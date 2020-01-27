@@ -101,34 +101,19 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    CArgsParser args_parser("tail");
+    bool follow = false;
+    int line_count = DEFAULT_LINE_COUNT;
+    const char* file = nullptr;
 
-    args_parser.add_arg("f", "follow -- appended data is output as it is written to the file");
-    args_parser.add_arg("n", "lines", "fetch the specified number of lines");
-    args_parser.add_required_single_value("file");
+    CArgsParser args_parser;
+    args_parser.add_option(follow, "Output data as it is written to the file", "follow", 'f');
+    args_parser.add_option(line_count, "Fetch the specified number of lines", "lines", 'n', "number");
+    args_parser.add_positional_argument(file, "File path", "file");
+    args_parser.parse(argc, argv);
 
-    CArgsParserResult args = args_parser.parse(argc, argv);
-
-    Vector<String> values = args.get_single_values();
-    if (values.size() != 1) {
-        args_parser.print_usage();
-        return 1;
-    }
-
-    int line_count = 0;
-    if (args.is_present("n")) {
-        line_count = strtol(args.get("n").characters(), NULL, 10);
-        if (errno == EINVAL) {
-            args_parser.print_usage();
-            return 1;
-        }
-    } else {
-        line_count = DEFAULT_LINE_COUNT;
-    }
-
-    auto f = CFile::construct(values[0]);
+    auto f = CFile::construct(file);
     if (!f->open(CIODevice::ReadOnly)) {
-        fprintf(stderr, "Error opening file %s: %s\n", f->filename().characters(), strerror(errno));
+        fprintf(stderr, "Error opening file %s: %s\n", file, strerror(errno));
         exit(1);
     }
 
@@ -137,7 +122,6 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    bool flag_follow = args.is_present("f");
     auto pos = find_seek_pos(*f, line_count);
-    return tail_from_pos(*f, pos, flag_follow);
+    return tail_from_pos(*f, pos, follow);
 }

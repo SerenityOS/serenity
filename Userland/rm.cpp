@@ -35,16 +35,16 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-int remove(bool recursive, const char* path)
+int remove(bool recursive, String path)
 {
     struct stat path_stat;
-    if (lstat(path, &path_stat) < 0) {
+    if (lstat(path.characters(), &path_stat) < 0) {
         perror("lstat");
         return 1;
     }
 
     if (S_ISDIR(path_stat.st_mode) && recursive) {
-        DIR* derp = opendir(path);
+        DIR* derp = opendir(path.characters());
         if (!derp) {
             return 1;
         }
@@ -55,18 +55,18 @@ int remove(bool recursive, const char* path)
                 builder.append(path);
                 builder.append('/');
                 builder.append(de->d_name);
-                int s = remove(true, builder.to_string().characters());
+                int s = remove(true, builder.to_string());
                 if (s < 0)
                     return s;
             }
         }
-        int s = rmdir(path);
+        int s = rmdir(path.characters());
         if (s < 0) {
             perror("rmdir");
             return 1;
         }
     } else {
-        int rc = unlink(path);
+        int rc = unlink(path.characters());
         if (rc < 0) {
             perror("unlink");
             return 1;
@@ -77,16 +77,13 @@ int remove(bool recursive, const char* path)
 
 int main(int argc, char** argv)
 {
-    CArgsParser args_parser("rm");
-    args_parser.add_arg("r", "Delete directory recursively.");
-    args_parser.add_required_single_value("path");
+    bool recursive = false;
+    const char* path = nullptr;
 
-    CArgsParserResult args = args_parser.parse(argc, argv);
-    Vector<String> values = args.get_single_values();
-    if (values.size() == 0) {
-        args_parser.print_usage();
-        return 1;
-    }
+    CArgsParser args_parser;
+    args_parser.add_option(recursive, "Delete directories recursively", "recursive", 'r');
+    args_parser.add_positional_argument(path, "File to remove", "path");
+    args_parser.parse(argc, argv);
 
-    return remove(args.is_present("r"), values[0].characters());
+    return remove(recursive, path);
 }

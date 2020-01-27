@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/String.h>
 #include <AK/HashMap.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/CArgsParser.h>
 #include <LibCore/CProcessStatisticsReader.h>
@@ -60,33 +60,29 @@ static int pid_of(const String& process_name, bool single_shot, bool omit_pid, p
 
 int main(int argc, char** argv)
 {
-    CArgsParser args_parser("pidof");
+    bool single_shot = false;
+    const char* omit_pid_value = nullptr;
+    const char* process_name = nullptr;
 
-    args_parser.add_arg("s", "Single shot - this instructs the program to only return one pid");
-    args_parser.add_arg("o", "pid", "Tells pidof to omit processes with that pid. The special pid %PPID can be used to name the parent process of the pidof program.");
+    CArgsParser args_parser;
+    args_parser.add_option(single_shot, "Only return one pid", nullptr, 's');
+    args_parser.add_option(omit_pid_value, "Omit the given PID, or the parent process if the special value %PPID is passed", nullptr, 'o', "pid");
+    args_parser.add_positional_argument(process_name, "Process name to search for", "process-name");
 
-    CArgsParserResult args = args_parser.parse(argc, argv);
+    args_parser.parse(argc, argv);
 
-    bool s_arg = args.is_present("s");
-    bool o_arg = args.is_present("o");
-    pid_t pid = 0;
-
-    if (o_arg) {
-        bool ok = false;
-        String pid_str = args.get("o");
-
-        if (pid_str == "%PPID")
-            pid = getppid();
+    pid_t pid_to_omit = 0;
+    if (omit_pid_value) {
+        bool ok = true;
+        if (!strcmp(omit_pid_value, "%PPID"))
+            pid_to_omit = getppid();
         else
-            pid = pid_str.to_uint(ok);
+            pid_to_omit = StringView(omit_pid_value).to_uint(ok);
+        if (!ok) {
+            fprintf(stderr, "Invalid value for -o\n");
+            args_parser.print_usage(stderr, argv[0]);
+            return 1;
+        }
     }
-
-    // We should have one single value : the process name
-    Vector<String> values = args.get_single_values();
-    if (values.size() == 0) {
-        args_parser.print_usage();
-        return 0;
-    }
-
-    return pid_of(values[0], s_arg, o_arg, pid);
+    return pid_of(process_name, single_shot, omit_pid_value != nullptr, pid_to_omit);
 }

@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibCore/CArgsParser.h>
 #include <alloca.h>
-#include <getopt.h>
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -59,28 +59,13 @@ int main(int argc, char** argv)
         perror("pledge");
         return 1;
     }
-    static const char* valid_option_characters = "ugGn";
-    int opt;
-    while ((opt = getopt(argc, argv, valid_option_characters)) != -1) {
-        switch (opt) {
-        case 'u':
-            flag_print_uid = true;
-            break;
-        case 'g':
-            flag_print_gid = true;
-            break;
-        case 'G':
-            flag_print_gid_all = true;
-            break;
-        case 'n':
-            flag_print_name = true;
-            break;
 
-        default:
-            fprintf(stderr, "usage: id [-%s]\n", valid_option_characters);
-            return 1;
-        }
-    }
+    CArgsParser args_parser;
+    args_parser.add_option(flag_print_uid, "Print UID", nullptr, 'u');
+    args_parser.add_option(flag_print_gid, "Print GID", nullptr, 'g');
+    args_parser.add_option(flag_print_gid_all, "Print all GIDs", nullptr, 'G');
+    args_parser.add_option(flag_print_name, "Print name", nullptr, 'n');
+    args_parser.parse(argc, argv);
 
     if (flag_print_name && !(flag_print_uid || flag_print_gid || flag_print_gid_all)) {
         fprintf(stderr, "cannot print only names or real IDs in default format\n");
