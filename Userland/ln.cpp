@@ -32,21 +32,18 @@
 
 int main(int argc, char** argv)
 {
-    CArgsParser args_parser("ln");
+    bool symbolic = false;
+    const char* target = nullptr;
+    const char* path = nullptr;
 
-    args_parser.add_arg("s", "create a symlink");
-    args_parser.add_required_single_value("target");
-    args_parser.add_required_single_value("link-path");
+    CArgsParser args_parser;
+    args_parser.add_option(symbolic, "Create a symlink", "symbolic", 's');
+    args_parser.add_positional_argument(target, "Link target", "target");
+    args_parser.add_positional_argument(path, "Link path", "path");
+    args_parser.parse(argc, argv);
 
-    CArgsParserResult args = args_parser.parse(argc, argv);
-    Vector<String> values = args.get_single_values();
-    if (values.size() == 0) {
-        args_parser.print_usage();
-        return 0;
-    }
-
-    if (args.is_present("s")) {
-        int rc = symlink(values[0].characters(), values[1].characters());
+    if (symbolic) {
+        int rc = symlink(target, path);
         if (rc < 0) {
             perror("symlink");
             return 1;
@@ -54,7 +51,7 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    int rc = link(values[0].characters(), values[1].characters());
+    int rc = link(target, path);
     if (rc < 0) {
         perror("link");
         return 1;

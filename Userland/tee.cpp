@@ -25,18 +25,18 @@
  */
 
 #include <AK/Vector.h>
+#include <LibCore/CArgsParser.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <getopt.h>
 #include <signal.h>
 #include <stdio.h>
 #include <unistd.h>
 
-static Vector<int> collect_fds(int argc, char** argv, int start, bool aflag, bool* err)
+static Vector<int> collect_fds(Vector<const char*> paths, bool append, bool* err)
 {
     int oflag;
     mode_t mode;
-    if (aflag) {
+    if (append) {
         oflag = O_APPEND;
         mode = 0;
     } else {
@@ -45,8 +45,8 @@ static Vector<int> collect_fds(int argc, char** argv, int start, bool aflag, boo
     }
 
     Vector<int> fds;
-    for (int i = start; i < argc; ++i) {
-        int fd = open(argv[i], oflag, mode);
+    for (const char* path : paths) {
+        int fd = open(path, oflag, mode);
         if (fd < 0) {
             perror("failed to open file for writing");
             *err = true;
@@ -119,28 +119,24 @@ static void int_handler(int)
 
 int main(int argc, char** argv)
 {
-    bool aflag = false, iflag = false;
-    int c = 0;
-    while ((c = getopt(argc, argv, "ai")) != -1) {
-        switch (c) {
-        case 'a':
-            aflag = true;
-            break;
-        case 'i':
-            iflag = true;
-            break;
-        }
-    }
+    bool append = false;
+    bool ignore_interrupts = false;
+    Vector<const char*> paths;
 
-    if (iflag) {
-        if (signal(SIGINT, int_handler) == SIG_ERR) {
+    CArgsParser args_parser;
+    args_parser.add_option(append, "Append, don't overwrite", "append", 'a');
+    args_parser.add_option(ignore_interrupts, "Ignore SIGINT", "ignore-interrupts", 'i');
+    args_parser.add_positional_argument(paths, "Files to copy stdin to", "file", CArgsParser::Required::No);
+    args_parser.parse(argc, argv);
+
+    if (ignore_interrupts) {
+        if (signal(SIGINT, int_handler) == SIG_ERR)
             perror("failed to install SIGINT handler");
-        }
     }
 
     bool err_open = false;
     bool err_write = false;
-    auto fds = collect_fds(argc, argv, optind, aflag, &err_open);
+    auto fds = collect_fds(paths, append, &err_open);
     copy_stdin(fds, &err_write);
     close_fds(fds);
 

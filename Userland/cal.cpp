@@ -128,69 +128,56 @@ void clean_buffers()
 
 int main(int argc, char** argv)
 {
-    CArgsParser args_parser("cal");
-    // FIXME: This i a bit of a cheat, as no nested optional args are available on CArgsParser
-    args_parser.add_single_value("[[day] month] year");
+    int day = 0;
+    int month = 0;
+    int year = 0;
 
-    CArgsParserResult args = args_parser.parse(argc, argv);
-    Vector<String> values = args.get_single_values();
-
-    if (values.size() > 3) {
-        printf("Invalid number of values\n");
-        args_parser.print_usage();
-        return 0;
-    }
+    CArgsParser args_parser;
+    // FIXME: This should ensure two values get parsed as month + year
+    args_parser.add_positional_argument(day, "Day of year", "day", CArgsParser::Required::No);
+    args_parser.add_positional_argument(month, "Month", "month", CArgsParser::Required::No);
+    args_parser.add_positional_argument(year, "Year", "year", CArgsParser::Required::No);
+    args_parser.parse(argc, argv);
 
     time_t now = time(nullptr);
     auto* tm = localtime(&now);
 
-    target_year = tm->tm_year + 1900;
-    target_month = tm->tm_mon + 1;
-    target_day = tm->tm_mday;
-
-    current_year = target_year;
-    current_month = target_month;
-
-    bool year_mode = false;
-    switch (values.size()) {
-    case 3:
-        target_day = atoi(values[0].characters());
-        target_month = atoi(values[1].characters());
-        target_year = atoi(values[2].characters());
-
-        // When passing the 3 parameters (day, month and year) we assume we're there.
-        current_year = target_year;
-        current_month = target_month;
-        break;
-    case 2:
-        target_month = atoi(values[0].characters());
-        target_year = atoi(values[1].characters());
-        break;
-    case 1:
-        target_year = atoi(values[0].characters());
-        year_mode = true;
-        break;
-    default:
-        break;
+    // Hack: workaround two values parsing as day + month.
+    if (day && month && !year) {
+        year = month;
+        month = day;
+        day = 0;
     }
+
+    bool year_mode = !day && !month && year;
+
+    if (!year)
+        year = tm->tm_year + 1900;
+    if (!month)
+        month = tm->tm_mon + 1;
+    if (!day)
+        day = tm->tm_mday;
+
+    current_year = year;
+    current_month = month;
 
     clean_buffers();
 
     if (year_mode) {
         printf("                             ");
-        printf("Year %4d", target_year);
+        printf("Year %4d", year);
         printf("                             \n\n");
 
         for (int i = 1; i < 12; ++i) {
-            insert_month_to_print(0, i++, target_year);
-            insert_month_to_print(1, i++, target_year);
-            insert_month_to_print(2, i, target_year);
+            insert_month_to_print(0, i++, year);
+            insert_month_to_print(1, i++, year);
+            insert_month_to_print(2, i, year);
             printf(print_buffer);
             printf("\n");
             clean_buffers();
         }
     } else {
-        insert_month_to_print(0, target_month, target_year);
+        insert_month_to_print(0, month, year);
         printf(print_buffer);
         printf("\n\n");
         clean_buffers();

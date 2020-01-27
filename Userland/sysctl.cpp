@@ -109,20 +109,17 @@ static int handle_var(const String& var)
 
 int main(int argc, char** argv)
 {
-    CArgsParser args_parser("sysctl");
+    bool show_all = false;
+    const char* var = nullptr;
 
-    args_parser.add_arg("a", "show all variables");
-    args_parser.add_single_value("variable=[value]");
+    CArgsParser args_parser;
+    args_parser.add_option(show_all, "Show all variables", nullptr, 'a');
+    args_parser.add_positional_argument(var, "Command (var[=value])", "command");
+    args_parser.parse(argc, argv);
 
-    CArgsParserResult args = args_parser.parse(argc, argv);
-
-    if (args.is_present("a")) {
+    if (show_all) {
         return handle_show_all();
-    } else if (args.get_single_values().size() != 1) {
-        args_parser.print_usage();
-        return 0;
     }
 
-    Vector<String> values = args.get_single_values();
-    return handle_var(values[0]);
+    return handle_var(var);
 }

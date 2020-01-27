@@ -30,19 +30,15 @@
 
 int main(int argc, char** argv)
 {
-    CArgsParser args_parser("umount");
-    args_parser.add_arg("mountpoint", "mount point");
-    CArgsParserResult args = args_parser.parse(argc, argv);
+    const char* mount_point = nullptr;
 
-    if (argc == 2) {
-        if (umount(argv[1]) < 0) {
-            perror("umount");
-            return 1;
-        }
-    } else {
-        args_parser.print_usage();
-        return 0;
+    CArgsParser args_parser;
+    args_parser.add_positional_argument(mount_point, "Mount point", "mountpoint");
+    args_parser.parse(argc, argv);
+
+    if (umount(mount_point) < 0) {
+        perror("umount");
+        return 1;
     }
-
     return 0;
 }

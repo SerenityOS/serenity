@@ -38,29 +38,31 @@ enum TruncateOperation {
 
 int main(int argc, char** argv)
 {
-    CArgsParser args_parser("truncate");
+    const char* resize = nullptr;
+    const char* reference = nullptr;
+    const char* file = nullptr;
 
-    args_parser.add_arg("s", "size", "Resize the target file to (or by) this size. Prefix with + or - to expand or shrink the file, or a bare number to set the size exactly.");
-    args_parser.add_arg("r", "reference", "Resize the target file to match the size of this one.");
-    args_parser.add_required_single_value("file");
+    CArgsParser args_parser;
+    args_parser.add_option(resize, "Resize the target file to (or by) this size. Prefix with + or - to expand or shrink the file, or a bare number to set the size exactly", "size", 's', "size");
+    args_parser.add_option(reference, "Resize the target file to match the size of this one", "reference", 'r', "file");
+    args_parser.add_positional_argument(file, "File path", "file");
+    args_parser.parse(argc, argv);
 
-    CArgsParserResult args = args_parser.parse(argc, argv);
-
-    if (!args.is_present("s") && !args.is_present("r")) {
-        args_parser.print_usage();
-        return -1;
+    if (!resize && !reference) {
+        args_parser.print_usage(stderr, argv[0]);
+        return 1;
     }
 
-    if (args.is_present("s") && args.is_present("r")) {
-        args_parser.print_usage();
-        return -1;
+    if (resize && reference) {
+        args_parser.print_usage(stderr, argv[0]);
+        return 1;
     }
 
     auto op = OP_Set;
     int size = 0;
 
-    if (args.is_present("s")) {
-        auto str = args.get("s");
+    if (resize) {
+        String str = resize;
 
         switch (str[0]) {
         case '+':
@@ -76,35 +78,33 @@ int main(int argc, char** argv)
         bool ok;
         size = str.to_int(ok);
         if (!ok) {
-            args_parser.print_usage();
-            return -1;
+            args_parser.print_usage(stderr, argv[0]);
+            return 1;
         }
     }
 
-    if (args.is_present("r")) {
+    if (reference) {
         struct stat st;
-        int rc = stat(args.get("r").characters(), &st);
+        int rc = stat(reference, &st);
         if (rc < 0) {
             perror("stat");
-            return -1;
+            return 1;
         }
 
         op = OP_Set;
         size = st.st_size;
     }
 
-    auto name = args.get_single_values()[0];
-
-    int fd = open(name.characters(), O_RDWR | O_CREAT, 0666);
+    int fd = open(file, O_RDWR | O_CREAT, 0666);
     if (fd < 0) {
         perror("open");
-        return -1;
+        return 1;
     }
 
     struct stat st;
     if (fstat(fd, &st) < 0) {
         perror("fstat");
-        return -1;
+        return 1;
     }
 
     switch (op) {
@@ -120,12 +120,12 @@ int main(int argc, char** argv)
 
     if (ftruncate(fd, size) < 0) {
         perror("ftruncate");
-        return -1;
+        return 1;
     }
 
     if (close(fd) < 0) {
         perror("close");
-        return -1;
+        return 1;
     }
 
     return 0;

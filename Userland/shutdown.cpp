@@ -30,17 +30,19 @@
 
 int main(int argc, char** argv)
 {
-    CArgsParser args_parser("shutdown");
-    args_parser.add_arg("n", "shut down now");
-    CArgsParserResult args = args_parser.parse(argc, argv);
+    bool now = false;
 
-    if (args.is_present("n")) {
+    CArgsParser args_parser;
+    args_parser.add_option(now, "Shut down now", "now", 'n');
+    args_parser.parse(argc, argv);
+
+    if (now) {
         if (halt() < 0) {
             perror("shutdown");
             return 1;
         }
     } else {
-        args_parser.print_usage();
-        return 0;
+        args_parser.print_usage(stderr, argv[0]);
+        return 1;
     }
 }

@@ -152,35 +152,39 @@ bool print_mounts()
 
 int main(int argc, char** argv)
 {
-    CArgsParser args_parser("mount");
-    args_parser.add_arg("devname", "device path");
-    args_parser.add_arg("mountpoint", "mount point");
-    args_parser.add_arg("t", "fstype", "file system type");
-    args_parser.add_arg("o", "options", "mount options");
-    args_parser.add_arg("a", "mount all systems listed in /etc/fstab");
-    CArgsParserResult args = args_parser.parse(argc, argv);
+    const char* source = nullptr;
+    const char* mountpoint = nullptr;
+    const char* fs_type = nullptr;
+    const char* options = nullptr;
+    bool should_mount_all = false;
 
-    if (args.is_present("a")) {
+    CArgsParser args_parser;
+    args_parser.add_positional_argument(source, "Source path", "source", CArgsParser::Required::No);
+    args_parser.add_positional_argument(mountpoint, "Mount point", "mountpoint", CArgsParser::Required::No);
+    args_parser.add_option(fs_type, "File system type", nullptr, 't', "fstype");
+    args_parser.add_option(options, "Mount options", nullptr, 'o', "options");
+    args_parser.add_option(should_mount_all, "Mount all file systems listed in /etc/fstab", nullptr, 'a');
+    args_parser.parse(argc, argv);
+
+    if (should_mount_all) {
         return mount_all() ? 0 : 1;
     }
 
-    switch (args.get_single_values().size()) {
-    case 0:
+    if (!source && !mountpoint)
         return print_mounts() ? 0 : 1;
-    case 2: {
-        String devname = args.get_single_values()[0];
-        String mountpoint = args.get_single_values()[1];
-        String fstype = args.is_present("t") ? args.get("t") : "ext2";
-        int flags = args.is_present("o") ? parse_options(args.get("o")) : 0;
 
-        if (mount(devname.characters(), mountpoint.characters(), fstype.characters(), flags) < 0) {
+    if (source && mountpoint) {
+        if (!fs_type)
+            fs_type = "ext2";
+        int flags = options ? parse_options(options) : 0;
+
+        if (mount(source, mountpoint, fs_type, flags) < 0) {
             perror("mount");
             return 1;
         }
         return 0;
     }
-    default:
-        args_parser.print_usage();
-        return 1;
-    }
+
+    args_parser.print_usage(stderr, argv[0]);
+    return 1;
 }

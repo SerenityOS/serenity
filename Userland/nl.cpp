@@ -31,80 +31,57 @@
 #include <stdio.h>
 #include <string.h>
 
+enum NumberStyle {
+    NumberAllLines,
+    NumberNonEmptyLines,
+    NumberNoLines,
+};
+
 int main(int argc, char** argv)
 {
-    CArgsParser args_parser("nl");
-    args_parser.add_arg("b", "type", "Line count type. \n\tt counts non-empty lines. \n\ta counts all lines. \n\tn counts no lines.");
-    args_parser.add_arg("i", "incr", "Set line count increment.");
-    args_parser.add_arg("s", "delim", "Set buffer between the line numbers and text. 1-63 bytes");
-    args_parser.add_arg("v", "startnum", "Initial value used to number logical page lines.");
-    args_parser.add_arg("w", "width", "The number of characters used for the line number.");
-    args_parser.add_single_value("file");
-    CArgsParserResult args = args_parser.parse(argc, argv);
+    NumberStyle number_style = NumberNonEmptyLines;
+    int increment = 1;
+    const char* separator = "  ";
+    int start_number = 1;
+    int number_width = 6;
+    Vector<const char*> files;
 
-    bool all_lines_flag = false;
-    bool line_numbers_flag = true;
-    String value_of_b;
-    if (args.is_present("b")) {
-        value_of_b = args.get("b");
-        if (value_of_b == "a")
-            all_lines_flag = true;
-        else if (value_of_b == "t")
-            all_lines_flag = false;
-        else if (value_of_b == "n")
-            line_numbers_flag = false;
-        else {
-            args_parser.print_usage();
-            return 1;
+    CArgsParser args_parser;
+
+    CArgsParser::Option number_style_option {
+        true,
+        "Line numbering style: 't' for non-empty lines, 'a' for all lines, 'n' for no lines",
+        "body-numbering",
+        'b',
+        "style",
+        [&number_style](const char* s) {
+            if (!strcmp(s, "t"))
+                number_style = NumberNonEmptyLines;
+            else if (!strcmp(s, "a"))
+                number_style = NumberAllLines;
+            else if (!strcmp(s, "n"))
+                number_style = NumberNoLines;
+            else
+                return false;
+
+            return true;
         }
-    }
+    };
 
-    long line_number_increment = 1;
-    String value_of_i;
-    if (args.is_present("i")) {
-        value_of_i = args.get("i");
-        line_number_increment = atol(value_of_i.characters());
-        if (!line_number_increment) {
-            args_parser.print_usage();
-            return 1;
-        }
-    }
+    args_parser.add_option(move(number_style_option));
+    args_parser.add_option(increment, "Line count increment", "increment", 'i', "number");
+    args_parser.add_option(separator, "Separator between line numbers and lines", "separator", 's', "string");
+    args_parser.add_option(start_number, "Initial line number", "startnum", 'v', "number");
+    args_parser.add_option(number_width, "Number width", "width", 'w', "number");
+    args_parser.add_positional_argument(files, "Files to process", "file", CArgsParser::Required::No);
+    args_parser.parse(argc, argv);
 
-    bool delimiter_flag = false;
-    String value_of_s;
-    if (args.is_present("s")) {
-        value_of_s = args.get("s");
-        if (value_of_s.length() > 0 && value_of_s.length() < 64)
-            delimiter_flag = true;
-        else {
-            args_parser.print_usage();
-            return 1;
-        }
-    }
-    char delimiter[64];
-    strcpy(delimiter, delimiter_flag ? value_of_s.characters() : "  ");
-
-    long line_number = 1;
-    String value_of_v;
-    if (args.is_present("v")) {
-        value_of_v = args.get("v");
-        line_number = atol(value_of_v.characters());
-    }
-
-    String value_of_w;
-    unsigned int line_number_width = 6;
-    if (args.is_present("w")) {
-        value_of_w = args.get("w");
-        line_number_width = atol(value_of_w.characters());
-    }
-
-    Vector<String> files = args.get_single_values();
     Vector<FILE*> file_pointers;
-    if (files.size() > 0) {
+    if (!files.is_empty()) {
         for (auto& file : files) {
-            FILE* file_pointer;
-            if ((file_pointer = fopen(file.characters(), "r")) == NULL) {
-                fprintf(stderr, "unable to open %s\n", file.characters());
+            FILE* file_pointer = fopen(file, "r");
+            if (!file_pointer) {
+                fprintf(stderr, "unable to open %s\n", file);
                 continue;
             }
             file_pointers.append(file_pointer);
@@ -113,21 +90,21 @@ int main(int argc, char** argv)
         file_pointers.append(stdin);
     }
 
-    line_number -= line_number_increment; // so the line number can start at 1 when added below
     for (auto& file_pointer : file_pointers) {
+        int line_number = start_number - increment; // so the line number can start at 1 when added below
         int previous_character = 0;
         int next_character = 0;
         while ((next_character = fgetc(file_pointer)) != EOF) {
             if (previous_character == 0 || previous_character == '\n') {
-                if (!all_lines_flag && next_character == '\n') {
-                    // skips printing line count on empty lines if all_lines_flags is false
+                if (next_character == '\n' && number_style != NumberAllLines) {
+                    // Skip printing line count on empty lines.
                     printf("\n");
                     continue;
                 }
-                if (line_numbers_flag)
-                    printf("%*lu%s", line_number_width, (line_number += line_number_increment), delimiter);
+                if (number_style != NumberNoLines)
+                    printf("%*d%s", number_width, (line_number += increment), separator);
                 else
-                    printf("%*s", line_number_width, "");
+                    printf("%*s", number_width, "");
             }
             putchar(next_character);
             previous_character = next_character;

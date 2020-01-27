@@ -193,11 +193,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    CArgsParser args_parser("Terminal");
+    const char* command_to_execute = "/bin/Shell";
 
-    args_parser.add_arg("e", "execute", "Execute this command inside the terminal.");
-
-    CArgsParserResult args = args_parser.parse(argc, argv);
+    CArgsParser args_parser;
+    args_parser.add_option(command_to_execute, "Execute this command inside the terminal", nullptr, 'e', "command");
+    args_parser.parse(argc, argv);
 
     if (chdir(get_current_user_home_path().characters()) < 0)
         perror("chdir");
@@ -208,7 +208,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    run_command(ptm_fd, args.get("e"));
+    run_command(ptm_fd, command_to_execute);
 
     auto window = GWindow::construct();
     window->set_title("Terminal");
@@ -268,7 +268,6 @@ int main(int argc, char** argv)
     edit_menu->add_action(terminal->copy_action());
     edit_menu->add_action(terminal->paste_action());
     menubar->add_menu(move(edit_menu));
-
 
     GActionGroup font_action_group;
     font_action_group.set_exclusive(true);

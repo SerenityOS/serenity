@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/String.h>
 #include <AK/FileSystemPath.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibCore/CArgsParser.h>
@@ -76,26 +76,22 @@ static int handle_set_pape(const String& name)
 
 int main(int argc, char** argv)
 {
+    bool show_all = false;
+    bool show_current = false;
+    const char* name = nullptr;
+
+    CArgsParser args_parser;
+    args_parser.add_option(show_all, "Show all wallpapers", "show-all", 'a');
+    args_parser.add_option(show_current, "Show current wallpaper", "show-current", 'c');
+    args_parser.add_positional_argument(name, "Wallpaper to set", "name", CArgsParser::Required::No);
+    args_parser.parse(argc, argv);
+
     GApplication app(argc, argv);
 
-    CArgsParser args_parser("pape");
-
-    args_parser.add_arg("a", "show all wallpapers");
-    args_parser.add_arg("c", "show current wallpaper");
-    args_parser.add_single_value("name");
-
-    CArgsParserResult args = args_parser.parse(argc, argv);
-
-    if (args.is_present("a"))
+    if (show_all)
         return handle_show_all();
-    else if (args.is_present("c"))
+    else if (show_current)
         return handle_show_current();
 
-    Vector<String> values = args.get_single_values();
-    if (values.size() != 1) {
-        args_parser.print_usage();
-        return 0;
-    }
-
-    return handle_set_pape(values[0]);
+    return handle_set_pape(name);
 }
