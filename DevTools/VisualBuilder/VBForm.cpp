@@ -431,8 +431,10 @@ void VBForm::write_to_file(const String& path)
         widget.for_each_property([&](auto& property) {
             if (property.value().is_bool())
                 widget_object.set(property.name(), property.value().to_bool());
-            else if (property.value().is_int())
-                widget_object.set(property.name(), property.value().to_int());
+            else if (property.value().is_i32())
+                widget_object.set(property.name(), property.value().to_i32());
+            else if (property.value().is_i64())
+                widget_object.set(property.name(), property.value().to_i64());
             else
                 widget_object.set(property.name(), property.value().to_string());
         });

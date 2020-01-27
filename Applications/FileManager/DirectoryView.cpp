@@ -282,7 +282,7 @@ void DirectoryView::update_statusbar()
     current_view().selection().for_each_index([&](auto& index) {
         auto& model = *current_view().model();
         auto size_index = model.sibling(index.row(), GFileSystemModel::Column::Size, model.parent_index(index));
-        auto file_size = model.data(size_index).to_int();
+        auto file_size = model.data(size_index).to_i32();
         selected_byte_count += file_size;
     });
 

@@ -258,7 +258,7 @@ public:
     virtual void paint(GPainter& painter, const Rect& a_rect, const Palette& palette, const GModel& model, const GModelIndex& index) override
     {
         auto rect = a_rect.shrunken(2, 2);
-        auto percentage = model.data(index, GModel::Role::Custom).to_int();
+        auto percentage = model.data(index, GModel::Role::Custom).to_i32();
 
         auto data = model.data(index, GModel::Role::Display);
         String text;

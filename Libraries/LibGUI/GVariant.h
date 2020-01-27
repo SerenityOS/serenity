@@ -40,7 +40,8 @@ public:
     GVariant();
     GVariant(bool);
     GVariant(float);
-    GVariant(int);
+    GVariant(i32);
+    GVariant(i64);
     GVariant(unsigned);
     GVariant(const char*);
     GVariant(const String&);
@@ -65,7 +66,8 @@ public:
     enum class Type {
         Invalid,
         Bool,
-        Int,
+        Int32,
+        Int64,
         UnsignedInt,
         Float,
         String,
@@ -80,7 +82,8 @@ public:
 
     bool is_valid() const { return m_type != Type::Invalid; }
     bool is_bool() const { return m_type == Type::Bool; }
-    bool is_int() const { return m_type == Type::Int; }
+    bool is_i32() const { return m_type == Type::Int32; }
+    bool is_i64() const { return m_type == Type::Int64; }
     bool is_uint() const { return m_type == Type::UnsignedInt; }
     bool is_float() const { return m_type == Type::Float; }
     bool is_string() const { return m_type == Type::String; }
@@ -105,8 +108,10 @@ public:
             return as_bool();
         if (type() == Type::String)
             return !!m_value.as_string;
-        if (type() == Type::Int)
-            return m_value.as_int != 0;
+        if (type() == Type::Int32)
+            return m_value.as_i32 != 0;
+        if (type() == Type::Int64)
+            return m_value.as_i64 != 0;
         if (type() == Type::UnsignedInt)
             return m_value.as_uint != 0;
         if (type() == Type::Rect)
@@ -118,10 +123,16 @@ public:
         return is_valid();
     }
 
-    int as_int() const
+    int as_i32() const
     {
-        ASSERT(type() == Type::Int);
-        return m_value.as_int;
+        ASSERT(type() == Type::Int32);
+        return m_value.as_i32;
+    }
+
+    int as_i64() const
+    {
+        ASSERT(type() == Type::Int64);
+        return m_value.as_i64;
     }
 
     unsigned as_uint() const
@@ -130,10 +141,13 @@ public:
         return m_value.as_uint;
     }
 
-    int to_int() const
+    template<typename T>
+    T to_integer() const
     {
-        if (is_int())
-            return as_int();
+        if (is_i32())
+            return as_i32();
+        if (is_i64())
+            return as_i64();
         if (is_bool())
             return as_bool() ? 1 : 0;
         if (is_float())
@@ -150,6 +164,16 @@ public:
             return value;
         }
         return 0;
+    }
+
+    i32 to_i32() const
+    {
+        return to_integer<i32>();
+    }
+
+    i64 to_i64() const
+    {
+        return to_integer<i64>();
     }
 
     float as_float() const
@@ -244,7 +268,8 @@ private:
         GIconImpl* as_icon;
         Font* as_font;
         bool as_bool;
-        int as_int;
+        i32 as_i32;
+        i64 as_i64;
         unsigned as_uint;
         float as_float;
         RGBA32 as_color;
