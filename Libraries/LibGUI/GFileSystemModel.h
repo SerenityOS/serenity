@@ -88,7 +88,7 @@ public:
         GModelIndex index(const GFileSystemModel&, int column) const;
         void traverse_if_needed(const GFileSystemModel&);
         void reify_if_needed(const GFileSystemModel&);
-        bool fetch_data_using_lstat(const String& full_path);
+        bool fetch_data(const String& full_path, bool is_root);
     };
 
     static NonnullRefPtr<GFileSystemModel> create(const StringView& root_path = "/", Mode mode = Mode::FilesAndDirectories)
