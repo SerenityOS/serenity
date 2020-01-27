@@ -302,7 +302,6 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringVi
     else
         region = Region::create_kernel_only(range, name, access, cacheable);
     region->set_page_directory(kernel_page_directory());
-    // FIXME: It would be cool if these could zero-fill on demand instead.
     if (should_commit)
         region->commit();
     return region;
