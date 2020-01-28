@@ -75,7 +75,8 @@ bool GFileSystemModel::Node::fetch_data(const String& full_path, bool is_root)
         if (length < 0) {
             perror("readlink");
         } else {
-            symlink_target = String(buffer, length);
+            ASSERT(length > 0);
+            symlink_target = String(buffer, length - 1);
         }
     }
 
