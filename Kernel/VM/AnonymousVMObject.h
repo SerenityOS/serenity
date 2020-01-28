@@ -34,7 +34,7 @@ public:
     virtual ~AnonymousVMObject() override;
 
     static NonnullRefPtr<AnonymousVMObject> create_with_size(size_t);
-    static NonnullRefPtr<AnonymousVMObject> create_for_physical_range(PhysicalAddress, size_t);
+    static RefPtr<AnonymousVMObject> create_for_physical_range(PhysicalAddress, size_t);
     static NonnullRefPtr<AnonymousVMObject> create_with_physical_page(PhysicalPage&);
     virtual NonnullRefPtr<VMObject> clone() override;
 

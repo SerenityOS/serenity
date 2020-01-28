@@ -313,11 +313,14 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size
     ASSERT(!(size % PAGE_SIZE));
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     ASSERT(range.is_valid());
+    auto vmobject = AnonymousVMObject::create_for_physical_range(paddr, size);
+    if (!vmobject)
+        return nullptr;
     OwnPtr<Region> region;
     if (user_accessible)
-        region = Region::create_user_accessible(range, AnonymousVMObject::create_for_physical_range(paddr, size), 0, name, access, cacheable);
+        region = Region::create_user_accessible(range, vmobject.release_nonnull(), 0, name, access, cacheable);
     else
-        region = Region::create_kernel_only(range, AnonymousVMObject::create_for_physical_range(paddr, size), 0, name, access, cacheable);
+        region = Region::create_kernel_only(range, vmobject.release_nonnull(), 0, name, access, cacheable);
     region->map(kernel_page_directory());
     return region;
 }
