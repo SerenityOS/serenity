@@ -26,9 +26,9 @@
 
 #pragma once
 
-#include "DoubleBuffer.h"
 #include <AK/CircularDeque.h>
 #include <Kernel/Devices/CharacterDevice.h>
+#include <Kernel/DoubleBuffer.h>
 #include <Kernel/UnixTypes.h>
 
 class Process;
