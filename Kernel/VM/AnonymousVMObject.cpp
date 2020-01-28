@@ -32,8 +32,12 @@ NonnullRefPtr<AnonymousVMObject> AnonymousVMObject::create_with_size(size_t size
     return adopt(*new AnonymousVMObject(size));
 }
 
-NonnullRefPtr<AnonymousVMObject> AnonymousVMObject::create_for_physical_range(PhysicalAddress paddr, size_t size)
+RefPtr<AnonymousVMObject> AnonymousVMObject::create_for_physical_range(PhysicalAddress paddr, size_t size)
 {
+    if (paddr.offset(size) < paddr) {
+        dbg() << "Shenanigans! create_for_physical_range(" << paddr << ", " << size << ") would wrap around";
+        return nullptr;
+    }
     return adopt(*new AnonymousVMObject(paddr, size));
 }
 

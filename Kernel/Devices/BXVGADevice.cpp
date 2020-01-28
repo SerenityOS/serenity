@@ -116,10 +116,12 @@ KResultOr<Region*> BXVGADevice::mmap(Process& process, FileDescription&, Virtual
     ASSERT(offset == 0);
     ASSERT(size == framebuffer_size_in_bytes());
     auto vmobject = AnonymousVMObject::create_for_physical_range(m_framebuffer_address, framebuffer_size_in_bytes());
+    if (!vmobject)
+        return KResult(-ENOMEM);
     auto* region = process.allocate_region_with_vmobject(
         preferred_vaddr,
         framebuffer_size_in_bytes(),
-        move(vmobject),
+        vmobject.release_nonnull(),
         0,
         "BXVGA Framebuffer",
         prot);
