@@ -74,6 +74,20 @@ private:
         }
     }
 
+    virtual void mousedown_event(GMouseEvent& event) override
+    {
+        if (event.button() != GMouseButton::Left)
+            return;
+        pid_t pid = fork();
+        if (pid < 0) {
+            perror("fork");
+        } else if (pid == 0) {
+            execl("/bin/SystemMonitor", "SystemMonitor", nullptr);
+            perror("execl");
+            ASSERT_NOT_REACHED();
+        }
+    }
+
     static void get_cpu_usage(unsigned& busy, unsigned& idle)
     {
         busy = 0;
@@ -98,14 +112,14 @@ private:
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio shared_buffer accept rpath unix cpath fattr", nullptr) < 0) {
+    if (pledge("stdio shared_buffer accept proc exec rpath unix cpath fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     GApplication app(argc, argv);
 
-    if (pledge("stdio shared_buffer accept rpath", nullptr) < 0) {
+    if (pledge("stdio shared_buffer accept proc exec rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -131,6 +145,11 @@ int main(int argc, char** argv)
     }
 
     if (unveil("/proc/all", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/bin/SystemMonitor", "x") < 0) {
         perror("unveil");
         return 1;
     }
