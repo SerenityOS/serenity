@@ -33,6 +33,9 @@
 #include <LibC/errno_numbers.h>
 #include <LibC/sys/ioctl_numbers.h>
 
+#define MAX_RESOLUTION_WIDTH 4096
+#define MAX_RESOLUTION_HEIGHT 2160
+
 #define VBE_DISPI_IOPORT_INDEX 0x01CE
 #define VBE_DISPI_IOPORT_DATA 0x01CF
 
@@ -167,6 +170,8 @@ int BXVGADevice::ioctl(FileDescription&, unsigned request, unsigned arg)
         auto* resolution = (FBResolution*)arg;
         if (!current->process().validate_read_typed(resolution) || !current->process().validate_write_typed(resolution))
             return -EFAULT;
+        if (resolution->width > MAX_RESOLUTION_WIDTH || resolution->height > MAX_RESOLUTION_HEIGHT)
+            return -EINVAL;
         set_resolution(resolution->width, resolution->height);
         resolution->pitch = m_framebuffer_pitch;
         resolution->width = m_framebuffer_width;
