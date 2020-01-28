@@ -68,8 +68,9 @@ void DirectoryView::handle_activation(const GModelIndex& index)
         return;
     }
 
-    // FIXME: This doesn't seem like the right way to fully detect executability.
-    if (st.st_mode & S_IXUSR) {
+    ASSERT(!S_ISLNK(st.st_mode));
+
+    if (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
         if (fork() == 0) {
             int rc = execl(path.characters(), path.characters(), nullptr);
             if (rc < 0)
