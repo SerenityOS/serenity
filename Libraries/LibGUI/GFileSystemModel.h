@@ -73,7 +73,7 @@ public:
 
         mutable RefPtr<GraphicsBitmap> thumbnail;
         bool is_directory() const { return S_ISDIR(mode); }
-        bool is_executable() const { return mode & S_IXUSR; }
+        bool is_executable() const { return mode & (S_IXUSR | S_IXGRP | S_IXOTH); }
 
         String full_path(const GFileSystemModel&) const;
 
