@@ -415,7 +415,7 @@ GIcon GFileSystemModel::icon_for_file(const mode_t mode, const String& name) con
         return m_symlink_icon;
     if (S_ISSOCK(mode))
         return m_socket_icon;
-    if (mode & S_IXUSR)
+    if (mode & (S_IXUSR | S_IXGRP | S_IXOTH))
         return m_executable_icon;
     if (name.to_lowercase().ends_with(".wav"))
         return m_filetype_sound_icon;
