@@ -191,10 +191,9 @@ void GAbstractView::mousedown_event(GMouseEvent& event)
         m_selection.clear();
     } else if (event.modifiers() & Mod_Ctrl) {
         m_selection.toggle(index);
-    } else if (event.button() == GMouseButton::Left && !m_model->drag_data_type().is_null()) {
+    } else if (event.button() == GMouseButton::Left && m_selection.contains(index) && !m_model->drag_data_type().is_null()) {
         // We might be starting a drag, so don't throw away other selected items yet.
         m_might_drag = true;
-        m_selection.add(index);
     } else {
         m_selection.set(index);
     }
