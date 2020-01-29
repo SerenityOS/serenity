@@ -39,7 +39,7 @@ public:
     E1000NetworkAdapter(PCI::Address, u8 irq);
     virtual ~E1000NetworkAdapter() override;
 
-    virtual void send_raw(const u8*, int) override;
+    virtual void send_raw(const u8*, size_t) override;
     virtual bool link_up() override;
 
 private:

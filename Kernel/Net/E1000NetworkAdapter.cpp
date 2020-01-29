@@ -371,12 +371,12 @@ u32 E1000NetworkAdapter::in32(u16 address)
     return IO::in32(m_io_base + address);
 }
 
-void E1000NetworkAdapter::send_raw(const u8* data, int length)
+void E1000NetworkAdapter::send_raw(const u8* data, size_t length)
 {
     disable_irq();
     u32 tx_current = in32(REG_TXDESCTAIL);
 #ifdef E1000_DEBUG
-    kprintf("E1000: Sending packet (%d bytes)\n", length);
+    kprintf("E1000: Sending packet (%zu bytes)\n", length);
 #endif
     auto& descriptor = m_tx_descriptors[tx_current];
     ASSERT(length <= 8192);
@@ -417,7 +417,7 @@ void E1000NetworkAdapter::receive()
         auto* buffer = (u8*)(m_rx_descriptors[rx_current].addr + 0xc0000000);
         u16 length = m_rx_descriptors[rx_current].length;
 #ifdef E1000_DEBUG
-        kprintf("E1000: Received 1 packet @ %p (%u) bytes!\n", buffer, length);
+        kprintf("E1000: Received 1 packet @ %p (%zu) bytes!\n", buffer, length);
 #endif
         did_receive(buffer, length);
         m_rx_descriptors[rx_current].status = 0;

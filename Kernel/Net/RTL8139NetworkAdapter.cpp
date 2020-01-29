@@ -291,7 +291,7 @@ void RTL8139NetworkAdapter::read_mac_address()
     set_mac_address(mac);
 }
 
-void RTL8139NetworkAdapter::send_raw(const u8* data, int length)
+void RTL8139NetworkAdapter::send_raw(const u8* data, size_t length)
 {
 #ifdef RTL8139_DEBUG
     kprintf("RTL8139NetworkAdapter::send_raw length=%d\n", length);
@@ -332,7 +332,7 @@ void RTL8139NetworkAdapter::send_raw(const u8* data, int length)
     // 60 bytes if necessary to make sure the whole thing is large enough.
     if (length < 60) {
 #ifdef RTL8139_DEBUG
-        kprintf("RTL8139NetworkAdapter: adjusting payload size from %d to 60\n", length);
+        kprintf("RTL8139NetworkAdapter: adjusting payload size from %zu to 60\n", length);
 #endif
         length = 60;
     }

@@ -127,7 +127,7 @@ void NetworkAdapter::send_ipv4(const MACAddress& destination_mac, const IPv4Addr
     send_raw((const u8*)&eth, ethernet_frame_size);
 }
 
-void NetworkAdapter::did_receive(const u8* data, int length)
+void NetworkAdapter::did_receive(const u8* data, size_t length)
 {
     InterruptDisabler disabler;
     m_packets_in++;
@@ -140,7 +140,7 @@ void NetworkAdapter::did_receive(const u8* data, int length)
     } else {
         buffer = m_unused_packet_buffers.take_first();
         --m_unused_packet_buffers_count;
-        if ((size_t)length <= buffer.value().size()) {
+        if (length <= buffer.value().size()) {
             memcpy(buffer.value().data(), data, length);
             buffer.value().set_size(length);
         } else {
