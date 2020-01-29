@@ -158,13 +158,13 @@ int TCPSocket::protocol_receive(const KBuffer& packet_buffer, void* buffer, size
     return payload_size;
 }
 
-int TCPSocket::protocol_send(const void* data, int data_length)
+int TCPSocket::protocol_send(const void* data, size_t data_length)
 {
     send_tcp_packet(TCPFlags::PUSH | TCPFlags::ACK, data, data_length);
     return data_length;
 }
 
-void TCPSocket::send_tcp_packet(u16 flags, const void* payload, int payload_size)
+void TCPSocket::send_tcp_packet(u16 flags, const void* payload, size_t payload_size)
 {
     auto buffer = ByteBuffer::create_zeroed(sizeof(TCPPacket) + payload_size);
     auto& tcp_packet = *(TCPPacket*)(buffer.data());

@@ -94,7 +94,7 @@ protected:
     virtual KResult protocol_bind() { return KSuccess; }
     virtual KResult protocol_listen() { return KSuccess; }
     virtual int protocol_receive(const KBuffer&, void*, size_t, int) { return -ENOTIMPL; }
-    virtual int protocol_send(const void*, int) { return -ENOTIMPL; }
+    virtual int protocol_send(const void*, size_t) { return -ENOTIMPL; }
     virtual KResult protocol_connect(FileDescription&, ShouldBlock) { return KSuccess; }
     virtual int protocol_allocate_local_port() { return 0; }
     virtual bool protocol_is_disconnected() const { return false; }
