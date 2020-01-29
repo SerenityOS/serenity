@@ -168,6 +168,8 @@ static unsigned prot_to_region_access_flags(int prot)
 Region& Process::allocate_split_region(const Region& source_region, const Range& range, size_t offset_in_vmobject)
 {
     auto& region = add_region(Region::create_user_accessible(range, source_region.vmobject(), offset_in_vmobject, source_region.name(), source_region.access()));
+    region.set_mmap(source_region.is_mmap());
+    region.set_stack(source_region.is_stack());
     size_t page_offset_in_source_region = (offset_in_vmobject - source_region.offset_in_vmobject()) / PAGE_SIZE;
     for (size_t i = 0; i < region.page_count(); ++i) {
         if (source_region.should_cow(page_offset_in_source_region + i))
