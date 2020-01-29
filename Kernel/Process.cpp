@@ -2334,21 +2334,21 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
     return waitee_pid;
 }
 
-bool Process::validate_read_from_kernel(VirtualAddress vaddr, ssize_t size) const
+bool Process::validate_read_from_kernel(VirtualAddress vaddr, size_t size) const
 {
     if (vaddr.is_null())
         return false;
     return MM.validate_kernel_read(*this, vaddr, size);
 }
 
-bool Process::validate_read(const void* address, ssize_t size) const
+bool Process::validate_read(const void* address, size_t size) const
 {
     if (!size)
         return false;
     return MM.validate_user_read(*this, VirtualAddress(address), size);
 }
 
-bool Process::validate_write(void* address, ssize_t size) const
+bool Process::validate_write(void* address, size_t size) const
 {
     if (!size)
         return false;
