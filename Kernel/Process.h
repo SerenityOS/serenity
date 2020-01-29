@@ -326,10 +326,10 @@ public:
     u32 m_ticks_in_user_for_dead_children { 0 };
     u32 m_ticks_in_kernel_for_dead_children { 0 };
 
-    bool validate_read_from_kernel(VirtualAddress, ssize_t) const;
+    bool validate_read_from_kernel(VirtualAddress, size_t) const;
 
-    bool validate_read(const void*, ssize_t) const;
-    bool validate_write(void*, ssize_t) const;
+    bool validate_read(const void*, size_t) const;
+    bool validate_write(void*, size_t) const;
     template<typename T>
     bool validate_read_typed(T* value, size_t count = 1) { return validate_read(value, sizeof(T) * count); }
     template<typename T>
