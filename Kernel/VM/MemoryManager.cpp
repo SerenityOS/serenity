@@ -569,6 +569,11 @@ template<MemoryManager::AccessSpace space, MemoryManager::AccessType access_type
 bool MemoryManager::validate_range(const Process& process, VirtualAddress base_vaddr, size_t size) const
 {
     ASSERT(size);
+    if (base_vaddr > base_vaddr.offset(size)) {
+        dbg() << "Shenanigans! Asked to validate wrappy " << base_vaddr << " size=" << size;
+        return false;
+    }
+
     VirtualAddress vaddr = base_vaddr.page_base();
     VirtualAddress end_vaddr = base_vaddr.offset(size - 1).page_base();
     if (end_vaddr < vaddr) {
