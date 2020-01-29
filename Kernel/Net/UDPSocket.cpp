@@ -88,7 +88,7 @@ int UDPSocket::protocol_receive(const KBuffer& packet_buffer, void* buffer, size
     return udp_packet.length() - sizeof(UDPPacket);
 }
 
-int UDPSocket::protocol_send(const void* data, int data_length)
+int UDPSocket::protocol_send(const void* data, size_t data_length)
 {
     auto routing_decision = route_to(peer_address(), local_address());
     if (routing_decision.is_zero())

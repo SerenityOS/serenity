@@ -147,7 +147,7 @@ public:
     u32 packets_out() const { return m_packets_out; }
     u32 bytes_out() const { return m_bytes_out; }
 
-    void send_tcp_packet(u16 flags, const void* = nullptr, int = 0);
+    void send_tcp_packet(u16 flags, const void* = nullptr, size_t = 0);
     void send_outgoing_packets();
     void receive_tcp_packet(const TCPPacket&, u16 size);
 
@@ -171,7 +171,7 @@ private:
     static NetworkOrdered<u16> compute_tcp_checksum(const IPv4Address& source, const IPv4Address& destination, const TCPPacket&, u16 payload_size);
 
     virtual int protocol_receive(const KBuffer&, void* buffer, size_t buffer_size, int flags) override;
-    virtual int protocol_send(const void*, int) override;
+    virtual int protocol_send(const void*, size_t) override;
     virtual KResult protocol_connect(FileDescription&, ShouldBlock) override;
     virtual int protocol_allocate_local_port() override;
     virtual bool protocol_is_disconnected() const override;
