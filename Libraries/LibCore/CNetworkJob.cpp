@@ -40,6 +40,14 @@ NetworkJob::~NetworkJob()
 {
 }
 
+void NetworkJob::start()
+{
+}
+
+void NetworkJob::shutdown()
+{
+}
+
 void NetworkJob::did_finish(NonnullRefPtr<NetworkResponse>&& response)
 {
     // NOTE: We protect ourselves here, since the on_finish callback may otherwise
