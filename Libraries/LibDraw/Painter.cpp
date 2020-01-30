@@ -37,7 +37,17 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC optimize("O3")
+#endif
+
+#ifndef ALWAYS_INLINE
+#if __has_attribute(always_inline)
+#define ALWAYS_INLINE __attribute__((always_inline))
+#else
+#define ALWAYS_INLINE inline
+#endif
+#endif
 
 template<GraphicsBitmap::Format format = GraphicsBitmap::Format::Invalid>
 static ALWAYS_INLINE Color get_pixel(const GraphicsBitmap& bitmap, int x, int y)
