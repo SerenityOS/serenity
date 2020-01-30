@@ -138,6 +138,7 @@ enum KeyCode : u8 {
 
     Key_Shift = Key_LeftShift,
 };
+const int key_code_count = Key_Logo;
 
 enum KeyModifier {
     Mod_None = 0x00,
