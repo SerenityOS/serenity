@@ -397,8 +397,7 @@ void WSCompositor::set_resolution(int desired_width, int desired_height)
     auto screen_rect = WSScreen::the().rect();
     if (screen_rect.width() == desired_width && screen_rect.height() == desired_height)
         return;
-    m_wallpaper_path = {};
-    m_wallpaper = nullptr;
+
     // Make sure it's impossible to set an invalid resolution
     ASSERT(desired_width >= 640 && desired_height >= 480);
     WSScreen::the().set_resolution(desired_width, desired_height);
