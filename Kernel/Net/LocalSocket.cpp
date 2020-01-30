@@ -117,10 +117,14 @@ KResult LocalSocket::bind(const sockaddr* user_address, socklen_t address_size)
             return KResult(-EADDRINUSE);
         return result.error();
     }
-    m_file = move(result.value());
 
-    ASSERT(m_file->inode());
-    m_file->inode()->bind_socket(*this);
+    auto file = move(result.value());
+
+    ASSERT(file->inode());
+    if (!file->inode()->bind_socket(*this))
+        return KResult(-EADDRINUSE);
+
+    m_file = move(file);
 
     m_address = address;
     m_bound = true;

@@ -168,14 +168,18 @@ void Inode::set_vmobject(VMObject& vmobject)
 
 bool Inode::bind_socket(LocalSocket& socket)
 {
-    ASSERT(!m_socket);
+    LOCKER(m_lock);
+    if (m_socket)
+        return false;
     m_socket = socket;
     return true;
 }
 
 bool Inode::unbind_socket()
 {
-    ASSERT(m_socket);
+    LOCKER(m_lock);
+    if (!m_socket)
+        return false;
     m_socket = nullptr;
     return true;
 }
