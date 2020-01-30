@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2019-2020, William McPherson <willmcpherson2@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,62 +28,185 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <LibDraw/Color.h>
 
 namespace Music {
+
+// CD quality
+// - Stereo
+// - 16 bit
+// - 44,100 samples/sec
+// - 1,411.2 kbps
 
 struct Sample {
     i16 left;
     i16 right;
 };
 
-enum WaveType { Sine, Saw, Square, Triangle, Noise, InvalidWave };
+constexpr int sample_count = 1024;
 
-enum PianoKey {
-    K_None,
-    K_C1, K_Db1, K_D1, K_Eb1, K_E1, K_F1, K_Gb1, K_G1, K_Ab1, K_A1, K_Bb1, K_B1,
-    K_C2, K_Db2, K_D2, K_Eb2, K_E2, K_F2, K_Gb2, K_G2,
+constexpr int buffer_size = sample_count * sizeof(Sample);
+
+constexpr double sample_rate = 44100;
+
+constexpr double volume = 1800;
+
+enum Switch {
+    Off,
+    On,
 };
 
-inline bool is_white(PianoKey n)
-{
-    switch (n) {
-    case K_C1:
-    case K_D1:
-    case K_E1:
-    case K_F1:
-    case K_G1:
-    case K_A1:
-    case K_B1:
-    case K_C2:
-    case K_D2:
-    case K_E2:
-    case K_F2:
-    case K_G2:
-        return true;
-    default:
-        return false;
-    }
-}
-
-enum Note {
-    C1, Db1, D1, Eb1, E1, F1, Gb1, G1, Ab1, A1, Bb1, B1,
-    C2, Db2, D2, Eb2, E2, F2, Gb2, G2, Ab2, A2, Bb2, B2,
-    C3, Db3, D3, Eb3, E3, F3, Gb3, G3, Ab3, A3, Bb3, B3,
-    C4, Db4, D4, Eb4, E4, F4, Gb4, G4, Ab4, A4, Bb4, B4,
-    C5, Db5, D5, Eb5, E5, F5, Gb5, G5, Ab5, A5, Bb5, B5,
-    C6, Db6, D6, Eb6, E6, F6, Gb6, G6, Ab6, A6, Bb6, B6,
-    C7, Db7, D7, Eb7, E7, F7, Gb7, G7, Ab7, A7, Bb7, B7,
+enum Direction {
+    Down,
+    Up,
 };
 
-const double note_frequency[] = {
-    /* Octave 1 */ 32.70, 34.65, 36.71, 38.89, 41.20, 43.65, 46.25, 49.00, 51.91, 55.00, 58.27, 61.74,
-    /* Octave 2 */ 65.41, 69.30, 73.42, 77.78, 82.41, 87.31, 92.50, 98.00, 103.83, 110.00, 116.54, 123.47,
-    /* Octave 3 */ 130.81, 138.59, 146.83, 155.56, 164.81, 174.61, 185.00, 196.00, 207.65, 220.00, 233.08, 246.94,
-    /* Octave 4 */ 261.63, 277.18, 293.66, 311.13, 329.63, 349.23, 369.99, 392.00, 415.30, 440.00, 466.16, 493.88,
-    /* Octave 5 */ 523.25, 554.37, 587.33, 622.25, 659.25, 698.46, 739.99, 783.99, 830.61, 880.00, 932.33, 987.77,
-    /* Octave 6 */ 1046.50, 1108.73, 1174.66, 1244.51, 1318.51, 1396.91, 1479.98, 1567.98, 1661.22, 1760.00, 1864.66, 1975.53,
-    /* Octave 7 */ 2093.00, 2217.46, 2349.32, 2489.02, 2637.02, 2793.83, 2959.96, 3135.96, 3322.44, 3520.00, 3729.31, 3951.07,
+enum Wave {
+    Sine,
+    Triangle,
+    Square,
+    Saw,
+    Noise,
 };
+
+constexpr const char* wave_strings[] = {
+    "Sine",
+    "Triangle",
+    "Square",
+    "Saw",
+    "Noise",
+};
+
+constexpr int first_wave = Sine;
+constexpr int last_wave = Noise;
+
+enum KeyColor {
+    White,
+    Black,
+};
+
+constexpr KeyColor key_pattern[] = {
+    White,
+    Black,
+    White,
+    Black,
+    White,
+    White,
+    Black,
+    White,
+    Black,
+    White,
+    Black,
+    White,
+};
+
+const Color note_pressed_color(64, 64, 255);
+const Color column_playing_color(128, 128, 255);
+
+constexpr int notes_per_octave = 12;
+constexpr int white_keys_per_octave = 7;
+constexpr int black_keys_per_octave = 5;
+constexpr int octave_min = 1;
+constexpr int octave_max = 7;
+
+// Equal temperament, A = 440Hz
+// We calculate note frequencies relative to A4:
+// 440.0 * pow(pow(2.0, 1.0 / 12.0), N)
+// Where N is the note distance from A.
+constexpr double note_frequencies[] = {
+    // Octave 1
+    32.703195662574764,
+    34.647828872108946,
+    36.708095989675876,
+    38.890872965260044,
+    41.203444614108669,
+    43.653528929125407,
+    46.249302838954222,
+    48.99942949771858,
+    51.913087197493056,
+    54.999999999999915,
+    58.270470189761156,
+    61.735412657015416,
+    // Octave 2
+    65.406391325149571,
+    69.295657744217934,
+    73.416191979351794,
+    77.781745930520117,
+    82.406889228217381,
+    87.307057858250872,
+    92.4986056779085,
+    97.998858995437217,
+    103.82617439498618,
+    109.99999999999989,
+    116.54094037952237,
+    123.4708253140309,
+    // Octave 3
+    130.8127826502992,
+    138.59131548843592,
+    146.83238395870364,
+    155.56349186104035,
+    164.81377845643485,
+    174.61411571650183,
+    184.99721135581709,
+    195.99771799087452,
+    207.65234878997245,
+    219.99999999999989,
+    233.08188075904488,
+    246.94165062806198,
+    // Octave 4
+    261.62556530059851,
+    277.18263097687202,
+    293.66476791740746,
+    311.12698372208081,
+    329.62755691286986,
+    349.22823143300383,
+    369.99442271163434,
+    391.99543598174927,
+    415.30469757994513,
+    440,
+    466.16376151808993,
+    493.88330125612413,
+    // Octave 5
+    523.25113060119736,
+    554.36526195374427,
+    587.32953583481526,
+    622.25396744416196,
+    659.25511382574007,
+    698.456462866008,
+    739.98884542326903,
+    783.99087196349899,
+    830.60939515989071,
+    880.00000000000034,
+    932.32752303618031,
+    987.76660251224882,
+    // Octave 6
+    1046.5022612023952,
+    1108.7305239074892,
+    1174.659071669631,
+    1244.5079348883246,
+    1318.5102276514808,
+    1396.9129257320169,
+    1479.977690846539,
+    1567.9817439269987,
+    1661.2187903197821,
+    1760.000000000002,
+    1864.6550460723618,
+    1975.5332050244986,
+    // Octave 7
+    2093.0045224047913,
+    2217.4610478149793,
+    2349.3181433392633,
+    2489.0158697766506,
+    2637.020455302963,
+    2793.8258514640347,
+    2959.9553816930793,
+    3135.9634878539991,
+    3322.437580639566,
+    3520.0000000000055,
+    3729.3100921447249,
+    3951.0664100489994,
+};
+constexpr int note_count = sizeof(note_frequencies) / sizeof(double);
 
 }
 

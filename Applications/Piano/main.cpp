@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2019-2020, William McPherson <willmcpherson2@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,8 +25,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Music.h"
-#include "PianoWidget.h"
+#include "AudioEngine.h"
+#include "MainWidget.h"
 #include <LibAudio/AClientConnection.h>
 #include <LibCore/CFile.h>
 #include <LibDraw/PNGLoader.h>
@@ -39,34 +40,36 @@
 int main(int argc, char** argv)
 {
     GApplication app(argc, argv);
+
     auto audio_client = AClientConnection::construct();
     audio_client->handshake();
 
+    AudioEngine audio_engine;
+
     auto window = GWindow::construct();
+    auto main_widget = MainWidget::construct(audio_engine);
+    window->set_main_widget(main_widget);
     window->set_title("Piano");
-    window->set_rect(100, 100, 512, 512);
-
-    auto piano_widget = PianoWidget::construct();
-    window->set_main_widget(piano_widget);
-    window->show();
+    window->set_rect(90, 90, 840, 600);
     window->set_icon(load_png("/res/icons/16x16/app-piano.png"));
+    window->show();
 
-    LibThread::Thread sound_thread([piano_widget = piano_widget.ptr()] {
+    LibThread::Thread audio_thread([&] {
         auto audio = CFile::construct("/dev/audio");
         if (!audio->open(CIODevice::WriteOnly)) {
             dbgprintf("Can't open audio device: %s", audio->error_string());
             return 1;
         }
 
+        FixedArray<Sample> buffer(sample_count);
         for (;;) {
-            u8 buffer[4096];
-            piano_widget->fill_audio_buffer(buffer, sizeof(buffer));
-            audio->write(buffer, sizeof(buffer));
-            CEventLoop::current().post_event(*piano_widget, make<CCustomEvent>(0));
+            audio_engine.fill_buffer(buffer);
+            audio->write(reinterpret_cast<u8*>(buffer.data()), buffer_size);
+            CEventLoop::current().post_event(*main_widget, make<CCustomEvent>(0));
             CEventLoop::wake();
         }
     });
-    sound_thread.start();
+    audio_thread.start();
 
     auto menubar = make<GMenuBar>();
 
