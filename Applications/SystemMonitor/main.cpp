@@ -103,6 +103,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (unveil("/dev", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     unveil(nullptr, nullptr);
 
     auto window = GWindow::construct();
