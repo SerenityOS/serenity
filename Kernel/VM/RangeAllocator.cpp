@@ -151,6 +151,8 @@ Range RangeAllocator::allocate_specific(VirtualAddress base, size_t size)
 void RangeAllocator::deallocate(Range range)
 {
     ASSERT(m_total_range.contains(range));
+    ASSERT(range.size());
+    ASSERT(range.base() < range.end());
 
 #ifdef VRA_DEBUG
     dbgprintf("VRA: Deallocate: %x(%u)\n", range.base().get(), range.size());
