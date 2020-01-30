@@ -458,6 +458,9 @@ int Process::sys$munmap(void* addr, size_t size)
 {
     REQUIRE_PROMISE(stdio);
 
+    if (!size)
+        return -EINVAL;
+
     if (!is_user_range(VirtualAddress(addr), size))
         return -EFAULT;
 
@@ -498,6 +501,9 @@ int Process::sys$munmap(void* addr, size_t size)
 int Process::sys$mprotect(void* addr, size_t size, int prot)
 {
     REQUIRE_PROMISE(stdio);
+
+    if (!size)
+        return -EINVAL;
 
     if (!is_user_range(VirtualAddress(addr), size))
         return -EFAULT;
@@ -565,6 +571,9 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
 int Process::sys$madvise(void* address, size_t size, int advice)
 {
     REQUIRE_PROMISE(stdio);
+
+    if (!size)
+        return -EINVAL;
 
     if (!is_user_range(VirtualAddress(address), size))
         return -EFAULT;
