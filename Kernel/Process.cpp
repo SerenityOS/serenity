@@ -332,6 +332,7 @@ Vector<Region*, 2> Process::split_region_around_range(const Region& source_regio
 {
     Range old_region_range = source_region.range();
     auto remaining_ranges_after_unmap = old_region_range.carve(desired_range);
+
     ASSERT(!remaining_ranges_after_unmap.is_empty());
     auto make_replacement_region = [&](const Range& new_range) -> Region& {
         ASSERT(new_range.base() >= old_region_range.base());
@@ -360,6 +361,9 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* user_params)
     int flags = params.flags;
     int fd = params.fd;
     int offset = params.offset;
+
+    if (!is_user_range(VirtualAddress(addr), size))
+        return (void*)-EFAULT;
 
     String name;
     if (params.name.characters) {
@@ -453,6 +457,10 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* user_params)
 int Process::sys$munmap(void* addr, size_t size)
 {
     REQUIRE_PROMISE(stdio);
+
+    if (!is_user_range(VirtualAddress(addr), size))
+        return -EFAULT;
+
     Range range_to_unmap { VirtualAddress(addr), size };
     if (auto* whole_region = region_from_range(range_to_unmap)) {
         if (!whole_region->is_mmap())
@@ -490,6 +498,10 @@ int Process::sys$munmap(void* addr, size_t size)
 int Process::sys$mprotect(void* addr, size_t size, int prot)
 {
     REQUIRE_PROMISE(stdio);
+
+    if (!is_user_range(VirtualAddress(addr), size))
+        return -EFAULT;
+
     Range range_to_mprotect = { VirtualAddress(addr), size };
 
     if (auto* whole_region = region_from_range(range_to_mprotect)) {
@@ -553,6 +565,10 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
 int Process::sys$madvise(void* address, size_t size, int advice)
 {
     REQUIRE_PROMISE(stdio);
+
+    if (!is_user_range(VirtualAddress(address), size))
+        return -EFAULT;
+
     auto* region = region_from_range({ VirtualAddress(address), size });
     if (!region)
         return -EINVAL;
