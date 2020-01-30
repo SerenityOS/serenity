@@ -29,6 +29,7 @@
 #include <AK/Function.h>
 #include <AK/String.h>
 #include <LibCore/CObject.h>
+#include <pthread.h>
 
 namespace LibThread {
 
@@ -40,11 +41,11 @@ public:
     virtual ~Thread();
 
     void start();
-    void quit(int code = 0);
+    void quit(void *code = 0);
 
 private:
     Function<int()> m_action;
-    int m_tid { -1 };
+    pthread_t m_tid;
     String m_thread_name;
 };
 
