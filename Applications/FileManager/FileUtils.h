@@ -26,6 +26,7 @@
 
 #pragma once
 #include <AK/String.h>
+#include <sys/stat.h>
 
 namespace FileUtils {
 
