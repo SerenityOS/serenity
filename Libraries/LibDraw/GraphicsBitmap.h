@@ -102,6 +102,8 @@ public:
     template<Format>
     Color get_pixel(int x, int y) const
     {
+        (void)x;
+        (void)y;
         ASSERT_NOT_REACHED();
     }
 
@@ -115,6 +117,8 @@ public:
     template<Format>
     void set_pixel(int x, int y, Color)
     {
+        (void)x;
+        (void)y;
         ASSERT_NOT_REACHED();
     }
 
