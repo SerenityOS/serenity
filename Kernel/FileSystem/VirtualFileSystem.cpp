@@ -729,18 +729,21 @@ KResult VFS::validate_path_against_process_veil(StringView path, int options)
     auto* unveiled_path = find_matching_unveiled_path(path);
     if (!unveiled_path) {
         dbg() << "Rejecting path '" << path << "' since it hasn't been unveiled.";
+        dump_backtrace();
         return KResult(-ENOENT);
     }
 
     if (options & O_CREAT) {
         if (!(unveiled_path->permissions & UnveiledPath::Access::CreateOrRemove)) {
             dbg() << "Rejecting path '" << path << "' since it hasn't been unveiled with 'c' permission.";
+            dump_backtrace();
             return KResult(-EACCES);
         }
     }
     if (options & O_UNLINK_INTERNAL) {
         if (!(unveiled_path->permissions & UnveiledPath::Access::CreateOrRemove)) {
             dbg() << "Rejecting path '" << path << "' for unlink since it hasn't been unveiled with 'c' permission.";
+            dump_backtrace();
             return KResult(-EACCES);
         }
         return KSuccess;
@@ -748,18 +751,21 @@ KResult VFS::validate_path_against_process_veil(StringView path, int options)
     if (options & O_RDONLY) {
         if (!(unveiled_path->permissions & UnveiledPath::Access::Read)) {
             dbg() << "Rejecting path '" << path << "' since it hasn't been unveiled with 'r' permission.";
+            dump_backtrace();
             return KResult(-EACCES);
         }
     }
     if (options & O_WRONLY) {
         if (!(unveiled_path->permissions & UnveiledPath::Access::Write)) {
             dbg() << "Rejecting path '" << path << "' since it hasn't been unveiled with 'w' permission.";
+            dump_backtrace();
             return KResult(-EACCES);
         }
     }
     if (options & O_EXEC) {
         if (!(unveiled_path->permissions & UnveiledPath::Access::Execute)) {
             dbg() << "Rejecting path '" << path << "' since it hasn't been unveiled with 'x' permission.";
+            dump_backtrace();
             return KResult(-EACCES);
         }
     }
