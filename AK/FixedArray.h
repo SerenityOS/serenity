@@ -71,6 +71,15 @@ public:
 
     size_t size() const { return m_size; }
 
+    T* data()
+    {
+        return m_elements;
+    }
+    const T* data() const
+    {
+        return m_elements;
+    }
+
     T& operator[](size_t index)
     {
         ASSERT(index < m_size);
