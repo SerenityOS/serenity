@@ -57,6 +57,8 @@ public:
 
     bool contains(VirtualAddress base, size_t size) const
     {
+        if (base.offset(size) < base)
+            return false;
         return base >= m_base && base.offset(size) <= end();
     }
 
