@@ -37,7 +37,7 @@ LibThread::Thread::Thread(Function<int()> action, StringView thread_name)
 
 LibThread::Thread::~Thread()
 {
-    if (m_tid != -1) {
+    if (m_tid) {
         dbg() << "trying to destroy a running thread!";
         ASSERT_NOT_REACHED();
     }
@@ -50,8 +50,8 @@ void LibThread::Thread::start()
         nullptr,
         [](void* arg) -> void* {
             Thread* self = static_cast<Thread*>(arg);
-            int exit_code = self->m_action();
-            self->m_tid = -1;
+            size_t exit_code = self->m_action();
+            self->m_tid = 0;
             pthread_exit((void*)exit_code);
             return (void*)exit_code;
         },
@@ -65,10 +65,10 @@ void LibThread::Thread::start()
     dbg() << "Started a thread, tid = " << m_tid;
 }
 
-void LibThread::Thread::quit(int code)
+void LibThread::Thread::quit(void *code)
 {
-    ASSERT(m_tid == gettid());
+    ASSERT(m_tid == pthread_self());
 
-    m_tid = -1;
-    pthread_exit((void*)code);
+    m_tid = 0;
+    pthread_exit(code);
 }
