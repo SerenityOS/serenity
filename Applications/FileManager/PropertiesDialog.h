@@ -91,7 +91,6 @@ private:
     String m_name;
     String m_path;
     mode_t m_mode;
-    int m_row;
     bool m_permissions_dirty { false };
     bool m_name_dirty { false };
 };
