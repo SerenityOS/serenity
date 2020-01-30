@@ -62,6 +62,11 @@ const LogStream& operator<<(const LogStream& stream, u64 value)
     return stream << String::number(value);
 }
 
+const LogStream& operator<<(const LogStream& stream, unsigned long value)
+{
+    return stream << String::number(value);
+}
+
 const LogStream& operator<<(const LogStream& stream, const void* value)
 {
     return stream << String::format("%p", value);

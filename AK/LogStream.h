@@ -88,17 +88,9 @@ const LogStream& operator<<(const LogStream&, const String&);
 const LogStream& operator<<(const LogStream&, const StringView&);
 const LogStream& operator<<(const LogStream&, i32);
 const LogStream& operator<<(const LogStream&, u32);
+const LogStream& operator<<(const LogStream&, i64);
 const LogStream& operator<<(const LogStream&, u64);
-
-#ifdef __serenity__
-inline const LogStream& operator<<(const LogStream& stream, size_t value)
-{
-    if constexpr (sizeof(size_t) == 4)
-        return stream << (u32)value;
-    else
-        return stream << (u64)value;
-}
-#endif
+const LogStream& operator<<(const LogStream&, unsigned long);
 
 const LogStream& operator<<(const LogStream&, const void*);
 

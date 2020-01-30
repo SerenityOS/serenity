@@ -82,6 +82,11 @@ typedef int8_t i8;
 typedef int16_t i16;
 typedef int32_t i32;
 typedef int64_t i64;
+
+#ifdef __ptrdiff_t
+typedef __PTRDIFF_TYPE__ __ptrdiff_t;
+#endif
+
 #endif
 
 constexpr unsigned KB = 1024;

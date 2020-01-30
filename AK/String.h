@@ -234,13 +234,16 @@ public:
     static String number(u64);
     static String number(u32);
     static String number(i32);
+    static String number(i64);
 
-#ifdef __serenity__
     static String number(size_t n)
     {
-        return number((u32)n);
+        if constexpr(sizeof(size_t) == 4)
+            return number((u32)n);
+        else if constexpr(sizeof(size_t) == 8)
+            return number((u64)n);
+        ASSERT_NOT_REACHED();
     }
-#endif
 
     StringView view() const
     {
