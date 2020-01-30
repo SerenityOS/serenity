@@ -84,7 +84,6 @@ private:
     bool m_in_drag_select { false };
     int m_selection_start { -1 };
     int m_selection_end { -1 };
-    int m_hover_pos { -1 };
     HashMap<int, u8> m_tracked_changes;
     int m_position { 0 };
     int m_byte_position { 0 }; // 0 or 1
