@@ -64,6 +64,20 @@ public:
         return *this;
     }
 
+    IEncoder& operator<<(u64 value)
+    {
+        m_buffer.ensure_capacity(m_buffer.size() + 8);
+        m_buffer.unchecked_append((u8)value);
+        m_buffer.unchecked_append((u8)(value >> 8));
+        m_buffer.unchecked_append((u8)(value >> 16));
+        m_buffer.unchecked_append((u8)(value >> 24));
+        m_buffer.unchecked_append((u8)(value >> 32));
+        m_buffer.unchecked_append((u8)(value >> 40));
+        m_buffer.unchecked_append((u8)(value >> 48));
+        m_buffer.unchecked_append((u8)(value >> 56));
+        return *this;
+    }
+
     IEncoder& operator<<(i8 value)
     {
         m_buffer.append((u8)value);
@@ -88,10 +102,37 @@ public:
         return *this;
     }
 
-#ifdef __serenity__
+    IEncoder& operator<<(i64 value)
+    {
+        m_buffer.ensure_capacity(m_buffer.size() + 8);
+        m_buffer.unchecked_append((u8)value);
+        m_buffer.unchecked_append((u8)(value >> 8));
+        m_buffer.unchecked_append((u8)(value >> 16));
+        m_buffer.unchecked_append((u8)(value >> 24));
+        m_buffer.unchecked_append((u8)(value >> 32));
+        m_buffer.unchecked_append((u8)(value >> 40));
+        m_buffer.unchecked_append((u8)(value >> 48));
+        m_buffer.unchecked_append((u8)(value >> 56));
+        return *this;
+    }
+
     IEncoder& operator<<(size_t value)
     {
-        return *this << (u32)value;
+        if constexpr(sizeof(size_t) == 4)
+            return *this << (u32)value;
+        else if constexpr(sizeof(size_t) == 8)
+            return *this << (u64)value;
+        ASSERT_NOT_REACHED();
+    }
+
+#ifndef __i386__
+    IEncoder& operator<<(ssize_t value)
+    {
+        if constexpr(sizeof(ssize_t) == 4)
+            return *this << (i32)value;
+        else if constexpr(sizeof(ssize_t) == 8)
+            return *this << (i64)value;
+        ASSERT_NOT_REACHED();
     }
 #endif
 
