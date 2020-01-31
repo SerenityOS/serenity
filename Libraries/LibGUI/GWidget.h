@@ -332,7 +332,6 @@ private:
     bool m_visible { true };
     bool m_greedy_for_hits { false };
     bool m_enabled { true };
-    bool m_layout_dirty { false };
     bool m_updates_enabled { true };
 
     NonnullRefPtr<PaletteImpl> m_palette;
