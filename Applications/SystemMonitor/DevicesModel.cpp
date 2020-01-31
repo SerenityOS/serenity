@@ -158,11 +158,11 @@ void DevicesModel::update()
             }
             if (!S_ISBLK(statbuf.st_mode) && !S_ISCHR(statbuf.st_mode))
                 continue;
-            unsigned major = ::major(statbuf.st_rdev);
-            unsigned minor = ::minor(statbuf.st_rdev);
+            unsigned _major = major(statbuf.st_rdev);
+            unsigned _minor = minor(statbuf.st_rdev);
 
-            auto it = m_devices.find([major, minor](auto& device_info) {
-                return device_info.major == major && device_info.minor == minor;
+            auto it = m_devices.find([_major, _minor](auto& device_info) {
+                return device_info.major == _major && device_info.minor == _minor;
             });
             if (it != m_devices.end()) {
                 (*it).path = move(path);
