@@ -89,7 +89,6 @@ static const int s_checked_bitmap_height = 9;
 static const int s_submenu_arrow_bitmap_width = 9;
 static const int s_submenu_arrow_bitmap_height = 9;
 static const int s_item_icon_width = 16;
-static const int s_checkbox_or_icon_padding = 6;
 static const int s_stripe_width = 23;
 
 int WSMenu::content_width() const
