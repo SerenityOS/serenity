@@ -127,10 +127,8 @@ bool copy_file(const String& src_path, const String& dst_path, const struct stat
         if (errno != EISDIR) {
             return false;
         }
-        StringBuilder builder;
-        builder.appendf("%s/%s", dst_path, FileSystemPath(src_path).basename());
-        String dst_path = builder.to_string();
-        dst_fd = creat(dst_path.characters(), 0666);
+        auto dst_dir_path = String::format("%s/%s", dst_path.characters(), FileSystemPath(src_path).basename().characters());
+        dst_fd = creat(dst_dir_path.characters(), 0666);
         if (dst_fd < 0) {
             return false;
         }
