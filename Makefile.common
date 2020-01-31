@@ -40,6 +40,7 @@ ifneq ($(USE_HOST_CXX),)
     AS = as
     LINK = ld
     OBJ_SUFFIX ?= .host
+    ARCH = $(shell arch -s)
 else
     TOOLCHAIN_PATH = $(SERENITY_BASE_DIR)/Toolchain/Local/bin
     CXX = $(PRE_CXX) $(TOOLCHAIN_PATH)/i686-pc-serenity-g++
@@ -48,6 +49,7 @@ else
     LINK = $(TOOLCHAIN_PATH)/i686-pc-serenity-ld
     RANLIB = $(TOOLCHAIN_PATH)/i686-pc-serenity-ranlib
     AR = $(TOOLCHAIN_PATH)/i686-pc-serenity-ar
+    ARCH = i386
 
     DEFINES += -DDEBUG
 
