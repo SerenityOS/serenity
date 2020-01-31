@@ -25,6 +25,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/LogStream.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/wait.h>
