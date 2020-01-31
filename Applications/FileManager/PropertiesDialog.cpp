@@ -31,6 +31,7 @@
 #include <LibGUI/GFilePicker.h>
 #include <LibGUI/GMessageBox.h>
 #include <LibGUI/GTabWidget.h>
+#include <limits.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <unistd.h>
