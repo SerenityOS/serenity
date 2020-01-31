@@ -136,6 +136,19 @@ void GColumnsView::paint_event(GPaintEvent& event)
     }
 }
 
+void GColumnsView::select_all()
+{
+    selection().clear();
+    for (int column_index = 0; column_index < m_columns.size(); ++column_index) {
+        for (int item_index = 0; item_index < model()->row_count(m_columns[column_index].parent_index); item_index++) {
+            auto& column = m_columns[column_index];
+            auto index = model()->index(item_index, m_model_column, column.parent_index);
+            selection().add(index);
+        }
+        update();
+    }
+}
+
 void GColumnsView::push_column(GModelIndex& parent_index)
 {
     ASSERT(model());

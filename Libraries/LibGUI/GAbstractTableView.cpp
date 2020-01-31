@@ -248,6 +248,15 @@ int GAbstractTableView::column_width(int column_index) const
     return column_data.width;
 }
 
+void GAbstractTableView::select_all()
+{
+    selection().clear();
+    for (int item_index = 0; item_index < item_count(); ++item_index) {
+        auto index = model()->index(item_index, item_index);
+        selection().add(index);
+    }
+}
+
 void GAbstractTableView::mousemove_event(GMouseEvent& event)
 {
     if (!model())

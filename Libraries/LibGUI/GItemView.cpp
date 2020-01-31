@@ -136,6 +136,15 @@ GModelIndex GItemView::index_at_event_position(const Point& position) const
     return {};
 }
 
+void GItemView::select_all()
+{
+    selection().clear();
+    for (int item_index = 0; item_index < item_count(); ++item_index) {
+        auto index = model()->index(item_index, model_column());
+        selection().add(index);
+    }
+}
+
 void GItemView::mousedown_event(GMouseEvent& event)
 {
     if (!model())

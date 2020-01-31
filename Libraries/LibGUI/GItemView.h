@@ -50,6 +50,7 @@ public:
 
     virtual GModelIndex index_at_event_position(const Point&) const override;
 
+    void select_all() override;
 private:
     explicit GItemView(GWidget* parent);
 

@@ -71,6 +71,7 @@ public:
     virtual GModelIndex index_at_event_position(const Point&, bool& is_toggle) const;
     virtual GModelIndex index_at_event_position(const Point&) const override;
 
+    void select_all() override;
 protected:
     virtual ~GAbstractTableView() override;
     explicit GAbstractTableView(GWidget* parent);
