@@ -28,9 +28,6 @@
 #include <AK/JsonObject.h>
 #include <AK/NeverDestroyed.h>
 #include <AK/SharedBuffer.h>
-#include <LibC/stdio.h>
-#include <LibC/stdlib.h>
-#include <LibC/unistd.h>
 #include <LibDraw/GraphicsBitmap.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
@@ -39,6 +36,9 @@
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
 #include <LibGUI/GWindowServerConnection.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 //#define UPDATE_COALESCING_DEBUG
 
