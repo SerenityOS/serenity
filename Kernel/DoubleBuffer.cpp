@@ -59,19 +59,21 @@ ssize_t DoubleBuffer::write(const u8* data, ssize_t size)
 {
     if (!size)
         return 0;
+    ASSERT(size > 0);
     LOCKER(m_lock);
-    ASSERT(size <= (ssize_t)space_for_writing());
+    ssize_t bytes_to_write = min(static_cast<size_t>(size), m_space_for_writing);
     u8* write_ptr = m_write_buffer->data + m_write_buffer->size;
-    m_write_buffer->size += size;
+    m_write_buffer->size += bytes_to_write;
     compute_lockfree_metadata();
-    memcpy(write_ptr, data, size);
-    return size;
+    memcpy(write_ptr, data, bytes_to_write);
+    return bytes_to_write;
 }
 
 ssize_t DoubleBuffer::read(u8* data, ssize_t size)
 {
     if (!size)
         return 0;
+    ASSERT(size > 0);
     LOCKER(m_lock);
     if (m_read_buffer_index >= m_read_buffer->size && m_write_buffer->size != 0)
         flip();
