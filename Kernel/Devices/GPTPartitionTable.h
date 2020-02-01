@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/RefPtr.h>
+#include <AK/Types.h>
 #include <AK/Vector.h>
 #include <Kernel/Devices/DiskDevice.h>
 #include <Kernel/Devices/DiskPartition.h>
@@ -35,7 +36,8 @@
 #define GPT_SIGNATURE 0x20494645
 #define BytesPerSector 512
 
-struct GPTPartitionEntry {
+struct [[gnu::packed]] GPTPartitionEntry
+{
     u32 partition_guid[4];
     u32 unique_guid[4];
 
@@ -44,9 +46,10 @@ struct GPTPartitionEntry {
 
     u64 attributes;
     u8 partition_name[72];
-} __attribute__((packed));
+};
 
-struct GPTPartitionHeader {
+struct [[gnu::packed]] GPTPartitionHeader
+{
     u32 sig[2];
     u32 revision;
     u32 header_size;
@@ -65,7 +68,7 @@ struct GPTPartitionHeader {
     u32 entries_count;
     u32 partition_entry_size;
     u32 crc32_entries_array;
-} __attribute__((packed));
+};
 
 class GPTPartitionTable {
 
