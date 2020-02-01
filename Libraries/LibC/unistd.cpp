@@ -111,13 +111,10 @@ int execve(const char* filename, char* const argv[], char* const envp[])
 
 int execvpe(const char* filename, char* const argv[], char* const envp[])
 {
+    if (strchr(filename, '/'))
+        return execve(filename, argv, envp);
+
     ScopedValueRollback errno_rollback(errno);
-    int rc = execve(filename, argv, envp);
-    if (rc < 0 && errno != ENOENT) {
-        errno_rollback.set_override_rollback_value(errno);
-        dbg() << "execvpe() failed on first with" << strerror(errno);
-        return rc;
-    }
     String path = getenv("PATH");
     if (path.is_empty())
         path = "/bin:/usr/bin";
