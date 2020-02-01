@@ -166,7 +166,7 @@ void* kmalloc_impl(size_t size)
                     sum_alloc += a->nchunk * CHUNK_SIZE;
                     sum_free -= a->nchunk * CHUNK_SIZE;
 #ifdef SANITIZE_KMALLOC
-                    memset(ptr, 0xbb, (a->nchunk * CHUNK_SIZE) - sizeof(allocation_t));
+                    memset(ptr, KMALLOC_SCRUB_BYTE, (a->nchunk * CHUNK_SIZE) - sizeof(allocation_t));
 #endif
                     return ptr;
                 }
@@ -199,7 +199,7 @@ void kfree(void* ptr)
     sum_free += a->nchunk * CHUNK_SIZE;
 
 #ifdef SANITIZE_KMALLOC
-    memset(a, 0xaa, a->nchunk * CHUNK_SIZE);
+    memset(a, KFREE_SCRUB_BYTE, a->nchunk * CHUNK_SIZE);
 #endif
 }
 
