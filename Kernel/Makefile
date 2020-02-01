@@ -118,7 +118,7 @@ KERNEL = 1
 
 PROGRAM = kernel
 
-SUBPROJECT_CXXFLAGS += -pie -fPIE -ffreestanding -mno-80387 -mno-mmx -mno-sse -mno-sse2 -fno-asynchronous-unwind-tables
+SUBPROJECT_CXXFLAGS += -pie -fPIE -ffreestanding -fbuiltin -mno-80387 -mno-mmx -mno-sse -mno-sse2 -fno-asynchronous-unwind-tables
 SUBPROJECT_CXXFLAGS += -nostdlib -nostdinc -nostdinc++ -g3
 SUBPROJECT_CXXFLAGS += -I../Toolchain/Local/i686-pc-serenity/include/c++/9.2.0/
 SUBPROJECT_CXXFLAGS += -I../Toolchain/Local/i686-pc-serenity/include/c++/9.2.0/i686-pc-serenity/
