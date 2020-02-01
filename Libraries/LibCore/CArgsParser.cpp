@@ -26,8 +26,8 @@
 
 #include "CArgsParser.h"
 #include <AK/StringBuilder.h>
-
 #include <getopt.h>
+#include <limits.h>
 #include <stdio.h>
 
 CArgsParser::CArgsParser()
