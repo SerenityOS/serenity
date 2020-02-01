@@ -63,6 +63,15 @@ bool MBRPartitionTable::initialize()
     return true;
 }
 
+bool MBRPartitionTable::contains_ebr() const
+{
+    for (int i = 0; i < 4; i++) {
+        if (header().entry[i].type == EBR_CHS_CONTAINER || header().entry[i].type == EBR_LBA_CONTAINER)
+            return true;
+    }
+    return false;
+}
+
 bool MBRPartitionTable::is_protective_mbr() const
 {
     return header().entry[0].type == MBR_PROTECTIVE;
