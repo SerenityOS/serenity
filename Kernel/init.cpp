@@ -42,6 +42,7 @@
 #include <Kernel/Devices/BXVGADevice.h>
 #include <Kernel/Devices/DebugLogDevice.h>
 #include <Kernel/Devices/DiskPartition.h>
+#include <Kernel/Devices/EBRPartitionTable.h>
 #include <Kernel/Devices/FloppyDiskDevice.h>
 #include <Kernel/Devices/FullDevice.h>
 #include <Kernel/Devices/GPTPartitionTable.h>
@@ -273,16 +274,30 @@ void init_stage2()
             root_dev = *partition;
         } else {
             dbgprintf("MBR Partitioned Storage Detected!\n");
-            if (partition_number < 1 || partition_number > 4) {
-                kprintf("init_stage2: invalid partition number %d; expected 1 to 4\n", partition_number);
-                hang();
+            if (mbr.contains_ebr()) {
+                EBRPartitionTable ebr(root_dev);
+                if (!ebr.initialize()) {
+                    kprintf("init_stage2: couldn't read EBR from disk\n");
+                    hang();
+                }
+                auto partition = ebr.partition(partition_number);
+                if (!partition) {
+                    kprintf("init_stage2: couldn't get partition %d\n", partition_number);
+                    hang();
+                }
+                root_dev = *partition;
+            } else {
+                if (partition_number < 1 || partition_number > 4) {
+                    kprintf("init_stage2: invalid partition number %d; expected 1 to 4\n", partition_number);
+                    hang();
+                }
+                auto partition = mbr.partition(partition_number);
+                if (!partition) {
+                    kprintf("init_stage2: couldn't get partition %d\n", partition_number);
+                    hang();
+                }
+                root_dev = *partition;
             }
-            auto partition = mbr.partition(partition_number);
-            if (!partition) {
-                kprintf("init_stage2: couldn't get partition %d\n", partition_number);
-                hang();
-            }
-            root_dev = *partition;
         }
     }
 
