@@ -41,6 +41,7 @@ extern Thread* current;
 extern Thread* g_finalizer;
 extern Thread* g_colonel;
 extern WaitQueue* g_finalizer_wait_queue;
+extern bool g_finalizer_has_work;
 extern u64 g_uptime;
 extern SchedulerData* g_scheduler_data;
 

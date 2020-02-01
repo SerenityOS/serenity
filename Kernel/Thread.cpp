@@ -37,6 +37,7 @@
 #include <LibELF/ELFLoader.h>
 
 //#define SIGNAL_DEBUG
+//#define THREAD_DEBUG
 
 static FPUState s_clean_fpu_state;
 
@@ -82,7 +83,9 @@ Thread::Thread(Process& process)
         m_tid = Process::allocate_pid();
     }
     process.m_thread_count++;
+#ifdef THREAD_DEBUG
     dbg() << "Created new thread " << process.name() << "(" << process.pid() << ":" << m_tid << ")";
+#endif
     set_default_signal_dispositions();
     m_fpu_state = (FPUState*)kmalloc_aligned(sizeof(FPUState), 16);
     memcpy(m_fpu_state, &s_clean_fpu_state, sizeof(FPUState));
@@ -163,7 +166,9 @@ void Thread::unblock()
 void Thread::set_should_die()
 {
     if (m_should_die) {
-        dbgprintf("Should already die (%u)\n", m_tid);
+#ifdef THREAD_DEBUG
+        dbg() << *this << " Should already die";
+#endif
         return;
     }
     InterruptDisabler disabler;
@@ -275,7 +280,9 @@ void Thread::finalize()
 {
     ASSERT(current == g_finalizer);
 
+#ifdef THREAD_DEBUG
     dbg() << "Finalizing thread " << *this;
+#endif
     set_state(Thread::State::Dead);
 
     if (m_joiner) {
@@ -320,21 +327,25 @@ bool Thread::tick()
     return --m_ticks_left;
 }
 
-void Thread::send_signal(u8 signal, Process* sender)
+void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
 {
     ASSERT(signal < 32);
     InterruptDisabler disabler;
 
     // FIXME: Figure out what to do for masked signals. Should we also ignore them here?
     if (should_ignore_signal(signal)) {
+#ifdef SIGNAL_DEBUG
         dbg() << "signal " << signal << " was ignored by " << process();
+#endif
         return;
     }
 
+#ifdef SIGNAL_DEBUG
     if (sender)
         dbgprintf("signal: %s(%u) sent %d to %s(%u)\n", sender->name().characters(), sender->pid(), signal, process().name().characters(), pid());
     else
         dbgprintf("signal: kernel sent %d to %s(%u)\n", signal, process().name().characters(), pid());
+#endif
 
     m_pending_signals |= 1 << (signal - 1);
 }
@@ -707,8 +718,10 @@ void Thread::set_state(State new_state)
         Scheduler::update_state_for_thread(*this);
     }
 
-    if (new_state == Dying)
+    if (new_state == Dying) {
+        g_finalizer_has_work = true;
         g_finalizer_wait_queue->wake_all();
+    }
 }
 
 String Thread::backtrace(ProcessInspectionHandle&) const

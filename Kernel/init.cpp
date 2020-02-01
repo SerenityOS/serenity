@@ -189,7 +189,13 @@ extern "C" [[noreturn]] void init()
     Process::create_kernel_process(g_finalizer, "Finalizer", [] {
         current->set_priority(THREAD_PRIORITY_LOW);
         for (;;) {
-            current->wait_on(*g_finalizer_wait_queue);
+            {
+                InterruptDisabler disabler;
+                if (!g_finalizer_has_work)
+                    current->wait_on(*g_finalizer_wait_queue);
+                ASSERT(g_finalizer_has_work);
+                g_finalizer_has_work = false;
+            }
             Thread::finalize_dying_threads();
         }
     });

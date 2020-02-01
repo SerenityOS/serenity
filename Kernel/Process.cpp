@@ -73,6 +73,7 @@
 #include <LibC/signal_numbers.h>
 #include <LibELF/ELFLoader.h>
 
+//#define PROCESS_DEBUG
 //#define DEBUG_POLL_SELECT
 //#define DEBUG_IO
 //#define TASK_DEBUG
@@ -1295,7 +1296,9 @@ Process::Process(Thread*& first_thread, const String& name, uid_t uid, gid_t gid
     , m_tty(tty)
     , m_ppid(ppid)
 {
+#ifdef PROCESS_DEBUG
     dbg() << "Created new process " << m_name << "(" << m_pid << ")";
+#endif
 
     m_page_directory = PageDirectory::create_for_userspace(*this, fork_parent ? &fork_parent->page_directory().range_allocator() : nullptr);
 #ifdef MM_DEBUG
@@ -2278,7 +2281,9 @@ int Process::reap(Process& process)
             }
         }
 
+#ifdef PROCESS_DEBUG
         dbg() << "Reaping process " << process;
+#endif
         ASSERT(process.is_dead());
         g_processes->remove(&process);
     }
@@ -2289,7 +2294,10 @@ int Process::reap(Process& process)
 pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
 {
     REQUIRE_PROMISE(stdio);
+
+#ifdef PROCESS_DEBUG
     dbg() << "sys$waitpid(" << waitee << ", " << wstatus << ", " << options << ")";
+#endif
 
     if (!options) {
         // FIXME: This can't be right.. can it? Figure out how this should actually work.
@@ -2928,7 +2936,9 @@ int Process::sys$chown(const Syscall::SC_chown_params* user_params)
 void Process::finalize()
 {
     ASSERT(current == g_finalizer);
+#ifdef PROCESS_DEBUG
     dbg() << "Finalizing process " << *this;
+#endif
 
     m_fds.clear();
     m_tty = nullptr;
