@@ -25,7 +25,7 @@
  */
 
 #include <AK/Utf8View.h>
-#include <LibHTML/CSS/PropertyID.h>
+#include <LibHTML/CSS_PropertyID.h>
 #include <LibHTML/CSS/StyleSheet.h>
 #include <LibHTML/DOM/Comment.h>
 #include <LibHTML/DOM/Document.h>

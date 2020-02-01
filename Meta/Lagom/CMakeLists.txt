@@ -1,7 +1,11 @@
 cmake_minimum_required (VERSION 3.0)
 project (Lagom)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -Wall -Wextra -Werror -std=c++17 -fPIC -g")
+set(CMAKE_CXX_COMPILER g++)
+set(CMAKE_CXX_FLAGS "")
+unset(CMAKE_SYSROOT)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -Wall -Wextra -Werror -std=c++17")
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wconsumed")
@@ -11,22 +15,8 @@ endif()
 
 file(GLOB AK_SOURCES "../../AK/*.cpp")
 file(GLOB LIBCORE_SOURCES "../../Libraries/LibCore/*.cpp")
-file(GLOB LIBIPC_SOURCES "../../Libraries/LibIPC/*.cpp")
 
-set(SOURCES ${AK_SOURCES} ${LIBCORE_SOURCES} ${LIBIPC_SOURCES})
+set(SOURCES ${AK_SOURCES} ${LIBCORE_SOURCES})
 
-include_directories (../../)
-include_directories (../../Libraries/)
 add_library(lagom ${SOURCES})
-
-add_executable(TestApp TestApp.cpp)
-target_link_libraries(TestApp lagom)
-target_link_libraries(TestApp stdc++)
-
-#add_executable(SimpleIPCClient SimpleIPCClient.cpp)
-#target_link_libraries(SimpleIPCClient lagom)
-#target_link_libraries(SimpleIPCClient stdc++)
-
-#add_executable(SimpleIPCServer SimpleIPCServer.cpp)
-#target_link_libraries(SimpleIPCServer lagom)
-#target_link_libraries(SimpleIPCServer stdc++)
+target_include_directories(lagom PUBLIC ../../ ../../Libraries)

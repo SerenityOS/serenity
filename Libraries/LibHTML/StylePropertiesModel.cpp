@@ -25,7 +25,7 @@
  */
 
 #include "StylePropertiesModel.h"
-#include <LibHTML/CSS/PropertyID.h>
+#include <LibHTML/CSS_PropertyID.h>
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/CSS/StyleProperties.h>
 

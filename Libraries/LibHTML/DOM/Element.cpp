@@ -25,7 +25,7 @@
  */
 
 #include <LibHTML/CSS/StyleResolver.h>
-#include <LibHTML/CSS/PropertyID.h>
+#include <LibHTML/CSS_PropertyID.h>
 #include <LibHTML/CSS/Length.h>
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/DOM/Element.h>

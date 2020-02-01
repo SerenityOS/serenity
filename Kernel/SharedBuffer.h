@@ -26,6 +26,8 @@
 
 #pragma once
 
+#ifdef __serenity__
+
 #include <AK/OwnPtr.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PurgeableVMObject.h>
@@ -83,3 +85,5 @@ public:
 };
 
 Lockable<HashMap<int, NonnullOwnPtr<SharedBuffer>>>& shared_buffers();
+
+#endif

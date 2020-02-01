@@ -35,7 +35,7 @@
 #include <LibDraw/Color.h>
 #include <LibDraw/GraphicsBitmap.h>
 #include <LibHTML/CSS/Length.h>
-#include <LibHTML/CSS/PropertyID.h>
+#include <LibHTML/CSS_PropertyID.h>
 
 class Document;
 

@@ -59,7 +59,7 @@ int main(int argc, char** argv)
     ASSERT(json.is_object());
 
     dbg() << "#include <AK/Assertions.h>";
-    dbg() << "#include <LibHTML/CSS/PropertyID.h>";
+    dbg() << "#include <LibHTML/CSS_PropertyID.h>";
     dbg() << "namespace CSS {";
 
     dbg() << "PropertyID property_id_from_string(const StringView& string) {";

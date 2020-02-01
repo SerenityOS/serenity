@@ -28,7 +28,7 @@
 #pragma once
 
 #include <LibGUI/GWidget.h>
-#include <Music.h>
+#include "Music.h"
 
 class AudioEngine;
 class WaveWidget;

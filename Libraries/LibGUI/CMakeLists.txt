@@ -1,0 +1,70 @@
+set(SOURCES
+    GPainter.cpp
+    GButton.cpp
+    GCheckBox.cpp
+    GWindowServerConnection.cpp
+    GLabel.cpp
+    GTextBox.cpp
+    GScrollBar.cpp
+    GStatusBar.cpp
+    GWidget.cpp
+    GLayout.cpp
+    GBoxLayout.cpp
+    GMenuBar.cpp
+    GMenu.cpp
+    GMenuItem.cpp
+    GApplication.cpp
+    GAction.cpp
+    GActionGroup.cpp
+    GFontDatabase.cpp
+    GToolBar.cpp
+    GTableView.cpp
+    GModel.cpp
+    GVariant.cpp
+    GShortcut.cpp
+    GTextEditor.cpp
+    GTextDocument.cpp
+    GClipboard.cpp
+    GSortingProxyModel.cpp
+    GStackWidget.cpp
+    GScrollableWidget.cpp
+    GMessageBox.cpp
+    GInputBox.cpp
+    GDialog.cpp
+    GDesktop.cpp
+    GProgressBar.cpp
+    GAbstractView.cpp
+    GAbstractTableView.cpp
+    GColumnsView.cpp
+    GColorPicker.cpp
+    GItemView.cpp
+    GIcon.cpp
+    GFrame.cpp
+    GTreeView.cpp
+    GFileSystemModel.cpp
+    GFilePicker.cpp
+    GSplitter.cpp
+    GSpinBox.cpp
+    GGroupBox.cpp
+    GSlider.cpp
+    GResizeCorner.cpp
+    GTabWidget.cpp
+    GRadioButton.cpp
+    GAbstractButton.cpp
+    GListView.cpp
+    GComboBox.cpp
+    GJsonArrayModel.cpp
+    GAboutDialog.cpp
+    GModelSelection.cpp
+    GLazyWidget.cpp
+    GCommand.cpp
+    GUndoStack.cpp
+    GDragOperation.cpp
+    GWindow.cpp
+)
+
+serenity_lib(LibGUI gui)
+add_dependencies(LibGUI WindowServer)
+target_link_libraries(LibGUI LibIPC LibDraw LibThread LibCore)
+target_include_directories(LibGUI PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/../../Servers)
+target_include_directories(LibGUI PUBLIC ../../Servers)

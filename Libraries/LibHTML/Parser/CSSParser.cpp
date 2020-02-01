@@ -25,7 +25,7 @@
  */
 
 #include <AK/HashMap.h>
-#include <LibHTML/CSS/PropertyID.h>
+#include <LibHTML/CSS_PropertyID.h>
 #include <LibHTML/CSS/StyleSheet.h>
 #include <LibHTML/Parser/CSSParser.h>
 #include <ctype.h>
