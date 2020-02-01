@@ -61,6 +61,9 @@ public:
         m_freelist = m_freelist->next;
         ++m_num_allocated;
         --m_num_free;
+#ifdef SANITIZE_KMALLOC
+        memset(ptr, SLAB_ALLOC_SCRUB_BYTE, slab_size());
+#endif
         return ptr;
     }
 
@@ -73,6 +76,10 @@ public:
             return;
         }
         ((FreeSlab*)ptr)->next = m_freelist;
+#ifdef SANITIZE_KMALLOC
+        if (slab_size() > sizeof(FreeSlab*))
+            memset(((FreeSlab*)ptr)->padding, SLAB_DEALLOC_SCRUB_BYTE, sizeof(FreeSlab::padding));
+#endif
         m_freelist = (FreeSlab*)ptr;
         ++m_num_allocated;
         --m_num_free;
