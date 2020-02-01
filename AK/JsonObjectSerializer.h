@@ -79,6 +79,30 @@ public:
         m_builder.append('"');
     }
 
+    void add(const StringView& key, i32 value)
+    {
+        begin_item(key);
+        m_builder.appendf("%d", value);
+    }
+
+    void add(const StringView& key, u32 value)
+    {
+        begin_item(key);
+        m_builder.appendf("%u", value);
+    }
+
+    void add(const StringView& key, i64 value)
+    {
+        begin_item(key);
+        m_builder.appendf("%lld", value);
+    }
+
+    void add(const StringView& key, u64 value)
+    {
+        begin_item(key);
+        m_builder.appendf("%llu", value);
+    }
+
     JsonArraySerializer<Builder> add_array(const StringView& key)
     {
         begin_item(key);
