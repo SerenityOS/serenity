@@ -34,7 +34,7 @@
 class E1000NetworkAdapter final : public NetworkAdapter
     , public IRQHandler {
 public:
-    static OwnPtr<E1000NetworkAdapter> autodetect();
+    static void detect(const PCI::Address&);
 
     E1000NetworkAdapter(PCI::Address, u8 irq);
     virtual ~E1000NetworkAdapter() override;

@@ -36,7 +36,7 @@
 class RTL8139NetworkAdapter final : public NetworkAdapter
     , public IRQHandler {
 public:
-    static OwnPtr<RTL8139NetworkAdapter> autodetect();
+    static void detect(const PCI::Address&);
 
     RTL8139NetworkAdapter(PCI::Address, u8 irq);
     virtual ~RTL8139NetworkAdapter() override;

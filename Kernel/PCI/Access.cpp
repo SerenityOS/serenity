@@ -77,6 +77,11 @@ void PCI::Access::enumerate_slot(int type, u8 bus, u8 slot, Function<void(Addres
     }
 }
 
+PCI::ID PCI::Access::get_id(Address address)
+{
+    return { read16_field(address, PCI_VENDOR_ID), read16_field(address, PCI_DEVICE_ID) };
+}
+
 void PCI::Access::enumerate_bus(int type, u8 bus, Function<void(Address, ID)>& callback)
 {
     for (u8 slot = 0; slot < 32; ++slot)
@@ -103,6 +108,11 @@ namespace PCI {
 void enumerate_all(Function<void(Address, ID)> callback)
 {
     PCI::Access::the().enumerate_all(callback);
+}
+
+ID get_id(Address address)
+{
+    return PCI::Access::the().get_id(address);
 }
 
 u8 get_interrupt_line(Address address)

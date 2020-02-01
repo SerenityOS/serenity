@@ -39,6 +39,7 @@ public:
     static void dismiss();
 
 private:
+    void detect_devices();
     ~Initializer();
     Initializer();
     bool test_acpi();

@@ -123,20 +123,16 @@
 #define RX_BUFFER_SIZE 32768
 #define TX_BUFFER_SIZE PACKET_SIZE_MAX
 
-OwnPtr<RTL8139NetworkAdapter> RTL8139NetworkAdapter::autodetect()
+void RTL8139NetworkAdapter::detect(const PCI::Address& address)
 {
+    if (address.is_null())
+        return;
     static const PCI::ID rtl8139_id = { 0x10EC, 0x8139 };
-    PCI::Address found_address;
-    PCI::enumerate_all([&](const PCI::Address& address, PCI::ID id) {
-        if (id == rtl8139_id) {
-            found_address = address;
-            return;
-        }
-    });
-    if (found_address.is_null())
-        return nullptr;
-    u8 irq = PCI::get_interrupt_line(found_address);
-    return make<RTL8139NetworkAdapter>(found_address, irq);
+    PCI::ID id = PCI::get_id(address);
+    if (id != rtl8139_id)
+        return;
+    u8 irq = PCI::get_interrupt_line(address);
+    new RTL8139NetworkAdapter(address, irq);
 }
 
 RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address pci_address, u8 irq)

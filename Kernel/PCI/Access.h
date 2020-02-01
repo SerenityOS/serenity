@@ -53,7 +53,7 @@ public:
         space_size = (~space_size) + 1;
         return space_size;
     }
-
+    virtual ID get_id(Address address) final;
     virtual u8 get_revision_id(Address address) { return read8_field(address, PCI_REVISION_ID); }
     virtual u8 get_subclass(Address address) { return read8_field(address, PCI_SUBCLASS); }
     virtual u8 get_class(Address address) { return read8_field(address, PCI_CLASS); }

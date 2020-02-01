@@ -74,6 +74,10 @@ struct ID {
     {
         return vendor_id == other.vendor_id && device_id == other.device_id;
     }
+    bool operator!=(const ID& other) const
+    {
+        return vendor_id != other.vendor_id || device_id != other.device_id;
+    }
 };
 
 struct Address {
@@ -156,6 +160,7 @@ struct ChangeableAddress : public Address {
     }
 };
 
+ID get_id(PCI::Address);
 void enumerate_all(Function<void(Address, ID)> callback);
 u8 get_interrupt_line(Address);
 u32 get_BAR0(Address);
