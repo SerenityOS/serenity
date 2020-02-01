@@ -251,11 +251,6 @@ void init_stage2()
             hang();
         }
 
-        if (partition_number < 1 || partition_number > 4) {
-            kprintf("init_stage2: invalid partition number %d; expected 1 to 4\n", partition_number);
-            hang();
-        }
-
         MBRPartitionTable mbr(root_dev);
 
         if (!mbr.initialize()) {
@@ -278,6 +273,10 @@ void init_stage2()
             root_dev = *partition;
         } else {
             dbgprintf("MBR Partitioned Storage Detected!\n");
+            if (partition_number < 1 || partition_number > 4) {
+                kprintf("init_stage2: invalid partition number %d; expected 1 to 4\n", partition_number);
+                hang();
+            }
             auto partition = mbr.partition(partition_number);
             if (!partition) {
                 kprintf("init_stage2: couldn't get partition %d\n", partition_number);
