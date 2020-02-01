@@ -59,3 +59,8 @@ You can vastly reduce the build time of successive rebuilds of Serenity by insta
 Bare curious users may even consider sourcing suitable hardware to [install Serenity on a physical PC.](https://github.com/SerenityOS/serenity/blob/master/INSTALL.md)
 
 Later on, when you `git pull` to get the latest changes, there's no need to rebuild the toolchain. You can simply rerun **./makeall.sh** in the `Kernel/` directory and you'll be good to **./run** again.
+
+You can even re-compile only parts of the system. Imagine you changed something in the **WindowServer**. Then run `make -C ../Servers/WindowServer` (from the `Kernel/` directory) followed by **./sync.sh** to update the disk image. Then you can start the system with **./run** again.
+
+#### Ports
+To add a package from the ports collection to Serenity, for example curl, go into `Ports/curl/` and run **./package.sh**. The sourcecode for the package will be downloaded and the package will be built. After that, run **./sync.sh** from the `Kernel/` directory to update the disk image. The next time you start Serenity with **./run**, `curl` will be available.
