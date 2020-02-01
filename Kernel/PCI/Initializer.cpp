@@ -27,6 +27,8 @@
 #include <Kernel/ACPI/ACPIParser.h>
 #include <Kernel/IO.h>
 #include <Kernel/KParams.h>
+#include <Kernel/Net/E1000NetworkAdapter.h>
+#include <Kernel/Net/RTL8139NetworkAdapter.h>
 #include <Kernel/PCI/IOAccess.h>
 #include <Kernel/PCI/Initializer.h>
 #include <Kernel/PCI/MMIOAccess.h>
@@ -43,11 +45,29 @@ PCI::Initializer& PCI::Initializer::the()
 void PCI::Initializer::initialize_pci_mmio_access(ACPI_RAW::MCFG& mcfg)
 {
     PCI::MMIOAccess::initialize(mcfg);
+    detect_devices();
 }
 void PCI::Initializer::initialize_pci_io_access()
 {
     PCI::IOAccess::initialize();
+    detect_devices();
 }
+
+void PCI::Initializer::detect_devices()
+{
+    PCI::enumerate_all([&](const PCI::Address& address, PCI::ID id) {
+        kprintf("PCI: device @ %w:%b:%b.%d [%w:%w]\n",
+            address.seg(),
+            address.bus(),
+            address.slot(),
+            address.function(),
+            id.vendor_id,
+            id.device_id);
+        E1000NetworkAdapter::detect(address);
+        RTL8139NetworkAdapter::detect(address);
+    });
+}
+
 void PCI::Initializer::test_and_initialize(bool disable_pci_mmio)
 {
     if (disable_pci_mmio) {
