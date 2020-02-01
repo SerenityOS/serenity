@@ -47,13 +47,10 @@ public:
         , m_length(length)
     {
     }
-    StringView(const char* cstring)
+    [[gnu::always_inline]] inline StringView(const char* cstring)
         : m_characters(cstring)
+        , m_length(cstring ? strlen(cstring) : 0)
     {
-        if (cstring) {
-            while (*(cstring++))
-                ++m_length;
-        }
     }
 
     StringView(const ByteBuffer&);
