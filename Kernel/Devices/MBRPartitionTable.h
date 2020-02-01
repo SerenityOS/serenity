@@ -34,16 +34,18 @@
 #define MBR_SIGNATURE 0xaa55
 #define MBR_PROTECTIVE 0xEE
 
-struct MBRPartitionEntry {
+struct [[gnu::packed]] MBRPartitionEntry
+{
     u8 status;
     u8 chs1[3];
     u8 type;
     u8 chs2[3];
     u32 offset;
     u32 length;
-} __attribute__((packed));
+};
 
-struct MBRPartitionHeader {
+struct [[gnu::packed]] MBRPartitionHeader
+{
     u8 code1[218];
     u16 ts_zero;
     u8 ts_drive, ts_seconds, ts_minutes, ts_hours;
@@ -52,7 +54,7 @@ struct MBRPartitionHeader {
     u16 disk_signature_zero;
     MBRPartitionEntry entry[4];
     u16 mbr_signature;
-} __attribute__((packed));
+};
 
 class MBRPartitionTable {
     AK_MAKE_ETERNAL
