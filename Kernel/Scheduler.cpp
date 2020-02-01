@@ -68,6 +68,7 @@ Thread* current;
 Thread* g_finalizer;
 Thread* g_colonel;
 WaitQueue* g_finalizer_wait_queue;
+bool g_finalizer_has_work;
 static Process* s_colonel_process;
 u64 g_uptime;
 
@@ -578,6 +579,7 @@ void Scheduler::initialize()
 {
     g_scheduler_data = new SchedulerData;
     g_finalizer_wait_queue = new WaitQueue;
+    g_finalizer_has_work = false;
     s_redirection.selector = gdt_alloc_entry();
     initialize_redirection();
     s_colonel_process = Process::create_kernel_process(g_colonel, "colonel", nullptr);
