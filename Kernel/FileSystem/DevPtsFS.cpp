@@ -169,17 +169,17 @@ size_t DevPtsFSInode::directory_entry_count() const
     return 2 + ptys->size();
 }
 
-InodeIdentifier DevPtsFSInode::lookup(StringView name)
+RefPtr<Inode> DevPtsFSInode::lookup(StringView name)
 {
     ASSERT(identifier().index() == 1);
 
     if (name == "." || name == "..")
-        return identifier();
+        return fs().get_inode(identifier());
 
     bool ok;
     unsigned pty_index = name.to_uint(ok);
     if (ok && ptys->contains(pty_index)) {
-        return { fsid(), pty_index_to_inode_index(pty_index) };
+        return fs().get_inode({ fsid(), pty_index_to_inode_index(pty_index) });
     }
 
     return {};

@@ -811,9 +811,8 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
         }
 
         // Okay, let's look up this part.
-        auto child_id = parent.inode().lookup(part);
-
-        if (!child_id.is_valid()) {
+        auto child_inode = parent.inode().lookup(part);
+        if (!child_inode) {
             if (out_parent) {
                 // ENOENT with a non-null parent custody signals to caller that
                 // we found the immediate parent of the file, but the file itself
@@ -824,14 +823,13 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
         }
 
         int mount_flags_for_child = parent.mount_flags();
+
         // See if there's something mounted on the child; in that case
         // we would need to return the guest inode, not the host inode.
-        if (auto mount = find_mount_for_host(child_id)) {
-            child_id = mount->guest();
+        if (auto mount = find_mount_for_host(child_inode->identifier())) {
+            child_inode = get_inode(mount->guest());
             mount_flags_for_child = mount->flags();
         }
-        auto child_inode = get_inode(child_id);
-        ASSERT(child_inode);
 
         custody = Custody::create(&parent, part, *child_inode, mount_flags_for_child);
 
