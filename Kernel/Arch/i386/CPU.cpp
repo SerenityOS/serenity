@@ -317,10 +317,16 @@ void page_fault_handler(RegisterDump regs)
 
         u32 malloc_scrub_pattern = explode_byte(MALLOC_SCRUB_BYTE);
         u32 free_scrub_pattern = explode_byte(FREE_SCRUB_BYTE);
+        u32 kmalloc_scrub_pattern = explode_byte(KMALLOC_SCRUB_BYTE);
+        u32 kfree_scrub_pattern = explode_byte(KFREE_SCRUB_BYTE);
         if ((fault_address & 0xffff0000) == (malloc_scrub_pattern & 0xffff0000)) {
             kprintf("\033[33;1mNote: Address %p looks like it may be uninitialized malloc() memory\033[0m\n", fault_address);
         } else if ((fault_address & 0xffff0000) == (free_scrub_pattern & 0xffff0000)) {
             kprintf("\033[33;1mNote: Address %p looks like it may be recently free()'d memory\033[0m\n", fault_address);
+        } else if ((fault_address & 0xffff0000) == (kmalloc_scrub_pattern & 0xffff0000)) {
+            kprintf("\033[33;1mNote: Address %p looks like it may be uninitialized kmalloc() memory\033[0m\n", fault_address);
+        } else if ((fault_address & 0xffff0000) == (kfree_scrub_pattern & 0xffff0000)) {
+            kprintf("\033[33;1mNote: Address %p looks like it may be recently kfree()'d memory\033[0m\n", fault_address);
         } else if (fault_address < 4096) {
             kprintf("\033[33;1mNote: Address %p looks like a possible nullptr dereference\033[0m\n", fault_address);
         }
