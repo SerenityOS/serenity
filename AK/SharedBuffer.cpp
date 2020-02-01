@@ -24,6 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef __serenity__
+
 #include <AK/SharedBuffer.h>
 #include <AK/kmalloc.h>
 #include <Kernel/Syscall.h>
@@ -121,3 +123,5 @@ bool SharedBuffer::set_nonvolatile()
 }
 
 }
+
+#endif
