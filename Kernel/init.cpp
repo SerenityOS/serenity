@@ -62,10 +62,8 @@
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/KParams.h>
 #include <Kernel/Multiboot.h>
-#include <Kernel/Net/E1000NetworkAdapter.h>
 #include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/NetworkTask.h>
-#include <Kernel/Net/RTL8139NetworkAdapter.h>
 #include <Kernel/PCI/Access.h>
 #include <Kernel/PCI/Initializer.h>
 #include <Kernel/Random.h>
@@ -145,16 +143,6 @@ extern "C" [[noreturn]] void init()
 
     PIT::initialize();
 
-    PCI::enumerate_all([](const PCI::Address& address, PCI::ID id) {
-        kprintf("PCI: device @ %w:%b:%b.%d [%w:%w]\n",
-            address.seg(),
-            address.bus(),
-            address.slot(),
-            address.function(),
-            id.vendor_id,
-            id.device_id);
-    });
-
     if (text_debug) {
         dbgprintf("Text mode enabled\n");
     } else {
@@ -170,8 +158,6 @@ extern "C" [[noreturn]] void init()
     }
 
     LoopbackAdapter::the();
-    auto e1000 = E1000NetworkAdapter::autodetect();
-    auto rtl8139 = RTL8139NetworkAdapter::autodetect();
 
     Process::initialize();
     Thread::initialize();
@@ -218,19 +204,19 @@ void init_stage2()
     new RandomDevice;
     new PTYMultiplexer;
 
+    bool dmi_unreliable = KParams::the().has("dmi_unreliable");
+    if (dmi_unreliable) {
+        DMIDecoder::initialize_untrusted();
+    } else {
+        DMIDecoder::initialize();
+    }
+
     bool text_debug = KParams::the().has("text_debug");
     bool force_pio = KParams::the().has("force_pio");
 
     auto root = KParams::the().get("root");
     if (root.is_empty()) {
         root = "/dev/hda";
-    }
-
-    bool dmi_unreliable = KParams::the().has("dmi_unreliable");
-    if (dmi_unreliable) {
-        DMIDecoder::initialize_untrusted();
-    } else {
-        DMIDecoder::initialize();
     }
 
     if (!root.starts_with("/dev/hda")) {

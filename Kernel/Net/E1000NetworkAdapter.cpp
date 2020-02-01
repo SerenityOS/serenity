@@ -119,20 +119,16 @@
 #define STATUS_SPEED_1000MB1 0x80
 #define STATUS_SPEED_1000MB2 0xC0
 
-OwnPtr<E1000NetworkAdapter> E1000NetworkAdapter::autodetect()
+void E1000NetworkAdapter::detect(const PCI::Address& address)
 {
+    if (address.is_null())
+        return;
     static const PCI::ID qemu_bochs_vbox_id = { 0x8086, 0x100e };
-    PCI::Address found_address;
-    PCI::enumerate_all([&](const PCI::Address& address, PCI::ID id) {
-        if (id == qemu_bochs_vbox_id) {
-            found_address = address;
-            return;
-        }
-    });
-    if (found_address.is_null())
-        return nullptr;
-    u8 irq = PCI::get_interrupt_line(found_address);
-    return make<E1000NetworkAdapter>(found_address, irq);
+    const PCI::ID id = PCI::get_id(address);
+    if (id != qemu_bochs_vbox_id)
+        return;
+    u8 irq = PCI::get_interrupt_line(address);
+    new E1000NetworkAdapter(address, irq);
 }
 
 E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address pci_address, u8 irq)
