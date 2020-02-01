@@ -25,6 +25,7 @@ OBJS = \
     Devices/FloppyDiskDevice.o \
     Devices/FullDevice.o \
     Devices/GPTPartitionTable.o \
+    Devices/EBRPartitionTable.o \
     Devices/KeyboardDevice.o \
     Devices/MBRPartitionTable.o \
     Devices/MBVGADevice.o \
