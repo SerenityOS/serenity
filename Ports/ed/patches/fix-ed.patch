@@ -1,0 +1,12 @@
+--- ed-1.15/ed.h.orig	Sat Feb  1 14:19:01 2020
++++ ed-1.15/ed.h	Sat Feb  1 14:19:17 2020
+@@ -18,8 +18,7 @@
+ */
+ 
+ #ifndef __cplusplus
+-enum Bool { false = 0, true = 1 };
+-typedef enum Bool bool;
++#include <stdbool.h>
+ #endif
+ 
+ enum Pflags			/* print suffixes */
