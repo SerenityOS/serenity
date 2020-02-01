@@ -72,7 +72,7 @@ public:
 
     virtual ssize_t read_bytes(off_t, ssize_t, u8* buffer, FileDescription*) const = 0;
     virtual bool traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) const = 0;
-    virtual InodeIdentifier lookup(StringView name) = 0;
+    virtual RefPtr<Inode> lookup(StringView name) = 0;
     virtual ssize_t write_bytes(off_t, ssize_t, const u8* data, FileDescription*) = 0;
     virtual KResult add_child(InodeIdentifier child_id, const StringView& name, mode_t) = 0;
     virtual KResult remove_child(const StringView& name) = 0;

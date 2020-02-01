@@ -1493,14 +1493,14 @@ void Ext2FSInode::populate_lookup_cache() const
     m_lookup_cache = move(children);
 }
 
-InodeIdentifier Ext2FSInode::lookup(StringView name)
+RefPtr<Inode> Ext2FSInode::lookup(StringView name)
 {
     ASSERT(is_directory());
     populate_lookup_cache();
     LOCKER(m_lock);
     auto it = m_lookup_cache.find(name.hash(), [&](auto& entry) { return entry.key == name; });
     if (it != m_lookup_cache.end())
-        return { fsid(), (*it).value };
+        return fs().get_inode({ fsid(), (*it).value });
     return {};
 }
 

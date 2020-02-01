@@ -233,20 +233,20 @@ ssize_t TmpFSInode::write_bytes(off_t offset, ssize_t size, const u8* buffer, Fi
     return size;
 }
 
-InodeIdentifier TmpFSInode::lookup(StringView name)
+RefPtr<Inode> TmpFSInode::lookup(StringView name)
 {
     LOCKER(m_lock);
     ASSERT(is_directory());
 
     if (name == ".")
-        return identifier();
+        return fs().get_inode(identifier());
     if (name == "..")
-        return m_parent;
+        return fs().get_inode(m_parent);
 
     auto it = m_children.find(name);
     if (it == m_children.end())
         return {};
-    return it->value.entry.inode;
+    return fs().get_inode(it->value.entry.inode);
 }
 
 size_t TmpFSInode::directory_entry_count() const

@@ -1298,13 +1298,13 @@ bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
     return true;
 }
 
-InodeIdentifier ProcFSInode::lookup(StringView name)
+RefPtr<Inode> ProcFSInode::lookup(StringView name)
 {
     ASSERT(is_directory());
     if (name == ".")
-        return identifier();
+        return fs().get_inode(identifier());
     if (name == "..")
-        return to_parent_id(identifier());
+        return fs().get_inode(to_parent_id(identifier()));
 
     auto proc_file_type = to_proc_file_type(identifier());
 
@@ -1314,7 +1314,7 @@ InodeIdentifier ProcFSInode::lookup(StringView name)
                 continue;
             if (entry.proc_file_type > __FI_Root_Start && entry.proc_file_type < __FI_Root_End) {
                 if (name == entry.name) {
-                    return to_identifier(fsid(), PDI_Root, 0, (ProcFileType)entry.proc_file_type);
+                    return fs().get_inode(to_identifier(fsid(), PDI_Root, 0, (ProcFileType)entry.proc_file_type));
                 }
             }
         }
@@ -1327,7 +1327,7 @@ InodeIdentifier ProcFSInode::lookup(StringView name)
                 process_exists = Process::from_pid(name_as_number);
             }
             if (process_exists)
-                return to_identifier(fsid(), PDI_Root, name_as_number, FI_PID);
+                return fs().get_inode(to_identifier(fsid(), PDI_Root, name_as_number, FI_PID));
         }
         return {};
     }
@@ -1336,22 +1336,22 @@ InodeIdentifier ProcFSInode::lookup(StringView name)
         for (int i = 1; i < sys_variables().size(); ++i) {
             auto& variable = sys_variables()[i];
             if (name == variable.name)
-                return sys_var_to_identifier(fsid(), i);
+                return fs().get_inode(sys_var_to_identifier(fsid(), i));
         }
         return {};
     }
 
     if (proc_file_type == FI_Root_net) {
         if (name == "adapters")
-            return to_identifier(fsid(), PDI_Root, 0, FI_Root_net_adapters);
+            return fs().get_inode(to_identifier(fsid(), PDI_Root, 0, FI_Root_net_adapters));
         if (name == "arp")
-            return to_identifier(fsid(), PDI_Root, 0, FI_Root_net_arp);
+            return fs().get_inode(to_identifier(fsid(), PDI_Root, 0, FI_Root_net_arp));
         if (name == "tcp")
-            return to_identifier(fsid(), PDI_Root, 0, FI_Root_net_tcp);
+            return fs().get_inode(to_identifier(fsid(), PDI_Root, 0, FI_Root_net_tcp));
         if (name == "udp")
-            return to_identifier(fsid(), PDI_Root, 0, FI_Root_net_udp);
+            return fs().get_inode(to_identifier(fsid(), PDI_Root, 0, FI_Root_net_udp));
         if (name == "local")
-            return to_identifier(fsid(), PDI_Root, 0, FI_Root_net_local);
+            return fs().get_inode(to_identifier(fsid(), PDI_Root, 0, FI_Root_net_local));
         return {};
     }
 
@@ -1367,7 +1367,7 @@ InodeIdentifier ProcFSInode::lookup(StringView name)
                 if (entry.name == nullptr)
                     continue;
                 if (name == entry.name) {
-                    return to_identifier(fsid(), PDI_PID, to_pid(identifier()), (ProcFileType)entry.proc_file_type);
+                    return fs().get_inode(to_identifier(fsid(), PDI_PID, to_pid(identifier()), (ProcFileType)entry.proc_file_type));
                 }
             }
         }
@@ -1385,7 +1385,7 @@ InodeIdentifier ProcFSInode::lookup(StringView name)
                     fd_exists = process->file_description(name_as_number);
             }
             if (fd_exists)
-                return to_identifier_with_fd(fsid(), to_pid(identifier()), name_as_number);
+                return fs().get_inode(to_identifier_with_fd(fsid(), to_pid(identifier()), name_as_number));
         }
     }
     return {};
@@ -1529,7 +1529,7 @@ KResult ProcFSProxyInode::remove_child(const StringView& name)
     return m_fd->inode()->remove_child(name);
 }
 
-InodeIdentifier ProcFSProxyInode::lookup(StringView name)
+RefPtr<Inode> ProcFSProxyInode::lookup(StringView name)
 {
     if (!m_fd->inode())
         return {};
