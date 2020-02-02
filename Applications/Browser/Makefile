@@ -6,6 +6,8 @@ PROGRAM = Browser
 
 LIB_DEPS = GUI HTML Draw IPC Protocol Core
 
+LDFLAGS = -static
+
 main.cpp: ../../Libraries/LibHTML/CSS/PropertyID.h
 ../../Libraries/LibHTML/CSS/PropertyID.h:
 	@flock ../../Libraries/LibHTML $(MAKE) -C ../../Libraries/LibHTML

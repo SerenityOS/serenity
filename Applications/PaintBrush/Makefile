@@ -17,4 +17,6 @@ PROGRAM = PaintBrush
 
 LIB_DEPS = GUI Draw IPC Thread Pthread Core
 
+LDFLAGS = -static
+
 include ../../Makefile.common

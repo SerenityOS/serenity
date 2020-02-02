@@ -13,4 +13,6 @@ PROGRAM = IRCClient
 
 LIB_DEPS = GUI HTML Draw Protocol IPC Thread Pthread Core
 
+LDFLAGS = -static
+
 include ../../Makefile.common

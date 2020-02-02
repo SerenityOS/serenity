@@ -21,4 +21,6 @@ OBJS = \
     ../../Libraries/LibCore/CLocalServer.o \
     ../../Libraries/LibCore/CEventLoop.o
 
+LDFLAGS = -static
+
 include ../../Makefile.common

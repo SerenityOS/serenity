@@ -6,6 +6,8 @@ EXTRA_CLEAN = $(APPS)
 
 LIB_DEPS = HTML GUI Draw Audio Protocol IPC Thread Pthread Core PCIDB Markdown
 
+LDFLAGS = -static
+
 include ../Makefile.common
 
 all: $(APPS)

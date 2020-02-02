@@ -3,4 +3,6 @@ OBJS = \
 
 PROGRAM = TTYServer
 
+LDFLAGS = -static
+
 include ../../Makefile.common

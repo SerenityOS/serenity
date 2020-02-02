@@ -10,6 +10,8 @@ PROGRAM = ProtocolServer
 
 LIB_DEPS = Core IPC
 
+LDFLAGS = -static
+
 EXTRA_CLEAN = ProtocolServerEndpoint.h ProtocolClientEndpoint.h
 
 *.cpp: ProtocolServerEndpoint.h ProtocolClientEndpoint.h

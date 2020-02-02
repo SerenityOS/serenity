@@ -8,6 +8,7 @@ prefix=$SERENITY_ROOT/Ports
 export CC=i686-pc-serenity-gcc
 export CXX=i686-pc-serenity-g++
 export PATH=$SERENITY_ROOT/Toolchain/Local/bin:$PATH
+export LDFLAGS=-static
 
 . "$@"
 shift

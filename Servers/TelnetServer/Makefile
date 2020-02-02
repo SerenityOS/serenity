@@ -7,4 +7,6 @@ PROGRAM = TelnetServer
 
 LIB_DEPS = Core
 
+LDFLAGS = -static
+
 include ../../Makefile.common

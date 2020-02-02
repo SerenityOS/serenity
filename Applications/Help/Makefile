@@ -9,4 +9,6 @@ PROGRAM = Help
 
 LIB_DEPS = GUI HTML Draw Markdown IPC Protocol Thread Pthread Core
 
+LDFLAGS = -static
+
 include ../../Makefile.common

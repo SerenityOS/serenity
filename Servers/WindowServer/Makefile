@@ -20,6 +20,8 @@ PROGRAM = WindowServer
 
 LIB_DEPS = Draw Core Thread Pthread IPC
 
+LDFLAGS = -static
+
 *.cpp: WindowServerEndpoint.h WindowClientEndpoint.h
 
 WindowServerEndpoint.h: WindowServer.ipc | IPCCOMPILER

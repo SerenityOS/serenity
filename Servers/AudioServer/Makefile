@@ -8,6 +8,8 @@ PROGRAM = AudioServer
 
 LIB_DEPS = Core IPC Thread Pthread
 
+LDFLAGS = -static
+
 EXTRA_CLEAN = AudioServerEndpoint.h AudioClientEndpoint.h
 
 *.cpp: AudioServerEndpoint.h AudioClientEndpoint.h

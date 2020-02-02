@@ -21,4 +21,6 @@ OBJS = \
     ../../Libraries/LibCore/CNotifier.o \
     ../../Libraries/LibCore/CEventLoop.o
 
+LDFLAGS = -static
+
 include ../../Makefile.common

@@ -20,4 +20,6 @@ PROGRAM = HackStudio
 
 LIB_DEPS = GUI HTML VT Protocol Markdown Draw IPC Thread Pthread Core
 
+LDFLAGS = -static
+
 include ../../Makefile.common

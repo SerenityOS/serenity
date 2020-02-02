@@ -8,6 +8,8 @@ PROGRAM = FontEditor
 
 LIB_DEPS = GUI Draw Core IPC
 
+LDFLAGS = -static
+
 FontEditor.cpp: UI_FontEditorBottom.h
 
 UI_FontEditorBottom.h: FontEditorBottom.frm | FORMCOMPILER

@@ -9,4 +9,6 @@ PROGRAM = LookupServer
 
 LIB_DEPS = Core
 
+LDFLAGS = -static
+
 include ../../Makefile.common

@@ -15,4 +15,6 @@ PROGRAM = SystemMonitor
 
 LIB_DEPS = GUI Draw Protocol PCIDB IPC Thread Pthread Core
 
+LDFLAGS = -static
+
 include ../../Makefile.common

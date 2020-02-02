@@ -156,6 +156,10 @@ pushd "$DIR/Build/"
         echo "XXX install libstdc++"
         "$MAKE" install-target-libstdc++-v3 || exit 1
 
+        echo "XXX serenity shared libc and libm"
+        ( cd "$DIR/../Libraries/LibC/" && "$MAKE" clean && "$MAKE" SHARED=1 && "$MAKE" SHARED=1 install )
+        ( cd "$DIR/../Libraries/LibM/" && "$MAKE" clean && "$MAKE" SHARED=1 && "$MAKE" SHARED=1 install )
+
         if [ `uname -s` = "OpenBSD" ]; then
             cd "$DIR"/Local/libexec/gcc/i686-pc-serenity/9.2.0 && ln -sf liblto_plugin.so.0.0 liblto_plugin.so
         fi
