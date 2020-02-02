@@ -77,7 +77,7 @@ OBJS = \
     PCI/Initializer.o \
     PerformanceEventBuffer.o \
     Process.o \
-    ProcessTracer.o \
+    Tracing/ProcessTracer.o \
     Profiling.o \
     RTC.o \
     Random.o \

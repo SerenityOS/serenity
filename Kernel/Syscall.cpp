@@ -26,9 +26,9 @@
 
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Process.h>
-#include <Kernel/ProcessTracer.h>
 #include <Kernel/Random.h>
 #include <Kernel/Syscall.h>
+#include <Kernel/Tracing/ProcessTracer.h>
 #include <Kernel/VM/MemoryManager.h>
 
 extern "C" void syscall_handler(RegisterDump);

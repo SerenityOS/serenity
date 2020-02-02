@@ -56,7 +56,6 @@
 #include <Kernel/Multiboot.h>
 #include <Kernel/Net/Socket.h>
 #include <Kernel/Process.h>
-#include <Kernel/ProcessTracer.h>
 #include <Kernel/Profiling.h>
 #include <Kernel/RTC.h>
 #include <Kernel/Random.h>
@@ -66,6 +65,7 @@
 #include <Kernel/Syscall.h>
 #include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/Thread.h>
+#include <Kernel/Tracing/ProcessTracer.h>
 #include <Kernel/VM/InodeVMObject.h>
 #include <Kernel/VM/PurgeableVMObject.h>
 #include <LibC/errno_numbers.h>

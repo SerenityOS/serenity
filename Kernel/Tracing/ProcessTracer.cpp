@@ -25,7 +25,7 @@
  */
 
 #include <AK/kstdio.h>
-#include <Kernel/ProcessTracer.h>
+#include <Kernel/Tracing/ProcessTracer.h>
 
 ProcessTracer::ProcessTracer(pid_t pid)
     : m_pid(pid)
