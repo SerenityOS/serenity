@@ -84,11 +84,11 @@ Rect GTabWidget::child_rect_for_size(const Size& size) const
     return rect;
 }
 
-void GTabWidget::child_event(CChildEvent& event)
+void GTabWidget::child_event(Core::ChildEvent& event)
 {
-    if (!event.child() || !is<GWidget>(*event.child()))
+    if (!event.child() || !Core::is<GWidget>(*event.child()))
         return GWidget::child_event(event);
-    auto& child = to<GWidget>(*event.child());
+    auto& child = Core::to<GWidget>(*event.child());
     if (event.type() == GEvent::ChildAdded) {
         if (!m_active_widget)
             set_active_widget(&child);
@@ -214,7 +214,7 @@ void GTabWidget::mousemove_event(GMouseEvent& event)
     update_bar();
 }
 
-void GTabWidget::leave_event(CEvent&)
+void GTabWidget::leave_event(Core::Event&)
 {
     if (m_hovered_tab_index != -1) {
         m_hovered_tab_index = -1;

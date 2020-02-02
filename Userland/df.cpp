@@ -45,8 +45,8 @@ struct FileSystem {
 
 int main(int, char**)
 {
-    auto file = CFile::construct("/proc/df");
-    if (!file->open(CIODevice::ReadOnly)) {
+    auto file = Core::File::construct("/proc/df");
+    if (!file->open(Core::IODevice::ReadOnly)) {
         fprintf(stderr, "Failed to open /proc/df: %s\n", file->error_string());
         return 1;
     }

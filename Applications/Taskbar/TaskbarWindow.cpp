@@ -81,15 +81,15 @@ void TaskbarWindow::create_quick_launch_bar()
     int total_width = 6;
     bool first = true;
 
-    auto config = CConfigFile::get_for_app("Taskbar");
+    auto config = Core::ConfigFile::get_for_app("Taskbar");
     constexpr const char* quick_launch = "QuickLaunch";
 
-    // FIXME: CConfigFile does not keep the order of the entries.
+    // FIXME: Core::ConfigFile does not keep the order of the entries.
     for (auto& name : config->keys(quick_launch)) {
         auto af_name = config->read_entry(quick_launch, name);
         ASSERT(!af_name.is_null());
         auto af_path = String::format("/res/apps/%s", af_name.characters());
-        auto af = CConfigFile::open(af_path);
+        auto af = Core::ConfigFile::open(af_path);
         auto app_executable = af->read_entry("App", "Executable");
         auto app_icon_path = af->read_entry("Icons", "16x16");
 

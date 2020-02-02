@@ -49,21 +49,23 @@
 //#define CEVENTLOOP_DEBUG
 //#define DEFERRED_INVOKE_DEBUG
 
+namespace Core {
+
 class RPCClient;
 
-static CEventLoop* s_main_event_loop;
-static Vector<CEventLoop*>* s_event_loop_stack;
+static EventLoop* s_main_event_loop;
+static Vector<EventLoop*>* s_event_loop_stack;
 static IDAllocator s_id_allocator;
-HashMap<int, NonnullOwnPtr<CEventLoop::EventLoopTimer>>* CEventLoop::s_timers;
-HashTable<CNotifier*>* CEventLoop::s_notifiers;
-int CEventLoop::s_wake_pipe_fds[2];
-RefPtr<CLocalServer> CEventLoop::s_rpc_server;
+HashMap<int, NonnullOwnPtr<EventLoop::EventLoopTimer>>* EventLoop::s_timers;
+HashTable<Notifier*>* EventLoop::s_notifiers;
+int EventLoop::s_wake_pipe_fds[2];
+RefPtr<LocalServer> EventLoop::s_rpc_server;
 HashMap<int, RefPtr<RPCClient>> s_rpc_clients;
 
-class RPCClient : public CObject {
+class RPCClient : public Object {
     C_OBJECT(RPCClient)
 public:
-    explicit RPCClient(RefPtr<CLocalSocket> socket)
+    explicit RPCClient(RefPtr<LocalSocket> socket)
         : m_socket(move(socket))
         , m_client_id(s_id_allocator.allocate())
     {
@@ -131,7 +133,7 @@ public:
             JsonObject response;
             response.set("type", type);
             JsonArray objects;
-            for (auto& object : CObject::all_objects()) {
+            for (auto& object : Object::all_objects()) {
                 JsonObject json_object;
                 object.save_to(json_object);
                 objects.append(move(json_object));
@@ -154,16 +156,16 @@ public:
     }
 
 private:
-    RefPtr<CLocalSocket> m_socket;
+    RefPtr<LocalSocket> m_socket;
     int m_client_id { -1 };
 };
 
-CEventLoop::CEventLoop()
+EventLoop::EventLoop()
 {
     if (!s_event_loop_stack) {
-        s_event_loop_stack = new Vector<CEventLoop*>;
-        s_timers = new HashMap<int, NonnullOwnPtr<CEventLoop::EventLoopTimer>>;
-        s_notifiers = new HashTable<CNotifier*>;
+        s_event_loop_stack = new Vector<EventLoop*>;
+        s_timers = new HashMap<int, NonnullOwnPtr<EventLoop::EventLoopTimer>>;
+        s_notifiers = new HashTable<Notifier*>;
     }
 
     if (!s_main_event_loop) {
@@ -185,8 +187,8 @@ CEventLoop::CEventLoop()
             perror("unlink");
             ASSERT_NOT_REACHED();
         }
-        s_rpc_server = CLocalServer::construct();
-        s_rpc_server->set_name("CEventLoop_RPC_server");
+        s_rpc_server = LocalServer::construct();
+        s_rpc_server->set_name("Core::EventLoop_RPC_server");
         bool listening = s_rpc_server->listen(rpc_path);
         ASSERT(listening);
 
@@ -196,66 +198,66 @@ CEventLoop::CEventLoop()
     }
 
 #ifdef CEVENTLOOP_DEBUG
-    dbg() << getpid() << " CEventLoop constructed :)";
+    dbg() << getpid() << " Core::EventLoop constructed :)";
 #endif
 }
 
-CEventLoop::~CEventLoop()
+EventLoop::~EventLoop()
 {
 }
 
-CEventLoop& CEventLoop::main()
+EventLoop& EventLoop::main()
 {
     ASSERT(s_main_event_loop);
     return *s_main_event_loop;
 }
 
-CEventLoop& CEventLoop::current()
+EventLoop& EventLoop::current()
 {
-    CEventLoop* event_loop = s_event_loop_stack->last();
+    EventLoop* event_loop = s_event_loop_stack->last();
     ASSERT(event_loop != nullptr);
     return *event_loop;
 }
 
-void CEventLoop::quit(int code)
+void EventLoop::quit(int code)
 {
-    dbg() << "CEventLoop::quit(" << code << ")";
+    dbg() << "Core::EventLoop::quit(" << code << ")";
     m_exit_requested = true;
     m_exit_code = code;
 }
 
-void CEventLoop::unquit()
+void EventLoop::unquit()
 {
-    dbg() << "CEventLoop::unquit()";
+    dbg() << "Core::EventLoop::unquit()";
     m_exit_requested = false;
     m_exit_code = 0;
 }
 
-struct CEventLoopPusher {
+struct EventLoopPusher {
 public:
-    CEventLoopPusher(CEventLoop& event_loop)
+    EventLoopPusher(EventLoop& event_loop)
         : m_event_loop(event_loop)
     {
         if (&m_event_loop != s_main_event_loop) {
-            m_event_loop.take_pending_events_from(CEventLoop::current());
+            m_event_loop.take_pending_events_from(EventLoop::current());
             s_event_loop_stack->append(&event_loop);
         }
     }
-    ~CEventLoopPusher()
+    ~EventLoopPusher()
     {
         if (&m_event_loop != s_main_event_loop) {
             s_event_loop_stack->take_last();
-            CEventLoop::current().take_pending_events_from(m_event_loop);
+            EventLoop::current().take_pending_events_from(m_event_loop);
         }
     }
 
 private:
-    CEventLoop& m_event_loop;
+    EventLoop& m_event_loop;
 };
 
-int CEventLoop::exec()
+int EventLoop::exec()
 {
-    CEventLoopPusher pusher(*this);
+    EventLoopPusher pusher(*this);
     for (;;) {
         if (m_exit_requested)
             return m_exit_code;
@@ -264,7 +266,7 @@ int CEventLoop::exec()
     ASSERT_NOT_REACHED();
 }
 
-void CEventLoop::pump(WaitMode mode)
+void EventLoop::pump(WaitMode mode)
 {
     if (m_queued_events.is_empty())
         wait_for_event(mode);
@@ -284,30 +286,30 @@ void CEventLoop::pump(WaitMode mode)
         auto& event = *queued_event.event;
 #ifdef CEVENTLOOP_DEBUG
         if (receiver)
-            dbg() << "CEventLoop: " << *receiver << " event " << (int)event.type();
+            dbg() << "Core::EventLoop: " << *receiver << " event " << (int)event.type();
 #endif
         if (!receiver) {
             switch (event.type()) {
-            case CEvent::Quit:
+            case Event::Quit:
                 ASSERT_NOT_REACHED();
                 return;
             default:
                 dbg() << "Event type " << event.type() << " with no receiver :(";
             }
-        } else if (event.type() == CEvent::Type::DeferredInvoke) {
+        } else if (event.type() == Event::Type::DeferredInvoke) {
 #ifdef DEFERRED_INVOKE_DEBUG
             printf("DeferredInvoke: receiver=%s{%p}\n", receiver->class_name(), receiver);
 #endif
-            static_cast<CDeferredInvocationEvent&>(event).m_invokee(*receiver);
+            static_cast<DeferredInvocationEvent&>(event).m_invokee(*receiver);
         } else {
-            NonnullRefPtr<CObject> protector(*receiver);
+            NonnullRefPtr<Object> protector(*receiver);
             receiver->dispatch_event(event);
         }
 
         if (m_exit_requested) {
             LOCKER(m_lock);
 #ifdef CEVENTLOOP_DEBUG
-            dbg() << "CEventLoop: Exit requested. Rejigging " << (events.size() - i) << " events.";
+            dbg() << "Core::EventLoop: Exit requested. Rejigging " << (events.size() - i) << " events.";
 #endif
             decltype(m_queued_events) new_event_queue;
             new_event_queue.ensure_capacity(m_queued_events.size() + events.size());
@@ -320,16 +322,16 @@ void CEventLoop::pump(WaitMode mode)
     }
 }
 
-void CEventLoop::post_event(CObject& receiver, NonnullOwnPtr<CEvent>&& event)
+void EventLoop::post_event(Object& receiver, NonnullOwnPtr<Event>&& event)
 {
     LOCKER(m_lock);
 #ifdef CEVENTLOOP_DEBUG
-    dbg() << "CEventLoop::post_event: {" << m_queued_events.size() << "} << receiver=" << receiver << ", event=" << event;
+    dbg() << "Core::EventLoop::post_event: {" << m_queued_events.size() << "} << receiver=" << receiver << ", event=" << event;
 #endif
     m_queued_events.append({ receiver.make_weak_ptr(), move(event) });
 }
 
-void CEventLoop::wait_for_event(WaitMode mode)
+void EventLoop::wait_for_event(WaitMode mode)
 {
     fd_set rfds;
     fd_set wfds;
@@ -347,11 +349,11 @@ void CEventLoop::wait_for_event(WaitMode mode)
     add_fd_to_set(s_wake_pipe_fds[0], rfds);
     max_fd = max(max_fd, max_fd_added);
     for (auto& notifier : *s_notifiers) {
-        if (notifier->event_mask() & CNotifier::Read)
+        if (notifier->event_mask() & Notifier::Read)
             add_fd_to_set(notifier->fd(), rfds);
-        if (notifier->event_mask() & CNotifier::Write)
+        if (notifier->event_mask() & Notifier::Write)
             add_fd_to_set(notifier->fd(), wfds);
-        if (notifier->event_mask() & CNotifier::Exceptional)
+        if (notifier->event_mask() & Notifier::Exceptional)
             ASSERT_NOT_REACHED();
     }
 
@@ -401,9 +403,9 @@ void CEventLoop::wait_for_event(WaitMode mode)
             continue;
         }
 #ifdef CEVENTLOOP_DEBUG
-        dbg() << "CEventLoop: Timer " << timer.timer_id << " has expired, sending CTimerEvent to " << timer.owner;
+        dbg() << "Core::EventLoop: Timer " << timer.timer_id << " has expired, sending Core::TimerEvent to " << timer.owner;
 #endif
-        post_event(*timer.owner, make<CTimerEvent>(timer.timer_id));
+        post_event(*timer.owner, make<TimerEvent>(timer.timer_id));
         if (timer.should_reload) {
             timer.reload(now);
         } else {
@@ -418,28 +420,28 @@ void CEventLoop::wait_for_event(WaitMode mode)
     for (auto& notifier : *s_notifiers) {
         if (FD_ISSET(notifier->fd(), &rfds)) {
             if (notifier->on_ready_to_read)
-                post_event(*notifier, make<CNotifierReadEvent>(notifier->fd()));
+                post_event(*notifier, make<NotifierReadEvent>(notifier->fd()));
         }
         if (FD_ISSET(notifier->fd(), &wfds)) {
             if (notifier->on_ready_to_write)
-                post_event(*notifier, make<CNotifierWriteEvent>(notifier->fd()));
+                post_event(*notifier, make<NotifierWriteEvent>(notifier->fd()));
         }
     }
 }
 
-bool CEventLoop::EventLoopTimer::has_expired(const timeval& now) const
+bool EventLoop::EventLoopTimer::has_expired(const timeval& now) const
 {
     return now.tv_sec > fire_time.tv_sec || (now.tv_sec == fire_time.tv_sec && now.tv_usec >= fire_time.tv_usec);
 }
 
-void CEventLoop::EventLoopTimer::reload(const timeval& now)
+void EventLoop::EventLoopTimer::reload(const timeval& now)
 {
     fire_time = now;
     fire_time.tv_sec += interval / 1000;
     fire_time.tv_usec += (interval % 1000) * 1000;
 }
 
-void CEventLoop::get_next_timer_expiration(timeval& soonest)
+void EventLoop::get_next_timer_expiration(timeval& soonest)
 {
     ASSERT(!s_timers->is_empty());
     bool has_checked_any = false;
@@ -456,7 +458,7 @@ void CEventLoop::get_next_timer_expiration(timeval& soonest)
     }
 }
 
-int CEventLoop::register_timer(CObject& object, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible fire_when_not_visible)
+int EventLoop::register_timer(Object& object, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible fire_when_not_visible)
 {
     ASSERT(milliseconds >= 0);
     auto timer = make<EventLoopTimer>();
@@ -473,7 +475,7 @@ int CEventLoop::register_timer(CObject& object, int milliseconds, bool should_re
     return timer_id;
 }
 
-bool CEventLoop::unregister_timer(int timer_id)
+bool EventLoop::unregister_timer(int timer_id)
 {
     s_id_allocator.deallocate(timer_id);
     auto it = s_timers->find(timer_id);
@@ -483,22 +485,24 @@ bool CEventLoop::unregister_timer(int timer_id)
     return true;
 }
 
-void CEventLoop::register_notifier(Badge<CNotifier>, CNotifier& notifier)
+void EventLoop::register_notifier(Badge<Notifier>, Notifier& notifier)
 {
     s_notifiers->set(&notifier);
 }
 
-void CEventLoop::unregister_notifier(Badge<CNotifier>, CNotifier& notifier)
+void EventLoop::unregister_notifier(Badge<Notifier>, Notifier& notifier)
 {
     s_notifiers->remove(&notifier);
 }
 
-void CEventLoop::wake()
+void EventLoop::wake()
 {
     char ch = '!';
     int nwritten = write(s_wake_pipe_fds[1], &ch, 1);
     if (nwritten < 0) {
-        perror("CEventLoop::wake: write");
+        perror("EventLoop::wake: write");
         ASSERT_NOT_REACHED();
     }
+}
+
 }

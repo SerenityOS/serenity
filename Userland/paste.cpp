@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
     bool print_type = false;
     bool no_newline = false;
 
-    CArgsParser args_parser;
+    Core::ArgsParser args_parser;
     args_parser.add_option(print_type, "Display the copied type", "print-type", 0);
     args_parser.add_option(no_newline, "Do not append a newline", "no-newline", 'n');
     args_parser.parse(argc, argv);

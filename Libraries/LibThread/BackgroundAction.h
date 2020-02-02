@@ -52,14 +52,14 @@ private:
 };
 
 template<typename Result>
-class BackgroundAction final : public CObject
+class BackgroundAction final : public Core::Object
     , private BackgroundActionBase {
     C_OBJECT(BackgroundAction);
+
 public:
     static NonnullRefPtr<BackgroundAction<Result>> create(
         Function<Result()> action,
-        Function<void(Result)> on_complete = nullptr
-    )
+        Function<void(Result)> on_complete = nullptr)
     {
         return adopt(*new BackgroundAction(move(action), move(on_complete)));
     }
@@ -67,9 +67,8 @@ public:
     virtual ~BackgroundAction() {}
 
 private:
-
     BackgroundAction(Function<Result()> action, Function<void(Result)> on_complete)
-        : CObject(&background_thread())
+        : Core::Object(&background_thread())
         , m_action(move(action))
         , m_on_complete(move(on_complete))
     {
@@ -79,11 +78,11 @@ private:
         all_actions().resource().enqueue([this] {
             m_result = m_action();
             if (m_on_complete) {
-                CEventLoop::main().post_event(*this, make<CDeferredInvocationEvent>([this](CObject&) {
+                Core::EventLoop::main().post_event(*this, make<Core::DeferredInvocationEvent>([this](auto&) {
                     m_on_complete(m_result.release_value());
                     this->unref();
                 }));
-                CEventLoop::main().wake();
+                Core::EventLoop::main().wake();
             } else
                 this->unref();
         });

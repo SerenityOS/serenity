@@ -45,14 +45,14 @@ public:
     int result() const { return m_result; }
     void done(int result);
 
-    virtual void event(CEvent&) override;
+    virtual void event(Core::Event&) override;
 
     virtual void close() override;
 
 protected:
-    explicit GDialog(CObject* parent);
+    explicit GDialog(Core::Object* parent);
 
 private:
-    OwnPtr<CEventLoop> m_event_loop;
+    OwnPtr<Core::EventLoop> m_event_loop;
     int m_result { ExecAborted };
 };

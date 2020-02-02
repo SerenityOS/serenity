@@ -142,12 +142,12 @@ protected:
     virtual void mousemove_event(GMouseEvent&) override;
     virtual void doubleclick_event(GMouseEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
-    virtual void focusin_event(CEvent&) override;
-    virtual void focusout_event(CEvent&) override;
-    virtual void timer_event(CTimerEvent&) override;
+    virtual void focusin_event(Core::Event&) override;
+    virtual void focusout_event(Core::Event&) override;
+    virtual void timer_event(Core::TimerEvent&) override;
     virtual bool accepts_focus() const override { return true; }
-    virtual void enter_event(CEvent&) override;
-    virtual void leave_event(CEvent&) override;
+    virtual void enter_event(Core::Event&) override;
+    virtual void leave_event(Core::Event&) override;
     virtual void context_menu_event(GContextMenuEvent&) override;
     virtual void resize_event(GResizeEvent&) override;
     virtual void cursor_did_change() {}
@@ -232,7 +232,7 @@ private:
     RefPtr<GAction> m_paste_action;
     RefPtr<GAction> m_delete_action;
     RefPtr<GAction> m_go_to_line_action;
-    CElapsedTimer m_triple_click_timer;
+    Core::ElapsedTimer m_triple_click_timer;
     NonnullRefPtrVector<GAction> m_custom_context_menu_actions;
 
     RefPtr<GTextDocument> m_document;

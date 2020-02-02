@@ -57,8 +57,8 @@ int main(int argc, char** argv)
     if (!db)
         fprintf(stderr, "Couldn't open PCI ID database\n");
 
-    auto proc_pci = CFile::construct("/proc/pci");
-    if (!proc_pci->open(CIODevice::ReadOnly)) {
+    auto proc_pci = Core::File::construct("/proc/pci");
+    if (!proc_pci->open(Core::IODevice::ReadOnly)) {
         fprintf(stderr, "Error: %s\n", proc_pci->error_string());
         return 1;
     }

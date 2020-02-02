@@ -32,7 +32,7 @@
 
 namespace LibThread {
 
-class Thread final : public CObject {
+class Thread final : public Core::Object {
     C_OBJECT(Thread);
 
 public:

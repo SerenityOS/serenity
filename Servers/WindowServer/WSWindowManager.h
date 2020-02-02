@@ -66,7 +66,7 @@ enum class ResizeDirection {
     DownLeft
 };
 
-class WSWindowManager : public CObject {
+class WSWindowManager : public Core::Object {
     C_OBJECT(WSWindowManager)
 
     friend class WSCompositor;
@@ -81,7 +81,7 @@ public:
 
     Palette palette() const { return Palette(*m_palette); }
 
-    RefPtr<CConfigFile> wm_config() const
+    RefPtr<Core::ConfigFile> wm_config() const
     {
         return m_wm_config;
     }
@@ -201,7 +201,7 @@ private:
     template<typename Callback>
     IterationDecision for_each_window_of_type_from_front_to_back(WSWindowType, Callback, bool ignore_highlight = false);
 
-    virtual void event(CEvent&) override;
+    virtual void event(Core::Event&) override;
     void paint_window_frame(const WSWindow&);
     void tell_wm_listener_about_window(WSWindow& listener, WSWindow&);
     void tell_wm_listener_about_window_icon(WSWindow& listener, WSWindow&);
@@ -239,7 +239,7 @@ private:
 
     struct DoubleClickInfo {
         struct ClickMetadata {
-            CElapsedTimer clock;
+            Core::ElapsedTimer clock;
             Point last_position;
         };
 
@@ -290,7 +290,7 @@ private:
 
     NonnullRefPtr<PaletteImpl> m_palette;
 
-    RefPtr<CConfigFile> m_wm_config;
+    RefPtr<Core::ConfigFile> m_wm_config;
 
     WeakPtr<WSClientConnection> m_dnd_client;
     String m_dnd_text;

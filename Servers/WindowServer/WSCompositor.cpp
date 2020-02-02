@@ -58,8 +58,8 @@ WallpaperMode mode_to_enum(const String& name)
 
 WSCompositor::WSCompositor()
 {
-    m_compose_timer = CTimer::construct(this);
-    m_immediate_compose_timer = CTimer::construct(this);
+    m_compose_timer = Core::Timer::construct(this);
+    m_immediate_compose_timer = Core::Timer::construct(this);
 
     m_screen_can_set_buffer = WSScreen::the().can_set_buffer();
 

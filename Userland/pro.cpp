@@ -45,7 +45,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    CEventLoop loop;
+    Core::EventLoop loop;
     auto protocol_client = LibProtocol::Client::construct();
 
     auto download = protocol_client->start_download(url.to_string());

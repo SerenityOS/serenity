@@ -40,16 +40,18 @@ namespace AK {
 class JsonObject;
 }
 
+namespace Core {
+
 enum class TimerShouldFireWhenNotVisible {
     No = 0,
     Yes
 };
 
-class CEvent;
-class CEventLoop;
-class CChildEvent;
-class CCustomEvent;
-class CTimerEvent;
+class ChildEvent;
+class CustomEvent;
+class Event;
+class EventLoop;
+class TimerEvent;
 
 #define C_OBJECT(klass)                                                \
 public:                                                                \
@@ -64,26 +66,26 @@ public:                                                                \
 public:                          \
     virtual const char* class_name() const override { return #klass; }
 
-class CObject
-    : public RefCounted<CObject>
-    , public Weakable<CObject> {
-    // NOTE: No C_OBJECT macro for CObject itself.
+class Object
+    : public RefCounted<Object>
+    , public Weakable<Object> {
+    // NOTE: No C_OBJECT macro for Core::Object itself.
 
-    AK_MAKE_NONCOPYABLE(CObject)
-    AK_MAKE_NONMOVABLE(CObject)
+    AK_MAKE_NONCOPYABLE(Object)
+    AK_MAKE_NONMOVABLE(Object)
 public:
     IntrusiveListNode m_all_objects_list_node;
 
-    virtual ~CObject();
+    virtual ~Object();
 
     virtual const char* class_name() const = 0;
-    virtual void event(CEvent&);
+    virtual void event(Core::Event&);
 
     const String& name() const { return m_name; }
     void set_name(const StringView& name) { m_name = name; }
 
-    NonnullRefPtrVector<CObject>& children() { return m_children; }
-    const NonnullRefPtrVector<CObject>& children() const { return m_children; }
+    NonnullRefPtrVector<Object>& children() { return m_children; }
+    const NonnullRefPtrVector<Object>& children() const { return m_children; }
 
     template<typename Callback>
     void for_each_child(Callback callback)
@@ -97,22 +99,22 @@ public:
     template<typename T, typename Callback>
     void for_each_child_of_type(Callback callback);
 
-    bool is_ancestor_of(const CObject&) const;
+    bool is_ancestor_of(const Object&) const;
 
-    CObject* parent() { return m_parent; }
-    const CObject* parent() const { return m_parent; }
+    Object* parent() { return m_parent; }
+    const Object* parent() const { return m_parent; }
 
     void start_timer(int ms, TimerShouldFireWhenNotVisible = TimerShouldFireWhenNotVisible::No);
     void stop_timer();
     bool has_timer() const { return m_timer_id; }
 
-    void add_child(CObject&);
-    void insert_child_before(CObject& new_child, CObject& before_child);
-    void remove_child(CObject&);
+    void add_child(Object&);
+    void insert_child_before(Object& new_child, Object& before_child);
+    void remove_child(Object&);
 
     void dump_tree(int indent = 0);
 
-    void deferred_invoke(Function<void(CObject&)>);
+    void deferred_invoke(Function<void(Object&)>);
 
     bool is_widget() const { return m_widget; }
     virtual bool is_action() const { return false; }
@@ -120,9 +122,9 @@ public:
 
     virtual void save_to(AK::JsonObject&);
 
-    static IntrusiveList<CObject, &CObject::m_all_objects_list_node>& all_objects();
+    static IntrusiveList<Object, &Object::m_all_objects_list_node>& all_objects();
 
-    void dispatch_event(CEvent&, CObject* stay_within = nullptr);
+    void dispatch_event(Core::Event&, Object* stay_within = nullptr);
 
     void remove_from_parent()
     {
@@ -133,41 +135,41 @@ public:
     virtual bool is_visible_for_timer_purposes() const;
 
 protected:
-    explicit CObject(CObject* parent = nullptr, bool is_widget = false);
+    explicit Object(Object* parent = nullptr, bool is_widget = false);
 
-    virtual void timer_event(CTimerEvent&);
-    virtual void custom_event(CCustomEvent&);
+    virtual void timer_event(TimerEvent&);
+    virtual void custom_event(CustomEvent&);
 
     // NOTE: You may get child events for children that are not yet fully constructed!
-    virtual void child_event(CChildEvent&);
+    virtual void child_event(ChildEvent&);
 
 private:
-    CObject* m_parent { nullptr };
+    Object* m_parent { nullptr };
     String m_name;
     int m_timer_id { 0 };
     bool m_widget { false };
-    NonnullRefPtrVector<CObject> m_children;
+    NonnullRefPtrVector<Object> m_children;
 };
 
 template<typename T>
-inline bool is(const CObject&) { return false; }
+inline bool is(const Object&) { return false; }
 
 template<typename T>
-inline T& to(CObject& object)
+inline T& to(Object& object)
 {
     ASSERT(is<typename RemoveConst<T>::Type>(object));
     return static_cast<T&>(object);
 }
 
 template<typename T>
-inline const T& to(const CObject& object)
+inline const T& to(const Object& object)
 {
     ASSERT(is<typename RemoveConst<T>::Type>(object));
     return static_cast<const T&>(object);
 }
 
 template<typename T, typename Callback>
-inline void CObject::for_each_child_of_type(Callback callback)
+inline void Object::for_each_child_of_type(Callback callback)
 {
     for_each_child([&](auto& child) {
         if (is<T>(child))
@@ -176,7 +178,9 @@ inline void CObject::for_each_child_of_type(Callback callback)
     });
 }
 
-inline const LogStream& operator<<(const LogStream& stream, const CObject& object)
+inline const LogStream& operator<<(const LogStream& stream, const Object& object)
 {
     return stream << object.class_name() << '{' << &object << '}';
+}
+
 }

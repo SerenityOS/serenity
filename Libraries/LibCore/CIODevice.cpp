@@ -34,21 +34,23 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-CIODevice::CIODevice(CObject* parent)
-    : CObject(parent)
+namespace Core {
+
+IODevice::IODevice(Object* parent)
+    : Object(parent)
 {
 }
 
-CIODevice::~CIODevice()
+IODevice::~IODevice()
 {
 }
 
-const char* CIODevice::error_string() const
+const char* IODevice::error_string() const
 {
     return strerror(m_error);
 }
 
-int CIODevice::read(u8* buffer, int length)
+int IODevice::read(u8* buffer, int length)
 {
     auto read_buffer = read(length);
     if (read_buffer.is_null())
@@ -57,7 +59,7 @@ int CIODevice::read(u8* buffer, int length)
     return read_buffer.size();
 }
 
-ByteBuffer CIODevice::read(int max_size)
+ByteBuffer IODevice::read(int max_size)
 {
     if (m_fd < 0)
         return {};
@@ -99,7 +101,7 @@ ByteBuffer CIODevice::read(int max_size)
     return buffer;
 }
 
-bool CIODevice::can_read_from_fd() const
+bool IODevice::can_read_from_fd() const
 {
     // FIXME: Can we somehow remove this once CSocket is implemented using non-blocking sockets?
     fd_set rfds;
@@ -111,13 +113,13 @@ bool CIODevice::can_read_from_fd() const
     int rc = CSyscallUtils::safe_syscall(select, m_fd + 1, &rfds, nullptr, nullptr, &timeout);
     if (rc < 0) {
         // NOTE: We don't set m_error here.
-        perror("CIODevice::can_read: select");
+        perror("IODevice::can_read: select");
         return false;
     }
     return FD_ISSET(m_fd, &rfds);
 }
 
-bool CIODevice::can_read_line()
+bool IODevice::can_read_line()
 {
     if (m_eof && !m_buffered_data.is_empty())
         return true;
@@ -129,12 +131,12 @@ bool CIODevice::can_read_line()
     return m_buffered_data.contains_slow('\n');
 }
 
-bool CIODevice::can_read() const
+bool IODevice::can_read() const
 {
     return !m_buffered_data.is_empty() || can_read_from_fd();
 }
 
-ByteBuffer CIODevice::read_all()
+ByteBuffer IODevice::read_all()
 {
     off_t file_size = 0;
     struct stat st;
@@ -168,7 +170,7 @@ ByteBuffer CIODevice::read_all()
     return ByteBuffer::copy(data.data(), data.size());
 }
 
-ByteBuffer CIODevice::read_line(int max_size)
+ByteBuffer IODevice::read_line(int max_size)
 {
     if (m_fd < 0)
         return {};
@@ -178,7 +180,7 @@ ByteBuffer CIODevice::read_line(int max_size)
         return {};
     if (m_eof) {
         if (m_buffered_data.size() > max_size) {
-            dbgprintf("CIODevice::read_line: At EOF but there's more than max_size(%d) buffered\n", max_size);
+            dbgprintf("IODevice::read_line: At EOF but there's more than max_size(%d) buffered\n", max_size);
             return {};
         }
         auto buffer = ByteBuffer::copy(m_buffered_data.data(), m_buffered_data.size());
@@ -202,7 +204,7 @@ ByteBuffer CIODevice::read_line(int max_size)
     return {};
 }
 
-bool CIODevice::populate_read_buffer()
+bool IODevice::populate_read_buffer()
 {
     if (m_fd < 0)
         return false;
@@ -220,7 +222,7 @@ bool CIODevice::populate_read_buffer()
     return true;
 }
 
-bool CIODevice::close()
+bool IODevice::close()
 {
     if (fd() < 0 || mode() == NotOpen)
         return false;
@@ -230,11 +232,11 @@ bool CIODevice::close()
         return false;
     }
     set_fd(-1);
-    set_mode(CIODevice::NotOpen);
+    set_mode(IODevice::NotOpen);
     return true;
 }
 
-bool CIODevice::seek(i64 offset, SeekMode mode, off_t* pos)
+bool IODevice::seek(i64 offset, SeekMode mode, off_t* pos)
 {
     int m = SEEK_SET;
     switch (mode) {
@@ -262,18 +264,18 @@ bool CIODevice::seek(i64 offset, SeekMode mode, off_t* pos)
     return true;
 }
 
-bool CIODevice::write(const u8* data, int size)
+bool IODevice::write(const u8* data, int size)
 {
     int rc = ::write(m_fd, data, size);
     if (rc < 0) {
-        perror("CIODevice::write: write");
+        perror("IODevice::write: write");
         set_error(errno);
         return false;
     }
     return rc == size;
 }
 
-int CIODevice::printf(const char* format, ...)
+int IODevice::printf(const char* format, ...)
 {
     va_list ap;
     va_start(ap, format);
@@ -286,11 +288,12 @@ int CIODevice::printf(const char* format, ...)
     return ret;
 }
 
-void CIODevice::set_fd(int fd)
+void IODevice::set_fd(int fd)
 {
     if (m_fd == fd)
         return;
 
     m_fd = fd;
     did_update_fd(fd);
+}
 }

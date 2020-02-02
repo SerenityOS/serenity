@@ -195,7 +195,7 @@ int main(int argc, char** argv)
 
     const char* command_to_execute = "/bin/Shell";
 
-    CArgsParser args_parser;
+    Core::ArgsParser args_parser;
     args_parser.add_option(command_to_execute, "Execute this command inside the terminal", nullptr, 'e', "command");
     args_parser.parse(argc, argv);
 
@@ -215,7 +215,7 @@ int main(int argc, char** argv)
     window->set_background_color(Color::Black);
     window->set_double_buffering_enabled(false);
 
-    RefPtr<CConfigFile> config = CConfigFile::get_for_app("Terminal");
+    RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("Terminal");
     auto terminal = TerminalWidget::construct(ptm_fd, true, config);
     terminal->on_command_exit = [&] {
         app.quit(0);

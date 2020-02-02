@@ -91,7 +91,7 @@ const GWidgetClassRegistration* GWidgetClassRegistration::find(const String& cla
 }
 
 GWidget::GWidget(GWidget* parent)
-    : CObject(parent, true)
+    : Core::Object(parent, true)
     , m_font(Font::default_font())
     , m_palette(GApplication::the().palette().impl())
 {
@@ -101,26 +101,26 @@ GWidget::~GWidget()
 {
 }
 
-void GWidget::child_event(CChildEvent& event)
+void GWidget::child_event(Core::ChildEvent& event)
 {
     if (event.type() == GEvent::ChildAdded) {
-        if (event.child() && is<GWidget>(*event.child()) && layout()) {
+        if (event.child() && Core::is<GWidget>(*event.child()) && layout()) {
             if (event.insertion_before_child() && event.insertion_before_child()->is_widget())
-                layout()->insert_widget_before(to<GWidget>(*event.child()), to<GWidget>(*event.insertion_before_child()));
+                layout()->insert_widget_before(Core::to<GWidget>(*event.child()), Core::to<GWidget>(*event.insertion_before_child()));
             else
-                layout()->add_widget(to<GWidget>(*event.child()));
+                layout()->add_widget(Core::to<GWidget>(*event.child()));
         }
     }
     if (event.type() == GEvent::ChildRemoved) {
         if (layout()) {
-            if (event.child() && is<GWidget>(*event.child()))
-                layout()->remove_widget(to<GWidget>(*event.child()));
+            if (event.child() && Core::is<GWidget>(*event.child()))
+                layout()->remove_widget(Core::to<GWidget>(*event.child()));
             else
                 invalidate_layout();
         }
         update();
     }
-    return CObject::child_event(event);
+    return Core::Object::child_event(event);
 }
 
 void GWidget::set_relative_rect(const Rect& a_rect)
@@ -151,7 +151,7 @@ void GWidget::set_relative_rect(const Rect& a_rect)
     update();
 }
 
-void GWidget::event(CEvent& event)
+void GWidget::event(Core::Event& event)
 {
     switch (event.type()) {
     case GEvent::Paint:
@@ -189,7 +189,7 @@ void GWidget::event(CEvent& event)
     case GEvent::EnabledChange:
         return change_event(static_cast<GEvent&>(event));
     default:
-        return CObject::event(event);
+        return Core::Object::event(event);
     }
 }
 
@@ -278,14 +278,14 @@ void GWidget::handle_mousedoubleclick_event(GMouseEvent& event)
     doubleclick_event(event);
 }
 
-void GWidget::handle_enter_event(CEvent& event)
+void GWidget::handle_enter_event(Core::Event& event)
 {
     if (has_tooltip())
         GApplication::the().show_tooltip(m_tooltip, screen_relative_rect().center().translated(0, height() / 2));
     enter_event(event);
 }
 
-void GWidget::handle_leave_event(CEvent& event)
+void GWidget::handle_leave_event(Core::Event& event)
 {
     GApplication::the().hide_tooltip();
     leave_event(event);
@@ -356,19 +356,19 @@ void GWidget::context_menu_event(GContextMenuEvent&)
 {
 }
 
-void GWidget::focusin_event(CEvent&)
+void GWidget::focusin_event(Core::Event&)
 {
 }
 
-void GWidget::focusout_event(CEvent&)
+void GWidget::focusout_event(Core::Event&)
 {
 }
 
-void GWidget::enter_event(CEvent&)
+void GWidget::enter_event(Core::Event&)
 {
 }
 
-void GWidget::leave_event(CEvent&)
+void GWidget::leave_event(Core::Event&)
 {
 }
 
@@ -426,9 +426,9 @@ Rect GWidget::screen_relative_rect() const
 GWidget* GWidget::child_at(const Point& point) const
 {
     for (int i = children().size() - 1; i >= 0; --i) {
-        if (!is<GWidget>(children()[i]))
+        if (!Core::is<GWidget>(children()[i]))
             continue;
-        auto& child = to<GWidget>(children()[i]);
+        auto& child = Core::to<GWidget>(children()[i]);
         if (!child.is_visible())
             continue;
         if (child.relative_rect().contains(point))
@@ -701,7 +701,7 @@ void GWidget::save_to(AK::JsonObject& json)
     json.set("foreground_color", foreground_color().to_string());
     json.set("preferred_size", preferred_size().to_string());
     json.set("size_policy", String::format("[%s,%s]", to_string(horizontal_size_policy()), to_string(vertical_size_policy())));
-    CObject::save_to(json);
+    Core::Object::save_to(json);
 }
 
 Vector<GWidget*> GWidget::child_widgets() const

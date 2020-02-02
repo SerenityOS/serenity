@@ -29,9 +29,11 @@
 #include <AK/StdLibExtras.h>
 #include <LibCore/CIODevice.h>
 
-class CIODeviceStreamReader {
+namespace Core {
+
+class IODeviceStreamReader {
 public:
-    CIODeviceStreamReader(CIODevice& device)
+    IODeviceStreamReader(IODevice& device)
         : m_device(device)
     {
     }
@@ -42,7 +44,7 @@ public:
     }
 
     template<typename T>
-    CIODeviceStreamReader& operator>>(T& value)
+    IODeviceStreamReader& operator>>(T& value)
     {
         int nread = m_device.read((u8*)&value, sizeof(T));
         ASSERT(nread == sizeof(T));
@@ -52,6 +54,8 @@ public:
     }
 
 private:
-    CIODevice& m_device;
+    IODevice& m_device;
     bool m_had_failure { false };
 };
+
+}

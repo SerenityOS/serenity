@@ -36,8 +36,11 @@
 #include <LibHTML/CSS/StyleSheet.h>
 #include <LibHTML/DOM/ParentNode.h>
 
+namespace Core {
+class Timer;
+}
+
 class Palette;
-class CTimer;
 class Frame;
 class HTMLBodyElement;
 class HTMLHtmlElement;
@@ -135,7 +138,7 @@ private:
     Optional<Color> m_active_link_color;
     Optional<Color> m_visited_link_color;
 
-    RefPtr<CTimer> m_style_update_timer;
+    RefPtr<Core::Timer> m_style_update_timer;
 
     String m_source;
 };

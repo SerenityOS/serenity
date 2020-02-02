@@ -28,7 +28,10 @@
 
 #include <LibGUI/GWidget.h>
 
-class CTimer;
+namespace Core {
+class Timer;
+}
+
 class GLabel;
 
 class ProcessStateWidget final : public GWidget {
@@ -48,7 +51,7 @@ private:
     RefPtr<GLabel> m_cpu_label;
     RefPtr<GLabel> m_memory_label;
 
-    RefPtr<CTimer> m_timer;
+    RefPtr<Core::Timer> m_timer;
 
     int m_tty_fd { -1 };
 };

@@ -33,7 +33,7 @@
 #include <WindowServer/WSCursor.h>
 #include <WindowServer/WSWindowType.h>
 
-class WSEvent : public CEvent {
+class WSEvent : public Core::Event {
 public:
     enum Type {
         Invalid = 3000,
@@ -54,7 +54,7 @@ public:
 
     WSEvent() {}
     explicit WSEvent(Type type)
-        : CEvent(type)
+        : Core::Event(type)
     {
     }
     virtual ~WSEvent() {}

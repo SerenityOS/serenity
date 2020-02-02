@@ -41,7 +41,7 @@ private:
     explicit SnakeGame(GWidget* parent = nullptr);
     virtual void paint_event(GPaintEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
-    virtual void timer_event(CTimerEvent&) override;
+    virtual void timer_event(Core::TimerEvent&) override;
 
     struct Coordinate {
         int row { 0 };

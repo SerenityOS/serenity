@@ -38,7 +38,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    CEventLoop event_loop;
+    Core::EventLoop event_loop;
     LookupServer server;
 
     if (pledge("stdio accept inet", nullptr) < 0) {

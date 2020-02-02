@@ -43,7 +43,7 @@
 #include <WindowServer/WindowClientEndpoint.h>
 
 WSMenu::WSMenu(WSClientConnection* client, int menu_id, const String& name)
-    : CObject(client)
+    : Core::Object(client)
     , m_client(client)
     , m_menu_id(menu_id)
     , m_name(move(name))
@@ -328,7 +328,7 @@ void WSMenu::handle_mouse_move_event(const WSMouseEvent& mouse_event)
     return;
 }
 
-void WSMenu::event(CEvent& event)
+void WSMenu::event(Core::Event& event)
 {
     if (event.type() == WSEvent::MouseMove) {
         handle_mouse_move_event(static_cast<const WSMouseEvent&>(event));
@@ -446,7 +446,7 @@ void WSMenu::event(CEvent& event)
             return;
         }
     }
-    CObject::event(event);
+    Core::Object::event(event);
 }
 
 void WSMenu::clear_hovered_item()

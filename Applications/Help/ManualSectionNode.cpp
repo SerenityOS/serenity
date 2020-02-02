@@ -41,7 +41,7 @@ void ManualSectionNode::reify_if_needed() const
         return;
     m_reified = true;
 
-    CDirIterator dir_iter { path(), CDirIterator::Flags::SkipDots };
+    Core::DirIterator dir_iter { path(), Core::DirIterator::Flags::SkipDots };
 
     while (dir_iter.has_next()) {
         FileSystemPath file_path(dir_iter.next_path());

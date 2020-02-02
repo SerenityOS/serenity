@@ -35,7 +35,7 @@
 class GAction;
 class Point;
 
-class GMenu final : public CObject {
+class GMenu final : public Core::Object {
     C_OBJECT(GMenu)
 public:
     explicit GMenu(const StringView& name = "");

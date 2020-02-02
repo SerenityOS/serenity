@@ -63,5 +63,5 @@ private:
 
     String m_board { "g" };
     JsonArray m_catalog;
-    RefPtr<CHttpJob> m_pending_job;
+    RefPtr<Core::HttpJob> m_pending_job;
 };

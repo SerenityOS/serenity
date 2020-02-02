@@ -42,7 +42,7 @@
 
 static int handle_show_all()
 {
-    CDirIterator di("/res/wallpapers", CDirIterator::SkipDots);
+    Core::DirIterator di("/res/wallpapers", Core::DirIterator::SkipDots);
     if (di.has_error()) {
         fprintf(stderr, "CDirIterator: %s\n", di.error_string());
         return 1;
@@ -80,10 +80,10 @@ int main(int argc, char** argv)
     bool show_current = false;
     const char* name = nullptr;
 
-    CArgsParser args_parser;
+    Core::ArgsParser args_parser;
     args_parser.add_option(show_all, "Show all wallpapers", "show-all", 'a');
     args_parser.add_option(show_current, "Show current wallpaper", "show-current", 'c');
-    args_parser.add_positional_argument(name, "Wallpaper to set", "name", CArgsParser::Required::No);
+    args_parser.add_positional_argument(name, "Wallpaper to set", "name", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
     GApplication app(argc, argv);

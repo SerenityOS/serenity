@@ -41,12 +41,12 @@
 #include <unistd.h>
 
 template<typename LocalEndpoint, typename PeerEndpoint>
-class IServerConnection : public CObject {
+class IServerConnection : public Core::Object {
 public:
     IServerConnection(LocalEndpoint& local_endpoint, const StringView& address)
         : m_local_endpoint(local_endpoint)
-        , m_connection(CLocalSocket::construct(this))
-        , m_notifier(CNotifier::construct(m_connection->fd(), CNotifier::Read, this))
+        , m_connection(Core::LocalSocket::construct(this))
+        , m_notifier(Core::Notifier::construct(m_connection->fd(), Core::Notifier::Read, this))
     {
         // We want to rate-limit our clients
         m_connection->set_blocking(true);
@@ -57,7 +57,7 @@ public:
 
         int retries = 100000;
         while (retries) {
-            if (m_connection->connect(CSocketAddress::local(address))) {
+            if (m_connection->connect(Core::SocketAddress::local(address))) {
                 break;
             }
 
@@ -193,8 +193,8 @@ private:
     }
 
     LocalEndpoint& m_local_endpoint;
-    RefPtr<CLocalSocket> m_connection;
-    RefPtr<CNotifier> m_notifier;
+    RefPtr<Core::LocalSocket> m_connection;
+    RefPtr<Core::Notifier> m_notifier;
     Vector<OwnPtr<IMessage>> m_unprocessed_messages;
     int m_server_pid { -1 };
     int m_my_client_id { -1 };

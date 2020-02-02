@@ -30,8 +30,10 @@
 #include <AK/StringView.h>
 #include <LibCore/CObject.h>
 
-class CIODevice : public CObject {
-    C_OBJECT_ABSTRACT(CIODevice)
+namespace Core {
+
+class IODevice : public Object {
+    C_OBJECT_ABSTRACT(IODevice)
 public:
     enum OpenMode {
         NotOpen = 0,
@@ -43,7 +45,7 @@ public:
         MustBeNew = 16,
     };
 
-    virtual ~CIODevice() override;
+    virtual ~IODevice() override;
 
     int fd() const { return m_fd; }
     unsigned mode() const { return m_mode; }
@@ -54,7 +56,6 @@ public:
     const char* error_string() const;
 
     bool has_error() const { return m_error != 0; }
-
 
     int read(u8* buffer, int length);
 
@@ -78,13 +79,13 @@ public:
 
     bool seek(i64, SeekMode = SeekMode::SetPosition, off_t* = nullptr);
 
-    virtual bool open(CIODevice::OpenMode) = 0;
+    virtual bool open(IODevice::OpenMode) = 0;
     virtual bool close();
 
     int printf(const char*, ...);
 
 protected:
-    explicit CIODevice(CObject* parent = nullptr);
+    explicit IODevice(Object* parent = nullptr);
 
     void set_fd(int);
     void set_mode(OpenMode mode) { m_mode = mode; }
@@ -103,3 +104,5 @@ private:
     OpenMode m_mode { NotOpen };
     Vector<u8> m_buffered_data;
 };
+
+}

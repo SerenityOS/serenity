@@ -30,13 +30,13 @@
 #include <LibGUI/GMessageBox.h>
 #include <stdio.h>
 
-int GMessageBox::show(const StringView& text, const StringView& title, Type type, InputType input_type, CObject* parent)
+int GMessageBox::show(const StringView& text, const StringView& title, Type type, InputType input_type, Core::Object* parent)
 {
     auto box = GMessageBox::construct(text, title, type, input_type, parent);
     return box->exec();
 }
 
-GMessageBox::GMessageBox(const StringView& text, const StringView& title, Type type, InputType input_type, CObject* parent)
+GMessageBox::GMessageBox(const StringView& text, const StringView& title, Type type, InputType input_type, Core::Object* parent)
     : GDialog(parent)
     , m_text(text)
     , m_type(type)

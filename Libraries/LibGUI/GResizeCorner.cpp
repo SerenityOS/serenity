@@ -60,13 +60,13 @@ void GResizeCorner::mousedown_event(GMouseEvent& event)
     GWidget::mousedown_event(event);
 }
 
-void GResizeCorner::enter_event(CEvent& event)
+void GResizeCorner::enter_event(Core::Event& event)
 {
     window()->set_override_cursor(GStandardCursor::ResizeDiagonalTLBR);
     GWidget::enter_event(event);
 }
 
-void GResizeCorner::leave_event(CEvent& event)
+void GResizeCorner::leave_event(Core::Event& event)
 {
     window()->set_override_cursor(GStandardCursor::None);
     GWidget::leave_event(event);

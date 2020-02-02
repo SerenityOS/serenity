@@ -72,7 +72,7 @@ Optional<String> GFilePicker::get_save_filepath(const String& title, const Strin
     return {};
 }
 
-GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringView& path, CObject* parent)
+GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringView& path, Core::Object* parent)
     : GDialog(parent)
     , m_model(GFileSystemModel::create())
     , m_mode(mode)

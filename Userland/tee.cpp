@@ -123,10 +123,10 @@ int main(int argc, char** argv)
     bool ignore_interrupts = false;
     Vector<const char*> paths;
 
-    CArgsParser args_parser;
+    Core::ArgsParser args_parser;
     args_parser.add_option(append, "Append, don't overwrite", "append", 'a');
     args_parser.add_option(ignore_interrupts, "Ignore SIGINT", "ignore-interrupts", 'i');
-    args_parser.add_positional_argument(paths, "Files to copy stdin to", "file", CArgsParser::Required::No);
+    args_parser.add_positional_argument(paths, "Files to copy stdin to", "file", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
     if (ignore_interrupts) {

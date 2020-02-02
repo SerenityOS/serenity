@@ -38,7 +38,7 @@ public:
     Color color() const { return m_color; }
 
 private:
-    explicit GColorPicker(Color, CObject* parent = nullptr);
+    explicit GColorPicker(Color, Core::Object* parent = nullptr);
 
     void build();
 

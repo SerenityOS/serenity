@@ -31,9 +31,9 @@
 #include <limits>
 
 AWavLoader::AWavLoader(const StringView& path)
-    : m_file(CFile::construct(path))
+    : m_file(Core::File::construct(path))
 {
-    if (!m_file->open(CIODevice::ReadOnly)) {
+    if (!m_file->open(Core::IODevice::ReadOnly)) {
         m_error_string = String::format("Can't open file: %s", m_file->error_string());
         return;
     }
@@ -75,7 +75,7 @@ void AWavLoader::reset()
 
 bool AWavLoader::parse_header()
 {
-    CIODeviceStreamReader stream(*m_file);
+    Core::IODeviceStreamReader stream(*m_file);
 
 #define CHECK_OK(msg)                                                           \
     do {                                                                        \

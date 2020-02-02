@@ -46,7 +46,7 @@ int main(int argc, char** argv)
     const char* gecos = "";
     const char* username = nullptr;
 
-    CArgsParser args_parser;
+    Core::ArgsParser args_parser;
     args_parser.add_option(home_path, "Home directory for the new user", "home-dir", 'd', "path");
     args_parser.add_option(uid, "User ID (uid) for the new user", "uid", 'u', "uid");
     args_parser.add_option(gid, "Group ID (gid) for the new user", "gid", 'g', "gid");

@@ -48,7 +48,7 @@ void ASClientConnection::for_each(Function<void(ASClientConnection&)> callback)
         callback(connection);
 }
 
-ASClientConnection::ASClientConnection(CLocalSocket& client_socket, int client_id, ASMixer& mixer)
+ASClientConnection::ASClientConnection(Core::LocalSocket& client_socket, int client_id, ASMixer& mixer)
     : IClientConnection(*this, client_socket, client_id)
     , m_mixer(mixer)
 {

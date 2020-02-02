@@ -70,5 +70,5 @@ private:
     RefPtr<ABuffer> m_next_buffer;
     RefPtr<ABuffer> m_current_buffer;
     Vector<RefPtr<ABuffer>> m_buffers;
-    RefPtr<CTimer> m_timer;
+    RefPtr<Core::Timer> m_timer;
 };

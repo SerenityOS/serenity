@@ -54,7 +54,7 @@ void TerminalWidget::set_pty_master_fd(int fd)
         m_notifier = nullptr;
         return;
     }
-    m_notifier = CNotifier::construct(m_ptm_fd, CNotifier::Read);
+    m_notifier = Core::Notifier::construct(m_ptm_fd, Core::Notifier::Read);
     m_notifier->on_ready_to_read = [this] {
         u8 buffer[BUFSIZ];
         ssize_t nread = read(m_ptm_fd, buffer, sizeof(buffer));
@@ -81,14 +81,14 @@ void TerminalWidget::set_pty_master_fd(int fd)
     };
 }
 
-TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<CConfigFile> config)
+TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Core::ConfigFile> config)
     : m_terminal(*this)
     , m_automatic_size_policy(automatic_size_policy)
     , m_config(move(config))
 {
     set_pty_master_fd(ptm_fd);
-    m_cursor_blink_timer = CTimer::construct();
-    m_visual_beep_timer = CTimer::construct();
+    m_cursor_blink_timer = Core::Timer::construct();
+    m_visual_beep_timer = Core::Timer::construct();
 
     set_frame_shape(FrameShape::Container);
     set_frame_shadow(FrameShadow::Sunken);
@@ -165,19 +165,19 @@ void TerminalWidget::set_logical_focus(bool focus)
     update();
 }
 
-void TerminalWidget::focusin_event(CEvent& event)
+void TerminalWidget::focusin_event(Core::Event& event)
 {
     set_logical_focus(true);
     return GFrame::focusin_event(event);
 }
 
-void TerminalWidget::focusout_event(CEvent& event)
+void TerminalWidget::focusout_event(Core::Event& event)
 {
     set_logical_focus(false);
     return GFrame::focusout_event(event);
 }
 
-void TerminalWidget::event(CEvent& event)
+void TerminalWidget::event(Core::Event& event)
 {
     if (event.type() == GEvent::WindowBecameActive)
         set_logical_focus(true);

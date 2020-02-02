@@ -31,9 +31,11 @@
 #include <AK/Vector.h>
 #include <stdio.h>
 
-class CArgsParser {
+namespace Core {
+
+class ArgsParser {
 public:
-    CArgsParser();
+    ArgsParser();
 
     enum class Required {
         Yes,
@@ -83,3 +85,5 @@ private:
 
     bool m_show_help { false };
 };
+
+}

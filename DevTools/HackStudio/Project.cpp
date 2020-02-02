@@ -190,8 +190,8 @@ Project::~Project()
 
 OwnPtr<Project> Project::load_from_file(const String& path)
 {
-    auto file = CFile::construct(path);
-    if (!file->open(CFile::ReadOnly))
+    auto file = Core::File::construct(path);
+    if (!file->open(Core::File::ReadOnly))
         return nullptr;
 
     Vector<String> files;
@@ -225,12 +225,12 @@ bool Project::remove_file(const String& filename)
 
 bool Project::save()
 {
-    auto project_file = CFile::construct(m_path);
-    if (!project_file->open(CFile::WriteOnly))
+    auto project_file = Core::File::construct(m_path);
+    if (!project_file->open(Core::File::WriteOnly))
         return false;
 
     for (auto& file : m_files) {
-        // FIXME: Check for error here. CIODevice::printf() needs some work on error reporting.
+        // FIXME: Check for error here. IODevice::printf() needs some work on error reporting.
         project_file->printf("%s\n", file.name().characters());
     }
 

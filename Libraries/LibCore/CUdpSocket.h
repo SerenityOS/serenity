@@ -29,12 +29,16 @@
 #include <AK/Badge.h>
 #include <LibCore/CSocket.h>
 
-class CUdpSocket final : public CSocket {
-    C_OBJECT(CUdpSocket)
+namespace Core {
+
+class UdpSocket final : public Socket {
+    C_OBJECT(UdpSocket)
 public:
-    virtual ~CUdpSocket() override;
+    virtual ~UdpSocket() override;
 
 private:
-    CUdpSocket(int fd, CObject* parent = nullptr);
-    explicit CUdpSocket(CObject* parent = nullptr);
+    UdpSocket(int fd, Object* parent = nullptr);
+    explicit UdpSocket(Object* parent = nullptr);
 };
+
+}

@@ -28,22 +28,24 @@
 #include <LibCore/CHttpJob.h>
 #include <LibCore/CHttpRequest.h>
 
-CHttpRequest::CHttpRequest()
+namespace Core {
+
+HttpRequest::HttpRequest()
 {
 }
 
-CHttpRequest::~CHttpRequest()
+HttpRequest::~HttpRequest()
 {
 }
 
-RefPtr<CNetworkJob> CHttpRequest::schedule()
+RefPtr<NetworkJob> HttpRequest::schedule()
 {
-    auto job = CHttpJob::construct(*this);
+    auto job = HttpJob::construct(*this);
     job->start();
     return job;
 }
 
-String CHttpRequest::method_name() const
+String HttpRequest::method_name() const
 {
     switch (m_method) {
     case Method::GET:
@@ -57,7 +59,7 @@ String CHttpRequest::method_name() const
     }
 }
 
-ByteBuffer CHttpRequest::to_raw_request() const
+ByteBuffer HttpRequest::to_raw_request() const
 {
     StringBuilder builder;
     builder.append(method_name());
@@ -67,4 +69,6 @@ ByteBuffer CHttpRequest::to_raw_request() const
     builder.append(m_url.host());
     builder.append("\r\n\r\n");
     return builder.to_byte_buffer();
+}
+
 }

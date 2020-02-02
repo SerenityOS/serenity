@@ -37,7 +37,7 @@ ProcessStacksWidget::ProcessStacksWidget(GWidget* parent)
     m_stacks_editor = GTextEditor::construct(GTextEditor::Type::MultiLine, this);
     m_stacks_editor->set_readonly(true);
 
-    m_timer = CTimer::construct(1000, [this] { refresh(); }, this);
+    m_timer = Core::Timer::construct(1000, [this] { refresh(); }, this);
 }
 
 ProcessStacksWidget::~ProcessStacksWidget()
@@ -54,8 +54,8 @@ void ProcessStacksWidget::set_pid(pid_t pid)
 
 void ProcessStacksWidget::refresh()
 {
-    auto file = CFile::construct(String::format("/proc/%d/stack", m_pid));
-    if (!file->open(CIODevice::ReadOnly)) {
+    auto file = Core::File::construct(String::format("/proc/%d/stack", m_pid));
+    if (!file->open(Core::IODevice::ReadOnly)) {
         m_stacks_editor->set_text(String::format("Unable to open %s", file->filename().characters()));
         return;
     }

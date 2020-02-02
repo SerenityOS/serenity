@@ -37,7 +37,7 @@ class SimpleIPCServer final :
 
     C_OBJECT(SimpleIPCServer)
 public:
-    SimpleIPCServer(CLocalSocket& socket, int client_id)
+    SimpleIPCServer(Core::LocalSocket& socket, int client_id)
         : ConnectionNG(*this, socket, client_id)
     {
     }
@@ -50,10 +50,10 @@ public:
 
 int main(int, char**)
 {
-    CEventLoop event_loop;
+    Core::EventLoop event_loop;
 
     unlink("/tmp/simple-ipc");
-    auto server = CLocalServer::construct();
+    auto server = Core::LocalServer::construct();
     server->listen("/tmp/simple-ipc");
     server->on_ready_to_accept = [&] {
         auto client_socket = server->accept();

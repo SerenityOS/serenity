@@ -30,7 +30,7 @@
 
 int main(int argc, char** argv)
 {
-    CEventLoop loop;
+    Core::EventLoop loop;
     auto audio_client = AClientConnection::construct();
     audio_client->handshake();
 

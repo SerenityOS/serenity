@@ -29,7 +29,7 @@
 #include <unistd.h>
 
 LibThread::Thread::Thread(Function<int()> action, StringView thread_name)
-    : CObject(nullptr)
+    : Core::Object(nullptr)
     , m_action(move(action))
     , m_thread_name(thread_name.is_null() ? "" : thread_name)
 {

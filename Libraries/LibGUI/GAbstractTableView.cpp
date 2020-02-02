@@ -517,7 +517,7 @@ void GAbstractTableView::context_menu_event(GContextMenuEvent& event)
         on_context_menu_request(index, event);
 }
 
-void GAbstractTableView::leave_event(CEvent&)
+void GAbstractTableView::leave_event(Core::Event&)
 {
     window()->set_override_cursor(GStandardCursor::None);
     set_hovered_header_index(-1);

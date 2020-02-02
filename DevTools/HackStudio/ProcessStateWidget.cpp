@@ -57,7 +57,7 @@ ProcessStateWidget::ProcessStateWidget(GWidget* parent)
     memory_label_label->set_font(Font::default_bold_font());
     m_memory_label = GLabel::construct("", this);
 
-    m_timer = CTimer::construct(500, [this] {
+    m_timer = Core::Timer::construct(500, [this] {
         refresh();
     });
 }
@@ -70,7 +70,7 @@ void ProcessStateWidget::refresh()
 {
     pid_t pid = tcgetpgrp(m_tty_fd);
 
-    auto processes = CProcessStatisticsReader::get_all();
+    auto processes = Core::ProcessStatisticsReader::get_all();
     auto child_process_data = processes.get(pid);
 
     if (!child_process_data.has_value())

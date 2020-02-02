@@ -29,7 +29,9 @@
 #include <LibGUI/GTextEditor.h>
 #include <LibGUI/GWidget.h>
 
-class CTimer;
+namespace Core {
+class Timer;
+}
 
 class ProcessStacksWidget final : public GWidget {
     C_OBJECT(ProcessStacksWidget)
@@ -43,5 +45,5 @@ public:
 private:
     pid_t m_pid { -1 };
     RefPtr<GTextEditor> m_stacks_editor;
-    RefPtr<CTimer> m_timer;
+    RefPtr<Core::Timer> m_timer;
 };

@@ -60,7 +60,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    CArgsParser args_parser;
+    Core::ArgsParser args_parser;
     args_parser.add_option(flag_print_uid, "Print UID", nullptr, 'u');
     args_parser.add_option(flag_print_gid, "Print GID", nullptr, 'g');
     args_parser.add_option(flag_print_gid_all, "Print all GIDs", nullptr, 'G');

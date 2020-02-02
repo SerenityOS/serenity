@@ -26,13 +26,17 @@
 
 #include <LibCore/CHttpResponse.h>
 
-CHttpResponse::CHttpResponse(int code, HashMap<String, String>&& headers, ByteBuffer&& payload)
-    : CNetworkResponse(move(payload))
+namespace Core {
+
+HttpResponse::HttpResponse(int code, HashMap<String, String>&& headers, ByteBuffer&& payload)
+    : NetworkResponse(move(payload))
     , m_code(code)
     , m_headers(move(headers))
 {
 }
 
-CHttpResponse::~CHttpResponse()
+HttpResponse::~HttpResponse()
 {
+}
+
 }

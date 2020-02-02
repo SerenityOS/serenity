@@ -55,7 +55,7 @@ private:
     void clear_preview();
     void on_file_return();
 
-    GFilePicker(Mode type = Mode::Open, const StringView& file_name = "Untitled", const StringView& path = String(get_current_user_home_path()), CObject* parent = nullptr);
+    GFilePicker(Mode type = Mode::Open, const StringView& file_name = "Untitled", const StringView& path = String(get_current_user_home_path()), Core::Object* parent = nullptr);
 
     static String ok_button_name(Mode mode)
     {

@@ -30,9 +30,9 @@
 
 int main(int, char**)
 {
-    CEventLoop event_loop;
+    Core::EventLoop event_loop;
 
-    auto timer = CTimer::construct(100, [&] {
+    auto timer = Core::Timer::construct(100, [&] {
         dbg() << "Timer fired, good-bye! :^)";
         event_loop.quit(0);
     });

@@ -29,14 +29,18 @@
 #include <AK/Badge.h>
 #include <LibCore/CSocket.h>
 
-class CTCPServer;
+namespace Core {
 
-class CTCPSocket final : public CSocket {
-    C_OBJECT(CTCPSocket)
+class TCPServer;
+
+class TCPSocket final : public Socket {
+    C_OBJECT(TCPSocket)
 public:
-    virtual ~CTCPSocket() override;
+    virtual ~TCPSocket() override;
 
 private:
-    CTCPSocket(int fd, CObject* parent = nullptr);
-    explicit CTCPSocket(CObject* parent = nullptr);
+    TCPSocket(int fd, Object* parent = nullptr);
+    explicit TCPSocket(Object* parent = nullptr);
 };
+
+}

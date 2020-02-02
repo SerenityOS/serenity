@@ -85,7 +85,7 @@ public:
         bool has_traversed { false };
 
         int m_watch_fd { -1 };
-        RefPtr<CNotifier> m_notifier;
+        RefPtr<Core::Notifier> m_notifier;
 
         GModelIndex index(const GFileSystemModel&, int column) const;
         void traverse_if_needed(const GFileSystemModel&);

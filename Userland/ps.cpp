@@ -37,7 +37,7 @@ int main(int argc, char** argv)
 
     printf("PID TPG PGP SID UID  STATE        PPID NSCHED     FDS TTY   NAME\n");
 
-    auto all_processes = CProcessStatisticsReader::get_all();
+    auto all_processes = Core::ProcessStatisticsReader::get_all();
 
     for (const auto& it : all_processes) {
         const auto& proc = it.value;

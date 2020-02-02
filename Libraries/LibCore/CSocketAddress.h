@@ -32,7 +32,9 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
-class CSocketAddress {
+namespace Core {
+
+class SocketAddress {
 public:
     enum class Type {
         Invalid,
@@ -40,23 +42,23 @@ public:
         Local
     };
 
-    CSocketAddress() {}
-    CSocketAddress(const IPv4Address& address)
+    SocketAddress() {}
+    SocketAddress(const IPv4Address& address)
         : m_type(Type::IPv4)
         , m_ipv4_address(address)
     {
     }
 
-    CSocketAddress(const IPv4Address& address, u16 port)
+    SocketAddress(const IPv4Address& address, u16 port)
         : m_type(Type::IPv4)
         , m_ipv4_address(address)
         , m_port(port)
     {
     }
 
-    static CSocketAddress local(const String& address)
+    static SocketAddress local(const String& address)
     {
-        CSocketAddress addr;
+        SocketAddress addr;
         addr.m_type = Type::Local;
         addr.m_local_address = address;
         return addr;
@@ -106,7 +108,9 @@ private:
     String m_local_address;
 };
 
-inline const LogStream& operator<<(const LogStream& stream, const CSocketAddress& value)
+inline const LogStream& operator<<(const LogStream& stream, const SocketAddress& value)
 {
     return stream << value.to_string();
+}
+
 }

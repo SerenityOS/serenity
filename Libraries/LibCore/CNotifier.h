@@ -29,8 +29,10 @@
 #include <AK/Function.h>
 #include <LibCore/CObject.h>
 
-class CNotifier : public CObject {
-    C_OBJECT(CNotifier)
+namespace Core {
+
+class Notifier : public Object {
+    C_OBJECT(Notifier)
 public:
     enum Event {
         None = 0,
@@ -39,7 +41,7 @@ public:
         Exceptional = 4,
     };
 
-    virtual ~CNotifier() override;
+    virtual ~Notifier() override;
 
     void set_enabled(bool);
 
@@ -50,11 +52,13 @@ public:
     unsigned event_mask() const { return m_event_mask; }
     void set_event_mask(unsigned event_mask) { m_event_mask = event_mask; }
 
-    void event(CEvent&) override;
+    void event(Core::Event&) override;
 
 private:
-    CNotifier(int fd, unsigned event_mask, CObject* parent = nullptr);
+    Notifier(int fd, unsigned event_mask, Object* parent = nullptr);
 
     int m_fd { -1 };
     unsigned m_event_mask { 0 };
 };
+
+}

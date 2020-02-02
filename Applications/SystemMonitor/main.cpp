@@ -146,7 +146,7 @@ int main(int argc, char** argv)
     toolbar->set_has_frame(false);
     auto process_table_view = ProcessTableView::construct(process_table_container);
 
-    auto refresh_timer = CTimer::construct(1000, [&] {
+    auto refresh_timer = Core::Timer::construct(1000, [&] {
         process_table_view->refresh();
         if (auto* memory_stats_widget = MemoryStatsWidget::the())
             memory_stats_widget->refresh();

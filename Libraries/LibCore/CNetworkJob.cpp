@@ -30,19 +30,21 @@
 
 //#define CNETWORKJOB_DEBUG
 
-CNetworkJob::CNetworkJob()
+namespace Core {
+
+NetworkJob::NetworkJob()
 {
 }
 
-CNetworkJob::~CNetworkJob()
+NetworkJob::~NetworkJob()
 {
 }
 
-void CNetworkJob::did_finish(NonnullRefPtr<CNetworkResponse>&& response)
+void NetworkJob::did_finish(NonnullRefPtr<NetworkResponse>&& response)
 {
     // NOTE: We protect ourselves here, since the on_finish callback may otherwise
     //       trigger destruction of this job somehow.
-    NonnullRefPtr<CNetworkJob> protector(*this);
+    NonnullRefPtr<NetworkJob> protector(*this);
 
     m_response = move(response);
 #ifdef CNETWORKJOB_DEBUG
@@ -53,11 +55,11 @@ void CNetworkJob::did_finish(NonnullRefPtr<CNetworkResponse>&& response)
     shutdown();
 }
 
-void CNetworkJob::did_fail(Error error)
+void NetworkJob::did_fail(Error error)
 {
     // NOTE: We protect ourselves here, since the on_finish callback may otherwise
     //       trigger destruction of this job somehow.
-    NonnullRefPtr<CNetworkJob> protector(*this);
+    NonnullRefPtr<NetworkJob> protector(*this);
 
     m_error = error;
 #ifdef CNETWORKJOB_DEBUG
@@ -68,18 +70,20 @@ void CNetworkJob::did_fail(Error error)
     shutdown();
 }
 
-const char* to_string(CNetworkJob::Error error)
+const char* to_string(NetworkJob::Error error)
 {
     switch (error) {
-    case CNetworkJob::Error::ProtocolFailed:
+    case NetworkJob::Error::ProtocolFailed:
         return "ProtocolFailed";
-    case CNetworkJob::Error::ConnectionFailed:
+    case NetworkJob::Error::ConnectionFailed:
         return "ConnectionFailed";
-    case CNetworkJob::Error::TransmissionFailed:
+    case NetworkJob::Error::TransmissionFailed:
         return "TransmissionFailed";
-    case CNetworkJob::Error::Cancelled:
+    case NetworkJob::Error::Cancelled:
         return "Cancelled";
     default:
         return "(Unknown error)";
     }
+}
+
 }

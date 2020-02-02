@@ -51,8 +51,8 @@ int main(int argc, char** argv)
         fprintf(stderr, "usage: %s <path/to/CSS/Properties.json>\n", argv[0]);
         return 1;
     }
-    auto file = CFile::construct(argv[1]);
-    if (!file->open(CIODevice::ReadOnly))
+    auto file = Core::File::construct(argv[1]);
+    if (!file->open(Core::IODevice::ReadOnly))
         return 1;
 
     auto json = JsonValue::from_string(file->read_all());

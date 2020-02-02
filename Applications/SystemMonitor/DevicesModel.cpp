@@ -121,8 +121,8 @@ GVariant DevicesModel::data(const GModelIndex& index, Role) const
 
 void DevicesModel::update()
 {
-    auto proc_devices = CFile::construct("/proc/devices");
-    if (!proc_devices->open(CIODevice::OpenMode::ReadOnly))
+    auto proc_devices = Core::File::construct("/proc/devices");
+    if (!proc_devices->open(Core::IODevice::OpenMode::ReadOnly))
         ASSERT_NOT_REACHED();
 
     auto json = JsonValue::from_string(proc_devices->read_all()).as_array();
@@ -148,7 +148,7 @@ void DevicesModel::update()
     });
 
     auto fill_in_paths_from_dir = [this](const String& dir) {
-        CDirIterator dir_iter { dir, CDirIterator::Flags::SkipDots };
+        Core::DirIterator dir_iter { dir, Core::DirIterator::Flags::SkipDots };
         while (dir_iter.has_next()) {
             auto name = dir_iter.next_path();
             auto path = String::format("%s/%s", dir.characters(), name.characters());

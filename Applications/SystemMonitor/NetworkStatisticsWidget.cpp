@@ -81,7 +81,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget(GWidget* parent)
         net_tcp_fields.empend("bytes_out", "Bytes Out", TextAlignment::CenterRight);
         m_socket_table_view->set_model(GJsonArrayModel::create("/proc/net/tcp", move(net_tcp_fields)));
 
-        m_update_timer = CTimer::construct(
+        m_update_timer = Core::Timer::construct(
             1000, [this] {
                 update_models();
             },

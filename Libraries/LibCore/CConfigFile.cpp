@@ -32,43 +32,45 @@
 #include <stdio.h>
 #include <unistd.h>
 
-NonnullRefPtr<CConfigFile> CConfigFile::get_for_app(const String& app_name)
+namespace Core {
+
+NonnullRefPtr<ConfigFile> ConfigFile::get_for_app(const String& app_name)
 {
     String home_path = get_current_user_home_path();
     if (home_path == "/")
         home_path = String::format("/tmp");
     auto path = String::format("%s/%s.ini", home_path.characters(), app_name.characters());
-    return adopt(*new CConfigFile(path));
+    return adopt(*new ConfigFile(path));
 }
 
-NonnullRefPtr<CConfigFile> CConfigFile::get_for_system(const String& app_name)
+NonnullRefPtr<ConfigFile> ConfigFile::get_for_system(const String& app_name)
 {
     auto path = String::format("/etc/%s.ini", app_name.characters());
-    return adopt(*new CConfigFile(path));
+    return adopt(*new ConfigFile(path));
 }
 
-NonnullRefPtr<CConfigFile> CConfigFile::open(const String& path)
+NonnullRefPtr<ConfigFile> ConfigFile::open(const String& path)
 {
-    return adopt(*new CConfigFile(path));
+    return adopt(*new ConfigFile(path));
 }
 
-CConfigFile::CConfigFile(const String& file_name)
+ConfigFile::ConfigFile(const String& file_name)
     : m_file_name(file_name)
 {
     reparse();
 }
 
-CConfigFile::~CConfigFile()
+ConfigFile::~ConfigFile()
 {
     sync();
 }
 
-void CConfigFile::reparse()
+void ConfigFile::reparse()
 {
     m_groups.clear();
 
-    auto file = CFile::construct(m_file_name);
-    if (!file->open(CIODevice::OpenMode::ReadOnly))
+    auto file = File::construct(m_file_name);
+    if (!file->open(IODevice::OpenMode::ReadOnly))
         return;
 
     HashMap<String, String>* current_group = nullptr;
@@ -111,10 +113,10 @@ void CConfigFile::reparse()
     }
 }
 
-String CConfigFile::read_entry(const String& group, const String& key, const String& default_value) const
+String ConfigFile::read_entry(const String& group, const String& key, const String& default_value) const
 {
     if (!has_key(group, key)) {
-        const_cast<CConfigFile&>(*this).write_entry(group, key, default_value);
+        const_cast<ConfigFile&>(*this).write_entry(group, key, default_value);
         return default_value;
     }
     auto it = m_groups.find(group);
@@ -122,10 +124,10 @@ String CConfigFile::read_entry(const String& group, const String& key, const Str
     return jt->value;
 }
 
-int CConfigFile::read_num_entry(const String& group, const String& key, int default_value) const
+int ConfigFile::read_num_entry(const String& group, const String& key, int default_value) const
 {
     if (!has_key(group, key)) {
-        const_cast<CConfigFile&>(*this).write_num_entry(group, key, default_value);
+        const_cast<ConfigFile&>(*this).write_num_entry(group, key, default_value);
         return default_value;
     }
 
@@ -136,31 +138,31 @@ int CConfigFile::read_num_entry(const String& group, const String& key, int defa
     return value;
 }
 
-bool CConfigFile::read_bool_entry(const String& group, const String& key, bool default_value) const
+bool ConfigFile::read_bool_entry(const String& group, const String& key, bool default_value) const
 {
     return read_entry(group, key, default_value ? "1" : "0") == "1";
 }
 
-void CConfigFile::write_entry(const String& group, const String& key, const String& value)
+void ConfigFile::write_entry(const String& group, const String& key, const String& value)
 {
     m_groups.ensure(group).ensure(key) = value;
     m_dirty = true;
 }
 
-void CConfigFile::write_num_entry(const String& group, const String& key, int value)
+void ConfigFile::write_num_entry(const String& group, const String& key, int value)
 {
     write_entry(group, key, String::number(value));
 }
-void CConfigFile::write_bool_entry(const String& group, const String& key, bool value)
+void ConfigFile::write_bool_entry(const String& group, const String& key, bool value)
 {
     write_entry(group, key, value ? "1" : "0");
 }
-void CConfigFile::write_color_entry(const String& group, const String& key, Color value)
+void ConfigFile::write_color_entry(const String& group, const String& key, Color value)
 {
     write_entry(group, key, String::format("%d,%d,%d,%d", value.red(), value.green(), value.blue(), value.alpha()));
 }
 
-bool CConfigFile::sync()
+bool ConfigFile::sync()
 {
     if (!m_dirty)
         return true;
@@ -182,7 +184,7 @@ bool CConfigFile::sync()
     return true;
 }
 
-void CConfigFile::dump() const
+void ConfigFile::dump() const
 {
     for (auto& it : m_groups) {
         printf("[%s]\n", it.key.characters());
@@ -192,12 +194,12 @@ void CConfigFile::dump() const
     }
 }
 
-Vector<String> CConfigFile::groups() const
+Vector<String> ConfigFile::groups() const
 {
     return m_groups.keys();
 }
 
-Vector<String> CConfigFile::keys(const String& group) const
+Vector<String> ConfigFile::keys(const String& group) const
 {
     auto it = m_groups.find(group);
     if (it == m_groups.end())
@@ -205,7 +207,7 @@ Vector<String> CConfigFile::keys(const String& group) const
     return it->value.keys();
 }
 
-bool CConfigFile::has_key(const String& group, const String& key) const
+bool ConfigFile::has_key(const String& group, const String& key) const
 {
     auto it = m_groups.find(group);
     if (it == m_groups.end())
@@ -213,22 +215,24 @@ bool CConfigFile::has_key(const String& group, const String& key) const
     return it->value.contains(key);
 }
 
-bool CConfigFile::has_group(const String& group) const
+bool ConfigFile::has_group(const String& group) const
 {
     return m_groups.contains(group);
 }
 
-void CConfigFile::remove_group(const String& group)
+void ConfigFile::remove_group(const String& group)
 {
     m_groups.remove(group);
     m_dirty = true;
 }
 
-void CConfigFile::remove_entry(const String& group, const String& key)
+void ConfigFile::remove_entry(const String& group, const String& key)
 {
     auto it = m_groups.find(group);
     if (it == m_groups.end())
         return;
     it->value.remove(key);
     m_dirty = true;
+}
+
 }

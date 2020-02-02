@@ -78,8 +78,8 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    auto file = CFile::construct("/proc/net/adapters");
-    if (!file->open(CIODevice::ReadOnly)) {
+    auto file = Core::File::construct("/proc/net/adapters");
+    if (!file->open(Core::IODevice::ReadOnly)) {
         fprintf(stderr, "Error: %s\n", file->error_string());
         return 1;
     }

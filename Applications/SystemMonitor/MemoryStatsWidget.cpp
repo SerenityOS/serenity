@@ -93,8 +93,8 @@ static inline size_t bytes_to_kb(size_t bytes)
 
 void MemoryStatsWidget::refresh()
 {
-    auto proc_memstat = CFile::construct("/proc/memstat");
-    if (!proc_memstat->open(CIODevice::OpenMode::ReadOnly))
+    auto proc_memstat = Core::File::construct("/proc/memstat");
+    if (!proc_memstat->open(Core::IODevice::OpenMode::ReadOnly))
         ASSERT_NOT_REACHED();
 
     auto file_contents = proc_memstat->read_all();

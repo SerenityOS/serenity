@@ -46,9 +46,9 @@ ResourceLoader::ResourceLoader()
 void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&)> callback)
 {
     if (url.protocol() == "file") {
-        auto f = CFile::construct();
+        auto f = Core::File::construct();
         f->set_filename(url.path());
-        if (!f->open(CIODevice::OpenMode::ReadOnly)) {
+        if (!f->open(Core::IODevice::OpenMode::ReadOnly)) {
             dbg() << "ResourceLoader::load: Error: " << f->error_string();
             callback({});
             return;

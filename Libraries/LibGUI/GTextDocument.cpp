@@ -37,7 +37,7 @@ GTextDocument::GTextDocument(Client* client)
     append_line(make<GTextDocumentLine>(*this));
 
     // TODO: Instead of a repating timer, this we should call a delayed 2 sec timer when the user types.
-    m_undo_timer = CTimer::construct(
+    m_undo_timer = Core::Timer::construct(
         2000, [this] {
             update_undo_timer();
         });

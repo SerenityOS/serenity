@@ -43,14 +43,14 @@ GSplitter::~GSplitter()
 {
 }
 
-void GSplitter::enter_event(CEvent&)
+void GSplitter::enter_event(Core::Event&)
 {
     set_background_role(ColorRole::HoverHighlight);
     window()->set_override_cursor(m_orientation == Orientation::Horizontal ? GStandardCursor::ResizeHorizontal : GStandardCursor::ResizeVertical);
     update();
 }
 
-void GSplitter::leave_event(CEvent&)
+void GSplitter::leave_event(Core::Event&)
 {
     set_background_role(ColorRole::Button);
     if (!m_resizing)

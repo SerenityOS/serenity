@@ -29,13 +29,15 @@
 #include <LibCore/CElapsedTimer.h>
 #include <sys/time.h>
 
-void CElapsedTimer::start()
+namespace Core {
+
+void ElapsedTimer::start()
 {
     m_valid = true;
     gettimeofday(&m_start_time, nullptr);
 }
 
-int CElapsedTimer::elapsed() const
+int ElapsedTimer::elapsed() const
 {
     ASSERT(is_valid());
     struct timeval now;
@@ -43,4 +45,6 @@ int CElapsedTimer::elapsed() const
     struct timeval diff;
     timeval_sub(now, m_start_time, diff);
     return diff.tv_sec * 1000 + diff.tv_usec / 1000;
+}
+
 }

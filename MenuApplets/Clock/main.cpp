@@ -41,7 +41,7 @@ public:
     {
         m_time_width = Font::default_bold_font().width("2222-22-22 22:22:22");
 
-        m_timer = CTimer::construct(1000, [this] {
+        m_timer = Core::Timer::construct(1000, [this] {
             static time_t last_update_time;
             time_t now = time(nullptr);
             if (now != last_update_time) {
@@ -84,7 +84,7 @@ private:
         update();
     }
 
-    RefPtr<CTimer> m_timer;
+    RefPtr<Core::Timer> m_timer;
     int m_time_width;
 };
 

@@ -33,7 +33,7 @@
 class GPainter;
 
 class GAbstractButton : public GWidget {
-    C_OBJECT(GAbstractButton)
+    C_OBJECT_ABSTRACT(GAbstractButton)
 public:
     virtual ~GAbstractButton() override;
 
@@ -69,8 +69,8 @@ protected:
     virtual void mousemove_event(GMouseEvent&) override;
     virtual void mouseup_event(GMouseEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
-    virtual void enter_event(CEvent&) override;
-    virtual void leave_event(CEvent&) override;
+    virtual void enter_event(Core::Event&) override;
+    virtual void leave_event(Core::Event&) override;
     virtual void change_event(GEvent&) override;
 
     void paint_text(GPainter&, const Rect&, const Font&, TextAlignment);
@@ -86,11 +86,11 @@ private:
     bool m_exclusive { false };
 
     int m_auto_repeat_interval { 0 };
-    RefPtr<CTimer> m_auto_repeat_timer;
+    RefPtr<Core::Timer> m_auto_repeat_timer;
 };
 
 template<>
-inline bool is<GAbstractButton>(const CObject& object)
+inline bool Core::is<GAbstractButton>(const Core::Object& object)
 {
     if (!is<GWidget>(object))
         return false;

@@ -37,7 +37,7 @@ namespace FileUtils {
 
 int delete_directory(String directory, String& file_that_caused_error)
 {
-    CDirIterator iterator(directory, CDirIterator::SkipDots);
+    Core::DirIterator iterator(directory, Core::DirIterator::SkipDots);
     if (iterator.has_error()) {
         file_that_caused_error = directory;
         return -1;
@@ -104,7 +104,7 @@ bool copy_directory(const String& src_path, const String& dst_path)
     if (rc < 0) {
         return false;
     }
-    CDirIterator di(src_path, CDirIterator::SkipDots);
+    Core::DirIterator di(src_path, Core::DirIterator::SkipDots);
     if (di.has_error()) {
         return false;
     }

@@ -32,7 +32,7 @@ int main(int argc, char** argv)
 {
     bool now = false;
 
-    CArgsParser args_parser;
+    Core::ArgsParser args_parser;
     args_parser.add_option(now, "Shut down now", "now", 'n');
     args_parser.parse(argc, argv);
 

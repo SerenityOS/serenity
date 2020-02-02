@@ -50,11 +50,11 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    CEventLoop loop;
+    Core::EventLoop loop;
 
     int pid = atoi(argv[1]);
 
-    auto socket = CLocalSocket::construct();
+    auto socket = Core::LocalSocket::construct();
 
     if (pledge("stdio unix", nullptr) < 0) {
         perror("pledge");
@@ -88,7 +88,7 @@ int main(int argc, char** argv)
         loop.quit(0);
     };
 
-    auto success = socket->connect(CSocketAddress::local(String::format("/tmp/rpc.%d", pid)));
+    auto success = socket->connect(Core::SocketAddress::local(String::format("/tmp/rpc.%d", pid)));
     if (!success) {
         fprintf(stderr, "Couldn't connect to PID %d\n", pid);
         return 1;

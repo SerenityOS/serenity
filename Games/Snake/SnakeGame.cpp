@@ -102,7 +102,7 @@ Rect SnakeGame::high_score_rect() const
     return { 2, height() - font().glyph_height() - 2, high_score_width, font().glyph_height() };
 }
 
-void SnakeGame::timer_event(CTimerEvent&)
+void SnakeGame::timer_event(Core::TimerEvent&)
 {
     Vector<Coordinate> dirty_cells;
 

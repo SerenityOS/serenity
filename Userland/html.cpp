@@ -46,13 +46,13 @@ int main(int argc, char** argv)
 {
     GApplication app(argc, argv);
 
-    auto f = CFile::construct();
+    auto f = Core::File::construct();
     bool success;
     if (argc < 2) {
-        success = f->open(STDIN_FILENO, CIODevice::OpenMode::ReadOnly, CFile::ShouldCloseFileDescription::No);
+        success = f->open(STDIN_FILENO, Core::IODevice::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescription::No);
     } else {
         f->set_filename(argv[1]);
-        success = f->open(CIODevice::OpenMode::ReadOnly);
+        success = f->open(Core::IODevice::OpenMode::ReadOnly);
     }
     if (!success) {
         fprintf(stderr, "Error: %s\n", f->error_string());

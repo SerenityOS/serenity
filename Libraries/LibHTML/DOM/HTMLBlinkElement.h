@@ -28,7 +28,9 @@
 
 #include <LibHTML/DOM/HTMLElement.h>
 
-class CTimer;
+namespace Core {
+class Timer;
+}
 
 class HTMLBlinkElement : public HTMLElement {
 public:
@@ -38,5 +40,5 @@ public:
 private:
     void blink();
 
-    NonnullRefPtr<CTimer> m_timer;
+    NonnullRefPtr<Core::Timer> m_timer;
 };

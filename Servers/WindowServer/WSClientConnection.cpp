@@ -65,7 +65,7 @@ WSClientConnection* WSClientConnection::from_client_id(int client_id)
     return (*it).value.ptr();
 }
 
-WSClientConnection::WSClientConnection(CLocalSocket& client_socket, int client_id)
+WSClientConnection::WSClientConnection(Core::LocalSocket& client_socket, int client_id)
     : IClientConnection(*this, client_socket, client_id)
 {
     if (!s_connections)

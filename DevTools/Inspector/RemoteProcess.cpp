@@ -34,7 +34,7 @@
 RemoteProcess::RemoteProcess(pid_t pid)
     : m_pid(pid)
     , m_object_graph_model(RemoteObjectGraphModel::create(*this))
-    , m_socket(CLocalSocket::construct())
+    , m_socket(Core::LocalSocket::construct())
 {
 }
 
@@ -152,7 +152,7 @@ void RemoteProcess::update()
         }
     };
 
-    auto success = m_socket->connect(CSocketAddress::local(String::format("/tmp/rpc.%d", m_pid)));
+    auto success = m_socket->connect(Core::SocketAddress::local(String::format("/tmp/rpc.%d", m_pid)));
     if (!success) {
         fprintf(stderr, "Couldn't connect to PID %d\n", m_pid);
         exit(1);

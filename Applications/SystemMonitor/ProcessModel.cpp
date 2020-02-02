@@ -335,7 +335,7 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
 
 void ProcessModel::update()
 {
-    auto all_processes = CProcessStatisticsReader::get_all();
+    auto all_processes = Core::ProcessStatisticsReader::get_all();
 
     unsigned last_sum_times_scheduled = 0;
     for (auto& it : m_threads)

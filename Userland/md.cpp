@@ -45,13 +45,13 @@ int main(int argc, char* argv[])
         else
             file_name = argv[i];
 
-    auto file = CFile::construct();;
+    auto file = Core::File::construct();;
     bool success;
     if (file_name == nullptr) {
-        success = file->open(STDIN_FILENO, CIODevice::OpenMode::ReadOnly, CFile::ShouldCloseFileDescription::No);
+        success = file->open(STDIN_FILENO, Core::IODevice::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescription::No);
     } else {
         file->set_filename(file_name);
-        success = file->open(CIODevice::OpenMode::ReadOnly);
+        success = file->open(Core::IODevice::OpenMode::ReadOnly);
     }
     if (!success) {
         fprintf(stderr, "Error: %s\n", file->error_string());

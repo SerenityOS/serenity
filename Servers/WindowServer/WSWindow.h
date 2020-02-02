@@ -58,12 +58,12 @@ enum class PopupMenuItem {
     Maximize,
 };
 
-class WSWindow final : public CObject
+class WSWindow final : public Core::Object
     , public InlineLinkedListNode<WSWindow> {
     C_OBJECT(WSWindow)
 public:
     WSWindow(WSClientConnection&, WSWindowType, int window_id, bool modal, bool minimizable, bool resizable, bool fullscreen);
-    WSWindow(CObject&, WSWindowType);
+    WSWindow(Core::Object&, WSWindowType);
     virtual ~WSWindow() override;
 
     void popup_window_menu(const Point&);
@@ -164,7 +164,7 @@ public:
     void invalidate();
     void invalidate(const Rect&);
 
-    virtual void event(CEvent&) override;
+    virtual void event(Core::Event&) override;
 
     // Only used by WSWindowType::MenuApplet. Perhaps it could be a WSWindow subclass? I don't know.
     void set_rect_in_menubar(const Rect& rect) { m_rect_in_menubar = rect; }

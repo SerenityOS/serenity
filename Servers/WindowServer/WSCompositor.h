@@ -44,7 +44,7 @@ enum class WallpaperMode {
     Unchecked
 };
 
-class WSCompositor final : public CObject {
+class WSCompositor final : public Core::Object {
     C_OBJECT(WSCompositor)
 public:
     static WSCompositor& the();
@@ -73,8 +73,8 @@ private:
 
     unsigned m_compose_count { 0 };
     unsigned m_flush_count { 0 };
-    RefPtr<CTimer> m_compose_timer;
-    RefPtr<CTimer> m_immediate_compose_timer;
+    RefPtr<Core::Timer> m_compose_timer;
+    RefPtr<Core::Timer> m_immediate_compose_timer;
     bool m_flash_flush { false };
     bool m_buffers_are_flipped { false };
     bool m_screen_can_set_buffer { false };

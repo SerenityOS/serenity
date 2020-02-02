@@ -53,11 +53,11 @@ WSMenuManager::WSMenuManager()
 
     HashTable<String> seen_app_categories;
     {
-        CDirIterator dt("/res/apps", CDirIterator::SkipDots);
+        Core::DirIterator dt("/res/apps", Core::DirIterator::SkipDots);
         while (dt.has_next()) {
             auto af_name = dt.next_path();
             auto af_path = String::format("/res/apps/%s", af_name.characters());
-            auto af = CConfigFile::open(af_path);
+            auto af = Core::ConfigFile::open(af_path);
             if (!af->has_key("App", "Name") || !af->has_key("App", "Executable"))
                 continue;
             auto app_name = af->read_entry("App", "Name");
@@ -114,7 +114,7 @@ WSMenuManager::WSMenuManager()
     m_system_menu->add_item(move(themes_menu_item));
 
     {
-        CDirIterator dt("/res/themes", CDirIterator::SkipDots);
+        Core::DirIterator dt("/res/themes", Core::DirIterator::SkipDots);
         while (dt.has_next()) {
             auto theme_name = dt.next_path();
             auto theme_path = String::format("/res/themes/%s", theme_name.characters());
@@ -270,10 +270,10 @@ void WSMenuManager::refresh()
     window().invalidate();
 }
 
-void WSMenuManager::event(CEvent& event)
+void WSMenuManager::event(Core::Event& event)
 {
     if (WSWindowManager::the().active_window_is_modal())
-        return CObject::event(event);
+        return Core::Object::event(event);
 
     if (event.type() == WSEvent::MouseMove || event.type() == WSEvent::MouseUp || event.type() == WSEvent::MouseDown || event.type() == WSEvent::MouseWheel) {
 
@@ -313,7 +313,7 @@ void WSMenuManager::event(CEvent& event)
         }
     }
 
-    return CObject::event(event);
+    return Core::Object::event(event);
 }
 
 void WSMenuManager::handle_menu_mouse_event(WSMenu& menu, const WSMouseEvent& event)

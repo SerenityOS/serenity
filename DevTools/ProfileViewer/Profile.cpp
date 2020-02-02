@@ -157,8 +157,8 @@ void Profile::rebuild_tree()
 
 OwnPtr<Profile> Profile::load_from_file(const StringView& path)
 {
-    auto file = CFile::construct(path);
-    if (!file->open(CIODevice::ReadOnly)) {
+    auto file = Core::File::construct(path);
+    if (!file->open(Core::IODevice::ReadOnly)) {
         fprintf(stderr, "Unable to open %s, error: %s\n", String(path).characters(), file->error_string());
         return nullptr;
     }

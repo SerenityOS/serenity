@@ -53,7 +53,7 @@ private:
 };
 
 template<>
-inline bool is<GRadioButton>(const CObject& object)
+inline bool Core::is<GRadioButton>(const Core::Object& object)
 {
     if (!is<GWidget>(object))
         return false;

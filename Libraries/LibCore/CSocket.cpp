@@ -38,33 +38,35 @@
 
 //#define CSOCKET_DEBUG
 
-CSocket::CSocket(Type type, CObject* parent)
-    : CIODevice(parent)
+namespace Core {
+
+Socket::Socket(Type type, Object* parent)
+    : IODevice(parent)
     , m_type(type)
 {
 }
 
-CSocket::~CSocket()
+Socket::~Socket()
 {
     close();
 }
 
-bool CSocket::connect(const String& hostname, int port)
+bool Socket::connect(const String& hostname, int port)
 {
     auto* hostent = gethostbyname(hostname.characters());
     if (!hostent) {
-        dbg() << "CSocket::connect: Unable to resolve '" << hostname << "'";
+        dbg() << "Socket::connect: Unable to resolve '" << hostname << "'";
         return false;
     }
 
     IPv4Address host_address((const u8*)hostent->h_addr_list[0]);
 #ifdef CSOCKET_DEBUG
-    dbg() << "CSocket::connect: Resolved '" << hostname << "' to " << host_address;
+    dbg() << "Socket::connect: Resolved '" << hostname << "' to " << host_address;
 #endif
     return connect(host_address, port);
 }
 
-void CSocket::set_blocking(bool blocking)
+void Socket::set_blocking(bool blocking)
 {
     int flags = fcntl(fd(), F_GETFL, 0);
     ASSERT(flags >= 0);
@@ -75,10 +77,10 @@ void CSocket::set_blocking(bool blocking)
     ASSERT(flags == 0);
 }
 
-bool CSocket::connect(const CSocketAddress& address, int port)
+bool Socket::connect(const SocketAddress& address, int port)
 {
     ASSERT(!is_connected());
-    ASSERT(address.type() == CSocketAddress::Type::IPv4);
+    ASSERT(address.type() == SocketAddress::Type::IPv4);
 #ifdef CSOCKET_DEBUG
     dbg() << *this << " connecting to " << address << "...";
 #endif
@@ -98,10 +100,10 @@ bool CSocket::connect(const CSocketAddress& address, int port)
     return common_connect((struct sockaddr*)&addr, sizeof(addr));
 }
 
-bool CSocket::connect(const CSocketAddress& address)
+bool Socket::connect(const SocketAddress& address)
 {
     ASSERT(!is_connected());
-    ASSERT(address.type() == CSocketAddress::Type::Local);
+    ASSERT(address.type() == SocketAddress::Type::Local);
 #ifdef CSOCKET_DEBUG
     dbg() << *this << " connecting to " << address << "...";
 #endif
@@ -113,7 +115,7 @@ bool CSocket::connect(const CSocketAddress& address)
     return common_connect((const sockaddr*)&saddr, sizeof(saddr));
 }
 
-bool CSocket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
+bool Socket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
 {
     int rc = ::connect(fd(), addr, addrlen);
     if (rc < 0) {
@@ -121,20 +123,20 @@ bool CSocket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
 #ifdef CSOCKET_DEBUG
             dbg() << *this << " connection in progress (EINPROGRESS)";
 #endif
-            m_notifier = CNotifier::construct(fd(), CNotifier::Event::Write, this);
+            m_notifier = Notifier::construct(fd(), Notifier::Event::Write, this);
             m_notifier->on_ready_to_write = [this] {
 #ifdef CSOCKET_DEBUG
                 dbg() << *this << " connected!";
 #endif
                 m_connected = true;
                 ensure_read_notifier();
-                m_notifier->set_event_mask(CNotifier::Event::None);
+                m_notifier->set_event_mask(Notifier::Event::None);
                 if (on_connected)
                     on_connected();
             };
             return true;
         }
-        perror("CSocket::common_connect: connect");
+        perror("Socket::common_connect: connect");
         return false;
     }
 #ifdef CSOCKET_DEBUG
@@ -147,7 +149,7 @@ bool CSocket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
     return true;
 }
 
-ByteBuffer CSocket::receive(int max_size)
+ByteBuffer Socket::receive(int max_size)
 {
     auto buffer = read(max_size);
     if (eof()) {
@@ -157,7 +159,7 @@ ByteBuffer CSocket::receive(int max_size)
     return buffer;
 }
 
-bool CSocket::send(const ByteBuffer& data)
+bool Socket::send(const ByteBuffer& data)
 {
     int nsent = ::send(fd(), data.data(), data.size(), 0);
     if (nsent < 0) {
@@ -168,7 +170,7 @@ bool CSocket::send(const ByteBuffer& data)
     return true;
 }
 
-void CSocket::did_update_fd(int fd)
+void Socket::did_update_fd(int fd)
 {
     if (fd < 0) {
         m_read_notifier = nullptr;
@@ -182,12 +184,14 @@ void CSocket::did_update_fd(int fd)
     }
 }
 
-void CSocket::ensure_read_notifier()
+void Socket::ensure_read_notifier()
 {
     ASSERT(m_connected);
-    m_read_notifier = CNotifier::construct(fd(), CNotifier::Event::Read, this);
+    m_read_notifier = Notifier::construct(fd(), Notifier::Event::Read, this);
     m_read_notifier->on_ready_to_read = [this] {
         if (on_ready_to_read)
             on_ready_to_read();
     };
+}
+
 }

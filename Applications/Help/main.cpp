@@ -113,10 +113,10 @@ int main(int argc, char* argv[])
 
         dbg() << "Opening page at " << path;
 
-        auto file = CFile::construct();
+        auto file = Core::File::construct();
         file->set_filename(path);
 
-        if (!file->open(CIODevice::OpenMode::ReadOnly)) {
+        if (!file->open(Core::IODevice::OpenMode::ReadOnly)) {
             int saved_errno = errno;
             GMessageBox::show(strerror(saved_errno), "Failed to open man page", GMessageBox::Type::Error, GMessageBox::InputType::OK, window);
             return;

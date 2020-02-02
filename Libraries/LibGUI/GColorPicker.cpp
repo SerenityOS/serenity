@@ -31,7 +31,7 @@
 #include <LibGUI/GSpinBox.h>
 #include <LibGUI/GWidget.h>
 
-GColorPicker::GColorPicker(Color color, CObject* parent)
+GColorPicker::GColorPicker(Color color, Core::Object* parent)
     : GDialog(parent)
     , m_color(color)
 {

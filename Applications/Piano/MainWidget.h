@@ -27,8 +27,8 @@
 
 #pragma once
 
+#include "Music.h"
 #include <LibGUI/GWidget.h>
-#include <Music.h>
 
 class AudioEngine;
 class WaveWidget;
@@ -48,7 +48,7 @@ private:
 
     virtual void keydown_event(GKeyEvent&) override;
     virtual void keyup_event(GKeyEvent&) override;
-    virtual void custom_event(CCustomEvent&) override;
+    virtual void custom_event(Core::CustomEvent&) override;
 
     void note_key_action(int key_code, Switch);
     void special_key_action(int key_code);

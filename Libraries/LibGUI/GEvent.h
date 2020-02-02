@@ -32,9 +32,7 @@
 #include <LibDraw/Rect.h>
 #include <LibGUI/GWindowType.h>
 
-class CObject;
-
-class GEvent : public CEvent {
+class GEvent : public Core::Event {
 public:
     enum Type {
         Show = 1000,
@@ -72,7 +70,7 @@ public:
 
     GEvent() {}
     explicit GEvent(Type type)
-        : CEvent(type)
+        : Core::Event(type)
     {
     }
     virtual ~GEvent() {}

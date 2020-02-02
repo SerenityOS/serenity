@@ -32,7 +32,7 @@ int main(int argc, char** argv)
 {
     const char* mount_point = nullptr;
 
-    CArgsParser args_parser;
+    Core::ArgsParser args_parser;
     args_parser.add_positional_argument(mount_point, "Mount point", "mountpoint");
     args_parser.parse(argc, argv);
 

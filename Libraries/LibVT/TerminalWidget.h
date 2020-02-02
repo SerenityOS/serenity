@@ -41,7 +41,7 @@ class TerminalWidget final : public GFrame
     , public VT::TerminalClient {
     C_OBJECT(TerminalWidget)
 public:
-    TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<CConfigFile> config);
+    TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Core::ConfigFile> config);
     virtual ~TerminalWidget() override;
 
     void set_pty_master_fd(int fd);
@@ -65,7 +65,7 @@ public:
     bool should_beep() { return m_should_beep; }
     void set_should_beep(bool sb) { m_should_beep = sb; };
 
-    RefPtr<CConfigFile> config() const { return m_config; }
+    RefPtr<Core::ConfigFile> config() const { return m_config; }
 
     bool has_selection() const;
     bool selection_contains(const VT::Position&) const;
@@ -89,7 +89,7 @@ public:
 
 private:
     // ^GWidget
-    virtual void event(CEvent&) override;
+    virtual void event(Core::Event&) override;
     virtual void paint_event(GPaintEvent&) override;
     virtual void resize_event(GResizeEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
@@ -97,8 +97,8 @@ private:
     virtual void mousemove_event(GMouseEvent&) override;
     virtual void mousewheel_event(GMouseEvent&) override;
     virtual void doubleclick_event(GMouseEvent&) override;
-    virtual void focusin_event(CEvent&) override;
-    virtual void focusout_event(CEvent&) override;
+    virtual void focusin_event(Core::Event&) override;
+    virtual void focusout_event(Core::Event&) override;
     virtual void context_menu_event(GContextMenuEvent&) override;
     virtual void drop_event(GDropEvent&) override;
     virtual void did_change_font() override;
@@ -143,7 +143,7 @@ private:
 
     bool m_has_logical_focus { false };
 
-    RefPtr<CNotifier> m_notifier;
+    RefPtr<Core::Notifier> m_notifier;
 
     u8 m_opacity { 255 };
     bool m_needs_background_fill { true };
@@ -154,9 +154,9 @@ private:
 
     int m_glyph_width { 0 };
 
-    RefPtr<CTimer> m_cursor_blink_timer;
-    RefPtr<CTimer> m_visual_beep_timer;
-    RefPtr<CConfigFile> m_config;
+    RefPtr<Core::Timer> m_cursor_blink_timer;
+    RefPtr<Core::Timer> m_visual_beep_timer;
+    RefPtr<Core::ConfigFile> m_config;
 
     RefPtr<GScrollBar> m_scrollbar;
 
@@ -165,5 +165,5 @@ private:
 
     RefPtr<GMenu> m_context_menu;
 
-    CElapsedTimer m_triple_click_timer;
+    Core::ElapsedTimer m_triple_click_timer;
 };

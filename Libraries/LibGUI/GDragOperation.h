@@ -32,7 +32,7 @@
 class GraphicsBitmap;
 class GWindowServerConnection;
 
-class GDragOperation : public CObject {
+class GDragOperation : public Core::Object {
     C_OBJECT(GDragOperation)
 public:
     enum class Outcome {
@@ -58,12 +58,12 @@ public:
     static void notify_cancelled(Badge<GWindowServerConnection>);
 
 protected:
-    explicit GDragOperation(CObject* parent = nullptr);
+    explicit GDragOperation(Core::Object* parent = nullptr);
 
 private:
     void done(Outcome);
 
-    OwnPtr<CEventLoop> m_event_loop;
+    OwnPtr<Core::EventLoop> m_event_loop;
     Outcome m_outcome { Outcome::None };
     String m_text;
     String m_data_type;

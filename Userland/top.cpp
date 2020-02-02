@@ -93,7 +93,7 @@ static Snapshot get_snapshot()
 {
     Snapshot snapshot;
 
-    auto all_processes = CProcessStatisticsReader::get_all();
+    auto all_processes = Core::ProcessStatisticsReader::get_all();
 
     for (auto& it : all_processes) {
         auto& stats = it.value;

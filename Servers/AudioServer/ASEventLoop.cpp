@@ -31,7 +31,7 @@
 #include <unistd.h>
 
 ASEventLoop::ASEventLoop()
-    : m_server(CLocalServer::construct())
+    : m_server(Core::LocalServer::construct())
 {
     bool ok = m_server->take_over_from_system_server();
     ASSERT(ok);

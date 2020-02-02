@@ -45,8 +45,8 @@ static GraphicsBitmap& default_window_icon()
     return *s_icon;
 }
 
-WSWindow::WSWindow(CObject& parent, WSWindowType type)
-    : CObject(&parent)
+WSWindow::WSWindow(Core::Object& parent, WSWindowType type)
+    : Core::Object(&parent)
     , m_type(type)
     , m_icon(default_window_icon())
     , m_frame(*this)
@@ -55,7 +55,7 @@ WSWindow::WSWindow(CObject& parent, WSWindowType type)
 }
 
 WSWindow::WSWindow(WSClientConnection& client, WSWindowType window_type, int window_id, bool modal, bool minimizable, bool resizable, bool fullscreen)
-    : CObject(&client)
+    : Core::Object(&client)
     , m_client(&client)
     , m_type(window_type)
     , m_modal(modal)
@@ -208,7 +208,7 @@ void WSWindow::set_maximized(bool maximized)
         set_rect(m_unmaximized_rect);
     }
     m_frame.did_set_maximized({}, maximized);
-    CEventLoop::current().post_event(*this, make<WSResizeEvent>(old_rect, m_rect));
+    Core::EventLoop::current().post_event(*this, make<WSResizeEvent>(old_rect, m_rect));
 }
 
 void WSWindow::set_resizable(bool resizable)
@@ -220,7 +220,7 @@ void WSWindow::set_resizable(bool resizable)
     // TODO: Hide/show (or alternatively change enabled state of) window maximize button dynamically depending on value of is_resizable()
 }
 
-void WSWindow::event(CEvent& event)
+void WSWindow::event(Core::Event& event)
 {
     if (!m_client) {
         ASSERT(parent());
@@ -378,7 +378,7 @@ void WSWindow::set_fullscreen(bool fullscreen)
     } else if (!m_saved_nonfullscreen_rect.is_empty()) {
         new_window_rect = m_saved_nonfullscreen_rect;
     }
-    CEventLoop::current().post_event(*this, make<WSResizeEvent>(m_rect, new_window_rect));
+    Core::EventLoop::current().post_event(*this, make<WSResizeEvent>(m_rect, new_window_rect));
     set_rect(new_window_rect);
 }
 
@@ -409,5 +409,5 @@ void WSWindow::set_tiled(WindowTileType tiled)
                 WSWindowManager::the().maximized_window_rect(*this).height());
         break;
     }
-    CEventLoop::current().post_event(*this, make<WSResizeEvent>(old_rect, m_rect));
+    Core::EventLoop::current().post_event(*this, make<WSResizeEvent>(old_rect, m_rect));
 }

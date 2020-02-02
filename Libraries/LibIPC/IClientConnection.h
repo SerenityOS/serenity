@@ -40,7 +40,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-class IEvent : public CEvent {
+class IEvent : public Core::Event {
 public:
     enum Type {
         Invalid = 2000,
@@ -48,7 +48,7 @@ public:
     };
     IEvent() {}
     explicit IEvent(Type type)
-        : CEvent(type)
+        : Core::Event(type)
     {
     }
 };
@@ -74,9 +74,9 @@ NonnullRefPtr<T> new_client_connection(Args&&... args)
 }
 
 template<typename Endpoint>
-class IClientConnection : public CObject {
+class IClientConnection : public Core::Object {
 public:
-    IClientConnection(Endpoint& endpoint, CLocalSocket& socket, int client_id)
+    IClientConnection(Endpoint& endpoint, Core::LocalSocket& socket, int client_id)
         : m_endpoint(endpoint)
         , m_socket(socket)
         , m_client_id(client_id)
@@ -133,7 +133,7 @@ public:
             ssize_t nread = recv(m_socket->fd(), buffer, sizeof(buffer), MSG_DONTWAIT);
             if (nread == 0 || (nread == -1 && errno == EAGAIN)) {
                 if (bytes.is_empty()) {
-                    CEventLoop::current().post_event(*this, make<IDisconnectedEvent>(client_id()));
+                    Core::EventLoop::current().post_event(*this, make<IDisconnectedEvent>(client_id()));
                     return;
                 }
                 break;
@@ -184,7 +184,7 @@ public:
     virtual void die() = 0;
 
 protected:
-    void event(CEvent& event) override
+    void event(Core::Event& event) override
     {
         if (event.type() == IEvent::Disconnected) {
             int client_id = static_cast<const IDisconnectedEvent&>(event).client_id();
@@ -193,12 +193,12 @@ protected:
             return;
         }
 
-        CObject::event(event);
+        Core::Object::event(event);
     }
 
 private:
     Endpoint& m_endpoint;
-    RefPtr<CLocalSocket> m_socket;
+    RefPtr<Core::LocalSocket> m_socket;
     int m_client_id { -1 };
     int m_client_pid { -1 };
 };

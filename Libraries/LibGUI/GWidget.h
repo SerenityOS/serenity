@@ -94,7 +94,7 @@ private:
     Function<NonnullRefPtr<GWidget>(GWidget*)> m_factory;
 };
 
-class GWidget : public CObject {
+class GWidget : public Core::Object {
     C_OBJECT(GWidget)
 public:
     virtual ~GWidget() override;
@@ -123,7 +123,7 @@ public:
     bool updates_enabled() const { return m_updates_enabled; }
     void set_updates_enabled(bool);
 
-    virtual void event(CEvent&) override;
+    virtual void event(Core::Event&) override;
 
     // This is called after children have been painted.
     virtual void second_paint_event(GPaintEvent&);
@@ -245,8 +245,8 @@ public:
     void for_each_child_widget(Callback callback)
     {
         for_each_child([&](auto& child) {
-            if (is<GWidget>(child))
-                return callback(to<GWidget>(child));
+            if (Core::is<GWidget>(child))
+                return callback(Core::to<GWidget>(child));
             return IterationDecision::Continue;
         });
     }
@@ -281,11 +281,11 @@ protected:
     virtual void click_event(GMouseEvent&);
     virtual void doubleclick_event(GMouseEvent&);
     virtual void context_menu_event(GContextMenuEvent&);
-    virtual void focusin_event(CEvent&);
-    virtual void focusout_event(CEvent&);
-    virtual void enter_event(CEvent&);
-    virtual void leave_event(CEvent&);
-    virtual void child_event(CChildEvent&) override;
+    virtual void focusin_event(Core::Event&);
+    virtual void focusout_event(Core::Event&);
+    virtual void enter_event(Core::Event&);
+    virtual void leave_event(Core::Event&);
+    virtual void child_event(Core::ChildEvent&) override;
     virtual void change_event(GEvent&);
     virtual void drop_event(GDropEvent&);
 
@@ -295,8 +295,8 @@ private:
     void handle_mousedown_event(GMouseEvent&);
     void handle_mousedoubleclick_event(GMouseEvent&);
     void handle_mouseup_event(GMouseEvent&);
-    void handle_enter_event(CEvent&);
-    void handle_leave_event(CEvent&);
+    void handle_enter_event(Core::Event&);
+    void handle_leave_event(Core::Event&);
     void focus_previous_widget();
     void focus_next_widget();
 
@@ -326,20 +326,20 @@ private:
 };
 
 template<>
-inline bool is<GWidget>(const CObject& object)
+inline bool Core::is<GWidget>(const Core::Object& object)
 {
     return object.is_widget();
 }
 
 inline GWidget* GWidget::parent_widget()
 {
-    if (parent() && is<GWidget>(*parent()))
-        return &to<GWidget>(*parent());
+    if (parent() && Core::is<GWidget>(*parent()))
+        return &Core::to<GWidget>(*parent());
     return nullptr;
 }
 inline const GWidget* GWidget::parent_widget() const
 {
-    if (parent() && is<GWidget>(*parent()))
-        return &to<const GWidget>(*parent());
+    if (parent() && Core::is<GWidget>(*parent()))
+        return &Core::to<const GWidget>(*parent());
     return nullptr;
 }

@@ -32,13 +32,15 @@
 #include <LibCore/CObject.h>
 #include <stdio.h>
 
-IntrusiveList<CObject, &CObject::m_all_objects_list_node>& CObject::all_objects()
+namespace Core {
+
+IntrusiveList<Object, &Object::m_all_objects_list_node>& Object::all_objects()
 {
-    static IntrusiveList<CObject, &CObject::m_all_objects_list_node> objects;
+    static IntrusiveList<Object, &Object::m_all_objects_list_node> objects;
     return objects;
 }
 
-CObject::CObject(CObject* parent, bool is_widget)
+Object::Object(Object* parent, bool is_widget)
     : m_parent(parent)
     , m_widget(is_widget)
 {
@@ -47,7 +49,7 @@ CObject::CObject(CObject* parent, bool is_widget)
         m_parent->add_child(*this);
 }
 
-CObject::~CObject()
+Object::~Object()
 {
     // NOTE: We move our children out to a stack vector to prevent other
     //       code from trying to iterate over them.
@@ -63,89 +65,89 @@ CObject::~CObject()
         m_parent->remove_child(*this);
 }
 
-void CObject::event(CEvent& event)
+void Object::event(Core::Event& event)
 {
     switch (event.type()) {
-    case CEvent::Timer:
-        return timer_event(static_cast<CTimerEvent&>(event));
-    case CEvent::ChildAdded:
-    case CEvent::ChildRemoved:
-        return child_event(static_cast<CChildEvent&>(event));
-    case CEvent::Invalid:
+    case Core::Event::Timer:
+        return timer_event(static_cast<TimerEvent&>(event));
+    case Core::Event::ChildAdded:
+    case Core::Event::ChildRemoved:
+        return child_event(static_cast<ChildEvent&>(event));
+    case Core::Event::Invalid:
         ASSERT_NOT_REACHED();
         break;
-    case CEvent::Custom:
-        return custom_event(static_cast<CCustomEvent&>(event));
+    case Core::Event::Custom:
+        return custom_event(static_cast<CustomEvent&>(event));
     default:
         break;
     }
 }
 
-void CObject::add_child(CObject& object)
+void Object::add_child(Object& object)
 {
     // FIXME: Should we support reparenting objects?
     ASSERT(!object.parent() || object.parent() == this);
     object.m_parent = this;
     m_children.append(object);
-    event(*make<CChildEvent>(CEvent::ChildAdded, object));
+    event(*make<Core::ChildEvent>(Core::Event::ChildAdded, object));
 }
 
-void CObject::insert_child_before(CObject& new_child, CObject& before_child)
+void Object::insert_child_before(Object& new_child, Object& before_child)
 {
     // FIXME: Should we support reparenting objects?
     ASSERT(!new_child.parent() || new_child.parent() == this);
     new_child.m_parent = this;
     m_children.insert_before_matching(new_child, [&](auto& existing_child) { return existing_child.ptr() == &before_child; });
-    event(*make<CChildEvent>(CEvent::ChildAdded, new_child, &before_child));
+    event(*make<Core::ChildEvent>(Core::Event::ChildAdded, new_child, &before_child));
 }
 
-void CObject::remove_child(CObject& object)
+void Object::remove_child(Object& object)
 {
     for (int i = 0; i < m_children.size(); ++i) {
         if (m_children.ptr_at(i).ptr() == &object) {
             // NOTE: We protect the child so it survives the handling of ChildRemoved.
-            NonnullRefPtr<CObject> protector = object;
+            NonnullRefPtr<Object> protector = object;
             object.m_parent = nullptr;
             m_children.remove(i);
-            event(*make<CChildEvent>(CEvent::ChildRemoved, object));
+            event(*make<Core::ChildEvent>(Core::Event::ChildRemoved, object));
             return;
         }
     }
     ASSERT_NOT_REACHED();
 }
 
-void CObject::timer_event(CTimerEvent&)
+void Object::timer_event(Core::TimerEvent&)
 {
 }
 
-void CObject::child_event(CChildEvent&)
+void Object::child_event(Core::ChildEvent&)
 {
 }
 
-void CObject::custom_event(CCustomEvent&)
+void Object::custom_event(CustomEvent&)
 {
 }
 
-void CObject::start_timer(int ms, TimerShouldFireWhenNotVisible fire_when_not_visible)
+void Object::start_timer(int ms, TimerShouldFireWhenNotVisible fire_when_not_visible)
 {
     if (m_timer_id) {
-        dbgprintf("CObject{%p} already has a timer!\n", this);
+        dbgprintf("Object{%p} already has a timer!\n", this);
         ASSERT_NOT_REACHED();
     }
 
-    m_timer_id = CEventLoop::register_timer(*this, ms, true, fire_when_not_visible);
+    m_timer_id = Core::EventLoop::register_timer(*this, ms, true, fire_when_not_visible);
 }
 
-void CObject::stop_timer()
+void Object::stop_timer()
 {
     if (!m_timer_id)
         return;
-    bool success = CEventLoop::unregister_timer(m_timer_id);
+    bool success = Core::EventLoop::unregister_timer(m_timer_id);
     ASSERT(success);
     m_timer_id = 0;
 }
 
-void CObject::dump_tree(int indent)
+void Object::dump_tree(int indent)
 {
     for (int i = 0; i < indent; ++i) {
         printf(" ");
@@ -158,12 +160,12 @@ void CObject::dump_tree(int indent)
     });
 }
 
-void CObject::deferred_invoke(Function<void(CObject&)> invokee)
+void Object::deferred_invoke(Function<void(Object&)> invokee)
 {
-    CEventLoop::current().post_event(*this, make<CDeferredInvocationEvent>(move(invokee)));
+    Core::EventLoop::current().post_event(*this, make<Core::DeferredInvocationEvent>(move(invokee)));
 }
 
-void CObject::save_to(JsonObject& json)
+void Object::save_to(JsonObject& json)
 {
     json.set("class_name", class_name());
     json.set("address", String::format("%p", this));
@@ -171,7 +173,7 @@ void CObject::save_to(JsonObject& json)
     json.set("parent", String::format("%p", parent()));
 }
 
-bool CObject::is_ancestor_of(const CObject& other) const
+bool Object::is_ancestor_of(const Object& other) const
 {
     if (&other == this)
         return false;
@@ -182,7 +184,7 @@ bool CObject::is_ancestor_of(const CObject& other) const
     return false;
 }
 
-void CObject::dispatch_event(CEvent& e, CObject* stay_within)
+void Object::dispatch_event(Core::Event& e, Object* stay_within)
 {
     ASSERT(!stay_within || stay_within == this || stay_within->is_ancestor_of(*this));
     auto* target = this;
@@ -197,9 +199,11 @@ void CObject::dispatch_event(CEvent& e, CObject* stay_within)
     } while (target && !e.is_accepted());
 }
 
-bool CObject::is_visible_for_timer_purposes() const
+bool Object::is_visible_for_timer_purposes() const
 {
     if (parent())
         return parent()->is_visible_for_timer_purposes();
     return true;
+}
+
 }

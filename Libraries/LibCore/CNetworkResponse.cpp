@@ -26,11 +26,15 @@
 
 #include <LibCore/CNetworkResponse.h>
 
-CNetworkResponse::CNetworkResponse(ByteBuffer&& payload)
+namespace Core {
+
+NetworkResponse::NetworkResponse(ByteBuffer&& payload)
     : m_payload(payload)
 {
 }
 
-CNetworkResponse::~CNetworkResponse()
+NetworkResponse::~NetworkResponse()
 {
+}
+
 }

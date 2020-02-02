@@ -59,11 +59,11 @@ void GStackWidget::resize_event(GResizeEvent& event)
     m_active_widget->set_relative_rect({ {}, event.size() });
 }
 
-void GStackWidget::child_event(CChildEvent& event)
+void GStackWidget::child_event(Core::ChildEvent& event)
 {
-    if (!event.child() || !is<GWidget>(*event.child()))
+    if (!event.child() || !Core::is<GWidget>(*event.child()))
         return GWidget::child_event(event);
-    auto& child = to<GWidget>(*event.child());
+    auto& child = Core::to<GWidget>(*event.child());
     if (event.type() == GEvent::ChildAdded) {
         if (!m_active_widget)
             set_active_widget(&child);

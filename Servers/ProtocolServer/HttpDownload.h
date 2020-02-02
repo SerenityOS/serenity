@@ -29,16 +29,19 @@
 #include <AK/Badge.h>
 #include <ProtocolServer/Download.h>
 
-class CHttpJob;
+namespace Core {
+class CoreHttpJob;
+}
+
 class HttpProtocol;
 
 class HttpDownload final : public Download {
 public:
     virtual ~HttpDownload() override;
-    static NonnullRefPtr<HttpDownload> create_with_job(Badge<HttpProtocol>, PSClientConnection&, NonnullRefPtr<CHttpJob>&&);
+    static NonnullRefPtr<HttpDownload> create_with_job(Badge<HttpProtocol>, PSClientConnection&, NonnullRefPtr<Core::HttpJob>&&);
 
 private:
-    explicit HttpDownload(PSClientConnection&, NonnullRefPtr<CHttpJob>&&);
+    explicit HttpDownload(PSClientConnection&, NonnullRefPtr<Core::HttpJob>&&);
 
-    NonnullRefPtr<CHttpJob> m_job;
+    NonnullRefPtr<Core::HttpJob> m_job;
 };

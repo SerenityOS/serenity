@@ -124,11 +124,11 @@ int main(int argc, char** argv)
 {
     Vector<const char*> files;
 
-    CArgsParser args_parser;
+    Core::ArgsParser args_parser;
     args_parser.add_option(output_line, "Output line count", "lines", 'l');
     args_parser.add_option(output_byte, "Output byte count", "bytes", 'c');
     args_parser.add_option(output_word, "Output word count", "words", 'w');
-    args_parser.add_positional_argument(files, "File to process", "file", CArgsParser::Required::No);
+    args_parser.add_positional_argument(files, "File to process", "file", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
     if (!output_line && !output_byte && !output_word)

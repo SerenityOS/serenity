@@ -135,7 +135,7 @@ void Service::setup_socket()
         ASSERT_NOT_REACHED();
     }
 
-    auto socket_address = CSocketAddress::local(m_socket_path);
+    auto socket_address = Core::SocketAddress::local(m_socket_path);
     auto un = socket_address.to_sockaddr_un();
     int rc = bind(m_socket_fd, (const sockaddr*)&un, sizeof(un));
     if (rc < 0) {
@@ -156,7 +156,7 @@ void Service::setup_notifier()
     ASSERT(m_socket_fd >= 0);
     ASSERT(!m_socket_notifier);
 
-    m_socket_notifier = CNotifier::construct(m_socket_fd, CNotifier::Event::Read, this);
+    m_socket_notifier = Core::Notifier::construct(m_socket_fd, Core::Notifier::Event::Read, this);
     m_socket_notifier->on_ready_to_read = [this] {
         dbg() << "Ready to read on behalf of " << name();
         remove_child(*m_socket_notifier);
@@ -267,8 +267,8 @@ void Service::did_exit(int exit_code)
         activate();
 }
 
-Service::Service(const CConfigFile& config, const StringView& name)
-    : CObject(nullptr)
+Service::Service(const Core::ConfigFile& config, const StringView& name)
+    : Core::Object(nullptr)
 {
     ASSERT(config.has_group(name));
 
@@ -304,7 +304,7 @@ Service::Service(const CConfigFile& config, const StringView& name)
 
 void Service::save_to(JsonObject& json)
 {
-    CObject::save_to(json);
+    Core::Object::save_to(json);
 
     json.set("executable_path", m_executable_path);
 

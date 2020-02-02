@@ -132,11 +132,11 @@ int main(int argc, char** argv)
     int month = 0;
     int year = 0;
 
-    CArgsParser args_parser;
+    Core::ArgsParser args_parser;
     // FIXME: This should ensure two values get parsed as month + year
-    args_parser.add_positional_argument(day, "Day of year", "day", CArgsParser::Required::No);
-    args_parser.add_positional_argument(month, "Month", "month", CArgsParser::Required::No);
-    args_parser.add_positional_argument(year, "Year", "year", CArgsParser::Required::No);
+    args_parser.add_positional_argument(day, "Day of year", "day", Core::ArgsParser::Required::No);
+    args_parser.add_positional_argument(month, "Month", "month", Core::ArgsParser::Required::No);
+    args_parser.add_positional_argument(year, "Year", "year", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
     time_t now = time(nullptr);

@@ -25,9 +25,11 @@
  */
 
 #include "CDirIterator.h"
-#include <cerrno>
+#include <errno.h>
 
-CDirIterator::CDirIterator(const StringView& path, Flags flags)
+namespace Core {
+
+DirIterator::DirIterator(const StringView& path, Flags flags)
     : m_flags(flags)
 {
     m_dir = opendir(String(path).characters());
@@ -36,7 +38,7 @@ CDirIterator::CDirIterator(const StringView& path, Flags flags)
     }
 }
 
-CDirIterator::~CDirIterator()
+DirIterator::~DirIterator()
 {
     if (m_dir != nullptr) {
         closedir(m_dir);
@@ -44,7 +46,7 @@ CDirIterator::~CDirIterator()
     }
 }
 
-bool CDirIterator::advance_next()
+bool DirIterator::advance_next()
 {
     if (m_dir == nullptr)
         return false;
@@ -74,7 +76,7 @@ bool CDirIterator::advance_next()
     return m_next.length() > 0;
 }
 
-bool CDirIterator::has_next()
+bool DirIterator::has_next()
 {
     if (!m_next.is_null())
         return true;
@@ -82,7 +84,7 @@ bool CDirIterator::has_next()
     return advance_next();
 }
 
-String CDirIterator::next_path()
+String DirIterator::next_path()
 {
     if (m_next.is_null())
         advance_next();
@@ -90,4 +92,6 @@ String CDirIterator::next_path()
     auto tmp = m_next;
     m_next = String();
     return tmp;
+}
+
 }

@@ -32,23 +32,25 @@
 #include <pwd.h>
 #include <stdio.h>
 
-HashMap<uid_t, String> CProcessStatisticsReader::s_usernames;
+namespace Core {
 
-HashMap<pid_t, CProcessStatistics> CProcessStatisticsReader::get_all()
+HashMap<uid_t, String> ProcessStatisticsReader::s_usernames;
+
+HashMap<pid_t, Core::ProcessStatistics> ProcessStatisticsReader::get_all()
 {
-    auto file = CFile::construct("/proc/all");
-    if (!file->open(CIODevice::ReadOnly)) {
+    auto file = Core::File::construct("/proc/all");
+    if (!file->open(Core::IODevice::ReadOnly)) {
         fprintf(stderr, "CProcessStatisticsReader: Failed to open /proc/all: %s\n", file->error_string());
         return {};
     }
 
-    HashMap<pid_t, CProcessStatistics> map;
+    HashMap<pid_t, Core::ProcessStatistics> map;
 
     auto file_contents = file->read_all();
     auto json = JsonValue::from_string({ file_contents.data(), (size_t)file_contents.size() });
     json.as_array().for_each([&](auto& value) {
         const JsonObject& process_object = value.as_object();
-        CProcessStatistics process;
+        Core::ProcessStatistics process;
 
         // kernel data first
         process.pid = process_object.get("pid").to_u32();
@@ -76,7 +78,7 @@ HashMap<pid_t, CProcessStatistics> CProcessStatisticsReader::get_all()
         process.threads.ensure_capacity(thread_array.size());
         thread_array.for_each([&](auto& value) {
             auto& thread_object = value.as_object();
-            CThreadStatistics thread;
+            Core::ThreadStatistics thread;
             thread.tid = thread_object.get("tid").to_u32();
             thread.times_scheduled = thread_object.get("times_scheduled").to_u32();
             thread.name = thread_object.get("name").to_string();
@@ -105,7 +107,7 @@ HashMap<pid_t, CProcessStatistics> CProcessStatisticsReader::get_all()
     return map;
 }
 
-String CProcessStatisticsReader::username_from_uid(uid_t uid)
+String ProcessStatisticsReader::username_from_uid(uid_t uid)
 {
     if (s_usernames.is_empty()) {
         setpwent();
@@ -118,4 +120,5 @@ String CProcessStatisticsReader::username_from_uid(uid_t uid)
     if (it != s_usernames.end())
         return (*it).value;
     return String::number(uid);
+}
 }

@@ -44,8 +44,8 @@ public:
     void notify_did_rehighlight();
 
 private:
-    virtual void focusin_event(CEvent&) override;
-    virtual void focusout_event(CEvent&) override;
+    virtual void focusin_event(Core::Event&) override;
+    virtual void focusout_event(Core::Event&) override;
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
     virtual void cursor_did_change() override;

@@ -73,7 +73,7 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget(GWidget* parent)
     m_json_model = GJsonArrayModel::create({}, move(pid_vm_fields));
     m_table_view->set_model(GSortingProxyModel::create(*m_json_model));
     m_table_view->model()->set_key_column_and_sort_order(0, GSortOrder::Ascending);
-    m_timer = CTimer::construct(1000, [this] { refresh(); }, this);
+    m_timer = Core::Timer::construct(1000, [this] { refresh(); }, this);
 }
 
 ProcessMemoryMapWidget::~ProcessMemoryMapWidget()
