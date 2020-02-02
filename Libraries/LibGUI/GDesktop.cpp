@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibCore/CConfigFile.h>
 #include <LibGUI/GDesktop.h>
 #include <LibGUI/GWindowServerConnection.h>
 #include <string.h>
@@ -53,7 +54,17 @@ void GDesktop::did_receive_screen_rect(Badge<GWindowServerConnection>, const Rec
 bool GDesktop::set_wallpaper(const StringView& path)
 {
     GWindowServerConnection::the().post_message(WindowServer::AsyncSetWallpaper(path));
-    return GWindowServerConnection::the().wait_for_specific_message<WindowClient::AsyncSetWallpaperFinished>()->success();
+    auto ret_val = GWindowServerConnection::the().wait_for_specific_message<WindowClient::AsyncSetWallpaperFinished>()->success();
+
+    if (ret_val) {
+        dbg() << "Saving wallpaper path '" << path << "' to config file at " << config->file_name();
+
+        RefPtr<CConfigFile> config = CConfigFile::get_for_app("WindowManager");
+        config->write_entry("Background", "Wallpaper", path);
+        config->sync();
+    }
+
+    return ret_val;
 }
 
 String GDesktop::wallpaper() const
