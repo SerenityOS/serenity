@@ -26,6 +26,7 @@
 
 #include "Profile.h"
 #include "ProfileModel.h"
+#include <AK/HashTable.h>
 #include <AK/MappedFile.h>
 #include <AK/QuickSort.h>
 #include <LibCore/CFile.h>
@@ -57,6 +58,15 @@ Profile::Profile(const JsonArray& json)
 
         Sample sample;
         sample.timestamp = sample_object.get("timestamp").to_number<u64>();
+        sample.type = sample_object.get("type").to_string();
+
+        if (sample.type == "malloc") {
+            sample.ptr = sample_object.get("ptr").to_number<u32>();
+            sample.size = sample_object.get("size").to_number<u32>();
+        } else if (sample.type == "free") {
+            sample.ptr = sample_object.get("ptr").to_number<u32>();
+        }
+
 
         auto frames_value = sample_object.get("frames");
         auto& frames_array = frames_value.as_array();
@@ -110,12 +120,33 @@ void Profile::rebuild_tree()
         return new_root;
     };
 
+    HashTable<uintptr_t> live_allocations;
+
     for (auto& sample : m_samples) {
         if (has_timestamp_filter_range()) {
             auto timestamp = sample.timestamp;
             if (timestamp < m_timestamp_filter_range_start || timestamp > m_timestamp_filter_range_end)
                 continue;
         }
+
+        if (sample.type == "malloc")
+            live_allocations.set(sample.ptr);
+        else if (sample.type == "free")
+            live_allocations.remove(sample.ptr);
+    }
+
+    for (auto& sample : m_samples) {
+        if (has_timestamp_filter_range()) {
+            auto timestamp = sample.timestamp;
+            if (timestamp < m_timestamp_filter_range_start || timestamp > m_timestamp_filter_range_end)
+                continue;
+        }
+
+        if (sample.type == "malloc" && !live_allocations.contains(sample.ptr))
+            continue;
+
+        if (sample.type == "free")
+            continue;
 
         ProfileNode* node = nullptr;
 
@@ -198,6 +229,9 @@ OwnPtr<Profile> Profile::load_from_perfcore_file(const StringView& path)
 
         JsonObject object;
         object.set("timestamp", perf_event.get("timestamp"));
+        object.set("type", perf_event.get("type"));
+        object.set("ptr", perf_event.get("ptr"));
+        object.set("size", perf_event.get("size"));
 
         JsonArray frames_array;
         auto stack_array = perf_event.get("stack").as_array();
