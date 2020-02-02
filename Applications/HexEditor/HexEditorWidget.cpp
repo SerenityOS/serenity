@@ -46,7 +46,7 @@
 
 HexEditorWidget::HexEditorWidget()
 {
-    set_layout(make<GBoxLayout>(Orientation::Vertical));
+    set_layout(make<GVBoxLayout>());
     layout()->set_spacing(0);
 
     m_editor = HexEditor::construct(this);

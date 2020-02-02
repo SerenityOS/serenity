@@ -45,7 +45,7 @@
 
 TextEditorWidget::TextEditorWidget()
 {
-    set_layout(make<GBoxLayout>(Orientation::Vertical));
+    set_layout(make<GVBoxLayout>());
     layout()->set_spacing(0);
 
     auto toolbar = GToolBar::construct(this);
@@ -71,7 +71,7 @@ TextEditorWidget::TextEditorWidget()
     m_find_replace_widget->set_fill_with_background_color(true);
     m_find_replace_widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_find_replace_widget->set_preferred_size(0, 48);
-    m_find_replace_widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    m_find_replace_widget->set_layout(make<GVBoxLayout>());
     m_find_replace_widget->layout()->set_margins({ 2, 2, 2, 4 });
     m_find_replace_widget->set_visible(false);
 
@@ -79,14 +79,14 @@ TextEditorWidget::TextEditorWidget()
     m_find_widget->set_fill_with_background_color(true);
     m_find_widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_find_widget->set_preferred_size(0, 22);
-    m_find_widget->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    m_find_widget->set_layout(make<GHBoxLayout>());
     m_find_widget->set_visible(false);
 
     m_replace_widget = GWidget::construct(m_find_replace_widget);
     m_replace_widget->set_fill_with_background_color(true);
     m_replace_widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_replace_widget->set_preferred_size(0, 22);
-    m_replace_widget->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    m_replace_widget->set_layout(make<GHBoxLayout>());
     m_replace_widget->set_visible(false);
 
     m_find_textbox = GTextBox::construct(m_find_widget);

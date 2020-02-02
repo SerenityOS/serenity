@@ -145,7 +145,7 @@ int main(int argc, char** argv)
     g_window->set_main_widget(widget);
 
     widget->set_fill_with_background_color(true);
-    widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    widget->set_layout(make<GVBoxLayout>());
     widget->layout()->set_spacing(0);
 
     StringBuilder path;
@@ -266,7 +266,7 @@ int main(int argc, char** argv)
     g_right_hand_stack = GStackWidget::construct(outer_splitter);
 
     g_form_inner_container = GWidget::construct(g_right_hand_stack);
-    g_form_inner_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    g_form_inner_container->set_layout(make<GHBoxLayout>());
     auto form_widgets_toolbar = GToolBar::construct(Orientation::Vertical, 26, g_form_inner_container);
     form_widgets_toolbar->set_preferred_size(38, 0);
 
@@ -303,11 +303,11 @@ int main(int argc, char** argv)
     auto form_editing_pane_container = GSplitter::construct(Orientation::Vertical, form_editor_inner_splitter);
     form_editing_pane_container->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     form_editing_pane_container->set_preferred_size(190, 0);
-    form_editing_pane_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    form_editing_pane_container->set_layout(make<GVBoxLayout>());
 
     auto add_properties_pane = [&](auto& text, auto pane_widget) {
         auto wrapper = GWidget::construct(form_editing_pane_container.ptr());
-        wrapper->set_layout(make<GBoxLayout>(Orientation::Vertical));
+        wrapper->set_layout(make<GVBoxLayout>());
         auto label = GLabel::construct(text, wrapper);
         label->set_fill_with_background_color(true);
         label->set_text_alignment(TextAlignment::CenterLeft);

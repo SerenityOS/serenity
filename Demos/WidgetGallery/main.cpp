@@ -51,7 +51,7 @@ int main(int argc, char** argv)
     auto main_widget = GWidget::construct();
     window->set_main_widget(main_widget);
     main_widget->set_fill_with_background_color(true);
-    main_widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    main_widget->set_layout(make<GVBoxLayout>());
     main_widget->layout()->set_margins({ 4, 4, 4, 4 });
 
     auto checkbox1 = GCheckBox::construct("GCheckBox 1", main_widget);
@@ -95,7 +95,7 @@ int main(int argc, char** argv)
     auto vertical_slider_container = GWidget::construct(main_widget.ptr());
     vertical_slider_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     vertical_slider_container->set_preferred_size(0, 100);
-    vertical_slider_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    vertical_slider_container->set_layout(make<GHBoxLayout>());
     auto vslider1 = GSlider::construct(Orientation::Vertical, vertical_slider_container);
     (void)vslider1;
     auto vslider2 = GSlider::construct(Orientation::Vertical, vertical_slider_container);

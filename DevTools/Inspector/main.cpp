@@ -61,7 +61,7 @@ int main(int argc, char** argv)
     auto widget = GWidget::construct();
     window->set_main_widget(widget);
     widget->set_fill_with_background_color(true);
-    widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    widget->set_layout(make<GVBoxLayout>());
 
     auto splitter = GSplitter::construct(Orientation::Horizontal, widget);
 

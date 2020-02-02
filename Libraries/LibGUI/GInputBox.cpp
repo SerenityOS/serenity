@@ -54,7 +54,7 @@ void GInputBox::build()
 
     set_rect(x(), y(), max_width + 80, 80);
 
-    widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    widget->set_layout(make<GVBoxLayout>());
     widget->set_fill_with_background_color(true);
 
     widget->layout()->set_margins({ 8, 8, 8, 8 });
@@ -71,10 +71,10 @@ void GInputBox::build()
     auto button_container_outer = GWidget::construct(widget.ptr());
     button_container_outer->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     button_container_outer->set_preferred_size(0, 20);
-    button_container_outer->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    button_container_outer->set_layout(make<GVBoxLayout>());
 
     auto button_container_inner = GWidget::construct(button_container_outer.ptr());
-    button_container_inner->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    button_container_inner->set_layout(make<GHBoxLayout>());
     button_container_inner->layout()->set_spacing(8);
 
     m_cancel_button = GButton::construct(button_container_inner);

@@ -107,7 +107,7 @@ Locator::Locator(GWidget* parent)
         s_header_icon = GraphicsBitmap::load_from_file("/res/icons/16x16/filetype-header.png");
     }
 
-    set_layout(make<GBoxLayout>(Orientation::Vertical));
+    set_layout(make<GVBoxLayout>());
     set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     set_preferred_size(0, 20);
     m_textbox = LocatorTextBox::construct(this);

@@ -60,14 +60,14 @@ int main(int argc, char** argv)
 
     auto widget = GWidget::construct();
     window->set_main_widget(widget);
-    widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    widget->set_layout(make<GVBoxLayout>());
     widget->layout()->set_spacing(0);
 
     auto container = GWidget::construct(widget.ptr());
     container->set_fill_with_background_color(true);
     container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     container->set_preferred_size(0, 36);
-    container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    container->set_layout(make<GHBoxLayout>());
     auto flag_icon_label = GLabel::construct(container);
     flag_icon_label->set_icon(GraphicsBitmap::load_from_file("/res/icons/minesweeper/flag.png"));
     auto flag_label = GLabel::construct(container);

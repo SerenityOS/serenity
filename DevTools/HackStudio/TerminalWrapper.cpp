@@ -161,7 +161,7 @@ void TerminalWrapper::kill_running_command()
 TerminalWrapper::TerminalWrapper(GWidget* parent)
     : GWidget(parent)
 {
-    set_layout(make<GBoxLayout>(Orientation::Vertical));
+    set_layout(make<GVBoxLayout>());
 
     RefPtr<CConfigFile> config = CConfigFile::get_for_app("Terminal");
     m_terminal_widget = TerminalWidget::construct(-1, false, config);

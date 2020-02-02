@@ -43,7 +43,7 @@ int main(int argc, char** argv)
     window->set_main_widget(main_widget);
     main_widget->set_fill_with_background_color(true);
     main_widget->set_background_color(Color::White);
-    main_widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    main_widget->set_layout(make<GVBoxLayout>());
     main_widget->layout()->set_margins({ 4, 4, 4, 4 });
 
     auto label = GLabel::construct(main_widget);

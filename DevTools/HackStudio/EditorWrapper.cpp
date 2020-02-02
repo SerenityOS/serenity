@@ -36,13 +36,13 @@ extern RefPtr<EditorWrapper> g_current_editor_wrapper;
 EditorWrapper::EditorWrapper(GWidget* parent)
     : GWidget(parent)
 {
-    set_layout(make<GBoxLayout>(Orientation::Vertical));
+    set_layout(make<GVBoxLayout>());
 
     auto label_wrapper = GWidget::construct(this);
     label_wrapper->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     label_wrapper->set_preferred_size(0, 14);
     label_wrapper->set_fill_with_background_color(true);
-    label_wrapper->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    label_wrapper->set_layout(make<GHBoxLayout>());
     label_wrapper->layout()->set_margins({ 2, 0, 2, 0 });
 
     m_filename_label = GLabel::construct("(Untitled)", label_wrapper);

@@ -42,12 +42,12 @@ GAboutDialog::GAboutDialog(const StringView& name, const GraphicsBitmap* icon, C
     auto widget = GWidget::construct();
     set_main_widget(widget);
     widget->set_fill_with_background_color(true);
-    widget->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    widget->set_layout(make<GHBoxLayout>());
 
     auto left_container = GWidget::construct(widget.ptr());
     left_container->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     left_container->set_preferred_size(48, 0);
-    left_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    left_container->set_layout(make<GVBoxLayout>());
     auto icon_label = GLabel::construct(left_container);
     icon_label->set_icon(m_icon);
     icon_label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
@@ -55,7 +55,7 @@ GAboutDialog::GAboutDialog(const StringView& name, const GraphicsBitmap* icon, C
     left_container->layout()->add_spacer();
 
     auto right_container = GWidget::construct(widget.ptr());
-    right_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    right_container->set_layout(make<GVBoxLayout>());
     right_container->layout()->set_margins({ 0, 4, 4, 4 });
 
     auto make_label = [&](const StringView& text, bool bold = false) {
@@ -75,7 +75,7 @@ GAboutDialog::GAboutDialog(const StringView& name, const GraphicsBitmap* icon, C
     auto button_container = GWidget::construct(right_container.ptr());
     button_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     button_container->set_preferred_size(0, 20);
-    button_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    button_container->set_layout(make<GHBoxLayout>());
     button_container->layout()->add_spacer();
     auto ok_button = GButton::construct("OK", button_container);
     ok_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);

@@ -43,7 +43,7 @@ PropertiesDialog::PropertiesDialog(GFileSystemModel& model, String path, bool di
     ASSERT(file_path.is_valid());
 
     auto main_widget = GWidget::construct();
-    main_widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    main_widget->set_layout(make<GVBoxLayout>());
     main_widget->layout()->set_margins({ 4, 4, 4, 4 });
     main_widget->set_fill_with_background_color(true);
 
@@ -54,7 +54,7 @@ PropertiesDialog::PropertiesDialog(GFileSystemModel& model, String path, bool di
     auto tab_widget = GTabWidget::construct(main_widget);
 
     auto general_tab = GWidget::construct(tab_widget.ptr());
-    general_tab->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    general_tab->set_layout(make<GVBoxLayout>());
     general_tab->layout()->set_margins({ 12, 8, 12, 8 });
     general_tab->layout()->set_spacing(10);
     tab_widget->add_widget("General", general_tab);
@@ -62,7 +62,7 @@ PropertiesDialog::PropertiesDialog(GFileSystemModel& model, String path, bool di
     general_tab->layout()->add_spacer();
 
     auto file_container = GWidget::construct(general_tab.ptr());
-    file_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    file_container->set_layout(make<GHBoxLayout>());
     file_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     file_container->layout()->set_spacing(20);
     file_container->set_preferred_size(0, 34);
@@ -132,7 +132,7 @@ PropertiesDialog::PropertiesDialog(GFileSystemModel& model, String path, bool di
     general_tab->layout()->add_spacer();
 
     auto button_widget = GWidget::construct(main_widget.ptr());
-    button_widget->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    button_widget->set_layout(make<GHBoxLayout>());
     button_widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     button_widget->set_preferred_size(0, 24);
     button_widget->layout()->set_spacing(5);
@@ -212,7 +212,7 @@ bool PropertiesDialog::apply_changes()
 void PropertiesDialog::make_permission_checkboxes(NonnullRefPtr<GWidget>& parent, PermissionMasks masks, String label_string, mode_t mode)
 {
     auto widget = GWidget::construct(parent.ptr());
-    widget->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    widget->set_layout(make<GHBoxLayout>());
     widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     widget->set_preferred_size(0, 16);
     widget->layout()->set_spacing(10);
@@ -241,7 +241,7 @@ void PropertiesDialog::make_property_value_pairs(const Vector<PropertyValuePair>
     property_labels.ensure_capacity(pairs.size());
     for (auto pair : pairs) {
         auto label_container = GWidget::construct(parent.ptr());
-        label_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+        label_container->set_layout(make<GHBoxLayout>());
         label_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
         label_container->set_preferred_size(0, 14);
         label_container->layout()->set_spacing(12);

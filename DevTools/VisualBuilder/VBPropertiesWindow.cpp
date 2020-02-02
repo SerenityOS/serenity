@@ -83,7 +83,7 @@ VBPropertiesWindow::VBPropertiesWindow()
 
     auto widget = GWidget::construct();
     widget->set_fill_with_background_color(true);
-    widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    widget->set_layout(make<GVBoxLayout>());
     widget->layout()->set_margins({ 2, 2, 2, 2 });
     set_main_widget(widget);
 

@@ -40,11 +40,11 @@ KnobsWidget::KnobsWidget(GWidget* parent, AudioEngine& audio_engine, MainWidget&
     set_frame_thickness(2);
     set_frame_shadow(FrameShadow::Sunken);
     set_frame_shape(FrameShape::Container);
-    set_layout(make<GBoxLayout>(Orientation::Vertical));
+    set_layout(make<GVBoxLayout>());
     set_fill_with_background_color(true);
 
     m_labels_container = GWidget::construct(this);
-    m_labels_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    m_labels_container->set_layout(make<GHBoxLayout>());
     m_labels_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_labels_container->set_preferred_size(0, 20);
 
@@ -54,7 +54,7 @@ KnobsWidget::KnobsWidget(GWidget* parent, AudioEngine& audio_engine, MainWidget&
     m_delay_label = GLabel::construct("Delay", m_labels_container);
 
     m_values_container = GWidget::construct(this);
-    m_values_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    m_values_container->set_layout(make<GHBoxLayout>());
     m_values_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_values_container->set_preferred_size(0, 10);
 
@@ -64,7 +64,7 @@ KnobsWidget::KnobsWidget(GWidget* parent, AudioEngine& audio_engine, MainWidget&
     m_delay_value = GLabel::construct(String::number(m_audio_engine.delay() / m_audio_engine.tick()), m_values_container);
 
     m_knobs_container = GWidget::construct(this);
-    m_knobs_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    m_knobs_container->set_layout(make<GHBoxLayout>());
 
     // FIXME: Implement vertical flipping in GSlider, not here.
 

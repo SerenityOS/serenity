@@ -101,7 +101,7 @@ void DisplayPropertiesWidget::create_resolution_list()
 void DisplayPropertiesWidget::create_root_widget()
 {
     m_root_widget = GWidget::construct();
-    m_root_widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    m_root_widget->set_layout(make<GVBoxLayout>());
     m_root_widget->set_fill_with_background_color(true);
     m_root_widget->layout()->set_margins({ 4, 4, 4, 16 });
 }
@@ -130,7 +130,7 @@ void DisplayPropertiesWidget::create_frame()
     tab_widget->add_widget("Wallpaper", background_splitter);
 
     auto background_content = GWidget::construct(background_splitter.ptr());
-    background_content->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    background_content->set_layout(make<GVBoxLayout>());
     background_content->layout()->set_margins({ 4, 4, 4, 4 });
 
     m_wallpaper_preview = GLabel::construct(background_splitter);
@@ -160,7 +160,7 @@ void DisplayPropertiesWidget::create_frame()
     tab_widget->add_widget("Settings", settings_splitter);
 
     auto settings_content = GWidget::construct(settings_splitter.ptr());
-    settings_content->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    settings_content->set_layout(make<GVBoxLayout>());
     settings_content->layout()->set_margins({ 4, 4, 4, 4 });
 
     auto resolution_list = GListView::construct(settings_content);
@@ -182,7 +182,7 @@ void DisplayPropertiesWidget::create_frame()
 
     // Add the apply and cancel buttons
     auto bottom_widget = GWidget::construct(m_root_widget.ptr());
-    bottom_widget->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    bottom_widget->set_layout(make<GHBoxLayout>());
     bottom_widget->layout()->add_spacer();
     bottom_widget->set_size_policy(Orientation::Vertical, SizePolicy::Fixed);
     bottom_widget->set_preferred_size(1, 22);

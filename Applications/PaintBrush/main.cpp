@@ -60,13 +60,13 @@ int main(int argc, char** argv)
 
     auto horizontal_container = GWidget::construct();
     window->set_main_widget(horizontal_container);
-    horizontal_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    horizontal_container->set_layout(make<GHBoxLayout>());
     horizontal_container->layout()->set_spacing(0);
 
     new ToolboxWidget(horizontal_container);
 
     auto vertical_container = GWidget::construct(horizontal_container.ptr());
-    vertical_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    vertical_container->set_layout(make<GVBoxLayout>());
     vertical_container->layout()->set_spacing(0);
 
     auto paintable_widget = PaintableWidget::construct(vertical_container);

@@ -41,7 +41,7 @@ GStatusBar::GStatusBar(int label_count, GWidget* parent)
 {
     set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     set_preferred_size(0, 20);
-    set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    set_layout(make<GHBoxLayout>());
     layout()->set_margins({ 2, 2, 2, 2 });
     layout()->set_spacing(2);
 

@@ -38,7 +38,7 @@ ProcessStateWidget::ProcessStateWidget(GWidget* parent)
     set_preferred_size(0, 20);
     set_visible(false);
 
-    set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    set_layout(make<GHBoxLayout>());
 
     auto pid_label_label = GLabel::construct("Process:", this);
     pid_label_label->set_font(Font::default_bold_font());

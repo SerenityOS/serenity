@@ -130,7 +130,7 @@ static RefPtr<SearchResultsModel> find_in_files(const StringView& text)
 FindInFilesWidget::FindInFilesWidget(GWidget* parent)
     : GWidget(parent)
 {
-    set_layout(make<GBoxLayout>(Orientation::Vertical));
+    set_layout(make<GVBoxLayout>());
     m_textbox = GTextBox::construct(this);
     m_textbox->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_textbox->set_preferred_size(0, 20);

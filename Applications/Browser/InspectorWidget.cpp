@@ -38,7 +38,7 @@
 InspectorWidget::InspectorWidget(GWidget* parent)
     : GWidget(parent)
 {
-    set_layout(make<GBoxLayout>(Orientation::Vertical));
+    set_layout(make<GVBoxLayout>());
     auto splitter = GSplitter::construct(Orientation::Vertical, this);
     m_dom_tree_view = GTreeView::construct(splitter);
     m_dom_tree_view->on_selection = [this](auto& index) {

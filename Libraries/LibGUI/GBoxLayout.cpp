@@ -35,10 +35,6 @@ GBoxLayout::GBoxLayout(Orientation orientation)
 {
 }
 
-GBoxLayout::~GBoxLayout()
-{
-}
-
 void GBoxLayout::run(GWidget& widget)
 {
     bool should_log = false;
