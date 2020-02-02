@@ -371,6 +371,10 @@ void EventLoop::wait_for_event(WaitMode mode)
             gettimeofday(&now, nullptr);
             get_next_timer_expiration(timeout);
             timeval_sub(timeout, now, timeout);
+            if (timeout.tv_sec < 0) {
+                timeout.tv_sec = 0;
+                timeout.tv_usec = 0;
+            }
         } else {
             should_wait_forever = true;
         }
