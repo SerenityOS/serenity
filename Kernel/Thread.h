@@ -101,7 +101,7 @@ public:
     const Process& process() const { return m_process; }
 
     String backtrace(ProcessInspectionHandle&) const;
-    Vector<u32> raw_backtrace(u32 ebp) const;
+    Vector<uintptr_t> raw_backtrace(uintptr_t ebp) const;
 
     const String& name() const { return m_name; }
     void set_name(StringView s) { m_name = s; }
