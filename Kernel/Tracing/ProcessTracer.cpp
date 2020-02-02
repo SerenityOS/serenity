@@ -25,15 +25,19 @@
  */
 
 #include <AK/kstdio.h>
+#include <Kernel/Process.h>
 #include <Kernel/Tracing/ProcessTracer.h>
 
-ProcessTracer::ProcessTracer(pid_t pid)
-    : m_pid(pid)
+ProcessTracer::ProcessTracer(Process& process)
+    : m_process(&process)
 {
+    process.add_tracer(*this);
 }
 
 ProcessTracer::~ProcessTracer()
 {
+    if (m_process)
+        m_process->remove_tracer(*this);
 }
 
 void ProcessTracer::did_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3, u32 result)
@@ -55,5 +59,7 @@ int ProcessTracer::read(FileDescription&, u8* buffer, int buffer_size)
 
 String ProcessTracer::absolute_path(const FileDescription&) const
 {
-    return String::format("tracer:%d", m_pid);
+    if (!m_process)
+        return "tracer:(dead)";
+    return String::format("tracer:%d", m_process->pid());
 }

@@ -28,7 +28,6 @@
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
 #include <Kernel/Syscall.h>
-#include <Kernel/Tracing/ProcessTracer.h>
 #include <Kernel/VM/MemoryManager.h>
 
 extern "C" void syscall_handler(RegisterDump);
@@ -89,8 +88,7 @@ int handle(RegisterDump& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
     if (function == SC_exit || function == SC_exit_thread) {
         // These syscalls need special handling since they never return to the caller.
         cli();
-        if (auto* tracer = process.tracer())
-            tracer->did_syscall(function, arg1, arg2, arg3, 0);
+        process.did_syscall(function, arg1, arg2, arg3, 0);
         if (function == SC_exit)
             process.sys$exit((int)arg1);
         else
@@ -165,8 +163,7 @@ void syscall_handler(RegisterDump regs)
     u32 arg2 = regs.ecx;
     u32 arg3 = regs.ebx;
     regs.eax = (u32)Syscall::handle(regs, function, arg1, arg2, arg3);
-    if (auto* tracer = process.tracer())
-        tracer->did_syscall(function, arg1, arg2, arg3, regs.eax);
+    process.did_syscall(function, arg1, arg2, arg3, regs.eax);
     process.big_lock().unlock();
 
     // Check if we're supposed to return to userspace or just die.

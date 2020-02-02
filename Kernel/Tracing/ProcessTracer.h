@@ -30,15 +30,17 @@
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/UnixTypes.h>
 
+class Process;
+
 class ProcessTracer : public File {
 public:
-    static NonnullRefPtr<ProcessTracer> create(pid_t pid) { return adopt(*new ProcessTracer(pid)); }
+    static NonnullRefPtr<ProcessTracer> create(Process& process) { return adopt(*new ProcessTracer(process)); }
     virtual ~ProcessTracer() override;
 
-    bool is_dead() const { return m_dead; }
-    void set_dead() { m_dead = true; }
+    bool is_dead() const { return !m_process; }
+    void set_dead() { m_process = nullptr; }
 
-    virtual bool can_read(const FileDescription&) const override { return !m_calls.is_empty() || m_dead; }
+    virtual bool can_read(const FileDescription&) const override { return !m_calls.is_empty() || is_dead(); }
     virtual int read(FileDescription&, u8*, int) override;
 
     virtual bool can_write(const FileDescription&) const override { return true; }
@@ -47,11 +49,11 @@ public:
     virtual String absolute_path(const FileDescription&) const override;
 
     void did_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3, u32 result);
-    pid_t pid() const { return m_pid; }
+    Process* process() const { return m_process; }
 
 private:
     virtual const char* class_name() const override { return "ProcessTracer"; }
-    explicit ProcessTracer(pid_t);
+    explicit ProcessTracer(Process&);
 
     struct CallData {
         u32 function;
@@ -61,7 +63,6 @@ private:
         u32 result;
     };
 
-    pid_t m_pid;
-    bool m_dead { false };
+    Process* m_process;
     CircularQueue<CallData, 200> m_calls;
 };

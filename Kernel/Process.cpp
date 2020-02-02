@@ -1340,6 +1340,18 @@ void Process::dump_regions()
     MM.dump_kernel_regions();
 }
 
+void Process::add_tracer(ProcessTracer& tracer)
+{
+    ASSERT(tracer.process() == this);
+    m_tracers.append(&tracer);
+}
+
+void Process::remove_tracer(ProcessTracer& tracer)
+{
+    ASSERT(tracer.process() == this);
+    m_tracers.remove_first_matching([&tracer](auto* other) { return &tracer == other; });
+}
+
 void Process::sys$exit(int status)
 {
     cli();
@@ -2981,8 +2993,9 @@ void Process::die()
     // slave owner, we have to allow the PTY pair to be torn down.
     m_tty = nullptr;
 
-    if (m_tracer)
-        m_tracer->set_dead();
+    for (auto* tracer : m_tracers)
+        tracer->set_dead();
+    m_tracers.clear();
 
     {
         // Tell the threads to unwind and die.
@@ -3581,6 +3594,12 @@ int Process::sys$set_shared_buffer_volatile(int shared_buffer_id, bool state)
     return 0;
 }
 
+void Process::did_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3, u32 result)
+{
+    for (auto* tracer : m_tracers)
+        tracer->did_syscall(function, arg1, arg2, arg3, result);
+}
+
 void Process::terminate_due_to_signal(u8 signal)
 {
     ASSERT_INTERRUPTS_DISABLED();
@@ -3859,7 +3878,8 @@ int Process::sys$systrace(pid_t pid)
     int fd = alloc_fd();
     if (fd < 0)
         return fd;
-    auto description = FileDescription::create(peer->ensure_tracer());
+    auto tracer = ProcessTracer::create(*peer);
+    auto description = FileDescription::create(tracer);
     description->set_readable(true);
     m_fds[fd].set(move(description), 0);
     return fd;
@@ -3991,13 +4011,6 @@ int Process::sys$umount(const char* user_mountpoint, size_t mountpoint_length)
 
     auto guest_inode_id = metadata_or_error.value().inode;
     return VFS::the().unmount(guest_inode_id);
-}
-
-ProcessTracer& Process::ensure_tracer()
-{
-    if (!m_tracer)
-        m_tracer = ProcessTracer::create(m_pid);
-    return *m_tracer;
 }
 
 void Process::FileDescriptionAndFlags::clear()

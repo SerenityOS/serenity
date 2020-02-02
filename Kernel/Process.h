@@ -27,7 +27,6 @@
 #pragma once
 
 #include <AK/InlineLinkedList.h>
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
@@ -319,8 +318,8 @@ public:
     const NonnullOwnPtrVector<Region>& regions() const { return m_regions; }
     void dump_regions();
 
-    ProcessTracer* tracer() { return m_tracer.ptr(); }
-    ProcessTracer& ensure_tracer();
+    void add_tracer(ProcessTracer&);
+    void remove_tracer(ProcessTracer&);
 
     u32 m_ticks_in_user { 0 };
     u32 m_ticks_in_kernel { 0 };
@@ -381,6 +380,8 @@ public:
 
     void set_being_inspected(bool b) { m_being_inspected = b; }
     bool is_being_inspected() const { return m_being_inspected; }
+
+    void did_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3, u32 result);
 
     void terminate_due_to_signal(u8 signal);
     void send_signal(u8, Process* sender);
@@ -490,7 +491,7 @@ private:
 
     HashTable<gid_t> m_extra_gids;
 
-    RefPtr<ProcessTracer> m_tracer;
+    Vector<ProcessTracer*> m_tracers;
     OwnPtr<ELFLoader> m_elf_loader;
 
     Region* m_master_tls_region { nullptr };
