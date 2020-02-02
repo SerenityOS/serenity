@@ -79,15 +79,17 @@ ifeq ($(SHARED),1)
     OBJS += tls.o
     SUBPROJECT_CXXFLAGS = -fPIC
     PROGRAM = libc.so
+    BUILT_CLIB = $(PROGRAM)
     LDFLAGS = -shared
 else
-    EXTRA_OBJS += crti.ao crtn.ao
     LIBRARY = libc.a
+    BUILT_CLIB = $(LIBRARY)
+    EXTRA_OBJS += crti.ao crtn.ao
 endif
 
 POST_LIBRARY_BUILD = $(QUIET) $(MAKE) install
 
-all: crt0.o $(EXTRA_OBJS) $(LIBRARY)
+all: crt0.o $(EXTRA_OBJS) $(BUILT_CLIB)
 
 install:
 	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/sys/
@@ -100,9 +102,11 @@ install:
 	cp bits/*.h $(SERENITY_BASE_DIR)/Root/usr/include/bits/
 	cp arpa/*.h $(SERENITY_BASE_DIR)/Root/usr/include/arpa/
 	cp netinet/*.h $(SERENITY_BASE_DIR)/Root/usr/include/netinet/
-	cp libc.a $(SERENITY_BASE_DIR)/Root/usr/lib/
+	cp $(BUILT_CLIB) $(SERENITY_BASE_DIR)/Root/usr/lib/
 	cp crt0.o $(SERENITY_BASE_DIR)/Root/usr/lib/
-	cp crti.ao $(SERENITY_BASE_DIR)/Root/usr/lib/crti.o
-	cp crtn.ao $(SERENITY_BASE_DIR)/Root/usr/lib/crtn.o
+    ifeq ($(SHARED),0)
+	    cp crti.ao $(SERENITY_BASE_DIR)/Root/usr/lib/crti.o
+	    cp crtn.ao $(SERENITY_BASE_DIR)/Root/usr/lib/crtn.o
+    endif
 
 include ../../Makefile.common
