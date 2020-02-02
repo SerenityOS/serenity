@@ -163,7 +163,7 @@ TerminalWrapper::TerminalWrapper(GWidget* parent)
 {
     set_layout(make<GVBoxLayout>());
 
-    RefPtr<CConfigFile> config = CConfigFile::get_for_app("Terminal");
+    RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("Terminal");
     m_terminal_widget = TerminalWidget::construct(-1, false, config);
     add_child(*m_terminal_widget);
 

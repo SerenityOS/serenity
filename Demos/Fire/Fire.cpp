@@ -101,7 +101,7 @@ private:
     GLabel* stats;
 
     virtual void paint_event(GPaintEvent&) override;
-    virtual void timer_event(CTimerEvent&) override;
+    virtual void timer_event(Core::TimerEvent&) override;
     virtual void mousedown_event(GMouseEvent& event) override;
     virtual void mousemove_event(GMouseEvent& event) override;
     virtual void mouseup_event(GMouseEvent& event) override;
@@ -148,7 +148,7 @@ Fire::~Fire()
 
 void Fire::paint_event(GPaintEvent& event)
 {
-    CElapsedTimer timer;
+    Core::ElapsedTimer timer;
     timer.start();
 
     GPainter painter(*this);
@@ -161,7 +161,7 @@ void Fire::paint_event(GPaintEvent& event)
     cycles++;
 }
 
-void Fire::timer_event(CTimerEvent&)
+void Fire::timer_event(Core::TimerEvent&)
 {
     /* Update only even or odd columns per frame... */
     phase++;

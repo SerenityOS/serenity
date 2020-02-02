@@ -40,11 +40,11 @@ HttpProtocol::~HttpProtocol()
 
 RefPtr<Download> HttpProtocol::start_download(PSClientConnection& client, const URL& url)
 {
-    CHttpRequest request;
-    request.set_method(CHttpRequest::Method::GET);
+    Core::HttpRequest request;
+    request.set_method(Core::HttpRequest::Method::GET);
     request.set_url(url);
     auto job = request.schedule();
     if (!job)
         return nullptr;
-    return HttpDownload::create_with_job({}, client, (CHttpJob&)*job);
+    return HttpDownload::create_with_job({}, client, (Core::HttpJob&)*job);
 }

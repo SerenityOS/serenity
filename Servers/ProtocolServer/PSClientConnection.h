@@ -40,7 +40,7 @@ class PSClientConnection final : public IClientConnection<ProtocolServerEndpoint
     , public ProtocolServerEndpoint {
     C_OBJECT(PSClientConnection)
 public:
-    explicit PSClientConnection(CLocalSocket&, int client_id);
+    explicit PSClientConnection(Core::LocalSocket&, int client_id);
     ~PSClientConnection() override;
 
     virtual void die() override;

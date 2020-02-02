@@ -106,8 +106,8 @@ static void run_command(int ptm_fd, String command)
 
 int main(int argc, char** argv)
 {
-    CEventLoop event_loop;
-    auto server = CTCPServer::construct();
+    Core::EventLoop event_loop;
+    auto server = Core::TCPServer::construct();
 
     int opt;
     u16 port = 23;

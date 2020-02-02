@@ -29,14 +29,18 @@
 #include <AK/Badge.h>
 #include <LibCore/CSocket.h>
 
-class CLocalServer;
+namespace Core {
 
-class CLocalSocket final : public CSocket {
-    C_OBJECT(CLocalSocket)
+class LocalServer;
+
+class LocalSocket final : public Socket {
+    C_OBJECT(LocalSocket)
 public:
-    virtual ~CLocalSocket() override;
+    virtual ~LocalSocket() override;
 
 private:
-    explicit CLocalSocket(CObject* parent = nullptr);
-    CLocalSocket(int fd, CObject* parent = nullptr);
+    explicit LocalSocket(Object* parent = nullptr);
+    LocalSocket(int fd, Object* parent = nullptr);
 };
+
+}

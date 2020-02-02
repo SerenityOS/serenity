@@ -235,8 +235,8 @@ void HexEditorWidget::update_title()
 
 void HexEditorWidget::open_file(const String& path)
 {
-    auto file = CFile::construct(path);
-    if (!file->open(CIODevice::ReadOnly)) {
+    auto file = Core::File::construct(path);
+    if (!file->open(Core::IODevice::ReadOnly)) {
         GMessageBox::show(String::format("Opening \"%s\" failed: %s", path.characters(), strerror(errno)), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
         return;
     }

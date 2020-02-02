@@ -162,7 +162,7 @@ void GSlider::mouseup_event(GMouseEvent& event)
     return GWidget::mouseup_event(event);
 }
 
-void GSlider::leave_event(CEvent& event)
+void GSlider::leave_event(Core::Event& event)
 {
     if (!is_enabled())
         return;

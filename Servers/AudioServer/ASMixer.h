@@ -106,7 +106,7 @@ private:
     WeakPtr<ASClientConnection> m_client;
 };
 
-class ASMixer : public CObject {
+class ASMixer : public Core::Object {
     C_OBJECT(ASMixer)
 public:
     ASMixer();
@@ -125,7 +125,7 @@ private:
     pthread_mutex_t m_pending_mutex;
     pthread_cond_t m_pending_cond;
 
-    RefPtr<CFile> m_device;
+    RefPtr<Core::File> m_device;
 
     LibThread::Thread m_sound_thread;
 

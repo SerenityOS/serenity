@@ -91,7 +91,7 @@ void GFileSystemModel::Node::traverse_if_needed(const GFileSystemModel& model)
     total_size = 0;
 
     auto full_path = this->full_path(model);
-    CDirIterator di(full_path, CDirIterator::SkipDots);
+    Core::DirIterator di(full_path, Core::DirIterator::SkipDots);
     if (di.has_error()) {
         fprintf(stderr, "CDirIterator: %s\n", di.error_string());
         return;
@@ -122,7 +122,7 @@ void GFileSystemModel::Node::traverse_if_needed(const GFileSystemModel& model)
     }
     fcntl(m_watch_fd, F_SETFD, FD_CLOEXEC);
     dbg() << "Watching " << full_path << " for changes, m_watch_fd = " << m_watch_fd;
-    m_notifier = CNotifier::construct(m_watch_fd, CNotifier::Event::Read);
+    m_notifier = Core::Notifier::construct(m_watch_fd, Core::Notifier::Event::Read);
     m_notifier->on_ready_to_read = [this, &model] {
         char buffer[32];
         int rc = read(m_notifier->fd(), buffer, sizeof(buffer));

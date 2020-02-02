@@ -29,10 +29,12 @@
 #include <AK/Function.h>
 #include <LibCore/CObject.h>
 
-class CNetworkResponse;
+namespace Core {
 
-class CNetworkJob : public CObject {
-    C_OBJECT(CNetworkJob)
+class NetworkResponse;
+
+class NetworkJob : public Object {
+    C_OBJECT_ABSTRACT(NetworkJob)
 public:
     enum class Error {
         None,
@@ -41,15 +43,15 @@ public:
         ProtocolFailed,
         Cancelled,
     };
-    virtual ~CNetworkJob() override;
+    virtual ~NetworkJob() override;
 
     Function<void(bool success)> on_finish;
 
     bool is_cancelled() const { return m_error == Error::Cancelled; }
     bool has_error() const { return m_error != Error::None; }
     Error error() const { return m_error; }
-    CNetworkResponse* response() { return m_response.ptr(); }
-    const CNetworkResponse* response() const { return m_response.ptr(); }
+    NetworkResponse* response() { return m_response.ptr(); }
+    const NetworkResponse* response() const { return m_response.ptr(); }
 
     virtual void start() = 0;
     virtual void shutdown() = 0;
@@ -61,13 +63,15 @@ public:
     }
 
 protected:
-    CNetworkJob();
-    void did_finish(NonnullRefPtr<CNetworkResponse>&&);
+    NetworkJob();
+    void did_finish(NonnullRefPtr<NetworkResponse>&&);
     void did_fail(Error);
 
 private:
-    RefPtr<CNetworkResponse> m_response;
+    RefPtr<NetworkResponse> m_response;
     Error m_error { Error::None };
 };
 
-const char* to_string(CNetworkJob::Error);
+const char* to_string(NetworkJob::Error);
+
+}

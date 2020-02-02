@@ -235,7 +235,7 @@ void GTextEditor::mousedown_event(GMouseEvent& event)
     }
 
     if (m_triple_click_timer.is_valid() && m_triple_click_timer.elapsed() < 250) {
-        m_triple_click_timer = CElapsedTimer();
+        m_triple_click_timer = Core::ElapsedTimer();
 
         GTextPosition start;
         GTextPosition end;
@@ -1030,18 +1030,18 @@ void GTextEditor::set_cursor(const GTextPosition& a_position)
         on_cursor_change();
 }
 
-void GTextEditor::focusin_event(CEvent&)
+void GTextEditor::focusin_event(Core::Event&)
 {
     update_cursor();
     start_timer(500);
 }
 
-void GTextEditor::focusout_event(CEvent&)
+void GTextEditor::focusout_event(Core::Event&)
 {
     stop_timer();
 }
 
-void GTextEditor::timer_event(CTimerEvent&)
+void GTextEditor::timer_event(Core::TimerEvent&)
 {
     m_cursor_state = !m_cursor_state;
     if (is_focused())
@@ -1171,13 +1171,13 @@ void GTextEditor::paste()
     insert_at_cursor_or_replace_selection(paste_text);
 }
 
-void GTextEditor::enter_event(CEvent&)
+void GTextEditor::enter_event(Core::Event&)
 {
     ASSERT(window());
     window()->set_override_cursor(GStandardCursor::IBeam);
 }
 
-void GTextEditor::leave_event(CEvent&)
+void GTextEditor::leave_event(Core::Event&)
 {
     ASSERT(window());
     window()->set_override_cursor(GStandardCursor::None);

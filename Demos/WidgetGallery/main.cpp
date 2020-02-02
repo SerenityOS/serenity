@@ -70,7 +70,7 @@ int main(int argc, char** argv)
     button2->set_enabled(false);
 
     auto progress1 = GProgressBar::construct(main_widget);
-    auto timer = CTimer::construct(100, [&] {
+    auto timer = Core::Timer::construct(100, [&] {
         progress1->set_value(progress1->value() + 1);
         if (progress1->value() == progress1->max())
             progress1->set_value(progress1->min());

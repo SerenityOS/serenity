@@ -69,10 +69,10 @@ char* read_map(const JsonObject& json, const String& name)
     return map;
 }
 
-RefPtr<CFile> open_keymap_file(String& filename)
+RefPtr<Core::File> open_keymap_file(String& filename)
 {
-    auto file = CFile::construct(filename);
-    if (file->open(CIODevice::ReadOnly))
+    auto file = Core::File::construct(filename);
+    if (file->open(Core::IODevice::ReadOnly))
         return file;
 
     if (!filename.ends_with(".json")) {
@@ -81,8 +81,8 @@ RefPtr<CFile> open_keymap_file(String& filename)
         full_path.append(filename);
         full_path.append(".json");
         filename = full_path.to_string();
-        file = CFile::construct(filename);
-        if (file->open(CIODevice::ReadOnly))
+        file = Core::File::construct(filename);
+        if (file->open(Core::IODevice::ReadOnly))
             return file;
     }
 

@@ -30,8 +30,8 @@
 
 static GDragOperation* s_current_drag_operation;
 
-GDragOperation::GDragOperation(CObject* parent)
-    : CObject(parent)
+GDragOperation::GDragOperation(Core::Object* parent)
+    : Core::Object(parent)
 {
 }
 
@@ -61,7 +61,7 @@ GDragOperation::Outcome GDragOperation::exec()
     }
 
     s_current_drag_operation = this;
-    m_event_loop = make<CEventLoop>();
+    m_event_loop = make<Core::EventLoop>();
     auto result = m_event_loop->exec();
     m_event_loop = nullptr;
     dbgprintf("%s: event loop returned with result %d\n", class_name(), result);

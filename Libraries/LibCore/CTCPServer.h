@@ -30,17 +30,19 @@
 #include <LibCore/CNotifier.h>
 #include <LibCore/CObject.h>
 
-class CTCPSocket;
+namespace Core {
 
-class CTCPServer : public CObject {
-    C_OBJECT(CTCPServer)
+class TCPSocket;
+
+class TCPServer : public Object {
+    C_OBJECT(TCPServer)
 public:
-    virtual ~CTCPServer() override;
+    virtual ~TCPServer() override;
 
     bool is_listening() const { return m_listening; }
     bool listen(const IPv4Address& address, u16 port);
 
-    RefPtr<CTCPSocket> accept();
+    RefPtr<TCPSocket> accept();
 
     Optional<IPv4Address> local_address() const;
     Optional<u16> local_port() const;
@@ -48,9 +50,11 @@ public:
     Function<void()> on_ready_to_accept;
 
 private:
-    explicit CTCPServer(CObject* parent = nullptr);
+    explicit TCPServer(Object* parent = nullptr);
 
     int m_fd { -1 };
     bool m_listening { false };
-    RefPtr<CNotifier> m_notifier;
+    RefPtr<Notifier> m_notifier;
 };
+
+}

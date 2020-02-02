@@ -29,10 +29,12 @@
 #include <AK/Function.h>
 #include <LibCore/CObject.h>
 
-class CTimer final : public CObject {
-    C_OBJECT(CTimer)
+namespace Core {
+
+class Timer final : public Object {
+    C_OBJECT(Timer)
 public:
-    virtual ~CTimer() override;
+    virtual ~Timer() override;
 
     void start();
     void start(int interval);
@@ -55,13 +57,15 @@ public:
     Function<void()> on_timeout;
 
 private:
-    explicit CTimer(CObject* parent = nullptr);
-    CTimer(int interval, Function<void()>&& timeout_handler, CObject* parent = nullptr);
+    explicit Timer(Object* parent = nullptr);
+    Timer(int interval, Function<void()>&& timeout_handler, Object* parent = nullptr);
 
-    virtual void timer_event(CTimerEvent&) override;
+    virtual void timer_event(TimerEvent&) override;
 
     bool m_active { false };
     bool m_single_shot { false };
     bool m_interval_dirty { false };
     int m_interval { 0 };
 };
+
+}

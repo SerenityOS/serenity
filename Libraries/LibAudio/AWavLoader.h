@@ -56,11 +56,11 @@ public:
     u32 sample_rate() const { return m_sample_rate; }
     u16 num_channels() const { return m_num_channels; }
     u16 bits_per_sample() const { return m_bits_per_sample; }
-    RefPtr<CFile> file() const { return m_file; }
+    RefPtr<Core::File> file() const { return m_file; }
 
 private:
     bool parse_header();
-    RefPtr<CFile> m_file;
+    RefPtr<Core::File> m_file;
     String m_error_string;
     OwnPtr<AResampleHelper> m_resampler;
 

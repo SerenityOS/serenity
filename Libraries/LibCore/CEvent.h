@@ -26,14 +26,16 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/Function.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/WeakPtr.h>
 
-class CObject;
+namespace Core {
 
-class CEvent {
+class Object;
+
+class Event {
 public:
     enum Type {
         Invalid = 0,
@@ -47,12 +49,12 @@ public:
         Custom,
     };
 
-    CEvent() {}
-    explicit CEvent(unsigned type)
+    Event() {}
+    explicit Event(unsigned type)
         : m_type(type)
     {
     }
-    virtual ~CEvent() {}
+    virtual ~Event() {}
 
     unsigned type() const { return m_type; }
 
@@ -65,28 +67,28 @@ private:
     bool m_accepted { true };
 };
 
-class CDeferredInvocationEvent : public CEvent {
-    friend class CEventLoop;
+class DeferredInvocationEvent : public Event {
+    friend class EventLoop;
 
 public:
-    CDeferredInvocationEvent(Function<void(CObject&)> invokee)
-        : CEvent(CEvent::Type::DeferredInvoke)
+    DeferredInvocationEvent(Function<void(Object&)> invokee)
+        : Event(Event::Type::DeferredInvoke)
         , m_invokee(move(invokee))
     {
     }
 
 private:
-    Function<void(CObject&)> m_invokee;
+    Function<void(Object&)> m_invokee;
 };
 
-class CTimerEvent final : public CEvent {
+class TimerEvent final : public Event {
 public:
-    explicit CTimerEvent(int timer_id)
-        : CEvent(CEvent::Timer)
+    explicit TimerEvent(int timer_id)
+        : Event(Event::Timer)
         , m_timer_id(timer_id)
     {
     }
-    ~CTimerEvent() {}
+    ~TimerEvent() {}
 
     int timer_id() const { return m_timer_id; }
 
@@ -94,14 +96,14 @@ private:
     int m_timer_id;
 };
 
-class CNotifierReadEvent final : public CEvent {
+class NotifierReadEvent final : public Event {
 public:
-    explicit CNotifierReadEvent(int fd)
-        : CEvent(CEvent::NotifierRead)
+    explicit NotifierReadEvent(int fd)
+        : Event(Event::NotifierRead)
         , m_fd(fd)
     {
     }
-    ~CNotifierReadEvent() {}
+    ~NotifierReadEvent() {}
 
     int fd() const { return m_fd; }
 
@@ -109,14 +111,14 @@ private:
     int m_fd;
 };
 
-class CNotifierWriteEvent final : public CEvent {
+class NotifierWriteEvent final : public Event {
 public:
-    explicit CNotifierWriteEvent(int fd)
-        : CEvent(CEvent::NotifierWrite)
+    explicit NotifierWriteEvent(int fd)
+        : Event(Event::NotifierWrite)
         , m_fd(fd)
     {
     }
-    ~CNotifierWriteEvent() {}
+    ~NotifierWriteEvent() {}
 
     int fd() const { return m_fd; }
 
@@ -124,31 +126,31 @@ private:
     int m_fd;
 };
 
-class CChildEvent final : public CEvent {
+class ChildEvent final : public Event {
 public:
-    CChildEvent(Type, CObject& child, CObject* insertion_before_child = nullptr);
-    ~CChildEvent();
+    ChildEvent(Type, Object& child, Object* insertion_before_child = nullptr);
+    ~ChildEvent();
 
-    CObject* child() { return m_child.ptr(); }
-    const CObject* child() const { return m_child.ptr(); }
+    Object* child() { return m_child.ptr(); }
+    const Object* child() const { return m_child.ptr(); }
 
-    CObject* insertion_before_child() { return m_insertion_before_child.ptr(); }
-    const CObject* insertion_before_child() const { return m_insertion_before_child.ptr(); }
+    Object* insertion_before_child() { return m_insertion_before_child.ptr(); }
+    const Object* insertion_before_child() const { return m_insertion_before_child.ptr(); }
 
 private:
-    WeakPtr<CObject> m_child;
-    WeakPtr<CObject> m_insertion_before_child;
+    WeakPtr<Object> m_child;
+    WeakPtr<Object> m_insertion_before_child;
 };
 
-class CCustomEvent : public CEvent {
+class CustomEvent : public Event {
 public:
-    CCustomEvent(int custom_type, void* data = nullptr)
-        : CEvent(CEvent::Type::Custom)
+    CustomEvent(int custom_type, void* data = nullptr)
+        : Event(Event::Type::Custom)
         , m_custom_type(custom_type)
         , m_data(data)
     {
     }
-    ~CCustomEvent() {}
+    ~CustomEvent() {}
 
     int custom_type() const { return m_custom_type; }
     void* data() { return m_data; }
@@ -158,3 +160,5 @@ private:
     int m_custom_type { 0 };
     void* m_data { nullptr };
 };
+
+}

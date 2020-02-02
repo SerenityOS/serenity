@@ -52,7 +52,7 @@ void ThreadCatalogModel::set_board(const String& board)
 
 void ThreadCatalogModel::update()
 {
-    CHttpRequest request;
+    Core::HttpRequest request;
     request.set_url(String::format("http://a.4cdn.org/%s/catalog.json", m_board.characters()));
 
     if (m_pending_job)

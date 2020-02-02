@@ -31,19 +31,21 @@
 #include <LibCore/CHttpResponse.h>
 #include <LibCore/CNetworkJob.h>
 
-class CTCPSocket;
+namespace Core {
 
-class CHttpJob final : public CNetworkJob {
-    C_OBJECT(CHttpJob)
+class TCPSocket;
+
+class HttpJob final : public NetworkJob {
+    C_OBJECT(HttpJob)
 public:
-    explicit CHttpJob(const CHttpRequest&);
-    virtual ~CHttpJob() override;
+    explicit HttpJob(const HttpRequest&);
+    virtual ~HttpJob() override;
 
     virtual void start() override;
     virtual void shutdown() override;
 
-    CHttpResponse* response() { return static_cast<CHttpResponse*>(CNetworkJob::response()); }
-    const CHttpResponse* response() const { return static_cast<const CHttpResponse*>(CNetworkJob::response()); }
+    HttpResponse* response() { return static_cast<HttpResponse*>(NetworkJob::response()); }
+    const HttpResponse* response() const { return static_cast<const HttpResponse*>(NetworkJob::response()); }
 
 private:
     void on_socket_connected();
@@ -56,11 +58,13 @@ private:
         Finished,
     };
 
-    CHttpRequest m_request;
-    RefPtr<CTCPSocket> m_socket;
+    HttpRequest m_request;
+    RefPtr<TCPSocket> m_socket;
     State m_state { State::InStatus };
     int m_code { -1 };
     HashMap<String, String> m_headers;
     Vector<ByteBuffer> m_received_buffers;
     size_t m_received_size { 0 };
 };
+
+}

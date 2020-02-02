@@ -31,7 +31,7 @@
 #include <LibGUI/GTextEditor.h>
 #include <stdio.h>
 
-GInputBox::GInputBox(const StringView& prompt, const StringView& title, CObject* parent)
+GInputBox::GInputBox(const StringView& prompt, const StringView& title, Core::Object* parent)
     : GDialog(parent)
     , m_prompt(prompt)
 {

@@ -54,16 +54,16 @@ static void sigchld_handler(int)
     // We wouldn't want to run the complex logic, such
     // as possibly spawning the service again, from the
     // signal handler, so defer it.
-    CEventLoop::main().post_event(*service, make<CDeferredInvocationEvent>([=](CObject&) {
+    Core::EventLoop::main().post_event(*service, make<Core::DeferredInvocationEvent>([=](auto&) {
         service->did_exit(status);
     }));
-    CEventLoop::wake();
+    Core::EventLoop::wake();
 }
 
 static void check_for_test_mode()
 {
-    auto f = CFile::construct("/proc/cmdline");
-    if (!f->open(CIODevice::ReadOnly)) {
+    auto f = Core::File::construct("/proc/cmdline");
+    if (!f->open(Core::IODevice::ReadOnly)) {
         dbg() << "Failed to read command line: " << f->error_string();
         ASSERT(false);
     }
@@ -117,12 +117,12 @@ int main(int, char**)
     };
     sigaction(SIGCHLD, &sa, nullptr);
 
-    CEventLoop event_loop;
+    Core::EventLoop event_loop;
 
     // Read our config and instantiate services.
     // This takes care of setting up sockets.
     Vector<RefPtr<Service>> services;
-    auto config = CConfigFile::get_for_system("SystemServer");
+    auto config = Core::ConfigFile::get_for_system("SystemServer");
     for (auto name : config->groups())
         services.append(Service::construct(*config, name));
 

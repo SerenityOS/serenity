@@ -60,9 +60,9 @@ IRCClient::IRCClient()
     : m_nickname("seren1ty")
     , m_client_window_list_model(IRCWindowListModel::create(*this))
     , m_log(IRCLogBuffer::create())
-    , m_config(CConfigFile::get_for_app("IRCClient"))
+    , m_config(Core::ConfigFile::get_for_app("IRCClient"))
 {
-    m_socket = CTCPSocket::construct(this);
+    m_socket = Core::TCPSocket::construct(this);
     m_nickname = m_config->read_entry("User", "Nickname", "seren1ty");
     m_hostname = m_config->read_entry("Connection", "Server", "");
     m_port = m_config->read_num_entry("Connection", "Port", 6667);
@@ -83,7 +83,7 @@ void IRCClient::set_server(const String& hostname, int port)
 
 void IRCClient::on_socket_connected()
 {
-    m_notifier = CNotifier::construct(m_socket->fd(), CNotifier::Read);
+    m_notifier = Core::Notifier::construct(m_socket->fd(), Core::Notifier::Read);
     m_notifier->on_ready_to_read = [this] { receive_from_server(); };
 
     send_user();

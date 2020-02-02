@@ -43,7 +43,7 @@ GFontDatabase& GFontDatabase::the()
 
 GFontDatabase::GFontDatabase()
 {
-    CDirIterator di("/res/fonts", CDirIterator::SkipDots);
+    Core::DirIterator di("/res/fonts", Core::DirIterator::SkipDots);
     if (di.has_error()) {
         fprintf(stderr, "CDirIterator: %s\n", di.error_string());
         exit(1);

@@ -28,34 +28,38 @@
 #include <LibCore/CEventLoop.h>
 #include <LibCore/CNotifier.h>
 
-CNotifier::CNotifier(int fd, unsigned event_mask, CObject* parent)
-    : CObject(parent)
+namespace Core {
+
+Notifier::Notifier(int fd, unsigned event_mask, Object* parent)
+    : Object(parent)
     , m_fd(fd)
     , m_event_mask(event_mask)
 {
     set_enabled(true);
 }
 
-CNotifier::~CNotifier()
+Notifier::~Notifier()
 {
     set_enabled(false);
 }
 
-void CNotifier::set_enabled(bool enabled)
+void Notifier::set_enabled(bool enabled)
 {
     if (enabled)
-        CEventLoop::register_notifier({}, *this);
+        Core::EventLoop::register_notifier({}, *this);
     else
-        CEventLoop::unregister_notifier({}, *this);
+        Core::EventLoop::unregister_notifier({}, *this);
 }
 
-void CNotifier::event(CEvent& event)
+void Notifier::event(Core::Event& event)
 {
-    if (event.type() == CEvent::NotifierRead && on_ready_to_read) {
+    if (event.type() == Core::Event::NotifierRead && on_ready_to_read) {
         on_ready_to_read();
-    } else if (event.type() == CEvent::NotifierWrite && on_ready_to_write) {
+    } else if (event.type() == Core::Event::NotifierWrite && on_ready_to_write) {
         on_ready_to_write();
     } else {
-        CObject::event(event);
+        Object::event(event);
     }
+}
+
 }

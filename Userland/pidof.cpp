@@ -38,7 +38,7 @@ static int pid_of(const String& process_name, bool single_shot, bool omit_pid, p
 {
     bool displayed_at_least_one = false;
 
-    auto processes = CProcessStatisticsReader().get_all();
+    auto processes = Core::ProcessStatisticsReader().get_all();
 
     for (auto& it : processes) {
         if (it.value.name == process_name) {
@@ -64,7 +64,7 @@ int main(int argc, char** argv)
     const char* omit_pid_value = nullptr;
     const char* process_name = nullptr;
 
-    CArgsParser args_parser;
+    Core::ArgsParser args_parser;
     args_parser.add_option(single_shot, "Only return one pid", nullptr, 's');
     args_parser.add_option(omit_pid_value, "Omit the given PID, or the parent process if the special value %PPID is passed", nullptr, 'o', "pid");
     args_parser.add_positional_argument(process_name, "Process name to search for", "process-name");

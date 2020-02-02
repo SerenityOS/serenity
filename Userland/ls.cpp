@@ -85,7 +85,7 @@ int main(int argc, char** argv)
 
     Vector<const char*> paths;
 
-    CArgsParser args_parser;
+    Core::ArgsParser args_parser;
     args_parser.add_option(flag_show_dotfiles, "Show dotfiles", "all", 'a');
     args_parser.add_option(flag_long, "Display long info", "long", 'l');
     args_parser.add_option(flag_sort_by_timestamp, "Sort files by timestamp", nullptr, 't');
@@ -94,7 +94,7 @@ int main(int argc, char** argv)
     args_parser.add_option(flag_show_inode, "Show inode ids", "inode", 'i');
     args_parser.add_option(flag_print_numeric, "In long format, display numeric UID/GID", "numeric-uid-gid", 'n');
     args_parser.add_option(flag_human_readable, "Print human-readable sizes", "human-readable", 'h');
-    args_parser.add_positional_argument(paths, "Directory to list", "path", CArgsParser::Required::No);
+    args_parser.add_positional_argument(paths, "Directory to list", "path", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
     if (flag_long) {
@@ -288,7 +288,7 @@ bool print_filesystem_object(const String& path, const String& name, const struc
 
 int do_file_system_object_long(const char* path)
 {
-    CDirIterator di(path, !flag_show_dotfiles ? CDirIterator::SkipDots : CDirIterator::Flags::NoFlags);
+    Core::DirIterator di(path, !flag_show_dotfiles ? Core::DirIterator::SkipDots : Core::DirIterator::Flags::NoFlags);
     if (di.has_error()) {
         if (di.error() == ENOTDIR) {
             struct stat stat;
@@ -366,7 +366,7 @@ bool print_filesystem_object_short(const char* path, const char* name, int* npri
 
 int do_file_system_object_short(const char* path)
 {
-    CDirIterator di(path, !flag_show_dotfiles ? CDirIterator::SkipDots : CDirIterator::Flags::NoFlags);
+    Core::DirIterator di(path, !flag_show_dotfiles ? Core::DirIterator::SkipDots : Core::DirIterator::Flags::NoFlags);
     if (di.has_error()) {
         if (di.error() == ENOTDIR) {
             int nprinted;

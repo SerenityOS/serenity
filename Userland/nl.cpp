@@ -46,9 +46,9 @@ int main(int argc, char** argv)
     int number_width = 6;
     Vector<const char*> files;
 
-    CArgsParser args_parser;
+    Core::ArgsParser args_parser;
 
-    CArgsParser::Option number_style_option {
+    Core::ArgsParser::Option number_style_option {
         true,
         "Line numbering style: 't' for non-empty lines, 'a' for all lines, 'n' for no lines",
         "body-numbering",
@@ -73,7 +73,7 @@ int main(int argc, char** argv)
     args_parser.add_option(separator, "Separator between line numbers and lines", "separator", 's', "string");
     args_parser.add_option(start_number, "Initial line number", "startnum", 'v', "number");
     args_parser.add_option(number_width, "Number width", "width", 'w', "number");
-    args_parser.add_positional_argument(files, "Files to process", "file", CArgsParser::Required::No);
+    args_parser.add_positional_argument(files, "Files to process", "file", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
     Vector<FILE*> file_pointers;

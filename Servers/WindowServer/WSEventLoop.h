@@ -44,10 +44,10 @@ private:
     void drain_mouse();
     void drain_keyboard();
 
-    CEventLoop m_event_loop;
+    Core::EventLoop m_event_loop;
     int m_keyboard_fd { -1 };
-    RefPtr<CNotifier> m_keyboard_notifier;
+    RefPtr<Core::Notifier> m_keyboard_notifier;
     int m_mouse_fd { -1 };
-    RefPtr<CNotifier> m_mouse_notifier;
-    RefPtr<CLocalServer> m_server;
+    RefPtr<Core::Notifier> m_mouse_notifier;
+    RefPtr<Core::LocalServer> m_server;
 };

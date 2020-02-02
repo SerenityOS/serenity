@@ -25,32 +25,36 @@
  */
 
 #include <LibCore/CUdpSocket.h>
-#include <sys/socket.h>
 #include <errno.h>
+#include <sys/socket.h>
 
-CUdpSocket::CUdpSocket(int fd, CObject* parent)
-    : CSocket(CSocket::Type::UDP, parent)
+namespace Core {
+
+UdpSocket::UdpSocket(int fd, Object* parent)
+    : Socket(Socket::Type::UDP, parent)
 {
     // NOTE: This constructor is used by CUdpServer::accept(), so the socket is already connected.
     m_connected = true;
     set_fd(fd);
-    set_mode(CIODevice::ReadWrite);
+    set_mode(IODevice::ReadWrite);
     set_error(0);
 }
 
-CUdpSocket::CUdpSocket(CObject* parent)
-    : CSocket(CSocket::Type::UDP, parent)
+UdpSocket::UdpSocket(Object* parent)
+    : Socket(Socket::Type::UDP, parent)
 {
     int fd = socket(AF_INET, SOCK_DGRAM | SOCK_NONBLOCK, 0);
     if (fd < 0) {
         set_error(errno);
     } else {
         set_fd(fd);
-        set_mode(CIODevice::ReadWrite);
+        set_mode(IODevice::ReadWrite);
         set_error(0);
     }
 }
 
-CUdpSocket::~CUdpSocket()
+UdpSocket::~UdpSocket()
 {
+}
+
 }

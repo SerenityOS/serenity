@@ -28,7 +28,6 @@
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibCore/CArgsParser.h>
-#include <LibCore/CDirIterator.h>
 #include <dirent.h>
 #include <stdio.h>
 #include <string.h>
@@ -80,7 +79,7 @@ int main(int argc, char** argv)
     bool recursive = false;
     const char* path = nullptr;
 
-    CArgsParser args_parser;
+    Core::ArgsParser args_parser;
     args_parser.add_option(recursive, "Delete directories recursively", "recursive", 'r');
     args_parser.add_positional_argument(path, "File to remove", "path");
     args_parser.parse(argc, argv);

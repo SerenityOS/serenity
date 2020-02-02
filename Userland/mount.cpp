@@ -58,8 +58,8 @@ bool mount_all()
     // Mount all filesystems listed in /etc/fstab.
     dbg() << "Mounting all filesystems...";
 
-    auto fstab = CFile::construct("/etc/fstab");
-    if (!fstab->open(CIODevice::OpenMode::ReadOnly)) {
+    auto fstab = Core::File::construct("/etc/fstab");
+    if (!fstab->open(Core::IODevice::OpenMode::ReadOnly)) {
         fprintf(stderr, "Failed to open /etc/fstab: %s\n", fstab->error_string());
         return false;
     }
@@ -111,8 +111,8 @@ bool mount_all()
 bool print_mounts()
 {
     // Output info about currently mounted filesystems.
-    auto df = CFile::construct("/proc/df");
-    if (!df->open(CIODevice::ReadOnly)) {
+    auto df = Core::File::construct("/proc/df");
+    if (!df->open(Core::IODevice::ReadOnly)) {
         fprintf(stderr, "Failed to open /proc/df: %s\n", df->error_string());
         return false;
     }
@@ -158,9 +158,9 @@ int main(int argc, char** argv)
     const char* options = nullptr;
     bool should_mount_all = false;
 
-    CArgsParser args_parser;
-    args_parser.add_positional_argument(source, "Source path", "source", CArgsParser::Required::No);
-    args_parser.add_positional_argument(mountpoint, "Mount point", "mountpoint", CArgsParser::Required::No);
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(source, "Source path", "source", Core::ArgsParser::Required::No);
+    args_parser.add_positional_argument(mountpoint, "Mount point", "mountpoint", Core::ArgsParser::Required::No);
     args_parser.add_option(fs_type, "File system type", nullptr, 't', "fstype");
     args_parser.add_option(options, "Mount options", nullptr, 'o', "options");
     args_parser.add_option(should_mount_all, "Mount all file systems listed in /etc/fstab", nullptr, 'a');

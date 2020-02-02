@@ -48,7 +48,7 @@ GApplication::GApplication(int argc, char** argv)
     (void)argv;
     ASSERT(!s_the);
     s_the = this;
-    m_event_loop = make<CEventLoop>();
+    m_event_loop = make<Core::EventLoop>();
     GWindowServerConnection::the();
     if (argc > 0)
         m_invoked_as = argv[0];

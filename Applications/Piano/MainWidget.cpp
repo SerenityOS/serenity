@@ -70,7 +70,7 @@ MainWidget::~MainWidget()
 // FIXME: There are some unnecessary calls to update() throughout this program,
 // which are an easy target for optimization.
 
-void MainWidget::custom_event(CCustomEvent&)
+void MainWidget::custom_event(Core::CustomEvent&)
 {
     m_wave_widget->update();
 

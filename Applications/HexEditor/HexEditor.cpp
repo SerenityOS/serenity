@@ -564,7 +564,7 @@ void HexEditor::paint_event(GPaintEvent& event)
     }
 }
 
-void HexEditor::leave_event(CEvent&)
+void HexEditor::leave_event(Core::Event&)
 {
     ASSERT(window());
     window()->set_override_cursor(GStandardCursor::None);

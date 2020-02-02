@@ -51,7 +51,7 @@ void set_system_theme(SharedBuffer& buffer)
 
 RefPtr<SharedBuffer> load_system_theme(const String& path)
 {
-    auto file = CConfigFile::open(path);
+    auto file = Core::ConfigFile::open(path);
     auto buffer = SharedBuffer::create_with_size(sizeof(SystemTheme));
 
     auto* data = (SystemTheme*)buffer->data();

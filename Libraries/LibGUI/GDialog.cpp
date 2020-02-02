@@ -28,7 +28,7 @@
 #include <LibGUI/GDialog.h>
 #include <LibGUI/GEvent.h>
 
-GDialog::GDialog(CObject* parent)
+GDialog::GDialog(Core::Object* parent)
     : GWindow(parent)
 {
     set_modal(true);
@@ -41,7 +41,7 @@ GDialog::~GDialog()
 int GDialog::exec()
 {
     ASSERT(!m_event_loop);
-    m_event_loop = make<CEventLoop>();
+    m_event_loop = make<Core::EventLoop>();
     auto new_rect = rect();
     if (parent() && parent()->is_window()) {
         auto& parent_window = *static_cast<GWindow*>(parent());
@@ -67,7 +67,7 @@ void GDialog::done(int result)
     m_event_loop->quit(result);
 }
 
-void GDialog::event(CEvent& event)
+void GDialog::event(Core::Event& event)
 {
     if (event.type() == GEvent::KeyUp) {
         auto& key_event = static_cast<GKeyEvent&>(event);

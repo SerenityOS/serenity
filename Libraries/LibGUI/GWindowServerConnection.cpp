@@ -75,13 +75,13 @@ void GWindowServerConnection::handle(const WindowClient::Paint& message)
     dbgprintf("WID=%d Paint\n", message.window_id());
 #endif
     if (auto* window = GWindow::from_window_id(message.window_id()))
-        CEventLoop::current().post_event(*window, make<GMultiPaintEvent>(message.rects(), message.window_size()));
+        Core::EventLoop::current().post_event(*window, make<GMultiPaintEvent>(message.rects(), message.window_size()));
 }
 
 void GWindowServerConnection::handle(const WindowClient::WindowResized& message)
 {
     if (auto* window = GWindow::from_window_id(message.window_id())) {
-        CEventLoop::current().post_event(*window, make<GResizeEvent>(message.old_rect().size(), message.new_rect().size()));
+        Core::EventLoop::current().post_event(*window, make<GResizeEvent>(message.old_rect().size(), message.new_rect().size()));
     }
 }
 
@@ -91,7 +91,7 @@ void GWindowServerConnection::handle(const WindowClient::WindowActivated& messag
     dbgprintf("(%d) WID=%d WindowActivated\n", getpid(), message.window_id());
 #endif
     if (auto* window = GWindow::from_window_id(message.window_id()))
-        CEventLoop::current().post_event(*window, make<GEvent>(GEvent::WindowBecameActive));
+        Core::EventLoop::current().post_event(*window, make<GEvent>(GEvent::WindowBecameActive));
 }
 
 void GWindowServerConnection::handle(const WindowClient::WindowDeactivated& message)
@@ -100,25 +100,25 @@ void GWindowServerConnection::handle(const WindowClient::WindowDeactivated& mess
     dbgprintf("(%d) WID=%d WindowDeactivated\n", getpid(), message.window_id());
 #endif
     if (auto* window = GWindow::from_window_id(message.window_id()))
-        CEventLoop::current().post_event(*window, make<GEvent>(GEvent::WindowBecameInactive));
+        Core::EventLoop::current().post_event(*window, make<GEvent>(GEvent::WindowBecameInactive));
 }
 
 void GWindowServerConnection::handle(const WindowClient::WindowCloseRequest& message)
 {
     if (auto* window = GWindow::from_window_id(message.window_id()))
-        CEventLoop::current().post_event(*window, make<GEvent>(GEvent::WindowCloseRequest));
+        Core::EventLoop::current().post_event(*window, make<GEvent>(GEvent::WindowCloseRequest));
 }
 
 void GWindowServerConnection::handle(const WindowClient::WindowEntered& message)
 {
     if (auto* window = GWindow::from_window_id(message.window_id()))
-        CEventLoop::current().post_event(*window, make<GEvent>(GEvent::WindowEntered));
+        Core::EventLoop::current().post_event(*window, make<GEvent>(GEvent::WindowEntered));
 }
 
 void GWindowServerConnection::handle(const WindowClient::WindowLeft& message)
 {
     if (auto* window = GWindow::from_window_id(message.window_id()))
-        CEventLoop::current().post_event(*window, make<GEvent>(GEvent::WindowLeft));
+        Core::EventLoop::current().post_event(*window, make<GEvent>(GEvent::WindowLeft));
 }
 
 void GWindowServerConnection::handle(const WindowClient::KeyDown& message)
@@ -151,7 +151,7 @@ void GWindowServerConnection::handle(const WindowClient::KeyDown& message)
         action->activate();
         return;
     }
-    CEventLoop::current().post_event(*window, move(key_event));
+    Core::EventLoop::current().post_event(*window, move(key_event));
 }
 
 void GWindowServerConnection::handle(const WindowClient::KeyUp& message)
@@ -169,7 +169,7 @@ void GWindowServerConnection::handle(const WindowClient::KeyUp& message)
         key_event->m_text = String(&ch, 1);
     }
 
-    CEventLoop::current().post_event(*window, move(key_event));
+    Core::EventLoop::current().post_event(*window, move(key_event));
 }
 
 GMouseButton to_gmousebutton(u32 button)
@@ -196,7 +196,7 @@ void GWindowServerConnection::handle(const WindowClient::MouseDown& message)
 #endif
 
     if (auto* window = GWindow::from_window_id(message.window_id()))
-        CEventLoop::current().post_event(*window, make<GMouseEvent>(GEvent::MouseDown, message.mouse_position(), message.buttons(), to_gmousebutton(message.button()), message.modifiers(), message.wheel_delta()));
+        Core::EventLoop::current().post_event(*window, make<GMouseEvent>(GEvent::MouseDown, message.mouse_position(), message.buttons(), to_gmousebutton(message.button()), message.modifiers(), message.wheel_delta()));
 }
 
 void GWindowServerConnection::handle(const WindowClient::MouseUp& message)
@@ -206,7 +206,7 @@ void GWindowServerConnection::handle(const WindowClient::MouseUp& message)
 #endif
 
     if (auto* window = GWindow::from_window_id(message.window_id()))
-        CEventLoop::current().post_event(*window, make<GMouseEvent>(GEvent::MouseUp, message.mouse_position(), message.buttons(), to_gmousebutton(message.button()), message.modifiers(), message.wheel_delta()));
+        Core::EventLoop::current().post_event(*window, make<GMouseEvent>(GEvent::MouseUp, message.mouse_position(), message.buttons(), to_gmousebutton(message.button()), message.modifiers(), message.wheel_delta()));
 }
 
 void GWindowServerConnection::handle(const WindowClient::MouseMove& message)
@@ -216,7 +216,7 @@ void GWindowServerConnection::handle(const WindowClient::MouseMove& message)
 #endif
 
     if (auto* window = GWindow::from_window_id(message.window_id()))
-        CEventLoop::current().post_event(*window, make<GMouseEvent>(GEvent::MouseMove, message.mouse_position(), message.buttons(), to_gmousebutton(message.button()), message.modifiers(), message.wheel_delta()));
+        Core::EventLoop::current().post_event(*window, make<GMouseEvent>(GEvent::MouseMove, message.mouse_position(), message.buttons(), to_gmousebutton(message.button()), message.modifiers(), message.wheel_delta()));
 }
 
 void GWindowServerConnection::handle(const WindowClient::MouseDoubleClick& message)
@@ -226,7 +226,7 @@ void GWindowServerConnection::handle(const WindowClient::MouseDoubleClick& messa
 #endif
 
     if (auto* window = GWindow::from_window_id(message.window_id()))
-        CEventLoop::current().post_event(*window, make<GMouseEvent>(GEvent::MouseDoubleClick, message.mouse_position(), message.buttons(), to_gmousebutton(message.button()), message.modifiers(), message.wheel_delta()));
+        Core::EventLoop::current().post_event(*window, make<GMouseEvent>(GEvent::MouseDoubleClick, message.mouse_position(), message.buttons(), to_gmousebutton(message.button()), message.modifiers(), message.wheel_delta()));
 }
 
 void GWindowServerConnection::handle(const WindowClient::MouseWheel& message)
@@ -236,7 +236,7 @@ void GWindowServerConnection::handle(const WindowClient::MouseWheel& message)
 #endif
 
     if (auto* window = GWindow::from_window_id(message.window_id()))
-        CEventLoop::current().post_event(*window, make<GMouseEvent>(GEvent::MouseWheel, message.mouse_position(), message.buttons(), to_gmousebutton(message.button()), message.modifiers(), message.wheel_delta()));
+        Core::EventLoop::current().post_event(*window, make<GMouseEvent>(GEvent::MouseWheel, message.mouse_position(), message.buttons(), to_gmousebutton(message.button()), message.modifiers(), message.wheel_delta()));
 }
 
 void GWindowServerConnection::handle(const WindowClient::MenuItemActivated& message)
@@ -256,7 +256,7 @@ void GWindowServerConnection::handle(const WindowClient::WM_WindowStateChanged& 
     dbgprintf("GEventLoop: handle_wm_event: %d\n", (int)event.type);
 #endif
     if (auto* window = GWindow::from_window_id(message.wm_id()))
-        CEventLoop::current().post_event(*window, make<GWMWindowStateChangedEvent>(message.client_id(), message.window_id(), message.title(), message.rect(), message.is_active(), (GWindowType)message.window_type(), message.is_minimized()));
+        Core::EventLoop::current().post_event(*window, make<GWMWindowStateChangedEvent>(message.client_id(), message.window_id(), message.title(), message.rect(), message.is_active(), (GWindowType)message.window_type(), message.is_minimized()));
 }
 
 void GWindowServerConnection::handle(const WindowClient::WM_WindowRectChanged& message)
@@ -265,7 +265,7 @@ void GWindowServerConnection::handle(const WindowClient::WM_WindowRectChanged& m
     dbgprintf("GEventLoop: handle_wm_event: %d\n", (int)event.type);
 #endif
     if (auto* window = GWindow::from_window_id(message.wm_id()))
-        CEventLoop::current().post_event(*window, make<GWMWindowRectChangedEvent>(message.client_id(), message.window_id(), message.rect()));
+        Core::EventLoop::current().post_event(*window, make<GWMWindowRectChangedEvent>(message.client_id(), message.window_id(), message.rect()));
 }
 
 void GWindowServerConnection::handle(const WindowClient::WM_WindowIconBitmapChanged& message)
@@ -274,7 +274,7 @@ void GWindowServerConnection::handle(const WindowClient::WM_WindowIconBitmapChan
     dbgprintf("GEventLoop: handle_wm_event: %d\n", (int)event.type);
 #endif
     if (auto* window = GWindow::from_window_id(message.wm_id()))
-        CEventLoop::current().post_event(*window, make<GWMWindowIconBitmapChangedEvent>(message.client_id(), message.window_id(), message.icon_buffer_id(), message.icon_size()));
+        Core::EventLoop::current().post_event(*window, make<GWMWindowIconBitmapChangedEvent>(message.client_id(), message.window_id(), message.icon_buffer_id(), message.icon_size()));
 }
 
 void GWindowServerConnection::handle(const WindowClient::WM_WindowRemoved& message)
@@ -283,7 +283,7 @@ void GWindowServerConnection::handle(const WindowClient::WM_WindowRemoved& messa
     dbgprintf("GEventLoop: handle_wm_event: %d\n", (int)event.type);
 #endif
     if (auto* window = GWindow::from_window_id(message.wm_id()))
-        CEventLoop::current().post_event(*window, make<GWMWindowRemovedEvent>(message.client_id(), message.window_id()));
+        Core::EventLoop::current().post_event(*window, make<GWMWindowRemovedEvent>(message.client_id(), message.window_id()));
 }
 
 void GWindowServerConnection::handle(const WindowClient::ScreenRectChanged& message)
@@ -304,7 +304,7 @@ void GWindowServerConnection::handle(const WindowClient::AsyncSetWallpaperFinish
 void GWindowServerConnection::handle(const WindowClient::DragDropped& message)
 {
     if (auto* window = GWindow::from_window_id(message.window_id()))
-        CEventLoop::current().post_event(*window, make<GDropEvent>(message.mouse_position(), message.text(), message.data_type(), message.data()));
+        Core::EventLoop::current().post_event(*window, make<GDropEvent>(message.mouse_position(), message.text(), message.data_type(), message.data()));
 }
 
 void GWindowServerConnection::handle(const WindowClient::DragAccepted&)

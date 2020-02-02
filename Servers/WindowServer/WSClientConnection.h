@@ -71,7 +71,7 @@ public:
     }
 
 private:
-    explicit WSClientConnection(CLocalSocket&, int client_id);
+    explicit WSClientConnection(Core::LocalSocket&, int client_id);
 
     virtual OwnPtr<WindowServer::GreetResponse> handle(const WindowServer::Greet&) override;
     virtual OwnPtr<WindowServer::CreateMenubarResponse> handle(const WindowServer::CreateMenubar&) override;

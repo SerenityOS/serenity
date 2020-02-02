@@ -65,7 +65,7 @@ private:
 
 private:
     String m_wallpaper_path;
-    RefPtr<CConfigFile> m_wm_config;
+    RefPtr<Core::ConfigFile> m_wm_config;
     RefPtr<GWidget> m_root_widget;
     Vector<Size> m_resolutions;
     Vector<String> m_wallpapers;

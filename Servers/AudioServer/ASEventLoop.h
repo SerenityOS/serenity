@@ -37,7 +37,7 @@ public:
     int exec() { return m_event_loop.exec(); }
 
 private:
-    CEventLoop m_event_loop;
-    RefPtr<CLocalServer> m_server;
+    Core::EventLoop m_event_loop;
+    RefPtr<Core::LocalServer> m_server;
     ASMixer m_mixer;
 };

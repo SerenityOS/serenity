@@ -31,7 +31,7 @@
 #include <pthread.h>
 
 ASMixer::ASMixer()
-    : m_device(CFile::construct("/dev/audio", this))
+    : m_device(Core::File::construct("/dev/audio", this))
     , m_sound_thread(
           [this] {
               mix();
@@ -39,7 +39,7 @@ ASMixer::ASMixer()
           },
           "AudioServer[mixer]")
 {
-    if (!m_device->open(CIODevice::WriteOnly)) {
+    if (!m_device->open(Core::IODevice::WriteOnly)) {
         dbgprintf("Can't open audio device: %s\n", m_device->error_string());
         return;
     }

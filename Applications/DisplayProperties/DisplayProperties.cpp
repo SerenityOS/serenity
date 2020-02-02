@@ -48,7 +48,7 @@
 #include <Servers/WindowServer/WSWindowManager.h>
 
 DisplayPropertiesWidget::DisplayPropertiesWidget()
-    : m_wm_config(CConfigFile::get_for_app("WindowManager"))
+    : m_wm_config(Core::ConfigFile::get_for_app("WindowManager"))
 {
     create_resolution_list();
     create_wallpaper_list();
@@ -114,7 +114,7 @@ void DisplayPropertiesWidget::create_wallpaper_list()
         m_selected_wallpaper = name_parts[2];
     }
 
-    CDirIterator iterator("/res/wallpapers/", CDirIterator::Flags::SkipDots);
+    Core::DirIterator iterator("/res/wallpapers/", Core::DirIterator::Flags::SkipDots);
 
     while (iterator.has_next()) {
         m_wallpapers.append(iterator.next_path());

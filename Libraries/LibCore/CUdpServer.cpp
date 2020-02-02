@@ -32,24 +32,26 @@
 #include <stdio.h>
 #include <sys/socket.h>
 
-CUdpServer::CUdpServer(CObject* parent)
-    : CObject(parent)
+namespace Core {
+
+UdpServer::UdpServer(Object* parent)
+    : Object(parent)
 {
     m_fd = socket(AF_INET, SOCK_DGRAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
     ASSERT(m_fd >= 0);
 }
 
-CUdpServer::~CUdpServer()
+UdpServer::~UdpServer()
 {
 }
 
-bool CUdpServer::listen(const IPv4Address& address, u16 port)
+bool UdpServer::listen(const IPv4Address& address, u16 port)
 {
     if (m_listening)
         return false;
 
     int rc;
-    auto socket_address = CSocketAddress(address, port);
+    auto socket_address = SocketAddress(address, port);
     auto in = socket_address.to_sockaddr_in();
     rc = ::bind(m_fd, (const sockaddr*)&in, sizeof(in));
     ASSERT(rc == 0);
@@ -58,7 +60,7 @@ bool CUdpServer::listen(const IPv4Address& address, u16 port)
     ASSERT(rc == 0);
     m_listening = true;
 
-    m_notifier = CNotifier::construct(m_fd, CNotifier::Event::Read);
+    m_notifier = Notifier::construct(m_fd, Notifier::Event::Read);
     m_notifier->on_ready_to_read = [this] {
         if (on_ready_to_accept)
             on_ready_to_accept();
@@ -66,7 +68,7 @@ bool CUdpServer::listen(const IPv4Address& address, u16 port)
     return true;
 }
 
-RefPtr<CUdpSocket> CUdpServer::accept()
+RefPtr<UdpSocket> UdpServer::accept()
 {
     ASSERT(m_listening);
     sockaddr_in in;
@@ -77,10 +79,10 @@ RefPtr<CUdpSocket> CUdpServer::accept()
         return nullptr;
     }
 
-    return CUdpSocket::construct(accepted_fd);
+    return UdpSocket::construct(accepted_fd);
 }
 
-Optional<IPv4Address> CUdpServer::local_address() const
+Optional<IPv4Address> UdpServer::local_address() const
 {
     if (m_fd == -1)
         return {};
@@ -93,7 +95,7 @@ Optional<IPv4Address> CUdpServer::local_address() const
     return IPv4Address(address.sin_addr.s_addr);
 }
 
-Optional<u16> CUdpServer::local_port() const
+Optional<u16> UdpServer::local_port() const
 {
     if (m_fd == -1)
         return {};
@@ -104,4 +106,6 @@ Optional<u16> CUdpServer::local_port() const
         return {};
 
     return ntohs(address.sin_port);
+}
+
 }

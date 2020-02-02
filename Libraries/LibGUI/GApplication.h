@@ -35,8 +35,10 @@
 namespace AK {
 class SharedBuffer;
 }
+namespace Core {
+class EventLoop;
+}
 
-class CEventLoop;
 class GAction;
 class GKeyEvent;
 class GMenuBar;
@@ -78,7 +80,7 @@ public:
     void set_system_palette(SharedBuffer&);
 
 private:
-    OwnPtr<CEventLoop> m_event_loop;
+    OwnPtr<Core::EventLoop> m_event_loop;
     OwnPtr<GMenuBar> m_menubar;
     RefPtr<PaletteImpl> m_palette;
     RefPtr<PaletteImpl> m_system_palette;

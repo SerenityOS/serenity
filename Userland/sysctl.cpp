@@ -43,8 +43,8 @@ static String read_var(const String& name)
     builder.append("/proc/sys/");
     builder.append(name);
     auto path = builder.to_string();
-    auto f = CFile::construct(path);
-    if (!f->open(CIODevice::ReadOnly)) {
+    auto f = Core::File::construct(path);
+    if (!f->open(Core::IODevice::ReadOnly)) {
         fprintf(stderr, "open: %s", f->error_string());
         exit(1);
     }
@@ -62,8 +62,8 @@ static void write_var(const String& name, const String& value)
     builder.append("/proc/sys/");
     builder.append(name);
     auto path = builder.to_string();
-    auto f = CFile::construct(path);
-    if (!f->open(CIODevice::WriteOnly)) {
+    auto f = Core::File::construct(path);
+    if (!f->open(Core::IODevice::WriteOnly)) {
         fprintf(stderr, "open: %s", f->error_string());
         exit(1);
     }
@@ -76,7 +76,7 @@ static void write_var(const String& name, const String& value)
 
 static int handle_show_all()
 {
-    CDirIterator di("/proc/sys", CDirIterator::SkipDots);
+    Core::DirIterator di("/proc/sys", Core::DirIterator::SkipDots);
     if (di.has_error()) {
         fprintf(stderr, "CDirIterator: %s\n", di.error_string());
         return 1;
@@ -112,7 +112,7 @@ int main(int argc, char** argv)
     bool show_all = false;
     const char* var = nullptr;
 
-    CArgsParser args_parser;
+    Core::ArgsParser args_parser;
     args_parser.add_option(show_all, "Show all variables", nullptr, 'a');
     args_parser.add_positional_argument(var, "Command (var[=value])", "command");
     args_parser.parse(argc, argv);

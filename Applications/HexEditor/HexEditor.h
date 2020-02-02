@@ -73,7 +73,7 @@ protected:
     virtual void mousemove_event(GMouseEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
     virtual bool accepts_focus() const override { return true; }
-    virtual void leave_event(CEvent&) override;
+    virtual void leave_event(Core::Event&) override;
 
 private:
     bool m_readonly { false };

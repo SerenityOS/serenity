@@ -79,7 +79,7 @@ int main(int, char**)
         return 1;
     }
 
-    auto wm_config = CConfigFile::get_for_app("WindowManager");
+    auto wm_config = Core::ConfigFile::get_for_app("WindowManager");
     auto theme_name = wm_config->read_entry("Theme", "Name", "Default");
 
     auto theme = load_system_theme(String::format("/res/themes/%s.ini", theme_name.characters()));

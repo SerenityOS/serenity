@@ -39,8 +39,8 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    auto file = CFile::construct(argv[1]);
-    if (!file->open(CIODevice::ReadOnly)) {
+    auto file = Core::File::construct(argv[1]);
+    if (!file->open(Core::IODevice::ReadOnly)) {
         fprintf(stderr, "Error: Cannot open %s: %s\n", argv[1], file->error_string());
         return 1;
     }

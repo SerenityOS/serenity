@@ -52,7 +52,7 @@ enum class GStandardCursor {
     Hand,
 };
 
-class GWindow : public CObject {
+class GWindow : public Core::Object {
     C_OBJECT(GWindow)
 public:
     virtual ~GWindow() override;
@@ -112,7 +112,7 @@ public:
     void resize(int width, int height) { resize({ width, height }); }
     void resize(const Size& size) { set_rect({ position(), size }); }
 
-    virtual void event(CEvent&) override;
+    virtual void event(Core::Event&) override;
 
     bool is_visible() const;
     bool is_active() const { return m_is_active; }
@@ -175,7 +175,7 @@ public:
     GAction* action_for_key_event(const GKeyEvent&);
 
 protected:
-    GWindow(CObject* parent = nullptr);
+    GWindow(Core::Object* parent = nullptr);
     virtual void wm_event(GWMEvent&);
 
 private:
@@ -216,7 +216,7 @@ private:
 };
 
 template<>
-inline bool is<GWindow>(const CObject& object)
+inline bool Core::is<GWindow>(const Core::Object& object)
 {
     return object.is_window();
 }

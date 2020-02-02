@@ -116,7 +116,7 @@ void LineEditor::cache_path()
 
     auto directories = path.split(':');
     for (const auto& directory : directories) {
-        CDirIterator programs(directory.characters(), CDirIterator::SkipDots);
+        Core::DirIterator programs(directory.characters(), Core::DirIterator::SkipDots);
         while (programs.has_next()) {
             auto program = programs.next_path();
             String program_path = String::format("%s/%s", directory.characters(), program.characters());
@@ -207,7 +207,7 @@ Vector<String> LineEditor::tab_complete_other_token(String& token)
     // the suggestions list is incomplete.
     // We only do this if the token is empty though.
     if (token.is_empty()) {
-        CDirIterator suggested_files(path, CDirIterator::SkipDots);
+        Core::DirIterator suggested_files(path, Core::DirIterator::SkipDots);
         while (suggested_files.has_next()) {
             suggestions.append(suggested_files.next_path());
         }
@@ -216,7 +216,7 @@ Vector<String> LineEditor::tab_complete_other_token(String& token)
     String completion;
 
     bool seen_others = false;
-    CDirIterator files(path, CDirIterator::SkipDots);
+    Core::DirIterator files(path, Core::DirIterator::SkipDots);
     while (files.has_next()) {
         auto file = files.next_path();
         if (file.starts_with(token)) {

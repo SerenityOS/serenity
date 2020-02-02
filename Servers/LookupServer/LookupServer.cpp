@@ -41,19 +41,19 @@
 
 LookupServer::LookupServer()
 {
-    auto config = CConfigFile::get_for_system("LookupServer");
+    auto config = Core::ConfigFile::get_for_system("LookupServer");
     dbg() << "Using network config file at " << config->file_name();
     m_nameserver = config->read_entry("DNS", "Nameserver", "1.1.1.1");
 
     load_etc_hosts();
 
-    m_local_server = CLocalServer::construct(this);
+    m_local_server = Core::LocalServer::construct(this);
     m_local_server->on_ready_to_accept = [this]() {
         auto socket = m_local_server->accept();
         socket->on_ready_to_read = [this, socket]() {
             service_client(socket);
-            RefPtr<CLocalSocket> keeper = socket;
-            const_cast<CLocalSocket&>(*socket).on_ready_to_read = [] {};
+            RefPtr<Core::LocalSocket> keeper = socket;
+            const_cast<Core::LocalSocket&>(*socket).on_ready_to_read = [] {};
         };
     };
     bool ok = m_local_server->take_over_from_system_server();
@@ -62,8 +62,8 @@ LookupServer::LookupServer()
 
 void LookupServer::load_etc_hosts()
 {
-    auto file = CFile::construct("/etc/hosts");
-    if (!file->open(CIODevice::ReadOnly))
+    auto file = Core::File::construct("/etc/hosts");
+    if (!file->open(Core::IODevice::ReadOnly))
         return;
     while (!file->eof()) {
         auto line = file->read_line(1024);
@@ -96,7 +96,7 @@ void LookupServer::load_etc_hosts()
     }
 }
 
-void LookupServer::service_client(RefPtr<CLocalSocket> socket)
+void LookupServer::service_client(RefPtr<Core::LocalSocket> socket)
 {
     u8 client_buffer[1024];
     int nrecv = socket->read(client_buffer, sizeof(client_buffer) - 1);
@@ -176,7 +176,7 @@ Vector<String> LookupServer::lookup(const String& hostname, bool& did_timeout, u
 
     auto buffer = request.to_byte_buffer();
 
-    auto udp_socket = CUdpSocket::construct();
+    auto udp_socket = Core::UdpSocket::construct();
     udp_socket->set_blocking(true);
 
     struct timeval timeout {

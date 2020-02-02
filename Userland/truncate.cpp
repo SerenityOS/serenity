@@ -42,7 +42,7 @@ int main(int argc, char** argv)
     const char* reference = nullptr;
     const char* file = nullptr;
 
-    CArgsParser args_parser;
+    Core::ArgsParser args_parser;
     args_parser.add_option(resize, "Resize the target file to (or by) this size. Prefix with + or - to expand or shrink the file, or a bare number to set the size exactly", "size", 's', "size");
     args_parser.add_option(reference, "Resize the target file to match the size of this one", "reference", 'r', "file");
     args_parser.add_positional_argument(file, "File path", "file");

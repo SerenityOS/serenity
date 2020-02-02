@@ -44,8 +44,8 @@ int main(int argc, char** argv)
         fprintf(stderr, "usage: jp <file>\n");
         return 0;
     }
-    auto file = CFile::construct(argv[1]);
-    if (!file->open(CIODevice::ReadOnly)) {
+    auto file = Core::File::construct(argv[1]);
+    if (!file->open(Core::IODevice::ReadOnly)) {
         fprintf(stderr, "Couldn't open %s for reading: %s\n", argv[1], file->error_string());
         return 1;
     }

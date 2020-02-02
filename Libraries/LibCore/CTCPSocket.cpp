@@ -25,32 +25,36 @@
  */
 
 #include <LibCore/CTCPSocket.h>
-#include <sys/socket.h>
 #include <errno.h>
+#include <sys/socket.h>
 
-CTCPSocket::CTCPSocket(int fd, CObject* parent)
-    : CSocket(CSocket::Type::TCP, parent)
+namespace Core {
+
+TCPSocket::TCPSocket(int fd, Object* parent)
+    : Socket(Socket::Type::TCP, parent)
 {
     // NOTE: This constructor is used by CTCPServer::accept(), so the socket is already connected.
     m_connected = true;
     set_fd(fd);
-    set_mode(CIODevice::ReadWrite);
+    set_mode(IODevice::ReadWrite);
     set_error(0);
 }
 
-CTCPSocket::CTCPSocket(CObject* parent)
-    : CSocket(CSocket::Type::TCP, parent)
+TCPSocket::TCPSocket(Object* parent)
+    : Socket(Socket::Type::TCP, parent)
 {
     int fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
     if (fd < 0) {
         set_error(errno);
     } else {
         set_fd(fd);
-        set_mode(CIODevice::ReadWrite);
+        set_mode(IODevice::ReadWrite);
         set_error(0);
     }
 }
 
-CTCPSocket::~CTCPSocket()
+TCPSocket::~TCPSocket()
 {
+}
+
 }

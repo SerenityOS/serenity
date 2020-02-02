@@ -45,7 +45,7 @@ public:
     virtual ~GraphWidget() override {}
 
 private:
-    virtual void timer_event(CTimerEvent&) override
+    virtual void timer_event(Core::TimerEvent&) override
     {
         unsigned busy;
         unsigned idle;
@@ -93,7 +93,7 @@ private:
         busy = 0;
         idle = 0;
 
-        auto all_processes = CProcessStatisticsReader::get_all();
+        auto all_processes = Core::ProcessStatisticsReader::get_all();
 
         for (auto& it : all_processes) {
             for (auto& jt : it.value.threads) {
@@ -137,7 +137,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    // FIXME: This is required by CProcessStatisticsReader.
+    // FIXME: This is required by Core::ProcessStatisticsReader.
     //        It would be good if we didn't depend on that.
     if (unveil("/etc/passwd", "r") < 0) {
         perror("unveil");

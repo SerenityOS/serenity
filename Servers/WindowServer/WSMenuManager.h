@@ -34,7 +34,7 @@
 
 class AClientConnection;
 
-class WSMenuManager final : public CObject {
+class WSMenuManager final : public Core::Object {
     C_OBJECT(WSMenuManager)
 public:
     static WSMenuManager& the();
@@ -44,7 +44,7 @@ public:
 
     void refresh();
 
-    virtual void event(CEvent&) override;
+    virtual void event(Core::Event&) override;
 
     bool is_open(const WSMenu&) const;
 

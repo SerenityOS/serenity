@@ -37,7 +37,7 @@ class ASClientConnection final : public IClientConnection<AudioServerEndpoint>
     , public AudioServerEndpoint {
     C_OBJECT(ASClientConnection)
 public:
-    explicit ASClientConnection(CLocalSocket&, int client_id, ASMixer& mixer);
+    explicit ASClientConnection(Core::LocalSocket&, int client_id, ASMixer& mixer);
     ~ASClientConnection() override;
 
     void did_finish_playing_buffer(Badge<ASBufferQueue>, int buffer_id);

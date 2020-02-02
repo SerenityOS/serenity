@@ -77,7 +77,7 @@ protected:
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
     virtual void mouseup_event(GMouseEvent&) override;
-    virtual void leave_event(CEvent&) override;
+    virtual void leave_event(Core::Event&) override;
     virtual void change_event(GEvent&) override;
 
 private:

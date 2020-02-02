@@ -72,7 +72,7 @@ int main(int argc, char** argv)
         break;
     }
 
-    CElapsedTimer timer;
+    Core::ElapsedTimer timer;
 
     printf("allocating memory (%d bytes)...\n", count);
     timer.start();
@@ -86,7 +86,7 @@ int main(int argc, char** argv)
     auto pages = count / 4096;
     auto step = pages / 10;
 
-    CElapsedTimer timer2;
+    Core::ElapsedTimer timer2;
 
     printf("writing one byte to each page of allocated memory...\n");
     timer.start();

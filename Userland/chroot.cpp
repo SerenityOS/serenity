@@ -35,11 +35,11 @@ int main(int argc, char** argv)
     const char* program = "/bin/Shell";
     int flags = -1;
 
-    CArgsParser args_parser;
+    Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "New root directory", "path");
-    args_parser.add_positional_argument(program, "Program to run", "program", CArgsParser::Required::No);
+    args_parser.add_positional_argument(program, "Program to run", "program", Core::ArgsParser::Required::No);
 
-    CArgsParser::Option option {
+    Core::ArgsParser::Option option {
         true,
         "Mount options",
         "options",

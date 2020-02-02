@@ -30,7 +30,7 @@
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GWidget.h>
 
-GAboutDialog::GAboutDialog(const StringView& name, const GraphicsBitmap* icon, CObject* parent)
+GAboutDialog::GAboutDialog(const StringView& name, const GraphicsBitmap* icon, Core::Object* parent)
     : GDialog(parent)
     , m_name(name)
     , m_icon(icon)

@@ -72,7 +72,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    RefPtr<CConfigFile> config = CConfigFile::get_for_app("FileManager");
+    RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("FileManager");
 
     GApplication app(argc, argv);
 

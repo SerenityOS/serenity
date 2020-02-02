@@ -47,7 +47,7 @@ Document::Document()
     : ParentNode(*this, NodeType::DOCUMENT_NODE)
     , m_style_resolver(make<StyleResolver>(*this))
 {
-    m_style_update_timer = CTimer::construct();
+    m_style_update_timer = Core::Timer::construct();
     m_style_update_timer->set_single_shot(true);
     m_style_update_timer->set_interval(0);
     m_style_update_timer->on_timeout = [this] {

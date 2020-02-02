@@ -36,11 +36,11 @@
 #include <stdio.h>
 #include <unistd.h>
 
-Client::Client(int id, RefPtr<CTCPSocket> socket, int ptm_fd)
+Client::Client(int id, RefPtr<Core::TCPSocket> socket, int ptm_fd)
     : m_id(id)
     , m_socket(move(socket))
     , m_ptm_fd(ptm_fd)
-    , m_ptm_notifier(CNotifier::construct(ptm_fd, CNotifier::Read))
+    , m_ptm_notifier(Core::Notifier::construct(ptm_fd, Core::Notifier::Read))
 {
     m_socket->on_ready_to_read = [this] { drain_socket(); };
     m_ptm_notifier->on_ready_to_read = [this] { drain_pty(); };

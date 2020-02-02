@@ -44,7 +44,7 @@ BoardListModel::~BoardListModel()
 
 void BoardListModel::update()
 {
-    CHttpRequest request;
+    Core::HttpRequest request;
     request.set_url("http://a.4cdn.org/boards.json");
 
     if (m_pending_job)

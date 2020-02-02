@@ -47,7 +47,7 @@ public:
 
 int main(int, char**)
 {
-    CEventLoop event_loop;
+    Core::EventLoop event_loop;
 
     SimpleIPCClient client;
 

@@ -32,7 +32,7 @@
 
 HTMLBlinkElement::HTMLBlinkElement(Document& document, const String& tag_name)
     : HTMLElement(document, tag_name)
-    , m_timer(CTimer::construct())
+    , m_timer(Core::Timer::construct())
 {
     m_timer->set_interval(500);
     m_timer->on_timeout = [this] { blink(); };

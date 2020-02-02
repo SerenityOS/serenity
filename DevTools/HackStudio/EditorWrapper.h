@@ -52,7 +52,7 @@ private:
 };
 
 template<>
-inline bool is<EditorWrapper>(const CObject& object)
+inline bool Core::is<EditorWrapper>(const Core::Object& object)
 {
     return !strcmp(object.class_name(), "EditorWrapper");
 }

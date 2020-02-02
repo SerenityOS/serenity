@@ -28,9 +28,11 @@
 
 #include <sys/time.h>
 
-class CElapsedTimer {
+namespace Core {
+
+class ElapsedTimer {
 public:
-    CElapsedTimer() {}
+    ElapsedTimer() {}
 
     bool is_valid() const { return m_valid; }
     void start();
@@ -42,3 +44,5 @@ private:
         0, 0
     };
 };
+
+}

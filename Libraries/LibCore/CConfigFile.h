@@ -26,19 +26,21 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/HashMap.h>
-#include <AK/RefPtr.h>
 #include <AK/RefCounted.h>
+#include <AK/RefPtr.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibDraw/Color.h>
 
-class CConfigFile : public RefCounted<CConfigFile> {
+namespace Core {
+
+class ConfigFile : public RefCounted<ConfigFile> {
 public:
-    static NonnullRefPtr<CConfigFile> get_for_app(const String& app_name);
-    static NonnullRefPtr<CConfigFile> get_for_system(const String& app_name);
-    static NonnullRefPtr<CConfigFile> open(const String& path);
-    ~CConfigFile();
+    static NonnullRefPtr<ConfigFile> get_for_app(const String& app_name);
+    static NonnullRefPtr<ConfigFile> get_for_system(const String& app_name);
+    static NonnullRefPtr<ConfigFile> open(const String& path);
+    ~ConfigFile();
 
     bool has_group(const String&) const;
     bool has_key(const String& group, const String& key) const;
@@ -67,7 +69,7 @@ public:
     String file_name() const { return m_file_name; }
 
 private:
-    explicit CConfigFile(const String& file_name);
+    explicit ConfigFile(const String& file_name);
 
     void reparse();
 
@@ -75,3 +77,5 @@ private:
     HashMap<String, HashMap<String, String>> m_groups;
     bool m_dirty { false };
 };
+
+}

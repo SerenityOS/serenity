@@ -25,27 +25,29 @@
  */
 
 #include <LibCore/CLocalSocket.h>
-#include <sys/socket.h>
 #include <errno.h>
+#include <sys/socket.h>
 
 #ifndef SOCK_NONBLOCK
-#include <sys/ioctl.h>
+#    include <sys/ioctl.h>
 #endif
 
-CLocalSocket::CLocalSocket(int fd, CObject* parent)
-    : CSocket(CSocket::Type::Local, parent)
+namespace Core {
+
+LocalSocket::LocalSocket(int fd, Object* parent)
+    : Socket(Socket::Type::Local, parent)
 {
     // NOTE: This constructor is used by CLocalServer::accept(), so the socket is already connected.
     m_connected = true;
     set_fd(fd);
-    set_mode(CIODevice::ReadWrite);
+    set_mode(IODevice::ReadWrite);
     set_error(0);
 }
 
-CLocalSocket::CLocalSocket(CObject* parent)
-    : CSocket(CSocket::Type::Local, parent)
+LocalSocket::LocalSocket(Object* parent)
+    : Socket(Socket::Type::Local, parent)
 {
-    
+
 #ifdef SOCK_NONBLOCK
     int fd = socket(AF_LOCAL, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
 #else
@@ -59,11 +61,13 @@ CLocalSocket::CLocalSocket(CObject* parent)
         set_error(errno);
     } else {
         set_fd(fd);
-        set_mode(CIODevice::ReadWrite);
+        set_mode(IODevice::ReadWrite);
         set_error(0);
     }
 }
 
-CLocalSocket::~CLocalSocket()
+LocalSocket::~LocalSocket()
 {
+}
+
 }

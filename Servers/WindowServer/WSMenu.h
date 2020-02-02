@@ -40,7 +40,7 @@ class WSMenuBar;
 class WSEvent;
 class Font;
 
-class WSMenu final : public CObject {
+class WSMenu final : public Core::Object {
     C_OBJECT(WSMenu)
 public:
     WSMenu(WSClientConnection*, int menu_id, const String& name);
@@ -115,7 +115,7 @@ public:
     int scroll_offset() const { return m_scroll_offset; }
 
 private:
-    virtual void event(CEvent&) override;
+    virtual void event(Core::Event&) override;
 
     void handle_mouse_move_event(const WSMouseEvent&);
     int visible_item_count() const;

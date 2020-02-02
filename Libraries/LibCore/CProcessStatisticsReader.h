@@ -30,7 +30,9 @@
 #include <AK/String.h>
 #include <unistd.h>
 
-struct CThreadStatistics {
+namespace Core {
+
+struct ThreadStatistics {
     int tid;
     unsigned times_scheduled;
     unsigned ticks;
@@ -50,7 +52,7 @@ struct CThreadStatistics {
     String name;
 };
 
-struct CProcessStatistics {
+struct ProcessStatistics {
     // Keep this in sync with /proc/all.
     // From the kernel side:
     pid_t pid;
@@ -74,17 +76,19 @@ struct CProcessStatistics {
     size_t amount_purgeable_nonvolatile;
     int icon_id;
 
-    Vector<CThreadStatistics> threads;
+    Vector<Core::ThreadStatistics> threads;
 
     // synthetic
     String username;
 };
 
-class CProcessStatisticsReader {
+class ProcessStatisticsReader {
 public:
-    static HashMap<pid_t, CProcessStatistics> get_all();
+    static HashMap<pid_t, Core::ProcessStatistics> get_all();
 
 private:
     static String username_from_uid(uid_t);
     static HashMap<uid_t, String> s_usernames;
 };
+
+}

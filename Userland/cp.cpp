@@ -50,7 +50,7 @@ int main(int argc, char** argv)
     Vector<const char*> sources;
     const char* destination = nullptr;
 
-    CArgsParser args_parser;
+    Core::ArgsParser args_parser;
     args_parser.add_option(recursion_allowed, "Copy directories recursively", "recursive", 'r');
     args_parser.add_positional_argument(sources, "Source file path", "source");
     args_parser.add_positional_argument(destination, "Destination file path", "destination");
@@ -174,7 +174,7 @@ bool copy_directory(String src_path, String dst_path)
         perror("cp: mkdir");
         return false;
     }
-    CDirIterator di(src_path, CDirIterator::SkipDots);
+    Core::DirIterator di(src_path, Core::DirIterator::SkipDots);
     if (di.has_error()) {
         fprintf(stderr, "cp: CDirIterator: %s\n", di.error_string());
         return false;

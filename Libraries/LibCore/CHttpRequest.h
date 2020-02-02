@@ -29,9 +29,11 @@
 #include <AK/String.h>
 #include <AK/URL.h>
 
-class CNetworkJob;
+namespace Core {
 
-class CHttpRequest {
+class NetworkJob;
+
+class HttpRequest {
 public:
     enum Method {
         Invalid,
@@ -40,8 +42,8 @@ public:
         POST
     };
 
-    CHttpRequest();
-    ~CHttpRequest();
+    HttpRequest();
+    ~HttpRequest();
 
     const URL& url() const { return m_url; }
     void set_url(const URL& url) { m_url = url; }
@@ -52,9 +54,11 @@ public:
     String method_name() const;
     ByteBuffer to_raw_request() const;
 
-    RefPtr<CNetworkJob> schedule();
+    RefPtr<NetworkJob> schedule();
 
 private:
     URL m_url;
     Method m_method { GET };
 };
+
+}

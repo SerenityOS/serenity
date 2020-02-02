@@ -67,7 +67,7 @@ const EditorWrapper& Editor::wrapper() const
     return static_cast<const EditorWrapper&>(*parent());
 }
 
-void Editor::focusin_event(CEvent& event)
+void Editor::focusin_event(Core::Event& event)
 {
     wrapper().set_editor_has_focus({}, true);
     if (on_focus)
@@ -75,7 +75,7 @@ void Editor::focusin_event(CEvent& event)
     GTextEditor::focusin_event(event);
 }
 
-void Editor::focusout_event(CEvent& event)
+void Editor::focusout_event(Core::Event& event)
 {
     wrapper().set_editor_has_focus({}, false);
     GTextEditor::focusout_event(event);
@@ -103,7 +103,7 @@ static HashMap<String, String>& man_paths()
     static HashMap<String, String> paths;
     if (paths.is_empty()) {
         // FIXME: This should also search man3, possibly other places..
-        CDirIterator it("/usr/share/man/man2", CDirIterator::Flags::SkipDots);
+        Core::DirIterator it("/usr/share/man/man2", Core::DirIterator::Flags::SkipDots);
         while (it.has_next()) {
             auto path = String::format("/usr/share/man/man2/%s", it.next_path().characters());
             auto title = FileSystemPath(path).title();
@@ -132,8 +132,8 @@ void Editor::show_documentation_tooltip_if_available(const String& hovered_token
 #ifdef EDITOR_DEBUG
     dbg() << "opening " << it->value;
 #endif
-    auto file = CFile::construct(it->value);
-    if (!file->open(CFile::ReadOnly)) {
+    auto file = Core::File::construct(it->value);
+    if (!file->open(Core::File::ReadOnly)) {
         dbg() << "failed to open " << it->value << " " << file->error_string();
         return;
     }

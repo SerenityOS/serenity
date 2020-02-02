@@ -81,7 +81,7 @@ protected:
     virtual void mousemove_event(GMouseEvent&) override;
     virtual void doubleclick_event(GMouseEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
-    virtual void leave_event(CEvent&) override;
+    virtual void leave_event(Core::Event&) override;
     virtual void context_menu_event(GContextMenuEvent&) override;
 
     virtual void toggle_index(const GModelIndex&) {}

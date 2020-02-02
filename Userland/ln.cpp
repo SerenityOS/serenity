@@ -36,7 +36,7 @@ int main(int argc, char** argv)
     const char* target = nullptr;
     const char* path = nullptr;
 
-    CArgsParser args_parser;
+    Core::ArgsParser args_parser;
     args_parser.add_option(symbolic, "Create a symlink", "symbolic", 's');
     args_parser.add_positional_argument(target, "Link target", "target");
     args_parser.add_positional_argument(path, "Link path", "path");

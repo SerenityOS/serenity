@@ -180,8 +180,8 @@ int main(int argc, char** argv)
         if (input_box->exec() == GInputBox::ExecCancel)
             return;
         auto filename = input_box->text_value();
-        auto file = CFile::construct(filename);
-        if (!file->open((CIODevice::OpenMode)(CIODevice::WriteOnly | CIODevice::MustBeNew))) {
+        auto file = Core::File::construct(filename);
+        if (!file->open((Core::IODevice::OpenMode)(Core::IODevice::WriteOnly | Core::IODevice::MustBeNew))) {
             GMessageBox::show(String::format("Failed to create '%s'", filename.characters()), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, g_window);
             return;
         }

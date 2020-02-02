@@ -30,17 +30,19 @@
 #include <LibCore/CNotifier.h>
 #include <LibCore/CObject.h>
 
-class CUdpSocket;
+namespace Core {
 
-class CUdpServer : public CObject {
-    C_OBJECT(CUdpServer)
+class UdpSocket;
+
+class UdpServer : public Object {
+    C_OBJECT(UdpServer)
 public:
-    virtual ~CUdpServer() override;
+    virtual ~UdpServer() override;
 
     bool is_listening() const { return m_listening; }
     bool listen(const IPv4Address& address, u16 port);
 
-    RefPtr<CUdpSocket> accept();
+    RefPtr<UdpSocket> accept();
 
     Optional<IPv4Address> local_address() const;
     Optional<u16> local_port() const;
@@ -48,9 +50,11 @@ public:
     Function<void()> on_ready_to_accept;
 
 private:
-    explicit CUdpServer(CObject* parent = nullptr);
+    explicit UdpServer(Object* parent = nullptr);
 
     int m_fd { -1 };
     bool m_listening { false };
-    RefPtr<CNotifier> m_notifier;
+    RefPtr<Notifier> m_notifier;
 };
+
+}

@@ -30,19 +30,21 @@
 #include <stdio.h>
 #include <unistd.h>
 
-CFile::CFile(const StringView& filename, CObject* parent)
-    : CIODevice(parent)
+namespace Core {
+
+File::File(const StringView& filename, Object* parent)
+    : IODevice(parent)
     , m_filename(filename)
 {
 }
 
-CFile::~CFile()
+File::~File()
 {
     if (m_should_close_file_descriptor == ShouldCloseFileDescription::Yes && mode() != NotOpen)
         close();
 }
 
-bool CFile::open(int fd, CIODevice::OpenMode mode, ShouldCloseFileDescription should_close)
+bool File::open(int fd, IODevice::OpenMode mode, ShouldCloseFileDescription should_close)
 {
     set_fd(fd);
     set_mode(mode);
@@ -50,25 +52,25 @@ bool CFile::open(int fd, CIODevice::OpenMode mode, ShouldCloseFileDescription sh
     return true;
 }
 
-bool CFile::open(CIODevice::OpenMode mode)
+bool File::open(IODevice::OpenMode mode)
 {
     ASSERT(!m_filename.is_null());
     int flags = 0;
-    if ((mode & CIODevice::ReadWrite) == CIODevice::ReadWrite) {
+    if ((mode & IODevice::ReadWrite) == IODevice::ReadWrite) {
         flags |= O_RDWR | O_CREAT;
-    } else if (mode & CIODevice::ReadOnly) {
+    } else if (mode & IODevice::ReadOnly) {
         flags |= O_RDONLY;
-    } else if (mode & CIODevice::WriteOnly) {
+    } else if (mode & IODevice::WriteOnly) {
         flags |= O_WRONLY | O_CREAT;
-        bool should_truncate = !((mode & CIODevice::Append) || (mode & CIODevice::MustBeNew));
+        bool should_truncate = !((mode & IODevice::Append) || (mode & IODevice::MustBeNew));
         if (should_truncate)
             flags |= O_TRUNC;
     }
-    if (mode & CIODevice::Append)
+    if (mode & IODevice::Append)
         flags |= O_APPEND;
-    if (mode & CIODevice::Truncate)
+    if (mode & IODevice::Truncate)
         flags |= O_TRUNC;
-    if (mode & CIODevice::MustBeNew)
+    if (mode & IODevice::MustBeNew)
         flags |= O_EXCL;
     int fd = ::open(m_filename.characters(), flags, 0666);
     if (fd < 0) {
@@ -79,4 +81,6 @@ bool CFile::open(CIODevice::OpenMode mode)
     set_fd(fd);
     set_mode(mode);
     return true;
+}
+
 }

@@ -35,7 +35,7 @@ class Painter;
 class WSKeyEvent;
 class WSWindow;
 
-class WSWindowSwitcher : public CObject {
+class WSWindowSwitcher : public Core::Object {
     C_OBJECT(WSWindowSwitcher)
 public:
     static WSWindowSwitcher& the();

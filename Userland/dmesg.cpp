@@ -46,8 +46,8 @@ int main(int argc, char** argv)
 
     (void)argc;
     (void)argv;
-    auto f = CFile::construct("/proc/dmesg");
-    if (!f->open(CIODevice::ReadOnly)) {
+    auto f = Core::File::construct("/proc/dmesg");
+    if (!f->open(Core::IODevice::ReadOnly)) {
         fprintf(stderr, "open: failed to open /proc/dmesg: %s\n", f->error_string());
         return 1;
     }

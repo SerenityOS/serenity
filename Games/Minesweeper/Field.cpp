@@ -127,7 +127,7 @@ Field::Field(GLabel& flag_label, GLabel& time_label, GButton& face_button, GWidg
     , m_on_size_changed(move(on_size_changed))
 {
     srand(time(nullptr));
-    m_timer = CTimer::construct();
+    m_timer = Core::Timer::construct();
     m_timer->on_timeout = [this] {
         ++m_time_elapsed;
         m_time_label.set_text(String::format("%u.%u", m_time_elapsed / 10, m_time_elapsed % 10));
@@ -153,7 +153,7 @@ Field::Field(GLabel& flag_label, GLabel& time_label, GButton& face_button, GWidg
     set_face(Face::Default);
 
     {
-        auto config = CConfigFile::get_for_app("Minesweeper");
+        auto config = Core::ConfigFile::get_for_app("Minesweeper");
         bool single_chording = config->read_num_entry("Minesweeper", "SingleChording", false);
         int mine_count = config->read_num_entry("Game", "MineCount", 10);
         int rows = config->read_num_entry("Game", "Rows", 9);
@@ -497,7 +497,7 @@ void Field::set_field_size(int rows, int columns, int mine_count)
     if (m_rows == rows && m_columns == columns && m_mine_count == mine_count)
         return;
     {
-        auto config = CConfigFile::get_for_app("Minesweeper");
+        auto config = Core::ConfigFile::get_for_app("Minesweeper");
         config->write_num_entry("Game", "MineCount", mine_count);
         config->write_num_entry("Game", "Rows", rows);
         config->write_num_entry("Game", "Columns", columns);
@@ -511,7 +511,7 @@ void Field::set_field_size(int rows, int columns, int mine_count)
 }
 
 void Field::set_single_chording(bool enabled) {
-    auto config = CConfigFile::get_for_app("Minesweeper");
+    auto config = Core::ConfigFile::get_for_app("Minesweeper");
     m_single_chording = enabled;
     config->write_bool_entry("Minesweeper", "SingleChording", m_single_chording);
 }

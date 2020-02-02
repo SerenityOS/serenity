@@ -55,8 +55,8 @@ int main(int argc, char** argv)
     window->show();
 
     LibThread::Thread audio_thread([&] {
-        auto audio = CFile::construct("/dev/audio");
-        if (!audio->open(CIODevice::WriteOnly)) {
+        auto audio = Core::File::construct("/dev/audio");
+        if (!audio->open(Core::IODevice::WriteOnly)) {
             dbgprintf("Can't open audio device: %s", audio->error_string());
             return 1;
         }
@@ -65,8 +65,8 @@ int main(int argc, char** argv)
         for (;;) {
             audio_engine.fill_buffer(buffer);
             audio->write(reinterpret_cast<u8*>(buffer.data()), buffer_size);
-            CEventLoop::current().post_event(*main_widget, make<CCustomEvent>(0));
-            CEventLoop::wake();
+            Core::EventLoop::current().post_event(*main_widget, make<Core::CustomEvent>(0));
+            Core::EventLoop::wake();
         }
     });
     audio_thread.start();

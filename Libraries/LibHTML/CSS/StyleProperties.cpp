@@ -109,7 +109,7 @@ void StyleProperties::load_font() const
 
     auto look_for_file = [](const StringView& expected_name) -> String {
         // TODO: handle font sizes properly?
-        CDirIterator it { "/res/fonts/", CDirIterator::Flags::SkipDots };
+        Core::DirIterator it { "/res/fonts/", Core::DirIterator::Flags::SkipDots };
         while (it.has_next()) {
             String name = it.next_path();
             ASSERT(name.ends_with(".font"));

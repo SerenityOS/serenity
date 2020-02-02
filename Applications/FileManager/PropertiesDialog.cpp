@@ -35,7 +35,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-PropertiesDialog::PropertiesDialog(GFileSystemModel& model, String path, bool disable_rename, CObject* parent)
+PropertiesDialog::PropertiesDialog(GFileSystemModel& model, String path, bool disable_rename, Core::Object* parent)
     : GDialog(parent)
     , m_model(model)
 {

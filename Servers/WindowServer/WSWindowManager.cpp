@@ -98,7 +98,7 @@ NonnullRefPtr<WSCursor> WSWindowManager::get_cursor(const String& name)
 
 void WSWindowManager::reload_config(bool set_screen)
 {
-    m_wm_config = CConfigFile::get_for_app("WindowManager");
+    m_wm_config = Core::ConfigFile::get_for_app("WindowManager");
 
     m_double_click_speed = m_wm_config->read_num_entry("Input", "DoubleClickSpeed", 250);
 
@@ -158,7 +158,7 @@ void WSWindowManager::add_window(WSWindow& window)
     m_windows_in_order.append(&window);
 
     if (window.is_fullscreen()) {
-        CEventLoop::current().post_event(window, make<WSResizeEvent>(window.rect(), WSScreen::the().rect()));
+        Core::EventLoop::current().post_event(window, make<WSResizeEvent>(window.rect(), WSScreen::the().rect()));
         window.set_rect(WSScreen::the().rect());
     }
 
@@ -486,7 +486,7 @@ bool WSWindowManager::process_ongoing_window_resize(const WSMouseEvent& event, W
 #ifdef RESIZE_DEBUG
         dbg() << "[WM] Finish resizing WSWindow{" << m_resize_window << "}";
 #endif
-        CEventLoop::current().post_event(*m_resize_window, make<WSResizeEvent>(m_resize_window->rect(), m_resize_window->rect()));
+        Core::EventLoop::current().post_event(*m_resize_window, make<WSResizeEvent>(m_resize_window->rect(), m_resize_window->rect()));
         invalidate(*m_resize_window);
         if (m_resize_window->rect().contains(event.position()))
             hovered_window = m_resize_window;
@@ -588,7 +588,7 @@ bool WSWindowManager::process_ongoing_window_resize(const WSMouseEvent& event, W
     dbg() << "[WM] Resizing, original: " << m_resize_window_original_rect << ", now: " << new_rect;
 #endif
     m_resize_window->set_rect(new_rect);
-    CEventLoop::current().post_event(*m_resize_window, make<WSResizeEvent>(old_rect, new_rect));
+    Core::EventLoop::current().post_event(*m_resize_window, make<WSResizeEvent>(old_rect, new_rect));
     return true;
 }
 
@@ -950,7 +950,7 @@ void WSWindowManager::draw_window_switcher()
         m_switcher.draw();
 }
 
-void WSWindowManager::event(CEvent& event)
+void WSWindowManager::event(Core::Event& event)
 {
     if (static_cast<WSEvent&>(event).is_mouse_event()) {
         WSWindow* hovered_window = nullptr;
@@ -1040,7 +1040,7 @@ void WSWindowManager::event(CEvent& event)
         }
     }
 
-    CObject::event(event);
+    Core::Object::event(event);
 }
 
 void WSWindowManager::set_highlight_window(WSWindow* window)
@@ -1072,7 +1072,7 @@ void WSWindowManager::set_active_window(WSWindow* window)
 
     if (previously_active_window) {
         previously_active_client = previously_active_window->client();
-        CEventLoop::current().post_event(*previously_active_window, make<WSEvent>(WSEvent::WindowDeactivated));
+        Core::EventLoop::current().post_event(*previously_active_window, make<WSEvent>(WSEvent::WindowDeactivated));
         invalidate(*previously_active_window);
         m_active_window = nullptr;
         tell_wm_listeners_window_state_changed(*previously_active_window);
@@ -1081,7 +1081,7 @@ void WSWindowManager::set_active_window(WSWindow* window)
     if (window) {
         m_active_window = window->make_weak_ptr();
         active_client = m_active_window->client();
-        CEventLoop::current().post_event(*m_active_window, make<WSEvent>(WSEvent::WindowActivated));
+        Core::EventLoop::current().post_event(*m_active_window, make<WSEvent>(WSEvent::WindowActivated));
         invalidate(*m_active_window);
 
         auto* client = window->client();
@@ -1106,12 +1106,12 @@ void WSWindowManager::set_hovered_window(WSWindow* window)
         return;
 
     if (m_hovered_window)
-        CEventLoop::current().post_event(*m_hovered_window, make<WSEvent>(WSEvent::WindowLeft));
+        Core::EventLoop::current().post_event(*m_hovered_window, make<WSEvent>(WSEvent::WindowLeft));
 
     m_hovered_window = window ? window->make_weak_ptr() : nullptr;
 
     if (m_hovered_window)
-        CEventLoop::current().post_event(*m_hovered_window, make<WSEvent>(WSEvent::WindowEntered));
+        Core::EventLoop::current().post_event(*m_hovered_window, make<WSEvent>(WSEvent::WindowEntered));
 }
 
 void WSWindowManager::invalidate()
@@ -1280,7 +1280,7 @@ void WSWindowManager::update_theme(String theme_path, String theme_name)
         }
         return IterationDecision::Continue;
     });
-    auto wm_config = CConfigFile::get_for_app("WindowManager");
+    auto wm_config = Core::ConfigFile::get_for_app("WindowManager");
     wm_config->write_entry("Theme", "Name", theme_name);
     wm_config->sync();
     invalidate();

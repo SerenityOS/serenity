@@ -35,16 +35,18 @@
 #include <sys/ioctl.h>
 #endif
 
-CLocalServer::CLocalServer(CObject* parent)
-    : CObject(parent)
+namespace Core {
+
+LocalServer::LocalServer(Object* parent)
+    : Object(parent)
 {
 }
 
-CLocalServer::~CLocalServer()
+LocalServer::~LocalServer()
 {
 }
 
-bool CLocalServer::take_over_from_system_server()
+bool LocalServer::take_over_from_system_server()
 {
     if (m_listening)
         return false;
@@ -84,16 +86,16 @@ bool CLocalServer::take_over_from_system_server()
     return false;
 }
 
-void CLocalServer::setup_notifier()
+void LocalServer::setup_notifier()
 {
-    m_notifier = CNotifier::construct(m_fd, CNotifier::Event::Read, this);
+    m_notifier = Notifier::construct(m_fd, Notifier::Event::Read, this);
     m_notifier->on_ready_to_read = [this] {
         if (on_ready_to_accept)
             on_ready_to_accept();
     };
 }
 
-bool CLocalServer::listen(const String& address)
+bool LocalServer::listen(const String& address)
 {
     if (m_listening)
         return false;
@@ -116,7 +118,7 @@ bool CLocalServer::listen(const String& address)
         ASSERT_NOT_REACHED();
     }
 
-    auto socket_address = CSocketAddress::local(address);
+    auto socket_address = SocketAddress::local(address);
     auto un = socket_address.to_sockaddr_un();
     rc = ::bind(m_fd, (const sockaddr*)&un, sizeof(un));
     if (rc < 0) {
@@ -135,7 +137,7 @@ bool CLocalServer::listen(const String& address)
     return true;
 }
 
-RefPtr<CLocalSocket> CLocalServer::accept()
+RefPtr<LocalSocket> LocalServer::accept()
 {
     ASSERT(m_listening);
     sockaddr_un un;
@@ -146,5 +148,7 @@ RefPtr<CLocalSocket> CLocalServer::accept()
         return nullptr;
     }
 
-    return CLocalSocket::construct(accepted_fd);
+    return LocalSocket::construct(accepted_fd);
+}
+
 }

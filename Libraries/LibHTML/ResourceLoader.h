@@ -34,7 +34,7 @@ namespace LibProtocol {
 class Client;
 }
 
-class ResourceLoader : public CObject {
+class ResourceLoader : public Core::Object {
     C_OBJECT(ResourceLoader)
 public:
     static ResourceLoader& the();

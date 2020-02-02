@@ -29,29 +29,33 @@
 #include <AK/String.h>
 #include <LibCore/CIODevice.h>
 
-class CFile final : public CIODevice {
-    C_OBJECT(CFile)
+namespace Core {
+
+class File final : public IODevice {
+    C_OBJECT(File)
 public:
-    virtual ~CFile() override;
+    virtual ~File() override;
 
     String filename() const { return m_filename; }
     void set_filename(const StringView& filename) { m_filename = filename; }
 
-    virtual bool open(CIODevice::OpenMode) override;
+    virtual bool open(IODevice::OpenMode) override;
 
     enum class ShouldCloseFileDescription {
         No = 0,
         Yes
     };
-    bool open(int fd, CIODevice::OpenMode, ShouldCloseFileDescription);
+    bool open(int fd, IODevice::OpenMode, ShouldCloseFileDescription);
 
 private:
-    CFile(CObject* parent = nullptr)
-        : CIODevice(parent)
+    File(Object* parent = nullptr)
+        : IODevice(parent)
     {
     }
-    explicit CFile(const StringView&, CObject* parent = nullptr);
+    explicit File(const StringView&, Object* parent = nullptr);
 
     String m_filename;
     ShouldCloseFileDescription m_should_close_file_descriptor { ShouldCloseFileDescription::Yes };
 };
+
+}

@@ -47,7 +47,7 @@
 //#define WSMESSAGELOOP_DEBUG
 
 WSEventLoop::WSEventLoop()
-    : m_server(CLocalServer::construct())
+    : m_server(Core::LocalServer::construct())
 {
     m_keyboard_fd = open("/dev/keyboard", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
     m_mouse_fd = open("/dev/psaux", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
@@ -69,10 +69,10 @@ WSEventLoop::WSEventLoop()
     ASSERT(m_keyboard_fd >= 0);
     ASSERT(m_mouse_fd >= 0);
 
-    m_keyboard_notifier = CNotifier::construct(m_keyboard_fd, CNotifier::Read);
+    m_keyboard_notifier = Core::Notifier::construct(m_keyboard_fd, Core::Notifier::Read);
     m_keyboard_notifier->on_ready_to_read = [this] { drain_keyboard(); };
 
-    m_mouse_notifier = CNotifier::construct(m_mouse_fd, CNotifier::Read);
+    m_mouse_notifier = Core::Notifier::construct(m_mouse_fd, Core::Notifier::Read);
     m_mouse_notifier->on_ready_to_read = [this] { drain_mouse(); };
 
     WSClipboard::the().on_content_change = [&] {

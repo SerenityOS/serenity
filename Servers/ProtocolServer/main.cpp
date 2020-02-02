@@ -36,14 +36,14 @@ int main(int, char**)
         perror("pledge");
         return 1;
     }
-    CEventLoop event_loop;
+    Core::EventLoop event_loop;
     // FIXME: Establish a connection to LookupServer and then drop "unix"?
     if (pledge("stdio inet shared_buffer accept unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
     (void)*new HttpProtocol;
-    auto server = CLocalServer::construct();
+    auto server = Core::LocalServer::construct();
     bool ok = server->take_over_from_system_server();
     ASSERT(ok);
     server->on_ready_to_accept = [&] {

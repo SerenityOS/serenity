@@ -93,7 +93,7 @@ GScrollBar::GScrollBar(Orientation orientation, GWidget* parent)
     : GWidget(parent)
     , m_orientation(orientation)
 {
-    m_automatic_scrolling_timer = CTimer::construct(this);
+    m_automatic_scrolling_timer = Core::Timer::construct(this);
     if (!s_up_arrow_bitmap)
         s_up_arrow_bitmap = &CharacterBitmap::create_from_ascii(s_up_arrow_bitmap_data, 9, 9).leak_ref();
     if (!s_down_arrow_bitmap)
@@ -355,7 +355,7 @@ void GScrollBar::mousemove_event(GMouseEvent& event)
     set_value(new_value);
 }
 
-void GScrollBar::leave_event(CEvent&)
+void GScrollBar::leave_event(Core::Event&)
 {
     if (m_hovered_component != Component::Invalid) {
         m_hovered_component = Component::Invalid;

@@ -31,11 +31,14 @@
 #include <AK/HashMap.h>
 #include <LibCore/CObject.h>
 
-class CLocalSocket;
-class CLocalServer;
+namespace Core {
+class LocalSocket;
+class LocalServer;
+}
+
 class DNSAnswer;
 
-class LookupServer final : public CObject {
+class LookupServer final : public Core::Object {
     C_OBJECT(LookupServer)
 
 public:
@@ -43,7 +46,7 @@ public:
 
 private:
     void load_etc_hosts();
-    void service_client(RefPtr<CLocalSocket>);
+    void service_client(RefPtr<Core::LocalSocket>);
     Vector<String> lookup(const String& hostname, bool& did_timeout, unsigned short record_type, ShouldRandomizeCase = ShouldRandomizeCase::Yes);
 
     struct CachedLookup {
@@ -51,7 +54,7 @@ private:
         Vector<DNSAnswer> answers;
     };
 
-    RefPtr<CLocalServer> m_local_server;
+    RefPtr<Core::LocalServer> m_local_server;
     String m_nameserver;
     HashMap<String, String> m_etc_hosts;
     HashMap<String, CachedLookup> m_lookup_cache;

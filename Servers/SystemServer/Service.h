@@ -31,13 +31,14 @@
 #include <LibCore/CNotifier.h>
 #include <LibCore/CObject.h>
 
-class CConfigFile;
-
 namespace AK {
 class JsonObject;
 }
+namespace Core {
+class ConfigFile;
+}
 
-class Service final : public CObject {
+class Service final : public Core::Object {
     C_OBJECT(Service)
 
 public:
@@ -49,7 +50,7 @@ public:
     void save_to(AK::JsonObject&) override;
 
 private:
-    Service(const CConfigFile&, const StringView& name);
+    Service(const Core::ConfigFile&, const StringView& name);
 
     void spawn();
 
@@ -78,7 +79,7 @@ private:
     pid_t m_pid { -1 };
     // An open fd to the socket.
     int m_socket_fd { -1 };
-    RefPtr<CNotifier> m_socket_notifier;
+    RefPtr<Core::Notifier> m_socket_notifier;
 
     void resolve_user();
     void setup_socket();

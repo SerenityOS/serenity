@@ -146,7 +146,7 @@ private:
     bool m_client_notifications_enabled { true };
 
     GUndoStack m_undo_stack;
-    RefPtr<CTimer> m_undo_timer;
+    RefPtr<Core::Timer> m_undo_timer;
 };
 
 class GTextDocumentLine {

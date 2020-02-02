@@ -38,9 +38,8 @@
 class IRCChannel;
 class IRCQuery;
 class IRCWindowListModel;
-class CNotifier;
 
-class IRCClient final : public CObject {
+class IRCClient final : public Core::Object {
     C_OBJECT(IRCClient)
     friend class IRCChannel;
     friend class IRCQuery;
@@ -162,10 +161,10 @@ private:
     String m_hostname;
     int m_port { 6667 };
 
-    RefPtr<CTCPSocket> m_socket;
+    RefPtr<Core::TCPSocket> m_socket;
 
     String m_nickname;
-    RefPtr<CNotifier> m_notifier;
+    RefPtr<Core::Notifier> m_notifier;
     HashMap<String, RefPtr<IRCChannel>, CaseInsensitiveStringTraits> m_channels;
     HashMap<String, RefPtr<IRCQuery>, CaseInsensitiveStringTraits> m_queries;
 
@@ -175,5 +174,5 @@ private:
 
     NonnullRefPtr<IRCWindowListModel> m_client_window_list_model;
     NonnullRefPtr<IRCLogBuffer> m_log;
-    NonnullRefPtr<CConfigFile> m_config;
+    NonnullRefPtr<Core::ConfigFile> m_config;
 };

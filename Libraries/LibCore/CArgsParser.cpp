@@ -30,12 +30,14 @@
 #include <limits.h>
 #include <stdio.h>
 
-CArgsParser::CArgsParser()
+namespace Core {
+
+ArgsParser::ArgsParser()
 {
     add_option(m_show_help, "Display this message", "help", 0);
 }
 
-void CArgsParser::parse(int argc, char** argv)
+void ArgsParser::parse(int argc, char** argv)
 {
     auto print_usage_and_exit = [this, argv] {
         print_usage(stderr, argv[0]);
@@ -148,7 +150,7 @@ void CArgsParser::parse(int argc, char** argv)
     }
 }
 
-void CArgsParser::print_usage(FILE* file, const char* argv0)
+void ArgsParser::print_usage(FILE* file, const char* argv0)
 {
     fprintf(file, "Usage:\n\t%s", argv0);
 
@@ -214,12 +216,12 @@ void CArgsParser::print_usage(FILE* file, const char* argv0)
     }
 }
 
-void CArgsParser::add_option(Option&& option)
+void ArgsParser::add_option(Option&& option)
 {
     m_options.append(move(option));
 }
 
-void CArgsParser::add_option(bool& value, const char* help_string, const char* long_name, char short_name)
+void ArgsParser::add_option(bool& value, const char* help_string, const char* long_name, char short_name)
 {
     Option option {
         false,
@@ -236,7 +238,7 @@ void CArgsParser::add_option(bool& value, const char* help_string, const char* l
     add_option(move(option));
 }
 
-void CArgsParser::add_option(const char*& value, const char* help_string, const char* long_name, char short_name, const char* value_name)
+void ArgsParser::add_option(const char*& value, const char* help_string, const char* long_name, char short_name, const char* value_name)
 {
     Option option {
         true,
@@ -252,7 +254,7 @@ void CArgsParser::add_option(const char*& value, const char* help_string, const 
     add_option(move(option));
 }
 
-void CArgsParser::add_option(int& value, const char* help_string, const char* long_name, char short_name, const char* value_name)
+void ArgsParser::add_option(int& value, const char* help_string, const char* long_name, char short_name, const char* value_name)
 {
     Option option {
         true,
@@ -269,12 +271,12 @@ void CArgsParser::add_option(int& value, const char* help_string, const char* lo
     add_option(move(option));
 }
 
-void CArgsParser::add_positional_argument(Arg&& arg)
+void ArgsParser::add_positional_argument(Arg&& arg)
 {
     m_positional_args.append(move(arg));
 }
 
-void CArgsParser::add_positional_argument(const char*& value, const char* help_string, const char* name, Required required)
+void ArgsParser::add_positional_argument(const char*& value, const char* help_string, const char* name, Required required)
 {
     Arg arg {
         help_string,
@@ -289,7 +291,7 @@ void CArgsParser::add_positional_argument(const char*& value, const char* help_s
     add_positional_argument(move(arg));
 }
 
-void CArgsParser::add_positional_argument(int& value, const char* help_string, const char* name, Required required)
+void ArgsParser::add_positional_argument(int& value, const char* help_string, const char* name, Required required)
 {
     Arg arg {
         help_string,
@@ -305,7 +307,7 @@ void CArgsParser::add_positional_argument(int& value, const char* help_string, c
     add_positional_argument(move(arg));
 }
 
-void CArgsParser::add_positional_argument(Vector<const char*>& values, const char* help_string, const char* name, Required required)
+void ArgsParser::add_positional_argument(Vector<const char*>& values, const char* help_string, const char* name, Required required)
 {
     Arg arg {
         help_string,
@@ -318,4 +320,6 @@ void CArgsParser::add_positional_argument(Vector<const char*>& values, const cha
         }
     };
     add_positional_argument(move(arg));
+}
+
 }

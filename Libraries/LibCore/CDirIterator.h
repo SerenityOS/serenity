@@ -29,15 +29,17 @@
 #include <AK/String.h>
 #include <dirent.h>
 
-class CDirIterator {
+namespace Core {
+
+class DirIterator {
 public:
     enum Flags {
         NoFlags = 0x0,
         SkipDots = 0x1,
     };
 
-    CDirIterator(const StringView& path, Flags = Flags::NoFlags);
-    ~CDirIterator();
+    DirIterator(const StringView& path, Flags = Flags::NoFlags);
+    ~DirIterator();
 
     bool has_error() const { return m_error != 0; }
     int error() const { return m_error; }
@@ -53,3 +55,5 @@ private:
 
     bool advance_next();
 };
+
+}

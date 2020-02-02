@@ -44,9 +44,9 @@ Options parse_options(int argc, char* argv[])
     const char* type = nullptr;
     Vector<const char*> text;
 
-    CArgsParser args_parser;
+    Core::ArgsParser args_parser;
     args_parser.add_option(type, "Pick a type", "type", 't', "type");
-    args_parser.add_positional_argument(text, "Text to copy", "text", CArgsParser::Required::No);
+    args_parser.add_positional_argument(text, "Text to copy", "text", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
     Options options;
@@ -54,11 +54,11 @@ Options parse_options(int argc, char* argv[])
 
     if (text.is_empty()) {
         // Copy our stdin.
-        auto c_stdin = CFile::construct();
+        auto c_stdin = Core::File::construct();
         bool success = c_stdin->open(
             STDIN_FILENO,
-            CIODevice::OpenMode::ReadOnly,
-            CFile::ShouldCloseFileDescription::No);
+            Core::IODevice::OpenMode::ReadOnly,
+            Core::File::ShouldCloseFileDescription::No);
         ASSERT(success);
         auto buffer = c_stdin->read_all();
         dbg() << "Read size " << buffer.size();

@@ -38,13 +38,15 @@
 #include <sys/time.h>
 #include <time.h>
 
-class CObject;
-class CNotifier;
+namespace Core {
 
-class CEventLoop {
+class Object;
+class Notifier;
+
+class EventLoop {
 public:
-    CEventLoop();
-    ~CEventLoop();
+    EventLoop();
+    ~EventLoop();
 
     int exec();
 
@@ -57,23 +59,23 @@ public:
     // this should really only be used for integrating with other event loops
     void pump(WaitMode = WaitMode::WaitForEvents);
 
-    void post_event(CObject& receiver, NonnullOwnPtr<CEvent>&&);
+    void post_event(Object& receiver, NonnullOwnPtr<Event>&&);
 
-    static CEventLoop& main();
-    static CEventLoop& current();
+    static EventLoop& main();
+    static EventLoop& current();
 
     bool was_exit_requested() const { return m_exit_requested; }
 
-    static int register_timer(CObject&, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible);
+    static int register_timer(Object&, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible);
     static bool unregister_timer(int timer_id);
 
-    static void register_notifier(Badge<CNotifier>, CNotifier&);
-    static void unregister_notifier(Badge<CNotifier>, CNotifier&);
+    static void register_notifier(Badge<Notifier>, Notifier&);
+    static void unregister_notifier(Badge<Notifier>, Notifier&);
 
     void quit(int);
     void unquit();
 
-    void take_pending_events_from(CEventLoop& other)
+    void take_pending_events_from(EventLoop& other)
     {
         m_queued_events.append(move(other.m_queued_events));
     }
@@ -85,8 +87,8 @@ private:
     void get_next_timer_expiration(timeval&);
 
     struct QueuedEvent {
-        WeakPtr<CObject> receiver;
-        NonnullOwnPtr<CEvent> event;
+        WeakPtr<Object> receiver;
+        NonnullOwnPtr<Event> event;
     };
 
     Vector<QueuedEvent, 64> m_queued_events;
@@ -104,7 +106,7 @@ private:
         timeval fire_time { 0, 0 };
         bool should_reload { false };
         TimerShouldFireWhenNotVisible fire_when_not_visible { TimerShouldFireWhenNotVisible::No };
-        WeakPtr<CObject> owner;
+        WeakPtr<Object> owner;
 
         void reload(const timeval& now);
         bool has_expired(const timeval& now) const;
@@ -112,7 +114,9 @@ private:
 
     static HashMap<int, NonnullOwnPtr<EventLoopTimer>>* s_timers;
 
-    static HashTable<CNotifier*>* s_notifiers;
+    static HashTable<Notifier*>* s_notifiers;
 
-    static RefPtr<CLocalServer> s_rpc_server;
+    static RefPtr<LocalServer> s_rpc_server;
 };
+
+}

@@ -42,5 +42,5 @@ private:
 
     RefPtr<GTableView> m_adapter_table_view;
     RefPtr<GTableView> m_socket_table_view;
-    RefPtr<CTimer> m_update_timer;
+    RefPtr<Core::Timer> m_update_timer;
 };

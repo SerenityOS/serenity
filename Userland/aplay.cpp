@@ -32,7 +32,7 @@
 
 int main(int argc, char** argv)
 {
-    CEventLoop loop;
+    Core::EventLoop loop;
     if (argc < 2) {
         fprintf(stderr, "Need a WAV to play\n");
         return 1;

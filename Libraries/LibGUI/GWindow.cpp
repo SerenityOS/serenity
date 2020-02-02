@@ -53,8 +53,8 @@ GWindow* GWindow::from_window_id(int window_id)
     return nullptr;
 }
 
-GWindow::GWindow(CObject* parent)
-    : CObject(parent)
+GWindow::GWindow(Core::Object* parent)
+    : Core::Object(parent)
 {
     all_windows->set(this);
     m_rect_when_windowless = { 100, 400, 140, 140 };
@@ -179,7 +179,7 @@ void GWindow::set_override_cursor(GStandardCursor cursor)
     GWindowServerConnection::the().send_sync<WindowServer::SetWindowOverrideCursor>(m_window_id, (u32)cursor);
 }
 
-void GWindow::event(CEvent& event)
+void GWindow::event(Core::Event& event)
 {
     if (event.type() == GEvent::Drop) {
         auto& drop_event = static_cast<GDropEvent&>(event);
@@ -317,7 +317,7 @@ void GWindow::event(CEvent& event)
     if (event.type() > GEvent::__Begin_WM_Events && event.type() < GEvent::__End_WM_Events)
         return wm_event(static_cast<GWMEvent&>(event));
 
-    CObject::event(event);
+    Core::Object::event(event);
 }
 
 bool GWindow::is_visible() const
@@ -386,12 +386,12 @@ void GWindow::set_focused_widget(GWidget* widget)
     if (m_focused_widget == widget)
         return;
     if (m_focused_widget) {
-        CEventLoop::current().post_event(*m_focused_widget, make<GEvent>(GEvent::FocusOut));
+        Core::EventLoop::current().post_event(*m_focused_widget, make<GEvent>(GEvent::FocusOut));
         m_focused_widget->update();
     }
     m_focused_widget = widget ? widget->make_weak_ptr() : nullptr;
     if (m_focused_widget) {
-        CEventLoop::current().post_event(*m_focused_widget, make<GEvent>(GEvent::FocusIn));
+        Core::EventLoop::current().post_event(*m_focused_widget, make<GEvent>(GEvent::FocusIn));
         m_focused_widget->update();
     }
 }
@@ -446,12 +446,12 @@ void GWindow::set_hovered_widget(GWidget* widget)
         return;
 
     if (m_hovered_widget)
-        CEventLoop::current().post_event(*m_hovered_widget, make<GEvent>(GEvent::Leave));
+        Core::EventLoop::current().post_event(*m_hovered_widget, make<GEvent>(GEvent::Leave));
 
     m_hovered_widget = widget ? widget->make_weak_ptr() : nullptr;
 
     if (m_hovered_widget)
-        CEventLoop::current().post_event(*m_hovered_widget, make<GEvent>(GEvent::Enter));
+        Core::EventLoop::current().post_event(*m_hovered_widget, make<GEvent>(GEvent::Enter));
 }
 
 void GWindow::set_current_backing_bitmap(GraphicsBitmap& bitmap, bool flush_immediately)
@@ -583,7 +583,7 @@ void GWindow::save_to(AK::JsonObject& json)
     json.set("rect", rect().to_string());
     json.set("base_size", base_size().to_string());
     json.set("size_increment", size_increment().to_string());
-    CObject::save_to(json);
+    Core::Object::save_to(json);
 }
 
 void GWindow::set_fullscreen(bool fullscreen)

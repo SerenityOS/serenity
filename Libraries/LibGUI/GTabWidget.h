@@ -55,11 +55,11 @@ public:
 
 protected:
     virtual void paint_event(GPaintEvent&) override;
-    virtual void child_event(CChildEvent&) override;
+    virtual void child_event(Core::ChildEvent&) override;
     virtual void resize_event(GResizeEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
-    virtual void leave_event(CEvent&) override;
+    virtual void leave_event(Core::Event&) override;
 
 private:
     Rect child_rect_for_size(const Size&) const;

@@ -41,7 +41,7 @@ public:
 
 protected:
     explicit GStackWidget(GWidget* parent);
-    virtual void child_event(CChildEvent&) override;
+    virtual void child_event(Core::ChildEvent&) override;
     virtual void resize_event(GResizeEvent&) override;
 
 private:

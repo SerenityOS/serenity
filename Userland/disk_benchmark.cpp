@@ -119,7 +119,7 @@ int main(int argc, char** argv)
             Vector<Result> results;
 
             printf("Running: file_size=%d block_size=%d\n", file_size, block_size);
-            CElapsedTimer timer;
+            Core::ElapsedTimer timer;
             timer.start();
             while (timer.elapsed() < time_per_benchmark * 1000) {
                 printf(".");
@@ -160,7 +160,7 @@ Result benchmark(const String& filename, int file_size, int block_size, ByteBuff
 
     Result res;
 
-    CElapsedTimer timer;
+    Core::ElapsedTimer timer;
 
     timer.start();
     int nwrote = 0;

@@ -37,7 +37,7 @@ GAbstractButton::GAbstractButton(const StringView& text, GWidget* parent)
     : GWidget(parent)
     , m_text(text)
 {
-    m_auto_repeat_timer = CTimer::construct(this);
+    m_auto_repeat_timer = Core::Timer::construct(this);
     m_auto_repeat_timer->on_timeout = [this] {
         click();
     };
@@ -147,13 +147,13 @@ void GAbstractButton::mouseup_event(GMouseEvent& event)
     GWidget::mouseup_event(event);
 }
 
-void GAbstractButton::enter_event(CEvent&)
+void GAbstractButton::enter_event(Core::Event&)
 {
     m_hovered = true;
     update();
 }
 
-void GAbstractButton::leave_event(CEvent&)
+void GAbstractButton::leave_event(Core::Event&)
 {
     m_hovered = false;
     update();

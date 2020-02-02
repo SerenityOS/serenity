@@ -41,12 +41,12 @@ int main(int argc, char** argv)
     bool always_print_filenames = false;
     Vector<const char*> files;
 
-    CArgsParser args_parser;
+    Core::ArgsParser args_parser;
     args_parser.add_option(line_count, "Number of lines to print (default 10)", "lines", 'n', "number");
     args_parser.add_option(char_count, "Number of characters to print", "characters", 'c', "number");
     args_parser.add_option(never_print_filenames, "Never print file names", "quiet", 'q');
     args_parser.add_option(always_print_filenames, "Always print file names", "verbose", 'v');
-    args_parser.add_positional_argument(files, "File to process", "file", CArgsParser::Required::No);
+    args_parser.add_positional_argument(files, "File to process", "file", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
     if (line_count == 0 && char_count == 0) {

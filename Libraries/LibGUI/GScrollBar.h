@@ -72,7 +72,7 @@ private:
     virtual void mouseup_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
     virtual void mousewheel_event(GMouseEvent&) override;
-    virtual void leave_event(CEvent&) override;
+    virtual void leave_event(Core::Event&) override;
     virtual void change_event(GEvent&) override;
 
     int default_button_size() const { return 16; }
@@ -110,5 +110,5 @@ private:
     };
 
     AutomaticScrollingDirection m_automatic_scrolling_direction { AutomaticScrollingDirection::None };
-    RefPtr<CTimer> m_automatic_scrolling_timer;
+    RefPtr<Core::Timer> m_automatic_scrolling_timer;
 };

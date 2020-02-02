@@ -29,7 +29,7 @@
 PlaybackManager::PlaybackManager(NonnullRefPtr<AClientConnection> connection)
     : m_connection(connection)
 {
-    m_timer = CTimer::construct(100, [&]() {
+    m_timer = Core::Timer::construct(100, [&]() {
         if (!m_loader)
             return;
         next_buffer();

@@ -178,7 +178,7 @@ static int sh_time(int argc, char** argv)
         if (i != argc - 1)
             builder.append(' ');
     }
-    CElapsedTimer timer;
+    Core::ElapsedTimer timer;
     timer.start();
     int exit_code = run_command(builder.to_string());
     printf("Time: %d ms\n", timer.elapsed());
@@ -479,7 +479,7 @@ public:
     }
 
 private:
-    CElapsedTimer m_timer;
+    Core::ElapsedTimer m_timer;
     String m_command;
 };
 
@@ -536,7 +536,7 @@ static Vector<String> expand_globs(const StringView& path, const StringView& bas
         StringView new_base_v = new_base;
         if (new_base_v.is_empty())
             new_base_v = ".";
-        CDirIterator di(new_base_v, CDirIterator::NoFlags);
+        Core::DirIterator di(new_base_v, Core::DirIterator::NoFlags);
 
         if (di.has_error()) {
             return res;
@@ -848,8 +848,8 @@ static String get_history_path()
 
 void load_history()
 {
-    auto history_file = CFile::construct(get_history_path());
-    if (!history_file->open(CIODevice::ReadOnly))
+    auto history_file = Core::File::construct(get_history_path());
+    if (!history_file->open(Core::IODevice::ReadOnly))
         return;
     while (history_file->can_read_line()) {
         auto b = history_file->read_line(1024);
@@ -860,8 +860,8 @@ void load_history()
 
 void save_history()
 {
-    auto history_file = CFile::construct(get_history_path());
-    if (!history_file->open(CIODevice::WriteOnly))
+    auto history_file = Core::File::construct(get_history_path());
+    if (!history_file->open(Core::IODevice::WriteOnly))
         return;
     for (const auto& line : editor.history()) {
         history_file->write(line);
@@ -921,8 +921,8 @@ int main(int argc, char** argv)
     }
 
     if (argc == 2 && argv[1][0] != '-') {
-        auto file = CFile::construct(argv[1]);
-        if (!file->open(CIODevice::ReadOnly)) {
+        auto file = Core::File::construct(argv[1]);
+        if (!file->open(Core::IODevice::ReadOnly)) {
             fprintf(stderr, "Failed to open %s: %s\n", file->filename().characters(), file->error_string());
             return 1;
         }

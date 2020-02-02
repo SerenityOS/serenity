@@ -138,7 +138,7 @@ void VBWidget::add_property(const String& name, Function<GVariant(const GWidget&
 
 void VBWidget::setup_properties()
 {
-    VB_ADD_PROPERTY(CObject, "name", name, set_name, string);
+    VB_ADD_PROPERTY(Core::Object, "name", name, set_name, string);
 
     VB_ADD_PROPERTY(GWidget, "width", width, set_width, i32);
     VB_ADD_PROPERTY(GWidget, "height", height, set_height, i32);

@@ -26,28 +26,30 @@
 
 #include <LibCore/CTimer.h>
 
-CTimer::CTimer(CObject* parent)
-    : CObject(parent)
+namespace Core {
+
+Timer::Timer(Object* parent)
+    : Object(parent)
 {
 }
 
-CTimer::CTimer(int interval, Function<void()>&& timeout_handler, CObject* parent)
-    : CObject(parent)
+Timer::Timer(int interval, Function<void()>&& timeout_handler, Object* parent)
+    : Object(parent)
     , on_timeout(move(timeout_handler))
 {
     start(interval);
 }
 
-CTimer::~CTimer()
+Timer::~Timer()
 {
 }
 
-void CTimer::start()
+void Timer::start()
 {
     start(m_interval);
 }
 
-void CTimer::start(int interval)
+void Timer::start(int interval)
 {
     if (m_active)
         return;
@@ -56,14 +58,14 @@ void CTimer::start(int interval)
     m_active = true;
 }
 
-void CTimer::restart(int interval)
+void Timer::restart(int interval)
 {
     if (m_active)
         stop();
     start(interval);
 }
 
-void CTimer::stop()
+void Timer::stop()
 {
     if (!m_active)
         return;
@@ -71,7 +73,7 @@ void CTimer::stop()
     m_active = false;
 }
 
-void CTimer::timer_event(CTimerEvent&)
+void Timer::timer_event(TimerEvent&)
 {
     if (m_single_shot)
         stop();
@@ -84,4 +86,6 @@ void CTimer::timer_event(CTimerEvent&)
 
     if (on_timeout)
         on_timeout();
+}
+
 }

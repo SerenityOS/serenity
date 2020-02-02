@@ -28,7 +28,10 @@
 
 #include <LibGUI/GWidget.h>
 
-class CTimer;
+namespace Core {
+class Timer;
+}
+
 class GJsonArrayModel;
 class GTableView;
 
@@ -45,5 +48,5 @@ private:
     RefPtr<GTableView> m_table_view;
     RefPtr<GJsonArrayModel> m_json_model;
     pid_t m_pid { -1 };
-    RefPtr<CTimer> m_timer;
+    RefPtr<Core::Timer> m_timer;
 };

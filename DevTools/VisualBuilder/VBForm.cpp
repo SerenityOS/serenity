@@ -381,8 +381,8 @@ void VBForm::mousemove_event(GMouseEvent& event)
 
 void VBForm::load_from_file(const String& path)
 {
-    auto file = CFile::construct(path);
-    if (!file->open(CIODevice::ReadOnly)) {
+    auto file = Core::File::construct(path);
+    if (!file->open(Core::IODevice::ReadOnly)) {
         GMessageBox::show(String::format("Could not open '%s' for reading", path.characters()), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
         return;
     }
@@ -417,8 +417,8 @@ void VBForm::load_from_file(const String& path)
 
 void VBForm::write_to_file(const String& path)
 {
-    auto file = CFile::construct(path);
-    if (!file->open(CIODevice::WriteOnly)) {
+    auto file = Core::File::construct(path);
+    if (!file->open(Core::IODevice::WriteOnly)) {
         GMessageBox::show(String::format("Could not open '%s' for writing", path.characters()), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
         return;
     }
