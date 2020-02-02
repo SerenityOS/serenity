@@ -32,8 +32,6 @@
 #define SLAB_ALLOC_SCRUB_BYTE 0xab
 #define SLAB_DEALLOC_SCRUB_BYTE 0xbc
 
-class JsonObjectSerializer;
-
 void* slab_alloc(size_t slab_size);
 void slab_dealloc(void*, size_t slab_size);
 void slab_alloc_init();
