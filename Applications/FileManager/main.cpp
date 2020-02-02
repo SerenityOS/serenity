@@ -194,7 +194,7 @@ int main(int argc, char** argv)
 
         config->write_entry("DirectoryView", "ViewMode", "List");
         config->sync();
-    });
+    }, window);
     view_as_table_action->set_checkable(true);
 
     view_as_icons_action = GAction::create("Icon view", { Mod_Ctrl, KeyCode::Key_I }, GraphicsBitmap::load_from_file("/res/icons/16x16/icon-view.png"), [&](const GAction&) {
@@ -203,7 +203,7 @@ int main(int argc, char** argv)
 
         config->write_entry("DirectoryView", "ViewMode", "Icon");
         config->sync();
-    });
+    }, window);
     view_as_icons_action->set_checkable(true);
 
     view_as_columns_action = GAction::create("Columns view", GraphicsBitmap::load_from_file("/res/icons/16x16/columns-view.png"), [&](const GAction&) {
@@ -212,7 +212,7 @@ int main(int argc, char** argv)
 
         config->write_entry("DirectoryView", "ViewMode", "Columns");
         config->sync();
-    });
+    }, window);
     view_as_columns_action->set_checkable(true);
 
     auto view_type_action_group = make<GActionGroup>();
@@ -261,7 +261,7 @@ int main(int argc, char** argv)
             copy_text.appendf("%s\n", path.characters());
         }
         GClipboard::the().set_data(copy_text.build(), "file-list");
-    });
+    }, window);
     copy_action->set_enabled(false);
 
     auto paste_action = GCommonActions::make_paste_action([&](const GAction&) {
@@ -290,7 +290,7 @@ int main(int argc, char** argv)
                 refresh_tree_view();
             }
         }
-    });
+    }, window);
     paste_action->set_enabled(GClipboard::the().type() == "file-list");
 
     GClipboard::the().on_content_change = [&](const String& data_type) {
@@ -318,7 +318,7 @@ int main(int argc, char** argv)
               }
 
               properties->exec();
-          });
+          }, window);
 
     enum class ConfirmBeforeDelete {
         No,
@@ -398,24 +398,24 @@ int main(int argc, char** argv)
 
     auto force_delete_action = GAction::create("Delete without confirmation", { Mod_Shift, Key_Delete }, [&](const GAction& action) {
         do_delete(ConfirmBeforeDelete::No, action);
-    });
+    }, window);
 
     auto delete_action = GCommonActions::make_delete_action([&](const GAction& action) {
         do_delete(ConfirmBeforeDelete::Yes, action);
-    });
+    }, window);
     delete_action->set_enabled(false);
 
     auto go_back_action = GCommonActions::make_go_back_action([&](auto&) {
         directory_view->open_previous_directory();
-    });
+    }, window);
 
     auto go_forward_action = GCommonActions::make_go_forward_action([&](auto&) {
         directory_view->open_next_directory();
-    });
+    }, window);
 
     auto go_home_action = GCommonActions::make_go_home_action([&](auto&) {
         directory_view->open(get_current_user_home_path());
-    });
+    }, window);
 
     auto menubar = make<GMenuBar>();
 
