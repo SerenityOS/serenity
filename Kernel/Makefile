@@ -75,6 +75,7 @@ OBJS = \
     PCI/IOAccess.o \
     PCI/MMIOAccess.o \
     PCI/Initializer.o \
+    PerformanceEventBuffer.o \
     Process.o \
     ProcessTracer.o \
     Profiling.o \

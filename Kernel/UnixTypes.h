@@ -28,6 +28,9 @@
 
 #include <AK/Types.h>
 
+#define PERF_EVENT_MALLOC 1
+#define PERF_EVENT_FREE 2
+
 #define WNOHANG 1
 #define WUNTRACED 2
 #define WSTOPPED WUNTRACED

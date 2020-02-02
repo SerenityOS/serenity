@@ -2940,6 +2940,15 @@ void Process::finalize()
     dbg() << "Finalizing process " << *this;
 #endif
 
+    if (m_perf_event_buffer) {
+        auto description_or_error = VFS::the().open("perfcore", O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { m_uid, m_gid });
+        if (!description_or_error.is_error()) {
+            auto& description = description_or_error.value();
+            auto json = m_perf_event_buffer->to_json(m_pid, m_executable ? m_executable->absolute_path() : "");
+            description->write(json.data(), json.size());
+        }
+    }
+
     m_fds.clear();
     m_tty = nullptr;
     m_executable = nullptr;
@@ -4669,4 +4678,11 @@ int Process::sys$unveil(const Syscall::SC_unveil_params* user_params)
     ASSERT(m_veil_state != VeilState::Locked);
     m_veil_state = VeilState::Dropped;
     return 0;
+}
+
+int Process::sys$perf_event(int type, uintptr_t arg1, uintptr_t arg2)
+{
+    if (!m_perf_event_buffer)
+        m_perf_event_buffer = make<PerformanceEventBuffer>();
+    return m_perf_event_buffer->append(type, arg1, arg2);
 }
