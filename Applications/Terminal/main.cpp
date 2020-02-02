@@ -125,7 +125,7 @@ static void run_command(int ptm_fd, String command)
     }
 }
 
-RefPtr<GWindow> create_settings_window(TerminalWidget& terminal, RefPtr<CConfigFile> config)
+RefPtr<GWindow> create_settings_window(TerminalWidget& terminal)
 {
     auto window = GWindow::construct();
     window->set_title("Terminal Settings");
@@ -159,7 +159,7 @@ RefPtr<GWindow> create_settings_window(TerminalWidget& terminal, RefPtr<CConfigF
     slider_container->set_preferred_size(100, 50);
     auto slider = GSlider::construct(Orientation::Horizontal, slider_container);
 
-    slider->on_value_changed = [&terminal, &config](int value) {
+    slider->on_value_changed = [&terminal](int value) {
         terminal.set_opacity(value);
     };
 
@@ -248,7 +248,7 @@ int main(int argc, char** argv)
     app_menu->add_action(GAction::create("Settings...", load_png("/res/icons/gear16.png"),
         [&](const GAction&) {
             if (!settings_window) {
-                settings_window = create_settings_window(*terminal, config);
+                settings_window = create_settings_window(*terminal);
                 settings_window->on_close_request = [&] {
                     settings_window = nullptr;
                     return GWindow::CloseRequestDecision::Close;
