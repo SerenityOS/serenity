@@ -35,6 +35,7 @@
 #include <AK/Weakable.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Lock.h>
+#include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Syscall.h>
 #include <Kernel/TTY/TTY.h>
 #include <Kernel/Thread.h>
@@ -301,6 +302,7 @@ public:
     int sys$chroot(const char* path, size_t path_length, int mount_flags);
     int sys$pledge(const Syscall::SC_pledge_params*);
     int sys$unveil(const Syscall::SC_unveil_params*);
+    int sys$perf_event(int type, uintptr_t arg1, uintptr_t arg2);
 
     template<bool sockname, typename Params>
     int get_sock_or_peer_name(const Params&);
@@ -511,6 +513,8 @@ private:
 
     WaitQueue& futex_queue(i32*);
     HashMap<u32, OwnPtr<WaitQueue>> m_futex_queues;
+
+    OwnPtr<PerformanceEventBuffer> m_perf_event_buffer;
 };
 
 class ProcessInspectionHandle {
