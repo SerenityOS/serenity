@@ -241,9 +241,6 @@ public:
 
     GAction* action_for_key_event(const GKeyEvent&);
 
-    void register_local_shortcut_action(Badge<GAction>, GAction&);
-    void unregister_local_shortcut_action(Badge<GAction>, GAction&);
-
     template<typename Callback>
     void for_each_child_widget(Callback callback)
     {
@@ -324,8 +321,6 @@ private:
     bool m_enabled { true };
     bool m_layout_dirty { false };
     bool m_updates_enabled { true };
-
-    HashMap<GShortcut, GAction*> m_local_shortcut_actions;
 
     NonnullRefPtr<PaletteImpl> m_palette;
 };

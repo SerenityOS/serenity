@@ -35,6 +35,8 @@
 #include <LibDraw/Rect.h>
 #include <LibGUI/GWindowType.h>
 
+class GAction;
+class GKeyEvent;
 class GWMEvent;
 class GWidget;
 class GWindowServerConnection;
@@ -170,6 +172,8 @@ public:
 
     virtual bool is_visible_for_timer_purposes() const override { return m_visible_for_timer_purposes; }
 
+    GAction* action_for_key_event(const GKeyEvent&);
+
 protected:
     GWindow(CObject* parent = nullptr);
     virtual void wm_event(GWMEvent&);
@@ -210,3 +214,9 @@ private:
     bool m_layout_pending { false };
     bool m_visible_for_timer_purposes { true };
 };
+
+template<>
+inline bool is<GWindow>(const CObject& object)
+{
+    return object.is_window();
+}

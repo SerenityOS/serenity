@@ -32,6 +32,7 @@
 #include <LibC/stdlib.h>
 #include <LibC/unistd.h>
 #include <LibDraw/GraphicsBitmap.h>
+#include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GEvent.h>
 #include <LibGUI/GPainter.h>
@@ -632,4 +633,18 @@ void GWindow::notify_state_changed(Badge<GWindowServerConnection>, bool minimize
             update();
         }
     }
+}
+
+GAction* GWindow::action_for_key_event(const GKeyEvent& event)
+{
+    GShortcut shortcut(event.modifiers(), (KeyCode)event.key());
+    GAction* found_action = nullptr;
+    for_each_child_of_type<GAction>([&](auto& action) {
+        if (action.shortcut() == shortcut) {
+            found_action = &action;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+    return found_action;
 }

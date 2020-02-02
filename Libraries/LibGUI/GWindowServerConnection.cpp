@@ -136,20 +136,20 @@ void GWindowServerConnection::handle(const WindowClient::KeyDown& message)
         key_event->m_text = String(&ch, 1);
     }
 
-    if (auto* focused_widget = window->focused_widget()) {
-        if (auto* action = focused_widget->action_for_key_event(*key_event)) {
-            if (action->is_enabled()) {
-                action->activate();
-                return;
-            }
-        }
-    }
+    GAction* action = nullptr;
 
-    if (auto* action = GApplication::the().action_for_key_event(*key_event)) {
-        if (action->is_enabled()) {
-            action->activate();
-            return;
-        }
+    if (auto* focused_widget = window->focused_widget())
+        action = focused_widget->action_for_key_event(*key_event);
+
+    if (!action)
+        action = window->action_for_key_event(*key_event);
+
+    if (!action)
+        action = GApplication::the().action_for_key_event(*key_event);
+
+    if (action && action->is_enabled()) {
+        action->activate();
+        return;
     }
     CEventLoop::current().post_event(*window, move(key_event));
 }

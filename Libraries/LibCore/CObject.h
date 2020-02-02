@@ -115,6 +115,7 @@ public:
     void deferred_invoke(Function<void(CObject&)>);
 
     bool is_widget() const { return m_widget; }
+    virtual bool is_action() const { return false; }
     virtual bool is_window() const { return false; }
 
     virtual void save_to(AK::JsonObject&);
