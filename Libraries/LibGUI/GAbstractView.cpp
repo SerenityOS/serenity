@@ -34,17 +34,19 @@
 #include <LibGUI/GScrollBar.h>
 #include <LibGUI/GTextBox.h>
 
-GAbstractView::GAbstractView(GWidget* parent)
-    : GScrollableWidget(parent)
+namespace GUI {
+
+AbstractView::AbstractView(Widget* parent)
+    : ScrollableWidget(parent)
     , m_selection(*this)
 {
 }
 
-GAbstractView::~GAbstractView()
+AbstractView::~AbstractView()
 {
 }
 
-void GAbstractView::set_model(RefPtr<GModel>&& model)
+void AbstractView::set_model(RefPtr<Model>&& model)
 {
     if (model == m_model)
         return;
@@ -56,13 +58,13 @@ void GAbstractView::set_model(RefPtr<GModel>&& model)
     did_update_model();
 }
 
-void GAbstractView::did_update_model()
+void AbstractView::did_update_model()
 {
     if (!model() || selection().first() != m_edit_index)
         stop_editing();
 }
 
-void GAbstractView::did_update_selection()
+void AbstractView::did_update_selection()
 {
     if (!model() || selection().first() != m_edit_index)
         stop_editing();
@@ -70,19 +72,19 @@ void GAbstractView::did_update_selection()
         on_selection(selection().first());
 }
 
-void GAbstractView::did_scroll()
+void AbstractView::did_scroll()
 {
     update_edit_widget_position();
 }
 
-void GAbstractView::update_edit_widget_position()
+void AbstractView::update_edit_widget_position()
 {
     if (!m_edit_widget)
         return;
     m_edit_widget->set_relative_rect(m_edit_widget_content_rect.translated(-horizontal_scrollbar().value(), -vertical_scrollbar().value()));
 }
 
-void GAbstractView::begin_editing(const GModelIndex& index)
+void AbstractView::begin_editing(const ModelIndex& index)
 {
     ASSERT(is_editable());
     ASSERT(model());
@@ -99,7 +101,7 @@ void GAbstractView::begin_editing(const GModelIndex& index)
     ASSERT(aid_create_editing_delegate);
     m_editing_delegate = aid_create_editing_delegate(index);
     m_editing_delegate->bind(*model(), index);
-    m_editing_delegate->set_value(model()->data(index, GModel::Role::Display));
+    m_editing_delegate->set_value(model()->data(index, Model::Role::Display));
     m_edit_widget = m_editing_delegate->widget();
     add_child(*m_edit_widget);
     m_edit_widget->move_to_back();
@@ -114,7 +116,7 @@ void GAbstractView::begin_editing(const GModelIndex& index)
     };
 }
 
-void GAbstractView::stop_editing()
+void AbstractView::stop_editing()
 {
     m_edit_index = {};
     if (m_edit_widget) {
@@ -123,7 +125,7 @@ void GAbstractView::stop_editing()
     }
 }
 
-void GAbstractView::select_all()
+void AbstractView::select_all()
 {
     ASSERT(model());
     int rows = model()->row_count();
@@ -135,13 +137,13 @@ void GAbstractView::select_all()
     }
 }
 
-void GAbstractView::activate(const GModelIndex& index)
+void AbstractView::activate(const ModelIndex& index)
 {
     if (on_activation)
         on_activation(index);
 }
 
-void GAbstractView::activate_selected()
+void AbstractView::activate_selected()
 {
     if (!on_activation)
         return;
@@ -151,7 +153,7 @@ void GAbstractView::activate_selected()
     });
 }
 
-void GAbstractView::notify_selection_changed(Badge<GModelSelection>)
+void AbstractView::notify_selection_changed(Badge<ModelSelection>)
 {
     did_update_selection();
     if (on_selection_change)
@@ -159,12 +161,12 @@ void GAbstractView::notify_selection_changed(Badge<GModelSelection>)
     update();
 }
 
-NonnullRefPtr<Font> GAbstractView::font_for_index(const GModelIndex& index) const
+NonnullRefPtr<Font> AbstractView::font_for_index(const ModelIndex& index) const
 {
     if (!model())
         return font();
 
-    auto font_data = model()->data(index, GModel::Role::Font);
+    auto font_data = model()->data(index, Model::Role::Font);
     if (font_data.is_font())
         return font_data.as_font();
 
@@ -174,14 +176,14 @@ NonnullRefPtr<Font> GAbstractView::font_for_index(const GModelIndex& index) cons
     return font();
 }
 
-void GAbstractView::mousedown_event(GMouseEvent& event)
+void AbstractView::mousedown_event(MouseEvent& event)
 {
-    GScrollableWidget::mousedown_event(event);
+    ScrollableWidget::mousedown_event(event);
 
     if (!model())
         return;
 
-    if (event.button() == GMouseButton::Left)
+    if (event.button() == MouseButton::Left)
         m_left_mousedown_position = event.position();
 
     auto index = index_at_event_position(event.position());
@@ -191,7 +193,7 @@ void GAbstractView::mousedown_event(GMouseEvent& event)
         m_selection.clear();
     } else if (event.modifiers() & Mod_Ctrl) {
         m_selection.toggle(index);
-    } else if (event.button() == GMouseButton::Left && m_selection.contains(index) && !m_model->drag_data_type().is_null()) {
+    } else if (event.button() == MouseButton::Left && m_selection.contains(index) && !m_model->drag_data_type().is_null()) {
         // We might be starting a drag, so don't throw away other selected items yet.
         m_might_drag = true;
     } else {
@@ -201,14 +203,14 @@ void GAbstractView::mousedown_event(GMouseEvent& event)
     update();
 }
 
-void GAbstractView::mousemove_event(GMouseEvent& event)
+void AbstractView::mousemove_event(MouseEvent& event)
 {
     if (!model() || !m_might_drag)
-        return GScrollableWidget::mousemove_event(event);
+        return ScrollableWidget::mousemove_event(event);
 
-    if (!(event.buttons() & GMouseButton::Left) || m_selection.is_empty()) {
+    if (!(event.buttons() & MouseButton::Left) || m_selection.is_empty()) {
         m_might_drag = false;
-        return GScrollableWidget::mousemove_event(event);
+        return ScrollableWidget::mousemove_event(event);
     }
 
     auto diff = event.position() - m_left_mousedown_position;
@@ -216,13 +218,13 @@ void GAbstractView::mousemove_event(GMouseEvent& event)
     constexpr int drag_distance_threshold = 5;
 
     if (distance_travelled_squared <= drag_distance_threshold)
-        return GScrollableWidget::mousemove_event(event);
+        return ScrollableWidget::mousemove_event(event);
 
     auto data_type = m_model->drag_data_type();
     ASSERT(!data_type.is_null());
 
     dbg() << "Initiate drag!";
-    auto drag_operation = GDragOperation::construct();
+    auto drag_operation = DragOperation::construct();
 
     RefPtr<GraphicsBitmap> bitmap;
 
@@ -235,14 +237,14 @@ void GAbstractView::mousemove_event(GMouseEvent& event)
             text_builder.append(", ");
         text_builder.append(text_data.to_string());
 
-        auto drag_data = m_model->data(index, GModel::Role::DragData);
+        auto drag_data = m_model->data(index, Model::Role::DragData);
         data_builder.append(drag_data.to_string());
         data_builder.append('\n');
 
         first = false;
 
         if (!bitmap) {
-            GVariant icon_data = model()->data(index, GModel::Role::Icon);
+            Variant icon_data = model()->data(index, Model::Role::Icon);
             if (icon_data.is_icon())
                 bitmap = icon_data.as_icon().bitmap_for_size(32);
         }
@@ -255,10 +257,10 @@ void GAbstractView::mousemove_event(GMouseEvent& event)
     auto outcome = drag_operation->exec();
 
     switch (outcome) {
-    case GDragOperation::Outcome::Accepted:
+    case DragOperation::Outcome::Accepted:
         dbg() << "Drag was accepted!";
         break;
-    case GDragOperation::Outcome::Cancelled:
+    case DragOperation::Outcome::Cancelled:
         dbg() << "Drag was cancelled!";
         break;
     default:
@@ -267,9 +269,9 @@ void GAbstractView::mousemove_event(GMouseEvent& event)
     }
 }
 
-void GAbstractView::mouseup_event(GMouseEvent& event)
+void AbstractView::mouseup_event(MouseEvent& event)
 {
-    GScrollableWidget::mouseup_event(event);
+    ScrollableWidget::mouseup_event(event);
 
     if (!model())
         return;
@@ -288,12 +290,12 @@ void GAbstractView::mouseup_event(GMouseEvent& event)
     }
 }
 
-void GAbstractView::doubleclick_event(GMouseEvent& event)
+void AbstractView::doubleclick_event(MouseEvent& event)
 {
     if (!model())
         return;
 
-    if (event.button() != GMouseButton::Left)
+    if (event.button() != MouseButton::Left)
         return;
 
     m_might_drag = false;
@@ -308,7 +310,7 @@ void GAbstractView::doubleclick_event(GMouseEvent& event)
     activate_selected();
 }
 
-void GAbstractView::context_menu_event(GContextMenuEvent& event)
+void AbstractView::context_menu_event(ContextMenuEvent& event)
 {
     if (!model())
         return;
@@ -322,4 +324,6 @@ void GAbstractView::context_menu_event(GContextMenuEvent& event)
 
     if (on_context_menu_request)
         on_context_menu_request(index, event);
+}
+
 }

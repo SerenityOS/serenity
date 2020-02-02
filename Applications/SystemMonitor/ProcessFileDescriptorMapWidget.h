@@ -28,9 +28,11 @@
 
 #include <LibGUI/GWidget.h>
 
-class GTableView;
+namespace GUI {
+class TableView;
+}
 
-class ProcessFileDescriptorMapWidget final : public GWidget {
+class ProcessFileDescriptorMapWidget final : public GUI::Widget {
     C_OBJECT(ProcessFileDescriptorMapWidget);
 public:
     virtual ~ProcessFileDescriptorMapWidget() override;
@@ -38,8 +40,8 @@ public:
     void set_pid(pid_t);
 
 private:
-    explicit ProcessFileDescriptorMapWidget(GWidget* parent);
+    explicit ProcessFileDescriptorMapWidget(GUI::Widget* parent);
 
-    RefPtr<GTableView> m_table_view;
+    RefPtr<GUI::TableView> m_table_view;
     pid_t m_pid { -1 };
 };

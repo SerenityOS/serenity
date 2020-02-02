@@ -28,17 +28,19 @@
 
 #include <LibGUI/GFrame.h>
 
-class GSplitter : public GFrame {
-    C_OBJECT(GSplitter)
+namespace GUI {
+
+class Splitter : public Frame {
+    C_OBJECT(Splitter)
 public:
-    virtual ~GSplitter() override;
+    virtual ~Splitter() override;
 
 protected:
-    GSplitter(Orientation, GWidget* parent);
+    Splitter(Orientation, Widget* parent);
 
-    virtual void mousedown_event(GMouseEvent&) override;
-    virtual void mousemove_event(GMouseEvent&) override;
-    virtual void mouseup_event(GMouseEvent&) override;
+    virtual void mousedown_event(MouseEvent&) override;
+    virtual void mousemove_event(MouseEvent&) override;
+    virtual void mouseup_event(MouseEvent&) override;
     virtual void enter_event(Core::Event&) override;
     virtual void leave_event(Core::Event&) override;
 
@@ -46,8 +48,10 @@ private:
     Orientation m_orientation;
     bool m_resizing { false };
     Point m_resize_origin;
-    WeakPtr<GWidget> m_first_resizee;
-    WeakPtr<GWidget> m_second_resizee;
+    WeakPtr<Widget> m_first_resizee;
+    WeakPtr<Widget> m_second_resizee;
     Size m_first_resizee_start_size;
     Size m_second_resizee_start_size;
 };
+
+}

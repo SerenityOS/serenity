@@ -30,19 +30,21 @@
 #include <WindowServer/WindowClientEndpoint.h>
 #include <WindowServer/WindowServerEndpoint.h>
 
-class GWindowServerConnection
+namespace GUI {
+
+class WindowServerConnection
     : public IServerConnection<WindowClientEndpoint, WindowServerEndpoint>
     , public WindowClientEndpoint {
-    C_OBJECT(GWindowServerConnection)
+    C_OBJECT(WindowServerConnection)
 public:
-    GWindowServerConnection()
+    WindowServerConnection()
         : IServerConnection(*this, "/tmp/portal/window")
     {
         handshake();
     }
 
     virtual void handshake() override;
-    static GWindowServerConnection& the();
+    static WindowServerConnection& the();
 
 private:
     virtual void handle(const WindowClient::Paint&) override;
@@ -73,3 +75,5 @@ private:
     virtual void handle(const WindowClient::UpdateSystemTheme&) override;
     virtual void handle(const WindowClient::WindowStateChanged&) override;
 };
+
+}

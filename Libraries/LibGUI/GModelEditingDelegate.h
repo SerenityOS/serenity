@@ -30,12 +30,14 @@
 #include <LibGUI/GTextBox.h>
 #include <LibGUI/GWidget.h>
 
-class GModelEditingDelegate {
-public:
-    GModelEditingDelegate() {}
-    virtual ~GModelEditingDelegate() {}
+namespace GUI {
 
-    void bind(GModel& model, const GModelIndex& index)
+class ModelEditingDelegate {
+public:
+    ModelEditingDelegate() {}
+    virtual ~ModelEditingDelegate() {}
+
+    void bind(Model& model, const ModelIndex& index)
     {
         if (m_model.ptr() == &model && m_index == index)
             return;
@@ -44,18 +46,18 @@ public:
         m_widget = create_widget();
     }
 
-    GWidget* widget() { return m_widget; }
-    const GWidget* widget() const { return m_widget; }
+    Widget* widget() { return m_widget; }
+    const Widget* widget() const { return m_widget; }
 
     Function<void()> on_commit;
 
-    virtual GVariant value() const = 0;
-    virtual void set_value(const GVariant&) = 0;
+    virtual Variant value() const = 0;
+    virtual void set_value(const Variant&) = 0;
 
     virtual void will_begin_editing() {}
 
 protected:
-    virtual RefPtr<GWidget> create_widget() = 0;
+    virtual RefPtr<Widget> create_widget() = 0;
     void commit()
     {
         if (on_commit)
@@ -63,24 +65,26 @@ protected:
     }
 
 private:
-    RefPtr<GModel> m_model;
-    GModelIndex m_index;
-    RefPtr<GWidget> m_widget;
+    RefPtr<Model> m_model;
+    ModelIndex m_index;
+    RefPtr<Widget> m_widget;
 };
 
-class GStringModelEditingDelegate : public GModelEditingDelegate {
+class StringModelEditingDelegate : public ModelEditingDelegate {
 public:
-    GStringModelEditingDelegate() {}
-    virtual ~GStringModelEditingDelegate() override {}
+    StringModelEditingDelegate() {}
+    virtual ~StringModelEditingDelegate() override {}
 
-    virtual RefPtr<GWidget> create_widget() override
+    virtual RefPtr<Widget> create_widget() override
     {
-        auto textbox = GTextBox::construct(nullptr);
+        auto textbox = TextBox::construct(nullptr);
         textbox->on_return_pressed = [this] {
             commit();
         };
         return textbox;
     }
-    virtual GVariant value() const override { return static_cast<const GTextBox*>(widget())->text(); }
-    virtual void set_value(const GVariant& value) override { static_cast<GTextBox*>(widget())->set_text(value.to_string()); }
+    virtual Variant value() const override { return static_cast<const TextBox*>(widget())->text(); }
+    virtual void set_value(const Variant& value) override { static_cast<TextBox*>(widget())->set_text(value.to_string()); }
 };
+
+}

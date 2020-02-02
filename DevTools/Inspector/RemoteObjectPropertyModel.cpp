@@ -32,7 +32,7 @@ RemoteObjectPropertyModel::RemoteObjectPropertyModel(RemoteObject& object)
 {
 }
 
-int RemoteObjectPropertyModel::row_count(const GModelIndex&) const
+int RemoteObjectPropertyModel::row_count(const GUI::ModelIndex&) const
 {
     return m_properties.size();
 }
@@ -48,7 +48,7 @@ String RemoteObjectPropertyModel::column_name(int column) const
     ASSERT_NOT_REACHED();
 }
 
-GVariant RemoteObjectPropertyModel::data(const GModelIndex& index, Role role) const
+GUI::Variant RemoteObjectPropertyModel::data(const GUI::ModelIndex& index, Role role) const
 {
     auto& property = m_properties[index.row()];
     if (role == Role::Display) {

@@ -45,43 +45,43 @@ VBForm* VBForm::current()
     return s_current;
 }
 
-VBForm::VBForm(const String& name, GWidget* parent)
-    : GWidget(parent)
+VBForm::VBForm(const String& name, GUI::Widget* parent)
+    : GUI::Widget(parent)
     , m_name(name)
 {
     s_current = this;
     set_fill_with_background_color(true);
     set_greedy_for_hits(true);
 
-    m_context_menu = GMenu::construct();
-    m_context_menu->add_action(GCommonActions::make_move_to_front_action([this](auto&) {
+    m_context_menu = GUI::Menu::construct();
+    m_context_menu->add_action(GUI::CommonActions::make_move_to_front_action([this](auto&) {
         if (auto* widget = single_selected_widget())
             widget->gwidget()->move_to_front();
     }));
-    m_context_menu->add_action(GCommonActions::make_move_to_back_action([this](auto&) {
+    m_context_menu->add_action(GUI::CommonActions::make_move_to_back_action([this](auto&) {
         if (auto* widget = single_selected_widget())
             widget->gwidget()->move_to_back();
     }));
     m_context_menu->add_separator();
-    m_context_menu->add_action(GAction::create("Lay out horizontally", load_png("/res/icons/16x16/layout-horizontally.png"), [this](auto&) {
+    m_context_menu->add_action(GUI::Action::create("Lay out horizontally", load_png("/res/icons/16x16/layout-horizontally.png"), [this](auto&) {
         if (auto* widget = single_selected_widget()) {
             dbg() << "Giving " << *widget->gwidget() << " a horizontal box layout";
-            widget->gwidget()->set_layout(make<GHBoxLayout>());
+            widget->gwidget()->set_layout(make<GUI::HBoxLayout>());
         }
     }));
-    m_context_menu->add_action(GAction::create("Lay out vertically", load_png("/res/icons/16x16/layout-vertically.png"), [this](auto&) {
+    m_context_menu->add_action(GUI::Action::create("Lay out vertically", load_png("/res/icons/16x16/layout-vertically.png"), [this](auto&) {
         if (auto* widget = single_selected_widget()) {
             dbg() << "Giving " << *widget->gwidget() << " a vertical box layout";
-            widget->gwidget()->set_layout(make<GVBoxLayout>());
+            widget->gwidget()->set_layout(make<GUI::VBoxLayout>());
         }
     }));
     m_context_menu->add_separator();
-    m_context_menu->add_action(GCommonActions::make_delete_action([this](auto&) {
+    m_context_menu->add_action(GUI::CommonActions::make_delete_action([this](auto&) {
         delete_selected_widgets();
     }));
 }
 
-void VBForm::context_menu_event(GContextMenuEvent& event)
+void VBForm::context_menu_event(GUI::ContextMenuEvent& event)
 {
     m_context_menu->popup(event.screen_position());
 }
@@ -102,9 +102,9 @@ VBForm::~VBForm()
 {
 }
 
-void VBForm::paint_event(GPaintEvent& event)
+void VBForm::paint_event(GUI::PaintEvent& event)
 {
-    GPainter painter(*this);
+    GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
     for (int y = 0; y < height(); y += m_grid_size) {
@@ -114,9 +114,9 @@ void VBForm::paint_event(GPaintEvent& event)
     }
 }
 
-void VBForm::second_paint_event(GPaintEvent& event)
+void VBForm::second_paint_event(GUI::PaintEvent& event)
 {
-    GPainter painter(*this);
+    GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
     for (auto& widget : m_widgets) {
@@ -140,7 +140,7 @@ bool VBForm::is_selected(const VBWidget& widget) const
 
 VBWidget* VBForm::widget_at(const Point& position)
 {
-    auto result = hit_test(position, GWidget::ShouldRespectGreediness::No);
+    auto result = hit_test(position, GUI::Widget::ShouldRespectGreediness::No);
     if (!result.widget)
         return nullptr;
     auto* gwidget = result.widget;
@@ -152,14 +152,14 @@ VBWidget* VBForm::widget_at(const Point& position)
     return nullptr;
 }
 
-void VBForm::grabber_mousedown_event(GMouseEvent& event, Direction grabber)
+void VBForm::grabber_mousedown_event(GUI::MouseEvent& event, Direction grabber)
 {
     m_transform_event_origin = event.position();
     for_each_selected_widget([](auto& widget) { widget.capture_transform_origin_rect(); });
     m_resize_direction = grabber;
 }
 
-void VBForm::keydown_event(GKeyEvent& event)
+void VBForm::keydown_event(GUI::KeyEvent& event)
 {
     if (event.key() == KeyCode::Key_Delete) {
         delete_selected_widgets();
@@ -252,7 +252,7 @@ void VBForm::remove_from_selection(VBWidget& widget)
     update();
 }
 
-void VBForm::mousedown_event(GMouseEvent& event)
+void VBForm::mousedown_event(GUI::MouseEvent& event)
 {
     if (m_resize_direction == Direction::None) {
         bool hit_grabber = false;
@@ -273,7 +273,7 @@ void VBForm::mousedown_event(GMouseEvent& event)
         set_single_selected_widget(nullptr);
         return;
     }
-    if (event.button() == GMouseButton::Left || event.button() == GMouseButton::Right) {
+    if (event.button() == GUI::MouseButton::Left || event.button() == GUI::MouseButton::Right) {
         m_transform_event_origin = event.position();
         if (event.modifiers() == Mod_Ctrl)
             remove_from_selection(*widget);
@@ -286,9 +286,9 @@ void VBForm::mousedown_event(GMouseEvent& event)
     }
 }
 
-void VBForm::mousemove_event(GMouseEvent& event)
+void VBForm::mousemove_event(GUI::MouseEvent& event)
 {
-    if (event.buttons() & GMouseButton::Left) {
+    if (event.buttons() & GUI::MouseButton::Left) {
         if (m_resize_direction == Direction::None) {
             update();
             auto delta = event.position() - m_transform_event_origin;
@@ -383,7 +383,7 @@ void VBForm::load_from_file(const String& path)
 {
     auto file = Core::File::construct(path);
     if (!file->open(Core::IODevice::ReadOnly)) {
-        GMessageBox::show(String::format("Could not open '%s' for reading", path.characters()), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
+        GUI::MessageBox::show(String::format("Could not open '%s' for reading", path.characters()), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
         return;
     }
 
@@ -391,7 +391,7 @@ void VBForm::load_from_file(const String& path)
     auto form_json = JsonValue::from_string(file_contents);
 
     if (!form_json.is_object()) {
-        GMessageBox::show(String::format("Could not parse '%s'", path.characters()), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
+        GUI::MessageBox::show(String::format("Could not parse '%s'", path.characters()), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
         return;
     }
 
@@ -419,7 +419,7 @@ void VBForm::write_to_file(const String& path)
 {
     auto file = Core::File::construct(path);
     if (!file->open(Core::IODevice::WriteOnly)) {
-        GMessageBox::show(String::format("Could not open '%s' for writing", path.characters()), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
+        GUI::MessageBox::show(String::format("Could not open '%s' for writing", path.characters()), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
         return;
     }
 
@@ -459,9 +459,9 @@ void VBForm::dump()
     }
 }
 
-void VBForm::mouseup_event(GMouseEvent& event)
+void VBForm::mouseup_event(GUI::MouseEvent& event)
 {
-    if (event.button() == GMouseButton::Left) {
+    if (event.button() == GUI::MouseButton::Left) {
         m_transform_event_origin = {};
         m_resize_direction = Direction::None;
     }
@@ -496,22 +496,22 @@ void VBForm::set_cursor_type_from_grabber(Direction grabber)
     switch (grabber) {
     case Direction::Up:
     case Direction::Down:
-        window()->set_override_cursor(GStandardCursor::ResizeVertical);
+        window()->set_override_cursor(GUI::StandardCursor::ResizeVertical);
         break;
     case Direction::Left:
     case Direction::Right:
-        window()->set_override_cursor(GStandardCursor::ResizeHorizontal);
+        window()->set_override_cursor(GUI::StandardCursor::ResizeHorizontal);
         break;
     case Direction::UpLeft:
     case Direction::DownRight:
-        window()->set_override_cursor(GStandardCursor::ResizeDiagonalTLBR);
+        window()->set_override_cursor(GUI::StandardCursor::ResizeDiagonalTLBR);
         break;
     case Direction::UpRight:
     case Direction::DownLeft:
-        window()->set_override_cursor(GStandardCursor::ResizeDiagonalBLTR);
+        window()->set_override_cursor(GUI::StandardCursor::ResizeDiagonalBLTR);
         break;
     case Direction::None:
-        window()->set_override_cursor(GStandardCursor::None);
+        window()->set_override_cursor(GUI::StandardCursor::None);
         break;
     }
 

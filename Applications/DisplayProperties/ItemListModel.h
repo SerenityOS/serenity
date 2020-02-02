@@ -31,18 +31,18 @@
 #include <LibGUI/GModel.h>
 
 template<typename T>
-class ItemListModel final : public GModel {
+class ItemListModel final : public GUI::Model {
 public:
     static NonnullRefPtr<ItemListModel> create(Vector<T>& data) { return adopt(*new ItemListModel<T>(data)); }
 
     virtual ~ItemListModel() override {}
 
-    virtual int row_count(const GModelIndex&) const override
+    virtual int row_count(const GUI::ModelIndex&) const override
     {
         return m_data.size();
     }
 
-    virtual int column_count(const GModelIndex&) const override
+    virtual int column_count(const GUI::ModelIndex&) const override
     {
         return 1;
     }
@@ -57,7 +57,7 @@ public:
         return { 70, TextAlignment::CenterLeft };
     }
 
-    virtual GVariant data(const GModelIndex& index, Role role = Role::Display) const override
+    virtual GUI::Variant data(const GUI::ModelIndex& index, Role role = Role::Display) const override
     {
         if (role == Role::Display)
             return m_data.at(index.row());

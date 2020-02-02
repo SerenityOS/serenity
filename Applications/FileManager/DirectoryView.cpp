@@ -49,7 +49,7 @@ static String human_readable_size(size_t size)
     return number_string_with_one_decimal((float)size / (float)GB, "GB");
 }
 
-void DirectoryView::handle_activation(const GModelIndex& index)
+void DirectoryView::handle_activation(const GUI::ModelIndex& index)
 {
     if (!index.is_valid())
         return;
@@ -118,24 +118,24 @@ void DirectoryView::handle_activation(const GModelIndex& index)
     }
 };
 
-DirectoryView::DirectoryView(GWidget* parent)
-    : GStackWidget(parent)
-    , m_model(GFileSystemModel::create())
+DirectoryView::DirectoryView(GUI::Widget* parent)
+    : GUI::StackWidget(parent)
+    , m_model(GUI::FileSystemModel::create())
 {
     set_active_widget(nullptr);
-    m_item_view = GItemView::construct(this);
+    m_item_view = GUI::ItemView::construct(this);
     m_item_view->set_model(model());
 
-    m_columns_view = GColumnsView::construct(this);
+    m_columns_view = GUI::ColumnsView::construct(this);
     m_columns_view->set_model(model());
 
-    m_table_view = GTableView::construct(this);
-    m_table_view->set_model(GSortingProxyModel::create(m_model));
+    m_table_view = GUI::TableView::construct(this);
+    m_table_view->set_model(GUI::SortingProxyModel::create(m_model));
 
-    m_table_view->model()->set_key_column_and_sort_order(GFileSystemModel::Column::Name, GSortOrder::Ascending);
+    m_table_view->model()->set_key_column_and_sort_order(GUI::FileSystemModel::Column::Name, GUI::SortOrder::Ascending);
 
-    m_item_view->set_model_column(GFileSystemModel::Column::Name);
-    m_columns_view->set_model_column(GFileSystemModel::Column::Name);
+    m_item_view->set_model_column(GUI::FileSystemModel::Column::Name);
+    m_columns_view->set_model_column(GUI::FileSystemModel::Column::Name);
 
     m_model->on_root_path_change = [this] {
         m_table_view->selection().clear();
@@ -160,14 +160,14 @@ DirectoryView::DirectoryView(GWidget* parent)
             on_thumbnail_progress(done, total);
     };
 
-    m_item_view->on_activation = [&](const GModelIndex& index) {
+    m_item_view->on_activation = [&](const GUI::ModelIndex& index) {
         handle_activation(index);
     };
-    m_columns_view->on_activation = [&](const GModelIndex& index) {
+    m_columns_view->on_activation = [&](const GUI::ModelIndex& index) {
         handle_activation(index);
     };
     m_table_view->on_activation = [&](auto& index) {
-        auto& filter_model = (GSortingProxyModel&)*m_table_view->model();
+        auto& filter_model = (GUI::SortingProxyModel&)*m_table_view->model();
         handle_activation(filter_model.map_to_target(index));
     };
 
@@ -292,7 +292,7 @@ void DirectoryView::update_statusbar()
 
     current_view().selection().for_each_index([&](auto& index) {
         auto& model = *current_view().model();
-        auto size_index = model.sibling(index.row(), GFileSystemModel::Column::Size, model.parent_index(index));
+        auto size_index = model.sibling(index.row(), GUI::FileSystemModel::Column::Size, model.parent_index(index));
         auto file_size = model.data(size_index).to_i32();
         selected_byte_count += file_size;
     });
@@ -311,7 +311,7 @@ void DirectoryView::update_statusbar()
 
         // FIXME: This is disgusting. This code should not even be aware that there is a GSortingProxyModel in the table view.
         if (m_view_mode == ViewMode::List) {
-            auto& filter_model = (GSortingProxyModel&)*m_table_view->model();
+            auto& filter_model = (GUI::SortingProxyModel&)*m_table_view->model();
             index = filter_model.map_to_target(index);
         }
 

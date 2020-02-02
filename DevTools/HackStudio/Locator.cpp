@@ -37,7 +37,7 @@ static RefPtr<GraphicsBitmap> s_file_icon;
 static RefPtr<GraphicsBitmap> s_cplusplus_icon;
 static RefPtr<GraphicsBitmap> s_header_icon;
 
-class LocatorSuggestionModel final : public GModel {
+class LocatorSuggestionModel final : public GUI::Model {
 public:
     explicit LocatorSuggestionModel(Vector<String>&& suggestions)
         : m_suggestions(move(suggestions))
@@ -49,9 +49,9 @@ public:
         Name,
         __Column_Count,
     };
-    virtual int row_count(const GModelIndex& = GModelIndex()) const override { return m_suggestions.size(); }
-    virtual int column_count(const GModelIndex& = GModelIndex()) const override { return Column::__Column_Count; }
-    virtual GVariant data(const GModelIndex& index, Role role = Role::Display) const override
+    virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_suggestions.size(); }
+    virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return Column::__Column_Count; }
+    virtual GUI::Variant data(const GUI::ModelIndex& index, Role role = Role::Display) const override
     {
         auto& suggestion = m_suggestions.at(index.row());
         if (role == Role::Display) {
@@ -73,7 +73,7 @@ private:
     Vector<String> m_suggestions;
 };
 
-class LocatorTextBox final : public GTextBox {
+class LocatorTextBox final : public GUI::TextBox {
     C_OBJECT(LocatorTextBox)
 public:
     virtual ~LocatorTextBox() override {}
@@ -81,25 +81,25 @@ public:
     Function<void()> on_up;
     Function<void()> on_down;
 
-    virtual void keydown_event(GKeyEvent& event) override
+    virtual void keydown_event(GUI::KeyEvent& event) override
     {
         if (event.key() == Key_Up)
             on_up();
         else if (event.key() == Key_Down)
             on_down();
 
-        GTextBox::keydown_event(event);
+        GUI::TextBox::keydown_event(event);
     }
 
 private:
-    LocatorTextBox(GWidget* parent)
-        : GTextBox(parent)
+    LocatorTextBox(GUI::Widget* parent)
+        : GUI::TextBox(parent)
     {
     }
 };
 
-Locator::Locator(GWidget* parent)
-    : GWidget(parent)
+Locator::Locator(GUI::Widget* parent)
+    : GUI::Widget(parent)
 {
     if (!s_cplusplus_icon) {
         s_file_icon = GraphicsBitmap::load_from_file("/res/icons/16x16/filetype-unknown.png");
@@ -107,8 +107,8 @@ Locator::Locator(GWidget* parent)
         s_header_icon = GraphicsBitmap::load_from_file("/res/icons/16x16/filetype-header.png");
     }
 
-    set_layout(make<GVBoxLayout>());
-    set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    set_layout(make<GUI::VBoxLayout>());
+    set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     set_preferred_size(0, 20);
     m_textbox = LocatorTextBox::construct(this);
     m_textbox->on_change = [this] {
@@ -118,7 +118,7 @@ Locator::Locator(GWidget* parent)
         m_popup_window->hide();
     };
     m_textbox->on_up = [this] {
-        GModelIndex new_index = m_suggestion_view->selection().first();
+        GUI::ModelIndex new_index = m_suggestion_view->selection().first();
         if (new_index.is_valid())
             new_index = m_suggestion_view->model()->index(new_index.row() - 1);
         else
@@ -130,7 +130,7 @@ Locator::Locator(GWidget* parent)
         }
     };
     m_textbox->on_down = [this] {
-        GModelIndex new_index = m_suggestion_view->selection().first();
+        GUI::ModelIndex new_index = m_suggestion_view->selection().first();
         if (new_index.is_valid())
             new_index = m_suggestion_view->model()->index(new_index.row() + 1);
         else
@@ -149,12 +149,12 @@ Locator::Locator(GWidget* parent)
         open_suggestion(selected_index);
     };
 
-    m_popup_window = GWindow::construct();
+    m_popup_window = GUI::Window::construct();
     // FIXME: This is obviously not a tooltip window, but it's the closest thing to what we want atm.
-    m_popup_window->set_window_type(GWindowType::Tooltip);
+    m_popup_window->set_window_type(GUI::WindowType::Tooltip);
     m_popup_window->set_rect(0, 0, 500, 200);
 
-    m_suggestion_view = GTableView::construct(nullptr);
+    m_suggestion_view = GUI::TableView::construct(nullptr);
     m_suggestion_view->set_size_columns_to_fit_content(true);
     m_suggestion_view->set_headers_visible(false);
     m_popup_window->set_main_widget(m_suggestion_view);
@@ -168,10 +168,10 @@ Locator::~Locator()
 {
 }
 
-void Locator::open_suggestion(const GModelIndex& index)
+void Locator::open_suggestion(const GUI::ModelIndex& index)
 {
     auto filename_index = m_suggestion_view->model()->index(index.row(), LocatorSuggestionModel::Column::Name);
-    auto filename = m_suggestion_view->model()->data(filename_index, GModel::Role::Display).to_string();
+    auto filename = m_suggestion_view->model()->data(filename_index, GUI::Model::Role::Display).to_string();
     open_file(filename);
     close();
 }

@@ -36,7 +36,7 @@ class RollWidget;
 class KeysWidget;
 class KnobsWidget;
 
-class MainWidget final : public GWidget {
+class MainWidget final : public GUI::Widget {
     C_OBJECT(MainWidget)
 public:
     virtual ~MainWidget() override;
@@ -46,8 +46,8 @@ public:
 private:
     explicit MainWidget(AudioEngine&);
 
-    virtual void keydown_event(GKeyEvent&) override;
-    virtual void keyup_event(GKeyEvent&) override;
+    virtual void keydown_event(GUI::KeyEvent&) override;
+    virtual void keyup_event(GUI::KeyEvent&) override;
     virtual void custom_event(Core::CustomEvent&) override;
 
     void note_key_action(int key_code, Switch);
@@ -57,7 +57,7 @@ private:
 
     RefPtr<WaveWidget> m_wave_widget;
     RefPtr<RollWidget> m_roll_widget;
-    RefPtr<GWidget> m_keys_and_knobs_container;
+    RefPtr<GUI::Widget> m_keys_and_knobs_container;
     RefPtr<KeysWidget> m_keys_widget;
     RefPtr<KnobsWidget> m_knobs_widget;
 

@@ -30,23 +30,25 @@
 #include <LibDraw/Point.h>
 #include <LibGUI/GActionGroup.h>
 
-class GMenu;
+namespace GUI {
+class Menu;
+}
 
 class PenTool final : public Tool {
 public:
     PenTool();
     virtual ~PenTool() override;
 
-    virtual void on_mousedown(GMouseEvent&) override;
-    virtual void on_mousemove(GMouseEvent&) override;
-    virtual void on_mouseup(GMouseEvent&) override;
-    virtual void on_contextmenu(GContextMenuEvent&) override;
+    virtual void on_mousedown(GUI::MouseEvent&) override;
+    virtual void on_mousemove(GUI::MouseEvent&) override;
+    virtual void on_mouseup(GUI::MouseEvent&) override;
+    virtual void on_contextmenu(GUI::ContextMenuEvent&) override;
 
 private:
     virtual const char* class_name() const override { return "PenTool"; }
 
     Point m_last_drawing_event_position { -1, -1 };
-    RefPtr<GMenu> m_context_menu;
+    RefPtr<GUI::Menu> m_context_menu;
     int m_thickness { 1 };
-    GActionGroup m_thickness_actions;
+    GUI::ActionGroup m_thickness_actions;
 };

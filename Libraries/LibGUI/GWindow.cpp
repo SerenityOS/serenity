@@ -42,10 +42,12 @@
 
 //#define UPDATE_COALESCING_DEBUG
 
-static NeverDestroyed<HashTable<GWindow*>> all_windows;
-static NeverDestroyed<HashMap<int, GWindow*>> reified_windows;
+namespace GUI {
 
-GWindow* GWindow::from_window_id(int window_id)
+static NeverDestroyed<HashTable<Window*>> all_windows;
+static NeverDestroyed<HashMap<int, Window*>> reified_windows;
+
+Window* Window::from_window_id(int window_id)
 {
     auto it = reified_windows->find(window_id);
     if (it != reified_windows->end())
@@ -53,7 +55,7 @@ GWindow* GWindow::from_window_id(int window_id)
     return nullptr;
 }
 
-GWindow::GWindow(Core::Object* parent)
+Window::Window(Core::Object* parent)
     : Core::Object(parent)
 {
     all_windows->set(this);
@@ -61,30 +63,30 @@ GWindow::GWindow(Core::Object* parent)
     m_title_when_windowless = "GWindow";
 }
 
-GWindow::~GWindow()
+Window::~Window()
 {
     all_windows->remove(this);
     hide();
 }
 
-void GWindow::close()
+void Window::close()
 {
     hide();
 }
 
-void GWindow::move_to_front()
+void Window::move_to_front()
 {
     if (!m_window_id)
         return;
 
-    GWindowServerConnection::the().send_sync<WindowServer::MoveWindowToFront>(m_window_id);
+    WindowServerConnection::the().send_sync<WindowServer::MoveWindowToFront>(m_window_id);
 }
 
-void GWindow::show()
+void Window::show()
 {
     if (m_window_id)
         return;
-    auto response = GWindowServerConnection::the().send_sync<WindowServer::CreateWindow>(
+    auto response = WindowServerConnection::the().send_sync<WindowServer::CreateWindow>(
         m_rect_when_windowless,
         m_has_alpha_channel,
         m_modal,
@@ -102,16 +104,16 @@ void GWindow::show()
     apply_icon();
 
     reified_windows->set(m_window_id, this);
-    GApplication::the().did_create_window({});
+    Application::the().did_create_window({});
     update();
 }
 
-void GWindow::hide()
+void Window::hide()
 {
     if (!m_window_id)
         return;
     reified_windows->remove(m_window_id);
-    GWindowServerConnection::the().send_sync<WindowServer::DestroyWindow>(m_window_id);
+    WindowServerConnection::the().send_sync<WindowServer::DestroyWindow>(m_window_id);
     m_window_id = 0;
     m_pending_paint_event_rects.clear();
     m_back_bitmap = nullptr;
@@ -125,32 +127,32 @@ void GWindow::hide()
         }
     }
     if (!app_has_visible_windows)
-        GApplication::the().did_delete_last_window({});
+        Application::the().did_delete_last_window({});
 }
 
-void GWindow::set_title(const StringView& title)
+void Window::set_title(const StringView& title)
 {
     m_title_when_windowless = title;
     if (!m_window_id)
         return;
-    GWindowServerConnection::the().send_sync<WindowServer::SetWindowTitle>(m_window_id, title);
+    WindowServerConnection::the().send_sync<WindowServer::SetWindowTitle>(m_window_id, title);
 }
 
-String GWindow::title() const
+String Window::title() const
 {
     if (!m_window_id)
         return m_title_when_windowless;
-    return GWindowServerConnection::the().send_sync<WindowServer::GetWindowTitle>(m_window_id)->title();
+    return WindowServerConnection::the().send_sync<WindowServer::GetWindowTitle>(m_window_id)->title();
 }
 
-Rect GWindow::rect() const
+Rect Window::rect() const
 {
     if (!m_window_id)
         return m_rect_when_windowless;
-    return GWindowServerConnection::the().send_sync<WindowServer::GetWindowRect>(m_window_id)->rect();
+    return WindowServerConnection::the().send_sync<WindowServer::GetWindowRect>(m_window_id)->rect();
 }
 
-void GWindow::set_rect(const Rect& a_rect)
+void Window::set_rect(const Rect& a_rect)
 {
     m_rect_when_windowless = a_rect;
     if (!m_window_id) {
@@ -158,7 +160,7 @@ void GWindow::set_rect(const Rect& a_rect)
             m_main_widget->resize(m_rect_when_windowless.size());
         return;
     }
-    GWindowServerConnection::the().send_sync<WindowServer::SetWindowRect>(m_window_id, a_rect);
+    WindowServerConnection::the().send_sync<WindowServer::SetWindowRect>(m_window_id, a_rect);
     if (m_back_bitmap && m_back_bitmap->size() != a_rect.size())
         m_back_bitmap = nullptr;
     if (m_front_bitmap && m_front_bitmap->size() != a_rect.size())
@@ -167,43 +169,43 @@ void GWindow::set_rect(const Rect& a_rect)
         m_main_widget->resize(a_rect.size());
 }
 
-void GWindow::set_window_type(GWindowType window_type)
+void Window::set_window_type(WindowType window_type)
 {
     m_window_type = window_type;
 }
 
-void GWindow::set_override_cursor(GStandardCursor cursor)
+void Window::set_override_cursor(StandardCursor cursor)
 {
     if (!m_window_id)
         return;
-    GWindowServerConnection::the().send_sync<WindowServer::SetWindowOverrideCursor>(m_window_id, (u32)cursor);
+    WindowServerConnection::the().send_sync<WindowServer::SetWindowOverrideCursor>(m_window_id, (u32)cursor);
 }
 
-void GWindow::event(Core::Event& event)
+void Window::event(Core::Event& event)
 {
-    if (event.type() == GEvent::Drop) {
-        auto& drop_event = static_cast<GDropEvent&>(event);
+    if (event.type() == Event::Drop) {
+        auto& drop_event = static_cast<DropEvent&>(event);
         if (!m_main_widget)
             return;
         auto result = m_main_widget->hit_test(drop_event.position());
-        auto local_event = make<GDropEvent>(result.local_position, drop_event.text(), drop_event.data_type(), drop_event.data());
+        auto local_event = make<DropEvent>(result.local_position, drop_event.text(), drop_event.data_type(), drop_event.data());
         ASSERT(result.widget);
         return result.widget->dispatch_event(*local_event, this);
     }
 
-    if (event.type() == GEvent::MouseUp || event.type() == GEvent::MouseDown || event.type() == GEvent::MouseDoubleClick || event.type() == GEvent::MouseMove || event.type() == GEvent::MouseWheel) {
-        auto& mouse_event = static_cast<GMouseEvent&>(event);
+    if (event.type() == Event::MouseUp || event.type() == Event::MouseDown || event.type() == Event::MouseDoubleClick || event.type() == Event::MouseMove || event.type() == Event::MouseWheel) {
+        auto& mouse_event = static_cast<MouseEvent&>(event);
         if (m_global_cursor_tracking_widget) {
             auto window_relative_rect = m_global_cursor_tracking_widget->window_relative_rect();
             Point local_point { mouse_event.x() - window_relative_rect.x(), mouse_event.y() - window_relative_rect.y() };
-            auto local_event = make<GMouseEvent>((GEvent::Type)event.type(), local_point, mouse_event.buttons(), mouse_event.button(), mouse_event.modifiers(), mouse_event.wheel_delta());
+            auto local_event = make<MouseEvent>((Event::Type)event.type(), local_point, mouse_event.buttons(), mouse_event.button(), mouse_event.modifiers(), mouse_event.wheel_delta());
             m_global_cursor_tracking_widget->dispatch_event(*local_event, this);
             return;
         }
         if (m_automatic_cursor_tracking_widget) {
             auto window_relative_rect = m_automatic_cursor_tracking_widget->window_relative_rect();
             Point local_point { mouse_event.x() - window_relative_rect.x(), mouse_event.y() - window_relative_rect.y() };
-            auto local_event = make<GMouseEvent>((GEvent::Type)event.type(), local_point, mouse_event.buttons(), mouse_event.button(), mouse_event.modifiers(), mouse_event.wheel_delta());
+            auto local_event = make<MouseEvent>((Event::Type)event.type(), local_point, mouse_event.buttons(), mouse_event.button(), mouse_event.modifiers(), mouse_event.wheel_delta());
             m_automatic_cursor_tracking_widget->dispatch_event(*local_event, this);
             if (mouse_event.buttons() == 0)
                 m_automatic_cursor_tracking_widget = nullptr;
@@ -212,7 +214,7 @@ void GWindow::event(Core::Event& event)
         if (!m_main_widget)
             return;
         auto result = m_main_widget->hit_test(mouse_event.position());
-        auto local_event = make<GMouseEvent>((GEvent::Type)event.type(), result.local_position, mouse_event.buttons(), mouse_event.button(), mouse_event.modifiers(), mouse_event.wheel_delta());
+        auto local_event = make<MouseEvent>((Event::Type)event.type(), result.local_position, mouse_event.buttons(), mouse_event.button(), mouse_event.modifiers(), mouse_event.wheel_delta());
         ASSERT(result.widget);
         set_hovered_widget(result.widget);
         if (mouse_event.buttons() != 0 && !m_automatic_cursor_tracking_widget)
@@ -222,12 +224,12 @@ void GWindow::event(Core::Event& event)
         return;
     }
 
-    if (event.type() == GEvent::MultiPaint) {
+    if (event.type() == Event::MultiPaint) {
         if (!m_window_id)
             return;
         if (!m_main_widget)
             return;
-        auto& paint_event = static_cast<GMultiPaintEvent&>(event);
+        auto& paint_event = static_cast<MultiPaintEvent&>(event);
         auto rects = paint_event.rects();
         ASSERT(!rects.is_empty());
         if (m_back_bitmap && m_back_bitmap->size() != paint_event.window_size()) {
@@ -254,7 +256,7 @@ void GWindow::event(Core::Event& event)
         }
 
         for (auto& rect : rects)
-            m_main_widget->dispatch_event(*make<GPaintEvent>(rect), this);
+            m_main_widget->dispatch_event(*make<PaintEvent>(rect), this);
 
         if (m_double_buffering_enabled)
             flip(rects);
@@ -265,12 +267,12 @@ void GWindow::event(Core::Event& event)
             Vector<Rect> rects_to_send;
             for (auto& r : rects)
                 rects_to_send.append(r);
-            GWindowServerConnection::the().post_message(WindowServer::DidFinishPainting(m_window_id, rects_to_send));
+            WindowServerConnection::the().post_message(WindowServer::DidFinishPainting(m_window_id, rects_to_send));
         }
         return;
     }
 
-    if (event.type() == GEvent::KeyUp || event.type() == GEvent::KeyDown) {
+    if (event.type() == Event::KeyUp || event.type() == Event::KeyDown) {
         if (m_focused_widget)
             return m_focused_widget->dispatch_event(event, this);
         if (m_main_widget)
@@ -278,8 +280,8 @@ void GWindow::event(Core::Event& event)
         return;
     }
 
-    if (event.type() == GEvent::WindowBecameActive || event.type() == GEvent::WindowBecameInactive) {
-        m_is_active = event.type() == GEvent::WindowBecameActive;
+    if (event.type() == Event::WindowBecameActive || event.type() == Event::WindowBecameInactive) {
+        m_is_active = event.type() == Event::WindowBecameActive;
         if (m_main_widget)
             m_main_widget->dispatch_event(event, this);
         if (m_focused_widget)
@@ -287,22 +289,22 @@ void GWindow::event(Core::Event& event)
         return;
     }
 
-    if (event.type() == GEvent::WindowCloseRequest) {
+    if (event.type() == Event::WindowCloseRequest) {
         if (on_close_request) {
-            if (on_close_request() == GWindow::CloseRequestDecision::StayOpen)
+            if (on_close_request() == Window::CloseRequestDecision::StayOpen)
                 return;
         }
         close();
         return;
     }
 
-    if (event.type() == GEvent::WindowLeft) {
+    if (event.type() == Event::WindowLeft) {
         set_hovered_widget(nullptr);
         return;
     }
 
-    if (event.type() == GEvent::Resize) {
-        auto new_size = static_cast<GResizeEvent&>(event).size();
+    if (event.type() == Event::Resize) {
+        auto new_size = static_cast<ResizeEvent&>(event).size();
         if (m_back_bitmap && m_back_bitmap->size() != new_size)
             m_back_bitmap = nullptr;
         if (!m_pending_paint_event_rects.is_empty()) {
@@ -314,23 +316,23 @@ void GWindow::event(Core::Event& event)
         return;
     }
 
-    if (event.type() > GEvent::__Begin_WM_Events && event.type() < GEvent::__End_WM_Events)
-        return wm_event(static_cast<GWMEvent&>(event));
+    if (event.type() > Event::__Begin_WM_Events && event.type() < Event::__End_WM_Events)
+        return wm_event(static_cast<WMEvent&>(event));
 
     Core::Object::event(event);
 }
 
-bool GWindow::is_visible() const
+bool Window::is_visible() const
 {
     return m_window_id != 0;
 }
 
-void GWindow::update()
+void Window::update()
 {
     update({ 0, 0, width(), height() });
 }
 
-void GWindow::update(const Rect& a_rect)
+void Window::update(const Rect& a_rect)
 {
     if (!m_window_id)
         return;
@@ -352,13 +354,13 @@ void GWindow::update(const Rect& a_rect)
             Vector<Rect> rects_to_send;
             for (auto& r : rects)
                 rects_to_send.append(r);
-            GWindowServerConnection::the().post_message(WindowServer::InvalidateRect(m_window_id, rects_to_send));
+            WindowServerConnection::the().post_message(WindowServer::InvalidateRect(m_window_id, rects_to_send));
         });
     }
     m_pending_paint_event_rects.append(a_rect);
 }
 
-void GWindow::set_main_widget(GWidget* widget)
+void Window::set_main_widget(Widget* widget)
 {
     if (m_main_widget == widget)
         return;
@@ -381,36 +383,36 @@ void GWindow::set_main_widget(GWidget* widget)
     update();
 }
 
-void GWindow::set_focused_widget(GWidget* widget)
+void Window::set_focused_widget(Widget* widget)
 {
     if (m_focused_widget == widget)
         return;
     if (m_focused_widget) {
-        Core::EventLoop::current().post_event(*m_focused_widget, make<GEvent>(GEvent::FocusOut));
+        Core::EventLoop::current().post_event(*m_focused_widget, make<Event>(Event::FocusOut));
         m_focused_widget->update();
     }
     m_focused_widget = widget ? widget->make_weak_ptr() : nullptr;
     if (m_focused_widget) {
-        Core::EventLoop::current().post_event(*m_focused_widget, make<GEvent>(GEvent::FocusIn));
+        Core::EventLoop::current().post_event(*m_focused_widget, make<Event>(Event::FocusIn));
         m_focused_widget->update();
     }
 }
 
-void GWindow::set_global_cursor_tracking_widget(GWidget* widget)
+void Window::set_global_cursor_tracking_widget(Widget* widget)
 {
     if (widget == m_global_cursor_tracking_widget)
         return;
     m_global_cursor_tracking_widget = widget ? widget->make_weak_ptr() : nullptr;
 }
 
-void GWindow::set_automatic_cursor_tracking_widget(GWidget* widget)
+void Window::set_automatic_cursor_tracking_widget(Widget* widget)
 {
     if (widget == m_automatic_cursor_tracking_widget)
         return;
     m_automatic_cursor_tracking_widget = widget ? widget->make_weak_ptr() : nullptr;
 }
 
-void GWindow::set_has_alpha_channel(bool value)
+void Window::set_has_alpha_channel(bool value)
 {
     if (m_has_alpha_channel == value)
         return;
@@ -422,44 +424,44 @@ void GWindow::set_has_alpha_channel(bool value)
     m_back_bitmap = nullptr;
     m_front_bitmap = nullptr;
 
-    GWindowServerConnection::the().send_sync<WindowServer::SetWindowHasAlphaChannel>(m_window_id, value);
+    WindowServerConnection::the().send_sync<WindowServer::SetWindowHasAlphaChannel>(m_window_id, value);
     update();
 }
 
-void GWindow::set_double_buffering_enabled(bool value)
+void Window::set_double_buffering_enabled(bool value)
 {
     ASSERT(!m_window_id);
     m_double_buffering_enabled = value;
 }
 
-void GWindow::set_opacity(float opacity)
+void Window::set_opacity(float opacity)
 {
     m_opacity_when_windowless = opacity;
     if (!m_window_id)
         return;
-    GWindowServerConnection::the().send_sync<WindowServer::SetWindowOpacity>(m_window_id, opacity);
+    WindowServerConnection::the().send_sync<WindowServer::SetWindowOpacity>(m_window_id, opacity);
 }
 
-void GWindow::set_hovered_widget(GWidget* widget)
+void Window::set_hovered_widget(Widget* widget)
 {
     if (widget == m_hovered_widget)
         return;
 
     if (m_hovered_widget)
-        Core::EventLoop::current().post_event(*m_hovered_widget, make<GEvent>(GEvent::Leave));
+        Core::EventLoop::current().post_event(*m_hovered_widget, make<Event>(Event::Leave));
 
     m_hovered_widget = widget ? widget->make_weak_ptr() : nullptr;
 
     if (m_hovered_widget)
-        Core::EventLoop::current().post_event(*m_hovered_widget, make<GEvent>(GEvent::Enter));
+        Core::EventLoop::current().post_event(*m_hovered_widget, make<Event>(Event::Enter));
 }
 
-void GWindow::set_current_backing_bitmap(GraphicsBitmap& bitmap, bool flush_immediately)
+void Window::set_current_backing_bitmap(GraphicsBitmap& bitmap, bool flush_immediately)
 {
-    GWindowServerConnection::the().send_sync<WindowServer::SetWindowBackingStore>(m_window_id, 32, bitmap.pitch(), bitmap.shared_buffer_id(), bitmap.has_alpha_channel(), bitmap.size(), flush_immediately);
+    WindowServerConnection::the().send_sync<WindowServer::SetWindowBackingStore>(m_window_id, 32, bitmap.pitch(), bitmap.shared_buffer_id(), bitmap.has_alpha_channel(), bitmap.size(), flush_immediately);
 }
 
-void GWindow::flip(const Vector<Rect, 32>& dirty_rects)
+void Window::flip(const Vector<Rect, 32>& dirty_rects)
 {
     swap(m_front_bitmap, m_back_bitmap);
 
@@ -480,49 +482,49 @@ void GWindow::flip(const Vector<Rect, 32>& dirty_rects)
     m_back_bitmap->shared_buffer()->set_volatile();
 }
 
-NonnullRefPtr<GraphicsBitmap> GWindow::create_shared_bitmap(GraphicsBitmap::Format format, const Size& size)
+NonnullRefPtr<GraphicsBitmap> Window::create_shared_bitmap(GraphicsBitmap::Format format, const Size& size)
 {
-    ASSERT(GWindowServerConnection::the().server_pid());
+    ASSERT(WindowServerConnection::the().server_pid());
     ASSERT(!size.is_empty());
     size_t pitch = round_up_to_power_of_two(size.width() * sizeof(RGBA32), 16);
     size_t size_in_bytes = size.height() * pitch;
     auto shared_buffer = SharedBuffer::create_with_size(size_in_bytes);
     ASSERT(shared_buffer);
-    shared_buffer->share_with(GWindowServerConnection::the().server_pid());
+    shared_buffer->share_with(WindowServerConnection::the().server_pid());
     return GraphicsBitmap::create_with_shared_buffer(format, *shared_buffer, size);
 }
 
-NonnullRefPtr<GraphicsBitmap> GWindow::create_backing_bitmap(const Size& size)
+NonnullRefPtr<GraphicsBitmap> Window::create_backing_bitmap(const Size& size)
 {
     auto format = m_has_alpha_channel ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32;
     return create_shared_bitmap(format, size);
 }
 
-void GWindow::set_modal(bool modal)
+void Window::set_modal(bool modal)
 {
     ASSERT(!m_window_id);
     m_modal = modal;
 }
 
-void GWindow::wm_event(GWMEvent&)
+void Window::wm_event(WMEvent&)
 {
 }
 
-void GWindow::set_icon(const GraphicsBitmap* icon)
+void Window::set_icon(const GraphicsBitmap* icon)
 {
     if (m_icon == icon)
         return;
 
     m_icon = create_shared_bitmap(GraphicsBitmap::Format::RGBA32, icon->size());
     {
-        GPainter painter(*m_icon);
+        Painter painter(*m_icon);
         painter.blit({ 0, 0 }, *icon, icon->rect());
     }
 
     apply_icon();
 }
 
-void GWindow::apply_icon()
+void Window::apply_icon()
 {
     if (!m_icon)
         return;
@@ -540,22 +542,22 @@ void GWindow::apply_icon()
     if (!has_set_process_icon)
         set_process_icon(m_icon->shared_buffer_id());
 
-    GWindowServerConnection::the().send_sync<WindowServer::SetWindowIconBitmap>(m_window_id, m_icon->shared_buffer_id(), m_icon->size());
+    WindowServerConnection::the().send_sync<WindowServer::SetWindowIconBitmap>(m_window_id, m_icon->shared_buffer_id(), m_icon->size());
 }
 
-void GWindow::start_wm_resize()
+void Window::start_wm_resize()
 {
-    GWindowServerConnection::the().post_message(WindowServer::WM_StartWindowResize(GWindowServerConnection::the().my_client_id(), m_window_id));
+    WindowServerConnection::the().post_message(WindowServer::WM_StartWindowResize(WindowServerConnection::the().my_client_id(), m_window_id));
 }
 
-Vector<GWidget*> GWindow::focusable_widgets() const
+Vector<Widget*> Window::focusable_widgets() const
 {
     if (!m_main_widget)
         return {};
 
-    Vector<GWidget*> collected_widgets;
+    Vector<Widget*> collected_widgets;
 
-    Function<void(GWidget&)> collect_focusable_widgets = [&](GWidget& widget) {
+    Function<void(Widget&)> collect_focusable_widgets = [&](auto& widget) {
         if (widget.accepts_focus())
             collected_widgets.append(&widget);
         widget.for_each_child_widget([&](auto& child) {
@@ -568,11 +570,11 @@ Vector<GWidget*> GWindow::focusable_widgets() const
         });
     };
 
-    collect_focusable_widgets(const_cast<GWidget&>(*m_main_widget));
+    collect_focusable_widgets(const_cast<Widget&>(*m_main_widget));
     return collected_widgets;
 }
 
-void GWindow::save_to(AK::JsonObject& json)
+void Window::save_to(AK::JsonObject& json)
 {
     json.set("title", title());
     json.set("visible", is_visible());
@@ -586,17 +588,17 @@ void GWindow::save_to(AK::JsonObject& json)
     Core::Object::save_to(json);
 }
 
-void GWindow::set_fullscreen(bool fullscreen)
+void Window::set_fullscreen(bool fullscreen)
 {
     if (m_fullscreen == fullscreen)
         return;
     m_fullscreen = fullscreen;
     if (!m_window_id)
         return;
-    GWindowServerConnection::the().send_sync<WindowServer::SetFullscreen>(m_window_id, fullscreen);
+    WindowServerConnection::the().send_sync<WindowServer::SetFullscreen>(m_window_id, fullscreen);
 }
 
-void GWindow::schedule_relayout()
+void Window::schedule_relayout()
 {
     if (m_layout_pending)
         return;
@@ -609,14 +611,14 @@ void GWindow::schedule_relayout()
     });
 }
 
-void GWindow::update_all_windows(Badge<GWindowServerConnection>)
+void Window::update_all_windows(Badge<WindowServerConnection>)
 {
     for (auto* window : *all_windows) {
         window->update();
     }
 }
 
-void GWindow::notify_state_changed(Badge<GWindowServerConnection>, bool minimized, bool occluded)
+void Window::notify_state_changed(Badge<WindowServerConnection>, bool minimized, bool occluded)
 {
     m_visible_for_timer_purposes = !minimized && !occluded;
 
@@ -635,11 +637,11 @@ void GWindow::notify_state_changed(Badge<GWindowServerConnection>, bool minimize
     }
 }
 
-GAction* GWindow::action_for_key_event(const GKeyEvent& event)
+Action* Window::action_for_key_event(const KeyEvent& event)
 {
-    GShortcut shortcut(event.modifiers(), (KeyCode)event.key());
-    GAction* found_action = nullptr;
-    for_each_child_of_type<GAction>([&](auto& action) {
+    Shortcut shortcut(event.modifiers(), (KeyCode)event.key());
+    Action* found_action = nullptr;
+    for_each_child_of_type<Action>([&](auto& action) {
         if (action.shortcut() == shortcut) {
             found_action = &action;
             return IterationDecision::Break;
@@ -647,4 +649,6 @@ GAction* GWindow::action_for_key_event(const GKeyEvent& event)
         return IterationDecision::Continue;
     });
     return found_action;
+}
+
 }

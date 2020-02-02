@@ -27,16 +27,18 @@
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GStackWidget.h>
 
-GStackWidget::GStackWidget(GWidget* parent)
-    : GWidget(parent)
+namespace GUI {
+
+StackWidget::StackWidget(Widget* parent)
+    : Widget(parent)
 {
 }
 
-GStackWidget::~GStackWidget()
+StackWidget::~StackWidget()
 {
 }
 
-void GStackWidget::set_active_widget(GWidget* widget)
+void StackWidget::set_active_widget(Widget* widget)
 {
     if (widget == m_active_widget)
         return;
@@ -52,26 +54,26 @@ void GStackWidget::set_active_widget(GWidget* widget)
         on_active_widget_change(m_active_widget);
 }
 
-void GStackWidget::resize_event(GResizeEvent& event)
+void StackWidget::resize_event(ResizeEvent& event)
 {
     if (!m_active_widget)
         return;
     m_active_widget->set_relative_rect({ {}, event.size() });
 }
 
-void GStackWidget::child_event(Core::ChildEvent& event)
+void StackWidget::child_event(Core::ChildEvent& event)
 {
-    if (!event.child() || !Core::is<GWidget>(*event.child()))
-        return GWidget::child_event(event);
-    auto& child = Core::to<GWidget>(*event.child());
-    if (event.type() == GEvent::ChildAdded) {
+    if (!event.child() || !Core::is<Widget>(*event.child()))
+        return Widget::child_event(event);
+    auto& child = Core::to<Widget>(*event.child());
+    if (event.type() == Event::ChildAdded) {
         if (!m_active_widget)
             set_active_widget(&child);
         else if (m_active_widget != &child)
             child.set_visible(false);
-    } else if (event.type() == GEvent::ChildRemoved) {
+    } else if (event.type() == Event::ChildRemoved) {
         if (m_active_widget == &child) {
-            GWidget* new_active_widget = nullptr;
+            Widget* new_active_widget = nullptr;
             for_each_child_widget([&](auto& new_child) {
                 new_active_widget = &new_child;
                 return IterationDecision::Break;
@@ -79,5 +81,7 @@ void GStackWidget::child_event(Core::ChildEvent& event)
             set_active_widget(new_active_widget);
         }
     }
-    GWidget::child_event(event);
+    Widget::child_event(event);
+}
+
 }

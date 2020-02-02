@@ -40,7 +40,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
     if (pledge("stdio shared_buffer rpath accept cpath wpath", nullptr) < 0) {
         perror("pledge");
@@ -64,7 +64,7 @@ int main(int argc, char** argv)
     else
         edited_font = Font::default_font().clone();
 
-    auto window = GWindow::construct();
+    auto window = GUI::Window::construct();
     window->set_title("Font Editor");
     window->set_rect({ 50, 50, 390, 342 });
 
@@ -73,18 +73,18 @@ int main(int argc, char** argv)
     window->show();
     window->set_icon(load_png("/res/icons/16x16/app-font-editor.png"));
 
-    auto menubar = make<GMenuBar>();
+    auto menubar = make<GUI::MenuBar>();
 
-    auto app_menu = GMenu::construct("Font Editor");
-    app_menu->add_action(GCommonActions::make_quit_action([](auto&) {
-        GApplication::the().quit(0);
+    auto app_menu = GUI::Menu::construct("Font Editor");
+    app_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
+        GUI::Application::the().quit(0);
         return;
     }));
     menubar->add_menu(move(app_menu));
 
-    auto help_menu = GMenu::construct("Help");
-    help_menu->add_action(GAction::create("About", [&](const GAction&) {
-        GAboutDialog::show("Font Editor", load_png("/res/icons/FontEditor.png"), window);
+    auto help_menu = GUI::Menu::construct("Help");
+    help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
+        GUI::AboutDialog::show("Font Editor", load_png("/res/icons/FontEditor.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 

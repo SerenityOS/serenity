@@ -38,30 +38,30 @@ PenTool::~PenTool()
 {
 }
 
-void PenTool::on_mousedown(GMouseEvent& event)
+void PenTool::on_mousedown(GUI::MouseEvent& event)
 {
-    if (event.button() != GMouseButton::Left && event.button() != GMouseButton::Right)
+    if (event.button() != GUI::MouseButton::Left && event.button() != GUI::MouseButton::Right)
         return;
 
-    GPainter painter(m_widget->bitmap());
+    GUI::Painter painter(m_widget->bitmap());
     painter.draw_line(event.position(), event.position(), m_widget->color_for(event), m_thickness);
     m_widget->update();
     m_last_drawing_event_position = event.position();
 }
 
-void PenTool::on_mouseup(GMouseEvent& event)
+void PenTool::on_mouseup(GUI::MouseEvent& event)
 {
-    if (event.button() == GMouseButton::Left || event.button() == GMouseButton::Right)
+    if (event.button() == GUI::MouseButton::Left || event.button() == GUI::MouseButton::Right)
         m_last_drawing_event_position = { -1, -1 };
 }
 
-void PenTool::on_mousemove(GMouseEvent& event)
+void PenTool::on_mousemove(GUI::MouseEvent& event)
 {
     if (!m_widget->rect().contains(event.position()))
         return;
 
-    if (event.buttons() & GMouseButton::Left || event.buttons() & GMouseButton::Right) {
-        GPainter painter(m_widget->bitmap());
+    if (event.buttons() & GUI::MouseButton::Left || event.buttons() & GUI::MouseButton::Right) {
+        GUI::Painter painter(m_widget->bitmap());
 
         if (m_last_drawing_event_position != Point(-1, -1))
             painter.draw_line(m_last_drawing_event_position, event.position(), m_widget->color_for(event), m_thickness);
@@ -73,13 +73,13 @@ void PenTool::on_mousemove(GMouseEvent& event)
     }
 }
 
-void PenTool::on_contextmenu(GContextMenuEvent& event)
+void PenTool::on_contextmenu(GUI::ContextMenuEvent& event)
 {
     if (!m_context_menu) {
-        m_context_menu = GMenu::construct();
+        m_context_menu = GUI::Menu::construct();
         m_thickness_actions.set_exclusive(true);
         auto insert_action = [&](int size, bool checked = false) {
-            auto action = GAction::create(String::number(size), [this, size](auto& action) {
+            auto action = GUI::Action::create(String::number(size), [this, size](auto& action) {
                 m_thickness = size;
                 action.set_checked(true);
             });

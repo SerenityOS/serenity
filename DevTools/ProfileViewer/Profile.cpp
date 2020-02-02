@@ -86,7 +86,7 @@ Profile::~Profile()
 {
 }
 
-GModel& Profile::model()
+GUI::Model& Profile::model()
 {
     return *m_model;
 }

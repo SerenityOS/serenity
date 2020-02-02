@@ -36,30 +36,30 @@
 MainWidget::MainWidget(AudioEngine& audio_engine)
     : m_audio_engine(audio_engine)
 {
-    set_layout(make<GVBoxLayout>());
+    set_layout(make<GUI::VBoxLayout>());
     layout()->set_spacing(2);
     layout()->set_margins({ 2, 2, 2, 2 });
     set_fill_with_background_color(true);
 
     m_wave_widget = WaveWidget::construct(this, audio_engine);
-    m_wave_widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    m_wave_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_wave_widget->set_preferred_size(0, 100);
 
     m_roll_widget = RollWidget::construct(this, audio_engine);
-    m_roll_widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
+    m_roll_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
     m_roll_widget->set_preferred_size(0, 300);
 
-    m_keys_and_knobs_container = GWidget::construct(this);
-    m_keys_and_knobs_container->set_layout(make<GHBoxLayout>());
+    m_keys_and_knobs_container = GUI::Widget::construct(this);
+    m_keys_and_knobs_container->set_layout(make<GUI::HBoxLayout>());
     m_keys_and_knobs_container->layout()->set_spacing(2);
-    m_keys_and_knobs_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    m_keys_and_knobs_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_keys_and_knobs_container->set_preferred_size(0, 100);
     m_keys_and_knobs_container->set_fill_with_background_color(true);
 
     m_keys_widget = KeysWidget::construct(m_keys_and_knobs_container, audio_engine);
 
     m_knobs_widget = KnobsWidget::construct(m_keys_and_knobs_container, audio_engine, *this);
-    m_knobs_widget->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    m_knobs_widget->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     m_knobs_widget->set_preferred_size(200, 0);
 }
 
@@ -78,7 +78,7 @@ void MainWidget::custom_event(Core::CustomEvent&)
         m_roll_widget->update_roll();
 }
 
-void MainWidget::keydown_event(GKeyEvent& event)
+void MainWidget::keydown_event(GUI::KeyEvent& event)
 {
     // This is to stop held-down keys from creating multiple events.
     if (m_keys_pressed[event.key()])
@@ -91,7 +91,7 @@ void MainWidget::keydown_event(GKeyEvent& event)
     m_keys_widget->update();
 }
 
-void MainWidget::keyup_event(GKeyEvent& event)
+void MainWidget::keyup_event(GUI::KeyEvent& event)
 {
     m_keys_pressed[event.key()] = false;
 

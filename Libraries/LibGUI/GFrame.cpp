@@ -28,21 +28,24 @@
 #include <LibGUI/GFrame.h>
 #include <LibGUI/GPainter.h>
 
-GFrame::GFrame(GWidget* parent)
-    : GWidget(parent)
+namespace GUI {
+
+Frame::Frame(Widget* parent)
+    : Widget(parent)
 {
 }
 
-GFrame::~GFrame()
+Frame::~Frame()
 {
 }
 
-void GFrame::paint_event(GPaintEvent& event)
+void Frame::paint_event(PaintEvent& event)
 {
     if (m_shape == FrameShape::NoFrame)
         return;
 
-    GPainter painter(*this);
+    Painter painter(*this);
     painter.add_clip_rect(event.rect());
     StylePainter::paint_frame(painter, rect(), palette(), m_shape, m_shadow, m_thickness, spans_entire_window_horizontally());
+}
 }

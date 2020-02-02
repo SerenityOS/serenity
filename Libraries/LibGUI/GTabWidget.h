@@ -28,37 +28,39 @@
 
 #include <LibGUI/GWidget.h>
 
-class GTabWidget : public GWidget {
-    C_OBJECT(GTabWidget)
+namespace GUI {
+
+class TabWidget : public Widget {
+    C_OBJECT(TabWidget)
 public:
     enum TabPosition {
         Top,
         Bottom,
     };
 
-    explicit GTabWidget(GWidget* parent);
-    virtual ~GTabWidget() override;
+    explicit TabWidget(Widget* parent);
+    virtual ~TabWidget() override;
 
     TabPosition tab_position() const { return m_tab_position; }
     void set_tab_position(TabPosition);
 
     int active_tab_index() const;
 
-    GWidget* active_widget() { return m_active_widget.ptr(); }
-    const GWidget* active_widget() const { return m_active_widget.ptr(); }
-    void set_active_widget(GWidget*);
+    Widget* active_widget() { return m_active_widget.ptr(); }
+    const Widget* active_widget() const { return m_active_widget.ptr(); }
+    void set_active_widget(Widget*);
 
     int bar_height() const { return 21; }
     int container_padding() const { return 2; }
 
-    void add_widget(const StringView&, GWidget*);
+    void add_widget(const StringView&, Widget*);
 
 protected:
-    virtual void paint_event(GPaintEvent&) override;
+    virtual void paint_event(PaintEvent&) override;
     virtual void child_event(Core::ChildEvent&) override;
-    virtual void resize_event(GResizeEvent&) override;
-    virtual void mousedown_event(GMouseEvent&) override;
-    virtual void mousemove_event(GMouseEvent&) override;
+    virtual void resize_event(ResizeEvent&) override;
+    virtual void mousedown_event(MouseEvent&) override;
+    virtual void mousemove_event(MouseEvent&) override;
     virtual void leave_event(Core::Event&) override;
 
 private:
@@ -68,15 +70,17 @@ private:
     Rect container_rect() const;
     void update_bar();
 
-    RefPtr<GWidget> m_active_widget;
+    RefPtr<Widget> m_active_widget;
 
     struct TabData {
         Rect rect(const Font&) const;
         int width(const Font&) const;
         String title;
-        GWidget* widget { nullptr };
+        Widget* widget { nullptr };
     };
     Vector<TabData> m_tabs;
     TabPosition m_tab_position { TabPosition::Top };
     int m_hovered_tab_index { -1 };
 };
+
+}

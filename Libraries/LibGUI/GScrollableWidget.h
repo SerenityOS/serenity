@@ -28,12 +28,14 @@
 
 #include <LibGUI/GFrame.h>
 
-class GScrollBar;
+namespace GUI {
 
-class GScrollableWidget : public GFrame {
-    C_OBJECT(GScrollableWidget)
+class ScrollBar;
+
+class ScrollableWidget : public Frame {
+    C_OBJECT(ScrollableWidget)
 public:
-    virtual ~GScrollableWidget() override;
+    virtual ~ScrollableWidget() override;
 
     Size content_size() const { return m_content_size; }
     int content_width() const { return m_content_size.width(); }
@@ -51,12 +53,12 @@ public:
 
     Size available_size() const;
 
-    GScrollBar& vertical_scrollbar() { return *m_vertical_scrollbar; }
-    const GScrollBar& vertical_scrollbar() const { return *m_vertical_scrollbar; }
-    GScrollBar& horizontal_scrollbar() { return *m_horizontal_scrollbar; }
-    const GScrollBar& horizontal_scrollbar() const { return *m_horizontal_scrollbar; }
-    GWidget& corner_widget() { return *m_corner_widget; }
-    const GWidget& corner_widget() const { return *m_corner_widget; }
+    ScrollBar& vertical_scrollbar() { return *m_vertical_scrollbar; }
+    const ScrollBar& vertical_scrollbar() const { return *m_vertical_scrollbar; }
+    ScrollBar& horizontal_scrollbar() { return *m_horizontal_scrollbar; }
+    const ScrollBar& horizontal_scrollbar() const { return *m_horizontal_scrollbar; }
+    Widget& corner_widget() { return *m_corner_widget; }
+    const Widget& corner_widget() const { return *m_corner_widget; }
 
     void scroll_to_top();
     void scroll_to_bottom();
@@ -71,10 +73,10 @@ public:
     Point to_widget_position(const Point& content_position) const;
 
 protected:
-    explicit GScrollableWidget(GWidget* parent);
+    explicit ScrollableWidget(Widget* parent);
     virtual void custom_layout() override;
-    virtual void resize_event(GResizeEvent&) override;
-    virtual void mousewheel_event(GMouseEvent&) override;
+    virtual void resize_event(ResizeEvent&) override;
+    virtual void mousewheel_event(MouseEvent&) override;
     virtual void did_scroll() {}
     void set_content_size(const Size&);
     void set_size_occupied_by_fixed_elements(const Size&);
@@ -82,11 +84,13 @@ protected:
 private:
     void update_scrollbar_ranges();
 
-    RefPtr<GScrollBar> m_vertical_scrollbar;
-    RefPtr<GScrollBar> m_horizontal_scrollbar;
-    RefPtr<GWidget> m_corner_widget;
+    RefPtr<ScrollBar> m_vertical_scrollbar;
+    RefPtr<ScrollBar> m_horizontal_scrollbar;
+    RefPtr<Widget> m_corner_widget;
     Size m_content_size;
     Size m_size_occupied_by_fixed_elements;
     bool m_scrollbars_enabled { true };
     bool m_should_hide_unnecessary_scrollbars { false };
 };
+
+}

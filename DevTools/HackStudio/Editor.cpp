@@ -43,12 +43,12 @@
 
 //#define EDITOR_DEBUG
 
-Editor::Editor(GWidget* parent)
-    : GTextEditor(GTextEditor::MultiLine, parent)
+Editor::Editor(GUI::Widget* parent)
+    : TextEditor(GUI::TextEditor::MultiLine, parent)
 {
-    m_documentation_tooltip_window = GWindow::construct();
+    m_documentation_tooltip_window = GUI::Window::construct();
     m_documentation_tooltip_window->set_rect(0, 0, 500, 400);
-    m_documentation_tooltip_window->set_window_type(GWindowType::Tooltip);
+    m_documentation_tooltip_window->set_window_type(GUI::WindowType::Tooltip);
 
     m_documentation_html_view = HtmlView::construct(nullptr);
     m_documentation_tooltip_window->set_main_widget(m_documentation_html_view);
@@ -72,21 +72,21 @@ void Editor::focusin_event(Core::Event& event)
     wrapper().set_editor_has_focus({}, true);
     if (on_focus)
         on_focus();
-    GTextEditor::focusin_event(event);
+    GUI::TextEditor::focusin_event(event);
 }
 
 void Editor::focusout_event(Core::Event& event)
 {
     wrapper().set_editor_has_focus({}, false);
-    GTextEditor::focusout_event(event);
+    GUI::TextEditor::focusout_event(event);
 }
 
-void Editor::paint_event(GPaintEvent& event)
+void Editor::paint_event(GUI::PaintEvent& event)
 {
-    GTextEditor::paint_event(event);
+    GUI::TextEditor::paint_event(event);
 
     if (is_focused()) {
-        GPainter painter(*this);
+        GUI::Painter painter(*this);
         painter.add_clip_rect(event.rect());
 
         auto rect = frame_inner_rect();
@@ -170,16 +170,16 @@ void Editor::show_documentation_tooltip_if_available(const String& hovered_token
     m_last_parsed_token = hovered_token;
 }
 
-void Editor::mousemove_event(GMouseEvent& event)
+void Editor::mousemove_event(GUI::MouseEvent& event)
 {
-    GTextEditor::mousemove_event(event);
+    GUI::TextEditor::mousemove_event(event);
 
     if (document().spans().is_empty())
         return;
 
     auto text_position = text_position_at(event.position());
     if (!text_position.is_valid()) {
-        GApplication::the().hide_tooltip();
+        GUI::Application::the().hide_tooltip();
         return;
     }
 
@@ -195,7 +195,7 @@ void Editor::mousemove_event(GMouseEvent& event)
             return;
         }
     }
-    GApplication::the().hide_tooltip();
+    GUI::Application::the().hide_tooltip();
 }
 
 void Editor::highlight_matching_token_pair()
@@ -222,8 +222,8 @@ void Editor::highlight_matching_token_pair()
     };
 
     auto make_buddies = [&](int index0, int index1) {
-        auto& buddy0 = const_cast<GTextDocumentSpan&>(document().spans()[index0]);
-        auto& buddy1 = const_cast<GTextDocumentSpan&>(document().spans()[index1]);
+        auto& buddy0 = const_cast<GUI::TextDocumentSpan&>(document().spans()[index0]);
+        auto& buddy1 = const_cast<GUI::TextDocumentSpan&>(document().spans()[index1]);
         m_has_brace_buddies = true;
         m_brace_buddies[0].index = index0;
         m_brace_buddies[1].index = index1;
@@ -248,7 +248,7 @@ void Editor::highlight_matching_token_pair()
     };
 
     for (int i = 0; i < document().spans().size(); ++i) {
-        auto& span = const_cast<GTextDocumentSpan&>(document().spans().at(i));
+        auto& span = const_cast<GUI::TextDocumentSpan&>(document().spans().at(i));
         auto token_type = (CppToken::Type)((uintptr_t)span.data);
 
         for (auto& pair : pairs) {

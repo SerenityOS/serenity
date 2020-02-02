@@ -52,12 +52,12 @@ int main(int argc, char** argv)
 
 int run_shutdown_dialog(int argc, char** argv)
 {
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
     {
-        auto result = GMessageBox::show("Shut down Serenity?", "Confirm Shutdown", GMessageBox::Type::Warning, GMessageBox::InputType::OKCancel);
+        auto result = GUI::MessageBox::show("Shut down Serenity?", "Confirm Shutdown", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel);
 
-        if (result == GMessageBox::ExecOK) {
+        if (result == GUI::MessageBox::ExecOK) {
             dbg() << "OK";
             int rc = execl("/bin/shutdown", "/bin/shutdown", "-n", nullptr);
             if (rc < 0) {

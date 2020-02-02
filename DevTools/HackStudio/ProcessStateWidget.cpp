@@ -31,31 +31,31 @@
 #include <LibGUI/GLabel.h>
 #include <unistd.h>
 
-ProcessStateWidget::ProcessStateWidget(GWidget* parent)
-    : GWidget(parent)
+ProcessStateWidget::ProcessStateWidget(GUI::Widget* parent)
+    : GUI::Widget(parent)
 {
-    set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     set_preferred_size(0, 20);
     set_visible(false);
 
-    set_layout(make<GHBoxLayout>());
+    set_layout(make<GUI::HBoxLayout>());
 
-    auto pid_label_label = GLabel::construct("Process:", this);
+    auto pid_label_label = GUI::Label::construct("Process:", this);
     pid_label_label->set_font(Font::default_bold_font());
-    m_pid_label = GLabel::construct("", this);
+    m_pid_label = GUI::Label::construct("", this);
 
-    auto state_label_label = GLabel::construct("State:", this);
+    auto state_label_label = GUI::Label::construct("State:", this);
     state_label_label->set_font(Font::default_bold_font());
-    m_state_label = GLabel::construct("", this);
+    m_state_label = GUI::Label::construct("", this);
 
     // FIXME: This should show CPU% instead.
-    auto cpu_label_label = GLabel::construct("Times scheduled:", this);
+    auto cpu_label_label = GUI::Label::construct("Times scheduled:", this);
     cpu_label_label->set_font(Font::default_bold_font());
-    m_cpu_label = GLabel::construct("", this);
+    m_cpu_label = GUI::Label::construct("", this);
 
-    auto memory_label_label = GLabel::construct("Memory (resident):", this);
+    auto memory_label_label = GUI::Label::construct("Memory (resident):", this);
     memory_label_label->set_font(Font::default_bold_font());
-    m_memory_label = GLabel::construct("", this);
+    m_memory_label = GUI::Label::construct("", this);
 
     m_timer = Core::Timer::construct(500, [this] {
         refresh();

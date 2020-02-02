@@ -29,28 +29,30 @@
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GRadioButton.h>
 
-GRadioButton::GRadioButton(GWidget* parent)
-    : GRadioButton({}, parent)
+namespace GUI {
+
+RadioButton::RadioButton(Widget* parent)
+    : RadioButton({}, parent)
 {
 }
 
-GRadioButton::GRadioButton(const StringView& text, GWidget* parent)
-    : GAbstractButton(text, parent)
+RadioButton::RadioButton(const StringView& text, Widget* parent)
+    : AbstractButton(text, parent)
 {
 }
 
-GRadioButton::~GRadioButton()
+RadioButton::~RadioButton()
 {
 }
 
-Size GRadioButton::circle_size()
+Size RadioButton::circle_size()
 {
     return { 12, 12 };
 }
 
-void GRadioButton::paint_event(GPaintEvent& event)
+void RadioButton::paint_event(PaintEvent& event)
 {
-    GPainter painter(*this);
+    Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
     Rect circle_rect { { 2, 0 }, circle_size() };
@@ -64,16 +66,16 @@ void GRadioButton::paint_event(GPaintEvent& event)
 }
 
 template<typename Callback>
-void GRadioButton::for_each_in_group(Callback callback)
+void RadioButton::for_each_in_group(Callback callback)
 {
     if (!parent())
         return;
-    parent()->for_each_child_of_type<GRadioButton>([&](auto& child) {
-        return callback(static_cast<GRadioButton&>(child));
+    parent()->for_each_child_of_type<RadioButton>([&](auto& child) {
+        return callback(static_cast<RadioButton&>(child));
     });
 }
 
-void GRadioButton::click()
+void RadioButton::click()
 {
     if (!is_enabled())
         return;
@@ -83,4 +85,6 @@ void GRadioButton::click()
         return IterationDecision::Continue;
     });
     set_checked(true);
+}
+
 }

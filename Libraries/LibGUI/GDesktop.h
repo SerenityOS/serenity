@@ -31,21 +31,25 @@
 #include <AK/String.h>
 #include <LibDraw/Rect.h>
 
-class GWindowServerConnection;
+namespace GUI {
 
-class GDesktop {
+class WindowServerConnection;
+
+class Desktop {
 public:
-    static GDesktop& the();
-    GDesktop();
+    static Desktop& the();
+    Desktop();
 
     String wallpaper() const;
     bool set_wallpaper(const StringView& path);
 
     Rect rect() const { return m_rect; }
-    void did_receive_screen_rect(Badge<GWindowServerConnection>, const Rect&);
+    void did_receive_screen_rect(Badge<WindowServerConnection>, const Rect&);
 
     Function<void(const Rect&)> on_rect_change;
 
 private:
     Rect m_rect;
 };
+
+}

@@ -30,11 +30,13 @@
 #include <AK/Function.h>
 #include <AK/String.h>
 
-class GWindowServerConnection;
+namespace GUI {
 
-class GClipboard {
+class WindowServerConnection;
+
+class Clipboard {
 public:
-    static GClipboard& the();
+    static Clipboard& the();
 
     String data() const { return data_and_type().data; }
     String type() const { return data_and_type().type; }
@@ -47,10 +49,12 @@ public:
 
     DataAndType data_and_type() const;
 
-    void did_receive_clipboard_contents_changed(Badge<GWindowServerConnection>, const String& data_type);
+    void did_receive_clipboard_contents_changed(Badge<WindowServerConnection>, const String& data_type);
 
     Function<void(const String& data_type)> on_content_change;
 
 private:
-    GClipboard();
+    Clipboard();
 };
+
+}

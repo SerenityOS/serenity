@@ -31,19 +31,21 @@
 #include <LibGUI/GModelSelection.h>
 #include <LibGUI/GScrollableWidget.h>
 
-class GModelEditingDelegate;
+namespace GUI {
 
-class GAbstractView : public GScrollableWidget {
-    C_OBJECT(GAbstractView)
-    friend class GModel;
+class ModelEditingDelegate;
+
+class AbstractView : public ScrollableWidget {
+    C_OBJECT_ABSTRACT(AbstractView)
+    friend class Model;
 
 public:
-    void set_model(RefPtr<GModel>&&);
-    GModel* model() { return m_model.ptr(); }
-    const GModel* model() const { return m_model.ptr(); }
+    void set_model(RefPtr<Model>&&);
+    Model* model() { return m_model.ptr(); }
+    const Model* model() const { return m_model.ptr(); }
 
-    GModelSelection& selection() { return m_selection; }
-    const GModelSelection& selection() const { return m_selection; }
+    ModelSelection& selection() { return m_selection; }
+    const ModelSelection& selection() const { return m_selection; }
     void select_all();
 
     bool is_editable() const { return m_editable; }
@@ -53,51 +55,53 @@ public:
     virtual void did_update_model();
     virtual void did_update_selection();
 
-    virtual Rect content_rect(const GModelIndex&) const { return {}; }
-    virtual GModelIndex index_at_event_position(const Point&) const = 0;
-    void begin_editing(const GModelIndex&);
+    virtual Rect content_rect(const ModelIndex&) const { return {}; }
+    virtual ModelIndex index_at_event_position(const Point&) const = 0;
+    void begin_editing(const ModelIndex&);
     void stop_editing();
 
     void set_activates_on_selection(bool b) { m_activates_on_selection = b; }
     bool activates_on_selection() const { return m_activates_on_selection; }
 
     Function<void()> on_selection_change;
-    Function<void(const GModelIndex&)> on_activation;
-    Function<void(const GModelIndex&)> on_selection;
-    Function<void(const GModelIndex&, const GContextMenuEvent&)> on_context_menu_request;
+    Function<void(const ModelIndex&)> on_activation;
+    Function<void(const ModelIndex&)> on_selection;
+    Function<void(const ModelIndex&, const ContextMenuEvent&)> on_context_menu_request;
 
-    Function<OwnPtr<GModelEditingDelegate>(const GModelIndex&)> aid_create_editing_delegate;
+    Function<OwnPtr<ModelEditingDelegate>(const ModelIndex&)> aid_create_editing_delegate;
 
-    void notify_selection_changed(Badge<GModelSelection>);
+    void notify_selection_changed(Badge<ModelSelection>);
 
-    NonnullRefPtr<Font> font_for_index(const GModelIndex&) const;
+    NonnullRefPtr<Font> font_for_index(const ModelIndex&) const;
 
 protected:
-    explicit GAbstractView(GWidget* parent);
-    virtual ~GAbstractView() override;
+    explicit AbstractView(Widget* parent);
+    virtual ~AbstractView() override;
 
-    virtual void mousedown_event(GMouseEvent&) override;
-    virtual void mousemove_event(GMouseEvent&) override;
-    virtual void mouseup_event(GMouseEvent&) override;
-    virtual void doubleclick_event(GMouseEvent&) override;
-    virtual void context_menu_event(GContextMenuEvent&) override;
+    virtual void mousedown_event(MouseEvent&) override;
+    virtual void mousemove_event(MouseEvent&) override;
+    virtual void mouseup_event(MouseEvent&) override;
+    virtual void doubleclick_event(MouseEvent&) override;
+    virtual void context_menu_event(ContextMenuEvent&) override;
 
     virtual void did_scroll() override;
-    void activate(const GModelIndex&);
+    void activate(const ModelIndex&);
     void activate_selected();
     void update_edit_widget_position();
 
     bool m_editable { false };
-    GModelIndex m_edit_index;
-    RefPtr<GWidget> m_edit_widget;
+    ModelIndex m_edit_index;
+    RefPtr<Widget> m_edit_widget;
     Rect m_edit_widget_content_rect;
 
     Point m_left_mousedown_position;
     bool m_might_drag { false };
 
 private:
-    RefPtr<GModel> m_model;
-    OwnPtr<GModelEditingDelegate> m_editing_delegate;
-    GModelSelection m_selection;
+    RefPtr<Model> m_model;
+    OwnPtr<ModelEditingDelegate> m_editing_delegate;
+    ModelSelection m_selection;
     bool m_activates_on_selection { false };
 };
+
+}

@@ -46,9 +46,9 @@
 #include <LibHTML/ResourceLoader.h>
 #include <stdio.h>
 
-HtmlView::HtmlView(GWidget* parent)
-    : GScrollableWidget(parent)
-    , m_main_frame(Frame::create(*this))
+HtmlView::HtmlView(GUI::Widget* parent)
+    : GUI::ScrollableWidget(parent)
+    , m_main_frame(::Frame::create(*this))
 {
     main_frame().on_set_needs_display = [this](auto& content_rect) {
         if (content_rect.is_empty()) {
@@ -129,17 +129,17 @@ void HtmlView::layout_and_sync_size()
 #endif
 }
 
-void HtmlView::resize_event(GResizeEvent& event)
+void HtmlView::resize_event(GUI::ResizeEvent& event)
 {
-    GScrollableWidget::resize_event(event);
+    GUI::ScrollableWidget::resize_event(event);
     layout_and_sync_size();
 }
 
-void HtmlView::paint_event(GPaintEvent& event)
+void HtmlView::paint_event(GUI::PaintEvent& event)
 {
-    GFrame::paint_event(event);
+    GUI::Frame::paint_event(event);
 
-    GPainter painter(*this);
+    GUI::Painter painter(*this);
     painter.add_clip_rect(widget_inner_rect());
     painter.add_clip_rect(event.rect());
 
@@ -163,10 +163,10 @@ void HtmlView::paint_event(GPaintEvent& event)
     layout_root()->render(context);
 }
 
-void HtmlView::mousemove_event(GMouseEvent& event)
+void HtmlView::mousemove_event(GUI::MouseEvent& event)
 {
     if (!layout_root())
-        return GScrollableWidget::mousemove_event(event);
+        return GUI::ScrollableWidget::mousemove_event(event);
 
     bool hovered_node_changed = false;
     bool is_hovering_link = false;
@@ -193,15 +193,15 @@ void HtmlView::mousemove_event(GMouseEvent& event)
         }
     }
     if (window())
-        window()->set_override_cursor(is_hovering_link ? GStandardCursor::Hand : GStandardCursor::None);
+        window()->set_override_cursor(is_hovering_link ? GUI::StandardCursor::Hand : GUI::StandardCursor::None);
     if (hovered_node_changed) {
         update();
         auto* hovered_html_element = document()->hovered_node() ? document()->hovered_node()->enclosing_html_element() : nullptr;
         if (hovered_html_element && !hovered_html_element->title().is_null()) {
             auto screen_position = screen_relative_rect().location().translated(event.position());
-            GApplication::the().show_tooltip(hovered_html_element->title(), screen_position.translated(4, 4));
+            GUI::Application::the().show_tooltip(hovered_html_element->title(), screen_position.translated(4, 4));
         } else {
-            GApplication::the().hide_tooltip();
+            GUI::Application::the().hide_tooltip();
         }
     }
     if (is_hovering_link != was_hovering_link) {
@@ -212,10 +212,10 @@ void HtmlView::mousemove_event(GMouseEvent& event)
     event.accept();
 }
 
-void HtmlView::mousedown_event(GMouseEvent& event)
+void HtmlView::mousedown_event(GUI::MouseEvent& event)
 {
     if (!layout_root())
-        return GScrollableWidget::mousemove_event(event);
+        return GUI::ScrollableWidget::mousemove_event(event);
 
     bool hovered_node_changed = false;
     auto result = layout_root()->hit_test(to_content_position(event.position()));
@@ -229,7 +229,7 @@ void HtmlView::mousedown_event(GMouseEvent& event)
                 if (on_link_click)
                     on_link_click(link->href());
             } else {
-                if (event.button() == GMouseButton::Left) {
+                if (event.button() == GUI::MouseButton::Left) {
                     layout_root()->selection().set({ result.layout_node, result.index_in_node }, {});
                     dump_selection("MouseDown");
                     m_in_mouse_selection = true;
@@ -242,18 +242,18 @@ void HtmlView::mousedown_event(GMouseEvent& event)
     event.accept();
 }
 
-void HtmlView::mouseup_event(GMouseEvent& event)
+void HtmlView::mouseup_event(GUI::MouseEvent& event)
 {
     if (!layout_root())
-        return GScrollableWidget::mouseup_event(event);
+        return GUI::ScrollableWidget::mouseup_event(event);
 
-    if (event.button() == GMouseButton::Left) {
+    if (event.button() == GUI::MouseButton::Left) {
         dump_selection("MouseUp");
         m_in_mouse_selection = false;
     }
 }
 
-void HtmlView::keydown_event(GKeyEvent& event)
+void HtmlView::keydown_event(GUI::KeyEvent& event)
 {
     if (event.modifiers() == 0) {
         switch (event.key()) {
@@ -327,7 +327,7 @@ void HtmlView::load(const URL& url)
     dbg() << "HtmlView::load: " << url;
 
     if (window())
-        window()->set_override_cursor(GStandardCursor::None);
+        window()->set_override_cursor(GUI::StandardCursor::None);
 
     if (on_load_start)
         on_load_start(url);
@@ -390,7 +390,7 @@ void HtmlView::scroll_to_anchor(const StringView& name)
     auto& layout_node = *element->layout_node();
     FloatRect float_rect { layout_node.box_type_agnostic_position(), { (float)visible_content_rect().width(), (float)visible_content_rect().height() } };
     scroll_into_view(enclosing_int_rect(float_rect), true, true);
-    window()->set_override_cursor(GStandardCursor::None);
+    window()->set_override_cursor(GUI::StandardCursor::None);
 }
 
 Document* HtmlView::document()

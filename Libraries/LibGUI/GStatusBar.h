@@ -28,13 +28,15 @@
 
 #include <LibGUI/GWidget.h>
 
-class GLabel;
-class GResizeCorner;
+namespace GUI {
 
-class GStatusBar : public GWidget {
-    C_OBJECT(GStatusBar)
+class Label;
+class ResizeCorner;
+
+class StatusBar : public Widget {
+    C_OBJECT(StatusBar)
 public:
-    virtual ~GStatusBar() override;
+    virtual ~StatusBar() override;
 
     String text() const;
     String text(int index) const;
@@ -42,12 +44,14 @@ public:
     void set_text(int index, const StringView&);
 
 protected:
-    explicit GStatusBar(GWidget* parent);
-    explicit GStatusBar(int label_count, GWidget* parent);
-    virtual void paint_event(GPaintEvent&) override;
+    explicit StatusBar(Widget* parent);
+    explicit StatusBar(int label_count, Widget* parent);
+    virtual void paint_event(PaintEvent&) override;
 
 private:
-    NonnullRefPtr<GLabel> create_label();
-    NonnullRefPtrVector<GLabel> m_labels;
-    RefPtr<GResizeCorner> m_corner;
+    NonnullRefPtr<Label> create_label();
+    NonnullRefPtrVector<Label> m_labels;
+    RefPtr<ResizeCorner> m_corner;
 };
+
+}

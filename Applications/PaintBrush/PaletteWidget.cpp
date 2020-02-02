@@ -29,11 +29,11 @@
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GColorPicker.h>
 
-class ColorWidget : public GFrame {
+class ColorWidget : public GUI::Frame {
     C_OBJECT(ColorWidget)
 public:
-    explicit ColorWidget(Color color, PaletteWidget& palette_widget, GWidget* parent)
-        : GFrame(parent)
+    explicit ColorWidget(Color color, PaletteWidget& palette_widget, GUI::Widget* parent)
+        : GUI::Frame(parent)
         , m_palette_widget(palette_widget)
         , m_color(color)
     {
@@ -46,11 +46,11 @@ public:
     {
     }
 
-    virtual void mousedown_event(GMouseEvent& event) override
+    virtual void mousedown_event(GUI::MouseEvent& event) override
     {
-        if (event.modifiers() & KeyModifier::Mod_Ctrl && event.button() == GMouseButton::Left) {
-            auto dialog = GColorPicker::construct(m_color, window());
-            if (dialog->exec() == GDialog::ExecOK) {
+        if (event.modifiers() & KeyModifier::Mod_Ctrl && event.button() == GUI::MouseButton::Left) {
+            auto dialog = GUI::ColorPicker::construct(m_color, window());
+            if (dialog->exec() == GUI::Dialog::ExecOK) {
                 m_color = dialog->color();
                 auto pal = palette();
                 pal.set_color(ColorRole::Background, m_color);
@@ -60,9 +60,9 @@ public:
             return;
         }
 
-        if (event.button() == GMouseButton::Left)
+        if (event.button() == GUI::MouseButton::Left)
             m_palette_widget.set_primary_color(m_color);
-        else if (event.button() == GMouseButton::Right)
+        else if (event.button() == GUI::MouseButton::Right)
             m_palette_widget.set_secondary_color(m_color);
     }
 
@@ -71,8 +71,8 @@ private:
     Color m_color;
 };
 
-PaletteWidget::PaletteWidget(PaintableWidget& paintable_widget, GWidget* parent)
-    : GFrame(parent)
+PaletteWidget::PaletteWidget(PaintableWidget& paintable_widget, GUI::Widget* parent)
+    : GUI::Frame(parent)
     , m_paintable_widget(paintable_widget)
 {
     set_frame_shape(FrameShape::Panel);
@@ -80,10 +80,10 @@ PaletteWidget::PaletteWidget(PaintableWidget& paintable_widget, GWidget* parent)
     set_frame_thickness(0);
     set_fill_with_background_color(true);
 
-    set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     set_preferred_size(0, 34);
 
-    m_secondary_color_widget = GFrame::construct(this);
+    m_secondary_color_widget = GUI::Frame::construct(this);
     m_secondary_color_widget->set_frame_thickness(2);
     m_secondary_color_widget->set_frame_shape(FrameShape::Container);
     m_secondary_color_widget->set_frame_shadow(FrameShadow::Sunken);
@@ -91,7 +91,7 @@ PaletteWidget::PaletteWidget(PaintableWidget& paintable_widget, GWidget* parent)
     m_secondary_color_widget->set_fill_with_background_color(true);
     set_secondary_color(paintable_widget.secondary_color());
 
-    m_primary_color_widget = GFrame::construct(this);
+    m_primary_color_widget = GUI::Frame::construct(this);
     m_primary_color_widget->set_frame_thickness(2);
     m_primary_color_widget->set_frame_shape(FrameShape::Container);
     m_primary_color_widget->set_frame_shadow(FrameShadow::Sunken);
@@ -109,20 +109,20 @@ PaletteWidget::PaletteWidget(PaintableWidget& paintable_widget, GWidget* parent)
         set_secondary_color(color);
     };
 
-    auto color_container = GWidget::construct(this);
+    auto color_container = GUI::Widget::construct(this);
     color_container->set_relative_rect(m_secondary_color_widget->relative_rect().right() + 2, 2, 500, 32);
-    color_container->set_layout(make<GVBoxLayout>());
+    color_container->set_layout(make<GUI::VBoxLayout>());
     color_container->layout()->set_spacing(1);
 
-    auto top_color_container = GWidget::construct(color_container.ptr());
-    top_color_container->set_layout(make<GHBoxLayout>());
+    auto top_color_container = GUI::Widget::construct(color_container.ptr());
+    top_color_container->set_layout(make<GUI::HBoxLayout>());
     top_color_container->layout()->set_spacing(1);
 
-    auto bottom_color_container = GWidget::construct(color_container.ptr());
-    bottom_color_container->set_layout(make<GHBoxLayout>());
+    auto bottom_color_container = GUI::Widget::construct(color_container.ptr());
+    bottom_color_container->set_layout(make<GUI::HBoxLayout>());
     bottom_color_container->layout()->set_spacing(1);
 
-    auto add_color_widget = [&](GWidget* container, Color color) {
+    auto add_color_widget = [&](GUI::Widget* container, Color color) {
         auto color_widget = ColorWidget::construct(color, *this, container);
         color_widget->set_fill_with_background_color(true);
         auto pal = color_widget->palette();

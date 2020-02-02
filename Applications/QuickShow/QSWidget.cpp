@@ -31,8 +31,8 @@
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GWindow.h>
 
-QSWidget::QSWidget(GWidget* parent)
-    : GFrame(parent)
+QSWidget::QSWidget(GUI::Widget* parent)
+    : GUI::Frame(parent)
 {
     set_frame_shape(FrameShape::Container);
     set_frame_shadow(FrameShadow::Sunken);
@@ -61,36 +61,36 @@ void QSWidget::relayout()
     update();
 }
 
-void QSWidget::resize_event(GResizeEvent& event)
+void QSWidget::resize_event(GUI::ResizeEvent& event)
 {
     relayout();
-    GWidget::resize_event(event);
+    GUI::Widget::resize_event(event);
 }
 
-void QSWidget::paint_event(GPaintEvent& event)
+void QSWidget::paint_event(GUI::PaintEvent& event)
 {
-    GPainter painter(*this);
+    GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
     painter.draw_scaled_bitmap(m_bitmap_rect, *m_bitmap, m_bitmap->rect());
 }
 
-void QSWidget::mousedown_event(GMouseEvent& event)
+void QSWidget::mousedown_event(GUI::MouseEvent& event)
 {
-    if (event.button() != GMouseButton::Left)
+    if (event.button() != GUI::MouseButton::Left)
         return;
     m_pan_origin = event.position();
     m_pan_bitmap_origin = m_bitmap_rect.location();
 }
 
-void QSWidget::mouseup_event(GMouseEvent& event)
+void QSWidget::mouseup_event(GUI::MouseEvent& event)
 {
     UNUSED_PARAM(event);
 }
 
-void QSWidget::mousemove_event(GMouseEvent& event)
+void QSWidget::mousemove_event(GUI::MouseEvent& event)
 {
-    if (!(event.buttons() & GMouseButton::Left))
+    if (!(event.buttons() & GUI::MouseButton::Left))
         return;
 
     auto delta = event.position() - m_pan_origin;
@@ -98,7 +98,7 @@ void QSWidget::mousemove_event(GMouseEvent& event)
     update();
 }
 
-void QSWidget::mousewheel_event(GMouseEvent& event)
+void QSWidget::mousewheel_event(GUI::MouseEvent& event)
 {
     auto old_scale = m_scale;
     auto old_scale_factor = (float)m_scale / 100.0f;
@@ -125,7 +125,7 @@ void QSWidget::set_path(const String& path)
     m_path = path;
 }
 
-void QSWidget::drop_event(GDropEvent& event)
+void QSWidget::drop_event(GUI::DropEvent& event)
 {
     event.accept();
     window()->move_to_front();
@@ -135,13 +135,13 @@ void QSWidget::drop_event(GDropEvent& event)
         if (lines.is_empty())
             return;
         if (lines.size() > 1) {
-            GMessageBox::show("QuickShow can only open one file at a time!", "One at a time please!", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
+            GUI::MessageBox::show("QuickShow can only open one file at a time!", "One at a time please!", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
             return;
         }
         URL url(lines[0]);
         auto bitmap = GraphicsBitmap::load_from_file(url.path());
         if (!bitmap) {
-            GMessageBox::show(String::format("Failed to open %s", url.to_string().characters()), "Cannot open image", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
+            GUI::MessageBox::show(String::format("Failed to open %s", url.to_string().characters()), "Cannot open image", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
             return;
         }
 

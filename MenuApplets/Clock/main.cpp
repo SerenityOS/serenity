@@ -33,11 +33,11 @@
 #include <stdio.h>
 #include <time.h>
 
-class ClockWidget final : public GWidget {
+class ClockWidget final : public GUI::Widget {
     C_OBJECT(ClockWidget)
 public:
     ClockWidget()
-        : GWidget(nullptr)
+        : GUI::Widget(nullptr)
     {
         m_time_width = Font::default_bold_font().width("2222-22-22 22:22:22");
 
@@ -61,7 +61,7 @@ public:
 private:
     static int menubar_menu_margin() { return 2; }
 
-    virtual void paint_event(GPaintEvent& event) override
+    virtual void paint_event(GUI::PaintEvent& event) override
     {
         time_t now = time(nullptr);
         auto* tm = localtime(&now);
@@ -74,7 +74,7 @@ private:
             tm->tm_min,
             tm->tm_sec);
 
-        GPainter painter(*this);
+        GUI::Painter painter(*this);
         painter.fill_rect(event.rect(), palette().window());
         painter.draw_text(event.rect(), time_text, Font::default_font(), TextAlignment::Center, palette().window_text());
     }
@@ -95,15 +95,15 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
     if (pledge("stdio shared_buffer accept rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
-    auto window = GWindow::construct();
-    window->set_window_type(GWindowType::MenuApplet);
+    auto window = GUI::Window::construct();
+    window->set_window_type(GUI::WindowType::MenuApplet);
 
     auto widget = ClockWidget::construct();
 

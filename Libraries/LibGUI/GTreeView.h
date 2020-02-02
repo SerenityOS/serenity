@@ -28,26 +28,28 @@
 
 #include <LibGUI/GAbstractTableView.h>
 
-class GTreeView : public GAbstractTableView {
-    C_OBJECT(GTreeView)
-public:
-    virtual ~GTreeView() override;
+namespace GUI {
 
-    virtual void scroll_into_view(const GModelIndex&, Orientation);
+class TreeView : public AbstractTableView {
+    C_OBJECT(TreeView)
+public:
+    virtual ~TreeView() override;
+
+    virtual void scroll_into_view(const ModelIndex&, Orientation);
 
     virtual int item_count() const override;
 
 protected:
-    explicit GTreeView(GWidget*);
+    explicit TreeView(Widget*);
 
-    virtual void paint_event(GPaintEvent&) override;
-    virtual void doubleclick_event(GMouseEvent&) override;
-    virtual void keydown_event(GKeyEvent&) override;
+    virtual void paint_event(PaintEvent&) override;
+    virtual void doubleclick_event(MouseEvent&) override;
+    virtual void keydown_event(KeyEvent&) override;
     virtual void did_update_selection() override;
     virtual void did_update_model() override;
 
 private:
-    virtual GModelIndex index_at_event_position(const Point&, bool& is_toggle) const override;
+    virtual ModelIndex index_at_event_position(const Point&, bool& is_toggle) const override;
 
     int item_height() const { return 16; }
     int max_item_width() const { return frame_inner_rect().width(); }
@@ -56,7 +58,7 @@ private:
     int icon_spacing() const { return 2; }
     int toggle_size() const { return 9; }
     int text_padding() const { return 2; }
-    virtual void toggle_index(const GModelIndex&) override;
+    virtual void toggle_index(const ModelIndex&) override;
     virtual void update_column_sizes() override;
 
     template<typename Callback>
@@ -64,10 +66,12 @@ private:
 
     struct MetadataForIndex;
 
-    MetadataForIndex& ensure_metadata_for_index(const GModelIndex&) const;
+    MetadataForIndex& ensure_metadata_for_index(const ModelIndex&) const;
 
     mutable HashMap<void*, NonnullOwnPtr<MetadataForIndex>> m_view_metadata;
 
     RefPtr<GraphicsBitmap> m_expand_bitmap;
     RefPtr<GraphicsBitmap> m_collapse_bitmap;
 };
+
+}

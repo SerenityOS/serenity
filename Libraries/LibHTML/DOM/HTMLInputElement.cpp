@@ -49,9 +49,9 @@ RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const StyleProperties*) 
     ASSERT(frame.html_view());
     auto& html_view = const_cast<HtmlView&>(*frame.html_view());
 
-    RefPtr<GWidget> widget;
+    RefPtr<GUI::Widget> widget;
     if (type() == "submit") {
-        auto button = GButton::construct(value(), &html_view);
+        auto button = GUI::Button::construct(value(), &html_view);
         int text_width = Font::default_font().width(value());
         button->set_relative_rect(0, 0, text_width + 20, 20);
         button->on_click = [this](auto&) {
@@ -62,11 +62,11 @@ RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const StyleProperties*) 
         };
         widget = button;
     } else {
-        auto text_box = GTextBox::construct(&html_view);
+        auto text_box = GUI::TextBox::construct(&html_view);
         text_box->set_text(value());
         text_box->on_change = [this] {
             auto& widget = to<LayoutWidget>(layout_node())->widget();
-            const_cast<HTMLInputElement*>(this)->set_attribute("value", static_cast<const GTextBox&>(widget).text());
+            const_cast<HTMLInputElement*>(this)->set_attribute("value", static_cast<const GUI::TextBox&>(widget).text());
         };
         int text_width = Font::default_font().width(value());
         text_box->set_relative_rect(0, 0, text_width + 20, 20);

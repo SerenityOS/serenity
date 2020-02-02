@@ -28,20 +28,24 @@
 
 #include <LibGUI/GWidget.h>
 
-class GGroupBox : public GWidget {
-    C_OBJECT(GGroupBox)
+namespace GUI {
+
+class GroupBox : public Widget {
+    C_OBJECT(GroupBox)
 public:
-    virtual ~GGroupBox() override;
+    virtual ~GroupBox() override;
 
     String title() const { return m_title; }
     void set_title(const StringView&);
 
 protected:
-    explicit GGroupBox(GWidget* parent);
-    GGroupBox(const StringView& title, GWidget* parent);
+    explicit GroupBox(Widget* parent);
+    GroupBox(const StringView& title, Widget* parent);
 
-    virtual void paint_event(GPaintEvent&) override;
+    virtual void paint_event(PaintEvent&) override;
 
 private:
     String m_title;
 };
+
+}

@@ -28,25 +28,27 @@
 
 #include <LibHTML/Layout/LayoutReplaced.h>
 
-class GWidget;
+namespace GUI {
+class Widget;
+}
 
 class LayoutWidget : public LayoutReplaced {
 public:
-    LayoutWidget(const Element&, GWidget&);
+    LayoutWidget(const Element&, GUI::Widget&);
     virtual ~LayoutWidget() override;
 
     virtual void layout() override;
     virtual void render(RenderingContext&) override;
 
-    GWidget& widget() { return m_widget; }
-    const GWidget& widget() const { return m_widget; }
+    GUI::Widget& widget() { return m_widget; }
+    const GUI::Widget& widget() const { return m_widget; }
 
     virtual bool is_widget() const final { return true; }
 
 private:
     virtual const char* class_name() const override { return "LayoutWidget"; }
 
-    NonnullRefPtr<GWidget> m_widget;
+    NonnullRefPtr<GUI::Widget> m_widget;
 };
 
 template<>

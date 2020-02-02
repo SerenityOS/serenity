@@ -33,27 +33,27 @@
 
 int main(int argc, char** argv)
 {
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
-    auto window = GWindow::construct();
+    auto window = GUI::Window::construct();
     window->set_rect(100, 100, 240, 160);
     window->set_title("Hello World!");
 
-    auto main_widget = GWidget::construct();
+    auto main_widget = GUI::Widget::construct();
     window->set_main_widget(main_widget);
     main_widget->set_fill_with_background_color(true);
     main_widget->set_background_color(Color::White);
-    main_widget->set_layout(make<GVBoxLayout>());
+    main_widget->set_layout(make<GUI::VBoxLayout>());
     main_widget->layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto label = GLabel::construct(main_widget);
+    auto label = GUI::Label::construct(main_widget);
     label->set_text("Hello\nWorld!");
 
-    auto button = GButton::construct(main_widget);
+    auto button = GUI::Button::construct(main_widget);
     button->set_text("Good-bye");
-    button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    button->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     button->set_preferred_size(0, 20);
-    button->on_click = [&](GButton&) {
+    button->on_click = [&](GUI::Button&) {
         app.quit();
     };
 

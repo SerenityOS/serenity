@@ -28,15 +28,17 @@
 
 #include <LibGUI/GWidget.h>
 
-class GSlider : public GWidget {
-    C_OBJECT(GSlider)
+namespace GUI {
+
+class Slider : public Widget {
+    C_OBJECT(Slider)
 public:
     enum class KnobSizeMode {
         Fixed,
         Proportional,
     };
 
-    virtual ~GSlider() override;
+    virtual ~Slider() override;
 
     Orientation orientation() const { return m_orientation; }
 
@@ -70,15 +72,15 @@ public:
     Function<void(int)> on_value_changed;
 
 protected:
-    explicit GSlider(GWidget*);
-    explicit GSlider(Orientation, GWidget*);
+    explicit Slider(Widget*);
+    explicit Slider(Orientation, Widget*);
 
-    virtual void paint_event(GPaintEvent&) override;
-    virtual void mousedown_event(GMouseEvent&) override;
-    virtual void mousemove_event(GMouseEvent&) override;
-    virtual void mouseup_event(GMouseEvent&) override;
+    virtual void paint_event(PaintEvent&) override;
+    virtual void mousedown_event(MouseEvent&) override;
+    virtual void mousemove_event(MouseEvent&) override;
+    virtual void mouseup_event(MouseEvent&) override;
     virtual void leave_event(Core::Event&) override;
-    virtual void change_event(GEvent&) override;
+    virtual void change_event(Event&) override;
 
 private:
     void set_knob_hovered(bool);
@@ -93,3 +95,5 @@ private:
     KnobSizeMode m_knob_size_mode { KnobSizeMode::Fixed };
     Orientation m_orientation { Orientation::Horizontal };
 };
+
+}

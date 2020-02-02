@@ -32,17 +32,17 @@
 #include <LibGUI/GTableView.h>
 #include <LibGUI/GTextBox.h>
 
-extern GTextEditor& current_editor();
+extern GUI::TextEditor& current_editor();
 extern void open_file(const String&);
 extern OwnPtr<Project> g_project;
 
 struct Match {
     String filename;
-    GTextRange range;
+    GUI::TextRange range;
     String text;
 };
 
-class SearchResultsModel final : public GModel {
+class SearchResultsModel final : public GUI::Model {
 public:
     enum Column {
         Filename,
@@ -56,8 +56,8 @@ public:
     {
     }
 
-    virtual int row_count(const GModelIndex& = GModelIndex()) const override { return m_matches.size(); }
-    virtual int column_count(const GModelIndex& = GModelIndex()) const override { return Column::__Count; }
+    virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_matches.size(); }
+    virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return Column::__Count; }
 
     virtual String column_name(int column) const override
     {
@@ -73,7 +73,7 @@ public:
         }
     }
 
-    virtual GVariant data(const GModelIndex& index, Role role = Role::Display) const override
+    virtual GUI::Variant data(const GUI::ModelIndex& index, Role role = Role::Display) const override
     {
         if (role == Role::Display) {
             auto& match = m_matches.at(index.row());
@@ -98,7 +98,7 @@ public:
     }
 
     virtual void update() override {}
-    virtual GModelIndex index(int row, int column = 0, const GModelIndex& = GModelIndex()) const override { return create_index(row, column, &m_matches.at(row)); }
+    virtual GUI::ModelIndex index(int row, int column = 0, const GUI::ModelIndex& = GUI::ModelIndex()) const override { return create_index(row, column, &m_matches.at(row)); }
 
 private:
     Vector<Match> m_matches;
@@ -127,18 +127,18 @@ static RefPtr<SearchResultsModel> find_in_files(const StringView& text)
     return adopt(*new SearchResultsModel(move(matches)));
 }
 
-FindInFilesWidget::FindInFilesWidget(GWidget* parent)
-    : GWidget(parent)
+FindInFilesWidget::FindInFilesWidget(GUI::Widget* parent)
+    : GUI::Widget(parent)
 {
-    set_layout(make<GVBoxLayout>());
-    m_textbox = GTextBox::construct(this);
-    m_textbox->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    set_layout(make<GUI::VBoxLayout>());
+    m_textbox = GUI::TextBox::construct(this);
+    m_textbox->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_textbox->set_preferred_size(0, 20);
-    m_button = GButton::construct("Find in files", this);
-    m_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    m_button = GUI::Button::construct("Find in files", this);
+    m_button->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_button->set_preferred_size(0, 20);
 
-    m_result_view = GTableView::construct(this);
+    m_result_view = GUI::TableView::construct(this);
     m_result_view->set_size_columns_to_fit_content(true);
 
     m_result_view->on_activation = [](auto& index) {

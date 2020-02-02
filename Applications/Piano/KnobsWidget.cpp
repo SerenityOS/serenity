@@ -32,43 +32,43 @@
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GSlider.h>
 
-KnobsWidget::KnobsWidget(GWidget* parent, AudioEngine& audio_engine, MainWidget& main_widget)
-    : GFrame(parent)
+KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWidget& main_widget)
+    : GUI::Frame(parent)
     , m_audio_engine(audio_engine)
     , m_main_widget(main_widget)
 {
     set_frame_thickness(2);
     set_frame_shadow(FrameShadow::Sunken);
     set_frame_shape(FrameShape::Container);
-    set_layout(make<GVBoxLayout>());
+    set_layout(make<GUI::VBoxLayout>());
     set_fill_with_background_color(true);
 
-    m_labels_container = GWidget::construct(this);
-    m_labels_container->set_layout(make<GHBoxLayout>());
-    m_labels_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    m_labels_container = GUI::Widget::construct(this);
+    m_labels_container->set_layout(make<GUI::HBoxLayout>());
+    m_labels_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_labels_container->set_preferred_size(0, 20);
 
-    m_octave_label = GLabel::construct("Octave", m_labels_container);
-    m_wave_label = GLabel::construct("Wave", m_labels_container);
-    m_decay_label = GLabel::construct("Decay", m_labels_container);
-    m_delay_label = GLabel::construct("Delay", m_labels_container);
+    m_octave_label = GUI::Label::construct("Octave", m_labels_container);
+    m_wave_label = GUI::Label::construct("Wave", m_labels_container);
+    m_decay_label = GUI::Label::construct("Decay", m_labels_container);
+    m_delay_label = GUI::Label::construct("Delay", m_labels_container);
 
-    m_values_container = GWidget::construct(this);
-    m_values_container->set_layout(make<GHBoxLayout>());
-    m_values_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    m_values_container = GUI::Widget::construct(this);
+    m_values_container->set_layout(make<GUI::HBoxLayout>());
+    m_values_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_values_container->set_preferred_size(0, 10);
 
-    m_octave_value = GLabel::construct(String::number(m_audio_engine.octave()), m_values_container);
-    m_wave_value = GLabel::construct(wave_strings[m_audio_engine.wave()], m_values_container);
-    m_decay_value = GLabel::construct(String::number(m_audio_engine.decay()), m_values_container);
-    m_delay_value = GLabel::construct(String::number(m_audio_engine.delay() / m_audio_engine.tick()), m_values_container);
+    m_octave_value = GUI::Label::construct(String::number(m_audio_engine.octave()), m_values_container);
+    m_wave_value = GUI::Label::construct(wave_strings[m_audio_engine.wave()], m_values_container);
+    m_decay_value = GUI::Label::construct(String::number(m_audio_engine.decay()), m_values_container);
+    m_delay_value = GUI::Label::construct(String::number(m_audio_engine.delay() / m_audio_engine.tick()), m_values_container);
 
-    m_knobs_container = GWidget::construct(this);
-    m_knobs_container->set_layout(make<GHBoxLayout>());
+    m_knobs_container = GUI::Widget::construct(this);
+    m_knobs_container->set_layout(make<GUI::HBoxLayout>());
 
     // FIXME: Implement vertical flipping in GSlider, not here.
 
-    m_octave_knob = GSlider::construct(Orientation::Vertical, m_knobs_container);
+    m_octave_knob = GUI::Slider::construct(Orientation::Vertical, m_knobs_container);
     m_octave_knob->set_tooltip("Z: octave down, X: octave up");
     m_octave_knob->set_range(octave_min - 1, octave_max - 1);
     m_octave_knob->set_value(m_audio_engine.octave() - 1);
@@ -80,7 +80,7 @@ KnobsWidget::KnobsWidget(GWidget* parent, AudioEngine& audio_engine, MainWidget&
         m_octave_value->set_text(String::number(new_octave));
     };
 
-    m_wave_knob = GSlider::construct(Orientation::Vertical, m_knobs_container);
+    m_wave_knob = GUI::Slider::construct(Orientation::Vertical, m_knobs_container);
     m_wave_knob->set_tooltip("C: cycle through waveforms");
     m_wave_knob->set_range(0, last_wave);
     m_wave_knob->set_value(last_wave - m_audio_engine.wave());
@@ -92,7 +92,7 @@ KnobsWidget::KnobsWidget(GWidget* parent, AudioEngine& audio_engine, MainWidget&
     };
 
     constexpr int max_decay = 20;
-    m_decay_knob = GSlider::construct(Orientation::Vertical, m_knobs_container);
+    m_decay_knob = GUI::Slider::construct(Orientation::Vertical, m_knobs_container);
     m_decay_knob->set_range(0, max_decay);
     m_decay_knob->set_value(max_decay);
     m_decay_knob->on_value_changed = [this](int value) {
@@ -103,7 +103,7 @@ KnobsWidget::KnobsWidget(GWidget* parent, AudioEngine& audio_engine, MainWidget&
     };
 
     constexpr int max_delay = 8;
-    m_delay_knob = GSlider::construct(Orientation::Vertical, m_knobs_container);
+    m_delay_knob = GUI::Slider::construct(Orientation::Vertical, m_knobs_container);
     m_delay_knob->set_range(0, max_delay);
     m_delay_knob->set_value(max_delay);
     m_delay_knob->on_value_changed = [this](int value) {

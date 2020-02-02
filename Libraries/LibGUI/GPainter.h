@@ -28,11 +28,14 @@
 
 #include <LibDraw/Painter.h>
 
-class GWidget;
-class GraphicsBitmap;
+namespace GUI {
 
-class GPainter : public Painter {
+class Widget;
+
+class Painter : public ::Painter {
 public:
-    explicit GPainter(GWidget&);
-    explicit GPainter(GraphicsBitmap&);
+    explicit Painter(Widget&);
+    explicit Painter(GraphicsBitmap&);
 };
+
+}

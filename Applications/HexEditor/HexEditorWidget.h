@@ -34,10 +34,13 @@
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
 
-class HexEditor;
-class GStatusBar;
+namespace GUI {
+class StatusBar;
+}
 
-class HexEditorWidget final : public GWidget {
+class HexEditor;
+
+class HexEditorWidget final : public GUI::Widget {
     C_OBJECT(HexEditorWidget)
 public:
     virtual ~HexEditorWidget() override;
@@ -53,14 +56,14 @@ private:
     String m_path;
     String m_name;
     String m_extension;
-    RefPtr<GAction> m_new_action;
-    RefPtr<GAction> m_open_action;
-    RefPtr<GAction> m_save_action;
-    RefPtr<GAction> m_save_as_action;
-    RefPtr<GAction> m_goto_decimal_offset_action;
-    RefPtr<GAction> m_goto_hex_offset_action;
+    RefPtr<GUI::Action> m_new_action;
+    RefPtr<GUI::Action> m_open_action;
+    RefPtr<GUI::Action> m_save_action;
+    RefPtr<GUI::Action> m_save_as_action;
+    RefPtr<GUI::Action> m_goto_decimal_offset_action;
+    RefPtr<GUI::Action> m_goto_hex_offset_action;
 
-    RefPtr<GStatusBar> m_statusbar;
+    RefPtr<GUI::StatusBar> m_statusbar;
 
     bool m_document_dirty { false };
 };

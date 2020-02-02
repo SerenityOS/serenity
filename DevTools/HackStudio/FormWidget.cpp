@@ -30,7 +30,7 @@
 #include <LibGUI/GPainter.h>
 
 FormWidget::FormWidget(FormEditorWidget& parent)
-    : GWidget(&parent)
+    : GUI::Widget(&parent)
 {
     set_fill_with_background_color(true);
     set_relative_rect(5, 5, 400, 300);
@@ -52,9 +52,9 @@ const FormEditorWidget& FormWidget::editor() const
     return static_cast<const FormEditorWidget&>(*parent());
 }
 
-void FormWidget::paint_event(GPaintEvent& event)
+void FormWidget::paint_event(GUI::PaintEvent& event)
 {
-    GPainter painter(*this);
+    GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
     for (int y = 0; y < height(); y += m_grid_size) {
@@ -64,9 +64,9 @@ void FormWidget::paint_event(GPaintEvent& event)
     }
 }
 
-void FormWidget::second_paint_event(GPaintEvent& event)
+void FormWidget::second_paint_event(GUI::PaintEvent& event)
 {
-    GPainter painter(*this);
+    GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
     if (!editor().selection().is_empty()) {
@@ -81,22 +81,22 @@ void FormWidget::second_paint_event(GPaintEvent& event)
     editor().tool().on_second_paint(painter, event);
 }
 
-void FormWidget::mousedown_event(GMouseEvent& event)
+void FormWidget::mousedown_event(GUI::MouseEvent& event)
 {
     editor().tool().on_mousedown(event);
 }
 
-void FormWidget::mouseup_event(GMouseEvent& event)
+void FormWidget::mouseup_event(GUI::MouseEvent& event)
 {
     editor().tool().on_mouseup(event);
 }
 
-void FormWidget::mousemove_event(GMouseEvent& event)
+void FormWidget::mousemove_event(GUI::MouseEvent& event)
 {
     editor().tool().on_mousemove(event);
 }
 
-void FormWidget::keydown_event(GKeyEvent& event)
+void FormWidget::keydown_event(GUI::KeyEvent& event)
 {
     editor().tool().on_keydown(event);
 }

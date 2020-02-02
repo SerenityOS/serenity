@@ -33,12 +33,14 @@
 #include <LibDraw/TextAlignment.h>
 #include <LibGUI/GAbstractButton.h>
 
-class GAction;
+namespace GUI {
 
-class GButton : public GAbstractButton {
-    C_OBJECT(GButton)
+class Action;
+
+class Button : public AbstractButton {
+    C_OBJECT(Button)
 public:
-    virtual ~GButton() override;
+    virtual ~Button() override;
 
     void set_icon(RefPtr<GraphicsBitmap>&&);
     const GraphicsBitmap* icon() const { return m_icon.ptr(); }
@@ -47,14 +49,14 @@ public:
     void set_text_alignment(TextAlignment text_alignment) { m_text_alignment = text_alignment; }
     TextAlignment text_alignment() const { return m_text_alignment; }
 
-    Function<void(GButton&)> on_click;
+    Function<void(Button&)> on_click;
 
     void set_button_style(ButtonStyle style) { m_button_style = style; }
     ButtonStyle button_style() const { return m_button_style; }
 
     virtual void click() override;
 
-    void set_action(GAction&);
+    void set_action(Action&);
 
     virtual bool accepts_focus() const override { return m_focusable; }
     virtual bool is_uncheckable() const override;
@@ -62,14 +64,16 @@ public:
     void set_focusable(bool b) { m_focusable = b; }
 
 protected:
-    GButton(const StringView& text, GWidget* parent);
-    explicit GButton(GWidget* parent);
-    virtual void paint_event(GPaintEvent&) override;
+    Button(const StringView& text, Widget* parent);
+    explicit Button(Widget* parent);
+    virtual void paint_event(PaintEvent&) override;
 
 private:
     RefPtr<GraphicsBitmap> m_icon;
     ButtonStyle m_button_style { ButtonStyle::Normal };
     TextAlignment m_text_alignment { TextAlignment::Center };
-    WeakPtr<GAction> m_action;
+    WeakPtr<Action> m_action;
     bool m_focusable { true };
 };
+
+}

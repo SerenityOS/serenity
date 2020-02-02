@@ -35,15 +35,15 @@
 #include <stdio.h>
 #include <unistd.h>
 
-PropertiesDialog::PropertiesDialog(GFileSystemModel& model, String path, bool disable_rename, Core::Object* parent)
-    : GDialog(parent)
+PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, bool disable_rename, Core::Object* parent)
+    : Dialog(parent)
     , m_model(model)
 {
     auto file_path = FileSystemPath(path);
     ASSERT(file_path.is_valid());
 
-    auto main_widget = GWidget::construct();
-    main_widget->set_layout(make<GVBoxLayout>());
+    auto main_widget = GUI::Widget::construct();
+    main_widget->set_layout(make<GUI::VBoxLayout>());
     main_widget->layout()->set_margins({ 4, 4, 4, 4 });
     main_widget->set_fill_with_background_color(true);
 
@@ -51,30 +51,30 @@ PropertiesDialog::PropertiesDialog(GFileSystemModel& model, String path, bool di
     set_rect({ 0, 0, 360, 420 });
     set_resizable(false);
 
-    auto tab_widget = GTabWidget::construct(main_widget);
+    auto tab_widget = GUI::TabWidget::construct(main_widget);
 
-    auto general_tab = GWidget::construct(tab_widget.ptr());
-    general_tab->set_layout(make<GVBoxLayout>());
+    auto general_tab = GUI::Widget::construct(tab_widget.ptr());
+    general_tab->set_layout(make<GUI::VBoxLayout>());
     general_tab->layout()->set_margins({ 12, 8, 12, 8 });
     general_tab->layout()->set_spacing(10);
     tab_widget->add_widget("General", general_tab);
 
     general_tab->layout()->add_spacer();
 
-    auto file_container = GWidget::construct(general_tab.ptr());
-    file_container->set_layout(make<GHBoxLayout>());
-    file_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    auto file_container = GUI::Widget::construct(general_tab.ptr());
+    file_container->set_layout(make<GUI::HBoxLayout>());
+    file_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     file_container->layout()->set_spacing(20);
     file_container->set_preferred_size(0, 34);
 
-    m_icon = GLabel::construct(file_container);
-    m_icon->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+    m_icon = GUI::Label::construct(file_container);
+    m_icon->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     m_icon->set_preferred_size(32, 32);
 
     m_name = file_path.basename();
 
-    m_name_box = GTextBox::construct(file_container);
-    m_name_box->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    m_name_box = GUI::TextBox::construct(file_container);
+    m_name_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_name_box->set_preferred_size({ 0, 22 });
     m_name_box->set_text(m_name);
     m_name_box->on_change = [&, disable_rename]() {
@@ -118,8 +118,8 @@ PropertiesDialog::PropertiesDialog(GFileSystemModel& model, String path, bool di
     properties.append({ "Size:", String::format("%zu bytes", st.st_size) });
     properties.append({ "Owner:", String::format("%s (%lu)", user_pw->pw_name, static_cast<u32>(user_pw->pw_uid)) });
     properties.append({ "Group:", String::format("%s (%lu)", group_pw->pw_name, static_cast<u32>(group_pw->pw_uid)) });
-    properties.append({ "Created at:", GFileSystemModel::timestamp_string(st.st_ctime) });
-    properties.append({ "Last modified:", GFileSystemModel::timestamp_string(st.st_mtime) });
+    properties.append({ "Created at:", GUI::FileSystemModel::timestamp_string(st.st_ctime) });
+    properties.append({ "Last modified:", GUI::FileSystemModel::timestamp_string(st.st_mtime) });
 
     make_property_value_pairs(properties, general_tab);
 
@@ -131,9 +131,9 @@ PropertiesDialog::PropertiesDialog(GFileSystemModel& model, String path, bool di
 
     general_tab->layout()->add_spacer();
 
-    auto button_widget = GWidget::construct(main_widget.ptr());
-    button_widget->set_layout(make<GHBoxLayout>());
-    button_widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    auto button_widget = GUI::Widget::construct(main_widget.ptr());
+    button_widget->set_layout(make<GUI::HBoxLayout>());
+    button_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     button_widget->set_preferred_size(0, 24);
     button_widget->layout()->set_spacing(5);
 
@@ -180,13 +180,13 @@ bool PropertiesDialog::apply_changes()
         String new_name = m_name_box->text();
         String new_file = make_full_path(new_name).characters();
 
-        if (GFilePicker::file_exists(new_file)) {
-            GMessageBox::show(String::format("A file \"%s\" already exists!", new_name.characters()), "Error", GMessageBox::Type::Error);
+        if (GUI::FilePicker::file_exists(new_file)) {
+            GUI::MessageBox::show(String::format("A file \"%s\" already exists!", new_name.characters()), "Error", GUI::MessageBox::Type::Error);
             return false;
         }
 
         if (rename(make_full_path(m_name).characters(), new_file.characters())) {
-            GMessageBox::show(String::format("Could not rename file: %s!", strerror(errno)), "Error", GMessageBox::Type::Error);
+            GUI::MessageBox::show(String::format("Could not rename file: %s!", strerror(errno)), "Error", GUI::MessageBox::Type::Error);
             return false;
         }
 
@@ -197,7 +197,7 @@ bool PropertiesDialog::apply_changes()
 
     if (m_permissions_dirty) {
         if (chmod(make_full_path(m_name).characters(), m_mode)) {
-            GMessageBox::show(String::format("Could not update permissions: %s!", strerror(errno)), "Error", GMessageBox::Type::Error);
+            GUI::MessageBox::show(String::format("Could not update permissions: %s!", strerror(errno)), "Error", GUI::MessageBox::Type::Error);
             return false;
         }
 
@@ -209,48 +209,48 @@ bool PropertiesDialog::apply_changes()
     return true;
 }
 
-void PropertiesDialog::make_permission_checkboxes(NonnullRefPtr<GWidget>& parent, PermissionMasks masks, String label_string, mode_t mode)
+void PropertiesDialog::make_permission_checkboxes(NonnullRefPtr<GUI::Widget>& parent, PermissionMasks masks, String label_string, mode_t mode)
 {
-    auto widget = GWidget::construct(parent.ptr());
-    widget->set_layout(make<GHBoxLayout>());
-    widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    auto widget = GUI::Widget::construct(parent.ptr());
+    widget->set_layout(make<GUI::HBoxLayout>());
+    widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     widget->set_preferred_size(0, 16);
     widget->layout()->set_spacing(10);
 
-    auto label = GLabel::construct(label_string, widget);
+    auto label = GUI::Label::construct(label_string, widget);
     label->set_text_alignment(TextAlignment::CenterLeft);
 
-    auto box_read = GCheckBox::construct("Read", widget);
+    auto box_read = GUI::CheckBox::construct("Read", widget);
     box_read->set_checked(mode & masks.read);
     box_read->on_checked = [&, masks](bool checked) { permission_changed(masks.read, checked); };
 
-    auto box_write = GCheckBox::construct("Write", widget);
+    auto box_write = GUI::CheckBox::construct("Write", widget);
     box_write->set_checked(mode & masks.write);
     box_write->on_checked = [&, masks](bool checked) { permission_changed(masks.write, checked); };
 
-    auto box_execute = GCheckBox::construct("Execute", widget);
+    auto box_execute = GUI::CheckBox::construct("Execute", widget);
     box_execute->set_checked(mode & masks.execute);
     box_execute->on_checked = [&, masks](bool checked) { permission_changed(masks.execute, checked); };
 }
 
-void PropertiesDialog::make_property_value_pairs(const Vector<PropertyValuePair>& pairs, NonnullRefPtr<GWidget>& parent)
+void PropertiesDialog::make_property_value_pairs(const Vector<PropertyValuePair>& pairs, NonnullRefPtr<GUI::Widget>& parent)
 {
     int max_width = 0;
-    Vector<NonnullRefPtr<GLabel>> property_labels;
+    Vector<NonnullRefPtr<GUI::Label>> property_labels;
 
     property_labels.ensure_capacity(pairs.size());
     for (auto pair : pairs) {
-        auto label_container = GWidget::construct(parent.ptr());
-        label_container->set_layout(make<GHBoxLayout>());
-        label_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+        auto label_container = GUI::Widget::construct(parent.ptr());
+        label_container->set_layout(make<GUI::HBoxLayout>());
+        label_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
         label_container->set_preferred_size(0, 14);
         label_container->layout()->set_spacing(12);
 
-        auto label_property = GLabel::construct(pair.property, label_container);
+        auto label_property = GUI::Label::construct(pair.property, label_container);
         label_property->set_text_alignment(TextAlignment::CenterLeft);
-        label_property->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+        label_property->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
 
-        GLabel::construct(pair.value, label_container)->set_text_alignment(TextAlignment::CenterLeft);
+        GUI::Label::construct(pair.value, label_container)->set_text_alignment(TextAlignment::CenterLeft);
 
         max_width = max(max_width, label_property->font().width(pair.property));
         property_labels.append(label_property);
@@ -260,20 +260,20 @@ void PropertiesDialog::make_property_value_pairs(const Vector<PropertyValuePair>
         label->set_preferred_size({ max_width, 0 });
 }
 
-NonnullRefPtr<GButton> PropertiesDialog::make_button(String text, NonnullRefPtr<GWidget>& parent)
+NonnullRefPtr<GUI::Button> PropertiesDialog::make_button(String text, NonnullRefPtr<GUI::Widget>& parent)
 {
-    auto button = GButton::construct(text, parent.ptr());
-    button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+    auto button = GUI::Button::construct(text, parent.ptr());
+    button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     button->set_preferred_size(70, 22);
     return button;
 }
 
-void PropertiesDialog::make_divider(NonnullRefPtr<GWidget>& parent)
+void PropertiesDialog::make_divider(NonnullRefPtr<GUI::Widget>& parent)
 {
     parent->layout()->add_spacer();
 
-    auto divider = GFrame::construct(parent.ptr());
-    divider->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    auto divider = GUI::Frame::construct(parent.ptr());
+    divider->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     divider->set_preferred_size({ 0, 2 });
     divider->set_frame_shape(FrameShape::HorizontalLine);
     divider->set_frame_shadow(FrameShadow::Sunken);

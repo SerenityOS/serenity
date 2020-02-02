@@ -34,13 +34,13 @@
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GTextBox.h>
 
-class PropertiesDialog final : public GDialog {
+class PropertiesDialog final : public GUI::Dialog {
     C_OBJECT(PropertiesDialog)
 public:
     virtual ~PropertiesDialog() override;
 
 private:
-    PropertiesDialog(GFileSystemModel&, String, bool disable_rename, Core::Object* parent = nullptr);
+    PropertiesDialog(GUI::FileSystemModel&, String, bool disable_rename, Core::Object* parent = nullptr);
 
     struct PropertyValuePair {
         String property;
@@ -75,19 +75,19 @@ private:
         return "Unknown";
     }
 
-    NonnullRefPtr<GButton> make_button(String, NonnullRefPtr<GWidget>&);
-    void make_divider(NonnullRefPtr<GWidget>&);
-    void make_property_value_pairs(const Vector<PropertyValuePair>& pairs, NonnullRefPtr<GWidget>& parent);
-    void make_permission_checkboxes(NonnullRefPtr<GWidget>& parent, PermissionMasks, String label_string, mode_t mode);
+    NonnullRefPtr<GUI::Button> make_button(String, NonnullRefPtr<GUI::Widget>&);
+    void make_divider(NonnullRefPtr<GUI::Widget>&);
+    void make_property_value_pairs(const Vector<PropertyValuePair>& pairs, NonnullRefPtr<GUI::Widget>& parent);
+    void make_permission_checkboxes(NonnullRefPtr<GUI::Widget>& parent, PermissionMasks, String label_string, mode_t mode);
     void permission_changed(mode_t mask, bool set);
     bool apply_changes();
     void update();
     String make_full_path(String name);
 
-    GFileSystemModel& m_model;
-    RefPtr<GButton> m_apply_button;
-    RefPtr<GTextBox> m_name_box;
-    RefPtr<GLabel> m_icon;
+    GUI::FileSystemModel& m_model;
+    RefPtr<GUI::Button> m_apply_button;
+    RefPtr<GUI::TextBox> m_name_box;
+    RefPtr<GUI::Label> m_icon;
     String m_name;
     String m_path;
     mode_t m_mode;

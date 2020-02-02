@@ -34,7 +34,7 @@
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
 
-class SoundPlayerWidget final : public GWidget {
+class SoundPlayerWidget final : public GUI::Widget {
     C_OBJECT(SoundPlayerWidget)
 public:
     virtual ~SoundPlayerWidget() override;
@@ -43,14 +43,14 @@ public:
     PlaybackManager& manager() { return m_manager; }
 
 private:
-    explicit SoundPlayerWidget(GWindow&, NonnullRefPtr<AClientConnection>);
+    explicit SoundPlayerWidget(GUI::Window&, NonnullRefPtr<AClientConnection>);
 
     void update_position(const int position);
     void update_ui();
     int normalize_rate(int) const;
     int denormalize_rate(int) const;
 
-    class Slider final : public GSlider {
+    class Slider final : public GUI::Slider {
         C_OBJECT(Slider)
     public:
         virtual ~Slider() override;
@@ -58,35 +58,35 @@ private:
         void set_value(int value)
         {
             if (!knob_dragging())
-                GSlider::set_value(value);
+                GUI::Slider::set_value(value);
         }
 
     protected:
-        Slider(Orientation orientation, GWidget* parent)
-            : GSlider(orientation, parent)
+        Slider(Orientation orientation, GUI::Widget* parent)
+            : GUI::Slider(orientation, parent)
         {
         }
 
-        virtual void mouseup_event(GMouseEvent& event) override
+        virtual void mouseup_event(GUI::MouseEvent& event) override
         {
             if (on_knob_released && is_enabled())
                 on_knob_released(value());
 
-            GSlider::mouseup_event(event);
+            GUI::Slider::mouseup_event(event);
         }
     };
 
-    GWindow& m_window;
+    GUI::Window& m_window;
     NonnullRefPtr<AClientConnection> m_connection;
     PlaybackManager m_manager;
     float m_sample_ratio;
-    RefPtr<GLabel> m_status;
-    RefPtr<GLabel> m_elapsed;
-    RefPtr<GLabel> m_remaining;
+    RefPtr<GUI::Label> m_status;
+    RefPtr<GUI::Label> m_elapsed;
+    RefPtr<GUI::Label> m_remaining;
     RefPtr<Slider> m_slider;
     RefPtr<SampleWidget> m_sample_widget;
     RefPtr<GraphicsBitmap> m_play_icon { GraphicsBitmap::load_from_file("/res/icons/16x16/play.png") };
     RefPtr<GraphicsBitmap> m_pause_icon { GraphicsBitmap::load_from_file("/res/icons/16x16/pause.png") };
-    RefPtr<GButton> m_play;
-    RefPtr<GButton> m_stop;
+    RefPtr<GUI::Button> m_play;
+    RefPtr<GUI::Button> m_stop;
 };

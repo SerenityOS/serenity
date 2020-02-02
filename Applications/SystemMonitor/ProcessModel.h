@@ -43,7 +43,7 @@ struct PidAndTid {
     int tid;
 };
 
-class ProcessModel final : public GModel {
+class ProcessModel final : public GUI::Model {
 public:
     enum Column {
         Icon = 0,
@@ -81,11 +81,11 @@ public:
     static NonnullRefPtr<ProcessModel> create() { return adopt(*new ProcessModel); }
     virtual ~ProcessModel() override;
 
-    virtual int row_count(const GModelIndex&) const override;
-    virtual int column_count(const GModelIndex&) const override;
+    virtual int row_count(const GUI::ModelIndex&) const override;
+    virtual int column_count(const GUI::ModelIndex&) const override;
     virtual String column_name(int column) const override;
     virtual ColumnMetadata column_metadata(int column) const override;
-    virtual GVariant data(const GModelIndex&, Role = Role::Display) const override;
+    virtual GUI::Variant data(const GUI::ModelIndex&, Role = Role::Display) const override;
     virtual void update() override;
 
     Function<void(float)> on_new_cpu_data_point;

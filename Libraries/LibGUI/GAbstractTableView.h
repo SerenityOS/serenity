@@ -28,17 +28,19 @@
 
 #include <LibGUI/GAbstractView.h>
 
-class GPainter;
+namespace GUI {
+
+class Painter;
 
 // FIXME: Rename this to something without "table cell" in the name.
-class GTableCellPaintingDelegate {
+class TableCellPaintingDelegate {
 public:
-    virtual ~GTableCellPaintingDelegate() {}
+    virtual ~TableCellPaintingDelegate() {}
 
-    virtual void paint(GPainter&, const Rect&, const Palette&, const GModel&, const GModelIndex&) = 0;
+    virtual void paint(Painter&, const Rect&, const Palette&, const Model&, const ModelIndex&) = 0;
 };
 
-class GAbstractTableView : public GAbstractView {
+class AbstractTableView : public AbstractView {
 public:
     int item_height() const { return 16; }
 
@@ -56,37 +58,37 @@ public:
     void set_size_columns_to_fit_content(bool b) { m_size_columns_to_fit_content = b; }
     bool size_columns_to_fit_content() const { return m_size_columns_to_fit_content; }
 
-    void set_cell_painting_delegate(int column, OwnPtr<GTableCellPaintingDelegate>&&);
+    void set_cell_painting_delegate(int column, OwnPtr<TableCellPaintingDelegate>&&);
 
     int horizontal_padding() const { return m_horizontal_padding; }
 
     Point adjusted_position(const Point&) const;
 
-    virtual Rect content_rect(const GModelIndex&) const override;
+    virtual Rect content_rect(const ModelIndex&) const override;
     Rect content_rect(int row, int column) const;
     Rect row_rect(int item_index) const;
 
-    void scroll_into_view(const GModelIndex&, Orientation);
+    void scroll_into_view(const ModelIndex&, Orientation);
 
-    virtual GModelIndex index_at_event_position(const Point&, bool& is_toggle) const;
-    virtual GModelIndex index_at_event_position(const Point&) const override;
+    virtual ModelIndex index_at_event_position(const Point&, bool& is_toggle) const;
+    virtual ModelIndex index_at_event_position(const Point&) const override;
 
 protected:
-    virtual ~GAbstractTableView() override;
-    explicit GAbstractTableView(GWidget* parent);
+    virtual ~AbstractTableView() override;
+    explicit AbstractTableView(Widget* parent);
 
     virtual void did_update_model() override;
-    virtual void mouseup_event(GMouseEvent&) override;
-    virtual void mousedown_event(GMouseEvent&) override;
-    virtual void mousemove_event(GMouseEvent&) override;
-    virtual void doubleclick_event(GMouseEvent&) override;
-    virtual void keydown_event(GKeyEvent&) override;
+    virtual void mouseup_event(MouseEvent&) override;
+    virtual void mousedown_event(MouseEvent&) override;
+    virtual void mousemove_event(MouseEvent&) override;
+    virtual void doubleclick_event(MouseEvent&) override;
+    virtual void keydown_event(KeyEvent&) override;
     virtual void leave_event(Core::Event&) override;
-    virtual void context_menu_event(GContextMenuEvent&) override;
+    virtual void context_menu_event(ContextMenuEvent&) override;
 
-    virtual void toggle_index(const GModelIndex&) {}
+    virtual void toggle_index(const ModelIndex&) {}
 
-    void paint_headers(GPainter&);
+    void paint_headers(Painter&);
     Rect header_rect(int column) const;
 
     static const Font& header_font();
@@ -97,15 +99,15 @@ protected:
         int width { 0 };
         bool has_initialized_width { false };
         bool visibility { true };
-        RefPtr<GAction> visibility_action;
-        OwnPtr<GTableCellPaintingDelegate> cell_painting_delegate;
+        RefPtr<Action> visibility_action;
+        OwnPtr<TableCellPaintingDelegate> cell_painting_delegate;
     };
     ColumnData& column_data(int column) const;
 
     mutable Vector<ColumnData> m_column_data;
 
-    GMenu& ensure_header_context_menu();
-    RefPtr<GMenu> m_header_context_menu;
+    Menu& ensure_header_context_menu();
+    RefPtr<Menu> m_header_context_menu;
 
     Rect column_resize_grabbable_rect(int) const;
     int column_width(int) const;
@@ -126,3 +128,5 @@ private:
     bool m_pressed_column_header_is_pressed { false };
     int m_hovered_column_header_index { -1 };
 };
+
+}

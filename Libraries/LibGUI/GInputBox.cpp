@@ -31,21 +31,23 @@
 #include <LibGUI/GTextEditor.h>
 #include <stdio.h>
 
-GInputBox::GInputBox(const StringView& prompt, const StringView& title, Core::Object* parent)
-    : GDialog(parent)
+namespace GUI {
+
+InputBox::InputBox(const StringView& prompt, const StringView& title, Core::Object* parent)
+    : Dialog(parent)
     , m_prompt(prompt)
 {
     set_title(title);
     build();
 }
 
-GInputBox::~GInputBox()
+InputBox::~InputBox()
 {
 }
 
-void GInputBox::build()
+void InputBox::build()
 {
-    auto widget = GWidget::construct();
+    auto widget = Widget::construct();
     set_main_widget(widget);
 
     int text_width = widget->font().width(m_prompt);
@@ -54,30 +56,30 @@ void GInputBox::build()
 
     set_rect(x(), y(), max_width + 80, 80);
 
-    widget->set_layout(make<GVBoxLayout>());
+    widget->set_layout(make<VBoxLayout>());
     widget->set_fill_with_background_color(true);
 
     widget->layout()->set_margins({ 8, 8, 8, 8 });
     widget->layout()->set_spacing(8);
 
-    auto label = GLabel::construct(m_prompt, widget);
+    auto label = Label::construct(m_prompt, widget);
     label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     label->set_preferred_size(text_width, 16);
 
-    m_text_editor = GTextEditor::construct(GTextEditor::SingleLine, widget);
+    m_text_editor = TextEditor::construct(TextEditor::SingleLine, widget);
     m_text_editor->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_text_editor->set_preferred_size(0, 19);
 
-    auto button_container_outer = GWidget::construct(widget.ptr());
+    auto button_container_outer = Widget::construct(widget.ptr());
     button_container_outer->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     button_container_outer->set_preferred_size(0, 20);
-    button_container_outer->set_layout(make<GVBoxLayout>());
+    button_container_outer->set_layout(make<VBoxLayout>());
 
-    auto button_container_inner = GWidget::construct(button_container_outer.ptr());
-    button_container_inner->set_layout(make<GHBoxLayout>());
+    auto button_container_inner = Widget::construct(button_container_outer.ptr());
+    button_container_inner->set_layout(make<HBoxLayout>());
     button_container_inner->layout()->set_spacing(8);
 
-    m_cancel_button = GButton::construct(button_container_inner);
+    m_cancel_button = Button::construct(button_container_inner);
     m_cancel_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_cancel_button->set_preferred_size(0, 20);
     m_cancel_button->set_text("Cancel");
@@ -86,7 +88,7 @@ void GInputBox::build()
         done(ExecCancel);
     };
 
-    m_ok_button = GButton::construct(button_container_inner);
+    m_ok_button = Button::construct(button_container_inner);
     m_ok_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_ok_button->set_preferred_size(0, 20);
     m_ok_button->set_text("OK");
@@ -103,4 +105,6 @@ void GInputBox::build()
         m_cancel_button->click();
     };
     m_text_editor->set_focus(true);
+}
+
 }

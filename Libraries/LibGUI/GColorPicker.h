@@ -28,20 +28,24 @@
 
 #include <LibGUI/GDialog.h>
 
-class GFrame;
+namespace GUI {
 
-class GColorPicker final : public GDialog {
-    C_OBJECT(GColorPicker)
+class Frame;
+
+class ColorPicker final : public Dialog {
+    C_OBJECT(ColorPicker)
 public:
-    virtual ~GColorPicker() override;
+    virtual ~ColorPicker() override;
 
     Color color() const { return m_color; }
 
 private:
-    explicit GColorPicker(Color, Core::Object* parent = nullptr);
+    explicit ColorPicker(Color, Core::Object* parent = nullptr);
 
     void build();
 
     Color m_color;
-    RefPtr<GFrame> m_preview_widget;
+    RefPtr<Frame> m_preview_widget;
 };
+
+}

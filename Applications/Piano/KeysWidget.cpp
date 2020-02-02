@@ -29,8 +29,8 @@
 #include "AudioEngine.h"
 #include <LibGUI/GPainter.h>
 
-KeysWidget::KeysWidget(GWidget* parent, AudioEngine& audio_engine)
-    : GFrame(parent)
+KeysWidget::KeysWidget(GUI::Widget* parent, AudioEngine& audio_engine)
+    : GUI::Frame(parent)
     , m_audio_engine(audio_engine)
 {
     set_frame_thickness(2);
@@ -174,9 +174,9 @@ constexpr int black_key_note_accumulator[] = {
     3,
 };
 
-void KeysWidget::paint_event(GPaintEvent& event)
+void KeysWidget::paint_event(GUI::PaintEvent& event)
 {
-    GPainter painter(*this);
+    GUI::Painter painter(*this);
     painter.translate(frame_thickness(), frame_thickness());
 
     int note = 0;
@@ -223,7 +223,7 @@ void KeysWidget::paint_event(GPaintEvent& event)
             break;
     }
 
-    GFrame::paint_event(event);
+    GUI::Frame::paint_event(event);
 }
 
 constexpr int notes_per_white_key[] = {
@@ -278,9 +278,9 @@ int KeysWidget::note_for_event_position(Point point) const
     return note;
 }
 
-void KeysWidget::mousedown_event(GMouseEvent& event)
+void KeysWidget::mousedown_event(GUI::MouseEvent& event)
 {
-    if (event.button() != Left)
+    if (event.button() != GUI::MouseButton::Left)
         return;
 
     m_mouse_down = true;
@@ -291,9 +291,9 @@ void KeysWidget::mousedown_event(GMouseEvent& event)
     update();
 }
 
-void KeysWidget::mouseup_event(GMouseEvent& event)
+void KeysWidget::mouseup_event(GUI::MouseEvent& event)
 {
-    if (event.button() != Left)
+    if (event.button() != GUI::MouseButton::Left)
         return;
 
     m_mouse_down = false;
@@ -302,7 +302,7 @@ void KeysWidget::mouseup_event(GMouseEvent& event)
     update();
 }
 
-void KeysWidget::mousemove_event(GMouseEvent& event)
+void KeysWidget::mousemove_event(GUI::MouseEvent& event)
 {
     if (!m_mouse_down)
         return;

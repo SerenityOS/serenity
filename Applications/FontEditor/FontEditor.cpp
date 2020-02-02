@@ -38,8 +38,8 @@
 #include <LibGUI/GTextBox.h>
 #include <stdlib.h>
 
-FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Font>&& edited_font, GWidget* parent)
-    : GWidget(parent)
+FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Font>&& edited_font, GUI::Widget* parent)
+    : GUI::Widget(parent)
     , m_edited_font(move(edited_font))
 {
     set_fill_with_background_color(true);
@@ -75,7 +75,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Font>&& edited_fon
     };
 
     m_ui->save_button->set_text("Save");
-    m_ui->save_button->on_click = [this](GButton&) {
+    m_ui->save_button->on_click = [this](GUI::Button&) {
         dbgprintf("write to file: '%s'\n", m_path.characters());
         m_edited_font->write_to_file(m_path);
     };

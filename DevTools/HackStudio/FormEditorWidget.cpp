@@ -30,8 +30,8 @@
 #include "WidgetTreeModel.h"
 #include <LibGUI/GPainter.h>
 
-FormEditorWidget::FormEditorWidget(GWidget* parent)
-    : GScrollableWidget(parent)
+FormEditorWidget::FormEditorWidget(GUI::Widget* parent)
+    : ScrollableWidget(parent)
     , m_tool(make<CursorTool>(*this))
 {
     set_fill_with_background_color(true);
@@ -49,11 +49,11 @@ FormEditorWidget::~FormEditorWidget()
 {
 }
 
-void FormEditorWidget::paint_event(GPaintEvent& event)
+void FormEditorWidget::paint_event(GUI::PaintEvent& event)
 {
-    GFrame::paint_event(event);
+    GUI::Frame::paint_event(event);
 
-    GPainter painter(*this);
+    GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 }
 

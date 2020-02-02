@@ -38,7 +38,7 @@ VBWidgetPropertyModel::~VBWidgetPropertyModel()
 {
 }
 
-int VBWidgetPropertyModel::row_count(const GModelIndex&) const
+int VBWidgetPropertyModel::row_count(const GUI::ModelIndex&) const
 {
     return m_widget.m_properties.size();
 }
@@ -57,7 +57,7 @@ String VBWidgetPropertyModel::column_name(int column) const
     }
 }
 
-GModel::ColumnMetadata VBWidgetPropertyModel::column_metadata(int column) const
+GUI::Model::ColumnMetadata VBWidgetPropertyModel::column_metadata(int column) const
 {
     UNUSED_PARAM(column);
     if (column == Column::Name)
@@ -65,7 +65,7 @@ GModel::ColumnMetadata VBWidgetPropertyModel::column_metadata(int column) const
     return { 90, TextAlignment::CenterLeft };
 }
 
-GVariant VBWidgetPropertyModel::data(const GModelIndex& index, Role role) const
+GUI::Variant VBWidgetPropertyModel::data(const GUI::ModelIndex& index, Role role) const
 {
     if (role == Role::Custom) {
         auto& property = m_widget.m_properties[index.row()];
@@ -100,7 +100,7 @@ GVariant VBWidgetPropertyModel::data(const GModelIndex& index, Role role) const
     return {};
 }
 
-void VBWidgetPropertyModel::set_data(const GModelIndex& index, const GVariant& value)
+void VBWidgetPropertyModel::set_data(const GUI::ModelIndex& index, const GUI::Variant& value)
 {
     ASSERT(index.column() == Column::Value);
     auto& property = m_widget.m_properties[index.row()];
@@ -108,7 +108,7 @@ void VBWidgetPropertyModel::set_data(const GModelIndex& index, const GVariant& v
     property.set_value(value);
 }
 
-bool VBWidgetPropertyModel::is_editable(const GModelIndex& index) const
+bool VBWidgetPropertyModel::is_editable(const GUI::ModelIndex& index) const
 {
     if (index.column() != Column::Value)
         return false;

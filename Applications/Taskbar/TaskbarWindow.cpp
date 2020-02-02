@@ -39,16 +39,16 @@
 
 TaskbarWindow::TaskbarWindow()
 {
-    set_window_type(GWindowType::Taskbar);
+    set_window_type(GUI::WindowType::Taskbar);
     set_title("Taskbar");
 
-    on_screen_rect_change(GDesktop::the().rect());
+    on_screen_rect_change(GUI::Desktop::the().rect());
 
-    GDesktop::the().on_rect_change = [this](const Rect& rect) { on_screen_rect_change(rect); };
+    GUI::Desktop::the().on_rect_change = [this](const Rect& rect) { on_screen_rect_change(rect); };
 
-    auto widget = GFrame::construct();
+    auto widget = GUI::Frame::construct();
     widget->set_fill_with_background_color(true);
-    widget->set_layout(make<GHBoxLayout>());
+    widget->set_layout(make<GUI::HBoxLayout>());
     widget->layout()->set_margins({ 3, 2, 3, 2 });
     widget->layout()->set_spacing(3);
     widget->set_frame_thickness(1);
@@ -69,9 +69,9 @@ TaskbarWindow::~TaskbarWindow()
 
 void TaskbarWindow::create_quick_launch_bar()
 {
-    auto quick_launch_bar = GFrame::construct(main_widget());
-    quick_launch_bar->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-    quick_launch_bar->set_layout(make<GHBoxLayout>());
+    auto quick_launch_bar = GUI::Frame::construct(main_widget());
+    quick_launch_bar->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    quick_launch_bar->set_layout(make<GUI::HBoxLayout>());
     quick_launch_bar->layout()->set_spacing(3);
     quick_launch_bar->layout()->set_margins({ 3, 0, 3, 0 });
     quick_launch_bar->set_frame_thickness(1);
@@ -93,8 +93,8 @@ void TaskbarWindow::create_quick_launch_bar()
         auto app_executable = af->read_entry("App", "Executable");
         auto app_icon_path = af->read_entry("Icons", "16x16");
 
-        auto button = GButton::construct(quick_launch_bar);
-        button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+        auto button = GUI::Button::construct(quick_launch_bar);
+        button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
         button->set_preferred_size(22, 22);
         button->set_button_style(ButtonStyle::CoolBar);
 
@@ -127,28 +127,28 @@ void TaskbarWindow::on_screen_rect_change(const Rect& rect)
     set_rect(new_rect);
 }
 
-NonnullRefPtr<GButton> TaskbarWindow::create_button(const WindowIdentifier& identifier)
+NonnullRefPtr<GUI::Button> TaskbarWindow::create_button(const WindowIdentifier& identifier)
 {
     auto button = TaskbarButton::construct(identifier, main_widget());
-    button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+    button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     button->set_preferred_size(140, 22);
     button->set_checkable(true);
     button->set_text_alignment(TextAlignment::CenterLeft);
     return button;
 }
 
-static bool should_include_window(GWindowType window_type)
+static bool should_include_window(GUI::WindowType window_type)
 {
-    return window_type == GWindowType::Normal;
+    return window_type == GUI::WindowType::Normal;
 }
 
-void TaskbarWindow::wm_event(GWMEvent& event)
+void TaskbarWindow::wm_event(GUI::WMEvent& event)
 {
     WindowIdentifier identifier { event.client_id(), event.window_id() };
     switch (event.type()) {
-    case GEvent::WM_WindowRemoved: {
+    case GUI::Event::WM_WindowRemoved: {
 #ifdef EVENT_DEBUG
-        auto& removed_event = static_cast<GWMWindowRemovedEvent&>(event);
+        auto& removed_event = static_cast<GUI::WMWindowRemovedEvent&>(event);
         dbgprintf("WM_WindowRemoved: client_id=%d, window_id=%d\n",
             removed_event.client_id(),
             removed_event.window_id());
@@ -157,9 +157,9 @@ void TaskbarWindow::wm_event(GWMEvent& event)
         update();
         break;
     }
-    case GEvent::WM_WindowRectChanged: {
+    case GUI::Event::WM_WindowRectChanged: {
 #ifdef EVENT_DEBUG
-        auto& changed_event = static_cast<GWMWindowRectChangedEvent&>(event);
+        auto& changed_event = static_cast<GUI::WMWindowRectChangedEvent&>(event);
         dbgprintf("WM_WindowRectChanged: client_id=%d, window_id=%d, rect=%s\n",
             changed_event.client_id(),
             changed_event.window_id(),
@@ -168,8 +168,8 @@ void TaskbarWindow::wm_event(GWMEvent& event)
         break;
     }
 
-    case GEvent::WM_WindowIconBitmapChanged: {
-        auto& changed_event = static_cast<GWMWindowIconBitmapChangedEvent&>(event);
+    case GUI::Event::WM_WindowIconBitmapChanged: {
+        auto& changed_event = static_cast<GUI::WMWindowIconBitmapChangedEvent&>(event);
 #ifdef EVENT_DEBUG
         dbgprintf("WM_WindowIconBitmapChanged: client_id=%d, window_id=%d, icon_buffer_id=%d\n",
             changed_event.client_id(),
@@ -184,8 +184,8 @@ void TaskbarWindow::wm_event(GWMEvent& event)
         break;
     }
 
-    case GEvent::WM_WindowStateChanged: {
-        auto& changed_event = static_cast<GWMWindowStateChangedEvent&>(event);
+    case GUI::Event::WM_WindowStateChanged: {
+        auto& changed_event = static_cast<GUI::WMWindowStateChangedEvent&>(event);
 #ifdef EVENT_DEBUG
         dbgprintf("WM_WindowStateChanged: client_id=%d, window_id=%d, title=%s, rect=%s, is_active=%u, is_minimized=%u\n",
             changed_event.client_id(),

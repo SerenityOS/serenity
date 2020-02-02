@@ -100,7 +100,7 @@ void ThreadCatalogModel::update()
     };
 }
 
-int ThreadCatalogModel::row_count(const GModelIndex&) const
+int ThreadCatalogModel::row_count(const GUI::ModelIndex&) const
 {
     return m_catalog.size();
 }
@@ -125,7 +125,7 @@ String ThreadCatalogModel::column_name(int column) const
     }
 }
 
-GModel::ColumnMetadata ThreadCatalogModel::column_metadata(int column) const
+GUI::Model::ColumnMetadata ThreadCatalogModel::column_metadata(int column) const
 {
     switch (column) {
     case Column::ThreadNumber:
@@ -145,7 +145,7 @@ GModel::ColumnMetadata ThreadCatalogModel::column_metadata(int column) const
     }
 }
 
-GVariant ThreadCatalogModel::data(const GModelIndex& index, Role role) const
+GUI::Variant ThreadCatalogModel::data(const GUI::ModelIndex& index, Role role) const
 {
     auto& thread = m_catalog.at(index.row()).as_object();
     if (role == Role::Display) {

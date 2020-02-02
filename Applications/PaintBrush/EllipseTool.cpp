@@ -40,7 +40,7 @@ EllipseTool::~EllipseTool()
 {
 }
 
-void EllipseTool::draw_using(Painter& painter)
+void EllipseTool::draw_using(GUI::Painter& painter)
 {
     auto ellipse_intersecting_rect = Rect::from_two_points(m_ellipse_start_position, m_ellipse_end_position);
     switch (m_mode) {
@@ -52,12 +52,12 @@ void EllipseTool::draw_using(Painter& painter)
     }
 }
 
-void EllipseTool::on_mousedown(GMouseEvent& event)
+void EllipseTool::on_mousedown(GUI::MouseEvent& event)
 {
-    if (event.button() != GMouseButton::Left && event.button() != GMouseButton::Right)
+    if (event.button() != GUI::MouseButton::Left && event.button() != GUI::MouseButton::Right)
         return;
 
-    if (m_drawing_button != GMouseButton::None)
+    if (m_drawing_button != GUI::MouseButton::None)
         return;
 
     m_drawing_button = event.button();
@@ -66,19 +66,19 @@ void EllipseTool::on_mousedown(GMouseEvent& event)
     m_widget->update();
 }
 
-void EllipseTool::on_mouseup(GMouseEvent& event)
+void EllipseTool::on_mouseup(GUI::MouseEvent& event)
 {
     if (event.button() == m_drawing_button) {
-        GPainter painter(m_widget->bitmap());
+        GUI::Painter painter(m_widget->bitmap());
         draw_using(painter);
-        m_drawing_button = GMouseButton::None;
+        m_drawing_button = GUI::MouseButton::None;
         m_widget->update();
     }
 }
 
-void EllipseTool::on_mousemove(GMouseEvent& event)
+void EllipseTool::on_mousemove(GUI::MouseEvent& event)
 {
-    if (m_drawing_button == GMouseButton::None)
+    if (m_drawing_button == GUI::MouseButton::None)
         return;
 
     if (!m_widget->rect().contains(event.position()))
@@ -88,36 +88,36 @@ void EllipseTool::on_mousemove(GMouseEvent& event)
     m_widget->update();
 }
 
-void EllipseTool::on_second_paint(GPaintEvent& event)
+void EllipseTool::on_second_paint(GUI::PaintEvent& event)
 {
-    if (m_drawing_button == GMouseButton::None)
+    if (m_drawing_button == GUI::MouseButton::None)
         return;
 
-    GPainter painter(*m_widget);
+    GUI::Painter painter(*m_widget);
     painter.add_clip_rect(event.rect());
     draw_using(painter);
 }
 
-void EllipseTool::on_keydown(GKeyEvent& event)
+void EllipseTool::on_keydown(GUI::KeyEvent& event)
 {
-    if (event.key() == Key_Escape && m_drawing_button != GMouseButton::None) {
-        m_drawing_button = GMouseButton::None;
+    if (event.key() == Key_Escape && m_drawing_button != GUI::MouseButton::None) {
+        m_drawing_button = GUI::MouseButton::None;
         m_widget->update();
         event.accept();
     }
 }
 
-void EllipseTool::on_contextmenu(GContextMenuEvent& event)
+void EllipseTool::on_contextmenu(GUI::ContextMenuEvent& event)
 {
     if (!m_context_menu) {
-        m_context_menu = GMenu::construct();
-        m_context_menu->add_action(GAction::create("Outline", [this](auto&) {
+        m_context_menu = GUI::Menu::construct();
+        m_context_menu->add_action(GUI::Action::create("Outline", [this](auto&) {
             m_mode = Mode::Outline;
         }));
         m_context_menu->add_separator();
         m_thickness_actions.set_exclusive(true);
         auto insert_action = [&](int size, bool checked = false) {
-            auto action = GAction::create(String::number(size), [this, size](auto& action) {
+            auto action = GUI::Action::create(String::number(size), [this, size](auto& action) {
                 m_thickness = size;
                 action.set_checked(true);
             });

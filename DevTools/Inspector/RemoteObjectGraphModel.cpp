@@ -44,7 +44,7 @@ RemoteObjectGraphModel::~RemoteObjectGraphModel()
 {
 }
 
-GModelIndex RemoteObjectGraphModel::index(int row, int column, const GModelIndex& parent) const
+GUI::ModelIndex RemoteObjectGraphModel::index(int row, int column, const GUI::ModelIndex& parent) const
 {
     if (!parent.is_valid()) {
         if (m_process.roots().is_empty())
@@ -55,7 +55,7 @@ GModelIndex RemoteObjectGraphModel::index(int row, int column, const GModelIndex
     return create_index(row, column, &remote_parent.children.at(row));
 }
 
-GModelIndex RemoteObjectGraphModel::parent_index(const GModelIndex& index) const
+GUI::ModelIndex RemoteObjectGraphModel::parent_index(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return {};
@@ -82,7 +82,7 @@ GModelIndex RemoteObjectGraphModel::parent_index(const GModelIndex& index) const
     return {};
 }
 
-int RemoteObjectGraphModel::row_count(const GModelIndex& index) const
+int RemoteObjectGraphModel::row_count(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return m_process.roots().size();
@@ -90,12 +90,12 @@ int RemoteObjectGraphModel::row_count(const GModelIndex& index) const
     return remote_object.children.size();
 }
 
-int RemoteObjectGraphModel::column_count(const GModelIndex&) const
+int RemoteObjectGraphModel::column_count(const GUI::ModelIndex&) const
 {
     return 1;
 }
 
-GVariant RemoteObjectGraphModel::data(const GModelIndex& index, Role role) const
+GUI::Variant RemoteObjectGraphModel::data(const GUI::ModelIndex& index, Role role) const
 {
     auto* remote_object = static_cast<RemoteObject*>(index.internal_data());
     if (role == Role::Icon) {

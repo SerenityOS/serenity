@@ -30,24 +30,26 @@
 #include <LibDraw/Point.h>
 #include <LibGUI/GActionGroup.h>
 
-class GMenu;
+namespace GUI {
+class Menu;
+}
 
 class EraseTool final : public Tool {
 public:
     EraseTool();
     virtual ~EraseTool() override;
 
-    virtual void on_mousedown(GMouseEvent&) override;
-    virtual void on_mousemove(GMouseEvent&) override;
-    virtual void on_contextmenu(GContextMenuEvent&) override;
+    virtual void on_mousedown(GUI::MouseEvent&) override;
+    virtual void on_mousemove(GUI::MouseEvent&) override;
+    virtual void on_contextmenu(GUI::ContextMenuEvent&) override;
 
 private:
     Color get_color() const;
     virtual const char* class_name() const override { return "EraseTool"; }
     Rect build_rect(const Point& pos, const Rect& widget_rect);
-    RefPtr<GMenu> m_context_menu;
+    RefPtr<GUI::Menu> m_context_menu;
 
     bool m_use_secondary_color { true };
     int m_thickness { 1 };
-    GActionGroup m_thickness_actions;
+    GUI::ActionGroup m_thickness_actions;
 };

@@ -43,14 +43,14 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
     if (pledge("stdio rpath shared_buffer accept", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
-    auto window = GWindow::construct();
+    auto window = GUI::Window::construct();
 
     window->set_double_buffering_enabled(false);
     window->set_title("Snake");
@@ -59,22 +59,22 @@ int main(int argc, char** argv)
     auto game = SnakeGame::construct();
     window->set_main_widget(game);
 
-    auto menubar = make<GMenuBar>();
+    auto menubar = make<GUI::MenuBar>();
 
-    auto app_menu = GMenu::construct("Snake");
+    auto app_menu = GUI::Menu::construct("Snake");
 
-    app_menu->add_action(GAction::create("New game", { Mod_None, Key_F2 }, [&](const GAction&) {
+    app_menu->add_action(GUI::Action::create("New game", { Mod_None, Key_F2 }, [&](const GUI::Action&) {
         game->reset();
     }));
-    app_menu->add_action(GCommonActions::make_quit_action([](auto&) {
-        GApplication::the().quit(0);
+    app_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
+        GUI::Application::the().quit(0);
     }));
 
     menubar->add_menu(move(app_menu));
 
-    auto help_menu = GMenu::construct("Help");
-    help_menu->add_action(GAction::create("About", [&](const GAction&) {
-        GAboutDialog::show("Snake", load_png("/res/icons/32x32/app-snake.png"), window);
+    auto help_menu = GUI::Menu::construct("Help");
+    help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
+        GUI::AboutDialog::show("Snake", load_png("/res/icons/32x32/app-snake.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 

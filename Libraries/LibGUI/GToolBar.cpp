@@ -32,13 +32,15 @@
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GToolBar.h>
 
-GToolBar::GToolBar(GWidget* parent)
-    : GToolBar(Orientation::Horizontal, 16, parent)
+namespace GUI {
+
+ToolBar::ToolBar(Widget* parent)
+    : ToolBar(Orientation::Horizontal, 16, parent)
 {
 }
 
-GToolBar::GToolBar(Orientation orientation, int button_size, GWidget* parent)
-    : GWidget(parent)
+ToolBar::ToolBar(Orientation orientation, int button_size, Widget* parent)
+    : Widget(parent)
     , m_button_size(button_size)
 {
     if (orientation == Orientation::Horizontal) {
@@ -48,22 +50,22 @@ GToolBar::GToolBar(Orientation orientation, int button_size, GWidget* parent)
         set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
         set_preferred_size(button_size + 12, 0);
     }
-    set_layout(make<GBoxLayout>(orientation));
+    set_layout(make<BoxLayout>(orientation));
     layout()->set_spacing(0);
     layout()->set_margins({ 2, 2, 2, 2 });
 }
 
-GToolBar::~GToolBar()
+ToolBar::~ToolBar()
 {
 }
 
-void GToolBar::add_action(GAction& action)
+void ToolBar::add_action(Action& action)
 {
     auto item = make<Item>();
-    item->type = Item::Action;
+    item->type = Item::Type::Action;
     item->action = action;
 
-    auto button = GButton::construct(this);
+    auto button = Button::construct(this);
     if (action.group() && action.group()->is_exclusive())
         button->set_exclusive(true);
     button->set_action(*item->action);
@@ -82,20 +84,20 @@ void GToolBar::add_action(GAction& action)
     m_items.append(move(item));
 }
 
-class SeparatorWidget final : public GWidget {
+class SeparatorWidget final : public Widget {
     C_OBJECT(SeparatorWidget)
 public:
-    SeparatorWidget(GWidget* parent)
-        : GWidget(parent)
+    SeparatorWidget(Widget* parent)
+        : Widget(parent)
     {
         set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
         set_preferred_size(8, 22);
     }
     virtual ~SeparatorWidget() override {}
 
-    virtual void paint_event(GPaintEvent& event) override
+    virtual void paint_event(PaintEvent& event) override
     {
-        GPainter painter(*this);
+        Painter painter(*this);
         painter.add_clip_rect(event.rect());
         painter.translate(rect().center().x() - 1, 0);
         painter.draw_line({ 0, 0 }, { 0, rect().bottom() }, palette().threed_shadow1());
@@ -103,21 +105,23 @@ public:
     }
 };
 
-void GToolBar::add_separator()
+void ToolBar::add_separator()
 {
     auto item = make<Item>();
-    item->type = Item::Separator;
+    item->type = Item::Type::Separator;
     new SeparatorWidget(this);
     m_items.append(move(item));
 }
 
-void GToolBar::paint_event(GPaintEvent& event)
+void ToolBar::paint_event(PaintEvent& event)
 {
-    GPainter painter(*this);
+    Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
     if (m_has_frame)
         StylePainter::paint_surface(painter, rect(), palette(), x() != 0, y() != 0);
     else
         painter.fill_rect(event.rect(), palette().button());
+}
+
 }

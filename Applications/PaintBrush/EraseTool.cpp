@@ -48,35 +48,35 @@ Rect EraseTool::build_rect(const Point& pos, const Rect& widget_rect)
     return Rect(ex - eraser_radius, ey - eraser_radius, eraser_size, eraser_size).intersected(widget_rect);
 }
 
-void EraseTool::on_mousedown(GMouseEvent& event)
+void EraseTool::on_mousedown(GUI::MouseEvent& event)
 {
-    if (event.button() != GMouseButton::Left && event.button() != GMouseButton::Right)
+    if (event.button() != GUI::MouseButton::Left && event.button() != GUI::MouseButton::Right)
         return;
     Rect r = build_rect(event.position(), m_widget->bitmap().rect());
-    GPainter painter(m_widget->bitmap());
+    GUI::Painter painter(m_widget->bitmap());
     painter.fill_rect(r, get_color());
     m_widget->update();
 }
 
-void EraseTool::on_mousemove(GMouseEvent& event)
+void EraseTool::on_mousemove(GUI::MouseEvent& event)
 {
     if (!m_widget->rect().contains(event.position()))
         return;
 
-    if (event.buttons() & GMouseButton::Left || event.buttons() & GMouseButton::Right) {
+    if (event.buttons() & GUI::MouseButton::Left || event.buttons() & GUI::MouseButton::Right) {
         Rect r = build_rect(event.position(), m_widget->bitmap().rect());
-        GPainter painter(m_widget->bitmap());
+        GUI::Painter painter(m_widget->bitmap());
         painter.fill_rect(r, get_color());
         m_widget->update();
     }
 }
 
-void EraseTool::on_contextmenu(GContextMenuEvent& event)
+void EraseTool::on_contextmenu(GUI::ContextMenuEvent& event)
 {
     if (!m_context_menu) {
-        m_context_menu = GMenu::construct();
+        m_context_menu = GUI::Menu::construct();
 
-        NonnullRefPtr<GAction> eraser_color_toggler = GAction::create("Use secondary color", [&](GAction& action) {
+        NonnullRefPtr<GUI::Action> eraser_color_toggler = GUI::Action::create("Use secondary color", [&](GUI::Action& action) {
             bool toggled = !m_use_secondary_color;
             m_use_secondary_color = toggled;
             action.set_checked(toggled);
@@ -89,7 +89,7 @@ void EraseTool::on_contextmenu(GContextMenuEvent& event)
 
         m_thickness_actions.set_exclusive(true);
         auto insert_action = [&](int size, bool checked = false) {
-            auto action = GAction::create(String::number(size), [this, size](auto& action) {
+            auto action = GUI::Action::create(String::number(size), [this, size](auto& action) {
                 m_thickness = size;
                 action.set_checked(true);
             });

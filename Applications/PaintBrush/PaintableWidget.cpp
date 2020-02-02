@@ -37,8 +37,8 @@ PaintableWidget& PaintableWidget::the()
     return *s_the;
 }
 
-PaintableWidget::PaintableWidget(GWidget* parent)
-    : GWidget(parent)
+PaintableWidget::PaintableWidget(GUI::Widget* parent)
+    : GUI::Widget(parent)
 {
     ASSERT(!s_the);
     s_the = this;
@@ -55,9 +55,9 @@ PaintableWidget::~PaintableWidget()
 {
 }
 
-void PaintableWidget::paint_event(GPaintEvent& event)
+void PaintableWidget::paint_event(GUI::PaintEvent& event)
 {
-    GPainter painter(*this);
+    GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
     painter.blit({ 0, 0 }, *m_bitmap, m_bitmap->rect());
 }
@@ -76,68 +76,68 @@ Tool* PaintableWidget::tool()
     return m_tool;
 }
 
-Color PaintableWidget::color_for(GMouseButton button) const
+Color PaintableWidget::color_for(GUI::MouseButton button) const
 {
-    if (button == GMouseButton::Left)
+    if (button == GUI::MouseButton::Left)
         return m_primary_color;
-    if (button == GMouseButton::Right)
+    if (button == GUI::MouseButton::Right)
         return m_secondary_color;
     ASSERT_NOT_REACHED();
 }
 
-Color PaintableWidget::color_for(const GMouseEvent& event) const
+Color PaintableWidget::color_for(const GUI::MouseEvent& event) const
 {
-    if (event.buttons() & GMouseButton::Left)
+    if (event.buttons() & GUI::MouseButton::Left)
         return m_primary_color;
-    if (event.buttons() & GMouseButton::Right)
+    if (event.buttons() & GUI::MouseButton::Right)
         return m_secondary_color;
     ASSERT_NOT_REACHED();
 }
 
-void PaintableWidget::mousedown_event(GMouseEvent& event)
+void PaintableWidget::mousedown_event(GUI::MouseEvent& event)
 {
-    if (event.button() == GMouseButton::Left || event.button() == GMouseButton::Right) {
+    if (event.button() == GUI::MouseButton::Left || event.button() == GUI::MouseButton::Right) {
         if (m_tool)
             m_tool->on_mousedown(event);
     }
-    GWidget::mousedown_event(event);
+    GUI::Widget::mousedown_event(event);
 }
 
-void PaintableWidget::mouseup_event(GMouseEvent& event)
+void PaintableWidget::mouseup_event(GUI::MouseEvent& event)
 {
-    if (event.button() == GMouseButton::Left || event.button() == GMouseButton::Right) {
+    if (event.button() == GUI::MouseButton::Left || event.button() == GUI::MouseButton::Right) {
         if (m_tool)
             m_tool->on_mouseup(event);
     }
-    GWidget::mouseup_event(event);
+    GUI::Widget::mouseup_event(event);
 }
 
-void PaintableWidget::mousemove_event(GMouseEvent& event)
+void PaintableWidget::mousemove_event(GUI::MouseEvent& event)
 {
     if (m_tool)
         m_tool->on_mousemove(event);
-    GWidget::mousemove_event(event);
+    GUI::Widget::mousemove_event(event);
 }
 
-void PaintableWidget::second_paint_event(GPaintEvent& event)
+void PaintableWidget::second_paint_event(GUI::PaintEvent& event)
 {
     if (m_tool)
         m_tool->on_second_paint(event);
-    GWidget::second_paint_event(event);
+    GUI::Widget::second_paint_event(event);
 }
 
-void PaintableWidget::keydown_event(GKeyEvent& event)
+void PaintableWidget::keydown_event(GUI::KeyEvent& event)
 {
     if (m_tool)
         m_tool->on_keydown(event);
-    GWidget::keydown_event(event);
+    GUI::Widget::keydown_event(event);
 }
 
-void PaintableWidget::keyup_event(GKeyEvent& event)
+void PaintableWidget::keyup_event(GUI::KeyEvent& event)
 {
     if (m_tool)
         m_tool->on_keyup(event);
-    GWidget::keyup_event(event);
+    GUI::Widget::keyup_event(event);
 }
 
 void PaintableWidget::set_primary_color(Color color)

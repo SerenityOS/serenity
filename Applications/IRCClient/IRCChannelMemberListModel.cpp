@@ -38,12 +38,12 @@ IRCChannelMemberListModel::~IRCChannelMemberListModel()
 {
 }
 
-int IRCChannelMemberListModel::row_count(const GModelIndex&) const
+int IRCChannelMemberListModel::row_count(const GUI::ModelIndex&) const
 {
     return m_channel.member_count();
 }
 
-int IRCChannelMemberListModel::column_count(const GModelIndex&) const
+int IRCChannelMemberListModel::column_count(const GUI::ModelIndex&) const
 {
     return 1;
 }
@@ -57,7 +57,7 @@ String IRCChannelMemberListModel::column_name(int column) const
     ASSERT_NOT_REACHED();
 }
 
-GModel::ColumnMetadata IRCChannelMemberListModel::column_metadata(int column) const
+GUI::Model::ColumnMetadata IRCChannelMemberListModel::column_metadata(int column) const
 {
     switch (column) {
     case Column::Name:
@@ -66,7 +66,7 @@ GModel::ColumnMetadata IRCChannelMemberListModel::column_metadata(int column) co
     ASSERT_NOT_REACHED();
 }
 
-GVariant IRCChannelMemberListModel::data(const GModelIndex& index, Role role) const
+GUI::Variant IRCChannelMemberListModel::data(const GUI::ModelIndex& index, Role role) const
 {
     if (role == Role::Display) {
         switch (index.column()) {

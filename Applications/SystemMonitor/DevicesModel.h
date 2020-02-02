@@ -30,7 +30,7 @@
 #include <AK/Vector.h>
 #include <LibGUI/GModel.h>
 
-class DevicesModel final : public GModel {
+class DevicesModel final : public GUI::Model {
 public:
     enum Column {
         Device = 0,
@@ -44,11 +44,11 @@ public:
     virtual ~DevicesModel() override;
     static NonnullRefPtr<DevicesModel> create();
 
-    virtual int row_count(const GModelIndex&) const override;
-    virtual int column_count(const GModelIndex&) const override;
+    virtual int row_count(const GUI::ModelIndex&) const override;
+    virtual int column_count(const GUI::ModelIndex&) const override;
     virtual String column_name(int column) const override;
     virtual ColumnMetadata column_metadata(int column) const override;
-    virtual GVariant data(const GModelIndex&, Role = Role::Display) const override;
+    virtual GUI::Variant data(const GUI::ModelIndex&, Role = Role::Display) const override;
     virtual void update() override;
 
 private:

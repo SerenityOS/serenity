@@ -29,13 +29,15 @@
 #include <LibGUI/GListView.h>
 #include <LibGUI/GWidget.h>
 
-class GButton;
-class GTextEditor;
+namespace GUI {
 
-class GComboBox : public GWidget {
-    C_OBJECT(GComboBox)
+class Button;
+class TextEditor;
+
+class ComboBox : public Widget {
+    C_OBJECT(ComboBox)
 public:
-    virtual ~GComboBox() override;
+    virtual ~ComboBox() override;
 
     String text() const;
     void set_text(const String&);
@@ -44,9 +46,9 @@ public:
     void close();
     void select_all();
 
-    GModel* model() { return m_list_view->model(); }
-    const GModel* model() const { return m_list_view->model(); }
-    void set_model(NonnullRefPtr<GModel>);
+    Model* model() { return m_list_view->model(); }
+    const Model* model() const { return m_list_view->model(); }
+    void set_model(NonnullRefPtr<Model>);
 
     bool only_allow_values_from_model() const { return m_only_allow_values_from_model; }
     void set_only_allow_values_from_model(bool);
@@ -54,17 +56,19 @@ public:
     int model_column() const { return m_list_view->model_column(); }
     void set_model_column(int column) { m_list_view->set_model_column(column); }
 
-    Function<void(const String&, const GModelIndex&)> on_change;
+    Function<void(const String&, const ModelIndex&)> on_change;
     Function<void()> on_return_pressed;
 
 protected:
-    explicit GComboBox(GWidget* parent = nullptr);
-    virtual void resize_event(GResizeEvent&) override;
+    explicit ComboBox(Widget* parent = nullptr);
+    virtual void resize_event(ResizeEvent&) override;
 
 private:
-    RefPtr<GTextEditor> m_editor;
-    RefPtr<GButton> m_open_button;
-    RefPtr<GWindow> m_list_window;
-    RefPtr<GListView> m_list_view;
+    RefPtr<TextEditor> m_editor;
+    RefPtr<Button> m_open_button;
+    RefPtr<Window> m_list_window;
+    RefPtr<ListView> m_list_view;
     bool m_only_allow_values_from_model { false };
 };
+
+}

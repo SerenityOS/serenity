@@ -31,14 +31,16 @@
 #include <LibGUI/GAbstractView.h>
 #include <LibGUI/GModel.h>
 
-class GScrollBar;
+namespace GUI {
+
+class ScrollBar;
 class Painter;
 
-class GListView : public GAbstractView {
-    C_OBJECT(GListView)
+class ListView : public AbstractView {
+    C_OBJECT(ListView)
 public:
-    explicit GListView(GWidget* parent);
-    virtual ~GListView() override;
+    explicit ListView(Widget* parent);
+    virtual ~ListView() override;
 
     int item_height() const { return 16; }
 
@@ -47,22 +49,22 @@ public:
 
     int horizontal_padding() const { return m_horizontal_padding; }
 
-    void scroll_into_view(const GModelIndex&, Orientation);
+    void scroll_into_view(const ModelIndex&, Orientation);
 
     Point adjusted_position(const Point&) const;
 
-    virtual GModelIndex index_at_event_position(const Point&) const override;
-    virtual Rect content_rect(const GModelIndex&) const override;
+    virtual ModelIndex index_at_event_position(const Point&) const override;
+    virtual Rect content_rect(const ModelIndex&) const override;
 
     int model_column() const { return m_model_column; }
     void set_model_column(int column) { m_model_column = column; }
 
 private:
     virtual void did_update_model() override;
-    virtual void paint_event(GPaintEvent&) override;
-    virtual void doubleclick_event(GMouseEvent&) override;
-    virtual void keydown_event(GKeyEvent&) override;
-    virtual void resize_event(GResizeEvent&) override;
+    virtual void paint_event(PaintEvent&) override;
+    virtual void doubleclick_event(MouseEvent&) override;
+    virtual void keydown_event(KeyEvent&) override;
+    virtual void resize_event(ResizeEvent&) override;
 
     Rect content_rect(int row) const;
     int item_count() const;
@@ -72,3 +74,5 @@ private:
     int m_model_column { 0 };
     bool m_alternating_row_colors { true };
 };
+
+}

@@ -28,13 +28,15 @@
 #include <LibGUI/GAbstractButton.h>
 #include <LibGUI/GPainter.h>
 
-GAbstractButton::GAbstractButton(GWidget* parent)
-    : GAbstractButton({}, parent)
+namespace GUI {
+
+AbstractButton::AbstractButton(Widget* parent)
+    : AbstractButton({}, parent)
 {
 }
 
-GAbstractButton::GAbstractButton(const StringView& text, GWidget* parent)
-    : GWidget(parent)
+AbstractButton::AbstractButton(const StringView& text, Widget* parent)
+    : Widget(parent)
     , m_text(text)
 {
     m_auto_repeat_timer = Core::Timer::construct(this);
@@ -43,11 +45,11 @@ GAbstractButton::GAbstractButton(const StringView& text, GWidget* parent)
     };
 }
 
-GAbstractButton::~GAbstractButton()
+AbstractButton::~AbstractButton()
 {
 }
 
-void GAbstractButton::set_text(const StringView& text)
+void AbstractButton::set_text(const StringView& text)
 {
     if (m_text == text)
         return;
@@ -55,14 +57,14 @@ void GAbstractButton::set_text(const StringView& text)
     update();
 }
 
-void GAbstractButton::set_checked(bool checked)
+void AbstractButton::set_checked(bool checked)
 {
     if (m_checked == checked)
         return;
     m_checked = checked;
 
     if (is_exclusive() && checked) {
-        parent_widget()->for_each_child_of_type<GAbstractButton>([&](auto& sibling) {
+        parent_widget()->for_each_child_of_type<AbstractButton>([&](auto& sibling) {
             if (!sibling.is_exclusive() || !sibling.is_checked())
                 return IterationDecision::Continue;
             sibling.m_checked = false;
@@ -79,7 +81,7 @@ void GAbstractButton::set_checked(bool checked)
         on_checked(checked);
 }
 
-void GAbstractButton::set_checkable(bool checkable)
+void AbstractButton::set_checkable(bool checkable)
 {
     if (m_checkable == checkable)
         return;
@@ -87,11 +89,11 @@ void GAbstractButton::set_checkable(bool checkable)
     update();
 }
 
-void GAbstractButton::mousemove_event(GMouseEvent& event)
+void AbstractButton::mousemove_event(MouseEvent& event)
 {
     bool is_over = rect().contains(event.position());
     m_hovered = is_over;
-    if (event.buttons() & GMouseButton::Left) {
+    if (event.buttons() & MouseButton::Left) {
         if (is_enabled()) {
             bool being_pressed = is_over;
             if (being_pressed != m_being_pressed) {
@@ -106,15 +108,15 @@ void GAbstractButton::mousemove_event(GMouseEvent& event)
             }
         }
     }
-    GWidget::mousemove_event(event);
+    Widget::mousemove_event(event);
 }
 
-void GAbstractButton::mousedown_event(GMouseEvent& event)
+void AbstractButton::mousedown_event(MouseEvent& event)
 {
 #ifdef GABSTRACTBUTTON_DEBUG
-    dbgprintf("GAbstractButton::mouse_down_event: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
+    dbgprintf("AbstractButton::mouse_down_event: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
 #endif
-    if (event.button() == GMouseButton::Left) {
+    if (event.button() == MouseButton::Left) {
         if (is_enabled()) {
             m_being_pressed = true;
             update();
@@ -125,15 +127,15 @@ void GAbstractButton::mousedown_event(GMouseEvent& event)
             }
         }
     }
-    GWidget::mousedown_event(event);
+    Widget::mousedown_event(event);
 }
 
-void GAbstractButton::mouseup_event(GMouseEvent& event)
+void AbstractButton::mouseup_event(MouseEvent& event)
 {
 #ifdef GABSTRACTBUTTON_DEBUG
-    dbgprintf("GAbstractButton::mouse_up_event: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
+    dbgprintf("AbstractButton::mouse_up_event: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
 #endif
-    if (event.button() == GMouseButton::Left) {
+    if (event.button() == MouseButton::Left) {
         bool was_auto_repeating = m_auto_repeat_timer->is_active();
         m_auto_repeat_timer->stop();
         if (is_enabled()) {
@@ -144,32 +146,32 @@ void GAbstractButton::mouseup_event(GMouseEvent& event)
                 click();
         }
     }
-    GWidget::mouseup_event(event);
+    Widget::mouseup_event(event);
 }
 
-void GAbstractButton::enter_event(Core::Event&)
+void AbstractButton::enter_event(Core::Event&)
 {
     m_hovered = true;
     update();
 }
 
-void GAbstractButton::leave_event(Core::Event&)
+void AbstractButton::leave_event(Core::Event&)
 {
     m_hovered = false;
     update();
 }
 
-void GAbstractButton::keydown_event(GKeyEvent& event)
+void AbstractButton::keydown_event(KeyEvent& event)
 {
     if (event.key() == KeyCode::Key_Return) {
         click();
         event.accept();
         return;
     }
-    GWidget::keydown_event(event);
+    Widget::keydown_event(event);
 }
 
-void GAbstractButton::paint_text(GPainter& painter, const Rect& rect, const Font& font, TextAlignment text_alignment)
+void AbstractButton::paint_text(Painter& painter, const Rect& rect, const Font& font, TextAlignment text_alignment)
 {
     auto clipped_rect = rect.intersected(this->rect());
 
@@ -186,9 +188,9 @@ void GAbstractButton::paint_text(GPainter& painter, const Rect& rect, const Font
         painter.draw_rect(clipped_rect.inflated(6, 4), Color(140, 140, 140));
 }
 
-void GAbstractButton::change_event(GEvent& event)
+void AbstractButton::change_event(Event& event)
 {
-    if (event.type() == GEvent::Type::EnabledChange) {
+    if (event.type() == Event::Type::EnabledChange) {
         if (!is_enabled()) {
             bool was_being_pressed = m_being_pressed;
             m_being_pressed = false;
@@ -196,5 +198,7 @@ void GAbstractButton::change_event(GEvent& event)
                 update();
         }
     }
-    GWidget::change_event(event);
+    Widget::change_event(event);
+}
+
 }

@@ -26,15 +26,17 @@
 
 #include <LibGUI/GUndoStack.h>
 
-GUndoStack::GUndoStack()
+namespace GUI {
+
+UndoStack::UndoStack()
 {
 }
 
-GUndoStack::~GUndoStack()
+UndoStack::~UndoStack()
 {
 }
 
-void GUndoStack::undo()
+void UndoStack::undo()
 {
     if (!can_undo())
         return;
@@ -57,7 +59,7 @@ void GUndoStack::undo()
     m_stack_index++;
 }
 
-void GUndoStack::redo()
+void UndoStack::redo()
 {
     if (!can_redo())
         return;
@@ -73,7 +75,7 @@ void GUndoStack::redo()
     m_stack_index--;
 }
 
-void GUndoStack::push(NonnullOwnPtr<GCommand>&& command)
+void UndoStack::push(NonnullOwnPtr<Command>&& command)
 {
     if (m_stack.is_empty()) {
         auto undo_commands_container = make<UndoCommandsContainer>();
@@ -92,7 +94,7 @@ void GUndoStack::push(NonnullOwnPtr<GCommand>&& command)
     m_stack[0].m_undo_vector.prepend(move(command));
 }
 
-void GUndoStack::finalize_current_combo()
+void UndoStack::finalize_current_combo()
 {
     if (m_stack.is_empty())
         return;
@@ -111,4 +113,6 @@ void GUndoStack::finalize_current_combo()
     }
 
     m_last_updated_undo_vector_size = undo_vector.size();
+}
+
 }

@@ -23,7 +23,6 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #pragma once
 
 #include <AK/URL.h>
@@ -32,7 +31,7 @@
 
 class Frame;
 
-class HtmlView : public GScrollableWidget {
+class HtmlView : public GUI::ScrollableWidget {
     C_OBJECT(HtmlView)
 public:
     virtual ~HtmlView() override;
@@ -44,8 +43,8 @@ public:
     const LayoutDocument* layout_root() const;
     LayoutDocument* layout_root();
 
-    Frame& main_frame() { return *m_main_frame; }
-    const Frame& main_frame() const { return *m_main_frame; }
+    ::Frame& main_frame() { return *m_main_frame; }
+    const ::Frame& main_frame() const { return *m_main_frame; }
 
     void reload();
     void load(const URL&);
@@ -63,14 +62,14 @@ public:
     virtual bool accepts_focus() const override { return true; }
 
 protected:
-    HtmlView(GWidget* parent = nullptr);
+    HtmlView(GUI::Widget* parent = nullptr);
 
-    virtual void resize_event(GResizeEvent&) override;
-    virtual void paint_event(GPaintEvent&) override;
-    virtual void mousemove_event(GMouseEvent&) override;
-    virtual void mousedown_event(GMouseEvent&) override;
-    virtual void mouseup_event(GMouseEvent&) override;
-    virtual void keydown_event(GKeyEvent&) override;
+    virtual void resize_event(GUI::ResizeEvent&) override;
+    virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void mousemove_event(GUI::MouseEvent&) override;
+    virtual void mousedown_event(GUI::MouseEvent&) override;
+    virtual void mouseup_event(GUI::MouseEvent&) override;
+    virtual void keydown_event(GUI::KeyEvent&) override;
 
 private:
     virtual void did_scroll() override;
@@ -78,7 +77,7 @@ private:
     void layout_and_sync_size();
     void dump_selection(const char* event_name);
 
-    RefPtr<Frame> m_main_frame;
+    RefPtr<::Frame> m_main_frame;
 
     bool m_should_show_line_box_borders { false };
     bool m_in_mouse_selection { false };

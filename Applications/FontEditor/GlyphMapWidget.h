@@ -29,7 +29,7 @@
 #include <AK/Function.h>
 #include <LibGUI/GFrame.h>
 
-class GlyphMapWidget final : public GFrame {
+class GlyphMapWidget final : public GUI::Frame {
     C_OBJECT(GlyphMapWidget)
 public:
     virtual ~GlyphMapWidget() override;
@@ -51,9 +51,9 @@ public:
     Function<void(u8)> on_glyph_selected;
 
 private:
-    GlyphMapWidget(Font&, GWidget* parent);
-    virtual void paint_event(GPaintEvent&) override;
-    virtual void mousedown_event(GMouseEvent&) override;
+    GlyphMapWidget(Font&, GUI::Widget* parent);
+    virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void mousedown_event(GUI::MouseEvent&) override;
 
     Rect get_outer_rect(u8 glyph) const;
 

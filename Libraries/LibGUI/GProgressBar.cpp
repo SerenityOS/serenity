@@ -28,19 +28,21 @@
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GProgressBar.h>
 
-GProgressBar::GProgressBar(GWidget* parent)
-    : GFrame(parent)
+namespace GUI {
+
+ProgressBar::ProgressBar(Widget* parent)
+    : Frame(parent)
 {
     set_frame_shape(FrameShape::Container);
     set_frame_shadow(FrameShadow::Sunken);
     set_frame_thickness(2);
 }
 
-GProgressBar::~GProgressBar()
+ProgressBar::~ProgressBar()
 {
 }
 
-void GProgressBar::set_value(int value)
+void ProgressBar::set_value(int value)
 {
     if (m_value == value)
         return;
@@ -48,7 +50,7 @@ void GProgressBar::set_value(int value)
     update();
 }
 
-void GProgressBar::set_range(int min, int max)
+void ProgressBar::set_range(int min, int max)
 {
     ASSERT(min < max);
     m_min = min;
@@ -56,11 +58,11 @@ void GProgressBar::set_range(int min, int max)
     m_value = clamp(m_value, m_min, m_max);
 }
 
-void GProgressBar::paint_event(GPaintEvent& event)
+void ProgressBar::paint_event(PaintEvent& event)
 {
-    GFrame::paint_event(event);
+    Frame::paint_event(event);
 
-    GPainter painter(*this);
+    Painter painter(*this);
     auto rect = frame_inner_rect();
     painter.add_clip_rect(rect);
     painter.add_clip_rect(event.rect());
@@ -82,4 +84,6 @@ void GProgressBar::paint_event(GPaintEvent& event)
     }
 
     StylePainter::paint_progress_bar(painter, rect, palette(), m_min, m_max, m_value, progress_text);
+}
+
 }

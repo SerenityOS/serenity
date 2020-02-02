@@ -30,10 +30,12 @@
 #include <AK/Traits.h>
 #include <Kernel/KeyCode.h>
 
-class GShortcut {
+namespace GUI {
+
+class Shortcut {
 public:
-    GShortcut() {}
-    GShortcut(u8 modifiers, KeyCode key)
+    Shortcut() {}
+    Shortcut(u8 modifiers, KeyCode key)
         : m_modifiers(modifiers)
         , m_key(key)
     {
@@ -44,7 +46,7 @@ public:
     KeyCode key() const { return m_key; }
     String to_string() const;
 
-    bool operator==(const GShortcut& other) const
+    bool operator==(const Shortcut& other) const
     {
         return m_modifiers == other.m_modifiers
             && m_key == other.m_key;
@@ -55,11 +57,13 @@ private:
     KeyCode m_key { KeyCode::Key_Invalid };
 };
 
+}
+
 namespace AK {
 
 template<>
-struct Traits<GShortcut> : public GenericTraits<GShortcut> {
-    static unsigned hash(const GShortcut& shortcut)
+struct Traits<GUI::Shortcut> : public GenericTraits<GUI::Shortcut> {
+    static unsigned hash(const GUI::Shortcut& shortcut)
     {
         return pair_int_hash(shortcut.modifiers(), shortcut.key());
     }

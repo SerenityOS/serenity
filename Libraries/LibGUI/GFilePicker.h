@@ -30,12 +30,14 @@
 #include <LibGUI/GDialog.h>
 #include <LibGUI/GTableView.h>
 
-class GFileSystemModel;
-class GLabel;
-class GTextBox;
+namespace GUI {
 
-class GFilePicker final : public GDialog {
-    C_OBJECT(GFilePicker)
+class FileSystemModel;
+class Label;
+class TextBox;
+
+class FilePicker final : public Dialog {
+    C_OBJECT(FilePicker)
 public:
     enum class Mode {
         Open,
@@ -46,7 +48,7 @@ public:
     static Optional<String> get_save_filepath(const String& title, const String& extension);
     static bool file_exists(const StringView& path);
 
-    virtual ~GFilePicker() override;
+    virtual ~FilePicker() override;
 
     FileSystemPath selected_file() const { return m_selected_file; }
 
@@ -55,7 +57,7 @@ private:
     void clear_preview();
     void on_file_return();
 
-    GFilePicker(Mode type = Mode::Open, const StringView& file_name = "Untitled", const StringView& path = String(get_current_user_home_path()), Core::Object* parent = nullptr);
+    FilePicker(Mode type = Mode::Open, const StringView& file_name = "Untitled", const StringView& path = String(get_current_user_home_path()), Core::Object* parent = nullptr);
 
     static String ok_button_name(Mode mode)
     {
@@ -69,13 +71,15 @@ private:
         }
     }
 
-    RefPtr<GTableView> m_view;
-    NonnullRefPtr<GFileSystemModel> m_model;
+    RefPtr<TableView> m_view;
+    NonnullRefPtr<FileSystemModel> m_model;
     FileSystemPath m_selected_file;
 
-    RefPtr<GTextBox> m_filename_textbox;
-    RefPtr<GLabel> m_preview_image_label;
-    RefPtr<GLabel> m_preview_name_label;
-    RefPtr<GLabel> m_preview_geometry_label;
+    RefPtr<TextBox> m_filename_textbox;
+    RefPtr<Label> m_preview_image_label;
+    RefPtr<Label> m_preview_name_label;
+    RefPtr<Label> m_preview_geometry_label;
     Mode m_mode { Mode::Open };
 };
+
+}

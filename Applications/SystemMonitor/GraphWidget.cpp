@@ -27,8 +27,8 @@
 #include "GraphWidget.h"
 #include <LibGUI/GPainter.h>
 
-GraphWidget::GraphWidget(GWidget* parent)
-    : GFrame(parent)
+GraphWidget::GraphWidget(GUI::Widget* parent)
+    : GUI::Frame(parent)
 {
     set_frame_thickness(2);
     set_frame_shape(FrameShape::Container);
@@ -45,10 +45,10 @@ void GraphWidget::add_value(int value)
     update();
 }
 
-void GraphWidget::paint_event(GPaintEvent& event)
+void GraphWidget::paint_event(GUI::PaintEvent& event)
 {
-    GFrame::paint_event(event);
-    GPainter painter(*this);
+    GUI::Frame::paint_event(event);
+    GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
     painter.add_clip_rect(frame_inner_rect());
     painter.fill_rect(event.rect(), Color::Black);

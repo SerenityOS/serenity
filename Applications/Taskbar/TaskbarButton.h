@@ -29,15 +29,15 @@
 #include "WindowIdentifier.h"
 #include <LibGUI/GButton.h>
 
-class TaskbarButton final : public GButton {
+class TaskbarButton final : public GUI::Button {
     C_OBJECT(TaskbarButton)
 public:
-    TaskbarButton(const WindowIdentifier&, GWidget* parent);
+    TaskbarButton(const WindowIdentifier&, GUI::Widget* parent);
     virtual ~TaskbarButton() override;
 
 private:
-    virtual void context_menu_event(GContextMenuEvent&) override;
-    virtual void resize_event(GResizeEvent&) override;
+    virtual void context_menu_event(GUI::ContextMenuEvent&) override;
+    virtual void resize_event(GUI::ResizeEvent&) override;
 
     WindowIdentifier m_identifier;
 };

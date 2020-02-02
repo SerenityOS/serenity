@@ -30,10 +30,12 @@
 #include <LibCore/CTimer.h>
 #include <LibGUI/GWidget.h>
 
-class GScrollBar final : public GWidget {
-    C_OBJECT(GScrollBar)
+namespace GUI {
+
+class ScrollBar final : public Widget {
+    C_OBJECT(ScrollBar)
 public:
-    virtual ~GScrollBar() override;
+    virtual ~ScrollBar() override;
 
     Orientation orientation() const { return m_orientation; }
 
@@ -64,16 +66,16 @@ public:
     };
 
 private:
-    explicit GScrollBar(GWidget* parent);
-    explicit GScrollBar(Orientation, GWidget* parent);
+    explicit ScrollBar(Widget* parent);
+    explicit ScrollBar(Orientation, Widget* parent);
 
-    virtual void paint_event(GPaintEvent&) override;
-    virtual void mousedown_event(GMouseEvent&) override;
-    virtual void mouseup_event(GMouseEvent&) override;
-    virtual void mousemove_event(GMouseEvent&) override;
-    virtual void mousewheel_event(GMouseEvent&) override;
+    virtual void paint_event(PaintEvent&) override;
+    virtual void mousedown_event(MouseEvent&) override;
+    virtual void mouseup_event(MouseEvent&) override;
+    virtual void mousemove_event(MouseEvent&) override;
+    virtual void mousewheel_event(MouseEvent&) override;
     virtual void leave_event(Core::Event&) override;
-    virtual void change_event(GEvent&) override;
+    virtual void change_event(Event&) override;
 
     int default_button_size() const { return 16; }
     int button_size() const { return length(orientation()) <= (default_button_size() * 2) ? length(orientation()) / 2 : default_button_size(); }
@@ -112,3 +114,5 @@ private:
     AutomaticScrollingDirection m_automatic_scrolling_direction { AutomaticScrollingDirection::None };
     RefPtr<Core::Timer> m_automatic_scrolling_timer;
 };
+
+}

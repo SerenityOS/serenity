@@ -50,32 +50,32 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
-    auto window = GWindow::construct();
+    auto window = GUI::Window::construct();
     window->set_title("ProfileViewer");
     window->set_rect(100, 100, 800, 600);
 
-    auto main_widget = GWidget::construct();
+    auto main_widget = GUI::Widget::construct();
     window->set_main_widget(main_widget);
     main_widget->set_fill_with_background_color(true);
-    main_widget->set_layout(make<GVBoxLayout>());
+    main_widget->set_layout(make<GUI::VBoxLayout>());
 
     auto timeline_widget = ProfileTimelineWidget::construct(*profile, main_widget);
 
-    auto tree_view = GTreeView::construct(main_widget);
+    auto tree_view = GUI::TreeView::construct(main_widget);
     tree_view->set_headers_visible(true);
     tree_view->set_size_columns_to_fit_content(true);
     tree_view->set_model(profile->model());
 
-    auto menubar = make<GMenuBar>();
-    auto app_menu = GMenu::construct("ProfileViewer");
-    app_menu->add_action(GCommonActions::make_quit_action([&](auto&) { app.quit(); }));
+    auto menubar = make<GUI::MenuBar>();
+    auto app_menu = GUI::Menu::construct("ProfileViewer");
+    app_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) { app.quit(); }));
 
     menubar->add_menu(move(app_menu));
 
-    auto view_menu = GMenu::construct("View");
-    auto invert_action = GAction::create("Invert tree", { Mod_Ctrl, Key_I }, [&](auto& action) {
+    auto view_menu = GUI::Menu::construct("View");
+    auto invert_action = GUI::Action::create("Invert tree", { Mod_Ctrl, Key_I }, [&](auto& action) {
         action.set_checked(!action.is_checked());
         profile->set_inverted(action.is_checked());
     });

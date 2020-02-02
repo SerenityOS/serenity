@@ -27,7 +27,7 @@
 #include <AK/Function.h>
 #include <LibGUI/GFrame.h>
 
-class GlyphEditorWidget final : public GFrame {
+class GlyphEditorWidget final : public GUI::Frame {
     C_OBJECT(GlyphEditorWidget)
 public:
     virtual ~GlyphEditorWidget() override;
@@ -44,12 +44,12 @@ public:
     Function<void(u8)> on_glyph_altered;
 
 private:
-    GlyphEditorWidget(Font&, GWidget* parent);
-    virtual void paint_event(GPaintEvent&) override;
-    virtual void mousedown_event(GMouseEvent&) override;
-    virtual void mousemove_event(GMouseEvent&) override;
+    GlyphEditorWidget(Font&, GUI::Widget* parent);
+    virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void mousedown_event(GUI::MouseEvent&) override;
+    virtual void mousemove_event(GUI::MouseEvent&) override;
 
-    void draw_at_mouse(const GMouseEvent&);
+    void draw_at_mouse(const GUI::MouseEvent&);
 
     RefPtr<Font> m_font;
     u8 m_glyph { 0 };

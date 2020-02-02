@@ -27,42 +27,44 @@
 #include <LibGUI/GLayout.h>
 #include <LibGUI/GWidget.h>
 
-GLayout::GLayout()
+namespace GUI {
+
+Layout::Layout()
 {
 }
 
-GLayout::~GLayout()
+Layout::~Layout()
 {
 }
 
-void GLayout::notify_adopted(Badge<GWidget>, GWidget& widget)
+void Layout::notify_adopted(Badge<Widget>, Widget& widget)
 {
     if (m_owner == &widget)
         return;
     m_owner = widget.make_weak_ptr();
 }
 
-void GLayout::notify_disowned(Badge<GWidget>, GWidget& widget)
+void Layout::notify_disowned(Badge<Widget>, Widget& widget)
 {
     ASSERT(m_owner == &widget);
     m_owner.clear();
 }
 
-void GLayout::add_entry(Entry&& entry)
+void Layout::add_entry(Entry&& entry)
 {
     m_entries.append(move(entry));
     if (m_owner)
         m_owner->notify_layout_changed({});
 }
 
-void GLayout::add_spacer()
+void Layout::add_spacer()
 {
     Entry entry;
     entry.type = Entry::Type::Spacer;
     add_entry(move(entry));
 }
 
-void GLayout::add_layout(OwnPtr<GLayout>&& layout)
+void Layout::add_layout(OwnPtr<Layout>&& layout)
 {
     Entry entry;
     entry.type = Entry::Type::Layout;
@@ -70,7 +72,7 @@ void GLayout::add_layout(OwnPtr<GLayout>&& layout)
     add_entry(move(entry));
 }
 
-void GLayout::add_widget(GWidget& widget)
+void Layout::add_widget(Widget& widget)
 {
     Entry entry;
     entry.type = Entry::Type::Widget;
@@ -78,7 +80,7 @@ void GLayout::add_widget(GWidget& widget)
     add_entry(move(entry));
 }
 
-void GLayout::insert_widget_before(GWidget& widget, GWidget& before_widget)
+void Layout::insert_widget_before(Widget& widget, Widget& before_widget)
 {
     Entry entry;
     entry.type = Entry::Type::Widget;
@@ -90,7 +92,7 @@ void GLayout::insert_widget_before(GWidget& widget, GWidget& before_widget)
         m_owner->notify_layout_changed({});
 }
 
-void GLayout::remove_widget(GWidget& widget)
+void Layout::remove_widget(Widget& widget)
 {
     m_entries.remove_first_matching([&](auto& entry) {
         return entry.widget == &widget;
@@ -99,7 +101,7 @@ void GLayout::remove_widget(GWidget& widget)
         m_owner->notify_layout_changed({});
 }
 
-void GLayout::set_spacing(int spacing)
+void Layout::set_spacing(int spacing)
 {
     if (m_spacing == spacing)
         return;
@@ -108,11 +110,13 @@ void GLayout::set_spacing(int spacing)
         m_owner->notify_layout_changed({});
 }
 
-void GLayout::set_margins(const GMargins& margins)
+void Layout::set_margins(const Margins& margins)
 {
     if (m_margins == margins)
         return;
     m_margins = margins;
     if (m_owner)
         m_owner->notify_layout_changed({});
+}
+
 }

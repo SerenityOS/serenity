@@ -41,7 +41,7 @@ public:
 
     const String& name() const { return m_name; }
 
-    const GTextDocument& document() const;
+    const GUI::TextDocument& document() const;
 
 private:
     explicit ProjectFile(const String& name)
@@ -50,5 +50,5 @@ private:
     }
 
     String m_name;
-    mutable RefPtr<GTextDocument> m_document;
+    mutable RefPtr<GUI::TextDocument> m_document;
 };

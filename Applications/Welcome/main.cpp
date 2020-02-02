@@ -86,68 +86,68 @@ int main(int argc, char** argv)
         },
     };
 
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
-    auto window = GWindow::construct();
+    auto window = GUI::Window::construct();
     window->set_title("Welcome to Serenity");
     Rect window_rect { 0, 0, 640, 360 };
-    window_rect.center_within(GDesktop::the().rect());
+    window_rect.center_within(GUI::Desktop::the().rect());
     window->set_resizable(true);
     window->set_rect(window_rect);
 
-    auto background = GLabel::construct();
+    auto background = GUI::Label::construct();
     window->set_main_widget(background);
     background->set_fill_with_background_color(true);
-    background->set_layout(make<GVBoxLayout>());
+    background->set_layout(make<GUI::VBoxLayout>());
     background->layout()->set_margins({ 8, 8, 8, 8 });
     background->layout()->set_spacing(8);
     background->set_icon(load_png_from_memory((const u8*)&_binary_background_png_start, (size_t)&_binary_background_png_size));
-    background->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
+    background->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
     background->set_preferred_size(background->icon()->size());
 
     //
     // header
     //
 
-    auto header = GLabel::construct(background.ptr());
+    auto header = GUI::Label::construct(background.ptr());
     header->set_font(Font::default_bold_font());
     header->set_text("Welcome to Serenity");
     header->set_text_alignment(TextAlignment::CenterLeft);
-    header->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    header->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     header->set_preferred_size(0, 30);
 
     //
     // main section
     //
 
-    auto main_section = GWidget::construct(background.ptr());
-    main_section->set_layout(make<GHBoxLayout>());
+    auto main_section = GUI::Widget::construct(background.ptr());
+    main_section->set_layout(make<GUI::HBoxLayout>());
     main_section->layout()->set_margins({ 0, 0, 0, 0 });
     main_section->layout()->set_spacing(8);
-    main_section->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
+    main_section->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
 
-    auto menu = GWidget::construct(main_section.ptr());
-    menu->set_layout(make<GVBoxLayout>());
+    auto menu = GUI::Widget::construct(main_section.ptr());
+    menu->set_layout(make<GUI::VBoxLayout>());
     menu->layout()->set_margins({ 0, 0, 0, 0 });
     menu->layout()->set_spacing(8);
-    menu->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    menu->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     menu->set_preferred_size(200, 0);
 
-    auto stack = GStackWidget::construct(main_section);
-    stack->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
+    auto stack = GUI::StackWidget::construct(main_section);
+    stack->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
 
     for (auto& page : pages) {
-        auto content = GWidget::construct(stack.ptr());
-        content->set_layout(make<GVBoxLayout>());
+        auto content = GUI::Widget::construct(stack.ptr());
+        content->set_layout(make<GUI::VBoxLayout>());
         content->layout()->set_margins({ 0, 0, 0, 0 });
         content->layout()->set_spacing(8);
-        content->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
+        content->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
 
-        auto content_title = GLabel::construct(content);
+        auto content_title = GUI::Label::construct(content);
         content_title->set_font(Font::default_bold_font());
         content_title->set_text(page.title);
         content_title->set_text_alignment(TextAlignment::CenterLeft);
-        content_title->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+        content_title->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
         content_title->set_preferred_size(0, 10);
 
         for (auto& paragraph : page.content) {
@@ -159,11 +159,11 @@ int main(int argc, char** argv)
             content_text->wrap_and_set_height();
         }
 
-        auto menu_option = GButton::construct(menu);
+        auto menu_option = GUI::Button::construct(menu);
         menu_option->set_font(Font::default_font());
         menu_option->set_text(page.menu_name);
         menu_option->set_text_alignment(TextAlignment::CenterLeft);
-        menu_option->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+        menu_option->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
         menu_option->set_preferred_size(0, 20);
         menu_option->on_click = [content = content.ptr(), &stack](auto&) {
             stack->set_active_widget(content);

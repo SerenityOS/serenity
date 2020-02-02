@@ -30,11 +30,11 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <LibGUI/GWidget.h>
 
-class VBForm : public GWidget {
+class VBForm : public GUI::Widget {
     C_OBJECT(VBForm)
     friend class VBWidget;
 public:
-    explicit VBForm(const String& name, GWidget* parent = nullptr);
+    explicit VBForm(const String& name, GUI::Widget* parent = nullptr);
     virtual ~VBForm() override;
 
     static VBForm* current();
@@ -57,16 +57,16 @@ public:
     void dump();
 
 protected:
-    virtual void paint_event(GPaintEvent&) override;
-    virtual void second_paint_event(GPaintEvent&) override;
-    virtual void mousedown_event(GMouseEvent&) override;
-    virtual void mousemove_event(GMouseEvent&) override;
-    virtual void mouseup_event(GMouseEvent&) override;
-    virtual void context_menu_event(GContextMenuEvent&) override;
-    virtual void keydown_event(GKeyEvent&) override;
+    virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void second_paint_event(GUI::PaintEvent&) override;
+    virtual void mousedown_event(GUI::MouseEvent&) override;
+    virtual void mousemove_event(GUI::MouseEvent&) override;
+    virtual void mouseup_event(GUI::MouseEvent&) override;
+    virtual void context_menu_event(GUI::ContextMenuEvent&) override;
+    virtual void keydown_event(GUI::KeyEvent&) override;
 
 private:
-    void grabber_mousedown_event(GMouseEvent&, Direction grabber);
+    void grabber_mousedown_event(GUI::MouseEvent&, Direction grabber);
     void set_single_selected_widget(VBWidget*);
     void add_to_selection(VBWidget&);
     void remove_from_selection(VBWidget&);
@@ -81,11 +81,11 @@ private:
     int m_grid_size { 5 };
     bool m_should_snap_to_grid { true };
     NonnullRefPtrVector<VBWidget> m_widgets;
-    HashMap<GWidget*, VBWidget*> m_gwidget_map;
+    HashMap<GUI::Widget*, VBWidget*> m_gwidget_map;
     HashTable<VBWidget*> m_selected_widgets;
     Point m_transform_event_origin;
     Point m_next_insertion_position;
     Direction m_resize_direction { Direction::None };
     Direction m_mouse_direction_type { Direction::None };
-    RefPtr<GMenu> m_context_menu;
+    RefPtr<GUI::Menu> m_context_menu;
 };

@@ -89,22 +89,22 @@ static int my_rand(void)
 /*
  * Fire Widget
 */
-class Fire : public GWidget {
+class Fire : public GUI::Widget {
     C_OBJECT(Fire)
 public:
     virtual ~Fire() override;
-    void set_stat_label(GLabel* l) { stats = l; };
+    void set_stat_label(RefPtr<GUI::Label> l) { stats = l; };
 
 private:
-    explicit Fire(GWidget* parent = nullptr);
+    explicit Fire(GUI::Widget* parent = nullptr);
     RefPtr<GraphicsBitmap> bitmap;
-    GLabel* stats;
+    RefPtr<GUI::Label> stats;
 
-    virtual void paint_event(GPaintEvent&) override;
+    virtual void paint_event(GUI::PaintEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
-    virtual void mousedown_event(GMouseEvent& event) override;
-    virtual void mousemove_event(GMouseEvent& event) override;
-    virtual void mouseup_event(GMouseEvent& event) override;
+    virtual void mousedown_event(GUI::MouseEvent& event) override;
+    virtual void mousemove_event(GUI::MouseEvent& event) override;
+    virtual void mouseup_event(GUI::MouseEvent& event) override;
 
     bool dragging;
     int timeAvg;
@@ -112,8 +112,8 @@ private:
     int phase;
 };
 
-Fire::Fire(GWidget* parent)
-    : GWidget(parent)
+Fire::Fire(GUI::Widget* parent)
+    : GUI::Widget(parent)
 {
     bitmap = GraphicsBitmap::create(GraphicsBitmap::Format::Indexed8, { 320, 200 });
 
@@ -146,12 +146,12 @@ Fire::~Fire()
 {
 }
 
-void Fire::paint_event(GPaintEvent& event)
+void Fire::paint_event(GUI::PaintEvent& event)
 {
     Core::ElapsedTimer timer;
     timer.start();
 
-    GPainter painter(*this);
+    GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
     /* Blit it! */
@@ -201,16 +201,16 @@ void Fire::timer_event(Core::TimerEvent&)
 /*
  * Mouse handling events
 */
-void Fire::mousedown_event(GMouseEvent& event)
+void Fire::mousedown_event(GUI::MouseEvent& event)
 {
-    if (event.button() == GMouseButton::Left)
+    if (event.button() == GUI::MouseButton::Left)
         dragging = true;
 
-    return GWidget::mousedown_event(event);
+    return GUI::Widget::mousedown_event(event);
 }
 
 /* FIXME: needs to account for the size of the window rect */
-void Fire::mousemove_event(GMouseEvent& event)
+void Fire::mousemove_event(GUI::MouseEvent& event)
 {
     if (dragging) {
         if (event.y() >= 2 && event.y() < 398 && event.x() <= 638) {
@@ -223,15 +223,15 @@ void Fire::mousemove_event(GMouseEvent& event)
         }
     }
 
-    return GWidget::mousemove_event(event);
+    return GUI::Widget::mousemove_event(event);
 }
 
-void Fire::mouseup_event(GMouseEvent& event)
+void Fire::mouseup_event(GUI::MouseEvent& event)
 {
-    if (event.button() == GMouseButton::Left)
+    if (event.button() == GUI::MouseButton::Left)
         dragging = false;
 
-    return GWidget::mouseup_event(event);
+    return GUI::Widget::mouseup_event(event);
 }
 
 /*
@@ -239,9 +239,9 @@ void Fire::mouseup_event(GMouseEvent& event)
 */
 int main(int argc, char** argv)
 {
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
-    auto window = GWindow::construct();
+    auto window = GUI::Window::construct();
     window->set_double_buffering_enabled(false);
     window->set_title("Fire");
     window->set_resizable(false);
@@ -250,7 +250,7 @@ int main(int argc, char** argv)
     auto fire = Fire::construct();
     window->set_main_widget(fire);
 
-    auto time = GLabel::construct(fire);
+    auto time = GUI::Label::construct(fire);
     time->set_relative_rect({ 0, 4, 40, 10 });
     time->move_by({ window->width() - time->width(), 0 });
     time->set_foreground_color(Color::from_rgb(0x444444));

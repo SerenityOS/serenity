@@ -27,7 +27,9 @@
 #include <LibGUI/GAbstractView.h>
 #include <LibGUI/GModelSelection.h>
 
-void GModelSelection::set(const GModelIndex& index)
+namespace GUI {
+
+void ModelSelection::set(const ModelIndex& index)
 {
     ASSERT(index.is_valid());
     if (m_indexes.size() == 1 && m_indexes.contains(index))
@@ -37,7 +39,7 @@ void GModelSelection::set(const GModelIndex& index)
     m_view.notify_selection_changed({});
 }
 
-void GModelSelection::add(const GModelIndex& index)
+void ModelSelection::add(const ModelIndex& index)
 {
     ASSERT(index.is_valid());
     if (m_indexes.contains(index))
@@ -46,7 +48,7 @@ void GModelSelection::add(const GModelIndex& index)
     m_view.notify_selection_changed({});
 }
 
-void GModelSelection::toggle(const GModelIndex& index)
+void ModelSelection::toggle(const ModelIndex& index)
 {
     ASSERT(index.is_valid());
     if (m_indexes.contains(index))
@@ -56,7 +58,7 @@ void GModelSelection::toggle(const GModelIndex& index)
     m_view.notify_selection_changed({});
 }
 
-bool GModelSelection::remove(const GModelIndex& index)
+bool ModelSelection::remove(const ModelIndex& index)
 {
     ASSERT(index.is_valid());
     if (!m_indexes.contains(index))
@@ -66,10 +68,12 @@ bool GModelSelection::remove(const GModelIndex& index)
     return true;
 }
 
-void GModelSelection::clear()
+void ModelSelection::clear()
 {
     if (m_indexes.is_empty())
         return;
     m_indexes.clear();
     m_view.notify_selection_changed({});
+}
+
 }

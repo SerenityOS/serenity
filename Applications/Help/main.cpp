@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
     if (pledge("stdio shared_buffer accept rpath", nullptr) < 0) {
         perror("pledge");
@@ -74,31 +74,31 @@ int main(int argc, char* argv[])
 
     unveil(nullptr, nullptr);
 
-    auto window = GWindow::construct();
+    auto window = GUI::Window::construct();
     window->set_title("Help");
     window->set_rect(300, 200, 570, 500);
 
-    auto widget = GWidget::construct();
-    widget->set_layout(make<GVBoxLayout>());
+    auto widget = GUI::Widget::construct();
+    widget->set_layout(make<GUI::VBoxLayout>());
     widget->layout()->set_spacing(0);
 
-    auto toolbar = GToolBar::construct(widget);
+    auto toolbar = GUI::ToolBar::construct(widget);
 
-    auto splitter = GSplitter::construct(Orientation::Horizontal, widget);
+    auto splitter = GUI::Splitter::construct(Orientation::Horizontal, widget);
 
     auto model = ManualModel::create();
 
-    auto tree_view = GTreeView::construct(splitter);
+    auto tree_view = GUI::TreeView::construct(splitter);
     tree_view->set_model(model);
-    tree_view->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    tree_view->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     tree_view->set_preferred_size(200, 500);
 
     auto html_view = HtmlView::construct(splitter);
 
     History history;
 
-    RefPtr<GAction> go_back_action;
-    RefPtr<GAction> go_forward_action;
+    RefPtr<GUI::Action> go_back_action;
+    RefPtr<GUI::Action> go_forward_action;
 
     auto update_actions = [&]() {
         go_back_action->set_enabled(history.can_go_back());
@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
 
         if (!file->open(Core::IODevice::OpenMode::ReadOnly)) {
             int saved_errno = errno;
-            GMessageBox::show(strerror(saved_errno), "Failed to open man page", GMessageBox::Type::Error, GMessageBox::InputType::OK, window);
+            GUI::MessageBox::show(strerror(saved_errno), "Failed to open man page", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window);
             return;
         }
         auto buffer = file->read_all();
@@ -158,13 +158,13 @@ int main(int argc, char* argv[])
         free(path);
     };
 
-    go_back_action = GCommonActions::make_go_back_action([&](auto&) {
+    go_back_action = GUI::CommonActions::make_go_back_action([&](auto&) {
         history.go_back();
         update_actions();
         open_page(history.current());
     });
 
-    go_forward_action = GCommonActions::make_go_forward_action([&](auto&) {
+    go_forward_action = GUI::CommonActions::make_go_forward_action([&](auto&) {
         history.go_forward();
         update_actions();
         open_page(history.current());
@@ -176,19 +176,19 @@ int main(int argc, char* argv[])
     toolbar->add_action(*go_back_action);
     toolbar->add_action(*go_forward_action);
 
-    auto menubar = make<GMenuBar>();
+    auto menubar = make<GUI::MenuBar>();
 
-    auto app_menu = GMenu::construct("Help");
-    app_menu->add_action(GAction::create("About", [&](const GAction&) {
-        GAboutDialog::show("Help", load_png("/res/icons/16x16/book.png"), window);
+    auto app_menu = GUI::Menu::construct("Help");
+    app_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
+        GUI::AboutDialog::show("Help", load_png("/res/icons/16x16/book.png"), window);
     }));
     app_menu->add_separator();
-    app_menu->add_action(GCommonActions::make_quit_action([](auto&) {
-        GApplication::the().quit(0);
+    app_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
+        GUI::Application::the().quit(0);
     }));
     menubar->add_menu(move(app_menu));
 
-    auto go_menu = GMenu::construct("Go");
+    auto go_menu = GUI::Menu::construct("Go");
     go_menu->add_action(*go_back_action);
     go_menu->add_action(*go_forward_action);
     menubar->add_menu(move(go_menu));

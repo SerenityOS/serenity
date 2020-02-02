@@ -29,6 +29,8 @@
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GScrollBar.h>
 
+namespace GUI {
+
 static const char* s_arrow_bitmap_data = {
     "         "
     "   #     "
@@ -43,8 +45,8 @@ static const char* s_arrow_bitmap_data = {
 static const int s_arrow_bitmap_width = 9;
 static const int s_arrow_bitmap_height = 9;
 
-GColumnsView::GColumnsView(GWidget* parent)
-    : GAbstractView(parent)
+ColumnsView::ColumnsView(Widget* parent)
+    : AbstractView(parent)
 {
     set_fill_with_background_color(true);
     set_background_role(ColorRole::Base);
@@ -56,18 +58,18 @@ GColumnsView::GColumnsView(GWidget* parent)
     m_columns.append({ {}, 0 });
 }
 
-GColumnsView::~GColumnsView()
+ColumnsView::~ColumnsView()
 {
 }
 
-void GColumnsView::paint_event(GPaintEvent& event)
+void ColumnsView::paint_event(PaintEvent& event)
 {
-    GAbstractView::paint_event(event);
+    AbstractView::paint_event(event);
 
     if (!model())
         return;
 
-    GPainter painter(*this);
+    Painter painter(*this);
     painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
     painter.translate(frame_thickness(), frame_thickness());
@@ -83,7 +85,7 @@ void GColumnsView::paint_event(GPaintEvent& event)
 
         int row_count = model()->row_count(column.parent_index);
         for (int row = 0; row < row_count; row++) {
-            GModelIndex index = model()->index(row, m_model_column, column.parent_index);
+            ModelIndex index = model()->index(row, m_model_column, column.parent_index);
             ASSERT(index.is_valid());
 
             bool is_selected_row = selection().contains(index);
@@ -102,7 +104,7 @@ void GColumnsView::paint_event(GPaintEvent& event)
             Rect row_rect { column_x, row * item_height(), column.width, item_height() };
             painter.fill_rect(row_rect, background_color);
 
-            auto icon = model()->data(index, GModel::Role::Icon);
+            auto icon = model()->data(index, Model::Role::Icon);
             Rect icon_rect = { column_x + icon_spacing(), 0, icon_size(), icon_size() };
             icon_rect.center_vertically_within(row_rect);
             if (icon.is_icon())
@@ -136,12 +138,12 @@ void GColumnsView::paint_event(GPaintEvent& event)
     }
 }
 
-void GColumnsView::push_column(GModelIndex& parent_index)
+void ColumnsView::push_column(ModelIndex& parent_index)
 {
     ASSERT(model());
 
     // Drop columns at the end.
-    GModelIndex grandparent = model()->parent_index(parent_index);
+    ModelIndex grandparent = model()->parent_index(parent_index);
     for (int i = m_columns.size() - 1; i > 0; i--) {
         if (m_columns[i].parent_index == grandparent)
             break;
@@ -156,7 +158,7 @@ void GColumnsView::push_column(GModelIndex& parent_index)
     update();
 }
 
-void GColumnsView::update_column_sizes()
+void ColumnsView::update_column_sizes()
 {
     if (!model())
         return;
@@ -173,7 +175,7 @@ void GColumnsView::update_column_sizes()
 
         column.width = 10;
         for (int row = 0; row < row_count; row++) {
-            GModelIndex index = model()->index(row, m_model_column, column.parent_index);
+            ModelIndex index = model()->index(row, m_model_column, column.parent_index);
             ASSERT(index.is_valid());
             auto text = model()->data(index).to_string();
             int row_width = icon_spacing() + icon_size() + icon_spacing() + font().width(text) + icon_spacing() + s_arrow_bitmap_width + icon_spacing();
@@ -186,7 +188,7 @@ void GColumnsView::update_column_sizes()
     set_content_size({ total_width, total_height });
 }
 
-GModelIndex GColumnsView::index_at_event_position(const Point& a_position) const
+ModelIndex ColumnsView::index_at_event_position(const Point& a_position) const
 {
     if (!model())
         return {};
@@ -214,14 +216,14 @@ GModelIndex GColumnsView::index_at_event_position(const Point& a_position) const
     return {};
 }
 
-void GColumnsView::mousedown_event(GMouseEvent& event)
+void ColumnsView::mousedown_event(MouseEvent& event)
 {
-    GAbstractView::mousedown_event(event);
+    AbstractView::mousedown_event(event);
 
     if (!model())
         return;
 
-    if (event.button() != GMouseButton::Left)
+    if (event.button() != MouseButton::Left)
         return;
 
     auto index = index_at_event_position(event.position());
@@ -231,9 +233,9 @@ void GColumnsView::mousedown_event(GMouseEvent& event)
     }
 }
 
-void GColumnsView::did_update_model()
+void ColumnsView::did_update_model()
 {
-    GAbstractView::did_update_model();
+    AbstractView::did_update_model();
 
     // FIXME: Don't drop the columns on minor updates.
     dbg() << "Model was updated; dropping columns :(";
@@ -244,7 +246,7 @@ void GColumnsView::did_update_model()
     update();
 }
 
-void GColumnsView::keydown_event(GKeyEvent& event)
+void ColumnsView::keydown_event(KeyEvent& event)
 {
     if (!model())
         return;
@@ -256,7 +258,7 @@ void GColumnsView::keydown_event(GKeyEvent& event)
     }
 
     if (event.key() == KeyCode::Key_Up) {
-        GModelIndex new_index;
+        ModelIndex new_index;
         if (!selection().is_empty()) {
             auto old_index = selection().first();
             auto parent_index = model.parent_index(old_index);
@@ -273,7 +275,7 @@ void GColumnsView::keydown_event(GKeyEvent& event)
     }
 
     if (event.key() == KeyCode::Key_Down) {
-        GModelIndex new_index;
+        ModelIndex new_index;
         if (!selection().is_empty()) {
             auto old_index = selection().first();
             auto parent_index = model.parent_index(old_index);
@@ -290,7 +292,7 @@ void GColumnsView::keydown_event(GKeyEvent& event)
     }
 
     if (event.key() == KeyCode::Key_Left) {
-        GModelIndex new_index;
+        ModelIndex new_index;
         if (!selection().is_empty()) {
             auto old_index = selection().first();
             new_index = model.parent_index(old_index);
@@ -305,7 +307,7 @@ void GColumnsView::keydown_event(GKeyEvent& event)
     }
 
     if (event.key() == KeyCode::Key_Right) {
-        GModelIndex old_index, new_index;
+        ModelIndex old_index, new_index;
         if (!selection().is_empty()) {
             old_index = selection().first();
             new_index = model.index(0, m_model_column, old_index);
@@ -320,4 +322,6 @@ void GColumnsView::keydown_event(GKeyEvent& event)
         }
         return;
     }
+}
+
 }

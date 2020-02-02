@@ -41,7 +41,7 @@ String to_class_name(VBWidgetType type)
 {
     switch (type) {
     case VBWidgetType::GWidget:
-        return "GWidget";
+        return "GUI::Widget";
     case VBWidgetType::GButton:
         return "GButton";
     case VBWidgetType::GLabel:
@@ -69,7 +69,7 @@ String to_class_name(VBWidgetType type)
 
 VBWidgetType widget_type_from_class_name(const StringView& name)
 {
-    if (name == "GWidget")
+    if (name == "GUI::Widget")
         return VBWidgetType::GWidget;
     if (name == "GButton")
         return VBWidgetType::GButton;
@@ -94,67 +94,67 @@ VBWidgetType widget_type_from_class_name(const StringView& name)
     ASSERT_NOT_REACHED();
 }
 
-static RefPtr<GWidget> build_gwidget(VBWidgetType type, GWidget* parent)
+static RefPtr<GUI::Widget> build_gwidget(VBWidgetType type, GUI::Widget* parent)
 {
     switch (type) {
     case VBWidgetType::GWidget:
-        return GWidget::construct(parent);
+        return GUI::Widget::construct(parent);
     case VBWidgetType::GScrollBar:
-        return GScrollBar::construct(Orientation::Vertical, parent);
+        return GUI::ScrollBar::construct(Orientation::Vertical, parent);
     case VBWidgetType::GGroupBox:
-        return GGroupBox::construct("groupbox_1", parent);
+        return GUI::GroupBox::construct("groupbox_1", parent);
     case VBWidgetType::GLabel: {
-        auto label = GLabel::construct(parent);
+        auto label = GUI::Label::construct(parent);
         label->set_fill_with_background_color(true);
         label->set_text("label_1");
         return label;
     }
     case VBWidgetType::GButton: {
-        auto button = GButton::construct(parent);
+        auto button = GUI::Button::construct(parent);
         button->set_text("button_1");
         return button;
     }
     case VBWidgetType::GSpinBox: {
-        auto box = GSpinBox::construct(parent);
+        auto box = GUI::SpinBox::construct(parent);
         box->set_range(0, 100);
         box->set_value(0);
         return box;
     }
     case VBWidgetType::GTextEditor: {
-        auto editor = GTextEditor::construct(GTextEditor::Type::MultiLine, parent);
+        auto editor = GUI::TextEditor::construct(GUI::TextEditor::Type::MultiLine, parent);
         editor->set_ruler_visible(false);
         return editor;
     }
     case VBWidgetType::GProgressBar: {
-        auto bar = GProgressBar::construct(parent);
-        bar->set_format(GProgressBar::Format::NoText);
+        auto bar = GUI::ProgressBar::construct(parent);
+        bar->set_format(GUI::ProgressBar::Format::NoText);
         bar->set_range(0, 100);
         bar->set_value(50);
         return bar;
     }
     case VBWidgetType::GSlider: {
-        auto slider = GSlider::construct(Orientation::Horizontal, parent);
+        auto slider = GUI::Slider::construct(Orientation::Horizontal, parent);
         slider->set_range(0, 100);
         slider->set_value(50);
         return slider;
     }
     case VBWidgetType::GCheckBox: {
-        auto box = GCheckBox::construct(parent);
+        auto box = GUI::CheckBox::construct(parent);
         box->set_text("checkbox_1");
         return box;
     }
     case VBWidgetType::GRadioButton:
-        return GRadioButton::construct("radio_1", parent);
+        return GUI::RadioButton::construct("radio_1", parent);
     default:
         ASSERT_NOT_REACHED();
         return nullptr;
     }
 }
 
-RefPtr<GWidget> VBWidgetRegistry::build_gwidget(VBWidget& widget, VBWidgetType type, GWidget* parent, NonnullOwnPtrVector<VBProperty>& properties)
+RefPtr<GUI::Widget> VBWidgetRegistry::build_gwidget(VBWidget& widget, VBWidgetType type, GUI::Widget* parent, NonnullOwnPtrVector<VBProperty>& properties)
 {
     auto gwidget = ::build_gwidget(type, parent);
-    auto add_readonly_property = [&](const String& name, const GVariant& value) {
+    auto add_readonly_property = [&](const String& name, const GUI::Variant& value) {
         auto property = make<VBProperty>(widget, name, value);
         property->set_readonly(true);
         properties.append(move(property));

@@ -28,9 +28,11 @@
 
 #include <AK/String.h>
 
-class GCommand {
+namespace GUI {
+
+class Command {
 public:
-    virtual ~GCommand();
+    virtual ~Command();
 
     virtual void undo() {}
     virtual void redo() {}
@@ -38,9 +40,11 @@ public:
     String action_text() const { return m_action_text; }
 
 protected:
-    GCommand() {}
+    Command() {}
     void set_action_text(const String& text) { m_action_text = text; }
 
 private:
     String m_action_text;
 };
+
+}

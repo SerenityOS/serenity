@@ -29,22 +29,24 @@
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GPainter.h>
 
-GLabel::GLabel(GWidget* parent)
-    : GFrame(parent)
+namespace GUI {
+
+Label::Label(Widget* parent)
+    : Frame(parent)
 {
 }
 
-GLabel::GLabel(const StringView& text, GWidget* parent)
-    : GFrame(parent)
+Label::Label(const StringView& text, Widget* parent)
+    : Frame(parent)
     , m_text(text)
 {
 }
 
-GLabel::~GLabel()
+Label::~Label()
 {
 }
 
-void GLabel::set_icon(GraphicsBitmap* icon)
+void Label::set_icon(GraphicsBitmap* icon)
 {
     if (m_icon == icon)
         return;
@@ -52,7 +54,7 @@ void GLabel::set_icon(GraphicsBitmap* icon)
     update();
 }
 
-void GLabel::set_text(const StringView& text)
+void Label::set_text(const StringView& text)
 {
     if (text == m_text)
         return;
@@ -60,11 +62,11 @@ void GLabel::set_text(const StringView& text)
     update();
 }
 
-void GLabel::paint_event(GPaintEvent& event)
+void Label::paint_event(PaintEvent& event)
 {
-    GFrame::paint_event(event);
+    Frame::paint_event(event);
 
-    GPainter painter(*this);
+    Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
     if (m_icon) {
@@ -92,8 +94,10 @@ void GLabel::paint_event(GPaintEvent& event)
     }
 }
 
-void GLabel::size_to_fit()
+void Label::size_to_fit()
 {
     set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     set_preferred_size(font().width(m_text), 0);
+}
+
 }

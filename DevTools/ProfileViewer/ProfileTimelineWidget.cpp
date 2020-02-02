@@ -28,8 +28,8 @@
 #include "Profile.h"
 #include <LibGUI/GPainter.h>
 
-ProfileTimelineWidget::ProfileTimelineWidget(Profile& profile, GWidget* parent)
-    : GFrame(parent)
+ProfileTimelineWidget::ProfileTimelineWidget(Profile& profile, GUI::Widget* parent)
+    : GUI::Frame(parent)
     , m_profile(profile)
 {
     set_frame_thickness(2);
@@ -37,7 +37,7 @@ ProfileTimelineWidget::ProfileTimelineWidget(Profile& profile, GWidget* parent)
     set_frame_shape(FrameShape::Container);
     set_background_color(Color::White);
     set_fill_with_background_color(true);
-    set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     set_preferred_size(0, 80);
 }
 
@@ -45,11 +45,11 @@ ProfileTimelineWidget::~ProfileTimelineWidget()
 {
 }
 
-void ProfileTimelineWidget::paint_event(GPaintEvent& event)
+void ProfileTimelineWidget::paint_event(GUI::PaintEvent& event)
 {
-    GFrame::paint_event(event);
+    GUI::Frame::paint_event(event);
 
-    GPainter painter(*this);
+    GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
     float column_width = (float)frame_inner_rect().width() / (float)m_profile.length_in_ms();
@@ -83,9 +83,9 @@ u64 ProfileTimelineWidget::timestamp_at_x(int x) const
     return m_profile.first_timestamp() + (u64)ms_into_profile;
 }
 
-void ProfileTimelineWidget::mousedown_event(GMouseEvent& event)
+void ProfileTimelineWidget::mousedown_event(GUI::MouseEvent& event)
 {
-    if (event.button() != GMouseButton::Left)
+    if (event.button() != GUI::MouseButton::Left)
         return;
 
     m_selecting = true;
@@ -95,7 +95,7 @@ void ProfileTimelineWidget::mousedown_event(GMouseEvent& event)
     update();
 }
 
-void ProfileTimelineWidget::mousemove_event(GMouseEvent& event)
+void ProfileTimelineWidget::mousemove_event(GUI::MouseEvent& event)
 {
     if (!m_selecting)
         return;
@@ -105,9 +105,9 @@ void ProfileTimelineWidget::mousemove_event(GMouseEvent& event)
     update();
 }
 
-void ProfileTimelineWidget::mouseup_event(GMouseEvent& event)
+void ProfileTimelineWidget::mouseup_event(GUI::MouseEvent& event)
 {
-    if (event.button() != GMouseButton::Left)
+    if (event.button() != GUI::MouseButton::Left)
         return;
 
     m_selecting = false;

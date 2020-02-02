@@ -30,7 +30,9 @@
 #include <AK/Noncopyable.h>
 #include <LibDraw/SystemTheme.h>
 
-class GApplication;
+namespace GUI {
+class Application;
+}
 
 class PaletteImpl : public RefCounted<PaletteImpl> {
     AK_MAKE_NONCOPYABLE(PaletteImpl)
@@ -42,7 +44,7 @@ public:
     Color color(ColorRole) const;
     const SystemTheme& theme() const;
 
-    void replace_internal_buffer(Badge<GApplication>, SharedBuffer& buffer) { m_theme_buffer = buffer; }
+    void replace_internal_buffer(Badge<GUI::Application>, SharedBuffer& buffer) { m_theme_buffer = buffer; }
 
 private:
     explicit PaletteImpl(SharedBuffer&);

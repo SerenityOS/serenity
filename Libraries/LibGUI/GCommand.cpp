@@ -26,6 +26,10 @@
 
 #include <LibGUI/GCommand.h>
 
-GCommand::~GCommand()
+namespace GUI {
+
+Command::~Command()
 {
+}
+
 }

@@ -28,10 +28,10 @@
 #include <LibCore/CFile.h>
 #include <string.h>
 
-const GTextDocument& ProjectFile::document() const
+const GUI::TextDocument& ProjectFile::document() const
 {
     if (!m_document) {
-        m_document = GTextDocument::create(nullptr);
+        m_document = GUI::TextDocument::create(nullptr);
         auto file = Core::File::construct(m_name);
         if (!file->open(Core::File::ReadOnly)) {
             ASSERT_NOT_REACHED();

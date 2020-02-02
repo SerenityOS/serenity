@@ -28,22 +28,24 @@
 
 #include <LibGUI/GAbstractButton.h>
 
-class GRadioButton : public GAbstractButton {
-    C_OBJECT(GRadioButton)
+namespace GUI {
+
+class RadioButton : public AbstractButton {
+    C_OBJECT(RadioButton)
 public:
-    virtual ~GRadioButton() override;
+    virtual ~RadioButton() override;
 
     virtual void click() override;
 
 protected:
-    explicit GRadioButton(GWidget* parent);
-    explicit GRadioButton(const StringView& text, GWidget* parent);
-    virtual void paint_event(GPaintEvent&) override;
+    explicit RadioButton(Widget* parent);
+    explicit RadioButton(const StringView& text, Widget* parent);
+    virtual void paint_event(PaintEvent&) override;
 
 private:
     // These don't make sense for a radio button, so hide them.
-    using GAbstractButton::auto_repeat_interval;
-    using GAbstractButton::set_auto_repeat_interval;
+    using AbstractButton::auto_repeat_interval;
+    using AbstractButton::set_auto_repeat_interval;
 
     virtual bool is_radio_button() const final { return true; }
 
@@ -52,10 +54,12 @@ private:
     static Size circle_size();
 };
 
+}
+
 template<>
-inline bool Core::is<GRadioButton>(const Core::Object& object)
+inline bool Core::is<GUI::RadioButton>(const Core::Object& object)
 {
-    if (!is<GWidget>(object))
+    if (!is<GUI::Widget>(object))
         return false;
-    return to<GWidget>(object).is_radio_button();
+    return to<GUI::Widget>(object).is_radio_button();
 }

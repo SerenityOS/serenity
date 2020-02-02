@@ -30,20 +30,24 @@
 #include <AK/String.h>
 #include <LibGUI/GAbstractButton.h>
 
-class GCheckBox : public GAbstractButton {
-    C_OBJECT(GCheckBox)
+namespace GUI {
+
+class CheckBox : public AbstractButton {
+    C_OBJECT(CheckBox)
 public:
-    virtual ~GCheckBox() override;
+    virtual ~CheckBox() override;
 
     virtual void click() override;
 
 private:
-    GCheckBox(const StringView&, GWidget* parent);
-    explicit GCheckBox(GWidget* parent);
+    CheckBox(const StringView&, Widget* parent);
+    explicit CheckBox(Widget* parent);
 
     // These don't make sense for a check box, so hide them.
-    using GAbstractButton::auto_repeat_interval;
-    using GAbstractButton::set_auto_repeat_interval;
+    using AbstractButton::auto_repeat_interval;
+    using AbstractButton::set_auto_repeat_interval;
 
-    virtual void paint_event(GPaintEvent&) override;
+    virtual void paint_event(PaintEvent&) override;
 };
+
+}

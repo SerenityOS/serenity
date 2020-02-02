@@ -28,8 +28,8 @@
 #include <LibDraw/Palette.h>
 #include <LibGUI/GPainter.h>
 
-GlyphMapWidget::GlyphMapWidget(Font& mutable_font, GWidget* parent)
-    : GFrame(parent)
+GlyphMapWidget::GlyphMapWidget(Font& mutable_font, GUI::Widget* parent)
+    : GUI::Frame(parent)
     , m_font(mutable_font)
 {
     set_frame_thickness(2);
@@ -80,11 +80,11 @@ void GlyphMapWidget::update_glyph(u8 glyph)
     update(get_outer_rect(glyph));
 }
 
-void GlyphMapWidget::paint_event(GPaintEvent& event)
+void GlyphMapWidget::paint_event(GUI::PaintEvent& event)
 {
-    GFrame::paint_event(event);
+    GUI::Frame::paint_event(event);
 
-    GPainter painter(*this);
+    GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
     painter.set_font(font());
@@ -110,7 +110,7 @@ void GlyphMapWidget::paint_event(GPaintEvent& event)
     }
 }
 
-void GlyphMapWidget::mousedown_event(GMouseEvent& event)
+void GlyphMapWidget::mousedown_event(GUI::MouseEvent& event)
 {
     // FIXME: This is a silly loop.
     for (unsigned glyph = 0; glyph < 256; ++glyph) {

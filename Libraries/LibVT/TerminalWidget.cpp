@@ -61,7 +61,7 @@ void TerminalWidget::set_pty_master_fd(int fd)
         if (nread < 0) {
             dbgprintf("Terminal read error: %s\n", strerror(errno));
             perror("read(ptm)");
-            GApplication::the().quit(1);
+            GUI::Application::the().quit(1);
             return;
         }
         if (nread == 0) {
@@ -94,7 +94,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
     set_frame_shadow(FrameShadow::Sunken);
     set_frame_thickness(2);
 
-    m_scrollbar = GScrollBar::construct(Orientation::Vertical, this);
+    m_scrollbar = GUI::ScrollBar::construct(Orientation::Vertical, this);
     m_scrollbar->set_relative_rect(0, 0, 16, 0);
     m_scrollbar->on_change = [this](int) {
         force_repaint();
@@ -119,11 +119,11 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
 
     m_terminal.set_size(m_config->read_num_entry("Window", "Width", 80), m_config->read_num_entry("Window", "Height", 25));
 
-    m_copy_action = GAction::create("Copy", { Mod_Ctrl | Mod_Shift, Key_C }, GraphicsBitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [this](auto&) {
+    m_copy_action = GUI::Action::create("Copy", { Mod_Ctrl | Mod_Shift, Key_C }, GraphicsBitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [this](auto&) {
         copy();
     });
 
-    m_paste_action = GAction::create("Paste", { Mod_Ctrl | Mod_Shift, Key_V }, GraphicsBitmap::load_from_file("/res/icons/paste16.png"), [this](auto&) {
+    m_paste_action = GUI::Action::create("Paste", { Mod_Ctrl | Mod_Shift, Key_V }, GraphicsBitmap::load_from_file("/res/icons/paste16.png"), [this](auto&) {
         paste();
     });
 }
@@ -168,29 +168,29 @@ void TerminalWidget::set_logical_focus(bool focus)
 void TerminalWidget::focusin_event(Core::Event& event)
 {
     set_logical_focus(true);
-    return GFrame::focusin_event(event);
+    return GUI::Frame::focusin_event(event);
 }
 
 void TerminalWidget::focusout_event(Core::Event& event)
 {
     set_logical_focus(false);
-    return GFrame::focusout_event(event);
+    return GUI::Frame::focusout_event(event);
 }
 
 void TerminalWidget::event(Core::Event& event)
 {
-    if (event.type() == GEvent::WindowBecameActive)
+    if (event.type() == GUI::Event::WindowBecameActive)
         set_logical_focus(true);
-    else if (event.type() == GEvent::WindowBecameInactive)
+    else if (event.type() == GUI::Event::WindowBecameInactive)
         set_logical_focus(false);
-    return GFrame::event(event);
+    return GUI::Frame::event(event);
 }
 
-void TerminalWidget::keydown_event(GKeyEvent& event)
+void TerminalWidget::keydown_event(GUI::KeyEvent& event)
 {
     if (m_ptm_fd == -1) {
         event.ignore();
-        return GFrame::keydown_event(event);
+        return GUI::Frame::keydown_event(event);
     }
 
     // Reset timer so cursor doesn't blink while typing.
@@ -274,11 +274,11 @@ void TerminalWidget::keydown_event(GKeyEvent& event)
         m_scrollbar->set_value(m_scrollbar->max());
 }
 
-void TerminalWidget::paint_event(GPaintEvent& event)
+void TerminalWidget::paint_event(GUI::PaintEvent& event)
 {
-    GFrame::paint_event(event);
+    GUI::Frame::paint_event(event);
 
-    GPainter painter(*this);
+    GUI::Painter painter(*this);
 
     painter.add_clip_rect(event.rect());
 
@@ -415,7 +415,7 @@ void TerminalWidget::force_repaint()
     update();
 }
 
-void TerminalWidget::resize_event(GResizeEvent& event)
+void TerminalWidget::resize_event(GUI::ResizeEvent& event)
 {
     relayout(event.size());
 }
@@ -446,7 +446,7 @@ Size TerminalWidget::compute_base_size() const
     return { base_width, base_height };
 }
 
-void TerminalWidget::apply_size_increments_to_window(GWindow& window)
+void TerminalWidget::apply_size_increments_to_window(GUI::Window& window)
 {
     window.set_size_increment({ font().glyph_width('x'), m_line_height });
     window.set_base_size(compute_base_size());
@@ -511,9 +511,9 @@ VT::Position TerminalWidget::buffer_position_at(const Point& position) const
     return { row, column };
 }
 
-void TerminalWidget::doubleclick_event(GMouseEvent& event)
+void TerminalWidget::doubleclick_event(GUI::MouseEvent& event)
 {
-    if (event.button() == GMouseButton::Left) {
+    if (event.button() == GUI::MouseButton::Left) {
         m_triple_click_timer.start();
 
         auto position = buffer_position_at(event.position());
@@ -534,14 +534,14 @@ void TerminalWidget::doubleclick_event(GMouseEvent& event)
         m_selection_start = { position.row(), start_column };
         m_selection_end = { position.row(), end_column };
     }
-    GFrame::doubleclick_event(event);
+    GUI::Frame::doubleclick_event(event);
 }
 
 void TerminalWidget::paste()
 {
     if (m_ptm_fd == -1)
         return;
-    auto text = GClipboard::the().data();
+    auto text = GUI::Clipboard::the().data();
     if (text.is_empty())
         return;
     int nwritten = write(m_ptm_fd, text.characters(), text.length());
@@ -554,12 +554,12 @@ void TerminalWidget::paste()
 void TerminalWidget::copy()
 {
     if (has_selection())
-        GClipboard::the().set_data(selected_text());
+        GUI::Clipboard::the().set_data(selected_text());
 }
 
-void TerminalWidget::mousedown_event(GMouseEvent& event)
+void TerminalWidget::mousedown_event(GUI::MouseEvent& event)
 {
-    if (event.button() == GMouseButton::Left) {
+    if (event.button() == GUI::MouseButton::Left) {
         if (m_triple_click_timer.is_valid() && m_triple_click_timer.elapsed() < 250) {
             int start_column = 0;
             int end_column = m_terminal.columns() - 1;
@@ -575,9 +575,9 @@ void TerminalWidget::mousedown_event(GMouseEvent& event)
     }
 }
 
-void TerminalWidget::mousemove_event(GMouseEvent& event)
+void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
 {
-    if (!(event.buttons() & GMouseButton::Left))
+    if (!(event.buttons() & GUI::MouseButton::Left))
         return;
 
     auto old_selection_end = m_selection_end;
@@ -586,12 +586,12 @@ void TerminalWidget::mousemove_event(GMouseEvent& event)
         update();
 }
 
-void TerminalWidget::mousewheel_event(GMouseEvent& event)
+void TerminalWidget::mousewheel_event(GUI::MouseEvent& event)
 {
     if (!is_scrollable())
         return;
     m_scrollbar->set_value(m_scrollbar->value() + event.wheel_delta());
-    GFrame::mousewheel_event(event);
+    GUI::Frame::mousewheel_event(event);
 }
 
 bool TerminalWidget::is_scrollable() const
@@ -649,7 +649,7 @@ void TerminalWidget::terminal_did_resize(u16 columns, u16 rows)
     m_pixel_height = (frame_thickness() * 2) + (m_inset * 2) + (rows * (font().glyph_height() + m_line_spacing));
 
     if (m_automatic_size_policy) {
-        set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+        set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
         set_preferred_size(m_pixel_width, m_pixel_height);
     }
 
@@ -686,17 +686,17 @@ void TerminalWidget::emit_char(u8 ch)
     }
 }
 
-void TerminalWidget::context_menu_event(GContextMenuEvent& event)
+void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
 {
     if (!m_context_menu) {
-        m_context_menu = GMenu::construct();
+        m_context_menu = GUI::Menu::construct();
         m_context_menu->add_action(copy_action());
         m_context_menu->add_action(paste_action());
     }
     m_context_menu->popup(event.screen_position());
 }
 
-void TerminalWidget::drop_event(GDropEvent& event)
+void TerminalWidget::drop_event(GUI::DropEvent& event)
 {
     if (event.data_type() == "text") {
         event.accept();
@@ -719,7 +719,7 @@ void TerminalWidget::drop_event(GDropEvent& event)
 
 void TerminalWidget::did_change_font()
 {
-    GFrame::did_change_font();
+    GUI::Frame::did_change_font();
     m_line_height = font().glyph_height() + m_line_spacing;
 
     // TODO: try to find a bold version of the new font (e.g. CsillaThin7x10 -> CsillaBold7x10)

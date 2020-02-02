@@ -34,7 +34,7 @@
 #include <LibGUI/GTableView.h>
 #include <sys/stat.h>
 
-class DirectoryView final : public GStackWidget {
+class DirectoryView final : public GUI::StackWidget {
     C_OBJECT(DirectoryView)
 public:
     virtual ~DirectoryView() override;
@@ -50,8 +50,8 @@ public:
     void refresh();
 
     Function<void(const StringView&)> on_path_change;
-    Function<void(GAbstractView&)> on_selection_change;
-    Function<void(const GAbstractView&, const GModelIndex&, const GContextMenuEvent&)> on_context_menu_request;
+    Function<void(GUI::AbstractView&)> on_selection_change;
+    Function<void(const GUI::AbstractView&, const GUI::ModelIndex&, const GUI::ContextMenuEvent&)> on_context_menu_request;
     Function<void(const StringView&)> on_status_message;
     Function<void(int done, int total)> on_thumbnail_progress;
 
@@ -64,7 +64,7 @@ public:
     void set_view_mode(ViewMode);
     ViewMode view_mode() const { return m_view_mode; }
 
-    GAbstractView& current_view()
+    GUI::AbstractView& current_view()
     {
         switch (m_view_mode) {
         case ViewMode::List:
@@ -86,25 +86,25 @@ public:
         callback(*m_columns_view);
     }
 
-    GFileSystemModel& model() { return *m_model; }
+    GUI::FileSystemModel& model() { return *m_model; }
 
 private:
-    explicit DirectoryView(GWidget* parent);
-    const GFileSystemModel& model() const { return *m_model; }
+    explicit DirectoryView(GUI::Widget* parent);
+    const GUI::FileSystemModel& model() const { return *m_model; }
 
-    void handle_activation(const GModelIndex&);
+    void handle_activation(const GUI::ModelIndex&);
 
     void set_status_message(const StringView&);
     void update_statusbar();
 
     ViewMode m_view_mode { Invalid };
 
-    NonnullRefPtr<GFileSystemModel> m_model;
+    NonnullRefPtr<GUI::FileSystemModel> m_model;
     int m_path_history_position { 0 };
     Vector<String> m_path_history;
     void add_path_to_history(const StringView& path);
 
-    RefPtr<GTableView> m_table_view;
-    RefPtr<GItemView> m_item_view;
-    RefPtr<GColumnsView> m_columns_view;
+    RefPtr<GUI::TableView> m_table_view;
+    RefPtr<GUI::ItemView> m_item_view;
+    RefPtr<GUI::ColumnsView> m_columns_view;
 };

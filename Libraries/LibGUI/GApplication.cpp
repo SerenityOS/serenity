@@ -34,34 +34,36 @@
 #include <LibGUI/GWindow.h>
 #include <LibGUI/GWindowServerConnection.h>
 
-static GApplication* s_the;
+namespace GUI {
 
-GApplication& GApplication::the()
+static Application* s_the;
+
+Application& Application::the()
 {
     ASSERT(s_the);
     return *s_the;
 }
 
-GApplication::GApplication(int argc, char** argv)
+Application::Application(int argc, char** argv)
 {
     (void)argc;
     (void)argv;
     ASSERT(!s_the);
     s_the = this;
     m_event_loop = make<Core::EventLoop>();
-    GWindowServerConnection::the();
+    WindowServerConnection::the();
     if (argc > 0)
         m_invoked_as = argv[0];
     for (int i = 1; i < argc; i++)
         m_args.append(argv[i]);
 }
 
-GApplication::~GApplication()
+Application::~Application()
 {
     s_the = nullptr;
 }
 
-int GApplication::exec()
+int Application::exec()
 {
     int exit_code = m_event_loop->exec();
     // NOTE: Maybe it would be cool to return instead of exit()?
@@ -70,12 +72,12 @@ int GApplication::exec()
     return exit_code;
 }
 
-void GApplication::quit(int exit_code)
+void Application::quit(int exit_code)
 {
     m_event_loop->quit(exit_code);
 }
 
-void GApplication::set_menubar(OwnPtr<GMenuBar>&& menubar)
+void Application::set_menubar(OwnPtr<MenuBar>&& menubar)
 {
     if (m_menubar)
         m_menubar->notify_removed_from_application({});
@@ -84,30 +86,30 @@ void GApplication::set_menubar(OwnPtr<GMenuBar>&& menubar)
         m_menubar->notify_added_to_application({});
 }
 
-void GApplication::register_global_shortcut_action(Badge<GAction>, GAction& action)
+void Application::register_global_shortcut_action(Badge<Action>, Action& action)
 {
     m_global_shortcut_actions.set(action.shortcut(), &action);
 }
 
-void GApplication::unregister_global_shortcut_action(Badge<GAction>, GAction& action)
+void Application::unregister_global_shortcut_action(Badge<Action>, Action& action)
 {
     m_global_shortcut_actions.remove(action.shortcut());
 }
 
-GAction* GApplication::action_for_key_event(const GKeyEvent& event)
+Action* Application::action_for_key_event(const KeyEvent& event)
 {
-    auto it = m_global_shortcut_actions.find(GShortcut(event.modifiers(), (KeyCode)event.key()));
+    auto it = m_global_shortcut_actions.find(Shortcut(event.modifiers(), (KeyCode)event.key()));
     if (it == m_global_shortcut_actions.end())
         return nullptr;
     return (*it).value;
 }
 
-class GApplication::TooltipWindow final : public GWindow {
+class Application::TooltipWindow final : public Window {
 public:
     TooltipWindow()
     {
-        set_window_type(GWindowType::Tooltip);
-        m_label = GLabel::construct();
+        set_window_type(WindowType::Tooltip);
+        m_label = Label::construct();
         m_label->set_background_color(Color::from_rgb(0xdac7b5));
         m_label->set_fill_with_background_color(true);
         m_label->set_frame_thickness(1);
@@ -124,10 +126,10 @@ public:
         m_label->set_text(tooltip);
     }
 
-    RefPtr<GLabel> m_label;
+    RefPtr<Label> m_label;
 };
 
-void GApplication::show_tooltip(const StringView& tooltip, const Point& screen_location)
+void Application::show_tooltip(const StringView& tooltip, const Point& screen_location)
 {
     if (!m_tooltip_window) {
         m_tooltip_window = new TooltipWindow;
@@ -135,7 +137,7 @@ void GApplication::show_tooltip(const StringView& tooltip, const Point& screen_l
     }
     m_tooltip_window->set_tooltip(tooltip);
 
-    Rect desktop_rect = GDesktop::the().rect();
+    Rect desktop_rect = Desktop::the().rect();
 
     const int margin = 30;
     Point adjusted_pos = screen_location;
@@ -150,7 +152,7 @@ void GApplication::show_tooltip(const StringView& tooltip, const Point& screen_l
     m_tooltip_window->show();
 }
 
-void GApplication::hide_tooltip()
+void Application::hide_tooltip()
 {
     if (m_tooltip_window) {
         m_tooltip_window->hide();
@@ -158,19 +160,19 @@ void GApplication::hide_tooltip()
     }
 }
 
-void GApplication::did_create_window(Badge<GWindow>)
+void Application::did_create_window(Badge<Window>)
 {
     if (m_event_loop->was_exit_requested())
         m_event_loop->unquit();
 }
 
-void GApplication::did_delete_last_window(Badge<GWindow>)
+void Application::did_delete_last_window(Badge<Window>)
 {
     if (m_quit_when_last_window_deleted)
         m_event_loop->quit(0);
 }
 
-void GApplication::set_system_palette(SharedBuffer& buffer)
+void Application::set_system_palette(SharedBuffer& buffer)
 {
     if (!m_system_palette)
         m_system_palette = PaletteImpl::create_with_shared_buffer(buffer);
@@ -181,7 +183,9 @@ void GApplication::set_system_palette(SharedBuffer& buffer)
         m_palette = m_system_palette;
 }
 
-void GApplication::set_palette(const Palette& palette)
+void Application::set_palette(const Palette& palette)
 {
     m_palette = palette.impl();
+}
+
 }

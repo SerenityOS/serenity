@@ -72,7 +72,7 @@ void BoardListModel::update()
     };
 }
 
-int BoardListModel::row_count(const GModelIndex&) const
+int BoardListModel::row_count(const GUI::ModelIndex&) const
 {
     return m_boards.size();
 }
@@ -87,12 +87,12 @@ String BoardListModel::column_name(int column) const
     }
 }
 
-GModel::ColumnMetadata BoardListModel::column_metadata([[maybe_unused]] int column) const
+GUI::Model::ColumnMetadata BoardListModel::column_metadata([[maybe_unused]] int column) const
 {
     return {};
 }
 
-GVariant BoardListModel::data(const GModelIndex& index, Role role) const
+GUI::Variant BoardListModel::data(const GUI::ModelIndex& index, Role role) const
 {
     auto& board = m_boards.at(index.row()).as_object();
     if (role == Role::Display) {

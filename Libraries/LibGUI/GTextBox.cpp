@@ -26,11 +26,15 @@
 
 #include <LibGUI/GTextBox.h>
 
-GTextBox::GTextBox(GWidget* parent)
-    : GTextEditor(GTextEditor::SingleLine, parent)
+namespace GUI {
+
+TextBox::TextBox(Widget* parent)
+    : TextEditor(TextEditor::SingleLine, parent)
 {
 }
 
-GTextBox::~GTextBox()
+TextBox::~TextBox()
 {
+}
+
 }

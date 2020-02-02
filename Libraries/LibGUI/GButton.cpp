@@ -32,25 +32,27 @@
 #include <LibGUI/GButton.h>
 #include <LibGUI/GPainter.h>
 
-GButton::GButton(GWidget* parent)
-    : GAbstractButton(parent)
+namespace GUI {
+
+Button::Button(Widget* parent)
+    : AbstractButton(parent)
 {
 }
 
-GButton::GButton(const StringView& text, GWidget* parent)
-    : GAbstractButton(text, parent)
+Button::Button(const StringView& text, Widget* parent)
+    : AbstractButton(text, parent)
 {
 }
 
-GButton::~GButton()
+Button::~Button()
 {
     if (m_action)
         m_action->unregister_button({}, *this);
 }
 
-void GButton::paint_event(GPaintEvent& event)
+void Button::paint_event(PaintEvent& event)
 {
-    GPainter painter(*this);
+    Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
     StylePainter::paint_button(painter, rect(), palette(), m_button_style, is_being_pressed(), is_hovered(), is_checked(), is_enabled());
@@ -83,7 +85,7 @@ void GButton::paint_event(GPaintEvent& event)
     paint_text(painter, text_rect, font, text_alignment());
 }
 
-void GButton::click()
+void Button::click()
 {
     if (!is_enabled())
         return;
@@ -98,7 +100,7 @@ void GButton::click()
         m_action->activate(this);
 }
 
-void GButton::set_action(GAction& action)
+void Button::set_action(Action& action)
 {
     m_action = action.make_weak_ptr();
     action.register_button({}, *this);
@@ -108,7 +110,7 @@ void GButton::set_action(GAction& action)
         set_checked(action.is_checked());
 }
 
-void GButton::set_icon(RefPtr<GraphicsBitmap>&& icon)
+void Button::set_icon(RefPtr<GraphicsBitmap>&& icon)
 {
     if (m_icon == icon)
         return;
@@ -116,11 +118,13 @@ void GButton::set_icon(RefPtr<GraphicsBitmap>&& icon)
     update();
 }
 
-bool GButton::is_uncheckable() const
+bool Button::is_uncheckable() const
 {
     if (!m_action)
         return true;
     if (!m_action->group())
         return true;
     return m_action->group()->is_unchecking_allowed();
+}
+
 }

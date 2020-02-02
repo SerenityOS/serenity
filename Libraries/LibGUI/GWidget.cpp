@@ -48,73 +48,75 @@
 #include <LibGUI/GWindowServerConnection.h>
 #include <unistd.h>
 
-REGISTER_GWIDGET(GButton)
-REGISTER_GWIDGET(GCheckBox)
-REGISTER_GWIDGET(GGroupBox)
-REGISTER_GWIDGET(GLabel)
-REGISTER_GWIDGET(GRadioButton)
-REGISTER_GWIDGET(GScrollBar)
-REGISTER_GWIDGET(GSlider)
-REGISTER_GWIDGET(GSpinBox)
-REGISTER_GWIDGET(GTextBox)
-REGISTER_GWIDGET(GWidget)
+namespace GUI {
 
-static HashMap<String, GWidgetClassRegistration*>& widget_classes()
+REGISTER_GWIDGET(Button)
+REGISTER_GWIDGET(CheckBox)
+REGISTER_GWIDGET(GroupBox)
+REGISTER_GWIDGET(Label)
+REGISTER_GWIDGET(RadioButton)
+REGISTER_GWIDGET(ScrollBar)
+REGISTER_GWIDGET(Slider)
+REGISTER_GWIDGET(SpinBox)
+REGISTER_GWIDGET(TextBox)
+REGISTER_GWIDGET(Widget)
+
+static HashMap<String, WidgetClassRegistration*>& widget_classes()
 {
-    static HashMap<String, GWidgetClassRegistration*>* map;
+    static HashMap<String, WidgetClassRegistration*>* map;
     if (!map)
-        map = new HashMap<String, GWidgetClassRegistration*>;
+        map = new HashMap<String, WidgetClassRegistration*>;
     return *map;
 }
 
-GWidgetClassRegistration::GWidgetClassRegistration(const String& class_name, Function<NonnullRefPtr<GWidget>(GWidget*)> factory)
+WidgetClassRegistration::WidgetClassRegistration(const String& class_name, Function<NonnullRefPtr<Widget>(Widget*)> factory)
     : m_class_name(class_name)
     , m_factory(move(factory))
 {
     widget_classes().set(class_name, this);
 }
 
-GWidgetClassRegistration::~GWidgetClassRegistration()
+WidgetClassRegistration::~WidgetClassRegistration()
 {
 }
 
-void GWidgetClassRegistration::for_each(Function<void(const GWidgetClassRegistration&)> callback)
+void WidgetClassRegistration::for_each(Function<void(const WidgetClassRegistration&)> callback)
 {
     for (auto& it : widget_classes()) {
         callback(*it.value);
     }
 }
 
-const GWidgetClassRegistration* GWidgetClassRegistration::find(const String& class_name)
+const WidgetClassRegistration* WidgetClassRegistration::find(const String& class_name)
 {
     return widget_classes().get(class_name).value_or(nullptr);
 }
 
-GWidget::GWidget(GWidget* parent)
+Widget::Widget(Widget* parent)
     : Core::Object(parent, true)
     , m_font(Font::default_font())
-    , m_palette(GApplication::the().palette().impl())
+    , m_palette(Application::the().palette().impl())
 {
 }
 
-GWidget::~GWidget()
+Widget::~Widget()
 {
 }
 
-void GWidget::child_event(Core::ChildEvent& event)
+void Widget::child_event(Core::ChildEvent& event)
 {
-    if (event.type() == GEvent::ChildAdded) {
-        if (event.child() && Core::is<GWidget>(*event.child()) && layout()) {
+    if (event.type() == Event::ChildAdded) {
+        if (event.child() && Core::is<Widget>(*event.child()) && layout()) {
             if (event.insertion_before_child() && event.insertion_before_child()->is_widget())
-                layout()->insert_widget_before(Core::to<GWidget>(*event.child()), Core::to<GWidget>(*event.insertion_before_child()));
+                layout()->insert_widget_before(Core::to<Widget>(*event.child()), Core::to<Widget>(*event.insertion_before_child()));
             else
-                layout()->add_widget(Core::to<GWidget>(*event.child()));
+                layout()->add_widget(Core::to<Widget>(*event.child()));
         }
     }
-    if (event.type() == GEvent::ChildRemoved) {
+    if (event.type() == Event::ChildRemoved) {
         if (layout()) {
-            if (event.child() && Core::is<GWidget>(*event.child()))
-                layout()->remove_widget(Core::to<GWidget>(*event.child()));
+            if (event.child() && Core::is<Widget>(*event.child()))
+                layout()->remove_widget(Core::to<Widget>(*event.child()));
             else
                 invalidate_layout();
         }
@@ -123,7 +125,7 @@ void GWidget::child_event(Core::ChildEvent& event)
     return Core::Object::child_event(event);
 }
 
-void GWidget::set_relative_rect(const Rect& a_rect)
+void Widget::set_relative_rect(const Rect& a_rect)
 {
     // Get rid of negative width/height values.
     Rect rect = {
@@ -142,7 +144,7 @@ void GWidget::set_relative_rect(const Rect& a_rect)
     m_relative_rect = rect;
 
     if (size_changed) {
-        GResizeEvent resize_event(m_relative_rect.size(), rect.size());
+        ResizeEvent resize_event(m_relative_rect.size(), rect.size());
         event(resize_event);
     }
 
@@ -151,59 +153,59 @@ void GWidget::set_relative_rect(const Rect& a_rect)
     update();
 }
 
-void GWidget::event(Core::Event& event)
+void Widget::event(Core::Event& event)
 {
     switch (event.type()) {
-    case GEvent::Paint:
-        return handle_paint_event(static_cast<GPaintEvent&>(event));
-    case GEvent::Resize:
-        return handle_resize_event(static_cast<GResizeEvent&>(event));
-    case GEvent::FocusIn:
+    case Event::Paint:
+        return handle_paint_event(static_cast<PaintEvent&>(event));
+    case Event::Resize:
+        return handle_resize_event(static_cast<ResizeEvent&>(event));
+    case Event::FocusIn:
         return focusin_event(event);
-    case GEvent::FocusOut:
+    case Event::FocusOut:
         return focusout_event(event);
-    case GEvent::Show:
-        return show_event(static_cast<GShowEvent&>(event));
-    case GEvent::Hide:
-        return hide_event(static_cast<GHideEvent&>(event));
-    case GEvent::KeyDown:
-        return keydown_event(static_cast<GKeyEvent&>(event));
-    case GEvent::KeyUp:
-        return keyup_event(static_cast<GKeyEvent&>(event));
-    case GEvent::MouseMove:
-        return mousemove_event(static_cast<GMouseEvent&>(event));
-    case GEvent::MouseDown:
-        return handle_mousedown_event(static_cast<GMouseEvent&>(event));
-    case GEvent::MouseDoubleClick:
-        return handle_mousedoubleclick_event(static_cast<GMouseEvent&>(event));
-    case GEvent::MouseUp:
-        return handle_mouseup_event(static_cast<GMouseEvent&>(event));
-    case GEvent::MouseWheel:
-        return mousewheel_event(static_cast<GMouseEvent&>(event));
-    case GEvent::Drop:
-        return drop_event(static_cast<GDropEvent&>(event));
-    case GEvent::Enter:
+    case Event::Show:
+        return show_event(static_cast<ShowEvent&>(event));
+    case Event::Hide:
+        return hide_event(static_cast<HideEvent&>(event));
+    case Event::KeyDown:
+        return keydown_event(static_cast<KeyEvent&>(event));
+    case Event::KeyUp:
+        return keyup_event(static_cast<KeyEvent&>(event));
+    case Event::MouseMove:
+        return mousemove_event(static_cast<MouseEvent&>(event));
+    case Event::MouseDown:
+        return handle_mousedown_event(static_cast<MouseEvent&>(event));
+    case Event::MouseDoubleClick:
+        return handle_mousedoubleclick_event(static_cast<MouseEvent&>(event));
+    case Event::MouseUp:
+        return handle_mouseup_event(static_cast<MouseEvent&>(event));
+    case Event::MouseWheel:
+        return mousewheel_event(static_cast<MouseEvent&>(event));
+    case Event::Drop:
+        return drop_event(static_cast<DropEvent&>(event));
+    case Event::Enter:
         return handle_enter_event(event);
-    case GEvent::Leave:
+    case Event::Leave:
         return handle_leave_event(event);
-    case GEvent::EnabledChange:
-        return change_event(static_cast<GEvent&>(event));
+    case Event::EnabledChange:
+        return change_event(static_cast<Event&>(event));
     default:
         return Core::Object::event(event);
     }
 }
 
-void GWidget::handle_paint_event(GPaintEvent& event)
+void Widget::handle_paint_event(PaintEvent& event)
 {
     ASSERT(is_visible());
     if (fill_with_background_color()) {
-        GPainter painter(*this);
+        Painter painter(*this);
         painter.fill_rect(event.rect(), palette().color(background_role()));
     } else {
 #ifdef DEBUG_WIDGET_UNDERDRAW
         // FIXME: This is a bit broken.
         // If the widget is not opaque, let's not mess it up with debugging color.
-        GPainter painter(*this);
+        Painter painter(*this);
         painter.fill_rect(rect(), Color::Red);
 #endif
     }
@@ -212,7 +214,7 @@ void GWidget::handle_paint_event(GPaintEvent& event)
         if (!child.is_visible())
             return IterationDecision::Continue;
         if (child.relative_rect().intersects(event.rect())) {
-            GPaintEvent local_event(event.rect().intersected(child.relative_rect()).translated(-child.relative_position()));
+            PaintEvent local_event(event.rect().intersected(child.relative_rect()).translated(-child.relative_position()));
             child.dispatch_event(local_event, this);
         }
         return IterationDecision::Continue;
@@ -220,7 +222,7 @@ void GWidget::handle_paint_event(GPaintEvent& event)
     second_paint_event(event);
 }
 
-void GWidget::set_layout(OwnPtr<GLayout>&& layout)
+void Widget::set_layout(OwnPtr<Layout>&& layout)
 {
     if (m_layout)
         m_layout->notify_disowned({}, *this);
@@ -233,7 +235,7 @@ void GWidget::set_layout(OwnPtr<GLayout>&& layout)
     }
 }
 
-void GWidget::do_layout()
+void Widget::do_layout()
 {
     for_each_child_widget([&](auto& child) {
         child.do_layout();
@@ -246,80 +248,80 @@ void GWidget::do_layout()
     update();
 }
 
-void GWidget::notify_layout_changed(Badge<GLayout>)
+void Widget::notify_layout_changed(Badge<Layout>)
 {
     invalidate_layout();
 }
 
-void GWidget::handle_resize_event(GResizeEvent& event)
+void Widget::handle_resize_event(ResizeEvent& event)
 {
     resize_event(event);
     do_layout();
 }
 
-void GWidget::handle_mouseup_event(GMouseEvent& event)
+void Widget::handle_mouseup_event(MouseEvent& event)
 {
     mouseup_event(event);
 }
 
-void GWidget::handle_mousedown_event(GMouseEvent& event)
+void Widget::handle_mousedown_event(MouseEvent& event)
 {
     if (accepts_focus())
         set_focus(true);
     mousedown_event(event);
-    if (event.button() == GMouseButton::Right) {
-        GContextMenuEvent c_event(event.position(), screen_relative_rect().location().translated(event.position()));
+    if (event.button() == MouseButton::Right) {
+        ContextMenuEvent c_event(event.position(), screen_relative_rect().location().translated(event.position()));
         context_menu_event(c_event);
     }
 }
 
-void GWidget::handle_mousedoubleclick_event(GMouseEvent& event)
+void Widget::handle_mousedoubleclick_event(MouseEvent& event)
 {
     doubleclick_event(event);
 }
 
-void GWidget::handle_enter_event(Core::Event& event)
+void Widget::handle_enter_event(Core::Event& event)
 {
     if (has_tooltip())
-        GApplication::the().show_tooltip(m_tooltip, screen_relative_rect().center().translated(0, height() / 2));
+        Application::the().show_tooltip(m_tooltip, screen_relative_rect().center().translated(0, height() / 2));
     enter_event(event);
 }
 
-void GWidget::handle_leave_event(Core::Event& event)
+void Widget::handle_leave_event(Core::Event& event)
 {
-    GApplication::the().hide_tooltip();
+    Application::the().hide_tooltip();
     leave_event(event);
 }
 
-void GWidget::click_event(GMouseEvent&)
+void Widget::click_event(MouseEvent&)
 {
 }
 
-void GWidget::doubleclick_event(GMouseEvent&)
+void Widget::doubleclick_event(MouseEvent&)
 {
 }
 
-void GWidget::resize_event(GResizeEvent&)
+void Widget::resize_event(ResizeEvent&)
 {
 }
 
-void GWidget::paint_event(GPaintEvent&)
+void Widget::paint_event(PaintEvent&)
 {
 }
 
-void GWidget::second_paint_event(GPaintEvent&)
+void Widget::second_paint_event(PaintEvent&)
 {
 }
 
-void GWidget::show_event(GShowEvent&)
+void Widget::show_event(ShowEvent&)
 {
 }
 
-void GWidget::hide_event(GHideEvent&)
+void Widget::hide_event(HideEvent&)
 {
 }
 
-void GWidget::keydown_event(GKeyEvent& event)
+void Widget::keydown_event(KeyEvent& event)
 {
     if (!event.alt() && !event.ctrl() && !event.logo() && event.key() == KeyCode::Key_Tab) {
         if (event.shift())
@@ -332,64 +334,64 @@ void GWidget::keydown_event(GKeyEvent& event)
     event.ignore();
 }
 
-void GWidget::keyup_event(GKeyEvent&)
+void Widget::keyup_event(KeyEvent&)
 {
 }
 
-void GWidget::mousedown_event(GMouseEvent&)
+void Widget::mousedown_event(MouseEvent&)
 {
 }
 
-void GWidget::mouseup_event(GMouseEvent&)
+void Widget::mouseup_event(MouseEvent&)
 {
 }
 
-void GWidget::mousemove_event(GMouseEvent&)
+void Widget::mousemove_event(MouseEvent&)
 {
 }
 
-void GWidget::mousewheel_event(GMouseEvent&)
+void Widget::mousewheel_event(MouseEvent&)
 {
 }
 
-void GWidget::context_menu_event(GContextMenuEvent&)
+void Widget::context_menu_event(ContextMenuEvent&)
 {
 }
 
-void GWidget::focusin_event(Core::Event&)
+void Widget::focusin_event(Core::Event&)
 {
 }
 
-void GWidget::focusout_event(Core::Event&)
+void Widget::focusout_event(Core::Event&)
 {
 }
 
-void GWidget::enter_event(Core::Event&)
+void Widget::enter_event(Core::Event&)
 {
 }
 
-void GWidget::leave_event(Core::Event&)
+void Widget::leave_event(Core::Event&)
 {
 }
 
-void GWidget::change_event(GEvent&)
+void Widget::change_event(Event&)
 {
 }
 
-void GWidget::drop_event(GDropEvent& event)
+void Widget::drop_event(DropEvent& event)
 {
     dbg() << class_name() << "{" << this << "} DROP  position: " << event.position() << ", text: '" << event.text() << "'";
     event.ignore();
 }
 
-void GWidget::update()
+void Widget::update()
 {
     if (rect().is_empty())
         return;
     update(rect());
 }
 
-void GWidget::update(const Rect& rect)
+void Widget::update(const Rect& rect)
 {
     if (!is_visible())
         return;
@@ -397,8 +399,8 @@ void GWidget::update(const Rect& rect)
     if (!updates_enabled())
         return;
 
-    GWindow* window = m_window;
-    GWidget* parent = parent_widget();
+    Window* window = m_window;
+    Widget* parent = parent_widget();
     while (parent) {
         if (!parent->updates_enabled())
             return;
@@ -409,7 +411,7 @@ void GWidget::update(const Rect& rect)
         window->update(rect.translated(window_relative_rect().location()));
 }
 
-Rect GWidget::window_relative_rect() const
+Rect Widget::window_relative_rect() const
 {
     auto rect = relative_rect();
     for (auto* parent = parent_widget(); parent; parent = parent->parent_widget()) {
@@ -418,26 +420,26 @@ Rect GWidget::window_relative_rect() const
     return rect;
 }
 
-Rect GWidget::screen_relative_rect() const
+Rect Widget::screen_relative_rect() const
 {
     return window_relative_rect().translated(window()->position());
 }
 
-GWidget* GWidget::child_at(const Point& point) const
+Widget* Widget::child_at(const Point& point) const
 {
     for (int i = children().size() - 1; i >= 0; --i) {
-        if (!Core::is<GWidget>(children()[i]))
+        if (!Core::is<Widget>(children()[i]))
             continue;
-        auto& child = Core::to<GWidget>(children()[i]);
+        auto& child = Core::to<Widget>(children()[i]);
         if (!child.is_visible())
             continue;
         if (child.relative_rect().contains(point))
-            return const_cast<GWidget*>(&child);
+            return const_cast<Widget*>(&child);
     }
     return nullptr;
 }
 
-GWidget::HitTestResult GWidget::hit_test(const Point& position, ShouldRespectGreediness should_respect_greediness)
+Widget::HitTestResult Widget::hit_test(const Point& position, ShouldRespectGreediness should_respect_greediness)
 {
     if (should_respect_greediness == ShouldRespectGreediness::Yes && is_greedy_for_hits())
         return { this, position };
@@ -446,14 +448,14 @@ GWidget::HitTestResult GWidget::hit_test(const Point& position, ShouldRespectGre
     return { this, position };
 }
 
-void GWidget::set_window(GWindow* window)
+void Widget::set_window(Window* window)
 {
     if (m_window == window)
         return;
     m_window = window;
 }
 
-bool GWidget::is_focused() const
+bool Widget::is_focused() const
 {
     auto* win = window();
     if (!win)
@@ -463,7 +465,7 @@ bool GWidget::is_focused() const
     return win->focused_widget() == this;
 }
 
-void GWidget::set_focus(bool focus)
+void Widget::set_focus(bool focus)
 {
     auto* win = window();
     if (!win)
@@ -476,7 +478,7 @@ void GWidget::set_focus(bool focus)
     }
 }
 
-void GWidget::set_font(const Font* font)
+void Widget::set_font(const Font* font)
 {
     if (m_font.ptr() == font)
         return;
@@ -490,7 +492,7 @@ void GWidget::set_font(const Font* font)
     update();
 }
 
-void GWidget::set_global_cursor_tracking(bool enabled)
+void Widget::set_global_cursor_tracking(bool enabled)
 {
     auto* win = window();
     if (!win)
@@ -498,7 +500,7 @@ void GWidget::set_global_cursor_tracking(bool enabled)
     win->set_global_cursor_tracking_widget(enabled ? this : nullptr);
 }
 
-bool GWidget::global_cursor_tracking() const
+bool Widget::global_cursor_tracking() const
 {
     auto* win = window();
     if (!win)
@@ -506,7 +508,7 @@ bool GWidget::global_cursor_tracking() const
     return win->global_cursor_tracking_widget() == this;
 }
 
-void GWidget::set_preferred_size(const Size& size)
+void Widget::set_preferred_size(const Size& size)
 {
     if (m_preferred_size == size)
         return;
@@ -514,7 +516,7 @@ void GWidget::set_preferred_size(const Size& size)
     invalidate_layout();
 }
 
-void GWidget::set_size_policy(Orientation orientation, SizePolicy policy)
+void Widget::set_size_policy(Orientation orientation, SizePolicy policy)
 {
     if (orientation == Orientation::Horizontal)
         set_size_policy(policy, m_vertical_size_policy);
@@ -522,7 +524,7 @@ void GWidget::set_size_policy(Orientation orientation, SizePolicy policy)
         set_size_policy(m_horizontal_size_policy, policy);
 }
 
-void GWidget::set_size_policy(SizePolicy horizontal_policy, SizePolicy vertical_policy)
+void Widget::set_size_policy(SizePolicy horizontal_policy, SizePolicy vertical_policy)
 {
     if (m_horizontal_size_policy == horizontal_policy && m_vertical_size_policy == vertical_policy)
         return;
@@ -531,13 +533,13 @@ void GWidget::set_size_policy(SizePolicy horizontal_policy, SizePolicy vertical_
     invalidate_layout();
 }
 
-void GWidget::invalidate_layout()
+void Widget::invalidate_layout()
 {
     if (window())
         window()->schedule_relayout();
 }
 
-void GWidget::set_visible(bool visible)
+void Widget::set_visible(bool visible)
 {
     if (visible == m_visible)
         return;
@@ -548,15 +550,15 @@ void GWidget::set_visible(bool visible)
         update();
 
     if (m_visible) {
-        GShowEvent e;
+        ShowEvent e;
         event(e);
     } else {
-        GHideEvent e;
+        HideEvent e;
         event(e);
     }
 }
 
-bool GWidget::spans_entire_window_horizontally() const
+bool Widget::spans_entire_window_horizontally() const
 {
     auto* w = window();
     if (!w)
@@ -570,17 +572,17 @@ bool GWidget::spans_entire_window_horizontally() const
     return wrr.left() == main_widget->rect().left() && wrr.right() == main_widget->rect().right();
 }
 
-void GWidget::set_enabled(bool enabled)
+void Widget::set_enabled(bool enabled)
 {
     if (m_enabled == enabled)
         return;
     m_enabled = enabled;
-    GEvent e(GEvent::EnabledChange);
+    Event e(Event::EnabledChange);
     event(e);
     update();
 }
 
-void GWidget::move_to_front()
+void Widget::move_to_front()
 {
     auto* parent = parent_widget();
     if (!parent)
@@ -594,7 +596,7 @@ void GWidget::move_to_front()
     parent->update();
 }
 
-void GWidget::move_to_back()
+void Widget::move_to_back()
 {
     auto* parent = parent_widget();
     if (!parent)
@@ -608,7 +610,7 @@ void GWidget::move_to_back()
     parent->update();
 }
 
-bool GWidget::is_frontmost() const
+bool Widget::is_frontmost() const
 {
     auto* parent = parent_widget();
     if (!parent)
@@ -616,7 +618,7 @@ bool GWidget::is_frontmost() const
     return &parent->children().last() == this;
 }
 
-bool GWidget::is_backmost() const
+bool Widget::is_backmost() const
 {
     auto* parent = parent_widget();
     if (!parent)
@@ -624,11 +626,11 @@ bool GWidget::is_backmost() const
     return &parent->children().first() == this;
 }
 
-GAction* GWidget::action_for_key_event(const GKeyEvent& event)
+Action* Widget::action_for_key_event(const KeyEvent& event)
 {
-    GShortcut shortcut(event.modifiers(), (KeyCode)event.key());
-    GAction* found_action = nullptr;
-    for_each_child_of_type<GAction>([&] (auto& action) {
+    Shortcut shortcut(event.modifiers(), (KeyCode)event.key());
+    Action* found_action = nullptr;
+    for_each_child_of_type<Action>([&](auto& action) {
         if (action.shortcut() == shortcut) {
             found_action = &action;
             return IterationDecision::Break;
@@ -638,7 +640,7 @@ GAction* GWidget::action_for_key_event(const GKeyEvent& event)
     return found_action;
 }
 
-void GWidget::set_updates_enabled(bool enabled)
+void Widget::set_updates_enabled(bool enabled)
 {
     if (m_updates_enabled == enabled)
         return;
@@ -647,7 +649,7 @@ void GWidget::set_updates_enabled(bool enabled)
         update();
 }
 
-void GWidget::focus_previous_widget()
+void Widget::focus_previous_widget()
 {
     auto focusable_widgets = window()->focusable_widgets();
     for (int i = focusable_widgets.size() - 1; i >= 0; --i) {
@@ -660,7 +662,7 @@ void GWidget::focus_previous_widget()
     }
 }
 
-void GWidget::focus_next_widget()
+void Widget::focus_next_widget()
 {
     auto focusable_widgets = window()->focusable_widgets();
     for (int i = 0; i < focusable_widgets.size(); ++i) {
@@ -673,7 +675,7 @@ void GWidget::focus_next_widget()
     }
 }
 
-void GWidget::set_backcolor(const StringView& color_string)
+void Widget::set_backcolor(const StringView& color_string)
 {
     auto color = Color::from_string(color_string);
     if (!color.has_value())
@@ -681,7 +683,7 @@ void GWidget::set_backcolor(const StringView& color_string)
     set_background_color(color.value());
 }
 
-void GWidget::set_forecolor(const StringView& color_string)
+void Widget::set_forecolor(const StringView& color_string)
 {
     auto color = Color::from_string(color_string);
     if (!color.has_value())
@@ -689,7 +691,7 @@ void GWidget::set_forecolor(const StringView& color_string)
     set_foreground_color(color.value());
 }
 
-void GWidget::save_to(AK::JsonObject& json)
+void Widget::save_to(AK::JsonObject& json)
 {
     json.set("relative_rect", relative_rect().to_string());
     json.set("fill_with_background_color", fill_with_background_color());
@@ -704,18 +706,20 @@ void GWidget::save_to(AK::JsonObject& json)
     Core::Object::save_to(json);
 }
 
-Vector<GWidget*> GWidget::child_widgets() const
+Vector<Widget*> Widget::child_widgets() const
 {
-    Vector<GWidget*> widgets;
+    Vector<Widget*> widgets;
     widgets.ensure_capacity(children().size());
-    for (auto& child : const_cast<GWidget*>(this)->children()) {
+    for (auto& child : const_cast<Widget*>(this)->children()) {
         if (child.is_widget())
-            widgets.append(static_cast<GWidget*>(&child));
+            widgets.append(static_cast<Widget*>(&child));
     }
     return widgets;
 }
 
-void GWidget::set_palette(const Palette& palette)
+void Widget::set_palette(const Palette& palette)
 {
     m_palette = palette.impl();
+}
+
 }

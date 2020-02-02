@@ -32,10 +32,12 @@
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GScrollBar.h>
 
+namespace GUI {
+
 static const int minimum_column_width = 2;
 
-GAbstractTableView::GAbstractTableView(GWidget* parent)
-    : GAbstractView(parent)
+AbstractTableView::AbstractTableView(Widget* parent)
+    : AbstractView(parent)
 {
     set_frame_shape(FrameShape::Container);
     set_frame_shadow(FrameShadow::Sunken);
@@ -44,11 +46,11 @@ GAbstractTableView::GAbstractTableView(GWidget* parent)
     set_should_hide_unnecessary_scrollbars(true);
 }
 
-GAbstractTableView::~GAbstractTableView()
+AbstractTableView::~AbstractTableView()
 {
 }
 
-void GAbstractTableView::update_column_sizes()
+void AbstractTableView::update_column_sizes()
 {
     if (!m_size_columns_to_fit_content)
         return;
@@ -84,7 +86,7 @@ void GAbstractTableView::update_column_sizes()
     }
 }
 
-void GAbstractTableView::update_content_size()
+void AbstractTableView::update_content_size()
 {
     if (!model())
         return set_content_size({});
@@ -101,7 +103,7 @@ void GAbstractTableView::update_content_size()
     set_size_occupied_by_fixed_elements({ 0, header_height() });
 }
 
-Rect GAbstractTableView::header_rect(int column_index) const
+Rect AbstractTableView::header_rect(int column_index) const
 {
     if (!model())
         return {};
@@ -116,7 +118,7 @@ Rect GAbstractTableView::header_rect(int column_index) const
     return { x_offset, 0, column_width(column_index) + horizontal_padding() * 2, header_height() };
 }
 
-void GAbstractTableView::set_hovered_header_index(int index)
+void AbstractTableView::set_hovered_header_index(int index)
 {
     if (m_hovered_column_header_index == index)
         return;
@@ -124,7 +126,7 @@ void GAbstractTableView::set_hovered_header_index(int index)
     update_headers();
 }
 
-void GAbstractTableView::paint_headers(GPainter& painter)
+void AbstractTableView::paint_headers(Painter& painter)
 {
     if (!headers_visible())
         return;
@@ -141,16 +143,16 @@ void GAbstractTableView::paint_headers(GPainter& painter)
         bool is_key_column = model()->key_column() == column_index;
         Rect cell_rect(x_offset, 0, column_width + horizontal_padding() * 2, header_height());
         bool pressed = column_index == m_pressed_column_header_index && m_pressed_column_header_is_pressed;
-        bool hovered = column_index == m_hovered_column_header_index && model()->column_metadata(column_index).sortable == GModel::ColumnMetadata::Sortable::True;
+        bool hovered = column_index == m_hovered_column_header_index && model()->column_metadata(column_index).sortable == Model::ColumnMetadata::Sortable::True;
         StylePainter::paint_button(painter, cell_rect, palette(), ButtonStyle::Normal, pressed, hovered);
         String text;
         if (is_key_column) {
             StringBuilder builder;
             builder.append(model()->column_name(column_index));
             auto sort_order = model()->sort_order();
-            if (sort_order == GSortOrder::Ascending)
+            if (sort_order == SortOrder::Ascending)
                 builder.append(" \xc3\xb6");
-            else if (sort_order == GSortOrder::Descending)
+            else if (sort_order == SortOrder::Descending)
                 builder.append(" \xc3\xb7");
             text = builder.to_string();
         } else {
@@ -164,12 +166,12 @@ void GAbstractTableView::paint_headers(GPainter& painter)
     }
 }
 
-bool GAbstractTableView::is_column_hidden(int column) const
+bool AbstractTableView::is_column_hidden(int column) const
 {
     return !column_data(column).visibility;
 }
 
-void GAbstractTableView::set_column_hidden(int column, bool hidden)
+void AbstractTableView::set_column_hidden(int column, bool hidden)
 {
     auto& column_data = this->column_data(column);
     if (column_data.visibility == !hidden)
@@ -179,18 +181,18 @@ void GAbstractTableView::set_column_hidden(int column, bool hidden)
     update();
 }
 
-GMenu& GAbstractTableView::ensure_header_context_menu()
+Menu& AbstractTableView::ensure_header_context_menu()
 {
     // FIXME: This menu needs to be rebuilt if the model is swapped out,
     //        or if the column count/names change.
     if (!m_header_context_menu) {
         ASSERT(model());
-        m_header_context_menu = GMenu::construct();
+        m_header_context_menu = Menu::construct();
 
         for (int column = 0; column < model()->column_count(); ++column) {
             auto& column_data = this->column_data(column);
             auto name = model()->column_name(column);
-            column_data.visibility_action = GAction::create(name, [this, column](GAction& action) {
+            column_data.visibility_action = Action::create(name, [this, column](Action& action) {
                 action.set_checked(!action.is_checked());
                 set_column_hidden(column, !action.is_checked());
             });
@@ -203,31 +205,31 @@ GMenu& GAbstractTableView::ensure_header_context_menu()
     return *m_header_context_menu;
 }
 
-const Font& GAbstractTableView::header_font()
+const Font& AbstractTableView::header_font()
 {
     return Font::default_bold_font();
 }
 
-void GAbstractTableView::set_cell_painting_delegate(int column, OwnPtr<GTableCellPaintingDelegate>&& delegate)
+void AbstractTableView::set_cell_painting_delegate(int column, OwnPtr<TableCellPaintingDelegate>&& delegate)
 {
     column_data(column).cell_painting_delegate = move(delegate);
 }
 
-void GAbstractTableView::update_headers()
+void AbstractTableView::update_headers()
 {
     Rect rect { 0, 0, frame_inner_rect().width(), header_height() };
     rect.move_by(frame_thickness(), frame_thickness());
     update(rect);
 }
 
-GAbstractTableView::ColumnData& GAbstractTableView::column_data(int column) const
+AbstractTableView::ColumnData& AbstractTableView::column_data(int column) const
 {
     if (column >= m_column_data.size())
         m_column_data.resize(column + 1);
     return m_column_data.at(column);
 }
 
-Rect GAbstractTableView::column_resize_grabbable_rect(int column) const
+Rect AbstractTableView::column_resize_grabbable_rect(int column) const
 {
     if (!model())
         return {};
@@ -235,7 +237,7 @@ Rect GAbstractTableView::column_resize_grabbable_rect(int column) const
     return { header_rect.right() - 1, header_rect.top(), 4, header_rect.height() };
 }
 
-int GAbstractTableView::column_width(int column_index) const
+int AbstractTableView::column_width(int column_index) const
 {
     if (!model())
         return 0;
@@ -248,10 +250,10 @@ int GAbstractTableView::column_width(int column_index) const
     return column_data.width;
 }
 
-void GAbstractTableView::mousemove_event(GMouseEvent& event)
+void AbstractTableView::mousemove_event(MouseEvent& event)
 {
     if (!model())
-        return GAbstractView::mousemove_event(event);
+        return AbstractView::mousemove_event(event);
 
     if (m_in_column_resize) {
         auto delta = event.position() - m_column_resize_origin;
@@ -288,7 +290,7 @@ void GAbstractTableView::mousemove_event(GMouseEvent& event)
         bool found_hovered_header = false;
         for (int i = 0; i < column_count; ++i) {
             if (column_resize_grabbable_rect(i).contains(event.position())) {
-                window()->set_override_cursor(GStandardCursor::ResizeHorizontal);
+                window()->set_override_cursor(StandardCursor::ResizeHorizontal);
                 set_hovered_header_index(-1);
                 return;
             }
@@ -300,29 +302,29 @@ void GAbstractTableView::mousemove_event(GMouseEvent& event)
         if (!found_hovered_header)
             set_hovered_header_index(-1);
     }
-    window()->set_override_cursor(GStandardCursor::None);
+    window()->set_override_cursor(StandardCursor::None);
 
-    GAbstractView::mousemove_event(event);
+    AbstractView::mousemove_event(event);
 }
 
-void GAbstractTableView::mouseup_event(GMouseEvent& event)
+void AbstractTableView::mouseup_event(MouseEvent& event)
 {
     auto adjusted_position = this->adjusted_position(event.position());
-    if (event.button() == GMouseButton::Left) {
+    if (event.button() == MouseButton::Left) {
         if (m_in_column_resize) {
             if (!column_resize_grabbable_rect(m_resizing_column).contains(adjusted_position))
-                window()->set_override_cursor(GStandardCursor::None);
+                window()->set_override_cursor(StandardCursor::None);
             m_in_column_resize = false;
             return;
         }
         if (m_pressed_column_header_index != -1) {
             auto header_rect = this->header_rect(m_pressed_column_header_index);
             if (header_rect.contains(event.position())) {
-                auto new_sort_order = GSortOrder::Ascending;
+                auto new_sort_order = SortOrder::Ascending;
                 if (model()->key_column() == m_pressed_column_header_index)
-                    new_sort_order = model()->sort_order() == GSortOrder::Ascending
-                        ? GSortOrder::Descending
-                        : GSortOrder::Ascending;
+                    new_sort_order = model()->sort_order() == SortOrder::Ascending
+                        ? SortOrder::Descending
+                        : SortOrder::Ascending;
                 model()->set_key_column_and_sort_order(m_pressed_column_header_index, new_sort_order);
             }
             m_pressed_column_header_index = -1;
@@ -332,16 +334,16 @@ void GAbstractTableView::mouseup_event(GMouseEvent& event)
         }
     }
 
-    GAbstractView::mouseup_event(event);
+    AbstractView::mouseup_event(event);
 }
 
-void GAbstractTableView::mousedown_event(GMouseEvent& event)
+void AbstractTableView::mousedown_event(MouseEvent& event)
 {
     if (!model())
-        return GAbstractView::mousedown_event(event);
+        return AbstractView::mousedown_event(event);
 
-    if (event.button() != GMouseButton::Left)
-        return GAbstractView::mousedown_event(event);
+    if (event.button() != MouseButton::Left)
+        return AbstractView::mousedown_event(event);
 
     if (event.y() < header_height()) {
         int column_count = model()->column_count();
@@ -355,7 +357,7 @@ void GAbstractTableView::mousedown_event(GMouseEvent& event)
             }
             auto header_rect = this->header_rect(i);
             auto column_metadata = model()->column_metadata(i);
-            if (header_rect.contains(event.position()) && column_metadata.sortable == GModel::ColumnMetadata::Sortable::True) {
+            if (header_rect.contains(event.position()) && column_metadata.sortable == Model::ColumnMetadata::Sortable::True) {
                 m_pressed_column_header_index = i;
                 m_pressed_column_header_is_pressed = true;
                 update_headers();
@@ -373,10 +375,10 @@ void GAbstractTableView::mousedown_event(GMouseEvent& event)
         return;
     }
 
-    GAbstractView::mousedown_event(event);
+    AbstractView::mousedown_event(event);
 }
 
-GModelIndex GAbstractTableView::index_at_event_position(const Point& position, bool& is_toggle) const
+ModelIndex AbstractTableView::index_at_event_position(const Point& position, bool& is_toggle) const
 {
     is_toggle = false;
     if (!model())
@@ -396,21 +398,21 @@ GModelIndex GAbstractTableView::index_at_event_position(const Point& position, b
     return {};
 }
 
-GModelIndex GAbstractTableView::index_at_event_position(const Point& position) const
+ModelIndex AbstractTableView::index_at_event_position(const Point& position) const
 {
     bool is_toggle;
     auto index = index_at_event_position(position, is_toggle);
-    return is_toggle ? GModelIndex() : index;
+    return is_toggle ? ModelIndex() : index;
 }
 
-int GAbstractTableView::item_count() const
+int AbstractTableView::item_count() const
 {
     if (!model())
         return 0;
     return model()->row_count();
 }
 
-void GAbstractTableView::keydown_event(GKeyEvent& event)
+void AbstractTableView::keydown_event(KeyEvent& event)
 {
     if (!model())
         return;
@@ -420,7 +422,7 @@ void GAbstractTableView::keydown_event(GKeyEvent& event)
         return;
     }
     if (event.key() == KeyCode::Key_Up) {
-        GModelIndex new_index;
+        ModelIndex new_index;
         if (!selection().is_empty()) {
             auto old_index = selection().first();
             new_index = model.index(old_index.row() - 1, old_index.column());
@@ -435,7 +437,7 @@ void GAbstractTableView::keydown_event(GKeyEvent& event)
         return;
     }
     if (event.key() == KeyCode::Key_Down) {
-        GModelIndex new_index;
+        ModelIndex new_index;
         if (!selection().is_empty()) {
             auto old_index = selection().first();
             new_index = model.index(old_index.row() + 1, old_index.column());
@@ -471,20 +473,20 @@ void GAbstractTableView::keydown_event(GKeyEvent& event)
         }
         return;
     }
-    return GWidget::keydown_event(event);
+    return Widget::keydown_event(event);
 }
 
-void GAbstractTableView::scroll_into_view(const GModelIndex& index, Orientation orientation)
+void AbstractTableView::scroll_into_view(const ModelIndex& index, Orientation orientation)
 {
     auto rect = row_rect(index.row()).translated(0, -header_height());
-    GScrollableWidget::scroll_into_view(rect, orientation);
+    ScrollableWidget::scroll_into_view(rect, orientation);
 }
 
-void GAbstractTableView::doubleclick_event(GMouseEvent& event)
+void AbstractTableView::doubleclick_event(MouseEvent& event)
 {
     if (!model())
         return;
-    if (event.button() == GMouseButton::Left) {
+    if (event.button() == MouseButton::Left) {
         if (event.y() < header_height())
             return;
         if (!selection().is_empty()) {
@@ -496,7 +498,7 @@ void GAbstractTableView::doubleclick_event(GMouseEvent& event)
     }
 }
 
-void GAbstractTableView::context_menu_event(GContextMenuEvent& event)
+void AbstractTableView::context_menu_event(ContextMenuEvent& event)
 {
     if (!model())
         return;
@@ -517,13 +519,13 @@ void GAbstractTableView::context_menu_event(GContextMenuEvent& event)
         on_context_menu_request(index, event);
 }
 
-void GAbstractTableView::leave_event(Core::Event&)
+void AbstractTableView::leave_event(Core::Event&)
 {
-    window()->set_override_cursor(GStandardCursor::None);
+    window()->set_override_cursor(StandardCursor::None);
     set_hovered_header_index(-1);
 }
 
-Rect GAbstractTableView::content_rect(int row, int column) const
+Rect AbstractTableView::content_rect(int row, int column) const
 {
     auto row_rect = this->row_rect(row);
     int x = 0;
@@ -533,25 +535,27 @@ Rect GAbstractTableView::content_rect(int row, int column) const
     return { row_rect.x() + x, row_rect.y(), column_width(column) + horizontal_padding() * 2, item_height() };
 }
 
-Rect GAbstractTableView::content_rect(const GModelIndex& index) const
+Rect AbstractTableView::content_rect(const ModelIndex& index) const
 {
     return content_rect(index.row(), index.column());
 }
 
-Rect GAbstractTableView::row_rect(int item_index) const
+Rect AbstractTableView::row_rect(int item_index) const
 {
     return { 0, header_height() + (item_index * item_height()), max(content_size().width(), width()), item_height() };
 }
 
-Point GAbstractTableView::adjusted_position(const Point& position) const
+Point AbstractTableView::adjusted_position(const Point& position) const
 {
     return position.translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
 }
 
-void GAbstractTableView::did_update_model()
+void AbstractTableView::did_update_model()
 {
-    GAbstractView::did_update_model();
+    AbstractView::did_update_model();
     update_column_sizes();
     update_content_size();
     update();
+}
+
 }

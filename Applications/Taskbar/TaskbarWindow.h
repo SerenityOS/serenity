@@ -28,7 +28,7 @@
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
 
-class TaskbarWindow final : public GWindow {
+class TaskbarWindow final : public GUI::Window {
     C_OBJECT(TaskbarWindow)
 public:
     TaskbarWindow();
@@ -39,7 +39,7 @@ public:
 private:
     void create_quick_launch_bar();
     void on_screen_rect_change(const Rect&);
-    NonnullRefPtr<GButton> create_button(const WindowIdentifier&);
+    NonnullRefPtr<GUI::Button> create_button(const WindowIdentifier&);
 
-    virtual void wm_event(GWMEvent&) override;
+    virtual void wm_event(GUI::WMEvent&) override;
 };

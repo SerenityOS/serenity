@@ -34,50 +34,50 @@
 #include <time.h>
 #include <unistd.h>
 
-class SquareButton final : public GButton {
+class SquareButton final : public GUI::Button {
 public:
-    SquareButton(GWidget* parent)
-        : GButton(parent)
+    SquareButton(GUI::Widget* parent)
+        : GUI::Button(parent)
     {
     }
 
     Function<void()> on_right_click;
     Function<void()> on_middle_click;
 
-    virtual void mousedown_event(GMouseEvent& event) override
+    virtual void mousedown_event(GUI::MouseEvent& event) override
     {
-        if (event.button() == GMouseButton::Right) {
+        if (event.button() == GUI::MouseButton::Right) {
             if (on_right_click)
                 on_right_click();
         }
-        if (event.button() == GMouseButton::Middle) {
+        if (event.button() == GUI::MouseButton::Middle) {
             if (on_middle_click)
                 on_middle_click();
         }
-        GButton::mousedown_event(event);
+        GUI::Button::mousedown_event(event);
     }
 };
 
-class SquareLabel final : public GLabel {
+class SquareLabel final : public GUI::Label {
 public:
-    SquareLabel(Square& square, GWidget* parent)
-        : GLabel(parent)
+    SquareLabel(Square& square, GUI::Widget* parent)
+        : GUI::Label(parent)
         , m_square(square)
     {
     }
 
     Function<void()> on_chord_click;
 
-    virtual void mousedown_event(GMouseEvent& event) override
+    virtual void mousedown_event(GUI::MouseEvent& event) override
     {
-        if (event.button() == GMouseButton::Right || event.button() == GMouseButton::Left) {
-            if (event.buttons() == (GMouseButton::Right | GMouseButton::Left) ||
+        if (event.button() == GUI::MouseButton::Right || event.button() == GUI::MouseButton::Left) {
+            if (event.buttons() == (GUI::MouseButton::Right | GUI::MouseButton::Left) ||
                   m_square.field->is_single_chording()) {
                 m_chord = true;
                 m_square.field->set_chord_preview(m_square, true);
             }
         }
-        if (event.button() == GMouseButton::Middle) {
+        if (event.button() == GUI::MouseButton::Middle) {
             m_square.field->for_each_square([](auto& square) {
                 if (square.is_considering) {
                     square.is_considering = false;
@@ -85,10 +85,10 @@ public:
                 }
             });
         }
-        GLabel::mousedown_event(event);
+        GUI::Label::mousedown_event(event);
     }
 
-    virtual void mousemove_event(GMouseEvent& event) override
+    virtual void mousemove_event(GUI::MouseEvent& event) override
     {
         if (m_chord) {
             if (rect().contains(event.position())) {
@@ -97,13 +97,13 @@ public:
                 m_square.field->set_chord_preview(m_square, false);
             }
         }
-        GLabel::mousemove_event(event);
+        GUI::Label::mousemove_event(event);
     }
 
-    virtual void mouseup_event(GMouseEvent& event) override
+    virtual void mouseup_event(GUI::MouseEvent& event) override
     {
         if (m_chord) {
-            if (event.button() == GMouseButton::Left || event.button() == GMouseButton::Right) {
+            if (event.button() == GUI::MouseButton::Left || event.button() == GUI::MouseButton::Right) {
                 if (rect().contains(event.position())) {
                     if (on_chord_click)
                         on_chord_click();
@@ -112,15 +112,15 @@ public:
             }
         }
         m_square.field->set_chord_preview(m_square, m_chord);
-        GLabel::mouseup_event(event);
+        GUI::Label::mouseup_event(event);
     }
 
     Square& m_square;
     bool m_chord { false };
 };
 
-Field::Field(GLabel& flag_label, GLabel& time_label, GButton& face_button, GWidget* parent, Function<void(Size)> on_size_changed)
-    : GFrame(parent)
+Field::Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, GUI::Widget* parent, Function<void(Size)> on_size_changed)
+    : GUI::Frame(parent)
     , m_face_button(face_button)
     , m_flag_label(flag_label)
     , m_time_label(time_label)
@@ -256,7 +256,7 @@ void Field::reset()
             square.label->set_icon(square.has_mine ? m_mine_bitmap : nullptr);
             if (!square.button) {
                 square.button = new SquareButton(this);
-                square.button->on_click = [this, &square](GButton&) {
+                square.button->on_click = [this, &square](GUI::Button&) {
                     on_square_clicked(square);
                 };
                 square.button->on_right_click = [this, &square] {
@@ -315,10 +315,10 @@ void Field::flood_fill(Square& square)
     }
 }
 
-void Field::paint_event(GPaintEvent& event)
+void Field::paint_event(GUI::PaintEvent& event)
 {
-    GFrame::paint_event(event);
-    GPainter painter(*this);
+    GUI::Frame::paint_event(event);
+    GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
     auto inner_rect = frame_inner_rect();

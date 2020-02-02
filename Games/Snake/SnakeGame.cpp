@@ -31,8 +31,8 @@
 #include <stdlib.h>
 #include <time.h>
 
-SnakeGame::SnakeGame(GWidget* parent)
-    : GWidget(parent)
+SnakeGame::SnakeGame(GUI::Widget* parent)
+    : GUI::Widget(parent)
 {
     set_font(GFontDatabase::the().get_by_name("Liza Regular"));
     m_fruit_bitmaps.append(*GraphicsBitmap::load_from_file("/res/icons/snake/paprika.png"));
@@ -161,7 +161,7 @@ void SnakeGame::timer_event(Core::TimerEvent&)
     }
 }
 
-void SnakeGame::keydown_event(GKeyEvent& event)
+void SnakeGame::keydown_event(GUI::KeyEvent& event)
 {
     switch (event.key()) {
     case KeyCode::Key_A:
@@ -205,9 +205,9 @@ Rect SnakeGame::cell_rect(const Coordinate& coord) const
     };
 }
 
-void SnakeGame::paint_event(GPaintEvent& event)
+void SnakeGame::paint_event(GUI::PaintEvent& event)
 {
-    GPainter painter(*this);
+    GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
     painter.fill_rect(event.rect(), Color::Black);
 

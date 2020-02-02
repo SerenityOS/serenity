@@ -30,12 +30,14 @@
 #include <LibDraw/TextAlignment.h>
 #include <LibGUI/GWidget.h>
 
-class GPainter;
+namespace GUI {
 
-class GAbstractButton : public GWidget {
+class Painter;
+
+class AbstractButton : public Widget {
     C_OBJECT_ABSTRACT(GAbstractButton)
 public:
-    virtual ~GAbstractButton() override;
+    virtual ~AbstractButton() override;
 
     Function<void(bool)> on_checked;
 
@@ -62,18 +64,18 @@ public:
     void set_auto_repeat_interval(int interval) { m_auto_repeat_interval = interval; }
 
 protected:
-    explicit GAbstractButton(GWidget* parent);
-    GAbstractButton(const StringView&, GWidget* parent);
+    explicit AbstractButton(Widget* parent);
+    AbstractButton(const StringView&, Widget* parent);
 
-    virtual void mousedown_event(GMouseEvent&) override;
-    virtual void mousemove_event(GMouseEvent&) override;
-    virtual void mouseup_event(GMouseEvent&) override;
-    virtual void keydown_event(GKeyEvent&) override;
+    virtual void mousedown_event(MouseEvent&) override;
+    virtual void mousemove_event(MouseEvent&) override;
+    virtual void mouseup_event(MouseEvent&) override;
+    virtual void keydown_event(KeyEvent&) override;
     virtual void enter_event(Core::Event&) override;
     virtual void leave_event(Core::Event&) override;
-    virtual void change_event(GEvent&) override;
+    virtual void change_event(Event&) override;
 
-    void paint_text(GPainter&, const Rect&, const Font&, TextAlignment);
+    void paint_text(Painter&, const Rect&, const Font&, TextAlignment);
 
 private:
     virtual bool is_abstract_button() const final { return true; }
@@ -89,10 +91,12 @@ private:
     RefPtr<Core::Timer> m_auto_repeat_timer;
 };
 
+}
+
 template<>
-inline bool Core::is<GAbstractButton>(const Core::Object& object)
+inline bool Core::is<GUI::AbstractButton>(const Core::Object& object)
 {
-    if (!is<GWidget>(object))
+    if (!is<GUI::Widget>(object))
         return false;
-    return to<GWidget>(object).is_abstract_button();
+    return to<GUI::Widget>(object).is_abstract_button();
 }

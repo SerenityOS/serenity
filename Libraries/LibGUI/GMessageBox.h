@@ -28,8 +28,10 @@
 
 #include <LibGUI/GDialog.h>
 
-class GMessageBox : public GDialog {
-    C_OBJECT(GMessageBox)
+namespace GUI {
+
+class MessageBox : public Dialog {
+    C_OBJECT(MessageBox)
 public:
     enum class Type {
         None,
@@ -43,12 +45,12 @@ public:
         OKCancel,
     };
 
-    virtual ~GMessageBox() override;
+    virtual ~MessageBox() override;
 
     static int show(const StringView& text, const StringView& title, Type type = Type::None, InputType = InputType::OK, Core::Object* parent = nullptr);
 
 private:
-    explicit GMessageBox(const StringView& text, const StringView& title, Type type = Type::None, InputType = InputType::OK, Core::Object* parent = nullptr);
+    explicit MessageBox(const StringView& text, const StringView& title, Type type = Type::None, InputType = InputType::OK, Core::Object* parent = nullptr);
 
     bool should_include_ok_button() const;
     bool should_include_cancel_button() const;
@@ -59,3 +61,5 @@ private:
     Type m_type { Type::None };
     InputType m_input_type { InputType::OK };
 };
+
+}

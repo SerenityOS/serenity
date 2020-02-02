@@ -33,11 +33,11 @@
 #include <LibGUI/GWindow.h>
 #include <stdio.h>
 
-class GraphWidget final : public GWidget {
+class GraphWidget final : public GUI::Widget {
     C_OBJECT(GraphWidget)
 public:
     GraphWidget()
-        : GWidget(nullptr)
+        : GUI::Widget(nullptr)
     {
         start_timer(1000);
     }
@@ -59,9 +59,9 @@ private:
         update();
     }
 
-    virtual void paint_event(GPaintEvent& event) override
+    virtual void paint_event(GUI::PaintEvent& event) override
     {
-        GPainter painter(*this);
+        GUI::Painter painter(*this);
         painter.add_clip_rect(event.rect());
         painter.fill_rect(event.rect(), Color::Black);
         int i = m_cpu_history.capacity() - m_cpu_history.size();
@@ -74,9 +74,9 @@ private:
         }
     }
 
-    virtual void mousedown_event(GMouseEvent& event) override
+    virtual void mousedown_event(GUI::MouseEvent& event) override
     {
-        if (event.button() != GMouseButton::Left)
+        if (event.button() != GUI::MouseButton::Left)
             return;
         pid_t pid = fork();
         if (pid < 0) {
@@ -117,15 +117,15 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
     if (pledge("stdio shared_buffer accept proc exec rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
-    auto window = GWindow::construct();
-    window->set_window_type(GWindowType::MenuApplet);
+    auto window = GUI::Window::construct();
+    window->set_window_type(GUI::WindowType::MenuApplet);
     window->resize(30, 16);
 
     auto widget = GraphWidget::construct();

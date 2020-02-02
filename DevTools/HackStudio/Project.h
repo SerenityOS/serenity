@@ -47,7 +47,7 @@ public:
 
     ProjectFile* get_file(const String& filename);
 
-    GModel& model() { return *m_model; }
+    GUI::Model& model() { return *m_model; }
 
     template<typename Callback>
     void for_each_text_file(Callback callback) const
@@ -67,7 +67,7 @@ private:
 
     String m_name;
     String m_path;
-    RefPtr<GModel> m_model;
+    RefPtr<GUI::Model> m_model;
     NonnullRefPtrVector<ProjectFile> m_files;
     RefPtr<ProjectTreeNode> m_root_node;
 

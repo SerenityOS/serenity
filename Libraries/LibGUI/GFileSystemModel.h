@@ -33,8 +33,11 @@
 #include <sys/stat.h>
 #include <time.h>
 
-class GFileSystemModel : public GModel
-    , public Weakable<GFileSystemModel> {
+namespace GUI {
+
+class FileSystemModel
+    : public Model
+    , public Weakable<FileSystemModel> {
     friend struct Node;
 
 public:
@@ -75,10 +78,10 @@ public:
         bool is_directory() const { return S_ISDIR(mode); }
         bool is_executable() const { return mode & (S_IXUSR | S_IXGRP | S_IXOTH); }
 
-        String full_path(const GFileSystemModel&) const;
+        String full_path(const FileSystemModel&) const;
 
     private:
-        friend class GFileSystemModel;
+        friend class FileSystemModel;
 
         Node* parent { nullptr };
         NonnullOwnPtrVector<Node> children;
@@ -87,38 +90,38 @@ public:
         int m_watch_fd { -1 };
         RefPtr<Core::Notifier> m_notifier;
 
-        GModelIndex index(const GFileSystemModel&, int column) const;
-        void traverse_if_needed(const GFileSystemModel&);
-        void reify_if_needed(const GFileSystemModel&);
+        ModelIndex index(const FileSystemModel&, int column) const;
+        void traverse_if_needed(const FileSystemModel&);
+        void reify_if_needed(const FileSystemModel&);
         bool fetch_data(const String& full_path, bool is_root);
     };
 
-    static NonnullRefPtr<GFileSystemModel> create(const StringView& root_path = "/", Mode mode = Mode::FilesAndDirectories)
+    static NonnullRefPtr<FileSystemModel> create(const StringView& root_path = "/", Mode mode = Mode::FilesAndDirectories)
     {
-        return adopt(*new GFileSystemModel(root_path, mode));
+        return adopt(*new FileSystemModel(root_path, mode));
     }
-    virtual ~GFileSystemModel() override;
+    virtual ~FileSystemModel() override;
 
     String root_path() const { return m_root_path; }
     void set_root_path(const StringView&);
-    String full_path(const GModelIndex&) const;
-    GModelIndex index(const StringView& path, int column) const;
+    String full_path(const ModelIndex&) const;
+    ModelIndex index(const StringView& path, int column) const;
 
-    const Node& node(const GModelIndex& index) const;
+    const Node& node(const ModelIndex& index) const;
     GIcon icon_for_file(const mode_t mode, const String& name) const;
 
     Function<void(int done, int total)> on_thumbnail_progress;
     Function<void()> on_root_path_change;
 
-    virtual int tree_column() const { return Column::Name; }
-    virtual int row_count(const GModelIndex& = GModelIndex()) const override;
-    virtual int column_count(const GModelIndex& = GModelIndex()) const override;
+    virtual int tree_column() const override { return Column::Name; }
+    virtual int row_count(const ModelIndex& = ModelIndex()) const override;
+    virtual int column_count(const ModelIndex& = ModelIndex()) const override;
     virtual String column_name(int column) const override;
     virtual ColumnMetadata column_metadata(int column) const override;
-    virtual GVariant data(const GModelIndex&, Role = Role::Display) const override;
+    virtual Variant data(const ModelIndex&, Role = Role::Display) const override;
     virtual void update() override;
-    virtual GModelIndex parent_index(const GModelIndex&) const override;
-    virtual GModelIndex index(int row, int column = 0, const GModelIndex& parent = GModelIndex()) const override;
+    virtual ModelIndex parent_index(const ModelIndex&) const override;
+    virtual ModelIndex index(int row, int column = 0, const ModelIndex& parent = ModelIndex()) const override;
     virtual StringView drag_data_type() const override { return "url-list"; }
 
     static String timestamp_string(time_t timestamp)
@@ -134,7 +137,7 @@ public:
     }
 
 private:
-    GFileSystemModel(const StringView& root_path, Mode);
+    FileSystemModel(const StringView& root_path, Mode);
 
     String name_for_uid(uid_t) const;
     String name_for_gid(gid_t) const;
@@ -161,3 +164,5 @@ private:
     unsigned m_thumbnail_progress { 0 };
     unsigned m_thumbnail_progress_total { 0 };
 };
+
+}

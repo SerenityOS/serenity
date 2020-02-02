@@ -69,16 +69,16 @@ RefPtr<EditorWrapper> g_current_editor_wrapper;
 
 String g_currently_open_file;
 OwnPtr<Project> g_project;
-RefPtr<GWindow> g_window;
-RefPtr<GTreeView> g_project_tree_view;
-RefPtr<GStackWidget> g_right_hand_stack;
-RefPtr<GSplitter> g_text_inner_splitter;
-RefPtr<GWidget> g_form_inner_container;
+RefPtr<GUI::Window> g_window;
+RefPtr<GUI::TreeView> g_project_tree_view;
+RefPtr<GUI::StackWidget> g_right_hand_stack;
+RefPtr<GUI::Splitter> g_text_inner_splitter;
+RefPtr<GUI::Widget> g_form_inner_container;
 RefPtr<FormEditorWidget> g_form_editor_widget;
 
-static RefPtr<GTabWidget> s_action_tab_widget;
+static RefPtr<GUI::TabWidget> s_action_tab_widget;
 
-void add_new_editor(GWidget& parent)
+void add_new_editor(GUI::Widget& parent)
 {
     auto wrapper = EditorWrapper::construct(nullptr);
     if (s_action_tab_widget) {
@@ -128,7 +128,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
     if (pledge("stdio tty accept rpath cpath wpath shared_buffer proc exec fattr", nullptr) < 0) {
         perror("pledge");
@@ -137,15 +137,15 @@ int main(int argc, char** argv)
 
     Function<void()> update_actions;
 
-    g_window = GWindow::construct();
+    g_window = GUI::Window::construct();
     g_window->set_rect(90, 90, 840, 600);
     g_window->set_title("HackStudio");
 
-    auto widget = GWidget::construct();
+    auto widget = GUI::Widget::construct();
     g_window->set_main_widget(widget);
 
     widget->set_fill_with_background_color(true);
-    widget->set_layout(make<GVBoxLayout>());
+    widget->set_layout(make<GUI::VBoxLayout>());
     widget->layout()->set_spacing(0);
 
     StringBuilder path;
@@ -156,7 +156,7 @@ int main(int argc, char** argv)
     setenv("PATH", path.to_string().characters(), true);
 
     if (!make_is_available())
-        GMessageBox::show("The 'make' command is not available. You probably want to install the binutils, gcc, and make ports from the root of the Serenity repository.", "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, g_window);
+        GUI::MessageBox::show("The 'make' command is not available. You probably want to install the binutils, gcc, and make ports from the root of the Serenity repository.", "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, g_window);
 
     if (chdir("/home/anon/little") < 0) {
         perror("chdir");
@@ -165,47 +165,47 @@ int main(int argc, char** argv)
     g_project = Project::load_from_file("little.files");
     ASSERT(g_project);
 
-    auto toolbar = GToolBar::construct(widget);
+    auto toolbar = GUI::ToolBar::construct(widget);
 
     auto selected_file_names = [&] {
         Vector<String> files;
-        g_project_tree_view->selection().for_each_index([&](const GModelIndex& index) {
+        g_project_tree_view->selection().for_each_index([&](const GUI::ModelIndex& index) {
             files.append(g_project->model().data(index).as_string());
         });
         return files;
     };
 
-    auto new_action = GAction::create("Add new file to project...", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GAction&) {
-        auto input_box = GInputBox::construct("Enter name of new file:", "Add new file to project", g_window);
-        if (input_box->exec() == GInputBox::ExecCancel)
+    auto new_action = GUI::Action::create("Add new file to project...", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GUI::Action&) {
+        auto input_box = GUI::InputBox::construct("Enter name of new file:", "Add new file to project", g_window);
+        if (input_box->exec() == GUI::InputBox::ExecCancel)
             return;
         auto filename = input_box->text_value();
         auto file = Core::File::construct(filename);
         if (!file->open((Core::IODevice::OpenMode)(Core::IODevice::WriteOnly | Core::IODevice::MustBeNew))) {
-            GMessageBox::show(String::format("Failed to create '%s'", filename.characters()), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, g_window);
+            GUI::MessageBox::show(String::format("Failed to create '%s'", filename.characters()), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, g_window);
             return;
         }
         if (!g_project->add_file(filename)) {
-            GMessageBox::show(String::format("Failed to add '%s' to project", filename.characters()), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, g_window);
+            GUI::MessageBox::show(String::format("Failed to add '%s' to project", filename.characters()), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, g_window);
             // FIXME: Should we unlink the file here maybe?
             return;
         }
         open_file(filename);
     });
 
-    auto add_existing_file_action = GAction::create("Add existing file to project...", GraphicsBitmap::load_from_file("/res/icons/16x16/open.png"), [&](auto&) {
-        auto result = GFilePicker::get_open_filepath("Add existing file to project");
+    auto add_existing_file_action = GUI::Action::create("Add existing file to project...", GraphicsBitmap::load_from_file("/res/icons/16x16/open.png"), [&](auto&) {
+        auto result = GUI::FilePicker::get_open_filepath("Add existing file to project");
         if (!result.has_value())
             return;
         auto& filename = result.value();
         if (!g_project->add_file(filename)) {
-            GMessageBox::show(String::format("Failed to add '%s' to project", filename.characters()), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, g_window);
+            GUI::MessageBox::show(String::format("Failed to add '%s' to project", filename.characters()), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, g_window);
             return;
         }
         open_file(filename);
     });
 
-    auto delete_action = GCommonActions::make_delete_action([&](const GAction& action) {
+    auto delete_action = GUI::CommonActions::make_delete_action([&](const GUI::Action& action) {
         (void)action;
 
         auto files = selected_file_names();
@@ -219,22 +219,22 @@ int main(int argc, char** argv)
             message = String::format("Really remove %d files from the project?", files.size());
         }
 
-        auto result = GMessageBox::show(
+        auto result = GUI::MessageBox::show(
             message,
             "Confirm deletion",
-            GMessageBox::Type::Warning,
-            GMessageBox::InputType::OKCancel,
+            GUI::MessageBox::Type::Warning,
+            GUI::MessageBox::InputType::OKCancel,
             g_window);
-        if (result == GMessageBox::ExecCancel)
+        if (result == GUI::MessageBox::ExecCancel)
             return;
 
         for (auto& file : files) {
             if (!g_project->remove_file(file)) {
-                GMessageBox::show(
+                GUI::MessageBox::show(
                     String::format("Removing file %s from the project failed.", file.characters()),
                     "Removal failed",
-                    GMessageBox::Type::Error,
-                    GMessageBox::InputType::OK,
+                    GUI::MessageBox::Type::Error,
+                    GUI::MessageBox::InputType::OK,
                     g_window);
                 break;
             }
@@ -242,18 +242,18 @@ int main(int argc, char** argv)
     });
     delete_action->set_enabled(false);
 
-    auto project_tree_view_context_menu = GMenu::construct("Project Files");
+    auto project_tree_view_context_menu = GUI::Menu::construct("Project Files");
     project_tree_view_context_menu->add_action(new_action);
     project_tree_view_context_menu->add_action(add_existing_file_action);
     project_tree_view_context_menu->add_action(delete_action);
 
-    auto outer_splitter = GSplitter::construct(Orientation::Horizontal, widget);
-    g_project_tree_view = GTreeView::construct(outer_splitter);
+    auto outer_splitter = GUI::Splitter::construct(Orientation::Horizontal, widget);
+    g_project_tree_view = GUI::TreeView::construct(outer_splitter);
     g_project_tree_view->set_model(g_project->model());
-    g_project_tree_view->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    g_project_tree_view->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     g_project_tree_view->set_preferred_size(140, 0);
 
-    g_project_tree_view->on_context_menu_request = [&](const GModelIndex& index, const GContextMenuEvent& event) {
+    g_project_tree_view->on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
         if (index.is_valid()) {
             project_tree_view_context_menu->popup(event.screen_position());
         }
@@ -263,17 +263,17 @@ int main(int argc, char** argv)
         delete_action->set_enabled(!g_project_tree_view->selection().is_empty());
     };
 
-    g_right_hand_stack = GStackWidget::construct(outer_splitter);
+    g_right_hand_stack = GUI::StackWidget::construct(outer_splitter);
 
-    g_form_inner_container = GWidget::construct(g_right_hand_stack);
-    g_form_inner_container->set_layout(make<GHBoxLayout>());
-    auto form_widgets_toolbar = GToolBar::construct(Orientation::Vertical, 26, g_form_inner_container);
+    g_form_inner_container = GUI::Widget::construct(g_right_hand_stack);
+    g_form_inner_container->set_layout(make<GUI::HBoxLayout>());
+    auto form_widgets_toolbar = GUI::ToolBar::construct(Orientation::Vertical, 26, g_form_inner_container);
     form_widgets_toolbar->set_preferred_size(38, 0);
 
-    GActionGroup tool_actions;
+    GUI::ActionGroup tool_actions;
     tool_actions.set_exclusive(true);
 
-    auto cursor_tool_action = GAction::create("Cursor", GraphicsBitmap::load_from_file("/res/icons/widgets/Cursor.png"), [&](auto&) {
+    auto cursor_tool_action = GUI::Action::create("Cursor", GraphicsBitmap::load_from_file("/res/icons/widgets/Cursor.png"), [&](auto&) {
         g_form_editor_widget->set_tool(make<CursorTool>(*g_form_editor_widget));
     });
     cursor_tool_action->set_checkable(true);
@@ -282,9 +282,9 @@ int main(int argc, char** argv)
 
     form_widgets_toolbar->add_action(cursor_tool_action);
 
-    GWidgetClassRegistration::for_each([&](const GWidgetClassRegistration& reg) {
+    GUI::WidgetClassRegistration::for_each([&](const GUI::WidgetClassRegistration& reg) {
         auto icon_path = String::format("/res/icons/widgets/%s.png", reg.class_name().characters());
-        auto action = GAction::create(reg.class_name(), GraphicsBitmap::load_from_file(icon_path), [&reg](auto&) {
+        auto action = GUI::Action::create(reg.class_name(), GraphicsBitmap::load_from_file(icon_path), [&reg](auto&) {
             g_form_editor_widget->set_tool(make<WidgetTool>(*g_form_editor_widget, reg));
             auto widget = reg.construct(&g_form_editor_widget->form_widget());
             widget->set_relative_rect(30, 30, 30, 30);
@@ -296,28 +296,28 @@ int main(int argc, char** argv)
         form_widgets_toolbar->add_action(move(action));
     });
 
-    auto form_editor_inner_splitter = GSplitter::construct(Orientation::Horizontal, g_form_inner_container);
+    auto form_editor_inner_splitter = GUI::Splitter::construct(Orientation::Horizontal, g_form_inner_container);
 
     g_form_editor_widget = FormEditorWidget::construct(form_editor_inner_splitter);
 
-    auto form_editing_pane_container = GSplitter::construct(Orientation::Vertical, form_editor_inner_splitter);
-    form_editing_pane_container->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    auto form_editing_pane_container = GUI::Splitter::construct(Orientation::Vertical, form_editor_inner_splitter);
+    form_editing_pane_container->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     form_editing_pane_container->set_preferred_size(190, 0);
-    form_editing_pane_container->set_layout(make<GVBoxLayout>());
+    form_editing_pane_container->set_layout(make<GUI::VBoxLayout>());
 
     auto add_properties_pane = [&](auto& text, auto pane_widget) {
-        auto wrapper = GWidget::construct(form_editing_pane_container.ptr());
-        wrapper->set_layout(make<GVBoxLayout>());
-        auto label = GLabel::construct(text, wrapper);
+        auto wrapper = GUI::Widget::construct(form_editing_pane_container.ptr());
+        wrapper->set_layout(make<GUI::VBoxLayout>());
+        auto label = GUI::Label::construct(text, wrapper);
         label->set_fill_with_background_color(true);
         label->set_text_alignment(TextAlignment::CenterLeft);
         label->set_font(Font::default_bold_font());
-        label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+        label->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
         label->set_preferred_size(0, 16);
         wrapper->add_child(pane_widget);
     };
 
-    auto form_widget_tree_view = GTreeView::construct(nullptr);
+    auto form_widget_tree_view = GUI::TreeView::construct(nullptr);
     form_widget_tree_view->set_model(g_form_editor_widget->model());
     form_widget_tree_view->on_selection_change = [&] {
         g_form_editor_widget->selection().disable_hooks();
@@ -326,7 +326,7 @@ int main(int argc, char** argv)
             // NOTE: Make sure we don't add the FormWidget itself to the selection,
             //       since that would allow you to drag-move the FormWidget.
             if (index.internal_data() != &g_form_editor_widget->form_widget())
-                g_form_editor_widget->selection().add(*(GWidget*)index.internal_data());
+                g_form_editor_widget->selection().add(*(GUI::Widget*)index.internal_data());
         });
         g_form_editor_widget->update();
         g_form_editor_widget->selection().enable_hooks();
@@ -343,13 +343,13 @@ int main(int argc, char** argv)
     };
 
     add_properties_pane("Form widget tree:", form_widget_tree_view);
-    add_properties_pane("Widget properties:", GTableView::construct(nullptr));
+    add_properties_pane("Widget properties:", GUI::TableView::construct(nullptr));
 
-    g_text_inner_splitter = GSplitter::construct(Orientation::Vertical, g_right_hand_stack);
+    g_text_inner_splitter = GUI::Splitter::construct(Orientation::Vertical, g_right_hand_stack);
     g_text_inner_splitter->layout()->set_margins({ 0, 3, 0, 0 });
     add_new_editor(*g_text_inner_splitter);
 
-    auto switch_to_next_editor = GAction::create("Switch to next editor", { Mod_Ctrl, Key_E }, [&](auto&) {
+    auto switch_to_next_editor = GUI::Action::create("Switch to next editor", { Mod_Ctrl, Key_E }, [&](auto&) {
         if (g_all_editor_wrappers.size() <= 1)
             return;
         Vector<EditorWrapper*> wrappers;
@@ -367,7 +367,7 @@ int main(int argc, char** argv)
         }
     });
 
-    auto switch_to_previous_editor = GAction::create("Switch to previous editor", { Mod_Ctrl | Mod_Shift, Key_E }, [&](auto&) {
+    auto switch_to_previous_editor = GUI::Action::create("Switch to previous editor", { Mod_Ctrl | Mod_Shift, Key_E }, [&](auto&) {
         if (g_all_editor_wrappers.size() <= 1)
             return;
         Vector<EditorWrapper*> wrappers;
@@ -385,7 +385,7 @@ int main(int argc, char** argv)
         }
     });
 
-    auto remove_current_editor_action = GAction::create("Remove current editor", { Mod_Alt | Mod_Shift, Key_E }, [&](auto&) {
+    auto remove_current_editor_action = GUI::Action::create("Remove current editor", { Mod_Alt | Mod_Shift, Key_E }, [&](auto&) {
         if (g_all_editor_wrappers.size() <= 1)
             return;
         auto wrapper = g_current_editor_wrapper;
@@ -395,7 +395,7 @@ int main(int argc, char** argv)
         update_actions();
     });
 
-    auto save_action = GAction::create("Save", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [&](auto&) {
+    auto save_action = GUI::Action::create("Save", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [&](auto&) {
         if (g_currently_open_file.is_empty())
             return;
         current_editor().write_to_file(g_currently_open_file);
@@ -407,22 +407,22 @@ int main(int argc, char** argv)
     toolbar->add_action(delete_action);
     toolbar->add_separator();
 
-    toolbar->add_action(GCommonActions::make_cut_action([&](auto&) { current_editor().cut_action().activate(); }));
-    toolbar->add_action(GCommonActions::make_copy_action([&](auto&) { current_editor().copy_action().activate(); }));
-    toolbar->add_action(GCommonActions::make_paste_action([&](auto&) { current_editor().paste_action().activate(); }));
+    toolbar->add_action(GUI::CommonActions::make_cut_action([&](auto&) { current_editor().cut_action().activate(); }));
+    toolbar->add_action(GUI::CommonActions::make_copy_action([&](auto&) { current_editor().copy_action().activate(); }));
+    toolbar->add_action(GUI::CommonActions::make_paste_action([&](auto&) { current_editor().paste_action().activate(); }));
     toolbar->add_separator();
-    toolbar->add_action(GCommonActions::make_undo_action([&](auto&) { current_editor().undo_action().activate(); }));
-    toolbar->add_action(GCommonActions::make_redo_action([&](auto&) { current_editor().redo_action().activate(); }));
+    toolbar->add_action(GUI::CommonActions::make_undo_action([&](auto&) { current_editor().undo_action().activate(); }));
+    toolbar->add_action(GUI::CommonActions::make_redo_action([&](auto&) { current_editor().redo_action().activate(); }));
     toolbar->add_separator();
 
     g_project_tree_view->on_activation = [&](auto& index) {
-        auto filename = g_project_tree_view->model()->data(index, GModel::Role::Custom).to_string();
+        auto filename = g_project_tree_view->model()->data(index, GUI::Model::Role::Custom).to_string();
         open_file(filename);
     };
 
-    s_action_tab_widget = GTabWidget::construct(g_text_inner_splitter);
+    s_action_tab_widget = GUI::TabWidget::construct(g_text_inner_splitter);
 
-    s_action_tab_widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    s_action_tab_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     s_action_tab_widget->set_preferred_size(0, 24);
 
     auto reveal_action_tab = [&](auto& widget) {
@@ -435,11 +435,11 @@ int main(int argc, char** argv)
         s_action_tab_widget->set_preferred_size(0, 24);
     };
 
-    auto hide_action_tabs_action = GAction::create("Hide action tabs", { Mod_Ctrl | Mod_Shift, Key_X }, [&](auto&) {
+    auto hide_action_tabs_action = GUI::Action::create("Hide action tabs", { Mod_Ctrl | Mod_Shift, Key_X }, [&](auto&) {
         hide_action_tabs();
     });
 
-    auto add_editor_action = GAction::create("Add new editor", { Mod_Ctrl | Mod_Alt, Key_E }, [&](auto&) {
+    auto add_editor_action = GUI::Action::create("Add new editor", { Mod_Ctrl | Mod_Alt, Key_E }, [&](auto&) {
         add_new_editor(*g_text_inner_splitter);
         update_actions();
     });
@@ -452,31 +452,31 @@ int main(int argc, char** argv)
 
     auto locator = Locator::construct(widget);
 
-    auto open_locator_action = GAction::create("Open Locator...", { Mod_Ctrl, Key_K }, [&](auto&) {
+    auto open_locator_action = GUI::Action::create("Open Locator...", { Mod_Ctrl, Key_K }, [&](auto&) {
         locator->open();
     });
 
-    auto menubar = make<GMenuBar>();
-    auto app_menu = GMenu::construct("HackStudio");
+    auto menubar = make<GUI::MenuBar>();
+    auto app_menu = GUI::Menu::construct("HackStudio");
     app_menu->add_action(save_action);
-    app_menu->add_action(GCommonActions::make_quit_action([&](auto&) {
+    app_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app.quit();
     }));
     menubar->add_menu(move(app_menu));
 
-    auto project_menu = GMenu::construct("Project");
+    auto project_menu = GUI::Menu::construct("Project");
     project_menu->add_action(new_action);
     project_menu->add_action(add_existing_file_action);
     menubar->add_menu(move(project_menu));
 
-    auto edit_menu = GMenu::construct("Edit");
-    edit_menu->add_action(GAction::create("Find in files...", { Mod_Ctrl | Mod_Shift, Key_F }, [&](auto&) {
+    auto edit_menu = GUI::Menu::construct("Edit");
+    edit_menu->add_action(GUI::Action::create("Find in files...", { Mod_Ctrl | Mod_Shift, Key_F }, [&](auto&) {
         reveal_action_tab(find_in_files_widget);
         find_in_files_widget->focus_textbox_and_select_all();
     }));
     menubar->add_menu(move(edit_menu));
 
-    auto stop_action = GAction::create("Stop", GraphicsBitmap::load_from_file("/res/icons/16x16/stop.png"), [&](auto&) {
+    auto stop_action = GUI::Action::create("Stop", GraphicsBitmap::load_from_file("/res/icons/16x16/stop.png"), [&](auto&) {
         terminal_wrapper->kill_running_command();
     });
 
@@ -485,14 +485,14 @@ int main(int argc, char** argv)
         stop_action->set_enabled(false);
     };
 
-    auto build_action = GAction::create("Build", { Mod_Ctrl, Key_B }, GraphicsBitmap::load_from_file("/res/icons/16x16/build.png"), [&](auto&) {
+    auto build_action = GUI::Action::create("Build", { Mod_Ctrl, Key_B }, GraphicsBitmap::load_from_file("/res/icons/16x16/build.png"), [&](auto&) {
         reveal_action_tab(terminal_wrapper);
         build(terminal_wrapper);
         stop_action->set_enabled(true);
     });
     toolbar->add_action(build_action);
 
-    auto run_action = GAction::create("Run", { Mod_Ctrl, Key_R }, GraphicsBitmap::load_from_file("/res/icons/16x16/play.png"), [&](auto&) {
+    auto run_action = GUI::Action::create("Run", { Mod_Ctrl, Key_R }, GraphicsBitmap::load_from_file("/res/icons/16x16/play.png"), [&](auto&) {
         reveal_action_tab(terminal_wrapper);
         run(terminal_wrapper);
         stop_action->set_enabled(true);
@@ -500,13 +500,13 @@ int main(int argc, char** argv)
     toolbar->add_action(run_action);
     toolbar->add_action(stop_action);
 
-    auto build_menu = GMenu::construct("Build");
+    auto build_menu = GUI::Menu::construct("Build");
     build_menu->add_action(build_action);
     build_menu->add_action(run_action);
     build_menu->add_action(stop_action);
     menubar->add_menu(move(build_menu));
 
-    auto view_menu = GMenu::construct("View");
+    auto view_menu = GUI::Menu::construct("View");
     view_menu->add_action(hide_action_tabs_action);
     view_menu->add_action(open_locator_action);
     view_menu->add_separator();
@@ -516,9 +516,9 @@ int main(int argc, char** argv)
 
     auto small_icon = GraphicsBitmap::load_from_file("/res/icons/16x16/app-hack-studio.png");
 
-    auto help_menu = GMenu::construct("Help");
-    help_menu->add_action(GAction::create("About", [&](auto&) {
-        GAboutDialog::show("HackStudio", small_icon, g_window);
+    auto help_menu = GUI::Menu::construct("Help");
+    help_menu->add_action(GUI::Action::create("About", [&](auto&) {
+        GUI::AboutDialog::show("HackStudio", small_icon, g_window);
     }));
     menubar->add_menu(move(help_menu));
 
@@ -581,12 +581,12 @@ static void rehighlight()
     CppLexer lexer(text);
     auto tokens = lexer.lex();
 
-    Vector<GTextDocumentSpan> spans;
+    Vector<GUI::TextDocumentSpan> spans;
     for (auto& token : tokens) {
 #ifdef DEBUG_SYNTAX_HIGHLIGHTING
         dbg() << token.to_string() << " @ " << token.m_start.line << ":" << token.m_start.column << " - " << token.m_end.line << ":" << token.m_end.column;
 #endif
-        GTextDocumentSpan span;
+        GUI::TextDocumentSpan span;
         span.range.set_start({ token.m_start.line, token.m_start.column });
         span.range.set_end({ token.m_end.line, token.m_end.column });
         auto style = style_for_token_type(token.m_type);
@@ -604,7 +604,7 @@ static void rehighlight()
 void open_file(const String& filename)
 {
     auto file = g_project->get_file(filename);
-    current_editor().set_document(const_cast<GTextDocument&>(file->document()));
+    current_editor().set_document(const_cast<GUI::TextDocument&>(file->document()));
 
     if (filename.ends_with(".cpp") || filename.ends_with(".h")) {
         current_editor().on_change = [] { rehighlight(); };

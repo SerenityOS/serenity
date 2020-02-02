@@ -29,12 +29,12 @@
 #include <LibCore/CTimer.h>
 #include <LibGUI/GBoxLayout.h>
 
-ProcessStacksWidget::ProcessStacksWidget(GWidget* parent)
-    : GWidget(parent)
+ProcessStacksWidget::ProcessStacksWidget(GUI::Widget* parent)
+    : GUI::Widget(parent)
 {
-    set_layout(make<GVBoxLayout>());
+    set_layout(make<GUI::VBoxLayout>());
     layout()->set_margins({ 4, 4, 4, 4 });
-    m_stacks_editor = GTextEditor::construct(GTextEditor::Type::MultiLine, this);
+    m_stacks_editor = GUI::TextEditor::construct(GUI::TextEditor::Type::MultiLine, this);
     m_stacks_editor->set_readonly(true);
 
     m_timer = Core::Timer::construct(1000, [this] { refresh(); }, this);

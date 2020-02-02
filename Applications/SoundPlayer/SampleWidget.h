@@ -30,15 +30,15 @@
 
 class ABuffer;
 
-class SampleWidget final : public GFrame {
+class SampleWidget final : public GUI::Frame {
     C_OBJECT(SampleWidget)
 public:
     virtual ~SampleWidget() override;
 
     void set_buffer(ABuffer*);
 private:
-    explicit SampleWidget(GWidget* parent);
-    virtual void paint_event(GPaintEvent&) override;
+    explicit SampleWidget(GUI::Widget* parent);
+    virtual void paint_event(GUI::PaintEvent&) override;
 
     RefPtr<ABuffer> m_buffer;
 };

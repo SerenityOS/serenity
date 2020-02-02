@@ -29,10 +29,12 @@
 #include <AK/LogStream.h>
 #include <LibGUI/GTextPosition.h>
 
-class GTextRange {
+namespace GUI {
+
+class TextRange {
 public:
-    GTextRange() {}
-    GTextRange(const GTextPosition& start, const GTextPosition& end)
+    TextRange() {}
+    TextRange(const TextPosition& start, const TextPosition& end)
         : m_start(start)
         , m_end(end)
     {
@@ -45,28 +47,28 @@ public:
         m_end = {};
     }
 
-    GTextPosition& start() { return m_start; }
-    GTextPosition& end() { return m_end; }
-    const GTextPosition& start() const { return m_start; }
-    const GTextPosition& end() const { return m_end; }
+    TextPosition& start() { return m_start; }
+    TextPosition& end() { return m_end; }
+    const TextPosition& start() const { return m_start; }
+    const TextPosition& end() const { return m_end; }
 
-    GTextRange normalized() const { return GTextRange(normalized_start(), normalized_end()); }
+    TextRange normalized() const { return TextRange(normalized_start(), normalized_end()); }
 
-    void set_start(const GTextPosition& position) { m_start = position; }
-    void set_end(const GTextPosition& position) { m_end = position; }
+    void set_start(const TextPosition& position) { m_start = position; }
+    void set_end(const TextPosition& position) { m_end = position; }
 
-    void set(const GTextPosition& start, const GTextPosition& end)
+    void set(const TextPosition& start, const TextPosition& end)
     {
         m_start = start;
         m_end = end;
     }
 
-    bool operator==(const GTextRange& other) const
+    bool operator==(const TextRange& other) const
     {
         return m_start == other.m_start && m_end == other.m_end;
     }
 
-    bool contains(const GTextPosition& position) const
+    bool contains(const TextPosition& position) const
     {
         if (!(position.line() > m_start.line() || (position.line() == m_start.line() && position.column() >= m_start.column())))
             return false;
@@ -76,16 +78,18 @@ public:
     }
 
 private:
-    GTextPosition normalized_start() const { return m_start < m_end ? m_start : m_end; }
-    GTextPosition normalized_end() const { return m_start < m_end ? m_end : m_start; }
+    TextPosition normalized_start() const { return m_start < m_end ? m_start : m_end; }
+    TextPosition normalized_end() const { return m_start < m_end ? m_end : m_start; }
 
-    GTextPosition m_start;
-    GTextPosition m_end;
+    TextPosition m_start;
+    TextPosition m_end;
 };
 
-inline const LogStream& operator<<(const LogStream& stream, const GTextRange& value)
+inline const LogStream& operator<<(const LogStream& stream, const TextRange& value)
 {
     if (!value.is_valid())
         return stream << "GTextRange(Invalid)";
     return stream << value.start() << '-' << value.end();
+}
+
 }

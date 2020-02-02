@@ -30,24 +30,24 @@
 #include <LibGUI/GJsonArrayModel.h>
 #include <LibGUI/GTableView.h>
 
-NetworkStatisticsWidget::NetworkStatisticsWidget(GWidget* parent)
-    : GLazyWidget(parent)
+NetworkStatisticsWidget::NetworkStatisticsWidget(GUI::Widget* parent)
+    : GUI::LazyWidget(parent)
 {
     on_first_show = [this](auto&) {
-        set_layout(make<GVBoxLayout>());
+        set_layout(make<GUI::VBoxLayout>());
         layout()->set_margins({ 4, 4, 4, 4 });
         set_fill_with_background_color(true);
 
-        auto adapters_group_box = GGroupBox::construct("Adapters", this);
-        adapters_group_box->set_layout(make<GVBoxLayout>());
+        auto adapters_group_box = GUI::GroupBox::construct("Adapters", this);
+        adapters_group_box->set_layout(make<GUI::VBoxLayout>());
         adapters_group_box->layout()->set_margins({ 6, 16, 6, 6 });
-        adapters_group_box->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+        adapters_group_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
         adapters_group_box->set_preferred_size(0, 120);
 
-        m_adapter_table_view = GTableView::construct(adapters_group_box);
+        m_adapter_table_view = GUI::TableView::construct(adapters_group_box);
         m_adapter_table_view->set_size_columns_to_fit_content(true);
 
-        Vector<GJsonArrayModel::FieldSpec> net_adapters_fields;
+        Vector<GUI::JsonArrayModel::FieldSpec> net_adapters_fields;
         net_adapters_fields.empend("name", "Name", TextAlignment::CenterLeft);
         net_adapters_fields.empend("class_name", "Class", TextAlignment::CenterLeft);
         net_adapters_fields.empend("mac_address", "MAC", TextAlignment::CenterLeft);
@@ -56,18 +56,18 @@ NetworkStatisticsWidget::NetworkStatisticsWidget(GWidget* parent)
         net_adapters_fields.empend("packets_out", "Pkt Out", TextAlignment::CenterRight);
         net_adapters_fields.empend("bytes_in", "Bytes In", TextAlignment::CenterRight);
         net_adapters_fields.empend("bytes_out", "Bytes Out", TextAlignment::CenterRight);
-        m_adapter_table_view->set_model(GJsonArrayModel::create("/proc/net/adapters", move(net_adapters_fields)));
+        m_adapter_table_view->set_model(GUI::JsonArrayModel::create("/proc/net/adapters", move(net_adapters_fields)));
 
-        auto sockets_group_box = GGroupBox::construct("Sockets", this);
-        sockets_group_box->set_layout(make<GVBoxLayout>());
+        auto sockets_group_box = GUI::GroupBox::construct("Sockets", this);
+        sockets_group_box->set_layout(make<GUI::VBoxLayout>());
         sockets_group_box->layout()->set_margins({ 6, 16, 6, 6 });
-        sockets_group_box->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
+        sockets_group_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
         sockets_group_box->set_preferred_size(0, 0);
 
-        m_socket_table_view = GTableView::construct(sockets_group_box);
+        m_socket_table_view = GUI::TableView::construct(sockets_group_box);
         m_socket_table_view->set_size_columns_to_fit_content(true);
 
-        Vector<GJsonArrayModel::FieldSpec> net_tcp_fields;
+        Vector<GUI::JsonArrayModel::FieldSpec> net_tcp_fields;
         net_tcp_fields.empend("peer_address", "Peer", TextAlignment::CenterLeft);
         net_tcp_fields.empend("peer_port", "Port", TextAlignment::CenterRight);
         net_tcp_fields.empend("local_address", "Local", TextAlignment::CenterLeft);
@@ -79,7 +79,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget(GWidget* parent)
         net_tcp_fields.empend("packets_out", "Pkt Out", TextAlignment::CenterRight);
         net_tcp_fields.empend("bytes_in", "Bytes In", TextAlignment::CenterRight);
         net_tcp_fields.empend("bytes_out", "Bytes Out", TextAlignment::CenterRight);
-        m_socket_table_view->set_model(GJsonArrayModel::create("/proc/net/tcp", move(net_tcp_fields)));
+        m_socket_table_view->set_model(GUI::JsonArrayModel::create("/proc/net/tcp", move(net_tcp_fields)));
 
         m_update_timer = Core::Timer::construct(
             1000, [this] {

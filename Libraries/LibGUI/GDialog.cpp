@@ -28,26 +28,28 @@
 #include <LibGUI/GDialog.h>
 #include <LibGUI/GEvent.h>
 
-GDialog::GDialog(Core::Object* parent)
-    : GWindow(parent)
+namespace GUI {
+
+Dialog::Dialog(Core::Object* parent)
+    : Window(parent)
 {
     set_modal(true);
 }
 
-GDialog::~GDialog()
+Dialog::~Dialog()
 {
 }
 
-int GDialog::exec()
+int Dialog::exec()
 {
     ASSERT(!m_event_loop);
     m_event_loop = make<Core::EventLoop>();
     auto new_rect = rect();
     if (parent() && parent()->is_window()) {
-        auto& parent_window = *static_cast<GWindow*>(parent());
+        auto& parent_window = *static_cast<Window*>(parent());
         new_rect.center_within(parent_window.rect());
     } else {
-        new_rect.center_within(GDesktop::the().rect());
+        new_rect.center_within(Desktop::the().rect());
     }
     set_rect(new_rect);
     show();
@@ -58,7 +60,7 @@ int GDialog::exec()
     return result;
 }
 
-void GDialog::done(int result)
+void Dialog::done(int result)
 {
     if (!m_event_loop)
         return;
@@ -67,10 +69,10 @@ void GDialog::done(int result)
     m_event_loop->quit(result);
 }
 
-void GDialog::event(Core::Event& event)
+void Dialog::event(Core::Event& event)
 {
-    if (event.type() == GEvent::KeyUp) {
-        auto& key_event = static_cast<GKeyEvent&>(event);
+    if (event.type() == Event::KeyUp) {
+        auto& key_event = static_cast<KeyEvent&>(event);
         if (key_event.key() == KeyCode::Key_Escape) {
             done(ExecCancel);
             event.accept();
@@ -78,11 +80,13 @@ void GDialog::event(Core::Event& event)
         }
     }
 
-    GWindow::event(event);
+    Window::event(event);
 }
 
-void GDialog::close()
+void Dialog::close()
 {
-    GWindow::close();
+    Window::close();
     m_event_loop->quit(ExecCancel);
+}
+
 }

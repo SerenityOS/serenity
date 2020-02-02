@@ -34,13 +34,13 @@ public:
 
     virtual const char* class_name() const = 0;
 
-    virtual void on_mousedown(GMouseEvent&) {}
-    virtual void on_mousemove(GMouseEvent&) {}
-    virtual void on_mouseup(GMouseEvent&) {}
-    virtual void on_contextmenu(GContextMenuEvent&) {}
-    virtual void on_second_paint(GPaintEvent&) {}
-    virtual void on_keydown(GKeyEvent&) {}
-    virtual void on_keyup(GKeyEvent&) {}
+    virtual void on_mousedown(GUI::MouseEvent&) {}
+    virtual void on_mousemove(GUI::MouseEvent&) {}
+    virtual void on_mouseup(GUI::MouseEvent&) {}
+    virtual void on_contextmenu(GUI::ContextMenuEvent&) {}
+    virtual void on_second_paint(GUI::PaintEvent&) {}
+    virtual void on_keydown(GUI::KeyEvent&) {}
+    virtual void on_keyup(GUI::KeyEvent&) {}
 
     void clear() { m_widget = nullptr; }
     void setup(PaintableWidget& widget) { m_widget = widget.make_weak_ptr(); }

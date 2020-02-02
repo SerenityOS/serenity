@@ -31,17 +31,16 @@
 
 class GlyphEditorWidget;
 class GlyphMapWidget;
-class GTextBox;
 
 struct UI_FontEditorBottom;
 
-class FontEditorWidget final : public GWidget {
+class FontEditorWidget final : public GUI::Widget {
     C_OBJECT(FontEditorWidget)
 public:
     virtual ~FontEditorWidget() override;
 
 private:
-    FontEditorWidget(const String& path, RefPtr<Font>&&, GWidget* parent = nullptr);
+    FontEditorWidget(const String& path, RefPtr<Font>&&, GUI::Widget* parent = nullptr);
     RefPtr<Font> m_edited_font;
 
     GlyphMapWidget* m_glyph_map_widget { nullptr };

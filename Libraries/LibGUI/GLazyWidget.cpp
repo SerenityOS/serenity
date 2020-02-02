@@ -26,16 +26,18 @@
 
 #include <LibGUI/GLazyWidget.h>
 
-GLazyWidget::GLazyWidget(GWidget* parent)
-    : GWidget(parent)
+namespace GUI {
+
+LazyWidget::LazyWidget(Widget* parent)
+    : Widget(parent)
 {
 }
 
-GLazyWidget::~GLazyWidget()
+LazyWidget::~LazyWidget()
 {
 }
 
-void GLazyWidget::show_event(GShowEvent&)
+void LazyWidget::show_event(ShowEvent&)
 {
     if (m_has_been_shown)
         return;
@@ -43,4 +45,6 @@ void GLazyWidget::show_event(GShowEvent&)
 
     ASSERT(on_first_show);
     on_first_show(*this);
+}
+
 }

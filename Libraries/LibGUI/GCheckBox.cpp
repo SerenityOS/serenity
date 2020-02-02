@@ -31,6 +31,8 @@
 #include <LibGUI/GCheckBox.h>
 #include <LibGUI/GPainter.h>
 
+namespace GUI {
+
 static const char* s_checked_bitmap_data = {
     "         "
     "       # "
@@ -49,23 +51,23 @@ static const int s_checked_bitmap_height = 9;
 static const int s_box_width = 13;
 static const int s_box_height = 13;
 
-GCheckBox::GCheckBox(GWidget* parent)
-    : GAbstractButton(parent)
+CheckBox::CheckBox(Widget* parent)
+    : AbstractButton(parent)
 {
 }
 
-GCheckBox::GCheckBox(const StringView& text, GWidget* parent)
-    : GAbstractButton(text, parent)
+CheckBox::CheckBox(const StringView& text, Widget* parent)
+    : AbstractButton(text, parent)
 {
 }
 
-GCheckBox::~GCheckBox()
+CheckBox::~CheckBox()
 {
 }
 
-void GCheckBox::paint_event(GPaintEvent& event)
+void CheckBox::paint_event(PaintEvent& event)
 {
-    GPainter painter(*this);
+    Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
     auto text_rect = rect();
@@ -96,9 +98,11 @@ void GCheckBox::paint_event(GPaintEvent& event)
     paint_text(painter, text_rect, font(), TextAlignment::TopLeft);
 }
 
-void GCheckBox::click()
+void CheckBox::click()
 {
     if (!is_enabled())
         return;
     set_checked(!is_checked());
+}
+
 }

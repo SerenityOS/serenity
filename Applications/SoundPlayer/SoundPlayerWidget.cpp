@@ -32,37 +32,37 @@
 #include <LibGUI/GMessageBox.h>
 #include <LibM/math.h>
 
-SoundPlayerWidget::SoundPlayerWidget(GWindow& window, NonnullRefPtr<AClientConnection> connection)
+SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, NonnullRefPtr<AClientConnection> connection)
     : m_window(window)
     , m_connection(connection)
     , m_manager(connection)
 {
     set_fill_with_background_color(true);
-    set_layout(make<GVBoxLayout>());
+    set_layout(make<GUI::VBoxLayout>());
     layout()->set_margins({ 2, 2, 2, 2 });
 
-    auto status_widget = GWidget::construct(this);
+    auto status_widget = GUI::Widget::construct(this);
     status_widget->set_fill_with_background_color(true);
-    status_widget->set_layout(make<GHBoxLayout>());
+    status_widget->set_layout(make<GUI::HBoxLayout>());
 
-    m_elapsed = GLabel::construct(status_widget);
+    m_elapsed = GUI::Label::construct(status_widget);
     m_elapsed->set_frame_shape(FrameShape::Container);
     m_elapsed->set_frame_shadow(FrameShadow::Sunken);
     m_elapsed->set_frame_thickness(2);
-    m_elapsed->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    m_elapsed->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     m_elapsed->set_preferred_size(80, 0);
 
-    auto sample_widget_container = GWidget::construct(status_widget.ptr());
-    sample_widget_container->set_layout(make<GHBoxLayout>());
-    sample_widget_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
+    auto sample_widget_container = GUI::Widget::construct(status_widget.ptr());
+    sample_widget_container->set_layout(make<GUI::HBoxLayout>());
+    sample_widget_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
 
     m_sample_widget = SampleWidget::construct(sample_widget_container);
 
-    m_remaining = GLabel::construct(status_widget);
+    m_remaining = GUI::Label::construct(status_widget);
     m_remaining->set_frame_shape(FrameShape::Container);
     m_remaining->set_frame_shadow(FrameShadow::Sunken);
     m_remaining->set_frame_thickness(2);
-    m_remaining->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    m_remaining->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     m_remaining->set_preferred_size(80, 0);
 
     m_slider = Slider::construct(Orientation::Horizontal, this);
@@ -70,32 +70,32 @@ SoundPlayerWidget::SoundPlayerWidget(GWindow& window, NonnullRefPtr<AClientConne
     m_slider->set_enabled(false);
     m_slider->on_knob_released = [&](int value) { m_manager.seek(denormalize_rate(value)); };
 
-    auto control_widget = GWidget::construct(this);
+    auto control_widget = GUI::Widget::construct(this);
     control_widget->set_fill_with_background_color(true);
-    control_widget->set_layout(make<GHBoxLayout>());
-    control_widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    control_widget->set_layout(make<GUI::HBoxLayout>());
+    control_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     control_widget->set_preferred_size(0, 30);
     control_widget->layout()->set_margins({ 10, 2, 10, 2 });
     control_widget->layout()->set_spacing(10);
 
-    m_play = GButton::construct(control_widget);
+    m_play = GUI::Button::construct(control_widget);
     m_play->set_icon(*m_pause_icon);
     m_play->set_enabled(false);
-    m_play->on_click = [this](GButton& button) {
+    m_play->on_click = [this](GUI::Button& button) {
         button.set_icon(m_manager.toggle_pause() ? *m_play_icon : *m_pause_icon);
     };
 
-    m_stop = GButton::construct(control_widget);
+    m_stop = GUI::Button::construct(control_widget);
     m_stop->set_enabled(false);
     m_stop->set_icon(GraphicsBitmap::load_from_file("/res/icons/16x16/stop.png"));
-    m_stop->on_click = [&](GButton&) { m_manager.stop(); };
+    m_stop->on_click = [&](GUI::Button&) { m_manager.stop(); };
 
-    m_status = GLabel::construct(this);
+    m_status = GUI::Label::construct(this);
     m_status->set_frame_shape(FrameShape::Box);
     m_status->set_frame_shadow(FrameShadow::Raised);
     m_status->set_frame_thickness(4);
     m_status->set_text_alignment(TextAlignment::CenterLeft);
-    m_status->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    m_status->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_status->set_preferred_size(0, 18);
     m_status->set_text("No file open!");
 
@@ -120,18 +120,18 @@ void SoundPlayerWidget::hide_scope(bool hide)
 void SoundPlayerWidget::open_file(String path)
 {
     if (!path.ends_with(".wav")) {
-        GMessageBox::show("Selected file is not a \".wav\" file!", "Filetype error", GMessageBox::Type::Error);
+        GUI::MessageBox::show("Selected file is not a \".wav\" file!", "Filetype error", GUI::MessageBox::Type::Error);
         return;
     }
 
     OwnPtr<AWavLoader> loader = make<AWavLoader>(path);
     if (loader->has_error()) {
-        GMessageBox::show(
+        GUI::MessageBox::show(
             String::format(
                 "Failed to load WAV file: %s (%s)",
                 path.characters(),
                 loader->error_string()),
-            "Filetype error", GMessageBox::Type::Error);
+            "Filetype error", GUI::MessageBox::Type::Error);
         return;
     }
 

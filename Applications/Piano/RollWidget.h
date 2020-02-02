@@ -32,7 +32,7 @@
 
 class AudioEngine;
 
-class RollWidget final : public GScrollableWidget {
+class RollWidget final : public GUI::ScrollableWidget {
     C_OBJECT(RollWidget)
 public:
     virtual ~RollWidget() override;
@@ -40,10 +40,10 @@ public:
     void update_roll();
 
 private:
-    RollWidget(GWidget* parent, AudioEngine&);
+    RollWidget(GUI::Widget* parent, AudioEngine&);
 
-    virtual void paint_event(GPaintEvent&) override;
-    virtual void mousedown_event(GMouseEvent& event) override;
+    virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void mousedown_event(GUI::MouseEvent& event) override;
 
     AudioEngine& m_audio_engine;
 

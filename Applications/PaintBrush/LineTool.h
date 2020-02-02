@@ -30,29 +30,31 @@
 #include <LibDraw/Point.h>
 #include <LibGUI/GActionGroup.h>
 
-class GMenu;
+namespace GUI {
+class Menu;
+}
 
 class LineTool final : public Tool {
 public:
     LineTool();
     virtual ~LineTool() override;
 
-    virtual void on_mousedown(GMouseEvent&) override;
-    virtual void on_mousemove(GMouseEvent&) override;
-    virtual void on_mouseup(GMouseEvent&) override;
-    virtual void on_contextmenu(GContextMenuEvent&) override;
-    virtual void on_second_paint(GPaintEvent&) override;
-    virtual void on_keydown(GKeyEvent&) override;
-    virtual void on_keyup(GKeyEvent&) override;
+    virtual void on_mousedown(GUI::MouseEvent&) override;
+    virtual void on_mousemove(GUI::MouseEvent&) override;
+    virtual void on_mouseup(GUI::MouseEvent&) override;
+    virtual void on_contextmenu(GUI::ContextMenuEvent&) override;
+    virtual void on_second_paint(GUI::PaintEvent&) override;
+    virtual void on_keydown(GUI::KeyEvent&) override;
+    virtual void on_keyup(GUI::KeyEvent&) override;
 
 private:
     virtual const char* class_name() const override { return "LineTool"; }
 
-    GMouseButton m_drawing_button { GMouseButton::None };
+    GUI::MouseButton m_drawing_button { GUI::MouseButton::None };
     Point m_line_start_position;
     Point m_line_end_position;
-    RefPtr<GMenu> m_context_menu;
-    GActionGroup m_thickness_actions;
+    RefPtr<GUI::Menu> m_context_menu;
+    GUI::ActionGroup m_thickness_actions;
     int m_thickness { 1 };
     bool m_constrain_angle { false };
 };

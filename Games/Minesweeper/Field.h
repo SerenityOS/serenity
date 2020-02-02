@@ -30,9 +30,12 @@
 #include <LibCore/CTimer.h>
 #include <LibGUI/GFrame.h>
 
+namespace GUI {
+class Button;
+class Label;
+}
+
 class Field;
-class GButton;
-class GLabel;
 class SquareButton;
 class SquareLabel;
 
@@ -57,12 +60,12 @@ public:
     void for_each_neighbor(Callback);
 };
 
-class Field final : public GFrame {
+class Field final : public GUI::Frame {
     C_OBJECT(Field)
     friend class Square;
     friend class SquareLabel;
 public:
-    Field(GLabel& flag_label, GLabel& time_label, GButton& face_button, GWidget* parent, Function<void(Size)> on_size_changed);
+    Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, GUI::Widget* parent, Function<void(Size)> on_size_changed);
     virtual ~Field() override;
 
     int rows() const { return m_rows; }
@@ -77,7 +80,7 @@ public:
     void reset();
 
 private:
-    virtual void paint_event(GPaintEvent&) override;
+    virtual void paint_event(GUI::PaintEvent&) override;
 
     void on_square_clicked(Square&);
     void on_square_right_clicked(Square&);
@@ -118,9 +121,9 @@ private:
     RefPtr<GraphicsBitmap> m_good_face_bitmap;
     RefPtr<GraphicsBitmap> m_bad_face_bitmap;
     RefPtr<GraphicsBitmap> m_number_bitmap[8];
-    GButton& m_face_button;
-    GLabel& m_flag_label;
-    GLabel& m_time_label;
+    GUI::Button& m_face_button;
+    GUI::Label& m_flag_label;
+    GUI::Label& m_time_label;
     RefPtr<Core::Timer> m_timer;
     int m_time_elapsed { 0 };
     int m_flags_left { 0 };

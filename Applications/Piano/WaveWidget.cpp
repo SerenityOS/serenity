@@ -30,8 +30,8 @@
 #include <LibGUI/GPainter.h>
 #include <limits>
 
-WaveWidget::WaveWidget(GWidget* parent, AudioEngine& audio_engine)
-    : GFrame(parent)
+WaveWidget::WaveWidget(GUI::Widget* parent, AudioEngine& audio_engine)
+    : GUI::Frame(parent)
     , m_audio_engine(audio_engine)
 {
     set_frame_thickness(2);
@@ -85,9 +85,9 @@ int WaveWidget::sample_to_y(int sample) const
     return y;
 }
 
-void WaveWidget::paint_event(GPaintEvent& event)
+void WaveWidget::paint_event(GUI::PaintEvent& event)
 {
-    GPainter painter(*this);
+    GUI::Painter painter(*this);
     painter.fill_rect(frame_inner_rect(), Color::Black);
     painter.translate(frame_thickness(), frame_thickness());
 
@@ -110,5 +110,5 @@ void WaveWidget::paint_event(GPaintEvent& event)
         prev_y = y;
     }
 
-    GFrame::paint_event(event);
+    GUI::Frame::paint_event(event);
 }
