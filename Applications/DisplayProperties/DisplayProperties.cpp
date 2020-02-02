@@ -108,10 +108,17 @@ void DisplayPropertiesWidget::create_root_widget()
 
 void DisplayPropertiesWidget::create_wallpaper_list()
 {
+    m_selected_wallpaper = m_wm_config->read_entry("Background", "Wallpaper");
+    if (!m_selected_wallpaper.is_empty()) {
+        auto name_parts = m_selected_wallpaper.split('/');
+        m_selected_wallpaper = name_parts[2];
+    }
+
     CDirIterator iterator("/res/wallpapers/", CDirIterator::Flags::SkipDots);
 
-    while (iterator.has_next())
+    while (iterator.has_next()) {
         m_wallpapers.append(iterator.next_path());
+    }
 }
 
 void DisplayPropertiesWidget::create_frame()
@@ -131,6 +138,13 @@ void DisplayPropertiesWidget::create_frame()
     auto wallpaper_list = GListView::construct(background_content);
     wallpaper_list->set_background_color(Color::White);
     wallpaper_list->set_model(*ItemListModel<AK::String>::create(m_wallpapers));
+
+    auto wallpaper_model = wallpaper_list->model();
+    auto find_first_wallpaper_index = m_wallpapers.find_first_index(m_selected_wallpaper);
+    auto wallpaper_index_in_model = wallpaper_model->index(find_first_wallpaper_index, wallpaper_list->model_column());
+    if (wallpaper_model->is_valid(wallpaper_index_in_model))
+        wallpaper_list->selection().set(wallpaper_index_in_model);
+
     wallpaper_list->horizontal_scrollbar().set_visible(false);
     wallpaper_list->on_selection = [this](auto& index) {
         StringBuilder builder;
@@ -154,8 +168,8 @@ void DisplayPropertiesWidget::create_frame()
     resolution_list->set_model(*ItemListModel<Size>::create(m_resolutions));
 
     auto resolution_model = resolution_list->model();
-    auto find_first_index = m_resolutions.find_first_index(m_selected_resolution);
-    auto resolution_index_in_model = resolution_model->index(find_first_index, resolution_list->model_column());
+    auto find_first_resolution_index = m_resolutions.find_first_index(m_selected_resolution);
+    auto resolution_index_in_model = resolution_model->index(find_first_resolution_index, resolution_list->model_column());
     if (resolution_model->is_valid(resolution_index_in_model))
         resolution_list->selection().set(resolution_index_in_model);
 
