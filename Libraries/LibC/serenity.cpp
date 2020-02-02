@@ -79,4 +79,9 @@ int purge(int mode)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int perf_event(int type, uintptr_t arg1, uintptr_t arg2)
+{
+    int rc = syscall(SC_perf_event, type, arg1, arg2);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
 }

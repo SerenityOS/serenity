@@ -60,6 +60,7 @@ LIBC_OBJS = \
 ELF_OBJS = \
         ../LibELF/ELFDynamicObject.o \
         ../LibELF/ELFDynamicLoader.o \
+        ../LibELF/ELFLoader.o \
         ../LibELF/ELFImage.o
 
 OBJS = $(AK_OBJS) $(LIBC_OBJS) $(ELF_OBJS)

@@ -57,6 +57,7 @@ constexpr int number_of_big_blocks_to_keep_around_per_size_class = 8;
 static bool s_log_malloc = false;
 static bool s_scrub_malloc = true;
 static bool s_scrub_free = true;
+static bool s_profiling = false;
 static unsigned short size_classes[] = { 8, 16, 32, 64, 128, 252, 508, 1016, 2036, 0 };
 static constexpr size_t num_size_classes = sizeof(size_classes) / sizeof(unsigned short);
 
@@ -170,7 +171,7 @@ static void os_free(void* ptr, size_t size)
     assert(rc == 0);
 }
 
-void* malloc(size_t size)
+static void* malloc_impl(size_t size)
 {
     LOCKER(malloc_lock());
 
@@ -266,7 +267,7 @@ void* malloc(size_t size)
     return ptr;
 }
 
-void free(void* ptr)
+static void free_impl(void* ptr)
 {
     ScopedValueRollback rollback(errno);
 
@@ -352,6 +353,21 @@ void free(void* ptr)
     }
 }
 
+void* malloc(size_t size)
+{
+    void* ptr = malloc_impl(size);
+    if (s_profiling)
+        perf_event(PERF_EVENT_MALLOC, size, reinterpret_cast<uintptr_t>(ptr));
+    return ptr;
+}
+
+void free(void* ptr)
+{
+    if (s_profiling)
+        perf_event(PERF_EVENT_FREE, reinterpret_cast<uintptr_t>(ptr), 0);
+    free_impl(ptr);
+}
+
 void* calloc(size_t count, size_t size)
 {
     size_t new_size = count * size;
@@ -396,6 +412,8 @@ void __malloc_init()
         s_scrub_free = false;
     if (getenv("LIBC_LOG_MALLOC"))
         s_log_malloc = true;
+    if (getenv("LIBC_PROFILE_MALLOC"))
+        s_profiling = true;
 
     g_allocators = (Allocator*)mmap_with_name(nullptr, sizeof(Allocator) * num_size_classes, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, "LibC Allocators");
     for (size_t i = 0; i < num_size_classes; ++i) {
@@ -404,10 +422,9 @@ void __malloc_init()
     }
 
     g_big_allocators = (BigAllocator*)mmap_with_name(nullptr, sizeof(BigAllocator), PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, "LibC BigAllocators");
-    new (g_big_allocators) (BigAllocator);
+    new (g_big_allocators)(BigAllocator);
 
     // We could mprotect the mmaps here with atexit, but, since this method is called in _start before
     // _init and __init_array entries, our mprotect method would always be the last thing run before _exit.
 }
-
 }
