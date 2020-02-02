@@ -42,53 +42,51 @@ class GAction;
 class GActionGroup;
 class GButton;
 class GMenuItem;
-class GWidget;
 
 namespace GCommonActions {
-NonnullRefPtr<GAction> make_open_action(Function<void(GAction&)>, GWidget* widget = nullptr);
-NonnullRefPtr<GAction> make_undo_action(Function<void(GAction&)>, GWidget* widget = nullptr);
-NonnullRefPtr<GAction> make_redo_action(Function<void(GAction&)>, GWidget* widget = nullptr);
-NonnullRefPtr<GAction> make_cut_action(Function<void(GAction&)>, GWidget* widget = nullptr);
-NonnullRefPtr<GAction> make_copy_action(Function<void(GAction&)>, GWidget* widget = nullptr);
-NonnullRefPtr<GAction> make_paste_action(Function<void(GAction&)>, GWidget* widget = nullptr);
-NonnullRefPtr<GAction> make_delete_action(Function<void(GAction&)>, GWidget* widget = nullptr);
-NonnullRefPtr<GAction> make_move_to_front_action(Function<void(GAction&)>, GWidget* widget = nullptr);
-NonnullRefPtr<GAction> make_move_to_back_action(Function<void(GAction&)>, GWidget* widget = nullptr);
-NonnullRefPtr<GAction> make_fullscreen_action(Function<void(GAction&)>, GWidget* widget = nullptr);
+NonnullRefPtr<GAction> make_open_action(Function<void(GAction&)>, CObject* parent = nullptr);
+NonnullRefPtr<GAction> make_undo_action(Function<void(GAction&)>, CObject* parent = nullptr);
+NonnullRefPtr<GAction> make_redo_action(Function<void(GAction&)>, CObject* parent = nullptr);
+NonnullRefPtr<GAction> make_cut_action(Function<void(GAction&)>, CObject* parent = nullptr);
+NonnullRefPtr<GAction> make_copy_action(Function<void(GAction&)>, CObject* parent = nullptr);
+NonnullRefPtr<GAction> make_paste_action(Function<void(GAction&)>, CObject* parent = nullptr);
+NonnullRefPtr<GAction> make_delete_action(Function<void(GAction&)>, CObject* parent = nullptr);
+NonnullRefPtr<GAction> make_move_to_front_action(Function<void(GAction&)>, CObject* parent = nullptr);
+NonnullRefPtr<GAction> make_move_to_back_action(Function<void(GAction&)>, CObject* parent = nullptr);
+NonnullRefPtr<GAction> make_fullscreen_action(Function<void(GAction&)>, CObject* parent = nullptr);
 NonnullRefPtr<GAction> make_quit_action(Function<void(GAction&)>);
-NonnullRefPtr<GAction> make_go_back_action(Function<void(GAction&)>, GWidget* widget = nullptr);
-NonnullRefPtr<GAction> make_go_forward_action(Function<void(GAction&)>, GWidget* widget = nullptr);
-NonnullRefPtr<GAction> make_go_home_action(Function<void(GAction&)> callback, GWidget* widget = nullptr);
-NonnullRefPtr<GAction> make_reload_action(Function<void(GAction&)>, GWidget* widget = nullptr);
+NonnullRefPtr<GAction> make_go_back_action(Function<void(GAction&)>, CObject* parent = nullptr);
+NonnullRefPtr<GAction> make_go_forward_action(Function<void(GAction&)>, CObject* parent = nullptr);
+NonnullRefPtr<GAction> make_go_home_action(Function<void(GAction&)> callback, CObject* parent = nullptr);
+NonnullRefPtr<GAction> make_reload_action(Function<void(GAction&)>, CObject* parent = nullptr);
 };
 
-class GAction : public RefCounted<GAction>
-    , public Weakable<GAction> {
+class GAction final : public CObject {
+    C_OBJECT(GAction)
 public:
     enum class ShortcutScope {
         None,
-        ApplicationGlobal,
         WidgetLocal,
+        WindowLocal,
+        ApplicationGlobal,
     };
-    static NonnullRefPtr<GAction> create(const StringView& text, Function<void(GAction&)> callback, GWidget* widget = nullptr)
+    static NonnullRefPtr<GAction> create(const StringView& text, Function<void(GAction&)> callback, CObject* parent = nullptr)
     {
-        return adopt(*new GAction(text, move(callback), widget));
+        return adopt(*new GAction(text, move(callback), parent));
     }
-    static NonnullRefPtr<GAction> create(const StringView& text, RefPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> callback, GWidget* widget = nullptr)
+    static NonnullRefPtr<GAction> create(const StringView& text, RefPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> callback, CObject* parent = nullptr)
     {
-        return adopt(*new GAction(text, move(icon), move(callback), widget));
+        return adopt(*new GAction(text, move(icon), move(callback), parent));
     }
-    static NonnullRefPtr<GAction> create(const StringView& text, const GShortcut& shortcut, Function<void(GAction&)> callback, GWidget* widget = nullptr)
+    static NonnullRefPtr<GAction> create(const StringView& text, const GShortcut& shortcut, Function<void(GAction&)> callback, CObject* parent = nullptr)
     {
-        return adopt(*new GAction(text, shortcut, move(callback), widget));
+        return adopt(*new GAction(text, shortcut, move(callback), parent));
     }
-    static NonnullRefPtr<GAction> create(const StringView& text, const GShortcut& shortcut, RefPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> callback, GWidget* widget = nullptr)
+    static NonnullRefPtr<GAction> create(const StringView& text, const GShortcut& shortcut, RefPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> callback, CObject* parent = nullptr)
     {
-        return adopt(*new GAction(text, shortcut, move(icon), move(callback), widget));
+        return adopt(*new GAction(text, shortcut, move(icon), move(callback), parent));
     }
-    ~GAction();
-    GWidget* widget() { return m_widget.ptr(); }
-    const GWidget* widget() const { return m_widget.ptr(); }
+    virtual ~GAction() override;
 
     String text() const { return m_text; }
     GShortcut shortcut() const { return m_shortcut; }
@@ -124,10 +122,12 @@ public:
     void set_group(Badge<GActionGroup>, GActionGroup*);
 
 private:
-    GAction(const StringView& text, Function<void(GAction&)> = nullptr, GWidget* = nullptr);
-    GAction(const StringView& text, const GShortcut&, Function<void(GAction&)> = nullptr, GWidget* = nullptr);
-    GAction(const StringView& text, const GShortcut&, RefPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> = nullptr, GWidget* = nullptr);
-    GAction(const StringView& text, RefPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> = nullptr, GWidget* = nullptr);
+    virtual bool is_action() const override { return true; }
+
+    GAction(const StringView& text, Function<void(GAction&)> = nullptr, CObject* = nullptr);
+    GAction(const StringView& text, const GShortcut&, Function<void(GAction&)> = nullptr, CObject* = nullptr);
+    GAction(const StringView& text, const GShortcut&, RefPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> = nullptr, CObject* = nullptr);
+    GAction(const StringView& text, RefPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> = nullptr, CObject* = nullptr);
 
     template<typename Callback>
     void for_each_toolbar_button(Callback);
@@ -144,7 +144,12 @@ private:
 
     HashTable<GButton*> m_buttons;
     HashTable<GMenuItem*> m_menu_items;
-    WeakPtr<GWidget> m_widget;
     WeakPtr<GActionGroup> m_action_group;
     WeakPtr<CObject> m_activator;
 };
+
+template<>
+inline bool is<GAction>(const CObject& object)
+{
+    return object.is_action();
+}

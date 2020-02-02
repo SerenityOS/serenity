@@ -626,20 +626,16 @@ bool GWidget::is_backmost() const
 
 GAction* GWidget::action_for_key_event(const GKeyEvent& event)
 {
-    auto it = m_local_shortcut_actions.find(GShortcut(event.modifiers(), (KeyCode)event.key()));
-    if (it == m_local_shortcut_actions.end())
-        return nullptr;
-    return (*it).value;
-}
-
-void GWidget::register_local_shortcut_action(Badge<GAction>, GAction& action)
-{
-    m_local_shortcut_actions.set(action.shortcut(), &action);
-}
-
-void GWidget::unregister_local_shortcut_action(Badge<GAction>, GAction& action)
-{
-    m_local_shortcut_actions.remove(action.shortcut());
+    GShortcut shortcut(event.modifiers(), (KeyCode)event.key());
+    GAction* found_action = nullptr;
+    for_each_child_of_type<GAction>([&] (auto& action) {
+        if (action.shortcut() == shortcut) {
+            found_action = &action;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+    return found_action;
 }
 
 void GWidget::set_updates_enabled(bool enabled)
