@@ -151,9 +151,6 @@ private:
 template<typename T>
 inline bool is(const CObject&) { return false; }
 
-template<>
-inline bool is<CObject>(const CObject&) { return true; }
-
 template<typename T>
 inline T& to(CObject& object)
 {
