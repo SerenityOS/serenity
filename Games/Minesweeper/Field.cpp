@@ -339,7 +339,7 @@ void Field::paint_event(GPaintEvent& event)
 void Field::on_square_clicked_impl(Square& square, bool should_flood_fill)
 {
     if (m_first_click) {
-        while (square.has_mine) {
+        while (square.has_mine || square.number != 0) {
             reset();
         }
     }
