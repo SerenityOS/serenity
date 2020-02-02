@@ -174,12 +174,6 @@ public:
         m_buffer[m_offset++] = (u8)(value >> 24);
         return *this;
     }
-
-    BufferStream& operator<<(size_t value)
-    {
-        return *this << (u32)value;
-    }
-
     BufferStream& operator>>(u32& value)
     {
         if (m_offset + sizeof(value) > unsigned(m_buffer.size())) {
@@ -198,6 +192,7 @@ public:
         value |= (u8(b0));
         return *this;
     }
+
     BufferStream& operator<<(i32 value)
     {
         m_buffer[m_offset++] = value;
@@ -224,6 +219,120 @@ public:
         value |= (u8(b0));
         return *this;
     }
+
+    BufferStream& operator<<(u64 value)
+    {
+        m_buffer[m_offset++] = value;
+        m_buffer[m_offset++] = (u8)(value >> 8);
+        m_buffer[m_offset++] = (u8)(value >> 16);
+        m_buffer[m_offset++] = (u8)(value >> 24);
+        m_buffer[m_offset++] = (u8)(value >> 32);
+        m_buffer[m_offset++] = (u8)(value >> 40);
+        m_buffer[m_offset++] = (u8)(value >> 48);
+        m_buffer[m_offset++] = (u8)(value >> 56);
+        return *this;
+    }
+    BufferStream& operator>>(u64& value)
+    {
+        if (m_offset + sizeof(value) > unsigned(m_buffer.size())) {
+            m_read_failure = true;
+            return *this;
+        }
+        u8 b0 = m_buffer[m_offset++];
+        u8 b1 = m_buffer[m_offset++];
+        u8 b2 = m_buffer[m_offset++];
+        u8 b3 = m_buffer[m_offset++];
+        u8 b4 = m_buffer[m_offset++];
+        u8 b5 = m_buffer[m_offset++];
+        u8 b6 = m_buffer[m_offset++];
+        u8 b7 = m_buffer[m_offset++];
+
+        value = 0;
+        value |= ((long long)b7 << 56);
+        value |= ((long long)b6 << 48);
+        value |= ((long long)b5 << 40);
+        value |= ((long long)b4 << 32);
+        value |= ((long long)b3 << 24);
+        value |= ((long long)b2 << 16);
+        value |= ((long long)b1 << 8);
+        value |= ((long long)b0);
+        return *this;
+    }
+    BufferStream& operator<<(i64 value)
+    {
+        m_buffer[m_offset++] = value;
+        m_buffer[m_offset++] = (u8)(value >> 8);
+        m_buffer[m_offset++] = (u8)(value >> 16);
+        m_buffer[m_offset++] = (u8)(value >> 24);
+        m_buffer[m_offset++] = (u8)(value >> 32);
+        m_buffer[m_offset++] = (u8)(value >> 40);
+        m_buffer[m_offset++] = (u8)(value >> 48);
+        m_buffer[m_offset++] = (u8)(value >> 56);
+        return *this;
+    }
+    BufferStream& operator>>(i64& value)
+    {
+        if (m_offset + sizeof(value) > unsigned(m_buffer.size())) {
+            m_read_failure = true;
+            return *this;
+        }
+        u8 b0 = m_buffer[m_offset++];
+        u8 b1 = m_buffer[m_offset++];
+        u8 b2 = m_buffer[m_offset++];
+        u8 b3 = m_buffer[m_offset++];
+        u8 b4 = m_buffer[m_offset++];
+        u8 b5 = m_buffer[m_offset++];
+        u8 b6 = m_buffer[m_offset++];
+        u8 b7 = m_buffer[m_offset++];
+
+        value = 0;
+        value |= ((long long)b7 << 56);
+        value |= ((long long)b6 << 48);
+        value |= ((long long)b5 << 40);
+        value |= ((long long)b4 << 32);
+        value |= ((long long)b3 << 24);
+        value |= ((long long)b2 << 16);
+        value |= ((long long)b1 << 8);
+        value |= ((long long)b0);
+        return *this;
+    }
+
+    BufferStream& operator<<(size_t value)
+    {
+        if constexpr(sizeof(size_t) == 4)
+            return *this << (u32)value;
+        else if constexpr(sizeof(size_t) == 8)
+            return *this << (u64)value;
+        ASSERT_NOT_REACHED();
+    }
+    BufferStream& operator>>(size_t& value)
+    {
+        if constexpr(sizeof(size_t) == 4)
+            return *this >> (u32&)value;
+        else if constexpr(sizeof(size_t) == 8)
+            return *this >> (u64&)value;
+        ASSERT_NOT_REACHED();
+    }
+
+#ifndef __i386__
+    BufferStream& operator<<(ssize_t value)
+    {
+        if constexpr(sizeof(ssize_t) == 4)
+            return *this << (i32)value;
+        else if constexpr(sizeof(ssize_t) == 8)
+            return *this << (i64)value;
+        ASSERT_NOT_REACHED();
+    }
+    BufferStream& operator>>(ssize_t& value)
+    {
+        if constexpr(sizeof(ssize_t) == 4)
+            return *this >> (i32&)value;
+        else if constexpr(sizeof(ssize_t) == 8)
+            return *this >> (i64&)value;
+        ASSERT_NOT_REACHED();
+    }
+#endif
+
 
     BufferStream& operator<<(const char* value)
     {
