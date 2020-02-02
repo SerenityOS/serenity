@@ -43,8 +43,14 @@ int main(int argc, char** argv)
     }
 
     const char* path = argv[1];
+    OwnPtr<Profile> profile;
 
-    auto profile = Profile::load_from_file(path);
+    if (!strcmp(path, "perfcore")) {
+        profile = Profile::load_from_perfcore_file(path);
+    } else {
+        profile = Profile::load_from_file(path);
+    }
+
     if (!profile) {
         fprintf(stderr, "Unable to load profile '%s'\n", path);
         return 1;

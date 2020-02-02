@@ -26,8 +26,10 @@
 
 #include "Profile.h"
 #include "ProfileModel.h"
+#include <AK/MappedFile.h>
 #include <AK/QuickSort.h>
 #include <LibCore/CFile.h>
+#include <LibELF/ELFLoader.h>
 #include <stdio.h>
 
 static void sort_profile_nodes(Vector<NonnullRefPtr<ProfileNode>>& nodes)
@@ -50,6 +52,7 @@ Profile::Profile(const JsonArray& json)
 
     m_samples.ensure_capacity(m_json.size());
     for (auto& sample_value : m_json.values()) {
+
         auto& sample_object = sample_value.as_object();
 
         Sample sample;
@@ -153,6 +156,69 @@ void Profile::rebuild_tree()
 
     m_roots = move(roots);
     m_model->update();
+}
+
+OwnPtr<Profile> Profile::load_from_perfcore_file(const StringView& path)
+{
+    auto file = Core::File::construct(path);
+    if (!file->open(Core::IODevice::ReadOnly)) {
+        fprintf(stderr, "Unable to open %s, error: %s\n", String(path).characters(), file->error_string());
+        return nullptr;
+    }
+
+    auto json = JsonValue::from_string(file->read_all());
+    if (!json.is_object()) {
+        fprintf(stderr, "Invalid perfcore format (not a JSON object)\n");
+        return nullptr;
+    }
+
+    auto& object = json.as_object();
+    auto executable_path = object.get("executable").to_string();
+
+    MappedFile elf_file(executable_path);
+    if (!elf_file.is_valid()) {
+        fprintf(stderr, "Unable to open executable '%s' for symbolication.\n", executable_path.characters());
+        return nullptr;
+    }
+
+    auto elf_loader = make<ELFLoader>(static_cast<const u8*>(elf_file.data()), elf_file.size());
+
+    auto events_value = object.get("events");
+    if (!events_value.is_array())
+        return nullptr;
+
+    auto& perf_events = events_value.as_array();
+    if (perf_events.is_empty())
+        return nullptr;
+
+    JsonArray profile_events;
+
+    for (auto& perf_event_value : perf_events.values()) {
+        auto& perf_event = perf_event_value.as_object();
+
+        JsonObject object;
+        object.set("timestamp", perf_event.get("timestamp"));
+
+        JsonArray frames_array;
+        auto stack_array = perf_event.get("stack").as_array();
+
+        for (auto& frame : stack_array.values()) {
+            auto ptr = frame.to_number<u32>();
+            u32 offset = 0;
+            auto symbol = elf_loader->symbolicate(ptr, &offset);
+
+            JsonObject frame_object;
+            frame_object.set("address", ptr);
+            frame_object.set("symbol", symbol);
+            frame_object.set("offset", offset);
+            frames_array.append(move(frame_object));
+        }
+
+        object.set("frames", move(frames_array));
+        profile_events.append(move(object));
+    }
+
+    return NonnullOwnPtr<Profile>(NonnullOwnPtr<Profile>::Adopt, *new Profile(move(profile_events)));
 }
 
 OwnPtr<Profile> Profile::load_from_file(const StringView& path)
