@@ -36,7 +36,7 @@
 MainWidget::MainWidget(AudioEngine& audio_engine)
     : m_audio_engine(audio_engine)
 {
-    set_layout(make<GBoxLayout>(Orientation::Vertical));
+    set_layout(make<GVBoxLayout>());
     layout()->set_spacing(2);
     layout()->set_margins({ 2, 2, 2, 2 });
     set_fill_with_background_color(true);
@@ -50,7 +50,7 @@ MainWidget::MainWidget(AudioEngine& audio_engine)
     m_roll_widget->set_preferred_size(0, 300);
 
     m_keys_and_knobs_container = GWidget::construct(this);
-    m_keys_and_knobs_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    m_keys_and_knobs_container->set_layout(make<GHBoxLayout>());
     m_keys_and_knobs_container->layout()->set_spacing(2);
     m_keys_and_knobs_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_keys_and_knobs_container->set_preferred_size(0, 100);

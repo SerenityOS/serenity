@@ -38,12 +38,12 @@ SoundPlayerWidget::SoundPlayerWidget(GWindow& window, NonnullRefPtr<AClientConne
     , m_manager(connection)
 {
     set_fill_with_background_color(true);
-    set_layout(make<GBoxLayout>(Orientation::Vertical));
+    set_layout(make<GVBoxLayout>());
     layout()->set_margins({ 2, 2, 2, 2 });
 
     auto status_widget = GWidget::construct(this);
     status_widget->set_fill_with_background_color(true);
-    status_widget->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    status_widget->set_layout(make<GHBoxLayout>());
 
     m_elapsed = GLabel::construct(status_widget);
     m_elapsed->set_frame_shape(FrameShape::Container);
@@ -53,7 +53,7 @@ SoundPlayerWidget::SoundPlayerWidget(GWindow& window, NonnullRefPtr<AClientConne
     m_elapsed->set_preferred_size(80, 0);
 
     auto sample_widget_container = GWidget::construct(status_widget.ptr());
-    sample_widget_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    sample_widget_container->set_layout(make<GHBoxLayout>());
     sample_widget_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
 
     m_sample_widget = SampleWidget::construct(sample_widget_container);
@@ -72,7 +72,7 @@ SoundPlayerWidget::SoundPlayerWidget(GWindow& window, NonnullRefPtr<AClientConne
 
     auto control_widget = GWidget::construct(this);
     control_widget->set_fill_with_background_color(true);
-    control_widget->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    control_widget->set_layout(make<GHBoxLayout>());
     control_widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     control_widget->set_preferred_size(0, 30);
     control_widget->layout()->set_margins({ 10, 2, 10, 2 });

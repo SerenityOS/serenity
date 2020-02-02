@@ -98,7 +98,7 @@ int main(int argc, char** argv)
     auto background = GLabel::construct();
     window->set_main_widget(background);
     background->set_fill_with_background_color(true);
-    background->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    background->set_layout(make<GVBoxLayout>());
     background->layout()->set_margins({ 8, 8, 8, 8 });
     background->layout()->set_spacing(8);
     background->set_icon(load_png_from_memory((const u8*)&_binary_background_png_start, (size_t)&_binary_background_png_size));
@@ -121,13 +121,13 @@ int main(int argc, char** argv)
     //
 
     auto main_section = GWidget::construct(background.ptr());
-    main_section->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    main_section->set_layout(make<GHBoxLayout>());
     main_section->layout()->set_margins({ 0, 0, 0, 0 });
     main_section->layout()->set_spacing(8);
     main_section->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
 
     auto menu = GWidget::construct(main_section.ptr());
-    menu->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    menu->set_layout(make<GVBoxLayout>());
     menu->layout()->set_margins({ 0, 0, 0, 0 });
     menu->layout()->set_spacing(8);
     menu->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
@@ -138,7 +138,7 @@ int main(int argc, char** argv)
 
     for (auto& page : pages) {
         auto content = GWidget::construct(stack.ptr());
-        content->set_layout(make<GBoxLayout>(Orientation::Vertical));
+        content->set_layout(make<GVBoxLayout>());
         content->layout()->set_margins({ 0, 0, 0, 0 });
         content->layout()->set_spacing(8);
         content->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);

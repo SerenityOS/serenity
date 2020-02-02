@@ -47,15 +47,15 @@ void GColorPicker::build()
 {
     auto horizontal_container = GWidget::construct();
     horizontal_container->set_fill_with_background_color(true);
-    horizontal_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    horizontal_container->set_layout(make<GHBoxLayout>());
     horizontal_container->layout()->set_margins({ 4, 4, 4, 4 });
     set_main_widget(horizontal_container);
 
     auto left_vertical_container = GWidget::construct(horizontal_container.ptr());
-    left_vertical_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    left_vertical_container->set_layout(make<GVBoxLayout>());
 
     auto right_vertical_container = GWidget::construct(horizontal_container.ptr());
-    right_vertical_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    right_vertical_container->set_layout(make<GVBoxLayout>());
 
     enum RGBComponent {
         Red,

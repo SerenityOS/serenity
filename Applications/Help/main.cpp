@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
     window->set_rect(300, 200, 570, 500);
 
     auto widget = GWidget::construct();
-    widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    widget->set_layout(make<GVBoxLayout>());
     widget->layout()->set_spacing(0);
 
     auto toolbar = GToolBar::construct(widget);

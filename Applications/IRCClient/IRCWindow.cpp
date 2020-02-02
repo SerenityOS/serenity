@@ -42,7 +42,7 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
     , m_type(type)
     , m_name(name)
 {
-    set_layout(make<GBoxLayout>(Orientation::Vertical));
+    set_layout(make<GVBoxLayout>());
 
     // Make a container for the log buffer view + (optional) member list.
     auto container = GSplitter::construct(Orientation::Horizontal, this);

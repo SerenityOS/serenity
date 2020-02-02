@@ -82,7 +82,7 @@ void GMessageBox::build()
     int text_width = widget->font().width(m_text);
     int icon_width = 0;
 
-    widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    widget->set_layout(make<GVBoxLayout>());
     widget->set_fill_with_background_color(true);
 
     widget->layout()->set_margins({ 0, 15, 0, 15 });
@@ -91,7 +91,7 @@ void GMessageBox::build()
     RefPtr<GWidget> message_container = widget;
     if (m_type != Type::None) {
         message_container = GWidget::construct(widget.ptr());
-        message_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+        message_container->set_layout(make<GHBoxLayout>());
         message_container->layout()->set_margins({ 8, 0, 8, 0 });
         message_container->layout()->set_spacing(8);
 
@@ -107,7 +107,7 @@ void GMessageBox::build()
     label->set_preferred_size(text_width, 16);
 
     auto button_container = GWidget::construct(widget.ptr());
-    button_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    button_container->set_layout(make<GHBoxLayout>());
     button_container->layout()->set_spacing(5);
     button_container->layout()->set_margins({ 15, 0, 15, 0 });
 

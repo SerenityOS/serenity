@@ -52,13 +52,13 @@ MemoryStatsWidget::MemoryStatsWidget(GraphWidget& graph, GWidget* parent)
     set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     set_preferred_size(0, 72);
 
-    set_layout(make<GBoxLayout>(Orientation::Vertical));
+    set_layout(make<GVBoxLayout>());
     layout()->set_margins({ 0, 8, 0, 0 });
     layout()->set_spacing(3);
 
     auto build_widgets_for_label = [this](const String& description) -> RefPtr<GLabel> {
         auto container = GWidget::construct(this);
-        container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+        container->set_layout(make<GHBoxLayout>());
         container->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
         container->set_preferred_size(275, 12);
         auto description_label = GLabel::construct(description, container);

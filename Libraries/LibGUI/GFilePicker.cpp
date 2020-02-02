@@ -81,16 +81,16 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
     set_rect(200, 200, 700, 400);
     auto horizontal_container = GWidget::construct();
     set_main_widget(horizontal_container);
-    horizontal_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    horizontal_container->set_layout(make<GHBoxLayout>());
     horizontal_container->layout()->set_margins({ 4, 4, 4, 4 });
     horizontal_container->set_fill_with_background_color(true);
 
     auto vertical_container = GWidget::construct(horizontal_container.ptr());
-    vertical_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    vertical_container->set_layout(make<GVBoxLayout>());
     vertical_container->layout()->set_spacing(4);
 
     auto upper_container = GWidget::construct(vertical_container.ptr());
-    upper_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    upper_container->set_layout(make<GHBoxLayout>());
     upper_container->layout()->set_spacing(4);
     upper_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     upper_container->set_preferred_size(0, 26);
@@ -148,7 +148,7 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
     toolbar->add_action(*mkdir_action);
 
     auto lower_container = GWidget::construct(vertical_container.ptr());
-    lower_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    lower_container->set_layout(make<GVBoxLayout>());
     lower_container->layout()->set_spacing(4);
     lower_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     lower_container->set_preferred_size(0, 60);
@@ -156,7 +156,7 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
     auto filename_container = GWidget::construct(lower_container.ptr());
     filename_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     filename_container->set_preferred_size(0, 20);
-    filename_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    filename_container->set_layout(make<GHBoxLayout>());
     auto filename_label = GLabel::construct("File name:", filename_container);
     filename_label->set_text_alignment(TextAlignment::CenterLeft);
     filename_label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
@@ -187,7 +187,7 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
     auto button_container = GWidget::construct(lower_container.ptr());
     button_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     button_container->set_preferred_size(0, 20);
-    button_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    button_container->set_layout(make<GHBoxLayout>());
     button_container->layout()->set_spacing(4);
     button_container->layout()->add_spacer();
 
@@ -227,7 +227,7 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
     preview_container->set_frame_shape(FrameShape::Container);
     preview_container->set_frame_shadow(FrameShadow::Sunken);
     preview_container->set_frame_thickness(2);
-    preview_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    preview_container->set_layout(make<GVBoxLayout>());
     preview_container->layout()->set_margins({ 8, 8, 8, 8 });
 
     m_preview_image_label = GLabel::construct(preview_container);

@@ -108,7 +108,7 @@ RefPtr<GWindow> make_toolbox_window()
 
     auto widget = GWidget::construct();
     widget->set_fill_with_background_color(true);
-    widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    widget->set_layout(make<GVBoxLayout>());
     widget->layout()->set_spacing(0);
     window->set_main_widget(widget);
 

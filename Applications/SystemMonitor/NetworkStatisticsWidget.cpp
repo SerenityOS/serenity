@@ -34,12 +34,12 @@ NetworkStatisticsWidget::NetworkStatisticsWidget(GWidget* parent)
     : GLazyWidget(parent)
 {
     on_first_show = [this](auto&) {
-        set_layout(make<GBoxLayout>(Orientation::Vertical));
+        set_layout(make<GVBoxLayout>());
         layout()->set_margins({ 4, 4, 4, 4 });
         set_fill_with_background_color(true);
 
         auto adapters_group_box = GGroupBox::construct("Adapters", this);
-        adapters_group_box->set_layout(make<GBoxLayout>(Orientation::Vertical));
+        adapters_group_box->set_layout(make<GVBoxLayout>());
         adapters_group_box->layout()->set_margins({ 6, 16, 6, 6 });
         adapters_group_box->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
         adapters_group_box->set_preferred_size(0, 120);
@@ -59,7 +59,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget(GWidget* parent)
         m_adapter_table_view->set_model(GJsonArrayModel::create("/proc/net/adapters", move(net_adapters_fields)));
 
         auto sockets_group_box = GGroupBox::construct("Sockets", this);
-        sockets_group_box->set_layout(make<GBoxLayout>(Orientation::Vertical));
+        sockets_group_box->set_layout(make<GVBoxLayout>());
         sockets_group_box->layout()->set_margins({ 6, 16, 6, 6 });
         sockets_group_box->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
         sockets_group_box->set_preferred_size(0, 0);

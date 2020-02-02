@@ -182,7 +182,7 @@ void IRCAppWindow::setup_widgets()
     auto widget = GWidget::construct();
     set_main_widget(widget);
     widget->set_fill_with_background_color(true);
-    widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    widget->set_layout(make<GVBoxLayout>());
     widget->layout()->set_spacing(0);
 
     auto toolbar = GToolBar::construct(widget);
@@ -197,7 +197,7 @@ void IRCAppWindow::setup_widgets()
     toolbar->add_action(*m_close_query_action);
 
     auto outer_container = GWidget::construct(widget.ptr());
-    outer_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    outer_container->set_layout(make<GVBoxLayout>());
     outer_container->layout()->set_margins({ 2, 0, 2, 2 });
 
     auto horizontal_container = GSplitter::construct(Orientation::Horizontal, outer_container);

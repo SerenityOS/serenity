@@ -32,7 +32,7 @@
 ProcessUnveiledPathsWidget::ProcessUnveiledPathsWidget(GWidget* parent)
     : GWidget(parent)
 {
-    set_layout(make<GBoxLayout>(Orientation::Vertical));
+    set_layout(make<GVBoxLayout>());
     layout()->set_margins({ 4, 4, 4, 4 });
     m_table_view = GTableView::construct(this);
     m_table_view->set_size_columns_to_fit_content(true);

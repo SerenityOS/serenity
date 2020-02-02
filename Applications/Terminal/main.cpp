@@ -135,11 +135,11 @@ RefPtr<GWindow> create_settings_window(TerminalWidget& terminal, RefPtr<CConfigF
     window->set_main_widget(settings);
     settings->set_fill_with_background_color(true);
     settings->set_background_role(ColorRole::Button);
-    settings->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    settings->set_layout(make<GVBoxLayout>());
     settings->layout()->set_margins({ 4, 4, 4, 4 });
 
     auto radio_container = GGroupBox::construct("Bell Mode", settings);
-    radio_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    radio_container->set_layout(make<GVBoxLayout>());
     radio_container->layout()->set_margins({ 6, 16, 6, 6 });
     radio_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     radio_container->set_preferred_size(100, 70);
@@ -153,7 +153,7 @@ RefPtr<GWindow> create_settings_window(TerminalWidget& terminal, RefPtr<CConfigF
     };
 
     auto slider_container = GGroupBox::construct("Background Opacity", settings);
-    slider_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    slider_container->set_layout(make<GVBoxLayout>());
     slider_container->layout()->set_margins({ 6, 16, 6, 6 });
     slider_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     slider_container->set_preferred_size(100, 50);

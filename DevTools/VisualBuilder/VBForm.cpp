@@ -66,13 +66,13 @@ VBForm::VBForm(const String& name, GWidget* parent)
     m_context_menu->add_action(GAction::create("Lay out horizontally", load_png("/res/icons/16x16/layout-horizontally.png"), [this](auto&) {
         if (auto* widget = single_selected_widget()) {
             dbg() << "Giving " << *widget->gwidget() << " a horizontal box layout";
-            widget->gwidget()->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+            widget->gwidget()->set_layout(make<GHBoxLayout>());
         }
     }));
     m_context_menu->add_action(GAction::create("Lay out vertically", load_png("/res/icons/16x16/layout-vertically.png"), [this](auto&) {
         if (auto* widget = single_selected_widget()) {
             dbg() << "Giving " << *widget->gwidget() << " a vertical box layout";
-            widget->gwidget()->set_layout(make<GBoxLayout>(Orientation::Vertical));
+            widget->gwidget()->set_layout(make<GVBoxLayout>());
         }
     }));
     m_context_menu->add_separator();
