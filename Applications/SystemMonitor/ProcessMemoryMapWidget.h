@@ -31,12 +31,14 @@
 namespace Core {
 class Timer;
 }
+namespace GUI {
+class JsonArrayModel;
+class TableView;
+}
 
-class GJsonArrayModel;
-class GTableView;
-
-class ProcessMemoryMapWidget final : public GWidget {
+class ProcessMemoryMapWidget final : public GUI::Widget {
     C_OBJECT(ProcessMemoryMapWidget);
+
 public:
     virtual ~ProcessMemoryMapWidget() override;
 
@@ -44,9 +46,9 @@ public:
     void refresh();
 
 private:
-    explicit ProcessMemoryMapWidget(GWidget* parent);
-    RefPtr<GTableView> m_table_view;
-    RefPtr<GJsonArrayModel> m_json_model;
+    explicit ProcessMemoryMapWidget(GUI::Widget* parent);
+    RefPtr<GUI::TableView> m_table_view;
+    RefPtr<GUI::JsonArrayModel> m_json_model;
     pid_t m_pid { -1 };
     RefPtr<Core::Timer> m_timer;
 };

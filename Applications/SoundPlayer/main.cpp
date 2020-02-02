@@ -43,7 +43,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
     if (pledge("stdio shared_buffer accept rpath unix", nullptr) < 0) {
         perror("pledge");
@@ -58,14 +58,14 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    auto window = GWindow::construct();
+    auto window = GUI::Window::construct();
     window->set_title("SoundPlayer");
     window->set_resizable(false);
     window->set_rect(300, 300, 350, 140);
     window->set_icon(GraphicsBitmap::load_from_file("/res/icons/16x16/app-sound-player.png"));
 
-    auto menubar = make<GMenuBar>();
-    auto app_menu = GMenu::construct("SoundPlayer");
+    auto menubar = make<GUI::MenuBar>();
+    auto app_menu = GUI::Menu::construct("SoundPlayer");
     auto player = SoundPlayerWidget::construct(window, audio_client);
 
     if (argc > 1) {
@@ -74,27 +74,27 @@ int main(int argc, char** argv)
         player->manager().play();
     }
 
-    auto hide_scope = GAction::create("Hide scope", { Mod_Ctrl, Key_H }, [&](GAction& action) {
+    auto hide_scope = GUI::Action::create("Hide scope", { Mod_Ctrl, Key_H }, [&](GUI::Action& action) {
         action.set_checked(!action.is_checked());
         player->hide_scope(action.is_checked());
     });
     hide_scope->set_checkable(true);
 
-    app_menu->add_action(GCommonActions::make_open_action([&](auto&) {
-        Optional<String> path = GFilePicker::get_open_filepath("Open wav file...");
+    app_menu->add_action(GUI::CommonActions::make_open_action([&](auto&) {
+        Optional<String> path = GUI::FilePicker::get_open_filepath("Open wav file...");
         if (path.has_value()) {
             player->open_file(path.value());
         }
     }));
     app_menu->add_action(move(hide_scope));
     app_menu->add_separator();
-    app_menu->add_action(GCommonActions::make_quit_action([&](auto&) {
+    app_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app.quit();
     }));
 
-    auto help_menu = GMenu::construct("Help");
-    help_menu->add_action(GAction::create("About", [](auto&) {
-        GAboutDialog::show("SoundPlayer", GraphicsBitmap::load_from_file("/res/icons/32x32/app-sound-player.png"));
+    auto help_menu = GUI::Menu::construct("Help");
+    help_menu->add_action(GUI::Action::create("About", [](auto&) {
+        GUI::AboutDialog::show("SoundPlayer", GraphicsBitmap::load_from_file("/res/icons/32x32/app-sound-player.png"));
     }));
 
     menubar->add_menu(move(app_menu));

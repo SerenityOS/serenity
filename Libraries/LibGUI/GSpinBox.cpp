@@ -28,10 +28,12 @@
 #include <LibGUI/GSpinBox.h>
 #include <LibGUI/GTextEditor.h>
 
-GSpinBox::GSpinBox(GWidget* parent)
-    : GWidget(parent)
+namespace GUI {
+
+SpinBox::SpinBox(Widget* parent)
+    : Widget(parent)
 {
-    m_editor = GTextEditor::construct(GTextEditor::Type::SingleLine, this);
+    m_editor = TextEditor::construct(TextEditor::Type::SingleLine, this);
     m_editor->set_text("0");
     m_editor->on_change = [this] {
         bool ok;
@@ -41,23 +43,23 @@ GSpinBox::GSpinBox(GWidget* parent)
         else
             m_editor->set_text(String::number(m_value));
     };
-    m_increment_button = GButton::construct(this);
+    m_increment_button = Button::construct(this);
     m_increment_button->set_focusable(false);
     m_increment_button->set_text("\xc3\xb6");
-    m_increment_button->on_click = [this](GButton&) { set_value(m_value + 1); };
+    m_increment_button->on_click = [this](auto&) { set_value(m_value + 1); };
     m_increment_button->set_auto_repeat_interval(150);
-    m_decrement_button = GButton::construct(this);
+    m_decrement_button = Button::construct(this);
     m_decrement_button->set_focusable(false);
     m_decrement_button->set_text("\xc3\xb7");
-    m_decrement_button->on_click = [this](GButton&) { set_value(m_value - 1); };
+    m_decrement_button->on_click = [this](auto&) { set_value(m_value - 1); };
     m_decrement_button->set_auto_repeat_interval(150);
 }
 
-GSpinBox::~GSpinBox()
+SpinBox::~SpinBox()
 {
 }
 
-void GSpinBox::set_value(int value)
+void SpinBox::set_value(int value)
 {
     value = clamp(value, m_min, m_max);
     if (m_value == value)
@@ -69,7 +71,7 @@ void GSpinBox::set_value(int value)
         on_change(value);
 }
 
-void GSpinBox::set_range(int min, int max)
+void SpinBox::set_range(int min, int max)
 {
     ASSERT(min <= max);
     if (m_min == min && m_max == max)
@@ -86,7 +88,7 @@ void GSpinBox::set_range(int min, int max)
     update();
 }
 
-void GSpinBox::resize_event(GResizeEvent& event)
+void SpinBox::resize_event(ResizeEvent& event)
 {
     int frame_thickness = m_editor->frame_thickness();
     int button_height = (event.size().height() / 2) - frame_thickness;
@@ -94,4 +96,6 @@ void GSpinBox::resize_event(GResizeEvent& event)
     m_increment_button->set_relative_rect(width() - button_width - frame_thickness, frame_thickness, button_width, button_height);
     m_decrement_button->set_relative_rect(width() - button_width - frame_thickness, frame_thickness + button_height, button_width, button_height);
     m_editor->set_relative_rect(0, 0, width(), height());
+}
+
 }

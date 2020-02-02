@@ -52,12 +52,12 @@ LineTool::~LineTool()
 {
 }
 
-void LineTool::on_mousedown(GMouseEvent& event)
+void LineTool::on_mousedown(GUI::MouseEvent& event)
 {
-    if (event.button() != GMouseButton::Left && event.button() != GMouseButton::Right)
+    if (event.button() != GUI::MouseButton::Left && event.button() != GUI::MouseButton::Right)
         return;
 
-    if (m_drawing_button != GMouseButton::None)
+    if (m_drawing_button != GUI::MouseButton::None)
         return;
 
     m_drawing_button = event.button();
@@ -66,19 +66,19 @@ void LineTool::on_mousedown(GMouseEvent& event)
     m_widget->update();
 }
 
-void LineTool::on_mouseup(GMouseEvent& event)
+void LineTool::on_mouseup(GUI::MouseEvent& event)
 {
     if (event.button() == m_drawing_button) {
-        GPainter painter(m_widget->bitmap());
+        GUI::Painter painter(m_widget->bitmap());
         painter.draw_line(m_line_start_position, m_line_end_position, m_widget->color_for(m_drawing_button), m_thickness);
-        m_drawing_button = GMouseButton::None;
+        m_drawing_button = GUI::MouseButton::None;
         m_widget->update();
     }
 }
 
-void LineTool::on_mousemove(GMouseEvent& event)
+void LineTool::on_mousemove(GUI::MouseEvent& event)
 {
-    if (m_drawing_button == GMouseButton::None)
+    if (m_drawing_button == GUI::MouseButton::None)
         return;
 
     if (!m_widget->rect().contains(event.position()))
@@ -93,20 +93,20 @@ void LineTool::on_mousemove(GMouseEvent& event)
     m_widget->update();
 }
 
-void LineTool::on_second_paint(GPaintEvent& event)
+void LineTool::on_second_paint(GUI::PaintEvent& event)
 {
-    if (m_drawing_button == GMouseButton::None)
+    if (m_drawing_button == GUI::MouseButton::None)
         return;
 
-    GPainter painter(*m_widget);
+    GUI::Painter painter(*m_widget);
     painter.add_clip_rect(event.rect());
     painter.draw_line(m_line_start_position, m_line_end_position, m_widget->color_for(m_drawing_button), m_thickness);
 }
 
-void LineTool::on_keydown(GKeyEvent& event)
+void LineTool::on_keydown(GUI::KeyEvent& event)
 {
-    if (event.key() == Key_Escape && m_drawing_button != GMouseButton::None) {
-        m_drawing_button = GMouseButton::None;
+    if (event.key() == Key_Escape && m_drawing_button != GUI::MouseButton::None) {
+        m_drawing_button = GUI::MouseButton::None;
         m_widget->update();
         event.accept();
     }
@@ -118,7 +118,7 @@ void LineTool::on_keydown(GKeyEvent& event)
     }
 }
 
-void LineTool::on_keyup(GKeyEvent& event)
+void LineTool::on_keyup(GUI::KeyEvent& event)
 {
     if (event.key() == Key_Shift) {
         m_constrain_angle = false;
@@ -127,13 +127,13 @@ void LineTool::on_keyup(GKeyEvent& event)
     }
 }
 
-void LineTool::on_contextmenu(GContextMenuEvent& event)
+void LineTool::on_contextmenu(GUI::ContextMenuEvent& event)
 {
     if (!m_context_menu) {
-        m_context_menu = GMenu::construct();
+        m_context_menu = GUI::Menu::construct();
         m_thickness_actions.set_exclusive(true);
         auto insert_action = [&](int size, bool checked = false) {
-            auto action = GAction::create(String::number(size), [this, size](auto& action) {
+            auto action = GUI::Action::create(String::number(size), [this, size](auto& action) {
                 m_thickness = size;
                 action.set_checked(true);
             });

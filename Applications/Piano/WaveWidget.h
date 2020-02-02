@@ -29,18 +29,17 @@
 
 #include <LibGUI/GFrame.h>
 
-class GPainter;
 class AudioEngine;
 
-class WaveWidget final : public GFrame {
+class WaveWidget final : public GUI::Frame {
     C_OBJECT(WaveWidget)
 public:
     virtual ~WaveWidget() override;
 
 private:
-    WaveWidget(GWidget* parent, AudioEngine&);
+    WaveWidget(GUI::Widget* parent, AudioEngine&);
 
-    virtual void paint_event(GPaintEvent&) override;
+    virtual void paint_event(GUI::PaintEvent&) override;
 
     int sample_to_y(int sample) const;
 

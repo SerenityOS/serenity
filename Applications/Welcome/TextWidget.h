@@ -31,11 +31,11 @@
 #include <LibDraw/TextAlignment.h>
 #include <LibGUI/GFrame.h>
 
-class TextWidget : public GFrame {
+class TextWidget : public GUI::Frame {
     C_OBJECT(TextWidget)
 public:
-    explicit TextWidget(GWidget* parent = nullptr);
-    TextWidget(const StringView& text, GWidget* parent = nullptr);
+    explicit TextWidget(GUI::Widget* parent = nullptr);
+    TextWidget(const StringView& text, GUI::Widget* parent = nullptr);
     virtual ~TextWidget() override;
 
     String text() const { return m_text; }
@@ -53,8 +53,8 @@ public:
     void wrap_and_set_height();
 
 private:
-    virtual void paint_event(GPaintEvent&) override;
-    virtual void resize_event(GResizeEvent&) override;
+    virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void resize_event(GUI::ResizeEvent&) override;
 
     String m_text;
     Vector<String> m_lines;

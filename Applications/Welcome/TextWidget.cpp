@@ -31,13 +31,13 @@
 #include <LibDraw/Palette.h>
 #include <LibGUI/GPainter.h>
 
-TextWidget::TextWidget(GWidget* parent)
-    : GFrame(parent)
+TextWidget::TextWidget(GUI::Widget* parent)
+    : GUI::Frame(parent)
 {
 }
 
-TextWidget::TextWidget(const StringView& text, GWidget* parent)
-    : GFrame(parent)
+TextWidget::TextWidget(const StringView& text, GUI::Widget* parent)
+    : GUI::Frame(parent)
     , m_text(text)
 {
 }
@@ -55,11 +55,11 @@ void TextWidget::set_text(const StringView& text)
     update();
 }
 
-void TextWidget::paint_event(GPaintEvent& event)
+void TextWidget::paint_event(GUI::PaintEvent& event)
 {
-    GFrame::paint_event(event);
+    GUI::Frame::paint_event(event);
 
-    GPainter painter(*this);
+    GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
     int indent = 0;
@@ -83,10 +83,10 @@ void TextWidget::paint_event(GPaintEvent& event)
     }
 }
 
-void TextWidget::resize_event(GResizeEvent& event)
+void TextWidget::resize_event(GUI::ResizeEvent& event)
 {
     wrap_and_set_height();
-    GWidget::resize_event(event);
+    GUI::Widget::resize_event(event);
 }
 
 void TextWidget::wrap_and_set_height()
@@ -136,6 +136,6 @@ void TextWidget::wrap_and_set_height()
 
     m_lines = lines;
 
-    set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     set_preferred_size(0, m_lines.size() * m_line_height + frame_thickness() * 2);
 }

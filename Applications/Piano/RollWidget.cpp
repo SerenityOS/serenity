@@ -33,8 +33,8 @@
 constexpr int note_height = 20;
 constexpr int roll_height = note_count * note_height;
 
-RollWidget::RollWidget(GWidget* parent, AudioEngine& audio_engine)
-    : GScrollableWidget(parent)
+RollWidget::RollWidget(GUI::Widget* parent, AudioEngine& audio_engine)
+    : ScrollableWidget(parent)
     , m_audio_engine(audio_engine)
 {
     set_frame_thickness(2);
@@ -50,7 +50,7 @@ RollWidget::~RollWidget()
 {
 }
 
-void RollWidget::paint_event(GPaintEvent& event)
+void RollWidget::paint_event(GUI::PaintEvent& event)
 {
     int roll_width = widget_inner_rect().width();
     double note_width = static_cast<double>(roll_width) / m_horizontal_notes;
@@ -68,7 +68,7 @@ void RollWidget::paint_event(GPaintEvent& event)
     int notes_to_paint = paint_area / note_height;
     int key_pattern_index = (notes_per_octave - 1) - (note_offset % notes_per_octave);
 
-    GPainter painter(*this);
+    GUI::Painter painter(*this);
     painter.translate(frame_thickness(), frame_thickness());
     painter.translate(0, -note_offset_remainder);
 
@@ -99,10 +99,10 @@ void RollWidget::paint_event(GPaintEvent& event)
             key_pattern_index = notes_per_octave - 1;
     }
 
-    GFrame::paint_event(event);
+    GUI::Frame::paint_event(event);
 }
 
-void RollWidget::mousedown_event(GMouseEvent& event)
+void RollWidget::mousedown_event(GUI::MouseEvent& event)
 {
     if (!widget_inner_rect().contains(event.x(), event.y()))
         return;

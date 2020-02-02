@@ -28,10 +28,13 @@
 
 #include <LibGUI/GWidget.h>
 
-class GLabel;
+namespace GUI {
+class Label;
+}
+
 class Editor;
 
-class EditorWrapper : public GWidget {
+class EditorWrapper : public GUI::Widget {
     C_OBJECT(EditorWrapper)
 public:
     virtual ~EditorWrapper() override;
@@ -39,15 +42,15 @@ public:
     Editor& editor() { return *m_editor; }
     const Editor& editor() const { return *m_editor; }
 
-    GLabel& filename_label() { return *m_filename_label; }
+    GUI::Label& filename_label() { return *m_filename_label; }
 
     void set_editor_has_focus(Badge<Editor>, bool);
 
 private:
-    explicit EditorWrapper(GWidget* parent = nullptr);
+    explicit EditorWrapper(GUI::Widget* parent = nullptr);
 
-    RefPtr<GLabel> m_filename_label;
-    RefPtr<GLabel> m_cursor_label;
+    RefPtr<GUI::Label> m_filename_label;
+    RefPtr<GUI::Label> m_cursor_label;
     RefPtr<Editor> m_editor;
 };
 

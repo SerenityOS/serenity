@@ -29,18 +29,20 @@
 #include <AK/HashTable.h>
 #include <LibGUI/GModelIndex.h>
 
-class GAbstractView;
+namespace GUI {
 
-class GModelSelection {
+class AbstractView;
+
+class ModelSelection {
 public:
-    GModelSelection(GAbstractView& view)
+    ModelSelection(AbstractView& view)
         : m_view(view)
     {
     }
 
     int size() const { return m_indexes.size(); }
     bool is_empty() const { return m_indexes.is_empty(); }
-    bool contains(const GModelIndex& index) const { return m_indexes.contains(index); }
+    bool contains(const ModelIndex& index) const { return m_indexes.contains(index); }
     bool contains_row(int row) const
     {
         for (auto& index : m_indexes) {
@@ -50,10 +52,10 @@ public:
         return false;
     }
 
-    void set(const GModelIndex&);
-    void add(const GModelIndex&);
-    void toggle(const GModelIndex&);
-    bool remove(const GModelIndex&);
+    void set(const ModelIndex&);
+    void add(const ModelIndex&);
+    void toggle(const ModelIndex&);
+    bool remove(const ModelIndex&);
     void clear();
 
     template<typename Callback>
@@ -70,9 +72,9 @@ public:
             callback(index);
     }
 
-    Vector<GModelIndex> indexes() const
+    Vector<ModelIndex> indexes() const
     {
-        Vector<GModelIndex> selected_indexes;
+        Vector<ModelIndex> selected_indexes;
 
         for (auto& index : m_indexes)
             selected_indexes.append(index);
@@ -81,7 +83,7 @@ public:
     }
 
     // FIXME: This doesn't guarantee that what you get is the lowest or "first" index selected..
-    GModelIndex first() const
+    ModelIndex first() const
     {
         if (m_indexes.is_empty())
             return {};
@@ -89,6 +91,8 @@ public:
     }
 
 private:
-    GAbstractView& m_view;
-    HashTable<GModelIndex> m_indexes;
+    AbstractView& m_view;
+    HashTable<ModelIndex> m_indexes;
 };
+
+}

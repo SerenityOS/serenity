@@ -31,7 +31,7 @@
 
 class RemoteObject;
 
-class RemoteObjectPropertyModel final : public GModel {
+class RemoteObjectPropertyModel final : public GUI::Model {
 public:
     virtual ~RemoteObjectPropertyModel() override {}
     static NonnullRefPtr<RemoteObjectPropertyModel> create(RemoteObject& object)
@@ -45,10 +45,10 @@ public:
         __Count,
     };
 
-    virtual int row_count(const GModelIndex& = GModelIndex()) const override;
-    virtual int column_count(const GModelIndex& = GModelIndex()) const override { return Column::__Count; }
+    virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
+    virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return Column::__Count; }
     virtual String column_name(int) const override;
-    virtual GVariant data(const GModelIndex&, Role = Role::Display) const override;
+    virtual GUI::Variant data(const GUI::ModelIndex&, Role = Role::Display) const override;
     virtual void update() override;
 
 private:

@@ -40,15 +40,28 @@
 #include <LibGUI/GEvent.h>
 #include <LibGUI/GShortcut.h>
 
-#define REGISTER_GWIDGET(class_name)                           \
-    extern GWidgetClassRegistration registration_##class_name; \
-    GWidgetClassRegistration registration_##class_name(#class_name, [](GWidget* parent) { return class_name::construct(parent); });
+#define REGISTER_GWIDGET(class_name)                          \
+    extern WidgetClassRegistration registration_##class_name; \
+    WidgetClassRegistration registration_##class_name(#class_name, [](Widget* parent) { return class_name::construct(parent); });
 
-class GAction;
-class GLayout;
-class GMenu;
-class GWindow;
 class GraphicsBitmap;
+
+namespace GUI {
+class Widget;
+}
+
+template<>
+inline bool Core::is<GUI::Widget>(const Core::Object& object)
+{
+    return object.is_widget();
+}
+
+namespace GUI {
+
+class Action;
+class Layout;
+class Menu;
+class Window;
 
 enum class SizePolicy {
     Fixed,
@@ -74,34 +87,34 @@ enum class VerticalDirection {
     Down
 };
 
-class GWidget;
+class Widget;
 
-class GWidgetClassRegistration {
-    AK_MAKE_NONCOPYABLE(GWidgetClassRegistration)
-    AK_MAKE_NONMOVABLE(GWidgetClassRegistration)
+class WidgetClassRegistration {
+    AK_MAKE_NONCOPYABLE(WidgetClassRegistration)
+    AK_MAKE_NONMOVABLE(WidgetClassRegistration)
 public:
-    GWidgetClassRegistration(const String& class_name, Function<NonnullRefPtr<GWidget>(GWidget*)> factory);
-    ~GWidgetClassRegistration();
+    WidgetClassRegistration(const String& class_name, Function<NonnullRefPtr<Widget>(Widget*)> factory);
+    ~WidgetClassRegistration();
 
     String class_name() const { return m_class_name; }
-    NonnullRefPtr<GWidget> construct(GWidget* parent) const { return m_factory(parent); }
+    NonnullRefPtr<Widget> construct(Widget* parent) const { return m_factory(parent); }
 
-    static void for_each(Function<void(const GWidgetClassRegistration&)>);
-    static const GWidgetClassRegistration* find(const String& class_name);
+    static void for_each(Function<void(const WidgetClassRegistration&)>);
+    static const WidgetClassRegistration* find(const String& class_name);
 
 private:
     String m_class_name;
-    Function<NonnullRefPtr<GWidget>(GWidget*)> m_factory;
+    Function<NonnullRefPtr<Widget>(Widget*)> m_factory;
 };
 
-class GWidget : public Core::Object {
-    C_OBJECT(GWidget)
+class Widget : public Core::Object {
+    C_OBJECT(Widget)
 public:
-    virtual ~GWidget() override;
+    virtual ~Widget() override;
 
-    GLayout* layout() { return m_layout.ptr(); }
-    const GLayout* layout() const { return m_layout.ptr(); }
-    void set_layout(OwnPtr<GLayout>&&);
+    Layout* layout() { return m_layout.ptr(); }
+    const Layout* layout() const { return m_layout.ptr(); }
+    void set_layout(OwnPtr<Layout>&&);
 
     SizePolicy horizontal_size_policy() const { return m_horizontal_size_policy; }
     SizePolicy vertical_size_policy() const { return m_vertical_size_policy; }
@@ -126,7 +139,7 @@ public:
     virtual void event(Core::Event&) override;
 
     // This is called after children have been painted.
-    virtual void second_paint_event(GPaintEvent&);
+    virtual void second_paint_event(PaintEvent&);
 
     Rect relative_rect() const { return m_relative_rect; }
     Point relative_position() const { return m_relative_rect.location(); }
@@ -154,11 +167,11 @@ public:
     enum class ShouldRespectGreediness { No = 0,
         Yes };
     struct HitTestResult {
-        GWidget* widget { nullptr };
+        Widget* widget { nullptr };
         Point local_position;
     };
     HitTestResult hit_test(const Point&, ShouldRespectGreediness = ShouldRespectGreediness::Yes);
-    GWidget* child_at(const Point&) const;
+    Widget* child_at(const Point&) const;
 
     void set_relative_rect(const Rect&);
     void set_relative_rect(int x, int y, int width, int height) { set_relative_rect({ x, y, width, height }); }
@@ -193,24 +206,24 @@ public:
 
     void set_autofill(bool b) { set_fill_with_background_color(b); }
 
-    GWindow* window()
+    Window* window()
     {
         if (auto* pw = parent_widget())
             return pw->window();
         return m_window;
     }
 
-    const GWindow* window() const
+    const Window* window() const
     {
         if (auto* pw = parent_widget())
             return pw->window();
         return m_window;
     }
 
-    void set_window(GWindow*);
+    void set_window(Window*);
 
-    GWidget* parent_widget();
-    const GWidget* parent_widget() const;
+    Widget* parent_widget();
+    const Widget* parent_widget() const;
 
     void set_fill_with_background_color(bool b) { m_fill_with_background_color = b; }
     bool fill_with_background_color() const { return m_fill_with_background_color; }
@@ -222,7 +235,7 @@ public:
     void set_global_cursor_tracking(bool);
     bool global_cursor_tracking() const;
 
-    void notify_layout_changed(Badge<GLayout>);
+    void notify_layout_changed(Badge<Layout>);
     void invalidate_layout();
 
     bool is_visible() const { return m_visible; }
@@ -239,19 +252,19 @@ public:
     bool is_frontmost() const;
     bool is_backmost() const;
 
-    GAction* action_for_key_event(const GKeyEvent&);
+    Action* action_for_key_event(const KeyEvent&);
 
     template<typename Callback>
     void for_each_child_widget(Callback callback)
     {
         for_each_child([&](auto& child) {
-            if (Core::is<GWidget>(child))
-                return callback(Core::to<GWidget>(child));
+            if (Core::is<Widget>(child))
+                return callback(Core::to<Widget>(child));
             return IterationDecision::Continue;
         });
     }
 
-    Vector<GWidget*> child_widgets() const;
+    Vector<Widget*> child_widgets() const;
 
     virtual bool is_radio_button() const { return false; }
     virtual bool is_abstract_button() const { return false; }
@@ -264,44 +277,44 @@ public:
     void set_palette(const Palette&);
 
 protected:
-    explicit GWidget(GWidget* parent = nullptr);
+    explicit Widget(Widget* parent = nullptr);
 
     virtual void custom_layout() {}
     virtual void did_change_font() {}
-    virtual void paint_event(GPaintEvent&);
-    virtual void resize_event(GResizeEvent&);
-    virtual void show_event(GShowEvent&);
-    virtual void hide_event(GHideEvent&);
-    virtual void keydown_event(GKeyEvent&);
-    virtual void keyup_event(GKeyEvent&);
-    virtual void mousemove_event(GMouseEvent&);
-    virtual void mousedown_event(GMouseEvent&);
-    virtual void mouseup_event(GMouseEvent&);
-    virtual void mousewheel_event(GMouseEvent&);
-    virtual void click_event(GMouseEvent&);
-    virtual void doubleclick_event(GMouseEvent&);
-    virtual void context_menu_event(GContextMenuEvent&);
+    virtual void paint_event(PaintEvent&);
+    virtual void resize_event(ResizeEvent&);
+    virtual void show_event(ShowEvent&);
+    virtual void hide_event(HideEvent&);
+    virtual void keydown_event(KeyEvent&);
+    virtual void keyup_event(KeyEvent&);
+    virtual void mousemove_event(MouseEvent&);
+    virtual void mousedown_event(MouseEvent&);
+    virtual void mouseup_event(MouseEvent&);
+    virtual void mousewheel_event(MouseEvent&);
+    virtual void click_event(MouseEvent&);
+    virtual void doubleclick_event(MouseEvent&);
+    virtual void context_menu_event(ContextMenuEvent&);
     virtual void focusin_event(Core::Event&);
     virtual void focusout_event(Core::Event&);
     virtual void enter_event(Core::Event&);
     virtual void leave_event(Core::Event&);
     virtual void child_event(Core::ChildEvent&) override;
-    virtual void change_event(GEvent&);
-    virtual void drop_event(GDropEvent&);
+    virtual void change_event(Event&);
+    virtual void drop_event(DropEvent&);
 
 private:
-    void handle_paint_event(GPaintEvent&);
-    void handle_resize_event(GResizeEvent&);
-    void handle_mousedown_event(GMouseEvent&);
-    void handle_mousedoubleclick_event(GMouseEvent&);
-    void handle_mouseup_event(GMouseEvent&);
+    void handle_paint_event(PaintEvent&);
+    void handle_resize_event(ResizeEvent&);
+    void handle_mousedown_event(MouseEvent&);
+    void handle_mousedoubleclick_event(MouseEvent&);
+    void handle_mouseup_event(MouseEvent&);
     void handle_enter_event(Core::Event&);
     void handle_leave_event(Core::Event&);
     void focus_previous_widget();
     void focus_next_widget();
 
-    GWindow* m_window { nullptr };
-    OwnPtr<GLayout> m_layout;
+    Window* m_window { nullptr };
+    OwnPtr<Layout> m_layout;
 
     Rect m_relative_rect;
     ColorRole m_background_role { ColorRole::Window };
@@ -325,21 +338,16 @@ private:
     NonnullRefPtr<PaletteImpl> m_palette;
 };
 
-template<>
-inline bool Core::is<GWidget>(const Core::Object& object)
+inline Widget* Widget::parent_widget()
 {
-    return object.is_widget();
-}
-
-inline GWidget* GWidget::parent_widget()
-{
-    if (parent() && Core::is<GWidget>(*parent()))
-        return &Core::to<GWidget>(*parent());
+    if (parent() && Core::is<Widget>(*parent()))
+        return &Core::to<Widget>(*parent());
     return nullptr;
 }
-inline const GWidget* GWidget::parent_widget() const
+inline const Widget* Widget::parent_widget() const
 {
-    if (parent() && Core::is<GWidget>(*parent()))
-        return &Core::to<const GWidget>(*parent());
+    if (parent() && Core::is<Widget>(*parent()))
+        return &Core::to<const Widget>(*parent());
     return nullptr;
+}
 }

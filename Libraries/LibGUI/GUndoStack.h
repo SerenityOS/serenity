@@ -29,14 +29,16 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibGUI/GCommand.h>
 
-class GCommand;
+namespace GUI {
 
-class GUndoStack {
+class Command;
+
+class UndoStack {
 public:
-    GUndoStack();
-    ~GUndoStack();
+    UndoStack();
+    ~UndoStack();
 
-    void push(NonnullOwnPtr<GCommand>&&);
+    void push(NonnullOwnPtr<Command>&&);
 
     bool can_undo() const { return m_stack_index < m_stack.size() && !m_stack.is_empty(); }
     bool can_redo() const { return m_stack_index > 0 && m_stack[m_stack_index - 1].m_undo_vector.size() > 0 && !m_stack.is_empty(); }
@@ -48,10 +50,12 @@ public:
 
 private:
     struct UndoCommandsContainer {
-        NonnullOwnPtrVector<GCommand> m_undo_vector;
+        NonnullOwnPtrVector<Command> m_undo_vector;
     };
 
     NonnullOwnPtrVector<UndoCommandsContainer> m_stack;
     int m_stack_index { 0 };
     int m_last_updated_undo_vector_size { 0 };
 };
+
+}

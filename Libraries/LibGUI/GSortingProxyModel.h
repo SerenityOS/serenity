@@ -28,40 +28,44 @@
 
 #include <LibGUI/GModel.h>
 
-class GSortingProxyModel final : public GModel {
-public:
-    static NonnullRefPtr<GSortingProxyModel> create(NonnullRefPtr<GModel>&& model) { return adopt(*new GSortingProxyModel(move(model))); }
-    virtual ~GSortingProxyModel() override;
+namespace GUI {
 
-    virtual int row_count(const GModelIndex& = GModelIndex()) const override;
-    virtual int column_count(const GModelIndex& = GModelIndex()) const override;
+class SortingProxyModel final : public Model {
+public:
+    static NonnullRefPtr<SortingProxyModel> create(NonnullRefPtr<Model>&& model) { return adopt(*new SortingProxyModel(move(model))); }
+    virtual ~SortingProxyModel() override;
+
+    virtual int row_count(const ModelIndex& = ModelIndex()) const override;
+    virtual int column_count(const ModelIndex& = ModelIndex()) const override;
     virtual String row_name(int) const override;
     virtual String column_name(int) const override;
     virtual ColumnMetadata column_metadata(int) const override;
-    virtual GVariant data(const GModelIndex&, Role = Role::Display) const override;
+    virtual Variant data(const ModelIndex&, Role = Role::Display) const override;
     virtual void update() override;
     virtual StringView drag_data_type() const override;
 
     virtual int key_column() const override { return m_key_column; }
-    virtual GSortOrder sort_order() const override { return m_sort_order; }
-    virtual void set_key_column_and_sort_order(int, GSortOrder) override;
+    virtual SortOrder sort_order() const override { return m_sort_order; }
+    virtual void set_key_column_and_sort_order(int, SortOrder) override;
 
-    GModelIndex map_to_target(const GModelIndex&) const;
+    ModelIndex map_to_target(const ModelIndex&) const;
 
 private:
-    explicit GSortingProxyModel(NonnullRefPtr<GModel>&&);
+    explicit SortingProxyModel(NonnullRefPtr<Model>&&);
 
-    GModel& target() { return *m_target; }
-    const GModel& target() const { return *m_target; }
+    Model& target() { return *m_target; }
+    const Model& target() const { return *m_target; }
 
     void resort();
 
     void set_sorting_case_sensitive(bool b) { m_sorting_case_sensitive = b; }
     bool is_sorting_case_sensitive() { return m_sorting_case_sensitive; }
 
-    NonnullRefPtr<GModel> m_target;
+    NonnullRefPtr<Model> m_target;
     Vector<int> m_row_mappings;
     int m_key_column { -1 };
-    GSortOrder m_sort_order { GSortOrder::Ascending };
+    SortOrder m_sort_order { SortOrder::Ascending };
     bool m_sorting_case_sensitive { false };
 };
+
+}

@@ -27,8 +27,8 @@
 #include "GlyphEditorWidget.h"
 #include <LibGUI/GPainter.h>
 
-GlyphEditorWidget::GlyphEditorWidget(Font& mutable_font, GWidget* parent)
-    : GFrame(parent)
+GlyphEditorWidget::GlyphEditorWidget(Font& mutable_font, GUI::Widget* parent)
+    : GUI::Frame(parent)
     , m_font(mutable_font)
 {
     set_frame_thickness(2);
@@ -49,11 +49,11 @@ void GlyphEditorWidget::set_glyph(u8 glyph)
     update();
 }
 
-void GlyphEditorWidget::paint_event(GPaintEvent& event)
+void GlyphEditorWidget::paint_event(GUI::PaintEvent& event)
 {
-    GFrame::paint_event(event);
+    GUI::Frame::paint_event(event);
 
-    GPainter painter(*this);
+    GUI::Painter painter(*this);
     painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
     painter.fill_rect(frame_inner_rect(), Color::White);
@@ -81,21 +81,21 @@ void GlyphEditorWidget::paint_event(GPaintEvent& event)
     }
 }
 
-void GlyphEditorWidget::mousedown_event(GMouseEvent& event)
+void GlyphEditorWidget::mousedown_event(GUI::MouseEvent& event)
 {
     draw_at_mouse(event);
 }
 
-void GlyphEditorWidget::mousemove_event(GMouseEvent& event)
+void GlyphEditorWidget::mousemove_event(GUI::MouseEvent& event)
 {
-    if (event.buttons() & (GMouseButton::Left | GMouseButton::Right))
+    if (event.buttons() & (GUI::MouseButton::Left | GUI::MouseButton::Right))
         draw_at_mouse(event);
 }
 
-void GlyphEditorWidget::draw_at_mouse(const GMouseEvent& event)
+void GlyphEditorWidget::draw_at_mouse(const GUI::MouseEvent& event)
 {
-    bool set = event.buttons() & GMouseButton::Left;
-    bool unset = event.buttons() & GMouseButton::Right;
+    bool set = event.buttons() & GUI::MouseButton::Left;
+    bool unset = event.buttons() & GUI::MouseButton::Right;
     if (!(set ^ unset))
         return;
     int x = (event.x() - 1) / m_scale;

@@ -27,10 +27,13 @@
 #include <LibGUI/GWidget.h>
 
 class Document;
-class GTableView;
-class GTreeView;
 
-class InspectorWidget final : public GWidget {
+namespace GUI {
+class TableView;
+class TreeView;
+}
+
+class InspectorWidget final : public GUI::Widget {
     C_OBJECT(InspectorWidget)
 public:
     virtual ~InspectorWidget();
@@ -38,10 +41,10 @@ public:
     void set_document(Document*);
 
 private:
-    explicit InspectorWidget(GWidget* parent);
+    explicit InspectorWidget(GUI::Widget* parent);
 
-    RefPtr<GTreeView> m_dom_tree_view;
-    RefPtr<GTableView> m_style_table_view;
-    RefPtr<GTableView> m_computed_style_table_view;
+    RefPtr<GUI::TreeView> m_dom_tree_view;
+    RefPtr<GUI::TableView> m_style_table_view;
+    RefPtr<GUI::TableView> m_computed_style_table_view;
     RefPtr<Document> m_document;
 };

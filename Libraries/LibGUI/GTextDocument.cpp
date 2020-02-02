@@ -30,11 +30,13 @@
 #include <LibGUI/GTextEditor.h>
 #include <ctype.h>
 
-GTextDocument::GTextDocument(Client* client)
+namespace GUI {
+
+TextDocument::TextDocument(Client* client)
 {
     if (client)
         m_clients.set(client);
-    append_line(make<GTextDocumentLine>(*this));
+    append_line(make<TextDocumentLine>(*this));
 
     // TODO: Instead of a repating timer, this we should call a delayed 2 sec timer when the user types.
     m_undo_timer = Core::Timer::construct(
@@ -43,7 +45,7 @@ GTextDocument::GTextDocument(Client* client)
         });
 }
 
-void GTextDocument::set_text(const StringView& text)
+void TextDocument::set_text(const StringView& text)
 {
     m_client_notifications_enabled = false;
     m_spans.clear();
@@ -53,7 +55,7 @@ void GTextDocument::set_text(const StringView& text)
 
     auto add_line = [&](size_t current_position) {
         size_t line_length = current_position - start_of_current_line;
-        auto line = make<GTextDocumentLine>(*this);
+        auto line = make<TextDocumentLine>(*this);
         if (line_length)
             line->set_text(*this, text.substring_view(start_of_current_line, current_position - start_of_current_line));
         append_line(move(line));
@@ -71,7 +73,7 @@ void GTextDocument::set_text(const StringView& text)
         client->document_did_set_text();
 }
 
-size_t GTextDocumentLine::first_non_whitespace_column() const
+size_t TextDocumentLine::first_non_whitespace_column() const
 {
     for (size_t i = 0; i < length(); ++i) {
         if (!isspace(m_text[(int)i]))
@@ -80,24 +82,24 @@ size_t GTextDocumentLine::first_non_whitespace_column() const
     return length();
 }
 
-GTextDocumentLine::GTextDocumentLine(GTextDocument& document)
+TextDocumentLine::TextDocumentLine(TextDocument& document)
 {
     clear(document);
 }
 
-GTextDocumentLine::GTextDocumentLine(GTextDocument& document, const StringView& text)
+TextDocumentLine::TextDocumentLine(TextDocument& document, const StringView& text)
 {
     set_text(document, text);
 }
 
-void GTextDocumentLine::clear(GTextDocument& document)
+void TextDocumentLine::clear(TextDocument& document)
 {
     m_text.clear();
     m_text.append(0);
     document.update_views({});
 }
 
-void GTextDocumentLine::set_text(GTextDocument& document, const StringView& text)
+void TextDocumentLine::set_text(TextDocument& document, const StringView& text)
 {
     if (text.length() == length() && !memcmp(text.characters_without_null_termination(), characters(), length()))
         return;
@@ -110,7 +112,7 @@ void GTextDocumentLine::set_text(GTextDocument& document, const StringView& text
     document.update_views({});
 }
 
-void GTextDocumentLine::append(GTextDocument& document, const char* characters, size_t length)
+void TextDocumentLine::append(TextDocument& document, const char* characters, size_t length)
 {
     int old_length = m_text.size() - 1;
     m_text.resize(m_text.size() + length);
@@ -119,17 +121,17 @@ void GTextDocumentLine::append(GTextDocument& document, const char* characters, 
     document.update_views({});
 }
 
-void GTextDocumentLine::append(GTextDocument& document, char ch)
+void TextDocumentLine::append(TextDocument& document, char ch)
 {
     insert(document, length(), ch);
 }
 
-void GTextDocumentLine::prepend(GTextDocument& document, char ch)
+void TextDocumentLine::prepend(TextDocument& document, char ch)
 {
     insert(document, 0, ch);
 }
 
-void GTextDocumentLine::insert(GTextDocument& document, size_t index, char ch)
+void TextDocumentLine::insert(TextDocument& document, size_t index, char ch)
 {
     if (index == length()) {
         m_text.last() = ch;
@@ -140,7 +142,7 @@ void GTextDocumentLine::insert(GTextDocument& document, size_t index, char ch)
     document.update_views({});
 }
 
-void GTextDocumentLine::remove(GTextDocument& document, size_t index)
+void TextDocumentLine::remove(TextDocument& document, size_t index)
 {
     if (index == length()) {
         m_text.take_last();
@@ -151,14 +153,14 @@ void GTextDocumentLine::remove(GTextDocument& document, size_t index)
     document.update_views({});
 }
 
-void GTextDocumentLine::truncate(GTextDocument& document, size_t length)
+void TextDocumentLine::truncate(TextDocument& document, size_t length)
 {
     m_text.resize((int)length + 1);
     m_text.last() = 0;
     document.update_views({});
 }
 
-void GTextDocument::append_line(NonnullOwnPtr<GTextDocumentLine> line)
+void TextDocument::append_line(NonnullOwnPtr<TextDocumentLine> line)
 {
     lines().append(move(line));
     if (m_client_notifications_enabled) {
@@ -167,7 +169,7 @@ void GTextDocument::append_line(NonnullOwnPtr<GTextDocumentLine> line)
     }
 }
 
-void GTextDocument::insert_line(size_t line_index, NonnullOwnPtr<GTextDocumentLine> line)
+void TextDocument::insert_line(size_t line_index, NonnullOwnPtr<TextDocumentLine> line)
 {
     lines().insert((int)line_index, move(line));
     if (m_client_notifications_enabled) {
@@ -176,7 +178,7 @@ void GTextDocument::insert_line(size_t line_index, NonnullOwnPtr<GTextDocumentLi
     }
 }
 
-void GTextDocument::remove_line(size_t line_index)
+void TextDocument::remove_line(size_t line_index)
 {
     lines().remove((int)line_index);
     if (m_client_notifications_enabled) {
@@ -185,7 +187,7 @@ void GTextDocument::remove_line(size_t line_index)
     }
 }
 
-void GTextDocument::remove_all_lines()
+void TextDocument::remove_all_lines()
 {
     lines().clear();
     if (m_client_notifications_enabled) {
@@ -194,26 +196,26 @@ void GTextDocument::remove_all_lines()
     }
 }
 
-GTextDocument::Client::~Client()
+TextDocument::Client::~Client()
 {
 }
 
-void GTextDocument::register_client(Client& client)
+void TextDocument::register_client(Client& client)
 {
     m_clients.set(&client);
 }
 
-void GTextDocument::unregister_client(Client& client)
+void TextDocument::unregister_client(Client& client)
 {
     m_clients.remove(&client);
 }
 
-void GTextDocument::update_views(Badge<GTextDocumentLine>)
+void TextDocument::update_views(Badge<TextDocumentLine>)
 {
     notify_did_change();
 }
 
-void GTextDocument::notify_did_change()
+void TextDocument::notify_did_change()
 {
     if (m_client_notifications_enabled) {
         for (auto* client : m_clients)
@@ -221,7 +223,7 @@ void GTextDocument::notify_did_change()
     }
 }
 
-void GTextDocument::set_all_cursors(const GTextPosition& position)
+void TextDocument::set_all_cursors(const TextPosition& position)
 {
     if (m_client_notifications_enabled) {
         for (auto* client : m_clients)
@@ -229,7 +231,7 @@ void GTextDocument::set_all_cursors(const GTextPosition& position)
     }
 }
 
-String GTextDocument::text_in_range(const GTextRange& a_range) const
+String TextDocument::text_in_range(const TextRange& a_range) const
 {
     auto range = a_range.normalized();
 
@@ -246,7 +248,7 @@ String GTextDocument::text_in_range(const GTextRange& a_range) const
     return builder.to_string();
 }
 
-char GTextDocument::character_at(const GTextPosition& position) const
+char TextDocument::character_at(const TextPosition& position) const
 {
     ASSERT(position.line() < line_count());
     auto& line = this->line(position.line());
@@ -255,7 +257,7 @@ char GTextDocument::character_at(const GTextPosition& position) const
     return line.characters()[position.column()];
 }
 
-GTextPosition GTextDocument::next_position_after(const GTextPosition& position, SearchShouldWrap should_wrap) const
+TextPosition TextDocument::next_position_after(const TextPosition& position, SearchShouldWrap should_wrap) const
 {
     auto& line = this->line(position.line());
     if (position.column() == line.length()) {
@@ -269,7 +271,7 @@ GTextPosition GTextDocument::next_position_after(const GTextPosition& position, 
     return { position.line(), position.column() + 1 };
 }
 
-GTextPosition GTextDocument::previous_position_before(const GTextPosition& position, SearchShouldWrap should_wrap) const
+TextPosition TextDocument::previous_position_before(const TextPosition& position, SearchShouldWrap should_wrap) const
 {
     if (position.column() == 0) {
         if (position.line() == 0) {
@@ -285,15 +287,15 @@ GTextPosition GTextDocument::previous_position_before(const GTextPosition& posit
     return { position.line(), position.column() - 1 };
 }
 
-GTextRange GTextDocument::find_next(const StringView& needle, const GTextPosition& start, SearchShouldWrap should_wrap) const
+TextRange TextDocument::find_next(const StringView& needle, const TextPosition& start, SearchShouldWrap should_wrap) const
 {
     if (needle.is_empty())
         return {};
 
-    GTextPosition position = start.is_valid() ? start : GTextPosition(0, 0);
-    GTextPosition original_position = position;
+    TextPosition position = start.is_valid() ? start : TextPosition(0, 0);
+    TextPosition original_position = position;
 
-    GTextPosition start_of_potential_match;
+    TextPosition start_of_potential_match;
     size_t needle_index = 0;
 
     do {
@@ -315,16 +317,16 @@ GTextRange GTextDocument::find_next(const StringView& needle, const GTextPositio
     return {};
 }
 
-GTextRange GTextDocument::find_previous(const StringView& needle, const GTextPosition& start, SearchShouldWrap should_wrap) const
+TextRange TextDocument::find_previous(const StringView& needle, const TextPosition& start, SearchShouldWrap should_wrap) const
 {
     if (needle.is_empty())
         return {};
 
-    GTextPosition position = start.is_valid() ? start : GTextPosition(0, 0);
+    TextPosition position = start.is_valid() ? start : TextPosition(0, 0);
     position = previous_position_before(position, should_wrap);
-    GTextPosition original_position = position;
+    TextPosition original_position = position;
 
-    GTextPosition end_of_potential_match;
+    TextPosition end_of_potential_match;
     size_t needle_index = needle.length() - 1;
 
     do {
@@ -346,11 +348,11 @@ GTextRange GTextDocument::find_previous(const StringView& needle, const GTextPos
     return {};
 }
 
-Vector<GTextRange> GTextDocument::find_all(const StringView& needle) const
+Vector<TextRange> TextDocument::find_all(const StringView& needle) const
 {
-    Vector<GTextRange> ranges;
+    Vector<TextRange> ranges;
 
-    GTextPosition position;
+    TextPosition position;
     for (;;) {
         auto range = find_next(needle, position, SearchShouldWrap::No);
         if (!range.is_valid())
@@ -361,7 +363,7 @@ Vector<GTextRange> GTextDocument::find_all(const StringView& needle) const
     return ranges;
 }
 
-Optional<GTextDocumentSpan> GTextDocument::first_non_skippable_span_before(const GTextPosition& position) const
+Optional<TextDocumentSpan> TextDocument::first_non_skippable_span_before(const TextPosition& position) const
 {
     for (int i = m_spans.size() - 1; i >= 0; --i) {
         if (!m_spans[i].range.contains(position))
@@ -375,7 +377,7 @@ Optional<GTextDocumentSpan> GTextDocument::first_non_skippable_span_before(const
     return {};
 }
 
-Optional<GTextDocumentSpan> GTextDocument::first_non_skippable_span_after(const GTextPosition& position) const
+Optional<TextDocumentSpan> TextDocument::first_non_skippable_span_after(const TextPosition& position) const
 {
     for (int i = 0; i < m_spans.size(); ++i) {
         if (!m_spans[i].range.contains(position))
@@ -389,7 +391,7 @@ Optional<GTextDocumentSpan> GTextDocument::first_non_skippable_span_after(const 
     return {};
 }
 
-void GTextDocument::undo()
+void TextDocument::undo()
 {
     if (!can_undo())
         return;
@@ -397,7 +399,7 @@ void GTextDocument::undo()
     notify_did_change();
 }
 
-void GTextDocument::redo()
+void TextDocument::redo()
 {
     if (!can_redo())
         return;
@@ -405,22 +407,22 @@ void GTextDocument::redo()
     notify_did_change();
 }
 
-void GTextDocument::add_to_undo_stack(NonnullOwnPtr<GTextDocumentUndoCommand> undo_command)
+void TextDocument::add_to_undo_stack(NonnullOwnPtr<TextDocumentUndoCommand> undo_command)
 {
     m_undo_stack.push(move(undo_command));
 }
 
-GTextDocumentUndoCommand::GTextDocumentUndoCommand(GTextDocument& document)
+TextDocumentUndoCommand::TextDocumentUndoCommand(TextDocument& document)
     : m_document(document)
 {
 }
 
-GTextDocumentUndoCommand::~GTextDocumentUndoCommand()
+TextDocumentUndoCommand::~TextDocumentUndoCommand()
 {
 }
 
-InsertTextCommand::InsertTextCommand(GTextDocument& document, const String& text, const GTextPosition& position)
-    : GTextDocumentUndoCommand(document)
+InsertTextCommand::InsertTextCommand(TextDocument& document, const String& text, const TextPosition& position)
+    : TextDocumentUndoCommand(document)
     , m_text(text)
     , m_range({ position, position })
 {
@@ -441,8 +443,8 @@ void InsertTextCommand::undo()
     m_document.set_all_cursors(m_range.start());
 }
 
-RemoveTextCommand::RemoveTextCommand(GTextDocument& document, const String& text, const GTextRange& range)
-    : GTextDocumentUndoCommand(document)
+RemoveTextCommand::RemoveTextCommand(TextDocument& document, const String& text, const TextRange& range)
+    : TextDocumentUndoCommand(document)
     , m_text(text)
     , m_range(range)
 {
@@ -460,20 +462,20 @@ void RemoveTextCommand::undo()
     m_document.set_all_cursors(new_cursor);
 }
 
-void GTextDocument::update_undo_timer()
+void TextDocument::update_undo_timer()
 {
     m_undo_stack.finalize_current_combo();
 }
 
-GTextPosition GTextDocument::insert_at(const GTextPosition& position, const StringView& text, const Client* client)
+TextPosition TextDocument::insert_at(const TextPosition& position, const StringView& text, const Client* client)
 {
-    GTextPosition cursor = position;
+    TextPosition cursor = position;
     for (size_t i = 0; i < text.length(); ++i)
         cursor = insert_at(cursor, text[i], client);
     return cursor;
 }
 
-GTextPosition GTextDocument::insert_at(const GTextPosition& position, char ch, const Client* client)
+TextPosition TextDocument::insert_at(const TextPosition& position, char ch, const Client* client)
 {
     bool automatic_indentation_enabled = client ? client->is_automatic_indentation_enabled() : false;
     size_t m_soft_tab_width = client ? client->soft_tab_width() : 4;
@@ -500,11 +502,11 @@ GTextPosition GTextDocument::insert_at(const GTextPosition& position, char ch, c
             Vector<char> line_content;
             for (size_t i = position.column(); i < line(row).length(); i++)
                 line_content.append(line(row).characters()[i]);
-            insert_line(position.line() + (at_tail ? 1 : 0), make<GTextDocumentLine>(*this, new_line_contents));
+            insert_line(position.line() + (at_tail ? 1 : 0), make<TextDocumentLine>(*this, new_line_contents));
             notify_did_change();
             return { position.line() + 1, line(position.line() + 1).length() };
         }
-        auto new_line = make<GTextDocumentLine>(*this);
+        auto new_line = make<TextDocumentLine>(*this);
         new_line->append(*this, line(position.line()).characters() + position.column(), line(position.line()).length() - position.column());
 
         Vector<char> line_content;
@@ -529,7 +531,7 @@ GTextPosition GTextDocument::insert_at(const GTextPosition& position, char ch, c
     return { position.line(), position.column() + 1 };
 }
 
-void GTextDocument::remove(const GTextRange& unnormalized_range)
+void TextDocument::remove(const TextRange& unnormalized_range)
 {
     if (!unnormalized_range.is_valid())
         return;
@@ -573,15 +575,17 @@ void GTextDocument::remove(const GTextRange& unnormalized_range)
     }
 
     if (lines().is_empty()) {
-        append_line(make<GTextDocumentLine>(*this));
+        append_line(make<TextDocumentLine>(*this));
     }
 
     notify_did_change();
 }
 
-GTextRange GTextDocument::range_for_entire_line(size_t line_index) const
+TextRange TextDocument::range_for_entire_line(size_t line_index) const
 {
     if (line_index >= line_count())
         return {};
     return { { line_index, 0 }, { line_index, line(line_index).length() } };
+}
+
 }

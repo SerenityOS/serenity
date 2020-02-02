@@ -30,8 +30,10 @@
 #include <LibGUI/GResizeCorner.h>
 #include <LibGUI/GWindow.h>
 
-GResizeCorner::GResizeCorner(GWidget* parent)
-    : GWidget(parent)
+namespace GUI {
+
+ResizeCorner::ResizeCorner(Widget* parent)
+    : Widget(parent)
 {
     set_background_role(ColorRole::Button);
     set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
@@ -40,34 +42,36 @@ GResizeCorner::GResizeCorner(GWidget* parent)
     ASSERT(m_bitmap);
 }
 
-GResizeCorner::~GResizeCorner()
+ResizeCorner::~ResizeCorner()
 {
 }
 
-void GResizeCorner::paint_event(GPaintEvent& event)
+void ResizeCorner::paint_event(PaintEvent& event)
 {
-    GPainter painter(*this);
+    Painter painter(*this);
     painter.add_clip_rect(event.rect());
     painter.fill_rect(rect(), palette().color(background_role()));
     painter.blit({ 0, 0 }, *m_bitmap, m_bitmap->rect());
-    GWidget::paint_event(event);
+    Widget::paint_event(event);
 }
 
-void GResizeCorner::mousedown_event(GMouseEvent& event)
+void ResizeCorner::mousedown_event(MouseEvent& event)
 {
-    if (event.button() == GMouseButton::Left)
+    if (event.button() == MouseButton::Left)
         window()->start_wm_resize();
-    GWidget::mousedown_event(event);
+    Widget::mousedown_event(event);
 }
 
-void GResizeCorner::enter_event(Core::Event& event)
+void ResizeCorner::enter_event(Core::Event& event)
 {
-    window()->set_override_cursor(GStandardCursor::ResizeDiagonalTLBR);
-    GWidget::enter_event(event);
+    window()->set_override_cursor(StandardCursor::ResizeDiagonalTLBR);
+    Widget::enter_event(event);
 }
 
-void GResizeCorner::leave_event(Core::Event& event)
+void ResizeCorner::leave_event(Core::Event& event)
 {
-    window()->set_override_cursor(GStandardCursor::None);
-    GWidget::leave_event(event);
+    window()->set_override_cursor(StandardCursor::None);
+    Widget::leave_event(event);
+}
+
 }

@@ -28,18 +28,21 @@
 
 #include <LibGUI/GWidget.h>
 
-class GLazyWidget : public GWidget {
-    C_OBJECT(GLazyWidget)
-public:
-    virtual ~GLazyWidget() override;
+namespace GUI {
 
-    Function<void(GLazyWidget&)> on_first_show;
+class LazyWidget : public Widget {
+    C_OBJECT(LazyWidget)
+public:
+    virtual ~LazyWidget() override;
+
+    Function<void(LazyWidget&)> on_first_show;
 
 protected:
-    explicit GLazyWidget(GWidget* parent = nullptr);
+    explicit LazyWidget(Widget* parent = nullptr);
 
 private:
-    virtual void show_event(GShowEvent&) override;
+    virtual void show_event(ShowEvent&) override;
 
     bool m_has_been_shown { false };
 };
+}

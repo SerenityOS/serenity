@@ -29,18 +29,18 @@
 #include <LibGUI/GJsonArrayModel.h>
 #include <LibGUI/GTableView.h>
 
-ProcessUnveiledPathsWidget::ProcessUnveiledPathsWidget(GWidget* parent)
-    : GWidget(parent)
+ProcessUnveiledPathsWidget::ProcessUnveiledPathsWidget(GUI::Widget* parent)
+    : GUI::Widget(parent)
 {
-    set_layout(make<GVBoxLayout>());
+    set_layout(make<GUI::VBoxLayout>());
     layout()->set_margins({ 4, 4, 4, 4 });
-    m_table_view = GTableView::construct(this);
+    m_table_view = GUI::TableView::construct(this);
     m_table_view->set_size_columns_to_fit_content(true);
 
-    Vector<GJsonArrayModel::FieldSpec> pid_unveil_fields;
+    Vector<GUI::JsonArrayModel::FieldSpec> pid_unveil_fields;
     pid_unveil_fields.empend("path", "Path", TextAlignment::CenterLeft);
     pid_unveil_fields.empend("permissions", "Permissions", TextAlignment::CenterLeft);
-    m_table_view->set_model(GJsonArrayModel::create({}, move(pid_unveil_fields)));
+    m_table_view->set_model(GUI::JsonArrayModel::create({}, move(pid_unveil_fields)));
 }
 
 ProcessUnveiledPathsWidget::~ProcessUnveiledPathsWidget()
@@ -52,5 +52,5 @@ void ProcessUnveiledPathsWidget::set_pid(pid_t pid)
     if (m_pid == pid)
         return;
     m_pid = pid;
-    static_cast<GJsonArrayModel*>(m_table_view->model())->set_json_path(String::format("/proc/%d/unveil", m_pid));
+    static_cast<GUI::JsonArrayModel*>(m_table_view->model())->set_json_path(String::format("/proc/%d/unveil", m_pid));
 }

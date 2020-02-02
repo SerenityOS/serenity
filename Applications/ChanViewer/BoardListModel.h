@@ -30,7 +30,7 @@
 #include <LibCore/CHttpJob.h>
 #include <LibGUI/GModel.h>
 
-class BoardListModel final : public GModel {
+class BoardListModel final : public GUI::Model {
 public:
     enum Column {
         Board,
@@ -40,11 +40,11 @@ public:
     static NonnullRefPtr<BoardListModel> create() { return adopt(*new BoardListModel); }
     virtual ~BoardListModel() override;
 
-    virtual int row_count(const GModelIndex& = GModelIndex()) const override;
-    virtual int column_count(const GModelIndex& = GModelIndex()) const override { return Column::__Count; }
+    virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
+    virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return Column::__Count; }
     virtual String column_name(int) const override;
     virtual ColumnMetadata column_metadata(int) const override;
-    virtual GVariant data(const GModelIndex&, Role = Role::Display) const override;
+    virtual GUI::Variant data(const GUI::ModelIndex&, Role = Role::Display) const override;
     virtual void update() override;
 
 private:

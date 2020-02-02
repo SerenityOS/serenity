@@ -29,20 +29,22 @@
 #include "Tool.h"
 #include <LibDraw/Point.h>
 
-class GMenu;
+namespace GUI {
+class Menu;
 class Painter;
+}
 
 class RectangleTool final : public Tool {
 public:
     RectangleTool();
     virtual ~RectangleTool() override;
 
-    virtual void on_mousedown(GMouseEvent&) override;
-    virtual void on_mousemove(GMouseEvent&) override;
-    virtual void on_mouseup(GMouseEvent&) override;
-    virtual void on_contextmenu(GContextMenuEvent&) override;
-    virtual void on_second_paint(GPaintEvent&) override;
-    virtual void on_keydown(GKeyEvent&) override;
+    virtual void on_mousedown(GUI::MouseEvent&) override;
+    virtual void on_mousemove(GUI::MouseEvent&) override;
+    virtual void on_mouseup(GUI::MouseEvent&) override;
+    virtual void on_contextmenu(GUI::ContextMenuEvent&) override;
+    virtual void on_second_paint(GUI::PaintEvent&) override;
+    virtual void on_keydown(GUI::KeyEvent&) override;
 
 private:
     enum class Mode {
@@ -52,11 +54,11 @@ private:
     };
 
     virtual const char* class_name() const override { return "RectangleTool"; }
-    void draw_using(Painter& painter);
+    void draw_using(GUI::Painter& painter);
 
-    GMouseButton m_drawing_button { GMouseButton::None };
+    GUI::MouseButton m_drawing_button { GUI::MouseButton::None };
     Point m_rectangle_start_position;
     Point m_rectangle_end_position;
-    RefPtr<GMenu> m_context_menu;
+    RefPtr<GUI::Menu> m_context_menu;
     Mode m_mode { Mode::Outline };
 };

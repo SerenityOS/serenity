@@ -28,12 +28,13 @@
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
 
-GPainter::GPainter(GraphicsBitmap& bitmap)
-    : Painter(bitmap)
+namespace GUI {
+Painter::Painter(GraphicsBitmap& bitmap)
+    : ::Painter(bitmap)
 {
 }
 
-GPainter::GPainter(GWidget& widget)
+Painter::Painter(Widget& widget)
     : Painter(*widget.window()->back_bitmap())
 {
     state().font = &widget.font();
@@ -42,4 +43,6 @@ GPainter::GPainter(GWidget& widget)
     state().clip_rect = origin_rect;
     m_clip_origin = origin_rect;
     state().clip_rect.intersect(m_target->rect());
+}
+
 }

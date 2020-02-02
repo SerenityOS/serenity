@@ -29,8 +29,8 @@
 #include <LibGUI/GPainter.h>
 #include <LibM/math.h>
 
-SampleWidget::SampleWidget(GWidget* parent)
-    : GFrame(parent)
+SampleWidget::SampleWidget(GUI::Widget* parent)
+    : GUI::Frame(parent)
 {
     set_frame_shape(FrameShape::Container);
     set_frame_shadow(FrameShadow::Sunken);
@@ -41,10 +41,10 @@ SampleWidget::~SampleWidget()
 {
 }
 
-void SampleWidget::paint_event(GPaintEvent& event)
+void SampleWidget::paint_event(GUI::PaintEvent& event)
 {
-    GFrame::paint_event(event);
-    GPainter painter(*this);
+    GUI::Frame::paint_event(event);
+    GUI::Painter painter(*this);
 
     painter.add_clip_rect(event.rect());
     painter.fill_rect(frame_inner_rect(), Color::Black);

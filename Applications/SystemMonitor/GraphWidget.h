@@ -27,7 +27,7 @@
 #include <AK/CircularQueue.h>
 #include <LibGUI/GFrame.h>
 
-class GraphWidget final : public GFrame {
+class GraphWidget final : public GUI::Frame {
     C_OBJECT(GraphWidget)
 public:
     virtual ~GraphWidget() override;
@@ -41,9 +41,9 @@ public:
     Function<String(int value, int max)> text_formatter;
 
 private:
-    explicit GraphWidget(GWidget* parent);
+    explicit GraphWidget(GUI::Widget* parent);
 
-    virtual void paint_event(GPaintEvent&) override;
+    virtual void paint_event(GUI::PaintEvent&) override;
 
     int m_max { 100 };
     CircularQueue<int, 4000> m_values;

@@ -28,9 +28,11 @@
 
 #include <LibGUI/GWidget.h>
 
-class GTableView;
+namespace GUI {
+class TableView;
+}
 
-class ProcessUnveiledPathsWidget final : public GWidget {
+class ProcessUnveiledPathsWidget final : public GUI::Widget {
     C_OBJECT(ProcessUnveiledPathsWidget);
 public:
     virtual ~ProcessUnveiledPathsWidget() override;
@@ -38,8 +40,8 @@ public:
     void set_pid(pid_t);
 
 private:
-    explicit ProcessUnveiledPathsWidget(GWidget* parent);
+    explicit ProcessUnveiledPathsWidget(GUI::Widget* parent);
 
-    RefPtr<GTableView> m_table_view;
+    RefPtr<GUI::TableView> m_table_view;
     pid_t m_pid { -1 };
 };

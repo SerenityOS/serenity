@@ -29,43 +29,45 @@
 #include <LibGUI/GSplitter.h>
 #include <LibGUI/GWindow.h>
 
-GSplitter::GSplitter(Orientation orientation, GWidget* parent)
-    : GFrame(parent)
+namespace GUI {
+
+Splitter::Splitter(Orientation orientation, Widget* parent)
+    : Frame(parent)
     , m_orientation(orientation)
 {
     set_background_role(ColorRole::Button);
-    set_layout(make<GBoxLayout>(orientation));
+    set_layout(make<BoxLayout>(orientation));
     set_fill_with_background_color(true);
     layout()->set_spacing(3);
 }
 
-GSplitter::~GSplitter()
+Splitter::~Splitter()
 {
 }
 
-void GSplitter::enter_event(Core::Event&)
+void Splitter::enter_event(Core::Event&)
 {
     set_background_role(ColorRole::HoverHighlight);
-    window()->set_override_cursor(m_orientation == Orientation::Horizontal ? GStandardCursor::ResizeHorizontal : GStandardCursor::ResizeVertical);
+    window()->set_override_cursor(m_orientation == Orientation::Horizontal ? StandardCursor::ResizeHorizontal : StandardCursor::ResizeVertical);
     update();
 }
 
-void GSplitter::leave_event(Core::Event&)
+void Splitter::leave_event(Core::Event&)
 {
     set_background_role(ColorRole::Button);
     if (!m_resizing)
-        window()->set_override_cursor(GStandardCursor::None);
+        window()->set_override_cursor(StandardCursor::None);
     update();
 }
 
-void GSplitter::mousedown_event(GMouseEvent& event)
+void Splitter::mousedown_event(MouseEvent& event)
 {
-    if (event.button() != GMouseButton::Left)
+    if (event.button() != MouseButton::Left)
         return;
     m_resizing = true;
     int x_or_y = event.position().primary_offset_for_orientation(m_orientation);
-    GWidget* first_resizee { nullptr };
-    GWidget* second_resizee { nullptr };
+    Widget* first_resizee { nullptr };
+    Widget* second_resizee { nullptr };
     int fudge = layout()->spacing();
     for_each_child_widget([&](auto& child) {
         int child_start = child.relative_rect().first_edge_for_orientation(m_orientation);
@@ -84,7 +86,7 @@ void GSplitter::mousedown_event(GMouseEvent& event)
     m_resize_origin = event.position();
 }
 
-void GSplitter::mousemove_event(GMouseEvent& event)
+void Splitter::mousemove_event(MouseEvent& event)
 {
     if (!m_resizing)
         return;
@@ -120,11 +122,13 @@ void GSplitter::mousemove_event(GMouseEvent& event)
     invalidate_layout();
 }
 
-void GSplitter::mouseup_event(GMouseEvent& event)
+void Splitter::mouseup_event(MouseEvent& event)
 {
-    if (event.button() != GMouseButton::Left)
+    if (event.button() != MouseButton::Left)
         return;
     m_resizing = false;
     if (!rect().contains(event.position()))
-        window()->set_override_cursor(GStandardCursor::None);
+        window()->set_override_cursor(StandardCursor::None);
+}
+
 }

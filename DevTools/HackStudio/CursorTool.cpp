@@ -30,13 +30,13 @@
 #include "WidgetTreeModel.h"
 #include <AK/LogStream.h>
 
-void CursorTool::on_mousedown(GMouseEvent& event)
+void CursorTool::on_mousedown(GUI::MouseEvent& event)
 {
     dbg() << "CursorTool::on_mousedown";
     auto& form_widget = m_editor.form_widget();
-    auto result = form_widget.hit_test(event.position(), GWidget::ShouldRespectGreediness::No);
+    auto result = form_widget.hit_test(event.position(), GUI::Widget::ShouldRespectGreediness::No);
 
-    if (event.button() == GMouseButton::Left) {
+    if (event.button() == GUI::MouseButton::Left) {
         if (result.widget && result.widget != &form_widget) {
             if (event.modifiers() & Mod_Ctrl) {
                 m_editor.selection().toggle(*result.widget);
@@ -65,12 +65,12 @@ void CursorTool::on_mousedown(GMouseEvent& event)
     }
 }
 
-void CursorTool::on_mouseup(GMouseEvent& event)
+void CursorTool::on_mouseup(GUI::MouseEvent& event)
 {
     dbg() << "CursorTool::on_mouseup";
-    if (event.button() == GMouseButton::Left) {
+    if (event.button() == GUI::MouseButton::Left) {
         auto& form_widget = m_editor.form_widget();
-        auto result = form_widget.hit_test(event.position(), GWidget::ShouldRespectGreediness::No);
+        auto result = form_widget.hit_test(event.position(), GUI::Widget::ShouldRespectGreediness::No);
         if (!m_dragging && !(event.modifiers() & Mod_Ctrl)) {
             if (result.widget && result.widget != &form_widget) {
                 m_editor.selection().set(*result.widget);
@@ -84,7 +84,7 @@ void CursorTool::on_mouseup(GMouseEvent& event)
     }
 }
 
-void CursorTool::on_mousemove(GMouseEvent& event)
+void CursorTool::on_mousemove(GUI::MouseEvent& event)
 {
     dbg() << "CursorTool::on_mousemove";
     auto& form_widget = m_editor.form_widget();
@@ -94,8 +94,8 @@ void CursorTool::on_mousemove(GMouseEvent& event)
         return;
     }
 
-    if (!m_dragging && event.buttons() & GMouseButton::Left && event.position() != m_drag_origin) {
-        auto result = form_widget.hit_test(event.position(), GWidget::ShouldRespectGreediness::No);
+    if (!m_dragging && event.buttons() & GUI::MouseButton::Left && event.position() != m_drag_origin) {
+        auto result = form_widget.hit_test(event.position(), GUI::Widget::ShouldRespectGreediness::No);
         if (result.widget && result.widget != &form_widget) {
             if (!m_editor.selection().contains(*result.widget)) {
                 m_editor.selection().set(*result.widget);
@@ -121,7 +121,7 @@ void CursorTool::on_mousemove(GMouseEvent& event)
     }
 }
 
-void CursorTool::on_keydown(GKeyEvent& event)
+void CursorTool::on_keydown(GUI::KeyEvent& event)
 {
     dbg() << "CursorTool::on_keydown";
 
@@ -175,7 +175,7 @@ Rect CursorTool::rubber_band_rect() const
     return Rect::from_two_points(m_rubber_band_origin, m_rubber_band_position);
 }
 
-void CursorTool::on_second_paint(GPainter& painter, GPaintEvent&)
+void CursorTool::on_second_paint(GUI::Painter& painter, GUI::PaintEvent&)
 {
     if (!m_rubber_banding)
         return;

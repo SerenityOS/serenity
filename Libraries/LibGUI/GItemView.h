@@ -31,42 +31,44 @@
 #include <LibGUI/GAbstractView.h>
 #include <LibGUI/GModel.h>
 
-class GScrollBar;
+namespace GUI {
+
+class ScrollBar;
 class Painter;
 
-class GItemView : public GAbstractView {
-    C_OBJECT(GItemView)
+class ItemView : public AbstractView {
+    C_OBJECT(ItemView)
 public:
-    virtual ~GItemView() override;
+    virtual ~ItemView() override;
 
     int content_width() const;
     int horizontal_padding() const { return m_horizontal_padding; }
 
-    void scroll_into_view(const GModelIndex&, Orientation);
+    void scroll_into_view(const ModelIndex&, Orientation);
     Size effective_item_size() const { return m_effective_item_size; }
 
     int model_column() const { return m_model_column; }
     void set_model_column(int column) { m_model_column = column; }
 
-    virtual GModelIndex index_at_event_position(const Point&) const override;
+    virtual ModelIndex index_at_event_position(const Point&) const override;
 
 private:
-    explicit GItemView(GWidget* parent);
+    explicit ItemView(Widget* parent);
 
     virtual void did_update_model() override;
-    virtual void paint_event(GPaintEvent&) override;
-    virtual void second_paint_event(GPaintEvent&) override;
-    virtual void resize_event(GResizeEvent&) override;
-    virtual void mousedown_event(GMouseEvent&) override;
-    virtual void mousemove_event(GMouseEvent&) override;
-    virtual void mouseup_event(GMouseEvent&) override;
-    virtual void keydown_event(GKeyEvent&) override;
+    virtual void paint_event(PaintEvent&) override;
+    virtual void second_paint_event(PaintEvent&) override;
+    virtual void resize_event(ResizeEvent&) override;
+    virtual void mousedown_event(MouseEvent&) override;
+    virtual void mousemove_event(MouseEvent&) override;
+    virtual void mouseup_event(MouseEvent&) override;
+    virtual void keydown_event(KeyEvent&) override;
 
     int item_count() const;
     Rect item_rect(int item_index) const;
     Vector<int> items_intersecting_rect(const Rect&) const;
     void update_content_size();
-    void get_item_rects(int item_index, const Font&, const GVariant& item_text, Rect& item_rect, Rect& icon_rect, Rect& text_rect) const;
+    void get_item_rects(int item_index, const Font&, const Variant& item_text, Rect& item_rect, Rect& icon_rect, Rect& text_rect) const;
 
     int m_horizontal_padding { 5 };
     int m_model_column { 0 };
@@ -78,5 +80,7 @@ private:
     bool m_rubber_banding { false };
     Point m_rubber_band_origin;
     Point m_rubber_band_current;
-    Vector<GModelIndex> m_rubber_band_remembered_selection;
+    Vector<ModelIndex> m_rubber_band_remembered_selection;
 };
+
+}

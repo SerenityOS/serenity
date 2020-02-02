@@ -29,13 +29,15 @@
 #include <AK/LogStream.h>
 #include <AK/String.h>
 
-class GModel;
+namespace GUI {
 
-class GModelIndex {
-    friend class GModel;
+class Model;
+
+class ModelIndex {
+    friend class Model;
 
 public:
-    GModelIndex() {}
+    ModelIndex() {}
 
     bool is_valid() const { return m_row != -1 && m_column != -1; }
     int row() const { return m_row; }
@@ -43,20 +45,20 @@ public:
 
     void* internal_data() const { return m_internal_data; }
 
-    GModelIndex parent() const;
+    ModelIndex parent() const;
 
-    bool operator==(const GModelIndex& other) const
+    bool operator==(const ModelIndex& other) const
     {
         return m_model == other.m_model && m_row == other.m_row && m_column == other.m_column && m_internal_data == other.m_internal_data;
     }
 
-    bool operator!=(const GModelIndex& other) const
+    bool operator!=(const ModelIndex& other) const
     {
         return !(*this == other);
     }
 
 private:
-    GModelIndex(const GModel& model, int row, int column, void* internal_data)
+    ModelIndex(const Model& model, int row, int column, void* internal_data)
         : m_model(&model)
         , m_row(row)
         , m_column(column)
@@ -64,22 +66,24 @@ private:
     {
     }
 
-    const GModel* m_model { nullptr };
+    const Model* m_model { nullptr };
     int m_row { -1 };
     int m_column { -1 };
     void* m_internal_data { nullptr };
 };
 
-inline const LogStream& operator<<(const LogStream& stream, const GModelIndex& value)
+inline const LogStream& operator<<(const LogStream& stream, const ModelIndex& value)
 {
     if (value.internal_data())
-        return stream << String::format("GModelIndex(%d,%d,%p)", value.row(), value.column(), value.internal_data());
-    return stream << String::format("GModelIndex(%d,%d)", value.row(), value.column());
+        return stream << String::format("ModelIndex(%d,%d,%p)", value.row(), value.column(), value.internal_data());
+    return stream << String::format("ModelIndex(%d,%d)", value.row(), value.column());
+}
+
 }
 
 namespace AK {
 template<>
-struct Traits<GModelIndex> : public GenericTraits<GModelIndex> {
-    static unsigned hash(const GModelIndex& index) { return pair_int_hash(index.row(), index.column()); }
+struct Traits<GUI::ModelIndex> : public GenericTraits<GUI::ModelIndex> {
+    static unsigned hash(const GUI::ModelIndex& index) { return pair_int_hash(index.row(), index.column()); }
 };
 }

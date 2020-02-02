@@ -52,18 +52,18 @@ int main(int argc, char** argv)
     if (!ok)
         print_usage_and_exit();
 
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
-    auto window = GWindow::construct();
+    auto window = GUI::Window::construct();
     window->set_title("Inspector");
     window->set_rect(150, 150, 300, 500);
 
-    auto widget = GWidget::construct();
+    auto widget = GUI::Widget::construct();
     window->set_main_widget(widget);
     widget->set_fill_with_background_color(true);
-    widget->set_layout(make<GVBoxLayout>());
+    widget->set_layout(make<GUI::VBoxLayout>());
 
-    auto splitter = GSplitter::construct(Orientation::Horizontal, widget);
+    auto splitter = GUI::Splitter::construct(Orientation::Horizontal, widget);
 
     RemoteProcess remote_process(pid);
 
@@ -72,11 +72,11 @@ int main(int argc, char** argv)
             window->set_title(String::format("Inspector: %s (%d)", remote_process.process_name().characters(), remote_process.pid()));
     };
 
-    auto tree_view = GTreeView::construct(splitter);
+    auto tree_view = GUI::TreeView::construct(splitter);
     tree_view->set_model(remote_process.object_graph_model());
     tree_view->set_activates_on_selection(true);
 
-    auto properties_table_view = GTableView::construct(splitter);
+    auto properties_table_view = GUI::TableView::construct(splitter);
     properties_table_view->set_size_columns_to_fit_content(true);
 
     tree_view->on_activation = [&](auto& index) {

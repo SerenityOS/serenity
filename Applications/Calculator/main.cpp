@@ -40,7 +40,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
     if (pledge("stdio shared_buffer rpath accept", nullptr) < 0) {
         perror("pledge");
@@ -54,7 +54,7 @@ int main(int argc, char** argv)
 
     unveil(nullptr, nullptr);
 
-    auto window = GWindow::construct();
+    auto window = GUI::Window::construct();
     window->set_title("Calculator");
     window->set_resizable(false);
     window->set_rect({ 300, 200, 254, 213 });
@@ -65,18 +65,18 @@ int main(int argc, char** argv)
     window->show();
     window->set_icon(GraphicsBitmap::load_from_file("/res/icons/16x16/app-calculator.png"));
 
-    auto menubar = make<GMenuBar>();
+    auto menubar = make<GUI::MenuBar>();
 
-    auto app_menu = GMenu::construct("Calculator");
-    app_menu->add_action(GCommonActions::make_quit_action([](auto&) {
-        GApplication::the().quit(0);
+    auto app_menu = GUI::Menu::construct("Calculator");
+    app_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
+        GUI::Application::the().quit(0);
         return;
     }));
     menubar->add_menu(move(app_menu));
 
-    auto help_menu = GMenu::construct("Help");
-    help_menu->add_action(GAction::create("About", [&](const GAction&) {
-        GAboutDialog::show("Calculator", load_png("/res/icons/16x16/app-calculator.png"), window);
+    auto help_menu = GUI::Menu::construct("Help");
+    help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
+        GUI::AboutDialog::show("Calculator", load_png("/res/icons/16x16/app-calculator.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 

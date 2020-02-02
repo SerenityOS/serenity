@@ -42,27 +42,27 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
     if (pledge("stdio shared_buffer accept rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
-    auto menubar = make<GMenuBar>();
+    auto menubar = make<GUI::MenuBar>();
 
-    auto app_menu = GMenu::construct("QuickShow");
-    app_menu->add_action(GCommonActions::make_quit_action([](auto&) {
-        GApplication::the().quit(0);
+    auto app_menu = GUI::Menu::construct("QuickShow");
+    app_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
+        GUI::Application::the().quit(0);
         return;
     }));
     menubar->add_menu(move(app_menu));
 
-    auto file_menu = GMenu::construct("File");
+    auto file_menu = GUI::Menu::construct("File");
     menubar->add_menu(move(file_menu));
 
-    auto help_menu = GMenu::construct("Help");
-    help_menu->add_action(GAction::create("About", [](const GAction&) {
+    auto help_menu = GUI::Menu::construct("Help");
+    help_menu->add_action(GUI::Action::create("About", [](const GUI::Action&) {
         dbgprintf("FIXME: Implement Help/About\n");
     }));
     menubar->add_menu(move(help_menu));
@@ -86,7 +86,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    auto window = GWindow::construct();
+    auto window = GUI::Window::construct();
     auto widget = QSWidget::construct();
     widget->set_path(path);
     widget->set_bitmap(*bitmap);

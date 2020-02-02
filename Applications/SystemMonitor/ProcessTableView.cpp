@@ -29,12 +29,12 @@
 #include <LibGUI/GSortingProxyModel.h>
 #include <stdio.h>
 
-ProcessTableView::ProcessTableView(GWidget* parent)
-    : GTableView(parent)
+ProcessTableView::ProcessTableView(GUI::Widget* parent)
+    : TableView(parent)
 {
     set_size_columns_to_fit_content(true);
-    set_model(GSortingProxyModel::create(ProcessModel::create()));
-    model()->set_key_column_and_sort_order(ProcessModel::Column::CPU, GSortOrder::Descending);
+    set_model(GUI::SortingProxyModel::create(ProcessModel::create()));
+    model()->set_key_column_and_sort_order(ProcessModel::Column::CPU, GUI::SortOrder::Descending);
     refresh();
 
     on_selection = [this](auto&) {
@@ -56,5 +56,5 @@ pid_t ProcessTableView::selected_pid() const
 {
     if (selection().is_empty())
         return -1;
-    return model()->data(model()->index(selection().first().row(), ProcessModel::Column::PID), GModel::Role::Sort).as_i32();
+    return model()->data(model()->index(selection().first().row(), ProcessModel::Column::PID), GUI::Model::Role::Sort).as_i32();
 }

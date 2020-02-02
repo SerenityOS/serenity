@@ -123,7 +123,7 @@ void VBWidget::for_each_property(Function<void(VBProperty&)> callback)
     }
 }
 
-void VBWidget::add_property(const String& name, Function<GVariant(const GWidget&)>&& getter, Function<void(GWidget&, const GVariant&)>&& setter)
+void VBWidget::add_property(const String& name, Function<GUI::Variant(const GUI::Widget&)>&& getter, Function<void(GUI::Widget&, const GUI::Variant&)>&& setter)
 {
     auto& prop = property(name);
     prop.m_getter = move(getter);
@@ -133,74 +133,74 @@ void VBWidget::add_property(const String& name, Function<GVariant(const GWidget&
 #define VB_ADD_PROPERTY(gclass, name, getter, setter, variant_type)                \
     add_property(                                                                  \
         name,                                                                      \
-        [](auto& widget) -> GVariant { return ((const gclass&)widget).getter(); }, \
+        [](auto& widget) -> GUI::Variant { return ((const gclass&)widget).getter(); }, \
         [](auto& widget, auto& value) { ((gclass&)widget).setter(value.to_##variant_type()); })
 
 void VBWidget::setup_properties()
 {
     VB_ADD_PROPERTY(Core::Object, "name", name, set_name, string);
 
-    VB_ADD_PROPERTY(GWidget, "width", width, set_width, i32);
-    VB_ADD_PROPERTY(GWidget, "height", height, set_height, i32);
-    VB_ADD_PROPERTY(GWidget, "x", x, set_x, i32);
-    VB_ADD_PROPERTY(GWidget, "y", y, set_y, i32);
-    VB_ADD_PROPERTY(GWidget, "visible", is_visible, set_visible, bool);
-    VB_ADD_PROPERTY(GWidget, "enabled", is_enabled, set_enabled, bool);
-    VB_ADD_PROPERTY(GWidget, "tooltip", tooltip, set_tooltip, string);
-    VB_ADD_PROPERTY(GWidget, "backcolor", background_color, set_background_color, color);
-    VB_ADD_PROPERTY(GWidget, "forecolor", foreground_color, set_foreground_color, color);
-    VB_ADD_PROPERTY(GWidget, "autofill", fill_with_background_color, set_fill_with_background_color, bool);
+    VB_ADD_PROPERTY(GUI::Widget, "width", width, set_width, i32);
+    VB_ADD_PROPERTY(GUI::Widget, "height", height, set_height, i32);
+    VB_ADD_PROPERTY(GUI::Widget, "x", x, set_x, i32);
+    VB_ADD_PROPERTY(GUI::Widget, "y", y, set_y, i32);
+    VB_ADD_PROPERTY(GUI::Widget, "visible", is_visible, set_visible, bool);
+    VB_ADD_PROPERTY(GUI::Widget, "enabled", is_enabled, set_enabled, bool);
+    VB_ADD_PROPERTY(GUI::Widget, "tooltip", tooltip, set_tooltip, string);
+    VB_ADD_PROPERTY(GUI::Widget, "backcolor", background_color, set_background_color, color);
+    VB_ADD_PROPERTY(GUI::Widget, "forecolor", foreground_color, set_foreground_color, color);
+    VB_ADD_PROPERTY(GUI::Widget, "autofill", fill_with_background_color, set_fill_with_background_color, bool);
 
     if (m_type == VBWidgetType::GLabel) {
-        VB_ADD_PROPERTY(GLabel, "text", text, set_text, string);
+        VB_ADD_PROPERTY(GUI::Label, "text", text, set_text, string);
     }
 
     if (m_type == VBWidgetType::GButton) {
-        VB_ADD_PROPERTY(GButton, "text", text, set_text, string);
+        VB_ADD_PROPERTY(GUI::Button, "text", text, set_text, string);
     }
 
     if (m_type == VBWidgetType::GGroupBox) {
-        VB_ADD_PROPERTY(GGroupBox, "title", title, set_title, string);
+        VB_ADD_PROPERTY(GUI::GroupBox, "title", title, set_title, string);
     }
 
     if (m_type == VBWidgetType::GScrollBar) {
-        VB_ADD_PROPERTY(GScrollBar, "min", min, set_min, i32);
-        VB_ADD_PROPERTY(GScrollBar, "max", max, set_max, i32);
-        VB_ADD_PROPERTY(GScrollBar, "value", value, set_value, i32);
-        VB_ADD_PROPERTY(GScrollBar, "step", step, set_step, i32);
+        VB_ADD_PROPERTY(GUI::ScrollBar, "min", min, set_min, i32);
+        VB_ADD_PROPERTY(GUI::ScrollBar, "max", max, set_max, i32);
+        VB_ADD_PROPERTY(GUI::ScrollBar, "value", value, set_value, i32);
+        VB_ADD_PROPERTY(GUI::ScrollBar, "step", step, set_step, i32);
     }
 
     if (m_type == VBWidgetType::GSpinBox) {
-        VB_ADD_PROPERTY(GSpinBox, "min", min, set_min, i32);
-        VB_ADD_PROPERTY(GSpinBox, "max", max, set_max, i32);
-        VB_ADD_PROPERTY(GSpinBox, "value", value, set_value, i32);
+        VB_ADD_PROPERTY(GUI::SpinBox, "min", min, set_min, i32);
+        VB_ADD_PROPERTY(GUI::SpinBox, "max", max, set_max, i32);
+        VB_ADD_PROPERTY(GUI::SpinBox, "value", value, set_value, i32);
     }
 
     if (m_type == VBWidgetType::GProgressBar) {
-        VB_ADD_PROPERTY(GProgressBar, "min", min, set_min, i32);
-        VB_ADD_PROPERTY(GProgressBar, "max", max, set_max, i32);
-        VB_ADD_PROPERTY(GProgressBar, "value", value, set_value, i32);
+        VB_ADD_PROPERTY(GUI::ProgressBar, "min", min, set_min, i32);
+        VB_ADD_PROPERTY(GUI::ProgressBar, "max", max, set_max, i32);
+        VB_ADD_PROPERTY(GUI::ProgressBar, "value", value, set_value, i32);
     }
 
     if (m_type == VBWidgetType::GSlider) {
-        VB_ADD_PROPERTY(GSlider, "min", min, set_min, i32);
-        VB_ADD_PROPERTY(GSlider, "max", max, set_max, i32);
-        VB_ADD_PROPERTY(GSlider, "value", value, set_value, i32);
+        VB_ADD_PROPERTY(GUI::Slider, "min", min, set_min, i32);
+        VB_ADD_PROPERTY(GUI::Slider, "max", max, set_max, i32);
+        VB_ADD_PROPERTY(GUI::Slider, "value", value, set_value, i32);
     }
 
     if (m_type == VBWidgetType::GTextEditor) {
-        VB_ADD_PROPERTY(GTextEditor, "text", text, set_text, string);
-        VB_ADD_PROPERTY(GTextEditor, "ruler_visible", is_ruler_visible, set_ruler_visible, bool);
+        VB_ADD_PROPERTY(GUI::TextEditor, "text", text, set_text, string);
+        VB_ADD_PROPERTY(GUI::TextEditor, "ruler_visible", is_ruler_visible, set_ruler_visible, bool);
     }
 
     if (m_type == VBWidgetType::GCheckBox) {
-        VB_ADD_PROPERTY(GCheckBox, "text", text, set_text, string);
-        VB_ADD_PROPERTY(GCheckBox, "checked", is_checked, set_checked, bool);
+        VB_ADD_PROPERTY(GUI::CheckBox, "text", text, set_text, string);
+        VB_ADD_PROPERTY(GUI::CheckBox, "checked", is_checked, set_checked, bool);
     }
 
     if (m_type == VBWidgetType::GRadioButton) {
-        VB_ADD_PROPERTY(GRadioButton, "text", text, set_text, string);
-        VB_ADD_PROPERTY(GRadioButton, "checked", is_checked, set_checked, bool);
+        VB_ADD_PROPERTY(GUI::RadioButton, "text", text, set_text, string);
+        VB_ADD_PROPERTY(GUI::RadioButton, "checked", is_checked, set_checked, bool);
     }
 }
 
@@ -220,7 +220,7 @@ VBProperty& VBWidget::property(const String& name)
         if (prop.name() == name)
             return prop;
     }
-    m_properties.append(make<VBProperty>(*this, name, GVariant()));
+    m_properties.append(make<VBProperty>(*this, name, GUI::Variant()));
     return m_properties.last();
 }
 

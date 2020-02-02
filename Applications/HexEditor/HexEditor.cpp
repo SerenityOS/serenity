@@ -41,8 +41,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
-HexEditor::HexEditor(GWidget* parent)
-    : GScrollableWidget(parent)
+HexEditor::HexEditor(GUI::Widget* parent)
+    : ScrollableWidget(parent)
 {
     set_frame_shape(FrameShape::Container);
     set_frame_shadow(FrameShadow::Sunken);
@@ -139,7 +139,7 @@ bool HexEditor::copy_selected_hex_to_clipboard()
         output_string_builder.appendf("%02X ", m_buffer.data()[i]);
     }
 
-    GClipboard::the().set_data(output_string_builder.to_string());
+    GUI::Clipboard::the().set_data(output_string_builder.to_string());
     return true;
 }
 
@@ -153,7 +153,7 @@ bool HexEditor::copy_selected_text_to_clipboard()
         output_string_builder.appendf("%c", isprint(m_buffer.data()[i]) ? m_buffer[i] : '.');
     }
 
-    GClipboard::the().set_data(output_string_builder.to_string());
+    GUI::Clipboard::the().set_data(output_string_builder.to_string());
     return true;
 }
 
@@ -176,7 +176,7 @@ bool HexEditor::copy_selected_hex_to_clipboard_as_c_code()
     }
     output_string_builder.append("\n};\n");
 
-    GClipboard::the().set_data(output_string_builder.to_string());
+    GUI::Clipboard::the().set_data(output_string_builder.to_string());
     return true;
 }
 
@@ -195,9 +195,9 @@ void HexEditor::set_content_length(int length)
     set_content_size({ offset_margin_width() + (m_bytes_per_row * (character_width() * 3)) + 10 + (m_bytes_per_row * character_width()) + 20, total_rows() * line_height() + 10 });
 }
 
-void HexEditor::mousedown_event(GMouseEvent& event)
+void HexEditor::mousedown_event(GUI::MouseEvent& event)
 {
-    if (event.button() != GMouseButton::Left) {
+    if (event.button() != GUI::MouseButton::Left) {
         return;
     }
 
@@ -259,7 +259,7 @@ void HexEditor::mousedown_event(GMouseEvent& event)
     }
 }
 
-void HexEditor::mousemove_event(GMouseEvent& event)
+void HexEditor::mousemove_event(GUI::MouseEvent& event)
 {
     auto absolute_x = horizontal_scrollbar().value() + event.x();
     auto absolute_y = vertical_scrollbar().value() + event.y();
@@ -274,12 +274,12 @@ void HexEditor::mousemove_event(GMouseEvent& event)
     auto text_end_x = text_start_x + (bytes_per_row() * character_width());
     auto text_end_y = text_start_y + 5 + (total_rows() * line_height());
 
-    window()->set_override_cursor(GStandardCursor::None);
+    window()->set_override_cursor(GUI::StandardCursor::None);
     if ((absolute_x >= hex_start_x && absolute_x <= hex_end_x
             && absolute_y >= hex_start_y && absolute_y <= hex_end_y)
         || (absolute_x >= text_start_x && absolute_x <= text_end_x
             && absolute_y >= text_start_y && absolute_y <= text_end_y)) {
-        window()->set_override_cursor(GStandardCursor::IBeam);
+        window()->set_override_cursor(GUI::StandardCursor::IBeam);
     }
 
     if (m_in_drag_select) {
@@ -311,9 +311,9 @@ void HexEditor::mousemove_event(GMouseEvent& event)
     }
 }
 
-void HexEditor::mouseup_event(GMouseEvent& event)
+void HexEditor::mouseup_event(GUI::MouseEvent& event)
 {
-    if (event.button() == GMouseButton::Left) {
+    if (event.button() == GUI::MouseButton::Left) {
         if (m_in_drag_select) {
             if (m_selection_end == -1 || m_selection_start == -1) {
                 m_selection_start = -1;
@@ -344,7 +344,7 @@ void HexEditor::scroll_position_into_view(int position)
     scroll_into_view(rect, true, true);
 }
 
-void HexEditor::keydown_event(GKeyEvent& event)
+void HexEditor::keydown_event(GUI::KeyEvent& event)
 {
 #ifdef HEX_DEBUG
     printf("HexEditor::keydown_event key=%d\n", event.key());
@@ -414,7 +414,7 @@ void HexEditor::keydown_event(GKeyEvent& event)
     }
 }
 
-void HexEditor::hex_mode_keydown_event(GKeyEvent& event)
+void HexEditor::hex_mode_keydown_event(GUI::KeyEvent& event)
 {
     if ((event.key() >= KeyCode::Key_0 && event.key() <= KeyCode::Key_9) || (event.key() >= KeyCode::Key_A && event.key() <= KeyCode::Key_F)) {
 
@@ -439,7 +439,7 @@ void HexEditor::hex_mode_keydown_event(GKeyEvent& event)
     }
 }
 
-void HexEditor::text_mode_keydown_event(GKeyEvent& event)
+void HexEditor::text_mode_keydown_event(GUI::KeyEvent& event)
 {
     m_tracked_changes.set(m_position, m_buffer.data()[m_position]);
     m_buffer.data()[m_position] = (u8)event.text().characters()[0]; // save the first 4 bits, OR the new value in the last 4
@@ -462,11 +462,11 @@ void HexEditor::did_change()
         on_change();
 }
 
-void HexEditor::paint_event(GPaintEvent& event)
+void HexEditor::paint_event(GUI::PaintEvent& event)
 {
-    GFrame::paint_event(event);
+    GUI::Frame::paint_event(event);
 
-    GPainter painter(*this);
+    GUI::Painter painter(*this);
     painter.add_clip_rect(widget_inner_rect());
     painter.add_clip_rect(event.rect());
     painter.fill_rect(event.rect(), Color::White);
@@ -567,5 +567,5 @@ void HexEditor::paint_event(GPaintEvent& event)
 void HexEditor::leave_event(Core::Event&)
 {
     ASSERT(window());
-    window()->set_override_cursor(GStandardCursor::None);
+    window()->set_override_cursor(GUI::StandardCursor::None);
 }

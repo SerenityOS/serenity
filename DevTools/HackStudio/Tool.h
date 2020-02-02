@@ -29,10 +29,13 @@
 #include <AK/Noncopyable.h>
 
 class FormEditorWidget;
-class GKeyEvent;
-class GMouseEvent;
-class GPaintEvent;
-class GPainter;
+
+namespace GUI {
+class KeyEvent;
+class MouseEvent;
+class PaintEvent;
+class Painter;
+}
 
 class Tool {
     AK_MAKE_NONCOPYABLE(Tool)
@@ -40,11 +43,11 @@ class Tool {
 public:
     virtual ~Tool() {}
 
-    virtual void on_mousedown(GMouseEvent&) = 0;
-    virtual void on_mouseup(GMouseEvent&) = 0;
-    virtual void on_mousemove(GMouseEvent&) = 0;
-    virtual void on_keydown(GKeyEvent&) = 0;
-    virtual void on_second_paint(GPainter&, GPaintEvent&) {}
+    virtual void on_mousedown(GUI::MouseEvent&) = 0;
+    virtual void on_mouseup(GUI::MouseEvent&) = 0;
+    virtual void on_mousemove(GUI::MouseEvent&) = 0;
+    virtual void on_keydown(GUI::KeyEvent&) = 0;
+    virtual void on_second_paint(GUI::Painter&, GUI::PaintEvent&) {}
 
     virtual const char* class_name() const = 0;
 

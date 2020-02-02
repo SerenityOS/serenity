@@ -125,39 +125,39 @@ static void run_command(int ptm_fd, String command)
     }
 }
 
-RefPtr<GWindow> create_settings_window(TerminalWidget& terminal)
+RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
 {
-    auto window = GWindow::construct();
+    auto window = GUI::Window::construct();
     window->set_title("Terminal Settings");
     window->set_rect(50, 50, 200, 140);
 
-    auto settings = GWidget::construct();
+    auto settings = GUI::Widget::construct();
     window->set_main_widget(settings);
     settings->set_fill_with_background_color(true);
     settings->set_background_role(ColorRole::Button);
-    settings->set_layout(make<GVBoxLayout>());
+    settings->set_layout(make<GUI::VBoxLayout>());
     settings->layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto radio_container = GGroupBox::construct("Bell Mode", settings);
-    radio_container->set_layout(make<GVBoxLayout>());
+    auto radio_container = GUI::GroupBox::construct("Bell Mode", settings);
+    radio_container->set_layout(make<GUI::VBoxLayout>());
     radio_container->layout()->set_margins({ 6, 16, 6, 6 });
-    radio_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    radio_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     radio_container->set_preferred_size(100, 70);
 
-    auto sysbell_radio = GRadioButton::construct("Use (Audible) System Bell", radio_container);
-    auto visbell_radio = GRadioButton::construct("Use (Visual) Terminal Bell", radio_container);
+    auto sysbell_radio = GUI::RadioButton::construct("Use (Audible) System Bell", radio_container);
+    auto visbell_radio = GUI::RadioButton::construct("Use (Visual) Terminal Bell", radio_container);
     sysbell_radio->set_checked(terminal.should_beep());
     visbell_radio->set_checked(!terminal.should_beep());
     sysbell_radio->on_checked = [&terminal](const bool checked) {
         terminal.set_should_beep(checked);
     };
 
-    auto slider_container = GGroupBox::construct("Background Opacity", settings);
-    slider_container->set_layout(make<GVBoxLayout>());
+    auto slider_container = GUI::GroupBox::construct("Background Opacity", settings);
+    slider_container->set_layout(make<GUI::VBoxLayout>());
     slider_container->layout()->set_margins({ 6, 16, 6, 6 });
-    slider_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    slider_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     slider_container->set_preferred_size(100, 50);
-    auto slider = GSlider::construct(Orientation::Horizontal, slider_container);
+    auto slider = GUI::Slider::construct(Orientation::Horizontal, slider_container);
 
     slider->on_value_changed = [&terminal](int value) {
         terminal.set_opacity(value);
@@ -186,7 +186,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
     if (pledge("stdio tty rpath accept cpath wpath shared_buffer proc exec", nullptr) < 0) {
         perror("pledge");
@@ -210,7 +210,7 @@ int main(int argc, char** argv)
 
     run_command(ptm_fd, command_to_execute);
 
-    auto window = GWindow::construct();
+    auto window = GUI::Window::construct();
     window->set_title("Terminal");
     window->set_background_color(Color::Black);
     window->set_double_buffering_enabled(false);
@@ -230,50 +230,50 @@ int main(int argc, char** argv)
     window->set_icon(load_png("/res/icons/16x16/app-terminal.png"));
     terminal->set_should_beep(config->read_bool_entry("Window", "AudibleBeep", false));
 
-    RefPtr<GWindow> settings_window;
+    RefPtr<GUI::Window> settings_window;
 
     auto new_opacity = config->read_num_entry("Window", "Opacity", 255);
     terminal->set_opacity(new_opacity);
     window->set_has_alpha_channel(new_opacity < 255);
 
-    auto menubar = make<GMenuBar>();
+    auto menubar = make<GUI::MenuBar>();
 
-    auto app_menu = GMenu::construct("Terminal");
-    app_menu->add_action(GAction::create("Open new terminal", { Mod_Ctrl | Mod_Shift, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/app-terminal.png"), [&](auto&) {
+    auto app_menu = GUI::Menu::construct("Terminal");
+    app_menu->add_action(GUI::Action::create("Open new terminal", { Mod_Ctrl | Mod_Shift, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/app-terminal.png"), [&](auto&) {
         if (!fork()) {
             execl("/bin/Terminal", "Terminal", nullptr);
             exit(1);
         }
     }));
-    app_menu->add_action(GAction::create("Settings...", load_png("/res/icons/gear16.png"),
-        [&](const GAction&) {
+    app_menu->add_action(GUI::Action::create("Settings...", load_png("/res/icons/gear16.png"),
+        [&](const GUI::Action&) {
             if (!settings_window) {
                 settings_window = create_settings_window(*terminal);
                 settings_window->on_close_request = [&] {
                     settings_window = nullptr;
-                    return GWindow::CloseRequestDecision::Close;
+                    return GUI::Window::CloseRequestDecision::Close;
                 };
             }
             settings_window->show();
             settings_window->move_to_front();
         }));
     app_menu->add_separator();
-    app_menu->add_action(GCommonActions::make_quit_action([](auto&) {
+    app_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
         dbgprintf("Terminal: Quit menu activated!\n");
-        GApplication::the().quit(0);
+        GUI::Application::the().quit(0);
     }));
     menubar->add_menu(move(app_menu));
 
-    auto edit_menu = GMenu::construct("Edit");
+    auto edit_menu = GUI::Menu::construct("Edit");
     edit_menu->add_action(terminal->copy_action());
     edit_menu->add_action(terminal->paste_action());
     menubar->add_menu(move(edit_menu));
 
-    GActionGroup font_action_group;
+    GUI::ActionGroup font_action_group;
     font_action_group.set_exclusive(true);
-    auto font_menu = GMenu::construct("Font");
+    auto font_menu = GUI::Menu::construct("Font");
     GFontDatabase::the().for_each_fixed_width_font([&](const StringView& font_name) {
-        auto action = GAction::create(font_name, [&](GAction& action) {
+        auto action = GUI::Action::create(font_name, [&](GUI::Action& action) {
             action.set_checked(true);
             terminal->set_font(GFontDatabase::the().get_by_name(action.text()));
             auto metadata = GFontDatabase::the().get_metadata_by_name(action.text());
@@ -290,9 +290,9 @@ int main(int argc, char** argv)
     });
     menubar->add_menu(move(font_menu));
 
-    auto help_menu = GMenu::construct("Help");
-    help_menu->add_action(GAction::create("About", [&](const GAction&) {
-        GAboutDialog::show("Terminal", load_png("/res/icons/32x32/app-terminal.png"), window);
+    auto help_menu = GUI::Menu::construct("Help");
+    help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
+        GUI::AboutDialog::show("Terminal", load_png("/res/icons/32x32/app-terminal.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 

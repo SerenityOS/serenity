@@ -30,7 +30,7 @@
 #include <AK/String.h>
 #include <LibGUI/GModel.h>
 
-class ManualModel final : public GModel {
+class ManualModel final : public GUI::Model {
 public:
     static NonnullRefPtr<ManualModel> create()
     {
@@ -39,15 +39,15 @@ public:
 
     virtual ~ManualModel() override {};
 
-    String page_path(const GModelIndex&) const;
-    String page_and_section(const GModelIndex&) const;
+    String page_path(const GUI::ModelIndex&) const;
+    String page_and_section(const GUI::ModelIndex&) const;
 
-    virtual int row_count(const GModelIndex& = GModelIndex()) const override;
-    virtual int column_count(const GModelIndex& = GModelIndex()) const override;
-    virtual GVariant data(const GModelIndex&, Role = Role::Display) const override;
+    virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
+    virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
+    virtual GUI::Variant data(const GUI::ModelIndex&, Role = Role::Display) const override;
     virtual void update() override;
-    virtual GModelIndex parent_index(const GModelIndex&) const override;
-    virtual GModelIndex index(int row, int column = 0, const GModelIndex& parent = GModelIndex()) const override;
+    virtual GUI::ModelIndex parent_index(const GUI::ModelIndex&) const override;
+    virtual GUI::ModelIndex index(int row, int column = 0, const GUI::ModelIndex& parent = GUI::ModelIndex()) const override;
 
 private:
     ManualModel();

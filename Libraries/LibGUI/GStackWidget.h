@@ -28,22 +28,26 @@
 
 #include <LibGUI/GWidget.h>
 
-class GStackWidget : public GWidget {
-    C_OBJECT(GStackWidget)
+namespace GUI {
+
+class StackWidget : public Widget {
+    C_OBJECT(StackWidget)
 public:
-    virtual ~GStackWidget() override;
+    virtual ~StackWidget() override;
 
-    GWidget* active_widget() { return m_active_widget.ptr(); }
-    const GWidget* active_widget() const { return m_active_widget.ptr(); }
-    void set_active_widget(GWidget*);
+    Widget* active_widget() { return m_active_widget.ptr(); }
+    const Widget* active_widget() const { return m_active_widget.ptr(); }
+    void set_active_widget(Widget*);
 
-    Function<void(GWidget*)> on_active_widget_change;
+    Function<void(Widget*)> on_active_widget_change;
 
 protected:
-    explicit GStackWidget(GWidget* parent);
+    explicit StackWidget(Widget* parent);
     virtual void child_event(Core::ChildEvent&) override;
-    virtual void resize_event(GResizeEvent&) override;
+    virtual void resize_event(ResizeEvent&) override;
 
 private:
-    RefPtr<GWidget> m_active_widget;
+    RefPtr<Widget> m_active_widget;
 };
+
+}

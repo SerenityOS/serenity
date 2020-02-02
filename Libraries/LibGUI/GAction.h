@@ -38,31 +38,33 @@
 #include <LibGUI/GShortcut.h>
 #include <LibGUI/GWindow.h>
 
-class GAction;
-class GActionGroup;
-class GButton;
-class GMenuItem;
+namespace GUI {
 
-namespace GCommonActions {
-NonnullRefPtr<GAction> make_open_action(Function<void(GAction&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<GAction> make_undo_action(Function<void(GAction&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<GAction> make_redo_action(Function<void(GAction&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<GAction> make_cut_action(Function<void(GAction&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<GAction> make_copy_action(Function<void(GAction&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<GAction> make_paste_action(Function<void(GAction&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<GAction> make_delete_action(Function<void(GAction&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<GAction> make_move_to_front_action(Function<void(GAction&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<GAction> make_move_to_back_action(Function<void(GAction&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<GAction> make_fullscreen_action(Function<void(GAction&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<GAction> make_quit_action(Function<void(GAction&)>);
-NonnullRefPtr<GAction> make_go_back_action(Function<void(GAction&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<GAction> make_go_forward_action(Function<void(GAction&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<GAction> make_go_home_action(Function<void(GAction&)> callback, Core::Object* parent = nullptr);
-NonnullRefPtr<GAction> make_reload_action(Function<void(GAction&)>, Core::Object* parent = nullptr);
+class Action;
+class ActionGroup;
+class Button;
+class MenuItem;
+
+namespace CommonActions {
+NonnullRefPtr<Action> make_open_action(Function<void(Action&)>, Core::Object* parent = nullptr);
+NonnullRefPtr<Action> make_undo_action(Function<void(Action&)>, Core::Object* parent = nullptr);
+NonnullRefPtr<Action> make_redo_action(Function<void(Action&)>, Core::Object* parent = nullptr);
+NonnullRefPtr<Action> make_cut_action(Function<void(Action&)>, Core::Object* parent = nullptr);
+NonnullRefPtr<Action> make_copy_action(Function<void(Action&)>, Core::Object* parent = nullptr);
+NonnullRefPtr<Action> make_paste_action(Function<void(Action&)>, Core::Object* parent = nullptr);
+NonnullRefPtr<Action> make_delete_action(Function<void(Action&)>, Core::Object* parent = nullptr);
+NonnullRefPtr<Action> make_move_to_front_action(Function<void(Action&)>, Core::Object* parent = nullptr);
+NonnullRefPtr<Action> make_move_to_back_action(Function<void(Action&)>, Core::Object* parent = nullptr);
+NonnullRefPtr<Action> make_fullscreen_action(Function<void(Action&)>, Core::Object* parent = nullptr);
+NonnullRefPtr<Action> make_quit_action(Function<void(Action&)>);
+NonnullRefPtr<Action> make_go_back_action(Function<void(Action&)>, Core::Object* parent = nullptr);
+NonnullRefPtr<Action> make_go_forward_action(Function<void(Action&)>, Core::Object* parent = nullptr);
+NonnullRefPtr<Action> make_go_home_action(Function<void(Action&)> callback, Core::Object* parent = nullptr);
+NonnullRefPtr<Action> make_reload_action(Function<void(Action&)>, Core::Object* parent = nullptr);
 };
 
-class GAction final : public Core::Object {
-    C_OBJECT(GAction)
+class Action final : public Core::Object {
+    C_OBJECT(Action)
 public:
     enum class ShortcutScope {
         None,
@@ -70,33 +72,33 @@ public:
         WindowLocal,
         ApplicationGlobal,
     };
-    static NonnullRefPtr<GAction> create(const StringView& text, Function<void(GAction&)> callback, Core::Object* parent = nullptr)
+    static NonnullRefPtr<Action> create(const StringView& text, Function<void(Action&)> callback, Core::Object* parent = nullptr)
     {
-        return adopt(*new GAction(text, move(callback), parent));
+        return adopt(*new Action(text, move(callback), parent));
     }
-    static NonnullRefPtr<GAction> create(const StringView& text, RefPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> callback, Core::Object* parent = nullptr)
+    static NonnullRefPtr<Action> create(const StringView& text, RefPtr<GraphicsBitmap>&& icon, Function<void(Action&)> callback, Core::Object* parent = nullptr)
     {
-        return adopt(*new GAction(text, move(icon), move(callback), parent));
+        return adopt(*new Action(text, move(icon), move(callback), parent));
     }
-    static NonnullRefPtr<GAction> create(const StringView& text, const GShortcut& shortcut, Function<void(GAction&)> callback, Core::Object* parent = nullptr)
+    static NonnullRefPtr<Action> create(const StringView& text, const Shortcut& shortcut, Function<void(Action&)> callback, Core::Object* parent = nullptr)
     {
-        return adopt(*new GAction(text, shortcut, move(callback), parent));
+        return adopt(*new Action(text, shortcut, move(callback), parent));
     }
-    static NonnullRefPtr<GAction> create(const StringView& text, const GShortcut& shortcut, RefPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> callback, Core::Object* parent = nullptr)
+    static NonnullRefPtr<Action> create(const StringView& text, const Shortcut& shortcut, RefPtr<GraphicsBitmap>&& icon, Function<void(Action&)> callback, Core::Object* parent = nullptr)
     {
-        return adopt(*new GAction(text, shortcut, move(icon), move(callback), parent));
+        return adopt(*new Action(text, shortcut, move(icon), move(callback), parent));
     }
-    virtual ~GAction() override;
+    virtual ~Action() override;
 
     String text() const { return m_text; }
-    GShortcut shortcut() const { return m_shortcut; }
+    Shortcut shortcut() const { return m_shortcut; }
     const GraphicsBitmap* icon() const { return m_icon.ptr(); }
     void set_icon(const GraphicsBitmap* icon) { m_icon = icon; }
 
     const Core::Object* activator() const { return m_activator.ptr(); }
     Core::Object* activator() { return m_activator.ptr(); }
 
-    Function<void(GAction&)> on_activation;
+    Function<void(Action&)> on_activation;
 
     void activate(Core::Object* activator = nullptr);
 
@@ -113,21 +115,21 @@ public:
     }
     void set_checked(bool);
 
-    void register_button(Badge<GButton>, GButton&);
-    void unregister_button(Badge<GButton>, GButton&);
-    void register_menu_item(Badge<GMenuItem>, GMenuItem&);
-    void unregister_menu_item(Badge<GMenuItem>, GMenuItem&);
+    void register_button(Badge<Button>, Button&);
+    void unregister_button(Badge<Button>, Button&);
+    void register_menu_item(Badge<MenuItem>, MenuItem&);
+    void unregister_menu_item(Badge<MenuItem>, MenuItem&);
 
-    const GActionGroup* group() const { return m_action_group.ptr(); }
-    void set_group(Badge<GActionGroup>, GActionGroup*);
+    const ActionGroup* group() const { return m_action_group.ptr(); }
+    void set_group(Badge<ActionGroup>, ActionGroup*);
 
 private:
     virtual bool is_action() const override { return true; }
 
-    GAction(const StringView& text, Function<void(GAction&)> = nullptr, Core::Object* = nullptr);
-    GAction(const StringView& text, const GShortcut&, Function<void(GAction&)> = nullptr, Core::Object* = nullptr);
-    GAction(const StringView& text, const GShortcut&, RefPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> = nullptr, Core::Object* = nullptr);
-    GAction(const StringView& text, RefPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> = nullptr, Core::Object* = nullptr);
+    Action(const StringView& text, Function<void(Action&)> = nullptr, Core::Object* = nullptr);
+    Action(const StringView& text, const Shortcut&, Function<void(Action&)> = nullptr, Core::Object* = nullptr);
+    Action(const StringView& text, const Shortcut&, RefPtr<GraphicsBitmap>&& icon, Function<void(Action&)> = nullptr, Core::Object* = nullptr);
+    Action(const StringView& text, RefPtr<GraphicsBitmap>&& icon, Function<void(Action&)> = nullptr, Core::Object* = nullptr);
 
     template<typename Callback>
     void for_each_toolbar_button(Callback);
@@ -136,20 +138,22 @@ private:
 
     String m_text;
     RefPtr<GraphicsBitmap> m_icon;
-    GShortcut m_shortcut;
+    Shortcut m_shortcut;
     bool m_enabled { true };
     bool m_checkable { false };
     bool m_checked { false };
     ShortcutScope m_scope { ShortcutScope::None };
 
-    HashTable<GButton*> m_buttons;
-    HashTable<GMenuItem*> m_menu_items;
-    WeakPtr<GActionGroup> m_action_group;
+    HashTable<Button*> m_buttons;
+    HashTable<MenuItem*> m_menu_items;
+    WeakPtr<ActionGroup> m_action_group;
     WeakPtr<Core::Object> m_activator;
 };
 
+}
+
 template<>
-inline bool Core::is<GAction>(const Core::Object& object)
+inline bool Core::is<GUI::Action>(const Core::Object& object)
 {
     return object.is_action();
 }

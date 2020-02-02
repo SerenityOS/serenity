@@ -31,11 +31,12 @@
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
 
-class GAction;
-class GStackWidget;
-class GTableView;
+namespace GUI {
+class StackWidget;
+class TableView;
+}
 
-class IRCAppWindow : public GWindow {
+class IRCAppWindow : public GUI::Window {
 public:
     IRCAppWindow();
     virtual ~IRCAppWindow() override;
@@ -54,12 +55,12 @@ private:
 
     IRCWindow& create_window(void* owner, IRCWindow::Type, const String& name);
     IRCClient m_client;
-    RefPtr<GStackWidget> m_container;
-    RefPtr<GTableView> m_window_list;
-    RefPtr<GAction> m_join_action;
-    RefPtr<GAction> m_part_action;
-    RefPtr<GAction> m_whois_action;
-    RefPtr<GAction> m_open_query_action;
-    RefPtr<GAction> m_close_query_action;
-    RefPtr<GAction> m_change_nick_action;
+    RefPtr<GUI::StackWidget> m_container;
+    RefPtr<GUI::TableView> m_window_list;
+    RefPtr<GUI::Action> m_join_action;
+    RefPtr<GUI::Action> m_part_action;
+    RefPtr<GUI::Action> m_whois_action;
+    RefPtr<GUI::Action> m_open_query_action;
+    RefPtr<GUI::Action> m_close_query_action;
+    RefPtr<GUI::Action> m_change_nick_action;
 };

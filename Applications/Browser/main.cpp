@@ -61,7 +61,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
     // Connect to the ProtocolServer immediately so we can drop the "unix" pledge.
     ResourceLoader::the();
@@ -72,21 +72,21 @@ int main(int argc, char** argv)
     }
 
 
-    auto window = GWindow::construct();
+    auto window = GUI::Window::construct();
     window->set_rect(100, 100, 640, 480);
 
-    auto widget = GWidget::construct();
+    auto widget = GUI::Widget::construct();
     widget->set_fill_with_background_color(true);
-    widget->set_layout(make<GVBoxLayout>());
+    widget->set_layout(make<GUI::VBoxLayout>());
     widget->layout()->set_spacing(0);
 
-    auto toolbar = GToolBar::construct(widget);
+    auto toolbar = GUI::ToolBar::construct(widget);
     auto html_widget = HtmlView::construct(widget);
 
     History<URL> history;
 
-    RefPtr<GAction> go_back_action;
-    RefPtr<GAction> go_forward_action;
+    RefPtr<GUI::Action> go_back_action;
+    RefPtr<GUI::Action> go_forward_action;
 
     auto update_actions = [&]() {
         go_back_action->set_enabled(history.can_go_back());
@@ -95,14 +95,14 @@ int main(int argc, char** argv)
 
     bool should_push_loads_to_history = true;
 
-    go_back_action = GCommonActions::make_go_back_action([&](auto&) {
+    go_back_action = GUI::CommonActions::make_go_back_action([&](auto&) {
         history.go_back();
         update_actions();
         TemporaryChange<bool> change(should_push_loads_to_history, false);
         html_widget->load(history.current());
     });
 
-    go_forward_action = GCommonActions::make_go_forward_action([&](auto&) {
+    go_forward_action = GUI::CommonActions::make_go_forward_action([&](auto&) {
         history.go_forward();
         update_actions();
         TemporaryChange<bool> change(should_push_loads_to_history, false);
@@ -112,16 +112,16 @@ int main(int argc, char** argv)
     toolbar->add_action(*go_back_action);
     toolbar->add_action(*go_forward_action);
 
-    toolbar->add_action(GCommonActions::make_go_home_action([&](auto&) {
+    toolbar->add_action(GUI::CommonActions::make_go_home_action([&](auto&) {
         html_widget->load(home_url);
     }));
 
-    toolbar->add_action(GCommonActions::make_reload_action([&](auto&) {
+    toolbar->add_action(GUI::CommonActions::make_reload_action([&](auto&) {
         TemporaryChange<bool> change(should_push_loads_to_history, false);
         html_widget->reload();
     }));
 
-    auto location_box = GTextBox::construct(toolbar);
+    auto location_box = GUI::TextBox::construct(toolbar);
 
     location_box->on_return_pressed = [&] {
         html_widget->load(location_box->text());
@@ -146,12 +146,12 @@ int main(int argc, char** argv)
         window->set_title(String::format("%s - Browser", title.characters()));
     };
 
-    auto focus_location_box_action = GAction::create("Focus location box", { Mod_Ctrl, Key_L }, [&](auto&) {
+    auto focus_location_box_action = GUI::Action::create("Focus location box", { Mod_Ctrl, Key_L }, [&](auto&) {
         location_box->select_all();
         location_box->set_focus(true);
     });
 
-    auto statusbar = GStatusBar::construct(widget);
+    auto statusbar = GUI::StatusBar::construct(widget);
 
     html_widget->on_link_hover = [&](auto& href) {
         statusbar->set_text(href);
@@ -165,18 +165,18 @@ int main(int argc, char** argv)
         statusbar->set_text(String::format("Loading (%d pending resources...)", ResourceLoader::the().pending_loads()));
     };
 
-    auto menubar = make<GMenuBar>();
+    auto menubar = make<GUI::MenuBar>();
 
-    auto app_menu = GMenu::construct("Browser");
-    app_menu->add_action(GCommonActions::make_quit_action([&](auto&) {
+    auto app_menu = GUI::Menu::construct("Browser");
+    app_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app.quit();
     }));
     menubar->add_menu(move(app_menu));
 
-    RefPtr<GWindow> dom_inspector_window;
+    RefPtr<GUI::Window> dom_inspector_window;
 
-    auto inspect_menu = GMenu::construct("Inspect");
-    inspect_menu->add_action(GAction::create("View source", { Mod_Ctrl, Key_U }, [&](auto&) {
+    auto inspect_menu = GUI::Menu::construct("Inspect");
+    inspect_menu->add_action(GUI::Action::create("View source", { Mod_Ctrl, Key_U }, [&](auto&) {
         String filename_to_open;
         char tmp_filename[] = "/tmp/view-source.XXXXXX";
         ASSERT(html_widget->document());
@@ -195,9 +195,9 @@ int main(int argc, char** argv)
             ASSERT_NOT_REACHED();
         }
     }));
-    inspect_menu->add_action(GAction::create("Inspect DOM tree", { Mod_None, Key_F12 }, [&](auto&) {
+    inspect_menu->add_action(GUI::Action::create("Inspect DOM tree", { Mod_None, Key_F12 }, [&](auto&) {
         if (!dom_inspector_window) {
-            dom_inspector_window = GWindow::construct();
+            dom_inspector_window = GUI::Window::construct();
             dom_inspector_window->set_rect(100, 100, 300, 500);
             dom_inspector_window->set_title("DOM inspector");
             auto dom_inspector_widget = InspectorWidget::construct(nullptr);
@@ -210,20 +210,20 @@ int main(int argc, char** argv)
     }));
     menubar->add_menu(move(inspect_menu));
 
-    auto debug_menu = GMenu::construct("Debug");
-    debug_menu->add_action(GAction::create("Dump DOM tree", [&](auto&) {
+    auto debug_menu = GUI::Menu::construct("Debug");
+    debug_menu->add_action(GUI::Action::create("Dump DOM tree", [&](auto&) {
         dump_tree(*html_widget->document());
     }));
-    debug_menu->add_action(GAction::create("Dump Layout tree", [&](auto&) {
+    debug_menu->add_action(GUI::Action::create("Dump Layout tree", [&](auto&) {
         dump_tree(*html_widget->document()->layout_node());
     }));
-    debug_menu->add_action(GAction::create("Dump Style sheets", [&](auto&) {
+    debug_menu->add_action(GUI::Action::create("Dump Style sheets", [&](auto&) {
         for (auto& sheet : html_widget->document()->stylesheets()) {
             dump_sheet(sheet);
         }
     }));
     debug_menu->add_separator();
-    auto line_box_borders_action = GAction::create("Line box borders", [&](auto& action) {
+    auto line_box_borders_action = GUI::Action::create("Line box borders", [&](auto& action) {
         action.set_checked(!action.is_checked());
         html_widget->set_should_show_line_box_borders(action.is_checked());
         html_widget->update();
@@ -233,9 +233,9 @@ int main(int argc, char** argv)
     debug_menu->add_action(line_box_borders_action);
     menubar->add_menu(move(debug_menu));
 
-    auto help_menu = GMenu::construct("Help");
-    help_menu->add_action(GAction::create("About", [&](const GAction&) {
-        GAboutDialog::show("Browser", GraphicsBitmap::load_from_file("/res/icons/32x32/filetype-html.png"), window);
+    auto help_menu = GUI::Menu::construct("Help");
+    help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
+        GUI::AboutDialog::show("Browser", GraphicsBitmap::load_from_file("/res/icons/32x32/filetype-html.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 

@@ -28,9 +28,9 @@
 
 #include <LibGUI/GFrame.h>
 
-class ToolboxWidget final : public GFrame {
+class ToolboxWidget final : public GUI::Frame {
     C_OBJECT(ToolboxWidget)
 public:
-    explicit ToolboxWidget(GWidget* parent);
+    explicit ToolboxWidget(GUI::Widget* parent);
     virtual ~ToolboxWidget() override;
 };

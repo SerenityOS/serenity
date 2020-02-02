@@ -32,7 +32,7 @@ class FormWidget;
 class Tool;
 class WidgetTreeModel;
 
-class FormEditorWidget final : public GScrollableWidget {
+class FormEditorWidget final : public GUI::ScrollableWidget {
     C_OBJECT(FormEditorWidget)
 public:
     virtual ~FormEditorWidget() override;
@@ -49,8 +49,8 @@ public:
 
     class WidgetSelection {
     public:
-        Function<void(GWidget&)> on_remove;
-        Function<void(GWidget&)> on_add;
+        Function<void(GUI::Widget&)> on_remove;
+        Function<void(GUI::Widget&)> on_add;
         Function<void()> on_clear;
 
         void enable_hooks() { m_hooks_enabled = true; }
@@ -61,12 +61,12 @@ public:
             return m_widgets.is_empty();
         }
 
-        bool contains(GWidget& widget) const
+        bool contains(GUI::Widget& widget) const
         {
             return m_widgets.contains(&widget);
         }
 
-        void toggle(GWidget& widget)
+        void toggle(GUI::Widget& widget)
         {
             if (contains(widget))
                 remove(widget);
@@ -74,13 +74,13 @@ public:
                 add(widget);
         }
 
-        void set(GWidget& widget)
+        void set(GUI::Widget& widget)
         {
             clear();
             add(widget);
         }
 
-        void remove(GWidget& widget)
+        void remove(GUI::Widget& widget)
         {
             ASSERT(m_widgets.contains(&widget));
             m_widgets.remove(&widget);
@@ -88,7 +88,7 @@ public:
                 on_remove(widget);
         }
 
-        void add(GWidget& widget)
+        void add(GUI::Widget& widget)
         {
             m_widgets.set(&widget);
             if (m_hooks_enabled && on_add)
@@ -114,16 +114,16 @@ public:
         WidgetSelection() {}
 
     private:
-        HashTable<GWidget*> m_widgets;
+        HashTable<GUI::Widget*> m_widgets;
         bool m_hooks_enabled { true };
     };
 
     WidgetSelection& selection() { return m_selection; }
 
 private:
-    virtual void paint_event(GPaintEvent&) override;
+    virtual void paint_event(GUI::PaintEvent&) override;
 
-    explicit FormEditorWidget(GWidget* parent);
+    explicit FormEditorWidget(GUI::Widget* parent);
 
     RefPtr<FormWidget> m_form_widget;
     RefPtr<WidgetTreeModel> m_widget_tree_model;

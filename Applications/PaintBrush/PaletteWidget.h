@@ -30,10 +30,10 @@
 
 class PaintableWidget;
 
-class PaletteWidget final : public GFrame {
+class PaletteWidget final : public GUI::Frame {
     C_OBJECT(PaletteWidget)
 public:
-    explicit PaletteWidget(PaintableWidget&, GWidget* parent);
+    explicit PaletteWidget(PaintableWidget&, GUI::Widget* parent);
     virtual ~PaletteWidget() override;
 
     void set_primary_color(Color);
@@ -41,6 +41,6 @@ public:
 
 private:
     PaintableWidget& m_paintable_widget;
-    RefPtr<GFrame> m_primary_color_widget;
-    RefPtr<GFrame> m_secondary_color_widget;
+    RefPtr<GUI::Frame> m_primary_color_widget;
+    RefPtr<GUI::Frame> m_secondary_color_widget;
 };

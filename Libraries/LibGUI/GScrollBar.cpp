@@ -31,6 +31,8 @@
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GScrollBar.h>
 
+namespace GUI {
+
 static const char* s_up_arrow_bitmap_data = {
     "         "
     "    #    "
@@ -84,13 +86,13 @@ static CharacterBitmap* s_down_arrow_bitmap;
 static CharacterBitmap* s_left_arrow_bitmap;
 static CharacterBitmap* s_right_arrow_bitmap;
 
-GScrollBar::GScrollBar(GWidget* parent)
-    : GScrollBar(Orientation::Vertical, parent)
+ScrollBar::ScrollBar(Widget* parent)
+    : ScrollBar(Orientation::Vertical, parent)
 {
 }
 
-GScrollBar::GScrollBar(Orientation orientation, GWidget* parent)
-    : GWidget(parent)
+ScrollBar::ScrollBar(Orientation orientation, Widget* parent)
+    : Widget(parent)
     , m_orientation(orientation)
 {
     m_automatic_scrolling_timer = Core::Timer::construct(this);
@@ -115,11 +117,11 @@ GScrollBar::GScrollBar(Orientation orientation, GWidget* parent)
     };
 }
 
-GScrollBar::~GScrollBar()
+ScrollBar::~ScrollBar()
 {
 }
 
-void GScrollBar::set_range(int min, int max)
+void ScrollBar::set_range(int min, int max)
 {
     ASSERT(min <= max);
     if (m_min == min && m_max == max)
@@ -136,7 +138,7 @@ void GScrollBar::set_range(int min, int max)
     update();
 }
 
-void GScrollBar::set_value(int value)
+void ScrollBar::set_value(int value)
 {
     value = clamp(value, m_min, m_max);
     if (value == m_value)
@@ -147,12 +149,12 @@ void GScrollBar::set_value(int value)
     update();
 }
 
-Rect GScrollBar::decrement_button_rect() const
+Rect ScrollBar::decrement_button_rect() const
 {
     return { 0, 0, button_width(), button_height() };
 }
 
-Rect GScrollBar::increment_button_rect() const
+Rect ScrollBar::increment_button_rect() const
 {
     if (orientation() == Orientation::Vertical)
         return { 0, height() - button_height(), button_width(), button_height() };
@@ -160,7 +162,7 @@ Rect GScrollBar::increment_button_rect() const
         return { width() - button_width(), 0, button_width(), button_height() };
 }
 
-Rect GScrollBar::decrement_gutter_rect() const
+Rect ScrollBar::decrement_gutter_rect() const
 {
     if (orientation() == Orientation::Vertical)
         return { 0, button_height(), button_width(), scrubber_rect().top() - button_height() };
@@ -168,7 +170,7 @@ Rect GScrollBar::decrement_gutter_rect() const
         return { button_width(), 0, scrubber_rect().x() - button_width(), button_height() };
 }
 
-Rect GScrollBar::increment_gutter_rect() const
+Rect ScrollBar::increment_gutter_rect() const
 {
     auto scrubber_rect = this->scrubber_rect();
     if (orientation() == Orientation::Vertical)
@@ -177,7 +179,7 @@ Rect GScrollBar::increment_gutter_rect() const
         return { scrubber_rect.right() + 1, 0, width() - button_width() - scrubber_rect.right() - 1, button_width() };
 }
 
-int GScrollBar::scrubbable_range_in_pixels() const
+int ScrollBar::scrubbable_range_in_pixels() const
 {
     if (orientation() == Orientation::Vertical)
         return height() - button_height() * 2 - scrubber_size();
@@ -185,19 +187,19 @@ int GScrollBar::scrubbable_range_in_pixels() const
         return width() - button_width() * 2 - scrubber_size();
 }
 
-bool GScrollBar::has_scrubber() const
+bool ScrollBar::has_scrubber() const
 {
     return m_max != m_min;
 }
 
-int GScrollBar::scrubber_size() const
+int ScrollBar::scrubber_size() const
 {
     int pixel_range = length(orientation()) - button_size() * 2;
     int value_range = m_max - m_min;
     return ::max(pixel_range - value_range, button_size());
 }
 
-Rect GScrollBar::scrubber_rect() const
+Rect ScrollBar::scrubber_rect() const
 {
     if (!has_scrubber() || length(orientation()) <= (button_size() * 2) + scrubber_size())
         return {};
@@ -219,9 +221,9 @@ Rect GScrollBar::scrubber_rect() const
         return { (int)x_or_y, 0, scrubber_size(), button_height() };
 }
 
-void GScrollBar::paint_event(GPaintEvent& event)
+void ScrollBar::paint_event(PaintEvent& event)
 {
-    GPainter painter(*this);
+    Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
     painter.fill_rect(rect(), palette().button().lightened());
@@ -238,7 +240,7 @@ void GScrollBar::paint_event(GPaintEvent& event)
         StylePainter::paint_button(painter, scrubber_rect(), palette(), ButtonStyle::Normal, false, m_hovered_component == Component::Scrubber || m_scrubber_in_use);
 }
 
-void GScrollBar::on_automatic_scrolling_timer_fired()
+void ScrollBar::on_automatic_scrolling_timer_fired()
 {
     if (m_automatic_scrolling_direction == AutomaticScrollingDirection::Decrement) {
         set_value(value() - m_step);
@@ -250,9 +252,9 @@ void GScrollBar::on_automatic_scrolling_timer_fired()
     }
 }
 
-void GScrollBar::mousedown_event(GMouseEvent& event)
+void ScrollBar::mousedown_event(MouseEvent& event)
 {
-    if (event.button() != GMouseButton::Left)
+    if (event.button() != MouseButton::Left)
         return;
     if (decrement_button_rect().contains(event.position())) {
         m_automatic_scrolling_direction = AutomaticScrollingDirection::Decrement;
@@ -294,9 +296,9 @@ void GScrollBar::mousedown_event(GMouseEvent& event)
     }
 }
 
-void GScrollBar::mouseup_event(GMouseEvent& event)
+void ScrollBar::mouseup_event(MouseEvent& event)
 {
-    if (event.button() != GMouseButton::Left)
+    if (event.button() != MouseButton::Left)
         return;
     m_scrubber_in_use = false;
     m_automatic_scrolling_direction = AutomaticScrollingDirection::None;
@@ -307,15 +309,15 @@ void GScrollBar::mouseup_event(GMouseEvent& event)
     update();
 }
 
-void GScrollBar::mousewheel_event(GMouseEvent& event)
+void ScrollBar::mousewheel_event(MouseEvent& event)
 {
     if (!is_scrollable())
         return;
     set_value(value() + event.wheel_delta() * m_step);
-    GWidget::mousewheel_event(event);
+    Widget::mousewheel_event(event);
 }
 
-void GScrollBar::set_automatic_scrolling_active(bool active)
+void ScrollBar::set_automatic_scrolling_active(bool active)
 {
     if (active) {
         on_automatic_scrolling_timer_fired();
@@ -325,7 +327,7 @@ void GScrollBar::set_automatic_scrolling_active(bool active)
     }
 }
 
-void GScrollBar::mousemove_event(GMouseEvent& event)
+void ScrollBar::mousemove_event(MouseEvent& event)
 {
     auto old_hovered_component = m_hovered_component;
     if (scrubber_rect().contains(event.position()))
@@ -355,7 +357,7 @@ void GScrollBar::mousemove_event(GMouseEvent& event)
     set_value(new_value);
 }
 
-void GScrollBar::leave_event(Core::Event&)
+void ScrollBar::leave_event(Core::Event&)
 {
     if (m_hovered_component != Component::Invalid) {
         m_hovered_component = Component::Invalid;
@@ -363,11 +365,13 @@ void GScrollBar::leave_event(Core::Event&)
     }
 }
 
-void GScrollBar::change_event(GEvent& event)
+void ScrollBar::change_event(Event& event)
 {
-    if (event.type() == GEvent::Type::EnabledChange) {
+    if (event.type() == Event::Type::EnabledChange) {
         if (!is_enabled())
             m_scrubbing = false;
     }
-    return GWidget::change_event(event);
+    return Widget::change_event(event);
+}
+
 }

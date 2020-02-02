@@ -28,14 +28,17 @@
 
 #include <LibGUI/GWidget.h>
 
+namespace GUI {
+class TextEditor;
+}
+
 class IRCChannel;
 class IRCClient;
 class IRCQuery;
 class IRCLogBuffer;
-class GTextEditor;
 class HtmlView;
 
-class IRCWindow : public GWidget {
+class IRCWindow : public GUI::Widget {
     C_OBJECT(IRCWindow)
 public:
     enum Type {
@@ -44,7 +47,7 @@ public:
         Query,
     };
 
-    IRCWindow(IRCClient&, void* owner, Type, const String& name, GWidget* parent);
+    IRCWindow(IRCClient&, void* owner, Type, const String& name, GUI::Widget* parent);
     virtual ~IRCWindow() override;
 
     String name() const { return m_name; }
@@ -73,7 +76,7 @@ private:
     Type m_type;
     String m_name;
     RefPtr<HtmlView> m_html_view;
-    RefPtr<GTextEditor> m_text_editor;
+    RefPtr<GUI::TextEditor> m_text_editor;
     RefPtr<IRCLogBuffer> m_log_buffer;
     int m_unread_count { 0 };
 };

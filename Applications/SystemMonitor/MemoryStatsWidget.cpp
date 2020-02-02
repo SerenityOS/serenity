@@ -42,29 +42,29 @@ MemoryStatsWidget* MemoryStatsWidget::the()
     return s_the;
 }
 
-MemoryStatsWidget::MemoryStatsWidget(GraphWidget& graph, GWidget* parent)
-    : GWidget(parent)
+MemoryStatsWidget::MemoryStatsWidget(GraphWidget& graph, GUI::Widget* parent)
+    : GUI::Widget(parent)
     , m_graph(graph)
 {
     ASSERT(!s_the);
     s_the = this;
 
-    set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     set_preferred_size(0, 72);
 
-    set_layout(make<GVBoxLayout>());
+    set_layout(make<GUI::VBoxLayout>());
     layout()->set_margins({ 0, 8, 0, 0 });
     layout()->set_spacing(3);
 
-    auto build_widgets_for_label = [this](const String& description) -> RefPtr<GLabel> {
-        auto container = GWidget::construct(this);
-        container->set_layout(make<GHBoxLayout>());
-        container->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+    auto build_widgets_for_label = [this](const String& description) -> RefPtr<GUI::Label> {
+        auto container = GUI::Widget::construct(this);
+        container->set_layout(make<GUI::HBoxLayout>());
+        container->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
         container->set_preferred_size(275, 12);
-        auto description_label = GLabel::construct(description, container);
+        auto description_label = GUI::Label::construct(description, container);
         description_label->set_font(Font::default_bold_font());
         description_label->set_text_alignment(TextAlignment::CenterLeft);
-        auto label = GLabel::construct(container);
+        auto label = GUI::Label::construct(container);
         label->set_text_alignment(TextAlignment::CenterRight);
         return label;
     };

@@ -39,14 +39,14 @@
 
 int main(int argc, char** argv)
 {
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
     auto audio_client = AClientConnection::construct();
     audio_client->handshake();
 
     AudioEngine audio_engine;
 
-    auto window = GWindow::construct();
+    auto window = GUI::Window::construct();
     auto main_widget = MainWidget::construct(audio_engine);
     window->set_main_widget(main_widget);
     window->set_title("Piano");
@@ -71,18 +71,18 @@ int main(int argc, char** argv)
     });
     audio_thread.start();
 
-    auto menubar = make<GMenuBar>();
+    auto menubar = make<GUI::MenuBar>();
 
-    auto app_menu = GMenu::construct("Piano");
-    app_menu->add_action(GCommonActions::make_quit_action([](auto&) {
-        GApplication::the().quit(0);
+    auto app_menu = GUI::Menu::construct("Piano");
+    app_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
+        GUI::Application::the().quit(0);
         return;
     }));
     menubar->add_menu(move(app_menu));
 
-    auto help_menu = GMenu::construct("Help");
-    help_menu->add_action(GAction::create("About", [&](const GAction&) {
-        GAboutDialog::show("Piano", load_png("/res/icons/32x32/app-piano.png"), window);
+    auto help_menu = GUI::Menu::construct("Help");
+    help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
+        GUI::AboutDialog::show("Piano", load_png("/res/icons/32x32/app-piano.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 

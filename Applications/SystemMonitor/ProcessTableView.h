@@ -33,7 +33,7 @@
 class GraphWidget;
 class ProcessModel;
 
-class ProcessTableView final : public GTableView {
+class ProcessTableView final : public GUI::TableView {
     C_OBJECT(ProcessTableView)
 public:
     virtual ~ProcessTableView() override;
@@ -45,5 +45,5 @@ public:
     Function<void(pid_t)> on_process_selected;
 
 private:
-    explicit ProcessTableView(GWidget* parent = nullptr);
+    explicit ProcessTableView(GUI::Widget* parent = nullptr);
 };

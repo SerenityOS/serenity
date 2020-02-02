@@ -36,7 +36,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
     if (pledge("stdio inet dns unix shared_buffer rpath", nullptr) < 0) {
         perror("pledge");

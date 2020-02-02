@@ -38,7 +38,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-GModelIndex GFileSystemModel::Node::index(const GFileSystemModel& model, int column) const
+namespace GUI {
+
+ModelIndex FileSystemModel::Node::index(const FileSystemModel& model, int column) const
 {
     if (!parent)
         return {};
@@ -49,7 +51,7 @@ GModelIndex GFileSystemModel::Node::index(const GFileSystemModel& model, int col
     ASSERT_NOT_REACHED();
 }
 
-bool GFileSystemModel::Node::fetch_data(const String& full_path, bool is_root)
+bool FileSystemModel::Node::fetch_data(const String& full_path, bool is_root)
 {
     struct stat st;
     int rc;
@@ -83,7 +85,7 @@ bool GFileSystemModel::Node::fetch_data(const String& full_path, bool is_root)
     return true;
 }
 
-void GFileSystemModel::Node::traverse_if_needed(const GFileSystemModel& model)
+void FileSystemModel::Node::traverse_if_needed(const FileSystemModel& model)
 {
     if (!is_directory() || has_traversed)
         return;
@@ -132,11 +134,11 @@ void GFileSystemModel::Node::traverse_if_needed(const GFileSystemModel& model)
         mode = 0;
         children.clear();
         reify_if_needed(model);
-        const_cast<GFileSystemModel&>(model).did_update();
+        const_cast<FileSystemModel&>(model).did_update();
     };
 }
 
-void GFileSystemModel::Node::reify_if_needed(const GFileSystemModel& model)
+void FileSystemModel::Node::reify_if_needed(const FileSystemModel& model)
 {
     traverse_if_needed(model);
     if (mode != 0)
@@ -144,7 +146,7 @@ void GFileSystemModel::Node::reify_if_needed(const GFileSystemModel& model)
     fetch_data(full_path(model), parent == nullptr);
 }
 
-String GFileSystemModel::Node::full_path(const GFileSystemModel& model) const
+String FileSystemModel::Node::full_path(const FileSystemModel& model) const
 {
     Vector<String, 32> lineage;
     for (auto* ancestor = parent; ancestor; ancestor = ancestor->parent) {
@@ -161,7 +163,7 @@ String GFileSystemModel::Node::full_path(const GFileSystemModel& model) const
     return canonicalized_path(builder.to_string());
 }
 
-GModelIndex GFileSystemModel::index(const StringView& path, int column) const
+ModelIndex FileSystemModel::index(const StringView& path, int column) const
 {
     FileSystemPath canonical_path(path);
     const Node* node = m_root;
@@ -186,14 +188,14 @@ GModelIndex GFileSystemModel::index(const StringView& path, int column) const
     return {};
 }
 
-String GFileSystemModel::full_path(const GModelIndex& index) const
+String FileSystemModel::full_path(const ModelIndex& index) const
 {
     auto& node = this->node(index);
     const_cast<Node&>(node).reify_if_needed(*this);
     return node.full_path(*this);
 }
 
-GFileSystemModel::GFileSystemModel(const StringView& root_path, Mode mode)
+FileSystemModel::FileSystemModel(const StringView& root_path, Mode mode)
     : m_root_path(canonicalized_path(root_path))
     , m_mode(mode)
 {
@@ -219,11 +221,11 @@ GFileSystemModel::GFileSystemModel(const StringView& root_path, Mode mode)
     update();
 }
 
-GFileSystemModel::~GFileSystemModel()
+FileSystemModel::~FileSystemModel()
 {
 }
 
-String GFileSystemModel::name_for_uid(uid_t uid) const
+String FileSystemModel::name_for_uid(uid_t uid) const
 {
     auto it = m_user_names.find(uid);
     if (it == m_user_names.end())
@@ -231,7 +233,7 @@ String GFileSystemModel::name_for_uid(uid_t uid) const
     return (*it).value;
 }
 
-String GFileSystemModel::name_for_gid(uid_t gid) const
+String FileSystemModel::name_for_gid(uid_t gid) const
 {
     auto it = m_user_names.find(gid);
     if (it == m_user_names.end())
@@ -276,7 +278,7 @@ static String permission_string(mode_t mode)
     return builder.to_string();
 }
 
-void GFileSystemModel::set_root_path(const StringView& root_path)
+void FileSystemModel::set_root_path(const StringView& root_path)
 {
     m_root_path = canonicalized_path(root_path);
 
@@ -286,7 +288,7 @@ void GFileSystemModel::set_root_path(const StringView& root_path)
     update();
 }
 
-void GFileSystemModel::update()
+void FileSystemModel::update()
 {
     m_root = make<Node>();
     m_root->reify_if_needed(*this);
@@ -294,7 +296,7 @@ void GFileSystemModel::update()
     did_update();
 }
 
-int GFileSystemModel::row_count(const GModelIndex& index) const
+int FileSystemModel::row_count(const ModelIndex& index) const
 {
     Node& node = const_cast<Node&>(this->node(index));
     node.reify_if_needed(*this);
@@ -303,14 +305,14 @@ int GFileSystemModel::row_count(const GModelIndex& index) const
     return 0;
 }
 
-const GFileSystemModel::Node& GFileSystemModel::node(const GModelIndex& index) const
+const FileSystemModel::Node& FileSystemModel::node(const ModelIndex& index) const
 {
     if (!index.is_valid())
         return *m_root;
     return *(Node*)index.internal_data();
 }
 
-GModelIndex GFileSystemModel::index(int row, int column, const GModelIndex& parent) const
+ModelIndex FileSystemModel::index(int row, int column, const ModelIndex& parent) const
 {
     if (row < 0 || column < 0)
         return {};
@@ -321,7 +323,7 @@ GModelIndex GFileSystemModel::index(int row, int column, const GModelIndex& pare
     return create_index(row, column, &node.children[row]);
 }
 
-GModelIndex GFileSystemModel::parent_index(const GModelIndex& index) const
+ModelIndex FileSystemModel::parent_index(const ModelIndex& index) const
 {
     if (!index.is_valid())
         return {};
@@ -333,7 +335,7 @@ GModelIndex GFileSystemModel::parent_index(const GModelIndex& index) const
     return node.parent->index(*this, index.column());
 }
 
-GVariant GFileSystemModel::data(const GModelIndex& index, Role role) const
+Variant FileSystemModel::data(const ModelIndex& index, Role role) const
 {
     ASSERT(index.is_valid());
     auto& node = this->node(index);
@@ -407,7 +409,7 @@ GVariant GFileSystemModel::data(const GModelIndex& index, Role role) const
     return {};
 }
 
-GIcon GFileSystemModel::icon_for_file(const mode_t mode, const String& name) const
+GIcon FileSystemModel::icon_for_file(const mode_t mode, const String& name) const
 {
     if (S_ISDIR(mode))
         return m_directory_icon;
@@ -426,11 +428,11 @@ GIcon GFileSystemModel::icon_for_file(const mode_t mode, const String& name) con
     return m_file_icon;
 }
 
-GIcon GFileSystemModel::icon_for(const Node& node) const
+GIcon FileSystemModel::icon_for(const Node& node) const
 {
     if (node.name.to_lowercase().ends_with(".png")) {
         if (!node.thumbnail) {
-            if (!const_cast<GFileSystemModel*>(this)->fetch_thumbnail_for(node))
+            if (!const_cast<FileSystemModel*>(this)->fetch_thumbnail_for(node))
                 return m_filetype_image_icon;
         }
         return GIcon(m_filetype_image_icon.bitmap_for_size(16), *node.thumbnail);
@@ -452,7 +454,7 @@ static RefPtr<GraphicsBitmap> render_thumbnail(const StringView& path)
     return thumbnail;
 }
 
-bool GFileSystemModel::fetch_thumbnail_for(const Node& node)
+bool FileSystemModel::fetch_thumbnail_for(const Node& node)
 {
     // See if we already have the thumbnail
     // we're looking for in the cache.
@@ -500,12 +502,12 @@ bool GFileSystemModel::fetch_thumbnail_for(const Node& node)
     return false;
 }
 
-int GFileSystemModel::column_count(const GModelIndex&) const
+int FileSystemModel::column_count(const ModelIndex&) const
 {
     return Column::__Count;
 }
 
-String GFileSystemModel::column_name(int column) const
+String FileSystemModel::column_name(int column) const
 {
     switch (column) {
     case Column::Icon:
@@ -530,11 +532,11 @@ String GFileSystemModel::column_name(int column) const
     ASSERT_NOT_REACHED();
 }
 
-GModel::ColumnMetadata GFileSystemModel::column_metadata(int column) const
+Model::ColumnMetadata FileSystemModel::column_metadata(int column) const
 {
     switch (column) {
     case Column::Icon:
-        return { 16, TextAlignment::Center, nullptr, GModel::ColumnMetadata::Sortable::False };
+        return { 16, TextAlignment::Center, nullptr, Model::ColumnMetadata::Sortable::False };
     case Column::Name:
         return { 120, TextAlignment::CenterLeft };
     case Column::Size:
@@ -553,4 +555,6 @@ GModel::ColumnMetadata GFileSystemModel::column_metadata(int column) const
         return { 120, TextAlignment::CenterLeft };
     }
     ASSERT_NOT_REACHED();
+}
+
 }

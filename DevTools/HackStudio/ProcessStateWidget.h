@@ -31,10 +31,11 @@
 namespace Core {
 class Timer;
 }
+namespace GUI {
+class Label;
+}
 
-class GLabel;
-
-class ProcessStateWidget final : public GWidget {
+class ProcessStateWidget final : public GUI::Widget {
     C_OBJECT(ProcessStateWidget)
 public:
     virtual ~ProcessStateWidget() override;
@@ -42,14 +43,14 @@ public:
     void set_tty_fd(int);
 
 private:
-    explicit ProcessStateWidget(GWidget* parent);
+    explicit ProcessStateWidget(GUI::Widget* parent);
 
     void refresh();
 
-    RefPtr<GLabel> m_pid_label;
-    RefPtr<GLabel> m_state_label;
-    RefPtr<GLabel> m_cpu_label;
-    RefPtr<GLabel> m_memory_label;
+    RefPtr<GUI::Label> m_pid_label;
+    RefPtr<GUI::Label> m_state_label;
+    RefPtr<GUI::Label> m_cpu_label;
+    RefPtr<GUI::Label> m_memory_label;
 
     RefPtr<Core::Timer> m_timer;
 

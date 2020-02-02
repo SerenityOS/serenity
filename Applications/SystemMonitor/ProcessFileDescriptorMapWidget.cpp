@@ -29,15 +29,15 @@
 #include <LibGUI/GJsonArrayModel.h>
 #include <LibGUI/GTableView.h>
 
-ProcessFileDescriptorMapWidget::ProcessFileDescriptorMapWidget(GWidget* parent)
-    : GWidget(parent)
+ProcessFileDescriptorMapWidget::ProcessFileDescriptorMapWidget(GUI::Widget* parent)
+    : GUI::Widget(parent)
 {
-    set_layout(make<GVBoxLayout>());
+    set_layout(make<GUI::VBoxLayout>());
     layout()->set_margins({ 4, 4, 4, 4 });
-    m_table_view = GTableView::construct(this);
+    m_table_view = GUI::TableView::construct(this);
     m_table_view->set_size_columns_to_fit_content(true);
 
-    Vector<GJsonArrayModel::FieldSpec> pid_fds_fields;
+    Vector<GUI::JsonArrayModel::FieldSpec> pid_fds_fields;
     pid_fds_fields.empend("fd", "FD", TextAlignment::CenterRight);
     pid_fds_fields.empend("class", "Class", TextAlignment::CenterLeft);
     pid_fds_fields.empend("offset", "Offset", TextAlignment::CenterRight);
@@ -58,7 +58,7 @@ ProcessFileDescriptorMapWidget::ProcessFileDescriptorMapWidget(GWidget* parent)
         return object.get("can_write").to_bool() ? "Yes" : "No";
     });
 
-    m_table_view->set_model(GJsonArrayModel::create({}, move(pid_fds_fields)));
+    m_table_view->set_model(GUI::JsonArrayModel::create({}, move(pid_fds_fields)));
 }
 
 ProcessFileDescriptorMapWidget::~ProcessFileDescriptorMapWidget()
@@ -70,5 +70,5 @@ void ProcessFileDescriptorMapWidget::set_pid(pid_t pid)
     if (m_pid == pid)
         return;
     m_pid = pid;
-    static_cast<GJsonArrayModel*>(m_table_view->model())->set_json_path(String::format("/proc/%d/fds", m_pid));
+    static_cast<GUI::JsonArrayModel*>(m_table_view->model())->set_json_path(String::format("/proc/%d/fds", m_pid));
 }

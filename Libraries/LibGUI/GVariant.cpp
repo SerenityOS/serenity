@@ -27,52 +27,54 @@
 #include <AK/JsonValue.h>
 #include <LibGUI/GVariant.h>
 
-const char* to_string(GVariant::Type type)
+namespace GUI {
+
+const char* to_string(Variant::Type type)
 {
     switch (type) {
-    case GVariant::Type::Invalid:
+    case Variant::Type::Invalid:
         return "Invalid";
-    case GVariant::Type::Bool:
+    case Variant::Type::Bool:
         return "Bool";
-    case GVariant::Type::Int32:
+    case Variant::Type::Int32:
         return "Int32";
-    case GVariant::Type::Int64:
+    case Variant::Type::Int64:
         return "Int64";
-    case GVariant::Type::UnsignedInt:
+    case Variant::Type::UnsignedInt:
         return "UnsignedInt";
-    case GVariant::Type::Float:
+    case Variant::Type::Float:
         return "Float";
-    case GVariant::Type::String:
+    case Variant::Type::String:
         return "String";
-    case GVariant::Type::Bitmap:
+    case Variant::Type::Bitmap:
         return "Bitmap";
-    case GVariant::Type::Color:
+    case Variant::Type::Color:
         return "Color";
-    case GVariant::Type::Icon:
+    case Variant::Type::Icon:
         return "Icon";
-    case GVariant::Type::Point:
+    case Variant::Type::Point:
         return "Point";
-    case GVariant::Type::Size:
+    case Variant::Type::Size:
         return "Size";
-    case GVariant::Type::Rect:
+    case Variant::Type::Rect:
         return "Rect";
-    case GVariant::Type::Font:
+    case Variant::Type::Font:
         return "Font";
     }
     ASSERT_NOT_REACHED();
 }
 
-GVariant::GVariant()
+Variant::Variant()
 {
     m_value.as_string = nullptr;
 }
 
-GVariant::~GVariant()
+Variant::~Variant()
 {
     clear();
 }
 
-void GVariant::clear()
+void Variant::clear()
 {
     switch (m_type) {
     case Type::String:
@@ -91,49 +93,49 @@ void GVariant::clear()
     m_value.as_string = nullptr;
 }
 
-GVariant::GVariant(i32 value)
+Variant::Variant(i32 value)
     : m_type(Type::Int32)
 {
     m_value.as_i32 = value;
 }
 
-GVariant::GVariant(i64 value)
+Variant::Variant(i64 value)
     : m_type(Type::Int64)
 {
     m_value.as_i64 = value;
 }
 
-GVariant::GVariant(unsigned value)
+Variant::Variant(unsigned value)
     : m_type(Type::UnsignedInt)
 {
     m_value.as_uint = value;
 }
 
-GVariant::GVariant(float value)
+Variant::Variant(float value)
     : m_type(Type::Float)
 {
     m_value.as_float = value;
 }
 
-GVariant::GVariant(bool value)
+Variant::Variant(bool value)
     : m_type(Type::Bool)
 {
     m_value.as_bool = value;
 }
 
-GVariant::GVariant(const char* cstring)
-    : GVariant(String(cstring))
+Variant::Variant(const char* cstring)
+    : Variant(String(cstring))
 {
 }
 
-GVariant::GVariant(const String& value)
+Variant::Variant(const String& value)
     : m_type(Type::String)
 {
     m_value.as_string = const_cast<StringImpl*>(value.impl());
     AK::ref_if_not_null(m_value.as_string);
 }
 
-GVariant::GVariant(const JsonValue& value)
+Variant::Variant(const JsonValue& value)
 {
     if (value.is_null()) {
         m_value.as_string = nullptr;
@@ -159,7 +161,7 @@ GVariant::GVariant(const JsonValue& value)
     }
 
     if (value.is_u64()) {
-        // FIXME: GVariant should have a 64-bit internal type.
+        // FIXME: Variant should have a 64-bit internal type.
         m_type = Type::UnsignedInt;
         m_value.as_uint = value.to_u32();
         return;
@@ -181,52 +183,52 @@ GVariant::GVariant(const JsonValue& value)
     ASSERT_NOT_REACHED();
 }
 
-GVariant::GVariant(const GraphicsBitmap& value)
+Variant::Variant(const GraphicsBitmap& value)
     : m_type(Type::Bitmap)
 {
     m_value.as_bitmap = const_cast<GraphicsBitmap*>(&value);
     AK::ref_if_not_null(m_value.as_bitmap);
 }
 
-GVariant::GVariant(const GIcon& value)
+Variant::Variant(const GIcon& value)
     : m_type(Type::Icon)
 {
     m_value.as_icon = &const_cast<GIconImpl&>(value.impl());
     AK::ref_if_not_null(m_value.as_icon);
 }
 
-GVariant::GVariant(const Font& value)
+Variant::Variant(const Font& value)
     : m_type(Type::Font)
 {
     m_value.as_font = &const_cast<Font&>(value);
     AK::ref_if_not_null(m_value.as_font);
 }
 
-GVariant::GVariant(Color color)
+Variant::Variant(Color color)
     : m_type(Type::Color)
 {
     m_value.as_color = color.value();
 }
 
-GVariant::GVariant(const Point& point)
+Variant::Variant(const Point& point)
     : m_type(Type::Point)
 {
     m_value.as_point = { point.x(), point.y() };
 }
 
-GVariant::GVariant(const Size& size)
+Variant::Variant(const Size& size)
     : m_type(Type::Size)
 {
     m_value.as_size = { size.width(), size.height() };
 }
 
-GVariant::GVariant(const Rect& rect)
+Variant::Variant(const Rect& rect)
     : m_type(Type::Rect)
 {
     m_value.as_rect = (const RawRect&)rect;
 }
 
-GVariant& GVariant::operator=(const GVariant& other)
+Variant& Variant::operator=(const Variant& other)
 {
     if (&other == this)
         return *this;
@@ -235,7 +237,7 @@ GVariant& GVariant::operator=(const GVariant& other)
     return *this;
 }
 
-GVariant& GVariant::operator=(GVariant&& other)
+Variant& Variant::operator=(Variant&& other)
 {
     if (&other == this)
         return *this;
@@ -246,12 +248,12 @@ GVariant& GVariant::operator=(GVariant&& other)
     return *this;
 }
 
-GVariant::GVariant(const GVariant& other)
+Variant::Variant(const Variant& other)
 {
     copy_from(other);
 }
 
-void GVariant::copy_from(const GVariant& other)
+void Variant::copy_from(const Variant& other)
 {
     ASSERT(!is_valid());
     m_type = other.m_type;
@@ -304,7 +306,7 @@ void GVariant::copy_from(const GVariant& other)
     }
 }
 
-bool GVariant::operator==(const GVariant& other) const
+bool Variant::operator==(const Variant& other) const
 {
     if (m_type != other.m_type)
         return to_string() == other.to_string();
@@ -341,7 +343,7 @@ bool GVariant::operator==(const GVariant& other) const
     ASSERT_NOT_REACHED();
 }
 
-bool GVariant::operator<(const GVariant& other) const
+bool Variant::operator<(const Variant& other) const
 {
     if (m_type != other.m_type)
         return to_string() < other.to_string();
@@ -378,7 +380,7 @@ bool GVariant::operator<(const GVariant& other) const
     ASSERT_NOT_REACHED();
 }
 
-String GVariant::to_string() const
+String Variant::to_string() const
 {
     switch (m_type) {
     case Type::Bool:
@@ -412,4 +414,6 @@ String GVariant::to_string() const
         break;
     }
     ASSERT_NOT_REACHED();
+}
+
 }

@@ -29,9 +29,13 @@
 #include <AK/Function.h>
 #include <LibGUI/GTextEditor.h>
 
-class GTextBox : public GTextEditor {
-    C_OBJECT(GTextBox)
+namespace GUI {
+
+class TextBox : public TextEditor {
+    C_OBJECT(TextBox)
 public:
-    explicit GTextBox(GWidget* parent);
-    virtual ~GTextBox() override;
+    explicit TextBox(Widget* parent);
+    virtual ~TextBox() override;
 };
+
+}

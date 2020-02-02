@@ -28,11 +28,13 @@
 
 #include <LibGUI/GWidget.h>
 
-class GButton;
-class GTableView;
-class GTextBox;
+namespace GUI {
+class Button;
+class TableView;
+class TextBox;
+}
 
-class FindInFilesWidget final : public GWidget {
+class FindInFilesWidget final : public GUI::Widget {
     C_OBJECT(FindInFilesWidget)
 public:
     virtual ~FindInFilesWidget() override {}
@@ -40,9 +42,9 @@ public:
     void focus_textbox_and_select_all();
 
 private:
-    explicit FindInFilesWidget(GWidget* parent);
+    explicit FindInFilesWidget(GUI::Widget* parent);
 
-    RefPtr<GTextBox> m_textbox;
-    RefPtr<GButton> m_button;
-    RefPtr<GTableView> m_result_view;
+    RefPtr<GUI::TextBox> m_textbox;
+    RefPtr<GUI::Button> m_button;
+    RefPtr<GUI::TableView> m_result_view;
 };

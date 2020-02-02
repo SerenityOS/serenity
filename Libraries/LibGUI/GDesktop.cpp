@@ -30,19 +30,21 @@
 #include <string.h>
 #include <unistd.h>
 
-GDesktop& GDesktop::the()
+namespace GUI {
+
+Desktop& Desktop::the()
 {
-    static GDesktop* the;
+    static Desktop* the;
     if (!the)
-        the = new GDesktop;
+        the = new Desktop;
     return *the;
 }
 
-GDesktop::GDesktop()
+Desktop::Desktop()
 {
 }
 
-void GDesktop::did_receive_screen_rect(Badge<GWindowServerConnection>, const Rect& rect)
+void Desktop::did_receive_screen_rect(Badge<WindowServerConnection>, const Rect& rect)
 {
     if (m_rect == rect)
         return;
@@ -51,15 +53,14 @@ void GDesktop::did_receive_screen_rect(Badge<GWindowServerConnection>, const Rec
         on_rect_change(rect);
 }
 
-bool GDesktop::set_wallpaper(const StringView& path)
+bool Desktop::set_wallpaper(const StringView& path)
 {
-    GWindowServerConnection::the().post_message(WindowServer::AsyncSetWallpaper(path));
-    auto ret_val = GWindowServerConnection::the().wait_for_specific_message<WindowClient::AsyncSetWallpaperFinished>()->success();
+    WindowServerConnection::the().post_message(WindowServer::AsyncSetWallpaper(path));
+    auto ret_val = WindowServerConnection::the().wait_for_specific_message<WindowClient::AsyncSetWallpaperFinished>()->success();
 
     if (ret_val) {
+        RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("WindowManager");
         dbg() << "Saving wallpaper path '" << path << "' to config file at " << config->file_name();
-
-        RefPtr<CConfigFile> config = CConfigFile::get_for_app("WindowManager");
         config->write_entry("Background", "Wallpaper", path);
         config->sync();
     }
@@ -67,7 +68,9 @@ bool GDesktop::set_wallpaper(const StringView& path)
     return ret_val;
 }
 
-String GDesktop::wallpaper() const
+String Desktop::wallpaper() const
 {
-    return GWindowServerConnection::the().send_sync<WindowServer::GetWallpaper>()->path();
+    return WindowServerConnection::the().send_sync<WindowServer::GetWallpaper>()->path();
+}
+
 }

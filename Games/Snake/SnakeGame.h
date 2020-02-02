@@ -30,7 +30,7 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <LibGUI/GWidget.h>
 
-class SnakeGame : public GWidget {
+class SnakeGame : public GUI::Widget {
     C_OBJECT(SnakeGame)
 public:
     virtual ~SnakeGame() override;
@@ -38,9 +38,9 @@ public:
     void reset();
 
 private:
-    explicit SnakeGame(GWidget* parent = nullptr);
-    virtual void paint_event(GPaintEvent&) override;
-    virtual void keydown_event(GKeyEvent&) override;
+    explicit SnakeGame(GUI::Widget* parent = nullptr);
+    virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
 
     struct Coordinate {

@@ -30,7 +30,7 @@
 #include <LibGUI/GWidget.h>
 #include <LibHTML/Layout/LayoutWidget.h>
 
-LayoutWidget::LayoutWidget(const Element& element, GWidget& widget)
+LayoutWidget::LayoutWidget(const Element& element, GUI::Widget& widget)
     : LayoutReplaced(element, StyleProperties::create())
     , m_widget(widget)
 {

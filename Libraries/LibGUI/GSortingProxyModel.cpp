@@ -30,7 +30,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-GSortingProxyModel::GSortingProxyModel(NonnullRefPtr<GModel>&& target)
+namespace GUI {
+
+SortingProxyModel::SortingProxyModel(NonnullRefPtr<Model>&& target)
     : m_target(move(target))
     , m_key_column(-1)
 {
@@ -39,21 +41,21 @@ GSortingProxyModel::GSortingProxyModel(NonnullRefPtr<GModel>&& target)
     };
 }
 
-GSortingProxyModel::~GSortingProxyModel()
+SortingProxyModel::~SortingProxyModel()
 {
 }
 
-int GSortingProxyModel::row_count(const GModelIndex& index) const
+int SortingProxyModel::row_count(const ModelIndex& index) const
 {
     return target().row_count(index);
 }
 
-int GSortingProxyModel::column_count(const GModelIndex& index) const
+int SortingProxyModel::column_count(const ModelIndex& index) const
 {
     return target().column_count(index);
 }
 
-GModelIndex GSortingProxyModel::map_to_target(const GModelIndex& index) const
+ModelIndex SortingProxyModel::map_to_target(const ModelIndex& index) const
 {
     if (!index.is_valid())
         return {};
@@ -62,37 +64,37 @@ GModelIndex GSortingProxyModel::map_to_target(const GModelIndex& index) const
     return target().index(m_row_mappings[index.row()], index.column());
 }
 
-String GSortingProxyModel::row_name(int index) const
+String SortingProxyModel::row_name(int index) const
 {
     return target().row_name(index);
 }
 
-String GSortingProxyModel::column_name(int index) const
+String SortingProxyModel::column_name(int index) const
 {
     return target().column_name(index);
 }
 
-GModel::ColumnMetadata GSortingProxyModel::column_metadata(int index) const
+Model::ColumnMetadata SortingProxyModel::column_metadata(int index) const
 {
     return target().column_metadata(index);
 }
 
-GVariant GSortingProxyModel::data(const GModelIndex& index, Role role) const
+Variant SortingProxyModel::data(const ModelIndex& index, Role role) const
 {
     return target().data(map_to_target(index), role);
 }
 
-void GSortingProxyModel::update()
+void SortingProxyModel::update()
 {
     target().update();
 }
 
-StringView GSortingProxyModel::drag_data_type() const
+StringView SortingProxyModel::drag_data_type() const
 {
     return target().drag_data_type();
 }
 
-void GSortingProxyModel::set_key_column_and_sort_order(int column, GSortOrder sort_order)
+void SortingProxyModel::set_key_column_and_sort_order(int column, SortOrder sort_order)
 {
     if (column == m_key_column && sort_order == m_sort_order)
         return;
@@ -103,7 +105,7 @@ void GSortingProxyModel::set_key_column_and_sort_order(int column, GSortOrder so
     resort();
 }
 
-void GSortingProxyModel::resort()
+void SortingProxyModel::resort()
 {
     auto old_row_mappings = m_row_mappings;
     int row_count = target().row_count();
@@ -115,8 +117,8 @@ void GSortingProxyModel::resort()
         return;
     }
     quick_sort(m_row_mappings.begin(), m_row_mappings.end(), [&](auto row1, auto row2) -> bool {
-        auto data1 = target().data(target().index(row1, m_key_column), GModel::Role::Sort);
-        auto data2 = target().data(target().index(row2, m_key_column), GModel::Role::Sort);
+        auto data1 = target().data(target().index(row1, m_key_column), Model::Role::Sort);
+        auto data2 = target().data(target().index(row2, m_key_column), Model::Role::Sort);
         if (data1 == data2)
             return 0;
         bool is_less_than;
@@ -124,13 +126,13 @@ void GSortingProxyModel::resort()
             is_less_than = data1.as_string().to_lowercase() < data2.as_string().to_lowercase();
         else
             is_less_than = data1 < data2;
-        return m_sort_order == GSortOrder::Ascending ? is_less_than : !is_less_than;
+        return m_sort_order == SortOrder::Ascending ? is_less_than : !is_less_than;
     });
     did_update();
-    for_each_view([&](GAbstractView& view) {
+    for_each_view([&](AbstractView& view) {
         auto& selection = view.selection();
-        Vector<GModelIndex> selected_indexes_in_target;
-        selection.for_each_index([&](const GModelIndex& index) {
+        Vector<ModelIndex> selected_indexes_in_target;
+        selection.for_each_index([&](const ModelIndex& index) {
             selected_indexes_in_target.append(target().index(old_row_mappings[index.row()], index.column()));
         });
 
@@ -144,4 +146,6 @@ void GSortingProxyModel::resort()
             }
         }
     });
+}
+
 }

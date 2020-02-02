@@ -55,8 +55,8 @@ public:
     void send_settings_to_window_server(int tabIndex);
     void create_frame();
 
-    const GWidget* root_widget() const { return m_root_widget; }
-    GWidget* root_widget() { return m_root_widget; }
+    const GUI::Widget* root_widget() const { return m_root_widget; }
+    GUI::Widget* root_widget() { return m_root_widget; }
 
 private:
     void create_wallpaper_list();
@@ -66,10 +66,10 @@ private:
 private:
     String m_wallpaper_path;
     RefPtr<Core::ConfigFile> m_wm_config;
-    RefPtr<GWidget> m_root_widget;
+    RefPtr<GUI::Widget> m_root_widget;
     Vector<Size> m_resolutions;
     Vector<String> m_wallpapers;
-    RefPtr<GLabel> m_wallpaper_preview;
+    RefPtr<GUI::Label> m_wallpaper_preview;
 
     Size m_selected_resolution;
     String m_selected_wallpaper;

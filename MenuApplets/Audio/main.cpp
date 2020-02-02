@@ -30,11 +30,11 @@
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
 
-class AudioWidget final : public GWidget {
+class AudioWidget final : public GUI::Widget {
     C_OBJECT(AudioWidget)
 public:
     AudioWidget()
-        : GWidget(nullptr)
+        : GUI::Widget(nullptr)
     {
         m_audio_client = make<AClientConnection>();
         m_audio_client->on_muted_state_change = [this](bool muted) {
@@ -50,17 +50,17 @@ public:
     virtual ~AudioWidget() override {}
 
 private:
-    virtual void mousedown_event(GMouseEvent& event) override
+    virtual void mousedown_event(GUI::MouseEvent& event) override
     {
-        if (event.button() != GMouseButton::Left)
+        if (event.button() != GUI::MouseButton::Left)
             return;
         m_audio_client->set_muted(!m_audio_muted);
         update();
     }
 
-    virtual void paint_event(GPaintEvent& event) override
+    virtual void paint_event(GUI::PaintEvent& event) override
     {
-        GPainter painter(*this);
+        GUI::Painter painter(*this);
         painter.add_clip_rect(event.rect());
         painter.clear_rect(event.rect(), Color::from_rgba(0));
         auto& audio_bitmap = m_audio_muted ? *m_muted_bitmap : *m_unmuted_bitmap;
@@ -80,16 +80,16 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
     if (pledge("stdio shared_buffer accept rpath unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
-    auto window = GWindow::construct();
+    auto window = GUI::Window::construct();
     window->set_has_alpha_channel(true);
-    window->set_window_type(GWindowType::MenuApplet);
+    window->set_window_type(GUI::WindowType::MenuApplet);
     window->resize(12, 16);
 
     auto widget = AudioWidget::construct();

@@ -36,23 +36,25 @@
 #include <LibGUI/GTextBox.h>
 #include <LibGUI/GWindow.h>
 
-GTableView::GTableView(GWidget* parent)
-    : GAbstractTableView(parent)
+namespace GUI {
+
+TableView::TableView(Widget* parent)
+    : AbstractTableView(parent)
 {
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
 }
 
-GTableView::~GTableView()
+TableView::~TableView()
 {
 }
 
-void GTableView::paint_event(GPaintEvent& event)
+void TableView::paint_event(PaintEvent& event)
 {
     Color widget_background_color = palette().color(background_role());
-    GFrame::paint_event(event);
+    Frame::paint_event(event);
 
-    GPainter painter(*this);
+    Painter painter(*this);
     painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
     painter.fill_rect(event.rect(), widget_background_color);
@@ -125,7 +127,7 @@ void GTableView::paint_event(GPaintEvent& event)
                     if (is_selected_row)
                         text_color = palette().selection_text();
                     else
-                        text_color = model()->data(cell_index, GModel::Role::ForegroundColor).to_color(palette().color(foreground_role()));
+                        text_color = model()->data(cell_index, Model::Role::ForegroundColor).to_color(palette().color(foreground_role()));
                     painter.draw_text(cell_rect, data.to_string(), font, column_metadata.text_alignment, text_color, TextElision::Right);
                 }
             }
@@ -141,4 +143,6 @@ void GTableView::paint_event(GPaintEvent& event)
     painter.translate(0, vertical_scrollbar().value());
     if (headers_visible())
         paint_headers(painter);
+}
+
 }

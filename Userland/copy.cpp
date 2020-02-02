@@ -81,11 +81,11 @@ Options parse_options(int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
     Options options = parse_options(argc, argv);
 
-    GClipboard& clipboard = GClipboard::the();
+    auto& clipboard = GUI::Clipboard::the();
     clipboard.set_data(options.data, options.type);
 
     return 0;

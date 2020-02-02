@@ -28,18 +28,18 @@
 
 class Profile;
 
-class ProfileTimelineWidget final : public GFrame {
+class ProfileTimelineWidget final : public GUI::Frame {
     C_OBJECT(ProfileTimelineWidget)
 public:
     virtual ~ProfileTimelineWidget() override;
 
 private:
-    virtual void paint_event(GPaintEvent&) override;
-    virtual void mousedown_event(GMouseEvent&) override;
-    virtual void mousemove_event(GMouseEvent&) override;
-    virtual void mouseup_event(GMouseEvent&) override;
+    virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void mousedown_event(GUI::MouseEvent&) override;
+    virtual void mousemove_event(GUI::MouseEvent&) override;
+    virtual void mouseup_event(GUI::MouseEvent&) override;
 
-    ProfileTimelineWidget(Profile&, GWidget* parent);
+    ProfileTimelineWidget(Profile&, GUI::Widget* parent);
 
     u64 timestamp_at_x(int x) const;
 

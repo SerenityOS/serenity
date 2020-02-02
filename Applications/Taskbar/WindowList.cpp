@@ -52,9 +52,9 @@ Window& WindowList::ensure_window(const WindowIdentifier& identifier)
     window->set_button(aid_create_button(identifier));
     window->button()->on_click = [window = window.ptr(), identifier](auto&) {
         if (window->is_minimized() || !window->is_active()) {
-            GWindowServerConnection::the().post_message(WindowServer::WM_SetActiveWindow(identifier.client_id(), identifier.window_id()));
+            GUI::WindowServerConnection::the().post_message(WindowServer::WM_SetActiveWindow(identifier.client_id(), identifier.window_id()));
         } else {
-            GWindowServerConnection::the().post_message(WindowServer::WM_SetWindowMinimized(identifier.client_id(), identifier.window_id(), true));
+            GUI::WindowServerConnection::the().post_message(WindowServer::WM_SetWindowMinimized(identifier.client_id(), identifier.window_id(), true));
         }
     };
     auto& window_ref = *window;

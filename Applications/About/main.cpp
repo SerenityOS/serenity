@@ -40,7 +40,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
     if (pledge("stdio shared_buffer accept rpath", nullptr) < 0) {
         perror("pledge");
@@ -54,56 +54,56 @@ int main(int argc, char** argv)
 
     unveil(nullptr, nullptr);
 
-    auto window = GWindow::construct();
+    auto window = GUI::Window::construct();
     window->set_title("About SerenityOS");
     Rect window_rect { 0, 0, 240, 180 };
-    window_rect.center_within(GDesktop::the().rect());
+    window_rect.center_within(GUI::Desktop::the().rect());
     window->set_resizable(false);
     window->set_rect(window_rect);
 
-    auto widget = GWidget::construct();
+    auto widget = GUI::Widget::construct();
     window->set_main_widget(widget);
     widget->set_fill_with_background_color(true);
-    widget->set_layout(make<GVBoxLayout>());
+    widget->set_layout(make<GUI::VBoxLayout>());
     widget->layout()->set_margins({ 0, 8, 0, 8 });
     widget->layout()->set_spacing(8);
 
-    auto icon_label = GLabel::construct(widget);
+    auto icon_label = GUI::Label::construct(widget);
     icon_label->set_icon(GraphicsBitmap::load_from_file("/res/icons/serenity.png"));
-    icon_label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+    icon_label->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     icon_label->set_preferred_size(icon_label->icon()->size());
 
-    auto label = GLabel::construct(widget);
+    auto label = GUI::Label::construct(widget);
     label->set_font(Font::default_bold_font());
     label->set_text("SerenityOS");
-    label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    label->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     label->set_preferred_size(0, 11);
 
     utsname uts;
     int rc = uname(&uts);
     ASSERT(rc == 0);
 
-    auto version_label = GLabel::construct(widget);
+    auto version_label = GUI::Label::construct(widget);
     version_label->set_text(String::format("Version %s", uts.release));
-    version_label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    version_label->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     version_label->set_preferred_size(0, 11);
 
-    auto git_info_label = GLabel::construct(widget);
+    auto git_info_label = GUI::Label::construct(widget);
     git_info_label->set_text(String::format("Built on %s@%s", GIT_BRANCH, GIT_COMMIT));
-    git_info_label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    git_info_label->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     git_info_label->set_preferred_size(0, 11);
 
-    auto git_changes_label = GLabel::construct(widget);
+    auto git_changes_label = GUI::Label::construct(widget);
     git_changes_label->set_text(String::format("Changes: %s", GIT_CHANGES));
-    git_changes_label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    git_changes_label->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     git_changes_label->set_preferred_size(0, 11);
 
-    auto quit_button = GButton::construct(widget);
+    auto quit_button = GUI::Button::construct(widget);
     quit_button->set_text("Okay");
-    quit_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+    quit_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     quit_button->set_preferred_size(100, 20);
-    quit_button->on_click = [](GButton&) {
-        GApplication::the().quit(0);
+    quit_button->on_click = [](GUI::Button&) {
+        GUI::Application::the().quit(0);
     };
 
     quit_button->set_focus(true);

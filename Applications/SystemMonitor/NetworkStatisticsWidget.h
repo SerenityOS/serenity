@@ -29,18 +29,20 @@
 #include <LibCore/CTimer.h>
 #include <LibGUI/GLazyWidget.h>
 
-class GTableView;
+namespace GUI {
+class TableView;
+}
 
-class NetworkStatisticsWidget final : public GLazyWidget {
+class NetworkStatisticsWidget final : public GUI::LazyWidget {
     C_OBJECT(NetworkStatisticsWidget)
 public:
     virtual ~NetworkStatisticsWidget() override;
 
 private:
-    explicit NetworkStatisticsWidget(GWidget* parent = nullptr);
+    explicit NetworkStatisticsWidget(GUI::Widget* parent = nullptr);
     void update_models();
 
-    RefPtr<GTableView> m_adapter_table_view;
-    RefPtr<GTableView> m_socket_table_view;
+    RefPtr<GUI::TableView> m_adapter_table_view;
+    RefPtr<GUI::TableView> m_socket_table_view;
     RefPtr<Core::Timer> m_update_timer;
 };

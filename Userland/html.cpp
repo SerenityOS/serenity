@@ -44,7 +44,7 @@
 
 int main(int argc, char** argv)
 {
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
     auto f = Core::File::construct();
     bool success;
@@ -62,7 +62,7 @@ int main(int argc, char** argv)
     String html = String::copy(f->read_all());
     auto document = parse_html_document(html);
 
-    auto window = GWindow::construct();
+    auto window = GUI::Window::construct();
     auto widget = HtmlView::construct();
     widget->set_document(document);
     if (!widget->document()->title().is_null())
@@ -72,17 +72,17 @@ int main(int argc, char** argv)
     window->set_main_widget(widget);
     window->show();
 
-    auto menubar = make<GMenuBar>();
+    auto menubar = make<GUI::MenuBar>();
 
-    auto app_menu = GMenu::construct("HTML");
-    app_menu->add_action(GCommonActions::make_quit_action([&](auto&) {
+    auto app_menu = GUI::Menu::construct("HTML");
+    app_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app.quit();
     }));
     menubar->add_menu(move(app_menu));
 
-    auto help_menu = GMenu::construct("Help");
-    help_menu->add_action(GAction::create("About", [&](const GAction&) {
-        GAboutDialog::show("HTML", GraphicsBitmap::load_from_file("/res/icons/32x32/filetype-html.png"), window);
+    auto help_menu = GUI::Menu::construct("Help");
+    help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
+        GUI::AboutDialog::show("HTML", GraphicsBitmap::load_from_file("/res/icons/32x32/filetype-html.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 

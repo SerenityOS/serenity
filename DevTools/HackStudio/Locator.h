@@ -28,11 +28,14 @@
 
 #include <LibGUI/GWidget.h>
 
-class LocatorTextBox;
-class GModelIndex;
-class GTableView;
+namespace GUI {
+class ModelIndex;
+class TableView;
+}
 
-class Locator final : public GWidget {
+class LocatorTextBox;
+
+class Locator final : public GUI::Widget {
     C_OBJECT(Locator)
 public:
     virtual ~Locator() override;
@@ -42,11 +45,11 @@ public:
 
 private:
     void update_suggestions();
-    void open_suggestion(const GModelIndex&);
+    void open_suggestion(const GUI::ModelIndex&);
 
-    explicit Locator(GWidget* parent);
+    explicit Locator(GUI::Widget* parent);
 
     RefPtr<LocatorTextBox> m_textbox;
-    RefPtr<GWindow> m_popup_window;
-    RefPtr<GTableView> m_suggestion_view;
+    RefPtr<GUI::Window> m_popup_window;
+    RefPtr<GUI::TableView> m_suggestion_view;
 };

@@ -32,10 +32,12 @@
 #include <LibGUI/GTextEditor.h>
 #include <LibGUI/GWindow.h>
 
-GComboBox::GComboBox(GWidget* parent)
-    : GWidget(parent)
+namespace GUI {
+
+ComboBox::ComboBox(Widget* parent)
+    : Widget(parent)
 {
-    m_editor = GTextEditor::construct(GTextEditor::Type::SingleLine, this);
+    m_editor = TextEditor::construct(TextEditor::Type::SingleLine, this);
     m_editor->on_change = [this] {
         if (on_change)
             on_change(m_editor->text(), m_list_view->selection().first());
@@ -44,7 +46,7 @@ GComboBox::GComboBox(GWidget* parent)
         if (on_return_pressed)
             on_return_pressed();
     };
-    m_open_button = GButton::construct(this);
+    m_open_button = Button::construct(this);
     m_open_button->set_focusable(false);
     m_open_button->set_text("\xc3\xb7");
     m_open_button->on_click = [this](auto&) {
@@ -54,11 +56,11 @@ GComboBox::GComboBox(GWidget* parent)
             open();
     };
 
-    m_list_window = GWindow::construct(this);
+    m_list_window = Window::construct(this);
     // FIXME: This is obviously not a tooltip window, but it's the closest thing to what we want atm.
-    m_list_window->set_window_type(GWindowType::Tooltip);
+    m_list_window->set_window_type(WindowType::Tooltip);
 
-    m_list_view = GListView::construct(nullptr);
+    m_list_view = ListView::construct(nullptr);
     m_list_view->horizontal_scrollbar().set_visible(false);
     m_list_window->set_main_widget(m_list_view);
 
@@ -75,11 +77,11 @@ GComboBox::GComboBox(GWidget* parent)
     };
 }
 
-GComboBox::~GComboBox()
+ComboBox::~ComboBox()
 {
 }
 
-void GComboBox::resize_event(GResizeEvent& event)
+void ComboBox::resize_event(ResizeEvent& event)
 {
     int frame_thickness = m_editor->frame_thickness();
     int button_height = event.size().height() - frame_thickness * 2;
@@ -88,17 +90,17 @@ void GComboBox::resize_event(GResizeEvent& event)
     m_editor->set_relative_rect(0, 0, width(), height());
 }
 
-void GComboBox::set_model(NonnullRefPtr<GModel> model)
+void ComboBox::set_model(NonnullRefPtr<Model> model)
 {
     m_list_view->set_model(move(model));
 }
 
-void GComboBox::select_all()
+void ComboBox::select_all()
 {
     m_editor->select_all();
 }
 
-void GComboBox::open()
+void ComboBox::open()
 {
     if (!model())
         return;
@@ -117,32 +119,34 @@ void GComboBox::open()
     };
 
     Rect list_window_rect { my_screen_rect.bottom_left(), size };
-    list_window_rect.intersect(GDesktop::the().rect().shrunken(0, 128));
+    list_window_rect.intersect(Desktop::the().rect().shrunken(0, 128));
 
     m_list_window->set_rect(list_window_rect);
     m_list_window->show();
 }
 
-void GComboBox::close()
+void ComboBox::close()
 {
     m_list_window->hide();
     m_editor->set_focus(true);
 }
 
-String GComboBox::text() const
+String ComboBox::text() const
 {
     return m_editor->text();
 }
 
-void GComboBox::set_text(const String& text)
+void ComboBox::set_text(const String& text)
 {
     m_editor->set_text(text);
 }
 
-void GComboBox::set_only_allow_values_from_model(bool b)
+void ComboBox::set_only_allow_values_from_model(bool b)
 {
     if (m_only_allow_values_from_model == b)
         return;
     m_only_allow_values_from_model = b;
     m_editor->set_readonly(m_only_allow_values_from_model);
+}
+
 }

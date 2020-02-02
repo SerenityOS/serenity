@@ -29,24 +29,26 @@
 #include <LibGUI/GGroupBox.h>
 #include <LibGUI/GPainter.h>
 
-GGroupBox::GGroupBox(GWidget* parent)
-    : GGroupBox({}, parent)
+namespace GUI {
+
+GroupBox::GroupBox(Widget* parent)
+    : GroupBox({}, parent)
 {
 }
 
-GGroupBox::GGroupBox(const StringView& title, GWidget* parent)
-    : GWidget(parent)
+GroupBox::GroupBox(const StringView& title, Widget* parent)
+    : Widget(parent)
     , m_title(title)
 {
 }
 
-GGroupBox::~GGroupBox()
+GroupBox::~GroupBox()
 {
 }
 
-void GGroupBox::paint_event(GPaintEvent& event)
+void GroupBox::paint_event(PaintEvent& event)
 {
-    GPainter painter(*this);
+    Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
     Rect frame_rect {
@@ -60,10 +62,12 @@ void GGroupBox::paint_event(GPaintEvent& event)
     painter.draw_text(text_rect, m_title, TextAlignment::Center, palette().button_text());
 }
 
-void GGroupBox::set_title(const StringView& title)
+void GroupBox::set_title(const StringView& title)
 {
     if (m_title == title)
         return;
     m_title = title;
     update();
+}
+
 }

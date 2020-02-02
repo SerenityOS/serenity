@@ -57,7 +57,7 @@ static int handle_show_all()
 
 static int handle_show_current()
 {
-    printf("%s\n", GDesktop::the().wallpaper().characters());
+    printf("%s\n", GUI::Desktop::the().wallpaper().characters());
     return 0;
 }
 
@@ -67,7 +67,7 @@ static int handle_set_pape(const String& name)
     builder.append("/res/wallpapers/");
     builder.append(name);
     String path = builder.to_string();
-    if (!GDesktop::the().set_wallpaper(path)) {
+    if (!GUI::Desktop::the().set_wallpaper(path)) {
         fprintf(stderr, "pape: Failed to set wallpaper %s\n", path.characters());
         return 1;
     }
@@ -86,7 +86,7 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(name, "Wallpaper to set", "name", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
     if (show_all)
         return handle_show_all();

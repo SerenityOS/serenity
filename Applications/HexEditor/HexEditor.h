@@ -34,7 +34,7 @@
 #include <LibDraw/TextAlignment.h>
 #include <LibGUI/GScrollableWidget.h>
 
-class HexEditor : public GScrollableWidget {
+class HexEditor : public GUI::ScrollableWidget {
     C_OBJECT(HexEditor)
 public:
     enum EditMode {
@@ -65,13 +65,13 @@ public:
     Function<void()> on_change;
 
 protected:
-    HexEditor(GWidget* parent);
+    HexEditor(GUI::Widget* parent);
 
-    virtual void paint_event(GPaintEvent&) override;
-    virtual void mousedown_event(GMouseEvent&) override;
-    virtual void mouseup_event(GMouseEvent&) override;
-    virtual void mousemove_event(GMouseEvent&) override;
-    virtual void keydown_event(GKeyEvent&) override;
+    virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void mousedown_event(GUI::MouseEvent&) override;
+    virtual void mouseup_event(GUI::MouseEvent&) override;
+    virtual void mousemove_event(GUI::MouseEvent&) override;
+    virtual void keydown_event(GUI::KeyEvent&) override;
     virtual bool accepts_focus() const override { return true; }
     virtual void leave_event(Core::Event&) override;
 
@@ -97,8 +97,8 @@ private:
     int character_width() const { return font().glyph_width('W'); }
     int offset_margin_width() const { return 80; }
 
-    void hex_mode_keydown_event(GKeyEvent&);
-    void text_mode_keydown_event(GKeyEvent&);
+    void hex_mode_keydown_event(GUI::KeyEvent&);
+    void text_mode_keydown_event(GUI::KeyEvent&);
 
     void set_content_length(int); // I might make this public if I add fetching data on demand.
     void update_status();

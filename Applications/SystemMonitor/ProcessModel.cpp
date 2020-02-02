@@ -56,12 +56,12 @@ ProcessModel::~ProcessModel()
 {
 }
 
-int ProcessModel::row_count(const GModelIndex&) const
+int ProcessModel::row_count(const GUI::ModelIndex&) const
 {
     return m_pids.size();
 }
 
-int ProcessModel::column_count(const GModelIndex&) const
+int ProcessModel::column_count(const GUI::ModelIndex&) const
 {
     return Column::__Count;
 }
@@ -128,7 +128,7 @@ String ProcessModel::column_name(int column) const
     }
 }
 
-GModel::ColumnMetadata ProcessModel::column_metadata(int column) const
+GUI::Model::ColumnMetadata ProcessModel::column_metadata(int column) const
 {
     switch (column) {
     case Column::Icon:
@@ -195,7 +195,7 @@ static String pretty_byte_size(size_t size)
     return String::format("%uK", size / 1024);
 }
 
-GVariant ProcessModel::data(const GModelIndex& index, Role role) const
+GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, Role role) const
 {
     ASSERT(is_valid(index));
 

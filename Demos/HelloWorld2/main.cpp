@@ -34,9 +34,9 @@
 
 int main(int argc, char** argv)
 {
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
-    auto window = GWindow::construct();
+    auto window = GUI::Window::construct();
     window->set_rect(100, 100, 240, 160);
     window->set_title("Hello World!");
 

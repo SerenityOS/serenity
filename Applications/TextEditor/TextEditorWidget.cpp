@@ -45,11 +45,11 @@
 
 TextEditorWidget::TextEditorWidget()
 {
-    set_layout(make<GVBoxLayout>());
+    set_layout(make<GUI::VBoxLayout>());
     layout()->set_spacing(0);
 
-    auto toolbar = GToolBar::construct(this);
-    m_editor = GTextEditor::construct(GTextEditor::MultiLine, this);
+    auto toolbar = GUI::ToolBar::construct(this);
+    m_editor = GUI::TextEditor::construct(GUI::TextEditor::MultiLine, this);
     m_editor->set_ruler_visible(true);
     m_editor->set_automatic_indentation_enabled(true);
     m_editor->set_line_wrapping_enabled(true);
@@ -67,32 +67,32 @@ TextEditorWidget::TextEditorWidget()
             update_title();
     };
 
-    m_find_replace_widget = GWidget::construct(this);
+    m_find_replace_widget = GUI::Widget::construct(this);
     m_find_replace_widget->set_fill_with_background_color(true);
-    m_find_replace_widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    m_find_replace_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_find_replace_widget->set_preferred_size(0, 48);
-    m_find_replace_widget->set_layout(make<GVBoxLayout>());
+    m_find_replace_widget->set_layout(make<GUI::VBoxLayout>());
     m_find_replace_widget->layout()->set_margins({ 2, 2, 2, 4 });
     m_find_replace_widget->set_visible(false);
 
-    m_find_widget = GWidget::construct(m_find_replace_widget);
+    m_find_widget = GUI::Widget::construct(m_find_replace_widget);
     m_find_widget->set_fill_with_background_color(true);
-    m_find_widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    m_find_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_find_widget->set_preferred_size(0, 22);
-    m_find_widget->set_layout(make<GHBoxLayout>());
+    m_find_widget->set_layout(make<GUI::HBoxLayout>());
     m_find_widget->set_visible(false);
 
-    m_replace_widget = GWidget::construct(m_find_replace_widget);
+    m_replace_widget = GUI::Widget::construct(m_find_replace_widget);
     m_replace_widget->set_fill_with_background_color(true);
-    m_replace_widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    m_replace_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_replace_widget->set_preferred_size(0, 22);
-    m_replace_widget->set_layout(make<GHBoxLayout>());
+    m_replace_widget->set_layout(make<GUI::HBoxLayout>());
     m_replace_widget->set_visible(false);
 
-    m_find_textbox = GTextBox::construct(m_find_widget);
-    m_replace_textbox = GTextBox::construct(m_replace_widget);
+    m_find_textbox = GUI::TextBox::construct(m_find_widget);
+    m_replace_textbox = GUI::TextBox::construct(m_replace_widget);
 
-    m_find_next_action = GAction::create("Find next", { Mod_Ctrl, Key_G }, [&](auto&) {
+    m_find_next_action = GUI::Action::create("Find next", { Mod_Ctrl, Key_G }, [&](auto&) {
         auto needle = m_find_textbox->text();
         if (needle.is_empty()) {
             dbg() << "find_next(\"\")";
@@ -103,15 +103,15 @@ TextEditorWidget::TextEditorWidget()
         if (found_range.is_valid()) {
             m_editor->set_selection(found_range);
         } else {
-            GMessageBox::show(
+            GUI::MessageBox::show(
                 String::format("Not found: \"%s\"", needle.characters()),
                 "Not found",
-                GMessageBox::Type::Information,
-                GMessageBox::InputType::OK, window());
+                GUI::MessageBox::Type::Information,
+                GUI::MessageBox::InputType::OK, window());
         }
     });
 
-    m_find_previous_action = GAction::create("Find previous", { Mod_Ctrl | Mod_Shift, Key_G }, [&](auto&) {
+    m_find_previous_action = GUI::Action::create("Find previous", { Mod_Ctrl | Mod_Shift, Key_G }, [&](auto&) {
         auto needle = m_find_textbox->text();
         if (needle.is_empty()) {
             dbg() << "find_prev(\"\")";
@@ -128,15 +128,15 @@ TextEditorWidget::TextEditorWidget()
         if (found_range.is_valid()) {
             m_editor->set_selection(found_range);
         } else {
-            GMessageBox::show(
+            GUI::MessageBox::show(
                 String::format("Not found: \"%s\"", needle.characters()),
                 "Not found",
-                GMessageBox::Type::Information,
-                GMessageBox::InputType::OK, window());
+                GUI::MessageBox::Type::Information,
+                GUI::MessageBox::InputType::OK, window());
         }
     });
 
-    m_replace_next_action = GAction::create("Replace next", { Mod_Ctrl, Key_F1 }, [&](auto&) {
+    m_replace_next_action = GUI::Action::create("Replace next", { Mod_Ctrl, Key_F1 }, [&](auto&) {
         auto needle = m_find_textbox->text();
         auto substitute = m_replace_textbox->text();
 
@@ -153,15 +153,15 @@ TextEditorWidget::TextEditorWidget()
             m_editor->set_selection(found_range);
             m_editor->insert_at_cursor_or_replace_selection(substitute);
         } else {
-            GMessageBox::show(
+            GUI::MessageBox::show(
                 String::format("Not found: \"%s\"", needle.characters()),
                 "Not found",
-                GMessageBox::Type::Information,
-                GMessageBox::InputType::OK, window());
+                GUI::MessageBox::Type::Information,
+                GUI::MessageBox::InputType::OK, window());
         }
     });
 
-    m_replace_previous_action = GAction::create("Replace previous", { Mod_Ctrl | Mod_Shift, Key_F1 }, [&](auto&) {
+    m_replace_previous_action = GUI::Action::create("Replace previous", { Mod_Ctrl | Mod_Shift, Key_F1 }, [&](auto&) {
         auto needle = m_find_textbox->text();
         auto substitute = m_replace_textbox->text();
         if (needle.is_empty())
@@ -177,15 +177,15 @@ TextEditorWidget::TextEditorWidget()
             m_editor->set_selection(found_range);
             m_editor->insert_at_cursor_or_replace_selection(substitute);
         } else {
-            GMessageBox::show(
+            GUI::MessageBox::show(
                 String::format("Not found: \"%s\"", needle.characters()),
                 "Not found",
-                GMessageBox::Type::Information,
-                GMessageBox::InputType::OK, window());
+                GUI::MessageBox::Type::Information,
+                GUI::MessageBox::InputType::OK, window());
         }
     });
 
-    m_replace_all_action = GAction::create("Replace all", { Mod_Ctrl, Key_F2 }, [&](auto&) {
+    m_replace_all_action = GUI::Action::create("Replace all", { Mod_Ctrl, Key_F2 }, [&](auto&) {
         auto needle = m_find_textbox->text();
         auto substitute = m_replace_textbox->text();
         if (needle.is_empty())
@@ -200,13 +200,13 @@ TextEditorWidget::TextEditorWidget()
         }
     });
 
-    m_find_previous_button = GButton::construct("Find previous", m_find_widget);
-    m_find_previous_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    m_find_previous_button = GUI::Button::construct("Find previous", m_find_widget);
+    m_find_previous_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     m_find_previous_button->set_preferred_size(150, 0);
     m_find_previous_button->set_action(*m_find_previous_action);
 
-    m_find_next_button = GButton::construct("Find next", m_find_widget);
-    m_find_next_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    m_find_next_button = GUI::Button::construct("Find next", m_find_widget);
+    m_find_next_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     m_find_next_button->set_preferred_size(150, 0);
     m_find_next_button->set_action(*m_find_next_action);
 
@@ -219,18 +219,18 @@ TextEditorWidget::TextEditorWidget()
         m_editor->set_focus(true);
     };
 
-    m_replace_previous_button = GButton::construct("Replace previous", m_replace_widget);
-    m_replace_previous_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    m_replace_previous_button = GUI::Button::construct("Replace previous", m_replace_widget);
+    m_replace_previous_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     m_replace_previous_button->set_preferred_size(100, 0);
     m_replace_previous_button->set_action(*m_replace_previous_action);
 
-    m_replace_next_button = GButton::construct("Replace next", m_replace_widget);
-    m_replace_next_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    m_replace_next_button = GUI::Button::construct("Replace next", m_replace_widget);
+    m_replace_next_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     m_replace_next_button->set_preferred_size(100, 0);
     m_replace_next_button->set_action(*m_replace_next_action);
 
-    m_replace_all_button = GButton::construct("Replace all", m_replace_widget);
-    m_replace_all_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    m_replace_all_button = GUI::Button::construct("Replace all", m_replace_widget);
+    m_replace_all_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     m_replace_all_button->set_preferred_size(100, 0);
     m_replace_all_button->set_action(*m_replace_all_action);
 
@@ -243,7 +243,7 @@ TextEditorWidget::TextEditorWidget()
         m_editor->set_focus(true);
     };
 
-    m_find_replace_action = GAction::create("Find/Replace...", { Mod_Ctrl, Key_F }, load_png("/res/icons/16x16/find.png"), [this](auto&) {
+    m_find_replace_action = GUI::Action::create("Find/Replace...", { Mod_Ctrl, Key_F }, load_png("/res/icons/16x16/find.png"), [this](auto&) {
         m_find_replace_widget->set_visible(true);
         m_find_widget->set_visible(true);
         m_replace_widget->set_visible(true);
@@ -260,7 +260,7 @@ TextEditorWidget::TextEditorWidget()
     m_editor->add_custom_context_menu_action(*m_find_next_action);
     m_editor->add_custom_context_menu_action(*m_find_previous_action);
 
-    m_statusbar = GStatusBar::construct(this);
+    m_statusbar = GUI::StatusBar::construct(this);
 
     m_editor->on_cursor_change = [this] {
         StringBuilder builder;
@@ -268,12 +268,12 @@ TextEditorWidget::TextEditorWidget()
         m_statusbar->set_text(builder.to_string());
     };
 
-    m_new_action = GAction::create("New", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [this](const GAction&) {
+    m_new_action = GUI::Action::create("New", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [this](const GUI::Action&) {
         if (m_document_dirty) {
-            auto save_document_first_box = GMessageBox::construct("Save Document First?", "Warning", GMessageBox::Type::Warning, GMessageBox::InputType::OKCancel, window());
+            auto save_document_first_box = GUI::MessageBox::construct("Save Document First?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel, window());
             auto save_document_first_result = save_document_first_box->exec();
 
-            if (save_document_first_result != GDialog::ExecResult::ExecOK)
+            if (save_document_first_result != GUI::Dialog::ExecResult::ExecOK)
                 return;
             m_save_action->activate();
         }
@@ -284,30 +284,30 @@ TextEditorWidget::TextEditorWidget()
         update_title();
     });
 
-    m_open_action = GCommonActions::make_open_action([this](auto&) {
-        Optional<String> open_path = GFilePicker::get_open_filepath();
+    m_open_action = GUI::CommonActions::make_open_action([this](auto&) {
+        Optional<String> open_path = GUI::FilePicker::get_open_filepath();
 
         if (!open_path.has_value())
             return;
 
         if (m_document_dirty) {
-            auto save_document_first_box = GMessageBox::construct("Save Document First?", "Warning", GMessageBox::Type::Warning, GMessageBox::InputType::OKCancel, window());
+            auto save_document_first_box = GUI::MessageBox::construct("Save Document First?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel, window());
             auto save_document_first_result = save_document_first_box->exec();
 
-            if (save_document_first_result == GDialog::ExecResult::ExecOK)
+            if (save_document_first_result == GUI::Dialog::ExecResult::ExecOK)
                 m_save_action->activate();
         }
 
         open_sesame(open_path.value());
     });
 
-    m_save_as_action = GAction::create("Save as...", { Mod_Ctrl | Mod_Shift, Key_S }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [this](const GAction&) {
-        Optional<String> save_path = GFilePicker::get_save_filepath(m_name.is_null() ? "Untitled" : m_name, m_extension.is_null() ? "txt" : m_extension);
+    m_save_as_action = GUI::Action::create("Save as...", { Mod_Ctrl | Mod_Shift, Key_S }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [this](const GUI::Action&) {
+        Optional<String> save_path = GUI::FilePicker::get_save_filepath(m_name.is_null() ? "Untitled" : m_name, m_extension.is_null() ? "txt" : m_extension);
         if (!save_path.has_value())
             return;
 
         if (!m_editor->write_to_file(save_path.value())) {
-            GMessageBox::show("Unable to save file.\n", "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
+            GUI::MessageBox::show("Unable to save file.\n", "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
             return;
         }
 
@@ -316,10 +316,10 @@ TextEditorWidget::TextEditorWidget()
         dbg() << "Wrote document to " << save_path.value();
     });
 
-    m_save_action = GAction::create("Save", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [&](const GAction&) {
+    m_save_action = GUI::Action::create("Save", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [&](const GUI::Action&) {
         if (!m_path.is_empty()) {
             if (!m_editor->write_to_file(m_path)) {
-                GMessageBox::show("Unable to save file.\n", "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
+                GUI::MessageBox::show("Unable to save file.\n", "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
             } else {
                 m_document_dirty = false;
                 update_title();
@@ -330,28 +330,28 @@ TextEditorWidget::TextEditorWidget()
         m_save_as_action->activate();
     });
 
-    m_line_wrapping_setting_action = GAction::create("Line wrapping", [&](GAction& action) {
+    m_line_wrapping_setting_action = GUI::Action::create("Line wrapping", [&](GUI::Action& action) {
         action.set_checked(!action.is_checked());
         m_editor->set_line_wrapping_enabled(action.is_checked());
     });
     m_line_wrapping_setting_action->set_checkable(true);
     m_line_wrapping_setting_action->set_checked(m_editor->is_line_wrapping_enabled());
 
-    auto menubar = make<GMenuBar>();
-    auto app_menu = GMenu::construct("Text Editor");
+    auto menubar = make<GUI::MenuBar>();
+    auto app_menu = GUI::Menu::construct("Text Editor");
     app_menu->add_action(*m_new_action);
     app_menu->add_action(*m_open_action);
     app_menu->add_action(*m_save_action);
     app_menu->add_action(*m_save_as_action);
     app_menu->add_separator();
-    app_menu->add_action(GCommonActions::make_quit_action([this](auto&) {
+    app_menu->add_action(GUI::CommonActions::make_quit_action([this](auto&) {
         if (!request_close())
             return;
-        GApplication::the().quit(0);
+        GUI::Application::the().quit(0);
     }));
     menubar->add_menu(move(app_menu));
 
-    auto edit_menu = GMenu::construct("Edit");
+    auto edit_menu = GUI::Menu::construct("Edit");
     edit_menu->add_action(m_editor->undo_action());
     edit_menu->add_action(m_editor->redo_action());
     edit_menu->add_separator();
@@ -368,27 +368,27 @@ TextEditorWidget::TextEditorWidget()
     edit_menu->add_action(*m_replace_all_action);
     menubar->add_menu(move(edit_menu));
 
-    auto font_menu = GMenu::construct("Font");
+    auto font_menu = GUI::Menu::construct("Font");
     GFontDatabase::the().for_each_fixed_width_font([&](const StringView& font_name) {
-        font_menu->add_action(GAction::create(font_name, [this](const GAction& action) {
+        font_menu->add_action(GUI::Action::create(font_name, [this](const GUI::Action& action) {
             m_editor->set_font(GFontDatabase::the().get_by_name(action.text()));
             m_editor->update();
         }));
     });
 
-    auto view_menu = GMenu::construct("View");
+    auto view_menu = GUI::Menu::construct("View");
     view_menu->add_action(*m_line_wrapping_setting_action);
     view_menu->add_separator();
     view_menu->add_submenu(move(font_menu));
     menubar->add_menu(move(view_menu));
 
-    auto help_menu = GMenu::construct("Help");
-    help_menu->add_action(GAction::create("About", [&](const GAction&) {
-        GAboutDialog::show("Text Editor", load_png("/res/icons/32x32/app-texteditor.png"), window());
+    auto help_menu = GUI::Menu::construct("Help");
+    help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
+        GUI::AboutDialog::show("Text Editor", load_png("/res/icons/32x32/app-texteditor.png"), window());
     }));
     menubar->add_menu(move(help_menu));
 
-    GApplication::the().set_menubar(move(menubar));
+    GUI::Application::the().set_menubar(move(menubar));
 
     toolbar->add_action(*m_new_action);
     toolbar->add_action(*m_open_action);
@@ -433,7 +433,7 @@ void TextEditorWidget::open_sesame(const String& path)
 {
     auto file = Core::File::construct(path);
     if (!file->open(Core::IODevice::ReadOnly)) {
-        GMessageBox::show(String::format("Opening \"%s\" failed: %s", path.characters(), strerror(errno)), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
+        GUI::MessageBox::show(String::format("Opening \"%s\" failed: %s", path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
         return;
     }
 
@@ -450,11 +450,11 @@ bool TextEditorWidget::request_close()
 {
     if (!m_document_dirty)
         return true;
-    auto result = GMessageBox::show("The document has been modified. Quit without saving?", "Quit without saving?", GMessageBox::Type::Warning, GMessageBox::InputType::OKCancel, window());
-    return result == GMessageBox::ExecOK;
+    auto result = GUI::MessageBox::show("The document has been modified. Quit without saving?", "Quit without saving?", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel, window());
+    return result == GUI::MessageBox::ExecOK;
 }
 
-void TextEditorWidget::drop_event(GDropEvent& event)
+void TextEditorWidget::drop_event(GUI::DropEvent& event)
 {
     event.accept();
     window()->move_to_front();
@@ -464,7 +464,7 @@ void TextEditorWidget::drop_event(GDropEvent& event)
         if (lines.is_empty())
             return;
         if (lines.size() > 1) {
-            GMessageBox::show("TextEditor can only open one file at a time!", "One at a time please!", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
+            GUI::MessageBox::show("TextEditor can only open one file at a time!", "One at a time please!", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
             return;
         }
         URL url(lines[0]);

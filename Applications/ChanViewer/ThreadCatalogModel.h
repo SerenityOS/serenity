@@ -30,7 +30,7 @@
 #include <LibCore/CHttpJob.h>
 #include <LibGUI/GModel.h>
 
-class ThreadCatalogModel final : public GModel {
+class ThreadCatalogModel final : public GUI::Model {
 public:
     enum Column {
         ThreadNumber,
@@ -45,11 +45,11 @@ public:
     static NonnullRefPtr<ThreadCatalogModel> create() { return adopt(*new ThreadCatalogModel); }
     virtual ~ThreadCatalogModel() override;
 
-    virtual int row_count(const GModelIndex& = GModelIndex()) const override;
-    virtual int column_count(const GModelIndex& = GModelIndex()) const override { return Column::__Count; }
+    virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
+    virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return Column::__Count; }
     virtual String column_name(int) const override;
     virtual ColumnMetadata column_metadata(int) const override;
-    virtual GVariant data(const GModelIndex&, Role = Role::Display) const override;
+    virtual GUI::Variant data(const GUI::ModelIndex&, Role = Role::Display) const override;
     virtual void update() override;
 
     const String& board() const { return m_board; }

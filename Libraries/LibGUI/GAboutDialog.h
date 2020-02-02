@@ -28,20 +28,23 @@
 
 #include <LibGUI/GDialog.h>
 
-class GAboutDialog final : public GDialog {
-    C_OBJECT(GAboutDialog)
+namespace GUI {
+
+class AboutDialog final : public Dialog {
+    C_OBJECT(AboutDialog)
 public:
-    virtual ~GAboutDialog() override;
+    virtual ~AboutDialog() override;
 
     static void show(const StringView& name, const GraphicsBitmap* icon = nullptr, Core::Object* parent = nullptr)
     {
-        auto dialog = GAboutDialog::construct(name, icon, parent);
+        auto dialog = AboutDialog::construct(name, icon, parent);
         dialog->exec();
     }
 
 private:
-    GAboutDialog(const StringView& name, const GraphicsBitmap* icon = nullptr, Core::Object* parent = nullptr);
+    AboutDialog(const StringView& name, const GraphicsBitmap* icon = nullptr, Core::Object* parent = nullptr);
 
     String m_name;
     RefPtr<GraphicsBitmap> m_icon;
 };
+}

@@ -45,7 +45,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
     if (pledge("stdio rpath accept wpath cpath shared_buffer", nullptr) < 0) {
         perror("pledge");
@@ -53,41 +53,41 @@ int main(int argc, char** argv)
     }
 
 
-    auto window = GWindow::construct();
+    auto window = GUI::Window::construct();
     window->set_resizable(false);
     window->set_title("Minesweeper");
     window->set_rect(100, 100, 139, 175);
 
-    auto widget = GWidget::construct();
+    auto widget = GUI::Widget::construct();
     window->set_main_widget(widget);
-    widget->set_layout(make<GVBoxLayout>());
+    widget->set_layout(make<GUI::VBoxLayout>());
     widget->layout()->set_spacing(0);
 
-    auto container = GWidget::construct(widget.ptr());
+    auto container = GUI::Widget::construct(widget.ptr());
     container->set_fill_with_background_color(true);
-    container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     container->set_preferred_size(0, 36);
-    container->set_layout(make<GHBoxLayout>());
-    auto flag_icon_label = GLabel::construct(container);
+    container->set_layout(make<GUI::HBoxLayout>());
+    auto flag_icon_label = GUI::Label::construct(container);
     flag_icon_label->set_icon(GraphicsBitmap::load_from_file("/res/icons/minesweeper/flag.png"));
-    auto flag_label = GLabel::construct(container);
-    auto face_button = GButton::construct(container);
+    auto flag_label = GUI::Label::construct(container);
+    auto face_button = GUI::Button::construct(container);
     face_button->set_button_style(ButtonStyle::CoolBar);
-    face_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    face_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     face_button->set_preferred_size(36, 0);
-    auto time_icon_label = GLabel::construct(container);
+    auto time_icon_label = GUI::Label::construct(container);
     time_icon_label->set_icon(GraphicsBitmap::load_from_file("/res/icons/minesweeper/timer.png"));
-    auto time_label = GLabel::construct(container);
+    auto time_label = GUI::Label::construct(container);
     auto field = Field::construct(*flag_label, *time_label, *face_button, widget, [&](Size size) {
         size.set_height(size.height() + container->preferred_size().height());
         window->resize(size);
     });
 
-    auto menubar = make<GMenuBar>();
+    auto menubar = make<GUI::MenuBar>();
 
-    auto app_menu = GMenu::construct("Minesweeper");
+    auto app_menu = GUI::Menu::construct("Minesweeper");
 
-    app_menu->add_action(GAction::create("New game", { Mod_None, Key_F2 }, [&](const GAction&) {
+    app_menu->add_action(GUI::Action::create("New game", { Mod_None, Key_F2 }, [&](const GUI::Action&) {
         field->reset();
     }));
 
@@ -95,7 +95,7 @@ int main(int argc, char** argv)
     app_menu->add_separator();
 
 
-    NonnullRefPtr<GAction> chord_toggler_action = GAction::create("Single-click chording", [&](const GAction&) {
+    NonnullRefPtr<GUI::Action> chord_toggler_action = GUI::Action::create("Single-click chording", [&](const GUI::Action&) {
         bool toggled = !field->is_single_chording();
         field->set_single_chording(toggled);
         chord_toggler_action->set_checked(toggled);
@@ -106,30 +106,30 @@ int main(int argc, char** argv)
     app_menu->add_action(*chord_toggler_action);
     app_menu->add_separator();
 
-    app_menu->add_action(GCommonActions::make_quit_action([](auto&) {
-        GApplication::the().quit(0);
+    app_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
+        GUI::Application::the().quit(0);
         return;
     }));
     menubar->add_menu(move(app_menu));
 
-    auto difficulty_menu = GMenu::construct("Difficulty");
-    difficulty_menu->add_action(GAction::create("Beginner", { Mod_Ctrl, Key_B }, [&](const GAction&) {
+    auto difficulty_menu = GUI::Menu::construct("Difficulty");
+    difficulty_menu->add_action(GUI::Action::create("Beginner", { Mod_Ctrl, Key_B }, [&](const GUI::Action&) {
         field->set_field_size(9, 9, 10);
     }));
-    difficulty_menu->add_action(GAction::create("Intermediate", { Mod_Ctrl, Key_I }, [&](const GAction&) {
+    difficulty_menu->add_action(GUI::Action::create("Intermediate", { Mod_Ctrl, Key_I }, [&](const GUI::Action&) {
         field->set_field_size(16, 16, 40);
     }));
-    difficulty_menu->add_action(GAction::create("Expert", { Mod_Ctrl, Key_E }, [&](const GAction&) {
+    difficulty_menu->add_action(GUI::Action::create("Expert", { Mod_Ctrl, Key_E }, [&](const GUI::Action&) {
         field->set_field_size(16, 30, 99);
     }));
-    difficulty_menu->add_action(GAction::create("Madwoman", { Mod_Ctrl, Key_M }, [&](const GAction&) {
+    difficulty_menu->add_action(GUI::Action::create("Madwoman", { Mod_Ctrl, Key_M }, [&](const GUI::Action&) {
         field->set_field_size(32, 60, 350);
     }));
     menubar->add_menu(move(difficulty_menu));
 
-    auto help_menu = GMenu::construct("Help");
-    help_menu->add_action(GAction::create("About", [&](const GAction&) {
-        GAboutDialog::show("Minesweeper", load_png("/res/icons/32x32/app-minesweeper.png"), window);
+    auto help_menu = GUI::Menu::construct("Help");
+    help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
+        GUI::AboutDialog::show("Minesweeper", load_png("/res/icons/32x32/app-minesweeper.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 

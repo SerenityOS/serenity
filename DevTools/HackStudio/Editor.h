@@ -31,7 +31,7 @@
 class EditorWrapper;
 class HtmlView;
 
-class Editor final : public GTextEditor {
+class Editor final : public GUI::TextEditor {
     C_OBJECT(Editor)
 public:
     virtual ~Editor() override;
@@ -46,22 +46,22 @@ public:
 private:
     virtual void focusin_event(Core::Event&) override;
     virtual void focusout_event(Core::Event&) override;
-    virtual void paint_event(GPaintEvent&) override;
-    virtual void mousemove_event(GMouseEvent&) override;
+    virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void cursor_did_change() override;
 
     void show_documentation_tooltip_if_available(const String&, const Point& screen_location);
     void highlight_matching_token_pair();
 
-    explicit Editor(GWidget* parent);
+    explicit Editor(GUI::Widget* parent);
 
-    RefPtr<GWindow> m_documentation_tooltip_window;
+    RefPtr<GUI::Window> m_documentation_tooltip_window;
     RefPtr<HtmlView> m_documentation_html_view;
     String m_last_parsed_token;
 
     struct BuddySpan {
         int index { -1 };
-        GTextDocumentSpan span_backup;
+        GUI::TextDocumentSpan span_backup;
     };
 
     bool m_has_brace_buddies { false };

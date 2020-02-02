@@ -32,7 +32,7 @@
 
 class AudioEngine;
 
-class KeysWidget final : public GFrame {
+class KeysWidget final : public GUI::Frame {
     C_OBJECT(KeysWidget)
 public:
     virtual ~KeysWidget() override;
@@ -43,12 +43,12 @@ public:
     void set_key(int key, Switch);
 
 private:
-    KeysWidget(GWidget* parent, AudioEngine&);
+    KeysWidget(GUI::Widget* parent, AudioEngine&);
 
-    virtual void paint_event(GPaintEvent&) override;
-    virtual void mousedown_event(GMouseEvent&) override;
-    virtual void mouseup_event(GMouseEvent&) override;
-    virtual void mousemove_event(GMouseEvent&) override;
+    virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void mousedown_event(GUI::MouseEvent&) override;
+    virtual void mouseup_event(GUI::MouseEvent&) override;
+    virtual void mousemove_event(GUI::MouseEvent&) override;
 
     int note_for_event_position(Point) const;
 

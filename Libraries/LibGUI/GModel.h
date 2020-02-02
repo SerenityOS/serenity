@@ -36,15 +36,18 @@
 #include <LibGUI/GVariant.h>
 
 class Font;
-class GAbstractView;
 
-enum class GSortOrder {
+namespace GUI {
+
+class AbstractView;
+
+enum class SortOrder {
     None,
     Ascending,
     Descending
 };
 
-class GModel : public RefCounted<GModel> {
+class Model : public RefCounted<Model> {
 public:
     struct ColumnMetadata {
         int preferred_width { 0 };
@@ -68,52 +71,54 @@ public:
         DragData,
     };
 
-    virtual ~GModel();
+    virtual ~Model();
 
-    virtual int row_count(const GModelIndex& = GModelIndex()) const = 0;
-    virtual int column_count(const GModelIndex& = GModelIndex()) const = 0;
+    virtual int row_count(const ModelIndex& = ModelIndex()) const = 0;
+    virtual int column_count(const ModelIndex& = ModelIndex()) const = 0;
     virtual String row_name(int) const { return {}; }
     virtual String column_name(int) const { return {}; }
     virtual ColumnMetadata column_metadata(int) const { return {}; }
-    virtual GVariant data(const GModelIndex&, Role = Role::Display) const = 0;
+    virtual Variant data(const ModelIndex&, Role = Role::Display) const = 0;
     virtual void update() = 0;
-    virtual GModelIndex parent_index(const GModelIndex&) const { return {}; }
-    virtual GModelIndex index(int row, int column = 0, const GModelIndex& = GModelIndex()) const { return create_index(row, column); }
-    virtual GModelIndex sibling(int row, int column, const GModelIndex& parent) const;
-    virtual bool is_editable(const GModelIndex&) const { return false; }
-    virtual void set_data(const GModelIndex&, const GVariant&) {}
+    virtual ModelIndex parent_index(const ModelIndex&) const { return {}; }
+    virtual ModelIndex index(int row, int column = 0, const ModelIndex& = ModelIndex()) const { return create_index(row, column); }
+    virtual ModelIndex sibling(int row, int column, const ModelIndex& parent) const;
+    virtual bool is_editable(const ModelIndex&) const { return false; }
+    virtual void set_data(const ModelIndex&, const Variant&) {}
     virtual int tree_column() const { return 0; }
 
-    bool is_valid(const GModelIndex& index) const
+    bool is_valid(const ModelIndex& index) const
     {
         auto parent_index = this->parent_index(index);
         return index.row() >= 0 && index.row() < row_count(parent_index) && index.column() >= 0 && index.column() < column_count(parent_index);
     }
 
     virtual int key_column() const { return -1; }
-    virtual GSortOrder sort_order() const { return GSortOrder::None; }
-    virtual void set_key_column_and_sort_order(int, GSortOrder) {}
+    virtual SortOrder sort_order() const { return SortOrder::None; }
+    virtual void set_key_column_and_sort_order(int, SortOrder) {}
 
     virtual StringView drag_data_type() const { return {}; }
 
-    void register_view(Badge<GAbstractView>, GAbstractView&);
-    void unregister_view(Badge<GAbstractView>, GAbstractView&);
+    void register_view(Badge<AbstractView>, AbstractView&);
+    void unregister_view(Badge<AbstractView>, AbstractView&);
 
     Function<void()> on_update;
 
 protected:
-    GModel();
+    Model();
 
-    void for_each_view(Function<void(GAbstractView&)>);
+    void for_each_view(Function<void(AbstractView&)>);
     void did_update();
 
-    GModelIndex create_index(int row, int column, const void* data = nullptr) const;
+    ModelIndex create_index(int row, int column, const void* data = nullptr) const;
 
 private:
-    HashTable<GAbstractView*> m_views;
+    HashTable<AbstractView*> m_views;
 };
 
-inline GModelIndex GModelIndex::parent() const
+inline ModelIndex ModelIndex::parent() const
 {
-    return m_model ? m_model->parent_index(*this) : GModelIndex();
+    return m_model ? m_model->parent_index(*this) : ModelIndex();
+}
+
 }

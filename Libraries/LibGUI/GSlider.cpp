@@ -28,22 +28,24 @@
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GSlider.h>
 
-GSlider::GSlider(GWidget* parent)
-    : GSlider(Orientation::Horizontal, parent)
+namespace GUI {
+
+Slider::Slider(Widget* parent)
+    : Slider(Orientation::Horizontal, parent)
 {
 }
 
-GSlider::GSlider(Orientation orientation, GWidget* parent)
-    : GWidget(parent)
+Slider::Slider(Orientation orientation, Widget* parent)
+    : Widget(parent)
     , m_orientation(orientation)
 {
 }
 
-GSlider::~GSlider()
+Slider::~Slider()
 {
 }
 
-void GSlider::set_range(int min, int max)
+void Slider::set_range(int min, int max)
 {
     ASSERT(min <= max);
     if (m_min == min && m_max == max)
@@ -54,7 +56,7 @@ void GSlider::set_range(int min, int max)
     update();
 }
 
-void GSlider::set_value(int value)
+void Slider::set_value(int value)
 {
     value = clamp(value, m_min, m_max);
     if (m_value == value)
@@ -66,9 +68,9 @@ void GSlider::set_value(int value)
         on_value_changed(m_value);
 }
 
-void GSlider::paint_event(GPaintEvent& event)
+void Slider::paint_event(PaintEvent& event)
 {
-    GPainter painter(*this);
+    Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
     Rect track_rect;
@@ -85,7 +87,7 @@ void GSlider::paint_event(GPaintEvent& event)
     StylePainter::paint_button(painter, knob_rect(), palette(), ButtonStyle::Normal, false, m_knob_hovered);
 }
 
-Rect GSlider::knob_rect() const
+Rect Slider::knob_rect() const
 {
     auto inner_rect = this->inner_rect();
     Rect rect;
@@ -114,11 +116,11 @@ Rect GSlider::knob_rect() const
     return rect;
 }
 
-void GSlider::mousedown_event(GMouseEvent& event)
+void Slider::mousedown_event(MouseEvent& event)
 {
     if (!is_enabled())
         return;
-    if (event.button() == GMouseButton::Left) {
+    if (event.button() == MouseButton::Left) {
         if (knob_rect().contains(event.position())) {
             m_dragging = true;
             m_drag_origin = event.position();
@@ -131,10 +133,10 @@ void GSlider::mousedown_event(GMouseEvent& event)
                 set_value(m_value - 1);
         }
     }
-    return GWidget::mousedown_event(event);
+    return Widget::mousedown_event(event);
 }
 
-void GSlider::mousemove_event(GMouseEvent& event)
+void Slider::mousemove_event(MouseEvent& event)
 {
     if (!is_enabled())
         return;
@@ -147,42 +149,44 @@ void GSlider::mousemove_event(GMouseEvent& event)
         set_value((int)new_value);
         return;
     }
-    return GWidget::mousemove_event(event);
+    return Widget::mousemove_event(event);
 }
 
-void GSlider::mouseup_event(GMouseEvent& event)
+void Slider::mouseup_event(MouseEvent& event)
 {
     if (!is_enabled())
         return;
-    if (event.button() == GMouseButton::Left) {
+    if (event.button() == MouseButton::Left) {
         m_dragging = false;
         return;
     }
 
-    return GWidget::mouseup_event(event);
+    return Widget::mouseup_event(event);
 }
 
-void GSlider::leave_event(Core::Event& event)
+void Slider::leave_event(Core::Event& event)
 {
     if (!is_enabled())
         return;
     set_knob_hovered(false);
-    GWidget::leave_event(event);
+    Widget::leave_event(event);
 }
 
-void GSlider::change_event(GEvent& event)
+void Slider::change_event(Event& event)
 {
-    if (event.type() == GEvent::Type::EnabledChange) {
+    if (event.type() == Event::Type::EnabledChange) {
         if (!is_enabled())
             m_dragging = false;
     }
-    GWidget::change_event(event);
+    Widget::change_event(event);
 }
 
-void GSlider::set_knob_hovered(bool hovered)
+void Slider::set_knob_hovered(bool hovered)
 {
     if (m_knob_hovered == hovered)
         return;
     m_knob_hovered = hovered;
     update(knob_rect());
+}
+
 }

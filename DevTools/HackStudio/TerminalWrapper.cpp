@@ -43,11 +43,11 @@
 void TerminalWrapper::run_command(const String& command)
 {
     if (m_pid != -1) {
-        GMessageBox::show(
+        GUI::MessageBox::show(
             "A command is already running in this TerminalWrapper",
             "Can't run command",
-            GMessageBox::Type::Error,
-            GMessageBox::InputType::OK,
+            GUI::MessageBox::Type::Error,
+            GUI::MessageBox::InputType::OK,
             window());
         return;
     }
@@ -158,10 +158,10 @@ void TerminalWrapper::kill_running_command()
     (void)killpg(m_pid, SIGTERM);
 }
 
-TerminalWrapper::TerminalWrapper(GWidget* parent)
-    : GWidget(parent)
+TerminalWrapper::TerminalWrapper(GUI::Widget* parent)
+    : GUI::Widget(parent)
 {
-    set_layout(make<GVBoxLayout>());
+    set_layout(make<GUI::VBoxLayout>());
 
     RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("Terminal");
     m_terminal_widget = TerminalWidget::construct(-1, false, config);

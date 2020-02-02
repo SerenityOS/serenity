@@ -35,9 +35,11 @@
 #include <LibGUI/GFrame.h>
 #include <LibVT/Terminal.h>
 
-class GScrollBar;
+namespace GUI {
+class ScrollBar;
+}
 
-class TerminalWidget final : public GFrame
+class TerminalWidget final : public GUI::Frame
     , public VT::TerminalClient {
     C_OBJECT(TerminalWidget)
 public:
@@ -56,7 +58,7 @@ public:
     void flush_dirty_lines();
     void force_repaint();
 
-    void apply_size_increments_to_window(GWindow&);
+    void apply_size_increments_to_window(GUI::Window&);
 
     const Font& bold_font() const { return *m_bold_font; }
 
@@ -76,8 +78,8 @@ public:
 
     bool is_scrollable() const;
 
-    GAction& copy_action() { return *m_copy_action; }
-    GAction& paste_action() { return *m_paste_action; }
+    GUI::Action& copy_action() { return *m_copy_action; }
+    GUI::Action& paste_action() { return *m_paste_action; }
 
     void copy();
     void paste();
@@ -88,19 +90,19 @@ public:
     Function<void()> on_command_exit;
 
 private:
-    // ^GWidget
+    // ^GUI::Widget
     virtual void event(Core::Event&) override;
-    virtual void paint_event(GPaintEvent&) override;
-    virtual void resize_event(GResizeEvent&) override;
-    virtual void keydown_event(GKeyEvent&) override;
-    virtual void mousedown_event(GMouseEvent&) override;
-    virtual void mousemove_event(GMouseEvent&) override;
-    virtual void mousewheel_event(GMouseEvent&) override;
-    virtual void doubleclick_event(GMouseEvent&) override;
+    virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void resize_event(GUI::ResizeEvent&) override;
+    virtual void keydown_event(GUI::KeyEvent&) override;
+    virtual void mousedown_event(GUI::MouseEvent&) override;
+    virtual void mousemove_event(GUI::MouseEvent&) override;
+    virtual void mousewheel_event(GUI::MouseEvent&) override;
+    virtual void doubleclick_event(GUI::MouseEvent&) override;
     virtual void focusin_event(Core::Event&) override;
     virtual void focusout_event(Core::Event&) override;
-    virtual void context_menu_event(GContextMenuEvent&) override;
-    virtual void drop_event(GDropEvent&) override;
+    virtual void context_menu_event(GUI::ContextMenuEvent&) override;
+    virtual void drop_event(GUI::DropEvent&) override;
     virtual void did_change_font() override;
 
     // ^TerminalClient
@@ -158,12 +160,12 @@ private:
     RefPtr<Core::Timer> m_visual_beep_timer;
     RefPtr<Core::ConfigFile> m_config;
 
-    RefPtr<GScrollBar> m_scrollbar;
+    RefPtr<GUI::ScrollBar> m_scrollbar;
 
-    RefPtr<GAction> m_copy_action;
-    RefPtr<GAction> m_paste_action;
+    RefPtr<GUI::Action> m_copy_action;
+    RefPtr<GUI::Action> m_paste_action;
 
-    RefPtr<GMenu> m_context_menu;
+    RefPtr<GUI::Menu> m_context_menu;
 
     Core::ElapsedTimer m_triple_click_timer;
 };

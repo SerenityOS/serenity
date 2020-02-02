@@ -44,7 +44,7 @@ DOMTreeModel::~DOMTreeModel()
 {
 }
 
-GModelIndex DOMTreeModel::index(int row, int column, const GModelIndex& parent) const
+GUI::ModelIndex DOMTreeModel::index(int row, int column, const GUI::ModelIndex& parent) const
 {
     if (!parent.is_valid()) {
         return create_index(row, column, m_document.ptr());
@@ -53,7 +53,7 @@ GModelIndex DOMTreeModel::index(int row, int column, const GModelIndex& parent) 
     return create_index(row, column, parent_node.child_at_index(row));
 }
 
-GModelIndex DOMTreeModel::parent_index(const GModelIndex& index) const
+GUI::ModelIndex DOMTreeModel::parent_index(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return {};
@@ -67,7 +67,7 @@ GModelIndex DOMTreeModel::parent_index(const GModelIndex& index) const
     }
 
     // Walk the grandparent's children to find the index of node's parent in its parent.
-    // (This is needed to produce the row number of the GModelIndex corresponding to node's parent.)
+    // (This is needed to produce the row number of the GUI::ModelIndex corresponding to node's parent.)
     int grandparent_child_index = 0;
     for (auto* grandparent_child = node.parent()->parent()->first_child(); grandparent_child; grandparent_child = grandparent_child->next_sibling()) {
         if (grandparent_child == node.parent())
@@ -79,7 +79,7 @@ GModelIndex DOMTreeModel::parent_index(const GModelIndex& index) const
     return {};
 }
 
-int DOMTreeModel::row_count(const GModelIndex& index) const
+int DOMTreeModel::row_count(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return 1;
@@ -87,7 +87,7 @@ int DOMTreeModel::row_count(const GModelIndex& index) const
     return node.child_count();
 }
 
-int DOMTreeModel::column_count(const GModelIndex&) const
+int DOMTreeModel::column_count(const GUI::ModelIndex&) const
 {
     return 1;
 }
@@ -113,7 +113,7 @@ static String with_whitespace_collapsed(const StringView& string)
     return builder.to_string();
 }
 
-GVariant DOMTreeModel::data(const GModelIndex& index, Role role) const
+GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, Role role) const
 {
     auto& node = *static_cast<Node*>(index.internal_data());
     if (role == Role::Icon) {

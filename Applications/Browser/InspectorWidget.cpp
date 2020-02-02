@@ -35,12 +35,12 @@
 #include <LibHTML/DOMTreeModel.h>
 #include <LibHTML/StylePropertiesModel.h>
 
-InspectorWidget::InspectorWidget(GWidget* parent)
-    : GWidget(parent)
+InspectorWidget::InspectorWidget(GUI::Widget* parent)
+    : GUI::Widget(parent)
 {
-    set_layout(make<GVBoxLayout>());
-    auto splitter = GSplitter::construct(Orientation::Vertical, this);
-    m_dom_tree_view = GTreeView::construct(splitter);
+    set_layout(make<GUI::VBoxLayout>());
+    auto splitter = GUI::Splitter::construct(Orientation::Vertical, this);
+    m_dom_tree_view = GUI::TreeView::construct(splitter);
     m_dom_tree_view->on_selection = [this](auto& index) {
         auto* node = static_cast<Node*>(index.internal_data());
         node->document().set_inspected_node(node);
@@ -55,13 +55,13 @@ InspectorWidget::InspectorWidget(GWidget* parent)
             m_computed_style_table_view->set_model(nullptr);
         }
     };
-    m_style_table_view = GTableView::construct(nullptr);
+    m_style_table_view = GUI::TableView::construct(nullptr);
     m_style_table_view->set_size_columns_to_fit_content(true);
 
-    m_computed_style_table_view = GTableView::construct(nullptr);
+    m_computed_style_table_view = GUI::TableView::construct(nullptr);
     m_computed_style_table_view->set_size_columns_to_fit_content(true);
 
-    auto tabwidget = GTabWidget::construct(splitter);
+    auto tabwidget = GUI::TabWidget::construct(splitter);
     tabwidget->add_widget("Styles", m_style_table_view);
     tabwidget->add_widget("Computed", m_computed_style_table_view);
 }

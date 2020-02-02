@@ -29,12 +29,15 @@
 
 #include <LibGUI/GFrame.h>
 
-class GSlider;
-class GLabel;
+namespace GUI {
+class Label;
+class Slider;
+}
+
 class AudioEngine;
 class MainWidget;
 
-class KnobsWidget final : public GFrame {
+class KnobsWidget final : public GUI::Frame {
     C_OBJECT(KnobsWidget)
 public:
     virtual ~KnobsWidget() override;
@@ -42,28 +45,28 @@ public:
     void update_knobs();
 
 private:
-    KnobsWidget(GWidget* parent, AudioEngine&, MainWidget&);
+    KnobsWidget(GUI::Widget* parent, AudioEngine&, MainWidget&);
 
     AudioEngine& m_audio_engine;
     MainWidget& m_main_widget;
 
-    RefPtr<GWidget> m_labels_container;
-    RefPtr<GLabel> m_octave_label;
-    RefPtr<GLabel> m_wave_label;
-    RefPtr<GLabel> m_decay_label;
-    RefPtr<GLabel> m_delay_label;
+    RefPtr<GUI::Widget> m_labels_container;
+    RefPtr<GUI::Label> m_octave_label;
+    RefPtr<GUI::Label> m_wave_label;
+    RefPtr<GUI::Label> m_decay_label;
+    RefPtr<GUI::Label> m_delay_label;
 
-    RefPtr<GWidget> m_values_container;
-    RefPtr<GLabel> m_octave_value;
-    RefPtr<GLabel> m_wave_value;
-    RefPtr<GLabel> m_decay_value;
-    RefPtr<GLabel> m_delay_value;
+    RefPtr<GUI::Widget> m_values_container;
+    RefPtr<GUI::Label> m_octave_value;
+    RefPtr<GUI::Label> m_wave_value;
+    RefPtr<GUI::Label> m_decay_value;
+    RefPtr<GUI::Label> m_delay_value;
 
-    RefPtr<GWidget> m_knobs_container;
-    RefPtr<GSlider> m_octave_knob;
-    RefPtr<GSlider> m_wave_knob;
-    RefPtr<GSlider> m_decay_knob;
-    RefPtr<GSlider> m_delay_knob;
+    RefPtr<GUI::Widget> m_knobs_container;
+    RefPtr<GUI::Slider> m_octave_knob;
+    RefPtr<GUI::Slider> m_wave_knob;
+    RefPtr<GUI::Slider> m_decay_knob;
+    RefPtr<GUI::Slider> m_delay_knob;
 
     bool m_change_octave { true };
 };

@@ -28,14 +28,16 @@
 
 #include <LibGUI/GDialog.h>
 
-class GButton;
-class GTextEditor;
+namespace GUI {
 
-class GInputBox : public GDialog {
-    C_OBJECT(GInputBox)
+class Button;
+class TextEditor;
+
+class InputBox : public Dialog {
+    C_OBJECT(InputBox)
 public:
-    explicit GInputBox(const StringView& prompt, const StringView& title, Core::Object* parent = nullptr);
-    virtual ~GInputBox() override;
+    explicit InputBox(const StringView& prompt, const StringView& title, Core::Object* parent = nullptr);
+    virtual ~InputBox() override;
 
     String text_value() const { return m_text_value; }
 
@@ -44,7 +46,9 @@ private:
     String m_prompt;
     String m_text_value;
 
-    RefPtr<GButton> m_ok_button;
-    RefPtr<GButton> m_cancel_button;
-    RefPtr<GTextEditor> m_text_editor;
+    RefPtr<Button> m_ok_button;
+    RefPtr<Button> m_cancel_button;
+    RefPtr<TextEditor> m_text_editor;
 };
+
+}

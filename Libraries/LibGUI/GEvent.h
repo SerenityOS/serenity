@@ -32,7 +32,9 @@
 #include <LibDraw/Rect.h>
 #include <LibGUI/GWindowType.h>
 
-class GEvent : public Core::Event {
+namespace GUI {
+
+class Event : public Core::Event {
 public:
     enum Type {
         Show = 1000,
@@ -68,21 +70,21 @@ public:
         __End_WM_Events,
     };
 
-    GEvent() {}
-    explicit GEvent(Type type)
+    Event() {}
+    explicit Event(Type type)
         : Core::Event(type)
     {
     }
-    virtual ~GEvent() {}
+    virtual ~Event() {}
 
     bool is_key_event() const { return type() == KeyUp || type() == KeyDown; }
     bool is_paint_event() const { return type() == Paint; }
 };
 
-class GWMEvent : public GEvent {
+class WMEvent : public Event {
 public:
-    GWMEvent(Type type, int client_id, int window_id)
-        : GEvent(type)
+    WMEvent(Type type, int client_id, int window_id)
+        : Event(type)
         , m_client_id(client_id)
         , m_window_id(window_id)
     {
@@ -96,18 +98,18 @@ private:
     int m_window_id { -1 };
 };
 
-class GWMWindowRemovedEvent : public GWMEvent {
+class WMWindowRemovedEvent : public WMEvent {
 public:
-    GWMWindowRemovedEvent(int client_id, int window_id)
-        : GWMEvent(GEvent::Type::WM_WindowRemoved, client_id, window_id)
+    WMWindowRemovedEvent(int client_id, int window_id)
+        : WMEvent(Event::Type::WM_WindowRemoved, client_id, window_id)
     {
     }
 };
 
-class GWMWindowStateChangedEvent : public GWMEvent {
+class WMWindowStateChangedEvent : public WMEvent {
 public:
-    GWMWindowStateChangedEvent(int client_id, int window_id, const StringView& title, const Rect& rect, bool is_active, GWindowType window_type, bool is_minimized)
-        : GWMEvent(GEvent::Type::WM_WindowStateChanged, client_id, window_id)
+    WMWindowStateChangedEvent(int client_id, int window_id, const StringView& title, const Rect& rect, bool is_active, WindowType window_type, bool is_minimized)
+        : WMEvent(Event::Type::WM_WindowStateChanged, client_id, window_id)
         , m_title(title)
         , m_rect(rect)
         , m_window_type(window_type)
@@ -119,21 +121,21 @@ public:
     String title() const { return m_title; }
     Rect rect() const { return m_rect; }
     bool is_active() const { return m_active; }
-    GWindowType window_type() const { return m_window_type; }
+    WindowType window_type() const { return m_window_type; }
     bool is_minimized() const { return m_minimized; }
 
 private:
     String m_title;
     Rect m_rect;
-    GWindowType m_window_type;
+    WindowType m_window_type;
     bool m_active;
     bool m_minimized;
 };
 
-class GWMWindowRectChangedEvent : public GWMEvent {
+class WMWindowRectChangedEvent : public WMEvent {
 public:
-    GWMWindowRectChangedEvent(int client_id, int window_id, const Rect& rect)
-        : GWMEvent(GEvent::Type::WM_WindowRectChanged, client_id, window_id)
+    WMWindowRectChangedEvent(int client_id, int window_id, const Rect& rect)
+        : WMEvent(Event::Type::WM_WindowRectChanged, client_id, window_id)
         , m_rect(rect)
     {
     }
@@ -144,10 +146,10 @@ private:
     Rect m_rect;
 };
 
-class GWMWindowIconBitmapChangedEvent : public GWMEvent {
+class WMWindowIconBitmapChangedEvent : public WMEvent {
 public:
-    GWMWindowIconBitmapChangedEvent(int client_id, int window_id, int icon_buffer_id, const Size& icon_size)
-        : GWMEvent(GEvent::Type::WM_WindowIconBitmapChanged, client_id, window_id)
+    WMWindowIconBitmapChangedEvent(int client_id, int window_id, int icon_buffer_id, const Size& icon_size)
+        : WMEvent(Event::Type::WM_WindowIconBitmapChanged, client_id, window_id)
         , m_icon_buffer_id(icon_buffer_id)
         , m_icon_size(icon_size)
     {
@@ -161,10 +163,10 @@ private:
     Size m_icon_size;
 };
 
-class GMultiPaintEvent final : public GEvent {
+class MultiPaintEvent final : public Event {
 public:
-    explicit GMultiPaintEvent(const Vector<Rect, 32>& rects, const Size& window_size)
-        : GEvent(GEvent::MultiPaint)
+    explicit MultiPaintEvent(const Vector<Rect, 32>& rects, const Size& window_size)
+        : Event(Event::MultiPaint)
         , m_rects(rects)
         , m_window_size(window_size)
     {
@@ -178,10 +180,10 @@ private:
     Size m_window_size;
 };
 
-class GPaintEvent final : public GEvent {
+class PaintEvent final : public Event {
 public:
-    explicit GPaintEvent(const Rect& rect, const Size& window_size = Size())
-        : GEvent(GEvent::Paint)
+    explicit PaintEvent(const Rect& rect, const Size& window_size = Size())
+        : Event(Event::Paint)
         , m_rect(rect)
         , m_window_size(window_size)
     {
@@ -195,10 +197,10 @@ private:
     Size m_window_size;
 };
 
-class GResizeEvent final : public GEvent {
+class ResizeEvent final : public Event {
 public:
-    explicit GResizeEvent(const Size& old_size, const Size& size)
-        : GEvent(GEvent::Resize)
+    explicit ResizeEvent(const Size& old_size, const Size& size)
+        : Event(Event::Resize)
         , m_old_size(old_size)
         , m_size(size)
     {
@@ -212,10 +214,10 @@ private:
     Size m_size;
 };
 
-class GContextMenuEvent final : public GEvent {
+class ContextMenuEvent final : public Event {
 public:
-    explicit GContextMenuEvent(const Point& position, const Point& screen_position)
-        : GEvent(GEvent::ContextMenu)
+    explicit ContextMenuEvent(const Point& position, const Point& screen_position)
+        : Event(Event::ContextMenu)
         , m_position(position)
         , m_screen_position(screen_position)
     {
@@ -229,33 +231,33 @@ private:
     Point m_screen_position;
 };
 
-class GShowEvent final : public GEvent {
+class ShowEvent final : public Event {
 public:
-    GShowEvent()
-        : GEvent(GEvent::Show)
+    ShowEvent()
+        : Event(Event::Show)
     {
     }
 };
 
-class GHideEvent final : public GEvent {
+class HideEvent final : public Event {
 public:
-    GHideEvent()
-        : GEvent(GEvent::Hide)
+    HideEvent()
+        : Event(Event::Hide)
     {
     }
 };
 
-enum GMouseButton : u8 {
+enum MouseButton : u8 {
     None = 0,
     Left = 1,
     Right = 2,
     Middle = 4,
 };
 
-class GKeyEvent final : public GEvent {
+class KeyEvent final : public Event {
 public:
-    GKeyEvent(Type type, int key, u8 modifiers)
-        : GEvent(type)
+    KeyEvent(Type type, int key, u8 modifiers)
+        : Event(type)
         , m_key(key)
         , m_modifiers(modifiers)
     {
@@ -270,16 +272,16 @@ public:
     String text() const { return m_text; }
 
 private:
-    friend class GWindowServerConnection;
+    friend class WindowServerConnection;
     int m_key { 0 };
     u8 m_modifiers { 0 };
     String m_text;
 };
 
-class GMouseEvent final : public GEvent {
+class MouseEvent final : public Event {
 public:
-    GMouseEvent(Type type, const Point& position, unsigned buttons, GMouseButton button, unsigned modifiers, int wheel_delta)
-        : GEvent(type)
+    MouseEvent(Type type, const Point& position, unsigned buttons, MouseButton button, unsigned modifiers, int wheel_delta)
+        : Event(type)
         , m_position(position)
         , m_buttons(buttons)
         , m_button(button)
@@ -291,7 +293,7 @@ public:
     Point position() const { return m_position; }
     int x() const { return m_position.x(); }
     int y() const { return m_position.y(); }
-    GMouseButton button() const { return m_button; }
+    MouseButton button() const { return m_button; }
     unsigned buttons() const { return m_buttons; }
     unsigned modifiers() const { return m_modifiers; }
     int wheel_delta() const { return m_wheel_delta; }
@@ -299,15 +301,15 @@ public:
 private:
     Point m_position;
     unsigned m_buttons { 0 };
-    GMouseButton m_button { GMouseButton::None };
+    MouseButton m_button { MouseButton::None };
     unsigned m_modifiers { 0 };
     int m_wheel_delta { 0 };
 };
 
-class GDropEvent final : public GEvent {
+class DropEvent final : public Event {
 public:
-    GDropEvent(const Point& position, const String& text, const String& data_type, const String& data)
-        : GEvent(GEvent::Drop)
+    DropEvent(const Point& position, const String& text, const String& data_type, const String& data)
+        : Event(Event::Drop)
         , m_position(position)
         , m_text(text)
         , m_data_type(data_type)
@@ -326,3 +328,5 @@ private:
     String m_data_type;
     String m_data;
 };
+
+}

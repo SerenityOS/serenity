@@ -30,8 +30,10 @@
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GScrollBar.h>
 
-GListView::GListView(GWidget* parent)
-    : GAbstractView(parent)
+namespace GUI {
+
+ListView::ListView(Widget* parent)
+    : AbstractView(parent)
 {
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
@@ -40,18 +42,18 @@ GListView::GListView(GWidget* parent)
     set_frame_thickness(2);
 }
 
-GListView::~GListView()
+ListView::~ListView()
 {
 }
 
-void GListView::update_content_size()
+void ListView::update_content_size()
 {
     if (!model())
         return set_content_size({});
 
     int content_width = 0;
     for (int row = 0, row_count = model()->row_count(); row < row_count; ++row) {
-        auto text = model()->data(model()->index(row, m_model_column), GModel::Role::Display);
+        auto text = model()->data(model()->index(row, m_model_column), Model::Role::Display);
         content_width = max(content_width, font().width(text.to_string()));
     }
 
@@ -61,30 +63,30 @@ void GListView::update_content_size()
     set_content_size({ content_width, content_height });
 }
 
-void GListView::resize_event(GResizeEvent& event)
+void ListView::resize_event(ResizeEvent& event)
 {
     update_content_size();
-    GAbstractView::resize_event(event);
+    AbstractView::resize_event(event);
 }
 
-void GListView::did_update_model()
+void ListView::did_update_model()
 {
-    GAbstractView::did_update_model();
+    AbstractView::did_update_model();
     update_content_size();
     update();
 }
 
-Rect GListView::content_rect(int row) const
+Rect ListView::content_rect(int row) const
 {
     return { 0, row * item_height(), content_width(), item_height() };
 }
 
-Rect GListView::content_rect(const GModelIndex& index) const
+Rect ListView::content_rect(const ModelIndex& index) const
 {
     return content_rect(index.row());
 }
 
-GModelIndex GListView::index_at_event_position(const Point& point) const
+ModelIndex ListView::index_at_event_position(const Point& point) const
 {
     ASSERT(model());
 
@@ -97,19 +99,19 @@ GModelIndex GListView::index_at_event_position(const Point& point) const
     return {};
 }
 
-Point GListView::adjusted_position(const Point& position) const
+Point ListView::adjusted_position(const Point& position) const
 {
     return position.translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
 }
 
-void GListView::paint_event(GPaintEvent& event)
+void ListView::paint_event(PaintEvent& event)
 {
-    GFrame::paint_event(event);
+    Frame::paint_event(event);
 
     if (!model())
         return;
 
-    GPainter painter(*this);
+    Painter painter(*this);
     painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
     painter.translate(frame_thickness(), frame_thickness());
@@ -151,7 +153,7 @@ void GListView::paint_event(GPaintEvent& event)
             if (is_selected_row)
                 text_color = palette().selection_text();
             else
-                text_color = model()->data(index, GModel::Role::ForegroundColor).to_color(palette().color(foreground_role()));
+                text_color = model()->data(index, Model::Role::ForegroundColor).to_color(palette().color(foreground_role()));
             auto text_rect = row_rect;
             text_rect.move_by(horizontal_padding(), 0);
             text_rect.set_width(text_rect.width() - horizontal_padding() * 2);
@@ -165,14 +167,14 @@ void GListView::paint_event(GPaintEvent& event)
     painter.fill_rect(unpainted_rect, palette().color(background_role()));
 }
 
-int GListView::item_count() const
+int ListView::item_count() const
 {
     if (!model())
         return 0;
     return model()->row_count();
 }
 
-void GListView::keydown_event(GKeyEvent& event)
+void ListView::keydown_event(KeyEvent& event)
 {
     if (!model())
         return;
@@ -182,7 +184,7 @@ void GListView::keydown_event(GKeyEvent& event)
         return;
     }
     if (event.key() == KeyCode::Key_Up) {
-        GModelIndex new_index;
+        ModelIndex new_index;
         if (!selection().is_empty()) {
             auto old_index = selection().first();
             new_index = model.index(old_index.row() - 1, old_index.column());
@@ -197,7 +199,7 @@ void GListView::keydown_event(GKeyEvent& event)
         return;
     }
     if (event.key() == KeyCode::Key_Down) {
-        GModelIndex new_index;
+        ModelIndex new_index;
         if (!selection().is_empty()) {
             auto old_index = selection().first();
             new_index = model.index(old_index.row() + 1, old_index.column());
@@ -233,20 +235,20 @@ void GListView::keydown_event(GKeyEvent& event)
         }
         return;
     }
-    return GWidget::keydown_event(event);
+    return Widget::keydown_event(event);
 }
 
-void GListView::scroll_into_view(const GModelIndex& index, Orientation orientation)
+void ListView::scroll_into_view(const ModelIndex& index, Orientation orientation)
 {
     auto rect = content_rect(index.row());
-    GScrollableWidget::scroll_into_view(rect, orientation);
+    ScrollableWidget::scroll_into_view(rect, orientation);
 }
 
-void GListView::doubleclick_event(GMouseEvent& event)
+void ListView::doubleclick_event(MouseEvent& event)
 {
     if (!model())
         return;
-    if (event.button() == GMouseButton::Left) {
+    if (event.button() == MouseButton::Left) {
         if (!selection().is_empty()) {
             if (is_editable())
                 begin_editing(selection().first());
@@ -254,4 +256,6 @@ void GListView::doubleclick_event(GMouseEvent& event)
                 activate_selected();
         }
     }
+}
+
 }

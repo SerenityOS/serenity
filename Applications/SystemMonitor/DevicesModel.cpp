@@ -45,12 +45,12 @@ DevicesModel::~DevicesModel()
 {
 }
 
-int DevicesModel::row_count(const GModelIndex&) const
+int DevicesModel::row_count(const GUI::ModelIndex&) const
 {
     return m_devices.size();
 }
 
-int DevicesModel::column_count(const GModelIndex&) const
+int DevicesModel::column_count(const GUI::ModelIndex&) const
 {
     return Column::__Count;
 }
@@ -73,7 +73,7 @@ String DevicesModel::column_name(int column) const
     }
 }
 
-GModel::ColumnMetadata DevicesModel::column_metadata(int column) const
+GUI::Model::ColumnMetadata DevicesModel::column_metadata(int column) const
 {
     switch (column) {
     case Column::Device:
@@ -91,7 +91,7 @@ GModel::ColumnMetadata DevicesModel::column_metadata(int column) const
     }
 }
 
-GVariant DevicesModel::data(const GModelIndex& index, Role) const
+GUI::Variant DevicesModel::data(const GUI::ModelIndex& index, Role) const
 {
     ASSERT(is_valid(index));
 

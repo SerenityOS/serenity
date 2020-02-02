@@ -31,7 +31,7 @@
 class ProcessStateWidget;
 class TerminalWidget;
 
-class TerminalWrapper final : public GWidget {
+class TerminalWrapper final : public GUI::Widget {
     C_OBJECT(TerminalWrapper)
 public:
     virtual ~TerminalWrapper() override;
@@ -42,7 +42,7 @@ public:
     Function<void()> on_command_exit;
 
 private:
-    explicit TerminalWrapper(GWidget* parent);
+    explicit TerminalWrapper(GUI::Widget* parent);
 
     RefPtr<ProcessStateWidget> m_process_state_widget;
     RefPtr<TerminalWidget> m_terminal_widget;

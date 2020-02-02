@@ -33,12 +33,12 @@
 #include <LibGUI/GTextBox.h>
 #include <LibGUI/GWidget.h>
 
-class BoolValuesModel final : public GModel {
+class BoolValuesModel final : public GUI::Model {
 public:
-    virtual int row_count(const GModelIndex&) const override { return 2; }
-    virtual int column_count(const GModelIndex&) const override { return 1; }
+    virtual int row_count(const GUI::ModelIndex&) const override { return 2; }
+    virtual int column_count(const GUI::ModelIndex&) const override { return 1; }
     virtual void update() override {}
-    virtual GVariant data(const GModelIndex& index, Role role) const override
+    virtual GUI::Variant data(const GUI::ModelIndex& index, Role role) const override
     {
         if (role != Role::Display)
             return {};
@@ -52,25 +52,25 @@ public:
     }
 };
 
-class BoolModelEditingDelegate : public GModelEditingDelegate {
+class BoolModelEditingDelegate : public GUI::ModelEditingDelegate {
 public:
     BoolModelEditingDelegate() {}
     virtual ~BoolModelEditingDelegate() override {}
 
-    virtual RefPtr<GWidget> create_widget() override
+    virtual RefPtr<GUI::Widget> create_widget() override
     {
-        auto combo = GComboBox::construct(nullptr);
+        auto combo = GUI::ComboBox::construct(nullptr);
         combo->set_only_allow_values_from_model(true);
         combo->set_model(adopt(*new BoolValuesModel));
         combo->on_return_pressed = [this] { commit(); };
         combo->on_change = [this](auto&, auto&) { commit(); };
         return combo;
     }
-    virtual GVariant value() const override { return static_cast<const GComboBox*>(widget())->text() == "true"; }
-    virtual void set_value(const GVariant& value) override { static_cast<GComboBox*>(widget())->set_text(value.to_string()); }
+    virtual GUI::Variant value() const override { return static_cast<const GUI::ComboBox*>(widget())->text() == "true"; }
+    virtual void set_value(const GUI::Variant& value) override { static_cast<GUI::ComboBox*>(widget())->set_text(value.to_string()); }
     virtual void will_begin_editing() override
     {
-        auto& combo = *static_cast<GComboBox*>(widget());
+        auto& combo = *static_cast<GUI::ComboBox*>(widget());
         combo.select_all();
         combo.open();
     }
@@ -81,26 +81,26 @@ VBPropertiesWindow::VBPropertiesWindow()
     set_title("Properties");
     set_rect(780, 200, 240, 280);
 
-    auto widget = GWidget::construct();
+    auto widget = GUI::Widget::construct();
     widget->set_fill_with_background_color(true);
-    widget->set_layout(make<GVBoxLayout>());
+    widget->set_layout(make<GUI::VBoxLayout>());
     widget->layout()->set_margins({ 2, 2, 2, 2 });
     set_main_widget(widget);
 
-    m_table_view = GTableView::construct(widget);
+    m_table_view = GUI::TableView::construct(widget);
     m_table_view->set_headers_visible(false);
     m_table_view->set_editable(true);
 
-    m_table_view->aid_create_editing_delegate = [this](auto& index) -> OwnPtr<GModelEditingDelegate> {
+    m_table_view->aid_create_editing_delegate = [this](auto& index) -> OwnPtr<GUI::ModelEditingDelegate> {
         if (!m_table_view->model())
             return nullptr;
         auto type_index = m_table_view->model()->index(index.row(), VBWidgetPropertyModel::Column::Type);
-        auto type = m_table_view->model()->data(type_index, GModel::Role::Custom).to_i32();
-        switch ((GVariant::Type)type) {
-        case GVariant::Type::Bool:
+        auto type = m_table_view->model()->data(type_index, GUI::Model::Role::Custom).to_i32();
+        switch ((GUI::Variant::Type)type) {
+        case GUI::Variant::Type::Bool:
             return make<BoolModelEditingDelegate>();
         default:
-            return make<GStringModelEditingDelegate>();
+            return make<GUI::StringModelEditingDelegate>();
         }
     };
 }

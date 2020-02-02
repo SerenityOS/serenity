@@ -28,10 +28,12 @@
 
 #include <LibGUI/GFrame.h>
 
-class GProgressBar : public GFrame {
-    C_OBJECT(GProgressBar)
+namespace GUI {
+
+class ProgressBar : public Frame {
+    C_OBJECT(ProgressBar)
 public:
-    virtual ~GProgressBar() override;
+    virtual ~ProgressBar() override;
 
     void set_range(int min, int max);
     void set_min(int min) { set_range(min, max()); }
@@ -54,9 +56,9 @@ public:
     void set_format(Format format) { m_format = format; }
 
 protected:
-    explicit GProgressBar(GWidget* parent);
+    explicit ProgressBar(Widget* parent);
 
-    virtual void paint_event(GPaintEvent&) override;
+    virtual void paint_event(PaintEvent&) override;
 
 private:
     Format m_format { Percentage };
@@ -65,3 +67,5 @@ private:
     int m_value { 0 };
     String m_caption;
 };
+
+}

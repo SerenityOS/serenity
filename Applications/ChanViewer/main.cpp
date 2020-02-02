@@ -45,37 +45,37 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
     if (pledge("stdio dns inet shared_buffer rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
-    auto window = GWindow::construct();
+    auto window = GUI::Window::construct();
     window->set_title("ChanViewer");
     window->set_rect(100, 100, 800, 500);
     window->set_icon(load_png("/res/icons/16x16/app-chanviewer.png"));
 
-    auto widget = GWidget::construct();
+    auto widget = GUI::Widget::construct();
     window->set_main_widget(widget);
     widget->set_fill_with_background_color(true);
-    widget->set_layout(make<GVBoxLayout>());
+    widget->set_layout(make<GUI::VBoxLayout>());
 
-    auto board_combo = GComboBox::construct(widget);
+    auto board_combo = GUI::ComboBox::construct(widget);
     board_combo->set_only_allow_values_from_model(true);
-    board_combo->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    board_combo->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     board_combo->set_preferred_size(0, 20);
     board_combo->set_model(BoardListModel::create());
 
-    auto catalog_view = GTableView::construct(widget);
+    auto catalog_view = GUI::TableView::construct(widget);
     catalog_view->set_model(ThreadCatalogModel::create());
     auto& catalog_model = *static_cast<ThreadCatalogModel*>(catalog_view->model());
 
-    auto statusbar = GStatusBar::construct(widget);
+    auto statusbar = GUI::StatusBar::construct(widget);
 
-    board_combo->on_change = [&] (auto&, const GModelIndex& index) {
-        auto selected_board = board_combo->model()->data(index, GModel::Role::Custom);
+    board_combo->on_change = [&] (auto&, const GUI::ModelIndex& index) {
+        auto selected_board = board_combo->model()->data(index, GUI::Model::Role::Custom);
         ASSERT(selected_board.is_string());
         catalog_model.set_board(selected_board.to_string());
     };
@@ -93,18 +93,18 @@ int main(int argc, char** argv)
 
     window->show();
 
-    auto menubar = make<GMenuBar>();
+    auto menubar = make<GUI::MenuBar>();
 
-    auto app_menu = GMenu::construct("ChanViewer");
-    app_menu->add_action(GCommonActions::make_quit_action([](auto&) {
-        GApplication::the().quit(0);
+    auto app_menu = GUI::Menu::construct("ChanViewer");
+    app_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
+        GUI::Application::the().quit(0);
         return;
     }));
     menubar->add_menu(move(app_menu));
 
-    auto help_menu = GMenu::construct("Help");
-    help_menu->add_action(GAction::create("About", [&](const GAction&) {
-        GAboutDialog::show("ChanViewer", load_png("/res/icons/32x32/app-chanviewer.png"), window);
+    auto help_menu = GUI::Menu::construct("Help");
+    help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
+        GUI::AboutDialog::show("ChanViewer", load_png("/res/icons/32x32/app-chanviewer.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 

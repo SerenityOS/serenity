@@ -27,7 +27,9 @@
 #include <AK/StringBuilder.h>
 #include <LibGUI/GShortcut.h>
 
-static String to_string(KeyCode key)
+namespace GUI {
+
+static String key_code_to_string(KeyCode key)
 {
     switch (key) {
     case Key_Escape:
@@ -244,7 +246,7 @@ static String to_string(KeyCode key)
     }
 }
 
-String GShortcut::to_string() const
+String Shortcut::to_string() const
 {
     Vector<String, 8> parts;
 
@@ -257,7 +259,7 @@ String GShortcut::to_string() const
     if (m_modifiers & Mod_Logo)
         parts.append("Logo");
 
-    parts.append(::to_string(m_key));
+    parts.append(key_code_to_string(m_key));
 
     StringBuilder builder;
     for (int i = 0; i < parts.size(); ++i) {
@@ -266,4 +268,6 @@ String GShortcut::to_string() const
             builder.append('+');
     }
     return builder.to_string();
+}
+
 }

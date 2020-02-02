@@ -36,8 +36,11 @@
 #include <LibDraw/Rect.h>
 #include <LibGUI/GWidget.h>
 
-class GPainter;
-class GVariant;
+namespace GUI {
+class Painter;
+class Variant;
+}
+
 class VBForm;
 class VBProperty;
 class VBWidgetPropertyModel;
@@ -82,7 +85,7 @@ public:
     Rect grabber_rect(Direction) const;
     Direction grabber_at(const Point&) const;
 
-    GWidget* gwidget() { return m_gwidget; }
+    GUI::Widget* gwidget() { return m_gwidget; }
 
     VBProperty& property(const String&);
 
@@ -103,11 +106,11 @@ public:
 private:
     VBWidget(VBWidgetType, VBForm&, VBWidget* parent);
 
-    void add_property(const String& name, Function<GVariant(const GWidget&)>&& getter, Function<void(GWidget&, const GVariant&)>&& setter);
+    void add_property(const String& name, Function<GUI::Variant(const GUI::Widget&)>&& getter, Function<void(GUI::Widget&, const GUI::Variant&)>&& setter);
 
     VBWidgetType m_type { VBWidgetType::None };
     VBForm& m_form;
-    RefPtr<GWidget> m_gwidget;
+    RefPtr<GUI::Widget> m_gwidget;
     NonnullOwnPtrVector<VBProperty> m_properties;
     NonnullRefPtr<VBWidgetPropertyModel> m_property_model;
     Rect m_transform_origin_rect;

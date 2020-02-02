@@ -66,11 +66,15 @@ int main(int argc, char** argv)
     widgets.as_array().for_each([&](auto& value) {
         const JsonObject& widget_object = value.as_object();
         auto class_name = widget_object.get("class").to_string();
-        dbg() << "#include <LibGUI/" << class_name << ".h>";
+        StringBuilder builder;
+        builder.append('G');
+        auto parts = class_name.split(':');
+        builder.append(parts.last());
+        dbg() << "#include <LibGUI/" << builder.to_string() << ".h>";
     });
 
     dbg() << "struct UI_" << name << " {";
-    dbg() << "    RefPtr<GWidget> main_widget;";
+    dbg() << "    RefPtr<GUI::Widget> main_widget;";
 
     widgets.as_array().for_each([&](auto& value) {
         ASSERT(value.is_object());
@@ -87,7 +91,7 @@ int main(int argc, char** argv)
     dbg() << "UI_" << name << "::UI_" << name << "()";
     dbg() << "{";
 
-    dbg() << "    main_widget = GWidget::construct(nullptr);";
+    dbg() << "    main_widget = GUI::Widget::construct(nullptr);";
     dbg() << "    main_widget->set_fill_with_background_color(true);";
 
     widgets.as_array().for_each([&](auto& value) {

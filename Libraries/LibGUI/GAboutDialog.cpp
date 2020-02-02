@@ -30,8 +30,10 @@
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GWidget.h>
 
-GAboutDialog::GAboutDialog(const StringView& name, const GraphicsBitmap* icon, Core::Object* parent)
-    : GDialog(parent)
+namespace GUI {
+
+AboutDialog::AboutDialog(const StringView& name, const GraphicsBitmap* icon, Core::Object* parent)
+    : Dialog(parent)
     , m_name(name)
     , m_icon(icon)
 {
@@ -39,27 +41,27 @@ GAboutDialog::GAboutDialog(const StringView& name, const GraphicsBitmap* icon, C
     set_title(String::format("About %s", m_name.characters()));
     set_resizable(false);
 
-    auto widget = GWidget::construct();
+    auto widget = Widget::construct();
     set_main_widget(widget);
     widget->set_fill_with_background_color(true);
-    widget->set_layout(make<GHBoxLayout>());
+    widget->set_layout(make<HBoxLayout>());
 
-    auto left_container = GWidget::construct(widget.ptr());
+    auto left_container = Widget::construct(widget.ptr());
     left_container->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     left_container->set_preferred_size(48, 0);
-    left_container->set_layout(make<GVBoxLayout>());
-    auto icon_label = GLabel::construct(left_container);
+    left_container->set_layout(make<VBoxLayout>());
+    auto icon_label = Label::construct(left_container);
     icon_label->set_icon(m_icon);
     icon_label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     icon_label->set_preferred_size(40, 40);
     left_container->layout()->add_spacer();
 
-    auto right_container = GWidget::construct(widget.ptr());
-    right_container->set_layout(make<GVBoxLayout>());
+    auto right_container = Widget::construct(widget.ptr());
+    right_container->set_layout(make<VBoxLayout>());
     right_container->layout()->set_margins({ 0, 4, 4, 4 });
 
     auto make_label = [&](const StringView& text, bool bold = false) {
-        auto label = GLabel::construct(text, right_container);
+        auto label = Label::construct(text, right_container);
         label->set_text_alignment(TextAlignment::CenterLeft);
         label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
         label->set_preferred_size(0, 14);
@@ -72,19 +74,21 @@ GAboutDialog::GAboutDialog(const StringView& name, const GraphicsBitmap* icon, C
 
     right_container->layout()->add_spacer();
 
-    auto button_container = GWidget::construct(right_container.ptr());
+    auto button_container = Widget::construct(right_container.ptr());
     button_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     button_container->set_preferred_size(0, 20);
-    button_container->set_layout(make<GHBoxLayout>());
+    button_container->set_layout(make<HBoxLayout>());
     button_container->layout()->add_spacer();
-    auto ok_button = GButton::construct("OK", button_container);
+    auto ok_button = Button::construct("OK", button_container);
     ok_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     ok_button->set_preferred_size(80, 20);
     ok_button->on_click = [this](auto&) {
-        done(GDialog::ExecOK);
+        done(Dialog::ExecOK);
     };
 }
 
-GAboutDialog::~GAboutDialog()
+AboutDialog::~AboutDialog()
 {
+}
+
 }

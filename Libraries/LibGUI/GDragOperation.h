@@ -30,10 +30,13 @@
 #include <LibCore/CObject.h>
 
 class GraphicsBitmap;
-class GWindowServerConnection;
 
-class GDragOperation : public Core::Object {
-    C_OBJECT(GDragOperation)
+namespace GUI {
+
+class WindowServerConnection;
+
+class DragOperation : public Core::Object {
+    C_OBJECT(DragOperation)
 public:
     enum class Outcome {
         None,
@@ -41,7 +44,7 @@ public:
         Cancelled,
     };
 
-    virtual ~GDragOperation() override;
+    virtual ~DragOperation() override;
 
     void set_text(const String& text) { m_text = text; }
     void set_bitmap(const GraphicsBitmap* bitmap) { m_bitmap = bitmap; }
@@ -54,11 +57,11 @@ public:
     Outcome exec();
     Outcome outcome() const { return m_outcome; }
 
-    static void notify_accepted(Badge<GWindowServerConnection>);
-    static void notify_cancelled(Badge<GWindowServerConnection>);
+    static void notify_accepted(Badge<WindowServerConnection>);
+    static void notify_cancelled(Badge<WindowServerConnection>);
 
 protected:
-    explicit GDragOperation(Core::Object* parent = nullptr);
+    explicit DragOperation(Core::Object* parent = nullptr);
 
 private:
     void done(Outcome);
@@ -70,3 +73,5 @@ private:
     String m_data;
     RefPtr<GraphicsBitmap> m_bitmap;
 };
+
+}

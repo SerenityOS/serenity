@@ -30,7 +30,7 @@
 
 class Profile;
 
-class ProfileModel final : public GModel {
+class ProfileModel final : public GUI::Model {
 public:
     static NonnullRefPtr<ProfileModel> create(Profile& profile)
     {
@@ -45,13 +45,13 @@ public:
 
     virtual ~ProfileModel() override;
 
-    virtual int row_count(const GModelIndex& = GModelIndex()) const override;
-    virtual int column_count(const GModelIndex& = GModelIndex()) const override;
+    virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
+    virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
     virtual String column_name(int) const override;
     virtual ColumnMetadata column_metadata(int) const override;
-    virtual GVariant data(const GModelIndex&, Role = Role::Display) const override;
-    virtual GModelIndex index(int row, int column, const GModelIndex& parent = GModelIndex()) const override;
-    virtual GModelIndex parent_index(const GModelIndex&) const override;
+    virtual GUI::Variant data(const GUI::ModelIndex&, Role = Role::Display) const override;
+    virtual GUI::ModelIndex index(int row, int column, const GUI::ModelIndex& parent = GUI::ModelIndex()) const override;
+    virtual GUI::ModelIndex parent_index(const GUI::ModelIndex&) const override;
     virtual void update() override;
     virtual int tree_column() const override { return Column::StackFrame; }
 

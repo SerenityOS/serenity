@@ -69,10 +69,10 @@ static String human_readable_size(u32 size)
     return String::format("%u GB", size / GB);
 }
 
-static RefPtr<GWidget> build_file_systems_tab();
-static RefPtr<GWidget> build_pci_devices_tab();
-static RefPtr<GWidget> build_devices_tab();
-static NonnullRefPtr<GWidget> build_graphs_tab();
+static RefPtr<GUI::Widget> build_file_systems_tab();
+static RefPtr<GUI::Widget> build_pci_devices_tab();
+static RefPtr<GUI::Widget> build_devices_tab();
+static NonnullRefPtr<GUI::Widget> build_graphs_tab();
 
 int main(int argc, char** argv)
 {
@@ -81,7 +81,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
     if (pledge("stdio proc shared_buffer accept rpath", nullptr) < 0) {
         perror("pledge");
@@ -110,22 +110,22 @@ int main(int argc, char** argv)
 
     unveil(nullptr, nullptr);
 
-    auto window = GWindow::construct();
+    auto window = GUI::Window::construct();
     window->set_title("System Monitor");
     window->set_rect(20, 200, 680, 400);
 
-    auto keeper = GWidget::construct();
+    auto keeper = GUI::Widget::construct();
     window->set_main_widget(keeper);
-    keeper->set_layout(make<GVBoxLayout>());
+    keeper->set_layout(make<GUI::VBoxLayout>());
     keeper->set_fill_with_background_color(true);
     keeper->layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto tabwidget = GTabWidget::construct(keeper);
+    auto tabwidget = GUI::TabWidget::construct(keeper);
 
-    auto process_container_splitter = GSplitter::construct(Orientation::Vertical, nullptr);
+    auto process_container_splitter = GUI::Splitter::construct(Orientation::Vertical, nullptr);
     tabwidget->add_widget("Processes", process_container_splitter);
 
-    auto process_table_container = GWidget::construct(process_container_splitter.ptr());
+    auto process_table_container = GUI::Widget::construct(process_container_splitter.ptr());
 
     tabwidget->add_widget("Graphs", build_graphs_tab());
 
@@ -138,11 +138,11 @@ int main(int argc, char** argv)
     auto network_stats_widget = NetworkStatisticsWidget::construct(nullptr);
     tabwidget->add_widget("Network", network_stats_widget);
 
-    process_table_container->set_layout(make<GVBoxLayout>());
+    process_table_container->set_layout(make<GUI::VBoxLayout>());
     process_table_container->layout()->set_margins({ 4, 0, 4, 4 });
     process_table_container->layout()->set_spacing(0);
 
-    auto toolbar = GToolBar::construct(process_table_container);
+    auto toolbar = GUI::ToolBar::construct(process_table_container);
     toolbar->set_has_frame(false);
     auto process_table_view = ProcessTableView::construct(process_table_container);
 
@@ -152,19 +152,19 @@ int main(int argc, char** argv)
             memory_stats_widget->refresh();
     }, window);
 
-    auto kill_action = GAction::create("Kill process", { Mod_Ctrl, Key_K }, GraphicsBitmap::load_from_file("/res/icons/kill16.png"), [process_table_view](const GAction&) {
+    auto kill_action = GUI::Action::create("Kill process", { Mod_Ctrl, Key_K }, GraphicsBitmap::load_from_file("/res/icons/kill16.png"), [process_table_view](const GUI::Action&) {
         pid_t pid = process_table_view->selected_pid();
         if (pid != -1)
             kill(pid, SIGKILL);
     });
 
-    auto stop_action = GAction::create("Stop process", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file("/res/icons/stop16.png"), [process_table_view](const GAction&) {
+    auto stop_action = GUI::Action::create("Stop process", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file("/res/icons/stop16.png"), [process_table_view](const GUI::Action&) {
         pid_t pid = process_table_view->selected_pid();
         if (pid != -1)
             kill(pid, SIGSTOP);
     });
 
-    auto continue_action = GAction::create("Continue process", { Mod_Ctrl, Key_C }, GraphicsBitmap::load_from_file("/res/icons/continue16.png"), [process_table_view](const GAction&) {
+    auto continue_action = GUI::Action::create("Continue process", { Mod_Ctrl, Key_C }, GraphicsBitmap::load_from_file("/res/icons/continue16.png"), [process_table_view](const GUI::Action&) {
         pid_t pid = process_table_view->selected_pid();
         if (pid != -1)
             kill(pid, SIGCONT);
@@ -174,35 +174,35 @@ int main(int argc, char** argv)
     toolbar->add_action(stop_action);
     toolbar->add_action(continue_action);
 
-    auto menubar = make<GMenuBar>();
-    auto app_menu = GMenu::construct("System Monitor");
-    app_menu->add_action(GCommonActions::make_quit_action([](auto&) {
-        GApplication::the().quit(0);
+    auto menubar = make<GUI::MenuBar>();
+    auto app_menu = GUI::Menu::construct("System Monitor");
+    app_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
+        GUI::Application::the().quit(0);
         return;
     }));
     menubar->add_menu(move(app_menu));
 
-    auto process_menu = GMenu::construct("Process");
+    auto process_menu = GUI::Menu::construct("Process");
     process_menu->add_action(kill_action);
     process_menu->add_action(stop_action);
     process_menu->add_action(continue_action);
     menubar->add_menu(move(process_menu));
 
-    auto process_context_menu = GMenu::construct();
+    auto process_context_menu = GUI::Menu::construct();
     process_context_menu->add_action(kill_action);
     process_context_menu->add_action(stop_action);
     process_context_menu->add_action(continue_action);
-    process_table_view->on_context_menu_request = [&](const GModelIndex& index, const GContextMenuEvent& event) {
+    process_table_view->on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
         (void)index;
         process_context_menu->popup(event.screen_position());
     };
 
-    auto frequency_menu = GMenu::construct("Frequency");
-    GActionGroup frequency_action_group;
+    auto frequency_menu = GUI::Menu::construct("Frequency");
+    GUI::ActionGroup frequency_action_group;
     frequency_action_group.set_exclusive(true);
 
     auto make_frequency_action = [&](auto& title, int interval, bool checked = false) {
-        auto action = GAction::create(title, [&refresh_timer, interval](auto& action) {
+        auto action = GUI::Action::create(title, [&refresh_timer, interval](auto& action) {
             refresh_timer->restart(interval);
             action.set_checked(true);
         });
@@ -220,15 +220,15 @@ int main(int argc, char** argv)
 
     menubar->add_menu(move(frequency_menu));
 
-    auto help_menu = GMenu::construct("Help");
-    help_menu->add_action(GAction::create("About", [&](const GAction&) {
-        GAboutDialog::show("System Monitor", load_png("/res/icons/32x32/app-system-monitor.png"), window);
+    auto help_menu = GUI::Menu::construct("Help");
+    help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
+        GUI::AboutDialog::show("System Monitor", load_png("/res/icons/32x32/app-system-monitor.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 
     app.set_menubar(move(menubar));
 
-    auto process_tab_widget = GTabWidget::construct(process_container_splitter);
+    auto process_tab_widget = GUI::TabWidget::construct(process_container_splitter);
 
     auto memory_map_widget = ProcessMemoryMapWidget::construct(nullptr);
     process_tab_widget->add_widget("Memory map", memory_map_widget);
@@ -256,16 +256,16 @@ int main(int argc, char** argv)
     return app.exec();
 }
 
-class ProgressBarPaintingDelegate final : public GTableCellPaintingDelegate {
+class ProgressBarPaintingDelegate final : public GUI::TableCellPaintingDelegate {
 public:
     virtual ~ProgressBarPaintingDelegate() override {}
 
-    virtual void paint(GPainter& painter, const Rect& a_rect, const Palette& palette, const GModel& model, const GModelIndex& index) override
+    virtual void paint(GUI::Painter& painter, const Rect& a_rect, const Palette& palette, const GUI::Model& model, const GUI::ModelIndex& index) override
     {
         auto rect = a_rect.shrunken(2, 2);
-        auto percentage = model.data(index, GModel::Role::Custom).to_i32();
+        auto percentage = model.data(index, GUI::Model::Role::Custom).to_i32();
 
-        auto data = model.data(index, GModel::Role::Display);
+        auto data = model.data(index, GUI::Model::Role::Display);
         String text;
         if (data.is_string())
             text = data.as_string();
@@ -274,17 +274,17 @@ public:
     }
 };
 
-RefPtr<GWidget> build_file_systems_tab()
+RefPtr<GUI::Widget> build_file_systems_tab()
 {
-    auto fs_widget = GLazyWidget::construct();
+    auto fs_widget = GUI::LazyWidget::construct();
 
     fs_widget->on_first_show = [](auto& self) {
-        self.set_layout(make<GVBoxLayout>());
+        self.set_layout(make<GUI::VBoxLayout>());
         self.layout()->set_margins({ 4, 4, 4, 4 });
-        auto fs_table_view = GTableView::construct(&self);
+        auto fs_table_view = GUI::TableView::construct(&self);
         fs_table_view->set_size_columns_to_fit_content(true);
 
-        Vector<GJsonArrayModel::FieldSpec> df_fields;
+        Vector<GUI::JsonArrayModel::FieldSpec> df_fields;
         df_fields.empend("mount_point", "Mount point", TextAlignment::CenterLeft);
         df_fields.empend("class_name", "Class", TextAlignment::CenterLeft);
         df_fields.empend("device", "Device", TextAlignment::CenterLeft);
@@ -354,7 +354,7 @@ RefPtr<GWidget> build_file_systems_tab()
         df_fields.empend("free_inode_count", "Free inodes", TextAlignment::CenterRight);
         df_fields.empend("total_inode_count", "Total inodes", TextAlignment::CenterRight);
         df_fields.empend("block_size", "Block size", TextAlignment::CenterRight);
-        fs_table_view->set_model(GSortingProxyModel::create(GJsonArrayModel::create("/proc/df", move(df_fields))));
+        fs_table_view->set_model(GUI::SortingProxyModel::create(GUI::JsonArrayModel::create("/proc/df", move(df_fields))));
 
         fs_table_view->set_cell_painting_delegate(3, make<ProgressBarPaintingDelegate>());
 
@@ -363,19 +363,19 @@ RefPtr<GWidget> build_file_systems_tab()
     return fs_widget;
 }
 
-RefPtr<GWidget> build_pci_devices_tab()
+RefPtr<GUI::Widget> build_pci_devices_tab()
 {
-    auto pci_widget = GLazyWidget::construct();
+    auto pci_widget = GUI::LazyWidget::construct();
 
     pci_widget->on_first_show = [](auto& self) {
-        self.set_layout(make<GVBoxLayout>());
+        self.set_layout(make<GUI::VBoxLayout>());
         self.layout()->set_margins({ 4, 4, 4, 4 });
-        auto pci_table_view = GTableView::construct(&self);
+        auto pci_table_view = GUI::TableView::construct(&self);
         pci_table_view->set_size_columns_to_fit_content(true);
 
         auto db = PCIDB::Database::open();
 
-        Vector<GJsonArrayModel::FieldSpec> pci_fields;
+        Vector<GUI::JsonArrayModel::FieldSpec> pci_fields;
         pci_fields.empend(
             "Address", TextAlignment::CenterLeft,
             [](const JsonObject& object) {
@@ -414,44 +414,44 @@ RefPtr<GWidget> build_pci_devices_tab()
                 return String::format("%02x", revision_id);
             });
 
-        pci_table_view->set_model(GSortingProxyModel::create(GJsonArrayModel::create("/proc/pci", move(pci_fields))));
+        pci_table_view->set_model(GUI::SortingProxyModel::create(GUI::JsonArrayModel::create("/proc/pci", move(pci_fields))));
         pci_table_view->model()->update();
     };
 
     return pci_widget;
 }
 
-RefPtr<GWidget> build_devices_tab()
+RefPtr<GUI::Widget> build_devices_tab()
 {
-    auto devices_widget = GLazyWidget::construct();
+    auto devices_widget = GUI::LazyWidget::construct();
 
     devices_widget->on_first_show = [](auto& self) {
-        self.set_layout(make<GVBoxLayout>());
+        self.set_layout(make<GUI::VBoxLayout>());
         self.layout()->set_margins({ 4, 4, 4, 4 });
 
-        auto devices_table_view = GTableView::construct(&self);
+        auto devices_table_view = GUI::TableView::construct(&self);
         devices_table_view->set_size_columns_to_fit_content(true);
-        devices_table_view->set_model(GSortingProxyModel::create(DevicesModel::create()));
+        devices_table_view->set_model(GUI::SortingProxyModel::create(DevicesModel::create()));
         devices_table_view->model()->update();
     };
 
     return devices_widget;
 }
 
-NonnullRefPtr<GWidget> build_graphs_tab()
+NonnullRefPtr<GUI::Widget> build_graphs_tab()
 {
-    auto graphs_container = GLazyWidget::construct();
+    auto graphs_container = GUI::LazyWidget::construct();
 
     graphs_container->on_first_show = [](auto& self) {
         self.set_fill_with_background_color(true);
         self.set_background_role(ColorRole::Button);
-        self.set_layout(make<GVBoxLayout>());
+        self.set_layout(make<GUI::VBoxLayout>());
         self.layout()->set_margins({ 4, 4, 4, 4 });
 
-        auto cpu_graph_group_box = GGroupBox::construct("CPU usage", &self);
-        cpu_graph_group_box->set_layout(make<GVBoxLayout>());
+        auto cpu_graph_group_box = GUI::GroupBox::construct("CPU usage", &self);
+        cpu_graph_group_box->set_layout(make<GUI::VBoxLayout>());
         cpu_graph_group_box->layout()->set_margins({ 6, 16, 6, 6 });
-        cpu_graph_group_box->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+        cpu_graph_group_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
         cpu_graph_group_box->set_preferred_size(0, 120);
         auto cpu_graph = GraphWidget::construct(cpu_graph_group_box);
         cpu_graph->set_max(100);
@@ -465,10 +465,10 @@ NonnullRefPtr<GWidget> build_graphs_tab()
             graph->add_value(cpu_percent);
         };
 
-        auto memory_graph_group_box = GGroupBox::construct("Memory usage", &self);
-        memory_graph_group_box->set_layout(make<GVBoxLayout>());
+        auto memory_graph_group_box = GUI::GroupBox::construct("Memory usage", &self);
+        memory_graph_group_box->set_layout(make<GUI::VBoxLayout>());
         memory_graph_group_box->layout()->set_margins({ 6, 16, 6, 6 });
-        memory_graph_group_box->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+        memory_graph_group_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
         memory_graph_group_box->set_preferred_size(0, 120);
         auto memory_graph = GraphWidget::construct(memory_graph_group_box);
         memory_graph->set_text_color(Color::Cyan);

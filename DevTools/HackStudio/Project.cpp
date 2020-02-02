@@ -74,14 +74,14 @@ struct Project::ProjectTreeNode : public RefCounted<ProjectTreeNode> {
     ProjectTreeNode* parent { nullptr };
 };
 
-class ProjectModel final : public GModel {
+class ProjectModel final : public GUI::Model {
 public:
     explicit ProjectModel(Project& project)
         : m_project(project)
     {
     }
 
-    virtual int row_count(const GModelIndex& index) const override
+    virtual int row_count(const GUI::ModelIndex& index) const override
     {
         if (!index.is_valid())
             return 1;
@@ -89,12 +89,12 @@ public:
         return node->children.size();
     }
 
-    virtual int column_count(const GModelIndex&) const override
+    virtual int column_count(const GUI::ModelIndex&) const override
     {
         return 1;
     }
 
-    virtual GVariant data(const GModelIndex& index, Role role = Role::Display) const override
+    virtual GUI::Variant data(const GUI::ModelIndex& index, Role role = Role::Display) const override
     {
         auto* node = static_cast<Project::ProjectTreeNode*>(index.internal_data());
         if (role == Role::Display) {
@@ -123,7 +123,7 @@ public:
         return {};
     }
 
-    virtual GModelIndex index(int row, int column = 0, const GModelIndex& parent = GModelIndex()) const override
+    virtual GUI::ModelIndex index(int row, int column = 0, const GUI::ModelIndex& parent = GUI::ModelIndex()) const override
     {
         if (!parent.is_valid()) {
             return create_index(row, column, &m_project.root_node());
@@ -132,7 +132,7 @@ public:
         return create_index(row, column, node.children.at(row).ptr());
     }
 
-    GModelIndex parent_index(const GModelIndex& index) const override
+    GUI::ModelIndex parent_index(const GUI::ModelIndex& index) const override
     {
         if (!index.is_valid())
             return {};

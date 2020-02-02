@@ -35,32 +35,32 @@
 #include <LibGUI/GTextEditor.h>
 #include <LibHTML/HtmlView.h>
 
-IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& name, GWidget* parent)
-    : GWidget(parent)
+IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& name, GUI::Widget* parent)
+    : GUI::Widget(parent)
     , m_client(client)
     , m_owner(owner)
     , m_type(type)
     , m_name(name)
 {
-    set_layout(make<GVBoxLayout>());
+    set_layout(make<GUI::VBoxLayout>());
 
     // Make a container for the log buffer view + (optional) member list.
-    auto container = GSplitter::construct(Orientation::Horizontal, this);
+    auto container = GUI::Splitter::construct(Orientation::Horizontal, this);
 
     m_html_view = HtmlView::construct(container);
 
     if (m_type == Channel) {
-        auto member_view = GTableView::construct(container);
+        auto member_view = GUI::TableView::construct(container);
         member_view->set_headers_visible(false);
-        member_view->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+        member_view->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
         member_view->set_preferred_size(100, 0);
         member_view->set_alternating_row_colors(false);
         member_view->set_model(channel().member_model());
         member_view->set_activates_on_selection(true);
     }
 
-    m_text_editor = GTextEditor::construct(GTextEditor::SingleLine, this);
-    m_text_editor->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    m_text_editor = GUI::TextEditor::construct(GUI::TextEditor::SingleLine, this);
+    m_text_editor->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_text_editor->set_preferred_size(0, 19);
     m_text_editor->on_return_pressed = [this] {
         if (m_type == Channel)

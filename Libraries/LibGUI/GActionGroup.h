@@ -29,15 +29,17 @@
 #include <AK/HashTable.h>
 #include <AK/Weakable.h>
 
-class GAction;
+namespace GUI {
 
-class GActionGroup : public Weakable<GActionGroup> {
+class Action;
+
+class ActionGroup : public Weakable<ActionGroup> {
 public:
-    GActionGroup() {}
-    ~GActionGroup() {}
+    ActionGroup() {}
+    ~ActionGroup() {}
 
-    void add_action(GAction&);
-    void remove_action(GAction&);
+    void add_action(Action&);
+    void remove_action(Action&);
 
     bool is_exclusive() const { return m_exclusive; }
     void set_exclusive(bool exclusive) { m_exclusive = exclusive; }
@@ -55,7 +57,9 @@ public:
     }
 
 private:
-    HashTable<GAction*> m_actions;
+    HashTable<Action*> m_actions;
     bool m_exclusive { false };
     bool m_unchecking_allowed { false };
 };
+
+}

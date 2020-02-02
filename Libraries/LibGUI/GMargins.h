@@ -26,17 +26,19 @@
 
 #pragma once
 
-class GMargins {
+namespace GUI {
+
+class Margins {
 public:
-    GMargins() {}
-    GMargins(int left, int top, int right, int bottom)
+    Margins() {}
+    Margins(int left, int top, int right, int bottom)
         : m_left(left)
         , m_top(top)
         , m_right(right)
         , m_bottom(bottom)
     {
     }
-    ~GMargins() {}
+    ~Margins() {}
 
     bool is_null() const { return !m_left && !m_top && !m_right && !m_bottom; }
 
@@ -50,7 +52,7 @@ public:
     void set_right(int value) { m_right = value; }
     void set_bottom(int value) { m_bottom = value; }
 
-    bool operator==(const GMargins& other) const
+    bool operator==(const Margins& other) const
     {
         return m_left == other.m_left
             && m_top == other.m_top
@@ -64,3 +66,4 @@ private:
     int m_right { 0 };
     int m_bottom { 0 };
 };
+}

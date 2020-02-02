@@ -35,14 +35,14 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
     if (pledge("stdio rpath accept cpath wpath shared_buffer", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
-    auto window = GWindow::construct();
+    auto window = GUI::Window::construct();
     window->set_title("Text Editor");
     window->set_rect(20, 200, 640, 400);
 
@@ -51,10 +51,10 @@ int main(int argc, char** argv)
 
     text_widget->editor().set_focus(true);
 
-    window->on_close_request = [&]() -> GWindow::CloseRequestDecision {
+    window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
         if (text_widget->request_close())
-            return GWindow::CloseRequestDecision::Close;
-        return GWindow::CloseRequestDecision::StayOpen;
+            return GUI::Window::CloseRequestDecision::Close;
+        return GUI::Window::CloseRequestDecision::StayOpen;
     };
 
     if (argc >= 2)

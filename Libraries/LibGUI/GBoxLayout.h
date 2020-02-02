@@ -29,33 +29,37 @@
 #include <LibGUI/GLayout.h>
 #include <LibGUI/GWidget.h>
 
-class GBoxLayout : public GLayout {
+namespace GUI {
+
+class BoxLayout : public Layout {
 public:
-    explicit GBoxLayout(Orientation);
-    virtual ~GBoxLayout() override {}
+    explicit BoxLayout(Orientation);
+    virtual ~BoxLayout() override {}
 
     Orientation orientation() const { return m_orientation; }
 
-    virtual void run(GWidget&) override;
+    virtual void run(Widget&) override;
 
 private:
     Orientation m_orientation;
 };
 
-class GVBoxLayout final : public GBoxLayout {
+class VBoxLayout final : public BoxLayout {
 public:
-    explicit GVBoxLayout()
-        : GBoxLayout(Orientation::Vertical)
+    explicit VBoxLayout()
+        : BoxLayout(Orientation::Vertical)
     {
     }
-    virtual ~GVBoxLayout() override {}
+    virtual ~VBoxLayout() override {}
 };
 
-class GHBoxLayout final : public GBoxLayout {
+class HBoxLayout final : public BoxLayout {
 public:
-    explicit GHBoxLayout()
-        : GBoxLayout(Orientation::Horizontal)
+    explicit HBoxLayout()
+        : BoxLayout(Orientation::Horizontal)
     {
     }
-    virtual ~GHBoxLayout() override {}
+    virtual ~HBoxLayout() override {}
 };
+
+}

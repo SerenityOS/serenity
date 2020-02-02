@@ -40,7 +40,7 @@ StylePropertiesModel::StylePropertiesModel(const StyleProperties& properties)
     });
 }
 
-int StylePropertiesModel::row_count(const GModelIndex&) const
+int StylePropertiesModel::row_count(const GUI::ModelIndex&) const
 {
     return m_values.size();
 }
@@ -56,7 +56,7 @@ String StylePropertiesModel::column_name(int column_index) const
         ASSERT_NOT_REACHED();
     }
 }
-GVariant StylePropertiesModel::data(const GModelIndex& index, Role role) const
+GUI::Variant StylePropertiesModel::data(const GUI::ModelIndex& index, Role role) const
 {
     auto& value = m_values[index.row()];
     if (role == Role::Display) {

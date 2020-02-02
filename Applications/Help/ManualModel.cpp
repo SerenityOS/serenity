@@ -48,7 +48,7 @@ ManualModel::ManualModel()
     m_page_icon.set_bitmap_for_size(16, load_png("/res/icons/16x16/filetype-unknown.png"));
 }
 
-String ManualModel::page_path(const GModelIndex& index) const
+String ManualModel::page_path(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return {};
@@ -59,7 +59,7 @@ String ManualModel::page_path(const GModelIndex& index) const
     return page->path();
 }
 
-String ManualModel::page_and_section(const GModelIndex& index) const
+String ManualModel::page_and_section(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return {};
@@ -71,7 +71,7 @@ String ManualModel::page_and_section(const GModelIndex& index) const
     return String::format("%s(%s)", page->name().characters(), section->section_name().characters());
 }
 
-GModelIndex ManualModel::index(int row, int column, const GModelIndex& parent_index) const
+GUI::ModelIndex ManualModel::index(int row, int column, const GUI::ModelIndex& parent_index) const
 {
     if (!parent_index.is_valid())
         return create_index(row, column, &s_sections[row]);
@@ -80,7 +80,7 @@ GModelIndex ManualModel::index(int row, int column, const GModelIndex& parent_in
     return create_index(row, column, child);
 }
 
-GModelIndex ManualModel::parent_index(const GModelIndex& index) const
+GUI::ModelIndex ManualModel::parent_index(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return {};
@@ -103,7 +103,7 @@ GModelIndex ManualModel::parent_index(const GModelIndex& index) const
     ASSERT_NOT_REACHED();
 }
 
-int ManualModel::row_count(const GModelIndex& index) const
+int ManualModel::row_count(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return sizeof(s_sections) / sizeof(s_sections[0]);
@@ -111,12 +111,12 @@ int ManualModel::row_count(const GModelIndex& index) const
     return node->children().size();
 }
 
-int ManualModel::column_count(const GModelIndex&) const
+int ManualModel::column_count(const GUI::ModelIndex&) const
 {
     return 1;
 }
 
-GVariant ManualModel::data(const GModelIndex& index, Role role) const
+GUI::Variant ManualModel::data(const GUI::ModelIndex& index, Role role) const
 {
     auto* node = static_cast<const ManualNode*>(index.internal_data());
     switch (role) {

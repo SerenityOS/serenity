@@ -33,55 +33,57 @@
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
 
-class GButton;
-class GTextBox;
-class GTextEditor;
-class GStatusBar;
+namespace GUI {
+class Button;
+class StatusBar;
+class TextBox;
+class TextEditor;
+}
 
-class TextEditorWidget final : public GWidget {
+class TextEditorWidget final : public GUI::Widget {
     C_OBJECT(TextEditorWidget)
 public:
     virtual ~TextEditorWidget() override;
     void open_sesame(const String& path);
     bool request_close();
 
-    GTextEditor& editor() { return *m_editor; }
+    GUI::TextEditor& editor() { return *m_editor; }
 
 private:
     TextEditorWidget();
     void set_path(const FileSystemPath& file);
     void update_title();
 
-    virtual void drop_event(GDropEvent&) override;
+    virtual void drop_event(GUI::DropEvent&) override;
 
-    RefPtr<GTextEditor> m_editor;
+    RefPtr<GUI::TextEditor> m_editor;
     String m_path;
     String m_name;
     String m_extension;
-    RefPtr<GAction> m_new_action;
-    RefPtr<GAction> m_open_action;
-    RefPtr<GAction> m_save_action;
-    RefPtr<GAction> m_save_as_action;
-    RefPtr<GAction> m_find_replace_action;
-    RefPtr<GAction> m_line_wrapping_setting_action;
-    RefPtr<GAction> m_find_next_action;
-    RefPtr<GAction> m_find_previous_action;
-    RefPtr<GAction> m_replace_next_action;
-    RefPtr<GAction> m_replace_previous_action;
-    RefPtr<GAction> m_replace_all_action;
+    RefPtr<GUI::Action> m_new_action;
+    RefPtr<GUI::Action> m_open_action;
+    RefPtr<GUI::Action> m_save_action;
+    RefPtr<GUI::Action> m_save_as_action;
+    RefPtr<GUI::Action> m_find_replace_action;
+    RefPtr<GUI::Action> m_line_wrapping_setting_action;
+    RefPtr<GUI::Action> m_find_next_action;
+    RefPtr<GUI::Action> m_find_previous_action;
+    RefPtr<GUI::Action> m_replace_next_action;
+    RefPtr<GUI::Action> m_replace_previous_action;
+    RefPtr<GUI::Action> m_replace_all_action;
 
-    RefPtr<GStatusBar> m_statusbar;
+    RefPtr<GUI::StatusBar> m_statusbar;
 
-    RefPtr<GTextBox> m_find_textbox;
-    RefPtr<GTextBox> m_replace_textbox;
-    GButton* m_find_previous_button { nullptr };
-    GButton* m_find_next_button { nullptr };
-    GButton* m_replace_previous_button { nullptr };
-    GButton* m_replace_next_button { nullptr };
-    GButton* m_replace_all_button { nullptr };
-    RefPtr<GWidget> m_find_replace_widget;
-    RefPtr<GWidget> m_find_widget;
-    RefPtr<GWidget> m_replace_widget;
+    RefPtr<GUI::TextBox> m_find_textbox;
+    RefPtr<GUI::TextBox> m_replace_textbox;
+    GUI::Button* m_find_previous_button { nullptr };
+    GUI::Button* m_find_next_button { nullptr };
+    GUI::Button* m_replace_previous_button { nullptr };
+    GUI::Button* m_replace_next_button { nullptr };
+    GUI::Button* m_replace_all_button { nullptr };
+    RefPtr<GUI::Widget> m_find_replace_widget;
+    RefPtr<GUI::Widget> m_find_widget;
+    RefPtr<GUI::Widget> m_replace_widget;
 
     bool m_document_dirty { false };
     bool m_document_opening { false };

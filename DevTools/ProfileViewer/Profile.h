@@ -32,7 +32,10 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
 
-class GModel;
+namespace GUI {
+class Model;
+}
+
 class ProfileModel;
 
 class ProfileNode : public RefCounted<ProfileNode> {
@@ -104,7 +107,7 @@ public:
     static OwnPtr<Profile> load_from_file(const StringView& path);
     ~Profile();
 
-    GModel& model();
+    GUI::Model& model();
 
     const Vector<NonnullRefPtr<ProfileNode>>& roots() const { return m_roots; }
 

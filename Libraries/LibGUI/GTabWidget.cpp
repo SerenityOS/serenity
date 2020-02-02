@@ -30,22 +30,24 @@
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GTabWidget.h>
 
-GTabWidget::GTabWidget(GWidget* parent)
-    : GWidget(parent)
+namespace GUI {
+
+TabWidget::TabWidget(Widget* parent)
+    : Widget(parent)
 {
 }
 
-GTabWidget::~GTabWidget()
+TabWidget::~TabWidget()
 {
 }
 
-void GTabWidget::add_widget(const StringView& title, GWidget* widget)
+void TabWidget::add_widget(const StringView& title, Widget* widget)
 {
     m_tabs.append({ title, widget });
     add_child(*widget);
 }
 
-void GTabWidget::set_active_widget(GWidget* widget)
+void TabWidget::set_active_widget(Widget* widget)
 {
     if (widget == m_active_widget)
         return;
@@ -61,14 +63,14 @@ void GTabWidget::set_active_widget(GWidget* widget)
     update_bar();
 }
 
-void GTabWidget::resize_event(GResizeEvent& event)
+void TabWidget::resize_event(ResizeEvent& event)
 {
     if (!m_active_widget)
         return;
     m_active_widget->set_relative_rect(child_rect_for_size(event.size()));
 }
 
-Rect GTabWidget::child_rect_for_size(const Size& size) const
+Rect TabWidget::child_rect_for_size(const Size& size) const
 {
     Rect rect;
     switch (m_tab_position) {
@@ -84,19 +86,19 @@ Rect GTabWidget::child_rect_for_size(const Size& size) const
     return rect;
 }
 
-void GTabWidget::child_event(Core::ChildEvent& event)
+void TabWidget::child_event(Core::ChildEvent& event)
 {
-    if (!event.child() || !Core::is<GWidget>(*event.child()))
-        return GWidget::child_event(event);
-    auto& child = Core::to<GWidget>(*event.child());
-    if (event.type() == GEvent::ChildAdded) {
+    if (!event.child() || !Core::is<Widget>(*event.child()))
+        return Widget::child_event(event);
+    auto& child = Core::to<Widget>(*event.child());
+    if (event.type() == Event::ChildAdded) {
         if (!m_active_widget)
             set_active_widget(&child);
         else if (m_active_widget != &child)
             child.set_visible(false);
-    } else if (event.type() == GEvent::ChildRemoved) {
+    } else if (event.type() == Event::ChildRemoved) {
         if (m_active_widget == &child) {
-            GWidget* new_active_widget = nullptr;
+            Widget* new_active_widget = nullptr;
             for_each_child_widget([&](auto& new_child) {
                 new_active_widget = &new_child;
                 return IterationDecision::Break;
@@ -104,10 +106,10 @@ void GTabWidget::child_event(Core::ChildEvent& event)
             set_active_widget(new_active_widget);
         }
     }
-    GWidget::child_event(event);
+    Widget::child_event(event);
 }
 
-Rect GTabWidget::bar_rect() const
+Rect TabWidget::bar_rect() const
 {
     switch (m_tab_position) {
     case TabPosition::Top:
@@ -118,7 +120,7 @@ Rect GTabWidget::bar_rect() const
     ASSERT_NOT_REACHED();
 }
 
-Rect GTabWidget::container_rect() const
+Rect TabWidget::container_rect() const
 {
     switch (m_tab_position) {
     case TabPosition::Top:
@@ -129,9 +131,9 @@ Rect GTabWidget::container_rect() const
     ASSERT_NOT_REACHED();
 }
 
-void GTabWidget::paint_event(GPaintEvent& event)
+void TabWidget::paint_event(PaintEvent& event)
 {
-    GPainter painter(*this);
+    Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
     auto container_rect = this->container_rect();
@@ -164,7 +166,7 @@ void GTabWidget::paint_event(GPaintEvent& event)
     }
 }
 
-Rect GTabWidget::button_rect(int index) const
+Rect TabWidget::button_rect(int index) const
 {
     int x_offset = 2;
     for (int i = 0; i < index; ++i)
@@ -181,12 +183,12 @@ Rect GTabWidget::button_rect(int index) const
     return rect;
 }
 
-int GTabWidget::TabData::width(const Font& font) const
+int TabWidget::TabData::width(const Font& font) const
 {
     return 16 + font.width(title);
 }
 
-void GTabWidget::mousedown_event(GMouseEvent& event)
+void TabWidget::mousedown_event(MouseEvent& event)
 {
     for (int i = 0; i < m_tabs.size(); ++i) {
         auto button_rect = this->button_rect(i);
@@ -197,7 +199,7 @@ void GTabWidget::mousedown_event(GMouseEvent& event)
     }
 }
 
-void GTabWidget::mousemove_event(GMouseEvent& event)
+void TabWidget::mousemove_event(MouseEvent& event)
 {
     int hovered_tab = -1;
     for (int i = 0; i < m_tabs.size(); ++i) {
@@ -214,7 +216,7 @@ void GTabWidget::mousemove_event(GMouseEvent& event)
     update_bar();
 }
 
-void GTabWidget::leave_event(Core::Event&)
+void TabWidget::leave_event(Core::Event&)
 {
     if (m_hovered_tab_index != -1) {
         m_hovered_tab_index = -1;
@@ -222,14 +224,14 @@ void GTabWidget::leave_event(Core::Event&)
     }
 }
 
-void GTabWidget::update_bar()
+void TabWidget::update_bar()
 {
     auto invalidation_rect = bar_rect();
     invalidation_rect.set_height(invalidation_rect.height() + 1);
     update(invalidation_rect);
 }
 
-void GTabWidget::set_tab_position(TabPosition tab_position)
+void TabWidget::set_tab_position(TabPosition tab_position)
 {
     if (m_tab_position == tab_position)
         return;
@@ -239,11 +241,12 @@ void GTabWidget::set_tab_position(TabPosition tab_position)
     update();
 }
 
-int GTabWidget::active_tab_index() const
+int TabWidget::active_tab_index() const
 {
     for (int i = 0; i < m_tabs.size(); i++) {
         if (m_tabs.at(i).widget == m_active_widget)
             return i;
     }
     return -1;
+}
 }

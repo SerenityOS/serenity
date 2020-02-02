@@ -100,8 +100,8 @@ void DisplayPropertiesWidget::create_resolution_list()
 
 void DisplayPropertiesWidget::create_root_widget()
 {
-    m_root_widget = GWidget::construct();
-    m_root_widget->set_layout(make<GVBoxLayout>());
+    m_root_widget = GUI::Widget::construct();
+    m_root_widget->set_layout(make<GUI::VBoxLayout>());
     m_root_widget->set_fill_with_background_color(true);
     m_root_widget->layout()->set_margins({ 4, 4, 4, 16 });
 }
@@ -123,19 +123,19 @@ void DisplayPropertiesWidget::create_wallpaper_list()
 
 void DisplayPropertiesWidget::create_frame()
 {
-    auto tab_widget = GTabWidget::construct(m_root_widget);
+    auto tab_widget = GUI::TabWidget::construct(m_root_widget);
 
     // First, let's create the "Background" tab
-    auto background_splitter = GSplitter::construct(Orientation::Vertical, nullptr);
+    auto background_splitter = GUI::Splitter::construct(Orientation::Vertical, nullptr);
     tab_widget->add_widget("Wallpaper", background_splitter);
 
-    auto background_content = GWidget::construct(background_splitter.ptr());
-    background_content->set_layout(make<GVBoxLayout>());
+    auto background_content = GUI::Widget::construct(background_splitter.ptr());
+    background_content->set_layout(make<GUI::VBoxLayout>());
     background_content->layout()->set_margins({ 4, 4, 4, 4 });
 
-    m_wallpaper_preview = GLabel::construct(background_splitter);
+    m_wallpaper_preview = GUI::Label::construct(background_splitter);
 
-    auto wallpaper_list = GListView::construct(background_content);
+    auto wallpaper_list = GUI::ListView::construct(background_content);
     wallpaper_list->set_background_color(Color::White);
     wallpaper_list->set_model(*ItemListModel<AK::String>::create(m_wallpapers));
 
@@ -156,14 +156,14 @@ void DisplayPropertiesWidget::create_frame()
     };
 
     // Let's add the settings tab
-    auto settings_splitter = GSplitter::construct(Orientation::Vertical, nullptr);
+    auto settings_splitter = GUI::Splitter::construct(Orientation::Vertical, nullptr);
     tab_widget->add_widget("Settings", settings_splitter);
 
-    auto settings_content = GWidget::construct(settings_splitter.ptr());
-    settings_content->set_layout(make<GVBoxLayout>());
+    auto settings_content = GUI::Widget::construct(settings_splitter.ptr());
+    settings_content->set_layout(make<GUI::VBoxLayout>());
     settings_content->layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto resolution_list = GListView::construct(settings_content);
+    auto resolution_list = GUI::ListView::construct(settings_content);
     resolution_list->set_background_color(Color::White);
     resolution_list->set_model(*ItemListModel<Size>::create(m_resolutions));
 
@@ -181,38 +181,38 @@ void DisplayPropertiesWidget::create_frame()
     settings_content->layout()->add_spacer();
 
     // Add the apply and cancel buttons
-    auto bottom_widget = GWidget::construct(m_root_widget.ptr());
-    bottom_widget->set_layout(make<GHBoxLayout>());
+    auto bottom_widget = GUI::Widget::construct(m_root_widget.ptr());
+    bottom_widget->set_layout(make<GUI::HBoxLayout>());
     bottom_widget->layout()->add_spacer();
-    bottom_widget->set_size_policy(Orientation::Vertical, SizePolicy::Fixed);
+    bottom_widget->set_size_policy(Orientation::Vertical, GUI::SizePolicy::Fixed);
     bottom_widget->set_preferred_size(1, 22);
 
-    auto apply_button = GButton::construct(bottom_widget);
+    auto apply_button = GUI::Button::construct(bottom_widget);
     apply_button->set_text("Apply");
-    apply_button->set_size_policy(Orientation::Vertical, SizePolicy::Fixed);
-    apply_button->set_size_policy(Orientation::Horizontal, SizePolicy::Fixed);
+    apply_button->set_size_policy(Orientation::Vertical, GUI::SizePolicy::Fixed);
+    apply_button->set_size_policy(Orientation::Horizontal, GUI::SizePolicy::Fixed);
     apply_button->set_preferred_size(60, 22);
-    apply_button->on_click = [this, tab_widget](GButton&) {
+    apply_button->on_click = [this, tab_widget](GUI::Button&) {
         send_settings_to_window_server(tab_widget->active_tab_index());
     };
 
-    auto ok_button = GButton::construct(bottom_widget);
+    auto ok_button = GUI::Button::construct(bottom_widget);
     ok_button->set_text("OK");
-    ok_button->set_size_policy(Orientation::Vertical, SizePolicy::Fixed);
-    ok_button->set_size_policy(Orientation::Horizontal, SizePolicy::Fixed);
+    ok_button->set_size_policy(Orientation::Vertical, GUI::SizePolicy::Fixed);
+    ok_button->set_size_policy(Orientation::Horizontal, GUI::SizePolicy::Fixed);
     ok_button->set_preferred_size(60, 22);
-    ok_button->on_click = [this, tab_widget](GButton&) {
+    ok_button->on_click = [this, tab_widget](GUI::Button&) {
         send_settings_to_window_server(tab_widget->active_tab_index());
-        GApplication::the().quit();
+        GUI::Application::the().quit();
     };
 
-    auto cancel_button = GButton::construct(bottom_widget);
+    auto cancel_button = GUI::Button::construct(bottom_widget);
     cancel_button->set_text("Cancel");
-    cancel_button->set_size_policy(Orientation::Vertical, SizePolicy::Fixed);
-    cancel_button->set_size_policy(Orientation::Horizontal, SizePolicy::Fixed);
+    cancel_button->set_size_policy(Orientation::Vertical, GUI::SizePolicy::Fixed);
+    cancel_button->set_size_policy(Orientation::Horizontal, GUI::SizePolicy::Fixed);
     cancel_button->set_preferred_size(60, 22);
-    cancel_button->on_click = [this](GButton&) {
-        GApplication::the().quit();
+    cancel_button->on_click = [](auto&) {
+        GUI::Application::the().quit();
     };
 }
 
@@ -222,10 +222,10 @@ void DisplayPropertiesWidget::send_settings_to_window_server(int tab_index)
         StringBuilder builder;
         builder.append("/res/wallpapers/");
         builder.append(m_selected_wallpaper);
-        GDesktop::the().set_wallpaper(builder.to_string());
+        GUI::Desktop::the().set_wallpaper(builder.to_string());
     } else if (tab_index == TabIndices::Settings) {
         dbg() << "Attempting to set resolution " << m_selected_resolution;
-        GWindowServerConnection::the().send_sync<WindowServer::SetResolution>(m_selected_resolution);
+        GUI::WindowServerConnection::the().send_sync<WindowServer::SetResolution>(m_selected_resolution);
     } else {
         dbg() << "Invalid tab index " << tab_index;
     }

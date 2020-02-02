@@ -29,8 +29,10 @@
 #include <LibCore/CEventLoop.h>
 #include <LibGUI/GWindow.h>
 
-class GDialog : public GWindow {
-    C_OBJECT(GDialog)
+namespace GUI {
+
+class Dialog : public Window {
+    C_OBJECT(Dialog)
 public:
     enum ExecResult {
         ExecOK = 0,
@@ -38,7 +40,7 @@ public:
         ExecAborted = 2
     };
 
-    virtual ~GDialog() override;
+    virtual ~Dialog() override;
 
     int exec();
 
@@ -50,9 +52,11 @@ public:
     virtual void close() override;
 
 protected:
-    explicit GDialog(Core::Object* parent);
+    explicit Dialog(Core::Object* parent);
 
 private:
     OwnPtr<Core::EventLoop> m_event_loop;
     int m_result { ExecAborted };
 };
+
+}

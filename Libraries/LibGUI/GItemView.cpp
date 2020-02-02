@@ -33,8 +33,10 @@
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GScrollBar.h>
 
-GItemView::GItemView(GWidget* parent)
-    : GAbstractView(parent)
+namespace GUI {
+
+ItemView::ItemView(Widget* parent)
+    : AbstractView(parent)
 {
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
@@ -44,29 +46,29 @@ GItemView::GItemView(GWidget* parent)
     horizontal_scrollbar().set_visible(false);
 }
 
-GItemView::~GItemView()
+ItemView::~ItemView()
 {
 }
 
-void GItemView::scroll_into_view(const GModelIndex& index, Orientation orientation)
+void ItemView::scroll_into_view(const ModelIndex& index, Orientation orientation)
 {
-    GScrollableWidget::scroll_into_view(item_rect(index.row()), orientation);
+    ScrollableWidget::scroll_into_view(item_rect(index.row()), orientation);
 }
 
-void GItemView::resize_event(GResizeEvent& event)
+void ItemView::resize_event(ResizeEvent& event)
 {
-    GAbstractView::resize_event(event);
+    AbstractView::resize_event(event);
     update_content_size();
 }
 
-void GItemView::did_update_model()
+void ItemView::did_update_model()
 {
-    GAbstractView::did_update_model();
+    AbstractView::did_update_model();
     update_content_size();
     update();
 }
 
-void GItemView::update_content_size()
+void ItemView::update_content_size()
 {
     if (!model())
         return set_content_size({});
@@ -83,7 +85,7 @@ void GItemView::update_content_size()
     set_content_size({ content_width, content_height });
 }
 
-Rect GItemView::item_rect(int item_index) const
+Rect ItemView::item_rect(int item_index) const
 {
     if (!m_visual_row_count || !m_visual_column_count)
         return {};
@@ -97,7 +99,7 @@ Rect GItemView::item_rect(int item_index) const
     };
 }
 
-Vector<int> GItemView::items_intersecting_rect(const Rect& rect) const
+Vector<int> ItemView::items_intersecting_rect(const Rect& rect) const
 {
     ASSERT(model());
     const auto& column_metadata = model()->column_metadata(model_column());
@@ -115,7 +117,7 @@ Vector<int> GItemView::items_intersecting_rect(const Rect& rect) const
     return item_indexes;
 }
 
-GModelIndex GItemView::index_at_event_position(const Point& position) const
+ModelIndex ItemView::index_at_event_position(const Point& position) const
 {
     ASSERT(model());
     // FIXME: Since all items are the same size, just compute the clicked item index
@@ -136,18 +138,18 @@ GModelIndex GItemView::index_at_event_position(const Point& position) const
     return {};
 }
 
-void GItemView::mousedown_event(GMouseEvent& event)
+void ItemView::mousedown_event(MouseEvent& event)
 {
     if (!model())
-        return GAbstractView::mousedown_event(event);
+        return AbstractView::mousedown_event(event);
 
-    if (event.button() != GMouseButton::Left)
-        return GAbstractView::mousedown_event(event);
+    if (event.button() != MouseButton::Left)
+        return AbstractView::mousedown_event(event);
 
     auto index = index_at_event_position(event.position());
     if (index.is_valid()) {
         // We might start dragging this item, but not rubber-banding.
-        return GAbstractView::mousedown_event(event);
+        return AbstractView::mousedown_event(event);
     }
 
     ASSERT(m_rubber_band_remembered_selection.is_empty());
@@ -166,20 +168,20 @@ void GItemView::mousedown_event(GMouseEvent& event)
     m_rubber_band_current = event.position();
 }
 
-void GItemView::mouseup_event(GMouseEvent& event)
+void ItemView::mouseup_event(MouseEvent& event)
 {
-    if (m_rubber_banding && event.button() == GMouseButton::Left) {
+    if (m_rubber_banding && event.button() == MouseButton::Left) {
         m_rubber_banding = false;
         m_rubber_band_remembered_selection.clear();
         update();
     }
-    GAbstractView::mouseup_event(event);
+    AbstractView::mouseup_event(event);
 }
 
-void GItemView::mousemove_event(GMouseEvent& event)
+void ItemView::mousemove_event(MouseEvent& event)
 {
     if (!model())
-        return GAbstractView::mousemove_event(event);
+        return AbstractView::mousemove_event(event);
 
     if (m_rubber_banding) {
         if (m_rubber_band_current != event.position()) {
@@ -199,10 +201,10 @@ void GItemView::mousemove_event(GMouseEvent& event)
         }
     }
 
-    GAbstractView::mousemove_event(event);
+    AbstractView::mousemove_event(event);
 }
 
-void GItemView::get_item_rects(int item_index, const Font& font, const GVariant& item_text, Rect& item_rect, Rect& icon_rect, Rect& text_rect) const
+void ItemView::get_item_rects(int item_index, const Font& font, const Variant& item_text, Rect& item_rect, Rect& icon_rect, Rect& text_rect) const
 {
     item_rect = this->item_rect(item_index);
     icon_rect = { 0, 0, 32, 32 };
@@ -214,12 +216,12 @@ void GItemView::get_item_rects(int item_index, const Font& font, const GVariant&
     text_rect.intersect(item_rect);
 }
 
-void GItemView::second_paint_event(GPaintEvent& event)
+void ItemView::second_paint_event(PaintEvent& event)
 {
     if (!m_rubber_banding)
         return;
 
-    GPainter painter(*this);
+    Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
     auto rubber_band_rect = Rect::from_two_points(m_rubber_band_origin, m_rubber_band_current);
@@ -227,12 +229,12 @@ void GItemView::second_paint_event(GPaintEvent& event)
     painter.draw_rect(rubber_band_rect, parent_widget()->palette().rubber_band_border());
 }
 
-void GItemView::paint_event(GPaintEvent& event)
+void ItemView::paint_event(PaintEvent& event)
 {
     Color widget_background_color = palette().color(background_role());
-    GFrame::paint_event(event);
+    Frame::paint_event(event);
 
-    GPainter painter(*this);
+    Painter painter(*this);
     painter.add_clip_rect(widget_inner_rect());
     painter.add_clip_rect(event.rect());
     painter.fill_rect(event.rect(), widget_background_color);
@@ -251,8 +253,8 @@ void GItemView::paint_event(GPaintEvent& event)
             background_color = widget_background_color;
         }
 
-        auto icon = model()->data(model_index, GModel::Role::Icon);
-        auto item_text = model()->data(model_index, GModel::Role::Display);
+        auto icon = model()->data(model_index, Model::Role::Icon);
+        auto item_text = model()->data(model_index, Model::Role::Display);
 
         Rect item_rect;
         Rect icon_rect;
@@ -268,20 +270,20 @@ void GItemView::paint_event(GPaintEvent& event)
         if (is_selected_item)
             text_color = palette().selection_text();
         else
-            text_color = model()->data(model_index, GModel::Role::ForegroundColor).to_color(palette().color(foreground_role()));
+            text_color = model()->data(model_index, Model::Role::ForegroundColor).to_color(palette().color(foreground_role()));
         painter.fill_rect(text_rect, background_color);
         painter.draw_text(text_rect, item_text.to_string(), font, TextAlignment::Center, text_color, TextElision::Right);
     };
 }
 
-int GItemView::item_count() const
+int ItemView::item_count() const
 {
     if (!model())
         return 0;
     return model()->row_count();
 }
 
-void GItemView::keydown_event(GKeyEvent& event)
+void ItemView::keydown_event(KeyEvent& event)
 {
     if (!model())
         return;
@@ -312,7 +314,7 @@ void GItemView::keydown_event(GKeyEvent& event)
         return;
     }
     if (event.key() == KeyCode::Key_Up) {
-        GModelIndex new_index;
+        ModelIndex new_index;
         if (!selection().is_empty()) {
             auto old_index = selection().first();
             new_index = model.index(old_index.row() - m_visual_column_count, old_index.column());
@@ -327,7 +329,7 @@ void GItemView::keydown_event(GKeyEvent& event)
         return;
     }
     if (event.key() == KeyCode::Key_Down) {
-        GModelIndex new_index;
+        ModelIndex new_index;
         if (!selection().is_empty()) {
             auto old_index = selection().first();
             new_index = model.index(old_index.row() + m_visual_column_count, old_index.column());
@@ -342,7 +344,7 @@ void GItemView::keydown_event(GKeyEvent& event)
         return;
     }
     if (event.key() == KeyCode::Key_Left) {
-        GModelIndex new_index;
+        ModelIndex new_index;
         if (!selection().is_empty()) {
             auto old_index = selection().first();
             new_index = model.index(old_index.row() - 1, old_index.column());
@@ -357,7 +359,7 @@ void GItemView::keydown_event(GKeyEvent& event)
         return;
     }
     if (event.key() == KeyCode::Key_Right) {
-        GModelIndex new_index;
+        ModelIndex new_index;
         if (!selection().is_empty()) {
             auto old_index = selection().first();
             new_index = model.index(old_index.row() + 1, old_index.column());
@@ -393,5 +395,7 @@ void GItemView::keydown_event(GKeyEvent& event)
         }
         return;
     }
-    return GWidget::keydown_event(event);
+    return Widget::keydown_event(event);
+}
+
 }

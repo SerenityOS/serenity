@@ -29,10 +29,12 @@
 #include <LibDraw/StylePainter.h>
 #include <LibGUI/GWidget.h>
 
-class GFrame : public GWidget {
-    C_OBJECT(GFrame)
+namespace GUI {
+
+class Frame : public Widget {
+    C_OBJECT(Frame)
 public:
-    virtual ~GFrame() override;
+    virtual ~Frame() override;
 
     int frame_thickness() const { return m_thickness; }
     void set_frame_thickness(int thickness) { m_thickness = thickness; }
@@ -47,11 +49,13 @@ public:
     Rect frame_inner_rect() const { return frame_inner_rect_for_size(size()); }
 
 protected:
-    explicit GFrame(GWidget* parent = nullptr);
-    void paint_event(GPaintEvent&) override;
+    explicit Frame(Widget* parent = nullptr);
+    void paint_event(PaintEvent&) override;
 
 private:
     int m_thickness { 0 };
     FrameShadow m_shadow { FrameShadow::Plain };
     FrameShape m_shape { FrameShape::NoFrame };
 };
+
+}

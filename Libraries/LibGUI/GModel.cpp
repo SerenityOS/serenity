@@ -27,31 +27,33 @@
 #include <LibGUI/GAbstractView.h>
 #include <LibGUI/GModel.h>
 
-GModel::GModel()
+namespace GUI {
+
+Model::Model()
 {
 }
 
-GModel::~GModel()
+Model::~Model()
 {
 }
 
-void GModel::register_view(Badge<GAbstractView>, GAbstractView& view)
+void Model::register_view(Badge<AbstractView>, AbstractView& view)
 {
     m_views.set(&view);
 }
 
-void GModel::unregister_view(Badge<GAbstractView>, GAbstractView& view)
+void Model::unregister_view(Badge<AbstractView>, AbstractView& view)
 {
     m_views.remove(&view);
 }
 
-void GModel::for_each_view(Function<void(GAbstractView&)> callback)
+void Model::for_each_view(Function<void(AbstractView&)> callback)
 {
     for (auto* view : m_views)
         callback(*view);
 }
 
-void GModel::did_update()
+void Model::did_update()
 {
     if (on_update)
         on_update();
@@ -60,12 +62,12 @@ void GModel::did_update()
     });
 }
 
-GModelIndex GModel::create_index(int row, int column, const void* data) const
+ModelIndex Model::create_index(int row, int column, const void* data) const
 {
-    return GModelIndex(*this, row, column, const_cast<void*>(data));
+    return ModelIndex(*this, row, column, const_cast<void*>(data));
 }
 
-GModelIndex GModel::sibling(int row, int column, const GModelIndex& parent) const
+ModelIndex Model::sibling(int row, int column, const ModelIndex& parent) const
 {
     if (!parent.is_valid())
         return index(row, column, {});
@@ -73,4 +75,6 @@ GModelIndex GModel::sibling(int row, int column, const GModelIndex& parent) cons
     if (row < 0 || row > row_count)
         return {};
     return index(row, column, parent);
+}
+
 }

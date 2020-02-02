@@ -26,8 +26,10 @@
 
 #pragma once
 
+namespace GUI {
+
 // Keep this in sync with WSWindowType.
-enum class GWindowType {
+enum class WindowType {
     Invalid = 0,
     Normal,
     Menu,
@@ -37,3 +39,5 @@ enum class GWindowType {
     Menubar,
     MenuApplet,
 };
+
+}

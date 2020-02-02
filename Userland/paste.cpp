@@ -41,9 +41,9 @@ int main(int argc, char* argv[])
     args_parser.add_option(no_newline, "Do not append a newline", "no-newline", 'n');
     args_parser.parse(argc, argv);
 
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
-    GClipboard& clipboard = GClipboard::the();
+    auto& clipboard = GUI::Clipboard::the();
     auto data_and_type = clipboard.data_and_type();
 
     if (!print_type) {

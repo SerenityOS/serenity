@@ -28,10 +28,13 @@
 
 #include <LibGUI/GWidget.h>
 
-class GLabel;
+namespace GUI {
+class Label;
+}
+
 class GraphWidget;
 
-class MemoryStatsWidget final : public GWidget {
+class MemoryStatsWidget final : public GUI::Widget {
     C_OBJECT(MemoryStatsWidget)
 public:
     static MemoryStatsWidget* the();
@@ -41,11 +44,11 @@ public:
     void refresh();
 
 private:
-    MemoryStatsWidget(GraphWidget& graph, GWidget* parent);
+    MemoryStatsWidget(GraphWidget& graph, GUI::Widget* parent);
 
     GraphWidget& m_graph;
-    RefPtr<GLabel> m_user_physical_pages_label;
-    RefPtr<GLabel> m_supervisor_physical_pages_label;
-    RefPtr<GLabel> m_kmalloc_label;
-    RefPtr<GLabel> m_kmalloc_count_label;
+    RefPtr<GUI::Label> m_user_physical_pages_label;
+    RefPtr<GUI::Label> m_supervisor_physical_pages_label;
+    RefPtr<GUI::Label> m_kmalloc_label;
+    RefPtr<GUI::Label> m_kmalloc_count_label;
 };

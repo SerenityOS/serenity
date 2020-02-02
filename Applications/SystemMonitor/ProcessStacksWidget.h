@@ -33,10 +33,10 @@ namespace Core {
 class Timer;
 }
 
-class ProcessStacksWidget final : public GWidget {
+class ProcessStacksWidget final : public GUI::Widget {
     C_OBJECT(ProcessStacksWidget)
 public:
-    explicit ProcessStacksWidget(GWidget* parent);
+    explicit ProcessStacksWidget(GUI::Widget* parent);
     virtual ~ProcessStacksWidget() override;
 
     void set_pid(pid_t);
@@ -44,6 +44,6 @@ public:
 
 private:
     pid_t m_pid { -1 };
-    RefPtr<GTextEditor> m_stacks_editor;
+    RefPtr<GUI::TextEditor> m_stacks_editor;
     RefPtr<Core::Timer> m_timer;
 };

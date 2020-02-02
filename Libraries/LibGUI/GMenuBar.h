@@ -30,22 +30,26 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibGUI/GMenu.h>
 
-class GApplication;
+namespace GUI {
 
-class GMenuBar {
+class Application;
+
+class MenuBar {
 public:
-    GMenuBar();
-    ~GMenuBar();
+    MenuBar();
+    ~MenuBar();
 
-    void add_menu(NonnullRefPtr<GMenu>);
+    void add_menu(NonnullRefPtr<Menu>);
 
-    void notify_added_to_application(Badge<GApplication>);
-    void notify_removed_from_application(Badge<GApplication>);
+    void notify_added_to_application(Badge<Application>);
+    void notify_removed_from_application(Badge<Application>);
 
 private:
     int realize_menubar();
     void unrealize_menubar();
 
     int m_menubar_id { -1 };
-    NonnullRefPtrVector<GMenu> m_menus;
+    NonnullRefPtrVector<Menu> m_menus;
 };
+
+}

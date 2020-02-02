@@ -31,10 +31,12 @@
 
 class GraphicsBitmap;
 
-class GLabel : public GFrame {
-    C_OBJECT(GLabel)
+namespace GUI {
+
+class Label : public Frame {
+    C_OBJECT(Label)
 public:
-    virtual ~GLabel() override;
+    virtual ~Label() override;
 
     String text() const { return m_text; }
     void set_text(const StringView&);
@@ -52,10 +54,10 @@ public:
     void size_to_fit();
 
 protected:
-    explicit GLabel(GWidget* parent = nullptr);
-    GLabel(const StringView& text, GWidget* parent = nullptr);
+    explicit Label(Widget* parent = nullptr);
+    Label(const StringView& text, Widget* parent = nullptr);
 
-    virtual void paint_event(GPaintEvent&) override;
+    virtual void paint_event(PaintEvent&) override;
 
 private:
     String m_text;
@@ -63,3 +65,5 @@ private:
     TextAlignment m_text_alignment { TextAlignment::Center };
     bool m_should_stretch_icon { false };
 };
+
+}

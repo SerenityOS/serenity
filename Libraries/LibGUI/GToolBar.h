@@ -29,36 +29,40 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibGUI/GWidget.h>
 
-class GAction;
+namespace GUI {
 
-class GToolBar : public GWidget {
-    C_OBJECT(GToolBar)
+class Action;
+
+class ToolBar : public Widget {
+    C_OBJECT(ToolBar)
 public:
-    virtual ~GToolBar() override;
+    virtual ~ToolBar() override;
 
-    void add_action(GAction&);
+    void add_action(Action&);
     void add_separator();
 
     bool has_frame() const { return m_has_frame; }
     void set_has_frame(bool has_frame) { m_has_frame = has_frame; }
 
 protected:
-    explicit GToolBar(GWidget* parent);
-    explicit GToolBar(Orientation, int button_size, GWidget* parent);
+    explicit ToolBar(Widget* parent);
+    explicit ToolBar(Orientation, int button_size, Widget* parent);
 
-    virtual void paint_event(GPaintEvent&) override;
+    virtual void paint_event(PaintEvent&) override;
 
 private:
     struct Item {
-        enum Type {
+        enum class Type {
             Invalid,
             Separator,
             Action
         };
-        Type type { Invalid };
-        RefPtr<GAction> action;
+        Type type { Type::Invalid };
+        RefPtr<Action> action;
     };
     NonnullOwnPtrVector<Item> m_items;
     int m_button_size { 16 };
     bool m_has_frame { true };
 };
+
+}

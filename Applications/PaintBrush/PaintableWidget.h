@@ -29,12 +29,12 @@
 #include <LibGUI/GWidget.h>
 class Tool;
 
-class PaintableWidget final : public GWidget {
+class PaintableWidget final : public GUI::Widget {
     C_OBJECT(PaintableWidget)
 public:
     static PaintableWidget& the();
 
-    explicit PaintableWidget(GWidget* parent);
+    explicit PaintableWidget(GUI::Widget* parent);
     virtual ~PaintableWidget() override;
 
     Color primary_color() const { return m_primary_color; }
@@ -46,8 +46,8 @@ public:
     void set_tool(Tool* tool);
     Tool* tool();
 
-    Color color_for(const GMouseEvent&) const;
-    Color color_for(GMouseButton) const;
+    Color color_for(const GUI::MouseEvent&) const;
+    Color color_for(GUI::MouseButton) const;
 
     void set_bitmap(const GraphicsBitmap&);
 
@@ -59,13 +59,13 @@ public:
 
 private:
     virtual bool accepts_focus() const override { return true; }
-    virtual void paint_event(GPaintEvent&) override;
-    virtual void second_paint_event(GPaintEvent&) override;
-    virtual void mousedown_event(GMouseEvent&) override;
-    virtual void mouseup_event(GMouseEvent&) override;
-    virtual void mousemove_event(GMouseEvent&) override;
-    virtual void keydown_event(GKeyEvent&) override;
-    virtual void keyup_event(GKeyEvent&) override;
+    virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void second_paint_event(GUI::PaintEvent&) override;
+    virtual void mousedown_event(GUI::MouseEvent&) override;
+    virtual void mouseup_event(GUI::MouseEvent&) override;
+    virtual void mousemove_event(GUI::MouseEvent&) override;
+    virtual void keydown_event(GUI::KeyEvent&) override;
+    virtual void keyup_event(GUI::KeyEvent&) override;
 
     RefPtr<GraphicsBitmap> m_bitmap;
 

@@ -40,12 +40,12 @@ IRCWindowListModel::~IRCWindowListModel()
 {
 }
 
-int IRCWindowListModel::row_count(const GModelIndex&) const
+int IRCWindowListModel::row_count(const GUI::ModelIndex&) const
 {
     return m_client.window_count();
 }
 
-int IRCWindowListModel::column_count(const GModelIndex&) const
+int IRCWindowListModel::column_count(const GUI::ModelIndex&) const
 {
     return 1;
 }
@@ -59,7 +59,7 @@ String IRCWindowListModel::column_name(int column) const
     ASSERT_NOT_REACHED();
 }
 
-GModel::ColumnMetadata IRCWindowListModel::column_metadata(int column) const
+GUI::Model::ColumnMetadata IRCWindowListModel::column_metadata(int column) const
 {
     switch (column) {
     case Column::Name:
@@ -68,7 +68,7 @@ GModel::ColumnMetadata IRCWindowListModel::column_metadata(int column) const
     ASSERT_NOT_REACHED();
 }
 
-GVariant IRCWindowListModel::data(const GModelIndex& index, Role role) const
+GUI::Variant IRCWindowListModel::data(const GUI::ModelIndex& index, Role role) const
 {
     if (role == Role::Display) {
         switch (index.column()) {

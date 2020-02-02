@@ -53,8 +53,8 @@ public:
     Rect rect() const { return m_rect; }
     void set_rect(const Rect& rect) { m_rect = rect; }
 
-    GButton* button() { return m_button; }
-    void set_button(GButton* button) { m_button = button; }
+    GUI::Button* button() { return m_button; }
+    void set_button(GUI::Button* button) { m_button = button; }
 
     void set_active(bool active) { m_active = active; }
     bool is_active() const { return m_active; }
@@ -68,7 +68,7 @@ private:
     WindowIdentifier m_identifier;
     String m_title;
     Rect m_rect;
-    RefPtr<GButton> m_button;
+    RefPtr<GUI::Button> m_button;
     RefPtr<GraphicsBitmap> m_icon;
     bool m_active { false };
     bool m_minimized { false };
@@ -89,7 +89,7 @@ public:
     Window& ensure_window(const WindowIdentifier&);
     void remove_window(const WindowIdentifier&);
 
-    Function<NonnullRefPtr<GButton>(const WindowIdentifier&)> aid_create_button;
+    Function<NonnullRefPtr<GUI::Button>(const WindowIdentifier&)> aid_create_button;
 
 private:
     HashMap<WindowIdentifier, NonnullOwnPtr<Window>> m_windows;

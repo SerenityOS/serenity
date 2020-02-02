@@ -29,10 +29,12 @@
 #include <AK/LogStream.h>
 #include <AK/String.h>
 
-class GTextPosition {
+namespace GUI {
+
+class TextPosition {
 public:
-    GTextPosition() {}
-    GTextPosition(size_t line, size_t column)
+    TextPosition() {}
+    TextPosition(size_t line, size_t column)
         : m_line(line)
         , m_column(column)
     {
@@ -46,18 +48,20 @@ public:
     void set_line(size_t line) { m_line = line; }
     void set_column(size_t column) { m_column = column; }
 
-    bool operator==(const GTextPosition& other) const { return m_line == other.m_line && m_column == other.m_column; }
-    bool operator!=(const GTextPosition& other) const { return m_line != other.m_line || m_column != other.m_column; }
-    bool operator<(const GTextPosition& other) const { return m_line < other.m_line || (m_line == other.m_line && m_column < other.m_column); }
+    bool operator==(const TextPosition& other) const { return m_line == other.m_line && m_column == other.m_column; }
+    bool operator!=(const TextPosition& other) const { return m_line != other.m_line || m_column != other.m_column; }
+    bool operator<(const TextPosition& other) const { return m_line < other.m_line || (m_line == other.m_line && m_column < other.m_column); }
 
 private:
     size_t m_line { 0xffffffff };
     size_t m_column { 0xffffffff };
 };
 
-inline const LogStream& operator<<(const LogStream& stream, const GTextPosition& value)
+inline const LogStream& operator<<(const LogStream& stream, const TextPosition& value)
 {
     if (!value.is_valid())
         return stream << "GTextPosition(Invalid)";
     return stream << String::format("(%zu,%zu)", value.line(), value.column());
+}
+
 }

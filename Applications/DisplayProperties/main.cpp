@@ -43,7 +43,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GApplication app(argc, argv);
+    GUI::Application app(argc, argv);
 
     if (pledge("stdio shared_buffer rpath accept cpath wpath", nullptr) < 0) {
         perror("pledge");
@@ -52,7 +52,7 @@ int main(int argc, char** argv)
 
     DisplayPropertiesWidget instance;
 
-    auto window = GWindow::construct();
+    auto window = GUI::Window::construct();
     window->set_title("Display Properties");
     window->move_to(100, 100);
     window->resize(400, 448);
@@ -61,17 +61,17 @@ int main(int argc, char** argv)
     window->set_icon(load_png("/res/icons/16x16/app-display-properties.png"));
 
     // Let's create the menubar first
-    auto menubar = make<GMenuBar>();
+    auto menubar = make<GUI::MenuBar>();
 
-    auto app_menu = GMenu::construct("Display Properties");
-    app_menu->add_action(GCommonActions::make_quit_action([&](const GAction&) {
+    auto app_menu = GUI::Menu::construct("Display Properties");
+    app_menu->add_action(GUI::CommonActions::make_quit_action([&](const GUI::Action&) {
         app.quit();
     }));
     menubar->add_menu(move(app_menu));
 
-    auto help_menu = GMenu::construct("Help");
-    help_menu->add_action(GAction::create("About", [&](const GAction&) {
-        GAboutDialog::show("Display Properties", load_png("/res/icons/32x32/app-display-properties.png"), window);
+    auto help_menu = GUI::Menu::construct("Help");
+    help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
+        GUI::AboutDialog::show("Display Properties", load_png("/res/icons/32x32/app-display-properties.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 

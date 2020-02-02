@@ -28,18 +28,20 @@
 #include <LibGUI/GDragOperation.h>
 #include <LibGUI/GWindowServerConnection.h>
 
-static GDragOperation* s_current_drag_operation;
+namespace GUI {
 
-GDragOperation::GDragOperation(Core::Object* parent)
+static DragOperation* s_current_drag_operation;
+
+DragOperation::DragOperation(Core::Object* parent)
     : Core::Object(parent)
 {
 }
 
-GDragOperation::~GDragOperation()
+DragOperation::~DragOperation()
 {
 }
 
-GDragOperation::Outcome GDragOperation::exec()
+DragOperation::Outcome DragOperation::exec()
 {
     ASSERT(!s_current_drag_operation);
     ASSERT(!m_event_loop);
@@ -49,12 +51,12 @@ GDragOperation::Outcome GDragOperation::exec()
     RefPtr<GraphicsBitmap> shared_bitmap;
     if (m_bitmap) {
         shared_bitmap = m_bitmap->to_shareable_bitmap();
-        shared_bitmap->shared_buffer()->share_with(GWindowServerConnection::the().server_pid());
+        shared_bitmap->shared_buffer()->share_with(WindowServerConnection::the().server_pid());
         bitmap_id = shared_bitmap->shared_buffer_id();
         bitmap_size = shared_bitmap->size();
     }
 
-    auto response = GWindowServerConnection::the().send_sync<WindowServer::StartDrag>(m_text, m_data_type, m_data, bitmap_id, bitmap_size);
+    auto response = WindowServerConnection::the().send_sync<WindowServer::StartDrag>(m_text, m_data_type, m_data, bitmap_id, bitmap_size);
     if (!response->started()) {
         m_outcome = Outcome::Cancelled;
         return m_outcome;
@@ -70,21 +72,23 @@ GDragOperation::Outcome GDragOperation::exec()
     return m_outcome;
 }
 
-void GDragOperation::done(Outcome outcome)
+void DragOperation::done(Outcome outcome)
 {
     ASSERT(m_outcome == Outcome::None);
     m_outcome = outcome;
     m_event_loop->quit(0);
 }
 
-void GDragOperation::notify_accepted(Badge<GWindowServerConnection>)
+void DragOperation::notify_accepted(Badge<WindowServerConnection>)
 {
     ASSERT(s_current_drag_operation);
     s_current_drag_operation->done(Outcome::Accepted);
 }
 
-void GDragOperation::notify_cancelled(Badge<GWindowServerConnection>)
+void DragOperation::notify_cancelled(Badge<WindowServerConnection>)
 {
     ASSERT(s_current_drag_operation);
     s_current_drag_operation->done(Outcome::Cancelled);
+}
+
 }

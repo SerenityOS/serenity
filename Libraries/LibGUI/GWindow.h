@@ -35,13 +35,15 @@
 #include <LibDraw/Rect.h>
 #include <LibGUI/GWindowType.h>
 
-class GAction;
-class GKeyEvent;
-class GWMEvent;
-class GWidget;
-class GWindowServerConnection;
+namespace GUI {
 
-enum class GStandardCursor {
+class Action;
+class KeyEvent;
+class WMEvent;
+class Widget;
+class WindowServerConnection;
+
+enum class StandardCursor {
     None = 0,
     Arrow,
     IBeam,
@@ -52,12 +54,12 @@ enum class GStandardCursor {
     Hand,
 };
 
-class GWindow : public Core::Object {
-    C_OBJECT(GWindow)
+class Window : public Core::Object {
+    C_OBJECT(Window)
 public:
-    virtual ~GWindow() override;
+    virtual ~Window() override;
 
-    static GWindow* from_window_id(int);
+    static Window* from_window_id(int);
 
     bool is_modal() const { return m_modal; }
     void set_modal(bool);
@@ -74,7 +76,7 @@ public:
     void set_double_buffering_enabled(bool);
     void set_has_alpha_channel(bool);
     void set_opacity(float);
-    void set_window_type(GWindowType);
+    void set_window_type(WindowType);
 
     int window_id() const { return m_window_id; }
 
@@ -124,28 +126,28 @@ public:
 
     void start_wm_resize();
 
-    GWidget* main_widget() { return m_main_widget; }
-    const GWidget* main_widget() const { return m_main_widget; }
-    void set_main_widget(GWidget*);
+    Widget* main_widget() { return m_main_widget; }
+    const Widget* main_widget() const { return m_main_widget; }
+    void set_main_widget(Widget*);
 
-    GWidget* focused_widget() { return m_focused_widget; }
-    const GWidget* focused_widget() const { return m_focused_widget; }
-    void set_focused_widget(GWidget*);
+    Widget* focused_widget() { return m_focused_widget; }
+    const Widget* focused_widget() const { return m_focused_widget; }
+    void set_focused_widget(Widget*);
 
     void update();
     void update(const Rect&);
 
-    void set_global_cursor_tracking_widget(GWidget*);
-    GWidget* global_cursor_tracking_widget() { return m_global_cursor_tracking_widget.ptr(); }
-    const GWidget* global_cursor_tracking_widget() const { return m_global_cursor_tracking_widget.ptr(); }
+    void set_global_cursor_tracking_widget(Widget*);
+    Widget* global_cursor_tracking_widget() { return m_global_cursor_tracking_widget.ptr(); }
+    const Widget* global_cursor_tracking_widget() const { return m_global_cursor_tracking_widget.ptr(); }
 
-    void set_automatic_cursor_tracking_widget(GWidget*);
-    GWidget* automatic_cursor_tracking_widget() { return m_automatic_cursor_tracking_widget.ptr(); }
-    const GWidget* automatic_cursor_tracking_widget() const { return m_automatic_cursor_tracking_widget.ptr(); }
+    void set_automatic_cursor_tracking_widget(Widget*);
+    Widget* automatic_cursor_tracking_widget() { return m_automatic_cursor_tracking_widget.ptr(); }
+    const Widget* automatic_cursor_tracking_widget() const { return m_automatic_cursor_tracking_widget.ptr(); }
 
-    GWidget* hovered_widget() { return m_hovered_widget.ptr(); }
-    const GWidget* hovered_widget() const { return m_hovered_widget.ptr(); }
-    void set_hovered_widget(GWidget*);
+    Widget* hovered_widget() { return m_hovered_widget.ptr(); }
+    const Widget* hovered_widget() const { return m_hovered_widget.ptr(); }
+    void set_hovered_widget(Widget*);
 
     GraphicsBitmap* front_bitmap() { return m_front_bitmap.ptr(); }
     GraphicsBitmap* back_bitmap() { return m_back_bitmap.ptr(); }
@@ -155,28 +157,28 @@ public:
     Size base_size() const { return m_base_size; }
     void set_base_size(const Size& size) { m_base_size = size; }
 
-    void set_override_cursor(GStandardCursor);
+    void set_override_cursor(StandardCursor);
 
     void set_icon(const GraphicsBitmap*);
     void apply_icon();
     const GraphicsBitmap* icon() const { return m_icon.ptr(); }
 
-    Vector<GWidget*> focusable_widgets() const;
+    Vector<Widget*> focusable_widgets() const;
 
     virtual void save_to(AK::JsonObject&) override;
 
     void schedule_relayout();
 
-    static void update_all_windows(Badge<GWindowServerConnection>);
-    void notify_state_changed(Badge<GWindowServerConnection>, bool minimized, bool occluded);
+    static void update_all_windows(Badge<WindowServerConnection>);
+    void notify_state_changed(Badge<WindowServerConnection>, bool minimized, bool occluded);
 
     virtual bool is_visible_for_timer_purposes() const override { return m_visible_for_timer_purposes; }
 
-    GAction* action_for_key_event(const GKeyEvent&);
+    Action* action_for_key_event(const KeyEvent&);
 
 protected:
-    GWindow(Core::Object* parent = nullptr);
-    virtual void wm_event(GWMEvent&);
+    Window(Core::Object* parent = nullptr);
+    virtual void wm_event(WMEvent&);
 
 private:
     virtual bool is_window() const override final { return true; }
@@ -191,18 +193,18 @@ private:
     RefPtr<GraphicsBitmap> m_icon;
     int m_window_id { 0 };
     float m_opacity_when_windowless { 1.0f };
-    RefPtr<GWidget> m_main_widget;
-    WeakPtr<GWidget> m_focused_widget;
-    WeakPtr<GWidget> m_global_cursor_tracking_widget;
-    WeakPtr<GWidget> m_automatic_cursor_tracking_widget;
-    WeakPtr<GWidget> m_hovered_widget;
+    RefPtr<Widget> m_main_widget;
+    WeakPtr<Widget> m_focused_widget;
+    WeakPtr<Widget> m_global_cursor_tracking_widget;
+    WeakPtr<Widget> m_automatic_cursor_tracking_widget;
+    WeakPtr<Widget> m_hovered_widget;
     Rect m_rect_when_windowless;
     String m_title_when_windowless;
     Vector<Rect, 32> m_pending_paint_event_rects;
     Size m_size_increment;
     Size m_base_size;
     Color m_background_color { Color::WarmGray };
-    GWindowType m_window_type { GWindowType::Normal };
+    WindowType m_window_type { WindowType::Normal };
     bool m_is_active { false };
     bool m_has_alpha_channel { false };
     bool m_double_buffering_enabled { true };
@@ -215,8 +217,10 @@ private:
     bool m_visible_for_timer_purposes { true };
 };
 
+}
+
 template<>
-inline bool Core::is<GWindow>(const Core::Object& object)
+inline bool Core::is<GUI::Window>(const Core::Object& object)
 {
     return object.is_window();
 }

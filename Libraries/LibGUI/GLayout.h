@@ -32,27 +32,29 @@
 #include <AK/WeakPtr.h>
 #include <LibGUI/GMargins.h>
 
-class GWidget;
+namespace GUI {
 
-class GLayout {
+class Widget;
+
+class Layout {
 public:
-    GLayout();
-    virtual ~GLayout();
+    Layout();
+    virtual ~Layout();
 
-    void add_widget(GWidget&);
-    void insert_widget_before(GWidget& widget, GWidget& before_widget);
-    void add_layout(OwnPtr<GLayout>&&);
+    void add_widget(Widget&);
+    void insert_widget_before(Widget& widget, Widget& before_widget);
+    void add_layout(OwnPtr<Layout>&&);
     void add_spacer();
 
-    void remove_widget(GWidget&);
+    void remove_widget(Widget&);
 
-    virtual void run(GWidget&) = 0;
+    virtual void run(Widget&) = 0;
 
-    void notify_adopted(Badge<GWidget>, GWidget&);
-    void notify_disowned(Badge<GWidget>, GWidget&);
+    void notify_adopted(Badge<Widget>, Widget&);
+    void notify_disowned(Badge<Widget>, Widget&);
 
-    GMargins margins() const { return m_margins; }
-    void set_margins(const GMargins&);
+    Margins margins() const { return m_margins; }
+    void set_margins(const Margins&);
 
     int spacing() const { return m_spacing; }
     void set_spacing(int);
@@ -67,14 +69,16 @@ protected:
         };
 
         Type type { Type::Invalid };
-        WeakPtr<GWidget> widget;
-        OwnPtr<GLayout> layout;
+        WeakPtr<Widget> widget;
+        OwnPtr<Layout> layout;
     };
     void add_entry(Entry&&);
 
-    WeakPtr<GWidget> m_owner;
+    WeakPtr<Widget> m_owner;
     Vector<Entry> m_entries;
 
-    GMargins m_margins;
+    Margins m_margins;
     int m_spacing { 3 };
 };
+
+}

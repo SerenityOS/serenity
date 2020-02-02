@@ -35,33 +35,35 @@ namespace AK {
 class JsonValue;
 }
 
-class GVariant {
+namespace GUI {
+
+class Variant {
 public:
-    GVariant();
-    GVariant(bool);
-    GVariant(float);
-    GVariant(i32);
-    GVariant(i64);
-    GVariant(unsigned);
-    GVariant(const char*);
-    GVariant(const String&);
-    GVariant(const GraphicsBitmap&);
-    GVariant(const GIcon&);
-    GVariant(const Point&);
-    GVariant(const Size&);
-    GVariant(const Rect&);
-    GVariant(const Font&);
-    GVariant(const AK::JsonValue&);
-    GVariant(Color);
+    Variant();
+    Variant(bool);
+    Variant(float);
+    Variant(i32);
+    Variant(i64);
+    Variant(unsigned);
+    Variant(const char*);
+    Variant(const String&);
+    Variant(const GraphicsBitmap&);
+    Variant(const GIcon&);
+    Variant(const Point&);
+    Variant(const Size&);
+    Variant(const Rect&);
+    Variant(const Font&);
+    Variant(const AK::JsonValue&);
+    Variant(Color);
 
-    GVariant(const GVariant&);
-    GVariant& operator=(const GVariant&);
+    Variant(const Variant&);
+    Variant& operator=(const Variant&);
 
-    GVariant(GVariant&&) = delete;
-    GVariant& operator=(GVariant&&);
+    Variant(Variant&&) = delete;
+    Variant& operator=(Variant&&);
 
     void clear();
-    ~GVariant();
+    ~Variant();
 
     enum class Type {
         Invalid,
@@ -241,11 +243,11 @@ public:
 
     String to_string() const;
 
-    bool operator==(const GVariant&) const;
-    bool operator<(const GVariant&) const;
+    bool operator==(const Variant&) const;
+    bool operator<(const Variant&) const;
 
 private:
-    void copy_from(const GVariant&);
+    void copy_from(const Variant&);
 
     struct RawPoint {
         int x;
@@ -281,4 +283,6 @@ private:
     Type m_type { Type::Invalid };
 };
 
-const char* to_string(GVariant::Type);
+const char* to_string(Variant::Type);
+
+}

@@ -40,7 +40,7 @@ RectangleTool::~RectangleTool()
 {
 }
 
-void RectangleTool::draw_using(Painter& painter)
+void RectangleTool::draw_using(GUI::Painter& painter)
 {
     auto rect_to_draw = Rect::from_two_points(m_rectangle_start_position, m_rectangle_end_position);
     switch (m_mode) {
@@ -58,12 +58,12 @@ void RectangleTool::draw_using(Painter& painter)
     }
 }
 
-void RectangleTool::on_mousedown(GMouseEvent& event)
+void RectangleTool::on_mousedown(GUI::MouseEvent& event)
 {
-    if (event.button() != GMouseButton::Left && event.button() != GMouseButton::Right)
+    if (event.button() != GUI::MouseButton::Left && event.button() != GUI::MouseButton::Right)
         return;
 
-    if (m_drawing_button != GMouseButton::None)
+    if (m_drawing_button != GUI::MouseButton::None)
         return;
 
     m_drawing_button = event.button();
@@ -72,19 +72,19 @@ void RectangleTool::on_mousedown(GMouseEvent& event)
     m_widget->update();
 }
 
-void RectangleTool::on_mouseup(GMouseEvent& event)
+void RectangleTool::on_mouseup(GUI::MouseEvent& event)
 {
     if (event.button() == m_drawing_button) {
-        GPainter painter(m_widget->bitmap());
+        GUI::Painter painter(m_widget->bitmap());
         draw_using(painter);
-        m_drawing_button = GMouseButton::None;
+        m_drawing_button = GUI::MouseButton::None;
         m_widget->update();
     }
 }
 
-void RectangleTool::on_mousemove(GMouseEvent& event)
+void RectangleTool::on_mousemove(GUI::MouseEvent& event)
 {
-    if (m_drawing_button == GMouseButton::None)
+    if (m_drawing_button == GUI::MouseButton::None)
         return;
 
     if (!m_widget->rect().contains(event.position()))
@@ -94,36 +94,36 @@ void RectangleTool::on_mousemove(GMouseEvent& event)
     m_widget->update();
 }
 
-void RectangleTool::on_second_paint(GPaintEvent& event)
+void RectangleTool::on_second_paint(GUI::PaintEvent& event)
 {
-    if (m_drawing_button == GMouseButton::None)
+    if (m_drawing_button == GUI::MouseButton::None)
         return;
 
-    GPainter painter(*m_widget);
+    GUI::Painter painter(*m_widget);
     painter.add_clip_rect(event.rect());
     draw_using(painter);
 }
 
-void RectangleTool::on_keydown(GKeyEvent& event)
+void RectangleTool::on_keydown(GUI::KeyEvent& event)
 {
-    if (event.key() == Key_Escape && m_drawing_button != GMouseButton::None) {
-        m_drawing_button = GMouseButton::None;
+    if (event.key() == Key_Escape && m_drawing_button != GUI::MouseButton::None) {
+        m_drawing_button = GUI::MouseButton::None;
         m_widget->update();
         event.accept();
     }
 }
 
-void RectangleTool::on_contextmenu(GContextMenuEvent& event)
+void RectangleTool::on_contextmenu(GUI::ContextMenuEvent& event)
 {
     if (!m_context_menu) {
-        m_context_menu = GMenu::construct();
-        m_context_menu->add_action(GAction::create("Fill", [this](auto&) {
+        m_context_menu = GUI::Menu::construct();
+        m_context_menu->add_action(GUI::Action::create("Fill", [this](auto&) {
             m_mode = Mode::Fill;
         }));
-        m_context_menu->add_action(GAction::create("Outline", [this](auto&) {
+        m_context_menu->add_action(GUI::Action::create("Outline", [this](auto&) {
             m_mode = Mode::Outline;
         }));
-        m_context_menu->add_action(GAction::create("Gradient", [this](auto&) {
+        m_context_menu->add_action(GUI::Action::create("Gradient", [this](auto&) {
             m_mode = Mode::Gradient;
         }));
     }

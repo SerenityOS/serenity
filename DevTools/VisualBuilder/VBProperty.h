@@ -26,24 +26,27 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/Function.h>
+#include <AK/String.h>
 #include <LibGUI/GVariant.h>
 
-class GWidget;
+namespace GUI {
+class Widget;
+}
+
 class VBWidget;
 
 class VBProperty {
     friend class VBWidget;
 
 public:
-    VBProperty(VBWidget&, const String& name, const GVariant& value);
-    VBProperty(VBWidget&, const String& name, Function<GVariant(const GWidget&)>&& getter, Function<void(GWidget&, const GVariant&)>&& setter);
+    VBProperty(VBWidget&, const String& name, const GUI::Variant& value);
+    VBProperty(VBWidget&, const String& name, Function<GUI::Variant(const GUI::Widget&)>&& getter, Function<void(GUI::Widget&, const GUI::Variant&)>&& setter);
     ~VBProperty();
 
     String name() const { return m_name; }
-    const GVariant& value() const { return m_value; }
-    void set_value(const GVariant&);
+    const GUI::Variant& value() const { return m_value; }
+    void set_value(const GUI::Variant&);
 
     bool is_readonly() const { return m_readonly; }
     void set_readonly(bool b) { m_readonly = b; }
@@ -53,8 +56,8 @@ public:
 private:
     VBWidget& m_widget;
     String m_name;
-    GVariant m_value;
-    Function<GVariant(const GWidget&)> m_getter;
-    Function<void(GWidget&, const GVariant&)> m_setter;
+    GUI::Variant m_value;
+    Function<GUI::Variant(const GUI::Widget&)> m_getter;
+    Function<void(GUI::Widget&, const GUI::Variant&)> m_setter;
     bool m_readonly { false };
 };

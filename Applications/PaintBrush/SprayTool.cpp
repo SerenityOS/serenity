@@ -55,7 +55,7 @@ static double nrand()
 
 void SprayTool::paint_it()
 {
-    GPainter painter(m_widget->bitmap());
+    GUI::Painter painter(m_widget->bitmap());
     auto& bitmap = m_widget->bitmap();
     ASSERT(bitmap.bpp() == 32);
     m_widget->update();
@@ -74,7 +74,7 @@ void SprayTool::paint_it()
     }
 }
 
-void SprayTool::on_mousedown(GMouseEvent& event)
+void SprayTool::on_mousedown(GUI::MouseEvent& event)
 {
     if (!m_widget->rect().contains(event.position()))
         return;
@@ -85,7 +85,7 @@ void SprayTool::on_mousedown(GMouseEvent& event)
     paint_it();
 }
 
-void SprayTool::on_mousemove(GMouseEvent& event)
+void SprayTool::on_mousemove(GUI::MouseEvent& event)
 {
     m_last_pos = event.position();
     if (m_timer->is_active()) {
@@ -94,18 +94,18 @@ void SprayTool::on_mousemove(GMouseEvent& event)
     }
 }
 
-void SprayTool::on_mouseup(GMouseEvent&)
+void SprayTool::on_mouseup(GUI::MouseEvent&)
 {
     m_timer->stop();
 }
 
-void SprayTool::on_contextmenu(GContextMenuEvent& event)
+void SprayTool::on_contextmenu(GUI::ContextMenuEvent& event)
 {
     if (!m_context_menu) {
-        m_context_menu = GMenu::construct();
+        m_context_menu = GUI::Menu::construct();
         m_thickness_actions.set_exclusive(true);
         auto insert_action = [&](int size, bool checked = false) {
-            auto action = GAction::create(String::number(size), [this, size](auto& action) {
+            auto action = GUI::Action::create(String::number(size), [this, size](auto& action) {
                 m_thickness = size;
                 action.set_checked(true);
             });

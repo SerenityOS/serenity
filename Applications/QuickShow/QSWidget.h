@@ -28,10 +28,9 @@
 
 #include <LibGUI/GFrame.h>
 
-class GLabel;
 class QSLabel;
 
-class QSWidget final : public GFrame {
+class QSWidget final : public GUI::Frame {
     C_OBJECT(QSWidget)
 public:
     virtual ~QSWidget() override;
@@ -45,14 +44,14 @@ public:
     Function<void(int)> on_scale_change;
 
 private:
-    explicit QSWidget(GWidget* parent = nullptr);
-    virtual void paint_event(GPaintEvent&) override;
-    virtual void resize_event(GResizeEvent&) override;
-    virtual void mousedown_event(GMouseEvent&) override;
-    virtual void mouseup_event(GMouseEvent&) override;
-    virtual void mousemove_event(GMouseEvent&) override;
-    virtual void mousewheel_event(GMouseEvent&) override;
-    virtual void drop_event(GDropEvent&) override;
+    explicit QSWidget(GUI::Widget* parent = nullptr);
+    virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void resize_event(GUI::ResizeEvent&) override;
+    virtual void mousedown_event(GUI::MouseEvent&) override;
+    virtual void mouseup_event(GUI::MouseEvent&) override;
+    virtual void mousemove_event(GUI::MouseEvent&) override;
+    virtual void mousewheel_event(GUI::MouseEvent&) override;
+    virtual void drop_event(GUI::DropEvent&) override;
 
     void relayout();
 

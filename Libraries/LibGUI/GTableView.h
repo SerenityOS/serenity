@@ -31,13 +31,17 @@
 #include <LibGUI/GAbstractTableView.h>
 #include <LibGUI/GModel.h>
 
-class GTableView : public GAbstractTableView {
-    C_OBJECT(GTableView)
+namespace GUI {
+
+class TableView : public AbstractTableView {
+    C_OBJECT(TableView)
 public:
-    virtual ~GTableView() override;
+    virtual ~TableView() override;
 
 protected:
-    explicit GTableView(GWidget* parent);
+    explicit TableView(Widget* parent);
 
-    virtual void paint_event(GPaintEvent&) override;
+    virtual void paint_event(PaintEvent&) override;
 };
+
+}

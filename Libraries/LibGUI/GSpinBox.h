@@ -28,13 +28,15 @@
 
 #include <LibGUI/GWidget.h>
 
-class GButton;
-class GTextEditor;
+namespace GUI {
 
-class GSpinBox : public GWidget {
-    C_OBJECT(GSpinBox)
+class Button;
+class TextEditor;
+
+class SpinBox : public Widget {
+    C_OBJECT(SpinBox)
 public:
-    virtual ~GSpinBox() override;
+    virtual ~SpinBox() override;
 
     int value() const { return m_value; }
     void set_value(int);
@@ -48,16 +50,18 @@ public:
     Function<void(int value)> on_change;
 
 protected:
-    explicit GSpinBox(GWidget* parent = nullptr);
+    explicit SpinBox(Widget* parent = nullptr);
 
-    virtual void resize_event(GResizeEvent&) override;
+    virtual void resize_event(ResizeEvent&) override;
 
 private:
-    RefPtr<GTextEditor> m_editor;
-    RefPtr<GButton> m_increment_button;
-    RefPtr<GButton> m_decrement_button;
+    RefPtr<TextEditor> m_editor;
+    RefPtr<Button> m_increment_button;
+    RefPtr<Button> m_decrement_button;
 
     int m_min { 0 };
     int m_max { 100 };
     int m_value { 0 };
 };
+
+}

@@ -30,7 +30,7 @@
 
 class Document;
 
-class DOMTreeModel final : public GModel {
+class DOMTreeModel final : public GUI::Model {
 public:
     static NonnullRefPtr<DOMTreeModel> create(Document& document)
     {
@@ -39,11 +39,11 @@ public:
 
     virtual ~DOMTreeModel() override;
 
-    virtual int row_count(const GModelIndex& = GModelIndex()) const override;
-    virtual int column_count(const GModelIndex& = GModelIndex()) const override;
-    virtual GVariant data(const GModelIndex&, Role = Role::Display) const override;
-    virtual GModelIndex index(int row, int column, const GModelIndex& parent = GModelIndex()) const override;
-    virtual GModelIndex parent_index(const GModelIndex&) const override;
+    virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
+    virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
+    virtual GUI::Variant data(const GUI::ModelIndex&, Role = Role::Display) const override;
+    virtual GUI::ModelIndex index(int row, int column, const GUI::ModelIndex& parent = GUI::ModelIndex()) const override;
+    virtual GUI::ModelIndex parent_index(const GUI::ModelIndex&) const override;
     virtual void update() override;
 
 private:

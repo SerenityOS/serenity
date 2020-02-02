@@ -32,7 +32,7 @@
 class CursorTool;
 class FormEditorWidget;
 
-class FormWidget final : public GWidget {
+class FormWidget final : public GUI::Widget {
     C_OBJECT(FormWidget)
 public:
     virtual ~FormWidget() override;
@@ -46,12 +46,12 @@ public:
 private:
     virtual bool accepts_focus() const override { return true; }
 
-    virtual void paint_event(GPaintEvent&) override;
-    virtual void second_paint_event(GPaintEvent&) override;
-    virtual void mousedown_event(GMouseEvent&) override;
-    virtual void mouseup_event(GMouseEvent&) override;
-    virtual void mousemove_event(GMouseEvent&) override;
-    virtual void keydown_event(GKeyEvent&) override;
+    virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void second_paint_event(GUI::PaintEvent&) override;
+    virtual void mousedown_event(GUI::MouseEvent&) override;
+    virtual void mouseup_event(GUI::MouseEvent&) override;
+    virtual void mousemove_event(GUI::MouseEvent&) override;
+    virtual void keydown_event(GUI::KeyEvent&) override;
 
     explicit FormWidget(FormEditorWidget& parent);
 
