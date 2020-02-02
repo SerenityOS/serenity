@@ -66,6 +66,7 @@
 #include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/Thread.h>
 #include <Kernel/Tracing/ProcessTracer.h>
+#include <Kernel/Tracing/SyscallTracer.h>
 #include <Kernel/VM/InodeVMObject.h>
 #include <Kernel/VM/PurgeableVMObject.h>
 #include <LibC/errno_numbers.h>
@@ -3596,8 +3597,10 @@ int Process::sys$set_shared_buffer_volatile(int shared_buffer_id, bool state)
 
 void Process::did_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3, u32 result)
 {
-    for (auto* tracer : m_tracers)
-        tracer->did_syscall(function, arg1, arg2, arg3, result);
+    for (auto* tracer : m_tracers) {
+        if (tracer->is_syscall_tracer())
+            static_cast<SyscallTracer&>(*tracer).did_syscall(function, arg1, arg2, arg3, result);
+    }
 }
 
 void Process::terminate_due_to_signal(u8 signal)
@@ -3878,7 +3881,7 @@ int Process::sys$systrace(pid_t pid)
     int fd = alloc_fd();
     if (fd < 0)
         return fd;
-    auto tracer = ProcessTracer::create(*peer);
+    auto tracer = SyscallTracer::create(*peer);
     auto description = FileDescription::create(tracer);
     description->set_readable(true);
     m_fds[fd].set(move(description), 0);

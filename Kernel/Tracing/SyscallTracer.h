@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Sergey Bugaev <bugaevc@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,32 +26,32 @@
 
 #pragma once
 
-#include <Kernel/FileSystem/File.h>
-#include <Kernel/UnixTypes.h>
+#include <AK/CircularQueue.h>
+#include <Kernel/Tracing/ProcessTracer.h>
 
-class Process;
-
-class ProcessTracer : public File {
+class SyscallTracer : public ProcessTracer {
 public:
-    virtual ~ProcessTracer() override;
+    static NonnullRefPtr<SyscallTracer> create(Process& process) { return adopt(*new SyscallTracer(process)); }
+    virtual ~SyscallTracer() override;
 
-    bool is_dead() const { return !m_process; }
-    void set_dead() { m_process = nullptr; }
+    virtual bool can_read(const FileDescription&) const override { return !m_calls.is_empty() || is_dead(); }
+    virtual int read(FileDescription&, u8*, int) override;
 
-    virtual bool can_write(const FileDescription&) const override { return true; }
-    virtual int write(FileDescription&, const u8*, int) override { return -EIO; }
+    void did_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3, u32 result);
 
-    virtual String absolute_path(const FileDescription&) const override;
-
-    Process* process() const { return m_process; }
-
-    virtual bool is_syscall_tracer() const { return false; }
-
-protected:
-    explicit ProcessTracer(Process&);
+    virtual bool is_syscall_tracer() const override { return true; }
 
 private:
-    virtual const char* class_name() const override { return "ProcessTracer"; }
+    virtual const char* class_name() const override { return "SyscallTracer"; }
+    explicit SyscallTracer(Process&);
 
-    Process* m_process;
+    struct CallData {
+        u32 function;
+        u32 arg1;
+        u32 arg2;
+        u32 arg3;
+        u32 result;
+    };
+
+    CircularQueue<CallData, 200> m_calls;
 };

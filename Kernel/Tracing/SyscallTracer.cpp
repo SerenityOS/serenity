@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Sergey Bugaev <bugaevc@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,34 +24,30 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <Kernel/Tracing/SyscallTracer.h>
 
-#include <Kernel/FileSystem/File.h>
-#include <Kernel/UnixTypes.h>
+SyscallTracer::SyscallTracer(Process& process)
+    : ProcessTracer(process)
+{
+}
 
-class Process;
+SyscallTracer::~SyscallTracer()
+{
+}
 
-class ProcessTracer : public File {
-public:
-    virtual ~ProcessTracer() override;
+void SyscallTracer::did_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3, u32 result)
+{
+    CallData data = { function, arg1, arg2, arg3, result };
+    m_calls.enqueue(data);
+}
 
-    bool is_dead() const { return !m_process; }
-    void set_dead() { m_process = nullptr; }
-
-    virtual bool can_write(const FileDescription&) const override { return true; }
-    virtual int write(FileDescription&, const u8*, int) override { return -EIO; }
-
-    virtual String absolute_path(const FileDescription&) const override;
-
-    Process* process() const { return m_process; }
-
-    virtual bool is_syscall_tracer() const { return false; }
-
-protected:
-    explicit ProcessTracer(Process&);
-
-private:
-    virtual const char* class_name() const override { return "ProcessTracer"; }
-
-    Process* m_process;
-};
+int SyscallTracer::read(FileDescription&, u8* buffer, int buffer_size)
+{
+    if (m_calls.is_empty())
+        return 0;
+    auto data = m_calls.dequeue();
+    // FIXME: This should not be an assertion.
+    ASSERT(buffer_size == sizeof(data));
+    memcpy(buffer, &data, sizeof(data));
+    return sizeof(data);
+}
