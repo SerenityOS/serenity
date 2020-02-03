@@ -29,7 +29,7 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
-#include <Kernel/Profiling.h>
+#include <Kernel/Tracing/ProfileTracer.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/MemoryManager.h>
@@ -805,15 +805,44 @@ Vector<uintptr_t> Thread::raw_backtrace(uintptr_t ebp) const
 {
     auto& process = const_cast<Process&>(this->process());
     ProcessPagingScope paging_scope(process);
-    Vector<uintptr_t, Profiling::max_stack_frame_count> backtrace;
+    Vector<uintptr_t, ProfileTracer::max_stack_frame_count> backtrace;
     backtrace.append(ebp);
     for (uintptr_t* stack_ptr = (uintptr_t*)ebp; process.validate_read_from_kernel(VirtualAddress(stack_ptr), sizeof(uintptr_t) * 2); stack_ptr = (uintptr_t*)*stack_ptr) {
         uintptr_t retaddr = stack_ptr[1];
         backtrace.append(retaddr);
-        if (backtrace.size() == Profiling::max_stack_frame_count)
+        if (backtrace.size() == ProfileTracer::max_stack_frame_count)
             break;
     }
     return backtrace;
+}
+
+void Thread::record_profiling_sample(u32 ebp)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+
+    auto& process = this->process();
+    if (process.m_profile_tracers_cnt == 0)
+        return;
+
+    SmapDisabler disabler;
+
+    auto backtrace = raw_backtrace(ebp);
+
+    for (auto* tracer : process.m_tracers) {
+        if (!tracer->is_profile_tracer())
+            continue;
+
+        auto& sample = static_cast<ProfileTracer&>(*tracer).next_sample_slot();
+        sample.pid = pid();
+        sample.tid = tid();
+        sample.timestamp = g_uptime;
+
+        size_t stack_size = min((size_t)backtrace.size(), ProfileTracer::max_stack_frame_count);
+
+        for (size_t i = 0; i < stack_size; i++) {
+            sample.frames[i] = backtrace[i];
+        }
+    }
 }
 
 void Thread::make_thread_specific_region(Badge<Process>)

@@ -79,7 +79,7 @@ OBJS = \
     Process.o \
     Tracing/ProcessTracer.o \
     Tracing/SyscallTracer.o \
-    Profiling.o \
+    Tracing/ProfileTracer.o \
     Tracing/SimpleBufferBuilder.o \
     RTC.o \
     Random.o \

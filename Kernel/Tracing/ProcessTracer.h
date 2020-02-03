@@ -54,6 +54,7 @@ public:
     Process* process() const { return m_process; }
 
     virtual bool is_syscall_tracer() const { return false; }
+    virtual bool is_profile_tracer() const { return false; }
 
 protected:
     explicit ProcessTracer(Process&);

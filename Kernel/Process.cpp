@@ -56,7 +56,6 @@
 #include <Kernel/Multiboot.h>
 #include <Kernel/Net/Socket.h>
 #include <Kernel/Process.h>
-#include <Kernel/Profiling.h>
 #include <Kernel/RTC.h>
 #include <Kernel/Random.h>
 #include <Kernel/Scheduler.h>
@@ -4397,9 +4396,7 @@ int Process::sys$profiling_enable(pid_t pid)
         return -ESRCH;
     if (!is_superuser() && process->uid() != m_uid)
         return -EPERM;
-    Profiling::start(*process);
-    process->set_profiling(true);
-    return 0;
+    return -ENOSYS;
 }
 
 int Process::sys$profiling_disable(pid_t pid)
@@ -4410,9 +4407,7 @@ int Process::sys$profiling_disable(pid_t pid)
         return -ESRCH;
     if (!is_superuser() && process->uid() != m_uid)
         return -EPERM;
-    process->set_profiling(false);
-    Profiling::stop();
-    return 0;
+    return -ENOSYS;
 }
 
 void* Process::sys$get_kernel_info_page()

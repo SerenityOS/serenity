@@ -103,6 +103,8 @@ public:
     String backtrace(ProcessInspectionHandle&) const;
     Vector<uintptr_t> raw_backtrace(uintptr_t ebp) const;
 
+    void record_profiling_sample(u32 ebp);
+
     const String& name() const { return m_name; }
     void set_name(StringView s) { m_name = s; }
 

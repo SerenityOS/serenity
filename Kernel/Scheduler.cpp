@@ -29,7 +29,6 @@
 #include <Kernel/Arch/i386/PIT.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
-#include <Kernel/Profiling.h>
 #include <Kernel/RTC.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/TimerQueue.h>
@@ -599,17 +598,7 @@ void Scheduler::timer_tick(RegisterDump& regs)
     tv.tv_usec = PIT::ticks_this_second() * 1000;
     Process::update_info_page_timestamp(tv);
 
-    if (current->process().is_profiling()) {
-        SmapDisabler disabler;
-        auto backtrace = current->raw_backtrace(regs.ebp);
-        auto& sample = Profiling::next_sample_slot();
-        sample.pid = current->pid();
-        sample.tid = current->tid();
-        sample.timestamp = g_uptime;
-        for (size_t i = 0; i < min((size_t)backtrace.size(), Profiling::max_stack_frame_count); ++i) {
-            sample.frames[i] = backtrace[i];
-        }
-    }
+    current->record_profiling_sample(regs.ebp);
 
     TimerQueue::the().fire();
 

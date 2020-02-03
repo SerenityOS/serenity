@@ -113,9 +113,6 @@ public:
     static Vector<pid_t> all_pids();
     static Vector<Process*> all_processes();
 
-    bool is_profiling() const { return m_profiling; }
-    void set_profiling(bool profiling) { m_profiling = profiling; }
-
     enum RingLevel : u8 {
         Ring0 = 0,
         Ring3 = 3,
@@ -320,6 +317,8 @@ public:
 
     void add_tracer(ProcessTracer&);
     void remove_tracer(ProcessTracer&);
+    void notify_profile_tracer_attached() { m_profile_tracers_cnt++; }
+    void notify_profile_tracer_detached() { m_profile_tracers_cnt--; }
 
     u32 m_ticks_in_user { 0 };
     u32 m_ticks_in_kernel { 0 };
@@ -467,7 +466,6 @@ private:
 
     bool m_being_inspected { false };
     bool m_dead { false };
-    bool m_profiling { false };
 
     RefPtr<Custody> m_executable;
     RefPtr<Custody> m_cwd;
@@ -492,6 +490,8 @@ private:
     HashTable<gid_t> m_extra_gids;
 
     Vector<ProcessTracer*> m_tracers;
+    u8 m_profile_tracers_cnt { 0 };
+
     OwnPtr<ELFLoader> m_elf_loader;
 
     Region* m_master_tls_region { nullptr };

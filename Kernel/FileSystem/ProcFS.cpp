@@ -49,7 +49,6 @@
 #include <Kernel/Net/TCPSocket.h>
 #include <Kernel/Net/UDPSocket.h>
 #include <Kernel/PCI/Access.h>
-#include <Kernel/Profiling.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PurgeableVMObject.h>
 #include <LibC/errno_numbers.h>
@@ -82,7 +81,6 @@ enum ProcFileType {
     FI_Root_uptime,
     FI_Root_cmdline,
     FI_Root_modules,
-    FI_Root_profile,
     FI_Root_self, // symlink
     FI_Root_sys,  // directory
     FI_Root_net,  // directory
@@ -386,36 +384,6 @@ Optional<KBuffer> procfs$modules(InodeIdentifier)
         }
         obj.add("size", size);
     }
-    array.finish();
-    return builder.build();
-}
-
-Optional<KBuffer> procfs$profile(InodeIdentifier)
-{
-    InterruptDisabler disabler;
-    KBufferBuilder builder;
-    JsonArraySerializer array(builder);
-    bool mask_kernel_addresses = !current->process().is_superuser();
-    Profiling::for_each_sample([&](auto& sample) {
-        auto object = array.add_object();
-        object.add("pid", sample.pid);
-        object.add("tid", sample.tid);
-        object.add("timestamp", sample.timestamp);
-        auto frames_array = object.add_array("frames");
-        for (size_t i = 0; i < Profiling::max_stack_frame_count; ++i) {
-            if (sample.frames[i] == 0)
-                break;
-            auto frame_object = frames_array.add_object();
-            u32 address = (u32)sample.frames[i];
-            if (mask_kernel_addresses && !is_user_address(VirtualAddress(address)))
-                address = 0xdeadc0de;
-            frame_object.add("address", address);
-            frame_object.add("symbol", sample.symbolicated_frames[i]);
-            frame_object.add("offset", JsonValue((u32)sample.offsets[i]));
-            frame_object.finish();
-        }
-        frames_array.finish();
-    });
     array.finish();
     return builder.build();
 }
@@ -1590,7 +1558,6 @@ ProcFS::ProcFS()
     m_entries[FI_Root_uptime] = { "uptime", FI_Root_uptime, false, procfs$uptime };
     m_entries[FI_Root_cmdline] = { "cmdline", FI_Root_cmdline, true, procfs$cmdline };
     m_entries[FI_Root_modules] = { "modules", FI_Root_modules, true, procfs$modules };
-    m_entries[FI_Root_profile] = { "profile", FI_Root_profile, false, procfs$profile };
     m_entries[FI_Root_sys] = { "sys", FI_Root_sys, true };
     m_entries[FI_Root_net] = { "net", FI_Root_net, false };
 

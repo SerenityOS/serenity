@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Sergey Bugaev <bugaevc@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,28 +26,45 @@
 
 #pragma once
 
-#include <AK/Function.h>
+#include <AK/CircularQueue.h>
 #include <AK/String.h>
 #include <AK/Types.h>
+#include <Kernel/KBuffer.h>
+#include <Kernel/Tracing/ProcessTracer.h>
 
-class Process;
+class ProfileTracer : public ProcessTracer {
+public:
+    static NonnullRefPtr<ProfileTracer> create(Process& process) { return adopt(*new ProfileTracer(process)); }
+    virtual ~ProfileTracer() override;
 
-namespace Profiling {
+    virtual bool have_more_items() const override;
+    virtual void read_item(SimpleBufferBuilder&) const override;
+    virtual void dequeue_item() override;
 
-constexpr size_t max_stack_frame_count = 30;
+    virtual bool is_profile_tracer() const override { return true; }
 
-struct Sample {
-    i32 pid;
-    i32 tid;
-    u64 timestamp;
-    u32 frames[max_stack_frame_count];
-    u32 offsets[max_stack_frame_count];
-    String symbolicated_frames[max_stack_frame_count];
+    constexpr static size_t max_stack_frame_count = 30;
+
+    struct Sample {
+        i32 pid;
+        i32 tid;
+        u64 timestamp;
+        u32 frames[max_stack_frame_count];
+        u32 offsets[max_stack_frame_count];
+        String symbolicated_frames[max_stack_frame_count];
+    };
+
+    Sample& next_sample_slot();
+
+private:
+    virtual const char* class_name() const override { return "ProfileTracer"; }
+    explicit ProfileTracer(Process&);
+
+    void symbolicate(Sample& stack) const;
+
+    constexpr static auto buffer_size = 1 * MB;
+    constexpr static auto queue_capacity = (buffer_size - sizeof(CircularQueue<Sample, 0>)) / sizeof(Sample);
+
+    KBuffer m_buffer;
+    CircularQueue<Sample, queue_capacity>& m_queue;
 };
-
-Sample& next_sample_slot();
-void start(Process&);
-void stop();
-void for_each_sample(Function<void(Sample&)>);
-
-}

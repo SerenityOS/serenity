@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Sergey Bugaev <bugaevc@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,48 +25,46 @@
  */
 
 #include <AK/Demangle.h>
-#include <AK/StringBuilder.h>
-#include <Kernel/FileSystem/Custody.h>
-#include <Kernel/KBuffer.h>
+#include <AK/JsonArraySerializer.h>
+#include <AK/JsonObject.h>
+#include <AK/JsonObjectSerializer.h>
+#include <Kernel/KBufferBuilder.h>
 #include <Kernel/Process.h>
-#include <Kernel/Profiling.h>
+#include <Kernel/Tracing/ProfileTracer.h>
+#include <Kernel/Tracing/SimpleBufferBuilder.h>
 #include <LibELF/ELFLoader.h>
 
-namespace Profiling {
-
-static KBufferImpl* s_profiling_buffer;
-static size_t s_slot_count;
-static size_t s_next_slot_index;
-static Process* s_process;
-
-void start(Process& process)
+ProfileTracer::ProfileTracer(Process& process)
+    : ProcessTracer(process)
+    , m_buffer(KBuffer::create_with_size(buffer_size))
+    , m_queue(*(CircularQueue<Sample, queue_capacity>*)m_buffer.data())
 {
-    s_process = &process;
-
-    if (!s_profiling_buffer) {
-        s_profiling_buffer = RefPtr<KBufferImpl>(KBuffer::create_with_size(8 * MB).impl()).leak_ref();
-        s_slot_count = s_profiling_buffer->size() / sizeof(Sample);
-    }
-
-    s_next_slot_index = 0;
+    new (&m_queue) CircularQueue<Sample, queue_capacity>();
+    process.notify_profile_tracer_attached();
 }
 
-static Sample& sample_slot(size_t index)
+ProfileTracer::~ProfileTracer()
 {
-    return ((Sample*)s_profiling_buffer->data())[index];
+    m_queue.clear();
+
+    if (process())
+        process()->notify_profile_tracer_detached();
 }
 
-Sample& next_sample_slot()
+ProfileTracer::Sample& ProfileTracer::next_sample_slot()
 {
-    auto& slot = sample_slot(s_next_slot_index++);
-    if (s_next_slot_index >= s_slot_count)
-        s_next_slot_index = 0;
-    return slot;
+    ASSERT_INTERRUPTS_DISABLED();
+
+    m_queue.enqueue({});
+    return const_cast<Sample&>(m_queue.last());
 }
 
-static void symbolicate(Sample& stack)
+void ProfileTracer::symbolicate(Sample& stack) const
 {
-    auto& process = *s_process;
+    if (is_dead())
+        return;
+
+    auto& process = *this->process();
     ProcessPagingScope paging_scope(process);
     struct RecognizedSymbol {
         u32 address;
@@ -104,22 +102,43 @@ static void symbolicate(Sample& stack)
     }
 }
 
-void stop()
+void ProfileTracer::read_item(SimpleBufferBuilder& builder) const
 {
-    for (size_t i = 0; i < s_next_slot_index; ++i) {
-        auto& stack = sample_slot(i);
-        symbolicate(stack);
-    }
+    InterruptDisabler disabler;
 
-    s_process = nullptr;
+    bool mask_kernel_addresses = !current->process().is_superuser();
+
+    Sample sample = m_queue.first();
+    symbolicate(sample);
+
+    JsonObjectSerializer object(builder);
+    object.add("pid", sample.pid);
+    object.add("tid", sample.tid);
+    object.add("timestamp", sample.timestamp);
+    auto frames_array = object.add_array("frames");
+    for (size_t i = 0; i < max_stack_frame_count; i++) {
+        if (sample.frames[i] == 0)
+            break;
+        auto frame_object = frames_array.add_object();
+        u32 address = (u32)sample.frames[i];
+        if (mask_kernel_addresses && !is_user_address(VirtualAddress(address)))
+            address = 0xdeadc0de;
+        frame_object.add("address", address);
+        frame_object.add("symbol", sample.symbolicated_frames[i]);
+        frame_object.add("offset", JsonValue((u32)sample.offsets[i]));
+    }
 }
 
-void for_each_sample(Function<void(Sample&)> callback)
+void ProfileTracer::dequeue_item()
 {
-    for (size_t i = 0; i < s_next_slot_index; ++i) {
-        auto& sample = sample_slot(i);
-        callback(sample);
-    }
+    InterruptDisabler disabler;
+
+    m_queue.dequeue();
 }
 
+bool ProfileTracer::have_more_items() const
+{
+    InterruptDisabler disabler;
+
+    return !m_queue.is_empty();
 }
