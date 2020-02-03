@@ -89,11 +89,9 @@ WSEventLoop::~WSEventLoop()
 void WSEventLoop::drain_mouse()
 {
     auto& screen = WSScreen::the();
-    unsigned prev_buttons = screen.mouse_button_state();
-    int dx = 0;
-    int dy = 0;
-    int dz = 0;
-    unsigned buttons = prev_buttons;
+    MousePacket state;
+    state.buttons = screen.mouse_button_state();
+    unsigned buttons = state.buttons;
     for (;;) {
         MousePacket packet;
         ssize_t nread = read(m_mouse_fd, &packet, sizeof(MousePacket));
@@ -102,19 +100,26 @@ void WSEventLoop::drain_mouse()
         ASSERT(nread == sizeof(packet));
         buttons = packet.buttons;
 
-        dx += packet.dx;
-        dy += -packet.dy;
-        dz += packet.dz;
-        if (buttons != prev_buttons) {
-            screen.on_receive_mouse_data(dx, dy, dz, buttons);
-            dx = 0;
-            dy = 0;
-            dz = 0;
-            prev_buttons = buttons;
+        if (packet.is_relative) {
+            state.x += packet.x;
+            state.y -= packet.y;
+            state.z += packet.z;
+        } else {
+            state.x = packet.x;
+            state.y = packet.y;
+            state.z += packet.z;
+        }
+
+        if (buttons != state.buttons) {
+            state.buttons = buttons;
+            screen.on_receive_mouse_data(state);
+            state.x = 0;
+            state.y = 0;
+            state.z = 0;
         }
     }
-    if (dx || dy || dz)
-        screen.on_receive_mouse_data(dx, dy, dz, buttons);
+    if (state.is_relative && (state.x || state.y || state.z))
+        screen.on_receive_mouse_data(state);
 }
 
 void WSEventLoop::drain_keyboard()
