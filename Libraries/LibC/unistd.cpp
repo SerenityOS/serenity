@@ -206,6 +206,12 @@ pid_t getppid()
     return syscall(SC_getppid);
 }
 
+pid_t getsid(pid_t pid)
+{
+    int rc = syscall(SC_getsid, pid);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 pid_t setsid()
 {
     int rc = syscall(SC_setsid);
