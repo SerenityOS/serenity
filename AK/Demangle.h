@@ -27,18 +27,25 @@
 #pragma once
 
 #include <AK/String.h>
+
+#ifndef SERENITY_LIBC_BUILD
 #include <cxxabi.h>
+#endif
 
 namespace AK {
 
 inline String demangle(const StringView& name)
 {
+#ifdef SERENITY_LIBC_BUILD
+    return name;
+#else
     int status = 0;
     auto* demangled_name = abi::__cxa_demangle(String(name).characters(), nullptr, nullptr, &status);
     auto string = String(status == 0 ? demangled_name : name);
     if (status == 0)
         kfree(demangled_name);
     return string;
+#endif
 }
 
 }
