@@ -130,7 +130,6 @@ typedef u32 socklen_t;
     __ENUMERATE_SYSCALL(donate)                     \
     __ENUMERATE_SYSCALL(rename)                     \
     __ENUMERATE_SYSCALL(ftruncate)                  \
-    __ENUMERATE_SYSCALL(systrace)                   \
     __ENUMERATE_SYSCALL(exit_thread)                \
     __ENUMERATE_SYSCALL(mknod)                      \
     __ENUMERATE_SYSCALL(writev)                     \
@@ -167,8 +166,6 @@ typedef u32 socklen_t;
     __ENUMERATE_SYSCALL(madvise)                    \
     __ENUMERATE_SYSCALL(purge)                      \
     __ENUMERATE_SYSCALL(set_shared_buffer_volatile) \
-    __ENUMERATE_SYSCALL(profiling_enable)           \
-    __ENUMERATE_SYSCALL(profiling_disable)          \
     __ENUMERATE_SYSCALL(get_kernel_info_page)       \
     __ENUMERATE_SYSCALL(futex)                      \
     __ENUMERATE_SYSCALL(set_thread_boost)           \

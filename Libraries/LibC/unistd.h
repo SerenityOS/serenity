@@ -58,7 +58,6 @@ int get_process_name(char* buffer, int buffer_size);
 void dump_backtrace();
 int fsync(int fd);
 void sysbeep();
-int systrace(pid_t);
 int gettid();
 int donate(int tid);
 int create_shared_buffer(int, void** buffer);

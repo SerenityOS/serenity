@@ -3868,25 +3868,6 @@ int Process::sys$watch_file(const char* user_path, size_t path_length)
     return fd;
 }
 
-int Process::sys$systrace(pid_t pid)
-{
-    REQUIRE_PROMISE(proc);
-    InterruptDisabler disabler;
-    auto* peer = Process::from_pid(pid);
-    if (!peer)
-        return -ESRCH;
-    if (peer->uid() != m_euid)
-        return -EACCES;
-    int fd = alloc_fd();
-    if (fd < 0)
-        return fd;
-    auto tracer = SyscallTracer::create(*peer);
-    auto description = FileDescription::create(tracer);
-    description->set_readable(true);
-    m_fds[fd].set(move(description), 0);
-    return fd;
-}
-
 int Process::sys$halt()
 {
     if (!is_superuser())
@@ -4385,29 +4366,6 @@ int Process::sys$module_unload(const char* user_name, size_t name_length)
 
     g_modules->remove(it);
     return 0;
-}
-
-int Process::sys$profiling_enable(pid_t pid)
-{
-    REQUIRE_NO_PROMISES;
-    InterruptDisabler disabler;
-    auto* process = Process::from_pid(pid);
-    if (!process)
-        return -ESRCH;
-    if (!is_superuser() && process->uid() != m_uid)
-        return -EPERM;
-    return -ENOSYS;
-}
-
-int Process::sys$profiling_disable(pid_t pid)
-{
-    InterruptDisabler disabler;
-    auto* process = Process::from_pid(pid);
-    if (!process)
-        return -ESRCH;
-    if (!is_superuser() && process->uid() != m_uid)
-        return -EPERM;
-    return -ENOSYS;
 }
 
 void* Process::sys$get_kernel_info_page()

@@ -271,7 +271,6 @@ public:
     int sys$set_thread_name(int tid, const char* buffer, size_t buffer_size);
     int sys$get_thread_name(int tid, char* buffer, size_t buffer_size);
     int sys$rename(const Syscall::SC_rename_params*);
-    int sys$systrace(pid_t);
     int sys$mknod(const Syscall::SC_mknod_params*);
     int sys$create_shared_buffer(int, void** buffer);
     int sys$share_buffer_with(int, pid_t peer_pid);
@@ -289,8 +288,6 @@ public:
     int sys$setkeymap(const Syscall::SC_setkeymap_params*);
     int sys$module_load(const char* path, size_t path_length);
     int sys$module_unload(const char* name, size_t name_length);
-    int sys$profiling_enable(pid_t);
-    int sys$profiling_disable(pid_t);
     void* sys$get_kernel_info_page();
     int sys$futex(const Syscall::SC_futex_params*);
     int sys$set_thread_boost(int tid, int amount);

@@ -27,47 +27,51 @@
 #include <AK/Assertions.h>
 #include <AK/Types.h>
 #include <Kernel/Syscall.h>
+#include <LibCore/CArgsParser.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-static int usage()
-{
-    printf("usage: strace [-p PID] [command...]\n");
-    return 0;
-}
-
 int main(int argc, char** argv)
 {
-    if (argc == 1)
-        return usage();
-
-    pid_t pid = -1;
+    int pid = -1;
     bool pid_is_child = false;
+    Vector<const char*> command;
 
-    if (!strcmp(argv[1], "-p")) {
-        if (argc != 3)
-            return usage();
-        pid = atoi(argv[2]);
-    } else {
+    Core::ArgsParser args_parser;
+    args_parser.add_option(pid, "Trace the process with this PID", "pid", 'p', "PID");
+    args_parser.add_positional_argument(command, "Command to trace", "command", Core::ArgsParser::Required::No);
+    args_parser.parse(argc, argv);
+
+    if (pid == -1) {
         pid_is_child = true;
         pid = fork();
-        if (!pid) {
-            kill(getpid(), SIGSTOP);
-            int rc = execvp(argv[1], &argv[1]);
-            if (rc < 0) {
-                perror("execvp");
-                exit(1);
-            }
+        if (pid < 0) {
+            perror("fork");
             ASSERT_NOT_REACHED();
+        } else if (pid == 0) {
+            // Stop ourselves and wait for the parent to set up tracing.
+            kill(getpid(), SIGSTOP);
+            // When the parent SIGCONT's us, proceed.
+            execvp(command[0], const_cast<char**>(command.data()));
+            perror("execvp");
+            return 1;
         }
     }
 
-    int fd = systrace(pid);
+    ASSERT(pid > 0);
+    ASSERT(pid != getpid());
+
+    auto path = String::format("/proc/%d/systrace", pid);
+    int fd = open(path.characters(), O_RDONLY);
     if (fd < 0) {
-        perror("systrace");
+        int saved_errno = errno;
+        String message = String::format("Failed to open %s", path.characters());
+        errno = saved_errno;
+        perror(message.characters());
         return 1;
     }
 
@@ -78,6 +82,9 @@ int main(int argc, char** argv)
             return 1;
         }
     }
+
+    // FIXME: The following is broken, and we would need
+    //        a streaming JSON parser to fix it.
 
     for (;;) {
         u32 call[5];
