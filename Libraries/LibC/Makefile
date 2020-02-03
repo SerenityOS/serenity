@@ -93,12 +93,14 @@ install:
 	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/sys/
 	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/bits/
 	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/netinet/
+	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/net/
 	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/arpa/
 	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/lib/
 	cp *.h $(SERENITY_BASE_DIR)/Root/usr/include/
 	cp sys/*.h $(SERENITY_BASE_DIR)/Root/usr/include/sys/
 	cp bits/*.h $(SERENITY_BASE_DIR)/Root/usr/include/bits/
 	cp arpa/*.h $(SERENITY_BASE_DIR)/Root/usr/include/arpa/
+	cp net/*.h $(SERENITY_BASE_DIR)/Root/usr/include/net/
 	cp netinet/*.h $(SERENITY_BASE_DIR)/Root/usr/include/netinet/
 	cp libc.a $(SERENITY_BASE_DIR)/Root/usr/lib/
 	cp crt0.o $(SERENITY_BASE_DIR)/Root/usr/lib/
