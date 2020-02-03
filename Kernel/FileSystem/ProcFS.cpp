@@ -40,6 +40,8 @@
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Heap/kmalloc.h>
+#include <Kernel/Tracing/SyscallTracer.h>
+#include <Kernel/Tracing/ProfileTracer.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/KParams.h>
 #include <Kernel/Module.h>
@@ -103,6 +105,8 @@ enum ProcFileType {
     FI_PID_regs,
     FI_PID_fds,
     FI_PID_unveil,
+    FI_PID_profile,
+    FI_PID_systrace,
     FI_PID_exe,  // symlink
     FI_PID_cwd,  // symlink
     FI_PID_root, // symlink
@@ -1453,6 +1457,34 @@ KResultOr<NonnullRefPtr<Custody>> ProcFSInode::resolve_as_link(Custody& base, Re
     return *res;
 }
 
+RefPtr<FileDescription> ProcFSInode::preopen_fd()
+{
+    auto proc_file_type = to_proc_file_type(identifier());
+    if (proc_file_type != FI_PID_profile && proc_file_type != FI_PID_systrace)
+        return nullptr;
+
+    auto pid = to_pid(identifier());
+
+    auto handle = ProcessInspectionHandle::from_pid(pid);
+    if (!handle)
+        return nullptr;
+    auto& process = handle->process();
+
+    RefPtr<ProcessTracer> tracer;
+
+    if (proc_file_type == FI_PID_profile)
+        tracer = ProfileTracer::create(process);
+    else if (proc_file_type == FI_PID_systrace)
+        tracer = SyscallTracer::create(process);
+    else
+        ASSERT_NOT_REACHED();
+
+    auto description = FileDescription::create(*tracer);
+    description->set_readable(true);
+
+    return description;
+}
+
 ProcFSProxyInode::ProcFSProxyInode(ProcFS& fs, FileDescription& fd)
     : Inode(fs, 0)
     , m_fd(fd)
@@ -1575,6 +1607,8 @@ ProcFS::ProcFS()
     m_entries[FI_PID_exe] = { "exe", FI_PID_exe, false, procfs$pid_exe };
     m_entries[FI_PID_cwd] = { "cwd", FI_PID_cwd, false, procfs$pid_cwd };
     m_entries[FI_PID_unveil] = { "unveil", FI_PID_unveil, false, procfs$pid_unveil };
+    m_entries[FI_PID_profile] = { "profile", FI_PID_profile, false, nullptr };
+    m_entries[FI_PID_systrace] = { "systrace", FI_PID_systrace, false, nullptr };
     m_entries[FI_PID_root] = { "root", FI_PID_root, false, procfs$pid_root };
     m_entries[FI_PID_fd] = { "fd", FI_PID_fd, false };
 }

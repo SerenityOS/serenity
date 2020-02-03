@@ -108,6 +108,7 @@ private:
     virtual KResult chmod(mode_t) override;
     virtual KResult chown(uid_t, gid_t) override;
     virtual KResultOr<NonnullRefPtr<Custody>> resolve_as_link(Custody& base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0) const override;
+    virtual RefPtr<FileDescription> preopen_fd() override;
 
     ProcFS& fs() { return static_cast<ProcFS&>(Inode::fs()); }
     const ProcFS& fs() const { return static_cast<const ProcFS&>(Inode::fs()); }
