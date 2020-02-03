@@ -16,6 +16,8 @@ if [ "$(id -u)" != 0 ]; then
     die "this script needs to run as root"
 fi
 
+umask 0022
+
 printf "creating initial filesystem structure... "
 for dir in bin etc proc mnt tmp; do
     mkdir -p mnt/$dir
