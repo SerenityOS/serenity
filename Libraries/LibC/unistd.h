@@ -101,8 +101,6 @@ int tcsetpgrp(int fd, pid_t pgid);
 ssize_t read(int fd, void* buf, size_t count);
 ssize_t write(int fd, const void* buf, size_t count);
 int close(int fd);
-pid_t waitpid(pid_t, int* wstatus, int options);
-pid_t wait(int* wstatus);
 int chdir(const char* path);
 int fchdir(int fd);
 char* getcwd(char* buffer, size_t size);

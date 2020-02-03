@@ -44,6 +44,7 @@ __BEGIN_DECLS
 #define WEXITED 4
 #define WCONTINUED 8
 
+pid_t waitpid(pid_t, int* wstatus, int options);
 pid_t wait(int* wstatus);
 
 __END_DECLS
