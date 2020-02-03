@@ -80,6 +80,7 @@ OBJS = \
     Tracing/ProcessTracer.o \
     Tracing/SyscallTracer.o \
     Profiling.o \
+    Tracing/SimpleBufferBuilder.o \
     RTC.o \
     Random.o \
     Scheduler.o \
