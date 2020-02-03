@@ -26,6 +26,7 @@
 
 #include <AK/StringBuilder.h>
 #include <Kernel/FileSystem/DevPtsFS.h>
+#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/TTY/SlavePTY.h>
 

@@ -87,7 +87,7 @@ public:
     bool bind_socket(LocalSocket&);
     bool unbind_socket();
 
-    virtual FileDescription* preopen_fd() { return nullptr; };
+    virtual RefPtr<FileDescription> preopen_fd() { return nullptr; };
 
     bool is_metadata_dirty() const { return m_metadata_dirty; }
 

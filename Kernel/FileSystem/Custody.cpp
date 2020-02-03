@@ -27,6 +27,7 @@
 #include <AK/HashTable.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/FileSystem/Custody.h>
+#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Lock.h>
 

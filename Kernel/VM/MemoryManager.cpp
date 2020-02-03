@@ -30,6 +30,7 @@
 #include <AK/Assertions.h>
 #include <AK/kstdio.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/VM/AnonymousVMObject.h>

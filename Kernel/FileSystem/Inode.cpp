@@ -26,12 +26,13 @@
 
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/StringBuilder.h>
+#include <Kernel/FileSystem/Custody.h>
+#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/InodeWatcher.h>
+#include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/VM/InodeVMObject.h>
-#include <Kernel/FileSystem/VirtualFileSystem.h>
-#include <Kernel/FileSystem/Custody.h>
 
 InlineLinkedList<Inode>& all_inodes()
 {

@@ -134,7 +134,7 @@ private:
     virtual KResult chmod(mode_t) override { return KResult(-EINVAL); }
     virtual KResult chown(uid_t, gid_t) override { return KResult(-EINVAL); }
     virtual KResultOr<NonnullRefPtr<Custody>> resolve_as_link(Custody&, RefPtr<Custody>*, int, int) const override { ASSERT_NOT_REACHED(); }
-    virtual FileDescription* preopen_fd() override { return m_fd; }
+    virtual RefPtr<FileDescription> preopen_fd() override { return m_fd; }
 
     ProcFS& fs() { return static_cast<ProcFS&>(Inode::fs()); }
     const ProcFS& fs() const { return static_cast<const ProcFS&>(Inode::fs()); }

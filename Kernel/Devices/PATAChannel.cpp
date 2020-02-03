@@ -27,6 +27,7 @@
 #include "PATADiskDevice.h"
 #include <AK/ByteBuffer.h>
 #include <Kernel/Devices/PATAChannel.h>
+#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/IO.h>
 #include <Kernel/Process.h>

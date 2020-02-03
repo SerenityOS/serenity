@@ -56,6 +56,7 @@
 #include <Kernel/Devices/SB16.h>
 #include <Kernel/Devices/SerialDevice.h>
 #include <Kernel/Devices/ZeroDevice.h>
+#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Heap/SlabAllocator.h>

@@ -26,6 +26,7 @@
 
 #include <Kernel/Arch/i386/PIT.h>
 #include <Kernel/Devices/FloppyDiskDevice.h>
+#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/IO.h>
 #include <Kernel/Process.h>
