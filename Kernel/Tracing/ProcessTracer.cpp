@@ -27,6 +27,7 @@
 #include <AK/kstdio.h>
 #include <Kernel/Process.h>
 #include <Kernel/Tracing/ProcessTracer.h>
+#include <Kernel/Tracing/SimpleBufferBuilder.h>
 
 ProcessTracer::ProcessTracer(Process& process)
     : m_process(&process)
@@ -45,4 +46,47 @@ String ProcessTracer::absolute_path(const FileDescription&) const
     if (!m_process)
         return "tracer:(dead)";
     return String::format("tracer:%d", m_process->pid());
+}
+
+int ProcessTracer::read(FileDescription&, u8* buffer, int buffer_size)
+{
+    if (buffer_size == 0)
+        return 0;
+
+    int nread = 0;
+    SimpleBufferBuilder builder(buffer, buffer_size);
+
+    while (have_more_items()) {
+        // Try to append the next item.
+        if (!m_read_first_item)
+            builder.append('[');
+        else
+            builder.append(',');
+
+        read_item(builder);
+
+        // See if that worked.
+        if (builder.overflown())
+            break;
+
+        // If it did, commit the new state.
+        m_read_first_item = true;
+        dequeue_item();
+        nread = builder.nwritten();
+    }
+
+    if (!have_more_items() && is_dead() && !m_read_closing_bracket) {
+        builder.append(']');
+        if (!builder.overflown()) {
+            nread = builder.nwritten();
+            m_read_closing_bracket = true;
+        }
+    }
+
+    if (have_more_items() && nread == 0) {
+        dbg() << "Buffer is too small to read even a single item, not cool :(";
+        return -EIO;
+    }
+
+    return nread;
 }

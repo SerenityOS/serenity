@@ -30,6 +30,7 @@
 #include <Kernel/UnixTypes.h>
 
 class Process;
+class SimpleBufferBuilder;
 
 class ProcessTracer : public File {
 public:
@@ -37,6 +38,13 @@ public:
 
     bool is_dead() const { return !m_process; }
     void set_dead() { m_process = nullptr; }
+
+    virtual bool have_more_items() const = 0;
+    virtual void read_item(SimpleBufferBuilder&) const = 0;
+    virtual void dequeue_item() = 0;
+
+    virtual bool can_read(const FileDescription&) const override { return have_more_items() || is_dead(); }
+    virtual int read(FileDescription&, u8*, int) override;
 
     virtual bool can_write(const FileDescription&) const override { return true; }
     virtual int write(FileDescription&, const u8*, int) override { return -EIO; }
@@ -54,4 +62,7 @@ private:
     virtual const char* class_name() const override { return "ProcessTracer"; }
 
     Process* m_process;
+
+    bool m_read_first_item { false };
+    bool m_read_closing_bracket { false };
 };

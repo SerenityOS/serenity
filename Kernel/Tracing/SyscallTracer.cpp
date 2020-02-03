@@ -24,7 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/JsonObjectSerializer.h>
+#include <Kernel/Tracing/SimpleBufferBuilder.h>
 #include <Kernel/Tracing/SyscallTracer.h>
+#include <Kernel/Syscall.h>
 
 SyscallTracer::SyscallTracer(Process& process)
     : ProcessTracer(process)
@@ -41,13 +44,15 @@ void SyscallTracer::did_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3, u32 
     m_calls.enqueue(data);
 }
 
-int SyscallTracer::read(FileDescription&, u8* buffer, int buffer_size)
+void SyscallTracer::read_item(SimpleBufferBuilder& builder) const
 {
-    if (m_calls.is_empty())
-        return 0;
-    auto data = m_calls.dequeue();
-    // FIXME: This should not be an assertion.
-    ASSERT(buffer_size == sizeof(data));
-    memcpy(buffer, &data, sizeof(data));
-    return sizeof(data);
+    auto data = m_calls.first();
+
+    JsonObjectSerializer object(builder);
+    object.add("function", Syscall::to_string((Syscall::Function)data.function));
+    object.add("result", data.result);
+    auto args = object.add_array("args");
+    args.add(data.arg1);
+    args.add(data.arg2);
+    args.add(data.arg3);
 }

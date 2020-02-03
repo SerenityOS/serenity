@@ -34,8 +34,9 @@ public:
     static NonnullRefPtr<SyscallTracer> create(Process& process) { return adopt(*new SyscallTracer(process)); }
     virtual ~SyscallTracer() override;
 
-    virtual bool can_read(const FileDescription&) const override { return !m_calls.is_empty() || is_dead(); }
-    virtual int read(FileDescription&, u8*, int) override;
+    virtual bool have_more_items() const override { return !m_calls.is_empty(); }
+    virtual void read_item(SimpleBufferBuilder&) const override;
+    virtual void dequeue_item() override { m_calls.dequeue(); }
 
     void did_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3, u32 result);
 
