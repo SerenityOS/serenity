@@ -48,7 +48,7 @@ private:
     AudioEngine& m_audio_engine;
 
     int m_horizontal_notes { 32 };
-    Switch m_roll_notes[note_count][32] { Off };
+    Switch m_roll_notes[note_count][32] { { Off } };
     int m_current_column { 0 };
     int m_previous_column { m_horizontal_notes - 1 };
 };
