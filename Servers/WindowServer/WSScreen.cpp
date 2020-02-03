@@ -30,6 +30,7 @@
 #include "WSEventLoop.h"
 #include "WSWindowManager.h"
 #include <Kernel/FB.h>
+#include <Kernel/MousePacket.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/mman.h>
@@ -101,11 +102,16 @@ void WSScreen::set_buffer(int index)
     ASSERT(rc == 0);
 }
 
-void WSScreen::on_receive_mouse_data(int dx, int dy, int dz, unsigned buttons)
+void WSScreen::on_receive_mouse_data(const MousePacket& packet)
 {
     auto prev_location = m_cursor_location;
-    m_cursor_location.move_by(dx, dy);
+    if (packet.is_relative)
+        m_cursor_location.move_by(packet.x, packet.y);
+    else
+        m_cursor_location = { packet.x * m_width / 0xffff, packet.y * m_height / 0xffff };
     m_cursor_location.constrain(rect());
+
+    unsigned buttons = packet.buttons;
     unsigned prev_buttons = m_mouse_button_state;
     m_mouse_button_state = buttons;
     unsigned changed_buttons = prev_buttons ^ buttons;
@@ -123,8 +129,8 @@ void WSScreen::on_receive_mouse_data(int dx, int dy, int dz, unsigned buttons)
         Core::EventLoop::current().post_event(WSWindowManager::the(), move(message));
     }
 
-    if (dz) {
-        auto message = make<WSMouseEvent>(WSEvent::MouseWheel, m_cursor_location, buttons, MouseButton::None, m_modifiers, dz);
+    if (packet.z) {
+        auto message = make<WSMouseEvent>(WSEvent::MouseWheel, m_cursor_location, buttons, MouseButton::None, m_modifiers, packet.z);
         Core::EventLoop::current().post_event(WSWindowManager::the(), move(message));
     }
 
