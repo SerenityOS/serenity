@@ -139,9 +139,9 @@ void PS2MouseDevice::parse_data_packet()
         y = 0;
     }
     MousePacket packet;
-    packet.dx = x;
-    packet.dy = y;
-    packet.dz = z;
+    packet.x = x;
+    packet.y = y;
+    packet.z = z;
     packet.buttons = m_data[0] & 0x07;
 
     m_queue.enqueue(packet);
