@@ -56,6 +56,7 @@ int isprint(int);
 int isgraph(int);
 int islower(int);
 int isupper(int);
+int isblank(int);
 
 #define isalnum(c) (_ctype_[(int)(c)] & (_U | _L | _N))
 #define isalpha(c) (_ctype_[(int)(c)] & (_U | _L))
@@ -68,6 +69,7 @@ int isupper(int);
 #define isgraph(c) (_ctype_[(int)(c)] & (_P | _U | _L | _N))
 #define islower(c) ((_ctype_[(int)(c)] & (_U | _L)) == _L)
 #define isupper(c) ((_ctype_[(int)(c)] & (_U | _L)) == _U)
+#define isblank(c) ((_ctype_[(int)(c)] & (_B)))
 
 #define isascii(c) ((unsigned)c <= 127)
 #define toascii(c) ((c)&127)
