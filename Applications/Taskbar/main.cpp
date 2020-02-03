@@ -28,6 +28,7 @@
 #include <LibGUI/GApplication.h>
 #include <signal.h>
 #include <stdio.h>
+#include <sys/wait.h>
 
 int main(int argc, char** argv)
 {

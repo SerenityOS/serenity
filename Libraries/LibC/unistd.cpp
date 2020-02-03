@@ -272,12 +272,6 @@ int close(int fd)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-pid_t waitpid(pid_t waitee, int* wstatus, int options)
-{
-    int rc = syscall(SC_waitpid, waitee, wstatus, options);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
 int lstat(const char* path, struct stat* statbuf)
 {
     if (!path) {
