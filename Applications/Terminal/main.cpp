@@ -195,7 +195,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const char* command_to_execute = "/bin/Shell";
+    const char* command_to_execute = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(command_to_execute, "Execute this command inside the terminal", nullptr, 'e', "command");
