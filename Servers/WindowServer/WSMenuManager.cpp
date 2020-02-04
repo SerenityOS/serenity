@@ -48,7 +48,6 @@ WSMenuManager& WSMenuManager::the()
 WSMenuManager::WSMenuManager()
 {
     s_the = this;
-    m_username = getlogin();
     m_needs_window_resize = true;
 
     HashTable<String> seen_app_categories;
@@ -200,29 +199,8 @@ void WSMenuManager::draw()
     auto menubar_rect = this->menubar_rect();
 
     if (m_needs_window_resize) {
-        int username_width = Font::default_bold_font().width(m_username);
-
-        m_username_rect = {
-            menubar_rect.right() - menubar_menu_margin() / 2 - Font::default_bold_font().width(m_username),
-            menubar_rect.y(),
-            username_width,
-            menubar_rect.height()
-        };
-
-        int right_edge_x = m_username_rect.left() - 4;
-        for (auto& existing_applet : m_applets) {
-            if (!existing_applet)
-                continue;
-
-            Rect new_applet_rect(right_edge_x - existing_applet->size().width(), 0, existing_applet->size().width(), existing_applet->size().height());
-            Rect dummy_menubar_rect(0, 0, 0, 18);
-            new_applet_rect.center_vertically_within(dummy_menubar_rect);
-
-            existing_applet->set_rect_in_menubar(new_applet_rect);
-            right_edge_x = existing_applet->rect_in_menubar().x() - 4;
-        }
-
         m_window->set_rect(menubar_rect);
+        calculate_applet_rects();
         m_needs_window_resize = false;
     }
 
@@ -248,18 +226,11 @@ void WSMenuManager::draw()
         return IterationDecision::Continue;
     });
 
-    painter.draw_text(m_username_rect, m_username, Font::default_bold_font(), TextAlignment::CenterRight, palette.window_text());
-
     for (auto& applet : m_applets) {
         if (!applet)
             continue;
         draw_applet(*applet);
     }
-}
-
-void WSMenuManager::tick_clock()
-{
-    refresh();
 }
 
 void WSMenuManager::refresh()
@@ -268,6 +239,25 @@ void WSMenuManager::refresh()
         return;
     draw();
     window().invalidate();
+}
+
+void WSMenuManager::calculate_applet_rects()
+{
+    dbg() << "Recalculate applet rects." << m_applets.size();
+
+    auto menubar_rect = m_window->rect();
+    int right_edge_x = menubar_rect.width() - 4;
+    for (auto& existing_applet : m_applets) {
+        if (!existing_applet)
+            continue;
+
+        Rect new_applet_rect(right_edge_x - existing_applet->size().width(), 0, existing_applet->size().width(), existing_applet->size().height());
+        Rect dummy_menubar_rect(0, 0, 0, 18);
+        new_applet_rect.center_vertically_within(dummy_menubar_rect);
+
+        existing_applet->set_rect_in_menubar(new_applet_rect);
+        right_edge_x = existing_applet->rect_in_menubar().x() - 4;
+    }
 }
 
 void WSMenuManager::event(Core::Event& event)
@@ -457,18 +447,8 @@ void WSMenuManager::close_bar()
 
 void WSMenuManager::add_applet(WSWindow& applet)
 {
-    int right_edge_x = m_username_rect.left() - 4;
-    for (auto& existing_applet : m_applets) {
-        if (existing_applet)
-            right_edge_x = existing_applet->rect_in_menubar().x() - 4;
-    }
-
-    Rect new_applet_rect(right_edge_x - applet.size().width(), 0, applet.size().width(), applet.size().height());
-    Rect dummy_menubar_rect(0, 0, 0, 18);
-    new_applet_rect.center_vertically_within(dummy_menubar_rect);
-
-    applet.set_rect_in_menubar(new_applet_rect);
     m_applets.append(applet.make_weak_ptr());
+    calculate_applet_rects();
 }
 
 void WSMenuManager::remove_applet(WSWindow& applet)

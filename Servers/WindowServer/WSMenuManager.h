@@ -43,6 +43,7 @@ public:
     virtual ~WSMenuManager() override;
 
     void refresh();
+    void calculate_applet_rects();
 
     virtual void event(Core::Event&) override;
 
@@ -99,17 +100,13 @@ private:
 
     void draw();
     void draw_applet(const WSWindow&);
-    void tick_clock();
 
     RefPtr<WSWindow> m_window;
-    String m_username;
 
     WeakPtr<WSMenu> m_current_menu;
     Vector<WeakPtr<WSMenu>> m_open_menu_stack;
 
     Vector<WeakPtr<WSWindow>> m_applets;
-
-    Rect m_username_rect;
 
     bool m_needs_window_resize { false };
     bool m_bar_open { false };
