@@ -77,7 +77,8 @@ private:
 
     int m_octave { 4 };
     int m_wave { first_wave };
-    int m_decay { 0 };
+    int m_decay;
+    double m_decay_step;
     int m_delay { 0 };
 
     int m_time { 0 };

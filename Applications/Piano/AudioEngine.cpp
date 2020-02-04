@@ -31,6 +31,7 @@
 
 AudioEngine::AudioEngine()
 {
+    set_decay(0);
 }
 
 AudioEngine::~AudioEngine()
@@ -45,6 +46,11 @@ void AudioEngine::fill_buffer(FixedArray<Sample>& buffer)
         for (size_t note = 0; note < note_count; ++note) {
             if (!m_note_on[note])
                 continue;
+
+            m_power[note] -= m_decay_step;
+            if (m_power[note] < 0)
+                m_power[note] = 0;
+
             double val = 0;
             switch (m_wave) {
             case Wave::Sine:
@@ -68,16 +74,6 @@ void AudioEngine::fill_buffer(FixedArray<Sample>& buffer)
             buffer[i].left += val;
         }
         buffer[i].right = buffer[i].left;
-    }
-
-    if (m_decay) {
-        for (size_t note = 0; note < note_count; ++note) {
-            if (m_note_on[note]) {
-                m_power[note] -= m_decay / 100.0;
-                if (m_power[note] < 0)
-                    m_power[note] = 0;
-            }
-        }
     }
 
     if (m_delay) {
@@ -201,10 +197,22 @@ void AudioEngine::set_wave(Direction direction)
     }
 }
 
+static inline double calculate_step(double distance, int milliseconds)
+{
+    if (milliseconds == 0)
+        return distance;
+
+    constexpr double samples_per_millisecond = sample_rate / 1000.0;
+    double samples = milliseconds * samples_per_millisecond;
+    double step = distance / samples;
+    return step;
+}
+
 void AudioEngine::set_decay(int decay)
 {
     ASSERT(decay >= 0);
     m_decay = decay;
+    m_decay_step = calculate_step(1, m_decay);
 }
 
 void AudioEngine::set_delay(int delay)

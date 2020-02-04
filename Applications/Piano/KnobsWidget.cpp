@@ -91,7 +91,7 @@ KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWid
         m_wave_value->set_text(wave_strings[new_wave]);
     };
 
-    constexpr int max_decay = 20;
+    constexpr int max_decay = 1000;
     m_decay_knob = GUI::Slider::construct(Orientation::Vertical, m_knobs_container);
     m_decay_knob->set_range(0, max_decay);
     m_decay_knob->set_value(max_decay - m_audio_engine.decay());
