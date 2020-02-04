@@ -38,6 +38,7 @@ OBJS = \
     Devices/SB16.o \
     Devices/SerialDevice.o \
     Devices/ZeroDevice.o \
+    Devices/VMWareBackdoor.o \
     DoubleBuffer.o \
     FileSystem/Custody.o \
     FileSystem/DevPtsFS.o \

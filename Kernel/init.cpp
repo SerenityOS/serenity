@@ -55,6 +55,7 @@
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Devices/SB16.h>
 #include <Kernel/Devices/SerialDevice.h>
+#include <Kernel/Devices/VMWareBackdoor.h>
 #include <Kernel/Devices/ZeroDevice.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
@@ -122,6 +123,10 @@ extern "C" [[noreturn]] void init()
 
     new KeyboardDevice;
     new PS2MouseDevice;
+    VMWareBackdoor::initialize();
+    if (!KParams::the().has("no_vmmouse"))
+        VMWareBackdoor::the().enable_absolute_vmmouse();
+
     new SB16;
     new NullDevice;
     if (!get_serial_debug())
