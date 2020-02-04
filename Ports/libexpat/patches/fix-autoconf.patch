@@ -1,15 +1,15 @@
---- conftools/config.sub.orig	2019-10-03 23:14:02.281000072 +0100
-+++ conftools/config.sub	2019-10-03 23:14:36.896816822 +0100
+--- a/conftools/config.sub
++++ b/conftools/config.sub
 @@ -2,7 +2,7 @@
  # Configuration validation subroutine script.
  #   Copyright 1992-2018 Free Software Foundation, Inc.
- 
--timestamp='2018-02-22'
+
+-timestamp='2018-01-01'
 +timestamp='2019-10-03'
- 
+
  # This file is free software; you can redistribute it and/or modify it
  # under the terms of the GNU General Public License as published by
-@@ -1364,6 +1364,7 @@
+@@ -1409,6 +1409,7 @@ case $os in
  	# Each alternative MUST end in a * to match a version number.
  	# -sysv* is not here because it comes later, after sysvr4.
  	-gnu* | -bsd* | -mach* | -minix* | -genix* | -ultrix* | -irix* \
@@ -17,3 +17,6 @@
  	      | -*vms* | -sco* | -esix* | -isc* | -aix* | -cnk* | -sunos | -sunos[34]*\
  	      | -hpux* | -unos* | -osf* | -luna* | -dgux* | -auroraux* | -solaris* \
  	      | -sym* | -kopensolaris* | -plan9* \
+--
+2.17.1
+
