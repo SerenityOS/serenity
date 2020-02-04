@@ -33,6 +33,23 @@
 
 extern "C" int main(int, char**);
 
+static bool check_user_password(const struct passwd* pwd) {
+    if (strlen(pwd->pw_passwd) == 0) return true;
+
+    // + 1 to be enough space for the newline character
+    char input_password[PWDB_STR_MAX_LEN + 1];
+    fprintf(stdout, "Password: ");
+    fflush(stdout);
+    fgets(input_password, PWDB_STR_MAX_LEN, stdin);
+
+    int length = strlen(input_password);
+    if (input_password[length - 1] == '\n') {
+        input_password[length - 1] = '\0';
+    }
+
+    return strcmp(input_password, pwd->pw_passwd) == 0;
+}
+
 int main(int argc, char** argv)
 {
     uid_t uid = 0;
@@ -53,6 +70,12 @@ int main(int argc, char** argv)
 
     if (!pwd) {
         fprintf(stderr, "No passwd entry.\n");
+        return 1;
+    }
+
+    bool is_password_valid = check_user_password(pwd);
+    if (not is_password_valid) {
+        fprintf(stderr, "Incorrect password.\n");
         return 1;
     }
 
