@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,10 +28,50 @@
 
 #include <AK/Types.h>
 
-struct MousePacket {
-    int x { 0 };
-    int y { 0 };
-    int z { 0 };
-    unsigned char buttons { 0 };
-    bool is_relative { true };
+#define VMWARE_MAGIC 0x564D5868
+#define VMWARE_PORT 0x5658
+#define VMWARE_PORT_HIGHBANDWIDTH 0x5659
+
+#define VMMOUSE_GETVERSION 10
+#define VMMOUSE_DATA 39
+#define VMMOUSE_STATUS 40
+#define VMMOUSE_COMMAND 41
+
+struct VMWareCommand {
+    union {
+        u32 ax;
+        u32 magic;
+    };
+    union {
+        u32 bx;
+        u32 size;
+    };
+    union {
+        u32 cx;
+        u32 command;
+    };
+    union {
+        u32 dx;
+        u32 port;
+    };
+    u32 si;
+    u32 di;
+};
+
+class VMWareBackdoor {
+public:
+    static void initialize();
+    static VMWareBackdoor& the();
+    bool supported();
+    bool vmmouse_is_absolute();
+    void enable_absolute_vmmouse();
+    void disable_absolute_vmmouse();
+    void send(VMWareCommand& command);
+
+private:
+    VMWareBackdoor();
+    bool detect_presence();
+    bool detect_vmmouse();
+    bool m_supported;
+    bool m_vmmouse_absolute { false };
 };

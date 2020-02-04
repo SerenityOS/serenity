@@ -48,6 +48,7 @@ public:
 private:
     // ^IRQHandler
     virtual void handle_irq() override;
+    void handle_vmmouse_absolute_pointer();
 
     // ^CharacterDevice
     virtual const char* class_name() const override { return "PS2MouseDevice"; }

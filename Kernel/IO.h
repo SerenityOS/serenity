@@ -27,6 +27,8 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Devices/VMWareBackdoor.h>
 
 namespace IO {
 
@@ -85,6 +87,16 @@ inline void repeated_out16(u16 port, const u8* data, int data_size)
     asm volatile("rep outsw"
                  : "+S"(data), "+c"(data_size)
                  : "d"(port));
+}
+
+inline void vmware_out(VMWareCommand& command)
+{
+    command.magic = VMWARE_MAGIC;
+    command.port = VMWARE_PORT;
+    command.si = 0;
+    command.di = 0;
+    asm volatile("in %%dx, %0"
+                 : "+a"(command.ax), "+b"(command.bx), "+c"(command.cx), "+d"(command.dx), "+S"(command.si), "+D"(command.di));
 }
 
 inline void delay()
