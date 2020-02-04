@@ -44,6 +44,7 @@ public:
     int octave_base() const { return (m_octave - octave_min) * 12; }
     int wave() const { return m_wave; }
     int decay() const { return m_decay; }
+    int sustain() const { return m_sustain; }
     int delay() const { return m_delay; }
     int time() const { return m_time; }
     int tick() const { return m_tick; }
@@ -55,6 +56,7 @@ public:
     void set_wave(int wave);
     void set_wave(Direction);
     void set_decay(int decay);
+    void set_sustain(int sustain);
     void set_delay(int delay);
 
 private:
@@ -63,6 +65,8 @@ private:
     double square(size_t note);
     double triangle(size_t note);
     double noise() const;
+
+    void set_sustain_impl(int sustain);
 
     FixedArray<Sample> m_front_buffer { sample_count };
     FixedArray<Sample> m_back_buffer { sample_count };
@@ -79,6 +83,8 @@ private:
     int m_wave { first_wave };
     int m_decay;
     double m_decay_step;
+    int m_sustain;
+    double m_sustain_level;
     int m_delay { 0 };
 
     int m_time { 0 };

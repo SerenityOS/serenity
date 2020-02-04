@@ -31,6 +31,7 @@
 
 AudioEngine::AudioEngine()
 {
+    set_sustain_impl(0);
     set_decay(0);
 }
 
@@ -48,8 +49,8 @@ void AudioEngine::fill_buffer(FixedArray<Sample>& buffer)
                 continue;
 
             m_power[note] -= m_decay_step;
-            if (m_power[note] < 0)
-                m_power[note] = 0;
+            if (m_power[note] < m_sustain_level)
+                m_power[note] = m_sustain_level;
 
             double val = 0;
             switch (m_wave) {
@@ -212,7 +213,20 @@ void AudioEngine::set_decay(int decay)
 {
     ASSERT(decay >= 0);
     m_decay = decay;
-    m_decay_step = calculate_step(1, m_decay);
+    m_decay_step = calculate_step(1 - m_sustain_level, m_decay);
+}
+
+void AudioEngine::set_sustain_impl(int sustain)
+{
+    ASSERT(sustain >= 0);
+    m_sustain = sustain;
+    m_sustain_level = sustain / 1000.0;
+}
+
+void AudioEngine::set_sustain(int sustain)
+{
+    set_sustain_impl(sustain);
+    set_decay(m_decay);
 }
 
 void AudioEngine::set_delay(int delay)
