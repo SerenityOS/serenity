@@ -6,21 +6,21 @@
 +CC=	i686-pc-serenity-gcc $(CFLAGS)
  V=	20190330
  R=	20190926
- 
+
  # Modules to load into image file
  OPTIONS=-l nstat -l nplot -l time
- 
+
 -all:	kg klong.image
 +all:	kg
- 
+
  klong.image:	kg
  	./kg -n $(OPTIONS) -o klong.image
 @@ -48,3 +48,8 @@
- 
+
  mksums:	clean
  	find . -type f | grep -v _csums | grep -v klong2015 | csum >_csums
 +
 +install:
 +	install kg ${DESTDIR}/usr/local/bin
-+	mkdir ${DESTDIR}/usr/local/lib/klong
++	mkdir -p ${DESTDIR}/usr/local/lib/klong
 +	install -m 644 lib/* ${DESTDIR}/usr/local/lib/klong

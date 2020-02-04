@@ -6,7 +6,7 @@ port=python-3.6
 version=3.6
 workdir=Python-3.6.0
 useconfigure=true
-configopts="--build=i686 --without-threads --enable-optimizations"
+configopts="--build=i686 --without-threads --enable-optimizations --without-ensurepip"
 makeopts="-j$(nproc) build_all"
 installopts="-j$(nproc) build_all"
 files="${PYTHON_URL} ${PYTHON_ARCHIVE}"
