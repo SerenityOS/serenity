@@ -9,6 +9,12 @@ export CC=i686-pc-serenity-gcc
 export CXX=i686-pc-serenity-g++
 export PATH=$SERENITY_ROOT/Toolchain/Local/bin:$PATH
 
+MD5SUM=md5sum
+
+if [ `uname -s` = "OpenBSD" ]; then
+    MD5SUM="md5 -q"
+fi
+
 . "$@"
 shift
 
@@ -20,6 +26,9 @@ shift
 : "${useconfigure:=false}"
 : "${depends:=}"
 : "${patchlevel:=1}"
+: "${auth_type:=md5}"
+: "${auth_import_key:=}"
+: "${auth_opts:=}"
 
 run_nocd() {
     echo "+ $@ (nocd)"
@@ -36,35 +45,102 @@ run_replace_in_file(){
 func_defined() {
     PATH= command -V "$1"  > /dev/null 2>&1
 }
-func_defined fetch || fetch() {
+
+func_defined post_fetch || post_fetch() {
+    :
+}
+fetch() {
+    if [ "$auth_type" == "sig" ] && [ ! -z "${auth_import_key}" ]; then
+        # import gpg key if not existing locally
+        gpg --list-keys $auth_import_key || gpg --recv-key $auth_import_key
+    fi
+
     OLDIFS=$IFS
     IFS=$'\n'
     for f in $files; do
         IFS=$OLDIFS
-        read url filename <<< $(echo "$f")
+        read url filename auth_sum<<< $(echo "$f")
+        echo "URL: ${url}"
+        # download files
         if [ -f "$filename" ]; then
             echo "$filename already exists"
         else
-            run_nocd curl ${curlopts:-} "$url" -o "$filename"
+            run_nocd curl ${curlopts:-} "$url" -L -o "$filename"
         fi
-        case "$filename" in
-            *.tar*|.tbz*|*.txz|*.tgz)
-                run_nocd tar xf "$filename"
-                ;;
-            *.gz)
-                run_nocd gunzip "$filename"
-                ;;
-            *.zip)
-                run_nocd bsdtar xf "$filename" || run_nocd unzip -qo "$filename"
-                ;;
-            *)
-                echo "Note: no case for file $filename."
-                ;;
-        esac
+
+        # check md5sum if given
+        if [ ! -z "$auth_sum" ]; then
+            if [ "$auth_type" == "md5" ] || [ "$auth_type" == "sha256" ] || [ "$auth_type" == "sha1" ]; then
+                echo "Expecting ${auth_type}sum: $auth_sum"
+                if [ "$auth_type" == "md5" ]; then
+                    calc_sum="$($MD5SUM $filename | cut -f1 -d' ')"
+                elif [ "$auth_type" == "sha256" ]; then
+                    calc_sum="$(sha256sum $filename | cut -f1 -d' ')"
+                elif [ "$auth_type" == "sha1" ]; then
+                    calc_sum="$(sha1sum $filename | cut -f1 -d' ')"
+                fi
+                echo "${auth_type}sum($filename) = '$calc_sum'"
+                if [ "$calc_sum" != "$auth_sum" ]; then
+                    # remove downloaded file to re-download on next run
+                    rm -f $filename
+                    echo "${auth_type}sum's mismatching, removed erronous download. Please run script again."
+                    exit 1
+                fi
+            fi
+        fi
+
+        # extract
+        if [ ! -f "$workdir"/.${filename}_extracted ]; then
+            case "$filename" in
+                *.tar.gz|*.tar.bz|*.tar.bz2|*.tar.xz|*.tar.lz|.tbz*|*.txz|*.tgz)
+                    run_nocd tar xf "$filename"
+                    run touch .${filename}_extracted
+                    ;;
+                *.gz)
+                    run_nocd gunzip "$filename"
+                    run touch .${filename}_extracted
+                    ;;
+                *.zip)
+                    run_nocd bsdtar xf "$filename" || run_nocd unzip -qo "$filename"
+                    run touch .${filename}_extracted
+                    ;;
+                *.asc)
+                    run_nocd gpg --import "$filename" || true
+                    ;;
+                *)
+                    echo "Note: no case for file $filename."
+                    ;;
+            esac
+        fi
     done
+
+    # check signature
+    if [ "$auth_type" == "sig" ]; then
+        if $(gpg --verify $auth_opts); then
+            echo "- Signature check OK."
+        else
+            echo "- Signature check NOT OK"
+            for f in $files; do
+                rm -f $f
+            done
+            rm -rf "$workdir"
+            echo "  Signature mismatching, removed erronous download. Please run script again."
+            exit 1
+        fi
+    fi
+
+    post_fetch
+}
+
+func_defined patch_internal || patch_internal() {
+    # patch if it was not yet patched (applying patches multiple times doesn't work!)
     if [ -d patches ]; then
-        for f in patches/*; do
-            run patch -p"$patchlevel" < "$f"
+        for filepath in patches/*; do
+            filename=$(basename $filepath)
+            if [ ! -f "$workdir"/.${filename}_applied ]; then
+                run patch -p"$patchlevel" < "$filepath"
+                run touch .${filename}_applied
+            fi
         done
     fi
 }
@@ -156,6 +232,10 @@ do_fetch() {
     echo "Fetching $port!"
     fetch
 }
+do_patch() {
+    echo "Patching $port!"
+    patch_internal
+}
 do_configure() {
     if [ "$useconfigure" = "true" ]; then
         echo "Configuring $port!"
@@ -192,6 +272,7 @@ do_uninstall() {
 }
 do_all() {
     do_fetch
+    do_patch
     do_configure
     do_build
     do_install "${1:-}"
@@ -201,14 +282,14 @@ if [ -z "${1:-}" ]; then
     do_all
 else
     case "$1" in
-        fetch|configure|build|install|clean|clean_dist|clean_all|uninstall)
+        fetch|patch|configure|build|install|clean|clean_dist|clean_all|uninstall)
             do_$1
             ;;
         --auto)
             do_all $1
             ;;
         *)
-            >&2 echo "I don't understand $1! Supported arguments: fetch, configure, build, install, clean, clean_dist, clean_all, uninstall."
+            >&2 echo "I don't understand $1! Supported arguments: fetch, patch, configure, build, install, clean, clean_dist, clean_all, uninstall."
             exit 1
             ;;
     esac
