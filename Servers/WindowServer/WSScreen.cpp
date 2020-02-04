@@ -105,10 +105,18 @@ void WSScreen::set_buffer(int index)
 void WSScreen::on_receive_mouse_data(const MousePacket& packet)
 {
     auto prev_location = m_cursor_location;
-    if (packet.is_relative)
+    if (packet.is_relative) {
         m_cursor_location.move_by(packet.x, packet.y);
-    else
+#ifdef WSSCREEN_DEBUG
+        dbgprintf("WSScreen: New Relative mouse point @ X %d, Y %d\n", m_cursor_location.x(), m_cursor_location.y());
+#endif
+    } else {
         m_cursor_location = { packet.x * m_width / 0xffff, packet.y * m_height / 0xffff };
+#ifdef WSSCREEN_DEBUG
+        dbgprintf("WSScreen: New Absolute mouse point @ X %d, Y %d\n", m_cursor_location.x(), m_cursor_location.y());
+#endif
+    }
+
     m_cursor_location.constrain(rect());
 
     unsigned buttons = packet.buttons;

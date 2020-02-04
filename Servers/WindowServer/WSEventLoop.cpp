@@ -98,8 +98,12 @@ void WSEventLoop::drain_mouse()
         if (nread == 0)
             break;
         ASSERT(nread == sizeof(packet));
+#ifdef WSMESSAGELOOP_DEBUG
+        dbgprintf("WSEventLoop: Mouse X %d, Y %d, Z %d, relative %d\n", packet.x, packet.y, packet.z, packet.is_relative);
+#endif
         buttons = packet.buttons;
 
+        state.is_relative = packet.is_relative;
         if (packet.is_relative) {
             state.x += packet.x;
             state.y -= packet.y;
@@ -112,13 +116,20 @@ void WSEventLoop::drain_mouse()
 
         if (buttons != state.buttons) {
             state.buttons = buttons;
+#ifdef WSMESSAGELOOP_DEBUG
+            dbgprintf("WSEventLoop: Mouse Button Event\n");
+#endif
             screen.on_receive_mouse_data(state);
-            state.x = 0;
-            state.y = 0;
-            state.z = 0;
+            if (state.is_relative) {
+                state.x = 0;
+                state.y = 0;
+                state.z = 0;
+            }
         }
     }
     if (state.is_relative && (state.x || state.y || state.z))
+        screen.on_receive_mouse_data(state);
+    if (!state.is_relative)
         screen.on_receive_mouse_data(state);
 }
 
