@@ -71,7 +71,7 @@ KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWid
     m_octave_knob = GUI::Slider::construct(Orientation::Vertical, m_knobs_container);
     m_octave_knob->set_tooltip("Z: octave down, X: octave up");
     m_octave_knob->set_range(octave_min - 1, octave_max - 1);
-    m_octave_knob->set_value(m_audio_engine.octave() - 1);
+    m_octave_knob->set_value((octave_max - 1) - (m_audio_engine.octave() - 1));
     m_octave_knob->on_value_changed = [this](int value) {
         int new_octave = octave_max - value;
         if (m_change_octave)
@@ -94,7 +94,7 @@ KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWid
     constexpr int max_decay = 20;
     m_decay_knob = GUI::Slider::construct(Orientation::Vertical, m_knobs_container);
     m_decay_knob->set_range(0, max_decay);
-    m_decay_knob->set_value(max_decay);
+    m_decay_knob->set_value(max_decay - m_audio_engine.decay());
     m_decay_knob->on_value_changed = [this](int value) {
         int new_decay = max_decay - value;
         m_audio_engine.set_decay(new_decay);
@@ -105,7 +105,7 @@ KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWid
     constexpr int max_delay = 8;
     m_delay_knob = GUI::Slider::construct(Orientation::Vertical, m_knobs_container);
     m_delay_knob->set_range(0, max_delay);
-    m_delay_knob->set_value(max_delay);
+    m_delay_knob->set_value(max_delay - (m_audio_engine.delay() / m_audio_engine.tick()));
     m_delay_knob->on_value_changed = [this](int value) {
         int new_delay = m_audio_engine.tick() * (max_delay - value);
         m_audio_engine.set_delay(new_delay);
