@@ -54,18 +54,21 @@ private:
     RefPtr<GUI::Label> m_octave_label;
     RefPtr<GUI::Label> m_wave_label;
     RefPtr<GUI::Label> m_decay_label;
+    RefPtr<GUI::Label> m_sustain_label;
     RefPtr<GUI::Label> m_delay_label;
 
     RefPtr<GUI::Widget> m_values_container;
     RefPtr<GUI::Label> m_octave_value;
     RefPtr<GUI::Label> m_wave_value;
     RefPtr<GUI::Label> m_decay_value;
+    RefPtr<GUI::Label> m_sustain_value;
     RefPtr<GUI::Label> m_delay_value;
 
     RefPtr<GUI::Widget> m_knobs_container;
     RefPtr<GUI::Slider> m_octave_knob;
     RefPtr<GUI::Slider> m_wave_knob;
     RefPtr<GUI::Slider> m_decay_knob;
+    RefPtr<GUI::Slider> m_sustain_knob;
     RefPtr<GUI::Slider> m_delay_knob;
 
     bool m_change_octave { true };

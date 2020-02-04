@@ -51,6 +51,7 @@ KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWid
     m_octave_label = GUI::Label::construct("Octave", m_labels_container);
     m_wave_label = GUI::Label::construct("Wave", m_labels_container);
     m_decay_label = GUI::Label::construct("Decay", m_labels_container);
+    m_sustain_label = GUI::Label::construct("Sustain", m_labels_container);
     m_delay_label = GUI::Label::construct("Delay", m_labels_container);
 
     m_values_container = GUI::Widget::construct(this);
@@ -61,6 +62,7 @@ KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWid
     m_octave_value = GUI::Label::construct(String::number(m_audio_engine.octave()), m_values_container);
     m_wave_value = GUI::Label::construct(wave_strings[m_audio_engine.wave()], m_values_container);
     m_decay_value = GUI::Label::construct(String::number(m_audio_engine.decay()), m_values_container);
+    m_sustain_value = GUI::Label::construct(String::number(m_audio_engine.sustain()), m_values_container);
     m_delay_value = GUI::Label::construct(String::number(m_audio_engine.delay() / m_audio_engine.tick()), m_values_container);
 
     m_knobs_container = GUI::Widget::construct(this);
@@ -100,6 +102,17 @@ KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWid
         m_audio_engine.set_decay(new_decay);
         ASSERT(new_decay == m_audio_engine.decay());
         m_decay_value->set_text(String::number(new_decay));
+    };
+
+    constexpr int max_sustain = 1000;
+    m_sustain_knob = GUI::Slider::construct(Orientation::Vertical, m_knobs_container);
+    m_sustain_knob->set_range(0, max_sustain);
+    m_sustain_knob->set_value(max_sustain - m_audio_engine.sustain());
+    m_sustain_knob->on_value_changed = [this](int value) {
+        int new_sustain = max_sustain - value;
+        m_audio_engine.set_sustain(new_sustain);
+        ASSERT(new_sustain == m_audio_engine.sustain());
+        m_sustain_value->set_text(String::number(new_sustain));
     };
 
     constexpr int max_delay = 8;
