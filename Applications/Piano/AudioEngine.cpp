@@ -153,13 +153,12 @@ void AudioEngine::set_note(int note, Switch switch_note)
     if (switch_note == On) {
         if (m_note_on[note] == 0) {
             m_pos[note] = 0;
-            m_power[note] = 0;
+            m_power[note] = 1;
         }
-        ++m_power[note];
         ++m_note_on[note];
     } else {
         if (m_note_on[note] >= 1) {
-            if (--m_power[note] < 0)
+            if (m_note_on[note] == 1)
                 m_power[note] = 0;
             --m_note_on[note];
         }
