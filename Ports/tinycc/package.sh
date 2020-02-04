@@ -2,7 +2,6 @@
 port=tinycc
 workdir=tinycc-dev
 version=dev
-curlopts="-L"
 files="https://github.com/TinyCC/tinycc/archive/dev.tar.gz tinycc-dev.tar.gz"
 useconfigure=true
 makeopts=tcc
