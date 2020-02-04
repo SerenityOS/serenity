@@ -32,6 +32,8 @@
 
 __BEGIN_DECLS
 
+#define PWDB_STR_MAX_LEN 255
+
 struct passwd {
     char* pw_name;
     char* pw_passwd;

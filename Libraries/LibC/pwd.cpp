@@ -33,8 +33,6 @@
 
 extern "C" {
 
-#define PWDB_STR_MAX_LEN 256
-
 struct passwd_with_strings : public passwd {
     char name_buffer[PWDB_STR_MAX_LEN];
     char passwd_buffer[PWDB_STR_MAX_LEN];
