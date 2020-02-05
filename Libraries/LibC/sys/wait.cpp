@@ -35,10 +35,10 @@ pid_t wait(int* wstatus)
 {
     return waitpid(-1, wstatus, 0);
 }
-}
 
 pid_t waitpid(pid_t waitee, int* wstatus, int options)
 {
     int rc = syscall(SC_waitpid, waitee, wstatus, options);
     __RETURN_WITH_ERRNO(rc, rc, -1);
+}
 }
