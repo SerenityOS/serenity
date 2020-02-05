@@ -73,10 +73,12 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    bool is_password_valid = check_user_password(pwd);
-    if (not is_password_valid) {
-        fprintf(stderr, "Incorrect password.\n");
-        return 1;
+    if (getuid() != 0 and getgid() != 0) {
+        bool is_password_valid = check_user_password(pwd);
+        if (not is_password_valid) {
+            fprintf(stderr, "Incorrect password.\n");
+            return 1;
+        }
     }
 
     Vector<gid_t> extra_gids;
