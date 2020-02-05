@@ -100,4 +100,8 @@ typedef struct {
 } ldiv_t;
 ldiv_t ldiv(long, long);
 
+int posix_openpt(int flags);
+int grantpt(int fd);
+int unlockpt(int fd);
+
 __END_DECLS
