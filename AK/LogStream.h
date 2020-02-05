@@ -86,11 +86,11 @@ inline const LogStream& operator<<(const LogStream& stream, const char* value)
 
 const LogStream& operator<<(const LogStream&, const String&);
 const LogStream& operator<<(const LogStream&, const StringView&);
-const LogStream& operator<<(const LogStream&, i32);
-const LogStream& operator<<(const LogStream&, u32);
-const LogStream& operator<<(const LogStream&, i64);
-const LogStream& operator<<(const LogStream&, u64);
+const LogStream& operator<<(const LogStream&, int);
+const LogStream& operator<<(const LogStream&, unsigned);
+const LogStream& operator<<(const LogStream&, long long);
 const LogStream& operator<<(const LogStream&, unsigned long);
+const LogStream& operator<<(const LogStream&, unsigned long long);
 
 const LogStream& operator<<(const LogStream&, const void*);
 
