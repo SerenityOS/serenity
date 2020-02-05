@@ -44,6 +44,12 @@ __BEGIN_DECLS
 #define WEXITED 4
 #define WCONTINUED 8
 
+typedef enum {
+    P_ALL = 1,
+    P_PID,
+    P_PGID
+} idtype_t;
+
 pid_t waitpid(pid_t, int* wstatus, int options);
 pid_t wait(int* wstatus);
 
