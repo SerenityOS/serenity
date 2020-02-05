@@ -28,7 +28,7 @@
 #include <LibProtocol/Client.h>
 #include <LibProtocol/Download.h>
 
-namespace LibProtocol {
+namespace Protocol {
 
 Download::Download(Client& client, i32 download_id)
     : m_client(client.make_weak_ptr())

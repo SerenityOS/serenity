@@ -28,7 +28,7 @@
 #include <LibProtocol/Client.h>
 #include <LibProtocol/Download.h>
 
-namespace LibProtocol {
+namespace Protocol {
 
 Client::Client()
     : IServerConnection(*this, "/tmp/portal/protocol")
