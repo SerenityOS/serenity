@@ -310,16 +310,16 @@ int main(int argc, char** argv)
                 dbg() << "        " << parameter.type << " " << parameter.name << " = " << initial_value << ";";
 
                 if (parameter.type == "String") {
-                    dbg() << "        u32 " << parameter.name << "_length = 0;";
+                    dbg() << "        i32 " << parameter.name << "_length = 0;";
                     dbg() << "        stream >> " << parameter.name << "_length;";
                     dbg() << "        if (" << parameter.name << "_length == 0) {";
                     dbg() << "            " << parameter.name << " = String::empty();";
-                    dbg() << "        } else if ((i32)" << parameter.name << "_length == -1) {";
+                    dbg() << "        } else if (" << parameter.name << "_length < 0) {";
                     dbg() << "            " << parameter.name << " = String();";
                     dbg() << "        } else {";
                     dbg() << "            char* " << parameter.name << "_buffer = nullptr;";
-                    dbg() << "            auto " << parameter.name << "_impl = StringImpl::create_uninitialized(" << parameter.name << "_length, " << parameter.name << "_buffer);";
-                    dbg() << "            for (size_t i = 0; i < " << parameter.name << "_length; ++i) {";
+                    dbg() << "            auto " << parameter.name << "_impl = StringImpl::create_uninitialized(static_cast<size_t>(" << parameter.name << "_length), " << parameter.name << "_buffer);";
+                    dbg() << "            for (size_t i = 0; i < static_cast<size_t>(" << parameter.name << "_length); ++i) {";
                     dbg() << "                stream >> " << parameter.name << "_buffer[i];";
                     dbg() << "            }";
                     dbg() << "            " << parameter.name << " = *" << parameter.name << "_impl;";
@@ -397,7 +397,7 @@ int main(int argc, char** argv)
                     dbg() << "        if (m_" << parameter.name << ".is_null()) {";
                     dbg() << "            stream << (i32)-1;";
                     dbg() << "        } else {";
-                    dbg() << "            stream << m_" << parameter.name << ".length();";
+                    dbg() << "            stream << static_cast<i32>(m_" << parameter.name << ".length());";
                     dbg() << "            stream << m_" << parameter.name << ";";
                     dbg() << "        }";
                 } else if (parameter.type == "Color") {
