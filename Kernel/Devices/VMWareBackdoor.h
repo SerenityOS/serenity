@@ -69,6 +69,8 @@ public:
     void send(VMWareCommand& command);
 
 private:
+    void send_highbandwidth(VMWareCommand& command);
+    void get_highbandwidth(VMWareCommand& command);
     VMWareBackdoor();
     bool detect_presence();
     bool detect_vmmouse();

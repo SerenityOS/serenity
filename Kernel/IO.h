@@ -99,6 +99,20 @@ inline void vmware_out(VMWareCommand& command)
                  : "+a"(command.ax), "+b"(command.bx), "+c"(command.cx), "+d"(command.dx), "+S"(command.si), "+D"(command.di));
 }
 
+inline void vmware_highbandwidth_send(VMWareCommand& command) {
+
+    command.magic = VMWARE_MAGIC;
+    command.port = VMWARE_PORT_HIGHBANDWIDTH;
+
+	asm volatile("cld; rep; outsb" : "+a"(command.ax), "+b"(command.bx), "+c"(command.cx), "+d"(command.dx), "+S"(command.si), "+D"(command.di));
+}
+
+inline void  vmware_highbandwidth_get(VMWareCommand& command) {
+    command.magic = VMWARE_MAGIC;
+    command.port = VMWARE_PORT_HIGHBANDWIDTH;
+	asm volatile("cld; rep; insb" : "+a"(command.ax), "+b"(command.bx), "+c"(command.cx), "+d"(command.dx), "+S"(command.si), "+D"(command.di));
+}
+
 inline void delay()
 {
     // ~3 microsecs
