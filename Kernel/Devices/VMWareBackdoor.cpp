@@ -142,6 +142,18 @@ void VMWareBackdoor::disable_absolute_vmmouse()
     m_vmmouse_absolute = false;
 }
 
+void VMWareBackdoor::send_highbandwidth(VMWareCommand& command)
+{
+    if (supported())
+        IO::vmware_highbandwidth_send(command);
+}
+
+void VMWareBackdoor::get_highbandwidth(VMWareCommand& command)
+{
+    if (supported())
+        IO::vmware_highbandwidth_get(command);
+}
+
 void VMWareBackdoor::send(VMWareCommand& command)
 {
     if (supported())
