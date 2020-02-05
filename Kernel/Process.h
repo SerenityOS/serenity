@@ -201,7 +201,7 @@ public:
     int sys$kill(pid_t pid, int sig);
     [[noreturn]] void sys$exit(int status);
     int sys$sigreturn(RegisterDump& registers);
-    pid_t sys$waitpid(pid_t, int* wstatus, int options);
+    pid_t sys$waitid(const Syscall::SC_waitid_params*);
     void* sys$mmap(const Syscall::SC_mmap_params*);
     int sys$munmap(void*, size_t size);
     int sys$set_mmap_name(const Syscall::SC_set_mmap_name_params*);
@@ -310,7 +310,7 @@ public:
     static void initialize();
 
     [[noreturn]] void crash(int signal, u32 eip);
-    [[nodiscard]] static int reap(Process&);
+    [[nodiscard]] static siginfo_t reap(Process&);
 
     const TTY* tty() const { return m_tty; }
     void set_tty(TTY* tty) { m_tty = tty; }
@@ -429,6 +429,8 @@ private:
 
     KResult do_kill(Process&, int signal);
     KResult do_killpg(pid_t pgrp, int signal);
+
+    KResultOr<siginfo_t> do_waitid(idtype_t idtype, int id, int options);
 
     KResultOr<String> get_syscall_path_argument(const char* user_path, size_t path_length) const;
     KResultOr<String> get_syscall_path_argument(const Syscall::StringArgument&) const;

@@ -36,6 +36,7 @@ extern "C" {
 struct timeval;
 struct timespec;
 struct sockaddr;
+struct siginfo;
 typedef u32 socklen_t;
 }
 
@@ -51,7 +52,7 @@ typedef u32 socklen_t;
     __ENUMERATE_SYSCALL(exit)                       \
     __ENUMERATE_SYSCALL(getgid)                     \
     __ENUMERATE_SYSCALL(getpid)                     \
-    __ENUMERATE_SYSCALL(waitpid)                    \
+    __ENUMERATE_SYSCALL(waitid)                     \
     __ENUMERATE_SYSCALL(mmap)                       \
     __ENUMERATE_SYSCALL(munmap)                     \
     __ENUMERATE_SYSCALL(get_dir_entries)            \
@@ -402,6 +403,13 @@ struct SC_pledge_params {
 struct SC_unveil_params {
     StringArgument path;
     StringArgument permissions;
+};
+
+struct SC_waitid_params {
+    int idtype;
+    int id;
+    struct siginfo* infop;
+    int options;
 };
 
 void initialize();

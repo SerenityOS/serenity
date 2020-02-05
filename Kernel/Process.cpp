@@ -2266,12 +2266,23 @@ mode_t Process::sys$umask(mode_t mask)
     return old_mask;
 }
 
-int Process::reap(Process& process)
+siginfo_t Process::reap(Process& process)
 {
-    int exit_status;
+    siginfo_t siginfo;
+    siginfo.si_signo = SIGCHLD;
+    siginfo.si_pid = process.pid();
+    siginfo.si_uid = process.uid();
+
+    if (process.m_termination_signal) {
+        siginfo.si_status = process.m_termination_signal;
+        siginfo.si_code = CLD_KILLED;
+    } else {
+        siginfo.si_status = process.m_termination_status;
+        siginfo.si_code = CLD_EXITED;
+    }
+
     {
         InterruptDisabler disabler;
-        exit_status = (process.m_termination_status << 8) | process.m_termination_signal;
 
         if (process.ppid()) {
             auto* parent = Process::from_pid(process.ppid());
@@ -2288,85 +2299,102 @@ int Process::reap(Process& process)
         g_processes->remove(&process);
     }
     delete &process;
-    return exit_status;
+    return siginfo;
 }
 
-pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
+KResultOr<siginfo_t> Process::do_waitid(idtype_t idtype, int id, int options)
 {
-    REQUIRE_PROMISE(stdio);
-
-#ifdef PROCESS_DEBUG
-    dbg() << "sys$waitpid(" << waitee << ", " << wstatus << ", " << options << ")";
-#endif
-
-    if (!options) {
-        // FIXME: This can't be right.. can it? Figure out how this should actually work.
-        options = WEXITED;
-    }
-
-    if (wstatus && !validate_write_typed(wstatus))
-        return -EFAULT;
-
-    int exit_status = 0;
-
-    {
+    if (idtype == P_PID) {
         InterruptDisabler disabler;
-        if (waitee != -1 && !Process::from_pid(waitee))
-            return -ECHILD;
+        if (idtype == P_PID && !Process::from_pid(id))
+            return KResult(-ECHILD);
     }
 
     if (options & WNOHANG) {
         // FIXME: Figure out what WNOHANG should do with stopped children.
-        if (waitee == -1) {
-            pid_t reaped_pid = 0;
+        if (idtype == P_ALL) {
             InterruptDisabler disabler;
-            for_each_child([&reaped_pid, &exit_status](Process& process) {
-                if (process.is_dead()) {
-                    reaped_pid = process.pid();
-                    exit_status = reap(process);
-                }
+            siginfo_t siginfo;
+            for_each_child([&siginfo](Process& process) {
+                if (process.is_dead())
+                    siginfo = reap(process);
                 return IterationDecision::Continue;
             });
-            return reaped_pid;
-        } else {
-            ASSERT(waitee > 0); // FIXME: Implement other PID specs.
+            return siginfo;
+        } else if (idtype == P_PID) {
             InterruptDisabler disabler;
-            auto* waitee_process = Process::from_pid(waitee);
+            auto* waitee_process = Process::from_pid(id);
             if (!waitee_process)
-                return -ECHILD;
-            if (waitee_process->is_dead()) {
-                exit_status = reap(*waitee_process);
-                return waitee;
-            }
-            return 0;
+                return KResult(-ECHILD);
+            if (waitee_process->is_dead())
+                return reap(*waitee_process);
+        } else {
+            // FIXME: Implement other PID specs.
+            return KResult(-EINVAL);
         }
     }
 
-    pid_t waitee_pid = waitee;
+    pid_t waitee_pid;
+
+    // FIXME: WaitBlocker should support idtype/id specs directly.
+    if (idtype == P_ALL) {
+        waitee_pid = -1;
+    } else if (idtype == P_PID) {
+        waitee_pid = id;
+    } else {
+        // FIXME: Implement other PID specs.
+        return KResult(-EINVAL);
+    }
+
     if (current->block<Thread::WaitBlocker>(options, waitee_pid) != Thread::BlockResult::WokeNormally)
-        return -EINTR;
+        return KResult(-EINTR);
 
     InterruptDisabler disabler;
 
     // NOTE: If waitee was -1, m_waitee_pid will have been filled in by the scheduler.
     Process* waitee_process = Process::from_pid(waitee_pid);
     if (!waitee_process)
-        return -ECHILD;
+        return KResult(-ECHILD);
 
     ASSERT(waitee_process);
     if (waitee_process->is_dead()) {
-        exit_status = reap(*waitee_process);
+        return reap(*waitee_process);
     } else {
         auto* waitee_thread = Thread::from_tid(waitee_pid);
         if (!waitee_thread)
-            return -ECHILD;
+            return KResult(-ECHILD);
         ASSERT(waitee_thread->state() == Thread::State::Stopped);
-        exit_status = (waitee_thread->m_stop_signal << 8) | 0x7f;
+        siginfo_t siginfo;
+        siginfo.si_signo = SIGCHLD;
+        siginfo.si_pid = waitee_process->pid();
+        siginfo.si_uid = waitee_process->uid();
+        siginfo.si_status = CLD_STOPPED;
+        siginfo.si_code = waitee_thread->m_stop_signal;
+        return siginfo;
     }
+}
 
-    if (wstatus)
-        copy_to_user(wstatus, &exit_status);
-    return waitee_pid;
+pid_t Process::sys$waitid(const Syscall::SC_waitid_params* user_params)
+{
+    REQUIRE_PROMISE(stdio);
+
+    Syscall::SC_waitid_params params;
+    if (!validate_read_and_copy_typed(&params, user_params))
+        return -EFAULT;
+
+    if (!validate_write_typed(params.infop))
+        return -EFAULT;
+
+    //#ifdef PROCESS_DEBUG
+    dbg() << "sys$waitid(" << params.idtype << ", " << params.id << ", " << params.infop << ", " << params.options << ")";
+    //#endif
+
+    auto siginfo_or_error = do_waitid(static_cast<idtype_t>(params.idtype), params.id, params.options);
+    if (siginfo_or_error.is_error())
+        return siginfo_or_error.error();
+
+    copy_to_user(params.infop, &siginfo_or_error.value());
+    return 0;
 }
 
 bool Process::validate_read_from_kernel(VirtualAddress vaddr, size_t size) const
