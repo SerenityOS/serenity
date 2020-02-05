@@ -35,8 +35,22 @@ typedef void (*__sighandler_t)(int);
 typedef __sighandler_t sighandler_t;
 
 typedef uint32_t sigset_t;
-typedef void siginfo_t;
 typedef uint32_t sig_atomic_t;
+
+union sigval {
+    int sival_int;
+    void* sival_ptr;
+};
+
+typedef struct siginfo {
+    int si_signo;
+    int si_code;
+    pid_t si_pid;
+    uid_t si_uid;
+    void* si_addr;
+    int si_status;
+    union sigval si_value;
+} siginfo_t;
 
 struct sigaction {
     union {
@@ -81,5 +95,12 @@ extern const char* sys_siglist[NSIG];
 #define SIG_BLOCK 0
 #define SIG_UNBLOCK 1
 #define SIG_SETMASK 2
+
+#define CLD_EXITED 0
+#define CLD_KILLED 1
+#define CLD_DUMPED 2
+#define CLD_TRAPPED 3
+#define CLD_STOPPED 4
+#define CLD_CONTINUED 5
 
 __END_DECLS
