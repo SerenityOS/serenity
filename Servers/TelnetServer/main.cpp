@@ -143,9 +143,19 @@ int main(int argc, char** argv)
             return;
         }
 
-        int ptm_fd = open("/dev/ptmx", O_RDWR);
+        int ptm_fd = posix_openpt(O_RDWR);
         if (ptm_fd < 0) {
-            perror("open(ptmx)");
+            perror("posix_openpt");
+            client_socket->close();
+            return;
+        }
+        if (grantpt(ptm_fd) < 0) {
+            perror("grantpt");
+            client_socket->close();
+            return;
+        }
+        if (unlockpt(ptm_fd) < 0) {
+            perror("unlockpt");
             client_socket->close();
             return;
         }

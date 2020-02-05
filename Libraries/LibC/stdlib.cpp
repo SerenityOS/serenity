@@ -746,4 +746,26 @@ char* realpath(const char* pathname, char* buffer)
     errno = 0;
     return buffer;
 }
+
+int posix_openpt(int flags)
+{
+    if (flags & ~(O_RDWR | O_NOCTTY | O_CLOEXEC)) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    return open("/dev/ptmx", flags);
+}
+
+int grantpt(int fd)
+{
+    (void)fd;
+    return 0;
+}
+
+int unlockpt(int fd)
+{
+    (void)fd;
+    return 0;
+}
 }

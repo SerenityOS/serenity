@@ -52,9 +52,17 @@ void TerminalWrapper::run_command(const String& command)
         return;
     }
 
-    int ptm_fd = open("/dev/ptmx", O_RDWR | O_CLOEXEC);
+    int ptm_fd = posix_openpt(O_RDWR | O_CLOEXEC);
     if (ptm_fd < 0) {
-        perror("open(ptmx)");
+        perror("posix_openpt");
+        ASSERT_NOT_REACHED();
+    }
+    if (grantpt(ptm_fd) < 0) {
+        perror("grantpt");
+        ASSERT_NOT_REACHED();
+    }
+    if (unlockpt(ptm_fd) < 0) {
+        perror("unlockpt");
         ASSERT_NOT_REACHED();
     }
 
