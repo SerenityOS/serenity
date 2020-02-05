@@ -399,15 +399,24 @@ extern "C" int __cxa_atexit(void (*)(void*), void*, void*)
 
 void setup_acpi()
 {
-    bool complete_acpi_disable = KParams::the().has("noacpi");
-    bool dynamic_acpi_disable = KParams::the().has("noacpi_aml");
-    if (complete_acpi_disable) {
-        ACPIParser::initialize_limited();
-    } else {
-        if (!dynamic_acpi_disable) {
-            ACPIDynamicParser::initialize_without_rsdp();
-        } else {
-            ACPIStaticParser::initialize_without_rsdp();
-        }
+    if (!KParams::the().has("acpi")) {
+        ACPIDynamicParser::initialize_without_rsdp();
+        return;
     }
+
+    auto acpi = KParams::the().get("acpi");
+    if (acpi == "off") {
+        ACPIParser::initialize_limited();
+        return;
+    }
+    if (acpi == "on") {
+        ACPIDynamicParser::initialize_without_rsdp();
+        return;
+    }
+    if (acpi == "limited") {
+        ACPIStaticParser::initialize_without_rsdp();
+        return;
+    }
+    kprintf("acpi boot argmuent has an invalid value.\n");
+    hang();
 }
