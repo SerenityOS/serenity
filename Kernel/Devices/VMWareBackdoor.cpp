@@ -38,7 +38,40 @@
 #define VMMOUSE_REQUEST_ABSOLUTE 0x53424152
 
 #define VMMOUSE_QEMU_VERSION 0x3442554a
+
+#define VMWARE_MAGIC 0x564D5868
+#define VMWARE_PORT 0x5658
+#define VMWARE_PORT_HIGHBANDWIDTH 0x5659
+
 //#define VMWAREBACKDOOR_DEBUG
+
+inline void vmware_out(VMWareCommand& command)
+{
+    command.magic = VMWARE_MAGIC;
+    command.port = VMWARE_PORT;
+    command.si = 0;
+    command.di = 0;
+    asm volatile("in %%dx, %0"
+                 : "+a"(command.ax), "+b"(command.bx), "+c"(command.cx), "+d"(command.dx), "+S"(command.si), "+D"(command.di));
+}
+
+inline void vmware_high_bandwidth_send(VMWareCommand& command)
+{
+
+    command.magic = VMWARE_MAGIC;
+    command.port = VMWARE_PORT_HIGHBANDWIDTH;
+
+    asm volatile("cld; rep; outsb"
+                 : "+a"(command.ax), "+b"(command.bx), "+c"(command.cx), "+d"(command.dx), "+S"(command.si), "+D"(command.di));
+}
+
+inline void vmware_high_bandwidth_get(VMWareCommand& command)
+{
+    command.magic = VMWARE_MAGIC;
+    command.port = VMWARE_PORT_HIGHBANDWIDTH;
+    asm volatile("cld; rep; insb"
+                 : "+a"(command.ax), "+b"(command.bx), "+c"(command.cx), "+d"(command.dx), "+S"(command.si), "+D"(command.di));
+}
 
 static VMWareBackdoor* s_vmware_backdoor;
 
@@ -74,7 +107,7 @@ bool VMWareBackdoor::detect_presence()
     VMWareCommand command;
     command.bx = ~VMWARE_MAGIC;
     command.command = VMWARE_CMD_GETVERSION;
-    IO::vmware_out(command);
+    vmware_out(command);
     if (command.bx != VMWARE_MAGIC || command.ax == 0xFFFFFFFF)
         return false;
     return true;
@@ -140,20 +173,20 @@ void VMWareBackdoor::disable_absolute_vmmouse()
     m_vmmouse_absolute = false;
 }
 
-void VMWareBackdoor::send_highbandwidth(VMWareCommand& command)
+void VMWareBackdoor::send_high_bandwidth(VMWareCommand& command)
 {
     if (supported()) {
-        IO::vmware_highbandwidth_send(command);
+        vmware_high_bandwidth_send(command);
 #ifdef VMWAREBACKDOOR_DEBUG
         dbg() << "VMWareBackdoor Command High bandwidth Send Results: EAX " << String::format("%x", command.ax) << " EBX " << String::format("%x", command.bx) << " ECX " << String::format("%x", command.cx) << " EDX " << String::format("%x", command.dx);
 #endif
     }
 }
 
-void VMWareBackdoor::get_highbandwidth(VMWareCommand& command)
+void VMWareBackdoor::get_high_bandwidth(VMWareCommand& command)
 {
     if (supported()) {
-        IO::vmware_highbandwidth_get(command);
+        vmware_high_bandwidth_get(command);
 #ifdef VMWAREBACKDOOR_DEBUG
         dbg() << "VMWareBackdoor Command High bandwidth Get Results: EAX " << String::format("%x", command.ax) << " EBX " << String::format("%x", command.bx) << " ECX " << String::format("%x", command.cx) << " EDX " << String::format("%x", command.dx);
 #endif
@@ -163,7 +196,7 @@ void VMWareBackdoor::get_highbandwidth(VMWareCommand& command)
 void VMWareBackdoor::send(VMWareCommand& command)
 {
     if (supported()) {
-        IO::vmware_out(command);
+        vmware_out(command);
 #ifdef VMWAREBACKDOOR_DEBUG
         dbg() << "VMWareBackdoor Command Send Results: EAX " << String::format("%x", command.ax) << " EBX " << String::format("%x", command.bx) << " ECX " << String::format("%x", command.cx) << " EDX " << String::format("%x", command.dx);
 #endif
