@@ -47,17 +47,17 @@ const LogStream& operator<<(const LogStream& stream, const StringView& value)
     return stream;
 }
 
-const LogStream& operator<<(const LogStream& stream, i32 value)
+const LogStream& operator<<(const LogStream& stream, int value)
 {
     return stream << String::number(value);
 }
 
-const LogStream& operator<<(const LogStream& stream, u32 value)
+const LogStream& operator<<(const LogStream& stream, unsigned value)
 {
     return stream << String::number(value);
 }
 
-const LogStream& operator<<(const LogStream& stream, u64 value)
+const LogStream& operator<<(const LogStream& stream, unsigned long long value)
 {
     return stream << String::number(value);
 }
