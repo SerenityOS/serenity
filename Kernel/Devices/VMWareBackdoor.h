@@ -28,10 +28,6 @@
 
 #include <AK/Types.h>
 
-#define VMWARE_MAGIC 0x564D5868
-#define VMWARE_PORT 0x5658
-#define VMWARE_PORT_HIGHBANDWIDTH 0x5659
-
 #define VMMOUSE_GETVERSION 10
 #define VMMOUSE_DATA 39
 #define VMMOUSE_STATUS 40
@@ -69,8 +65,8 @@ public:
     void send(VMWareCommand& command);
 
 private:
-    void send_highbandwidth(VMWareCommand& command);
-    void get_highbandwidth(VMWareCommand& command);
+    void send_high_bandwidth(VMWareCommand& command);
+    void get_high_bandwidth(VMWareCommand& command);
     VMWareBackdoor();
     bool detect_presence();
     bool detect_vmmouse();
