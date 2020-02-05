@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <signal.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
@@ -35,7 +36,7 @@ __BEGIN_DECLS
 #define WSTOPSIG(status) WEXITSTATUS(status)
 #define WTERMSIG(status) ((status)&0x7f)
 #define WIFEXITED(status) (WTERMSIG(status) == 0)
-#define WIFSTOPPED(status) (((status) & 0xff) == 0x7f)
+#define WIFSTOPPED(status) (((status)&0xff) == 0x7f)
 #define WIFSIGNALED(status) (((char)(((status)&0x7f) + 1) >> 1) > 0)
 
 #define WNOHANG 1
@@ -52,5 +53,6 @@ typedef enum {
 
 pid_t waitpid(pid_t, int* wstatus, int options);
 pid_t wait(int* wstatus);
+int waitid(idtype_t idtype, id_t id, siginfo_t* infop, int options);
 
 __END_DECLS

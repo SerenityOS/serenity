@@ -38,7 +38,52 @@ pid_t wait(int* wstatus)
 
 pid_t waitpid(pid_t waitee, int* wstatus, int options)
 {
-    int rc = syscall(SC_waitpid, waitee, wstatus, options);
+    siginfo_t siginfo;
+    idtype_t idtype;
+    id_t id;
+
+    if (waitee < -1) {
+        idtype = P_PGID;
+        id = -waitee;
+    } else if (waitee == -1) {
+        idtype = P_ALL;
+        id = 0;
+    } else if (waitee == 0) {
+        idtype = P_PGID;
+        id = getgid();
+    } else {
+        idtype = P_PID;
+        id = waitee;
+    }
+
+    int rc = waitid(idtype, id, &siginfo, options | WEXITED);
+
+    if (rc < 0)
+        return rc;
+
+    if (wstatus) {
+        switch (siginfo.si_code) {
+        case CLD_EXITED:
+            *wstatus = siginfo.si_status << 8;
+            break;
+        case CLD_KILLED:
+            *wstatus = siginfo.si_status;
+            break;
+        case CLD_STOPPED:
+            *wstatus = siginfo.si_status << 8 | 0x7f;
+            break;
+        default:
+            ASSERT_NOT_REACHED();
+        }
+    }
+
+    return siginfo.si_pid;
+}
+
+int waitid(idtype_t idtype, id_t id, siginfo_t* infop, int options)
+{
+    Syscall::SC_waitid_params params { idtype, id, infop, options };
+    int rc = syscall(SC_waitid, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 }
