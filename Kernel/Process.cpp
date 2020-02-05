@@ -2385,9 +2385,9 @@ pid_t Process::sys$waitid(const Syscall::SC_waitid_params* user_params)
     if (!validate_write_typed(params.infop))
         return -EFAULT;
 
-    //#ifdef PROCESS_DEBUG
+#ifdef PROCESS_DEBUG
     dbg() << "sys$waitid(" << params.idtype << ", " << params.id << ", " << params.infop << ", " << params.options << ")";
-    //#endif
+#endif
 
     auto siginfo_or_error = do_waitid(static_cast<idtype_t>(params.idtype), params.id, params.options);
     if (siginfo_or_error.is_error())
