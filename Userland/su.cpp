@@ -33,14 +33,35 @@
 
 extern "C" int main(int, char**);
 
+ #include <termios.h>
+
+static void set_echo(int fd) {
+    struct termios term;
+    tcgetattr(0, &term);
+    term.c_lflag |= ECHO;
+    tcsetattr(fd, TCSAFLUSH, &term);
+}
+
+static void unset_echo(int fd) {
+    struct termios term;
+    tcgetattr(0, &term);
+    term.c_lflag &= ~ECHO;
+    tcsetattr(fd, TCSAFLUSH, &term);
+}
+
 static bool check_user_password(const struct passwd* pwd) {
     if (strlen(pwd->pw_passwd) == 0) return true;
 
-    // + 1 to be enough space for the newline character
-    char input_password[PWDB_STR_MAX_LEN + 1];
     fprintf(stdout, "Password: ");
     fflush(stdout);
+    unset_echo(0);
+    
+    // + 1 to be enough space for the newline character
+    char input_password[PWDB_STR_MAX_LEN + 1];
     fgets(input_password, PWDB_STR_MAX_LEN, stdin);
+
+    set_echo(1);
+    puts("");
 
     int length = strlen(input_password);
     if (input_password[length - 1] == '\n') {
