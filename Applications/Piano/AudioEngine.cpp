@@ -32,6 +32,7 @@
 AudioEngine::AudioEngine()
 {
     set_sustain_impl(0);
+    set_attack(0);
     set_decay(0);
 }
 
@@ -45,12 +46,26 @@ void AudioEngine::fill_buffer(FixedArray<Sample>& buffer)
 
     for (size_t i = 0; i < buffer.size(); ++i) {
         for (size_t note = 0; note < note_count; ++note) {
-            if (!m_note_on[note])
+            switch (m_envelope[note]) {
+            case Done:
                 continue;
-
-            m_power[note] -= m_decay_step;
-            if (m_power[note] < m_sustain_level)
-                m_power[note] = m_sustain_level;
+            case Attack:
+                m_power[note] += m_attack_step;
+                if (m_power[note] >= 1) {
+                    m_power[note] = 1;
+                    m_envelope[note] = Decay;
+                }
+                break;
+            case Decay:
+                m_power[note] -= m_decay_step;
+                if (m_power[note] < m_sustain_level)
+                    m_power[note] = m_sustain_level;
+                break;
+            case Release:
+                break;
+            default:
+                ASSERT_NOT_REACHED();
+            }
 
             double val = 0;
             switch (m_wave) {
@@ -150,13 +165,15 @@ void AudioEngine::set_note(int note, Switch switch_note)
     if (switch_note == On) {
         if (m_note_on[note] == 0) {
             m_pos[note] = 0;
-            m_power[note] = 1;
+            m_envelope[note] = Attack;
         }
         ++m_note_on[note];
     } else {
         if (m_note_on[note] >= 1) {
-            if (m_note_on[note] == 1)
+            if (m_note_on[note] == 1) {
                 m_power[note] = 0;
+                m_envelope[note] = Done;
+            }
             --m_note_on[note];
         }
     }
@@ -207,6 +224,13 @@ static inline double calculate_step(double distance, int milliseconds)
     double samples = milliseconds * samples_per_millisecond;
     double step = distance / samples;
     return step;
+}
+
+void AudioEngine::set_attack(int attack)
+{
+    ASSERT(attack >= 0);
+    m_attack = attack;
+    m_attack_step = calculate_step(1, m_attack);
 }
 
 void AudioEngine::set_decay(int decay)
