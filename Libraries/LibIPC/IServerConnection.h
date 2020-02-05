@@ -40,10 +40,12 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+namespace IPC {
+
 template<typename LocalEndpoint, typename PeerEndpoint>
-class IServerConnection : public Core::Object {
+class ServerConnection : public Core::Object {
 public:
-    IServerConnection(LocalEndpoint& local_endpoint, const StringView& address)
+    ServerConnection(LocalEndpoint& local_endpoint, const StringView& address)
         : m_local_endpoint(local_endpoint)
         , m_connection(Core::LocalSocket::construct(this))
         , m_notifier(Core::Notifier::construct(m_connection->fd(), Core::Notifier::Read, this))
@@ -116,7 +118,7 @@ public:
         }
     }
 
-    bool post_message(const IMessage& message)
+    bool post_message(const Message& message)
     {
         auto buffer = message.encode();
         int nwritten = write(m_connection->fd(), buffer.data(), (size_t)buffer.size());
@@ -195,7 +197,9 @@ private:
     LocalEndpoint& m_local_endpoint;
     RefPtr<Core::LocalSocket> m_connection;
     RefPtr<Core::Notifier> m_notifier;
-    Vector<OwnPtr<IMessage>> m_unprocessed_messages;
+    Vector<OwnPtr<Message>> m_unprocessed_messages;
     int m_server_pid { -1 };
     int m_my_client_id { -1 };
 };
+
+}

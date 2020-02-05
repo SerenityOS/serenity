@@ -28,17 +28,21 @@
 
 #include <AK/String.h>
 
-typedef Vector<u8, 1024> IMessageBuffer;
+namespace IPC {
 
-class IMessage {
+typedef Vector<u8, 1024> MessageBuffer;
+
+class Message {
 public:
-    virtual ~IMessage();
+    virtual ~Message();
 
     virtual int endpoint_magic() const = 0;
     virtual int message_id() const = 0;
     virtual String message_name() const = 0;
-    virtual IMessageBuffer encode() const = 0;
+    virtual MessageBuffer encode() const = 0;
 
 protected:
-    IMessage();
+    Message();
 };
+
+}

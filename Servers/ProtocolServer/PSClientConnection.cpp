@@ -33,7 +33,7 @@
 static HashMap<int, RefPtr<PSClientConnection>> s_connections;
 
 PSClientConnection::PSClientConnection(Core::LocalSocket& socket, int client_id)
-    : IClientConnection(*this, socket, client_id)
+    : IPC::ClientConnection<ProtocolServerEndpoint>(*this, socket, client_id)
 {
     s_connections.set(client_id, *this);
 }

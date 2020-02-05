@@ -34,7 +34,7 @@ namespace Protocol {
 
 class Download;
 
-class Client : public IServerConnection<ProtocolClientEndpoint, ProtocolServerEndpoint>
+class Client : public IPC::ServerConnection<ProtocolClientEndpoint, ProtocolServerEndpoint>
     , public ProtocolClientEndpoint {
     C_OBJECT(Client)
 public:

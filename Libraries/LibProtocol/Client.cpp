@@ -31,7 +31,7 @@
 namespace Protocol {
 
 Client::Client()
-    : IServerConnection(*this, "/tmp/portal/protocol")
+    : IPC::ServerConnection<ProtocolClientEndpoint, ProtocolServerEndpoint>(*this, "/tmp/portal/protocol")
 {
     handshake();
 }

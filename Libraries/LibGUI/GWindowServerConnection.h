@@ -33,12 +33,12 @@
 namespace GUI {
 
 class WindowServerConnection
-    : public IServerConnection<WindowClientEndpoint, WindowServerEndpoint>
+    : public IPC::ServerConnection<WindowClientEndpoint, WindowServerEndpoint>
     , public WindowClientEndpoint {
     C_OBJECT(WindowServerConnection)
 public:
     WindowServerConnection()
-        : IServerConnection(*this, "/tmp/portal/window")
+        : IPC::ServerConnection<WindowClientEndpoint, WindowServerEndpoint>(*this, "/tmp/portal/window")
     {
         handshake();
     }

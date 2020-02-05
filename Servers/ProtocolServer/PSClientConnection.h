@@ -36,7 +36,7 @@ class SharedBuffer;
 
 class Download;
 
-class PSClientConnection final : public IClientConnection<ProtocolServerEndpoint>
+class PSClientConnection final : public IPC::ClientConnection<ProtocolServerEndpoint>
     , public ProtocolServerEndpoint {
     C_OBJECT(PSClientConnection)
 public:

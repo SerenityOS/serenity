@@ -40,23 +40,25 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-class IEvent : public Core::Event {
+namespace IPC {
+
+class Event : public Core::Event {
 public:
     enum Type {
         Invalid = 2000,
         Disconnected,
     };
-    IEvent() {}
-    explicit IEvent(Type type)
+    Event() {}
+    explicit Event(Type type)
         : Core::Event(type)
     {
     }
 };
 
-class IDisconnectedEvent : public IEvent {
+class DisconnectedEvent : public Event {
 public:
-    explicit IDisconnectedEvent(int client_id)
-        : IEvent(Disconnected)
+    explicit DisconnectedEvent(int client_id)
+        : Event(Disconnected)
         , m_client_id(client_id)
     {
     }
@@ -74,9 +76,9 @@ NonnullRefPtr<T> new_client_connection(Args&&... args)
 }
 
 template<typename Endpoint>
-class IClientConnection : public Core::Object {
+class ClientConnection : public Core::Object {
 public:
-    IClientConnection(Endpoint& endpoint, Core::LocalSocket& socket, int client_id)
+    ClientConnection(Endpoint& endpoint, Core::LocalSocket& socket, int client_id)
         : m_endpoint(endpoint)
         , m_socket(socket)
         , m_client_id(client_id)
@@ -92,11 +94,11 @@ public:
         m_socket->on_ready_to_read = [this] { drain_messages_from_client(); };
     }
 
-    virtual ~IClientConnection() override
+    virtual ~ClientConnection() override
     {
     }
 
-    void post_message(const IMessage& message)
+    void post_message(const Message& message)
     {
         // NOTE: If this connection is being shut down, but has not yet been destroyed,
         //       the socket will be closed. Don't try to send more messages.
@@ -109,11 +111,11 @@ public:
         if (nwritten < 0) {
             switch (errno) {
             case EPIPE:
-                dbg() << "Connection::post_message: Disconnected from peer";
+                dbg() << *this << "::post_message: Disconnected from peer";
                 shutdown();
                 return;
             case EAGAIN:
-                dbg() << "Connection::post_message: Client buffer overflowed.";
+                dbg() << *this << "::post_message: Client buffer overflowed.";
                 did_misbehave();
                 return;
             default:
@@ -133,7 +135,7 @@ public:
             ssize_t nread = recv(m_socket->fd(), buffer, sizeof(buffer), MSG_DONTWAIT);
             if (nread == 0 || (nread == -1 && errno == EAGAIN)) {
                 if (bytes.is_empty()) {
-                    Core::EventLoop::current().post_event(*this, make<IDisconnectedEvent>(client_id()));
+                    Core::EventLoop::current().post_event(*this, make<DisconnectedEvent>(client_id()));
                     return;
                 }
                 break;
@@ -162,13 +164,13 @@ public:
 
     void did_misbehave()
     {
-        dbg() << "Connection{" << this << "} (id=" << m_client_id << ", pid=" << m_client_pid << ") misbehaved, disconnecting.";
+        dbg() << *this << " (id=" << m_client_id << ", pid=" << m_client_pid << ") misbehaved, disconnecting.";
         shutdown();
     }
 
     void did_misbehave(const char* message)
     {
-        dbg() << "Connection{" << this << "} (id=" << m_client_id << ", pid=" << m_client_pid << ") misbehaved (" << message << "), disconnecting.";
+        dbg() << *this << " (id=" << m_client_id << ", pid=" << m_client_pid << ") misbehaved (" << message << "), disconnecting.";
         shutdown();
     }
 
@@ -186,9 +188,9 @@ public:
 protected:
     void event(Core::Event& event) override
     {
-        if (event.type() == IEvent::Disconnected) {
-            int client_id = static_cast<const IDisconnectedEvent&>(event).client_id();
-            dbgprintf("Connection: Client disconnected: %d\n", client_id);
+        if (event.type() == Event::Disconnected) {
+            int client_id = static_cast<const DisconnectedEvent&>(event).client_id();
+            dbg() << *this << ": Client disconnected: " << client_id;
             die();
             return;
         }
@@ -202,3 +204,5 @@ private:
     int m_client_id { -1 };
     int m_client_pid { -1 };
 };
+
+}

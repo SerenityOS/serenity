@@ -33,7 +33,7 @@ class ABuffer;
 class ASBufferQueue;
 class ASMixer;
 
-class ASClientConnection final : public IClientConnection<AudioServerEndpoint>
+class ASClientConnection final : public IPC::ClientConnection<AudioServerEndpoint>
     , public AudioServerEndpoint {
     C_OBJECT(ASClientConnection)
 public:
