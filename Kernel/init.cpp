@@ -75,6 +75,7 @@
 [[noreturn]] static void init_stage2();
 static void setup_serial_debug();
 static void setup_acpi();
+static void setup_vmmouse();
 
 VirtualConsole* tty0;
 
@@ -123,9 +124,7 @@ extern "C" [[noreturn]] void init()
 
     new KeyboardDevice;
     new PS2MouseDevice;
-    VMWareBackdoor::initialize();
-    if (!KParams::the().has("no_vmmouse"))
-        VMWareBackdoor::the().enable_absolute_vmmouse();
+    setup_vmmouse();
 
     new SB16;
     new NullDevice;
@@ -418,5 +417,23 @@ void setup_acpi()
         return;
     }
     kprintf("acpi boot argmuent has an invalid value.\n");
+    hang();
+}
+
+void setup_vmmouse()
+{
+    VMWareBackdoor::initialize();
+    if (!KParams::the().has("vmmouse")) {
+        VMWareBackdoor::the().enable_absolute_vmmouse();
+        return;
+    }
+    auto vmmouse = KParams::the().get("vmmouse");
+    if (vmmouse == "off")
+        return;
+    if (vmmouse == "on") {
+        VMWareBackdoor::the().enable_absolute_vmmouse();
+        return;
+    }
+    kprintf("vmmouse boot argmuent has an invalid value.\n");
     hang();
 }
