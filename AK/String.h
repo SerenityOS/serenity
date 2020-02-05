@@ -231,19 +231,12 @@ public:
     }
 
     static String format(const char*, ...);
-    static String number(u64);
-    static String number(u32);
-    static String number(i32);
-    static String number(i64);
-
-    static String number(size_t n)
-    {
-        if constexpr(sizeof(size_t) == 4)
-            return number((u32)n);
-        else if constexpr(sizeof(size_t) == 8)
-            return number((u64)n);
-        ASSERT_NOT_REACHED();
-    }
+    static String number(unsigned);
+    static String number(unsigned long);
+    static String number(unsigned long long);
+    static String number(int);
+    static String number(long);
+    static String number(long long);
 
     StringView view() const
     {

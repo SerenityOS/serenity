@@ -230,26 +230,44 @@ unsigned String::to_uint(bool& ok) const
     return value;
 }
 
-String String::number(u64 value)
+String String::number(unsigned long long value)
 {
     int size;
     char buffer[32];
-#ifdef __serenity__
     size = sprintf(buffer, "%llu", value);
-#else
-    size = sprintf(buffer, "%" PRIu64, value);
-#endif
     return String(buffer, size);
 }
 
-String String::number(u32 value)
+String String::number(unsigned long value)
+{
+    int size;
+    char buffer[32];
+    size = sprintf(buffer, "%lu", value);
+    return String(buffer, size);
+}
+
+String String::number(unsigned value)
 {
     char buffer[32];
     int size = sprintf(buffer, "%u", value);
     return String(buffer, size);
 }
 
-String String::number(i32 value)
+String String::number(long long value)
+{
+    char buffer[32];
+    int size = sprintf(buffer, "%lld", value);
+    return String(buffer, size);
+}
+
+String String::number(long value)
+{
+    char buffer[32];
+    int size = sprintf(buffer, "%ld", value);
+    return String(buffer, size);
+}
+
+String String::number(int value)
 {
     char buffer[32];
     int size = sprintf(buffer, "%d", value);
