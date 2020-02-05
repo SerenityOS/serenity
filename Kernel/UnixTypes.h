@@ -274,7 +274,21 @@ typedef void (*__sighandler_t)(int);
 typedef __sighandler_t sighandler_t;
 
 typedef u32 sigset_t;
-typedef void siginfo_t;
+
+union sigval {
+    int sival_int;
+    void* sival_ptr;
+};
+
+typedef struct siginfo {
+    int si_signo;
+    int si_code;
+    pid_t si_pid;
+    uid_t si_uid;
+    void* si_addr;
+    int si_status;
+    union sigval si_value;
+} siginfo_t;
 
 struct sigaction {
     union {
@@ -293,6 +307,13 @@ struct sigaction {
 #define SIG_BLOCK 0
 #define SIG_UNBLOCK 1
 #define SIG_SETMASK 2
+
+#define CLD_EXITED 0
+#define CLD_KILLED 1
+#define CLD_DUMPED 2
+#define CLD_TRAPPED 3
+#define CLD_STOPPED 4
+#define CLD_CONTINUED 5
 
 #define OFF_T_MAX 2147483647
 
@@ -431,6 +452,12 @@ struct timespec {
     time_t tv_sec;
     long tv_nsec;
 };
+
+typedef enum {
+    P_ALL = 1,
+    P_PID,
+    P_PGID
+} idtype_t;
 
 typedef int clockid_t;
 
