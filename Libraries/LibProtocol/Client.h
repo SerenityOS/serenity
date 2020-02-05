@@ -30,7 +30,7 @@
 #include <ProtocolServer/ProtocolClientEndpoint.h>
 #include <ProtocolServer/ProtocolServerEndpoint.h>
 
-namespace LibProtocol {
+namespace Protocol {
 
 class Download;
 

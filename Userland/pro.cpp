@@ -46,7 +46,7 @@ int main(int argc, char** argv)
     }
 
     Core::EventLoop loop;
-    auto protocol_client = LibProtocol::Client::construct();
+    auto protocol_client = Protocol::Client::construct();
 
     auto download = protocol_client->start_download(url.to_string());
     download->on_progress = [](u32 total_size, u32 downloaded_size) {

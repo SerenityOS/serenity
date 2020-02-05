@@ -39,7 +39,7 @@ ResourceLoader& ResourceLoader::the()
 }
 
 ResourceLoader::ResourceLoader()
-    : m_protocol_client(LibProtocol::Client::construct())
+    : m_protocol_client(Protocol::Client::construct())
 {
 }
 

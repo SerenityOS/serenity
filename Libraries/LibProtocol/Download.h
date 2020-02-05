@@ -36,7 +36,7 @@ namespace AK {
 class SharedBuffer;
 }
 
-namespace LibProtocol {
+namespace Protocol {
 
 class Client;
 

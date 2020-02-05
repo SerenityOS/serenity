@@ -30,7 +30,7 @@
 #include <AK/URL.h>
 #include <LibCore/CObject.h>
 
-namespace LibProtocol {
+namespace Protocol {
 class Client;
 }
 
@@ -50,6 +50,6 @@ private:
 
     int m_pending_loads { 0 };
 
-    LibProtocol::Client& protocol_client() { return *m_protocol_client; }
-    RefPtr<LibProtocol::Client> m_protocol_client;
+    Protocol::Client& protocol_client() { return *m_protocol_client; }
+    RefPtr<Protocol::Client> m_protocol_client;
 };
