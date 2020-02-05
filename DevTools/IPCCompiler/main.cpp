@@ -310,11 +310,11 @@ int main(int argc, char** argv)
                 dbg() << "        " << parameter.type << " " << parameter.name << " = " << initial_value << ";";
 
                 if (parameter.type == "String") {
-                    dbg() << "        size_t " << parameter.name << "_length = 0;";
+                    dbg() << "        u32 " << parameter.name << "_length = 0;";
                     dbg() << "        stream >> " << parameter.name << "_length;";
                     dbg() << "        if (" << parameter.name << "_length == 0) {";
                     dbg() << "            " << parameter.name << " = String::empty();";
-                    dbg() << "        } else if ((ssize_t)" << parameter.name << "_length == -1) {";
+                    dbg() << "        } else if ((i32)" << parameter.name << "_length == -1) {";
                     dbg() << "            " << parameter.name << " = String();";
                     dbg() << "        } else {";
                     dbg() << "            char* " << parameter.name << "_buffer = nullptr;";
@@ -395,7 +395,7 @@ int main(int argc, char** argv)
             for (auto& parameter : parameters) {
                 if (parameter.type == "String") {
                     dbg() << "        if (m_" << parameter.name << ".is_null()) {";
-                    dbg() << "            stream << (ssize_t)-1;";
+                    dbg() << "            stream << (i32)-1;";
                     dbg() << "        } else {";
                     dbg() << "            stream << m_" << parameter.name << ".length();";
                     dbg() << "            stream << m_" << parameter.name << ";";
