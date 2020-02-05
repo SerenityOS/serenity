@@ -80,6 +80,13 @@ constexpr const char* wave_strings[] = {
 constexpr int first_wave = Sine;
 constexpr int last_wave = Noise;
 
+enum Envelope {
+    Done,
+    Attack,
+    Decay,
+    Release,
+};
+
 enum KeyColor {
     White,
     Black,
