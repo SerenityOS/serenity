@@ -1,0 +1,26 @@
+--- a/shell/path.c	2020-02-03 18:04:51.852832611 +0300
++++ b/shell/path.c	2020-02-03 18:06:50.023851071 +0300
+@@ -27,18 +27,23 @@
+ 			return NULL;
+ 		}
+ 	} else {
++/*
+ 		size_t pathe_size = confstr(_CS_PATH, NULL, 0);
+ 		if (pathe_size == 0) {
+ 			return NULL;
+ 		}
+ 		pathe = malloc(pathe_size);
++*/
++		pathe = strdup("/bin:/usr/bin");
+ 		if (pathe == NULL) {
+ 			return NULL;
+ 		}
++/*
+ 		if (confstr(_CS_PATH, pathe, pathe_size) != pathe_size) {
+ 			free(pathe);
+ 			return NULL;
+ 		}
++*/
+ 	}
+ 
+ 	static char path[PATH_MAX + 1];
