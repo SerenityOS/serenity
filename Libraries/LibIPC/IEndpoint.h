@@ -26,26 +26,30 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/OwnPtr.h>
+#include <AK/String.h>
 
 namespace AK {
 class BufferStream;
 }
 
-class IMessage;
+namespace IPC {
 
-class IEndpoint {
+class Message;
+
+class Endpoint {
 public:
-    virtual ~IEndpoint();
+    virtual ~Endpoint();
 
     virtual int magic() const = 0;
     virtual String name() const = 0;
-    virtual OwnPtr<IMessage> handle(const IMessage&) = 0;
+    virtual OwnPtr<Message> handle(const Message&) = 0;
 
 protected:
-    IEndpoint();
+    Endpoint();
 
 private:
     String m_name;
 };
+
+}

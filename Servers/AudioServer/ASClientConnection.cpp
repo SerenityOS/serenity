@@ -49,7 +49,7 @@ void ASClientConnection::for_each(Function<void(ASClientConnection&)> callback)
 }
 
 ASClientConnection::ASClientConnection(Core::LocalSocket& client_socket, int client_id, ASMixer& mixer)
-    : IClientConnection(*this, client_socket, client_id)
+    : IPC::ClientConnection<AudioServerEndpoint>(*this, client_socket, client_id)
     , m_mixer(mixer)
 {
     s_connections.set(client_id, *this);

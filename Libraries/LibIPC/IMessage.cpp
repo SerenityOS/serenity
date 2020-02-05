@@ -26,10 +26,14 @@
 
 #include <LibIPC/IMessage.h>
 
-IMessage::IMessage()
+namespace IPC {
+
+Message::Message()
 {
 }
 
-IMessage::~IMessage()
+Message::~Message()
 {
+}
+
 }

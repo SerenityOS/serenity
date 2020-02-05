@@ -26,10 +26,14 @@
 
 #include <LibIPC/IEndpoint.h>
 
-IEndpoint::IEndpoint()
+namespace IPC {
+
+Endpoint::Endpoint()
 {
 }
 
-IEndpoint::~IEndpoint()
+Endpoint::~Endpoint()
 {
+}
+
 }

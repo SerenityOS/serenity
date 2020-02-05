@@ -32,7 +32,7 @@
 
 class ABuffer;
 
-class AClientConnection : public IServerConnection<AudioClientEndpoint, AudioServerEndpoint>
+class AClientConnection : public IPC::ServerConnection<AudioClientEndpoint, AudioServerEndpoint>
     , public AudioClientEndpoint {
     C_OBJECT(AClientConnection)
 public:

@@ -54,7 +54,7 @@ int main(int, char**)
         }
         static int s_next_client_id = 0;
         int client_id = ++s_next_client_id;
-        new_client_connection<PSClientConnection>(*client_socket, client_id);
+        IPC::new_client_connection<PSClientConnection>(*client_socket, client_id);
     };
     return event_loop.exec();
 }

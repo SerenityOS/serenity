@@ -63,7 +63,7 @@ WSEventLoop::WSEventLoop()
         }
         static int s_next_client_id = 0;
         int client_id = ++s_next_client_id;
-        new_client_connection<WSClientConnection>(*client_socket, client_id);
+        IPC::new_client_connection<WSClientConnection>(*client_socket, client_id);
     };
 
     ASSERT(m_keyboard_fd >= 0);

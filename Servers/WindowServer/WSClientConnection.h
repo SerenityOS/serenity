@@ -41,7 +41,7 @@ class WSMenu;
 class WSMenuBar;
 
 class WSClientConnection final
-    : public IClientConnection<WindowServerEndpoint>
+    : public IPC::ClientConnection<WindowServerEndpoint>
     , public WindowServerEndpoint {
     C_OBJECT(WSClientConnection)
 public:

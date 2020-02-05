@@ -29,7 +29,7 @@
 #include <LibAudio/AClientConnection.h>
 
 AClientConnection::AClientConnection()
-    : IServerConnection(*this, "/tmp/portal/audio")
+    : IPC::ServerConnection<AudioClientEndpoint, AudioServerEndpoint>(*this, "/tmp/portal/audio")
 {
 }
 

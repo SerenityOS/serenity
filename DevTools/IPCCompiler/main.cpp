@@ -285,7 +285,7 @@ int main(int argc, char** argv)
         };
 
         auto do_message = [&](const String& name, const Vector<Parameter>& parameters, const String& response_type = {}) {
-            dbg() << "class " << name << " final : public IMessage {";
+            dbg() << "class " << name << " final : public IPC::Message {";
             dbg() << "public:";
             if (!response_type.is_null())
                 dbg() << "    typedef class " << response_type << " ResponseType;";
@@ -385,10 +385,10 @@ int main(int argc, char** argv)
             dbg() << "        size_in_bytes = stream.offset();";
             dbg() << "        return make<" << name << ">(" << builder.to_string() << ");";
             dbg() << "    }";
-            dbg() << "    virtual IMessageBuffer encode() const override";
+            dbg() << "    virtual IPC::MessageBuffer encode() const override";
             dbg() << "    {";
-            dbg() << "        IMessageBuffer buffer;";
-            dbg() << "        IEncoder stream(buffer);";
+            dbg() << "        IPC::MessageBuffer buffer;";
+            dbg() << "        IPC::Encoder stream(buffer);";
             dbg() << "        stream << endpoint_magic();";
             dbg() << "        stream << (int)MessageID::" << name << ";";
             for (auto& parameter : parameters) {
@@ -447,7 +447,7 @@ int main(int argc, char** argv)
         dbg() << "} // namespace " << endpoint.name;
         dbg();
 
-        dbg() << "class " << endpoint.name << "Endpoint : public IEndpoint {";
+        dbg() << "class " << endpoint.name << "Endpoint : public IPC::Endpoint {";
         dbg() << "public:";
         dbg() << "    " << endpoint.name << "Endpoint() {}";
         dbg() << "    virtual ~" << endpoint.name << "Endpoint() override {}";
@@ -455,7 +455,7 @@ int main(int argc, char** argv)
         dbg() << "    virtual int magic() const override { return " << endpoint.magic << "; }";
         dbg() << "    static String static_name() { return \"" << endpoint.name << "\"; };";
         dbg() << "    virtual String name() const override { return \"" << endpoint.name << "\"; };";
-        dbg() << "    static OwnPtr<IMessage> decode_message(const ByteBuffer& buffer, size_t& size_in_bytes)";
+        dbg() << "    static OwnPtr<IPC::Message> decode_message(const ByteBuffer& buffer, size_t& size_in_bytes)";
         dbg() << "    {";
         dbg() << "        BufferStream stream(const_cast<ByteBuffer&>(buffer));";
         dbg() << "        i32 message_endpoint_magic = 0;";
@@ -487,7 +487,7 @@ int main(int argc, char** argv)
         dbg() << "        }";
         dbg() << "    }";
         dbg();
-        dbg() << "    virtual OwnPtr<IMessage> handle(const IMessage& message) override";
+        dbg() << "    virtual OwnPtr<IPC::Message> handle(const IPC::Message& message) override";
         dbg() << "    {";
         dbg() << "        switch (message.message_id()) {";
         for (auto& message : endpoint.messages) {
