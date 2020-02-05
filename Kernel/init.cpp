@@ -76,6 +76,7 @@
 static void setup_serial_debug();
 static void setup_acpi();
 static void setup_vmmouse();
+static void setup_pci();
 
 VirtualConsole* tty0;
 
@@ -142,8 +143,7 @@ extern "C" [[noreturn]] void init()
     // Sample test to see if the ACPI parser is working...
     kprintf("ACPI: HPET table @ P 0x%x\n", ACPIParser::the().find_table("HPET"));
 
-    PCI::Initializer::the().test_and_initialize(KParams::the().has("nopci_mmio"));
-    PCI::Initializer::the().dismiss();
+    setup_pci();
 
     PIT::initialize();
 
@@ -436,4 +436,23 @@ void setup_vmmouse()
     }
     kprintf("vmmouse boot argmuent has an invalid value.\n");
     hang();
+}
+
+void setup_pci()
+{
+    if (!KParams::the().has("pci_mmio")) {
+        PCI::Initializer::the().test_and_initialize(false);
+        PCI::Initializer::the().dismiss();
+        return;
+    }
+    auto pci_mmio = KParams::the().get("pci_mmio");
+    if (pci_mmio == "on") {
+        PCI::Initializer::the().test_and_initialize(false);
+    } else if (pci_mmio == "off") {
+        PCI::Initializer::the().test_and_initialize(true);
+    } else {
+        kprintf("pci_mmio boot argmuent has an invalid value.\n");
+        hang();
+    }
+    PCI::Initializer::the().dismiss();
 }
