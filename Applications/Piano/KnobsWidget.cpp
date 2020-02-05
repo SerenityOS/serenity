@@ -53,6 +53,7 @@ KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWid
     m_attack_label = GUI::Label::construct("Attack", m_labels_container);
     m_decay_label = GUI::Label::construct("Decay", m_labels_container);
     m_sustain_label = GUI::Label::construct("Sustain", m_labels_container);
+    m_release_label = GUI::Label::construct("Release", m_labels_container);
     m_delay_label = GUI::Label::construct("Delay", m_labels_container);
 
     m_values_container = GUI::Widget::construct(this);
@@ -65,6 +66,7 @@ KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWid
     m_attack_value = GUI::Label::construct(String::number(m_audio_engine.attack()), m_values_container);
     m_decay_value = GUI::Label::construct(String::number(m_audio_engine.decay()), m_values_container);
     m_sustain_value = GUI::Label::construct(String::number(m_audio_engine.sustain()), m_values_container);
+    m_release_value = GUI::Label::construct(String::number(m_audio_engine.release()), m_values_container);
     m_delay_value = GUI::Label::construct(String::number(m_audio_engine.delay() / m_audio_engine.tick()), m_values_container);
 
     m_knobs_container = GUI::Widget::construct(this);
@@ -126,6 +128,17 @@ KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWid
         m_audio_engine.set_sustain(new_sustain);
         ASSERT(new_sustain == m_audio_engine.sustain());
         m_sustain_value->set_text(String::number(new_sustain));
+    };
+
+    constexpr int max_release = 1000;
+    m_release_knob = GUI::Slider::construct(Orientation::Vertical, m_knobs_container);
+    m_release_knob->set_range(0, max_release);
+    m_release_knob->set_value(max_release - m_audio_engine.release());
+    m_release_knob->on_value_changed = [this](int value) {
+        int new_release = max_release - value;
+        m_audio_engine.set_release(new_release);
+        ASSERT(new_release == m_audio_engine.release());
+        m_release_value->set_text(String::number(new_release));
     };
 
     constexpr int max_delay = 8;
