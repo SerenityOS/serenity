@@ -31,10 +31,10 @@
 
 AudioEngine::AudioEngine()
 {
-    set_sustain_impl(0);
-    set_attack(0);
-    set_decay(0);
-    set_release(0);
+    set_sustain_impl(1000);
+    set_attack(5);
+    set_decay(1000);
+    set_release(5);
 }
 
 AudioEngine::~AudioEngine()
