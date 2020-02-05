@@ -1,0 +1,33 @@
+--- a/builtin/cd.c	2020-02-03 17:38:39.619544218 +0300
++++ b/builtin/cd.c	2020-02-03 17:39:18.387886672 +0300
+@@ -10,6 +10,8 @@
+ #include <unistd.h>
+ #include "builtin.h"
+ 
++#define PATH_MAX 4096
++
+ static const char cd_usage[] = "usage: cd [-L|-P] [-|directory]\n";
+ 
+ static int cd(struct mrsh_state *state, const char *path) {
+--- a/shell/entry.c	2020-02-03 18:02:41.502709181 +0300
++++ b/shell/entry.c	2020-02-03 18:03:02.254888038 +0300
+@@ -12,6 +12,8 @@
+ #include "parser.h"
+ #include "shell/trap.h"
+ 
++#define PATH_MAX 4096
++
+ static char *expand_str(struct mrsh_state *state, const char *src) {
+ 	struct mrsh_parser *parser = mrsh_parser_with_data(src, strlen(src));
+ 	if (parser == NULL) {
+--- a/shell/path.c	2020-02-03 18:03:55.014342748 +0300
++++ b/shell/path.c	2020-02-03 18:04:08.167456108 +0300
+@@ -8,6 +8,8 @@
+ #include <unistd.h>
+ #include "shell/path.h"
+ 
++#define PATH_MAX 4096
++
+ const char *expand_path(struct mrsh_state *state, const char *file, bool exec,
+ 		bool default_path) {
+ 	if (strchr(file, '/')) {

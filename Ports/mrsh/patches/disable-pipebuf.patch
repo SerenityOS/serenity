@@ -1,0 +1,11 @@
+--- a/shell/redir.c	2020-02-03 18:09:07.918039522 +0300
++++ b/shell/redir.c	2020-02-03 18:10:13.701606476 +0300
+@@ -46,7 +46,7 @@
+ 
+ 	// We can write at most PIPE_BUF bytes without blocking. If we want to write
+ 	// more, we need to fork and continue writing in another process.
+-	size_t remaining = PIPE_BUF;
++	size_t remaining = 0;
+ 	bool more = false;
+ 	size_t i;
+ 	for (i = 0; i < lines->len; ++i) {

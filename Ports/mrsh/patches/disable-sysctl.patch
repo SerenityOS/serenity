@@ -1,0 +1,17 @@
+--- a/builtin/times.c	2020-02-03 17:40:26.634489515 +0300
++++ b/builtin/times.c	2020-02-03 17:41:52.351246681 +0300
+@@ -16,11 +16,14 @@
+ 	}
+ 
+ 	struct tms buf;
++/*
+ 	long clk_tck = sysconf(_SC_CLK_TCK);
+ 	if (clk_tck == -1) {
+ 		perror("sysconf");
+ 		return 1;
+ 	}
++*/
++	long clk_tck = 1000;
+ 
+ 	if (times(&buf) == (clock_t)-1) {
+ 		perror("times");

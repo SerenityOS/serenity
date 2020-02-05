@@ -1,0 +1,110 @@
+--- a/ast.c	2020-02-03 17:32:44.302405596 +0300
++++ b/ast.c	2020-02-03 17:35:40.520962185 +0300
+@@ -576,6 +576,7 @@
+ 			return;
+ 		}
+ 		assert(false);
++		return;
+ 	case MRSH_NODE_COMMAND:;
+ 		struct mrsh_command *cmd = mrsh_node_get_command(node);
+ 		switch (cmd->type) {
+@@ -626,6 +627,7 @@
+ 			return;
+ 		}
+ 		assert(false);
++		return;
+ 	case MRSH_NODE_WORD:;
+ 		struct mrsh_word *word = mrsh_node_get_word(node);
+ 		switch (word->type) {
+@@ -653,8 +655,10 @@
+ 			return;
+ 		}
+ 		assert(false);
++		return;
+ 	}
+ 	assert(false);
++	return;
+ }
+ 
+ static void position_next(struct mrsh_position *dst,
+@@ -700,6 +704,7 @@
+ 		return;
+ 	case MRSH_WORD_ARITHMETIC:
+ 		assert(false); // TODO
++		return;
+ 	case MRSH_WORD_LIST:;
+ 		struct mrsh_word_list *wl = mrsh_word_get_list(word);
+ 		if (wl->children.len == 0) {
+@@ -713,6 +718,7 @@
+ 		return;
+ 	}
+ 	assert(false);
++	return;
+ }
+ 
+ void mrsh_command_range(struct mrsh_command *cmd, struct mrsh_position *begin,
+@@ -800,8 +806,10 @@
+ 			mrsh_command_get_function_definition(cmd);
+ 		*begin = fd->name_range.begin;
+ 		mrsh_command_range(fd->body, NULL, end);
++		return;
+ 	}
+ 	assert(false);
++	return;
+ }
+ 
+ static void buffer_append_str(struct mrsh_buffer *buf, const char *str) {
+@@ -818,6 +826,7 @@
+ 	case MRSH_WORD_COMMAND:
+ 	case MRSH_WORD_ARITHMETIC:
+ 		assert(false);
++		return;
+ 	case MRSH_WORD_LIST:;
+ 		const struct mrsh_word_list *wl = mrsh_word_get_list(word);
+ 		for (size_t i = 0; i < wl->children.len; ++i) {
+@@ -827,6 +836,7 @@
+ 		return;
+ 	}
+ 	assert(false);
++	return;
+ }
+ 
+ char *mrsh_word_str(const struct mrsh_word *word) {
+@@ -891,6 +901,7 @@
+ 			return;
+ 		}
+ 		assert(false);
++		return;
+ 	case MRSH_NODE_COMMAND:;
+ 		struct mrsh_command *cmd = mrsh_node_get_command(node);
+ 		switch (cmd->type) {
+@@ -956,6 +967,7 @@
+ 			return;
+ 		}
+ 		assert(false);
++		return;
+ 	case MRSH_NODE_WORD:;
+ 		// TODO: quoting
+ 		struct mrsh_word *word = mrsh_node_get_word(node);
+@@ -1002,8 +1014,10 @@
+ 			return;
+ 		}
+ 		assert(false);
++		return;
+ 	}
+ 	assert(false);
++	return;
+ }
+ 
+ char *mrsh_node_format(struct mrsh_node *node) {
+--- a/main.c	2020-02-03 18:40:40.433381483 +0300
++++ b/main.c	2020-02-03 18:39:57.708015856 +0300
+@@ -14,7 +14,7 @@
+ #include <unistd.h>
+ #include "frontend.h"
+ 
+-extern char **environ;
++// extern char **environ;
+ 
+ int main(int argc, char *argv[]) {
+ 	struct mrsh_state *state = mrsh_state_create();

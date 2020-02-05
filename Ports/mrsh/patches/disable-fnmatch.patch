@@ -1,0 +1,45 @@
+--- a/shell/task/task.c	2020-02-03 18:16:49.579018362 +0300
++++ b/shell/task/task.c	2020-02-03 18:24:17.149890856 +0300
+@@ -2,7 +2,7 @@
+ #include <assert.h>
+ #include <errno.h>
+ #include <fcntl.h>
+-#include <fnmatch.h>
++// #include <fnmatch.h>
+ #include <mrsh/ast.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+@@ -218,7 +218,7 @@
+ 			}
+ 			char *pattern = word_to_pattern(*word_ptr);
+ 			if (pattern != NULL) {
+-				selected = fnmatch(pattern, word_str, 0) == 0;
++				// selected = fnmatch(pattern, word_str, 0) == 0;
+ 				free(pattern);
+ 			} else {
+ 				char *str = mrsh_word_str(*word_ptr);
+--- a/shell/task/word.c	2020-02-03 18:25:52.544717475 +0300
++++ b/shell/task/word.c	2020-02-03 18:26:47.036189658 +0300
+@@ -1,7 +1,7 @@
+ #define _POSIX_C_SOURCE 200809L
+ #include <assert.h>
+ #include <errno.h>
+-#include <fnmatch.h>
++// #include <fnmatch.h>
+ #include <mrsh/buffer.h>
+ #include <mrsh/parser.h>
+ #include <stdio.h>
+@@ -364,11 +364,13 @@
+ 			trimmed = buf;
+ 		}
+ 
++/*
+ 		if (fnmatch(pattern, match, 0) == 0) {
+ 			char *result = strdup(trimmed);
+ 			free(buf);
+ 			return result;
+ 		}
++*/
+ 
+ 		buf[i] = ch;
+ 	}
