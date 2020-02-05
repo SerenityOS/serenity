@@ -387,7 +387,6 @@ int main(int argc, char** argv)
             dbg() << "    }";
             dbg() << "    virtual IMessageBuffer encode() const override";
             dbg() << "    {";
-            // FIXME: Support longer messages:
             dbg() << "        IMessageBuffer buffer;";
             dbg() << "        IEncoder stream(buffer);";
             dbg() << "        stream << endpoint_magic();";
