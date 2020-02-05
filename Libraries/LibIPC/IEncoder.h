@@ -118,26 +118,6 @@ public:
         return *this;
     }
 
-    Encoder& operator<<(size_t value)
-    {
-        if constexpr (sizeof(size_t) == 4)
-            return *this << (u32)value;
-        else if constexpr (sizeof(size_t) == 8)
-            return *this << (u64)value;
-        ASSERT_NOT_REACHED();
-    }
-
-#ifndef __i386__
-    Encoder& operator<<(ssize_t value)
-    {
-        if constexpr (sizeof(ssize_t) == 4)
-            return *this << (i32)value;
-        else if constexpr (sizeof(ssize_t) == 8)
-            return *this << (i64)value;
-        ASSERT_NOT_REACHED();
-    }
-#endif
-
     Encoder& operator<<(float value)
     {
         union bits {
