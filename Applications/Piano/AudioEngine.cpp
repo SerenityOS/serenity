@@ -34,6 +34,7 @@ AudioEngine::AudioEngine()
     set_sustain_impl(0);
     set_attack(0);
     set_decay(0);
+    set_release(0);
 }
 
 AudioEngine::~AudioEngine()
@@ -62,6 +63,12 @@ void AudioEngine::fill_buffer(FixedArray<Sample>& buffer)
                     m_power[note] = m_sustain_level;
                 break;
             case Release:
+                m_power[note] -= m_release_step[note];
+                if (m_power[note] <= 0) {
+                    m_power[note] = 0;
+                    m_envelope[note] = Done;
+                    continue;
+                }
                 break;
             default:
                 ASSERT_NOT_REACHED();
@@ -158,6 +165,17 @@ double AudioEngine::noise() const
     return w;
 }
 
+static inline double calculate_step(double distance, int milliseconds)
+{
+    if (milliseconds == 0)
+        return distance;
+
+    constexpr double samples_per_millisecond = sample_rate / 1000.0;
+    double samples = milliseconds * samples_per_millisecond;
+    double step = distance / samples;
+    return step;
+}
+
 void AudioEngine::set_note(int note, Switch switch_note)
 {
     ASSERT(note >= 0 && note < note_count);
@@ -171,8 +189,8 @@ void AudioEngine::set_note(int note, Switch switch_note)
     } else {
         if (m_note_on[note] >= 1) {
             if (m_note_on[note] == 1) {
-                m_power[note] = 0;
-                m_envelope[note] = Done;
+                m_release_step[note] = calculate_step(m_power[note], m_release);
+                m_envelope[note] = Release;
             }
             --m_note_on[note];
         }
@@ -215,17 +233,6 @@ void AudioEngine::set_wave(Direction direction)
     }
 }
 
-static inline double calculate_step(double distance, int milliseconds)
-{
-    if (milliseconds == 0)
-        return distance;
-
-    constexpr double samples_per_millisecond = sample_rate / 1000.0;
-    double samples = milliseconds * samples_per_millisecond;
-    double step = distance / samples;
-    return step;
-}
-
 void AudioEngine::set_attack(int attack)
 {
     ASSERT(attack >= 0);
@@ -251,6 +258,12 @@ void AudioEngine::set_sustain(int sustain)
 {
     set_sustain_impl(sustain);
     set_decay(m_decay);
+}
+
+void AudioEngine::set_release(int release)
+{
+    ASSERT(release >= 0);
+    m_release = release;
 }
 
 void AudioEngine::set_delay(int delay)

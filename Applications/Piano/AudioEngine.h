@@ -46,6 +46,7 @@ public:
     int attack() const { return m_attack; }
     int decay() const { return m_decay; }
     int sustain() const { return m_sustain; }
+    int release() const { return m_release; }
     int delay() const { return m_delay; }
     int time() const { return m_time; }
     int tick() const { return m_tick; }
@@ -59,6 +60,7 @@ public:
     void set_attack(int attack);
     void set_decay(int decay);
     void set_sustain(int sustain);
+    void set_release(int release);
     void set_delay(int delay);
 
 private:
@@ -90,6 +92,8 @@ private:
     double m_decay_step;
     int m_sustain;
     double m_sustain_level;
+    int m_release;
+    double m_release_step[note_count];
     int m_delay { 0 };
 
     int m_time { 0 };
