@@ -43,6 +43,7 @@ public:
     int octave() const { return m_octave; }
     int octave_base() const { return (m_octave - octave_min) * 12; }
     int wave() const { return m_wave; }
+    int attack() const { return m_attack; }
     int decay() const { return m_decay; }
     int sustain() const { return m_sustain; }
     int delay() const { return m_delay; }
@@ -55,6 +56,7 @@ public:
     void set_octave(Direction);
     void set_wave(int wave);
     void set_wave(Direction);
+    void set_attack(int attack);
     void set_decay(int decay);
     void set_sustain(int sustain);
     void set_delay(int delay);
@@ -76,11 +78,14 @@ private:
     Queue<NonnullOwnPtr<FixedArray<Sample>>> m_delay_buffers;
 
     u8 m_note_on[note_count] { 0 };
-    double m_power[note_count]; // Initialized lazily.
-    double m_pos[note_count];   // Initialized lazily.
+    double m_power[note_count] { 0 };
+    double m_pos[note_count]; // Initialized lazily.
+    Envelope m_envelope[note_count] { Done };
 
     int m_octave { 4 };
     int m_wave { first_wave };
+    int m_attack;
+    double m_attack_step;
     int m_decay;
     double m_decay_step;
     int m_sustain;

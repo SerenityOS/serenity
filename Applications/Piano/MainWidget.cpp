@@ -60,7 +60,7 @@ MainWidget::MainWidget(AudioEngine& audio_engine)
 
     m_knobs_widget = KnobsWidget::construct(m_keys_and_knobs_container, audio_engine, *this);
     m_knobs_widget->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    m_knobs_widget->set_preferred_size(250, 0);
+    m_knobs_widget->set_preferred_size(300, 0);
 }
 
 MainWidget::~MainWidget()

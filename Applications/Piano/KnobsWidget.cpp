@@ -50,6 +50,7 @@ KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWid
 
     m_octave_label = GUI::Label::construct("Octave", m_labels_container);
     m_wave_label = GUI::Label::construct("Wave", m_labels_container);
+    m_attack_label = GUI::Label::construct("Attack", m_labels_container);
     m_decay_label = GUI::Label::construct("Decay", m_labels_container);
     m_sustain_label = GUI::Label::construct("Sustain", m_labels_container);
     m_delay_label = GUI::Label::construct("Delay", m_labels_container);
@@ -61,6 +62,7 @@ KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWid
 
     m_octave_value = GUI::Label::construct(String::number(m_audio_engine.octave()), m_values_container);
     m_wave_value = GUI::Label::construct(wave_strings[m_audio_engine.wave()], m_values_container);
+    m_attack_value = GUI::Label::construct(String::number(m_audio_engine.attack()), m_values_container);
     m_decay_value = GUI::Label::construct(String::number(m_audio_engine.decay()), m_values_container);
     m_sustain_value = GUI::Label::construct(String::number(m_audio_engine.sustain()), m_values_container);
     m_delay_value = GUI::Label::construct(String::number(m_audio_engine.delay() / m_audio_engine.tick()), m_values_container);
@@ -91,6 +93,17 @@ KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWid
         m_audio_engine.set_wave(new_wave);
         ASSERT(new_wave == m_audio_engine.wave());
         m_wave_value->set_text(wave_strings[new_wave]);
+    };
+
+    constexpr int max_attack = 1000;
+    m_attack_knob = GUI::Slider::construct(Orientation::Vertical, m_knobs_container);
+    m_attack_knob->set_range(0, max_attack);
+    m_attack_knob->set_value(max_attack - m_audio_engine.attack());
+    m_attack_knob->on_value_changed = [this](int value) {
+        int new_attack = max_attack - value;
+        m_audio_engine.set_attack(new_attack);
+        ASSERT(new_attack == m_audio_engine.attack());
+        m_attack_value->set_text(String::number(new_attack));
     };
 
     constexpr int max_decay = 1000;
