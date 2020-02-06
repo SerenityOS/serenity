@@ -92,23 +92,23 @@ void ClientConnection::die()
 
 void ClientConnection::notify_about_new_screen_rect(const Gfx::Rect& rect)
 {
-    post_message(WindowClient::ScreenRectChanged(rect));
+    post_message(Messages::WindowClient::ScreenRectChanged(rect));
 }
 
 void ClientConnection::notify_about_clipboard_contents_changed()
 {
-    post_message(WindowClient::ClipboardContentsChanged(Clipboard::the().data_type()));
+    post_message(Messages::WindowClient::ClipboardContentsChanged(Clipboard::the().data_type()));
 }
 
-OwnPtr<WindowServer::CreateMenubarResponse> ClientConnection::handle(const WindowServer::CreateMenubar&)
+OwnPtr<Messages::WindowServer::CreateMenubarResponse> ClientConnection::handle(const Messages::WindowServer::CreateMenubar&)
 {
     int menubar_id = m_next_menubar_id++;
     auto menubar = make<MenuBar>(*this, menubar_id);
     m_menubars.set(menubar_id, move(menubar));
-    return make<WindowServer::CreateMenubarResponse>(menubar_id);
+    return make<Messages::WindowServer::CreateMenubarResponse>(menubar_id);
 }
 
-OwnPtr<WindowServer::DestroyMenubarResponse> ClientConnection::handle(const WindowServer::DestroyMenubar& message)
+OwnPtr<Messages::WindowServer::DestroyMenubarResponse> ClientConnection::handle(const Messages::WindowServer::DestroyMenubar& message)
 {
     int menubar_id = message.menubar_id();
     auto it = m_menubars.find(menubar_id);
@@ -119,18 +119,18 @@ OwnPtr<WindowServer::DestroyMenubarResponse> ClientConnection::handle(const Wind
     auto& menubar = *(*it).value;
     MenuManager::the().close_menubar(menubar);
     m_menubars.remove(it);
-    return make<WindowServer::DestroyMenubarResponse>();
+    return make<Messages::WindowServer::DestroyMenubarResponse>();
 }
 
-OwnPtr<WindowServer::CreateMenuResponse> ClientConnection::handle(const WindowServer::CreateMenu& message)
+OwnPtr<Messages::WindowServer::CreateMenuResponse> ClientConnection::handle(const Messages::WindowServer::CreateMenu& message)
 {
     int menu_id = m_next_menu_id++;
     auto menu = Menu::construct(this, menu_id, message.menu_title());
     m_menus.set(menu_id, move(menu));
-    return make<WindowServer::CreateMenuResponse>(menu_id);
+    return make<Messages::WindowServer::CreateMenuResponse>(menu_id);
 }
 
-OwnPtr<WindowServer::DestroyMenuResponse> ClientConnection::handle(const WindowServer::DestroyMenu& message)
+OwnPtr<Messages::WindowServer::DestroyMenuResponse> ClientConnection::handle(const Messages::WindowServer::DestroyMenu& message)
 {
     int menu_id = message.menu_id();
     auto it = m_menus.find(menu_id);
@@ -142,10 +142,10 @@ OwnPtr<WindowServer::DestroyMenuResponse> ClientConnection::handle(const WindowS
     menu.close();
     m_menus.remove(it);
     remove_child(menu);
-    return make<WindowServer::DestroyMenuResponse>();
+    return make<Messages::WindowServer::DestroyMenuResponse>();
 }
 
-OwnPtr<WindowServer::SetApplicationMenubarResponse> ClientConnection::handle(const WindowServer::SetApplicationMenubar& message)
+OwnPtr<Messages::WindowServer::SetApplicationMenubarResponse> ClientConnection::handle(const Messages::WindowServer::SetApplicationMenubar& message)
 {
     int menubar_id = message.menubar_id();
     auto it = m_menubars.find(menubar_id);
@@ -156,10 +156,10 @@ OwnPtr<WindowServer::SetApplicationMenubarResponse> ClientConnection::handle(con
     auto& menubar = *(*it).value;
     m_app_menubar = menubar.make_weak_ptr();
     WindowManager::the().notify_client_changed_app_menubar(*this);
-    return make<WindowServer::SetApplicationMenubarResponse>();
+    return make<Messages::WindowServer::SetApplicationMenubarResponse>();
 }
 
-OwnPtr<WindowServer::AddMenuToMenubarResponse> ClientConnection::handle(const WindowServer::AddMenuToMenubar& message)
+OwnPtr<Messages::WindowServer::AddMenuToMenubarResponse> ClientConnection::handle(const Messages::WindowServer::AddMenuToMenubar& message)
 {
     int menubar_id = message.menubar_id();
     int menu_id = message.menu_id();
@@ -176,10 +176,10 @@ OwnPtr<WindowServer::AddMenuToMenubarResponse> ClientConnection::handle(const Wi
     auto& menubar = *(*it).value;
     auto& menu = *(*jt).value;
     menubar.add_menu(menu);
-    return make<WindowServer::AddMenuToMenubarResponse>();
+    return make<Messages::WindowServer::AddMenuToMenubarResponse>();
 }
 
-OwnPtr<WindowServer::AddMenuItemResponse> ClientConnection::handle(const WindowServer::AddMenuItem& message)
+OwnPtr<Messages::WindowServer::AddMenuItemResponse> ClientConnection::handle(const Messages::WindowServer::AddMenuItem& message)
 {
     int menu_id = message.menu_id();
     unsigned identifier = message.identifier();
@@ -201,10 +201,10 @@ OwnPtr<WindowServer::AddMenuItemResponse> ClientConnection::handle(const WindowS
     menu_item->set_submenu_id(message.submenu_id());
     menu_item->set_exclusive(message.exclusive());
     menu.add_item(move(menu_item));
-    return make<WindowServer::AddMenuItemResponse>();
+    return make<Messages::WindowServer::AddMenuItemResponse>();
 }
 
-OwnPtr<WindowServer::PopupMenuResponse> ClientConnection::handle(const WindowServer::PopupMenu& message)
+OwnPtr<Messages::WindowServer::PopupMenuResponse> ClientConnection::handle(const Messages::WindowServer::PopupMenu& message)
 {
     int menu_id = message.menu_id();
     auto position = message.screen_position();
@@ -215,10 +215,10 @@ OwnPtr<WindowServer::PopupMenuResponse> ClientConnection::handle(const WindowSer
     }
     auto& menu = *(*it).value;
     menu.popup(position);
-    return make<WindowServer::PopupMenuResponse>();
+    return make<Messages::WindowServer::PopupMenuResponse>();
 }
 
-OwnPtr<WindowServer::DismissMenuResponse> ClientConnection::handle(const WindowServer::DismissMenu& message)
+OwnPtr<Messages::WindowServer::DismissMenuResponse> ClientConnection::handle(const Messages::WindowServer::DismissMenu& message)
 {
     int menu_id = message.menu_id();
     auto it = m_menus.find(menu_id);
@@ -228,10 +228,10 @@ OwnPtr<WindowServer::DismissMenuResponse> ClientConnection::handle(const WindowS
     }
     auto& menu = *(*it).value;
     menu.close();
-    return make<WindowServer::DismissMenuResponse>();
+    return make<Messages::WindowServer::DismissMenuResponse>();
 }
 
-OwnPtr<WindowServer::UpdateMenuItemResponse> ClientConnection::handle(const WindowServer::UpdateMenuItem& message)
+OwnPtr<Messages::WindowServer::UpdateMenuItemResponse> ClientConnection::handle(const Messages::WindowServer::UpdateMenuItem& message)
 {
     int menu_id = message.menu_id();
     auto it = m_menus.find(menu_id);
@@ -251,10 +251,10 @@ OwnPtr<WindowServer::UpdateMenuItemResponse> ClientConnection::handle(const Wind
     menu_item->set_checkable(message.checkable());
     if (message.checkable())
         menu_item->set_checked(message.checked());
-    return make<WindowServer::UpdateMenuItemResponse>();
+    return make<Messages::WindowServer::UpdateMenuItemResponse>();
 }
 
-OwnPtr<WindowServer::AddMenuSeparatorResponse> ClientConnection::handle(const WindowServer::AddMenuSeparator& message)
+OwnPtr<Messages::WindowServer::AddMenuSeparatorResponse> ClientConnection::handle(const Messages::WindowServer::AddMenuSeparator& message)
 {
     int menu_id = message.menu_id();
     auto it = m_menus.find(menu_id);
@@ -264,10 +264,10 @@ OwnPtr<WindowServer::AddMenuSeparatorResponse> ClientConnection::handle(const Wi
     }
     auto& menu = *(*it).value;
     menu.add_item(make<MenuItem>(menu, MenuItem::Separator));
-    return make<WindowServer::AddMenuSeparatorResponse>();
+    return make<Messages::WindowServer::AddMenuSeparatorResponse>();
 }
 
-OwnPtr<WindowServer::MoveWindowToFrontResponse> ClientConnection::handle(const WindowServer::MoveWindowToFront& message)
+OwnPtr<Messages::WindowServer::MoveWindowToFrontResponse> ClientConnection::handle(const Messages::WindowServer::MoveWindowToFront& message)
 {
     auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
@@ -275,10 +275,10 @@ OwnPtr<WindowServer::MoveWindowToFrontResponse> ClientConnection::handle(const W
         return nullptr;
     }
     WindowManager::the().move_to_front_and_make_active(*(*it).value);
-    return make<WindowServer::MoveWindowToFrontResponse>();
+    return make<Messages::WindowServer::MoveWindowToFrontResponse>();
 }
 
-OwnPtr<WindowServer::SetFullscreenResponse> ClientConnection::handle(const WindowServer::SetFullscreen& message)
+OwnPtr<Messages::WindowServer::SetFullscreenResponse> ClientConnection::handle(const Messages::WindowServer::SetFullscreen& message)
 {
     auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
@@ -286,10 +286,10 @@ OwnPtr<WindowServer::SetFullscreenResponse> ClientConnection::handle(const Windo
         return nullptr;
     }
     it->value->set_fullscreen(message.fullscreen());
-    return make<WindowServer::SetFullscreenResponse>();
+    return make<Messages::WindowServer::SetFullscreenResponse>();
 }
 
-OwnPtr<WindowServer::SetWindowOpacityResponse> ClientConnection::handle(const WindowServer::SetWindowOpacity& message)
+OwnPtr<Messages::WindowServer::SetWindowOpacityResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowOpacity& message)
 {
     auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
@@ -297,28 +297,28 @@ OwnPtr<WindowServer::SetWindowOpacityResponse> ClientConnection::handle(const Wi
         return nullptr;
     }
     it->value->set_opacity(message.opacity());
-    return make<WindowServer::SetWindowOpacityResponse>();
+    return make<Messages::WindowServer::SetWindowOpacityResponse>();
 }
 
-void ClientConnection::handle(const WindowServer::AsyncSetWallpaper& message)
+void ClientConnection::handle(const Messages::WindowServer::AsyncSetWallpaper& message)
 {
     Compositor::the().set_wallpaper(message.path(), [&](bool success) {
-        post_message(WindowClient::AsyncSetWallpaperFinished(success));
+        post_message(Messages::WindowClient::AsyncSetWallpaperFinished(success));
     });
 }
 
-OwnPtr<WindowServer::GetWallpaperResponse> ClientConnection::handle(const WindowServer::GetWallpaper&)
+OwnPtr<Messages::WindowServer::GetWallpaperResponse> ClientConnection::handle(const Messages::WindowServer::GetWallpaper&)
 {
-    return make<WindowServer::GetWallpaperResponse>(Compositor::the().wallpaper_path());
+    return make<Messages::WindowServer::GetWallpaperResponse>(Compositor::the().wallpaper_path());
 }
 
-OwnPtr<WindowServer::SetResolutionResponse> ClientConnection::handle(const WindowServer::SetResolution& message)
+OwnPtr<Messages::WindowServer::SetResolutionResponse> ClientConnection::handle(const Messages::WindowServer::SetResolution& message)
 {
     WindowManager::the().set_resolution(message.resolution().width(), message.resolution().height());
-    return make<WindowServer::SetResolutionResponse>();
+    return make<Messages::WindowServer::SetResolutionResponse>();
 }
 
-OwnPtr<WindowServer::SetWindowTitleResponse> ClientConnection::handle(const WindowServer::SetWindowTitle& message)
+OwnPtr<Messages::WindowServer::SetWindowTitleResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowTitle& message)
 {
     auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
@@ -326,20 +326,20 @@ OwnPtr<WindowServer::SetWindowTitleResponse> ClientConnection::handle(const Wind
         return nullptr;
     }
     it->value->set_title(message.title());
-    return make<WindowServer::SetWindowTitleResponse>();
+    return make<Messages::WindowServer::SetWindowTitleResponse>();
 }
 
-OwnPtr<WindowServer::GetWindowTitleResponse> ClientConnection::handle(const WindowServer::GetWindowTitle& message)
+OwnPtr<Messages::WindowServer::GetWindowTitleResponse> ClientConnection::handle(const Messages::WindowServer::GetWindowTitle& message)
 {
     auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
         did_misbehave("GetWindowTitle: Bad window ID");
         return nullptr;
     }
-    return make<WindowServer::GetWindowTitleResponse>(it->value->title());
+    return make<Messages::WindowServer::GetWindowTitleResponse>(it->value->title());
 }
 
-OwnPtr<WindowServer::SetWindowIconBitmapResponse> ClientConnection::handle(const WindowServer::SetWindowIconBitmap& message)
+OwnPtr<Messages::WindowServer::SetWindowIconBitmapResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowIconBitmap& message)
 {
     auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
@@ -358,10 +358,10 @@ OwnPtr<WindowServer::SetWindowIconBitmapResponse> ClientConnection::handle(const
 
     window.frame().invalidate_title_bar();
     WindowManager::the().tell_wm_listeners_window_icon_changed(window);
-    return make<WindowServer::SetWindowIconBitmapResponse>();
+    return make<Messages::WindowServer::SetWindowIconBitmapResponse>();
 }
 
-OwnPtr<WindowServer::SetWindowRectResponse> ClientConnection::handle(const WindowServer::SetWindowRect& message)
+OwnPtr<Messages::WindowServer::SetWindowRectResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowRect& message)
 {
     int window_id = message.window_id();
     auto it = m_windows.find(window_id);
@@ -376,10 +376,10 @@ OwnPtr<WindowServer::SetWindowRectResponse> ClientConnection::handle(const Windo
     }
     window.set_rect(message.rect());
     window.request_update(message.rect());
-    return make<WindowServer::SetWindowRectResponse>();
+    return make<Messages::WindowServer::SetWindowRectResponse>();
 }
 
-OwnPtr<WindowServer::GetWindowRectResponse> ClientConnection::handle(const WindowServer::GetWindowRect& message)
+OwnPtr<Messages::WindowServer::GetWindowRectResponse> ClientConnection::handle(const Messages::WindowServer::GetWindowRect& message)
 {
     int window_id = message.window_id();
     auto it = m_windows.find(window_id);
@@ -387,10 +387,10 @@ OwnPtr<WindowServer::GetWindowRectResponse> ClientConnection::handle(const Windo
         did_misbehave("GetWindowRect: Bad window ID");
         return nullptr;
     }
-    return make<WindowServer::GetWindowRectResponse>(it->value->rect());
+    return make<Messages::WindowServer::GetWindowRectResponse>(it->value->rect());
 }
 
-OwnPtr<WindowServer::SetClipboardContentsResponse> ClientConnection::handle(const WindowServer::SetClipboardContents& message)
+OwnPtr<Messages::WindowServer::SetClipboardContentsResponse> ClientConnection::handle(const Messages::WindowServer::SetClipboardContents& message)
 {
     auto shared_buffer = SharedBuffer::create_from_shared_buffer_id(message.shared_buffer_id());
     if (!shared_buffer) {
@@ -398,10 +398,10 @@ OwnPtr<WindowServer::SetClipboardContentsResponse> ClientConnection::handle(cons
         return nullptr;
     }
     Clipboard::the().set_data(*shared_buffer, message.content_size(), message.content_type());
-    return make<WindowServer::SetClipboardContentsResponse>();
+    return make<Messages::WindowServer::SetClipboardContentsResponse>();
 }
 
-OwnPtr<WindowServer::GetClipboardContentsResponse> ClientConnection::handle(const WindowServer::GetClipboardContents&)
+OwnPtr<Messages::WindowServer::GetClipboardContentsResponse> ClientConnection::handle(const Messages::WindowServer::GetClipboardContents&)
 {
     auto& clipboard = Clipboard::the();
 
@@ -421,10 +421,10 @@ OwnPtr<WindowServer::GetClipboardContentsResponse> ClientConnection::handle(cons
         //        After we respond to GetClipboardContents, we have to wait for the client to ref the buffer on his side.
         m_last_sent_clipboard_content = move(shared_buffer);
     }
-    return make<WindowServer::GetClipboardContentsResponse>(shared_buffer_id, clipboard.size(), clipboard.data_type());
+    return make<Messages::WindowServer::GetClipboardContentsResponse>(shared_buffer_id, clipboard.size(), clipboard.data_type());
 }
 
-OwnPtr<WindowServer::CreateWindowResponse> ClientConnection::handle(const WindowServer::CreateWindow& message)
+OwnPtr<Messages::WindowServer::CreateWindowResponse> ClientConnection::handle(const Messages::WindowServer::CreateWindow& message)
 {
     int window_id = m_next_window_id++;
     auto window = Window::construct(*this, (WindowType)message.type(), window_id, message.modal(), message.minimizable(), message.resizable(), message.fullscreen());
@@ -440,10 +440,10 @@ OwnPtr<WindowServer::CreateWindowResponse> ClientConnection::handle(const Window
     if (window->type() == WindowType::MenuApplet)
         MenuManager::the().add_applet(*window);
     m_windows.set(window_id, move(window));
-    return make<WindowServer::CreateWindowResponse>(window_id);
+    return make<Messages::WindowServer::CreateWindowResponse>(window_id);
 }
 
-OwnPtr<WindowServer::DestroyWindowResponse> ClientConnection::handle(const WindowServer::DestroyWindow& message)
+OwnPtr<Messages::WindowServer::DestroyWindowResponse> ClientConnection::handle(const Messages::WindowServer::DestroyWindow& message)
 {
     auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
@@ -460,7 +460,7 @@ OwnPtr<WindowServer::DestroyWindowResponse> ClientConnection::handle(const Windo
     ASSERT(it->value.ptr() == &window);
     m_windows.remove(message.window_id());
 
-    return make<WindowServer::DestroyWindowResponse>();
+    return make<Messages::WindowServer::DestroyWindowResponse>();
 }
 
 void ClientConnection::post_paint_message(Window& window)
@@ -469,10 +469,10 @@ void ClientConnection::post_paint_message(Window& window)
     if (window.is_minimized() || window.is_occluded())
         return;
 
-    post_message(WindowClient::Paint(window.window_id(), window.size(), rect_set.rects()));
+    post_message(Messages::WindowClient::Paint(window.window_id(), window.size(), rect_set.rects()));
 }
 
-void ClientConnection::handle(const WindowServer::InvalidateRect& message)
+void ClientConnection::handle(const Messages::WindowServer::InvalidateRect& message)
 {
     auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
@@ -484,7 +484,7 @@ void ClientConnection::handle(const WindowServer::InvalidateRect& message)
         window.request_update(message.rects()[i].intersected({ {}, window.size() }));
 }
 
-void ClientConnection::handle(const WindowServer::DidFinishPainting& message)
+void ClientConnection::handle(const Messages::WindowServer::DidFinishPainting& message)
 {
     int window_id = message.window_id();
     auto it = m_windows.find(window_id);
@@ -499,7 +499,7 @@ void ClientConnection::handle(const WindowServer::DidFinishPainting& message)
     WindowSwitcher::the().refresh_if_needed();
 }
 
-OwnPtr<WindowServer::SetWindowBackingStoreResponse> ClientConnection::handle(const WindowServer::SetWindowBackingStore& message)
+OwnPtr<Messages::WindowServer::SetWindowBackingStoreResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowBackingStore& message)
 {
     int window_id = message.window_id();
     auto it = m_windows.find(window_id);
@@ -513,7 +513,7 @@ OwnPtr<WindowServer::SetWindowBackingStoreResponse> ClientConnection::handle(con
     } else {
         auto shared_buffer = SharedBuffer::create_from_shared_buffer_id(message.shared_buffer_id());
         if (!shared_buffer)
-            return make<WindowServer::SetWindowBackingStoreResponse>();
+            return make<Messages::WindowServer::SetWindowBackingStoreResponse>();
         auto backing_store = Gfx::Bitmap::create_with_shared_buffer(
             message.has_alpha_channel() ? Gfx::Bitmap::Format::RGBA32 : Gfx::Bitmap::Format::RGB32,
             *shared_buffer,
@@ -524,10 +524,10 @@ OwnPtr<WindowServer::SetWindowBackingStoreResponse> ClientConnection::handle(con
     if (message.flush_immediately())
         window.invalidate();
 
-    return make<WindowServer::SetWindowBackingStoreResponse>();
+    return make<Messages::WindowServer::SetWindowBackingStoreResponse>();
 }
 
-OwnPtr<WindowServer::SetGlobalCursorTrackingResponse> ClientConnection::handle(const WindowServer::SetGlobalCursorTracking& message)
+OwnPtr<Messages::WindowServer::SetGlobalCursorTrackingResponse> ClientConnection::handle(const Messages::WindowServer::SetGlobalCursorTracking& message)
 {
     int window_id = message.window_id();
     auto it = m_windows.find(window_id);
@@ -536,10 +536,10 @@ OwnPtr<WindowServer::SetGlobalCursorTrackingResponse> ClientConnection::handle(c
         return nullptr;
     }
     it->value->set_global_cursor_tracking_enabled(message.enabled());
-    return make<WindowServer::SetGlobalCursorTrackingResponse>();
+    return make<Messages::WindowServer::SetGlobalCursorTrackingResponse>();
 }
 
-OwnPtr<WindowServer::SetWindowOverrideCursorResponse> ClientConnection::handle(const WindowServer::SetWindowOverrideCursor& message)
+OwnPtr<Messages::WindowServer::SetWindowOverrideCursorResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowOverrideCursor& message)
 {
     auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
@@ -548,10 +548,10 @@ OwnPtr<WindowServer::SetWindowOverrideCursorResponse> ClientConnection::handle(c
     }
     auto& window = *(*it).value;
     window.set_override_cursor(Cursor::create((StandardCursor)message.cursor_type()));
-    return make<WindowServer::SetWindowOverrideCursorResponse>();
+    return make<Messages::WindowServer::SetWindowOverrideCursorResponse>();
 }
 
-OwnPtr<WindowServer::SetWindowHasAlphaChannelResponse> ClientConnection::handle(const WindowServer::SetWindowHasAlphaChannel& message)
+OwnPtr<Messages::WindowServer::SetWindowHasAlphaChannelResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowHasAlphaChannel& message)
 {
     auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
@@ -559,10 +559,10 @@ OwnPtr<WindowServer::SetWindowHasAlphaChannelResponse> ClientConnection::handle(
         return nullptr;
     }
     it->value->set_has_alpha_channel(message.has_alpha_channel());
-    return make<WindowServer::SetWindowHasAlphaChannelResponse>();
+    return make<Messages::WindowServer::SetWindowHasAlphaChannelResponse>();
 }
 
-void ClientConnection::handle(const WindowServer::WM_SetActiveWindow& message)
+void ClientConnection::handle(const Messages::WindowServer::WM_SetActiveWindow& message)
 {
     auto* client = ClientConnection::from_client_id(message.client_id());
     if (!client) {
@@ -579,7 +579,7 @@ void ClientConnection::handle(const WindowServer::WM_SetActiveWindow& message)
     WindowManager::the().move_to_front_and_make_active(window);
 }
 
-void ClientConnection::handle(const WindowServer::WM_PopupWindowMenu& message)
+void ClientConnection::handle(const Messages::WindowServer::WM_PopupWindowMenu& message)
 {
     auto* client = ClientConnection::from_client_id(message.client_id());
     if (!client) {
@@ -595,7 +595,7 @@ void ClientConnection::handle(const WindowServer::WM_PopupWindowMenu& message)
     window.popup_window_menu(message.screen_position());
 }
 
-void ClientConnection::handle(const WindowServer::WM_StartWindowResize& request)
+void ClientConnection::handle(const Messages::WindowServer::WM_StartWindowResize& request)
 {
     auto* client = ClientConnection::from_client_id(request.client_id());
     if (!client) {
@@ -613,7 +613,7 @@ void ClientConnection::handle(const WindowServer::WM_StartWindowResize& request)
     WindowManager::the().start_window_resize(window, Screen::the().cursor_location(), MouseButton::Left);
 }
 
-void ClientConnection::handle(const WindowServer::WM_SetWindowMinimized& message)
+void ClientConnection::handle(const Messages::WindowServer::WM_SetWindowMinimized& message)
 {
     auto* client = ClientConnection::from_client_id(message.client_id());
     if (!client) {
@@ -629,9 +629,9 @@ void ClientConnection::handle(const WindowServer::WM_SetWindowMinimized& message
     window.set_minimized(message.minimized());
 }
 
-OwnPtr<WindowServer::GreetResponse> ClientConnection::handle(const WindowServer::Greet&)
+OwnPtr<Messages::WindowServer::GreetResponse> ClientConnection::handle(const Messages::WindowServer::Greet&)
 {
-    return make<WindowServer::GreetResponse>(client_id(), Screen::the().rect(), Gfx::current_system_theme_buffer_id());
+    return make<Messages::WindowServer::GreetResponse>(client_id(), Screen::the().rect(), Gfx::current_system_theme_buffer_id());
 }
 
 bool ClientConnection::is_showing_modal_window() const
@@ -644,7 +644,7 @@ bool ClientConnection::is_showing_modal_window() const
     return false;
 }
 
-void ClientConnection::handle(const WindowServer::WM_SetWindowTaskbarRect& message)
+void ClientConnection::handle(const Messages::WindowServer::WM_SetWindowTaskbarRect& message)
 {
     auto* client = ClientConnection::from_client_id(message.client_id());
     if (!client) {
@@ -660,11 +660,11 @@ void ClientConnection::handle(const WindowServer::WM_SetWindowTaskbarRect& messa
     window.set_taskbar_rect(message.rect());
 }
 
-OwnPtr<WindowServer::StartDragResponse> ClientConnection::handle(const WindowServer::StartDrag& message)
+OwnPtr<Messages::WindowServer::StartDragResponse> ClientConnection::handle(const Messages::WindowServer::StartDrag& message)
 {
     auto& wm = WindowManager::the();
     if (wm.dnd_client())
-        return make<WindowServer::StartDragResponse>(false);
+        return make<Messages::WindowServer::StartDragResponse>(false);
 
     RefPtr<Gfx::Bitmap> bitmap;
     if (message.bitmap_id() != -1) {
@@ -678,7 +678,7 @@ OwnPtr<WindowServer::StartDragResponse> ClientConnection::handle(const WindowSer
     }
 
     wm.start_dnd_drag(*this, message.text(), bitmap, message.data_type(), message.data());
-    return make<WindowServer::StartDragResponse>(true);
+    return make<Messages::WindowServer::StartDragResponse>(true);
 }
 
 void ClientConnection::boost()

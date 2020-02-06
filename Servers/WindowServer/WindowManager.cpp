@@ -213,7 +213,7 @@ void WindowManager::remove_window(Window& window)
         if (!(listener.wm_event_mask() & WMEventMask::WindowRemovals))
             return IterationDecision::Continue;
         if (!window.is_internal())
-            listener.client()->post_message(WindowClient::WM_WindowRemoved(listener.window_id(), window.client_id(), window.window_id()));
+            listener.client()->post_message(Messages::WindowClient::WM_WindowRemoved(listener.window_id(), window.client_id(), window.window_id()));
         return IterationDecision::Continue;
     });
 }
@@ -224,7 +224,7 @@ void WindowManager::tell_wm_listener_about_window(Window& listener, Window& wind
         return;
     if (window.is_internal())
         return;
-    listener.client()->post_message(WindowClient::WM_WindowStateChanged(listener.window_id(), window.client_id(), window.window_id(), window.is_active(), window.is_minimized(), (i32)window.type(), window.title(), window.rect()));
+    listener.client()->post_message(Messages::WindowClient::WM_WindowStateChanged(listener.window_id(), window.client_id(), window.window_id(), window.is_active(), window.is_minimized(), (i32)window.type(), window.title(), window.rect()));
 }
 
 void WindowManager::tell_wm_listener_about_window_rect(Window& listener, Window& window)
@@ -233,7 +233,7 @@ void WindowManager::tell_wm_listener_about_window_rect(Window& listener, Window&
         return;
     if (window.is_internal())
         return;
-    listener.client()->post_message(WindowClient::WM_WindowRectChanged(listener.window_id(), window.client_id(), window.window_id(), window.rect()));
+    listener.client()->post_message(Messages::WindowClient::WM_WindowRectChanged(listener.window_id(), window.client_id(), window.window_id(), window.rect()));
 }
 
 void WindowManager::tell_wm_listener_about_window_icon(Window& listener, Window& window)
@@ -248,7 +248,7 @@ void WindowManager::tell_wm_listener_about_window_icon(Window& listener, Window&
     if (share_buffer_with(window.icon().shared_buffer_id(), listener.client()->client_pid()) < 0) {
         ASSERT_NOT_REACHED();
     }
-    listener.client()->post_message(WindowClient::WM_WindowIconBitmapChanged(listener.window_id(), window.client_id(), window.window_id(), window.icon().shared_buffer_id(), window.icon().size()));
+    listener.client()->post_message(Messages::WindowClient::WM_WindowIconBitmapChanged(listener.window_id(), window.client_id(), window.window_id(), window.icon().shared_buffer_id(), window.icon().size()));
 }
 
 void WindowManager::tell_wm_listeners_window_state_changed(Window& window)
@@ -329,7 +329,7 @@ void WindowManager::notify_minimization_state_changed(Window& window)
     tell_wm_listeners_window_state_changed(window);
 
     if (window.client())
-        window.client()->post_message(WindowClient::WindowStateChanged(window.window_id(), window.is_minimized(), window.is_occluded()));
+        window.client()->post_message(Messages::WindowClient::WindowStateChanged(window.window_id(), window.is_minimized(), window.is_occluded()));
 
     if (window.is_active() && window.is_minimized())
         pick_new_active_window();
@@ -338,7 +338,7 @@ void WindowManager::notify_minimization_state_changed(Window& window)
 void WindowManager::notify_occlusion_state_changed(Window& window)
 {
     if (window.client())
-        window.client()->post_message(WindowClient::WindowStateChanged(window.window_id(), window.is_minimized(), window.is_occluded()));
+        window.client()->post_message(Messages::WindowClient::WindowStateChanged(window.window_id(), window.is_minimized(), window.is_occluded()));
 }
 
 void WindowManager::pick_new_active_window()
@@ -610,13 +610,13 @@ bool WindowManager::process_ongoing_drag(MouseEvent& event, Window*& hovered_win
     });
 
     if (hovered_window) {
-        m_dnd_client->post_message(WindowClient::DragAccepted());
+        m_dnd_client->post_message(Messages::WindowClient::DragAccepted());
         if (hovered_window->client()) {
             auto translated_event = event.translated(-hovered_window->position());
-            hovered_window->client()->post_message(WindowClient::DragDropped(hovered_window->window_id(), translated_event.position(), m_dnd_text, m_dnd_data_type, m_dnd_data));
+            hovered_window->client()->post_message(Messages::WindowClient::DragDropped(hovered_window->window_id(), translated_event.position(), m_dnd_text, m_dnd_data_type, m_dnd_data));
         }
     } else {
-        m_dnd_client->post_message(WindowClient::DragCancelled());
+        m_dnd_client->post_message(Messages::WindowClient::DragCancelled());
     }
 
     end_dnd_drag();
@@ -965,7 +965,7 @@ void WindowManager::event(Core::Event& event)
         m_keyboard_modifiers = key_event.modifiers();
 
         if (key_event.type() == Event::KeyDown && key_event.key() == Key_Escape && m_dnd_client) {
-            m_dnd_client->post_message(WindowClient::DragCancelled());
+            m_dnd_client->post_message(Messages::WindowClient::DragCancelled());
             end_dnd_drag();
             return;
         }
@@ -1275,7 +1275,7 @@ void WindowManager::update_theme(String theme_path, String theme_name)
     for_each_window([&](Window& window) {
         if (window.client()) {
             if (!notified_clients.contains(window.client())) {
-                window.client()->post_message(WindowClient::UpdateSystemTheme(Gfx::current_system_theme_buffer_id()));
+                window.client()->post_message(Messages::WindowClient::UpdateSystemTheme(Gfx::current_system_theme_buffer_id()));
                 notified_clients.set(window.client());
             }
         }

@@ -55,8 +55,8 @@ void Desktop::did_receive_screen_rect(Badge<WindowServerConnection>, const Gfx::
 
 bool Desktop::set_wallpaper(const StringView& path)
 {
-    WindowServerConnection::the().post_message(WindowServer::AsyncSetWallpaper(path));
-    auto ret_val = WindowServerConnection::the().wait_for_specific_message<WindowClient::AsyncSetWallpaperFinished>()->success();
+    WindowServerConnection::the().post_message(Messages::WindowServer::AsyncSetWallpaper(path));
+    auto ret_val = WindowServerConnection::the().wait_for_specific_message<Messages::WindowClient::AsyncSetWallpaperFinished>()->success();
 
     if (ret_val) {
         RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("WindowManager");
@@ -70,7 +70,7 @@ bool Desktop::set_wallpaper(const StringView& path)
 
 String Desktop::wallpaper() const
 {
-    return WindowServerConnection::the().send_sync<WindowServer::GetWallpaper>()->path();
+    return WindowServerConnection::the().send_sync<Messages::WindowServer::GetWallpaper>()->path();
 }
 
 }

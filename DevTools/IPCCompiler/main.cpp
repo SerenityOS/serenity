@@ -233,6 +233,7 @@ int main(int argc, char** argv)
     dbg();
 
     for (auto& endpoint : endpoints) {
+        dbg() << "namespace Messages {";
         dbg() << "namespace " << endpoint.name << " {";
         dbg();
 
@@ -445,6 +446,7 @@ int main(int argc, char** argv)
             do_message(message.name, message.inputs, response_name);
         }
         dbg() << "} // namespace " << endpoint.name;
+        dbg() << "} // namespace Messages";
         dbg();
 
         dbg() << "class " << endpoint.name << "Endpoint : public IPC::Endpoint {";
@@ -471,8 +473,8 @@ int main(int argc, char** argv)
         dbg() << "        switch (message_id) {";
         for (auto& message : endpoint.messages) {
             auto do_decode_message = [&](const String& name) {
-                dbg() << "        case (int)" << endpoint.name << "::MessageID::" << name << ":";
-                dbg() << "            return " << endpoint.name << "::" << name << "::decode(stream, size_in_bytes);";
+                dbg() << "        case (int)Messages::" << endpoint.name << "::MessageID::" << name << ":";
+                dbg() << "            return Messages::" << endpoint.name << "::" << name << "::decode(stream, size_in_bytes);";
             };
             do_decode_message(message.name);
             if (message.is_synchronous)
@@ -492,11 +494,11 @@ int main(int argc, char** argv)
         dbg() << "        switch (message.message_id()) {";
         for (auto& message : endpoint.messages) {
             auto do_decode_message = [&](const String& name, bool returns_something) {
-                dbg() << "        case (int)" << endpoint.name << "::MessageID::" << name << ":";
+                dbg() << "        case (int)Messages::" << endpoint.name << "::MessageID::" << name << ":";
                 if (returns_something) {
-                    dbg() << "            return handle(static_cast<const " << endpoint.name << "::" << name << "&>(message));";
+                    dbg() << "            return handle(static_cast<const Messages::" << endpoint.name << "::" << name << "&>(message));";
                 } else {
-                    dbg() << "            handle(static_cast<const " << endpoint.name << "::" << name << "&>(message));";
+                    dbg() << "            handle(static_cast<const Messages::" << endpoint.name << "::" << name << "&>(message));";
                     dbg() << "            return nullptr;";
                 }
             };
@@ -514,7 +516,7 @@ int main(int argc, char** argv)
             String return_type = "void";
             if (message.is_synchronous) {
                 StringBuilder builder;
-                builder.append("OwnPtr<");
+                builder.append("OwnPtr<Messages::");
                 builder.append(endpoint.name);
                 builder.append("::");
                 builder.append(message.name);
@@ -522,7 +524,7 @@ int main(int argc, char** argv)
                 builder.append(">");
                 return_type = builder.to_string();
             }
-            dbg() << "    virtual " << return_type << " handle(const " << endpoint.name << "::" << message.name << "&) = 0;";
+            dbg() << "    virtual " << return_type << " handle(const Messages::" << endpoint.name << "::" << message.name << "&) = 0;";
         }
 
         dbg() << "private:";
