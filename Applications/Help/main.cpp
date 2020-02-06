@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
 
     auto toolbar = GUI::ToolBar::construct(widget);
 
-    auto splitter = GUI::Splitter::construct(Orientation::Horizontal, widget);
+    auto splitter = GUI::HorizontalSplitter::construct(widget);
 
     auto model = ManualModel::create();
 

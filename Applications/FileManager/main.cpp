@@ -103,7 +103,7 @@ int main(int argc, char** argv)
 
     auto location_textbox = GUI::TextEditor::construct(GUI::TextEditor::SingleLine, location_toolbar);
 
-    auto splitter = GUI::Splitter::construct(Orientation::Horizontal, widget);
+    auto splitter = GUI::HorizontalSplitter::construct(widget);
     auto tree_view = GUI::TreeView::construct(splitter);
     auto directories_model = GUI::FileSystemModel::create("/", GUI::FileSystemModel::Mode::DirectoriesOnly);
     tree_view->set_model(directories_model);

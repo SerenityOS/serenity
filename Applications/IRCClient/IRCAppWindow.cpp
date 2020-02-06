@@ -199,7 +199,7 @@ void IRCAppWindow::setup_widgets()
     outer_container->set_layout(make<GUI::VBoxLayout>());
     outer_container->layout()->set_margins({ 2, 0, 2, 2 });
 
-    auto horizontal_container = GUI::Splitter::construct(Orientation::Horizontal, outer_container);
+    auto horizontal_container = GUI::HorizontalSplitter::construct(outer_container);
 
     m_window_list = GUI::TableView::construct(horizontal_container);
     m_window_list->set_headers_visible(false);

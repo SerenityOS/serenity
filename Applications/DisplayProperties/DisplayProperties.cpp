@@ -125,7 +125,7 @@ void DisplayPropertiesWidget::create_frame()
     auto tab_widget = GUI::TabWidget::construct(m_root_widget);
 
     // First, let's create the "Background" tab
-    auto background_splitter = GUI::Splitter::construct(Orientation::Vertical, nullptr);
+    auto background_splitter = GUI::VerticalSplitter::construct(nullptr);
     tab_widget->add_widget("Wallpaper", background_splitter);
 
     auto background_content = GUI::Widget::construct(background_splitter.ptr());
@@ -155,7 +155,7 @@ void DisplayPropertiesWidget::create_frame()
     };
 
     // Let's add the settings tab
-    auto settings_splitter = GUI::Splitter::construct(Orientation::Vertical, nullptr);
+    auto settings_splitter = GUI::VerticalSplitter::construct(nullptr);
     tab_widget->add_widget("Settings", settings_splitter);
 
     auto settings_content = GUI::Widget::construct(settings_splitter.ptr());
