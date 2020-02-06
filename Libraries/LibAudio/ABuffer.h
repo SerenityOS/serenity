@@ -31,24 +31,26 @@
 #include <AK/Vector.h>
 #include <AK/SharedBuffer.h>
 
+namespace Audio {
+
 // A single sample in an audio buffer.
 // Values are floating point, and should range from -1.0 to +1.0
-struct ASample {
-    ASample()
+struct Sample {
+    Sample()
         : left(0)
         , right(0)
     {
     }
 
     // For mono
-    ASample(float left)
+    Sample(float left)
         : left(left)
         , right(left)
     {
     }
 
     // For stereo
-    ASample(float left, float right)
+    Sample(float left, float right)
         : left(left)
         , right(right)
     {
@@ -74,7 +76,7 @@ struct ASample {
         right *= pct;
     }
 
-    ASample& operator+=(const ASample& other)
+    Sample& operator+=(const Sample& other)
     {
         left += other.left;
         right += other.right;
@@ -88,9 +90,9 @@ struct ASample {
 // Small helper to resample from one playback rate to another
 // This isn't really "smart", in that we just insert (or drop) samples.
 // Should do better...
-class AResampleHelper {
+class ResampleHelper {
 public:
-    AResampleHelper(float source, float target);
+    ResampleHelper(float source, float target);
 
     void process_sample(float sample_l, float sample_r);
     bool read_sample(float& next_l, float& next_r);
@@ -103,34 +105,34 @@ private:
 };
 
 // A buffer of audio samples, normalized to 44100hz.
-class ABuffer : public RefCounted<ABuffer> {
+class Buffer : public RefCounted<Buffer> {
 public:
-    static RefPtr<ABuffer> from_pcm_data(ByteBuffer& data, AResampleHelper& resampler, int num_channels, int bits_per_sample);
-    static NonnullRefPtr<ABuffer> create_with_samples(Vector<ASample>&& samples)
+    static RefPtr<Buffer> from_pcm_data(ByteBuffer& data, ResampleHelper& resampler, int num_channels, int bits_per_sample);
+    static NonnullRefPtr<Buffer> create_with_samples(Vector<Sample>&& samples)
     {
-        return adopt(*new ABuffer(move(samples)));
+        return adopt(*new Buffer(move(samples)));
     }
-    static NonnullRefPtr<ABuffer> create_with_shared_buffer(NonnullRefPtr<SharedBuffer>&& buffer, int sample_count)
+    static NonnullRefPtr<Buffer> create_with_shared_buffer(NonnullRefPtr<SharedBuffer>&& buffer, int sample_count)
     {
-        return adopt(*new ABuffer(move(buffer), sample_count));
+        return adopt(*new Buffer(move(buffer), sample_count));
     }
 
-    const ASample* samples() const { return (const ASample*)data(); }
+    const Sample* samples() const { return (const Sample*)data(); }
     int sample_count() const { return m_sample_count; }
     const void* data() const { return m_buffer->data(); }
-    int size_in_bytes() const { return m_sample_count * (int)sizeof(ASample); }
+    int size_in_bytes() const { return m_sample_count * (int)sizeof(Sample); }
     int shared_buffer_id() const { return m_buffer->shared_buffer_id(); }
     SharedBuffer& shared_buffer() { return *m_buffer; }
 
 private:
-    explicit ABuffer(Vector<ASample>&& samples)
-        : m_buffer(*SharedBuffer::create_with_size(samples.size() * sizeof(ASample))),
+    explicit Buffer(Vector<Sample>&& samples)
+        : m_buffer(*SharedBuffer::create_with_size(samples.size() * sizeof(Sample))),
         m_sample_count(samples.size())
     {
-        memcpy(m_buffer->data(), samples.data(), samples.size() * sizeof(ASample));
+        memcpy(m_buffer->data(), samples.data(), samples.size() * sizeof(Sample));
     }
 
-    explicit ABuffer(NonnullRefPtr<SharedBuffer>&& buffer, int sample_count)
+    explicit Buffer(NonnullRefPtr<SharedBuffer>&& buffer, int sample_count)
         : m_buffer(move(buffer)),
         m_sample_count(sample_count)
     {
@@ -139,3 +141,5 @@ private:
     NonnullRefPtr<SharedBuffer> m_buffer;
     const int m_sample_count;
 };
+
+}

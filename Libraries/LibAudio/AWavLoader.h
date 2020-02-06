@@ -26,27 +26,28 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/RefPtr.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
-#include <LibCore/CFile.h>
 #include <LibAudio/ABuffer.h>
-
-class ABuffer;
+#include <LibCore/CFile.h>
 
 namespace AK {
 class ByteBuffer;
 }
 
-// Parses a WAV file and produces an ABuffer instance from it
-class AWavLoader {
+namespace Audio {
+class Buffer;
+
+// Parses a WAV file and produces an Audio::Buffer.
+class WavLoader {
 public:
-    explicit AWavLoader(const StringView& path);
+    explicit WavLoader(const StringView& path);
 
     bool has_error() const { return !m_error_string.is_null(); }
     const char* error_string() { return m_error_string.characters(); }
 
-    RefPtr<ABuffer> get_more_samples(size_t max_bytes_to_read_from_input = 128 * KB);
+    RefPtr<Buffer> get_more_samples(size_t max_bytes_to_read_from_input = 128 * KB);
 
     void reset();
     void seek(const int position);
@@ -62,7 +63,7 @@ private:
     bool parse_header();
     RefPtr<Core::File> m_file;
     String m_error_string;
-    OwnPtr<AResampleHelper> m_resampler;
+    OwnPtr<ResampleHelper> m_resampler;
 
     u32 m_sample_rate { 0 };
     u16 m_num_channels { 0 };
@@ -71,3 +72,5 @@ private:
     int m_loaded_samples { 0 };
     int m_total_samples { 0 };
 };
+
+}

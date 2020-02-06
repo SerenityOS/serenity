@@ -36,7 +36,7 @@
 
 class PlaybackManager final {
 public:
-    PlaybackManager(NonnullRefPtr<AClientConnection>);
+    PlaybackManager(NonnullRefPtr<Audio::ClientConnection>);
     ~PlaybackManager();
 
     void play();
@@ -44,14 +44,14 @@ public:
     void pause();
     void seek(const int position);
     bool toggle_pause();
-    void set_loader(OwnPtr<AWavLoader>&&);
+    void set_loader(OwnPtr<Audio::WavLoader>&&);
 
     int last_seek() const { return m_last_seek; }
     bool is_paused() const { return m_paused; }
     float total_length() const { return m_total_length; }
-    RefPtr<ABuffer> current_buffer() const { return m_current_buffer; }
+    RefPtr<Audio::Buffer> current_buffer() const { return m_current_buffer; }
 
-    NonnullRefPtr<AClientConnection> connection() const { return m_connection; }
+    NonnullRefPtr<Audio::ClientConnection> connection() const { return m_connection; }
 
     Function<void()> on_update;
 
@@ -65,10 +65,10 @@ private:
     int m_next_ptr { 0 };
     int m_last_seek { 0 };
     float m_total_length { 0 };
-    OwnPtr<AWavLoader> m_loader { nullptr };
-    NonnullRefPtr<AClientConnection> m_connection;
-    RefPtr<ABuffer> m_next_buffer;
-    RefPtr<ABuffer> m_current_buffer;
-    Vector<RefPtr<ABuffer>> m_buffers;
+    OwnPtr<Audio::WavLoader> m_loader { nullptr };
+    NonnullRefPtr<Audio::ClientConnection> m_connection;
+    RefPtr<Audio::Buffer> m_next_buffer;
+    RefPtr<Audio::Buffer> m_current_buffer;
+    Vector<RefPtr<Audio::Buffer>> m_buffers;
     RefPtr<Core::Timer> m_timer;
 };

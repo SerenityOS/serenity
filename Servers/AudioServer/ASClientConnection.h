@@ -29,7 +29,10 @@
 #include <AudioServer/AudioServerEndpoint.h>
 #include <LibIPC/IClientConnection.h>
 
-class ABuffer;
+namespace Audio {
+class Buffer;
+}
+
 class ASBufferQueue;
 class ASMixer;
 

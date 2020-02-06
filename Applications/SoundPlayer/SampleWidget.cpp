@@ -77,7 +77,7 @@ void SampleWidget::paint_event(GUI::PaintEvent& event)
     }
 }
 
-void SampleWidget::set_buffer(ABuffer* buffer)
+void SampleWidget::set_buffer(Audio::Buffer* buffer)
 {
     if (m_buffer == buffer)
         return;

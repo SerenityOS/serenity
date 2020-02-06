@@ -30,7 +30,9 @@
 #include <LibCore/CIODeviceStreamReader.h>
 #include <limits>
 
-AWavLoader::AWavLoader(const StringView& path)
+namespace Audio {
+
+WavLoader::WavLoader(const StringView& path)
     : m_file(Core::File::construct(path))
 {
     if (!m_file->open(Core::IODevice::ReadOnly)) {
@@ -39,10 +41,10 @@ AWavLoader::AWavLoader(const StringView& path)
     }
 
     parse_header();
-    m_resampler = make<AResampleHelper>(m_sample_rate, 44100);
+    m_resampler = make<ResampleHelper>(m_sample_rate, 44100);
 }
 
-RefPtr<ABuffer> AWavLoader::get_more_samples(size_t max_bytes_to_read_from_input)
+RefPtr<Buffer> WavLoader::get_more_samples(size_t max_bytes_to_read_from_input)
 {
 #ifdef AWAVLOADER_DEBUG
     dbgprintf("Read WAV of format PCM with num_channels %u sample rate %u, bits per sample %u\n", m_num_channels, m_sample_rate, m_bits_per_sample);
@@ -52,14 +54,14 @@ RefPtr<ABuffer> AWavLoader::get_more_samples(size_t max_bytes_to_read_from_input
     if (raw_samples.is_empty())
         return nullptr;
 
-    auto buffer = ABuffer::from_pcm_data(raw_samples, *m_resampler, m_num_channels, m_bits_per_sample);
+    auto buffer = Buffer::from_pcm_data(raw_samples, *m_resampler, m_num_channels, m_bits_per_sample);
     //Buffer contains normalized samples, but m_loaded_samples should containt the ammount of actually loaded samples
     m_loaded_samples += static_cast<int>(max_bytes_to_read_from_input) / (m_num_channels * (m_bits_per_sample / 8));
     m_loaded_samples = min(m_total_samples, m_loaded_samples);
     return buffer;
 }
 
-void AWavLoader::seek(const int position)
+void WavLoader::seek(const int position)
 {
     if (position < 0 || position > m_total_samples)
         return;
@@ -68,12 +70,12 @@ void AWavLoader::seek(const int position)
     m_file->seek(position * m_num_channels * (m_bits_per_sample / 8));
 }
 
-void AWavLoader::reset()
+void WavLoader::reset()
 {
     seek(0);
 }
 
-bool AWavLoader::parse_header()
+bool WavLoader::parse_header()
 {
     Core::IODeviceStreamReader stream(*m_file);
 
@@ -179,19 +181,19 @@ bool AWavLoader::parse_header()
     return true;
 }
 
-AResampleHelper::AResampleHelper(float source, float target)
+ResampleHelper::ResampleHelper(float source, float target)
     : m_ratio(source / target)
 {
 }
 
-void AResampleHelper::process_sample(float sample_l, float sample_r)
+void ResampleHelper::process_sample(float sample_l, float sample_r)
 {
     m_last_sample_l = sample_l;
     m_last_sample_r = sample_r;
     m_current_ratio += 1;
 }
 
-bool AResampleHelper::read_sample(float& next_l, float& next_r)
+bool ResampleHelper::read_sample(float& next_l, float& next_r)
 {
     if (m_current_ratio > 0) {
         m_current_ratio -= m_ratio;
@@ -204,7 +206,7 @@ bool AResampleHelper::read_sample(float& next_l, float& next_r)
 }
 
 template<typename SampleReader>
-static void read_samples_from_stream(BufferStream& stream, SampleReader read_sample, Vector<ASample>& samples, AResampleHelper& resampler, int num_channels)
+static void read_samples_from_stream(BufferStream& stream, SampleReader read_sample, Vector<Sample>& samples, ResampleHelper& resampler, int num_channels)
 {
     float norm_l = 0;
     float norm_r = 0;
@@ -213,7 +215,7 @@ static void read_samples_from_stream(BufferStream& stream, SampleReader read_sam
     case 1:
         for (;;) {
             while (resampler.read_sample(norm_l, norm_r)) {
-                samples.append(ASample(norm_l));
+                samples.append(Sample(norm_l));
             }
             norm_l = read_sample(stream);
 
@@ -226,7 +228,7 @@ static void read_samples_from_stream(BufferStream& stream, SampleReader read_sam
     case 2:
         for (;;) {
             while (resampler.read_sample(norm_l, norm_r)) {
-                samples.append(ASample(norm_l, norm_r));
+                samples.append(Sample(norm_l, norm_r));
             }
             norm_l = read_sample(stream);
             norm_r = read_sample(stream);
@@ -276,10 +278,10 @@ static float read_norm_sample_8(BufferStream& stream)
 // ### can't const this because BufferStream is non-const
 // perhaps we need a reading class separate from the writing one, that can be
 // entirely consted.
-RefPtr<ABuffer> ABuffer::from_pcm_data(ByteBuffer& data, AResampleHelper& resampler, int num_channels, int bits_per_sample)
+RefPtr<Buffer> Buffer::from_pcm_data(ByteBuffer& data, ResampleHelper& resampler, int num_channels, int bits_per_sample)
 {
     BufferStream stream(data);
-    Vector<ASample> fdata;
+    Vector<Sample> fdata;
     fdata.ensure_capacity(data.size() / (bits_per_sample / 8));
 #ifdef AWAVLOADER_DEBUG
     dbg() << "Reading " << bits_per_sample << " bits and " << num_channels << " channels, total bytes: " << data.size();
@@ -304,5 +306,7 @@ RefPtr<ABuffer> ABuffer::from_pcm_data(ByteBuffer& data, AResampleHelper& resamp
     // don't belong.
     ASSERT(!stream.handle_read_failure());
 
-    return ABuffer::create_with_samples(move(fdata));
+    return Buffer::create_with_samples(move(fdata));
+}
+
 }

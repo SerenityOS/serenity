@@ -28,21 +28,23 @@
 #include <LibAudio/ABuffer.h>
 #include <LibAudio/AClientConnection.h>
 
-AClientConnection::AClientConnection()
+namespace Audio {
+
+ClientConnection::ClientConnection()
     : IPC::ServerConnection<AudioClientEndpoint, AudioServerEndpoint>(*this, "/tmp/portal/audio")
 {
 }
 
-void AClientConnection::handshake()
+void ClientConnection::handshake()
 {
     auto response = send_sync<AudioServer::Greet>();
     set_my_client_id(response->client_id());
 }
 
-void AClientConnection::enqueue(const ABuffer& buffer)
+void ClientConnection::enqueue(const Buffer& buffer)
 {
     for (;;) {
-        const_cast<ABuffer&>(buffer).shared_buffer().share_with(server_pid());
+        const_cast<Buffer&>(buffer).shared_buffer().share_with(server_pid());
         auto response = send_sync<AudioServer::EnqueueBuffer>(buffer.shared_buffer_id(), buffer.sample_count());
         if (response->success())
             break;
@@ -50,66 +52,68 @@ void AClientConnection::enqueue(const ABuffer& buffer)
     }
 }
 
-bool AClientConnection::try_enqueue(const ABuffer& buffer)
+bool ClientConnection::try_enqueue(const Buffer& buffer)
 {
-    const_cast<ABuffer&>(buffer).shared_buffer().share_with(server_pid());
+    const_cast<Buffer&>(buffer).shared_buffer().share_with(server_pid());
     auto response = send_sync<AudioServer::EnqueueBuffer>(buffer.shared_buffer_id(), buffer.sample_count());
     return response->success();
 }
 
-bool AClientConnection::get_muted()
+bool ClientConnection::get_muted()
 {
     return send_sync<AudioServer::GetMuted>()->muted();
 }
 
-void AClientConnection::set_muted(bool muted)
+void ClientConnection::set_muted(bool muted)
 {
     send_sync<AudioServer::SetMuted>(muted);
 }
 
-int AClientConnection::get_main_mix_volume()
+int ClientConnection::get_main_mix_volume()
 {
     return send_sync<AudioServer::GetMainMixVolume>()->volume();
 }
 
-void AClientConnection::set_main_mix_volume(int volume)
+void ClientConnection::set_main_mix_volume(int volume)
 {
     send_sync<AudioServer::SetMainMixVolume>(volume);
 }
 
-int AClientConnection::get_remaining_samples()
+int ClientConnection::get_remaining_samples()
 {
     return send_sync<AudioServer::GetRemainingSamples>()->remaining_samples();
 }
 
-int AClientConnection::get_played_samples()
+int ClientConnection::get_played_samples()
 {
     return send_sync<AudioServer::GetPlayedSamples>()->played_samples();
 }
 
-void AClientConnection::set_paused(bool paused)
+void ClientConnection::set_paused(bool paused)
 {
     send_sync<AudioServer::SetPaused>(paused);
 }
 
-void AClientConnection::clear_buffer(bool paused)
+void ClientConnection::clear_buffer(bool paused)
 {
     send_sync<AudioServer::ClearBuffer>(paused);
 }
 
-int AClientConnection::get_playing_buffer()
+int ClientConnection::get_playing_buffer()
 {
     return send_sync<AudioServer::GetPlayingBuffer>()->buffer_id();
 }
 
-void AClientConnection::handle(const AudioClient::FinishedPlayingBuffer& message)
+void ClientConnection::handle(const AudioClient::FinishedPlayingBuffer& message)
 {
     if (on_finish_playing_buffer)
         on_finish_playing_buffer(message.buffer_id());
 }
 
-void AClientConnection::handle(const AudioClient::MutedStateChanged& message)
+void ClientConnection::handle(const AudioClient::MutedStateChanged& message)
 {
     if (on_muted_state_change)
         on_muted_state_change(message.muted());
+}
+
 }
