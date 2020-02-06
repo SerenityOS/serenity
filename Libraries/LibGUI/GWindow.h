@@ -102,7 +102,7 @@ public:
     int height() const { return rect().height(); }
 
     Gfx::Rect rect() const;
-    Size size() const { return rect().size(); }
+    Gfx::Size size() const { return rect().size(); }
     void set_rect(const Gfx::Rect&);
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
 
@@ -152,9 +152,9 @@ public:
     Gfx::Bitmap* front_bitmap() { return m_front_bitmap.ptr(); }
     Gfx::Bitmap* back_bitmap() { return m_back_bitmap.ptr(); }
 
-    Size size_increment() const { return m_size_increment; }
+    Gfx::Size size_increment() const { return m_size_increment; }
     void set_size_increment(const Gfx::Size& increment) { m_size_increment = increment; }
-    Size base_size() const { return m_base_size; }
+    Gfx::Size base_size() const { return m_base_size; }
     void set_base_size(const Gfx::Size& size) { m_base_size = size; }
 
     void set_override_cursor(StandardCursor);

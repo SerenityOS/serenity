@@ -146,7 +146,7 @@ void WSWindowManager::set_resolution(int width, int height)
         client.notify_about_new_screen_rect(WSScreen::the().rect());
     });
     if (m_wm_config) {
-        dbg() << "Saving resolution: " << Size(width, height) << " to config file at " << m_wm_config->file_name();
+        dbg() << "Saving resolution: " << Gfx::Size(width, height) << " to config file at " << m_wm_config->file_name();
         m_wm_config->write_num_entry("Screen", "Width", width);
         m_wm_config->write_num_entry("Screen", "Height", height);
         m_wm_config->sync();
@@ -542,7 +542,7 @@ bool WSWindowManager::process_ongoing_window_resize(const WSMouseEvent& event, W
     auto new_rect = m_resize_window_original_rect;
 
     // First, size the new rect.
-    Size minimum_size { 50, 50 };
+    Gfx::Size minimum_size { 50, 50 };
 
     new_rect.set_width(max(minimum_size.width(), new_rect.width() + change_w));
     new_rect.set_height(max(minimum_size.height(), new_rect.height() + change_h));

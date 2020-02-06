@@ -47,7 +47,7 @@ DragOperation::Outcome DragOperation::exec()
     ASSERT(!m_event_loop);
 
     int bitmap_id = -1;
-    Size bitmap_size;
+    Gfx::Size bitmap_size;
     RefPtr<Gfx::Bitmap> shared_bitmap;
     if (m_bitmap) {
         shared_bitmap = m_bitmap->to_shareable_bitmap();

@@ -69,7 +69,7 @@ void DisplayPropertiesWidget::create_resolution_list()
     m_resolutions.append({ 1920, 1080 });
     m_resolutions.append({ 2560, 1080 });
 
-    Size find_size;
+    Gfx::Size find_size;
 
     bool okay = false;
     // Let's attempt to find the current resolution and select it!
@@ -165,7 +165,7 @@ void DisplayPropertiesWidget::create_frame()
 
     auto resolution_list = GUI::ListView::construct(settings_content);
     resolution_list->set_background_color(Color::White);
-    resolution_list->set_model(*ItemListModel<Size>::create(m_resolutions));
+    resolution_list->set_model(*ItemListModel<Gfx::Size>::create(m_resolutions));
 
     auto resolution_model = resolution_list->model();
     auto find_first_resolution_index = m_resolutions.find_first_index(m_selected_resolution);

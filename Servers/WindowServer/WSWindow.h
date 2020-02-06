@@ -159,7 +159,7 @@ public:
     void set_position(const Gfx::Point& position) { set_rect({ position.x(), position.y(), width(), height() }); }
     void set_position_without_repaint(const Gfx::Point& position) { set_rect_without_repaint({ position.x(), position.y(), width(), height() }); }
 
-    Size size() const { return m_rect.size(); }
+    Gfx::Size size() const { return m_rect.size(); }
 
     void invalidate();
     void invalidate(const Gfx::Rect&);
@@ -193,10 +193,10 @@ public:
     bool has_alpha_channel() const { return m_has_alpha_channel; }
     void set_has_alpha_channel(bool value) { m_has_alpha_channel = value; }
 
-    Size size_increment() const { return m_size_increment; }
+    Gfx::Size size_increment() const { return m_size_increment; }
     void set_size_increment(const Gfx::Size& increment) { m_size_increment = increment; }
 
-    Size base_size() const { return m_base_size; }
+    Gfx::Size base_size() const { return m_base_size; }
     void set_base_size(const Gfx::Size& size) { m_base_size = size; }
 
     const Gfx::Bitmap& icon() const { return *m_icon; }

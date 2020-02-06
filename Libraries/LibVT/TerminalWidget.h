@@ -122,7 +122,7 @@ private:
 
     void relayout(const Gfx::Size&);
 
-    Size compute_base_size() const;
+    Gfx::Size compute_base_size() const;
     int first_selection_column_on_row(int row) const;
     int last_selection_column_on_row(int row) const;
 

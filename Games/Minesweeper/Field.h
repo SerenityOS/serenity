@@ -65,7 +65,7 @@ class Field final : public GUI::Frame {
     friend class Square;
     friend class SquareLabel;
 public:
-    Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, GUI::Widget* parent, Function<void(Size)> on_size_changed);
+    Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, GUI::Widget* parent, Function<void(Gfx::Size)> on_size_changed);
     virtual ~Field() override;
 
     int rows() const { return m_rows; }
@@ -131,5 +131,5 @@ private:
     bool m_chord_preview { false };
     bool m_first_click { true };
     bool m_single_chording { true };
-    Function<void(Size)> m_on_size_changed;
+    Function<void(Gfx::Size)> m_on_size_changed;
 };

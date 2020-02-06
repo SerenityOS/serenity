@@ -48,7 +48,7 @@ void BoxLayout::run(Widget& widget)
     if (m_entries.is_empty())
         return;
 
-    Size available_size = widget.size();
+    Gfx::Size available_size = widget.size();
     int number_of_entries_with_fixed_size = 0;
 
     int number_of_visible_entries = 0;
@@ -91,7 +91,7 @@ void BoxLayout::run(Widget& widget)
     if (should_log)
         dbgprintf("BoxLayout:   available_size=%s, fixed=%d, fill=%d\n", available_size.to_string().characters(), number_of_entries_with_fixed_size, number_of_entries_with_automatic_size);
 
-    Size automatic_size;
+    Gfx::Size automatic_size;
 
     if (number_of_entries_with_automatic_size) {
         if (m_orientation == Orientation::Horizontal) {

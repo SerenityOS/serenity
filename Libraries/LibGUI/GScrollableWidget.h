@@ -37,7 +37,7 @@ class ScrollableWidget : public Frame {
 public:
     virtual ~ScrollableWidget() override;
 
-    Size content_size() const { return m_content_size; }
+    Gfx::Size content_size() const { return m_content_size; }
     int content_width() const { return m_content_size.width(); }
     int content_height() const { return m_content_size.height(); }
 
@@ -51,7 +51,7 @@ public:
     void set_scrollbars_enabled(bool);
     bool is_scrollbars_enabled() const { return m_scrollbars_enabled; }
 
-    Size available_size() const;
+    Gfx::Size available_size() const;
 
     ScrollBar& vertical_scrollbar() { return *m_vertical_scrollbar; }
     const ScrollBar& vertical_scrollbar() const { return *m_vertical_scrollbar; }

@@ -189,7 +189,7 @@ public:
         return { m_value.as_point.x, m_value.as_point.y };
     }
 
-    Size as_size() const
+    Gfx::Size as_size() const
     {
         return { m_value.as_size.width, m_value.as_size.height };
     }

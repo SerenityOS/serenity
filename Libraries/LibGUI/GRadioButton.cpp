@@ -45,7 +45,7 @@ RadioButton::~RadioButton()
 {
 }
 
-Size RadioButton::circle_size()
+Gfx::Size RadioButton::circle_size()
 {
     return { 12, 12 };
 }

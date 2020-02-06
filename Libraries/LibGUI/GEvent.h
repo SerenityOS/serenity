@@ -173,7 +173,7 @@ public:
     }
 
     const Vector<Gfx::Rect, 32>& rects() const { return m_rects; }
-    Size window_size() const { return m_window_size; }
+    Gfx::Size window_size() const { return m_window_size; }
 
 private:
     Vector<Gfx::Rect, 32> m_rects;
@@ -182,7 +182,7 @@ private:
 
 class PaintEvent final : public Event {
 public:
-    explicit PaintEvent(const Gfx::Rect& rect, const Gfx::Size& window_size = Size())
+    explicit PaintEvent(const Gfx::Rect& rect, const Gfx::Size& window_size = {})
         : Event(Event::Paint)
         , m_rect(rect)
         , m_window_size(window_size)
@@ -190,7 +190,7 @@ public:
     }
 
     Gfx::Rect rect() const { return m_rect; }
-    Size window_size() const { return m_window_size; }
+    Gfx::Size window_size() const { return m_window_size; }
 
 private:
     Gfx::Rect m_rect;

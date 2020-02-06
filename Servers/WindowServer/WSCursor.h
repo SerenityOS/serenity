@@ -51,7 +51,7 @@ public:
     const Gfx::Bitmap& bitmap() const { return *m_bitmap; }
 
     Gfx::Rect rect() const { return m_bitmap->rect(); }
-    Size size() const { return m_bitmap->size(); }
+    Gfx::Size size() const { return m_bitmap->size(); }
 
 private:
     WSCursor(NonnullRefPtr<Gfx::Bitmap>&&, const Gfx::Point&);

@@ -115,5 +115,3 @@ inline const LogStream& operator<<(const LogStream& stream, const Size& value)
 }
 
 }
-
-using Gfx::Size;

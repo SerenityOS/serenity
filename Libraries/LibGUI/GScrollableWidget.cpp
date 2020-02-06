@@ -92,7 +92,7 @@ void ScrollableWidget::resize_event(ResizeEvent& event)
     update_scrollbar_ranges();
 }
 
-Size ScrollableWidget::available_size() const
+Gfx::Size ScrollableWidget::available_size() const
 {
     int available_width = frame_inner_rect().width() - m_size_occupied_by_fixed_elements.width() - width_occupied_by_vertical_scrollbar();
     int available_height = frame_inner_rect().height() - m_size_occupied_by_fixed_elements.height() - height_occupied_by_horizontal_scrollbar();
