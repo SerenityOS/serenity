@@ -26,9 +26,9 @@
 
 #include "EraseTool.h"
 #include "PaintableWidget.h"
-#include <LibGUI/GAction.h>
-#include <LibGUI/GMenu.h>
-#include <LibGUI/GPainter.h>
+#include <LibGUI/Action.h>
+#include <LibGUI/Menu.h>
+#include <LibGUI/Painter.h>
 
 EraseTool::EraseTool()
 {

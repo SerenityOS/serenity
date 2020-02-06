@@ -28,19 +28,19 @@
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/File.h>
-#include <LibGUI/GAboutDialog.h>
-#include <LibGUI/GAction.h>
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GButton.h>
-#include <LibGUI/GFilePicker.h>
-#include <LibGUI/GFontDatabase.h>
-#include <LibGUI/GInputBox.h>
-#include <LibGUI/GMenuBar.h>
-#include <LibGUI/GMessageBox.h>
-#include <LibGUI/GStatusBar.h>
-#include <LibGUI/GTextBox.h>
-#include <LibGUI/GTextEditor.h>
-#include <LibGUI/GToolBar.h>
+#include <LibGUI/AboutDialog.h>
+#include <LibGUI/Action.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/Button.h>
+#include <LibGUI/FilePicker.h>
+#include <LibGUI/FontDatabase.h>
+#include <LibGUI/InputBox.h>
+#include <LibGUI/MenuBar.h>
+#include <LibGUI/MessageBox.h>
+#include <LibGUI/StatusBar.h>
+#include <LibGUI/TextBox.h>
+#include <LibGUI/TextEditor.h>
+#include <LibGUI/ToolBar.h>
 #include <stdio.h>
 
 HexEditorWidget::HexEditorWidget()

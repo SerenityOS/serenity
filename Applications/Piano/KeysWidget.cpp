@@ -27,7 +27,7 @@
 
 #include "KeysWidget.h"
 #include "AudioEngine.h"
-#include <LibGUI/GPainter.h>
+#include <LibGUI/Painter.h>
 
 KeysWidget::KeysWidget(GUI::Widget* parent, AudioEngine& audio_engine)
     : GUI::Frame(parent)

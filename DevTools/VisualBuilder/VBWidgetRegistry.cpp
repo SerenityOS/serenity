@@ -26,16 +26,16 @@
 
 #include "VBWidgetRegistry.h"
 #include "VBProperty.h"
-#include <LibGUI/GButton.h>
-#include <LibGUI/GCheckBox.h>
-#include <LibGUI/GGroupBox.h>
-#include <LibGUI/GLabel.h>
-#include <LibGUI/GProgressBar.h>
-#include <LibGUI/GRadioButton.h>
-#include <LibGUI/GScrollBar.h>
-#include <LibGUI/GSlider.h>
-#include <LibGUI/GSpinBox.h>
-#include <LibGUI/GTextEditor.h>
+#include <LibGUI/Button.h>
+#include <LibGUI/CheckBox.h>
+#include <LibGUI/GroupBox.h>
+#include <LibGUI/Label.h>
+#include <LibGUI/ProgressBar.h>
+#include <LibGUI/RadioButton.h>
+#include <LibGUI/ScrollBar.h>
+#include <LibGUI/Slider.h>
+#include <LibGUI/SpinBox.h>
+#include <LibGUI/TextEditor.h>
 
 String to_class_name(VBWidgetType type)
 {

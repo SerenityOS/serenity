@@ -27,7 +27,7 @@
 #pragma once
 
 #include <LibCore/Timer.h>
-#include <LibGUI/GLazyWidget.h>
+#include <LibGUI/LazyWidget.h>
 
 namespace GUI {
 class TableView;

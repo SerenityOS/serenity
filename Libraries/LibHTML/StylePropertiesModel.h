@@ -25,7 +25,7 @@
  */
 
 #include <AK/NonnullRefPtrVector.h>
-#include <LibGUI/GModel.h>
+#include <LibGUI/Model.h>
 
 class StyleProperties;
 

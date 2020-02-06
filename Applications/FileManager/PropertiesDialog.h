@@ -28,11 +28,11 @@
 
 #include <AK/FileSystemPath.h>
 #include <LibCore/File.h>
-#include <LibGUI/GButton.h>
-#include <LibGUI/GDialog.h>
-#include <LibGUI/GFileSystemModel.h>
-#include <LibGUI/GLabel.h>
-#include <LibGUI/GTextBox.h>
+#include <LibGUI/Button.h>
+#include <LibGUI/Dialog.h>
+#include <LibGUI/FileSystemModel.h>
+#include <LibGUI/Label.h>
+#include <LibGUI/TextBox.h>
 
 class PropertiesDialog final : public GUI::Dialog {
     C_OBJECT(PropertiesDialog)

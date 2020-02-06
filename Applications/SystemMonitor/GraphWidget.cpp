@@ -25,7 +25,7 @@
  */
 
 #include "GraphWidget.h"
-#include <LibGUI/GPainter.h>
+#include <LibGUI/Painter.h>
 
 GraphWidget::GraphWidget(GUI::Widget* parent)
     : GUI::Frame(parent)

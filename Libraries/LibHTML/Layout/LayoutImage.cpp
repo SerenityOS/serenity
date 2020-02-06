@@ -26,7 +26,7 @@
 
 #include <LibGfx/Font.h>
 #include <LibGfx/StylePainter.h>
-#include <LibGUI/GPainter.h>
+#include <LibGUI/Painter.h>
 #include <LibHTML/Layout/LayoutImage.h>
 
 LayoutImage::LayoutImage(const HTMLImageElement& element, NonnullRefPtr<StyleProperties> style)

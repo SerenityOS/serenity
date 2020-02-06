@@ -32,7 +32,7 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/StdLibExtras.h>
 #include <LibGfx/TextAlignment.h>
-#include <LibGUI/GScrollableWidget.h>
+#include <LibGUI/ScrollableWidget.h>
 
 class HexEditor : public GUI::ScrollableWidget {
     C_OBJECT(HexEditor)

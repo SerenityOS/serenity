@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGUI/GFrame.h>
+#include <LibGUI/Frame.h>
 
 class Profile;
 

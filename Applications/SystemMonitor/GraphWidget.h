@@ -25,7 +25,7 @@
  */
 
 #include <AK/CircularQueue.h>
-#include <LibGUI/GFrame.h>
+#include <LibGUI/Frame.h>
 
 class GraphWidget final : public GUI::Frame {
     C_OBJECT(GraphWidget)

@@ -26,12 +26,12 @@
 
 #include "VBPropertiesWindow.h"
 #include "VBWidgetPropertyModel.h"
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GComboBox.h>
-#include <LibGUI/GModelEditingDelegate.h>
-#include <LibGUI/GTableView.h>
-#include <LibGUI/GTextBox.h>
-#include <LibGUI/GWidget.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/ComboBox.h>
+#include <LibGUI/ModelEditingDelegate.h>
+#include <LibGUI/TableView.h>
+#include <LibGUI/TextBox.h>
+#include <LibGUI/Widget.h>
 
 class BoolValuesModel final : public GUI::Model {
 public:

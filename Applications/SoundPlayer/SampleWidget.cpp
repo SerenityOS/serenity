@@ -26,7 +26,7 @@
 
 #include "SampleWidget.h"
 #include <LibAudio/Buffer.h>
-#include <LibGUI/GPainter.h>
+#include <LibGUI/Painter.h>
 #include <LibM/math.h>
 
 SampleWidget::SampleWidget(GUI::Widget* parent)

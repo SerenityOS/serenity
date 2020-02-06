@@ -67,7 +67,6 @@ int main(int argc, char** argv)
         const JsonObject& widget_object = value.as_object();
         auto class_name = widget_object.get("class").to_string();
         StringBuilder builder;
-        builder.append('G');
         auto parts = class_name.split(':');
         builder.append(parts.last());
         dbg() << "#include <LibGUI/" << builder.to_string() << ".h>";

@@ -26,9 +26,9 @@
 
 #include "CalculatorWidget.h"
 #include <AK/Assertions.h>
-#include <LibGUI/GButton.h>
-#include <LibGUI/GLabel.h>
-#include <LibGUI/GTextBox.h>
+#include <LibGUI/Button.h>
+#include <LibGUI/Label.h>
+#include <LibGUI/TextBox.h>
 
 CalculatorWidget::CalculatorWidget(GUI::Widget* parent)
     : GUI::Widget(parent)

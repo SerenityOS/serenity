@@ -30,13 +30,13 @@
 #include <LibAudio/ClientConnection.h>
 #include <LibAudio/WavWriter.h>
 #include <LibCore/File.h>
-#include <LibGUI/GAboutDialog.h>
-#include <LibGUI/GAction.h>
-#include <LibGUI/GApplication.h>
-#include <LibGUI/GFilePicker.h>
-#include <LibGUI/GMenuBar.h>
-#include <LibGUI/GMessageBox.h>
-#include <LibGUI/GWindow.h>
+#include <LibGUI/AboutDialog.h>
+#include <LibGUI/Action.h>
+#include <LibGUI/Application.h>
+#include <LibGUI/FilePicker.h>
+#include <LibGUI/MenuBar.h>
+#include <LibGUI/MessageBox.h>
+#include <LibGUI/Window.h>
 #include <LibThread/Thread.h>
 
 int main(int argc, char** argv)

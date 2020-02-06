@@ -32,11 +32,11 @@
 #include <AK/JsonObject.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/File.h>
-#include <LibGUI/GAction.h>
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GMenu.h>
-#include <LibGUI/GMessageBox.h>
-#include <LibGUI/GPainter.h>
+#include <LibGUI/Action.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/Menu.h>
+#include <LibGUI/MessageBox.h>
+#include <LibGUI/Painter.h>
 
 static VBForm* s_current;
 VBForm* VBForm::current()

@@ -28,7 +28,7 @@
 
 #include <AK/Noncopyable.h>
 #include <LibCore/Timer.h>
-#include <LibGUI/GFrame.h>
+#include <LibGUI/Frame.h>
 
 namespace GUI {
 class Button;

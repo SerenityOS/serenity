@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGUI/GPainter.h>
+#include <LibGUI/Painter.h>
 #include <LibHTML/Layout/LayoutListItemMarker.h>
 
 LayoutListItemMarker::LayoutListItemMarker()

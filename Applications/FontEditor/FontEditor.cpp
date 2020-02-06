@@ -29,13 +29,13 @@
 #include "GlyphMapWidget.h"
 #include "UI_FontEditorBottom.h"
 #include <AK/StringBuilder.h>
-#include <LibGUI/GButton.h>
-#include <LibGUI/GCheckBox.h>
-#include <LibGUI/GGroupBox.h>
-#include <LibGUI/GLabel.h>
-#include <LibGUI/GPainter.h>
-#include <LibGUI/GSpinBox.h>
-#include <LibGUI/GTextBox.h>
+#include <LibGUI/Button.h>
+#include <LibGUI/CheckBox.h>
+#include <LibGUI/GroupBox.h>
+#include <LibGUI/Label.h>
+#include <LibGUI/Painter.h>
+#include <LibGUI/SpinBox.h>
+#include <LibGUI/TextBox.h>
 #include <stdlib.h>
 
 FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edited_font, GUI::Widget* parent)

@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <LibGUI/GWindow.h>
+#include <LibGUI/Window.h>
 
 namespace GUI {
 class TableView;

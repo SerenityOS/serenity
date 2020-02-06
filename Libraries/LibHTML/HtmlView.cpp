@@ -26,10 +26,10 @@
 
 #include <AK/FileSystemPath.h>
 #include <LibCore/File.h>
-#include <LibGUI/GApplication.h>
-#include <LibGUI/GPainter.h>
-#include <LibGUI/GScrollBar.h>
-#include <LibGUI/GWindow.h>
+#include <LibGUI/Application.h>
+#include <LibGUI/Painter.h>
+#include <LibGUI/ScrollBar.h>
+#include <LibGUI/Window.h>
 #include <LibGfx/PNGLoader.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/DOM/ElementFactory.h>

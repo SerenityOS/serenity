@@ -25,8 +25,8 @@
  */
 
 #include "WindowList.h"
-#include <LibGUI/GWidget.h>
-#include <LibGUI/GWindow.h>
+#include <LibGUI/Widget.h>
+#include <LibGUI/Window.h>
 
 class TaskbarWindow final : public GUI::Window {
     C_OBJECT(TaskbarWindow)

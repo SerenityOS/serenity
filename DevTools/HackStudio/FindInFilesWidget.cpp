@@ -27,10 +27,10 @@
 #include "FindInFilesWidget.h"
 #include "Project.h"
 #include <AK/StringBuilder.h>
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GButton.h>
-#include <LibGUI/GTableView.h>
-#include <LibGUI/GTextBox.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/Button.h>
+#include <LibGUI/TableView.h>
+#include <LibGUI/TextBox.h>
 
 extern GUI::TextEditor& current_editor();
 extern void open_file(const String&);

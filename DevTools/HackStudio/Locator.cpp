@@ -26,10 +26,10 @@
 
 #include "Locator.h"
 #include "Project.h"
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GTableView.h>
-#include <LibGUI/GTextBox.h>
-#include <LibGUI/GWindow.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/TableView.h>
+#include <LibGUI/TextBox.h>
+#include <LibGUI/Window.h>
 
 extern RefPtr<Project> g_project;
 extern void open_file(const String&);

@@ -28,9 +28,9 @@
 #include "KnobsWidget.h"
 #include "AudioEngine.h"
 #include "MainWidget.h"
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GLabel.h>
-#include <LibGUI/GSlider.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/Label.h>
+#include <LibGUI/Slider.h>
 
 KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWidget& main_widget)
     : GUI::Frame(parent)

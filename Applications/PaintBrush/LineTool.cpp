@@ -26,9 +26,9 @@
 
 #include "LineTool.h"
 #include "PaintableWidget.h"
-#include <LibGUI/GAction.h>
-#include <LibGUI/GMenu.h>
-#include <LibGUI/GPainter.h>
+#include <LibGUI/Action.h>
+#include <LibGUI/Menu.h>
+#include <LibGUI/Painter.h>
 #include <LibM/math.h>
 
 static Gfx::Point constrain_line_angle(const Gfx::Point& start_pos, const Gfx::Point& end_pos, float angle_increment)

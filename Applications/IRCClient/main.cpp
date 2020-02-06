@@ -26,7 +26,7 @@
 
 #include "IRCAppWindow.h"
 #include "IRCClient.h"
-#include <LibGUI/GApplication.h>
+#include <LibGUI/Application.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)

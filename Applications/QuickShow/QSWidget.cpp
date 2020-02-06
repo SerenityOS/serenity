@@ -27,9 +27,9 @@
 #include "QSWidget.h"
 #include <AK/URL.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGUI/GMessageBox.h>
-#include <LibGUI/GPainter.h>
-#include <LibGUI/GWindow.h>
+#include <LibGUI/MessageBox.h>
+#include <LibGUI/Painter.h>
+#include <LibGUI/Window.h>
 
 QSWidget::QSWidget(GUI::Widget* parent)
     : GUI::Frame(parent)

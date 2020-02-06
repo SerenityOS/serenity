@@ -28,7 +28,7 @@
 #include "CursorTool.h"
 #include "FormWidget.h"
 #include "WidgetTreeModel.h"
-#include <LibGUI/GPainter.h>
+#include <LibGUI/Painter.h>
 
 FormEditorWidget::FormEditorWidget(GUI::Widget* parent)
     : ScrollableWidget(parent)

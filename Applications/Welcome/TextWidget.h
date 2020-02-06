@@ -29,7 +29,7 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibGfx/TextAlignment.h>
-#include <LibGUI/GFrame.h>
+#include <LibGUI/Frame.h>
 
 class TextWidget : public GUI::Frame {
     C_OBJECT(TextWidget)

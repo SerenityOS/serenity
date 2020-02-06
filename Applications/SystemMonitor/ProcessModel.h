@@ -29,7 +29,7 @@
 #include <AK/HashMap.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibGUI/GModel.h>
+#include <LibGUI/Model.h>
 #include <unistd.h>
 
 class GraphWidget;

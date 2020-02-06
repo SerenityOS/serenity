@@ -27,7 +27,7 @@
 #pragma once
 
 #include <AK/Function.h>
-#include <LibGUI/GWidget.h>
+#include <LibGUI/Widget.h>
 
 class GlyphEditorWidget;
 class GlyphMapWidget;

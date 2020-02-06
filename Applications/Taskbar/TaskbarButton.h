@@ -27,7 +27,7 @@
 #pragma once
 
 #include "WindowIdentifier.h"
-#include <LibGUI/GButton.h>
+#include <LibGUI/Button.h>
 
 class TaskbarButton final : public GUI::Button {
     C_OBJECT(TaskbarButton)

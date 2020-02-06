@@ -26,13 +26,13 @@
 
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibGUI/GApplication.h>
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GButton.h>
-#include <LibGUI/GDesktop.h>
-#include <LibGUI/GLabel.h>
-#include <LibGUI/GStackWidget.h>
-#include <LibGUI/GWindow.h>
+#include <LibGUI/Application.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/Button.h>
+#include <LibGUI/Desktop.h>
+#include <LibGUI/Label.h>
+#include <LibGUI/StackWidget.h>
+#include <LibGUI/Window.h>
 #include <LibGfx/PNGLoader.h>
 
 #include "TextWidget.h"

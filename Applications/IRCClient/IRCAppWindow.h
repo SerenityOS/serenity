@@ -28,8 +28,8 @@
 
 #include "IRCClient.h"
 #include "IRCWindow.h"
-#include <LibGUI/GWidget.h>
-#include <LibGUI/GWindow.h>
+#include <LibGUI/Widget.h>
+#include <LibGUI/Window.h>
 
 namespace GUI {
 class StackWidget;

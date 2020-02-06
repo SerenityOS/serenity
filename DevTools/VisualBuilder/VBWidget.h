@@ -34,7 +34,7 @@
 #include <AK/RefCounted.h>
 #include <AK/Weakable.h>
 #include <LibGfx/Rect.h>
-#include <LibGUI/GWidget.h>
+#include <LibGUI/Widget.h>
 
 namespace GUI {
 class Painter;

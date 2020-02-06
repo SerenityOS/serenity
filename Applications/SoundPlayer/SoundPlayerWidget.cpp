@@ -26,10 +26,10 @@
 
 #include "SoundPlayerWidget.h"
 #include <AK/StringBuilder.h>
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GButton.h>
-#include <LibGUI/GLabel.h>
-#include <LibGUI/GMessageBox.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/Button.h>
+#include <LibGUI/Label.h>
+#include <LibGUI/MessageBox.h>
 #include <LibM/math.h>
 
 SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, NonnullRefPtr<Audio::ClientConnection> connection)

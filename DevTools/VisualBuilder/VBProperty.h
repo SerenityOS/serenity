@@ -28,7 +28,7 @@
 
 #include <AK/Function.h>
 #include <AK/String.h>
-#include <LibGUI/GVariant.h>
+#include <LibGUI/Variant.h>
 
 namespace GUI {
 class Widget;

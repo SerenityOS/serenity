@@ -29,9 +29,9 @@
 #include <AK/JsonObject.h>
 #include <LibCore/File.h>
 #include <LibGfx/StylePainter.h>
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GLabel.h>
-#include <LibGUI/GPainter.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/Label.h>
+#include <LibGUI/Painter.h>
 #include <stdio.h>
 #include <stdlib.h>
 

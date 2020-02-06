@@ -27,7 +27,7 @@
 #pragma once
 
 #include <AK/Badge.h>
-#include <LibGUI/GWidget.h>
+#include <LibGUI/Widget.h>
 
 class CursorTool;
 class FormEditorWidget;

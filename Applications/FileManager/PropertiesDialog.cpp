@@ -26,11 +26,11 @@
 
 #include "PropertiesDialog.h"
 #include <AK/StringBuilder.h>
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GCheckBox.h>
-#include <LibGUI/GFilePicker.h>
-#include <LibGUI/GMessageBox.h>
-#include <LibGUI/GTabWidget.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/CheckBox.h>
+#include <LibGUI/FilePicker.h>
+#include <LibGUI/MessageBox.h>
+#include <LibGUI/TabWidget.h>
 #include <limits.h>
 #include <pwd.h>
 #include <stdio.h>

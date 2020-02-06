@@ -29,7 +29,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibGfx/Palette.h>
-#include <LibGUI/GPainter.h>
+#include <LibGUI/Painter.h>
 
 TextWidget::TextWidget(GUI::Widget* parent)
     : GUI::Frame(parent)

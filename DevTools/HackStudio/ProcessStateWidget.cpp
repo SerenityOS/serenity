@@ -27,8 +27,8 @@
 #include "ProcessStateWidget.h"
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibCore/Timer.h>
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GLabel.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/Label.h>
 #include <unistd.h>
 
 ProcessStateWidget::ProcessStateWidget(GUI::Widget* parent)

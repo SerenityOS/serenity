@@ -25,7 +25,7 @@
  */
 
 #include "TaskbarWindow.h"
-#include <LibGUI/GApplication.h>
+#include <LibGUI/Application.h>
 #include <signal.h>
 #include <stdio.h>
 #include <sys/wait.h>

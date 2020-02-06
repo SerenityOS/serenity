@@ -27,8 +27,8 @@
 
 #include "RollWidget.h"
 #include "AudioEngine.h"
-#include <LibGUI/GPainter.h>
-#include <LibGUI/GScrollBar.h>
+#include <LibGUI/Painter.h>
+#include <LibGUI/ScrollBar.h>
 
 constexpr int note_height = 20;
 constexpr int roll_height = note_count * note_height;

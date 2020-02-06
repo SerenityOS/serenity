@@ -26,8 +26,8 @@
 
 #pragma once
 
-#include <LibGUI/GModel.h>
-#include <LibGUI/GPainter.h>
+#include <LibGUI/Model.h>
+#include <LibGUI/Painter.h>
 
 class WidgetTreeModel final : public GUI::Model {
 public:

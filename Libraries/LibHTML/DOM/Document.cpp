@@ -27,7 +27,7 @@
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/Timer.h>
-#include <LibGUI/GApplication.h>
+#include <LibGUI/Application.h>
 #include <LibHTML/CSS/StyleResolver.h>
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/DOM/DocumentType.h>

@@ -27,7 +27,7 @@
 #pragma once
 
 #include <AK/Function.h>
-#include <LibGUI/GModel.h>
+#include <LibGUI/Model.h>
 
 class IRCClient;
 class IRCWindow;

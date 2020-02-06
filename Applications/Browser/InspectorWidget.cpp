@@ -25,11 +25,11 @@
  */
 
 #include "InspectorWidget.h"
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GSplitter.h>
-#include <LibGUI/GTableView.h>
-#include <LibGUI/GTreeView.h>
-#include <LibGUI/GTabWidget.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/Splitter.h>
+#include <LibGUI/TableView.h>
+#include <LibGUI/TreeView.h>
+#include <LibGUI/TabWidget.h>
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/DOMTreeModel.h>

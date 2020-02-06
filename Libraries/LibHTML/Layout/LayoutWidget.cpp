@@ -26,8 +26,8 @@
 
 #include <LibGfx/Font.h>
 #include <LibGfx/StylePainter.h>
-#include <LibGUI/GPainter.h>
-#include <LibGUI/GWidget.h>
+#include <LibGUI/Painter.h>
+#include <LibGUI/Widget.h>
 #include <LibHTML/Layout/LayoutWidget.h>
 
 LayoutWidget::LayoutWidget(const Element& element, GUI::Widget& widget)

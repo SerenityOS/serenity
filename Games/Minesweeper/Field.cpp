@@ -28,9 +28,9 @@
 #include <AK/HashTable.h>
 #include <AK/Queue.h>
 #include <LibCore/ConfigFile.h>
-#include <LibGUI/GButton.h>
-#include <LibGUI/GLabel.h>
-#include <LibGUI/GPainter.h>
+#include <LibGUI/Button.h>
+#include <LibGUI/Label.h>
+#include <LibGUI/Painter.h>
 #include <time.h>
 #include <unistd.h>
 
