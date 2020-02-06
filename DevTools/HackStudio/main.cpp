@@ -247,7 +247,7 @@ int main(int argc, char** argv)
     project_tree_view_context_menu->add_action(add_existing_file_action);
     project_tree_view_context_menu->add_action(delete_action);
 
-    auto outer_splitter = GUI::Splitter::construct(Orientation::Horizontal, widget);
+    auto outer_splitter = GUI::HorizontalSplitter::construct(widget);
     g_project_tree_view = GUI::TreeView::construct(outer_splitter);
     g_project_tree_view->set_model(g_project->model());
     g_project_tree_view->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
@@ -296,11 +296,11 @@ int main(int argc, char** argv)
         form_widgets_toolbar->add_action(move(action));
     });
 
-    auto form_editor_inner_splitter = GUI::Splitter::construct(Orientation::Horizontal, g_form_inner_container);
+    auto form_editor_inner_splitter = GUI::HorizontalSplitter::construct(g_form_inner_container);
 
     g_form_editor_widget = FormEditorWidget::construct(form_editor_inner_splitter);
 
-    auto form_editing_pane_container = GUI::Splitter::construct(Orientation::Vertical, form_editor_inner_splitter);
+    auto form_editing_pane_container = GUI::VerticalSplitter::construct(form_editor_inner_splitter);
     form_editing_pane_container->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     form_editing_pane_container->set_preferred_size(190, 0);
     form_editing_pane_container->set_layout(make<GUI::VBoxLayout>());
@@ -345,7 +345,7 @@ int main(int argc, char** argv)
     add_properties_pane("Form widget tree:", form_widget_tree_view);
     add_properties_pane("Widget properties:", GUI::TableView::construct(nullptr));
 
-    g_text_inner_splitter = GUI::Splitter::construct(Orientation::Vertical, g_right_hand_stack);
+    g_text_inner_splitter = GUI::VerticalSplitter::construct(g_right_hand_stack);
     g_text_inner_splitter->layout()->set_margins({ 0, 3, 0, 0 });
     add_new_editor(*g_text_inner_splitter);
 

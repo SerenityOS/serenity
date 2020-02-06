@@ -63,7 +63,7 @@ int main(int argc, char** argv)
     widget->set_fill_with_background_color(true);
     widget->set_layout(make<GUI::VBoxLayout>());
 
-    auto splitter = GUI::Splitter::construct(Orientation::Horizontal, widget);
+    auto splitter = GUI::HorizontalSplitter::construct(widget);
 
     RemoteProcess remote_process(pid);
 

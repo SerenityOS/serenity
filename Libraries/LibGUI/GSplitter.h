@@ -54,4 +54,28 @@ private:
     Gfx::Size m_second_resizee_start_size;
 };
 
+class VerticalSplitter final : public Splitter {
+    C_OBJECT(VerticalSplitter)
+public:
+    virtual ~VerticalSplitter() override {}
+
+private:
+    explicit VerticalSplitter(Widget* parent)
+        : Splitter(Orientation::Vertical, parent)
+    {
+    }
+};
+
+class HorizontalSplitter final : public Splitter {
+    C_OBJECT(HorizontalSplitter)
+public:
+    virtual ~HorizontalSplitter() override {}
+
+private:
+    explicit HorizontalSplitter(Widget* parent)
+        : Splitter(Orientation::Horizontal, parent)
+    {
+    }
+};
+
 }

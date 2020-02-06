@@ -45,7 +45,7 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
     set_layout(make<GUI::VBoxLayout>());
 
     // Make a container for the log buffer view + (optional) member list.
-    auto container = GUI::Splitter::construct(Orientation::Horizontal, this);
+    auto container = GUI::HorizontalSplitter::construct(this);
 
     m_html_view = HtmlView::construct(container);
 

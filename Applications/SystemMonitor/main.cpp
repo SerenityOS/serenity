@@ -121,7 +121,7 @@ int main(int argc, char** argv)
 
     auto tabwidget = GUI::TabWidget::construct(keeper);
 
-    auto process_container_splitter = GUI::Splitter::construct(Orientation::Vertical, nullptr);
+    auto process_container_splitter = GUI::VerticalSplitter::construct(nullptr);
     tabwidget->add_widget("Processes", process_container_splitter);
 
     auto process_table_container = GUI::Widget::construct(process_container_splitter.ptr());
