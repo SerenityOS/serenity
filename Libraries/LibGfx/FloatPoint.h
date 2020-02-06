@@ -145,5 +145,3 @@ inline const LogStream& operator<<(const LogStream& stream, const FloatPoint& va
 }
 
 }
-
-using Gfx::FloatPoint;

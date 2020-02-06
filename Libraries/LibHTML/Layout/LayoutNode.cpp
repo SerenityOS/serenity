@@ -135,12 +135,12 @@ void LayoutNode::set_needs_display()
     }
 }
 
-FloatPoint LayoutNode::box_type_agnostic_position() const
+Gfx::FloatPoint LayoutNode::box_type_agnostic_position() const
 {
     if (is_box())
         return to<LayoutBox>(*this).position();
     ASSERT(is_inline());
-    FloatPoint position;
+    Gfx::FloatPoint position;
     if (auto* block = containing_block()) {
         block->for_each_fragment([&](auto& fragment) {
             if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
