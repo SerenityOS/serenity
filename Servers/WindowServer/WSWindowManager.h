@@ -239,7 +239,7 @@ private:
     struct DoubleClickInfo {
         struct ClickMetadata {
             Core::ElapsedTimer clock;
-            Point last_position;
+            Gfx::Point last_position;
         };
 
         ClickMetadata& metadata_for_button(MouseButton);

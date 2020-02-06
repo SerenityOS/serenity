@@ -197,14 +197,14 @@ void Window::event(Core::Event& event)
         auto& mouse_event = static_cast<MouseEvent&>(event);
         if (m_global_cursor_tracking_widget) {
             auto window_relative_rect = m_global_cursor_tracking_widget->window_relative_rect();
-            Point local_point { mouse_event.x() - window_relative_rect.x(), mouse_event.y() - window_relative_rect.y() };
+            Gfx::Point local_point { mouse_event.x() - window_relative_rect.x(), mouse_event.y() - window_relative_rect.y() };
             auto local_event = make<MouseEvent>((Event::Type)event.type(), local_point, mouse_event.buttons(), mouse_event.button(), mouse_event.modifiers(), mouse_event.wheel_delta());
             m_global_cursor_tracking_widget->dispatch_event(*local_event, this);
             return;
         }
         if (m_automatic_cursor_tracking_widget) {
             auto window_relative_rect = m_automatic_cursor_tracking_widget->window_relative_rect();
-            Point local_point { mouse_event.x() - window_relative_rect.x(), mouse_event.y() - window_relative_rect.y() };
+            Gfx::Point local_point { mouse_event.x() - window_relative_rect.x(), mouse_event.y() - window_relative_rect.y() };
             auto local_event = make<MouseEvent>((Event::Type)event.type(), local_point, mouse_event.buttons(), mouse_event.button(), mouse_event.modifiers(), mouse_event.wheel_delta());
             m_automatic_cursor_tracking_widget->dispatch_event(*local_event, this);
             if (mouse_event.buttons() == 0)

@@ -102,8 +102,8 @@ void WaveWidget::paint_event(GUI::PaintEvent& event)
     for (size_t x = 1; x < buffer.size(); ++x) {
         int y = sample_to_y(buffer[x].left);
 
-        Point point1(prev_x * width_scale, prev_y);
-        Point point2(x * width_scale, y);
+        Gfx::Point point1(prev_x * width_scale, prev_y);
+        Gfx::Point point2(x * width_scale, y);
         painter.draw_line(point1, point2, wave_color);
 
         prev_x = x;

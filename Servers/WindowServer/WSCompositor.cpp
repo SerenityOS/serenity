@@ -144,7 +144,7 @@ void WSCompositor::compose()
             if (m_wallpaper_mode == WallpaperMode::Simple) {
                 m_back_painter->blit(dirty_rect.location(), *m_wallpaper, dirty_rect);
             } else if (m_wallpaper_mode == WallpaperMode::Center) {
-                Point offset { ws.size().width() / 2 - m_wallpaper->size().width() / 2,
+                Gfx::Point offset { ws.size().width() / 2 - m_wallpaper->size().width() / 2,
                     ws.size().height() / 2 - m_wallpaper->size().height() / 2 };
                 m_back_painter->blit_offset(dirty_rect.location(), *m_wallpaper,
                     dirty_rect, offset);

@@ -184,7 +184,7 @@ public:
         return m_value.as_float;
     }
 
-    Point as_point() const
+    Gfx::Point as_point() const
     {
         return { m_value.as_point.x, m_value.as_point.y };
     }

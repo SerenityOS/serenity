@@ -90,7 +90,7 @@ void VBForm::insert_widget(VBWidgetType type)
 {
     auto* insertion_parent = single_selected_widget();
     auto widget = VBWidget::create(type, *this, insertion_parent);
-    Point insertion_position = m_next_insertion_position;
+    Gfx::Point insertion_position = m_next_insertion_position;
     if (insertion_parent)
         insertion_position.move_by(insertion_parent->gwidget()->window_relative_rect().location());
     widget->set_rect({ insertion_position, { m_grid_size * 10 + 1, m_grid_size * 5 + 1 } });

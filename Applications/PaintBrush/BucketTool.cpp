@@ -47,7 +47,7 @@ static void flood_fill(Gfx::Bitmap& bitmap, const Gfx::Point& start_position, Co
     if (target_color == fill_color)
         return;
 
-    Queue<Point> queue;
+    Queue<Gfx::Point> queue;
     queue.enqueue(start_position);
     while (!queue.is_empty()) {
         auto position = queue.dequeue();

@@ -63,7 +63,7 @@ void PenTool::on_mousemove(GUI::MouseEvent& event)
     if (event.buttons() & GUI::MouseButton::Left || event.buttons() & GUI::MouseButton::Right) {
         GUI::Painter painter(m_widget->bitmap());
 
-        if (m_last_drawing_event_position != Point(-1, -1))
+        if (m_last_drawing_event_position != Gfx::Point(-1, -1))
             painter.draw_line(m_last_drawing_event_position, event.position(), m_widget->color_for(event), m_thickness);
         else
             painter.draw_line(event.position(), event.position(), m_widget->color_for(event), m_thickness);

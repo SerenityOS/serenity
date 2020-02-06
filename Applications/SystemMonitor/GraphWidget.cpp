@@ -56,13 +56,13 @@ void GraphWidget::paint_event(GUI::PaintEvent& event)
     auto inner_rect = frame_inner_rect();
     float scale = (float)inner_rect.height() / (float)m_max;
 
-    Point prev_point;
+    Gfx::Point prev_point;
     for (int i = 0; i < m_values.size(); ++i) {
         int x = inner_rect.right() - (i * 2) + 1;
         if (x < 0)
             break;
         float scaled_value = (float)m_values.at(m_values.size() - i - 1) * scale;
-        Point point = { x, inner_rect.bottom() - (int)scaled_value };
+        Gfx::Point point = { x, inner_rect.bottom() - (int)scaled_value };
         if (i != 0)
             painter.draw_line(prev_point, point, m_graph_color);
         prev_point = point;

@@ -99,7 +99,7 @@ ModelIndex ListView::index_at_event_position(const Gfx::Point& point) const
     return {};
 }
 
-Point ListView::adjusted_position(const Gfx::Point& position) const
+Gfx::Point ListView::adjusted_position(const Gfx::Point& position) const
 {
     return position.translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
 }

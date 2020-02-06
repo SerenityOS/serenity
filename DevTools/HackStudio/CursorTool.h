@@ -54,7 +54,7 @@ private:
     Gfx::Rect rubber_band_rect() const;
 
     Gfx::Point m_drag_origin;
-    HashMap<GUI::Widget*, Point> m_positions_before_drag;
+    HashMap<GUI::Widget*, Gfx::Point> m_positions_before_drag;
     bool m_dragging { false };
 
     bool m_rubber_banding { false };

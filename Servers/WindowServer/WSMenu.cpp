@@ -125,7 +125,7 @@ WSWindow& WSMenu::ensure_menu_window()
 {
     int width = this->content_width();
     if (!m_menu_window) {
-        Point next_item_location(frame_thickness(), frame_thickness());
+        Gfx::Point next_item_location(frame_thickness(), frame_thickness());
         for (auto& item : m_items) {
             int height = 0;
             if (item.type() == WSMenuItem::Text)
@@ -249,8 +249,8 @@ void WSMenu::draw()
                 painter.draw_bitmap(submenu_arrow_rect.location(), submenu_arrow_bitmap, text_color);
             }
         } else if (item.type() == WSMenuItem::Separator) {
-            Point p1(item.rect().translated(stripe_rect.width() + 4, 0).x(), item.rect().center().y() - 1);
-            Point p2(width - 7, item.rect().center().y() - 1);
+            Gfx::Point p1(item.rect().translated(stripe_rect.width() + 4, 0).x(), item.rect().center().y() - 1);
+            Gfx::Point p2(width - 7, item.rect().center().y() - 1);
             painter.draw_line(p1, p2, palette.threed_shadow1());
             painter.draw_line(p1.translated(0, 1), p2.translated(0, 1), palette.threed_highlight());
         }
@@ -305,8 +305,8 @@ void WSMenu::handle_mouse_move_event(const WSMouseEvent& mouse_event)
     if (hovered_item() && hovered_item()->is_submenu()) {
 
         auto item = *hovered_item();
-        auto submenu_top_left = item.rect().location() + Point { item.rect().width(), 0 };
-        auto submenu_bottom_left = submenu_top_left + Point { 0, item.submenu()->menu_window()->height() };
+        auto submenu_top_left = item.rect().location() + Gfx::Point { item.rect().width(), 0 };
+        auto submenu_bottom_left = submenu_top_left + Gfx::Point { 0, item.submenu()->menu_window()->height() };
 
         auto safe_hover_triangle = Gfx::Triangle { m_last_position_in_hover, submenu_top_left, submenu_bottom_left };
         m_last_position_in_hover = mouse_event.position();
@@ -510,7 +510,7 @@ void WSMenu::popup(const Gfx::Point& position, bool is_submenu)
     redraw_if_theme_changed();
 
     const int margin = 30;
-    Point adjusted_pos = position;
+    Gfx::Point adjusted_pos = position;
 
     if (adjusted_pos.x() + window.width() >= WSScreen::the().width() - margin) {
         adjusted_pos = adjusted_pos.translated(-window.width(), 0);

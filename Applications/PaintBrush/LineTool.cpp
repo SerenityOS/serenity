@@ -31,7 +31,7 @@
 #include <LibGUI/GPainter.h>
 #include <LibM/math.h>
 
-Point constrain_line_angle(const Gfx::Point& start_pos, const Gfx::Point& end_pos, float angle_increment)
+static Gfx::Point constrain_line_angle(const Gfx::Point& start_pos, const Gfx::Point& end_pos, float angle_increment)
 {
     float current_angle = atan2(end_pos.y() - start_pos.y(), end_pos.x() - start_pos.x()) + M_PI * 2.;
 

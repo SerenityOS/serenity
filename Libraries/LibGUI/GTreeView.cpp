@@ -281,16 +281,16 @@ void TreeView::paint_event(PaintEvent& event)
                 for (int i = indent_level; i > 0; --i) {
                     auto parent_of_index_at_indent = index_at_indent.parent();
                     bool index_at_indent_is_last_in_parent = index_at_indent.row() == model.row_count(parent_of_index_at_indent) - 1;
-                    Point a { tree_column_x_offset + horizontal_padding() + indent_width_in_pixels() * i - icon_size() / 2, rect.y() - 2 };
-                    Point b { a.x(), a.y() + item_height() - 1 };
+                    Gfx::Point a { tree_column_x_offset + horizontal_padding() + indent_width_in_pixels() * i - icon_size() / 2, rect.y() - 2 };
+                    Gfx::Point b { a.x(), a.y() + item_height() - 1 };
                     if (index_at_indent_is_last_in_parent)
                         b.set_y(rect.center().y());
                     if (!(i != indent_level && index_at_indent_is_last_in_parent))
                         painter.draw_line(a, b, Color::MidGray);
 
                     if (i == indent_level) {
-                        Point c { a.x(), rect.center().y() };
-                        Point d { c.x() + icon_size() / 2, c.y() };
+                        Gfx::Point c { a.x(), rect.center().y() };
+                        Gfx::Point d { c.x() + icon_size() / 2, c.y() };
                         painter.draw_line(c, d, Color::MidGray);
                     }
                     index_at_indent = parent_of_index_at_indent;

@@ -113,7 +113,7 @@ void QSWidget::mousewheel_event(GUI::MouseEvent& event)
     relayout();
     auto new_scale_factor = (float)m_scale / 100.0f;
     auto scale_factor_change = new_scale_factor - old_scale_factor;
-    m_bitmap_rect.move_by(-Point((float)zoom_point.x() * scale_factor_change, (float)zoom_point.y() * scale_factor_change));
+    m_bitmap_rect.move_by(-Gfx::Point((float)zoom_point.x() * scale_factor_change, (float)zoom_point.y() * scale_factor_change));
     if (old_scale != m_scale) {
         if (on_scale_change)
             on_scale_change(m_scale);

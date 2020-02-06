@@ -62,7 +62,7 @@ public:
 
     int horizontal_padding() const { return m_horizontal_padding; }
 
-    Point adjusted_position(const Gfx::Point&) const;
+    Gfx::Point adjusted_position(const Gfx::Point&) const;
 
     virtual Gfx::Rect content_rect(const ModelIndex&) const override;
     Gfx::Rect content_rect(int row, int column) const;

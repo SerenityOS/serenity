@@ -61,7 +61,7 @@ void Button::paint_event(PaintEvent& event)
         return;
 
     auto content_rect = rect().shrunken(8, 2);
-    auto icon_location = m_icon ? content_rect.center().translated(-(m_icon->width() / 2), -(m_icon->height() / 2)) : Point();
+    auto icon_location = m_icon ? content_rect.center().translated(-(m_icon->width() / 2), -(m_icon->height() / 2)) : Gfx::Point();
     if (m_icon && !text().is_empty())
         icon_location.set_x(content_rect.x());
     if (is_being_pressed() || is_checked())

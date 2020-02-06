@@ -518,7 +518,7 @@ void WSMenuManager::set_current_menubar(WSMenuBar* menubar)
 #ifdef DEBUG_MENUS
     dbg() << "[WM] Current menubar is now " << menubar;
 #endif
-    Point next_menu_location { WSMenuManager::menubar_menu_margin() / 2, 0 };
+    Gfx::Point next_menu_location { WSMenuManager::menubar_menu_margin() / 2, 0 };
     int index = 0;
     for_each_active_menubar_menu([&](WSMenu& menu) {
         int text_width = index == 1 ? Gfx::Font::default_bold_font().width(menu.name()) : Gfx::Font::default_font().width(menu.name());

@@ -155,7 +155,7 @@ public:
     void move_to(const Gfx::Point& position) { set_rect({ position, size() }); }
     void move_to(int x, int y) { move_to({ x, y }); }
 
-    Point position() const { return m_rect.location(); }
+    Gfx::Point position() const { return m_rect.location(); }
     void set_position(const Gfx::Point& position) { set_rect({ position.x(), position.y(), width(), height() }); }
     void set_position_without_repaint(const Gfx::Point& position) { set_rect_without_repaint({ position.x(), position.y(), width(), height() }); }
 
