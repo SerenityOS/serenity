@@ -24,20 +24,66 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include "MenuItem.h"
+#include "ClientConnection.h"
+#include "Menu.h"
+#include "WindowManager.h"
+#include <LibGfx/Bitmap.h>
 
-namespace GUI {
+namespace WindowServer {
 
-// Keep this in sync with WindowType.
-enum class WindowType {
-    Invalid = 0,
-    Normal,
-    Menu,
-    WindowSwitcher,
-    Taskbar,
-    Tooltip,
-    Menubar,
-    MenuApplet,
-};
+MenuItem::MenuItem(Menu& menu, unsigned identifier, const String& text, const String& shortcut_text, bool enabled, bool checkable, bool checked, const Gfx::Bitmap* icon)
+    : m_menu(menu)
+    , m_type(Text)
+    , m_enabled(enabled)
+    , m_checkable(checkable)
+    , m_checked(checked)
+    , m_identifier(identifier)
+    , m_text(text)
+    , m_shortcut_text(shortcut_text)
+    , m_icon(icon)
+{
+}
+
+MenuItem::MenuItem(Menu& menu, Type type)
+    : m_menu(menu)
+    , m_type(type)
+{
+}
+
+MenuItem::~MenuItem()
+{
+}
+
+void MenuItem::set_enabled(bool enabled)
+{
+    if (m_enabled == enabled)
+        return;
+    m_enabled = enabled;
+    m_menu.redraw();
+}
+
+void MenuItem::set_checked(bool checked)
+{
+    if (m_checked == checked)
+        return;
+    m_checked = checked;
+    m_menu.redraw();
+}
+
+Menu* MenuItem::submenu()
+{
+    ASSERT(is_submenu());
+    if (m_menu.client())
+        return m_menu.client()->find_menu_by_id(m_submenu_id);
+    return MenuManager::the().find_internal_menu_by_id(m_submenu_id);
+}
+
+Gfx::Rect MenuItem::rect() const
+{
+    if (!m_menu.is_scrollable())
+        return m_rect;
+    return m_rect.translated(0, m_menu.item_height() - (m_menu.scroll_offset() * m_menu.item_height()));
+}
 
 }

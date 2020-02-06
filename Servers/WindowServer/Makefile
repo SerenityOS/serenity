@@ -1,19 +1,19 @@
 OBJS = \
-    WSEventLoop.o \
-    WSWindow.o \
-    WSWindowManager.o \
-    WSScreen.o \
-    WSMenuBar.o \
-    WSMenu.o \
-    WSMenuItem.o \
-    WSClientConnection.o \
-    WSWindowSwitcher.o \
-    WSClipboard.o \
-    WSCursor.o \
-    WSWindowFrame.o \
-    WSButton.o \
-    WSCompositor.o \
-    WSMenuManager.o \
+    Button.o \
+    ClientConnection.o \
+    Clipboard.o \
+    Compositor.o \
+    Cursor.o \
+    EventLoop.o \
+    Menu.o \
+    MenuBar.o \
+    MenuItem.o \
+    MenuManager.o \
+    Screen.o \
+    Window.o \
+    WindowFrame.o \
+    WindowManager.o \
+    WindowSwitcher.o \
     main.o
 
 PROGRAM = WindowServer

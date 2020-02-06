@@ -26,9 +26,7 @@
 
 #pragma once
 
-namespace GUI {
-
-// Keep this in sync with WindowType.
+// Keep this in sync with GWindowType.
 enum class WindowType {
     Invalid = 0,
     Normal,
@@ -39,5 +37,3 @@ enum class WindowType {
     Menubar,
     MenuApplet,
 };
-
-}

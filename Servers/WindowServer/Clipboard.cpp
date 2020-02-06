@@ -24,20 +24,55 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <WindowServer/Clipboard.h>
 
-namespace GUI {
+namespace WindowServer {
 
-// Keep this in sync with WindowType.
-enum class WindowType {
-    Invalid = 0,
-    Normal,
-    Menu,
-    WindowSwitcher,
-    Taskbar,
-    Tooltip,
-    Menubar,
-    MenuApplet,
-};
+Clipboard& Clipboard::the()
+{
+    static Clipboard* s_the;
+    if (!s_the)
+        s_the = new Clipboard;
+    return *s_the;
+}
+
+Clipboard::Clipboard()
+{
+}
+
+Clipboard::~Clipboard()
+{
+}
+
+const u8* Clipboard::data() const
+{
+    if (!m_shared_buffer)
+        return nullptr;
+    return (const u8*)m_shared_buffer->data();
+}
+
+int Clipboard::size() const
+{
+    if (!m_shared_buffer)
+        return 0;
+    return m_contents_size;
+}
+
+void Clipboard::clear()
+{
+    m_shared_buffer = nullptr;
+    m_contents_size = 0;
+}
+
+void Clipboard::set_data(NonnullRefPtr<SharedBuffer>&& data, int contents_size, const String& data_type)
+{
+    dbg() << "Clipboard::set_data <- [" << data_type << "] " << data->data() << " (" << contents_size << " bytes)";
+    m_shared_buffer = move(data);
+    m_contents_size = contents_size;
+    m_data_type = data_type;
+
+    if (on_content_change)
+        on_content_change();
+}
 
 }

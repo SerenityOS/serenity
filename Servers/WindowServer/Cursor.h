@@ -26,18 +26,40 @@
 
 #pragma once
 
-namespace GUI {
+#include <LibGfx/Bitmap.h>
 
-// Keep this in sync with WindowType.
-enum class WindowType {
-    Invalid = 0,
-    Normal,
-    Menu,
-    WindowSwitcher,
-    Taskbar,
-    Tooltip,
-    Menubar,
-    MenuApplet,
+namespace WindowServer {
+
+enum class StandardCursor {
+    None = 0,
+    Arrow,
+    IBeam,
+    ResizeHorizontal,
+    ResizeVertical,
+    ResizeDiagonalTLBR,
+    ResizeDiagonalBLTR,
+    Hand,
+    Drag,
+};
+
+class Cursor : public RefCounted<Cursor> {
+public:
+    static NonnullRefPtr<Cursor> create(NonnullRefPtr<Gfx::Bitmap>&&, const Gfx::Point& hotspot);
+    static NonnullRefPtr<Cursor> create(NonnullRefPtr<Gfx::Bitmap>&&);
+    static RefPtr<Cursor> create(StandardCursor);
+    ~Cursor();
+
+    Gfx::Point hotspot() const { return m_hotspot; }
+    const Gfx::Bitmap& bitmap() const { return *m_bitmap; }
+
+    Gfx::Rect rect() const { return m_bitmap->rect(); }
+    Gfx::Size size() const { return m_bitmap->size(); }
+
+private:
+    Cursor(NonnullRefPtr<Gfx::Bitmap>&&, const Gfx::Point&);
+
+    RefPtr<Gfx::Bitmap> m_bitmap;
+    Gfx::Point m_hotspot;
 };
 
 }

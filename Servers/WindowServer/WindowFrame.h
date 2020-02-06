@@ -26,18 +26,42 @@
 
 #pragma once
 
-namespace GUI {
+#include <AK/Badge.h>
+#include <AK/NonnullOwnPtrVector.h>
 
-// Keep this in sync with WindowType.
-enum class WindowType {
-    Invalid = 0,
-    Normal,
-    Menu,
-    WindowSwitcher,
-    Taskbar,
-    Tooltip,
-    Menubar,
-    MenuApplet,
+namespace Gfx {
+class Painter;
+class Rect;
+}
+
+namespace WindowServer {
+
+class Button;
+class MouseEvent;
+class Window;
+
+class WindowFrame {
+public:
+    WindowFrame(Window&);
+    ~WindowFrame();
+
+    Gfx::Rect rect() const;
+    void paint(Gfx::Painter&);
+    void on_mouse_event(const MouseEvent&);
+    void notify_window_rect_changed(const Gfx::Rect& old_rect, const Gfx::Rect& new_rect);
+    void invalidate_title_bar();
+
+    Gfx::Rect title_bar_rect() const;
+    Gfx::Rect title_bar_icon_rect() const;
+    Gfx::Rect title_bar_text_rect() const;
+
+    void did_set_maximized(Badge<Window>, bool);
+
+private:
+    Window& m_window;
+    NonnullOwnPtrVector<Button> m_buttons;
+    Button* m_maximize_button { nullptr };
+    Button* m_minimize_button { nullptr };
 };
 
 }

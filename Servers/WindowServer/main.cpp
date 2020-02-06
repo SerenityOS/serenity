@@ -24,13 +24,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "Compositor.h"
+#include "EventLoop.h"
+#include "Screen.h"
+#include "WindowManager.h"
 #include <LibCore/ConfigFile.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/SystemTheme.h>
-#include <WindowServer/WSCompositor.h>
-#include <WindowServer/WSEventLoop.h>
-#include <WindowServer/WSScreen.h>
-#include <WindowServer/WSWindowManager.h>
 #include <signal.h>
 #include <stdio.h>
 
@@ -87,18 +87,18 @@ int main(int, char**)
     Gfx::set_system_theme(*theme);
     auto palette = Gfx::PaletteImpl::create_with_shared_buffer(*theme);
 
-    WSEventLoop loop;
+    WindowServer::EventLoop loop;
 
     if (pledge("stdio video thread shared_buffer accept rpath wpath cpath proc exec", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
-    WSScreen screen(wm_config->read_num_entry("Screen", "Width", 1024),
+    WindowServer::Screen screen(wm_config->read_num_entry("Screen", "Width", 1024),
         wm_config->read_num_entry("Screen", "Height", 768));
-    WSCompositor::the();
-    auto wm = WSWindowManager::construct(*palette);
-    auto mm = WSMenuManager::construct();
+    WindowServer::Compositor::the();
+    auto wm = WindowServer::WindowManager::construct(*palette);
+    auto mm = WindowServer::MenuManager::construct();
 
     if (unveil("/tmp", "") < 0) {
         perror("unveil");
