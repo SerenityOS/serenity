@@ -32,7 +32,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-namespace CSyscallUtils {
+namespace Core {
 
 template<typename Syscall, class... Args>
 inline int safe_syscall(Syscall syscall, Args&&... args)
@@ -41,7 +41,7 @@ inline int safe_syscall(Syscall syscall, Args&&... args)
         int sysret = syscall(forward<Args>(args)...);
         if (sysret == -1) {
             int saved_errno = errno;
-            dbg() << "CSafeSyscall: " << sysret << " (" << saved_errno << ": " << strerror(saved_errno) << ")";
+            dbg() << "Core::safe_syscall: " << sysret << " (" << saved_errno << ": " << strerror(saved_errno) << ")";
             if (errno == EINTR)
                 continue;
             ASSERT_NOT_REACHED();

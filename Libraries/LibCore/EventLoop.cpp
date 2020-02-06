@@ -382,7 +382,7 @@ void EventLoop::wait_for_event(WaitMode mode)
         should_wait_forever = false;
     }
 
-    int marked_fd_count = CSyscallUtils::safe_syscall(select, max_fd + 1, &rfds, &wfds, nullptr, should_wait_forever ? nullptr : &timeout);
+    int marked_fd_count = Core::safe_syscall(select, max_fd + 1, &rfds, &wfds, nullptr, should_wait_forever ? nullptr : &timeout);
     if (FD_ISSET(s_wake_pipe_fds[0], &rfds)) {
         char buffer[32];
         auto nread = read(s_wake_pipe_fds[0], buffer, sizeof(buffer));
