@@ -38,7 +38,7 @@ void LineBox::add_fragment(const LayoutNode& layout_node, int start, int length,
         m_fragments.last().m_length = (start - m_fragments.last().m_start) + length;
         m_fragments.last().m_rect.set_width(m_fragments.last().m_rect.width() + width);
     } else {
-        m_fragments.empend(layout_node, start, length, FloatRect(m_width, 0, width, height));
+        m_fragments.empend(layout_node, start, length, Gfx::FloatRect(m_width, 0, width, height));
     }
     m_width += width;
 }

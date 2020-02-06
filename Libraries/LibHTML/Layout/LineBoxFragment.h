@@ -34,7 +34,7 @@ class RenderingContext;
 class LineBoxFragment {
     friend class LineBox;
 public:
-    LineBoxFragment(const LayoutNode& layout_node, int start, int length, const FloatRect& rect)
+    LineBoxFragment(const LayoutNode& layout_node, int start, int length, const Gfx::FloatRect& rect)
         : m_layout_node(layout_node)
         , m_start(start)
         , m_length(length)
@@ -45,8 +45,8 @@ public:
     const LayoutNode& layout_node() const { return m_layout_node; }
     int start() const { return m_start; }
     int length() const { return m_length; }
-    const FloatRect& rect() const { return m_rect; }
-    FloatRect& rect() { return m_rect; }
+    const Gfx::FloatRect& rect() const { return m_rect; }
+    Gfx::FloatRect& rect() { return m_rect; }
 
     float width() const { return m_rect.width(); }
 
@@ -61,5 +61,5 @@ private:
     const LayoutNode& m_layout_node;
     int m_start { 0 };
     int m_length { 0 };
-    FloatRect m_rect;
+    Gfx::FloatRect m_rect;
 };

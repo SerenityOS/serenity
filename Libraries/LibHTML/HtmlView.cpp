@@ -388,7 +388,7 @@ void HtmlView::scroll_to_anchor(const StringView& name)
         return;
     }
     auto& layout_node = *element->layout_node();
-    FloatRect float_rect { layout_node.box_type_agnostic_position(), { (float)visible_content_rect().width(), (float)visible_content_rect().height() } };
+    Gfx::FloatRect float_rect { layout_node.box_type_agnostic_position(), { (float)visible_content_rect().width(), (float)visible_content_rect().height() } };
     scroll_into_view(enclosing_int_rect(float_rect), true, true);
     window()->set_override_cursor(GUI::StandardCursor::None);
 }
