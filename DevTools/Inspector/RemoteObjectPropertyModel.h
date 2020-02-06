@@ -27,7 +27,7 @@
 #pragma once
 
 #include <AK/JsonValue.h>
-#include <LibGUI/GModel.h>
+#include <LibGUI/Model.h>
 
 class RemoteObject;
 

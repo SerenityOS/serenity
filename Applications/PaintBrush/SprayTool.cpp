@@ -28,9 +28,9 @@
 #include "PaintableWidget.h"
 #include <AK/Queue.h>
 #include <AK/SinglyLinkedList.h>
-#include <LibGUI/GPainter.h>
-#include <LibGUI/GAction.h>
-#include <LibGUI/GMenu.h>
+#include <LibGUI/Painter.h>
+#include <LibGUI/Action.h>
+#include <LibGUI/Menu.h>
 #include <LibGfx/Bitmap.h>
 #include <stdio.h>
 #include <LibM/math.h>

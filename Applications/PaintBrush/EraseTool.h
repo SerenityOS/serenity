@@ -28,7 +28,7 @@
 
 #include "Tool.h"
 #include <LibGfx/Point.h>
-#include <LibGUI/GActionGroup.h>
+#include <LibGUI/ActionGroup.h>
 
 namespace GUI {
 class Menu;

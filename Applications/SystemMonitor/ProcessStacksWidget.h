@@ -26,8 +26,8 @@
 
 #pragma once
 
-#include <LibGUI/GTextEditor.h>
-#include <LibGUI/GWidget.h>
+#include <LibGUI/TextEditor.h>
+#include <LibGUI/Widget.h>
 
 namespace Core {
 class Timer;

@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <LibGUI/GTextEditor.h>
+#include <LibGUI/TextEditor.h>
 
 class EditorWrapper;
 class HtmlView;

@@ -26,8 +26,8 @@
 
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
-#include <LibGUI/GApplication.h>
-#include <LibGUI/GClipboard.h>
+#include <LibGUI/Application.h>
+#include <LibGUI/Clipboard.h>
 #include <stdio.h>
 #include <stdlib.h>
 

@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGUI/GButton.h>
-#include <LibGUI/GTextBox.h>
+#include <LibGUI/Button.h>
+#include <LibGUI/TextBox.h>
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/DOM/HTMLFormElement.h>
 #include <LibHTML/DOM/HTMLInputElement.h>

@@ -26,10 +26,10 @@
 
 #include "ProcessMemoryMapWidget.h"
 #include <LibCore/Timer.h>
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GJsonArrayModel.h>
-#include <LibGUI/GSortingProxyModel.h>
-#include <LibGUI/GTableView.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/JsonArrayModel.h>
+#include <LibGUI/SortingProxyModel.h>
+#include <LibGUI/TableView.h>
 
 ProcessMemoryMapWidget::ProcessMemoryMapWidget(GUI::Widget* parent)
     : GUI::Widget(parent)

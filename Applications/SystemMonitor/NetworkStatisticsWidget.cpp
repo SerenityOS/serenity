@@ -25,10 +25,10 @@
  */
 
 #include "NetworkStatisticsWidget.h"
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GGroupBox.h>
-#include <LibGUI/GJsonArrayModel.h>
-#include <LibGUI/GTableView.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/GroupBox.h>
+#include <LibGUI/JsonArrayModel.h>
+#include <LibGUI/TableView.h>
 
 NetworkStatisticsWidget::NetworkStatisticsWidget(GUI::Widget* parent)
     : GUI::LazyWidget(parent)

@@ -32,7 +32,7 @@
 #include <LibCore/Timer.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Rect.h>
-#include <LibGUI/GFrame.h>
+#include <LibGUI/Frame.h>
 #include <LibVT/Terminal.h>
 
 namespace GUI {

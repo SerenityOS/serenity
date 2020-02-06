@@ -25,9 +25,9 @@
  */
 
 #include "ProcessFileDescriptorMapWidget.h"
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GJsonArrayModel.h>
-#include <LibGUI/GTableView.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/JsonArrayModel.h>
+#include <LibGUI/TableView.h>
 
 ProcessFileDescriptorMapWidget::ProcessFileDescriptorMapWidget(GUI::Widget* parent)
     : GUI::Widget(parent)

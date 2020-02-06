@@ -25,7 +25,7 @@
  */
 
 #include "GlyphEditorWidget.h"
-#include <LibGUI/GPainter.h>
+#include <LibGUI/Painter.h>
 
 GlyphEditorWidget::GlyphEditorWidget(Gfx::Font& mutable_font, GUI::Widget* parent)
     : GUI::Frame(parent)

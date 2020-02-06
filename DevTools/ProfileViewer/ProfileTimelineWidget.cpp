@@ -26,7 +26,7 @@
 
 #include "ProfileTimelineWidget.h"
 #include "Profile.h"
-#include <LibGUI/GPainter.h>
+#include <LibGUI/Painter.h>
 
 ProfileTimelineWidget::ProfileTimelineWidget(Profile& profile, GUI::Widget* parent)
     : GUI::Frame(parent)

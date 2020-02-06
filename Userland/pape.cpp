@@ -30,8 +30,8 @@
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
-#include <LibGUI/GApplication.h>
-#include <LibGUI/GDesktop.h>
+#include <LibGUI/Application.h>
+#include <LibGUI/Desktop.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>

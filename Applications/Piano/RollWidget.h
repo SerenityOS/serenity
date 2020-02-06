@@ -28,7 +28,7 @@
 #pragma once
 
 #include "Music.h"
-#include <LibGUI/GScrollableWidget.h>
+#include <LibGUI/ScrollableWidget.h>
 
 class AudioEngine;
 

@@ -26,8 +26,8 @@
 
 #include "PaletteWidget.h"
 #include "PaintableWidget.h"
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GColorPicker.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/ColorPicker.h>
 
 class ColorWidget : public GUI::Frame {
     C_OBJECT(ColorWidget)

@@ -28,7 +28,7 @@
 
 #include <AK/NonnullRefPtr.h>
 #include <AK/String.h>
-#include <LibGUI/GModel.h>
+#include <LibGUI/Model.h>
 
 class ManualModel final : public GUI::Model {
 public:

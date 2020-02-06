@@ -24,12 +24,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGUI/GApplication.h>
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GButton.h>
-#include <LibGUI/GLabel.h>
-#include <LibGUI/GWidget.h>
-#include <LibGUI/GWindow.h>
+#include <LibGUI/Application.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/Button.h>
+#include <LibGUI/Label.h>
+#include <LibGUI/Widget.h>
+#include <LibGUI/Window.h>
 
 int main(int argc, char** argv)
 {

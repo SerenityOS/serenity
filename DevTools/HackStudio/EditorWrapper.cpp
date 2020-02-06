@@ -26,10 +26,10 @@
 
 #include "EditorWrapper.h"
 #include "Editor.h"
-#include <LibGUI/GAction.h>
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GInputBox.h>
-#include <LibGUI/GLabel.h>
+#include <LibGUI/Action.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/InputBox.h>
+#include <LibGUI/Label.h>
 
 extern RefPtr<EditorWrapper> g_current_editor_wrapper;
 

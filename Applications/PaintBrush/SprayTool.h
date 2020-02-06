@@ -28,8 +28,8 @@
 
 #include "Tool.h"
 #include <LibCore/Timer.h>
-#include <LibGUI/GActionGroup.h>
-#include <LibGUI/GPainter.h>
+#include <LibGUI/ActionGroup.h>
+#include <LibGUI/Painter.h>
 
 namespace GUI {
 class Menu;

@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <LibGUI/GModel.h>
+#include <LibGUI/Model.h>
 
 class VBWidget;
 class VBProperty;

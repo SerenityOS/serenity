@@ -27,11 +27,11 @@
 #pragma once
 
 #include <AK/Vector.h>
-#include <LibGUI/GColumnsView.h>
-#include <LibGUI/GFileSystemModel.h>
-#include <LibGUI/GItemView.h>
-#include <LibGUI/GStackWidget.h>
-#include <LibGUI/GTableView.h>
+#include <LibGUI/ColumnsView.h>
+#include <LibGUI/FileSystemModel.h>
+#include <LibGUI/ItemView.h>
+#include <LibGUI/StackWidget.h>
+#include <LibGUI/TableView.h>
 #include <sys/stat.h>
 
 class DirectoryView final : public GUI::StackWidget {

@@ -25,7 +25,7 @@
  */
 
 #include <AK/Function.h>
-#include <LibGUI/GFrame.h>
+#include <LibGUI/Frame.h>
 
 class GlyphEditorWidget final : public GUI::Frame {
     C_OBJECT(GlyphEditorWidget)

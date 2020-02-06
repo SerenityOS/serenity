@@ -25,7 +25,7 @@
  */
 
 #include "WindowList.h"
-#include <LibGUI/GWindowServerConnection.h>
+#include <LibGUI/WindowServerConnection.h>
 
 WindowList& WindowList::the()
 {

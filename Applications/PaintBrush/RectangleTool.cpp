@@ -27,9 +27,9 @@
 #include "RectangleTool.h"
 #include "PaintableWidget.h"
 #include <LibGfx/Rect.h>
-#include <LibGUI/GAction.h>
-#include <LibGUI/GMenu.h>
-#include <LibGUI/GPainter.h>
+#include <LibGUI/Action.h>
+#include <LibGUI/Menu.h>
+#include <LibGUI/Painter.h>
 #include <LibM/math.h>
 
 RectangleTool::RectangleTool()

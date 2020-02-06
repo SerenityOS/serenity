@@ -24,13 +24,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGUI/GApplication.h>
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GButton.h>
-#include <LibGUI/GDesktop.h>
-#include <LibGUI/GLabel.h>
-#include <LibGUI/GMessageBox.h>
-#include <LibGUI/GWindow.h>
+#include <LibGUI/Application.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/Button.h>
+#include <LibGUI/Desktop.h>
+#include <LibGUI/Label.h>
+#include <LibGUI/MessageBox.h>
+#include <LibGUI/Window.h>
 #include <stdio.h>
 #include <sys/utsname.h>
 

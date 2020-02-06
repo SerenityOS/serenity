@@ -31,7 +31,7 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
-#include <LibGUI/GWidget.h>
+#include <LibGUI/Widget.h>
 
 class VBProperty;
 class VBWidget;

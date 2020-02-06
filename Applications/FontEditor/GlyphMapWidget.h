@@ -27,7 +27,7 @@
 #pragma once
 
 #include <AK/Function.h>
-#include <LibGUI/GFrame.h>
+#include <LibGUI/Frame.h>
 
 class GlyphMapWidget final : public GUI::Frame {
     C_OBJECT(GlyphMapWidget)

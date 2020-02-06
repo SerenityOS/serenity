@@ -30,10 +30,10 @@
 #include <AK/FileSystemPath.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
-#include <LibGUI/GApplication.h>
-#include <LibGUI/GPainter.h>
-#include <LibGUI/GScrollBar.h>
-#include <LibGUI/GWindow.h>
+#include <LibGUI/Application.h>
+#include <LibGUI/Painter.h>
+#include <LibGUI/ScrollBar.h>
+#include <LibGUI/Window.h>
 #include <LibHTML/DOM/ElementFactory.h>
 #include <LibHTML/DOM/HTMLHeadElement.h>
 #include <LibHTML/DOM/Text.h>

@@ -28,7 +28,7 @@
 
 #include <AK/CircularQueue.h>
 #include <AK/NonnullRefPtrVector.h>
-#include <LibGUI/GWidget.h>
+#include <LibGUI/Widget.h>
 
 class SnakeGame : public GUI::Widget {
     C_OBJECT(SnakeGame)

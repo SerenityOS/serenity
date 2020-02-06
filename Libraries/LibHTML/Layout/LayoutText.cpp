@@ -28,7 +28,7 @@
 #include <AK/Utf8View.h>
 #include <LibCore/DirIterator.h>
 #include <LibGfx/Font.h>
-#include <LibGUI/GPainter.h>
+#include <LibGUI/Painter.h>
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/Layout/LayoutBlock.h>
 #include <LibHTML/Layout/LayoutText.h>

@@ -31,7 +31,7 @@
 #include "KnobsWidget.h"
 #include "RollWidget.h"
 #include "WaveWidget.h"
-#include <LibGUI/GBoxLayout.h>
+#include <LibGUI/BoxLayout.h>
 
 MainWidget::MainWidget(AudioEngine& audio_engine)
     : m_audio_engine(audio_engine)

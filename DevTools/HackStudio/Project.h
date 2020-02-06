@@ -30,8 +30,8 @@
 #include <AK/Noncopyable.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
-#include <LibGUI/GIcon.h>
-#include <LibGUI/GModel.h>
+#include <LibGUI/Icon.h>
+#include <LibGUI/Model.h>
 
 class Project {
     AK_MAKE_NONCOPYABLE(Project)

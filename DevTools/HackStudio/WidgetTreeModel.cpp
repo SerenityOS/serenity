@@ -26,7 +26,7 @@
 
 #include "WidgetTreeModel.h"
 #include <AK/StringBuilder.h>
-#include <LibGUI/GWidget.h>
+#include <LibGUI/Widget.h>
 #include <stdio.h>
 
 WidgetTreeModel::WidgetTreeModel(GUI::Widget& root)

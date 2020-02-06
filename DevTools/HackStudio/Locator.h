@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <LibGUI/GWidget.h>
+#include <LibGUI/Widget.h>
 
 namespace GUI {
 class ModelIndex;

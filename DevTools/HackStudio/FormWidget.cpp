@@ -27,7 +27,7 @@
 #include "FormWidget.h"
 #include "FormEditorWidget.h"
 #include "Tool.h"
-#include <LibGUI/GPainter.h>
+#include <LibGUI/Painter.h>
 
 FormWidget::FormWidget(FormEditorWidget& parent)
     : GUI::Widget(&parent)

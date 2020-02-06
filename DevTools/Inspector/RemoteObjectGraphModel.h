@@ -30,7 +30,7 @@
 #include <AK/JsonObject.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibCore/LocalSocket.h>
-#include <LibGUI/GModel.h>
+#include <LibGUI/Model.h>
 
 class RemoteProcess;
 

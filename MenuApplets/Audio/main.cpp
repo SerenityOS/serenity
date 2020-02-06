@@ -25,10 +25,10 @@
  */
 
 #include <LibAudio/ClientConnection.h>
-#include <LibGUI/GApplication.h>
-#include <LibGUI/GPainter.h>
-#include <LibGUI/GWidget.h>
-#include <LibGUI/GWindow.h>
+#include <LibGUI/Application.h>
+#include <LibGUI/Painter.h>
+#include <LibGUI/Widget.h>
+#include <LibGUI/Window.h>
 
 class AudioWidget final : public GUI::Widget {
     C_OBJECT(AudioWidget)

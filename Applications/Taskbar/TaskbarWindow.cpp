@@ -28,11 +28,11 @@
 #include "TaskbarButton.h"
 #include <AK/SharedBuffer.h>
 #include <LibCore/ConfigFile.h>
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GButton.h>
-#include <LibGUI/GDesktop.h>
-#include <LibGUI/GFrame.h>
-#include <LibGUI/GWindow.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/Button.h>
+#include <LibGUI/Desktop.h>
+#include <LibGUI/Frame.h>
+#include <LibGUI/Window.h>
 #include <stdio.h>
 
 //#define EVENT_DEBUG

@@ -29,7 +29,7 @@
 #include "WindowIdentifier.h"
 #include <AK/String.h>
 #include <AK/HashMap.h>
-#include <LibGUI/GButton.h>
+#include <LibGUI/Button.h>
 #include <LibGfx/Rect.h>
 
 class Window {

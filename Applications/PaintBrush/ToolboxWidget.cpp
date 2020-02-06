@@ -34,8 +34,8 @@
 #include "PickerTool.h"
 #include "RectangleTool.h"
 #include "SprayTool.h"
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GButton.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/Button.h>
 
 class ToolButton final : public GUI::Button {
     C_OBJECT(ToolButton)

@@ -28,11 +28,11 @@
 #include "IRCChannel.h"
 #include "IRCChannelMemberListModel.h"
 #include "IRCClient.h"
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GSplitter.h>
-#include <LibGUI/GTableView.h>
-#include <LibGUI/GTextBox.h>
-#include <LibGUI/GTextEditor.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/Splitter.h>
+#include <LibGUI/TableView.h>
+#include <LibGUI/TextBox.h>
+#include <LibGUI/TextEditor.h>
 #include <LibHTML/HtmlView.h>
 
 IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& name, GUI::Widget* parent)

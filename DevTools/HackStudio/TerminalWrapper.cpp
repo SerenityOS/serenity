@@ -28,8 +28,8 @@
 #include "ProcessStateWidget.h"
 #include <AK/String.h>
 #include <LibCore/ConfigFile.h>
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GMessageBox.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/MessageBox.h>
 #include <LibVT/TerminalWidget.h>
 #include <fcntl.h>
 #include <signal.h>

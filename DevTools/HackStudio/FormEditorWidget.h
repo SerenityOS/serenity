@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <LibGUI/GScrollableWidget.h>
+#include <LibGUI/ScrollableWidget.h>
 
 class FormWidget;
 class Tool;

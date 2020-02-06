@@ -29,7 +29,7 @@
 #include "Calculator.h"
 #include "Keypad.h"
 #include <AK/Vector.h>
-#include <LibGUI/GWidget.h>
+#include <LibGUI/Widget.h>
 
 namespace GUI {
 class Button;

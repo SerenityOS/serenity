@@ -27,7 +27,7 @@
 
 #include "WaveWidget.h"
 #include "AudioEngine.h"
-#include <LibGUI/GPainter.h>
+#include <LibGUI/Painter.h>
 #include <limits>
 
 WaveWidget::WaveWidget(GUI::Widget* parent, AudioEngine& audio_engine)

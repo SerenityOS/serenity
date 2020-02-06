@@ -27,7 +27,7 @@
 #include "DirectoryView.h"
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
-#include <LibGUI/GSortingProxyModel.h>
+#include <LibGUI/SortingProxyModel.h>
 #include <stdio.h>
 #include <unistd.h>
 

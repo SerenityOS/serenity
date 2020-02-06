@@ -32,8 +32,8 @@
 #include <LibCore/ConfigFile.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Size.h>
-#include <LibGUI/GWidget.h>
-#include <LibGUI/GLabel.h>
+#include <LibGUI/Widget.h>
+#include <LibGUI/Label.h>
 
 class DisplayPropertiesWidget final {
 public:

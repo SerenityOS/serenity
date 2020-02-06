@@ -28,7 +28,7 @@
 #pragma once
 
 #include "Music.h"
-#include <LibGUI/GFrame.h>
+#include <LibGUI/Frame.h>
 
 class AudioEngine;
 

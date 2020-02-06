@@ -25,8 +25,8 @@
  */
 
 #include "TaskbarButton.h"
-#include <LibGUI/GAction.h>
-#include <LibGUI/GWindowServerConnection.h>
+#include <LibGUI/Action.h>
+#include <LibGUI/WindowServerConnection.h>
 
 TaskbarButton::TaskbarButton(const WindowIdentifier& identifier, GUI::Widget* parent)
     : GUI::Button(parent)

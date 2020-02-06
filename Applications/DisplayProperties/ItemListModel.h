@@ -28,7 +28,7 @@
 
 #include <AK/NonnullRefPtr.h>
 #include <AK/Vector.h>
-#include <LibGUI/GModel.h>
+#include <LibGUI/Model.h>
 
 template<typename T>
 class ItemListModel final : public GUI::Model {

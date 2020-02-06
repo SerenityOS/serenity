@@ -29,7 +29,7 @@
 #include "RemoteProcess.h"
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
-#include <LibGUI/GApplication.h>
+#include <LibGUI/Application.h>
 #include <stdio.h>
 
 RemoteObjectGraphModel::RemoteObjectGraphModel(RemoteProcess& process)

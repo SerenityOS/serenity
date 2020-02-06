@@ -28,7 +28,7 @@
 
 #include "VBWidget.h"
 #include <AK/NonnullRefPtrVector.h>
-#include <LibGUI/GWidget.h>
+#include <LibGUI/Widget.h>
 
 class VBForm : public GUI::Widget {
     C_OBJECT(VBForm)

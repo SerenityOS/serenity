@@ -25,14 +25,14 @@
  */
 
 #include "DisplayProperties.h"
-#include <LibGUI/GAboutDialog.h>
-#include <LibGUI/GAction.h>
-#include <LibGUI/GApplication.h>
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GMenu.h>
-#include <LibGUI/GMenuBar.h>
-#include <LibGUI/GWidget.h>
-#include <LibGUI/GWindow.h>
+#include <LibGUI/AboutDialog.h>
+#include <LibGUI/Action.h>
+#include <LibGUI/Application.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/Menu.h>
+#include <LibGUI/MenuBar.h>
+#include <LibGUI/Widget.h>
+#include <LibGUI/Window.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)

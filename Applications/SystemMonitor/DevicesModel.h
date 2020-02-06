@@ -28,7 +28,7 @@
 
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibGUI/GModel.h>
+#include <LibGUI/Model.h>
 
 class DevicesModel final : public GUI::Model {
 public:

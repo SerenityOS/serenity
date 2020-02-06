@@ -29,10 +29,10 @@
 #include "HexEditor.h"
 #include <AK/FileSystemPath.h>
 #include <AK/Function.h>
-#include <LibGUI/GApplication.h>
-#include <LibGUI/GTextEditor.h>
-#include <LibGUI/GWidget.h>
-#include <LibGUI/GWindow.h>
+#include <LibGUI/Application.h>
+#include <LibGUI/TextEditor.h>
+#include <LibGUI/Widget.h>
+#include <LibGUI/Window.h>
 
 namespace GUI {
 class StatusBar;

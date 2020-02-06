@@ -28,12 +28,12 @@
 #include "RemoteObjectGraphModel.h"
 #include "RemoteObjectPropertyModel.h"
 #include "RemoteProcess.h"
-#include <LibGUI/GApplication.h>
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GSplitter.h>
-#include <LibGUI/GTableView.h>
-#include <LibGUI/GTreeView.h>
-#include <LibGUI/GWindow.h>
+#include <LibGUI/Application.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/Splitter.h>
+#include <LibGUI/TableView.h>
+#include <LibGUI/TreeView.h>
+#include <LibGUI/Window.h>
 #include <stdio.h>
 
 [[noreturn]] static void print_usage_and_exit()

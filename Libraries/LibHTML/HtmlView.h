@@ -26,7 +26,7 @@
 #pragma once
 
 #include <AK/URL.h>
-#include <LibGUI/GScrollableWidget.h>
+#include <LibGUI/ScrollableWidget.h>
 #include <LibHTML/DOM/Document.h>
 
 class Frame;

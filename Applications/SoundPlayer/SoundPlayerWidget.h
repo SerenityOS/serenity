@@ -28,11 +28,11 @@
 
 #include "PlaybackManager.h"
 #include "SampleWidget.h"
-#include <LibGUI/GButton.h>
-#include <LibGUI/GLabel.h>
-#include <LibGUI/GSlider.h>
-#include <LibGUI/GWidget.h>
-#include <LibGUI/GWindow.h>
+#include <LibGUI/Button.h>
+#include <LibGUI/Label.h>
+#include <LibGUI/Slider.h>
+#include <LibGUI/Widget.h>
+#include <LibGUI/Window.h>
 
 class SoundPlayerWidget final : public GUI::Widget {
     C_OBJECT(SoundPlayerWidget)

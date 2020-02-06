@@ -25,20 +25,20 @@
  */
 
 #include <LibCore/Timer.h>
-#include <LibGUI/GApplication.h>
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GButton.h>
-#include <LibGUI/GCheckBox.h>
-#include <LibGUI/GGroupBox.h>
-#include <LibGUI/GLabel.h>
-#include <LibGUI/GProgressBar.h>
-#include <LibGUI/GRadioButton.h>
-#include <LibGUI/GScrollBar.h>
-#include <LibGUI/GSlider.h>
-#include <LibGUI/GSpinBox.h>
-#include <LibGUI/GTextBox.h>
-#include <LibGUI/GWidget.h>
-#include <LibGUI/GWindow.h>
+#include <LibGUI/Application.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/Button.h>
+#include <LibGUI/CheckBox.h>
+#include <LibGUI/GroupBox.h>
+#include <LibGUI/Label.h>
+#include <LibGUI/ProgressBar.h>
+#include <LibGUI/RadioButton.h>
+#include <LibGUI/ScrollBar.h>
+#include <LibGUI/Slider.h>
+#include <LibGUI/SpinBox.h>
+#include <LibGUI/TextBox.h>
+#include <LibGUI/Widget.h>
+#include <LibGUI/Window.h>
 
 int main(int argc, char** argv)
 {

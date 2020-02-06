@@ -27,7 +27,7 @@
 #pragma once
 
 #include <AK/Function.h>
-#include <LibGUI/GTableView.h>
+#include <LibGUI/TableView.h>
 #include <unistd.h>
 
 class GraphWidget;

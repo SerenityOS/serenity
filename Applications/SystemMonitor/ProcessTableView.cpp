@@ -26,7 +26,7 @@
 
 #include "ProcessTableView.h"
 #include "ProcessModel.h"
-#include <LibGUI/GSortingProxyModel.h>
+#include <LibGUI/SortingProxyModel.h>
 #include <stdio.h>
 
 ProcessTableView::ProcessTableView(GUI::Widget* parent)

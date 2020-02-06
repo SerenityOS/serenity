@@ -30,7 +30,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/String.h>
-#include <LibGUI/GTextDocument.h>
+#include <LibGUI/TextDocument.h>
 
 class ProjectFile : public RefCounted<ProjectFile> {
 public:
