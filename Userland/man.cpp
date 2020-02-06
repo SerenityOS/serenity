@@ -25,7 +25,7 @@
  */
 
 #include <AK/String.h>
-#include <LibCore/CFile.h>
+#include <LibCore/File.h>
 #include <LibMarkdown/MDDocument.h>
 #include <stdio.h>
 #include <unistd.h>

@@ -26,7 +26,7 @@
 
 #include <AK/FileSystemPath.h>
 #include <AK/Optional.h>
-#include <LibCore/CUserInfo.h>
+#include <LibCore/UserInfo.h>
 #include <LibGUI/GDialog.h>
 #include <LibGUI/GTableView.h>
 

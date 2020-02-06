@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibCore/CConfigFile.h>
+#include <LibCore/ConfigFile.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/SystemTheme.h>
 #include <WindowServer/WSCompositor.h>

@@ -25,7 +25,7 @@
  */
 
 #include <AK/FileSystemPath.h>
-#include <LibCore/CFile.h>
+#include <LibCore/File.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GScrollBar.h>

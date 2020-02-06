@@ -31,7 +31,7 @@
 #include <AK/QuickSort.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibCore/CProcessStatisticsReader.h>
+#include <LibCore/ProcessStatisticsReader.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>

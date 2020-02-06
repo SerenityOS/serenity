@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibCore/CHttpJob.h>
-#include <LibCore/CHttpRequest.h>
+#include <LibCore/HttpJob.h>
+#include <LibCore/HttpRequest.h>
 #include <ProtocolServer/HttpDownload.h>
 #include <ProtocolServer/HttpProtocol.h>
 

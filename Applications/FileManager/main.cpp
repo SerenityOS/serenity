@@ -29,8 +29,8 @@
 #include "PropertiesDialog.h"
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/CConfigFile.h>
-#include <LibCore/CUserInfo.h>
+#include <LibCore/ConfigFile.h>
+#include <LibCore/UserInfo.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GActionGroup.h>

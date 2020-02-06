@@ -29,9 +29,9 @@
 #include "Parser.h"
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/CDirIterator.h>
-#include <LibCore/CElapsedTimer.h>
-#include <LibCore/CFile.h>
+#include <LibCore/DirIterator.h>
+#include <LibCore/ElapsedTimer.h>
+#include <LibCore/File.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <pwd.h>

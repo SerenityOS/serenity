@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibCore/CEventLoop.h>
-#include <LibCore/CLocalServer.h>
+#include <LibCore/EventLoop.h>
+#include <LibCore/LocalServer.h>
 #include <LibIPC/ClientConnection.h>
 #include <ProtocolServer/HttpProtocol.h>
 #include <ProtocolServer/PSClientConnection.h>

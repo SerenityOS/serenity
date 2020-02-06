@@ -27,7 +27,7 @@
 #include "DisplayProperties.h"
 #include "ItemListModel.h"
 #include <AK/StringBuilder.h>
-#include <LibCore/CDirIterator.h>
+#include <LibCore/DirIterator.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>

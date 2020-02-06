@@ -30,8 +30,8 @@
 #include <AK/HashTable.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/WeakPtr.h>
-#include <LibCore/CConfigFile.h>
-#include <LibCore/CElapsedTimer.h>
+#include <LibCore/ConfigFile.h>
+#include <LibCore/ElapsedTimer.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/DisjointRectSet.h>
 #include <LibGfx/Painter.h>

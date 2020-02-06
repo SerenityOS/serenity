@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibCore/CHttpJob.h>
-#include <LibCore/CHttpResponse.h>
+#include <LibCore/HttpJob.h>
+#include <LibCore/HttpResponse.h>
 #include <ProtocolServer/HttpDownload.h>
 
 HttpDownload::HttpDownload(PSClientConnection& client, NonnullRefPtr<Core::HttpJob>&& job)

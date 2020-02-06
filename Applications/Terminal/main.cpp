@@ -25,8 +25,8 @@
  */
 
 #include <Kernel/KeyCode.h>
-#include <LibCore/CArgsParser.h>
-#include <LibCore/CUserInfo.h>
+#include <LibCore/ArgsParser.h>
+#include <LibCore/UserInfo.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GActionGroup.h>

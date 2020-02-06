@@ -25,8 +25,8 @@
  */
 
 #include "ProcessStateWidget.h"
-#include <LibCore/CProcessStatisticsReader.h>
-#include <LibCore/CTimer.h>
+#include <LibCore/ProcessStatisticsReader.h>
+#include <LibCore/Timer.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GLabel.h>
 #include <unistd.h>

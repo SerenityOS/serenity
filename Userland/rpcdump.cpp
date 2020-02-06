@@ -26,8 +26,8 @@
 
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
-#include <LibCore/CEventLoop.h>
-#include <LibCore/CLocalSocket.h>
+#include <LibCore/EventLoop.h>
+#include <LibCore/LocalSocket.h>
 #include <stdio.h>
 #include <stdlib.h>
 

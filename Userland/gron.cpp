@@ -28,7 +28,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/CFile.h>
+#include <LibCore/File.h>
 #include <stdio.h>
 
 static bool use_color = false;

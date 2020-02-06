@@ -25,7 +25,7 @@
  */
 
 #include <AK/QuickSort.h>
-#include <LibCore/CDirIterator.h>
+#include <LibCore/DirIterator.h>
 #include <LibGfx/Font.h>
 #include <LibGUI/GFontDatabase.h>
 #include <dirent.h>

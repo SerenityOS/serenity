@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <LibCore/CTimer.h>
+#include <LibCore/Timer.h>
 #include <LibGUI/GLazyWidget.h>
 
 namespace GUI {

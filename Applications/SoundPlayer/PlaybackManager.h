@@ -29,7 +29,7 @@
 #include <AK/Vector.h>
 #include <LibAudio/AClientConnection.h>
 #include <LibAudio/AWavLoader.h>
-#include <LibCore/CTimer.h>
+#include <LibCore/Timer.h>
 
 #define PLAYBACK_MANAGER_BUFFER_SIZE 64 * KB
 #define PLAYBACK_MANAGER_RATE 44100

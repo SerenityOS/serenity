@@ -28,7 +28,7 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/Vector.h>
-#include <LibCore/CFile.h>
+#include <LibCore/File.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -29,7 +29,7 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/NonnullOwnPtrVector.h>
-#include <LibCore/CLocalSocket.h>
+#include <LibCore/LocalSocket.h>
 #include <LibGUI/GModel.h>
 
 class RemoteProcess;

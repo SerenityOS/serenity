@@ -28,7 +28,7 @@
 
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtrVector.h>
-#include <LibCore/CNotifier.h>
+#include <LibCore/Notifier.h>
 #include <LibGUI/GModel.h>
 #include <sys/stat.h>
 #include <time.h>

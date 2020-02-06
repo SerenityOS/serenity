@@ -30,12 +30,12 @@
 #include <AK/HashMap.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/CConfigFile.h>
-#include <LibCore/CEventLoop.h>
-#include <LibCore/CFile.h>
-#include <LibCore/CLocalServer.h>
-#include <LibCore/CLocalSocket.h>
-#include <LibCore/CUdpSocket.h>
+#include <LibCore/ConfigFile.h>
+#include <LibCore/EventLoop.h>
+#include <LibCore/File.h>
+#include <LibCore/LocalServer.h>
+#include <LibCore/LocalSocket.h>
+#include <LibCore/UdpSocket.h>
 #include <stdio.h>
 #include <unistd.h>
 

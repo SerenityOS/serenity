@@ -27,7 +27,7 @@
 #include <AK/String.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
-#include <LibCore/CFile.h>
+#include <LibCore/File.h>
 #include <LibPCIDB/Database.h>
 #include <stdio.h>
 

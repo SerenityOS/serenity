@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibCore/CArgsParser.h>
+#include <LibCore/ArgsParser.h>
 #include <stdio.h>
 #include <unistd.h>
 

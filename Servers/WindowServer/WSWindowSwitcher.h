@@ -28,7 +28,7 @@
 
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
-#include <LibCore/CObject.h>
+#include <LibCore/Object.h>
 #include <LibGfx/Rect.h>
 
 namespace Gfx {

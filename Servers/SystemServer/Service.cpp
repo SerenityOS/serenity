@@ -28,8 +28,8 @@
 #include <AK/HashMap.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
-#include <LibCore/CConfigFile.h>
-#include <LibCore/CLocalSocket.h>
+#include <LibCore/ConfigFile.h>
+#include <LibCore/LocalSocket.h>
 #include <fcntl.h>
 #include <grp.h>
 #include <libgen.h>

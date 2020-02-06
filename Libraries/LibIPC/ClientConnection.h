@@ -26,12 +26,12 @@
 
 #pragma once
 
-#include <LibCore/CEvent.h>
-#include <LibCore/CEventLoop.h>
-#include <LibCore/CIODevice.h>
-#include <LibCore/CLocalSocket.h>
-#include <LibCore/CNotifier.h>
-#include <LibCore/CObject.h>
+#include <LibCore/Event.h>
+#include <LibCore/EventLoop.h>
+#include <LibCore/IODevice.h>
+#include <LibCore/LocalSocket.h>
+#include <LibCore/Notifier.h>
+#include <LibCore/Object.h>
 #include <LibIPC/Endpoint.h>
 #include <LibIPC/Message.h>
 #include <errno.h>

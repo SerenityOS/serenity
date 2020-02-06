@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibCore/CFile.h>
-#include <LibCore/CProcessStatisticsReader.h>
+#include <LibCore/File.h>
+#include <LibCore/ProcessStatisticsReader.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>

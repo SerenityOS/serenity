@@ -34,7 +34,7 @@
 #include "ProcessStacksWidget.h"
 #include "ProcessTableView.h"
 #include "ProcessUnveiledPathsWidget.h"
-#include <LibCore/CTimer.h>
+#include <LibCore/Timer.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GActionGroup.h>

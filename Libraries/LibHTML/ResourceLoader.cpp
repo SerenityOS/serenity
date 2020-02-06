@@ -25,7 +25,7 @@
  */
 
 #include <AK/SharedBuffer.h>
-#include <LibCore/CFile.h>
+#include <LibCore/File.h>
 #include <LibHTML/ResourceLoader.h>
 #include <LibProtocol/Client.h>
 #include <LibProtocol/Download.h>

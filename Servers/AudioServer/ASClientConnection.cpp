@@ -29,7 +29,7 @@
 #include "AudioClientEndpoint.h"
 #include <AK/SharedBuffer.h>
 #include <LibAudio/ABuffer.h>
-#include <LibCore/CEventLoop.h>
+#include <LibCore/EventLoop.h>
 #include <errno.h>
 #include <stdio.h>
 #include <sys/socket.h>

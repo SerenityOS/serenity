@@ -28,7 +28,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/CFile.h>
+#include <LibCore/File.h>
 #include <stdio.h>
 
 static void print(const JsonValue& value, int indent = 0);

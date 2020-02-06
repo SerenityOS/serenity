@@ -27,8 +27,8 @@
 #include <AK/FileSystemPath.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/CArgsParser.h>
-#include <LibCore/CDirIterator.h>
+#include <LibCore/ArgsParser.h>
+#include <LibCore/DirIterator.h>
 #include <assert.h>
 #include <fcntl.h>
 #include <stdio.h>

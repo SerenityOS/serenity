@@ -27,9 +27,9 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
-#include <LibCore/CEventLoop.h>
-#include <LibCore/CLocalServer.h>
-#include <LibCore/CNotifier.h>
+#include <LibCore/EventLoop.h>
+#include <LibCore/LocalServer.h>
+#include <LibCore/Notifier.h>
 
 class WSClientConnection;
 

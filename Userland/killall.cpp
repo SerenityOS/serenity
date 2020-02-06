@@ -25,7 +25,7 @@
  */
 
 #include <AK/String.h>
-#include <LibCore/CProcessStatisticsReader.h>
+#include <LibCore/ProcessStatisticsReader.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>

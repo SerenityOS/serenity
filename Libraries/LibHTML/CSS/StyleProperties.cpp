@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibCore/CDirIterator.h>
+#include <LibCore/DirIterator.h>
 #include <LibHTML/CSS/StyleProperties.h>
 #include <LibHTML/FontCache.h>
 #include <ctype.h>

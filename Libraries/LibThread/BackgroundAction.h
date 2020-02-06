@@ -30,8 +30,8 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
 #include <AK/Queue.h>
-#include <LibCore/CEventLoop.h>
-#include <LibCore/CObject.h>
+#include <LibCore/EventLoop.h>
+#include <LibCore/Object.h>
 #include <LibThread/Lock.h>
 #include <LibThread/Thread.h>
 

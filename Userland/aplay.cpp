@@ -27,7 +27,7 @@
 #include <LibAudio/ABuffer.h>
 #include <LibAudio/AClientConnection.h>
 #include <LibAudio/AWavLoader.h>
-#include <LibCore/CEventLoop.h>
+#include <LibCore/EventLoop.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)

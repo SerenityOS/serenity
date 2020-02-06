@@ -27,7 +27,7 @@
 #pragma once
 
 #include <AK/NonnullOwnPtrVector.h>
-#include <LibCore/CLocalSocket.h>
+#include <LibCore/LocalSocket.h>
 
 namespace AK {
 class JsonObject;

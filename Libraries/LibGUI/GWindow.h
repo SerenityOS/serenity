@@ -30,7 +30,7 @@
 #include <AK/HashMap.h>
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
-#include <LibCore/CObject.h>
+#include <LibCore/Object.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Rect.h>
 #include <LibGUI/GWindowType.h>

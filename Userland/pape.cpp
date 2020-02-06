@@ -28,8 +28,8 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
-#include <LibCore/CArgsParser.h>
-#include <LibCore/CDirIterator.h>
+#include <LibCore/ArgsParser.h>
+#include <LibCore/DirIterator.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GDesktop.h>
 #include <dirent.h>

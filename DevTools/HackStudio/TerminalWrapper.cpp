@@ -27,7 +27,7 @@
 #include "TerminalWrapper.h"
 #include "ProcessStateWidget.h"
 #include <AK/String.h>
-#include <LibCore/CConfigFile.h>
+#include <LibCore/ConfigFile.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GMessageBox.h>
 #include <LibVT/TerminalWidget.h>

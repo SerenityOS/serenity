@@ -29,7 +29,7 @@
 #include <AK/JsonValue.h>
 #include <AK/LogStream.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/CFile.h>
+#include <LibCore/File.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)

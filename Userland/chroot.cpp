@@ -25,7 +25,7 @@
  */
 
 #include <AK/StringView.h>
-#include <LibCore/CArgsParser.h>
+#include <LibCore/ArgsParser.h>
 #include <stdio.h>
 #include <unistd.h>
 

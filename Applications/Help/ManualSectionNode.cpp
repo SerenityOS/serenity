@@ -28,7 +28,7 @@
 #include "ManualPageNode.h"
 #include <AK/FileSystemPath.h>
 #include <AK/String.h>
-#include <LibCore/CDirIterator.h>
+#include <LibCore/DirIterator.h>
 
 String ManualSectionNode::path() const
 {

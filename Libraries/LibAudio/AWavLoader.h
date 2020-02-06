@@ -30,7 +30,7 @@
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <LibAudio/ABuffer.h>
-#include <LibCore/CFile.h>
+#include <LibCore/File.h>
 
 namespace AK {
 class ByteBuffer;

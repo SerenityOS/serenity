@@ -26,7 +26,7 @@
 
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/CDirIterator.h>
+#include <LibCore/DirIterator.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGUI/GFileSystemModel.h>
 #include <LibGUI/GPainter.h>

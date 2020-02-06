@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibCore/CTimer.h>
+#include <LibCore/Timer.h>
 #include <LibHTML/CSS/StyleProperties.h>
 #include <LibHTML/CSS/StyleValue.h>
 #include <LibHTML/DOM/HTMLBlinkElement.h>

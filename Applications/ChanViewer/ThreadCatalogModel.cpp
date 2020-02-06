@@ -28,9 +28,9 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
-#include <LibCore/CHttpRequest.h>
-#include <LibCore/CNetworkJob.h>
-#include <LibCore/CNetworkResponse.h>
+#include <LibCore/HttpRequest.h>
+#include <LibCore/NetworkJob.h>
+#include <LibCore/NetworkResponse.h>
 #include <stdio.h>
 
 ThreadCatalogModel::ThreadCatalogModel()
