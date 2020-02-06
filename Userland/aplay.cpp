@@ -24,9 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibAudio/ABuffer.h>
-#include <LibAudio/AClientConnection.h>
-#include <LibAudio/AWavLoader.h>
+#include <LibAudio/Buffer.h>
+#include <LibAudio/ClientConnection.h>
+#include <LibAudio/WavLoader.h>
 #include <LibCore/EventLoop.h>
 #include <stdio.h>
 

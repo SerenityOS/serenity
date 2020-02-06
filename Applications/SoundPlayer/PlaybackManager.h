@@ -27,8 +27,8 @@
 #pragma once
 
 #include <AK/Vector.h>
-#include <LibAudio/AClientConnection.h>
-#include <LibAudio/AWavLoader.h>
+#include <LibAudio/ClientConnection.h>
+#include <LibAudio/WavLoader.h>
 #include <LibCore/Timer.h>
 
 #define PLAYBACK_MANAGER_BUFFER_SIZE 64 * KB

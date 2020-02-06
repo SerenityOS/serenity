@@ -25,7 +25,7 @@
  */
 
 #include "SampleWidget.h"
-#include <LibAudio/ABuffer.h>
+#include <LibAudio/Buffer.h>
 #include <LibGUI/GPainter.h>
 #include <LibM/math.h>
 

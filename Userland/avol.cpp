@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibAudio/ABuffer.h>
-#include <LibAudio/AClientConnection.h>
+#include <LibAudio/Buffer.h>
+#include <LibAudio/ClientConnection.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)
