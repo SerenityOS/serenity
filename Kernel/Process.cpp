@@ -2269,6 +2269,7 @@ mode_t Process::sys$umask(mode_t mask)
 siginfo_t Process::reap(Process& process)
 {
     siginfo_t siginfo;
+    memset(&siginfo, 0, sizeof(siginfo));
     siginfo.si_signo = SIGCHLD;
     siginfo.si_pid = process.pid();
     siginfo.si_uid = process.uid();
@@ -2314,7 +2315,8 @@ KResultOr<siginfo_t> Process::do_waitid(idtype_t idtype, int id, int options)
         // FIXME: Figure out what WNOHANG should do with stopped children.
         if (idtype == P_ALL) {
             InterruptDisabler disabler;
-            siginfo_t siginfo = { 0 };
+            siginfo_t siginfo;
+            memset(&siginfo, 0, sizeof(siginfo));
             for_each_child([&siginfo](Process& process) {
                 if (process.is_dead())
                     siginfo = reap(process);
@@ -2365,6 +2367,7 @@ KResultOr<siginfo_t> Process::do_waitid(idtype_t idtype, int id, int options)
             return KResult(-ECHILD);
         ASSERT(waitee_thread->state() == Thread::State::Stopped);
         siginfo_t siginfo;
+        memset(&siginfo, 0, sizeof(siginfo));
         siginfo.si_signo = SIGCHLD;
         siginfo.si_pid = waitee_process->pid();
         siginfo.si_uid = waitee_process->uid();
