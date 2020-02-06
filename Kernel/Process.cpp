@@ -2314,7 +2314,7 @@ KResultOr<siginfo_t> Process::do_waitid(idtype_t idtype, int id, int options)
         // FIXME: Figure out what WNOHANG should do with stopped children.
         if (idtype == P_ALL) {
             InterruptDisabler disabler;
-            siginfo_t siginfo;
+            siginfo_t siginfo = { 0 };
             for_each_child([&siginfo](Process& process) {
                 if (process.is_dead())
                     siginfo = reap(process);
