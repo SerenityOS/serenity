@@ -74,6 +74,7 @@ private:
     double noise() const;
 
     void update_roll();
+    void set_notes_from_roll();
 
     void set_sustain_impl(int sustain);
 

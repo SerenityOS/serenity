@@ -45,6 +45,9 @@ void AudioEngine::fill_buffer(FixedArray<Sample>& buffer)
 {
     memset(buffer.data(), 0, buffer_size);
 
+    if (m_time == 0)
+        set_notes_from_roll();
+
     for (size_t i = 0; i < buffer.size(); ++i) {
         for (size_t note = 0; note < note_count; ++note) {
             switch (m_envelope[note]) {
@@ -224,7 +227,10 @@ void AudioEngine::update_roll()
         m_current_column = 0;
     if (++m_previous_column == horizontal_notes)
         m_previous_column = 0;
+}
 
+void AudioEngine::set_notes_from_roll()
+{
     for (int note = 0; note < note_count; ++note) {
         if (m_roll_notes[note][m_previous_column] == On)
             set_note((note_count - 1) - note, Off);
