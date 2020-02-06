@@ -22,3 +22,7 @@ add_library(lagom ${SOURCES})
 add_executable(TestApp TestApp.cpp)
 target_link_libraries(TestApp lagom)
 target_link_libraries(TestApp stdc++)
+
+add_executable(TestJson TestJson.cpp)
+target_link_libraries(TestJson lagom)
+target_link_libraries(TestJson stdc++)
