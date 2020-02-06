@@ -32,7 +32,7 @@
 #include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
-#include <LibDraw/CharacterBitmap.h>
+#include <LibGfx/CharacterBitmap.h>
 #include <math.h>
 #include <stdio.h>
 #include <unistd.h>

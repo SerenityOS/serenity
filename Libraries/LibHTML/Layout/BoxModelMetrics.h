@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <LibDraw/Size.h>
+#include <LibGfx/Size.h>
 #include <LibHTML/CSS/LengthBox.h>
 
 class BoxModelMetrics {

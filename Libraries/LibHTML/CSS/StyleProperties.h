@@ -28,7 +28,7 @@
 
 #include <AK/HashMap.h>
 #include <AK/NonnullRefPtr.h>
-#include <LibDraw/Font.h>
+#include <LibGfx/Font.h>
 #include <LibHTML/CSS/StyleValue.h>
 
 namespace Gfx {

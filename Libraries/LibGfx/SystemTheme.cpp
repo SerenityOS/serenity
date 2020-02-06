@@ -25,7 +25,7 @@
  */
 
 #include <LibCore/CConfigFile.h>
-#include <LibDraw/SystemTheme.h>
+#include <LibGfx/SystemTheme.h>
 
 namespace Gfx {
 

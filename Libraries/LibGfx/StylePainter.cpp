@@ -24,10 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibDraw/GraphicsBitmap.h>
-#include <LibDraw/Painter.h>
-#include <LibDraw/Palette.h>
-#include <LibDraw/StylePainter.h>
+#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/Painter.h>
+#include <LibGfx/Palette.h>
+#include <LibGfx/StylePainter.h>
 
 namespace Gfx {
 

@@ -34,7 +34,7 @@
 #include "PickerTool.h"
 #include "RectangleTool.h"
 #include "SprayTool.h"
-#include <LibDraw/PNGLoader.h>
+#include <LibGfx/PNGLoader.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>
 

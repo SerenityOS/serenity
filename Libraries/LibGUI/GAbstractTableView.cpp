@@ -25,7 +25,7 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <LibDraw/Palette.h>
+#include <LibGfx/Palette.h>
 #include <LibGUI/GAbstractTableView.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GMenu.h>

@@ -5,7 +5,7 @@ OBJS = \
 
 PROGRAM = Welcome
 
-LIB_DEPS = GUI Draw IPC Core
+LIB_DEPS = GUI Gfx IPC Core
 
 .SUFFIXES: .png
 %.png.o: %.png

@@ -27,9 +27,9 @@
 #include <AK/FileSystemPath.h>
 #include <AK/QuickSort.h>
 #include <LibCore/CDirIterator.h>
-#include <LibDraw/Font.h>
-#include <LibDraw/PNGLoader.h>
-#include <LibDraw/Painter.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/PNGLoader.h>
+#include <LibGfx/Painter.h>
 #include <WindowServer/WSMenuManager.h>
 #include <WindowServer/WSScreen.h>
 #include <WindowServer/WSWindowManager.h>

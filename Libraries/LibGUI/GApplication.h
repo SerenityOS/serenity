@@ -29,7 +29,7 @@
 #include <AK/Badge.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
-#include <LibDraw/Palette.h>
+#include <LibGfx/Palette.h>
 #include <LibGUI/GShortcut.h>
 
 namespace AK {

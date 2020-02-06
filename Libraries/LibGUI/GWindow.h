@@ -31,8 +31,8 @@
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/CObject.h>
-#include <LibDraw/GraphicsBitmap.h>
-#include <LibDraw/Rect.h>
+#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/Rect.h>
 #include <LibGUI/GWindowType.h>
 
 namespace GUI {

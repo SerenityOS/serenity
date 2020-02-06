@@ -3,6 +3,6 @@ OBJS = \
 
 PROGRAM = WidgetGallery
 
-LIB_DEPS = GUI IPC Draw Core
+LIB_DEPS = GUI IPC Gfx Core
 
 include ../../Makefile.common

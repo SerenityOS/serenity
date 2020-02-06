@@ -32,8 +32,8 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 #include <LibCore/CTimer.h>
-#include <LibDraw/Color.h>
-#include <LibDraw/Font.h>
+#include <LibGfx/Color.h>
+#include <LibGfx/Font.h>
 #include <LibGUI/GTextRange.h>
 #include <LibGUI/GUndoStack.h>
 

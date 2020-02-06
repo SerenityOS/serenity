@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Shannon Booth <shannon.ml.booth@gmail.com>
+ * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,58 +24,52 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibDraw/Point.h>
+#include <LibGfx/DisjointRectSet.h>
 
 namespace Gfx {
 
-class Triangle {
-public:
-    Triangle(Point a, Point b, Point c)
-        : m_a(a)
-        , m_b(b)
-        , m_c(c)
-    {
-        m_det = (m_b.x() - m_a.x()) * (m_c.y() - m_a.y()) - (m_b.y() - m_a.y()) * (m_c.x() - m_a.x());
-    }
-
-    Point a() const { return m_a; }
-    Point b() const { return m_b; }
-    Point c() const { return m_c; }
-
-    bool contains(Point p) const
-    {
-        int x = p.x();
-        int y = p.y();
-
-        int ax = m_a.x();
-        int bx = m_b.x();
-        int cx = m_c.x();
-
-        int ay = m_a.y();
-        int by = m_b.y();
-        int cy = m_c.y();
-
-        if (m_det * ((bx - ax) * (y - ay) - (by - ay) * (x - ax)) <= 0)
-            return false;
-        if (m_det * ((cx - bx) * (y - by) - (cy - by) * (x - bx)) <= 0)
-            return false;
-        if (m_det * ((ax - cx) * (y - cy) - (ay - cy) * (x - cx)) <= 0)
-            return false;
-        return true;
-    }
-
-    String to_string() const { return String::format("(%s,%s,%s)", m_a.to_string().characters(), m_b.to_string().characters(), m_c.to_string().characters()); }
-
-private:
-    int m_det;
-    Point m_a;
-    Point m_b;
-    Point m_c;
-};
-
-inline const LogStream& operator<<(const LogStream& stream, const Triangle& value)
+void DisjointRectSet::add(const Rect& new_rect)
 {
-    return stream << value.to_string();
+    for (auto& rect : m_rects) {
+        if (rect.contains(new_rect))
+            return;
+    }
+
+    m_rects.append(new_rect);
+    if (m_rects.size() > 1)
+        shatter();
+}
+
+void DisjointRectSet::shatter()
+{
+    Vector<Rect, 32> output;
+    output.ensure_capacity(m_rects.size());
+    bool pass_had_intersections = false;
+    do {
+        pass_had_intersections = false;
+        output.clear_with_capacity();
+        for (int i = 0; i < m_rects.size(); ++i) {
+            auto& r1 = m_rects[i];
+            for (int j = 0; j < m_rects.size(); ++j) {
+                if (i == j)
+                    continue;
+                auto& r2 = m_rects[j];
+                if (!r1.intersects(r2))
+                    continue;
+                pass_had_intersections = true;
+                auto pieces = r1.shatter(r2);
+                for (auto& piece : pieces)
+                    output.append(piece);
+                m_rects.remove(i);
+                for (; i < m_rects.size(); ++i)
+                    output.append(m_rects[i]);
+                goto next_pass;
+            }
+            output.append(r1);
+        }
+    next_pass:
+        swap(output, m_rects);
+    } while (pass_had_intersections);
 }
 
 }

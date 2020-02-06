@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <LibDraw/FloatRect.h>
+#include <LibGfx/FloatRect.h>
 
 class LayoutNode;
 class RenderingContext;

@@ -25,7 +25,7 @@
  */
 
 #include "GlyphMapWidget.h"
-#include <LibDraw/Palette.h>
+#include <LibGfx/Palette.h>
 #include <LibGUI/GPainter.h>
 
 GlyphMapWidget::GlyphMapWidget(Gfx::Font& mutable_font, GUI::Widget* parent)

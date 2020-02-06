@@ -28,8 +28,8 @@
 
 #include <AK/NonnullRefPtr.h>
 #include <AK/Vector.h>
-#include <LibDraw/FloatRect.h>
-#include <LibDraw/Rect.h>
+#include <LibGfx/FloatRect.h>
+#include <LibGfx/Rect.h>
 #include <LibHTML/CSS/StyleProperties.h>
 #include <LibHTML/Layout/BoxModelMetrics.h>
 #include <LibHTML/Layout/LayoutPosition.h>

@@ -28,7 +28,7 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
-#include <LibDraw/Palette.h>
+#include <LibGfx/Palette.h>
 #include <LibGUI/GPainter.h>
 
 TextWidget::TextWidget(GUI::Widget* parent)

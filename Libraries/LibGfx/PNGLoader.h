@@ -26,8 +26,8 @@
 
 #pragma once
 
-#include <LibDraw/GraphicsBitmap.h>
-#include <LibDraw/ImageDecoder.h>
+#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/ImageDecoder.h>
 
 namespace Gfx {
 

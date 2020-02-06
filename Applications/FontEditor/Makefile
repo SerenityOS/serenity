@@ -6,7 +6,7 @@ OBJS = \
 
 PROGRAM = FontEditor
 
-LIB_DEPS = GUI Draw Core IPC
+LIB_DEPS = GUI Gfx Core IPC
 
 FontEditor.cpp: UI_FontEditorBottom.h
 

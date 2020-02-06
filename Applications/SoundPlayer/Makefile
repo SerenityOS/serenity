@@ -6,6 +6,6 @@ OBJS = \
 
 PROGRAM = SoundPlayer
 
-LIB_DEPS = GUI Draw Audio IPC Thread Pthread Core
+LIB_DEPS = GUI Gfx Audio IPC Thread Pthread Core
 
 include ../../Makefile.common

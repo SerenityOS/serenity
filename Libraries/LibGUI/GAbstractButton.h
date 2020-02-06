@@ -27,7 +27,7 @@
 #pragma once
 
 #include <LibCore/CTimer.h>
-#include <LibDraw/TextAlignment.h>
+#include <LibGfx/TextAlignment.h>
 #include <LibGUI/GWidget.h>
 
 namespace GUI {

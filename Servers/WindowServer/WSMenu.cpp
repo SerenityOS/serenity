@@ -33,12 +33,12 @@
 #include "WSScreen.h"
 #include "WSWindow.h"
 #include "WSWindowManager.h"
-#include <LibDraw/CharacterBitmap.h>
-#include <LibDraw/Font.h>
-#include <LibDraw/GraphicsBitmap.h>
-#include <LibDraw/Painter.h>
-#include <LibDraw/StylePainter.h>
-#include <LibDraw/Triangle.h>
+#include <LibGfx/CharacterBitmap.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/Painter.h>
+#include <LibGfx/StylePainter.h>
+#include <LibGfx/Triangle.h>
 #include <WindowServer/WSClientConnection.h>
 #include <WindowServer/WindowClientEndpoint.h>
 

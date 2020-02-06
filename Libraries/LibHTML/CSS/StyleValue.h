@@ -32,8 +32,8 @@
 #include <AK/StringView.h>
 #include <AK/URL.h>
 #include <AK/WeakPtr.h>
-#include <LibDraw/Color.h>
-#include <LibDraw/GraphicsBitmap.h>
+#include <LibGfx/Color.h>
+#include <LibGfx/GraphicsBitmap.h>
 #include <LibHTML/CSS/Length.h>
 #include <LibHTML/CSS/PropertyID.h>
 

@@ -28,7 +28,7 @@
 #include "ManualNode.h"
 #include "ManualPageNode.h"
 #include "ManualSectionNode.h"
-#include <LibDraw/PNGLoader.h>
+#include <LibGfx/PNGLoader.h>
 
 static ManualSectionNode s_sections[] = {
     { "1", "Command-line programs" },

@@ -26,7 +26,7 @@
 
 #include "QSWidget.h"
 #include <AK/URL.h>
-#include <LibDraw/GraphicsBitmap.h>
+#include <LibGfx/GraphicsBitmap.h>
 #include <LibGUI/GMessageBox.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GWindow.h>

@@ -27,7 +27,7 @@
 #pragma once
 
 #include "Tool.h"
-#include <LibDraw/Point.h>
+#include <LibGfx/Point.h>
 
 namespace GUI {
 class Menu;

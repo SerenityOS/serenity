@@ -27,8 +27,8 @@
 #pragma once
 
 #include <AK/String.h>
-#include <LibDraw/Font.h>
-#include <LibDraw/GraphicsBitmap.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/GraphicsBitmap.h>
 #include <LibGUI/GIcon.h>
 
 namespace AK {

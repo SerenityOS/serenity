@@ -7,6 +7,6 @@ OBJS = \
 
 PROGRAM = Help
 
-LIB_DEPS = GUI HTML Draw Markdown IPC Protocol Thread Pthread Core
+LIB_DEPS = GUI HTML Gfx Markdown IPC Protocol Thread Pthread Core
 
 include ../../Makefile.common

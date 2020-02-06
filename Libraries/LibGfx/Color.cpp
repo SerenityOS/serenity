@@ -25,8 +25,8 @@
  */
 
 #include <AK/Assertions.h>
-#include <LibDraw/Color.h>
-#include <LibDraw/SystemTheme.h>
+#include <LibGfx/Color.h>
+#include <LibGfx/SystemTheme.h>
 #include <ctype.h>
 #include <stdio.h>
 

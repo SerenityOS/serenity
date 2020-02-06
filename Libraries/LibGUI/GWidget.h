@@ -31,12 +31,12 @@
 #include <AK/String.h>
 #include <LibCore/CElapsedTimer.h>
 #include <LibCore/CObject.h>
-#include <LibDraw/Color.h>
-#include <LibDraw/Font.h>
-#include <LibDraw/Orientation.h>
-#include <LibDraw/Palette.h>
-#include <LibDraw/Rect.h>
-#include <LibDraw/SystemTheme.h>
+#include <LibGfx/Color.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/Orientation.h>
+#include <LibGfx/Palette.h>
+#include <LibGfx/Rect.h>
+#include <LibGfx/SystemTheme.h>
 #include <LibGUI/GEvent.h>
 #include <LibGUI/GShortcut.h>
 

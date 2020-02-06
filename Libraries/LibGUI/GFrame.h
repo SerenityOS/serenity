@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <LibDraw/StylePainter.h>
+#include <LibGfx/StylePainter.h>
 #include <LibGUI/GWidget.h>
 
 namespace GUI {

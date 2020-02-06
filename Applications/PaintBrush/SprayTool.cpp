@@ -31,7 +31,7 @@
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GMenu.h>
-#include <LibDraw/GraphicsBitmap.h>
+#include <LibGfx/GraphicsBitmap.h>
 #include <stdio.h>
 #include <LibM/math.h>
 

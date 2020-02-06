@@ -28,7 +28,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/FileSystemPath.h>
 #include <AK/NonnullOwnPtrVector.h>
-#include <LibDraw/GIFLoader.h>
+#include <LibGfx/GIFLoader.h>
 #include <stdio.h>
 
 namespace Gfx {

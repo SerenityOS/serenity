@@ -26,7 +26,7 @@
 
 #include <AK/FileSystemPath.h>
 #include <LibCore/CFile.h>
-#include <LibDraw/PNGLoader.h>
+#include <LibGfx/PNGLoader.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GScrollBar.h>

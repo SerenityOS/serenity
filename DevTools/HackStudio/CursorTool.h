@@ -28,7 +28,7 @@
 
 #include "Tool.h"
 #include <AK/HashMap.h>
-#include <LibDraw/Point.h>
+#include <LibGfx/Point.h>
 
 namespace GUI {
 class Widget;

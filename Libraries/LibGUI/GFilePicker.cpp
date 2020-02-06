@@ -26,7 +26,7 @@
 
 #include <AK/FileSystemPath.h>
 #include <AK/Function.h>
-#include <LibDraw/PNGLoader.h>
+#include <LibGfx/PNGLoader.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>

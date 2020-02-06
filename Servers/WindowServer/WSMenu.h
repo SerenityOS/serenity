@@ -30,7 +30,7 @@
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/CObject.h>
-#include <LibDraw/Rect.h>
+#include <LibGfx/Rect.h>
 #include <WindowServer/WSCursor.h>
 #include <WindowServer/WSMenuItem.h>
 #include <WindowServer/WSWindow.h>

@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibDraw/Font.h>
+#include <LibGfx/Font.h>
 #include <LibHTML/FontCache.h>
 
 FontCache& FontCache::the()

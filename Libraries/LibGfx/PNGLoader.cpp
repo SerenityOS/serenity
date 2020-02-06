@@ -28,7 +28,7 @@
 #include <AK/MappedFile.h>
 #include <AK/NetworkOrdered.h>
 #include <LibCore/puff.h>
-#include <LibDraw/PNGLoader.h>
+#include <LibGfx/PNGLoader.h>
 #include <fcntl.h>
 #include <serenity.h>
 #include <stdio.h>

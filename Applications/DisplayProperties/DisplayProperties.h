@@ -30,8 +30,8 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/CConfigFile.h>
-#include <LibDraw/Color.h>
-#include <LibDraw/Size.h>
+#include <LibGfx/Color.h>
+#include <LibGfx/Size.h>
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GLabel.h>
 

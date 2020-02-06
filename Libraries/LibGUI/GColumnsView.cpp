@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibDraw/CharacterBitmap.h>
+#include <LibGfx/CharacterBitmap.h>
 #include <LibGUI/GColumnsView.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GScrollBar.h>

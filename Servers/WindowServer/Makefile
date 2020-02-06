@@ -18,7 +18,7 @@ OBJS = \
 
 PROGRAM = WindowServer
 
-LIB_DEPS = Draw Core Thread Pthread IPC
+LIB_DEPS = Gfx Core Thread Pthread IPC
 
 *.cpp: WindowServerEndpoint.h WindowClientEndpoint.h
 

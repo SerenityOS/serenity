@@ -27,7 +27,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
 #include <LibCore/CDirIterator.h>
-#include <LibDraw/Font.h>
+#include <LibGfx/Font.h>
 #include <LibGUI/GPainter.h>
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/Layout/LayoutBlock.h>

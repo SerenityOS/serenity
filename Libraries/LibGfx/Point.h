@@ -28,7 +28,7 @@
 
 #include <AK/LogStream.h>
 #include <AK/String.h>
-#include <LibDraw/Orientation.h>
+#include <LibGfx/Orientation.h>
 
 namespace Gfx {
 

@@ -27,9 +27,9 @@
 #pragma once
 
 #include <Kernel/KeyCode.h>
-#include <LibDraw/Color.h>
-#include <LibDraw/Rect.h>
-#include <LibDraw/Size.h>
+#include <LibGfx/Color.h>
+#include <LibGfx/Rect.h>
+#include <LibGfx/Size.h>
 
 struct MousePacket;
 

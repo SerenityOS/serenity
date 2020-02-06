@@ -28,11 +28,11 @@
 
 #include <AK/LogStream.h>
 #include <AK/String.h>
-#include <LibDraw/FloatPoint.h>
-#include <LibDraw/FloatSize.h>
-#include <LibDraw/Orientation.h>
-#include <LibDraw/Rect.h>
-#include <LibDraw/TextAlignment.h>
+#include <LibGfx/FloatPoint.h>
+#include <LibGfx/FloatSize.h>
+#include <LibGfx/Orientation.h>
+#include <LibGfx/Rect.h>
+#include <LibGfx/TextAlignment.h>
 #include <math.h>
 
 namespace Gfx {

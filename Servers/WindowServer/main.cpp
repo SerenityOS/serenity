@@ -25,8 +25,8 @@
  */
 
 #include <LibCore/CConfigFile.h>
-#include <LibDraw/Palette.h>
-#include <LibDraw/SystemTheme.h>
+#include <LibGfx/Palette.h>
+#include <LibGfx/SystemTheme.h>
 #include <WindowServer/WSCompositor.h>
 #include <WindowServer/WSEventLoop.h>
 #include <WindowServer/WSScreen.h>

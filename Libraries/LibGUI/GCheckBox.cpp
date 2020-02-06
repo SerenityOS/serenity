@@ -25,9 +25,9 @@
  */
 
 #include <Kernel/KeyCode.h>
-#include <LibDraw/CharacterBitmap.h>
-#include <LibDraw/Palette.h>
-#include <LibDraw/StylePainter.h>
+#include <LibGfx/CharacterBitmap.h>
+#include <LibGfx/Palette.h>
+#include <LibGfx/StylePainter.h>
 #include <LibGUI/GCheckBox.h>
 #include <LibGUI/GPainter.h>
 

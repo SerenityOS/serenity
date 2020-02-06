@@ -24,43 +24,53 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <LibDraw/Color.h>
+#include <LibGfx/Palette.h>
 
 namespace Gfx {
 
-class Painter;
-class Palette;
-class Rect;
+NonnullRefPtr<PaletteImpl> PaletteImpl::create_with_shared_buffer(SharedBuffer& buffer)
+{
+    return adopt(*new PaletteImpl(buffer));
+}
 
-enum class ButtonStyle {
-    Normal,
-    CoolBar
-};
-enum class FrameShadow {
-    Plain,
-    Raised,
-    Sunken
-};
-enum class FrameShape {
-    NoFrame,
-    Box,
-    Container,
-    Panel,
-    VerticalLine,
-    HorizontalLine
-};
+PaletteImpl::PaletteImpl(SharedBuffer& buffer)
+    : m_theme_buffer(buffer)
+{
+}
 
-class StylePainter {
-public:
-    static void paint_button(Painter&, const Rect&, const Palette&, ButtonStyle, bool pressed, bool hovered = false, bool checked = false, bool enabled = true);
-    static void paint_tab_button(Painter&, const Rect&, const Palette&, bool active, bool hovered, bool enabled);
-    static void paint_surface(Painter&, const Rect&, const Palette&, bool paint_vertical_lines = true, bool paint_top_line = true);
-    static void paint_frame(Painter&, const Rect&, const Palette&, FrameShape, FrameShadow, int thickness, bool skip_vertical_lines = false);
-    static void paint_window_frame(Painter&, const Rect&, const Palette&);
-    static void paint_progress_bar(Painter&, const Rect&, const Palette&, int min, int max, int value, const StringView& text = {});
-    static void paint_radio_button(Painter&, const Rect&, const Palette&, bool is_checked, bool is_being_pressed);
-};
+Palette::Palette(const PaletteImpl& impl)
+    : m_impl(impl)
+{
+}
+
+Palette::~Palette()
+{
+}
+
+const SystemTheme& PaletteImpl::theme() const
+{
+    return *(const SystemTheme*)m_theme_buffer->data();
+}
+
+Color PaletteImpl::color(ColorRole role) const
+{
+    ASSERT((int)role < (int)ColorRole::__Count);
+    return theme().color[(int)role];
+}
+
+NonnullRefPtr<PaletteImpl> PaletteImpl::clone() const
+{
+    auto new_theme_buffer = SharedBuffer::create_with_size(m_theme_buffer->size());
+    memcpy(new_theme_buffer->data(), m_theme_buffer->data(), m_theme_buffer->size());
+    return adopt(*new PaletteImpl(*new_theme_buffer));
+}
+
+void Palette::set_color(ColorRole role, Color color)
+{
+    if (m_impl->ref_count() != 1)
+        m_impl = m_impl->clone();
+    auto& theme = const_cast<SystemTheme&>(impl().theme());
+    theme.color[(int)role] = color;
+}
 
 }

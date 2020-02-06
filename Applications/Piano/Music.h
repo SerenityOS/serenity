@@ -28,7 +28,7 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <LibDraw/Color.h>
+#include <LibGfx/Color.h>
 
 namespace Music {
 

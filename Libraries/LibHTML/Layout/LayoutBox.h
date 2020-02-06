@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <LibDraw/FloatRect.h>
+#include <LibGfx/FloatRect.h>
 #include <LibHTML/Layout/LayoutNode.h>
 
 class LayoutBox : public LayoutNodeWithStyleAndBoxModelMetrics {

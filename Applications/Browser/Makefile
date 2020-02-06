@@ -4,7 +4,7 @@ OBJS = \
 
 PROGRAM = Browser
 
-LIB_DEPS = GUI HTML Draw IPC Protocol Core
+LIB_DEPS = GUI HTML Gfx IPC Protocol Core
 
 main.cpp: ../../Libraries/LibHTML/CSS/PropertyID.h
 ../../Libraries/LibHTML/CSS/PropertyID.h:

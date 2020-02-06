@@ -29,7 +29,7 @@
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
-#include <LibDraw/Color.h>
+#include <LibGfx/Color.h>
 #include <LibHTML/DOM/Document.h>
 
 class IRCLogBuffer : public RefCounted<IRCLogBuffer> {

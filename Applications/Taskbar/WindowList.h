@@ -30,7 +30,7 @@
 #include <AK/String.h>
 #include <AK/HashMap.h>
 #include <LibGUI/GButton.h>
-#include <LibDraw/Rect.h>
+#include <LibGfx/Rect.h>
 
 class Window {
 public:

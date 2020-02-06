@@ -29,9 +29,9 @@
 #include <AK/InlineLinkedList.h>
 #include <AK/String.h>
 #include <LibCore/CObject.h>
-#include <LibDraw/DisjointRectSet.h>
-#include <LibDraw/GraphicsBitmap.h>
-#include <LibDraw/Rect.h>
+#include <LibGfx/DisjointRectSet.h>
+#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/Rect.h>
 #include <WindowServer/WSWindowFrame.h>
 #include <WindowServer/WSWindowType.h>
 

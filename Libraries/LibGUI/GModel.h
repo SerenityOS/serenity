@@ -31,7 +31,7 @@
 #include <AK/HashTable.h>
 #include <AK/RefCounted.h>
 #include <AK/String.h>
-#include <LibDraw/TextAlignment.h>
+#include <LibGfx/TextAlignment.h>
 #include <LibGUI/GModelIndex.h>
 #include <LibGUI/GVariant.h>
 

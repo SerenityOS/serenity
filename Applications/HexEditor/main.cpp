@@ -25,7 +25,7 @@
  */
 
 #include "HexEditorWidget.h"
-#include <LibDraw/PNGLoader.h>
+#include <LibGfx/PNGLoader.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)

@@ -13,6 +13,6 @@ OBJS = \
 
 PROGRAM = SystemMonitor
 
-LIB_DEPS = GUI Draw Protocol PCIDB IPC Thread Pthread Core
+LIB_DEPS = GUI Gfx Protocol PCIDB IPC Thread Pthread Core
 
 include ../../Makefile.common
