@@ -53,7 +53,7 @@ RollWidget::~RollWidget()
 void RollWidget::paint_event(GUI::PaintEvent& event)
 {
     int roll_width = widget_inner_rect().width();
-    double note_width = static_cast<double>(roll_width) / m_horizontal_notes;
+    double note_width = static_cast<double>(roll_width) / horizontal_notes;
 
     set_content_size({ roll_width, roll_height });
 
@@ -74,7 +74,7 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
 
     for (int y = 0; y < notes_to_paint; ++y) {
         int y_pos = y * note_height;
-        for (int x = 0; x < m_horizontal_notes; ++x) {
+        for (int x = 0; x < horizontal_notes; ++x) {
             // This is needed to avoid rounding errors. You can't just use
             // note_width as the width.
             int x_pos = x * note_width;
@@ -82,9 +82,9 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
             int distance_to_next_x = next_x_pos - x_pos;
             Gfx::Rect rect(x_pos, y_pos, distance_to_next_x, note_height);
 
-            if (m_roll_notes[y + note_offset][x] == On)
+            if (m_audio_engine.roll_note(y + note_offset, x) == On)
                 painter.fill_rect(rect, note_pressed_color);
-            else if (x == m_current_column)
+            else if (x == m_audio_engine.current_column())
                 painter.fill_rect(rect, column_playing_color);
             else if (key_pattern[key_pattern_index] == Black)
                 painter.fill_rect(rect, Color::LightGray);
@@ -108,7 +108,7 @@ void RollWidget::mousedown_event(GUI::MouseEvent& event)
         return;
 
     int roll_width = widget_inner_rect().width();
-    double note_width = static_cast<double>(roll_width) / m_horizontal_notes;
+    double note_width = static_cast<double>(roll_width) / horizontal_notes;
 
     int y = (event.y() + vertical_scrollbar().value()) - frame_thickness();
     y /= note_height;
@@ -125,30 +125,7 @@ void RollWidget::mousedown_event(GUI::MouseEvent& event)
         ++x;
     x /= note_width;
 
-    if (m_roll_notes[y][x] == On) {
-        if (x == m_current_column) // If you turn off a note that is playing.
-            m_audio_engine.set_note((note_count - 1) - y, Off);
-        m_roll_notes[y][x] = Off;
-    } else {
-        m_roll_notes[y][x] = On;
-    }
-
-    update();
-}
-
-void RollWidget::update_roll()
-{
-    if (++m_current_column == m_horizontal_notes)
-        m_current_column = 0;
-    if (++m_previous_column == m_horizontal_notes)
-        m_previous_column = 0;
-
-    for (int note = 0; note < note_count; ++note) {
-        if (m_roll_notes[note][m_previous_column] == On)
-            m_audio_engine.set_note((note_count - 1) - note, Off);
-        if (m_roll_notes[note][m_current_column] == On)
-            m_audio_engine.set_note((note_count - 1) - note, On);
-    }
+    m_audio_engine.set_roll_note(y, x, m_audio_engine.roll_note(y, x) == On ? Off : On);
 
     update();
 }

@@ -37,8 +37,6 @@ class RollWidget final : public GUI::ScrollableWidget {
 public:
     virtual ~RollWidget() override;
 
-    void update_roll();
-
 private:
     RollWidget(GUI::Widget* parent, AudioEngine&);
 
@@ -46,9 +44,4 @@ private:
     virtual void mousedown_event(GUI::MouseEvent& event) override;
 
     AudioEngine& m_audio_engine;
-
-    int m_horizontal_notes { 32 };
-    Switch m_roll_notes[note_count][32] { { Off } };
-    int m_current_column { 0 };
-    int m_previous_column { m_horizontal_notes - 1 };
 };

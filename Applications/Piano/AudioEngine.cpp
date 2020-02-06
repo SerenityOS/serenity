@@ -113,8 +113,10 @@ void AudioEngine::fill_buffer(FixedArray<Sample>& buffer)
         m_delay_buffers.enqueue(move(delay_buffer));
     }
 
-    if (++m_time == m_tick)
+    if (++m_time == m_tick) {
         m_time = 0;
+        update_roll();
+    }
 
     memcpy(m_back_buffer_ptr->data(), buffer.data(), buffer_size);
     swap(m_front_buffer_ptr, m_back_buffer_ptr);
@@ -203,6 +205,32 @@ void AudioEngine::set_note(int note, Switch switch_note)
 void AudioEngine::set_note_current_octave(int note, Switch switch_note)
 {
     set_note(note + octave_base(), switch_note);
+}
+
+void AudioEngine::set_roll_note(int y, int x, Switch switch_note)
+{
+    ASSERT(x >= 0 && x < horizontal_notes);
+    ASSERT(y >= 0 && y < note_count);
+
+    m_roll_notes[y][x] = switch_note;
+
+    if (x == m_current_column && switch_note == Off) // If you turn off a note that is playing.
+        set_note((note_count - 1) - y, Off);
+}
+
+void AudioEngine::update_roll()
+{
+    if (++m_current_column == horizontal_notes)
+        m_current_column = 0;
+    if (++m_previous_column == horizontal_notes)
+        m_previous_column = 0;
+
+    for (int note = 0; note < note_count; ++note) {
+        if (m_roll_notes[note][m_previous_column] == On)
+            set_note((note_count - 1) - note, Off);
+        if (m_roll_notes[note][m_current_column] == On)
+            set_note((note_count - 1) - note, On);
+    }
 }
 
 void AudioEngine::set_octave(Direction direction)
