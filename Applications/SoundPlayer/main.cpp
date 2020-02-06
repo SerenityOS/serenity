@@ -62,7 +62,7 @@ int main(int argc, char** argv)
     window->set_title("SoundPlayer");
     window->set_resizable(false);
     window->set_rect(300, 300, 350, 140);
-    window->set_icon(GraphicsBitmap::load_from_file("/res/icons/16x16/app-sound-player.png"));
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-sound-player.png"));
 
     auto menubar = make<GUI::MenuBar>();
     auto app_menu = GUI::Menu::construct("SoundPlayer");
@@ -94,7 +94,7 @@ int main(int argc, char** argv)
 
     auto help_menu = GUI::Menu::construct("Help");
     help_menu->add_action(GUI::Action::create("About", [](auto&) {
-        GUI::AboutDialog::show("SoundPlayer", GraphicsBitmap::load_from_file("/res/icons/32x32/app-sound-player.png"));
+        GUI::AboutDialog::show("SoundPlayer", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-sound-player.png"));
     }));
 
     menubar->add_menu(move(app_menu));

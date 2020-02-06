@@ -46,7 +46,7 @@ Label::~Label()
 {
 }
 
-void Label::set_icon(GraphicsBitmap* icon)
+void Label::set_icon(Gfx::Bitmap* icon)
 {
     if (m_icon == icon)
         return;
@@ -87,10 +87,10 @@ void Label::paint_event(PaintEvent& event)
     text_rect.set_width(text_rect.width() - indent * 2);
 
     if (is_enabled()) {
-        painter.draw_text(text_rect, text(), m_text_alignment, palette().window_text(), TextElision::Right);
+        painter.draw_text(text_rect, text(), m_text_alignment, palette().window_text(), Gfx::TextElision::Right);
     } else {
-        painter.draw_text(text_rect.translated(1, 1), text(), font(), text_alignment(), Color::White, TextElision::Right);
-        painter.draw_text(text_rect, text(), font(), text_alignment(), Color::from_rgb(0x808080), TextElision::Right);
+        painter.draw_text(text_rect.translated(1, 1), text(), font(), text_alignment(), Color::White, Gfx::TextElision::Right);
+        painter.draw_text(text_rect, text(), font(), text_alignment(), Color::from_rgb(0x808080), Gfx::TextElision::Right);
     }
 }
 

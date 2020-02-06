@@ -41,11 +41,11 @@ Frame::~Frame()
 
 void Frame::paint_event(PaintEvent& event)
 {
-    if (m_shape == FrameShape::NoFrame)
+    if (m_shape == Gfx::FrameShape::NoFrame)
         return;
 
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
-    StylePainter::paint_frame(painter, rect(), palette(), m_shape, m_shadow, m_thickness, spans_entire_window_horizontally());
+    Gfx::StylePainter::paint_frame(painter, rect(), palette(), m_shape, m_shadow, m_thickness, spans_entire_window_horizontally());
 }
 }

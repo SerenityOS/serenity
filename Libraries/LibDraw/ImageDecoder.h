@@ -31,14 +31,16 @@
 #include <AK/RefCounted.h>
 #include <LibDraw/Size.h>
 
-class GraphicsBitmap;
+namespace Gfx {
+
+class Bitmap;
 
 class ImageDecoderPlugin {
 public:
     virtual ~ImageDecoderPlugin() {}
 
     virtual Size size() = 0;
-    virtual RefPtr<GraphicsBitmap> bitmap() = 0;
+    virtual RefPtr<Gfx::Bitmap> bitmap() = 0;
 
     virtual void set_volatile() = 0;
     [[nodiscard]] virtual bool set_nonvolatile() = 0;
@@ -55,7 +57,7 @@ public:
     Size size() const { return m_plugin->size(); }
     int width() const { return size().width(); }
     int height() const { return size().height(); }
-    RefPtr<GraphicsBitmap> bitmap() const { return m_plugin->bitmap(); }
+    RefPtr<Gfx::Bitmap> bitmap() const { return m_plugin->bitmap(); }
     void set_volatile() { m_plugin->set_volatile(); }
     [[nodiscard]] bool set_nonvolatile() { return m_plugin->set_nonvolatile(); }
 
@@ -64,3 +66,5 @@ private:
 
     mutable OwnPtr<ImageDecoderPlugin> m_plugin;
 };
+
+}

@@ -32,10 +32,10 @@ namespace GUI {
 
 class Widget;
 
-class Painter : public ::Painter {
+class Painter : public Gfx::Painter {
 public:
     explicit Painter(Widget&);
-    explicit Painter(GraphicsBitmap&);
+    explicit Painter(Gfx::Bitmap&);
 };
 
 }

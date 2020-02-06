@@ -74,7 +74,7 @@ public:
 
         size_t total_size { 0 };
 
-        mutable RefPtr<GraphicsBitmap> thumbnail;
+        mutable RefPtr<Gfx::Bitmap> thumbnail;
         bool is_directory() const { return S_ISDIR(mode); }
         bool is_executable() const { return mode & (S_IXUSR | S_IXGRP | S_IXOTH); }
 

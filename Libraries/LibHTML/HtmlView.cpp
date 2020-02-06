@@ -60,8 +60,8 @@ HtmlView::HtmlView(GUI::Widget* parent)
         update(adjusted_rect);
     };
 
-    set_frame_shape(FrameShape::Container);
-    set_frame_shadow(FrameShadow::Sunken);
+    set_frame_shape(Gfx::FrameShape::Container);
+    set_frame_shadow(Gfx::FrameShadow::Sunken);
     set_frame_thickness(2);
     set_should_hide_unnecessary_scrollbars(true);
     set_background_role(ColorRole::Base);
@@ -297,7 +297,7 @@ static RefPtr<Document> create_image_document(const ByteBuffer& data, const URL&
     auto document = adopt(*new Document);
     document->set_url(url);
 
-    auto bitmap = load_png_from_memory(data.data(), data.size());
+    auto bitmap = Gfx::load_png_from_memory(data.data(), data.size());
     ASSERT(bitmap);
 
     auto html_element = create_element(document, "html");

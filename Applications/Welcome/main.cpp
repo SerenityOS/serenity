@@ -101,7 +101,7 @@ int main(int argc, char** argv)
     background->set_layout(make<GUI::VBoxLayout>());
     background->layout()->set_margins({ 8, 8, 8, 8 });
     background->layout()->set_spacing(8);
-    background->set_icon(load_png_from_memory((const u8*)&_binary_background_png_start, (size_t)&_binary_background_png_size));
+    background->set_icon(Gfx::load_png_from_memory((const u8*)&_binary_background_png_start, (size_t)&_binary_background_png_size));
     background->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
     background->set_preferred_size(background->icon()->size());
 
@@ -110,9 +110,9 @@ int main(int argc, char** argv)
     //
 
     auto header = GUI::Label::construct(background.ptr());
-    header->set_font(Font::default_bold_font());
+    header->set_font(Gfx::Font::default_bold_font());
     header->set_text("Welcome to Serenity");
-    header->set_text_alignment(TextAlignment::CenterLeft);
+    header->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     header->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     header->set_preferred_size(0, 30);
 
@@ -144,25 +144,25 @@ int main(int argc, char** argv)
         content->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
 
         auto content_title = GUI::Label::construct(content);
-        content_title->set_font(Font::default_bold_font());
+        content_title->set_font(Gfx::Font::default_bold_font());
         content_title->set_text(page.title);
-        content_title->set_text_alignment(TextAlignment::CenterLeft);
+        content_title->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         content_title->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
         content_title->set_preferred_size(0, 10);
 
         for (auto& paragraph : page.content) {
             auto content_text = TextWidget::construct(content);
-            content_text->set_font(Font::default_font());
+            content_text->set_font(Gfx::Font::default_font());
             content_text->set_text(paragraph);
-            content_text->set_text_alignment(TextAlignment::TopLeft);
+            content_text->set_text_alignment(Gfx::TextAlignment::TopLeft);
             content_text->set_line_height(12);
             content_text->wrap_and_set_height();
         }
 
         auto menu_option = GUI::Button::construct(menu);
-        menu_option->set_font(Font::default_font());
+        menu_option->set_font(Gfx::Font::default_font());
         menu_option->set_text(page.menu_name);
-        menu_option->set_text_alignment(TextAlignment::CenterLeft);
+        menu_option->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         menu_option->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
         menu_option->set_preferred_size(0, 20);
         menu_option->on_click = [content = content.ptr(), &stack](auto&) {

@@ -82,10 +82,10 @@ int main(int, char**)
     auto wm_config = Core::ConfigFile::get_for_app("WindowManager");
     auto theme_name = wm_config->read_entry("Theme", "Name", "Default");
 
-    auto theme = load_system_theme(String::format("/res/themes/%s.ini", theme_name.characters()));
+    auto theme = Gfx::load_system_theme(String::format("/res/themes/%s.ini", theme_name.characters()));
     ASSERT(theme);
-    set_system_theme(*theme);
-    auto palette = PaletteImpl::create_with_shared_buffer(*theme);
+    Gfx::set_system_theme(*theme);
+    auto palette = Gfx::PaletteImpl::create_with_shared_buffer(*theme);
 
     WSEventLoop loop;
 

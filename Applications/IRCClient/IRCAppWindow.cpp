@@ -55,7 +55,7 @@ IRCAppWindow::IRCAppWindow()
     ASSERT(!s_the);
     s_the = this;
 
-    set_icon(load_png("/res/icons/16x16/app-irc-client.png"));
+    set_icon(Gfx::load_png("/res/icons/16x16/app-irc-client.png"));
 
     update_title();
     set_rect(200, 200, 600, 400);
@@ -108,13 +108,13 @@ void IRCAppWindow::setup_client()
 
 void IRCAppWindow::setup_actions()
 {
-    m_join_action = GUI::Action::create("Join channel", { Mod_Ctrl, Key_J }, GraphicsBitmap::load_from_file("/res/icons/16x16/irc-join.png"), [&](auto&) {
+    m_join_action = GUI::Action::create("Join channel", { Mod_Ctrl, Key_J }, Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-join.png"), [&](auto&) {
         auto input_box = GUI::InputBox::construct("Enter channel name:", "Join channel", this);
         if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty())
             m_client.handle_join_action(input_box->text_value());
     });
 
-    m_part_action = GUI::Action::create("Part from channel", { Mod_Ctrl, Key_P }, GraphicsBitmap::load_from_file("/res/icons/16x16/irc-part.png"), [this](auto&) {
+    m_part_action = GUI::Action::create("Part from channel", { Mod_Ctrl, Key_P }, Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-part.png"), [this](auto&) {
         auto* window = m_client.current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
             // FIXME: Perhaps this action should have been disabled instead of allowing us to activate it.
@@ -123,23 +123,23 @@ void IRCAppWindow::setup_actions()
         m_client.handle_part_action(window->channel().name());
     });
 
-    m_whois_action = GUI::Action::create("Whois user", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-whois.png"), [&](auto&) {
+    m_whois_action = GUI::Action::create("Whois user", Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-whois.png"), [&](auto&) {
         auto input_box = GUI::InputBox::construct("Enter nickname:", "IRC WHOIS lookup", this);
         if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty())
             m_client.handle_whois_action(input_box->text_value());
     });
 
-    m_open_query_action = GUI::Action::create("Open query", { Mod_Ctrl, Key_O }, GraphicsBitmap::load_from_file("/res/icons/16x16/irc-open-query.png"), [&](auto&) {
+    m_open_query_action = GUI::Action::create("Open query", { Mod_Ctrl, Key_O }, Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-open-query.png"), [&](auto&) {
         auto input_box = GUI::InputBox::construct("Enter nickname:", "Open IRC query with...", this);
         if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty())
             m_client.handle_open_query_action(input_box->text_value());
     });
 
-    m_close_query_action = GUI::Action::create("Close query", { Mod_Ctrl, Key_D }, GraphicsBitmap::load_from_file("/res/icons/16x16/irc-close-query.png"), [](auto&) {
+    m_close_query_action = GUI::Action::create("Close query", { Mod_Ctrl, Key_D }, Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-close-query.png"), [](auto&) {
         printf("FIXME: Implement close-query action\n");
     });
 
-    m_change_nick_action = GUI::Action::create("Change nickname", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-nick.png"), [this](auto&) {
+    m_change_nick_action = GUI::Action::create("Change nickname", Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-nick.png"), [this](auto&) {
         auto input_box = GUI::InputBox::construct("Enter nickname:", "Change nickname", this);
         if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty())
             m_client.handle_change_nick_action(input_box->text_value());
@@ -170,7 +170,7 @@ void IRCAppWindow::setup_menus()
 
     auto help_menu = GUI::Menu::construct("Help");
     help_menu->add_action(GUI::Action::create("About", [this](const GUI::Action&) {
-        GUI::AboutDialog::show("IRC Client", load_png("/res/icons/32x32/app-irc-client.png"), this);
+        GUI::AboutDialog::show("IRC Client", Gfx::load_png("/res/icons/32x32/app-irc-client.png"), this);
     }));
     menubar->add_menu(move(help_menu));
 

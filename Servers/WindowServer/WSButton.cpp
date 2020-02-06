@@ -31,7 +31,7 @@
 #include <WindowServer/WSEvent.h>
 #include <WindowServer/WSWindowManager.h>
 
-WSButton::WSButton(WSWindowFrame& frame, NonnullRefPtr<CharacterBitmap>&& bitmap, Function<void(WSButton&)>&& on_click_handler)
+WSButton::WSButton(WSWindowFrame& frame, NonnullRefPtr<Gfx::CharacterBitmap>&& bitmap, Function<void(WSButton&)>&& on_click_handler)
     : on_click(move(on_click_handler))
     , m_frame(frame)
     , m_bitmap(move(bitmap))
@@ -42,12 +42,12 @@ WSButton::~WSButton()
 {
 }
 
-void WSButton::paint(Painter& painter)
+void WSButton::paint(Gfx::Painter& painter)
 {
     auto palette = WSWindowManager::the().palette();
-    PainterStateSaver saver(painter);
+    Gfx::PainterStateSaver saver(painter);
     painter.translate(relative_rect().location());
-    StylePainter::paint_button(painter, rect(), palette, ButtonStyle::Normal, m_pressed, m_hovered);
+    Gfx::StylePainter::paint_button(painter, rect(), palette, Gfx::ButtonStyle::Normal, m_pressed, m_hovered);
     auto x_location = rect().center();
     x_location.move_by(-(m_bitmap->width() / 2), -(m_bitmap->height() / 2));
     if (m_pressed)
@@ -99,7 +99,7 @@ void WSButton::on_mouse_event(const WSMouseEvent& event)
     }
 }
 
-Rect WSButton::screen_rect() const
+Gfx::Rect WSButton::screen_rect() const
 {
     return m_relative_rect.translated(m_frame.rect().location());
 }

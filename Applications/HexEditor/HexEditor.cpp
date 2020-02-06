@@ -44,8 +44,8 @@
 HexEditor::HexEditor(GUI::Widget* parent)
     : ScrollableWidget(parent)
 {
-    set_frame_shape(FrameShape::Container);
-    set_frame_shadow(FrameShadow::Sunken);
+    set_frame_shape(Gfx::FrameShape::Container);
+    set_frame_shadow(Gfx::FrameShadow::Sunken);
     set_frame_thickness(2);
     set_scrollbars_enabled(true);
     set_font(GFontDatabase::the().get_by_name("Csilla Thin"));
@@ -544,7 +544,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             }
 
             auto line = String::format("%02X", m_buffer[byte_position]);
-            painter.draw_text(hex_display_rect, line, TextAlignment::TopLeft, text_color);
+            painter.draw_text(hex_display_rect, line, Gfx::TextAlignment::TopLeft, text_color);
 
             Rect text_display_rect {
                 frame_thickness() + offset_margin_width() + (bytes_per_row() * (character_width() * 3)) + (j * character_width()) + 20,
@@ -559,7 +559,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
                 painter.fill_rect(text_display_rect, Color::from_rgb(0xCCCCCC));
             }
 
-            painter.draw_text(text_display_rect, String::format("%c", isprint(m_buffer[byte_position]) ? m_buffer[byte_position] : '.'), TextAlignment::TopLeft, text_color);
+            painter.draw_text(text_display_rect, String::format("%c", isprint(m_buffer[byte_position]) ? m_buffer[byte_position] : '.'), Gfx::TextAlignment::TopLeft, text_color);
         }
     }
 }

@@ -98,7 +98,7 @@ private:
 
 class WSMouseEvent final : public WSEvent {
 public:
-    WSMouseEvent(Type type, const Point& position, unsigned buttons, MouseButton button, unsigned modifiers, int wheel_delta = 0)
+    WSMouseEvent(Type type, const Gfx::Point& position, unsigned buttons, MouseButton button, unsigned modifiers, int wheel_delta = 0)
         : WSEvent(type)
         , m_position(position)
         , m_buttons(buttons)
@@ -116,10 +116,10 @@ public:
     unsigned modifiers() const { return m_modifiers; }
     int wheel_delta() const { return m_wheel_delta; }
 
-    WSMouseEvent translated(const Point& delta) const { return WSMouseEvent((Type)type(), m_position.translated(delta), m_buttons, m_button, m_modifiers, m_wheel_delta); }
+    WSMouseEvent translated(const Gfx::Point& delta) const { return WSMouseEvent((Type)type(), m_position.translated(delta), m_buttons, m_button, m_modifiers, m_wheel_delta); }
 
 private:
-    Point m_position;
+    Gfx::Point m_position;
     unsigned m_buttons { 0 };
     MouseButton m_button { MouseButton::None };
     unsigned m_modifiers { 0 };
@@ -128,7 +128,7 @@ private:
 
 class WSResizeEvent final : public WSEvent {
 public:
-    WSResizeEvent(const Rect& old_rect, const Rect& rect)
+    WSResizeEvent(const Gfx::Rect& old_rect, const Gfx::Rect& rect)
         : WSEvent(WSEvent::WindowResized)
         , m_old_rect(old_rect)
         , m_rect(rect)
@@ -139,6 +139,6 @@ public:
     Rect rect() const { return m_rect; }
 
 private:
-    Rect m_old_rect;
-    Rect m_rect;
+    Gfx::Rect m_old_rect;
+    Gfx::Rect m_rect;
 };

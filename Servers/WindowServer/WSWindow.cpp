@@ -37,11 +37,11 @@ static String default_window_icon_path()
     return "/res/icons/16x16/window.png";
 }
 
-static GraphicsBitmap& default_window_icon()
+static Gfx::Bitmap& default_window_icon()
 {
-    static GraphicsBitmap* s_icon;
+    static Gfx::Bitmap* s_icon;
     if (!s_icon)
-        s_icon = GraphicsBitmap::load_from_file(default_window_icon_path()).leak_ref();
+        s_icon = Gfx::Bitmap::load_from_file(default_window_icon_path()).leak_ref();
     return *s_icon;
 }
 
@@ -92,7 +92,7 @@ void WSWindow::set_title(const String& title)
     WSWindowManager::the().notify_title_changed(*this);
 }
 
-void WSWindow::set_rect(const Rect& rect)
+void WSWindow::set_rect(const Gfx::Rect& rect)
 {
     Rect old_rect;
     if (m_rect == rect)
@@ -100,7 +100,7 @@ void WSWindow::set_rect(const Rect& rect)
     old_rect = m_rect;
     m_rect = rect;
     if (!m_client && (!m_backing_store || old_rect.size() != rect.size())) {
-        m_backing_store = GraphicsBitmap::create(GraphicsBitmap::Format::RGB32, m_rect.size());
+        m_backing_store = Gfx::Bitmap::create(Gfx::Bitmap::Format::RGB32, m_rect.size());
     }
     m_frame.notify_window_rect_changed(old_rect, rect);
 }
@@ -294,7 +294,7 @@ void WSWindow::invalidate()
     WSWindowManager::the().invalidate(*this);
 }
 
-void WSWindow::invalidate(const Rect& rect)
+void WSWindow::invalidate(const Gfx::Rect& rect)
 {
     WSWindowManager::the().invalidate(*this, rect);
 }
@@ -314,7 +314,7 @@ void WSWindow::set_default_icon()
     m_icon = default_window_icon();
 }
 
-void WSWindow::request_update(const Rect& rect)
+void WSWindow::request_update(const Gfx::Rect& rect)
 {
     if (m_pending_paint_rects.is_empty()) {
         deferred_invoke([this](auto&) {
@@ -324,7 +324,7 @@ void WSWindow::request_update(const Rect& rect)
     m_pending_paint_rects.add(rect);
 }
 
-void WSWindow::popup_window_menu(const Point& position)
+void WSWindow::popup_window_menu(const Gfx::Point& position)
 {
     if (!m_window_menu) {
         m_window_menu = WSMenu::construct(nullptr, -1, "(Window Menu)");

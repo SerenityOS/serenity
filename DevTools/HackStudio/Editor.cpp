@@ -114,7 +114,7 @@ static HashMap<String, String>& man_paths()
     return paths;
 }
 
-void Editor::show_documentation_tooltip_if_available(const String& hovered_token, const Point& screen_location)
+void Editor::show_documentation_tooltip_if_available(const String& hovered_token, const Gfx::Point& screen_location)
 {
     auto it = man_paths().find(hovered_token);
     if (it == man_paths().end()) {

@@ -32,7 +32,9 @@
 #include <LibCore/CObject.h>
 #include <LibGUI/GMenuItem.h>
 
+namespace Gfx {
 class Point;
+}
 
 namespace GUI {
 
@@ -54,7 +56,7 @@ public:
     void add_separator();
     void add_submenu(NonnullRefPtr<Menu>);
 
-    void popup(const Point& screen_position);
+    void popup(const Gfx::Point& screen_position);
     void dismiss();
 
     Function<void(unsigned)> on_item_activation;

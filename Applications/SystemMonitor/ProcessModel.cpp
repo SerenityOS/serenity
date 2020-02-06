@@ -46,10 +46,10 @@ ProcessModel::ProcessModel()
 {
     ASSERT(!s_the);
     s_the = this;
-    m_generic_process_icon = GraphicsBitmap::load_from_file("/res/icons/gear16.png");
-    m_high_priority_icon = GraphicsBitmap::load_from_file("/res/icons/highpriority16.png");
-    m_low_priority_icon = GraphicsBitmap::load_from_file("/res/icons/lowpriority16.png");
-    m_normal_priority_icon = GraphicsBitmap::load_from_file("/res/icons/normalpriority16.png");
+    m_generic_process_icon = Gfx::Bitmap::load_from_file("/res/icons/gear16.png");
+    m_high_priority_icon = Gfx::Bitmap::load_from_file("/res/icons/highpriority16.png");
+    m_low_priority_icon = Gfx::Bitmap::load_from_file("/res/icons/lowpriority16.png");
+    m_normal_priority_icon = Gfx::Bitmap::load_from_file("/res/icons/normalpriority16.png");
 }
 
 ProcessModel::~ProcessModel()
@@ -132,59 +132,59 @@ GUI::Model::ColumnMetadata ProcessModel::column_metadata(int column) const
 {
     switch (column) {
     case Column::Icon:
-        return { 16, TextAlignment::CenterLeft };
+        return { 16, Gfx::TextAlignment::CenterLeft };
     case Column::PID:
-        return { 32, TextAlignment::CenterRight };
+        return { 32, Gfx::TextAlignment::CenterRight };
     case Column::TID:
-        return { 32, TextAlignment::CenterRight };
+        return { 32, Gfx::TextAlignment::CenterRight };
     case Column::State:
-        return { 75, TextAlignment::CenterLeft };
+        return { 75, Gfx::TextAlignment::CenterLeft };
     case Column::Priority:
-        return { 16, TextAlignment::CenterRight };
+        return { 16, Gfx::TextAlignment::CenterRight };
     case Column::EffectivePriority:
-        return { 16, TextAlignment::CenterRight };
+        return { 16, Gfx::TextAlignment::CenterRight };
     case Column::User:
-        return { 50, TextAlignment::CenterLeft };
+        return { 50, Gfx::TextAlignment::CenterLeft };
     case Column::Virtual:
-        return { 65, TextAlignment::CenterRight };
+        return { 65, Gfx::TextAlignment::CenterRight };
     case Column::Physical:
-        return { 65, TextAlignment::CenterRight };
+        return { 65, Gfx::TextAlignment::CenterRight };
     case Column::DirtyPrivate:
-        return { 65, TextAlignment::CenterRight };
+        return { 65, Gfx::TextAlignment::CenterRight };
     case Column::CleanInode:
-        return { 65, TextAlignment::CenterRight };
+        return { 65, Gfx::TextAlignment::CenterRight };
     case Column::PurgeableVolatile:
-        return { 65, TextAlignment::CenterRight };
+        return { 65, Gfx::TextAlignment::CenterRight };
     case Column::PurgeableNonvolatile:
-        return { 65, TextAlignment::CenterRight };
+        return { 65, Gfx::TextAlignment::CenterRight };
     case Column::CPU:
-        return { 32, TextAlignment::CenterRight };
+        return { 32, Gfx::TextAlignment::CenterRight };
     case Column::Name:
-        return { 140, TextAlignment::CenterLeft };
+        return { 140, Gfx::TextAlignment::CenterLeft };
     case Column::Syscalls:
-        return { 60, TextAlignment::CenterRight };
+        return { 60, Gfx::TextAlignment::CenterRight };
     case Column::InodeFaults:
-        return { 60, TextAlignment::CenterRight };
+        return { 60, Gfx::TextAlignment::CenterRight };
     case Column::ZeroFaults:
-        return { 60, TextAlignment::CenterRight };
+        return { 60, Gfx::TextAlignment::CenterRight };
     case Column::CowFaults:
-        return { 60, TextAlignment::CenterRight };
+        return { 60, Gfx::TextAlignment::CenterRight };
     case Column::FileReadBytes:
-        return { 60, TextAlignment::CenterRight };
+        return { 60, Gfx::TextAlignment::CenterRight };
     case Column::FileWriteBytes:
-        return { 60, TextAlignment::CenterRight };
+        return { 60, Gfx::TextAlignment::CenterRight };
     case Column::UnixSocketReadBytes:
-        return { 60, TextAlignment::CenterRight };
+        return { 60, Gfx::TextAlignment::CenterRight };
     case Column::UnixSocketWriteBytes:
-        return { 60, TextAlignment::CenterRight };
+        return { 60, Gfx::TextAlignment::CenterRight };
     case Column::IPv4SocketReadBytes:
-        return { 60, TextAlignment::CenterRight };
+        return { 60, Gfx::TextAlignment::CenterRight };
     case Column::IPv4SocketWriteBytes:
-        return { 60, TextAlignment::CenterRight };
+        return { 60, Gfx::TextAlignment::CenterRight };
     case Column::Pledge:
-        return { 60, TextAlignment::CenterLeft };
+        return { 60, Gfx::TextAlignment::CenterLeft };
     case Column::Veil:
-        return { 60, TextAlignment::CenterLeft };
+        return { 60, Gfx::TextAlignment::CenterLeft };
     default:
         ASSERT_NOT_REACHED();
     }
@@ -269,7 +269,7 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, Role role) const
             if (thread.current_state.icon_id != -1) {
                 auto icon_buffer = SharedBuffer::create_from_shared_buffer_id(thread.current_state.icon_id);
                 if (icon_buffer) {
-                    auto icon_bitmap = GraphicsBitmap::create_with_shared_buffer(GraphicsBitmap::Format::RGBA32, *icon_buffer, { 16, 16 });
+                    auto icon_bitmap = Gfx::Bitmap::create_with_shared_buffer(Gfx::Bitmap::Format::RGBA32, *icon_buffer, { 16, 16 });
                     if (icon_bitmap)
                         return *icon_bitmap;
                 }

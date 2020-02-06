@@ -47,7 +47,7 @@ public:
 private:
     virtual const char* class_name() const override { return "PenTool"; }
 
-    Point m_last_drawing_event_position { -1, -1 };
+    Gfx::Point m_last_drawing_event_position { -1, -1 };
     RefPtr<GUI::Menu> m_context_menu;
     int m_thickness { 1 };
     GUI::ActionGroup m_thickness_actions;

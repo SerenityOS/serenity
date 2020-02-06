@@ -42,7 +42,7 @@ protected:
     virtual void leave_event(Core::Event&) override;
 
 private:
-    RefPtr<GraphicsBitmap> m_bitmap;
+    RefPtr<Gfx::Bitmap> m_bitmap;
 };
 
 }

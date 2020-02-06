@@ -58,8 +58,8 @@ TextEditor::TextEditor(Type type, Widget* parent)
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
     set_document(TextDocument::create());
-    set_frame_shape(FrameShape::Container);
-    set_frame_shadow(FrameShadow::Sunken);
+    set_frame_shape(Gfx::FrameShape::Container);
+    set_frame_shadow(Gfx::FrameShadow::Sunken);
     set_frame_thickness(2);
     set_scrollbars_enabled(is_multi_line());
     set_font(GFontDatabase::the().get_by_name("Csilla Thin"));
@@ -86,7 +86,7 @@ void TextEditor::create_actions()
     m_paste_action = CommonActions::make_paste_action([&](auto&) { paste(); }, this);
     m_delete_action = CommonActions::make_delete_action([&](auto&) { do_delete(); }, this);
     m_go_to_line_action = Action::create(
-        "Go to line...", { Mod_Ctrl, Key_L }, GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](auto&) {
+        "Go to line...", { Mod_Ctrl, Key_L }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](auto&) {
             auto input_box = InputBox::construct("Line:", "Go to line", window());
             auto result = input_box->exec();
             if (result == InputBox::ExecOK) {
@@ -134,7 +134,7 @@ void TextEditor::update_content_size()
     set_size_occupied_by_fixed_elements({ ruler_width(), 0 });
 }
 
-TextPosition TextEditor::text_position_at(const Point& a_position) const
+TextPosition TextEditor::text_position_at(const Gfx::Point& a_position) const
 {
     auto position = a_position;
     position.move_by(horizontal_scrollbar().value(), vertical_scrollbar().value());
@@ -161,10 +161,10 @@ TextPosition TextEditor::text_position_at(const Point& a_position) const
 
     size_t column_index;
     switch (m_text_alignment) {
-    case TextAlignment::CenterLeft:
+    case Gfx::TextAlignment::CenterLeft:
         column_index = (position.x() + glyph_width() / 2) / glyph_width();
         if (is_line_wrapping_enabled()) {
-            for_each_visual_line(line_index, [&](const Rect& rect, const StringView&, size_t start_of_line) {
+            for_each_visual_line(line_index, [&](const Gfx::Rect& rect, const StringView&, size_t start_of_line) {
                 if (rect.contains_vertically(position.y())) {
                     column_index += start_of_line;
                     return IterationDecision::Break;
@@ -173,7 +173,7 @@ TextPosition TextEditor::text_position_at(const Point& a_position) const
             });
         }
         break;
-    case TextAlignment::CenterRight:
+    case Gfx::TextAlignment::CenterRight:
         // FIXME: Support right-aligned line wrapping, I guess.
         ASSERT(!is_line_wrapping_enabled());
         column_index = (position.x() - content_x_for_position({ line_index, 0 }) + glyph_width() / 2) / glyph_width();
@@ -376,8 +376,8 @@ void TextEditor::paint_event(PaintEvent& event)
             painter.draw_text(
                 ruler_line_rect.shrunken(2, 0).translated(0, m_line_spacing / 2),
                 String::number(i + 1),
-                is_current_line ? Font::default_bold_font() : font(),
-                TextAlignment::TopRight,
+                is_current_line ? Gfx::Font::default_bold_font() : font(),
+                Gfx::TextAlignment::TopRight,
                 is_current_line ? widget_background_color.darkened(0.2f) : widget_background_color.darkened(0.4f));
         }
     }
@@ -412,7 +412,7 @@ void TextEditor::paint_event(PaintEvent& event)
         size_t selection_end_column_within_line = selection.end().line() == line_index ? selection.end().column() : line.length();
 
         size_t visual_line_index = 0;
-        for_each_visual_line(line_index, [&](const Rect& visual_line_rect, const StringView& visual_line_text, size_t start_of_visual_line) {
+        for_each_visual_line(line_index, [&](const Gfx::Rect& visual_line_rect, const StringView& visual_line_text, size_t start_of_visual_line) {
             if (is_multi_line() && line_index == m_cursor.line())
                 painter.fill_rect(visual_line_rect, widget_background_color.darkened(0.9f));
 #ifdef DEBUG_GTEXTEDITOR
@@ -425,7 +425,7 @@ void TextEditor::paint_event(PaintEvent& event)
                 int advance = font().glyph_width(' ') + font().glyph_spacing();
                 Rect character_rect = { visual_line_rect.location(), { font().glyph_width(' '), line_height() } };
                 for (size_t i = 0; i < visual_line_text.length(); ++i) {
-                    const Font* font = &this->font();
+                    const Gfx::Font* font = &this->font();
                     Color color;
                     Optional<Color> background_color;
                     TextPosition physical_position(line_index, start_of_visual_line + i);
@@ -479,7 +479,7 @@ void TextEditor::paint_event(PaintEvent& event)
                         end_of_selection_within_visual_line - start_of_selection_within_visual_line
                     };
 
-                    painter.draw_text(selection_rect, visual_selected_text, TextAlignment::CenterLeft, palette().selection_text());
+                    painter.draw_text(selection_rect, visual_selected_text, Gfx::TextAlignment::CenterLeft, palette().selection_text());
                 }
             }
             ++visual_line_index;
@@ -894,8 +894,8 @@ int TextEditor::content_x_for_position(const TextPosition& position) const
     auto& line = this->line(position.line());
     int x_offset = -1;
     switch (m_text_alignment) {
-    case TextAlignment::CenterLeft:
-        for_each_visual_line(position.line(), [&](const Rect&, const StringView& view, size_t start_of_visual_line) {
+    case Gfx::TextAlignment::CenterLeft:
+        for_each_visual_line(position.line(), [&](const Gfx::Rect&, const StringView& view, size_t start_of_visual_line) {
             if (position.column() >= start_of_visual_line && ((position.column() - start_of_visual_line) <= view.length())) {
                 x_offset = (position.column() - start_of_visual_line) * glyph_width();
                 return IterationDecision::Break;
@@ -903,7 +903,7 @@ int TextEditor::content_x_for_position(const TextPosition& position) const
             return IterationDecision::Continue;
         });
         return m_horizontal_content_padding + x_offset;
-    case TextAlignment::CenterRight:
+    case Gfx::TextAlignment::CenterRight:
         // FIXME
         ASSERT(!is_line_wrapping_enabled());
         return content_width() - m_horizontal_content_padding - (line.length() * glyph_width()) + (position.column() * glyph_width());
@@ -928,7 +928,7 @@ Rect TextEditor::content_rect_for_position(const TextPosition& position) const
     }
 
     Rect rect;
-    for_each_visual_line(position.line(), [&](const Rect& visual_line_rect, const StringView& view, size_t start_of_visual_line) {
+    for_each_visual_line(position.line(), [&](const Gfx::Rect& visual_line_rect, const StringView& view, size_t start_of_visual_line) {
         if (position.column() >= start_of_visual_line && ((position.column() - start_of_visual_line) <= view.length())) {
             // NOTE: We have to subtract the horizontal padding here since it's part of the visual line rect
             //       *and* included in what we get from content_x_for_position().
@@ -1250,7 +1250,7 @@ void TextEditor::context_menu_event(ContextMenuEvent& event)
     m_context_menu->popup(event.screen_position());
 }
 
-void TextEditor::set_text_alignment(TextAlignment alignment)
+void TextEditor::set_text_alignment(Gfx::TextAlignment alignment)
 {
     if (m_text_alignment == alignment)
         return;
@@ -1309,7 +1309,7 @@ void TextEditor::ensure_cursor_is_valid()
 size_t TextEditor::visual_line_containing(size_t line_index, size_t column) const
 {
     size_t visual_line_index = 0;
-    for_each_visual_line(line_index, [&](const Rect&, const StringView& view, size_t start_of_visual_line) {
+    for_each_visual_line(line_index, [&](const Gfx::Rect&, const StringView& view, size_t start_of_visual_line) {
         if (column >= start_of_visual_line && ((column - start_of_visual_line) < view.length()))
             return IterationDecision::Break;
         ++visual_line_index;

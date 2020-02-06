@@ -38,8 +38,8 @@ public:
         , m_color(color)
     {
         set_frame_thickness(2);
-        set_frame_shadow(FrameShadow::Sunken);
-        set_frame_shape(FrameShape::Container);
+        set_frame_shadow(Gfx::FrameShadow::Sunken);
+        set_frame_shape(Gfx::FrameShape::Container);
     }
 
     virtual ~ColorWidget() override
@@ -75,8 +75,8 @@ PaletteWidget::PaletteWidget(PaintableWidget& paintable_widget, GUI::Widget* par
     : GUI::Frame(parent)
     , m_paintable_widget(paintable_widget)
 {
-    set_frame_shape(FrameShape::Panel);
-    set_frame_shadow(FrameShadow::Raised);
+    set_frame_shape(Gfx::FrameShape::Panel);
+    set_frame_shadow(Gfx::FrameShadow::Raised);
     set_frame_thickness(0);
     set_fill_with_background_color(true);
 
@@ -85,16 +85,16 @@ PaletteWidget::PaletteWidget(PaintableWidget& paintable_widget, GUI::Widget* par
 
     m_secondary_color_widget = GUI::Frame::construct(this);
     m_secondary_color_widget->set_frame_thickness(2);
-    m_secondary_color_widget->set_frame_shape(FrameShape::Container);
-    m_secondary_color_widget->set_frame_shadow(FrameShadow::Sunken);
+    m_secondary_color_widget->set_frame_shape(Gfx::FrameShape::Container);
+    m_secondary_color_widget->set_frame_shadow(Gfx::FrameShadow::Sunken);
     m_secondary_color_widget->set_relative_rect({ 2, 2, 60, 31 });
     m_secondary_color_widget->set_fill_with_background_color(true);
     set_secondary_color(paintable_widget.secondary_color());
 
     m_primary_color_widget = GUI::Frame::construct(this);
     m_primary_color_widget->set_frame_thickness(2);
-    m_primary_color_widget->set_frame_shape(FrameShape::Container);
-    m_primary_color_widget->set_frame_shadow(FrameShadow::Sunken);
+    m_primary_color_widget->set_frame_shape(Gfx::FrameShape::Container);
+    m_primary_color_widget->set_frame_shadow(Gfx::FrameShadow::Sunken);
     Rect rect { 0, 0, 38, 15 };
     rect.center_within(m_secondary_color_widget->relative_rect());
     m_primary_color_widget->set_relative_rect(rect);

@@ -30,6 +30,8 @@
 #include <AK/String.h>
 #include <LibDraw/Orientation.h>
 
+namespace Gfx {
+
 class Rect;
 
 class Point {
@@ -158,3 +160,7 @@ inline const LogStream& operator<<(const LogStream& stream, const Point& value)
 {
     return stream << value.to_string();
 }
+
+}
+
+using Gfx::Point;

@@ -43,8 +43,8 @@ public:
             m_audio_muted = muted;
             update();
         };
-        m_unmuted_bitmap = GraphicsBitmap::load_from_file("/res/icons/audio-unmuted.png");
-        m_muted_bitmap = GraphicsBitmap::load_from_file("/res/icons/audio-muted.png");
+        m_unmuted_bitmap = Gfx::Bitmap::load_from_file("/res/icons/audio-unmuted.png");
+        m_muted_bitmap = Gfx::Bitmap::load_from_file("/res/icons/audio-muted.png");
     }
 
     virtual ~AudioWidget() override {}
@@ -68,8 +68,8 @@ private:
     }
 
     OwnPtr<Audio::ClientConnection> m_audio_client;
-    RefPtr<GraphicsBitmap> m_muted_bitmap;
-    RefPtr<GraphicsBitmap> m_unmuted_bitmap;
+    RefPtr<Gfx::Bitmap> m_muted_bitmap;
+    RefPtr<Gfx::Bitmap> m_unmuted_bitmap;
     bool m_audio_muted { false };
 };
 

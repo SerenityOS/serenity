@@ -42,7 +42,7 @@ public:
     FloatSize size() const { return rect().size(); }
     FloatPoint position() const { return rect().location(); }
 
-    virtual HitTestResult hit_test(const Point& position) const override;
+    virtual HitTestResult hit_test(const Gfx::Point& position) const override;
     virtual void set_needs_display() override;
 
     bool is_body() const;

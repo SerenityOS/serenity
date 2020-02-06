@@ -34,6 +34,8 @@ namespace GUI {
 class Application;
 }
 
+namespace Gfx {
+
 class PaletteImpl : public RefCounted<PaletteImpl> {
     AK_MAKE_NONCOPYABLE(PaletteImpl)
     AK_MAKE_NONMOVABLE(PaletteImpl)
@@ -107,3 +109,7 @@ public:
 private:
     NonnullRefPtr<PaletteImpl> m_impl;
 };
+
+}
+
+using Gfx::Palette;

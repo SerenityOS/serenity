@@ -26,6 +26,8 @@
 
 #include <LibDraw/Point.h>
 
+namespace Gfx {
+
 class Triangle {
 public:
     Triangle(Point a, Point b, Point c)
@@ -74,4 +76,6 @@ private:
 inline const LogStream& operator<<(const LogStream& stream, const Triangle& value)
 {
     return stream << value.to_string();
+}
+
 }

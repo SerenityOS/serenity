@@ -68,7 +68,7 @@ ImageStyleValue::ImageStyleValue(const URL& url, Document& document)
     ResourceLoader::the().load(url, [this, protector](auto& data) {
         if (!m_document)
             return;
-        m_bitmap = load_png_from_memory(data.data(), data.size());
+        m_bitmap = Gfx::load_png_from_memory(data.data(), data.size());
         if (!m_bitmap)
             return;
         // FIXME: Do less than a full repaint if possible?

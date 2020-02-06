@@ -46,12 +46,12 @@ EditorWrapper::EditorWrapper(GUI::Widget* parent)
     label_wrapper->layout()->set_margins({ 2, 0, 2, 0 });
 
     m_filename_label = GUI::Label::construct("(Untitled)", label_wrapper);
-    m_filename_label->set_text_alignment(TextAlignment::CenterLeft);
+    m_filename_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     m_filename_label->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_filename_label->set_preferred_size(0, 14);
 
     m_cursor_label = GUI::Label::construct("(Cursor)", label_wrapper);
-    m_cursor_label->set_text_alignment(TextAlignment::CenterRight);
+    m_cursor_label->set_text_alignment(Gfx::TextAlignment::CenterRight);
     m_cursor_label->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_cursor_label->set_preferred_size(0, 14);
 
@@ -75,5 +75,5 @@ EditorWrapper::~EditorWrapper()
 
 void EditorWrapper::set_editor_has_focus(Badge<Editor>, bool focus)
 {
-    m_filename_label->set_font(focus ? Font::default_bold_font() : Font::default_font());
+    m_filename_label->set_font(focus ? Gfx::Font::default_bold_font() : Gfx::Font::default_font());
 }

@@ -37,8 +37,8 @@ ListView::ListView(Widget* parent)
 {
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
-    set_frame_shape(FrameShape::Container);
-    set_frame_shadow(FrameShadow::Sunken);
+    set_frame_shape(Gfx::FrameShape::Container);
+    set_frame_shadow(Gfx::FrameShadow::Sunken);
     set_frame_thickness(2);
 }
 
@@ -86,7 +86,7 @@ Rect ListView::content_rect(const ModelIndex& index) const
     return content_rect(index.row());
 }
 
-ModelIndex ListView::index_at_event_position(const Point& point) const
+ModelIndex ListView::index_at_event_position(const Gfx::Point& point) const
 {
     ASSERT(model());
 
@@ -99,7 +99,7 @@ ModelIndex ListView::index_at_event_position(const Point& point) const
     return {};
 }
 
-Point ListView::adjusted_position(const Point& position) const
+Point ListView::adjusted_position(const Gfx::Point& position) const
 {
     return position.translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
 }

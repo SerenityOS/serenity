@@ -60,7 +60,7 @@ public:
 
     void apply_size_increments_to_window(GUI::Window&);
 
-    const Font& bold_font() const { return *m_bold_font; }
+    const Gfx::Font& bold_font() const { return *m_bold_font; }
 
     void set_opacity(u8);
     float opacity() { return m_opacity; };
@@ -72,7 +72,7 @@ public:
     bool has_selection() const;
     bool selection_contains(const VT::Position&) const;
     String selected_text() const;
-    VT::Position buffer_position_at(const Point&) const;
+    VT::Position buffer_position_at(const Gfx::Point&) const;
     VT::Position normalized_selection_start() const;
     VT::Position normalized_selection_end() const;
 
@@ -120,7 +120,7 @@ private:
     void update_cursor();
     void invalidate_cursor();
 
-    void relayout(const Size&);
+    void relayout(const Gfx::Size&);
 
     Size compute_base_size() const;
     int first_selection_column_on_row(int row) const;
@@ -152,7 +152,7 @@ private:
     bool m_cursor_blink_state { true };
     bool m_automatic_size_policy { false };
 
-    RefPtr<Font> m_bold_font;
+    RefPtr<Gfx::Font> m_bold_font;
 
     int m_glyph_width { 0 };
 

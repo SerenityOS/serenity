@@ -42,17 +42,17 @@ class Button : public AbstractButton {
 public:
     virtual ~Button() override;
 
-    void set_icon(RefPtr<GraphicsBitmap>&&);
-    const GraphicsBitmap* icon() const { return m_icon.ptr(); }
-    GraphicsBitmap* icon() { return m_icon.ptr(); }
+    void set_icon(RefPtr<Gfx::Bitmap>&&);
+    const Gfx::Bitmap* icon() const { return m_icon.ptr(); }
+    Gfx::Bitmap* icon() { return m_icon.ptr(); }
 
-    void set_text_alignment(TextAlignment text_alignment) { m_text_alignment = text_alignment; }
-    TextAlignment text_alignment() const { return m_text_alignment; }
+    void set_text_alignment(Gfx::TextAlignment text_alignment) { m_text_alignment = text_alignment; }
+    Gfx::TextAlignment text_alignment() const { return m_text_alignment; }
 
     Function<void(Button&)> on_click;
 
-    void set_button_style(ButtonStyle style) { m_button_style = style; }
-    ButtonStyle button_style() const { return m_button_style; }
+    void set_button_style(Gfx::ButtonStyle style) { m_button_style = style; }
+    Gfx::ButtonStyle button_style() const { return m_button_style; }
 
     virtual void click() override;
 
@@ -69,9 +69,9 @@ protected:
     virtual void paint_event(PaintEvent&) override;
 
 private:
-    RefPtr<GraphicsBitmap> m_icon;
-    ButtonStyle m_button_style { ButtonStyle::Normal };
-    TextAlignment m_text_alignment { TextAlignment::Center };
+    RefPtr<Gfx::Bitmap> m_icon;
+    Gfx::ButtonStyle m_button_style { Gfx::ButtonStyle::Normal };
+    Gfx::TextAlignment m_text_alignment { Gfx::TextAlignment::Center };
     WeakPtr<Action> m_action;
     bool m_focusable { true };
 };

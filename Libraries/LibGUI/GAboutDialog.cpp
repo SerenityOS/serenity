@@ -32,7 +32,7 @@
 
 namespace GUI {
 
-AboutDialog::AboutDialog(const StringView& name, const GraphicsBitmap* icon, Core::Object* parent)
+AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Core::Object* parent)
     : Dialog(parent)
     , m_name(name)
     , m_icon(icon)
@@ -62,11 +62,11 @@ AboutDialog::AboutDialog(const StringView& name, const GraphicsBitmap* icon, Cor
 
     auto make_label = [&](const StringView& text, bool bold = false) {
         auto label = Label::construct(text, right_container);
-        label->set_text_alignment(TextAlignment::CenterLeft);
+        label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
         label->set_preferred_size(0, 14);
         if (bold)
-            label->set_font(Font::default_bold_font());
+            label->set_font(Gfx::Font::default_bold_font());
     };
     make_label(m_name, true);
     make_label("SerenityOS");

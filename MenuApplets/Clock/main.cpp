@@ -39,7 +39,7 @@ public:
     ClockWidget()
         : GUI::Widget(nullptr)
     {
-        m_time_width = Font::default_bold_font().width("2222-22-22 22:22:22");
+        m_time_width = Gfx::Font::default_bold_font().width("2222-22-22 22:22:22");
 
         m_timer = Core::Timer::construct(1000, [this] {
             static time_t last_update_time;
@@ -76,7 +76,7 @@ private:
 
         GUI::Painter painter(*this);
         painter.fill_rect(event.rect(), palette().window());
-        painter.draw_text(event.rect(), time_text, Font::default_font(), TextAlignment::Center, palette().window_text());
+        painter.draw_text(event.rect(), time_text, Gfx::Font::default_font(), Gfx::TextAlignment::Center, palette().window_text());
     }
 
     void tick_clock()

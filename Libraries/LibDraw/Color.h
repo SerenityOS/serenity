@@ -30,6 +30,8 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 
+namespace Gfx {
+
 enum class ColorRole;
 typedef u32 RGBA32;
 
@@ -177,3 +179,7 @@ inline const LogStream& operator<<(const LogStream& stream, Color value)
 {
     return stream << value.to_string();
 }
+
+}
+
+using Gfx::Color;

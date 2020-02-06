@@ -47,12 +47,12 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    RefPtr<Font> edited_font;
+    RefPtr<Gfx::Font> edited_font;
     String path;
 
     if (argc == 2) {
         path = argv[1];
-        edited_font = Font::load_from_file(path);
+        edited_font = Gfx::Font::load_from_file(path);
         if (!edited_font) {
             fprintf(stderr, "Couldn't load font: %s\n", path.characters());
             return 1;
@@ -62,7 +62,7 @@ int main(int argc, char** argv)
     if (edited_font)
         edited_font = edited_font->clone();
     else
-        edited_font = Font::default_font().clone();
+        edited_font = Gfx::Font::default_font().clone();
 
     auto window = GUI::Window::construct();
     window->set_title("Font Editor");
@@ -71,7 +71,7 @@ int main(int argc, char** argv)
     auto font_editor = FontEditorWidget::construct(path, move(edited_font));
     window->set_main_widget(font_editor);
     window->show();
-    window->set_icon(load_png("/res/icons/16x16/app-font-editor.png"));
+    window->set_icon(Gfx::load_png("/res/icons/16x16/app-font-editor.png"));
 
     auto menubar = make<GUI::MenuBar>();
 
@@ -84,7 +84,7 @@ int main(int argc, char** argv)
 
     auto help_menu = GUI::Menu::construct("Help");
     help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
-        GUI::AboutDialog::show("Font Editor", load_png("/res/icons/FontEditor.png"), window);
+        GUI::AboutDialog::show("Font Editor", Gfx::load_png("/res/icons/FontEditor.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 

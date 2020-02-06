@@ -213,12 +213,12 @@ public:
 
     String to_string() const override { return String::format("Image{%s}", m_url.to_string().characters()); }
 
-    const GraphicsBitmap* bitmap() const { return m_bitmap; }
+    const Gfx::Bitmap* bitmap() const { return m_bitmap; }
 
 private:
     ImageStyleValue(const URL&, Document&);
 
     URL m_url;
     WeakPtr<Document> m_document;
-    RefPtr<GraphicsBitmap> m_bitmap;
+    RefPtr<Gfx::Bitmap> m_bitmap;
 };

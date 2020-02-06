@@ -35,7 +35,7 @@ namespace GUI {
 class JsonArrayModel final : public Model {
 public:
     struct FieldSpec {
-        FieldSpec(const String& a_column_name, TextAlignment a_text_alignment, Function<Variant(const JsonObject&)>&& a_massage_for_display, Function<Variant(const JsonObject&)>&& a_massage_for_sort = {}, Function<Variant(const JsonObject&)>&& a_massage_for_custom = {})
+        FieldSpec(const String& a_column_name, Gfx::TextAlignment a_text_alignment, Function<Variant(const JsonObject&)>&& a_massage_for_display, Function<Variant(const JsonObject&)>&& a_massage_for_sort = {}, Function<Variant(const JsonObject&)>&& a_massage_for_custom = {})
             : column_name(a_column_name)
             , text_alignment(a_text_alignment)
             , massage_for_display(move(a_massage_for_display))
@@ -44,7 +44,7 @@ public:
         {
         }
 
-        FieldSpec(const String& a_json_field_name, const String& a_column_name, TextAlignment a_text_alignment)
+        FieldSpec(const String& a_json_field_name, const String& a_column_name, Gfx::TextAlignment a_text_alignment)
             : json_field_name(a_json_field_name)
             , column_name(a_column_name)
             , text_alignment(a_text_alignment)
@@ -53,7 +53,7 @@ public:
 
         String json_field_name;
         String column_name;
-        TextAlignment text_alignment;
+        Gfx::TextAlignment text_alignment;
         Function<Variant(const JsonObject&)> massage_for_display;
         Function<Variant(const JsonObject&)> massage_for_sort;
         Function<Variant(const JsonObject&)> massage_for_custom;

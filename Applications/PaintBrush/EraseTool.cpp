@@ -38,7 +38,7 @@ EraseTool::~EraseTool()
 {
 }
 
-Rect EraseTool::build_rect(const Point& pos, const Rect& widget_rect)
+Rect EraseTool::build_rect(const Gfx::Point& pos, const Gfx::Rect& widget_rect)
 {
     const int base_eraser_size = 10;
     const int eraser_size = (base_eraser_size * m_thickness);

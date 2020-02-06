@@ -33,9 +33,9 @@
 
 extern RefPtr<Project> g_project;
 extern void open_file(const String&);
-static RefPtr<GraphicsBitmap> s_file_icon;
-static RefPtr<GraphicsBitmap> s_cplusplus_icon;
-static RefPtr<GraphicsBitmap> s_header_icon;
+static RefPtr<Gfx::Bitmap> s_file_icon;
+static RefPtr<Gfx::Bitmap> s_cplusplus_icon;
+static RefPtr<Gfx::Bitmap> s_header_icon;
 
 class LocatorSuggestionModel final : public GUI::Model {
 public:
@@ -102,9 +102,9 @@ Locator::Locator(GUI::Widget* parent)
     : GUI::Widget(parent)
 {
     if (!s_cplusplus_icon) {
-        s_file_icon = GraphicsBitmap::load_from_file("/res/icons/16x16/filetype-unknown.png");
-        s_cplusplus_icon = GraphicsBitmap::load_from_file("/res/icons/16x16/filetype-cplusplus.png");
-        s_header_icon = GraphicsBitmap::load_from_file("/res/icons/16x16/filetype-header.png");
+        s_file_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-unknown.png");
+        s_cplusplus_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-cplusplus.png");
+        s_header_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-header.png");
     }
 
     set_layout(make<GUI::VBoxLayout>());

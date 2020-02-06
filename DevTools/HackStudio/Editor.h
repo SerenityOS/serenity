@@ -50,7 +50,7 @@ private:
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void cursor_did_change() override;
 
-    void show_documentation_tooltip_if_available(const String&, const Point& screen_location);
+    void show_documentation_tooltip_if_available(const String&, const Gfx::Point& screen_location);
     void highlight_matching_token_pair();
 
     explicit Editor(GUI::Widget* parent);

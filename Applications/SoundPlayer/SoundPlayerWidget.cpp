@@ -46,8 +46,8 @@ SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, NonnullRefPtr<Audio::C
     status_widget->set_layout(make<GUI::HBoxLayout>());
 
     m_elapsed = GUI::Label::construct(status_widget);
-    m_elapsed->set_frame_shape(FrameShape::Container);
-    m_elapsed->set_frame_shadow(FrameShadow::Sunken);
+    m_elapsed->set_frame_shape(Gfx::FrameShape::Container);
+    m_elapsed->set_frame_shadow(Gfx::FrameShadow::Sunken);
     m_elapsed->set_frame_thickness(2);
     m_elapsed->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     m_elapsed->set_preferred_size(80, 0);
@@ -59,8 +59,8 @@ SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, NonnullRefPtr<Audio::C
     m_sample_widget = SampleWidget::construct(sample_widget_container);
 
     m_remaining = GUI::Label::construct(status_widget);
-    m_remaining->set_frame_shape(FrameShape::Container);
-    m_remaining->set_frame_shadow(FrameShadow::Sunken);
+    m_remaining->set_frame_shape(Gfx::FrameShape::Container);
+    m_remaining->set_frame_shadow(Gfx::FrameShadow::Sunken);
     m_remaining->set_frame_thickness(2);
     m_remaining->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     m_remaining->set_preferred_size(80, 0);
@@ -87,14 +87,14 @@ SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, NonnullRefPtr<Audio::C
 
     m_stop = GUI::Button::construct(control_widget);
     m_stop->set_enabled(false);
-    m_stop->set_icon(GraphicsBitmap::load_from_file("/res/icons/16x16/stop.png"));
+    m_stop->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/stop.png"));
     m_stop->on_click = [&](GUI::Button&) { m_manager.stop(); };
 
     m_status = GUI::Label::construct(this);
-    m_status->set_frame_shape(FrameShape::Box);
-    m_status->set_frame_shadow(FrameShadow::Raised);
+    m_status->set_frame_shape(Gfx::FrameShape::Box);
+    m_status->set_frame_shadow(Gfx::FrameShadow::Raised);
     m_status->set_frame_thickness(4);
-    m_status->set_text_alignment(TextAlignment::CenterLeft);
+    m_status->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     m_status->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_status->set_preferred_size(0, 18);
     m_status->set_text("No file open!");

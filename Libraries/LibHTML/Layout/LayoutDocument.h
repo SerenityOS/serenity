@@ -41,7 +41,7 @@ public:
     const LayoutRange& selection() const { return m_selection; }
     LayoutRange& selection() { return m_selection; }
 
-    void did_set_viewport_rect(Badge<Frame>, const Rect&);
+    void did_set_viewport_rect(Badge<Frame>, const Gfx::Rect&);
 
 private:
     LayoutRange m_selection;

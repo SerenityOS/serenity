@@ -36,47 +36,47 @@ namespace CommonActions {
 
 NonnullRefPtr<Action> make_open_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Open...", { Mod_Ctrl, Key_O }, GraphicsBitmap::load_from_file("/res/icons/16x16/open.png"), move(callback), parent);
+    return Action::create("Open...", { Mod_Ctrl, Key_O }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_move_to_front_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Move to front", { Mod_Ctrl | Mod_Shift, Key_Up }, GraphicsBitmap::load_from_file("/res/icons/16x16/move-to-front.png"), move(callback), parent);
+    return Action::create("Move to front", { Mod_Ctrl | Mod_Shift, Key_Up }, Gfx::Bitmap::load_from_file("/res/icons/16x16/move-to-front.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_move_to_back_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Move to back", { Mod_Ctrl | Mod_Shift, Key_Down }, GraphicsBitmap::load_from_file("/res/icons/16x16/move-to-back.png"), move(callback), parent);
+    return Action::create("Move to back", { Mod_Ctrl | Mod_Shift, Key_Down }, Gfx::Bitmap::load_from_file("/res/icons/16x16/move-to-back.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_undo_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Undo", { Mod_Ctrl, Key_Z }, GraphicsBitmap::load_from_file("/res/icons/16x16/undo.png"), move(callback), parent);
+    return Action::create("Undo", { Mod_Ctrl, Key_Z }, Gfx::Bitmap::load_from_file("/res/icons/16x16/undo.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_redo_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Redo", { Mod_Ctrl, Key_Y }, GraphicsBitmap::load_from_file("/res/icons/16x16/redo.png"), move(callback), parent);
+    return Action::create("Redo", { Mod_Ctrl, Key_Y }, Gfx::Bitmap::load_from_file("/res/icons/16x16/redo.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_delete_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Delete", { Mod_None, Key_Delete }, GraphicsBitmap::load_from_file("/res/icons/16x16/delete.png"), move(callback), parent);
+    return Action::create("Delete", { Mod_None, Key_Delete }, Gfx::Bitmap::load_from_file("/res/icons/16x16/delete.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_cut_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Cut", { Mod_Ctrl, Key_X }, GraphicsBitmap::load_from_file("/res/icons/cut16.png"), move(callback), parent);
+    return Action::create("Cut", { Mod_Ctrl, Key_X }, Gfx::Bitmap::load_from_file("/res/icons/cut16.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_copy_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Copy", { Mod_Ctrl, Key_C }, GraphicsBitmap::load_from_file("/res/icons/16x16/edit-copy.png"), move(callback), parent);
+    return Action::create("Copy", { Mod_Ctrl, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_paste_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Paste", { Mod_Ctrl, Key_V }, GraphicsBitmap::load_from_file("/res/icons/paste16.png"), move(callback), parent);
+    return Action::create("Paste", { Mod_Ctrl, Key_V }, Gfx::Bitmap::load_from_file("/res/icons/paste16.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_fullscreen_action(Function<void(Action&)> callback, Core::Object* parent)
@@ -91,22 +91,22 @@ NonnullRefPtr<Action> make_quit_action(Function<void(Action&)> callback)
 
 NonnullRefPtr<Action> make_go_back_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Go back", { Mod_Alt, Key_Left }, GraphicsBitmap::load_from_file("/res/icons/16x16/go-back.png"), move(callback), parent);
+    return Action::create("Go back", { Mod_Alt, Key_Left }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_go_forward_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Go forward", { Mod_Alt, Key_Right }, GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), move(callback), parent);
+    return Action::create("Go forward", { Mod_Alt, Key_Right }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_go_home_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Go home", { Mod_Alt, Key_Home }, GraphicsBitmap::load_from_file("/res/icons/16x16/go-home.png"), move(callback), parent);
+    return Action::create("Go home", { Mod_Alt, Key_Home }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-home.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_reload_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Reload", { Mod_Ctrl, Key_R }, GraphicsBitmap::load_from_file("/res/icons/16x16/reload.png"), move(callback), parent);
+    return Action::create("Reload", { Mod_Ctrl, Key_R }, Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"), move(callback), parent);
 }
 
 }
@@ -118,7 +118,7 @@ Action::Action(const StringView& text, Function<void(Action&)> on_activation_cal
 {
 }
 
-Action::Action(const StringView& text, RefPtr<GraphicsBitmap>&& icon, Function<void(Action&)> on_activation_callback, Core::Object* parent)
+Action::Action(const StringView& text, RefPtr<Gfx::Bitmap>&& icon, Function<void(Action&)> on_activation_callback, Core::Object* parent)
     : Core::Object(parent)
     , on_activation(move(on_activation_callback))
     , m_text(text)
@@ -131,7 +131,7 @@ Action::Action(const StringView& text, const Shortcut& shortcut, Function<void(A
 {
 }
 
-Action::Action(const StringView& text, const Shortcut& shortcut, RefPtr<GraphicsBitmap>&& icon, Function<void(Action&)> on_activation_callback, Core::Object* parent)
+Action::Action(const StringView& text, const Shortcut& shortcut, RefPtr<Gfx::Bitmap>&& icon, Function<void(Action&)> on_activation_callback, Core::Object* parent)
     : Core::Object(parent)
     , on_activation(move(on_activation_callback))
     , m_text(text)

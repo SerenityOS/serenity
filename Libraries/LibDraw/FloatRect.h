@@ -35,6 +35,8 @@
 #include <LibDraw/TextAlignment.h>
 #include <math.h>
 
+namespace Gfx {
+
 class FloatRect {
 public:
     FloatRect() {}
@@ -324,3 +326,7 @@ inline Rect enclosing_int_rect(const FloatRect& float_rect)
 {
     return { (int)float_rect.x(), (int)float_rect.y(), (int)ceilf(float_rect.width()), (int)ceilf(float_rect.height()) };
 }
+
+}
+
+using Gfx::FloatRect;

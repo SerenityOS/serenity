@@ -49,7 +49,7 @@ private:
     virtual const char* class_name() const override { return "SprayTool"; }
     void paint_it();
     RefPtr<Core::Timer> m_timer;
-    Point m_last_pos;
+    Gfx::Point m_last_pos;
     Color m_color;
     RefPtr<GUI::Menu> m_context_menu;
     GUI::ActionGroup m_thickness_actions;

@@ -27,6 +27,8 @@
 #include <LibCore/CConfigFile.h>
 #include <LibDraw/SystemTheme.h>
 
+namespace Gfx {
+
 static SystemTheme dummy_theme;
 static const SystemTheme* theme_page = &dummy_theme;
 static RefPtr<SharedBuffer> theme_buffer;
@@ -108,4 +110,6 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
     buffer->share_globally();
 
     return buffer;
+}
+
 }

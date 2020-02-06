@@ -94,7 +94,7 @@ const WidgetClassRegistration* WidgetClassRegistration::find(const String& class
 
 Widget::Widget(Widget* parent)
     : Core::Object(parent, true)
-    , m_font(Font::default_font())
+    , m_font(Gfx::Font::default_font())
     , m_palette(Application::the().palette().impl())
 {
 }
@@ -125,7 +125,7 @@ void Widget::child_event(Core::ChildEvent& event)
     return Core::Object::child_event(event);
 }
 
-void Widget::set_relative_rect(const Rect& a_rect)
+void Widget::set_relative_rect(const Gfx::Rect& a_rect)
 {
     // Get rid of negative width/height values.
     Rect rect = {
@@ -391,7 +391,7 @@ void Widget::update()
     update(rect());
 }
 
-void Widget::update(const Rect& rect)
+void Widget::update(const Gfx::Rect& rect)
 {
     if (!is_visible())
         return;
@@ -425,7 +425,7 @@ Rect Widget::screen_relative_rect() const
     return window_relative_rect().translated(window()->position());
 }
 
-Widget* Widget::child_at(const Point& point) const
+Widget* Widget::child_at(const Gfx::Point& point) const
 {
     for (int i = children().size() - 1; i >= 0; --i) {
         if (!Core::is<Widget>(children()[i]))
@@ -439,7 +439,7 @@ Widget* Widget::child_at(const Point& point) const
     return nullptr;
 }
 
-Widget::HitTestResult Widget::hit_test(const Point& position, ShouldRespectGreediness should_respect_greediness)
+Widget::HitTestResult Widget::hit_test(const Gfx::Point& position, ShouldRespectGreediness should_respect_greediness)
 {
     if (should_respect_greediness == ShouldRespectGreediness::Yes && is_greedy_for_hits())
         return { this, position };
@@ -478,13 +478,13 @@ void Widget::set_focus(bool focus)
     }
 }
 
-void Widget::set_font(const Font* font)
+void Widget::set_font(const Gfx::Font* font)
 {
     if (m_font.ptr() == font)
         return;
 
     if (!font)
-        m_font = Font::default_font();
+        m_font = Gfx::Font::default_font();
     else
         m_font = *font;
 
@@ -508,7 +508,7 @@ bool Widget::global_cursor_tracking() const
     return win->global_cursor_tracking_widget() == this;
 }
 
-void Widget::set_preferred_size(const Size& size)
+void Widget::set_preferred_size(const Gfx::Size& size)
 {
     if (m_preferred_size == size)
         return;

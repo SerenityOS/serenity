@@ -26,7 +26,13 @@
 
 #pragma once
 
+namespace Gfx {
+
 enum class Orientation {
     Horizontal,
     Vertical
 };
+
+}
+
+using Gfx::Orientation;

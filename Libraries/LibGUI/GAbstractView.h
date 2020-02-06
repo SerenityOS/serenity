@@ -56,7 +56,7 @@ public:
     virtual void did_update_selection();
 
     virtual Rect content_rect(const ModelIndex&) const { return {}; }
-    virtual ModelIndex index_at_event_position(const Point&) const = 0;
+    virtual ModelIndex index_at_event_position(const Gfx::Point&) const = 0;
     void begin_editing(const ModelIndex&);
     void stop_editing();
 
@@ -72,7 +72,7 @@ public:
 
     void notify_selection_changed(Badge<ModelSelection>);
 
-    NonnullRefPtr<Font> font_for_index(const ModelIndex&) const;
+    NonnullRefPtr<Gfx::Font> font_for_index(const ModelIndex&) const;
 
 protected:
     explicit AbstractView(Widget* parent);
@@ -92,9 +92,9 @@ protected:
     bool m_editable { false };
     ModelIndex m_edit_index;
     RefPtr<Widget> m_edit_widget;
-    Rect m_edit_widget_content_rect;
+    Gfx::Rect m_edit_widget_content_rect;
 
-    Point m_left_mousedown_position;
+    Gfx::Point m_left_mousedown_position;
     bool m_might_drag { false };
 
 private:

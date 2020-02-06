@@ -62,10 +62,10 @@ MemoryStatsWidget::MemoryStatsWidget(GraphWidget& graph, GUI::Widget* parent)
         container->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
         container->set_preferred_size(275, 12);
         auto description_label = GUI::Label::construct(description, container);
-        description_label->set_font(Font::default_bold_font());
-        description_label->set_text_alignment(TextAlignment::CenterLeft);
+        description_label->set_font(Gfx::Font::default_bold_font());
+        description_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         auto label = GUI::Label::construct(container);
-        label->set_text_alignment(TextAlignment::CenterRight);
+        label->set_text_alignment(Gfx::TextAlignment::CenterRight);
         return label;
     };
 

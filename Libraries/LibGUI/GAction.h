@@ -76,7 +76,7 @@ public:
     {
         return adopt(*new Action(text, move(callback), parent));
     }
-    static NonnullRefPtr<Action> create(const StringView& text, RefPtr<GraphicsBitmap>&& icon, Function<void(Action&)> callback, Core::Object* parent = nullptr)
+    static NonnullRefPtr<Action> create(const StringView& text, RefPtr<Gfx::Bitmap>&& icon, Function<void(Action&)> callback, Core::Object* parent = nullptr)
     {
         return adopt(*new Action(text, move(icon), move(callback), parent));
     }
@@ -84,7 +84,7 @@ public:
     {
         return adopt(*new Action(text, shortcut, move(callback), parent));
     }
-    static NonnullRefPtr<Action> create(const StringView& text, const Shortcut& shortcut, RefPtr<GraphicsBitmap>&& icon, Function<void(Action&)> callback, Core::Object* parent = nullptr)
+    static NonnullRefPtr<Action> create(const StringView& text, const Shortcut& shortcut, RefPtr<Gfx::Bitmap>&& icon, Function<void(Action&)> callback, Core::Object* parent = nullptr)
     {
         return adopt(*new Action(text, shortcut, move(icon), move(callback), parent));
     }
@@ -92,8 +92,8 @@ public:
 
     String text() const { return m_text; }
     Shortcut shortcut() const { return m_shortcut; }
-    const GraphicsBitmap* icon() const { return m_icon.ptr(); }
-    void set_icon(const GraphicsBitmap* icon) { m_icon = icon; }
+    const Gfx::Bitmap* icon() const { return m_icon.ptr(); }
+    void set_icon(const Gfx::Bitmap* icon) { m_icon = icon; }
 
     const Core::Object* activator() const { return m_activator.ptr(); }
     Core::Object* activator() { return m_activator.ptr(); }
@@ -128,8 +128,8 @@ private:
 
     Action(const StringView& text, Function<void(Action&)> = nullptr, Core::Object* = nullptr);
     Action(const StringView& text, const Shortcut&, Function<void(Action&)> = nullptr, Core::Object* = nullptr);
-    Action(const StringView& text, const Shortcut&, RefPtr<GraphicsBitmap>&& icon, Function<void(Action&)> = nullptr, Core::Object* = nullptr);
-    Action(const StringView& text, RefPtr<GraphicsBitmap>&& icon, Function<void(Action&)> = nullptr, Core::Object* = nullptr);
+    Action(const StringView& text, const Shortcut&, RefPtr<Gfx::Bitmap>&& icon, Function<void(Action&)> = nullptr, Core::Object* = nullptr);
+    Action(const StringView& text, RefPtr<Gfx::Bitmap>&& icon, Function<void(Action&)> = nullptr, Core::Object* = nullptr);
 
     template<typename Callback>
     void for_each_toolbar_button(Callback);
@@ -137,7 +137,7 @@ private:
     void for_each_menu_item(Callback);
 
     String m_text;
-    RefPtr<GraphicsBitmap> m_icon;
+    RefPtr<Gfx::Bitmap> m_icon;
     Shortcut m_shortcut;
     bool m_enabled { true };
     bool m_checkable { false };

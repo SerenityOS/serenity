@@ -44,7 +44,9 @@
     extern WidgetClassRegistration registration_##class_name; \
     WidgetClassRegistration registration_##class_name(#class_name, [](Widget* parent) { return class_name::construct(parent); });
 
-class GraphicsBitmap;
+namespace Gfx {
+class Bitmap;
+}
 
 namespace GUI {
 class Widget;
@@ -123,7 +125,7 @@ public:
     void set_size_policy(Orientation, SizePolicy);
 
     Size preferred_size() const { return m_preferred_size; }
-    void set_preferred_size(const Size&);
+    void set_preferred_size(const Gfx::Size&);
     void set_preferred_size(int width, int height) { set_preferred_size({ width, height }); }
 
     bool has_tooltip() const { return !m_tooltip.is_empty(); }
@@ -157,7 +159,7 @@ public:
     Size size() const { return m_relative_rect.size(); }
 
     void update();
-    void update(const Rect&);
+    void update(const Gfx::Rect&);
 
     virtual bool accepts_focus() const { return false; }
 
@@ -170,10 +172,10 @@ public:
         Widget* widget { nullptr };
         Point local_position;
     };
-    HitTestResult hit_test(const Point&, ShouldRespectGreediness = ShouldRespectGreediness::Yes);
-    Widget* child_at(const Point&) const;
+    HitTestResult hit_test(const Gfx::Point&, ShouldRespectGreediness = ShouldRespectGreediness::Yes);
+    Widget* child_at(const Gfx::Point&) const;
 
-    void set_relative_rect(const Rect&);
+    void set_relative_rect(const Gfx::Rect&);
     void set_relative_rect(int x, int y, int width, int height) { set_relative_rect({ x, y, width, height }); }
 
     void set_x(int x) { set_relative_rect(x, y(), width(), height()); }
@@ -181,13 +183,13 @@ public:
     void set_width(int width) { set_relative_rect(x(), y(), width, height()); }
     void set_height(int height) { set_relative_rect(x(), y(), width(), height); }
 
-    void move_to(const Point& point) { set_relative_rect({ point, relative_rect().size() }); }
+    void move_to(const Gfx::Point& point) { set_relative_rect({ point, relative_rect().size() }); }
     void move_to(int x, int y) { move_to({ x, y }); }
-    void resize(const Size& size) { set_relative_rect({ relative_rect().location(), size }); }
+    void resize(const Gfx::Size& size) { set_relative_rect({ relative_rect().location(), size }); }
     void resize(int width, int height) { resize({ width, height }); }
 
     void move_by(int x, int y) { move_by({ x, y }); }
-    void move_by(const Point& delta) { set_relative_rect({ relative_position().translated(delta), size() }); }
+    void move_by(const Gfx::Point& delta) { set_relative_rect({ relative_position().translated(delta), size() }); }
 
     ColorRole background_role() const { return m_background_role; }
     void set_background_role(ColorRole role) { m_background_role = role; }
@@ -228,9 +230,9 @@ public:
     void set_fill_with_background_color(bool b) { m_fill_with_background_color = b; }
     bool fill_with_background_color() const { return m_fill_with_background_color; }
 
-    const Font& font() const { return *m_font; }
-    void set_font(const Font*);
-    void set_font(const Font& font) { set_font(&font); }
+    const Gfx::Font& font() const { return *m_font; }
+    void set_font(const Gfx::Font*);
+    void set_font(const Gfx::Font& font) { set_font(&font); }
 
     void set_global_cursor_tracking(bool);
     bool global_cursor_tracking() const;
@@ -316,17 +318,17 @@ private:
     Window* m_window { nullptr };
     OwnPtr<Layout> m_layout;
 
-    Rect m_relative_rect;
+    Gfx::Rect m_relative_rect;
     ColorRole m_background_role { ColorRole::Window };
     ColorRole m_foreground_role { ColorRole::WindowText };
     Color m_background_color;
     Color m_foreground_color;
-    NonnullRefPtr<Font> m_font;
+    NonnullRefPtr<Gfx::Font> m_font;
     String m_tooltip;
 
     SizePolicy m_horizontal_size_policy { SizePolicy::Fill };
     SizePolicy m_vertical_size_policy { SizePolicy::Fill };
-    Size m_preferred_size;
+    Gfx::Size m_preferred_size;
 
     bool m_fill_with_background_color { false };
     bool m_visible { true };
@@ -334,7 +336,7 @@ private:
     bool m_enabled { true };
     bool m_updates_enabled { true };
 
-    NonnullRefPtr<PaletteImpl> m_palette;
+    NonnullRefPtr<Gfx::PaletteImpl> m_palette;
 };
 
 inline Widget* Widget::parent_widget()

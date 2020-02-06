@@ -75,7 +75,7 @@ void ToolBar::add_action(Action& action)
     else
         button->set_text(item->action->text());
 
-    button->set_button_style(ButtonStyle::CoolBar);
+    button->set_button_style(Gfx::ButtonStyle::CoolBar);
     button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     ASSERT(button->size_policy(Orientation::Horizontal) == SizePolicy::Fixed);
     ASSERT(button->size_policy(Orientation::Vertical) == SizePolicy::Fixed);
@@ -119,7 +119,7 @@ void ToolBar::paint_event(PaintEvent& event)
     painter.add_clip_rect(event.rect());
 
     if (m_has_frame)
-        StylePainter::paint_surface(painter, rect(), palette(), x() != 0, y() != 0);
+        Gfx::StylePainter::paint_surface(painter, rect(), palette(), x() != 0, y() != 0);
     else
         painter.fill_rect(event.rect(), palette().button());
 }

@@ -63,7 +63,7 @@ int main(int argc, char** argv)
     window->set_main_widget(calc_widget);
 
     window->show();
-    window->set_icon(GraphicsBitmap::load_from_file("/res/icons/16x16/app-calculator.png"));
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-calculator.png"));
 
     auto menubar = make<GUI::MenuBar>();
 
@@ -76,7 +76,7 @@ int main(int argc, char** argv)
 
     auto help_menu = GUI::Menu::construct("Help");
     help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
-        GUI::AboutDialog::show("Calculator", load_png("/res/icons/16x16/app-calculator.png"), window);
+        GUI::AboutDialog::show("Calculator", Gfx::load_png("/res/icons/16x16/app-calculator.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 

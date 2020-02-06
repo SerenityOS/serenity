@@ -161,7 +161,7 @@ void AbstractView::notify_selection_changed(Badge<ModelSelection>)
     update();
 }
 
-NonnullRefPtr<Font> AbstractView::font_for_index(const ModelIndex& index) const
+NonnullRefPtr<Gfx::Font> AbstractView::font_for_index(const ModelIndex& index) const
 {
     if (!model())
         return font();
@@ -226,7 +226,7 @@ void AbstractView::mousemove_event(MouseEvent& event)
     dbg() << "Initiate drag!";
     auto drag_operation = DragOperation::construct();
 
-    RefPtr<GraphicsBitmap> bitmap;
+    RefPtr<Gfx::Bitmap> bitmap;
 
     StringBuilder text_builder;
     StringBuilder data_builder;

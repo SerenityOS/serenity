@@ -26,6 +26,8 @@
 
 #pragma once
 
+namespace Gfx {
+
 enum class TextAlignment {
     TopLeft,
     CenterLeft,
@@ -43,4 +45,6 @@ inline bool is_right_text_alignment(TextAlignment alignment)
     default:
         return false;
     }
+}
+
 }

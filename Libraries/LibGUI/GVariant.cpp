@@ -183,10 +183,10 @@ Variant::Variant(const JsonValue& value)
     ASSERT_NOT_REACHED();
 }
 
-Variant::Variant(const GraphicsBitmap& value)
+Variant::Variant(const Gfx::Bitmap& value)
     : m_type(Type::Bitmap)
 {
-    m_value.as_bitmap = const_cast<GraphicsBitmap*>(&value);
+    m_value.as_bitmap = const_cast<Gfx::Bitmap*>(&value);
     AK::ref_if_not_null(m_value.as_bitmap);
 }
 
@@ -197,10 +197,10 @@ Variant::Variant(const GIcon& value)
     AK::ref_if_not_null(m_value.as_icon);
 }
 
-Variant::Variant(const Font& value)
+Variant::Variant(const Gfx::Font& value)
     : m_type(Type::Font)
 {
-    m_value.as_font = &const_cast<Font&>(value);
+    m_value.as_font = &const_cast<Gfx::Font&>(value);
     AK::ref_if_not_null(m_value.as_font);
 }
 
@@ -210,19 +210,19 @@ Variant::Variant(Color color)
     m_value.as_color = color.value();
 }
 
-Variant::Variant(const Point& point)
+Variant::Variant(const Gfx::Point& point)
     : m_type(Type::Point)
 {
     m_value.as_point = { point.x(), point.y() };
 }
 
-Variant::Variant(const Size& size)
+Variant::Variant(const Gfx::Size& size)
     : m_type(Type::Size)
 {
     m_value.as_size = { size.width(), size.height() };
 }
 
-Variant::Variant(const Rect& rect)
+Variant::Variant(const Gfx::Rect& rect)
     : m_type(Type::Rect)
 {
     m_value.as_rect = (const RawRect&)rect;

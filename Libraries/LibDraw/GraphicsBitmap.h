@@ -36,7 +36,9 @@
 #include <AK/String.h>
 #include <AK/StringView.h>
 
-class GraphicsBitmap : public RefCounted<GraphicsBitmap> {
+namespace Gfx {
+
+class Bitmap : public RefCounted<Bitmap> {
 public:
     enum class Format {
         Invalid,
@@ -45,16 +47,16 @@ public:
         Indexed8
     };
 
-    static NonnullRefPtr<GraphicsBitmap> create(Format, const Size&);
-    static NonnullRefPtr<GraphicsBitmap> create_purgeable(Format, const Size&);
-    static NonnullRefPtr<GraphicsBitmap> create_wrapper(Format, const Size&, size_t pitch, RGBA32*);
-    static RefPtr<GraphicsBitmap> load_from_file(const StringView& path);
-    static RefPtr<GraphicsBitmap> load_from_file(Format, const StringView& path, const Size&);
-    static NonnullRefPtr<GraphicsBitmap> create_with_shared_buffer(Format, NonnullRefPtr<SharedBuffer>&&, const Size&);
+    static NonnullRefPtr<Bitmap> create(Format, const Size&);
+    static NonnullRefPtr<Bitmap> create_purgeable(Format, const Size&);
+    static NonnullRefPtr<Bitmap> create_wrapper(Format, const Size&, size_t pitch, RGBA32*);
+    static RefPtr<Bitmap> load_from_file(const StringView& path);
+    static RefPtr<Bitmap> load_from_file(Format, const StringView& path, const Size&);
+    static NonnullRefPtr<Bitmap> create_with_shared_buffer(Format, NonnullRefPtr<SharedBuffer>&&, const Size&);
 
-    NonnullRefPtr<GraphicsBitmap> to_shareable_bitmap() const;
+    NonnullRefPtr<Bitmap> to_shareable_bitmap() const;
 
-    ~GraphicsBitmap();
+    ~Bitmap();
 
     RGBA32* scanline(int y);
     const RGBA32* scanline(int y) const;
@@ -137,10 +139,10 @@ public:
 private:
     enum class Purgeable { No,
         Yes };
-    GraphicsBitmap(Format, const Size&, Purgeable);
-    GraphicsBitmap(Format, const Size&, size_t pitch, RGBA32*);
-    GraphicsBitmap(Format, const Size&, MappedFile&&);
-    GraphicsBitmap(Format, NonnullRefPtr<SharedBuffer>&&, const Size&);
+    Bitmap(Format, const Size&, Purgeable);
+    Bitmap(Format, const Size&, size_t pitch, RGBA32*);
+    Bitmap(Format, const Size&, MappedFile&&);
+    Bitmap(Format, NonnullRefPtr<SharedBuffer>&&, const Size&);
 
     Size m_size;
     RGBA32* m_data { nullptr };
@@ -154,45 +156,45 @@ private:
     RefPtr<SharedBuffer> m_shared_buffer;
 };
 
-inline RGBA32* GraphicsBitmap::scanline(int y)
+inline RGBA32* Bitmap::scanline(int y)
 {
     return reinterpret_cast<RGBA32*>((((u8*)m_data) + (y * m_pitch)));
 }
 
-inline const RGBA32* GraphicsBitmap::scanline(int y) const
+inline const RGBA32* Bitmap::scanline(int y) const
 {
     return reinterpret_cast<const RGBA32*>((((const u8*)m_data) + (y * m_pitch)));
 }
 
-inline const u8* GraphicsBitmap::bits(int y) const
+inline const u8* Bitmap::bits(int y) const
 {
     return reinterpret_cast<const u8*>(scanline(y));
 }
 
-inline u8* GraphicsBitmap::bits(int y)
+inline u8* Bitmap::bits(int y)
 {
     return reinterpret_cast<u8*>(scanline(y));
 }
 
 template<>
-inline Color GraphicsBitmap::get_pixel<GraphicsBitmap::Format::RGB32>(int x, int y) const
+inline Color Bitmap::get_pixel<Bitmap::Format::RGB32>(int x, int y) const
 {
     return Color::from_rgb(scanline(y)[x]);
 }
 
 template<>
-inline Color GraphicsBitmap::get_pixel<GraphicsBitmap::Format::RGBA32>(int x, int y) const
+inline Color Bitmap::get_pixel<Bitmap::Format::RGBA32>(int x, int y) const
 {
     return Color::from_rgba(scanline(y)[x]);
 }
 
 template<>
-inline Color GraphicsBitmap::get_pixel<GraphicsBitmap::Format::Indexed8>(int x, int y) const
+inline Color Bitmap::get_pixel<Bitmap::Format::Indexed8>(int x, int y) const
 {
     return Color::from_rgba(m_palette[bits(y)[x]]);
 }
 
-inline Color GraphicsBitmap::get_pixel(int x, int y) const
+inline Color Bitmap::get_pixel(int x, int y) const
 {
     switch (m_format) {
     case Format::RGB32:
@@ -208,18 +210,18 @@ inline Color GraphicsBitmap::get_pixel(int x, int y) const
 }
 
 template<>
-inline void GraphicsBitmap::set_pixel<GraphicsBitmap::Format::RGB32>(int x, int y, Color color)
+inline void Bitmap::set_pixel<Bitmap::Format::RGB32>(int x, int y, Color color)
 {
     scanline(y)[x] = color.value();
 }
 
 template<>
-inline void GraphicsBitmap::set_pixel<GraphicsBitmap::Format::RGBA32>(int x, int y, Color color)
+inline void Bitmap::set_pixel<Bitmap::Format::RGBA32>(int x, int y, Color color)
 {
     scanline(y)[x] = color.value();
 }
 
-inline void GraphicsBitmap::set_pixel(int x, int y, Color color)
+inline void Bitmap::set_pixel(int x, int y, Color color)
 {
     switch (m_format) {
     case Format::RGB32:
@@ -233,4 +235,6 @@ inline void GraphicsBitmap::set_pixel(int x, int y, Color color)
     default:
         ASSERT_NOT_REACHED();
     }
+}
+
 }

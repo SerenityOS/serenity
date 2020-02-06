@@ -38,8 +38,8 @@ ProcessUnveiledPathsWidget::ProcessUnveiledPathsWidget(GUI::Widget* parent)
     m_table_view->set_size_columns_to_fit_content(true);
 
     Vector<GUI::JsonArrayModel::FieldSpec> pid_unveil_fields;
-    pid_unveil_fields.empend("path", "Path", TextAlignment::CenterLeft);
-    pid_unveil_fields.empend("permissions", "Permissions", TextAlignment::CenterLeft);
+    pid_unveil_fields.empend("path", "Path", Gfx::TextAlignment::CenterLeft);
+    pid_unveil_fields.empend("permissions", "Permissions", Gfx::TextAlignment::CenterLeft);
     m_table_view->set_model(GUI::JsonArrayModel::create({}, move(pid_unveil_fields)));
 }
 

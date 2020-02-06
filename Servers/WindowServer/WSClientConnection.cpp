@@ -88,7 +88,7 @@ void WSClientConnection::die()
     });
 }
 
-void WSClientConnection::notify_about_new_screen_rect(const Rect& rect)
+void WSClientConnection::notify_about_new_screen_rect(const Gfx::Rect& rect)
 {
     post_message(WindowClient::ScreenRectChanged(rect));
 }
@@ -193,7 +193,7 @@ OwnPtr<WindowServer::AddMenuItemResponse> WSClientConnection::handle(const Windo
         if (!icon_buffer)
             return nullptr;
         // FIXME: Verify that the icon buffer can accomodate a 16x16 bitmap view.
-        auto shared_icon = GraphicsBitmap::create_with_shared_buffer(GraphicsBitmap::Format::RGBA32, icon_buffer.release_nonnull(), { 16, 16 });
+        auto shared_icon = Gfx::Bitmap::create_with_shared_buffer(Gfx::Bitmap::Format::RGBA32, icon_buffer.release_nonnull(), { 16, 16 });
         menu_item->set_icon(shared_icon);
     }
     menu_item->set_submenu_id(message.submenu_id());
@@ -351,7 +351,7 @@ OwnPtr<WindowServer::SetWindowIconBitmapResponse> WSClientConnection::handle(con
     if (!icon_buffer) {
         window.set_default_icon();
     } else {
-        window.set_icon(GraphicsBitmap::create_with_shared_buffer(GraphicsBitmap::Format::RGBA32, *icon_buffer, message.icon_size()));
+        window.set_icon(Gfx::Bitmap::create_with_shared_buffer(Gfx::Bitmap::Format::RGBA32, *icon_buffer, message.icon_size()));
     }
 
     window.frame().invalidate_title_bar();
@@ -512,8 +512,8 @@ OwnPtr<WindowServer::SetWindowBackingStoreResponse> WSClientConnection::handle(c
         auto shared_buffer = SharedBuffer::create_from_shared_buffer_id(message.shared_buffer_id());
         if (!shared_buffer)
             return make<WindowServer::SetWindowBackingStoreResponse>();
-        auto backing_store = GraphicsBitmap::create_with_shared_buffer(
-            message.has_alpha_channel() ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32,
+        auto backing_store = Gfx::Bitmap::create_with_shared_buffer(
+            message.has_alpha_channel() ? Gfx::Bitmap::Format::RGBA32 : Gfx::Bitmap::Format::RGB32,
             *shared_buffer,
             message.size());
         window.set_backing_store(move(backing_store));
@@ -629,7 +629,7 @@ void WSClientConnection::handle(const WindowServer::WM_SetWindowMinimized& messa
 
 OwnPtr<WindowServer::GreetResponse> WSClientConnection::handle(const WindowServer::Greet&)
 {
-    return make<WindowServer::GreetResponse>(client_id(), WSScreen::the().rect(), current_system_theme_buffer_id());
+    return make<WindowServer::GreetResponse>(client_id(), WSScreen::the().rect(), Gfx::current_system_theme_buffer_id());
 }
 
 bool WSClientConnection::is_showing_modal_window() const
@@ -664,15 +664,15 @@ OwnPtr<WindowServer::StartDragResponse> WSClientConnection::handle(const WindowS
     if (wm.dnd_client())
         return make<WindowServer::StartDragResponse>(false);
 
-    RefPtr<GraphicsBitmap> bitmap;
+    RefPtr<Gfx::Bitmap> bitmap;
     if (message.bitmap_id() != -1) {
         auto shared_buffer = SharedBuffer::create_from_shared_buffer_id(message.bitmap_id());
-        ssize_t size_in_bytes = message.bitmap_size().area() * sizeof(RGBA32);
+        ssize_t size_in_bytes = message.bitmap_size().area() * sizeof(Gfx::RGBA32);
         if (size_in_bytes > shared_buffer->size()) {
             did_misbehave("SetAppletBackingStore: Shared buffer is too small for applet size");
             return nullptr;
         }
-        bitmap = GraphicsBitmap::create_with_shared_buffer(GraphicsBitmap::Format::RGBA32, *shared_buffer, message.bitmap_size());
+        bitmap = Gfx::Bitmap::create_with_shared_buffer(Gfx::Bitmap::Format::RGBA32, *shared_buffer, message.bitmap_size());
     }
 
     wm.start_dnd_drag(*this, message.text(), bitmap, message.data_type(), message.data());

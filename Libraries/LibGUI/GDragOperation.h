@@ -29,7 +29,9 @@
 #include <LibCore/CEventLoop.h>
 #include <LibCore/CObject.h>
 
-class GraphicsBitmap;
+namespace Gfx {
+class Bitmap;
+}
 
 namespace GUI {
 
@@ -47,7 +49,7 @@ public:
     virtual ~DragOperation() override;
 
     void set_text(const String& text) { m_text = text; }
-    void set_bitmap(const GraphicsBitmap* bitmap) { m_bitmap = bitmap; }
+    void set_bitmap(const Gfx::Bitmap* bitmap) { m_bitmap = bitmap; }
     void set_data(const String& data_type, const String& data)
     {
         m_data_type = data_type;
@@ -71,7 +73,7 @@ private:
     String m_text;
     String m_data_type;
     String m_data;
-    RefPtr<GraphicsBitmap> m_bitmap;
+    RefPtr<Gfx::Bitmap> m_bitmap;
 };
 
 }

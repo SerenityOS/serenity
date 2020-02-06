@@ -35,10 +35,10 @@ SnakeGame::SnakeGame(GUI::Widget* parent)
     : GUI::Widget(parent)
 {
     set_font(GFontDatabase::the().get_by_name("Liza Regular"));
-    m_fruit_bitmaps.append(*GraphicsBitmap::load_from_file("/res/icons/snake/paprika.png"));
-    m_fruit_bitmaps.append(*GraphicsBitmap::load_from_file("/res/icons/snake/eggplant.png"));
-    m_fruit_bitmaps.append(*GraphicsBitmap::load_from_file("/res/icons/snake/cauliflower.png"));
-    m_fruit_bitmaps.append(*GraphicsBitmap::load_from_file("/res/icons/snake/tomato.png"));
+    m_fruit_bitmaps.append(*Gfx::Bitmap::load_from_file("/res/icons/snake/paprika.png"));
+    m_fruit_bitmaps.append(*Gfx::Bitmap::load_from_file("/res/icons/snake/eggplant.png"));
+    m_fruit_bitmaps.append(*Gfx::Bitmap::load_from_file("/res/icons/snake/cauliflower.png"));
+    m_fruit_bitmaps.append(*Gfx::Bitmap::load_from_file("/res/icons/snake/tomato.png"));
     srand(time(nullptr));
     reset();
 
@@ -228,8 +228,8 @@ void SnakeGame::paint_event(GUI::PaintEvent& event)
 
     painter.draw_scaled_bitmap(cell_rect(m_fruit), m_fruit_bitmaps[m_fruit_type], m_fruit_bitmaps[m_fruit_type].rect());
 
-    painter.draw_text(high_score_rect(), m_high_score_text, TextAlignment::TopLeft, Color::from_rgb(0xfafae0));
-    painter.draw_text(score_rect(), m_score_text, TextAlignment::TopLeft, Color::White);
+    painter.draw_text(high_score_rect(), m_high_score_text, Gfx::TextAlignment::TopLeft, Color::from_rgb(0xfafae0));
+    painter.draw_text(score_rect(), m_score_text, Gfx::TextAlignment::TopLeft, Color::White);
 }
 
 void SnakeGame::game_over()

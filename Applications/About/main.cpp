@@ -69,12 +69,12 @@ int main(int argc, char** argv)
     widget->layout()->set_spacing(8);
 
     auto icon_label = GUI::Label::construct(widget);
-    icon_label->set_icon(GraphicsBitmap::load_from_file("/res/icons/serenity.png"));
+    icon_label->set_icon(Gfx::Bitmap::load_from_file("/res/icons/serenity.png"));
     icon_label->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     icon_label->set_preferred_size(icon_label->icon()->size());
 
     auto label = GUI::Label::construct(widget);
-    label->set_font(Font::default_bold_font());
+    label->set_font(Gfx::Font::default_bold_font());
     label->set_text("SerenityOS");
     label->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     label->set_preferred_size(0, 11);

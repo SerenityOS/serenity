@@ -108,7 +108,7 @@ public:
 
 class WMWindowStateChangedEvent : public WMEvent {
 public:
-    WMWindowStateChangedEvent(int client_id, int window_id, const StringView& title, const Rect& rect, bool is_active, WindowType window_type, bool is_minimized)
+    WMWindowStateChangedEvent(int client_id, int window_id, const StringView& title, const Gfx::Rect& rect, bool is_active, WindowType window_type, bool is_minimized)
         : WMEvent(Event::Type::WM_WindowStateChanged, client_id, window_id)
         , m_title(title)
         , m_rect(rect)
@@ -126,7 +126,7 @@ public:
 
 private:
     String m_title;
-    Rect m_rect;
+    Gfx::Rect m_rect;
     WindowType m_window_type;
     bool m_active;
     bool m_minimized;
@@ -134,7 +134,7 @@ private:
 
 class WMWindowRectChangedEvent : public WMEvent {
 public:
-    WMWindowRectChangedEvent(int client_id, int window_id, const Rect& rect)
+    WMWindowRectChangedEvent(int client_id, int window_id, const Gfx::Rect& rect)
         : WMEvent(Event::Type::WM_WindowRectChanged, client_id, window_id)
         , m_rect(rect)
     {
@@ -143,12 +143,12 @@ public:
     Rect rect() const { return m_rect; }
 
 private:
-    Rect m_rect;
+    Gfx::Rect m_rect;
 };
 
 class WMWindowIconBitmapChangedEvent : public WMEvent {
 public:
-    WMWindowIconBitmapChangedEvent(int client_id, int window_id, int icon_buffer_id, const Size& icon_size)
+    WMWindowIconBitmapChangedEvent(int client_id, int window_id, int icon_buffer_id, const Gfx::Size& icon_size)
         : WMEvent(Event::Type::WM_WindowIconBitmapChanged, client_id, window_id)
         , m_icon_buffer_id(icon_buffer_id)
         , m_icon_size(icon_size)
@@ -156,16 +156,16 @@ public:
     }
 
     int icon_buffer_id() const { return m_icon_buffer_id; }
-    const Size& icon_size() const { return m_icon_size; }
+    const Gfx::Size& icon_size() const { return m_icon_size; }
 
 private:
     int m_icon_buffer_id;
-    Size m_icon_size;
+    Gfx::Size m_icon_size;
 };
 
 class MultiPaintEvent final : public Event {
 public:
-    explicit MultiPaintEvent(const Vector<Rect, 32>& rects, const Size& window_size)
+    explicit MultiPaintEvent(const Vector<Rect, 32>& rects, const Gfx::Size& window_size)
         : Event(Event::MultiPaint)
         , m_rects(rects)
         , m_window_size(window_size)
@@ -177,12 +177,12 @@ public:
 
 private:
     Vector<Rect, 32> m_rects;
-    Size m_window_size;
+    Gfx::Size m_window_size;
 };
 
 class PaintEvent final : public Event {
 public:
-    explicit PaintEvent(const Rect& rect, const Size& window_size = Size())
+    explicit PaintEvent(const Gfx::Rect& rect, const Gfx::Size& window_size = Size())
         : Event(Event::Paint)
         , m_rect(rect)
         , m_window_size(window_size)
@@ -193,42 +193,42 @@ public:
     Size window_size() const { return m_window_size; }
 
 private:
-    Rect m_rect;
-    Size m_window_size;
+    Gfx::Rect m_rect;
+    Gfx::Size m_window_size;
 };
 
 class ResizeEvent final : public Event {
 public:
-    explicit ResizeEvent(const Size& old_size, const Size& size)
+    explicit ResizeEvent(const Gfx::Size& old_size, const Gfx::Size& size)
         : Event(Event::Resize)
         , m_old_size(old_size)
         , m_size(size)
     {
     }
 
-    const Size& old_size() const { return m_old_size; }
-    const Size& size() const { return m_size; }
+    const Gfx::Size& old_size() const { return m_old_size; }
+    const Gfx::Size& size() const { return m_size; }
 
 private:
-    Size m_old_size;
-    Size m_size;
+    Gfx::Size m_old_size;
+    Gfx::Size m_size;
 };
 
 class ContextMenuEvent final : public Event {
 public:
-    explicit ContextMenuEvent(const Point& position, const Point& screen_position)
+    explicit ContextMenuEvent(const Gfx::Point& position, const Gfx::Point& screen_position)
         : Event(Event::ContextMenu)
         , m_position(position)
         , m_screen_position(screen_position)
     {
     }
 
-    const Point& position() const { return m_position; }
-    const Point& screen_position() const { return m_screen_position; }
+    const Gfx::Point& position() const { return m_position; }
+    const Gfx::Point& screen_position() const { return m_screen_position; }
 
 private:
-    Point m_position;
-    Point m_screen_position;
+    Gfx::Point m_position;
+    Gfx::Point m_screen_position;
 };
 
 class ShowEvent final : public Event {
@@ -280,7 +280,7 @@ private:
 
 class MouseEvent final : public Event {
 public:
-    MouseEvent(Type type, const Point& position, unsigned buttons, MouseButton button, unsigned modifiers, int wheel_delta)
+    MouseEvent(Type type, const Gfx::Point& position, unsigned buttons, MouseButton button, unsigned modifiers, int wheel_delta)
         : Event(type)
         , m_position(position)
         , m_buttons(buttons)
@@ -299,7 +299,7 @@ public:
     int wheel_delta() const { return m_wheel_delta; }
 
 private:
-    Point m_position;
+    Gfx::Point m_position;
     unsigned m_buttons { 0 };
     MouseButton m_button { MouseButton::None };
     unsigned m_modifiers { 0 };
@@ -308,7 +308,7 @@ private:
 
 class DropEvent final : public Event {
 public:
-    DropEvent(const Point& position, const String& text, const String& data_type, const String& data)
+    DropEvent(const Gfx::Point& position, const String& text, const String& data_type, const String& data)
         : Event(Event::Drop)
         , m_position(position)
         , m_text(text)
@@ -317,13 +317,13 @@ public:
     {
     }
 
-    const Point& position() const { return m_position; }
+    const Gfx::Point& position() const { return m_position; }
     const String& text() const { return m_text; }
     const String& data_type() const { return m_data_type; }
     const String& data() const { return m_data; }
 
 private:
-    Point m_position;
+    Gfx::Point m_position;
     String m_text;
     String m_data_type;
     String m_data;

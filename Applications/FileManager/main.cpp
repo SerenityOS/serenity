@@ -126,8 +126,8 @@ int main(int argc, char** argv)
     progressbar->set_caption("Generating thumbnails: ");
     progressbar->set_format(GUI::ProgressBar::Format::ValueSlashMax);
     progressbar->set_visible(false);
-    progressbar->set_frame_shape(FrameShape::Panel);
-    progressbar->set_frame_shadow(FrameShadow::Sunken);
+    progressbar->set_frame_shape(Gfx::FrameShape::Panel);
+    progressbar->set_frame_shadow(Gfx::FrameShadow::Sunken);
     progressbar->set_frame_thickness(1);
 
     location_textbox->on_return_pressed = [&] {
@@ -164,11 +164,11 @@ int main(int argc, char** argv)
     auto tree_view_directory_context_menu = GUI::Menu::construct("Tree View Directory");
     auto tree_view_context_menu = GUI::Menu::construct("Tree View");
 
-    auto open_parent_directory_action = GUI::Action::create("Open parent directory", { Mod_Alt, Key_Up }, GraphicsBitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [&](const GUI::Action&) {
+    auto open_parent_directory_action = GUI::Action::create("Open parent directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [&](const GUI::Action&) {
         directory_view->open_parent_directory();
     });
 
-    auto mkdir_action = GUI::Action::create("New directory...", { Mod_Ctrl | Mod_Shift, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&](const GUI::Action&) {
+    auto mkdir_action = GUI::Action::create("New directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&](const GUI::Action&) {
         auto input_box = GUI::InputBox::construct("Enter name:", "New directory", window);
         if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty()) {
             auto new_dir_path = canonicalized_path(
@@ -188,7 +188,7 @@ int main(int argc, char** argv)
     RefPtr<GUI::Action> view_as_icons_action;
     RefPtr<GUI::Action> view_as_columns_action;
 
-    view_as_table_action = GUI::Action::create("Table view", { Mod_Ctrl, KeyCode::Key_L }, GraphicsBitmap::load_from_file("/res/icons/16x16/table-view.png"), [&](const GUI::Action&) {
+    view_as_table_action = GUI::Action::create("Table view", { Mod_Ctrl, KeyCode::Key_L }, Gfx::Bitmap::load_from_file("/res/icons/16x16/table-view.png"), [&](const GUI::Action&) {
         directory_view->set_view_mode(DirectoryView::ViewMode::List);
         view_as_table_action->set_checked(true);
 
@@ -197,7 +197,7 @@ int main(int argc, char** argv)
     }, window);
     view_as_table_action->set_checkable(true);
 
-    view_as_icons_action = GUI::Action::create("Icon view", { Mod_Ctrl, KeyCode::Key_I }, GraphicsBitmap::load_from_file("/res/icons/16x16/icon-view.png"), [&](const GUI::Action&) {
+    view_as_icons_action = GUI::Action::create("Icon view", { Mod_Ctrl, KeyCode::Key_I }, Gfx::Bitmap::load_from_file("/res/icons/16x16/icon-view.png"), [&](const GUI::Action&) {
         directory_view->set_view_mode(DirectoryView::ViewMode::Icon);
         view_as_icons_action->set_checked(true);
 
@@ -206,7 +206,7 @@ int main(int argc, char** argv)
     }, window);
     view_as_icons_action->set_checkable(true);
 
-    view_as_columns_action = GUI::Action::create("Columns view", GraphicsBitmap::load_from_file("/res/icons/16x16/columns-view.png"), [&](const GUI::Action&) {
+    view_as_columns_action = GUI::Action::create("Columns view", Gfx::Bitmap::load_from_file("/res/icons/16x16/columns-view.png"), [&](const GUI::Action&) {
         directory_view->set_view_mode(DirectoryView::ViewMode::Columns);
         view_as_columns_action->set_checked(true);
 
@@ -298,7 +298,7 @@ int main(int argc, char** argv)
     };
 
     auto properties_action
-        = GUI::Action::create("Properties...", { Mod_Alt, Key_Return }, GraphicsBitmap::load_from_file("/res/icons/16x16/properties.png"), [&](const GUI::Action& action) {
+        = GUI::Action::create("Properties...", { Mod_Alt, Key_Return }, Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"), [&](const GUI::Action& action) {
               auto& model = directory_view->model();
               String path;
               Vector<String> selected;
@@ -445,7 +445,7 @@ int main(int argc, char** argv)
 
     auto help_menu = GUI::Menu::construct("Help");
     help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
-        GUI::AboutDialog::show("File Manager", load_png("/res/icons/32x32/filetype-folder.png"), window);
+        GUI::AboutDialog::show("File Manager", Gfx::load_png("/res/icons/32x32/filetype-folder.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 
@@ -502,7 +502,7 @@ int main(int argc, char** argv)
         delete_action->set_enabled(!view.selection().is_empty());
     };
 
-    auto open_in_text_editor_action = GUI::Action::create("Open in TextEditor...", GraphicsBitmap::load_from_file("/res/icons/TextEditor16.png"), [&](auto&) {
+    auto open_in_text_editor_action = GUI::Action::create("Open in TextEditor...", Gfx::Bitmap::load_from_file("/res/icons/TextEditor16.png"), [&](auto&) {
         for (auto& path : selected_file_paths()) {
             if (!fork()) {
                 int rc = execl("/bin/TextEditor", "TextEditor", path.characters(), nullptr);
@@ -587,7 +587,7 @@ int main(int argc, char** argv)
     window->set_main_widget(widget);
     window->show();
 
-    window->set_icon(load_png("/res/icons/16x16/filetype-folder.png"));
+    window->set_icon(Gfx::load_png("/res/icons/16x16/filetype-folder.png"));
 
     // Read direcory read mode from config.
     auto dir_view_mode = config->read_entry("DirectoryView", "ViewMode", "Icon");

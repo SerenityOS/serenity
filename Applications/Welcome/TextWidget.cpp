@@ -75,10 +75,10 @@ void TextWidget::paint_event(GUI::PaintEvent& event)
             text_rect.set_width(text_rect.width() - indent * 2);
 
         if (is_enabled()) {
-            painter.draw_text(text_rect, line, m_text_alignment, palette().color(foreground_role()), TextElision::None);
+            painter.draw_text(text_rect, line, m_text_alignment, palette().color(foreground_role()), Gfx::TextElision::None);
         } else {
-            painter.draw_text(text_rect.translated(1, 1), line, font(), text_alignment(), Color::White, TextElision::Right);
-            painter.draw_text(text_rect, line, font(), text_alignment(), Color::from_rgb(0x808080), TextElision::Right);
+            painter.draw_text(text_rect.translated(1, 1), line, font(), text_alignment(), Color::White, Gfx::TextElision::Right);
+            painter.draw_text(text_rect, line, font(), text_alignment(), Color::from_rgb(0x808080), Gfx::TextElision::Right);
         }
     }
 }

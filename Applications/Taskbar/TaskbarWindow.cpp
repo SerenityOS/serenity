@@ -44,7 +44,7 @@ TaskbarWindow::TaskbarWindow()
 
     on_screen_rect_change(GUI::Desktop::the().rect());
 
-    GUI::Desktop::the().on_rect_change = [this](const Rect& rect) { on_screen_rect_change(rect); };
+    GUI::Desktop::the().on_rect_change = [this](const Gfx::Rect& rect) { on_screen_rect_change(rect); };
 
     auto widget = GUI::Frame::construct();
     widget->set_fill_with_background_color(true);
@@ -52,8 +52,8 @@ TaskbarWindow::TaskbarWindow()
     widget->layout()->set_margins({ 3, 2, 3, 2 });
     widget->layout()->set_spacing(3);
     widget->set_frame_thickness(1);
-    widget->set_frame_shape(FrameShape::Panel);
-    widget->set_frame_shadow(FrameShadow::Raised);
+    widget->set_frame_shape(Gfx::FrameShape::Panel);
+    widget->set_frame_shadow(Gfx::FrameShadow::Raised);
     set_main_widget(widget);
 
     WindowList::the().aid_create_button = [this](auto& identifier) {
@@ -75,8 +75,8 @@ void TaskbarWindow::create_quick_launch_bar()
     quick_launch_bar->layout()->set_spacing(3);
     quick_launch_bar->layout()->set_margins({ 3, 0, 3, 0 });
     quick_launch_bar->set_frame_thickness(1);
-    quick_launch_bar->set_frame_shape(FrameShape::Container);
-    quick_launch_bar->set_frame_shadow(FrameShadow::Raised);
+    quick_launch_bar->set_frame_shape(Gfx::FrameShape::Container);
+    quick_launch_bar->set_frame_shadow(Gfx::FrameShadow::Raised);
 
     int total_width = 6;
     bool first = true;
@@ -96,9 +96,9 @@ void TaskbarWindow::create_quick_launch_bar()
         auto button = GUI::Button::construct(quick_launch_bar);
         button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
         button->set_preferred_size(22, 22);
-        button->set_button_style(ButtonStyle::CoolBar);
+        button->set_button_style(Gfx::ButtonStyle::CoolBar);
 
-        button->set_icon(GraphicsBitmap::load_from_file(app_icon_path));
+        button->set_icon(Gfx::Bitmap::load_from_file(app_icon_path));
         // FIXME: the tooltip ends up outside the screen rect.
         button->set_tooltip(name);
         button->on_click = [app_executable](auto&) {
@@ -121,7 +121,7 @@ void TaskbarWindow::create_quick_launch_bar()
     quick_launch_bar->set_preferred_size(total_width, 22);
 }
 
-void TaskbarWindow::on_screen_rect_change(const Rect& rect)
+void TaskbarWindow::on_screen_rect_change(const Gfx::Rect& rect)
 {
     Rect new_rect { rect.x(), rect.bottom() - taskbar_height() + 1, rect.width(), taskbar_height() };
     set_rect(new_rect);
@@ -133,7 +133,7 @@ NonnullRefPtr<GUI::Button> TaskbarWindow::create_button(const WindowIdentifier& 
     button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     button->set_preferred_size(140, 22);
     button->set_checkable(true);
-    button->set_text_alignment(TextAlignment::CenterLeft);
+    button->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     return button;
 }
 
@@ -179,7 +179,7 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
         if (auto* window = WindowList::the().window(identifier)) {
             auto buffer = SharedBuffer::create_from_shared_buffer_id(changed_event.icon_buffer_id());
             ASSERT(buffer);
-            window->button()->set_icon(GraphicsBitmap::create_with_shared_buffer(GraphicsBitmap::Format::RGBA32, *buffer, changed_event.icon_size()));
+            window->button()->set_icon(Gfx::Bitmap::create_with_shared_buffer(Gfx::Bitmap::Format::RGBA32, *buffer, changed_event.icon_size()));
         }
         break;
     }

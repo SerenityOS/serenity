@@ -49,10 +49,10 @@ public:
     Color color_for(const GUI::MouseEvent&) const;
     Color color_for(GUI::MouseButton) const;
 
-    void set_bitmap(const GraphicsBitmap&);
+    void set_bitmap(const Gfx::Bitmap&);
 
-    GraphicsBitmap& bitmap() { return *m_bitmap; }
-    const GraphicsBitmap& bitmap() const { return *m_bitmap; }
+    Gfx::Bitmap& bitmap() { return *m_bitmap; }
+    const Gfx::Bitmap& bitmap() const { return *m_bitmap; }
 
     Function<void(Color)> on_primary_color_change;
     Function<void(Color)> on_secondary_color_change;
@@ -67,7 +67,7 @@ private:
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void keyup_event(GUI::KeyEvent&) override;
 
-    RefPtr<GraphicsBitmap> m_bitmap;
+    RefPtr<Gfx::Bitmap> m_bitmap;
 
     Color m_primary_color { Color::Black };
     Color m_secondary_color { Color::White };

@@ -102,7 +102,7 @@ WSMenuManager::WSMenuManager()
     int app_identifier = 1;
     for (const auto& app : m_apps) {
         auto parent_menu = m_app_category_menus.get(app.category).value_or(*m_system_menu);
-        parent_menu->add_item(make<WSMenuItem>(*m_system_menu, app_identifier++, app.name, String(), true, false, false, load_png(app.icon_path)));
+        parent_menu->add_item(make<WSMenuItem>(*m_system_menu, app_identifier++, app.name, String(), true, false, false, Gfx::load_png(app.icon_path)));
     }
 
     m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
@@ -140,7 +140,7 @@ WSMenuManager::WSMenuManager()
     m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 100, "Reload WM Config File"));
 
     m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
-    m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 200, "About...", String(), true, false, false, load_png("/res/icons/16x16/ladybug.png")));
+    m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 200, "About...", String(), true, false, false, Gfx::load_png("/res/icons/16x16/ladybug.png")));
     m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
     m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 300, "Shutdown..."));
     m_system_menu->on_item_activation = [this](WSMenuItem& item) {
@@ -200,10 +200,10 @@ void WSMenuManager::draw()
     auto menubar_rect = this->menubar_rect();
 
     if (m_needs_window_resize) {
-        int username_width = Font::default_bold_font().width(m_username);
+        int username_width = Gfx::Font::default_bold_font().width(m_username);
 
         m_username_rect = {
-            menubar_rect.right() - menubar_menu_margin() / 2 - Font::default_bold_font().width(m_username),
+            menubar_rect.right() - menubar_menu_margin() / 2 - Gfx::Font::default_bold_font().width(m_username),
             menubar_rect.y(),
             username_width,
             menubar_rect.height()
@@ -226,7 +226,7 @@ void WSMenuManager::draw()
         m_needs_window_resize = false;
     }
 
-    Painter painter(*window().backing_store());
+    Gfx::Painter painter(*window().backing_store());
 
     painter.fill_rect(menubar_rect, palette.window());
     painter.draw_line({ 0, menubar_rect.bottom() }, { menubar_rect.right(), menubar_rect.bottom() }, palette.threed_shadow1());
@@ -242,13 +242,13 @@ void WSMenuManager::draw()
             menu.text_rect_in_menubar(),
             menu.name(),
             index == 1 ? wm.app_menu_font() : wm.menu_font(),
-            TextAlignment::CenterLeft,
+            Gfx::TextAlignment::CenterLeft,
             text_color);
         ++index;
         return IterationDecision::Continue;
     });
 
-    painter.draw_text(m_username_rect, m_username, Font::default_bold_font(), TextAlignment::CenterRight, palette.window_text());
+    painter.draw_text(m_username_rect, m_username, Gfx::Font::default_bold_font(), Gfx::TextAlignment::CenterRight, palette.window_text());
 
     for (auto& applet : m_applets) {
         if (!applet)
@@ -482,12 +482,12 @@ void WSMenuManager::draw_applet(const WSWindow& applet)
 {
     if (!applet.backing_store())
         return;
-    Painter painter(*window().backing_store());
+    Gfx::Painter painter(*window().backing_store());
     painter.fill_rect(applet.rect_in_menubar(), WSWindowManager::the().palette().window());
     painter.blit(applet.rect_in_menubar().location(), *applet.backing_store(), applet.backing_store()->rect());
 }
 
-void WSMenuManager::invalidate_applet(const WSWindow& applet, const Rect& rect)
+void WSMenuManager::invalidate_applet(const WSWindow& applet, const Gfx::Rect& rect)
 {
     draw_applet(applet);
     window().invalidate(rect.translated(applet.rect_in_menubar().location()));
@@ -521,7 +521,7 @@ void WSMenuManager::set_current_menubar(WSMenuBar* menubar)
     Point next_menu_location { WSMenuManager::menubar_menu_margin() / 2, 0 };
     int index = 0;
     for_each_active_menubar_menu([&](WSMenu& menu) {
-        int text_width = index == 1 ? Font::default_bold_font().width(menu.name()) : Font::default_font().width(menu.name());
+        int text_width = index == 1 ? Gfx::Font::default_bold_font().width(menu.name()) : Gfx::Font::default_font().width(menu.name());
         menu.set_rect_in_menubar({ next_menu_location.x() - WSMenuManager::menubar_menu_margin() / 2, 0, text_width + WSMenuManager::menubar_menu_margin(), menubar_rect().height() - 1 });
         menu.set_text_rect_in_menubar({ next_menu_location, { text_width, menubar_rect().height() } });
         next_menu_location.move_by(menu.rect_in_menubar().width(), 0);

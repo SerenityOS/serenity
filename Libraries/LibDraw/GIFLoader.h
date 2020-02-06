@@ -29,8 +29,10 @@
 #include <LibDraw/GraphicsBitmap.h>
 #include <LibDraw/ImageDecoder.h>
 
-RefPtr<GraphicsBitmap> load_gif(const StringView& path);
-RefPtr<GraphicsBitmap> load_gif_from_memory(const u8*, size_t);
+namespace Gfx {
+
+RefPtr<Gfx::Bitmap> load_gif(const StringView& path);
+RefPtr<Gfx::Bitmap> load_gif_from_memory(const u8*, size_t);
 
 struct GIFLoadingContext;
 
@@ -40,10 +42,12 @@ public:
     GIFImageDecoderPlugin(const u8*, size_t);
 
     virtual Size size() override;
-    virtual RefPtr<GraphicsBitmap> bitmap() override;
+    virtual RefPtr<Gfx::Bitmap> bitmap() override;
     virtual void set_volatile() override;
     [[nodiscard]] virtual bool set_nonvolatile() override;
 
 private:
     OwnPtr<GIFLoadingContext> m_context;
 };
+
+}

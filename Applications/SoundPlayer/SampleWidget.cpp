@@ -32,8 +32,8 @@
 SampleWidget::SampleWidget(GUI::Widget* parent)
     : GUI::Frame(parent)
 {
-    set_frame_shape(FrameShape::Container);
-    set_frame_shadow(FrameShadow::Sunken);
+    set_frame_shape(Gfx::FrameShape::Container);
+    set_frame_shadow(Gfx::FrameShadow::Sunken);
     set_frame_thickness(2);
 }
 

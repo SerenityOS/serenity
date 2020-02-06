@@ -441,14 +441,14 @@ GIcon FileSystemModel::icon_for(const Node& node) const
     return icon_for_file(node.mode, node.name);
 }
 
-static HashMap<String, RefPtr<GraphicsBitmap>> s_thumbnail_cache;
+static HashMap<String, RefPtr<Gfx::Bitmap>> s_thumbnail_cache;
 
-static RefPtr<GraphicsBitmap> render_thumbnail(const StringView& path)
+static RefPtr<Gfx::Bitmap> render_thumbnail(const StringView& path)
 {
-    auto png_bitmap = GraphicsBitmap::load_from_file(path);
+    auto png_bitmap = Gfx::Bitmap::load_from_file(path);
     if (!png_bitmap)
         return nullptr;
-    auto thumbnail = GraphicsBitmap::create(png_bitmap->format(), { 32, 32 });
+    auto thumbnail = Gfx::Bitmap::create(png_bitmap->format(), { 32, 32 });
     Painter painter(*thumbnail);
     painter.draw_scaled_bitmap(thumbnail->rect(), *png_bitmap, png_bitmap->rect());
     return thumbnail;
@@ -475,7 +475,7 @@ bool FileSystemModel::fetch_thumbnail_for(const Node& node)
 
     auto weak_this = make_weak_ptr();
 
-    LibThread::BackgroundAction<RefPtr<GraphicsBitmap>>::create(
+    LibThread::BackgroundAction<RefPtr<Gfx::Bitmap>>::create(
         [path] {
             return render_thumbnail(path);
         },
@@ -536,23 +536,23 @@ Model::ColumnMetadata FileSystemModel::column_metadata(int column) const
 {
     switch (column) {
     case Column::Icon:
-        return { 16, TextAlignment::Center, nullptr, Model::ColumnMetadata::Sortable::False };
+        return { 16, Gfx::TextAlignment::Center, nullptr, Model::ColumnMetadata::Sortable::False };
     case Column::Name:
-        return { 120, TextAlignment::CenterLeft };
+        return { 120, Gfx::TextAlignment::CenterLeft };
     case Column::Size:
-        return { 80, TextAlignment::CenterRight };
+        return { 80, Gfx::TextAlignment::CenterRight };
     case Column::Owner:
-        return { 50, TextAlignment::CenterLeft };
+        return { 50, Gfx::TextAlignment::CenterLeft };
     case Column::Group:
-        return { 50, TextAlignment::CenterLeft };
+        return { 50, Gfx::TextAlignment::CenterLeft };
     case Column::ModificationTime:
-        return { 110, TextAlignment::CenterLeft };
+        return { 110, Gfx::TextAlignment::CenterLeft };
     case Column::Permissions:
-        return { 65, TextAlignment::CenterLeft };
+        return { 65, Gfx::TextAlignment::CenterLeft };
     case Column::Inode:
-        return { 60, TextAlignment::CenterRight };
+        return { 60, Gfx::TextAlignment::CenterRight };
     case Column::SymlinkTarget:
-        return { 120, TextAlignment::CenterLeft };
+        return { 120, Gfx::TextAlignment::CenterLeft };
     }
     ASSERT_NOT_REACHED();
 }

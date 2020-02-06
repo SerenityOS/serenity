@@ -26,9 +26,11 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/LogStream.h>
+#include <AK/String.h>
 #include <LibDraw/Orientation.h>
+
+namespace Gfx {
 
 class FloatSize {
 public:
@@ -111,3 +113,7 @@ inline const LogStream& operator<<(const LogStream& stream, const FloatSize& val
 {
     return stream << value.to_string();
 }
+
+}
+
+using Gfx::FloatSize;

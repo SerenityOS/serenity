@@ -56,7 +56,7 @@ int main(int argc, char** argv)
     };
 
     window->show();
-    window->set_icon(load_png("/res/icons/16x16/app-hexeditor.png"));
+    window->set_icon(Gfx::load_png("/res/icons/16x16/app-hexeditor.png"));
 
     if (argc >= 2)
         hex_editor_widget->open_file(argv[1]);

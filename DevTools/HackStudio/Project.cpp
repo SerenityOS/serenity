@@ -117,7 +117,7 @@ public:
         if (role == Role::Font) {
             extern String g_currently_open_file;
             if (node->name == g_currently_open_file)
-                return Font::default_bold_font();
+                return Gfx::Font::default_bold_font();
             return {};
         }
         return {};
@@ -169,11 +169,11 @@ Project::Project(const String& path, Vector<String>&& filenames)
 {
     m_name = FileSystemPath(m_path).basename();
 
-    m_file_icon = GIcon(GraphicsBitmap::load_from_file("/res/icons/16x16/filetype-unknown.png"));
-    m_cplusplus_icon = GIcon(GraphicsBitmap::load_from_file("/res/icons/16x16/filetype-cplusplus.png"));
-    m_header_icon = GIcon(GraphicsBitmap::load_from_file("/res/icons/16x16/filetype-header.png"));
-    m_directory_icon = GIcon(GraphicsBitmap::load_from_file("/res/icons/16x16/filetype-folder.png"));
-    m_project_icon = GIcon(GraphicsBitmap::load_from_file("/res/icons/16x16/app-hack-studio.png"));
+    m_file_icon = GIcon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-unknown.png"));
+    m_cplusplus_icon = GIcon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-cplusplus.png"));
+    m_header_icon = GIcon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-header.png"));
+    m_directory_icon = GIcon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-folder.png"));
+    m_project_icon = GIcon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-hack-studio.png"));
 
     for (auto& filename : filenames) {
         m_files.append(ProjectFile::construct_with_name(filename));

@@ -26,9 +26,11 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/LogStream.h>
+#include <AK/String.h>
 #include <LibDraw/Orientation.h>
+
+namespace Gfx {
 
 class Size {
 public:
@@ -100,7 +102,6 @@ public:
             set_height(value);
     }
 
-
     String to_string() const { return String::format("[%dx%d]", m_width, m_height); }
 
 private:
@@ -112,3 +113,7 @@ inline const LogStream& operator<<(const LogStream& stream, const Size& value)
 {
     return stream << value.to_string();
 }
+
+}
+
+using Gfx::Size;

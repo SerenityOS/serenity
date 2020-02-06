@@ -55,11 +55,11 @@ void GroupBox::paint_event(PaintEvent& event)
         0, font().glyph_height() / 2,
         width(), height() - font().glyph_height() / 2
     };
-    StylePainter::paint_frame(painter, frame_rect, palette(), FrameShape::Box, FrameShadow::Sunken, 2);
+    Gfx::StylePainter::paint_frame(painter, frame_rect, palette(), Gfx::FrameShape::Box, Gfx::FrameShadow::Sunken, 2);
 
     Rect text_rect { 4, 0, font().width(m_title) + 6, font().glyph_height() };
     painter.fill_rect(text_rect, palette().button());
-    painter.draw_text(text_rect, m_title, TextAlignment::Center, palette().button_text());
+    painter.draw_text(text_rect, m_title, Gfx::TextAlignment::Center, palette().button_text());
 }
 
 void GroupBox::set_title(const StringView& title)

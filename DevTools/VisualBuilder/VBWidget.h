@@ -80,10 +80,10 @@ public:
     bool is_selected() const;
 
     Rect rect() const;
-    void set_rect(const Rect&);
+    void set_rect(const Gfx::Rect&);
 
     Rect grabber_rect(Direction) const;
-    Direction grabber_at(const Point&) const;
+    Direction grabber_at(const Gfx::Point&) const;
 
     GUI::Widget* gwidget() { return m_gwidget; }
 
@@ -113,5 +113,5 @@ private:
     RefPtr<GUI::Widget> m_gwidget;
     NonnullOwnPtrVector<VBProperty> m_properties;
     NonnullRefPtr<VBWidgetPropertyModel> m_property_model;
-    Rect m_transform_origin_rect;
+    Gfx::Rect m_transform_origin_rect;
 };

@@ -38,7 +38,7 @@
 #include <LibGUI/GTextBox.h>
 #include <stdlib.h>
 
-FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Font>&& edited_font, GUI::Widget* parent)
+FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edited_font, GUI::Widget* parent)
     : GUI::Widget(parent)
     , m_edited_font(move(edited_font))
 {
@@ -85,7 +85,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Font>&& edited_fon
         exit(0);
     };
 
-    m_ui->info_label->set_text_alignment(TextAlignment::CenterLeft);
+    m_ui->info_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
     m_ui->demo_label_1->set_font(m_edited_font);
     m_ui->demo_label_1->set_text("quick fox jumps nightly above wizard.");

@@ -33,8 +33,8 @@
 ProfileModel::ProfileModel(Profile& profile)
     : m_profile(profile)
 {
-    m_user_frame_icon.set_bitmap_for_size(16, GraphicsBitmap::load_from_file("/res/icons/16x16/inspector-object.png"));
-    m_kernel_frame_icon.set_bitmap_for_size(16, GraphicsBitmap::load_from_file("/res/icons/16x16/inspector-object-red.png"));
+    m_user_frame_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/inspector-object.png"));
+    m_kernel_frame_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/inspector-object-red.png"));
 }
 
 ProfileModel::~ProfileModel()
@@ -109,7 +109,7 @@ String ProfileModel::column_name(int column) const
 GUI::Model::ColumnMetadata ProfileModel::column_metadata(int column) const
 {
     if (column == Column::SampleCount)
-        return ColumnMetadata { 0, TextAlignment::CenterRight };
+        return ColumnMetadata { 0, Gfx::TextAlignment::CenterRight };
     return {};
 }
 

@@ -39,8 +39,8 @@ static const int minimum_column_width = 2;
 AbstractTableView::AbstractTableView(Widget* parent)
     : AbstractView(parent)
 {
-    set_frame_shape(FrameShape::Container);
-    set_frame_shadow(FrameShadow::Sunken);
+    set_frame_shape(Gfx::FrameShape::Container);
+    set_frame_shadow(Gfx::FrameShadow::Sunken);
     set_frame_thickness(2);
 
     set_should_hide_unnecessary_scrollbars(true);
@@ -144,7 +144,7 @@ void AbstractTableView::paint_headers(Painter& painter)
         Rect cell_rect(x_offset, 0, column_width + horizontal_padding() * 2, header_height());
         bool pressed = column_index == m_pressed_column_header_index && m_pressed_column_header_is_pressed;
         bool hovered = column_index == m_hovered_column_header_index && model()->column_metadata(column_index).sortable == Model::ColumnMetadata::Sortable::True;
-        StylePainter::paint_button(painter, cell_rect, palette(), ButtonStyle::Normal, pressed, hovered);
+        Gfx::StylePainter::paint_button(painter, cell_rect, palette(), Gfx::ButtonStyle::Normal, pressed, hovered);
         String text;
         if (is_key_column) {
             StringBuilder builder;
@@ -161,7 +161,7 @@ void AbstractTableView::paint_headers(Painter& painter)
         auto text_rect = cell_rect.translated(horizontal_padding(), 0);
         if (pressed)
             text_rect.move_by(1, 1);
-        painter.draw_text(text_rect, text, header_font(), TextAlignment::CenterLeft, palette().button_text());
+        painter.draw_text(text_rect, text, header_font(), Gfx::TextAlignment::CenterLeft, palette().button_text());
         x_offset += column_width + horizontal_padding() * 2;
     }
 }
@@ -205,9 +205,9 @@ Menu& AbstractTableView::ensure_header_context_menu()
     return *m_header_context_menu;
 }
 
-const Font& AbstractTableView::header_font()
+const Gfx::Font& AbstractTableView::header_font()
 {
-    return Font::default_bold_font();
+    return Gfx::Font::default_bold_font();
 }
 
 void AbstractTableView::set_cell_painting_delegate(int column, OwnPtr<TableCellPaintingDelegate>&& delegate)
@@ -378,7 +378,7 @@ void AbstractTableView::mousedown_event(MouseEvent& event)
     AbstractView::mousedown_event(event);
 }
 
-ModelIndex AbstractTableView::index_at_event_position(const Point& position, bool& is_toggle) const
+ModelIndex AbstractTableView::index_at_event_position(const Gfx::Point& position, bool& is_toggle) const
 {
     is_toggle = false;
     if (!model())
@@ -398,7 +398,7 @@ ModelIndex AbstractTableView::index_at_event_position(const Point& position, boo
     return {};
 }
 
-ModelIndex AbstractTableView::index_at_event_position(const Point& position) const
+ModelIndex AbstractTableView::index_at_event_position(const Gfx::Point& position) const
 {
     bool is_toggle;
     auto index = index_at_event_position(position, is_toggle);
@@ -545,7 +545,7 @@ Rect AbstractTableView::row_rect(int item_index) const
     return { 0, header_height() + (item_index * item_height()), max(content_size().width(), width()), item_height() };
 }
 
-Point AbstractTableView::adjusted_position(const Point& position) const
+Point AbstractTableView::adjusted_position(const Gfx::Point& position) const
 {
     return position.translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
 }

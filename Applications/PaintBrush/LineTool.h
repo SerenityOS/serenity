@@ -51,8 +51,8 @@ private:
     virtual const char* class_name() const override { return "LineTool"; }
 
     GUI::MouseButton m_drawing_button { GUI::MouseButton::None };
-    Point m_line_start_position;
-    Point m_line_end_position;
+    Gfx::Point m_line_start_position;
+    Gfx::Point m_line_end_position;
     RefPtr<GUI::Menu> m_context_menu;
     GUI::ActionGroup m_thickness_actions;
     int m_thickness { 1 };

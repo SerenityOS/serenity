@@ -85,7 +85,7 @@ void WSScreen::on_change_resolution(int pitch, int width, int height)
     int rc = fb_get_size_in_bytes(m_framebuffer_fd, &m_size_in_bytes);
     ASSERT(rc == 0);
 
-    m_framebuffer = (RGBA32*)mmap(nullptr, m_size_in_bytes, PROT_READ | PROT_WRITE, MAP_SHARED, m_framebuffer_fd, 0);
+    m_framebuffer = (Gfx::RGBA32*)mmap(nullptr, m_size_in_bytes, PROT_READ | PROT_WRITE, MAP_SHARED, m_framebuffer_fd, 0);
     ASSERT(m_framebuffer && m_framebuffer != (void*)-1);
 
     m_pitch = pitch;

@@ -33,7 +33,10 @@
 #include <LibDraw/DisjointRectSet.h>
 #include <LibDraw/GraphicsBitmap.h>
 
+namespace Gfx {
 class Painter;
+}
+
 class WSCursor;
 
 enum class WallpaperMode {
@@ -51,7 +54,7 @@ public:
 
     void compose();
     void invalidate();
-    void invalidate(const Rect&);
+    void invalidate(const Gfx::Rect&);
 
     void set_resolution(int desired_width, int desired_height);
 
@@ -59,13 +62,13 @@ public:
     String wallpaper_path() const { return m_wallpaper_path; }
 
     void invalidate_cursor();
-    Rect current_cursor_rect() const;
+    Gfx::Rect current_cursor_rect() const;
 
 private:
     WSCompositor();
     void init_bitmaps();
     void flip_buffers();
-    void flush(const Rect&);
+    void flush(const Gfx::Rect&);
     void draw_cursor();
     void draw_geometry_label();
     void draw_menubar();
@@ -79,18 +82,18 @@ private:
     bool m_buffers_are_flipped { false };
     bool m_screen_can_set_buffer { false };
 
-    RefPtr<GraphicsBitmap> m_front_bitmap;
-    RefPtr<GraphicsBitmap> m_back_bitmap;
-    OwnPtr<Painter> m_back_painter;
-    OwnPtr<Painter> m_front_painter;
+    RefPtr<Gfx::Bitmap> m_front_bitmap;
+    RefPtr<Gfx::Bitmap> m_back_bitmap;
+    OwnPtr<Gfx::Painter> m_back_painter;
+    OwnPtr<Gfx::Painter> m_front_painter;
 
-    DisjointRectSet m_dirty_rects;
+    Gfx::DisjointRectSet m_dirty_rects;
 
-    Rect m_last_cursor_rect;
-    Rect m_last_dnd_rect;
-    Rect m_last_geometry_label_rect;
+    Gfx::Rect m_last_cursor_rect;
+    Gfx::Rect m_last_dnd_rect;
+    Gfx::Rect m_last_geometry_label_rect;
 
     String m_wallpaper_path;
     WallpaperMode m_wallpaper_mode { WallpaperMode::Unchecked };
-    RefPtr<GraphicsBitmap> m_wallpaper;
+    RefPtr<Gfx::Bitmap> m_wallpaper;
 };

@@ -36,8 +36,8 @@
 RemoteObjectGraphModel::RemoteObjectGraphModel(RemoteProcess& process)
     : m_process(process)
 {
-    m_object_icon.set_bitmap_for_size(16, load_png("/res/icons/16x16/inspector-object.png"));
-    m_window_icon.set_bitmap_for_size(16, load_png("/res/icons/16x16/window.png"));
+    m_object_icon.set_bitmap_for_size(16, Gfx::load_png("/res/icons/16x16/inspector-object.png"));
+    m_window_icon.set_bitmap_for_size(16, Gfx::load_png("/res/icons/16x16/window.png"));
 }
 
 RemoteObjectGraphModel::~RemoteObjectGraphModel()

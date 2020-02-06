@@ -99,7 +99,7 @@ private:
 
     bool m_scrubbing { false };
     int m_scrub_start_value { 0 };
-    Point m_scrub_origin;
+    Gfx::Point m_scrub_origin;
 
     Orientation m_orientation { Orientation::Vertical };
     Component m_hovered_component { Component::Invalid };

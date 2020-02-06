@@ -32,7 +32,7 @@
 WidgetTreeModel::WidgetTreeModel(GUI::Widget& root)
     : m_root(root)
 {
-    m_widget_icon.set_bitmap_for_size(16, GraphicsBitmap::load_from_file("/res/icons/16x16/inspector-object.png"));
+    m_widget_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/inspector-object.png"));
 }
 
 WidgetTreeModel::~WidgetTreeModel()

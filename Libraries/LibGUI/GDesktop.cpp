@@ -44,7 +44,7 @@ Desktop::Desktop()
 {
 }
 
-void Desktop::did_receive_screen_rect(Badge<WindowServerConnection>, const Rect& rect)
+void Desktop::did_receive_screen_rect(Badge<WindowServerConnection>, const Gfx::Rect& rect)
 {
     if (m_rect == rect)
         return;

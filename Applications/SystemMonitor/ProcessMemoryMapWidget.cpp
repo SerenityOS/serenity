@@ -39,13 +39,13 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget(GUI::Widget* parent)
     m_table_view = GUI::TableView::construct(this);
     m_table_view->set_size_columns_to_fit_content(true);
     Vector<GUI::JsonArrayModel::FieldSpec> pid_vm_fields;
-    pid_vm_fields.empend("Address", TextAlignment::CenterLeft, [](auto& object) {
+    pid_vm_fields.empend("Address", Gfx::TextAlignment::CenterLeft, [](auto& object) {
         return String::format("%#x", object.get("address").to_u32());
     });
-    pid_vm_fields.empend("size", "Size", TextAlignment::CenterRight);
-    pid_vm_fields.empend("amount_resident", "Resident", TextAlignment::CenterRight);
-    pid_vm_fields.empend("amount_dirty", "Dirty", TextAlignment::CenterRight);
-    pid_vm_fields.empend("Access", TextAlignment::CenterLeft, [](auto& object) {
+    pid_vm_fields.empend("size", "Size", Gfx::TextAlignment::CenterRight);
+    pid_vm_fields.empend("amount_resident", "Resident", Gfx::TextAlignment::CenterRight);
+    pid_vm_fields.empend("amount_dirty", "Dirty", Gfx::TextAlignment::CenterRight);
+    pid_vm_fields.empend("Access", Gfx::TextAlignment::CenterLeft, [](auto& object) {
         StringBuilder builder;
         if (!object.get("user_accessible").to_bool())
             builder.append('K');
@@ -61,15 +61,15 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget(GUI::Widget* parent)
             builder.append('T');
         return builder.to_string();
     });
-    pid_vm_fields.empend("Purgeable", TextAlignment::CenterLeft, [](auto& object) {
+    pid_vm_fields.empend("Purgeable", Gfx::TextAlignment::CenterLeft, [](auto& object) {
         if (!object.get("purgeable").to_bool())
             return "";
         if (object.get("volatile").to_bool())
             return "Volatile";
         return "Non-volatile";
     });
-    pid_vm_fields.empend("cow_pages", "# CoW", TextAlignment::CenterRight);
-    pid_vm_fields.empend("name", "Name", TextAlignment::CenterLeft);
+    pid_vm_fields.empend("cow_pages", "# CoW", Gfx::TextAlignment::CenterRight);
+    pid_vm_fields.empend("name", "Name", Gfx::TextAlignment::CenterLeft);
     m_json_model = GUI::JsonArrayModel::create({}, move(pid_vm_fields));
     m_table_view->set_model(GUI::SortingProxyModel::create(*m_json_model));
     m_table_view->model()->set_key_column_and_sort_order(0, GUI::SortOrder::Ascending);

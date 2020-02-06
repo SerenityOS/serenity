@@ -45,8 +45,8 @@ public:
 
     Rect widget_inner_rect() const;
 
-    void scroll_into_view(const Rect&, Orientation);
-    void scroll_into_view(const Rect&, bool scroll_horizontally, bool scroll_vertically);
+    void scroll_into_view(const Gfx::Rect&, Orientation);
+    void scroll_into_view(const Gfx::Rect&, bool scroll_horizontally, bool scroll_vertically);
 
     void set_scrollbars_enabled(bool);
     bool is_scrollbars_enabled() const { return m_scrollbars_enabled; }
@@ -69,8 +69,8 @@ public:
     void set_should_hide_unnecessary_scrollbars(bool b) { m_should_hide_unnecessary_scrollbars = b; }
     bool should_hide_unnecessary_scrollbars() const { return m_should_hide_unnecessary_scrollbars; }
 
-    Point to_content_position(const Point& widget_position) const;
-    Point to_widget_position(const Point& content_position) const;
+    Point to_content_position(const Gfx::Point& widget_position) const;
+    Point to_widget_position(const Gfx::Point& content_position) const;
 
 protected:
     explicit ScrollableWidget(Widget* parent);
@@ -78,8 +78,8 @@ protected:
     virtual void resize_event(ResizeEvent&) override;
     virtual void mousewheel_event(MouseEvent&) override;
     virtual void did_scroll() {}
-    void set_content_size(const Size&);
-    void set_size_occupied_by_fixed_elements(const Size&);
+    void set_content_size(const Gfx::Size&);
+    void set_size_occupied_by_fixed_elements(const Gfx::Size&);
 
 private:
     void update_scrollbar_ranges();
@@ -87,8 +87,8 @@ private:
     RefPtr<ScrollBar> m_vertical_scrollbar;
     RefPtr<ScrollBar> m_horizontal_scrollbar;
     RefPtr<Widget> m_corner_widget;
-    Size m_content_size;
-    Size m_size_occupied_by_fixed_elements;
+    Gfx::Size m_content_size;
+    Gfx::Size m_size_occupied_by_fixed_elements;
     bool m_scrollbars_enabled { true };
     bool m_should_hide_unnecessary_scrollbars { false };
 };

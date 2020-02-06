@@ -31,23 +31,26 @@
 #include <AK/Weakable.h>
 #include <LibDraw/Rect.h>
 
+namespace Gfx {
 class CharacterBitmap;
 class Painter;
+}
+
 class WSMouseEvent;
 class WSWindowFrame;
 
 class WSButton : public Weakable<WSButton> {
 public:
-    WSButton(WSWindowFrame&, NonnullRefPtr<CharacterBitmap>&&, Function<void(WSButton&)>&& on_click_handler);
+    WSButton(WSWindowFrame&, NonnullRefPtr<Gfx::CharacterBitmap>&&, Function<void(WSButton&)>&& on_click_handler);
     ~WSButton();
 
-    Rect relative_rect() const { return m_relative_rect; }
-    void set_relative_rect(const Rect& rect) { m_relative_rect = rect; }
+    Gfx::Rect relative_rect() const { return m_relative_rect; }
+    void set_relative_rect(const Gfx::Rect& rect) { m_relative_rect = rect; }
 
-    Rect rect() const { return { {}, m_relative_rect.size() }; }
-    Rect screen_rect() const;
+    Gfx::Rect rect() const { return { {}, m_relative_rect.size() }; }
+    Gfx::Rect screen_rect() const;
 
-    void paint(Painter&);
+    void paint(Gfx::Painter&);
 
     void on_mouse_event(const WSMouseEvent&);
 
@@ -55,12 +58,12 @@ public:
 
     bool is_visible() const { return m_visible; }
 
-    void set_bitmap(const CharacterBitmap& bitmap) { m_bitmap = bitmap; }
+    void set_bitmap(const Gfx::CharacterBitmap& bitmap) { m_bitmap = bitmap; }
 
 private:
     WSWindowFrame& m_frame;
-    Rect m_relative_rect;
-    NonnullRefPtr<CharacterBitmap> m_bitmap;
+    Gfx::Rect m_relative_rect;
+    NonnullRefPtr<Gfx::CharacterBitmap> m_bitmap;
     bool m_pressed { false };
     bool m_visible { true };
     bool m_hovered { false };

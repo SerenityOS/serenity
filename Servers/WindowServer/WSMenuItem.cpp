@@ -30,7 +30,7 @@
 #include "WSWindowManager.h"
 #include <LibDraw/GraphicsBitmap.h>
 
-WSMenuItem::WSMenuItem(WSMenu& menu, unsigned identifier, const String& text, const String& shortcut_text, bool enabled, bool checkable, bool checked, const GraphicsBitmap* icon)
+WSMenuItem::WSMenuItem(WSMenu& menu, unsigned identifier, const String& text, const String& shortcut_text, bool enabled, bool checkable, bool checked, const Gfx::Bitmap* icon)
     : m_menu(menu)
     , m_type(Text)
     , m_enabled(enabled)

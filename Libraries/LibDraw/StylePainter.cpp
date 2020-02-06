@@ -29,6 +29,8 @@
 #include <LibDraw/Palette.h>
 #include <LibDraw/StylePainter.h>
 
+namespace Gfx {
+
 void StylePainter::paint_tab_button(Painter& painter, const Rect& rect, const Palette& palette, bool active, bool hovered, bool enabled)
 {
     Color base_color = palette.button();
@@ -285,12 +287,12 @@ void StylePainter::paint_progress_bar(Painter& painter, const Rect& rect, const 
         painter.draw_text(rect.translated(0, 0), text, TextAlignment::Center, palette.base_text());
 }
 
-static RefPtr<GraphicsBitmap> s_unfilled_circle_bitmap;
-static RefPtr<GraphicsBitmap> s_filled_circle_bitmap;
-static RefPtr<GraphicsBitmap> s_changing_filled_circle_bitmap;
-static RefPtr<GraphicsBitmap> s_changing_unfilled_circle_bitmap;
+static RefPtr<Gfx::Bitmap> s_unfilled_circle_bitmap;
+static RefPtr<Gfx::Bitmap> s_filled_circle_bitmap;
+static RefPtr<Gfx::Bitmap> s_changing_filled_circle_bitmap;
+static RefPtr<Gfx::Bitmap> s_changing_unfilled_circle_bitmap;
 
-static const GraphicsBitmap& circle_bitmap(bool checked, bool changing)
+static const Gfx::Bitmap& circle_bitmap(bool checked, bool changing)
 {
     if (changing)
         return checked ? *s_changing_filled_circle_bitmap : *s_changing_unfilled_circle_bitmap;
@@ -300,12 +302,14 @@ static const GraphicsBitmap& circle_bitmap(bool checked, bool changing)
 void StylePainter::paint_radio_button(Painter& painter, const Rect& rect, const Palette&, bool is_checked, bool is_being_pressed)
 {
     if (!s_unfilled_circle_bitmap) {
-        s_unfilled_circle_bitmap = GraphicsBitmap::load_from_file("/res/icons/unfilled-radio-circle.png");
-        s_filled_circle_bitmap = GraphicsBitmap::load_from_file("/res/icons/filled-radio-circle.png");
-        s_changing_filled_circle_bitmap = GraphicsBitmap::load_from_file("/res/icons/changing-filled-radio-circle.png");
-        s_changing_unfilled_circle_bitmap = GraphicsBitmap::load_from_file("/res/icons/changing-unfilled-radio-circle.png");
+        s_unfilled_circle_bitmap = Bitmap::load_from_file("/res/icons/unfilled-radio-circle.png");
+        s_filled_circle_bitmap = Bitmap::load_from_file("/res/icons/filled-radio-circle.png");
+        s_changing_filled_circle_bitmap = Bitmap::load_from_file("/res/icons/changing-filled-radio-circle.png");
+        s_changing_unfilled_circle_bitmap = Bitmap::load_from_file("/res/icons/changing-unfilled-radio-circle.png");
     }
 
     auto& bitmap = circle_bitmap(is_checked, is_being_pressed);
     painter.blit(rect.location(), bitmap, bitmap.rect());
+}
+
 }

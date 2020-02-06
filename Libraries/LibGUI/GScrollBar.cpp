@@ -81,10 +81,10 @@ static const char* s_right_arrow_bitmap_data = {
     "         "
 };
 
-static CharacterBitmap* s_up_arrow_bitmap;
-static CharacterBitmap* s_down_arrow_bitmap;
-static CharacterBitmap* s_left_arrow_bitmap;
-static CharacterBitmap* s_right_arrow_bitmap;
+static Gfx::CharacterBitmap* s_up_arrow_bitmap;
+static Gfx::CharacterBitmap* s_down_arrow_bitmap;
+static Gfx::CharacterBitmap* s_left_arrow_bitmap;
+static Gfx::CharacterBitmap* s_right_arrow_bitmap;
 
 ScrollBar::ScrollBar(Widget* parent)
     : ScrollBar(Orientation::Vertical, parent)
@@ -97,13 +97,13 @@ ScrollBar::ScrollBar(Orientation orientation, Widget* parent)
 {
     m_automatic_scrolling_timer = Core::Timer::construct(this);
     if (!s_up_arrow_bitmap)
-        s_up_arrow_bitmap = &CharacterBitmap::create_from_ascii(s_up_arrow_bitmap_data, 9, 9).leak_ref();
+        s_up_arrow_bitmap = &Gfx::CharacterBitmap::create_from_ascii(s_up_arrow_bitmap_data, 9, 9).leak_ref();
     if (!s_down_arrow_bitmap)
-        s_down_arrow_bitmap = &CharacterBitmap::create_from_ascii(s_down_arrow_bitmap_data, 9, 9).leak_ref();
+        s_down_arrow_bitmap = &Gfx::CharacterBitmap::create_from_ascii(s_down_arrow_bitmap_data, 9, 9).leak_ref();
     if (!s_left_arrow_bitmap)
-        s_left_arrow_bitmap = &CharacterBitmap::create_from_ascii(s_left_arrow_bitmap_data, 9, 9).leak_ref();
+        s_left_arrow_bitmap = &Gfx::CharacterBitmap::create_from_ascii(s_left_arrow_bitmap_data, 9, 9).leak_ref();
     if (!s_right_arrow_bitmap)
-        s_right_arrow_bitmap = &CharacterBitmap::create_from_ascii(s_right_arrow_bitmap_data, 9, 9).leak_ref();
+        s_right_arrow_bitmap = &Gfx::CharacterBitmap::create_from_ascii(s_right_arrow_bitmap_data, 9, 9).leak_ref();
 
     if (m_orientation == Orientation::Vertical) {
         set_preferred_size(15, 0);
@@ -228,8 +228,8 @@ void ScrollBar::paint_event(PaintEvent& event)
 
     painter.fill_rect(rect(), palette().button().lightened());
 
-    StylePainter::paint_button(painter, decrement_button_rect(), palette(), ButtonStyle::Normal, false, m_hovered_component == Component::DecrementButton);
-    StylePainter::paint_button(painter, increment_button_rect(), palette(), ButtonStyle::Normal, false, m_hovered_component == Component::IncrementButton);
+    Gfx::StylePainter::paint_button(painter, decrement_button_rect(), palette(), Gfx::ButtonStyle::Normal, false, m_hovered_component == Component::DecrementButton);
+    Gfx::StylePainter::paint_button(painter, increment_button_rect(), palette(), Gfx::ButtonStyle::Normal, false, m_hovered_component == Component::IncrementButton);
 
     if (length(orientation()) > default_button_size()) {
         painter.draw_bitmap(decrement_button_rect().location().translated(3, 3), orientation() == Orientation::Vertical ? *s_up_arrow_bitmap : *s_left_arrow_bitmap, has_scrubber() ? palette().button_text() : palette().threed_shadow1());
@@ -237,7 +237,7 @@ void ScrollBar::paint_event(PaintEvent& event)
     }
 
     if (has_scrubber())
-        StylePainter::paint_button(painter, scrubber_rect(), palette(), ButtonStyle::Normal, false, m_hovered_component == Component::Scrubber || m_scrubber_in_use);
+        Gfx::StylePainter::paint_button(painter, scrubber_rect(), palette(), Gfx::ButtonStyle::Normal, false, m_hovered_component == Component::Scrubber || m_scrubber_in_use);
 }
 
 void ScrollBar::on_automatic_scrolling_timer_fired()

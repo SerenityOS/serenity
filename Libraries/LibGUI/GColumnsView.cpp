@@ -51,8 +51,8 @@ ColumnsView::ColumnsView(Widget* parent)
     set_fill_with_background_color(true);
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
-    set_frame_shape(FrameShape::Container);
-    set_frame_shadow(FrameShadow::Sunken);
+    set_frame_shape(Gfx::FrameShape::Container);
+    set_frame_shadow(Gfx::FrameShadow::Sunken);
     set_frame_thickness(2);
 
     m_columns.append({ {}, 0 });
@@ -116,7 +116,7 @@ void ColumnsView::paint_event(PaintEvent& event)
                 column.width - icon_spacing() - icon_size() - icon_spacing() - icon_spacing() - s_arrow_bitmap_width - icon_spacing(), item_height()
             };
             auto text = model()->data(index).to_string();
-            painter.draw_text(text_rect, text, TextAlignment::CenterLeft, text_color);
+            painter.draw_text(text_rect, text, Gfx::TextAlignment::CenterLeft, text_color);
 
             bool expandable = model()->row_count(index) > 0;
             if (expandable) {
@@ -125,7 +125,7 @@ void ColumnsView::paint_event(PaintEvent& event)
                     s_arrow_bitmap_width, s_arrow_bitmap_height
                 };
                 arrow_rect.center_vertically_within(row_rect);
-                static auto& arrow_bitmap = CharacterBitmap::create_from_ascii(s_arrow_bitmap_data, s_arrow_bitmap_width, s_arrow_bitmap_height).leak_ref();
+                static auto& arrow_bitmap = Gfx::CharacterBitmap::create_from_ascii(s_arrow_bitmap_data, s_arrow_bitmap_width, s_arrow_bitmap_height).leak_ref();
                 painter.draw_bitmap(arrow_rect.location(), arrow_bitmap, text_color);
             }
         }
@@ -188,7 +188,7 @@ void ColumnsView::update_column_sizes()
     set_content_size({ total_width, total_height });
 }
 
-ModelIndex ColumnsView::index_at_event_position(const Point& a_position) const
+ModelIndex ColumnsView::index_at_event_position(const Gfx::Point& a_position) const
 {
     if (!model())
         return {};

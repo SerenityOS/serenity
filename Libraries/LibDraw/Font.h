@@ -26,13 +26,15 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/MappedFile.h>
-#include <AK/RefPtr.h>
 #include <AK/RefCounted.h>
+#include <AK/RefPtr.h>
+#include <AK/String.h>
 #include <AK/Types.h>
-#include <LibDraw/Rect.h>
 #include <AK/Utf8View.h>
+#include <LibDraw/Rect.h>
+
+namespace Gfx {
 
 // FIXME: Make a MutableGlyphBitmap buddy class for FontEditor instead?
 class GlyphBitmap {
@@ -126,3 +128,5 @@ private:
 
     bool m_fixed_width { false };
 };
+
+}

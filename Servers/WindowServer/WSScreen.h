@@ -45,7 +45,7 @@ public:
     int width() const { return m_width; }
     int height() const { return m_height; }
     size_t pitch() const { return m_pitch; }
-    RGBA32* scanline(int y);
+    Gfx::RGBA32* scanline(int y);
 
     static WSScreen& the();
 
@@ -63,7 +63,7 @@ private:
 
     size_t m_size_in_bytes;
 
-    RGBA32* m_framebuffer { nullptr };
+    Gfx::RGBA32* m_framebuffer { nullptr };
     bool m_can_set_buffer { false };
 
     int m_pitch { 0 };
@@ -71,12 +71,12 @@ private:
     int m_height { 0 };
     int m_framebuffer_fd { -1 };
 
-    Point m_cursor_location;
+    Gfx::Point m_cursor_location;
     unsigned m_mouse_button_state { 0 };
     unsigned m_modifiers { 0 };
 };
 
-inline RGBA32* WSScreen::scanline(int y)
+inline Gfx::RGBA32* WSScreen::scanline(int y)
 {
-    return reinterpret_cast<RGBA32*>(((u8*)m_framebuffer) + (y * m_pitch));
+    return reinterpret_cast<Gfx::RGBA32*>(((u8*)m_framebuffer) + (y * m_pitch));
 }

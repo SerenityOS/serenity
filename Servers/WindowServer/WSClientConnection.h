@@ -58,7 +58,7 @@ public:
 
     bool is_showing_modal_window() const;
 
-    void notify_about_new_screen_rect(const Rect&);
+    void notify_about_new_screen_rect(const Gfx::Rect&);
     void notify_about_clipboard_contents_changed();
     void post_paint_message(WSWindow&);
 

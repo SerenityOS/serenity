@@ -28,9 +28,13 @@
 
 #include <AK/Types.h>
 
-class GraphicsBitmap;
+namespace Gfx {
+
+class Bitmap;
 
 class Emoji {
 public:
-    static const GraphicsBitmap* emoji_for_codepoint(u32 codepoint);
+    static const Gfx::Bitmap* emoji_for_codepoint(u32 codepoint);
 };
+
+}

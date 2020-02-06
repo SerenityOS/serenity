@@ -50,14 +50,14 @@ private:
     virtual void on_keydown(GUI::KeyEvent&) override;
     virtual void on_second_paint(GUI::Painter&, GUI::PaintEvent&) override;
 
-    void set_rubber_band_position(const Point&);
-    Rect rubber_band_rect() const;
+    void set_rubber_band_position(const Gfx::Point&);
+    Gfx::Rect rubber_band_rect() const;
 
-    Point m_drag_origin;
+    Gfx::Point m_drag_origin;
     HashMap<GUI::Widget*, Point> m_positions_before_drag;
     bool m_dragging { false };
 
     bool m_rubber_banding { false };
-    Point m_rubber_band_origin;
-    Point m_rubber_band_position;
+    Gfx::Point m_rubber_band_origin;
+    Gfx::Point m_rubber_band_position;
 };

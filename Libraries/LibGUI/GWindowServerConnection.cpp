@@ -53,7 +53,7 @@ static void set_system_theme_from_shared_buffer_id(int id)
 {
     auto system_theme = SharedBuffer::create_from_shared_buffer_id(id);
     ASSERT(system_theme);
-    set_system_theme(*system_theme);
+    Gfx::set_system_theme(*system_theme);
     Application::the().set_system_palette(*system_theme);
 }
 

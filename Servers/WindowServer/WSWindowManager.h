@@ -76,7 +76,7 @@ class WSWindowManager : public Core::Object {
 public:
     static WSWindowManager& the();
 
-    explicit WSWindowManager(const PaletteImpl&);
+    explicit WSWindowManager(const Gfx::PaletteImpl&);
     virtual ~WSWindowManager() override;
 
     Palette palette() const { return Palette(*m_palette); }
@@ -91,22 +91,22 @@ public:
     void remove_window(WSWindow&);
 
     void notify_title_changed(WSWindow&);
-    void notify_rect_changed(WSWindow&, const Rect& oldRect, const Rect& newRect);
+    void notify_rect_changed(WSWindow&, const Gfx::Rect& oldRect, const Gfx::Rect& newRect);
     void notify_minimization_state_changed(WSWindow&);
     void notify_opacity_changed(WSWindow&);
     void notify_occlusion_state_changed(WSWindow&);
     void notify_client_changed_app_menubar(WSClientConnection&);
 
-    Rect maximized_window_rect(const WSWindow&) const;
+    Gfx::Rect maximized_window_rect(const WSWindow&) const;
 
     WSClientConnection* dnd_client() { return m_dnd_client.ptr(); }
     const String& dnd_text() const { return m_dnd_text; }
     const String& dnd_data_type() const { return m_dnd_data_type; }
     const String& dnd_data() const { return m_dnd_data; }
-    const GraphicsBitmap* dnd_bitmap() const { return m_dnd_bitmap; }
-    Rect dnd_rect() const;
+    const Gfx::Bitmap* dnd_bitmap() const { return m_dnd_bitmap; }
+    Gfx::Rect dnd_rect() const;
 
-    void start_dnd_drag(WSClientConnection&, const String& text, GraphicsBitmap*, const String& data_type, const String& data);
+    void start_dnd_drag(WSClientConnection&, const String& text, Gfx::Bitmap*, const String& data_type, const String& data);
     void end_dnd_drag();
 
     WSWindow* active_window() { return m_active_window.ptr(); }
@@ -120,7 +120,7 @@ public:
 
     void draw_window_switcher();
 
-    Rect menubar_rect() const;
+    Gfx::Rect menubar_rect() const;
 
     const WSCursor& active_cursor() const;
     const WSCursor& arrow_cursor() const { return *m_arrow_cursor; }
@@ -135,15 +135,15 @@ public:
     const WSCursor& drag_cursor() const { return *m_drag_cursor; }
 
     void invalidate(const WSWindow&);
-    void invalidate(const WSWindow&, const Rect&);
-    void invalidate(const Rect&);
+    void invalidate(const WSWindow&, const Gfx::Rect&);
+    void invalidate(const Gfx::Rect&);
     void invalidate();
-    void flush(const Rect&);
+    void flush(const Gfx::Rect&);
 
-    const Font& font() const;
-    const Font& window_title_font() const;
-    const Font& menu_font() const;
-    const Font& app_menu_font() const;
+    const Gfx::Font& font() const;
+    const Gfx::Font& window_title_font() const;
+    const Gfx::Font& menu_font() const;
+    const Gfx::Font& app_menu_font() const;
 
     int menubar_menu_margin() const;
 
@@ -159,14 +159,14 @@ public:
     void clear_resize_candidate();
     ResizeDirection resize_direction_of_window(const WSWindow&);
 
-    bool any_opaque_window_contains_rect(const Rect&);
-    bool any_opaque_window_above_this_one_contains_rect(const WSWindow&, const Rect&);
+    bool any_opaque_window_contains_rect(const Gfx::Rect&);
+    bool any_opaque_window_above_this_one_contains_rect(const WSWindow&, const Gfx::Rect&);
 
     void tell_wm_listeners_window_state_changed(WSWindow&);
     void tell_wm_listeners_window_icon_changed(WSWindow&);
     void tell_wm_listeners_window_rect_changed(WSWindow&);
 
-    void start_window_resize(WSWindow&, const Point&, MouseButton);
+    void start_window_resize(WSWindow&, const Gfx::Point&, MouseButton);
     void start_window_resize(WSWindow&, const WSMouseEvent&);
 
     const WSWindow* active_fullscreen_window() const { return (m_active_window && m_active_window->is_fullscreen()) ? m_active_window : nullptr; }
@@ -176,7 +176,7 @@ public:
 
 private:
     NonnullRefPtr<WSCursor> get_cursor(const String& name);
-    NonnullRefPtr<WSCursor> get_cursor(const String& name, const Point& hotspot);
+    NonnullRefPtr<WSCursor> get_cursor(const String& name, const Gfx::Point& hotspot);
 
     void process_mouse_event(WSMouseEvent&, WSWindow*& hovered_window);
     void process_event_for_doubleclick(WSWindow& window, WSMouseEvent& event);
@@ -269,14 +269,14 @@ private:
     WeakPtr<WSWindow> m_active_input_window;
 
     WeakPtr<WSWindow> m_move_window;
-    Point m_move_origin;
-    Point m_move_window_origin;
+    Gfx::Point m_move_origin;
+    Gfx::Point m_move_window_origin;
 
     WeakPtr<WSWindow> m_resize_window;
     WeakPtr<WSWindow> m_resize_candidate;
     MouseButton m_resizing_mouse_button { MouseButton::None };
-    Rect m_resize_window_original_rect;
-    Point m_resize_origin;
+    Gfx::Rect m_resize_window_original_rect;
+    Gfx::Point m_resize_origin;
     ResizeDirection m_resize_direction { ResizeDirection::None };
 
     bool m_moved_or_resized_since_logo_keydown { false };
@@ -288,7 +288,7 @@ private:
     WeakPtr<WSButton> m_cursor_tracking_button;
     WeakPtr<WSButton> m_hovered_button;
 
-    NonnullRefPtr<PaletteImpl> m_palette;
+    NonnullRefPtr<Gfx::PaletteImpl> m_palette;
 
     RefPtr<Core::ConfigFile> m_wm_config;
 
@@ -296,7 +296,7 @@ private:
     String m_dnd_text;
     String m_dnd_data_type;
     String m_dnd_data;
-    RefPtr<GraphicsBitmap> m_dnd_bitmap;
+    RefPtr<Gfx::Bitmap> m_dnd_bitmap;
 };
 
 template<typename Callback>

@@ -49,7 +49,7 @@ struct TextDocumentSpan {
     Color color;
     Optional<Color> background_color;
     bool is_skippable { false };
-    const Font* font { nullptr };
+    const Gfx::Font* font { nullptr };
     void* data { nullptr };
 };
 

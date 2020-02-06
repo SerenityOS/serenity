@@ -33,8 +33,8 @@ namespace GUI {
 ProgressBar::ProgressBar(Widget* parent)
     : Frame(parent)
 {
-    set_frame_shape(FrameShape::Container);
-    set_frame_shadow(FrameShadow::Sunken);
+    set_frame_shape(Gfx::FrameShape::Container);
+    set_frame_shadow(Gfx::FrameShadow::Sunken);
     set_frame_thickness(2);
 }
 
@@ -83,7 +83,7 @@ void ProgressBar::paint_event(PaintEvent& event)
         progress_text = builder.to_string();
     }
 
-    StylePainter::paint_progress_bar(painter, rect, palette(), m_min, m_max, m_value, progress_text);
+    Gfx::StylePainter::paint_progress_bar(painter, rect, palette(), m_min, m_max, m_value, progress_text);
 }
 
 }

@@ -43,7 +43,7 @@ public:
     void set_name(const String& name) { m_name = name; }
 
     bool is_selected(const VBWidget&) const;
-    VBWidget* widget_at(const Point&);
+    VBWidget* widget_at(const Gfx::Point&);
 
     void set_should_snap_to_grip(bool snap) { m_should_snap_to_grid = snap; }
     bool should_snap_to_grid() const { return m_should_snap_to_grid; }
@@ -83,8 +83,8 @@ private:
     NonnullRefPtrVector<VBWidget> m_widgets;
     HashMap<GUI::Widget*, VBWidget*> m_gwidget_map;
     HashTable<VBWidget*> m_selected_widgets;
-    Point m_transform_event_origin;
-    Point m_next_insertion_position;
+    Gfx::Point m_transform_event_origin;
+    Gfx::Point m_next_insertion_position;
     Direction m_resize_direction { Direction::None };
     Direction m_mouse_direction_type { Direction::None };
     RefPtr<GUI::Menu> m_context_menu;

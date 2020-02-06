@@ -37,7 +37,7 @@ public:
     int model_column() const { return m_model_column; }
     void set_model_column(int column) { m_model_column = column; }
 
-    virtual ModelIndex index_at_event_position(const Point&) const override;
+    virtual ModelIndex index_at_event_position(const Gfx::Point&) const override;
 
 private:
     ColumnsView(Widget* parent = nullptr);

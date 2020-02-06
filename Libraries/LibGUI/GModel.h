@@ -35,7 +35,9 @@
 #include <LibGUI/GModelIndex.h>
 #include <LibGUI/GVariant.h>
 
+namespace Gfx {
 class Font;
+}
 
 namespace GUI {
 
@@ -51,8 +53,8 @@ class Model : public RefCounted<Model> {
 public:
     struct ColumnMetadata {
         int preferred_width { 0 };
-        TextAlignment text_alignment { TextAlignment::CenterLeft };
-        const Font* font { nullptr };
+        Gfx::TextAlignment text_alignment { Gfx::TextAlignment::CenterLeft };
+        const Gfx::Font* font { nullptr };
         enum class Sortable {
             False,
             True,

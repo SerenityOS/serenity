@@ -33,6 +33,8 @@
 #include <LibDraw/Size.h>
 #include <LibDraw/TextAlignment.h>
 
+namespace Gfx {
+
 class Rect {
 public:
     Rect() {}
@@ -329,3 +331,7 @@ inline const LogStream& operator<<(const LogStream& stream, const Rect& value)
 {
     return stream << value.to_string();
 }
+
+}
+
+using Gfx::Rect;

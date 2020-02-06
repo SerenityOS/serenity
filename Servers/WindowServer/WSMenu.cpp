@@ -54,9 +54,9 @@ WSMenu::~WSMenu()
 {
 }
 
-const Font& WSMenu::font() const
+const Gfx::Font& WSMenu::font() const
 {
-    return Font::default_font();
+    return Gfx::Font::default_font();
 }
 
 static const char* s_checked_bitmap_data = {
@@ -83,7 +83,7 @@ static const char* s_submenu_arrow_bitmap_data = {
     "         "
 };
 
-static CharacterBitmap* s_checked_bitmap;
+static Gfx::CharacterBitmap* s_checked_bitmap;
 static const int s_checked_bitmap_width = 9;
 static const int s_checked_bitmap_height = 9;
 static const int s_submenu_arrow_bitmap_width = 9;
@@ -169,15 +169,15 @@ void WSMenu::draw()
 
     ASSERT(menu_window());
     ASSERT(menu_window()->backing_store());
-    Painter painter(*menu_window()->backing_store());
+    Gfx::Painter painter(*menu_window()->backing_store());
 
-    Rect rect { {}, menu_window()->size() };
+    Gfx::Rect rect { {}, menu_window()->size() };
     painter.fill_rect(rect.shrunken(6, 6), palette.menu_base());
-    StylePainter::paint_window_frame(painter, rect, palette);
+    Gfx::StylePainter::paint_window_frame(painter, rect, palette);
     int width = this->content_width();
 
     if (!s_checked_bitmap)
-        s_checked_bitmap = &CharacterBitmap::create_from_ascii(s_checked_bitmap_data, s_checked_bitmap_width, s_checked_bitmap_height).leak_ref();
+        s_checked_bitmap = &Gfx::CharacterBitmap::create_from_ascii(s_checked_bitmap_data, s_checked_bitmap_width, s_checked_bitmap_height).leak_ref();
 
     bool has_checkable_items = false;
     bool has_items_with_icon = false;
@@ -186,7 +186,7 @@ void WSMenu::draw()
         has_items_with_icon = has_items_with_icon | !!item.icon();
     }
 
-    Rect stripe_rect { frame_thickness(), frame_thickness(), s_stripe_width, menu_window()->height() - frame_thickness() * 2 };
+    Gfx::Rect stripe_rect { frame_thickness(), frame_thickness(), s_stripe_width, menu_window()->height() - frame_thickness() * 2 };
     painter.fill_rect(stripe_rect, palette.menu_stripe());
     painter.draw_line(stripe_rect.top_right(), stripe_rect.bottom_right(), palette.menu_stripe().darkened());
 
@@ -195,10 +195,10 @@ void WSMenu::draw()
     if (is_scrollable()) {
         bool can_go_up = m_scroll_offset > 0;
         bool can_go_down = m_scroll_offset < m_max_scroll_offset;
-        Rect up_indicator_rect { frame_thickness(), frame_thickness(), content_width(), item_height() };
-        painter.draw_text(up_indicator_rect, "\xc3\xb6", TextAlignment::Center, can_go_up ? palette.menu_base_text() : palette.color(ColorRole::DisabledText));
-        Rect down_indicator_rect { frame_thickness(), menu_window()->height() - item_height() - frame_thickness(), content_width(), item_height() };
-        painter.draw_text(down_indicator_rect, "\xc3\xb7", TextAlignment::Center, can_go_down ? palette.menu_base_text() : palette.color(ColorRole::DisabledText));
+        Gfx::Rect up_indicator_rect { frame_thickness(), frame_thickness(), content_width(), item_height() };
+        painter.draw_text(up_indicator_rect, "\xc3\xb6", Gfx::TextAlignment::Center, can_go_up ? palette.menu_base_text() : palette.color(ColorRole::DisabledText));
+        Gfx::Rect down_indicator_rect { frame_thickness(), menu_window()->height() - item_height() - frame_thickness(), content_width(), item_height() };
+        painter.draw_text(down_indicator_rect, "\xc3\xb7", Gfx::TextAlignment::Center, can_go_down ? palette.menu_base_text() : palette.color(ColorRole::DisabledText));
     }
 
     for (int i = 0; i < visible_item_count; ++i) {
@@ -212,34 +212,34 @@ void WSMenu::draw()
             } else if (!item.is_enabled()) {
                 text_color = Color::MidGray;
             }
-            Rect text_rect = item.rect().translated(stripe_rect.width() + 6, 0);
+            Gfx::Rect text_rect = item.rect().translated(stripe_rect.width() + 6, 0);
             if (item.is_checkable()) {
                 if (item.is_exclusive()) {
-                    Rect radio_rect { item.rect().x() + 5, 0, 12, 12 };
+                    Gfx::Rect radio_rect { item.rect().x() + 5, 0, 12, 12 };
                     radio_rect.center_vertically_within(text_rect);
-                    StylePainter::paint_radio_button(painter, radio_rect, palette, item.is_checked(), false);
+                    Gfx::StylePainter::paint_radio_button(painter, radio_rect, palette, item.is_checked(), false);
                 } else {
-                    Rect checkmark_rect { item.rect().x() + 7, 0, s_checked_bitmap_width, s_checked_bitmap_height };
+                    Gfx::Rect checkmark_rect { item.rect().x() + 7, 0, s_checked_bitmap_width, s_checked_bitmap_height };
                     checkmark_rect.center_vertically_within(text_rect);
-                    Rect checkbox_rect = checkmark_rect.inflated(4, 4);
+                    Gfx::Rect checkbox_rect = checkmark_rect.inflated(4, 4);
                     painter.fill_rect(checkbox_rect, palette.base());
-                    StylePainter::paint_frame(painter, checkbox_rect, palette, FrameShape::Container, FrameShadow::Sunken, 2);
+                    Gfx::StylePainter::paint_frame(painter, checkbox_rect, palette, Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);
                     if (item.is_checked()) {
                         painter.draw_bitmap(checkmark_rect.location(), *s_checked_bitmap, palette.button_text());
                     }
                 }
             } else if (item.icon()) {
-                Rect icon_rect { item.rect().x() + 3, 0, s_item_icon_width, s_item_icon_width };
+                Gfx::Rect icon_rect { item.rect().x() + 3, 0, s_item_icon_width, s_item_icon_width };
                 icon_rect.center_vertically_within(text_rect);
                 painter.blit(icon_rect.location(), *item.icon(), item.icon()->rect());
             }
-            painter.draw_text(text_rect, item.text(), TextAlignment::CenterLeft, text_color);
+            painter.draw_text(text_rect, item.text(), Gfx::TextAlignment::CenterLeft, text_color);
             if (!item.shortcut_text().is_empty()) {
-                painter.draw_text(item.rect().translated(-right_padding(), 0), item.shortcut_text(), TextAlignment::CenterRight, text_color);
+                painter.draw_text(item.rect().translated(-right_padding(), 0), item.shortcut_text(), Gfx::TextAlignment::CenterRight, text_color);
             }
             if (item.is_submenu()) {
-                static auto& submenu_arrow_bitmap = CharacterBitmap::create_from_ascii(s_submenu_arrow_bitmap_data, s_submenu_arrow_bitmap_width, s_submenu_arrow_bitmap_height).leak_ref();
-                Rect submenu_arrow_rect {
+                static auto& submenu_arrow_bitmap = Gfx::CharacterBitmap::create_from_ascii(s_submenu_arrow_bitmap_data, s_submenu_arrow_bitmap_width, s_submenu_arrow_bitmap_height).leak_ref();
+                Gfx::Rect submenu_arrow_rect {
                     item.rect().right() - s_submenu_arrow_bitmap_width - 2,
                     0,
                     s_submenu_arrow_bitmap_width,
@@ -308,7 +308,7 @@ void WSMenu::handle_mouse_move_event(const WSMouseEvent& mouse_event)
         auto submenu_top_left = item.rect().location() + Point { item.rect().width(), 0 };
         auto submenu_bottom_left = submenu_top_left + Point { 0, item.submenu()->menu_window()->height() };
 
-        auto safe_hover_triangle = Triangle { m_last_position_in_hover, submenu_top_left, submenu_bottom_left };
+        auto safe_hover_triangle = Gfx::Triangle { m_last_position_in_hover, submenu_top_left, submenu_bottom_left };
         m_last_position_in_hover = mouse_event.position();
 
         // Don't update the hovered item if mouse is moving towards a submenu
@@ -480,7 +480,7 @@ WSMenuItem* WSMenu::item_with_identifier(unsigned identifer)
     return nullptr;
 }
 
-int WSMenu::item_index_at(const Point& position)
+int WSMenu::item_index_at(const Gfx::Point& position)
 {
     int i = 0;
     for (auto& item : m_items) {
@@ -502,7 +502,7 @@ void WSMenu::redraw_if_theme_changed()
         redraw();
 }
 
-void WSMenu::popup(const Point& position, bool is_submenu)
+void WSMenu::popup(const Gfx::Point& position, bool is_submenu)
 {
     ASSERT(!is_empty());
 

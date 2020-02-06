@@ -87,7 +87,7 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
         }
     };
 
-    set_icon(GraphicsBitmap::load_from_file("/res/icons/16x16/properties.png"));
+    set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"));
     make_divider(general_tab);
 
     struct stat st;
@@ -154,7 +154,7 @@ PropertiesDialog::~PropertiesDialog() {}
 
 void PropertiesDialog::update()
 {
-    m_icon->set_icon(const_cast<GraphicsBitmap*>(m_model.icon_for_file(m_mode, m_name).bitmap_for_size(32)));
+    m_icon->set_icon(const_cast<Gfx::Bitmap*>(m_model.icon_for_file(m_mode, m_name).bitmap_for_size(32)));
     set_title(String::format("Properties of \"%s\"", m_name.characters()));
 }
 
@@ -219,7 +219,7 @@ void PropertiesDialog::make_permission_checkboxes(NonnullRefPtr<GUI::Widget>& pa
     widget->layout()->set_spacing(10);
 
     auto label = GUI::Label::construct(label_string, widget);
-    label->set_text_alignment(TextAlignment::CenterLeft);
+    label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
     auto box_read = GUI::CheckBox::construct("Read", widget);
     box_read->set_checked(mode & masks.read);
@@ -248,10 +248,10 @@ void PropertiesDialog::make_property_value_pairs(const Vector<PropertyValuePair>
         label_container->layout()->set_spacing(12);
 
         auto label_property = GUI::Label::construct(pair.property, label_container);
-        label_property->set_text_alignment(TextAlignment::CenterLeft);
+        label_property->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         label_property->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
 
-        GUI::Label::construct(pair.value, label_container)->set_text_alignment(TextAlignment::CenterLeft);
+        GUI::Label::construct(pair.value, label_container)->set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
         max_width = max(max_width, label_property->font().width(pair.property));
         property_labels.append(label_property);
@@ -276,8 +276,8 @@ void PropertiesDialog::make_divider(NonnullRefPtr<GUI::Widget>& parent)
     auto divider = GUI::Frame::construct(parent.ptr());
     divider->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     divider->set_preferred_size({ 0, 2 });
-    divider->set_frame_shape(FrameShape::HorizontalLine);
-    divider->set_frame_shadow(FrameShadow::Sunken);
+    divider->set_frame_shape(Gfx::FrameShape::HorizontalLine);
+    divider->set_frame_shadow(Gfx::FrameShadow::Sunken);
     divider->set_frame_thickness(2);
 
     parent->layout()->add_spacer();

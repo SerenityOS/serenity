@@ -38,20 +38,20 @@ public:
     int preferred_width() const;
     int preferred_height() const;
 
-    Font& font() { return *m_font; }
-    const Font& font() const { return *m_font; }
+    Gfx::Font& font() { return *m_font; }
+    const Gfx::Font& font() const { return *m_font; }
 
     Function<void(u8)> on_glyph_altered;
 
 private:
-    GlyphEditorWidget(Font&, GUI::Widget* parent);
+    GlyphEditorWidget(Gfx::Font&, GUI::Widget* parent);
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
 
     void draw_at_mouse(const GUI::MouseEvent&);
 
-    RefPtr<Font> m_font;
+    RefPtr<Gfx::Font> m_font;
     u8 m_glyph { 0 };
     int m_scale { 10 };
 };

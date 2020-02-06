@@ -37,8 +37,8 @@ FormEditorWidget::FormEditorWidget(GUI::Widget* parent)
     set_fill_with_background_color(true);
     set_background_color(Color::MidGray);
 
-    set_frame_shape(FrameShape::Container);
-    set_frame_shadow(FrameShadow::Sunken);
+    set_frame_shape(Gfx::FrameShape::Container);
+    set_frame_shadow(Gfx::FrameShadow::Sunken);
     set_frame_thickness(2);
 
     m_form_widget = FormWidget::construct(*this);

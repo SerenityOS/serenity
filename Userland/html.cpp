@@ -82,13 +82,13 @@ int main(int argc, char** argv)
 
     auto help_menu = GUI::Menu::construct("Help");
     help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
-        GUI::AboutDialog::show("HTML", GraphicsBitmap::load_from_file("/res/icons/32x32/filetype-html.png"), window);
+        GUI::AboutDialog::show("HTML", Gfx::Bitmap::load_from_file("/res/icons/32x32/filetype-html.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 
     app.set_menubar(move(menubar));
 
-    window->set_icon(GraphicsBitmap::load_from_file("/res/icons/16x16/filetype-html.png"));
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png"));
 
     return app.exec();
 }

@@ -63,7 +63,7 @@ GUI::Model::ColumnMetadata IRCWindowListModel::column_metadata(int column) const
 {
     switch (column) {
     case Column::Name:
-        return { 70, TextAlignment::CenterLeft };
+        return { 70, Gfx::TextAlignment::CenterLeft };
     }
     ASSERT_NOT_REACHED();
 }

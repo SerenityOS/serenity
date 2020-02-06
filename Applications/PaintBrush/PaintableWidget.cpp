@@ -47,7 +47,7 @@ PaintableWidget::PaintableWidget(GUI::Widget* parent)
     pal.set_color(ColorRole::Window, Color::MidGray);
     set_palette(pal);
     set_background_color(Color::MidGray);
-    m_bitmap = GraphicsBitmap::create(GraphicsBitmap::Format::RGB32, { 600, 400 });
+    m_bitmap = Gfx::Bitmap::create(Gfx::Bitmap::Format::RGB32, { 600, 400 });
     m_bitmap->fill(Color::White);
 }
 
@@ -158,7 +158,7 @@ void PaintableWidget::set_secondary_color(Color color)
         on_secondary_color_change(color);
 }
 
-void PaintableWidget::set_bitmap(const GraphicsBitmap& bitmap)
+void PaintableWidget::set_bitmap(const Gfx::Bitmap& bitmap)
 {
     m_bitmap = bitmap;
     update();

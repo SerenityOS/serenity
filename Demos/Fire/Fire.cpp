@@ -97,7 +97,7 @@ public:
 
 private:
     explicit Fire(GUI::Widget* parent = nullptr);
-    RefPtr<GraphicsBitmap> bitmap;
+    RefPtr<Gfx::Bitmap> bitmap;
     RefPtr<GUI::Label> stats;
 
     virtual void paint_event(GUI::PaintEvent&) override;
@@ -115,7 +115,7 @@ private:
 Fire::Fire(GUI::Widget* parent)
     : GUI::Widget(parent)
 {
-    bitmap = GraphicsBitmap::create(GraphicsBitmap::Format::Indexed8, { 320, 200 });
+    bitmap = Gfx::Bitmap::create(Gfx::Bitmap::Format::Indexed8, { 320, 200 });
 
     /* Initialize fire palette */
     for (int i = 0; i < 30; i++)
@@ -257,7 +257,7 @@ int main(int argc, char** argv)
     fire->set_stat_label(time);
 
     window->show();
-    window->set_icon(load_png("/res/icons/16x16/app-demo.png"));
+    window->set_icon(Gfx::load_png("/res/icons/16x16/app-demo.png"));
 
     return app.exec();
 }

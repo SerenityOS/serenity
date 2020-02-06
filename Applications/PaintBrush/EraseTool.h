@@ -46,7 +46,7 @@ public:
 private:
     Color get_color() const;
     virtual const char* class_name() const override { return "EraseTool"; }
-    Rect build_rect(const Point& pos, const Rect& widget_rect);
+    Rect build_rect(const Gfx::Point& pos, const Gfx::Rect& widget_rect);
     RefPtr<GUI::Menu> m_context_menu;
 
     bool m_use_secondary_color { true };

@@ -31,7 +31,10 @@
 #include <LibCore/CObject.h>
 #include <LibDraw/Rect.h>
 
+namespace Gfx {
 class Painter;
+}
+
 class WSKeyEvent;
 class WSWindow;
 
@@ -68,7 +71,7 @@ public:
 
 private:
     RefPtr<WSWindow> m_switcher_window;
-    Rect m_rect;
+    Gfx::Rect m_rect;
     bool m_visible { false };
     Vector<WeakPtr<WSWindow>> m_windows;
     int m_selected_index { 0 };

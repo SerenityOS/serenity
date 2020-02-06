@@ -31,8 +31,8 @@ GraphWidget::GraphWidget(GUI::Widget* parent)
     : GUI::Frame(parent)
 {
     set_frame_thickness(2);
-    set_frame_shape(FrameShape::Container);
-    set_frame_shadow(FrameShadow::Sunken);
+    set_frame_shape(Gfx::FrameShape::Container);
+    set_frame_shadow(Gfx::FrameShadow::Sunken);
 }
 
 GraphWidget::~GraphWidget()
@@ -72,7 +72,7 @@ void GraphWidget::paint_event(GUI::PaintEvent& event)
         Rect text_rect = inner_rect.shrunken(8, 8);
         text_rect.set_height(font().glyph_height());
         auto text = text_formatter(m_values.last(), m_max);
-        painter.draw_text(text_rect.translated(1, 1), text.characters(), TextAlignment::CenterRight, Color::Black);
-        painter.draw_text(text_rect, text.characters(), TextAlignment::CenterRight, m_text_color);
+        painter.draw_text(text_rect.translated(1, 1), text.characters(), Gfx::TextAlignment::CenterRight, Color::Black);
+        painter.draw_text(text_rect, text.characters(), Gfx::TextAlignment::CenterRight, m_text_color);
     }
 }

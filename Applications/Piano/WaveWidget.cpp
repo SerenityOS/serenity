@@ -35,8 +35,8 @@ WaveWidget::WaveWidget(GUI::Widget* parent, AudioEngine& audio_engine)
     , m_audio_engine(audio_engine)
 {
     set_frame_thickness(2);
-    set_frame_shadow(FrameShadow::Sunken);
-    set_frame_shape(FrameShape::Container);
+    set_frame_shadow(Gfx::FrameShadow::Sunken);
+    set_frame_shape(Gfx::FrameShape::Container);
 }
 
 WaveWidget::~WaveWidget()
