@@ -8,11 +8,9 @@ Graphical Unix-like operating system for x86 computers.
 
 SerenityOS is a love letter to '90s user interfaces with a custom Unix-like core. It flatters with sincerity by stealing beautiful ideas from various other systems.
 
-Roughly speaking, the goal is a marriage between the aesthetic of late-1990s productivity software and the power-user accessibility of late-2000s \*nix. This is a system by me, for me, based on the things I like.
+Roughly speaking, the goal is a marriage between the aesthetic of late-1990s productivity software and the power-user accessibility of late-2000s \*nix. This is a system by us, for us, based on the things we like.
 
-If you like some of the same things, you are welcome to join the project. It would be great to one day change the above to say "this is a system by us, for us, based on the things we like." :^)
-
-I regularly post raw hacking sessions and demos on [my YouTube channel](https://www.youtube.com/c/AndreasKling/).
+I (Andreas) regularly post raw hacking sessions and demos on [my YouTube channel](https://www.youtube.com/c/AndreasKling/).
 
 Sometimes I write about the system on [my github.io blog](https://awesomekling.github.io/).
 
@@ -22,54 +20,62 @@ I'm also on [Patreon](https://www.patreon.com/serenityos) and [GitHub Sponsors](
 
 ![Screenshot as of 1133aca](https://raw.githubusercontent.com/SerenityOS/serenity/master/Meta/screenshot-1133aca.png)
 
-## Current features (all under development, some more mature than others)
+## Kernel features
 
-* Pre-emptive multitasking
-* Multithreading
-* Compositing window server
-* IPv4 networking with ARP, TCP, UDP and ICMP
+* x86 (32-bit) kernel with pre-emptive multi-threading
+* Hardware protections (SMEP, SMAP, UMIP, NX, WP, TSD, ...)
+* IPv4 stack with ARP, TCP, UDP and ICMP protocols
 * ext2 filesystem
-* Unix-like libc and userland
 * POSIX signals
-* Shell with pipes and I/O redirection
-* mmap()
 * Purgeable memory
 * /proc filesystem
-* Local sockets
 * Pseudoterminals (with /dev/pts filesystem)
 * Filesystem notifications
-* JSON framework
-* Low-level utility library (LibCore)
-* Mid-level 2D graphics library (LibDraw)
-* High-level GUI library (LibGUI)
-* HTML/CSS engine
-* Web browser
-* C++ IDE
-* Sampling profiler with GUI
-* Emojis (UTF-8)
-* HTTP downloads
+* CPU and memory profiling
 * SoundBlaster 16 driver
-* Software-mixing sound daemon
-* WAV playback
-* Simple desktop piano/synthesizer
-* Visual GUI design tool
-* PNG format support
-* Text editor
+* VMWare/QEMU mouse integration
+
+## System services
+
+* Launch/session daemon (SystemServer)
+* Compositing window server (WindowServer)
+* DNS client (LookupServer)
+* Software-mixing sound daemon (AudioServer)
+
+## Libraries
+
+* C++ templates and containers (AK)
+* Event loop and utilities (LibCore)
+* 2D graphics library (LibGfx)
+* GUI toolkit (LibGUI)
+* Cross-process communication library (LibIPC)
+* HTML/CSS engine (LibHTML)
+* Markdown (LibMarkdown)
+* Audio (LibAudio)
+* PCI database (LibPCIDB)
+* Terminal emulation (LibVT)
+* Network protocols (HTTP) (LibProtocol)
+
+## Userland features
+
+* Unix-like libc and userland
+* Shell with pipes and I/O redirection
+* On-line help system (both terminal and GUI variants)
+* Web browser (Browser)
+* C++ IDE (HackStudio)
 * IRC client
-* Simple painting application
-* DNS lookup
-* Desktop games: Minesweeper and Snake
-* Color theming
-* Ports system (needs more packages!)
-* Other stuff I can't think of right now...
+* Desktop synthesizer (Piano)
+* Various desktop apps & games
+* Desktop games (Minesweeper and Snake)
+* Color themes
 
 ## How do I build and run this?
 
 See the [SerenityOS build instructions](https://github.com/SerenityOS/serenity/blob/master/Documentation/BuildInstructions.md)
 
-## Wanna talk?
+## Wanna chat?
 
-Come chat with us in `#serenityos` on the Freenode IRC network.
+Come hang out with us in `#serenityos` on the Freenode IRC network.
 
 ## Author
 
