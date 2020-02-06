@@ -156,7 +156,7 @@ RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
     slider_container->layout()->set_margins({ 6, 16, 6, 6 });
     slider_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     slider_container->set_preferred_size(100, 50);
-    auto slider = GUI::Slider::construct(Orientation::Horizontal, slider_container);
+    auto slider = GUI::HorizontalSlider::construct(slider_container);
 
     slider->on_value_changed = [&terminal](int value) {
         terminal.set_opacity(value);

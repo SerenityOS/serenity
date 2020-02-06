@@ -133,7 +133,7 @@ static RefPtr<GUI::Widget> build_gwidget(VBWidgetType type, GUI::Widget* parent)
         return bar;
     }
     case VBWidgetType::GSlider: {
-        auto slider = GUI::Slider::construct(Orientation::Horizontal, parent);
+        auto slider = GUI::HorizontalSlider::construct(parent);
         slider->set_range(0, 100);
         slider->set_value(50);
         return slider;

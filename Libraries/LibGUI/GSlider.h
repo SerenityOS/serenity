@@ -96,4 +96,28 @@ private:
     Orientation m_orientation { Orientation::Horizontal };
 };
 
+class VerticalSlider final : public Slider {
+    C_OBJECT(VerticalSlider)
+public:
+    virtual ~VerticalSlider() override {}
+
+private:
+    explicit VerticalSlider(Widget* parent)
+        : Slider(Orientation::Vertical, parent)
+    {
+    }
+};
+
+class HorizontalSlider final : public Slider {
+    C_OBJECT(HorizontalSlider)
+public:
+    virtual ~HorizontalSlider() override {}
+
+private:
+    explicit HorizontalSlider(Widget* parent)
+        : Slider(Orientation::Horizontal, parent)
+    {
+    }
+};
+
 }
