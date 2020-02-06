@@ -26,18 +26,32 @@
 
 #pragma once
 
-namespace GUI {
+#include <AK/ByteBuffer.h>
+#include <LibCore/EventLoop.h>
+#include <LibCore/LocalServer.h>
+#include <LibCore/Notifier.h>
 
-// Keep this in sync with WindowType.
-enum class WindowType {
-    Invalid = 0,
-    Normal,
-    Menu,
-    WindowSwitcher,
-    Taskbar,
-    Tooltip,
-    Menubar,
-    MenuApplet,
+namespace WindowServer {
+
+class ClientConnection;
+
+class EventLoop {
+public:
+    EventLoop();
+    virtual ~EventLoop();
+
+    int exec() { return m_event_loop.exec(); }
+
+private:
+    void drain_mouse();
+    void drain_keyboard();
+
+    Core::EventLoop m_event_loop;
+    int m_keyboard_fd { -1 };
+    RefPtr<Core::Notifier> m_keyboard_notifier;
+    int m_mouse_fd { -1 };
+    RefPtr<Core::Notifier> m_mouse_notifier;
+    RefPtr<Core::LocalServer> m_server;
 };
 
 }

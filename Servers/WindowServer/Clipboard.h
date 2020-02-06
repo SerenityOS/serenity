@@ -26,18 +26,37 @@
 
 #pragma once
 
-namespace GUI {
+#include <AK/Function.h>
+#include <AK/SharedBuffer.h>
+#include <AK/String.h>
 
-// Keep this in sync with WindowType.
-enum class WindowType {
-    Invalid = 0,
-    Normal,
-    Menu,
-    WindowSwitcher,
-    Taskbar,
-    Tooltip,
-    Menubar,
-    MenuApplet,
+namespace WindowServer {
+
+class Clipboard {
+public:
+    static Clipboard& the();
+    ~Clipboard();
+
+    bool has_data() const
+    {
+        return m_shared_buffer;
+    }
+
+    const String& data_type() const { return m_data_type; }
+    const u8* data() const;
+    int size() const;
+
+    void clear();
+    void set_data(NonnullRefPtr<SharedBuffer>&&, int contents_size, const String& data_type);
+
+    Function<void()> on_content_change;
+
+private:
+    Clipboard();
+
+    String m_data_type;
+    RefPtr<SharedBuffer> m_shared_buffer;
+    int m_contents_size { 0 };
 };
 
 }

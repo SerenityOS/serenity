@@ -26,18 +26,40 @@
 
 #pragma once
 
-namespace GUI {
+#include "Menu.h"
+#include <AK/Vector.h>
+#include <AK/WeakPtr.h>
+#include <AK/Weakable.h>
 
-// Keep this in sync with WindowType.
-enum class WindowType {
-    Invalid = 0,
-    Normal,
-    Menu,
-    WindowSwitcher,
-    Taskbar,
-    Tooltip,
-    Menubar,
-    MenuApplet,
+namespace WindowServer {
+
+class MenuBar : public Weakable<MenuBar> {
+public:
+    MenuBar(ClientConnection& client, int menubar_id);
+    ~MenuBar();
+
+    ClientConnection& client() { return m_client; }
+    const ClientConnection& client() const { return m_client; }
+    int menubar_id() const { return m_menubar_id; }
+    void add_menu(Menu& menu)
+    {
+        menu.set_menubar(this);
+        m_menus.append(&menu);
+    }
+
+    template<typename Callback>
+    void for_each_menu(Callback callback)
+    {
+        for (auto& menu : m_menus) {
+            if (callback(*menu) == IterationDecision::Break)
+                return;
+        }
+    }
+
+private:
+    ClientConnection& m_client;
+    int m_menubar_id { 0 };
+    Vector<Menu*> m_menus;
 };
 
 }

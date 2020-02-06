@@ -44,7 +44,7 @@
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
 #include <LibGUI/GWindowServerConnection.h>
-#include <Servers/WindowServer/WSWindowManager.h>
+#include <Servers/WindowServer/WindowManager.h>
 
 DisplayPropertiesWidget::DisplayPropertiesWidget()
     : m_wm_config(Core::ConfigFile::get_for_app("WindowManager"))

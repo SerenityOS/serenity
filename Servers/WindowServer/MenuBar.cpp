@@ -24,20 +24,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include "MenuBar.h"
+#include "Menu.h"
+#include "MenuItem.h"
+#include <LibGfx/Bitmap.h>
 
-namespace GUI {
+namespace WindowServer {
 
-// Keep this in sync with WindowType.
-enum class WindowType {
-    Invalid = 0,
-    Normal,
-    Menu,
-    WindowSwitcher,
-    Taskbar,
-    Tooltip,
-    Menubar,
-    MenuApplet,
-};
+MenuBar::MenuBar(ClientConnection& client, int menubar_id)
+    : m_client(client)
+    , m_menubar_id(menubar_id)
+{
+}
+
+MenuBar::~MenuBar()
+{
+}
 
 }

@@ -26,18 +26,57 @@
 
 #pragma once
 
-namespace GUI {
+#include <AK/Vector.h>
+#include <AK/WeakPtr.h>
+#include <LibCore/Object.h>
+#include <LibGfx/Rect.h>
 
-// Keep this in sync with WindowType.
-enum class WindowType {
-    Invalid = 0,
-    Normal,
-    Menu,
-    WindowSwitcher,
-    Taskbar,
-    Tooltip,
-    Menubar,
-    MenuApplet,
+namespace Gfx {
+class Painter;
+}
+
+namespace WindowServer {
+
+class KeyEvent;
+class Window;
+
+class WindowSwitcher : public Core::Object {
+    C_OBJECT(WindowSwitcher)
+public:
+    static WindowSwitcher& the();
+
+    WindowSwitcher();
+    virtual ~WindowSwitcher() override;
+
+    bool is_visible() const { return m_visible; }
+    void set_visible(bool);
+
+    void show() { set_visible(true); }
+    void hide() { set_visible(false); }
+
+    void on_key_event(const KeyEvent&);
+    void refresh();
+    void refresh_if_needed();
+
+    void draw();
+
+    int thumbnail_width() { return 40; }
+    int thumbnail_height() { return 40; }
+
+    int item_height() { return 10 + thumbnail_height(); }
+    int padding() { return 8; }
+    int item_padding() { return 8; }
+
+    Window* selected_window();
+
+    Window* switcher_window() { return m_switcher_window.ptr(); }
+
+private:
+    RefPtr<Window> m_switcher_window;
+    Gfx::Rect m_rect;
+    bool m_visible { false };
+    Vector<WeakPtr<Window>> m_windows;
+    int m_selected_index { 0 };
 };
 
 }

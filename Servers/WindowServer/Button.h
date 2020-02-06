@@ -26,18 +26,49 @@
 
 #pragma once
 
-namespace GUI {
+#include <AK/Function.h>
+#include <AK/NonnullRefPtr.h>
+#include <AK/Weakable.h>
+#include <LibGfx/Rect.h>
 
-// Keep this in sync with WindowType.
-enum class WindowType {
-    Invalid = 0,
-    Normal,
-    Menu,
-    WindowSwitcher,
-    Taskbar,
-    Tooltip,
-    Menubar,
-    MenuApplet,
+namespace Gfx {
+class CharacterBitmap;
+class Painter;
+}
+
+namespace WindowServer {
+
+class MouseEvent;
+class WindowFrame;
+
+class Button : public Weakable<Button> {
+public:
+    Button(WindowFrame&, NonnullRefPtr<Gfx::CharacterBitmap>&&, Function<void(Button&)>&& on_click_handler);
+    ~Button();
+
+    Gfx::Rect relative_rect() const { return m_relative_rect; }
+    void set_relative_rect(const Gfx::Rect& rect) { m_relative_rect = rect; }
+
+    Gfx::Rect rect() const { return { {}, m_relative_rect.size() }; }
+    Gfx::Rect screen_rect() const;
+
+    void paint(Gfx::Painter&);
+
+    void on_mouse_event(const MouseEvent&);
+
+    Function<void(Button&)> on_click;
+
+    bool is_visible() const { return m_visible; }
+
+    void set_bitmap(const Gfx::CharacterBitmap& bitmap) { m_bitmap = bitmap; }
+
+private:
+    WindowFrame& m_frame;
+    Gfx::Rect m_relative_rect;
+    NonnullRefPtr<Gfx::CharacterBitmap> m_bitmap;
+    bool m_pressed { false };
+    bool m_visible { true };
+    bool m_hovered { false };
 };
 
 }
