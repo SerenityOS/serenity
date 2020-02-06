@@ -140,7 +140,7 @@ void EventLoop::drain_keyboard()
     auto& screen = Screen::the();
     for (;;) {
         ::KeyEvent event;
-        ssize_t nread = read(m_keyboard_fd, (u8*)&event, sizeof(KeyEvent));
+        ssize_t nread = read(m_keyboard_fd, (u8*)&event, sizeof(::KeyEvent));
         if (nread == 0)
             break;
         ASSERT(nread == sizeof(::KeyEvent));
