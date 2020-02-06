@@ -132,7 +132,7 @@ inline typename Builder::OutputType JsonObject::serialized() const
 }
 
 template<typename Builder>
-void JsonValue::serialize(Builder& builder) const
+inline void JsonValue::serialize(Builder& builder) const
 {
     switch (m_type) {
     case Type::String:
@@ -176,7 +176,7 @@ void JsonValue::serialize(Builder& builder) const
 }
 
 template<typename Builder>
-typename Builder::OutputType JsonValue::serialized() const
+inline typename Builder::OutputType JsonValue::serialized() const
 {
     Builder builder;
     serialize(builder);
