@@ -40,6 +40,8 @@ public:
     ~AudioEngine();
 
     const FixedArray<Sample>& buffer() const { return *m_front_buffer_ptr; }
+    Switch roll_note(int y, int x) const { return m_roll_notes[y][x]; }
+    int current_column() const { return m_current_column; }
     int octave() const { return m_octave; }
     int octave_base() const { return (m_octave - octave_min) * 12; }
     int wave() const { return m_wave; }
@@ -54,6 +56,7 @@ public:
     void fill_buffer(FixedArray<Sample>& buffer);
     void set_note(int note, Switch);
     void set_note_current_octave(int note, Switch);
+    void set_roll_note(int y, int x, Switch);
     void set_octave(Direction);
     void set_wave(int wave);
     void set_wave(Direction);
@@ -69,6 +72,8 @@ private:
     double square(size_t note);
     double triangle(size_t note);
     double noise() const;
+
+    void update_roll();
 
     void set_sustain_impl(int sustain);
 
@@ -98,4 +103,8 @@ private:
 
     int m_time { 0 };
     int m_tick { 8 };
+
+    Switch m_roll_notes[note_count][horizontal_notes] { { Off } };
+    int m_current_column { 0 };
+    int m_previous_column { horizontal_notes - 1 };
 };

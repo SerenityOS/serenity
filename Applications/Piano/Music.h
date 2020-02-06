@@ -116,6 +116,8 @@ constexpr int black_keys_per_octave = 5;
 constexpr int octave_min = 1;
 constexpr int octave_max = 7;
 
+constexpr int horizontal_notes = 32;
+
 // Equal temperament, A = 440Hz
 // We calculate note frequencies relative to A4:
 // 440.0 * pow(pow(2.0, 1.0 / 12.0), N)
