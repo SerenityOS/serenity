@@ -1,5 +1,6 @@
 OBJS = \
     ClientConnection.o \
+    WavWriter.o \
     WavLoader.o
 
 LIBRARY = libaudio.a
