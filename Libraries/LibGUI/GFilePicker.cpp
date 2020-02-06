@@ -26,7 +26,6 @@
 
 #include <AK/FileSystemPath.h>
 #include <AK/Function.h>
-#include <LibGfx/PNGLoader.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>
@@ -254,7 +253,7 @@ FilePicker::~FilePicker()
 void FilePicker::set_preview(const FileSystemPath& path)
 {
     if (path.has_extension(".png")) {
-        auto bitmap = Gfx::load_png(path.string());
+        auto bitmap = Gfx::Bitmap::load_from_file(path.string());
         if (!bitmap) {
             clear_preview();
             return;

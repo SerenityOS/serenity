@@ -32,7 +32,6 @@
 #include <AK/JsonObject.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/CFile.h>
-#include <LibGfx/PNGLoader.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GMenu.h>
@@ -63,13 +62,13 @@ VBForm::VBForm(const String& name, GUI::Widget* parent)
             widget->gwidget()->move_to_back();
     }));
     m_context_menu->add_separator();
-    m_context_menu->add_action(GUI::Action::create("Lay out horizontally", Gfx::load_png("/res/icons/16x16/layout-horizontally.png"), [this](auto&) {
+    m_context_menu->add_action(GUI::Action::create("Lay out horizontally", Gfx::Bitmap::load_from_file("/res/icons/16x16/layout-horizontally.png"), [this](auto&) {
         if (auto* widget = single_selected_widget()) {
             dbg() << "Giving " << *widget->gwidget() << " a horizontal box layout";
             widget->gwidget()->set_layout(make<GUI::HBoxLayout>());
         }
     }));
-    m_context_menu->add_action(GUI::Action::create("Lay out vertically", Gfx::load_png("/res/icons/16x16/layout-vertically.png"), [this](auto&) {
+    m_context_menu->add_action(GUI::Action::create("Lay out vertically", Gfx::Bitmap::load_from_file("/res/icons/16x16/layout-vertically.png"), [this](auto&) {
         if (auto* widget = single_selected_widget()) {
             dbg() << "Giving " << *widget->gwidget() << " a vertical box layout";
             widget->gwidget()->set_layout(make<GUI::VBoxLayout>());

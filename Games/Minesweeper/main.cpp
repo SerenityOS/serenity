@@ -26,7 +26,6 @@
 
 #include "Field.h"
 #include <LibCore/CConfigFile.h>
-#include <LibGfx/PNGLoader.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
@@ -129,7 +128,7 @@ int main(int argc, char** argv)
 
     auto help_menu = GUI::Menu::construct("Help");
     help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
-        GUI::AboutDialog::show("Minesweeper", Gfx::load_png("/res/icons/32x32/app-minesweeper.png"), window);
+        GUI::AboutDialog::show("Minesweeper", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-minesweeper.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 
@@ -137,7 +136,7 @@ int main(int argc, char** argv)
 
     window->show();
 
-    window->set_icon(Gfx::load_png("/res/icons/minesweeper/mine.png"));
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/minesweeper/mine.png"));
 
     return app.exec();
 }

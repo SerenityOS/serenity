@@ -28,7 +28,6 @@
 #include "ItemListModel.h"
 #include <AK/StringBuilder.h>
 #include <LibCore/CDirIterator.h>
-#include <LibGfx/PNGLoader.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
@@ -151,7 +150,7 @@ void DisplayPropertiesWidget::create_frame()
         m_selected_wallpaper = m_wallpapers.at(index.row());
         builder.append("/res/wallpapers/");
         builder.append(m_selected_wallpaper);
-        m_wallpaper_preview->set_icon(Gfx::load_png(builder.to_string()));
+        m_wallpaper_preview->set_icon(Gfx::Bitmap::load_from_file(builder.to_string()));
         m_wallpaper_preview->set_should_stretch_icon(true);
     };
 

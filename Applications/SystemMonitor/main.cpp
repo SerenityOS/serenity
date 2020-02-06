@@ -35,7 +35,6 @@
 #include "ProcessTableView.h"
 #include "ProcessUnveiledPathsWidget.h"
 #include <LibCore/CTimer.h>
-#include <LibGfx/PNGLoader.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GActionGroup.h>
@@ -222,7 +221,7 @@ int main(int argc, char** argv)
 
     auto help_menu = GUI::Menu::construct("Help");
     help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
-        GUI::AboutDialog::show("System Monitor", Gfx::load_png("/res/icons/32x32/app-system-monitor.png"), window);
+        GUI::AboutDialog::show("System Monitor", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-system-monitor.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 
@@ -251,7 +250,7 @@ int main(int argc, char** argv)
 
     window->show();
 
-    window->set_icon(Gfx::load_png("/res/icons/16x16/app-system-monitor.png"));
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-system-monitor.png"));
 
     return app.exec();
 }

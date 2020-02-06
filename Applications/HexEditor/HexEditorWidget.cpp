@@ -28,7 +28,6 @@
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/CFile.h>
-#include <LibGfx/PNGLoader.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GBoxLayout.h>
@@ -202,7 +201,7 @@ HexEditorWidget::HexEditorWidget()
 
     auto help_menu = GUI::Menu::construct("Help");
     help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
-        GUI::AboutDialog::show("Hex Editor", Gfx::load_png("/res/icons/32x32/app-hexeditor.png"), window());
+        GUI::AboutDialog::show("Hex Editor", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-hexeditor.png"), window());
     }));
     menubar->add_menu(move(help_menu));
 

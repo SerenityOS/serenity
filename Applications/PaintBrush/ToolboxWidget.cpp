@@ -34,7 +34,6 @@
 #include "PickerTool.h"
 #include "RectangleTool.h"
 #include "SprayTool.h"
-#include <LibGfx/PNGLoader.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>
 
@@ -83,7 +82,7 @@ ToolboxWidget::ToolboxWidget(GUI::Widget* parent)
         button->set_checkable(true);
         button->set_exclusive(true);
 
-        button->set_icon(Gfx::load_png(String::format("/res/icons/paintbrush/%s.png", String(icon_name).characters())));
+        button->set_icon(Gfx::Bitmap::load_from_file(String::format("/res/icons/paintbrush/%s.png", String(icon_name).characters())));
 
         button->on_checked = [button = button.ptr()](auto checked) {
             if (checked)

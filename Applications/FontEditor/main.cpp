@@ -25,7 +25,6 @@
  */
 
 #include "FontEditor.h"
-#include <LibGfx/PNGLoader.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
@@ -71,7 +70,7 @@ int main(int argc, char** argv)
     auto font_editor = FontEditorWidget::construct(path, move(edited_font));
     window->set_main_widget(font_editor);
     window->show();
-    window->set_icon(Gfx::load_png("/res/icons/16x16/app-font-editor.png"));
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-font-editor.png"));
 
     auto menubar = make<GUI::MenuBar>();
 
@@ -84,7 +83,7 @@ int main(int argc, char** argv)
 
     auto help_menu = GUI::Menu::construct("Help");
     help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
-        GUI::AboutDialog::show("Font Editor", Gfx::load_png("/res/icons/FontEditor.png"), window);
+        GUI::AboutDialog::show("Font Editor", Gfx::Bitmap::load_from_file("/res/icons/FontEditor.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 

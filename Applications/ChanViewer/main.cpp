@@ -26,7 +26,6 @@
 
 #include "BoardListModel.h"
 #include "ThreadCatalogModel.h"
-#include <LibGfx/PNGLoader.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
@@ -55,7 +54,7 @@ int main(int argc, char** argv)
     auto window = GUI::Window::construct();
     window->set_title("ChanViewer");
     window->set_rect(100, 100, 800, 500);
-    window->set_icon(Gfx::load_png("/res/icons/16x16/app-chanviewer.png"));
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-chanviewer.png"));
 
     auto widget = GUI::Widget::construct();
     window->set_main_widget(widget);
@@ -104,7 +103,7 @@ int main(int argc, char** argv)
 
     auto help_menu = GUI::Menu::construct("Help");
     help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
-        GUI::AboutDialog::show("ChanViewer", Gfx::load_png("/res/icons/32x32/app-chanviewer.png"), window);
+        GUI::AboutDialog::show("ChanViewer", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-chanviewer.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 

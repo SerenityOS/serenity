@@ -28,7 +28,6 @@
 #include <AK/QuickSort.h>
 #include <LibCore/CDirIterator.h>
 #include <LibGfx/Font.h>
-#include <LibGfx/PNGLoader.h>
 #include <LibGfx/Painter.h>
 #include <WindowServer/WSMenuManager.h>
 #include <WindowServer/WSScreen.h>
@@ -102,7 +101,7 @@ WSMenuManager::WSMenuManager()
     int app_identifier = 1;
     for (const auto& app : m_apps) {
         auto parent_menu = m_app_category_menus.get(app.category).value_or(*m_system_menu);
-        parent_menu->add_item(make<WSMenuItem>(*m_system_menu, app_identifier++, app.name, String(), true, false, false, Gfx::load_png(app.icon_path)));
+        parent_menu->add_item(make<WSMenuItem>(*m_system_menu, app_identifier++, app.name, String(), true, false, false, Gfx::Bitmap::load_from_file(app.icon_path)));
     }
 
     m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
@@ -140,7 +139,7 @@ WSMenuManager::WSMenuManager()
     m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 100, "Reload WM Config File"));
 
     m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
-    m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 200, "About...", String(), true, false, false, Gfx::load_png("/res/icons/16x16/ladybug.png")));
+    m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 200, "About...", String(), true, false, false, Gfx::Bitmap::load_from_file("/res/icons/16x16/ladybug.png")));
     m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
     m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 300, "Shutdown..."));
     m_system_menu->on_item_activation = [this](WSMenuItem& item) {

@@ -27,7 +27,6 @@
 #include <Kernel/KeyCode.h>
 #include <LibCore/CArgsParser.h>
 #include <LibCore/CUserInfo.h>
-#include <LibGfx/PNGLoader.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GActionGroup.h>
@@ -235,7 +234,7 @@ int main(int argc, char** argv)
     window->move_to(300, 300);
     terminal->apply_size_increments_to_window(*window);
     window->show();
-    window->set_icon(Gfx::load_png("/res/icons/16x16/app-terminal.png"));
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"));
     terminal->set_should_beep(config->read_bool_entry("Window", "AudibleBeep", false));
 
     RefPtr<GUI::Window> settings_window;
@@ -253,7 +252,7 @@ int main(int argc, char** argv)
             exit(1);
         }
     }));
-    app_menu->add_action(GUI::Action::create("Settings...", Gfx::load_png("/res/icons/gear16.png"),
+    app_menu->add_action(GUI::Action::create("Settings...", Gfx::Bitmap::load_from_file("/res/icons/gear16.png"),
         [&](const GUI::Action&) {
             if (!settings_window) {
                 settings_window = create_settings_window(*terminal);
@@ -300,7 +299,7 @@ int main(int argc, char** argv)
 
     auto help_menu = GUI::Menu::construct("Help");
     help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
-        GUI::AboutDialog::show("Terminal", Gfx::load_png("/res/icons/32x32/app-terminal.png"), window);
+        GUI::AboutDialog::show("Terminal", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-terminal.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 
