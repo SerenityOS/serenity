@@ -39,7 +39,7 @@ public:
     float y() const { return rect().y(); }
     float width() const { return rect().width(); }
     float height() const { return rect().height(); }
-    FloatSize size() const { return rect().size(); }
+    Gfx::FloatSize size() const { return rect().size(); }
     FloatPoint position() const { return rect().location(); }
 
     virtual HitTestResult hit_test(const Gfx::Point& position) const override;
