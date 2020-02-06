@@ -27,7 +27,7 @@
 #pragma once
 
 #include <Kernel/KeyCode.h>
-#include <LibCore/CEvent.h>
+#include <LibCore/Event.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>
 #include <LibGUI/GWindowType.h>

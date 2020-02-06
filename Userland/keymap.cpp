@@ -25,7 +25,7 @@
  */
 
 #include <AK/JsonObject.h>
-#include <LibCore/CFile.h>
+#include <LibCore/File.h>
 #include <stdio.h>
 
 #include <Kernel/Syscall.h>

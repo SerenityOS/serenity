@@ -30,7 +30,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/SharedBuffer.h>
-#include <LibCore/CProcessStatisticsReader.h>
+#include <LibCore/ProcessStatisticsReader.h>
 #include <fcntl.h>
 #include <stdio.h>
 

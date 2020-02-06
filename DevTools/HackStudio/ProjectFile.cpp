@@ -25,7 +25,7 @@
  */
 
 #include "ProjectFile.h"
-#include <LibCore/CFile.h>
+#include <LibCore/File.h>
 #include <string.h>
 
 const GUI::TextDocument& ProjectFile::document() const

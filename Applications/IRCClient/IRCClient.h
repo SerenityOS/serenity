@@ -32,8 +32,8 @@
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/String.h>
-#include <LibCore/CConfigFile.h>
-#include <LibCore/CTCPSocket.h>
+#include <LibCore/ConfigFile.h>
+#include <LibCore/TCPSocket.h>
 
 class IRCChannel;
 class IRCQuery;

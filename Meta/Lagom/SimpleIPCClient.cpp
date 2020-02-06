@@ -24,9 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibCore/CEventLoop.h>
-#include <LibCore/CTimer.h>
-#include <LibCore/CoreIPCClient.h>
+#include <LibCore/EventLoop.h>
+#include <LibCore/Timer.h>
+#include <LibCore/oreIPCClient.h>
 #include <stdio.h>
 #include "SimpleEndpoint.h"
 

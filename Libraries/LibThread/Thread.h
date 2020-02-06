@@ -28,7 +28,7 @@
 
 #include <AK/Function.h>
 #include <AK/String.h>
-#include <LibCore/CObject.h>
+#include <LibCore/Object.h>
 #include <pthread.h>
 
 namespace LibThread {

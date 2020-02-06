@@ -28,8 +28,8 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
-#include <LibCore/CDirIterator.h>
-#include <LibCore/CFile.h>
+#include <LibCore/DirIterator.h>
+#include <LibCore/File.h>
 #include <sys/stat.h>
 
 NonnullRefPtr<DevicesModel> DevicesModel::create()

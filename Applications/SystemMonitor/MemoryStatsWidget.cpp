@@ -27,7 +27,7 @@
 #include "MemoryStatsWidget.h"
 #include "GraphWidget.h"
 #include <AK/JsonObject.h>
-#include <LibCore/CFile.h>
+#include <LibCore/File.h>
 #include <LibGfx/StylePainter.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GLabel.h>

@@ -25,7 +25,7 @@
  */
 
 #include <AK/StdLibExtras.h>
-#include <LibCore/CArgsParser.h>
+#include <LibCore/ArgsParser.h>
 
 #include <errno.h>
 #include <stdio.h>

@@ -25,7 +25,7 @@
  */
 
 #include <AK/Vector.h>
-#include <LibCore/CArgsParser.h>
+#include <LibCore/ArgsParser.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>

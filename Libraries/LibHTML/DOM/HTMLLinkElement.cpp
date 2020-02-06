@@ -25,7 +25,7 @@
  */
 
 #include <AK/URL.h>
-#include <LibCore/CFile.h>
+#include <LibCore/File.h>
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/DOM/HTMLLinkElement.h>
 #include <LibHTML/Parser/CSSParser.h>

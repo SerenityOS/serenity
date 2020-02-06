@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <LibCore/CEventLoop.h>
+#include <LibCore/EventLoop.h>
 #include <LibGUI/GWindow.h>
 
 namespace GUI {

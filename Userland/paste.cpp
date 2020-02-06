@@ -25,7 +25,7 @@
  */
 
 #include <AK/String.h>
-#include <LibCore/CArgsParser.h>
+#include <LibCore/ArgsParser.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GClipboard.h>
 #include <stdio.h>

@@ -27,9 +27,9 @@
 #pragma once
 
 #include <AK/String.h>
-#include <LibCore/CConfigFile.h>
-#include <LibCore/CNotifier.h>
-#include <LibCore/CTimer.h>
+#include <LibCore/ConfigFile.h>
+#include <LibCore/Notifier.h>
+#include <LibCore/Timer.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Rect.h>
 #include <LibGUI/GFrame.h>

@@ -25,7 +25,7 @@
  */
 
 #include "ProcessMemoryMapWidget.h"
-#include <LibCore/CTimer.h>
+#include <LibCore/Timer.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GJsonArrayModel.h>
 #include <LibGUI/GSortingProxyModel.h>

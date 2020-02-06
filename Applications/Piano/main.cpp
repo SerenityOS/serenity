@@ -28,7 +28,7 @@
 #include "AudioEngine.h"
 #include "MainWidget.h"
 #include <LibAudio/AClientConnection.h>
-#include <LibCore/CFile.h>
+#include <LibCore/File.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>

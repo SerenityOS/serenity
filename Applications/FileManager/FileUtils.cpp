@@ -27,7 +27,7 @@
 #include "FileUtils.h"
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/CDirIterator.h>
+#include <LibCore/DirIterator.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>

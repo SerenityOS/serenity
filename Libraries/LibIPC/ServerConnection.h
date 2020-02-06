@@ -27,11 +27,11 @@
 #pragma once
 
 #include <AK/NonnullOwnPtrVector.h>
-#include <LibCore/CEvent.h>
-#include <LibCore/CEventLoop.h>
-#include <LibCore/CLocalSocket.h>
-#include <LibCore/CNotifier.h>
-#include <LibCore/CSyscallUtils.h>
+#include <LibCore/Event.h>
+#include <LibCore/EventLoop.h>
+#include <LibCore/LocalSocket.h>
+#include <LibCore/Notifier.h>
+#include <LibCore/SyscallUtils.h>
 #include <LibIPC/Message.h>
 #include <stdio.h>
 #include <stdlib.h>

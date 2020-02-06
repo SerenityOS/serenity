@@ -27,7 +27,7 @@
 #pragma once
 
 #include <AK/JsonArray.h>
-#include <LibCore/CHttpJob.h>
+#include <LibCore/HttpJob.h>
 #include <LibGUI/GModel.h>
 
 class ThreadCatalogModel final : public GUI::Model {

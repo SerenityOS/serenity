@@ -31,7 +31,7 @@
 #include <AK/QuickSort.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibCore/CDirIterator.h>
+#include <LibCore/DirIterator.h>
 #include <sys/stat.h>
 
 class LineEditor {

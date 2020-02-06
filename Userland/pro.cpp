@@ -26,7 +26,7 @@
 
 #include <AK/URL.h>
 #include <AK/SharedBuffer.h>
-#include <LibCore/CEventLoop.h>
+#include <LibCore/EventLoop.h>
 #include <LibProtocol/Client.h>
 #include <LibProtocol/Download.h>
 #include <stdio.h>

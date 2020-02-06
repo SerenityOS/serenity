@@ -29,8 +29,8 @@
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
-#include <LibCore/CNotifier.h>
-#include <LibCore/CTCPSocket.h>
+#include <LibCore/Notifier.h>
+#include <LibCore/TCPSocket.h>
 
 #include "Command.h"
 #include "Parser.h"

@@ -25,7 +25,7 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <LibCore/CTimer.h>
+#include <LibCore/Timer.h>
 #include <LibGUI/GTextDocument.h>
 #include <LibGUI/GTextEditor.h>
 #include <ctype.h>

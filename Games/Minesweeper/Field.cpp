@@ -27,7 +27,7 @@
 #include "Field.h"
 #include <AK/HashTable.h>
 #include <AK/Queue.h>
-#include <LibCore/CConfigFile.h>
+#include <LibCore/ConfigFile.h>
 #include <LibGUI/GButton.h>
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GPainter.h>

@@ -26,8 +26,8 @@
 
 #pragma once
 
-#include <LibCore/CEventLoop.h>
-#include <LibCore/CObject.h>
+#include <LibCore/EventLoop.h>
+#include <LibCore/Object.h>
 
 namespace Gfx {
 class Bitmap;

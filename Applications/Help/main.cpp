@@ -26,7 +26,7 @@
 
 #include "History.h"
 #include "ManualModel.h"
-#include <LibCore/CFile.h>
+#include <LibCore/File.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>

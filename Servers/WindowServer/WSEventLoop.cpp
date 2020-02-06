@@ -27,8 +27,8 @@
 #include "WSClipboard.h"
 #include <Kernel/KeyCode.h>
 #include <Kernel/MousePacket.h>
-#include <LibCore/CLocalSocket.h>
-#include <LibCore/CObject.h>
+#include <LibCore/LocalSocket.h>
+#include <LibCore/Object.h>
 #include <WindowServer/WSClientConnection.h>
 #include <WindowServer/WSCursor.h>
 #include <WindowServer/WSEvent.h>

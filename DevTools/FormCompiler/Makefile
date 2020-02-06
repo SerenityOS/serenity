@@ -11,14 +11,14 @@ OBJS = \
     ../../AK/JsonValue.o \
     ../../AK/JsonParser.o \
     ../../AK/LogStream.o \
-    ../../Libraries/LibCore/CIODevice.o \
-    ../../Libraries/LibCore/CFile.o \
-    ../../Libraries/LibCore/CObject.o \
-    ../../Libraries/LibCore/CEvent.o \
-    ../../Libraries/LibCore/CSocket.o \
-    ../../Libraries/LibCore/CLocalSocket.o \
-    ../../Libraries/LibCore/CLocalServer.o \
-    ../../Libraries/LibCore/CNotifier.o \
-    ../../Libraries/LibCore/CEventLoop.o
+    ../../Libraries/LibCore/IODevice.o \
+    ../../Libraries/LibCore/File.o \
+    ../../Libraries/LibCore/Object.o \
+    ../../Libraries/LibCore/Event.o \
+    ../../Libraries/LibCore/Socket.o \
+    ../../Libraries/LibCore/LocalSocket.o \
+    ../../Libraries/LibCore/LocalServer.o \
+    ../../Libraries/LibCore/Notifier.o \
+    ../../Libraries/LibCore/EventLoop.o
 
 include ../../Makefile.common

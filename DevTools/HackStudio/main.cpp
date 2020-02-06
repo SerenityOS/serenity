@@ -37,7 +37,7 @@
 #include "WidgetTool.h"
 #include "WidgetTreeModel.h"
 #include <AK/StringBuilder.h>
-#include <LibCore/CFile.h>
+#include <LibCore/File.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GActionGroup.h>

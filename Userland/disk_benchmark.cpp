@@ -28,7 +28,7 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
-#include <LibCore/CElapsedTimer.h>
+#include <LibCore/ElapsedTimer.h>
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>

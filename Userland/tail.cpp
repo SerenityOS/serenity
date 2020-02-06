@@ -25,8 +25,8 @@
  */
 
 #include <AK/Assertions.h>
-#include <LibCore/CArgsParser.h>
-#include <LibCore/CFile.h>
+#include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>

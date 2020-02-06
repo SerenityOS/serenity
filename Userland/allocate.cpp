@@ -25,7 +25,7 @@
  */
 
 #include <AK/String.h>
-#include <LibCore/CElapsedTimer.h>
+#include <LibCore/ElapsedTimer.h>
 #include <stdio.h>
 #include <unistd.h>
 

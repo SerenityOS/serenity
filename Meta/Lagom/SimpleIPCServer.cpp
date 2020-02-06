@@ -24,10 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibCore/CEventLoop.h>
-#include <LibCore/CTimer.h>
-#include <LibCore/CoreIPCServer.h>
-#include <LibCore/CLocalServer.h>
+#include <LibCore/EventLoop.h>
+#include <LibCore/Timer.h>
+#include <LibCore/oreIPCServer.h>
+#include <LibCore/LocalServer.h>
 #include <stdio.h>
 #include "SimpleEndpoint.h"
 

@@ -33,7 +33,7 @@
 #include <AK/RefCounted.h>
 #include <AK/WeakPtr.h>
 #include <LibAudio/ABuffer.h>
-#include <LibCore/CFile.h>
+#include <LibCore/File.h>
 #include <LibThread/Lock.h>
 #include <LibThread/Thread.h>
 

@@ -29,7 +29,7 @@
 #include <AK/HashTable.h>
 #include <AK/MappedFile.h>
 #include <AK/QuickSort.h>
-#include <LibCore/CFile.h>
+#include <LibCore/File.h>
 #include <LibELF/ELFLoader.h>
 #include <stdio.h>
 

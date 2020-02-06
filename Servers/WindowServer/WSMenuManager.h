@@ -29,7 +29,7 @@
 #include "WSMenu.h"
 #include "WSMenuBar.h"
 #include <AK/HashMap.h>
-#include <LibCore/CObject.h>
+#include <LibCore/Object.h>
 #include <WindowServer/WSWindow.h>
 
 class AClientConnection;

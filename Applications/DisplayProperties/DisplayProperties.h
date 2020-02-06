@@ -29,7 +29,7 @@
 #include <AK/RefPtr.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibCore/CConfigFile.h>
+#include <LibCore/ConfigFile.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Size.h>
 #include <LibGUI/GWidget.h>

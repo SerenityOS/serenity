@@ -27,7 +27,7 @@
 #pragma once
 
 #include "Tool.h"
-#include <LibCore/CTimer.h>
+#include <LibCore/Timer.h>
 #include <LibGUI/GActionGroup.h>
 #include <LibGUI/GPainter.h>
 

@@ -27,9 +27,9 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
-#include <LibCore/CArgsParser.h>
-#include <LibCore/CDirIterator.h>
-#include <LibCore/CFile.h>
+#include <LibCore/ArgsParser.h>
+#include <LibCore/DirIterator.h>
+#include <LibCore/File.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>

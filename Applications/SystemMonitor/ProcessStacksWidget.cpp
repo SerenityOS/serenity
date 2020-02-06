@@ -25,8 +25,8 @@
  */
 
 #include "ProcessStacksWidget.h"
-#include <LibCore/CFile.h>
-#include <LibCore/CTimer.h>
+#include <LibCore/File.h>
+#include <LibCore/Timer.h>
 #include <LibGUI/GBoxLayout.h>
 
 ProcessStacksWidget::ProcessStacksWidget(GUI::Widget* parent)

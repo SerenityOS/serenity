@@ -31,8 +31,8 @@
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
-#include <LibCore/CNotifier.h>
-#include <LibCore/CTCPSocket.h>
+#include <LibCore/Notifier.h>
+#include <LibCore/TCPSocket.h>
 #include <stdio.h>
 #include <unistd.h>
 

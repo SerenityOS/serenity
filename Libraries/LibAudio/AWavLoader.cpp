@@ -26,8 +26,8 @@
 
 #include <AK/BufferStream.h>
 #include <LibAudio/AWavLoader.h>
-#include <LibCore/CFile.h>
-#include <LibCore/CIODeviceStreamReader.h>
+#include <LibCore/File.h>
+#include <LibCore/IODeviceStreamReader.h>
 #include <limits>
 
 namespace Audio {

@@ -28,8 +28,8 @@
 
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
-#include <LibCore/CObject.h>
-#include <LibCore/CTimer.h>
+#include <LibCore/Object.h>
+#include <LibCore/Timer.h>
 #include <LibGfx/DisjointRectSet.h>
 #include <LibGfx/Bitmap.h>
 

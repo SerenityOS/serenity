@@ -26,7 +26,7 @@
 
 #include <AK/FileSystemPath.h>
 #include <AK/QuickSort.h>
-#include <LibCore/CDirIterator.h>
+#include <LibCore/DirIterator.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Painter.h>
 #include <WindowServer/WSMenuManager.h>

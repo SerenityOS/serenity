@@ -28,7 +28,7 @@
 
 #include <AK/InlineLinkedList.h>
 #include <AK/String.h>
-#include <LibCore/CObject.h>
+#include <LibCore/Object.h>
 #include <LibGfx/DisjointRectSet.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Rect.h>

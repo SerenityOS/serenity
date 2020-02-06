@@ -27,7 +27,7 @@
 #pragma once
 
 #include <AK/FileSystemPath.h>
-#include <LibCore/CFile.h>
+#include <LibCore/File.h>
 #include <LibGUI/GButton.h>
 #include <LibGUI/GDialog.h>
 #include <LibGUI/GFileSystemModel.h>

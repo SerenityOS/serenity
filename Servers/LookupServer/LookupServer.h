@@ -29,7 +29,7 @@
 #include "DNSRequest.h"
 #include "DNSResponse.h"
 #include <AK/HashMap.h>
-#include <LibCore/CObject.h>
+#include <LibCore/Object.h>
 
 namespace Core {
 class LocalSocket;

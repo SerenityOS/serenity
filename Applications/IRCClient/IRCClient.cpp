@@ -33,7 +33,7 @@
 #include "IRCWindowListModel.h"
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/CNotifier.h>
+#include <LibCore/Notifier.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stdio.h>

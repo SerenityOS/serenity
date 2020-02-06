@@ -26,7 +26,7 @@
 
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibCore/CArgsParser.h>
+#include <LibCore/ArgsParser.h>
 
 #include <stdio.h>
 #include <string.h>

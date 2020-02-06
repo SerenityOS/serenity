@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <LibCore/CTimer.h>
+#include <LibCore/Timer.h>
 #include <LibGfx/TextAlignment.h>
 #include <LibGUI/GWidget.h>
 

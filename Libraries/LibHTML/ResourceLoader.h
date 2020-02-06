@@ -28,7 +28,7 @@
 
 #include <AK/Function.h>
 #include <AK/URL.h>
-#include <LibCore/CObject.h>
+#include <LibCore/Object.h>
 
 namespace Protocol {
 class Client;

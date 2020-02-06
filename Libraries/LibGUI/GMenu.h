@@ -29,7 +29,7 @@
 #include <AK/Function.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtr.h>
-#include <LibCore/CObject.h>
+#include <LibCore/Object.h>
 #include <LibGUI/GMenuItem.h>
 
 namespace Gfx {

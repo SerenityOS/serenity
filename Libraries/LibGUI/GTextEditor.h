@@ -30,7 +30,7 @@
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtrVector.h>
-#include <LibCore/CTimer.h>
+#include <LibCore/Timer.h>
 #include <LibGfx/TextAlignment.h>
 #include <LibGUI/GScrollableWidget.h>
 #include <LibGUI/GTextDocument.h>

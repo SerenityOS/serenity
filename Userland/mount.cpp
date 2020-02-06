@@ -27,8 +27,8 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
-#include <LibCore/CArgsParser.h>
-#include <LibCore/CFile.h>
+#include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <stdio.h>
 #include <unistd.h>
 

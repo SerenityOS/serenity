@@ -25,7 +25,7 @@
  */
 
 #include "Field.h"
-#include <LibCore/CConfigFile.h>
+#include <LibCore/ConfigFile.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>

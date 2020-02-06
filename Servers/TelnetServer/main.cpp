@@ -32,9 +32,9 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
-#include <LibCore/CEventLoop.h>
-#include <LibCore/CTCPServer.h>
-#include <LibCore/CTCPSocket.h>
+#include <LibCore/EventLoop.h>
+#include <LibCore/TCPServer.h>
+#include <LibCore/TCPSocket.h>
 #include <fcntl.h>
 #include <getopt.h>
 #include <stdio.h>

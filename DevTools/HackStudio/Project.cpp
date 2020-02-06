@@ -28,7 +28,7 @@
 #include <AK/FileSystemPath.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/CFile.h>
+#include <LibCore/File.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>

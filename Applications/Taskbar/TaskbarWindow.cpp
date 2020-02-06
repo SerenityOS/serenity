@@ -27,7 +27,7 @@
 #include "TaskbarWindow.h"
 #include "TaskbarButton.h"
 #include <AK/SharedBuffer.h>
-#include <LibCore/CConfigFile.h>
+#include <LibCore/ConfigFile.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>
 #include <LibGUI/GDesktop.h>

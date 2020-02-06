@@ -28,8 +28,8 @@
 
 #include <AK/RefPtr.h>
 #include <AK/String.h>
-#include <LibCore/CNotifier.h>
-#include <LibCore/CObject.h>
+#include <LibCore/Notifier.h>
+#include <LibCore/Object.h>
 
 namespace AK {
 class JsonObject;

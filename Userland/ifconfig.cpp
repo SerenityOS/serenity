@@ -28,7 +28,7 @@
 #include <AK/JsonObject.h>
 #include <AK/String.h>
 #include <AK/Types.h>
-#include <LibCore/CFile.h>
+#include <LibCore/File.h>
 #include <net/if.h>
 #include <netinet/in.h>
 #include <stdio.h>
