@@ -26,11 +26,11 @@
 
 #include <AK/FileSystemPath.h>
 #include <LibCore/CFile.h>
-#include <LibGfx/PNGLoader.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GScrollBar.h>
 #include <LibGUI/GWindow.h>
+#include <LibGfx/PNGLoader.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/DOM/ElementFactory.h>
 #include <LibHTML/DOM/HTMLAnchorElement.h>

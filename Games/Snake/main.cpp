@@ -25,7 +25,6 @@
  */
 
 #include "SnakeGame.h"
-#include <LibGfx/PNGLoader.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
@@ -74,7 +73,7 @@ int main(int argc, char** argv)
 
     auto help_menu = GUI::Menu::construct("Help");
     help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
-        GUI::AboutDialog::show("Snake", Gfx::load_png("/res/icons/32x32/app-snake.png"), window);
+        GUI::AboutDialog::show("Snake", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-snake.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 
@@ -82,7 +81,7 @@ int main(int argc, char** argv)
 
     window->show();
 
-    window->set_icon(Gfx::load_png("/res/icons/16x16/app-snake.png"));
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-snake.png"));
 
     return app.exec();
 }

@@ -31,7 +31,6 @@
 #include "WSWindow.h"
 #include "WSWindowManager.h"
 #include <LibGfx/Font.h>
-#include <LibGfx/PNGLoader.h>
 #include <LibGfx/Painter.h>
 #include <LibThread/BackgroundAction.h>
 
@@ -328,7 +327,7 @@ bool WSCompositor::set_wallpaper(const String& path, Function<void(bool)>&& call
 {
     LibThread::BackgroundAction<RefPtr<Gfx::Bitmap>>::create(
         [path] {
-            return Gfx::load_png(path);
+            return Gfx::Bitmap::load_from_file(path);
         },
 
         [this, path, callback = move(callback)](RefPtr<Gfx::Bitmap> bitmap) {

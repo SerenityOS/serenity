@@ -43,7 +43,6 @@
 */
 
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/PNGLoader.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GPainter.h>
@@ -257,7 +256,7 @@ int main(int argc, char** argv)
     fire->set_stat_label(time);
 
     window->show();
-    window->set_icon(Gfx::load_png("/res/icons/16x16/app-demo.png"));
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-demo.png"));
 
     return app.exec();
 }

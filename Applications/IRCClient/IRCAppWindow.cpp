@@ -28,7 +28,6 @@
 #include "IRCChannel.h"
 #include "IRCWindow.h"
 #include "IRCWindowListModel.h"
-#include <LibGfx/PNGLoader.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
@@ -55,7 +54,7 @@ IRCAppWindow::IRCAppWindow()
     ASSERT(!s_the);
     s_the = this;
 
-    set_icon(Gfx::load_png("/res/icons/16x16/app-irc-client.png"));
+    set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-irc-client.png"));
 
     update_title();
     set_rect(200, 200, 600, 400);
@@ -170,7 +169,7 @@ void IRCAppWindow::setup_menus()
 
     auto help_menu = GUI::Menu::construct("Help");
     help_menu->add_action(GUI::Action::create("About", [this](const GUI::Action&) {
-        GUI::AboutDialog::show("IRC Client", Gfx::load_png("/res/icons/32x32/app-irc-client.png"), this);
+        GUI::AboutDialog::show("IRC Client", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-irc-client.png"), this);
     }));
     menubar->add_menu(move(help_menu));
 

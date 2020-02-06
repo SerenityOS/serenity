@@ -29,7 +29,6 @@
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <LibCore/CFile.h>
-#include <LibGfx/PNGLoader.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GBoxLayout.h>
@@ -243,7 +242,7 @@ TextEditorWidget::TextEditorWidget()
         m_editor->set_focus(true);
     };
 
-    m_find_replace_action = GUI::Action::create("Find/Replace...", { Mod_Ctrl, Key_F }, Gfx::load_png("/res/icons/16x16/find.png"), [this](auto&) {
+    m_find_replace_action = GUI::Action::create("Find/Replace...", { Mod_Ctrl, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"), [this](auto&) {
         m_find_replace_widget->set_visible(true);
         m_find_widget->set_visible(true);
         m_replace_widget->set_visible(true);
@@ -384,7 +383,7 @@ TextEditorWidget::TextEditorWidget()
 
     auto help_menu = GUI::Menu::construct("Help");
     help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
-        GUI::AboutDialog::show("Text Editor", Gfx::load_png("/res/icons/32x32/app-texteditor.png"), window());
+        GUI::AboutDialog::show("Text Editor", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-texteditor.png"), window());
     }));
     menubar->add_menu(move(help_menu));
 

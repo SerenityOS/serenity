@@ -26,7 +26,6 @@
 
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibGfx/PNGLoader.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>
@@ -34,6 +33,7 @@
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GStackWidget.h>
 #include <LibGUI/GWindow.h>
+#include <LibGfx/PNGLoader.h>
 
 #include "TextWidget.h"
 

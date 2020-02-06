@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGfx/PNGLoader.h>
 #include <LibHTML/CSS/StyleResolver.h>
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/DOM/HTMLImageElement.h>

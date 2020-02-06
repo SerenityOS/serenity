@@ -27,7 +27,6 @@
 #include "History.h"
 #include "ManualModel.h"
 #include <LibCore/CFile.h>
-#include <LibGfx/PNGLoader.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
@@ -180,7 +179,7 @@ int main(int argc, char* argv[])
 
     auto app_menu = GUI::Menu::construct("Help");
     app_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
-        GUI::AboutDialog::show("Help", Gfx::load_png("/res/icons/16x16/book.png"), window);
+        GUI::AboutDialog::show("Help", Gfx::Bitmap::load_from_file("/res/icons/16x16/book.png"), window);
     }));
     app_menu->add_separator();
     app_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
@@ -199,7 +198,7 @@ int main(int argc, char* argv[])
     window->set_focused_widget(tree_view);
     window->show();
 
-    window->set_icon(Gfx::load_png("/res/icons/16x16/book.png"));
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/book.png"));
 
     return app.exec();
 }

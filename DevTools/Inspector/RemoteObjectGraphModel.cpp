@@ -29,15 +29,14 @@
 #include "RemoteProcess.h"
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
-#include <LibGfx/PNGLoader.h>
 #include <LibGUI/GApplication.h>
 #include <stdio.h>
 
 RemoteObjectGraphModel::RemoteObjectGraphModel(RemoteProcess& process)
     : m_process(process)
 {
-    m_object_icon.set_bitmap_for_size(16, Gfx::load_png("/res/icons/16x16/inspector-object.png"));
-    m_window_icon.set_bitmap_for_size(16, Gfx::load_png("/res/icons/16x16/window.png"));
+    m_object_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/inspector-object.png"));
+    m_window_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/window.png"));
 }
 
 RemoteObjectGraphModel::~RemoteObjectGraphModel()

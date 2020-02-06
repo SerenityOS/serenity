@@ -29,7 +29,6 @@
 #include "MainWidget.h"
 #include <LibAudio/AClientConnection.h>
 #include <LibCore/CFile.h>
-#include <LibGfx/PNGLoader.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
@@ -51,7 +50,7 @@ int main(int argc, char** argv)
     window->set_main_widget(main_widget);
     window->set_title("Piano");
     window->set_rect(90, 90, 840, 600);
-    window->set_icon(Gfx::load_png("/res/icons/16x16/app-piano.png"));
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-piano.png"));
     window->show();
 
     LibThread::Thread audio_thread([&] {
@@ -82,7 +81,7 @@ int main(int argc, char** argv)
 
     auto help_menu = GUI::Menu::construct("Help");
     help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
-        GUI::AboutDialog::show("Piano", Gfx::load_png("/res/icons/32x32/app-piano.png"), window);
+        GUI::AboutDialog::show("Piano", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-piano.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 

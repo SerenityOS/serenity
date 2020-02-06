@@ -31,7 +31,6 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/CConfigFile.h>
 #include <LibCore/CUserInfo.h>
-#include <LibGfx/PNGLoader.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GActionGroup.h>
@@ -445,7 +444,7 @@ int main(int argc, char** argv)
 
     auto help_menu = GUI::Menu::construct("Help");
     help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
-        GUI::AboutDialog::show("File Manager", Gfx::load_png("/res/icons/32x32/filetype-folder.png"), window);
+        GUI::AboutDialog::show("File Manager", Gfx::Bitmap::load_from_file("/res/icons/32x32/filetype-folder.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 
@@ -587,7 +586,7 @@ int main(int argc, char** argv)
     window->set_main_widget(widget);
     window->show();
 
-    window->set_icon(Gfx::load_png("/res/icons/16x16/filetype-folder.png"));
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-folder.png"));
 
     // Read direcory read mode from config.
     auto dir_view_mode = config->read_entry("DirectoryView", "ViewMode", "Icon");
