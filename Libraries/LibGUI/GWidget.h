@@ -144,7 +144,7 @@ public:
     virtual void second_paint_event(PaintEvent&);
 
     Gfx::Rect relative_rect() const { return m_relative_rect; }
-    Point relative_position() const { return m_relative_rect.location(); }
+    Gfx::Point relative_position() const { return m_relative_rect.location(); }
 
     Gfx::Rect window_relative_rect() const;
     Gfx::Rect screen_relative_rect() const;
@@ -170,7 +170,7 @@ public:
         Yes };
     struct HitTestResult {
         Widget* widget { nullptr };
-        Point local_position;
+        Gfx::Point local_position;
     };
     HitTestResult hit_test(const Gfx::Point&, ShouldRespectGreediness = ShouldRespectGreediness::Yes);
     Widget* child_at(const Gfx::Point&) const;

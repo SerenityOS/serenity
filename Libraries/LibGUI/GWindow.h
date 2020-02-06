@@ -106,7 +106,7 @@ public:
     void set_rect(const Gfx::Rect&);
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
 
-    Point position() const { return rect().location(); }
+    Gfx::Point position() const { return rect().location(); }
 
     void move_to(int x, int y) { move_to({ x, y }); }
     void move_to(const Gfx::Point& point) { set_rect({ point, size() }); }

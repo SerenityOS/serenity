@@ -162,5 +162,3 @@ inline const LogStream& operator<<(const LogStream& stream, const Point& value)
 }
 
 }
-
-using Gfx::Point;

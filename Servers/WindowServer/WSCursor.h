@@ -47,7 +47,7 @@ public:
     static RefPtr<WSCursor> create(WSStandardCursor);
     ~WSCursor();
 
-    Point hotspot() const { return m_hotspot; }
+    Gfx::Point hotspot() const { return m_hotspot; }
     const Gfx::Bitmap& bitmap() const { return *m_bitmap; }
 
     Gfx::Rect rect() const { return m_bitmap->rect(); }

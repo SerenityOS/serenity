@@ -466,7 +466,7 @@ bool WSWindowManager::process_ongoing_window_move(WSMouseEvent& event, WSWindow*
                 m_move_window->set_tiled(WindowTileType::Right);
             } else if (pixels_moved_from_start > 5 || m_move_window->tiled() == WindowTileType::None) {
                 m_move_window->set_tiled(WindowTileType::None);
-                Point pos = m_move_window_origin.translated(event.position() - m_move_origin);
+                Gfx::Point pos = m_move_window_origin.translated(event.position() - m_move_origin);
                 m_move_window->set_position_without_repaint(pos);
                 if (m_move_window->rect().contains(event.position()))
                     hovered_window = m_move_window;

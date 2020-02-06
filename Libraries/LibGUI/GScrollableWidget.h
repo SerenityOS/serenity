@@ -69,8 +69,8 @@ public:
     void set_should_hide_unnecessary_scrollbars(bool b) { m_should_hide_unnecessary_scrollbars = b; }
     bool should_hide_unnecessary_scrollbars() const { return m_should_hide_unnecessary_scrollbars; }
 
-    Point to_content_position(const Gfx::Point& widget_position) const;
-    Point to_widget_position(const Gfx::Point& content_position) const;
+    Gfx::Point to_content_position(const Gfx::Point& widget_position) const;
+    Gfx::Point to_widget_position(const Gfx::Point& content_position) const;
 
 protected:
     explicit ScrollableWidget(Widget* parent);

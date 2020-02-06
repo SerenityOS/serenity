@@ -108,7 +108,7 @@ public:
     {
     }
 
-    Point position() const { return m_position; }
+    Gfx::Point position() const { return m_position; }
     int x() const { return m_position.x(); }
     int y() const { return m_position.y(); }
     MouseButton button() const { return m_button; }

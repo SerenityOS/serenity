@@ -209,7 +209,7 @@ Gfx::Rect ScrollableWidget::widget_inner_rect() const
     return rect;
 }
 
-Point ScrollableWidget::to_content_position(const Gfx::Point& widget_position) const
+Gfx::Point ScrollableWidget::to_content_position(const Gfx::Point& widget_position) const
 {
     auto content_position = widget_position;
     content_position.move_by(horizontal_scrollbar().value(), vertical_scrollbar().value());
@@ -217,7 +217,7 @@ Point ScrollableWidget::to_content_position(const Gfx::Point& widget_position) c
     return content_position;
 }
 
-Point ScrollableWidget::to_widget_position(const Gfx::Point& content_position) const
+Gfx::Point ScrollableWidget::to_widget_position(const Gfx::Point& content_position) const
 {
     auto widget_position = content_position;
     widget_position.move_by(-horizontal_scrollbar().value(), -vertical_scrollbar().value());

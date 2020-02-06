@@ -545,7 +545,7 @@ Gfx::Rect AbstractTableView::row_rect(int item_index) const
     return { 0, header_height() + (item_index * item_height()), max(content_size().width(), width()), item_height() };
 }
 
-Point AbstractTableView::adjusted_position(const Gfx::Point& position) const
+Gfx::Point AbstractTableView::adjusted_position(const Gfx::Point& position) const
 {
     return position.translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
 }

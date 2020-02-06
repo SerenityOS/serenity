@@ -140,7 +140,7 @@ void Application::show_tooltip(const StringView& tooltip, const Gfx::Point& scre
     Gfx::Rect desktop_rect = Desktop::the().rect();
 
     const int margin = 30;
-    Point adjusted_pos = screen_location;
+    Gfx::Point adjusted_pos = screen_location;
     if (adjusted_pos.x() + m_tooltip_window->width() >= desktop_rect.width() - margin) {
         adjusted_pos = adjusted_pos.translated(-m_tooltip_window->width(), 0);
     }
