@@ -66,7 +66,6 @@ I'm also on [Patreon](https://www.patreon.com/serenityos) and [GitHub Sponsors](
 * IRC client
 * Desktop synthesizer (Piano)
 * Various desktop apps & games
-* Desktop games (Minesweeper and Snake)
 * Color themes
 
 ## How do I build and run this?
