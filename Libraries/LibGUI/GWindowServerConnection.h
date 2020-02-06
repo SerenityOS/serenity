@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <LibIPC/IServerConnection.h>
+#include <LibIPC/ServerConnection.h>
 #include <WindowServer/WindowClientEndpoint.h>
 #include <WindowServer/WindowServerEndpoint.h>
 

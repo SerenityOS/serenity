@@ -27,7 +27,7 @@
 #pragma once
 
 #include <AudioServer/AudioServerEndpoint.h>
-#include <LibIPC/IClientConnection.h>
+#include <LibIPC/ClientConnection.h>
 
 namespace Audio {
 class Buffer;

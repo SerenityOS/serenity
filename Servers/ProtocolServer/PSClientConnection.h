@@ -27,7 +27,7 @@
 #pragma once
 
 #include <AK/Badge.h>
-#include <LibIPC/IClientConnection.h>
+#include <LibIPC/ClientConnection.h>
 #include <ProtocolServer/ProtocolServerEndpoint.h>
 
 namespace AK {

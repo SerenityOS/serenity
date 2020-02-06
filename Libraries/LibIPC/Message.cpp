@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibIPC/IMessage.h>
+#include <LibIPC/Message.h>
 
 namespace IPC {
 
