@@ -28,11 +28,14 @@
 #include "AudioEngine.h"
 #include "MainWidget.h"
 #include <LibAudio/ClientConnection.h>
+#include <LibAudio/WavWriter.h>
 #include <LibCore/File.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
+#include <LibGUI/GFilePicker.h>
 #include <LibGUI/GMenuBar.h>
+#include <LibGUI/GMessageBox.h>
 #include <LibGUI/GWindow.h>
 #include <LibThread/Thread.h>
 
@@ -53,6 +56,10 @@ int main(int argc, char** argv)
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-piano.png"));
     window->show();
 
+    Audio::WavWriter wav_writer;
+    Optional<String> save_path;
+    bool need_to_write_wav = false;
+
     LibThread::Thread audio_thread([&] {
         auto audio = Core::File::construct("/dev/audio");
         if (!audio->open(Core::IODevice::WriteOnly)) {
@@ -66,6 +73,17 @@ int main(int argc, char** argv)
             audio->write(reinterpret_cast<u8*>(buffer.data()), buffer_size);
             Core::EventLoop::current().post_event(*main_widget, make<Core::CustomEvent>(0));
             Core::EventLoop::wake();
+
+            if (need_to_write_wav) {
+                need_to_write_wav = false;
+                audio_engine.reset();
+                while (audio_engine.current_column() < horizontal_notes - 1) {
+                    audio_engine.fill_buffer(buffer);
+                    wav_writer.write_samples(reinterpret_cast<u8*>(buffer.data()), buffer_size);
+                }
+                audio_engine.reset();
+                wav_writer.finalize();
+            }
         }
     });
     audio_thread.start();
@@ -76,6 +94,18 @@ int main(int argc, char** argv)
     app_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the().quit(0);
         return;
+    }));
+    app_menu->add_action(GUI::Action::create("Export", { Mod_Ctrl, Key_E }, [&](const GUI::Action&) {
+        save_path = GUI::FilePicker::get_save_filepath("Untitled", "wav");
+        if (!save_path.has_value())
+            return;
+        wav_writer.set_file(save_path.value());
+        if (wav_writer.has_error()) {
+            GUI::MessageBox::show(String::format("Failed to export WAV file: %s", wav_writer.error_string()), "Error", GUI::MessageBox::Type::Error);
+            wav_writer.clear_error();
+            return;
+        }
+        need_to_write_wav = true;
     }));
     menubar->add_menu(move(app_menu));
 
