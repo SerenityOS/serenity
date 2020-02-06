@@ -45,7 +45,7 @@
 
 HexEditorWidget::HexEditorWidget()
 {
-    set_layout(make<GUI::VBoxLayout>());
+    set_layout(make<GUI::VerticalBoxLayout>());
     layout()->set_spacing(0);
 
     m_editor = HexEditor::construct(this);

@@ -111,15 +111,15 @@ PaletteWidget::PaletteWidget(PaintableWidget& paintable_widget, GUI::Widget* par
 
     auto color_container = GUI::Widget::construct(this);
     color_container->set_relative_rect(m_secondary_color_widget->relative_rect().right() + 2, 2, 500, 32);
-    color_container->set_layout(make<GUI::VBoxLayout>());
+    color_container->set_layout(make<GUI::VerticalBoxLayout>());
     color_container->layout()->set_spacing(1);
 
     auto top_color_container = GUI::Widget::construct(color_container.ptr());
-    top_color_container->set_layout(make<GUI::HBoxLayout>());
+    top_color_container->set_layout(make<GUI::HorizontalBoxLayout>());
     top_color_container->layout()->set_spacing(1);
 
     auto bottom_color_container = GUI::Widget::construct(color_container.ptr());
-    bottom_color_container->set_layout(make<GUI::HBoxLayout>());
+    bottom_color_container->set_layout(make<GUI::HorizontalBoxLayout>());
     bottom_color_container->layout()->set_spacing(1);
 
     auto add_color_widget = [&](GUI::Widget* container, Color color) {

@@ -130,7 +130,7 @@ static RefPtr<SearchResultsModel> find_in_files(const StringView& text)
 FindInFilesWidget::FindInFilesWidget(GUI::Widget* parent)
     : GUI::Widget(parent)
 {
-    set_layout(make<GUI::VBoxLayout>());
+    set_layout(make<GUI::VerticalBoxLayout>());
     m_textbox = GUI::TextBox::construct(this);
     m_textbox->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_textbox->set_preferred_size(0, 20);

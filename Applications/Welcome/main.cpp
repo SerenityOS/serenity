@@ -98,7 +98,7 @@ int main(int argc, char** argv)
     auto background = GUI::Label::construct();
     window->set_main_widget(background);
     background->set_fill_with_background_color(true);
-    background->set_layout(make<GUI::VBoxLayout>());
+    background->set_layout(make<GUI::VerticalBoxLayout>());
     background->layout()->set_margins({ 8, 8, 8, 8 });
     background->layout()->set_spacing(8);
     background->set_icon(Gfx::load_png_from_memory((const u8*)&_binary_background_png_start, (size_t)&_binary_background_png_size));
@@ -121,13 +121,13 @@ int main(int argc, char** argv)
     //
 
     auto main_section = GUI::Widget::construct(background.ptr());
-    main_section->set_layout(make<GUI::HBoxLayout>());
+    main_section->set_layout(make<GUI::HorizontalBoxLayout>());
     main_section->layout()->set_margins({ 0, 0, 0, 0 });
     main_section->layout()->set_spacing(8);
     main_section->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
 
     auto menu = GUI::Widget::construct(main_section.ptr());
-    menu->set_layout(make<GUI::VBoxLayout>());
+    menu->set_layout(make<GUI::VerticalBoxLayout>());
     menu->layout()->set_margins({ 0, 0, 0, 0 });
     menu->layout()->set_spacing(8);
     menu->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
@@ -138,7 +138,7 @@ int main(int argc, char** argv)
 
     for (auto& page : pages) {
         auto content = GUI::Widget::construct(stack.ptr());
-        content->set_layout(make<GUI::VBoxLayout>());
+        content->set_layout(make<GUI::VerticalBoxLayout>());
         content->layout()->set_margins({ 0, 0, 0, 0 });
         content->layout()->set_spacing(8);
         content->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);

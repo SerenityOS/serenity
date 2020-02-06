@@ -77,7 +77,7 @@ int main(int argc, char** argv)
 
     auto widget = GUI::Widget::construct();
     widget->set_fill_with_background_color(true);
-    widget->set_layout(make<GUI::VBoxLayout>());
+    widget->set_layout(make<GUI::VerticalBoxLayout>());
     widget->layout()->set_spacing(0);
 
     auto toolbar = GUI::ToolBar::construct(widget);

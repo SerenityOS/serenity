@@ -84,7 +84,7 @@ void MessageBox::build()
     int text_width = widget->font().width(m_text);
     int icon_width = 0;
 
-    widget->set_layout(make<VBoxLayout>());
+    widget->set_layout(make<VerticalBoxLayout>());
     widget->set_fill_with_background_color(true);
 
     widget->layout()->set_margins({ 0, 15, 0, 15 });
@@ -93,7 +93,7 @@ void MessageBox::build()
     RefPtr<Widget> message_container = widget;
     if (m_type != Type::None) {
         message_container = Widget::construct(widget.ptr());
-        message_container->set_layout(make<HBoxLayout>());
+        message_container->set_layout(make<HorizontalBoxLayout>());
         message_container->layout()->set_margins({ 8, 0, 8, 0 });
         message_container->layout()->set_spacing(8);
 
@@ -109,7 +109,7 @@ void MessageBox::build()
     label->set_preferred_size(text_width, 16);
 
     auto button_container = Widget::construct(widget.ptr());
-    button_container->set_layout(make<HBoxLayout>());
+    button_container->set_layout(make<HorizontalBoxLayout>());
     button_container->layout()->set_spacing(5);
     button_container->layout()->set_margins({ 15, 0, 15, 0 });
 

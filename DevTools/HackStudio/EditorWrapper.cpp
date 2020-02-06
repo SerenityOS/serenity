@@ -36,13 +36,13 @@ extern RefPtr<EditorWrapper> g_current_editor_wrapper;
 EditorWrapper::EditorWrapper(GUI::Widget* parent)
     : GUI::Widget(parent)
 {
-    set_layout(make<GUI::VBoxLayout>());
+    set_layout(make<GUI::VerticalBoxLayout>());
 
     auto label_wrapper = GUI::Widget::construct(this);
     label_wrapper->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     label_wrapper->set_preferred_size(0, 14);
     label_wrapper->set_fill_with_background_color(true);
-    label_wrapper->set_layout(make<GUI::HBoxLayout>());
+    label_wrapper->set_layout(make<GUI::HorizontalBoxLayout>());
     label_wrapper->layout()->set_margins({ 2, 0, 2, 0 });
 
     m_filename_label = GUI::Label::construct("(Untitled)", label_wrapper);

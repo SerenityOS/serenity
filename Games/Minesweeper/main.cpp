@@ -59,14 +59,14 @@ int main(int argc, char** argv)
 
     auto widget = GUI::Widget::construct();
     window->set_main_widget(widget);
-    widget->set_layout(make<GUI::VBoxLayout>());
+    widget->set_layout(make<GUI::VerticalBoxLayout>());
     widget->layout()->set_spacing(0);
 
     auto container = GUI::Widget::construct(widget.ptr());
     container->set_fill_with_background_color(true);
     container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     container->set_preferred_size(0, 36);
-    container->set_layout(make<GUI::HBoxLayout>());
+    container->set_layout(make<GUI::HorizontalBoxLayout>());
     auto flag_icon_label = GUI::Label::construct(container);
     flag_icon_label->set_icon(Gfx::Bitmap::load_from_file("/res/icons/minesweeper/flag.png"));
     auto flag_label = GUI::Label::construct(container);

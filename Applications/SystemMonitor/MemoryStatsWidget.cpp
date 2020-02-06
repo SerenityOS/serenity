@@ -52,13 +52,13 @@ MemoryStatsWidget::MemoryStatsWidget(GraphWidget& graph, GUI::Widget* parent)
     set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     set_preferred_size(0, 72);
 
-    set_layout(make<GUI::VBoxLayout>());
+    set_layout(make<GUI::VerticalBoxLayout>());
     layout()->set_margins({ 0, 8, 0, 0 });
     layout()->set_spacing(3);
 
     auto build_widgets_for_label = [this](const String& description) -> RefPtr<GUI::Label> {
         auto container = GUI::Widget::construct(this);
-        container->set_layout(make<GUI::HBoxLayout>());
+        container->set_layout(make<GUI::HorizontalBoxLayout>());
         container->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
         container->set_preferred_size(275, 12);
         auto description_label = GUI::Label::construct(description, container);

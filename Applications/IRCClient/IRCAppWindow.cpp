@@ -181,7 +181,7 @@ void IRCAppWindow::setup_widgets()
     auto widget = GUI::Widget::construct();
     set_main_widget(widget);
     widget->set_fill_with_background_color(true);
-    widget->set_layout(make<GUI::VBoxLayout>());
+    widget->set_layout(make<GUI::VerticalBoxLayout>());
     widget->layout()->set_spacing(0);
 
     auto toolbar = GUI::ToolBar::construct(widget);
@@ -196,7 +196,7 @@ void IRCAppWindow::setup_widgets()
     toolbar->add_action(*m_close_query_action);
 
     auto outer_container = GUI::Widget::construct(widget.ptr());
-    outer_container->set_layout(make<GUI::VBoxLayout>());
+    outer_container->set_layout(make<GUI::VerticalBoxLayout>());
     outer_container->layout()->set_margins({ 2, 0, 2, 2 });
 
     auto horizontal_container = GUI::HorizontalSplitter::construct(outer_container);

@@ -38,12 +38,12 @@ SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, NonnullRefPtr<Audio::C
     , m_manager(connection)
 {
     set_fill_with_background_color(true);
-    set_layout(make<GUI::VBoxLayout>());
+    set_layout(make<GUI::VerticalBoxLayout>());
     layout()->set_margins({ 2, 2, 2, 2 });
 
     auto status_widget = GUI::Widget::construct(this);
     status_widget->set_fill_with_background_color(true);
-    status_widget->set_layout(make<GUI::HBoxLayout>());
+    status_widget->set_layout(make<GUI::HorizontalBoxLayout>());
 
     m_elapsed = GUI::Label::construct(status_widget);
     m_elapsed->set_frame_shape(Gfx::FrameShape::Container);
@@ -53,7 +53,7 @@ SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, NonnullRefPtr<Audio::C
     m_elapsed->set_preferred_size(80, 0);
 
     auto sample_widget_container = GUI::Widget::construct(status_widget.ptr());
-    sample_widget_container->set_layout(make<GUI::HBoxLayout>());
+    sample_widget_container->set_layout(make<GUI::HorizontalBoxLayout>());
     sample_widget_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
 
     m_sample_widget = SampleWidget::construct(sample_widget_container);
@@ -72,7 +72,7 @@ SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, NonnullRefPtr<Audio::C
 
     auto control_widget = GUI::Widget::construct(this);
     control_widget->set_fill_with_background_color(true);
-    control_widget->set_layout(make<GUI::HBoxLayout>());
+    control_widget->set_layout(make<GUI::HorizontalBoxLayout>());
     control_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     control_widget->set_preferred_size(0, 30);
     control_widget->layout()->set_margins({ 10, 2, 10, 2 });
