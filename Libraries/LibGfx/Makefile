@@ -1,18 +1,18 @@
 OBJS = \
+    Bitmap.o \
     CharacterBitmap.o \
     Color.o \
     DisjointRectSet.o \
+    Emoji.o \
     Font.o \
-    GraphicsBitmap.o \
-    Painter.o \
-    PNGLoader.o \
     GIFLoader.o \
     ImageDecoder.o \
+    PNGLoader.o \
+    Painter.o \
+    Palette.o \
     Rect.o \
     StylePainter.o \
-    SystemTheme.o \
-    Palette.o \
-    Emoji.o
+    SystemTheme.o
 
 LIBRARY = libgfx.a
 

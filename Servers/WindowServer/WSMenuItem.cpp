@@ -28,7 +28,7 @@
 #include "WSClientConnection.h"
 #include "WSMenu.h"
 #include "WSWindowManager.h"
-#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/Bitmap.h>
 
 WSMenuItem::WSMenuItem(WSMenu& menu, unsigned identifier, const String& text, const String& shortcut_text, bool enabled, bool checkable, bool checked, const Gfx::Bitmap* icon)
     : m_menu(menu)

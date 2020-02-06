@@ -28,7 +28,7 @@
 
 #include <AK/Function.h>
 #include <AK/String.h>
-#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/StylePainter.h>
 #include <LibGfx/TextAlignment.h>
 #include <LibGUI/GAbstractButton.h>

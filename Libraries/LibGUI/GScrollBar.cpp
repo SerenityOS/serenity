@@ -25,7 +25,7 @@
  */
 
 #include <LibGfx/CharacterBitmap.h>
-#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
 #include <LibGUI/GPainter.h>

@@ -25,7 +25,7 @@
  */
 
 #include <AK/MappedFile.h>
-#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/PNGLoader.h>
 #include <errno.h>
 #include <fcntl.h>

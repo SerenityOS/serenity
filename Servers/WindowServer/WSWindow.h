@@ -30,7 +30,7 @@
 #include <AK/String.h>
 #include <LibCore/CObject.h>
 #include <LibGfx/DisjointRectSet.h>
-#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/Rect.h>
 #include <WindowServer/WSWindowFrame.h>
 #include <WindowServer/WSWindowType.h>

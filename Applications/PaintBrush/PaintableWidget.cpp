@@ -26,7 +26,7 @@
 
 #include "PaintableWidget.h"
 #include "Tool.h"
-#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/Palette.h>
 #include <LibGUI/GPainter.h>
 

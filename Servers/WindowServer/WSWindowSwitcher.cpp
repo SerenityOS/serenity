@@ -25,7 +25,7 @@
  */
 
 #include <LibGfx/Font.h>
-#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/StylePainter.h>
 #include <WindowServer/WSEvent.h>
 #include <WindowServer/WSScreen.h>

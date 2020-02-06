@@ -27,7 +27,7 @@
 #include "SnakeGame.h"
 #include <LibGUI/GFontDatabase.h>
 #include <LibGUI/GPainter.h>
-#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/Bitmap.h>
 #include <stdlib.h>
 #include <time.h>
 

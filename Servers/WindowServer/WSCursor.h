@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/Bitmap.h>
 
 enum class WSStandardCursor {
     None = 0,

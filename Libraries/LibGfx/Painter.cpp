@@ -27,7 +27,7 @@
 #include "Painter.h"
 #include "Emoji.h"
 #include "Font.h"
-#include "GraphicsBitmap.h"
+#include "Bitmap.h"
 #include <AK/Assertions.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>

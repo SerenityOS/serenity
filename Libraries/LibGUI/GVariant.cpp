@@ -396,7 +396,7 @@ String Variant::to_string() const
     case Type::String:
         return as_string();
     case Type::Bitmap:
-        return "[GraphicsBitmap]";
+        return "[Gfx::Bitmap]";
     case Type::Icon:
         return "[GIcon]";
     case Type::Color:
