@@ -77,7 +77,7 @@ typedef uint16_t Elf64_Quarter;
 #define EI_OSABI 7      /* OS/ABI ID */
 #define EI_ABIVERSION 8 /* ABI version */
 #define EI_PAD 9        /* start of pad bytes */
-#define EI_NIDENT 16    /* Size of e_ident[] */
+#define EI_NIDENT 16    /* Gfx::Size of e_ident[] */
 
 /* e_ident[] magic number */
 #define ELFMAG0 0x7f     /* e_ident[EI_MAG0] */
@@ -701,7 +701,7 @@ struct elf_args {
     u_long arg_entry;     /* program entry point */
     u_long arg_interp;    /* Interpreter load address */
     u_long arg_phaddr;    /* program header address */
-    u_long arg_phentsize; /* Size of program header */
+    u_long arg_phentsize; /* Gfx::Size of program header */
     u_long arg_phnum;     /* Number of program headers */
 };
 

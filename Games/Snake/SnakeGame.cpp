@@ -196,7 +196,7 @@ void SnakeGame::keydown_event(GUI::KeyEvent& event)
 Gfx::Rect SnakeGame::cell_rect(const Coordinate& coord) const
 {
     auto game_rect = rect();
-    auto cell_size = Size(game_rect.width() / m_columns, game_rect.height() / m_rows);
+    auto cell_size = Gfx::Size(game_rect.width() / m_columns, game_rect.height() / m_rows);
     return {
         coord.column * cell_size.width(),
         coord.row * cell_size.height(),

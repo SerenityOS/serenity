@@ -51,7 +51,7 @@ private:
 
     template<typename Callback>
     void for_each_in_group(Callback);
-    static Size circle_size();
+    static Gfx::Size circle_size();
 };
 
 }

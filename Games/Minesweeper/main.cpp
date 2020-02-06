@@ -78,7 +78,7 @@ int main(int argc, char** argv)
     auto time_icon_label = GUI::Label::construct(container);
     time_icon_label->set_icon(Gfx::Bitmap::load_from_file("/res/icons/minesweeper/timer.png"));
     auto time_label = GUI::Label::construct(container);
-    auto field = Field::construct(*flag_label, *time_label, *face_button, widget, [&](Size size) {
+    auto field = Field::construct(*flag_label, *time_label, *face_button, widget, [&](auto size) {
         size.set_height(size.height() + container->preferred_size().height());
         window->resize(size);
     });

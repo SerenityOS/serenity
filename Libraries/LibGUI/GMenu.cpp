@@ -124,7 +124,7 @@ int Menu::realize_menu()
             int icon_buffer_id = -1;
             if (action.icon()) {
                 ASSERT(action.icon()->format() == Gfx::Bitmap::Format::RGBA32);
-                ASSERT(action.icon()->size() == Size(16, 16));
+                ASSERT(action.icon()->size() == Gfx::Size(16, 16));
                 if (action.icon()->shared_buffer_id() == -1) {
                     auto shared_buffer = SharedBuffer::create_with_size(action.icon()->size_in_bytes());
                     ASSERT(shared_buffer);

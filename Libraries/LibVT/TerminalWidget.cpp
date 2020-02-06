@@ -439,7 +439,7 @@ void TerminalWidget::relayout(const Gfx::Size& size)
     m_scrollbar->set_relative_rect(scrollbar_rect);
 }
 
-Size TerminalWidget::compute_base_size() const
+Gfx::Size TerminalWidget::compute_base_size() const
 {
     int base_width = frame_thickness() * 2 + m_inset * 2 + m_scrollbar->width();
     int base_height = frame_thickness() * 2 + m_inset * 2;

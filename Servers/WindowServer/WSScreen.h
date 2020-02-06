@@ -49,7 +49,7 @@ public:
 
     static WSScreen& the();
 
-    Size size() const { return { width(), height() }; }
+    Gfx::Size size() const { return { width(), height() }; }
     Gfx::Rect rect() const { return { 0, 0, width(), height() }; }
 
     Gfx::Point cursor_location() const { return m_cursor_location; }

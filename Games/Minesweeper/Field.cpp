@@ -119,7 +119,7 @@ public:
     bool m_chord { false };
 };
 
-Field::Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, GUI::Widget* parent, Function<void(Size)> on_size_changed)
+Field::Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, GUI::Widget* parent, Function<void(Gfx::Size)> on_size_changed)
     : GUI::Frame(parent)
     , m_face_button(face_button)
     , m_flag_label(flag_label)

@@ -354,7 +354,7 @@ void VBForm::mousemove_event(GUI::MouseEvent& event)
             if (widget.is_in_layout())
                 return;
             auto new_rect = widget.transform_origin_rect();
-            Size minimum_size { 5, 5 };
+            Gfx::Size minimum_size { 5, 5 };
             new_rect.set_x(new_rect.x() + change_x);
             new_rect.set_y(new_rect.y() + change_y);
             new_rect.set_width(max(minimum_size.width(), new_rect.width() + change_w));

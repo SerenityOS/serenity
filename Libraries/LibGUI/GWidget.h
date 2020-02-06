@@ -124,7 +124,7 @@ public:
     void set_size_policy(SizePolicy horizontal_policy, SizePolicy vertical_policy);
     void set_size_policy(Orientation, SizePolicy);
 
-    Size preferred_size() const { return m_preferred_size; }
+    Gfx::Size preferred_size() const { return m_preferred_size; }
     void set_preferred_size(const Gfx::Size&);
     void set_preferred_size(int width, int height) { set_preferred_size({ width, height }); }
 
@@ -156,7 +156,7 @@ public:
     int length(Orientation orientation) const { return orientation == Orientation::Vertical ? height() : width(); }
 
     Gfx::Rect rect() const { return { 0, 0, width(), height() }; }
-    Size size() const { return m_relative_rect.size(); }
+    Gfx::Size size() const { return m_relative_rect.size(); }
 
     void update();
     void update(const Gfx::Rect&);
