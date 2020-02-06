@@ -68,7 +68,7 @@ HexEditorWidget::HexEditorWidget()
 
     m_statusbar = GUI::StatusBar::construct(5, this);
 
-    m_new_action = GUI::Action::create("New", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [this](const GUI::Action&) {
+    m_new_action = GUI::Action::create("New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [this](const GUI::Action&) {
         if (m_document_dirty) {
             auto save_document_first_box = GUI::MessageBox::construct("Save Document First?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel, window());
             auto save_document_first_result = save_document_first_box->exec();
@@ -102,7 +102,7 @@ HexEditorWidget::HexEditorWidget()
         open_file(open_path.value());
     });
 
-    m_save_action = GUI::Action::create("Save", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [&](const GUI::Action&) {
+    m_save_action = GUI::Action::create("Save", { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"), [&](const GUI::Action&) {
         if (!m_path.is_empty()) {
             if (!m_editor->write_to_file(m_path)) {
                 GUI::MessageBox::show("Unable to save file.\n", "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
@@ -116,7 +116,7 @@ HexEditorWidget::HexEditorWidget()
         m_save_as_action->activate();
     });
 
-    m_save_as_action = GUI::Action::create("Save as...", { Mod_Ctrl | Mod_Shift, Key_S }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [this](const GUI::Action&) {
+    m_save_as_action = GUI::Action::create("Save as...", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"), [this](const GUI::Action&) {
         Optional<String> save_path = GUI::FilePicker::get_save_filepath(m_name.is_null() ? "Untitled" : m_name, m_extension.is_null() ? "bin" : m_extension);
         if (!save_path.has_value())
             return;
@@ -153,7 +153,7 @@ HexEditorWidget::HexEditorWidget()
         }));
     }
 
-    m_goto_decimal_offset_action = GUI::Action::create("Go To Offset (Decimal)...", { Mod_Ctrl | Mod_Shift, Key_G }, GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GUI::Action&) {
+    m_goto_decimal_offset_action = GUI::Action::create("Go To Offset (Decimal)...", { Mod_Ctrl | Mod_Shift, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GUI::Action&) {
         auto input_box = GUI::InputBox::construct("Enter Decimal offset:", "Go To", this);
         if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty()) {
             auto valid = false;
@@ -164,7 +164,7 @@ HexEditorWidget::HexEditorWidget()
         }
     });
 
-    m_goto_hex_offset_action = GUI::Action::create("Go To Offset (Hex)...", { Mod_Ctrl, Key_G }, GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GUI::Action&) {
+    m_goto_hex_offset_action = GUI::Action::create("Go To Offset (Hex)...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GUI::Action&) {
         auto input_box = GUI::InputBox::construct("Enter Hex offset:", "Go To", this);
         if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty()) {
             auto new_offset = strtol(input_box->text_value().characters(), nullptr, 16);
@@ -202,7 +202,7 @@ HexEditorWidget::HexEditorWidget()
 
     auto help_menu = GUI::Menu::construct("Help");
     help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
-        GUI::AboutDialog::show("Hex Editor", load_png("/res/icons/32x32/app-hexeditor.png"), window());
+        GUI::AboutDialog::show("Hex Editor", Gfx::load_png("/res/icons/32x32/app-hexeditor.png"), window());
     }));
     menubar->add_menu(move(help_menu));
 

@@ -47,12 +47,12 @@ public:
     Variant(unsigned);
     Variant(const char*);
     Variant(const String&);
-    Variant(const GraphicsBitmap&);
+    Variant(const Gfx::Bitmap&);
     Variant(const GIcon&);
-    Variant(const Point&);
-    Variant(const Size&);
-    Variant(const Rect&);
-    Variant(const Font&);
+    Variant(const Gfx::Point&);
+    Variant(const Gfx::Size&);
+    Variant(const Gfx::Rect&);
+    Variant(const Gfx::Font&);
     Variant(const AK::JsonValue&);
     Variant(Color);
 
@@ -205,7 +205,7 @@ public:
         return m_value.as_string;
     }
 
-    const GraphicsBitmap& as_bitmap() const
+    const Gfx::Bitmap& as_bitmap() const
     {
         ASSERT(type() == Type::Bitmap);
         return *m_value.as_bitmap;
@@ -223,7 +223,7 @@ public:
         return Color::from_rgba(m_value.as_color);
     }
 
-    const Font& as_font() const
+    const Gfx::Font& as_font() const
     {
         ASSERT(type() == Type::Font);
         return *m_value.as_font;
@@ -266,15 +266,15 @@ private:
 
     union {
         StringImpl* as_string;
-        GraphicsBitmap* as_bitmap;
+        Gfx::Bitmap* as_bitmap;
         GIconImpl* as_icon;
-        Font* as_font;
+        Gfx::Font* as_font;
         bool as_bool;
         i32 as_i32;
         i64 as_i64;
         unsigned as_uint;
         float as_float;
-        RGBA32 as_color;
+        Gfx::RGBA32 as_color;
         RawPoint as_point;
         RawSize as_size;
         RawRect as_rect;

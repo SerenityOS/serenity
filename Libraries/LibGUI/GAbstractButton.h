@@ -75,7 +75,7 @@ protected:
     virtual void leave_event(Core::Event&) override;
     virtual void change_event(Event&) override;
 
-    void paint_text(Painter&, const Rect&, const Font&, TextAlignment);
+    void paint_text(Painter&, const Gfx::Rect&, const Gfx::Font&, Gfx::TextAlignment);
 
 private:
     virtual bool is_abstract_button() const final { return true; }

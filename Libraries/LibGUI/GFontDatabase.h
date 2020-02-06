@@ -30,7 +30,9 @@
 #include <AK/HashMap.h>
 #include <AK/String.h>
 
+namespace Gfx {
 class Font;
+}
 
 struct Metadata {
     String path;
@@ -42,7 +44,7 @@ class GFontDatabase {
 public:
     static GFontDatabase& the();
 
-    RefPtr<Font> get_by_name(const StringView&);
+    RefPtr<Gfx::Font> get_by_name(const StringView&);
     void for_each_font(Function<void(const StringView&)>);
     void for_each_fixed_width_font(Function<void(const StringView&)>);
 

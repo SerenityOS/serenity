@@ -64,7 +64,7 @@ protected:
     virtual void leave_event(Core::Event&) override;
 
 private:
-    Rect child_rect_for_size(const Size&) const;
+    Rect child_rect_for_size(const Gfx::Size&) const;
     Rect button_rect(int index) const;
     Rect bar_rect() const;
     Rect container_rect() const;
@@ -73,8 +73,8 @@ private:
     RefPtr<Widget> m_active_widget;
 
     struct TabData {
-        Rect rect(const Font&) const;
-        int width(const Font&) const;
+        Rect rect(const Gfx::Font&) const;
+        int width(const Gfx::Font&) const;
         String title;
         Widget* widget { nullptr };
     };

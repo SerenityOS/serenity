@@ -69,14 +69,14 @@ int main(int argc, char** argv)
     container->set_preferred_size(0, 36);
     container->set_layout(make<GUI::HBoxLayout>());
     auto flag_icon_label = GUI::Label::construct(container);
-    flag_icon_label->set_icon(GraphicsBitmap::load_from_file("/res/icons/minesweeper/flag.png"));
+    flag_icon_label->set_icon(Gfx::Bitmap::load_from_file("/res/icons/minesweeper/flag.png"));
     auto flag_label = GUI::Label::construct(container);
     auto face_button = GUI::Button::construct(container);
-    face_button->set_button_style(ButtonStyle::CoolBar);
+    face_button->set_button_style(Gfx::ButtonStyle::CoolBar);
     face_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     face_button->set_preferred_size(36, 0);
     auto time_icon_label = GUI::Label::construct(container);
-    time_icon_label->set_icon(GraphicsBitmap::load_from_file("/res/icons/minesweeper/timer.png"));
+    time_icon_label->set_icon(Gfx::Bitmap::load_from_file("/res/icons/minesweeper/timer.png"));
     auto time_label = GUI::Label::construct(container);
     auto field = Field::construct(*flag_label, *time_label, *face_button, widget, [&](Size size) {
         size.set_height(size.height() + container->preferred_size().height());
@@ -129,7 +129,7 @@ int main(int argc, char** argv)
 
     auto help_menu = GUI::Menu::construct("Help");
     help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
-        GUI::AboutDialog::show("Minesweeper", load_png("/res/icons/32x32/app-minesweeper.png"), window);
+        GUI::AboutDialog::show("Minesweeper", Gfx::load_png("/res/icons/32x32/app-minesweeper.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 
@@ -137,7 +137,7 @@ int main(int argc, char** argv)
 
     window->show();
 
-    window->set_icon(load_png("/res/icons/minesweeper/mine.png"));
+    window->set_icon(Gfx::load_png("/res/icons/minesweeper/mine.png"));
 
     return app.exec();
 }

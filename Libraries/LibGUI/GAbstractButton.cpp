@@ -171,19 +171,19 @@ void AbstractButton::keydown_event(KeyEvent& event)
     Widget::keydown_event(event);
 }
 
-void AbstractButton::paint_text(Painter& painter, const Rect& rect, const Font& font, TextAlignment text_alignment)
+void AbstractButton::paint_text(Painter& painter, const Gfx::Rect& rect, const Gfx::Font& font, Gfx::TextAlignment text_alignment)
 {
     auto clipped_rect = rect.intersected(this->rect());
 
     if (!is_enabled()) {
-        painter.draw_text(clipped_rect.translated(1, 1), text(), font, text_alignment, Color::White, TextElision::Right);
-        painter.draw_text(clipped_rect, text(), font, text_alignment, Color::from_rgb(0x808080), TextElision::Right);
+        painter.draw_text(clipped_rect.translated(1, 1), text(), font, text_alignment, Color::White, Gfx::TextElision::Right);
+        painter.draw_text(clipped_rect, text(), font, text_alignment, Color::from_rgb(0x808080), Gfx::TextElision::Right);
         return;
     }
 
     if (text().is_empty())
         return;
-    painter.draw_text(clipped_rect, text(), font, text_alignment, palette().button_text(), TextElision::Right);
+    painter.draw_text(clipped_rect, text(), font, text_alignment, palette().button_text(), Gfx::TextElision::Right);
     if (is_focused())
         painter.draw_rect(clipped_rect.inflated(6, 4), Color(140, 140, 140));
 }

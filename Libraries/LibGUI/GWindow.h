@@ -103,16 +103,16 @@ public:
 
     Rect rect() const;
     Size size() const { return rect().size(); }
-    void set_rect(const Rect&);
+    void set_rect(const Gfx::Rect&);
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
 
     Point position() const { return rect().location(); }
 
     void move_to(int x, int y) { move_to({ x, y }); }
-    void move_to(const Point& point) { set_rect({ point, size() }); }
+    void move_to(const Gfx::Point& point) { set_rect({ point, size() }); }
 
     void resize(int width, int height) { resize({ width, height }); }
-    void resize(const Size& size) { set_rect({ position(), size }); }
+    void resize(const Gfx::Size& size) { set_rect({ position(), size }); }
 
     virtual void event(Core::Event&) override;
 
@@ -135,7 +135,7 @@ public:
     void set_focused_widget(Widget*);
 
     void update();
-    void update(const Rect&);
+    void update(const Gfx::Rect&);
 
     void set_global_cursor_tracking_widget(Widget*);
     Widget* global_cursor_tracking_widget() { return m_global_cursor_tracking_widget.ptr(); }
@@ -149,19 +149,19 @@ public:
     const Widget* hovered_widget() const { return m_hovered_widget.ptr(); }
     void set_hovered_widget(Widget*);
 
-    GraphicsBitmap* front_bitmap() { return m_front_bitmap.ptr(); }
-    GraphicsBitmap* back_bitmap() { return m_back_bitmap.ptr(); }
+    Gfx::Bitmap* front_bitmap() { return m_front_bitmap.ptr(); }
+    Gfx::Bitmap* back_bitmap() { return m_back_bitmap.ptr(); }
 
     Size size_increment() const { return m_size_increment; }
-    void set_size_increment(const Size& increment) { m_size_increment = increment; }
+    void set_size_increment(const Gfx::Size& increment) { m_size_increment = increment; }
     Size base_size() const { return m_base_size; }
-    void set_base_size(const Size& size) { m_base_size = size; }
+    void set_base_size(const Gfx::Size& size) { m_base_size = size; }
 
     void set_override_cursor(StandardCursor);
 
-    void set_icon(const GraphicsBitmap*);
+    void set_icon(const Gfx::Bitmap*);
     void apply_icon();
-    const GraphicsBitmap* icon() const { return m_icon.ptr(); }
+    const Gfx::Bitmap* icon() const { return m_icon.ptr(); }
 
     Vector<Widget*> focusable_widgets() const;
 
@@ -183,14 +183,14 @@ protected:
 private:
     virtual bool is_window() const override final { return true; }
 
-    NonnullRefPtr<GraphicsBitmap> create_backing_bitmap(const Size&);
-    NonnullRefPtr<GraphicsBitmap> create_shared_bitmap(GraphicsBitmap::Format, const Size&);
-    void set_current_backing_bitmap(GraphicsBitmap&, bool flush_immediately = false);
+    NonnullRefPtr<Gfx::Bitmap> create_backing_bitmap(const Gfx::Size&);
+    NonnullRefPtr<Gfx::Bitmap> create_shared_bitmap(Gfx::Bitmap::Format, const Gfx::Size&);
+    void set_current_backing_bitmap(Gfx::Bitmap&, bool flush_immediately = false);
     void flip(const Vector<Rect, 32>& dirty_rects);
 
-    RefPtr<GraphicsBitmap> m_front_bitmap;
-    RefPtr<GraphicsBitmap> m_back_bitmap;
-    RefPtr<GraphicsBitmap> m_icon;
+    RefPtr<Gfx::Bitmap> m_front_bitmap;
+    RefPtr<Gfx::Bitmap> m_back_bitmap;
+    RefPtr<Gfx::Bitmap> m_icon;
     int m_window_id { 0 };
     float m_opacity_when_windowless { 1.0f };
     RefPtr<Widget> m_main_widget;
@@ -198,11 +198,11 @@ private:
     WeakPtr<Widget> m_global_cursor_tracking_widget;
     WeakPtr<Widget> m_automatic_cursor_tracking_widget;
     WeakPtr<Widget> m_hovered_widget;
-    Rect m_rect_when_windowless;
+    Gfx::Rect m_rect_when_windowless;
     String m_title_when_windowless;
     Vector<Rect, 32> m_pending_paint_event_rects;
-    Size m_size_increment;
-    Size m_base_size;
+    Gfx::Size m_size_increment;
+    Gfx::Size m_base_size;
     Color m_background_color { Color::WarmGray };
     WindowType m_window_type { WindowType::Normal };
     bool m_is_active { false };

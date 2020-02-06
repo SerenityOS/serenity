@@ -88,15 +88,15 @@ void WSCompositor::init_bitmaps()
     auto& screen = WSScreen::the();
     auto size = screen.size();
 
-    m_front_bitmap = GraphicsBitmap::create_wrapper(GraphicsBitmap::Format::RGB32, size, screen.pitch(), screen.scanline(0));
+    m_front_bitmap = Gfx::Bitmap::create_wrapper(Gfx::Bitmap::Format::RGB32, size, screen.pitch(), screen.scanline(0));
 
     if (m_screen_can_set_buffer)
-        m_back_bitmap = GraphicsBitmap::create_wrapper(GraphicsBitmap::Format::RGB32, size, screen.pitch(), screen.scanline(size.height()));
+        m_back_bitmap = Gfx::Bitmap::create_wrapper(Gfx::Bitmap::Format::RGB32, size, screen.pitch(), screen.scanline(size.height()));
     else
-        m_back_bitmap = GraphicsBitmap::create(GraphicsBitmap::Format::RGB32, size);
+        m_back_bitmap = Gfx::Bitmap::create(Gfx::Bitmap::Format::RGB32, size);
 
-    m_front_painter = make<Painter>(*m_front_bitmap);
-    m_back_painter = make<Painter>(*m_back_bitmap);
+    m_front_painter = make<Gfx::Painter>(*m_front_bitmap);
+    m_back_painter = make<Gfx::Painter>(*m_back_bitmap);
 
     m_buffers_are_flipped = false;
 
@@ -117,10 +117,10 @@ void WSCompositor::compose()
         return;
     }
 
-    dirty_rects.add(Rect::intersection(m_last_geometry_label_rect, WSScreen::the().rect()));
-    dirty_rects.add(Rect::intersection(m_last_cursor_rect, WSScreen::the().rect()));
-    dirty_rects.add(Rect::intersection(m_last_dnd_rect, WSScreen::the().rect()));
-    dirty_rects.add(Rect::intersection(current_cursor_rect(), WSScreen::the().rect()));
+    dirty_rects.add(Gfx::Rect::intersection(m_last_geometry_label_rect, WSScreen::the().rect()));
+    dirty_rects.add(Gfx::Rect::intersection(m_last_cursor_rect, WSScreen::the().rect()));
+    dirty_rects.add(Gfx::Rect::intersection(m_last_dnd_rect, WSScreen::the().rect()));
+    dirty_rects.add(Gfx::Rect::intersection(current_cursor_rect(), WSScreen::the().rect()));
 #ifdef DEBUG_COUNTERS
     dbgprintf("[WM] compose #%u (%u rects)\n", ++m_compose_count, dirty_rects.rects().size());
 #endif
@@ -164,13 +164,13 @@ void WSCompositor::compose()
     auto compose_window = [&](WSWindow& window) -> IterationDecision {
         if (!any_dirty_rect_intersects_window(window))
             return IterationDecision::Continue;
-        PainterStateSaver saver(*m_back_painter);
+        Gfx::PainterStateSaver saver(*m_back_painter);
         m_back_painter->add_clip_rect(window.frame().rect());
-        RefPtr<GraphicsBitmap> backing_store = window.backing_store();
+        RefPtr<Gfx::Bitmap> backing_store = window.backing_store();
         for (auto& dirty_rect : dirty_rects.rects()) {
             if (wm.any_opaque_window_above_this_one_contains_rect(window, dirty_rect))
                 continue;
-            PainterStateSaver saver(*m_back_painter);
+            Gfx::PainterStateSaver saver(*m_back_painter);
             m_back_painter->add_clip_rect(dirty_rect);
             if (!backing_store)
                 m_back_painter->fill_rect(dirty_rect, wm.palette().window());
@@ -255,7 +255,7 @@ void WSCompositor::compose()
         flush(r);
 }
 
-void WSCompositor::flush(const Rect& a_rect)
+void WSCompositor::flush(const Gfx::Rect& a_rect)
 {
     auto rect = Rect::intersection(a_rect, WSScreen::the().rect());
 
@@ -263,8 +263,8 @@ void WSCompositor::flush(const Rect& a_rect)
     dbgprintf("[WM] flush #%u (%d,%d %dx%d)\n", ++m_flush_count, rect.x(), rect.y(), rect.width(), rect.height());
 #endif
 
-    RGBA32* front_ptr = m_front_bitmap->scanline(rect.y()) + rect.x();
-    RGBA32* back_ptr = m_back_bitmap->scanline(rect.y()) + rect.x();
+    Gfx::RGBA32* front_ptr = m_front_bitmap->scanline(rect.y()) + rect.x();
+    Gfx::RGBA32* back_ptr = m_back_bitmap->scanline(rect.y()) + rect.x();
     size_t pitch = m_back_bitmap->pitch();
 
     // NOTE: The meaning of a flush depends on whether we can flip buffers or not.
@@ -276,8 +276,8 @@ void WSCompositor::flush(const Rect& a_rect)
     //       If flipping is not supported, flushing means that we copy the changed
     //       rects from the backing bitmap to the display framebuffer.
 
-    RGBA32* to_ptr;
-    const RGBA32* from_ptr;
+    Gfx::RGBA32* to_ptr;
+    const Gfx::RGBA32* from_ptr;
 
     if (m_screen_can_set_buffer) {
         to_ptr = back_ptr;
@@ -289,8 +289,8 @@ void WSCompositor::flush(const Rect& a_rect)
 
     for (int y = 0; y < rect.height(); ++y) {
         fast_u32_copy(to_ptr, from_ptr, rect.width());
-        from_ptr = (const RGBA32*)((const u8*)from_ptr + pitch);
-        to_ptr = (RGBA32*)((u8*)to_ptr + pitch);
+        from_ptr = (const Gfx::RGBA32*)((const u8*)from_ptr + pitch);
+        to_ptr = (Gfx::RGBA32*)((u8*)to_ptr + pitch);
     }
 }
 
@@ -300,7 +300,7 @@ void WSCompositor::invalidate()
     invalidate(WSScreen::the().rect());
 }
 
-void WSCompositor::invalidate(const Rect& a_rect)
+void WSCompositor::invalidate(const Gfx::Rect& a_rect)
 {
     auto rect = Rect::intersection(a_rect, WSScreen::the().rect());
     if (rect.is_empty())
@@ -326,12 +326,12 @@ void WSCompositor::invalidate(const Rect& a_rect)
 
 bool WSCompositor::set_wallpaper(const String& path, Function<void(bool)>&& callback)
 {
-    LibThread::BackgroundAction<RefPtr<GraphicsBitmap>>::create(
+    LibThread::BackgroundAction<RefPtr<Gfx::Bitmap>>::create(
         [path] {
-            return load_png(path);
+            return Gfx::load_png(path);
         },
 
-        [this, path, callback = move(callback)](RefPtr<GraphicsBitmap> bitmap) {
+        [this, path, callback = move(callback)](RefPtr<Gfx::Bitmap> bitmap) {
             if (!bitmap) {
                 callback(false);
                 return;
@@ -437,7 +437,7 @@ void WSCompositor::draw_geometry_label()
     geometry_label_rect.center_within(window_being_moved_or_resized->rect());
     m_back_painter->fill_rect(geometry_label_rect, Color::WarmGray);
     m_back_painter->draw_rect(geometry_label_rect, Color::DarkGray);
-    m_back_painter->draw_text(geometry_label_rect, geometry_string, TextAlignment::Center);
+    m_back_painter->draw_text(geometry_label_rect, geometry_string, Gfx::TextAlignment::Center);
     m_last_geometry_label_rect = geometry_label_rect;
 }
 
@@ -454,7 +454,7 @@ void WSCompositor::draw_cursor()
             auto text_rect = dnd_rect;
             if (wm.dnd_bitmap())
                 text_rect.move_by(wm.dnd_bitmap()->width(), 0);
-            m_back_painter->draw_text(text_rect, wm.dnd_text(), TextAlignment::CenterLeft, Color::White);
+            m_back_painter->draw_text(text_rect, wm.dnd_text(), Gfx::TextAlignment::CenterLeft, Color::White);
         }
         if (wm.dnd_bitmap()) {
             m_back_painter->blit(dnd_rect.top_left(), *wm.dnd_bitmap(), wm.dnd_bitmap()->rect());

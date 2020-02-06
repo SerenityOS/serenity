@@ -37,7 +37,7 @@ class TableCellPaintingDelegate {
 public:
     virtual ~TableCellPaintingDelegate() {}
 
-    virtual void paint(Painter&, const Rect&, const Palette&, const Model&, const ModelIndex&) = 0;
+    virtual void paint(Painter&, const Gfx::Rect&, const Palette&, const Model&, const ModelIndex&) = 0;
 };
 
 class AbstractTableView : public AbstractView {
@@ -62,7 +62,7 @@ public:
 
     int horizontal_padding() const { return m_horizontal_padding; }
 
-    Point adjusted_position(const Point&) const;
+    Point adjusted_position(const Gfx::Point&) const;
 
     virtual Rect content_rect(const ModelIndex&) const override;
     Rect content_rect(int row, int column) const;
@@ -70,8 +70,8 @@ public:
 
     void scroll_into_view(const ModelIndex&, Orientation);
 
-    virtual ModelIndex index_at_event_position(const Point&, bool& is_toggle) const;
-    virtual ModelIndex index_at_event_position(const Point&) const override;
+    virtual ModelIndex index_at_event_position(const Gfx::Point&, bool& is_toggle) const;
+    virtual ModelIndex index_at_event_position(const Gfx::Point&) const override;
 
 protected:
     virtual ~AbstractTableView() override;
@@ -91,7 +91,7 @@ protected:
     void paint_headers(Painter&);
     Rect header_rect(int column) const;
 
-    static const Font& header_font();
+    static const Gfx::Font& header_font();
     void update_headers();
     void set_hovered_header_index(int);
 
@@ -121,7 +121,7 @@ private:
     bool m_in_column_resize { false };
     bool m_alternating_row_colors { true };
     int m_horizontal_padding { 5 };
-    Point m_column_resize_origin;
+    Gfx::Point m_column_resize_origin;
     int m_column_resize_original_width { 0 };
     int m_resizing_column { -1 };
     int m_pressed_column_header_index { -1 };

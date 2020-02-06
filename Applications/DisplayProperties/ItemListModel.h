@@ -54,7 +54,7 @@ public:
 
     virtual ColumnMetadata column_metadata(int) const override
     {
-        return { 70, TextAlignment::CenterLeft };
+        return { 70, Gfx::TextAlignment::CenterLeft };
     }
 
     virtual GUI::Variant data(const GUI::ModelIndex& index, Role role = Role::Display) const override

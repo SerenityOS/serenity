@@ -49,19 +49,21 @@
 #endif
 #endif
 
-template<GraphicsBitmap::Format format = GraphicsBitmap::Format::Invalid>
-static ALWAYS_INLINE Color get_pixel(const GraphicsBitmap& bitmap, int x, int y)
+namespace Gfx {
+
+template<Bitmap::Format format = Bitmap::Format::Invalid>
+static ALWAYS_INLINE Color get_pixel(const Gfx::Bitmap& bitmap, int x, int y)
 {
-    if constexpr (format == GraphicsBitmap::Format::Indexed8)
+    if constexpr (format == Bitmap::Format::Indexed8)
         return bitmap.palette_color(bitmap.bits(y)[x]);
-    if constexpr (format == GraphicsBitmap::Format::RGB32)
+    if constexpr (format == Bitmap::Format::RGB32)
         return Color::from_rgb(bitmap.scanline(y)[x]);
-    if constexpr (format == GraphicsBitmap::Format::RGBA32)
+    if constexpr (format == Bitmap::Format::RGBA32)
         return Color::from_rgba(bitmap.scanline(y)[x]);
     return bitmap.get_pixel(x, y);
 }
 
-Painter::Painter(GraphicsBitmap& bitmap)
+Painter::Painter(Gfx::Bitmap& bitmap)
     : m_target(bitmap)
 {
     m_state_stack.append(State());
@@ -286,7 +288,7 @@ void Painter::draw_bitmap(const Point& p, const GlyphBitmap& bitmap, Color color
     }
 }
 
-void Painter::blit_scaled(const Rect& dst_rect_raw, const GraphicsBitmap& source, const Rect& src_rect, float hscale, float vscale)
+void Painter::blit_scaled(const Rect& dst_rect_raw, const Gfx::Bitmap& source, const Rect& src_rect, float hscale, float vscale)
 {
     auto dst_rect = Rect(dst_rect_raw.location(), dst_rect_raw.size()).translated(translation());
     auto clipped_rect = dst_rect.intersected(clip_rect());
@@ -316,7 +318,7 @@ void Painter::blit_scaled(const Rect& dst_rect_raw, const GraphicsBitmap& source
     return;
 }
 
-void Painter::blit_with_opacity(const Point& position, const GraphicsBitmap& source, const Rect& src_rect, float opacity)
+void Painter::blit_with_opacity(const Point& position, const Gfx::Bitmap& source, const Rect& src_rect, float opacity)
 {
     ASSERT(!m_target->has_alpha_channel());
 
@@ -354,7 +356,7 @@ void Painter::blit_with_opacity(const Point& position, const GraphicsBitmap& sou
     }
 }
 
-void Painter::blit_dimmed(const Point& position, const GraphicsBitmap& source, const Rect& src_rect)
+void Painter::blit_dimmed(const Point& position, const Gfx::Bitmap& source, const Rect& src_rect)
 {
     Rect safe_src_rect = src_rect.intersected(source.rect());
     auto dst_rect = Rect(position, safe_src_rect.size()).translated(translation());
@@ -385,7 +387,7 @@ void Painter::blit_dimmed(const Point& position, const GraphicsBitmap& source, c
     }
 }
 
-void Painter::draw_tiled_bitmap(const Rect& a_dst_rect, const GraphicsBitmap& source)
+void Painter::draw_tiled_bitmap(const Rect& a_dst_rect, const Gfx::Bitmap& source)
 {
     auto dst_rect = a_dst_rect.translated(translation());
     auto clipped_rect = dst_rect.intersected(clip_rect());
@@ -397,7 +399,7 @@ void Painter::draw_tiled_bitmap(const Rect& a_dst_rect, const GraphicsBitmap& so
     RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
     const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
 
-    if (source.format() == GraphicsBitmap::Format::RGB32 || source.format() == GraphicsBitmap::Format::RGBA32) {
+    if (source.format() == Bitmap::Format::RGB32 || source.format() == Bitmap::Format::RGBA32) {
         int x_start = first_column + a_dst_rect.left();
         for (int row = first_row; row <= last_row; ++row) {
             const RGBA32* sl = source.scanline((row + a_dst_rect.top())
@@ -414,7 +416,7 @@ void Painter::draw_tiled_bitmap(const Rect& a_dst_rect, const GraphicsBitmap& so
 }
 
 void Painter::blit_offset(const Point& position,
-    const GraphicsBitmap& source,
+    const Gfx::Bitmap& source,
     const Rect& src_rect,
     const Point& offset)
 {
@@ -428,7 +430,7 @@ void Painter::blit_offset(const Point& position,
     RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
     const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
 
-    if (source.format() == GraphicsBitmap::Format::RGB32 || source.format() == GraphicsBitmap::Format::RGBA32) {
+    if (source.format() == Bitmap::Format::RGB32 || source.format() == Bitmap::Format::RGBA32) {
         int x_start = first_column + src_rect.left();
         for (int row = first_row; row <= last_row; ++row) {
             int sr = row - offset.y() + src_rect.top();
@@ -450,7 +452,7 @@ void Painter::blit_offset(const Point& position,
     ASSERT_NOT_REACHED();
 }
 
-void Painter::blit_with_alpha(const Point& position, const GraphicsBitmap& source, const Rect& src_rect)
+void Painter::blit_with_alpha(const Point& position, const Gfx::Bitmap& source, const Rect& src_rect)
 {
     ASSERT(source.has_alpha_channel());
     Rect safe_src_rect = src_rect.intersected(source.rect());
@@ -482,7 +484,7 @@ void Painter::blit_with_alpha(const Point& position, const GraphicsBitmap& sourc
     }
 }
 
-void Painter::blit(const Point& position, const GraphicsBitmap& source, const Rect& src_rect, float opacity)
+void Painter::blit(const Point& position, const Gfx::Bitmap& source, const Rect& src_rect, float opacity)
 {
     if (opacity < 1.0f)
         return blit_with_opacity(position, source, src_rect, opacity);
@@ -500,7 +502,7 @@ void Painter::blit(const Point& position, const GraphicsBitmap& source, const Re
     RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
     const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
 
-    if (source.format() == GraphicsBitmap::Format::RGB32 || source.format() == GraphicsBitmap::Format::RGBA32) {
+    if (source.format() == Bitmap::Format::RGB32 || source.format() == Bitmap::Format::RGBA32) {
         const RGBA32* src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column;
         const size_t src_skip = source.pitch() / sizeof(RGBA32);
         for (int row = first_row; row <= last_row; ++row) {
@@ -511,7 +513,7 @@ void Painter::blit(const Point& position, const GraphicsBitmap& source, const Re
         return;
     }
 
-    if (source.format() == GraphicsBitmap::Format::Indexed8) {
+    if (source.format() == Bitmap::Format::Indexed8) {
         const u8* src = source.bits(src_rect.top() + first_row) + src_rect.left() + first_column;
         const size_t src_skip = source.pitch();
         for (int row = first_row; row <= last_row; ++row) {
@@ -527,7 +529,7 @@ void Painter::blit(const Point& position, const GraphicsBitmap& source, const Re
 }
 
 template<bool has_alpha_channel, typename GetPixel>
-ALWAYS_INLINE static void do_draw_integer_scaled_bitmap(GraphicsBitmap& target, const Rect& dst_rect, const GraphicsBitmap& source, int hfactor, int vfactor, GetPixel get_pixel)
+ALWAYS_INLINE static void do_draw_integer_scaled_bitmap(Gfx::Bitmap& target, const Rect& dst_rect, const Gfx::Bitmap& source, int hfactor, int vfactor, GetPixel get_pixel)
 {
     for (int y = source.rect().top(); y <= source.rect().bottom(); ++y) {
         int dst_y = dst_rect.y() + y * vfactor;
@@ -548,7 +550,7 @@ ALWAYS_INLINE static void do_draw_integer_scaled_bitmap(GraphicsBitmap& target, 
 }
 
 template<bool has_alpha_channel, typename GetPixel>
-ALWAYS_INLINE static void do_draw_scaled_bitmap(GraphicsBitmap& target, const Rect& dst_rect, const Rect& clipped_rect, const GraphicsBitmap& source, const Rect& src_rect, int hscale, int vscale, GetPixel get_pixel)
+ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, const Rect& dst_rect, const Rect& clipped_rect, const Gfx::Bitmap& source, const Rect& src_rect, int hscale, int vscale, GetPixel get_pixel)
 {
     if (dst_rect == clipped_rect && !(dst_rect.width() % src_rect.width()) && !(dst_rect.height() % src_rect.height())) {
         int hfactor = dst_rect.width() / src_rect.width();
@@ -577,7 +579,7 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(GraphicsBitmap& target, const Re
     }
 }
 
-void Painter::draw_scaled_bitmap(const Rect& a_dst_rect, const GraphicsBitmap& source, const Rect& src_rect)
+void Painter::draw_scaled_bitmap(const Rect& a_dst_rect, const Gfx::Bitmap& source, const Rect& src_rect)
 {
     auto dst_rect = a_dst_rect;
     if (dst_rect.size() == src_rect.size())
@@ -595,32 +597,32 @@ void Painter::draw_scaled_bitmap(const Rect& a_dst_rect, const GraphicsBitmap& s
 
     if (source.has_alpha_channel()) {
         switch (source.format()) {
-        case GraphicsBitmap::Format::RGB32:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::RGB32>);
+        case Bitmap::Format::RGB32:
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<Bitmap::Format::RGB32>);
             break;
-        case GraphicsBitmap::Format::RGBA32:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::RGBA32>);
+        case Bitmap::Format::RGBA32:
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<Bitmap::Format::RGBA32>);
             break;
-        case GraphicsBitmap::Format::Indexed8:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::Indexed8>);
+        case Bitmap::Format::Indexed8:
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<Bitmap::Format::Indexed8>);
             break;
         default:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::Invalid>);
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<Bitmap::Format::Invalid>);
             break;
         }
     } else {
         switch (source.format()) {
-        case GraphicsBitmap::Format::RGB32:
-            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::RGB32>);
+        case Bitmap::Format::RGB32:
+            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<Bitmap::Format::RGB32>);
             break;
-        case GraphicsBitmap::Format::RGBA32:
-            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::RGBA32>);
+        case Bitmap::Format::RGBA32:
+            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<Bitmap::Format::RGBA32>);
             break;
-        case GraphicsBitmap::Format::Indexed8:
-            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::Indexed8>);
+        case Bitmap::Format::Indexed8:
+            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<Bitmap::Format::Indexed8>);
             break;
         default:
-            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::Invalid>);
+            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<Bitmap::Format::Invalid>);
             break;
         }
     }
@@ -636,7 +638,7 @@ void Painter::draw_scaled_bitmap(const Rect& a_dst_rect, const GraphicsBitmap& s
     draw_bitmap(point, font.glyph_bitmap(ch), color);
 }
 
-void Painter::draw_emoji(const Point& point, const GraphicsBitmap& emoji, const Font& font)
+void Painter::draw_emoji(const Point& point, const Gfx::Bitmap& emoji, const Font& font)
 {
     if (!font.is_fixed_width())
         blit(point, emoji, emoji.rect());
@@ -951,4 +953,6 @@ PainterStateSaver::PainterStateSaver(Painter& painter)
 PainterStateSaver::~PainterStateSaver()
 {
     m_painter.restore();
+}
+
 }

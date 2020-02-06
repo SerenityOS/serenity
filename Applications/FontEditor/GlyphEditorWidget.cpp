@@ -27,13 +27,13 @@
 #include "GlyphEditorWidget.h"
 #include <LibGUI/GPainter.h>
 
-GlyphEditorWidget::GlyphEditorWidget(Font& mutable_font, GUI::Widget* parent)
+GlyphEditorWidget::GlyphEditorWidget(Gfx::Font& mutable_font, GUI::Widget* parent)
     : GUI::Frame(parent)
     , m_font(mutable_font)
 {
     set_frame_thickness(2);
-    set_frame_shadow(FrameShadow::Sunken);
-    set_frame_shape(FrameShape::Container);
+    set_frame_shadow(Gfx::FrameShadow::Sunken);
+    set_frame_shape(Gfx::FrameShape::Container);
     set_relative_rect({ 0, 0, preferred_width(), preferred_height() });
 }
 

@@ -55,7 +55,7 @@ private:
     bool should_include_ok_button() const;
     bool should_include_cancel_button() const;
     void build();
-    RefPtr<GraphicsBitmap> icon() const;
+    RefPtr<Gfx::Bitmap> icon() const;
 
     String m_text;
     Type m_type { Type::None };

@@ -27,7 +27,7 @@
 #include <WindowServer/WSCursor.h>
 #include <WindowServer/WSWindowManager.h>
 
-WSCursor::WSCursor(NonnullRefPtr<GraphicsBitmap>&& bitmap, const Point& hotspot)
+WSCursor::WSCursor(NonnullRefPtr<Gfx::Bitmap>&& bitmap, const Gfx::Point& hotspot)
     : m_bitmap(move(bitmap))
     , m_hotspot(hotspot)
 {
@@ -37,12 +37,12 @@ WSCursor::~WSCursor()
 {
 }
 
-NonnullRefPtr<WSCursor> WSCursor::create(NonnullRefPtr<GraphicsBitmap>&& bitmap)
+NonnullRefPtr<WSCursor> WSCursor::create(NonnullRefPtr<Gfx::Bitmap>&& bitmap)
 {
     return adopt(*new WSCursor(move(bitmap), bitmap->rect().center()));
 }
 
-NonnullRefPtr<WSCursor> WSCursor::create(NonnullRefPtr<GraphicsBitmap>&& bitmap, const Point& hotspot)
+NonnullRefPtr<WSCursor> WSCursor::create(NonnullRefPtr<Gfx::Bitmap>&& bitmap, const Gfx::Point& hotspot)
 {
     return adopt(*new WSCursor(move(bitmap), hotspot));
 }

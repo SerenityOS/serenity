@@ -41,8 +41,8 @@ public:
     String text() const { return m_text; }
     void set_text(const StringView&);
 
-    TextAlignment text_alignment() const { return m_text_alignment; }
-    void set_text_alignment(TextAlignment text_alignment) { m_text_alignment = text_alignment; }
+    Gfx::TextAlignment text_alignment() const { return m_text_alignment; }
+    void set_text_alignment(Gfx::TextAlignment text_alignment) { m_text_alignment = text_alignment; }
 
     bool should_wrap() const { return m_should_wrap; }
     void set_should_wrap(bool should_wrap) { m_should_wrap = should_wrap; }
@@ -58,7 +58,7 @@ private:
 
     String m_text;
     Vector<String> m_lines;
-    TextAlignment m_text_alignment { TextAlignment::Center };
+    Gfx::TextAlignment m_text_alignment { Gfx::TextAlignment::Center };
     bool m_should_wrap { false };
     int m_line_height { 0 };
 };

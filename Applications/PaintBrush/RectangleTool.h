@@ -57,8 +57,8 @@ private:
     void draw_using(GUI::Painter& painter);
 
     GUI::MouseButton m_drawing_button { GUI::MouseButton::None };
-    Point m_rectangle_start_position;
-    Point m_rectangle_end_position;
+    Gfx::Point m_rectangle_start_position;
+    Gfx::Point m_rectangle_end_position;
     RefPtr<GUI::Menu> m_context_menu;
     Mode m_mode { Mode::Outline };
 };

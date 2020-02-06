@@ -92,7 +92,7 @@ public:
     virtual ColumnMetadata column_metadata(int column) const override
     {
         if (column == Column::MatchedText) {
-            return { 0, TextAlignment::CenterLeft, &Font::default_fixed_width_font() };
+            return { 0, Gfx::TextAlignment::CenterLeft, &Gfx::Font::default_fixed_width_font() };
         }
         return {};
     }

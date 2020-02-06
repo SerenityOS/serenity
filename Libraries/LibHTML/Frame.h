@@ -50,13 +50,13 @@ public:
     HtmlView* html_view() { return m_html_view; }
     const HtmlView* html_view() const { return m_html_view; }
 
-    const Size& size() const { return m_size; }
-    void set_size(const Size&);
+    const Gfx::Size& size() const { return m_size; }
+    void set_size(const Gfx::Size&);
 
-    void set_needs_display(const Rect&);
-    Function<void(const Rect&)> on_set_needs_display;
+    void set_needs_display(const Gfx::Rect&);
+    Function<void(const Gfx::Rect&)> on_set_needs_display;
 
-    void set_viewport_rect(const Rect&);
+    void set_viewport_rect(const Gfx::Rect&);
     Rect viewport_rect() const { return m_viewport_rect; }
 
 private:
@@ -64,6 +64,6 @@ private:
 
     WeakPtr<HtmlView> m_html_view;
     RefPtr<Document> m_document;
-    Size m_size;
-    Rect m_viewport_rect;
+    Gfx::Size m_size;
+    Gfx::Rect m_viewport_rect;
 };

@@ -50,7 +50,7 @@ private:
     virtual void mouseup_event(GUI::MouseEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
 
-    int note_for_event_position(Point) const;
+    int note_for_event_position(const Gfx::Point&) const;
 
     AudioEngine& m_audio_engine;
 

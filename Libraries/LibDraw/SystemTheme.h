@@ -30,6 +30,8 @@
 #include <AK/Types.h>
 #include <LibDraw/Color.h>
 
+namespace Gfx {
+
 enum class ColorRole {
     NoRole,
     DesktopBackground,
@@ -82,3 +84,7 @@ const SystemTheme& current_system_theme();
 int current_system_theme_buffer_id();
 void set_system_theme(SharedBuffer&);
 RefPtr<SharedBuffer> load_system_theme(const String& path);
+
+}
+
+using Gfx::ColorRole;

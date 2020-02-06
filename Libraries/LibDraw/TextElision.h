@@ -26,7 +26,11 @@
 
 #pragma once
 
+namespace Gfx {
+
 enum class TextElision {
     None,
     Right,
 };
+
+}

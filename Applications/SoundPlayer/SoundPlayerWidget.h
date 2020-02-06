@@ -85,8 +85,8 @@ private:
     RefPtr<GUI::Label> m_remaining;
     RefPtr<Slider> m_slider;
     RefPtr<SampleWidget> m_sample_widget;
-    RefPtr<GraphicsBitmap> m_play_icon { GraphicsBitmap::load_from_file("/res/icons/16x16/play.png") };
-    RefPtr<GraphicsBitmap> m_pause_icon { GraphicsBitmap::load_from_file("/res/icons/16x16/pause.png") };
+    RefPtr<Gfx::Bitmap> m_play_icon { Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png") };
+    RefPtr<Gfx::Bitmap> m_pause_icon { Gfx::Bitmap::load_from_file("/res/icons/16x16/pause.png") };
     RefPtr<GUI::Button> m_play;
     RefPtr<GUI::Button> m_stop;
 };

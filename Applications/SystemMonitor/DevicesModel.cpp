@@ -77,15 +77,15 @@ GUI::Model::ColumnMetadata DevicesModel::column_metadata(int column) const
 {
     switch (column) {
     case Column::Device:
-        return { 70, TextAlignment::CenterLeft };
+        return { 70, Gfx::TextAlignment::CenterLeft };
     case Column::Major:
-        return { 32, TextAlignment::CenterRight };
+        return { 32, Gfx::TextAlignment::CenterRight };
     case Column::Minor:
-        return { 32, TextAlignment::CenterRight };
+        return { 32, Gfx::TextAlignment::CenterRight };
     case Column::ClassName:
-        return { 120, TextAlignment::CenterLeft };
+        return { 120, Gfx::TextAlignment::CenterLeft };
     case Column::Type:
-        return { 120, TextAlignment::CenterLeft };
+        return { 120, Gfx::TextAlignment::CenterLeft };
     default:
         ASSERT_NOT_REACHED();
     }

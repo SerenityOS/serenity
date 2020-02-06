@@ -29,8 +29,11 @@
 #include <AK/Badge.h>
 #include <AK/NonnullOwnPtrVector.h>
 
+namespace Gfx {
 class Painter;
 class Rect;
+}
+
 class WSButton;
 class WSMouseEvent;
 class WSWindow;
@@ -40,15 +43,15 @@ public:
     WSWindowFrame(WSWindow&);
     ~WSWindowFrame();
 
-    Rect rect() const;
-    void paint(Painter&);
+    Gfx::Rect rect() const;
+    void paint(Gfx::Painter&);
     void on_mouse_event(const WSMouseEvent&);
-    void notify_window_rect_changed(const Rect& old_rect, const Rect& new_rect);
+    void notify_window_rect_changed(const Gfx::Rect& old_rect, const Gfx::Rect& new_rect);
     void invalidate_title_bar();
 
-    Rect title_bar_rect() const;
-    Rect title_bar_icon_rect() const;
-    Rect title_bar_text_rect() const;
+    Gfx::Rect title_bar_rect() const;
+    Gfx::Rect title_bar_icon_rect() const;
+    Gfx::Rect title_bar_text_rect() const;
 
     void did_set_maximized(Badge<WSWindow>, bool);
 

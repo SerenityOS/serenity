@@ -132,10 +132,10 @@ private:
     HashMap<uid_t, String> m_usernames;
     HashMap<PidAndTid, NonnullOwnPtr<Thread>> m_threads;
     Vector<PidAndTid> m_pids;
-    RefPtr<GraphicsBitmap> m_generic_process_icon;
-    RefPtr<GraphicsBitmap> m_high_priority_icon;
-    RefPtr<GraphicsBitmap> m_low_priority_icon;
-    RefPtr<GraphicsBitmap> m_normal_priority_icon;
+    RefPtr<Gfx::Bitmap> m_generic_process_icon;
+    RefPtr<Gfx::Bitmap> m_high_priority_icon;
+    RefPtr<Gfx::Bitmap> m_low_priority_icon;
+    RefPtr<Gfx::Bitmap> m_normal_priority_icon;
 };
 
 namespace AK {

@@ -104,7 +104,7 @@ void TableView::paint_event(PaintEvent& event)
                 continue;
             auto column_metadata = model()->column_metadata(column_index);
             int column_width = this->column_width(column_index);
-            const Font& font = column_metadata.font ? *column_metadata.font : this->font();
+            const Gfx::Font& font = column_metadata.font ? *column_metadata.font : this->font();
             bool is_key_column = model()->key_column() == column_index;
             Rect cell_rect(horizontal_padding() + x_offset, y, column_width, item_height());
             if (is_key_column) {
@@ -128,7 +128,7 @@ void TableView::paint_event(PaintEvent& event)
                         text_color = palette().selection_text();
                     else
                         text_color = model()->data(cell_index, Model::Role::ForegroundColor).to_color(palette().color(foreground_role()));
-                    painter.draw_text(cell_rect, data.to_string(), font, column_metadata.text_alignment, text_color, TextElision::Right);
+                    painter.draw_text(cell_rect, data.to_string(), font, column_metadata.text_alignment, text_color, Gfx::TextElision::Right);
                 }
             }
             x_offset += column_width + horizontal_padding() * 2;

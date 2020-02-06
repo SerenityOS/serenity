@@ -25,18 +25,20 @@
  */
 
 #include "Font.h"
+#include "Emoji.h"
+#include "GraphicsBitmap.h"
 #include <AK/BufferStream.h>
 #include <AK/MappedFile.h>
 #include <AK/StdLibExtras.h>
+#include <AK/Utf8View.h>
 #include <AK/kmalloc.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <sys/mman.h>
 #include <stdio.h>
+#include <sys/mman.h>
 #include <unistd.h>
-#include <AK/Utf8View.h>
-#include "Emoji.h"
-#include "GraphicsBitmap.h"
+
+namespace Gfx {
 
 struct [[gnu::packed]] FontFileHeader
 {
@@ -235,4 +237,6 @@ int Font::width(const Utf8View& utf8) const
     }
 
     return width;
+}
+
 }

@@ -44,8 +44,8 @@ static ManualSectionNode s_sections[] = {
 ManualModel::ManualModel()
 {
     // FIXME: need some help from the icon fairy ^)
-    m_section_icon.set_bitmap_for_size(16, load_png("/res/icons/16x16/book.png"));
-    m_page_icon.set_bitmap_for_size(16, load_png("/res/icons/16x16/filetype-unknown.png"));
+    m_section_icon.set_bitmap_for_size(16, Gfx::load_png("/res/icons/16x16/book.png"));
+    m_page_icon.set_bitmap_for_size(16, Gfx::load_png("/res/icons/16x16/filetype-unknown.png"));
 }
 
 String ManualModel::page_path(const GUI::ModelIndex& index) const

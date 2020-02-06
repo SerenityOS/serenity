@@ -87,5 +87,5 @@ private:
     unsigned m_high_score { 0 };
     String m_high_score_text;
 
-    NonnullRefPtrVector<GraphicsBitmap> m_fruit_bitmaps;
+    NonnullRefPtrVector<Gfx::Bitmap> m_fruit_bitmaps;
 };

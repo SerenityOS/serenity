@@ -63,13 +63,13 @@ VBForm::VBForm(const String& name, GUI::Widget* parent)
             widget->gwidget()->move_to_back();
     }));
     m_context_menu->add_separator();
-    m_context_menu->add_action(GUI::Action::create("Lay out horizontally", load_png("/res/icons/16x16/layout-horizontally.png"), [this](auto&) {
+    m_context_menu->add_action(GUI::Action::create("Lay out horizontally", Gfx::load_png("/res/icons/16x16/layout-horizontally.png"), [this](auto&) {
         if (auto* widget = single_selected_widget()) {
             dbg() << "Giving " << *widget->gwidget() << " a horizontal box layout";
             widget->gwidget()->set_layout(make<GUI::HBoxLayout>());
         }
     }));
-    m_context_menu->add_action(GUI::Action::create("Lay out vertically", load_png("/res/icons/16x16/layout-vertically.png"), [this](auto&) {
+    m_context_menu->add_action(GUI::Action::create("Lay out vertically", Gfx::load_png("/res/icons/16x16/layout-vertically.png"), [this](auto&) {
         if (auto* widget = single_selected_widget()) {
             dbg() << "Giving " << *widget->gwidget() << " a vertical box layout";
             widget->gwidget()->set_layout(make<GUI::VBoxLayout>());
@@ -138,7 +138,7 @@ bool VBForm::is_selected(const VBWidget& widget) const
     return m_selected_widgets.contains(const_cast<VBWidget*>(&widget));
 }
 
-VBWidget* VBForm::widget_at(const Point& position)
+VBWidget* VBForm::widget_at(const Gfx::Point& position)
 {
     auto result = hit_test(position, GUI::Widget::ShouldRespectGreediness::No);
     if (!result.widget)

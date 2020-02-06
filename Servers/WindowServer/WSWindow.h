@@ -66,7 +66,7 @@ public:
     WSWindow(Core::Object&, WSWindowType);
     virtual ~WSWindow() override;
 
-    void popup_window_menu(const Point&);
+    void popup_window_menu(const Gfx::Point&);
     void request_close();
 
     unsigned wm_event_mask() const { return m_wm_event_mask; }
@@ -135,10 +135,10 @@ public:
 
     bool is_modal() const { return m_modal; }
 
-    Rect rect() const { return m_rect; }
-    void set_rect(const Rect&);
+    Gfx::Rect rect() const { return m_rect; }
+    void set_rect(const Gfx::Rect&);
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
-    void set_rect_without_repaint(const Rect& rect)
+    void set_rect_without_repaint(const Gfx::Rect& rect)
     {
         if (m_rect == rect)
             return;
@@ -147,33 +147,33 @@ public:
         m_frame.notify_window_rect_changed(old_rect, rect);
     }
 
-    void set_rect_from_window_manager_resize(const Rect&);
+    void set_rect_from_window_manager_resize(const Gfx::Rect&);
 
-    void set_taskbar_rect(const Rect& rect) { m_taskbar_rect = rect; }
-    const Rect& taskbar_rect() const { return m_taskbar_rect; }
+    void set_taskbar_rect(const Gfx::Rect& rect) { m_taskbar_rect = rect; }
+    const Gfx::Rect& taskbar_rect() const { return m_taskbar_rect; }
 
-    void move_to(const Point& position) { set_rect({ position, size() }); }
+    void move_to(const Gfx::Point& position) { set_rect({ position, size() }); }
     void move_to(int x, int y) { move_to({ x, y }); }
 
     Point position() const { return m_rect.location(); }
-    void set_position(const Point& position) { set_rect({ position.x(), position.y(), width(), height() }); }
-    void set_position_without_repaint(const Point& position) { set_rect_without_repaint({ position.x(), position.y(), width(), height() }); }
+    void set_position(const Gfx::Point& position) { set_rect({ position.x(), position.y(), width(), height() }); }
+    void set_position_without_repaint(const Gfx::Point& position) { set_rect_without_repaint({ position.x(), position.y(), width(), height() }); }
 
     Size size() const { return m_rect.size(); }
 
     void invalidate();
-    void invalidate(const Rect&);
+    void invalidate(const Gfx::Rect&);
 
     virtual void event(Core::Event&) override;
 
     // Only used by WSWindowType::MenuApplet. Perhaps it could be a WSWindow subclass? I don't know.
-    void set_rect_in_menubar(const Rect& rect) { m_rect_in_menubar = rect; }
-    const Rect& rect_in_menubar() const { return m_rect_in_menubar; }
+    void set_rect_in_menubar(const Gfx::Rect& rect) { m_rect_in_menubar = rect; }
+    const Gfx::Rect& rect_in_menubar() const { return m_rect_in_menubar; }
 
-    const GraphicsBitmap* backing_store() const { return m_backing_store.ptr(); }
-    GraphicsBitmap* backing_store() { return m_backing_store.ptr(); }
+    const Gfx::Bitmap* backing_store() const { return m_backing_store.ptr(); }
+    Gfx::Bitmap* backing_store() { return m_backing_store.ptr(); }
 
-    void set_backing_store(RefPtr<GraphicsBitmap>&& backing_store)
+    void set_backing_store(RefPtr<Gfx::Bitmap>&& backing_store)
     {
         m_last_backing_store = move(m_backing_store);
         m_backing_store = move(backing_store);
@@ -184,7 +184,7 @@ public:
         swap(m_backing_store, m_last_backing_store);
     }
 
-    GraphicsBitmap* last_backing_store() { return m_last_backing_store.ptr(); }
+    Gfx::Bitmap* last_backing_store() { return m_last_backing_store.ptr(); }
 
     void set_global_cursor_tracking_enabled(bool);
     void set_automatic_cursor_tracking_enabled(bool enabled) { m_automatic_cursor_tracking_enabled = enabled; }
@@ -194,21 +194,21 @@ public:
     void set_has_alpha_channel(bool value) { m_has_alpha_channel = value; }
 
     Size size_increment() const { return m_size_increment; }
-    void set_size_increment(const Size& increment) { m_size_increment = increment; }
+    void set_size_increment(const Gfx::Size& increment) { m_size_increment = increment; }
 
     Size base_size() const { return m_base_size; }
-    void set_base_size(const Size& size) { m_base_size = size; }
+    void set_base_size(const Gfx::Size& size) { m_base_size = size; }
 
-    const GraphicsBitmap& icon() const { return *m_icon; }
-    void set_icon(NonnullRefPtr<GraphicsBitmap>&& icon) { m_icon = move(icon); }
+    const Gfx::Bitmap& icon() const { return *m_icon; }
+    void set_icon(NonnullRefPtr<Gfx::Bitmap>&& icon) { m_icon = move(icon); }
 
     void set_default_icon();
 
     const WSCursor* override_cursor() const { return m_override_cursor.ptr(); }
     void set_override_cursor(RefPtr<WSCursor>&& cursor) { m_override_cursor = move(cursor); }
 
-    void request_update(const Rect&);
-    DisjointRectSet take_pending_paint_rects() { return move(m_pending_paint_rects); }
+    void request_update(const Gfx::Rect&);
+    Gfx::DisjointRectSet take_pending_paint_rects() { return move(m_pending_paint_rects); }
 
     bool in_minimize_animation() const { return m_minimize_animation_step != -1; }
 
@@ -231,9 +231,9 @@ private:
 
     WSClientConnection* m_client { nullptr };
     String m_title;
-    Rect m_rect;
-    Rect m_saved_nonfullscreen_rect;
-    Rect m_taskbar_rect;
+    Gfx::Rect m_rect;
+    Gfx::Rect m_saved_nonfullscreen_rect;
+    Gfx::Rect m_taskbar_rect;
     WSWindowType m_type { WSWindowType::Normal };
     bool m_global_cursor_tracking_enabled { false };
     bool m_automatic_cursor_tracking_enabled { false };
@@ -247,23 +247,23 @@ private:
     bool m_maximized { false };
     bool m_fullscreen { false };
     WindowTileType m_tiled { WindowTileType::None };
-    Rect m_untiled_rect;
+    Gfx::Rect m_untiled_rect;
     bool m_occluded { false };
     bool m_show_titlebar { true };
-    RefPtr<GraphicsBitmap> m_backing_store;
-    RefPtr<GraphicsBitmap> m_last_backing_store;
+    RefPtr<Gfx::Bitmap> m_backing_store;
+    RefPtr<Gfx::Bitmap> m_last_backing_store;
     int m_window_id { -1 };
     i32 m_client_id { -1 };
     float m_opacity { 1 };
-    Size m_size_increment;
-    Size m_base_size;
-    NonnullRefPtr<GraphicsBitmap> m_icon;
+    Gfx::Size m_size_increment;
+    Gfx::Size m_base_size;
+    NonnullRefPtr<Gfx::Bitmap> m_icon;
     RefPtr<WSCursor> m_override_cursor;
     WSWindowFrame m_frame;
     unsigned m_wm_event_mask { 0 };
-    DisjointRectSet m_pending_paint_rects;
-    Rect m_unmaximized_rect;
-    Rect m_rect_in_menubar;
+    Gfx::DisjointRectSet m_pending_paint_rects;
+    Gfx::Rect m_unmaximized_rect;
+    Gfx::Rect m_rect_in_menubar;
     RefPtr<WSMenu> m_window_menu;
     int m_minimize_animation_step { -1 };
 };

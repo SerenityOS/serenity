@@ -90,8 +90,8 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
     m_cursor_blink_timer = Core::Timer::construct();
     m_visual_beep_timer = Core::Timer::construct();
 
-    set_frame_shape(FrameShape::Container);
-    set_frame_shadow(FrameShadow::Sunken);
+    set_frame_shape(Gfx::FrameShape::Container);
+    set_frame_shadow(Gfx::FrameShadow::Sunken);
     set_frame_thickness(2);
 
     m_scrollbar = GUI::ScrollBar::construct(Orientation::Vertical, this);
@@ -111,19 +111,19 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
 
     auto font_entry = m_config->read_entry("Text", "Font", "default");
     if (font_entry == "default")
-        set_font(Font::default_fixed_width_font());
+        set_font(Gfx::Font::default_fixed_width_font());
     else
-        set_font(Font::load_from_file(font_entry));
+        set_font(Gfx::Font::load_from_file(font_entry));
 
     m_line_height = font().glyph_height() + m_line_spacing;
 
     m_terminal.set_size(m_config->read_num_entry("Window", "Width", 80), m_config->read_num_entry("Window", "Height", 25));
 
-    m_copy_action = GUI::Action::create("Copy", { Mod_Ctrl | Mod_Shift, Key_C }, GraphicsBitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [this](auto&) {
+    m_copy_action = GUI::Action::create("Copy", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [this](auto&) {
         copy();
     });
 
-    m_paste_action = GUI::Action::create("Paste", { Mod_Ctrl | Mod_Shift, Key_V }, GraphicsBitmap::load_from_file("/res/icons/paste16.png"), [this](auto&) {
+    m_paste_action = GUI::Action::create("Paste", { Mod_Ctrl | Mod_Shift, Key_V }, Gfx::Bitmap::load_from_file("/res/icons/paste16.png"), [this](auto&) {
         paste();
     });
 }
@@ -420,7 +420,7 @@ void TerminalWidget::resize_event(GUI::ResizeEvent& event)
     relayout(event.size());
 }
 
-void TerminalWidget::relayout(const Size& size)
+void TerminalWidget::relayout(const Gfx::Size& size)
 {
     if (!m_scrollbar)
         return;
@@ -495,7 +495,7 @@ bool TerminalWidget::selection_contains(const VT::Position& position) const
     return position >= normalized_selection_start() && position <= normalized_selection_end();
 }
 
-VT::Position TerminalWidget::buffer_position_at(const Point& position) const
+VT::Position TerminalWidget::buffer_position_at(const Gfx::Point& position) const
 {
     auto adjusted_position = position.translated(-(frame_thickness() + m_inset), -(frame_thickness() + m_inset));
     int row = adjusted_position.y() / m_line_height;
@@ -723,7 +723,7 @@ void TerminalWidget::did_change_font()
     m_line_height = font().glyph_height() + m_line_spacing;
 
     // TODO: try to find a bold version of the new font (e.g. CsillaThin7x10 -> CsillaBold7x10)
-    const Font& bold_font = Font::default_bold_fixed_width_font();
+    const Gfx::Font& bold_font = Gfx::Font::default_bold_fixed_width_font();
 
     if (bold_font.glyph_height() == font().glyph_height() && bold_font.glyph_width(' ') == font().glyph_width(' '))
         m_bold_font = &bold_font;

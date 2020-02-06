@@ -56,7 +56,7 @@ int main(int argc, char** argv)
     auto window = GUI::Window::construct();
     window->set_title("PaintBrush");
     window->set_rect(100, 100, 640, 480);
-    window->set_icon(load_png("/res/icons/16x16/app-paintbrush.png"));
+    window->set_icon(Gfx::load_png("/res/icons/16x16/app-paintbrush.png"));
 
     auto horizontal_container = GUI::Widget::construct();
     window->set_main_widget(horizontal_container);
@@ -84,7 +84,7 @@ int main(int argc, char** argv)
         if (!open_path.has_value())
             return;
 
-        auto bitmap = load_png(open_path.value());
+        auto bitmap = Gfx::load_png(open_path.value());
         if (!bitmap) {
             GUI::MessageBox::show(String::format("Failed to load '%s'", open_path.value().characters()), "Open failed", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window);
             return;
@@ -104,7 +104,7 @@ int main(int argc, char** argv)
 
     auto help_menu = GUI::Menu::construct("Help");
     help_menu->add_action(GUI::Action::create("About", [&](auto&) {
-        GUI::AboutDialog::show("PaintBrush", load_png("/res/icons/32x32/app-paintbrush.png"), window);
+        GUI::AboutDialog::show("PaintBrush", Gfx::load_png("/res/icons/32x32/app-paintbrush.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 

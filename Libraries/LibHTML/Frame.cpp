@@ -52,14 +52,14 @@ void Frame::set_document(Document* document)
         m_document->attach_to_frame({}, *this);
 }
 
-void Frame::set_size(const Size& size)
+void Frame::set_size(const Gfx::Size& size)
 {
     if (m_size == size)
         return;
     m_size = size;
 }
 
-void Frame::set_viewport_rect(const Rect& rect)
+void Frame::set_viewport_rect(const Gfx::Rect& rect)
 {
     if (m_viewport_rect == rect)
         return;
@@ -69,7 +69,7 @@ void Frame::set_viewport_rect(const Rect& rect)
         m_document->layout_node()->did_set_viewport_rect({}, rect);
 }
 
-void Frame::set_needs_display(const Rect& rect)
+void Frame::set_needs_display(const Gfx::Rect& rect)
 {
     if (!m_viewport_rect.intersects(rect))
         return;

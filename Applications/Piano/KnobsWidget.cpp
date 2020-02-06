@@ -38,8 +38,8 @@ KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWid
     , m_main_widget(main_widget)
 {
     set_frame_thickness(2);
-    set_frame_shadow(FrameShadow::Sunken);
-    set_frame_shape(FrameShape::Container);
+    set_frame_shadow(Gfx::FrameShadow::Sunken);
+    set_frame_shape(Gfx::FrameShape::Container);
     set_layout(make<GUI::VBoxLayout>());
     set_fill_with_background_color(true);
 

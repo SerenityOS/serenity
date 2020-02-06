@@ -37,13 +37,13 @@ CalculatorWidget::CalculatorWidget(GUI::Widget* parent)
 
     m_entry = GUI::TextBox::construct(this);
     m_entry->set_relative_rect(5, 5, 244, 26);
-    m_entry->set_text_alignment(TextAlignment::CenterRight);
+    m_entry->set_text_alignment(Gfx::TextAlignment::CenterRight);
 
     m_label = GUI::Label::construct(this);
     m_label->set_relative_rect(12, 42, 27, 27);
     m_label->set_foreground_color(Color::NamedColor::Red);
-    m_label->set_frame_shadow(FrameShadow::Sunken);
-    m_label->set_frame_shape(FrameShape::Container);
+    m_label->set_frame_shadow(Gfx::FrameShadow::Sunken);
+    m_label->set_frame_shape(Gfx::FrameShape::Container);
     m_label->set_frame_thickness(2);
 
     update_display();

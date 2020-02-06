@@ -38,8 +38,8 @@ RollWidget::RollWidget(GUI::Widget* parent, AudioEngine& audio_engine)
     , m_audio_engine(audio_engine)
 {
     set_frame_thickness(2);
-    set_frame_shadow(FrameShadow::Sunken);
-    set_frame_shape(FrameShape::Container);
+    set_frame_shadow(Gfx::FrameShadow::Sunken);
+    set_frame_shape(Gfx::FrameShape::Container);
 
     set_should_hide_unnecessary_scrollbars(true);
     set_content_size({ 0, roll_height });

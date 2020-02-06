@@ -29,6 +29,8 @@
 #include <AK/Vector.h>
 #include <LibDraw/Rect.h>
 
+namespace Gfx {
+
 class DisjointRectSet {
 public:
     DisjointRectSet() {}
@@ -52,3 +54,5 @@ private:
 
     Vector<Rect, 32> m_rects;
 };
+
+}

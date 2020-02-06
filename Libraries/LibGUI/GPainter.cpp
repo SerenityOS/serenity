@@ -29,8 +29,8 @@
 #include <LibGUI/GWindow.h>
 
 namespace GUI {
-Painter::Painter(GraphicsBitmap& bitmap)
-    : ::Painter(bitmap)
+Painter::Painter(Gfx::Bitmap& bitmap)
+    : Gfx::Painter(bitmap)
 {
 }
 

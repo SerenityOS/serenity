@@ -64,7 +64,7 @@ Rect VBWidget::rect() const
     return m_gwidget->window_relative_rect();
 }
 
-void VBWidget::set_rect(const Rect& rect)
+void VBWidget::set_rect(const Gfx::Rect& rect)
 {
     if (rect == m_gwidget->window_relative_rect())
         return;
@@ -106,7 +106,7 @@ Rect VBWidget::grabber_rect(Direction direction) const
     }
 }
 
-Direction VBWidget::grabber_at(const Point& position) const
+Direction VBWidget::grabber_at(const Gfx::Point& position) const
 {
     Direction found_grabber = Direction::None;
     for_each_direction([&](Direction direction) {

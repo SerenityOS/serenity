@@ -71,7 +71,7 @@ void LayoutNode::render(RenderingContext& context)
     });
 }
 
-HitTestResult LayoutNode::hit_test(const Point& position) const
+HitTestResult LayoutNode::hit_test(const Gfx::Point& position) const
 {
     HitTestResult result;
     for_each_child([&](auto& child) {

@@ -47,11 +47,11 @@ protected:
 private:
     Orientation m_orientation;
     bool m_resizing { false };
-    Point m_resize_origin;
+    Gfx::Point m_resize_origin;
     WeakPtr<Widget> m_first_resizee;
     WeakPtr<Widget> m_second_resizee;
-    Size m_first_resizee_start_size;
-    Size m_second_resizee_start_size;
+    Gfx::Size m_first_resizee_start_size;
+    Gfx::Size m_second_resizee_start_size;
 };
 
 }

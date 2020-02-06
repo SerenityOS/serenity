@@ -44,7 +44,7 @@ void LayoutImage::layout()
         rect().set_width(node().preferred_width());
         rect().set_height(node().preferred_height());
     } else if (renders_as_alt_text()) {
-        auto& font = Font::default_font();
+        auto& font = Gfx::Font::default_font();
         auto alt = node().alt();
         if (alt.is_empty())
             alt = node().src();
@@ -68,12 +68,12 @@ void LayoutImage::render(RenderingContext& context)
         return;
 
     if (renders_as_alt_text()) {
-        context.painter().set_font(Font::default_font());
-        StylePainter::paint_frame(context.painter(), enclosing_int_rect(rect()), context.palette(), FrameShape::Container, FrameShadow::Sunken, 2);
+        context.painter().set_font(Gfx::Font::default_font());
+        Gfx::StylePainter::paint_frame(context.painter(), enclosing_int_rect(rect()), context.palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);
         auto alt = node().alt();
         if (alt.is_empty())
             alt = node().src();
-        context.painter().draw_text(enclosing_int_rect(rect()), alt, TextAlignment::Center, style().color_or_fallback(CSS::PropertyID::Color, document(), Color::Black), TextElision::Right);
+        context.painter().draw_text(enclosing_int_rect(rect()), alt, Gfx::TextAlignment::Center, style().color_or_fallback(CSS::PropertyID::Color, document(), Color::Black), Gfx::TextElision::Right);
     } else if (node().bitmap())
         context.painter().draw_scaled_bitmap(enclosing_int_rect(rect()), *node().bitmap(), node().bitmap()->rect());
     LayoutReplaced::render(context);

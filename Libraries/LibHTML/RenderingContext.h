@@ -48,11 +48,11 @@ public:
     void set_should_show_line_box_borders(bool value) { m_should_show_line_box_borders = value; }
 
     Rect viewport_rect() const { return m_viewport_rect; }
-    void set_viewport_rect(const Rect& rect) { m_viewport_rect = rect; }
+    void set_viewport_rect(const Gfx::Rect& rect) { m_viewport_rect = rect; }
 
 private:
     GUI::Painter& m_painter;
     Palette m_palette;
-    Rect m_viewport_rect;
+    Gfx::Rect m_viewport_rect;
     bool m_should_show_line_box_borders { false };
 };

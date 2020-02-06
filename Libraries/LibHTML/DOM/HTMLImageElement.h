@@ -44,8 +44,8 @@ public:
     int preferred_width() const;
     int preferred_height() const;
 
-    const GraphicsBitmap* bitmap() const;
-    const ImageDecoder* image_decoder() const { return m_image_decoder; }
+    const Gfx::Bitmap* bitmap() const;
+    const Gfx::ImageDecoder* image_decoder() const { return m_image_decoder; }
 
     void set_volatile(Badge<LayoutDocument>, bool);
 
@@ -54,6 +54,6 @@ private:
 
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
 
-    RefPtr<ImageDecoder> m_image_decoder;
+    RefPtr<Gfx::ImageDecoder> m_image_decoder;
     ByteBuffer m_encoded_data;
 };

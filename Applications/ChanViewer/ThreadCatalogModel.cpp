@@ -129,17 +129,17 @@ GUI::Model::ColumnMetadata ThreadCatalogModel::column_metadata(int column) const
 {
     switch (column) {
     case Column::ThreadNumber:
-        return { 70, TextAlignment::CenterRight };
+        return { 70, Gfx::TextAlignment::CenterRight };
     case Column::Subject:
-        return { 170, TextAlignment::CenterLeft };
+        return { 170, Gfx::TextAlignment::CenterLeft };
     case Column::Text:
-        return { 270, TextAlignment::CenterLeft };
+        return { 270, Gfx::TextAlignment::CenterLeft };
     case Column::ReplyCount:
-        return { 45, TextAlignment::CenterRight };
+        return { 45, Gfx::TextAlignment::CenterRight };
     case Column::ImageCount:
-        return { 40, TextAlignment::CenterRight };
+        return { 40, Gfx::TextAlignment::CenterRight };
     case Column::PostTime:
-        return { 120, TextAlignment::CenterLeft };
+        return { 120, Gfx::TextAlignment::CenterLeft };
     default:
         ASSERT_NOT_REACHED();
     }

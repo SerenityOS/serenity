@@ -40,7 +40,7 @@ BucketTool::~BucketTool()
 {
 }
 
-static void flood_fill(GraphicsBitmap& bitmap, const Point& start_position, Color target_color, Color fill_color)
+static void flood_fill(Gfx::Bitmap& bitmap, const Gfx::Point& start_position, Color target_color, Color fill_color)
 {
     ASSERT(bitmap.bpp() == 32);
 
@@ -48,13 +48,13 @@ static void flood_fill(GraphicsBitmap& bitmap, const Point& start_position, Colo
         return;
 
     Queue<Point> queue;
-    queue.enqueue(Point(start_position));
+    queue.enqueue(start_position);
     while (!queue.is_empty()) {
         auto position = queue.dequeue();
 
-        if (bitmap.get_pixel<GraphicsBitmap::Format::RGB32>(position.x(), position.y()) != target_color)
+        if (bitmap.get_pixel<Gfx::Bitmap::Format::RGB32>(position.x(), position.y()) != target_color)
             continue;
-        bitmap.set_pixel<GraphicsBitmap::Format::RGB32>(position.x(), position.y(), fill_color);
+        bitmap.set_pixel<Gfx::Bitmap::Format::RGB32>(position.x(), position.y(), fill_color);
 
         if (position.x() != 0)
             queue.enqueue(position.translated(-1, 0));

@@ -41,20 +41,20 @@ ProcessStateWidget::ProcessStateWidget(GUI::Widget* parent)
     set_layout(make<GUI::HBoxLayout>());
 
     auto pid_label_label = GUI::Label::construct("Process:", this);
-    pid_label_label->set_font(Font::default_bold_font());
+    pid_label_label->set_font(Gfx::Font::default_bold_font());
     m_pid_label = GUI::Label::construct("", this);
 
     auto state_label_label = GUI::Label::construct("State:", this);
-    state_label_label->set_font(Font::default_bold_font());
+    state_label_label->set_font(Gfx::Font::default_bold_font());
     m_state_label = GUI::Label::construct("", this);
 
     // FIXME: This should show CPU% instead.
     auto cpu_label_label = GUI::Label::construct("Times scheduled:", this);
-    cpu_label_label->set_font(Font::default_bold_font());
+    cpu_label_label->set_font(Gfx::Font::default_bold_font());
     m_cpu_label = GUI::Label::construct("", this);
 
     auto memory_label_label = GUI::Label::construct("Memory (resident):", this);
-    memory_label_label->set_font(Font::default_bold_font());
+    memory_label_label->set_font(Gfx::Font::default_bold_font());
     m_memory_label = GUI::Label::construct("", this);
 
     m_timer = Core::Timer::construct(500, [this] {

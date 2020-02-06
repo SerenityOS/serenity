@@ -34,8 +34,8 @@ KeysWidget::KeysWidget(GUI::Widget* parent, AudioEngine& audio_engine)
     , m_audio_engine(audio_engine)
 {
     set_frame_thickness(2);
-    set_frame_shadow(FrameShadow::Sunken);
-    set_frame_shape(FrameShape::Container);
+    set_frame_shadow(Gfx::FrameShadow::Sunken);
+    set_frame_shape(Gfx::FrameShape::Container);
     set_fill_with_background_color(true);
 }
 
@@ -188,7 +188,7 @@ void KeysWidget::paint_event(GUI::PaintEvent& event)
         painter.draw_rect(rect, Color::Black);
         if (i < white_key_labels_count) {
             rect.set_height(rect.height() * 1.5);
-            painter.draw_text(rect, StringView(&white_key_labels[i], 1), TextAlignment::Center, Color::Black);
+            painter.draw_text(rect, StringView(&white_key_labels[i], 1), Gfx::TextAlignment::Center, Color::Black);
         }
 
         note += white_key_note_accumulator[i % white_keys_per_octave];
@@ -210,7 +210,7 @@ void KeysWidget::paint_event(GUI::PaintEvent& event)
         painter.draw_rect(rect, Color::Black);
         if (i < black_key_labels_count) {
             rect.set_height(rect.height() * 1.5);
-            painter.draw_text(rect, StringView(&black_key_labels[i], 1), TextAlignment::Center, Color::White);
+            painter.draw_text(rect, StringView(&black_key_labels[i], 1), Gfx::TextAlignment::Center, Color::White);
         }
 
         note += black_key_note_accumulator[i % black_keys_per_octave];
@@ -249,11 +249,12 @@ static inline int note_from_white_keys(int white_keys)
     return note;
 }
 
-int KeysWidget::note_for_event_position(Point point) const
+int KeysWidget::note_for_event_position(const Gfx::Point& a_point) const
 {
-    if (!frame_inner_rect().contains(point))
+    if (!frame_inner_rect().contains(a_point))
         return -1;
 
+    auto point = a_point;
     point.move_by(-frame_thickness(), -frame_thickness());
 
     int white_keys = point.x() / white_key_width;

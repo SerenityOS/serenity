@@ -35,8 +35,8 @@ class QSWidget final : public GUI::Frame {
 public:
     virtual ~QSWidget() override;
 
-    void set_bitmap(NonnullRefPtr<GraphicsBitmap>);
-    const GraphicsBitmap* bitmap() const { return m_bitmap.ptr(); }
+    void set_bitmap(NonnullRefPtr<Gfx::Bitmap>);
+    const Gfx::Bitmap* bitmap() const { return m_bitmap.ptr(); }
 
     void set_path(const String&);
     const String& path() const { return m_path; }
@@ -55,10 +55,10 @@ private:
 
     void relayout();
 
-    RefPtr<GraphicsBitmap> m_bitmap;
-    Rect m_bitmap_rect;
+    RefPtr<Gfx::Bitmap> m_bitmap;
+    Gfx::Rect m_bitmap_rect;
     int m_scale { 100 };
-    Point m_pan_origin;
-    Point m_pan_bitmap_origin;
+    Gfx::Point m_pan_origin;
+    Gfx::Point m_pan_bitmap_origin;
     String m_path;
 };

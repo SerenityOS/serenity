@@ -120,7 +120,7 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
         clear_preview();
     };
 
-    auto open_parent_directory_action = Action::create("Open parent directory", { Mod_Alt, Key_Up }, GraphicsBitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [this](const Action&) {
+    auto open_parent_directory_action = Action::create("Open parent directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [this](const Action&) {
         m_model->set_root_path(String::format("%s/..", m_model->root_path().characters()));
         clear_preview();
     });
@@ -132,7 +132,7 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
     toolbar->add_action(go_home_action);
     toolbar->add_separator();
 
-    auto mkdir_action = Action::create("New directory...", GraphicsBitmap::load_from_file("/res/icons/16x16/mkdir.png"), [this](const Action&) {
+    auto mkdir_action = Action::create("New directory...", Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [this](const Action&) {
         auto input_box = InputBox::construct("Enter name:", "New directory", this);
         if (input_box->exec() == InputBox::ExecOK && !input_box->text_value().is_empty()) {
             auto new_dir_path = FileSystemPath(String::format("%s/%s",
@@ -160,7 +160,7 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
     filename_container->set_preferred_size(0, 20);
     filename_container->set_layout(make<HBoxLayout>());
     auto filename_label = Label::construct("File name:", filename_container);
-    filename_label->set_text_alignment(TextAlignment::CenterLeft);
+    filename_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     filename_label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     filename_label->set_preferred_size(60, 0);
     m_filename_textbox = TextBox::construct(filename_container.ptr());
@@ -226,8 +226,8 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
     auto preview_container = Frame::construct(horizontal_container);
     preview_container->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     preview_container->set_preferred_size(180, 0);
-    preview_container->set_frame_shape(FrameShape::Container);
-    preview_container->set_frame_shadow(FrameShadow::Sunken);
+    preview_container->set_frame_shape(Gfx::FrameShape::Container);
+    preview_container->set_frame_shadow(Gfx::FrameShadow::Sunken);
     preview_container->set_frame_thickness(2);
     preview_container->set_layout(make<VBoxLayout>());
     preview_container->layout()->set_margins({ 8, 8, 8, 8 });
@@ -238,7 +238,7 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
     m_preview_image_label->set_preferred_size(160, 160);
 
     m_preview_name_label = Label::construct(preview_container);
-    m_preview_name_label->set_font(Font::default_bold_font());
+    m_preview_name_label->set_font(Gfx::Font::default_bold_font());
     m_preview_name_label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_preview_name_label->set_preferred_size(0, m_preview_name_label->font().glyph_height());
 
@@ -254,7 +254,7 @@ FilePicker::~FilePicker()
 void FilePicker::set_preview(const FileSystemPath& path)
 {
     if (path.has_extension(".png")) {
-        auto bitmap = load_png(path.string());
+        auto bitmap = Gfx::load_png(path.string());
         if (!bitmap) {
             clear_preview();
             return;

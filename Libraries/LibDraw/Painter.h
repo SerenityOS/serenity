@@ -35,15 +35,17 @@
 #include <LibDraw/TextAlignment.h>
 #include <LibDraw/TextElision.h>
 
+namespace Gfx {
+
 class CharacterBitmap;
 class GlyphBitmap;
-class GraphicsBitmap;
+class Bitmap;
 class Font;
 class Emoji;
 
 class Painter {
 public:
-    explicit Painter(GraphicsBitmap&);
+    explicit Painter(Gfx::Bitmap&);
     ~Painter();
     void clear_rect(const Rect&, Color);
     void fill_rect(const Rect&, Color);
@@ -54,17 +56,17 @@ public:
     void draw_ellipse_intersecting(const Rect&, Color, int thickness = 1);
     void set_pixel(const Point&, Color);
     void draw_line(const Point&, const Point&, Color, int thickness = 1, bool dotted = false);
-    void draw_scaled_bitmap(const Rect& dst_rect, const GraphicsBitmap&, const Rect& src_rect);
-    void blit(const Point&, const GraphicsBitmap&, const Rect& src_rect, float opacity = 1.0f);
-    void blit_dimmed(const Point&, const GraphicsBitmap&, const Rect& src_rect);
-    void draw_tiled_bitmap(const Rect& dst_rect, const GraphicsBitmap&);
-    void blit_offset(const Point&, const GraphicsBitmap&, const Rect& src_rect, const Point&);
-    void blit_scaled(const Rect&, const GraphicsBitmap&, const Rect&, float, float);
+    void draw_scaled_bitmap(const Rect& dst_rect, const Gfx::Bitmap&, const Rect& src_rect);
+    void blit(const Point&, const Gfx::Bitmap&, const Rect& src_rect, float opacity = 1.0f);
+    void blit_dimmed(const Point&, const Gfx::Bitmap&, const Rect& src_rect);
+    void draw_tiled_bitmap(const Rect& dst_rect, const Gfx::Bitmap&);
+    void blit_offset(const Point&, const Gfx::Bitmap&, const Rect& src_rect, const Point&);
+    void blit_scaled(const Rect&, const Gfx::Bitmap&, const Rect&, float, float);
     void draw_text(const Rect&, const StringView&, const Font&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
     void draw_text(const Rect&, const StringView&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
     void draw_glyph(const Point&, char, Color);
     void draw_glyph(const Point&, char, const Font&, Color);
-    void draw_emoji(const Point&, const GraphicsBitmap&, const Font&);
+    void draw_emoji(const Point&, const Gfx::Bitmap&, const Font&);
     void draw_glyph_or_emoji(const Point&, u32 codepoint, const Font&, Color);
 
     const Font& font() const { return *state().font; }
@@ -86,7 +88,7 @@ public:
 
     Point translation() const { return state().translation; }
 
-    GraphicsBitmap* target() { return m_target.ptr(); }
+    Gfx::Bitmap* target() { return m_target.ptr(); }
 
     void save() { m_state_stack.append(m_state_stack.last()); }
     void restore()
@@ -98,8 +100,8 @@ public:
 protected:
     void set_pixel_with_draw_op(u32& pixel, const Color&);
     void fill_rect_with_draw_op(const Rect&, Color);
-    void blit_with_alpha(const Point&, const GraphicsBitmap&, const Rect& src_rect);
-    void blit_with_opacity(const Point&, const GraphicsBitmap&, const Rect& src_rect, float opacity);
+    void blit_with_alpha(const Point&, const Gfx::Bitmap&, const Rect& src_rect);
+    void blit_with_opacity(const Point&, const Gfx::Bitmap&, const Rect& src_rect, float opacity);
     void draw_pixel(const Point&, Color, int thickness = 1);
 
     void draw_text_line(const Rect&, const Utf8View&, const Font&, TextAlignment, Color, TextElision);
@@ -115,7 +117,7 @@ protected:
     const State& state() const { return m_state_stack.last(); }
 
     Rect m_clip_origin;
-    NonnullRefPtr<GraphicsBitmap> m_target;
+    NonnullRefPtr<Gfx::Bitmap> m_target;
     Vector<State, 4> m_state_stack;
 };
 
@@ -127,3 +129,5 @@ public:
 private:
     Painter& m_painter;
 };
+
+}

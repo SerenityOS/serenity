@@ -152,7 +152,7 @@ Rect Window::rect() const
     return WindowServerConnection::the().send_sync<WindowServer::GetWindowRect>(m_window_id)->rect();
 }
 
-void Window::set_rect(const Rect& a_rect)
+void Window::set_rect(const Gfx::Rect& a_rect)
 {
     m_rect_when_windowless = a_rect;
     if (!m_window_id) {
@@ -332,7 +332,7 @@ void Window::update()
     update({ 0, 0, width(), height() });
 }
 
-void Window::update(const Rect& a_rect)
+void Window::update(const Gfx::Rect& a_rect)
 {
     if (!m_window_id)
         return;
@@ -456,7 +456,7 @@ void Window::set_hovered_widget(Widget* widget)
         Core::EventLoop::current().post_event(*m_hovered_widget, make<Event>(Event::Enter));
 }
 
-void Window::set_current_backing_bitmap(GraphicsBitmap& bitmap, bool flush_immediately)
+void Window::set_current_backing_bitmap(Gfx::Bitmap& bitmap, bool flush_immediately)
 {
     WindowServerConnection::the().send_sync<WindowServer::SetWindowBackingStore>(m_window_id, 32, bitmap.pitch(), bitmap.shared_buffer_id(), bitmap.has_alpha_channel(), bitmap.size(), flush_immediately);
 }
@@ -482,21 +482,21 @@ void Window::flip(const Vector<Rect, 32>& dirty_rects)
     m_back_bitmap->shared_buffer()->set_volatile();
 }
 
-NonnullRefPtr<GraphicsBitmap> Window::create_shared_bitmap(GraphicsBitmap::Format format, const Size& size)
+NonnullRefPtr<Gfx::Bitmap> Window::create_shared_bitmap(Gfx::Bitmap::Format format, const Gfx::Size& size)
 {
     ASSERT(WindowServerConnection::the().server_pid());
     ASSERT(!size.is_empty());
-    size_t pitch = round_up_to_power_of_two(size.width() * sizeof(RGBA32), 16);
+    size_t pitch = round_up_to_power_of_two(size.width() * sizeof(Gfx::RGBA32), 16);
     size_t size_in_bytes = size.height() * pitch;
     auto shared_buffer = SharedBuffer::create_with_size(size_in_bytes);
     ASSERT(shared_buffer);
     shared_buffer->share_with(WindowServerConnection::the().server_pid());
-    return GraphicsBitmap::create_with_shared_buffer(format, *shared_buffer, size);
+    return Gfx::Bitmap::create_with_shared_buffer(format, *shared_buffer, size);
 }
 
-NonnullRefPtr<GraphicsBitmap> Window::create_backing_bitmap(const Size& size)
+NonnullRefPtr<Gfx::Bitmap> Window::create_backing_bitmap(const Gfx::Size& size)
 {
-    auto format = m_has_alpha_channel ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32;
+    auto format = m_has_alpha_channel ? Gfx::Bitmap::Format::RGBA32 : Gfx::Bitmap::Format::RGB32;
     return create_shared_bitmap(format, size);
 }
 
@@ -510,12 +510,12 @@ void Window::wm_event(WMEvent&)
 {
 }
 
-void Window::set_icon(const GraphicsBitmap* icon)
+void Window::set_icon(const Gfx::Bitmap* icon)
 {
     if (m_icon == icon)
         return;
 
-    m_icon = create_shared_bitmap(GraphicsBitmap::Format::RGBA32, icon->size());
+    m_icon = create_shared_bitmap(Gfx::Bitmap::Format::RGBA32, icon->size());
     {
         Painter painter(*m_icon);
         painter.blit({ 0, 0 }, *icon, icon->rect());
@@ -624,7 +624,7 @@ void Window::notify_state_changed(Badge<WindowServerConnection>, bool minimized,
 
     // When double buffering is enabled, minimization/occlusion means we can mark the front bitmap volatile (in addition to the back bitmap.)
     // When double buffering is disabled, there is only the back bitmap (which we can now mark volatile!)
-    RefPtr<GraphicsBitmap>& bitmap = m_double_buffering_enabled ? m_front_bitmap : m_back_bitmap;
+    RefPtr<Gfx::Bitmap>& bitmap = m_double_buffering_enabled ? m_front_bitmap : m_back_bitmap;
     if (!bitmap)
         return;
     if (minimized || occluded) {

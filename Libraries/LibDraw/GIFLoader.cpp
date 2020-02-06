@@ -31,9 +31,11 @@
 #include <LibDraw/GIFLoader.h>
 #include <stdio.h>
 
-static RefPtr<GraphicsBitmap> load_gif_impl(const u8*, size_t);
+namespace Gfx {
 
-RefPtr<GraphicsBitmap> load_gif(const StringView& path)
+static RefPtr<Gfx::Bitmap> load_gif_impl(const u8*, size_t);
+
+RefPtr<Gfx::Bitmap> load_gif(const StringView& path)
 {
     MappedFile mapped_file(path);
     if (!mapped_file.is_valid())
@@ -44,7 +46,7 @@ RefPtr<GraphicsBitmap> load_gif(const StringView& path)
     return bitmap;
 }
 
-RefPtr<GraphicsBitmap> load_gif_from_memory(const u8* data, size_t length)
+RefPtr<Gfx::Bitmap> load_gif_from_memory(const u8* data, size_t length)
 {
     auto bitmap = load_gif_impl(data, length);
     if (bitmap)
@@ -80,7 +82,7 @@ struct ImageDescriptor {
     Vector<u8> lzw_encoded_bytes;
 };
 
-RefPtr<GraphicsBitmap> load_gif_impl(const u8* data, size_t data_size)
+RefPtr<Gfx::Bitmap> load_gif_impl(const u8* data, size_t data_size)
 {
     if (data_size < 32)
         return nullptr;
@@ -258,4 +260,6 @@ RefPtr<GraphicsBitmap> load_gif_impl(const u8* data, size_t data_size)
     }
 
     return nullptr;
+}
+
 }

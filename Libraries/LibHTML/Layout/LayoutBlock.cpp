@@ -344,7 +344,7 @@ void LayoutBlock::render(RenderingContext& context)
     }
 }
 
-HitTestResult LayoutBlock::hit_test(const Point& position) const
+HitTestResult LayoutBlock::hit_test(const Gfx::Point& position) const
 {
     if (!children_are_inline())
         return LayoutBox::hit_test(position);

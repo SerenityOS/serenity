@@ -26,11 +26,14 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/Function.h>
+#include <AK/String.h>
 #include <LibDraw/Rect.h>
 
-class GraphicsBitmap;
+namespace Gfx {
+class Bitmap;
+}
+
 class WSMenu;
 
 class WSMenuItem {
@@ -41,7 +44,7 @@ public:
         Separator,
     };
 
-    WSMenuItem(WSMenu&, unsigned identifier, const String& text, const String& shortcut_text = {}, bool enabled = true, bool checkable = false, bool checked = false, const GraphicsBitmap* icon = nullptr);
+    WSMenuItem(WSMenu&, unsigned identifier, const String& text, const String& shortcut_text = {}, bool enabled = true, bool checkable = false, bool checked = false, const Gfx::Bitmap* icon = nullptr);
     WSMenuItem(WSMenu&, Type);
     ~WSMenuItem();
 
@@ -62,13 +65,13 @@ public:
     String shortcut_text() const { return m_shortcut_text; }
     void set_shortcut_text(const String& text) { m_shortcut_text = text; }
 
-    void set_rect(const Rect& rect) { m_rect = rect; }
-    Rect rect() const;
+    void set_rect(const Gfx::Rect& rect) { m_rect = rect; }
+    Gfx::Rect rect() const;
 
     unsigned identifier() const { return m_identifier; }
 
-    const GraphicsBitmap* icon() const { return m_icon; }
-    void set_icon(const GraphicsBitmap* icon) { m_icon = icon; }
+    const Gfx::Bitmap* icon() const { return m_icon; }
+    void set_icon(const Gfx::Bitmap* icon) { m_icon = icon; }
 
     bool is_submenu() const { return m_submenu_id != -1; }
     int submenu_id() const { return m_submenu_id; }
@@ -88,8 +91,8 @@ private:
     unsigned m_identifier { 0 };
     String m_text;
     String m_shortcut_text;
-    Rect m_rect;
-    RefPtr<GraphicsBitmap> m_icon;
+    Gfx::Rect m_rect;
+    RefPtr<Gfx::Bitmap> m_icon;
     int m_submenu_id { -1 };
     bool m_exclusive { false };
 };

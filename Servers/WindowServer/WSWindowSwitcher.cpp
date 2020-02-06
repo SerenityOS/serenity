@@ -110,12 +110,12 @@ void WSWindowSwitcher::on_key_event(const WSKeyEvent& event)
 void WSWindowSwitcher::draw()
 {
     auto palette = WSWindowManager::the().palette();
-    Painter painter(*m_switcher_window->backing_store());
+    Gfx::Painter painter(*m_switcher_window->backing_store());
     painter.fill_rect({ {}, m_rect.size() }, palette.window());
     painter.draw_rect({ {}, m_rect.size() }, palette.threed_shadow2());
     for (int index = 0; index < m_windows.size(); ++index) {
         auto& window = *m_windows.at(index);
-        Rect item_rect {
+        Gfx::Rect item_rect {
             padding(),
             padding() + index * item_height(),
             m_rect.width() - padding() * 2,
@@ -132,16 +132,16 @@ void WSWindowSwitcher::draw()
             rect_text_color = palette.threed_shadow2();
         }
         item_rect.shrink(item_padding(), 0);
-        Rect thumbnail_rect = { item_rect.location().translated(0, 5), { thumbnail_width(), thumbnail_height() } };
+        Gfx::Rect thumbnail_rect = { item_rect.location().translated(0, 5), { thumbnail_width(), thumbnail_height() } };
         if (window.backing_store()) {
             painter.draw_scaled_bitmap(thumbnail_rect, *window.backing_store(), window.backing_store()->rect());
-            StylePainter::paint_frame(painter, thumbnail_rect.inflated(4, 4), palette, FrameShape::Container, FrameShadow::Sunken, 2);
+            Gfx::StylePainter::paint_frame(painter, thumbnail_rect.inflated(4, 4), palette, Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);
         }
-        Rect icon_rect = { thumbnail_rect.bottom_right().translated(-window.icon().width(), -window.icon().height()), { window.icon().width(), window.icon().height() } };
+        Gfx::Rect icon_rect = { thumbnail_rect.bottom_right().translated(-window.icon().width(), -window.icon().height()), { window.icon().width(), window.icon().height() } };
         painter.fill_rect(icon_rect, palette.window());
         painter.blit(icon_rect.location(), window.icon(), window.icon().rect());
-        painter.draw_text(item_rect.translated(thumbnail_width() + 12, 0), window.title(), WSWindowManager::the().window_title_font(), TextAlignment::CenterLeft, text_color);
-        painter.draw_text(item_rect, window.rect().to_string(), TextAlignment::CenterRight, rect_text_color);
+        painter.draw_text(item_rect.translated(thumbnail_width() + 12, 0), window.title(), WSWindowManager::the().window_title_font(), Gfx::TextAlignment::CenterLeft, text_color);
+        painter.draw_text(item_rect, window.rect().to_string(), Gfx::TextAlignment::CenterRight, rect_text_color);
     }
 }
 

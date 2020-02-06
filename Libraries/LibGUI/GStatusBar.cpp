@@ -63,10 +63,10 @@ StatusBar::~StatusBar()
 NonnullRefPtr<Label> StatusBar::create_label()
 {
     auto label = Label::construct(this);
-    label->set_frame_shadow(FrameShadow::Sunken);
-    label->set_frame_shape(FrameShape::Panel);
+    label->set_frame_shadow(Gfx::FrameShadow::Sunken);
+    label->set_frame_shape(Gfx::FrameShape::Panel);
     label->set_frame_thickness(1);
-    label->set_text_alignment(TextAlignment::CenterLeft);
+    label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     return label;
 }
 
@@ -94,7 +94,7 @@ void StatusBar::paint_event(PaintEvent& event)
 {
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
-    StylePainter::paint_surface(painter, rect(), palette(), !spans_entire_window_horizontally());
+    Gfx::StylePainter::paint_surface(painter, rect(), palette(), !spans_entire_window_horizontally());
 }
 
 }

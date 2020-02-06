@@ -136,9 +136,9 @@ void StyleProperties::load_font() const
         dbg() << "Failed to find a font for family " << font_family << " weight " << font_weight;
 
         if (font_weight == "bold")
-            m_font = Font::default_bold_font();
+            m_font = Gfx::Font::default_bold_font();
         else
-            m_font = Font::default_font();
+            m_font = Gfx::Font::default_font();
         return;
     }
 
@@ -146,7 +146,7 @@ void StyleProperties::load_font() const
     dbg() << "Found font " << file_name << " for family " << font_family << " weight " << font_weight;
 #endif
 
-    m_font = Font::load_from_file(String::format("/res/fonts/%s", file_name.characters()));
+    m_font = Gfx::Font::load_from_file(String::format("/res/fonts/%s", file_name.characters()));
     FontCache::the().set({ font_family, font_weight }, *m_font);
 }
 

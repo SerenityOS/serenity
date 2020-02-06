@@ -175,7 +175,7 @@ int main(int argc, char** argv)
         return files;
     };
 
-    auto new_action = GUI::Action::create("Add new file to project...", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GUI::Action&) {
+    auto new_action = GUI::Action::create("Add new file to project...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GUI::Action&) {
         auto input_box = GUI::InputBox::construct("Enter name of new file:", "Add new file to project", g_window);
         if (input_box->exec() == GUI::InputBox::ExecCancel)
             return;
@@ -193,7 +193,7 @@ int main(int argc, char** argv)
         open_file(filename);
     });
 
-    auto add_existing_file_action = GUI::Action::create("Add existing file to project...", GraphicsBitmap::load_from_file("/res/icons/16x16/open.png"), [&](auto&) {
+    auto add_existing_file_action = GUI::Action::create("Add existing file to project...", Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"), [&](auto&) {
         auto result = GUI::FilePicker::get_open_filepath("Add existing file to project");
         if (!result.has_value())
             return;
@@ -273,7 +273,7 @@ int main(int argc, char** argv)
     GUI::ActionGroup tool_actions;
     tool_actions.set_exclusive(true);
 
-    auto cursor_tool_action = GUI::Action::create("Cursor", GraphicsBitmap::load_from_file("/res/icons/widgets/Cursor.png"), [&](auto&) {
+    auto cursor_tool_action = GUI::Action::create("Cursor", Gfx::Bitmap::load_from_file("/res/icons/widgets/Cursor.png"), [&](auto&) {
         g_form_editor_widget->set_tool(make<CursorTool>(*g_form_editor_widget));
     });
     cursor_tool_action->set_checkable(true);
@@ -284,7 +284,7 @@ int main(int argc, char** argv)
 
     GUI::WidgetClassRegistration::for_each([&](const GUI::WidgetClassRegistration& reg) {
         auto icon_path = String::format("/res/icons/widgets/%s.png", reg.class_name().characters());
-        auto action = GUI::Action::create(reg.class_name(), GraphicsBitmap::load_from_file(icon_path), [&reg](auto&) {
+        auto action = GUI::Action::create(reg.class_name(), Gfx::Bitmap::load_from_file(icon_path), [&reg](auto&) {
             g_form_editor_widget->set_tool(make<WidgetTool>(*g_form_editor_widget, reg));
             auto widget = reg.construct(&g_form_editor_widget->form_widget());
             widget->set_relative_rect(30, 30, 30, 30);
@@ -310,8 +310,8 @@ int main(int argc, char** argv)
         wrapper->set_layout(make<GUI::VBoxLayout>());
         auto label = GUI::Label::construct(text, wrapper);
         label->set_fill_with_background_color(true);
-        label->set_text_alignment(TextAlignment::CenterLeft);
-        label->set_font(Font::default_bold_font());
+        label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        label->set_font(Gfx::Font::default_bold_font());
         label->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
         label->set_preferred_size(0, 16);
         wrapper->add_child(pane_widget);
@@ -395,7 +395,7 @@ int main(int argc, char** argv)
         update_actions();
     });
 
-    auto save_action = GUI::Action::create("Save", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [&](auto&) {
+    auto save_action = GUI::Action::create("Save", { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"), [&](auto&) {
         if (g_currently_open_file.is_empty())
             return;
         current_editor().write_to_file(g_currently_open_file);
@@ -476,7 +476,7 @@ int main(int argc, char** argv)
     }));
     menubar->add_menu(move(edit_menu));
 
-    auto stop_action = GUI::Action::create("Stop", GraphicsBitmap::load_from_file("/res/icons/16x16/stop.png"), [&](auto&) {
+    auto stop_action = GUI::Action::create("Stop", Gfx::Bitmap::load_from_file("/res/icons/16x16/stop.png"), [&](auto&) {
         terminal_wrapper->kill_running_command();
     });
 
@@ -485,14 +485,14 @@ int main(int argc, char** argv)
         stop_action->set_enabled(false);
     };
 
-    auto build_action = GUI::Action::create("Build", { Mod_Ctrl, Key_B }, GraphicsBitmap::load_from_file("/res/icons/16x16/build.png"), [&](auto&) {
+    auto build_action = GUI::Action::create("Build", { Mod_Ctrl, Key_B }, Gfx::Bitmap::load_from_file("/res/icons/16x16/build.png"), [&](auto&) {
         reveal_action_tab(terminal_wrapper);
         build(terminal_wrapper);
         stop_action->set_enabled(true);
     });
     toolbar->add_action(build_action);
 
-    auto run_action = GUI::Action::create("Run", { Mod_Ctrl, Key_R }, GraphicsBitmap::load_from_file("/res/icons/16x16/play.png"), [&](auto&) {
+    auto run_action = GUI::Action::create("Run", { Mod_Ctrl, Key_R }, Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"), [&](auto&) {
         reveal_action_tab(terminal_wrapper);
         run(terminal_wrapper);
         stop_action->set_enabled(true);
@@ -514,7 +514,7 @@ int main(int argc, char** argv)
     view_menu->add_action(remove_current_editor_action);
     menubar->add_menu(move(view_menu));
 
-    auto small_icon = GraphicsBitmap::load_from_file("/res/icons/16x16/app-hack-studio.png");
+    auto small_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/app-hack-studio.png");
 
     auto help_menu = GUI::Menu::construct("Help");
     help_menu->add_action(GUI::Action::create("About", [&](auto&) {
@@ -550,16 +550,16 @@ void run(TerminalWrapper& wrapper)
 
 struct TextStyle {
     Color color;
-    const Font* font { nullptr };
+    const Gfx::Font* font { nullptr };
 };
 
 static TextStyle style_for_token_type(CppToken::Type type)
 {
     switch (type) {
     case CppToken::Type::Keyword:
-        return { Color::Black, &Font::default_bold_fixed_width_font() };
+        return { Color::Black, &Gfx::Font::default_bold_fixed_width_font() };
     case CppToken::Type::KnownType:
-        return { Color::from_rgb(0x929200), &Font::default_bold_fixed_width_font() };
+        return { Color::from_rgb(0x929200), &Gfx::Font::default_bold_fixed_width_font() };
     case CppToken::Type::Identifier:
         return { Color::from_rgb(0x000092) };
     case CppToken::Type::DoubleQuotedString:

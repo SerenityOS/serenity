@@ -37,6 +37,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+namespace Gfx {
+
 static const u8 png_header[8] = { 0x89, 'P', 'N', 'G', 13, 10, 26, 10 };
 
 struct PNG_IHDR {
@@ -109,7 +111,7 @@ struct PNGLoadingContext {
     bool has_seen_zlib_header { false };
     bool has_alpha() const { return color_type & 4 || palette_transparency_data.size() > 0; }
     Vector<Scanline> scanlines;
-    RefPtr<GraphicsBitmap> bitmap;
+    RefPtr<Gfx::Bitmap> bitmap;
     u8* decompression_buffer { nullptr };
     int decompression_buffer_size { 0 };
     Vector<u8> compressed_data;
@@ -167,10 +169,10 @@ private:
     int m_size_remaining;
 };
 
-static RefPtr<GraphicsBitmap> load_png_impl(const u8*, int);
+static RefPtr<Gfx::Bitmap> load_png_impl(const u8*, int);
 static bool process_chunk(Streamer&, PNGLoadingContext& context, bool decode_size_only);
 
-RefPtr<GraphicsBitmap> load_png(const StringView& path)
+RefPtr<Gfx::Bitmap> load_png(const StringView& path)
 {
     MappedFile mapped_file(path);
     if (!mapped_file.is_valid())
@@ -181,7 +183,7 @@ RefPtr<GraphicsBitmap> load_png(const StringView& path)
     return bitmap;
 }
 
-RefPtr<GraphicsBitmap> load_png_from_memory(const u8* data, size_t length)
+RefPtr<Gfx::Bitmap> load_png_from_memory(const u8* data, size_t length)
 {
     auto bitmap = load_png_impl(data, length);
     if (bitmap)
@@ -216,7 +218,7 @@ union [[gnu::packed]] Pixel
 static_assert(sizeof(Pixel) == 4);
 
 template<bool has_alpha, u8 filter_type>
-[[gnu::always_inline]] static inline void unfilter_impl(GraphicsBitmap& bitmap, int y, const void* dummy_scanline_data)
+[[gnu::always_inline]] static inline void unfilter_impl(Gfx::Bitmap& bitmap, int y, const void* dummy_scanline_data)
 {
     auto* dummy_scanline = (const Pixel*)dummy_scanline_data;
     if constexpr (filter_type == 0) {
@@ -517,7 +519,7 @@ static bool decode_png_bitmap(PNGLoadingContext& context)
         }
     }
 
-    context.bitmap = GraphicsBitmap::create_purgeable(context.has_alpha() ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32, { context.width, context.height });
+    context.bitmap = Bitmap::create_purgeable(context.has_alpha() ? Bitmap::Format::RGBA32 : Bitmap::Format::RGB32, { context.width, context.height });
 
     unfilter(context);
 
@@ -529,7 +531,7 @@ static bool decode_png_bitmap(PNGLoadingContext& context)
     return true;
 }
 
-static RefPtr<GraphicsBitmap> load_png_impl(const u8* data, int data_size)
+static RefPtr<Gfx::Bitmap> load_png_impl(const u8* data, int data_size)
 {
     PNGLoadingContext context;
     context.data = data;
@@ -687,7 +689,7 @@ Size PNGImageDecoderPlugin::size()
     return { m_context->width, m_context->height };
 }
 
-RefPtr<GraphicsBitmap> PNGImageDecoderPlugin::bitmap()
+RefPtr<Gfx::Bitmap> PNGImageDecoderPlugin::bitmap()
 {
     if (m_context->state == PNGLoadingContext::State::Error)
         return nullptr;
@@ -714,4 +716,6 @@ bool PNGImageDecoderPlugin::set_nonvolatile()
     if (!m_context->bitmap)
         return false;
     return m_context->bitmap->set_nonvolatile();
+}
+
 }

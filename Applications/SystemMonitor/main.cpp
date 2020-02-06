@@ -152,19 +152,19 @@ int main(int argc, char** argv)
             memory_stats_widget->refresh();
     }, window);
 
-    auto kill_action = GUI::Action::create("Kill process", { Mod_Ctrl, Key_K }, GraphicsBitmap::load_from_file("/res/icons/kill16.png"), [process_table_view](const GUI::Action&) {
+    auto kill_action = GUI::Action::create("Kill process", { Mod_Ctrl, Key_K }, Gfx::Bitmap::load_from_file("/res/icons/kill16.png"), [process_table_view](const GUI::Action&) {
         pid_t pid = process_table_view->selected_pid();
         if (pid != -1)
             kill(pid, SIGKILL);
     });
 
-    auto stop_action = GUI::Action::create("Stop process", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file("/res/icons/stop16.png"), [process_table_view](const GUI::Action&) {
+    auto stop_action = GUI::Action::create("Stop process", { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/stop16.png"), [process_table_view](const GUI::Action&) {
         pid_t pid = process_table_view->selected_pid();
         if (pid != -1)
             kill(pid, SIGSTOP);
     });
 
-    auto continue_action = GUI::Action::create("Continue process", { Mod_Ctrl, Key_C }, GraphicsBitmap::load_from_file("/res/icons/continue16.png"), [process_table_view](const GUI::Action&) {
+    auto continue_action = GUI::Action::create("Continue process", { Mod_Ctrl, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/continue16.png"), [process_table_view](const GUI::Action&) {
         pid_t pid = process_table_view->selected_pid();
         if (pid != -1)
             kill(pid, SIGCONT);
@@ -222,7 +222,7 @@ int main(int argc, char** argv)
 
     auto help_menu = GUI::Menu::construct("Help");
     help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
-        GUI::AboutDialog::show("System Monitor", load_png("/res/icons/32x32/app-system-monitor.png"), window);
+        GUI::AboutDialog::show("System Monitor", Gfx::load_png("/res/icons/32x32/app-system-monitor.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 
@@ -251,7 +251,7 @@ int main(int argc, char** argv)
 
     window->show();
 
-    window->set_icon(load_png("/res/icons/16x16/app-system-monitor.png"));
+    window->set_icon(Gfx::load_png("/res/icons/16x16/app-system-monitor.png"));
 
     return app.exec();
 }
@@ -260,7 +260,7 @@ class ProgressBarPaintingDelegate final : public GUI::TableCellPaintingDelegate 
 public:
     virtual ~ProgressBarPaintingDelegate() override {}
 
-    virtual void paint(GUI::Painter& painter, const Rect& a_rect, const Palette& palette, const GUI::Model& model, const GUI::ModelIndex& index) override
+    virtual void paint(GUI::Painter& painter, const Gfx::Rect& a_rect, const Palette& palette, const GUI::Model& model, const GUI::ModelIndex& index) override
     {
         auto rect = a_rect.shrunken(2, 2);
         auto percentage = model.data(index, GUI::Model::Role::Custom).to_i32();
@@ -269,7 +269,7 @@ public:
         String text;
         if (data.is_string())
             text = data.as_string();
-        StylePainter::paint_progress_bar(painter, rect, palette, 0, 100, percentage, text);
+        Gfx::StylePainter::paint_progress_bar(painter, rect, palette, 0, 100, percentage, text);
         painter.draw_rect(rect, Color::Black);
     }
 };
@@ -285,11 +285,11 @@ RefPtr<GUI::Widget> build_file_systems_tab()
         fs_table_view->set_size_columns_to_fit_content(true);
 
         Vector<GUI::JsonArrayModel::FieldSpec> df_fields;
-        df_fields.empend("mount_point", "Mount point", TextAlignment::CenterLeft);
-        df_fields.empend("class_name", "Class", TextAlignment::CenterLeft);
-        df_fields.empend("device", "Device", TextAlignment::CenterLeft);
+        df_fields.empend("mount_point", "Mount point", Gfx::TextAlignment::CenterLeft);
+        df_fields.empend("class_name", "Class", Gfx::TextAlignment::CenterLeft);
+        df_fields.empend("device", "Device", Gfx::TextAlignment::CenterLeft);
         df_fields.empend(
-            "Size", TextAlignment::CenterRight,
+            "Size", Gfx::TextAlignment::CenterRight,
             [](const JsonObject& object) {
                 return human_readable_size(object.get("total_block_count").to_u32() * object.get("block_size").to_u32());
             },
@@ -297,7 +297,7 @@ RefPtr<GUI::Widget> build_file_systems_tab()
                 return object.get("total_block_count").to_u32() * object.get("block_size").to_u32();
             });
         df_fields.empend(
-            "Used", TextAlignment::CenterRight,
+            "Used", Gfx::TextAlignment::CenterRight,
             [](const JsonObject& object) {
             auto total_blocks = object.get("total_block_count").to_u32();
             auto free_blocks = object.get("free_block_count").to_u32();
@@ -319,17 +319,17 @@ RefPtr<GUI::Widget> build_file_systems_tab()
                 return percentage;
             });
         df_fields.empend(
-            "Available", TextAlignment::CenterRight,
+            "Available", Gfx::TextAlignment::CenterRight,
             [](const JsonObject& object) {
                 return human_readable_size(object.get("free_block_count").to_u32() * object.get("block_size").to_u32());
             },
             [](const JsonObject& object) {
                 return object.get("free_block_count").to_u32() * object.get("block_size").to_u32();
             });
-        df_fields.empend("Access", TextAlignment::CenterLeft, [](const JsonObject& object) {
+        df_fields.empend("Access", Gfx::TextAlignment::CenterLeft, [](const JsonObject& object) {
             return object.get("readonly").to_bool() ? "Read-only" : "Read/Write";
         });
-        df_fields.empend("Mount flags", TextAlignment::CenterLeft, [](const JsonObject& object) {
+        df_fields.empend("Mount flags", Gfx::TextAlignment::CenterLeft, [](const JsonObject& object) {
             int mount_flags = object.get("mount_flags").to_int();
             StringBuilder builder;
             bool first = true;
@@ -349,11 +349,11 @@ RefPtr<GUI::Widget> build_file_systems_tab()
                 return String("defaults");
             return builder.to_string();
         });
-        df_fields.empend("free_block_count", "Free blocks", TextAlignment::CenterRight);
-        df_fields.empend("total_block_count", "Total blocks", TextAlignment::CenterRight);
-        df_fields.empend("free_inode_count", "Free inodes", TextAlignment::CenterRight);
-        df_fields.empend("total_inode_count", "Total inodes", TextAlignment::CenterRight);
-        df_fields.empend("block_size", "Block size", TextAlignment::CenterRight);
+        df_fields.empend("free_block_count", "Free blocks", Gfx::TextAlignment::CenterRight);
+        df_fields.empend("total_block_count", "Total blocks", Gfx::TextAlignment::CenterRight);
+        df_fields.empend("free_inode_count", "Free inodes", Gfx::TextAlignment::CenterRight);
+        df_fields.empend("total_inode_count", "Total inodes", Gfx::TextAlignment::CenterRight);
+        df_fields.empend("block_size", "Block size", Gfx::TextAlignment::CenterRight);
         fs_table_view->set_model(GUI::SortingProxyModel::create(GUI::JsonArrayModel::create("/proc/df", move(df_fields))));
 
         fs_table_view->set_cell_painting_delegate(3, make<ProgressBarPaintingDelegate>());
@@ -377,7 +377,7 @@ RefPtr<GUI::Widget> build_pci_devices_tab()
 
         Vector<GUI::JsonArrayModel::FieldSpec> pci_fields;
         pci_fields.empend(
-            "Address", TextAlignment::CenterLeft,
+            "Address", Gfx::TextAlignment::CenterLeft,
             [](const JsonObject& object) {
                 auto seg = object.get("seg").to_u32();
                 auto bus = object.get("bus").to_u32();
@@ -386,21 +386,21 @@ RefPtr<GUI::Widget> build_pci_devices_tab()
                 return String::format("%04x:%02x:%02x.%d", seg, bus, slot, function);
             });
         pci_fields.empend(
-            "Class", TextAlignment::CenterLeft,
+            "Class", Gfx::TextAlignment::CenterLeft,
             [db](const JsonObject& object) {
                 auto class_id = object.get("class").to_u32();
                 String class_name = db->get_class(class_id);
                 return class_name == "" ? String::format("%04x", class_id) : class_name;
             });
         pci_fields.empend(
-            "Vendor", TextAlignment::CenterLeft,
+            "Vendor", Gfx::TextAlignment::CenterLeft,
             [db](const JsonObject& object) {
                 auto vendor_id = object.get("vendor_id").to_u32();
                 String vendor_name = db->get_vendor(vendor_id);
                 return vendor_name == "" ? String::format("%02x", vendor_id) : vendor_name;
             });
         pci_fields.empend(
-            "Device", TextAlignment::CenterLeft,
+            "Device", Gfx::TextAlignment::CenterLeft,
             [db](const JsonObject& object) {
                 auto vendor_id = object.get("vendor_id").to_u32();
                 auto device_id = object.get("device_id").to_u32();
@@ -408,7 +408,7 @@ RefPtr<GUI::Widget> build_pci_devices_tab()
                 return device_name == "" ? String::format("%02x", device_id) : device_name;
             });
         pci_fields.empend(
-            "Revision", TextAlignment::CenterRight,
+            "Revision", Gfx::TextAlignment::CenterRight,
             [](const JsonObject& object) {
                 auto revision_id = object.get("revision_id").to_u32();
                 return String::format("%02x", revision_id);

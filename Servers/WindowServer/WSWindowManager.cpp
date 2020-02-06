@@ -62,7 +62,7 @@ WSWindowManager& WSWindowManager::the()
     return *s_the;
 }
 
-WSWindowManager::WSWindowManager(const PaletteImpl& palette)
+WSWindowManager::WSWindowManager(const Gfx::PaletteImpl& palette)
     : m_palette(palette)
 {
     s_the = this;
@@ -77,23 +77,23 @@ WSWindowManager::~WSWindowManager()
 {
 }
 
-NonnullRefPtr<WSCursor> WSWindowManager::get_cursor(const String& name, const Point& hotspot)
+NonnullRefPtr<WSCursor> WSWindowManager::get_cursor(const String& name, const Gfx::Point& hotspot)
 {
     auto path = m_wm_config->read_entry("Cursor", name, "/res/cursors/arrow.png");
-    auto gb = GraphicsBitmap::load_from_file(path);
+    auto gb = Gfx::Bitmap::load_from_file(path);
     if (gb)
         return WSCursor::create(*gb, hotspot);
-    return WSCursor::create(*GraphicsBitmap::load_from_file("/res/cursors/arrow.png"));
+    return WSCursor::create(*Gfx::Bitmap::load_from_file("/res/cursors/arrow.png"));
 }
 
 NonnullRefPtr<WSCursor> WSWindowManager::get_cursor(const String& name)
 {
     auto path = m_wm_config->read_entry("Cursor", name, "/res/cursors/arrow.png");
-    auto gb = GraphicsBitmap::load_from_file(path);
+    auto gb = Gfx::Bitmap::load_from_file(path);
 
     if (gb)
         return WSCursor::create(*gb);
-    return WSCursor::create(*GraphicsBitmap::load_from_file("/res/cursors/arrow.png"));
+    return WSCursor::create(*Gfx::Bitmap::load_from_file("/res/cursors/arrow.png"));
 }
 
 void WSWindowManager::reload_config(bool set_screen)
@@ -118,24 +118,24 @@ void WSWindowManager::reload_config(bool set_screen)
     m_drag_cursor = get_cursor("Drag");
 }
 
-const Font& WSWindowManager::font() const
+const Gfx::Font& WSWindowManager::font() const
 {
-    return Font::default_font();
+    return Gfx::Font::default_font();
 }
 
-const Font& WSWindowManager::window_title_font() const
+const Gfx::Font& WSWindowManager::window_title_font() const
 {
-    return Font::default_bold_font();
+    return Gfx::Font::default_bold_font();
 }
 
-const Font& WSWindowManager::menu_font() const
+const Gfx::Font& WSWindowManager::menu_font() const
 {
-    return Font::default_font();
+    return Gfx::Font::default_font();
 }
 
-const Font& WSWindowManager::app_menu_font() const
+const Gfx::Font& WSWindowManager::app_menu_font() const
 {
-    return Font::default_bold_font();
+    return Gfx::Font::default_bold_font();
 }
 
 void WSWindowManager::set_resolution(int width, int height)
@@ -286,7 +286,7 @@ void WSWindowManager::notify_title_changed(WSWindow& window)
     tell_wm_listeners_window_state_changed(window);
 }
 
-void WSWindowManager::notify_rect_changed(WSWindow& window, const Rect& old_rect, const Rect& new_rect)
+void WSWindowManager::notify_rect_changed(WSWindow& window, const Gfx::Rect& old_rect, const Gfx::Rect& new_rect)
 {
     UNUSED_PARAM(old_rect);
     UNUSED_PARAM(new_rect);
@@ -364,7 +364,7 @@ void WSWindowManager::start_window_move(WSWindow& window, const WSMouseEvent& ev
     invalidate(window);
 }
 
-void WSWindowManager::start_window_resize(WSWindow& window, const Point& position, MouseButton button)
+void WSWindowManager::start_window_resize(WSWindow& window, const Gfx::Point& position, MouseButton button)
 {
     move_to_front_and_make_active(window);
     constexpr ResizeDirection direction_for_hot_area[3][3] = {
@@ -887,7 +887,7 @@ void WSWindowManager::clear_resize_candidate()
     m_resize_candidate = nullptr;
 }
 
-bool WSWindowManager::any_opaque_window_contains_rect(const Rect& rect)
+bool WSWindowManager::any_opaque_window_contains_rect(const Gfx::Rect& rect)
 {
     bool found_containing_window = false;
     for_each_visible_window_from_back_to_front([&](WSWindow& window) {
@@ -909,7 +909,7 @@ bool WSWindowManager::any_opaque_window_contains_rect(const Rect& rect)
     return found_containing_window;
 };
 
-bool WSWindowManager::any_opaque_window_above_this_one_contains_rect(const WSWindow& a_window, const Rect& rect)
+bool WSWindowManager::any_opaque_window_above_this_one_contains_rect(const WSWindow& a_window, const Gfx::Rect& rect)
 {
     bool found_containing_window = false;
     bool checking = false;
@@ -1119,7 +1119,7 @@ void WSWindowManager::invalidate()
     WSCompositor::the().invalidate();
 }
 
-void WSWindowManager::invalidate(const Rect& rect)
+void WSWindowManager::invalidate(const Gfx::Rect& rect)
 {
     WSCompositor::the().invalidate(rect);
 }
@@ -1129,7 +1129,7 @@ void WSWindowManager::invalidate(const WSWindow& window)
     invalidate(window.frame().rect());
 }
 
-void WSWindowManager::invalidate(const WSWindow& window, const Rect& rect)
+void WSWindowManager::invalidate(const WSWindow& window, const Gfx::Rect& rect)
 {
     if (window.type() == WSWindowType::MenuApplet) {
         WSMenuManager::the().invalidate_applet(window, rect);
@@ -1233,7 +1233,7 @@ Rect WSWindowManager::maximized_window_rect(const WSWindow& window) const
     return rect;
 }
 
-void WSWindowManager::start_dnd_drag(WSClientConnection& client, const String& text, GraphicsBitmap* bitmap, const String& data_type, const String& data)
+void WSWindowManager::start_dnd_drag(WSClientConnection& client, const String& text, Gfx::Bitmap* bitmap, const String& data_type, const String& data)
 {
     ASSERT(!m_dnd_client);
     m_dnd_client = client.make_weak_ptr();
@@ -1254,27 +1254,27 @@ void WSWindowManager::end_dnd_drag()
     m_dnd_bitmap = nullptr;
 }
 
-Rect WSWindowManager::dnd_rect() const
+Gfx::Rect WSWindowManager::dnd_rect() const
 {
     int bitmap_width = m_dnd_bitmap ? m_dnd_bitmap->width() : 0;
     int bitmap_height = m_dnd_bitmap ? m_dnd_bitmap->height() : 0;
     int width = font().width(m_dnd_text) + bitmap_width;
     int height = max((int)font().glyph_height(), bitmap_height);
     auto location = WSCompositor::the().current_cursor_rect().center().translated(8, 8);
-    return Rect(location, { width, height }).inflated(4, 4);
+    return Gfx::Rect(location, { width, height }).inflated(4, 4);
 }
 
 void WSWindowManager::update_theme(String theme_path, String theme_name)
 {
-    auto new_theme = load_system_theme(theme_path);
+    auto new_theme = Gfx::load_system_theme(theme_path);
     ASSERT(new_theme);
-    set_system_theme(*new_theme);
-    m_palette = PaletteImpl::create_with_shared_buffer(*new_theme);
+    Gfx::set_system_theme(*new_theme);
+    m_palette = Gfx::PaletteImpl::create_with_shared_buffer(*new_theme);
     HashTable<WSClientConnection*> notified_clients;
     for_each_window([&](WSWindow& window) {
         if (window.client()) {
             if (!notified_clients.contains(window.client())) {
-                window.client()->post_message(WindowClient::UpdateSystemTheme(current_system_theme_buffer_id()));
+                window.client()->post_message(WindowClient::UpdateSystemTheme(Gfx::current_system_theme_buffer_id()));
                 notified_clients.set(window.client());
             }
         }

@@ -29,7 +29,9 @@
 #include <AK/HashMap.h>
 #include <AK/String.h>
 
+namespace Gfx {
 class Font;
+}
 
 struct FontSelector {
     String family;
@@ -51,10 +53,10 @@ struct Traits<FontSelector> : public GenericTraits<FontSelector> {
 class FontCache {
 public:
     static FontCache& the();
-    RefPtr<Font> get(const FontSelector&) const;
-    void set(const FontSelector&, NonnullRefPtr<Font>);
+    RefPtr<Gfx::Font> get(const FontSelector&) const;
+    void set(const FontSelector&, NonnullRefPtr<Gfx::Font>);
 
 private:
     FontCache() {}
-    mutable HashMap<FontSelector, NonnullRefPtr<Font>> m_fonts;
+    mutable HashMap<FontSelector, NonnullRefPtr<Gfx::Font>> m_fonts;
 };

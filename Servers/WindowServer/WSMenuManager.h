@@ -73,7 +73,7 @@ public:
 
     void add_applet(WSWindow&);
     void remove_applet(WSWindow&);
-    void invalidate_applet(const WSWindow&, const Rect&);
+    void invalidate_applet(const WSWindow&, const Gfx::Rect&);
 
     Color menu_selection_color() const { return m_menu_selection_color; }
     WSMenu& system_menu() { return *m_system_menu; }
@@ -109,7 +109,7 @@ private:
 
     Vector<WeakPtr<WSWindow>> m_applets;
 
-    Rect m_username_rect;
+    Gfx::Rect m_username_rect;
 
     bool m_needs_window_resize { false };
     bool m_bar_open { false };

@@ -29,9 +29,11 @@
 #include <LibDraw/Emoji.h>
 #include <LibDraw/GraphicsBitmap.h>
 
-static HashMap<u32, RefPtr<GraphicsBitmap>> s_emojis;
+namespace Gfx {
 
-const GraphicsBitmap* Emoji::emoji_for_codepoint(u32 codepoint)
+static HashMap<u32, RefPtr<Gfx::Bitmap>> s_emojis;
+
+const Bitmap* Emoji::emoji_for_codepoint(u32 codepoint)
 {
     auto it = s_emojis.find(codepoint);
     if (it != s_emojis.end())
@@ -39,7 +41,7 @@ const GraphicsBitmap* Emoji::emoji_for_codepoint(u32 codepoint)
 
     String path = String::format("/res/emoji/U+%X.png", codepoint);
 
-    auto bitmap = GraphicsBitmap::load_from_file(path);
+    auto bitmap = Bitmap::load_from_file(path);
     if (!bitmap) {
         s_emojis.set(codepoint, nullptr);
         return nullptr;
@@ -47,4 +49,6 @@ const GraphicsBitmap* Emoji::emoji_for_codepoint(u32 codepoint)
 
     s_emojis.set(codepoint, bitmap);
     return bitmap.ptr();
+}
+
 }

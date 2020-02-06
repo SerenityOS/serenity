@@ -113,8 +113,8 @@ public:
         m_label->set_background_color(Color::from_rgb(0xdac7b5));
         m_label->set_fill_with_background_color(true);
         m_label->set_frame_thickness(1);
-        m_label->set_frame_shape(FrameShape::Container);
-        m_label->set_frame_shadow(FrameShadow::Plain);
+        m_label->set_frame_shape(Gfx::FrameShape::Container);
+        m_label->set_frame_shadow(Gfx::FrameShadow::Plain);
         set_main_widget(m_label);
     }
 
@@ -129,7 +129,7 @@ public:
     RefPtr<Label> m_label;
 };
 
-void Application::show_tooltip(const StringView& tooltip, const Point& screen_location)
+void Application::show_tooltip(const StringView& tooltip, const Gfx::Point& screen_location)
 {
     if (!m_tooltip_window) {
         m_tooltip_window = new TooltipWindow;
@@ -175,7 +175,7 @@ void Application::did_delete_last_window(Badge<Window>)
 void Application::set_system_palette(SharedBuffer& buffer)
 {
     if (!m_system_palette)
-        m_system_palette = PaletteImpl::create_with_shared_buffer(buffer);
+        m_system_palette = Gfx::PaletteImpl::create_with_shared_buffer(buffer);
     else
         m_system_palette->replace_internal_buffer({}, buffer);
 

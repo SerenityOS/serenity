@@ -38,8 +38,10 @@ class SharedBuffer;
 namespace Core {
 class EventLoop;
 }
+namespace Gfx {
 class Palette;
 class Point;
+}
 
 namespace GUI {
 class Action;
@@ -63,7 +65,7 @@ public:
     void register_global_shortcut_action(Badge<Action>, Action&);
     void unregister_global_shortcut_action(Badge<Action>, Action&);
 
-    void show_tooltip(const StringView&, const Point& screen_location);
+    void show_tooltip(const StringView&, const Gfx::Point& screen_location);
     void hide_tooltip();
 
     bool quit_when_last_window_deleted() const { return m_quit_when_last_window_deleted; }
@@ -83,8 +85,8 @@ public:
 private:
     OwnPtr<Core::EventLoop> m_event_loop;
     OwnPtr<MenuBar> m_menubar;
-    RefPtr<PaletteImpl> m_palette;
-    RefPtr<PaletteImpl> m_system_palette;
+    RefPtr<Gfx::PaletteImpl> m_palette;
+    RefPtr<Gfx::PaletteImpl> m_system_palette;
     HashMap<Shortcut, Action*> m_global_shortcut_actions;
     class TooltipWindow;
     TooltipWindow* m_tooltip_window { nullptr };

@@ -162,7 +162,7 @@ Color Document::background_color(const Palette& palette) const
     return background_color.value()->to_color(*this);
 }
 
-RefPtr<GraphicsBitmap> Document::background_image() const
+RefPtr<Gfx::Bitmap> Document::background_image() const
 {
     auto* body_element = body();
     if (!body_element)

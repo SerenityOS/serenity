@@ -327,7 +327,7 @@ int main(int argc, char** argv)
                 } else if (parameter.type == "Color") {
                     dbg() << "        u32 " << parameter.name << "_rgba = 0;";
                     dbg() << "        stream >> " << parameter.name << "_rgba;";
-                    dbg() << "        " << parameter.name << " = Color::from_rgba(" << parameter.name << "_rgba);";
+                    dbg() << "        " << parameter.name << " = Gfx::Color::from_rgba(" << parameter.name << "_rgba);";
                 } else if (parameter.type == "Size") {
                     dbg() << "        int " << parameter.name << "_width = 0;";
                     dbg() << "        stream >> " << parameter.name << "_width;";

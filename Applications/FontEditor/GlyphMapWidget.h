@@ -43,21 +43,21 @@ public:
     int preferred_width() const;
     int preferred_height() const;
 
-    Font& font() { return *m_font; }
-    const Font& font() const { return *m_font; }
+    Gfx::Font& font() { return *m_font; }
+    const Gfx::Font& font() const { return *m_font; }
 
     void update_glyph(u8);
 
     Function<void(u8)> on_glyph_selected;
 
 private:
-    GlyphMapWidget(Font&, GUI::Widget* parent);
+    GlyphMapWidget(Gfx::Font&, GUI::Widget* parent);
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
 
     Rect get_outer_rect(u8 glyph) const;
 
-    RefPtr<Font> m_font;
+    RefPtr<Gfx::Font> m_font;
     int m_rows { 8 };
     int m_horizontal_spacing { 2 };
     int m_vertical_spacing { 2 };

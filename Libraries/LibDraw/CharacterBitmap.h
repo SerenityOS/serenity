@@ -27,8 +27,10 @@
 #pragma once
 
 #include "Size.h"
-#include <AK/RefPtr.h>
 #include <AK/RefCounted.h>
+#include <AK/RefPtr.h>
+
+namespace Gfx {
 
 class CharacterBitmap : public RefCounted<CharacterBitmap> {
 public:
@@ -48,3 +50,5 @@ private:
     const char* m_bits { nullptr };
     Size m_size;
 };
+
+}

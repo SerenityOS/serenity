@@ -80,7 +80,7 @@ int main(int argc, char** argv)
     if (argc > 1)
         path = argv[1];
 
-    auto bitmap = GraphicsBitmap::load_from_file(path);
+    auto bitmap = Gfx::Bitmap::load_from_file(path);
     if (!bitmap) {
         fprintf(stderr, "Failed to load %s\n", path);
         return 1;

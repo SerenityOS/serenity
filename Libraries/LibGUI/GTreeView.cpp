@@ -56,22 +56,22 @@ TreeView::TreeView(Widget* parent)
     set_foreground_role(ColorRole::BaseText);
     set_size_columns_to_fit_content(true);
     set_headers_visible(false);
-    m_expand_bitmap = GraphicsBitmap::load_from_file("/res/icons/treeview-expand.png");
-    m_collapse_bitmap = GraphicsBitmap::load_from_file("/res/icons/treeview-collapse.png");
+    m_expand_bitmap = Gfx::Bitmap::load_from_file("/res/icons/treeview-expand.png");
+    m_collapse_bitmap = Gfx::Bitmap::load_from_file("/res/icons/treeview-collapse.png");
 }
 
 TreeView::~TreeView()
 {
 }
 
-ModelIndex TreeView::index_at_event_position(const Point& a_position, bool& is_toggle) const
+ModelIndex TreeView::index_at_event_position(const Gfx::Point& a_position, bool& is_toggle) const
 {
     auto position = a_position.translated(0, -header_height()).translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
     is_toggle = false;
     if (!model())
         return {};
     ModelIndex result;
-    traverse_in_paint_order([&](const ModelIndex& index, const Rect& rect, const Rect& toggle_rect, int) {
+    traverse_in_paint_order([&](const ModelIndex& index, const Gfx::Rect& rect, const Gfx::Rect& toggle_rect, int) {
         if (toggle_rect.contains(position)) {
             result = index;
             is_toggle = true;
@@ -198,7 +198,7 @@ void TreeView::paint_event(PaintEvent& event)
 
     int painted_row_index = 0;
 
-    traverse_in_paint_order([&](const ModelIndex& index, const Rect& a_rect, const Rect& a_toggle_rect, int indent_level) {
+    traverse_in_paint_order([&](const ModelIndex& index, const Gfx::Rect& a_rect, const Gfx::Rect& a_toggle_rect, int indent_level) {
         if (!a_rect.intersects_vertically(visible_content_rect))
             return IterationDecision::Continue;
 
@@ -260,7 +260,7 @@ void TreeView::paint_event(PaintEvent& event)
                     } else {
                         if (!is_selected_row)
                             text_color = model.data(cell_index, Model::Role::ForegroundColor).to_color(palette().color(foreground_role()));
-                        painter.draw_text(cell_rect, data.to_string(), font, column_metadata.text_alignment, text_color, TextElision::Right);
+                        painter.draw_text(cell_rect, data.to_string(), font, column_metadata.text_alignment, text_color, Gfx::TextElision::Right);
                     }
                 }
             } else {
@@ -276,7 +276,7 @@ void TreeView::paint_event(PaintEvent& event)
                     rect.width() - icon_size() - icon_spacing(), rect.height()
                 };
                 auto node_text = model.data(index, Model::Role::Display).to_string();
-                painter.draw_text(text_rect, node_text, TextAlignment::Center, text_color);
+                painter.draw_text(text_rect, node_text, Gfx::TextAlignment::Center, text_color);
                 auto index_at_indent = index;
                 for (int i = indent_level; i > 0; --i) {
                     auto parent_of_index_at_indent = index_at_indent.parent();
@@ -320,7 +320,7 @@ void TreeView::scroll_into_view(const ModelIndex& a_index, Orientation orientati
     if (!a_index.is_valid())
         return;
     Rect found_rect;
-    traverse_in_paint_order([&](const ModelIndex& index, const Rect& rect, const Rect&, int) {
+    traverse_in_paint_order([&](const ModelIndex& index, const Gfx::Rect& rect, const Gfx::Rect&, int) {
         if (index == a_index) {
             found_rect = rect;
             return IterationDecision::Break;
@@ -375,7 +375,7 @@ void TreeView::keydown_event(KeyEvent& event)
     if (event.key() == KeyCode::Key_Up) {
         ModelIndex previous_index;
         ModelIndex found_index;
-        traverse_in_paint_order([&](const ModelIndex& index, const Rect&, const Rect&, int) {
+        traverse_in_paint_order([&](const ModelIndex& index, const Gfx::Rect&, const Gfx::Rect&, int) {
             if (index == cursor_index) {
                 found_index = previous_index;
                 return IterationDecision::Break;
@@ -392,7 +392,7 @@ void TreeView::keydown_event(KeyEvent& event)
     if (event.key() == KeyCode::Key_Down) {
         ModelIndex previous_index;
         ModelIndex found_index;
-        traverse_in_paint_order([&](const ModelIndex& index, const Rect&, const Rect&, int) {
+        traverse_in_paint_order([&](const ModelIndex& index, const Gfx::Rect&, const Gfx::Rect&, int) {
             if (previous_index == cursor_index) {
                 found_index = index;
                 return IterationDecision::Break;
@@ -442,7 +442,7 @@ void TreeView::keydown_event(KeyEvent& event)
 int TreeView::item_count() const
 {
     int count = 0;
-    traverse_in_paint_order([&](const ModelIndex&, const Rect&, const Rect&, int) {
+    traverse_in_paint_order([&](const ModelIndex&, const Gfx::Rect&, const Gfx::Rect&, int) {
         ++count;
         return IterationDecision::Continue;
     });
@@ -491,7 +491,7 @@ void TreeView::update_column_sizes()
 
     int tree_column_header_width = header_font().width(model.column_name(tree_column));
     int tree_column_width = tree_column_header_width;
-    traverse_in_paint_order([&](const ModelIndex&, const Rect& rect, const Rect&, int) {
+    traverse_in_paint_order([&](const ModelIndex&, const Gfx::Rect& rect, const Gfx::Rect&, int) {
         tree_column_width = max(rect.right() - tree_column_x_offset, tree_column_width);
         return IterationDecision::Continue;
     });

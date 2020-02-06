@@ -134,17 +134,17 @@ Field::Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_b
     };
     m_timer->set_interval(100);
     set_frame_thickness(2);
-    set_frame_shape(FrameShape::Container);
-    set_frame_shadow(FrameShadow::Sunken);
-    m_mine_bitmap = GraphicsBitmap::load_from_file("/res/icons/minesweeper/mine.png");
-    m_flag_bitmap = GraphicsBitmap::load_from_file("/res/icons/minesweeper/flag.png");
-    m_badflag_bitmap = GraphicsBitmap::load_from_file("/res/icons/minesweeper/badflag.png");
-    m_consider_bitmap = GraphicsBitmap::load_from_file("/res/icons/minesweeper/consider.png");
-    m_default_face_bitmap = GraphicsBitmap::load_from_file("/res/icons/minesweeper/face-default.png");
-    m_good_face_bitmap = GraphicsBitmap::load_from_file("/res/icons/minesweeper/face-good.png");
-    m_bad_face_bitmap = GraphicsBitmap::load_from_file("/res/icons/minesweeper/face-bad.png");
+    set_frame_shape(Gfx::FrameShape::Container);
+    set_frame_shadow(Gfx::FrameShadow::Sunken);
+    m_mine_bitmap = Gfx::Bitmap::load_from_file("/res/icons/minesweeper/mine.png");
+    m_flag_bitmap = Gfx::Bitmap::load_from_file("/res/icons/minesweeper/flag.png");
+    m_badflag_bitmap = Gfx::Bitmap::load_from_file("/res/icons/minesweeper/badflag.png");
+    m_consider_bitmap = Gfx::Bitmap::load_from_file("/res/icons/minesweeper/consider.png");
+    m_default_face_bitmap = Gfx::Bitmap::load_from_file("/res/icons/minesweeper/face-default.png");
+    m_good_face_bitmap = Gfx::Bitmap::load_from_file("/res/icons/minesweeper/face-good.png");
+    m_bad_face_bitmap = Gfx::Bitmap::load_from_file("/res/icons/minesweeper/face-bad.png");
     for (int i = 0; i < 8; ++i)
-        m_number_bitmap[i] = GraphicsBitmap::load_from_file(String::format("/res/icons/minesweeper/%u.png", i + 1));
+        m_number_bitmap[i] = Gfx::Bitmap::load_from_file(String::format("/res/icons/minesweeper/%u.png", i + 1));
 
     set_fill_with_background_color(true);
     reset();

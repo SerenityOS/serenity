@@ -26,9 +26,11 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/LogStream.h>
+#include <AK/String.h>
 #include <LibDraw/Orientation.h>
+
+namespace Gfx {
 
 class FloatRect;
 
@@ -141,3 +143,7 @@ inline const LogStream& operator<<(const LogStream& stream, const FloatPoint& va
 {
     return stream << value.to_string();
 }
+
+}
+
+using Gfx::FloatPoint;

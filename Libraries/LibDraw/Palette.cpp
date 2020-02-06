@@ -26,6 +26,8 @@
 
 #include <LibDraw/Palette.h>
 
+namespace Gfx {
+
 NonnullRefPtr<PaletteImpl> PaletteImpl::create_with_shared_buffer(SharedBuffer& buffer)
 {
     return adopt(*new PaletteImpl(buffer));
@@ -69,4 +71,6 @@ void Palette::set_color(ColorRole role, Color color)
         m_impl = m_impl->clone();
     auto& theme = const_cast<SystemTheme&>(impl().theme());
     theme.color[(int)role] = color;
+}
+
 }

@@ -34,8 +34,8 @@
 QSWidget::QSWidget(GUI::Widget* parent)
     : GUI::Frame(parent)
 {
-    set_frame_shape(FrameShape::Container);
-    set_frame_shadow(FrameShadow::Sunken);
+    set_frame_shape(Gfx::FrameShape::Container);
+    set_frame_shadow(Gfx::FrameShadow::Sunken);
     set_frame_thickness(2);
 
     set_fill_with_background_color(true);
@@ -46,7 +46,7 @@ QSWidget::~QSWidget()
 {
 }
 
-void QSWidget::set_bitmap(NonnullRefPtr<GraphicsBitmap> bitmap)
+void QSWidget::set_bitmap(NonnullRefPtr<Gfx::Bitmap> bitmap)
 {
     m_bitmap = move(bitmap);
 }
@@ -139,7 +139,7 @@ void QSWidget::drop_event(GUI::DropEvent& event)
             return;
         }
         URL url(lines[0]);
-        auto bitmap = GraphicsBitmap::load_from_file(url.path());
+        auto bitmap = Gfx::Bitmap::load_from_file(url.path());
         if (!bitmap) {
             GUI::MessageBox::show(String::format("Failed to open %s", url.to_string().characters()), "Cannot open image", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
             return;

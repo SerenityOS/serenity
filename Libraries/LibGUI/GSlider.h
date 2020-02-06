@@ -91,7 +91,7 @@ private:
     bool m_knob_hovered { false };
     bool m_dragging { false };
     int m_drag_origin_value { 0 };
-    Point m_drag_origin;
+    Gfx::Point m_drag_origin;
     KnobSizeMode m_knob_size_mode { KnobSizeMode::Fixed };
     Orientation m_orientation { Orientation::Horizontal };
 };

@@ -48,14 +48,14 @@ NetworkStatisticsWidget::NetworkStatisticsWidget(GUI::Widget* parent)
         m_adapter_table_view->set_size_columns_to_fit_content(true);
 
         Vector<GUI::JsonArrayModel::FieldSpec> net_adapters_fields;
-        net_adapters_fields.empend("name", "Name", TextAlignment::CenterLeft);
-        net_adapters_fields.empend("class_name", "Class", TextAlignment::CenterLeft);
-        net_adapters_fields.empend("mac_address", "MAC", TextAlignment::CenterLeft);
-        net_adapters_fields.empend("ipv4_address", "IPv4", TextAlignment::CenterLeft);
-        net_adapters_fields.empend("packets_in", "Pkt In", TextAlignment::CenterRight);
-        net_adapters_fields.empend("packets_out", "Pkt Out", TextAlignment::CenterRight);
-        net_adapters_fields.empend("bytes_in", "Bytes In", TextAlignment::CenterRight);
-        net_adapters_fields.empend("bytes_out", "Bytes Out", TextAlignment::CenterRight);
+        net_adapters_fields.empend("name", "Name", Gfx::TextAlignment::CenterLeft);
+        net_adapters_fields.empend("class_name", "Class", Gfx::TextAlignment::CenterLeft);
+        net_adapters_fields.empend("mac_address", "MAC", Gfx::TextAlignment::CenterLeft);
+        net_adapters_fields.empend("ipv4_address", "IPv4", Gfx::TextAlignment::CenterLeft);
+        net_adapters_fields.empend("packets_in", "Pkt In", Gfx::TextAlignment::CenterRight);
+        net_adapters_fields.empend("packets_out", "Pkt Out", Gfx::TextAlignment::CenterRight);
+        net_adapters_fields.empend("bytes_in", "Bytes In", Gfx::TextAlignment::CenterRight);
+        net_adapters_fields.empend("bytes_out", "Bytes Out", Gfx::TextAlignment::CenterRight);
         m_adapter_table_view->set_model(GUI::JsonArrayModel::create("/proc/net/adapters", move(net_adapters_fields)));
 
         auto sockets_group_box = GUI::GroupBox::construct("Sockets", this);
@@ -68,17 +68,17 @@ NetworkStatisticsWidget::NetworkStatisticsWidget(GUI::Widget* parent)
         m_socket_table_view->set_size_columns_to_fit_content(true);
 
         Vector<GUI::JsonArrayModel::FieldSpec> net_tcp_fields;
-        net_tcp_fields.empend("peer_address", "Peer", TextAlignment::CenterLeft);
-        net_tcp_fields.empend("peer_port", "Port", TextAlignment::CenterRight);
-        net_tcp_fields.empend("local_address", "Local", TextAlignment::CenterLeft);
-        net_tcp_fields.empend("local_port", "Port", TextAlignment::CenterRight);
-        net_tcp_fields.empend("state", "State", TextAlignment::CenterLeft);
-        net_tcp_fields.empend("ack_number", "Ack#", TextAlignment::CenterRight);
-        net_tcp_fields.empend("sequence_number", "Seq#", TextAlignment::CenterRight);
-        net_tcp_fields.empend("packets_in", "Pkt In", TextAlignment::CenterRight);
-        net_tcp_fields.empend("packets_out", "Pkt Out", TextAlignment::CenterRight);
-        net_tcp_fields.empend("bytes_in", "Bytes In", TextAlignment::CenterRight);
-        net_tcp_fields.empend("bytes_out", "Bytes Out", TextAlignment::CenterRight);
+        net_tcp_fields.empend("peer_address", "Peer", Gfx::TextAlignment::CenterLeft);
+        net_tcp_fields.empend("peer_port", "Port", Gfx::TextAlignment::CenterRight);
+        net_tcp_fields.empend("local_address", "Local", Gfx::TextAlignment::CenterLeft);
+        net_tcp_fields.empend("local_port", "Port", Gfx::TextAlignment::CenterRight);
+        net_tcp_fields.empend("state", "State", Gfx::TextAlignment::CenterLeft);
+        net_tcp_fields.empend("ack_number", "Ack#", Gfx::TextAlignment::CenterRight);
+        net_tcp_fields.empend("sequence_number", "Seq#", Gfx::TextAlignment::CenterRight);
+        net_tcp_fields.empend("packets_in", "Pkt In", Gfx::TextAlignment::CenterRight);
+        net_tcp_fields.empend("packets_out", "Pkt Out", Gfx::TextAlignment::CenterRight);
+        net_tcp_fields.empend("bytes_in", "Bytes In", Gfx::TextAlignment::CenterRight);
+        net_tcp_fields.empend("bytes_out", "Bytes Out", Gfx::TextAlignment::CenterRight);
         m_socket_table_view->set_model(GUI::JsonArrayModel::create("/proc/net/tcp", move(net_tcp_fields)));
 
         m_update_timer = Core::Timer::construct(

@@ -51,9 +51,9 @@ public:
 
     void scroll_into_view(const ModelIndex&, Orientation);
 
-    Point adjusted_position(const Point&) const;
+    Point adjusted_position(const Gfx::Point&) const;
 
-    virtual ModelIndex index_at_event_position(const Point&) const override;
+    virtual ModelIndex index_at_event_position(const Gfx::Point&) const override;
     virtual Rect content_rect(const ModelIndex&) const override;
 
     int model_column() const { return m_model_column; }

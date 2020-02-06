@@ -71,6 +71,6 @@ private:
     Vector<String> m_wallpapers;
     RefPtr<GUI::Label> m_wallpaper_preview;
 
-    Size m_selected_resolution;
+    Gfx::Size m_selected_resolution;
     String m_selected_wallpaper;
 };

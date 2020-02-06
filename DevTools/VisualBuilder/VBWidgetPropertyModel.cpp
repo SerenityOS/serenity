@@ -61,8 +61,8 @@ GUI::Model::ColumnMetadata VBWidgetPropertyModel::column_metadata(int column) co
 {
     UNUSED_PARAM(column);
     if (column == Column::Name)
-        return { 110, TextAlignment::CenterLeft, &Font::default_bold_font() };
-    return { 90, TextAlignment::CenterLeft };
+        return { 110, Gfx::TextAlignment::CenterLeft, &Gfx::Font::default_bold_font() };
+    return { 90, Gfx::TextAlignment::CenterLeft };
 }
 
 GUI::Variant VBWidgetPropertyModel::data(const GUI::ModelIndex& index, Role role) const

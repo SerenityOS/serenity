@@ -40,8 +40,8 @@ ItemView::ItemView(Widget* parent)
 {
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
-    set_frame_shape(FrameShape::Container);
-    set_frame_shadow(FrameShadow::Sunken);
+    set_frame_shape(Gfx::FrameShape::Container);
+    set_frame_shadow(Gfx::FrameShadow::Sunken);
     set_frame_thickness(2);
     horizontal_scrollbar().set_visible(false);
 }
@@ -99,7 +99,7 @@ Rect ItemView::item_rect(int item_index) const
     };
 }
 
-Vector<int> ItemView::items_intersecting_rect(const Rect& rect) const
+Vector<int> ItemView::items_intersecting_rect(const Gfx::Rect& rect) const
 {
     ASSERT(model());
     const auto& column_metadata = model()->column_metadata(model_column());
@@ -117,7 +117,7 @@ Vector<int> ItemView::items_intersecting_rect(const Rect& rect) const
     return item_indexes;
 }
 
-ModelIndex ItemView::index_at_event_position(const Point& position) const
+ModelIndex ItemView::index_at_event_position(const Gfx::Point& position) const
 {
     ASSERT(model());
     // FIXME: Since all items are the same size, just compute the clicked item index
@@ -204,7 +204,7 @@ void ItemView::mousemove_event(MouseEvent& event)
     AbstractView::mousemove_event(event);
 }
 
-void ItemView::get_item_rects(int item_index, const Font& font, const Variant& item_text, Rect& item_rect, Rect& icon_rect, Rect& text_rect) const
+void ItemView::get_item_rects(int item_index, const Gfx::Font& font, const Variant& item_text, Rect& item_rect, Rect& icon_rect, Rect& text_rect) const
 {
     item_rect = this->item_rect(item_index);
     icon_rect = { 0, 0, 32, 32 };
@@ -241,7 +241,7 @@ void ItemView::paint_event(PaintEvent& event)
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
     auto column_metadata = model()->column_metadata(m_model_column);
-    const Font& font = column_metadata.font ? *column_metadata.font : this->font();
+    const Gfx::Font& font = column_metadata.font ? *column_metadata.font : this->font();
 
     for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
         auto model_index = model()->index(item_index, m_model_column);
@@ -272,7 +272,7 @@ void ItemView::paint_event(PaintEvent& event)
         else
             text_color = model()->data(model_index, Model::Role::ForegroundColor).to_color(palette().color(foreground_role()));
         painter.fill_rect(text_rect, background_color);
-        painter.draw_text(text_rect, item_text.to_string(), font, TextAlignment::Center, text_color, TextElision::Right);
+        painter.draw_text(text_rect, item_text.to_string(), font, Gfx::TextAlignment::Center, text_color, Gfx::TextElision::Right);
     };
 }
 

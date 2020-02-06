@@ -55,7 +55,7 @@ void Button::paint_event(PaintEvent& event)
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    StylePainter::paint_button(painter, rect(), palette(), m_button_style, is_being_pressed(), is_hovered(), is_checked(), is_enabled());
+    Gfx::StylePainter::paint_button(painter, rect(), palette(), m_button_style, is_being_pressed(), is_hovered(), is_checked(), is_enabled());
 
     if (text().is_empty() && !m_icon)
         return;
@@ -72,7 +72,7 @@ void Button::paint_event(PaintEvent& event)
         else
             painter.blit_dimmed(icon_location, *m_icon, m_icon->rect());
     }
-    auto& font = is_checked() ? Font::default_bold_font() : this->font();
+    auto& font = is_checked() ? Gfx::Font::default_bold_font() : this->font();
     if (m_icon && !text().is_empty()) {
         content_rect.move_by(m_icon->width() + 4, 0);
         content_rect.set_width(content_rect.width() - m_icon->width() - 4);
@@ -110,7 +110,7 @@ void Button::set_action(Action& action)
         set_checked(action.is_checked());
 }
 
-void Button::set_icon(RefPtr<GraphicsBitmap>&& icon)
+void Button::set_icon(RefPtr<Gfx::Bitmap>&& icon)
 {
     if (m_icon == icon)
         return;

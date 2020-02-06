@@ -151,7 +151,7 @@ void DisplayPropertiesWidget::create_frame()
         m_selected_wallpaper = m_wallpapers.at(index.row());
         builder.append("/res/wallpapers/");
         builder.append(m_selected_wallpaper);
-        m_wallpaper_preview->set_icon(load_png(builder.to_string()));
+        m_wallpaper_preview->set_icon(Gfx::load_png(builder.to_string()));
         m_wallpaper_preview->set_should_stretch_icon(true);
     };
 

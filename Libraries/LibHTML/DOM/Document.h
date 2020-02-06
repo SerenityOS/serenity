@@ -40,7 +40,10 @@ namespace Core {
 class Timer;
 }
 
+namespace Gfx {
 class Palette;
+}
+
 class Frame;
 class HTMLBodyElement;
 class HTMLHtmlElement;
@@ -90,8 +93,8 @@ public:
     Frame* frame() { return m_frame.ptr(); }
     const Frame* frame() const { return m_frame.ptr(); }
 
-    Color background_color(const Palette&) const;
-    RefPtr<GraphicsBitmap> background_image() const;
+    Color background_color(const Gfx::Palette&) const;
+    RefPtr<Gfx::Bitmap> background_image() const;
 
     Color link_color() const;
     void set_link_color(Color);

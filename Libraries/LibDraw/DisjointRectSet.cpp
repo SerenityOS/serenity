@@ -26,6 +26,8 @@
 
 #include <LibDraw/DisjointRectSet.h>
 
+namespace Gfx {
+
 void DisjointRectSet::add(const Rect& new_rect)
 {
     for (auto& rect : m_rects) {
@@ -68,4 +70,6 @@ void DisjointRectSet::shatter()
     next_pass:
         swap(output, m_rects);
     } while (pass_had_intersections);
+}
+
 }

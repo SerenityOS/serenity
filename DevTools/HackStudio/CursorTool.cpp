@@ -150,7 +150,7 @@ void CursorTool::on_keydown(GUI::KeyEvent& event)
     }
 }
 
-void CursorTool::set_rubber_band_position(const Point& position)
+void CursorTool::set_rubber_band_position(const Gfx::Point& position)
 {
     if (m_rubber_band_position == position)
         return;

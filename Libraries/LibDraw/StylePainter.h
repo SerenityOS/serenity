@@ -28,6 +28,8 @@
 
 #include <LibDraw/Color.h>
 
+namespace Gfx {
+
 class Painter;
 class Palette;
 class Rect;
@@ -60,3 +62,5 @@ public:
     static void paint_progress_bar(Painter&, const Rect&, const Palette&, int min, int max, int value, const StringView& text = {});
     static void paint_radio_button(Painter&, const Rect&, const Palette&, bool is_checked, bool is_being_pressed);
 };
+
+}

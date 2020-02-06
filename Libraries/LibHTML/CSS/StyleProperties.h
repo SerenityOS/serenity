@@ -31,7 +31,9 @@
 #include <LibDraw/Font.h>
 #include <LibHTML/CSS/StyleValue.h>
 
+namespace Gfx {
 class Color;
+}
 
 class StyleProperties : public RefCounted<StyleProperties> {
 public:
@@ -57,7 +59,7 @@ public:
     String string_or_fallback(CSS::PropertyID, const StringView& fallback) const;
     Color color_or_fallback(CSS::PropertyID, const Document&, Color fallback) const;
 
-    const Font& font() const
+    const Gfx::Font& font() const
     {
         if (!m_font)
             load_font();
@@ -74,5 +76,5 @@ private:
 
     void load_font() const;
 
-    mutable RefPtr<Font> m_font;
+    mutable RefPtr<Gfx::Font> m_font;
 };

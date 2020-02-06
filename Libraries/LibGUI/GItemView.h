@@ -50,7 +50,7 @@ public:
     int model_column() const { return m_model_column; }
     void set_model_column(int column) { m_model_column = column; }
 
-    virtual ModelIndex index_at_event_position(const Point&) const override;
+    virtual ModelIndex index_at_event_position(const Gfx::Point&) const override;
 
 private:
     explicit ItemView(Widget* parent);
@@ -66,20 +66,20 @@ private:
 
     int item_count() const;
     Rect item_rect(int item_index) const;
-    Vector<int> items_intersecting_rect(const Rect&) const;
+    Vector<int> items_intersecting_rect(const Gfx::Rect&) const;
     void update_content_size();
-    void get_item_rects(int item_index, const Font&, const Variant& item_text, Rect& item_rect, Rect& icon_rect, Rect& text_rect) const;
+    void get_item_rects(int item_index, const Gfx::Font&, const Variant& item_text, Rect& item_rect, Rect& icon_rect, Rect& text_rect) const;
 
     int m_horizontal_padding { 5 };
     int m_model_column { 0 };
     int m_visual_column_count { 0 };
     int m_visual_row_count { 0 };
 
-    Size m_effective_item_size { 80, 80 };
+    Gfx::Size m_effective_item_size { 80, 80 };
 
     bool m_rubber_banding { false };
-    Point m_rubber_band_origin;
-    Point m_rubber_band_current;
+    Gfx::Point m_rubber_band_origin;
+    Gfx::Point m_rubber_band_current;
     Vector<ModelIndex> m_rubber_band_remembered_selection;
 };
 

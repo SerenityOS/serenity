@@ -51,7 +51,7 @@ GFontDatabase::GFontDatabase()
     while (di.has_next()) {
         String name = di.next_path();
         auto path = String::format("/res/fonts/%s", name.characters());
-        if (auto font = Font::load_from_file(path)) {
+        if (auto font = Gfx::Font::load_from_file(path)) {
             Metadata metadata;
             metadata.path = path;
             metadata.glyph_height = font->glyph_height();
@@ -89,10 +89,10 @@ void GFontDatabase::for_each_fixed_width_font(Function<void(const StringView&)> 
         callback(name);
 }
 
-RefPtr<Font> GFontDatabase::get_by_name(const StringView& name)
+RefPtr<Gfx::Font> GFontDatabase::get_by_name(const StringView& name)
 {
     auto it = m_name_to_metadata.find(name);
     if (it == m_name_to_metadata.end())
         return nullptr;
-    return Font::load_from_file((*it).value.path);
+    return Gfx::Font::load_from_file((*it).value.path);
 }

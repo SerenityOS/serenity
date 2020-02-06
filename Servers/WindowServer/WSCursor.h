@@ -42,20 +42,20 @@ enum class WSStandardCursor {
 
 class WSCursor : public RefCounted<WSCursor> {
 public:
-    static NonnullRefPtr<WSCursor> create(NonnullRefPtr<GraphicsBitmap>&&, const Point& hotspot);
-    static NonnullRefPtr<WSCursor> create(NonnullRefPtr<GraphicsBitmap>&&);
+    static NonnullRefPtr<WSCursor> create(NonnullRefPtr<Gfx::Bitmap>&&, const Gfx::Point& hotspot);
+    static NonnullRefPtr<WSCursor> create(NonnullRefPtr<Gfx::Bitmap>&&);
     static RefPtr<WSCursor> create(WSStandardCursor);
     ~WSCursor();
 
     Point hotspot() const { return m_hotspot; }
-    const GraphicsBitmap& bitmap() const { return *m_bitmap; }
+    const Gfx::Bitmap& bitmap() const { return *m_bitmap; }
 
     Rect rect() const { return m_bitmap->rect(); }
     Size size() const { return m_bitmap->size(); }
 
 private:
-    WSCursor(NonnullRefPtr<GraphicsBitmap>&&, const Point&);
+    WSCursor(NonnullRefPtr<Gfx::Bitmap>&&, const Gfx::Point&);
 
-    RefPtr<GraphicsBitmap> m_bitmap;
-    Point m_hotspot;
+    RefPtr<Gfx::Bitmap> m_bitmap;
+    Gfx::Point m_hotspot;
 };

@@ -67,8 +67,8 @@ ToolboxWidget::ToolboxWidget(GUI::Widget* parent)
     set_fill_with_background_color(true);
 
     set_frame_thickness(1);
-    set_frame_shape(FrameShape::Panel);
-    set_frame_shadow(FrameShadow::Raised);
+    set_frame_shape(Gfx::FrameShape::Panel);
+    set_frame_shadow(Gfx::FrameShadow::Raised);
 
     set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     set_preferred_size(48, 0);
@@ -83,7 +83,7 @@ ToolboxWidget::ToolboxWidget(GUI::Widget* parent)
         button->set_checkable(true);
         button->set_exclusive(true);
 
-        button->set_icon(load_png(String::format("/res/icons/paintbrush/%s.png", String(icon_name).characters())));
+        button->set_icon(Gfx::load_png(String::format("/res/icons/paintbrush/%s.png", String(icon_name).characters())));
 
         button->on_checked = [button = button.ptr()](auto checked) {
             if (checked)

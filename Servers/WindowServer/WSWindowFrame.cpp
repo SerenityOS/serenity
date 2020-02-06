@@ -49,7 +49,7 @@ static const char* s_close_button_bitmap_data = {
     "##    ##"
 };
 
-static CharacterBitmap* s_close_button_bitmap;
+static Gfx::CharacterBitmap* s_close_button_bitmap;
 static const int s_close_button_bitmap_width = 8;
 static const int s_close_button_bitmap_height = 9;
 
@@ -65,7 +65,7 @@ static const char* s_minimize_button_bitmap_data = {
     "        "
 };
 
-static CharacterBitmap* s_minimize_button_bitmap;
+static Gfx::CharacterBitmap* s_minimize_button_bitmap;
 static const int s_minimize_button_bitmap_width = 8;
 static const int s_minimize_button_bitmap_height = 9;
 
@@ -81,7 +81,7 @@ static const char* s_maximize_button_bitmap_data = {
     "        "
 };
 
-static CharacterBitmap* s_maximize_button_bitmap;
+static Gfx::CharacterBitmap* s_maximize_button_bitmap;
 static const int s_maximize_button_bitmap_width = 8;
 static const int s_maximize_button_bitmap_height = 9;
 
@@ -97,7 +97,7 @@ static const char* s_unmaximize_button_bitmap_data = {
     "        "
 };
 
-static CharacterBitmap* s_unmaximize_button_bitmap;
+static Gfx::CharacterBitmap* s_unmaximize_button_bitmap;
 static const int s_unmaximize_button_bitmap_width = 8;
 static const int s_unmaximize_button_bitmap_height = 9;
 
@@ -105,16 +105,16 @@ WSWindowFrame::WSWindowFrame(WSWindow& window)
     : m_window(window)
 {
     if (!s_close_button_bitmap)
-        s_close_button_bitmap = &CharacterBitmap::create_from_ascii(s_close_button_bitmap_data, s_close_button_bitmap_width, s_close_button_bitmap_height).leak_ref();
+        s_close_button_bitmap = &Gfx::CharacterBitmap::create_from_ascii(s_close_button_bitmap_data, s_close_button_bitmap_width, s_close_button_bitmap_height).leak_ref();
 
     if (!s_minimize_button_bitmap)
-        s_minimize_button_bitmap = &CharacterBitmap::create_from_ascii(s_minimize_button_bitmap_data, s_minimize_button_bitmap_width, s_minimize_button_bitmap_height).leak_ref();
+        s_minimize_button_bitmap = &Gfx::CharacterBitmap::create_from_ascii(s_minimize_button_bitmap_data, s_minimize_button_bitmap_width, s_minimize_button_bitmap_height).leak_ref();
 
     if (!s_maximize_button_bitmap)
-        s_maximize_button_bitmap = &CharacterBitmap::create_from_ascii(s_maximize_button_bitmap_data, s_maximize_button_bitmap_width, s_maximize_button_bitmap_height).leak_ref();
+        s_maximize_button_bitmap = &Gfx::CharacterBitmap::create_from_ascii(s_maximize_button_bitmap_data, s_maximize_button_bitmap_width, s_maximize_button_bitmap_height).leak_ref();
 
     if (!s_unmaximize_button_bitmap)
-        s_unmaximize_button_bitmap = &CharacterBitmap::create_from_ascii(s_unmaximize_button_bitmap_data, s_unmaximize_button_bitmap_width, s_unmaximize_button_bitmap_height).leak_ref();
+        s_unmaximize_button_bitmap = &Gfx::CharacterBitmap::create_from_ascii(s_unmaximize_button_bitmap_data, s_unmaximize_button_bitmap_width, s_unmaximize_button_bitmap_height).leak_ref();
 
     m_buttons.append(make<WSButton>(*this, *s_close_button_bitmap, [this](auto&) {
         m_window.request_close();
@@ -175,9 +175,9 @@ Rect WSWindowFrame::title_bar_text_rect() const
     };
 }
 
-void WSWindowFrame::paint(Painter& painter)
+void WSWindowFrame::paint(Gfx::Painter& painter)
 {
-    PainterStateSaver saver(painter);
+    Gfx::PainterStateSaver saver(painter);
     painter.translate(rect().location());
 
     if (m_window.type() != WSWindowType::Normal)
@@ -189,10 +189,10 @@ void WSWindowFrame::paint(Painter& painter)
     auto titlebar_rect = title_bar_rect();
     auto titlebar_icon_rect = title_bar_icon_rect();
     auto titlebar_inner_rect = title_bar_text_rect();
-    Rect outer_rect = { {}, rect().size() };
+    Gfx::Rect outer_rect = { {}, rect().size() };
 
     auto titlebar_title_rect = titlebar_inner_rect;
-    titlebar_title_rect.set_width(Font::default_bold_font().width(window.title()));
+    titlebar_title_rect.set_width(Gfx::Font::default_bold_font().width(window.title()));
 
     Color title_color;
     Color border_color;
@@ -218,14 +218,14 @@ void WSWindowFrame::paint(Painter& painter)
         title_color = palette.inactive_window_title();
     }
 
-    StylePainter::paint_window_frame(painter, outer_rect, palette);
+    Gfx::StylePainter::paint_window_frame(painter, outer_rect, palette);
 
     if (!window.show_titlebar())
         return;
 
     painter.draw_line(titlebar_rect.bottom_left().translated(0, 1), titlebar_rect.bottom_right().translated(0, 1), palette.button());
 
-    auto leftmost_button_rect = m_buttons.is_empty() ? Rect() : m_buttons.last().relative_rect();
+    auto leftmost_button_rect = m_buttons.is_empty() ? Gfx::Rect() : m_buttons.last().relative_rect();
 
     painter.fill_rect_with_gradient(titlebar_rect, border_color, border_color2);
 
@@ -240,9 +240,9 @@ void WSWindowFrame::paint(Painter& painter)
     auto clipped_title_rect = titlebar_title_rect;
     clipped_title_rect.set_width(stripe_right - clipped_title_rect.x());
     if (!clipped_title_rect.is_empty()) {
-        painter.draw_text(clipped_title_rect.translated(1, 2), window.title(), wm.window_title_font(), TextAlignment::CenterLeft, border_color.darkened(0.4), TextElision::Right);
+        painter.draw_text(clipped_title_rect.translated(1, 2), window.title(), wm.window_title_font(), Gfx::TextAlignment::CenterLeft, border_color.darkened(0.4), Gfx::TextElision::Right);
         // FIXME: The translated(0, 1) wouldn't be necessary if we could center text based on its baseline.
-        painter.draw_text(clipped_title_rect.translated(0, 1), window.title(), wm.window_title_font(), TextAlignment::CenterLeft, title_color, TextElision::Right);
+        painter.draw_text(clipped_title_rect.translated(0, 1), window.title(), wm.window_title_font(), Gfx::TextAlignment::CenterLeft, title_color, Gfx::TextElision::Right);
     }
 
     painter.blit(titlebar_icon_rect.location(), window.icon(), window.icon().rect());
@@ -252,7 +252,7 @@ void WSWindowFrame::paint(Painter& painter)
     }
 }
 
-static Rect frame_rect_for_window(WSWindow& window, const Rect& rect)
+static Gfx::Rect frame_rect_for_window(WSWindow& window, const Gfx::Rect& rect)
 {
     auto type = window.type();
     auto offset = !window.show_titlebar() ? (window_titlebar_height + 1) : 0;
@@ -268,7 +268,7 @@ static Rect frame_rect_for_window(WSWindow& window, const Rect& rect)
     }
 }
 
-static Rect frame_rect_for_window(WSWindow& window)
+static Gfx::Rect frame_rect_for_window(WSWindow& window)
 {
     return frame_rect_for_window(window, window.rect());
 }
@@ -283,7 +283,7 @@ void WSWindowFrame::invalidate_title_bar()
     WSWindowManager::the().invalidate(title_bar_rect().translated(rect().location()));
 }
 
-void WSWindowFrame::notify_window_rect_changed(const Rect& old_rect, const Rect& new_rect)
+void WSWindowFrame::notify_window_rect_changed(const Gfx::Rect& old_rect, const Gfx::Rect& new_rect)
 {
     int window_button_width = 15;
     int window_button_height = 15;
@@ -291,7 +291,7 @@ void WSWindowFrame::notify_window_rect_changed(const Rect& old_rect, const Rect&
 
     for (auto& button : m_buttons) {
         x -= window_button_width;
-        Rect rect { x, 0, window_button_width, window_button_height };
+        Gfx::Rect rect { x, 0, window_button_width, window_button_height };
         rect.center_vertically_within(title_bar_text_rect());
         button.set_relative_rect(rect);
     }
@@ -353,7 +353,7 @@ void WSWindowFrame::on_mouse_event(const WSMouseEvent& event)
             { ResizeDirection::Left, ResizeDirection::None, ResizeDirection::Right },
             { ResizeDirection::DownLeft, ResizeDirection::Down, ResizeDirection::DownRight },
         };
-        Rect outer_rect = { {}, rect().size() };
+        Gfx::Rect outer_rect = { {}, rect().size() };
         ASSERT(outer_rect.contains(event.position()));
         int window_relative_x = event.x() - outer_rect.x();
         int window_relative_y = event.y() - outer_rect.y();

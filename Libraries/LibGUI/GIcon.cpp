@@ -41,7 +41,7 @@ GIcon::GIcon(const GIcon& other)
 {
 }
 
-GIcon::GIcon(RefPtr<GraphicsBitmap>&& bitmap)
+GIcon::GIcon(RefPtr<Gfx::Bitmap>&& bitmap)
     : GIcon()
 {
     if (bitmap) {
@@ -51,7 +51,7 @@ GIcon::GIcon(RefPtr<GraphicsBitmap>&& bitmap)
     }
 }
 
-GIcon::GIcon(RefPtr<GraphicsBitmap>&& bitmap1, RefPtr<GraphicsBitmap>&& bitmap2)
+GIcon::GIcon(RefPtr<Gfx::Bitmap>&& bitmap1, RefPtr<Gfx::Bitmap>&& bitmap2)
     : GIcon(move(bitmap1))
 {
     if (bitmap2) {
@@ -61,14 +61,14 @@ GIcon::GIcon(RefPtr<GraphicsBitmap>&& bitmap1, RefPtr<GraphicsBitmap>&& bitmap2)
     }
 }
 
-const GraphicsBitmap* GIconImpl::bitmap_for_size(int size) const
+const Gfx::Bitmap* GIconImpl::bitmap_for_size(int size) const
 {
     auto it = m_bitmaps.find(size);
     if (it != m_bitmaps.end())
         return it->value.ptr();
 
     int best_diff_so_far = INT32_MAX;
-    const GraphicsBitmap* best_fit = nullptr;
+    const Gfx::Bitmap* best_fit = nullptr;
     for (auto& it : m_bitmaps) {
         int abs_diff = abs(it.key - size);
         if (abs_diff < best_diff_so_far) {
@@ -79,7 +79,7 @@ const GraphicsBitmap* GIconImpl::bitmap_for_size(int size) const
     return best_fit;
 }
 
-void GIconImpl::set_bitmap_for_size(int size, RefPtr<GraphicsBitmap>&& bitmap)
+void GIconImpl::set_bitmap_for_size(int size, RefPtr<Gfx::Bitmap>&& bitmap)
 {
     if (!bitmap) {
         m_bitmaps.remove(size);
@@ -90,7 +90,7 @@ void GIconImpl::set_bitmap_for_size(int size, RefPtr<GraphicsBitmap>&& bitmap)
 
 GIcon GIcon::default_icon(const StringView& name)
 {
-    auto bitmap16 = GraphicsBitmap::load_from_file(String::format("/res/icons/16x16/%s.png", String(name).characters()));
-    auto bitmap32 = GraphicsBitmap::load_from_file(String::format("/res/icons/32x32/%s.png", String(name).characters()));
+    auto bitmap16 = Gfx::Bitmap::load_from_file(String::format("/res/icons/16x16/%s.png", String(name).characters()));
+    auto bitmap32 = Gfx::Bitmap::load_from_file(String::format("/res/icons/32x32/%s.png", String(name).characters()));
     return GIcon(move(bitmap16), move(bitmap32));
 }

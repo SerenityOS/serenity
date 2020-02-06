@@ -26,8 +26,8 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/NonnullOwnPtrVector.h>
+#include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/CObject.h>
 #include <LibDraw/Rect.h>
@@ -35,10 +35,13 @@
 #include <WindowServer/WSMenuItem.h>
 #include <WindowServer/WSWindow.h>
 
+namespace Gfx {
+class Font;
+}
+
 class WSClientConnection;
 class WSMenuBar;
 class WSEvent;
-class Font;
 
 class WSMenu final : public Core::Object {
     C_OBJECT(WSMenu)
@@ -70,11 +73,11 @@ public:
             callback(item);
     }
 
-    Rect text_rect_in_menubar() const { return m_text_rect_in_menubar; }
-    void set_text_rect_in_menubar(const Rect& rect) { m_text_rect_in_menubar = rect; }
+    Gfx::Rect text_rect_in_menubar() const { return m_text_rect_in_menubar; }
+    void set_text_rect_in_menubar(const Gfx::Rect& rect) { m_text_rect_in_menubar = rect; }
 
-    Rect rect_in_menubar() const { return m_rect_in_menubar; }
-    void set_rect_in_menubar(const Rect& rect) { m_rect_in_menubar = rect; }
+    Gfx::Rect rect_in_menubar() const { return m_rect_in_menubar; }
+    void set_rect_in_menubar(const Gfx::Rect& rect) { m_rect_in_menubar = rect; }
 
     WSWindow* menu_window() { return m_menu_window.ptr(); }
     WSWindow& ensure_menu_window();
@@ -93,7 +96,7 @@ public:
     int right_padding() const { return 14; }
 
     void draw();
-    const Font& font() const;
+    const Gfx::Font& font() const;
 
     WSMenuItem* item_with_identifier(unsigned);
     void redraw();
@@ -105,7 +108,7 @@ public:
 
     void close();
 
-    void popup(const Point&, bool is_submenu = false);
+    void popup(const Gfx::Point&, bool is_submenu = false);
 
     bool is_menu_ancestor_of(const WSMenu&) const;
 
@@ -120,7 +123,7 @@ private:
     void handle_mouse_move_event(const WSMouseEvent&);
     int visible_item_count() const;
 
-    int item_index_at(const Point&);
+    int item_index_at(const Gfx::Point&);
     int padding_between_text_and_shortcut() const { return 50; }
     void did_activate(WSMenuItem&);
     void open_hovered_item();
@@ -130,15 +133,15 @@ private:
     WSClientConnection* m_client { nullptr };
     int m_menu_id { 0 };
     String m_name;
-    Rect m_rect_in_menubar;
-    Rect m_text_rect_in_menubar;
+    Gfx::Rect m_rect_in_menubar;
+    Gfx::Rect m_text_rect_in_menubar;
     WSMenuBar* m_menubar { nullptr };
     NonnullOwnPtrVector<WSMenuItem> m_items;
     RefPtr<WSWindow> m_menu_window;
 
     WeakPtr<WSWindow> m_window_menu_of;
     bool m_is_window_menu_open = { false };
-    Point m_last_position_in_hover;
+    Gfx::Point m_last_position_in_hover;
     int m_theme_index_at_last_paint { -1 };
     int m_hovered_item_index { -1 };
     bool m_in_submenu { false };

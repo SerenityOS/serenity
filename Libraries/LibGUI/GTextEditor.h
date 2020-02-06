@@ -70,8 +70,8 @@ public:
     bool is_line_wrapping_enabled() const { return m_line_wrapping_enabled; }
     void set_line_wrapping_enabled(bool);
 
-    TextAlignment text_alignment() const { return m_text_alignment; }
-    void set_text_alignment(TextAlignment);
+    Gfx::TextAlignment text_alignment() const { return m_text_alignment; }
+    void set_text_alignment(Gfx::TextAlignment);
 
     Type type() const { return m_type; }
     bool is_single_line() const { return m_type == SingleLine; }
@@ -154,7 +154,7 @@ protected:
     virtual void resize_event(ResizeEvent&) override;
     virtual void cursor_did_change() {}
 
-    TextPosition text_position_at(const Point&) const;
+    TextPosition text_position_at(const Gfx::Point&) const;
 
 private:
     friend class TextDocumentLine;
@@ -214,7 +214,7 @@ private:
     Type m_type { MultiLine };
 
     TextPosition m_cursor;
-    TextAlignment m_text_alignment { TextAlignment::CenterLeft };
+    Gfx::TextAlignment m_text_alignment { Gfx::TextAlignment::CenterLeft };
     bool m_cursor_state { true };
     bool m_in_drag_select { false };
     bool m_ruler_visible { false };

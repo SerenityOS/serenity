@@ -49,7 +49,7 @@ protected:
     virtual void did_update_model() override;
 
 private:
-    virtual ModelIndex index_at_event_position(const Point&, bool& is_toggle) const override;
+    virtual ModelIndex index_at_event_position(const Gfx::Point&, bool& is_toggle) const override;
 
     int item_height() const { return 16; }
     int max_item_width() const { return frame_inner_rect().width(); }
@@ -70,8 +70,8 @@ private:
 
     mutable HashMap<void*, NonnullOwnPtr<MetadataForIndex>> m_view_metadata;
 
-    RefPtr<GraphicsBitmap> m_expand_bitmap;
-    RefPtr<GraphicsBitmap> m_collapse_bitmap;
+    RefPtr<Gfx::Bitmap> m_expand_bitmap;
+    RefPtr<Gfx::Bitmap> m_collapse_bitmap;
 };
 
 }

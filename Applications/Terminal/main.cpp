@@ -235,7 +235,7 @@ int main(int argc, char** argv)
     window->move_to(300, 300);
     terminal->apply_size_increments_to_window(*window);
     window->show();
-    window->set_icon(load_png("/res/icons/16x16/app-terminal.png"));
+    window->set_icon(Gfx::load_png("/res/icons/16x16/app-terminal.png"));
     terminal->set_should_beep(config->read_bool_entry("Window", "AudibleBeep", false));
 
     RefPtr<GUI::Window> settings_window;
@@ -247,13 +247,13 @@ int main(int argc, char** argv)
     auto menubar = make<GUI::MenuBar>();
 
     auto app_menu = GUI::Menu::construct("Terminal");
-    app_menu->add_action(GUI::Action::create("Open new terminal", { Mod_Ctrl | Mod_Shift, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/app-terminal.png"), [&](auto&) {
+    app_menu->add_action(GUI::Action::create("Open new terminal", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"), [&](auto&) {
         if (!fork()) {
             execl("/bin/Terminal", "Terminal", nullptr);
             exit(1);
         }
     }));
-    app_menu->add_action(GUI::Action::create("Settings...", load_png("/res/icons/gear16.png"),
+    app_menu->add_action(GUI::Action::create("Settings...", Gfx::load_png("/res/icons/gear16.png"),
         [&](const GUI::Action&) {
             if (!settings_window) {
                 settings_window = create_settings_window(*terminal);
@@ -300,7 +300,7 @@ int main(int argc, char** argv)
 
     auto help_menu = GUI::Menu::construct("Help");
     help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
-        GUI::AboutDialog::show("Terminal", load_png("/res/icons/32x32/app-terminal.png"), window);
+        GUI::AboutDialog::show("Terminal", Gfx::load_png("/res/icons/32x32/app-terminal.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 
