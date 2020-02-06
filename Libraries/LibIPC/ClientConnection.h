@@ -32,8 +32,8 @@
 #include <LibCore/CLocalSocket.h>
 #include <LibCore/CNotifier.h>
 #include <LibCore/CObject.h>
-#include <LibIPC/IEndpoint.h>
-#include <LibIPC/IMessage.h>
+#include <LibIPC/Endpoint.h>
+#include <LibIPC/Message.h>
 #include <errno.h>
 #include <stdio.h>
 #include <sys/socket.h>

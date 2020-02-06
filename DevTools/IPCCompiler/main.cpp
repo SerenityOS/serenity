@@ -227,9 +227,9 @@ int main(int argc, char** argv)
     dbg() << "#include <AK/OwnPtr.h>";
     dbg() << "#include <LibGfx/Color.h>";
     dbg() << "#include <LibGfx/Rect.h>";
-    dbg() << "#include <LibIPC/IEncoder.h>";
-    dbg() << "#include <LibIPC/IEndpoint.h>";
-    dbg() << "#include <LibIPC/IMessage.h>";
+    dbg() << "#include <LibIPC/Encoder.h>";
+    dbg() << "#include <LibIPC/Endpoint.h>";
+    dbg() << "#include <LibIPC/Message.h>";
     dbg();
 
     for (auto& endpoint : endpoints) {

@@ -32,7 +32,7 @@
 #include <AK/WeakPtr.h>
 #include <LibCore/CObject.h>
 #include <LibGfx/Bitmap.h>
-#include <LibIPC/IClientConnection.h>
+#include <LibIPC/ClientConnection.h>
 #include <WindowServer/WSEvent.h>
 #include <WindowServer/WindowServerEndpoint.h>
 

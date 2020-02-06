@@ -26,7 +26,7 @@
 
 #include <LibCore/CEventLoop.h>
 #include <LibCore/CLocalServer.h>
-#include <LibIPC/IClientConnection.h>
+#include <LibIPC/ClientConnection.h>
 #include <ProtocolServer/HttpProtocol.h>
 #include <ProtocolServer/PSClientConnection.h>
 

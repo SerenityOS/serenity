@@ -1,6 +1,6 @@
 OBJS = \
-    IEndpoint.o \
-    IMessage.o
+    Endpoint.o \
+    Message.o
 
 LIBRARY = libipc.a
 

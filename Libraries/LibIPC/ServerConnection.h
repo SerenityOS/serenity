@@ -32,7 +32,7 @@
 #include <LibCore/CLocalSocket.h>
 #include <LibCore/CNotifier.h>
 #include <LibCore/CSyscallUtils.h>
-#include <LibIPC/IMessage.h>
+#include <LibIPC/Message.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/select.h>

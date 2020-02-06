@@ -28,7 +28,7 @@
 
 #include <AudioServer/AudioClientEndpoint.h>
 #include <AudioServer/AudioServerEndpoint.h>
-#include <LibIPC/IServerConnection.h>
+#include <LibIPC/ServerConnection.h>
 
 namespace Audio {
 

@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <LibIPC/IServerConnection.h>
+#include <LibIPC/ServerConnection.h>
 #include <ProtocolServer/ProtocolClientEndpoint.h>
 #include <ProtocolServer/ProtocolServerEndpoint.h>
 
