@@ -123,7 +123,7 @@ void TaskbarWindow::create_quick_launch_bar()
 
 void TaskbarWindow::on_screen_rect_change(const Gfx::Rect& rect)
 {
-    Rect new_rect { rect.x(), rect.bottom() - taskbar_height() + 1, rect.width(), taskbar_height() };
+    Gfx::Rect new_rect { rect.x(), rect.bottom() - taskbar_height() + 1, rect.width(), taskbar_height() };
     set_rect(new_rect);
 }
 

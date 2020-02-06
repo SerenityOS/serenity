@@ -79,10 +79,10 @@ public:
 
     bool is_selected() const;
 
-    Rect rect() const;
+    Gfx::Rect rect() const;
     void set_rect(const Gfx::Rect&);
 
-    Rect grabber_rect(Direction) const;
+    Gfx::Rect grabber_rect(Direction) const;
     Direction grabber_at(const Gfx::Point&) const;
 
     GUI::Widget* gwidget() { return m_gwidget; }
@@ -98,7 +98,7 @@ public:
 
     void property_did_change();
 
-    Rect transform_origin_rect() const { return m_transform_origin_rect; }
+    Gfx::Rect transform_origin_rect() const { return m_transform_origin_rect; }
     void capture_transform_origin_rect();
 
     bool is_in_layout() const;

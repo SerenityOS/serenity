@@ -168,11 +168,11 @@ void CursorTool::set_rubber_band_position(const Gfx::Point& position)
     m_editor.form_widget().update();
 }
 
-Rect CursorTool::rubber_band_rect() const
+Gfx::Rect CursorTool::rubber_band_rect() const
 {
     if (!m_rubber_banding)
         return {};
-    return Rect::from_two_points(m_rubber_band_origin, m_rubber_band_position);
+    return Gfx::Rect::from_two_points(m_rubber_band_origin, m_rubber_band_position);
 }
 
 void CursorTool::on_second_paint(GUI::Painter& painter, GUI::PaintEvent&)

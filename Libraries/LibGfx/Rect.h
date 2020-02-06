@@ -333,5 +333,3 @@ inline const LogStream& operator<<(const LogStream& stream, const Rect& value)
 }
 
 }
-
-using Gfx::Rect;

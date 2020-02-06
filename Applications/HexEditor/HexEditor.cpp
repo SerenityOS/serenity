@@ -335,7 +335,7 @@ void HexEditor::scroll_position_into_view(int position)
 {
     int y = position / bytes_per_row();
     int x = position % bytes_per_row();
-    Rect rect {
+    Gfx::Rect rect {
         frame_thickness() + offset_margin_width() + (x * (character_width() * 3)) + 10,
         frame_thickness() + 5 + (y * line_height()),
         (character_width() * 3),
@@ -477,7 +477,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
     painter.translate(frame_thickness(), frame_thickness());
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
-    Rect offset_clip_rect {
+    Gfx::Rect offset_clip_rect {
         0,
         vertical_scrollbar().value(),
         85,
@@ -497,7 +497,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
 
     // paint offsets
     for (int i = min_row; i < max_row; i++) {
-        Rect side_offset_rect {
+        Gfx::Rect side_offset_rect {
             frame_thickness() + 5,
             frame_thickness() + 5 + (i * line_height()),
             width() - width_occupied_by_vertical_scrollbar(),
@@ -530,7 +530,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
                 }
             }
 
-            Rect hex_display_rect {
+            Gfx::Rect hex_display_rect {
                 frame_thickness() + offset_margin_width() + (j * (character_width() * 3)) + 10,
                 frame_thickness() + 5 + (i * line_height()),
                 (character_width() * 3),
@@ -546,7 +546,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             auto line = String::format("%02X", m_buffer[byte_position]);
             painter.draw_text(hex_display_rect, line, Gfx::TextAlignment::TopLeft, text_color);
 
-            Rect text_display_rect {
+            Gfx::Rect text_display_rect {
                 frame_thickness() + offset_margin_width() + (bytes_per_row() * (character_width() * 3)) + (j * character_width()) + 20,
                 frame_thickness() + 5 + (i * line_height()),
                 character_width(),

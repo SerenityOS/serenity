@@ -55,12 +55,12 @@ void RadioButton::paint_event(PaintEvent& event)
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    Rect circle_rect { { 2, 0 }, circle_size() };
+    Gfx::Rect circle_rect { { 2, 0 }, circle_size() };
     circle_rect.center_vertically_within(rect());
 
     Gfx::StylePainter::paint_radio_button(painter, circle_rect, palette(), is_checked(), is_being_pressed());
 
-    Rect text_rect { circle_rect.right() + 4, 0, font().width(text()), font().glyph_height() };
+    Gfx::Rect text_rect { circle_rect.right() + 4, 0, font().width(text()), font().glyph_height() };
     text_rect.center_vertically_within(rect());
     paint_text(painter, text_rect, font(), Gfx::TextAlignment::TopLeft);
 }

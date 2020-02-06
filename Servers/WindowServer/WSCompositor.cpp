@@ -187,7 +187,7 @@ void WSCompositor::compose()
             // we want to try to blit the backing store at the same place
             // it was previously, and fill the rest of the window with its
             // background color.
-            Rect backing_rect;
+            Gfx::Rect backing_rect;
             backing_rect.set_size(backing_store->size());
             switch (WSWindowManager::the().resize_direction_of_window(window)) {
             case ResizeDirection::None:
@@ -212,7 +212,7 @@ void WSCompositor::compose()
                 break;
             }
 
-            Rect dirty_rect_in_backing_coordinates = dirty_rect
+            Gfx::Rect dirty_rect_in_backing_coordinates = dirty_rect
                                                          .intersected(window.rect())
                                                          .intersected(backing_rect)
                                                          .translated(-backing_rect.location());
@@ -257,7 +257,7 @@ void WSCompositor::compose()
 
 void WSCompositor::flush(const Gfx::Rect& a_rect)
 {
-    auto rect = Rect::intersection(a_rect, WSScreen::the().rect());
+    auto rect = Gfx::Rect::intersection(a_rect, WSScreen::the().rect());
 
 #ifdef DEBUG_COUNTERS
     dbgprintf("[WM] flush #%u (%d,%d %dx%d)\n", ++m_flush_count, rect.x(), rect.y(), rect.width(), rect.height());
@@ -302,7 +302,7 @@ void WSCompositor::invalidate()
 
 void WSCompositor::invalidate(const Gfx::Rect& a_rect)
 {
-    auto rect = Rect::intersection(a_rect, WSScreen::the().rect());
+    auto rect = Gfx::Rect::intersection(a_rect, WSScreen::the().rect());
     if (rect.is_empty())
         return;
 
@@ -369,7 +369,7 @@ void WSCompositor::run_animations()
             float width_delta_per_step = (float)(from_rect.width() - to_rect.width()) / minimize_animation_steps;
             float height_delta_per_step = (float)(from_rect.height() - to_rect.height()) / minimize_animation_steps;
 
-            Rect rect {
+            Gfx::Rect rect {
                 from_rect.x() - (int)(x_delta_per_step * animation_index),
                 from_rect.y() - (int)(y_delta_per_step * animation_index),
                 from_rect.width() - (int)(width_delta_per_step * animation_index),
@@ -405,7 +405,7 @@ void WSCompositor::set_resolution(int desired_width, int desired_height)
     compose();
 }
 
-Rect WSCompositor::current_cursor_rect() const
+Gfx::Rect WSCompositor::current_cursor_rect() const
 {
     auto& wm = WSWindowManager::the();
     return { WSScreen::the().cursor_location().translated(-wm.active_cursor().hotspot()), wm.active_cursor().size() };
@@ -433,7 +433,7 @@ void WSCompositor::draw_geometry_label()
         int height_steps = (window_being_moved_or_resized->height() - window_being_moved_or_resized->base_size().height()) / window_being_moved_or_resized->size_increment().height();
         geometry_string = String::format("%s (%dx%d)", geometry_string.characters(), width_steps, height_steps);
     }
-    auto geometry_label_rect = Rect { 0, 0, wm.font().width(geometry_string) + 16, wm.font().glyph_height() + 10 };
+    auto geometry_label_rect = Gfx::Rect { 0, 0, wm.font().width(geometry_string) + 16, wm.font().glyph_height() + 10 };
     geometry_label_rect.center_within(window_being_moved_or_resized->rect());
     m_back_painter->fill_rect(geometry_label_rect, Color::WarmGray);
     m_back_painter->draw_rect(geometry_label_rect, Color::DarkGray);
@@ -444,7 +444,7 @@ void WSCompositor::draw_geometry_label()
 void WSCompositor::draw_cursor()
 {
     auto& wm = WSWindowManager::the();
-    Rect cursor_rect = current_cursor_rect();
+    Gfx::Rect cursor_rect = current_cursor_rect();
     m_back_painter->blit(cursor_rect.location(), wm.active_cursor().bitmap(), wm.active_cursor().rect());
 
     if (wm.dnd_client()) {

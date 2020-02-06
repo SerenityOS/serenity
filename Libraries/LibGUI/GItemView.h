@@ -65,10 +65,10 @@ private:
     virtual void keydown_event(KeyEvent&) override;
 
     int item_count() const;
-    Rect item_rect(int item_index) const;
+    Gfx::Rect item_rect(int item_index) const;
     Vector<int> items_intersecting_rect(const Gfx::Rect&) const;
     void update_content_size();
-    void get_item_rects(int item_index, const Gfx::Font&, const Variant& item_text, Rect& item_rect, Rect& icon_rect, Rect& text_rect) const;
+    void get_item_rects(int item_index, const Gfx::Font&, const Variant& item_text, Gfx::Rect& item_rect, Gfx::Rect& icon_rect, Gfx::Rect& text_rect) const;
 
     int m_horizontal_padding { 5 };
     int m_model_column { 0 };

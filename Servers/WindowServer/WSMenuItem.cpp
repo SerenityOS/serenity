@@ -77,7 +77,7 @@ WSMenu* WSMenuItem::submenu()
     return WSMenuManager::the().find_internal_menu_by_id(m_submenu_id);
 }
 
-Rect WSMenuItem::rect() const
+Gfx::Rect WSMenuItem::rect() const
 {
     if (!m_menu.is_scrollable())
         return m_rect;

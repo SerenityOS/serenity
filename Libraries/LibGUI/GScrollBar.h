@@ -81,11 +81,11 @@ private:
     int button_size() const { return length(orientation()) <= (default_button_size() * 2) ? length(orientation()) / 2 : default_button_size(); }
     int button_width() const { return orientation() == Orientation::Vertical ? width() : button_size(); }
     int button_height() const { return orientation() == Orientation::Horizontal ? height() : button_size(); }
-    Rect decrement_button_rect() const;
-    Rect increment_button_rect() const;
-    Rect decrement_gutter_rect() const;
-    Rect increment_gutter_rect() const;
-    Rect scrubber_rect() const;
+    Gfx::Rect decrement_button_rect() const;
+    Gfx::Rect increment_button_rect() const;
+    Gfx::Rect decrement_gutter_rect() const;
+    Gfx::Rect increment_gutter_rect() const;
+    Gfx::Rect scrubber_rect() const;
     int scrubber_size() const;
     int scrubbable_range_in_pixels() const;
     void on_automatic_scrolling_timer_fired();

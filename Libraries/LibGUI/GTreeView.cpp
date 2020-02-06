@@ -138,11 +138,11 @@ void TreeView::traverse_in_paint_order(Callback callback) const
             auto& metadata = ensure_metadata_for_index(index);
             int x_offset = tree_column_x_offset + horizontal_padding() + indent_level * indent_width_in_pixels();
             auto node_text = model.data(index, Model::Role::Display).to_string();
-            Rect rect = {
+            Gfx::Rect rect = {
                 x_offset, y_offset,
                 icon_size() + icon_spacing() + text_padding() + font().width(node_text) + text_padding(), item_height()
             };
-            Rect toggle_rect;
+            Gfx::Rect toggle_rect;
             if (row_count_at_index > 0) {
                 int toggle_x = tree_column_x_offset + horizontal_padding() + indent_width_in_pixels() * indent_level - icon_size() / 2 - 4;
                 toggle_rect = { toggle_x, rect.y(), toggle_size(), toggle_size() };
@@ -230,7 +230,7 @@ void TreeView::paint_event(PaintEvent& event)
             }
         }
 
-        Rect row_rect { 0, rect.y(), frame_inner_rect().width(), rect.height() };
+        Gfx::Rect row_rect { 0, rect.y(), frame_inner_rect().width(), rect.height() };
         painter.fill_rect(row_rect, background_color);
 
         int x_offset = 0;
@@ -244,7 +244,7 @@ void TreeView::paint_event(PaintEvent& event)
             painter.draw_rect(toggle_rect, text_color);
 
             if (column_index != tree_column) {
-                Rect cell_rect(horizontal_padding() + x_offset, rect.y(), column_width, item_height());
+                Gfx::Rect cell_rect(horizontal_padding() + x_offset, rect.y(), column_width, item_height());
                 auto cell_index = model.sibling(index.row(), column_index, index.parent());
 
                 if (auto* delegate = column_data(column_index).cell_painting_delegate.ptr()) {
@@ -265,13 +265,13 @@ void TreeView::paint_event(PaintEvent& event)
                 }
             } else {
                 // It's the tree column!
-                Rect icon_rect = { rect.x(), rect.y(), icon_size(), icon_size() };
+                Gfx::Rect icon_rect = { rect.x(), rect.y(), icon_size(), icon_size() };
                 auto icon = model.data(index, Model::Role::Icon);
                 if (icon.is_icon()) {
                     if (auto* bitmap = icon.as_icon().bitmap_for_size(icon_size()))
                         painter.blit(icon_rect.location(), *bitmap, bitmap->rect());
                 }
-                Rect text_rect = {
+                Gfx::Rect text_rect = {
                     icon_rect.right() + 1 + icon_spacing(), rect.y(),
                     rect.width() - icon_size() - icon_spacing(), rect.height()
                 };
@@ -319,7 +319,7 @@ void TreeView::scroll_into_view(const ModelIndex& a_index, Orientation orientati
 {
     if (!a_index.is_valid())
         return;
-    Rect found_rect;
+    Gfx::Rect found_rect;
     traverse_in_paint_order([&](const ModelIndex& index, const Gfx::Rect& rect, const Gfx::Rect&, int) {
         if (index == a_index) {
             found_rect = rect;

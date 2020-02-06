@@ -80,7 +80,7 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
             int x_pos = x * note_width;
             int next_x_pos = (x + 1) * note_width;
             int distance_to_next_x = next_x_pos - x_pos;
-            Rect rect(x_pos, y_pos, distance_to_next_x, note_height);
+            Gfx::Rect rect(x_pos, y_pos, distance_to_next_x, note_height);
 
             if (m_roll_notes[y + note_offset][x] == On)
                 painter.fill_rect(rect, note_pressed_color);

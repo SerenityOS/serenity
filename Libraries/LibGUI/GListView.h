@@ -54,7 +54,7 @@ public:
     Point adjusted_position(const Gfx::Point&) const;
 
     virtual ModelIndex index_at_event_position(const Gfx::Point&) const override;
-    virtual Rect content_rect(const ModelIndex&) const override;
+    virtual Gfx::Rect content_rect(const ModelIndex&) const override;
 
     int model_column() const { return m_model_column; }
     void set_model_column(int column) { m_model_column = column; }
@@ -66,7 +66,7 @@ private:
     virtual void keydown_event(KeyEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
 
-    Rect content_rect(int row) const;
+    Gfx::Rect content_rect(int row) const;
     int item_count() const;
     void update_content_size();
 

@@ -101,7 +101,7 @@ public:
     int width() const { return rect().width(); }
     int height() const { return rect().height(); }
 
-    Rect rect() const;
+    Gfx::Rect rect() const;
     Size size() const { return rect().size(); }
     void set_rect(const Gfx::Rect&);
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
@@ -186,7 +186,7 @@ private:
     NonnullRefPtr<Gfx::Bitmap> create_backing_bitmap(const Gfx::Size&);
     NonnullRefPtr<Gfx::Bitmap> create_shared_bitmap(Gfx::Bitmap::Format, const Gfx::Size&);
     void set_current_backing_bitmap(Gfx::Bitmap&, bool flush_immediately = false);
-    void flip(const Vector<Rect, 32>& dirty_rects);
+    void flip(const Vector<Gfx::Rect, 32>& dirty_rects);
 
     RefPtr<Gfx::Bitmap> m_front_bitmap;
     RefPtr<Gfx::Bitmap> m_back_bitmap;
@@ -200,7 +200,7 @@ private:
     WeakPtr<Widget> m_hovered_widget;
     Gfx::Rect m_rect_when_windowless;
     String m_title_when_windowless;
-    Vector<Rect, 32> m_pending_paint_event_rects;
+    Vector<Gfx::Rect, 32> m_pending_paint_event_rects;
     Gfx::Size m_size_increment;
     Gfx::Size m_base_size;
     Color m_background_color { Color::WarmGray };

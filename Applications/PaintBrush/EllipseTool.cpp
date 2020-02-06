@@ -42,7 +42,7 @@ EllipseTool::~EllipseTool()
 
 void EllipseTool::draw_using(GUI::Painter& painter)
 {
-    auto ellipse_intersecting_rect = Rect::from_two_points(m_ellipse_start_position, m_ellipse_end_position);
+    auto ellipse_intersecting_rect = Gfx::Rect::from_two_points(m_ellipse_start_position, m_ellipse_end_position);
     switch (m_mode) {
     case Mode::Outline:
         painter.draw_ellipse_intersecting(ellipse_intersecting_rect, m_widget->color_for(m_drawing_button), m_thickness);

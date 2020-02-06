@@ -114,8 +114,8 @@ private:
 
     void set_logical_focus(bool);
 
-    Rect glyph_rect(u16 row, u16 column);
-    Rect row_rect(u16 row);
+    Gfx::Rect glyph_rect(u16 row, u16 column);
+    Gfx::Rect row_rect(u16 row);
 
     void update_cursor();
     void invalidate_cursor();

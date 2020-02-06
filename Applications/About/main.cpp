@@ -56,7 +56,7 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->set_title("About SerenityOS");
-    Rect window_rect { 0, 0, 240, 180 };
+    Gfx::Rect window_rect { 0, 0, 240, 180 };
     window_rect.center_within(GUI::Desktop::the().rect());
     window->set_resizable(false);
     window->set_rect(window_rect);

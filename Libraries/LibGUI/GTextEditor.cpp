@@ -310,7 +310,7 @@ int TextEditor::ruler_width() const
     return 5 * font().glyph_width('x') + 4;
 }
 
-Rect TextEditor::ruler_content_rect(size_t line_index) const
+Gfx::Rect TextEditor::ruler_content_rect(size_t line_index) const
 {
     if (!m_ruler_visible)
         return {};
@@ -322,12 +322,12 @@ Rect TextEditor::ruler_content_rect(size_t line_index) const
     };
 }
 
-Rect TextEditor::ruler_rect_in_inner_coordinates() const
+Gfx::Rect TextEditor::ruler_rect_in_inner_coordinates() const
 {
     return { 0, 0, ruler_width(), height() - height_occupied_by_horizontal_scrollbar() };
 }
 
-Rect TextEditor::visible_text_rect_in_inner_coordinates() const
+Gfx::Rect TextEditor::visible_text_rect_in_inner_coordinates() const
 {
     return {
         m_horizontal_content_padding + (m_ruler_visible ? (ruler_rect_in_inner_coordinates().right() + 1) : 0),
@@ -382,7 +382,7 @@ void TextEditor::paint_event(PaintEvent& event)
         }
     }
 
-    Rect text_clip_rect {
+    Gfx::Rect text_clip_rect {
         (m_ruler_visible ? (ruler_rect_in_inner_coordinates().right() + frame_thickness() + 1) : frame_thickness()),
         frame_thickness(),
         width() - width_occupied_by_vertical_scrollbar() - ruler_width(),
@@ -423,7 +423,7 @@ void TextEditor::paint_event(PaintEvent& event)
                 painter.draw_text(visual_line_rect, visual_line_text, m_text_alignment, palette().color(foreground_role()));
             } else {
                 int advance = font().glyph_width(' ') + font().glyph_spacing();
-                Rect character_rect = { visual_line_rect.location(), { font().glyph_width(' '), line_height() } };
+                Gfx::Rect character_rect = { visual_line_rect.location(), { font().glyph_width(' '), line_height() } };
                 for (size_t i = 0; i < visual_line_text.length(); ++i) {
                     const Gfx::Font* font = &this->font();
                     Color color;
@@ -462,7 +462,7 @@ void TextEditor::paint_event(PaintEvent& event)
                         ? content_x_for_position({ line_index, (size_t)selection_end_column_within_line })
                         : visual_line_rect.right() + 1;
 
-                    Rect selection_rect {
+                    Gfx::Rect selection_rect {
                         selection_left,
                         visual_line_rect.y(),
                         selection_right - selection_left,
@@ -912,7 +912,7 @@ int TextEditor::content_x_for_position(const TextPosition& position) const
     }
 }
 
-Rect TextEditor::content_rect_for_position(const TextPosition& position) const
+Gfx::Rect TextEditor::content_rect_for_position(const TextPosition& position) const
 {
     if (!position.is_valid())
         return {};
@@ -922,12 +922,12 @@ Rect TextEditor::content_rect_for_position(const TextPosition& position) const
     int x = content_x_for_position(position);
 
     if (is_single_line()) {
-        Rect rect { x, 0, 1, font().glyph_height() + 2 };
+        Gfx::Rect rect { x, 0, 1, font().glyph_height() + 2 };
         rect.center_vertically_within({ {}, frame_inner_rect().size() });
         return rect;
     }
 
-    Rect rect;
+    Gfx::Rect rect;
     for_each_visual_line(position.line(), [&](const Gfx::Rect& visual_line_rect, const StringView& view, size_t start_of_visual_line) {
         if (position.column() >= start_of_visual_line && ((position.column() - start_of_visual_line) <= view.length())) {
             // NOTE: We have to subtract the horizontal padding here since it's part of the visual line rect
@@ -945,12 +945,12 @@ Rect TextEditor::content_rect_for_position(const TextPosition& position) const
     return rect;
 }
 
-Rect TextEditor::cursor_content_rect() const
+Gfx::Rect TextEditor::cursor_content_rect() const
 {
     return content_rect_for_position(m_cursor);
 }
 
-Rect TextEditor::line_widget_rect(size_t line_index) const
+Gfx::Rect TextEditor::line_widget_rect(size_t line_index) const
 {
     auto rect = line_content_rect(line_index);
     rect.set_x(frame_thickness());
@@ -976,11 +976,11 @@ void TextEditor::scroll_cursor_into_view()
     scroll_position_into_view(m_cursor);
 }
 
-Rect TextEditor::line_content_rect(size_t line_index) const
+Gfx::Rect TextEditor::line_content_rect(size_t line_index) const
 {
     auto& line = this->line(line_index);
     if (is_single_line()) {
-        Rect line_rect = { content_x_for_position({ line_index, 0 }), 0, (int)line.length() * glyph_width(), font().glyph_height() + 2 };
+        Gfx::Rect line_rect = { content_x_for_position({ line_index, 0 }), 0, (int)line.length() * glyph_width(), font().glyph_height() + 2 };
         line_rect.center_vertically_within({ {}, frame_inner_rect().size() });
         return line_rect;
     }
@@ -1362,7 +1362,7 @@ void TextEditor::for_each_visual_line(size_t line_index, Callback callback) cons
 
     for (auto visual_line_break : visual_data.visual_line_breaks) {
         auto visual_line_view = StringView(line.characters() + start_of_line, visual_line_break - start_of_line);
-        Rect visual_line_rect {
+        Gfx::Rect visual_line_rect {
             visual_data.visual_rect.x(),
             visual_data.visual_rect.y() + ((int)visual_line_index * line_height()),
             font().width(visual_line_view),

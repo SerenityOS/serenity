@@ -372,7 +372,7 @@ void WSWindowManager::start_window_resize(WSWindow& window, const Gfx::Point& po
         { ResizeDirection::Left, ResizeDirection::None, ResizeDirection::Right },
         { ResizeDirection::DownLeft, ResizeDirection::Down, ResizeDirection::DownRight },
     };
-    Rect outer_rect = window.frame().rect();
+    Gfx::Rect outer_rect = window.frame().rect();
     ASSERT(outer_rect.contains(position));
     int window_relative_x = position.x() - outer_rect.x();
     int window_relative_y = position.y() - outer_rect.y();
@@ -937,7 +937,7 @@ bool WSWindowManager::any_opaque_window_above_this_one_contains_rect(const WSWin
     return found_containing_window;
 };
 
-Rect WSWindowManager::menubar_rect() const
+Gfx::Rect WSWindowManager::menubar_rect() const
 {
     if (active_fullscreen_window())
         return {};
@@ -1212,9 +1212,9 @@ ResizeDirection WSWindowManager::resize_direction_of_window(const WSWindow& wind
     return m_resize_direction;
 }
 
-Rect WSWindowManager::maximized_window_rect(const WSWindow& window) const
+Gfx::Rect WSWindowManager::maximized_window_rect(const WSWindow& window) const
 {
-    Rect rect = WSScreen::the().rect();
+    Gfx::Rect rect = WSScreen::the().rect();
 
     // Subtract window title bar (leaving the border)
     rect.set_y(rect.y() + window.frame().title_bar_rect().height());

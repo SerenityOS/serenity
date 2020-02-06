@@ -73,7 +73,7 @@ void Slider::paint_event(PaintEvent& event)
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    Rect track_rect;
+    Gfx::Rect track_rect;
 
     if (orientation() == Orientation::Horizontal) {
         track_rect = { inner_rect().x(), 0, inner_rect().width(), track_size() };
@@ -87,10 +87,10 @@ void Slider::paint_event(PaintEvent& event)
     Gfx::StylePainter::paint_button(painter, knob_rect(), palette(), Gfx::ButtonStyle::Normal, false, m_knob_hovered);
 }
 
-Rect Slider::knob_rect() const
+Gfx::Rect Slider::knob_rect() const
 {
     auto inner_rect = this->inner_rect();
-    Rect rect;
+    Gfx::Rect rect;
     rect.set_secondary_offset_for_orientation(orientation(), 0);
     rect.set_secondary_size_for_orientation(orientation(), knob_secondary_size());
 

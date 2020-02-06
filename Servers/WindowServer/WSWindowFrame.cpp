@@ -147,12 +147,12 @@ void WSWindowFrame::did_set_maximized(Badge<WSWindow>, bool maximized)
     m_maximize_button->set_bitmap(maximized ? *s_unmaximize_button_bitmap : *s_maximize_button_bitmap);
 }
 
-Rect WSWindowFrame::title_bar_rect() const
+Gfx::Rect WSWindowFrame::title_bar_rect() const
 {
     return { 3, 3, m_window.width(), window_titlebar_height };
 }
 
-Rect WSWindowFrame::title_bar_icon_rect() const
+Gfx::Rect WSWindowFrame::title_bar_icon_rect() const
 {
     auto titlebar_rect = title_bar_rect();
     return {
@@ -163,7 +163,7 @@ Rect WSWindowFrame::title_bar_icon_rect() const
     };
 }
 
-Rect WSWindowFrame::title_bar_text_rect() const
+Gfx::Rect WSWindowFrame::title_bar_text_rect() const
 {
     auto titlebar_rect = title_bar_rect();
     auto titlebar_icon_rect = title_bar_icon_rect();
@@ -273,7 +273,7 @@ static Gfx::Rect frame_rect_for_window(WSWindow& window)
     return frame_rect_for_window(window, window.rect());
 }
 
-Rect WSWindowFrame::rect() const
+Gfx::Rect WSWindowFrame::rect() const
 {
     return frame_rect_for_window(m_window);
 }

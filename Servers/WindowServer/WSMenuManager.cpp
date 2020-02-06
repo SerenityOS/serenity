@@ -214,8 +214,8 @@ void WSMenuManager::draw()
             if (!existing_applet)
                 continue;
 
-            Rect new_applet_rect(right_edge_x - existing_applet->size().width(), 0, existing_applet->size().width(), existing_applet->size().height());
-            Rect dummy_menubar_rect(0, 0, 0, 18);
+            Gfx::Rect new_applet_rect(right_edge_x - existing_applet->size().width(), 0, existing_applet->size().width(), existing_applet->size().height());
+            Gfx::Rect dummy_menubar_rect(0, 0, 0, 18);
             new_applet_rect.center_vertically_within(dummy_menubar_rect);
 
             existing_applet->set_rect_in_menubar(new_applet_rect);
@@ -463,8 +463,8 @@ void WSMenuManager::add_applet(WSWindow& applet)
             right_edge_x = existing_applet->rect_in_menubar().x() - 4;
     }
 
-    Rect new_applet_rect(right_edge_x - applet.size().width(), 0, applet.size().width(), applet.size().height());
-    Rect dummy_menubar_rect(0, 0, 0, 18);
+    Gfx::Rect new_applet_rect(right_edge_x - applet.size().width(), 0, applet.size().width(), applet.size().height());
+    Gfx::Rect dummy_menubar_rect(0, 0, 0, 18);
     new_applet_rect.center_vertically_within(dummy_menubar_rect);
 
     applet.set_rect_in_menubar(new_applet_rect);
@@ -493,7 +493,7 @@ void WSMenuManager::invalidate_applet(const WSWindow& applet, const Gfx::Rect& r
     window().invalidate(rect.translated(applet.rect_in_menubar().location()));
 }
 
-Rect WSMenuManager::menubar_rect() const
+Gfx::Rect WSMenuManager::menubar_rect() const
 {
     return { 0, 0, WSScreen::the().rect().width(), 18 };
 }

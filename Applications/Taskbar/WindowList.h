@@ -50,7 +50,7 @@ public:
     String title() const { return m_title; }
     void set_title(const String& title) { m_title = title; }
 
-    Rect rect() const { return m_rect; }
+    Gfx::Rect rect() const { return m_rect; }
     void set_rect(const Gfx::Rect& rect) { m_rect = rect; }
 
     GUI::Button* button() { return m_button; }

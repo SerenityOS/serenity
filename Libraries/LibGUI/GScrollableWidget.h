@@ -41,9 +41,9 @@ public:
     int content_width() const { return m_content_size.width(); }
     int content_height() const { return m_content_size.height(); }
 
-    Rect visible_content_rect() const;
+    Gfx::Rect visible_content_rect() const;
 
-    Rect widget_inner_rect() const;
+    Gfx::Rect widget_inner_rect() const;
 
     void scroll_into_view(const Gfx::Rect&, Orientation);
     void scroll_into_view(const Gfx::Rect&, bool scroll_horizontally, bool scroll_vertically);

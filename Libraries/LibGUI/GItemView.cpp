@@ -85,7 +85,7 @@ void ItemView::update_content_size()
     set_content_size({ content_width, content_height });
 }
 
-Rect ItemView::item_rect(int item_index) const
+Gfx::Rect ItemView::item_rect(int item_index) const
 {
     if (!m_visual_row_count || !m_visual_column_count)
         return {};
@@ -106,9 +106,9 @@ Vector<int> ItemView::items_intersecting_rect(const Gfx::Rect& rect) const
     const auto& font = column_metadata.font ? *column_metadata.font : this->font();
     Vector<int> item_indexes;
     for (int item_index = 0; item_index < item_count(); ++item_index) {
-        Rect item_rect;
-        Rect icon_rect;
-        Rect text_rect;
+        Gfx::Rect item_rect;
+        Gfx::Rect icon_rect;
+        Gfx::Rect text_rect;
         auto item_text = model()->data(model()->index(item_index, model_column()));
         get_item_rects(item_index, font, item_text, item_rect, icon_rect, text_rect);
         if (icon_rect.intersects(rect) || text_rect.intersects(rect))
@@ -126,9 +126,9 @@ ModelIndex ItemView::index_at_event_position(const Gfx::Point& position) const
     const auto& column_metadata = model()->column_metadata(model_column());
     const auto& font = column_metadata.font ? *column_metadata.font : this->font();
     for (int item_index = 0; item_index < item_count(); ++item_index) {
-        Rect item_rect;
-        Rect icon_rect;
-        Rect text_rect;
+        Gfx::Rect item_rect;
+        Gfx::Rect icon_rect;
+        Gfx::Rect text_rect;
         auto index = model()->index(item_index, model_column());
         auto item_text = model()->data(index);
         get_item_rects(item_index, font, item_text, item_rect, icon_rect, text_rect);
@@ -186,7 +186,7 @@ void ItemView::mousemove_event(MouseEvent& event)
     if (m_rubber_banding) {
         if (m_rubber_band_current != event.position()) {
             m_rubber_band_current = event.position();
-            auto rubber_band_rect = Rect::from_two_points(m_rubber_band_origin, m_rubber_band_current);
+            auto rubber_band_rect = Gfx::Rect::from_two_points(m_rubber_band_origin, m_rubber_band_current);
             selection().clear();
             for (auto item_index : items_intersecting_rect(rubber_band_rect)) {
                 selection().add(model()->index(item_index, model_column()));
@@ -204,7 +204,7 @@ void ItemView::mousemove_event(MouseEvent& event)
     AbstractView::mousemove_event(event);
 }
 
-void ItemView::get_item_rects(int item_index, const Gfx::Font& font, const Variant& item_text, Rect& item_rect, Rect& icon_rect, Rect& text_rect) const
+void ItemView::get_item_rects(int item_index, const Gfx::Font& font, const Variant& item_text, Gfx::Rect& item_rect, Gfx::Rect& icon_rect, Gfx::Rect& text_rect) const
 {
     item_rect = this->item_rect(item_index);
     icon_rect = { 0, 0, 32, 32 };
@@ -224,7 +224,7 @@ void ItemView::second_paint_event(PaintEvent& event)
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    auto rubber_band_rect = Rect::from_two_points(m_rubber_band_origin, m_rubber_band_current);
+    auto rubber_band_rect = Gfx::Rect::from_two_points(m_rubber_band_origin, m_rubber_band_current);
     painter.fill_rect(rubber_band_rect, parent_widget()->palette().rubber_band_fill());
     painter.draw_rect(rubber_band_rect, parent_widget()->palette().rubber_band_border());
 }
@@ -256,9 +256,9 @@ void ItemView::paint_event(PaintEvent& event)
         auto icon = model()->data(model_index, Model::Role::Icon);
         auto item_text = model()->data(model_index, Model::Role::Display);
 
-        Rect item_rect;
-        Rect icon_rect;
-        Rect text_rect;
+        Gfx::Rect item_rect;
+        Gfx::Rect icon_rect;
+        Gfx::Rect text_rect;
         get_item_rects(item_index, font, item_text, item_rect, icon_rect, text_rect);
 
         if (icon.is_icon()) {

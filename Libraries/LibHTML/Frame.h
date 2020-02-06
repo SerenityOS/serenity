@@ -57,7 +57,7 @@ public:
     Function<void(const Gfx::Rect&)> on_set_needs_display;
 
     void set_viewport_rect(const Gfx::Rect&);
-    Rect viewport_rect() const { return m_viewport_rect; }
+    Gfx::Rect viewport_rect() const { return m_viewport_rect; }
 
 private:
     explicit Frame(HtmlView&);

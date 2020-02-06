@@ -42,7 +42,7 @@ RectangleTool::~RectangleTool()
 
 void RectangleTool::draw_using(GUI::Painter& painter)
 {
-    auto rect_to_draw = Rect::from_two_points(m_rectangle_start_position, m_rectangle_end_position);
+    auto rect_to_draw = Gfx::Rect::from_two_points(m_rectangle_start_position, m_rectangle_end_position);
     switch (m_mode) {
     case Mode::Fill:
         painter.fill_rect(rect_to_draw, m_widget->color_for(m_drawing_button));

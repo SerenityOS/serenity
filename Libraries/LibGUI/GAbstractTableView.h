@@ -64,9 +64,9 @@ public:
 
     Point adjusted_position(const Gfx::Point&) const;
 
-    virtual Rect content_rect(const ModelIndex&) const override;
-    Rect content_rect(int row, int column) const;
-    Rect row_rect(int item_index) const;
+    virtual Gfx::Rect content_rect(const ModelIndex&) const override;
+    Gfx::Rect content_rect(int row, int column) const;
+    Gfx::Rect row_rect(int item_index) const;
 
     void scroll_into_view(const ModelIndex&, Orientation);
 
@@ -89,7 +89,7 @@ protected:
     virtual void toggle_index(const ModelIndex&) {}
 
     void paint_headers(Painter&);
-    Rect header_rect(int column) const;
+    Gfx::Rect header_rect(int column) const;
 
     static const Gfx::Font& header_font();
     void update_headers();
@@ -109,7 +109,7 @@ protected:
     Menu& ensure_header_context_menu();
     RefPtr<Menu> m_header_context_menu;
 
-    Rect column_resize_grabbable_rect(int) const;
+    Gfx::Rect column_resize_grabbable_rect(int) const;
     int column_width(int) const;
     void update_content_size();
     virtual void update_column_sizes();

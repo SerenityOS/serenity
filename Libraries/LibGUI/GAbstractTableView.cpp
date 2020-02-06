@@ -103,7 +103,7 @@ void AbstractTableView::update_content_size()
     set_size_occupied_by_fixed_elements({ 0, header_height() });
 }
 
-Rect AbstractTableView::header_rect(int column_index) const
+Gfx::Rect AbstractTableView::header_rect(int column_index) const
 {
     if (!model())
         return {};
@@ -141,7 +141,7 @@ void AbstractTableView::paint_headers(Painter& painter)
             continue;
         int column_width = this->column_width(column_index);
         bool is_key_column = model()->key_column() == column_index;
-        Rect cell_rect(x_offset, 0, column_width + horizontal_padding() * 2, header_height());
+        Gfx::Rect cell_rect(x_offset, 0, column_width + horizontal_padding() * 2, header_height());
         bool pressed = column_index == m_pressed_column_header_index && m_pressed_column_header_is_pressed;
         bool hovered = column_index == m_hovered_column_header_index && model()->column_metadata(column_index).sortable == Model::ColumnMetadata::Sortable::True;
         Gfx::StylePainter::paint_button(painter, cell_rect, palette(), Gfx::ButtonStyle::Normal, pressed, hovered);
@@ -217,7 +217,7 @@ void AbstractTableView::set_cell_painting_delegate(int column, OwnPtr<TableCellP
 
 void AbstractTableView::update_headers()
 {
-    Rect rect { 0, 0, frame_inner_rect().width(), header_height() };
+    Gfx::Rect rect { 0, 0, frame_inner_rect().width(), header_height() };
     rect.move_by(frame_thickness(), frame_thickness());
     update(rect);
 }
@@ -229,7 +229,7 @@ AbstractTableView::ColumnData& AbstractTableView::column_data(int column) const
     return m_column_data.at(column);
 }
 
-Rect AbstractTableView::column_resize_grabbable_rect(int column) const
+Gfx::Rect AbstractTableView::column_resize_grabbable_rect(int column) const
 {
     if (!model())
         return {};
@@ -525,7 +525,7 @@ void AbstractTableView::leave_event(Core::Event&)
     set_hovered_header_index(-1);
 }
 
-Rect AbstractTableView::content_rect(int row, int column) const
+Gfx::Rect AbstractTableView::content_rect(int row, int column) const
 {
     auto row_rect = this->row_rect(row);
     int x = 0;
@@ -535,12 +535,12 @@ Rect AbstractTableView::content_rect(int row, int column) const
     return { row_rect.x() + x, row_rect.y(), column_width(column) + horizontal_padding() * 2, item_height() };
 }
 
-Rect AbstractTableView::content_rect(const ModelIndex& index) const
+Gfx::Rect AbstractTableView::content_rect(const ModelIndex& index) const
 {
     return content_rect(index.row(), index.column());
 }
 
-Rect AbstractTableView::row_rect(int item_index) const
+Gfx::Rect AbstractTableView::row_rect(int item_index) const
 {
     return { 0, header_height() + (item_index * item_height()), max(content_size().width(), width()), item_height() };
 }

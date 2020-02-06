@@ -173,10 +173,10 @@ private:
     void update_content_size();
     void did_change();
 
-    Rect line_content_rect(size_t item_index) const;
-    Rect line_widget_rect(size_t line_index) const;
-    Rect cursor_content_rect() const;
-    Rect content_rect_for_position(const TextPosition&) const;
+    Gfx::Rect line_content_rect(size_t item_index) const;
+    Gfx::Rect line_widget_rect(size_t line_index) const;
+    Gfx::Rect cursor_content_rect() const;
+    Gfx::Rect content_rect_for_position(const TextPosition&) const;
     void update_cursor();
     const NonnullOwnPtrVector<TextDocumentLine>& lines() const { return document().lines(); }
     NonnullOwnPtrVector<TextDocumentLine>& lines() { return document().lines(); }
@@ -185,13 +185,13 @@ private:
     TextDocumentLine& current_line() { return line(m_cursor.line()); }
     const TextDocumentLine& current_line() const { return line(m_cursor.line()); }
     int ruler_width() const;
-    Rect ruler_content_rect(size_t line) const;
+    Gfx::Rect ruler_content_rect(size_t line) const;
     void toggle_selection_if_needed_for_event(const KeyEvent&);
     void delete_selection();
     void did_update_selection();
     int content_x_for_position(const TextPosition&) const;
-    Rect ruler_rect_in_inner_coordinates() const;
-    Rect visible_text_rect_in_inner_coordinates() const;
+    Gfx::Rect ruler_rect_in_inner_coordinates() const;
+    Gfx::Rect visible_text_rect_in_inner_coordinates() const;
     void recompute_all_visual_lines();
     void ensure_cursor_is_valid();
     void flush_pending_change_notification_if_needed();
@@ -244,7 +244,7 @@ private:
 
     struct LineVisualData {
         Vector<size_t, 1> visual_line_breaks;
-        Rect visual_rect;
+        Gfx::Rect visual_rect;
     };
 
     NonnullOwnPtrVector<LineVisualData> m_line_visual_data;

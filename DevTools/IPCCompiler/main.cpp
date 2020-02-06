@@ -324,23 +324,23 @@ int main(int argc, char** argv)
                     dbg() << "            }";
                     dbg() << "            " << parameter.name << " = *" << parameter.name << "_impl;";
                     dbg() << "        }";
-                } else if (parameter.type == "Color") {
+                } else if (parameter.type == "Gfx::Color") {
                     dbg() << "        u32 " << parameter.name << "_rgba = 0;";
                     dbg() << "        stream >> " << parameter.name << "_rgba;";
                     dbg() << "        " << parameter.name << " = Gfx::Color::from_rgba(" << parameter.name << "_rgba);";
-                } else if (parameter.type == "Size") {
+                } else if (parameter.type == "Gfx::Size") {
                     dbg() << "        int " << parameter.name << "_width = 0;";
                     dbg() << "        stream >> " << parameter.name << "_width;";
                     dbg() << "        int " << parameter.name << "_height = 0;";
                     dbg() << "        stream >> " << parameter.name << "_height;";
                     dbg() << "        " << parameter.name << " = { " << parameter.name << "_width, " << parameter.name << "_height };";
-                } else if (parameter.type == "Point") {
+                } else if (parameter.type == "Gfx::Point") {
                     dbg() << "        int " << parameter.name << "_x = 0;";
                     dbg() << "        stream >> " << parameter.name << "_x;";
                     dbg() << "        int " << parameter.name << "_y = 0;";
                     dbg() << "        stream >> " << parameter.name << "_y;";
                     dbg() << "        " << parameter.name << " = { " << parameter.name << "_x, " << parameter.name << "_y };";
-                } else if (parameter.type == "Rect") {
+                } else if (parameter.type == "Gfx::Rect") {
                     dbg() << "        int " << parameter.name << "_x = 0;";
                     dbg() << "        stream >> " << parameter.name << "_x;";
                     dbg() << "        int " << parameter.name << "_y = 0;";
@@ -350,7 +350,7 @@ int main(int argc, char** argv)
                     dbg() << "        int " << parameter.name << "_height = 0;";
                     dbg() << "        stream >> " << parameter.name << "_height;";
                     dbg() << "        " << parameter.name << " = { " << parameter.name << "_x, " << parameter.name << "_y, " << parameter.name << "_width, " << parameter.name << "_height };";
-                } else if (parameter.type == "Vector<Rect>") {
+                } else if (parameter.type == "Vector<Gfx::Rect>") {
                     dbg() << "        int " << parameter.name << "_size = 0;";
                     dbg() << "        stream >> " << parameter.name << "_size;";
                     dbg() << "        for (int i = 0; i < " << parameter.name << "_size; ++i) {";
@@ -399,20 +399,20 @@ int main(int argc, char** argv)
                     dbg() << "            stream << static_cast<i32>(m_" << parameter.name << ".length());";
                     dbg() << "            stream << m_" << parameter.name << ";";
                     dbg() << "        }";
-                } else if (parameter.type == "Color") {
+                } else if (parameter.type == "Gfx::Color") {
                     dbg() << "        stream << m_" << parameter.name << ".value();";
-                } else if (parameter.type == "Size") {
+                } else if (parameter.type == "Gfx::Size") {
                     dbg() << "        stream << m_" << parameter.name << ".width();";
                     dbg() << "        stream << m_" << parameter.name << ".height();";
-                } else if (parameter.type == "Point") {
+                } else if (parameter.type == "Gfx::Point") {
                     dbg() << "        stream << m_" << parameter.name << ".x();";
                     dbg() << "        stream << m_" << parameter.name << ".y();";
-                } else if (parameter.type == "Rect") {
+                } else if (parameter.type == "Gfx::Rect") {
                     dbg() << "        stream << m_" << parameter.name << ".x();";
                     dbg() << "        stream << m_" << parameter.name << ".y();";
                     dbg() << "        stream << m_" << parameter.name << ".width();";
                     dbg() << "        stream << m_" << parameter.name << ".height();";
-                } else if (parameter.type == "Vector<Rect>") {
+                } else if (parameter.type == "Vector<Gfx::Rect>") {
                     dbg() << "        stream << m_" << parameter.name << ".size();";
                     dbg() << "        for (auto& rect : m_" << parameter.name << ") {";
                     dbg() << "            stream << rect.x();";

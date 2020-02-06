@@ -106,7 +106,7 @@ void TableView::paint_event(PaintEvent& event)
             int column_width = this->column_width(column_index);
             const Gfx::Font& font = column_metadata.font ? *column_metadata.font : this->font();
             bool is_key_column = model()->key_column() == column_index;
-            Rect cell_rect(horizontal_padding() + x_offset, y, column_width, item_height());
+            Gfx::Rect cell_rect(horizontal_padding() + x_offset, y, column_width, item_height());
             if (is_key_column) {
                 auto cell_rect_for_fill = cell_rect.inflated(horizontal_padding() * 2, 0);
                 painter.fill_rect(cell_rect_for_fill, key_column_background_color);
@@ -136,7 +136,7 @@ void TableView::paint_event(PaintEvent& event)
         ++painted_item_index;
     };
 
-    Rect unpainted_rect(0, header_height() + painted_item_index * item_height(), exposed_width, height());
+    Gfx::Rect unpainted_rect(0, header_height() + painted_item_index * item_height(), exposed_width, height());
     painter.fill_rect(unpainted_rect, widget_background_color);
 
     // Untranslate the painter vertically and do the column headers.

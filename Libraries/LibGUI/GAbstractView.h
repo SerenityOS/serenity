@@ -55,7 +55,7 @@ public:
     virtual void did_update_model();
     virtual void did_update_selection();
 
-    virtual Rect content_rect(const ModelIndex&) const { return {}; }
+    virtual Gfx::Rect content_rect(const ModelIndex&) const { return {}; }
     virtual ModelIndex index_at_event_position(const Gfx::Point&) const = 0;
     void begin_editing(const ModelIndex&);
     void stop_editing();
