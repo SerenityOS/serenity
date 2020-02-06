@@ -125,6 +125,24 @@ void AudioEngine::fill_buffer(FixedArray<Sample>& buffer)
     swap(m_front_buffer_ptr, m_back_buffer_ptr);
 }
 
+void AudioEngine::reset()
+{
+    memset(m_front_buffer.data(), 0, buffer_size);
+    memset(m_back_buffer.data(), 0, buffer_size);
+    m_front_buffer_ptr = &m_front_buffer;
+    m_back_buffer_ptr = &m_back_buffer;
+
+    m_delay_buffers.clear();
+
+    memset(m_note_on, 0, sizeof(m_note_on));
+    memset(m_power, 0, sizeof(m_power));
+    memset(m_envelope, 0, sizeof(m_envelope));
+
+    m_time = 0;
+    m_current_column = 0;
+    m_previous_column = horizontal_notes - 1;
+}
+
 // All of the information for these waves is on Wikipedia.
 
 double AudioEngine::sine(size_t note)

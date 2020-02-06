@@ -40,6 +40,7 @@ public:
     ~AudioEngine();
 
     const FixedArray<Sample>& buffer() const { return *m_front_buffer_ptr; }
+    void reset();
     Switch roll_note(int y, int x) const { return m_roll_notes[y][x]; }
     int current_column() const { return m_current_column; }
     int octave() const { return m_octave; }
