@@ -79,7 +79,7 @@ void CheckBox::paint_event(PaintEvent& event)
     if (fill_with_background_color())
         painter.fill_rect(rect(), palette().window());
 
-    Rect box_rect {
+    Gfx::Rect box_rect {
         0, height() / 2 - s_box_height / 2 - 1,
         s_box_width, s_box_height
     };

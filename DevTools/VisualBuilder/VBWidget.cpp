@@ -59,7 +59,7 @@ VBWidget::~VBWidget()
     m_gwidget->parent()->remove_child(*m_gwidget);
 }
 
-Rect VBWidget::rect() const
+Gfx::Rect VBWidget::rect() const
 {
     return m_gwidget->window_relative_rect();
 }
@@ -80,7 +80,7 @@ bool VBWidget::is_selected() const
     return m_form.is_selected(*this);
 }
 
-Rect VBWidget::grabber_rect(Direction direction) const
+Gfx::Rect VBWidget::grabber_rect(Direction direction) const
 {
     int grabber_size = 5;
     int half_grabber_size = grabber_size / 2;

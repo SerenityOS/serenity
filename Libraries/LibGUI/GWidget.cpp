@@ -128,7 +128,7 @@ void Widget::child_event(Core::ChildEvent& event)
 void Widget::set_relative_rect(const Gfx::Rect& a_rect)
 {
     // Get rid of negative width/height values.
-    Rect rect = {
+    Gfx::Rect rect = {
         a_rect.x(),
         a_rect.y(),
         max(a_rect.width(), 0),
@@ -411,7 +411,7 @@ void Widget::update(const Gfx::Rect& rect)
         window->update(rect.translated(window_relative_rect().location()));
 }
 
-Rect Widget::window_relative_rect() const
+Gfx::Rect Widget::window_relative_rect() const
 {
     auto rect = relative_rect();
     for (auto* parent = parent_widget(); parent; parent = parent->parent_widget()) {
@@ -420,7 +420,7 @@ Rect Widget::window_relative_rect() const
     return rect;
 }
 
-Rect Widget::screen_relative_rect() const
+Gfx::Rect Widget::screen_relative_rect() const
 {
     return window_relative_rect().translated(window()->position());
 }

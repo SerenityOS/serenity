@@ -137,17 +137,17 @@ static inline Color lookup_color(unsigned color)
     return Color::from_rgb(xterm_colors[color]);
 }
 
-Rect TerminalWidget::glyph_rect(u16 row, u16 column)
+Gfx::Rect TerminalWidget::glyph_rect(u16 row, u16 column)
 {
     int y = row * m_line_height;
     int x = column * font().glyph_width('x');
     return { x + frame_thickness() + m_inset, y + frame_thickness() + m_inset, font().glyph_width('x'), font().glyph_height() };
 }
 
-Rect TerminalWidget::row_rect(u16 row)
+Gfx::Rect TerminalWidget::row_rect(u16 row)
 {
     int y = row * m_line_height;
-    Rect rect = { frame_thickness() + m_inset, y + frame_thickness() + m_inset, font().glyph_width('x') * m_terminal.columns(), font().glyph_height() };
+    Gfx::Rect rect = { frame_thickness() + m_inset, y + frame_thickness() + m_inset, font().glyph_width('x') * m_terminal.columns(), font().glyph_height() };
     rect.inflate(0, m_line_spacing);
     return rect;
 }
@@ -282,7 +282,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
 
     painter.add_clip_rect(event.rect());
 
-    Rect terminal_buffer_rect(frame_inner_rect().top_left(), { frame_inner_rect().width() - m_scrollbar->width(), frame_inner_rect().height() });
+    Gfx::Rect terminal_buffer_rect(frame_inner_rect().top_left(), { frame_inner_rect().width() - m_scrollbar->width(), frame_inner_rect().height() });
     painter.add_clip_rect(terminal_buffer_rect);
 
     if (m_visual_beep_timer->is_active())
@@ -399,7 +399,7 @@ void TerminalWidget::flush_dirty_lines()
         m_terminal.m_need_full_flush = false;
         return;
     }
-    Rect rect;
+    Gfx::Rect rect;
     for (int i = 0; i < m_terminal.rows(); ++i) {
         if (m_terminal.line(i).dirty) {
             rect = rect.united(row_rect(i));
@@ -430,7 +430,7 @@ void TerminalWidget::relayout(const Gfx::Size& size)
     int new_rows = (size.height() - base_size.height()) / m_line_height;
     m_terminal.set_size(new_columns, new_rows);
 
-    Rect scrollbar_rect = {
+    Gfx::Rect scrollbar_rect = {
         size.width() - m_scrollbar->width() - frame_thickness(),
         frame_thickness(),
         m_scrollbar->width(),

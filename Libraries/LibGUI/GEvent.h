@@ -119,7 +119,7 @@ public:
     }
 
     String title() const { return m_title; }
-    Rect rect() const { return m_rect; }
+    Gfx::Rect rect() const { return m_rect; }
     bool is_active() const { return m_active; }
     WindowType window_type() const { return m_window_type; }
     bool is_minimized() const { return m_minimized; }
@@ -140,7 +140,7 @@ public:
     {
     }
 
-    Rect rect() const { return m_rect; }
+    Gfx::Rect rect() const { return m_rect; }
 
 private:
     Gfx::Rect m_rect;
@@ -165,18 +165,18 @@ private:
 
 class MultiPaintEvent final : public Event {
 public:
-    explicit MultiPaintEvent(const Vector<Rect, 32>& rects, const Gfx::Size& window_size)
+    explicit MultiPaintEvent(const Vector<Gfx::Rect, 32>& rects, const Gfx::Size& window_size)
         : Event(Event::MultiPaint)
         , m_rects(rects)
         , m_window_size(window_size)
     {
     }
 
-    const Vector<Rect, 32>& rects() const { return m_rects; }
+    const Vector<Gfx::Rect, 32>& rects() const { return m_rects; }
     Size window_size() const { return m_window_size; }
 
 private:
-    Vector<Rect, 32> m_rects;
+    Vector<Gfx::Rect, 32> m_rects;
     Gfx::Size m_window_size;
 };
 
@@ -189,7 +189,7 @@ public:
     {
     }
 
-    Rect rect() const { return m_rect; }
+    Gfx::Rect rect() const { return m_rect; }
     Size window_size() const { return m_window_size; }
 
 private:

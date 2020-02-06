@@ -76,12 +76,12 @@ void ListView::did_update_model()
     update();
 }
 
-Rect ListView::content_rect(int row) const
+Gfx::Rect ListView::content_rect(int row) const
 {
     return { 0, row * item_height(), content_width(), item_height() };
 }
 
-Rect ListView::content_rect(const ModelIndex& index) const
+Gfx::Rect ListView::content_rect(const ModelIndex& index) const
 {
     return content_rect(index.row());
 }
@@ -138,7 +138,7 @@ void ListView::paint_event(PaintEvent& event)
 
         auto column_metadata = model()->column_metadata(m_model_column);
 
-        Rect row_rect(0, y, content_width(), item_height());
+        Gfx::Rect row_rect(0, y, content_width(), item_height());
         painter.fill_rect(row_rect, background_color);
         auto index = model()->index(row_index, m_model_column);
         auto data = model()->data(index);
@@ -163,7 +163,7 @@ void ListView::paint_event(PaintEvent& event)
         ++painted_item_index;
     };
 
-    Rect unpainted_rect(0, painted_item_index * item_height(), exposed_width, height());
+    Gfx::Rect unpainted_rect(0, painted_item_index * item_height(), exposed_width, height());
     painter.fill_rect(unpainted_rect, palette().color(background_role()));
 }
 

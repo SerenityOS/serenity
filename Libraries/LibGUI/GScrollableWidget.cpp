@@ -81,7 +81,7 @@ void ScrollableWidget::custom_layout()
 
     m_corner_widget->set_visible(m_vertical_scrollbar->is_visible() && m_horizontal_scrollbar->is_visible());
     if (m_corner_widget->is_visible()) {
-        Rect corner_rect { m_horizontal_scrollbar->relative_rect().right() + 1, m_vertical_scrollbar->relative_rect().bottom() + 1, width_occupied_by_vertical_scrollbar(), height_occupied_by_horizontal_scrollbar() };
+        Gfx::Rect corner_rect { m_horizontal_scrollbar->relative_rect().right() + 1, m_vertical_scrollbar->relative_rect().bottom() + 1, width_occupied_by_vertical_scrollbar(), height_occupied_by_horizontal_scrollbar() };
         m_corner_widget->set_relative_rect(corner_rect);
     }
 }
@@ -144,7 +144,7 @@ int ScrollableWidget::width_occupied_by_vertical_scrollbar() const
     return m_vertical_scrollbar->is_visible() ? m_vertical_scrollbar->width() : 0;
 }
 
-Rect ScrollableWidget::visible_content_rect() const
+Gfx::Rect ScrollableWidget::visible_content_rect() const
 {
     return {
         m_horizontal_scrollbar->value(),
@@ -201,7 +201,7 @@ void ScrollableWidget::scroll_to_bottom()
     scroll_into_view({ 0, content_height(), 1, 1 }, Orientation::Vertical);
 }
 
-Rect ScrollableWidget::widget_inner_rect() const
+Gfx::Rect ScrollableWidget::widget_inner_rect() const
 {
     auto rect = frame_inner_rect();
     rect.set_width(rect.width() - width_occupied_by_vertical_scrollbar());

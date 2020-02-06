@@ -183,7 +183,7 @@ void KeysWidget::paint_event(GUI::PaintEvent& event)
     int x = 0;
     int i = 0;
     for (;;) {
-        Rect rect(x, 0, white_key_width, frame_inner_rect().height());
+        Gfx::Rect rect(x, 0, white_key_width, frame_inner_rect().height());
         painter.fill_rect(rect, m_key_on[note] ? note_pressed_color : Color::White);
         painter.draw_rect(rect, Color::Black);
         if (i < white_key_labels_count) {
@@ -205,7 +205,7 @@ void KeysWidget::paint_event(GUI::PaintEvent& event)
     x = white_key_width - black_key_x_offset;
     i = 0;
     for (;;) {
-        Rect rect(x, 0, black_key_width, black_key_height);
+        Gfx::Rect rect(x, 0, black_key_width, black_key_height);
         painter.fill_rect(rect, m_key_on[note] ? note_pressed_color : Color::Black);
         painter.draw_rect(rect, Color::Black);
         if (i < black_key_labels_count) {
@@ -263,7 +263,7 @@ int KeysWidget::note_for_event_position(const Gfx::Point& a_point) const
     bool black_key_on_left = note != 0 && key_pattern[(note - 1) % notes_per_octave] == Black;
     if (black_key_on_left) {
         int black_key_x = (white_keys * white_key_width) - black_key_x_offset;
-        Rect black_key(black_key_x, 0, black_key_width, black_key_height);
+        Gfx::Rect black_key(black_key_x, 0, black_key_width, black_key_height);
         if (black_key.contains(point))
             return note - 1;
     }
@@ -271,7 +271,7 @@ int KeysWidget::note_for_event_position(const Gfx::Point& a_point) const
     bool black_key_on_right = key_pattern[(note + 1) % notes_per_octave] == Black;
     if (black_key_on_right) {
         int black_key_x = ((white_keys + 1) * white_key_width) - black_key_x_offset;
-        Rect black_key(black_key_x, 0, black_key_width, black_key_height);
+        Gfx::Rect black_key(black_key_x, 0, black_key_width, black_key_height);
         if (black_key.contains(point))
             return note + 1;
     }

@@ -143,11 +143,11 @@ public:
     // This is called after children have been painted.
     virtual void second_paint_event(PaintEvent&);
 
-    Rect relative_rect() const { return m_relative_rect; }
+    Gfx::Rect relative_rect() const { return m_relative_rect; }
     Point relative_position() const { return m_relative_rect.location(); }
 
-    Rect window_relative_rect() const;
-    Rect screen_relative_rect() const;
+    Gfx::Rect window_relative_rect() const;
+    Gfx::Rect screen_relative_rect() const;
 
     int x() const { return m_relative_rect.x(); }
     int y() const { return m_relative_rect.y(); }
@@ -155,7 +155,7 @@ public:
     int height() const { return m_relative_rect.height(); }
     int length(Orientation orientation) const { return orientation == Orientation::Vertical ? height() : width(); }
 
-    Rect rect() const { return { 0, 0, width(), height() }; }
+    Gfx::Rect rect() const { return { 0, 0, width(), height() }; }
     Size size() const { return m_relative_rect.size(); }
 
     void update();

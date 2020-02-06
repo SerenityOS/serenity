@@ -62,11 +62,11 @@ void GlyphMapWidget::set_selected_glyph(u8 glyph)
     update();
 }
 
-Rect GlyphMapWidget::get_outer_rect(u8 glyph) const
+Gfx::Rect GlyphMapWidget::get_outer_rect(u8 glyph) const
 {
     int row = glyph / columns();
     int column = glyph % columns();
-    return Rect {
+    return Gfx::Rect {
         column * (font().max_glyph_width() + m_horizontal_spacing) + 1,
         row * (font().glyph_height() + m_vertical_spacing) + 1,
         font().max_glyph_width() + m_horizontal_spacing,
@@ -94,8 +94,8 @@ void GlyphMapWidget::paint_event(GUI::PaintEvent& event)
 
     for (int row = 0; row < rows(); ++row) {
         for (int column = 0; column < columns(); ++column, ++glyph) {
-            Rect outer_rect = get_outer_rect(glyph);
-            Rect inner_rect(
+            Gfx::Rect outer_rect = get_outer_rect(glyph);
+            Gfx::Rect inner_rect(
                 outer_rect.x() + m_horizontal_spacing / 2,
                 outer_rect.y() + m_vertical_spacing / 2,
                 font().max_glyph_width(),

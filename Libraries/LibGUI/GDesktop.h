@@ -43,7 +43,7 @@ public:
     String wallpaper() const;
     bool set_wallpaper(const StringView& path);
 
-    Rect rect() const { return m_rect; }
+    Gfx::Rect rect() const { return m_rect; }
     void did_receive_screen_rect(Badge<WindowServerConnection>, const Gfx::Rect&);
 
     Function<void(const Gfx::Rect&)> on_rect_change;

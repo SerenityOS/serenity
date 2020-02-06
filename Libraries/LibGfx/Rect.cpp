@@ -27,6 +27,8 @@
 #include "Rect.h"
 #include <AK/StdLibExtras.h>
 
+namespace Gfx {
+
 void Rect::intersect(const Rect& other)
 {
     int l = max(left(), other.left());
@@ -125,4 +127,6 @@ void Rect::align_within(const Rect& other, TextAlignment alignment)
         center_vertically_within(other);
         return;
     }
+}
+
 }

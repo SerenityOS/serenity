@@ -64,16 +64,16 @@ protected:
     virtual void leave_event(Core::Event&) override;
 
 private:
-    Rect child_rect_for_size(const Gfx::Size&) const;
-    Rect button_rect(int index) const;
-    Rect bar_rect() const;
-    Rect container_rect() const;
+    Gfx::Rect child_rect_for_size(const Gfx::Size&) const;
+    Gfx::Rect button_rect(int index) const;
+    Gfx::Rect bar_rect() const;
+    Gfx::Rect container_rect() const;
     void update_bar();
 
     RefPtr<Widget> m_active_widget;
 
     struct TabData {
-        Rect rect(const Gfx::Font&) const;
+        Gfx::Rect rect(const Gfx::Font&) const;
         int width(const Gfx::Font&) const;
         String title;
         Widget* widget { nullptr };

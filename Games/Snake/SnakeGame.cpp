@@ -90,13 +90,13 @@ void SnakeGame::spawn_fruit()
     m_fruit_type = rand() % m_fruit_bitmaps.size();
 }
 
-Rect SnakeGame::score_rect() const
+Gfx::Rect SnakeGame::score_rect() const
 {
     int score_width = font().width(m_score_text);
     return { width() - score_width - 2, height() - font().glyph_height() - 2, score_width, font().glyph_height() };
 }
 
-Rect SnakeGame::high_score_rect() const
+Gfx::Rect SnakeGame::high_score_rect() const
 {
     int high_score_width = font().width(m_high_score_text);
     return { 2, height() - font().glyph_height() - 2, high_score_width, font().glyph_height() };
@@ -193,7 +193,7 @@ void SnakeGame::keydown_event(GUI::KeyEvent& event)
     }
 }
 
-Rect SnakeGame::cell_rect(const Coordinate& coord) const
+Gfx::Rect SnakeGame::cell_rect(const Coordinate& coord) const
 {
     auto game_rect = rect();
     auto cell_size = Size(game_rect.width() / m_columns, game_rect.height() / m_rows);
@@ -216,10 +216,10 @@ void SnakeGame::paint_event(GUI::PaintEvent& event)
         auto rect = cell_rect(part);
         painter.fill_rect(rect, Color::from_rgb(0xaaaa00));
 
-        Rect left_side(rect.x(), rect.y(), 2, rect.height());
-        Rect top_side(rect.x(), rect.y(), rect.width(), 2);
-        Rect right_side(rect.right() - 1, rect.y(), 2, rect.height());
-        Rect bottom_side(rect.x(), rect.bottom() - 1, rect.width(), 2);
+        Gfx::Rect left_side(rect.x(), rect.y(), 2, rect.height());
+        Gfx::Rect top_side(rect.x(), rect.y(), rect.width(), 2);
+        Gfx::Rect right_side(rect.right() - 1, rect.y(), 2, rect.height());
+        Gfx::Rect bottom_side(rect.x(), rect.bottom() - 1, rect.width(), 2);
         painter.fill_rect(left_side, Color::from_rgb(0xcccc00));
         painter.fill_rect(right_side, Color::from_rgb(0x888800));
         painter.fill_rect(top_side, Color::from_rgb(0xcccc00));

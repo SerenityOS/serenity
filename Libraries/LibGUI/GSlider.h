@@ -60,9 +60,9 @@ public:
     int knob_secondary_size() const { return 20; }
 
     bool knob_dragging() const { return m_dragging; }
-    Rect knob_rect() const;
+    Gfx::Rect knob_rect() const;
 
-    Rect inner_rect() const
+    Gfx::Rect inner_rect() const
     {
         if (orientation() == Orientation::Horizontal)
             return rect().shrunken(20, 0);

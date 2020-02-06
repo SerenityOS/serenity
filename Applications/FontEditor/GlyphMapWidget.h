@@ -55,7 +55,7 @@ private:
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
 
-    Rect get_outer_rect(u8 glyph) const;
+    Gfx::Rect get_outer_rect(u8 glyph) const;
 
     RefPtr<Gfx::Font> m_font;
     int m_rows { 8 };

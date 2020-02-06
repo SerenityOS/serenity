@@ -50,7 +50,7 @@ public:
 
     Vector<WeakPtr<WSMenu>>& open_menu_stack() { return m_open_menu_stack; }
 
-    Rect menubar_rect() const;
+    Gfx::Rect menubar_rect() const;
     static int menubar_menu_margin() { return 16; }
 
     void set_needs_window_resize();

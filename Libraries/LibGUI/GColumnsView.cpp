@@ -101,17 +101,17 @@ void ColumnsView::paint_event(PaintEvent& event)
                 text_color = palette().selection_text();
             }
 
-            Rect row_rect { column_x, row * item_height(), column.width, item_height() };
+            Gfx::Rect row_rect { column_x, row * item_height(), column.width, item_height() };
             painter.fill_rect(row_rect, background_color);
 
             auto icon = model()->data(index, Model::Role::Icon);
-            Rect icon_rect = { column_x + icon_spacing(), 0, icon_size(), icon_size() };
+            Gfx::Rect icon_rect = { column_x + icon_spacing(), 0, icon_size(), icon_size() };
             icon_rect.center_vertically_within(row_rect);
             if (icon.is_icon())
                 if (auto* bitmap = icon.as_icon().bitmap_for_size(icon_size()))
                     painter.blit(icon_rect.location(), *bitmap, bitmap->rect());
 
-            Rect text_rect = {
+            Gfx::Rect text_rect = {
                 icon_rect.right() + 1 + icon_spacing(), row * item_height(),
                 column.width - icon_spacing() - icon_size() - icon_spacing() - icon_spacing() - s_arrow_bitmap_width - icon_spacing(), item_height()
             };
@@ -120,7 +120,7 @@ void ColumnsView::paint_event(PaintEvent& event)
 
             bool expandable = model()->row_count(index) > 0;
             if (expandable) {
-                Rect arrow_rect = {
+                Gfx::Rect arrow_rect = {
                     text_rect.right() + 1 + icon_spacing(), 0,
                     s_arrow_bitmap_width, s_arrow_bitmap_height
                 };

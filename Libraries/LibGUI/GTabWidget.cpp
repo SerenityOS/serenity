@@ -70,9 +70,9 @@ void TabWidget::resize_event(ResizeEvent& event)
     m_active_widget->set_relative_rect(child_rect_for_size(event.size()));
 }
 
-Rect TabWidget::child_rect_for_size(const Gfx::Size& size) const
+Gfx::Rect TabWidget::child_rect_for_size(const Gfx::Size& size) const
 {
-    Rect rect;
+    Gfx::Rect rect;
     switch (m_tab_position) {
     case TabPosition::Top:
         rect = { { container_padding(), bar_height() + container_padding() }, { size.width() - container_padding() * 2, size.height() - bar_height() - container_padding() * 2 } };
@@ -109,7 +109,7 @@ void TabWidget::child_event(Core::ChildEvent& event)
     Widget::child_event(event);
 }
 
-Rect TabWidget::bar_rect() const
+Gfx::Rect TabWidget::bar_rect() const
 {
     switch (m_tab_position) {
     case TabPosition::Top:
@@ -120,7 +120,7 @@ Rect TabWidget::bar_rect() const
     ASSERT_NOT_REACHED();
 }
 
-Rect TabWidget::container_rect() const
+Gfx::Rect TabWidget::container_rect() const
 {
     switch (m_tab_position) {
     case TabPosition::Top:
@@ -166,12 +166,12 @@ void TabWidget::paint_event(PaintEvent& event)
     }
 }
 
-Rect TabWidget::button_rect(int index) const
+Gfx::Rect TabWidget::button_rect(int index) const
 {
     int x_offset = 2;
     for (int i = 0; i < index; ++i)
         x_offset += m_tabs[i].width(font());
-    Rect rect { x_offset, 0, m_tabs[index].width(font()), bar_height() };
+    Gfx::Rect rect { x_offset, 0, m_tabs[index].width(font()), bar_height() };
     if (m_tabs[index].widget != m_active_widget) {
         rect.move_by(0, 2);
         rect.set_height(rect.height() - 2);

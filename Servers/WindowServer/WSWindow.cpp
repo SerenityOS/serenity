@@ -94,7 +94,7 @@ void WSWindow::set_title(const String& title)
 
 void WSWindow::set_rect(const Gfx::Rect& rect)
 {
-    Rect old_rect;
+    Gfx::Rect old_rect;
     if (m_rect == rect)
         return;
     old_rect = m_rect;
@@ -371,7 +371,7 @@ void WSWindow::set_fullscreen(bool fullscreen)
     if (m_fullscreen == fullscreen)
         return;
     m_fullscreen = fullscreen;
-    Rect new_window_rect = m_rect;
+    Gfx::Rect new_window_rect = m_rect;
     if (m_fullscreen) {
         m_saved_nonfullscreen_rect = m_rect;
         new_window_rect = WSScreen::the().rect();

@@ -237,7 +237,7 @@ void Field::reset()
         for (int c = 0; c < columns(); ++c) {
             if (!m_squares[i])
                 m_squares[i] = make<Square>();
-            Rect rect = { frame_thickness() + c * square_size(), frame_thickness() + r * square_size(), square_size(), square_size() };
+            Gfx::Rect rect = { frame_thickness() + c * square_size(), frame_thickness() + r * square_size(), square_size(), square_size() };
             auto& square = this->square(r, c);
             square.field = this;
             square.row = r;

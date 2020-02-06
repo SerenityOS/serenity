@@ -149,12 +149,12 @@ void ScrollBar::set_value(int value)
     update();
 }
 
-Rect ScrollBar::decrement_button_rect() const
+Gfx::Rect ScrollBar::decrement_button_rect() const
 {
     return { 0, 0, button_width(), button_height() };
 }
 
-Rect ScrollBar::increment_button_rect() const
+Gfx::Rect ScrollBar::increment_button_rect() const
 {
     if (orientation() == Orientation::Vertical)
         return { 0, height() - button_height(), button_width(), button_height() };
@@ -162,7 +162,7 @@ Rect ScrollBar::increment_button_rect() const
         return { width() - button_width(), 0, button_width(), button_height() };
 }
 
-Rect ScrollBar::decrement_gutter_rect() const
+Gfx::Rect ScrollBar::decrement_gutter_rect() const
 {
     if (orientation() == Orientation::Vertical)
         return { 0, button_height(), button_width(), scrubber_rect().top() - button_height() };
@@ -170,7 +170,7 @@ Rect ScrollBar::decrement_gutter_rect() const
         return { button_width(), 0, scrubber_rect().x() - button_width(), button_height() };
 }
 
-Rect ScrollBar::increment_gutter_rect() const
+Gfx::Rect ScrollBar::increment_gutter_rect() const
 {
     auto scrubber_rect = this->scrubber_rect();
     if (orientation() == Orientation::Vertical)
@@ -199,7 +199,7 @@ int ScrollBar::scrubber_size() const
     return ::max(pixel_range - value_range, button_size());
 }
 
-Rect ScrollBar::scrubber_rect() const
+Gfx::Rect ScrollBar::scrubber_rect() const
 {
     if (!has_scrubber() || length(orientation()) <= (button_size() * 2) + scrubber_size())
         return {};

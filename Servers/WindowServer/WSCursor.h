@@ -50,7 +50,7 @@ public:
     Point hotspot() const { return m_hotspot; }
     const Gfx::Bitmap& bitmap() const { return *m_bitmap; }
 
-    Rect rect() const { return m_bitmap->rect(); }
+    Gfx::Rect rect() const { return m_bitmap->rect(); }
     Size size() const { return m_bitmap->size(); }
 
 private:

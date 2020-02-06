@@ -90,7 +90,7 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->set_title("Welcome to Serenity");
-    Rect window_rect { 0, 0, 640, 360 };
+    Gfx::Rect window_rect { 0, 0, 640, 360 };
     window_rect.center_within(GUI::Desktop::the().rect());
     window->set_resizable(true);
     window->set_rect(window_rect);

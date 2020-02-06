@@ -119,7 +119,7 @@ void BoxLayout::run(Widget& widget)
             continue;
         if (!entry.widget->is_visible())
             continue;
-        Rect rect(current_x, current_y, 0, 0);
+        Gfx::Rect rect(current_x, current_y, 0, 0);
         if (entry.layout) {
             // FIXME: Implement recursive layout.
             ASSERT_NOT_REACHED();

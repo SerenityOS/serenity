@@ -135,8 +135,8 @@ public:
     {
     }
 
-    Rect old_rect() const { return m_old_rect; }
-    Rect rect() const { return m_rect; }
+    Gfx::Rect old_rect() const { return m_old_rect; }
+    Gfx::Rect rect() const { return m_rect; }
 
 private:
     Gfx::Rect m_old_rect;

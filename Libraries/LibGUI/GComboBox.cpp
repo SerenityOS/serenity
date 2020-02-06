@@ -118,7 +118,7 @@ void ComboBox::open()
         model()->row_count() * m_list_view->item_height() + m_list_view->frame_thickness() * 2
     };
 
-    Rect list_window_rect { my_screen_rect.bottom_left(), size };
+    Gfx::Rect list_window_rect { my_screen_rect.bottom_left(), size };
     list_window_rect.intersect(Desktop::the().rect().shrunken(0, 128));
 
     m_list_window->set_rect(list_window_rect);

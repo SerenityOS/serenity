@@ -69,7 +69,7 @@ void GraphWidget::paint_event(GUI::PaintEvent& event)
     }
 
     if (!m_values.is_empty() && text_formatter) {
-        Rect text_rect = inner_rect.shrunken(8, 8);
+        Gfx::Rect text_rect = inner_rect.shrunken(8, 8);
         text_rect.set_height(font().glyph_height());
         auto text = text_formatter(m_values.last(), m_max);
         painter.draw_text(text_rect.translated(1, 1), text.characters(), Gfx::TextAlignment::CenterRight, Color::Black);

@@ -194,7 +194,7 @@ public:
         return { m_value.as_size.width, m_value.as_size.height };
     }
 
-    Rect as_rect() const
+    Gfx::Rect as_rect() const
     {
         return { as_point(), as_size() };
     }

@@ -50,7 +50,7 @@ public:
     static WSScreen& the();
 
     Size size() const { return { width(), height() }; }
-    Rect rect() const { return { 0, 0, width(), height() }; }
+    Gfx::Rect rect() const { return { 0, 0, width(), height() }; }
 
     Point cursor_location() const { return m_cursor_location; }
     unsigned mouse_button_state() const { return m_mouse_button_state; }

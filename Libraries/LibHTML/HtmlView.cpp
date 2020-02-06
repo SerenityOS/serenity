@@ -55,7 +55,7 @@ HtmlView::HtmlView(GUI::Widget* parent)
             update();
             return;
         }
-        Rect adjusted_rect = content_rect;
+        Gfx::Rect adjusted_rect = content_rect;
         adjusted_rect.set_location(to_widget_position(content_rect.location()));
         update(adjusted_rect);
     };

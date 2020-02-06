@@ -95,7 +95,7 @@ PaletteWidget::PaletteWidget(PaintableWidget& paintable_widget, GUI::Widget* par
     m_primary_color_widget->set_frame_thickness(2);
     m_primary_color_widget->set_frame_shape(Gfx::FrameShape::Container);
     m_primary_color_widget->set_frame_shadow(Gfx::FrameShadow::Sunken);
-    Rect rect { 0, 0, 38, 15 };
+    Gfx::Rect rect { 0, 0, 38, 15 };
     rect.center_within(m_secondary_color_widget->relative_rect());
     m_primary_color_widget->set_relative_rect(rect);
     m_primary_color_widget->set_fill_with_background_color(true);

@@ -145,7 +145,7 @@ String Window::title() const
     return WindowServerConnection::the().send_sync<WindowServer::GetWindowTitle>(m_window_id)->title();
 }
 
-Rect Window::rect() const
+Gfx::Rect Window::rect() const
 {
     if (!m_window_id)
         return m_rect_when_windowless;
@@ -264,7 +264,7 @@ void Window::event(Core::Event& event)
             set_current_backing_bitmap(*m_back_bitmap, true);
 
         if (m_window_id) {
-            Vector<Rect> rects_to_send;
+            Vector<Gfx::Rect> rects_to_send;
             for (auto& r : rects)
                 rects_to_send.append(r);
             WindowServerConnection::the().post_message(WindowServer::DidFinishPainting(m_window_id, rects_to_send));
@@ -351,7 +351,7 @@ void Window::update(const Gfx::Rect& a_rect)
             auto rects = move(m_pending_paint_event_rects);
             if (rects.is_empty())
                 return;
-            Vector<Rect> rects_to_send;
+            Vector<Gfx::Rect> rects_to_send;
             for (auto& r : rects)
                 rects_to_send.append(r);
             WindowServerConnection::the().post_message(WindowServer::InvalidateRect(m_window_id, rects_to_send));
@@ -461,7 +461,7 @@ void Window::set_current_backing_bitmap(Gfx::Bitmap& bitmap, bool flush_immediat
     WindowServerConnection::the().send_sync<WindowServer::SetWindowBackingStore>(m_window_id, 32, bitmap.pitch(), bitmap.shared_buffer_id(), bitmap.has_alpha_channel(), bitmap.size(), flush_immediately);
 }
 
-void Window::flip(const Vector<Rect, 32>& dirty_rects)
+void Window::flip(const Vector<Gfx::Rect, 32>& dirty_rects)
 {
     swap(m_front_bitmap, m_back_bitmap);
 

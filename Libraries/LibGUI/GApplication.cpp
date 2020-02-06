@@ -137,7 +137,7 @@ void Application::show_tooltip(const StringView& tooltip, const Gfx::Point& scre
     }
     m_tooltip_window->set_tooltip(tooltip);
 
-    Rect desktop_rect = Desktop::the().rect();
+    Gfx::Rect desktop_rect = Desktop::the().rect();
 
     const int margin = 30;
     Point adjusted_pos = screen_location;
