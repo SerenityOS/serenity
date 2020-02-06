@@ -212,7 +212,7 @@ HitTestResult LayoutBox::hit_test(const Gfx::Point& position) const
     // FIXME: It would be nice if we could confidently skip over hit testing
     //        parts of the layout tree, but currently we can't just check
     //        m_rect.contains() since inline text rects can't be trusted..
-    HitTestResult result { m_rect.contains(FloatPoint(position.x(), position.y())) ? this : nullptr };
+    HitTestResult result { m_rect.contains(position.x(), position.y()) ? this : nullptr };
     for_each_child([&](auto& child) {
         auto child_result = child.hit_test(position);
         if (child_result.layout_node)

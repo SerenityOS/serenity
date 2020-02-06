@@ -137,7 +137,7 @@ public:
     template<typename T>
     T* first_ancestor_of_type();
 
-    FloatPoint box_type_agnostic_position() const;
+    Gfx::FloatPoint box_type_agnostic_position() const;
 
 protected:
     explicit LayoutNode(const Node*);

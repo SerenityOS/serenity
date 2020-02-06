@@ -40,7 +40,7 @@ public:
     float width() const { return rect().width(); }
     float height() const { return rect().height(); }
     Gfx::FloatSize size() const { return rect().size(); }
-    FloatPoint position() const { return rect().location(); }
+    Gfx::FloatPoint position() const { return rect().location(); }
 
     virtual HitTestResult hit_test(const Gfx::Point& position) const override;
     virtual void set_needs_display() override;
