@@ -29,7 +29,7 @@
 #include <AK/RefPtr.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
-#include <LibAudio/ABuffer.h>
+#include <LibAudio/Buffer.h>
 #include <LibCore/File.h>
 
 namespace AK {

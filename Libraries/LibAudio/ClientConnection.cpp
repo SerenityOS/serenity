@@ -25,8 +25,8 @@
  */
 
 #include <AK/SharedBuffer.h>
-#include <LibAudio/ABuffer.h>
-#include <LibAudio/AClientConnection.h>
+#include <LibAudio/Buffer.h>
+#include <LibAudio/ClientConnection.h>
 
 namespace Audio {
 

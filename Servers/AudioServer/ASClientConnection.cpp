@@ -28,7 +28,7 @@
 #include "ASMixer.h"
 #include "AudioClientEndpoint.h"
 #include <AK/SharedBuffer.h>
-#include <LibAudio/ABuffer.h>
+#include <LibAudio/Buffer.h>
 #include <LibCore/EventLoop.h>
 #include <errno.h>
 #include <stdio.h>

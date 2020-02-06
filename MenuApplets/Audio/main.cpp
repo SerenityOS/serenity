@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibAudio/AClientConnection.h>
+#include <LibAudio/ClientConnection.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GWidget.h>

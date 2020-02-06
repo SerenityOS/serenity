@@ -1,10 +1,10 @@
 OBJS = \
-    AClientConnection.o \
-    AWavLoader.o
+    ClientConnection.o \
+    WavLoader.o
 
 LIBRARY = libaudio.a
 
-AClientConnection.cpp: ../../Servers/AudioServer/AudioClientEndpoint.h
+ClientConnection.cpp: ../../Servers/AudioServer/AudioClientEndpoint.h
 ../../Servers/AudioServer/AudioClientEndpoint.h:
 	@flock $(dir $(@)) $(MAKE) -C $(dir $(@))
 

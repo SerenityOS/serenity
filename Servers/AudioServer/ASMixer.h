@@ -32,7 +32,7 @@
 #include <AK/Queue.h>
 #include <AK/RefCounted.h>
 #include <AK/WeakPtr.h>
-#include <LibAudio/ABuffer.h>
+#include <LibAudio/Buffer.h>
 #include <LibCore/File.h>
 #include <LibThread/Lock.h>
 #include <LibThread/Thread.h>

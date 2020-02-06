@@ -25,7 +25,7 @@
  */
 
 #include <AK/BufferStream.h>
-#include <LibAudio/AWavLoader.h>
+#include <LibAudio/WavLoader.h>
 #include <LibCore/File.h>
 #include <LibCore/IODeviceStreamReader.h>
 #include <limits>
