@@ -26,7 +26,7 @@
 
 #include "PlaybackManager.h"
 
-PlaybackManager::PlaybackManager(NonnullRefPtr<AClientConnection> connection)
+PlaybackManager::PlaybackManager(NonnullRefPtr<Audio::ClientConnection> connection)
     : m_connection(connection)
 {
     m_timer = Core::Timer::construct(100, [&]() {
@@ -41,7 +41,7 @@ PlaybackManager::~PlaybackManager()
 {
 }
 
-void PlaybackManager::set_loader(OwnPtr<AWavLoader>&& loader)
+void PlaybackManager::set_loader(OwnPtr<Audio::WavLoader>&& loader)
 {
     stop();
     m_loader = move(loader);

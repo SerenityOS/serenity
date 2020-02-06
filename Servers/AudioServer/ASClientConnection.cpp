@@ -105,7 +105,7 @@ OwnPtr<AudioServer::EnqueueBufferResponse> ASClientConnection::handle(const Audi
     if (m_queue->is_full())
         return make<AudioServer::EnqueueBufferResponse>(false);
 
-    m_queue->enqueue(ABuffer::create_with_shared_buffer(*shared_buffer, message.sample_count()));
+    m_queue->enqueue(Audio::Buffer::create_with_shared_buffer(*shared_buffer, message.sample_count()));
     return make<AudioServer::EnqueueBufferResponse>(true);
 }
 

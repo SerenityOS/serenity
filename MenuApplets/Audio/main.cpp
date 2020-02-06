@@ -36,7 +36,7 @@ public:
     AudioWidget()
         : GUI::Widget(nullptr)
     {
-        m_audio_client = make<AClientConnection>();
+        m_audio_client = make<Audio::ClientConnection>();
         m_audio_client->on_muted_state_change = [this](bool muted) {
             if (m_audio_muted == muted)
                 return;
@@ -67,7 +67,7 @@ private:
         painter.blit({}, audio_bitmap, audio_bitmap.rect());
     }
 
-    OwnPtr<AClientConnection> m_audio_client;
+    OwnPtr<Audio::ClientConnection> m_audio_client;
     RefPtr<GraphicsBitmap> m_muted_bitmap;
     RefPtr<GraphicsBitmap> m_unmuted_bitmap;
     bool m_audio_muted { false };

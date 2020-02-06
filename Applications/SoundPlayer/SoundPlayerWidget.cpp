@@ -32,7 +32,7 @@
 #include <LibGUI/GMessageBox.h>
 #include <LibM/math.h>
 
-SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, NonnullRefPtr<AClientConnection> connection)
+SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, NonnullRefPtr<Audio::ClientConnection> connection)
     : m_window(window)
     , m_connection(connection)
     , m_manager(connection)
@@ -124,7 +124,7 @@ void SoundPlayerWidget::open_file(String path)
         return;
     }
 
-    OwnPtr<AWavLoader> loader = make<AWavLoader>(path);
+    OwnPtr<Audio::WavLoader> loader = make<Audio::WavLoader>(path);
     if (loader->has_error()) {
         GUI::MessageBox::show(
             String::format(

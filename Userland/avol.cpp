@@ -31,7 +31,7 @@
 int main(int argc, char** argv)
 {
     Core::EventLoop loop;
-    auto audio_client = AClientConnection::construct();
+    auto audio_client = Audio::ClientConnection::construct();
     audio_client->handshake();
 
     if (argc > 1) {

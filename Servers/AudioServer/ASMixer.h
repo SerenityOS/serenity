@@ -45,9 +45,9 @@ public:
     ~ASBufferQueue() {}
 
     bool is_full() const { return m_queue.size() >= 3; }
-    void enqueue(NonnullRefPtr<ABuffer>&&);
+    void enqueue(NonnullRefPtr<Audio::Buffer>&&);
 
-    bool get_next_sample(ASample& sample)
+    bool get_next_sample(Audio::Sample& sample)
     {
         if (m_paused)
             return false;
@@ -97,8 +97,8 @@ public:
     }
 
 private:
-    RefPtr<ABuffer> m_current;
-    Queue<NonnullRefPtr<ABuffer>> m_queue;
+    RefPtr<Audio::Buffer> m_current;
+    Queue<NonnullRefPtr<Audio::Buffer>> m_queue;
     int m_position { 0 };
     int m_remaining_samples { 0 };
     int m_played_samples { 0 };

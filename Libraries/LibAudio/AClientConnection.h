@@ -30,17 +30,19 @@
 #include <AudioServer/AudioServerEndpoint.h>
 #include <LibIPC/IServerConnection.h>
 
-class ABuffer;
+namespace Audio {
 
-class AClientConnection : public IPC::ServerConnection<AudioClientEndpoint, AudioServerEndpoint>
+class Buffer;
+
+class ClientConnection : public IPC::ServerConnection<AudioClientEndpoint, AudioServerEndpoint>
     , public AudioClientEndpoint {
-    C_OBJECT(AClientConnection)
+    C_OBJECT(ClientConnection)
 public:
-    AClientConnection();
+    ClientConnection();
 
     virtual void handshake() override;
-    void enqueue(const ABuffer&);
-    bool try_enqueue(const ABuffer&);
+    void enqueue(const Buffer&);
+    bool try_enqueue(const Buffer&);
 
     bool get_muted();
     void set_muted(bool);
@@ -62,3 +64,5 @@ private:
     virtual void handle(const AudioClient::FinishedPlayingBuffer&) override;
     virtual void handle(const AudioClient::MutedStateChanged&) override;
 };
+
+}

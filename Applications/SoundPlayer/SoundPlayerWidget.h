@@ -43,7 +43,7 @@ public:
     PlaybackManager& manager() { return m_manager; }
 
 private:
-    explicit SoundPlayerWidget(GUI::Window&, NonnullRefPtr<AClientConnection>);
+    explicit SoundPlayerWidget(GUI::Window&, NonnullRefPtr<Audio::ClientConnection>);
 
     void update_position(const int position);
     void update_ui();
@@ -77,7 +77,7 @@ private:
     };
 
     GUI::Window& m_window;
-    NonnullRefPtr<AClientConnection> m_connection;
+    NonnullRefPtr<Audio::ClientConnection> m_connection;
     PlaybackManager m_manager;
     float m_sample_ratio;
     RefPtr<GUI::Label> m_status;

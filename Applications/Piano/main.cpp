@@ -41,7 +41,7 @@ int main(int argc, char** argv)
 {
     GUI::Application app(argc, argv);
 
-    auto audio_client = AClientConnection::construct();
+    auto audio_client = Audio::ClientConnection::construct();
     audio_client->handshake();
 
     AudioEngine audio_engine;

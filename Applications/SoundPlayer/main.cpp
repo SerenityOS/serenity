@@ -50,7 +50,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    auto audio_client = AClientConnection::construct();
+    auto audio_client = Audio::ClientConnection::construct();
     audio_client->handshake();
 
     if (pledge("stdio shared_buffer accept rpath", nullptr) < 0) {

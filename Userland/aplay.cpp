@@ -38,9 +38,9 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    auto audio_client = AClientConnection::construct();
+    auto audio_client = Audio::ClientConnection::construct();
     audio_client->handshake();
-    AWavLoader loader(argv[1]);
+    Audio::WavLoader loader(argv[1]);
 
     printf("\033[34;1m Playing\033[0m: %s\n", argv[1]);
     printf("\033[34;1m  Format\033[0m: %u Hz, %u-bit, %s\n",

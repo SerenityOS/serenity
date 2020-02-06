@@ -80,8 +80,8 @@ void ASMixer::mix()
 
         active_mix_queues.remove_all_matching([&](auto& entry) { return !entry->client(); });
 
-        ASample mixed_buffer[1024];
-        auto mixed_buffer_length = (int)(sizeof(mixed_buffer) / sizeof(ASample));
+        Audio::Sample mixed_buffer[1024];
+        auto mixed_buffer_length = (int)(sizeof(mixed_buffer) / sizeof(Audio::Sample));
 
         // Mix the buffers together into the output
         for (auto& queue : active_mix_queues) {
@@ -92,7 +92,7 @@ void ASMixer::mix()
 
             for (int i = 0; i < mixed_buffer_length; ++i) {
                 auto& mixed_sample = mixed_buffer[i];
-                ASample sample;
+                Audio::Sample sample;
                 if (!queue->get_next_sample(sample))
                     break;
                 mixed_sample += sample;
@@ -145,7 +145,7 @@ ASBufferQueue::ASBufferQueue(ASClientConnection& client)
 {
 }
 
-void ASBufferQueue::enqueue(NonnullRefPtr<ABuffer>&& buffer)
+void ASBufferQueue::enqueue(NonnullRefPtr<Audio::Buffer>&& buffer)
 {
     m_remaining_samples += buffer->sample_count();
     m_queue.enqueue(move(buffer));
