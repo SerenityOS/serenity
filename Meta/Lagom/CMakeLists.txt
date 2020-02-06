@@ -22,11 +22,3 @@ add_library(lagom ${SOURCES})
 add_executable(TestApp TestApp.cpp)
 target_link_libraries(TestApp lagom)
 target_link_libraries(TestApp stdc++)
-
-#add_executable(SimpleIPCClient SimpleIPCClient.cpp)
-#target_link_libraries(SimpleIPCClient lagom)
-#target_link_libraries(SimpleIPCClient stdc++)
-
-#add_executable(SimpleIPCServer SimpleIPCServer.cpp)
-#target_link_libraries(SimpleIPCServer lagom)
-#target_link_libraries(SimpleIPCServer stdc++)
