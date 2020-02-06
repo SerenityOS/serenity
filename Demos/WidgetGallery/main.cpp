@@ -96,19 +96,19 @@ int main(int argc, char** argv)
     vertical_slider_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     vertical_slider_container->set_preferred_size(0, 100);
     vertical_slider_container->set_layout(make<GUI::HBoxLayout>());
-    auto vslider1 = GUI::Slider::construct(Orientation::Vertical, vertical_slider_container);
+    auto vslider1 = GUI::VerticalSlider::construct(vertical_slider_container);
     (void)vslider1;
-    auto vslider2 = GUI::Slider::construct(Orientation::Vertical, vertical_slider_container);
+    auto vslider2 = GUI::VerticalSlider::construct(vertical_slider_container);
     vslider2->set_enabled(false);
-    auto vslider3 = GUI::Slider::construct(Orientation::Vertical, vertical_slider_container);
+    auto vslider3 = GUI::VerticalSlider::construct(vertical_slider_container);
     vslider3->set_max(5);
     vslider3->set_knob_size_mode(GUI::Slider::KnobSizeMode::Proportional);
 
-    auto slider1 = GUI::Slider::construct(Orientation::Horizontal, main_widget);
+    auto slider1 = GUI::HorizontalSlider::construct(main_widget);
     (void)slider1;
-    auto slider2 = GUI::Slider::construct(Orientation::Horizontal, main_widget);
+    auto slider2 = GUI::HorizontalSlider::construct(main_widget);
     slider2->set_enabled(false);
-    auto slider3 = GUI::Slider::construct(Orientation::Horizontal, main_widget);
+    auto slider3 = GUI::HorizontalSlider::construct(main_widget);
     slider3->set_max(5);
     slider3->set_knob_size_mode(GUI::Slider::KnobSizeMode::Proportional);
 

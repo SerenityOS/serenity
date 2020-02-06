@@ -74,7 +74,7 @@ KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWid
 
     // FIXME: Implement vertical flipping in GSlider, not here.
 
-    m_octave_knob = GUI::Slider::construct(Orientation::Vertical, m_knobs_container);
+    m_octave_knob = GUI::VerticalSlider::construct(m_knobs_container);
     m_octave_knob->set_tooltip("Z: octave down, X: octave up");
     m_octave_knob->set_range(octave_min - 1, octave_max - 1);
     m_octave_knob->set_value((octave_max - 1) - (m_audio_engine.octave() - 1));
@@ -86,7 +86,7 @@ KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWid
         m_octave_value->set_text(String::number(new_octave));
     };
 
-    m_wave_knob = GUI::Slider::construct(Orientation::Vertical, m_knobs_container);
+    m_wave_knob = GUI::VerticalSlider::construct(m_knobs_container);
     m_wave_knob->set_tooltip("C: cycle through waveforms");
     m_wave_knob->set_range(0, last_wave);
     m_wave_knob->set_value(last_wave - m_audio_engine.wave());
@@ -98,7 +98,7 @@ KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWid
     };
 
     constexpr int max_attack = 1000;
-    m_attack_knob = GUI::Slider::construct(Orientation::Vertical, m_knobs_container);
+    m_attack_knob = GUI::VerticalSlider::construct(m_knobs_container);
     m_attack_knob->set_range(0, max_attack);
     m_attack_knob->set_value(max_attack - m_audio_engine.attack());
     m_attack_knob->on_value_changed = [this](int value) {
@@ -109,7 +109,7 @@ KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWid
     };
 
     constexpr int max_decay = 1000;
-    m_decay_knob = GUI::Slider::construct(Orientation::Vertical, m_knobs_container);
+    m_decay_knob = GUI::VerticalSlider::construct(m_knobs_container);
     m_decay_knob->set_range(0, max_decay);
     m_decay_knob->set_value(max_decay - m_audio_engine.decay());
     m_decay_knob->on_value_changed = [this](int value) {
@@ -120,7 +120,7 @@ KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWid
     };
 
     constexpr int max_sustain = 1000;
-    m_sustain_knob = GUI::Slider::construct(Orientation::Vertical, m_knobs_container);
+    m_sustain_knob = GUI::VerticalSlider::construct(m_knobs_container);
     m_sustain_knob->set_range(0, max_sustain);
     m_sustain_knob->set_value(max_sustain - m_audio_engine.sustain());
     m_sustain_knob->on_value_changed = [this](int value) {
@@ -131,7 +131,7 @@ KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWid
     };
 
     constexpr int max_release = 1000;
-    m_release_knob = GUI::Slider::construct(Orientation::Vertical, m_knobs_container);
+    m_release_knob = GUI::VerticalSlider::construct(m_knobs_container);
     m_release_knob->set_range(0, max_release);
     m_release_knob->set_value(max_release - m_audio_engine.release());
     m_release_knob->on_value_changed = [this](int value) {
@@ -142,7 +142,7 @@ KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWid
     };
 
     constexpr int max_delay = 8;
-    m_delay_knob = GUI::Slider::construct(Orientation::Vertical, m_knobs_container);
+    m_delay_knob = GUI::VerticalSlider::construct(m_knobs_container);
     m_delay_knob->set_range(0, max_delay);
     m_delay_knob->set_value(max_delay - (m_audio_engine.delay() / m_audio_engine.tick()));
     m_delay_knob->on_value_changed = [this](int value) {
