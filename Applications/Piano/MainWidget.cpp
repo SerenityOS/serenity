@@ -36,7 +36,7 @@
 MainWidget::MainWidget(AudioEngine& audio_engine)
     : m_audio_engine(audio_engine)
 {
-    set_layout(make<GUI::VBoxLayout>());
+    set_layout(make<GUI::VerticalBoxLayout>());
     layout()->set_spacing(2);
     layout()->set_margins({ 2, 2, 2, 2 });
     set_fill_with_background_color(true);
@@ -50,7 +50,7 @@ MainWidget::MainWidget(AudioEngine& audio_engine)
     m_roll_widget->set_preferred_size(0, 300);
 
     m_keys_and_knobs_container = GUI::Widget::construct(this);
-    m_keys_and_knobs_container->set_layout(make<GUI::HBoxLayout>());
+    m_keys_and_knobs_container->set_layout(make<GUI::HorizontalBoxLayout>());
     m_keys_and_knobs_container->layout()->set_spacing(2);
     m_keys_and_knobs_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_keys_and_knobs_container->set_preferred_size(0, 100);

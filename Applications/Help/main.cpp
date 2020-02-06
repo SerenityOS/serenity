@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
     window->set_rect(300, 200, 570, 500);
 
     auto widget = GUI::Widget::construct();
-    widget->set_layout(make<GUI::VBoxLayout>());
+    widget->set_layout(make<GUI::VerticalBoxLayout>());
     widget->layout()->set_spacing(0);
 
     auto toolbar = GUI::ToolBar::construct(widget);

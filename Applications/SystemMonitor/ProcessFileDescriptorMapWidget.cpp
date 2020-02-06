@@ -32,7 +32,7 @@
 ProcessFileDescriptorMapWidget::ProcessFileDescriptorMapWidget(GUI::Widget* parent)
     : GUI::Widget(parent)
 {
-    set_layout(make<GUI::VBoxLayout>());
+    set_layout(make<GUI::VerticalBoxLayout>());
     layout()->set_margins({ 4, 4, 4, 4 });
     m_table_view = GUI::TableView::construct(this);
     m_table_view->set_size_columns_to_fit_content(true);

@@ -72,7 +72,7 @@ ToolboxWidget::ToolboxWidget(GUI::Widget* parent)
     set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     set_preferred_size(48, 0);
 
-    set_layout(make<GUI::VBoxLayout>());
+    set_layout(make<GUI::VerticalBoxLayout>());
     layout()->set_margins({ 4, 4, 4, 4 });
 
     auto add_tool = [&](const StringView& name, const StringView& icon_name, OwnPtr<Tool>&& tool) {

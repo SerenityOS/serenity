@@ -44,7 +44,7 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
     ASSERT(file_path.is_valid());
 
     auto main_widget = GUI::Widget::construct();
-    main_widget->set_layout(make<GUI::VBoxLayout>());
+    main_widget->set_layout(make<GUI::VerticalBoxLayout>());
     main_widget->layout()->set_margins({ 4, 4, 4, 4 });
     main_widget->set_fill_with_background_color(true);
 
@@ -55,7 +55,7 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
     auto tab_widget = GUI::TabWidget::construct(main_widget);
 
     auto general_tab = GUI::Widget::construct(tab_widget.ptr());
-    general_tab->set_layout(make<GUI::VBoxLayout>());
+    general_tab->set_layout(make<GUI::VerticalBoxLayout>());
     general_tab->layout()->set_margins({ 12, 8, 12, 8 });
     general_tab->layout()->set_spacing(10);
     tab_widget->add_widget("General", general_tab);
@@ -63,7 +63,7 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
     general_tab->layout()->add_spacer();
 
     auto file_container = GUI::Widget::construct(general_tab.ptr());
-    file_container->set_layout(make<GUI::HBoxLayout>());
+    file_container->set_layout(make<GUI::HorizontalBoxLayout>());
     file_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     file_container->layout()->set_spacing(20);
     file_container->set_preferred_size(0, 34);
@@ -133,7 +133,7 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
     general_tab->layout()->add_spacer();
 
     auto button_widget = GUI::Widget::construct(main_widget.ptr());
-    button_widget->set_layout(make<GUI::HBoxLayout>());
+    button_widget->set_layout(make<GUI::HorizontalBoxLayout>());
     button_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     button_widget->set_preferred_size(0, 24);
     button_widget->layout()->set_spacing(5);
@@ -213,7 +213,7 @@ bool PropertiesDialog::apply_changes()
 void PropertiesDialog::make_permission_checkboxes(NonnullRefPtr<GUI::Widget>& parent, PermissionMasks masks, String label_string, mode_t mode)
 {
     auto widget = GUI::Widget::construct(parent.ptr());
-    widget->set_layout(make<GUI::HBoxLayout>());
+    widget->set_layout(make<GUI::HorizontalBoxLayout>());
     widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     widget->set_preferred_size(0, 16);
     widget->layout()->set_spacing(10);
@@ -242,7 +242,7 @@ void PropertiesDialog::make_property_value_pairs(const Vector<PropertyValuePair>
     property_labels.ensure_capacity(pairs.size());
     for (auto pair : pairs) {
         auto label_container = GUI::Widget::construct(parent.ptr());
-        label_container->set_layout(make<GUI::HBoxLayout>());
+        label_container->set_layout(make<GUI::HorizontalBoxLayout>());
         label_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
         label_container->set_preferred_size(0, 14);
         label_container->layout()->set_spacing(12);

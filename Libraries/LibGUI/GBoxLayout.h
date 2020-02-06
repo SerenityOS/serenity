@@ -44,22 +44,22 @@ private:
     Orientation m_orientation;
 };
 
-class VBoxLayout final : public BoxLayout {
+class VerticalBoxLayout final : public BoxLayout {
 public:
-    explicit VBoxLayout()
+    explicit VerticalBoxLayout()
         : BoxLayout(Orientation::Vertical)
     {
     }
-    virtual ~VBoxLayout() override {}
+    virtual ~VerticalBoxLayout() override {}
 };
 
-class HBoxLayout final : public BoxLayout {
+class HorizontalBoxLayout final : public BoxLayout {
 public:
-    explicit HBoxLayout()
+    explicit HorizontalBoxLayout()
         : BoxLayout(Orientation::Horizontal)
     {
     }
-    virtual ~HBoxLayout() override {}
+    virtual ~HorizontalBoxLayout() override {}
 };
 
 }

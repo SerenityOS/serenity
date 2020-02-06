@@ -82,16 +82,16 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
     set_rect(200, 200, 700, 400);
     auto horizontal_container = Widget::construct();
     set_main_widget(horizontal_container);
-    horizontal_container->set_layout(make<HBoxLayout>());
+    horizontal_container->set_layout(make<HorizontalBoxLayout>());
     horizontal_container->layout()->set_margins({ 4, 4, 4, 4 });
     horizontal_container->set_fill_with_background_color(true);
 
     auto vertical_container = Widget::construct(horizontal_container.ptr());
-    vertical_container->set_layout(make<VBoxLayout>());
+    vertical_container->set_layout(make<VerticalBoxLayout>());
     vertical_container->layout()->set_spacing(4);
 
     auto upper_container = Widget::construct(vertical_container.ptr());
-    upper_container->set_layout(make<HBoxLayout>());
+    upper_container->set_layout(make<HorizontalBoxLayout>());
     upper_container->layout()->set_spacing(4);
     upper_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     upper_container->set_preferred_size(0, 26);
@@ -149,7 +149,7 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
     toolbar->add_action(*mkdir_action);
 
     auto lower_container = Widget::construct(vertical_container.ptr());
-    lower_container->set_layout(make<VBoxLayout>());
+    lower_container->set_layout(make<VerticalBoxLayout>());
     lower_container->layout()->set_spacing(4);
     lower_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     lower_container->set_preferred_size(0, 60);
@@ -157,7 +157,7 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
     auto filename_container = Widget::construct(lower_container.ptr());
     filename_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     filename_container->set_preferred_size(0, 20);
-    filename_container->set_layout(make<HBoxLayout>());
+    filename_container->set_layout(make<HorizontalBoxLayout>());
     auto filename_label = Label::construct("File name:", filename_container);
     filename_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     filename_label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
@@ -188,7 +188,7 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
     auto button_container = Widget::construct(lower_container.ptr());
     button_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     button_container->set_preferred_size(0, 20);
-    button_container->set_layout(make<HBoxLayout>());
+    button_container->set_layout(make<HorizontalBoxLayout>());
     button_container->layout()->set_spacing(4);
     button_container->layout()->add_spacer();
 
@@ -228,7 +228,7 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
     preview_container->set_frame_shape(Gfx::FrameShape::Container);
     preview_container->set_frame_shadow(Gfx::FrameShadow::Sunken);
     preview_container->set_frame_thickness(2);
-    preview_container->set_layout(make<VBoxLayout>());
+    preview_container->set_layout(make<VerticalBoxLayout>());
     preview_container->layout()->set_margins({ 8, 8, 8, 8 });
 
     m_preview_image_label = Label::construct(preview_container);

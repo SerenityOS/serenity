@@ -43,7 +43,7 @@ int main(int argc, char** argv)
     window->set_main_widget(main_widget);
     main_widget->set_fill_with_background_color(true);
     main_widget->set_background_color(Color::White);
-    main_widget->set_layout(make<GUI::VBoxLayout>());
+    main_widget->set_layout(make<GUI::VerticalBoxLayout>());
     main_widget->layout()->set_margins({ 4, 4, 4, 4 });
 
     auto label = GUI::Label::construct(main_widget);

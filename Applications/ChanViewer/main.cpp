@@ -59,7 +59,7 @@ int main(int argc, char** argv)
     auto widget = GUI::Widget::construct();
     window->set_main_widget(widget);
     widget->set_fill_with_background_color(true);
-    widget->set_layout(make<GUI::VBoxLayout>());
+    widget->set_layout(make<GUI::VerticalBoxLayout>());
 
     auto board_combo = GUI::ComboBox::construct(widget);
     board_combo->set_only_allow_values_from_model(true);

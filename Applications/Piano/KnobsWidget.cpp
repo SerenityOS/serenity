@@ -40,11 +40,11 @@ KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWid
     set_frame_thickness(2);
     set_frame_shadow(Gfx::FrameShadow::Sunken);
     set_frame_shape(Gfx::FrameShape::Container);
-    set_layout(make<GUI::VBoxLayout>());
+    set_layout(make<GUI::VerticalBoxLayout>());
     set_fill_with_background_color(true);
 
     m_labels_container = GUI::Widget::construct(this);
-    m_labels_container->set_layout(make<GUI::HBoxLayout>());
+    m_labels_container->set_layout(make<GUI::HorizontalBoxLayout>());
     m_labels_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_labels_container->set_preferred_size(0, 20);
 
@@ -57,7 +57,7 @@ KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWid
     m_delay_label = GUI::Label::construct("Delay", m_labels_container);
 
     m_values_container = GUI::Widget::construct(this);
-    m_values_container->set_layout(make<GUI::HBoxLayout>());
+    m_values_container->set_layout(make<GUI::HorizontalBoxLayout>());
     m_values_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_values_container->set_preferred_size(0, 10);
 
@@ -70,7 +70,7 @@ KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWid
     m_delay_value = GUI::Label::construct(String::number(m_audio_engine.delay() / m_audio_engine.tick()), m_values_container);
 
     m_knobs_container = GUI::Widget::construct(this);
-    m_knobs_container->set_layout(make<GUI::HBoxLayout>());
+    m_knobs_container->set_layout(make<GUI::HorizontalBoxLayout>());
 
     // FIXME: Implement vertical flipping in GSlider, not here.
 

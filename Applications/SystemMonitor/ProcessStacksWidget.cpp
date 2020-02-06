@@ -32,7 +32,7 @@
 ProcessStacksWidget::ProcessStacksWidget(GUI::Widget* parent)
     : GUI::Widget(parent)
 {
-    set_layout(make<GUI::VBoxLayout>());
+    set_layout(make<GUI::VerticalBoxLayout>());
     layout()->set_margins({ 4, 4, 4, 4 });
     m_stacks_editor = GUI::TextEditor::construct(GUI::TextEditor::Type::MultiLine, this);
     m_stacks_editor->set_readonly(true);
