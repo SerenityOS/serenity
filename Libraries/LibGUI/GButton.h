@@ -28,9 +28,9 @@
 
 #include <AK/Function.h>
 #include <AK/String.h>
-#include <LibDraw/GraphicsBitmap.h>
-#include <LibDraw/StylePainter.h>
-#include <LibDraw/TextAlignment.h>
+#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/StylePainter.h>
+#include <LibGfx/TextAlignment.h>
 #include <LibGUI/GAbstractButton.h>
 
 namespace GUI {

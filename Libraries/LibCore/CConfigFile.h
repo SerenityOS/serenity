@@ -31,7 +31,7 @@
 #include <AK/RefPtr.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibDraw/Color.h>
+#include <LibGfx/Color.h>
 
 namespace Core {
 

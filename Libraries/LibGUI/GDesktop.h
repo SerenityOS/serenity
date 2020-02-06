@@ -29,7 +29,7 @@
 #include <AK/Badge.h>
 #include <AK/Function.h>
 #include <AK/String.h>
-#include <LibDraw/Rect.h>
+#include <LibGfx/Rect.h>
 
 namespace GUI {
 

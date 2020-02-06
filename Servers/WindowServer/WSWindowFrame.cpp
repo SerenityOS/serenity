@@ -24,10 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibDraw/CharacterBitmap.h>
-#include <LibDraw/Font.h>
-#include <LibDraw/Painter.h>
-#include <LibDraw/StylePainter.h>
+#include <LibGfx/CharacterBitmap.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/Painter.h>
+#include <LibGfx/StylePainter.h>
 #include <WindowServer/WSButton.h>
 #include <WindowServer/WSCompositor.h>
 #include <WindowServer/WSEvent.h>

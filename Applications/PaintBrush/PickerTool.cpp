@@ -25,7 +25,7 @@
  */
 
 #include "PickerTool.h"
-#include <LibDraw/GraphicsBitmap.h>
+#include <LibGfx/GraphicsBitmap.h>
 
 PickerTool::PickerTool()
 {

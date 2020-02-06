@@ -27,7 +27,7 @@
 #include <Kernel/KeyCode.h>
 #include <LibCore/CArgsParser.h>
 #include <LibCore/CUserInfo.h>
-#include <LibDraw/PNGLoader.h>
+#include <LibGfx/PNGLoader.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GActionGroup.h>

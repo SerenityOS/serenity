@@ -25,7 +25,7 @@
  */
 
 #include "FontEditor.h"
-#include <LibDraw/PNGLoader.h>
+#include <LibGfx/PNGLoader.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>

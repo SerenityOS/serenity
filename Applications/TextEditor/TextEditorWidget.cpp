@@ -29,7 +29,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <LibCore/CFile.h>
-#include <LibDraw/PNGLoader.h>
+#include <LibGfx/PNGLoader.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GBoxLayout.h>

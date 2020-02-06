@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <LibDraw/TextAlignment.h>
+#include <LibGfx/TextAlignment.h>
 #include <LibGUI/GFrame.h>
 
 namespace Gfx {

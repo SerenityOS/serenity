@@ -24,53 +24,35 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibDraw/Palette.h>
+#pragma once
+
+#include <AK/Vector.h>
+#include <LibGfx/Rect.h>
 
 namespace Gfx {
 
-NonnullRefPtr<PaletteImpl> PaletteImpl::create_with_shared_buffer(SharedBuffer& buffer)
-{
-    return adopt(*new PaletteImpl(buffer));
-}
+class DisjointRectSet {
+public:
+    DisjointRectSet() {}
+    ~DisjointRectSet() {}
+    DisjointRectSet(DisjointRectSet&& other)
+        : m_rects(move(other.m_rects))
+    {
+    }
 
-PaletteImpl::PaletteImpl(SharedBuffer& buffer)
-    : m_theme_buffer(buffer)
-{
-}
+    void add(const Rect&);
 
-Palette::Palette(const PaletteImpl& impl)
-    : m_impl(impl)
-{
-}
+    bool is_empty() const { return m_rects.is_empty(); }
+    int size() const { return m_rects.size(); }
 
-Palette::~Palette()
-{
-}
+    void clear() { m_rects.clear(); }
+    void clear_with_capacity() { m_rects.clear_with_capacity(); }
+    const Vector<Rect, 32>& rects() const { return m_rects; }
 
-const SystemTheme& PaletteImpl::theme() const
-{
-    return *(const SystemTheme*)m_theme_buffer->data();
-}
+private:
+    void shatter();
 
-Color PaletteImpl::color(ColorRole role) const
-{
-    ASSERT((int)role < (int)ColorRole::__Count);
-    return theme().color[(int)role];
-}
-
-NonnullRefPtr<PaletteImpl> PaletteImpl::clone() const
-{
-    auto new_theme_buffer = SharedBuffer::create_with_size(m_theme_buffer->size());
-    memcpy(new_theme_buffer->data(), m_theme_buffer->data(), m_theme_buffer->size());
-    return adopt(*new PaletteImpl(*new_theme_buffer));
-}
-
-void Palette::set_color(ColorRole role, Color color)
-{
-    if (m_impl->ref_count() != 1)
-        m_impl = m_impl->clone();
-    auto& theme = const_cast<SystemTheme&>(impl().theme());
-    theme.color[(int)role] = color;
-}
+    Vector<Rect, 32> m_rects;
+};
 
 }

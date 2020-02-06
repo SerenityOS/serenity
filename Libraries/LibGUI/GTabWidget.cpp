@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibDraw/Palette.h>
-#include <LibDraw/StylePainter.h>
+#include <LibGfx/Palette.h>
+#include <LibGfx/StylePainter.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GTabWidget.h>

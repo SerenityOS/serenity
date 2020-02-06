@@ -4,6 +4,6 @@ OBJS = \
 
 PROGRAM = QuickShow
 
-LIB_DEPS = GUI Draw Protocol IPC Thread Pthread Core
+LIB_DEPS = GUI Gfx Protocol IPC Thread Pthread Core
 
 include ../../Makefile.common

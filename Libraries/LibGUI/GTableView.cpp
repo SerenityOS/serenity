@@ -26,7 +26,7 @@
 
 #include <AK/StringBuilder.h>
 #include <Kernel/KeyCode.h>
-#include <LibDraw/Palette.h>
+#include <LibGfx/Palette.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GModel.h>

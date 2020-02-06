@@ -28,7 +28,7 @@
 
 #include <AK/Badge.h>
 #include <AK/Noncopyable.h>
-#include <LibDraw/SystemTheme.h>
+#include <LibGfx/SystemTheme.h>
 
 namespace GUI {
 class Application;

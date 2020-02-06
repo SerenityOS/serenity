@@ -30,7 +30,7 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/KeyCode.h>
-#include <LibDraw/Font.h>
+#include <LibGfx/Font.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GClipboard.h>

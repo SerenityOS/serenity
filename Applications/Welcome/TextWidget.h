@@ -28,7 +28,7 @@
 
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibDraw/TextAlignment.h>
+#include <LibGfx/TextAlignment.h>
 #include <LibGUI/GFrame.h>
 
 class TextWidget : public GUI::Frame {

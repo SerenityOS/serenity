@@ -30,8 +30,8 @@
 #include <AK/RefPtr.h>
 #include <LibCore/CObject.h>
 #include <LibCore/CTimer.h>
-#include <LibDraw/DisjointRectSet.h>
-#include <LibDraw/GraphicsBitmap.h>
+#include <LibGfx/DisjointRectSet.h>
+#include <LibGfx/GraphicsBitmap.h>
 
 namespace Gfx {
 class Painter;

@@ -32,7 +32,7 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Utf8View.h>
-#include <LibDraw/Rect.h>
+#include <LibGfx/Rect.h>
 
 namespace Gfx {
 

@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <LibDraw/Painter.h>
+#include <LibGfx/Painter.h>
 
 namespace GUI {
 

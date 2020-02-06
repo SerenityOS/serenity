@@ -24,17 +24,30 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibDraw/ImageDecoder.h>
-#include <LibDraw/PNGLoader.h>
+#pragma once
+
+#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/ImageDecoder.h>
 
 namespace Gfx {
 
-ImageDecoder::ImageDecoder(const u8* data, size_t size)
-{
-    m_plugin = make<PNGImageDecoderPlugin>(data, size);
-}
+RefPtr<Gfx::Bitmap> load_gif(const StringView& path);
+RefPtr<Gfx::Bitmap> load_gif_from_memory(const u8*, size_t);
 
-ImageDecoder::~ImageDecoder()
-{
-}
+struct GIFLoadingContext;
+
+class GIFImageDecoderPlugin final : public ImageDecoderPlugin {
+public:
+    virtual ~GIFImageDecoderPlugin() override;
+    GIFImageDecoderPlugin(const u8*, size_t);
+
+    virtual Size size() override;
+    virtual RefPtr<Gfx::Bitmap> bitmap() override;
+    virtual void set_volatile() override;
+    [[nodiscard]] virtual bool set_nonvolatile() override;
+
+private:
+    OwnPtr<GIFLoadingContext> m_context;
+};
+
 }

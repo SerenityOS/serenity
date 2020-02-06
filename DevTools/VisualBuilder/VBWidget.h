@@ -33,7 +33,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/Weakable.h>
-#include <LibDraw/Rect.h>
+#include <LibGfx/Rect.h>
 #include <LibGUI/GWidget.h>
 
 namespace GUI {

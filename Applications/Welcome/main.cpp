@@ -26,7 +26,7 @@
 
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibDraw/PNGLoader.h>
+#include <LibGfx/PNGLoader.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>

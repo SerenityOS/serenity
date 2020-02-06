@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibDraw/GraphicsBitmap.h>
-#include <LibDraw/Palette.h>
+#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/Palette.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GResizeCorner.h>
 #include <LibGUI/GWindow.h>

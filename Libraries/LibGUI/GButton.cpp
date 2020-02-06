@@ -26,7 +26,7 @@
 
 #include <AK/StringBuilder.h>
 #include <Kernel/KeyCode.h>
-#include <LibDraw/StylePainter.h>
+#include <LibGfx/StylePainter.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GActionGroup.h>
 #include <LibGUI/GButton.h>

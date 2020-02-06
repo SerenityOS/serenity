@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibDraw/GraphicsBitmap.h>
-#include <LibDraw/PNGLoader.h>
+#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/PNGLoader.h>
 #include <LibHTML/CSS/StyleValue.h>
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/Frame.h>

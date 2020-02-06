@@ -26,7 +26,7 @@
 
 #include "RectangleTool.h"
 #include "PaintableWidget.h"
-#include <LibDraw/Rect.h>
+#include <LibGfx/Rect.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GPainter.h>

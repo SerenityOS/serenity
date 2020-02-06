@@ -26,8 +26,8 @@
 
 #include <AK/Assertions.h>
 #include <AK/JsonObject.h>
-#include <LibDraw/GraphicsBitmap.h>
-#include <LibDraw/Palette.h>
+#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/Palette.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GButton.h>

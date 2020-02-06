@@ -26,8 +26,8 @@
 
 #include "PaintableWidget.h"
 #include "Tool.h"
-#include <LibDraw/GraphicsBitmap.h>
-#include <LibDraw/Palette.h>
+#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/Palette.h>
 #include <LibGUI/GPainter.h>
 
 static PaintableWidget* s_the;

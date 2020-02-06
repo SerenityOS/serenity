@@ -42,8 +42,8 @@
  *  [ ] handle fire bitmap edges better
 */
 
-#include <LibDraw/GraphicsBitmap.h>
-#include <LibDraw/PNGLoader.h>
+#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/PNGLoader.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GPainter.h>

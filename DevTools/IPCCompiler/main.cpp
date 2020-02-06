@@ -225,8 +225,8 @@ int main(int argc, char** argv)
     dbg() << "#pragma once";
     dbg() << "#include <AK/BufferStream.h>";
     dbg() << "#include <AK/OwnPtr.h>";
-    dbg() << "#include <LibDraw/Color.h>";
-    dbg() << "#include <LibDraw/Rect.h>";
+    dbg() << "#include <LibGfx/Color.h>";
+    dbg() << "#include <LibGfx/Rect.h>";
     dbg() << "#include <LibIPC/IEncoder.h>";
     dbg() << "#include <LibIPC/IEndpoint.h>";
     dbg() << "#include <LibIPC/IMessage.h>";

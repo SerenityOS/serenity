@@ -26,8 +26,8 @@
 
 #pragma once
 
-#include <LibDraw/Palette.h>
-#include <LibDraw/Rect.h>
+#include <LibGfx/Palette.h>
+#include <LibGfx/Rect.h>
 
 namespace GUI {
 class Painter;

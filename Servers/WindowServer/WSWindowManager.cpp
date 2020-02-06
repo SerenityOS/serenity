@@ -35,11 +35,11 @@
 #include <AK/LogStream.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
-#include <LibDraw/CharacterBitmap.h>
-#include <LibDraw/Font.h>
-#include <LibDraw/Painter.h>
-#include <LibDraw/StylePainter.h>
-#include <LibDraw/SystemTheme.h>
+#include <LibGfx/CharacterBitmap.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/Painter.h>
+#include <LibGfx/StylePainter.h>
+#include <LibGfx/SystemTheme.h>
 #include <WindowServer/WSButton.h>
 #include <WindowServer/WSClientConnection.h>
 #include <WindowServer/WSCursor.h>

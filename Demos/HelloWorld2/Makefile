@@ -3,7 +3,7 @@ OBJS = \
 
 PROGRAM = HelloWorld2
 
-LIB_DEPS = GUI IPC Draw Core
+LIB_DEPS = GUI IPC Gfx Core
 
 main.cpp: UI_HelloWorld2.h
 

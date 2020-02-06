@@ -28,8 +28,8 @@
 
 #include <Kernel/KeyCode.h>
 #include <LibCore/CEvent.h>
-#include <LibDraw/Point.h>
-#include <LibDraw/Rect.h>
+#include <LibGfx/Point.h>
+#include <LibGfx/Rect.h>
 #include <LibGUI/GWindowType.h>
 
 namespace GUI {

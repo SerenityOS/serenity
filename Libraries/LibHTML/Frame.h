@@ -30,8 +30,8 @@
 #include <AK/Noncopyable.h>
 #include <AK/RefPtr.h>
 #include <AK/WeakPtr.h>
-#include <LibDraw/Rect.h>
-#include <LibDraw/Size.h>
+#include <LibGfx/Rect.h>
+#include <LibGfx/Size.h>
 #include <LibHTML/TreeNode.h>
 
 class Document;

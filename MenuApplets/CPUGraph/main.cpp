@@ -26,7 +26,7 @@
 
 #include <AK/CircularQueue.h>
 #include <LibCore/CProcessStatisticsReader.h>
-#include <LibDraw/Palette.h>
+#include <LibGfx/Palette.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GWidget.h>

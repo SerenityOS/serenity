@@ -32,11 +32,11 @@
 #include <AK/WeakPtr.h>
 #include <LibCore/CConfigFile.h>
 #include <LibCore/CElapsedTimer.h>
-#include <LibDraw/Color.h>
-#include <LibDraw/DisjointRectSet.h>
-#include <LibDraw/Painter.h>
-#include <LibDraw/Palette.h>
-#include <LibDraw/Rect.h>
+#include <LibGfx/Color.h>
+#include <LibGfx/DisjointRectSet.h>
+#include <LibGfx/Painter.h>
+#include <LibGfx/Palette.h>
+#include <LibGfx/Rect.h>
 #include <WindowServer/WSCursor.h>
 #include <WindowServer/WSEvent.h>
 #include <WindowServer/WSMenuBar.h>

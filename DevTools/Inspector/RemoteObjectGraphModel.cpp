@@ -29,7 +29,7 @@
 #include "RemoteProcess.h"
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
-#include <LibDraw/PNGLoader.h>
+#include <LibGfx/PNGLoader.h>
 #include <LibGUI/GApplication.h>
 #include <stdio.h>
 

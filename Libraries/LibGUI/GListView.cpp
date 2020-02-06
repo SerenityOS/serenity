@@ -25,7 +25,7 @@
  */
 
 #include <Kernel/KeyCode.h>
-#include <LibDraw/Palette.h>
+#include <LibGfx/Palette.h>
 #include <LibGUI/GListView.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GScrollBar.h>

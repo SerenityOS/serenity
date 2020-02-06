@@ -26,7 +26,7 @@
 
 #include "SoundPlayerWidget.h"
 #include <LibAudio/AClientConnection.h>
-#include <LibDraw/CharacterBitmap.h>
+#include <LibGfx/CharacterBitmap.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>

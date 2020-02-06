@@ -18,6 +18,6 @@ OBJS = \
 
 PROGRAM = HackStudio
 
-LIB_DEPS = GUI HTML VT Protocol Markdown Draw IPC Thread Pthread Core
+LIB_DEPS = GUI HTML VT Protocol Markdown Gfx IPC Thread Pthread Core
 
 include ../../Makefile.common

@@ -29,7 +29,7 @@
 #include <AK/Function.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Weakable.h>
-#include <LibDraw/Rect.h>
+#include <LibGfx/Rect.h>
 
 namespace Gfx {
 class CharacterBitmap;

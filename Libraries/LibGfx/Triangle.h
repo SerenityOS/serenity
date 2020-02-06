@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Shannon Booth <shannon.ml.booth@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,30 +24,58 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <LibDraw/GraphicsBitmap.h>
-#include <LibDraw/ImageDecoder.h>
+#include <LibGfx/Point.h>
 
 namespace Gfx {
 
-RefPtr<Gfx::Bitmap> load_gif(const StringView& path);
-RefPtr<Gfx::Bitmap> load_gif_from_memory(const u8*, size_t);
-
-struct GIFLoadingContext;
-
-class GIFImageDecoderPlugin final : public ImageDecoderPlugin {
+class Triangle {
 public:
-    virtual ~GIFImageDecoderPlugin() override;
-    GIFImageDecoderPlugin(const u8*, size_t);
+    Triangle(Point a, Point b, Point c)
+        : m_a(a)
+        , m_b(b)
+        , m_c(c)
+    {
+        m_det = (m_b.x() - m_a.x()) * (m_c.y() - m_a.y()) - (m_b.y() - m_a.y()) * (m_c.x() - m_a.x());
+    }
 
-    virtual Size size() override;
-    virtual RefPtr<Gfx::Bitmap> bitmap() override;
-    virtual void set_volatile() override;
-    [[nodiscard]] virtual bool set_nonvolatile() override;
+    Point a() const { return m_a; }
+    Point b() const { return m_b; }
+    Point c() const { return m_c; }
+
+    bool contains(Point p) const
+    {
+        int x = p.x();
+        int y = p.y();
+
+        int ax = m_a.x();
+        int bx = m_b.x();
+        int cx = m_c.x();
+
+        int ay = m_a.y();
+        int by = m_b.y();
+        int cy = m_c.y();
+
+        if (m_det * ((bx - ax) * (y - ay) - (by - ay) * (x - ax)) <= 0)
+            return false;
+        if (m_det * ((cx - bx) * (y - by) - (cy - by) * (x - bx)) <= 0)
+            return false;
+        if (m_det * ((ax - cx) * (y - cy) - (ay - cy) * (x - cx)) <= 0)
+            return false;
+        return true;
+    }
+
+    String to_string() const { return String::format("(%s,%s,%s)", m_a.to_string().characters(), m_b.to_string().characters(), m_c.to_string().characters()); }
 
 private:
-    OwnPtr<GIFLoadingContext> m_context;
+    int m_det;
+    Point m_a;
+    Point m_b;
+    Point m_c;
 };
+
+inline const LogStream& operator<<(const LogStream& stream, const Triangle& value)
+{
+    return stream << value.to_string();
+}
 
 }

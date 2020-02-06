@@ -4,6 +4,6 @@ OBJS = \
 
 PROGRAM = TextEditor
 
-LIB_DEPS = GUI Draw VT IPC Thread Pthread Core
+LIB_DEPS = GUI Gfx VT IPC Thread Pthread Core
 
 include ../../Makefile.common

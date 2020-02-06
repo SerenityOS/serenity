@@ -27,7 +27,7 @@
 #include "VBWidgetPropertyModel.h"
 #include "VBProperty.h"
 #include "VBWidget.h"
-#include <LibDraw/Font.h>
+#include <LibGfx/Font.h>
 
 VBWidgetPropertyModel::VBWidgetPropertyModel(VBWidget& widget)
     : m_widget(widget)

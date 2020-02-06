@@ -28,7 +28,7 @@
 
 #include <AK/Function.h>
 #include <AK/String.h>
-#include <LibDraw/Rect.h>
+#include <LibGfx/Rect.h>
 
 namespace Gfx {
 class Bitmap;

@@ -31,7 +31,7 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <LibCore/CTimer.h>
-#include <LibDraw/TextAlignment.h>
+#include <LibGfx/TextAlignment.h>
 #include <LibGUI/GScrollableWidget.h>
 #include <LibGUI/GTextDocument.h>
 #include <LibGUI/GTextRange.h>

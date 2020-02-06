@@ -24,9 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibDraw/Font.h>
-#include <LibDraw/GraphicsBitmap.h>
-#include <LibDraw/StylePainter.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/StylePainter.h>
 #include <WindowServer/WSEvent.h>
 #include <WindowServer/WSScreen.h>
 #include <WindowServer/WSWindowManager.h>

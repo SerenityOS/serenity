@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,31 +24,43 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/HashMap.h>
-#include <AK/String.h>
-#include <LibDraw/Emoji.h>
-#include <LibDraw/GraphicsBitmap.h>
+#pragma once
+
+#include <LibGfx/Color.h>
 
 namespace Gfx {
 
-static HashMap<u32, RefPtr<Gfx::Bitmap>> s_emojis;
+class Painter;
+class Palette;
+class Rect;
 
-const Bitmap* Emoji::emoji_for_codepoint(u32 codepoint)
-{
-    auto it = s_emojis.find(codepoint);
-    if (it != s_emojis.end())
-        return (*it).value.ptr();
+enum class ButtonStyle {
+    Normal,
+    CoolBar
+};
+enum class FrameShadow {
+    Plain,
+    Raised,
+    Sunken
+};
+enum class FrameShape {
+    NoFrame,
+    Box,
+    Container,
+    Panel,
+    VerticalLine,
+    HorizontalLine
+};
 
-    String path = String::format("/res/emoji/U+%X.png", codepoint);
-
-    auto bitmap = Bitmap::load_from_file(path);
-    if (!bitmap) {
-        s_emojis.set(codepoint, nullptr);
-        return nullptr;
-    }
-
-    s_emojis.set(codepoint, bitmap);
-    return bitmap.ptr();
-}
+class StylePainter {
+public:
+    static void paint_button(Painter&, const Rect&, const Palette&, ButtonStyle, bool pressed, bool hovered = false, bool checked = false, bool enabled = true);
+    static void paint_tab_button(Painter&, const Rect&, const Palette&, bool active, bool hovered, bool enabled);
+    static void paint_surface(Painter&, const Rect&, const Palette&, bool paint_vertical_lines = true, bool paint_top_line = true);
+    static void paint_frame(Painter&, const Rect&, const Palette&, FrameShape, FrameShadow, int thickness, bool skip_vertical_lines = false);
+    static void paint_window_frame(Painter&, const Rect&, const Palette&);
+    static void paint_progress_bar(Painter&, const Rect&, const Palette&, int min, int max, int value, const StringView& text = {});
+    static void paint_radio_button(Painter&, const Rect&, const Palette&, bool is_checked, bool is_being_pressed);
+};
 
 }

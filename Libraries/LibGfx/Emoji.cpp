@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,52 +24,31 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibDraw/DisjointRectSet.h>
+#include <AK/HashMap.h>
+#include <AK/String.h>
+#include <LibGfx/Emoji.h>
+#include <LibGfx/GraphicsBitmap.h>
 
 namespace Gfx {
 
-void DisjointRectSet::add(const Rect& new_rect)
+static HashMap<u32, RefPtr<Gfx::Bitmap>> s_emojis;
+
+const Bitmap* Emoji::emoji_for_codepoint(u32 codepoint)
 {
-    for (auto& rect : m_rects) {
-        if (rect.contains(new_rect))
-            return;
+    auto it = s_emojis.find(codepoint);
+    if (it != s_emojis.end())
+        return (*it).value.ptr();
+
+    String path = String::format("/res/emoji/U+%X.png", codepoint);
+
+    auto bitmap = Bitmap::load_from_file(path);
+    if (!bitmap) {
+        s_emojis.set(codepoint, nullptr);
+        return nullptr;
     }
 
-    m_rects.append(new_rect);
-    if (m_rects.size() > 1)
-        shatter();
-}
-
-void DisjointRectSet::shatter()
-{
-    Vector<Rect, 32> output;
-    output.ensure_capacity(m_rects.size());
-    bool pass_had_intersections = false;
-    do {
-        pass_had_intersections = false;
-        output.clear_with_capacity();
-        for (int i = 0; i < m_rects.size(); ++i) {
-            auto& r1 = m_rects[i];
-            for (int j = 0; j < m_rects.size(); ++j) {
-                if (i == j)
-                    continue;
-                auto& r2 = m_rects[j];
-                if (!r1.intersects(r2))
-                    continue;
-                pass_had_intersections = true;
-                auto pieces = r1.shatter(r2);
-                for (auto& piece : pieces)
-                    output.append(piece);
-                m_rects.remove(i);
-                for (; i < m_rects.size(); ++i)
-                    output.append(m_rects[i]);
-                goto next_pass;
-            }
-            output.append(r1);
-        }
-    next_pass:
-        swap(output, m_rects);
-    } while (pass_had_intersections);
+    s_emojis.set(codepoint, bitmap);
+    return bitmap.ptr();
 }
 
 }

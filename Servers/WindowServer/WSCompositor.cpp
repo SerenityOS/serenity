@@ -30,9 +30,9 @@
 #include "WSScreen.h"
 #include "WSWindow.h"
 #include "WSWindowManager.h"
-#include <LibDraw/Font.h>
-#include <LibDraw/PNGLoader.h>
-#include <LibDraw/Painter.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/PNGLoader.h>
+#include <LibGfx/Painter.h>
 #include <LibThread/BackgroundAction.h>
 
 // #define COMPOSITOR_DEBUG

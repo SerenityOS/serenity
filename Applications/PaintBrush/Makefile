@@ -15,6 +15,6 @@ OBJS = \
 
 PROGRAM = PaintBrush
 
-LIB_DEPS = GUI Draw IPC Thread Pthread Core
+LIB_DEPS = GUI Gfx IPC Thread Pthread Core
 
 include ../../Makefile.common

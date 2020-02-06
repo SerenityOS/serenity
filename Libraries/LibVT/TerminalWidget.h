@@ -30,8 +30,8 @@
 #include <LibCore/CConfigFile.h>
 #include <LibCore/CNotifier.h>
 #include <LibCore/CTimer.h>
-#include <LibDraw/GraphicsBitmap.h>
-#include <LibDraw/Rect.h>
+#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/Rect.h>
 #include <LibGUI/GFrame.h>
 #include <LibVT/Terminal.h>
 

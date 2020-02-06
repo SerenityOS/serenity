@@ -31,7 +31,7 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/StdLibExtras.h>
-#include <LibDraw/TextAlignment.h>
+#include <LibGfx/TextAlignment.h>
 #include <LibGUI/GScrollableWidget.h>
 
 class HexEditor : public GUI::ScrollableWidget {

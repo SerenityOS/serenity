@@ -29,7 +29,7 @@
 #include <AK/String.h>
 #include <Kernel/KeyCode.h>
 #include <LibCore/CEvent.h>
-#include <LibDraw/Rect.h>
+#include <LibGfx/Rect.h>
 #include <WindowServer/WSCursor.h>
 #include <WindowServer/WSWindowType.h>
 

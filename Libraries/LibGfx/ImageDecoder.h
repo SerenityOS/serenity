@@ -29,7 +29,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
-#include <LibDraw/Size.h>
+#include <LibGfx/Size.h>
 
 namespace Gfx {
 
