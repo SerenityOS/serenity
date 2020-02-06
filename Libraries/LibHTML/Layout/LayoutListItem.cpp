@@ -47,6 +47,6 @@ void LayoutListItem::layout()
         append_child(*m_marker);
     }
 
-    FloatRect marker_rect { x() - 8, y(), 4, height() };
+    Gfx::FloatRect marker_rect { x() - 8, y(), 4, height() };
     m_marker->set_rect(marker_rect);
 }

@@ -328,5 +328,3 @@ inline Rect enclosing_int_rect(const FloatRect& float_rect)
 }
 
 }
-
-using Gfx::FloatRect;

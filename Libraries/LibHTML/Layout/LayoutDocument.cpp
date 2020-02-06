@@ -59,7 +59,7 @@ void LayoutDocument::layout()
 
 void LayoutDocument::did_set_viewport_rect(Badge<Frame>, const Gfx::Rect& a_viewport_rect)
 {
-    FloatRect viewport_rect(a_viewport_rect.x(), a_viewport_rect.y(), a_viewport_rect.width(), a_viewport_rect.height());
+    Gfx::FloatRect viewport_rect(a_viewport_rect.x(), a_viewport_rect.y(), a_viewport_rect.width(), a_viewport_rect.height());
     for_each_in_subtree_of_type<LayoutImage>([&](auto& layout_image) {
         const_cast<HTMLImageElement&>(layout_image.node()).set_volatile({}, !viewport_rect.intersects(layout_image.rect()));
         return IterationDecision::Continue;

@@ -31,9 +31,9 @@
 
 class LayoutBox : public LayoutNodeWithStyleAndBoxModelMetrics {
 public:
-    const FloatRect& rect() const { return m_rect; }
-    FloatRect& rect() { return m_rect; }
-    void set_rect(const FloatRect& rect) { m_rect = rect; }
+    const Gfx::FloatRect& rect() const { return m_rect; }
+    Gfx::FloatRect& rect() { return m_rect; }
+    void set_rect(const Gfx::FloatRect& rect) { m_rect = rect; }
 
     float x() const { return rect().x(); }
     float y() const { return rect().y(); }
@@ -64,9 +64,9 @@ private:
         Bottom,
         Left,
     };
-    void paint_border(RenderingContext&, Edge, const FloatRect&, CSS::PropertyID style_property_id, CSS::PropertyID color_property_id, CSS::PropertyID width_property_id);
+    void paint_border(RenderingContext&, Edge, const Gfx::FloatRect&, CSS::PropertyID style_property_id, CSS::PropertyID color_property_id, CSS::PropertyID width_property_id);
 
-    FloatRect m_rect;
+    Gfx::FloatRect m_rect;
 };
 
 template<>

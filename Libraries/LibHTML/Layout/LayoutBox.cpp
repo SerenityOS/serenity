@@ -34,7 +34,7 @@
 //#define DRAW_BOXES_AROUND_LAYOUT_NODES
 //#define DRAW_BOXES_AROUND_HOVERED_NODES
 
-void LayoutBox::paint_border(RenderingContext& context, Edge edge, const FloatRect& rect, CSS::PropertyID style_property_id, CSS::PropertyID color_property_id, CSS::PropertyID width_property_id)
+void LayoutBox::paint_border(RenderingContext& context, Edge edge, const Gfx::FloatRect& rect, CSS::PropertyID style_property_id, CSS::PropertyID color_property_id, CSS::PropertyID width_property_id)
 {
     auto border_width = style().property(width_property_id);
     if (!border_width.has_value())
@@ -59,7 +59,7 @@ void LayoutBox::paint_border(RenderingContext& context, Edge edge, const FloatRe
             color = Color::Black;
     }
 
-    auto first_point_for_edge = [](Edge edge, const FloatRect& rect) {
+    auto first_point_for_edge = [](Edge edge, const Gfx::FloatRect& rect) {
         switch (edge) {
         case Edge::Top:
             return rect.top_left();
@@ -73,7 +73,7 @@ void LayoutBox::paint_border(RenderingContext& context, Edge edge, const FloatRe
         }
     };
 
-    auto second_point_for_edge = [](Edge edge, const FloatRect& rect) {
+    auto second_point_for_edge = [](Edge edge, const Gfx::FloatRect& rect) {
         switch (edge) {
         case Edge::Top:
             return rect.top_right();
@@ -172,7 +172,7 @@ void LayoutBox::render(RenderingContext& context)
     if (node() && document().inspected_node() == node())
         context.painter().draw_rect(enclosing_int_rect(m_rect), Color::Magenta);
 
-    FloatRect padded_rect;
+    Gfx::FloatRect padded_rect;
     padded_rect.set_x(x() - box_model().padding().left.to_px());
     padded_rect.set_width(width() + box_model().padding().left.to_px() + box_model().padding().right.to_px());
     padded_rect.set_y(y() - box_model().padding().top.to_px());
@@ -193,7 +193,7 @@ void LayoutBox::render(RenderingContext& context)
         }
     }
 
-    FloatRect bordered_rect;
+    Gfx::FloatRect bordered_rect;
     bordered_rect.set_x(padded_rect.x() - box_model().border().left.to_px());
     bordered_rect.set_width(padded_rect.width() + box_model().border().left.to_px() + box_model().border().right.to_px());
     bordered_rect.set_y(padded_rect.y() - box_model().border().top.to_px());
