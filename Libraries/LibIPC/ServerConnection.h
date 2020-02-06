@@ -100,7 +100,7 @@ public:
             fd_set rfds;
             FD_ZERO(&rfds);
             FD_SET(m_connection->fd(), &rfds);
-            int rc = CSyscallUtils::safe_syscall(select, m_connection->fd() + 1, &rfds, nullptr, nullptr, nullptr);
+            int rc = Core::safe_syscall(select, m_connection->fd() + 1, &rfds, nullptr, nullptr, nullptr);
             if (rc < 0) {
                 perror("select");
             }

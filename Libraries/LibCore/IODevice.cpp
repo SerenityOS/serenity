@@ -110,7 +110,7 @@ bool IODevice::can_read_from_fd() const
     struct timeval timeout {
         0, 0
     };
-    int rc = CSyscallUtils::safe_syscall(select, m_fd + 1, &rfds, nullptr, nullptr, &timeout);
+    int rc = Core::safe_syscall(select, m_fd + 1, &rfds, nullptr, nullptr, &timeout);
     if (rc < 0) {
         // NOTE: We don't set m_error here.
         perror("IODevice::can_read: select");
