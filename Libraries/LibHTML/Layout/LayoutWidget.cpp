@@ -43,7 +43,7 @@ LayoutWidget::~LayoutWidget()
 
 void LayoutWidget::layout()
 {
-    rect().set_size(FloatSize(widget().width(), widget().height()));
+    rect().set_size(widget().width(), widget().height());
     LayoutReplaced::layout();
     widget().move_to(rect().x(), rect().y());
 }
