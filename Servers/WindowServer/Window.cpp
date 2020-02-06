@@ -113,19 +113,19 @@ void Window::handle_mouse_event(const MouseEvent& event)
 
     switch (event.type()) {
     case Event::MouseMove:
-        m_client->post_message(WindowClient::MouseMove(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta()));
+        m_client->post_message(Messages::WindowClient::MouseMove(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta()));
         break;
     case Event::MouseDown:
-        m_client->post_message(WindowClient::MouseDown(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta()));
+        m_client->post_message(Messages::WindowClient::MouseDown(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta()));
         break;
     case Event::MouseDoubleClick:
-        m_client->post_message(WindowClient::MouseDoubleClick(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta()));
+        m_client->post_message(Messages::WindowClient::MouseDoubleClick(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta()));
         break;
     case Event::MouseUp:
-        m_client->post_message(WindowClient::MouseUp(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta()));
+        m_client->post_message(Messages::WindowClient::MouseUp(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta()));
         break;
     case Event::MouseWheel:
-        m_client->post_message(WindowClient::MouseWheel(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta()));
+        m_client->post_message(Messages::WindowClient::MouseWheel(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta()));
         break;
     default:
         ASSERT_NOT_REACHED();
@@ -237,37 +237,37 @@ void Window::event(Core::Event& event)
 
     switch (event.type()) {
     case Event::WindowEntered:
-        m_client->post_message(WindowClient::WindowEntered(m_window_id));
+        m_client->post_message(Messages::WindowClient::WindowEntered(m_window_id));
         break;
     case Event::WindowLeft:
-        m_client->post_message(WindowClient::WindowLeft(m_window_id));
+        m_client->post_message(Messages::WindowClient::WindowLeft(m_window_id));
         break;
     case Event::KeyDown:
         m_client->post_message(
-            WindowClient::KeyDown(m_window_id,
+            Messages::WindowClient::KeyDown(m_window_id,
                 (u8) static_cast<const KeyEvent&>(event).character(),
                 (u32) static_cast<const KeyEvent&>(event).key(),
                 static_cast<const KeyEvent&>(event).modifiers()));
         break;
     case Event::KeyUp:
         m_client->post_message(
-            WindowClient::KeyUp(m_window_id,
+            Messages::WindowClient::KeyUp(m_window_id,
                 (u8) static_cast<const KeyEvent&>(event).character(),
                 (u32) static_cast<const KeyEvent&>(event).key(),
                 static_cast<const KeyEvent&>(event).modifiers()));
         break;
     case Event::WindowActivated:
-        m_client->post_message(WindowClient::WindowActivated(m_window_id));
+        m_client->post_message(Messages::WindowClient::WindowActivated(m_window_id));
         break;
     case Event::WindowDeactivated:
-        m_client->post_message(WindowClient::WindowDeactivated(m_window_id));
+        m_client->post_message(Messages::WindowClient::WindowDeactivated(m_window_id));
         break;
     case Event::WindowCloseRequest:
-        m_client->post_message(WindowClient::WindowCloseRequest(m_window_id));
+        m_client->post_message(Messages::WindowClient::WindowCloseRequest(m_window_id));
         break;
     case Event::WindowResized:
         m_client->post_message(
-            WindowClient::WindowResized(
+            Messages::WindowClient::WindowResized(
                 m_window_id,
                 static_cast<const ResizeEvent&>(event).old_rect(),
                 static_cast<const ResizeEvent&>(event).rect()));

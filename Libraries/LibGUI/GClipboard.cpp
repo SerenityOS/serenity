@@ -44,7 +44,7 @@ Clipboard::Clipboard()
 
 Clipboard::DataAndType Clipboard::data_and_type() const
 {
-    auto response = WindowServerConnection::the().send_sync<WindowServer::GetClipboardContents>();
+    auto response = WindowServerConnection::the().send_sync<Messages::WindowServer::GetClipboardContents>();
     if (response->shared_buffer_id() < 0)
         return {};
     auto shared_buffer = SharedBuffer::create_from_shared_buffer_id(response->shared_buffer_id());
@@ -75,7 +75,7 @@ void Clipboard::set_data(const StringView& data, const String& type)
     shared_buffer->seal();
     shared_buffer->share_with(WindowServerConnection::the().server_pid());
 
-    WindowServerConnection::the().send_sync<WindowServer::SetClipboardContents>(shared_buffer->shared_buffer_id(), data.length(), type);
+    WindowServerConnection::the().send_sync<Messages::WindowServer::SetClipboardContents>(shared_buffer->shared_buffer_id(), data.length(), type);
 }
 
 void Clipboard::did_receive_clipboard_contents_changed(Badge<WindowServerConnection>, const String& data_type)

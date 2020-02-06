@@ -224,7 +224,7 @@ void DisplayPropertiesWidget::send_settings_to_window_server(int tab_index)
         GUI::Desktop::the().set_wallpaper(builder.to_string());
     } else if (tab_index == TabIndices::Settings) {
         dbg() << "Attempting to set resolution " << m_selected_resolution;
-        GUI::WindowServerConnection::the().send_sync<WindowServer::SetResolution>(m_selected_resolution);
+        GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetResolution>(m_selected_resolution);
     } else {
         dbg() << "Invalid tab index " << tab_index;
     }

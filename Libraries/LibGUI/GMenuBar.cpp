@@ -45,14 +45,14 @@ void MenuBar::add_menu(NonnullRefPtr<Menu> menu)
 
 int MenuBar::realize_menubar()
 {
-    return WindowServerConnection::the().send_sync<WindowServer::CreateMenubar>()->menubar_id();
+    return WindowServerConnection::the().send_sync<Messages::WindowServer::CreateMenubar>()->menubar_id();
 }
 
 void MenuBar::unrealize_menubar()
 {
     if (m_menubar_id == -1)
         return;
-    WindowServerConnection::the().send_sync<WindowServer::DestroyMenubar>(m_menubar_id);
+    WindowServerConnection::the().send_sync<Messages::WindowServer::DestroyMenubar>(m_menubar_id);
     m_menubar_id = -1;
 }
 
@@ -64,9 +64,9 @@ void MenuBar::notify_added_to_application(Badge<Application>)
     for (auto& menu : m_menus) {
         int menu_id = menu.realize_menu();
         ASSERT(menu_id != -1);
-        WindowServerConnection::the().send_sync<WindowServer::AddMenuToMenubar>(m_menubar_id, menu_id);
+        WindowServerConnection::the().send_sync<Messages::WindowServer::AddMenuToMenubar>(m_menubar_id, menu_id);
     }
-    WindowServerConnection::the().send_sync<WindowServer::SetApplicationMenubar>(m_menubar_id);
+    WindowServerConnection::the().send_sync<Messages::WindowServer::SetApplicationMenubar>(m_menubar_id);
 }
 
 void MenuBar::notify_removed_from_application(Badge<Application>)

@@ -79,14 +79,14 @@ void Window::move_to_front()
     if (!m_window_id)
         return;
 
-    WindowServerConnection::the().send_sync<WindowServer::MoveWindowToFront>(m_window_id);
+    WindowServerConnection::the().send_sync<Messages::WindowServer::MoveWindowToFront>(m_window_id);
 }
 
 void Window::show()
 {
     if (m_window_id)
         return;
-    auto response = WindowServerConnection::the().send_sync<WindowServer::CreateWindow>(
+    auto response = WindowServerConnection::the().send_sync<Messages::WindowServer::CreateWindow>(
         m_rect_when_windowless,
         m_has_alpha_channel,
         m_modal,
@@ -113,7 +113,7 @@ void Window::hide()
     if (!m_window_id)
         return;
     reified_windows->remove(m_window_id);
-    WindowServerConnection::the().send_sync<WindowServer::DestroyWindow>(m_window_id);
+    WindowServerConnection::the().send_sync<Messages::WindowServer::DestroyWindow>(m_window_id);
     m_window_id = 0;
     m_pending_paint_event_rects.clear();
     m_back_bitmap = nullptr;
@@ -135,21 +135,21 @@ void Window::set_title(const StringView& title)
     m_title_when_windowless = title;
     if (!m_window_id)
         return;
-    WindowServerConnection::the().send_sync<WindowServer::SetWindowTitle>(m_window_id, title);
+    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowTitle>(m_window_id, title);
 }
 
 String Window::title() const
 {
     if (!m_window_id)
         return m_title_when_windowless;
-    return WindowServerConnection::the().send_sync<WindowServer::GetWindowTitle>(m_window_id)->title();
+    return WindowServerConnection::the().send_sync<Messages::WindowServer::GetWindowTitle>(m_window_id)->title();
 }
 
 Gfx::Rect Window::rect() const
 {
     if (!m_window_id)
         return m_rect_when_windowless;
-    return WindowServerConnection::the().send_sync<WindowServer::GetWindowRect>(m_window_id)->rect();
+    return WindowServerConnection::the().send_sync<Messages::WindowServer::GetWindowRect>(m_window_id)->rect();
 }
 
 void Window::set_rect(const Gfx::Rect& a_rect)
@@ -160,7 +160,7 @@ void Window::set_rect(const Gfx::Rect& a_rect)
             m_main_widget->resize(m_rect_when_windowless.size());
         return;
     }
-    WindowServerConnection::the().send_sync<WindowServer::SetWindowRect>(m_window_id, a_rect);
+    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowRect>(m_window_id, a_rect);
     if (m_back_bitmap && m_back_bitmap->size() != a_rect.size())
         m_back_bitmap = nullptr;
     if (m_front_bitmap && m_front_bitmap->size() != a_rect.size())
@@ -178,7 +178,7 @@ void Window::set_override_cursor(StandardCursor cursor)
 {
     if (!m_window_id)
         return;
-    WindowServerConnection::the().send_sync<WindowServer::SetWindowOverrideCursor>(m_window_id, (u32)cursor);
+    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowOverrideCursor>(m_window_id, (u32)cursor);
 }
 
 void Window::event(Core::Event& event)
@@ -267,7 +267,7 @@ void Window::event(Core::Event& event)
             Vector<Gfx::Rect> rects_to_send;
             for (auto& r : rects)
                 rects_to_send.append(r);
-            WindowServerConnection::the().post_message(WindowServer::DidFinishPainting(m_window_id, rects_to_send));
+            WindowServerConnection::the().post_message(Messages::WindowServer::DidFinishPainting(m_window_id, rects_to_send));
         }
         return;
     }
@@ -354,7 +354,7 @@ void Window::update(const Gfx::Rect& a_rect)
             Vector<Gfx::Rect> rects_to_send;
             for (auto& r : rects)
                 rects_to_send.append(r);
-            WindowServerConnection::the().post_message(WindowServer::InvalidateRect(m_window_id, rects_to_send));
+            WindowServerConnection::the().post_message(Messages::WindowServer::InvalidateRect(m_window_id, rects_to_send));
         });
     }
     m_pending_paint_event_rects.append(a_rect);
@@ -424,7 +424,7 @@ void Window::set_has_alpha_channel(bool value)
     m_back_bitmap = nullptr;
     m_front_bitmap = nullptr;
 
-    WindowServerConnection::the().send_sync<WindowServer::SetWindowHasAlphaChannel>(m_window_id, value);
+    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowHasAlphaChannel>(m_window_id, value);
     update();
 }
 
@@ -439,7 +439,7 @@ void Window::set_opacity(float opacity)
     m_opacity_when_windowless = opacity;
     if (!m_window_id)
         return;
-    WindowServerConnection::the().send_sync<WindowServer::SetWindowOpacity>(m_window_id, opacity);
+    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowOpacity>(m_window_id, opacity);
 }
 
 void Window::set_hovered_widget(Widget* widget)
@@ -458,7 +458,7 @@ void Window::set_hovered_widget(Widget* widget)
 
 void Window::set_current_backing_bitmap(Gfx::Bitmap& bitmap, bool flush_immediately)
 {
-    WindowServerConnection::the().send_sync<WindowServer::SetWindowBackingStore>(m_window_id, 32, bitmap.pitch(), bitmap.shared_buffer_id(), bitmap.has_alpha_channel(), bitmap.size(), flush_immediately);
+    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowBackingStore>(m_window_id, 32, bitmap.pitch(), bitmap.shared_buffer_id(), bitmap.has_alpha_channel(), bitmap.size(), flush_immediately);
 }
 
 void Window::flip(const Vector<Gfx::Rect, 32>& dirty_rects)
@@ -542,12 +542,12 @@ void Window::apply_icon()
     if (!has_set_process_icon)
         set_process_icon(m_icon->shared_buffer_id());
 
-    WindowServerConnection::the().send_sync<WindowServer::SetWindowIconBitmap>(m_window_id, m_icon->shared_buffer_id(), m_icon->size());
+    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowIconBitmap>(m_window_id, m_icon->shared_buffer_id(), m_icon->size());
 }
 
 void Window::start_wm_resize()
 {
-    WindowServerConnection::the().post_message(WindowServer::WM_StartWindowResize(WindowServerConnection::the().my_client_id(), m_window_id));
+    WindowServerConnection::the().post_message(Messages::WindowServer::WM_StartWindowResize(WindowServerConnection::the().my_client_id(), m_window_id));
 }
 
 Vector<Widget*> Window::focusable_widgets() const
@@ -595,7 +595,7 @@ void Window::set_fullscreen(bool fullscreen)
     m_fullscreen = fullscreen;
     if (!m_window_id)
         return;
-    WindowServerConnection::the().send_sync<WindowServer::SetFullscreen>(m_window_id, fullscreen);
+    WindowServerConnection::the().send_sync<Messages::WindowServer::SetFullscreen>(m_window_id, fullscreen);
 }
 
 void Window::schedule_relayout()

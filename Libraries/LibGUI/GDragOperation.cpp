@@ -56,7 +56,7 @@ DragOperation::Outcome DragOperation::exec()
         bitmap_size = shared_bitmap->size();
     }
 
-    auto response = WindowServerConnection::the().send_sync<WindowServer::StartDrag>(m_text, m_data_type, m_data, bitmap_id, bitmap_size);
+    auto response = WindowServerConnection::the().send_sync<Messages::WindowServer::StartDrag>(m_text, m_data_type, m_data, bitmap_id, bitmap_size);
     if (!response->started()) {
         m_outcome = Outcome::Cancelled;
         return m_outcome;

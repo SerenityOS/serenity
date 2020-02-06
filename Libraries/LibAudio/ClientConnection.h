@@ -61,8 +61,8 @@ public:
     Function<void(bool muted)> on_muted_state_change;
 
 private:
-    virtual void handle(const AudioClient::FinishedPlayingBuffer&) override;
-    virtual void handle(const AudioClient::MutedStateChanged&) override;
+    virtual void handle(const Messages::AudioClient::FinishedPlayingBuffer&) override;
+    virtual void handle(const Messages::AudioClient::MutedStateChanged&) override;
 };
 
 }

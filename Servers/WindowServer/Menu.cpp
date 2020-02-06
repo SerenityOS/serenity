@@ -470,7 +470,7 @@ void Menu::did_activate(MenuItem& item)
     MenuManager::the().close_bar();
 
     if (m_client)
-        m_client->post_message(WindowClient::MenuItemActivated(m_menu_id, item.identifier()));
+        m_client->post_message(Messages::WindowClient::MenuItemActivated(m_menu_id, item.identifier()));
 }
 
 MenuItem* Menu::item_with_identifier(unsigned identifer)

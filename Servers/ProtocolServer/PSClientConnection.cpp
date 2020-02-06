@@ -47,30 +47,30 @@ void PSClientConnection::die()
     s_connections.remove(client_id());
 }
 
-OwnPtr<ProtocolServer::IsSupportedProtocolResponse> PSClientConnection::handle(const ProtocolServer::IsSupportedProtocol& message)
+OwnPtr<Messages::ProtocolServer::IsSupportedProtocolResponse> PSClientConnection::handle(const Messages::ProtocolServer::IsSupportedProtocol& message)
 {
     bool supported = Protocol::find_by_name(message.protocol().to_lowercase());
-    return make<ProtocolServer::IsSupportedProtocolResponse>(supported);
+    return make<Messages::ProtocolServer::IsSupportedProtocolResponse>(supported);
 }
 
-OwnPtr<ProtocolServer::StartDownloadResponse> PSClientConnection::handle(const ProtocolServer::StartDownload& message)
+OwnPtr<Messages::ProtocolServer::StartDownloadResponse> PSClientConnection::handle(const Messages::ProtocolServer::StartDownload& message)
 {
     URL url(message.url());
     ASSERT(url.is_valid());
     auto* protocol = Protocol::find_by_name(url.protocol());
     ASSERT(protocol);
     auto download = protocol->start_download(*this, url);
-    return make<ProtocolServer::StartDownloadResponse>(download->id());
+    return make<Messages::ProtocolServer::StartDownloadResponse>(download->id());
 }
 
-OwnPtr<ProtocolServer::StopDownloadResponse> PSClientConnection::handle(const ProtocolServer::StopDownload& message)
+OwnPtr<Messages::ProtocolServer::StopDownloadResponse> PSClientConnection::handle(const Messages::ProtocolServer::StopDownload& message)
 {
     auto* download = Download::find_by_id(message.download_id());
     bool success = false;
     if (download) {
         download->stop();
     }
-    return make<ProtocolServer::StopDownloadResponse>(success);
+    return make<Messages::ProtocolServer::StopDownloadResponse>(success);
 }
 
 void PSClientConnection::did_finish_download(Badge<Download>, Download& download, bool success)
@@ -83,21 +83,21 @@ void PSClientConnection::did_finish_download(Badge<Download>, Download& download
         buffer->share_with(client_pid());
         m_shared_buffers.set(buffer->shared_buffer_id(), buffer);
     }
-    post_message(ProtocolClient::DownloadFinished(download.id(), success, download.total_size(), buffer ? buffer->shared_buffer_id() : -1));
+    post_message(Messages::ProtocolClient::DownloadFinished(download.id(), success, download.total_size(), buffer ? buffer->shared_buffer_id() : -1));
 }
 
 void PSClientConnection::did_progress_download(Badge<Download>, Download& download)
 {
-    post_message(ProtocolClient::DownloadProgress(download.id(), download.total_size(), download.downloaded_size()));
+    post_message(Messages::ProtocolClient::DownloadProgress(download.id(), download.total_size(), download.downloaded_size()));
 }
 
-OwnPtr<ProtocolServer::GreetResponse> PSClientConnection::handle(const ProtocolServer::Greet&)
+OwnPtr<Messages::ProtocolServer::GreetResponse> PSClientConnection::handle(const Messages::ProtocolServer::Greet&)
 {
-    return make<ProtocolServer::GreetResponse>(client_id());
+    return make<Messages::ProtocolServer::GreetResponse>(client_id());
 }
 
-OwnPtr<ProtocolServer::DisownSharedBufferResponse> PSClientConnection::handle(const ProtocolServer::DisownSharedBuffer& message)
+OwnPtr<Messages::ProtocolServer::DisownSharedBufferResponse> PSClientConnection::handle(const Messages::ProtocolServer::DisownSharedBuffer& message)
 {
     m_shared_buffers.remove(message.shared_buffer_id());
-    return make<ProtocolServer::DisownSharedBufferResponse>();
+    return make<Messages::ProtocolServer::DisownSharedBufferResponse>();
 }

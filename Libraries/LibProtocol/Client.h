@@ -48,8 +48,8 @@ public:
     bool stop_download(Badge<Download>, Download&);
 
 private:
-    virtual void handle(const ProtocolClient::DownloadProgress&) override;
-    virtual void handle(const ProtocolClient::DownloadFinished&) override;
+    virtual void handle(const Messages::ProtocolClient::DownloadProgress&) override;
+    virtual void handle(const Messages::ProtocolClient::DownloadFinished&) override;
 
     HashMap<i32, RefPtr<Download>> m_downloads;
 };
