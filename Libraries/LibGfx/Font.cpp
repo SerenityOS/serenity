@@ -26,7 +26,7 @@
 
 #include "Font.h"
 #include "Emoji.h"
-#include "GraphicsBitmap.h"
+#include "Bitmap.h"
 #include <AK/BufferStream.h>
 #include <AK/MappedFile.h>
 #include <AK/StdLibExtras.h>

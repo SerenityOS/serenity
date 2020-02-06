@@ -31,7 +31,7 @@
 #include <LibCore/CObject.h>
 #include <LibCore/CTimer.h>
 #include <LibGfx/DisjointRectSet.h>
-#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/Bitmap.h>
 
 namespace Gfx {
 class Painter;

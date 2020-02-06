@@ -33,7 +33,7 @@
 #include <AK/URL.h>
 #include <AK/WeakPtr.h>
 #include <LibGfx/Color.h>
-#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/Bitmap.h>
 #include <LibHTML/CSS/Length.h>
 #include <LibHTML/CSS/PropertyID.h>
 

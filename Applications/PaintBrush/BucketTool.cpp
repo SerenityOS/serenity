@@ -29,7 +29,7 @@
 #include <AK/Queue.h>
 #include <AK/SinglyLinkedList.h>
 #include <LibGUI/GPainter.h>
-#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/Bitmap.h>
 #include <stdio.h>
 
 BucketTool::BucketTool()

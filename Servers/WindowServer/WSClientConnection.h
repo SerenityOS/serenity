@@ -31,7 +31,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/CObject.h>
-#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/Bitmap.h>
 #include <LibIPC/IClientConnection.h>
 #include <WindowServer/WSEvent.h>
 #include <WindowServer/WindowServerEndpoint.h>

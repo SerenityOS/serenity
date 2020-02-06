@@ -25,7 +25,7 @@
  */
 
 #include <AK/SharedBuffer.h>
-#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/SystemTheme.h>
 #include <WindowServer/WSClientConnection.h>
 #include <WindowServer/WSClipboard.h>

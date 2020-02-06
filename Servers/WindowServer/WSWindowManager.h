@@ -51,7 +51,6 @@ class WSClientWantsToPaintMessage;
 class WSWindow;
 class WSClientConnection;
 class WSWindowSwitcher;
-class GraphicsBitmap;
 class WSButton;
 
 enum class ResizeDirection {

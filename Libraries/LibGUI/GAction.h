@@ -34,7 +34,7 @@
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
-#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGUI/GShortcut.h>
 #include <LibGUI/GWindow.h>
 

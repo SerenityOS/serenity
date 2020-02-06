@@ -27,7 +27,7 @@
 #include <AK/HashMap.h>
 #include <AK/String.h>
 #include <LibGfx/Emoji.h>
-#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/Bitmap.h>
 
 namespace Gfx {
 

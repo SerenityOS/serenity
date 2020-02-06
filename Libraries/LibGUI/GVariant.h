@@ -28,7 +28,7 @@
 
 #include <AK/String.h>
 #include <LibGfx/Font.h>
-#include <LibGfx/GraphicsBitmap.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGUI/GIcon.h>
 
 namespace AK {
