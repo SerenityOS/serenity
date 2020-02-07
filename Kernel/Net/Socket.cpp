@@ -113,7 +113,7 @@ KResult Socket::setsockopt(int level, int option, const void* value, socklen_t v
         m_receive_timeout = *(const timeval*)value;
         return KSuccess;
     default:
-        kprintf("%s(%u): setsockopt() at SOL_SOCKET with unimplemented option %d\n", current->process().name().characters(), current->process().pid(), option);
+        dbg() << "setsockopt(" << option << ") at SOL_SOCKET not implemented.";
         return KResult(-ENOPROTOOPT);
     }
 }
@@ -137,12 +137,12 @@ KResult Socket::getsockopt(FileDescription&, int level, int option, void* value,
     case SO_ERROR:
         if (*value_size < sizeof(int))
             return KResult(-EINVAL);
-        kprintf("%s(%u): getsockopt() SO_ERROR: WARNING! I have no idea what the real error is, so I'll just stick my fingers in my ears and pretend there is none! %d\n", current->process().name().characters(), option);
+        dbg() << "getsockopt(SO_ERROR): FIXME!";
         *(int*)value = 0;
         *value_size = sizeof(int);
         return KSuccess;
     default:
-        kprintf("%s(%u): getsockopt() at SOL_SOCKET with unimplemented option %d\n", current->process().name().characters(), option);
+        dbg() << "getsockopt(" << option << ") at SOL_SOCKET not implemented.";
         return KResult(-ENOPROTOOPT);
     }
 }
