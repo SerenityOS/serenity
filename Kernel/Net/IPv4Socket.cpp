@@ -347,6 +347,10 @@ ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t 
 bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port, KBuffer&& packet)
 {
     LOCKER(lock());
+
+    if (is_shut_down_for_reading())
+        return false;
+
     auto packet_size = packet.size();
 
     if (buffer_mode() == BufferMode::Bytes) {
