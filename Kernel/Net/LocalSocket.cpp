@@ -76,19 +76,16 @@ LocalSocket::~LocalSocket()
     all_sockets().resource().remove(this);
 }
 
-bool LocalSocket::get_local_address(sockaddr* address, socklen_t* address_size)
+void LocalSocket::get_local_address(sockaddr* address, socklen_t* address_size)
 {
-    // FIXME: Look into what fallback behavior we should have here.
-    if (*address_size != sizeof(sockaddr_un))
-        return false;
-    memcpy(address, &m_address, sizeof(sockaddr_un));
+    size_t bytes_to_copy = min(static_cast<size_t>(*address_size), sizeof(sockaddr_un));
+    memcpy(address, &m_address, bytes_to_copy);
     *address_size = sizeof(sockaddr_un);
-    return true;
 }
 
-bool LocalSocket::get_peer_address(sockaddr* address, socklen_t* address_size)
+void LocalSocket::get_peer_address(sockaddr* address, socklen_t* address_size)
 {
-    return get_local_address(address, address_size);
+    get_local_address(address, address_size);
 }
 
 KResult LocalSocket::bind(const sockaddr* user_address, socklen_t address_size)

@@ -3190,8 +3190,7 @@ int Process::sys$accept(int accepting_socket_fd, sockaddr* address, socklen_t* a
     }
     auto accepted_socket = socket.accept();
     ASSERT(accepted_socket);
-    bool success = accepted_socket->get_peer_address(address, address_size);
-    ASSERT(success);
+    accepted_socket->get_peer_address(address, address_size);
     auto accepted_socket_description = FileDescription::create(*accepted_socket);
     accepted_socket_description->set_readable(true);
     accepted_socket_description->set_writable(true);
@@ -3318,11 +3317,12 @@ int Process::get_sock_or_peer_name(const Params& params)
 
     u8 address_buffer[sizeof(sockaddr_un)];
     addrlen_value = min(sizeof(sockaddr_un), static_cast<size_t>(addrlen_value));
-
-    if (!socket.get_local_address((sockaddr*)address_buffer, &addrlen_value))
-        return -EINVAL;
-
+    if constexpr (sockname)
+        socket.get_local_address((sockaddr*)address_buffer, &addrlen_value);
+    else
+        socket.get_peer_address((sockaddr*)address_buffer, &addrlen_value);
     copy_to_user(params.addr, address_buffer, addrlen_value);
+    copy_to_user(params.addrlen, &addrlen_value);
     return 0;
 }
 
