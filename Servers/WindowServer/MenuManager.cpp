@@ -198,6 +198,16 @@ bool MenuManager::is_open(const Menu& menu) const
     return false;
 }
 
+const Gfx::Font& MenuManager::menu_font() const
+{
+    return Gfx::Font::default_font();
+}
+
+const Gfx::Font& MenuManager::app_menu_font() const
+{
+    return Gfx::Font::default_bold_font();
+}
+
 void MenuManager::draw()
 {
     auto& wm = WindowManager::the();
@@ -246,7 +256,7 @@ void MenuManager::draw()
         painter.draw_text(
             menu.text_rect_in_menubar(),
             menu.name(),
-            index == 1 ? wm.app_menu_font() : wm.menu_font(),
+            index == 1 ? app_menu_font() : menu_font(),
             Gfx::TextAlignment::CenterLeft,
             text_color);
         ++index;

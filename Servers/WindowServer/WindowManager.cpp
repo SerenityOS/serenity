@@ -130,16 +130,6 @@ const Gfx::Font& WindowManager::window_title_font() const
     return Gfx::Font::default_bold_font();
 }
 
-const Gfx::Font& WindowManager::menu_font() const
-{
-    return Gfx::Font::default_font();
-}
-
-const Gfx::Font& WindowManager::app_menu_font() const
-{
-    return Gfx::Font::default_bold_font();
-}
-
 void WindowManager::set_resolution(int width, int height)
 {
     Compositor::the().set_resolution(width, height);

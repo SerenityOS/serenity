@@ -90,6 +90,9 @@ public:
     }
 
 private:
+    const Gfx::Font& menu_font() const;
+    const Gfx::Font& app_menu_font() const;
+
     void close_menus(const Vector<Menu*>&);
 
     Window& window() { return *m_window; }
