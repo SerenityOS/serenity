@@ -49,6 +49,10 @@ __BEGIN_DECLS
 #define SOCK_NONBLOCK 04000
 #define SOCK_CLOEXEC 02000000
 
+#define SHUT_RD 1
+#define SHUT_WR 2
+#define SHUT_RDWR 3
+
 #define IPPROTO_IP 0
 #define IPPROTO_ICMP 1
 #define IPPROTO_TCP 6
@@ -81,6 +85,7 @@ int bind(int sockfd, const struct sockaddr* addr, socklen_t);
 int listen(int sockfd, int backlog);
 int accept(int sockfd, struct sockaddr*, socklen_t*);
 int connect(int sockfd, const struct sockaddr*, socklen_t);
+int shutdown(int sockfd, int how);
 ssize_t send(int sockfd, const void*, size_t, int flags);
 ssize_t sendto(int sockfd, const void*, size_t, int flags, const struct sockaddr*, socklen_t);
 ssize_t recv(int sockfd, void*, size_t, int flags);

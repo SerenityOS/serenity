@@ -177,7 +177,8 @@ typedef u32 socklen_t;
     __ENUMERATE_SYSCALL(chroot)                     \
     __ENUMERATE_SYSCALL(pledge)                     \
     __ENUMERATE_SYSCALL(unveil)                     \
-    __ENUMERATE_SYSCALL(perf_event)
+    __ENUMERATE_SYSCALL(perf_event)                 \
+    __ENUMERATE_SYSCALL(shutdown)
 
 namespace Syscall {
 

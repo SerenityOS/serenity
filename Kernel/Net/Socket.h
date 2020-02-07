@@ -51,6 +51,9 @@ public:
     int type() const { return m_type; }
     int protocol() const { return m_protocol; }
 
+    bool is_shut_down_for_writing() const { return m_shut_down_for_writing; }
+    bool is_shut_down_for_reading() const { return m_shut_down_for_reading; }
+
     enum class SetupState {
         Unstarted,  // we haven't tried to set the socket up yet
         InProgress, // we're in the process of setting things up - for TCP maybe we've sent a SYN packet
@@ -89,6 +92,8 @@ public:
 
     bool can_accept() const { return !m_pending.is_empty(); }
     RefPtr<Socket> accept();
+
+    KResult shutdown(int how);
 
     virtual KResult bind(const sockaddr*, socklen_t) = 0;
     virtual KResult connect(FileDescription&, const sockaddr*, socklen_t, ShouldBlock) = 0;
@@ -153,6 +158,8 @@ private:
     int m_backlog { 0 };
     SetupState m_setup_state { SetupState::Unstarted };
     bool m_connected { false };
+    bool m_shut_down_for_reading { false };
+    bool m_shut_down_for_writing { false };
 
     timeval m_receive_timeout { 0, 0 };
     timeval m_send_timeout { 0, 0 };

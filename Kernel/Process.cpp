@@ -3221,6 +3221,22 @@ int Process::sys$connect(int sockfd, const sockaddr* address, socklen_t address_
     return socket.connect(*description, address, address_size, description->is_blocking() ? ShouldBlock::Yes : ShouldBlock::No);
 }
 
+int Process::sys$shutdown(int sockfd, int how)
+{
+    REQUIRE_PROMISE(stdio);
+    if (how & ~SHUT_RDWR)
+        return -EINVAL;
+    auto description = file_description(sockfd);
+    if (!description)
+        return -EBADF;
+    if (!description->is_socket())
+        return -ENOTSOCK;
+
+    auto& socket = *description->socket();
+    REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
+    return socket.shutdown(how);
+}
+
 ssize_t Process::sys$sendto(const Syscall::SC_sendto_params* user_params)
 {
     REQUIRE_PROMISE(stdio);
@@ -3241,8 +3257,10 @@ ssize_t Process::sys$sendto(const Syscall::SC_sendto_params* user_params)
         return -EBADF;
     if (!description->is_socket())
         return -ENOTSOCK;
-    SmapDisabler disabler;
     auto& socket = *description->socket();
+    if (socket.is_shut_down_for_writing())
+        return -EPIPE;
+    SmapDisabler disabler;
     return socket.sendto(*description, params.data.data, params.data.size, flags, addr, addr_length);
 }
 
@@ -3275,6 +3293,9 @@ ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* user_params)
     if (!description->is_socket())
         return -ENOTSOCK;
     auto& socket = *description->socket();
+
+    if (socket.is_shut_down_for_reading())
+        return 0;
 
     bool original_blocking = description->is_blocking();
     if (flags & MSG_DONTWAIT)
