@@ -29,6 +29,8 @@
 #include <AK/String.h>
 #include <ctype.h>
 
+namespace GUI {
+
 CppLexer::CppLexer(const StringView& input)
     : m_input(input)
 {
@@ -367,4 +369,6 @@ Vector<CppToken> CppLexer::lex()
         emit_token(CppToken::Type::Unknown);
     }
     return tokens;
+}
+
 }

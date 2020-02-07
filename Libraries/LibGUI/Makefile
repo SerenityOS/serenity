@@ -14,6 +14,8 @@ OBJS = \
     ColumnsView.o \
     ComboBox.o \
     Command.o \
+    CppLexer.o \
+    CppSyntaxHighlighter.o \
     Desktop.o \
     Dialog.o \
     DragOperation.o \
@@ -49,6 +51,7 @@ OBJS = \
     Splitter.o \
     StackWidget.o \
     StatusBar.o \
+    SyntaxHighlighter.o \
     TabWidget.o \
     TableView.o \
     TextBox.o \

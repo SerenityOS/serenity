@@ -6,7 +6,6 @@ OBJS = \
     ProcessStateWidget.o \
     FormEditorWidget.o \
     FormWidget.o \
-    CppLexer.o \
     Editor.o \
     EditorWrapper.o \
     Locator.o \

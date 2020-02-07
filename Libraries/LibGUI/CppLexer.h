@@ -29,6 +29,8 @@
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 
+namespace GUI {
+
 #define FOR_EACH_TOKEN_TYPE        \
     __TOKEN(Unknown)               \
     __TOKEN(Whitespace)            \
@@ -94,3 +96,5 @@ private:
     CppPosition m_previous_position { 0, 0 };
     CppPosition m_position { 0, 0 };
 };
+
+}

@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "CppLexer.h"
 #include "CursorTool.h"
 #include "Editor.h"
 #include "EditorWrapper.h"
@@ -44,6 +43,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/CppSyntaxHighlighter.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
@@ -548,70 +548,13 @@ void run(TerminalWrapper& wrapper)
     wrapper.run_command("make run");
 }
 
-struct TextStyle {
-    Color color;
-    const Gfx::Font* font { nullptr };
-};
-
-static TextStyle style_for_token_type(CppToken::Type type)
-{
-    switch (type) {
-    case CppToken::Type::Keyword:
-        return { Color::Black, &Gfx::Font::default_bold_fixed_width_font() };
-    case CppToken::Type::KnownType:
-        return { Color::from_rgb(0x929200), &Gfx::Font::default_bold_fixed_width_font() };
-    case CppToken::Type::Identifier:
-        return { Color::from_rgb(0x000092) };
-    case CppToken::Type::DoubleQuotedString:
-    case CppToken::Type::SingleQuotedString:
-    case CppToken::Type::Number:
-        return { Color::from_rgb(0x920000) };
-    case CppToken::Type::PreprocessorStatement:
-        return { Color::from_rgb(0x009292) };
-    case CppToken::Type::Comment:
-        return { Color::from_rgb(0x009200) };
-    default:
-        return { Color::Black };
-    }
-}
-
-static void rehighlight()
-{
-    auto text = current_editor().text();
-    CppLexer lexer(text);
-    auto tokens = lexer.lex();
-
-    Vector<GUI::TextDocumentSpan> spans;
-    for (auto& token : tokens) {
-#ifdef DEBUG_SYNTAX_HIGHLIGHTING
-        dbg() << token.to_string() << " @ " << token.m_start.line << ":" << token.m_start.column << " - " << token.m_end.line << ":" << token.m_end.column;
-#endif
-        GUI::TextDocumentSpan span;
-        span.range.set_start({ token.m_start.line, token.m_start.column });
-        span.range.set_end({ token.m_end.line, token.m_end.column });
-        auto style = style_for_token_type(token.m_type);
-        span.color = style.color;
-        span.font = style.font;
-        span.is_skippable = token.m_type == CppToken::Type::Whitespace;
-        span.data = (void*)token.m_type;
-        spans.append(span);
-    }
-    current_editor().document().set_spans(spans);
-    static_cast<Editor&>(current_editor()).notify_did_rehighlight();
-    current_editor().update();
-}
-
 void open_file(const String& filename)
 {
     auto file = g_project->get_file(filename);
     current_editor().set_document(const_cast<GUI::TextDocument&>(file->document()));
 
-    if (filename.ends_with(".cpp") || filename.ends_with(".h")) {
-        current_editor().on_change = [] { rehighlight(); };
-        rehighlight();
-    } else {
-        current_editor().on_change = nullptr;
-    }
+    if (filename.ends_with(".cpp") || filename.ends_with(".h"))
+        current_editor().set_syntax_highlighter(make<GUI::CppSyntaxHighlighter>());
 
     if (filename.ends_with(".frm")) {
         set_edit_mode(EditMode::Form);
