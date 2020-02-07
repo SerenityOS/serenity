@@ -142,10 +142,6 @@ public:
 
     const Gfx::Font& font() const;
     const Gfx::Font& window_title_font() const;
-    const Gfx::Font& menu_font() const;
-    const Gfx::Font& app_menu_font() const;
-
-    int menubar_menu_margin() const;
 
     void set_resolution(int width, int height);
 
