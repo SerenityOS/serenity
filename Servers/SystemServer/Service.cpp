@@ -179,6 +179,7 @@ void Service::spawn()
 {
     dbg() << "Spawning " << name();
 
+    m_run_timer.start();
     m_pid = fork();
 
     if (m_pid < 0) {
@@ -256,15 +257,34 @@ void Service::spawn()
 void Service::did_exit(int exit_code)
 {
     ASSERT(m_pid > 0);
-    (void)exit_code;
 
-    dbg() << "Service " << name() << " has exited";
+    dbg() << "Service " << name() << " has exited with exit code " << exit_code;
 
     s_service_map.remove(m_pid);
     m_pid = -1;
 
-    if (m_keep_alive)
-        activate();
+    if (!m_keep_alive)
+        return;
+
+    int run_time_in_msec = m_run_timer.elapsed();
+    bool exited_successfully = exit_code == 0;
+
+    if (!exited_successfully && run_time_in_msec < 1000) {
+        switch (m_restart_attempts) {
+        case 0:
+            dbg() << "Trying again";
+            break;
+        case 1:
+            dbg() << "Third time's a charm?";
+            break;
+        default:
+            dbg() << "Giving up on " << name() << ". Good luck!";
+            return;
+        }
+        m_restart_attempts++;
+    }
+
+    activate();
 }
 
 Service::Service(const Core::ConfigFile& config, const StringView& name)
@@ -330,4 +350,6 @@ void Service::save_to(JsonObject& json)
         json.set("pid", m_pid);
     else
         json.set("pid", nullptr);
+
+    json.set("restart_attempts", m_restart_attempts);
 }
