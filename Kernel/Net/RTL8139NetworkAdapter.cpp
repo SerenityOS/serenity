@@ -132,7 +132,7 @@ void RTL8139NetworkAdapter::detect(const PCI::Address& address)
     if (id != rtl8139_id)
         return;
     u8 irq = PCI::get_interrupt_line(address);
-    new RTL8139NetworkAdapter(address, irq);
+    (void)adopt(*new RTL8139NetworkAdapter(address, irq)).leak_ref();
 }
 
 RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address pci_address, u8 irq)

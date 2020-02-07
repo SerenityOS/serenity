@@ -128,7 +128,7 @@ void E1000NetworkAdapter::detect(const PCI::Address& address)
     if (id != qemu_bochs_vbox_id)
         return;
     u8 irq = PCI::get_interrupt_line(address);
-    new E1000NetworkAdapter(address, irq);
+    (void)adopt(*new E1000NetworkAdapter(address, irq)).leak_ref();
 }
 
 E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address pci_address, u8 irq)
@@ -376,7 +376,7 @@ void E1000NetworkAdapter::send_raw(const u8* data, size_t length)
 #endif
     auto& descriptor = m_tx_descriptors[tx_current];
     ASSERT(length <= 8192);
-    auto *vptr = (void*)(descriptor.addr + 0xc0000000);
+    auto* vptr = (void*)(descriptor.addr + 0xc0000000);
     memcpy(vptr, data, length);
     descriptor.length = length;
     descriptor.status = 0;

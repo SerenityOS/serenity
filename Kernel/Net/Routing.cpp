@@ -46,13 +46,13 @@ bool RoutingDecision::is_zero() const
 RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source)
 {
     if (target[0] == 127)
-        return { LoopbackAdapter::the().make_weak_ptr(), {} };
+        return { LoopbackAdapter::the(), {} };
 
     auto target_addr = target.to_u32();
     auto source_addr = source.to_u32();
 
-    WeakPtr<NetworkAdapter> local_adapter = nullptr;
-    WeakPtr<NetworkAdapter> gateway_adapter = nullptr;
+    RefPtr<NetworkAdapter> local_adapter = nullptr;
+    RefPtr<NetworkAdapter> gateway_adapter = nullptr;
 
     NetworkAdapter::for_each([source_addr, &target_addr, &local_adapter, &gateway_adapter](auto& adapter) {
         auto adapter_addr = adapter.ipv4_address().to_u32();
@@ -62,10 +62,10 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source)
             return;
 
         if ((target_addr & adapter_mask) == (adapter_addr & adapter_mask))
-            local_adapter = adapter.make_weak_ptr();
+            local_adapter = adapter;
 
         if (adapter.ipv4_gateway().to_u32() != 0)
-            gateway_adapter = adapter.make_weak_ptr();
+            gateway_adapter = adapter;
     });
 
     if (!local_adapter && !gateway_adapter) {
@@ -76,7 +76,7 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source)
         return { nullptr, {} };
     }
 
-    WeakPtr<NetworkAdapter> adapter = nullptr;
+    RefPtr<NetworkAdapter> adapter = nullptr;
     IPv4Address next_hop_ip;
 
     if (local_adapter) {
