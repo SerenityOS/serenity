@@ -27,7 +27,6 @@
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/KeyCode.h>
-#include <LibGfx/Palette.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/FontDatabase.h>
@@ -35,8 +34,10 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
+#include <LibGUI/SyntaxHighlighter.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Palette.h>
 #include <ctype.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -1030,6 +1031,8 @@ void TextEditor::set_cursor(const TextPosition& a_position)
     cursor_did_change();
     if (on_cursor_change)
         on_cursor_change();
+    if (m_highlighter)
+        m_highlighter->cursor_did_change();
 }
 
 void TextEditor::focusin_event(Core::Event&)
@@ -1198,6 +1201,8 @@ void TextEditor::did_change()
                 return;
             if (on_change)
                 on_change();
+            if (m_highlighter)
+                m_highlighter->rehighlight();
             m_has_pending_change_notification = false;
         });
     }
@@ -1476,7 +1481,20 @@ void TextEditor::flush_pending_change_notification_if_needed()
         return;
     if (on_change)
         on_change();
+    if (m_highlighter)
+        m_highlighter->rehighlight();
     m_has_pending_change_notification = false;
+}
+
+void TextEditor::set_syntax_highlighter(OwnPtr<SyntaxHighlighter> highlighter)
+{
+    if (m_highlighter)
+        m_highlighter->detach();
+    m_highlighter = move(highlighter);
+    if (m_highlighter) {
+        m_highlighter->attach(*this);
+        m_highlighter->rehighlight();
+    }
 }
 
 }

@@ -25,7 +25,6 @@
  */
 
 #include "Editor.h"
-#include "CppLexer.h"
 #include "EditorWrapper.h"
 #include <AK/FileSystemPath.h>
 #include <LibCore/DirIterator.h>
@@ -196,99 +195,4 @@ void Editor::mousemove_event(GUI::MouseEvent& event)
         }
     }
     GUI::Application::the().hide_tooltip();
-}
-
-void Editor::highlight_matching_token_pair()
-{
-    enum class Direction {
-        Forward,
-        Backward,
-    };
-
-    auto find_span_of_type = [&](int i, CppToken::Type type, CppToken::Type not_type, Direction direction) {
-        int nesting_level = 0;
-        bool forward = direction == Direction::Forward;
-        for (forward ? ++i : --i; forward ? (i < document().spans().size()) : (i >= 0); forward ? ++i : --i) {
-            auto& span = document().spans().at(i);
-            auto span_token_type = (CppToken::Type)((uintptr_t)span.data);
-            if (span_token_type == not_type) {
-                ++nesting_level;
-            } else if (span_token_type == type) {
-                if (nesting_level-- <= 0)
-                    return i;
-            }
-        }
-        return -1;
-    };
-
-    auto make_buddies = [&](int index0, int index1) {
-        auto& buddy0 = const_cast<GUI::TextDocumentSpan&>(document().spans()[index0]);
-        auto& buddy1 = const_cast<GUI::TextDocumentSpan&>(document().spans()[index1]);
-        m_has_brace_buddies = true;
-        m_brace_buddies[0].index = index0;
-        m_brace_buddies[1].index = index1;
-        m_brace_buddies[0].span_backup = buddy0;
-        m_brace_buddies[1].span_backup = buddy1;
-        buddy0.background_color = Color::DarkCyan;
-        buddy1.background_color = Color::DarkCyan;
-        buddy0.color = Color::White;
-        buddy1.color = Color::White;
-        update();
-    };
-
-    struct MatchingTokenPair {
-        CppToken::Type open;
-        CppToken::Type close;
-    };
-
-    MatchingTokenPair pairs[] = {
-        { CppToken::Type::LeftCurly, CppToken::Type::RightCurly },
-        { CppToken::Type::LeftParen, CppToken::Type::RightParen },
-        { CppToken::Type::LeftBracket, CppToken::Type::RightBracket },
-    };
-
-    for (int i = 0; i < document().spans().size(); ++i) {
-        auto& span = const_cast<GUI::TextDocumentSpan&>(document().spans().at(i));
-        auto token_type = (CppToken::Type)((uintptr_t)span.data);
-
-        for (auto& pair : pairs) {
-            if (token_type == pair.open && span.range.start() == cursor()) {
-                auto buddy = find_span_of_type(i, pair.close, pair.open, Direction::Forward);
-                if (buddy != -1)
-                    make_buddies(i, buddy);
-                return;
-            }
-        }
-
-        auto right_of_end = span.range.end();
-        right_of_end.set_column(right_of_end.column() + 1);
-
-        for (auto& pair : pairs) {
-            if (token_type == pair.close && right_of_end == cursor()) {
-                auto buddy = find_span_of_type(i, pair.open, pair.close, Direction::Backward);
-                if (buddy != -1)
-                    make_buddies(i, buddy);
-                return;
-            }
-        }
-    }
-}
-
-void Editor::cursor_did_change()
-{
-    if (m_has_brace_buddies) {
-        if (m_brace_buddies[0].index >= 0 && m_brace_buddies[0].index < document().spans().size())
-            document().set_span_at_index(m_brace_buddies[0].index, m_brace_buddies[0].span_backup);
-        if (m_brace_buddies[1].index >= 0 && m_brace_buddies[1].index < document().spans().size())
-            document().set_span_at_index(m_brace_buddies[1].index, m_brace_buddies[1].span_backup);
-        m_has_brace_buddies = false;
-        update();
-    }
-    highlight_matching_token_pair();
-}
-
-void Editor::notify_did_rehighlight()
-{
-    m_has_brace_buddies = false;
-    highlight_matching_token_pair();
 }

@@ -42,6 +42,7 @@ class Action;
 class Menu;
 class Painter;
 class ScrollBar;
+class SyntaxHighlighter;
 
 class TextEditor
     : public ScrollableWidget
@@ -132,6 +133,8 @@ public:
 
     void set_cursor(size_t line, size_t column);
     void set_cursor(const TextPosition&);
+
+    void set_syntax_highlighter(OwnPtr<SyntaxHighlighter>);
 
 protected:
     explicit TextEditor(Widget* parent);
@@ -248,6 +251,8 @@ private:
     };
 
     NonnullOwnPtrVector<LineVisualData> m_line_visual_data;
+
+    OwnPtr<SyntaxHighlighter> m_highlighter;
 };
 
 }

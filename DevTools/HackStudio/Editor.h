@@ -41,29 +41,17 @@ public:
     EditorWrapper& wrapper();
     const EditorWrapper& wrapper() const;
 
-    void notify_did_rehighlight();
-
 private:
     virtual void focusin_event(Core::Event&) override;
     virtual void focusout_event(Core::Event&) override;
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
-    virtual void cursor_did_change() override;
 
     void show_documentation_tooltip_if_available(const String&, const Gfx::Point& screen_location);
-    void highlight_matching_token_pair();
 
     explicit Editor(GUI::Widget* parent);
 
     RefPtr<GUI::Window> m_documentation_tooltip_window;
     RefPtr<HtmlView> m_documentation_html_view;
     String m_last_parsed_token;
-
-    struct BuddySpan {
-        int index { -1 };
-        GUI::TextDocumentSpan span_backup;
-    };
-
-    bool m_has_brace_buddies { false };
-    BuddySpan m_brace_buddies[2];
 };
