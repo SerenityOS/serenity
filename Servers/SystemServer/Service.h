@@ -28,6 +28,7 @@
 
 #include <AK/RefPtr.h>
 #include <AK/String.h>
+#include <LibCore/ElapsedTimer.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
 
@@ -80,6 +81,12 @@ private:
     // An open fd to the socket.
     int m_socket_fd { -1 };
     RefPtr<Core::Notifier> m_socket_notifier;
+
+    // Timer since we last spawned the service.
+    Core::ElapsedTimer m_run_timer;
+    // How many times we have tried to restart this service, only counting those
+    // times where it has exited unsuccessfully and too quickly.
+    int m_restart_attempts { 0 };
 
     void resolve_user();
     void setup_socket();
