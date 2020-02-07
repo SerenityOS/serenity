@@ -93,8 +93,8 @@ public:
     virtual KResult bind(const sockaddr*, socklen_t) = 0;
     virtual KResult connect(FileDescription&, const sockaddr*, socklen_t, ShouldBlock) = 0;
     virtual KResult listen(int) = 0;
-    virtual bool get_local_address(sockaddr*, socklen_t*) = 0;
-    virtual bool get_peer_address(sockaddr*, socklen_t*) = 0;
+    virtual void get_local_address(sockaddr*, socklen_t*) = 0;
+    virtual void get_peer_address(sockaddr*, socklen_t*) = 0;
     virtual bool is_local() const { return false; }
     virtual bool is_ipv4() const { return false; }
     virtual void attach(FileDescription&) = 0;
