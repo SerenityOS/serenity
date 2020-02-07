@@ -124,7 +124,7 @@ Locator::Locator(GUI::Widget* parent)
         else
             new_index = m_suggestion_view->model()->index(0);
 
-        if (new_index.is_valid()) {
+        if (m_suggestion_view->model()->is_valid(new_index)) {
             m_suggestion_view->selection().set(new_index);
             m_suggestion_view->scroll_into_view(new_index, Orientation::Vertical);
         }
@@ -136,7 +136,7 @@ Locator::Locator(GUI::Widget* parent)
         else
             new_index = m_suggestion_view->model()->index(0);
 
-        if (new_index.is_valid()) {
+        if (m_suggestion_view->model()->is_valid(new_index)) {
             m_suggestion_view->selection().set(new_index);
             m_suggestion_view->scroll_into_view(new_index, Orientation::Vertical);
         }
@@ -203,7 +203,14 @@ void Locator::update_suggestions()
         dbg() << "    " << s;
     }
 
+    bool has_suggestions = !suggestions.is_empty();
+
     m_suggestion_view->set_model(adopt(*new LocatorSuggestionModel(move(suggestions))));
+
+    if (!has_suggestions)
+        m_suggestion_view->selection().clear();
+    else
+        m_suggestion_view->selection().set(m_suggestion_view->model()->index(0));
 
     m_popup_window->move_to(screen_relative_rect().top_left().translated(0, -m_popup_window->height()));
     dbg() << "Popup rect: " << m_popup_window->rect();
