@@ -94,12 +94,18 @@ void EventLoop::drain_mouse()
     MousePacket state;
     state.buttons = screen.mouse_button_state();
     unsigned buttons = state.buttons;
-    for (;;) {
-        MousePacket packet;
-        ssize_t nread = read(m_mouse_fd, &packet, sizeof(MousePacket));
-        if (nread == 0)
-            break;
-        ASSERT(nread == sizeof(packet));
+    MousePacket packets[32];
+
+    ssize_t nread = read(m_mouse_fd, &packets, sizeof(packets));
+    if (nread < 0) {
+        perror("EventLoop::drain_mouse read");
+        return;
+    }
+    size_t npackets = nread / sizeof(MousePacket);
+    if (!npackets)
+        return;
+    for (size_t i = 0; i < npackets; ++i) {
+        auto& packet = packets[i];
 #ifdef WSMESSAGELOOP_DEBUG
         dbgprintf("EventLoop: Mouse X %d, Y %d, Z %d, relative %d\n", packet.x, packet.y, packet.z, packet.is_relative);
 #endif
