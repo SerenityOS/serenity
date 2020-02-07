@@ -40,6 +40,12 @@ inline constexpr u32 make_rgb(u8 r, u8 g, u8 b)
     return ((r << 16) | (g << 8) | b);
 }
 
+struct HSV {
+    double hue { 0 };
+    double saturation { 0 };
+    double value { 0 };
+};
+
 class Color {
 public:
     enum NamedColor {
@@ -165,6 +171,99 @@ public:
 
     String to_string() const;
     static Optional<Color> from_string(const StringView&);
+
+    HSV to_hsv() const
+    {
+        HSV hsv;
+        double r = static_cast<double>(red()) / 255.0;
+        double g = static_cast<double>(green()) / 255.0;
+        double b = static_cast<double>(blue()) / 255.0;
+        double max = AK::max(AK::max(r, g), b);
+        double min = AK::min(AK::min(r, g), b);
+        double chroma = max - min;
+
+        if (!chroma)
+            hsv.hue = 0.0;
+        else if (max == r)
+            hsv.hue = (60.0 * ((g - b) / chroma)) + 360.0;
+        else if (max == g)
+            hsv.hue = (60.0 * ((b - r) / chroma)) + 120.0;
+        else
+            hsv.hue = (60.0 * ((r - g) / chroma)) + 240.0;
+
+        if (hsv.hue >= 360.0)
+            hsv.hue -= 360.0;
+
+        hsv.hue /= 360.0;
+
+        if (!max)
+            hsv.saturation = 0;
+        else
+            hsv.saturation = chroma / max;
+
+        hsv.value = max;
+        return hsv;
+    }
+
+    static Color from_hsv(double hue, double saturation, double value)
+    {
+        return from_hsv({ hue, saturation, value });
+    }
+
+    static Color from_hsv(const HSV& hsv)
+    {
+        double hue = hsv.hue * 2.0;
+        double saturation = hsv.saturation / 255.0;
+        double value = hsv.value / 255.0;
+
+        int high = static_cast<int>(hue / 60.0) % 6;
+        double f = (hue / 60.0) - high;
+        double c1 = value * (1.0 - saturation);
+        double c2 = value * (1.0 - saturation * f);
+        double c3 = value * (1.0 - saturation * (1.0 - f));
+
+        double r = 0;
+        double g = 0;
+        double b = 0;
+
+        switch (high) {
+        case 0:
+            r = value;
+            g = c3;
+            b = c1;
+            break;
+        case 1:
+            r = c2;
+            g = value;
+            b = c1;
+            break;
+        case 2:
+            r = c1;
+            g = value;
+            b = c3;
+            break;
+        case 3:
+            r = c1;
+            g = c2;
+            b = value;
+            break;
+        case 4:
+            r = c3;
+            g = c1;
+            b = value;
+            break;
+        case 5:
+            r = value;
+            g = c1;
+            b = c2;
+            break;
+        }
+
+        u8 out_r = (u8)(r * 255);
+        u8 out_g = (u8)(g * 255);
+        u8 out_b = (u8)(b * 255);
+        return Color(out_r, out_g, out_b);
+    }
 
 private:
     explicit Color(RGBA32 rgba)
