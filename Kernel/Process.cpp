@@ -927,7 +927,6 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
         }
     }
 
-    // FIXME: Should we just make a new Thread here instead?
     Thread* new_main_thread = nullptr;
     if (&current->process() == this) {
         new_main_thread = current;
@@ -1220,7 +1219,6 @@ int Process::sys$execve(const Syscall::SC_execve_params* user_params)
 
 Process* Process::create_user_process(Thread*& first_thread, const String& path, uid_t uid, gid_t gid, pid_t parent_pid, int& error, Vector<String>&& arguments, Vector<String>&& environment, TTY* tty)
 {
-    // FIXME: Don't split() the path twice (sys$spawn also does it...)
     auto parts = path.split('/');
     if (arguments.is_empty()) {
         arguments.append(parts.last());
