@@ -387,6 +387,10 @@ struct pollfd {
 #define SOCK_NONBLOCK 04000
 #define SOCK_CLOEXEC 02000000
 
+#define SHUT_RD 1
+#define SHUT_WR 2
+#define SHUT_RDWR 3
+
 #define MSG_DONTWAIT 0x40
 
 #define SOL_SOCKET 1

@@ -149,10 +149,23 @@ KResult Socket::getsockopt(FileDescription&, int level, int option, void* value,
 
 ssize_t Socket::read(FileDescription& description, u8* buffer, ssize_t size)
 {
+    if (is_shut_down_for_reading())
+        return 0;
     return recvfrom(description, buffer, size, 0, nullptr, 0);
 }
 
 ssize_t Socket::write(FileDescription& description, const u8* data, ssize_t size)
 {
+    if (is_shut_down_for_writing())
+        return -EPIPE;
     return sendto(description, data, size, 0, nullptr, 0);
+}
+
+KResult Socket::shutdown(int how)
+{
+    if (type() == SOCK_STREAM && !is_connected())
+        return KResult(-ENOTCONN);
+    m_shut_down_for_reading |= how & SHUT_RD;
+    m_shut_down_for_writing |= how & SHUT_WR;
+    return KSuccess;
 }
