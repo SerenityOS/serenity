@@ -33,6 +33,7 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/CppSyntaxHighlighter.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/FontDatabase.h>
 #include <LibGUI/MenuBar.h>
@@ -415,6 +416,10 @@ void TextEditorWidget::set_path(const FileSystemPath& file)
     m_path = file.string();
     m_name = file.title();
     m_extension = file.extension();
+
+    if (m_extension == "cpp" || m_extension == "h")
+        m_editor->set_syntax_highlighter(make<GUI::CppSyntaxHighlighter>());
+
     update_title();
 }
 
