@@ -102,8 +102,12 @@ MenuManager::MenuManager()
     // Then we create and insert all the app menu items into the right place.
     int app_identifier = 1;
     for (const auto& app : m_apps) {
+        RefPtr<Gfx::Bitmap> icon;
+        if (!app.icon_path.is_empty())
+             icon = Gfx::Bitmap::load_from_file(app.icon_path);
+
         auto parent_menu = m_app_category_menus.get(app.category).value_or(*m_system_menu);
-        parent_menu->add_item(make<MenuItem>(*m_system_menu, app_identifier++, app.name, String(), true, false, false, Gfx::Bitmap::load_from_file(app.icon_path)));
+        parent_menu->add_item(make<MenuItem>(*m_system_menu, app_identifier++, app.name, String(), true, false, false, icon));
     }
 
     m_system_menu->add_item(make<MenuItem>(*m_system_menu, MenuItem::Separator));
