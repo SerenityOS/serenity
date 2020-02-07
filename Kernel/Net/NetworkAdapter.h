@@ -40,11 +40,11 @@
 
 class NetworkAdapter;
 
-class NetworkAdapter : public Weakable<NetworkAdapter> {
+class NetworkAdapter : public RefCounted<NetworkAdapter> {
 public:
     static void for_each(Function<void(NetworkAdapter&)>);
-    static WeakPtr<NetworkAdapter> from_ipv4_address(const IPv4Address&);
-    static WeakPtr<NetworkAdapter> lookup_by_name(const StringView&);
+    static RefPtr<NetworkAdapter> from_ipv4_address(const IPv4Address&);
+    static RefPtr<NetworkAdapter> lookup_by_name(const StringView&);
     virtual ~NetworkAdapter();
 
     virtual const char* class_name() const = 0;

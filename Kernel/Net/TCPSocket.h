@@ -182,7 +182,7 @@ private:
     HashMap<IPv4SocketTuple, NonnullRefPtr<TCPSocket>> m_pending_release_for_accept;
     Direction m_direction { Direction::Unspecified };
     Error m_error { Error::None };
-    WeakPtr<NetworkAdapter> m_adapter;
+    RefPtr<NetworkAdapter> m_adapter;
     u32 m_sequence_number { 0 };
     u32 m_ack_number { 0 };
     State m_state { State::Closed };

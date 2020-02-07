@@ -49,26 +49,26 @@ void NetworkAdapter::for_each(Function<void(NetworkAdapter&)> callback)
         callback(*it);
 }
 
-WeakPtr<NetworkAdapter> NetworkAdapter::from_ipv4_address(const IPv4Address& address)
+RefPtr<NetworkAdapter> NetworkAdapter::from_ipv4_address(const IPv4Address& address)
 {
     LOCKER(all_adapters().lock());
     for (auto* adapter : all_adapters().resource()) {
         if (adapter->ipv4_address() == address)
-            return adapter->make_weak_ptr();
+            return adapter;
     }
     if (address[0] == 127)
-        return LoopbackAdapter::the().make_weak_ptr();
+        return LoopbackAdapter::the();
     return nullptr;
 }
 
-WeakPtr<NetworkAdapter> NetworkAdapter::lookup_by_name(const StringView& name)
+RefPtr<NetworkAdapter> NetworkAdapter::lookup_by_name(const StringView& name)
 {
     NetworkAdapter* found_adapter = nullptr;
     for_each([&](auto& adapter) {
         if (adapter.name() == name)
             found_adapter = &adapter;
     });
-    return found_adapter ? found_adapter->make_weak_ptr() : nullptr;
+    return found_adapter;
 }
 
 NetworkAdapter::NetworkAdapter()

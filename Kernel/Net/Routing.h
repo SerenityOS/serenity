@@ -30,7 +30,7 @@
 
 struct RoutingDecision
 {
-    WeakPtr<NetworkAdapter> adapter;
+    RefPtr<NetworkAdapter> adapter;
     MACAddress next_hop;
 
     bool is_zero() const;
