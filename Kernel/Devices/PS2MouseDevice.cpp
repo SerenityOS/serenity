@@ -361,21 +361,20 @@ bool PS2MouseDevice::can_read(const FileDescription&) const
 
 ssize_t PS2MouseDevice::read(FileDescription&, u8* buffer, ssize_t size)
 {
-    ssize_t nread = 0;
-    while (nread < size) {
-        if (m_queue.is_empty())
-            break;
-        // Don't return partial data frames.
-        if ((size - nread) < (ssize_t)sizeof(MousePacket))
-            break;
+    ASSERT(size > 0);
+    size_t nread = 0;
+    size_t remaining_space_in_buffer = static_cast<size_t>(size) - nread;
+    while (!m_queue.is_empty() && remaining_space_in_buffer) {
         auto packet = m_queue.dequeue();
 #ifdef PS2MOUSE_DEBUG
         dbgprintf("PS2 Mouse Read: Buttons %x\n", packet.buttons);
         dbgprintf("PS2 Mouse Read: X %d, Y %d, Z %d, Relative %d\n", packet.x, packet.y, packet.z, packet.buttons);
         dbgprintf("PS2 Mouse Read: Filter packets\n");
 #endif
-        memcpy(buffer, &packet, sizeof(MousePacket));
-        nread += sizeof(MousePacket);
+        size_t bytes_read_from_packet = min(remaining_space_in_buffer, sizeof(MousePacket));
+        memcpy(buffer + nread, &packet, bytes_read_from_packet);
+        nread += bytes_read_from_packet;
+        remaining_space_in_buffer -= bytes_read_from_packet;
     }
     return nread;
 }
