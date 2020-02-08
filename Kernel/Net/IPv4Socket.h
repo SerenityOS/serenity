@@ -46,6 +46,7 @@ public:
 
     static Lockable<HashTable<IPv4Socket*>>& all_sockets();
 
+    virtual void close() override;
     virtual KResult bind(const sockaddr*, socklen_t) override;
     virtual KResult connect(FileDescription&, const sockaddr*, socklen_t, ShouldBlock = ShouldBlock::Yes) override;
     virtual KResult listen(int) override;

@@ -165,7 +165,13 @@ KResult Socket::shutdown(int how)
 {
     if (type() == SOCK_STREAM && !is_connected())
         return KResult(-ENOTCONN);
-    m_shut_down_for_reading |= how & SHUT_RD;
-    m_shut_down_for_writing |= how & SHUT_WR;
+    if (m_role == Role::Listener)
+        return KResult(-ENOTCONN);
+    if (!m_shut_down_for_writing && (how & SHUT_WR))
+        shut_down_for_writing();
+    if (!m_shut_down_for_reading && (how & SHUT_RD))
+        shut_down_for_reading();
+    m_shut_down_for_reading |= (how & SHUT_RD) != 0;
+    m_shut_down_for_writing |= (how & SHUT_WR) != 0;
     return KSuccess;
 }

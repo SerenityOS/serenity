@@ -141,6 +141,9 @@ protected:
 
     virtual const char* class_name() const override { return "Socket"; }
 
+    virtual void shut_down_for_reading() {}
+    virtual void shut_down_for_writing() {}
+
     Role m_role { Role::None };
 
 protected:
