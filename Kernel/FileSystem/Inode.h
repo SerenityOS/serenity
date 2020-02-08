@@ -94,8 +94,8 @@ public:
     virtual int set_atime(time_t);
     virtual int set_ctime(time_t);
     virtual int set_mtime(time_t);
-    virtual int increment_link_count();
-    virtual int decrement_link_count();
+    virtual KResult increment_link_count();
+    virtual KResult decrement_link_count();
 
     virtual void flush_metadata() = 0;
 
