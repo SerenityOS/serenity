@@ -505,3 +505,9 @@ void IPv4Socket::close()
 {
     shutdown(SHUT_RDWR);
 }
+
+void IPv4Socket::shut_down_for_reading()
+{
+    Socket::shut_down_for_reading();
+    m_can_read = true;
+}
