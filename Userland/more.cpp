@@ -50,11 +50,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    key_fd = open(ttyname(1), O_RDONLY);
-    if (key_fd < 0) {
-        perror("open");
-        return 1;
-    }
+    key_fd = STDOUT_FILENO;
 
     struct winsize ws;
     ioctl(1, TIOCGWINSZ, &ws);
