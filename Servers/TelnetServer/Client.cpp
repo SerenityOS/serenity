@@ -57,6 +57,7 @@ Client::Client(int id, RefPtr<Core::TCPSocket> socket, int ptm_fd)
 
 void Client::drain_socket()
 {
+    NonnullRefPtr<Client> protect(*this);
     while (m_socket->can_read()) {
         auto buf = m_socket->read(1024);
 
