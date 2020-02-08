@@ -283,7 +283,7 @@ KResultOr<Region*> FileDescription::mmap(Process& process, VirtualAddress vaddr,
     return m_file->mmap(process, *this, vaddr, offset, size, prot);
 }
 
-KResult FileDescription::truncate(off_t length)
+KResult FileDescription::truncate(u64 length)
 {
     LOCKER(m_lock);
     return m_file->truncate(length);

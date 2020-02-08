@@ -130,7 +130,7 @@ public:
 
     void set_original_inode(Badge<VFS>, NonnullRefPtr<Inode>&& inode) { m_inode = move(inode); }
 
-    KResult truncate(off_t);
+    KResult truncate(u64);
 
     off_t offset() const { return m_current_offset; }
 

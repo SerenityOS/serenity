@@ -85,7 +85,7 @@ public:
     virtual size_t directory_entry_count() const override;
     virtual KResult chmod(mode_t) override;
     virtual KResult chown(uid_t, gid_t) override;
-    virtual KResult truncate(off_t) override;
+    virtual KResult truncate(u64) override;
     virtual int set_atime(time_t) override;
     virtual int set_ctime(time_t) override;
     virtual int set_mtime(time_t) override;

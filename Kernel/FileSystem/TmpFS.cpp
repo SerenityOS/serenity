@@ -327,7 +327,7 @@ KResult TmpFSInode::remove_child(const StringView& name)
     return KSuccess;
 }
 
-KResult TmpFSInode::truncate(off_t size)
+KResult TmpFSInode::truncate(u64 size)
 {
     LOCKER(m_lock);
     ASSERT(!is_directory());
