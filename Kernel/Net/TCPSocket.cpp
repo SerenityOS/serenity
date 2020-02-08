@@ -441,7 +441,9 @@ bool TCPSocket::protocol_is_disconnected() const
 void TCPSocket::shut_down_for_writing()
 {
     if (state() == State::Established) {
+#ifdef TCP_SOCKET_DEBUG
         dbg() << " Sending FIN/ACK from Established and moving into FinWait1";
+#endif
         send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK);
         set_state(State::FinWait1);
     } else {
@@ -453,7 +455,9 @@ void TCPSocket::close()
 {
     IPv4Socket::close();
     if (state() == State::CloseWait) {
+#ifdef TCP_SOCKET_DEBUG
         dbg() << " Sending FIN from CloseWait and moving into LastAck";
+#endif
         send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK);
         set_state(State::LastAck);
     }
