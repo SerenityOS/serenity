@@ -94,7 +94,7 @@ public:
     KResultOr& operator=(KResultOr&& other)
     {
         if (!m_is_error)
-           value().~T();
+            value().~T();
         m_is_error = other.m_is_error;
         if (m_is_error)
             m_error = other.m_error;
@@ -119,6 +119,7 @@ public:
         ASSERT(m_is_error);
         return m_error;
     }
+    KResult result() const { return m_is_error ? KSuccess : m_error; }
     T& value()
     {
         ASSERT(!m_is_error);
@@ -139,7 +140,7 @@ public:
     }
 
 private:
-    alignas (T) char m_storage[sizeof(T)];
+    alignas(T) char m_storage[sizeof(T)];
     KResult m_error;
     bool m_is_error { false };
 };
