@@ -1035,10 +1035,9 @@ const char* ProcFS::class_name() const
     return "ProcFS";
 }
 
-RefPtr<Inode> ProcFS::create_inode(InodeIdentifier, const String&, mode_t, off_t, dev_t, uid_t, gid_t, int&)
+KResultOr<NonnullRefPtr<Inode>> ProcFS::create_inode(InodeIdentifier, const String&, mode_t, off_t, dev_t, uid_t, gid_t)
 {
-    kprintf("FIXME: Implement ProcFS::create_inode()?\n");
-    return {};
+    return KResult(-EROFS);
 }
 
 KResult ProcFS::create_directory(InodeIdentifier, const String&, mode_t, uid_t, gid_t)

@@ -77,10 +77,9 @@ InodeIdentifier DevPtsFS::root_inode() const
     return { fsid(), 1 };
 }
 
-RefPtr<Inode> DevPtsFS::create_inode(InodeIdentifier, const String&, mode_t, off_t, dev_t, uid_t, gid_t, int& error)
+KResultOr<NonnullRefPtr<Inode>> DevPtsFS::create_inode(InodeIdentifier, const String&, mode_t, off_t, dev_t, uid_t, gid_t)
 {
-    error = -EROFS;
-    return nullptr;
+    return KResult(-EROFS);
 }
 
 KResult DevPtsFS::create_directory(InodeIdentifier, const String&, mode_t, uid_t, gid_t)

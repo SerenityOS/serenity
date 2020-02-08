@@ -1359,10 +1359,11 @@ KResult Ext2FS::create_directory(InodeIdentifier parent_id, const String& name, 
 
     // NOTE: When creating a new directory, make the size 1 block.
     //       There's probably a better strategy here, but this works for now.
-    int error;
-    auto inode = create_inode(parent_id, name, mode, block_size(), 0, uid, gid, error);
-    if (!inode)
-        return KResult(error);
+    auto inode_or_error = create_inode(parent_id, name, mode, block_size(), 0, uid, gid);
+    if (inode_or_error.is_error())
+        return inode_or_error.error();
+
+    auto& inode = inode_or_error.value();
 
 #ifdef EXT2_DEBUG
     dbgprintf("Ext2FS: create_directory: created new directory named '%s' with inode %u\n", name.characters(), inode->identifier().index());
@@ -1391,17 +1392,15 @@ KResult Ext2FS::create_directory(InodeIdentifier parent_id, const String& name, 
     return KSuccess;
 }
 
-RefPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name, mode_t mode, off_t size, dev_t dev, uid_t uid, gid_t gid, int& error)
+KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name, mode_t mode, off_t size, dev_t dev, uid_t uid, gid_t gid)
 {
     LOCKER(m_lock);
     ASSERT(parent_id.fsid() == fsid());
     auto parent_inode = get_inode(parent_id);
     ASSERT(parent_inode);
 
-    if (static_cast<const Ext2FSInode&>(*parent_inode).m_raw_inode.i_links_count == 0) {
-        error = -ENOENT;
-        return nullptr;
-    }
+    if (static_cast<const Ext2FSInode&>(*parent_inode).m_raw_inode.i_links_count == 0)
+        return KResult(-ENOENT);
 
 #ifdef EXT2_DEBUG
     dbgprintf("Ext2FS: Adding inode '%s' (mode %o) to parent directory %u:\n", name.characters(), mode, parent_inode->identifier().index());
@@ -1410,24 +1409,20 @@ RefPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name
     auto needed_blocks = ceil_div(size, block_size());
     if ((size_t)needed_blocks > super_block().s_free_blocks_count) {
         dbg() << "Ext2FS: create_inode: not enough free blocks";
-        error = -ENOSPC;
-        return {};
+        return KResult(-ENOSPC);
     }
 
     // NOTE: This doesn't commit the inode allocation just yet!
     auto inode_id = find_a_free_inode(0, size);
     if (!inode_id) {
         kprintf("Ext2FS: create_inode: allocate_inode failed\n");
-        error = -ENOSPC;
-        return {};
+        return KResult(-ENOSPC);
     }
 
     // Try adding it to the directory first, in case the name is already in use.
     auto result = parent_inode->add_child({ fsid(), inode_id }, name, mode);
-    if (result.is_error()) {
-        error = result;
-        return {};
-    }
+    if (result.is_error())
+        return result;
 
     auto blocks = allocate_blocks(group_index_from_inode(inode_id), needed_blocks);
     ASSERT(blocks.size() == needed_blocks);
@@ -1477,7 +1472,7 @@ RefPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name
     auto inode = get_inode({ fsid(), inode_id });
     // If we've already computed a block list, no sense in throwing it away.
     static_cast<Ext2FSInode&>(*inode).m_block_list = move(blocks);
-    return inode;
+    return inode.release_nonnull();
 }
 
 void Ext2FSInode::populate_lookup_cache() const
