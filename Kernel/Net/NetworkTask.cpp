@@ -617,12 +617,9 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
             socket->sequence_number());
 #endif
 
-        bool should_ack = true;
-        if (payload_size != 0) {
-            should_ack = socket->did_receive(ipv4_packet.source(), tcp_packet.source_port(), KBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()));
+        if (payload_size) {
+            if (socket->did_receive(ipv4_packet.source(), tcp_packet.source_port(), KBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size())))
+                socket->send_tcp_packet(TCPFlags::ACK);
         }
-
-        if (should_ack)
-            socket->send_tcp_packet(TCPFlags::ACK);
     }
 }
