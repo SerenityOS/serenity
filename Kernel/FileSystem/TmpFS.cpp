@@ -117,12 +117,15 @@ RefPtr<Inode> TmpFS::create_inode(InodeIdentifier parent_id, const String& name,
     return inode;
 }
 
-RefPtr<Inode> TmpFS::create_directory(InodeIdentifier parent_id, const String& name, mode_t mode, uid_t uid, gid_t gid, int& error)
+KResult TmpFS::create_directory(InodeIdentifier parent_id, const String& name, mode_t mode, uid_t uid, gid_t gid)
 {
     // Ensure it's a directory.
     mode &= ~0170000;
     mode |= 0040000;
-    return create_inode(parent_id, name, mode, 0, 0, uid, gid, error);
+    int error;
+    if (!create_inode(parent_id, name, mode, 0, 0, uid, gid, error))
+        return KResult(error);
+    return KSuccess;
 }
 
 TmpFSInode::TmpFSInode(TmpFS& fs, InodeMetadata metadata, InodeIdentifier parent)

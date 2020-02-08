@@ -1347,7 +1347,7 @@ bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
     return true;
 }
 
-RefPtr<Inode> Ext2FS::create_directory(InodeIdentifier parent_id, const String& name, mode_t mode, uid_t uid, gid_t gid, int& error)
+KResult Ext2FS::create_directory(InodeIdentifier parent_id, const String& name, mode_t mode, uid_t uid, gid_t gid)
 {
     LOCKER(m_lock);
     ASSERT(parent_id.fsid() == fsid());
@@ -1359,9 +1359,10 @@ RefPtr<Inode> Ext2FS::create_directory(InodeIdentifier parent_id, const String& 
 
     // NOTE: When creating a new directory, make the size 1 block.
     //       There's probably a better strategy here, but this works for now.
+    int error;
     auto inode = create_inode(parent_id, name, mode, block_size(), 0, uid, gid, error);
     if (!inode)
-        return nullptr;
+        return KResult(error);
 
 #ifdef EXT2_DEBUG
     dbgprintf("Ext2FS: create_directory: created new directory named '%s' with inode %u\n", name.characters(), inode->identifier().index());
@@ -1375,9 +1376,9 @@ RefPtr<Inode> Ext2FS::create_directory(InodeIdentifier parent_id, const String& 
     ASSERT(success);
 
     auto parent_inode = get_inode(parent_id);
-    error = parent_inode->increment_link_count();
-    if (error < 0)
-        return nullptr;
+    auto result = parent_inode->increment_link_count();
+    if (result.is_error())
+        return result;
 
     auto& bgd = const_cast<ext2_group_desc&>(group_descriptor(group_index_from_inode(inode->identifier().index())));
     ++bgd.bg_used_dirs_count;
@@ -1387,8 +1388,7 @@ RefPtr<Inode> Ext2FS::create_directory(InodeIdentifier parent_id, const String& 
 
     m_block_group_descriptors_dirty = true;
 
-    error = 0;
-    return inode;
+    return KSuccess;
 }
 
 RefPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name, mode_t mode, off_t size, dev_t dev, uid_t uid, gid_t gid, int& error)
