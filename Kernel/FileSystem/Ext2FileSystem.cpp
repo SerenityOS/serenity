@@ -36,6 +36,7 @@
 
 //#define EXT2_DEBUG
 
+static const size_t max_link_count = 65535;
 static const size_t max_block_size = 4096;
 static const ssize_t max_inline_symlink_length = 60;
 
@@ -950,8 +951,11 @@ KResult Ext2FSInode::add_child(InodeIdentifier child_id, const StringView& name,
     }
 
     auto child_inode = fs().get_inode(child_id);
-    if (child_inode)
-        child_inode->increment_link_count();
+    if (child_inode) {
+        auto result = child_inode->increment_link_count();
+        if (result.is_error())
+            return result;
+    }
 
     entries.empend(name.characters_without_null_termination(), name.length(), child_id, to_ext2_file_type(mode));
     bool success = write_directory(entries);
@@ -1539,27 +1543,29 @@ int Ext2FSInode::set_mtime(time_t t)
     return 0;
 }
 
-int Ext2FSInode::increment_link_count()
+KResult Ext2FSInode::increment_link_count()
 {
     LOCKER(m_lock);
     if (fs().is_readonly())
-        return -EROFS;
+        return KResult(-EROFS);
+    if (m_raw_inode.i_links_count == max_link_count)
+        return KResult(-EMLINK);
     ++m_raw_inode.i_links_count;
     set_metadata_dirty(true);
-    return 0;
+    return KSuccess;
 }
 
-int Ext2FSInode::decrement_link_count()
+KResult Ext2FSInode::decrement_link_count()
 {
     LOCKER(m_lock);
     if (fs().is_readonly())
-        return -EROFS;
+        return KResult(-EROFS);
     ASSERT(m_raw_inode.i_links_count);
     --m_raw_inode.i_links_count;
     if (ref_count() == 1 && m_raw_inode.i_links_count == 0)
         fs().uncache_inode(index());
     set_metadata_dirty(true);
-    return 0;
+    return KSuccess;
 }
 
 void Ext2FS::uncache_inode(InodeIndex index)

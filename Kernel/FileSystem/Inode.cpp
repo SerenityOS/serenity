@@ -151,14 +151,14 @@ int Inode::set_mtime(time_t)
     return -ENOTIMPL;
 }
 
-int Inode::increment_link_count()
+KResult Inode::increment_link_count()
 {
-    return -ENOTIMPL;
+    return KResult(-ENOTIMPL);
 }
 
-int Inode::decrement_link_count()
+KResult Inode::decrement_link_count()
 {
-    return -ENOTIMPL;
+    return KResult(-ENOTIMPL);
 }
 
 void Inode::set_vmobject(VMObject& vmobject)
