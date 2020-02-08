@@ -105,6 +105,9 @@ protected:
 private:
     virtual bool is_ipv4() const override { return true; }
 
+    ssize_t receive_byte_buffered(FileDescription&, void* buffer, size_t buffer_length, int flags, sockaddr*, socklen_t*);
+    ssize_t receive_packet_buffered(FileDescription&, void* buffer, size_t buffer_length, int flags, sockaddr*, socklen_t*);
+
     IPv4Address m_local_address;
     IPv4Address m_peer_address;
 
