@@ -559,8 +559,7 @@ void MemoryManager::unquickmap_page()
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(m_quickmap_in_use);
     auto& pte = boot_pd3_pde1023_pt[0];
-    pte.set_physical_page_base(0);
-    pte.set_present(false);
+    pte.clear();
     flush_tlb(VirtualAddress(0xffe00000));
     m_quickmap_in_use = false;
 }
