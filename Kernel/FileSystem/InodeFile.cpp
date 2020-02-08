@@ -74,7 +74,7 @@ String InodeFile::absolute_path(const FileDescription& description) const
     return description.absolute_path();
 }
 
-KResult InodeFile::truncate(off_t size)
+KResult InodeFile::truncate(u64 size)
 {
     auto truncate_result = m_inode->truncate(size);
     if (truncate_result.is_error())

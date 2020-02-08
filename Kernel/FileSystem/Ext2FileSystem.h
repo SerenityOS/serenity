@@ -70,7 +70,7 @@ private:
     virtual size_t directory_entry_count() const override;
     virtual KResult chmod(mode_t) override;
     virtual KResult chown(uid_t, gid_t) override;
-    virtual KResult truncate(off_t) override;
+    virtual KResult truncate(u64) override;
 
     bool write_directory(const Vector<FS::DirectoryEntry>&);
     void populate_lookup_cache() const;

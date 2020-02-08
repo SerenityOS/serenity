@@ -79,7 +79,7 @@ public:
     virtual size_t directory_entry_count() const = 0;
     virtual KResult chmod(mode_t) = 0;
     virtual KResult chown(uid_t, gid_t) = 0;
-    virtual KResult truncate(off_t) { return KSuccess; }
+    virtual KResult truncate(u64) { return KSuccess; }
     virtual KResultOr<NonnullRefPtr<Custody>> resolve_as_link(Custody& base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0) const;
 
     LocalSocket* socket() { return m_socket.ptr(); }

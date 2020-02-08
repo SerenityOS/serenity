@@ -1598,10 +1598,10 @@ KResult Ext2FSInode::chown(uid_t uid, gid_t gid)
     return KSuccess;
 }
 
-KResult Ext2FSInode::truncate(off_t size)
+KResult Ext2FSInode::truncate(u64 size)
 {
     LOCKER(m_lock);
-    if ((off_t)m_raw_inode.i_size == size)
+    if (static_cast<u64>(m_raw_inode.i_size) == size)
         return KSuccess;
     auto result = resize(size);
     if (result.is_error())

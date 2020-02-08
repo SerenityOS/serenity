@@ -3868,7 +3868,7 @@ int Process::sys$ftruncate(int fd, off_t length)
         return -EBADF;
     if (!description->is_writable())
         return -EBADF;
-    return description->truncate(length);
+    return description->truncate(static_cast<u64>(length));
 }
 
 int Process::sys$watch_file(const char* user_path, size_t path_length)

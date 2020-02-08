@@ -82,7 +82,7 @@ public:
 
     virtual String absolute_path(const FileDescription&) const = 0;
 
-    virtual KResult truncate(off_t) { return KResult(-EINVAL); }
+    virtual KResult truncate(u64) { return KResult(-EINVAL); }
     virtual KResult chown(uid_t, gid_t) { return KResult(-EBADF); }
     virtual KResult chmod(mode_t) { return KResult(-EBADF); }
 
