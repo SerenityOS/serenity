@@ -190,7 +190,7 @@ void TCPSocket::send_tcp_packet(u16 flags, const void* payload, size_t payload_s
 
     if (tcp_packet.has_syn() || payload_size > 0) {
         LOCKER(m_not_acked_lock);
-        m_not_acked.append({ m_sequence_number, move(buffer), 0, {} });
+        m_not_acked.append({ m_sequence_number, move(buffer) });
         send_outgoing_packets();
         return;
     }
@@ -217,9 +217,8 @@ void TCPSocket::send_outgoing_packets()
     for (auto& packet : m_not_acked) {
         timeval diff;
         timeval_sub(packet.tx_time, now, diff);
-        if (diff.tv_sec < 1 && diff.tv_usec <= 500000)
+        if (diff.tv_sec == 0 && diff.tv_usec <= 500000)
             continue;
-
         packet.tx_time = now;
         packet.tx_counter++;
 
