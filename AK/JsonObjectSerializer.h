@@ -79,6 +79,12 @@ public:
         m_builder.append('"');
     }
 
+    void add(const StringView& key, bool value)
+    {
+        begin_item(key);
+        m_builder.append(value ? "true" : "false");
+    }
+
     void add(const StringView& key, i32 value)
     {
         begin_item(key);
