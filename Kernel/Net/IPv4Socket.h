@@ -100,6 +100,8 @@ protected:
     virtual int protocol_allocate_local_port() { return 0; }
     virtual bool protocol_is_disconnected() const { return false; }
 
+    virtual void shut_down_for_reading() override;
+
     void set_local_address(IPv4Address address) { m_local_address = address; }
     void set_peer_address(IPv4Address address) { m_peer_address = address; }
 
