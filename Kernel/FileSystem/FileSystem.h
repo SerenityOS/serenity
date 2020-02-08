@@ -35,7 +35,7 @@
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <AK/kstdio.h>
-#include <Kernel/Devices/DiskDevice.h>
+#include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/KResult.h>

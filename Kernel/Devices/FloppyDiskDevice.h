@@ -98,7 +98,7 @@
 #pragma once
 
 #include <AK/RefPtr.h>
-#include <Kernel/Devices/DiskDevice.h>
+#include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/IRQHandler.h>
 #include <Kernel/Lock.h>
 #include <Kernel/VM/PhysicalAddress.h>
@@ -120,8 +120,9 @@ struct FloppyControllerCommand {
 // uses the Intel 82077A controller. More about this controller can
 // be found here: http://www.buchty.net/casio/files/82077.pdf
 //
-class FloppyDiskDevice final : public IRQHandler
-    , public DiskDevice {
+class FloppyDiskDevice final
+    : public IRQHandler
+    , public BlockDevice {
     AK_MAKE_ETERNAL
 
     static constexpr u8 SECTORS_PER_CYLINDER = 18;
@@ -160,8 +161,6 @@ public:
     virtual ~FloppyDiskDevice() override;
 
     // ^DiskDevice
-    virtual bool read_block(unsigned index, u8*) const override;
-    virtual bool write_block(unsigned index, const u8*) override;
     virtual bool read_blocks(unsigned index, u16 count, u8*) override;
     virtual bool write_blocks(unsigned index, u16 count, const u8*) override;
 

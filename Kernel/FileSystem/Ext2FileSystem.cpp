@@ -58,13 +58,13 @@ static u8 to_ext2_file_type(mode_t mode)
     return EXT2_FT_UNKNOWN;
 }
 
-NonnullRefPtr<Ext2FS> Ext2FS::create(NonnullRefPtr<DiskDevice> device)
+NonnullRefPtr<Ext2FS> Ext2FS::create(BlockDevice& device)
 {
-    return adopt(*new Ext2FS(move(device)));
+    return adopt(*new Ext2FS(device));
 }
 
-Ext2FS::Ext2FS(NonnullRefPtr<DiskDevice>&& device)
-    : DiskBackedFS(move(device))
+Ext2FS::Ext2FS(BlockDevice& device)
+    : DiskBackedFS(device)
 {
 }
 
@@ -90,7 +90,7 @@ const ext2_group_desc& Ext2FS::group_descriptor(GroupIndex group_index) const
 bool Ext2FS::initialize()
 {
     LOCKER(m_lock);
-    bool success = const_cast<DiskDevice&>(device()).read_blocks(2, 1, (u8*)&m_super_block);
+    bool success = const_cast<BlockDevice&>(device()).read_blocks(2, 1, (u8*)&m_super_block);
     ASSERT(success);
 
     auto& super_block = this->super_block();

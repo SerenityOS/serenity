@@ -47,6 +47,8 @@ private:
     virtual bool can_write(const FileDescription&) const override { return true; }
     virtual ssize_t read(FileDescription&, u8*, ssize_t) override { return -EINVAL; }
     virtual ssize_t write(FileDescription&, const u8*, ssize_t) override { return -EINVAL; }
+    virtual bool read_blocks(unsigned, u16, u8*) override { return false; }
+    virtual bool write_blocks(unsigned, u16, const u8*) override { return false; }
 
     size_t framebuffer_size_in_bytes() const { return m_framebuffer_pitch * m_framebuffer_height; }
 

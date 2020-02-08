@@ -27,15 +27,13 @@
 #pragma once
 
 #include <AK/RefPtr.h>
-#include <Kernel/Devices/DiskDevice.h>
+#include <Kernel/Devices/BlockDevice.h>
 
-class DiskPartition final : public DiskDevice {
+class DiskPartition final : public BlockDevice {
 public:
-    static NonnullRefPtr<DiskPartition> create(DiskDevice&, unsigned block_offset, unsigned block_limit);
+    static NonnullRefPtr<DiskPartition> create(BlockDevice&, unsigned block_offset, unsigned block_limit);
     virtual ~DiskPartition();
 
-    virtual bool read_block(unsigned index, u8* out) const override;
-    virtual bool write_block(unsigned index, const u8*) override;
     virtual bool read_blocks(unsigned index, u16 count, u8*) override;
     virtual bool write_blocks(unsigned index, u16 count, const u8*) override;
 
@@ -48,9 +46,9 @@ public:
 private:
     virtual const char* class_name() const override;
 
-    DiskPartition(DiskDevice&, unsigned block_offset, unsigned block_limit);
+    DiskPartition(BlockDevice&, unsigned block_offset, unsigned block_limit);
 
-    NonnullRefPtr<DiskDevice> m_device;
+    NonnullRefPtr<BlockDevice> m_device;
     unsigned m_block_offset;
     unsigned m_block_limit;
 };

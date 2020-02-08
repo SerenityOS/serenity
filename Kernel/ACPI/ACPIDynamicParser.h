@@ -28,7 +28,6 @@
 
 #include <AK/RefPtr.h>
 #include <Kernel/ACPI/ACPIStaticParser.h>
-#include <Kernel/Devices/DiskDevice.h>
 #include <Kernel/IRQHandler.h>
 #include <Kernel/Lock.h>
 #include <Kernel/VM/PhysicalAddress.h>

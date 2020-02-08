@@ -110,8 +110,8 @@ private:
     bool m_dirty { false };
 };
 
-DiskBackedFS::DiskBackedFS(NonnullRefPtr<DiskDevice>&& device)
-    : m_device(move(device))
+DiskBackedFS::DiskBackedFS(BlockDevice& device)
+    : m_device(device)
 {
 }
 
@@ -129,8 +129,8 @@ bool DiskBackedFS::write_block(unsigned index, const u8* data, FileDescription* 
 
     if (!allow_cache) {
         flush_specific_block_if_needed(index);
-        DiskOffset base_offset = static_cast<DiskOffset>(index) * static_cast<DiskOffset>(block_size());
-        device().write(base_offset, block_size(), data);
+        u32 base_offset = static_cast<u32>(index) * static_cast<u32>(block_size());
+        device().write_raw(base_offset, block_size(), data);
         return true;
     }
 
@@ -163,16 +163,16 @@ bool DiskBackedFS::read_block(unsigned index, u8* buffer, FileDescription* descr
 
     if (!allow_cache) {
         const_cast<DiskBackedFS*>(this)->flush_specific_block_if_needed(index);
-        DiskOffset base_offset = static_cast<DiskOffset>(index) * static_cast<DiskOffset>(block_size());
-        bool success = device().read(base_offset, block_size(), buffer);
+        u32 base_offset = static_cast<u32>(index) * static_cast<u32>(block_size());
+        bool success = device().read_raw(base_offset, block_size(), buffer);
         ASSERT(success);
         return true;
     }
 
     auto& entry = cache().get(index);
     if (!entry.has_data) {
-        DiskOffset base_offset = static_cast<DiskOffset>(index) * static_cast<DiskOffset>(block_size());
-        bool success = device().read(base_offset, block_size(), entry.data);
+        u32 base_offset = static_cast<u32>(index) * static_cast<u32>(block_size());
+        bool success = device().read_raw(base_offset, block_size(), entry.data);
         entry.has_data = true;
         ASSERT(success);
     }
@@ -204,8 +204,8 @@ void DiskBackedFS::flush_specific_block_if_needed(unsigned index)
         return;
     cache().for_each_entry([&](CacheEntry& entry) {
         if (entry.is_dirty && entry.block_index == index) {
-            DiskOffset base_offset = static_cast<DiskOffset>(entry.block_index) * static_cast<DiskOffset>(block_size());
-            device().write(base_offset, block_size(), entry.data);
+            u32 base_offset = static_cast<u32>(entry.block_index) * static_cast<u32>(block_size());
+            device().write_raw(base_offset, block_size(), entry.data);
             entry.is_dirty = false;
         }
     });
@@ -220,8 +220,8 @@ void DiskBackedFS::flush_writes_impl()
     cache().for_each_entry([&](CacheEntry& entry) {
         if (!entry.is_dirty)
             return;
-        DiskOffset base_offset = static_cast<DiskOffset>(entry.block_index) * static_cast<DiskOffset>(block_size());
-        device().write(base_offset, block_size(), entry.data);
+        u32 base_offset = static_cast<u32>(entry.block_index) * static_cast<u32>(block_size());
+        device().write_raw(base_offset, block_size(), entry.data);
         ++count;
         entry.is_dirty = false;
     });
