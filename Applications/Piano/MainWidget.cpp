@@ -30,8 +30,10 @@
 #include "KeysWidget.h"
 #include "KnobsWidget.h"
 #include "RollWidget.h"
+#include "SamplerWidget.h"
 #include "WaveWidget.h"
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/TabWidget.h>
 
 MainWidget::MainWidget(AudioEngine& audio_engine)
     : m_audio_engine(audio_engine)
@@ -45,9 +47,15 @@ MainWidget::MainWidget(AudioEngine& audio_engine)
     m_wave_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_wave_widget->set_preferred_size(0, 100);
 
-    m_roll_widget = RollWidget::construct(this, audio_engine);
+    m_roll_widget = RollWidget::construct(nullptr, audio_engine);
     m_roll_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
     m_roll_widget->set_preferred_size(0, 300);
+
+    m_sampler_widget = SamplerWidget::construct(nullptr, audio_engine);
+
+    m_tab_widget = GUI::TabWidget::construct(this);
+    m_tab_widget->add_widget("Piano Roll", m_roll_widget);
+    m_tab_widget->add_widget("Sampler", m_sampler_widget);
 
     m_keys_and_knobs_container = GUI::Widget::construct(this);
     m_keys_and_knobs_container->set_layout(make<GUI::HorizontalBoxLayout>());
