@@ -234,45 +234,37 @@ ssize_t IPv4Socket::sendto(FileDescription&, const void* data, size_t data_lengt
     return nsent;
 }
 
-ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t buffer_length, int flags, sockaddr* addr, socklen_t* addr_length)
+ssize_t IPv4Socket::receive_byte_buffered(FileDescription& description, void* buffer, size_t buffer_length, int, sockaddr*, socklen_t*)
 {
-    if (addr_length && *addr_length < sizeof(sockaddr_in))
-        return -EINVAL;
+    if (m_receive_buffer.is_empty()) {
+        if (protocol_is_disconnected())
+            return 0;
+        if (!description.is_blocking())
+            return -EAGAIN;
 
-#ifdef IPV4_SOCKET_DEBUG
-    kprintf("recvfrom: type=%d, local_port=%u\n", type(), local_port());
-#endif
+        auto res = current->block<Thread::ReadBlocker>(description);
 
-    if (buffer_mode() == BufferMode::Bytes) {
-        if (m_receive_buffer.is_empty()) {
-            if (protocol_is_disconnected()) {
-                return 0;
-            }
-            if (!description.is_blocking()) {
-                return -EAGAIN;
-            }
+        LOCKER(lock());
+        if (!m_can_read) {
+            if (res != Thread::BlockResult::WokeNormally)
+                return -EINTR;
 
-            auto res = current->block<Thread::ReadBlocker>(description);
-
-            LOCKER(lock());
-            if (!m_can_read) {
-                if (res != Thread::BlockResult::WokeNormally)
-                    return -EINTR;
-
-                // Unblocked due to timeout.
-                return -EAGAIN;
-            }
+            // Unblocked due to timeout.
+            return -EAGAIN;
         }
-
-        ASSERT(!m_receive_buffer.is_empty());
-        int nreceived = m_receive_buffer.read((u8*)buffer, buffer_length);
-        if (nreceived > 0)
-            current->did_ipv4_socket_read((size_t)nreceived);
-
-        m_can_read = !m_receive_buffer.is_empty();
-        return nreceived;
     }
 
+    ASSERT(!m_receive_buffer.is_empty());
+    int nreceived = m_receive_buffer.read((u8*)buffer, buffer_length);
+    if (nreceived > 0)
+        current->did_ipv4_socket_read((size_t)nreceived);
+
+    m_can_read = !m_receive_buffer.is_empty();
+    return nreceived;
+}
+
+ssize_t IPv4Socket::receive_packet_buffered(FileDescription& description, void* buffer, size_t buffer_length, int flags, sockaddr* addr, socklen_t* addr_length)
+{
     ReceivedPacket packet;
     {
         LOCKER(lock());
@@ -338,7 +330,24 @@ ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t 
         return ipv4_packet.payload_size();
     }
 
-    int nreceived = protocol_receive(packet.data.value(), buffer, buffer_length, flags);
+    return protocol_receive(packet.data.value(), buffer, buffer_length, flags);
+}
+
+ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t buffer_length, int flags, sockaddr* addr, socklen_t* addr_length)
+{
+    if (addr_length && *addr_length < sizeof(sockaddr_in))
+        return -EINVAL;
+
+#ifdef IPV4_SOCKET_DEBUG
+    kprintf("recvfrom: type=%d, local_port=%u\n", type(), local_port());
+#endif
+
+    ssize_t nreceived = 0;
+    if (buffer_mode() == BufferMode::Bytes)
+        nreceived = receive_byte_buffered(description, buffer, buffer_length, flags, addr, addr_length);
+    else
+        nreceived = receive_packet_buffered(description, buffer, buffer_length, flags, addr, addr_length);
+
     if (nreceived > 0)
         current->did_ipv4_socket_read(nreceived);
     return nreceived;
