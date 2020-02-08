@@ -3,6 +3,7 @@ OBJS = \
     MainWidget.o \
     WaveWidget.o \
     RollWidget.o \
+    SamplerWidget.o \
     KeysWidget.o \
     KnobsWidget.o \
     main.o

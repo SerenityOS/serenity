@@ -67,6 +67,7 @@ enum Wave {
     Square,
     Saw,
     Noise,
+    RecordedSample,
 };
 
 constexpr const char* wave_strings[] = {
@@ -75,10 +76,11 @@ constexpr const char* wave_strings[] = {
     "Square",
     "Saw",
     "Noise",
+    "Sample",
 };
 
 constexpr int first_wave = Sine;
-constexpr int last_wave = Noise;
+constexpr int last_wave = RecordedSample;
 
 enum Envelope {
     Done,
@@ -109,6 +111,45 @@ constexpr KeyColor key_pattern[] = {
 
 const Color note_pressed_color(64, 64, 255);
 const Color column_playing_color(128, 128, 255);
+
+const Color wave_colors[] = {
+    // Sine
+    {
+        255,
+        192,
+        0,
+    },
+    // Triangle
+    {
+        35,
+        171,
+        35,
+    },
+    // Square
+    {
+        128,
+        160,
+        255,
+    },
+    // Saw
+    {
+        240,
+        100,
+        128,
+    },
+    // Noise
+    {
+        197,
+        214,
+        225,
+    },
+    // RecordedSample
+    {
+        227,
+        39,
+        39,
+    },
+};
 
 constexpr int notes_per_octave = 12;
 constexpr int white_keys_per_octave = 7;
@@ -216,6 +257,8 @@ constexpr double note_frequencies[] = {
     3951.0664100489994,
 };
 constexpr int note_count = sizeof(note_frequencies) / sizeof(double);
+
+constexpr double middle_c = note_frequencies[36];
 
 }
 

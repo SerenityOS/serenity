@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2019-2020, William McPherson <willmcpherson2@gmail.com>
+ * Copyright (c) 2020-2020, William McPherson <willmcpherson2@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,46 +26,42 @@
 
 #pragma once
 
-#include "Music.h"
-#include <LibGUI/Widget.h>
-
-class AudioEngine;
-class WaveWidget;
-class RollWidget;
-class SamplerWidget;
-class KeysWidget;
-class KnobsWidget;
+#include <LibGUI/Frame.h>
 
 namespace GUI {
-class TabWidget;
+class Label;
+class Button;
 }
 
-class MainWidget final : public GUI::Widget {
-    C_OBJECT(MainWidget)
-public:
-    virtual ~MainWidget() override;
+class AudioEngine;
 
-    void set_octave_and_ensure_note_change(Direction);
+class WaveEditor final : public GUI::Frame {
+    C_OBJECT(WaveEditor)
+public:
+    virtual ~WaveEditor() override;
 
 private:
-    explicit MainWidget(AudioEngine&);
+    WaveEditor(GUI::Widget* parent, AudioEngine&);
 
-    virtual void keydown_event(GUI::KeyEvent&) override;
-    virtual void keyup_event(GUI::KeyEvent&) override;
-    virtual void custom_event(Core::CustomEvent&) override;
+    virtual void paint_event(GUI::PaintEvent&) override;
 
-    void note_key_action(int key_code, Switch);
-    void special_key_action(int key_code);
+    int sample_to_y(float percentage) const;
+
+    AudioEngine& m_audio_engine;
+};
+
+class SamplerWidget final : public GUI::Frame {
+    C_OBJECT(SamplerWidget)
+public:
+    virtual ~SamplerWidget() override;
+
+private:
+    SamplerWidget(GUI::Widget* parent, AudioEngine&);
 
     AudioEngine& m_audio_engine;
 
-    RefPtr<WaveWidget> m_wave_widget;
-    RefPtr<RollWidget> m_roll_widget;
-    RefPtr<SamplerWidget> m_sampler_widget;
-    RefPtr<GUI::TabWidget> m_tab_widget;
-    RefPtr<GUI::Widget> m_keys_and_knobs_container;
-    RefPtr<KeysWidget> m_keys_widget;
-    RefPtr<KnobsWidget> m_knobs_widget;
-
-    bool m_keys_pressed[key_code_count] { false };
+    RefPtr<GUI::Widget> m_open_button_and_recorded_sample_name_container;
+    RefPtr<GUI::Button> m_open_button;
+    RefPtr<GUI::Label> m_recorded_sample_name;
+    RefPtr<WaveEditor> m_wave_editor;
 };
