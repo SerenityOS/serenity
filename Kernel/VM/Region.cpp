@@ -96,6 +96,7 @@ NonnullOwnPtr<Region> Region::clone()
         // Create a new region backed by the same VMObject.
         auto region = Region::create_user_accessible(m_range, m_vmobject, m_offset_in_vmobject, m_name, m_access);
         region->set_mmap(m_mmap);
+        region->set_shared(m_shared);
         return region;
     }
 
