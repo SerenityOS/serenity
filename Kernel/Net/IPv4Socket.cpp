@@ -500,3 +500,8 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, unsigned arg)
 
     return -EINVAL;
 }
+
+void IPv4Socket::close()
+{
+    shutdown(SHUT_RDWR);
+}

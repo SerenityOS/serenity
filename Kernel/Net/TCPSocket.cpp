@@ -55,6 +55,19 @@ void TCPSocket::set_state(State new_state)
 
     if (new_state == State::Established && m_direction == Direction::Outgoing)
         m_role = Role::Connected;
+
+    if (new_state == State::Closed) {
+        LOCKER(closing_sockets().lock());
+        closing_sockets().resource().remove(tuple());
+    }
+}
+
+Lockable<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>& TCPSocket::closing_sockets()
+{
+    static Lockable<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>* s_map;
+    if (!s_map)
+        s_map = new Lockable<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>;
+    return *s_map;
 }
 
 Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>& TCPSocket::sockets_by_tuple()
@@ -137,6 +150,10 @@ TCPSocket::~TCPSocket()
 {
     LOCKER(sockets_by_tuple().lock());
     sockets_by_tuple().resource().remove(tuple());
+
+#ifdef TCP_SOCKET_DEBUG
+    dbg() << "~TCPSocket in state " << to_string(state());
+#endif
 }
 
 NonnullRefPtr<TCPSocket> TCPSocket::create(int protocol)
@@ -419,4 +436,28 @@ bool TCPSocket::protocol_is_disconnected() const
     default:
         return false;
     }
+}
+
+void TCPSocket::shut_down_for_writing()
+{
+    if (state() == State::Established) {
+        dbg() << " Sending FIN/ACK from Established and moving into FinWait1";
+        send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK);
+        set_state(State::FinWait1);
+    } else {
+        dbg() << " Shutting down TCPSocket for writing but not moving to FinWait1 since state is " << to_string(state());
+    }
+}
+
+void TCPSocket::close()
+{
+    IPv4Socket::close();
+    if (state() == State::CloseWait) {
+        dbg() << " Sending FIN from CloseWait and moving into LastAck";
+        send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK);
+        set_state(State::LastAck);
+    }
+
+    LOCKER(closing_sockets().lock());
+    closing_sockets().resource().set(tuple(), *this);
 }

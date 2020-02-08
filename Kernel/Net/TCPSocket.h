@@ -155,11 +155,15 @@ public:
     static RefPtr<TCPSocket> from_tuple(const IPv4SocketTuple& tuple);
     static RefPtr<TCPSocket> from_endpoints(const IPv4Address& local_address, u16 local_port, const IPv4Address& peer_address, u16 peer_port);
 
+    static Lockable<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>& closing_sockets();
+
     RefPtr<TCPSocket> create_client(const IPv4Address& local_address, u16 local_port, const IPv4Address& peer_address, u16 peer_port);
     void set_originator(TCPSocket& originator) { m_originator = originator.make_weak_ptr(); }
     bool has_originator() { return !!m_originator; }
     void release_to_originator();
     void release_for_accept(RefPtr<TCPSocket>);
+
+    virtual void close() override;
 
 protected:
     void set_direction(Direction direction) { m_direction = direction; }
@@ -169,6 +173,8 @@ private:
     virtual const char* class_name() const override { return "TCPSocket"; }
 
     static NetworkOrdered<u16> compute_tcp_checksum(const IPv4Address& source, const IPv4Address& destination, const TCPPacket&, u16 payload_size);
+
+    virtual void shut_down_for_writing() override;
 
     virtual int protocol_receive(const KBuffer&, void* buffer, size_t buffer_size, int flags) override;
     virtual int protocol_send(const void*, size_t) override;

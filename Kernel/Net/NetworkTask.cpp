@@ -572,6 +572,9 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
             socket->set_state(TCPSocket::State::TimeWait);
             return;
+        case TCPFlags::ACK | TCPFlags::RST:
+            socket->set_state(TCPSocket::State::Closed);
+            return;
         default:
             kprintf("handle_tcp: unexpected flags in FinWait2 state\n");
             socket->send_tcp_packet(TCPFlags::RST);
@@ -596,12 +599,8 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
                 socket->did_receive(ipv4_packet.source(), tcp_packet.source_port(), KBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()));
 
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
-            // TODO: We should only send a FIN packet out once we're shutting
-            // down our side of the socket, so we should change this back to
-            // just being an ACK and a transition to CloseWait once we have a
-            // shutdown() implementation.
-            socket->send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK);
-            socket->set_state(TCPSocket::State::Closing);
+            socket->send_tcp_packet(TCPFlags::ACK);
+            socket->set_state(TCPSocket::State::CloseWait);
             socket->set_connected(false);
             return;
         }
