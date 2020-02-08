@@ -1041,10 +1041,9 @@ RefPtr<Inode> ProcFS::create_inode(InodeIdentifier, const String&, mode_t, off_t
     return {};
 }
 
-RefPtr<Inode> ProcFS::create_directory(InodeIdentifier, const String&, mode_t, uid_t, gid_t, int& error)
+KResult ProcFS::create_directory(InodeIdentifier, const String&, mode_t, uid_t, gid_t)
 {
-    error = -EROFS;
-    return nullptr;
+    return KResult(-EROFS);
 }
 
 InodeIdentifier ProcFS::root_inode() const

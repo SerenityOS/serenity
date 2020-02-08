@@ -355,11 +355,7 @@ KResult VFS::mkdir(StringView path, mode_t mode, Custody& base)
 #ifdef VFS_DEBUG
     dbg() << "VFS::mkdir: '" << p.basename() << "' in " << parent_inode.identifier();
 #endif
-    int error;
-    auto new_dir = parent_inode.fs().create_directory(parent_inode.identifier(), p.basename(), mode, current->process().uid(), current->process().gid(), error);
-    if (new_dir)
-        return KSuccess;
-    return KResult(error);
+    return parent_inode.fs().create_directory(parent_inode.identifier(), p.basename(), mode, current->process().uid(), current->process().gid());
 }
 
 KResult VFS::access(StringView path, int mode, Custody& base)

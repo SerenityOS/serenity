@@ -49,7 +49,7 @@ public:
     virtual RefPtr<Inode> get_inode(InodeIdentifier) const override;
 
     virtual RefPtr<Inode> create_inode(InodeIdentifier parent_id, const String& name, mode_t, off_t size, dev_t, uid_t, gid_t, int& error) override;
-    virtual RefPtr<Inode> create_directory(InodeIdentifier parent_id, const String& name, mode_t, uid_t, gid_t, int& error) override;
+    virtual KResult create_directory(InodeIdentifier parent_id, const String& name, mode_t, uid_t, gid_t) override;
 
 private:
     TmpFS();
