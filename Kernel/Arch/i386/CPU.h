@@ -215,6 +215,8 @@ public:
     bool is_execute_disabled() const { return raw() & NoExecute; }
     void set_execute_disabled(bool b) { set_bit(NoExecute, b); }
 
+    void clear() { m_raw = 0; }
+
     void set_bit(u64 bit, bool value)
     {
         if (value)

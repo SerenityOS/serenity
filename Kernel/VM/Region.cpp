@@ -255,8 +255,7 @@ void Region::map_individual_page_impl(size_t page_index)
     auto& pte = MM.ensure_pte(*m_page_directory, page_vaddr);
     auto& physical_page = vmobject().physical_pages()[first_page_index() + page_index];
     if (!physical_page) {
-        pte.set_physical_page_base(0);
-        pte.set_present(false);
+        pte.clear();
     } else {
         pte.set_cache_disabled(!m_cacheable);
         pte.set_physical_page_base(physical_page->paddr().get());
@@ -290,10 +289,7 @@ void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
     for (size_t i = 0; i < page_count(); ++i) {
         auto vaddr = this->vaddr().offset(i * PAGE_SIZE);
         auto& pte = MM.ensure_pte(*m_page_directory, vaddr);
-        pte.set_physical_page_base(0);
-        pte.set_present(false);
-        pte.set_writable(false);
-        pte.set_user_allowed(false);
+        pte.clear();
         MM.flush_tlb(vaddr);
 #ifdef MM_DEBUG
         auto& physical_page = vmobject().physical_pages()[first_page_index() + i];
