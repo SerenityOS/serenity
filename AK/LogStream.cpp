@@ -52,6 +52,16 @@ const LogStream& operator<<(const LogStream& stream, int value)
     return stream << String::number(value);
 }
 
+const LogStream& operator<<(const LogStream& stream, long value)
+{
+    return stream << String::number(value);
+}
+
+const LogStream& operator<<(const LogStream& stream, long long value)
+{
+    return stream << String::number(value);
+}
+
 const LogStream& operator<<(const LogStream& stream, unsigned value)
 {
     return stream << String::number(value);
