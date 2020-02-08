@@ -88,7 +88,7 @@ RefPtr<Inode> TmpFS::get_inode(InodeIdentifier identifier) const
     return it->value;
 }
 
-RefPtr<Inode> TmpFS::create_inode(InodeIdentifier parent_id, const String& name, mode_t mode, off_t size, dev_t dev, uid_t uid, gid_t gid, int& error)
+KResultOr<NonnullRefPtr<Inode>> TmpFS::create_inode(InodeIdentifier parent_id, const String& name, mode_t mode, off_t size, dev_t dev, uid_t uid, gid_t gid)
 {
     LOCKER(m_lock);
     ASSERT(parent_id.fsid() == fsid());
@@ -112,7 +112,10 @@ RefPtr<Inode> TmpFS::create_inode(InodeIdentifier parent_id, const String& name,
     auto it = m_inodes.find(parent_id.index());
     ASSERT(it != m_inodes.end());
     auto parent_inode = it->value;
-    error = parent_inode->add_child(inode->identifier(), name, mode);
+
+    auto result = parent_inode->add_child(inode->identifier(), name, mode);
+    if (result.is_error())
+        return result;
 
     return inode;
 }
@@ -122,9 +125,9 @@ KResult TmpFS::create_directory(InodeIdentifier parent_id, const String& name, m
     // Ensure it's a directory.
     mode &= ~0170000;
     mode |= 0040000;
-    int error;
-    if (!create_inode(parent_id, name, mode, 0, 0, uid, gid, error))
-        return KResult(error);
+    auto result = create_inode(parent_id, name, mode, 0, 0, uid, gid);
+    if (result.is_error())
+        return result.error();
     return KSuccess;
 }
 

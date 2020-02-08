@@ -84,7 +84,7 @@ public:
         u8 file_type { 0 };
     };
 
-    virtual RefPtr<Inode> create_inode(InodeIdentifier parent_inode, const String& name, mode_t, off_t size, dev_t, uid_t, gid_t, int& error) = 0;
+    virtual KResultOr<NonnullRefPtr<Inode>> create_inode(InodeIdentifier parent_id, const String& name, mode_t, off_t size, dev_t, uid_t, gid_t) = 0;
     virtual KResult create_directory(InodeIdentifier parent_inode, const String& name, mode_t, uid_t, gid_t) = 0;
 
     virtual RefPtr<Inode> get_inode(InodeIdentifier) const = 0;

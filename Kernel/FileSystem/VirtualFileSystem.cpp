@@ -299,12 +299,7 @@ KResult VFS::mknod(StringView path, mode_t mode, dev_t dev, Custody& base)
 
     FileSystemPath p(path);
     dbg() << "VFS::mknod: '" << p.basename() << "' mode=" << mode << " dev=" << dev << " in " << parent_inode.identifier();
-    int error;
-    auto new_file = parent_inode.fs().create_inode(parent_inode.identifier(), p.basename(), mode, 0, dev, current->process().uid(), current->process().gid(), error);
-    if (!new_file)
-        return KResult(error);
-
-    return KSuccess;
+    return parent_inode.fs().create_inode(parent_inode.identifier(), p.basename(), mode, 0, dev, current->process().uid(), current->process().gid()).result();
 }
 
 KResultOr<NonnullRefPtr<FileDescription>> VFS::create(StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> owner)
@@ -321,15 +316,13 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::create(StringView path, int optio
 #ifdef VFS_DEBUG
     dbg() << "VFS::create: '" << p.basename() << "' in " << parent_inode.identifier();
 #endif
-    int error;
-
     uid_t uid = owner.has_value() ? owner.value().uid : current->process().uid();
     gid_t gid = owner.has_value() ? owner.value().gid : current->process().gid();
-    auto new_file = parent_inode.fs().create_inode(parent_inode.identifier(), p.basename(), mode, 0, 0, uid, gid, error);
-    if (!new_file)
-        return KResult(error);
+    auto inode_or_error = parent_inode.fs().create_inode(parent_inode.identifier(), p.basename(), mode, 0, 0, uid, gid);
+    if (inode_or_error.is_error())
+        return inode_or_error.error();
 
-    auto new_custody = Custody::create(&parent_custody, p.basename(), *new_file, parent_custody.mount_flags());
+    auto new_custody = Custody::create(&parent_custody, p.basename(), inode_or_error.value(), parent_custody.mount_flags());
     auto description = FileDescription::create(*new_custody);
     description->set_rw_mode(options);
     description->set_file_flags(options);
@@ -599,11 +592,11 @@ KResult VFS::symlink(StringView target, StringView linkpath, Custody& base)
 
     FileSystemPath p(linkpath);
     dbg() << "VFS::symlink: '" << p.basename() << "' (-> '" << target << "') in " << parent_inode.identifier();
-    int error;
-    auto new_file = parent_inode.fs().create_inode(parent_inode.identifier(), p.basename(), 0120644, 0, 0, current->process().uid(), current->process().gid(), error);
-    if (!new_file)
-        return KResult(error);
-    ssize_t nwritten = new_file->write_bytes(0, target.length(), (const u8*)target.characters_without_null_termination(), nullptr);
+    auto inode_or_error = parent_inode.fs().create_inode(parent_inode.identifier(), p.basename(), 0120644, 0, 0, current->process().uid(), current->process().gid());
+    if (inode_or_error.is_error())
+        return inode_or_error.error();
+    auto& inode = inode_or_error.value();
+    ssize_t nwritten = inode->write_bytes(0, target.length(), (const u8*)target.characters_without_null_termination(), nullptr);
     if (nwritten < 0)
         return KResult(nwritten);
     return KSuccess;
