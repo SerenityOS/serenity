@@ -33,7 +33,7 @@ NonnullRefPtr<PATADiskDevice> PATADiskDevice::create(PATAChannel& channel, Drive
 }
 
 PATADiskDevice::PATADiskDevice(PATAChannel& channel, DriveType type, int major, int minor)
-    : DiskDevice(major, minor)
+    : BlockDevice(major, minor, 512)
     , m_drive_type(type)
     , m_channel(channel)
 {
@@ -55,11 +55,6 @@ bool PATADiskDevice::read_blocks(unsigned index, u16 count, u8* out)
     return read_sectors(index, count, out);
 }
 
-bool PATADiskDevice::read_block(unsigned index, u8* out) const
-{
-    return const_cast<PATADiskDevice*>(this)->read_blocks(index, 1, out);
-}
-
 bool PATADiskDevice::write_blocks(unsigned index, u16 count, const u8* data)
 {
     if (m_channel.m_bus_master_base && m_channel.m_dma_enabled.resource())
@@ -69,11 +64,6 @@ bool PATADiskDevice::write_blocks(unsigned index, u16 count, const u8* data)
             return false;
     }
     return true;
-}
-
-bool PATADiskDevice::write_block(unsigned index, const u8* data)
-{
-    return write_blocks(index, 1, data);
 }
 
 void PATADiskDevice::set_drive_geometry(u16 cyls, u16 heads, u16 spt)

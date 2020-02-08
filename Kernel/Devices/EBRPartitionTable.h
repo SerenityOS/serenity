@@ -28,7 +28,6 @@
 
 #include <AK/RefPtr.h>
 #include <AK/Vector.h>
-#include <Kernel/Devices/DiskDevice.h>
 #include <Kernel/Devices/DiskPartition.h>
 #include <Kernel/Devices/MBRPartitionTable.h>
 
@@ -44,7 +43,7 @@ struct [[gnu::packed]] EBRPartitionExtension
 class EBRPartitionTable {
 
 public:
-    explicit EBRPartitionTable(NonnullRefPtr<DiskDevice>);
+    explicit EBRPartitionTable(NonnullRefPtr<BlockDevice>);
     ~EBRPartitionTable();
 
     bool initialize();
@@ -52,7 +51,7 @@ public:
 
 private:
     int index_of_ebr_container() const;
-    NonnullRefPtr<DiskDevice> m_device;
+    NonnullRefPtr<BlockDevice> m_device;
 
     const MBRPartitionHeader& header() const;
     const EBRPartitionExtension& ebr_extension() const;

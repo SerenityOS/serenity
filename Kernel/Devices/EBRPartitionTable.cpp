@@ -29,7 +29,7 @@
 
 #define EBR_DEBUG
 
-EBRPartitionTable::EBRPartitionTable(NonnullRefPtr<DiskDevice> device)
+EBRPartitionTable::EBRPartitionTable(NonnullRefPtr<BlockDevice> device)
     : m_device(move(device))
 {
 }

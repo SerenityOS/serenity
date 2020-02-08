@@ -229,7 +229,7 @@ void init_stage2()
     }
 
     auto pata0 = PATAChannel::create(PATAChannel::ChannelType::Primary, force_pio);
-    NonnullRefPtr<DiskDevice> root_dev = *pata0->master_device();
+    NonnullRefPtr<BlockDevice> root_dev = *pata0->master_device();
 
     root = root.substring(strlen("/dev/hda"), root.length() - strlen("/dev/hda"));
 

@@ -29,7 +29,7 @@
 
 #define GPT_DEBUG
 
-GPTPartitionTable::GPTPartitionTable(DiskDevice& device)
+GPTPartitionTable::GPTPartitionTable(BlockDevice& device)
     : m_device(move(device))
 {
 }

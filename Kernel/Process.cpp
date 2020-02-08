@@ -3992,15 +3992,15 @@ int Process::sys$mount(const Syscall::SC_mount_params* user_params)
             return source_or_error.error();
 
         auto* device = source_or_error.value()->device();
-        if (!device || !device->is_disk_device()) {
-            dbg() << "mount: this is not a DiskDevice";
+        if (!device || !device->is_block_device()) {
+            dbg() << "mount: this is not a BlockDevice";
             return -ENODEV;
         }
-        auto& disk_device = static_cast<DiskDevice&>(*device);
+        auto& block_device = static_cast<BlockDevice&>(*device);
 
-        dbg() << "mount: attempting to mount " << disk_device.absolute_path() << " on " << target;
+        dbg() << "mount: attempting to mount " << block_device.absolute_path() << " on " << target;
 
-        fs = Ext2FS::create(disk_device);
+        fs = Ext2FS::create(block_device);
     } else if (fs_type == "proc" || fs_type == "ProcFS") {
         fs = ProcFS::create();
     } else if (fs_type == "devpts" || fs_type == "DevPtsFS") {

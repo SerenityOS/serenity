@@ -28,7 +28,6 @@
 
 #include <AK/RefPtr.h>
 #include <AK/Vector.h>
-#include <Kernel/Devices/DiskDevice.h>
 #include <Kernel/Devices/DiskPartition.h>
 
 #define MBR_SIGNATURE 0xaa55
@@ -62,7 +61,7 @@ class MBRPartitionTable {
     AK_MAKE_ETERNAL
 
 public:
-    explicit MBRPartitionTable(NonnullRefPtr<DiskDevice>);
+    explicit MBRPartitionTable(NonnullRefPtr<BlockDevice>);
     ~MBRPartitionTable();
 
     bool initialize();
@@ -71,7 +70,7 @@ public:
     RefPtr<DiskPartition> partition(unsigned index);
 
 private:
-    NonnullRefPtr<DiskDevice> m_device;
+    NonnullRefPtr<BlockDevice> m_device;
 
     const MBRPartitionHeader& header() const;
 

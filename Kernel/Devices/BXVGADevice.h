@@ -47,6 +47,8 @@ private:
     virtual bool can_write(const FileDescription&) const override { return true; }
     virtual ssize_t read(FileDescription&, u8*, ssize_t) override { return -EINVAL; }
     virtual ssize_t write(FileDescription&, const u8*, ssize_t) override { return -EINVAL; }
+    virtual bool read_blocks(unsigned, u16, u8*) override { return false; }
+    virtual bool write_blocks(unsigned, u16, const u8*) override { return false; }
 
     void set_register(u16 index, u16 value);
     u32 find_framebuffer_address();

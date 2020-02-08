@@ -29,7 +29,7 @@
 
 #define MBR_DEBUG
 
-MBRPartitionTable::MBRPartitionTable(NonnullRefPtr<DiskDevice> device)
+MBRPartitionTable::MBRPartitionTable(NonnullRefPtr<BlockDevice> device)
     : m_device(move(device))
 {
 }

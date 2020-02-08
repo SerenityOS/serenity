@@ -30,13 +30,13 @@
 //
 #pragma once
 
-#include <Kernel/Devices/DiskDevice.h>
+#include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/IRQHandler.h>
 #include <Kernel/Lock.h>
 
 class PATAChannel;
 
-class PATADiskDevice final : public DiskDevice {
+class PATADiskDevice final : public BlockDevice {
     AK_MAKE_ETERNAL
 public:
     // Type of drive this IDEDiskDevice is on the ATA channel.
@@ -53,8 +53,6 @@ public:
     virtual ~PATADiskDevice() override;
 
     // ^DiskDevice
-    virtual bool read_block(unsigned index, u8*) const override;
-    virtual bool write_block(unsigned index, const u8*) override;
     virtual bool read_blocks(unsigned index, u16 count, u8*) override;
     virtual bool write_blocks(unsigned index, u16 count, const u8*) override;
 

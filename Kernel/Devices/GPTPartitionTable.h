@@ -29,7 +29,6 @@
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
-#include <Kernel/Devices/DiskDevice.h>
 #include <Kernel/Devices/DiskPartition.h>
 
 #define GPT_SIGNATURE2 0x54524150
@@ -73,14 +72,14 @@ struct [[gnu::packed]] GPTPartitionHeader
 class GPTPartitionTable {
 
 public:
-    explicit GPTPartitionTable(DiskDevice&);
+    explicit GPTPartitionTable(BlockDevice&);
     ~GPTPartitionTable();
 
     bool initialize();
     RefPtr<DiskPartition> partition(unsigned index);
 
 private:
-    NonnullRefPtr<DiskDevice> m_device;
+    NonnullRefPtr<BlockDevice> m_device;
 
     const GPTPartitionHeader& header() const;
 

@@ -89,7 +89,7 @@ class Ext2FS final : public DiskBackedFS {
     friend class Ext2FSInode;
 
 public:
-    static NonnullRefPtr<Ext2FS> create(NonnullRefPtr<DiskDevice>);
+    static NonnullRefPtr<Ext2FS> create(BlockDevice&);
     virtual ~Ext2FS() override;
     virtual bool initialize() override;
 
@@ -106,7 +106,7 @@ private:
     typedef unsigned BlockIndex;
     typedef unsigned GroupIndex;
     typedef unsigned InodeIndex;
-    explicit Ext2FS(NonnullRefPtr<DiskDevice>&&);
+    explicit Ext2FS(BlockDevice&);
 
     const ext2_super_block& super_block() const { return m_super_block; }
     const ext2_group_desc& group_descriptor(GroupIndex) const;

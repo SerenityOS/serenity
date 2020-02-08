@@ -20,7 +20,6 @@ OBJS = \
     Devices/CharacterDevice.o \
     Devices/DebugLogDevice.o \
     Devices/Device.o \
-    Devices/DiskDevice.o \
     Devices/DiskPartition.o \
     Devices/FloppyDiskDevice.o \
     Devices/FullDevice.o \
