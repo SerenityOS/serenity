@@ -43,39 +43,6 @@ WaveWidget::~WaveWidget()
 {
 }
 
-static const Color wave_colors[] = {
-    // Sine
-    {
-        255,
-        192,
-        0,
-    },
-    // Triangle
-    {
-        35,
-        171,
-        35,
-    },
-    // Square
-    {
-        128,
-        160,
-        255,
-    },
-    // Saw
-    {
-        240,
-        100,
-        128,
-    },
-    // Noise
-    {
-        197,
-        214,
-        225,
-    },
-};
-
 int WaveWidget::sample_to_y(int sample) const
 {
     constexpr double sample_max = std::numeric_limits<i16>::max();

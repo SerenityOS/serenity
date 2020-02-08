@@ -26,6 +26,7 @@
  */
 
 #include "AudioEngine.h"
+#include <LibAudio/WavLoader.h>
 #include <limits>
 #include <math.h>
 
@@ -94,6 +95,9 @@ void AudioEngine::fill_buffer(FixedArray<Sample>& buffer)
             case Wave::Noise:
                 val = (volume * m_power[note]) * noise();
                 break;
+            case Wave::RecordedSample:
+                val = (volume * m_power[note]) * recorded_sample(note);
+                break;
             default:
                 ASSERT_NOT_REACHED();
             }
@@ -143,6 +147,37 @@ void AudioEngine::reset()
     m_previous_column = horizontal_notes - 1;
 }
 
+String AudioEngine::set_recorded_sample(const StringView& path)
+{
+    Audio::WavLoader wav_loader(path);
+    if (wav_loader.has_error())
+        return String(wav_loader.error_string());
+    auto wav_buffer = wav_loader.get_more_samples(60 * sample_rate * sizeof(Sample)); // 1 minute maximum
+
+    if (!m_recorded_sample.is_empty())
+        m_recorded_sample.clear();
+    m_recorded_sample.resize(wav_buffer->sample_count());
+
+    float peak = 0;
+    for (int i = 0; i < wav_buffer->sample_count(); ++i) {
+        float left_abs = fabs(wav_buffer->samples()[i].left);
+        float right_abs = fabs(wav_buffer->samples()[i].right);
+        if (left_abs > peak)
+            peak = left_abs;
+        if (right_abs > peak)
+            peak = right_abs;
+    }
+
+    if (peak) {
+        for (int i = 0; i < wav_buffer->sample_count(); ++i) {
+            m_recorded_sample[i].left = wav_buffer->samples()[i].left / peak;
+            m_recorded_sample[i].right = wav_buffer->samples()[i].right / peak;
+        }
+    }
+
+    return String::empty();
+}
+
 // All of the information for these waves is on Wikipedia.
 
 double AudioEngine::sine(size_t note)
@@ -185,6 +220,21 @@ double AudioEngine::noise() const
 {
     double random_percentage = static_cast<double>(rand()) / RAND_MAX;
     double w = (random_percentage * 2) - 1;
+    return w;
+}
+
+double AudioEngine::recorded_sample(size_t note)
+{
+    int t = m_pos[note];
+    if (t >= m_recorded_sample.size())
+        return 0;
+    double w = m_recorded_sample[t].left;
+    if (t + 1 < m_recorded_sample.size()) {
+        double t_fraction = m_pos[note] - t;
+        w += (m_recorded_sample[t + 1].left - m_recorded_sample[t].left) * t_fraction;
+    }
+    double recorded_sample_step = note_frequencies[note] / middle_c;
+    m_pos[note] += recorded_sample_step;
     return w;
 }
 
