@@ -331,7 +331,10 @@ template<typename PutChFunc>
 
             case 'd':
             case 'i':
-                ret += print_signed_number(putch, bufptr, va_arg(ap, int), left_pad, zeroPad, fieldWidth, always_sign);
+                if (long_qualifiers >= 2)
+                    ret += print_i64(putch, bufptr, va_arg(ap, i64), left_pad, zeroPad, fieldWidth);
+                else
+                    ret += print_signed_number(putch, bufptr, va_arg(ap, int), left_pad, zeroPad, fieldWidth, always_sign);
                 break;
 
             case 'u':
