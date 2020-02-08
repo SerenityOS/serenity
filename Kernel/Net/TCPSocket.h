@@ -192,10 +192,10 @@ private:
     u32 m_bytes_out { 0 };
 
     struct OutgoingPacket {
-        u32 ack_number;
+        u32 ack_number { 0 };
         ByteBuffer buffer;
         int tx_counter { 0 };
-        timeval tx_time;
+        timeval tx_time { 0, 0 };
     };
 
     Lock m_not_acked_lock { "TCPSocket unacked packets" };
