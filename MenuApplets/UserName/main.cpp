@@ -89,6 +89,7 @@ int main(int argc, char** argv)
     GUI::Application app(argc, argv);
 
     auto window = GUI::Window::construct();
+    window->set_title("UserName");
     window->set_window_type(GUI::WindowType::MenuApplet);
 
     auto widget = UserNameWidget::construct();
