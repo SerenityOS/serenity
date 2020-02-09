@@ -40,7 +40,9 @@ WavLoader::WavLoader(const StringView& path)
         return;
     }
 
-    parse_header();
+    if (!parse_header())
+        return;
+
     m_resampler = make<ResampleHelper>(m_sample_rate, 44100);
 }
 
@@ -81,7 +83,6 @@ bool WavLoader::parse_header()
 
 #define CHECK_OK(msg)                                                           \
     do {                                                                        \
-        ASSERT(ok);                                                             \
         if (stream.handle_read_failure()) {                                     \
             m_error_string = String::format("Premature stream EOF at %s", msg); \
             return {};                                                          \
