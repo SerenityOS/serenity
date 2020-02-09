@@ -152,6 +152,7 @@ cp ../Shell/Shell mnt/bin/Shell
 cp ../MenuApplets/Audio/Audio.MenuApplet mnt/bin/
 cp ../MenuApplets/CPUGraph/CPUGraph.MenuApplet mnt/bin/
 cp ../MenuApplets/Clock/Clock.MenuApplet mnt/bin/
+cp ../MenuApplets/UserName/UserName.MenuApplet mnt/bin
 echo "done"
 
 printf "installing dynamic libraries... "
