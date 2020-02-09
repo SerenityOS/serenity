@@ -29,6 +29,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Painter.h>
+#include <WindowServer/AppletManager.h>
 #include <WindowServer/MenuManager.h>
 #include <WindowServer/Screen.h>
 #include <WindowServer/WindowManager.h>
@@ -215,7 +216,7 @@ void MenuManager::draw()
 
     if (m_needs_window_resize) {
         m_window->set_rect(menubar_rect);
-        calculate_applet_rects();
+        AppletManager::the().calculate_applet_rects(window());
         m_needs_window_resize = false;
     }
 
@@ -241,11 +242,7 @@ void MenuManager::draw()
         return IterationDecision::Continue;
     });
 
-    for (auto& applet : m_applets) {
-        if (!applet)
-            continue;
-        draw_applet(*applet);
-    }
+    AppletManager::the().draw();
 }
 
 void MenuManager::refresh()
@@ -254,25 +251,6 @@ void MenuManager::refresh()
         return;
     draw();
     window().invalidate();
-}
-
-void MenuManager::calculate_applet_rects()
-{
-    dbg() << "Recalculate applet rects." << m_applets.size();
-
-    auto menubar_rect = m_window->rect();
-    int right_edge_x = menubar_rect.width() - 4;
-    for (auto& existing_applet : m_applets) {
-        if (!existing_applet)
-            continue;
-
-        Gfx::Rect new_applet_rect(right_edge_x - existing_applet->size().width(), 0, existing_applet->size().width(), existing_applet->size().height());
-        Gfx::Rect dummy_menubar_rect(0, 0, 0, 18);
-        new_applet_rect.center_vertically_within(dummy_menubar_rect);
-
-        existing_applet->set_rect_in_menubar(new_applet_rect);
-        right_edge_x = existing_applet->rect_in_menubar().x() - 4;
-    }
 }
 
 void MenuManager::event(Core::Event& event)
@@ -291,14 +269,7 @@ void MenuManager::event(Core::Event& event)
             return IterationDecision::Continue;
         });
 
-        for (auto& applet : m_applets) {
-            if (!applet)
-                continue;
-            if (!applet->rect_in_menubar().contains(mouse_event.position()))
-                continue;
-            auto local_event = mouse_event.translated(-applet->rect_in_menubar().location());
-            applet->event(local_event);
-        }
+        AppletManager::the().event(event);
     }
 
     if (static_cast<Event&>(event).is_key_event()) {
@@ -458,34 +429,6 @@ void MenuManager::close_bar()
 {
     close_everyone();
     m_bar_open = false;
-}
-
-void MenuManager::add_applet(Window& applet)
-{
-    m_applets.append(applet.make_weak_ptr());
-    calculate_applet_rects();
-}
-
-void MenuManager::remove_applet(Window& applet)
-{
-    m_applets.remove_first_matching([&](auto& entry) {
-        return &applet == entry.ptr();
-    });
-}
-
-void MenuManager::draw_applet(const Window& applet)
-{
-    if (!applet.backing_store())
-        return;
-    Gfx::Painter painter(*window().backing_store());
-    painter.fill_rect(applet.rect_in_menubar(), WindowManager::the().palette().window());
-    painter.blit(applet.rect_in_menubar().location(), *applet.backing_store(), applet.backing_store()->rect());
-}
-
-void MenuManager::invalidate_applet(const Window& applet, const Gfx::Rect& rect)
-{
-    draw_applet(applet);
-    window().invalidate(rect.translated(applet.rect_in_menubar().location()));
 }
 
 Gfx::Rect MenuManager::menubar_rect() const

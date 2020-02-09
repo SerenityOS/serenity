@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "AppletManager.h"
 #include "Compositor.h"
 #include "EventLoop.h"
 #include "Screen.h"
@@ -98,6 +99,7 @@ int main(int, char**)
         wm_config->read_num_entry("Screen", "Height", 768));
     WindowServer::Compositor::the();
     auto wm = WindowServer::WindowManager::construct(*palette);
+    auto am = WindowServer::AppletManager::construct();
     auto mm = WindowServer::MenuManager::construct();
 
     if (unveil("/tmp", "") < 0) {
