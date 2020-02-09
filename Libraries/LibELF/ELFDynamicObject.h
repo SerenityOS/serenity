@@ -26,9 +26,8 @@
 
 #pragma once
 
+#include <LibBareMetal/Memory/VirtualAddress.h>
 #include <LibELF/exec_elf.h>
-
-#include <Kernel/VM/VirtualAddress.h>
 
 class ELFDynamicObject {
 public:

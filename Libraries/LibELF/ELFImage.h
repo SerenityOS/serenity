@@ -29,7 +29,7 @@
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
-#include <Kernel/VM/VirtualAddress.h>
+#include <LibBareMetal/Memory/VirtualAddress.h>
 #include <LibELF/exec_elf.h>
 
 class ELFImage {
