@@ -60,6 +60,8 @@ else
 
     ifdef KERNEL
         DEFINES += -DKERNEL
+    else ifdef BOOTSTRAPPER
+        DEFINES += -DBOOTSTRAPPER
     else
         # everything else gets -lc -lm
         LIB_DEPS := C M $(LIB_DEPS)
