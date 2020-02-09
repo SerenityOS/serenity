@@ -68,6 +68,10 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source)
             gateway_adapter = adapter;
     });
 
+
+    if (local_adapter && target == local_adapter->ipv4_address())
+        return { local_adapter, local_adapter->mac_address() };
+
     if (!local_adapter && !gateway_adapter) {
 #ifdef ROUTING_DEBUG
         kprintf("Routing: Couldn't find a suitable adapter for route to %s\n",
