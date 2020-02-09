@@ -83,7 +83,7 @@ void Client::handle_request(ByteBuffer raw_request)
 void Client::send_error_response(unsigned code, const StringView& message, const Core::HttpRequest& request)
 {
     StringBuilder builder;
-    builder.appendf("HTTP/1.0 %u", code);
+    builder.appendf("HTTP/1.0 %u ", code);
     builder.append(message);
     builder.append("\r\n\r\n");
     builder.append("<!DOCTYPE html><html><body><h1>");
