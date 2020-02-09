@@ -49,7 +49,6 @@ MenuManager& MenuManager::the()
 MenuManager::MenuManager()
 {
     s_the = this;
-    m_username = getlogin();
     m_needs_window_resize = true;
 
     HashTable<String> seen_app_categories;
@@ -104,7 +103,7 @@ MenuManager::MenuManager()
     for (const auto& app : m_apps) {
         RefPtr<Gfx::Bitmap> icon;
         if (!app.icon_path.is_empty())
-             icon = Gfx::Bitmap::load_from_file(app.icon_path);
+            icon = Gfx::Bitmap::load_from_file(app.icon_path);
 
         auto parent_menu = m_app_category_menus.get(app.category).value_or(*m_system_menu);
         parent_menu->add_item(make<MenuItem>(*m_system_menu, app_identifier++, app.name, String(), true, false, false, icon));
@@ -215,29 +214,8 @@ void MenuManager::draw()
     auto menubar_rect = this->menubar_rect();
 
     if (m_needs_window_resize) {
-        int username_width = Gfx::Font::default_bold_font().width(m_username);
-
-        m_username_rect = {
-            menubar_rect.right() - menubar_menu_margin() / 2 - Gfx::Font::default_bold_font().width(m_username),
-            menubar_rect.y(),
-            username_width,
-            menubar_rect.height()
-        };
-
-        int right_edge_x = m_username_rect.left() - 4;
-        for (auto& existing_applet : m_applets) {
-            if (!existing_applet)
-                continue;
-
-            Gfx::Rect new_applet_rect(right_edge_x - existing_applet->size().width(), 0, existing_applet->size().width(), existing_applet->size().height());
-            Gfx::Rect dummy_menubar_rect(0, 0, 0, 18);
-            new_applet_rect.center_vertically_within(dummy_menubar_rect);
-
-            existing_applet->set_rect_in_menubar(new_applet_rect);
-            right_edge_x = existing_applet->rect_in_menubar().x() - 4;
-        }
-
         m_window->set_rect(menubar_rect);
+        calculate_applet_rects();
         m_needs_window_resize = false;
     }
 
@@ -263,18 +241,11 @@ void MenuManager::draw()
         return IterationDecision::Continue;
     });
 
-    painter.draw_text(m_username_rect, m_username, Gfx::Font::default_bold_font(), Gfx::TextAlignment::CenterRight, palette.window_text());
-
     for (auto& applet : m_applets) {
         if (!applet)
             continue;
         draw_applet(*applet);
     }
-}
-
-void MenuManager::tick_clock()
-{
-    refresh();
 }
 
 void MenuManager::refresh()
@@ -283,6 +254,25 @@ void MenuManager::refresh()
         return;
     draw();
     window().invalidate();
+}
+
+void MenuManager::calculate_applet_rects()
+{
+    dbg() << "Recalculate applet rects." << m_applets.size();
+
+    auto menubar_rect = m_window->rect();
+    int right_edge_x = menubar_rect.width() - 4;
+    for (auto& existing_applet : m_applets) {
+        if (!existing_applet)
+            continue;
+
+        Gfx::Rect new_applet_rect(right_edge_x - existing_applet->size().width(), 0, existing_applet->size().width(), existing_applet->size().height());
+        Gfx::Rect dummy_menubar_rect(0, 0, 0, 18);
+        new_applet_rect.center_vertically_within(dummy_menubar_rect);
+
+        existing_applet->set_rect_in_menubar(new_applet_rect);
+        right_edge_x = existing_applet->rect_in_menubar().x() - 4;
+    }
 }
 
 void MenuManager::event(Core::Event& event)
@@ -472,18 +462,8 @@ void MenuManager::close_bar()
 
 void MenuManager::add_applet(Window& applet)
 {
-    int right_edge_x = m_username_rect.left() - 4;
-    for (auto& existing_applet : m_applets) {
-        if (existing_applet)
-            right_edge_x = existing_applet->rect_in_menubar().x() - 4;
-    }
-
-    Gfx::Rect new_applet_rect(right_edge_x - applet.size().width(), 0, applet.size().width(), applet.size().height());
-    Gfx::Rect dummy_menubar_rect(0, 0, 0, 18);
-    new_applet_rect.center_vertically_within(dummy_menubar_rect);
-
-    applet.set_rect_in_menubar(new_applet_rect);
     m_applets.append(applet.make_weak_ptr());
+    calculate_applet_rects();
 }
 
 void MenuManager::remove_applet(Window& applet)
