@@ -142,7 +142,7 @@ EXTRA_CLEAN ?=
 
 clean:
 	@echo "$(notdir $(CURDIR)): CLEAN"
-	$(QUIET) rm -f $(PROGRAM) $(LIBRARY) $(SUFFIXED_OBJS) $(EXTRA_OBJS) *.d $(EXTRA_CLEAN)
+	$(QUIET) rm -f $(PROGRAM) $(LIBRARY) $(SUFFIXED_OBJS) $(EXTRA_OBJS) $(patsubst %.o,%.d,$(SUFFIXED_OBJS) $(EXTRA_OBJS)) $(EXTRA_CLEAN)
 
 install:
 
