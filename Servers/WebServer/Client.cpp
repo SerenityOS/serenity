@@ -68,11 +68,13 @@ void Client::handle_request(ByteBuffer raw_request)
         return;
     }
 
-    m_socket->write("HTTP/1.0 200 OK\r\n");
-    m_socket->write("Server: WebServer (SerenityOS)\r\n");
-    m_socket->write("Content-Type: text/html\r\n");
-    m_socket->write("\r\n");
+    StringBuilder builder;
+    builder.append("HTTP/1.0 200 OK\r\n");
+    builder.append("Server: WebServer (SerenityOS)\r\n");
+    builder.append("Content-Type: text/html\r\n");
+    builder.append("\r\n");
 
+    m_socket->write(builder.to_string());
     m_socket->write(file->read_all());
 
     log_response(200, request);
