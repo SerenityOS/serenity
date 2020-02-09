@@ -352,7 +352,7 @@ template<typename PutChFunc>
                 ret += print_hex(putch, bufptr, va_arg(ap, u64), false, false, left_pad, zeroPad, 16);
                 break;
 
-#ifndef KERNEL
+#if !defined(BOOTSTRAPPER) && !defined(KERNEL)
             case 'g':
             case 'f':
                 // FIXME: Print as float!

@@ -26,8 +26,8 @@
 
 #pragma once
 
-#ifdef KERNEL
-#    include <Kernel/StdLib.h>
+#if defined(KERNEL) || defined(BOOTSTRAPPER)
+#    include <LibBareMetal/StdLib.h>
 #else
 #    include <stdlib.h>
 #    include <string.h>
@@ -37,13 +37,13 @@
 
 #include <AK/Types.h>
 
-#if defined(__serenity__) && !defined(KERNEL)
+#if defined(__serenity__) && !defined(KERNEL) && !defined(BOOTSTRAPPER)
 extern "C" void* mmx_memcpy(void* to, const void* from, size_t);
 #endif
 
 [[gnu::always_inline]] inline void fast_u32_copy(u32* dest, const u32* src, size_t count)
 {
-#if defined(__serenity__) && !defined(KERNEL)
+#if defined(__serenity__) && !defined(KERNEL) && !defined(BOOTSTRAPPER)
     if (count >= 256) {
         mmx_memcpy(dest, src, count * sizeof(count));
         return;
@@ -323,12 +323,12 @@ struct IsSame<T, T> {
 }
 
 using AK::ceil_div;
+using AK::clamp;
 using AK::exchange;
 using AK::forward;
 using AK::IsSame;
 using AK::max;
 using AK::min;
-using AK::clamp;
 using AK::move;
 using AK::RemoveConst;
 using AK::swap;
