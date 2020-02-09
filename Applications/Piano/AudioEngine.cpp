@@ -78,32 +78,32 @@ void AudioEngine::fill_buffer(FixedArray<Sample>& buffer)
                 ASSERT_NOT_REACHED();
             }
 
-            double val = 0;
+            Audio::Sample sample;
             switch (m_wave) {
             case Wave::Sine:
-                val = (volume * m_power[note]) * sine(note);
+                sample = sine(note);
                 break;
             case Wave::Saw:
-                val = (volume * m_power[note]) * saw(note);
+                sample = saw(note);
                 break;
             case Wave::Square:
-                val = (volume * m_power[note]) * square(note);
+                sample = square(note);
                 break;
             case Wave::Triangle:
-                val = (volume * m_power[note]) * triangle(note);
+                sample = triangle(note);
                 break;
             case Wave::Noise:
-                val = (volume * m_power[note]) * noise();
+                sample = noise();
                 break;
             case Wave::RecordedSample:
-                val = (volume * m_power[note]) * recorded_sample(note);
+                sample = recorded_sample(note);
                 break;
             default:
                 ASSERT_NOT_REACHED();
             }
-            buffer[i].left += val;
+            buffer[i].left += sample.left * m_power[note] * volume;
+            buffer[i].right += sample.right * m_power[note] * volume;
         }
-        buffer[i].right = buffer[i].left;
     }
 
     if (m_delay) {
@@ -180,7 +180,7 @@ String AudioEngine::set_recorded_sample(const StringView& path)
 
 // All of the information for these waves is on Wikipedia.
 
-double AudioEngine::sine(size_t note)
+Audio::Sample AudioEngine::sine(size_t note)
 {
     double pos = note_frequencies[note] / sample_rate;
     double sin_step = pos * 2 * M_PI;
@@ -189,7 +189,7 @@ double AudioEngine::sine(size_t note)
     return w;
 }
 
-double AudioEngine::saw(size_t note)
+Audio::Sample AudioEngine::saw(size_t note)
 {
     double saw_step = note_frequencies[note] / sample_rate;
     double t = m_pos[note];
@@ -198,7 +198,7 @@ double AudioEngine::saw(size_t note)
     return w;
 }
 
-double AudioEngine::square(size_t note)
+Audio::Sample AudioEngine::square(size_t note)
 {
     double pos = note_frequencies[note] / sample_rate;
     double square_step = pos * 2 * M_PI;
@@ -207,7 +207,7 @@ double AudioEngine::square(size_t note)
     return w;
 }
 
-double AudioEngine::triangle(size_t note)
+Audio::Sample AudioEngine::triangle(size_t note)
 {
     double triangle_step = note_frequencies[note] / sample_rate;
     double t = m_pos[note];
@@ -216,26 +216,28 @@ double AudioEngine::triangle(size_t note)
     return w;
 }
 
-double AudioEngine::noise() const
+Audio::Sample AudioEngine::noise() const
 {
     double random_percentage = static_cast<double>(rand()) / RAND_MAX;
     double w = (random_percentage * 2) - 1;
     return w;
 }
 
-double AudioEngine::recorded_sample(size_t note)
+Audio::Sample AudioEngine::recorded_sample(size_t note)
 {
     int t = m_pos[note];
     if (t >= m_recorded_sample.size())
         return 0;
-    double w = m_recorded_sample[t].left;
+    float w_left = m_recorded_sample[t].left;
+    float w_right = m_recorded_sample[t].right;
     if (t + 1 < m_recorded_sample.size()) {
         double t_fraction = m_pos[note] - t;
-        w += (m_recorded_sample[t + 1].left - m_recorded_sample[t].left) * t_fraction;
+        w_left += (m_recorded_sample[t + 1].left - m_recorded_sample[t].left) * t_fraction;
+        w_right += (m_recorded_sample[t + 1].right - m_recorded_sample[t].right) * t_fraction;
     }
     double recorded_sample_step = note_frequencies[note] / middle_c;
     m_pos[note] += recorded_sample_step;
-    return w;
+    return { w_left, w_right };
 }
 
 static inline double calculate_step(double distance, int milliseconds)

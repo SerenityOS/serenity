@@ -71,12 +71,12 @@ public:
     void set_delay(int delay);
 
 private:
-    double sine(size_t note);
-    double saw(size_t note);
-    double square(size_t note);
-    double triangle(size_t note);
-    double noise() const;
-    double recorded_sample(size_t note);
+    Audio::Sample sine(size_t note);
+    Audio::Sample saw(size_t note);
+    Audio::Sample square(size_t note);
+    Audio::Sample triangle(size_t note);
+    Audio::Sample noise() const;
+    Audio::Sample recorded_sample(size_t note);
 
     void update_roll();
     void set_notes_from_roll();
