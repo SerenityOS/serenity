@@ -36,8 +36,10 @@
 #    define AK_MAKE_ETERNAL
 #endif
 
-#ifdef KERNEL
+#if defined(KERNEL)
 #    include <Kernel/Heap/kmalloc.h>
+#elif defined(BOOTSTRAPPER)
+#    include <Bootstrapper/Memory/malloc.h>
 #else
 #    include <stdlib.h>
 

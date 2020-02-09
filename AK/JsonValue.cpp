@@ -118,7 +118,7 @@ JsonValue::JsonValue(const char* cstring)
 {
 }
 
-#ifndef KERNEL
+#if !defined(BOOTSTRAPPER) && !defined(KERNEL)
 JsonValue::JsonValue(double value)
     : m_type(Type::Double)
 {

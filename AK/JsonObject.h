@@ -26,11 +26,11 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/HashMap.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObjectSerializer.h>
 #include <AK/JsonValue.h>
+#include <AK/String.h>
 
 namespace AK {
 
@@ -119,7 +119,7 @@ inline void JsonObject::serialize(Builder& builder) const
 {
     JsonObjectSerializer serializer { builder };
     for_each_member([&](auto& key, auto& value) {
-            serializer.add(key, value);
+        serializer.add(key, value);
     });
 }
 
@@ -147,7 +147,7 @@ inline void JsonValue::serialize(Builder& builder) const
     case Type::Bool:
         builder.append(m_value.as_bool ? "true" : "false");
         break;
-#ifndef KERNEL
+#if !defined(KERNEL) && !defined(BOOTSTRAPPER)
     case Type::Double:
         builder.appendf("%g", m_value.as_double);
         break;
