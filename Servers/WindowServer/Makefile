@@ -1,4 +1,5 @@
 OBJS = \
+    AppletManager.o \
     Button.o \
     ClientConnection.o \
     Clipboard.o \

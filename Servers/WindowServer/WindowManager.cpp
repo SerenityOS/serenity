@@ -40,6 +40,7 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>
 #include <LibGfx/SystemTheme.h>
+#include <WindowServer/AppletManager.h>
 #include <WindowServer/Button.h>
 #include <WindowServer/ClientConnection.h>
 #include <WindowServer/Cursor.h>
@@ -1123,7 +1124,7 @@ void WindowManager::invalidate(const Window& window)
 void WindowManager::invalidate(const Window& window, const Gfx::Rect& rect)
 {
     if (window.type() == WindowType::MenuApplet) {
-        MenuManager::the().invalidate_applet(window, rect);
+        AppletManager::the().invalidate_applet(window, rect);
         return;
     }
 

@@ -43,7 +43,6 @@ public:
     virtual ~MenuManager() override;
 
     void refresh();
-    void calculate_applet_rects();
 
     virtual void event(Core::Event&) override;
 
@@ -72,14 +71,12 @@ public:
 
     void close_all_menus_from_client(Badge<ClientConnection>, ClientConnection&);
 
-    void add_applet(Window&);
-    void remove_applet(Window&);
-    void invalidate_applet(const Window&, const Gfx::Rect&);
-
     Color menu_selection_color() const { return m_menu_selection_color; }
     Menu& system_menu() { return *m_system_menu; }
     Menu* find_internal_menu_by_id(int);
     int theme_index() const { return m_theme_index; }
+
+    Window& window() { return *m_window; }
 
     template<typename Callback>
     void for_each_active_menubar_menu(Callback callback)
@@ -96,20 +93,16 @@ private:
 
     void close_menus(const Vector<Menu*>&);
 
-    Window& window() { return *m_window; }
     const Window& window() const { return *m_window; }
 
     void handle_menu_mouse_event(Menu&, const MouseEvent&);
 
     void draw();
-    void draw_applet(const Window&);
 
     RefPtr<Window> m_window;
 
     WeakPtr<Menu> m_current_menu;
     Vector<WeakPtr<Menu>> m_open_menu_stack;
-
-    Vector<WeakPtr<Window>> m_applets;
 
     bool m_needs_window_resize { false };
     bool m_bar_open { false };

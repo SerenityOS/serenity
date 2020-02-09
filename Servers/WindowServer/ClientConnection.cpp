@@ -27,6 +27,7 @@
 #include <AK/SharedBuffer.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/SystemTheme.h>
+#include <WindowServer/AppletManager.h>
 #include <WindowServer/ClientConnection.h>
 #include <WindowServer/Clipboard.h>
 #include <WindowServer/Compositor.h>
@@ -438,7 +439,7 @@ OwnPtr<Messages::WindowServer::CreateWindowResponse> ClientConnection::handle(co
     window->set_base_size(message.base_size());
     window->invalidate();
     if (window->type() == WindowType::MenuApplet)
-        MenuManager::the().add_applet(*window);
+        AppletManager::the().add_applet(*window);
     m_windows.set(window_id, move(window));
     return make<Messages::WindowServer::CreateWindowResponse>(window_id);
 }
@@ -453,7 +454,7 @@ OwnPtr<Messages::WindowServer::DestroyWindowResponse> ClientConnection::handle(c
     auto& window = *(*it).value;
 
     if (window.type() == WindowType::MenuApplet)
-        MenuManager::the().remove_applet(window);
+        AppletManager::the().remove_applet(window);
 
     WindowManager::the().invalidate(window);
     remove_child(window);
