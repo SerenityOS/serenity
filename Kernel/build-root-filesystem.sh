@@ -148,6 +148,7 @@ cp ../Servers/AudioServer/AudioServer mnt/bin/AudioServer
 cp ../Servers/TTYServer/TTYServer mnt/bin/TTYServer
 cp ../Servers/TelnetServer/TelnetServer mnt/bin/TelnetServer
 cp ../Servers/ProtocolServer/ProtocolServer mnt/bin/ProtocolServer
+cp ../Servers/WebServer/WebServer mnt/bin/WebServer
 cp ../Shell/Shell mnt/bin/Shell
 cp ../MenuApplets/Audio/Audio.MenuApplet mnt/bin/
 cp ../MenuApplets/CPUGraph/CPUGraph.MenuApplet mnt/bin/
@@ -185,6 +186,7 @@ ln -s Browser mnt/bin/br
 ln -s HackStudio mnt/bin/hs
 ln -s SystemMonitor mnt/bin/sm
 ln -s ProfileViewer mnt/bin/pv
+ln -s WebServer mnt/bin/ws
 echo "done"
 
 mkdir -p mnt/boot/
