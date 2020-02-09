@@ -25,11 +25,11 @@
  */
 
 #include <LibCore/Timer.h>
-#include <LibGfx/Palette.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Palette.h>
 #include <stdio.h>
 #include <time.h>
 
@@ -103,6 +103,7 @@ int main(int argc, char** argv)
     }
 
     auto window = GUI::Window::construct();
+    window->set_title("Clock");
     window->set_window_type(GUI::WindowType::MenuApplet);
 
     auto widget = ClockWidget::construct();
