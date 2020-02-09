@@ -55,6 +55,7 @@ private:
     virtual void mousedown_event(MouseEvent& event) override;
     virtual void keydown_event(KeyEvent& event) override;
 
+    virtual void select_all() override;
     struct Column {
         ModelIndex parent_index;
         int width;

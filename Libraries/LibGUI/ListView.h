@@ -59,6 +59,7 @@ public:
     int model_column() const { return m_model_column; }
     void set_model_column(int column) { m_model_column = column; }
 
+    virtual void select_all() override;
 private:
     virtual void did_update_model() override;
     virtual void paint_event(PaintEvent&) override;
