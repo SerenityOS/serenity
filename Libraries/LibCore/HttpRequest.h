@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/URL.h>
 
@@ -42,8 +43,16 @@ public:
         POST
     };
 
+    struct Header {
+        String name;
+        String value;
+    };
+
     HttpRequest();
     ~HttpRequest();
+
+    const String& resource() const { return m_resource; }
+    const Vector<Header>& headers() const { return m_headers; }
 
     const URL& url() const { return m_url; }
     void set_url(const URL& url) { m_url = url; }
@@ -56,9 +65,13 @@ public:
 
     RefPtr<NetworkJob> schedule();
 
+    static Optional<HttpRequest> from_raw_request(const ByteBuffer&);
+
 private:
     URL m_url;
+    String m_resource;
     Method m_method { GET };
+    Vector<Header> m_headers;
 };
 
 }
