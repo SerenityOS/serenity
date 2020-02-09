@@ -29,7 +29,7 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <Kernel/Devices/BlockDevice.h>
-#include <Kernel/VM/PhysicalAddress.h>
+#include <LibBareMetal/Memory/PhysicalAddress.h>
 
 class MBVGADevice final : public BlockDevice {
     AK_MAKE_ETERNAL

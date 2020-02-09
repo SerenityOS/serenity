@@ -28,9 +28,9 @@
 
 #include <AK/Types.h>
 #include <AK/Vector.h>
-#include <Kernel/VM/PhysicalAddress.h>
 #include <Kernel/VM/Region.h>
-#include <Kernel/VM/VirtualAddress.h>
+#include <LibBareMetal/Memory/PhysicalAddress.h>
+#include <LibBareMetal/Memory/VirtualAddress.h>
 
 namespace SMBIOS {
 struct [[gnu::packed]] LegacyEntryPoint32bit
