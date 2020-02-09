@@ -42,7 +42,6 @@ public:
 
     const FixedArray<Sample>& buffer() const { return *m_front_buffer_ptr; }
     const Vector<Audio::Sample>& recorded_sample() const { return m_recorded_sample; }
-    void reset();
     Switch roll_note(int y, int x) const { return m_roll_notes[y][x]; }
     int current_column() const { return m_current_column; }
     int octave() const { return m_octave; }
@@ -57,6 +56,7 @@ public:
     int tick() const { return m_tick; }
 
     void fill_buffer(FixedArray<Sample>& buffer);
+    void reset();
     String set_recorded_sample(const StringView& path);
     void set_note(int note, Switch);
     void set_note_current_octave(int note, Switch);
