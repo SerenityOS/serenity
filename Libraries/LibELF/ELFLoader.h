@@ -33,7 +33,7 @@
 #include <LibELF/ELFImage.h>
 
 #ifdef KERNEL
-#include <Kernel/VM/VirtualAddress.h>
+#    include <LibBareMetal/Memory/VirtualAddress.h>
 class Region;
 #endif
 
