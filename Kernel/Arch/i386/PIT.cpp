@@ -27,8 +27,8 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Arch/i386/PIC.h>
 #include <Kernel/Arch/i386/PIT.h>
-#include <Kernel/IO.h>
 #include <Kernel/Scheduler.h>
+#include <LibBareMetal/IO.h>
 
 #define IRQ_TIMER 0
 

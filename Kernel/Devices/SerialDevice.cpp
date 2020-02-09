@@ -25,7 +25,7 @@
  */
 
 #include <Kernel/Devices/SerialDevice.h>
-#include <Kernel/IO.h>
+#include <LibBareMetal/IO.h>
 
 SerialDevice::SerialDevice(int base_addr, unsigned minor)
     : CharacterDevice(4, minor)
@@ -95,8 +95,8 @@ void SerialDevice::set_baud(Baud baud)
     m_baud = baud;
 
     IO::out8(m_base_addr + 3, IO::in8(m_base_addr + 3) | 0x80); // turn on DLAB
-    IO::out8(m_base_addr + 0, ((char)(baud)) >> 2); // lower half of divisor
-    IO::out8(m_base_addr + 1, ((char)(baud)) & 0xff); // upper half of divisor
+    IO::out8(m_base_addr + 0, ((char)(baud)) >> 2);             // lower half of divisor
+    IO::out8(m_base_addr + 1, ((char)(baud)) & 0xff);           // upper half of divisor
     IO::out8(m_base_addr + 3, IO::in8(m_base_addr + 3) & 0x7f); // turn off DLAB
 }
 

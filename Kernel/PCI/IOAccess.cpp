@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/IO.h>
 #include <Kernel/PCI/IOAccess.h>
+#include <LibBareMetal/IO.h>
 
 void PCI::IOAccess::initialize()
 {

@@ -32,7 +32,7 @@
 #include <Kernel/Net/EthernetFrameHeader.h>
 #include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/NetworkAdapter.h>
-#include <Kernel/StdLib.h>
+#include <LibBareMetal/StdLib.h>
 
 static Lockable<HashTable<NetworkAdapter*>>& all_adapters()
 {

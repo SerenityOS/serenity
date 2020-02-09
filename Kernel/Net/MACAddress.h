@@ -26,10 +26,10 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/Assertions.h>
+#include <AK/String.h>
 #include <AK/Types.h>
-#include <Kernel/StdLib.h>
+#include <LibBareMetal/StdLib.h>
 
 class [[gnu::packed]] MACAddress
 {

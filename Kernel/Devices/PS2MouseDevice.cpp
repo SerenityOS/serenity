@@ -26,7 +26,7 @@
 
 #include <Kernel/Devices/PS2MouseDevice.h>
 #include <Kernel/Devices/VMWareBackdoor.h>
-#include <Kernel/IO.h>
+#include <LibBareMetal/IO.h>
 
 #define IRQ_MOUSE 12
 #define I8042_BUFFER 0x60
