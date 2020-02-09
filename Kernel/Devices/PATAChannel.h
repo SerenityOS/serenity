@@ -41,9 +41,9 @@
 #include <Kernel/IRQHandler.h>
 #include <Kernel/Lock.h>
 #include <Kernel/PCI/Access.h>
-#include <Kernel/VM/PhysicalAddress.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/WaitQueue.h>
+#include <LibBareMetal/Memory/PhysicalAddress.h>
 
 struct PhysicalRegionDescriptor {
     PhysicalAddress offset;

@@ -30,8 +30,8 @@
 #include <Kernel/ACPI/ACPIStaticParser.h>
 #include <Kernel/IRQHandler.h>
 #include <Kernel/Lock.h>
-#include <Kernel/VM/PhysicalAddress.h>
 #include <Kernel/VM/PhysicalPage.h>
+#include <LibBareMetal/Memory/PhysicalAddress.h>
 
 class ACPIDynamicParser final : public IRQHandler
     , ACPIStaticParser {

@@ -26,13 +26,13 @@
 
 #pragma once
 
-#include <AK/String.h>
-#include <AK/RefCounted.h>
 #include <AK/NonnullRefPtr.h>
+#include <AK/RefCounted.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <Kernel/KResult.h>
 #include <Kernel/UnixTypes.h>
-#include <Kernel/VM/VirtualAddress.h>
+#include <LibBareMetal/Memory/VirtualAddress.h>
 
 class FileDescription;
 class Process;

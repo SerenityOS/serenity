@@ -28,8 +28,8 @@
 
 #include <AK/Badge.h>
 #include <AK/Noncopyable.h>
-#include <Kernel/VM/PhysicalAddress.h>
-#include <Kernel/VM/VirtualAddress.h>
+#include <LibBareMetal/Memory/PhysicalAddress.h>
+#include <LibBareMetal/Memory/VirtualAddress.h>
 #include <LibBareMetal/Output/kstdio.h>
 
 #define PAGE_SIZE 4096

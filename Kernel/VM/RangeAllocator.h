@@ -29,7 +29,7 @@
 #include <AK/String.h>
 #include <AK/Traits.h>
 #include <AK/Vector.h>
-#include <Kernel/VM/VirtualAddress.h>
+#include <LibBareMetal/Memory/VirtualAddress.h>
 
 class Range {
     friend class RangeAllocator;

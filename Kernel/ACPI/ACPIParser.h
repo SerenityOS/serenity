@@ -29,9 +29,9 @@
 #include <AK/Types.h>
 #include <Kernel/ACPI/Definitions.h>
 #include <Kernel/FileSystem/File.h>
-#include <Kernel/VM/PhysicalAddress.h>
 #include <Kernel/VM/Region.h>
-#include <Kernel/VM/VirtualAddress.h>
+#include <LibBareMetal/Memory/PhysicalAddress.h>
+#include <LibBareMetal/Memory/VirtualAddress.h>
 
 class ACPIParser {
 public:

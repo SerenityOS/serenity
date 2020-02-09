@@ -36,7 +36,7 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/KBuffer.h>
 #include <Kernel/Net/Socket.h>
-#include <Kernel/VM/VirtualAddress.h>
+#include <LibBareMetal/Memory/VirtualAddress.h>
 
 class File;
 class TTY;

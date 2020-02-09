@@ -26,8 +26,8 @@
 
 #pragma once
 
-#include <Kernel/VM/PhysicalAddress.h>
 #include <Kernel/VM/VMObject.h>
+#include <LibBareMetal/Memory/PhysicalAddress.h>
 
 class AnonymousVMObject : public VMObject {
 public:
