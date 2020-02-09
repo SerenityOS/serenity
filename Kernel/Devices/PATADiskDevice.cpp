@@ -24,8 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+//#define PATA_DEVICE_DEBUG
+
 #include <Kernel/Devices/PATAChannel.h>
 #include <Kernel/Devices/PATADiskDevice.h>
+#include <Kernel/FileSystem/FileDescription.h>
 
 NonnullRefPtr<PATADiskDevice> PATADiskDevice::create(PATAChannel& channel, DriveType type, int major, int minor)
 {
@@ -71,6 +74,93 @@ void PATADiskDevice::set_drive_geometry(u16 cyls, u16 heads, u16 spt)
     m_cylinders = cyls;
     m_heads = heads;
     m_sectors_per_track = spt;
+}
+
+ssize_t PATADiskDevice::read(FileDescription& fd, u8* outbuf, ssize_t len)
+{
+    unsigned index = fd.offset() / block_size();
+    u16 whole_blocks = len / block_size();
+    ssize_t remaining = len % block_size();
+
+    unsigned blocks_per_page = PAGE_SIZE / block_size();
+
+    // PATAChannel will chuck a wobbly if we try to read more than PAGE_SIZE
+    // at a time, because it uses a single page for its DMA buffer.
+    if (whole_blocks >= blocks_per_page) {
+        whole_blocks = blocks_per_page;
+        remaining = 0;
+    }
+
+#ifdef PATA_DEVICE_DEBUG
+    kprintf("PATADiskDevice::read() index=%d whole_blocks=%d remaining=%d\n", index, whole_blocks, remaining);
+#endif
+
+    if (whole_blocks > 0) {
+        if (!read_blocks(index, whole_blocks, outbuf))
+            return -1;
+    }
+
+    off_t pos = whole_blocks * block_size();
+
+    if (remaining > 0) {
+        auto buf = ByteBuffer::create_uninitialized(block_size());
+        if (!read_blocks(index + whole_blocks, 1, buf.data()))
+            return pos;
+        memcpy(&outbuf[pos], buf.data(), remaining);
+    }
+
+    return pos + remaining;
+}
+
+bool PATADiskDevice::can_read(const FileDescription& fd) const
+{
+    return static_cast<unsigned>(fd.offset()) < (m_cylinders * m_heads * m_sectors_per_track * block_size());
+}
+
+ssize_t PATADiskDevice::write(FileDescription& fd, const u8* inbuf, ssize_t len)
+{
+    unsigned index = fd.offset() / block_size();
+    u16 whole_blocks = len / block_size();
+    ssize_t remaining = len % block_size();
+
+    unsigned blocks_per_page = PAGE_SIZE / block_size();
+
+    // PATAChannel will chuck a wobbly if we try to write more than PAGE_SIZE
+    // at a time, because it uses a single page for its DMA buffer.
+    if (whole_blocks >= blocks_per_page) {
+        whole_blocks = blocks_per_page;
+        remaining = 0;
+    }
+
+#ifdef PATA_DEVICE_DEBUG
+    kprintf("PATADiskDevice::write() index=%d whole_blocks=%d remaining=%d\n", index, whole_blocks, remaining);
+#endif
+
+    if (whole_blocks > 0) {
+        if (!write_blocks(index, whole_blocks, inbuf))
+            return -1;
+    }
+
+    off_t pos = whole_blocks * block_size();
+
+    // since we can only write in block_size() increments, if we want to do a
+    // partial write, we have to read the block's content first, modify it,
+    // then write the whole block back to the disk.
+    if (remaining > 0) {
+        auto buf = ByteBuffer::create_zeroed(block_size());
+        if (!read_blocks(index + whole_blocks, 1, buf.data()))
+            return pos;
+        memcpy(buf.data(), &inbuf[pos], remaining);
+        if (!write_blocks(index + whole_blocks, 1, buf.data()))
+            return pos;
+    }
+
+    return pos + remaining;
+}
+
+bool PATADiskDevice::can_write(const FileDescription& fd) const
+{
+    return static_cast<unsigned>(fd.offset()) < (m_cylinders * m_heads * m_sectors_per_track * block_size());
 }
 
 bool PATADiskDevice::read_sectors_with_dma(u32 lba, u16 count, u8* outbuf)
