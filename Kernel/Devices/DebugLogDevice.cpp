@@ -25,7 +25,7 @@
  */
 
 #include <Kernel/Devices/DebugLogDevice.h>
-#include <Kernel/IO.h>
+#include <LibBareMetal/IO.h>
 
 static DebugLogDevice* s_the;
 

@@ -29,8 +29,8 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Process.h>
-#include <Kernel/StdLib.h>
 #include <Kernel/UnixTypes.h>
+#include <LibBareMetal/StdLib.h>
 #include <LibC/errno_numbers.h>
 
 //#define DEBUG_LOCAL_SOCKET

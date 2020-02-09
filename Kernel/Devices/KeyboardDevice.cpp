@@ -29,8 +29,8 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Arch/i386/PIC.h>
 #include <Kernel/Devices/KeyboardDevice.h>
-#include <Kernel/IO.h>
 #include <Kernel/TTY/VirtualConsole.h>
+#include <LibBareMetal/IO.h>
 
 //#define KEYBOARD_DEBUG
 

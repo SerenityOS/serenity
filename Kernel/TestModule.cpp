@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/kstdio.h>
 #include <Kernel/Process.h>
+#include <LibBareMetal/Output/kstdio.h>
 
 extern "C" const char module_name[] = "TestModule";
 

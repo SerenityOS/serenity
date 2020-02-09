@@ -25,12 +25,12 @@
  */
 
 #include "VirtualConsole.h"
-#include "IO.h"
-#include "StdLib.h"
-#include <Kernel/Heap/kmalloc.h>
 #include <AK/String.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Devices/KeyboardDevice.h>
+#include <Kernel/Heap/kmalloc.h>
+#include <LibBareMetal/IO.h>
+#include <LibBareMetal/StdLib.h>
 
 static u8* s_vga_buffer;
 static VirtualConsole* s_consoles[6];

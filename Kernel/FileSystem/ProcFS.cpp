@@ -25,11 +25,9 @@
  */
 
 #include "ProcFS.h"
-#include "Console.h"
 #include "KSyms.h"
 #include "Process.h"
 #include "Scheduler.h"
-#include "StdLib.h"
 #include <AK/JsonArraySerializer.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonObjectSerializer.h>
@@ -52,6 +50,8 @@
 #include <Kernel/Profiling.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PurgeableVMObject.h>
+#include <LibBareMetal/Output/Console.h>
+#include <LibBareMetal/StdLib.h>
 #include <LibC/errno_numbers.h>
 
 enum ProcParentDirectory {

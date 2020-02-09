@@ -33,7 +33,6 @@
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Arch/i386/PIT.h>
-#include <Kernel/Console.h>
 #include <Kernel/Devices/KeyboardDevice.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/Devices/PCSpeaker.h>
@@ -48,7 +47,6 @@
 #include <Kernel/FileSystem/TmpFS.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Heap/kmalloc.h>
-#include <Kernel/IO.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/KernelInfoPage.h>
@@ -62,12 +60,14 @@
 #include <Kernel/Random.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/SharedBuffer.h>
-#include <Kernel/StdLib.h>
 #include <Kernel/Syscall.h>
 #include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/InodeVMObject.h>
 #include <Kernel/VM/PurgeableVMObject.h>
+#include <LibBareMetal/IO.h>
+#include <LibBareMetal/Output/Console.h>
+#include <LibBareMetal/StdLib.h>
 #include <LibC/errno_numbers.h>
 #include <LibC/limits.h>
 #include <LibC/signal_numbers.h>

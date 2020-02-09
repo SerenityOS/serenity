@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/IO.h>
 #include <Kernel/Net/RTL8139NetworkAdapter.h>
+#include <LibBareMetal/IO.h>
 
 //#define RTL8139_DEBUG
 

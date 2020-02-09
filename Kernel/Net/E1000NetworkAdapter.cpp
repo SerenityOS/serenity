@@ -24,9 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/IO.h>
 #include <Kernel/Net/E1000NetworkAdapter.h>
 #include <Kernel/Thread.h>
+#include <LibBareMetal/IO.h>
 
 //#define E1000_DEBUG
 

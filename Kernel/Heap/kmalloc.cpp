@@ -32,11 +32,11 @@
 #include <AK/Assertions.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Heap/kmalloc.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Process.h>
 #include <Kernel/Scheduler.h>
-#include <Kernel/StdLib.h>
-#include <Kernel/Heap/kmalloc.h>
+#include <LibBareMetal/StdLib.h>
 
 #define SANITIZE_KMALLOC
 
@@ -231,4 +231,3 @@ void* operator new[](size_t size)
 {
     return kmalloc(size);
 }
-

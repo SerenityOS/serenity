@@ -26,7 +26,6 @@
 
 #include "CMOS.h"
 #include "Process.h"
-#include "StdLib.h"
 #include <AK/Assertions.h>
 #include <AK/kstdio.h>
 #include <Kernel/Arch/i386/CPU.h>
@@ -36,6 +35,7 @@
 #include <Kernel/VM/InodeVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PurgeableVMObject.h>
+#include <LibBareMetal/StdLib.h>
 
 //#define MM_DEBUG
 //#define PAGE_FAULT_DEBUG

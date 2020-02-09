@@ -25,7 +25,6 @@
  */
 
 #include <AK/Optional.h>
-#include <Kernel/IO.h>
 #include <Kernel/PCI/MMIOAccess.h>
 #include <Kernel/VM/MemoryManager.h>
 
@@ -60,11 +59,11 @@ PCI::MMIOAccess::MMIOAccess(ACPI_RAW::MCFG& raw_mcfg)
     kprintf("PCI: Using MMIO Mechanism for PCI Configuartion Space Access\n");
     m_mmio_window_region = MM.allocate_kernel_region(PAGE_ROUND_UP(PCI_MMIO_CONFIG_SPACE_SIZE), "PCI MMIO", Region::Access::Read | Region::Access::Write);
 
-    auto checkup_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)&raw_mcfg)),(PAGE_SIZE * 2), "PCI MCFG Checkup", Region::Access::Read | Region::Access::Write);
+    auto checkup_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)&raw_mcfg)), (PAGE_SIZE * 2), "PCI MCFG Checkup", Region::Access::Read | Region::Access::Write);
 #ifdef PCI_DEBUG
     dbgprintf("PCI: Checking MCFG Table length to choose the correct mapping size\n");
 #endif
-    
+
     ACPI_RAW::SDTHeader* sdt = (ACPI_RAW::SDTHeader*)checkup_region->vaddr().offset(offset_in_page((u32)&raw_mcfg)).as_ptr();
     u32 length = sdt->length;
     u8 revision = sdt->revision;
@@ -114,7 +113,7 @@ void PCI::MMIOAccess::map_device(Address address)
 #ifdef PCI_DEBUG
     dbgprintf("PCI: Mapping device @ pci (%w:%b:%b.%b), V 0x%x, P 0x%x\n", address.seg(), address.bus(), address.slot(), address.function(), m_mmio_window_region->vaddr().get(), device_physical_mmio_space.get());
 #endif
-    m_mmio_window_region->vmobject().physical_pages()[0] = PhysicalPage::create(device_physical_mmio_space,false,false);
+    m_mmio_window_region->vmobject().physical_pages()[0] = PhysicalPage::create(device_physical_mmio_space, false, false);
     m_mmio_window_region->remap();
     m_mapped_address = address;
 }
