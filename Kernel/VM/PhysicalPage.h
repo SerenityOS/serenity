@@ -29,7 +29,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <Kernel/Assertions.h>
 #include <Kernel/Heap/SlabAllocator.h>
-#include <Kernel/VM/PhysicalAddress.h>
+#include <LibBareMetal/Memory/PhysicalAddress.h>
 
 class PhysicalPage {
     friend class MemoryManager;

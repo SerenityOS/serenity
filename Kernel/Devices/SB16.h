@@ -29,9 +29,9 @@
 #include <AK/CircularQueue.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/IRQHandler.h>
-#include <Kernel/VM/PhysicalAddress.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/WaitQueue.h>
+#include <LibBareMetal/Memory/PhysicalAddress.h>
 
 class SB16;
 
