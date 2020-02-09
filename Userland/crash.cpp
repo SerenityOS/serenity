@@ -26,7 +26,7 @@
 
 #include <AK/Function.h>
 #include <AK/String.h>
-#include <Kernel/IO.h>
+#include <LibBareMetal/IO.h>
 #include <Kernel/Syscall.h>
 #include <stdio.h>
 #include <stdlib.h>
