@@ -43,6 +43,7 @@ public:
     virtual ~MenuManager() override;
 
     void refresh();
+    void calculate_applet_rects();
 
     virtual void event(Core::Event&) override;
 
@@ -102,17 +103,13 @@ private:
 
     void draw();
     void draw_applet(const Window&);
-    void tick_clock();
 
     RefPtr<Window> m_window;
-    String m_username;
 
     WeakPtr<Menu> m_current_menu;
     Vector<WeakPtr<Menu>> m_open_menu_stack;
 
     Vector<WeakPtr<Window>> m_applets;
-
-    Gfx::Rect m_username_rect;
 
     bool m_needs_window_resize { false };
     bool m_bar_open { false };
