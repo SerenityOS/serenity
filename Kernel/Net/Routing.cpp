@@ -46,7 +46,7 @@ bool RoutingDecision::is_zero() const
 RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source)
 {
     if (target[0] == 127)
-        return { LoopbackAdapter::the(), {} };
+        return { LoopbackAdapter::the(), LoopbackAdapter::the().mac_address() };
 
     auto target_addr = target.to_u32();
     auto source_addr = source.to_u32();
