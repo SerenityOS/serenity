@@ -27,9 +27,9 @@
 #include <AK/BinarySearch.h>
 #include <AK/QuickSort.h>
 #include <Kernel/Random.h>
-#include <Kernel/VM/RangeAllocator.h>
-#include <Kernel/kstdio.h>
 #include <Kernel/Thread.h>
+#include <Kernel/VM/RangeAllocator.h>
+#include <LibBareMetal/Output/kstdio.h>
 
 //#define VRA_DEBUG
 #define VM_GUARD_PAGES
@@ -162,18 +162,22 @@ void RangeAllocator::deallocate(Range range)
     ASSERT(!m_available_ranges.is_empty());
 
     int nearby_index = 0;
-    auto* existing_range = binary_search(m_available_ranges.data(), m_available_ranges.size(), range, [](auto& a, auto& b) {
-        return a.base().get() - b.end().get();
-    }, &nearby_index);
+    auto* existing_range = binary_search(
+        m_available_ranges.data(), m_available_ranges.size(), range, [](auto& a, auto& b) {
+            return a.base().get() - b.end().get();
+        },
+        &nearby_index);
 
     int inserted_index = 0;
     if (existing_range) {
         existing_range->m_size += range.size();
         inserted_index = nearby_index;
     } else {
-        m_available_ranges.insert_before_matching(Range(range), [&](auto& entry) {
-            return entry.base() >= range.end();
-        }, nearby_index, &inserted_index);
+        m_available_ranges.insert_before_matching(
+            Range(range), [&](auto& entry) {
+                return entry.base() >= range.end();
+            },
+            nearby_index, &inserted_index);
     }
 
     if (inserted_index < (m_available_ranges.size() - 1)) {

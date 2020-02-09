@@ -27,9 +27,9 @@
 #include <Kernel/Arch/i386/PIT.h>
 #include <Kernel/Devices/FloppyDiskDevice.h>
 #include <Kernel/FileSystem/ProcFS.h>
-#include <Kernel/IO.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <LibBareMetal/IO.h>
 
 // Uncomment me for a LOT of output
 //#define FLOPPY_DEBUG

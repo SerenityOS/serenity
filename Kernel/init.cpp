@@ -29,7 +29,6 @@
 #include "Process.h"
 #include "RTC.h"
 #include "Scheduler.h"
-#include "kstdio.h"
 #include <AK/Types.h>
 #include <Kernel/ACPI/ACPIDynamicParser.h>
 #include <Kernel/ACPI/ACPIStaticParser.h>
@@ -71,6 +70,7 @@
 #include <Kernel/TTY/PTYMultiplexer.h>
 #include <Kernel/TTY/VirtualConsole.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <LibBareMetal/Output/kstdio.h>
 
 [[noreturn]] static void init_stage2();
 static void setup_serial_debug();

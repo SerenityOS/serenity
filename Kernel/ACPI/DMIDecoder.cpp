@@ -25,8 +25,8 @@
  */
 
 #include <Kernel/ACPI/DMIDecoder.h>
-#include <Kernel/StdLib.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <LibBareMetal/StdLib.h>
 
 static DMIDecoder* s_dmi_decoder;
 

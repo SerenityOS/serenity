@@ -26,9 +26,9 @@
 
 #pragma once
 
-#include "Console.h"
 #include <Kernel/Devices/KeyboardDevice.h>
 #include <Kernel/TTY/TTY.h>
+#include <LibBareMetal/Output/Console.h>
 
 class VirtualConsole final : public TTY
     , public KeyboardClient

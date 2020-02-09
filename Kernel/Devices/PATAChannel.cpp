@@ -28,9 +28,9 @@
 #include <AK/ByteBuffer.h>
 #include <Kernel/Devices/PATAChannel.h>
 #include <Kernel/FileSystem/ProcFS.h>
-#include <Kernel/IO.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <LibBareMetal/IO.h>
 
 #define PATA_PRIMARY_IRQ 14
 #define PATA_SECONDARY_IRQ 15

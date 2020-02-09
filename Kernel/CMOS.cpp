@@ -25,7 +25,7 @@
  */
 
 #include <Kernel/CMOS.h>
-#include <Kernel/IO.h>
+#include <LibBareMetal/IO.h>
 
 namespace CMOS {
 

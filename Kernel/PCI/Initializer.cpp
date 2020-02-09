@@ -25,13 +25,13 @@
  */
 
 #include <Kernel/ACPI/ACPIParser.h>
-#include <Kernel/IO.h>
 #include <Kernel/KParams.h>
 #include <Kernel/Net/E1000NetworkAdapter.h>
 #include <Kernel/Net/RTL8139NetworkAdapter.h>
 #include <Kernel/PCI/IOAccess.h>
 #include <Kernel/PCI/Initializer.h>
 #include <Kernel/PCI/MMIOAccess.h>
+#include <LibBareMetal/IO.h>
 
 static PCI::Initializer* s_pci_initializer;
 

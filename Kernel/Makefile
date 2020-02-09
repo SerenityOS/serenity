@@ -9,12 +9,14 @@ OBJS = \
     ../AK/StringView.o \
     ../Libraries/LibELF/ELFImage.o \
     ../Libraries/LibELF/ELFLoader.o \
+    ../Libraries/LibBareMetal/Output/Console.o \
+    ../Libraries/LibBareMetal/Output/kprintf.o \
+    ../Libraries/LibBareMetal/StdLib.o \
     Arch/i386/APIC.o \
     Arch/i386/CPU.o \
     Arch/i386/PIC.o \
     Arch/i386/PIT.o \
     CMOS.o \
-    Console.o \
     Devices/BXVGADevice.o \
     Devices/BlockDevice.o \
     Devices/CharacterDevice.o \
@@ -83,7 +85,6 @@ OBJS = \
     Random.o \
     Scheduler.o \
     SharedBuffer.o \
-    StdLib.o \
     Syscall.o \
     TimerQueue.o \
     TTY/MasterPTY.o \
@@ -107,8 +108,7 @@ OBJS = \
     ACPI/ACPIDynamicParser.o \
     ACPI/DMIDecoder.o \
     WaitQueue.o \
-    init.o \
-    kprintf.o
+    init.o
 
 OBJ_SUFFIX = .kernel
 
