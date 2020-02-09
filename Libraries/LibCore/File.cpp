@@ -28,6 +28,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 namespace Core {
@@ -81,6 +82,22 @@ bool File::open(IODevice::OpenMode mode)
     set_fd(fd);
     set_mode(mode);
     return true;
+}
+
+bool File::is_directory() const
+{
+    struct stat stat;
+    if (fstat(fd(), &stat) < 0)
+        return false;
+    return S_ISDIR(stat.st_mode);
+}
+
+bool File::is_directory(const String& filename)
+{
+    struct stat st;
+    if (stat(filename.characters(), &st) < 0)
+        return false;
+    return S_ISDIR(st.st_mode);
 }
 
 }

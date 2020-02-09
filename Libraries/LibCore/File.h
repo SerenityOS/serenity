@@ -39,6 +39,9 @@ public:
     String filename() const { return m_filename; }
     void set_filename(const StringView& filename) { m_filename = filename; }
 
+    bool is_directory() const;
+    static bool is_directory(const String& filename);
+
     virtual bool open(IODevice::OpenMode) override;
 
     enum class ShouldCloseFileDescription {
