@@ -47,8 +47,8 @@ int WaveWidget::sample_to_y(int sample) const
 {
     constexpr double sample_max = std::numeric_limits<i16>::max();
     double percentage = sample / sample_max;
-    double portion_of_height = percentage * frame_inner_rect().height();
-    int y = (frame_inner_rect().height() / 2) + portion_of_height;
+    double portion_of_half_height = percentage * ((frame_inner_rect().height() - 1) / 2.0);
+    double y = (frame_inner_rect().height() / 2.0) + portion_of_half_height;
     return y;
 }
 
