@@ -112,7 +112,7 @@ constexpr KeyColor key_pattern[] = {
 const Color note_pressed_color(64, 64, 255);
 const Color column_playing_color(128, 128, 255);
 
-const Color wave_colors[] = {
+const Color left_wave_colors[] = {
     // Sine
     {
         255,
@@ -147,6 +147,45 @@ const Color wave_colors[] = {
     {
         227,
         39,
+        39,
+    },
+};
+
+const Color right_wave_colors[] = {
+    // Sine
+    {
+        255,
+        223,
+        0,
+    },
+    // Triangle
+    {
+        35,
+        171,
+        90,
+    },
+    // Square
+    {
+        139,
+        128,
+        255,
+    },
+    // Saw
+    {
+        240,
+        100,
+        220,
+    },
+    // Noise
+    {
+        197,
+        223,
+        225,
+    },
+    // RecordedSample
+    {
+        227,
+        105,
         39,
     },
 };

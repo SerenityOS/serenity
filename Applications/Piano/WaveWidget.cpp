@@ -60,23 +60,32 @@ void WaveWidget::paint_event(GUI::PaintEvent& event)
     painter.fill_rect(frame_inner_rect(), Color::Black);
     painter.translate(frame_thickness(), frame_thickness());
 
-    Color wave_color = wave_colors[m_audio_engine.wave()];
+    Color left_wave_color = left_wave_colors[m_audio_engine.wave()];
+    Color right_wave_color = right_wave_colors[m_audio_engine.wave()];
     auto buffer = m_audio_engine.buffer();
     double width_scale = static_cast<double>(frame_inner_rect().width()) / buffer.size();
 
     int prev_x = 0;
-    int prev_y = sample_to_y(buffer[0].left);
-    painter.set_pixel({ prev_x, prev_y }, wave_color);
+    int prev_y_left = sample_to_y(buffer[0].left);
+    int prev_y_right = sample_to_y(buffer[0].right);
+    painter.set_pixel({ prev_x, prev_y_left }, left_wave_color);
+    painter.set_pixel({ prev_x, prev_y_right }, right_wave_color);
 
     for (size_t x = 1; x < buffer.size(); ++x) {
-        int y = sample_to_y(buffer[x].left);
+        int y_left = sample_to_y(buffer[x].left);
+        int y_right = sample_to_y(buffer[x].right);
 
-        Gfx::Point point1(prev_x * width_scale, prev_y);
-        Gfx::Point point2(x * width_scale, y);
-        painter.draw_line(point1, point2, wave_color);
+        Gfx::Point point1_left(prev_x * width_scale, prev_y_left);
+        Gfx::Point point2_left(x * width_scale, y_left);
+        painter.draw_line(point1_left, point2_left, left_wave_color);
+
+        Gfx::Point point1_right(prev_x * width_scale, prev_y_right);
+        Gfx::Point point2_right(x * width_scale, y_right);
+        painter.draw_line(point1_right, point2_right, right_wave_color);
 
         prev_x = x;
-        prev_y = y;
+        prev_y_left = y_left;
+        prev_y_right = y_right;
     }
 
     GUI::Frame::paint_event(event);
