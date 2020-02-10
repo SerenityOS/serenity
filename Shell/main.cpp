@@ -55,12 +55,50 @@ static int run_command(const String&);
 
 static String prompt()
 {
-    if (g.uid == 0)
-        return "# ";
+    auto* ps1 = getenv("PROMPT");
+    if (!ps1) {
+        if (g.uid == 0)
+            return "# ";
+
+        StringBuilder builder;
+        builder.appendf("\033]0;%s@%s:%s\007", g.username.characters(), g.hostname, g.cwd.characters());
+        builder.appendf("\033[31;1m%s\033[0m@\033[37;1m%s\033[0m:\033[32;1m%s\033[0m$> ", g.username.characters(), g.hostname, g.cwd.characters());
+        return builder.to_string();
+    }
 
     StringBuilder builder;
-    builder.appendf("\033]0;%s@%s:%s\007", g.username.characters(), g.hostname, g.cwd.characters());
-    builder.appendf("\033[31;1m%s\033[0m@\033[37;1m%s\033[0m:\033[32;1m%s\033[0m$> ", g.username.characters(), g.hostname, g.cwd.characters());
+    for (char* ptr = ps1; *ptr; ++ptr) {
+        if (*ptr == '\\') {
+            ++ptr;
+            if (!*ptr)
+                break;
+            switch (*ptr) {
+            case 'X':
+                builder.append("\033]0;");
+                break;
+            case 'a':
+                builder.append(0x07);
+                break;
+            case 'e':
+                builder.append(0x1b);
+                break;
+            case 'u':
+                builder.append(g.username);
+                break;
+            case 'h':
+                builder.append(g.hostname);
+                break;
+            case 'w':
+                builder.append(g.cwd);
+                break;
+            case 'p':
+                builder.append(g.uid == 0 ? '#' : '$');
+                break;
+            }
+            continue;
+        }
+        builder.append(*ptr);
+    }
     return builder.to_string();
 }
 
