@@ -27,7 +27,6 @@
 #include "CMOS.h"
 #include "Process.h"
 #include <AK/Assertions.h>
-#include <AK/kstdio.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Multiboot.h>

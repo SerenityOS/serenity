@@ -27,7 +27,6 @@
 #pragma once
 
 #include <AK/Traits.h>
-#include <AK/kstdio.h>
 
 class WindowIdentifier {
 public:
@@ -54,6 +53,5 @@ namespace AK {
 template<>
 struct Traits<WindowIdentifier> : public GenericTraits<WindowIdentifier> {
     static unsigned hash(const WindowIdentifier& w) { return pair_int_hash(w.client_id(), w.window_id()); }
-    static void dump(const WindowIdentifier& w) { kprintf("WindowIdentifier(%d, %d)", w.client_id(), w.window_id()); }
 };
 }

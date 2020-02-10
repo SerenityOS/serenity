@@ -26,7 +26,6 @@
 
 #include "ZeroDevice.h"
 #include <AK/StdLibExtras.h>
-#include <AK/kstdio.h>
 
 ZeroDevice::ZeroDevice()
     : CharacterDevice(1, 5)

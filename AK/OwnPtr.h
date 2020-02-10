@@ -205,7 +205,6 @@ template<typename T>
 struct Traits<OwnPtr<T>> : public GenericTraits<OwnPtr<T>> {
     using PeekType = const T*;
     static unsigned hash(const OwnPtr<T>& p) { return int_hash((u32)p.ptr()); }
-    static void dump(const OwnPtr<T>& p) { kprintf("%p", p.ptr()); }
     static bool equals(const OwnPtr<T>& a, const OwnPtr<T>& b) { return a.ptr() == b.ptr(); }
 };
 

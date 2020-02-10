@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/kstdio.h>
 #include <AK/String.h>
 #include <assert.h>
 #include <stdio.h>

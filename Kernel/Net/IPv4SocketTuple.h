@@ -79,11 +79,6 @@ struct Traits<IPv4SocketTuple> : public GenericTraits<IPv4SocketTuple> {
         auto h2 = pair_int_hash(tuple.peer_address().to_u32(), tuple.peer_port());
         return pair_int_hash(h1, h2);
     }
-
-    static void dump(const IPv4SocketTuple& tuple)
-    {
-        kprintf("%s", tuple.to_string().characters());
-    }
 };
 
 }

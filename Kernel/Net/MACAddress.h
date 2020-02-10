@@ -82,7 +82,6 @@ namespace AK {
 template<>
 struct Traits<MACAddress> : public GenericTraits<MACAddress> {
     static unsigned hash(const MACAddress& address) { return string_hash((const char*)&address, sizeof(address)); }
-    static void dump(const MACAddress& address) { kprintf("%s", address.to_string().characters()); }
 };
 
 }

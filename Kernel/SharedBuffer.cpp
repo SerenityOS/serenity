@@ -100,6 +100,8 @@ void* SharedBuffer::ref_for_process_and_get_address(Process& process)
 void SharedBuffer::share_with(pid_t peer_pid)
 {
     LOCKER(shared_buffers().lock());
+    if (m_global)
+        return;
     for (auto& ref : m_refs) {
         if (ref.pid == peer_pid) {
             // don't increment the reference count yet; let them get_shared_buffer it first.

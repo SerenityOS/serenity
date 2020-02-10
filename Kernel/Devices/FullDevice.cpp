@@ -26,7 +26,6 @@
 
 #include "FullDevice.h"
 #include <AK/StdLibExtras.h>
-#include <AK/kstdio.h>
 #include <LibC/errno_numbers.h>
 
 FullDevice::FullDevice()

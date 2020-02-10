@@ -115,7 +115,6 @@ static_assert(sizeof(IPv4Address) == 4);
 template<>
 struct Traits<IPv4Address> : public GenericTraits<IPv4Address> {
     static unsigned hash(const IPv4Address& address) { return string_hash((const char*)&address, sizeof(address)); }
-    static void dump(const IPv4Address& address) { kprintf("%s", address.to_string().characters()); }
 };
 
 inline const LogStream& operator<<(const LogStream& stream, const IPv4Address& value)

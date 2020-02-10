@@ -26,7 +26,6 @@
 
 #include <AK/Assertions.h>
 #include <AK/JsonObject.h>
-#include <AK/kstdio.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Object.h>
