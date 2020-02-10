@@ -39,7 +39,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (argc < 2) {
+    if (argc < 3) {
         printf("usage: chown <uid[:gid]> <path>\n");
         return 0;
     }
