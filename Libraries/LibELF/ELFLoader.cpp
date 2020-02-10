@@ -27,7 +27,6 @@
 #include "ELFLoader.h"
 #include <AK/Demangle.h>
 #include <AK/QuickSort.h>
-#include <AK/kstdio.h>
 
 #ifdef KERNEL
 #include <Kernel/VM/MemoryManager.h>

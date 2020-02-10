@@ -32,7 +32,6 @@
 #include <AK/StringView.h>
 #include <AK/Traits.h>
 #include <AK/Vector.h>
-#include <AK/kstdio.h>
 
 namespace AK {
 
@@ -264,7 +263,6 @@ inline bool StringView::operator==(const String& string) const
 template<>
 struct Traits<String> : public GenericTraits<String> {
     static unsigned hash(const String& s) { return s.impl() ? s.impl()->hash() : 0; }
-    static void dump(const String& s) { kprintf("%s", s.characters()); }
 };
 
 struct CaseInsensitiveStringTraits : public AK::Traits<String> {

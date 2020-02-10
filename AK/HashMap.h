@@ -30,7 +30,6 @@
 #include <AK/Optional.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
-#include <AK/kstdio.h>
 
 namespace AK {
 
@@ -45,13 +44,6 @@ private:
     struct EntryTraits {
         static unsigned hash(const Entry& entry) { return KeyTraits::hash(entry.key); }
         static bool equals(const Entry& a, const Entry& b) { return KeyTraits::equals(a.key, b.key); }
-        static void dump(const Entry& entry)
-        {
-            kprintf("key=");
-            KeyTraits::dump(entry.key);
-            kprintf(" value=");
-            Traits<V>::dump(entry.value);
-        }
     };
 
 public:
@@ -101,8 +93,6 @@ public:
     }
 
     void ensure_capacity(int capacity) { m_table.ensure_capacity(capacity); }
-
-    void dump() const { m_table.dump(); }
 
     Optional<typename Traits<V>::PeekType> get(const K& key) const
     {

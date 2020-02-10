@@ -25,7 +25,6 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <AK/kstdio.h>
 #include <LibELF/ELFImage.h>
 
 ELFImage::ELFImage(const u8* buffer, size_t size)

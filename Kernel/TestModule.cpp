@@ -25,7 +25,6 @@
  */
 
 #include <Kernel/Process.h>
-#include <LibBareMetal/Output/kstdio.h>
 
 extern "C" const char module_name[] = "TestModule";
 

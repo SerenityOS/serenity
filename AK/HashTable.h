@@ -31,7 +31,6 @@
 #include <AK/StdLibExtras.h>
 #include <AK/TemporaryChange.h>
 #include <AK/Traits.h>
-#include <AK/kstdio.h>
 
 namespace AK {
 
@@ -162,8 +161,6 @@ public:
     void set(T&&);
     bool contains(const T&) const;
     void clear();
-
-    void dump() const;
 
     using Iterator = HashTableIterator<HashTable, T, typename Bucket::Iterator>;
     friend Iterator;
@@ -378,21 +375,6 @@ auto HashTable<T, TraitsForT>::lookup(const T& value, int* bucket_index) const -
     if (bucket_index)
         *bucket_index = hash % m_capacity;
     return m_buckets[hash % m_capacity];
-}
-
-template<typename T, typename TraitsForT>
-void HashTable<T, TraitsForT>::dump() const
-{
-    kprintf("HashTable{%p} m_size=%u, m_capacity=%u, m_buckets=%p\n", this, m_size, m_capacity, m_buckets);
-    for (int i = 0; i < m_capacity; ++i) {
-        auto& bucket = m_buckets[i];
-        kprintf("Bucket %u\n", i);
-        for (auto& e : bucket) {
-            kprintf("  > ");
-            TraitsForT::dump(e);
-            kprintf("\n");
-        }
-    }
 }
 
 }

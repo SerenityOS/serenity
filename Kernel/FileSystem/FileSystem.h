@@ -34,7 +34,6 @@
 #include <AK/RefPtr.h>
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
-#include <AK/kstdio.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
@@ -128,7 +127,6 @@ namespace AK {
 template<>
 struct Traits<InodeIdentifier> : public GenericTraits<InodeIdentifier> {
     static unsigned hash(const InodeIdentifier& inode) { return pair_int_hash(inode.fsid(), inode.index()); }
-    static void dump(const InodeIdentifier& inode) { kprintf("%02u:%08u", inode.fsid(), inode.index()); }
 };
 
 }

@@ -26,7 +26,6 @@
 
 #include "NullDevice.h"
 #include <AK/StdLibExtras.h>
-#include <AK/kstdio.h>
 
 static NullDevice* s_the;
 
