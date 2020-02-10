@@ -457,12 +457,8 @@ bool Scheduler::yield()
 {
     InterruptDisabler disabler;
     ASSERT(current);
-    //    dbgprintf("%s(%u:%u) yield()\n", current->process().name().characters(), current->pid(), current->tid());
-
     if (!pick_next())
         return false;
-
-    //    dbgprintf("yield() jumping to new process: sel=%x, %s(%u:%u)\n", current->far_ptr().selector, current->process().name().characters(), current->pid(), current->tid());
     switch_now();
     return true;
 }
