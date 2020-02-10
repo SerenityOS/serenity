@@ -236,6 +236,16 @@ void CalculatorWidget::keydown_event(GUI::KeyEvent& event)
     } else if (event.key() >= KeyCode::Key_0 && event.key() <= KeyCode::Key_9) {
         m_keypad.type_digit(atoi(event.text().characters()));
 
+    } else if (event.key() == KeyCode::Key_Period) {
+        m_keypad.type_decimal_point();
+
+    } else if (event.key() == KeyCode::Key_Escape) {
+        m_keypad.set_value(0.0);
+        m_calculator.clear_operation();
+
+    } else if (event.key() == KeyCode::Key_Backspace) {
+        m_keypad.type_backspace();
+
     } else {
         Calculator::Operation operation;
 
