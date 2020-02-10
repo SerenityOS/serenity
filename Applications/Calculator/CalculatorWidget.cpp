@@ -240,7 +240,7 @@ void CalculatorWidget::keydown_event(GUI::KeyEvent& event)
 	m_keypad.type_decimal_point();
 
     } else if (event.key() == KeyCode::Key_Escape) {
-	m_keypad.set_value(0.0);
+        m_keypad.set_value(0.0);
         m_calculator.clear_operation();
 
     } else if (event.key() == KeyCode::Key_Backspace) {
