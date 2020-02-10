@@ -114,7 +114,7 @@ static void run_command(int ptm_fd, String command)
             args[1] = "-c";
             args[2] = command.characters();
         }
-        const char* envs[] = { "TERM=xterm", "PATH=/bin:/usr/bin:/usr/local/bin", nullptr };
+        const char* envs[] = { "PROMPT=\\X\\u@\\h:\\w\\a\\e[33;1m\\h\\e[0m \\e[32;1m\\w\\e[0m \\p ", "TERM=xterm", "PATH=/bin:/usr/bin:/usr/local/bin", nullptr };
         rc = execve(shell.characters(), const_cast<char**>(args), const_cast<char**>(envs));
         if (rc < 0) {
             perror("execve");
