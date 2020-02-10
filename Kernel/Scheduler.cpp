@@ -353,7 +353,6 @@ bool Scheduler::pick_next()
     });
 
     // Dispatch any pending signals.
-    // FIXME: Do we really need this to be a separate pass over the process list?
     Thread::for_each_living([](Thread& thread) -> IterationDecision {
         if (!thread.has_unmasked_pending_signals())
             return IterationDecision::Continue;
