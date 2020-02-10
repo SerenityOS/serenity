@@ -86,18 +86,20 @@ void TextEditor::create_actions()
     m_copy_action = CommonActions::make_copy_action([&](auto&) { copy(); }, this);
     m_paste_action = CommonActions::make_paste_action([&](auto&) { paste(); }, this);
     m_delete_action = CommonActions::make_delete_action([&](auto&) { do_delete(); }, this);
-    m_go_to_line_action = Action::create(
-        "Go to line...", { Mod_Ctrl, Key_L }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](auto&) {
-            auto input_box = InputBox::construct("Line:", "Go to line", window());
-            auto result = input_box->exec();
-            if (result == InputBox::ExecOK) {
-                bool ok;
-                auto line_number = input_box->text_value().to_uint(ok);
-                if (ok)
-                    set_cursor(line_number - 1, 0);
-            }
-        },
-        this);
+    if (is_multi_line()) {
+        m_go_to_line_action = Action::create(
+            "Go to line...", { Mod_Ctrl, Key_L }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](auto&) {
+                auto input_box = InputBox::construct("Line:", "Go to line", window());
+                auto result = input_box->exec();
+                if (result == InputBox::ExecOK) {
+                    bool ok;
+                    auto line_number = input_box->text_value().to_uint(ok);
+                    if (ok)
+                        set_cursor(line_number - 1, 0);
+                }
+            },
+            this);
+    }
 }
 
 void TextEditor::set_text(const StringView& text)
