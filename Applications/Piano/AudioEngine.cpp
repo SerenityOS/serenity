@@ -158,10 +158,10 @@ String AudioEngine::set_recorded_sample(const StringView& path)
         m_recorded_sample.clear();
     m_recorded_sample.resize(wav_buffer->sample_count());
 
-    float peak = 0;
+    double peak = 0;
     for (int i = 0; i < wav_buffer->sample_count(); ++i) {
-        float left_abs = fabs(wav_buffer->samples()[i].left);
-        float right_abs = fabs(wav_buffer->samples()[i].right);
+        double left_abs = fabs(wav_buffer->samples()[i].left);
+        double right_abs = fabs(wav_buffer->samples()[i].right);
         if (left_abs > peak)
             peak = left_abs;
         if (right_abs > peak)
@@ -228,8 +228,8 @@ Audio::Sample AudioEngine::recorded_sample(size_t note)
     int t = m_pos[note];
     if (t >= m_recorded_sample.size())
         return 0;
-    float w_left = m_recorded_sample[t].left;
-    float w_right = m_recorded_sample[t].right;
+    double w_left = m_recorded_sample[t].left;
+    double w_right = m_recorded_sample[t].right;
     if (t + 1 < m_recorded_sample.size()) {
         double t_fraction = m_pos[note] - t;
         w_left += (m_recorded_sample[t + 1].left - m_recorded_sample[t].left) * t_fraction;

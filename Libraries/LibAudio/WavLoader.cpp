@@ -182,19 +182,19 @@ bool WavLoader::parse_header()
     return true;
 }
 
-ResampleHelper::ResampleHelper(float source, float target)
+ResampleHelper::ResampleHelper(double source, double target)
     : m_ratio(source / target)
 {
 }
 
-void ResampleHelper::process_sample(float sample_l, float sample_r)
+void ResampleHelper::process_sample(double sample_l, double sample_r)
 {
     m_last_sample_l = sample_l;
     m_last_sample_r = sample_r;
     m_current_ratio += 1;
 }
 
-bool ResampleHelper::read_sample(float& next_l, float& next_r)
+bool ResampleHelper::read_sample(double& next_l, double& next_r)
 {
     if (m_current_ratio > 0) {
         m_current_ratio -= m_ratio;
@@ -209,8 +209,8 @@ bool ResampleHelper::read_sample(float& next_l, float& next_r)
 template<typename SampleReader>
 static void read_samples_from_stream(BufferStream& stream, SampleReader read_sample, Vector<Sample>& samples, ResampleHelper& resampler, int num_channels)
 {
-    float norm_l = 0;
-    float norm_r = 0;
+    double norm_l = 0;
+    double norm_r = 0;
 
     switch (num_channels) {
     case 1:
@@ -245,7 +245,7 @@ static void read_samples_from_stream(BufferStream& stream, SampleReader read_sam
     }
 }
 
-static float read_norm_sample_24(BufferStream& stream)
+static double read_norm_sample_24(BufferStream& stream)
 {
     u8 byte = 0;
     stream >> byte;
@@ -259,21 +259,21 @@ static float read_norm_sample_24(BufferStream& stream)
     value = sample1 << 8;
     value |= (sample2 << 16);
     value |= (sample3 << 24);
-    return float(value) / std::numeric_limits<i32>::max();
+    return double(value) / std::numeric_limits<i32>::max();
 }
 
-static float read_norm_sample_16(BufferStream& stream)
+static double read_norm_sample_16(BufferStream& stream)
 {
     i16 sample = 0;
     stream >> sample;
-    return float(sample) / std::numeric_limits<i16>::max();
+    return double(sample) / std::numeric_limits<i16>::max();
 }
 
-static float read_norm_sample_8(BufferStream& stream)
+static double read_norm_sample_8(BufferStream& stream)
 {
     u8 sample = 0;
     stream >> sample;
-    return float(sample) / std::numeric_limits<u8>::max();
+    return double(sample) / std::numeric_limits<u8>::max();
 }
 
 // ### can't const this because BufferStream is non-const

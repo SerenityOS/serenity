@@ -46,7 +46,7 @@ WaveEditor::~WaveEditor()
 {
 }
 
-int WaveEditor::sample_to_y(float percentage) const
+int WaveEditor::sample_to_y(double percentage) const
 {
     double portion_of_half_height = percentage * ((frame_inner_rect().height() - 1) / 2.0);
     double y = (frame_inner_rect().height() / 2.0) + portion_of_half_height;

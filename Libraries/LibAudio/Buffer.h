@@ -43,14 +43,14 @@ struct Sample {
     }
 
     // For mono
-    Sample(float left)
+    Sample(double left)
         : left(left)
         , right(left)
     {
     }
 
     // For stereo
-    Sample(float left, float right)
+    Sample(double left, double right)
         : left(left)
         , right(right)
     {
@@ -71,7 +71,7 @@ struct Sample {
 
     void scale(int percent)
     {
-        float pct = (float)percent / 100.0;
+        double pct = (double)percent / 100.0;
         left *= pct;
         right *= pct;
     }
@@ -83,8 +83,8 @@ struct Sample {
         return *this;
     }
 
-    float left;
-    float right;
+    double left;
+    double right;
 };
 
 // Small helper to resample from one playback rate to another
@@ -92,16 +92,16 @@ struct Sample {
 // Should do better...
 class ResampleHelper {
 public:
-    ResampleHelper(float source, float target);
+    ResampleHelper(double source, double target);
 
-    void process_sample(float sample_l, float sample_r);
-    bool read_sample(float& next_l, float& next_r);
+    void process_sample(double sample_l, double sample_r);
+    bool read_sample(double& next_l, double& next_r);
 
 private:
-    const float m_ratio;
-    float m_current_ratio { 0 };
-    float m_last_sample_l { 0 };
-    float m_last_sample_r { 0 };
+    const double m_ratio;
+    double m_current_ratio { 0 };
+    double m_last_sample_l { 0 };
+    double m_last_sample_r { 0 };
 };
 
 // A buffer of audio samples, normalized to 44100hz.
