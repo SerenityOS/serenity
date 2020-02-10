@@ -29,7 +29,6 @@
 #include <Kernel/Random.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/RangeAllocator.h>
-#include <LibBareMetal/Output/kstdio.h>
 
 //#define VRA_DEBUG
 #define VM_GUARD_PAGES

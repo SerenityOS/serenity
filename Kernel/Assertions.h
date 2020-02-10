@@ -27,7 +27,6 @@
 #pragma once
 
 #include <Kernel/Arch/i386/CPU.h>
-#include <LibBareMetal/Output/kstdio.h>
 
 #ifdef DEBUG
 [[noreturn]] void __assertion_failed(const char* msg, const char* file, unsigned line, const char* func);
