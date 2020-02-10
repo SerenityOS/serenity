@@ -278,24 +278,25 @@ int close(int fd)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int lstat(const char* path, struct stat* statbuf)
+static int do_stat(const char* path, struct stat* statbuf, bool follow_symlinks)
 {
     if (!path) {
         errno = EFAULT;
         return -1;
     }
-    int rc = syscall(SC_lstat, path, strlen(path), statbuf);
+    Syscall::SC_stat_params params { { path, strlen(path) }, statbuf, follow_symlinks };
+    int rc = syscall(SC_stat, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int lstat(const char* path, struct stat* statbuf)
+{
+    return do_stat(path, statbuf, false);
 }
 
 int stat(const char* path, struct stat* statbuf)
 {
-    if (!path) {
-        errno = EFAULT;
-        return -1;
-    }
-    int rc = syscall(SC_stat, path, strlen(path), statbuf);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
+    return do_stat(path, statbuf, true);
 }
 
 int fstat(int fd, struct stat* statbuf)

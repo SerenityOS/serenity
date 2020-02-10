@@ -56,7 +56,6 @@ typedef u32 socklen_t;
     __ENUMERATE_SYSCALL(mmap)                       \
     __ENUMERATE_SYSCALL(munmap)                     \
     __ENUMERATE_SYSCALL(get_dir_entries)            \
-    __ENUMERATE_SYSCALL(lstat)                      \
     __ENUMERATE_SYSCALL(getcwd)                     \
     __ENUMERATE_SYSCALL(gettimeofday)               \
     __ENUMERATE_SYSCALL(gethostname)                \
@@ -411,6 +410,12 @@ struct SC_waitid_params {
     int id;
     struct siginfo* infop;
     int options;
+};
+
+struct SC_stat_params {
+    StringArgument path;
+    struct stat* statbuf;
+    bool follow_symlinks;
 };
 
 void initialize();
