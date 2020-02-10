@@ -1783,41 +1783,25 @@ int Process::sys$fstat(int fd, stat* statbuf)
     return description->fstat(*statbuf);
 }
 
-int Process::sys$lstat(const char* user_path, size_t path_length, stat* user_statbuf)
+int Process::sys$stat(const Syscall::SC_stat_params* user_params)
 {
     REQUIRE_PROMISE(rpath);
-    if (!validate_write_typed(user_statbuf))
+    Syscall::SC_stat_params params;
+    if (!validate_read_and_copy_typed(&params, user_params))
         return -EFAULT;
-    auto path = get_syscall_path_argument(user_path, path_length);
+    if (!validate_write_typed(params.statbuf))
+        return -EFAULT;
+    auto path = get_syscall_path_argument(params.path);
     if (path.is_error())
         return path.error();
-    auto metadata_or_error = VFS::the().lookup_metadata(path.value(), current_directory(), O_NOFOLLOW_NOERROR);
+    auto metadata_or_error = VFS::the().lookup_metadata(path.value(), current_directory(), params.follow_symlinks ? 0 : O_NOFOLLOW_NOERROR);
     if (metadata_or_error.is_error())
         return metadata_or_error.error();
     stat statbuf;
     auto result = metadata_or_error.value().stat(statbuf);
     if (result.is_error())
         return result;
-    copy_to_user(user_statbuf, &statbuf);
-    return 0;
-}
-
-int Process::sys$stat(const char* user_path, size_t path_length, stat* user_statbuf)
-{
-    REQUIRE_PROMISE(rpath);
-    if (!validate_write_typed(user_statbuf))
-        return -EFAULT;
-    auto path = get_syscall_path_argument(user_path, path_length);
-    if (path.is_error())
-        return path.error();
-    auto metadata_or_error = VFS::the().lookup_metadata(path.value(), current_directory());
-    if (metadata_or_error.is_error())
-        return metadata_or_error.error();
-    stat statbuf;
-    auto result = metadata_or_error.value().stat(statbuf);
-    if (result.is_error())
-        return result;
-    copy_to_user(user_statbuf, &statbuf);
+    copy_to_user(params.statbuf, &statbuf);
     return 0;
 }
 

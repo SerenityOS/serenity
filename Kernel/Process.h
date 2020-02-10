@@ -195,8 +195,7 @@ public:
     ssize_t sys$write(int fd, const u8*, ssize_t);
     ssize_t sys$writev(int fd, const struct iovec* iov, int iov_count);
     int sys$fstat(int fd, stat*);
-    int sys$lstat(const char*, size_t, stat*);
-    int sys$stat(const char*, size_t, stat*);
+    int sys$stat(const Syscall::SC_stat_params*);
     int sys$lseek(int fd, off_t, int whence);
     int sys$kill(pid_t pid, int sig);
     [[noreturn]] void sys$exit(int status);
