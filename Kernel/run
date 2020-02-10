@@ -1,11 +1,14 @@
 #!/bin/sh
+# shellcheck disable=SC2086 # FIXME: fix these globing warnings
+
+set -e
 
 script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 cd "$script_path"
 
 #SERENITY_PACKET_LOGGING_ARG="-object filter-dump,id=hue,netdev=breh,file=e1000.pcap"
 
-[ -e /dev/kvm -a -r /dev/kvm -a -w /dev/kvm ] && SERENITY_KVM_ARG="-enable-kvm"
+[ -e /dev/kvm ] && [ -r /dev/kvm ] && [ -w /dev/kvm ] && SERENITY_KVM_ARG="-enable-kvm"
 
 [ -z "$SERENITY_BOCHS_BIN" ] && SERENITY_BOCHS_BIN="bochs"
 
@@ -33,7 +36,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 -s -m $SERENITY_RAM_SIZE
 -cpu max
 -machine q35
--d cpu_reset,guest_errors 
+-d cpu_reset,guest_errors
 -device VGA,vgamem_mb=64
 -device piix3-ide
 -drive file=_disk_image,id=disk,if=none
@@ -76,7 +79,7 @@ elif [ "$1" = "qgrub" ]; then
 elif [ "$1" = "q35_cmd" ]; then
     SERENITY_KERNEL_CMDLINE=""
     # FIXME: Someone who knows sh syntax better, please help:
-    for i in `seq 2 $#`; do
+    for _ in $(seq 2 $#); do
         shift
         SERENITY_KERNEL_CMDLINE="$SERENITY_KERNEL_CMDLINE $1"
     done
@@ -92,7 +95,7 @@ elif [ "$1" = "q35_cmd" ]; then
 elif [ "$1" = "qcmd" ]; then
     SERENITY_KERNEL_CMDLINE=""
     # FIXME: Someone who knows sh syntax better, please help:
-    for i in `seq 2 $#`; do
+    for _ in $(seq 2 $#); do
         shift
         SERENITY_KERNEL_CMDLINE="$SERENITY_KERNEL_CMDLINE $1"
     done

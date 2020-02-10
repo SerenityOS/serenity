@@ -9,7 +9,7 @@ while [ "$1" != "" ]; do
     case $1 in
         -f | --fast )           fast_mode=1
                                 ;;
-        -h | --help )           echo "-f or --fast: build fast without cleaning or running tests"
+        -h | --help )           printf -- "-f or --fast: build fast without cleaning or running tests\n"
                                 exit 0
                                 ;;
     esac
@@ -18,10 +18,10 @@ done
 
 sudo id
 
-MAKE=make
+MAKE="make"
 
 if [ "$(uname -s)" = "OpenBSD" ]; then
-	MAKE=gmake
+	MAKE="gmake"
 fi
 
 if [ "$fast_mode" = "1" ]; then
