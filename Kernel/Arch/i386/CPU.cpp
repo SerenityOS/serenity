@@ -178,9 +178,7 @@ static void dump(const RegisterDump& regs)
     u32 cr2;
     asm("movl %%cr2, %%eax"
         : "=a"(cr2));
-    u32 cr3;
-    asm("movl %%cr3, %%eax"
-        : "=a"(cr3));
+    u32 cr3 = read_cr3();
     u32 cr4;
     asm("movl %%cr4, %%eax"
         : "=a"(cr4));
@@ -271,11 +269,8 @@ void page_fault_handler(RegisterDump regs)
     asm("movl %%cr2, %%eax"
         : "=a"(fault_address));
 
-    u32 fault_page_directory;
-    asm("movl %%cr3, %%eax"
-        : "=a"(fault_page_directory));
-
 #ifdef PAGE_FAULT_DEBUG
+    u32 fault_page_directory = read_cr3();
     dbgprintf("%s(%u): ring%u %s page fault in PD=%x, %s%s V%08x\n",
         current ? current->process().name().characters() : "(none)",
         current ? current->pid() : 0,
@@ -715,4 +710,18 @@ void cpu_setup()
     } else {
         kprintf("x86: No RDRAND support detected. Randomness will be shitty\n");
     }
+}
+
+u32 read_cr3()
+{
+    u32 cr3;
+    asm("movl %%cr3, %%eax"
+        : "=a"(cr3));
+    return cr3;
+}
+
+void write_cr3(u32 cr3)
+{
+    asm volatile("movl %%eax, %%cr3" ::"a"(cr3)
+                 : "memory");
 }

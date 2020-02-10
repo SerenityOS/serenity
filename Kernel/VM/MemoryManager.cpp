@@ -49,11 +49,8 @@ MemoryManager& MM
 MemoryManager::MemoryManager()
 {
     m_kernel_page_directory = PageDirectory::create_kernel_page_directory();
-
     parse_memory_map();
-
-    asm volatile("movl %%eax, %%cr3" ::"a"(kernel_page_directory().cr3()));
-
+    write_cr3(kernel_page_directory().cr3());
     setup_low_identity_mapping();
     protect_kernel_image();
 }
@@ -266,7 +263,7 @@ Region* MemoryManager::region_from_vaddr(VirtualAddress vaddr)
 {
     if (auto* region = kernel_region_from_vaddr(vaddr))
         return region;
-    auto page_directory = PageDirectory::find_by_cr3(cpu_cr3());
+    auto page_directory = PageDirectory::find_by_cr3(read_cr3());
     if (!page_directory)
         return nullptr;
     ASSERT(page_directory->process());
@@ -475,16 +472,12 @@ void MemoryManager::enter_process_paging_scope(Process& process)
     InterruptDisabler disabler;
 
     current->tss().cr3 = process.page_directory().cr3();
-    asm volatile("movl %%eax, %%cr3" ::"a"(process.page_directory().cr3())
-                 : "memory");
+    write_cr3(process.page_directory().cr3());
 }
 
 void MemoryManager::flush_entire_tlb()
 {
-    asm volatile(
-        "mov %%cr3, %%eax\n"
-        "mov %%eax, %%cr3\n" ::
-            : "%eax", "memory");
+    write_cr3(read_cr3());
 }
 
 void MemoryManager::flush_tlb(VirtualAddress vaddr)
@@ -676,8 +669,7 @@ void MemoryManager::dump_kernel_regions()
 ProcessPagingScope::ProcessPagingScope(Process& process)
 {
     ASSERT(current);
-    asm("movl %%cr3, %%eax"
-        : "=a"(m_previous_cr3));
+    m_previous_cr3 = read_cr3();
     MM.enter_process_paging_scope(process);
 }
 
@@ -685,6 +677,5 @@ ProcessPagingScope::~ProcessPagingScope()
 {
     InterruptDisabler disabler;
     current->tss().cr3 = m_previous_cr3;
-    asm volatile("movl %%eax, %%cr3" ::"a"(m_previous_cr3)
-                 : "memory");
+    write_cr3(m_previous_cr3);
 }

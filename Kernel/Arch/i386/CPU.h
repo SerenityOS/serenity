@@ -278,15 +278,6 @@ void handle_crash(RegisterDump&, const char* description, int signal);
                                : "memory")
 #define memory_barrier() asm volatile("" :: \
                                           : "memory")
-
-inline u32 cpu_cr3()
-{
-    u32 cr3;
-    asm volatile("movl %%cr3, %%eax"
-                 : "=a"(cr3));
-    return cr3;
-}
-
 inline u32 cpu_flags()
 {
     u32 flags;
@@ -472,6 +463,9 @@ inline uintptr_t offset_in_page(const void* address)
 {
     return offset_in_page((uintptr_t)address);
 }
+
+u32 read_cr3();
+void write_cr3(u32);
 
 class CPUID {
 public:
