@@ -45,7 +45,7 @@ private:
 
     virtual void paint_event(GUI::PaintEvent&) override;
 
-    int sample_to_y(float percentage) const;
+    int sample_to_y(double percentage) const;
 
     AudioEngine& m_audio_engine;
 };
