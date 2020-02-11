@@ -51,6 +51,7 @@ Bitmap::Bitmap(Format format, const Size& size, Purgeable purgeable)
     , m_format(format)
     , m_purgeable(purgeable == Purgeable::Yes)
 {
+    ASSERT(!m_size.is_empty());
     if (format == Format::Indexed8)
         m_palette = new RGBA32[256];
     int map_flags = purgeable == Purgeable::Yes ? (MAP_PURGEABLE | MAP_PRIVATE) : (MAP_ANONYMOUS | MAP_PRIVATE);
