@@ -75,6 +75,7 @@ public:
     Window* switcher_window() { return m_switcher_window.ptr(); }
 
 private:
+    void redraw();
     void select_window_at_index(int index);
     Gfx::Rect item_rect(int index) const;
 
@@ -85,6 +86,7 @@ private:
     bool m_visible { false };
     Vector<WeakPtr<Window>> m_windows;
     int m_selected_index { 0 };
+    int m_hovered_index { -1 };
 };
 
 }
