@@ -126,6 +126,16 @@ void WindowSwitcher::on_key_event(const KeyEvent& event)
     select_window_at_index(new_selected_index);
 }
 
+void WindowSwitcher::select_window(Window& window)
+{
+    for (int i = 0; i < m_windows.size(); ++i) {
+        if (m_windows.at(i) == &window) {
+            select_window_at_index(i);
+            return;
+        }
+    }
+}
+
 void WindowSwitcher::select_window_at_index(int index)
 {
     m_selected_index = index;
