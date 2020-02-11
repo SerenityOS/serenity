@@ -40,7 +40,7 @@ namespace WindowServer {
 class KeyEvent;
 class Window;
 
-class WindowSwitcher : public Core::Object {
+class WindowSwitcher final : public Core::Object {
     C_OBJECT(WindowSwitcher)
 public:
     static WindowSwitcher& the();
@@ -55,23 +55,29 @@ public:
     void hide() { set_visible(false); }
 
     void on_key_event(const KeyEvent&);
+
     void refresh();
     void refresh_if_needed();
 
     void draw();
 
-    int thumbnail_width() { return 40; }
-    int thumbnail_height() { return 40; }
+    int thumbnail_width() const { return 40; }
+    int thumbnail_height() const { return 40; }
 
-    int item_height() { return 10 + thumbnail_height(); }
-    int padding() { return 8; }
-    int item_padding() { return 8; }
+    int item_height() const { return 10 + thumbnail_height(); }
+    int padding() const { return 8; }
+    int item_padding() const { return 8; }
 
     Window* selected_window();
 
     Window* switcher_window() { return m_switcher_window.ptr(); }
 
 private:
+    void select_window_at_index(int index);
+    Gfx::Rect item_rect(int index) const;
+
+    virtual void event(Core::Event&) override;
+
     RefPtr<Window> m_switcher_window;
     Gfx::Rect m_rect;
     bool m_visible { false };

@@ -71,6 +71,24 @@ Window* WindowSwitcher::selected_window()
     return m_windows[m_selected_index].ptr();
 }
 
+void WindowSwitcher::event(Core::Event& event)
+{
+    if (!static_cast<Event&>(event).is_mouse_event())
+        return;
+
+    auto& mouse_event = static_cast<MouseEvent&>(event);
+    if (mouse_event.type() == Event::MouseDown) {
+        for (int i = 0; i < m_windows.size(); ++i) {
+            auto item_rect = this->item_rect(i);
+            if (item_rect.contains(mouse_event.position())) {
+                select_window_at_index(i);
+                break;
+            }
+        }
+    }
+    event.accept();
+}
+
 void WindowSwitcher::on_key_event(const KeyEvent& event)
 {
     if (event.type() == Event::KeyUp) {
@@ -94,19 +112,38 @@ void WindowSwitcher::on_key_event(const KeyEvent& event)
     }
     ASSERT(!m_windows.is_empty());
 
+    int new_selected_index;
+
     if (!event.shift()) {
-        m_selected_index = (m_selected_index + 1) % m_windows.size();
+        new_selected_index = (m_selected_index + 1) % m_windows.size();
     } else {
-        m_selected_index = (m_selected_index - 1) % m_windows.size();
-        if (m_selected_index < 0)
-            m_selected_index = m_windows.size() - 1;
+        new_selected_index = (m_selected_index - 1) % m_windows.size();
+        if (new_selected_index < 0)
+            new_selected_index = m_windows.size() - 1;
     }
-    ASSERT(m_selected_index < m_windows.size());
-    auto* highlight_window = m_windows.at(m_selected_index).ptr();
+    ASSERT(new_selected_index < m_windows.size());
+
+    select_window_at_index(new_selected_index);
+}
+
+void WindowSwitcher::select_window_at_index(int index)
+{
+    m_selected_index = index;
+    auto* highlight_window = m_windows.at(index).ptr();
     ASSERT(highlight_window);
     WindowManager::the().set_highlight_window(highlight_window);
     draw();
     WindowManager::the().invalidate(m_rect);
+}
+
+Gfx::Rect WindowSwitcher::item_rect(int index) const
+{
+    return {
+        padding(),
+        padding() + index * item_height(),
+        m_rect.width() - padding() * 2,
+        item_height()
+    };
 }
 
 void WindowSwitcher::draw()
@@ -117,12 +154,7 @@ void WindowSwitcher::draw()
     painter.draw_rect({ {}, m_rect.size() }, palette.threed_shadow2());
     for (int index = 0; index < m_windows.size(); ++index) {
         auto& window = *m_windows.at(index);
-        Gfx::Rect item_rect {
-            padding(),
-            padding() + index * item_height(),
-            m_rect.width() - padding() * 2,
-            item_height()
-        };
+        auto item_rect = this->item_rect(index);
         Color text_color;
         Color rect_text_color;
         if (index == m_selected_index) {
