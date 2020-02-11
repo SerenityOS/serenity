@@ -30,6 +30,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>
 #include <ctype.h>
 #include <dirent.h>
@@ -271,14 +272,7 @@ bool print_filesystem_object(const String& path, const String& name, const struc
         }
     }
 
-    auto* tm = localtime(&st.st_mtime);
-    printf("  %4u-%02u-%02u %02u:%02u:%02u  ",
-        tm->tm_year + 1900,
-        tm->tm_mon + 1,
-        tm->tm_mday,
-        tm->tm_hour,
-        tm->tm_min,
-        tm->tm_sec);
+    printf("  %s  ", Core::DateTime::from_timestamp(st.st_mtime).to_string().characters());
 
     print_name(st, name, path.characters());
 
