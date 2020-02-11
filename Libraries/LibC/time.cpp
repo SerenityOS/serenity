@@ -118,8 +118,7 @@ struct tm* localtime(const time_t* t)
     if (!t)
         return nullptr;
     static struct tm tm_buf;
-    time_to_tm(&tm_buf, *t);
-    return &tm_buf;
+    return localtime_r(t, &tm_buf);
 }
 
 struct tm* gmtime(const time_t* t)
@@ -180,8 +179,9 @@ struct tm* gmtime_r(const time_t*, struct tm*)
     ASSERT_NOT_REACHED();
 }
 
-struct tm* localtime_r(const time_t*, struct tm*)
+struct tm* localtime_r(const time_t* t, struct tm* tm)
 {
-    ASSERT_NOT_REACHED();
+    time_to_tm(tm, *t);
+    return tm;
 }
 }
