@@ -46,6 +46,7 @@ public:
     String to_string() const;
 
     static DateTime now();
+    static DateTime from_timestamp(time_t);
 
 private:
     time_t m_timestamp { 0 };

@@ -32,7 +32,11 @@ namespace Core {
 
 DateTime DateTime::now()
 {
-    auto timestamp = time(nullptr);
+    return from_timestamp(time(nullptr));
+}
+
+DateTime DateTime::from_timestamp(time_t timestamp)
+{
     struct tm tm;
     localtime_r(&timestamp, &tm);
     DateTime dt;
