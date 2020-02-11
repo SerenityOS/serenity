@@ -399,11 +399,11 @@ void Menu::event(Core::Event& event)
             do {
                 if (m_hovered_item_index == 0)
                     m_hovered_item_index = m_items.size() - 1;
-                else if (m_hovered_item_index < 0)
-                    return;
                 else
                     --m_hovered_item_index;
             } while (hovered_item()->type() == MenuItem::Separator);
+
+            ASSERT(m_hovered_item_index >= 0 && m_hovered_item_index <= m_items.size() - 1);
 
             if (is_scrollable() && m_hovered_item_index < m_scroll_offset)
                 --m_scroll_offset;
@@ -421,11 +421,11 @@ void Menu::event(Core::Event& event)
             do {
                 if (m_hovered_item_index == m_items.size() - 1)
                     m_hovered_item_index = 0;
-                else if (m_hovered_item_index > m_items.size() - 1)
-                    return;
                 else
                     ++m_hovered_item_index;
             } while (hovered_item()->type() == MenuItem::Separator);
+
+            ASSERT(m_hovered_item_index >= 0 && m_hovered_item_index <= m_items.size() - 1);
 
             if (is_scrollable() && m_hovered_item_index >= (m_scroll_offset + visible_item_count()))
                 ++m_scroll_offset;
