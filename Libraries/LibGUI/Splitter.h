@@ -45,6 +45,8 @@ protected:
     virtual void leave_event(Core::Event&) override;
 
 private:
+    void get_resize_candidates_at(const Gfx::Point&, Widget*&, Widget*&);
+
     Orientation m_orientation;
     bool m_resizing { false };
     Gfx::Point m_resize_origin;
