@@ -283,6 +283,7 @@ protected:
 
     virtual void custom_layout() {}
     virtual void did_change_font() {}
+    virtual void did_layout() {}
     virtual void paint_event(PaintEvent&);
     virtual void resize_event(ResizeEvent&);
     virtual void show_event(ShowEvent&);
