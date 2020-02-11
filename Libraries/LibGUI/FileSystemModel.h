@@ -28,6 +28,7 @@
 
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtrVector.h>
+#include <LibCore/DateTime.h>
 #include <LibCore/Notifier.h>
 #include <LibGUI/Model.h>
 #include <sys/stat.h>
@@ -126,14 +127,7 @@ public:
 
     static String timestamp_string(time_t timestamp)
     {
-        auto* tm = localtime(&timestamp);
-        return String::format("%4u-%02u-%02u %02u:%02u:%02u",
-            tm->tm_year + 1900,
-            tm->tm_mon + 1,
-            tm->tm_mday,
-            tm->tm_hour,
-            tm->tm_min,
-            tm->tm_sec);
+        return Core::DateTime::from_timestamp(timestamp).to_string();
     }
 
 private:
