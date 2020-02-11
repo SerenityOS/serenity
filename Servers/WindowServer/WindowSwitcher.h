@@ -59,8 +59,6 @@ public:
     void refresh();
     void refresh_if_needed();
 
-    void draw();
-
     int thumbnail_width() const { return 40; }
     int thumbnail_height() const { return 40; }
 
@@ -75,6 +73,7 @@ public:
     Window* switcher_window() { return m_switcher_window.ptr(); }
 
 private:
+    void draw();
     void redraw();
     void select_window_at_index(int index);
     Gfx::Rect item_rect(int index) const;

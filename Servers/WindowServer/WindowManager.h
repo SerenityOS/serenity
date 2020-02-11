@@ -118,8 +118,6 @@ public:
 
     void move_to_front_and_make_active(Window&);
 
-    void draw_window_switcher();
-
     Gfx::Rect menubar_rect() const;
 
     const Cursor& active_cursor() const;
