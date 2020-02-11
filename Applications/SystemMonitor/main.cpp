@@ -138,7 +138,7 @@ int main(int argc, char** argv)
     tabwidget->add_widget("Network", network_stats_widget);
 
     process_table_container->set_layout(make<GUI::VerticalBoxLayout>());
-    process_table_container->layout()->set_margins({ 4, 0, 4, 4 });
+    process_table_container->layout()->set_margins({ 4, 0, 4, 0 });
     process_table_container->layout()->set_spacing(0);
 
     auto toolbar = GUI::ToolBar::construct(process_table_container);
