@@ -1,5 +1,6 @@
 OBJS = \
     ArgsParser.o \
+    DateTime.o \
     IODevice.o \
     File.o \
     Socket.o \
