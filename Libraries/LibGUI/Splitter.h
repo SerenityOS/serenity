@@ -38,13 +38,18 @@ public:
 protected:
     Splitter(Orientation, Widget* parent);
 
+    virtual void paint_event(PaintEvent&) override;
+    virtual void resize_event(ResizeEvent&) override;
     virtual void mousedown_event(MouseEvent&) override;
     virtual void mousemove_event(MouseEvent&) override;
     virtual void mouseup_event(MouseEvent&) override;
     virtual void enter_event(Core::Event&) override;
     virtual void leave_event(Core::Event&) override;
 
+    virtual void did_layout() override;
+
 private:
+    void recompute_grabbable_rect(const Widget&, const Widget&);
     void get_resize_candidates_at(const Gfx::Point&, Widget*&, Widget*&);
 
     Orientation m_orientation;
@@ -54,6 +59,7 @@ private:
     WeakPtr<Widget> m_second_resizee;
     Gfx::Size m_first_resizee_start_size;
     Gfx::Size m_second_resizee_start_size;
+    Gfx::Rect m_grabbable_rect;
 };
 
 class VerticalSplitter final : public Splitter {

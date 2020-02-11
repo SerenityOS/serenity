@@ -24,10 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGfx/Palette.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/Painter.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Palette.h>
 
 namespace GUI {
 
@@ -45,19 +46,32 @@ Splitter::~Splitter()
 {
 }
 
+void Splitter::paint_event(PaintEvent& event)
+{
+    Painter painter(*this);
+    painter.add_clip_rect(event.rect());
+    painter.fill_rect(m_grabbable_rect, palette().hover_highlight());
+}
+
+void Splitter::resize_event(ResizeEvent& event)
+{
+    Frame::resize_event(event);
+    m_grabbable_rect = {};
+}
+
 void Splitter::enter_event(Core::Event&)
 {
-    set_background_role(ColorRole::HoverHighlight);
     window()->set_override_cursor(m_orientation == Orientation::Horizontal ? StandardCursor::ResizeHorizontal : StandardCursor::ResizeVertical);
-    update();
 }
 
 void Splitter::leave_event(Core::Event&)
 {
-    set_background_role(ColorRole::Button);
     if (!m_resizing)
         window()->set_override_cursor(StandardCursor::None);
-    update();
+    if (!m_grabbable_rect.is_empty()) {
+        m_grabbable_rect = {};
+        update();
+    }
 }
 
 void Splitter::get_resize_candidates_at(const Gfx::Point& position, Widget*& first, Widget*& second)
@@ -94,10 +108,30 @@ void Splitter::mousedown_event(MouseEvent& event)
     m_resize_origin = event.position();
 }
 
+void Splitter::recompute_grabbable_rect(const Widget& first, const Widget& second)
+{
+    auto first_edge = first.relative_rect().primary_offset_for_orientation(m_orientation) + first.relative_rect().primary_size_for_orientation(m_orientation);
+    auto second_edge = second.relative_rect().primary_offset_for_orientation(m_orientation);
+    Gfx::Rect rect;
+    rect.set_primary_offset_for_orientation(m_orientation, first_edge);
+    rect.set_primary_size_for_orientation(m_orientation, second_edge - first_edge);
+    rect.set_secondary_offset_for_orientation(m_orientation, first.relative_rect().secondary_offset_for_orientation(m_orientation));
+    rect.set_secondary_size_for_orientation(m_orientation, first.relative_rect().secondary_size_for_orientation(m_orientation));
+    if (m_grabbable_rect != rect) {
+        m_grabbable_rect = rect;
+        update();
+    }
+}
+
 void Splitter::mousemove_event(MouseEvent& event)
 {
-    if (!m_resizing)
+    if (!m_resizing) {
+        Widget* first { nullptr };
+        Widget* second { nullptr };
+        get_resize_candidates_at(event.position(), first, second);
+        recompute_grabbable_rect(*first, *second);
         return;
+    }
     auto delta = event.position() - m_resize_origin;
     if (!m_first_resizee || !m_second_resizee) {
         // One or both of the resizees were deleted during an ongoing resize, screw this.
@@ -128,6 +162,12 @@ void Splitter::mousemove_event(MouseEvent& event)
     m_second_resizee->set_size_policy(m_orientation, SizePolicy::Fill);
 
     invalidate_layout();
+}
+
+void Splitter::did_layout()
+{
+    if (m_first_resizee && m_second_resizee)
+        recompute_grabbable_rect(*m_first_resizee, *m_second_resizee);
 }
 
 void Splitter::mouseup_event(MouseEvent& event)
