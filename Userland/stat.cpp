@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibCore/DateTime.h>
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -98,14 +99,7 @@ int main(int argc, char** argv)
     printf(")\n");
 
     auto print_time = [](time_t t) {
-        auto* tm = localtime(&t);
-        printf("%4u-%02u-%02u %02u:%02u:%02u\n",
-            tm->tm_year + 1900,
-            tm->tm_mon + 1,
-            tm->tm_mday,
-            tm->tm_hour,
-            tm->tm_min,
-            tm->tm_sec);
+        printf("%s\n", Core::DateTime::from_timestamp(t).to_string().characters());
     };
 
     printf("Accessed: ");
