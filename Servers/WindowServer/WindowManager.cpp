@@ -942,12 +942,6 @@ Gfx::Rect WindowManager::menubar_rect() const
     return MenuManager::the().menubar_rect();
 }
 
-void WindowManager::draw_window_switcher()
-{
-    if (m_switcher.is_visible())
-        m_switcher.draw();
-}
-
 void WindowManager::event(Core::Event& event)
 {
     if (static_cast<Event&>(event).is_mouse_event()) {
