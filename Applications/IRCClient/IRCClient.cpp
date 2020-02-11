@@ -33,6 +33,7 @@
 #include "IRCWindowListModel.h"
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/DateTime.h>
 #include <LibCore/Notifier.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -625,16 +626,8 @@ void IRCClient::handle_rpl_topicwhotime(const Message& msg)
     auto setat = msg.arguments[3];
     bool ok;
     time_t setat_time = setat.to_uint(ok);
-    if (ok) {
-        auto* tm = localtime(&setat_time);
-        setat = String::format("%4u-%02u-%02u %02u:%02u:%02u",
-            tm->tm_year + 1900,
-            tm->tm_mon + 1,
-            tm->tm_mday,
-            tm->tm_hour,
-            tm->tm_min,
-            tm->tm_sec);
-    }
+    if (ok)
+        setat = Core::DateTime::from_timestamp(setat_time).to_string();
     ensure_channel(channel_name).add_message(String::format("*** (set by %s at %s)", nick.characters(), setat.characters()), Color::Blue);
 }
 
