@@ -96,6 +96,7 @@ void Window::set_title(const String& title)
 
 void Window::set_rect(const Gfx::Rect& rect)
 {
+    ASSERT(!rect.is_empty());
     Gfx::Rect old_rect;
     if (m_rect == rect)
         return;

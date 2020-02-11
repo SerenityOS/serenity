@@ -142,6 +142,7 @@ public:
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
     void set_rect_without_repaint(const Gfx::Rect& rect)
     {
+        ASSERT(!rect.is_empty());
         if (m_rect == rect)
             return;
         auto old_rect = m_rect;
