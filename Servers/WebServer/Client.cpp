@@ -27,6 +27,7 @@
 #include "Client.h"
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/DateTime.h>
 #include <LibCore/File.h>
 #include <LibCore/HttpRequest.h>
 #include <stdio.h>
@@ -123,7 +124,11 @@ void Client::send_error_response(unsigned code, const StringView& message, const
 
 void Client::log_response(unsigned code, const Core::HttpRequest& request)
 {
-    printf("%lld :: %03u :: %s %s\n", time(nullptr), code, request.method_name().characters(), request.resource().characters());
+    printf("%s :: %03u :: %s %s\n",
+        Core::DateTime::now().to_string().characters(),
+        code,
+        request.method_name().characters(),
+        request.resource().characters());
 }
 
 }
