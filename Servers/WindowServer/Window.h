@@ -149,8 +149,6 @@ public:
         m_frame.notify_window_rect_changed(old_rect, rect);
     }
 
-    void set_rect_from_window_manager_resize(const Gfx::Rect&);
-
     void set_taskbar_rect(const Gfx::Rect& rect) { m_taskbar_rect = rect; }
     const Gfx::Rect& taskbar_rect() const { return m_taskbar_rect; }
 
