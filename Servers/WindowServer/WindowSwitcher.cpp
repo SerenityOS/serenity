@@ -77,15 +77,28 @@ void WindowSwitcher::event(Core::Event& event)
         return;
 
     auto& mouse_event = static_cast<MouseEvent&>(event);
-    if (mouse_event.type() == Event::MouseDown) {
-        for (int i = 0; i < m_windows.size(); ++i) {
-            auto item_rect = this->item_rect(i);
-            if (item_rect.contains(mouse_event.position())) {
-                select_window_at_index(i);
-                break;
-            }
+    int new_hovered_index = -1;
+    for (int i = 0; i < m_windows.size(); ++i) {
+        auto item_rect = this->item_rect(i);
+        if (item_rect.contains(mouse_event.position())) {
+            new_hovered_index = i;
+            break;
         }
     }
+
+    if (mouse_event.type() == Event::MouseMove) {
+        if (m_hovered_index != new_hovered_index) {
+            m_hovered_index = new_hovered_index;
+            redraw();
+        }
+    }
+
+    if (new_hovered_index == -1)
+        return;
+
+    if (mouse_event.type() == Event::MouseDown)
+        select_window_at_index(new_hovered_index);
+
     event.accept();
 }
 
@@ -142,6 +155,11 @@ void WindowSwitcher::select_window_at_index(int index)
     auto* highlight_window = m_windows.at(index).ptr();
     ASSERT(highlight_window);
     WindowManager::the().set_highlight_window(highlight_window);
+    redraw();
+}
+
+void WindowSwitcher::redraw()
+{
     draw();
     WindowManager::the().invalidate(m_rect);
 }
@@ -172,6 +190,8 @@ void WindowSwitcher::draw()
             text_color = palette.selection_text();
             rect_text_color = palette.threed_shadow1();
         } else {
+            if (index == m_hovered_index)
+                Gfx::StylePainter::paint_button(painter, item_rect, palette, Gfx::ButtonStyle::CoolBar, false, true);
             text_color = palette.window_text();
             rect_text_color = palette.threed_shadow2();
         }
@@ -222,15 +242,13 @@ void WindowSwitcher::refresh()
     if (!m_switcher_window)
         m_switcher_window = Window::construct(*this, WindowType::WindowSwitcher);
     m_switcher_window->set_rect(m_rect);
-    draw();
+    redraw();
 }
 
 void WindowSwitcher::refresh_if_needed()
 {
-    if (m_visible) {
+    if (m_visible)
         refresh();
-        WindowManager::the().invalidate(m_rect);
-    }
 }
 
 }
