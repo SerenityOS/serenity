@@ -59,24 +59,20 @@ public:
     void refresh();
     void refresh_if_needed();
 
+    void select_window(Window&);
+
+private:
     int thumbnail_width() const { return 40; }
     int thumbnail_height() const { return 40; }
-
     int item_height() const { return 10 + thumbnail_height(); }
     int padding() const { return 8; }
     int item_padding() const { return 8; }
 
-    void select_window(Window&);
-
-    Window* selected_window();
-
-    Window* switcher_window() { return m_switcher_window.ptr(); }
-
-private:
     void draw();
     void redraw();
     void select_window_at_index(int index);
     Gfx::Rect item_rect(int index) const;
+    Window* selected_window();
 
     virtual void event(Core::Event&) override;
 
