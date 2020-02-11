@@ -264,6 +264,11 @@ public:
             && m_size == other.m_size;
     }
 
+    bool operator!=(const Rect& other) const
+    {
+        return !(*this == other);
+    }
+
     void intersect(const Rect&);
 
     static Rect from_two_points(const Point& a, const Point& b)
