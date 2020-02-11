@@ -245,6 +245,7 @@ void Widget::do_layout()
     if (!m_layout)
         return;
     m_layout->run(*this);
+    did_layout();
     update();
 }
 
