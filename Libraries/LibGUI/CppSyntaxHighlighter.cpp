@@ -15,17 +15,17 @@ static TextStyle style_for_token_type(CppToken::Type type)
     case CppToken::Type::Keyword:
         return { Color::Black, &Gfx::Font::default_bold_fixed_width_font() };
     case CppToken::Type::KnownType:
-        return { Color::from_rgb(0x929200), &Gfx::Font::default_bold_fixed_width_font() };
+        return { Color::from_rgb(0x800080), &Gfx::Font::default_bold_fixed_width_font() };
     case CppToken::Type::Identifier:
-        return { Color::from_rgb(0x000092) };
+        return { Color::from_rgb(0x092e64) };
     case CppToken::Type::DoubleQuotedString:
     case CppToken::Type::SingleQuotedString:
     case CppToken::Type::Number:
-        return { Color::from_rgb(0x920000) };
+        return { Color::from_rgb(0x800000) };
     case CppToken::Type::PreprocessorStatement:
-        return { Color::from_rgb(0x009292) };
+        return { Color::from_rgb(0x008080) };
     case CppToken::Type::Comment:
-        return { Color::from_rgb(0x009200) };
+        return { Color::from_rgb(0x008000) };
     default:
         return { Color::Black };
     }
