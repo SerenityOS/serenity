@@ -44,6 +44,19 @@ static const char* color_off = "";
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio tty rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
+    if (isatty(STDOUT_FILENO))
+        use_color = true;
+
+    if (pledge("stdio rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     if (argc != 2) {
         fprintf(stderr, "usage: gron <file>\n");
         return 0;
@@ -54,11 +67,13 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (pledge("stdio", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents);
-
-    if (isatty(STDOUT_FILENO))
-        use_color = true;
 
     if (use_color) {
         color_name = "\033[33;1m";
