@@ -187,6 +187,12 @@ void WindowManager::move_to_front_and_make_active(Window& window)
     recompute_occlusions();
 
     set_active_window(&window);
+
+    if (m_switcher.is_visible()) {
+        m_switcher.refresh();
+        m_switcher.select_window(window);
+        set_highlight_window(&window);
+    }
 }
 
 void WindowManager::remove_window(Window& window)

@@ -68,6 +68,8 @@ public:
     int padding() const { return 8; }
     int item_padding() const { return 8; }
 
+    void select_window(Window&);
+
     Window* selected_window();
 
     Window* switcher_window() { return m_switcher_window.ptr(); }
