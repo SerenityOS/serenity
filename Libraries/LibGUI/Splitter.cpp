@@ -60,29 +60,37 @@ void Splitter::leave_event(Core::Event&)
     update();
 }
 
-void Splitter::mousedown_event(MouseEvent& event)
+void Splitter::get_resize_candidates_at(const Gfx::Point& position, Widget*& first, Widget*& second)
 {
-    if (event.button() != MouseButton::Left)
-        return;
-    m_resizing = true;
-    int x_or_y = event.position().primary_offset_for_orientation(m_orientation);
-    Widget* first_resizee { nullptr };
-    Widget* second_resizee { nullptr };
+    int x_or_y = position.primary_offset_for_orientation(m_orientation);
     int fudge = layout()->spacing();
     for_each_child_widget([&](auto& child) {
         int child_start = child.relative_rect().first_edge_for_orientation(m_orientation);
         int child_end = child.relative_rect().last_edge_for_orientation(m_orientation);
         if (x_or_y > child_end && (x_or_y - fudge) <= child_end)
-            first_resizee = &child;
+            first = &child;
         if (x_or_y < child_start && (x_or_y + fudge) >= child_start)
-            second_resizee = &child;
+            second = &child;
         return IterationDecision::Continue;
     });
-    ASSERT(first_resizee && second_resizee);
-    m_first_resizee = first_resizee->make_weak_ptr();
-    m_second_resizee = second_resizee->make_weak_ptr();
-    m_first_resizee_start_size = first_resizee->size();
-    m_second_resizee_start_size = second_resizee->size();
+    ASSERT(first);
+    ASSERT(second);
+}
+
+void Splitter::mousedown_event(MouseEvent& event)
+{
+    if (event.button() != MouseButton::Left)
+        return;
+    m_resizing = true;
+
+    Widget* first { nullptr };
+    Widget* second { nullptr };
+    get_resize_candidates_at(event.position(), first, second);
+
+    m_first_resizee = first->make_weak_ptr();
+    m_second_resizee = second->make_weak_ptr();
+    m_first_resizee_start_size = first->size();
+    m_second_resizee_start_size = second->size();
     m_resize_origin = event.position();
 }
 
