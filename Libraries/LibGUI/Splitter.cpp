@@ -175,6 +175,8 @@ void Splitter::mouseup_event(MouseEvent& event)
     if (event.button() != MouseButton::Left)
         return;
     m_resizing = false;
+    m_first_resizee = nullptr;
+    m_second_resizee = nullptr;
     if (!rect().contains(event.position()))
         window()->set_override_cursor(StandardCursor::None);
 }
