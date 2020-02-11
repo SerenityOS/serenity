@@ -30,6 +30,7 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/File.h>
 #include <stdio.h>
+#include <unistd.h>
 
 static void print(const JsonValue& value, int indent = 0);
 static void print_indent(int indent)
@@ -40,6 +41,11 @@ static void print_indent(int indent)
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     if (argc != 2) {
         fprintf(stderr, "usage: jp <file>\n");
         return 0;
@@ -47,6 +53,11 @@ int main(int argc, char** argv)
     auto file = Core::File::construct(argv[1]);
     if (!file->open(Core::IODevice::ReadOnly)) {
         fprintf(stderr, "Couldn't open %s for reading: %s\n", argv[1], file->error_string());
+        return 1;
+    }
+
+    if (pledge("stdio", nullptr) < 0) {
+        perror("pledge");
         return 1;
     }
 
