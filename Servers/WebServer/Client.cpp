@@ -28,6 +28,7 @@
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/DateTime.h>
+#include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/HttpRequest.h>
 #include <stdio.h>
@@ -79,22 +80,37 @@ void Client::handle_request(ByteBuffer raw_request)
         return;
     }
 
-    FileSystemPath canonical_path(request.resource());
-    dbg() << "Requested canonical path: '" << canonical_path.string() << "'";
+    auto requested_path = canonicalized_path(request.resource());
+    dbg() << "Canonical requested path: '" << requested_path << "'";
 
     StringBuilder path_builder;
     path_builder.append("/www/");
-    path_builder.append(canonical_path.string());
+    path_builder.append(requested_path);
+    auto real_path = path_builder.to_string();
 
-    if (Core::File::is_directory(path_builder.to_string()))
-        path_builder.append("/index.html");
+    if (Core::File::is_directory(real_path)) {
+        StringBuilder index_html_path_builder;
+        index_html_path_builder.append(real_path);
+        index_html_path_builder.append("/index.html");
+        auto index_html_path = index_html_path_builder.to_string();
+        if (!Core::File::exists(index_html_path)) {
+            handle_directory_listing(requested_path, real_path, request);
+            return;
+        }
+        real_path = index_html_path;
+    }
 
-    auto file = Core::File::construct(path_builder.to_string());
+    auto file = Core::File::construct(real_path);
     if (!file->open(Core::File::ReadOnly)) {
         send_error_response(404, "Not found, bro!", request);
         return;
     }
 
+    send_response(file->read_all(), request);
+}
+
+void Client::send_response(StringView response, const Core::HttpRequest& request)
+{
     StringBuilder builder;
     builder.append("HTTP/1.0 200 OK\r\n");
     builder.append("Server: WebServer (SerenityOS)\r\n");
@@ -102,9 +118,42 @@ void Client::handle_request(ByteBuffer raw_request)
     builder.append("\r\n");
 
     m_socket->write(builder.to_string());
-    m_socket->write(file->read_all());
+    m_socket->write(response);
 
     log_response(200, request);
+}
+
+void Client::handle_directory_listing(const String& requested_path, const String& real_path, const Core::HttpRequest& request)
+{
+    StringBuilder builder;
+
+    builder.append("<!DOCTYPE html>\n");
+    builder.append("<html>\n");
+    builder.append("<head><title>Index of ");
+    builder.append(requested_path);
+    builder.append("</title></head>\n");
+    builder.append("<body>\n");
+    builder.append("<h1>Index of ");
+    builder.append(requested_path);
+    builder.append("</h1>\n");
+    builder.append("<ul>\n");
+
+    Core::DirIterator dt(real_path);
+    while (dt.has_next()) {
+        auto name = dt.next_path();
+        builder.append("<li>");
+        builder.append("<a href=\"");
+        builder.append(name);
+        builder.append("\">");
+        builder.append(name);
+        builder.append("</a></li>\n");
+    }
+
+    builder.append("</ul>\n");
+    builder.append("</body>\n");
+    builder.append("</html>\n");
+
+    send_response(builder.to_string(), request);
 }
 
 void Client::send_error_response(unsigned code, const StringView& message, const Core::HttpRequest& request)
