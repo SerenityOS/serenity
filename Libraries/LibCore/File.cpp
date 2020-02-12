@@ -100,4 +100,10 @@ bool File::is_directory(const String& filename)
     return S_ISDIR(st.st_mode);
 }
 
+bool File::exists(const String& filename)
+{
+    struct stat st;
+    return stat(filename.characters(), &st) == 0;
+}
+
 }
