@@ -168,18 +168,19 @@ public:
 
     void update_theme(String theme_path, String theme_name);
 
+    void set_hovered_window(Window*);
+    void deliver_mouse_event(Window& window, MouseEvent& event);
+
 private:
     NonnullRefPtr<Cursor> get_cursor(const String& name);
     NonnullRefPtr<Cursor> get_cursor(const String& name, const Gfx::Point& hotspot);
 
     void process_mouse_event(MouseEvent&, Window*& hovered_window);
     void process_event_for_doubleclick(Window& window, MouseEvent& event);
-    void deliver_mouse_event(Window& window, MouseEvent& event);
     bool process_ongoing_window_resize(const MouseEvent&, Window*& hovered_window);
     bool process_ongoing_window_move(MouseEvent&, Window*& hovered_window);
     bool process_ongoing_drag(MouseEvent&, Window*& hovered_window);
     void start_window_move(Window&, const MouseEvent&);
-    void set_hovered_window(Window*);
     template<typename Callback>
     IterationDecision for_each_visible_window_of_type_from_back_to_front(WindowType, Callback, bool ignore_highlight = false);
     template<typename Callback>

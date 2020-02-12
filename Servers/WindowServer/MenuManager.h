@@ -44,8 +44,6 @@ public:
 
     void refresh();
 
-    virtual void event(Core::Event&) override;
-
     bool is_open(const Menu&) const;
 
     Vector<WeakPtr<Menu>>& open_menu_stack() { return m_open_menu_stack; }
@@ -95,6 +93,8 @@ private:
 
     const Window& window() const { return *m_window; }
 
+    virtual void event(Core::Event&) override;
+    void handle_mouse_event(MouseEvent&);
     void handle_menu_mouse_event(Menu&, const MouseEvent&);
 
     void draw();

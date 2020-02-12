@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Shannon Booth <shannon.ml.booth@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -258,18 +259,9 @@ void MenuManager::event(Core::Event& event)
     if (WindowManager::the().active_window_is_modal())
         return Core::Object::event(event);
 
-    if (event.type() == Event::MouseMove || event.type() == Event::MouseUp || event.type() == Event::MouseDown || event.type() == Event::MouseWheel) {
-
-        auto& mouse_event = static_cast<MouseEvent&>(event);
-        for_each_active_menubar_menu([&](Menu& menu) {
-            if (menu.rect_in_menubar().contains(mouse_event.position())) {
-                handle_menu_mouse_event(menu, mouse_event);
-                return IterationDecision::Break;
-            }
-            return IterationDecision::Continue;
-        });
-
-        AppletManager::the().event(event);
+    if (static_cast<Event&>(event).is_mouse_event()) {
+        handle_mouse_event(static_cast<MouseEvent&>(event));
+        return;
     }
 
     if (static_cast<Event&>(event).is_key_event()) {
@@ -290,6 +282,70 @@ void MenuManager::event(Core::Event& event)
     }
 
     return Core::Object::event(event);
+}
+
+void MenuManager::handle_mouse_event(MouseEvent& mouse_event)
+{
+    bool handled_menubar_event = false;
+    for_each_active_menubar_menu([&](Menu& menu) {
+        if (menu.rect_in_menubar().contains(mouse_event.position())) {
+            handle_menu_mouse_event(menu, mouse_event);
+            handled_menubar_event = true;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+    if (handled_menubar_event)
+        return;
+
+    if (!open_menu_stack().is_empty()) {
+        auto* topmost_menu = open_menu_stack().last().ptr();
+        ASSERT(topmost_menu);
+        auto* window = topmost_menu->menu_window();
+        ASSERT(window);
+
+        bool event_is_inside_current_menu = window->rect().contains(mouse_event.position());
+        if (event_is_inside_current_menu) {
+            WindowManager::the().set_hovered_window(window);
+            auto translated_event = mouse_event.translated(-window->position());
+            WindowManager::the().deliver_mouse_event(*window, translated_event);
+            return;
+        }
+
+        if (topmost_menu->hovered_item())
+            topmost_menu->clear_hovered_item();
+        if (mouse_event.type() == Event::MouseDown || mouse_event.type() == Event::MouseUp) {
+            auto* window_menu_of = topmost_menu->window_menu_of();
+            if (window_menu_of) {
+                bool event_is_inside_taskbar_button = window_menu_of->taskbar_rect().contains(mouse_event.position());
+                if (event_is_inside_taskbar_button && !topmost_menu->is_window_menu_open()) {
+                    topmost_menu->set_window_menu_open(true);
+                    return;
+                }
+            }
+
+            if (mouse_event.type() == Event::MouseDown) {
+                close_bar();
+                topmost_menu->set_window_menu_open(false);
+            }
+        }
+
+        if (mouse_event.type() == Event::MouseMove) {
+            for (auto& menu : open_menu_stack()) {
+                if (!menu)
+                    continue;
+                if (!menu->menu_window()->rect().contains(mouse_event.position()))
+                    continue;
+                WindowManager::the().set_hovered_window(menu->menu_window());
+                auto translated_event = mouse_event.translated(-menu->menu_window()->position());
+                WindowManager::the().deliver_mouse_event(*menu->menu_window(), translated_event);
+                break;
+            }
+        }
+        return;
+    }
+
+    AppletManager::the().dispatch_event(static_cast<Event&>(mouse_event));
 }
 
 void MenuManager::handle_menu_mouse_event(Menu& menu, const MouseEvent& event)
