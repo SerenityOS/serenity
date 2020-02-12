@@ -56,7 +56,10 @@ void BoxLayout::run(Widget& widget)
     if (should_log)
         dbgprintf("BoxLayout:  Starting with available size: %s\n", available_size.to_string().characters());
 
-    for (auto& entry : m_entries) {
+    int last_entry_with_automatic_size = -1;
+
+    for (int i = 0; i < m_entries.size(); ++i) {
+        auto& entry = m_entries[i];
         if (entry.type == Entry::Type::Spacer) {
             ++number_of_visible_entries;
         }
@@ -75,6 +78,8 @@ void BoxLayout::run(Widget& widget)
             if (should_log)
                 dbgprintf("BoxLayout:     Available size  after: %s\n", available_size.to_string().characters());
             ++number_of_entries_with_fixed_size;
+        } else {
+            last_entry_with_automatic_size = i;
         }
         available_size -= { spacing(), spacing() };
     }
@@ -92,14 +97,21 @@ void BoxLayout::run(Widget& widget)
         dbgprintf("BoxLayout:   available_size=%s, fixed=%d, fill=%d\n", available_size.to_string().characters(), number_of_entries_with_fixed_size, number_of_entries_with_automatic_size);
 
     Gfx::Size automatic_size;
+    Gfx::Size automatic_size_for_last_entry;
 
     if (number_of_entries_with_automatic_size) {
         if (m_orientation == Orientation::Horizontal) {
             automatic_size.set_width(available_size.width() / number_of_entries_with_automatic_size);
             automatic_size.set_height(widget.height());
+
+            automatic_size_for_last_entry.set_width(available_size.width() - (number_of_entries_with_automatic_size - 1) * automatic_size.width());
+            automatic_size_for_last_entry.set_height(widget.height());
         } else {
             automatic_size.set_width(widget.width());
             automatic_size.set_height(available_size.height() / number_of_entries_with_automatic_size);
+
+            automatic_size_for_last_entry.set_width(widget.width());
+            automatic_size_for_last_entry.set_height(available_size.height() - (number_of_entries_with_automatic_size - 1) * automatic_size.height());
         }
     }
 
@@ -109,7 +121,8 @@ void BoxLayout::run(Widget& widget)
     int current_x = margins().left();
     int current_y = margins().top();
 
-    for (auto& entry : m_entries) {
+    for (int i = 0; i < m_entries.size(); ++i) {
+        auto& entry = m_entries[i];
         if (entry.type == Entry::Type::Spacer) {
             current_x += automatic_size.width();
             current_y += automatic_size.height();
@@ -125,7 +138,12 @@ void BoxLayout::run(Widget& widget)
             ASSERT_NOT_REACHED();
         }
         ASSERT(entry.widget);
-        rect.set_size(automatic_size);
+
+        if (i == last_entry_with_automatic_size) {
+            rect.set_size(automatic_size_for_last_entry);
+        } else {
+            rect.set_size(automatic_size);
+        }
 
         if (entry.widget->size_policy(Orientation::Vertical) == SizePolicy::Fixed)
             rect.set_height(entry.widget->preferred_size().height());
