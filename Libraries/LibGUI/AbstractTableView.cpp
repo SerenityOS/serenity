@@ -274,10 +274,12 @@ void AbstractTableView::mousemove_event(MouseEvent& event)
     if (m_pressed_column_header_index != -1) {
         auto header_rect = this->header_rect(m_pressed_column_header_index);
         if (header_rect.contains(event.position())) {
+            set_hovered_header_index(m_pressed_column_header_index);
             if (!m_pressed_column_header_is_pressed)
                 update_headers();
             m_pressed_column_header_is_pressed = true;
         } else {
+            set_hovered_header_index(-1);
             if (m_pressed_column_header_is_pressed)
                 update_headers();
             m_pressed_column_header_is_pressed = false;
