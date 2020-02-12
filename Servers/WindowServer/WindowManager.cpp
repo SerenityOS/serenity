@@ -732,55 +732,8 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
     }
 
     // FIXME: Now that the menubar has a dedicated window, is this special-casing really necessary?
-    if (!active_window_is_modal() && menubar_rect().contains(event.position())) {
+    if (!MenuManager::the().open_menu_stack().is_empty() || (!active_window_is_modal() && menubar_rect().contains(event.position()))) {
         MenuManager::the().dispatch_event(event);
-        return;
-    }
-
-    if (!MenuManager::the().open_menu_stack().is_empty()) {
-        auto* topmost_menu = MenuManager::the().open_menu_stack().last().ptr();
-        ASSERT(topmost_menu);
-        auto* window = topmost_menu->menu_window();
-        ASSERT(window);
-
-        bool event_is_inside_current_menu = window->rect().contains(event.position());
-        if (event_is_inside_current_menu) {
-            hovered_window = window;
-            auto translated_event = event.translated(-window->position());
-            deliver_mouse_event(*window, translated_event);
-            return;
-        }
-
-        if (topmost_menu->hovered_item())
-            topmost_menu->clear_hovered_item();
-        if (event.type() == Event::MouseDown || event.type() == Event::MouseUp) {
-            auto* window_menu_of = topmost_menu->window_menu_of();
-            if (window_menu_of) {
-                bool event_is_inside_taskbar_button = window_menu_of->taskbar_rect().contains(event.position());
-                if (event_is_inside_taskbar_button && !topmost_menu->is_window_menu_open()) {
-                    topmost_menu->set_window_menu_open(true);
-                    return;
-                }
-            }
-
-            if (event.type() == Event::MouseDown) {
-                MenuManager::the().close_bar();
-                topmost_menu->set_window_menu_open(false);
-            }
-        }
-
-        if (event.type() == Event::MouseMove) {
-            for (auto& menu : MenuManager::the().open_menu_stack()) {
-                if (!menu)
-                    continue;
-                if (!menu->menu_window()->rect().contains(event.position()))
-                    continue;
-                hovered_window = menu->menu_window();
-                auto translated_event = event.translated(-menu->menu_window()->position());
-                deliver_mouse_event(*menu->menu_window(), translated_event);
-                break;
-            }
-        }
         return;
     }
 
