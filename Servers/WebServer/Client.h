@@ -44,9 +44,11 @@ private:
     Client(NonnullRefPtr<Core::TCPSocket>, Core::Object* parent);
 
     void handle_request(ByteBuffer);
+    void send_response(StringView, const Core::HttpRequest&);
     void send_error_response(unsigned code, const StringView& message, const Core::HttpRequest&);
     void die();
     void log_response(unsigned code, const Core::HttpRequest&);
+    void handle_directory_listing(const String& requested_path, const String& real_path, const Core::HttpRequest&);
 
     NonnullRefPtr<Core::TCPSocket> m_socket;
 };
