@@ -42,6 +42,8 @@ public:
     bool is_directory() const;
     static bool is_directory(const String& filename);
 
+    static bool exists(const String& filename);
+
     virtual bool open(IODevice::OpenMode) override;
 
     enum class ShouldCloseFileDescription {
