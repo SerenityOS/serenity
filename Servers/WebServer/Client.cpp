@@ -132,11 +132,11 @@ void Client::handle_directory_listing(const String& requested_path, const String
     builder.append("<!DOCTYPE html>\n");
     builder.append("<html>\n");
     builder.append("<head><title>Index of ");
-    builder.append(requested_path);
+    builder.append(escape_html_entities(requested_path));
     builder.append("</title></head>\n");
     builder.append("<body>\n");
     builder.append("<h1>Index of ");
-    builder.append(requested_path);
+    builder.append(escape_html_entities(requested_path));
     builder.append("</h1>\n");
     builder.append("<hr>\n");
     builder.append("<pre>\n");
@@ -145,9 +145,10 @@ void Client::handle_directory_listing(const String& requested_path, const String
     while (dt.has_next()) {
         auto name = dt.next_path();
         builder.append("<a href=\"");
+        // FIXME: urlencode
         builder.append(name);
         builder.append("\">");
-        builder.append(name);
+        builder.append(escape_html_entities(name));
         builder.append("</a>");
         for (size_t i = 0; i < (40 - name.length()); ++i)
             builder.append(' ');
