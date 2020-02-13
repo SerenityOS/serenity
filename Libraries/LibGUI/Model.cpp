@@ -77,4 +77,9 @@ ModelIndex Model::sibling(int row, int column, const ModelIndex& parent) const
     return index(row, column, parent);
 }
 
+bool Model::accepts_drag(const ModelIndex&, const StringView&)
+{
+    return false;
+}
+
 }
