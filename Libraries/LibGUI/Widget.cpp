@@ -26,8 +26,6 @@
 
 #include <AK/Assertions.h>
 #include <AK/JsonObject.h>
-#include <LibGfx/Bitmap.h>
-#include <LibGfx/Palette.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Button.h>
@@ -46,6 +44,8 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGUI/WindowServerConnection.h>
+#include <LibGfx/Bitmap.h>
+#include <LibGfx/Palette.h>
 #include <unistd.h>
 
 namespace GUI {
@@ -182,6 +182,8 @@ void Widget::event(Core::Event& event)
         return handle_mouseup_event(static_cast<MouseEvent&>(event));
     case Event::MouseWheel:
         return mousewheel_event(static_cast<MouseEvent&>(event));
+    case Event::DragMove:
+        return drag_move_event(static_cast<DragEvent&>(event));
     case Event::Drop:
         return drop_event(static_cast<DropEvent&>(event));
     case Event::Enter:
@@ -377,6 +379,12 @@ void Widget::leave_event(Core::Event&)
 
 void Widget::change_event(Event&)
 {
+}
+
+void Widget::drag_move_event(DragEvent& event)
+{
+    dbg() << class_name() << "{" << this << "} DRAG MOVE  position: " << event.position() << ", data_type: '" << event.data_type() << "'";
+    event.ignore();
 }
 
 void Widget::drop_event(DropEvent& event)

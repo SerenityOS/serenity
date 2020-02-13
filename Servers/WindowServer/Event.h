@@ -117,6 +117,11 @@ public:
     unsigned buttons() const { return m_buttons; }
     unsigned modifiers() const { return m_modifiers; }
     int wheel_delta() const { return m_wheel_delta; }
+    bool is_drag() const { return m_drag; }
+    const String& drag_data_type() const { return m_drag_data_type; }
+
+    void set_drag(bool b) { m_drag = b; }
+    void set_drag_data_type(const String& drag_data_type) { m_drag_data_type = drag_data_type; }
 
     MouseEvent translated(const Gfx::Point& delta) const { return MouseEvent((Type)type(), m_position.translated(delta), m_buttons, m_button, m_modifiers, m_wheel_delta); }
 
@@ -126,6 +131,8 @@ private:
     MouseButton m_button { MouseButton::None };
     unsigned m_modifiers { 0 };
     int m_wheel_delta { 0 };
+    bool m_drag { false };
+    String m_drag_data_type;
 };
 
 class ResizeEvent final : public Event {

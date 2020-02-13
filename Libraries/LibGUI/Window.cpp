@@ -319,6 +319,16 @@ void Window::event(Core::Event& event)
     if (event.type() > Event::__Begin_WM_Events && event.type() < Event::__End_WM_Events)
         return wm_event(static_cast<WMEvent&>(event));
 
+    if (event.type() == Event::DragMove) {
+        if (!m_main_widget)
+            return;
+        auto& drag_event = static_cast<DragEvent&>(event);
+        auto result = m_main_widget->hit_test(drag_event.position());
+        auto local_event = make<DragEvent>(static_cast<Event::Type>(drag_event.type()), result.local_position, drag_event.data_type());
+        ASSERT(result.widget);
+        return result.widget->dispatch_event(*local_event, this);
+    }
+
     Core::Object::event(event);
 }
 
