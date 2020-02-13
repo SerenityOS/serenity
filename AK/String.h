@@ -302,7 +302,10 @@ inline bool operator<=(const char* characters, const String& string)
     return !(characters > string);
 }
 
+String escape_html_entities(const StringView& html);
+
 }
 
 using AK::CaseInsensitiveStringTraits;
 using AK::String;
+using AK::escape_html_entities;

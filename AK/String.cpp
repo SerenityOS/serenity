@@ -391,5 +391,20 @@ bool String::equals_ignoring_case(const StringView& other) const
     return true;
 }
 
+String escape_html_entities(const StringView& html)
+{
+    StringBuilder builder;
+    for (size_t i = 0; i < html.length(); ++i) {
+        if (html[i] == '<')
+            builder.append("&lt;");
+        else if (html[i] == '>')
+            builder.append("&gt;");
+        else if (html[i] == '&')
+            builder.append("&amp;");
+        else
+            builder.append(html[i]);
+    }
+    return builder.to_string();
 }
 
+}
