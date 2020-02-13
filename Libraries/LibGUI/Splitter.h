@@ -50,7 +50,7 @@ protected:
 
 private:
     void recompute_grabbable_rect(const Widget&, const Widget&);
-    void get_resize_candidates_at(const Gfx::Point&, Widget*&, Widget*&);
+    bool get_resize_candidates_at(const Gfx::Point&, Widget*&, Widget*&);
 
     Orientation m_orientation;
     bool m_resizing { false };
