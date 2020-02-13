@@ -29,6 +29,7 @@
 #include "PropertiesDialog.h"
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
+#include <AK/URL.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/UserInfo.h>
 #include <LibGUI/AboutDialog.h>
@@ -568,6 +569,40 @@ int main(int argc, char** argv)
                 file_context_menu->popup(event.screen_position());
         } else {
             directory_view_context_menu->popup(event.screen_position());
+        }
+    };
+
+    directory_view->on_drop = [&](const GUI::AbstractView&, const GUI::ModelIndex& index, const GUI::DropEvent& event) {
+        if (!index.is_valid())
+            return;
+        if (event.data_type() != "url-list")
+            return;
+        auto paths_to_copy = event.data().split('\n');
+        if (paths_to_copy.is_empty()) {
+            dbg() << "No files to drop";
+            return;
+        }
+
+        auto& target_node = directory_view->model().node(index);
+        if (!target_node.is_directory())
+            return;
+
+        for (auto& path_to_copy : paths_to_copy) {
+            auto url_to_copy = URL(path_to_copy);
+            if (!url_to_copy.is_valid())
+                continue;
+            auto new_path = String::format("%s/%s",
+                target_node.full_path(directory_view->model()).characters(),
+                FileSystemPath(url_to_copy.path()).basename().characters());
+
+            if (!FileUtils::copy_file_or_directory(url_to_copy.path(), new_path)) {
+                auto error_message = String::format("Could not copy %s into %s.",
+                    path_to_copy.characters(),
+                    new_path.characters());
+                GUI::MessageBox::show(error_message, "File Manager", GUI::MessageBox::Type::Error);
+            } else {
+                refresh_tree_view();
+            }
         }
     };
 

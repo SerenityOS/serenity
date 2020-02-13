@@ -52,6 +52,7 @@ public:
     Function<void(const StringView&)> on_path_change;
     Function<void(GUI::AbstractView&)> on_selection_change;
     Function<void(const GUI::AbstractView&, const GUI::ModelIndex&, const GUI::ContextMenuEvent&)> on_context_menu_request;
+    Function<void(const GUI::AbstractView&, const GUI::ModelIndex&, const GUI::DropEvent&)> on_drop;
     Function<void(const StringView&)> on_status_message;
     Function<void(int done, int total)> on_thumbnail_progress;
 
