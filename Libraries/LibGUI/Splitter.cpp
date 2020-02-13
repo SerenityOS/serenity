@@ -74,7 +74,7 @@ void Splitter::leave_event(Core::Event&)
     }
 }
 
-void Splitter::get_resize_candidates_at(const Gfx::Point& position, Widget*& first, Widget*& second)
+bool Splitter::get_resize_candidates_at(const Gfx::Point& position, Widget*& first, Widget*& second)
 {
     int x_or_y = position.primary_offset_for_orientation(m_orientation);
     int fudge = layout()->spacing();
@@ -87,8 +87,7 @@ void Splitter::get_resize_candidates_at(const Gfx::Point& position, Widget*& fir
             second = &child;
         return IterationDecision::Continue;
     });
-    ASSERT(first);
-    ASSERT(second);
+    return first && second;
 }
 
 void Splitter::mousedown_event(MouseEvent& event)
@@ -99,7 +98,8 @@ void Splitter::mousedown_event(MouseEvent& event)
 
     Widget* first { nullptr };
     Widget* second { nullptr };
-    get_resize_candidates_at(event.position(), first, second);
+    if (!get_resize_candidates_at(event.position(), first, second))
+        return;
 
     m_first_resizee = first->make_weak_ptr();
     m_second_resizee = second->make_weak_ptr();
@@ -128,7 +128,8 @@ void Splitter::mousemove_event(MouseEvent& event)
     if (!m_resizing) {
         Widget* first { nullptr };
         Widget* second { nullptr };
-        get_resize_candidates_at(event.position(), first, second);
+        if (!get_resize_candidates_at(event.position(), first, second))
+            return;
         recompute_grabbable_rect(*first, *second);
         return;
     }
