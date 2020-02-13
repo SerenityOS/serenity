@@ -147,6 +147,44 @@ static int sh_unset(int argc, char** argv)
     return 0;
 }
 
+static String expand_tilde(const char* expression)
+{
+    int len = strlen(expression);
+    ASSERT(len > 0 && len + 1 <= PATH_MAX);
+    ASSERT(expression[0] == '~');
+
+    StringBuilder login_name;
+    int first_slash_index = len;
+    for (int i = 1; i < len; ++i) {
+        if (expression[i] == '/') {
+            first_slash_index = i;
+            break;
+        }
+        login_name.append(expression[i]);
+    }
+
+    StringBuilder path;
+    for (int i = first_slash_index; i < len; ++i)
+        path.append(expression[i]);
+
+    if (login_name.is_empty()) {
+        const char* home = getenv("HOME");
+        if (!home) {
+            auto passwd = getpwuid(getuid());
+            ASSERT(passwd && passwd->pw_dir);
+            return String::format("%s/%s", passwd->pw_dir, path.to_string().characters());
+        }
+        return String::format("%s/%s", home, path.to_string().characters());
+    }
+
+    auto passwd = getpwnam(login_name.to_string().characters());
+    if (!passwd)
+        return String(expression);
+    ASSERT(passwd->pw_dir);
+
+    return String::format("%s/%s", passwd->pw_dir, path.to_string().characters());
+}
+
 static int sh_cd(int argc, char** argv)
 {
     char pathbuf[PATH_MAX];
@@ -161,6 +199,11 @@ static int sh_cd(int argc, char** argv)
             size_t len = strlen(oldpwd);
             ASSERT(len + 1 <= PATH_MAX);
             memcpy(pathbuf, oldpwd, len + 1);
+        } else if (argv[1][0] == '~') {
+            auto path = expand_tilde(argv[1]);
+            if (path.is_empty())
+                return 1;
+            strcpy(pathbuf, path.characters());
         } else if (argv[1][0] == '/') {
             memcpy(pathbuf, argv[1], strlen(argv[1]) + 1);
         } else {
