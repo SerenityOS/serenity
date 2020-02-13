@@ -63,6 +63,7 @@ private:
     virtual void mousemove_event(MouseEvent&) override;
     virtual void mouseup_event(MouseEvent&) override;
     virtual void keydown_event(KeyEvent&) override;
+    virtual void drag_move_event(DragEvent&) override;
 
     int item_count() const;
     Gfx::Rect item_rect(int item_index) const;
@@ -81,6 +82,8 @@ private:
     Gfx::Point m_rubber_band_origin;
     Gfx::Point m_rubber_band_current;
     Vector<ModelIndex> m_rubber_band_remembered_selection;
+
+    ModelIndex m_drop_candidate_index;
 };
 
 }
