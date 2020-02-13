@@ -91,6 +91,17 @@ void Client::handle_request(ByteBuffer raw_request)
     auto real_path = path_builder.to_string();
 
     if (Core::File::is_directory(real_path)) {
+
+        if (!request.resource().ends_with("/")) {
+            StringBuilder red;
+
+            red.append(requested_path);
+            red.append("/");
+
+            send_redirect(red.to_string(), request);
+            return;
+        }
+
         StringBuilder index_html_path_builder;
         index_html_path_builder.append(real_path);
         index_html_path_builder.append("/index.html");
@@ -123,6 +134,20 @@ void Client::send_response(StringView response, const Core::HttpRequest& request
     m_socket->write(response);
 
     log_response(200, request);
+}
+
+void Client::send_redirect(StringView redirect_path, const Core::HttpRequest& request)
+{
+    StringBuilder builder;
+    builder.append("HTTP/1.0 301 Moved Permanently\r\n");
+    builder.append("Location: ");
+    builder.append(redirect_path);
+    builder.append("\r\n");
+    builder.append("\r\n");
+
+    m_socket->write(builder.to_string());
+
+    log_response(301, request);
 }
 
 void Client::handle_directory_listing(const String& requested_path, const String& real_path, const Core::HttpRequest& request)

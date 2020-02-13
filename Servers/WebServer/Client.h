@@ -45,6 +45,7 @@ private:
 
     void handle_request(ByteBuffer);
     void send_response(StringView, const Core::HttpRequest&);
+    void send_redirect(StringView redirect, const Core::HttpRequest& request);
     void send_error_response(unsigned code, const StringView& message, const Core::HttpRequest&);
     void die();
     void log_response(unsigned code, const Core::HttpRequest&);
