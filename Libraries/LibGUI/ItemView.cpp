@@ -33,6 +33,8 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
 
+//#define DRAGDROP_DEBUG
+
 namespace GUI {
 
 ItemView::ItemView(Widget* parent)
@@ -178,6 +180,25 @@ void ItemView::mouseup_event(MouseEvent& event)
     AbstractView::mouseup_event(event);
 }
 
+void ItemView::drag_move_event(DragEvent& event)
+{
+    auto index = index_at_event_position(event.position());
+    ModelIndex new_drop_candidate_index;
+    if (index.is_valid()) {
+        bool acceptable = model()->accepts_drag(index, event.data_type());
+#ifdef DRAGDROP_DEBUG
+        dbg() << "Drag of type '" << event.data_type() << "' moving over " << index << ", acceptable: " << acceptable;
+#endif
+        if (acceptable)
+            new_drop_candidate_index = index;
+    }
+    if (m_drop_candidate_index != new_drop_candidate_index) {
+        m_drop_candidate_index = new_drop_candidate_index;
+        update();
+    }
+    event.accept();
+}
+
 void ItemView::mousemove_event(MouseEvent& event)
 {
     if (!model())
@@ -273,6 +294,11 @@ void ItemView::paint_event(PaintEvent& event)
             text_color = model()->data(model_index, Model::Role::ForegroundColor).to_color(palette().color(foreground_role()));
         painter.fill_rect(text_rect, background_color);
         painter.draw_text(text_rect, item_text.to_string(), font, Gfx::TextAlignment::Center, text_color, Gfx::TextElision::Right);
+
+        if (model_index == m_drop_candidate_index) {
+            // FIXME: This visualization is not great, as it's also possible to drop things on the text label..
+            painter.draw_rect(icon_rect.inflated(8, 8), palette().selection(), true);
+        }
     };
 }
 
