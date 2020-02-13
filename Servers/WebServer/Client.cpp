@@ -161,9 +161,8 @@ void Client::handle_directory_listing(const String& requested_path, const String
         memset(&st, 0, sizeof(st));
         int rc = stat(path_builder.to_string().characters(), &st);
         if (rc < 0) {
-            perror("wut!");
+            perror("stat");
         }
-        dbg() << "statted _" << path_builder.to_string() << "_, rc = " << rc << " mtime = " << st.st_mtime;
         builder.appendf("  %10d", st.st_size);
         builder.appendf("  ");
         builder.append(Core::DateTime::from_timestamp(st.st_mtime).to_string());
