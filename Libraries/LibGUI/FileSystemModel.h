@@ -124,6 +124,7 @@ public:
     virtual ModelIndex parent_index(const ModelIndex&) const override;
     virtual ModelIndex index(int row, int column = 0, const ModelIndex& parent = ModelIndex()) const override;
     virtual StringView drag_data_type() const override { return "url-list"; }
+    virtual bool accepts_drag(const ModelIndex&, const StringView& data_type) override;
 
     static String timestamp_string(time_t timestamp)
     {

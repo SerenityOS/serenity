@@ -27,9 +27,9 @@
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/DirIterator.h>
-#include <LibGfx/Bitmap.h>
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/Bitmap.h>
 #include <LibThread/BackgroundAction.h>
 #include <dirent.h>
 #include <grp.h>
@@ -555,6 +555,16 @@ Model::ColumnMetadata FileSystemModel::column_metadata(int column) const
         return { 120, Gfx::TextAlignment::CenterLeft };
     }
     ASSERT_NOT_REACHED();
+}
+
+bool FileSystemModel::accepts_drag(const ModelIndex& index, const StringView& data_type)
+{
+    if (!index.is_valid())
+        return false;
+    if (data_type != "url-list")
+        return false;
+    auto& node = this->node(index);
+    return node.is_directory();
 }
 
 }
