@@ -67,6 +67,7 @@ public:
     Function<void(const ModelIndex&)> on_activation;
     Function<void(const ModelIndex&)> on_selection;
     Function<void(const ModelIndex&, const ContextMenuEvent&)> on_context_menu_request;
+    Function<void(const ModelIndex&, const DropEvent&)> on_drop;
 
     Function<OwnPtr<ModelEditingDelegate>(const ModelIndex&)> aid_create_editing_delegate;
 
@@ -83,6 +84,7 @@ protected:
     virtual void mouseup_event(MouseEvent&) override;
     virtual void doubleclick_event(MouseEvent&) override;
     virtual void context_menu_event(ContextMenuEvent&) override;
+    virtual void drop_event(DropEvent&) override;
 
     virtual void did_scroll() override;
     void activate(const ModelIndex&);
