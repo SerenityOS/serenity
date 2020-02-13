@@ -187,31 +187,37 @@ int main(int argc, char** argv)
     RefPtr<GUI::Action> view_as_icons_action;
     RefPtr<GUI::Action> view_as_columns_action;
 
-    view_as_table_action = GUI::Action::create("Table view", { Mod_Ctrl, KeyCode::Key_L }, Gfx::Bitmap::load_from_file("/res/icons/16x16/table-view.png"), [&](const GUI::Action&) {
-        directory_view->set_view_mode(DirectoryView::ViewMode::List);
-        view_as_table_action->set_checked(true);
+    view_as_table_action = GUI::Action::create(
+        "Table view", { Mod_Ctrl, KeyCode::Key_L }, Gfx::Bitmap::load_from_file("/res/icons/16x16/table-view.png"), [&](const GUI::Action&) {
+            directory_view->set_view_mode(DirectoryView::ViewMode::List);
+            view_as_table_action->set_checked(true);
 
-        config->write_entry("DirectoryView", "ViewMode", "List");
-        config->sync();
-    }, window);
+            config->write_entry("DirectoryView", "ViewMode", "List");
+            config->sync();
+        },
+        window);
     view_as_table_action->set_checkable(true);
 
-    view_as_icons_action = GUI::Action::create("Icon view", { Mod_Ctrl, KeyCode::Key_I }, Gfx::Bitmap::load_from_file("/res/icons/16x16/icon-view.png"), [&](const GUI::Action&) {
-        directory_view->set_view_mode(DirectoryView::ViewMode::Icon);
-        view_as_icons_action->set_checked(true);
+    view_as_icons_action = GUI::Action::create(
+        "Icon view", { Mod_Ctrl, KeyCode::Key_I }, Gfx::Bitmap::load_from_file("/res/icons/16x16/icon-view.png"), [&](const GUI::Action&) {
+            directory_view->set_view_mode(DirectoryView::ViewMode::Icon);
+            view_as_icons_action->set_checked(true);
 
-        config->write_entry("DirectoryView", "ViewMode", "Icon");
-        config->sync();
-    }, window);
+            config->write_entry("DirectoryView", "ViewMode", "Icon");
+            config->sync();
+        },
+        window);
     view_as_icons_action->set_checkable(true);
 
-    view_as_columns_action = GUI::Action::create("Columns view", Gfx::Bitmap::load_from_file("/res/icons/16x16/columns-view.png"), [&](const GUI::Action&) {
-        directory_view->set_view_mode(DirectoryView::ViewMode::Columns);
-        view_as_columns_action->set_checked(true);
+    view_as_columns_action = GUI::Action::create(
+        "Columns view", Gfx::Bitmap::load_from_file("/res/icons/16x16/columns-view.png"), [&](const GUI::Action&) {
+            directory_view->set_view_mode(DirectoryView::ViewMode::Columns);
+            view_as_columns_action->set_checked(true);
 
-        config->write_entry("DirectoryView", "ViewMode", "Columns");
-        config->sync();
-    }, window);
+            config->write_entry("DirectoryView", "ViewMode", "Columns");
+            config->sync();
+        },
+        window);
     view_as_columns_action->set_checkable(true);
 
     auto view_type_action_group = make<GUI::ActionGroup>();
@@ -246,50 +252,54 @@ int main(int argc, char** argv)
         directory_view->current_view().select_all();
     });
 
-    auto copy_action = GUI::CommonActions::make_copy_action([&](const GUI::Action& action) {
-        Vector<String> paths;
-        if (action.activator() == directory_context_menu || directory_view->active_widget()->is_focused()) {
-            paths = selected_file_paths();
-        } else {
-            paths = tree_view_selected_file_paths();
-        }
-        if (paths.is_empty())
-            return;
-        StringBuilder copy_text;
-        for (auto& path : paths) {
-            copy_text.appendf("%s\n", path.characters());
-        }
-        GUI::Clipboard::the().set_data(copy_text.build(), "file-list");
-    }, window);
+    auto copy_action = GUI::CommonActions::make_copy_action(
+        [&](const GUI::Action& action) {
+            Vector<String> paths;
+            if (action.activator() == directory_context_menu || directory_view->active_widget()->is_focused()) {
+                paths = selected_file_paths();
+            } else {
+                paths = tree_view_selected_file_paths();
+            }
+            if (paths.is_empty())
+                return;
+            StringBuilder copy_text;
+            for (auto& path : paths) {
+                copy_text.appendf("%s\n", path.characters());
+            }
+            GUI::Clipboard::the().set_data(copy_text.build(), "file-list");
+        },
+        window);
     copy_action->set_enabled(false);
 
-    auto paste_action = GUI::CommonActions::make_paste_action([&](const GUI::Action&) {
-        auto data_and_type = GUI::Clipboard::the().data_and_type();
-        if (data_and_type.type != "file-list") {
-            dbg() << "Cannot paste clipboard type " << data_and_type.type;
-            return;
-        }
-        auto copied_lines = data_and_type.data.split('\n');
-        if (copied_lines.is_empty()) {
-            dbg() << "No files to paste";
-            return;
-        }
-        for (auto& current_path : copied_lines) {
-            if (current_path.is_empty())
-                continue;
-            auto current_directory = directory_view->path();
-            auto new_path = String::format("%s/%s",
-                current_directory.characters(),
-                FileSystemPath(current_path).basename().characters());
-            if (!FileUtils::copy_file_or_directory(current_path, new_path)) {
-                auto error_message = String::format("Could not paste %s.",
-                    current_path.characters());
-                GUI::MessageBox::show(error_message, "File Manager", GUI::MessageBox::Type::Error);
-            } else {
-                refresh_tree_view();
+    auto paste_action = GUI::CommonActions::make_paste_action(
+        [&](const GUI::Action&) {
+            auto data_and_type = GUI::Clipboard::the().data_and_type();
+            if (data_and_type.type != "file-list") {
+                dbg() << "Cannot paste clipboard type " << data_and_type.type;
+                return;
             }
-        }
-    }, window);
+            auto copied_lines = data_and_type.data.split('\n');
+            if (copied_lines.is_empty()) {
+                dbg() << "No files to paste";
+                return;
+            }
+            for (auto& current_path : copied_lines) {
+                if (current_path.is_empty())
+                    continue;
+                auto current_directory = directory_view->path();
+                auto new_path = String::format("%s/%s",
+                    current_directory.characters(),
+                    FileSystemPath(current_path).basename().characters());
+                if (!FileUtils::copy_file_or_directory(current_path, new_path)) {
+                    auto error_message = String::format("Could not paste %s.",
+                        current_path.characters());
+                    GUI::MessageBox::show(error_message, "File Manager", GUI::MessageBox::Type::Error);
+                } else {
+                    refresh_tree_view();
+                }
+            }
+        },
+        window);
     paste_action->set_enabled(GUI::Clipboard::the().type() == "file-list");
 
     GUI::Clipboard::the().on_content_change = [&](const String& data_type) {
@@ -297,27 +307,29 @@ int main(int argc, char** argv)
     };
 
     auto properties_action
-        = GUI::Action::create("Properties...", { Mod_Alt, Key_Return }, Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"), [&](const GUI::Action& action) {
-              auto& model = directory_view->model();
-              String path;
-              Vector<String> selected;
-              if (action.activator() == directory_context_menu || directory_view->active_widget()->is_focused()) {
-                  path = directory_view->path();
-                  selected = selected_file_paths();
-              } else {
-                  path = directories_model->full_path(tree_view->selection().first());
-                  selected = tree_view_selected_file_paths();
-              }
+        = GUI::Action::create(
+            "Properties...", { Mod_Alt, Key_Return }, Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"), [&](const GUI::Action& action) {
+                auto& model = directory_view->model();
+                String path;
+                Vector<String> selected;
+                if (action.activator() == directory_context_menu || directory_view->active_widget()->is_focused()) {
+                    path = directory_view->path();
+                    selected = selected_file_paths();
+                } else {
+                    path = directories_model->full_path(tree_view->selection().first());
+                    selected = tree_view_selected_file_paths();
+                }
 
-              RefPtr<PropertiesDialog> properties;
-              if (selected.is_empty()) {
-                  properties = PropertiesDialog::construct(model, path, true, window);
-              } else {
-                  properties = PropertiesDialog::construct(model, selected.first(), false, window);
-              }
+                RefPtr<PropertiesDialog> properties;
+                if (selected.is_empty()) {
+                    properties = PropertiesDialog::construct(model, path, true, window);
+                } else {
+                    properties = PropertiesDialog::construct(model, selected.first(), false, window);
+                }
 
-              properties->exec();
-          }, window);
+                properties->exec();
+            },
+            window);
 
     enum class ConfirmBeforeDelete {
         No,
@@ -395,26 +407,36 @@ int main(int argc, char** argv)
         }
     };
 
-    auto force_delete_action = GUI::Action::create("Delete without confirmation", { Mod_Shift, Key_Delete }, [&](const GUI::Action& action) {
-        do_delete(ConfirmBeforeDelete::No, action);
-    }, window);
+    auto force_delete_action = GUI::Action::create(
+        "Delete without confirmation", { Mod_Shift, Key_Delete }, [&](const GUI::Action& action) {
+            do_delete(ConfirmBeforeDelete::No, action);
+        },
+        window);
 
-    auto delete_action = GUI::CommonActions::make_delete_action([&](const GUI::Action& action) {
-        do_delete(ConfirmBeforeDelete::Yes, action);
-    }, window);
+    auto delete_action = GUI::CommonActions::make_delete_action(
+        [&](const GUI::Action& action) {
+            do_delete(ConfirmBeforeDelete::Yes, action);
+        },
+        window);
     delete_action->set_enabled(false);
 
-    auto go_back_action = GUI::CommonActions::make_go_back_action([&](auto&) {
-        directory_view->open_previous_directory();
-    }, window);
+    auto go_back_action = GUI::CommonActions::make_go_back_action(
+        [&](auto&) {
+            directory_view->open_previous_directory();
+        },
+        window);
 
-    auto go_forward_action = GUI::CommonActions::make_go_forward_action([&](auto&) {
-        directory_view->open_next_directory();
-    }, window);
+    auto go_forward_action = GUI::CommonActions::make_go_forward_action(
+        [&](auto&) {
+            directory_view->open_next_directory();
+        },
+        window);
 
-    auto go_home_action = GUI::CommonActions::make_go_home_action([&](auto&) {
-        directory_view->open(get_current_user_home_path());
-    }, window);
+    auto go_home_action = GUI::CommonActions::make_go_home_action(
+        [&](auto&) {
+            directory_view->open(get_current_user_home_path());
+        },
+        window);
 
     auto menubar = make<GUI::MenuBar>();
 
