@@ -200,6 +200,19 @@ DirectoryView::DirectoryView(GUI::Widget* parent)
             on_context_menu_request(*m_columns_view, index, event);
     };
 
+    m_table_view->on_drop = [this](auto& index, auto& event) {
+        if (on_drop)
+            on_drop(*m_table_view, index, event);
+    };
+    m_item_view->on_drop = [this](auto& index, auto& event) {
+        if (on_drop)
+            on_drop(*m_item_view, index, event);
+    };
+    m_columns_view->on_drop = [this](auto& index, auto& event) {
+        if (on_drop)
+            on_drop(*m_columns_view, index, event);
+    };
+
     set_view_mode(ViewMode::Icon);
 }
 
