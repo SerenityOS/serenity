@@ -60,6 +60,7 @@ public:
         WindowCloseRequest,
         ContextMenu,
         EnabledChange,
+        DragMove,
         Drop,
 
         __Begin_WM_Events,
@@ -304,6 +305,23 @@ private:
     MouseButton m_button { MouseButton::None };
     unsigned m_modifiers { 0 };
     int m_wheel_delta { 0 };
+};
+
+class DragEvent final : public Event {
+public:
+    DragEvent(Type type, const Gfx::Point& position, const String& data_type)
+        : Event(type)
+        , m_position(position)
+        , m_data_type(data_type)
+    {
+    }
+
+    const Gfx::Point& position() const { return m_position; }
+    const String& data_type() const { return m_data_type; }
+
+private:
+    Gfx::Point m_position;
+    String m_data_type;
 };
 
 class DropEvent final : public Event {

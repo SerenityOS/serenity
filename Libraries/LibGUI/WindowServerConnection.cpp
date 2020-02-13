@@ -24,8 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGfx/Palette.h>
-#include <LibGfx/SystemTheme.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
@@ -36,6 +34,8 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGUI/WindowServerConnection.h>
+#include <LibGfx/Palette.h>
+#include <LibGfx/SystemTheme.h>
 
 //#define GEVENTLOOP_DEBUG
 
@@ -217,8 +217,12 @@ void WindowServerConnection::handle(const Messages::WindowClient::MouseMove& mes
     dbgprintf("WID=%d MouseMove %d,%d,%d\n", message.window_id(), message.mouse_position().x(), message.mouse_position().y(), message.wheel_delta();
 #endif
 
-    if (auto* window = Window::from_window_id(message.window_id()))
-        Core::EventLoop::current().post_event(*window, make<MouseEvent>(Event::MouseMove, message.mouse_position(), message.buttons(), to_gmousebutton(message.button()), message.modifiers(), message.wheel_delta()));
+    if (auto* window = Window::from_window_id(message.window_id())) {
+        if (message.is_drag())
+            Core::EventLoop::current().post_event(*window, make<DragEvent>(Event::DragMove, message.mouse_position(), message.drag_data_type()));
+        else
+            Core::EventLoop::current().post_event(*window, make<MouseEvent>(Event::MouseMove, message.mouse_position(), message.buttons(), to_gmousebutton(message.button()), message.modifiers(), message.wheel_delta()));
+    }
 }
 
 void WindowServerConnection::handle(const Messages::WindowClient::MouseDoubleClick& message)

@@ -594,6 +594,21 @@ bool WindowManager::process_ongoing_drag(MouseEvent& event, Window*& hovered_win
 {
     if (!m_dnd_client)
         return false;
+
+    if (event.type() == Event::MouseMove) {
+        // We didn't let go of the drag yet, see if we should send some drag move events..
+        for_each_visible_window_from_front_to_back([&](Window& window) {
+            if (!window.rect().contains(event.position()))
+                return IterationDecision::Continue;
+            hovered_window = &window;
+            auto translated_event = event.translated(-window.position());
+            translated_event.set_drag(true);
+            translated_event.set_drag_data_type(m_dnd_data_type);
+            deliver_mouse_event(window, translated_event);
+            return IterationDecision::Break;
+        });
+    }
+
     if (!(event.type() == Event::MouseUp && event.button() == MouseButton::Left))
         return true;
 

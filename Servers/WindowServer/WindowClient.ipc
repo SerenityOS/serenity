@@ -1,7 +1,7 @@
 endpoint WindowClient = 4
 {
     Paint(i32 window_id, Gfx::Size window_size, Vector<Gfx::Rect> rects) =|
-    MouseMove(i32 window_id, Gfx::Point mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta) =|
+    MouseMove(i32 window_id, Gfx::Point mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta, bool is_drag, String drag_data_type) =|
     MouseDown(i32 window_id, Gfx::Point mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta) =|
     MouseDoubleClick(i32 window_id, Gfx::Point mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta) =|
     MouseUp(i32 window_id, Gfx::Point mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta) =|
