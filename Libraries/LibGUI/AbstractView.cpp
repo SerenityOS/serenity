@@ -326,4 +326,19 @@ void AbstractView::context_menu_event(ContextMenuEvent& event)
         on_context_menu_request(index, event);
 }
 
+void AbstractView::drop_event(DropEvent& event)
+{
+    event.accept();
+
+    if (!model())
+        return;
+
+    auto index = index_at_event_position(event.position());
+    if (!index.is_valid())
+        return;
+
+    if (on_drop)
+        on_drop(index, event);
+}
+
 }
