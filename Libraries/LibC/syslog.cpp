@@ -27,6 +27,7 @@
 // Has to be defined before including due to legacy Unices
 #define SYSLOG_NAMES 1
 
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <stdio.h>
 #include <string.h>

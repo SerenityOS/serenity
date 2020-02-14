@@ -27,9 +27,8 @@
 #pragma once
 
 #include "DNSQuestion.h"
-#include <AK/ByteBuffer.h>
-#include <AK/String.h>
 #include <AK/Types.h>
+#include <AK/Vector.h>
 
 #define T_A 1
 #define T_NS 2

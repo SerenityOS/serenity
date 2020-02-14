@@ -62,11 +62,7 @@ private:
 class DebugLogStream final : public LogStream {
 public:
     DebugLogStream() {}
-    virtual ~DebugLogStream() override
-    {
-        char newline = '\n';
-        write(&newline, 1);
-    }
+    virtual ~DebugLogStream() override;
 
     virtual void write(const char* characters, int length) const override
     {

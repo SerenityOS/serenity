@@ -26,12 +26,11 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
+#include <AK/Forward.h>
 #include <AK/RefPtr.h>
 #include <AK/StringImpl.h>
 #include <AK/StringView.h>
 #include <AK/Traits.h>
-#include <AK/Vector.h>
 
 namespace AK {
 

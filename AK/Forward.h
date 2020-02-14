@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,42 +26,84 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/Forward.h>
-#include <stdarg.h>
-
 namespace AK {
 
-class StringBuilder {
-public:
-    using OutputType = String;
+class Bitmap;
+class ByteBuffer;
+class IPv4Address;
+class JsonArray;
+class JsonObject;
+class JsonValue;
+class String;
+class StringBuilder;
+class StringImpl;
+class StringView;
+class URL;
 
-    explicit StringBuilder(size_t initial_capacity = 16);
-    ~StringBuilder() {}
+template<typename T>
+class SinglyLinkedList;
 
-    void append(const StringView&);
-    void append(char);
-    void append(const char*, size_t);
-    void appendf(const char*, ...);
-    void appendvf(const char*, va_list);
+template<typename T>
+class DoublyLinkedList;
 
-    String build();
-    String to_string();
-    ByteBuffer to_byte_buffer();
+template<typename T>
+class InlineLinkedList;
 
-    StringView string_view() const;
-    void clear();
+template<typename T, int capacity>
+class CircularQueue;
 
-    size_t length() const { return m_length; }
-    void trim(size_t count) { m_length -= count; }
+template<typename T>
+class Badge;
 
-private:
-    void will_append(size_t);
+template<typename T>
+class FixedArray;
 
-    ByteBuffer m_buffer;
-    size_t m_length { 0 };
-};
+template<typename>
+class Function;
+
+template<typename Out, typename... In>
+class Function<Out(In...)>;
+
+template<typename T>
+class NonnullRefPtr;
+
+template<typename T>
+class NonnullOwnPtr;
+
+template<typename T>
+class RefPtr;
+
+template<typename T>
+class OwnPtr;
+
+template<typename T>
+class WeakPtr;
+
+template<typename T, int inline_capacity = 0>
+class Vector;
 
 }
 
+using AK::Badge;
+using AK::Bitmap;
+using AK::ByteBuffer;
+using AK::CircularQueue;
+using AK::DoublyLinkedList;
+using AK::FixedArray;
+using AK::Function;
+using AK::InlineLinkedList;
+using AK::IPv4Address;
+using AK::JsonArray;
+using AK::JsonObject;
+using AK::JsonValue;
+using AK::NonnullOwnPtr;
+using AK::NonnullRefPtr;
+using AK::OwnPtr;
+using AK::RefPtr;
+using AK::SinglyLinkedList;
+using AK::String;
 using AK::StringBuilder;
+using AK::StringImpl;
+using AK::StringView;
+using AK::URL;
+using AK::Vector;

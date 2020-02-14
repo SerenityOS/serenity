@@ -26,10 +26,11 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/LogStream.h>
 #include <AK/NetworkOrdered.h>
 #include <AK/Optional.h>
+#include <AK/String.h>
+#include <AK/Vector.h>
 
 typedef u32 in_addr_t;
 

@@ -24,8 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/ByteBuffer.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
+#include <AK/Vector.h>
 
 namespace AK {
 

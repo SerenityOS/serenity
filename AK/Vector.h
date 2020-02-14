@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/Forward.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Traits.h>
 #include <AK/kmalloc.h>
@@ -43,9 +44,6 @@
 #endif
 
 namespace AK {
-
-template<typename T, int inline_capacity>
-class Vector;
 
 template<typename VectorType, typename ElementType>
 class VectorIterator {
@@ -132,7 +130,7 @@ public:
     }
 };
 
-template<typename T, int inline_capacity = 0>
+template<typename T, int inline_capacity>
 class Vector {
 public:
     Vector()

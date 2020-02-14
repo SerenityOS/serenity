@@ -24,12 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/String.h>
+#include <AK/StringBuilder.h>
 #include <LibELF/ELFDynamicObject.h>
 #include <LibELF/exec_elf.h>
-
-#include <AK/StringBuilder.h>
-
-#include <assert.h>
 #include <stdio.h>
 
 static const char* name_for_dtag(Elf32_Sword d_tag);
