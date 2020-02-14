@@ -71,9 +71,9 @@ Optional<Vector<ContentPage>> parse_welcome_file(const String& path)
             if (file->error()) {
                 file->close();
                 return error;
-            } else {
-                break;
             }
+
+            break;
         }
 
         auto line = String((char*)buffer.data());
@@ -101,7 +101,7 @@ Optional<Vector<ContentPage>> parse_welcome_file(const String& path)
         case '\n':
             dbg() << "newline";
 
-            if (current_output_line.to_string() != String::empty())
+            if (!current_output_line.to_string().is_empty())
                 current.content.append(current_output_line.to_string());
             current_output_line.clear();
             break;
@@ -214,7 +214,7 @@ int main(int argc, char** argv)
         title_box->set_preferred_size(0, 16);
         title_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
 
-        if (page.icon != String::empty()) {
+        if (!page.icon.is_empty()) {
             auto icon = GUI::Label::construct(title_box);
             icon->set_icon(Gfx::Bitmap::load_from_file(page.icon));
             icon->set_preferred_size(16, 16);
