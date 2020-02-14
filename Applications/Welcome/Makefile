@@ -1,15 +1,10 @@
 OBJS = \
     main.o \
     TextWidget.o \
-    background.png.o
+	BackgroundWidget.o
 
 PROGRAM = Welcome
 
 LIB_DEPS = GUI Gfx IPC Core
-
-.SUFFIXES: .png
-%.png.o: %.png
-	@echo "LINK $<"
-	$(QUIET) $(LINK) --relocatable --format binary -m elf_$(ARCH) --output $@ $<
 
 include ../../Makefile.common
