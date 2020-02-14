@@ -24,16 +24,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Optional.h>
 #include <AK/String.h>
+#include <AK/StringBuilder.h>
 #include <AK/Vector.h>
+#include <LibCore/File.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/Label.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/StackWidget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/Bitmap.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -47,46 +52,77 @@ struct ContentPage {
     Vector<String> content;
 };
 
+Optional<Vector<ContentPage>> parse_welcome_file(const String& path)
+{
+    const auto error = Optional<Vector<ContentPage>>();
+    auto file = Core::File::construct(path);
+
+    if (!file->open(Core::IODevice::ReadOnly))
+        return error;
+
+    Vector<ContentPage> pages;
+    StringBuilder current_output_line;
+    bool started = false;
+    ContentPage current;
+    while (true) {
+        auto buffer = file->read_line(4096);
+        if (buffer.is_null()) {
+            if (file->error()) {
+                file->close();
+                return error;
+            } else {
+                break;
+            }
+        }
+
+        auto line = String((char*)buffer.data());
+        if (line.length() > 1)
+            line = line.substring(0, line.length() - 1); // remove newline
+        switch (line[0]) {
+        case '*':
+            dbg() << "menu_item line:\t" << line;
+            if (started)
+                pages.append(current);
+            else
+                started = true;
+
+            current = {};
+            current.menu_name = line.substring(2, line.length() - 2);
+            break;
+        case '>':
+            dbg() << "title line:\t" << line;
+            current.title = line.substring(2, line.length() - 2);
+            break;
+        case '\n':
+            dbg() << "newline";
+
+            if (current_output_line.to_string() != String::empty())
+                current.content.append(current_output_line.to_string());
+            current_output_line.clear();
+            break;
+        case '#':
+            dbg() << "comment line:\t" << line;
+            break;
+        default:
+            dbg() << "content line:\t" << line;
+            if (current_output_line.length() != 0)
+                current_output_line.append(' ');
+            current_output_line.append(line);
+            break;
+        }
+    }
+
+    if (started) {
+        current.content.append(current_output_line.to_string());
+        pages.append(current);
+    }
+
+    file->close();
+    return pages;
+}
+
 int main(int argc, char** argv)
 {
-    Vector<ContentPage> pages = {
-        {
-            "Welcome",
-            "Welcome",
-            {
-                "Welcome to the exciting new world of Serenity, where the year is 1998 and the leading OS vendor has decided to merge their flagship product with a Unix-like kernel.",
-                "Sit back and relax as you take a brief tour of the options available on this screen.",
-                "If you want to explore an option, just click it.",
-            },
-        },
-        {
-            "Register Now",
-            "Register Now!",
-            {
-                "Registering your copy of Serenity opens the doors to full integration of Serenity into your life, your being, and your soul.",
-                "By registering Serenity, you enter into the draw to win a lifetime supply of milk, delivered fresh each day by a mystical horse wearing a full tuxedo.",
-                "To register, simply write your contact details on a piece of paper and hold it up to your monitor.",
-            },
-        },
-        {
-            "Connect to the Internet",
-            "Connect to the Internet",
-            {
-                "On the Internet, you can correspond through electronic mail (e-mail), get the latest news and financial information, and visit Web sites around the world, most of which will make you really angry.",
-                "Serenity includes several internet applications, such as an IRC (Internet relay chat) client, 4chan browser, telnet server, and basic utilities like ping.",
-                "Come chat with us today! How bad can it be?",
-            },
-        },
-        {
-            "Have fun",
-            "Play Some Games!",
-            {
-                "Serenity includes several games built right into the base system. These include the classic game Snake and the anti-productivity mainstay Minesweeper.",
-                "With a little extra effort, you can even play the original id Software hit DOOM, albeit without sound. No sound just means you won't alert your boss, so it's more of a feature than a limitation.",
-            },
-        },
-    };
-
     if (pledge("stdio shared_buffer rpath unix cpath fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
@@ -99,11 +135,19 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil("/res/fonts", "r") < 0) {
+    if (unveil("/res", "r") < 0) {
         perror("unveil");
         return 1;
     }
+
     unveil(nullptr, nullptr);
+
+    Optional<Vector<ContentPage>> _pages = parse_welcome_file("/res/welcome.txt");
+    if (!_pages.has_value()) {
+        GUI::MessageBox::show("Could not open Welcome file.", "Welcome", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, nullptr);
+        return 1;
+    }
+    auto pages = _pages.value();
 
     auto window = GUI::Window::construct();
     window->set_title("Welcome to Serenity");

@@ -1,0 +1,41 @@
+* Welcome
+> Welcome to SerenityOS!
+Welcome to the exciting new world of Serenity, where the year is 1998 and the
+leading OS vendor has decided to merge their flagship product with a Unix-like
+kernel.
+
+Sit back and relax as you take a brief tour of the options available on this
+screen.
+
+If you want to explore an option, just click it.
+
+* Registration
+> Register now!
+Registering your copy of Serenity opens the doors to full integration of
+Serenity into your life, your being, and your soul.
+
+By registering Serenity, you enter into the draw to win a lifetime supply of
+milk, delivered fresh each day by a mystical horse wearing a full tuxedo.
+
+To register, simply write your contact details on a piece of paper and hold it
+up to your monitor.
+
+* Internet
+> Connect to the Internet!
+On the Internet, you can correspond through electronic mail (e-mail), get the
+latest news and financial information, and visit Web sites around the world,
+most of which will make you really angry.
+
+Serenity includes several internet applications, such as an IRC (Internet relay
+chat) client, 4chan browser, telnet server, and basic utilities like ping.
+
+Come chat with us today! How bad can it be?
+
+* Fun & Games
+> Play some games!
+Serenity includes several games built right into the base system. These include
+the classic game Snake and the anti-productivity mainstay Minesweeper.
+
+With a little extra effort, you can even play the original id Software hit DOOM,
+albeit without sound. No sound just means you won't alert your boss, so it's
+more of a feature than a limitation.
