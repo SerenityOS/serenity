@@ -102,20 +102,20 @@ static String prompt()
     return builder.to_string();
 }
 
-static int sh_pwd(int, char**)
+static int sh_pwd(int, const char**)
 {
     printf("%s\n", g.cwd.characters());
     return 0;
 }
 
-static int sh_exit(int, char**)
+static int sh_exit(int, const char**)
 {
     printf("Good-bye!\n");
     exit(0);
     return 0;
 }
 
-static int sh_export(int argc, char** argv)
+static int sh_export(int argc, const char** argv)
 {
     if (argc == 1) {
         for (int i = 0; environ[i]; ++i)
@@ -136,7 +136,7 @@ static int sh_export(int argc, char** argv)
     return setenv_return;
 }
 
-static int sh_unset(int argc, char** argv)
+static int sh_unset(int argc, const char** argv)
 {
     if (argc != 2) {
         fprintf(stderr, "usage: unset variable\n");
@@ -185,7 +185,7 @@ static String expand_tilde(const char* expression)
     return String::format("%s/%s", passwd->pw_dir, path.to_string().characters());
 }
 
-static int sh_cd(int argc, char** argv)
+static int sh_cd(int argc, const char** argv)
 {
     char pathbuf[PATH_MAX];
 
@@ -239,7 +239,7 @@ static int sh_cd(int argc, char** argv)
     return 0;
 }
 
-static int sh_history(int, char**)
+static int sh_history(int, const char**)
 {
     for (int i = 0; i < editor.history().size(); ++i) {
         printf("%6d  %s\n", i, editor.history()[i].characters());
@@ -247,7 +247,7 @@ static int sh_history(int, char**)
     return 0;
 }
 
-static int sh_time(int argc, char** argv)
+static int sh_time(int argc, const char** argv)
 {
     if (argc == 1) {
         printf("usage: time <command>\n");
@@ -266,7 +266,7 @@ static int sh_time(int argc, char** argv)
     return exit_code;
 }
 
-static int sh_umask(int argc, char** argv)
+static int sh_umask(int argc, const char** argv)
 {
     if (argc == 1) {
         mode_t old_mask = umask(0);
@@ -286,7 +286,7 @@ static int sh_umask(int argc, char** argv)
     return 0;
 }
 
-static int sh_popd(int argc, char** argv)
+static int sh_popd(int argc, const char** argv)
 {
     if (g.directory_stack.size() <= 1) {
         fprintf(stderr, "Shell: popd: directory stack empty\n");
@@ -348,7 +348,7 @@ static int sh_popd(int argc, char** argv)
     return 0;
 }
 
-static int sh_pushd(int argc, char** argv)
+static int sh_pushd(int argc, const char** argv)
 {
     StringBuilder path_builder;
     bool should_switch = true;
@@ -435,7 +435,7 @@ static int sh_pushd(int argc, char** argv)
     return 0;
 }
 
-static int sh_dirs(int argc, char** argv)
+static int sh_dirs(int argc, const char** argv)
 {
     // The first directory in the stack is ALWAYS the current directory
     g.directory_stack.at(0) = g.cwd.characters();
@@ -479,7 +479,7 @@ static int sh_dirs(int argc, char** argv)
     return 0;
 }
 
-static bool handle_builtin(int argc, char** argv, int& retval)
+static bool handle_builtin(int argc, const char** argv, int& retval)
 {
     if (argc == 0)
         return false;
@@ -832,7 +832,7 @@ static int run_command(const String& cmd)
 #endif
 
             int retval = 0;
-            if (handle_builtin(argv.size() - 1, const_cast<char**>(argv.data()), retval))
+            if (handle_builtin(argv.size() - 1, argv.data(), retval))
                 return retval;
 
             pid_t child = fork();
