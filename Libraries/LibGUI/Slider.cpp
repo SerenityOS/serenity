@@ -24,9 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGfx/StylePainter.h>
+#include <AK/Assertions.h>
+#include <AK/StdLibExtras.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Slider.h>
+#include <LibGfx/StylePainter.h>
 
 namespace GUI {
 

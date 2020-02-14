@@ -30,12 +30,13 @@
 #include <AK/HashTable.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtr.h>
+#include <AK/Optional.h>
 #include <AK/RefCounted.h>
 #include <LibCore/Timer.h>
-#include <LibGfx/Color.h>
-#include <LibGfx/Font.h>
 #include <LibGUI/TextRange.h>
 #include <LibGUI/UndoStack.h>
+#include <LibGfx/Color.h>
+#include <LibGfx/Font.h>
 
 namespace GUI {
 
