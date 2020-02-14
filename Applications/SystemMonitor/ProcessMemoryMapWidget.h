@@ -28,9 +28,6 @@
 
 #include <LibGUI/Widget.h>
 
-namespace Core {
-class Timer;
-}
 namespace GUI {
 class JsonArrayModel;
 class TableView;

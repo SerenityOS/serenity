@@ -32,10 +32,6 @@
 #include <LibGfx/Rect.h>
 #include <LibGUI/WindowType.h>
 
-namespace Core {
-class MimeData;
-}
-
 namespace GUI {
 
 class Event : public Core::Event {

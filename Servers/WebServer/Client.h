@@ -29,10 +29,6 @@
 #include <LibCore/Object.h>
 #include <LibCore/TCPSocket.h>
 
-namespace Core {
-class HttpRequest;
-}
-
 namespace WebServer {
 
 class Client final : public Core::Object {
