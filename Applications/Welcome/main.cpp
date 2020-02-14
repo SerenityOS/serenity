@@ -34,6 +34,8 @@
 #include <LibGUI/StackWidget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Font.h>
+#include <stdio.h>
+#include <unistd.h>
 
 #include "BackgroundWidget.h"
 #include "TextWidget.h"
@@ -85,7 +87,23 @@ int main(int argc, char** argv)
         },
     };
 
+    if (pledge("stdio shared_buffer rpath unix cpath fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     GUI::Application app(argc, argv);
+
+    if (pledge("stdio shared_buffer rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
+    if (unveil("/res/fonts", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+    unveil(nullptr, nullptr);
 
     auto window = GUI::Window::construct();
     window->set_title("Welcome to Serenity");
