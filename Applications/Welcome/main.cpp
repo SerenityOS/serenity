@@ -193,9 +193,9 @@ int main(int argc, char** argv)
     auto menu = GUI::Widget::construct(main_section.ptr());
     menu->set_layout(make<GUI::VerticalBoxLayout>());
     menu->layout()->set_margins({ 0, 0, 0, 0 });
-    menu->layout()->set_spacing(8);
+    menu->layout()->set_spacing(4);
     menu->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    menu->set_preferred_size(200, 0);
+    menu->set_preferred_size(100, 0);
 
     auto stack = GUI::StackWidget::construct(main_section);
     stack->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
