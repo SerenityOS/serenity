@@ -25,6 +25,7 @@
  */
 
 #include <AK/BufferStream.h>
+#include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/File.h>

@@ -71,6 +71,9 @@ template<typename T>
 class NonnullOwnPtr;
 
 template<typename T>
+class Optional;
+
+template<typename T>
 class RefPtr;
 
 template<typename T>
@@ -98,6 +101,7 @@ using AK::JsonObject;
 using AK::JsonValue;
 using AK::NonnullOwnPtr;
 using AK::NonnullRefPtr;
+using AK::Optional;
 using AK::OwnPtr;
 using AK::RefPtr;
 using AK::SinglyLinkedList;

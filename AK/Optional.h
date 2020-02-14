@@ -30,6 +30,8 @@
 #include <AK/Platform.h>
 #include <AK/StdLibExtras.h>
 
+namespace AK {
+
 template<typename T>
 class CONSUMABLE(unknown) alignas(T) Optional {
 public:
@@ -161,3 +163,7 @@ private:
     char m_storage[sizeof(T)];
     bool m_has_value { false };
 };
+
+}
+
+using AK::Optional;

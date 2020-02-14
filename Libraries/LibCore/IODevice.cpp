@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/ByteBuffer.h>
 #include <AK/PrintfImplementation.h>
 #include <LibCore/IODevice.h>
 #include <LibCore/SyscallUtils.h>
@@ -296,4 +297,10 @@ void IODevice::set_fd(int fd)
     m_fd = fd;
     did_update_fd(fd);
 }
+
+bool IODevice::write(const StringView& v)
+{
+    return write((const u8*)v.characters_without_null_termination(), v.length());
+}
+
 }

@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <AK/Assertions.h>
+
 namespace AK {
 
 class IntrusiveListNode;

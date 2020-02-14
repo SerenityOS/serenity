@@ -26,6 +26,7 @@
 
 #include "History.h"
 #include "ManualModel.h"
+#include <AK/ByteBuffer.h>
 #include <LibCore/File.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>

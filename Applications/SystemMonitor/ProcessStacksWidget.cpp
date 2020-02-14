@@ -25,6 +25,7 @@
  */
 
 #include "ProcessStacksWidget.h"
+#include <AK/ByteBuffer.h>
 #include <LibCore/File.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/BoxLayout.h>

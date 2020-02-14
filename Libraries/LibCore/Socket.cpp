@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/ByteBuffer.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Socket.h>
 #include <arpa/inet.h>

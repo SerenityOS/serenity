@@ -24,43 +24,38 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Badge.h>
-#include <LibCore/Event.h>
-#include <LibCore/EventLoop.h>
-#include <LibCore/Notifier.h>
-
 namespace Core {
 
-Notifier::Notifier(int fd, unsigned event_mask, Object* parent)
-    : Object(parent)
-    , m_fd(fd)
-    , m_event_mask(event_mask)
-{
-    set_enabled(true);
-}
+class ArgsParser;
+class ChildEvent;
+class ConfigFile;
+class CustomEvent;
+class DateTime;
+class DirIterator;
+class ElapsedTime;
+class Event;
+class EventLoop;
+class File;
+class HttpJob;
+class HttpRequest;
+class HttpResponse;
+class IODevice;
+class LocalServer;
+class LocalSocket;
+class MimeData;
+class NetworkJob;
+class NetworkResponse;
+class Notifier;
+class Object;
+class ProcessStatisticsReader;
+class Socket;
+class SocketAddress;
+class TCPServer;
+class TCPSocket;
+class TimerEvent;
+class UdpServer;
+class UdpSocket;
 
-Notifier::~Notifier()
-{
-    set_enabled(false);
-}
-
-void Notifier::set_enabled(bool enabled)
-{
-    if (enabled)
-        Core::EventLoop::register_notifier({}, *this);
-    else
-        Core::EventLoop::unregister_notifier({}, *this);
-}
-
-void Notifier::event(Core::Event& event)
-{
-    if (event.type() == Core::Event::NotifierRead && on_ready_to_read) {
-        on_ready_to_read();
-    } else if (event.type() == Core::Event::NotifierWrite && on_ready_to_write) {
-        on_ready_to_write();
-    } else {
-        Object::event(event);
-    }
-}
+enum class TimerShouldFireWhenNotVisible;
 
 }

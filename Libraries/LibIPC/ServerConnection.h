@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/ByteBuffer.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>

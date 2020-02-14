@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Function.h>
 #include <LibCore/IODevice.h>
 #include <LibCore/SocketAddress.h>
 
