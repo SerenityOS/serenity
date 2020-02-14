@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/String.h>
 #include <LibCore/DateTime.h>
 #include <stdio.h>
 #include <string.h>

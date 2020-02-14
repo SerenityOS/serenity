@@ -108,9 +108,6 @@ private:
     String m_local_address;
 };
 
-inline const LogStream& operator<<(const LogStream& stream, const SocketAddress& value)
-{
-    return stream << value.to_string();
-}
+const LogStream& operator<<(const LogStream&, const SocketAddress&);
 
 }
