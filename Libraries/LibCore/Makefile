@@ -11,6 +11,7 @@ OBJS = \
     UdpSocket.o \
     UdpServer.o \
     ElapsedTimer.o \
+    MimeData.o \
     Notifier.o \
     HttpRequest.o \
     HttpResponse.o \
