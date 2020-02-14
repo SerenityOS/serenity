@@ -29,10 +29,6 @@
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Widget.h>
 
-namespace Core {
-class Timer;
-}
-
 class ProcessStacksWidget final : public GUI::Widget {
     C_OBJECT(ProcessStacksWidget)
 public:

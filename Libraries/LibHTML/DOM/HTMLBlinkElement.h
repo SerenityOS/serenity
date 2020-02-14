@@ -26,11 +26,8 @@
 
 #pragma once
 
+#include <LibCore/Forward.h>
 #include <LibHTML/DOM/HTMLElement.h>
-
-namespace Core {
-class Timer;
-}
 
 class HTMLBlinkElement : public HTMLElement {
 public:

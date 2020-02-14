@@ -27,11 +27,8 @@
 #pragma once
 
 #include <AK/Badge.h>
+#include <LibCore/Forward.h>
 #include <ProtocolServer/Download.h>
-
-namespace Core {
-class CoreHttpJob;
-}
 
 class HttpProtocol;
 
