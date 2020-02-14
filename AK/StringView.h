@@ -26,13 +26,10 @@
 
 #pragma once
 
-#include <AK/Vector.h>
+#include <AK/Forward.h>
+#include <AK/StdLibExtras.h>
 
 namespace AK {
-
-class ByteBuffer;
-class String;
-class StringImpl;
 
 class StringView {
 public:

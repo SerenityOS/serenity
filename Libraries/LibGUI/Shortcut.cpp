@@ -25,6 +25,7 @@
  */
 
 #include <AK/StringBuilder.h>
+#include <AK/Vector.h>
 #include <LibGUI/Shortcut.h>
 
 namespace GUI {

@@ -24,8 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Rect.h"
 #include <AK/StdLibExtras.h>
+#include <AK/Vector.h>
+#include <LibGfx/Rect.h>
 
 namespace Gfx {
 

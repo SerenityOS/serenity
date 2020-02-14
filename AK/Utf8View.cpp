@@ -24,8 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Utf8View.h>
+#include <AK/Assertions.h>
 #include <AK/LogStream.h>
+#include <AK/Utf8View.h>
 
 namespace AK {
 

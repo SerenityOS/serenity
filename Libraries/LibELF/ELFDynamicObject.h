@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Assertions.h>
 #include <LibBareMetal/Memory/VirtualAddress.h>
 #include <LibELF/exec_elf.h>
 

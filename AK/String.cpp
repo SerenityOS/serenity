@@ -27,10 +27,10 @@
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
-#include <stdarg.h>
+#include <AK/Vector.h>
 
 #ifndef KERNEL
-#include <inttypes.h>
+#    include <inttypes.h>
 #endif
 
 #ifdef KERNEL

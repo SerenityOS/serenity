@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Assertions.h>
 #include <AK/StringBuilder.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ProgressBar.h>

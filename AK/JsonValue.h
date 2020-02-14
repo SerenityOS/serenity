@@ -26,16 +26,13 @@
 
 #pragma once
 
+#include <AK/Forward.h>
 #include <AK/IPv4Address.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 
 namespace AK {
-
-class JsonArray;
-class JsonObject;
-class StringBuilder;
 
 class JsonValue {
 public:

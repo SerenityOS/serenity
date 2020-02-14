@@ -25,6 +25,7 @@
  */
 
 #include <AK/String.h>
+#include <AK/Vector.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>

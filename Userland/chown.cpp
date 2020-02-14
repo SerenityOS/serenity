@@ -25,6 +25,7 @@
  */
 
 #include <AK/String.h>
+#include <AK/Vector.h>
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -69,7 +70,7 @@ int main(int argc, char** argv)
         if (!ok) {
             new_gid = getgrnam(parts[1].characters())->gr_gid;
 
-            if(!new_gid) {
+            if (!new_gid) {
                 fprintf(stderr, "Invalid gid: '%s'\n", parts[1].characters());
                 return 1;
             }

@@ -26,12 +26,13 @@
 
 #pragma once
 
-#include "Color.h"
-#include "Point.h"
-#include "Rect.h"
-#include "Size.h"
 #include <AK/String.h>
 #include <AK/Utf8View.h>
+#include <AK/Vector.h>
+#include <LibGfx/Color.h>
+#include <LibGfx/Point.h>
+#include <LibGfx/Rect.h>
+#include <LibGfx/Size.h>
 #include <LibGfx/TextAlignment.h>
 #include <LibGfx/TextElision.h>
 

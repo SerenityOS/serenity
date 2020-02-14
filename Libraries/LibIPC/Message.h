@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/Vector.h>
 
 namespace IPC {
 

@@ -112,4 +112,10 @@ DebugLogStream dbg()
     return stream;
 }
 
+DebugLogStream::~DebugLogStream()
+{
+    char newline = '\n';
+    write(&newline, 1);
+}
+
 }
