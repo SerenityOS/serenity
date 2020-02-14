@@ -31,8 +31,6 @@
 
 namespace Core {
 
-class NetworkResponse;
-
 class NetworkJob : public Object {
     C_OBJECT_ABSTRACT(NetworkJob)
 public:
