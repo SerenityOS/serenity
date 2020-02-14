@@ -49,6 +49,7 @@
 struct ContentPage {
     String menu_name;
     String title;
+    String icon = String::empty();
     Vector<String> content;
 };
 
@@ -88,6 +89,10 @@ Optional<Vector<ContentPage>> parse_welcome_file(const String& path)
 
             current = {};
             current.menu_name = line.substring(2, line.length() - 2);
+            break;
+        case '$':
+            dbg() << "icon line: \t" << line;
+            current.icon = line.substring(2, line.length() - 2);
             break;
         case '>':
             dbg() << "title line:\t" << line;
@@ -203,7 +208,20 @@ int main(int argc, char** argv)
         content->layout()->set_spacing(8);
         content->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
 
-        auto content_title = GUI::Label::construct(content);
+        auto title_box = GUI::Widget::construct(content.ptr());
+        title_box->set_layout(make<GUI::HorizontalBoxLayout>());
+        title_box->layout()->set_spacing(4);
+        title_box->set_preferred_size(0, 16);
+        title_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+
+        if (page.icon != String::empty()) {
+            auto icon = GUI::Label::construct(title_box);
+            icon->set_icon(Gfx::Bitmap::load_from_file(page.icon));
+            icon->set_preferred_size(16, 16);
+            icon->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+        }
+
+        auto content_title = GUI::Label::construct(title_box);
         content_title->set_font(Gfx::Font::default_bold_font());
         content_title->set_text(page.title);
         content_title->set_text_alignment(Gfx::TextAlignment::CenterLeft);
