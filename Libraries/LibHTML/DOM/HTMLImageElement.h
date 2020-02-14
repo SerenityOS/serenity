@@ -27,8 +27,7 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
-#include <LibGfx/Bitmap.h>
-#include <LibGfx/ImageDecoder.h>
+#include <LibGfx/Forward.h>
 #include <LibHTML/DOM/HTMLElement.h>
 
 class LayoutDocument;

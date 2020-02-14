@@ -28,6 +28,8 @@
 
 #include <AK/Forward.h>
 #include <AK/Noncopyable.h>
+#include <AK/RefCounted.h>
+#include <AK/RefPtr.h>
 #include <LibGfx/SystemTheme.h>
 
 namespace GUI {
