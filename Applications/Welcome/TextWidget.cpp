@@ -100,13 +100,13 @@ void TextWidget::wrap_and_set_height()
         if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n') {
             if (start.has_value())
                 words.append(m_text.substring(start.value(), i - start.value()));
-            start = -1;
+            start.clear();
         } else if (!start.has_value()) {
             start = i;
         }
     }
     if (start.has_value())
-        words.append(m_text.substring(start, m_text.length() - start.value()));
+        words.append(m_text.substring(start.value(), m_text.length() - start.value()));
 
     auto rect = frame_inner_rect();
     if (frame_thickness() > 0)
@@ -122,6 +122,7 @@ void TextWidget::wrap_and_set_height()
 
         if (line_width + word_width > rect.width()) {
             lines.append(builder.to_string());
+            builder.clear();
             line_width = 0;
         }
 
