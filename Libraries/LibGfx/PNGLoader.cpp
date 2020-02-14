@@ -520,7 +520,7 @@ static bool decode_png_bitmap(PNGLoadingContext& context)
         }
     }
 
-    context.bitmap = Bitmap::create_purgeable(context.has_alpha() ? Bitmap::Format::RGBA32 : Bitmap::Format::RGB32, { context.width, context.height });
+    context.bitmap = Bitmap::create_purgeable(context.has_alpha() ? BitmapFormat::RGBA32 : BitmapFormat::RGB32, { context.width, context.height });
 
     unfilter(context);
 

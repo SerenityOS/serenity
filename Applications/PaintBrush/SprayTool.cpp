@@ -70,7 +70,7 @@ void SprayTool::paint_it()
             continue;
         if (ypos < 0 || ypos >= bitmap.height())
             continue;
-        bitmap.set_pixel<Gfx::Bitmap::Format::RGB32>(xpos, ypos, m_color);
+        bitmap.set_pixel<Gfx::BitmapFormat::RGB32>(xpos, ypos, m_color);
     }
 }
 

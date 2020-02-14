@@ -29,6 +29,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Bitmap.h>
 
 class AudioWidget final : public GUI::Widget {
     C_OBJECT(AudioWidget)

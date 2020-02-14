@@ -25,6 +25,7 @@
  */
 
 #include "HexEditorWidget.h"
+#include <LibGfx/Bitmap.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)
