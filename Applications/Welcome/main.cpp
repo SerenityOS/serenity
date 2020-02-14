@@ -34,12 +34,9 @@
 #include <LibGUI/StackWidget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Font.h>
-#include <LibGfx/PNGLoader.h>
 
+#include "BackgroundWidget.h"
 #include "TextWidget.h"
-
-extern const u8 _binary_background_png_start[];
-extern const u8 _binary_background_png_size;
 
 struct ContentPage {
     String menu_name;
@@ -96,15 +93,13 @@ int main(int argc, char** argv)
     window->set_resizable(true);
     window->set_rect(window_rect);
 
-    auto background = GUI::Label::construct();
+    auto background = BackgroundWidget::construct();
     window->set_main_widget(background);
-    background->set_fill_with_background_color(true);
+    background->set_fill_with_background_color(false);
     background->set_layout(make<GUI::VerticalBoxLayout>());
-    background->layout()->set_margins({ 8, 8, 8, 8 });
+    background->layout()->set_margins({ 16, 8, 16, 8 });
     background->layout()->set_spacing(8);
-    background->set_icon(Gfx::load_png_from_memory((const u8*)&_binary_background_png_start, (size_t)&_binary_background_png_size));
     background->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
-    background->set_preferred_size(background->icon()->size());
 
     //
     // header
