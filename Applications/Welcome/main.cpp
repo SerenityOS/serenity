@@ -155,7 +155,7 @@ int main(int argc, char** argv)
     auto pages = _pages.value();
 
     auto window = GUI::Window::construct();
-    window->set_title("Welcome to Serenity");
+    window->set_title("Welcome");
     Gfx::Rect window_rect { 0, 0, 640, 360 };
     window_rect.center_within(GUI::Desktop::the().rect());
     window->set_resizable(true);
@@ -175,7 +175,7 @@ int main(int argc, char** argv)
 
     auto header = GUI::Label::construct(background.ptr());
     header->set_font(Gfx::Font::load_from_file("/res/fonts/PebbletonBold11.font"));
-    header->set_text("Welcome to Serenity");
+    header->set_text("Welcome to SerenityOS!");
     header->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     header->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     header->set_preferred_size(0, 30);

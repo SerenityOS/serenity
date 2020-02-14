@@ -1,6 +1,6 @@
 * Welcome
 $ /res/icons/16x16/ladybug.png
-> Welcome to SerenityOS!
+> Welcome, friends, to SerenityOS!
 Welcome to the exciting new world of Serenity, where the year is 1998 and the
 leading OS vendor has decided to merge their flagship product with a Unix-like
 kernel.
