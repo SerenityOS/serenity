@@ -29,6 +29,7 @@
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <AK/Utf8View.h>
 #include <Kernel/KeyCode.h>
 #include <LibCore/MimeData.h>
 #include <LibGUI/Action.h>
