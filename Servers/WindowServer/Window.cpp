@@ -114,7 +114,7 @@ void Window::handle_mouse_event(const MouseEvent& event)
 
     switch (event.type()) {
     case Event::MouseMove:
-        m_client->post_message(Messages::WindowClient::MouseMove(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta()));
+        m_client->post_message(Messages::WindowClient::MouseMove(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta(), event.is_drag(), event.drag_data_type()));
         break;
     case Event::MouseDown:
         m_client->post_message(Messages::WindowClient::MouseDown(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta()));

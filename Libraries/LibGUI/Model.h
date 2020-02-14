@@ -88,6 +88,7 @@ public:
     virtual bool is_editable(const ModelIndex&) const { return false; }
     virtual void set_data(const ModelIndex&, const Variant&) {}
     virtual int tree_column() const { return 0; }
+    virtual bool accepts_drag(const ModelIndex&, const StringView& data_type);
 
     bool is_valid(const ModelIndex& index) const
     {
