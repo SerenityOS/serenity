@@ -32,8 +32,6 @@
 
 namespace Core {
 
-class Notifier;
-
 class Socket : public IODevice {
     C_OBJECT(Socket)
 public:

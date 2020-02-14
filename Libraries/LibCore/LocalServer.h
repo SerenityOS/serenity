@@ -31,8 +31,6 @@
 
 namespace Core {
 
-class LocalSocket;
-
 class LocalServer : public Object {
     C_OBJECT(LocalServer)
 public:

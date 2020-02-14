@@ -32,8 +32,6 @@
 
 namespace Core {
 
-class TCPSocket;
-
 class TCPServer : public Object {
     C_OBJECT(TCPServer)
 public:

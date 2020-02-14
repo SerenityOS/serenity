@@ -29,10 +29,10 @@
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/URL.h>
+#include <AK/Vector.h>
+#include <LibCore/Forward.h>
 
 namespace Core {
-
-class NetworkJob;
 
 class HttpRequest {
 public:

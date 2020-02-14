@@ -33,8 +33,6 @@
 
 namespace Core {
 
-class TCPSocket;
-
 class HttpJob final : public NetworkJob {
     C_OBJECT(HttpJob)
 public:
