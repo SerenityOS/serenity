@@ -25,6 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Badge.h>
 #include <AK/FileSystemPath.h>
 #include <AK/QuickSort.h>
 #include <LibCore/DirIterator.h>

@@ -28,10 +28,7 @@
 
 #include <LibCore/EventLoop.h>
 #include <LibCore/Object.h>
-
-namespace Gfx {
-class Bitmap;
-}
+#include <LibGfx/Forward.h>
 
 namespace GUI {
 

@@ -29,11 +29,8 @@
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Object.h>
+#include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
-
-namespace Gfx {
-class Painter;
-}
 
 namespace WindowServer {
 

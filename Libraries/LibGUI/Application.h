@@ -29,19 +29,10 @@
 #include <AK/Badge.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
-#include <LibGfx/Palette.h>
+#include <LibCore/Forward.h>
 #include <LibGUI/Shortcut.h>
-
-namespace AK {
-class SharedBuffer;
-}
-namespace Core {
-class EventLoop;
-}
-namespace Gfx {
-class Palette;
-class Point;
-}
+#include <LibGfx/Forward.h>
+#include <LibGfx/Palette.h>
 
 namespace GUI {
 class Action;

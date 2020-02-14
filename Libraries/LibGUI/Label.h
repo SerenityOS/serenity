@@ -29,10 +29,6 @@
 #include <LibGfx/TextAlignment.h>
 #include <LibGUI/Frame.h>
 
-namespace Gfx {
-class Bitmap;
-}
-
 namespace GUI {
 
 class Label : public Frame {
