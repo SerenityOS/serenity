@@ -1,7 +1,8 @@
 OBJS = \
     main.o \
     TextWidget.o \
-	BackgroundWidget.o
+	BackgroundWidget.o \
+	UnuncheckableButton.o
 
 PROGRAM = Welcome
 
