@@ -55,7 +55,7 @@ int remove(bool recursive, String path)
                 builder.append('/');
                 builder.append(de->d_name);
                 int s = remove(true, builder.to_string());
-                if (s < 0)
+                if (s != 0)
                     return s;
             }
         }
