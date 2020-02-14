@@ -42,6 +42,7 @@ class StringBuilder;
 class StringImpl;
 class StringView;
 class URL;
+class Utf8View;
 
 template<typename T>
 class SinglyLinkedList;
@@ -116,4 +117,5 @@ using AK::StringBuilder;
 using AK::StringImpl;
 using AK::StringView;
 using AK::URL;
+using AK::Utf8View;
 using AK::Vector;
