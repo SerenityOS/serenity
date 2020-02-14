@@ -37,6 +37,7 @@
 
 #include "BackgroundWidget.h"
 #include "TextWidget.h"
+#include "UnuncheckableButton.h"
 
 struct ContentPage {
     String menu_name;
@@ -132,6 +133,7 @@ int main(int argc, char** argv)
     auto stack = GUI::StackWidget::construct(main_section);
     stack->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
 
+    bool first = true;
     for (auto& page : pages) {
         auto content = GUI::Widget::construct(stack.ptr());
         content->set_layout(make<GUI::VerticalBoxLayout>());
@@ -155,16 +157,24 @@ int main(int argc, char** argv)
             content_text->wrap_and_set_height();
         }
 
-        auto menu_option = GUI::Button::construct(menu);
+        auto menu_option = UnuncheckableButton::construct(menu);
         menu_option->set_font(Gfx::Font::default_font());
         menu_option->set_text(page.menu_name);
         menu_option->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         menu_option->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
         menu_option->set_preferred_size(0, 20);
+        menu_option->set_checkable(true);
+        menu_option->set_exclusive(true);
+
+        if (first)
+            menu_option->set_checked(true);
+
         menu_option->on_click = [content = content.ptr(), &stack](auto&) {
             stack->set_active_widget(content);
             content->invalidate_layout();
         };
+
+        first = false;
     }
 
     window->show();
