@@ -28,6 +28,7 @@
 #include <LibGUI/FontDatabase.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Font.h>
 #include <stdlib.h>
 #include <time.h>
 

@@ -28,8 +28,9 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
-#include <LibGfx/Palette.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/Palette.h>
 
 TextWidget::TextWidget(GUI::Widget* parent)
     : GUI::Frame(parent)

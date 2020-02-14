@@ -30,6 +30,7 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Font.h>
 
 class AudioWidget final : public GUI::Widget {
     C_OBJECT(AudioWidget)

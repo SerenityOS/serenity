@@ -24,11 +24,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGfx/Palette.h>
-#include <LibGfx/StylePainter.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/TabWidget.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/Palette.h>
+#include <LibGfx/StylePainter.h>
 
 namespace GUI {
 

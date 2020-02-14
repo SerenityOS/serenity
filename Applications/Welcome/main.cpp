@@ -33,6 +33,7 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/StackWidget.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Font.h>
 #include <LibGfx/PNGLoader.h>
 
 #include "TextWidget.h"

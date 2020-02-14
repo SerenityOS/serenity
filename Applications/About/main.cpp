@@ -30,8 +30,9 @@
 #include <LibGUI/Desktop.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Window.h>
-#include <sys/utsname.h>
+#include <LibGfx/Font.h>
 #include <stdio.h>
+#include <sys/utsname.h>
 
 int main(int argc, char** argv)
 {

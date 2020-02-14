@@ -29,6 +29,7 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Widget.h>
+#include <LibGfx/Font.h>
 
 namespace GUI {
 

@@ -31,14 +31,12 @@
 #include <AK/String.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/Object.h>
-#include <LibGfx/Color.h>
-#include <LibGfx/Font.h>
-#include <LibGfx/Orientation.h>
-#include <LibGfx/Palette.h>
-#include <LibGfx/Rect.h>
-#include <LibGfx/SystemTheme.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Shortcut.h>
+#include <LibGfx/Color.h>
+#include <LibGfx/Forward.h>
+#include <LibGfx/Orientation.h>
+#include <LibGfx/Rect.h>
 
 #define REGISTER_GWIDGET(class_name)                          \
     extern WidgetClassRegistration registration_##class_name; \
@@ -191,11 +189,11 @@ public:
     void move_by(int x, int y) { move_by({ x, y }); }
     void move_by(const Gfx::Point& delta) { set_relative_rect({ relative_position().translated(delta), size() }); }
 
-    ColorRole background_role() const { return m_background_role; }
-    void set_background_role(ColorRole role) { m_background_role = role; }
+    Gfx::ColorRole background_role() const { return m_background_role; }
+    void set_background_role(Gfx::ColorRole);
 
-    ColorRole foreground_role() const { return m_foreground_role; }
-    void set_foreground_role(ColorRole role) { m_foreground_role = role; }
+    Gfx::ColorRole foreground_role() const { return m_foreground_role; }
+    void set_foreground_role(Gfx::ColorRole);
 
     Color background_color() const { return m_background_color; }
     Color foreground_color() const { return m_foreground_color; }
@@ -275,8 +273,8 @@ public:
 
     void do_layout();
 
-    Palette palette() const { return Palette(*m_palette); }
-    void set_palette(const Palette&);
+    Gfx::Palette palette() const;
+    void set_palette(const Gfx::Palette&);
 
 protected:
     explicit Widget(Widget* parent = nullptr);
@@ -321,8 +319,8 @@ private:
     OwnPtr<Layout> m_layout;
 
     Gfx::Rect m_relative_rect;
-    ColorRole m_background_role { ColorRole::Window };
-    ColorRole m_foreground_role { ColorRole::WindowText };
+    Gfx::ColorRole m_background_role;
+    Gfx::ColorRole m_foreground_role;
     Color m_background_color;
     Color m_foreground_color;
     NonnullRefPtr<Gfx::Font> m_font;
