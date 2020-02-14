@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Shannon Booth <shannon.ml.booth@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,23 +24,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGfx/ImageDecoder.h>
-#include <LibGfx/PNGLoader.h>
+#include <AK/String.h>
+#include <LibGfx/Triangle.h>
 
 namespace Gfx {
 
-ImageDecoder::ImageDecoder(const u8* data, size_t size)
+String Triangle::to_string() const
 {
-    m_plugin = make<PNGImageDecoderPlugin>(data, size);
+    return String::format("(%s,%s,%s)", m_a.to_string().characters(), m_b.to_string().characters(), m_c.to_string().characters());
 }
 
-ImageDecoder::~ImageDecoder()
+const LogStream& operator<<(const LogStream& stream, const Triangle& value)
 {
-}
-
-RefPtr<Gfx::Bitmap> ImageDecoder::bitmap() const
-{
-    return m_plugin->bitmap();
+    return stream << value.to_string();
 }
 
 }

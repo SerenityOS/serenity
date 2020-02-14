@@ -26,8 +26,7 @@
 
 #pragma once
 
-#include <AK/LogStream.h>
-#include <AK/String.h>
+#include <AK/Forward.h>
 #include <LibGfx/Orientation.h>
 
 namespace Gfx {
@@ -102,16 +101,13 @@ public:
             set_height(value);
     }
 
-    String to_string() const { return String::format("[%dx%d]", m_width, m_height); }
+    String to_string() const;
 
 private:
     int m_width { 0 };
     int m_height { 0 };
 };
 
-inline const LogStream& operator<<(const LogStream& stream, const Size& value)
-{
-    return stream << value.to_string();
-}
+const LogStream& operator<<(const LogStream&, const Size&);
 
 }
