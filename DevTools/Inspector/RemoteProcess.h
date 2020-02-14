@@ -29,10 +29,6 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibCore/LocalSocket.h>
 
-namespace AK {
-class JsonObject;
-}
-
 class RemoteObjectGraphModel;
 class RemoteObject;
 

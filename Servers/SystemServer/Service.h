@@ -32,13 +32,6 @@
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
 
-namespace AK {
-class JsonObject;
-}
-namespace Core {
-class ConfigFile;
-}
-
 class Service final : public Core::Object {
     C_OBJECT(Service)
 

@@ -32,10 +32,6 @@
 #include <LibAudio/Buffer.h>
 #include <LibCore/File.h>
 
-namespace AK {
-class ByteBuffer;
-}
-
 namespace Audio {
 class Buffer;
 

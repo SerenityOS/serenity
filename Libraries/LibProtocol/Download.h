@@ -32,10 +32,6 @@
 #include <AK/RefCounted.h>
 #include <AK/WeakPtr.h>
 
-namespace AK {
-class SharedBuffer;
-}
-
 namespace Protocol {
 
 class Client;
