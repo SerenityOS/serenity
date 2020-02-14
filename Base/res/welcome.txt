@@ -39,3 +39,23 @@ the classic game Snake and the anti-productivity mainstay Minesweeper.
 With a little extra effort, you can even play the original id Software hit DOOM,
 albeit without sound. No sound just means you won't alert your boss, so it's
 more of a feature than a limitation.
+
+* Development
+$ /res/icons/16x16/app-hack-studio.png
+> Develop new applications!
+Serenity includes several development tools to enable you to create new
+applications for Serenity. You can build a new graphical tool, craft a new
+server, hack on a kernel, hammer the browser... the possibilities are endless!
+
+This is all possibly by using HackStudio, Visual Builder, Terminal, and the
+(optional) GNU tools.
+
+* Multimedia
+$ /res/icons/audio-unmuted.png
+> Draw while playing your favorite songs!
+Serenity includes the Piano, which allows you to create your own tunes by
+simply pressing keys on the keyboard. You can pick the wavetype, octave, and
+more! Serenity also has SoundPlayer, which lets you play WAV files.
+
+Serenity also has PaintBrush, which is a simple bitmap editor. Draw with the
+pencil and change colors. Try drawing shapes! Can't do that in GIMP!
