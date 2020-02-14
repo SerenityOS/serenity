@@ -105,6 +105,13 @@ Vector<StringView> StringView::lines(bool consider_cr) const
     return v;
 }
 
+bool StringView::starts_with(char ch) const
+{
+    if (is_empty())
+        return false;
+    return ch == characters_without_null_termination()[0];
+}
+
 bool StringView::starts_with(const StringView& str) const
 {
     if (str.is_empty())
@@ -116,6 +123,13 @@ bool StringView::starts_with(const StringView& str) const
     if (characters_without_null_termination() == str.characters_without_null_termination())
         return true;
     return !memcmp(characters_without_null_termination(), str.characters_without_null_termination(), str.length());
+}
+
+bool StringView::ends_with(char ch) const
+{
+    if (is_empty())
+        return false;
+    return ch == characters_without_null_termination()[length() - 1];
 }
 
 bool StringView::ends_with(const StringView& str) const
