@@ -26,22 +26,17 @@
 
 #pragma once
 
-#include <AK/Badge.h>
+#include <AK/Forward.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
-#include <LibCore/Event.h>
-#include <LibCore/LocalServer.h>
+#include <LibCore/Forward.h>
+#include <LibCore/Object.h>
 #include <LibThread/Lock.h>
-#include <sys/select.h>
 #include <sys/time.h>
-#include <time.h>
 
 namespace Core {
-
-class Object;
-class Notifier;
 
 class EventLoop {
 public:
@@ -87,6 +82,12 @@ private:
     void get_next_timer_expiration(timeval&);
 
     struct QueuedEvent {
+        AK_MAKE_NONCOPYABLE(QueuedEvent);
+    public:
+        QueuedEvent(Object& receiver, NonnullOwnPtr<Event>);
+        QueuedEvent(QueuedEvent&&);
+        ~QueuedEvent();
+
         WeakPtr<Object> receiver;
         NonnullOwnPtr<Event> event;
     };

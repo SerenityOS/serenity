@@ -26,14 +26,14 @@
 
 #pragma once
 
-#include <AK/Badge.h>
+#include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Object.h>
+#include <LibGUI/WindowType.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Rect.h>
-#include <LibGUI/WindowType.h>
 
 namespace GUI {
 

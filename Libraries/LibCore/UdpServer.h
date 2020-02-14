@@ -26,13 +26,12 @@
 
 #pragma once
 
-#include <AK/IPv4Address.h>
-#include <LibCore/Notifier.h>
+#include <AK/Forward.h>
+#include <AK/Function.h>
+#include <LibCore/Forward.h>
 #include <LibCore/Object.h>
 
 namespace Core {
-
-class UdpSocket;
 
 class UdpServer : public Object {
     C_OBJECT(UdpServer)

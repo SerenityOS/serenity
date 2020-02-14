@@ -26,19 +26,13 @@
 
 #pragma once
 
-#include <AK/Badge.h>
-#include <AK/Function.h>
+#include <AK/Forward.h>
 #include <AK/IntrusiveList.h>
 #include <AK/Noncopyable.h>
 #include <AK/NonnullRefPtrVector.h>
-#include <AK/StdLibExtras.h>
 #include <AK/String.h>
-#include <AK/Vector.h>
 #include <AK/Weakable.h>
-
-namespace AK {
-class JsonObject;
-}
+#include <LibCore/Forward.h>
 
 namespace Core {
 
@@ -46,12 +40,6 @@ enum class TimerShouldFireWhenNotVisible {
     No = 0,
     Yes
 };
-
-class ChildEvent;
-class CustomEvent;
-class Event;
-class EventLoop;
-class TimerEvent;
 
 #define C_OBJECT(klass)                                                \
 public:                                                                \

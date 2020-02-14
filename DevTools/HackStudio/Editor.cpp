@@ -26,6 +26,7 @@
 
 #include "Editor.h"
 #include "EditorWrapper.h"
+#include <AK/ByteBuffer.h>
 #include <AK/FileSystemPath.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>

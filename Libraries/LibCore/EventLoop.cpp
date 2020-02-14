@@ -24,12 +24,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Badge.h>
 #include <AK/IDAllocator.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/Time.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/LocalServer.h>
 #include <LibCore/LocalSocket.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
@@ -328,7 +330,7 @@ void EventLoop::post_event(Object& receiver, NonnullOwnPtr<Event>&& event)
 #ifdef CEVENTLOOP_DEBUG
     dbg() << "Core::EventLoop::post_event: {" << m_queued_events.size() << "} << receiver=" << receiver << ", event=" << event;
 #endif
-    m_queued_events.append({ receiver.make_weak_ptr(), move(event) });
+    m_queued_events.empend(receiver, move(event));
 }
 
 void EventLoop::wait_for_event(WaitMode mode)
@@ -507,6 +509,22 @@ void EventLoop::wake()
         perror("EventLoop::wake: write");
         ASSERT_NOT_REACHED();
     }
+}
+
+EventLoop::QueuedEvent::QueuedEvent(Object& receiver, NonnullOwnPtr<Event> event)
+    : receiver(receiver.make_weak_ptr())
+    , event(move(event))
+{
+}
+
+EventLoop::QueuedEvent::QueuedEvent(QueuedEvent&& other)
+    : receiver(other.receiver)
+    , event(move(other.event))
+{
+}
+
+EventLoop::QueuedEvent::~QueuedEvent()
+{
 }
 
 }
