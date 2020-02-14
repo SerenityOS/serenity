@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Forward.h>
 #include <LibGfx/Point.h>
 
 namespace Gfx {
@@ -64,7 +65,7 @@ public:
         return true;
     }
 
-    String to_string() const { return String::format("(%s,%s,%s)", m_a.to_string().characters(), m_b.to_string().characters(), m_c.to_string().characters()); }
+    String to_string() const;
 
 private:
     int m_det;
@@ -73,9 +74,6 @@ private:
     Point m_c;
 };
 
-inline const LogStream& operator<<(const LogStream& stream, const Triangle& value)
-{
-    return stream << value.to_string();
-}
+const LogStream& operator<<(const LogStream&, const Triangle&);
 
 }

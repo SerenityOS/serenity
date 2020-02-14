@@ -25,6 +25,7 @@
  */
 
 #include <AK/StdLibExtras.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibGfx/Rect.h>
 
@@ -128,6 +129,16 @@ void Rect::align_within(const Rect& other, TextAlignment alignment)
         center_vertically_within(other);
         return;
     }
+}
+
+String Rect::to_string() const
+{
+    return String::format("[%d,%d %dx%d]", x(), y(), width(), height());
+}
+
+const LogStream& operator<<(const LogStream& stream, const Rect& value)
+{
+    return stream << value.to_string();
 }
 
 }

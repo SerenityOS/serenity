@@ -26,8 +26,8 @@
 
 #pragma once
 
-#include <AK/LogStream.h>
-#include <AK/String.h>
+#include <AK/Forward.h>
+#include <AK/StdLibExtras.h>
 #include <LibGfx/Orientation.h>
 
 namespace Gfx {
@@ -105,7 +105,7 @@ public:
     }
     Point operator+(const Point& other) const { return { m_x + other.m_x, m_y + other.m_y }; }
 
-    String to_string() const { return String::format("[%d,%d]", x(), y()); }
+    String to_string() const;
 
     bool is_null() const { return !m_x && !m_y; }
 
@@ -156,9 +156,6 @@ private:
     int m_y { 0 };
 };
 
-inline const LogStream& operator<<(const LogStream& stream, const Point& value)
-{
-    return stream << value.to_string();
-}
+const LogStream& operator<<(const LogStream&, const Point&);
 
 }

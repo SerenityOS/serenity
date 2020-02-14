@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <AK/NonnullRefPtr.h>
 #include <AK/Vector.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Forward.h>

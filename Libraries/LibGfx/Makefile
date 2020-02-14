@@ -10,9 +10,12 @@ OBJS = \
     PNGLoader.o \
     Painter.o \
     Palette.o \
+    Point.o \
     Rect.o \
+    Size.o \
     StylePainter.o \
-    SystemTheme.o
+    SystemTheme.o \
+    Triangle.o
 
 LIBRARY = libgfx.a
 

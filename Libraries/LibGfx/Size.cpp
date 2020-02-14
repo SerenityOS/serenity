@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,23 +24,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGfx/ImageDecoder.h>
-#include <LibGfx/PNGLoader.h>
+#include <AK/String.h>
+#include <LibGfx/Size.h>
 
 namespace Gfx {
 
-ImageDecoder::ImageDecoder(const u8* data, size_t size)
+String Size::to_string() const
 {
-    m_plugin = make<PNGImageDecoderPlugin>(data, size);
+    return String::format("[%dx%d]", m_width, m_height);
 }
 
-ImageDecoder::~ImageDecoder()
+const LogStream& operator<<(const LogStream& stream, const Size& value)
 {
-}
-
-RefPtr<Gfx::Bitmap> ImageDecoder::bitmap() const
-{
-    return m_plugin->bitmap();
+    return stream << value.to_string();
 }
 
 }
