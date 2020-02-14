@@ -38,6 +38,7 @@
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
 #include <ctype.h>
 #include <fcntl.h>
@@ -1498,6 +1499,16 @@ void TextEditor::set_syntax_highlighter(OwnPtr<SyntaxHighlighter> highlighter)
         m_highlighter->attach(*this);
         m_highlighter->rehighlight();
     }
+}
+
+int TextEditor::line_height() const
+{
+    return font().glyph_height() + m_line_spacing;
+}
+
+int TextEditor::glyph_width() const
+{
+    return font().glyph_width('x');
 }
 
 }

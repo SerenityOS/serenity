@@ -30,6 +30,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
+#include <LibGfx/Font.h>
 
 extern RefPtr<EditorWrapper> g_current_editor_wrapper;
 

@@ -45,6 +45,7 @@
 #include <LibGUI/Window.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
 #include <unistd.h>
 

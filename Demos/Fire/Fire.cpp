@@ -42,12 +42,13 @@
  *  [ ] handle fire bitmap edges better
 */
 
-#include <LibGfx/Bitmap.h>
+#include <LibCore/ElapsedTimer.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Bitmap.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>

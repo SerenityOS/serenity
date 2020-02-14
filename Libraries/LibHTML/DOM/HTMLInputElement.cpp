@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibCore/ElapsedTimer.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/TextBox.h>
 #include <LibHTML/DOM/Document.h>
