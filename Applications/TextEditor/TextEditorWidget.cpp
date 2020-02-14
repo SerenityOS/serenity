@@ -29,6 +29,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <LibCore/File.h>
+#include <LibCore/MimeData.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
@@ -191,12 +192,11 @@ TextEditorWidget::TextEditorWidget()
         if (needle.is_empty())
             return;
 
-
         auto found_range = m_editor->document().find_next(needle);
-        while(found_range.is_valid()) {
-                m_editor->set_selection(found_range);
-                m_editor->insert_at_cursor_or_replace_selection(substitute);
-                found_range = m_editor->document().find_next(needle);
+        while (found_range.is_valid()) {
+            m_editor->set_selection(found_range);
+            m_editor->insert_at_cursor_or_replace_selection(substitute);
+            found_range = m_editor->document().find_next(needle);
         }
     });
 
@@ -463,15 +463,14 @@ void TextEditorWidget::drop_event(GUI::DropEvent& event)
     event.accept();
     window()->move_to_front();
 
-    if (event.data_type() == "url-list") {
-        auto lines = event.data().split_view('\n');
-        if (lines.is_empty())
+    if (event.mime_data().has_urls()) {
+        auto urls = event.mime_data().urls();
+        if (urls.is_empty() )
             return;
-        if (lines.size() > 1) {
+        if (urls.size() > 1) {
             GUI::MessageBox::show("TextEditor can only open one file at a time!", "One at a time please!", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
             return;
         }
-        URL url(lines[0]);
-        open_sesame(url.path());
+        open_sesame(urls.first().path());
     }
 }

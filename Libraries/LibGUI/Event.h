@@ -32,6 +32,10 @@
 #include <LibGfx/Rect.h>
 #include <LibGUI/WindowType.h>
 
+namespace Core {
+class MimeData;
+}
+
 namespace GUI {
 
 class Event : public Core::Event {
@@ -326,25 +330,18 @@ private:
 
 class DropEvent final : public Event {
 public:
-    DropEvent(const Gfx::Point& position, const String& text, const String& data_type, const String& data)
-        : Event(Event::Drop)
-        , m_position(position)
-        , m_text(text)
-        , m_data_type(data_type)
-        , m_data(data)
-    {
-    }
+    DropEvent(const Gfx::Point&, const String& text, NonnullRefPtr<Core::MimeData> mime_data);
+
+    ~DropEvent();
 
     const Gfx::Point& position() const { return m_position; }
     const String& text() const { return m_text; }
-    const String& data_type() const { return m_data_type; }
-    const String& data() const { return m_data; }
+    const Core::MimeData& mime_data() const { return m_mime_data; }
 
 private:
     Gfx::Point m_position;
     String m_text;
-    String m_data_type;
-    String m_data;
+    NonnullRefPtr<Core::MimeData> m_mime_data;
 };
 
 }

@@ -26,10 +26,11 @@
 
 #include "QSWidget.h"
 #include <AK/URL.h>
-#include <LibGfx/Bitmap.h>
+#include <LibCore/MimeData.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Bitmap.h>
 
 QSWidget::QSWidget(GUI::Widget* parent)
     : GUI::Frame(parent)
@@ -130,15 +131,15 @@ void QSWidget::drop_event(GUI::DropEvent& event)
     event.accept();
     window()->move_to_front();
 
-    if (event.data_type() == "url-list") {
-        auto lines = event.data().split_view('\n');
-        if (lines.is_empty())
+    if (event.mime_data().has_urls()) {
+        auto urls = event.mime_data().urls();
+        if (urls.is_empty())
             return;
-        if (lines.size() > 1) {
+        if (urls.size() > 1) {
             GUI::MessageBox::show("QuickShow can only open one file at a time!", "One at a time please!", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
             return;
         }
-        URL url(lines[0]);
+        auto url = urls.first();
         auto bitmap = Gfx::Bitmap::load_from_file(url.path());
         if (!bitmap) {
             GUI::MessageBox::show(String::format("Failed to open %s", url.to_string().characters()), "Cannot open image", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());

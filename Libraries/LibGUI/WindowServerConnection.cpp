@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibCore/MimeData.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
@@ -309,8 +310,11 @@ void WindowServerConnection::handle(const Messages::WindowClient::AsyncSetWallpa
 
 void WindowServerConnection::handle(const Messages::WindowClient::DragDropped& message)
 {
-    if (auto* window = Window::from_window_id(message.window_id()))
-        Core::EventLoop::current().post_event(*window, make<DropEvent>(message.mouse_position(), message.text(), message.data_type(), message.data()));
+    if (auto* window = Window::from_window_id(message.window_id())) {
+        auto mime_data = Core::MimeData::construct();
+        mime_data->set_data(message.data_type(), message.data().to_byte_buffer());
+        Core::EventLoop::current().post_event(*window, make<DropEvent>(message.mouse_position(), message.text(), mime_data));
+    }
 }
 
 void WindowServerConnection::handle(const Messages::WindowClient::DragAccepted&)

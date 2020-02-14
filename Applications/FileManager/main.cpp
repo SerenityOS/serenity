@@ -31,6 +31,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/MimeData.h>
 #include <LibCore/UserInfo.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
@@ -575,10 +576,10 @@ int main(int argc, char** argv)
     directory_view->on_drop = [&](const GUI::AbstractView&, const GUI::ModelIndex& index, const GUI::DropEvent& event) {
         if (!index.is_valid())
             return;
-        if (event.data_type() != "url-list")
+        if (!event.mime_data().has_urls())
             return;
-        auto paths_to_copy = event.data().split('\n');
-        if (paths_to_copy.is_empty()) {
+        auto urls = event.mime_data().urls();
+        if (urls.is_empty()) {
             dbg() << "No files to drop";
             return;
         }
@@ -587,8 +588,7 @@ int main(int argc, char** argv)
         if (!target_node.is_directory())
             return;
 
-        for (auto& path_to_copy : paths_to_copy) {
-            auto url_to_copy = URL(path_to_copy);
+        for (auto& url_to_copy : urls) {
             if (!url_to_copy.is_valid())
                 continue;
             auto new_path = String::format("%s/%s",
@@ -597,7 +597,7 @@ int main(int argc, char** argv)
 
             if (!FileUtils::copy_file_or_directory(url_to_copy.path(), new_path)) {
                 auto error_message = String::format("Could not copy %s into %s.",
-                    path_to_copy.characters(),
+                    url_to_copy.to_string().characters(),
                     new_path.characters());
                 GUI::MessageBox::show(error_message, "File Manager", GUI::MessageBox::Type::Error);
             } else {

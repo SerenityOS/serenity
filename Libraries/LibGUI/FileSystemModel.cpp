@@ -561,7 +561,7 @@ bool FileSystemModel::accepts_drag(const ModelIndex& index, const StringView& da
 {
     if (!index.is_valid())
         return false;
-    if (data_type != "url-list")
+    if (data_type != "text/uri-list")
         return false;
     auto& node = this->node(index);
     return node.is_directory();
