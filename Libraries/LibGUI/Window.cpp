@@ -28,7 +28,7 @@
 #include <AK/JsonObject.h>
 #include <AK/NeverDestroyed.h>
 #include <AK/SharedBuffer.h>
-#include <LibGfx/Bitmap.h>
+#include <LibCore/MimeData.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Event.h>
@@ -36,6 +36,7 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGUI/WindowServerConnection.h>
+#include <LibGfx/Bitmap.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -188,7 +189,7 @@ void Window::event(Core::Event& event)
         if (!m_main_widget)
             return;
         auto result = m_main_widget->hit_test(drop_event.position());
-        auto local_event = make<DropEvent>(result.local_position, drop_event.text(), drop_event.data_type(), drop_event.data());
+        auto local_event = make<DropEvent>(result.local_position, drop_event.text(), drop_event.mime_data());
         ASSERT(result.widget);
         return result.widget->dispatch_event(*local_event, this);
     }

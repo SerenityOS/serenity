@@ -19,6 +19,7 @@ OBJS = \
     Desktop.o \
     Dialog.o \
     DragOperation.o \
+    Event.o \
     FilePicker.o \
     FileSystemModel.o \
     FontDatabase.o \
