@@ -53,6 +53,7 @@ public:
     void clear();
 
     size_t length() const { return m_length; }
+    bool is_empty() const { return m_length == 0; }
     void trim(size_t count) { m_length -= count; }
 
 private:
