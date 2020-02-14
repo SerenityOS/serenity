@@ -30,10 +30,6 @@
 #include <LibIPC/ClientConnection.h>
 #include <ProtocolServer/ProtocolServerEndpoint.h>
 
-namespace AK {
-class SharedBuffer;
-}
-
 class Download;
 
 class PSClientConnection final : public IPC::ClientConnection<ProtocolServerEndpoint>
