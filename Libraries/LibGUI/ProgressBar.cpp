@@ -28,6 +28,7 @@
 #include <AK/StringBuilder.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ProgressBar.h>
+#include <LibGfx/Palette.h>
 
 namespace GUI {
 

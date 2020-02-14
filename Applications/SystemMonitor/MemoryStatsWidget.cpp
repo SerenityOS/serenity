@@ -28,10 +28,11 @@
 #include "GraphWidget.h"
 #include <AK/JsonObject.h>
 #include <LibCore/File.h>
-#include <LibGfx/StylePainter.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/StylePainter.h>
 #include <stdio.h>
 #include <stdlib.h>
 

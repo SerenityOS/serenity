@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGfx/Palette.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Desktop.h>
@@ -33,6 +32,8 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGUI/WindowServerConnection.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/Palette.h>
 
 namespace GUI {
 

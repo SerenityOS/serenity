@@ -29,6 +29,7 @@
 #include <LibCore/Timer.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>
+#include <LibGfx/Font.h>
 #include <unistd.h>
 
 ProcessStateWidget::ProcessStateWidget(GUI::Widget* parent)

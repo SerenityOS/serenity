@@ -33,6 +33,7 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/StdLibExtras.h>
 #include <LibGUI/ScrollableWidget.h>
+#include <LibGfx/Font.h>
 #include <LibGfx/TextAlignment.h>
 
 class HexEditor : public GUI::ScrollableWidget {

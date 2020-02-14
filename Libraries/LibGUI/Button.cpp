@@ -26,11 +26,13 @@
 
 #include <AK/StringBuilder.h>
 #include <Kernel/KeyCode.h>
-#include <LibGfx/StylePainter.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/Palette.h>
+#include <LibGfx/StylePainter.h>
 
 namespace GUI {
 

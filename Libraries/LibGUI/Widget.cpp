@@ -94,6 +94,8 @@ const WidgetClassRegistration* WidgetClassRegistration::find(const String& class
 
 Widget::Widget(Widget* parent)
     : Core::Object(parent, true)
+    , m_background_role(Gfx::ColorRole::Window)
+    , m_foreground_role(Gfx::ColorRole::WindowText)
     , m_font(Gfx::Font::default_font())
     , m_palette(Application::the().palette().impl())
 {
@@ -729,6 +731,21 @@ Vector<Widget*> Widget::child_widgets() const
 void Widget::set_palette(const Palette& palette)
 {
     m_palette = palette.impl();
+}
+
+void Widget::set_background_role(ColorRole role)
+{
+    m_background_role = role;
+}
+
+void Widget::set_foreground_role(ColorRole role)
+{
+    m_foreground_role = role;
+}
+
+Gfx::Palette Widget::palette() const
+{
+    return Gfx::Palette(*m_palette);
 }
 
 }

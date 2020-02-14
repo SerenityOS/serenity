@@ -24,10 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGfx/Palette.h>
-#include <LibGfx/StylePainter.h>
 #include <LibGUI/GroupBox.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/Palette.h>
+#include <LibGfx/StylePainter.h>
 
 namespace GUI {
 

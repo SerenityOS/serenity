@@ -41,6 +41,7 @@ class GlyphBitmap;
 class ImageDecoder;
 class Painter;
 class Palette;
+class PaletteImpl;
 class Point;
 class Rect;
 class Size;
@@ -49,6 +50,7 @@ class SystemTheme;
 class Triangle;
 
 enum class BitmapFormat;
+enum class ColorRole;
 
 }
 

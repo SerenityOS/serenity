@@ -37,7 +37,7 @@ class TableCellPaintingDelegate {
 public:
     virtual ~TableCellPaintingDelegate() {}
 
-    virtual void paint(Painter&, const Gfx::Rect&, const Palette&, const Model&, const ModelIndex&) = 0;
+    virtual void paint(Painter&, const Gfx::Rect&, const Gfx::Palette&, const Model&, const ModelIndex&) = 0;
 };
 
 class AbstractTableView : public AbstractView {

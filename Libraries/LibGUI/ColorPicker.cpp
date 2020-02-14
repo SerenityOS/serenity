@@ -30,6 +30,7 @@
 #include <LibGUI/Frame.h>
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/Widget.h>
+#include <LibGfx/Palette.h>
 
 namespace GUI {
 
