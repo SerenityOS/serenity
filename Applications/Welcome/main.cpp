@@ -107,7 +107,7 @@ int main(int argc, char** argv)
     //
 
     auto header = GUI::Label::construct(background.ptr());
-    header->set_font(Gfx::Font::default_bold_font());
+    header->set_font(Gfx::Font::load_from_file("/res/fonts/PebbletonBold11.font"));
     header->set_text("Welcome to Serenity");
     header->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     header->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
