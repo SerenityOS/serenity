@@ -36,7 +36,7 @@
 #include <LibGUI/TextRange.h>
 #include <LibGUI/UndoStack.h>
 #include <LibGfx/Color.h>
-#include <LibGfx/Font.h>
+#include <LibGfx/Forward.h>
 
 namespace GUI {
 

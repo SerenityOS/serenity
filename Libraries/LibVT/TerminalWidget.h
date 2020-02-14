@@ -28,11 +28,12 @@
 
 #include <AK/String.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/ElapsedTimer.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Timer.h>
+#include <LibGUI/Frame.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Rect.h>
-#include <LibGUI/Frame.h>
 #include <LibVT/Terminal.h>
 
 namespace GUI {

@@ -36,6 +36,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/TextBox.h>
+#include <LibGfx/Font.h>
 #include <stdlib.h>
 
 FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edited_font, GUI::Widget* parent)

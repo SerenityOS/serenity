@@ -1,6 +1,7 @@
 #include <LibGUI/CppLexer.h>
 #include <LibGUI/CppSyntaxHighlighter.h>
 #include <LibGUI/TextEditor.h>
+#include <LibGfx/Font.h>
 
 namespace GUI {
 

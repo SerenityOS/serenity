@@ -30,11 +30,12 @@
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtrVector.h>
+#include <LibCore/ElapsedTimer.h>
 #include <LibCore/Timer.h>
-#include <LibGfx/TextAlignment.h>
 #include <LibGUI/ScrollableWidget.h>
 #include <LibGUI/TextDocument.h>
 #include <LibGUI/TextRange.h>
+#include <LibGfx/TextAlignment.h>
 
 namespace GUI {
 
@@ -89,11 +90,11 @@ public:
     void scroll_position_into_view(const TextPosition&);
     size_t line_count() const { return document().line_count(); }
     int line_spacing() const { return m_line_spacing; }
-    int line_height() const { return font().glyph_height() + m_line_spacing; }
+    int line_height() const;
     TextPosition cursor() const { return m_cursor; }
     TextRange normalized_selection() const { return m_selection.normalized(); }
     // FIXME: This should take glyph spacing into account, no?
-    int glyph_width() const { return font().glyph_width('x'); }
+    int glyph_width() const;
 
     void insert_at_cursor_or_replace_selection(const StringView&);
     bool write_to_file(const StringView& path);

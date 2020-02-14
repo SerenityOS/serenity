@@ -29,10 +29,8 @@
 #include <AK/Badge.h>
 #include <AK/HashMap.h>
 #include <AK/String.h>
-#include <LibCore/ElapsedTimer.h>
 #include <LibCore/Object.h>
 #include <LibGUI/Event.h>
-#include <LibGUI/Shortcut.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Orientation.h>

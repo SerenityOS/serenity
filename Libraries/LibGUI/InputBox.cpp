@@ -29,6 +29,7 @@
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/TextEditor.h>
+#include <LibGfx/Font.h>
 #include <stdio.h>
 
 namespace GUI {
