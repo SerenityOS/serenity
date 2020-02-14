@@ -196,7 +196,7 @@ OwnPtr<Messages::WindowServer::AddMenuItemResponse> ClientConnection::handle(con
         if (!icon_buffer)
             return nullptr;
         // FIXME: Verify that the icon buffer can accomodate a 16x16 bitmap view.
-        auto shared_icon = Gfx::Bitmap::create_with_shared_buffer(Gfx::Bitmap::Format::RGBA32, icon_buffer.release_nonnull(), { 16, 16 });
+        auto shared_icon = Gfx::Bitmap::create_with_shared_buffer(Gfx::BitmapFormat::RGBA32, icon_buffer.release_nonnull(), { 16, 16 });
         menu_item->set_icon(shared_icon);
     }
     menu_item->set_submenu_id(message.submenu_id());
@@ -354,7 +354,7 @@ OwnPtr<Messages::WindowServer::SetWindowIconBitmapResponse> ClientConnection::ha
     if (!icon_buffer) {
         window.set_default_icon();
     } else {
-        window.set_icon(Gfx::Bitmap::create_with_shared_buffer(Gfx::Bitmap::Format::RGBA32, *icon_buffer, message.icon_size()));
+        window.set_icon(Gfx::Bitmap::create_with_shared_buffer(Gfx::BitmapFormat::RGBA32, *icon_buffer, message.icon_size()));
     }
 
     window.frame().invalidate_title_bar();
@@ -516,7 +516,7 @@ OwnPtr<Messages::WindowServer::SetWindowBackingStoreResponse> ClientConnection::
         if (!shared_buffer)
             return make<Messages::WindowServer::SetWindowBackingStoreResponse>();
         auto backing_store = Gfx::Bitmap::create_with_shared_buffer(
-            message.has_alpha_channel() ? Gfx::Bitmap::Format::RGBA32 : Gfx::Bitmap::Format::RGB32,
+            message.has_alpha_channel() ? Gfx::BitmapFormat::RGBA32 : Gfx::BitmapFormat::RGB32,
             *shared_buffer,
             message.size());
         window.set_backing_store(move(backing_store));
@@ -675,7 +675,7 @@ OwnPtr<Messages::WindowServer::StartDragResponse> ClientConnection::handle(const
             did_misbehave("SetAppletBackingStore: Shared buffer is too small for applet size");
             return nullptr;
         }
-        bitmap = Gfx::Bitmap::create_with_shared_buffer(Gfx::Bitmap::Format::RGBA32, *shared_buffer, message.bitmap_size());
+        bitmap = Gfx::Bitmap::create_with_shared_buffer(Gfx::BitmapFormat::RGBA32, *shared_buffer, message.bitmap_size());
     }
 
     wm.start_dnd_drag(*this, message.text(), bitmap, message.data_type(), message.data());

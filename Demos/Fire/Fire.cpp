@@ -114,7 +114,7 @@ private:
 Fire::Fire(GUI::Widget* parent)
     : GUI::Widget(parent)
 {
-    bitmap = Gfx::Bitmap::create(Gfx::Bitmap::Format::Indexed8, { 320, 200 });
+    bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::Indexed8, { 320, 200 });
 
     /* Initialize fire palette */
     for (int i = 0; i < 30; i++)

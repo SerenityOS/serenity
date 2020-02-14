@@ -25,10 +25,12 @@
  */
 
 #include <AK/HashMap.h>
+#include <AK/SharedBuffer.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/WindowServerConnection.h>
+#include <LibGfx/Bitmap.h>
 
 //#define MENU_DEBUG
 
@@ -123,12 +125,12 @@ int Menu::realize_menu()
             auto& action = *item.action();
             int icon_buffer_id = -1;
             if (action.icon()) {
-                ASSERT(action.icon()->format() == Gfx::Bitmap::Format::RGBA32);
+                ASSERT(action.icon()->format() == Gfx::BitmapFormat::RGBA32);
                 ASSERT(action.icon()->size() == Gfx::Size(16, 16));
                 if (action.icon()->shared_buffer_id() == -1) {
                     auto shared_buffer = SharedBuffer::create_with_size(action.icon()->size_in_bytes());
                     ASSERT(shared_buffer);
-                    auto shared_icon = Gfx::Bitmap::create_with_shared_buffer(Gfx::Bitmap::Format::RGBA32, *shared_buffer, action.icon()->size());
+                    auto shared_icon = Gfx::Bitmap::create_with_shared_buffer(Gfx::BitmapFormat::RGBA32, *shared_buffer, action.icon()->size());
                     memcpy(shared_buffer->data(), action.icon()->bits(0), action.icon()->size_in_bytes());
                     shared_buffer->seal();
                     shared_buffer->share_with(WindowServerConnection::the().server_pid());

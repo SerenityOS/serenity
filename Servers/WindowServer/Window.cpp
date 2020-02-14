@@ -103,7 +103,7 @@ void Window::set_rect(const Gfx::Rect& rect)
     old_rect = m_rect;
     m_rect = rect;
     if (!m_client && (!m_backing_store || old_rect.size() != rect.size())) {
-        m_backing_store = Gfx::Bitmap::create(Gfx::Bitmap::Format::RGB32, m_rect.size());
+        m_backing_store = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, m_rect.size());
     }
     m_frame.notify_window_rect_changed(old_rect, rect);
 }

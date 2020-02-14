@@ -89,12 +89,12 @@ void Compositor::init_bitmaps()
     auto& screen = Screen::the();
     auto size = screen.size();
 
-    m_front_bitmap = Gfx::Bitmap::create_wrapper(Gfx::Bitmap::Format::RGB32, size, screen.pitch(), screen.scanline(0));
+    m_front_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::RGB32, size, screen.pitch(), screen.scanline(0));
 
     if (m_screen_can_set_buffer)
-        m_back_bitmap = Gfx::Bitmap::create_wrapper(Gfx::Bitmap::Format::RGB32, size, screen.pitch(), screen.scanline(size.height()));
+        m_back_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::RGB32, size, screen.pitch(), screen.scanline(size.height()));
     else
-        m_back_bitmap = Gfx::Bitmap::create(Gfx::Bitmap::Format::RGB32, size);
+        m_back_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, size);
 
     m_front_painter = make<Gfx::Painter>(*m_front_bitmap);
     m_back_painter = make<Gfx::Painter>(*m_back_bitmap);

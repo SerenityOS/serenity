@@ -29,6 +29,7 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/Bitmap.h>
 
 EraseTool::EraseTool()
 {

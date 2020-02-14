@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <AK/Badge.h>
+#include <AK/Forward.h>
 #include <AK/Noncopyable.h>
 #include <LibGfx/SystemTheme.h>
 
@@ -40,13 +40,14 @@ class PaletteImpl : public RefCounted<PaletteImpl> {
     AK_MAKE_NONCOPYABLE(PaletteImpl)
     AK_MAKE_NONMOVABLE(PaletteImpl)
 public:
+    ~PaletteImpl();
     static NonnullRefPtr<PaletteImpl> create_with_shared_buffer(SharedBuffer&);
     NonnullRefPtr<PaletteImpl> clone() const;
 
     Color color(ColorRole) const;
     const SystemTheme& theme() const;
 
-    void replace_internal_buffer(Badge<GUI::Application>, SharedBuffer& buffer) { m_theme_buffer = buffer; }
+    void replace_internal_buffer(Badge<GUI::Application>, SharedBuffer& buffer);
 
 private:
     explicit PaletteImpl(SharedBuffer&);

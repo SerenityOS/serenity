@@ -34,7 +34,7 @@
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
-#include <LibGfx/Bitmap.h>
+#include <LibGfx/Forward.h>
 #include <LibGUI/Shortcut.h>
 #include <LibGUI/Window.h>
 
@@ -93,7 +93,7 @@ public:
     String text() const { return m_text; }
     Shortcut shortcut() const { return m_shortcut; }
     const Gfx::Bitmap* icon() const { return m_icon.ptr(); }
-    void set_icon(const Gfx::Bitmap* icon) { m_icon = icon; }
+    void set_icon(const Gfx::Bitmap*);
 
     const Core::Object* activator() const { return m_activator.ptr(); }
     Core::Object* activator() { return m_activator.ptr(); }

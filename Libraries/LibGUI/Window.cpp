@@ -493,7 +493,7 @@ void Window::flip(const Vector<Gfx::Rect, 32>& dirty_rects)
     m_back_bitmap->shared_buffer()->set_volatile();
 }
 
-NonnullRefPtr<Gfx::Bitmap> Window::create_shared_bitmap(Gfx::Bitmap::Format format, const Gfx::Size& size)
+NonnullRefPtr<Gfx::Bitmap> Window::create_shared_bitmap(Gfx::BitmapFormat format, const Gfx::Size& size)
 {
     ASSERT(WindowServerConnection::the().server_pid());
     ASSERT(!size.is_empty());
@@ -507,7 +507,7 @@ NonnullRefPtr<Gfx::Bitmap> Window::create_shared_bitmap(Gfx::Bitmap::Format form
 
 NonnullRefPtr<Gfx::Bitmap> Window::create_backing_bitmap(const Gfx::Size& size)
 {
-    auto format = m_has_alpha_channel ? Gfx::Bitmap::Format::RGBA32 : Gfx::Bitmap::Format::RGB32;
+    auto format = m_has_alpha_channel ? Gfx::BitmapFormat::RGBA32 : Gfx::BitmapFormat::RGB32;
     return create_shared_bitmap(format, size);
 }
 
@@ -526,7 +526,7 @@ void Window::set_icon(const Gfx::Bitmap* icon)
     if (m_icon == icon)
         return;
 
-    m_icon = create_shared_bitmap(Gfx::Bitmap::Format::RGBA32, icon->size());
+    m_icon = create_shared_bitmap(Gfx::BitmapFormat::RGBA32, icon->size());
     {
         Painter painter(*m_icon);
         painter.blit({ 0, 0 }, *icon, icon->rect());

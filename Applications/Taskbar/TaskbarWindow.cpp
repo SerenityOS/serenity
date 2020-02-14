@@ -179,7 +179,7 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
         if (auto* window = WindowList::the().window(identifier)) {
             auto buffer = SharedBuffer::create_from_shared_buffer_id(changed_event.icon_buffer_id());
             ASSERT(buffer);
-            window->button()->set_icon(Gfx::Bitmap::create_with_shared_buffer(Gfx::Bitmap::Format::RGBA32, *buffer, changed_event.icon_size()));
+            window->button()->set_icon(Gfx::Bitmap::create_with_shared_buffer(Gfx::BitmapFormat::RGBA32, *buffer, changed_event.icon_size()));
         }
         break;
     }

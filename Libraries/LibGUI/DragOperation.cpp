@@ -25,6 +25,7 @@
  */
 
 #include <AK/Badge.h>
+#include <AK/SharedBuffer.h>
 #include <LibGUI/DragOperation.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Bitmap.h>

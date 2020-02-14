@@ -37,6 +37,7 @@
 #include <LibGUI/SyntaxHighlighter.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/Palette.h>
 #include <ctype.h>
 #include <fcntl.h>
