@@ -297,6 +297,15 @@ char* strchr(const char* str, int c)
     }
 }
 
+char* strchrnul(const char* str, int c)
+{
+    char ch = c;
+    for (;; ++str) {
+        if (*str == ch || !*str)
+            return const_cast<char*>(str);
+    }
+}
+
 void* memchr(const void* ptr, int c, size_t size)
 {
     char ch = c;
