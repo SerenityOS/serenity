@@ -166,9 +166,6 @@ inline void Object::for_each_child_of_type(Callback callback)
     });
 }
 
-inline const LogStream& operator<<(const LogStream& stream, const Object& object)
-{
-    return stream << object.class_name() << '{' << &object << '}';
-}
+const LogStream& operator<<(const LogStream&, const Object&);
 
 }

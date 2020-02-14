@@ -3,6 +3,7 @@ OBJS = \
     DateTime.o \
     IODevice.o \
     File.o \
+    SocketAddress.o \
     Socket.o \
     LocalSocket.o \
     LocalServer.o \

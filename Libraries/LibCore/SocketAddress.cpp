@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,40 +24,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <AK/Forward.h>
-#include <time.h>
+#include <LibCore/SocketAddress.h>
 
 namespace Core {
 
-class DateTime {
-public:
-    time_t timestamp() const { return m_timestamp; }
-
-    unsigned year() const { return m_year; }
-    unsigned month() const { return m_month; }
-    unsigned day() const { return m_day; }
-
-    unsigned hour() const { return m_hour; }
-    unsigned minute() const { return m_minute; }
-    unsigned second() const { return m_second; }
-
-    String to_string() const;
-
-    static DateTime now();
-    static DateTime from_timestamp(time_t);
-
-private:
-    time_t m_timestamp { 0 };
-    unsigned m_year { 0 };
-    unsigned m_month { 0 };
-    unsigned m_day { 0 };
-    unsigned m_hour { 0 };
-    unsigned m_minute { 0 };
-    unsigned m_second { 0 };
-};
-
-const LogStream& operator<<(const LogStream&, const DateTime&);
+const LogStream& operator<<(const LogStream& stream, const SocketAddress& value)
+{
+    return stream << value.to_string();
+}
 
 }

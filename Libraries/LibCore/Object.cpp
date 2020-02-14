@@ -205,4 +205,9 @@ bool Object::is_visible_for_timer_purposes() const
     return true;
 }
 
+const LogStream& operator<<(const LogStream& stream, const Object& object)
+{
+    return stream << object.class_name() << '{' << &object << '}';
+}
+
 }
