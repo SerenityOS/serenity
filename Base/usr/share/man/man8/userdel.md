@@ -1,16 +1,16 @@
 ## Name
 
-userdel - delete a user account in the system password file
+userdel - delete a user account
 
 ## Synopsis
 
 ```**sh
-# userdel [options] <login>
+# userdel [-r] <login>
 ```
 
 ## Description
 
-This program uses adds a new user to the system.
+This program delete a user account in the system.
 
 This program must be run as root.
 
@@ -38,3 +38,10 @@ This program must be run as root.
 # userdel --remove alice
 ```
 
+## Author
+
+Fei Wu <f.eiwu@yahoo.com>
+
+## See Also
+
+* [`useradd`(8)](useradd.md)
