@@ -29,13 +29,8 @@
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <LibCore/Object.h>
-#include <LibCore/Timer.h>
-#include <LibGfx/Bitmap.h>
 #include <LibGfx/DisjointRectSet.h>
-
-namespace Gfx {
-class Painter;
-}
+#include <LibGfx/Forward.h>
 
 namespace WindowServer {
 

@@ -31,6 +31,7 @@
 #include "Screen.h"
 #include "WindowClientEndpoint.h"
 #include "WindowManager.h"
+#include <AK/Badge.h>
 
 namespace WindowServer {
 
@@ -412,6 +413,11 @@ void Window::set_tiled(WindowTileType tiled)
         break;
     }
     Core::EventLoop::current().post_event(*this, make<ResizeEvent>(old_rect, m_rect));
+}
+
+void Window::detach_client(Badge<ClientConnection>)
+{
+    m_client = nullptr;
 }
 
 }

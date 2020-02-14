@@ -223,7 +223,7 @@ public:
     Window* m_next { nullptr };
     Window* m_prev { nullptr };
 
-    void detach_client(Badge<ClientConnection>) { m_client = nullptr; }
+    void detach_client(Badge<ClientConnection>);
 
 private:
     void handle_mouse_event(const MouseEvent&);

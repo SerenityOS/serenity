@@ -30,14 +30,11 @@
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Object.h>
+#include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
 #include <WindowServer/Cursor.h>
 #include <WindowServer/MenuItem.h>
 #include <WindowServer/Window.h>
-
-namespace Gfx {
-class Font;
-}
 
 namespace WindowServer {
 

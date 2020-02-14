@@ -29,10 +29,7 @@
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/String.h>
-
-namespace Gfx {
-class Font;
-}
+#include <LibGfx/Forward.h>
 
 struct Metadata {
     String path;

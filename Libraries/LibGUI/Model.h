@@ -31,13 +31,10 @@
 #include <AK/HashTable.h>
 #include <AK/RefCounted.h>
 #include <AK/String.h>
-#include <LibGfx/TextAlignment.h>
 #include <LibGUI/ModelIndex.h>
 #include <LibGUI/Variant.h>
-
-namespace Gfx {
-class Font;
-}
+#include <LibGfx/Forward.h>
+#include <LibGfx/TextAlignment.h>
 
 namespace GUI {
 

@@ -52,6 +52,7 @@ class Socket;
 class SocketAddress;
 class TCPServer;
 class TCPSocket;
+class Timer;
 class TimerEvent;
 class UdpServer;
 class UdpSocket;

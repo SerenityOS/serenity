@@ -26,13 +26,9 @@
 
 #pragma once
 
-#include <AK/Badge.h>
+#include <AK/Forward.h>
 #include <AK/NonnullOwnPtrVector.h>
-
-namespace Gfx {
-class Painter;
-class Rect;
-}
+#include <LibGfx/Forward.h>
 
 namespace WindowServer {
 

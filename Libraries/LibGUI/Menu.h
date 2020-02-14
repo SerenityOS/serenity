@@ -31,10 +31,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <LibCore/Object.h>
 #include <LibGUI/MenuItem.h>
-
-namespace Gfx {
-class Point;
-}
+#include <LibGfx/Forward.h>
 
 namespace GUI {
 

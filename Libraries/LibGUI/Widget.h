@@ -42,10 +42,6 @@
     extern WidgetClassRegistration registration_##class_name; \
     WidgetClassRegistration registration_##class_name(#class_name, [](Widget* parent) { return class_name::construct(parent); });
 
-namespace Gfx {
-class Bitmap;
-}
-
 namespace GUI {
 class Widget;
 }

@@ -29,11 +29,8 @@
 #include <AK/HashMap.h>
 #include <AK/NonnullRefPtr.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/Forward.h>
 #include <LibHTML/CSS/StyleValue.h>
-
-namespace Gfx {
-class Color;
-}
 
 class StyleProperties : public RefCounted<StyleProperties> {
 public:
