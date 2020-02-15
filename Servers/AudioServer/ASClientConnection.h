@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/HashMap.h>
 #include <AudioServer/AudioServerEndpoint.h>
 #include <LibIPC/ClientConnection.h>
 

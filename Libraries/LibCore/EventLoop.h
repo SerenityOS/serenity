@@ -27,13 +27,11 @@
 #pragma once
 
 #include <AK/Forward.h>
-#include <AK/HashMap.h>
-#include <AK/OwnPtr.h>
+#include <AK/Noncopyable.h>
+#include <AK/NonnullOwnPtr.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Forward.h>
-#include <LibCore/Object.h>
-#include <LibThread/Lock.h>
 #include <sys/time.h>
 
 namespace Core {
@@ -83,6 +81,7 @@ private:
 
     struct QueuedEvent {
         AK_MAKE_NONCOPYABLE(QueuedEvent);
+
     public:
         QueuedEvent(Object& receiver, NonnullOwnPtr<Event>);
         QueuedEvent(QueuedEvent&&);
@@ -99,25 +98,8 @@ private:
 
     static int s_wake_pipe_fds[2];
 
-    LibThread::Lock m_lock;
-
-    struct EventLoopTimer {
-        int timer_id { 0 };
-        int interval { 0 };
-        timeval fire_time { 0, 0 };
-        bool should_reload { false };
-        TimerShouldFireWhenNotVisible fire_when_not_visible { TimerShouldFireWhenNotVisible::No };
-        WeakPtr<Object> owner;
-
-        void reload(const timeval& now);
-        bool has_expired(const timeval& now) const;
-    };
-
-    static HashMap<int, NonnullOwnPtr<EventLoopTimer>>* s_timers;
-
-    static HashTable<Notifier*>* s_notifiers;
-
-    static RefPtr<LocalServer> s_rpc_server;
+    struct Private;
+    NonnullOwnPtr<Private> m_private;
 };
 
 }
