@@ -67,6 +67,9 @@ bool DirIterator::advance_next()
         if (m_flags & Flags::SkipDots && m_next.starts_with('.'))
             continue;
 
+        if (m_flags & Flags::SkipParentAndBaseDir && (m_next == "." || m_next == ".."))
+            continue;
+
         return !m_next.is_empty();
     }
 }
