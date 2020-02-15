@@ -582,7 +582,7 @@ void Scheduler::initialize()
     load_task_register(s_redirection.selector);
 }
 
-void Scheduler::timer_tick(RegisterDump& regs)
+void Scheduler::timer_tick(RegisterState& regs)
 {
     if (!current)
         return;

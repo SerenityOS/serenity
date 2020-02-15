@@ -242,7 +242,7 @@ public:
 };
 
 class IRQHandler;
-struct RegisterDump;
+struct RegisterState;
 
 void gdt_init();
 void idt_init();
@@ -258,7 +258,7 @@ u16 gdt_alloc_entry();
 void gdt_free_entry(u16);
 Descriptor& get_gdt_entry(u16 selector);
 void write_gdt_entry(u16 selector, Descriptor&);
-void handle_crash(RegisterDump&, const char* description, int signal);
+void handle_crash(RegisterState&, const char* description, int signal);
 
 [[noreturn]] static inline void hang()
 {
@@ -415,7 +415,7 @@ private:
     VirtualAddress m_vaddr;
 };
 
-struct [[gnu::packed]] RegisterDump
+struct [[gnu::packed]] RegisterState
 {
     u32 ss;
     u32 gs;

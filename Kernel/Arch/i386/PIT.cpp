@@ -33,7 +33,7 @@
 #define IRQ_TIMER 0
 
 extern "C" void timer_interrupt_entry();
-extern "C" void timer_interrupt_handler(RegisterDump);
+extern "C" void timer_interrupt_handler(RegisterState);
 
 asm(
     ".globl timer_interrupt_entry \n"
@@ -62,7 +62,7 @@ asm(
 static u32 s_ticks_this_second;
 static u32 s_seconds_since_boot;
 
-void timer_interrupt_handler(RegisterDump regs)
+void timer_interrupt_handler(RegisterState regs)
 {
     clac();
     IRQHandlerScope scope(IRQ_TIMER);

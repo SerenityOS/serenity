@@ -664,7 +664,7 @@ int Process::sys$gethostname(char* buffer, ssize_t size)
     return 0;
 }
 
-pid_t Process::sys$fork(RegisterDump& regs)
+pid_t Process::sys$fork(RegisterState& regs)
 {
     REQUIRE_PROMISE(proc);
     Thread* child_first_thread = nullptr;
@@ -1412,7 +1412,7 @@ void create_kernel_info_page()
     memset(s_info_page_address_for_kernel.as_ptr(), 0, PAGE_SIZE);
 }
 
-int Process::sys$sigreturn(RegisterDump& registers)
+int Process::sys$sigreturn(RegisterState& registers)
 {
     REQUIRE_PROMISE(stdio);
     SmapDisabler disabler;
