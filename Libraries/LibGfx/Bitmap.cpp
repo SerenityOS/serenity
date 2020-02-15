@@ -25,6 +25,7 @@
  */
 
 #include <AK/SharedBuffer.h>
+#include <AK/String.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/PNGLoader.h>
 #include <errno.h>

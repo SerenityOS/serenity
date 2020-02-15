@@ -31,7 +31,7 @@
 #include <AK/RefPtr.h>
 #include <AK/String.h>
 #include <AK/Types.h>
-#include <LibGfx/Rect.h>
+#include <LibGfx/Size.h>
 
 namespace Gfx {
 
