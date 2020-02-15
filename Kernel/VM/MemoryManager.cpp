@@ -53,6 +53,8 @@ MemoryManager::MemoryManager()
     write_cr3(kernel_page_directory().cr3());
     setup_low_identity_mapping();
     protect_kernel_image();
+
+    m_shared_zero_page = allocate_user_physical_page();
 }
 
 MemoryManager::~MemoryManager()
@@ -297,7 +299,7 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringVi
         region = Region::create_user_accessible(range, name, access, cacheable);
     else
         region = Region::create_kernel_only(range, name, access, cacheable);
-    region->set_page_directory(kernel_page_directory());
+    region->map(kernel_page_directory());
     if (should_commit)
         region->commit();
     return region;

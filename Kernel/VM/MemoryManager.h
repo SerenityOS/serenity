@@ -132,6 +132,8 @@ public:
 
     void dump_kernel_regions();
 
+    PhysicalPage& shared_zero_page() { return *m_shared_zero_page; }
+
 private:
     MemoryManager();
     ~MemoryManager();
@@ -171,6 +173,8 @@ private:
 
     RefPtr<PageDirectory> m_kernel_page_directory;
     RefPtr<PhysicalPage> m_low_page_table;
+
+    RefPtr<PhysicalPage> m_shared_zero_page;
 
     unsigned m_user_physical_pages { 0 };
     unsigned m_user_physical_pages_used { 0 };
@@ -222,4 +226,9 @@ inline bool is_user_range(VirtualAddress vaddr, size_t size)
     if (vaddr.offset(size) < vaddr)
         return false;
     return is_user_address(vaddr) && is_user_address(vaddr.offset(size));
+}
+
+inline bool PhysicalPage::is_shared_zero_page() const
+{
+    return this == &MM.shared_zero_page();
 }

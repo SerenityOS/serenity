@@ -60,6 +60,8 @@ public:
 
     u16 ref_count() const { return m_retain_count; }
 
+    bool is_shared_zero_page() const;
+
 private:
     PhysicalPage(PhysicalAddress paddr, bool supervisor, bool may_return_to_freelist = true);
     ~PhysicalPage() {}
