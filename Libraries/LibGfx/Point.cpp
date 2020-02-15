@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/BufferStream.h>
 #include <AK/String.h>
 #include <LibGfx/Point.h>
 
@@ -37,6 +38,22 @@ String Point::to_string() const
 const LogStream& operator<<(const LogStream& stream, const Point& value)
 {
     return stream << value.to_string();
+}
+
+}
+
+namespace IPC {
+
+bool decode(BufferStream& stream, Gfx::Point& point)
+{
+    int x;
+    int y;
+    stream >> x;
+    stream >> y;
+    if (stream.handle_read_failure())
+        return false;
+    point = { x, y };
+    return true;
 }
 
 }

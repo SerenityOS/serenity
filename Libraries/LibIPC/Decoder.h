@@ -24,36 +24,46 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/BufferStream.h>
-#include <AK/String.h>
-#include <LibGfx/Size.h>
+#pragma once
 
-namespace Gfx {
-
-String Size::to_string() const
-{
-    return String::format("[%dx%d]", m_width, m_height);
-}
-
-const LogStream& operator<<(const LogStream& stream, const Size& value)
-{
-    return stream << value.to_string();
-}
-
-}
+#include <AK/Forward.h>
+#include <LibIPC/Message.h>
 
 namespace IPC {
 
-bool decode(BufferStream& stream, Gfx::Size& size)
+template<typename T>
+bool decode(BufferStream&, T&)
 {
-    int width;
-    int height;
-    stream >> width;
-    stream >> height;
-    if (stream.handle_read_failure())
-        return false;
-    size = { width, height };
-    return true;
+    return false;
 }
+
+class Decoder {
+public:
+    explicit Decoder(BufferStream& stream)
+        : m_stream(stream)
+    {
+    }
+
+    bool decode(bool&);
+    bool decode(u8&);
+    bool decode(u16&);
+    bool decode(u32&);
+    bool decode(u64&);
+    bool decode(i8&);
+    bool decode(i16&);
+    bool decode(i32&);
+    bool decode(i64&);
+    bool decode(float&);
+    bool decode(String&);
+
+    template<typename T>
+    bool decode(T& value)
+    {
+        return IPC::decode(m_stream, value);
+    }
+
+private:
+    BufferStream& m_stream;
+};
 
 }

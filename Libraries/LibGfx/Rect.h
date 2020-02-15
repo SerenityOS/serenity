@@ -334,3 +334,7 @@ inline void Point::constrain(const Rect& rect)
 const LogStream& operator<<(const LogStream&, const Rect&);
 
 }
+
+namespace IPC {
+bool decode(BufferStream&, Gfx::Rect&);
+}
