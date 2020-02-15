@@ -42,6 +42,7 @@
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/ProgressBar.h>

@@ -24,7 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Badge.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
+#include <LibGUI/MenuItem.h>
 #include <LibGUI/WindowServerConnection.h>
 
 namespace GUI {

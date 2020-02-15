@@ -88,4 +88,14 @@ void MenuItem::update_window_server()
     WindowServerConnection::the().send_sync<Messages::WindowServer::UpdateMenuItem>(m_menu_id, m_identifier, -1, action.text(), action.is_enabled(), action.is_checkable(), action.is_checkable() ? action.is_checked() : false, shortcut_text);
 }
 
+void MenuItem::set_menu_id(Badge<Menu>, unsigned int menu_id)
+{
+    m_menu_id = menu_id;
+}
+
+void MenuItem::set_identifier(Badge<Menu>, unsigned identifier)
+{
+    m_identifier = identifier;
+}
+
 }

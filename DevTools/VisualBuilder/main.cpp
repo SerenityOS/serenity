@@ -33,6 +33,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/Widget.h>

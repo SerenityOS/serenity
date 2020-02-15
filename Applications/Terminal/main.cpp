@@ -34,6 +34,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/FontDatabase.h>
 #include <LibGUI/GroupBox.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/Slider.h>

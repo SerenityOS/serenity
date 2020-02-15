@@ -44,6 +44,7 @@
 #include <LibGUI/JsonArrayModel.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/LazyWidget.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/SortingProxyModel.h>

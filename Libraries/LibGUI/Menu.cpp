@@ -29,6 +29,7 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Menu.h>
+#include <LibGUI/MenuItem.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Bitmap.h>
 
