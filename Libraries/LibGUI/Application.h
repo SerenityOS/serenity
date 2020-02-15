@@ -77,7 +77,7 @@ private:
     RefPtr<Gfx::PaletteImpl> m_system_palette;
     HashMap<Shortcut, Action*> m_global_shortcut_actions;
     class TooltipWindow;
-    TooltipWindow* m_tooltip_window { nullptr };
+    RefPtr<TooltipWindow> m_tooltip_window;
     bool m_quit_when_last_window_deleted { true };
     String m_invoked_as;
     Vector<String> m_args;
