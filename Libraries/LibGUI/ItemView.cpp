@@ -269,7 +269,7 @@ void ItemView::paint_event(PaintEvent& event)
         bool is_selected_item = selection().contains(model_index);
         Color background_color;
         if (is_selected_item) {
-            background_color = is_focused() ? palette().selection() : Color::from_rgb(0x606060);
+            background_color = is_focused() ? palette().selection() : palette().inactive_selection();
         } else {
             background_color = widget_background_color;
         }
@@ -289,7 +289,7 @@ void ItemView::paint_event(PaintEvent& event)
 
         Color text_color;
         if (is_selected_item)
-            text_color = palette().selection_text();
+            text_color = is_focused() ? palette().selection_text() : palette().inactive_selection_text();
         else
             text_color = model()->data(model_index, Model::Role::ForegroundColor).to_color(palette().color(foreground_role()));
         painter.fill_rect(text_rect, background_color);

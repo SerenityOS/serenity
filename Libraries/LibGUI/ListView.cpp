@@ -126,7 +126,7 @@ void ListView::paint_event(PaintEvent& event)
 
         Color background_color;
         if (is_selected_row) {
-            background_color = is_focused() ? palette().selection() : Color::from_rgb(0x606060);
+            background_color = is_focused() ? palette().selection() : palette().inactive_selection();
         } else {
             Color row_fill_color = palette().color(background_role());
             if (alternating_row_colors() && (painted_item_index % 2)) {
@@ -151,7 +151,7 @@ void ListView::paint_event(PaintEvent& event)
         } else {
             Color text_color;
             if (is_selected_row)
-                text_color = palette().selection_text();
+                text_color = is_focused() ? palette().selection_text() : palette().inactive_selection_text();
             else
                 text_color = model()->data(index, Model::Role::ForegroundColor).to_color(palette().color(foreground_role()));
             auto text_rect = row_rect;

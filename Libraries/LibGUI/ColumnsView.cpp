@@ -94,8 +94,10 @@ void ColumnsView::paint_event(PaintEvent& event)
             Color background_color = palette().color(background_role());
             Color text_color = palette().color(foreground_role());
 
-            if (next_column != nullptr && next_column->parent_index == index)
-                background_color = background_color.blend(palette().selection().with_alpha(100));
+            if (next_column != nullptr && next_column->parent_index == index) {
+                background_color = palette().inactive_selection();
+                text_color = palette().inactive_selection_text();
+            }
 
             if (is_selected_row) {
                 background_color = palette().selection();
