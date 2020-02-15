@@ -2600,7 +2600,7 @@ int Process::sys$sigaction(int signum, const sigaction* act, sigaction* old_act)
     return 0;
 }
 
-int Process::sys$getgroups(ssize_t count, gid_t* gids)
+int Process::sys$getgroups(ssize_t count, gid_t* user_gids)
 {
     REQUIRE_PROMISE(stdio);
     if (count < 0)
@@ -2609,12 +2609,14 @@ int Process::sys$getgroups(ssize_t count, gid_t* gids)
         return m_extra_gids.size();
     if (count != (int)m_extra_gids.size())
         return -EINVAL;
-    if (!validate_write_typed(gids, m_extra_gids.size()))
+    if (!validate_write_typed(user_gids, m_extra_gids.size()))
         return -EFAULT;
-    size_t i = 0;
-    SmapDisabler disabler;
+
+    Vector<gid_t> gids;
     for (auto gid : m_extra_gids)
-        gids[i++] = gid;
+        gids.append(gid);
+
+    copy_to_user(user_gids, gids.data(), sizeof(gid_t) * count);
     return 0;
 }
 
