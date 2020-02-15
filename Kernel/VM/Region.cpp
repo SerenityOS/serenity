@@ -144,7 +144,7 @@ bool Region::commit(size_t page_index)
     dbgprintf("MM: commit single page (%zu) in Region %p (VMO=%p) at V%p\n", page_index, vmobject().page_count(), this, &vmobject(), vaddr().get());
 #endif
     auto& vmobject_physical_page_entry = vmobject().physical_pages()[first_page_index() + page_index];
-    if (!vmobject_physical_page_entry.is_null())
+    if (!vmobject_physical_page_entry.is_null() && !vmobject_physical_page_entry->is_shared_zero_page())
         return true;
     auto physical_page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
     if (!physical_page) {
@@ -177,7 +177,8 @@ size_t Region::amount_resident() const
 {
     size_t bytes = 0;
     for (size_t i = 0; i < page_count(); ++i) {
-        if (m_vmobject->physical_pages()[first_page_index() + i])
+        auto& physical_page = m_vmobject->physical_pages()[first_page_index() + i];
+        if (physical_page && !physical_page->is_shared_zero_page())
             bytes += PAGE_SIZE;
     }
     return bytes;
@@ -188,7 +189,7 @@ size_t Region::amount_shared() const
     size_t bytes = 0;
     for (size_t i = 0; i < page_count(); ++i) {
         auto& physical_page = m_vmobject->physical_pages()[first_page_index() + i];
-        if (physical_page && physical_page->ref_count() > 1)
+        if (physical_page && physical_page->ref_count() > 1 && !physical_page->is_shared_zero_page())
             bytes += PAGE_SIZE;
     }
     return bytes;
@@ -231,6 +232,8 @@ NonnullOwnPtr<Region> Region::create_kernel_only(const Range& range, const Strin
 
 bool Region::should_cow(size_t page_index) const
 {
+    if (vmobject().physical_pages()[page_index]->is_shared_zero_page())
+        return true;
     if (m_shared)
         return false;
     return m_cow_map && m_cow_map->get(page_index);
@@ -339,16 +342,28 @@ PageFaultResponse Region::handle_fault(const PageFault& fault)
 #endif
             return handle_inode_fault(page_index_in_region);
         }
-#ifdef PAGE_FAULT_DEBUG
-        dbgprintf("NP(zero) fault in Region{%p}[%u]\n", this, page_index_in_region);
-#endif
+#ifdef MAP_SHARED_ZERO_PAGE_LAZILY
+        if (fault.is_read()) {
+            vmobject().physical_pages()[first_page_index() + page_index_in_region] = MM.shared_zero_page();
+            remap_page(page_index_in_region);
+            return PageFaultResponse::Continue;
+        }
         return handle_zero_fault(page_index_in_region);
+#else
+        ASSERT_NOT_REACHED();
+#endif
     }
     ASSERT(fault.type() == PageFault::Type::ProtectionViolation);
     if (fault.access() == PageFault::Access::Write && is_writable() && should_cow(page_index_in_region)) {
 #ifdef PAGE_FAULT_DEBUG
         dbgprintf("PV(cow) fault in Region{%p}[%u]\n", this, page_index_in_region);
 #endif
+        if (vmobject().physical_pages()[first_page_index() + page_index_in_region]->is_shared_zero_page()) {
+#ifdef PAGE_FAULT_DEBUG
+            dbgprintf("NP(zero) fault in Region{%p}[%u]\n", this, page_index_in_region);
+#endif
+            return handle_zero_fault(page_index_in_region);
+        }
         return handle_cow_fault(page_index_in_region);
     }
     kprintf("PV(error) fault in Region{%p}[%u] at V%p\n", this, page_index_in_region, fault.vaddr().get());
@@ -366,7 +381,7 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
 
     auto& vmobject_physical_page_entry = vmobject().physical_pages()[first_page_index() + page_index_in_region];
 
-    if (!vmobject_physical_page_entry.is_null()) {
+    if (!vmobject_physical_page_entry.is_null() && !vmobject_physical_page_entry->is_shared_zero_page()) {
 #ifdef PAGE_FAULT_DEBUG
         dbgprintf("MM: zero_page() but page already present. Fine with me!\n");
 #endif

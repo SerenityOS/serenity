@@ -25,6 +25,7 @@
  */
 
 #include <Kernel/VM/AnonymousVMObject.h>
+#include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PhysicalPage.h>
 
 NonnullRefPtr<AnonymousVMObject> AnonymousVMObject::create_with_size(size_t size)
@@ -51,6 +52,10 @@ NonnullRefPtr<AnonymousVMObject> AnonymousVMObject::create_with_physical_page(Ph
 AnonymousVMObject::AnonymousVMObject(size_t size)
     : VMObject(size)
 {
+#ifndef MAP_SHARED_ZERO_PAGE_LAZILY
+    for (size_t i = 0; i < page_count(); ++i)
+        physical_pages()[i] = MM.shared_zero_page();
+#endif
 }
 
 AnonymousVMObject::AnonymousVMObject(PhysicalAddress paddr, size_t size)
