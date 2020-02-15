@@ -26,20 +26,17 @@
 
 #pragma once
 
-#include <AK/Badge.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <LibCore/Forward.h>
 #include <LibGUI/Shortcut.h>
 #include <LibGfx/Forward.h>
-#include <LibGfx/Palette.h>
 
 namespace GUI {
 class Action;
 class KeyEvent;
 class MenuBar;
 class Window;
-class WindowServerConnection;
 
 class Application {
 public:
@@ -68,8 +65,8 @@ public:
     const String& invoked_as() const { return m_invoked_as; }
     const Vector<String>& args() const { return m_args; }
 
-    Palette palette() const { return Palette(*m_palette); }
-    void set_palette(const Palette&);
+    Gfx::Palette palette() const;
+    void set_palette(const Gfx::Palette&);
 
     void set_system_palette(SharedBuffer&);
 

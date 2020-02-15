@@ -189,4 +189,9 @@ void Application::set_palette(const Palette& palette)
     m_palette = palette.impl();
 }
 
+Gfx::Palette Application::palette() const
+{
+    return Palette(*m_palette);
+}
+
 }
