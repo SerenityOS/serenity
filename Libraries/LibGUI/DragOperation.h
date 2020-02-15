@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/OwnPtr.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Object.h>
 #include <LibGfx/Forward.h>
