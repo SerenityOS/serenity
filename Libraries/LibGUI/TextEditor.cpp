@@ -474,7 +474,10 @@ void TextEditor::paint_event(PaintEvent& event)
                         visual_line_rect.height()
                     };
 
-                    painter.fill_rect(selection_rect, palette().selection());
+                    Color background_color = is_focused() ? palette().selection() : palette().inactive_selection();
+                    Color text_color = is_focused() ? palette().selection_text() : palette().inactive_selection_text();
+
+                    painter.fill_rect(selection_rect, background_color);
 
                     size_t start_of_selection_within_visual_line = (size_t)max(0, (int)selection_start_column_within_line - (int)start_of_visual_line);
                     size_t end_of_selection_within_visual_line = selection_end_column_within_line - start_of_visual_line;
@@ -484,7 +487,7 @@ void TextEditor::paint_event(PaintEvent& event)
                         end_of_selection_within_visual_line - start_of_selection_within_visual_line
                     };
 
-                    painter.draw_text(selection_rect, visual_selected_text, Gfx::TextAlignment::CenterLeft, palette().selection_text());
+                    painter.draw_text(selection_rect, visual_selected_text, Gfx::TextAlignment::CenterLeft, text_color);
                 }
             }
             ++visual_line_index;
