@@ -30,6 +30,7 @@ namespace AK {
 
 class Bitmap;
 class ByteBuffer;
+class BufferStream;
 class DebugLogStream;
 class IPv4Address;
 class JsonArray;
@@ -93,14 +94,15 @@ class Vector;
 
 using AK::Badge;
 using AK::Bitmap;
+using AK::BufferStream;
 using AK::ByteBuffer;
 using AK::CircularQueue;
 using AK::DebugLogStream;
 using AK::DoublyLinkedList;
 using AK::FixedArray;
 using AK::Function;
-using AK::IPv4Address;
 using AK::InlineLinkedList;
+using AK::IPv4Address;
 using AK::JsonArray;
 using AK::JsonObject;
 using AK::JsonValue;
