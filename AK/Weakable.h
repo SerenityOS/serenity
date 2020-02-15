@@ -30,6 +30,8 @@
 #include "RefCounted.h"
 #include "RefPtr.h"
 
+#define WEAKABLE_DEBUG
+
 namespace AK {
 
 template<typename T>
@@ -66,7 +68,7 @@ protected:
 
     ~Weakable()
     {
-#ifdef DEBUG
+#ifdef WEAKABLE_DEBUG
         m_being_destroyed = true;
 #endif
         if (m_link)
@@ -75,7 +77,7 @@ protected:
 
 private:
     RefPtr<WeakLink<T>> m_link;
-#ifdef DEBUG
+#ifdef WEAKABLE_DEBUG
     bool m_being_destroyed { false };
 #endif
 };
