@@ -213,13 +213,13 @@ void TreeView::paint_event(PaintEvent& event)
 
         Color text_color = palette().color(foreground_role());
         if (is_selected_row)
-            text_color = Color::White;
+            text_color = is_focused() ? palette().selection_text() : palette().inactive_selection_text();
 
         Color background_color;
         Color key_column_background_color;
         if (is_selected_row) {
-            background_color = is_focused() ? palette().selection() : Color::from_rgb(0x606060);
-            key_column_background_color = is_focused() ? palette().selection() : Color::from_rgb(0x606060);
+            background_color = is_focused() ? palette().selection() : palette().inactive_selection();
+            key_column_background_color = is_focused() ? palette().selection() : palette().inactive_selection();
         } else {
             if (alternating_row_colors() && (painted_row_index % 2)) {
                 background_color = Color(220, 220, 220);
