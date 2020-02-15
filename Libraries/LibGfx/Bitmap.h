@@ -30,10 +30,8 @@
 #include <AK/MappedFile.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
-#include <AK/String.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Rect.h>
-#include <LibGfx/Size.h>
 
 namespace Gfx {
 
