@@ -294,11 +294,9 @@ int main(int argc, char** argv)
             dbg() << "    " << constructor_for_message(name, parameters);
             dbg() << "    virtual ~" << name << "() override {}";
             dbg() << "    virtual i32 endpoint_magic() const override { return " << endpoint.magic << "; }";
-            dbg() << "    static i32 static_endpoint_magic() { return " << endpoint.magic << "; }";
             dbg() << "    virtual i32 message_id() const override { return (int)MessageID::" << name << "; }";
             dbg() << "    static i32 static_message_id() { return (int)MessageID::" << name << "; }";
-            dbg() << "    virtual String message_name() const override { return \"" << endpoint.name << "::" << name << "\"; }";
-            dbg() << "    static String static_message_name() { return \"" << endpoint.name << "::" << name << "\"; }";
+            dbg() << "    virtual const char* message_name() const override { return \"" << endpoint.name << "::" << name << "\"; }";
             dbg() << "    static OwnPtr<" << name << "> decode(BufferStream& stream, size_t& size_in_bytes)";
             dbg() << "    {";
 
