@@ -27,7 +27,6 @@
 #pragma once
 
 #include <AK/Forward.h>
-#include <AK/MappedFile.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <LibGfx/Color.h>
@@ -48,7 +47,6 @@ public:
     static NonnullRefPtr<Bitmap> create_purgeable(BitmapFormat, const Size&);
     static NonnullRefPtr<Bitmap> create_wrapper(BitmapFormat, const Size&, size_t pitch, RGBA32*);
     static RefPtr<Bitmap> load_from_file(const StringView& path);
-    static RefPtr<Bitmap> load_from_file(BitmapFormat, const StringView& path, const Size&);
     static NonnullRefPtr<Bitmap> create_with_shared_buffer(BitmapFormat, NonnullRefPtr<SharedBuffer>&&, const Size&);
 
     NonnullRefPtr<Bitmap> to_shareable_bitmap() const;
@@ -138,7 +136,6 @@ private:
         Yes };
     Bitmap(BitmapFormat, const Size&, Purgeable);
     Bitmap(BitmapFormat, const Size&, size_t pitch, RGBA32*);
-    Bitmap(BitmapFormat, const Size&, MappedFile&&);
     Bitmap(BitmapFormat, NonnullRefPtr<SharedBuffer>&&, const Size&);
 
     Size m_size;
@@ -149,7 +146,6 @@ private:
     bool m_needs_munmap { false };
     bool m_purgeable { false };
     bool m_volatile { false };
-    MappedFile m_mapped_file;
     RefPtr<SharedBuffer> m_shared_buffer;
 };
 

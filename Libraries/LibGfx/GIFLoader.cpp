@@ -27,6 +27,7 @@
 #include <AK/BufferStream.h>
 #include <AK/ByteBuffer.h>
 #include <AK/FileSystemPath.h>
+#include <AK/MappedFile.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibGfx/GIFLoader.h>
 #include <stdio.h>
