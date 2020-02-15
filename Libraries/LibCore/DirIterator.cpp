@@ -33,14 +33,14 @@ DirIterator::DirIterator(const StringView& path, Flags flags)
     : m_flags(flags)
 {
     m_dir = opendir(String(path).characters());
-    if (m_dir == nullptr) {
+    if (!m_dir) {
         m_error = errno;
     }
 }
 
 DirIterator::~DirIterator()
 {
-    if (m_dir != nullptr) {
+    if (m_dir) {
         closedir(m_dir);
         m_dir = nullptr;
     }
@@ -48,32 +48,27 @@ DirIterator::~DirIterator()
 
 bool DirIterator::advance_next()
 {
-    if (m_dir == nullptr)
+    if (!m_dir)
         return false;
 
-    bool keep_advancing = true;
-    while (keep_advancing) {
+    while (true) {
         errno = 0;
         auto* de = readdir(m_dir);
-        if (de) {
-            m_next = de->d_name;
-        } else {
+        if (!de) {
             m_error = errno;
             m_next = String();
+            return false;
         }
 
-        if (m_next.is_null()) {
-            keep_advancing = false;
-        } else if (m_flags & Flags::SkipDots) {
-            if (m_next.length() < 1 || m_next[0] != '.') {
-                keep_advancing = false;
-            }
-        } else {
-            keep_advancing = false;
-        }
+        m_next = de->d_name;
+        if (m_next.is_null())
+            return false;
+
+        if (m_flags & Flags::SkipDots && m_next.starts_with('.'))
+            continue;
+
+        return !m_next.is_empty();
     }
-
-    return m_next.length() > 0;
 }
 
 bool DirIterator::has_next()
