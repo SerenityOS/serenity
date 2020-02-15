@@ -36,6 +36,7 @@ public:
     enum Flags {
         NoFlags = 0x0,
         SkipDots = 0x1,
+        SkipParentAndBaseDir = 0x2,
     };
 
     DirIterator(const StringView& path, Flags = Flags::NoFlags);
