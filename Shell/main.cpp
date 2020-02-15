@@ -574,7 +574,7 @@ static Vector<String> expand_globs(const StringView& path, const StringView& bas
         StringView new_base_v = new_base;
         if (new_base_v.is_empty())
             new_base_v = ".";
-        Core::DirIterator di(new_base_v, Core::DirIterator::NoFlags);
+        Core::DirIterator di(new_base_v, Core::DirIterator::SkipParentAndBaseDir);
 
         if (di.has_error()) {
             return res;
@@ -585,10 +585,6 @@ static Vector<String> expand_globs(const StringView& path, const StringView& bas
 
             // Dotfiles have to be explicitly requested
             if (name[0] == '.' && part[0] != '.')
-                continue;
-
-            // And even if they are, skip . and ..
-            if (name == "." || name == "..")
                 continue;
 
             if (name.matches(part, String::CaseSensitivity::CaseSensitive)) {
