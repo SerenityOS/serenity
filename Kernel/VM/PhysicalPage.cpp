@@ -46,7 +46,7 @@ void PhysicalPage::return_to_freelist() &&
 
     InterruptDisabler disabler;
 
-    m_retain_count = 1;
+    m_ref_count = 1;
 
     if (m_supervisor)
         MM.deallocate_supervisor_physical_page(move(*this));
