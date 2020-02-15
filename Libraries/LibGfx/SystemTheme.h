@@ -64,6 +64,8 @@ enum class ColorRole {
     HoverHighlight,
     Selection,
     SelectionText,
+    InactiveSelection,
+    InactiveSelectionText,
     RubberBandFill,
     RubberBandBorder,
     Link,

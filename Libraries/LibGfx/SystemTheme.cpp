@@ -77,6 +77,8 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
     DO_COLOR(HoverHighlight);
     DO_COLOR(Selection);
     DO_COLOR(SelectionText);
+    DO_COLOR(InactiveSelection);
+    DO_COLOR(InactiveSelectionText);
     DO_COLOR(Window);
     DO_COLOR(WindowText);
     DO_COLOR(Base);
