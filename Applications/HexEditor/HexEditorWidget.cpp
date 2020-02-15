@@ -35,6 +35,7 @@
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/FontDatabase.h>
 #include <LibGUI/InputBox.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/StatusBar.h>

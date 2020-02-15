@@ -26,13 +26,13 @@
 
 #pragma once
 
-#include <AK/Badge.h>
-#include <AK/NonnullOwnPtrVector.h>
-#include <LibGUI/Menu.h>
+#include <AK/Forward.h>
+#include <AK/NonnullRefPtrVector.h>
 
 namespace GUI {
 
 class Application;
+class Menu;
 
 class MenuBar {
 public:

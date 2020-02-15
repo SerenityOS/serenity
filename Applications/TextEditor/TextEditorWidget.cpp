@@ -37,6 +37,7 @@
 #include <LibGUI/CppSyntaxHighlighter.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/FontDatabase.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/StatusBar.h>
