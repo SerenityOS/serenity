@@ -2618,17 +2618,21 @@ int Process::sys$getgroups(ssize_t count, gid_t* gids)
     return 0;
 }
 
-int Process::sys$setgroups(ssize_t count, const gid_t* gids)
+int Process::sys$setgroups(ssize_t count, const gid_t* user_gids)
 {
     REQUIRE_PROMISE(id);
     if (count < 0)
         return -EINVAL;
     if (!is_superuser())
         return -EPERM;
-    if (count && !validate_read(gids, count))
+    if (count && !validate_read(user_gids, count))
         return -EFAULT;
+
+    Vector<gid_t> gids;
+    gids.resize(count);
+    copy_from_user(gids.data(), user_gids, sizeof(gid_t) * count);
+
     m_extra_gids.clear();
-    SmapDisabler disabler;
     for (int i = 0; i < count; ++i) {
         if (gids[i] == m_gid)
             continue;
