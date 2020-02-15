@@ -295,6 +295,13 @@ bool String::starts_with(const StringView& str) const
     return !memcmp(characters(), str.characters_without_null_termination(), str.length());
 }
 
+bool String::starts_with(char ch) const
+{
+    if (is_empty())
+        return false;
+    return characters()[0] == ch;
+}
+
 bool String::ends_with(const StringView& str) const
 {
     if (str.is_empty())
@@ -306,6 +313,12 @@ bool String::ends_with(const StringView& str) const
     return !memcmp(characters() + (length() - str.length()), str.characters_without_null_termination(), str.length());
 }
 
+bool String::ends_with(char ch) const
+{
+    if (is_empty())
+        return false;
+    return characters()[length() - 1] == ch;
+}
 String String::repeated(char ch, size_t count)
 {
     if (!count)

@@ -80,6 +80,8 @@ TEST_CASE(starts_with)
 {
     String test_string = "ABCDEF";
     EXPECT(test_string.starts_with("AB"));
+    EXPECT(test_string.starts_with('A'));
+    EXPECT(!test_string.starts_with('B'));
     EXPECT(test_string.starts_with("ABCDEF"));
     EXPECT(!test_string.starts_with("DEF"));
 }
@@ -88,6 +90,8 @@ TEST_CASE(ends_with)
 {
     String test_string = "ABCDEF";
     EXPECT(test_string.ends_with("EF"));
+    EXPECT(test_string.ends_with('F'));
+    EXPECT(!test_string.ends_with('E'));
     EXPECT(test_string.ends_with("ABCDEF"));
     EXPECT(!test_string.ends_with("ABC"));
 }

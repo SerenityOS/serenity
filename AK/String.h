@@ -157,6 +157,8 @@ public:
 
     bool starts_with(const StringView&) const;
     bool ends_with(const StringView&) const;
+    bool starts_with(char) const;
+    bool ends_with(char) const;
 
     bool operator==(const String&) const;
     bool operator!=(const String& other) const { return !(*this == other); }
