@@ -199,7 +199,7 @@ public:
     int sys$lseek(int fd, off_t, int whence);
     int sys$kill(pid_t pid, int sig);
     [[noreturn]] void sys$exit(int status);
-    int sys$sigreturn(RegisterDump& registers);
+    int sys$sigreturn(RegisterState& registers);
     pid_t sys$waitid(const Syscall::SC_waitid_params*);
     void* sys$mmap(const Syscall::SC_mmap_params*);
     int sys$munmap(void*, size_t size);
@@ -223,7 +223,7 @@ public:
     int sys$readlink(const Syscall::SC_readlink_params*);
     int sys$ttyname_r(int fd, char*, ssize_t);
     int sys$ptsname_r(int fd, char*, ssize_t);
-    pid_t sys$fork(RegisterDump&);
+    pid_t sys$fork(RegisterState&);
     int sys$execve(const Syscall::SC_execve_params*);
     int sys$getdtablesize();
     int sys$dup(int oldfd);

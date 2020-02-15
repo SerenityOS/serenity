@@ -66,7 +66,7 @@ void gdt_free_entry(u16 entry)
     s_gdt_freelist->append(entry);
 }
 
-extern "C" void handle_irq(RegisterDump);
+extern "C" void handle_irq(RegisterState);
 extern "C" void irq_common_asm_entry();
 
 #define GENERATE_IRQ_ASM_ENTRY(irq, isr_number) \
@@ -100,60 +100,60 @@ asm(
     "    add $0x4, %esp\n"
     "    iret\n");
 
-#define EH_ENTRY(ec, title)                        \
-    extern "C" void title##_asm_entry();           \
-    extern "C" void title##_handler(RegisterDump); \
-    asm(                                           \
-        ".globl " #title "_asm_entry\n"            \
-        "" #title "_asm_entry: \n"                 \
-        "    pusha\n"                              \
-        "    pushl %ds\n"                          \
-        "    pushl %es\n"                          \
-        "    pushl %fs\n"                          \
-        "    pushl %gs\n"                          \
-        "    pushl %ss\n"                          \
-        "    mov $0x10, %ax\n"                     \
-        "    mov %ax, %ds\n"                       \
-        "    mov %ax, %es\n"                       \
-        "    cld\n"                                \
-        "    call " #title "_handler\n"            \
-        "    add $0x4, %esp \n"                    \
-        "    popl %gs\n"                           \
-        "    popl %fs\n"                           \
-        "    popl %es\n"                           \
-        "    popl %ds\n"                           \
-        "    popa\n"                               \
-        "    add $0x4, %esp\n"                     \
+#define EH_ENTRY(ec, title)                         \
+    extern "C" void title##_asm_entry();            \
+    extern "C" void title##_handler(RegisterState); \
+    asm(                                            \
+        ".globl " #title "_asm_entry\n"             \
+        "" #title "_asm_entry: \n"                  \
+        "    pusha\n"                               \
+        "    pushl %ds\n"                           \
+        "    pushl %es\n"                           \
+        "    pushl %fs\n"                           \
+        "    pushl %gs\n"                           \
+        "    pushl %ss\n"                           \
+        "    mov $0x10, %ax\n"                      \
+        "    mov %ax, %ds\n"                        \
+        "    mov %ax, %es\n"                        \
+        "    cld\n"                                 \
+        "    call " #title "_handler\n"             \
+        "    add $0x4, %esp \n"                     \
+        "    popl %gs\n"                            \
+        "    popl %fs\n"                            \
+        "    popl %es\n"                            \
+        "    popl %ds\n"                            \
+        "    popa\n"                                \
+        "    add $0x4, %esp\n"                      \
         "    iret\n");
 
-#define EH_ENTRY_NO_CODE(ec, title)                \
-    extern "C" void title##_handler(RegisterDump); \
-    extern "C" void title##_asm_entry();           \
-    asm(                                           \
-        ".globl " #title "_asm_entry\n"            \
-        "" #title "_asm_entry: \n"                 \
-        "    pushl $0x0\n"                         \
-        "    pusha\n"                              \
-        "    pushl %ds\n"                          \
-        "    pushl %es\n"                          \
-        "    pushl %fs\n"                          \
-        "    pushl %gs\n"                          \
-        "    pushl %ss\n"                          \
-        "    mov $0x10, %ax\n"                     \
-        "    mov %ax, %ds\n"                       \
-        "    mov %ax, %es\n"                       \
-        "    cld\n"                                \
-        "    call " #title "_handler\n"            \
-        "    add $0x4, %esp\n"                     \
-        "    popl %gs\n"                           \
-        "    popl %fs\n"                           \
-        "    popl %es\n"                           \
-        "    popl %ds\n"                           \
-        "    popa\n"                               \
-        "    add $0x4, %esp\n"                     \
+#define EH_ENTRY_NO_CODE(ec, title)                 \
+    extern "C" void title##_handler(RegisterState); \
+    extern "C" void title##_asm_entry();            \
+    asm(                                            \
+        ".globl " #title "_asm_entry\n"             \
+        "" #title "_asm_entry: \n"                  \
+        "    pushl $0x0\n"                          \
+        "    pusha\n"                               \
+        "    pushl %ds\n"                           \
+        "    pushl %es\n"                           \
+        "    pushl %fs\n"                           \
+        "    pushl %gs\n"                           \
+        "    pushl %ss\n"                           \
+        "    mov $0x10, %ax\n"                      \
+        "    mov %ax, %ds\n"                        \
+        "    mov %ax, %es\n"                        \
+        "    cld\n"                                 \
+        "    call " #title "_handler\n"             \
+        "    add $0x4, %esp\n"                      \
+        "    popl %gs\n"                            \
+        "    popl %fs\n"                            \
+        "    popl %es\n"                            \
+        "    popl %ds\n"                            \
+        "    popa\n"                                \
+        "    add $0x4, %esp\n"                      \
         "    iret\n");
 
-static void dump(const RegisterDump& regs)
+static void dump(const RegisterState& regs)
 {
     u16 ss;
     u32 esp;
@@ -199,7 +199,7 @@ static void dump(const RegisterDump& regs)
     }
 }
 
-void handle_crash(RegisterDump& regs, const char* description, int signal)
+void handle_crash(RegisterState& regs, const char* description, int signal)
 {
     if (!current) {
         kprintf("%s with !current\n", description);
@@ -229,21 +229,21 @@ void handle_crash(RegisterDump& regs, const char* description, int signal)
 }
 
 EH_ENTRY_NO_CODE(6, illegal_instruction);
-void illegal_instruction_handler(RegisterDump regs)
+void illegal_instruction_handler(RegisterState regs)
 {
     clac();
     handle_crash(regs, "Illegal instruction", SIGILL);
 }
 
 EH_ENTRY_NO_CODE(0, divide_error);
-void divide_error_handler(RegisterDump regs)
+void divide_error_handler(RegisterState regs)
 {
     clac();
     handle_crash(regs, "Divide error", SIGFPE);
 }
 
 EH_ENTRY(13, general_protection_fault);
-void general_protection_fault_handler(RegisterDump regs)
+void general_protection_fault_handler(RegisterState regs)
 {
     clac();
     handle_crash(regs, "General protection fault", SIGSEGV);
@@ -251,7 +251,7 @@ void general_protection_fault_handler(RegisterDump regs)
 
 // 7: FPU not available exception
 EH_ENTRY_NO_CODE(7, fpu_exception);
-void fpu_exception_handler(RegisterDump)
+void fpu_exception_handler(RegisterState)
 {
     // Just clear the TS flag. We've already restored the FPU state eagerly.
     // FIXME: It would be nice if we didn't have to do this at all.
@@ -260,7 +260,7 @@ void fpu_exception_handler(RegisterDump)
 
 // 14: Page Fault
 EH_ENTRY(14, page_fault);
-void page_fault_handler(RegisterDump regs)
+void page_fault_handler(RegisterState regs)
 {
     clac();
     //ASSERT(current);
@@ -543,7 +543,7 @@ void load_task_register(u16 selector)
     asm("ltr %0" ::"r"(selector));
 }
 
-void handle_irq(RegisterDump regs)
+void handle_irq(RegisterState regs)
 {
     clac();
     ASSERT(regs.isr_number >= 0x50 && regs.isr_number <= 0x5f);

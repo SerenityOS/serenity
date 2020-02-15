@@ -568,8 +568,8 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
 
     // We now place the thread state on the userspace stack.
     // Note that when we are in the kernel (ie. blocking) we cannot use the
-    // tss, as that will contain kernel state; instead, we use a RegisterDump.
-    // Conversely, when the thread isn't blocking the RegisterDump may not be
+    // tss, as that will contain kernel state; instead, we use a RegisterState.
+    // Conversely, when the thread isn't blocking the RegisterState may not be
     // valid (fork, exec etc) but the tss will, so we use that instead.
     if (!in_kernel()) {
         u32* stack = &m_tss.esp;
@@ -612,12 +612,12 @@ void Thread::push_value_on_stack(uintptr_t value)
     copy_to_user(stack_ptr, &value);
 }
 
-RegisterDump& Thread::get_register_dump_from_stack()
+RegisterState& Thread::get_register_dump_from_stack()
 {
     // The userspace registers should be stored at the top of the stack
     // We have to subtract 2 because the processor decrements the kernel
     // stack before pushing the args.
-    return *(RegisterDump*)(kernel_stack_top() - sizeof(RegisterDump));
+    return *(RegisterState*)(kernel_stack_top() - sizeof(RegisterState));
 }
 
 u32 Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment)

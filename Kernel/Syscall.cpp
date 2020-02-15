@@ -31,7 +31,7 @@
 #include <Kernel/Syscall.h>
 #include <Kernel/VM/MemoryManager.h>
 
-extern "C" void syscall_handler(RegisterDump);
+extern "C" void syscall_handler(RegisterState);
 extern "C" void syscall_asm_entry();
 
 asm(
@@ -62,7 +62,7 @@ asm(
 
 namespace Syscall {
 
-static int handle(RegisterDump&, u32 function, u32 arg1, u32 arg2, u32 arg3);
+static int handle(RegisterState&, u32 function, u32 arg1, u32 arg2, u32 arg3);
 
 void initialize()
 {
@@ -80,7 +80,7 @@ static Handler s_syscall_table[] = {
 #undef __ENUMERATE_SYSCALL
 #undef __ENUMERATE_REMOVED_SYSCALL
 
-int handle(RegisterDump& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
+int handle(RegisterState& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
 {
     ASSERT_INTERRUPTS_ENABLED();
     auto& process = current->process();
@@ -119,7 +119,7 @@ int handle(RegisterDump& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
 
 }
 
-void syscall_handler(RegisterDump regs)
+void syscall_handler(RegisterState regs)
 {
     // Special handling of the "gettid" syscall since it's extremely hot.
     // FIXME: Remove this hack once userspace locks stop calling it so damn much.

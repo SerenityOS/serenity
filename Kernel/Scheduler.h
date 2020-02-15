@@ -34,7 +34,7 @@
 class Process;
 class Thread;
 class WaitQueue;
-struct RegisterDump;
+struct RegisterState;
 struct SchedulerData;
 
 extern Thread* current;
@@ -48,7 +48,7 @@ extern SchedulerData* g_scheduler_data;
 class Scheduler {
 public:
     static void initialize();
-    static void timer_tick(RegisterDump&);
+    static void timer_tick(RegisterState&);
     static bool pick_next();
     static void pick_next_and_switch_now();
     static void switch_now();
