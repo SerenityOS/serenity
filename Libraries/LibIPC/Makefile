@@ -1,4 +1,5 @@
 OBJS = \
+    Encoder.o \
     Endpoint.o \
     Message.o
 

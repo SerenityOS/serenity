@@ -392,14 +392,7 @@ int main(int argc, char** argv)
             dbg() << "        stream << endpoint_magic();";
             dbg() << "        stream << (int)MessageID::" << name << ";";
             for (auto& parameter : parameters) {
-                if (parameter.type == "String") {
-                    dbg() << "        if (m_" << parameter.name << ".is_null()) {";
-                    dbg() << "            stream << (i32)-1;";
-                    dbg() << "        } else {";
-                    dbg() << "            stream << static_cast<i32>(m_" << parameter.name << ".length());";
-                    dbg() << "            stream << m_" << parameter.name << ";";
-                    dbg() << "        }";
-                } else if (parameter.type == "Gfx::Color") {
+                if (parameter.type == "Gfx::Color") {
                     dbg() << "        stream << m_" << parameter.name << ".value();";
                 } else if (parameter.type == "Gfx::Size") {
                     dbg() << "        stream << m_" << parameter.name << ".width();";
