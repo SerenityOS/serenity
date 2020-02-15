@@ -27,7 +27,7 @@
 #pragma once
 
 #ifdef __serenity__
-#    include <Libraries/LibBareMetal/Output/kstdio.h>
+#    include <LibBareMetal/Output/kstdio.h>
 #else
 #include <stdio.h>
 #define kprintf printf
