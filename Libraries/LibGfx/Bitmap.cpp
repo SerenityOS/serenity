@@ -71,14 +71,6 @@ RefPtr<Bitmap> Bitmap::load_from_file(const StringView& path)
     return load_png(path);
 }
 
-RefPtr<Bitmap> Bitmap::load_from_file(BitmapFormat format, const StringView& path, const Size& size)
-{
-    MappedFile mapped_file(path);
-    if (!mapped_file.is_valid())
-        return nullptr;
-    return adopt(*new Bitmap(format, size, move(mapped_file)));
-}
-
 Bitmap::Bitmap(BitmapFormat format, const Size& size, size_t pitch, RGBA32* data)
     : m_size(size)
     , m_data(data)
@@ -87,16 +79,6 @@ Bitmap::Bitmap(BitmapFormat format, const Size& size, size_t pitch, RGBA32* data
 {
     if (format == BitmapFormat::Indexed8)
         m_palette = new RGBA32[256];
-}
-
-Bitmap::Bitmap(BitmapFormat format, const Size& size, MappedFile&& mapped_file)
-    : m_size(size)
-    , m_data((RGBA32*)mapped_file.data())
-    , m_pitch(round_up_to_power_of_two(size.width() * sizeof(RGBA32), 16))
-    , m_format(format)
-    , m_mapped_file(move(mapped_file))
-{
-    ASSERT(format != BitmapFormat::Indexed8);
 }
 
 NonnullRefPtr<Bitmap> Bitmap::create_with_shared_buffer(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer, const Size& size)
