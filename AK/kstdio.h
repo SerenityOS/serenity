@@ -27,10 +27,24 @@
 #pragma once
 
 #ifdef __serenity__
-#    include <LibBareMetal/Output/kstdio.h>
+#    if defined(KERNEL) || defined(BOOTSTRAPPER)
+#        include <LibBareMetal/Output/kstdio.h>
+#    else
+#        include <AK/Types.h>
+extern "C" {
+int dbgprintf(const char* fmt, ...);
+int dbgputstr(const char*, int);
+int sprintf(char* buf, const char* fmt, ...);
+}
+template<size_t N>
+inline int dbgputstr(const char (&array)[N])
+{
+    return ::dbgputstr(array, N);
+}
+#    endif
 #else
-#include <stdio.h>
-#define kprintf printf
-#define dbgprintf printf
-#define dbgputstr(characters, length) fwrite(characters, 1, length, stdout)
+#    include <stdio.h>
+#    define kprintf printf
+#    define dbgprintf printf
+#    define dbgputstr(characters, length) fwrite(characters, 1, length, stdout)
 #endif
