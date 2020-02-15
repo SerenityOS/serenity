@@ -37,107 +37,19 @@ public:
     {
     }
 
-    Encoder& operator<<(bool value)
-    {
-        return *this << (u8)value;
-    }
-
-    Encoder& operator<<(u8 value)
-    {
-        m_buffer.append(value);
-        return *this;
-    }
-
-    Encoder& operator<<(u16 value)
-    {
-        m_buffer.ensure_capacity(m_buffer.size() + 2);
-        m_buffer.unchecked_append((u8)value);
-        m_buffer.unchecked_append((u8)(value >> 8));
-        return *this;
-    }
-
-    Encoder& operator<<(u32 value)
-    {
-        m_buffer.ensure_capacity(m_buffer.size() + 4);
-        m_buffer.unchecked_append((u8)value);
-        m_buffer.unchecked_append((u8)(value >> 8));
-        m_buffer.unchecked_append((u8)(value >> 16));
-        m_buffer.unchecked_append((u8)(value >> 24));
-        return *this;
-    }
-
-    Encoder& operator<<(u64 value)
-    {
-        m_buffer.ensure_capacity(m_buffer.size() + 8);
-        m_buffer.unchecked_append((u8)value);
-        m_buffer.unchecked_append((u8)(value >> 8));
-        m_buffer.unchecked_append((u8)(value >> 16));
-        m_buffer.unchecked_append((u8)(value >> 24));
-        m_buffer.unchecked_append((u8)(value >> 32));
-        m_buffer.unchecked_append((u8)(value >> 40));
-        m_buffer.unchecked_append((u8)(value >> 48));
-        m_buffer.unchecked_append((u8)(value >> 56));
-        return *this;
-    }
-
-    Encoder& operator<<(i8 value)
-    {
-        m_buffer.append((u8)value);
-        return *this;
-    }
-
-    Encoder& operator<<(i16 value)
-    {
-        m_buffer.ensure_capacity(m_buffer.size() + 2);
-        m_buffer.unchecked_append((u8)value);
-        m_buffer.unchecked_append((u8)(value >> 8));
-        return *this;
-    }
-
-    Encoder& operator<<(i32 value)
-    {
-        m_buffer.ensure_capacity(m_buffer.size() + 4);
-        m_buffer.unchecked_append((u8)value);
-        m_buffer.unchecked_append((u8)(value >> 8));
-        m_buffer.unchecked_append((u8)(value >> 16));
-        m_buffer.unchecked_append((u8)(value >> 24));
-        return *this;
-    }
-
-    Encoder& operator<<(i64 value)
-    {
-        m_buffer.ensure_capacity(m_buffer.size() + 8);
-        m_buffer.unchecked_append((u8)value);
-        m_buffer.unchecked_append((u8)(value >> 8));
-        m_buffer.unchecked_append((u8)(value >> 16));
-        m_buffer.unchecked_append((u8)(value >> 24));
-        m_buffer.unchecked_append((u8)(value >> 32));
-        m_buffer.unchecked_append((u8)(value >> 40));
-        m_buffer.unchecked_append((u8)(value >> 48));
-        m_buffer.unchecked_append((u8)(value >> 56));
-        return *this;
-    }
-
-    Encoder& operator<<(float value)
-    {
-        union bits {
-            float as_float;
-            u32 as_u32;
-        } u;
-        u.as_float = value;
-        return *this << u.as_u32;
-    }
-
-    Encoder& operator<<(const char* value)
-    {
-        return *this << StringView(value);
-    }
-
-    Encoder& operator<<(const StringView& value)
-    {
-        m_buffer.append((const u8*)value.characters_without_null_termination(), value.length());
-        return *this;
-    }
+    Encoder& operator<<(bool);
+    Encoder& operator<<(u8);
+    Encoder& operator<<(u16);
+    Encoder& operator<<(u32);
+    Encoder& operator<<(u64);
+    Encoder& operator<<(i8);
+    Encoder& operator<<(i16);
+    Encoder& operator<<(i32);
+    Encoder& operator<<(i64);
+    Encoder& operator<<(float);
+    Encoder& operator<<(const char*);
+    Encoder& operator<<(const StringView&);
+    Encoder& operator<<(const String&);
 
 private:
     MessageBuffer& m_buffer;
