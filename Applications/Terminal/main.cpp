@@ -40,6 +40,7 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/Palette.h>
 #include <LibVT/TerminalWidget.h>
 #include <assert.h>
 #include <errno.h>

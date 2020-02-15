@@ -52,6 +52,7 @@
 #include <LibGUI/ToolBar.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Palette.h>
 #include <LibPCIDB/Database.h>
 #include <signal.h>
 #include <stdio.h>
@@ -145,11 +146,13 @@ int main(int argc, char** argv)
     toolbar->set_has_frame(false);
     auto process_table_view = ProcessTableView::construct(process_table_container);
 
-    auto refresh_timer = Core::Timer::construct(1000, [&] {
-        process_table_view->refresh();
-        if (auto* memory_stats_widget = MemoryStatsWidget::the())
-            memory_stats_widget->refresh();
-    }, window);
+    auto refresh_timer = Core::Timer::construct(
+        1000, [&] {
+            process_table_view->refresh();
+            if (auto* memory_stats_widget = MemoryStatsWidget::the())
+                memory_stats_widget->refresh();
+        },
+        window);
 
     auto kill_action = GUI::Action::create("Kill process", { Mod_Ctrl, Key_K }, Gfx::Bitmap::load_from_file("/res/icons/kill16.png"), [process_table_view](const GUI::Action&) {
         pid_t pid = process_table_view->selected_pid();
