@@ -25,6 +25,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/BufferStream.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <LibGfx/Color.h>
@@ -344,7 +345,17 @@ Optional<Color> Color::from_string(const StringView& string)
 }
 }
 
-inline const LogStream& operator<<(const LogStream& stream, Color value)
+const LogStream& operator<<(const LogStream& stream, Color value)
 {
     return stream << value.to_string();
+}
+
+bool IPC::decode(BufferStream& stream, Color& color)
+{
+    u32 rgba;
+    stream >> rgba;
+    if (stream.handle_read_failure())
+        return false;
+    color = Color::from_rgba(rgba);
+    return true;
 }

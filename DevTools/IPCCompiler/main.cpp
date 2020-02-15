@@ -228,6 +228,7 @@ int main(int argc, char** argv)
     dbg() << "#include <AK/OwnPtr.h>";
     dbg() << "#include <LibGfx/Color.h>";
     dbg() << "#include <LibGfx/Rect.h>";
+    dbg() << "#include <LibIPC/Decoder.h>";
     dbg() << "#include <LibIPC/Encoder.h>";
     dbg() << "#include <LibIPC/Endpoint.h>";
     dbg() << "#include <LibIPC/Message.h>";
@@ -300,8 +301,7 @@ int main(int argc, char** argv)
             dbg() << "    static OwnPtr<" << name << "> decode(BufferStream& stream, size_t& size_in_bytes)";
             dbg() << "    {";
 
-            if (parameters.is_empty())
-                dbg() << "        (void)stream;";
+            dbg() << "        IPC::Decoder decoder(stream);";
 
             for (auto& parameter : parameters) {
                 String initial_value = "{}";
@@ -309,70 +309,19 @@ int main(int argc, char** argv)
                     initial_value = "false";
                 dbg() << "        " << parameter.type << " " << parameter.name << " = " << initial_value << ";";
 
-                if (parameter.type == "String") {
-                    dbg() << "        i32 " << parameter.name << "_length = 0;";
-                    dbg() << "        stream >> " << parameter.name << "_length;";
-                    dbg() << "        if (" << parameter.name << "_length == 0) {";
-                    dbg() << "            " << parameter.name << " = String::empty();";
-                    dbg() << "        } else if (" << parameter.name << "_length < 0) {";
-                    dbg() << "            " << parameter.name << " = String();";
-                    dbg() << "        } else {";
-                    dbg() << "            char* " << parameter.name << "_buffer = nullptr;";
-                    dbg() << "            auto " << parameter.name << "_impl = StringImpl::create_uninitialized(static_cast<size_t>(" << parameter.name << "_length), " << parameter.name << "_buffer);";
-                    dbg() << "            for (size_t i = 0; i < static_cast<size_t>(" << parameter.name << "_length); ++i) {";
-                    dbg() << "                stream >> " << parameter.name << "_buffer[i];";
-                    dbg() << "            }";
-                    dbg() << "            " << parameter.name << " = *" << parameter.name << "_impl;";
-                    dbg() << "        }";
-                } else if (parameter.type == "Gfx::Color") {
-                    dbg() << "        u32 " << parameter.name << "_rgba = 0;";
-                    dbg() << "        stream >> " << parameter.name << "_rgba;";
-                    dbg() << "        " << parameter.name << " = Gfx::Color::from_rgba(" << parameter.name << "_rgba);";
-                } else if (parameter.type == "Gfx::Size") {
-                    dbg() << "        int " << parameter.name << "_width = 0;";
-                    dbg() << "        stream >> " << parameter.name << "_width;";
-                    dbg() << "        int " << parameter.name << "_height = 0;";
-                    dbg() << "        stream >> " << parameter.name << "_height;";
-                    dbg() << "        " << parameter.name << " = { " << parameter.name << "_width, " << parameter.name << "_height };";
-                } else if (parameter.type == "Gfx::Point") {
-                    dbg() << "        int " << parameter.name << "_x = 0;";
-                    dbg() << "        stream >> " << parameter.name << "_x;";
-                    dbg() << "        int " << parameter.name << "_y = 0;";
-                    dbg() << "        stream >> " << parameter.name << "_y;";
-                    dbg() << "        " << parameter.name << " = { " << parameter.name << "_x, " << parameter.name << "_y };";
-                } else if (parameter.type == "Gfx::Rect") {
-                    dbg() << "        int " << parameter.name << "_x = 0;";
-                    dbg() << "        stream >> " << parameter.name << "_x;";
-                    dbg() << "        int " << parameter.name << "_y = 0;";
-                    dbg() << "        stream >> " << parameter.name << "_y;";
-                    dbg() << "        int " << parameter.name << "_width = 0;";
-                    dbg() << "        stream >> " << parameter.name << "_width;";
-                    dbg() << "        int " << parameter.name << "_height = 0;";
-                    dbg() << "        stream >> " << parameter.name << "_height;";
-                    dbg() << "        " << parameter.name << " = { " << parameter.name << "_x, " << parameter.name << "_y, " << parameter.name << "_width, " << parameter.name << "_height };";
-                } else if (parameter.type == "Vector<Gfx::Rect>") {
+                if (parameter.type == "Vector<Gfx::Rect>") {
                     dbg() << "        int " << parameter.name << "_size = 0;";
                     dbg() << "        stream >> " << parameter.name << "_size;";
                     dbg() << "        for (int i = 0; i < " << parameter.name << "_size; ++i) {";
-                    dbg() << "            int " << parameter.name << "_x = 0;";
-                    dbg() << "            stream >> " << parameter.name << "_x;";
-                    dbg() << "            int " << parameter.name << "_y = 0;";
-                    dbg() << "            stream >> " << parameter.name << "_y;";
-                    dbg() << "            int " << parameter.name << "_width = 0;";
-                    dbg() << "            stream >> " << parameter.name << "_width;";
-                    dbg() << "            int " << parameter.name << "_height = 0;";
-                    dbg() << "            stream >> " << parameter.name << "_height;";
-                    dbg() << "            " << parameter.name << ".empend(" << parameter.name << "_x, " << parameter.name << "_y, " << parameter.name << "_width, " << parameter.name << "_height);";
+                    dbg() << "            Gfx::Rect rect;";
+                    dbg() << "            if (!decoder.decode(rect))";
+                    dbg() << "                return nullptr;";
+                    dbg() << "            " << parameter.name << ".append(move(rect));";
                     dbg() << "        }";
                 } else {
-                    dbg() << "        stream >> " << parameter.name << ";";
+                    dbg() << "        if (!decoder.decode(" << parameter.name << "))";
+                    dbg() << "            return nullptr;";
                 }
-                dbg() << "        if (stream.handle_read_failure()) {";
-#ifdef GENERATE_DEBUG_CODE
-                dbg() << "            dbg() << \"Failed to decode " << name << "." << parameter.name << "\";";
-#endif
-                dbg() << "            return nullptr;";
-                dbg() << "        }";
             }
 
             StringBuilder builder;

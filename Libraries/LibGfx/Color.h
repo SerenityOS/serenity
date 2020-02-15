@@ -278,3 +278,7 @@ const LogStream& operator<<(const LogStream&, Color);
 }
 
 using Gfx::Color;
+
+namespace IPC {
+bool decode(BufferStream&, Gfx::Color&);
+}

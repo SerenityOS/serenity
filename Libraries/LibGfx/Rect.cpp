@@ -142,3 +142,19 @@ const LogStream& operator<<(const LogStream& stream, const Rect& value)
 }
 
 }
+
+namespace IPC {
+
+bool decode(BufferStream& stream, Gfx::Rect& rect)
+{
+    Gfx::Point point;
+    Gfx::Size size;
+    if (!decode(stream, point))
+        return false;
+    if (!decode(stream, size))
+        return false;
+    rect = { point, size };
+    return true;
+}
+
+}

@@ -159,3 +159,7 @@ private:
 const LogStream& operator<<(const LogStream&, const Point&);
 
 }
+
+namespace IPC {
+bool decode(BufferStream&, Gfx::Point&);
+}

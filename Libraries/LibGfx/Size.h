@@ -111,3 +111,7 @@ private:
 const LogStream& operator<<(const LogStream&, const Size&);
 
 }
+
+namespace IPC {
+bool decode(BufferStream&, Gfx::Size&);
+}
