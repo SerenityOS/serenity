@@ -31,7 +31,7 @@ extern "C" {
 
 const char _ctype_[256] = {
     _C, _C, _C, _C, _C, _C, _C, _C,
-    _C, (char)(_C | _S | _B), _C | _S, _C | _S, _C | _S, _C | _S, _C, _C,
+    _C, _C | _S, _C | _S, _C | _S, _C | _S, _C | _S, _C, _C,
     _C, _C, _C, _C, _C, _C, _C, _C,
     _C, _C, _C, _C, _C, _C, _C, _C,
     (char)(_S | _B), _P, _P, _P, _P, _P, _P, _P,
