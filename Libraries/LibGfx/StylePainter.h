@@ -26,13 +26,10 @@
 
 #pragma once
 
-#include <LibGfx/Color.h>
+#include <AK/Forward.h>
+#include <LibGfx/Forward.h>
 
 namespace Gfx {
-
-class Painter;
-class Palette;
-class Rect;
 
 enum class ButtonStyle {
     Normal,
