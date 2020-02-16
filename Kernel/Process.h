@@ -30,7 +30,6 @@
 #include <AK/InlineLinkedList.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/String.h>
-#include <AK/Weakable.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Lock.h>
@@ -93,8 +92,7 @@ struct UnveiledPath {
     unsigned permissions { 0 };
 };
 
-class Process : public InlineLinkedListNode<Process>
-    , public Weakable<Process> {
+class Process : public InlineLinkedListNode<Process> {
     friend class InlineLinkedListNode<Process>;
     friend class Thread;
 
