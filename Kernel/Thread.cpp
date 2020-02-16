@@ -34,6 +34,7 @@
 #include <Kernel/Scheduler.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <Kernel/VM/PageDirectory.h>
 #include <LibC/signal_numbers.h>
 #include <LibELF/ELFLoader.h>
 

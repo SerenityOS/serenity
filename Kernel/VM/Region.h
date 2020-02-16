@@ -26,11 +26,9 @@
 
 #pragma once
 
-#include <AK/Bitmap.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/String.h>
 #include <Kernel/Heap/SlabAllocator.h>
-#include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/RangeAllocator.h>
 
 namespace Kernel {
