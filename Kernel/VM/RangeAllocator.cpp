@@ -94,7 +94,7 @@ void RangeAllocator::carve_at_index(int index, const Range& range)
         m_available_ranges.insert(index + 1, move(remaining_parts[1]));
 }
 
-Range RangeAllocator::allocate_anywhere(size_t size)
+Range RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
 {
 #ifdef VM_GUARD_PAGES
     // NOTE: We pad VM allocations with a guard page on each side.
@@ -104,26 +104,32 @@ Range RangeAllocator::allocate_anywhere(size_t size)
     size_t effective_size = size;
     size_t offset_from_effective_base = 0;
 #endif
+
     for (int i = 0; i < m_available_ranges.size(); ++i) {
         auto& available_range = m_available_ranges[i];
-        if (available_range.size() < effective_size)
+        // FIXME: This check is probably excluding some valid candidates when using a large alignment.
+        if (available_range.size() < (effective_size + alignment))
             continue;
-        Range allocated_range(available_range.base().offset(offset_from_effective_base), size);
-        if (available_range.size() == effective_size) {
+
+        uintptr_t initial_base = available_range.base().offset(offset_from_effective_base).get();
+        uintptr_t aligned_base = round_up_to_power_of_two(initial_base, alignment);
+
+        Range allocated_range(VirtualAddress(aligned_base), size);
+        if (available_range == allocated_range) {
 #ifdef VRA_DEBUG
-            dbgprintf("VRA: Allocated perfect-fit anywhere(%u): %x\n", size, allocated_range.base().get());
+            dbgprintf("VRA: Allocated perfect-fit anywhere(%zu, %zu): %x\n", size, alignment, allocated_range.base().get());
 #endif
             m_available_ranges.remove(i);
             return allocated_range;
         }
         carve_at_index(i, allocated_range);
 #ifdef VRA_DEBUG
-        dbgprintf("VRA: Allocated anywhere(%u): %x\n", size, allocated_range.base().get());
+        dbgprintf("VRA: Allocated anywhere(%zu, %zu): %x\n", size, alignment, allocated_range.base().get());
         dump();
 #endif
         return allocated_range;
     }
-    kprintf("VRA: Failed to allocate anywhere: %u\n", size);
+    kprintf("VRA: Failed to allocate anywhere: %zu, %zu\n", size, alignment);
     return {};
 }
 

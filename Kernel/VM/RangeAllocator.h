@@ -84,7 +84,7 @@ public:
     void initialize_with_range(VirtualAddress, size_t);
     void initialize_from_parent(const RangeAllocator&);
 
-    Range allocate_anywhere(size_t);
+    Range allocate_anywhere(size_t, size_t alignment = PAGE_SIZE);
     Range allocate_specific(VirtualAddress, size_t);
     void deallocate(Range);
 
