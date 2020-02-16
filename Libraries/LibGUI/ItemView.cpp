@@ -259,6 +259,7 @@ void ItemView::paint_event(PaintEvent& event)
     painter.add_clip_rect(widget_inner_rect());
     painter.add_clip_rect(event.rect());
     painter.fill_rect(event.rect(), widget_background_color);
+    painter.translate(frame_thickness(), frame_thickness());
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
     auto column_metadata = model()->column_metadata(m_model_column);
