@@ -72,13 +72,17 @@ LIBRARY = libgui.a
 
 Application.cpp: ../../Servers/WindowServer/WindowServerEndpoint.h
 
-Notification.cpp: ../../Servers/NotificationServer/NotificationServerEndpoint.h
-
 ../../Servers/WindowServer/WindowServerEndpoint.h:
 	@flock $(dir $(@)) $(MAKE) -C $(dir $(@))
 
+# HACK: NotificationServer depends on LibGUI so we don't flock for these..
+Notification.cpp: ../../Servers/NotificationServer/NotificationServerEndpoint.h ../../Servers/NotificationServer/NotificationClientEndpoint.h
+
 ../../Servers/NotificationServer/NotificationServerEndpoint.h:
-	@flock $(dir $(@)) $(MAKE) -C $(dir $(@))
+	$(MAKE) -C $(dir $(@)) NotificationServerEndpoint.h
+
+../../Servers/NotificationServer/NotificationClientEndpoint.h:
+	$(MAKE) -C $(dir $(@)) NotificationClientEndpoint.h
 
 install:
 	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/LibGUI/
