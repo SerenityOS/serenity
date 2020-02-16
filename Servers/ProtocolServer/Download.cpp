@@ -39,7 +39,7 @@ static HashMap<i32, RefPtr<Download>>& all_downloads()
 
 Download* Download::find_by_id(i32 id)
 {
-    return all_downloads().get(id).value_or(nullptr);
+    return const_cast<Download*>(all_downloads().get(id).value_or(nullptr));
 }
 
 Download::Download(PSClientConnection& client)
