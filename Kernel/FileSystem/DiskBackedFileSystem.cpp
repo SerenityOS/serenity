@@ -32,6 +32,8 @@
 
 //#define DBFS_DEBUG
 
+namespace Kernel {
+
 struct CacheEntry {
     time_t timestamp { 0 };
     u32 block_index { 0 };
@@ -239,4 +241,6 @@ DiskCache& DiskBackedFS::cache() const
     if (!m_cache)
         m_cache = make<DiskCache>(const_cast<DiskBackedFS&>(*this));
     return *m_cache;
+}
+
 }

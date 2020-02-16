@@ -28,6 +28,8 @@
 
 #include <Kernel/Devices/Device.h>
 
+namespace Kernel {
+
 class BlockDevice : public Device {
 public:
     virtual ~BlockDevice() override;
@@ -55,3 +57,5 @@ private:
 
     size_t m_block_size { 0 };
 };
+
+}

@@ -27,6 +27,8 @@
 #include <Kernel/Devices/DebugLogDevice.h>
 #include <LibBareMetal/IO.h>
 
+namespace Kernel {
+
 static DebugLogDevice* s_the;
 
 DebugLogDevice& DebugLogDevice::the()
@@ -50,4 +52,6 @@ ssize_t DebugLogDevice::write(FileDescription&, const u8* data, ssize_t data_siz
     for (int i = 0; i < data_size; ++i)
         IO::out8(0xe9, data[i]);
     return data_size;
+}
+
 }

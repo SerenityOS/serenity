@@ -26,8 +26,11 @@
 
 #pragma once
 
+#include <AK/Bitmap.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/VM/VMObject.h>
+
+namespace Kernel {
 
 class InodeVMObject final : public VMObject {
 public:
@@ -65,3 +68,5 @@ private:
     NonnullRefPtr<Inode> m_inode;
     Bitmap m_dirty_pages;
 };
+
+}

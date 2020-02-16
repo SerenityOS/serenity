@@ -44,6 +44,8 @@
 #include <Kernel/VM/Region.h>
 #include <Kernel/VM/VMObject.h>
 
+namespace Kernel {
+
 #define PAGE_ROUND_UP(x) ((((u32)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1)))
 
 template<typename T>
@@ -71,7 +73,7 @@ inline u32 virtual_to_low_physical(u32 physical)
 class KBuffer;
 class SynthFSInode;
 
-#define MM MemoryManager::the()
+#define MM Kernel::MemoryManager::the()
 
 class MemoryManager {
     AK_MAKE_ETERNAL
@@ -138,8 +140,10 @@ private:
     MemoryManager();
     ~MemoryManager();
 
-    enum class AccessSpace { Kernel, User };
-    enum class AccessType { Read, Write };
+    enum class AccessSpace { Kernel,
+        User };
+    enum class AccessType { Read,
+        Write };
     template<AccessSpace, AccessType>
     bool validate_range(const Process&, VirtualAddress, size_t) const;
 
@@ -231,4 +235,6 @@ inline bool is_user_range(VirtualAddress vaddr, size_t size)
 inline bool PhysicalPage::is_shared_zero_page() const
 {
     return this == &MM.shared_zero_page();
+}
+
 }

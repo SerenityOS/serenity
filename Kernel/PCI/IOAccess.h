@@ -27,6 +27,8 @@
 #pragma once
 #include <Kernel/PCI/Access.h>
 
+namespace Kernel {
+
 class PCI::IOAccess final : public PCI::Access {
 public:
     static void initialize();
@@ -34,6 +36,7 @@ public:
 
     virtual String get_access_type() override final { return "IO-Access"; };
     virtual uint32_t get_segments_count() { return 1; };
+
 protected:
     IOAccess();
 
@@ -44,7 +47,10 @@ private:
     virtual void write8_field(Address address, u32, u8) override final;
     virtual void write16_field(Address address, u32, u16) override final;
     virtual void write32_field(Address address, u32, u32) override final;
-    
+
     virtual uint8_t get_segment_start_bus(u32) { return 0x0; };
     virtual uint8_t get_segment_end_bus(u32) { return 0xFF; };
 };
+
+}
+

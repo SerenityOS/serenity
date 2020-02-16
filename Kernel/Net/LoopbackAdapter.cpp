@@ -26,6 +26,8 @@
 
 #include <Kernel/Net/LoopbackAdapter.h>
 
+namespace Kernel {
+
 LoopbackAdapter& LoopbackAdapter::the()
 {
     static LoopbackAdapter* the;
@@ -49,4 +51,6 @@ void LoopbackAdapter::send_raw(const u8* data, size_t size)
 {
     dbgprintf("LoopbackAdapter: Sending %d byte(s) to myself.\n", size);
     did_receive(data, size);
+}
+
 }

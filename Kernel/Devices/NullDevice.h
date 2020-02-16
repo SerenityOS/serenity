@@ -28,6 +28,8 @@
 
 #include "CharacterDevice.h"
 
+namespace Kernel {
+
 class NullDevice final : public CharacterDevice {
     AK_MAKE_ETERNAL
 public:
@@ -44,3 +46,5 @@ private:
     virtual bool can_read(const FileDescription&) const override;
     virtual const char* class_name() const override { return "NullDevice"; }
 };
+
+}

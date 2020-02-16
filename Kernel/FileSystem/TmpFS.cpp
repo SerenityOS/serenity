@@ -28,6 +28,8 @@
 #include <Kernel/Process.h>
 #include <Kernel/Thread.h>
 
+namespace Kernel {
+
 NonnullRefPtr<TmpFS> TmpFS::create()
 {
     return adopt(*new TmpFS);
@@ -396,4 +398,6 @@ void TmpFSInode::one_ref_left()
 {
     // Destroy ourselves.
     fs().unregister_inode(identifier());
+}
+
 }

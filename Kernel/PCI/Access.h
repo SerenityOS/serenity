@@ -29,6 +29,8 @@
 #include <AK/String.h>
 #include <Kernel/PCI/Definitions.h>
 
+namespace Kernel {
+
 class PCI::Access {
 public:
     virtual void enumerate_all(Function<void(Address, ID)>&) = 0;
@@ -86,3 +88,5 @@ protected:
     virtual void write16_field(Address address, u32 field, u16 value) = 0;
     virtual void write32_field(Address address, u32 field, u32 value) = 0;
 };
+
+}

@@ -30,6 +30,8 @@
 #include <Kernel/ACPI/Definitions.h>
 #include <Kernel/PCI/Definitions.h>
 
+namespace Kernel {
+
 class PCI::Initializer {
 public:
     static PCI::Initializer& the();
@@ -47,3 +49,5 @@ private:
     bool test_pci_mmio();
     void initialize_pci_mmio_access_after_test();
 };
+
+}

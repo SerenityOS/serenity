@@ -28,7 +28,9 @@
 
 #include <AK/Atomic.h>
 #include <AK/Function.h>
+#include <AK/HashTable.h>
 #include <AK/IntrusiveList.h>
+#include <AK/Optional.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
@@ -37,8 +39,9 @@
 #include <Kernel/KResult.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/UnixTypes.h>
-#include <Kernel/VM/Region.h>
 #include <LibC/fd_set.h>
+
+namespace Kernel {
 
 class Alarm;
 class FileDescription;
@@ -179,6 +182,7 @@ public:
         explicit WriteBlocker(const FileDescription&);
         virtual bool should_unblock(Thread&, time_t, long) override;
         virtual const char* state_string() const override { return "Writing"; }
+
     private:
         Optional<timeval> m_deadline;
     };
@@ -188,6 +192,7 @@ public:
         explicit ReadBlocker(const FileDescription&);
         virtual bool should_unblock(Thread&, time_t, long) override;
         virtual const char* state_string() const override { return "Reading"; }
+
     private:
         Optional<timeval> m_deadline;
     };
@@ -579,3 +584,5 @@ inline IterationDecision Scheduler::for_each_nonrunnable(Callback callback)
 
 u16 thread_specific_selector();
 Descriptor& thread_specific_descriptor();
+
+}

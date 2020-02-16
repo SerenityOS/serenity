@@ -37,6 +37,8 @@
 
 //#define PAGE_FAULT_DEBUG
 
+namespace Kernel {
+
 struct [[gnu::packed]] DescriptorTablePointer
 {
     u16 limit;
@@ -553,24 +555,6 @@ void handle_irq(RegisterState regs)
     PIC::eoi(irq);
 }
 
-#ifdef DEBUG
-void __assertion_failed(const char* msg, const char* file, unsigned line, const char* func)
-{
-    asm volatile("cli");
-    kprintf("ASSERTION FAILED: %s\n%s:%u in %s\n", msg, file, line, func);
-
-    // Switch back to the current process's page tables if there are any.
-    // Otherwise stack walking will be a disaster.
-    if (current)
-        MM.enter_process_paging_scope(current->process());
-
-    dump_backtrace();
-    asm volatile("hlt");
-    for (;;)
-        ;
-}
-#endif
-
 void sse_init()
 {
     asm volatile(
@@ -725,3 +709,23 @@ void write_cr3(u32 cr3)
     asm volatile("movl %%eax, %%cr3" ::"a"(cr3)
                  : "memory");
 }
+
+}
+
+#ifdef DEBUG
+void __assertion_failed(const char* msg, const char* file, unsigned line, const char* func)
+{
+    asm volatile("cli");
+    kprintf("ASSERTION FAILED: %s\n%s:%u in %s\n", msg, file, line, func);
+
+    // Switch back to the current process's page tables if there are any.
+    // Otherwise stack walking will be a disaster.
+    if (Kernel::current)
+        MM.enter_process_paging_scope(Kernel::current->process());
+
+    Kernel::dump_backtrace();
+    asm volatile("hlt");
+    for (;;)
+        ;
+}
+#endif

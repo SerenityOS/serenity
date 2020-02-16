@@ -30,6 +30,8 @@
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Lock.h>
 
+namespace Kernel {
+
 class MasterPTY;
 
 class PTYMultiplexer final : public CharacterDevice {
@@ -56,3 +58,5 @@ private:
     Lock m_lock { "PTYMultiplexer" };
     Vector<unsigned> m_freelist;
 };
+
+}

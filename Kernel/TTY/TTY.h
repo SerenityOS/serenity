@@ -31,6 +31,8 @@
 #include <Kernel/DoubleBuffer.h>
 #include <Kernel/UnixTypes.h>
 
+namespace Kernel {
+
 class Process;
 
 class TTY : public CharacterDevice {
@@ -95,3 +97,5 @@ private:
     unsigned short m_rows { 0 };
     unsigned short m_columns { 0 };
 };
+
+}

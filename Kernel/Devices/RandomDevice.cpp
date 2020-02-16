@@ -27,6 +27,8 @@
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Random.h>
 
+namespace Kernel {
+
 RandomDevice::RandomDevice()
     : CharacterDevice(1, 8)
 {
@@ -51,4 +53,6 @@ ssize_t RandomDevice::write(FileDescription&, const u8*, ssize_t size)
 {
     // FIXME: Use input for entropy? I guess that could be a neat feature?
     return min(PAGE_SIZE, size);
+}
+
 }

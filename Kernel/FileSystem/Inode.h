@@ -26,16 +26,18 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/Function.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/RefCounted.h>
+#include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/KResult.h>
 #include <Kernel/Lock.h>
+
+namespace Kernel {
 
 class FileDescription;
 class InodeVMObject;
@@ -132,3 +134,5 @@ private:
     HashTable<InodeWatcher*> m_watchers;
     bool m_metadata_dirty { false };
 };
+
+}

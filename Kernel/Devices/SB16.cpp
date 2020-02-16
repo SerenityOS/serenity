@@ -32,6 +32,8 @@
 
 //#define SB16_DEBUG
 
+namespace Kernel {
+
 enum class SampleFormat : u8 {
     Signed = 0x10,
     Stereo = 0x20,
@@ -214,4 +216,6 @@ ssize_t SB16::write(FileDescription&, const u8* data, ssize_t length)
 
     wait_for_irq();
     return length;
+}
+
 }

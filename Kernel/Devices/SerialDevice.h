@@ -26,6 +26,8 @@
 
 #include <Kernel/Devices/CharacterDevice.h>
 
+namespace Kernel {
+
 #define SERIAL_COM1_ADDR 0x3F8
 #define SERIAL_COM2_ADDR 0x2F8
 #define SERIAL_COM3_ADDR 0x3E8
@@ -144,3 +146,5 @@ private:
     bool m_break_enable;
     char m_modem_control;
 };
+
+}

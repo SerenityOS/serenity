@@ -30,6 +30,8 @@
 #include <Kernel/Devices/PATADiskDevice.h>
 #include <Kernel/FileSystem/FileDescription.h>
 
+namespace Kernel {
+
 NonnullRefPtr<PATADiskDevice> PATADiskDevice::create(PATAChannel& channel, DriveType type, int major, int minor)
 {
     return adopt(*new PATADiskDevice(channel, type, major, minor));
@@ -186,4 +188,6 @@ bool PATADiskDevice::write_sectors(u32 start_sector, u16 count, const u8* inbuf)
 bool PATADiskDevice::is_slave() const
 {
     return m_drive_type == DriveType::Slave;
+}
+
 }

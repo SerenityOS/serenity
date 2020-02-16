@@ -31,6 +31,8 @@
 #include <LibC/errno_numbers.h>
 #include <LibC/sys/ioctl_numbers.h>
 
+namespace Kernel {
+
 static MBVGADevice* s_the;
 
 MBVGADevice& MBVGADevice::the()
@@ -108,4 +110,6 @@ int MBVGADevice::ioctl(FileDescription&, unsigned request, unsigned arg)
     default:
         return -EINVAL;
     };
+}
+
 }

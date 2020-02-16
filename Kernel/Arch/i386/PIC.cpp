@@ -30,6 +30,8 @@
 #include <Kernel/Arch/i386/PIC.h>
 #include <LibBareMetal/IO.h>
 
+namespace Kernel {
+
 // The slave 8259 is connected to the master's IRQ2 line.
 // This is really only to enhance clarity.
 #define SLAVE_INDEX 2
@@ -134,6 +136,8 @@ u16 get_irr()
     u8 irr0 = IO::in8(PIC0_CTL);
     u8 irr1 = IO::in8(PIC1_CTL);
     return (irr1 << 8) | irr0;
+}
+
 }
 
 }

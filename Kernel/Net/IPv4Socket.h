@@ -35,6 +35,8 @@
 #include <Kernel/Net/IPv4SocketTuple.h>
 #include <Kernel/Net/Socket.h>
 
+namespace Kernel {
+
 class NetworkAdapter;
 class TCPPacket;
 class TCPSocket;
@@ -137,3 +139,5 @@ private:
 
     Optional<KBuffer> m_scratch_buffer;
 };
+
+}

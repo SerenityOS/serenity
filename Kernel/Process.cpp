@@ -82,6 +82,8 @@
 //#define SIGNAL_DEBUG
 //#define SHARED_BUFFER_DEBUG
 
+namespace Kernel {
+
 static void create_signal_trampolines();
 static void create_kernel_info_page();
 
@@ -4725,4 +4727,6 @@ int Process::sys$perf_event(int type, uintptr_t arg1, uintptr_t arg2)
     if (!m_perf_event_buffer)
         m_perf_event_buffer = make<PerformanceEventBuffer>();
     return m_perf_event_buffer->append(type, arg1, arg2);
+}
+
 }

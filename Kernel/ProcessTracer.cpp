@@ -26,6 +26,8 @@
 
 #include <Kernel/ProcessTracer.h>
 
+namespace Kernel {
+
 ProcessTracer::ProcessTracer(pid_t pid)
     : m_pid(pid)
 {
@@ -55,4 +57,6 @@ int ProcessTracer::read(FileDescription&, u8* buffer, int buffer_size)
 String ProcessTracer::absolute_path(const FileDescription&) const
 {
     return String::format("tracer:%d", m_pid);
+}
+
 }

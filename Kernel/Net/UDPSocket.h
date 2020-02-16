@@ -28,6 +28,8 @@
 
 #include <Kernel/Net/IPv4Socket.h>
 
+namespace Kernel {
+
 class UDPSocket final : public IPv4Socket {
 public:
     static NonnullRefPtr<UDPSocket> create(int protocol);
@@ -47,3 +49,5 @@ private:
     virtual int protocol_allocate_local_port() override;
     virtual KResult protocol_bind() override;
 };
+
+}

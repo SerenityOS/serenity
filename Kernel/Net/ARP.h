@@ -31,6 +31,8 @@
 #include <Kernel/Net/IPv4.h>
 #include <Kernel/Net/MACAddress.h>
 
+namespace Kernel {
+
 struct ARPOperation {
     enum : u16 {
         Request = 1,
@@ -87,3 +89,5 @@ private:
 };
 
 static_assert(sizeof(ARPPacket) == 28);
+
+}

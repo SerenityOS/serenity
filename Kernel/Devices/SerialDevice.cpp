@@ -27,6 +27,8 @@
 #include <Kernel/Devices/SerialDevice.h>
 #include <LibBareMetal/IO.h>
 
+namespace Kernel {
+
 SerialDevice::SerialDevice(int base_addr, unsigned minor)
     : CharacterDevice(4, minor)
     , m_base_addr(base_addr)
@@ -133,4 +135,6 @@ void SerialDevice::set_modem_control(char modem_control)
 char SerialDevice::get_line_status() const
 {
     return IO::in8(m_base_addr + 5);
+}
+
 }

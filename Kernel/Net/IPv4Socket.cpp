@@ -43,6 +43,8 @@
 
 //#define IPV4_SOCKET_DEBUG
 
+namespace Kernel {
+
 Lockable<HashTable<IPv4Socket*>>& IPv4Socket::all_sockets()
 {
     static Lockable<HashTable<IPv4Socket*>>* s_table;
@@ -510,4 +512,6 @@ void IPv4Socket::shut_down_for_reading()
 {
     Socket::shut_down_for_reading();
     m_can_read = true;
+}
+
 }

@@ -30,6 +30,8 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 
+namespace Kernel {
+
 namespace ACPI_RAW {
 
 struct [[gnu::packed]] RSDPDescriptor
@@ -308,4 +310,6 @@ private:
 
 class MADT : public SDT {
 };
+}
+
 }

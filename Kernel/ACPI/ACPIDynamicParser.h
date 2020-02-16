@@ -33,6 +33,8 @@
 #include <Kernel/VM/PhysicalPage.h>
 #include <LibBareMetal/Memory/PhysicalAddress.h>
 
+namespace Kernel {
+
 class ACPIDynamicParser final : public IRQHandler
     , ACPIStaticParser {
 public:
@@ -56,3 +58,5 @@ private:
 
     OwnPtr<Region> m_acpi_namespace;
 };
+
+}

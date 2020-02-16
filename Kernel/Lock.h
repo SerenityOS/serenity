@@ -30,9 +30,10 @@
 #include <AK/Atomic.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
-#include <Kernel/KSyms.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/WaitQueue.h>
+
+namespace Kernel {
 
 class Thread;
 extern Thread* current;
@@ -98,3 +99,5 @@ private:
     T m_resource;
     Lock m_lock;
 };
+
+}

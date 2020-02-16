@@ -32,6 +32,8 @@
 #include <LibBareMetal/Memory/PhysicalAddress.h>
 #include <LibBareMetal/Memory/VirtualAddress.h>
 
+namespace Kernel {
+
 namespace SMBIOS {
 struct [[gnu::packed]] LegacyEntryPoint32bit
 {
@@ -1418,3 +1420,5 @@ private:
 
     SinglyLinkedList<SMBIOS::TableHeader*> m_smbios_tables;
 };
+
+}

@@ -28,6 +28,8 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Arch/i386/PIC.h>
 
+namespace Kernel {
+
 IRQHandler::IRQHandler(u8 irq)
     : m_irq_number(irq)
 {
@@ -47,4 +49,6 @@ void IRQHandler::enable_irq()
 void IRQHandler::disable_irq()
 {
     PIC::disable(m_irq_number);
+}
+
 }

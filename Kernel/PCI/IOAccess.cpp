@@ -27,6 +27,8 @@
 #include <Kernel/PCI/IOAccess.h>
 #include <LibBareMetal/IO.h>
 
+namespace Kernel {
+
 void PCI::IOAccess::initialize()
 {
     if (!PCI::Access::is_initialized())
@@ -86,4 +88,6 @@ void PCI::IOAccess::enumerate_all(Function<void(Address, ID)>& callback)
             break;
         enumerate_bus(-1, function, callback);
     }
+}
+
 }

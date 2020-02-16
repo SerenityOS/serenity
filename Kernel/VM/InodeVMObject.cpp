@@ -29,6 +29,8 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/Region.h>
 
+namespace Kernel {
+
 NonnullRefPtr<InodeVMObject> InodeVMObject::create_with_inode(Inode& inode)
 {
     size_t size = inode.size();
@@ -194,4 +196,6 @@ u32 InodeVMObject::executable_mappings() const
             ++count;
     });
     return count;
+}
+
 }

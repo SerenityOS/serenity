@@ -28,6 +28,8 @@
 
 #include <Kernel/FileSystem/File.h>
 
+namespace Kernel {
+
 class Inode;
 
 class InodeFile final : public File {
@@ -64,3 +66,5 @@ private:
     explicit InodeFile(NonnullRefPtr<Inode>&&);
     NonnullRefPtr<Inode> m_inode;
 };
+
+}

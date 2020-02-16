@@ -26,6 +26,10 @@
 
 #include <Kernel/Devices/CharacterDevice.h>
 
+namespace Kernel {
+
 CharacterDevice::~CharacterDevice()
 {
+}
+
 }

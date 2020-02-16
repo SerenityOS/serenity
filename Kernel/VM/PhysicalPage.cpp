@@ -28,6 +28,8 @@
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/Heap/kmalloc.h>
 
+namespace Kernel {
+
 NonnullRefPtr<PhysicalPage> PhysicalPage::create(PhysicalAddress paddr, bool supervisor, bool may_return_to_freelist)
 {
     return adopt(*new PhysicalPage(paddr, supervisor, may_return_to_freelist));
@@ -56,4 +58,6 @@ void PhysicalPage::return_to_freelist() &&
 #ifdef MM_DEBUG
     dbgprintf("MM: P%x released to freelist\n", m_paddr.get());
 #endif
+}
+
 }

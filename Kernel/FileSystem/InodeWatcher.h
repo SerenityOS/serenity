@@ -31,6 +31,8 @@
 #include <AK/WeakPtr.h>
 #include <Kernel/FileSystem/File.h>
 
+namespace Kernel {
+
 class Inode;
 
 class InodeWatcher final : public File {
@@ -62,3 +64,5 @@ private:
     WeakPtr<Inode> m_inode;
     CircularQueue<Event, 32> m_queue;
 };
+
+}

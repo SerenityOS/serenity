@@ -26,9 +26,11 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/ByteBuffer.h>
+#include <AK/String.h>
 #include <AK/Types.h>
+
+namespace Kernel {
 
 class FS;
 struct InodeMetadata;
@@ -75,3 +77,4 @@ inline const LogStream& operator<<(const LogStream& stream, const InodeIdentifie
     return stream;
 }
 
+}

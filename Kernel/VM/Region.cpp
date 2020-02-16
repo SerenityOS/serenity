@@ -35,6 +35,8 @@
 //#define MM_DEBUG
 //#define PAGE_FAULT_DEBUG
 
+namespace Kernel {
+
 Region::Region(const Range& range, const String& name, u8 access, bool cacheable)
     : m_range(range)
     , m_vmobject(AnonymousVMObject::create_with_size(size()))
@@ -499,4 +501,6 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
 
     remap_page(page_index_in_region);
     return PageFaultResponse::Continue;
+}
+
 }

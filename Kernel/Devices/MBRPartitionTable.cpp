@@ -29,6 +29,8 @@
 
 #define MBR_DEBUG
 
+namespace Kernel {
+
 MBRPartitionTable::MBRPartitionTable(NonnullRefPtr<BlockDevice> device)
     : m_device(move(device))
 {
@@ -106,4 +108,6 @@ RefPtr<DiskPartition> MBRPartitionTable::partition(unsigned index)
 #endif
 
     return DiskPartition::create(m_device, entry.offset, (entry.offset + entry.length));
+}
+
 }

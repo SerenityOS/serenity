@@ -27,9 +27,11 @@
 #pragma once
 
 #include <AK/Assertions.h>
-#include <AK/Types.h>
 #include <AK/Function.h>
 #include <AK/IntrusiveList.h>
+#include <AK/Types.h>
+
+namespace Kernel {
 
 class Process;
 class Thread;
@@ -74,3 +76,5 @@ public:
 private:
     static void prepare_for_iret_to_new_process();
 };
+
+}

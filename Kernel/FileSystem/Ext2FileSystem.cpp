@@ -36,6 +36,8 @@
 
 //#define EXT2_DEBUG
 
+namespace Kernel {
+
 static const size_t max_link_count = 65535;
 static const size_t max_block_size = 4096;
 static const ssize_t max_inline_symlink_length = 60;
@@ -573,7 +575,7 @@ InodeMetadata Ext2FSInode::metadata() const
     metadata.block_size = fs().block_size();
     metadata.block_count = m_raw_inode.i_blocks;
 
-    if (::is_character_device(m_raw_inode.i_mode) || ::is_block_device(m_raw_inode.i_mode)) {
+    if (Kernel::is_character_device(m_raw_inode.i_mode) || Kernel::is_block_device(m_raw_inode.i_mode)) {
         unsigned dev = m_raw_inode.i_block[0];
         if (!dev)
             dev = m_raw_inode.i_block[1];
@@ -1645,4 +1647,6 @@ KResult Ext2FS::prepare_to_unmount() const
 
     m_inode_cache.clear();
     return KSuccess;
+}
+
 }

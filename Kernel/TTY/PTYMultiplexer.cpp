@@ -32,6 +32,8 @@
 
 //#define PTMX_DEBUG
 
+namespace Kernel {
+
 static const unsigned s_max_pty_pairs = 8;
 static PTYMultiplexer* s_the;
 
@@ -77,4 +79,6 @@ void PTYMultiplexer::notify_master_destroyed(Badge<MasterPTY>, unsigned index)
 #ifdef PTMX_DEBUG
     dbgprintf("PTYMultiplexer: %u added to freelist\n", index);
 #endif
+}
+
 }

@@ -38,6 +38,7 @@
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/KResult.h>
 
+namespace Kernel {
 
 #define O_RDONLY (1 << 0)
 #define O_WRONLY (1 << 1)
@@ -159,3 +160,5 @@ private:
 
     RefPtr<Custody> m_root_custody;
 };
+
+}

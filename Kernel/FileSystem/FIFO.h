@@ -30,6 +30,8 @@
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/UnixTypes.h>
 
+namespace Kernel {
+
 class FileDescription;
 
 class FIFO final : public File {
@@ -70,3 +72,5 @@ private:
 
     int m_fifo_id { 0 };
 };
+
+}

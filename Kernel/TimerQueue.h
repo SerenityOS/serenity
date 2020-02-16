@@ -32,6 +32,8 @@
 #include <AK/SinglyLinkedList.h>
 #include <Kernel/Arch/i386/PIT.h>
 
+namespace Kernel {
+
 struct Timer {
     u64 id;
     u64 expires;
@@ -72,3 +74,5 @@ private:
     u64 m_timer_id_count { 0 };
     SinglyLinkedList<NonnullOwnPtr<Timer>> m_timer_queue;
 };
+
+}

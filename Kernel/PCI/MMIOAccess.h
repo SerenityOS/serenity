@@ -35,6 +35,8 @@
 #include <Kernel/VM/Region.h>
 #include <Kernel/VM/VMObject.h>
 
+namespace Kernel {
+
 class PCI::MMIOAccess final : public PCI::Access {
 public:
     static void initialize(ACPI_RAW::MCFG&);
@@ -42,6 +44,7 @@ public:
 
     virtual String get_access_type() override final { return "MMIO-Access"; };
     virtual u32 get_segments_count();
+
 protected:
     explicit MMIOAccess(ACPI_RAW::MCFG&);
 
@@ -76,3 +79,5 @@ private:
     u8 m_start_bus;
     u8 m_end_bus;
 };
+
+}

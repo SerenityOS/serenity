@@ -112,21 +112,21 @@ void* kmalloc_page_aligned(size_t size)
 
 void* kmalloc_impl(size_t size)
 {
-    InterruptDisabler disabler;
+    Kernel::InterruptDisabler disabler;
     ++g_kmalloc_call_count;
 
-    if (g_dump_kmalloc_stacks && ksyms_ready) {
+    if (g_dump_kmalloc_stacks && Kernel::ksyms_ready) {
         dbgprintf("kmalloc(%u)\n", size);
-        dump_backtrace();
+        Kernel::dump_backtrace();
     }
 
     // We need space for the allocation_t structure at the head of the block.
     size_t real_size = size + sizeof(allocation_t);
 
     if (sum_free < real_size) {
-        dump_backtrace();
-        kprintf("%s(%u) kmalloc(): PANIC! Out of memory (sucks, dude)\nsum_free=%u, real_size=%u\n", current->process().name().characters(), current->pid(), sum_free, real_size);
-        hang();
+        Kernel::dump_backtrace();
+        kprintf("%s(%u) kmalloc(): PANIC! Out of memory (sucks, dude)\nsum_free=%u, real_size=%u\n", Kernel::current->process().name().characters(), Kernel::current->pid(), sum_free, real_size);
+        Kernel::hang();
     }
 
     size_t chunks_needed = real_size / CHUNK_SIZE;
@@ -177,9 +177,9 @@ void* kmalloc_impl(size_t size)
         }
     }
 
-    kprintf("%s(%u) kmalloc(): PANIC! Out of memory (no suitable block for size %u)\n", current->process().name().characters(), current->pid(), size);
-    dump_backtrace();
-    hang();
+    kprintf("%s(%u) kmalloc(): PANIC! Out of memory (no suitable block for size %u)\n", Kernel::current->process().name().characters(), Kernel::current->pid(), size);
+    Kernel::dump_backtrace();
+    Kernel::hang();
 }
 
 void kfree(void* ptr)
@@ -187,7 +187,7 @@ void kfree(void* ptr)
     if (!ptr)
         return;
 
-    InterruptDisabler disabler;
+    Kernel::InterruptDisabler disabler;
     ++g_kfree_call_count;
 
     auto* a = (allocation_t*)((((u8*)ptr) - sizeof(allocation_t)));
@@ -208,7 +208,7 @@ void* krealloc(void* ptr, size_t new_size)
     if (!ptr)
         return kmalloc(new_size);
 
-    InterruptDisabler disabler;
+    Kernel::InterruptDisabler disabler;
 
     auto* a = (allocation_t*)((((u8*)ptr) - sizeof(allocation_t)));
     size_t old_size = a->nchunk * CHUNK_SIZE;

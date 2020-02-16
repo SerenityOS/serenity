@@ -30,6 +30,8 @@
 #include <Kernel/Scheduler.h>
 #include <Kernel/TimerQueue.h>
 
+namespace Kernel {
+
 static TimerQueue* s_the;
 
 TimerQueue& TimerQueue::the()
@@ -95,4 +97,6 @@ void TimerQueue::update_next_timer_due()
         m_next_timer_due = 0;
     else
         m_next_timer_due = m_timer_queue.first()->expires;
+}
+
 }

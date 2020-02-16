@@ -33,6 +33,8 @@
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/RangeAllocator.h>
 
+namespace Kernel {
+
 class Inode;
 class VMObject;
 
@@ -192,3 +194,5 @@ private:
     bool m_mmap { false };
     mutable OwnPtr<Bitmap> m_cow_map;
 };
+
+}

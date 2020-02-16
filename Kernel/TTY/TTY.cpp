@@ -32,6 +32,8 @@
 
 //#define TTY_DEBUG
 
+namespace Kernel {
+
 TTY::TTY(unsigned major, unsigned minor)
     : CharacterDevice(major, minor)
 {
@@ -344,4 +346,6 @@ void TTY::set_size(unsigned short columns, unsigned short rows)
 void TTY::hang_up()
 {
     generate_signal(SIGHUP);
+}
+
 }

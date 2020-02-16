@@ -29,6 +29,8 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/VMObject.h>
 
+namespace Kernel {
+
 VMObject::VMObject(const VMObject& other)
     : m_physical_pages(other.m_physical_pages)
 {
@@ -44,4 +46,6 @@ VMObject::VMObject(size_t size)
 VMObject::~VMObject()
 {
     MM.unregister_vmobject(*this);
+}
+
 }

@@ -28,6 +28,8 @@
 
 #include <AK/Types.h>
 
+namespace Kernel {
+
 // NOTE: These API's are primarily about expressing intent/needs in the calling code.
 //       We don't make any guarantees about actual fastness or goodness yet.
 
@@ -50,3 +52,4 @@ inline T get_good_random()
     return value;
 }
 
+}

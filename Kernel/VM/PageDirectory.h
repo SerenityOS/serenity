@@ -32,6 +32,8 @@
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/VM/RangeAllocator.h>
 
+namespace Kernel {
+
 class Process;
 
 class PageDirectory : public RefCounted<PageDirectory> {
@@ -64,3 +66,5 @@ private:
     RefPtr<PhysicalPage> m_directory_pages[4];
     HashMap<unsigned, RefPtr<PhysicalPage>> m_physical_pages;
 };
+
+}

@@ -27,6 +27,8 @@
 #include <Kernel/Process.h>
 #include <Kernel/SharedBuffer.h>
 
+namespace Kernel {
+
 Lockable<HashMap<int, NonnullOwnPtr<SharedBuffer>>>& shared_buffers()
 {
     static Lockable<HashMap<int, NonnullOwnPtr<SharedBuffer>>>* map;
@@ -186,4 +188,6 @@ void SharedBuffer::seal()
             ref.region->remap();
         }
     }
+}
+
 }

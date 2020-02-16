@@ -30,6 +30,8 @@
 #include <Kernel/TTY/TTY.h>
 #include <LibBareMetal/Output/Console.h>
 
+namespace Kernel {
+
 class VirtualConsole final : public TTY
     , public KeyboardClient
     , public ConsoleImplementation {
@@ -116,3 +118,5 @@ private:
     u8* m_horizontal_tabs { nullptr };
     char m_tty_name[32];
 };
+
+}

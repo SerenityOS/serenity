@@ -31,6 +31,8 @@
 
 //#define ACPI_DEBUG
 
+namespace Kernel {
+
 void ACPIStaticParser::initialize(ACPI_RAW::RSDPDescriptor20& rsdp)
 {
     if (!ACPIParser::is_initialized()) {
@@ -412,4 +414,6 @@ ACPI_RAW::SDTHeader* ACPI::FixedACPIData::get_dsdt()
         ASSERT((ACPI_RAW::SDTHeader*)m_dsdt_ptr != nullptr);
         return (ACPI_RAW::SDTHeader*)m_dsdt_ptr;
     }
+}
+
 }

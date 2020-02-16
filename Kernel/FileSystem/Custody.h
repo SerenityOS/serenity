@@ -32,6 +32,8 @@
 #include <AK/RefPtr.h>
 #include <AK/String.h>
 
+namespace Kernel {
+
 class Inode;
 class VFS;
 
@@ -79,3 +81,5 @@ private:
     bool m_mounted_on { false };
     int m_mount_flags { 0 };
 };
+
+}

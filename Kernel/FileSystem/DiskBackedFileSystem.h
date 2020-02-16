@@ -29,6 +29,8 @@
 #include "FileSystem.h"
 #include <AK/ByteBuffer.h>
 
+namespace Kernel {
+
 class DiskCache;
 
 class DiskBackedFS : public FS {
@@ -60,3 +62,5 @@ private:
     NonnullRefPtr<BlockDevice> m_device;
     mutable OwnPtr<DiskCache> m_cache;
 };
+
+}

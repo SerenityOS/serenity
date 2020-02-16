@@ -30,6 +30,8 @@
 #include <AK/SinglyLinkedList.h>
 #include <Kernel/Thread.h>
 
+namespace Kernel {
+
 class WaitQueue {
 public:
     WaitQueue();
@@ -43,3 +45,5 @@ private:
     typedef IntrusiveList<Thread, &Thread::m_wait_queue_node> ThreadList;
     ThreadList m_threads;
 };
+
+}

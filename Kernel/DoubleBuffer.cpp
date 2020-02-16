@@ -26,6 +26,8 @@
 
 #include <Kernel/DoubleBuffer.h>
 
+namespace Kernel {
+
 inline void DoubleBuffer::compute_lockfree_metadata()
 {
     InterruptDisabler disabler;
@@ -84,4 +86,6 @@ ssize_t DoubleBuffer::read(u8* data, ssize_t size)
     m_read_buffer_index += nread;
     compute_lockfree_metadata();
     return nread;
+}
+
 }

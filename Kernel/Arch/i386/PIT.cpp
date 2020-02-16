@@ -30,6 +30,8 @@
 #include <Kernel/Scheduler.h>
 #include <LibBareMetal/IO.h>
 
+namespace Kernel {
+
 #define IRQ_TIMER 0
 
 extern "C" void timer_interrupt_entry();
@@ -102,6 +104,8 @@ void initialize()
     register_interrupt_handler(IRQ_VECTOR_BASE + IRQ_TIMER, timer_interrupt_entry);
 
     PIC::enable(IRQ_TIMER);
+}
+
 }
 
 }

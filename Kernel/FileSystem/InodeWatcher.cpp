@@ -27,6 +27,8 @@
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/InodeWatcher.h>
 
+namespace Kernel {
+
 NonnullRefPtr<InodeWatcher> InodeWatcher::create(Inode& inode)
 {
     return adopt(*new InodeWatcher(inode));
@@ -83,4 +85,6 @@ String InodeWatcher::absolute_path(const FileDescription&) const
 void InodeWatcher::notify_inode_event(Badge<Inode>, Event::Type event_type)
 {
     m_queue.enqueue({ event_type });
+}
+
 }

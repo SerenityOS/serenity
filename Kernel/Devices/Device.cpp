@@ -28,6 +28,8 @@
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <LibC/errno_numbers.h>
 
+namespace Kernel {
+
 static HashMap<u32, Device*>* s_all_devices;
 
 HashMap<u32, Device*>& Device::all_devices()
@@ -77,4 +79,6 @@ String Device::absolute_path() const
 String Device::absolute_path(const FileDescription&) const
 {
     return absolute_path();
+}
+
 }

@@ -30,6 +30,8 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 
+namespace Kernel {
+
 class Process;
 
 namespace Profiling {
@@ -49,5 +51,7 @@ Sample& next_sample_slot();
 void start(Process&);
 void stop();
 void for_each_sample(Function<void(Sample&)>);
+
+}
 
 }

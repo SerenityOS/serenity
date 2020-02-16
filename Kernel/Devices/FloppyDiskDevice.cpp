@@ -31,6 +31,8 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <LibBareMetal/IO.h>
 
+namespace Kernel {
+
 // Uncomment me for a LOT of output
 //#define FLOPPY_DEBUG
 
@@ -560,4 +562,6 @@ void FloppyDiskDevice::initialize()
 #ifdef FLOPPY_DEBUG
     kprintf("fdc: fd%d initialised succesfully!\n", is_slave() ? 1 : 0);
 #endif
+}
+
 }

@@ -57,19 +57,19 @@ Console::~Console()
 }
 
 #if defined(KERNEL)
-bool Console::can_read(const FileDescription&) const
+bool Console::can_read(const Kernel::FileDescription&) const
 {
     return false;
 }
 
-ssize_t Console::read(FileDescription&, u8*, ssize_t)
+ssize_t Console::read(Kernel::FileDescription&, u8*, ssize_t)
 {
     // FIXME: Implement reading from the console.
     //        Maybe we could use a ring buffer for this device?
     return 0;
 }
 
-ssize_t Console::write(FileDescription&, const u8* data, ssize_t size)
+ssize_t Console::write(Kernel::FileDescription&, const u8* data, ssize_t size)
 {
     if (!size)
         return 0;

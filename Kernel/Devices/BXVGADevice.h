@@ -31,6 +31,8 @@
 #include <Kernel/Devices/BlockDevice.h>
 #include <LibBareMetal/Memory/PhysicalAddress.h>
 
+namespace Kernel {
+
 class BXVGADevice final : public BlockDevice {
     AK_MAKE_ETERNAL
 public:
@@ -62,3 +64,5 @@ private:
     int m_framebuffer_height { 0 };
     int m_y_offset { 0 };
 };
+
+}

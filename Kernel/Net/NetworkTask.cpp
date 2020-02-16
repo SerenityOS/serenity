@@ -48,6 +48,8 @@
 //#define UDP_DEBUG
 //#define TCP_DEBUG
 
+namespace Kernel {
+
 static void handle_arp(const EthernetFrameHeader&, size_t frame_size);
 static void handle_ipv4(const EthernetFrameHeader&, size_t frame_size);
 static void handle_icmp(const EthernetFrameHeader&, const IPv4Packet&);
@@ -621,4 +623,6 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
                 socket->send_tcp_packet(TCPFlags::ACK);
         }
     }
+}
+
 }

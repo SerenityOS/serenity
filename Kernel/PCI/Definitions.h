@@ -29,6 +29,9 @@
 #include <AK/Function.h>
 #include <AK/Types.h>
 
+namespace Kernel {
+
+
 #define PCI_VENDOR_ID 0x00           // word
 #define PCI_DEVICE_ID 0x02           // word
 #define PCI_COMMAND 0x04             // word
@@ -184,5 +187,7 @@ class MMIOAccess;
 class IOAccess;
 class MMIOSegment;
 class Device;
+
+}
 
 }

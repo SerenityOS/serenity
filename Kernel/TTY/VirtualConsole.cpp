@@ -32,6 +32,8 @@
 #include <LibBareMetal/IO.h>
 #include <LibBareMetal/StdLib.h>
 
+namespace Kernel {
+
 static u8* s_vga_buffer;
 static VirtualConsole* s_consoles[6];
 static int s_active_console;
@@ -587,4 +589,6 @@ void VirtualConsole::set_vga_start_row(u16 row)
     IO::out8(0x3d5, MSB(m_current_vga_start_address));
     IO::out8(0x3d4, 0x0d);
     IO::out8(0x3d5, LSB(m_current_vga_start_address));
+}
+
 }

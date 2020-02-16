@@ -29,6 +29,8 @@
 
 #define GPT_DEBUG
 
+namespace Kernel {
+
 GPTPartitionTable::GPTPartitionTable(BlockDevice& device)
     : m_device(move(device))
 {
@@ -98,4 +100,6 @@ RefPtr<DiskPartition> GPTPartitionTable::partition(unsigned index)
     kprintf("GPTPartitionTable::partition: found partition index=%d type=%x-%x-%x-%x\n", index, entry.partition_guid[3], entry.partition_guid[2], entry.partition_guid[1], entry.partition_guid[0]);
 #endif
     return DiskPartition::create(m_device, entry.first_lba[0], entry.last_lba[0]);
+}
+
 }

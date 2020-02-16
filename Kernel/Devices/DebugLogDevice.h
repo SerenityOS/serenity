@@ -26,6 +26,8 @@
 
 #include <Kernel/Devices/CharacterDevice.h>
 
+namespace Kernel {
+
 class DebugLogDevice final : public CharacterDevice {
 public:
     DebugLogDevice();
@@ -41,3 +43,5 @@ private:
     virtual bool can_read(const FileDescription&) const override { return true; }
     virtual const char* class_name() const override { return "DebugLogDevice"; }
 };
+
+}

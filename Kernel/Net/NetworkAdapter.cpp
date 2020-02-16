@@ -34,6 +34,8 @@
 #include <Kernel/Net/NetworkAdapter.h>
 #include <LibBareMetal/StdLib.h>
 
+namespace Kernel {
+
 static Lockable<HashTable<NetworkAdapter*>>& all_adapters()
 {
     static Lockable<HashTable<NetworkAdapter*>>* table;
@@ -192,4 +194,6 @@ void NetworkAdapter::set_interface_name(const StringView& basename)
     builder.append(basename);
     builder.append('0');
     m_name = builder.to_string();
+}
+
 }

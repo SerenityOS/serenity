@@ -40,6 +40,8 @@ struct siginfo;
 typedef u32 socklen_t;
 }
 
+namespace Kernel {
+
 #define ENUMERATE_SYSCALLS                          \
     __ENUMERATE_SYSCALL(sleep)                      \
     __ENUMERATE_SYSCALL(yield)                      \
@@ -474,3 +476,7 @@ ENUMERATE_SYSCALLS
 #undef __ENUMERATE_SYSCALL
 #undef __ENUMERATE_REMOVED_SYSCALL
 #define syscall Syscall::invoke
+
+}
+
+using namespace Kernel;

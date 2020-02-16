@@ -29,6 +29,8 @@
 #include <AK/Function.h>
 #include <AK/Types.h>
 
+namespace Kernel {
+
 #define SLAB_ALLOC_SCRUB_BYTE 0xab
 #define SLAB_DEALLOC_SCRUB_BYTE 0xbc
 
@@ -43,3 +45,5 @@ public:                                                                  \
     void operator delete(void* ptr) { slab_dealloc(ptr, sizeof(type)); } \
                                                                          \
 private:
+
+}

@@ -29,6 +29,8 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 
+namespace Kernel {
+
 struct KSym {
     u32 address;
     const char* name;
@@ -43,3 +45,5 @@ extern u32 ksym_lowest_address;
 extern u32 ksym_highest_address;
 
 void dump_backtrace();
+
+}

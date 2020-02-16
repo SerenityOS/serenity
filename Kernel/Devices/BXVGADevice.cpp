@@ -33,6 +33,8 @@
 #include <LibC/errno_numbers.h>
 #include <LibC/sys/ioctl_numbers.h>
 
+namespace Kernel {
+
 #define MAX_RESOLUTION_WIDTH 4096
 #define MAX_RESOLUTION_HEIGHT 2160
 
@@ -181,4 +183,6 @@ int BXVGADevice::ioctl(FileDescription&, unsigned request, unsigned arg)
     default:
         return -EINVAL;
     };
+}
+
 }

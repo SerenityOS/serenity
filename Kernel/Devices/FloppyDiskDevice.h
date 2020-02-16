@@ -104,6 +104,8 @@
 #include <Kernel/VM/PhysicalPage.h>
 #include <LibBareMetal/Memory/PhysicalAddress.h>
 
+namespace Kernel {
+
 struct FloppyControllerCommand {
     u8 cmd;         // Command to send to the controller
     u8 numParams;   // Number of parameters to send to the drive
@@ -216,3 +218,5 @@ private:
 
     u8 m_controller_version { 0 };
 };
+
+}

@@ -27,15 +27,17 @@
 #pragma once
 
 #include <AK/Bitmap.h>
-#include <Kernel/KBuffer.h>
 #include <Kernel/FileSystem/DiskBackedFileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/ext2_fs.h>
+#include <Kernel/KBuffer.h>
 #include <Kernel/UnixTypes.h>
 
 struct ext2_group_desc;
 struct ext2_inode;
 struct ext2_super_block;
+
+namespace Kernel {
 
 class Ext2FS;
 
@@ -46,8 +48,8 @@ public:
     virtual ~Ext2FSInode() override;
 
     size_t size() const { return m_raw_inode.i_size; }
-    bool is_symlink() const { return ::is_symlink(m_raw_inode.i_mode); }
-    bool is_directory() const { return ::is_directory(m_raw_inode.i_mode); }
+    bool is_symlink() const { return Kernel::is_symlink(m_raw_inode.i_mode); }
+    bool is_directory() const { return Kernel::is_directory(m_raw_inode.i_mode); }
 
     // ^Inode (RefCounted magic)
     virtual void one_ref_left() override;
@@ -171,7 +173,8 @@ private:
         CachedBitmap(BlockIndex bi, KBuffer&& buf)
             : bitmap_block_index(bi)
             , buffer(move(buf))
-        {}
+        {
+        }
         BlockIndex bitmap_block_index { 0 };
         bool dirty { false };
         KBuffer buffer;
@@ -191,4 +194,6 @@ inline Ext2FS& Ext2FSInode::fs()
 inline const Ext2FS& Ext2FSInode::fs() const
 {
     return static_cast<const Ext2FS&>(Inode::fs());
+}
+
 }

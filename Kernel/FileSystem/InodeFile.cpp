@@ -30,6 +30,8 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Process.h>
 
+namespace Kernel {
+
 InodeFile::InodeFile(NonnullRefPtr<Inode>&& inode)
     : m_inode(move(inode))
 {
@@ -93,4 +95,6 @@ KResult InodeFile::chown(uid_t uid, gid_t gid)
 KResult InodeFile::chmod(mode_t mode)
 {
     return VFS::the().chmod(*m_inode, mode);
+}
+
 }

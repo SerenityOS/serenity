@@ -27,6 +27,8 @@
 #include "NullDevice.h"
 #include <AK/StdLibExtras.h>
 
+namespace Kernel {
+
 static NullDevice* s_the;
 
 NullDevice& NullDevice::the()
@@ -58,4 +60,6 @@ ssize_t NullDevice::read(FileDescription&, u8*, ssize_t)
 ssize_t NullDevice::write(FileDescription&, const u8*, ssize_t buffer_size)
 {
     return min(PAGE_SIZE, buffer_size);
+}
+
 }

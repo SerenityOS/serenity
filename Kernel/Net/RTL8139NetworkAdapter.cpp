@@ -29,6 +29,8 @@
 
 //#define RTL8139_DEBUG
 
+namespace Kernel {
+
 #define REG_MAC 0x00
 #define REG_MAR0 0x08
 #define REG_MAR4 0x12
@@ -393,4 +395,6 @@ u16 RTL8139NetworkAdapter::in16(u16 address)
 u32 RTL8139NetworkAdapter::in32(u16 address)
 {
     return IO::in32(m_io_base + address);
+}
+
 }

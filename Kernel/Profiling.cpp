@@ -28,9 +28,12 @@
 #include <AK/StringBuilder.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/KBuffer.h>
+#include <Kernel/KSyms.h>
 #include <Kernel/Process.h>
 #include <Kernel/Profiling.h>
 #include <LibELF/ELFLoader.h>
+
+namespace Kernel {
 
 namespace Profiling {
 
@@ -120,6 +123,8 @@ void for_each_sample(Function<void(Sample&)> callback)
         auto& sample = sample_slot(i);
         callback(sample);
     }
+}
+
 }
 
 }

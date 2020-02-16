@@ -31,6 +31,8 @@
 
 //#define SLAVEPTY_DEBUG
 
+namespace Kernel {
+
 SlavePTY::SlavePTY(MasterPTY& master, unsigned index)
     : TTY(201, index)
     , m_master(master)
@@ -96,4 +98,6 @@ ssize_t SlavePTY::read(FileDescription& description, u8* buffer, ssize_t size)
 void SlavePTY::close()
 {
     m_master->notify_slave_closed({});
+}
+
 }

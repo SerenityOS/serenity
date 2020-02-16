@@ -30,6 +30,8 @@
 
 //#define E1000_DEBUG
 
+namespace Kernel {
+
 #define REG_CTRL 0x0000
 #define REG_STATUS 0x0008
 #define REG_EEPROM 0x0014
@@ -419,4 +421,6 @@ void E1000NetworkAdapter::receive()
         m_rx_descriptors[rx_current].status = 0;
         out32(REG_RXDESCTAIL, rx_current);
     }
+}
+
 }

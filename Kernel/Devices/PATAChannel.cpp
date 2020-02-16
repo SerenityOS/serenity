@@ -32,6 +32,8 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <LibBareMetal/IO.h>
 
+namespace Kernel {
+
 #define PATA_PRIMARY_IRQ 14
 #define PATA_SECONDARY_IRQ 15
 
@@ -532,4 +534,6 @@ bool PATAChannel::ata_write_sectors(u32 start_sector, u16 count, const u8* inbuf
     ASSERT(!(status & ATA_SR_BSY));
 
     return !m_device_error;
+}
+
 }

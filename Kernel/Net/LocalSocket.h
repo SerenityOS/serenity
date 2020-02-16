@@ -30,6 +30,8 @@
 #include <Kernel/DoubleBuffer.h>
 #include <Kernel/Net/Socket.h>
 
+namespace Kernel {
+
 class FileDescription;
 
 class LocalSocket final : public Socket, public InlineLinkedListNode<LocalSocket> {
@@ -100,3 +102,5 @@ private:
     LocalSocket* m_prev { nullptr };
     LocalSocket* m_next { nullptr };
 };
+
+}

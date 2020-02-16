@@ -31,6 +31,8 @@
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/PCI/Access.h>
 
+namespace Kernel {
+
 class E1000NetworkAdapter final : public NetworkAdapter
     , public IRQHandler {
 public:
@@ -102,3 +104,5 @@ private:
 
     WaitQueue m_wait_queue;
 };
+
+}
