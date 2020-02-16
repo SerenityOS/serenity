@@ -32,6 +32,8 @@
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
 
+namespace Kernel {
+
 void UDPSocket::for_each(Function<void(UDPSocket&)> callback)
 {
     LOCKER(sockets_by_port().lock());
@@ -146,4 +148,6 @@ KResult UDPSocket::protocol_bind()
         return KResult(-EADDRINUSE);
     sockets_by_port().resource().set(local_port(), this);
     return KSuccess;
+}
+
 }

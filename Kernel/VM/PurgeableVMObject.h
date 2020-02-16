@@ -28,6 +28,8 @@
 
 #include <Kernel/VM/AnonymousVMObject.h>
 
+namespace Kernel {
+
 class PurgeableVMObject final : public AnonymousVMObject {
 public:
     virtual ~PurgeableVMObject() override;
@@ -59,3 +61,5 @@ private:
     bool m_was_purged { false };
     bool m_volatile { false };
 };
+
+}

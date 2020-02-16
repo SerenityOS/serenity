@@ -27,9 +27,11 @@
 #pragma once
 
 #include <AK/Bitmap.h>
-#include <AK/RefCounted.h>
 #include <AK/NonnullRefPtr.h>
+#include <AK/RefCounted.h>
 #include <Kernel/VM/PhysicalPage.h>
+
+namespace Kernel {
 
 class PhysicalRegion : public RefCounted<PhysicalRegion> {
     AK_MAKE_ETERNAL
@@ -62,3 +64,5 @@ private:
     unsigned m_last { 0 };
     Bitmap m_bitmap;
 };
+
+}

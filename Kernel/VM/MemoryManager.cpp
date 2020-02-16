@@ -39,6 +39,12 @@
 //#define MM_DEBUG
 //#define PAGE_FAULT_DEBUG
 
+extern uintptr_t start_of_kernel_text;
+extern uintptr_t start_of_kernel_data;
+extern uintptr_t end_of_kernel_bss;
+
+namespace Kernel {
+
 static MemoryManager* s_the;
 
 MemoryManager& MM
@@ -64,8 +70,6 @@ MemoryManager::~MemoryManager()
 void MemoryManager::protect_kernel_image()
 {
     // Disable writing to the kernel text and rodata segments.
-    extern uintptr_t start_of_kernel_text;
-    extern uintptr_t start_of_kernel_data;
     for (size_t i = (uintptr_t)&start_of_kernel_text; i < (uintptr_t)&start_of_kernel_data; i += PAGE_SIZE) {
         auto& pte = ensure_pte(kernel_page_directory(), VirtualAddress(i));
         pte.set_writable(false);
@@ -73,7 +77,6 @@ void MemoryManager::protect_kernel_image()
 
     if (g_cpu_supports_nx) {
         // Disable execution of the kernel data and bss segments.
-        extern uintptr_t end_of_kernel_bss;
         for (size_t i = (uintptr_t)&start_of_kernel_data; i < (uintptr_t)&end_of_kernel_bss; i += PAGE_SIZE) {
             auto& pte = ensure_pte(kernel_page_directory(), VirtualAddress(i));
             pte.set_execute_disabled(true);
@@ -680,4 +683,6 @@ ProcessPagingScope::~ProcessPagingScope()
     InterruptDisabler disabler;
     current->tss().cr3 = m_previous_cr3;
     write_cr3(m_previous_cr3);
+}
+
 }

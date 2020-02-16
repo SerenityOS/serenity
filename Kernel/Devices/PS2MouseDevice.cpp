@@ -28,6 +28,8 @@
 #include <Kernel/Devices/VMWareBackdoor.h>
 #include <LibBareMetal/IO.h>
 
+namespace Kernel {
+
 #define IRQ_MOUSE 12
 #define I8042_BUFFER 0x60
 #define I8042_STATUS 0x64
@@ -382,4 +384,6 @@ ssize_t PS2MouseDevice::read(FileDescription&, u8* buffer, ssize_t size)
 ssize_t PS2MouseDevice::write(FileDescription&, const u8*, ssize_t)
 {
     return 0;
+}
+
 }

@@ -28,6 +28,8 @@
 
 #include <Kernel/Net/NetworkAdapter.h>
 
+namespace Kernel {
+
 struct RoutingDecision
 {
     RefPtr<NetworkAdapter> adapter;
@@ -39,3 +41,5 @@ struct RoutingDecision
 RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source);
 
 Lockable<HashMap<IPv4Address, MACAddress>>& arp_table();
+
+}

@@ -26,6 +26,8 @@
 
 #include <Kernel/ACPI/ACPIParser.h>
 
+namespace Kernel {
+
 static ACPIParser* s_acpi_parser;
 
 ACPIParser& ACPIParser::the()
@@ -97,4 +99,6 @@ void ACPIParser::disable_aml_interpretation()
 bool ACPIParser::is_operable()
 {
     return false;
+}
+
 }

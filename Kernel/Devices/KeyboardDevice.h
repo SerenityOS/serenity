@@ -33,6 +33,8 @@
 #include <AK/Types.h>
 #include <Kernel/Devices/CharacterDevice.h>
 
+namespace Kernel {
+
 class KeyboardClient;
 
 class KeyboardDevice final : public IRQHandler
@@ -84,3 +86,5 @@ public:
     virtual ~KeyboardClient();
     virtual void on_key_pressed(KeyboardDevice::Event) = 0;
 };
+
+}

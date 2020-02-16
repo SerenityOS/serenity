@@ -27,6 +27,8 @@
 #include <Kernel/ACPI/ACPIDynamicParser.h>
 #include <Kernel/ACPI/ACPIParser.h>
 
+namespace Kernel {
+
 void ACPIDynamicParser::initialize(ACPI_RAW::RSDPDescriptor20& rsdp)
 {
     if (!ACPIStaticParser::is_initialized()) {
@@ -90,4 +92,6 @@ void ACPIDynamicParser::build_namespace()
 {
     // FIXME: Implement AML Interpretation to build the ACPI namespace
     ASSERT_NOT_REACHED();
+}
+
 }

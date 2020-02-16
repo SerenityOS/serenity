@@ -31,6 +31,8 @@
 #include <AK/Vector.h>
 #include <LibBareMetal/Memory/VirtualAddress.h>
 
+namespace Kernel {
+
 class Range {
     friend class RangeAllocator;
 
@@ -100,9 +102,12 @@ inline const LogStream& operator<<(const LogStream& stream, const Range& value)
     return stream << String::format("Range(%x-%x)", value.base().get(), value.end().get() - 1);
 }
 
+}
+
 namespace AK {
 template<>
-struct Traits<Range> : public GenericTraits<Range> {
+struct Traits<Kernel::Range> : public GenericTraits<Kernel::Range> {
     static constexpr bool is_trivial() { return true; }
 };
 }
+

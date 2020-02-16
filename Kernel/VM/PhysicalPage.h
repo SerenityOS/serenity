@@ -31,6 +31,8 @@
 #include <Kernel/Heap/SlabAllocator.h>
 #include <LibBareMetal/Memory/PhysicalAddress.h>
 
+namespace Kernel {
+
 class PhysicalPage {
     friend class MemoryManager;
     friend class PageDirectory;
@@ -73,3 +75,5 @@ private:
     bool m_supervisor { false };
     PhysicalAddress m_paddr;
 };
+
+}

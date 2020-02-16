@@ -154,7 +154,7 @@ String ELFLoader::symbolicate(u32 address, u32* out_offset) const
     SortedSymbol* sorted_symbols = nullptr;
 #ifdef KERNEL
     if (!m_sorted_symbols_region) {
-        m_sorted_symbols_region = MM.allocate_kernel_region(PAGE_ROUND_UP(m_image.symbol_count() * sizeof(SortedSymbol)), "Sorted symbols", Region::Access::Read | Region::Access::Write);
+        m_sorted_symbols_region = MM.allocate_kernel_region(PAGE_ROUND_UP(m_image.symbol_count() * sizeof(SortedSymbol)), "Sorted symbols", Kernel::Region::Access::Read | Kernel::Region::Access::Write);
         sorted_symbols = (SortedSymbol*)m_sorted_symbols_region->vaddr().as_ptr();
         size_t index = 0;
         m_image.for_each_symbol([&](auto& symbol) {

@@ -28,6 +28,7 @@
 #include <AK/StringBuilder.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/KSyms.h>
 #include <Kernel/Process.h>
 #include <Kernel/Profiling.h>
 #include <Kernel/Scheduler.h>
@@ -38,6 +39,8 @@
 
 //#define SIGNAL_DEBUG
 //#define THREAD_DEBUG
+
+namespace Kernel {
 
 static FPUState s_clean_fpu_state;
 
@@ -871,4 +874,6 @@ Thread* Thread::from_tid(int tid)
         return IterationDecision::Continue;
     });
     return found_thread;
+}
+
 }

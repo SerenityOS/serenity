@@ -31,6 +31,8 @@
 #include <Kernel/IRQHandler.h>
 #include <Kernel/MousePacket.h>
 
+namespace Kernel {
+
 class PS2MouseDevice final : public IRQHandler
     , public CharacterDevice {
 public:
@@ -71,3 +73,5 @@ private:
     u8 m_data[4];
     bool m_has_wheel { false };
 };
+
+}

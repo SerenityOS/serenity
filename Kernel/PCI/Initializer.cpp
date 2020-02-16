@@ -33,6 +33,8 @@
 #include <Kernel/PCI/MMIOAccess.h>
 #include <LibBareMetal/IO.h>
 
+namespace Kernel {
+
 static PCI::Initializer* s_pci_initializer;
 
 PCI::Initializer& PCI::Initializer::the()
@@ -149,4 +151,6 @@ void PCI::Initializer::dismiss()
 
 PCI::Initializer::~Initializer()
 {
+}
+
 }

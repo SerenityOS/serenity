@@ -28,6 +28,8 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PhysicalPage.h>
 
+namespace Kernel {
+
 NonnullRefPtr<AnonymousVMObject> AnonymousVMObject::create_with_size(size_t size)
 {
     return adopt(*new AnonymousVMObject(size));
@@ -78,4 +80,6 @@ AnonymousVMObject::~AnonymousVMObject()
 NonnullRefPtr<VMObject> AnonymousVMObject::clone()
 {
     return adopt(*new AnonymousVMObject(*this));
+}
+
 }

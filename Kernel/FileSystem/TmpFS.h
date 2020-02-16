@@ -31,6 +31,8 @@
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/KBuffer.h>
 
+namespace Kernel {
+
 class TmpFSInode;
 
 class TmpFS final : public FS {
@@ -106,3 +108,5 @@ private:
     };
     HashMap<String, Child> m_children;
 };
+
+}

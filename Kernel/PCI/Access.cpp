@@ -27,6 +27,8 @@
 #include <Kernel/PCI/Access.h>
 #include <Kernel/PCI/IOAccess.h>
 
+namespace Kernel {
+
 static PCI::Access* s_access;
 
 PCI::Access& PCI::Access::the()
@@ -175,4 +177,7 @@ size_t get_BAR_Space_Size(Address address, u8 bar_number)
 {
     return PCI::Access::the().get_BAR_Space_Size(address, bar_number);
 }
+
+}
+
 }

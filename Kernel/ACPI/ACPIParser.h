@@ -33,6 +33,8 @@
 #include <LibBareMetal/Memory/PhysicalAddress.h>
 #include <LibBareMetal/Memory/VirtualAddress.h>
 
+namespace Kernel {
+
 class ACPIParser {
 public:
     static ACPIParser& the();
@@ -54,3 +56,5 @@ protected:
     explicit ACPIParser(bool usable);
     bool m_operable;
 };
+
+}

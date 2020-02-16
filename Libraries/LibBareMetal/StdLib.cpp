@@ -38,7 +38,7 @@
 #ifdef KERNEL
 String copy_string_from_user(const char* user_str, size_t user_str_size)
 {
-    SmapDisabler disabler;
+    Kernel::SmapDisabler disabler;
     size_t length = strnlen(user_str, user_str_size);
     return String(user_str, length);
 }
@@ -49,15 +49,15 @@ extern "C" {
 #ifdef KERNEL
 void copy_to_user(void* dest_ptr, const void* src_ptr, size_t n)
 {
-    ASSERT(is_user_range(VirtualAddress(dest_ptr), n));
-    SmapDisabler disabler;
+    ASSERT(Kernel::is_user_range(VirtualAddress(dest_ptr), n));
+    Kernel::SmapDisabler disabler;
     memcpy(dest_ptr, src_ptr, n);
 }
 
 void copy_from_user(void* dest_ptr, const void* src_ptr, size_t n)
 {
-    ASSERT(is_user_range(VirtualAddress(src_ptr), n));
-    SmapDisabler disabler;
+    ASSERT(Kernel::is_user_range(VirtualAddress(src_ptr), n));
+    Kernel::SmapDisabler disabler;
     memcpy(dest_ptr, src_ptr, n);
 }
 #endif
@@ -118,8 +118,8 @@ char* strncpy(char* dest, const char* src, size_t n)
 #ifdef KERNEL
 void memset_user(void* dest_ptr, int c, size_t n)
 {
-    ASSERT(is_user_range(VirtualAddress(dest_ptr), n));
-    SmapDisabler disabler;
+    ASSERT(Kernel::is_user_range(VirtualAddress(dest_ptr), n));
+    Kernel::SmapDisabler disabler;
     memset(dest_ptr, c, n);
 }
 #endif

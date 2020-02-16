@@ -29,6 +29,8 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/TTY/SlavePTY.h>
 
+namespace Kernel {
+
 NonnullRefPtr<DevPtsFS> DevPtsFS::create()
 {
     return adopt(*new DevPtsFS);
@@ -205,4 +207,6 @@ KResult DevPtsFSInode::chmod(mode_t)
 KResult DevPtsFSInode::chown(uid_t, gid_t)
 {
     return KResult(-EPERM);
+}
+
 }

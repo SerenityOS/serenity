@@ -30,6 +30,8 @@
 
 //#define ROUTING_DEBUG
 
+namespace Kernel {
+
 Lockable<HashMap<IPv4Address, MACAddress>>& arp_table()
 {
     static Lockable<HashMap<IPv4Address, MACAddress>>* the;
@@ -67,7 +69,6 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source)
         if (adapter.ipv4_gateway().to_u32() != 0)
             gateway_adapter = adapter;
     });
-
 
     if (local_adapter && target == local_adapter->ipv4_address())
         return { local_adapter, local_adapter->mac_address() };
@@ -160,4 +161,6 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source)
 #endif
 
     return { nullptr, {} };
+}
+
 }

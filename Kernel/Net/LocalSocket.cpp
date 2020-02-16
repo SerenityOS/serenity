@@ -35,6 +35,8 @@
 
 //#define DEBUG_LOCAL_SOCKET
 
+namespace Kernel {
+
 Lockable<InlineLinkedList<LocalSocket>>& LocalSocket::all_sockets()
 {
     static Lockable<InlineLinkedList<LocalSocket>>* s_list;
@@ -393,4 +395,6 @@ KResult LocalSocket::chown(uid_t uid, gid_t gid)
     m_prebind_uid = uid;
     m_prebind_gid = gid;
     return KSuccess;
+}
+
 }

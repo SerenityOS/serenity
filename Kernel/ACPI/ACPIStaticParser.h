@@ -29,6 +29,8 @@
 #include <ACPI/ACPIParser.h>
 #include <AK/OwnPtr.h>
 
+namespace Kernel {
+
 class ACPIStaticParser : ACPIParser {
 public:
     static void initialize(ACPI_RAW::RSDPDescriptor20& rsdp);
@@ -66,3 +68,5 @@ private:
     Vector<ACPI_RAW::SDTHeader*> m_aml_tables_ptrs;
     bool m_xsdt_supported;
 };
+
+}

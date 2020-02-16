@@ -29,6 +29,8 @@
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/VM/Region.h>
 
+namespace Kernel {
+
 template<size_t templated_slab_size>
 class SlabAllocator {
 public:
@@ -159,4 +161,6 @@ void slab_alloc_stats(Function<void(size_t slab_size, size_t allocated, size_t f
     for_each_allocator([&](auto& allocator) {
         callback(allocator.slab_size(), allocator.num_allocated(), allocator.num_free());
     });
+}
+
 }

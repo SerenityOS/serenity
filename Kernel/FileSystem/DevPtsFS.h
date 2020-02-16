@@ -30,6 +30,8 @@
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
 
+namespace Kernel {
+
 class SlavePTY;
 class DevPtsFSInode;
 
@@ -57,6 +59,7 @@ private:
 
 class DevPtsFSInode final : public Inode {
     friend class DevPtsFS;
+
 public:
     virtual ~DevPtsFSInode() override;
 
@@ -78,3 +81,5 @@ private:
 
     InodeMetadata m_metadata;
 };
+
+}

@@ -28,6 +28,8 @@
 
 #include <Kernel/Net/IPv4.h>
 
+namespace Kernel {
+
 struct TCPFlags {
     enum : u16 {
         FIN = 0x01,
@@ -95,3 +97,5 @@ private:
 };
 
 static_assert(sizeof(TCPPacket) == 20);
+
+}

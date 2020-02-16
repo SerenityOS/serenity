@@ -27,6 +27,8 @@
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/FileSystem/FileDescription.h>
 
+namespace Kernel {
+
 File::File()
 {
 }
@@ -55,4 +57,6 @@ int File::ioctl(FileDescription&, unsigned, unsigned)
 KResultOr<Region*> File::mmap(Process&, FileDescription&, VirtualAddress, size_t, size_t, int)
 {
     return KResult(-ENODEV);
+}
+
 }

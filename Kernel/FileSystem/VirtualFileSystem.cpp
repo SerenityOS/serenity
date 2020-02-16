@@ -32,10 +32,13 @@
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/KSyms.h>
 #include <Kernel/Process.h>
 #include <LibC/errno_numbers.h>
 
 //#define VFS_DEBUG
+
+namespace Kernel {
 
 static VFS* s_the;
 static constexpr int symlink_recursion_limit { 5 }; // FIXME: increase?
@@ -847,4 +850,6 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
     if (out_parent)
         *out_parent = custody->parent();
     return custody;
+}
+
 }

@@ -34,6 +34,8 @@
 #include <Kernel/IRQHandler.h>
 #include <Kernel/Lock.h>
 
+namespace Kernel {
+
 class PATAChannel;
 
 class PATADiskDevice final : public BlockDevice {
@@ -86,3 +88,5 @@ private:
 
     PATAChannel& m_channel;
 };
+
+}

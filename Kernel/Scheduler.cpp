@@ -28,6 +28,7 @@
 #include <AK/TemporaryChange.h>
 #include <Kernel/Arch/i386/PIT.h>
 #include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/Net/Socket.h>
 #include <Kernel/Process.h>
 #include <Kernel/Profiling.h>
 #include <Kernel/RTC.h>
@@ -37,6 +38,8 @@
 //#define LOG_EVERY_CONTEXT_SWITCH
 //#define SCHEDULER_DEBUG
 //#define SCHEDULER_RUNNABLE_DEBUG
+
+namespace Kernel {
 
 SchedulerData* g_scheduler_data;
 
@@ -668,4 +671,6 @@ void Scheduler::idle_loop()
             yield();
         }
     }
+}
+
 }

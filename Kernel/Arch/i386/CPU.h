@@ -34,6 +34,8 @@
 #define PAGE_SIZE 4096
 #define PAGE_MASK ((uintptr_t)0xfffff000u)
 
+namespace Kernel {
+
 class MemoryManager;
 class PageDirectory;
 class PageTableEntry;
@@ -589,3 +591,5 @@ public:
 private:
     u32 m_flags;
 };
+
+}

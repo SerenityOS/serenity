@@ -32,6 +32,8 @@
 #include <AK/WeakPtr.h>
 #include <Kernel/Net/IPv4Socket.h>
 
+namespace Kernel {
+
 class TCPSocket final : public IPv4Socket
     , public Weakable<TCPSocket> {
 public:
@@ -207,3 +209,5 @@ private:
     Lock m_not_acked_lock { "TCPSocket unacked packets" };
     SinglyLinkedList<OutgoingPacket> m_not_acked;
 };
+
+}

@@ -29,6 +29,8 @@
 #include <AK/RefPtr.h>
 #include <Kernel/Devices/BlockDevice.h>
 
+namespace Kernel {
+
 class DiskPartition final : public BlockDevice {
 public:
     static NonnullRefPtr<DiskPartition> create(BlockDevice&, unsigned block_offset, unsigned block_limit);
@@ -52,3 +54,5 @@ private:
     unsigned m_block_offset;
     unsigned m_block_limit;
 };
+
+}

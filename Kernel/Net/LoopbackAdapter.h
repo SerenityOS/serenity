@@ -28,6 +28,8 @@
 
 #include <Kernel/Net/NetworkAdapter.h>
 
+namespace Kernel {
+
 class LoopbackAdapter final : public NetworkAdapter {
     AK_MAKE_ETERNAL
 public:
@@ -41,3 +43,5 @@ public:
 private:
     LoopbackAdapter();
 };
+
+}

@@ -29,6 +29,8 @@
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/PerformanceEventBuffer.h>
 
+namespace Kernel {
+
 PerformanceEventBuffer::PerformanceEventBuffer()
     : m_buffer(KBuffer::create_with_size(4 * MB))
 {
@@ -123,4 +125,6 @@ KBuffer PerformanceEventBuffer::to_json(pid_t pid, const String& executable_path
     array.finish();
     object.finish();
     return builder.build();
+}
+
 }

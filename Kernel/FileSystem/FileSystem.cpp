@@ -33,6 +33,8 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/errno_numbers.h>
 
+namespace Kernel {
+
 static u32 s_lastFileSystemID;
 static HashMap<u32, FS*>* s_fs_map;
 
@@ -110,4 +112,6 @@ void FS::set_block_size(int block_size)
     if (block_size == m_block_size)
         return;
     m_block_size = block_size;
+}
+
 }

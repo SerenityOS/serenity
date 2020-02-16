@@ -28,6 +28,8 @@
 
 #include <AK/Types.h>
 
+namespace Kernel {
+
 class IRQHandler {
 public:
     virtual ~IRQHandler();
@@ -44,3 +46,5 @@ protected:
 private:
     u8 m_irq_number { 0 };
 };
+
+}

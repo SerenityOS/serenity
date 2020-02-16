@@ -54,6 +54,8 @@
 #include <LibBareMetal/StdLib.h>
 #include <LibC/errno_numbers.h>
 
+namespace Kernel {
+
 enum ProcParentDirectory {
     PDI_AbstractRoot = 0,
     PDI_Root,
@@ -1219,7 +1221,7 @@ bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
     dbgprintf("ProcFS: traverse_as_directory %u\n", index());
 #endif
 
-    if (!::is_directory(identifier()))
+    if (!Kernel::is_directory(identifier()))
         return false;
 
     auto pid = to_pid(identifier());
@@ -1621,4 +1623,6 @@ ProcFS::ProcFSDirectoryEntry* ProcFS::get_directory_entry(InodeIdentifier identi
 KResult ProcFSInode::chown(uid_t, gid_t)
 {
     return KResult(-EPERM);
+}
+
 }

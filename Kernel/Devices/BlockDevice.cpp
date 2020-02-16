@@ -26,6 +26,8 @@
 
 #include <Kernel/Devices/BlockDevice.h>
 
+namespace Kernel {
+
 BlockDevice::~BlockDevice()
 {
 }
@@ -58,4 +60,6 @@ bool BlockDevice::write_raw(u32 offset, unsigned length, const u8* in)
     ASSERT(first_block <= 0xffffffff);
     ASSERT(end_block <= 0xffffffff);
     return write_blocks(first_block, end_block - first_block, in);
+}
+
 }

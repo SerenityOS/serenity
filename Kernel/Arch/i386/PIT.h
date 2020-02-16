@@ -28,6 +28,8 @@
 
 #include <AK/Types.h>
 
+namespace Kernel {
+
 #define TICKS_PER_SECOND 1000
 /* Timer related ports */
 #define TIMER0_CTL 0x40
@@ -54,5 +56,7 @@ namespace PIT {
 void initialize();
 u32 ticks_this_second();
 u32 seconds_since_boot();
+
+}
 
 }

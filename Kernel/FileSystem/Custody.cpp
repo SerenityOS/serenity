@@ -30,6 +30,8 @@
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Lock.h>
 
+namespace Kernel {
+
 static Lockable<InlineLinkedList<Custody>>& all_custodies()
 {
     static Lockable<InlineLinkedList<Custody>>* list;
@@ -108,4 +110,6 @@ void Custody::did_mount_on(Badge<VFS>)
 void Custody::did_rename(Badge<VFS>, const String& name)
 {
     m_name = name;
+}
+
 }

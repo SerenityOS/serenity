@@ -27,6 +27,8 @@
 #include "ZeroDevice.h"
 #include <AK/StdLibExtras.h>
 
+namespace Kernel {
+
 ZeroDevice::ZeroDevice()
     : CharacterDevice(1, 5)
 {
@@ -51,4 +53,6 @@ ssize_t ZeroDevice::read(FileDescription&, u8* buffer, ssize_t size)
 ssize_t ZeroDevice::write(FileDescription&, const u8*, ssize_t size)
 {
     return min(PAGE_SIZE, size);
+}
+
 }

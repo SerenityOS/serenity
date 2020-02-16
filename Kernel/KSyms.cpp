@@ -32,6 +32,8 @@
 #include <Kernel/Scheduler.h>
 #include <LibELF/ELFLoader.h>
 
+namespace Kernel {
+
 static KSym* s_ksyms;
 u32 ksym_lowest_address = 0xffffffff;
 u32 ksym_highest_address = 0;
@@ -188,4 +190,6 @@ void load_ksyms()
     auto buffer = description->read_entire_file();
     ASSERT(buffer);
     load_ksyms_from_data(buffer);
+}
+
 }

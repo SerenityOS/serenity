@@ -31,6 +31,8 @@
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/VM/PhysicalRegion.h>
 
+namespace Kernel {
+
 NonnullRefPtr<PhysicalRegion> PhysicalRegion::create(PhysicalAddress lower, PhysicalAddress upper)
 {
     return adopt(*new PhysicalRegion(lower, upper));
@@ -111,4 +113,6 @@ void PhysicalRegion::return_page_at(PhysicalAddress addr)
 
     m_bitmap.set(page, false);
     m_used--;
+}
+
 }

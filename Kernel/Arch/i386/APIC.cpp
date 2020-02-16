@@ -47,6 +47,8 @@
 #define APIC_REG_LVT_LINT1 0x360
 #define APIC_REG_LVT_ERR 0x370
 
+namespace Kernel {
+
 extern "C" void apic_spurious_interrupt_entry();
 
 asm(
@@ -211,6 +213,8 @@ void enable(u32 cpu)
                 ; // TODO: 200 microsecond delay
         }
     }
+}
+
 }
 
 }

@@ -34,6 +34,8 @@
 
 //#define KEYBOARD_DEBUG
 
+namespace Kernel {
+
 #define IRQ_KEYBOARD 1
 #define I8042_BUFFER 0x60
 #define I8042_STATUS 0x64
@@ -618,4 +620,6 @@ void KeyboardDevice::set_maps(const char* n_map, const char* n_shift_map, const 
         alt_map[i] = n_alt_map[i];
         altgr_map[i] = n_altgr_map[i];
     }
+}
+
 }

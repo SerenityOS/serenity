@@ -44,6 +44,9 @@
 #include <LibC/signal_numbers.h>
 
 class ELFLoader;
+
+namespace Kernel {
+
 class FileDescription;
 class KBuffer;
 class PageDirectory;
@@ -665,3 +668,5 @@ inline u32 Thread::effective_priority() const
             ASSERT_NOT_REACHED();                                   \
         }                                                           \
     } while (0)
+
+}

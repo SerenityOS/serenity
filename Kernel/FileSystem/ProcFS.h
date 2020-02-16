@@ -32,6 +32,8 @@
 #include <Kernel/KBuffer.h>
 #include <Kernel/Lock.h>
 
+namespace Kernel {
+
 class Process;
 
 class ProcFSInode;
@@ -147,3 +149,5 @@ private:
 
     NonnullRefPtr<FileDescription> m_fd;
 };
+
+}

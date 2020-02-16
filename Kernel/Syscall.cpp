@@ -31,6 +31,8 @@
 #include <Kernel/Syscall.h>
 #include <Kernel/VM/MemoryManager.h>
 
+namespace Kernel {
+
 extern "C" void syscall_handler(RegisterState);
 extern "C" void syscall_asm_entry();
 
@@ -174,4 +176,6 @@ void syscall_handler(RegisterState regs)
 
     if (current->has_unmasked_pending_signals())
         (void)current->block<Thread::SemiPermanentBlocker>(Thread::SemiPermanentBlocker::Reason::Signal);
+}
+
 }

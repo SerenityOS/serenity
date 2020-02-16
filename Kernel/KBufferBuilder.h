@@ -30,6 +30,8 @@
 #include <Kernel/KBuffer.h>
 #include <stdarg.h>
 
+namespace Kernel {
+
 class KBufferBuilder {
 public:
     using OutputType = KBuffer;
@@ -52,3 +54,5 @@ private:
     KBuffer m_buffer;
     size_t m_size { 0 };
 };
+
+}

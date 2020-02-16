@@ -29,6 +29,8 @@
 #include <AK/Assertions.h>
 #include <LibC/errno_numbers.h>
 
+namespace Kernel {
+
 enum KSuccessTag {
     KSuccess
 };
@@ -144,3 +146,5 @@ private:
     KResult m_error;
     bool m_is_error { false };
 };
+
+}

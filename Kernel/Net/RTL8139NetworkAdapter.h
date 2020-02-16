@@ -31,6 +31,8 @@
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/PCI/Access.h>
 
+namespace Kernel {
+
 #define RTL8139_TX_BUFFER_COUNT 4
 
 class RTL8139NetworkAdapter final : public NetworkAdapter
@@ -70,3 +72,5 @@ private:
     u32 m_packet_buffer { 0 };
     bool m_link_up { false };
 };
+
+}

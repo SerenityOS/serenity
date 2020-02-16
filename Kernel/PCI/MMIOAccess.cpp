@@ -28,6 +28,8 @@
 #include <Kernel/PCI/MMIOAccess.h>
 #include <Kernel/VM/MemoryManager.h>
 
+namespace Kernel {
+
 #define PCI_MMIO_CONFIG_SPACE_SIZE 4096
 
 uint32_t PCI::MMIOAccess::get_segments_count()
@@ -226,4 +228,6 @@ size_t PCI::MMIOSegment::get_size()
 PhysicalAddress PCI::MMIOSegment::get_paddr()
 {
     return m_base_addr;
+}
+
 }

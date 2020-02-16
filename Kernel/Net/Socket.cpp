@@ -35,6 +35,8 @@
 
 //#define SOCKET_DEBUG
 
+namespace Kernel {
+
 KResultOr<NonnullRefPtr<Socket>> Socket::create(int domain, int type, int protocol)
 {
     switch (domain) {
@@ -174,4 +176,6 @@ KResult Socket::shutdown(int how)
     m_shut_down_for_reading |= (how & SHUT_RD) != 0;
     m_shut_down_for_writing |= (how & SHUT_WR) != 0;
     return KSuccess;
+}
+
 }

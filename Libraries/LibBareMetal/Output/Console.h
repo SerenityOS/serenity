@@ -39,7 +39,7 @@ public:
 };
 
 #if defined(KERNEL)
-class Console final : public CharacterDevice {
+class Console final : public Kernel::CharacterDevice {
     AK_MAKE_ETERNAL
 #elif defined(BOOTSTRAPPER)
 class Console {
@@ -57,10 +57,10 @@ public:
 
 #if defined(KERNEL)
     // ^CharacterDevice
-    virtual bool can_read(const FileDescription&) const override;
-    virtual bool can_write(const FileDescription&) const override { return true; }
-    virtual ssize_t read(FileDescription&, u8*, ssize_t) override;
-    virtual ssize_t write(FileDescription&, const u8*, ssize_t) override;
+    virtual bool can_read(const Kernel::FileDescription&) const override;
+    virtual bool can_write(const Kernel::FileDescription&) const override { return true; }
+    virtual ssize_t read(Kernel::FileDescription&, u8*, ssize_t) override;
+    virtual ssize_t write(Kernel::FileDescription&, const u8*, ssize_t) override;
     virtual const char* class_name() const override { return "Console"; }
 #endif
     void set_implementation(ConsoleImplementation* implementation)

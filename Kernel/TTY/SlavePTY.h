@@ -29,6 +29,8 @@
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/TTY/TTY.h>
 
+namespace Kernel {
+
 class MasterPTY;
 
 class SlavePTY final : public TTY {
@@ -58,3 +60,5 @@ private:
     unsigned m_index;
     char m_tty_name[32];
 };
+
+}

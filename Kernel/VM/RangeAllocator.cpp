@@ -33,6 +33,8 @@
 //#define VRA_DEBUG
 #define VM_GUARD_PAGES
 
+namespace Kernel {
+
 RangeAllocator::RangeAllocator()
 {
 }
@@ -193,4 +195,6 @@ void RangeAllocator::deallocate(Range range)
     dbgprintf("VRA: After deallocate\n");
     dump();
 #endif
+}
+
 }

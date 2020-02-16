@@ -26,12 +26,13 @@
 
 #pragma once
 
-#include <AK/CircularQueue.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/IRQHandler.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/WaitQueue.h>
 #include <LibBareMetal/Memory/PhysicalAddress.h>
+
+namespace Kernel {
 
 class SB16;
 
@@ -68,3 +69,5 @@ private:
 
     WaitQueue m_irq_queue;
 };
+
+}

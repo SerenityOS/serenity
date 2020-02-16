@@ -34,6 +34,8 @@
 #include <Kernel/UnixTypes.h>
 #include <LibBareMetal/Memory/VirtualAddress.h>
 
+namespace Kernel {
+
 class FileDescription;
 class Process;
 class Region;
@@ -102,3 +104,5 @@ public:
 protected:
     File();
 };
+
+}

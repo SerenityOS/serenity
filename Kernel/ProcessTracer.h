@@ -30,6 +30,8 @@
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/UnixTypes.h>
 
+namespace Kernel {
+
 class ProcessTracer : public File {
 public:
     static NonnullRefPtr<ProcessTracer> create(pid_t pid) { return adopt(*new ProcessTracer(pid)); }
@@ -65,3 +67,5 @@ private:
     bool m_dead { false };
     CircularQueue<CallData, 200> m_calls;
 };
+
+}

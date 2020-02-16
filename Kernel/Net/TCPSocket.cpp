@@ -36,6 +36,8 @@
 
 //#define TCP_SOCKET_DEBUG
 
+namespace Kernel {
+
 void TCPSocket::for_each(Function<void(TCPSocket&)> callback)
 {
     LOCKER(sockets_by_tuple().lock());
@@ -464,4 +466,6 @@ void TCPSocket::close()
 
     LOCKER(closing_sockets().lock());
     closing_sockets().resource().set(tuple(), *this);
+}
+
 }

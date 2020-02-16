@@ -71,14 +71,6 @@
 #include <Kernel/TTY/VirtualConsole.h>
 #include <Kernel/VM/MemoryManager.h>
 
-[[noreturn]] static void init_stage2();
-static void setup_serial_debug();
-static void setup_acpi();
-static void setup_vmmouse();
-static void setup_pci();
-
-VirtualConsole* tty0;
-
 // Defined in the linker script
 typedef void (*ctor_func_t)();
 extern ctor_func_t start_ctors;
@@ -86,6 +78,16 @@ extern ctor_func_t end_ctors;
 
 extern u32 __stack_chk_guard;
 u32 __stack_chk_guard;
+
+namespace Kernel {
+
+[[noreturn]] static void init_stage2();
+static void setup_serial_debug();
+static void setup_acpi();
+static void setup_vmmouse();
+static void setup_pci();
+
+VirtualConsole* tty0;
 
 extern "C" [[noreturn]] void init()
 {
@@ -454,4 +456,6 @@ void setup_pci()
         hang();
     }
     PCI::Initializer::the().dismiss();
+}
+
 }

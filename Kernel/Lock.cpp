@@ -24,8 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <Kernel/KSyms.h>
 #include <Kernel/Lock.h>
 #include <Kernel/Thread.h>
+
+namespace Kernel {
 
 void Lock::lock()
 {
@@ -81,4 +84,6 @@ bool Lock::force_unlock_if_locked()
     --m_level;
     m_queue.wake_one();
     return true;
+}
+
 }

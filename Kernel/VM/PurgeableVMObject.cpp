@@ -28,6 +28,8 @@
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/VM/PurgeableVMObject.h>
 
+namespace Kernel {
+
 NonnullRefPtr<PurgeableVMObject> PurgeableVMObject::create_with_size(size_t size)
 {
     return adopt(*new PurgeableVMObject(size));
@@ -83,4 +85,6 @@ int PurgeableVMObject::purge_impl()
     });
 
     return purged_page_count;
+}
+
 }

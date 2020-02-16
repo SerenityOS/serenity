@@ -41,6 +41,8 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/Region.h>
 
+namespace Kernel {
+
 class KBufferImpl : public RefCounted<KBufferImpl> {
 public:
     static NonnullRefPtr<KBufferImpl> create_with_size(size_t size, u8 access, const char* name)
@@ -117,4 +119,6 @@ private:
 inline const LogStream& operator<<(const LogStream& stream, const KBuffer& value)
 {
     return stream << StringView(value.data(), value.size());
+}
+
 }

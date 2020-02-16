@@ -34,6 +34,8 @@
 
 //#define FIFO_DEBUG
 
+namespace Kernel {
+
 Lockable<HashTable<FIFO*>>& all_fifos()
 {
     static Lockable<HashTable<FIFO*>>* s_table;
@@ -142,4 +144,6 @@ ssize_t FIFO::write(FileDescription&, const u8* buffer, ssize_t size)
 String FIFO::absolute_path(const FileDescription&) const
 {
     return String::format("fifo:%u", m_fifo_id);
+}
+
 }

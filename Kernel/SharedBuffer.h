@@ -30,7 +30,9 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PurgeableVMObject.h>
 
-struct SharedBuffer {
+namespace Kernel {
+
+class SharedBuffer {
 private:
     struct Reference {
         Reference(pid_t pid)
@@ -83,3 +85,5 @@ public:
 };
 
 Lockable<HashMap<int, NonnullOwnPtr<SharedBuffer>>>& shared_buffers();
+
+}

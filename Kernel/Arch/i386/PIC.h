@@ -28,14 +28,16 @@
 
 #include <AK/Types.h>
 
+namespace Kernel {
+
 namespace PIC {
 
-void enable(u8 number);
-void disable(u8 number);
-void eoi(u8 number);
-void initialize();
-u16 get_isr();
-u16 get_irr();
+    void enable(u8 number);
+    void disable(u8 number);
+    void eoi(u8 number);
+    void initialize();
+    u16 get_isr();
+    u16 get_irr();
 
 }
 
@@ -50,3 +52,5 @@ public:
 private:
     u8 m_irq { 0 };
 };
+
+}

@@ -35,6 +35,8 @@
 #include <Kernel/Lock.h>
 #include <Kernel/UnixTypes.h>
 
+namespace Kernel {
+
 enum class ShouldBlock {
     No = 0,
     Yes = 1
@@ -207,3 +209,5 @@ public:
 private:
     RefPtr<SocketType> m_socket;
 };
+
+}

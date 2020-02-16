@@ -45,6 +45,8 @@
 #include <Kernel/WaitQueue.h>
 #include <LibBareMetal/Memory/PhysicalAddress.h>
 
+namespace Kernel {
+
 struct PhysicalRegionDescriptor {
     PhysicalAddress offset;
     u16 size { 0 };
@@ -100,3 +102,5 @@ private:
     RefPtr<PATADiskDevice> m_master;
     RefPtr<PATADiskDevice> m_slave;
 };
+
+}

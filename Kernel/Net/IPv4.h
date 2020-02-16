@@ -32,6 +32,8 @@
 #include <AK/NetworkOrdered.h>
 #include <AK/Types.h>
 
+namespace Kernel {
+
 enum class IPv4Protocol : u16 {
     ICMP = 1,
     TCP = 6,
@@ -109,4 +111,6 @@ inline NetworkOrdered<u16> internet_checksum(const void* ptr, size_t count)
     while (checksum >> 16)
         checksum = (checksum & 0xffff) + (checksum >> 16);
     return ~checksum & 0xffff;
+}
+
 }
