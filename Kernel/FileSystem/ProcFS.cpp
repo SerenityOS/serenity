@@ -49,6 +49,7 @@
 #include <Kernel/Net/UDPSocket.h>
 #include <Kernel/PCI/Access.h>
 #include <Kernel/Profiling.h>
+#include <Kernel/TTY/TTY.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PurgeableVMObject.h>
 #include <LibBareMetal/Output/Console.h>
