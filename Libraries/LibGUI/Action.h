@@ -35,15 +35,11 @@
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <LibCore/Object.h>
+#include <LibGUI/Forward.h>
 #include <LibGUI/Shortcut.h>
 #include <LibGfx/Forward.h>
 
 namespace GUI {
-
-class Action;
-class ActionGroup;
-class Button;
-class MenuItem;
 
 namespace CommonActions {
     NonnullRefPtr<Action> make_open_action(Function<void(Action&)>, Core::Object* parent = nullptr);

@@ -26,14 +26,12 @@
 
 #pragma once
 
-#include <AK/Badge.h>
 #include <AK/Function.h>
 #include <AK/String.h>
+#include <LibGUI/Forward.h>
 #include <LibGfx/Rect.h>
 
 namespace GUI {
-
-class WindowServerConnection;
 
 class Desktop {
 public:

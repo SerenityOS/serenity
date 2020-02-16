@@ -31,11 +31,6 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 
-namespace GUI {
-class StackWidget;
-class TableView;
-}
-
 class IRCAppWindow : public GUI::Window {
 public:
     IRCAppWindow();

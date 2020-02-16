@@ -28,10 +28,6 @@
 
 #include <LibHTML/Layout/LayoutReplaced.h>
 
-namespace GUI {
-class Widget;
-}
-
 class LayoutWidget : public LayoutReplaced {
 public:
     LayoutWidget(const Element&, GUI::Widget&);

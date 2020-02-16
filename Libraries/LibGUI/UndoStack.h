@@ -27,11 +27,9 @@
 #pragma once
 
 #include <AK/NonnullOwnPtrVector.h>
-#include <LibGUI/Command.h>
+#include <LibGUI/Forward.h>
 
 namespace GUI {
-
-class Command;
 
 class UndoStack {
 public:

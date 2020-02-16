@@ -31,10 +31,6 @@
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Painter.h>
 
-namespace GUI {
-class Menu;
-}
-
 class SprayTool final : public Tool {
 public:
     SprayTool();

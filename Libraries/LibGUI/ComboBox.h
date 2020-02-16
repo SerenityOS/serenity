@@ -31,9 +31,6 @@
 
 namespace GUI {
 
-class Button;
-class TextEditor;
-
 class ComboBox : public Widget {
     C_OBJECT(ComboBox)
 public:

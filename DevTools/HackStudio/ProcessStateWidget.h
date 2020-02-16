@@ -28,10 +28,6 @@
 
 #include <LibGUI/Widget.h>
 
-namespace GUI {
-class Label;
-}
-
 class ProcessStateWidget final : public GUI::Widget {
     C_OBJECT(ProcessStateWidget)
 public:

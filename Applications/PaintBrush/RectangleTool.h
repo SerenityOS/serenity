@@ -29,11 +29,6 @@
 #include "Tool.h"
 #include <LibGfx/Point.h>
 
-namespace GUI {
-class Menu;
-class Painter;
-}
-
 class RectangleTool final : public Tool {
 public:
     RectangleTool();

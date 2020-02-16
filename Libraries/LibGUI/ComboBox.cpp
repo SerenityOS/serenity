@@ -28,6 +28,7 @@
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/ListView.h>
+#include <LibGUI/Model.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>

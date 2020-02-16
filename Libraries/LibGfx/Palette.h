@@ -30,11 +30,8 @@
 #include <AK/Noncopyable.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
+#include <LibGUI/Forward.h>
 #include <LibGfx/SystemTheme.h>
-
-namespace GUI {
-class Application;
-}
 
 namespace Gfx {
 

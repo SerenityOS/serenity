@@ -26,8 +26,6 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/String.h>
 #include <LibGUI/AbstractButton.h>
 
 namespace GUI {

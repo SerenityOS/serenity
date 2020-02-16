@@ -33,13 +33,6 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 
-namespace GUI {
-class Button;
-class StatusBar;
-class TextBox;
-class TextEditor;
-}
-
 class TextEditorWidget final : public GUI::Widget {
     C_OBJECT(TextEditorWidget)
 public:

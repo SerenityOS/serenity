@@ -26,10 +26,7 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/HashMap.h>
 #include <LibGUI/AbstractTableView.h>
-#include <LibGUI/Model.h>
 
 namespace GUI {
 

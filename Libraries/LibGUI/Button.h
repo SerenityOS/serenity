@@ -35,8 +35,6 @@
 
 namespace GUI {
 
-class Action;
-
 class Button : public AbstractButton {
     C_OBJECT(Button)
 public:

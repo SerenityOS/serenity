@@ -51,6 +51,7 @@ class Triangle;
 
 enum class BitmapFormat;
 enum class ColorRole;
+enum class TextAlignment;
 
 }
 

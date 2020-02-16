@@ -30,10 +30,6 @@
 #include <LibGfx/Point.h>
 #include <LibGUI/ActionGroup.h>
 
-namespace GUI {
-class Menu;
-}
-
 class PenTool final : public Tool {
 public:
     PenTool();

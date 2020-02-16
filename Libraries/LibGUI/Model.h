@@ -38,8 +38,6 @@
 
 namespace GUI {
 
-class AbstractView;
-
 enum class SortOrder {
     None,
     Ascending,

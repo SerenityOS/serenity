@@ -28,10 +28,6 @@
 
 #include <LibGUI/Widget.h>
 
-namespace GUI {
-class Label;
-}
-
 class GraphWidget;
 
 class MemoryStatsWidget final : public GUI::Widget {

@@ -6,8 +6,6 @@
 
 namespace GUI {
 
-class TextEditor;
-
 class SyntaxHighlighter {
     AK_MAKE_NONCOPYABLE(SyntaxHighlighter);
     AK_MAKE_NONMOVABLE(SyntaxHighlighter);

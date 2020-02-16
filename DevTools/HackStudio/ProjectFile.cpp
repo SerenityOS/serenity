@@ -28,6 +28,11 @@
 #include <LibCore/File.h>
 #include <string.h>
 
+ProjectFile::ProjectFile(const String& name)
+    : m_name(name)
+{
+}
+
 const GUI::TextDocument& ProjectFile::document() const
 {
     if (!m_document) {

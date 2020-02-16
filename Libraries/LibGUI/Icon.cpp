@@ -26,6 +26,7 @@
 
 #include <AK/String.h>
 #include <LibGUI/Icon.h>
+#include <LibGfx/Bitmap.h>
 
 GIcon::GIcon()
     : m_impl(GIconImpl::create())

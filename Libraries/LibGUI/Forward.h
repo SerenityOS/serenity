@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,33 +24,54 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+namespace GUI {
 
-#include "Tool.h"
-#include <LibGfx/Point.h>
-#include <LibGUI/ActionGroup.h>
+class AbstractButton;
+class AbstractTableView;
+class AbstractView;
+class Action;
+class ActionGroup;
+class Application;
+class BoxLayout;
+class Button;
+class Command;
+class FileSystemModel;
+class Frame;
+class HorizontalBoxLayout;
+class ItemView;
+class JsonArrayModel;
+class KeyEvent;
+class Label;
+class Layout;
+class Menu;
+class MenuBar;
+class MenuItem;
+class Model;
+class ModelEditingDelegate;
+class ModelIndex;
+class MouseEvent;
+class PaintEvent;
+class Painter;
+class ResizeCorner;
+class ScrollBar;
+class Slider;
+class Splitter;
+class StackWidget;
+class StatusBar;
+class SyntaxHighlighter;
+class TabWidget;
+class TableView;
+class TextBox;
+class TextDocument;
+class TextDocumentLine;
+class TextDocumentUndoCommand;
+class TextEditor;
+class TreeView;
+class Variant;
+class VerticalBoxLayout;
+class WMEvent;
+class Widget;
+class Window;
+class WindowServerConnection;
 
-class LineTool final : public Tool {
-public:
-    LineTool();
-    virtual ~LineTool() override;
-
-    virtual void on_mousedown(GUI::MouseEvent&) override;
-    virtual void on_mousemove(GUI::MouseEvent&) override;
-    virtual void on_mouseup(GUI::MouseEvent&) override;
-    virtual void on_contextmenu(GUI::ContextMenuEvent&) override;
-    virtual void on_second_paint(GUI::PaintEvent&) override;
-    virtual void on_keydown(GUI::KeyEvent&) override;
-    virtual void on_keyup(GUI::KeyEvent&) override;
-
-private:
-    virtual const char* class_name() const override { return "LineTool"; }
-
-    GUI::MouseButton m_drawing_button { GUI::MouseButton::None };
-    Gfx::Point m_line_start_position;
-    Gfx::Point m_line_end_position;
-    RefPtr<GUI::Menu> m_context_menu;
-    GUI::ActionGroup m_thickness_actions;
-    int m_thickness { 1 };
-    bool m_constrain_angle { false };
-};
+}

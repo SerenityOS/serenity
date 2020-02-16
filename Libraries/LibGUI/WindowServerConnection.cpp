@@ -25,6 +25,7 @@
  */
 
 #include <AK/SharedBuffer.h>
+#include <LibCore/EventLoop.h>
 #include <LibCore/MimeData.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>

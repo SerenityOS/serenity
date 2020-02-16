@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/HashTable.h>
 #include <LibGUI/ScrollableWidget.h>
 
 class FormWidget;

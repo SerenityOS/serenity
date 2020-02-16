@@ -30,8 +30,6 @@
 
 namespace GUI {
 
-class Frame;
-
 class ColorPicker final : public Dialog {
     C_OBJECT(ColorPicker)
 public:

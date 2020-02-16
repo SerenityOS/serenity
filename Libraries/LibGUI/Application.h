@@ -28,15 +28,13 @@
 
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
+#include <AK/String.h>
 #include <LibCore/Forward.h>
+#include <LibGUI/Forward.h>
 #include <LibGUI/Shortcut.h>
 #include <LibGfx/Forward.h>
 
 namespace GUI {
-class Action;
-class KeyEvent;
-class MenuBar;
-class Window;
 
 class Application {
 public:

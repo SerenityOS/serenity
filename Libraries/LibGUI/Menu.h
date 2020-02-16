@@ -26,16 +26,12 @@
 
 #pragma once
 
-#include <AK/Function.h>
 #include <AK/NonnullOwnPtrVector.h>
-#include <AK/NonnullRefPtr.h>
 #include <LibCore/Object.h>
+#include <LibGUI/Forward.h>
 #include <LibGfx/Forward.h>
 
 namespace GUI {
-
-class Action;
-class MenuItem;
 
 class Menu final : public Core::Object {
     C_OBJECT(Menu)
@@ -55,8 +51,6 @@ public:
 
     void popup(const Gfx::Point& screen_position);
     void dismiss();
-
-    Function<void(unsigned)> on_item_activation;
 
 private:
     friend class MenuBar;

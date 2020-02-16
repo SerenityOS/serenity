@@ -25,10 +25,11 @@
  */
 
 #include <Kernel/KeyCode.h>
-#include <LibGfx/Palette.h>
 #include <LibGUI/ListView.h>
+#include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
+#include <LibGfx/Palette.h>
 
 namespace GUI {
 

@@ -29,7 +29,6 @@
 #include <AK/ByteBuffer.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibCore/Event.h>
-#include <LibCore/EventLoop.h>
 #include <LibCore/LocalSocket.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/SyscallUtils.h>

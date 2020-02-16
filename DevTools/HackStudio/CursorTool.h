@@ -28,11 +28,8 @@
 
 #include "Tool.h"
 #include <AK/HashMap.h>
+#include <LibGUI/Forward.h>
 #include <LibGfx/Point.h>
-
-namespace GUI {
-class Widget;
-}
 
 class CursorTool final : public Tool {
 public:

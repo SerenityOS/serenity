@@ -31,12 +31,6 @@
 #include <AK/Vector.h>
 #include <LibGUI/Widget.h>
 
-namespace GUI {
-class Button;
-class Label;
-class TextBox;
-}
-
 class CalculatorWidget final : public GUI::Widget {
     C_OBJECT(CalculatorWidget)
 public:

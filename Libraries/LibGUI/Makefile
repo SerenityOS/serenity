@@ -38,6 +38,7 @@ OBJS = \
     MenuItem.o \
     MessageBox.o \
     Model.o \
+    ModelIndex.o \
     ModelSelection.o \
     Painter.o \
     ProgressBar.o \

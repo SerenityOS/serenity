@@ -30,11 +30,6 @@
 #include <LibCore/Timer.h>
 #include <LibGUI/Frame.h>
 
-namespace GUI {
-class Button;
-class Label;
-}
-
 class Field;
 class SquareButton;
 class SquareLabel;

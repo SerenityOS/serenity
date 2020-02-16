@@ -26,6 +26,7 @@
 
 #include <LibAudio/Buffer.h>
 #include <LibAudio/ClientConnection.h>
+#include <LibCore/EventLoop.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)

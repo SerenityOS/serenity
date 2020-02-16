@@ -28,11 +28,6 @@
 
 #include <LibGUI/Window.h>
 
-namespace GUI {
-class TableView;
-class TextBox;
-}
-
 class VBPropertiesWindow final : public GUI::Window {
     C_OBJECT(VBPropertiesWindow)
 public:

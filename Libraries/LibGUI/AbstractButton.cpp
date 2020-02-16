@@ -24,9 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGfx/Palette.h>
+#include <LibCore/Timer.h>
 #include <LibGUI/AbstractButton.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/Palette.h>
 
 namespace GUI {
 

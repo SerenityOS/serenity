@@ -31,6 +31,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
+#include <LibGUI/Model.h>
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Window.h>
 #include <stdio.h>

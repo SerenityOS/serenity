@@ -30,9 +30,6 @@
 
 namespace GUI {
 
-class Button;
-class TextEditor;
-
 class InputBox : public Dialog {
     C_OBJECT(InputBox)
 public:

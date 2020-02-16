@@ -44,10 +44,7 @@ public:
     const GUI::TextDocument& document() const;
 
 private:
-    explicit ProjectFile(const String& name)
-        : m_name(name)
-    {
-    }
+    explicit ProjectFile(const String& name);
 
     String m_name;
     mutable RefPtr<GUI::TextDocument> m_document;

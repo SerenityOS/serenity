@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibGUI/Command.h>
 #include <LibGUI/UndoStack.h>
 
 namespace GUI {

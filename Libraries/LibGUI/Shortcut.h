@@ -26,7 +26,6 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/Traits.h>
 #include <Kernel/KeyCode.h>
 

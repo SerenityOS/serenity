@@ -25,6 +25,8 @@
  */
 
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/Widget.h>
+#include <LibGfx/Orientation.h>
 #include <stdio.h>
 
 //#define GBOXLAYOUT_DEBUG

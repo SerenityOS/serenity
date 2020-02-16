@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Badge.h>
 #include <LibCore/ConfigFile.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/WindowServerConnection.h>

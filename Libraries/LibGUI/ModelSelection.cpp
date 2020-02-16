@@ -24,7 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Badge.h>
 #include <LibGUI/AbstractView.h>
+#include <LibGUI/Model.h>
 #include <LibGUI/ModelSelection.h>
 
 namespace GUI {

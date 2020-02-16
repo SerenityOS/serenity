@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibCore/EventLoop.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/Dialog.h>
 #include <LibGUI/Event.h>

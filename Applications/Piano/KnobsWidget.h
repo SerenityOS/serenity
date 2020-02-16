@@ -29,11 +29,6 @@
 
 #include <LibGUI/Frame.h>
 
-namespace GUI {
-class Label;
-class Slider;
-}
-
 class AudioEngine;
 class MainWidget;
 
