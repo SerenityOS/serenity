@@ -167,6 +167,19 @@ void Slider::mouseup_event(MouseEvent& event)
     return Widget::mouseup_event(event);
 }
 
+void Slider::mousewheel_event(MouseEvent& event)
+{
+    if (!is_enabled())
+        return;
+
+    if (orientation() == Orientation::Horizontal)
+        set_value(value() - event.wheel_delta() * m_step);
+    else
+        set_value(value() + event.wheel_delta() * m_step);
+
+    Widget::mousewheel_event(event);
+}
+
 void Slider::leave_event(Core::Event& event)
 {
     if (!is_enabled())
