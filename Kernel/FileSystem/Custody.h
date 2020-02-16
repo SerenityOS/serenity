@@ -26,16 +26,13 @@
 
 #pragma once
 
-#include <AK/Badge.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
+#include <Kernel/Forward.h>
 
 namespace Kernel {
-
-class Inode;
-class VFS;
 
 // FIXME: Custody needs some locking.
 
