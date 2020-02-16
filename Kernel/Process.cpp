@@ -151,12 +151,12 @@ bool Process::in_group(gid_t gid) const
     return m_gid == gid || m_extra_gids.contains(gid);
 }
 
-Range Process::allocate_range(VirtualAddress vaddr, size_t size)
+Range Process::allocate_range(VirtualAddress vaddr, size_t size, size_t alignment)
 {
     vaddr.mask(PAGE_MASK);
     size = PAGE_ROUND_UP(size);
     if (vaddr.is_null())
-        return page_directory().range_allocator().allocate_anywhere(size);
+        return page_directory().range_allocator().allocate_anywhere(size, alignment);
     return page_directory().range_allocator().allocate_specific(vaddr, size);
 }
 
@@ -185,16 +185,22 @@ Region& Process::allocate_split_region(const Region& source_region, const Range&
     return region;
 }
 
-Region* Process::allocate_region(VirtualAddress vaddr, size_t size, const String& name, int prot, bool commit)
+Region* Process::allocate_region(const Range& range, const String& name, int prot, bool commit)
 {
-    auto range = allocate_range(vaddr, size);
-    if (!range.is_valid())
-        return nullptr;
+    ASSERT(range.is_valid());
     auto& region = add_region(Region::create_user_accessible(range, name, prot_to_region_access_flags(prot)));
     region.map(page_directory());
     if (commit)
         region.commit();
     return &region;
+}
+
+Region* Process::allocate_region(VirtualAddress vaddr, size_t size, const String& name, int prot, bool commit)
+{
+    auto range = allocate_range(vaddr, size);
+    if (!range.is_valid())
+        return nullptr;
+    return allocate_region(range, name, prot, commit);
 }
 
 Region* Process::allocate_file_backed_region(VirtualAddress vaddr, size_t size, NonnullRefPtr<Inode> inode, const String& name, int prot)
@@ -207,9 +213,10 @@ Region* Process::allocate_file_backed_region(VirtualAddress vaddr, size_t size, 
     return &region;
 }
 
-Region* Process::allocate_region_with_vmobject(VirtualAddress vaddr, size_t size, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, int prot, bool user_accessible)
+Region* Process::allocate_region_with_vmobject(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, int prot, bool user_accessible)
 {
-    size_t end_in_vmobject = offset_in_vmobject + size;
+    ASSERT(range.is_valid());
+    size_t end_in_vmobject = offset_in_vmobject + range.size();
     if (end_in_vmobject < offset_in_vmobject) {
         dbgprintf("allocate_region_with_vmobject: Overflow (offset + size)\n");
         return nullptr;
@@ -222,9 +229,6 @@ Region* Process::allocate_region_with_vmobject(VirtualAddress vaddr, size_t size
         dbgprintf("allocate_region_with_vmobject: Attempt to allocate a region with an end past the end of its VMObject.\n");
         return nullptr;
     }
-    auto range = allocate_range(vaddr, size);
-    if (!range.is_valid())
-        return nullptr;
     offset_in_vmobject &= PAGE_MASK;
     Region* region;
     if (user_accessible)
@@ -233,6 +237,15 @@ Region* Process::allocate_region_with_vmobject(VirtualAddress vaddr, size_t size
         region = &add_region(Region::create_kernel_only(range, move(vmobject), offset_in_vmobject, name, prot_to_region_access_flags(prot)));
     region->map(page_directory());
     return region;
+}
+
+
+Region* Process::allocate_region_with_vmobject(VirtualAddress vaddr, size_t size, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, int prot, bool user_accessible)
+{
+    auto range = allocate_range(vaddr, size);
+    if (!range.is_valid())
+        return nullptr;
+    return allocate_region_with_vmobject(range, move(vmobject), offset_in_vmobject, name, prot, user_accessible);
 }
 
 bool Process::deallocate_region(Region& region)
@@ -364,10 +377,14 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* user_params)
 
     void* addr = (void*)params.addr;
     size_t size = params.size;
+    size_t alignment = params.alignment;
     int prot = params.prot;
     int flags = params.flags;
     int fd = params.fd;
     int offset = params.offset;
+
+    if (alignment & ~PAGE_MASK)
+        return (void*)-EINVAL;
 
     if (!is_user_range(VirtualAddress(addr), size))
         return (void*)-EFAULT;
@@ -407,15 +424,19 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* user_params)
 
     Region* region = nullptr;
 
+    auto range = allocate_range(VirtualAddress(addr), size, alignment);
+    if (!range.is_valid())
+        return (void*)-ENOMEM;
+
     if (map_purgeable) {
         auto vmobject = PurgeableVMObject::create_with_size(size);
-        region = allocate_region_with_vmobject(VirtualAddress(addr), size, vmobject, 0, !name.is_null() ? name : "mmap (purgeable)", prot);
+        region = allocate_region_with_vmobject(range, vmobject, 0, !name.is_null() ? name : "mmap (purgeable)", prot);
         if (!region && (!map_fixed && addr != 0))
             region = allocate_region_with_vmobject({}, size, vmobject, 0, !name.is_null() ? name : "mmap (purgeable)", prot);
     } else if (map_anonymous) {
-        region = allocate_region(VirtualAddress(addr), size, !name.is_null() ? name : "mmap", prot, false);
+        region = allocate_region(range, !name.is_null() ? name : "mmap", prot, false);
         if (!region && (!map_fixed && addr != 0))
-            region = allocate_region({}, size, !name.is_null() ? name : "mmap", prot, false);
+            region = allocate_region(allocate_range({}, size), !name.is_null() ? name : "mmap", prot, false);
     } else {
         if (offset < 0)
             return (void*)-EINVAL;

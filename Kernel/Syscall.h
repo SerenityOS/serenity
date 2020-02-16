@@ -240,6 +240,7 @@ struct StringListArgument {
 struct SC_mmap_params {
     uint32_t addr;
     uint32_t size;
+    uint32_t alignment;
     int32_t prot;
     int32_t flags;
     int32_t fd;

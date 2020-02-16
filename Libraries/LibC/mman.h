@@ -53,6 +53,7 @@ __BEGIN_DECLS
 
 void* mmap(void* addr, size_t, int prot, int flags, int fd, off_t);
 void* mmap_with_name(void* addr, size_t, int prot, int flags, int fd, off_t, const char* name);
+void* serenity_mmap(void* addr, size_t, int prot, int flags, int fd, off_t, size_t alignment, const char* name);
 int munmap(void*, size_t);
 int mprotect(void*, size_t, int prot);
 int set_mmap_name(void*, size_t, const char*);
