@@ -101,6 +101,7 @@ KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWid
     m_attack_knob = GUI::VerticalSlider::construct(m_knobs_container);
     m_attack_knob->set_range(0, max_attack);
     m_attack_knob->set_value(max_attack - m_audio_engine.attack());
+    m_attack_knob->set_step(100);
     m_attack_knob->on_value_changed = [this](int value) {
         int new_attack = max_attack - value;
         m_audio_engine.set_attack(new_attack);
@@ -112,6 +113,7 @@ KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWid
     m_decay_knob = GUI::VerticalSlider::construct(m_knobs_container);
     m_decay_knob->set_range(0, max_decay);
     m_decay_knob->set_value(max_decay - m_audio_engine.decay());
+    m_decay_knob->set_step(100);
     m_decay_knob->on_value_changed = [this](int value) {
         int new_decay = max_decay - value;
         m_audio_engine.set_decay(new_decay);
@@ -123,6 +125,7 @@ KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWid
     m_sustain_knob = GUI::VerticalSlider::construct(m_knobs_container);
     m_sustain_knob->set_range(0, max_sustain);
     m_sustain_knob->set_value(max_sustain - m_audio_engine.sustain());
+    m_sustain_knob->set_step(100);
     m_sustain_knob->on_value_changed = [this](int value) {
         int new_sustain = max_sustain - value;
         m_audio_engine.set_sustain(new_sustain);
@@ -134,6 +137,7 @@ KnobsWidget::KnobsWidget(GUI::Widget* parent, AudioEngine& audio_engine, MainWid
     m_release_knob = GUI::VerticalSlider::construct(m_knobs_container);
     m_release_knob->set_range(0, max_release);
     m_release_knob->set_value(max_release - m_audio_engine.release());
+    m_release_knob->set_step(100);
     m_release_knob->on_value_changed = [this](int value) {
         int new_release = max_release - value;
         m_audio_engine.set_release(new_release);
