@@ -49,37 +49,51 @@ const LogStream& operator<<(const LogStream& stream, const StringView& value)
 
 const LogStream& operator<<(const LogStream& stream, int value)
 {
-    return stream << String::number(value);
+    char buffer[32];
+    sprintf(buffer, "%d", value);
+    return stream << buffer;
 }
 
 const LogStream& operator<<(const LogStream& stream, long value)
 {
-    return stream << String::number(value);
+    char buffer[32];
+    sprintf(buffer, "%ld", value);
+    return stream << buffer;
 }
 
 const LogStream& operator<<(const LogStream& stream, long long value)
 {
-    return stream << String::number(value);
+    char buffer[32];
+    sprintf(buffer, "%lld", value);
+    return stream << buffer;
 }
 
 const LogStream& operator<<(const LogStream& stream, unsigned value)
 {
-    return stream << String::number(value);
+    char buffer[32];
+    sprintf(buffer, "%u", value);
+    return stream << buffer;
 }
 
 const LogStream& operator<<(const LogStream& stream, unsigned long long value)
 {
-    return stream << String::number(value);
+    char buffer[32];
+    sprintf(buffer, "%llu", value);
+    return stream << buffer;
 }
 
 const LogStream& operator<<(const LogStream& stream, unsigned long value)
 {
-    return stream << String::number(value);
+    char buffer[32];
+    sprintf(buffer, "%lu", value);
+    return stream << buffer;
 }
 
 const LogStream& operator<<(const LogStream& stream, const void* value)
 {
-    return stream << String::format("%p", value);
+    char buffer[32];
+    sprintf(buffer, "%p", value);
+    return stream << buffer;
 }
 
 #if defined(__serenity__) && !defined(KERNEL) && !defined(BOOTSTRAPPER)
