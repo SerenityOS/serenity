@@ -102,7 +102,7 @@ NonnullRefPtr<Cursor> WindowManager::get_cursor(const String& name)
 
 void WindowManager::reload_config(bool set_screen)
 {
-    m_wm_config = Core::ConfigFile::get_for_app("WindowManager");
+    m_wm_config = Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini");
 
     m_double_click_speed = m_wm_config->read_num_entry("Input", "DoubleClickSpeed", 250);
 
@@ -1241,7 +1241,7 @@ void WindowManager::update_theme(String theme_path, String theme_name)
         }
         return IterationDecision::Continue;
     });
-    auto wm_config = Core::ConfigFile::get_for_app("WindowManager");
+    auto wm_config = Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini");
     wm_config->write_entry("Theme", "Name", theme_name);
     wm_config->sync();
     invalidate();

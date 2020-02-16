@@ -58,10 +58,7 @@ int main(int, char**)
         return 1;
     }
 
-    // FIXME: WindowServer should obviously not hardcode this.
-    //        Instead, we should have a ConfigServer or similar that allows programs
-    //        to get/set user settings over IPC without giving them access to any files.
-    if (unveil("/home/anon/WindowManager.ini", "rwc") < 0) {
+    if (unveil("/etc/WindowServer/WindowServer.ini", "rwc") < 0) {
         perror("unveil");
         return 1;
     }
@@ -81,7 +78,7 @@ int main(int, char**)
         return 1;
     }
 
-    auto wm_config = Core::ConfigFile::get_for_app("WindowManager");
+    auto wm_config = Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini");
     auto theme_name = wm_config->read_entry("Theme", "Name", "Default");
 
     auto theme = Gfx::load_system_theme(String::format("/res/themes/%s.ini", theme_name.characters()));
