@@ -51,15 +51,18 @@ static LibThread::Lock& malloc_lock()
     return *reinterpret_cast<LibThread::Lock*>(&lock_storage);
 }
 
-constexpr int number_of_chunked_blocks_to_keep_around_per_size_class = 32;
+constexpr int number_of_chunked_blocks_to_keep_around_per_size_class = 4;
 constexpr int number_of_big_blocks_to_keep_around_per_size_class = 8;
 
 static bool s_log_malloc = false;
 static bool s_scrub_malloc = true;
 static bool s_scrub_free = true;
 static bool s_profiling = false;
-static unsigned short size_classes[] = { 8, 16, 32, 64, 128, 252, 508, 1016, 2036, 0 };
+static unsigned short size_classes[] = { 8, 16, 32, 64, 128, 252, 508, 1016, 2036, 4090, 8188, 16376, 32756, 0 };
 static constexpr size_t num_size_classes = sizeof(size_classes) / sizeof(unsigned short);
+
+constexpr size_t block_size = 64 * KB;
+constexpr size_t block_mask = ~(block_size - 1);
 
 struct CommonHeader {
     size_t m_magic;
@@ -79,8 +82,10 @@ struct FreelistEntry {
     FreelistEntry* next;
 };
 
-struct ChunkedBlock : public CommonHeader
+struct ChunkedBlock
+    : public CommonHeader
     , public InlineLinkedListNode<ChunkedBlock> {
+
     ChunkedBlock(size_t bytes_per_chunk)
     {
         m_magic = MAGIC_PAGE_HEADER;
@@ -110,7 +115,7 @@ struct ChunkedBlock : public CommonHeader
     size_t bytes_per_chunk() const { return m_size; }
     size_t free_chunks() const { return m_free_chunks; }
     size_t used_chunks() const { return chunk_capacity() - m_free_chunks; }
-    size_t chunk_capacity() const { return (PAGE_SIZE - sizeof(ChunkedBlock)) / m_size; }
+    size_t chunk_capacity() const { return (block_size - sizeof(ChunkedBlock)) / m_size; }
 };
 
 struct Allocator {
@@ -144,7 +149,7 @@ static Allocator* allocator_for_size(size_t size, size_t& good_size)
 
 static BigAllocator* big_allocator_for_size(size_t size)
 {
-    if (size == 4096)
+    if (size == 65536)
         return &g_big_allocators[0];
     return nullptr;
 }
@@ -162,7 +167,9 @@ size_t malloc_good_size(size_t size)
 
 static void* os_alloc(size_t size, const char* name)
 {
-    return mmap_with_name(nullptr, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_PURGEABLE, 0, 0, name);
+    auto* ptr = serenity_mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_PURGEABLE, 0, 0, block_size, name);
+    ASSERT(ptr != MAP_FAILED);
+    return ptr;
 }
 
 static void os_free(void* ptr, size_t size)
@@ -185,7 +192,7 @@ static void* malloc_impl(size_t size)
     auto* allocator = allocator_for_size(size, good_size);
 
     if (!allocator) {
-        size_t real_size = PAGE_ROUND_UP(sizeof(BigAllocationBlock) + size);
+        size_t real_size = round_up_to_power_of_two(sizeof(BigAllocationBlock) + size, block_size);
 #ifdef RECYCLE_BIG_ALLOCATIONS
         if (auto* allocator = big_allocator_for_size(real_size)) {
             if (!allocator->blocks.is_empty()) {
@@ -202,7 +209,6 @@ static void* malloc_impl(size_t size)
                 }
                 if (this_block_was_purged)
                     new (block) BigAllocationBlock(real_size);
-                set_mmap_name(block, PAGE_SIZE, "malloc: BigAllocationBlock (reused)");
                 return &block->m_slot[0];
             }
         }
@@ -221,29 +227,26 @@ static void* malloc_impl(size_t size)
 
     if (!block && allocator->empty_block_count) {
         block = allocator->empty_blocks[--allocator->empty_block_count];
-        int rc = madvise(block, PAGE_SIZE, MADV_SET_NONVOLATILE);
+        int rc = madvise(block, block_size, MADV_SET_NONVOLATILE);
         bool this_block_was_purged = rc == 1;
         if (rc < 0) {
             perror("madvise");
             ASSERT_NOT_REACHED();
         }
-        rc = mprotect(block, PAGE_SIZE, PROT_READ | PROT_WRITE);
+        rc = mprotect(block, block_size, PROT_READ | PROT_WRITE);
         if (rc < 0) {
             perror("mprotect");
             ASSERT_NOT_REACHED();
         }
         if (this_block_was_purged)
             new (block) ChunkedBlock(good_size);
-        char buffer[64];
-        snprintf(buffer, sizeof(buffer), "malloc: ChunkedBlock(%zu) (reused)", good_size);
-        set_mmap_name(block, PAGE_SIZE, buffer);
         allocator->usable_blocks.append(block);
     }
 
     if (!block) {
         char buffer[64];
         snprintf(buffer, sizeof(buffer), "malloc: ChunkedBlock(%zu)", good_size);
-        block = (ChunkedBlock*)os_alloc(PAGE_SIZE, buffer);
+        block = (ChunkedBlock*)os_alloc(block_size, buffer);
         new (block) ChunkedBlock(good_size);
         allocator->usable_blocks.append(block);
         ++allocator->block_count;
@@ -276,21 +279,20 @@ static void free_impl(void* ptr)
 
     LOCKER(malloc_lock());
 
-    void* page_base = (void*)((uintptr_t)ptr & (uintptr_t)~0xfff);
-    size_t magic = *(size_t*)page_base;
+    void* block_base = (void*)((uintptr_t)ptr & block_mask);
+    size_t magic = *(size_t*)block_base;
 
     if (magic == MAGIC_BIGALLOC_HEADER) {
-        auto* block = (BigAllocationBlock*)page_base;
+        auto* block = (BigAllocationBlock*)block_base;
 #ifdef RECYCLE_BIG_ALLOCATIONS
         if (auto* allocator = big_allocator_for_size(block->m_size)) {
             if (allocator->blocks.size() < number_of_big_blocks_to_keep_around_per_size_class) {
                 allocator->blocks.append(block);
-                set_mmap_name(block, PAGE_SIZE, "malloc: BigAllocationBlock (free)");
-                if (mprotect(block, PAGE_SIZE, PROT_NONE) < 0) {
+                if (mprotect(block, block->m_size, PROT_NONE) < 0) {
                     perror("mprotect");
                     ASSERT_NOT_REACHED();
                 }
-                if (madvise(block, PAGE_SIZE, MADV_SET_VOLATILE) != 0) {
+                if (madvise(block, block->m_size, MADV_SET_VOLATILE) != 0) {
                     perror("madvise");
                     ASSERT_NOT_REACHED();
                 }
@@ -303,7 +305,7 @@ static void free_impl(void* ptr)
     }
 
     assert(magic == MAGIC_PAGE_HEADER);
-    auto* block = (ChunkedBlock*)page_base;
+    auto* block = (ChunkedBlock*)block_base;
 
 #ifdef MALLOC_DEBUG
     dbgprintf("LibC: freeing %p in allocator %p (size=%u, used=%u)\n", ptr, block, block->bytes_per_chunk(), block->used_chunks());
@@ -337,11 +339,8 @@ static void free_impl(void* ptr)
 #endif
             allocator->usable_blocks.remove(block);
             allocator->empty_blocks[allocator->empty_block_count++] = block;
-            char buffer[64];
-            snprintf(buffer, sizeof(buffer), "malloc: ChunkedBlock(%zu) (free)", good_size);
-            set_mmap_name(block, PAGE_SIZE, buffer);
-            mprotect(block, PAGE_SIZE, PROT_NONE);
-            madvise(block, PAGE_SIZE, MADV_SET_VOLATILE);
+            mprotect(block, block_size, PROT_NONE);
+            madvise(block, block_size, MADV_SET_VOLATILE);
             return;
         }
 #ifdef MALLOC_DEBUG
@@ -349,7 +348,7 @@ static void free_impl(void* ptr)
 #endif
         allocator->usable_blocks.remove(block);
         --allocator->block_count;
-        os_free(block, PAGE_SIZE);
+        os_free(block, block_size);
     }
 }
 
@@ -381,7 +380,7 @@ size_t malloc_size(void* ptr)
     if (!ptr)
         return 0;
     LOCKER(malloc_lock());
-    void* page_base = (void*)((uintptr_t)ptr & (uintptr_t)~0xfff);
+    void* page_base = (void*)((uintptr_t)ptr & block_mask);
     auto* header = (const CommonHeader*)page_base;
     auto size = header->m_size;
     if (header->m_magic == MAGIC_BIGALLOC_HEADER)
