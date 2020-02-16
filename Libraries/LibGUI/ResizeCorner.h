@@ -40,9 +40,6 @@ protected:
     virtual void mousedown_event(MouseEvent&) override;
     virtual void enter_event(Core::Event&) override;
     virtual void leave_event(Core::Event&) override;
-
-private:
-    RefPtr<Gfx::Bitmap> m_bitmap;
 };
 
 }
