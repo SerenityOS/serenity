@@ -30,12 +30,11 @@
 #include <AK/Atomic.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
-#include <Kernel/Scheduler.h>
+#include <Kernel/Forward.h>
 #include <Kernel/WaitQueue.h>
 
 namespace Kernel {
 
-class Thread;
 extern Thread* current;
 
 class Lock {

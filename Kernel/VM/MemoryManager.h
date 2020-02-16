@@ -26,22 +26,16 @@
 
 #pragma once
 
-#include <AK/Badge.h>
-#include <AK/Bitmap.h>
-#include <AK/ByteBuffer.h>
 #include <AK/HashTable.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/String.h>
-#include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
-#include <Kernel/FileSystem/InodeIdentifier.h>
+#include <Kernel/Forward.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/VM/Region.h>
 #include <Kernel/VM/VMObject.h>
 
 namespace Kernel {
-
-class PhysicalRegion;
 
 #define PAGE_ROUND_UP(x) ((((u32)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1)))
 

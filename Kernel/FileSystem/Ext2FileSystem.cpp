@@ -26,7 +26,9 @@
 
 #include <AK/Bitmap.h>
 #include <AK/BufferStream.h>
+#include <AK/HashMap.h>
 #include <AK/StdLibExtras.h>
+#include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/ext2_fs.h>
