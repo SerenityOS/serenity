@@ -4183,22 +4183,25 @@ int Process::sys$setkeymap(const Syscall::SC_setkeymap_params* user_params)
     return 0;
 }
 
-int Process::sys$clock_gettime(clockid_t clock_id, timespec* ts)
+int Process::sys$clock_gettime(clockid_t clock_id, timespec* user_ts)
 {
     REQUIRE_PROMISE(stdio);
-    if (!validate_write_typed(ts))
+    if (!validate_write_typed(user_ts))
         return -EFAULT;
 
-    SmapDisabler disabler;
+    timespec ts;
+    memset(&ts, 0, sizeof(ts));
+
     switch (clock_id) {
     case CLOCK_MONOTONIC:
-        ts->tv_sec = g_uptime / TICKS_PER_SECOND;
-        ts->tv_nsec = (g_uptime % TICKS_PER_SECOND) * 1000000;
+        ts.tv_sec = g_uptime / TICKS_PER_SECOND;
+        ts.tv_nsec = (g_uptime % TICKS_PER_SECOND) * 1000000;
         break;
     default:
         return -EINVAL;
     }
 
+    copy_to_user(user_ts, &ts);
     return 0;
 }
 
