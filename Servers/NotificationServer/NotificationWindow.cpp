@@ -43,11 +43,23 @@ NotificationWindow::NotificationWindow(const String& text, const String& title)
 
     set_window_type(GUI::WindowType::Tooltip);
 
+    Gfx::Rect lowest_notification_rect_on_screen;
+    for (auto& window : s_windows) {
+        if (window->m_original_rect.y() > lowest_notification_rect_on_screen.y())
+            lowest_notification_rect_on_screen = window->m_original_rect;
+    }
+
     Gfx::Rect rect;
     rect.set_width(200);
     rect.set_height(40);
     rect.set_location(GUI::Desktop::the().rect().top_right().translated(-rect.width() - 8, 26));
+
+    if (!lowest_notification_rect_on_screen.is_null())
+        rect.set_location(lowest_notification_rect_on_screen.bottom_left().translated(0, 8));
+
     set_rect(rect);
+
+    m_original_rect = rect;
 
     auto widget = GUI::Widget::construct();
     widget->set_fill_with_background_color(true);
