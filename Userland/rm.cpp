@@ -28,6 +28,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DirIterator.h>
 #include <dirent.h>
 #include <stdio.h>
 #include <string.h>
@@ -43,22 +44,18 @@ int remove(bool recursive, String path)
     }
 
     if (S_ISDIR(path_stat.st_mode) && recursive) {
-        DIR* derp = opendir(path.characters());
-        if (!derp) {
+        auto di = Core::DirIterator(path, Core::DirIterator::SkipParentAndBaseDir);
+        if (di.has_error()) {
+            fprintf(stderr, "DirIterator: %s\n", di.error_string());
             return 1;
         }
 
-        while (auto* de = readdir(derp)) {
-            if (strcmp(de->d_name, ".") != 0 && strcmp(de->d_name, "..") != 0) {
-                StringBuilder builder;
-                builder.append(path);
-                builder.append('/');
-                builder.append(de->d_name);
-                int s = remove(true, builder.to_string());
-                if (s != 0)
-                    return s;
-            }
+        while (di.has_next()) {
+            int s = remove(true, di.next_full_path());
+            if (s != 0)
+                return s;
         }
+
         int s = rmdir(path.characters());
         if (s < 0) {
             perror("rmdir");
