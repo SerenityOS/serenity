@@ -26,13 +26,10 @@
 
 #pragma once
 
-#include <AK/Atomic.h>
 #include <AK/Function.h>
-#include <AK/HashTable.h>
 #include <AK/IntrusiveList.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <Kernel/Arch/i386/CPU.h>

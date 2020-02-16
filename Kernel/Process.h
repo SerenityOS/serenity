@@ -26,19 +26,18 @@
 
 #pragma once
 
+#include <AK/HashMap.h>
 #include <AK/InlineLinkedList.h>
-#include <AK/NonnullRefPtrVector.h>
+#include <AK/NonnullOwnPtrVector.h>
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
-#include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Lock.h>
-#include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Syscall.h>
-#include <Kernel/TTY/TTY.h>
 #include <Kernel/Thread.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/VM/RangeAllocator.h>
@@ -309,7 +308,7 @@ public:
     [[nodiscard]] static siginfo_t reap(Process&);
 
     const TTY* tty() const { return m_tty; }
-    void set_tty(TTY* tty) { m_tty = tty; }
+    void set_tty(TTY*);
 
     size_t region_count() const { return m_regions.size(); }
     const NonnullOwnPtrVector<Region>& regions() const { return m_regions; }

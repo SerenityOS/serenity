@@ -54,6 +54,7 @@
 #include <Kernel/Module.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/Net/Socket.h>
+#include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Process.h>
 #include <Kernel/ProcessTracer.h>
 #include <Kernel/Profiling.h>
@@ -63,6 +64,7 @@
 #include <Kernel/SharedBuffer.h>
 #include <Kernel/Syscall.h>
 #include <Kernel/TTY/MasterPTY.h>
+#include <Kernel/TTY/TTY.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/InodeVMObject.h>
 #include <Kernel/VM/PageDirectory.h>
@@ -4729,6 +4731,11 @@ int Process::sys$perf_event(int type, uintptr_t arg1, uintptr_t arg2)
     if (!m_perf_event_buffer)
         m_perf_event_buffer = make<PerformanceEventBuffer>();
     return m_perf_event_buffer->append(type, arg1, arg2);
+}
+
+void Process::set_tty(TTY* tty)
+{
+    m_tty = tty;
 }
 
 }
