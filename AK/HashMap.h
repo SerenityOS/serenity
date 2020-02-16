@@ -33,7 +33,7 @@
 
 namespace AK {
 
-template<typename K, typename V, typename KeyTraits = Traits<K>>
+template<typename K, typename V, typename KeyTraits>
 class HashMap {
 private:
     struct Entry {
