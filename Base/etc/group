@@ -5,5 +5,6 @@ phys:x:3:window
 audio:x:4:anon
 lookup:x:10:protocol,anon
 protocol:x:11:anon
-window:x:13:anon
+notify:x:12:anon
+window:x:13:anon,notify
 users:x:100:anon

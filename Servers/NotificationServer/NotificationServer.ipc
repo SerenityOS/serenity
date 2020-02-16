@@ -1,0 +1,7 @@
+endpoint NotificationServer = 95
+{
+    // Basic protocol
+    Greet() => (i32 client_id)
+
+    ShowNotification(String text, String title) =|
+}
