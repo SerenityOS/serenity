@@ -40,6 +40,7 @@ OBJS = \
     Model.o \
     ModelIndex.o \
     ModelSelection.o \
+    Notification.o \
     Painter.o \
     ProgressBar.o \
     RadioButton.o \
@@ -70,6 +71,8 @@ OBJS = \
 LIBRARY = libgui.a
 
 Application.cpp: ../../Servers/WindowServer/WindowServerEndpoint.h
+
+Notification.cpp: ../../Servers/NotificationServer/NotificationServerEndpoint.h
 
 ../../Servers/WindowServer/WindowServerEndpoint.h:
 	@flock $(dir $(@)) $(MAKE) -C $(dir $(@))
