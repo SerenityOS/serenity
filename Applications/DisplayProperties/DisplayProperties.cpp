@@ -47,7 +47,7 @@
 #include <Servers/WindowServer/WindowManager.h>
 
 DisplayPropertiesWidget::DisplayPropertiesWidget()
-    : m_wm_config(Core::ConfigFile::get_for_app("WindowManager"))
+    : m_wm_config(Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini"))
 {
     create_resolution_list();
     create_wallpaper_list();
