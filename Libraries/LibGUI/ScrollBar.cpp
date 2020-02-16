@@ -230,12 +230,22 @@ void ScrollBar::paint_event(PaintEvent& event)
 
     painter.fill_rect(rect(), palette().button().lightened());
 
-    Gfx::StylePainter::paint_button(painter, decrement_button_rect(), palette(), Gfx::ButtonStyle::Normal, false, m_hovered_component == Component::DecrementButton);
-    Gfx::StylePainter::paint_button(painter, increment_button_rect(), palette(), Gfx::ButtonStyle::Normal, false, m_hovered_component == Component::IncrementButton);
+    bool decrement_pressed = m_automatic_scrolling_direction == AutomaticScrollingDirection::Decrement;
+    bool increment_pressed = m_automatic_scrolling_direction == AutomaticScrollingDirection::Increment;
+
+    Gfx::StylePainter::paint_button(painter, decrement_button_rect(), palette(), Gfx::ButtonStyle::Normal, decrement_pressed, m_hovered_component == Component::DecrementButton);
+    Gfx::StylePainter::paint_button(painter, increment_button_rect(), palette(), Gfx::ButtonStyle::Normal, increment_pressed, m_hovered_component == Component::IncrementButton);
 
     if (length(orientation()) > default_button_size()) {
-        painter.draw_bitmap(decrement_button_rect().location().translated(3, 3), orientation() == Orientation::Vertical ? *s_up_arrow_bitmap : *s_left_arrow_bitmap, has_scrubber() ? palette().button_text() : palette().threed_shadow1());
-        painter.draw_bitmap(increment_button_rect().location().translated(3, 3), orientation() == Orientation::Vertical ? *s_down_arrow_bitmap : *s_right_arrow_bitmap, has_scrubber() ? palette().button_text() : palette().threed_shadow1());
+        auto decrement_location = decrement_button_rect().location().translated(3, 3);
+        if (decrement_pressed)
+            decrement_location.move_by(1, 1);
+        painter.draw_bitmap(decrement_location, orientation() == Orientation::Vertical ? *s_up_arrow_bitmap : *s_left_arrow_bitmap, has_scrubber() ? palette().button_text() : palette().threed_shadow1());
+
+        auto increment_location = increment_button_rect().location().translated(3, 3);
+        if (increment_pressed)
+            increment_location.move_by(1, 1);
+        painter.draw_bitmap(increment_location, orientation() == Orientation::Vertical ? *s_down_arrow_bitmap : *s_right_arrow_bitmap, has_scrubber() ? palette().button_text() : palette().threed_shadow1());
     }
 
     if (has_scrubber())
@@ -258,17 +268,22 @@ void ScrollBar::mousedown_event(MouseEvent& event)
 {
     if (event.button() != MouseButton::Left)
         return;
+    if (!has_scrubber())
+        return;
+
     if (decrement_button_rect().contains(event.position())) {
         m_automatic_scrolling_direction = AutomaticScrollingDirection::Decrement;
         set_automatic_scrolling_active(true);
+        update();
         return;
     }
     if (increment_button_rect().contains(event.position())) {
         m_automatic_scrolling_direction = AutomaticScrollingDirection::Increment;
         set_automatic_scrolling_active(true);
+        update();
         return;
     }
-    if (has_scrubber() && scrubber_rect().contains(event.position())) {
+    if (scrubber_rect().contains(event.position())) {
         m_scrubber_in_use = true;
         m_scrubbing = true;
         m_scrub_start_value = value();
@@ -277,25 +292,23 @@ void ScrollBar::mousedown_event(MouseEvent& event)
         return;
     }
 
-    if (has_scrubber()) {
-        float range_size = m_max - m_min;
-        float available = scrubbable_range_in_pixels();
+    float range_size = m_max - m_min;
+    float available = scrubbable_range_in_pixels();
 
-        float x = ::max(0, event.position().x() - button_width() - button_width() / 2);
-        float y = ::max(0, event.position().y() - button_height() - button_height() / 2);
+    float x = ::max(0, event.position().x() - button_width() - button_width() / 2);
+    float y = ::max(0, event.position().y() - button_height() - button_height() / 2);
 
-        float rel_x = x / available;
-        float rel_y = y / available;
+    float rel_x = x / available;
+    float rel_y = y / available;
 
-        if (orientation() == Orientation::Vertical)
-            set_value(m_min + rel_y * range_size);
-        else
-            set_value(m_min + rel_x * range_size);
+    if (orientation() == Orientation::Vertical)
+        set_value(m_min + rel_y * range_size);
+    else
+        set_value(m_min + rel_x * range_size);
 
-        m_scrubbing = true;
-        m_scrub_start_value = value();
-        m_scrub_origin = event.position();
-    }
+    m_scrubbing = true;
+    m_scrub_start_value = value();
+    m_scrub_origin = event.position();
 }
 
 void ScrollBar::mouseup_event(MouseEvent& event)
@@ -305,8 +318,6 @@ void ScrollBar::mouseup_event(MouseEvent& event)
     m_scrubber_in_use = false;
     m_automatic_scrolling_direction = AutomaticScrollingDirection::None;
     set_automatic_scrolling_active(false);
-    if (!m_scrubbing)
-        return;
     m_scrubbing = false;
     update();
 }
