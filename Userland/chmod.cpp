@@ -80,8 +80,8 @@ int main(int argc, char** argv)
     }
 
     if (argc < 3) {
-        printf("usage: chmod <octal-mode> <path,...>\n"
-               "       chmod [[ugoa][+-=][rwx...],...] <path,...>\n");
+        printf("usage: chmod <octal-mode> <path...>\n"
+               "       chmod [[ugoa][+-=][rwx...],...] <path...>\n");
         return 1;
     }
 
