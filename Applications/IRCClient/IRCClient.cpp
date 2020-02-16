@@ -436,7 +436,7 @@ void IRCClient::handle_privmsg_or_notice(const Message& msg, PrivmsgOrNotice typ
 
 IRCQuery* IRCClient::query_with_name(const String& name)
 {
-    return m_queries.get(name).value_or(nullptr);
+    return const_cast<IRCQuery*>(m_queries.get(name).value_or(nullptr));
 }
 
 IRCQuery& IRCClient::ensure_query(const String& name)

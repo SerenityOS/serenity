@@ -29,6 +29,7 @@
 #include <AK/LogStream.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/StdLibExtras.h>
+#include <AK/Traits.h>
 #include <AK/Types.h>
 
 namespace AK {
@@ -273,6 +274,13 @@ inline const LogStream& operator<<(const LogStream& stream, const RefPtr<T>& val
 {
     return stream << value.ptr();
 }
+
+template<typename T>
+struct Traits<RefPtr<T>> : public GenericTraits<RefPtr<T>> {
+    using PeekType = const T*;
+    static unsigned hash(const RefPtr<T>& p) { return int_hash((u32)p.ptr()); }
+    static bool equals(const RefPtr<T>& a, const RefPtr<T>& b) { return a.ptr() == b.ptr(); }
+};
 
 }
 
