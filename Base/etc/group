@@ -1,8 +1,9 @@
 root:x:0:
 wheel:x:1:anon
 tty:x:2:
-phys:x:3:anon
+phys:x:3:window
 audio:x:4:anon
 lookup:x:10:protocol,anon
 protocol:x:11:anon
+window:x:13:anon
 users:x:100:anon

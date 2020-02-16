@@ -6,6 +6,8 @@ wheel_gid=1
 tty_gid=2
 phys_gid=3
 audio_gid=4
+window_uid=13
+window_gid=13
 
 die() {
     echo "die: $*"
@@ -83,6 +85,10 @@ cp -R ../Base/* mnt/
 cp -R ../Root/* mnt/
 cp kernel.map mnt/res/
 chmod 400 mnt/res/kernel.map
+
+chmod 660 mnt/etc/WindowServer/WindowServer.ini
+chown $window_uid:$window_gid mnt/etc/WindowServer/WindowServer.ini
+
 echo "done"
 
 printf "installing users... "
