@@ -34,8 +34,10 @@ namespace Kernel {
 
 class FileDescription;
 
-class LocalSocket final : public Socket, public InlineLinkedListNode<LocalSocket> {
+class LocalSocket final : public Socket
+    , public InlineLinkedListNode<LocalSocket> {
     friend class InlineLinkedListNode<LocalSocket>;
+
 public:
     static KResultOr<NonnullRefPtr<Socket>> create(int type);
     virtual ~LocalSocket() override;

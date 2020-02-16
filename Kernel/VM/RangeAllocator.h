@@ -72,8 +72,7 @@ public:
     Vector<Range, 2> carve(const Range&);
 
 private:
-    VirtualAddress m_base;
-    size_t m_size { 0 };
+    VirtualAddress m_base;    size_t m_size { 0 };
 };
 
 class RangeAllocator {

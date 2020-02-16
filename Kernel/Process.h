@@ -30,9 +30,6 @@
 #include <AK/InlineLinkedList.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/String.h>
-#include <AK/Types.h>
-#include <AK/Vector.h>
-#include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/Forward.h>
