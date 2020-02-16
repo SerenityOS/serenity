@@ -26,24 +26,20 @@
 
 #pragma once
 
-#include <AK/Badge.h>
 #include <AK/HashTable.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
 #include <AK/RefCounted.h>
-#include <LibCore/Timer.h>
+#include <LibCore/Forward.h>
+#include <LibGUI/Command.h>
+#include <LibGUI/Forward.h>
 #include <LibGUI/TextRange.h>
 #include <LibGUI/UndoStack.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Forward.h>
 
 namespace GUI {
-
-class TextDocument;
-class TextDocumentLine;
-class TextDocumentUndoCommand;
-class TextEditor;
 
 struct TextDocumentSpan {
     TextRange range;
@@ -76,10 +72,8 @@ public:
         virtual int soft_tab_width() const = 0;
     };
 
-    static NonnullRefPtr<TextDocument> create(Client* client = nullptr)
-    {
-        return adopt(*new TextDocument(client));
-    }
+    static NonnullRefPtr<TextDocument> create(Client* client = nullptr);
+    ~TextDocument();
 
     size_t line_count() const { return (size_t)m_lines.size(); }
     const TextDocumentLine& line(size_t line_index) const { return m_lines[(int)line_index]; }

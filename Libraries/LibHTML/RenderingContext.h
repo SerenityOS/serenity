@@ -28,10 +28,7 @@
 
 #include <LibGfx/Palette.h>
 #include <LibGfx/Rect.h>
-
-namespace GUI {
-class Painter;
-}
+#include <LibGUI/Forward.h>
 
 class RenderingContext {
 public:

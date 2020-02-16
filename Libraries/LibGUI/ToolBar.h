@@ -31,8 +31,6 @@
 
 namespace GUI {
 
-class Action;
-
 class ToolBar : public Widget {
     C_OBJECT(ToolBar)
 public:

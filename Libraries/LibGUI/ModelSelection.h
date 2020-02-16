@@ -27,11 +27,10 @@
 #pragma once
 
 #include <AK/HashTable.h>
+#include <AK/Vector.h>
 #include <LibGUI/ModelIndex.h>
 
 namespace GUI {
-
-class AbstractView;
 
 class ModelSelection {
 public:

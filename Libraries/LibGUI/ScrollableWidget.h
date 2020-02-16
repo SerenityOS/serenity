@@ -30,8 +30,6 @@
 
 namespace GUI {
 
-class ScrollBar;
-
 class ScrollableWidget : public Frame {
     C_OBJECT(ScrollableWidget)
 public:

@@ -31,10 +31,7 @@
 #include <AK/JsonValue.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
-
-namespace GUI {
-class Model;
-}
+#include <LibGUI/Forward.h>
 
 class ProfileModel;
 

@@ -28,11 +28,8 @@
 
 #include <AK/Function.h>
 #include <AK/String.h>
+#include <LibGUI/Forward.h>
 #include <LibGUI/Variant.h>
-
-namespace GUI {
-class Widget;
-}
 
 class VBWidget;
 

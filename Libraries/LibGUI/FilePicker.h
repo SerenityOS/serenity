@@ -32,10 +32,6 @@
 
 namespace GUI {
 
-class FileSystemModel;
-class Label;
-class TextBox;
-
 class FilePicker final : public Dialog {
     C_OBJECT(FilePicker)
 public:

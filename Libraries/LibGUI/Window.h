@@ -27,22 +27,16 @@
 #pragma once
 
 #include <AK/Function.h>
-#include <AK/HashMap.h>
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Object.h>
+#include <LibGUI/Forward.h>
 #include <LibGUI/WindowType.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
 
 namespace GUI {
-
-class Action;
-class KeyEvent;
-class WMEvent;
-class Widget;
-class WindowServerConnection;
 
 enum class StandardCursor {
     None = 0,

@@ -28,11 +28,6 @@
 
 #include <LibGUI/Frame.h>
 
-namespace GUI {
-class Label;
-class Button;
-}
-
 class AudioEngine;
 
 class WaveEditor final : public GUI::Frame {

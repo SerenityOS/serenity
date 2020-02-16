@@ -26,13 +26,9 @@
 
 #pragma once
 
-#include <LibCore/Timer.h>
-#include <LibGfx/TextAlignment.h>
 #include <LibGUI/Widget.h>
 
 namespace GUI {
-
-class Painter;
 
 class AbstractButton : public Widget {
     C_OBJECT_ABSTRACT(GAbstractButton)

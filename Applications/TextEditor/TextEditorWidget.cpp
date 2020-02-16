@@ -44,6 +44,7 @@
 #include <LibGUI/TextBox.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/ToolBar.h>
+#include <LibGfx/Font.h>
 
 TextEditorWidget::TextEditorWidget()
 {
@@ -466,7 +467,7 @@ void TextEditorWidget::drop_event(GUI::DropEvent& event)
 
     if (event.mime_data().has_urls()) {
         auto urls = event.mime_data().urls();
-        if (urls.is_empty() )
+        if (urls.is_empty())
             return;
         if (urls.size() > 1) {
             GUI::MessageBox::show("TextEditor can only open one file at a time!", "One at a time please!", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());

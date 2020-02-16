@@ -28,12 +28,6 @@
 
 #include <LibGUI/Widget.h>
 
-namespace GUI {
-class Button;
-class TableView;
-class TextBox;
-}
-
 class FindInFilesWidget final : public GUI::Widget {
     C_OBJECT(FindInFilesWidget)
 public:

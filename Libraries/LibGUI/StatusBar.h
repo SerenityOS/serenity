@@ -30,9 +30,6 @@
 
 namespace GUI {
 
-class Label;
-class ResizeCorner;
-
 class StatusBar : public Widget {
     C_OBJECT(StatusBar)
 public:

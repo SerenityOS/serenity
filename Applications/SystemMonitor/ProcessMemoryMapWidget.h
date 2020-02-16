@@ -28,11 +28,6 @@
 
 #include <LibGUI/Widget.h>
 
-namespace GUI {
-class JsonArrayModel;
-class TableView;
-}
-
 class ProcessMemoryMapWidget final : public GUI::Widget {
     C_OBJECT(ProcessMemoryMapWidget);
 

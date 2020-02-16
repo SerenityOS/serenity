@@ -26,11 +26,10 @@
 
 #pragma once
 
+#include <LibGUI/Forward.h>
 #include <LibGfx/Painter.h>
 
 namespace GUI {
-
-class Widget;
 
 class Painter : public Gfx::Painter {
 public:

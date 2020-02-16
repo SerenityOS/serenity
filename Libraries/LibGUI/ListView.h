@@ -26,15 +26,9 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/HashMap.h>
 #include <LibGUI/AbstractView.h>
-#include <LibGUI/Model.h>
 
 namespace GUI {
-
-class ScrollBar;
-class Painter;
 
 class ListView : public AbstractView {
     C_OBJECT(ListView)

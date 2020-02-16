@@ -28,10 +28,6 @@
 
 #include <LibGUI/Widget.h>
 
-namespace GUI {
-class Label;
-}
-
 class Editor;
 
 class EditorWrapper : public GUI::Widget {

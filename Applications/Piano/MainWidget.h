@@ -37,10 +37,6 @@ class SamplerWidget;
 class KeysWidget;
 class KnobsWidget;
 
-namespace GUI {
-class TabWidget;
-}
-
 class MainWidget final : public GUI::Widget {
     C_OBJECT(MainWidget)
 public:

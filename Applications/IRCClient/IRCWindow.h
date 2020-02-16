@@ -28,10 +28,6 @@
 
 #include <LibGUI/Widget.h>
 
-namespace GUI {
-class TextEditor;
-}
-
 class IRCChannel;
 class IRCClient;
 class IRCQuery;

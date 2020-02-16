@@ -29,10 +29,6 @@
 #include <LibCore/Timer.h>
 #include <LibGUI/LazyWidget.h>
 
-namespace GUI {
-class TableView;
-}
-
 class NetworkStatisticsWidget final : public GUI::LazyWidget {
     C_OBJECT(NetworkStatisticsWidget)
 public:

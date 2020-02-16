@@ -24,10 +24,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGfx/Palette.h>
+#include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/TreeView.h>
+#include <LibGfx/Bitmap.h>
+#include <LibGfx/Palette.h>
 
 //#define DEBUG_ITEM_RECTS
 

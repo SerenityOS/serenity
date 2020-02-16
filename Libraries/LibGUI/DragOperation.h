@@ -27,13 +27,11 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
-#include <LibCore/EventLoop.h>
 #include <LibCore/Object.h>
+#include <LibGUI/Forward.h>
 #include <LibGfx/Forward.h>
 
 namespace GUI {
-
-class WindowServerConnection;
 
 class DragOperation : public Core::Object {
     C_OBJECT(DragOperation)

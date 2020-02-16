@@ -24,33 +24,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <AK/String.h>
+#include <LibGUI/ModelIndex.h>
 
-#include "Tool.h"
-#include <LibGfx/Point.h>
-#include <LibGUI/ActionGroup.h>
+namespace GUI {
 
-class LineTool final : public Tool {
-public:
-    LineTool();
-    virtual ~LineTool() override;
+const LogStream& operator<<(const LogStream& stream, const ModelIndex& value)
+{
+    if (value.internal_data())
+        return stream << String::format("ModelIndex(%d,%d,%p)", value.row(), value.column(), value.internal_data());
+    return stream << String::format("ModelIndex(%d,%d)", value.row(), value.column());
+}
 
-    virtual void on_mousedown(GUI::MouseEvent&) override;
-    virtual void on_mousemove(GUI::MouseEvent&) override;
-    virtual void on_mouseup(GUI::MouseEvent&) override;
-    virtual void on_contextmenu(GUI::ContextMenuEvent&) override;
-    virtual void on_second_paint(GUI::PaintEvent&) override;
-    virtual void on_keydown(GUI::KeyEvent&) override;
-    virtual void on_keyup(GUI::KeyEvent&) override;
-
-private:
-    virtual const char* class_name() const override { return "LineTool"; }
-
-    GUI::MouseButton m_drawing_button { GUI::MouseButton::None };
-    Gfx::Point m_line_start_position;
-    Gfx::Point m_line_end_position;
-    RefPtr<GUI::Menu> m_context_menu;
-    GUI::ActionGroup m_thickness_actions;
-    int m_thickness { 1 };
-    bool m_constrain_angle { false };
-};
+}

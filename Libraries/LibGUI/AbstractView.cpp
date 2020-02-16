@@ -25,6 +25,7 @@
  */
 
 #include <AK/StringBuilder.h>
+#include <AK/Vector.h>
 #include <Kernel/KeyCode.h>
 #include <LibGUI/AbstractView.h>
 #include <LibGUI/DragOperation.h>

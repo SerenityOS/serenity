@@ -27,7 +27,6 @@
 #pragma once
 
 #include <AK/Function.h>
-#include <LibCore/Timer.h>
 #include <LibGUI/Widget.h>
 
 namespace GUI {
@@ -37,7 +36,7 @@ class ScrollBar final : public Widget {
 public:
     virtual ~ScrollBar() override;
 
-    Orientation orientation() const { return m_orientation; }
+    Gfx::Orientation orientation() const { return m_orientation; }
 
     bool is_scrollable() const { return max() != min(); }
 
@@ -101,7 +100,7 @@ private:
     int m_scrub_start_value { 0 };
     Gfx::Point m_scrub_origin;
 
-    Orientation m_orientation { Orientation::Vertical };
+    Gfx::Orientation m_orientation { Gfx::Orientation::Vertical };
     Component m_hovered_component { Component::Invalid };
     bool m_scrubber_in_use { false };
 

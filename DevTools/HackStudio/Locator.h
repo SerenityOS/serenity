@@ -28,11 +28,6 @@
 
 #include <LibGUI/Widget.h>
 
-namespace GUI {
-class ModelIndex;
-class TableView;
-}
-
 class LocatorTextBox;
 
 class Locator final : public GUI::Widget {

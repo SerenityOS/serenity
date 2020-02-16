@@ -24,11 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Assertions.h>
-#include <AK/StdLibExtras.h>
+#include <LibCore/Timer.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
-#include <LibGfx/Bitmap.h>
 #include <LibGfx/CharacterBitmap.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>

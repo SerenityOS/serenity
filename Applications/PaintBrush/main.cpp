@@ -36,6 +36,7 @@
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Bitmap.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)

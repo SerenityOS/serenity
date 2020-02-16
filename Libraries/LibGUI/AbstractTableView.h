@@ -30,9 +30,6 @@
 
 namespace GUI {
 
-class Painter;
-
-// FIXME: Rename this to something without "table cell" in the name.
 class TableCellPaintingDelegate {
 public:
     virtual ~TableCellPaintingDelegate() {}

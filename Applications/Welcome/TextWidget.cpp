@@ -25,6 +25,7 @@
  */
 
 #include "TextWidget.h"
+#include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>

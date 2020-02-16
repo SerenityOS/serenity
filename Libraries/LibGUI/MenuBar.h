@@ -28,11 +28,9 @@
 
 #include <AK/Forward.h>
 #include <AK/NonnullRefPtrVector.h>
+#include <LibGUI/Forward.h>
 
 namespace GUI {
-
-class Application;
-class Menu;
 
 class MenuBar {
 public:

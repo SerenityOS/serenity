@@ -26,11 +26,10 @@
 
 #pragma once
 
-#include <AK/Badge.h>
-#include <AK/HashMap.h>
 #include <AK/String.h>
 #include <LibCore/Object.h>
 #include <LibGUI/Event.h>
+#include <LibGUI/Forward.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Orientation.h>
@@ -40,10 +39,6 @@
     extern WidgetClassRegistration registration_##class_name; \
     WidgetClassRegistration registration_##class_name(#class_name, [](Widget* parent) { return class_name::construct(parent); });
 
-namespace GUI {
-class Widget;
-}
-
 template<>
 inline bool Core::is<GUI::Widget>(const Core::Object& object)
 {
@@ -51,11 +46,6 @@ inline bool Core::is<GUI::Widget>(const Core::Object& object)
 }
 
 namespace GUI {
-
-class Action;
-class Layout;
-class Menu;
-class Window;
 
 enum class SizePolicy {
     Fixed,
@@ -80,8 +70,6 @@ enum class VerticalDirection {
     Up,
     Down
 };
-
-class Widget;
 
 class WidgetClassRegistration {
     AK_MAKE_NONCOPYABLE(WidgetClassRegistration)

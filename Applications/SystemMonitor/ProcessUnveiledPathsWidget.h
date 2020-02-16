@@ -28,10 +28,6 @@
 
 #include <LibGUI/Widget.h>
 
-namespace GUI {
-class TableView;
-}
-
 class ProcessUnveiledPathsWidget final : public GUI::Widget {
     C_OBJECT(ProcessUnveiledPathsWidget);
 public:

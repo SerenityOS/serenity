@@ -36,10 +36,6 @@
 #include <LibGfx/Rect.h>
 #include <LibVT/Terminal.h>
 
-namespace GUI {
-class ScrollBar;
-}
-
 class TerminalWidget final : public GUI::Frame
     , public VT::TerminalClient {
     C_OBJECT(TerminalWidget)

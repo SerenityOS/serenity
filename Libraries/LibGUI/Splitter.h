@@ -36,7 +36,7 @@ public:
     virtual ~Splitter() override;
 
 protected:
-    Splitter(Orientation, Widget* parent);
+    Splitter(Gfx::Orientation, Widget* parent);
 
     virtual void paint_event(PaintEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
@@ -52,7 +52,7 @@ private:
     void recompute_grabbable_rect(const Widget&, const Widget&);
     bool get_resize_candidates_at(const Gfx::Point&, Widget*&, Widget*&);
 
-    Orientation m_orientation;
+    Gfx::Orientation m_orientation;
     bool m_resizing { false };
     Gfx::Point m_resize_origin;
     WeakPtr<Widget> m_first_resizee;
@@ -69,7 +69,7 @@ public:
 
 private:
     explicit VerticalSplitter(Widget* parent)
-        : Splitter(Orientation::Vertical, parent)
+        : Splitter(Gfx::Orientation::Vertical, parent)
     {
     }
 };
@@ -81,7 +81,7 @@ public:
 
 private:
     explicit HorizontalSplitter(Widget* parent)
-        : Splitter(Orientation::Horizontal, parent)
+        : Splitter(Gfx::Orientation::Horizontal, parent)
     {
     }
 };

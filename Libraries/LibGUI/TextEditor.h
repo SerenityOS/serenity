@@ -27,23 +27,15 @@
 #pragma once
 
 #include <AK/Function.h>
-#include <AK/HashMap.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <LibCore/ElapsedTimer.h>
-#include <LibCore/Timer.h>
 #include <LibGUI/ScrollableWidget.h>
 #include <LibGUI/TextDocument.h>
 #include <LibGUI/TextRange.h>
 #include <LibGfx/TextAlignment.h>
 
 namespace GUI {
-
-class Action;
-class Menu;
-class Painter;
-class ScrollBar;
-class SyntaxHighlighter;
 
 class TextEditor
     : public ScrollableWidget

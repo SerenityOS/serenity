@@ -30,9 +30,6 @@
 
 namespace GUI {
 
-class Button;
-class TextEditor;
-
 class SpinBox : public Widget {
     C_OBJECT(SpinBox)
 public:

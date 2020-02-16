@@ -27,13 +27,10 @@
 #pragma once
 
 #include <AK/Function.h>
-#include <LibGUI/Model.h>
 #include <LibGUI/ModelSelection.h>
 #include <LibGUI/ScrollableWidget.h>
 
 namespace GUI {
-
-class ModelEditingDelegate;
 
 class AbstractView : public ScrollableWidget {
     C_OBJECT_ABSTRACT(AbstractView)

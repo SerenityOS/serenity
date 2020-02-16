@@ -30,11 +30,6 @@
 #include <LibGfx/Point.h>
 #include <LibGUI/ActionGroup.h>
 
-namespace GUI {
-class Menu;
-class Painter;
-}
-
 class EllipseTool final : public Tool {
 public:
     EllipseTool();

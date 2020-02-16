@@ -36,11 +36,6 @@
 #include <LibGfx/Rect.h>
 #include <LibGUI/Widget.h>
 
-namespace GUI {
-class Painter;
-class Variant;
-}
-
 class VBForm;
 class VBProperty;
 class VBWidgetPropertyModel;

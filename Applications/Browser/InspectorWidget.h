@@ -28,11 +28,6 @@
 
 class Document;
 
-namespace GUI {
-class TableView;
-class TreeView;
-}
-
 class InspectorWidget final : public GUI::Widget {
     C_OBJECT(InspectorWidget)
 public:
