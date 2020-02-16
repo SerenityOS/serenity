@@ -64,6 +64,7 @@
 #include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/InodeVMObject.h>
+#include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/PurgeableVMObject.h>
 #include <LibBareMetal/IO.h>
 #include <LibBareMetal/Output/Console.h>

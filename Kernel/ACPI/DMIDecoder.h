@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/SinglyLinkedList.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <Kernel/VM/Region.h>
