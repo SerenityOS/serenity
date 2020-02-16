@@ -33,6 +33,7 @@
 #include <AK/JsonObjectSerializer.h>
 #include <AK/JsonValue.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/DiskBackedFileSystem.h>
 #include <Kernel/FileSystem/FileDescription.h>

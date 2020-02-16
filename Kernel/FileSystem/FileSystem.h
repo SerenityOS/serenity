@@ -26,17 +26,10 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/Function.h>
-#include <AK/HashMap.h>
-#include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
-#include <AK/WeakPtr.h>
-#include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
-#include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/KResult.h>
 #include <Kernel/Lock.h>
 #include <Kernel/UnixTypes.h>

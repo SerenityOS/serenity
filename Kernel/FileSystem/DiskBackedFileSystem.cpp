@@ -25,6 +25,7 @@
  */
 
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/DiskBackedFileSystem.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/KBuffer.h>

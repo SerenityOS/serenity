@@ -36,19 +36,13 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/UnixTypes.h>
 #include <LibC/fd_set.h>
 
 namespace Kernel {
-
-class Alarm;
-class FileDescription;
-class Process;
-class ProcessInspectionHandle;
-class Region;
-class WaitQueue;
 
 enum class ShouldUnblockThread {
     No = 0,

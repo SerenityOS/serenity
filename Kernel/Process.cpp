@@ -33,6 +33,7 @@
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Arch/i386/PIT.h>
+#include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Devices/KeyboardDevice.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/Devices/PCSpeaker.h>

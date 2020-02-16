@@ -26,7 +26,7 @@
 
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
-#include <Kernel/Devices/CharacterDevice.h>
+#include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/DiskBackedFileSystem.h>
 #include <Kernel/FileSystem/FileDescription.h>

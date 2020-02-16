@@ -34,6 +34,7 @@
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/Forward.h>
 #include <Kernel/Lock.h>
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Syscall.h>
@@ -46,14 +47,6 @@
 class ELFLoader;
 
 namespace Kernel {
-
-class FileDescription;
-class KBuffer;
-class PageDirectory;
-class Region;
-class VMObject;
-class ProcessTracer;
-class SharedBuffer;
 
 timeval kgettimeofday();
 void kgettimeofday(timeval&);

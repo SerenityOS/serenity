@@ -30,15 +30,12 @@
 #include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <AK/Types.h>
+#include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
 #include <Kernel/UnixTypes.h>
 #include <LibBareMetal/Memory/VirtualAddress.h>
 
 namespace Kernel {
-
-class FileDescription;
-class Process;
-class Region;
 
 // File is the base class for anything that can be referenced by a FileDescription.
 //

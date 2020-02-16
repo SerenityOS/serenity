@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,39 +26,43 @@
 
 #pragma once
 
-#include <Kernel/FileSystem/FileSystem.h>
-#include <Kernel/Forward.h>
-
 namespace Kernel {
 
-class DiskBackedFS : public FS {
-public:
-    virtual ~DiskBackedFS() override;
+class BlockDevice;
+class CharacterDevice;
+class Custody;
+class Device;
+class DiskCache;
+class DoubleBuffer;
+class File;
+class FileDescription;
+class IPv4Socket;
+class Inode;
+class InodeIdentifier;
+class InodeVMObject;
+class InodeWatcher;
+class KBuffer;
+class KResult;
+class LocalSocket;
+class PageDirectory;
+class PhysicalPage;
+class PhysicalRegion;
+class Process;
+class ProcessInspectionHandle;
+class ProcessTracer;
+class Range;
+class RangeAllocator;
+class Region;
+class Scheduler;
+class SharedBuffer;
+class Socket;
+class TCPSocket;
+class Thread;
+class UDPSocket;
+class VMObject;
+class WaitQueue;
 
-    virtual bool is_disk_backed() const override { return true; }
-
-    BlockDevice& device() { return *m_device; }
-    const BlockDevice& device() const { return *m_device; }
-
-    virtual void flush_writes() override;
-
-    void flush_writes_impl();
-
-protected:
-    explicit DiskBackedFS(BlockDevice&);
-
-    bool read_block(unsigned index, u8* buffer, FileDescription* = nullptr) const;
-    bool read_blocks(unsigned index, unsigned count, u8* buffer, FileDescription* = nullptr) const;
-
-    bool write_block(unsigned index, const u8*, FileDescription* = nullptr);
-    bool write_blocks(unsigned index, unsigned count, const u8*, FileDescription* = nullptr);
-
-private:
-    DiskCache& cache() const;
-    void flush_specific_block_if_needed(unsigned index);
-
-    NonnullRefPtr<BlockDevice> m_device;
-    mutable OwnPtr<DiskCache> m_cache;
-};
+template<typename T>
+class KResultOr;
 
 }
