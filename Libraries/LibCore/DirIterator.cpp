@@ -30,7 +30,8 @@
 namespace Core {
 
 DirIterator::DirIterator(const StringView& path, Flags flags)
-    : m_flags(flags)
+    : m_path(path)
+    , m_flags(flags)
 {
     m_dir = opendir(String(path).characters());
     if (!m_dir) {
@@ -90,6 +91,11 @@ String DirIterator::next_path()
     auto tmp = m_next;
     m_next = String();
     return tmp;
+}
+
+String DirIterator::next_full_path()
+{
+    return String::format("%s/%s", m_path.characters(), next_path().characters());
 }
 
 }
