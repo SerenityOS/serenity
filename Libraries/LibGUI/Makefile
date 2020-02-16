@@ -77,6 +77,9 @@ Notification.cpp: ../../Servers/NotificationServer/NotificationServerEndpoint.h
 ../../Servers/WindowServer/WindowServerEndpoint.h:
 	@flock $(dir $(@)) $(MAKE) -C $(dir $(@))
 
+../../Servers/NotificationServer/NotificationServerEndpoint.h:
+	@flock $(dir $(@)) $(MAKE) -C $(dir $(@))
+
 install:
 	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/LibGUI/
 	cp ./*.h $(SERENITY_BASE_DIR)/Root/usr/include/LibGUI/
