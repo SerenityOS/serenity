@@ -48,7 +48,7 @@ public:
     const T* operator->() const { return &get(); }
 
     T& operator*() { return get(); }
-    const T* operator*() const { return get(); }
+    const T& operator*() const { return get(); }
 
     T& get() { return reinterpret_cast<T&>(storage); }
     const T& get() const { return reinterpret_cast<T&>(storage); }
