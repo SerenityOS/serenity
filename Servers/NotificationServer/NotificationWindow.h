@@ -38,6 +38,8 @@ public:
 
 private:
     NotificationWindow(const String& text, const String& title);
+
+    Gfx::Rect m_original_rect;
 };
 
 }
