@@ -29,8 +29,8 @@
 namespace AK {
 
 class Bitmap;
-class ByteBuffer;
 class BufferStream;
+class ByteBuffer;
 class DebugLogStream;
 class IPv4Address;
 class JsonArray;
@@ -46,6 +46,9 @@ class URL;
 class Utf8View;
 
 template<typename T>
+class Atomic;
+
+template<typename T>
 class SinglyLinkedList;
 
 template<typename T>
@@ -56,6 +59,15 @@ class InlineLinkedList;
 
 template<typename T, int capacity>
 class CircularQueue;
+
+template<typename T>
+struct Traits;
+
+template<typename T, typename = Traits<T>>
+class HashTable;
+
+template<typename K, typename V, typename = Traits<K>>
+class HashMap;
 
 template<typename T>
 class Badge;
@@ -92,6 +104,7 @@ class Vector;
 
 }
 
+using AK::Atomic;
 using AK::Badge;
 using AK::Bitmap;
 using AK::BufferStream;
@@ -101,8 +114,10 @@ using AK::DebugLogStream;
 using AK::DoublyLinkedList;
 using AK::FixedArray;
 using AK::Function;
-using AK::InlineLinkedList;
+using AK::HashMap;
+using AK::HashTable;
 using AK::IPv4Address;
+using AK::InlineLinkedList;
 using AK::JsonArray;
 using AK::JsonObject;
 using AK::JsonValue;
@@ -118,6 +133,7 @@ using AK::String;
 using AK::StringBuilder;
 using AK::StringImpl;
 using AK::StringView;
+using AK::Traits;
 using AK::URL;
 using AK::Utf8View;
 using AK::Vector;

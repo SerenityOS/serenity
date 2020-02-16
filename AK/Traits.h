@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Forward.h>
 #include <AK/HashFunctions.h>
 
 namespace AK {
@@ -82,3 +83,6 @@ struct Traits<T*> : public GenericTraits<T*> {
 };
 
 }
+
+using AK::GenericTraits;
+using AK::Traits;

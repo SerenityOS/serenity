@@ -34,7 +34,7 @@
 
 namespace AK {
 
-template<typename T, typename = Traits<T>>
+template<typename T, typename>
 class HashTable;
 
 template<typename HashTableType, typename ElementType, typename BucketIteratorType>
