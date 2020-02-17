@@ -24,9 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "ASMixer.h"
 #include <LibCore/File.h>
-
-#include "ASEventLoop.h"
+#include <LibCore/LocalServer.h>
 
 int main(int, char**)
 {
@@ -34,7 +34,24 @@ int main(int, char**)
         perror("pledge");
         return 1;
     }
-    ASEventLoop event_loop;
+
+    Core::EventLoop event_loop;
+    ASMixer mixer;
+
+    auto server = Core::LocalServer::construct();
+    bool ok = server->take_over_from_system_server();
+    ASSERT(ok);
+    server->on_ready_to_accept = [&] {
+        auto client_socket = server->accept();
+        if (!client_socket) {
+            dbg() << "AudioServer: accept failed.";
+            return;
+        }
+        static int s_next_client_id = 0;
+        int client_id = ++s_next_client_id;
+        IPC::new_client_connection<ASClientConnection>(*client_socket, client_id, mixer);
+    };
+
     if (pledge("stdio thread shared_buffer accept", nullptr) < 0) {
         perror("pledge");
         return 1;

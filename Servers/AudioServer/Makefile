@@ -1,8 +1,7 @@
 OBJS = \
     main.o \
     ASMixer.o \
-    ASClientConnection.o \
-    ASEventLoop.o
+    ASClientConnection.o
 
 PROGRAM = AudioServer
 
