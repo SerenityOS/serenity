@@ -11,6 +11,8 @@ endpoint WindowServer = 2
     AddMenuToMenubar(i32 menubar_id, i32 menu_id) => ()
     SetApplicationMenubar(i32 menubar_id) => ()
 
+    SetSystemMenu(i32 menu_id) => ()
+
     AddMenuItem(
         i32 menu_id,
         i32 identifier,
@@ -79,4 +81,6 @@ endpoint WindowServer = 2
     SetWindowOverrideCursor(i32 window_id, i32 cursor_type) => ()
 
     StartDrag(String text, String data_type, String data, i32 bitmap_id, Gfx::Size bitmap_size) => (bool started)
+
+    SetSystemTheme(String theme_path, String theme_name) => (bool success)
 }

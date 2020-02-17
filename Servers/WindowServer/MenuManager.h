@@ -69,9 +69,16 @@ public:
 
     void close_all_menus_from_client(Badge<ClientConnection>, ClientConnection&);
 
+    void toggle_system_menu()
+    {
+        if (m_system_menu)
+            toggle_menu(*m_system_menu);
+    }
+
+    Menu* system_menu() { return m_system_menu; }
+    void set_system_menu(Menu&);
+
     Color menu_selection_color() const { return m_menu_selection_color; }
-    Menu& system_menu() { return *m_system_menu; }
-    Menu* find_internal_menu_by_id(int);
     int theme_index() const { return m_theme_index; }
 
     Window& window() { return *m_window; }
@@ -79,11 +86,15 @@ public:
     template<typename Callback>
     void for_each_active_menubar_menu(Callback callback)
     {
-        if (callback(system_menu()) == IterationDecision::Break)
-            return;
+        if (system_menu()) {
+            if (callback(*system_menu()) == IterationDecision::Break)
+                return;
+        }
         if (m_current_menubar)
             m_current_menubar->for_each_menu(callback);
     }
+
+    void did_change_theme();
 
 private:
     const Gfx::Font& menu_font() const;
@@ -104,30 +115,14 @@ private:
     WeakPtr<Menu> m_current_menu;
     Vector<WeakPtr<Menu>> m_open_menu_stack;
 
+    WeakPtr<Menu> m_system_menu;
+
     bool m_needs_window_resize { false };
     bool m_bar_open { false };
 
-    struct AppMetadata {
-        String executable;
-        String name;
-        String icon_path;
-        String category;
-    };
-    Vector<AppMetadata> m_apps;
-
-    HashMap<String, NonnullRefPtr<Menu>> m_app_category_menus;
-
-    struct ThemeMetadata {
-        String name;
-        String path;
-    };
-
-    RefPtr<Menu> m_system_menu;
     Color m_menu_selection_color;
 
     int m_theme_index { 0 };
-    Vector<ThemeMetadata> m_themes;
-    RefPtr<Menu> m_themes_menu;
 
     WeakPtr<MenuBar> m_current_menubar;
 };

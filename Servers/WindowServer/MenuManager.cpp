@@ -54,132 +54,6 @@ MenuManager::MenuManager()
     s_the = this;
     m_needs_window_resize = true;
 
-    HashTable<String> seen_app_categories;
-    {
-        Core::DirIterator dt("/res/apps", Core::DirIterator::SkipDots);
-        while (dt.has_next()) {
-            auto af_name = dt.next_path();
-            auto af_path = String::format("/res/apps/%s", af_name.characters());
-            auto af = Core::ConfigFile::open(af_path);
-            if (!af->has_key("App", "Name") || !af->has_key("App", "Executable"))
-                continue;
-            auto app_name = af->read_entry("App", "Name");
-            auto app_executable = af->read_entry("App", "Executable");
-            auto app_category = af->read_entry("App", "Category");
-            auto app_icon_path = af->read_entry("Icons", "16x16");
-            m_apps.append({ app_executable, app_name, app_icon_path, app_category });
-            seen_app_categories.set(app_category);
-        }
-    }
-
-    Vector<String> sorted_app_categories;
-    for (auto& category : seen_app_categories)
-        sorted_app_categories.append(category);
-    quick_sort(sorted_app_categories.begin(), sorted_app_categories.end(), [](auto& a, auto& b) { return a < b; });
-
-    u8 system_menu_name[] = { 0xc3, 0xb8, 0 };
-    m_system_menu = Menu::construct(nullptr, -1, String((const char*)system_menu_name));
-
-    // First we construct all the necessary app category submenus.
-    for (const auto& category : sorted_app_categories) {
-
-        if (m_app_category_menus.contains(category))
-            continue;
-        auto category_menu = Menu::construct(nullptr, 5000 + m_app_category_menus.size(), category);
-        category_menu->on_item_activation = [this](auto& item) {
-            if (item.identifier() >= 1 && item.identifier() <= 1u + m_apps.size() - 1) {
-                if (fork() == 0) {
-                    const auto& bin = m_apps[item.identifier() - 1].executable;
-                    execl(bin.characters(), bin.characters(), nullptr);
-                    ASSERT_NOT_REACHED();
-                }
-            }
-        };
-        auto item = make<MenuItem>(*m_system_menu, -1, category);
-        item->set_submenu_id(category_menu->menu_id());
-        m_system_menu->add_item(move(item));
-        m_app_category_menus.set(category, move(category_menu));
-    }
-
-    // Then we create and insert all the app menu items into the right place.
-    int app_identifier = 1;
-    for (const auto& app : m_apps) {
-        RefPtr<Gfx::Bitmap> icon;
-        if (!app.icon_path.is_empty())
-            icon = Gfx::Bitmap::load_from_file(app.icon_path);
-
-        auto parent_menu = m_app_category_menus.get(app.category).value_or(*m_system_menu);
-        parent_menu->add_item(make<MenuItem>(*m_system_menu, app_identifier++, app.name, String(), true, false, false, icon));
-    }
-
-    m_system_menu->add_item(make<MenuItem>(*m_system_menu, MenuItem::Separator));
-
-    m_themes_menu = Menu::construct(nullptr, 9000, "Themes");
-
-    auto themes_menu_item = make<MenuItem>(*m_system_menu, 100, "Themes");
-    themes_menu_item->set_submenu_id(m_themes_menu->menu_id());
-    m_system_menu->add_item(move(themes_menu_item));
-
-    {
-        Core::DirIterator dt("/res/themes", Core::DirIterator::SkipDots);
-        while (dt.has_next()) {
-            auto theme_name = dt.next_path();
-            auto theme_path = String::format("/res/themes/%s", theme_name.characters());
-            m_themes.append({ FileSystemPath(theme_name).title(), theme_path });
-        }
-        quick_sort(m_themes.begin(), m_themes.end(), [](auto& a, auto& b) { return a.name < b.name; });
-    }
-
-    {
-        int theme_identifier = 9000;
-        for (auto& theme : m_themes) {
-            m_themes_menu->add_item(make<MenuItem>(*m_themes_menu, theme_identifier++, theme.name));
-        }
-    }
-
-    m_themes_menu->on_item_activation = [this](MenuItem& item) {
-        auto& theme = m_themes[(int)item.identifier() - 9000];
-        WindowManager::the().update_theme(theme.path, theme.name);
-        ++m_theme_index;
-    };
-
-    m_system_menu->add_item(make<MenuItem>(*m_system_menu, MenuItem::Separator));
-    m_system_menu->add_item(make<MenuItem>(*m_system_menu, 100, "Reload WM Config File"));
-
-    m_system_menu->add_item(make<MenuItem>(*m_system_menu, MenuItem::Separator));
-    m_system_menu->add_item(make<MenuItem>(*m_system_menu, 200, "About...", String(), true, false, false, Gfx::Bitmap::load_from_file("/res/icons/16x16/ladybug.png")));
-    m_system_menu->add_item(make<MenuItem>(*m_system_menu, MenuItem::Separator));
-    m_system_menu->add_item(make<MenuItem>(*m_system_menu, 300, "Shutdown..."));
-    m_system_menu->on_item_activation = [this](MenuItem& item) {
-        if (item.identifier() >= 1 && item.identifier() <= 1u + m_apps.size() - 1) {
-            if (fork() == 0) {
-                const auto& bin = m_apps[item.identifier() - 1].executable;
-                execl(bin.characters(), bin.characters(), nullptr);
-                ASSERT_NOT_REACHED();
-            }
-        }
-        switch (item.identifier()) {
-        case 100:
-            WindowManager::the().reload_config(true);
-            break;
-        case 200:
-            if (fork() == 0) {
-                execl("/bin/About", "/bin/About", nullptr);
-                ASSERT_NOT_REACHED();
-            }
-            return;
-        case 300:
-            if (fork() == 0) {
-                execl("/bin/SystemDialog", "/bin/SystemDialog", "--shutdown", nullptr);
-                ASSERT_NOT_REACHED();
-            }
-            return;
-        }
-#ifdef DEBUG_MENUS
-        dbg() << "Menu 1 item activated: " << item.text();
-#endif
-    };
-
     // NOTE: This ensures that the system menu has the correct dimensions.
     set_current_menubar(nullptr);
 
@@ -493,17 +367,6 @@ Gfx::Rect MenuManager::menubar_rect() const
     return { 0, 0, Screen::the().rect().width(), 18 };
 }
 
-Menu* MenuManager::find_internal_menu_by_id(int menu_id)
-{
-    if (m_themes_menu->menu_id() == menu_id)
-        return m_themes_menu.ptr();
-    for (auto& it : m_app_category_menus) {
-        if (menu_id == it.value->menu_id())
-            return it.value;
-    }
-    return nullptr;
-}
-
 void MenuManager::set_current_menubar(MenuBar* menubar)
 {
     if (menubar)
@@ -530,6 +393,18 @@ void MenuManager::close_menubar(MenuBar& menubar)
 {
     if (current_menubar() == &menubar)
         set_current_menubar(nullptr);
+}
+
+void MenuManager::set_system_menu(Menu& menu)
+{
+    m_system_menu = menu.make_weak_ptr();
+    set_current_menubar(m_current_menubar);
+}
+
+void MenuManager::did_change_theme()
+{
+    ++m_theme_index;
+    refresh();
 }
 
 }

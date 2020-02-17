@@ -166,7 +166,7 @@ public:
     const Window* active_fullscreen_window() const { return (m_active_window && m_active_window->is_fullscreen()) ? m_active_window : nullptr; }
     Window* active_fullscreen_window() { return (m_active_window && m_active_window->is_fullscreen()) ? m_active_window : nullptr; }
 
-    void update_theme(String theme_path, String theme_name);
+    bool update_theme(String theme_path, String theme_name);
 
     void set_hovered_window(Window*);
     void deliver_mouse_event(Window& window, MouseEvent& event);
