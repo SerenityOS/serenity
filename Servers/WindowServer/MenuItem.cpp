@@ -74,9 +74,8 @@ void MenuItem::set_checked(bool checked)
 Menu* MenuItem::submenu()
 {
     ASSERT(is_submenu());
-    if (m_menu.client())
-        return m_menu.client()->find_menu_by_id(m_submenu_id);
-    return MenuManager::the().find_internal_menu_by_id(m_submenu_id);
+    ASSERT(m_menu.client());
+    return m_menu.client()->find_menu_by_id(m_submenu_id);
 }
 
 Gfx::Rect MenuItem::rect() const

@@ -114,6 +114,8 @@ private:
     virtual OwnPtr<Messages::WindowServer::SetWindowIconBitmapResponse> handle(const Messages::WindowServer::SetWindowIconBitmap&) override;
     virtual void handle(const Messages::WindowServer::WM_SetWindowTaskbarRect&) override;
     virtual OwnPtr<Messages::WindowServer::StartDragResponse> handle(const Messages::WindowServer::StartDrag&) override;
+    virtual OwnPtr<Messages::WindowServer::SetSystemMenuResponse> handle(const Messages::WindowServer::SetSystemMenu&) override;
+    virtual OwnPtr<Messages::WindowServer::SetSystemThemeResponse> handle(const Messages::WindowServer::SetSystemTheme&) override;
 
     HashMap<int, NonnullRefPtr<Window>> m_windows;
     HashMap<int, NonnullOwnPtr<MenuBar>> m_menubars;

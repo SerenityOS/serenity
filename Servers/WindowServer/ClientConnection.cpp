@@ -683,6 +683,25 @@ OwnPtr<Messages::WindowServer::StartDragResponse> ClientConnection::handle(const
     return make<Messages::WindowServer::StartDragResponse>(true);
 }
 
+OwnPtr<Messages::WindowServer::SetSystemMenuResponse> ClientConnection::handle(const Messages::WindowServer::SetSystemMenu& message)
+{
+    auto it = m_menus.find(message.menu_id());
+    if (it == m_menus.end()) {
+        did_misbehave("SetSystemMenu called with invalid menu ID");
+        return nullptr;
+    }
+
+    auto& menu = it->value;
+    MenuManager::the().set_system_menu(menu);
+    return make<Messages::WindowServer::SetSystemMenuResponse>();
+}
+
+OwnPtr<Messages::WindowServer::SetSystemThemeResponse> ClientConnection::handle(const Messages::WindowServer::SetSystemTheme& message)
+{
+    bool success = WindowManager::the().update_theme(message.theme_path(), message.theme_name());
+    return make<Messages::WindowServer::SetSystemThemeResponse>(success);
+}
+
 void ClientConnection::boost()
 {
     if (set_process_boost(client_pid(), 10) < 0)

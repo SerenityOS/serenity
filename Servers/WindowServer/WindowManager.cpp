@@ -933,7 +933,7 @@ void WindowManager::event(Core::Event& event)
         if (key_event.key() == Key_Logo) {
             if (key_event.type() == Event::KeyUp) {
                 if (!m_moved_or_resized_since_logo_keydown && !m_switcher.is_visible() && !m_move_window && !m_resize_window) {
-                    MenuManager::the().toggle_menu(MenuManager::the().system_menu());
+                    MenuManager::the().toggle_system_menu();
                     return;
                 }
 
@@ -1225,9 +1225,11 @@ Gfx::Rect WindowManager::dnd_rect() const
     return Gfx::Rect(location, { width, height }).inflated(4, 4);
 }
 
-void WindowManager::update_theme(String theme_path, String theme_name)
+bool WindowManager::update_theme(String theme_path, String theme_name)
 {
     auto new_theme = Gfx::load_system_theme(theme_path);
+    if (!new_theme)
+        return false;
     ASSERT(new_theme);
     Gfx::set_system_theme(*new_theme);
     m_palette = Gfx::PaletteImpl::create_with_shared_buffer(*new_theme);
@@ -1241,10 +1243,12 @@ void WindowManager::update_theme(String theme_path, String theme_name)
         }
         return IterationDecision::Continue;
     });
+    MenuManager::the().did_change_theme();
     auto wm_config = Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini");
     wm_config->write_entry("Theme", "Name", theme_name);
     wm_config->sync();
     invalidate();
+    return true;
 }
 
 }
