@@ -46,7 +46,7 @@ class Point;
 class Rect;
 class Size;
 class StylePainter;
-class SystemTheme;
+struct SystemTheme;
 class Triangle;
 
 enum class BitmapFormat;
