@@ -371,8 +371,7 @@ public:
     Region& allocate_split_region(const Region& source_region, const Range&, size_t offset_in_vmobject);
     Vector<Region*, 2> split_region_around_range(const Region& source_region, const Range&);
 
-    void set_being_inspected(bool b) { m_being_inspected = b; }
-    bool is_being_inspected() const { return m_being_inspected; }
+    bool is_being_inspected() const { return m_inspector_count; }
 
     void terminate_due_to_signal(u8 signal);
     void send_signal(u8, Process* sender);
@@ -398,6 +397,9 @@ public:
 
     VeilState veil_state() const { return m_veil_state; }
     const Vector<UnveiledPath>& unveiled_paths() const { return m_unveiled_paths; }
+
+    void increment_inspector_count(Badge<ProcessInspectionHandle>) { ++m_inspector_count; }
+    void decrement_inspector_count(Badge<ProcessInspectionHandle>) { --m_inspector_count; }
 
 private:
     friend class MemoryManager;
@@ -458,7 +460,6 @@ private:
     u8 m_termination_signal { 0 };
     u16 m_thread_count { 0 };
 
-    bool m_being_inspected { false };
     bool m_dead { false };
     bool m_profiling { false };
 
@@ -509,6 +510,8 @@ private:
     HashMap<u32, OwnPtr<WaitQueue>> m_futex_queues;
 
     OwnPtr<PerformanceEventBuffer> m_perf_event_buffer;
+
+    u32 m_inspector_count { 0 };
 };
 
 class ProcessInspectionHandle {
@@ -517,13 +520,16 @@ public:
         : m_process(process)
     {
         if (&process != &current->process()) {
-            ASSERT(!m_process.is_being_inspected());
-            m_process.set_being_inspected(true);
+            InterruptDisabler disabler;
+            m_process.increment_inspector_count({});
         }
     }
     ~ProcessInspectionHandle()
     {
-        m_process.set_being_inspected(false);
+        if (&m_process != &current->process()) {
+            InterruptDisabler disabler;
+            m_process.decrement_inspector_count({});
+        }
     }
 
     Process& process() { return m_process; }
