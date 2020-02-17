@@ -204,7 +204,7 @@ inline void swap(OwnPtr<T>& a, OwnPtr<U>& b)
 template<typename T>
 struct Traits<OwnPtr<T>> : public GenericTraits<OwnPtr<T>> {
     using PeekType = const T*;
-    static unsigned hash(const OwnPtr<T>& p) { return int_hash((u32)p.ptr()); }
+    static unsigned hash(const OwnPtr<T>& p) { return ptr_hash(p.ptr()); }
     static bool equals(const OwnPtr<T>& a, const OwnPtr<T>& b) { return a.ptr() == b.ptr(); }
 };
 
