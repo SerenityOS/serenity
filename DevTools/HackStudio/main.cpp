@@ -283,7 +283,7 @@ int main(int argc, char** argv)
     form_widgets_toolbar->add_action(cursor_tool_action);
 
     GUI::WidgetClassRegistration::for_each([&](const GUI::WidgetClassRegistration& reg) {
-        auto icon_path = String::format("/res/icons/widgets/%s.png", reg.class_name().characters());
+        auto icon_path = String::format("/res/icons/widgets/G%s.png", reg.class_name().characters());
         auto action = GUI::Action::create(reg.class_name(), Gfx::Bitmap::load_from_file(icon_path), [&reg](auto&) {
             g_form_editor_widget->set_tool(make<WidgetTool>(*g_form_editor_widget, reg));
             auto widget = reg.construct(&g_form_editor_widget->form_widget());
