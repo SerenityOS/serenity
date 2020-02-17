@@ -43,6 +43,8 @@ public:
     enum class InputType {
         OK,
         OKCancel,
+        YesNo,
+        YesNoCancel,
     };
 
     virtual ~MessageBox() override;
@@ -54,6 +56,8 @@ private:
 
     bool should_include_ok_button() const;
     bool should_include_cancel_button() const;
+    bool should_include_yes_button() const;
+    bool should_include_no_button() const;
     void build();
     RefPtr<Gfx::Bitmap> icon() const;
 

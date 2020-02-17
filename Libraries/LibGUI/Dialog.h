@@ -36,7 +36,9 @@ public:
     enum ExecResult {
         ExecOK = 0,
         ExecCancel = 1,
-        ExecAborted = 2
+        ExecAborted = 2,
+        ExecYes = 3,
+        ExecNo = 4,
     };
 
     virtual ~Dialog() override;
