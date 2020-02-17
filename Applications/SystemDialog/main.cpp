@@ -55,20 +55,17 @@ int run_shutdown_dialog(int argc, char** argv)
     GUI::Application app(argc, argv);
 
     {
-        auto result = GUI::MessageBox::show("Shut down Serenity?", "Confirm Shutdown", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel);
+        auto result = GUI::MessageBox::show("Shut down Serenity?", "Confirm Shutdown", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNo);
 
-        if (result == GUI::MessageBox::ExecOK) {
-            dbg() << "OK";
+        if (result == GUI::MessageBox::ExecYes) {
             int rc = execl("/bin/shutdown", "/bin/shutdown", "-n", nullptr);
             if (rc < 0) {
                 perror("execl");
                 return 1;
             }
-        } else {
-            dbg() << "Cancel";
-            return 0;
+            ASSERT_NOT_REACHED();
         }
-    }
 
-    return app.exec();
+        return 0;
+    }
 }
