@@ -3016,6 +3016,8 @@ void Process::finalize()
         }
     }
 
+    m_regions.clear();
+
     m_dead = true;
 }
 
