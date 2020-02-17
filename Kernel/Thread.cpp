@@ -43,6 +43,8 @@
 
 namespace Kernel {
 
+Thread* Thread::current;
+
 static FPUState s_clean_fpu_state;
 
 u16 thread_specific_selector()
@@ -234,7 +236,7 @@ u64 Thread::sleep(u32 ticks)
 {
     ASSERT(state() == Thread::Running);
     u64 wakeup_time = g_uptime + ticks;
-    auto ret = current->block<Thread::SleepBlocker>(wakeup_time);
+    auto ret = Thread::current->block<Thread::SleepBlocker>(wakeup_time);
     if (wakeup_time > g_uptime) {
         ASSERT(ret != Thread::BlockResult::WokeNormally);
     }
@@ -244,7 +246,7 @@ u64 Thread::sleep(u32 ticks)
 u64 Thread::sleep_until(u64 wakeup_time)
 {
     ASSERT(state() == Thread::Running);
-    auto ret = current->block<Thread::SleepBlocker>(wakeup_time);
+    auto ret = Thread::current->block<Thread::SleepBlocker>(wakeup_time);
     if (wakeup_time > g_uptime)
         ASSERT(ret != Thread::BlockResult::WokeNormally);
     return wakeup_time;

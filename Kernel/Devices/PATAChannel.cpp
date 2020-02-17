@@ -184,7 +184,7 @@ void PATAChannel::wait_for_irq()
 {
     cli();
     enable_irq();
-    current->wait_on(m_irq_queue);
+    Thread::current->wait_on(m_irq_queue);
     disable_irq();
 }
 
@@ -279,8 +279,8 @@ bool PATAChannel::ata_read_sectors_with_dma(u32 lba, u16 count, u8* outbuf, bool
     LOCKER(s_lock());
 #ifdef PATA_DEBUG
     kprintf("%s(%u): PATAChannel::ata_read_sectors_with_dma (%u x%u) -> %p\n",
-        current->process().name().characters(),
-        current->pid(), lba, count, outbuf);
+        Process::current->name().characters(),
+        Process::current->pid(), lba, count, outbuf);
 #endif
 
     prdt().offset = m_dma_buffer_page->paddr();
@@ -352,8 +352,8 @@ bool PATAChannel::ata_write_sectors_with_dma(u32 lba, u16 count, const u8* inbuf
     LOCKER(s_lock());
 #ifdef PATA_DEBUG
     kprintf("%s(%u): PATAChannel::ata_write_sectors_with_dma (%u x%u) <- %p\n",
-        current->process().name().characters(),
-        current->pid(), lba, count, inbuf);
+        Process::current->name().characters(),
+        Process::current->pid(), lba, count, inbuf);
 #endif
 
     prdt().offset = m_dma_buffer_page->paddr();
@@ -423,8 +423,8 @@ bool PATAChannel::ata_read_sectors(u32 start_sector, u16 count, u8* outbuf, bool
     LOCKER(s_lock());
 #ifdef PATA_DEBUG
     kprintf("%s(%u): PATAChannel::ata_read_sectors request (%u sector(s) @ %u into %p)\n",
-        current->process().name().characters(),
-        current->pid(),
+        Process::current->name().characters(),
+        Process::current->pid(),
         count,
         start_sector,
         outbuf);
@@ -481,8 +481,8 @@ bool PATAChannel::ata_write_sectors(u32 start_sector, u16 count, const u8* inbuf
     LOCKER(s_lock());
 #ifdef PATA_DEBUG
     kprintf("%s(%u): PATAChannel::ata_write_sectors request (%u sector(s) @ %u)\n",
-        current->process().name().characters(),
-        current->pid(),
+        Process::current->name().characters(),
+        Process::current->pid(),
         count,
         start_sector);
 #endif

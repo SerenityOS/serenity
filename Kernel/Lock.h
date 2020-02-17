@@ -35,8 +35,6 @@
 
 namespace Kernel {
 
-extern Thread* current;
-
 class Lock {
 public:
     Lock(const char* name = nullptr)

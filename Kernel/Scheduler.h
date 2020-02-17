@@ -39,7 +39,6 @@ class WaitQueue;
 struct RegisterState;
 struct SchedulerData;
 
-extern Thread* current;
 extern Thread* g_finalizer;
 extern Thread* g_colonel;
 extern WaitQueue* g_finalizer_wait_queue;

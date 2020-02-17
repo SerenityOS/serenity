@@ -91,6 +91,8 @@ namespace Kernel {
 static void create_signal_trampolines();
 static void create_kernel_info_page();
 
+Process* Process::current;
+
 static pid_t next_pid;
 InlineLinkedList<Process>* g_processes;
 static String* s_hostname;
@@ -843,7 +845,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     OwnPtr<ELFLoader> loader;
     {
         ArmedScopeGuard rollback_regions_guard([&]() {
-            ASSERT(&current->process() == this);
+            ASSERT(Process::current == this);
             m_page_directory = move(old_page_directory);
             m_regions = move(old_regions);
             MM.enter_process_paging_scope(*this);
@@ -940,9 +942,9 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
             m_egid = main_program_metadata.gid;
     }
 
-    current->set_default_signal_dispositions();
-    current->m_signal_mask = 0;
-    current->m_pending_signals = 0;
+    Thread::current->set_default_signal_dispositions();
+    Thread::current->m_signal_mask = 0;
+    Thread::current->m_pending_signals = 0;
 
     m_futex_queues.clear();
 
@@ -955,8 +957,8 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     }
 
     Thread* new_main_thread = nullptr;
-    if (&current->process() == this) {
-        new_main_thread = current;
+    if (Process::current == this) {
+        new_main_thread = Thread::current;
     } else {
         for_each_thread([&](auto& thread) {
             new_main_thread = &thread;
@@ -972,7 +974,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     // We cli() manually here because we don't want to get interrupted between do_exec() and Schedule::yield().
     // The reason is that the task redirection we've set up above will be clobbered by the timer IRQ.
     // If we used an InterruptDisabler that sti()'d on exit, we might timer tick'd too soon in exec().
-    if (&current->process() == this)
+    if (Process::current == this)
         cli();
 
     // NOTE: Be careful to not trigger any page faults below!
@@ -1187,7 +1189,7 @@ int Process::exec(String path, Vector<String> arguments, Vector<String> environm
     if (rc < 0)
         return rc;
 
-    if (&current->process() == this) {
+    if (Process::current == this) {
         Scheduler::yield();
         ASSERT_NOT_REACHED();
     }
@@ -1332,7 +1334,7 @@ Process::Process(Thread*& first_thread, const String& name, uid_t uid, gid_t gid
 
     if (fork_parent) {
         // NOTE: fork() doesn't clone all threads; the thread that called fork() becomes the only thread in the new process.
-        first_thread = current->clone(*this);
+        first_thread = Thread::current->clone(*this);
     } else {
         // NOTE: This non-forked code path is only taken when the kernel creates a process "manually" (at boot.)
         first_thread = new Thread(*this);
@@ -1378,7 +1380,7 @@ void Process::sys$exit(int status)
     m_termination_status = status;
     m_termination_signal = 0;
     die();
-    current->die_if_needed();
+    Thread::current->die_if_needed();
     ASSERT_NOT_REACHED();
 }
 
@@ -1451,7 +1453,7 @@ int Process::sys$sigreturn(RegisterState& registers)
     //pop the stored eax, ebp, return address, handler and signal code
     stack_ptr += 5;
 
-    current->m_signal_mask = *stack_ptr;
+    Thread::current->m_signal_mask = *stack_ptr;
     stack_ptr++;
 
     //pop edi, esi, ebp, esp, ebx, edx, ecx and eax
@@ -1472,7 +1474,7 @@ void Process::crash(int signal, u32 eip)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(!is_dead());
-    ASSERT(&current->process() == this);
+    ASSERT(Process::current == this);
 
     if (eip >= 0xc0000000 && ksyms_ready) {
         auto* ksym = ksymbolicate(eip);
@@ -1490,7 +1492,7 @@ void Process::crash(int signal, u32 eip)
     die();
     // We can not return from here, as there is nowhere
     // to unwind to, so die right away.
-    current->die_if_needed();
+    Thread::current->die_if_needed();
     ASSERT_NOT_REACHED();
 }
 
@@ -1648,7 +1650,7 @@ ssize_t Process::do_write(FileDescription& description, const u8* data, int data
 #ifdef IO_DEBUG
             dbgprintf("block write on %d\n", fd);
 #endif
-            if (current->block<Thread::WriteBlocker>(description) != Thread::BlockResult::WokeNormally) {
+            if (Thread::current->block<Thread::WriteBlocker>(description) != Thread::BlockResult::WokeNormally) {
                 if (nwritten == 0)
                     return -EINTR;
             }
@@ -1711,7 +1713,7 @@ ssize_t Process::sys$read(int fd, u8* buffer, ssize_t size)
         return -EISDIR;
     if (description->is_blocking()) {
         if (!description->can_read()) {
-            if (current->block<Thread::ReadBlocker>(*description) != Thread::BlockResult::WokeNormally)
+            if (Thread::current->block<Thread::ReadBlocker>(*description) != Thread::BlockResult::WokeNormally)
                 return -EINTR;
             if (!description->can_read())
                 return -EAGAIN;
@@ -2175,9 +2177,9 @@ int Process::sys$kill(pid_t pid, int signal)
     if (pid == m_pid) {
         if (signal == 0)
             return 0;
-        if (!current->should_ignore_signal(signal)) {
-            current->send_signal(signal, this);
-            (void)current->block<Thread::SemiPermanentBlocker>(Thread::SemiPermanentBlocker::Reason::Signal);
+        if (!Thread::current->should_ignore_signal(signal)) {
+            Thread::current->send_signal(signal, this);
+            (void)Thread::current->block<Thread::SemiPermanentBlocker>(Thread::SemiPermanentBlocker::Reason::Signal);
         }
         return 0;
     }
@@ -2193,7 +2195,7 @@ int Process::sys$usleep(useconds_t usec)
     REQUIRE_PROMISE(stdio);
     if (!usec)
         return 0;
-    u64 wakeup_time = current->sleep(usec / 1000);
+    u64 wakeup_time = Thread::current->sleep(usec / 1000);
     if (wakeup_time > g_uptime)
         return -EINTR;
     return 0;
@@ -2204,7 +2206,7 @@ int Process::sys$sleep(unsigned seconds)
     REQUIRE_PROMISE(stdio);
     if (!seconds)
         return 0;
-    u64 wakeup_time = current->sleep(seconds * TICKS_PER_SECOND);
+    u64 wakeup_time = Thread::current->sleep(seconds * TICKS_PER_SECOND);
     if (wakeup_time > g_uptime) {
         u32 ticks_left_until_original_wakeup_time = wakeup_time - g_uptime;
         return ticks_left_until_original_wakeup_time / TICKS_PER_SECOND;
@@ -2357,7 +2359,7 @@ KResultOr<siginfo_t> Process::do_waitid(idtype_t idtype, int id, int options)
         return KResult(-EINVAL);
     }
 
-    if (current->block<Thread::WaitBlocker>(options, waitee_pid) != Thread::BlockResult::WokeNormally)
+    if (Thread::current->block<Thread::WaitBlocker>(options, waitee_pid) != Thread::BlockResult::WokeNormally)
         return KResult(-EINTR);
 
     InterruptDisabler disabler;
@@ -2574,7 +2576,7 @@ int Process::sys$sigprocmask(int how, const sigset_t* set, sigset_t* old_set)
     if (old_set) {
         if (!validate_write_typed(old_set))
             return -EFAULT;
-        copy_to_user(old_set, &current->m_signal_mask);
+        copy_to_user(old_set, &Thread::current->m_signal_mask);
     }
     if (set) {
         if (!validate_read_typed(set))
@@ -2583,13 +2585,13 @@ int Process::sys$sigprocmask(int how, const sigset_t* set, sigset_t* old_set)
         copy_from_user(&set_value, set);
         switch (how) {
         case SIG_BLOCK:
-            current->m_signal_mask &= ~set_value;
+            Thread::current->m_signal_mask &= ~set_value;
             break;
         case SIG_UNBLOCK:
-            current->m_signal_mask |= set_value;
+            Thread::current->m_signal_mask |= set_value;
             break;
         case SIG_SETMASK:
-            current->m_signal_mask = set_value;
+            Thread::current->m_signal_mask = set_value;
             break;
         default:
             return -EINVAL;
@@ -2603,7 +2605,7 @@ int Process::sys$sigpending(sigset_t* set)
     REQUIRE_PROMISE(stdio);
     if (!validate_write_typed(set))
         return -EFAULT;
-    copy_to_user(set, &current->m_pending_signals);
+    copy_to_user(set, &Thread::current->m_pending_signals);
     return 0;
 }
 
@@ -2615,7 +2617,7 @@ int Process::sys$sigaction(int signum, const sigaction* act, sigaction* old_act)
     if (!validate_read_typed(act))
         return -EFAULT;
     InterruptDisabler disabler; // FIXME: This should use a narrower lock. Maybe a way to ignore signals temporarily?
-    auto& action = current->m_signal_action_data[signum];
+    auto& action = Thread::current->m_signal_action_data[signum];
     if (old_act) {
         if (!validate_write_typed(old_act))
             return -EFAULT;
@@ -2783,7 +2785,7 @@ int Process::sys$select(const Syscall::SC_select_params* params)
 #endif
 
     if (!timeout || select_has_timeout) {
-        if (current->block<Thread::SelectBlocker>(computed_timeout, select_has_timeout, rfds, wfds, efds) != Thread::BlockResult::WokeNormally)
+        if (Thread::current->block<Thread::SelectBlocker>(computed_timeout, select_has_timeout, rfds, wfds, efds) != Thread::BlockResult::WokeNormally)
             return -EINTR;
     }
 
@@ -2844,7 +2846,7 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
 #endif
 
     if (has_timeout || timeout < 0) {
-        if (current->block<Thread::SelectBlocker>(actual_timeout, has_timeout, rfds, wfds, Thread::SelectBlocker::FDVector()) != Thread::BlockResult::WokeNormally)
+        if (Thread::current->block<Thread::SelectBlocker>(actual_timeout, has_timeout, rfds, wfds, Thread::SelectBlocker::FDVector()) != Thread::BlockResult::WokeNormally)
             return -EINTR;
     }
 
@@ -2981,7 +2983,7 @@ int Process::sys$chown(const Syscall::SC_chown_params* user_params)
 
 void Process::finalize()
 {
-    ASSERT(current == g_finalizer);
+    ASSERT(Thread::current == g_finalizer);
 #ifdef PROCESS_DEBUG
     dbg() << "Finalizing process " << *this;
 #endif
@@ -3200,7 +3202,7 @@ int Process::sys$accept(int accepting_socket_fd, sockaddr* user_address, socklen
     auto& socket = *accepting_socket_description->socket();
     if (!socket.can_accept()) {
         if (accepting_socket_description->is_blocking()) {
-            if (current->block<Thread::AcceptBlocker>(*accepting_socket_description) != Thread::BlockResult::WokeNormally)
+            if (Thread::current->block<Thread::AcceptBlocker>(*accepting_socket_description) != Thread::BlockResult::WokeNormally)
                 return -EINTR;
         } else {
             return -EAGAIN;
@@ -3397,7 +3399,7 @@ int Process::sys$sched_setparam(int tid, const struct sched_param* param)
     copy_from_user(&desired_priority, &param->sched_priority);
 
     InterruptDisabler disabler;
-    auto* peer = current;
+    auto* peer = Thread::current;
     if (tid != 0)
         peer = Thread::from_tid(tid);
 
@@ -3421,7 +3423,7 @@ int Process::sys$sched_getparam(pid_t pid, struct sched_param* param)
         return -EFAULT;
 
     InterruptDisabler disabler;
-    auto* peer = current;
+    auto* peer = Thread::current;
     if (pid != 0)
         peer = Thread::from_tid(pid);
 
@@ -3741,10 +3743,10 @@ void Process::sys$exit_thread(void* exit_value)
 {
     REQUIRE_PROMISE(thread);
     cli();
-    current->m_exit_value = exit_value;
-    current->set_should_die();
+    Thread::current->m_exit_value = exit_value;
+    Thread::current->set_should_die();
     big_lock().force_unlock_if_locked();
-    current->die_if_needed();
+    Thread::current->die_if_needed();
     ASSERT_NOT_REACHED();
 }
 
@@ -3774,13 +3776,13 @@ int Process::sys$join_thread(int tid, void** exit_value)
     if (!thread || thread->pid() != pid())
         return -ESRCH;
 
-    if (thread == current)
+    if (thread == Thread::current)
         return -EDEADLK;
 
-    if (thread->m_joinee == current)
+    if (thread->m_joinee == Thread::current)
         return -EDEADLK;
 
-    ASSERT(thread->m_joiner != current);
+    ASSERT(thread->m_joiner != Thread::current);
     if (thread->m_joiner)
         return -EINVAL;
 
@@ -3791,13 +3793,13 @@ int Process::sys$join_thread(int tid, void** exit_value)
 
     // NOTE: pthread_join() cannot be interrupted by signals. Only by death.
     for (;;) {
-        auto result = current->block<Thread::JoinBlocker>(*thread, joinee_exit_value);
+        auto result = Thread::current->block<Thread::JoinBlocker>(*thread, joinee_exit_value);
         if (result == Thread::BlockResult::InterruptedByDeath) {
             // NOTE: This cleans things up so that Thread::finalize() won't
             //       get confused about a missing joiner when finalizing the joinee.
             InterruptDisabler disabler;
-            current->m_joinee->m_joiner = nullptr;
-            current->m_joinee = nullptr;
+            Thread::current->m_joinee->m_joiner = nullptr;
+            Thread::current->m_joinee = nullptr;
             return 0;
         }
     }
@@ -3853,7 +3855,7 @@ int Process::sys$get_thread_name(int tid, char* buffer, size_t buffer_size)
 int Process::sys$gettid()
 {
     REQUIRE_PROMISE(stdio);
-    return current->tid();
+    return Thread::current->tid();
 }
 
 int Process::sys$donate(int tid)
@@ -4259,12 +4261,12 @@ int Process::sys$clock_nanosleep(const Syscall::SC_clock_nanosleep_params* user_
         u64 wakeup_time;
         if (is_absolute) {
             u64 time_to_wake = (requested_sleep.tv_sec * 1000 + requested_sleep.tv_nsec / 1000000);
-            wakeup_time = current->sleep_until(time_to_wake);
+            wakeup_time = Thread::current->sleep_until(time_to_wake);
         } else {
             u32 ticks_to_sleep = (requested_sleep.tv_sec * 1000 + requested_sleep.tv_nsec / 1000000);
             if (!ticks_to_sleep)
                 return 0;
-            wakeup_time = current->sleep(ticks_to_sleep);
+            wakeup_time = Thread::current->sleep(ticks_to_sleep);
         }
         if (wakeup_time > g_uptime) {
             u32 ticks_left = wakeup_time - g_uptime;
@@ -4295,14 +4297,14 @@ int Process::sys$sync()
 int Process::sys$yield()
 {
     REQUIRE_PROMISE(stdio);
-    current->yield_without_holding_big_lock();
+    Thread::current->yield_without_holding_big_lock();
     return 0;
 }
 
 int Process::sys$beep()
 {
     PCSpeaker::tone_on(440);
-    u64 wakeup_time = current->sleep(100);
+    u64 wakeup_time = Thread::current->sleep(100);
     PCSpeaker::tone_off();
     if (wakeup_time > g_uptime)
         return -EINTR;
@@ -4535,7 +4537,7 @@ int Process::sys$futex(const Syscall::SC_futex_params* user_params)
             return -EAGAIN;
         // FIXME: This is supposed to be interruptible by a signal, but right now WaitQueue cannot be interrupted.
         // FIXME: Support timeout!
-        current->wait_on(futex_queue(userspace_address));
+        Thread::current->wait_on(futex_queue(userspace_address));
         break;
     case FUTEX_WAKE:
         if (value == 0)

@@ -141,14 +141,14 @@ int BXVGADevice::ioctl(FileDescription&, unsigned request, unsigned arg)
     switch (request) {
     case FB_IOCTL_GET_SIZE_IN_BYTES: {
         auto* out = (size_t*)arg;
-        if (!current->process().validate_write_typed(out))
+        if (!Process::current->validate_write_typed(out))
             return -EFAULT;
         *out = framebuffer_size_in_bytes();
         return 0;
     }
     case FB_IOCTL_GET_BUFFER: {
         auto* index = (int*)arg;
-        if (!current->process().validate_write_typed(index))
+        if (!Process::current->validate_write_typed(index))
             return -EFAULT;
         *index = m_y_offset == 0 ? 0 : 1;
         return 0;
@@ -161,7 +161,7 @@ int BXVGADevice::ioctl(FileDescription&, unsigned request, unsigned arg)
     }
     case FB_IOCTL_GET_RESOLUTION: {
         auto* resolution = (FBResolution*)arg;
-        if (!current->process().validate_write_typed(resolution))
+        if (!Process::current->validate_write_typed(resolution))
             return -EFAULT;
         resolution->pitch = m_framebuffer_pitch;
         resolution->width = m_framebuffer_width;
@@ -170,7 +170,7 @@ int BXVGADevice::ioctl(FileDescription&, unsigned request, unsigned arg)
     }
     case FB_IOCTL_SET_RESOLUTION: {
         auto* resolution = (FBResolution*)arg;
-        if (!current->process().validate_read_typed(resolution) || !current->process().validate_write_typed(resolution))
+        if (!Process::current->validate_read_typed(resolution) || !Process::current->validate_write_typed(resolution))
             return -EFAULT;
         if (resolution->width > MAX_RESOLUTION_WIDTH || resolution->height > MAX_RESOLUTION_HEIGHT)
             return -EINVAL;

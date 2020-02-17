@@ -280,7 +280,7 @@ Region* MemoryManager::region_from_vaddr(VirtualAddress vaddr)
 PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(current);
+    ASSERT(Thread::current);
 #ifdef PAGE_FAULT_DEBUG
     dbgprintf("MM: handle_page_fault(%w) at V%p\n", fault.code(), fault.vaddr().get());
 #endif
@@ -475,10 +475,10 @@ RefPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
 
 void MemoryManager::enter_process_paging_scope(Process& process)
 {
-    ASSERT(current);
+    ASSERT(Thread::current);
     InterruptDisabler disabler;
 
-    current->tss().cr3 = process.page_directory().cr3();
+    Thread::current->tss().cr3 = process.page_directory().cr3();
     write_cr3(process.page_directory().cr3());
 }
 
@@ -675,7 +675,7 @@ void MemoryManager::dump_kernel_regions()
 
 ProcessPagingScope::ProcessPagingScope(Process& process)
 {
-    ASSERT(current);
+    ASSERT(Thread::current);
     m_previous_cr3 = read_cr3();
     MM.enter_process_paging_scope(process);
 }
@@ -683,7 +683,7 @@ ProcessPagingScope::ProcessPagingScope(Process& process)
 ProcessPagingScope::~ProcessPagingScope()
 {
     InterruptDisabler disabler;
-    current->tss().cr3 = m_previous_cr3;
+    Thread::current->tss().cr3 = m_previous_cr3;
     write_cr3(m_previous_cr3);
 }
 

@@ -49,7 +49,7 @@ void TCPSocket::set_state(State new_state)
 {
 #ifdef TCP_SOCKET_DEBUG
     kprintf("%s(%u) TCPSocket{%p} state moving from %s to %s\n",
-        current->process().name().characters(), current->pid(), this,
+        Process::current->name().characters(), Process::current->pid(), this,
         to_string(m_state), to_string(new_state));
 #endif
 
@@ -385,7 +385,7 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
     m_direction = Direction::Outgoing;
 
     if (should_block == ShouldBlock::Yes) {
-        if (current->block<Thread::ConnectBlocker>(description) != Thread::BlockResult::WokeNormally)
+        if (Thread::current->block<Thread::ConnectBlocker>(description) != Thread::BlockResult::WokeNormally)
             return KResult(-EINTR);
         ASSERT(setup_state() == SetupState::Completed);
         if (has_error()) {

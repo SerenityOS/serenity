@@ -67,6 +67,8 @@ class Thread {
     friend class Scheduler;
 
 public:
+    static Thread* current;
+
     explicit Thread(Process&);
     ~Thread();
 
