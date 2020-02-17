@@ -39,7 +39,14 @@ public:
     explicit Menu(const StringView& name = "");
     virtual ~Menu() override;
 
+    void realize_menu_if_needed()
+    {
+        if (menu_id() == -1)
+            realize_menu();
+    }
+
     static Menu* from_menu_id(int);
+    int menu_id() const { return m_menu_id; }
 
     const String& name() const { return m_name; }
 
@@ -55,7 +62,6 @@ public:
 private:
     friend class MenuBar;
 
-    int menu_id() const { return m_menu_id; }
     int realize_menu();
     void unrealize_menu();
     void realize_if_needed();
