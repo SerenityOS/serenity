@@ -50,3 +50,11 @@ inline unsigned u64_hash(u64 key)
     u32 last = key >> 32;
     return pair_int_hash(first, last);
 }
+
+inline unsigned ptr_hash(uintptr_t ptr)
+{
+    if constexpr(sizeof(ptr) == 8)
+        return u64_hash((u64)ptr);
+    else
+        return int_hash((u32)ptr);
+}
