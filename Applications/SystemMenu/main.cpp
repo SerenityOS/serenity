@@ -71,6 +71,23 @@ int main(int argc, char** argv)
 
     GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetSystemMenu>(menu->menu_id());
 
+    if (pledge("stdio shared_buffer accept rpath proc exec", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
+    if (unveil("/bin", "x")) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/res", "r")) {
+        perror("unveil");
+        return 1;
+    }
+
+    unveil(nullptr, nullptr);
+
     return app.exec();
 }
 
