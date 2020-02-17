@@ -272,12 +272,11 @@ TextEditorWidget::TextEditorWidget()
 
     m_new_action = GUI::Action::create("New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [this](const GUI::Action&) {
         if (m_document_dirty) {
-            auto save_document_first_box = GUI::MessageBox::construct("Save Document First?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel, window());
-            auto save_document_first_result = save_document_first_box->exec();
-
-            if (save_document_first_result != GUI::Dialog::ExecResult::ExecOK)
+            auto save_document_first_result = GUI::MessageBox::construct("Save Document First?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel, window())->exec();
+            if (save_document_first_result == GUI::Dialog::ExecResult::ExecYes)
+                m_save_action->activate();
+            if (save_document_first_result == GUI::Dialog::ExecResult::ExecCancel)
                 return;
-            m_save_action->activate();
         }
 
         m_document_dirty = false;
@@ -293,11 +292,11 @@ TextEditorWidget::TextEditorWidget()
             return;
 
         if (m_document_dirty) {
-            auto save_document_first_box = GUI::MessageBox::construct("Save Document First?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel, window());
-            auto save_document_first_result = save_document_first_box->exec();
-
-            if (save_document_first_result == GUI::Dialog::ExecResult::ExecOK)
+            auto save_document_first_result = GUI::MessageBox::construct("Save Document First?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel, window())->exec();
+            if (save_document_first_result == GUI::Dialog::ExecResult::ExecYes)
                 m_save_action->activate();
+            if (save_document_first_result == GUI::Dialog::ExecResult::ExecCancel)
+                return;
         }
 
         open_sesame(open_path.value());
@@ -456,8 +455,15 @@ bool TextEditorWidget::request_close()
 {
     if (!m_document_dirty)
         return true;
-    auto result = GUI::MessageBox::show("The document has been modified. Quit without saving?", "Quit without saving?", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel, window());
-    return result == GUI::MessageBox::ExecOK;
+    auto result = GUI::MessageBox::show("The document has been modified. Would you like to save?", "Unsaved changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel, window());
+
+    if (result == GUI::MessageBox::ExecYes)
+        m_save_action->activate();
+
+    if (result == GUI::MessageBox::ExecNo)
+        return true;
+
+    return false;
 }
 
 void TextEditorWidget::drop_event(GUI::DropEvent& event)
