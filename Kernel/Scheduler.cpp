@@ -67,7 +67,6 @@ static u32 time_slice_for(const Thread& thread)
     return 10;
 }
 
-Thread* current;
 Thread* g_finalizer;
 Thread* g_colonel;
 WaitQueue* g_finalizer_wait_queue;
@@ -92,8 +91,8 @@ Thread::JoinBlocker::JoinBlocker(Thread& joinee, void*& joinee_exit_value)
     , m_joinee_exit_value(joinee_exit_value)
 {
     ASSERT(m_joinee.m_joiner == nullptr);
-    m_joinee.m_joiner = current;
-    current->m_joinee = &joinee;
+    m_joinee.m_joiner = Thread::current;
+    Thread::current->m_joinee = &joinee;
 }
 
 bool Thread::JoinBlocker::should_unblock(Thread& joiner, time_t, long)
@@ -320,7 +319,7 @@ bool Scheduler::pick_next()
 
     ASSERT(s_active);
 
-    if (!current) {
+    if (!Thread::current) {
         // XXX: The first ever context_switch() goes to the idle process.
         //      This to setup a reliable place we can return to.
         return context_switch(*g_colonel);
@@ -340,7 +339,7 @@ bool Scheduler::pick_next()
 
     Process::for_each([&](Process& process) {
         if (process.is_dead()) {
-            if (current->pid() != process.pid() && (!process.ppid() || !Process::from_pid(process.ppid()))) {
+            if (Process::current->pid() != process.pid() && (!process.ppid() || !Process::from_pid(process.ppid()))) {
                 auto name = process.name();
                 auto pid = process.pid();
                 auto exit_status = Process::reap(process);
@@ -362,7 +361,7 @@ bool Scheduler::pick_next()
         // FIXME: It would be nice if the Scheduler didn't have to worry about who is "current"
         //        For now, avoid dispatching signals to "current" and do it in a scheduling pass
         //        while some other process is interrupted. Otherwise a mess will be made.
-        if (&thread == current)
+        if (&thread == Thread::current)
             return IterationDecision::Continue;
         // We know how to interrupt blocked processes, but if they are just executing
         // at some random point in the kernel, let them continue.
@@ -442,13 +441,13 @@ bool Scheduler::donate_to(Thread* beneficiary, const char* reason)
         return false;
 
     (void)reason;
-    unsigned ticks_left = current->ticks_left();
+    unsigned ticks_left = Thread::current->ticks_left();
     if (!beneficiary || beneficiary->state() != Thread::Runnable || ticks_left <= 1)
         return yield();
 
     unsigned ticks_to_donate = min(ticks_left - 1, time_slice_for(*beneficiary));
 #ifdef SCHEDULER_DEBUG
-    dbgprintf("%s(%u:%u) donating %u ticks to %s(%u:%u), reason=%s\n", current->process().name().characters(), current->pid(), current->tid(), ticks_to_donate, beneficiary->process().name().characters(), beneficiary->pid(), beneficiary->tid(), reason);
+    dbgprintf("%s(%u:%u) donating %u ticks to %s(%u:%u), reason=%s\n", Process::current->name().characters(), Process::current->pid(), Thread::current->tid(), ticks_to_donate, beneficiary->process().name().characters(), beneficiary->pid(), beneficiary->tid(), reason);
 #endif
     context_switch(*beneficiary);
     beneficiary->set_ticks_left(ticks_to_donate);
@@ -459,7 +458,7 @@ bool Scheduler::donate_to(Thread* beneficiary, const char* reason)
 bool Scheduler::yield()
 {
     InterruptDisabler disabler;
-    ASSERT(current);
+    ASSERT(Thread::current);
     if (!pick_next())
         return false;
     switch_now();
@@ -475,10 +474,10 @@ void Scheduler::pick_next_and_switch_now()
 
 void Scheduler::switch_now()
 {
-    Descriptor& descriptor = get_gdt_entry(current->selector());
+    Descriptor& descriptor = get_gdt_entry(Thread::current->selector());
     descriptor.type = 9;
     asm("sti\n"
-        "ljmp *(%%eax)\n" ::"a"(&current->far_ptr()));
+        "ljmp *(%%eax)\n" ::"a"(&Thread::current->far_ptr()));
 }
 
 bool Scheduler::context_switch(Thread& thread)
@@ -486,31 +485,33 @@ bool Scheduler::context_switch(Thread& thread)
     thread.set_ticks_left(time_slice_for(thread));
     thread.did_schedule();
 
-    if (current == &thread)
+    if (Thread::current == &thread)
         return false;
 
-    if (current) {
+    if (Thread::current) {
         // If the last process hasn't blocked (still marked as running),
         // mark it as runnable for the next round.
-        if (current->state() == Thread::Running)
-            current->set_state(Thread::Runnable);
+        if (Thread::current->state() == Thread::Running)
+            Thread::current->set_state(Thread::Runnable);
 
         asm volatile("fxsave %0"
-                     : "=m"(current->fpu_state()));
+                     : "=m"(Thread::current->fpu_state()));
 
 #ifdef LOG_EVERY_CONTEXT_SWITCH
         dbgprintf("Scheduler: %s(%u:%u) -> %s(%u:%u) [%u] %w:%x\n",
-            current->process().name().characters(), current->process().pid(), current->tid(),
+            Process::current->name().characters(), Process::current->pid(), Thread::current->tid(),
             thread.process().name().characters(), thread.process().pid(), thread.tid(),
             thread.priority(),
             thread.tss().cs, thread.tss().eip);
 #endif
     }
 
-    current = &thread;
+    Thread::current = &thread;
+    Process::current = &thread.process();
+
     thread.set_state(Thread::Running);
 
-    asm volatile("fxrstor %0" ::"m"(current->fpu_state()));
+    asm volatile("fxrstor %0" ::"m"(Thread::current->fpu_state()));
 
     if (!thread.selector()) {
         thread.set_selector(gdt_alloc_entry());
@@ -555,7 +556,7 @@ void Scheduler::prepare_for_iret_to_new_process()
 {
     auto& descriptor = get_gdt_entry(s_redirection.selector);
     descriptor.type = 9;
-    s_redirection.tss.backlink = current->selector();
+    s_redirection.tss.backlink = Thread::current->selector();
     load_task_register(s_redirection.selector);
 }
 
@@ -564,7 +565,7 @@ void Scheduler::prepare_to_modify_tss(Thread& thread)
     // This ensures that a currently running process modifying its own TSS
     // in order to yield() and end up somewhere else doesn't just end up
     // right after the yield().
-    if (current == &thread)
+    if (Thread::current == &thread)
         load_task_register(s_redirection.selector);
 }
 
@@ -587,7 +588,7 @@ void Scheduler::initialize()
 
 void Scheduler::timer_tick(RegisterState& regs)
 {
-    if (!current)
+    if (!Thread::current)
         return;
 
     ++g_uptime;
@@ -597,12 +598,12 @@ void Scheduler::timer_tick(RegisterState& regs)
     tv.tv_usec = PIT::ticks_this_second() * 1000;
     Process::update_info_page_timestamp(tv);
 
-    if (current->process().is_profiling()) {
+    if (Process::current->is_profiling()) {
         SmapDisabler disabler;
-        auto backtrace = current->raw_backtrace(regs.ebp);
+        auto backtrace = Thread::current->raw_backtrace(regs.ebp);
         auto& sample = Profiling::next_sample_slot();
-        sample.pid = current->pid();
-        sample.tid = current->tid();
+        sample.pid = Process::current->pid();
+        sample.tid = Thread::current->tid();
         sample.timestamp = g_uptime;
         for (size_t i = 0; i < min((size_t)backtrace.size(), Profiling::max_stack_frame_count); ++i) {
             sample.frames[i] = backtrace[i];
@@ -611,10 +612,10 @@ void Scheduler::timer_tick(RegisterState& regs)
 
     TimerQueue::the().fire();
 
-    if (current->tick())
+    if (Thread::current->tick())
         return;
 
-    auto& outgoing_tss = current->tss();
+    auto& outgoing_tss = Thread::current->tss();
 
     if (!pick_next())
         return;
@@ -656,7 +657,7 @@ static bool s_should_stop_idling = false;
 
 void Scheduler::stop_idling()
 {
-    if (current != g_colonel)
+    if (Thread::current != g_colonel)
         return;
 
     s_should_stop_idling = true;

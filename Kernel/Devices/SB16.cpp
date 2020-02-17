@@ -171,7 +171,7 @@ void SB16::wait_for_irq()
 {
     cli();
     enable_irq();
-    current->wait_on(m_irq_queue);
+    Thread::current->wait_on(m_irq_queue);
     disable_irq();
 }
 

@@ -84,15 +84,15 @@ Region::~Region()
 
 NonnullOwnPtr<Region> Region::clone()
 {
-    ASSERT(current);
+    ASSERT(Process::current);
 
     // FIXME: What should we do for privately mapped InodeVMObjects?
     if (m_shared || vmobject().is_inode()) {
         ASSERT(!m_stack);
 #ifdef MM_DEBUG
         dbgprintf("%s<%u> Region::clone(): sharing %s (V%p)\n",
-            current->process().name().characters(),
-            current->pid(),
+            Process::current->name().characters(),
+            Process::current->pid(),
             m_name.characters(),
             vaddr().get());
 #endif
@@ -105,8 +105,8 @@ NonnullOwnPtr<Region> Region::clone()
 
 #ifdef MM_DEBUG
     dbgprintf("%s<%u> Region::clone(): cowing %s (V%p)\n",
-        current->process().name().characters(),
-        current->pid(),
+        Process::current->name().characters(),
+        Process::current->pid(),
         m_name.characters(),
         vaddr().get());
 #endif
@@ -392,8 +392,8 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
         return PageFaultResponse::Continue;
     }
 
-    if (current)
-        current->did_zero_fault();
+    if (Thread::current)
+        Thread::current->did_zero_fault();
 
     auto physical_page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
     if (physical_page.is_null()) {
@@ -422,8 +422,8 @@ PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
         return PageFaultResponse::Continue;
     }
 
-    if (current)
-        current->did_cow_fault();
+    if (Thread::current)
+        Thread::current->did_cow_fault();
 
 #ifdef PAGE_FAULT_DEBUG
     dbgprintf("    >> It's a COW page and it's time to COW!\n");
@@ -471,8 +471,8 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
         return PageFaultResponse::Continue;
     }
 
-    if (current)
-        current->did_inode_fault();
+    if (Thread::current)
+        Thread::current->did_inode_fault();
 
 #ifdef MM_DEBUG
     dbgprintf("MM: page_in_from_inode ready to read from inode\n");

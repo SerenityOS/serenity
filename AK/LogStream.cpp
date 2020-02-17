@@ -115,8 +115,8 @@ DebugLogStream dbg()
         stream << "\033[33;1m" << process_name_buffer << '(' << getpid() << ")\033[0m: ";
 #endif
 #if defined(__serenity__) && defined(KERNEL) && !defined(BOOTSTRAPPER)
-    if (Kernel::current)
-        stream << "\033[34;1m[" << *Kernel::current << "]\033[0m: ";
+    if (Kernel::Thread::current)
+        stream << "\033[34;1m[" << *Kernel::Thread::current << "]\033[0m: ";
     else
         stream << "\033[36;1m[Kernel]\033[0m: ";
 #endif

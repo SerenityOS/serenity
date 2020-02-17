@@ -45,7 +45,7 @@ ssize_t InodeFile::read(FileDescription& description, u8* buffer, ssize_t count)
 {
     ssize_t nread = m_inode->read_bytes(description.offset(), count, buffer, &description);
     if (nread > 0)
-        current->did_file_read(nread);
+        Thread::current->did_file_read(nread);
     return nread;
 }
 
@@ -54,7 +54,7 @@ ssize_t InodeFile::write(FileDescription& description, const u8* data, ssize_t c
     ssize_t nwritten = m_inode->write_bytes(description.offset(), count, data, &description);
     if (nwritten > 0) {
         m_inode->set_mtime(kgettimeofday().tv_sec);
-        current->did_file_write(nwritten);
+        Thread::current->did_file_write(nwritten);
     }
     return nwritten;
 }

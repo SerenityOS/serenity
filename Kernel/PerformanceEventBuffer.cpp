@@ -69,7 +69,7 @@ KResult PerformanceEventBuffer::append(int type, uintptr_t arg1, uintptr_t arg2)
     Vector<uintptr_t> backtrace;
     {
         SmapDisabler disabler;
-        backtrace = current->raw_backtrace(ebp);
+        backtrace = Thread::current->raw_backtrace(ebp);
     }
     event.stack_size = min(sizeof(event.stack) / sizeof(uintptr_t), static_cast<size_t>(backtrace.size()));
     memcpy(event.stack, backtrace.data(), event.stack_size * sizeof(uintptr_t));

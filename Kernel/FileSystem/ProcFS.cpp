@@ -292,7 +292,7 @@ Optional<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
     for (auto& region : process.regions()) {
-        if (!region.is_user_accessible() && !current->process().is_superuser())
+        if (!region.is_user_accessible() && !Process::current->is_superuser())
             continue;
         auto region_object = array.add_object();
         region_object.add("readable", region.is_readable());
@@ -399,7 +399,7 @@ Optional<KBuffer> procfs$profile(InodeIdentifier)
     InterruptDisabler disabler;
     KBufferBuilder builder;
     JsonArraySerializer array(builder);
-    bool mask_kernel_addresses = !current->process().is_superuser();
+    bool mask_kernel_addresses = !Process::current->is_superuser();
     Profiling::for_each_sample([&](auto& sample) {
         auto object = array.add_object();
         object.add("pid", sample.pid);
@@ -640,7 +640,7 @@ Optional<KBuffer> procfs$pid_root(InodeIdentifier identifier)
 Optional<KBuffer> procfs$self(InodeIdentifier)
 {
     char buffer[16];
-    sprintf(buffer, "%u", current->pid());
+    sprintf(buffer, "%u", Process::current->pid());
     return KBuffer::copy((const u8*)buffer, strlen(buffer));
 }
 

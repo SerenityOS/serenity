@@ -39,8 +39,8 @@ SlavePTY::SlavePTY(MasterPTY& master, unsigned index)
     , m_index(index)
 {
     sprintf(m_tty_name, "/dev/pts/%u", m_index);
-    set_uid(current->process().uid());
-    set_gid(current->process().gid());
+    set_uid(Process::current->uid());
+    set_gid(Process::current->gid());
     DevPtsFS::register_slave_pty(*this);
     set_size(80, 25);
 }

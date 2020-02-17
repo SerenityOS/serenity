@@ -174,17 +174,17 @@ extern "C" [[noreturn]] void init()
     Process::create_kernel_process(syncd_thread, "syncd", [] {
         for (;;) {
             VFS::the().sync();
-            current->sleep(1 * TICKS_PER_SECOND);
+            Thread::current->sleep(1 * TICKS_PER_SECOND);
         }
     });
 
     Process::create_kernel_process(g_finalizer, "Finalizer", [] {
-        current->set_priority(THREAD_PRIORITY_LOW);
+        Thread::current->set_priority(THREAD_PRIORITY_LOW);
         for (;;) {
             {
                 InterruptDisabler disabler;
                 if (!g_finalizer_has_work)
-                    current->wait_on(*g_finalizer_wait_queue);
+                    Thread::current->wait_on(*g_finalizer_wait_queue);
                 ASSERT(g_finalizer_has_work);
                 g_finalizer_has_work = false;
             }
@@ -303,7 +303,7 @@ void init_stage2()
         hang();
     }
 
-    current->process().set_root_directory(VFS::the().root_custody());
+    Process::current->set_root_directory(VFS::the().root_custody());
 
     dbgprintf("Load ksyms\n");
     load_ksyms();
@@ -356,7 +356,7 @@ void init_stage2()
         Process::create_kernel_process(thread, "NetworkTask", NetworkTask_main);
     }
 
-    current->process().sys$exit(0);
+    Process::current->sys$exit(0);
     ASSERT_NOT_REACHED();
 }
 

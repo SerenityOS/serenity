@@ -34,7 +34,6 @@ namespace Kernel {
 NonnullRefPtr<InodeVMObject> InodeVMObject::create_with_inode(Inode& inode)
 {
     size_t size = inode.size();
-    InterruptDisabler disabler;
     if (inode.vmobject())
         return *inode.vmobject();
     auto vmobject = adopt(*new InodeVMObject(inode, size));

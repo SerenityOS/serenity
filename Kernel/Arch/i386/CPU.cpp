@@ -159,7 +159,7 @@ static void dump(const RegisterState& regs)
 {
     u16 ss;
     u32 esp;
-    if (!current || current->process().is_ring0()) {
+    if (!Process::current || Process::current->is_ring0()) {
         ss = regs.ss;
         esp = regs.esp;
     } else {
@@ -186,7 +186,7 @@ static void dump(const RegisterState& regs)
         : "=a"(cr4));
     kprintf("cr0=%08x cr2=%08x cr3=%08x cr4=%08x\n", cr0, cr2, cr3, cr4);
 
-    if (current && current->process().validate_read((void*)regs.eip, 8)) {
+    if (Process::current && Process::current->validate_read((void*)regs.eip, 8)) {
         SmapDisabler disabler;
         u8* codeptr = (u8*)regs.eip;
         kprintf("code: %02x %02x %02x %02x %02x %02x %02x %02x\n",
@@ -203,31 +203,31 @@ static void dump(const RegisterState& regs)
 
 void handle_crash(RegisterState& regs, const char* description, int signal)
 {
-    if (!current) {
+    if (!Process::current) {
         kprintf("%s with !current\n", description);
         hang();
     }
 
     // If a process crashed while inspecting another process,
     // make sure we switch back to the right page tables.
-    MM.enter_process_paging_scope(current->process());
+    MM.enter_process_paging_scope(*Process::current);
 
     kprintf("\033[31;1mCRASH: %s. %s: %s(%u)\033[0m\n",
         description,
-        current->process().is_ring0() ? "Kernel" : "Process",
-        current->process().name().characters(),
-        current->pid());
+        Process::current->is_ring0() ? "Kernel" : "Process",
+        Process::current->name().characters(),
+        Process::current->pid());
 
     dump(regs);
 
-    if (current->process().is_ring0()) {
+    if (Process::current->is_ring0()) {
         kprintf("Oh shit, we've crashed in ring 0 :(\n");
         dump_backtrace();
         hang();
     }
 
     cli();
-    current->process().crash(signal, regs.eip);
+    Process::current->crash(signal, regs.eip);
 }
 
 EH_ENTRY_NO_CODE(6, illegal_instruction);
@@ -274,8 +274,8 @@ void page_fault_handler(RegisterState regs)
 #ifdef PAGE_FAULT_DEBUG
     u32 fault_page_directory = read_cr3();
     dbgprintf("%s(%u): ring%u %s page fault in PD=%x, %s%s V%08x\n",
-        current ? current->process().name().characters() : "(none)",
-        current ? current->pid() : 0,
+        current ? Process::current->name().characters() : "(none)",
+        current ? Process::current->pid() : 0,
         regs.cs & 3,
         regs.exception_code & 1 ? "PV" : "NP",
         fault_page_directory,
@@ -289,7 +289,7 @@ void page_fault_handler(RegisterState regs)
 #endif
 
     bool faulted_in_userspace = (regs.cs & 3) == 3;
-    if (faulted_in_userspace && !MM.validate_user_stack(current->process(), VirtualAddress(regs.userspace_esp))) {
+    if (faulted_in_userspace && !MM.validate_user_stack(*Process::current, VirtualAddress(regs.userspace_esp))) {
         dbgprintf("Invalid stack pointer: %p\n", regs.userspace_esp);
         handle_crash(regs, "Bad stack on page fault", SIGSTKFLT);
         ASSERT_NOT_REACHED();
@@ -298,15 +298,15 @@ void page_fault_handler(RegisterState regs)
     auto response = MM.handle_page_fault(PageFault(regs.exception_code, VirtualAddress(fault_address)));
 
     if (response == PageFaultResponse::ShouldCrash) {
-        if (current->has_signal_handler(SIGSEGV)) {
-            current->send_urgent_signal_to_self(SIGSEGV);
+        if (Thread::current->has_signal_handler(SIGSEGV)) {
+            Thread::current->send_urgent_signal_to_self(SIGSEGV);
             return;
         }
 
         kprintf("\033[31;1m%s(%u:%u) Unrecoverable page fault, %s%s%s address %p\033[0m\n",
-            current->process().name().characters(),
-            current->pid(),
-            current->tid(),
+            Process::current->name().characters(),
+            Process::current->pid(),
+            Thread::current->tid(),
             regs.exception_code & PageFaultFlags::ReservedBitViolation ? "reserved bit violation / " : "",
             regs.exception_code & PageFaultFlags::InstructionFetch ? "instruction fetch / " : "",
             regs.exception_code & PageFaultFlags::Write ? "write to" : "read from",
@@ -720,8 +720,8 @@ void __assertion_failed(const char* msg, const char* file, unsigned line, const 
 
     // Switch back to the current process's page tables if there are any.
     // Otherwise stack walking will be a disaster.
-    if (Kernel::current)
-        MM.enter_process_paging_scope(Kernel::current->process());
+    if (Process::current)
+        MM.enter_process_paging_scope(*Process::current);
 
     Kernel::dump_backtrace();
     asm volatile("hlt");

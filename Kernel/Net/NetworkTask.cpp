@@ -109,7 +109,7 @@ void NetworkTask_main()
     for (;;) {
         size_t packet_size = dequeue_packet(buffer, buffer_size);
         if (!packet_size) {
-            current->wait_on(packet_wait_queue);
+            Thread::current->wait_on(packet_wait_queue);
             continue;
         }
         if (packet_size < sizeof(EthernetFrameHeader)) {

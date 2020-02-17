@@ -97,6 +97,8 @@ class Process : public InlineLinkedListNode<Process> {
     friend class Thread;
 
 public:
+    static Process* current;
+
     static Process* create_kernel_process(Thread*& first_thread, String&& name, void (*entry)());
     static Process* create_user_process(Thread*& first_thread, const String& path, uid_t, gid_t, pid_t ppid, int& error, Vector<String>&& arguments = Vector<String>(), Vector<String>&& environment = Vector<String>(), TTY* = nullptr);
     ~Process();
@@ -519,14 +521,14 @@ public:
     ProcessInspectionHandle(Process& process)
         : m_process(process)
     {
-        if (&process != &current->process()) {
+        if (&process != Process::current) {
             InterruptDisabler disabler;
             m_process.increment_inspector_count({});
         }
     }
     ~ProcessInspectionHandle()
     {
-        if (&m_process != &current->process()) {
+        if (&m_process != Process::current) {
             InterruptDisabler disabler;
             m_process.decrement_inspector_count({});
         }
@@ -645,21 +647,21 @@ inline u32 Thread::effective_priority() const
 
 #define REQUIRE_NO_PROMISES                       \
     do {                                          \
-        if (current->process().has_promises()) {  \
+        if (Process::current->has_promises()) {  \
             dbg() << "Has made a promise";        \
             cli();                                \
-            current->process().crash(SIGABRT, 0); \
+            Process::current->crash(SIGABRT, 0); \
             ASSERT_NOT_REACHED();                 \
         }                                         \
     } while (0)
 
 #define REQUIRE_PROMISE(promise)                                    \
     do {                                                            \
-        if (current->process().has_promises()                       \
-            && !current->process().has_promised(Pledge::promise)) { \
+        if (Process::current->has_promises()                       \
+            && !Process::current->has_promised(Pledge::promise)) { \
             dbg() << "Has not pledged " << #promise;                \
             cli();                                                  \
-            current->process().crash(SIGABRT, 0);                   \
+            Process::current->crash(SIGABRT, 0);                   \
             ASSERT_NOT_REACHED();                                   \
         }                                                           \
     } while (0)

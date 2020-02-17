@@ -395,7 +395,7 @@ void E1000NetworkAdapter::send_raw(const u8* data, size_t length)
             sti();
             break;
         }
-        current->wait_on(m_wait_queue);
+        Thread::current->wait_on(m_wait_queue);
     }
 #ifdef E1000_DEBUG
     kprintf("E1000: Sent packet, status is now %b!\n", descriptor.status);
