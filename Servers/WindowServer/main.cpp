@@ -48,11 +48,6 @@ int main(int, char**)
         return 1;
     }
 
-    if (unveil("/etc/passwd", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
     if (unveil("/tmp", "cw") < 0) {
         perror("unveil");
         return 1;
@@ -106,11 +101,6 @@ int main(int, char**)
     }
 
     if (unveil("/dev", "") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/bin", "x") < 0) {
         perror("unveil");
         return 1;
     }
