@@ -34,6 +34,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Bitmap.h>
 #include <stdio.h>
 #include <sys/utsname.h>
@@ -56,7 +57,6 @@ struct ThemeMetadata {
 
 Color g_menu_selection_color;
 
-int g_theme_index { 0 };
 Vector<ThemeMetadata> g_themes;
 RefPtr<GUI::Menu> g_themes_menu;
 
@@ -67,16 +67,9 @@ int main(int argc, char** argv)
     GUI::Application app(argc, argv);
 
     auto menu = build_system_menu();
+    menu->realize_menu_if_needed();
 
-    auto menubar = make<GUI::MenuBar>();
-    menubar->add_menu(move(menu));
-
-    app.set_menubar(move(menubar));
-
-    // FIXME: This window is just so we can see that the menu works.
-    //        Once we have a way to make this the default system menu we can drop this.
-    auto window = GUI::Window::construct();
-    window->show();
+    GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetSystemMenu>(menu->menu_id());
 
     return app.exec();
 }
@@ -163,7 +156,8 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
             g_themes_menu->add_action(GUI::Action::create(theme.name, [theme_identifier](auto&) {
                 auto& theme = g_themes[theme_identifier];
                 dbg() << "Theme switched to " << theme.name << " at path " << theme.path;
-                // FIXME: Tell WindowServer to switch theme!
+                auto response = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetSystemTheme>(theme.path, theme.name);
+                ASSERT(response->success());
             }));
             ++theme_identifier;
         }
