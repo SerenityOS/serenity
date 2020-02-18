@@ -25,9 +25,15 @@
  */
 
 #include <stdio.h>
+#include <unistd.h>
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     for (int i = 1; i < argc; ++i) {
         fputs(argv[i], stdout);
         if (i != argc - 1)
