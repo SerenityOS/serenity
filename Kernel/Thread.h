@@ -440,8 +440,9 @@ private:
     friend class WaitQueue;
     bool unlock_process_if_locked();
     void relock_process();
-
     String backtrace_impl() const;
+    void reset_fpu_state();
+
     Process& m_process;
     int m_tid { -1 };
     TSS32 m_tss;
