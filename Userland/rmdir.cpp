@@ -30,6 +30,11 @@
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio cpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     if (argc != 2) {
         fprintf(stderr, "usage: rmdir <path>\n");
         return 1;
