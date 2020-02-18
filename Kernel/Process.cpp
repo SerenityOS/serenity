@@ -3529,10 +3529,7 @@ int Process::sys$create_shared_buffer(int size, void** buffer)
     shared_buffer->share_with(m_pid);
 
     void* address = shared_buffer->ref_for_process_and_get_address(*this);
-    {
-        SmapDisabler disabler;
-        *buffer = address;
-    }
+    copy_to_user(buffer, &address);
     ASSERT((int)shared_buffer->size() >= size);
 #ifdef SHARED_BUFFER_DEBUG
     kprintf("%s(%u): Created shared buffer %d @ %p (%u bytes, vmobject is %u)\n", name().characters(), pid(), shared_buffer_id, *buffer, size, shared_buffer->size());
