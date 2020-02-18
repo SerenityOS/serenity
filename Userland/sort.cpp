@@ -32,6 +32,11 @@
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio", nullptr) > 0) {
+        perror("pledge");
+        return 1;
+    }
+
     UNUSED_PARAM(argc);
     UNUSED_PARAM(argv);
 
