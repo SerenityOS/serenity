@@ -86,4 +86,10 @@ bool Lock::force_unlock_if_locked()
     return true;
 }
 
+void Lock::clear_waiters()
+{
+    InterruptDisabler disabler;
+    m_queue.clear();
+}
+
 }

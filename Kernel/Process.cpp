@@ -760,21 +760,45 @@ pid_t Process::sys$fork(RegisterState& regs)
     return child->pid();
 }
 
+void Process::kill_threads_except_self()
+{
+    InterruptDisabler disabler;
+
+    if (m_thread_count <= 1)
+        return;
+
+    for_each_thread([&](Thread& thread) {
+        if (&thread == Thread::current
+                || thread.state() == Thread::State::Dead
+                || thread.state() == Thread::State::Dying)
+            return IterationDecision::Continue;
+
+        // At this point, we have no joiner anymore
+        thread.m_joiner = nullptr;
+        thread.set_should_die();
+
+        if (thread.state() != Thread::State::Dead)
+            thread.set_state(Thread::State::Dying);
+
+        return IterationDecision::Continue;
+    });
+
+    big_lock().clear_waiters();
+}
+
+void Process::kill_all_threads()
+{
+    for_each_thread([&](Thread& thread) {
+        thread.set_should_die();
+        return IterationDecision::Continue;
+    });
+}
+
 int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description)
 {
     ASSERT(is_ring3());
     auto path = main_program_description->absolute_path();
     dbg() << "do_exec(" << path << ")";
-    // FIXME(Thread): Kill any threads the moment we commit to the exec().
-    if (thread_count() != 1) {
-        dbgprintf("Gonna die because I have many threads! These are the threads:\n");
-        for_each_thread([](Thread& thread) {
-            dbgprintf("Thread{%p}: TID=%d, PID=%d\n", &thread, thread.tid(), thread.pid());
-            return IterationDecision::Continue;
-        });
-        ASSERT(thread_count() == 1);
-        ASSERT_NOT_REACHED();
-    }
 
     size_t total_blob_size = 0;
     for (auto& a : arguments)
@@ -807,6 +831,10 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     // Disable profiling temporarily in case it's running on this process.
     bool was_profiling = is_profiling();
     TemporaryChange profiling_disabler(m_profiling, false);
+
+    // Mark this thread as the current thread that does exec
+    // No other thread from this process will be scheduled to run
+    m_exec_tid = Thread::current->tid();
 
     auto old_page_directory = move(m_page_directory);
     auto old_regions = move(m_regions);
@@ -854,9 +882,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
             m_regions = move(old_regions);
             MM.enter_process_paging_scope(*this);
         });
-
         loader = make<ELFLoader>(region->vaddr().as_ptr(), loader_metadata.size);
-
         // Load the correct executable -- either interp or main program.
         // FIXME: Once we actually load both interp and main, we'll need to be more clever about this.
         //     In that case, both will be ET_DYN objects, so they'll both be completely relocatable.
@@ -919,6 +945,8 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
         // NOTE: At this point, we've committed to the new executable.
         entry_eip = loader->entry().offset(totally_random_offset).get();
+
+        kill_threads_except_self();
 
 #ifdef EXEC_DEBUG
         kprintf("Memory layout after ELF load:");
@@ -999,6 +1027,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     m_master_tls_size = master_tls_size;
     m_master_tls_alignment = master_tls_alignment;
 
+    m_pid = new_main_thread->tid();
     new_main_thread->make_thread_specific_region({});
     new_main_thread->reset_fpu_state();
 
@@ -1198,6 +1227,9 @@ int Process::exec(String path, Vector<String> arguments, Vector<String> environm
     // The bulk of exec() is done by do_exec(), which ensures that all locals
     // are cleaned up by the time we yield-teleport below.
     int rc = do_exec(move(description), move(arguments), move(environment), move(interpreter_description));
+
+    m_exec_tid = 0;
+
     if (rc < 0)
         return rc;
 
@@ -1211,6 +1243,7 @@ int Process::exec(String path, Vector<String> arguments, Vector<String> environm
 int Process::sys$execve(const Syscall::SC_execve_params* user_params)
 {
     REQUIRE_PROMISE(exec);
+
     // NOTE: Be extremely careful with allocating any kernel memory in exec().
     //       On success, the kernel stack will be lost.
     Syscall::SC_execve_params params;
@@ -3053,14 +3086,7 @@ void Process::die()
     if (m_tracer)
         m_tracer->set_dead();
 
-    {
-        // Tell the threads to unwind and die.
-        InterruptDisabler disabler;
-        for_each_thread([](Thread& thread) {
-            thread.set_should_die();
-            return IterationDecision::Continue;
-        });
-    }
+    kill_all_threads();
 }
 
 size_t Process::amount_dirty_private() const

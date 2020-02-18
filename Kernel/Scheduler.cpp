@@ -409,6 +409,9 @@ bool Scheduler::pick_next()
         if (thread->process().is_being_inspected())
             continue;
 
+        if (thread->process().exec_tid() && thread->process().exec_tid() != thread->tid())
+            continue;
+
         ASSERT(thread->state() == Thread::Runnable || thread->state() == Thread::Running);
 
         if (!thread_to_schedule) {

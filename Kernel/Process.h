@@ -141,6 +141,8 @@ public:
     gid_t egid() const { return m_egid; }
     pid_t ppid() const { return m_ppid; }
 
+    pid_t exec_tid() const { return m_exec_tid; }
+
     mode_t umask() const { return m_umask; }
 
     bool in_group(gid_t) const;
@@ -417,6 +419,9 @@ private:
 
     Region& add_region(NonnullOwnPtr<Region>);
 
+    void kill_threads_except_self();
+    void kill_all_threads();
+
     int do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description);
     ssize_t do_write(FileDescription&, const u8*, int data_size);
 
@@ -447,6 +452,8 @@ private:
     gid_t m_egid { 0 };
     pid_t m_sid { 0 };
     pid_t m_pgid { 0 };
+
+    pid_t m_exec_tid { 0 };
 
     static const int m_max_open_file_descriptors { FD_SETSIZE };
 

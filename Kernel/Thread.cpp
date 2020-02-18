@@ -162,11 +162,17 @@ Thread::~Thread()
 void Thread::unblock()
 {
     if (current == this) {
-        set_state(Thread::Running);
+        if (m_should_die)
+            set_state(Thread::Dying);
+        else
+            set_state(Thread::Running);
         return;
     }
     ASSERT(m_state != Thread::Runnable && m_state != Thread::Running);
-    set_state(Thread::Runnable);
+    if (m_should_die)
+        set_state(Thread::Dying);
+    else
+        set_state(Thread::Runnable);
 }
 
 void Thread::set_should_die()
