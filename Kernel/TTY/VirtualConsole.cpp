@@ -65,6 +65,14 @@ void VirtualConsole::initialize()
     s_active_console = -1;
 }
 
+void VirtualConsole::set_graphical(bool graphical)
+{
+    if (graphical)
+        set_vga_start_row(0);
+
+    m_graphical = graphical;
+}
+
 VirtualConsole::VirtualConsole(unsigned index, InitialContents initial_contents)
     : TTY(4, index)
     , m_index(index)
