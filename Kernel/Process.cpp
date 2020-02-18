@@ -992,6 +992,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     m_master_tls_alignment = master_tls_alignment;
 
     new_main_thread->make_thread_specific_region({});
+    new_main_thread->reset_fpu_state();
 
     memset(&tss, 0, sizeof(TSS32));
     tss.iomapbase = sizeof(TSS32);

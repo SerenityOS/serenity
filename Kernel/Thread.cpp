@@ -94,7 +94,7 @@ Thread::Thread(Process& process)
 #endif
     set_default_signal_dispositions();
     m_fpu_state = (FPUState*)kmalloc_aligned(sizeof(FPUState), 16);
-    memcpy(m_fpu_state, &s_clean_fpu_state, sizeof(FPUState));
+    reset_fpu_state();
     memset(&m_tss, 0, sizeof(m_tss));
     m_tss.iomapbase = sizeof(TSS32);
 
@@ -877,6 +877,11 @@ Thread* Thread::from_tid(int tid)
         return IterationDecision::Continue;
     });
     return found_thread;
+}
+
+void Thread::reset_fpu_state()
+{
+    memcpy(m_fpu_state, &s_clean_fpu_state, sizeof(FPUState));
 }
 
 }
