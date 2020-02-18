@@ -726,23 +726,11 @@ pid_t Process::sys$fork(RegisterState& regs)
 
     child->m_extra_gids = m_extra_gids;
 
-    auto& child_tss = child_first_thread->m_tss;
-    child_tss.eax = 0; // fork() returns 0 in the child :^)
-    child_tss.ebx = regs.ebx;
-    child_tss.ecx = regs.ecx;
-    child_tss.edx = regs.edx;
-    child_tss.ebp = regs.ebp;
-    child_tss.esp = regs.userspace_esp;
-    child_tss.esi = regs.esi;
-    child_tss.edi = regs.edi;
-    child_tss.eflags = regs.eflags;
-    child_tss.eip = regs.eip;
-    child_tss.cs = regs.cs;
-    child_tss.ds = regs.ds;
-    child_tss.es = regs.es;
-    child_tss.fs = regs.fs;
-    child_tss.gs = regs.gs;
-    child_tss.ss = regs.userspace_ss;
+    auto& child_regs = child_first_thread->get_register_dump_from_stack();
+    u32 old_esp0 = child_regs.esp;
+    child_regs = regs;
+    child_regs.eax = 0; // fork() returns 0 in the child :^)
+    child_regs.esp = old_esp0;
 
 #ifdef FORK_DEBUG
     dbgprintf("fork: child will begin executing at %w:%x with stack %w:%x, kstack %w:%x\n", child_tss.cs, child_tss.eip, child_tss.ss, child_tss.esp, child_tss.ss0, child_tss.esp0);
@@ -971,22 +959,14 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     //       and we don't want to deal with faults after this point.
     u32 new_userspace_esp = new_main_thread->make_userspace_stack_for_main_thread(move(arguments), move(environment));
 
-    // We cli() manually here because we don't want to get interrupted between do_exec() and Schedule::yield().
-    // The reason is that the task redirection we've set up above will be clobbered by the timer IRQ.
-    // If we used an InterruptDisabler that sti()'d on exit, we might timer tick'd too soon in exec().
-    if (Process::current == this)
-        cli();
-
     // NOTE: Be careful to not trigger any page faults below!
-
-    Scheduler::prepare_to_modify_tss(*new_main_thread);
 
     m_name = parts.take_last();
     new_main_thread->set_name(m_name);
 
-    auto& tss = new_main_thread->m_tss;
+    auto& regs = new_main_thread->get_register_dump_from_stack();
 
-    u32 old_esp0 = tss.esp0;
+    u32 old_esp0 = regs.esp;
 
     m_master_tls_size = master_tls_size;
     m_master_tls_alignment = master_tls_alignment;
@@ -994,29 +974,28 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     new_main_thread->make_thread_specific_region({});
     new_main_thread->reset_fpu_state();
 
-    memset(&tss, 0, sizeof(TSS32));
-    tss.iomapbase = sizeof(TSS32);
-
-    tss.eflags = 0x0202;
-    tss.eip = entry_eip;
-    tss.cs = 0x1b;
-    tss.ds = 0x23;
-    tss.es = 0x23;
-    tss.fs = 0x23;
-    tss.gs = thread_specific_selector() | 3;
-    tss.ss = 0x23;
-    tss.cr3 = page_directory().cr3();
-    tss.esp = new_userspace_esp;
-    tss.ss0 = 0x10;
-    tss.esp0 = old_esp0;
-    tss.ss2 = m_pid;
+    regs.eflags = 0x0202;
+    regs.eip = entry_eip;
+    regs.cs = 0x1b;
+    regs.ds = 0x23;
+    regs.es = 0x23;
+    regs.fs = 0x23;
+    regs.gs = thread_specific_selector() | 3;
+    regs.userspace_ss = 0x23;
+    new_main_thread->set_cr3(page_directory().cr3());
+    regs.userspace_esp = new_userspace_esp;
+    regs.ebp = new_userspace_esp;
+    regs.ss = 0x10;
+    regs.esp = old_esp0;
 
 #ifdef TASK_DEBUG
     kprintf("Process %u (%s) exec'd %s @ %p\n", pid(), name().characters(), path.characters(), tss.eip);
 #endif
 
+    // We need to yield here to ensure that the tss, tls and page directory
+    // are properly set up.
     new_main_thread->set_state(Thread::State::Skip1SchedulerPass);
-    big_lock().force_unlock_if_locked();
+    Scheduler::yield();
     return 0;
 }
 
@@ -1190,10 +1169,6 @@ int Process::exec(String path, Vector<String> arguments, Vector<String> environm
     if (rc < 0)
         return rc;
 
-    if (Process::current == this) {
-        Scheduler::yield();
-        ASSERT_NOT_REACHED();
-    }
     return 0;
 }
 
@@ -1243,7 +1218,6 @@ int Process::sys$execve(const Syscall::SC_execve_params* user_params)
         return -EFAULT;
 
     int rc = exec(move(path), move(arguments), move(environment));
-    ASSERT(rc < 0); // We should never continue after a successful exec!
     return rc;
 }
 
@@ -1297,7 +1271,7 @@ Process* Process::create_user_process(Thread*& first_thread, const String& path,
 Process* Process::create_kernel_process(Thread*& first_thread, String&& name, void (*e)())
 {
     auto* process = new Process(first_thread, move(name), (uid_t)0, (gid_t)0, (pid_t)0, Ring0);
-    first_thread->tss().eip = (uintptr_t)e;
+    first_thread->get_register_dump_from_stack().eip = (uintptr_t)e;
 
     if (process->pid() != 0) {
         InterruptDisabler disabler;
@@ -3729,11 +3703,11 @@ int Process::sys$create_thread(void* (*entry)(void*), void* argument, const Sysc
     thread->set_priority(requested_thread_priority);
     thread->set_joinable(is_thread_joinable);
 
-    auto& tss = thread->tss();
-    tss.eip = (uintptr_t)entry;
-    tss.eflags = 0x0202;
-    tss.cr3 = page_directory().cr3();
-    tss.esp = user_stack_address;
+    auto& regs = thread->get_register_dump_from_stack();
+    regs.eip = (uintptr_t)entry;
+    regs.eflags = 0x0202;
+    thread->set_cr3(page_directory().cr3());
+    regs.userspace_esp = user_stack_address;
 
     // NOTE: The stack needs to be 16-byte aligned.
     thread->push_value_on_stack((uintptr_t)argument);

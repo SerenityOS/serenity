@@ -33,11 +33,6 @@ namespace Kernel {
 void Lock::lock()
 {
     ASSERT(!Scheduler::is_active());
-    if (!are_interrupts_enabled()) {
-        kprintf("Interrupts disabled when trying to take Lock{%s}\n", m_name);
-        dump_backtrace();
-        hang();
-    }
     for (;;) {
         bool expected = false;
         if (m_lock.compare_exchange_strong(expected, true, AK::memory_order_acq_rel)) {

@@ -478,7 +478,7 @@ void MemoryManager::enter_process_paging_scope(Process& process)
     ASSERT(Thread::current);
     InterruptDisabler disabler;
 
-    Thread::current->tss().cr3 = process.page_directory().cr3();
+    Thread::current->set_cr3(process.page_directory().cr3());
     write_cr3(process.page_directory().cr3());
 }
 
@@ -683,7 +683,7 @@ ProcessPagingScope::ProcessPagingScope(Process& process)
 ProcessPagingScope::~ProcessPagingScope()
 {
     InterruptDisabler disabler;
-    Thread::current->tss().cr3 = m_previous_cr3;
+    Thread::current->set_cr3(m_previous_cr3);
     write_cr3(m_previous_cr3);
 }
 

@@ -78,6 +78,17 @@ HashTable<Thread*>& thread_table()
     return *table;
 }
 
+extern "C" void thread_trampoline();
+asm("thread_trampoline:\n"
+    "   add $0x4, %esp\n" // "popl %ss"
+    "	popl %gs\n"
+    "	popl %fs\n"
+    "	popl %es\n"
+    "	popl %ds\n"
+    "	popa\n"
+    "	add $0x4, %esp\n"
+    "	iret\n");
+
 Thread::Thread(Process& process)
     : m_process(process)
     , m_name(process.name())
@@ -95,11 +106,17 @@ Thread::Thread(Process& process)
     set_default_signal_dispositions();
     m_fpu_state = (FPUState*)kmalloc_aligned(sizeof(FPUState), 16);
     reset_fpu_state();
-    memset(&m_tss, 0, sizeof(m_tss));
-    m_tss.iomapbase = sizeof(TSS32);
+
+    m_kernel_stack_region = MM.allocate_kernel_region(default_kernel_stack_size, String::format("Kernel Stack (Thread %d)", m_tid), Region::Access::Read | Region::Access::Write, false, true);
+    m_kernel_stack_region->set_stack(true);
+    m_kernel_stack_base = m_kernel_stack_region->vaddr().get();
+    m_kernel_stack_top = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & 0xfffffff8u;
+
+    auto& regs = get_register_dump_from_stack();
+    memset(&regs, 0, sizeof(RegisterState));
 
     // Only IF is set when a process boots.
-    m_tss.eflags = 0x0202;
+    regs.eflags = 0x0202;
     u16 cs, ds, ss, gs;
 
     if (m_process.is_ring0()) {
@@ -114,27 +131,19 @@ Thread::Thread(Process& process)
         gs = thread_specific_selector() | 3;
     }
 
-    m_tss.ds = ds;
-    m_tss.es = ds;
-    m_tss.fs = ds;
-    m_tss.gs = gs;
-    m_tss.ss = ss;
-    m_tss.cs = cs;
+    regs.ds = ds;
+    regs.es = ds;
+    regs.fs = ds;
+    regs.gs = gs;
+    regs.ss = ss;
+    regs.cs = cs;
 
-    m_tss.cr3 = m_process.page_directory().cr3();
+    m_cr3 = m_process.page_directory().cr3();
 
-    m_kernel_stack_region = MM.allocate_kernel_region(default_kernel_stack_size, String::format("Kernel Stack (Thread %d)", m_tid), Region::Access::Read | Region::Access::Write, false, true);
-    m_kernel_stack_region->set_stack(true);
-    m_kernel_stack_base = m_kernel_stack_region->vaddr().get();
-    m_kernel_stack_top = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & 0xfffffff8u;
-
-    if (m_process.is_ring0()) {
-        m_tss.esp = m_kernel_stack_top;
-    } else {
+    if (m_process.is_ring3()) {
         // Ring 3 processes get a separate stack for ring 0.
         // The ring 3 stack will be assigned by exec().
-        m_tss.ss0 = 0x10;
-        m_tss.esp0 = m_kernel_stack_top;
+        regs.userspace_ss = 0x23;
     }
 
     if (m_process.pid() != 0) {
@@ -142,6 +151,9 @@ Thread::Thread(Process& process)
         thread_table().set(this);
         Scheduler::init_thread(*this);
     }
+
+    m_stored_eip = (uintptr_t)thread_trampoline;
+    m_stored_esp = (uintptr_t)(&get_register_dump_from_stack());
 }
 
 Thread::~Thread()
@@ -184,17 +196,10 @@ void Thread::set_should_die()
     m_should_die = true;
 
     if (is_blocked()) {
-        ASSERT(in_kernel());
         ASSERT(m_blocker != nullptr);
         // We're blocked in the kernel.
         m_blocker->set_interrupted_by_death();
         unblock();
-    } else if (!in_kernel()) {
-        // We're executing in userspace (and we're clearly
-        // not the current thread). No need to unwind, so
-        // set the state to dying right away. This also
-        // makes sure we won't be scheduled anymore.
-        set_state(Thread::State::Dying);
     }
 }
 
@@ -211,7 +216,7 @@ void Thread::die_if_needed()
     set_state(Thread::State::Dying);
 
     if (!Scheduler::is_active())
-        Scheduler::pick_next_and_switch_now();
+        Scheduler::yield();
 }
 
 void Thread::yield_without_holding_big_lock()
@@ -326,7 +331,7 @@ void Thread::finalize_dying_threads()
 bool Thread::tick()
 {
     ++m_ticks;
-    if (tss().cs & 3)
+    if (get_register_dump_from_stack().cs & 3)
         ++m_process.m_ticks_in_user;
     else
         ++m_process.m_ticks_in_kernel;
@@ -572,30 +577,10 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
         ASSERT((*stack % 16) == 0);
     };
 
-    // We now place the thread state on the userspace stack.
-    // Note that when we are in the kernel (ie. blocking) we cannot use the
-    // tss, as that will contain kernel state; instead, we use a RegisterState.
-    // Conversely, when the thread isn't blocking the RegisterState may not be
-    // valid (fork, exec etc) but the tss will, so we use that instead.
-    if (!in_kernel()) {
-        u32* stack = &m_tss.esp;
-        setup_stack(m_tss, stack);
-
-        Scheduler::prepare_to_modify_tss(*this);
-        m_tss.cs = 0x1b;
-        m_tss.ds = 0x23;
-        m_tss.es = 0x23;
-        m_tss.fs = 0x23;
-        m_tss.gs = thread_specific_selector() | 3;
-        m_tss.eip = g_return_to_ring3_from_signal_trampoline.get();
-        // FIXME: This state is such a hack. It avoids trouble if 'current' is the process receiving a signal.
-        set_state(Skip1SchedulerPass);
-    } else {
-        auto& regs = get_register_dump_from_stack();
-        u32* stack = &regs.userspace_esp;
-        setup_stack(regs, stack);
-        regs.eip = g_return_to_ring3_from_signal_trampoline.get();
-    }
+    auto& regs = get_register_dump_from_stack();
+    u32* stack = &regs.userspace_esp;
+    setup_stack(regs, stack);
+    regs.eip = g_return_to_ring3_from_signal_trampoline.get();
 
 #ifdef SIGNAL_DEBUG
     kprintf("signal: Okay, %s(%u) {%s} has been primed with signal handler %w:%x\n", process().name().characters(), pid(), state_string(), m_tss.cs, m_tss.eip);
@@ -613,12 +598,13 @@ void Thread::set_default_signal_dispositions()
 
 void Thread::push_value_on_stack(uintptr_t value)
 {
-    m_tss.esp -= 4;
-    uintptr_t* stack_ptr = (uintptr_t*)m_tss.esp;
+    auto& regs = get_register_dump_from_stack();
+    regs.userspace_esp -= 4;
+    uintptr_t* stack_ptr = (uintptr_t*)regs.userspace_esp;
     copy_to_user(stack_ptr, &value);
 }
 
-RegisterState& Thread::get_register_dump_from_stack()
+RegisterState& Thread::get_register_dump_from_stack() const
 {
     // The userspace registers should be stored at the top of the stack
     // We have to subtract 2 because the processor decrements the kernel
@@ -775,8 +761,9 @@ String Thread::backtrace_impl() const
         asm volatile("movl %%ebp, %%eax"
                      : "=a"(start_frame));
     } else {
+        auto& regs = get_register_dump_from_stack();
         start_frame = frame_ptr();
-        recognized_symbols.append({ tss().eip, ksymbolicate(tss().eip) });
+        recognized_symbols.append({ regs.eip, ksymbolicate(regs.eip) });
     }
 
     auto& process = const_cast<Process&>(this->process());
@@ -843,17 +830,20 @@ const LogStream& operator<<(const LogStream& stream, const Thread& value)
 
 void Thread::wait_on(WaitQueue& queue, Atomic<bool>* lock, Thread* beneficiary, const char* reason)
 {
-    cli();
-    bool did_unlock = unlock_process_if_locked();
-    if (lock)
-        *lock = false;
-    set_state(State::Queued);
-    queue.enqueue(*current);
-    // Yield and wait for the queue to wake us up again.
-    if (beneficiary)
-        Scheduler::donate_to(beneficiary, reason);
-    else
-        Scheduler::yield();
+    bool did_unlock = false;
+    {
+        InterruptDisabler disabler;
+        did_unlock = unlock_process_if_locked();
+        if (lock)
+            *lock = false;
+        set_state(State::Queued);
+        queue.enqueue(*current);
+        // Yield and wait for the queue to wake us up again.
+        if (beneficiary)
+            Scheduler::donate_to(beneficiary, reason);
+        else
+            Scheduler::yield();
+    }
     // We've unblocked, relock the process if needed and carry on.
     if (did_unlock)
         relock_process();

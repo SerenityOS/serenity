@@ -310,7 +310,7 @@ void Thread::consider_unblock(time_t now_sec, long now_usec)
     }
 }
 
-bool Scheduler::pick_next()
+Thread& Scheduler::pick_next()
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(!s_active);
@@ -320,9 +320,9 @@ bool Scheduler::pick_next()
     ASSERT(s_active);
 
     if (!Thread::current) {
-        // XXX: The first ever context_switch() goes to the idle process.
+        // XXX: The first ever context switch goes to the idle process.
         //      This to setup a reliable place we can return to.
-        return context_switch(*g_colonel);
+        return *g_colonel;
     }
 
     struct timeval now;
@@ -431,7 +431,7 @@ bool Scheduler::pick_next()
         thread_to_schedule->tss().eip);
 #endif
 
-    return context_switch(*thread_to_schedule);
+    return *thread_to_schedule;
 }
 
 bool Scheduler::donate_to(Thread* beneficiary, const char* reason)
@@ -449,92 +449,65 @@ bool Scheduler::donate_to(Thread* beneficiary, const char* reason)
 #ifdef SCHEDULER_DEBUG
     dbgprintf("%s(%u:%u) donating %u ticks to %s(%u:%u), reason=%s\n", Process::current->name().characters(), Process::current->pid(), Thread::current->tid(), ticks_to_donate, beneficiary->process().name().characters(), beneficiary->pid(), beneficiary->tid(), reason);
 #endif
-    context_switch(*beneficiary);
-    beneficiary->set_ticks_left(ticks_to_donate);
-    switch_now();
-    return false;
+
+    return switch_with_donation(*Thread::current, *beneficiary, ticks_to_donate);
 }
 
 bool Scheduler::yield()
 {
     InterruptDisabler disabler;
     ASSERT(Thread::current);
-    if (!pick_next())
-        return false;
-    switch_now();
-    return true;
+
+    Thread* switching_from = Thread::current;
+    Thread& switching_to = pick_next();
+    return switch_with_donation(*switching_from, switching_to, time_slice_for(switching_to));
 }
 
-void Scheduler::pick_next_and_switch_now()
+bool Scheduler::switch_with_donation(Thread& switching_from, Thread& switching_to, u32 time_slice)
 {
-    bool someone_wants_to_run = pick_next();
-    ASSERT(someone_wants_to_run);
-    switch_now();
-}
+    switching_to.set_ticks_left(time_slice);
+    switching_to.did_schedule();
 
-void Scheduler::switch_now()
-{
-    Descriptor& descriptor = get_gdt_entry(Thread::current->selector());
-    descriptor.type = 9;
-    asm("sti\n"
-        "ljmp *(%%eax)\n" ::"a"(&Thread::current->far_ptr()));
-}
+    if (switching_from.state() == Thread::Running)
+        switching_from.set_state(Thread::Runnable);
 
-bool Scheduler::context_switch(Thread& thread)
-{
-    thread.set_ticks_left(time_slice_for(thread));
-    thread.did_schedule();
+    asm volatile("fxsave %0"
+                 : "=m"(Thread::current->fpu_state()));
 
-    if (Thread::current == &thread)
-        return false;
+    if (switching_to.process().is_ring3())
+        s_redirection.tss.esp0 = switching_to.kernel_stack_top();
 
-    if (Thread::current) {
-        // If the last process hasn't blocked (still marked as running),
-        // mark it as runnable for the next round.
-        if (Thread::current->state() == Thread::Running)
-            Thread::current->set_state(Thread::Runnable);
+    Thread::current = &switching_to;
+    Process::current = &switching_to.process();
 
-        asm volatile("fxsave %0"
-                     : "=m"(Thread::current->fpu_state()));
-
-#ifdef LOG_EVERY_CONTEXT_SWITCH
-        dbgprintf("Scheduler: %s(%u:%u) -> %s(%u:%u) [%u] %w:%x\n",
-            Process::current->name().characters(), Process::current->pid(), Thread::current->tid(),
-            thread.process().name().characters(), thread.process().pid(), thread.tid(),
-            thread.priority(),
-            thread.tss().cs, thread.tss().eip);
-#endif
-    }
-
-    Thread::current = &thread;
-    Process::current = &thread.process();
-
-    thread.set_state(Thread::Running);
-
-    asm volatile("fxrstor %0" ::"m"(Thread::current->fpu_state()));
-
-    if (!thread.selector()) {
-        thread.set_selector(gdt_alloc_entry());
-        auto& descriptor = get_gdt_entry(thread.selector());
-        descriptor.set_base(&thread.tss());
-        descriptor.set_limit(sizeof(TSS32));
-        descriptor.dpl = 0;
-        descriptor.segment_present = 1;
-        descriptor.granularity = 0;
-        descriptor.zero = 0;
-        descriptor.operation_size = 1;
-        descriptor.descriptor_type = 0;
-    }
-
-    if (!thread.thread_specific_data().is_null()) {
+    if (!switching_to.thread_specific_data().is_null()) {
         auto& descriptor = thread_specific_descriptor();
-        descriptor.set_base(thread.thread_specific_data().as_ptr());
+        descriptor.set_base(switching_to.thread_specific_data().as_ptr());
         descriptor.set_limit(sizeof(ThreadSpecificData*));
     }
 
-    auto& descriptor = get_gdt_entry(thread.selector());
-    descriptor.type = 11; // Busy TSS
+    write_cr3(switching_to.cr3());
+
+    switching_to.set_state(Thread::Running);
+    switch_thread(switching_from, switching_to);
+
     return true;
+}
+
+void Scheduler::switch_thread(Thread& from, Thread& to)
+{
+    asm("pushfl\n"
+        "pushl %%ebp\n"
+        "movl %%esp, %[esp_from]\n"
+        "movl %[esp_to], %%esp\n"
+        "movl $switch_resume, %[eip_from]\n"
+        "jmp *%[eip_to]\n"
+        "switch_resume:\n"
+        "popl %%ebp\n"
+        "popfl\n"
+        : [ esp_from ] "=m"(from.m_stored_esp), [ eip_from ] "=m"(from.m_stored_eip)
+        : [ esp_to ] "m"(to.m_stored_esp), [ eip_to ] "r"(to.m_stored_eip)
+        : "memory");
 }
 
 static void initialize_redirection()
@@ -549,24 +522,11 @@ static void initialize_redirection()
     descriptor.operation_size = 1;
     descriptor.descriptor_type = 0;
     descriptor.type = 9;
+
+    memset(&s_redirection.tss, 0, sizeof(TSS32));
+    s_redirection.tss.iomapbase = sizeof(TSS32);
+    s_redirection.tss.ss0 = 0x10;
     flush_gdt();
-}
-
-void Scheduler::prepare_for_iret_to_new_process()
-{
-    auto& descriptor = get_gdt_entry(s_redirection.selector);
-    descriptor.type = 9;
-    s_redirection.tss.backlink = Thread::current->selector();
-    load_task_register(s_redirection.selector);
-}
-
-void Scheduler::prepare_to_modify_tss(Thread& thread)
-{
-    // This ensures that a currently running process modifying its own TSS
-    // in order to yield() and end up somewhere else doesn't just end up
-    // right after the yield().
-    if (Thread::current == &thread)
-        load_task_register(s_redirection.selector);
 }
 
 Process* Scheduler::colonel()
@@ -581,9 +541,14 @@ void Scheduler::initialize()
     g_finalizer_has_work = false;
     s_redirection.selector = gdt_alloc_entry();
     initialize_redirection();
-    s_colonel_process = Process::create_kernel_process(g_colonel, "colonel", nullptr);
+    s_colonel_process = Process::create_kernel_process(g_colonel, "colonel", idle_loop);
     g_colonel->set_priority(THREAD_PRIORITY_MIN);
     load_task_register(s_redirection.selector);
+
+    g_colonel->set_state(Thread::Running);
+    Thread::current = g_colonel;
+    Process::current = s_colonel_process;
+    Thread::current->set_ticks_left(1);
 }
 
 void Scheduler::timer_tick(RegisterState& regs)
@@ -611,46 +576,6 @@ void Scheduler::timer_tick(RegisterState& regs)
     }
 
     TimerQueue::the().fire();
-
-    if (Thread::current->tick())
-        return;
-
-    auto& outgoing_tss = Thread::current->tss();
-
-    if (!pick_next())
-        return;
-
-    outgoing_tss.gs = regs.gs;
-    outgoing_tss.fs = regs.fs;
-    outgoing_tss.es = regs.es;
-    outgoing_tss.ds = regs.ds;
-    outgoing_tss.edi = regs.edi;
-    outgoing_tss.esi = regs.esi;
-    outgoing_tss.ebp = regs.ebp;
-    outgoing_tss.ebx = regs.ebx;
-    outgoing_tss.edx = regs.edx;
-    outgoing_tss.ecx = regs.ecx;
-    outgoing_tss.eax = regs.eax;
-    outgoing_tss.eip = regs.eip;
-    outgoing_tss.cs = regs.cs;
-    outgoing_tss.eflags = regs.eflags;
-
-    // Compute process stack pointer.
-    // Add 16 for CS, EIP, EFLAGS, exception code (interrupt mechanic)
-    outgoing_tss.esp = regs.esp + 16;
-    outgoing_tss.ss = regs.ss;
-
-    if ((outgoing_tss.cs & 3) != 0) {
-        outgoing_tss.ss = regs.userspace_ss;
-        outgoing_tss.esp = regs.userspace_esp;
-    }
-    prepare_for_iret_to_new_process();
-
-    // Set the NT (nested task) flag.
-    asm(
-        "pushf\n"
-        "orl $0x00004000, (%esp)\n"
-        "popf\n");
 }
 
 static bool s_should_stop_idling = false;

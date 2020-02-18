@@ -50,13 +50,9 @@ class Scheduler {
 public:
     static void initialize();
     static void timer_tick(RegisterState&);
-    static bool pick_next();
-    static void pick_next_and_switch_now();
-    static void switch_now();
+    static Thread& pick_next();
     static bool yield();
     static bool donate_to(Thread*, const char* reason);
-    static bool context_switch(Thread&);
-    static void prepare_to_modify_tss(Thread&);
     static Process* colonel();
     static bool is_active();
     static void beep();
@@ -74,6 +70,8 @@ public:
 
 private:
     static void prepare_for_iret_to_new_process();
+	static bool switch_with_donation(Thread& switching_from, Thread& switching_to, u32 time_slice);
+    static void switch_thread(Thread& from, Thread& to);
 };
 
 }

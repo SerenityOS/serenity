@@ -28,6 +28,7 @@
 #include <Kernel/Arch/i386/PIC.h>
 #include <Kernel/Arch/i386/PIT.h>
 #include <Kernel/Scheduler.h>
+#include <Kernel/Thread.h>
 #include <LibBareMetal/IO.h>
 
 namespace Kernel {
@@ -67,13 +68,19 @@ static u32 s_seconds_since_boot;
 void timer_interrupt_handler(RegisterState regs)
 {
     clac();
-    IRQHandlerScope scope(IRQ_TIMER);
-    if (++s_ticks_this_second >= TICKS_PER_SECOND) {
-        // FIXME: Synchronize with the RTC somehow to prevent drifting apart.
-        ++s_seconds_since_boot;
-        s_ticks_this_second = 0;
+    {
+        IRQHandlerScope scope(IRQ_TIMER);
+        if (++s_ticks_this_second >= TICKS_PER_SECOND) {
+            // FIXME: Synchronize with the RTC somehow to prevent drifting apart.
+            ++s_seconds_since_boot;
+            s_ticks_this_second = 0;
+        }
+        Scheduler::timer_tick(regs);
     }
-    Scheduler::timer_tick(regs);
+
+    if (!Thread::current->tick())
+        Scheduler::yield();
+    Thread::current->die_if_needed();
 }
 
 namespace PIT {

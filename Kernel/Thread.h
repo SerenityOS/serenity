@@ -263,16 +263,17 @@ public:
 
     bool is_stopped() const { return m_state == Stopped; }
     bool is_blocked() const { return m_state == Blocked; }
-    bool in_kernel() const { return (m_tss.cs & 0x03) == 0; }
+    bool in_kernel() const { return (get_register_dump_from_stack().cs & 0x03) == 0; }
 
-    u32 frame_ptr() const { return m_tss.ebp; }
-    u32 stack_ptr() const { return m_tss.esp; }
+    u32 frame_ptr() const { return get_register_dump_from_stack().ebp; }
+    u32 stack_ptr() const { return get_register_dump_from_stack().esp; }
 
-    RegisterState& get_register_dump_from_stack();
+    RegisterState& get_register_dump_from_stack() const;
 
     u16 selector() const { return m_far_ptr.selector; }
-    TSS32& tss() { return m_tss; }
-    const TSS32& tss() const { return m_tss; }
+
+    u32 cr3() const { return m_cr3; }
+    void set_cr3(u32 cr3) { m_cr3 = cr3; }
     State state() const { return m_state; }
     const char* state_string() const;
     u32 ticks() const { return m_ticks; }
@@ -445,7 +446,9 @@ private:
 
     Process& m_process;
     int m_tid { -1 };
-    TSS32 m_tss;
+    uintptr_t m_stored_esp { 0 };
+    uintptr_t m_stored_eip { 0 };
+    u32 m_cr3 { 0 };
     FarPtr m_far_ptr;
     u32 m_ticks { 0 };
     u32 m_ticks_left { 0 };
