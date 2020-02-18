@@ -32,6 +32,23 @@
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
+    if (unveil("/proc/all", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/etc/passwd", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    unveil(nullptr, nullptr);
+
     (void)argc;
     (void)argv;
 
