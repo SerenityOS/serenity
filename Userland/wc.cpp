@@ -122,6 +122,11 @@ Count get_total_count(Vector<Count>& counts)
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     Vector<const char*> files;
 
     Core::ArgsParser args_parser;
@@ -138,6 +143,11 @@ int main(int argc, char** argv)
     for (auto& file : files) {
         Count count = get_count(file);
         counts.append(count);
+    }
+
+    if (pledge("stdio", nullptr) < 0) {
+        perror("pledge");
+        return 1;
     }
 
     if (files.size() > 1) {
