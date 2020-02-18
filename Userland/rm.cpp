@@ -73,6 +73,11 @@ int remove(bool recursive, String path)
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio rpath cpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     bool recursive = false;
     const char* path = nullptr;
 
