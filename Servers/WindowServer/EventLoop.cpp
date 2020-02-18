@@ -52,7 +52,7 @@ EventLoop::EventLoop()
     : m_server(Core::LocalServer::construct())
 {
     m_keyboard_fd = open("/dev/keyboard", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
-    m_mouse_fd = open("/dev/psaux", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
+    m_mouse_fd = open("/dev/mouse", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
 
     bool ok = m_server->take_over_from_system_server();
     ASSERT(ok);

@@ -59,9 +59,9 @@ chmod 666 mnt/dev/debuglog
 mknod mnt/dev/keyboard c 85 1
 chmod 440 mnt/dev/keyboard
 chown 0:$phys_gid mnt/dev/keyboard
-mknod mnt/dev/psaux c 10 1
-chmod 440 mnt/dev/psaux
-chown 0:$phys_gid mnt/dev/psaux
+mknod mnt/dev/mouse c 10 1
+chmod 440 mnt/dev/mouse
+chown 0:$phys_gid mnt/dev/mouse
 mknod mnt/dev/audio c 42 42
 chmod 220 mnt/dev/audio
 chown 0:$audio_gid mnt/dev/audio
