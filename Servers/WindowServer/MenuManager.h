@@ -78,7 +78,6 @@ public:
     Menu* system_menu() { return m_system_menu; }
     void set_system_menu(Menu&);
 
-    Color menu_selection_color() const { return m_menu_selection_color; }
     int theme_index() const { return m_theme_index; }
 
     Window& window() { return *m_window; }
@@ -119,8 +118,6 @@ private:
 
     bool m_needs_window_resize { false };
     bool m_bar_open { false };
-
-    Color m_menu_selection_color;
 
     int m_theme_index { 0 };
 
