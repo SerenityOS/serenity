@@ -38,6 +38,11 @@ static void print_usage_and_exit()
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio proc", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     if (argc != 2 && argc != 3)
         print_usage_and_exit();
     bool ok;
