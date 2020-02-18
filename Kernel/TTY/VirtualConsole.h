@@ -49,7 +49,7 @@ public:
     static void initialize();
 
     bool is_graphical() { return m_graphical; }
-    void set_graphical(bool graphical) { m_graphical = graphical; }
+    void set_graphical(bool graphical);
 
 private:
     // ^KeyboardClient
