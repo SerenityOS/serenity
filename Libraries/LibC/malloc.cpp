@@ -131,16 +131,31 @@ struct BigAllocator {
     Vector<BigAllocationBlock*, number_of_big_blocks_to_keep_around_per_size_class> blocks;
 };
 
-// Allocators will be mmapped in __malloc_init
-Allocator* g_allocators = nullptr;
-BigAllocator* g_big_allocators = nullptr;
+// Allocators will be initialized in __malloc_init.
+// We can not rely on global constructors to initialize them,
+// because they must be initialized before other global constructors
+// are run. Similarly, we can not allow global destructors to destruct
+// them. We could have used AK::NeverDestoyed to prevent the latter,
+// but it would have not helped with the former.
+static u8 g_allocators_storage[sizeof(Allocator) * num_size_classes];
+static u8 g_big_allocators_storage[sizeof(BigAllocator)];
+
+static inline Allocator (&allocators())[num_size_classes]
+{
+    return reinterpret_cast<Allocator(&)[num_size_classes]>(g_allocators_storage);
+}
+
+static inline BigAllocator (&big_allocators())[1]
+{
+    return reinterpret_cast<BigAllocator(&)[1]>(g_big_allocators_storage);
+}
 
 static Allocator* allocator_for_size(size_t size, size_t& good_size)
 {
     for (int i = 0; size_classes[i]; ++i) {
         if (size <= size_classes[i]) {
             good_size = size_classes[i];
-            return &g_allocators[i];
+            return &allocators()[i];
         }
     }
     good_size = PAGE_ROUND_UP(size);
@@ -150,7 +165,7 @@ static Allocator* allocator_for_size(size_t size, size_t& good_size)
 static BigAllocator* big_allocator_for_size(size_t size)
 {
     if (size == 65536)
-        return &g_big_allocators[0];
+        return &big_allocators()[0];
     return nullptr;
 }
 
@@ -414,16 +429,11 @@ void __malloc_init()
     if (getenv("LIBC_PROFILE_MALLOC"))
         s_profiling = true;
 
-    g_allocators = (Allocator*)mmap_with_name(nullptr, sizeof(Allocator) * num_size_classes, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, "LibC Allocators");
     for (size_t i = 0; i < num_size_classes; ++i) {
-        new (&g_allocators[i]) Allocator();
-        g_allocators[i].size = size_classes[i];
+        new (&allocators()[i]) Allocator();
+        allocators()[i].size = size_classes[i];
     }
 
-    g_big_allocators = (BigAllocator*)mmap_with_name(nullptr, sizeof(BigAllocator), PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, "LibC BigAllocators");
-    new (g_big_allocators)(BigAllocator);
-
-    // We could mprotect the mmaps here with atexit, but, since this method is called in _start before
-    // _init and __init_array entries, our mprotect method would always be the last thing run before _exit.
+    new (&big_allocators()[0])(BigAllocator);
 }
 }
