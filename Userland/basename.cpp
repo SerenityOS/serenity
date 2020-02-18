@@ -29,6 +29,11 @@
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     if (argc != 2) {
         printf("usage: basename <path>\n");
         return 1;
