@@ -133,6 +133,23 @@ static Snapshot get_snapshot()
 
 int main(int, char**)
 {
+    if (pledge("stdio rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
+    if (unveil("/proc/all", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/etc/passwd", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    unveil(nullptr, nullptr);
+
     Vector<ThreadData*> threads;
     auto prev = get_snapshot();
     usleep(10000);
