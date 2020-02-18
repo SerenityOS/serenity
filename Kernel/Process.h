@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/FixedArray.h>
 #include <AK/HashMap.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/NonnullOwnPtrVector.h>
@@ -134,7 +135,7 @@ public:
     pid_t pgid() const { return m_pgid; }
     uid_t uid() const { return m_uid; }
     gid_t gid() const { return m_gid; }
-    const HashTable<gid_t>& extra_gids() const { return m_extra_gids; }
+    const FixedArray<gid_t>& extra_gids() const { return m_extra_gids; }
     uid_t euid() const { return m_euid; }
     gid_t egid() const { return m_egid; }
     pid_t ppid() const { return m_ppid; }
@@ -485,7 +486,7 @@ private:
     pid_t m_ppid { 0 };
     mode_t m_umask { 022 };
 
-    HashTable<gid_t> m_extra_gids;
+    FixedArray<gid_t> m_extra_gids;
 
     RefPtr<ProcessTracer> m_tracer;
     OwnPtr<ELFLoader> m_elf_loader;

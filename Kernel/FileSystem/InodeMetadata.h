@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <AK/HashTable.h>
+#include <AK/FixedArray.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/KResult.h>
 #include <Kernel/UnixTypes.h>
@@ -58,7 +58,7 @@ struct InodeMetadata {
     bool may_write(const Process&) const;
     bool may_execute(const Process&) const;
 
-    bool may_read(uid_t u, gid_t g, const HashTable<gid_t>& eg) const
+    bool may_read(uid_t u, gid_t g, const FixedArray<gid_t>& eg) const
     {
         if (u == 0)
             return true;
@@ -69,7 +69,7 @@ struct InodeMetadata {
         return mode & 0004;
     }
 
-    bool may_write(uid_t u, gid_t g, const HashTable<gid_t>& eg) const
+    bool may_write(uid_t u, gid_t g, const FixedArray<gid_t>& eg) const
     {
         if (u == 0)
             return true;
@@ -80,7 +80,7 @@ struct InodeMetadata {
         return mode & 0002;
     }
 
-    bool may_execute(uid_t u, gid_t g, const HashTable<gid_t>& eg) const
+    bool may_execute(uid_t u, gid_t g, const FixedArray<gid_t>& eg) const
     {
         if (u == 0)
             return true;

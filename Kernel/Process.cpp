@@ -219,7 +219,7 @@ Region* Process::allocate_region_with_vmobject(const Range& range, NonnullRefPtr
 {
     ASSERT(range.is_valid());
     size_t end_in_vmobject = offset_in_vmobject + range.size();
-    if (end_in_vmobject < offset_in_vmobject) {
+    if (end_in_vmobject <= offset_in_vmobject) {
         dbgprintf("allocate_region_with_vmobject: Overflow (offset + size)\n");
         return nullptr;
     }
@@ -2663,11 +2663,18 @@ int Process::sys$setgroups(ssize_t count, const gid_t* user_gids)
     gids.resize(count);
     copy_from_user(gids.data(), user_gids, sizeof(gid_t) * count);
 
-    m_extra_gids.clear();
-    for (int i = 0; i < count; ++i) {
-        if (gids[i] == m_gid)
+    HashTable<gid_t> unique_extra_gids;
+    for (auto& gid : gids) {
+        if (gid != m_gid)
+            unique_extra_gids.set(gid);
+    }
+
+    m_extra_gids.resize(unique_extra_gids.size());
+    size_t i = 0;
+    for (auto& gid : unique_extra_gids) {
+        if (gid == m_gid)
             continue;
-        m_extra_gids.set(gids[i]);
+        m_extra_gids[i++] = gid;
     }
     return 0;
 }

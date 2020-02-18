@@ -54,7 +54,13 @@ public:
             new (&m_elements[i]) T(other[i]);
     }
 
-    FixedArray& operator=(const FixedArray&) = delete;
+    FixedArray& operator=(const FixedArray& other)
+    {
+        FixedArray array(other);
+        swap(array);
+        return *this;
+    }
+
     FixedArray(FixedArray&&) = delete;
     FixedArray& operator=(FixedArray&&) = delete;
 
@@ -107,6 +113,21 @@ public:
             kfree(m_elements);
         m_elements = new_elements;
         m_size = new_size;
+    }
+
+    bool contains(const T& value) const
+    {
+        for (size_t i = 0; i < m_size; ++i) {
+            if (m_elements[i] == value)
+                return true;
+        }
+        return false;
+    }
+
+    void swap(FixedArray& other)
+    {
+        ::swap(m_elements, other.m_elements);
+        ::swap(m_size, other.m_size);
     }
 
     using Iterator = VectorIterator<FixedArray, T>;

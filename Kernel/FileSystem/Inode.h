@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <AK/HashTable.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/RefCounted.h>
 #include <AK/String.h>
