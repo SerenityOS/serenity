@@ -32,6 +32,11 @@
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     if (argc != 2) {
         printf("usage: realpath <path>\n");
         return 1;
