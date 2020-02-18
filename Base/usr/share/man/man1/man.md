@@ -12,12 +12,12 @@ $ man section page
 ## Description
 
 `man` finds, loads and displays the so-called manual pages,
-or man pages for short, from the Serenity manual. You're reading
+or man pages for short, from the SerenityOS manual. You're reading
 the manual page for `man` program itself right now.
 
 ## Sections
 
-The Serenity manual is split into the following *sections*, or *chapters*:
+The SerenityOS manual is split into the following *sections*, or *chapters*:
 
 1. Command-line programs
 2. System calls

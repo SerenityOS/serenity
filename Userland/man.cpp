@@ -26,6 +26,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/String.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibMarkdown/MDDocument.h>
 #include <stdio.h>
@@ -45,26 +46,20 @@ int main(int argc, char* argv[])
 
     unveil(nullptr, nullptr);
 
-    String name;
-    String section;
+    const char* section = nullptr;
+    const char* name = nullptr;
 
-    if (argc < 2 || argc > 3) {
-        fprintf(stderr, "Usage:\t%s <name>\n\t%s <section <name>\n", argv[0], argv[0]);
-        exit(1);
-    }
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(section, "Section of the man page", "section", Core::ArgsParser::Required::No);
+    args_parser.add_positional_argument(name, "Name of the man page", "name");
 
-    if (argc == 2) {
-        name = argv[1];
-    } else {
-        section = argv[1];
-        name = argv[2];
-    }
+    args_parser.parse(argc, argv);
 
-    auto make_path = [&](String s) {
-        return String::format("/usr/share/man/man%s/%s.md", s.characters(), name.characters());
+    auto make_path = [name](const char* section) {
+        return String::format("/usr/share/man/man%s/%s.md", section, name);
     };
-    if (section.is_null()) {
-        String sections[] = {
+    if (!section) {
+        const char* sections[] = {
             "1",
             "2",
             "3",
@@ -74,15 +69,15 @@ int main(int argc, char* argv[])
             "7",
             "8"
         };
-        for (auto& s : sections) {
+        for (auto s : sections) {
             String path = make_path(s);
             if (access(path.characters(), R_OK) == 0) {
                 section = s;
                 break;
             }
         }
-        if (section.is_null()) {
-            fprintf(stderr, "No man page for %s\n", name.characters());
+        if (!section) {
+            fprintf(stderr, "No man page for %s\n", name);
             exit(1);
         }
     }
@@ -104,7 +99,7 @@ int main(int argc, char* argv[])
     auto buffer = file->read_all();
     String source { (const char*)buffer.data(), (size_t)buffer.size() };
 
-    printf("%s(%s)\t\tSerenity manual\n", name.characters(), section.characters());
+    printf("%s(%s)\t\tSerenityOS manual\n", name, section);
 
     MDDocument document;
     bool success = document.parse(source);
