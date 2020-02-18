@@ -32,6 +32,11 @@
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     time_t now = time(nullptr);
 
     if (argc == 2 && !strcmp(argv[1], "-u")) {
