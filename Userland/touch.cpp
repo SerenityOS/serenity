@@ -50,6 +50,11 @@ static bool file_exists(const char* path)
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio rpath cpath fattr", nullptr)) {
+        perror("pledge");
+        return 1;
+    }
+
     if (argc != 2) {
         fprintf(stderr, "usage: touch <path>\n");
         return 1;
