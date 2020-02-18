@@ -47,6 +47,7 @@ public:
     void unlock();
     bool force_unlock_if_locked();
     bool is_locked() const { return m_holder; }
+    void clear_waiters();
 
     const char* name() const { return m_name; }
 

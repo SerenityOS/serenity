@@ -40,6 +40,7 @@ public:
     void enqueue(Thread&);
     void wake_one(Atomic<bool>* lock = nullptr);
     void wake_all();
+    void clear();
 
 private:
     typedef IntrusiveList<Thread, &Thread::m_wait_queue_node> ThreadList;

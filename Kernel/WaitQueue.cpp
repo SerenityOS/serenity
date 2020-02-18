@@ -65,4 +65,10 @@ void WaitQueue::wake_all()
     Scheduler::stop_idling();
 }
 
+void WaitQueue::clear()
+{
+    InterruptDisabler disabler;
+    m_threads.clear();
+}
+
 }
