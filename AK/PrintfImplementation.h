@@ -28,6 +28,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/LogStream.h>
+#include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #include <stdarg.h>
 
@@ -228,20 +229,22 @@ template<typename PutChFunc>
 }
 
 template<typename PutChFunc>
-[[gnu::always_inline]] inline int print_string(PutChFunc putch, char*& bufptr, const char* str, bool leftPad, u32 field_width, bool dot)
+[[gnu::always_inline]] inline int print_string(PutChFunc putch, char*& bufptr, const char* str, bool left_pad, size_t field_width, bool dot)
 {
     size_t len = strlen(str);
     if (!dot && (!field_width || field_width < len))
         field_width = len;
-    if (!leftPad && field_width > len) {
-        for (unsigned i = 0; i < field_width - len; ++i)
+    size_t pad_amount = field_width > len ? field_width - len : 0;
+
+    if (!left_pad) {
+        for (size_t i = 0; i < pad_amount; ++i)
             putch(bufptr, ' ');
     }
-    for (unsigned i = 0; i < field_width; ++i) {
+    for (size_t i = 0; i < min(len, field_width); ++i) {
         putch(bufptr, str[i]);
     }
-    if (leftPad && field_width > len) {
-        for (unsigned i = 0; i < field_width - len; ++i)
+    if (left_pad) {
+        for (size_t i = 0; i < pad_amount; ++i)
             putch(bufptr, ' ');
     }
     return field_width;
