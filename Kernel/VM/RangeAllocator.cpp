@@ -96,6 +96,9 @@ void RangeAllocator::carve_at_index(int index, const Range& range)
 
 Range RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
 {
+    if (!size)
+        return {};
+
 #ifdef VM_GUARD_PAGES
     // NOTE: We pad VM allocations with a guard page on each side.
     size_t effective_size = size + PAGE_SIZE * 2;
@@ -135,6 +138,9 @@ Range RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
 
 Range RangeAllocator::allocate_specific(VirtualAddress base, size_t size)
 {
+    if (!size)
+        return {};
+
     Range allocated_range(base, size);
     for (int i = 0; i < m_available_ranges.size(); ++i) {
         auto& available_range = m_available_ranges[i];
