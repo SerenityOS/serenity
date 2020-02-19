@@ -51,7 +51,7 @@ endpoint WindowServer = 2
     SetWindowRect(i32 window_id, Gfx::Rect rect) => ()
     GetWindowRect(i32 window_id) => (Gfx::Rect rect)
 
-    InvalidateRect(i32 window_id, Vector<Gfx::Rect> rects) =|
+    InvalidateRect(i32 window_id, Vector<Gfx::Rect> rects, bool ignore_occlusion) =|
     DidFinishPainting(i32 window_id, Vector<Gfx::Rect> rects) =|
 
     SetGlobalCursorTracking(i32 window_id, bool enabled) => ()

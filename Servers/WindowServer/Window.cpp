@@ -317,11 +317,11 @@ void Window::set_default_icon()
     m_icon = default_window_icon();
 }
 
-void Window::request_update(const Gfx::Rect& rect)
+void Window::request_update(const Gfx::Rect& rect, bool ignore_occlusion)
 {
     if (m_pending_paint_rects.is_empty()) {
-        deferred_invoke([this](auto&) {
-            client()->post_paint_message(*this);
+        deferred_invoke([this, ignore_occlusion](auto&) {
+            client()->post_paint_message(*this, ignore_occlusion);
         });
     }
     m_pending_paint_rects.add(rect);

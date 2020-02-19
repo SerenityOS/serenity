@@ -465,10 +465,10 @@ OwnPtr<Messages::WindowServer::DestroyWindowResponse> ClientConnection::handle(c
     return make<Messages::WindowServer::DestroyWindowResponse>();
 }
 
-void ClientConnection::post_paint_message(Window& window)
+void ClientConnection::post_paint_message(Window& window, bool ignore_occlusion)
 {
     auto rect_set = window.take_pending_paint_rects();
-    if (window.is_minimized() || window.is_occluded())
+    if (window.is_minimized() || (!ignore_occlusion && window.is_occluded()))
         return;
 
     post_message(Messages::WindowClient::Paint(window.window_id(), window.size(), rect_set.rects()));
@@ -483,7 +483,7 @@ void ClientConnection::handle(const Messages::WindowServer::InvalidateRect& mess
     }
     auto& window = *(*it).value;
     for (int i = 0; i < message.rects().size(); ++i)
-        window.request_update(message.rects()[i].intersected({ {}, window.size() }));
+        window.request_update(message.rects()[i].intersected({ {}, window.size() }), message.ignore_occlusion());
 }
 
 void ClientConnection::handle(const Messages::WindowServer::DidFinishPainting& message)
