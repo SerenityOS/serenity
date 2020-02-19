@@ -115,8 +115,10 @@ int feof(FILE* stream)
 
 int fflush(FILE* stream)
 {
-    // FIXME: fflush(NULL) should flush all open output streams.
-    ASSERT(stream);
+    if (!stream) {
+        dbg() << "FIXME: fflush(nullptr) should flush all open streams";
+        return 0;
+    }
     if (!stream->buffer_index)
         return 0;
     int rc = write(stream->fd, stream->buffer, stream->buffer_index);
