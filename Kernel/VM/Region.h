@@ -185,11 +185,11 @@ private:
     NonnullRefPtr<VMObject> m_vmobject;
     String m_name;
     u8 m_access { 0 };
-    bool m_shared { false };
-    bool m_user_accessible { false };
-    bool m_cacheable { false };
-    bool m_stack { false };
-    bool m_mmap { false };
+    bool m_shared : 1 { false };
+    bool m_user_accessible : 1 { false };
+    bool m_cacheable : 1 { false };
+    bool m_stack : 1 { false };
+    bool m_mmap : 1 { false };
     mutable OwnPtr<Bitmap> m_cow_map;
 };
 
