@@ -75,7 +75,7 @@ Compositor::Compositor()
     };
     m_compose_timer->set_single_shot(true);
     m_compose_timer->set_interval(1000 / 60);
-    m_immediate_compose_timer->on_timeout = [=]() {
+    m_immediate_compose_timer->on_timeout = [this]() {
 #if defined(COMPOSITOR_DEBUG)
         dbgprintf("Compositor: immediate frame callback: %d rects\n", m_dirty_rects.size());
 #endif
