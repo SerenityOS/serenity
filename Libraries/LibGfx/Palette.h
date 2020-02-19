@@ -94,6 +94,10 @@ public:
     Color hover_highlight() const { return color(ColorRole::ThreedHighlight); }
     Color rubber_band_fill() const { return color(ColorRole::RubberBandFill); }
     Color rubber_band_border() const { return color(ColorRole::RubberBandBorder); }
+    Color ruler() const { return color(ColorRole::Ruler); }
+    Color ruler_border() const { return color(ColorRole::RulerBorder); }
+    Color ruler_active_text() const { return color(ColorRole::RulerActiveText); }
+    Color ruler_inactive_text() const { return color(ColorRole::RulerInactiveText); }
 
     Color link() const { return color(ColorRole::Link); }
     Color active_link() const { return color(ColorRole::ActiveLink); }
