@@ -360,8 +360,8 @@ void TextEditor::paint_event(PaintEvent& event)
     auto ruler_rect = ruler_rect_in_inner_coordinates();
 
     if (m_ruler_visible) {
-        painter.fill_rect(ruler_rect, widget_background_color.darkened(0.85f));
-        painter.draw_line(ruler_rect.top_right(), ruler_rect.bottom_right(), widget_background_color.darkened(0.5f));
+        painter.fill_rect(ruler_rect, palette().ruler());
+        painter.draw_line(ruler_rect.top_right(), ruler_rect.bottom_right(), palette().ruler_border());
     }
 
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
@@ -383,7 +383,7 @@ void TextEditor::paint_event(PaintEvent& event)
                 String::number(i + 1),
                 is_current_line ? Gfx::Font::default_bold_font() : font(),
                 Gfx::TextAlignment::TopRight,
-                is_current_line ? widget_background_color.darkened(0.2f) : widget_background_color.darkened(0.4f));
+                is_current_line ? palette().ruler_active_text() : palette().ruler_inactive_text());
         }
     }
 
