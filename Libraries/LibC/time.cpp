@@ -127,6 +127,12 @@ struct tm* gmtime(const time_t* t)
     return localtime(t);
 }
 
+struct tm* gmtime_r(const time_t* t, struct tm* tm)
+{
+    // FIXME: This is obviously not correct. What about timezones bro?
+    return localtime_r(t, tm);
+}
+
 char* asctime(const struct tm*)
 {
     ASSERT_NOT_REACHED();
@@ -170,11 +176,6 @@ int clock_nanosleep(clockid_t clock_id, int flags, const struct timespec* reques
 }
 
 int clock_getres(clockid_t, struct timespec*)
-{
-    ASSERT_NOT_REACHED();
-}
-
-struct tm* gmtime_r(const time_t*, struct tm*)
 {
     ASSERT_NOT_REACHED();
 }
