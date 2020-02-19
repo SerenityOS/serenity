@@ -151,6 +151,11 @@ char* ELFLoader::symbol_ptr(const char* name)
 
 String ELFLoader::symbolicate(u32 address, u32* out_offset) const
 {
+    if (!m_image.symbol_count()) {
+        if (out_offset)
+            *out_offset = 0;
+        return "??";
+    }
     SortedSymbol* sorted_symbols = nullptr;
 #ifdef KERNEL
     if (!m_sorted_symbols_region) {
@@ -183,8 +188,11 @@ String ELFLoader::symbolicate(u32 address, u32* out_offset) const
 
     for (size_t i = 0; i < m_image.symbol_count(); ++i) {
         if (sorted_symbols[i].address > address) {
-            if (i == 0)
+            if (i == 0) {
+                if (out_offset)
+                    *out_offset = 0;
                 return "!!";
+            }
             auto& symbol = sorted_symbols[i - 1];
             if (out_offset) {
                 *out_offset = address - symbol.address;
@@ -193,5 +201,7 @@ String ELFLoader::symbolicate(u32 address, u32* out_offset) const
             return String::format("%s +%u", demangle(symbol.name).characters(), address - symbol.address);
         }
     }
+    if (out_offset)
+        *out_offset = 0;
     return "??";
 }
