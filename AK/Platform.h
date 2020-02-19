@@ -27,11 +27,11 @@
 #pragma once
 
 #ifdef __i386__
-#define AK_ARCH_I386 1
+#    define AK_ARCH_I386 1
 #endif
 
 #ifdef __x86_64__
-#define AK_ARCH_X86_64 1
+#    define AK_ARCH_X86_64 1
 #endif
 
 #define ARCH(arch) (defined(AK_ARCH_##arch) && AK_ARCH_##arch)
@@ -49,12 +49,12 @@
 #endif
 
 #ifndef __serenity__
-#define PAGE_SIZE sysconf(_SC_PAGESIZE)
+#    define PAGE_SIZE sysconf(_SC_PAGESIZE)
 
-#include <errno.h>
-#include <fcntl.h>
-#include <stdlib.h>
-#include <string.h>
+#    include <errno.h>
+#    include <fcntl.h>
+#    include <stdlib.h>
+#    include <string.h>
 inline int open_with_path_length(const char* path, size_t path_length, int options, mode_t mode)
 {
     auto* tmp = (char*)malloc(path_length + 1);
@@ -68,3 +68,19 @@ inline int open_with_path_length(const char* path, size_t path_length, int optio
 }
 #endif
 
+template<typename T>
+[[gnu::always_inline]] inline T convert_between_host_and_network(T value)
+{
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    if constexpr (sizeof(T) == 8)
+        return __builtin_bswap64(value);
+    if constexpr (sizeof(T) == 4)
+        return __builtin_bswap32(value);
+    if constexpr (sizeof(T) == 2)
+        return __builtin_bswap16(value);
+    if constexpr (sizeof(T) == 1)
+        return value;
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    return value;
+#endif
+}
