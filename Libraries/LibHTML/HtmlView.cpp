@@ -332,7 +332,7 @@ void HtmlView::load(const URL& url)
     if (on_load_start)
         on_load_start(url);
 
-    ResourceLoader::the().load(url, [=](auto data) {
+    ResourceLoader::the().load(url, [this, url](auto data) {
         if (data.is_null()) {
             dbg() << "Load failed!";
             ASSERT_NOT_REACHED();
