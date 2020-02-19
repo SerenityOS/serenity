@@ -178,6 +178,7 @@ void MenuManager::handle_mouse_event(MouseEvent& mouse_event)
         ASSERT(topmost_menu);
         auto* window = topmost_menu->menu_window();
         ASSERT(window);
+        ASSERT(window->is_visible());
 
         bool event_is_inside_current_menu = window->rect().contains(mouse_event.position());
         if (event_is_inside_current_menu) {
@@ -340,6 +341,9 @@ void MenuManager::open_menu(Menu& menu)
 
 void MenuManager::set_current_menu(Menu* menu, bool is_submenu)
 {
+    if (menu == m_current_menu)
+        return;
+
     if (!is_submenu) {
         if (menu)
             close_everyone_not_in_lineage(*menu);
