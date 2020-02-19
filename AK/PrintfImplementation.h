@@ -228,23 +228,23 @@ template<typename PutChFunc>
 }
 
 template<typename PutChFunc>
-[[gnu::always_inline]] inline int print_string(PutChFunc putch, char*& bufptr, const char* str, bool leftPad, u32 fieldWidth)
+[[gnu::always_inline]] inline int print_string(PutChFunc putch, char*& bufptr, const char* str, bool leftPad, u32 field_width, bool dot)
 {
     size_t len = strlen(str);
-    if (!fieldWidth || fieldWidth < len)
-        fieldWidth = len;
-    if (!leftPad) {
-        for (unsigned i = 0; i < fieldWidth - len; ++i)
+    if (!dot && (!field_width || field_width < len))
+        field_width = len;
+    if (!leftPad && field_width > len) {
+        for (unsigned i = 0; i < field_width - len; ++i)
             putch(bufptr, ' ');
     }
-    for (unsigned i = 0; i < len; ++i) {
+    for (unsigned i = 0; i < field_width; ++i) {
         putch(bufptr, str[i]);
     }
-    if (leftPad) {
-        for (unsigned i = 0; i < fieldWidth - len; ++i)
+    if (leftPad && field_width > len) {
+        for (unsigned i = 0; i < field_width - len; ++i)
             putch(bufptr, ' ');
     }
-    return fieldWidth;
+    return field_width;
 }
 
 template<typename PutChFunc>
@@ -270,6 +270,7 @@ template<typename PutChFunc>
     for (p = fmt; *p; ++p) {
         bool left_pad = false;
         bool zeroPad = false;
+        bool dot = false;
         unsigned fieldWidth = 0;
         unsigned long_qualifiers = 0;
         bool size_qualifier = false;
@@ -279,9 +280,11 @@ template<typename PutChFunc>
         if (*p == '%' && *(p + 1)) {
         one_more:
             ++p;
-            // FIXME: This is just a hack workaround to prevent choking on '.' specifiers
-            if (*p == '.')
-                goto one_more;
+            if (*p == '.') {
+                dot = true;
+                if (*(p + 1))
+                    goto one_more;
+            }
             if (*p == '-') {
                 left_pad = true;
                 if (*(p + 1))
@@ -326,7 +329,7 @@ template<typename PutChFunc>
             switch (*p) {
             case 's': {
                 const char* sp = va_arg(ap, const char*);
-                ret += print_string(putch, bufptr, sp ? sp : "(null)", left_pad, fieldWidth);
+                ret += print_string(putch, bufptr, sp ? sp : "(null)", left_pad, fieldWidth, dot);
             } break;
 
             case 'd':
