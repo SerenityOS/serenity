@@ -341,7 +341,14 @@ bool Window::is_visible() const
 
 void Window::update()
 {
-    update({ 0, 0, width(), height() });
+    auto rect = this->rect();
+    update({ 0, 0, rect.width(), rect.height() });
+}
+
+void Window::force_update()
+{
+    auto rect = this->rect();
+    WindowServerConnection::the().post_message(Messages::WindowServer::InvalidateRect(m_window_id, { { 0, 0, rect.width(), rect.height() } }, true));
 }
 
 void Window::update(const Gfx::Rect& a_rect)
@@ -366,7 +373,7 @@ void Window::update(const Gfx::Rect& a_rect)
             Vector<Gfx::Rect> rects_to_send;
             for (auto& r : rects)
                 rects_to_send.append(r);
-            WindowServerConnection::the().post_message(Messages::WindowServer::InvalidateRect(m_window_id, rects_to_send));
+            WindowServerConnection::the().post_message(Messages::WindowServer::InvalidateRect(m_window_id, rects_to_send, false));
         });
     }
     m_pending_paint_event_rects.append(a_rect);
@@ -626,7 +633,7 @@ void Window::schedule_relayout()
 void Window::update_all_windows(Badge<WindowServerConnection>)
 {
     for (auto* window : *all_windows) {
-        window->update();
+        window->force_update();
     }
 }
 

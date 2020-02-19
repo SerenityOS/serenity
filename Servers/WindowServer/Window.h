@@ -208,7 +208,7 @@ public:
     const Cursor* override_cursor() const { return m_override_cursor.ptr(); }
     void set_override_cursor(RefPtr<Cursor>&& cursor) { m_override_cursor = move(cursor); }
 
-    void request_update(const Gfx::Rect&);
+    void request_update(const Gfx::Rect&, bool ignore_occlusion = false);
     Gfx::DisjointRectSet take_pending_paint_rects() { return move(m_pending_paint_rects); }
 
     bool in_minimize_animation() const { return m_minimize_animation_step != -1; }
