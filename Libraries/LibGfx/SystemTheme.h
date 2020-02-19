@@ -71,6 +71,10 @@ enum class ColorRole {
     Link,
     ActiveLink,
     VisitedLink,
+    Ruler,
+    RulerBorder,
+    RulerActiveText,
+    RulerInactiveText,
 
     __Count,
 

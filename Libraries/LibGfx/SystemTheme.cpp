@@ -108,6 +108,10 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
     DO_COLOR(Link);
     DO_COLOR(ActiveLink);
     DO_COLOR(VisitedLink);
+    DO_COLOR(Ruler);
+    DO_COLOR(RulerBorder);
+    DO_COLOR(RulerActiveText);
+    DO_COLOR(RulerInactiveText);
 
     buffer->seal();
     buffer->share_globally();
