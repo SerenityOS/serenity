@@ -67,6 +67,7 @@ void HexEditor::set_buffer(const ByteBuffer& buffer)
 {
     m_buffer = buffer;
     set_content_length(buffer.size());
+    m_tracked_changes.clear();
     m_position = 0;
     m_byte_position = 0;
     update();
