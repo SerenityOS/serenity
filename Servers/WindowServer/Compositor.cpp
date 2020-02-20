@@ -437,9 +437,9 @@ void Compositor::draw_geometry_label()
     }
     auto geometry_label_rect = Gfx::Rect { 0, 0, wm.font().width(geometry_string) + 16, wm.font().glyph_height() + 10 };
     geometry_label_rect.center_within(window_being_moved_or_resized->rect());
-    m_back_painter->fill_rect(geometry_label_rect, Color::WarmGray);
-    m_back_painter->draw_rect(geometry_label_rect, Color::DarkGray);
-    m_back_painter->draw_text(geometry_label_rect, geometry_string, Gfx::TextAlignment::Center);
+    m_back_painter->fill_rect(geometry_label_rect, wm.palette().window());
+    m_back_painter->draw_rect(geometry_label_rect, wm.palette().threed_shadow2());
+    m_back_painter->draw_text(geometry_label_rect, geometry_string, Gfx::TextAlignment::Center, wm.palette().window_text());
     m_last_geometry_label_rect = geometry_label_rect;
 }
 
