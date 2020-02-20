@@ -54,7 +54,9 @@ void TTY::set_default_termios()
 
 ssize_t TTY::read(FileDescription&, u8* buffer, ssize_t size)
 {
-    if (m_input_buffer.size() < size)
+    ASSERT(size >= 0);
+
+    if (m_input_buffer.size() < static_cast<size_t>(size))
         size = m_input_buffer.size();
 
     if (in_canonical_mode()) {
