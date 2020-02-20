@@ -106,7 +106,7 @@ void MenuManager::draw()
         if (is_open(menu)) {
             painter.fill_rect(menu.rect_in_menubar(), palette.menu_selection());
             painter.draw_rect(menu.rect_in_menubar(), palette.menu_selection().darkened());
-            text_color = Color::White;
+            text_color = palette.menu_selection_text();
         }
         painter.draw_text(
             menu.text_rect_in_menubar(),
