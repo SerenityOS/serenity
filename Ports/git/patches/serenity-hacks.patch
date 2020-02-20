@@ -1,0 +1,136 @@
+diff -ru git-2.25.1/commit-graph.c git-2.25.1-serenity/commit-graph.c
+--- git-2.25.1/commit-graph.c	2020-02-17 05:47:35.000000000 +0100
++++ git-2.25.1-serenity/commit-graph.c	2020-02-20 06:44:32.062023438 +0100
+@@ -130,7 +130,7 @@
+ 		error(_("commit-graph file is too small"));
+ 		return NULL;
+ 	}
+-	graph_map = xmmap(NULL, graph_size, PROT_READ, MAP_PRIVATE, fd, 0);
++	graph_map = xmmap(NULL, graph_size, PROT_READ, MAP_SHARED, fd, 0);
+ 	ret = parse_commit_graph(graph_map, fd, graph_size);
+ 
+ 	if (!ret) {
+diff -ru git-2.25.1/config.c git-2.25.1-serenity/config.c
+--- git-2.25.1/config.c	2020-02-17 05:47:35.000000000 +0100
++++ git-2.25.1-serenity/config.c	2020-02-20 06:44:32.062023438 +0100
+@@ -2841,7 +2841,7 @@
+ 
+ 		contents_sz = xsize_t(st.st_size);
+ 		contents = xmmap_gently(NULL, contents_sz, PROT_READ,
+-					MAP_PRIVATE, in_fd, 0);
++					MAP_SHARED, in_fd, 0);
+ 		if (contents == MAP_FAILED) {
+ 			if (errno == ENODEV && S_ISDIR(st.st_mode))
+ 				errno = EISDIR;
+diff -ru git-2.25.1/config.mak.uname git-2.25.1-serenity/config.mak.uname
+--- git-2.25.1/config.mak.uname	2020-02-17 05:47:35.000000000 +0100
++++ git-2.25.1-serenity/config.mak.uname	2020-02-20 06:20:22.532687832 +0100
+@@ -4,12 +4,12 @@
+ # Microsoft's Safe Exception Handling in libraries (such as zlib).
+ # Typically required for VS2013+/32-bit compilation on Vista+ versions.
+ 
+-uname_S := $(shell sh -c 'uname -s 2>/dev/null || echo not')
+-uname_M := $(shell sh -c 'uname -m 2>/dev/null || echo not')
+-uname_O := $(shell sh -c 'uname -o 2>/dev/null || echo not')
+-uname_R := $(shell sh -c 'uname -r 2>/dev/null || echo not')
+-uname_P := $(shell sh -c 'uname -p 2>/dev/null || echo not')
+-uname_V := $(shell sh -c 'uname -v 2>/dev/null || echo not')
++uname_S := 
++uname_M := 
++uname_O := 
++uname_R := 
++uname_P := 
++uname_V := 
+ 
+ ifdef MSVC
+ 	# avoid the MingW and Cygwin configuration sections
+diff -ru git-2.25.1/diff.c git-2.25.1-serenity/diff.c
+--- git-2.25.1/diff.c	2020-02-17 05:47:35.000000000 +0100
++++ git-2.25.1-serenity/diff.c	2020-02-20 06:44:32.070023410 +0100
+@@ -3994,7 +3994,7 @@
+ 		fd = open(s->path, O_RDONLY);
+ 		if (fd < 0)
+ 			goto err_empty;
+-		s->data = xmmap(NULL, s->size, PROT_READ, MAP_PRIVATE, fd, 0);
++		s->data = xmmap(NULL, s->size, PROT_READ, MAP_SHARED, fd, 0);
+ 		close(fd);
+ 		s->should_munmap = 1;
+ 
+diff -ru git-2.25.1/midx.c git-2.25.1-serenity/midx.c
+--- git-2.25.1/midx.c	2020-02-17 05:47:35.000000000 +0100
++++ git-2.25.1-serenity/midx.c	2020-02-20 06:44:32.082023367 +0100
+@@ -71,7 +71,7 @@
+ 
+ 	FREE_AND_NULL(midx_name);
+ 
+-	midx_map = xmmap(NULL, midx_size, PROT_READ, MAP_PRIVATE, fd, 0);
++	midx_map = xmmap(NULL, midx_size, PROT_READ, MAP_SHARED, fd, 0);
+ 
+ 	FLEX_ALLOC_STR(m, object_dir, object_dir);
+ 	m->fd = fd;
+diff -ru git-2.25.1/pack-bitmap.c git-2.25.1-serenity/pack-bitmap.c
+--- git-2.25.1/pack-bitmap.c	2020-02-17 05:47:35.000000000 +0100
++++ git-2.25.1-serenity/pack-bitmap.c	2020-02-20 06:44:32.086023353 +0100
+@@ -288,7 +288,7 @@
+ 
+ 	bitmap_git->pack = packfile;
+ 	bitmap_git->map_size = xsize_t(st.st_size);
+-	bitmap_git->map = xmmap(NULL, bitmap_git->map_size, PROT_READ, MAP_PRIVATE, fd, 0);
++	bitmap_git->map = xmmap(NULL, bitmap_git->map_size, PROT_READ, MAP_SHARED, fd, 0);
+ 	bitmap_git->map_pos = 0;
+ 	close(fd);
+ 
+diff -ru git-2.25.1/packfile.c git-2.25.1-serenity/packfile.c
+--- git-2.25.1/packfile.c	2020-02-17 05:47:35.000000000 +0100
++++ git-2.25.1-serenity/packfile.c	2020-02-20 06:44:32.086023353 +0100
+@@ -97,7 +97,7 @@
+ 		close(fd);
+ 		return error("index file %s is too small", path);
+ 	}
+-	idx_map = xmmap(NULL, idx_size, PROT_READ, MAP_PRIVATE, fd, 0);
++	idx_map = xmmap(NULL, idx_size, PROT_READ, MAP_SHARED, fd, 0);
+ 	close(fd);
+ 
+ 	ret = load_idx(path, hashsz, idx_map, idx_size, p);
+@@ -653,7 +653,7 @@
+ 				&& unuse_one_window(p))
+ 				; /* nothing */
+ 			win->base = xmmap_gently(NULL, win->len,
+-				PROT_READ, MAP_PRIVATE,
++				PROT_READ, MAP_SHARED,
+ 				p->pack_fd, win->offset);
+ 			if (win->base == MAP_FAILED)
+ 				die_errno("packfile %s cannot be mapped",
+diff -ru git-2.25.1/read-cache.c git-2.25.1-serenity/read-cache.c
+--- git-2.25.1/read-cache.c	2020-02-17 05:47:35.000000000 +0100
++++ git-2.25.1-serenity/read-cache.c	2020-02-20 06:44:32.090023338 +0100
+@@ -2177,7 +2177,7 @@
+ 	if (mmap_size < sizeof(struct cache_header) + the_hash_algo->rawsz)
+ 		die(_("%s: index file smaller than expected"), path);
+ 
+-	mmap = xmmap_gently(NULL, mmap_size, PROT_READ, MAP_PRIVATE, fd, 0);
++	mmap = xmmap_gently(NULL, mmap_size, PROT_READ, MAP_SHARED, fd, 0);
+ 	if (mmap == MAP_FAILED)
+ 		die_errno(_("%s: unable to map index file"), path);
+ 	close(fd);
+diff -ru git-2.25.1/sha1-file.c git-2.25.1-serenity/sha1-file.c
+--- git-2.25.1/sha1-file.c	2020-02-17 05:47:35.000000000 +0100
++++ git-2.25.1-serenity/sha1-file.c	2020-02-20 06:44:32.102023295 +0100
+@@ -1129,7 +1129,7 @@
+ 				close(fd);
+ 				return NULL;
+ 			}
+-			map = xmmap(NULL, *size, PROT_READ, MAP_PRIVATE, fd, 0);
++			map = xmmap(NULL, *size, PROT_READ, MAP_SHARED, fd, 0);
+ 		}
+ 		close(fd);
+ 	}
+@@ -2073,7 +2073,7 @@
+ 			ret = index_mem(istate, oid, buf, size, type, path, flags);
+ 		free(buf);
+ 	} else {
+-		void *buf = xmmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
++		void *buf = xmmap(NULL, size, PROT_READ, MAP_SHARED, fd, 0);
+ 		ret = index_mem(istate, oid, buf, size, type, path, flags);
+ 		munmap(buf, size);
+ 	}
