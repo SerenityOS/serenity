@@ -113,6 +113,7 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
     DO_COLOR(RulerActiveText);
     DO_COLOR(RulerInactiveText);
     DO_COLOR(TextCursor);
+    DO_COLOR(FocusOutline);
 
     buffer->seal();
     buffer->share_globally();
