@@ -496,7 +496,7 @@ void TextEditor::paint_event(PaintEvent& event)
     }
 
     if (is_focused() && m_cursor_state)
-        painter.fill_rect(cursor_content_rect(), Color::Red);
+        painter.fill_rect(cursor_content_rect(), palette().text_cursor());
 }
 
 void TextEditor::toggle_selection_if_needed_for_event(const KeyEvent& event)
