@@ -89,7 +89,7 @@ void GlyphMapWidget::paint_event(GUI::PaintEvent& event)
     painter.add_clip_rect(event.rect());
 
     painter.set_font(font());
-    painter.fill_rect(frame_inner_rect(), Color::White);
+    painter.fill_rect(frame_inner_rect(), palette().base());
 
     u8 glyph = 0;
 
@@ -103,9 +103,9 @@ void GlyphMapWidget::paint_event(GUI::PaintEvent& event)
                 font().glyph_height());
             if (glyph == m_selected_glyph) {
                 painter.fill_rect(outer_rect, palette().selection());
-                painter.draw_glyph(inner_rect.location(), glyph, Color::White);
+                painter.draw_glyph(inner_rect.location(), glyph, palette().selection_text());
             } else {
-                painter.draw_glyph(inner_rect.location(), glyph, Color::Black);
+                painter.draw_glyph(inner_rect.location(), glyph, palette().base_text());
             }
         }
     }
