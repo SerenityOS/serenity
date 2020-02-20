@@ -81,7 +81,7 @@ int main(int argc, char** argv)
 
         auto data = socket->read_all();
 
-        for (int i = 0; i < data.size(); ++i)
+        for (size_t i = 0; i < data.size(); ++i)
             putchar(data[i]);
         printf("\n");
 

@@ -92,7 +92,7 @@ void HexEditor::fill_selection(u8 fill_byte)
 
 void HexEditor::set_position(int position)
 {
-    if (position > m_buffer.size())
+    if (position > static_cast<int>(m_buffer.size()))
         return;
 
     m_position = position;
@@ -125,7 +125,7 @@ bool HexEditor::write_to_file(const StringView& path)
         return false;
     }
 
-    if (nwritten == m_buffer.size()) {
+    if (static_cast<size_t>(nwritten) == m_buffer.size()) {
         m_tracked_changes.clear();
         update();
     }
@@ -224,7 +224,7 @@ void HexEditor::mousedown_event(GUI::MouseEvent& event)
         auto byte_y = (absolute_y - hex_start_y) / line_height();
         auto offset = (byte_y * m_bytes_per_row) + byte_x;
 
-        if (offset < 0 || offset > m_buffer.size())
+        if (offset < 0 || offset > static_cast<int>(m_buffer.size()))
             return;
 
 #ifdef HEX_DEBUG
@@ -246,7 +246,7 @@ void HexEditor::mousedown_event(GUI::MouseEvent& event)
         auto byte_y = (absolute_y - text_start_y) / line_height();
         auto offset = (byte_y * m_bytes_per_row) + byte_x;
 
-        if (offset < 0 || offset > m_buffer.size())
+        if (offset < 0 || offset > static_cast<int>(m_buffer.size()))
             return;
 
 #ifdef HEX_DEBUG
@@ -293,7 +293,7 @@ void HexEditor::mousemove_event(GUI::MouseEvent& event)
             auto byte_y = (absolute_y - hex_start_y) / line_height();
             auto offset = (byte_y * m_bytes_per_row) + byte_x;
 
-            if (offset < 0 || offset > m_buffer.size())
+            if (offset < 0 || offset > static_cast<int>(m_buffer.size()))
                 return;
 
             m_selection_end = offset;
@@ -304,7 +304,7 @@ void HexEditor::mousemove_event(GUI::MouseEvent& event)
             auto byte_x = (absolute_x - text_start_x) / character_width();
             auto byte_y = (absolute_y - text_start_y) / line_height();
             auto offset = (byte_y * m_bytes_per_row) + byte_x;
-            if (offset < 0 || offset > m_buffer.size())
+            if (offset < 0 || offset > static_cast<int>(m_buffer.size()))
                 return;
 
             m_selection_end = offset;
@@ -367,7 +367,7 @@ void HexEditor::keydown_event(GUI::KeyEvent& event)
     }
 
     if (event.key() == KeyCode::Key_Down) {
-        if (m_position + bytes_per_row() < m_buffer.size()) {
+        if (m_position + bytes_per_row() < static_cast<int>(m_buffer.size())) {
             m_position += bytes_per_row();
             m_byte_position = 0;
             scroll_position_into_view(m_position);
@@ -389,7 +389,7 @@ void HexEditor::keydown_event(GUI::KeyEvent& event)
     }
 
     if (event.key() == KeyCode::Key_Right) {
-        if (m_position + 1 < m_buffer.size()) {
+        if (m_position + 1 < static_cast<int>(m_buffer.size())) {
             m_position++;
             m_byte_position = 0;
             scroll_position_into_view(m_position);
@@ -425,7 +425,7 @@ void HexEditor::hex_mode_keydown_event(GUI::KeyEvent& event)
         if (m_buffer.is_empty())
             return;
         ASSERT(m_position >= 0);
-        ASSERT(m_position < m_buffer.size());
+        ASSERT(m_position < static_cast<int>(m_buffer.size()));
 
         // yes, this is terrible... but it works.
         auto value = (event.key() >= KeyCode::Key_0 && event.key() <= KeyCode::Key_9)
@@ -438,7 +438,7 @@ void HexEditor::hex_mode_keydown_event(GUI::KeyEvent& event)
             m_byte_position++;
         } else {
             m_buffer.data()[m_position] = (m_buffer.data()[m_position] & 0xF0) | value; // save the first 4 bits, OR the new value in the last 4
-            if (m_position + 1 < m_buffer.size())
+            if (m_position + 1 < static_cast<int>(m_buffer.size()))
                 m_position++;
             m_byte_position = 0;
         }
@@ -454,11 +454,11 @@ void HexEditor::text_mode_keydown_event(GUI::KeyEvent& event)
     if (m_buffer.is_empty())
         return;
     ASSERT(m_position >= 0);
-    ASSERT(m_position < m_buffer.size());
+    ASSERT(m_position < static_cast<int>(m_buffer.size()));
 
     m_tracked_changes.set(m_position, m_buffer.data()[m_position]);
     m_buffer.data()[m_position] = (u8)event.text().characters()[0]; // save the first 4 bits, OR the new value in the last 4
-    if (m_position + 1 < m_buffer.size())
+    if (m_position + 1 < static_cast<int>(m_buffer.size()))
         m_position++;
     m_byte_position = 0;
 
@@ -534,7 +534,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
     for (int i = min_row; i < max_row; i++) {
         for (int j = 0; j < bytes_per_row(); j++) {
             auto byte_position = (i * bytes_per_row()) + j;
-            if (byte_position >= m_buffer.size())
+            if (byte_position >= static_cast<int>(m_buffer.size()))
                 return;
 
             Color text_color = palette().color(foreground_role());

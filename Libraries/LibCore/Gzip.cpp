@@ -40,7 +40,7 @@ bool CGzip::is_compressed(const ByteBuffer& data)
 // see: https://tools.ietf.org/html/rfc1952#page-5
 static Optional<ByteBuffer> get_gzip_payload(const ByteBuffer& data)
 {
-    int current = 0;
+    size_t current = 0;
     auto read_byte = [&]() {
         if (current >= data.size()) {
             ASSERT_NOT_REACHED();

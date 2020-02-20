@@ -79,9 +79,9 @@ int main(int argc, char** argv)
 
     Vector<char> buffer;
 
-    int index = 0;
+    size_t index = 0;
 
-    auto peek = [&](int offset = 0) -> char {
+    auto peek = [&](size_t offset = 0) -> char {
         if ((index + offset) < file_contents.size())
             return file_contents[index + offset];
         return 0;
