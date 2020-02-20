@@ -142,7 +142,7 @@ void IRCClient::process_line(ByteBuffer&& line)
     } state
         = Start;
 
-    for (int i = 0; i < line.size(); ++i) {
+    for (size_t i = 0; i < line.size(); ++i) {
         char ch = line[i];
         if (ch == '\r')
             continue;

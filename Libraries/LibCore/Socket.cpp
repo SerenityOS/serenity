@@ -162,12 +162,12 @@ ByteBuffer Socket::receive(int max_size)
 
 bool Socket::send(const ByteBuffer& data)
 {
-    int nsent = ::send(fd(), data.data(), data.size(), 0);
+    ssize_t nsent = ::send(fd(), data.data(), data.size(), 0);
     if (nsent < 0) {
         set_error(errno);
         return false;
     }
-    ASSERT(nsent == data.size());
+    ASSERT(static_cast<size_t>(nsent) == data.size());
     return true;
 }
 

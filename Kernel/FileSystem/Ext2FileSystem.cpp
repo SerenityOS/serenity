@@ -923,8 +923,10 @@ bool Ext2FSInode::write_directory(const Vector<FS::DirectoryEntry>& entries)
     stream.fill_to_end(0);
 
     ssize_t nwritten = write_bytes(0, directory_data.size(), directory_data.data(), nullptr);
+    if (nwritten < 0)
+        return false;
     set_metadata_dirty(true);
-    return nwritten == directory_data.size();
+    return static_cast<size_t>(nwritten) == directory_data.size();
 }
 
 KResult Ext2FSInode::add_child(InodeIdentifier child_id, const StringView& name, mode_t mode)

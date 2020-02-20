@@ -53,7 +53,7 @@ int main(int argc, char** argv)
         return 1;
     }
     const auto& b = f->read_all();
-    for (auto i = 0; i < b.size(); ++i)
+    for (size_t i = 0; i < b.size(); ++i)
         putchar(b[i]);
     return 0;
 }

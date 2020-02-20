@@ -90,7 +90,7 @@ public:
         s_rpc_clients.set(m_client_id, this);
         add_child(*m_socket);
         m_socket->on_ready_to_read = [this] {
-            i32 length;
+            u32 length;
             int nread = m_socket->read((u8*)&length, sizeof(length));
             if (nread == 0) {
                 dbg() << "RPC client disconnected";
@@ -117,7 +117,7 @@ public:
     void send_response(const JsonObject& response)
     {
         auto serialized = response.to_string();
-        i32 length = serialized.length();
+        u32 length = serialized.length();
         m_socket->write((const u8*)&length, sizeof(length));
         m_socket->write(serialized);
     }

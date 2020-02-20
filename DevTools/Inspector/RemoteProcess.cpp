@@ -121,7 +121,7 @@ void RemoteProcess::update()
             return;
         }
 
-        i32 length;
+        u32 length;
         int nread = m_socket->read((u8*)&length, sizeof(length));
         ASSERT(nread == sizeof(length));
 

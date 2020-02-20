@@ -311,7 +311,7 @@ public:
 
     BufferStream& operator<<(const ByteBuffer& value)
     {
-        for (ssize_t i = 0; i < value.size(); ++i)
+        for (size_t i = 0; i < value.size(); ++i)
             m_buffer[m_offset++] = value[i];
         return *this;
     }
@@ -349,7 +349,7 @@ public:
 
 private:
     ByteBuffer& m_buffer;
-    ssize_t m_offset { 0 };
+    size_t m_offset { 0 };
     bool m_read_failure { false };
 };
 

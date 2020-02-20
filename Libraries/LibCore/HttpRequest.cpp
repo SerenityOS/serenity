@@ -82,7 +82,7 @@ Optional<HttpRequest> HttpRequest::from_raw_request(const ByteBuffer& raw_reques
     };
 
     State state { State::InMethod };
-    int index = 0;
+    size_t index = 0;
 
     auto peek = [&](int offset = 0) -> u8 {
         if (index + offset >= raw_request.size())
