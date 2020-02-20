@@ -45,8 +45,7 @@ public:
     void refresh();
 
     bool is_open(const Menu&) const;
-
-    Vector<WeakPtr<Menu>>& open_menu_stack() { return m_open_menu_stack; }
+    bool has_open_menu() const { return !m_open_menu_stack.is_empty(); }
 
     Gfx::Rect menubar_rect() const;
     static int menubar_menu_margin() { return 16; }
