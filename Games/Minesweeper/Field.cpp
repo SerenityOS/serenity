@@ -28,6 +28,7 @@
 #include <AK/HashTable.h>
 #include <AK/Queue.h>
 #include <LibCore/ConfigFile.h>
+#include <LibGfx/Palette.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
@@ -327,12 +328,12 @@ void Field::paint_event(GUI::PaintEvent& event)
     for (int y = inner_rect.top() - 1; y <= inner_rect.bottom(); y += square_size()) {
         Gfx::Point a { inner_rect.left(), y };
         Gfx::Point b { inner_rect.right(), y };
-        painter.draw_line(a, b, Color::MidGray);
+        painter.draw_line(a, b, palette().threed_shadow1());
     }
     for (int x = frame_inner_rect().left() - 1; x <= frame_inner_rect().right(); x += square_size()) {
         Gfx::Point a { x, inner_rect.top() };
         Gfx::Point b { x, inner_rect.bottom() };
-        painter.draw_line(a, b, Color::MidGray);
+        painter.draw_line(a, b, palette().threed_shadow1());
     }
 }
 
