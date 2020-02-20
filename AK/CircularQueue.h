@@ -32,7 +32,7 @@
 
 namespace AK {
 
-template<typename T, int Capacity>
+template<typename T, size_t Capacity>
 class CircularQueue {
 public:
     CircularQueue()
@@ -46,7 +46,7 @@ public:
 
     void clear()
     {
-        for (int i = 0; i < m_size; ++i)
+        for (size_t i = 0; i < m_size; ++i)
             elements()[(m_head + i) % Capacity].~T();
 
         m_head = 0;
@@ -54,9 +54,9 @@ public:
     }
 
     bool is_empty() const { return !m_size; }
-    int size() const { return m_size; }
+    size_t size() const { return m_size; }
 
-    int capacity() const { return Capacity; }
+    size_t capacity() const { return Capacity; }
 
     void enqueue(T&& value)
     {
@@ -87,7 +87,7 @@ public:
         return value;
     }
 
-    const T& at(int index) const { return elements()[(m_head + index) % Capacity]; }
+    const T& at(size_t index) const { return elements()[(m_head + index) % Capacity]; }
 
     const T& first() const { return at(0); }
     const T& last() const { return at(size() - 1); }
@@ -107,19 +107,19 @@ public:
 
     private:
         friend class CircularQueue;
-        ConstIterator(const CircularQueue& queue, const int index)
+        ConstIterator(const CircularQueue& queue, const size_t index)
             : m_queue(queue)
             , m_index(index)
         {
         }
         const CircularQueue& m_queue;
-        int m_index { 0 };
+        size_t m_index { 0 };
     };
 
     ConstIterator begin() const { return ConstIterator(*this, m_head); }
     ConstIterator end() const { return ConstIterator(*this, size()); }
 
-    int head_index() const { return m_head; }
+    size_t head_index() const { return m_head; }
 
 protected:
     T* elements() { return reinterpret_cast<T*>(m_storage); }
@@ -127,8 +127,8 @@ protected:
 
     friend class ConstIterator;
     alignas(T) u8 m_storage[sizeof(T) * Capacity];
-    int m_size { 0 };
-    int m_head { 0 };
+    size_t m_size { 0 };
+    size_t m_head { 0 };
 };
 
 }

@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <AK/Types.h>
+
 namespace AK {
 
 class Bitmap;
@@ -57,7 +59,7 @@ class DoublyLinkedList;
 template<typename T>
 class InlineLinkedList;
 
-template<typename T, int capacity>
+template<typename T, size_t capacity>
 class CircularQueue;
 
 template<typename T>
@@ -116,8 +118,8 @@ using AK::FixedArray;
 using AK::Function;
 using AK::HashMap;
 using AK::HashTable;
-using AK::IPv4Address;
 using AK::InlineLinkedList;
+using AK::IPv4Address;
 using AK::JsonArray;
 using AK::JsonObject;
 using AK::JsonValue;
