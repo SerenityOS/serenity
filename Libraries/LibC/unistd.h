@@ -99,6 +99,7 @@ int setgid(gid_t);
 pid_t tcgetpgrp(int fd);
 int tcsetpgrp(int fd, pid_t pgid);
 ssize_t read(int fd, void* buf, size_t count);
+ssize_t pread(int fd, void* buf, size_t count, off_t);
 ssize_t write(int fd, const void* buf, size_t count);
 int close(int fd);
 int chdir(const char* path);
