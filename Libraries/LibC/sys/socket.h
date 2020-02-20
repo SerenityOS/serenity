@@ -79,6 +79,7 @@ struct ucred {
 #define SO_KEEPALIVE 3
 #define SO_ERROR 4
 #define SO_PEERCRED 5
+#define SO_REUSEADDR 6
 
 int socket(int domain, int type, int protocol);
 int bind(int sockfd, const struct sockaddr* addr, socklen_t);
