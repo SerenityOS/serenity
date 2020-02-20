@@ -27,6 +27,7 @@
 #include "GlyphEditorWidget.h"
 #include <LibGUI/Painter.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/Palette.h>
 
 GlyphEditorWidget::GlyphEditorWidget(Gfx::Font& mutable_font, GUI::Widget* parent)
     : GUI::Frame(parent)
@@ -57,15 +58,15 @@ void GlyphEditorWidget::paint_event(GUI::PaintEvent& event)
     GUI::Painter painter(*this);
     painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
-    painter.fill_rect(frame_inner_rect(), Color::White);
+    painter.fill_rect(frame_inner_rect(), palette().base());
     painter.translate(frame_thickness(), frame_thickness());
 
     painter.translate(-1, -1);
     for (int y = 1; y < font().glyph_height(); ++y)
-        painter.draw_line({ 0, y * m_scale }, { font().max_glyph_width() * m_scale, y * m_scale }, Color::Black);
+        painter.draw_line({ 0, y * m_scale }, { font().max_glyph_width() * m_scale, y * m_scale }, palette().threed_shadow2());
 
     for (int x = 1; x < font().max_glyph_width(); ++x)
-        painter.draw_line({ x * m_scale, 0 }, { x * m_scale, font().glyph_height() * m_scale }, Color::Black);
+        painter.draw_line({ x * m_scale, 0 }, { x * m_scale, font().glyph_height() * m_scale }, palette().threed_shadow2());
 
     auto bitmap = font().glyph_bitmap(m_glyph);
 
@@ -73,10 +74,10 @@ void GlyphEditorWidget::paint_event(GUI::PaintEvent& event)
         for (int x = 0; x < font().max_glyph_width(); ++x) {
             Gfx::Rect rect { x * m_scale, y * m_scale, m_scale, m_scale };
             if (x >= font().glyph_width(m_glyph)) {
-                painter.fill_rect(rect, Color::MidGray);
+                painter.fill_rect(rect, palette().threed_shadow1());
             } else {
                 if (bitmap.bit_at(x, y))
-                    painter.fill_rect(rect, Color::Black);
+                    painter.fill_rect(rect, palette().base_text());
             }
         }
     }
