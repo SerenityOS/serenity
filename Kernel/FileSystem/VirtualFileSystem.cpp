@@ -433,7 +433,7 @@ KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
     RefPtr<Custody> new_parent_custody;
     auto new_custody_or_error = resolve_path(new_path, base, &new_parent_custody);
     if (new_custody_or_error.is_error()) {
-        if (new_custody_or_error.error() != -ENOENT)
+        if (new_custody_or_error.error() != -ENOENT || !new_parent_custody)
             return new_custody_or_error.error();
     }
 
