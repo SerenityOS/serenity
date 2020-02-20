@@ -37,6 +37,8 @@ __BEGIN_DECLS
 const char* inet_ntop(int af, const void* src, char* dst, socklen_t);
 int inet_pton(int af, const char* src, void* dst);
 
+char* inet_ntoa(struct in_addr);
+
 inline uint16_t htons(uint16_t value)
 {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
