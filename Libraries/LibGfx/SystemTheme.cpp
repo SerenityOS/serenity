@@ -112,6 +112,7 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
     DO_COLOR(RulerBorder);
     DO_COLOR(RulerActiveText);
     DO_COLOR(RulerInactiveText);
+    DO_COLOR(TextCursor);
 
     buffer->seal();
     buffer->share_globally();
