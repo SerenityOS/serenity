@@ -24,9 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/String.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
+#include <AK/String.h>
 #include <LibCore/File.h>
 #include <LibPCIDB/Database.h>
 #include <stdio.h>
@@ -81,20 +81,22 @@ int main(int argc, char** argv)
         auto revision_id = dev.get("revision_id").to_u32();
         auto class_id = dev.get("class").to_u32();
 
-        String vendor_name = String::format("%02x", vendor_id);
-        auto vendor = db->get_vendor(vendor_id);
-        if (vendor != "")
-            vendor_name = vendor;
+        String vendor_name;
+        String device_name;
+        String class_name;
 
-        String device_name = String::format("%02x", device_id);
-        auto device = db->get_device(vendor_id, device_id);
-        if (device != "")
-            device_name = device;
+        if (db) {
+            vendor_name = db->get_vendor(vendor_id);
+            device_name = db->get_device(vendor_id, device_id);
+            class_name = db->get_class(class_id);
+        }
 
-        String class_name = String::format("%04x", class_id);
-        auto class_ptr = db->get_class(class_id);
-        if (class_ptr != "")
-            class_name = class_ptr;
+        if (vendor_name.is_empty())
+            vendor_name = String::format("%02x", vendor_id);
+        if (device_name.is_empty())
+            device_name = String::format("%02x", device_id);
+        if (class_name.is_empty())
+            class_name = String::format("%04x", class_id);
 
         printf("%04x:%02x:%02x.%d %s: %s %s (rev %02x)\n",
             seg, bus, slot, function,
