@@ -701,4 +701,10 @@ int unveil(const char* path, const char* permissions)
     int rc = syscall(SC_unveil, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
+
+char* getpass(const char* prompt)
+{
+    dbg() << "FIXME: getpass(\"" << prompt << "\")";
+    ASSERT_NOT_REACHED();
+}
 }
