@@ -52,4 +52,11 @@ struct servent {
 
 struct servent* getservbyname(const char* name, const char* protocol);
 
+extern int h_errno;
+
+#define HOST_NOT_FOUND 101
+#define NO_DATA 102
+#define NO_RECOVERY 103
+#define TRY_AGAIN 104
+
 __END_DECLS
