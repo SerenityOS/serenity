@@ -98,6 +98,7 @@ public:
     Color ruler_border() const { return color(ColorRole::RulerBorder); }
     Color ruler_active_text() const { return color(ColorRole::RulerActiveText); }
     Color ruler_inactive_text() const { return color(ColorRole::RulerInactiveText); }
+    Color text_cursor() const { return color(ColorRole::TextCursor); }
 
     Color link() const { return color(ColorRole::Link); }
     Color active_link() const { return color(ColorRole::ActiveLink); }
