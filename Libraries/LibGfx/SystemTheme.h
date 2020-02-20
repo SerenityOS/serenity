@@ -76,6 +76,7 @@ enum class ColorRole {
     RulerActiveText,
     RulerInactiveText,
     TextCursor,
+    FocusOutline,
 
     __Count,
 
