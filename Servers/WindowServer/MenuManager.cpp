@@ -173,8 +173,8 @@ void MenuManager::handle_mouse_event(MouseEvent& mouse_event)
     if (handled_menubar_event)
         return;
 
-    if (!open_menu_stack().is_empty()) {
-        auto* topmost_menu = open_menu_stack().last().ptr();
+    if (has_open_menu()) {
+        auto* topmost_menu = m_open_menu_stack.last().ptr();
         ASSERT(topmost_menu);
         auto* window = topmost_menu->menu_window();
         ASSERT(window);
@@ -207,7 +207,7 @@ void MenuManager::handle_mouse_event(MouseEvent& mouse_event)
         }
 
         if (mouse_event.type() == Event::MouseMove) {
-            for (auto& menu : open_menu_stack()) {
+            for (auto& menu : m_open_menu_stack) {
                 if (!menu)
                     continue;
                 if (!menu->menu_window()->rect().contains(mouse_event.position()))
@@ -227,7 +227,7 @@ void MenuManager::handle_mouse_event(MouseEvent& mouse_event)
 void MenuManager::handle_menu_mouse_event(Menu& menu, const MouseEvent& event)
 {
     bool is_hover_with_any_menu_open = event.type() == MouseEvent::MouseMove
-        && !m_open_menu_stack.is_empty()
+        && has_open_menu()
         && (m_open_menu_stack.first()->menubar() || m_open_menu_stack.first() == m_system_menu.ptr());
     bool is_mousedown_with_left_button = event.type() == MouseEvent::MouseDown && event.button() == MouseButton::Left;
     bool should_open_menu = &menu != m_current_menu && (is_hover_with_any_menu_open || is_mousedown_with_left_button);
@@ -251,7 +251,7 @@ void MenuManager::set_needs_window_resize()
 
 void MenuManager::close_all_menus_from_client(Badge<ClientConnection>, ClientConnection& client)
 {
-    if (m_open_menu_stack.is_empty())
+    if (!has_open_menu())
         return;
     if (m_open_menu_stack.first()->client() != &client)
         return;
