@@ -235,7 +235,8 @@ NonnullOwnPtr<Region> Region::create_kernel_only(const Range& range, const Strin
 
 bool Region::should_cow(size_t page_index) const
 {
-    if (vmobject().physical_pages()[page_index]->is_shared_zero_page())
+    auto& slot = vmobject().physical_pages()[page_index];
+    if (slot && slot->is_shared_zero_page())
         return true;
     if (m_shared)
         return false;
