@@ -545,14 +545,18 @@ void load_task_register(u16 selector)
     asm("ltr %0" ::"r"(selector));
 }
 
+u32 g_in_irq;
+
 void handle_irq(RegisterState regs)
 {
     clac();
+    ++g_in_irq;
     ASSERT(regs.isr_number >= 0x50 && regs.isr_number <= 0x5f);
     u8 irq = (u8)(regs.isr_number - 0x50);
     if (s_irq_handler[irq])
         s_irq_handler[irq]->handle_irq();
     PIC::eoi(irq);
+    --g_in_irq;
 }
 
 void sse_init()
