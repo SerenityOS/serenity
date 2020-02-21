@@ -1984,7 +1984,7 @@ int Process::sys$open(const Syscall::SC_open_params* user_params)
     if (path.is_error())
         return path.error();
 #ifdef DEBUG_IO
-    dbgprintf("%s(%u) sys$open(%d, \"%s\")\n", dirfd, name().characters(), pid(), path.value().characters());
+    dbg() << "sys$open(dirfd=" << dirfd << ", path=\"" << path.value() << "\", options=" << options << ", mode=" << mode << ")";
 #endif
     int fd = alloc_fd();
     if (fd < 0)
