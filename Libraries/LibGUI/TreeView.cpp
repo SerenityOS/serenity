@@ -417,8 +417,13 @@ void TreeView::keydown_event(KeyEvent& event)
     if (event.key() == KeyCode::Key_Left) {
         if (cursor_index.is_valid() && model()->row_count(cursor_index)) {
             auto& metadata = ensure_metadata_for_index(cursor_index);
-            if (metadata.open)
+            if (metadata.open) {
                 open_tree_node(false, metadata);
+                return;
+            }
+        }
+        if (cursor_index.is_valid() && cursor_index.parent().is_valid()) {
+            selection().set(cursor_index.parent());
             return;
         }
     }
@@ -426,8 +431,12 @@ void TreeView::keydown_event(KeyEvent& event)
     if (event.key() == KeyCode::Key_Right) {
         if (cursor_index.is_valid() && model()->row_count(cursor_index)) {
             auto& metadata = ensure_metadata_for_index(cursor_index);
-            if (!metadata.open)
+            if (!metadata.open) {
                 open_tree_node(true, metadata);
+                return;
+            }
+
+            selection().set(model()->index(0, model()->tree_column(), cursor_index));
             return;
         }
     }
