@@ -139,6 +139,7 @@ private:
     GroupIndex group_index_from_inode(InodeIndex) const;
     GroupIndex group_index_from_block_index(BlockIndex) const;
 
+    Vector<BlockIndex> block_list_for_inode_impl(const ext2_inode&, bool include_block_list_blocks = false) const;
     Vector<BlockIndex> block_list_for_inode(const ext2_inode&, bool include_block_list_blocks = false) const;
     bool write_block_list_for_inode(InodeIndex, ext2_inode&, const Vector<BlockIndex>&);
 

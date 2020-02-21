@@ -407,11 +407,10 @@ Vector<Ext2FS::BlockIndex> Ext2FS::block_list_for_inode_impl(const ext2_inode& e
     LOCKER(m_lock);
     unsigned entries_per_block = EXT2_ADDR_PER_BLOCK(&super_block());
 
-    // NOTE: i_blocks is number of 512-byte blocks, not number of fs-blocks.
-    unsigned block_count = e2inode.i_blocks / (block_size() / 512);
+    unsigned block_count = ceil_div(e2inode.i_size, block_size());
 
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS::block_list_for_inode(): i_size=%u, i_blocks=%u, block_count=%u\n", e2inode.i_size, block_count);
+    dbgprintf("Ext2FS::block_list_for_inode(): i_size=%u, i_blocks=%u, block_count=%u\n", e2inode.i_size, e2inode.i_blocks, block_count);
 #endif
 
     unsigned blocks_remaining = block_count;
@@ -687,9 +686,11 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDes
     u8 block[max_block_size];
 
     for (int bi = first_block_logical_index; remaining_count && bi <= last_block_logical_index; ++bi) {
-        bool success = fs().read_block(m_block_list[bi], block, description);
+        auto block_index = m_block_list[bi];
+        ASSERT(block_index);
+        bool success = fs().read_block(block_index, block, description);
         if (!success) {
-            kprintf("ext2fs: read_bytes: read_block(%u) failed (lbi: %u)\n", m_block_list[bi], bi);
+            kprintf("ext2fs: read_bytes: read_block(%u) failed (lbi: %u)\n", block_index, bi);
             return -EIO;
         }
 
