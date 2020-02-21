@@ -67,6 +67,7 @@ static u32 s_seconds_since_boot;
 void timer_interrupt_handler(RegisterState regs)
 {
     clac();
+    ++g_in_irq;
     IRQHandlerScope scope(IRQ_TIMER);
     if (++s_ticks_this_second >= TICKS_PER_SECOND) {
         // FIXME: Synchronize with the RTC somehow to prevent drifting apart.
@@ -74,6 +75,7 @@ void timer_interrupt_handler(RegisterState regs)
         s_ticks_this_second = 0;
     }
     Scheduler::timer_tick(regs);
+    --g_in_irq;
 }
 
 namespace PIT {

@@ -592,4 +592,6 @@ private:
     u32 m_flags;
 };
 
+extern u32 g_in_irq;
+
 }
