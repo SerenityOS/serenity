@@ -396,6 +396,14 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
 
 Vector<Ext2FS::BlockIndex> Ext2FS::block_list_for_inode(const ext2_inode& e2inode, bool include_block_list_blocks) const
 {
+    auto block_list = block_list_for_inode_impl(e2inode, include_block_list_blocks);
+    while (!block_list.is_empty() && block_list.last() == 0)
+        block_list.take_last();
+    return block_list;
+}
+
+Vector<Ext2FS::BlockIndex> Ext2FS::block_list_for_inode_impl(const ext2_inode& e2inode, bool include_block_list_blocks) const
+{
     LOCKER(m_lock);
     unsigned entries_per_block = EXT2_ADDR_PER_BLOCK(&super_block());
 
@@ -408,6 +416,14 @@ Vector<Ext2FS::BlockIndex> Ext2FS::block_list_for_inode(const ext2_inode& e2inod
 
     unsigned blocks_remaining = block_count;
     Vector<BlockIndex> list;
+
+    auto add_block = [&](BlockIndex bi) {
+        if (blocks_remaining) {
+            list.append(bi);
+            --blocks_remaining;
+        }
+    };
+
     if (include_block_list_blocks) {
         // This seems like an excessive over-estimate but w/e.
         list.ensure_capacity(blocks_remaining * 2);
@@ -418,10 +434,7 @@ Vector<Ext2FS::BlockIndex> Ext2FS::block_list_for_inode(const ext2_inode& e2inod
     unsigned direct_count = min(block_count, (unsigned)EXT2_NDIR_BLOCKS);
     for (unsigned i = 0; i < direct_count; ++i) {
         auto block_index = e2inode.i_block[i];
-        if (!block_index)
-            return list;
-        list.unchecked_append(block_index);
-        --blocks_remaining;
+        add_block(block_index);
     }
 
     if (!blocks_remaining)
@@ -435,36 +448,30 @@ Vector<Ext2FS::BlockIndex> Ext2FS::block_list_for_inode(const ext2_inode& e2inod
         ASSERT(array_block);
         auto* array = reinterpret_cast<const __u32*>(array_block.data());
         unsigned count = min(blocks_remaining, entries_per_block);
-        for (unsigned i = 0; i < count; ++i) {
-            if (!array[i]) {
-                blocks_remaining = 0;
-                return;
-            }
+        for (BlockIndex i = 0; i < count; ++i)
             callback(array[i]);
-            --blocks_remaining;
-        }
     };
 
-    process_block_array(e2inode.i_block[EXT2_IND_BLOCK], [&](unsigned entry) {
-        list.unchecked_append(entry);
+    process_block_array(e2inode.i_block[EXT2_IND_BLOCK], [&](unsigned block_index) {
+        add_block(block_index);
     });
 
     if (!blocks_remaining)
         return list;
 
-    process_block_array(e2inode.i_block[EXT2_DIND_BLOCK], [&](unsigned entry) {
-        process_block_array(entry, [&](unsigned entry) {
-            list.unchecked_append(entry);
+    process_block_array(e2inode.i_block[EXT2_DIND_BLOCK], [&](unsigned block_index) {
+        process_block_array(block_index, [&](unsigned block_index2) {
+            add_block(block_index2);
         });
     });
 
     if (!blocks_remaining)
         return list;
 
-    process_block_array(e2inode.i_block[EXT2_TIND_BLOCK], [&](unsigned entry) {
-        process_block_array(entry, [&](unsigned entry) {
-            process_block_array(entry, [&](unsigned entry) {
-                list.unchecked_append(entry);
+    process_block_array(e2inode.i_block[EXT2_TIND_BLOCK], [&](unsigned block_index) {
+        process_block_array(block_index, [&](unsigned block_index2) {
+            process_block_array(block_index2, [&](unsigned block_index3) {
+                add_block(block_index3);
             });
         });
     });
@@ -487,8 +494,10 @@ void Ext2FS::free_inode(Ext2FSInode& inode)
 
     auto block_list = block_list_for_inode(inode.m_raw_inode, true);
 
-    for (auto block_index : block_list)
-        set_block_allocation_state(block_index, false);
+    for (auto block_index : block_list) {
+        if (block_index)
+            set_block_allocation_state(block_index, false);
+    }
 
     set_inode_allocation_state(inode.index(), false);
 
@@ -729,7 +738,8 @@ KResult Ext2FSInode::resize(u64 new_size)
 #endif
         while (block_list.size() != blocks_needed_after) {
             auto block_index = block_list.take_last();
-            fs().set_block_allocation_state(block_index, false);
+            if (block_index)
+                fs().set_block_allocation_state(block_index, false);
         }
     }
 
@@ -1304,6 +1314,7 @@ Ext2FS::CachedBitmap& Ext2FS::get_bitmap_block(BlockIndex bitmap_block_index)
 
 bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
 {
+    ASSERT(block_index != 0);
     LOCKER(m_lock);
 #ifdef EXT2_DEBUG
     dbgprintf("Ext2FS: set_block_allocation_state(block=%u, state=%u)\n", block_index, new_state);
