@@ -71,6 +71,9 @@ public:
         m_size = size;
     }
 
+    const Region& region() const { return *m_region; }
+    Region& region() { return *m_region; }
+
 private:
     explicit KBufferImpl(NonnullOwnPtr<Region>&& region, size_t size)
         : m_size(size)
