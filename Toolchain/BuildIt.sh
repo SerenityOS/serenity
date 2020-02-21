@@ -148,7 +148,7 @@ pushd "$DIR/Build/"
         "$MAKE" install-gcc install-target-libgcc || exit 1
 
         echo "XXX serenity libc and libm"
-        ( cd "$DIR/../Libraries/LibC/" && "$MAKE" clean && "$MAKE" && "$MAKE" install )
+        ( cd "$DIR/../Libraries/LibC/" && "$MAKE" clean && "$MAKE" EXTRA_LIBC_DEFINES="-DBUILDING_SERENITY_TOOLCHAIN" && "$MAKE" install )
         ( cd "$DIR/../Libraries/LibM/" && "$MAKE" clean && "$MAKE" && "$MAKE" install )
 
         echo "XXX build libstdc++"
