@@ -451,12 +451,12 @@ void Compositor::draw_cursor()
 
     if (wm.dnd_client()) {
         auto dnd_rect = wm.dnd_rect();
-        m_back_painter->fill_rect(dnd_rect, Color(110, 34, 9, 200));
+        m_back_painter->fill_rect(dnd_rect, wm.palette().selection().with_alpha(200));
         if (!wm.dnd_text().is_empty()) {
             auto text_rect = dnd_rect;
             if (wm.dnd_bitmap())
                 text_rect.move_by(wm.dnd_bitmap()->width(), 0);
-            m_back_painter->draw_text(text_rect, wm.dnd_text(), Gfx::TextAlignment::CenterLeft, Color::White);
+             m_back_painter->draw_text(text_rect, wm.dnd_text(), Gfx::TextAlignment::CenterLeft, wm.palette().selection_text());
         }
         if (wm.dnd_bitmap()) {
             m_back_painter->blit(dnd_rect.top_left(), *wm.dnd_bitmap(), wm.dnd_bitmap()->rect());
