@@ -115,6 +115,7 @@ union [[gnu::packed]] Descriptor
 
 class PageDirectoryEntry {
 public:
+    const PageTableEntry* page_table_base() const { return reinterpret_cast<PageTableEntry*>(m_raw & 0xfffff000u); }
     PageTableEntry* page_table_base() { return reinterpret_cast<PageTableEntry*>(m_raw & 0xfffff000u); }
     void set_page_table_base(u32 value)
     {

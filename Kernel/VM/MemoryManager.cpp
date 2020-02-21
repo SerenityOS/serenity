@@ -191,6 +191,21 @@ void MemoryManager::parse_memory_map()
         m_user_physical_pages += region.finalize_capacity();
 }
 
+const PageTableEntry* MemoryManager::pte(const PageDirectory& page_directory, VirtualAddress vaddr)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    u32 page_directory_table_index = (vaddr.get() >> 30) & 0x3;
+    u32 page_directory_index = (vaddr.get() >> 21) & 0x1ff;
+    u32 page_table_index = (vaddr.get() >> 12) & 0x1ff;
+
+    auto* pd = quickmap_pd(const_cast<PageDirectory&>(page_directory), page_directory_table_index);
+    const PageDirectoryEntry& pde = pd[page_directory_index];
+    if (!pde.is_present())
+        return nullptr;
+
+    return &quickmap_pt(PhysicalAddress((uintptr_t)pde.page_table_base()))[page_table_index];
+}
+
 PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, VirtualAddress vaddr)
 {
     ASSERT_INTERRUPTS_DISABLED();
@@ -610,6 +625,17 @@ bool MemoryManager::validate_kernel_read(const Process& process, VirtualAddress 
 {
     return validate_range<AccessSpace::Kernel, AccessType::Read>(process, vaddr, size);
 }
+
+bool MemoryManager::can_read_without_faulting(const Process& process, VirtualAddress vaddr, size_t size) const
+{
+    // FIXME: Use the size argument!
+    UNUSED_PARAM(size);
+    auto* pte = const_cast<MemoryManager*>(this)->pte(process.page_directory(), vaddr);
+    if (!pte)
+        return false;
+    return pte->is_present();
+}
+
 
 bool MemoryManager::validate_user_read(const Process& process, VirtualAddress vaddr, size_t size) const
 {

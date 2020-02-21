@@ -813,7 +813,7 @@ Vector<uintptr_t> Thread::raw_backtrace(uintptr_t ebp) const
     ProcessPagingScope paging_scope(process);
     Vector<uintptr_t, Profiling::max_stack_frame_count> backtrace;
     backtrace.append(ebp);
-    for (uintptr_t* stack_ptr = (uintptr_t*)ebp; process.validate_read_from_kernel(VirtualAddress(stack_ptr), sizeof(uintptr_t) * 2); stack_ptr = (uintptr_t*)*stack_ptr) {
+    for (uintptr_t* stack_ptr = (uintptr_t*)ebp; MM.can_read_without_faulting(process, VirtualAddress(stack_ptr), sizeof(uintptr_t) * 2); stack_ptr = (uintptr_t*)*stack_ptr) {
         uintptr_t retaddr = stack_ptr[1];
         backtrace.append(retaddr);
         if (backtrace.size() == Profiling::max_stack_frame_count)

@@ -91,6 +91,8 @@ public:
 
     bool validate_kernel_read(const Process&, VirtualAddress, size_t) const;
 
+    bool can_read_without_faulting(const Process&, VirtualAddress, size_t) const;
+
     enum class ShouldZeroFill {
         No,
         Yes
@@ -164,6 +166,7 @@ private:
 
     PageDirectory& kernel_page_directory() { return *m_kernel_page_directory; }
 
+    const PageTableEntry* pte(const PageDirectory&, VirtualAddress);
     PageTableEntry& ensure_pte(PageDirectory&, VirtualAddress);
 
     RefPtr<PageDirectory> m_kernel_page_directory;
