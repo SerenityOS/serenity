@@ -26,6 +26,7 @@
 
 #include <AK/FileSystemPath.h>
 #include <AK/String.h>
+#include <LibCore/ArgsParser.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -37,24 +38,30 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (argc != 3) {
-        printf("usage: mv <old-path> <new-path>\n");
+    const char* old_path = nullptr;
+    const char* new_path = nullptr;
+
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(old_path, "The file or directory being moved", "source");
+    args_parser.add_positional_argument(new_path, "destination of the move operation", "destination");
+    args_parser.parse(argc, argv);
+
+    struct stat st;
+
+    int rc = lstat(new_path, &st);
+    if (rc != 0 && errno != ENOENT) {
+        perror("lstat");
         return 1;
     }
 
-    String old_path = argv[1];
-    String new_path = argv[2];
-
-    struct stat st;
-    int rc = lstat(new_path.characters(), &st);
-    if (rc == 0) {
-        if (S_ISDIR(st.st_mode)) {
-            auto old_basename = FileSystemPath(old_path).basename();
-            new_path = String::format("%s/%s", new_path.characters(), old_basename.characters());
-        }
+    String combined_new_path;
+    if (rc == 0 && S_ISDIR(st.st_mode)) {
+        auto old_basename = FileSystemPath(old_path).basename();
+        combined_new_path = String::format("%s/%s", new_path, old_basename.characters());
+        new_path = combined_new_path.characters();
     }
 
-    rc = rename(old_path.characters(), new_path.characters());
+    rc = rename(old_path, new_path);
     if (rc < 0) {
         perror("rename");
         return 1;
