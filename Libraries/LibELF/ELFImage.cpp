@@ -147,7 +147,7 @@ bool ELFImage::parse()
             m_symbol_table_section_index = i;
         }
         if (sh.sh_type == SHT_STRTAB && i != header().e_shstrndx) {
-            if (StringView(".strtab") == section_header_table_string(sh.sh_name))
+            if (section_header_table_string(sh.sh_name) == ELF_STRTAB)
                 m_string_table_section_index = i;
         }
     }
