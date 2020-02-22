@@ -28,7 +28,6 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
-#include <Kernel/Arch/i386/PIC.h>
 #include <Kernel/Devices/KeyboardDevice.h>
 #include <Kernel/TTY/VirtualConsole.h>
 #include <LibBareMetal/IO.h>
@@ -486,7 +485,7 @@ void KeyboardDevice::key_state_changed(u8 raw, bool pressed)
     m_has_e0_prefix = false;
 }
 
-void KeyboardDevice::handle_irq()
+void KeyboardDevice::handle_irq(RegisterState&)
 {
     for (;;) {
         u8 status = IO::in8(I8042_STATUS);
