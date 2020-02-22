@@ -31,13 +31,18 @@
 #include <AK/RefPtr.h>
 #include <AK/String.h>
 #include <Kernel/Forward.h>
+#include <Kernel/Heap/SlabAllocator.h>
 
 namespace Kernel {
 
 // FIXME: Custody needs some locking.
 
-class Custody : public RefCounted<Custody>
+class Custody
+    : public RefCounted<Custody>
     , public InlineLinkedListNode<Custody> {
+
+    MAKE_SLAB_ALLOCATED(Custody)
+
 public:
     static Custody* get_if_cached(Custody* parent, const StringView& name);
     static NonnullRefPtr<Custody> get_or_create(Custody* parent, const StringView& name, Inode&, int mount_flags);
