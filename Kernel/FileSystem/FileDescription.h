@@ -47,6 +47,7 @@ class Socket;
 class TTY;
 
 class FileDescription : public RefCounted<FileDescription> {
+    MAKE_SLAB_ALLOCATED(FileDescription)
 public:
     static NonnullRefPtr<FileDescription> create(Custody&);
     static NonnullRefPtr<FileDescription> create(File&);
