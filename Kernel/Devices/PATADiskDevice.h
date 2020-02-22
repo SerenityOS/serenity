@@ -31,7 +31,7 @@
 #pragma once
 
 #include <Kernel/Devices/BlockDevice.h>
-#include <Kernel/IRQHandler.h>
+#include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Lock.h>
 
 namespace Kernel {

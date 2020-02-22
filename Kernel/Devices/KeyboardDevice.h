@@ -26,12 +26,12 @@
 
 #pragma once
 
-#include "IRQHandler.h"
 #include "KeyCode.h"
 #include <AK/CircularQueue.h>
 #include <AK/DoublyLinkedList.h>
 #include <AK/Types.h>
 #include <Kernel/Devices/CharacterDevice.h>
+#include <Kernel/Interrupts/IRQHandler.h>
 
 namespace Kernel {
 
@@ -59,7 +59,7 @@ public:
 
 private:
     // ^IRQHandler
-    virtual void handle_irq() override;
+    virtual void handle_irq(RegisterState&) override;
 
     // ^CharacterDevice
     virtual const char* class_name() const override { return "KeyboardDevice"; }

@@ -28,7 +28,7 @@
 
 #include <AK/CircularQueue.h>
 #include <Kernel/Devices/CharacterDevice.h>
-#include <Kernel/IRQHandler.h>
+#include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/MousePacket.h>
 
 namespace Kernel {
@@ -49,8 +49,8 @@ public:
 
 private:
     // ^IRQHandler
-    virtual void handle_irq() override;
     void handle_vmmouse_absolute_pointer();
+    virtual void handle_irq(RegisterState&) override;
 
     // ^CharacterDevice
     virtual const char* class_name() const override { return "PS2MouseDevice"; }

@@ -99,7 +99,7 @@
 
 #include <AK/RefPtr.h>
 #include <Kernel/Devices/BlockDevice.h>
-#include <Kernel/IRQHandler.h>
+#include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Lock.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <LibBareMetal/Memory/PhysicalAddress.h>
@@ -177,7 +177,7 @@ protected:
 
 private:
     // ^IRQHandler
-    void handle_irq();
+    virtual void handle_irq(RegisterState&) override;
 
     // ^DiskDevice
     virtual const char* class_name() const override;
