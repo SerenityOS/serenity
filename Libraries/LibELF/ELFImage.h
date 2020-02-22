@@ -225,14 +225,16 @@ private:
 template<typename F>
 inline void ELFImage::for_each_section(F func) const
 {
-    for (unsigned i = 0; i < section_count(); ++i)
+    auto section_count = this->section_count();
+    for (unsigned i = 0; i < section_count; ++i)
         func(section(i));
 }
 
 template<typename F>
 inline void ELFImage::for_each_section_of_type(unsigned type, F func) const
 {
-    for (unsigned i = 0; i < section_count(); ++i) {
+    auto section_count = this->section_count();
+    for (unsigned i = 0; i < section_count; ++i) {
         auto& section = this->section(i);
         if (section.type() == type) {
             if (func(section) == IterationDecision::Break)
@@ -244,7 +246,8 @@ inline void ELFImage::for_each_section_of_type(unsigned type, F func) const
 template<typename F>
 inline void ELFImage::RelocationSection::for_each_relocation(F func) const
 {
-    for (unsigned i = 0; i < relocation_count(); ++i) {
+    auto relocation_count = this->relocation_count();
+    for (unsigned i = 0; i < relocation_count; ++i) {
         if (func(relocation(i)) == IterationDecision::Break)
             break;
     }
@@ -253,7 +256,8 @@ inline void ELFImage::RelocationSection::for_each_relocation(F func) const
 template<typename F>
 inline void ELFImage::for_each_symbol(F func) const
 {
-    for (unsigned i = 0; i < symbol_count(); ++i) {
+    auto symbol_count = this->symbol_count();
+    for (unsigned i = 0; i < symbol_count; ++i) {
         if (func(symbol(i)) == IterationDecision::Break)
             break;
     }
@@ -262,6 +266,7 @@ inline void ELFImage::for_each_symbol(F func) const
 template<typename F>
 inline void ELFImage::for_each_program_header(F func) const
 {
-    for (unsigned i = 0; i < program_header_count(); ++i)
+    auto program_header_count = this->program_header_count();
+    for (unsigned i = 0; i < program_header_count; ++i)
         func(program_header(i));
 }
