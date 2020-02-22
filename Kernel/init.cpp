@@ -33,10 +33,8 @@
 #include <Kernel/ACPI/ACPIDynamicParser.h>
 #include <Kernel/ACPI/ACPIStaticParser.h>
 #include <Kernel/ACPI/DMIDecoder.h>
-#include <Kernel/Arch/i386/APIC.h>
+#include <Kernel/ACPI/MultiProcessorParser.h>
 #include <Kernel/Arch/i386/CPU.h>
-#include <Kernel/Arch/i386/PIC.h>
-#include <Kernel/Arch/i386/PIT.h>
 #include <Kernel/CMOS.h>
 #include <Kernel/Devices/BXVGADevice.h>
 #include <Kernel/Devices/DebugLogDevice.h>
@@ -50,6 +48,7 @@
 #include <Kernel/Devices/MBVGADevice.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/Devices/PATAChannel.h>
+#include <Kernel/Devices/PIT.h>
 #include <Kernel/Devices/PS2MouseDevice.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Devices/SB16.h>
@@ -60,6 +59,9 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/Heap/kmalloc.h>
+#include <Kernel/Interrupts/APIC.h>
+#include <Kernel/Interrupts/InterruptManagement.h>
+#include <Kernel/Interrupts/PIC.h>
 #include <Kernel/KParams.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/Net/LoopbackAdapter.h>
@@ -86,6 +88,7 @@ static void setup_serial_debug();
 static void setup_acpi();
 static void setup_vmmouse();
 static void setup_pci();
+static void setup_interrupts();
 
 VirtualConsole* tty0;
 
@@ -103,8 +106,11 @@ extern "C" [[noreturn]] void init()
     MemoryManager::initialize();
 
     bool text_debug = KParams::the().has("text_debug");
+    gdt_init();
+    idt_init();
 
     setup_acpi();
+    setup_interrupts();
 
     new VFS;
     new DebugLogDevice;
@@ -115,10 +121,8 @@ extern "C" [[noreturn]] void init()
 
     __stack_chk_guard = get_good_random<u32>();
 
+    PIT::initialize();
     RTC::initialize();
-    PIC::initialize();
-    gdt_init();
-    idt_init();
 
     // call global constructors after gtd and itd init
     for (ctor_func_t* ctor = &start_ctors; ctor < &end_ctors; ctor++)
@@ -291,7 +295,6 @@ void init_stage2()
             }
         }
     }
-
     auto e2fs = Ext2FS::create(root_dev);
     if (!e2fs->initialize()) {
         kprintf("init_stage2: couldn't open root filesystem\n");
@@ -458,4 +461,38 @@ void setup_pci()
     PCI::Initializer::the().dismiss();
 }
 
+static void setup_interrupt_management()
+{
+    auto* madt = (ACPI_RAW::MADT*)ACPIParser::the().find_table("APIC");
+    if (!madt) {
+        InterruptManagement::initialize();
+        return;
+    }
+    AdvancedInterruptManagement::initialize(*madt);
+}
+
+void setup_interrupts()
+{
+    setup_interrupt_management();
+
+    if (!KParams::the().has("smp")) {
+        InterruptManagement::the().switch_to_pic_mode();
+        return;
+    }
+    auto smp = KParams::the().get("smp");
+    if (smp == "off") {
+        InterruptManagement::the().switch_to_pic_mode();
+        return;
+    }
+    if (smp == "on") {
+        ASSERT_NOT_REACHED(); // FIXME: The IOAPIC mode is not stable yet so we can't use it now.
+        InterruptManagement::the().switch_to_ioapic_mode();
+        APIC::init();
+        APIC::enable_bsp();
+        return;
+    }
+
+    kprintf("smp boot argmuent has an invalid value.\n");
+    hang();
+}
 }
