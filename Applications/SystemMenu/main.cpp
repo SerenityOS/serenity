@@ -40,6 +40,8 @@
 #include <sys/utsname.h>
 #include <unistd.h>
 
+//#define SYSTEM_MENU_DEBUG
+
 struct AppMetadata {
     String executable;
     String name;
@@ -136,8 +138,10 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
         if (!app.icon_path.is_empty())
             icon = Gfx::Bitmap::load_from_file(app.icon_path);
 
+#ifdef SYSTEM_MENU_DEBUG
         if (icon)
             dbg() << "App " << app.name << " has icon with size " << icon->size();
+#endif
 
         auto parent_menu = g_app_category_menus.get(app.category).value_or(*system_menu);
         parent_menu->add_action(GUI::Action::create(app.name, icon.ptr(), [app_identifier](auto&) {
