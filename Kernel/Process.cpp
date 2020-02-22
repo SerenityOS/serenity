@@ -804,6 +804,10 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
         return -ETXTBSY;
     }
 
+    // Disable profiling temporarily in case it's running on this process.
+    bool was_profiling = is_profiling();
+    TemporaryChange profiling_disabler(m_profiling, false);
+
     auto old_page_directory = move(m_page_directory);
     auto old_regions = move(m_regions);
     m_page_directory = PageDirectory::create_for_userspace(*this);
@@ -1015,7 +1019,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     kprintf("Process %u (%s) exec'd %s @ %p\n", pid(), name().characters(), path.characters(), tss.eip);
 #endif
 
-    if (is_profiling())
+    if (was_profiling)
         Profiling::did_exec(path);
 
     new_main_thread->set_state(Thread::State::Skip1SchedulerPass);
