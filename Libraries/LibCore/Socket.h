@@ -58,7 +58,7 @@ public:
     SocketAddress source_address() const { return m_source_address; }
     int source_port() const { return m_source_port; }
 
-    SocketAddress destination_address() const { return m_source_address; }
+    SocketAddress destination_address() const { return m_destination_address; }
     int destination_port() const { return m_destination_port; }
 
     Function<void()> on_connected;
