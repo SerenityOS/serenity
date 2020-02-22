@@ -24,14 +24,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "APIC.h"
-#include "Assertions.h"
-#include "IRQHandler.h"
-#include "PIC.h"
-#include "Process.h"
+#include <AK/Assertions.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Arch/i386/ISRStubs.h>
+#include <Kernel/Interrupts/APIC.h>
+#include <Kernel/Interrupts/GenericInterruptHandler.h>
+#include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/Interrupts/InterruptManagement.h>
+#include <Kernel/Interrupts/SharedIRQHandler.h>
+#include <Kernel/Interrupts/UnhandledInterruptHandler.h>
 #include <Kernel/KSyms.h>
+#include <Kernel/Process.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/mallocdefs.h>
 
@@ -50,7 +54,7 @@ static DescriptorTablePointer s_gdtr;
 static Descriptor s_idt[256];
 static Descriptor s_gdt[256];
 
-static IRQHandler* s_irq_handler[16];
+static GenericInterruptHandler* s_interrupt_handler[GENERIC_INTERRUPT_HANDLERS_COUNT];
 
 static Vector<u16>* s_gdt_freelist;
 
@@ -68,39 +72,7 @@ void gdt_free_entry(u16 entry)
     s_gdt_freelist->append(entry);
 }
 
-extern "C" void handle_irq(RegisterState);
-extern "C" void irq_common_asm_entry();
-
-#define GENERATE_IRQ_ASM_ENTRY(irq, isr_number) \
-    extern "C" void irq_##irq##_asm_entry();    \
-    asm(".globl irq_" #irq "_asm_entry\n"       \
-        "irq_" #irq "_asm_entry:\n"             \
-        "    pushw $" #isr_number "\n"          \
-        "    pushw $0\n"                        \
-        "    jmp irq_common_asm_entry\n");
-
-asm(
-    ".globl irq_common_asm_entry\n"
-    "irq_common_asm_entry: \n"
-    "    pusha\n"
-    "    pushl %ds\n"
-    "    pushl %es\n"
-    "    pushl %fs\n"
-    "    pushl %gs\n"
-    "    pushl %ss\n"
-    "    mov $0x10, %ax\n"
-    "    mov %ax, %ds\n"
-    "    mov %ax, %es\n"
-    "    cld\n"
-    "    call handle_irq\n"
-    "    add $0x4, %esp\n" // "popl %ss"
-    "    popl %gs\n"
-    "    popl %fs\n"
-    "    popl %es\n"
-    "    popl %ds\n"
-    "    popa\n"
-    "    add $0x4, %esp\n"
-    "    iret\n");
+extern "C" void handle_interrupt(RegisterState);
 
 #define EH_ENTRY(ec, title)                         \
     extern "C" void title##_asm_entry();            \
@@ -444,16 +416,65 @@ static void unimp_trap()
     hang();
 }
 
-void register_irq_handler(u8 irq, IRQHandler& handler)
+GenericInterruptHandler& get_interrupt_handler(u8 interrupt_number)
 {
-    ASSERT(!s_irq_handler[irq]);
-    s_irq_handler[irq] = &handler;
+    ASSERT(s_interrupt_handler[interrupt_number] != nullptr);
+    return *s_interrupt_handler[interrupt_number];
 }
 
-void unregister_irq_handler(u8 irq, IRQHandler& handler)
+static void revert_to_unused_handler(u8 interrupt_number)
 {
-    ASSERT(s_irq_handler[irq] == &handler);
-    s_irq_handler[irq] = nullptr;
+    new UnhandledInterruptHandler(interrupt_number);
+}
+
+void register_generic_interrupt_handler(u8 interrupt_number, GenericInterruptHandler& handler)
+{
+    if (s_interrupt_handler[interrupt_number] != nullptr) {
+        if (s_interrupt_handler[interrupt_number]->purpose() == HandlerPurpose::UnhandledInterruptHandler) {
+            s_interrupt_handler[interrupt_number] = &handler;
+            return;
+        }
+        if (s_interrupt_handler[interrupt_number]->is_shared_handler() && !s_interrupt_handler[interrupt_number]->is_sharing_with_others()) {
+            ASSERT(s_interrupt_handler[interrupt_number]->purpose() == HandlerPurpose::SharedIRQHandler);
+            static_cast<SharedIRQHandler*>(s_interrupt_handler[interrupt_number])->register_handler(handler);
+            return;
+        } 
+        if (!s_interrupt_handler[interrupt_number]->is_shared_handler()) {
+            ASSERT(s_interrupt_handler[interrupt_number]->purpose() == HandlerPurpose::IRQHandler);
+            auto& previous_handler = *s_interrupt_handler[interrupt_number];
+            s_interrupt_handler[interrupt_number] = nullptr;
+            SharedIRQHandler::initialize(interrupt_number);
+            static_cast<SharedIRQHandler*>(s_interrupt_handler[interrupt_number])->register_handler(previous_handler);
+            static_cast<SharedIRQHandler*>(s_interrupt_handler[interrupt_number])->register_handler(handler);
+            return;
+        }
+        ASSERT_NOT_REACHED();
+    } else {
+        s_interrupt_handler[interrupt_number] = &handler;
+    }
+}
+
+void unregister_generic_interrupt_handler(u8 interrupt_number, GenericInterruptHandler& handler)
+{
+    ASSERT(s_interrupt_handler[interrupt_number] != nullptr);
+    if (s_interrupt_handler[interrupt_number]->purpose() == HandlerPurpose::UnhandledInterruptHandler) {
+        dbg() << "Trying to unregister unused handler (?)";
+        return;
+    }
+    if (s_interrupt_handler[interrupt_number]->is_shared_handler() && !s_interrupt_handler[interrupt_number]->is_sharing_with_others()) {
+        ASSERT(s_interrupt_handler[interrupt_number]->purpose() == HandlerPurpose::SharedIRQHandler);
+        static_cast<SharedIRQHandler*>(s_interrupt_handler[interrupt_number])->unregister_handler(handler);
+        if (!static_cast<SharedIRQHandler*>(s_interrupt_handler[interrupt_number])->get_sharing_devices_count()) {
+            revert_to_unused_handler(interrupt_number);
+        }
+        return;
+    }
+    if (!s_interrupt_handler[interrupt_number]->is_shared_handler()) {
+        ASSERT(s_interrupt_handler[interrupt_number]->purpose() == HandlerPurpose::IRQHandler);
+        revert_to_unused_handler(interrupt_number);
+        return;
+    }
+    ASSERT_NOT_REACHED();
 }
 
 void register_interrupt_handler(u8 index, void (*f)())
@@ -472,23 +493,6 @@ void flush_idt()
 {
     asm("lidt %0" ::"m"(s_idtr));
 }
-
-GENERATE_IRQ_ASM_ENTRY(0, 0x50)
-GENERATE_IRQ_ASM_ENTRY(1, 0x51)
-GENERATE_IRQ_ASM_ENTRY(2, 0x52)
-GENERATE_IRQ_ASM_ENTRY(3, 0x53)
-GENERATE_IRQ_ASM_ENTRY(4, 0x54)
-GENERATE_IRQ_ASM_ENTRY(5, 0x55)
-GENERATE_IRQ_ASM_ENTRY(6, 0x56)
-GENERATE_IRQ_ASM_ENTRY(7, 0x57)
-GENERATE_IRQ_ASM_ENTRY(8, 0x58)
-GENERATE_IRQ_ASM_ENTRY(9, 0x59)
-GENERATE_IRQ_ASM_ENTRY(10, 0x5a)
-GENERATE_IRQ_ASM_ENTRY(11, 0x5b)
-GENERATE_IRQ_ASM_ENTRY(12, 0x5c)
-GENERATE_IRQ_ASM_ENTRY(13, 0x5d)
-GENERATE_IRQ_ASM_ENTRY(14, 0x5e)
-GENERATE_IRQ_ASM_ENTRY(15, 0x5f)
 
 void idt_init()
 {
@@ -516,25 +520,137 @@ void idt_init()
     register_interrupt_handler(0x0f, _exception15);
     register_interrupt_handler(0x10, _exception16);
 
-    register_interrupt_handler(0x50, irq_0_asm_entry);
-    register_interrupt_handler(0x51, irq_1_asm_entry);
-    register_interrupt_handler(0x52, irq_2_asm_entry);
-    register_interrupt_handler(0x53, irq_3_asm_entry);
-    register_interrupt_handler(0x54, irq_4_asm_entry);
-    register_interrupt_handler(0x55, irq_5_asm_entry);
-    register_interrupt_handler(0x56, irq_6_asm_entry);
-    register_interrupt_handler(0x57, irq_7_asm_entry);
-    register_interrupt_handler(0x58, irq_8_asm_entry);
-    register_interrupt_handler(0x59, irq_9_asm_entry);
-    register_interrupt_handler(0x5a, irq_10_asm_entry);
-    register_interrupt_handler(0x5b, irq_11_asm_entry);
-    register_interrupt_handler(0x5c, irq_12_asm_entry);
-    register_interrupt_handler(0x5d, irq_13_asm_entry);
-    register_interrupt_handler(0x5e, irq_14_asm_entry);
-    register_interrupt_handler(0x5f, irq_15_asm_entry);
+    register_interrupt_handler(0x50, interrupt_0_asm_entry);
+    register_interrupt_handler(0x51, interrupt_1_asm_entry);
+    register_interrupt_handler(0x52, interrupt_2_asm_entry);
+    register_interrupt_handler(0x53, interrupt_3_asm_entry);
+    register_interrupt_handler(0x54, interrupt_4_asm_entry);
+    register_interrupt_handler(0x55, interrupt_5_asm_entry);
+    register_interrupt_handler(0x56, interrupt_6_asm_entry);
+    register_interrupt_handler(0x57, interrupt_7_asm_entry);
+    register_interrupt_handler(0x58, interrupt_8_asm_entry);
+    register_interrupt_handler(0x59, interrupt_9_asm_entry);
+    register_interrupt_handler(0x5a, interrupt_10_asm_entry);
+    register_interrupt_handler(0x5b, interrupt_11_asm_entry);
+    register_interrupt_handler(0x5c, interrupt_12_asm_entry);
+    register_interrupt_handler(0x5d, interrupt_13_asm_entry);
+    register_interrupt_handler(0x5e, interrupt_14_asm_entry);
+    register_interrupt_handler(0x5f, interrupt_15_asm_entry);
+    register_interrupt_handler(0x60, interrupt_16_asm_entry);
+    register_interrupt_handler(0x61, interrupt_17_asm_entry);
+    register_interrupt_handler(0x62, interrupt_18_asm_entry);
+    register_interrupt_handler(0x63, interrupt_19_asm_entry);
+    register_interrupt_handler(0x64, interrupt_20_asm_entry);
+    register_interrupt_handler(0x65, interrupt_21_asm_entry);
+    register_interrupt_handler(0x66, interrupt_22_asm_entry);
+    register_interrupt_handler(0x67, interrupt_23_asm_entry);
+    register_interrupt_handler(0x68, interrupt_24_asm_entry);
+    register_interrupt_handler(0x69, interrupt_25_asm_entry);
+    register_interrupt_handler(0x6a, interrupt_26_asm_entry);
+    register_interrupt_handler(0x6b, interrupt_27_asm_entry);
+    register_interrupt_handler(0x6c, interrupt_28_asm_entry);
+    register_interrupt_handler(0x6d, interrupt_29_asm_entry);
+    register_interrupt_handler(0x6e, interrupt_30_asm_entry);
+    register_interrupt_handler(0x6f, interrupt_31_asm_entry);
+    register_interrupt_handler(0x70, interrupt_32_asm_entry);
+    register_interrupt_handler(0x71, interrupt_33_asm_entry);
+    register_interrupt_handler(0x72, interrupt_34_asm_entry);
+    register_interrupt_handler(0x73, interrupt_35_asm_entry);
+    register_interrupt_handler(0x74, interrupt_36_asm_entry);
+    register_interrupt_handler(0x75, interrupt_37_asm_entry);
+    register_interrupt_handler(0x76, interrupt_38_asm_entry);
+    register_interrupt_handler(0x77, interrupt_39_asm_entry);
+    register_interrupt_handler(0x78, interrupt_40_asm_entry);
+    register_interrupt_handler(0x79, interrupt_41_asm_entry);
+    register_interrupt_handler(0x7a, interrupt_42_asm_entry);
+    register_interrupt_handler(0x7b, interrupt_43_asm_entry);
+    register_interrupt_handler(0x7c, interrupt_44_asm_entry);
+    register_interrupt_handler(0x7d, interrupt_45_asm_entry);
+    register_interrupt_handler(0x7e, interrupt_46_asm_entry);
+    register_interrupt_handler(0x7f, interrupt_47_asm_entry);
+    register_interrupt_handler(0x80, interrupt_48_asm_entry);
+    register_interrupt_handler(0x81, interrupt_49_asm_entry);
+    register_interrupt_handler(0x82, interrupt_50_asm_entry);
+    register_interrupt_handler(0x83, interrupt_51_asm_entry);
+    register_interrupt_handler(0x84, interrupt_52_asm_entry);
+    register_interrupt_handler(0x85, interrupt_53_asm_entry);
+    register_interrupt_handler(0x86, interrupt_54_asm_entry);
+    register_interrupt_handler(0x87, interrupt_55_asm_entry);
+    register_interrupt_handler(0x88, interrupt_56_asm_entry);
+    register_interrupt_handler(0x89, interrupt_57_asm_entry);
+    register_interrupt_handler(0x8a, interrupt_58_asm_entry);
+    register_interrupt_handler(0x8b, interrupt_59_asm_entry);
+    register_interrupt_handler(0x8c, interrupt_60_asm_entry);
+    register_interrupt_handler(0x8d, interrupt_61_asm_entry);
+    register_interrupt_handler(0x8e, interrupt_62_asm_entry);
+    register_interrupt_handler(0x8f, interrupt_63_asm_entry);
+    register_interrupt_handler(0x90, interrupt_64_asm_entry);
+    register_interrupt_handler(0x91, interrupt_65_asm_entry);
+    register_interrupt_handler(0x92, interrupt_66_asm_entry);
+    register_interrupt_handler(0x93, interrupt_67_asm_entry);
+    register_interrupt_handler(0x94, interrupt_68_asm_entry);
+    register_interrupt_handler(0x95, interrupt_69_asm_entry);
+    register_interrupt_handler(0x96, interrupt_70_asm_entry);
+    register_interrupt_handler(0x97, interrupt_71_asm_entry);
+    register_interrupt_handler(0x98, interrupt_72_asm_entry);
+    register_interrupt_handler(0x99, interrupt_73_asm_entry);
+    register_interrupt_handler(0x9a, interrupt_74_asm_entry);
+    register_interrupt_handler(0x9b, interrupt_75_asm_entry);
+    register_interrupt_handler(0x9c, interrupt_76_asm_entry);
+    register_interrupt_handler(0x9d, interrupt_77_asm_entry);
+    register_interrupt_handler(0x9e, interrupt_78_asm_entry);
+    register_interrupt_handler(0x9f, interrupt_79_asm_entry);
+    register_interrupt_handler(0xa0, interrupt_80_asm_entry);
+    register_interrupt_handler(0xa1, interrupt_81_asm_entry);
+    register_interrupt_handler(0xa2, interrupt_82_asm_entry);
+    register_interrupt_handler(0xa3, interrupt_83_asm_entry);
+    register_interrupt_handler(0xa4, interrupt_84_asm_entry);
+    register_interrupt_handler(0xa5, interrupt_85_asm_entry);
+    register_interrupt_handler(0xa6, interrupt_86_asm_entry);
+    register_interrupt_handler(0xa7, interrupt_87_asm_entry);
+    register_interrupt_handler(0xa8, interrupt_88_asm_entry);
+    register_interrupt_handler(0xa9, interrupt_89_asm_entry);
+    register_interrupt_handler(0xaa, interrupt_90_asm_entry);
+    register_interrupt_handler(0xab, interrupt_91_asm_entry);
+    register_interrupt_handler(0xac, interrupt_92_asm_entry);
+    register_interrupt_handler(0xad, interrupt_93_asm_entry);
+    register_interrupt_handler(0xae, interrupt_94_asm_entry);
+    register_interrupt_handler(0xaf, interrupt_95_asm_entry);
+    register_interrupt_handler(0xb0, interrupt_96_asm_entry);
+    register_interrupt_handler(0xb1, interrupt_97_asm_entry);
+    register_interrupt_handler(0xb2, interrupt_98_asm_entry);
+    register_interrupt_handler(0xb3, interrupt_99_asm_entry);
+    register_interrupt_handler(0xb4, interrupt_100_asm_entry);
+    register_interrupt_handler(0xb5, interrupt_101_asm_entry);
+    register_interrupt_handler(0xb6, interrupt_102_asm_entry);
+    register_interrupt_handler(0xb7, interrupt_103_asm_entry);
+    register_interrupt_handler(0xb8, interrupt_104_asm_entry);
+    register_interrupt_handler(0xb9, interrupt_105_asm_entry);
+    register_interrupt_handler(0xba, interrupt_106_asm_entry);
+    register_interrupt_handler(0xbb, interrupt_107_asm_entry);
+    register_interrupt_handler(0xbc, interrupt_108_asm_entry);
+    register_interrupt_handler(0xbd, interrupt_109_asm_entry);
+    register_interrupt_handler(0xbe, interrupt_110_asm_entry);
+    register_interrupt_handler(0xbf, interrupt_111_asm_entry);
+    register_interrupt_handler(0xc0, interrupt_112_asm_entry);
+    register_interrupt_handler(0xc1, interrupt_113_asm_entry);
+    register_interrupt_handler(0xc2, interrupt_114_asm_entry);
+    register_interrupt_handler(0xc3, interrupt_115_asm_entry);
+    register_interrupt_handler(0xc4, interrupt_116_asm_entry);
+    register_interrupt_handler(0xc5, interrupt_117_asm_entry);
+    register_interrupt_handler(0xc6, interrupt_118_asm_entry);
+    register_interrupt_handler(0xc7, interrupt_119_asm_entry);
+    register_interrupt_handler(0xc8, interrupt_120_asm_entry);
+    register_interrupt_handler(0xc9, interrupt_121_asm_entry);
+    register_interrupt_handler(0xca, interrupt_122_asm_entry);
+    register_interrupt_handler(0xcb, interrupt_123_asm_entry);
+    register_interrupt_handler(0xcc, interrupt_124_asm_entry);
+    register_interrupt_handler(0xcd, interrupt_125_asm_entry);
+    register_interrupt_handler(0xce, interrupt_126_asm_entry);
+    register_interrupt_handler(0xcf, interrupt_127_asm_entry);
 
-    for (u8 i = 0; i < 16; ++i) {
-        s_irq_handler[i] = nullptr;
+    for (u8 i = 0; i < GENERIC_INTERRUPT_HANDLERS_COUNT; ++i) {
+        new UnhandledInterruptHandler(i);
     }
 
     flush_idt();
@@ -547,15 +663,20 @@ void load_task_register(u16 selector)
 
 u32 g_in_irq;
 
-void handle_irq(RegisterState regs)
+void handle_interrupt(RegisterState regs)
 {
     clac();
     ++g_in_irq;
     ASSERT(regs.isr_number >= 0x50 && regs.isr_number <= 0x5f);
     u8 irq = (u8)(regs.isr_number - 0x50);
-    if (s_irq_handler[irq])
-        s_irq_handler[irq]->handle_irq();
-    PIC::eoi(irq);
+    if (s_interrupt_handler[irq]) {
+        s_interrupt_handler[irq]->handle_interrupt(regs);
+        s_interrupt_handler[irq]->increment_invoking_counter();
+        s_interrupt_handler[irq]->eoi();
+    } else {
+        dbgprintf("No IRQ %d Handler installed!\n", irq);
+        hang();
+    }
     --g_in_irq;
 }
 
