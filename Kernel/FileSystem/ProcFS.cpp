@@ -39,6 +39,8 @@
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Heap/kmalloc.h>
+#include <Kernel/Interrupts/GenericInterruptHandler.h>
+#include <Kernel/Interrupts/InterruptManagement.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/KParams.h>
 #include <Kernel/Module.h>
@@ -81,6 +83,7 @@ enum ProcFileType {
     FI_Root_cpuinfo,
     FI_Root_inodes,
     FI_Root_dmesg,
+    FI_Root_interrupts,
     FI_Root_pci,
     FI_Root_devices,
     FI_Root_uptime,
@@ -334,6 +337,22 @@ Optional<KBuffer> procfs$pci(InodeIdentifier)
         obj.add("class", PCI::get_class(address));
         obj.add("subsystem_id", PCI::get_subsystem_id(address));
         obj.add("subsystem_vendor_id", PCI::get_subsystem_vendor_id(address));
+    });
+    array.finish();
+    return builder.build();
+}
+
+Optional<KBuffer> procfs$interrupts(InodeIdentifier)
+{
+    KBufferBuilder builder;
+    JsonArraySerializer array { builder };
+    InterruptManagement::the().enumerate_interrupt_handlers([&array](GenericInterruptHandler& handler) {
+        auto obj = array.add_object();
+        obj.add("purpose", "Interrupt Handler"); // FIXME: Determine the right description for each interrupt handler.
+        obj.add("interrupt_line", handler.interrupt_number());
+        obj.add("cpu_handler", 0); // FIXME: Determine the responsible CPU for each interrupt handler.
+        obj.add("device_sharing", (unsigned)handler.get_sharing_devices_count());
+        obj.add("call_count", (unsigned)handler.get_invoking_count());
     });
     array.finish();
     return builder.build();
@@ -1590,6 +1609,7 @@ ProcFS::ProcFS()
     m_entries[FI_Root_dmesg] = { "dmesg", FI_Root_dmesg, true, procfs$dmesg };
     m_entries[FI_Root_self] = { "self", FI_Root_self, false, procfs$self };
     m_entries[FI_Root_pci] = { "pci", FI_Root_pci, false, procfs$pci };
+    m_entries[FI_Root_interrupts] = { "interrupts", FI_Root_interrupts, false, procfs$interrupts };
     m_entries[FI_Root_devices] = { "devices", FI_Root_devices, false, procfs$devices };
     m_entries[FI_Root_uptime] = { "uptime", FI_Root_uptime, false, procfs$uptime };
     m_entries[FI_Root_cmdline] = { "cmdline", FI_Root_cmdline, true, procfs$cmdline };
