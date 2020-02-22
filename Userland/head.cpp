@@ -35,6 +35,11 @@ int head(const String& filename, bool print_filename, int line_count, int char_c
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     int line_count = 0;
     int char_count = 0;
     bool never_print_filenames = false;
