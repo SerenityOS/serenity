@@ -56,6 +56,14 @@ public:
         return space_size;
     }
     virtual ID get_id(Address address) final;
+    virtual void enable_interrupt_line(Address address) final
+    {
+        write16_field(address, PCI_COMMAND, read16_field(address, PCI_COMMAND) & ~(1 << 10));
+    }
+    virtual void disable_interrupt_line(Address address) final
+    {
+        write16_field(address, PCI_COMMAND, read16_field(address, PCI_COMMAND) | 1 << 10);
+    }
     virtual u8 get_revision_id(Address address) { return read8_field(address, PCI_REVISION_ID); }
     virtual u8 get_subclass(Address address) { return read8_field(address, PCI_SUBCLASS); }
     virtual u8 get_class(Address address) { return read8_field(address, PCI_CLASS); }
