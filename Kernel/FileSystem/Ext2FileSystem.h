@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Bitmap.h>
+#include <AK/HashMap.h>
 #include <Kernel/FileSystem/DiskBackedFileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/ext2_fs.h>
