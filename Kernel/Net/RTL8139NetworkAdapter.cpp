@@ -137,17 +137,17 @@ void RTL8139NetworkAdapter::detect(const PCI::Address& address)
     (void)adopt(*new RTL8139NetworkAdapter(address, irq)).leak_ref();
 }
 
-RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address pci_address, u8 irq)
-    : PCI::Device(pci_address, irq)
+RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address address, u8 irq)
+    : PCI::Device(address, irq)
 {
     set_interface_name("rtl8139");
 
-    kprintf("RTL8139: Found at PCI address %b:%b:%b\n", get_pci_address().bus(), get_pci_address().slot(), get_pci_address().function());
+    kprintf("RTL8139: Found at PCI address %b:%b:%b\n", pci_address().bus(), pci_address().slot(), pci_address().function());
 
-    enable_bus_mastering(get_pci_address());
+    enable_bus_mastering(pci_address());
 
-    m_io_base = PCI::get_BAR0(get_pci_address()) & ~1;
-    m_interrupt_line = PCI::get_interrupt_line(get_pci_address());
+    m_io_base = PCI::get_BAR0(pci_address()) & ~1;
+    m_interrupt_line = PCI::get_interrupt_line(pci_address());
     kprintf("RTL8139: IO port base: %w\n", m_io_base);
     kprintf("RTL8139: Interrupt line: %u\n", m_interrupt_line);
 
