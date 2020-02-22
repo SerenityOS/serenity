@@ -86,6 +86,32 @@ struct [[gnu::packed]] GenericAddressStructure
     u64 address;
 };
 
+struct [[gnu::packed]] TimerStructure
+{
+    u64 configuration_capability;
+    u64 comparator_value;
+    u64 fsb_interrupt_route;
+};
+
+struct [[gnu::packed]] HPET
+{
+    SDTHeader h;
+    u64 capabilities;
+    u64 reserved;
+    u64 configuration;
+    u64 reserved2;
+    u64 interrupt_status;
+    u64 reserved3;
+    u64 main_counter_value;
+    u64 reserved4;
+    TimerStructure timer0;
+    u64 reserved5;
+    TimerStructure timer1;
+    u64 reserved6;
+    TimerStructure timer2;
+    u64 reserved7;
+};
+
 struct [[gnu::packed]] FADT
 {
     SDTHeader h;
@@ -145,12 +171,47 @@ struct [[gnu::packed]] FADT
     GenericAddressStructure sleep_status;
     u64 hypervisor_vendor_identity;
 };
+enum class MADTEntryType {
+    LocalAPIC = 0x0,
+    IOAPIC = 0x1,
+    InterruptSourceOverride = 0x2,
+    NMI_Source = 0x3,
+    LocalAPIC_NMI = 0x4,
+    LocalAPIC_Address_Override = 0x5,
+    IO_SAPIC = 0x6,
+    Local_SAPIC = 0x7,
+    Platform_interrupt_Sources = 0x8,
+    Local_x2APIC = 0x9,
+    Local_x2APIC_NMI = 0xA,
+    GIC_CPU = 0xB,
+    GIC_Distributor = 0xC,
+    GIC_MSI = 0xD,
+    GIC_Redistrbutor = 0xE,
+    GIC_Interrupt_Translation = 0xF
+};
 
-struct [[gnu::packed]] MADTEntry
+struct [[gnu::packed]] MADTEntryHeader
 {
     u8 type;
     u8 length;
-    char data[];
+};
+
+struct [[gnu::packed]] MADT_IOAPIC
+{
+    MADTEntryHeader h;
+    u8 ioapic_id;
+    u8 reserved;
+    u32 ioapic_address;
+    u32 gsi_base;
+};
+
+struct [[gnu::packed]] MADT_InterruptSourceOverride
+{
+    MADTEntryHeader h;
+    u8 bus;
+    u8 source;
+    u32 global_system_interrupt;
+    u16 flags;
 };
 
 struct [[gnu::packed]] MADT
@@ -158,7 +219,7 @@ struct [[gnu::packed]] MADT
     SDTHeader h;
     u32 lapic_address;
     u32 flags;
-    MADTEntry entries[];
+    MADTEntryHeader entries[];
 };
 
 struct [[gnu::packed]] AMLTable
