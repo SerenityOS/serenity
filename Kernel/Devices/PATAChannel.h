@@ -38,9 +38,9 @@
 
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
-#include <Kernel/IRQHandler.h>
 #include <Kernel/Lock.h>
 #include <Kernel/PCI/Access.h>
+#include <Kernel/PCI/Device.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/WaitQueue.h>
 #include <LibBareMetal/Memory/PhysicalAddress.h>
@@ -54,7 +54,7 @@ struct PhysicalRegionDescriptor {
 };
 
 class PATADiskDevice;
-class PATAChannel final : public IRQHandler {
+class PATAChannel final : public PCI::Device {
     friend class PATADiskDevice;
     AK_MAKE_ETERNAL
 public:
@@ -65,7 +65,7 @@ public:
 
 public:
     static OwnPtr<PATAChannel> create(ChannelType type, bool force_pio);
-    PATAChannel(ChannelType type, bool force_pio);
+    PATAChannel(PCI::Address address, ChannelType type, bool force_pio);
     virtual ~PATAChannel() override;
 
     RefPtr<PATADiskDevice> master_device() { return m_master; };
@@ -73,7 +73,7 @@ public:
 
 private:
     //^ IRQHandler
-    virtual void handle_irq() override;
+    virtual void handle_irq(RegisterState&) override;
 
     void initialize(bool force_pio);
     void detect_disks();
@@ -92,7 +92,6 @@ private:
 
     WaitQueue m_irq_queue;
 
-    PCI::Address m_pci_address;
     PhysicalRegionDescriptor& prdt() { return *reinterpret_cast<PhysicalRegionDescriptor*>(m_prdt_page->paddr().offset(0xc0000000).as_ptr()); }
     RefPtr<PhysicalPage> m_prdt_page;
     RefPtr<PhysicalPage> m_dma_buffer_page;
@@ -102,5 +101,4 @@ private:
     RefPtr<PATADiskDevice> m_master;
     RefPtr<PATADiskDevice> m_slave;
 };
-
 }
