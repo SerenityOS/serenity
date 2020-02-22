@@ -33,6 +33,7 @@
 //#define SB16_DEBUG
 
 namespace Kernel {
+#define SB16_DEFAULT_IRQ 5
 
 enum class SampleFormat : u8 {
     Signed = 0x10,
@@ -76,7 +77,7 @@ void SB16::set_sample_rate(uint16_t hz)
 static SB16* s_the;
 
 SB16::SB16()
-    : IRQHandler(5)
+    : IRQHandler(SB16_DEFAULT_IRQ)
     , CharacterDevice(42, 42) // ### ?
 {
     s_the = this;
@@ -112,6 +113,56 @@ void SB16::initialize()
     auto vmin = dsp_read();
 
     kprintf("SB16: found version %d.%d\n", m_major_version, vmin);
+    set_irq_register(SB16_DEFAULT_IRQ);
+    kprintf("SB16: IRQ %d\n", get_irq_line());
+}
+
+void SB16::set_irq_register(u8 irq_number)
+{
+    u8 bitmask;
+    switch (irq_number) {
+    case 2:
+        bitmask = 0;
+        break;
+    case 5:
+        bitmask = 0b10;
+        break;
+    case 7:
+        bitmask = 0b100;
+        break;
+    case 10:
+        bitmask = 0b1000;
+        break;
+    default:
+        ASSERT_NOT_REACHED();
+    }
+    IO::out8(0x224, 0x80);
+    IO::out8(0x225, bitmask);
+}
+
+u8 SB16::get_irq_line()
+{
+    IO::out8(0x224, 0x80);
+    u8 bitmask = IO::in8(0x225);
+    switch (bitmask) {
+    case 0:
+        return 2;
+    case 0b10:
+        return 5;
+    case 0b100:
+        return 7;
+    case 0b1000:
+        return 10;
+    }
+    return bitmask;
+}
+void SB16::set_irq_line(u8 irq_number)
+{
+    InterruptDisabler disabler;
+    if (irq_number == get_irq_line())
+        return;
+    set_irq_register(irq_number);
+    change_irq_number(irq_number);
 }
 
 bool SB16::can_read(const FileDescription&) const
@@ -155,7 +206,7 @@ void SB16::dma_start(uint32_t length)
     IO::out8(0xd4, (channel % 4));
 }
 
-void SB16::handle_irq()
+void SB16::handle_irq(RegisterState&)
 {
     // Stop sound output ready for the next block.
     dsp_write(0xd5);
