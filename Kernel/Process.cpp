@@ -1015,6 +1015,9 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     kprintf("Process %u (%s) exec'd %s @ %p\n", pid(), name().characters(), path.characters(), tss.eip);
 #endif
 
+    if (is_profiling())
+        Profiling::did_exec(path);
+
     new_main_thread->set_state(Thread::State::Skip1SchedulerPass);
     big_lock().force_unlock_if_locked();
     return 0;

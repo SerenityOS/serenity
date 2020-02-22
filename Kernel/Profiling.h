@@ -51,6 +51,7 @@ extern String& executable_path();
 Sample& next_sample_slot();
 void start(Process&);
 void stop();
+void did_exec(const String& new_executable_path);
 void for_each_sample(Function<void(Sample&)>);
 
 }
