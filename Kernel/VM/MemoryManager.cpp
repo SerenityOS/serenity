@@ -263,7 +263,9 @@ Region* MemoryManager::user_region_from_vaddr(Process& process, VirtualAddress v
         if (region.contains(vaddr))
             return &region;
     }
+#ifdef MM_DEBUG
     dbg() << process << " Couldn't find user region for " << vaddr;
+#endif
     return nullptr;
 }
 
