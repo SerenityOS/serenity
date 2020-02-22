@@ -290,7 +290,7 @@ ACPI_RAW::RSDPDescriptor20* ACPIStaticParser::search_rsdp_in_bios_area()
     char* p_rsdp_str = (char*)(PhysicalAddress(0xE0000).as_ptr());
     for (char* rsdp_str = (char*)rsdp_region->vaddr().offset(offset_in_page((u32)(0xE0000))).as_ptr(); rsdp_str < (char*)(rsdp_region->vaddr().offset(offset_in_page((u32)(0xE0000))).get() + (0xFFFFF - 0xE0000)); rsdp_str += 16) {
 #ifdef ACPI_DEBUG
-        dbgprintf("ACPI: Looking for RSDP in EBDA @ V0x%x, P0x%x\n", rsdp_str, p_rsdp_str);
+        dbgprintf("ACPI: Looking for RSDP in BIOS area @ V0x%x, P0x%x\n", rsdp_str, p_rsdp_str);
 #endif
         if (!strncmp("RSD PTR ", rsdp_str, strlen("RSD PTR ")))
             return (ACPI_RAW::RSDPDescriptor20*)p_rsdp_str;
