@@ -12,11 +12,17 @@ OBJS = \
     ../Libraries/LibBareMetal/Output/Console.o \
     ../Libraries/LibBareMetal/Output/kprintf.o \
     ../Libraries/LibBareMetal/StdLib.o \
-    Arch/i386/APIC.o \
     Arch/i386/CPU.o \
-    Arch/i386/PIC.o \
-    Arch/i386/PIT.o \
+    Interrupts/InterruptManagement.o \
+    Interrupts/APIC.o \
+    Interrupts/IOAPIC.o \
+    Interrupts/PIC.o \
+    Interrupts/GenericInterruptHandler.o \
+    Interrupts/UnhandledInterruptHandler.o \
+    Interrupts/IRQHandler.o \
+    Interrupts/SharedIRQHandler.o \
     CMOS.o \
+    Devices/PIT.o \
     Devices/BXVGADevice.o \
     Devices/BlockDevice.o \
     Devices/CharacterDevice.o \
@@ -40,6 +46,7 @@ OBJS = \
     Devices/SerialDevice.o \
     Devices/ZeroDevice.o \
     Devices/VMWareBackdoor.o \
+    Devices/HardwareTimer.o \
     DoubleBuffer.o \
     FileSystem/Custody.o \
     FileSystem/DevPtsFS.o \
@@ -57,7 +64,6 @@ OBJS = \
     FileSystem/VirtualFileSystem.o \
     Heap/SlabAllocator.o \
     Heap/kmalloc.o \
-    IRQHandler.o \
     KBufferBuilder.o \
     KParams.o \
     KSyms.o \
@@ -77,6 +83,7 @@ OBJS = \
     PCI/IOAccess.o \
     PCI/MMIOAccess.o \
     PCI/Initializer.o \
+    PCI/Device.o \
     PerformanceEventBuffer.o \
     Process.o \
     ProcessTracer.o \
@@ -107,6 +114,7 @@ OBJS = \
     ACPI/ACPIStaticParser.o \
     ACPI/ACPIDynamicParser.o \
     ACPI/DMIDecoder.o \
+    ACPI/MultiProcessorParser.o \
     WaitQueue.o \
     init.o
 
