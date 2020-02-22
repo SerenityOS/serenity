@@ -33,7 +33,7 @@
 namespace Kernel {
 class PCI::Device : public IRQHandler {
 public:
-    Address get_pci_address() const { return m_pci_address; };
+    Address pci_address() const { return m_pci_address; };
 
 protected:
     Device(Address pci_address);
