@@ -26,7 +26,7 @@
 
 #include <AK/QuickSort.h>
 #include <AK/TemporaryChange.h>
-#include <Kernel/Arch/i386/PIT.h>
+#include <Kernel/Devices/PIT.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Net/Socket.h>
 #include <Kernel/Process.h>
@@ -594,8 +594,8 @@ void Scheduler::timer_tick(RegisterState& regs)
     ++g_uptime;
 
     timeval tv;
-    tv.tv_sec = RTC::boot_time() + PIT::seconds_since_boot();
-    tv.tv_usec = PIT::ticks_this_second() * 1000;
+    tv.tv_sec = RTC::boot_time() + PIT::the().seconds_since_boot();
+    tv.tv_usec = PIT::the().ticks_this_second() * 1000;
     Process::update_info_page_timestamp(tv);
 
     if (Process::current->is_profiling()) {
