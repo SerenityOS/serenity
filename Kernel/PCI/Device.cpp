@@ -26,15 +26,16 @@
 
 #include <Kernel/PCI/Device.h>
 
+namespace Kernel {
 PCI::Device::Device(PCI::Address address)
-    : InterruptHandler(PCI::get_interrupt_line(address))
+    : IRQHandler(PCI::get_interrupt_line(address))
     , m_pci_address(address)
 {
     // FIXME: Register PCI device somewhere...
 }
 
 PCI::Device::Device(PCI::Address address, u8 interrupt_vector)
-    : InterruptHandler(interrupt_vector)
+    : IRQHandler(interrupt_vector)
     , m_pci_address(address)
 {
     // FIXME: Register PCI device somewhere...
@@ -43,4 +44,5 @@ PCI::Device::Device(PCI::Address address, u8 interrupt_vector)
 PCI::Device::~Device()
 {
     // FIXME: Unregister the device
+}
 }
