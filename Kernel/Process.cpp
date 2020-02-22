@@ -952,6 +952,8 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
     m_futex_queues.clear();
 
+    disown_all_shared_buffers();
+
     for (int i = 0; i < m_fds.size(); ++i) {
         auto& daf = m_fds[i];
         if (daf.description && daf.flags & FD_CLOEXEC) {
