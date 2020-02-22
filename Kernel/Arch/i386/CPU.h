@@ -32,6 +32,7 @@
 #include <LibBareMetal/Memory/VirtualAddress.h>
 
 #define PAGE_SIZE 4096
+#define GENERIC_INTERRUPT_HANDLERS_COUNT 128
 #define PAGE_MASK ((uintptr_t)0xfffff000u)
 
 namespace Kernel {
@@ -244,7 +245,7 @@ public:
     u64 raw[4];
 };
 
-class IRQHandler;
+class GenericInterruptHandler;
 struct RegisterState;
 
 void gdt_init();
@@ -252,8 +253,11 @@ void idt_init();
 void sse_init();
 void register_interrupt_handler(u8 number, void (*f)());
 void register_user_callable_interrupt_handler(u8 number, void (*f)());
-void register_irq_handler(u8 number, IRQHandler&);
-void unregister_irq_handler(u8 number, IRQHandler&);
+GenericInterruptHandler& get_interrupt_handler(u8 interrupt_number);
+void register_generic_interrupt_handler(u8 number, GenericInterruptHandler&);
+void replace_single_handler_with_shared(GenericInterruptHandler&);
+void replace_shared_handler_with_single(GenericInterruptHandler&);
+void unregister_generic_interrupt_handler(u8 number, GenericInterruptHandler&);
 void flush_idt();
 void flush_gdt();
 void load_task_register(u16 selector);
