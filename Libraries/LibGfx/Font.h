@@ -76,7 +76,8 @@ public:
     static Font& default_fixed_width_font();
     static Font& default_bold_fixed_width_font();
 
-    RefPtr<Font> clone() const;
+    NonnullRefPtr<Font> clone() const;
+    static NonnullRefPtr<Font> create(u8 glyph_height, u8 glyph_width, bool fixed);
 
     static RefPtr<Font> load_from_file(const StringView& path);
     bool write_to_file(const StringView& path);

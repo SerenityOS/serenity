@@ -37,6 +37,7 @@
 #include <stdio.h>
 #include <sys/mman.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 namespace Gfx {
 
@@ -96,7 +97,7 @@ Font& Font::default_bold_font()
     return *s_default_bold_font;
 }
 
-RefPtr<Font> Font::clone() const
+NonnullRefPtr<Font> Font::clone() const
 {
     size_t bytes_per_glyph = sizeof(u32) * glyph_height();
     // FIXME: This is leaked!
@@ -107,7 +108,18 @@ RefPtr<Font> Font::clone() const
         memcpy(new_widths, m_glyph_widths, 256);
     else
         memset(new_widths, m_glyph_width, 256);
-    return adopt(*new Font(m_name, new_rows, new_widths, m_fixed_width, m_glyph_width, m_glyph_height, m_glyph_spacing));
+    return adopt(*new Font(m_name, new_rows, new_widths, m_fixed_width, m_glyph_width, 12, m_glyph_spacing));
+}
+
+NonnullRefPtr<Font> Font::create(u8 glyph_height, u8 glyph_width, bool fixed)
+{
+    size_t bytes_per_glyph = sizeof(u32) * glyph_height;
+    // FIXME: This is leaked!
+    auto* new_rows = static_cast<unsigned*>(malloc(bytes_per_glyph * 256));
+    memset(new_rows, 0, bytes_per_glyph * 256);
+    auto* new_widths = static_cast<u8*>(malloc(256));
+    memset(new_widths, glyph_width, 256);
+    return adopt(*new Font("Untitled", new_rows, new_widths, fixed, glyph_width, glyph_height, 1));
 }
 
 Font::Font(const StringView& name, unsigned* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height, u8 glyph_spacing)
