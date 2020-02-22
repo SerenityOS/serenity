@@ -294,7 +294,11 @@ RefPtr<GUI::Widget> build_file_systems_tab()
         df_fields.empend(
             "Size", Gfx::TextAlignment::CenterRight,
             [](const JsonObject& object) {
-                return human_readable_size(object.get("total_block_count").to_u32() * object.get("block_size").to_u32());
+                StringBuilder size_builder;
+                size_builder.append(" ");
+                size_builder.append(human_readable_size(object.get("total_block_count").to_u32() * object.get("block_size").to_u32()));
+                size_builder.append(" ");
+                return size_builder.to_string();
             },
             [](const JsonObject& object) {
                 return object.get("total_block_count").to_u32() * object.get("block_size").to_u32();
