@@ -56,7 +56,7 @@ ACPIDynamicParser::ACPIDynamicParser(ACPI_RAW::RSDPDescriptor20& rsdp)
     kprintf("ACPI: Dynamic Parsing Enabled, Can parse AML\n");
 }
 
-void ACPIDynamicParser::handle_irq()
+void ACPIDynamicParser::handle_irq(RegisterState&)
 {
     // FIXME: Implement IRQ handling of ACPI signals!
     ASSERT_NOT_REACHED();
