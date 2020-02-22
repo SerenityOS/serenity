@@ -27,7 +27,7 @@
 #pragma once
 
 #include <Kernel/Devices/CharacterDevice.h>
-#include <Kernel/IRQHandler.h>
+#include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/WaitQueue.h>
 #include <LibBareMetal/Memory/PhysicalAddress.h>
@@ -52,7 +52,7 @@ public:
 
 private:
     // ^IRQHandler
-    virtual void handle_irq() override;
+    virtual void handle_irq(RegisterState&) override;
 
     // ^CharacterDevice
     virtual const char* class_name() const override { return "SB16"; }
@@ -63,11 +63,13 @@ private:
     void set_sample_rate(uint16_t hz);
     void dsp_write(u8 value);
     u8 dsp_read();
+    u8 get_irq_line();
+    void set_irq_register(u8 irq_number);
+    void set_irq_line(u8 irq_number);
 
     OwnPtr<Region> m_dma_region;
     int m_major_version { 0 };
 
     WaitQueue m_irq_queue;
 };
-
 }
