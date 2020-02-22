@@ -106,53 +106,46 @@ private:
     static_assert(sizeof(FreeSlab) == templated_slab_size);
 };
 
-static SlabAllocator<8> s_slab_allocator_8;
 static SlabAllocator<16> s_slab_allocator_16;
 static SlabAllocator<32> s_slab_allocator_32;
-static SlabAllocator<48> s_slab_allocator_48;
+static SlabAllocator<64> s_slab_allocator_64;
 
-static_assert(sizeof(Region) <= s_slab_allocator_48.slab_size());
+static_assert(sizeof(Region) <= s_slab_allocator_64.slab_size());
 
 template<typename Callback>
 void for_each_allocator(Callback callback)
 {
-    callback(s_slab_allocator_8);
     callback(s_slab_allocator_16);
     callback(s_slab_allocator_32);
-    callback(s_slab_allocator_48);
+    callback(s_slab_allocator_64);
 }
 
 void slab_alloc_init()
 {
-    s_slab_allocator_8.init(384 * KB);
     s_slab_allocator_16.init(128 * KB);
     s_slab_allocator_32.init(128 * KB);
-    s_slab_allocator_48.init(128 * KB);
+    s_slab_allocator_64.init(512 * KB);
 }
 
 void* slab_alloc(size_t slab_size)
 {
-    if (slab_size <= 8)
-        return s_slab_allocator_8.alloc();
     if (slab_size <= 16)
         return s_slab_allocator_16.alloc();
     if (slab_size <= 32)
         return s_slab_allocator_32.alloc();
-    if (slab_size <= 48)
-        return s_slab_allocator_48.alloc();
+    if (slab_size <= 64)
+        return s_slab_allocator_64.alloc();
     ASSERT_NOT_REACHED();
 }
 
 void slab_dealloc(void* ptr, size_t slab_size)
 {
-    if (slab_size <= 8)
-        return s_slab_allocator_8.dealloc(ptr);
     if (slab_size <= 16)
         return s_slab_allocator_16.dealloc(ptr);
     if (slab_size <= 32)
         return s_slab_allocator_32.dealloc(ptr);
-    if (slab_size <= 48)
-        return s_slab_allocator_48.dealloc(ptr);
+    if (slab_size <= 64)
+        return s_slab_allocator_64.dealloc(ptr);
     ASSERT_NOT_REACHED();
 }
 
