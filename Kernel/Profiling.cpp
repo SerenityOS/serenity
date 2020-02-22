@@ -90,6 +90,12 @@ void stop()
     s_process = nullptr;
 }
 
+void did_exec(const String& new_executable_path)
+{
+    executable_path() = new_executable_path;
+    s_next_slot_index = 0;
+}
+
 void for_each_sample(Function<void(Sample&)> callback)
 {
     for (size_t i = 0; i < s_next_slot_index; ++i) {
