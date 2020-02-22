@@ -256,7 +256,7 @@ OwnPtr<Profile> Profile::load_from_perfcore_file(const StringView& path)
             }
 
             if (symbol == "??")
-                symbol = String::format("%#08x", ptr);
+                symbol = String::format("??", ptr);
 
             JsonObject frame_object;
             frame_object.set("address", ptr);
