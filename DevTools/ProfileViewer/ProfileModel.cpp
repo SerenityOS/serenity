@@ -64,7 +64,7 @@ GUI::ModelIndex ProfileModel::parent_index(const GUI::ModelIndex& index) const
     if (!node.parent()->parent()) {
         for (int row = 0; row < m_profile.roots().size(); ++row) {
             if (m_profile.roots()[row].ptr() == node.parent()) {
-                return create_index(row, 0, node.parent());
+                return create_index(row, index.column(), node.parent());
             }
         }
         ASSERT_NOT_REACHED();
@@ -73,7 +73,7 @@ GUI::ModelIndex ProfileModel::parent_index(const GUI::ModelIndex& index) const
 
     for (int row = 0; row < node.parent()->parent()->children().size(); ++row) {
         if (node.parent()->parent()->children()[row].ptr() == node.parent())
-            return create_index(row, 0, node.parent());
+            return create_index(row, index.column(), node.parent());
     }
 
     ASSERT_NOT_REACHED();
