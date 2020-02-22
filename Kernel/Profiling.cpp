@@ -41,10 +41,27 @@ static KBufferImpl* s_profiling_buffer;
 static size_t s_slot_count;
 static size_t s_next_slot_index;
 static Process* s_process;
+static u32 s_pid;
+
+String& executable_path()
+{
+    static String* path;
+    if (!path)
+        path = new String;
+    return *path;
+}
+
+u32 pid()
+{
+    return s_pid;
+}
 
 void start(Process& process)
 {
     s_process = &process;
+
+    executable_path() = process.executable()->absolute_path().impl();
+    s_pid = process.pid();
 
     if (!s_profiling_buffer) {
         s_profiling_buffer = RefPtr<KBufferImpl>(KBuffer::create_with_size(8 * MB).impl()).leak_ref();
@@ -68,53 +85,8 @@ Sample& next_sample_slot()
     return slot;
 }
 
-static void symbolicate(Sample& stack)
-{
-    auto& process = *s_process;
-    ProcessPagingScope paging_scope(process);
-    struct RecognizedSymbol {
-        u32 address;
-        const KSym* ksym;
-    };
-    Vector<RecognizedSymbol, max_stack_frame_count> recognized_symbols;
-    for (size_t i = 1; i < max_stack_frame_count; ++i) {
-        if (stack.frames[i] == 0)
-            break;
-        recognized_symbols.append({ stack.frames[i], ksymbolicate(stack.frames[i]) });
-    }
-
-    size_t i = 1;
-    for (auto& symbol : recognized_symbols) {
-        if (!symbol.address)
-            break;
-        auto& symbol_string_slot = stack.symbolicated_frames[i];
-        auto& offset_slot = stack.offsets[i];
-        ++i;
-        if (!symbol.ksym) {
-            if (!Scheduler::is_active() && process.elf_loader() && process.elf_loader()->has_symbols())
-                symbol_string_slot = process.elf_loader()->symbolicate(symbol.address, &offset_slot);
-            else
-                symbol_string_slot = String::empty();
-            continue;
-        }
-        u32 offset = symbol.address - symbol.ksym->address;
-        if (symbol.ksym->address == ksym_highest_address && offset > 4096) {
-            symbol_string_slot = String::empty();
-            offset_slot = 0;
-        } else {
-            symbol_string_slot = demangle(symbol.ksym->name);
-            offset_slot = offset;
-        }
-    }
-}
-
 void stop()
 {
-    for (size_t i = 0; i < s_next_slot_index; ++i) {
-        auto& stack = sample_slot(i);
-        symbolicate(stack);
-    }
-
     s_process = nullptr;
 }
 
