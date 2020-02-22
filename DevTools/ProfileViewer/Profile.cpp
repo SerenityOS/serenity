@@ -272,27 +272,6 @@ OwnPtr<Profile> Profile::load_from_perfcore_file(const StringView& path)
     return NonnullOwnPtr<Profile>(NonnullOwnPtr<Profile>::Adopt, *new Profile(move(profile_events)));
 }
 
-OwnPtr<Profile> Profile::load_from_file(const StringView& path)
-{
-    auto file = Core::File::construct(path);
-    if (!file->open(Core::IODevice::ReadOnly)) {
-        fprintf(stderr, "Unable to open %s, error: %s\n", String(path).characters(), file->error_string());
-        return nullptr;
-    }
-
-    auto json = JsonValue::from_string(file->read_all());
-    if (!json.is_array()) {
-        fprintf(stderr, "Invalid format (not a JSON array)\n");
-        return nullptr;
-    }
-
-    auto& samples = json.as_array();
-    if (samples.is_empty())
-        return nullptr;
-
-    return NonnullOwnPtr<Profile>(NonnullOwnPtr<Profile>::Adopt, *new Profile(move(samples)));
-}
-
 void ProfileNode::sort_children()
 {
     sort_profile_nodes(m_children);

@@ -101,7 +101,6 @@ private:
 
 class Profile {
 public:
-    static OwnPtr<Profile> load_from_file(const StringView& path);
     static OwnPtr<Profile> load_from_perfcore_file(const StringView& path);
     ~Profile();
 
