@@ -134,21 +134,20 @@ void E1000NetworkAdapter::detect(const PCI::Address& address)
 }
 
 E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address pci_address, u8 irq)
-    : IRQHandler(irq)
-    , m_pci_address(pci_address)
+    : PCI::Device(pci_address, irq)
 {
     set_interface_name("e1k");
 
-    kprintf("E1000: Found at PCI address @ %w:%b:%b.%b\n", pci_address.seg(), pci_address.bus(), pci_address.slot(), pci_address.function());
+    kprintf("E1000: Found at PCI address @ %w:%b:%b.%b\n", get_pci_address().seg(), get_pci_address().bus(), get_pci_address().slot(), get_pci_address().function());
 
-    enable_bus_mastering(m_pci_address);
+    enable_bus_mastering(get_pci_address());
 
     size_t mmio_base_size = PCI::get_BAR_Space_Size(pci_address, 0);
-    m_mmio_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of(PCI::get_BAR0(m_pci_address))), PAGE_ROUND_UP(mmio_base_size), "E1000 MMIO", Region::Access::Read | Region::Access::Write, false, false);
+    m_mmio_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of(PCI::get_BAR0(get_pci_address()))), PAGE_ROUND_UP(mmio_base_size), "E1000 MMIO", Region::Access::Read | Region::Access::Write, false, false);
     m_mmio_base = m_mmio_region->vaddr();
     m_use_mmio = true;
-    m_io_base = PCI::get_BAR1(m_pci_address) & ~1;
-    m_interrupt_line = PCI::get_interrupt_line(m_pci_address);
+    m_io_base = PCI::get_BAR1(get_pci_address()) & ~1;
+    m_interrupt_line = PCI::get_interrupt_line(get_pci_address());
     kprintf("E1000: IO port base: %w\n", m_io_base);
     kprintf("E1000: MMIO base: P%x\n", PCI::get_BAR0(pci_address) & 0xfffffffc);
     kprintf("E1000: MMIO base size: %u bytes\n", mmio_base_size);
@@ -176,7 +175,7 @@ E1000NetworkAdapter::~E1000NetworkAdapter()
 {
 }
 
-void E1000NetworkAdapter::handle_irq()
+void E1000NetworkAdapter::handle_irq(RegisterState&)
 {
     out32(REG_IMASK, 0x1);
 
