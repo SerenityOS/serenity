@@ -258,8 +258,10 @@ void AbstractTableView::mousemove_event(MouseEvent& event)
     if (!model())
         return AbstractView::mousemove_event(event);
 
+    auto adjusted_position = this->adjusted_position(event.position());
+
     if (m_in_column_resize) {
-        auto delta = event.position() - m_column_resize_origin;
+        auto delta = adjusted_position - m_column_resize_origin;
         int new_width = m_column_resize_original_width + delta.x();
         if (new_width <= minimum_column_width)
             new_width = minimum_column_width;
@@ -276,7 +278,7 @@ void AbstractTableView::mousemove_event(MouseEvent& event)
 
     if (m_pressed_column_header_index != -1) {
         auto header_rect = this->header_rect(m_pressed_column_header_index);
-        if (header_rect.contains(event.position())) {
+        if (header_rect.contains(adjusted_position)) {
             set_hovered_header_index(m_pressed_column_header_index);
             if (!m_pressed_column_header_is_pressed)
                 update_headers();
@@ -294,12 +296,12 @@ void AbstractTableView::mousemove_event(MouseEvent& event)
         int column_count = model()->column_count();
         bool found_hovered_header = false;
         for (int i = 0; i < column_count; ++i) {
-            if (column_resize_grabbable_rect(i).contains(event.position())) {
+            if (column_resize_grabbable_rect(i).contains(adjusted_position)) {
                 window()->set_override_cursor(StandardCursor::ResizeHorizontal);
                 set_hovered_header_index(-1);
                 return;
             }
-            if (header_rect(i).contains(event.position())) {
+            if (header_rect(i).contains(adjusted_position)) {
                 set_hovered_header_index(i);
                 found_hovered_header = true;
             }
@@ -324,7 +326,7 @@ void AbstractTableView::mouseup_event(MouseEvent& event)
         }
         if (m_pressed_column_header_index != -1) {
             auto header_rect = this->header_rect(m_pressed_column_header_index);
-            if (header_rect.contains(event.position())) {
+            if (header_rect.contains(adjusted_position)) {
                 auto new_sort_order = SortOrder::Ascending;
                 if (model()->key_column() == m_pressed_column_header_index)
                     new_sort_order = model()->sort_order() == SortOrder::Ascending
@@ -350,19 +352,21 @@ void AbstractTableView::mousedown_event(MouseEvent& event)
     if (event.button() != MouseButton::Left)
         return AbstractView::mousedown_event(event);
 
+    auto adjusted_position = this->adjusted_position(event.position());
+
     if (event.y() < header_height()) {
         int column_count = model()->column_count();
         for (int i = 0; i < column_count; ++i) {
-            if (column_resize_grabbable_rect(i).contains(event.position())) {
+            if (column_resize_grabbable_rect(i).contains(adjusted_position)) {
                 m_resizing_column = i;
                 m_in_column_resize = true;
                 m_column_resize_original_width = column_width(i);
-                m_column_resize_origin = event.position();
+                m_column_resize_origin = adjusted_position;
                 return;
             }
             auto header_rect = this->header_rect(i);
             auto column_metadata = model()->column_metadata(i);
-            if (header_rect.contains(event.position()) && column_metadata.sortable == Model::ColumnMetadata::Sortable::True) {
+            if (header_rect.contains(adjusted_position) && column_metadata.sortable == Model::ColumnMetadata::Sortable::True) {
                 m_pressed_column_header_index = i;
                 m_pressed_column_header_is_pressed = true;
                 update_headers();
