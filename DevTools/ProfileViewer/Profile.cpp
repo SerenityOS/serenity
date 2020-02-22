@@ -67,7 +67,6 @@ Profile::Profile(const JsonArray& json)
             sample.ptr = sample_object.get("ptr").to_number<u32>();
         }
 
-
         auto frames_value = sample_object.get("frames");
         auto& frames_array = frames_value.as_array();
 
@@ -214,6 +213,11 @@ OwnPtr<Profile> Profile::load_from_perfcore_file(const StringView& path)
 
     auto elf_loader = make<ELFLoader>(static_cast<const u8*>(elf_file.data()), elf_file.size());
 
+    MappedFile kernel_elf_file("/boot/kernel");
+    OwnPtr<ELFLoader> kernel_elf_loader;
+    if (kernel_elf_file.is_valid())
+        kernel_elf_loader = make<ELFLoader>(static_cast<const u8*>(kernel_elf_file.data()), kernel_elf_file.size());
+
     auto events_value = object.get("events");
     if (!events_value.is_array())
         return nullptr;
@@ -239,7 +243,20 @@ OwnPtr<Profile> Profile::load_from_perfcore_file(const StringView& path)
         for (auto& frame : stack_array.values()) {
             auto ptr = frame.to_number<u32>();
             u32 offset = 0;
-            auto symbol = elf_loader->symbolicate(ptr, &offset);
+            String symbol;
+
+            if (ptr >= 0xc0000000) {
+                if (kernel_elf_loader) {
+                    symbol = kernel_elf_loader->symbolicate(ptr, &offset);
+                } else {
+                    symbol = "??";
+                }
+            } else {
+                symbol = elf_loader->symbolicate(ptr, &offset);
+            }
+
+            if (symbol == "??")
+                symbol = String::format("%#08x", ptr);
 
             JsonObject frame_object;
             frame_object.set("address", ptr);
