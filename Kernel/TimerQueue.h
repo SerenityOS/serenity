@@ -30,7 +30,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
 #include <AK/SinglyLinkedList.h>
-#include <Kernel/Arch/i386/PIT.h>
+#include <Kernel/Devices/PIT.h>
 
 namespace Kernel {
 
