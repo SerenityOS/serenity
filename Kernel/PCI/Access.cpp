@@ -107,77 +107,85 @@ void PCI::Access::disable_bus_mastering(Address address)
 }
 
 namespace PCI {
-void enumerate_all(Function<void(Address, ID)> callback)
-{
-    PCI::Access::the().enumerate_all(callback);
-}
+    void enumerate_all(Function<void(Address, ID)> callback)
+    {
+        PCI::Access::the().enumerate_all(callback);
+    }
 
-ID get_id(Address address)
-{
-    return PCI::Access::the().get_id(address);
-}
+    ID get_id(Address address)
+    {
+        return PCI::Access::the().get_id(address);
+    }
 
-u8 get_interrupt_line(Address address)
-{
-    return PCI::Access::the().get_interrupt_line(address);
-}
-u32 get_BAR0(Address address)
-{
-    return PCI::Access::the().get_BAR0(address);
-}
-u32 get_BAR1(Address address)
-{
-    return PCI::Access::the().get_BAR1(address);
-}
-u32 get_BAR2(Address address)
-{
-    return PCI::Access::the().get_BAR2(address);
-}
-u32 get_BAR3(Address address)
-{
-    return PCI::Access::the().get_BAR3(address);
-}
-u32 get_BAR4(Address address)
-{
-    return PCI::Access::the().get_BAR4(address);
-}
-u32 get_BAR5(Address address)
-{
-    return PCI::Access::the().get_BAR5(address);
-}
-u8 get_revision_id(Address address)
-{
-    return PCI::Access::the().get_revision_id(address);
-}
-u8 get_subclass(Address address)
-{
-    return PCI::Access::the().get_subclass(address);
-}
-u8 get_class(Address address)
-{
-    return PCI::Access::the().get_class(address);
-}
-u16 get_subsystem_id(Address address)
-{
-    return PCI::Access::the().get_subsystem_id(address);
-}
-u16 get_subsystem_vendor_id(Address address)
-{
-    return PCI::Access::the().get_subsystem_vendor_id(address);
-}
-void enable_bus_mastering(Address address)
-{
-    PCI::Access::the().enable_bus_mastering(address);
-}
-void disable_bus_mastering(Address address)
-{
-    PCI::Access::the().disable_bus_mastering(address);
-}
-size_t get_BAR_Space_Size(Address address, u8 bar_number)
-{
-    return PCI::Access::the().get_BAR_Space_Size(address, bar_number);
-}
+    void enable_interrupt_line(Address address)
+    {
+        PCI::Access::the().enable_interrupt_line(address);
+    }
+    void disable_interrupt_line(Address address)
+    {
+        PCI::Access::the().disable_interrupt_line(address);
+    }
 
+    u8 get_interrupt_line(Address address)
+    {
+        return PCI::Access::the().get_interrupt_line(address);
+    }
+    u32 get_BAR0(Address address)
+    {
+        return PCI::Access::the().get_BAR0(address);
+    }
+    u32 get_BAR1(Address address)
+    {
+        return PCI::Access::the().get_BAR1(address);
+    }
+    u32 get_BAR2(Address address)
+    {
+        return PCI::Access::the().get_BAR2(address);
+    }
+    u32 get_BAR3(Address address)
+    {
+        return PCI::Access::the().get_BAR3(address);
+    }
+    u32 get_BAR4(Address address)
+    {
+        return PCI::Access::the().get_BAR4(address);
+    }
+    u32 get_BAR5(Address address)
+    {
+        return PCI::Access::the().get_BAR5(address);
+    }
+    u8 get_revision_id(Address address)
+    {
+        return PCI::Access::the().get_revision_id(address);
+    }
+    u8 get_subclass(Address address)
+    {
+        return PCI::Access::the().get_subclass(address);
+    }
+    u8 get_class(Address address)
+    {
+        return PCI::Access::the().get_class(address);
+    }
+    u16 get_subsystem_id(Address address)
+    {
+        return PCI::Access::the().get_subsystem_id(address);
+    }
+    u16 get_subsystem_vendor_id(Address address)
+    {
+        return PCI::Access::the().get_subsystem_vendor_id(address);
+    }
+    void enable_bus_mastering(Address address)
+    {
+        PCI::Access::the().enable_bus_mastering(address);
+    }
+    void disable_bus_mastering(Address address)
+    {
+        PCI::Access::the().disable_bus_mastering(address);
+    }
+    size_t get_BAR_Space_Size(Address address, u8 bar_number)
+    {
+        return PCI::Access::the().get_BAR_Space_Size(address, bar_number);
+    }
 }
 
 }
