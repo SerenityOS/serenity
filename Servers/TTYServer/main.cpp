@@ -38,6 +38,13 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (unveil("/bin/Shell", "x") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    unveil(nullptr, nullptr);
+
     if (argc < 2)
         return -1;
 
