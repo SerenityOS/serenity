@@ -47,7 +47,7 @@ struct [[gnu::packed]] allocation_t
 };
 
 #define BASE_PHYSICAL (0xc0000000 + (4 * MB))
-#define CHUNK_SIZE 8
+#define CHUNK_SIZE 32
 #define POOL_SIZE (3 * MB)
 
 #define ETERNAL_BASE_PHYSICAL (0xc0000000 + (2 * MB))
