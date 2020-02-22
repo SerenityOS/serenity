@@ -40,10 +40,10 @@
 
 #define SANITIZE_KMALLOC
 
-struct [[gnu::packed]] allocation_t
+struct AllocationHeader
 {
-    size_t start;
-    size_t nchunk;
+    size_t allocation_size_in_chunks;
+    u8 data[0];
 };
 
 #define BASE_PHYSICAL (0xc0000000 + (4 * MB))
@@ -120,8 +120,8 @@ void* kmalloc_impl(size_t size)
         Kernel::dump_backtrace();
     }
 
-    // We need space for the allocation_t structure at the head of the block.
-    size_t real_size = size + sizeof(allocation_t);
+    // We need space for the AllocationHeader at the head of the block.
+    size_t real_size = size + sizeof(AllocationHeader);
 
     if (sum_free < real_size) {
         Kernel::dump_backtrace();
@@ -153,20 +153,18 @@ void* kmalloc_impl(size_t size)
                 ++chunks_here;
 
                 if (chunks_here == chunks_needed) {
-                    auto* a = (allocation_t*)(BASE_PHYSICAL + (first_chunk * CHUNK_SIZE));
-                    u8* ptr = (u8*)a;
-                    ptr += sizeof(allocation_t);
-                    a->nchunk = chunks_needed;
-                    a->start = first_chunk;
+                    auto* a = (AllocationHeader*)(BASE_PHYSICAL + (first_chunk * CHUNK_SIZE));
+                    u8* ptr = a->data;
+                    a->allocation_size_in_chunks = chunks_needed;
 
                     for (size_t k = first_chunk; k < (first_chunk + chunks_needed); ++k) {
                         alloc_map[k / 8] |= 1 << (k % 8);
                     }
 
-                    sum_alloc += a->nchunk * CHUNK_SIZE;
-                    sum_free -= a->nchunk * CHUNK_SIZE;
+                    sum_alloc += a->allocation_size_in_chunks * CHUNK_SIZE;
+                    sum_free -= a->allocation_size_in_chunks * CHUNK_SIZE;
 #ifdef SANITIZE_KMALLOC
-                    memset(ptr, KMALLOC_SCRUB_BYTE, (a->nchunk * CHUNK_SIZE) - sizeof(allocation_t));
+                    memset(ptr, KMALLOC_SCRUB_BYTE, (a->allocation_size_in_chunks * CHUNK_SIZE) - sizeof(AllocationHeader));
 #endif
                     return ptr;
                 }
@@ -190,16 +188,17 @@ void kfree(void* ptr)
     Kernel::InterruptDisabler disabler;
     ++g_kfree_call_count;
 
-    auto* a = (allocation_t*)((((u8*)ptr) - sizeof(allocation_t)));
+    auto* a = (AllocationHeader*)((((u8*)ptr) - sizeof(AllocationHeader)));
+    uintptr_t start = ((uintptr_t)a - (uintptr_t)BASE_PHYSICAL) / CHUNK_SIZE;
 
-    for (size_t k = a->start; k < (a->start + a->nchunk); ++k)
+    for (size_t k = start; k < (start + a->allocation_size_in_chunks); ++k)
         alloc_map[k / 8] &= ~(1 << (k % 8));
 
-    sum_alloc -= a->nchunk * CHUNK_SIZE;
-    sum_free += a->nchunk * CHUNK_SIZE;
+    sum_alloc -= a->allocation_size_in_chunks * CHUNK_SIZE;
+    sum_free += a->allocation_size_in_chunks * CHUNK_SIZE;
 
 #ifdef SANITIZE_KMALLOC
-    memset(a, KFREE_SCRUB_BYTE, a->nchunk * CHUNK_SIZE);
+    memset(a, KFREE_SCRUB_BYTE, a->allocation_size_in_chunks * CHUNK_SIZE);
 #endif
 }
 
@@ -210,8 +209,8 @@ void* krealloc(void* ptr, size_t new_size)
 
     Kernel::InterruptDisabler disabler;
 
-    auto* a = (allocation_t*)((((u8*)ptr) - sizeof(allocation_t)));
-    size_t old_size = a->nchunk * CHUNK_SIZE;
+    auto* a = (AllocationHeader*)((((u8*)ptr) - sizeof(AllocationHeader)));
+    size_t old_size = a->allocation_size_in_chunks * CHUNK_SIZE;
 
     if (old_size == new_size)
         return ptr;
