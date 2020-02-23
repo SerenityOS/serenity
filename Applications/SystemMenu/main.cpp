@@ -40,6 +40,8 @@
 #include <sys/utsname.h>
 #include <unistd.h>
 
+#include "PowerDialog.h"
+
 //#define SYSTEM_MENU_DEBUG
 
 struct AppMetadata {
@@ -84,6 +86,11 @@ int main(int argc, char** argv)
     }
 
     if (unveil("/res", "r")) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/etc/PowerOptions.ini", "r")) {
         perror("unveil");
         return 1;
     }
@@ -193,8 +200,13 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
     }));
     system_menu->add_separator();
     system_menu->add_action(GUI::Action::create("Exit...", [](auto&) {
+        Vector<char const*> command = PowerDialog::show();
+
+        if (command.size() == 0)
+            return;
+
         if (fork() == 0) {
-            execl("/bin/SystemDialog", "/bin/SystemDialog", nullptr);
+            execv(command[0], const_cast<char* const*>(command.data()));
             ASSERT_NOT_REACHED();
         }
     }));

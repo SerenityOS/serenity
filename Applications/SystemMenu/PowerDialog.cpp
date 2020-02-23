@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,102 +26,51 @@
 
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibCore/ConfigFile.h>
-#include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Desktop.h>
-#include <LibGUI/Dialog.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/Font.h>
-#include <LibGfx/TextAlignment.h>
-#include <stdio.h>
-#include <sys/utsname.h>
 
-struct DialogOption {
+#include "PowerDialog.h"
+
+struct PowerOption {
     String title;
-    String cmd;
+    Vector<char const*> cmd;
     bool enabled;
     bool default_action;
 };
 
-Vector<DialogOption> get_options()
+static const Vector<PowerOption> options = {
+    { "Shut down", { "/bin/shutdown", "--now", nullptr }, true, true },
+    { "Restart", { "/bin/reboot", nullptr }, true, false },
+    { "Log out", {}, false, false },
+    { "Sleep", {}, false, false },
+};
+
+Vector<char const*> PowerDialog::show()
 {
-    Vector<DialogOption> options;
-    auto config = Core::ConfigFile::get_for_system("SystemDialog");
-    for (auto title : config->groups()) {
-        dbg() << "title = " << title;
-        auto command = config->read_entry(title, "command", "");
-        dbg() << "\tcommand=" << command;
-        auto enabled = config->read_bool_entry(title, "enabled", true);
-        dbg() << "\tenabled=" << enabled;
-        auto default_entry = config->read_bool_entry(title, "default", false);
-        dbg() << "\tdefault=" << default_entry;
+    auto rc = PowerDialog::construct()->exec();
+    if (rc < 0)
+        return {};
 
-        ASSERT(!(command == "" && enabled));
-
-        options.append({ title, command, enabled, default_entry });
-    }
-    return options;
+    return options[rc].cmd;
 }
 
-int main(int argc, char** argv)
+PowerDialog::PowerDialog(Core::Object* parent)
+    : GUI::Dialog(parent)
 {
-    Vector<DialogOption> options;
-
-    if (pledge("stdio shared_buffer rpath wpath cpath unix fattr exec", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    if (unveil("/etc/SystemDialog.ini", "rwc") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/tmp", "rwc") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/bin/Shell", "rx") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    unveil(nullptr, nullptr);
-
-    GUI::Application app(argc, argv);
-
-    if (pledge("stdio shared_buffer rpath wpath cpath exec", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    options = get_options();
-
-    if (pledge("stdio shared_buffer rpath exec", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    auto dialog = GUI::Dialog::construct(nullptr);
     Gfx::Rect rect({ 0, 0, 180, 180 + ((options.size() - 3) * 16) });
     rect.center_within(GUI::Desktop::the().rect());
-    dialog->set_rect(rect);
-    dialog->set_resizable(false);
-    dialog->set_title("SerenityOS");
-    dialog->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-systemdialog.png"));
+    set_rect(rect);
+    set_resizable(false);
+    set_title("SerenityOS");
+    set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/power.png"));
 
     auto main = GUI::Widget::construct();
-    dialog->set_main_widget(main);
+    set_main_widget(main);
     main->set_layout(make<GUI::VerticalBoxLayout>());
     main->layout()->set_margins({ 8, 8, 8, 8 });
     main->layout()->set_spacing(8);
@@ -133,7 +82,7 @@ int main(int argc, char** argv)
     header->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     header->set_font(Gfx::Font::default_bold_font());
 
-    int selected;
+    int selected = -1;
     for (int i = 0; i < options.size(); i++) {
         auto action = options[i];
         auto radio = GUI::RadioButton::construct(main);
@@ -155,32 +104,18 @@ int main(int argc, char** argv)
     button_box->layout()->set_spacing(8);
 
     auto ok_button = GUI::Button::construct(button_box);
-    ok_button->on_click = [&](auto&) {
-        dialog->done(true);
+    ok_button->on_click = [this, &selected](auto&) {
+        done(selected);
     };
     ok_button->set_text("OK");
 
     auto cancel_button = GUI::Button::construct(button_box);
-    cancel_button->on_click = [&](auto&) {
-        dialog->done(false);
+    cancel_button->on_click = [this](auto&) {
+        done(-1);
     };
     cancel_button->set_text("Cancel");
+}
 
-    dialog->exec();
-
-    if (pledge("stdio shared_buffer exec", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    if (!dialog->result())
-        return 0;
-
-    // TODO Don't rely on the shell
-    auto command = options[selected].cmd.characters();
-    dbg() << command;
-    if (execl("/bin/Shell", "/bin/Shell", "-c", command, NULL) < 0) {
-        perror("execl");
-        return 1;
-    }
+PowerDialog::~PowerDialog()
+{
 }
