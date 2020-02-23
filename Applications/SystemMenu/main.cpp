@@ -192,9 +192,9 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
         }
     }));
     system_menu->add_separator();
-    system_menu->add_action(GUI::Action::create("Shutdown...", [](auto&) {
+    system_menu->add_action(GUI::Action::create("Exit...", [](auto&) {
         if (fork() == 0) {
-            execl("/bin/SystemDialog", "/bin/SystemDialog", "--shutdown", nullptr);
+            execl("/bin/SystemDialog", "/bin/SystemDialog", nullptr);
             ASSERT_NOT_REACHED();
         }
     }));
