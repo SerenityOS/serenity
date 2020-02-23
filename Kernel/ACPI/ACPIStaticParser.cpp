@@ -249,8 +249,6 @@ void ACPIStaticParser::locate_all_aml_tables()
 ACPIStaticParser::ACPIStaticParser()
     : ACPIParser(true)
     , m_rsdp(search_rsdp())
-    , m_main_sdt(nullptr)
-    , m_fadt(nullptr)
 {
     if (!m_rsdp.is_null()) {
         kprintf("ACPI: Using RSDP @ P 0x%x\n", m_rsdp);
@@ -308,8 +306,6 @@ PhysicalAddress ACPIStaticParser::search_rsdp()
 ACPIStaticParser::ACPIStaticParser(PhysicalAddress rsdp)
     : ACPIParser(true)
     , m_rsdp(rsdp)
-    , m_main_sdt(nullptr)
-    , m_fadt(nullptr)
 {
     kprintf("ACPI: Using RSDP @ Px%x\n", rsdp.get());
     m_operable = true;
