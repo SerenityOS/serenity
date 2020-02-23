@@ -28,7 +28,7 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
-#include <LibGUI/TextEditor.h>
+#include <LibGUI/TextBox.h>
 #include <LibGfx/Font.h>
 #include <stdio.h>
 
@@ -63,24 +63,24 @@ void InputBox::build()
     widget->layout()->set_margins({ 8, 8, 8, 8 });
     widget->layout()->set_spacing(8);
 
-    auto label = Label::construct(m_prompt, widget);
+    auto label = widget->add<Label>(m_prompt);
     label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     label->set_preferred_size(text_width, 16);
 
-    m_text_editor = TextEditor::construct(TextEditor::SingleLine, widget);
+    m_text_editor = widget->add<TextBox>();
     m_text_editor->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_text_editor->set_preferred_size(0, 19);
 
-    auto button_container_outer = Widget::construct(widget.ptr());
+    auto button_container_outer = widget->add<Widget>();
     button_container_outer->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     button_container_outer->set_preferred_size(0, 20);
     button_container_outer->set_layout(make<VerticalBoxLayout>());
 
-    auto button_container_inner = Widget::construct(button_container_outer.ptr());
+    auto button_container_inner = button_container_outer->add<Widget>();
     button_container_inner->set_layout(make<HorizontalBoxLayout>());
     button_container_inner->layout()->set_spacing(8);
 
-    m_cancel_button = Button::construct(button_container_inner);
+    m_cancel_button = button_container_inner->add<Button>();
     m_cancel_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_cancel_button->set_preferred_size(0, 20);
     m_cancel_button->set_text("Cancel");
@@ -89,7 +89,7 @@ void InputBox::build()
         done(ExecCancel);
     };
 
-    m_ok_button = Button::construct(button_container_inner);
+    m_ok_button = button_container_inner->add<Button>();
     m_ok_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_ok_button->set_preferred_size(0, 20);
     m_ok_button->set_text("OK");

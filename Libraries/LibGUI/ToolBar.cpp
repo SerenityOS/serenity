@@ -65,7 +65,7 @@ void ToolBar::add_action(Action& action)
     item->type = Item::Type::Action;
     item->action = action;
 
-    auto button = Button::construct(this);
+    auto button = add<Button>();
     if (action.group() && action.group()->is_exclusive())
         button->set_exclusive(true);
     button->set_action(*item->action);

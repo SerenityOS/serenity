@@ -40,7 +40,7 @@ AbstractButton::AbstractButton(const StringView& text, Widget* parent)
     : Widget(parent)
     , m_text(text)
 {
-    m_auto_repeat_timer = Core::Timer::construct(this);
+    m_auto_repeat_timer = add<Core::Timer>();
     m_auto_repeat_timer->on_timeout = [this] {
         click();
     };

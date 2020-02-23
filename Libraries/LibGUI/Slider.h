@@ -74,8 +74,8 @@ public:
     Function<void(int)> on_value_changed;
 
 protected:
-    explicit Slider(Widget*);
-    explicit Slider(Orientation, Widget*);
+    explicit Slider(Widget* = nullptr);
+    explicit Slider(Orientation, Widget* = nullptr);
 
     virtual void paint_event(PaintEvent&) override;
     virtual void mousedown_event(MouseEvent&) override;

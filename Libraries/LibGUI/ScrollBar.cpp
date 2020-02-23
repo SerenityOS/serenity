@@ -95,7 +95,7 @@ ScrollBar::ScrollBar(Orientation orientation, Widget* parent)
     : Widget(parent)
     , m_orientation(orientation)
 {
-    m_automatic_scrolling_timer = Core::Timer::construct(this);
+    m_automatic_scrolling_timer = add<Core::Timer>();
     if (!s_up_arrow_bitmap)
         s_up_arrow_bitmap = &Gfx::CharacterBitmap::create_from_ascii(s_up_arrow_bitmap_data, 9, 9).leak_ref();
     if (!s_down_arrow_bitmap)
