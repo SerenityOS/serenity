@@ -91,7 +91,6 @@ int main(int argc, char** argv)
             return 1;
         }
 
-        op = OP_Set;
         size = st.st_size;
     }
 
