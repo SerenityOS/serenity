@@ -257,7 +257,7 @@ bool Process::deallocate_region(Region& region)
         m_region_lookup_cache.region = nullptr;
     for (int i = 0; i < m_regions.size(); ++i) {
         if (&m_regions[i] == &region) {
-            m_regions.remove(i);
+            m_regions.unstable_remove(i);
             return true;
         }
     }
