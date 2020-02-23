@@ -118,6 +118,7 @@ int main(int argc, char** argv)
     dialog->set_rect(rect);
     dialog->set_resizable(false);
     dialog->set_title("SerenityOS");
+    dialog->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-systemdialog.png"));
 
     auto main = GUI::Widget::construct();
     dialog->set_main_widget(main);
