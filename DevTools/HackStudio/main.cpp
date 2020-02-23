@@ -445,11 +445,8 @@ int main(int argc, char** argv)
         update_actions();
     });
 
-    auto find_in_files_widget = FindInFilesWidget::construct();
-    s_action_tab_widget->add_widget("Find in files", find_in_files_widget);
-
-    auto terminal_wrapper = TerminalWrapper::construct();
-    s_action_tab_widget->add_widget("Console", terminal_wrapper);
+    auto find_in_files_widget = s_action_tab_widget->add_tab<FindInFilesWidget>("Find in files");
+    auto terminal_wrapper = s_action_tab_widget->add_tab<TerminalWrapper>("Console");
 
     auto locator = widget->add<Locator>();
 
