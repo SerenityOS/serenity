@@ -35,7 +35,7 @@ namespace Kernel {
 class PCI::Initializer {
 public:
     static PCI::Initializer& the();
-    void initialize_pci_mmio_access(ACPI_RAW::MCFG& mcfg);
+    void initialize_pci_mmio_access(PhysicalAddress mcfg);
     void initialize_pci_io_access();
     void test_and_initialize(bool disable_pci_mmio);
     static void dismiss();

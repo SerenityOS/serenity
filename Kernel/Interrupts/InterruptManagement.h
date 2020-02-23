@@ -65,18 +65,18 @@ class AdvancedInterruptManagement : public InterruptManagement {
     friend class IOAPIC;
 
 public:
-    static void initialize(ACPI_RAW::MADT& madt);
+    static void initialize(PhysicalAddress madt);
     virtual void switch_to_ioapic_mode() override;
     virtual void switch_to_pic_mode() override;
 
 private:
-    explicit AdvancedInterruptManagement(ACPI_RAW::MADT& madt);
-    void locate_ioapics(ACPI_RAW::MADT& madt);
-    void locate_isa_interrupt_overrides(ACPI_RAW::MADT& madt);
+    explicit AdvancedInterruptManagement(PhysicalAddress madt);
+    void locate_ioapics(PhysicalAddress madt);
+    void locate_isa_interrupt_overrides(PhysicalAddress madt);
     void locate_pci_interrupt_overrides();
     Vector<RefPtr<ISAInterruptOverrideMetadata>> m_isa_interrupt_overrides;
     Vector<RefPtr<PCIInterruptOverrideMetadata>> m_pci_interrupt_overrides;
-    ACPI_RAW::MADT& m_madt;
+    PhysicalAddress m_madt;
 };
 
 class ISAInterruptOverrideMetadata : public RefCounted<ISAInterruptOverrideMetadata> {

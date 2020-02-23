@@ -47,35 +47,35 @@ uint8_t PCI::MMIOAccess::get_segment_end_bus(u32 seg)
     return m_segments.get(seg).value()->get_end_bus();
 }
 
-void PCI::MMIOAccess::initialize(ACPI_RAW::MCFG& mcfg)
+void PCI::MMIOAccess::initialize(PhysicalAddress mcfg)
 {
     if (!PCI::Access::is_initialized())
         new PCI::MMIOAccess(mcfg);
 }
 
-PCI::MMIOAccess::MMIOAccess(ACPI_RAW::MCFG& raw_mcfg)
-    : m_mcfg(raw_mcfg)
+PCI::MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
+    : m_mcfg(p_mcfg)
     , m_segments(*new HashMap<u16, MMIOSegment*>())
     , m_mapped_address(ChangeableAddress(0xFFFF, 0xFF, 0xFF, 0xFF))
 {
     kprintf("PCI: Using MMIO Mechanism for PCI Configuartion Space Access\n");
     m_mmio_window_region = MM.allocate_kernel_region(PAGE_ROUND_UP(PCI_MMIO_CONFIG_SPACE_SIZE), "PCI MMIO", Region::Access::Read | Region::Access::Write);
 
-    auto checkup_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)&raw_mcfg)), (PAGE_SIZE * 2), "PCI MCFG Checkup", Region::Access::Read | Region::Access::Write);
+    auto checkup_region = MM.allocate_kernel_region(p_mcfg.page_base(), (PAGE_SIZE * 2), "PCI MCFG Checkup", Region::Access::Read | Region::Access::Write);
 #ifdef PCI_DEBUG
     dbgprintf("PCI: Checking MCFG Table length to choose the correct mapping size\n");
 #endif
 
-    ACPI_RAW::SDTHeader* sdt = (ACPI_RAW::SDTHeader*)checkup_region->vaddr().offset(offset_in_page((u32)&raw_mcfg)).as_ptr();
+    ACPI_RAW::SDTHeader* sdt = (ACPI_RAW::SDTHeader*)checkup_region->vaddr().offset(p_mcfg.offset_in_page().get()).as_ptr();
     u32 length = sdt->length;
     u8 revision = sdt->revision;
 
     kprintf("PCI: MCFG, length - %u, revision %d\n", length, revision);
     checkup_region->unmap();
 
-    auto mcfg_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)&raw_mcfg)), PAGE_ROUND_UP(length) + PAGE_SIZE, "PCI Parsing MCFG", Region::Access::Read | Region::Access::Write);
+    auto mcfg_region = MM.allocate_kernel_region(p_mcfg.page_base(), PAGE_ROUND_UP(length) + PAGE_SIZE, "PCI Parsing MCFG", Region::Access::Read | Region::Access::Write);
 
-    auto& mcfg = *(ACPI_RAW::MCFG*)mcfg_region->vaddr().offset(offset_in_page((u32)&raw_mcfg)).as_ptr();
+    auto& mcfg = *(ACPI_RAW::MCFG*)mcfg_region->vaddr().offset(p_mcfg.offset_in_page().get()).as_ptr();
 #ifdef PCI_DEBUG
     dbgprintf("PCI: Checking MCFG @ V 0x%x, P 0x%x\n", &mcfg, &raw_mcfg);
 #endif

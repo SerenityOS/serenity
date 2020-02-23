@@ -58,10 +58,10 @@ ACPIParser::ACPIParser(bool usable)
     s_acpi_parser = this;
 }
 
-ACPI_RAW::SDTHeader* ACPIParser::find_table(const char*)
+PhysicalAddress ACPIParser::find_table(const char*)
 {
     kprintf("ACPI: Requested to search for a table, Abort!\n");
-    return nullptr;
+    return {};
 }
 
 void ACPIParser::do_acpi_reboot()
