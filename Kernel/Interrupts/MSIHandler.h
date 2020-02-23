@@ -44,7 +44,7 @@ public:
 
     virtual bool eoi() override;
 
-    virtual size_t get_sharing_devices_count() const override { return 0; }
+    virtual size_t sharing_devices_count() const override { return 0; }
     virtual bool is_shared_handler() const override { return false; }
     virtual bool is_sharing_with_others() const override { return m_shared_with_others; }
 

@@ -51,7 +51,7 @@ public:
 
     size_t get_invoking_count() const { return m_invoking_count; }
 
-    virtual size_t get_sharing_devices_count() const = 0;
+    virtual size_t sharing_devices_count() const = 0;
     virtual bool is_shared_handler() const = 0;
     virtual bool is_sharing_with_others() const = 0;
 
