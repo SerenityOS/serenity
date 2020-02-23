@@ -38,7 +38,7 @@ namespace Kernel {
 class ACPIDynamicParser final : public IRQHandler
     , ACPIStaticParser {
 public:
-    static void initialize(ACPI_RAW::RSDPDescriptor20& rsdp);
+    static void initialize(PhysicalAddress rsdp);
     static void initialize_without_rsdp();
 
     virtual void enable_aml_interpretation() override;
@@ -49,7 +49,7 @@ public:
 
 protected:
     ACPIDynamicParser();
-    explicit ACPIDynamicParser(ACPI_RAW::RSDPDescriptor20&);
+    explicit ACPIDynamicParser(PhysicalAddress);
 
 private:
     void build_namespace();

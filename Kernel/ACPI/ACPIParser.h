@@ -41,7 +41,7 @@ public:
 
     static bool is_initialized();
     static void initialize_limited();
-    virtual ACPI_RAW::SDTHeader* find_table(const char* sig);
+    virtual PhysicalAddress find_table(const char* sig);
 
     virtual void do_acpi_reboot();
     virtual void do_acpi_shutdown();

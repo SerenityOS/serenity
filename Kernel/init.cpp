@@ -146,7 +146,7 @@ extern "C" [[noreturn]] void init()
     VirtualConsole::switch_to(0);
 
     // Sample test to see if the ACPI parser is working...
-    kprintf("ACPI: HPET table @ P 0x%x\n", ACPIParser::the().find_table("HPET"));
+    kprintf("ACPI: HPET table @ P 0x%x\n", ACPIParser::the().find_table("HPET").get());
 
     setup_pci();
 
@@ -463,12 +463,12 @@ void setup_pci()
 
 static void setup_interrupt_management()
 {
-    auto* madt = (ACPI_RAW::MADT*)ACPIParser::the().find_table("APIC");
-    if (!madt) {
+    auto madt = ACPIParser::the().find_table("APIC");
+    if (madt.is_null()) {
         InterruptManagement::initialize();
         return;
     }
-    AdvancedInterruptManagement::initialize(*madt);
+    AdvancedInterruptManagement::initialize(madt);
 }
 
 void setup_interrupts()
