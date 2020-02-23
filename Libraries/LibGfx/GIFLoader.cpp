@@ -200,7 +200,7 @@ RefPtr<Gfx::Bitmap> load_gif_impl(const u8* data, size_t data_size)
         if (sentinel == 0x2c) {
             images.append(make<ImageDescriptor>());
             auto& image = images.last();
-            u8 packed_fields;
+            u8 packed_fields { 0 };
             stream >> image.x;
             stream >> image.y;
             stream >> image.width;

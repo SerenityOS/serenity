@@ -152,7 +152,7 @@ Utf8CodepointIterator& Utf8CodepointIterator::operator++()
 {
     ASSERT(m_length > 0);
 
-    int codepoint_length_in_bytes;
+    int codepoint_length_in_bytes = 0;
     u32 value;
     bool first_byte_makes_sense = decode_first_byte(*m_ptr, codepoint_length_in_bytes, value);
 
@@ -169,7 +169,7 @@ Utf8CodepointIterator& Utf8CodepointIterator::operator++()
 int Utf8CodepointIterator::codepoint_length_in_bytes() const
 {
     ASSERT(m_length > 0);
-    int codepoint_length_in_bytes;
+    int codepoint_length_in_bytes = 0;
     u32 value;
     bool first_byte_makes_sense = decode_first_byte(*m_ptr, codepoint_length_in_bytes, value);
     ASSERT(first_byte_makes_sense);
@@ -180,8 +180,8 @@ u32 Utf8CodepointIterator::operator*() const
 {
     ASSERT(m_length > 0);
 
-    u32 codepoint_value_so_far;
-    int codepoint_length_in_bytes;
+    u32 codepoint_value_so_far = 0;
+    int codepoint_length_in_bytes = 0;
 
     bool first_byte_makes_sense = decode_first_byte(m_ptr[0], codepoint_length_in_bytes, codepoint_value_so_far);
     if (!first_byte_makes_sense) {
