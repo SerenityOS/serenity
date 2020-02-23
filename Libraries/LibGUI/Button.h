@@ -62,8 +62,8 @@ public:
     void set_focusable(bool b) { m_focusable = b; }
 
 protected:
-    Button(const StringView& text, Widget* parent);
-    explicit Button(Widget* parent);
+    Button(const StringView& text, Widget* parent = nullptr);
+    explicit Button(Widget* parent = nullptr);
     virtual void paint_event(PaintEvent&) override;
 
 private:

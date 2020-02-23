@@ -48,7 +48,7 @@ public:
     virtual ModelIndex index_at_event_position(const Gfx::Point&) const override;
 
 private:
-    explicit ItemView(Widget* parent);
+    explicit ItemView(Widget* parent = nullptr);
 
     virtual void did_update_model() override;
     virtual void paint_event(PaintEvent&) override;

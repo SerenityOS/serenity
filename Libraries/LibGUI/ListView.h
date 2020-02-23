@@ -33,7 +33,7 @@ namespace GUI {
 class ListView : public AbstractView {
     C_OBJECT(ListView)
 public:
-    explicit ListView(Widget* parent);
+    explicit ListView(Widget* parent = nullptr);
     virtual ~ListView() override;
 
     int item_height() const { return 16; }

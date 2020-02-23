@@ -60,8 +60,8 @@ public:
     void set_auto_repeat_interval(int interval) { m_auto_repeat_interval = interval; }
 
 protected:
-    explicit AbstractButton(Widget* parent);
-    AbstractButton(const StringView&, Widget* parent);
+    explicit AbstractButton(Widget* parent = nullptr);
+    AbstractButton(const StringView&, Widget* parent = nullptr);
 
     virtual void mousedown_event(MouseEvent&) override;
     virtual void mousemove_event(MouseEvent&) override;

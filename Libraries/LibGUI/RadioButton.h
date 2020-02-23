@@ -38,8 +38,8 @@ public:
     virtual void click() override;
 
 protected:
-    explicit RadioButton(Widget* parent);
-    explicit RadioButton(const StringView& text, Widget* parent);
+    explicit RadioButton(Widget* parent = nullptr);
+    explicit RadioButton(const StringView& text, Widget* parent = nullptr);
     virtual void paint_event(PaintEvent&) override;
 
 private:

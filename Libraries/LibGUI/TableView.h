@@ -36,7 +36,7 @@ public:
     virtual ~TableView() override;
 
 protected:
-    explicit TableView(Widget* parent);
+    explicit TableView(Widget* parent = nullptr);
 
     virtual void paint_event(PaintEvent&) override;
 };

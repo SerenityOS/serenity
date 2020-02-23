@@ -72,7 +72,7 @@ public:
 
 protected:
     virtual ~AbstractTableView() override;
-    explicit AbstractTableView(Widget* parent);
+    explicit AbstractTableView(Widget* parent = nullptr);
 
     virtual void did_update_model() override;
     virtual void mouseup_event(MouseEvent&) override;

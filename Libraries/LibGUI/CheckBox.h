@@ -38,8 +38,8 @@ public:
     virtual void click() override;
 
 private:
-    CheckBox(const StringView&, Widget* parent);
-    explicit CheckBox(Widget* parent);
+    CheckBox(const StringView&, Widget* parent = nullptr);
+    explicit CheckBox(Widget* parent = nullptr);
 
     // These don't make sense for a check box, so hide them.
     using AbstractButton::auto_repeat_interval;
