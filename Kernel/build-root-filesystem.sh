@@ -138,7 +138,6 @@ cp ../Applications/Welcome/Welcome mnt/bin/Welcome
 cp ../Applications/Help/Help mnt/bin/Help
 cp ../Applications/Browser/Browser mnt/bin/Browser
 cp ../Demos/HelloWorld/HelloWorld mnt/bin/HelloWorld
-cp ../Demos/HelloWorld2/HelloWorld2 mnt/bin/HelloWorld2
 cp ../Demos/WidgetGallery/WidgetGallery mnt/bin/WidgetGallery
 cp ../Demos/Fire/Fire mnt/bin/Fire
 cp ../Demos/DynamicLink/LinkDemo/LinkDemo mnt/bin/LinkDemo
@@ -171,7 +170,6 @@ echo "done"
 printf "installing shortcuts... "
 ln -s FileManager mnt/bin/fm
 ln -s HelloWorld mnt/bin/hw
-ln -s HelloWorld2 mnt/bin/hw2
 ln -s IRCClient mnt/bin/irc
 ln -s Minesweeper mnt/bin/ms
 ln -s Shell mnt/bin/sh
