@@ -36,7 +36,7 @@ public:
     void set_tty_fd(int);
 
 private:
-    explicit ProcessStateWidget(GUI::Widget* parent);
+    explicit ProcessStateWidget();
 
     void refresh();
 

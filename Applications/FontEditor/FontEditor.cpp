@@ -50,10 +50,10 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edite
     else
         m_path = path;
 
-    m_glyph_map_widget = GlyphMapWidget::construct(*m_edited_font, this);
+    m_glyph_map_widget = add<GlyphMapWidget>(*m_edited_font);
     m_glyph_map_widget->move_to({ 90, 5 });
 
-    m_glyph_editor_widget = GlyphEditorWidget::construct(*m_edited_font, this);
+    m_glyph_editor_widget = add<GlyphEditorWidget>(*m_edited_font);
     m_glyph_editor_widget->move_to({ 5, 5 });
 
     m_ui = make<UI_FontEditorBottom>();

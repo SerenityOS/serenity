@@ -42,7 +42,7 @@ private:
     void update_suggestions();
     void open_suggestion(const GUI::ModelIndex&);
 
-    explicit Locator(GUI::Widget* parent);
+    Locator();
 
     RefPtr<LocatorTextBox> m_textbox;
     RefPtr<GUI::Window> m_popup_window;

@@ -46,10 +46,10 @@ int main(int argc, char** argv)
     main_widget->set_layout(make<GUI::VerticalBoxLayout>());
     main_widget->layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto label = GUI::Label::construct(main_widget);
+    auto label = main_widget->add<GUI::Label>();
     label->set_text("Hello\nWorld!");
 
-    auto button = GUI::Button::construct(main_widget);
+    auto button = main_widget->add<GUI::Button>();
     button->set_text("Good-bye");
     button->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     button->set_preferred_size(0, 20);

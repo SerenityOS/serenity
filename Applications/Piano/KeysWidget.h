@@ -43,7 +43,7 @@ public:
     void set_key(int key, Switch);
 
 private:
-    KeysWidget(GUI::Widget* parent, AudioEngine&);
+    explicit KeysWidget(AudioEngine&);
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;

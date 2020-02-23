@@ -33,7 +33,7 @@ class PaintableWidget;
 class PaletteWidget final : public GUI::Frame {
     C_OBJECT(PaletteWidget)
 public:
-    explicit PaletteWidget(PaintableWidget&, GUI::Widget* parent);
+    explicit PaletteWidget(PaintableWidget&);
     virtual ~PaletteWidget() override;
 
     void set_primary_color(Color);

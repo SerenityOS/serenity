@@ -34,7 +34,6 @@ class PaintableWidget final : public GUI::Widget {
 public:
     static PaintableWidget& the();
 
-    explicit PaintableWidget(GUI::Widget* parent);
     virtual ~PaintableWidget() override;
 
     Color primary_color() const { return m_primary_color; }
@@ -58,6 +57,8 @@ public:
     Function<void(Color)> on_secondary_color_change;
 
 private:
+    PaintableWidget();
+
     virtual bool accepts_focus() const override { return true; }
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void second_paint_event(GUI::PaintEvent&) override;

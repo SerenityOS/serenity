@@ -118,18 +118,17 @@ void DirectoryView::handle_activation(const GUI::ModelIndex& index)
     }
 };
 
-DirectoryView::DirectoryView(GUI::Widget* parent)
-    : GUI::StackWidget(parent)
-    , m_model(GUI::FileSystemModel::create())
+DirectoryView::DirectoryView()
+    : m_model(GUI::FileSystemModel::create())
 {
     set_active_widget(nullptr);
-    m_item_view = GUI::ItemView::construct(this);
+    m_item_view = add<GUI::ItemView>();
     m_item_view->set_model(model());
 
-    m_columns_view = GUI::ColumnsView::construct(this);
+    m_columns_view = add<GUI::ColumnsView>();
     m_columns_view->set_model(model());
 
-    m_table_view = GUI::TableView::construct(this);
+    m_table_view = add<GUI::TableView>();
     m_table_view->set_model(GUI::SortingProxyModel::create(m_model));
 
     m_table_view->model()->set_key_column_and_sort_order(GUI::FileSystemModel::Column::Name, GUI::SortOrder::Ascending);

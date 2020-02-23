@@ -80,8 +80,8 @@ int main(int argc, char** argv)
     widget->set_layout(make<GUI::VerticalBoxLayout>());
     widget->layout()->set_spacing(0);
 
-    auto toolbar = GUI::ToolBar::construct(widget);
-    auto html_widget = HtmlView::construct(widget);
+    auto toolbar = widget->add<GUI::ToolBar>();
+    auto html_widget = widget->add<HtmlView>();
 
     History<URL> history;
 
@@ -121,7 +121,7 @@ int main(int argc, char** argv)
         html_widget->reload();
     }));
 
-    auto location_box = GUI::TextBox::construct(toolbar);
+    auto location_box = toolbar->add<GUI::TextBox>();
 
     location_box->on_return_pressed = [&] {
         html_widget->load(location_box->text());
@@ -151,7 +151,7 @@ int main(int argc, char** argv)
         location_box->set_focus(true);
     });
 
-    auto statusbar = GUI::StatusBar::construct(widget);
+    auto statusbar = widget->add<GUI::StatusBar>();
 
     html_widget->on_link_hover = [&](auto& href) {
         statusbar->set_text(href);

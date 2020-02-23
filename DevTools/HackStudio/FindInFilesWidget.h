@@ -36,7 +36,7 @@ public:
     void focus_textbox_and_select_all();
 
 private:
-    explicit FindInFilesWidget(GUI::Widget* parent);
+    explicit FindInFilesWidget();
 
     RefPtr<GUI::TextBox> m_textbox;
     RefPtr<GUI::Button> m_button;

@@ -37,8 +37,7 @@ PaintableWidget& PaintableWidget::the()
     return *s_the;
 }
 
-PaintableWidget::PaintableWidget(GUI::Widget* parent)
-    : GUI::Widget(parent)
+PaintableWidget::PaintableWidget()
 {
     ASSERT(!s_the);
     s_the = this;

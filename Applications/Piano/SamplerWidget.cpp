@@ -33,9 +33,8 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 
-WaveEditor::WaveEditor(GUI::Widget* parent, AudioEngine& audio_engine)
-    : GUI::Frame(parent)
-    , m_audio_engine(audio_engine)
+WaveEditor::WaveEditor(AudioEngine& audio_engine)
+    : m_audio_engine(audio_engine)
 {
     set_frame_thickness(2);
     set_frame_shadow(Gfx::FrameShadow::Sunken);
@@ -92,9 +91,8 @@ void WaveEditor::paint_event(GUI::PaintEvent& event)
     }
 }
 
-SamplerWidget::SamplerWidget(GUI::Widget* parent, AudioEngine& audio_engine)
-    : GUI::Frame(parent)
-    , m_audio_engine(audio_engine)
+SamplerWidget::SamplerWidget(AudioEngine& audio_engine)
+    : m_audio_engine(audio_engine)
 {
     set_frame_thickness(2);
     set_frame_shadow(Gfx::FrameShadow::Sunken);
@@ -104,13 +102,13 @@ SamplerWidget::SamplerWidget(GUI::Widget* parent, AudioEngine& audio_engine)
     layout()->set_spacing(10);
     set_fill_with_background_color(true);
 
-    m_open_button_and_recorded_sample_name_container = GUI::Widget::construct(this);
+    m_open_button_and_recorded_sample_name_container = add<GUI::Widget>();
     m_open_button_and_recorded_sample_name_container->set_layout(make<GUI::HorizontalBoxLayout>());
     m_open_button_and_recorded_sample_name_container->layout()->set_spacing(10);
     m_open_button_and_recorded_sample_name_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_open_button_and_recorded_sample_name_container->set_preferred_size(0, 24);
 
-    m_open_button = GUI::Button::construct(m_open_button_and_recorded_sample_name_container);
+    m_open_button = m_open_button_and_recorded_sample_name_container->add<GUI::Button>();
     m_open_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     m_open_button->set_preferred_size(24, 24);
     m_open_button->set_focusable(false);
@@ -128,10 +126,10 @@ SamplerWidget::SamplerWidget(GUI::Widget* parent, AudioEngine& audio_engine)
         m_wave_editor->update();
     };
 
-    m_recorded_sample_name = GUI::Label::construct("No sample loaded", m_open_button_and_recorded_sample_name_container);
+    m_recorded_sample_name = m_open_button_and_recorded_sample_name_container->add<GUI::Label>("No sample loaded");
     m_recorded_sample_name->set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
-    m_wave_editor = WaveEditor::construct(this, m_audio_engine);
+    m_wave_editor = add<WaveEditor>(m_audio_engine);
     m_wave_editor->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_wave_editor->set_preferred_size(0, 100);
 }

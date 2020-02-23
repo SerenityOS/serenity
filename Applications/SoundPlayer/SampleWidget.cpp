@@ -29,8 +29,7 @@
 #include <LibGUI/Painter.h>
 #include <LibM/math.h>
 
-SampleWidget::SampleWidget(GUI::Widget* parent)
-    : GUI::Frame(parent)
+SampleWidget::SampleWidget()
 {
     set_frame_shape(Gfx::FrameShape::Container);
     set_frame_shadow(Gfx::FrameShadow::Sunken);

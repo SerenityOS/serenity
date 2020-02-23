@@ -60,8 +60,8 @@ WallpaperMode mode_to_enum(const String& name)
 
 Compositor::Compositor()
 {
-    m_compose_timer = Core::Timer::construct(this);
-    m_immediate_compose_timer = Core::Timer::construct(this);
+    m_compose_timer = add<Core::Timer>();
+    m_immediate_compose_timer = add<Core::Timer>();
 
     m_screen_can_set_buffer = Screen::the().can_set_buffer();
 

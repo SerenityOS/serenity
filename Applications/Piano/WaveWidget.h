@@ -37,7 +37,7 @@ public:
     virtual ~WaveWidget() override;
 
 private:
-    WaveWidget(GUI::Widget* parent, AudioEngine&);
+    explicit WaveWidget(AudioEngine&);
 
     virtual void paint_event(GUI::PaintEvent&) override;
 

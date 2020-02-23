@@ -51,7 +51,7 @@ public:
     Function<void(u8)> on_glyph_selected;
 
 private:
-    GlyphMapWidget(Gfx::Font&, GUI::Widget* parent);
+    explicit GlyphMapWidget(Gfx::Font&);
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
 

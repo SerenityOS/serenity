@@ -43,14 +43,13 @@
 
 //#define EDITOR_DEBUG
 
-Editor::Editor(GUI::Widget* parent)
-    : TextEditor(GUI::TextEditor::MultiLine, parent)
+Editor::Editor()
 {
     m_documentation_tooltip_window = GUI::Window::construct();
     m_documentation_tooltip_window->set_rect(0, 0, 500, 400);
     m_documentation_tooltip_window->set_window_type(GUI::WindowType::Tooltip);
 
-    m_documentation_html_view = HtmlView::construct(nullptr);
+    m_documentation_html_view = HtmlView::construct();
     m_documentation_tooltip_window->set_main_widget(m_documentation_html_view);
 }
 

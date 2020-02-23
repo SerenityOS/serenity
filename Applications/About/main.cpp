@@ -69,12 +69,12 @@ int main(int argc, char** argv)
     widget->layout()->set_margins({ 0, 8, 0, 8 });
     widget->layout()->set_spacing(8);
 
-    auto icon_label = GUI::Label::construct(widget);
+    auto icon_label = widget->add<GUI::Label>();
     icon_label->set_icon(Gfx::Bitmap::load_from_file("/res/icons/serenity.png"));
     icon_label->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     icon_label->set_preferred_size(icon_label->icon()->size());
 
-    auto label = GUI::Label::construct(widget);
+    auto label = widget->add<GUI::Label>();
     label->set_font(Gfx::Font::default_bold_font());
     label->set_text("SerenityOS");
     label->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
@@ -84,22 +84,22 @@ int main(int argc, char** argv)
     int rc = uname(&uts);
     ASSERT(rc == 0);
 
-    auto version_label = GUI::Label::construct(widget);
+    auto version_label = widget->add<GUI::Label>();
     version_label->set_text(String::format("Version %s", uts.release));
     version_label->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     version_label->set_preferred_size(0, 11);
 
-    auto git_info_label = GUI::Label::construct(widget);
+    auto git_info_label = widget->add<GUI::Label>();
     git_info_label->set_text(String::format("Built on %s@%s", GIT_BRANCH, GIT_COMMIT));
     git_info_label->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     git_info_label->set_preferred_size(0, 11);
 
-    auto git_changes_label = GUI::Label::construct(widget);
+    auto git_changes_label = widget->add<GUI::Label>();
     git_changes_label->set_text(String::format("Changes: %s", GIT_CHANGES));
     git_changes_label->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     git_changes_label->set_preferred_size(0, 11);
 
-    auto quit_button = GUI::Button::construct(widget);
+    auto quit_button = widget->add<GUI::Button>();
     quit_button->set_text("Okay");
     quit_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     quit_button->set_preferred_size(100, 20);

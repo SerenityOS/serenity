@@ -33,9 +33,8 @@
 class ColorWidget : public GUI::Frame {
     C_OBJECT(ColorWidget)
 public:
-    explicit ColorWidget(Color color, PaletteWidget& palette_widget, GUI::Widget* parent)
-        : GUI::Frame(parent)
-        , m_palette_widget(palette_widget)
+    explicit ColorWidget(Color color, PaletteWidget& palette_widget)
+        : m_palette_widget(palette_widget)
         , m_color(color)
     {
         set_frame_thickness(2);
@@ -72,9 +71,8 @@ private:
     Color m_color;
 };
 
-PaletteWidget::PaletteWidget(PaintableWidget& paintable_widget, GUI::Widget* parent)
-    : GUI::Frame(parent)
-    , m_paintable_widget(paintable_widget)
+PaletteWidget::PaletteWidget(PaintableWidget& paintable_widget)
+    : m_paintable_widget(paintable_widget)
 {
     set_frame_shape(Gfx::FrameShape::Panel);
     set_frame_shadow(Gfx::FrameShadow::Raised);
@@ -84,7 +82,7 @@ PaletteWidget::PaletteWidget(PaintableWidget& paintable_widget, GUI::Widget* par
     set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     set_preferred_size(0, 34);
 
-    m_secondary_color_widget = GUI::Frame::construct(this);
+    m_secondary_color_widget = add<GUI::Frame>();
     m_secondary_color_widget->set_frame_thickness(2);
     m_secondary_color_widget->set_frame_shape(Gfx::FrameShape::Container);
     m_secondary_color_widget->set_frame_shadow(Gfx::FrameShadow::Sunken);
@@ -92,7 +90,7 @@ PaletteWidget::PaletteWidget(PaintableWidget& paintable_widget, GUI::Widget* par
     m_secondary_color_widget->set_fill_with_background_color(true);
     set_secondary_color(paintable_widget.secondary_color());
 
-    m_primary_color_widget = GUI::Frame::construct(this);
+    m_primary_color_widget = add<GUI::Frame>();
     m_primary_color_widget->set_frame_thickness(2);
     m_primary_color_widget->set_frame_shape(Gfx::FrameShape::Container);
     m_primary_color_widget->set_frame_shadow(Gfx::FrameShadow::Sunken);
@@ -110,21 +108,21 @@ PaletteWidget::PaletteWidget(PaintableWidget& paintable_widget, GUI::Widget* par
         set_secondary_color(color);
     };
 
-    auto color_container = GUI::Widget::construct(this);
+    auto color_container = add<GUI::Widget>();
     color_container->set_relative_rect(m_secondary_color_widget->relative_rect().right() + 2, 2, 500, 32);
     color_container->set_layout(make<GUI::VerticalBoxLayout>());
     color_container->layout()->set_spacing(1);
 
-    auto top_color_container = GUI::Widget::construct(color_container.ptr());
+    auto top_color_container = color_container->add<GUI::Widget>();
     top_color_container->set_layout(make<GUI::HorizontalBoxLayout>());
     top_color_container->layout()->set_spacing(1);
 
-    auto bottom_color_container = GUI::Widget::construct(color_container.ptr());
+    auto bottom_color_container = color_container->add<GUI::Widget>();
     bottom_color_container->set_layout(make<GUI::HorizontalBoxLayout>());
     bottom_color_container->layout()->set_spacing(1);
 
     auto add_color_widget = [&](GUI::Widget* container, Color color) {
-        auto color_widget = ColorWidget::construct(color, *this, container);
+        auto color_widget = container->add<ColorWidget>(color, *this);
         color_widget->set_fill_with_background_color(true);
         auto pal = color_widget->palette();
         pal.set_color(ColorRole::Background, color);

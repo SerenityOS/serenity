@@ -40,7 +40,7 @@ public:
     void update_knobs();
 
 private:
-    KnobsWidget(GUI::Widget* parent, AudioEngine&, MainWidget&);
+    KnobsWidget(AudioEngine&, MainWidget&);
 
     AudioEngine& m_audio_engine;
     MainWidget& m_main_widget;

@@ -41,36 +41,36 @@ SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, NonnullRefPtr<Audio::C
     set_layout(make<GUI::VerticalBoxLayout>());
     layout()->set_margins({ 2, 2, 2, 2 });
 
-    auto status_widget = GUI::Widget::construct(this);
+    auto status_widget = add<GUI::Widget>();
     status_widget->set_fill_with_background_color(true);
     status_widget->set_layout(make<GUI::HorizontalBoxLayout>());
 
-    m_elapsed = GUI::Label::construct(status_widget);
+    m_elapsed = status_widget->add<GUI::Label>();
     m_elapsed->set_frame_shape(Gfx::FrameShape::Container);
     m_elapsed->set_frame_shadow(Gfx::FrameShadow::Sunken);
     m_elapsed->set_frame_thickness(2);
     m_elapsed->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     m_elapsed->set_preferred_size(80, 0);
 
-    auto sample_widget_container = GUI::Widget::construct(status_widget.ptr());
+    auto sample_widget_container = status_widget->add<GUI::Widget>();
     sample_widget_container->set_layout(make<GUI::HorizontalBoxLayout>());
     sample_widget_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
 
-    m_sample_widget = SampleWidget::construct(sample_widget_container);
+    m_sample_widget = sample_widget_container->add<SampleWidget>();
 
-    m_remaining = GUI::Label::construct(status_widget);
+    m_remaining = status_widget->add<GUI::Label>();
     m_remaining->set_frame_shape(Gfx::FrameShape::Container);
     m_remaining->set_frame_shadow(Gfx::FrameShadow::Sunken);
     m_remaining->set_frame_thickness(2);
     m_remaining->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     m_remaining->set_preferred_size(80, 0);
 
-    m_slider = Slider::construct(Orientation::Horizontal, this);
+    m_slider = add<Slider>(Orientation::Horizontal);
     m_slider->set_min(0);
     m_slider->set_enabled(false);
     m_slider->on_knob_released = [&](int value) { m_manager.seek(denormalize_rate(value)); };
 
-    auto control_widget = GUI::Widget::construct(this);
+    auto control_widget = add<GUI::Widget>();
     control_widget->set_fill_with_background_color(true);
     control_widget->set_layout(make<GUI::HorizontalBoxLayout>());
     control_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
@@ -78,19 +78,19 @@ SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, NonnullRefPtr<Audio::C
     control_widget->layout()->set_margins({ 10, 2, 10, 2 });
     control_widget->layout()->set_spacing(10);
 
-    m_play = GUI::Button::construct(control_widget);
+    m_play = control_widget->add<GUI::Button>();
     m_play->set_icon(*m_pause_icon);
     m_play->set_enabled(false);
     m_play->on_click = [this](GUI::Button& button) {
         button.set_icon(m_manager.toggle_pause() ? *m_play_icon : *m_pause_icon);
     };
 
-    m_stop = GUI::Button::construct(control_widget);
+    m_stop = control_widget->add<GUI::Button>();
     m_stop->set_enabled(false);
     m_stop->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/stop.png"));
     m_stop->on_click = [&](GUI::Button&) { m_manager.stop(); };
 
-    m_status = GUI::Label::construct(this);
+    m_status = add<GUI::Label>();
     m_status->set_frame_shape(Gfx::FrameShape::Box);
     m_status->set_frame_shadow(Gfx::FrameShadow::Raised);
     m_status->set_frame_thickness(4);

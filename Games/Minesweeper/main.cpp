@@ -62,22 +62,22 @@ int main(int argc, char** argv)
     widget->set_layout(make<GUI::VerticalBoxLayout>());
     widget->layout()->set_spacing(0);
 
-    auto container = GUI::Widget::construct(widget.ptr());
+    auto container = widget->add<GUI::Widget>();
     container->set_fill_with_background_color(true);
     container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     container->set_preferred_size(0, 36);
     container->set_layout(make<GUI::HorizontalBoxLayout>());
-    auto flag_icon_label = GUI::Label::construct(container);
+    auto flag_icon_label = container->add<GUI::Label>();
     flag_icon_label->set_icon(Gfx::Bitmap::load_from_file("/res/icons/minesweeper/flag.png"));
-    auto flag_label = GUI::Label::construct(container);
-    auto face_button = GUI::Button::construct(container);
+    auto flag_label = container->add<GUI::Label>();
+    auto face_button = container->add<GUI::Button>();
     face_button->set_button_style(Gfx::ButtonStyle::CoolBar);
     face_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     face_button->set_preferred_size(36, 0);
-    auto time_icon_label = GUI::Label::construct(container);
+    auto time_icon_label = container->add<GUI::Label>();
     time_icon_label->set_icon(Gfx::Bitmap::load_from_file("/res/icons/minesweeper/timer.png"));
-    auto time_label = GUI::Label::construct(container);
-    auto field = Field::construct(*flag_label, *time_label, *face_button, widget, [&](auto size) {
+    auto time_label = container->add<GUI::Label>();
+    auto field = widget->add<Field>(*flag_label, *time_label, *face_button, [&](auto size) {
         size.set_height(size.height() + container->preferred_size().height());
         window->resize(size);
     });

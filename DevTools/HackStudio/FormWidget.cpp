@@ -29,8 +29,7 @@
 #include "Tool.h"
 #include <LibGUI/Painter.h>
 
-FormWidget::FormWidget(FormEditorWidget& parent)
-    : GUI::Widget(&parent)
+FormWidget::FormWidget()
 {
     set_fill_with_background_color(true);
     set_relative_rect(5, 5, 400, 300);

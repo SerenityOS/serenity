@@ -124,7 +124,7 @@ public:
 private:
     virtual void paint_event(GUI::PaintEvent&) override;
 
-    explicit FormEditorWidget(GUI::Widget* parent);
+    FormEditorWidget();
 
     RefPtr<FormWidget> m_form_widget;
     RefPtr<WidgetTreeModel> m_widget_tree_model;

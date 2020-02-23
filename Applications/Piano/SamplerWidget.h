@@ -36,7 +36,7 @@ public:
     virtual ~WaveEditor() override;
 
 private:
-    WaveEditor(GUI::Widget* parent, AudioEngine&);
+    explicit WaveEditor(AudioEngine&);
 
     virtual void paint_event(GUI::PaintEvent&) override;
 
@@ -51,7 +51,7 @@ public:
     virtual ~SamplerWidget() override;
 
 private:
-    SamplerWidget(GUI::Widget* parent, AudioEngine&);
+    explicit SamplerWidget(AudioEngine&);
 
     AudioEngine& m_audio_engine;
 

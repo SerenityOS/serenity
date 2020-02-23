@@ -40,9 +40,8 @@
 class ToolButton final : public GUI::Button {
     C_OBJECT(ToolButton)
 public:
-    ToolButton(const String& name, GUI::Widget* parent, OwnPtr<Tool>&& tool)
-        : GUI::Button(parent)
-        , m_tool(move(tool))
+    ToolButton(const String& name, OwnPtr<Tool>&& tool)
+        : m_tool(move(tool))
     {
         set_tooltip(name);
     }
@@ -60,8 +59,7 @@ private:
     OwnPtr<Tool> m_tool;
 };
 
-ToolboxWidget::ToolboxWidget(GUI::Widget* parent)
-    : GUI::Frame(parent)
+ToolboxWidget::ToolboxWidget()
 {
     set_fill_with_background_color(true);
 
@@ -76,7 +74,7 @@ ToolboxWidget::ToolboxWidget(GUI::Widget* parent)
     layout()->set_margins({ 4, 4, 4, 4 });
 
     auto add_tool = [&](const StringView& name, const StringView& icon_name, OwnPtr<Tool>&& tool) {
-        auto button = ToolButton::construct(name, this, move(tool));
+        auto button = add<ToolButton>(name, move(tool));
         button->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
         button->set_preferred_size(0, 32);
         button->set_checkable(true);

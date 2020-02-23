@@ -28,10 +28,10 @@
 #include <AK/HashTable.h>
 #include <AK/Queue.h>
 #include <LibCore/ConfigFile.h>
-#include <LibGfx/Palette.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/Palette.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -72,8 +72,7 @@ public:
     virtual void mousedown_event(GUI::MouseEvent& event) override
     {
         if (event.button() == GUI::MouseButton::Right || event.button() == GUI::MouseButton::Left) {
-            if (event.buttons() == (GUI::MouseButton::Right | GUI::MouseButton::Left) ||
-                  m_square.field->is_single_chording()) {
+            if (event.buttons() == (GUI::MouseButton::Right | GUI::MouseButton::Left) || m_square.field->is_single_chording()) {
                 m_chord = true;
                 m_square.field->set_chord_preview(m_square, true);
             }
@@ -120,15 +119,14 @@ public:
     bool m_chord { false };
 };
 
-Field::Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, GUI::Widget* parent, Function<void(Gfx::Size)> on_size_changed)
-    : GUI::Frame(parent)
-    , m_face_button(face_button)
+Field::Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, Function<void(Gfx::Size)> on_size_changed)
+    : m_face_button(face_button)
     , m_flag_label(flag_label)
     , m_time_label(time_label)
     , m_on_size_changed(move(on_size_changed))
 {
     srand(time(nullptr));
-    m_timer = Core::Timer::construct();
+    m_timer = add<Core::Timer>();
     m_timer->on_timeout = [this] {
         ++m_time_elapsed;
         m_time_label.set_text(String::format("%u.%u", m_time_elapsed / 10, m_time_elapsed % 10));
@@ -511,7 +509,8 @@ void Field::set_field_size(int rows, int columns, int mine_count)
     m_on_size_changed(preferred_size());
 }
 
-void Field::set_single_chording(bool enabled) {
+void Field::set_single_chording(bool enabled)
+{
     auto config = Core::ConfigFile::get_for_app("Minesweeper");
     m_single_chording = enabled;
     config->write_bool_entry("Minesweeper", "SingleChording", m_single_chording);

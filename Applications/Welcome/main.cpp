@@ -173,7 +173,7 @@ int main(int argc, char** argv)
     // header
     //
 
-    auto header = GUI::Label::construct(background.ptr());
+    auto header = background->add<GUI::Label>();
     header->set_font(Gfx::Font::load_from_file("/res/fonts/PebbletonBold11.font"));
     header->set_text("Welcome to SerenityOS!");
     header->set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -184,44 +184,44 @@ int main(int argc, char** argv)
     // main section
     //
 
-    auto main_section = GUI::Widget::construct(background.ptr());
+    auto main_section = background->add<GUI::Widget>();
     main_section->set_layout(make<GUI::HorizontalBoxLayout>());
     main_section->layout()->set_margins({ 0, 0, 0, 0 });
     main_section->layout()->set_spacing(8);
     main_section->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
 
-    auto menu = GUI::Widget::construct(main_section.ptr());
+    auto menu = main_section->add<GUI::Widget>();
     menu->set_layout(make<GUI::VerticalBoxLayout>());
     menu->layout()->set_margins({ 0, 0, 0, 0 });
     menu->layout()->set_spacing(4);
     menu->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     menu->set_preferred_size(100, 0);
 
-    auto stack = GUI::StackWidget::construct(main_section);
+    auto stack = main_section->add<GUI::StackWidget>();
     stack->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
 
     bool first = true;
     for (auto& page : pages) {
-        auto content = GUI::Widget::construct(stack.ptr());
+        auto content = stack->add<GUI::Widget>();
         content->set_layout(make<GUI::VerticalBoxLayout>());
         content->layout()->set_margins({ 0, 0, 0, 0 });
         content->layout()->set_spacing(8);
         content->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
 
-        auto title_box = GUI::Widget::construct(content.ptr());
+        auto title_box = content->add<GUI::Widget>();
         title_box->set_layout(make<GUI::HorizontalBoxLayout>());
         title_box->layout()->set_spacing(4);
         title_box->set_preferred_size(0, 16);
         title_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
 
         if (!page.icon.is_empty()) {
-            auto icon = GUI::Label::construct(title_box);
+            auto icon = title_box->add<GUI::Label>();
             icon->set_icon(Gfx::Bitmap::load_from_file(page.icon));
             icon->set_preferred_size(16, 16);
             icon->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
         }
 
-        auto content_title = GUI::Label::construct(title_box);
+        auto content_title = title_box->add<GUI::Label>();
         content_title->set_font(Gfx::Font::default_bold_font());
         content_title->set_text(page.title);
         content_title->set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -229,7 +229,7 @@ int main(int argc, char** argv)
         content_title->set_preferred_size(0, 10);
 
         for (auto& paragraph : page.content) {
-            auto content_text = TextWidget::construct(content);
+            auto content_text = content->add<TextWidget>();
             content_text->set_font(Gfx::Font::default_font());
             content_text->set_text(paragraph);
             content_text->set_text_alignment(Gfx::TextAlignment::TopLeft);
@@ -237,7 +237,7 @@ int main(int argc, char** argv)
             content_text->wrap_and_set_height();
         }
 
-        auto menu_option = UnuncheckableButton::construct(menu);
+        auto menu_option = menu->add<UnuncheckableButton>();
         menu_option->set_font(Gfx::Font::default_font());
         menu_option->set_text(page.menu_name);
         menu_option->set_text_alignment(Gfx::TextAlignment::CenterLeft);

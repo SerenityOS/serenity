@@ -46,9 +46,8 @@
 #include <LibHTML/ResourceLoader.h>
 #include <stdio.h>
 
-HtmlView::HtmlView(GUI::Widget* parent)
-    : GUI::ScrollableWidget(parent)
-    , m_main_frame(::Frame::create(*this))
+HtmlView::HtmlView()
+    : m_main_frame(::Frame::create(*this))
 {
     main_frame().on_set_needs_display = [this](auto& content_rect) {
         if (content_rect.is_empty()) {

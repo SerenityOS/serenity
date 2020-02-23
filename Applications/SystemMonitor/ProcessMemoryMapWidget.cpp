@@ -36,7 +36,7 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget(GUI::Widget* parent)
 {
     set_layout(make<GUI::VerticalBoxLayout>());
     layout()->set_margins({ 4, 4, 4, 4 });
-    m_table_view = GUI::TableView::construct(this);
+    m_table_view = add<GUI::TableView>();
     m_table_view->set_size_columns_to_fit_content(true);
     Vector<GUI::JsonArrayModel::FieldSpec> pid_vm_fields;
     pid_vm_fields.empend("Address", Gfx::TextAlignment::CenterLeft, [](auto& object) {
@@ -73,7 +73,7 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget(GUI::Widget* parent)
     m_json_model = GUI::JsonArrayModel::create({}, move(pid_vm_fields));
     m_table_view->set_model(GUI::SortingProxyModel::create(*m_json_model));
     m_table_view->model()->set_key_column_and_sort_order(0, GUI::SortOrder::Ascending);
-    m_timer = Core::Timer::construct(1000, [this] { refresh(); }, this);
+    m_timer = add<Core::Timer>(1000, [this] { refresh(); });
 }
 
 ProcessMemoryMapWidget::~ProcessMemoryMapWidget()
