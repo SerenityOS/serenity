@@ -48,6 +48,7 @@ public:
     const u8* as_ptr() const { return reinterpret_cast<const u8*>(m_address); }
 
     PhysicalAddress page_base() const { return PhysicalAddress(m_address & 0xfffff000); }
+    PhysicalAddress offset_in_page() const { return PhysicalAddress(m_address & 0xfff); }
 
     bool operator==(const PhysicalAddress& other) const { return m_address == other.m_address; }
     bool operator!=(const PhysicalAddress& other) const { return m_address != other.m_address; }
