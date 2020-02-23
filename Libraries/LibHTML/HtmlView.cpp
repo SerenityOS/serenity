@@ -59,9 +59,6 @@ HtmlView::HtmlView()
         update(adjusted_rect);
     };
 
-    set_frame_shape(Gfx::FrameShape::Container);
-    set_frame_shadow(Gfx::FrameShadow::Sunken);
-    set_frame_thickness(2);
     set_should_hide_unnecessary_scrollbars(true);
     set_background_role(ColorRole::Base);
 }

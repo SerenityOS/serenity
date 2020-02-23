@@ -36,9 +36,6 @@ KnobsWidget::KnobsWidget(AudioEngine& audio_engine, MainWidget& main_widget)
     : m_audio_engine(audio_engine)
     , m_main_widget(main_widget)
 {
-    set_frame_thickness(2);
-    set_frame_shadow(Gfx::FrameShadow::Sunken);
-    set_frame_shape(Gfx::FrameShape::Container);
     set_layout(make<GUI::VerticalBoxLayout>());
     set_fill_with_background_color(true);
 

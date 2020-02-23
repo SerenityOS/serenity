@@ -53,10 +53,6 @@ ColumnsView::ColumnsView(Widget* parent)
     set_fill_with_background_color(true);
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
-    set_frame_shape(Gfx::FrameShape::Container);
-    set_frame_shadow(Gfx::FrameShadow::Sunken);
-    set_frame_thickness(2);
-
     m_columns.append({ {}, 0 });
 }
 

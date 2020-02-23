@@ -32,9 +32,6 @@
 GlyphEditorWidget::GlyphEditorWidget(Gfx::Font& mutable_font)
     : m_font(mutable_font)
 {
-    set_frame_thickness(2);
-    set_frame_shadow(Gfx::FrameShadow::Sunken);
-    set_frame_shape(Gfx::FrameShape::Container);
     set_relative_rect({ 0, 0, preferred_width(), preferred_height() });
 }
 

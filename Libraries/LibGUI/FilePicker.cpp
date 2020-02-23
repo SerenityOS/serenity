@@ -225,9 +225,6 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
     auto preview_container = horizontal_container->add<Frame>();
     preview_container->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     preview_container->set_preferred_size(180, 0);
-    preview_container->set_frame_shape(Gfx::FrameShape::Container);
-    preview_container->set_frame_shadow(Gfx::FrameShadow::Sunken);
-    preview_container->set_frame_thickness(2);
     preview_container->set_layout(make<VerticalBoxLayout>());
     preview_container->layout()->set_margins({ 8, 8, 8, 8 });
 

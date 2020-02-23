@@ -276,9 +276,6 @@ void PropertiesDialog::make_divider(NonnullRefPtr<GUI::Widget>& parent)
     auto divider = parent->add<GUI::Frame>();
     divider->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     divider->set_preferred_size({ 0, 2 });
-    divider->set_frame_shape(Gfx::FrameShape::HorizontalLine);
-    divider->set_frame_shadow(Gfx::FrameShadow::Sunken);
-    divider->set_frame_thickness(2);
 
     parent->layout()->add_spacer();
 }

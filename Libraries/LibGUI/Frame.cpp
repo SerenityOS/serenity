@@ -34,6 +34,9 @@ namespace GUI {
 Frame::Frame(Widget* parent)
     : Widget(parent)
 {
+    set_frame_thickness(2);
+    set_frame_shape(Gfx::FrameShape::Container);
+    set_frame_shadow(Gfx::FrameShadow::Sunken);
 }
 
 Frame::~Frame()
