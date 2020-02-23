@@ -41,7 +41,7 @@ public:
     virtual int item_count() const override;
 
 protected:
-    explicit TreeView(Widget*);
+    explicit TreeView(Widget* parent = nullptr);
 
     virtual void paint_event(PaintEvent&) override;
     virtual void doubleclick_event(MouseEvent&) override;

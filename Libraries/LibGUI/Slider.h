@@ -106,7 +106,7 @@ public:
     virtual ~VerticalSlider() override {}
 
 private:
-    explicit VerticalSlider(Widget* parent)
+    explicit VerticalSlider(Widget* parent = nullptr)
         : Slider(Orientation::Vertical, parent)
     {
     }
@@ -118,7 +118,7 @@ public:
     virtual ~HorizontalSlider() override {}
 
 private:
-    explicit HorizontalSlider(Widget* parent)
+    explicit HorizontalSlider(Widget* parent = nullptr)
         : Slider(Orientation::Horizontal, parent)
     {
     }

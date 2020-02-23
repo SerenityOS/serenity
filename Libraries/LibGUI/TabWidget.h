@@ -38,7 +38,7 @@ public:
         Bottom,
     };
 
-    explicit TabWidget(Widget* parent);
+    explicit TabWidget(Widget* parent = nullptr);
     virtual ~TabWidget() override;
 
     TabPosition tab_position() const { return m_tab_position; }

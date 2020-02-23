@@ -130,8 +130,8 @@ public:
     void set_syntax_highlighter(OwnPtr<SyntaxHighlighter>);
 
 protected:
-    explicit TextEditor(Widget* parent);
-    explicit TextEditor(Type, Widget* parent);
+    explicit TextEditor(Widget* parent = nullptr);
+    explicit TextEditor(Type, Widget* parent = nullptr);
 
     virtual void did_change_font() override;
     virtual void paint_event(PaintEvent&) override;
