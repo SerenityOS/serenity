@@ -45,7 +45,6 @@ class IRCClient final : public Core::Object {
     friend class IRCQuery;
 
 public:
-    IRCClient();
     virtual ~IRCClient() override;
 
     void set_server(const String& hostname, int port = 6667);
@@ -114,6 +113,8 @@ public:
     void add_server_message(const String&, Color = Color::Black);
 
 private:
+    IRCClient();
+
     struct Message {
         String prefix;
         String command;
