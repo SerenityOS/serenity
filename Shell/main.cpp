@@ -191,7 +191,11 @@ static int sh_cd(int argc, const char** argv)
 
     if (argc == 1) {
         new_path = g.home;
+        if (g.cd_history.is_empty() || g.cd_history.last() != g.home)
+            g.cd_history.enqueue(g.home);
     } else {
+        if (g.cd_history.is_empty() || g.cd_history.last() != argv[1])
+            g.cd_history.enqueue(argv[1]);
         if (strcmp(argv[1], "-") == 0) {
             char* oldpwd = getenv("OLDPWD");
             if (oldpwd == nullptr)
@@ -239,6 +243,37 @@ static int sh_cd(int argc, const char** argv)
     g.cwd = canonical_path.string();
     setenv("PWD", g.cwd.characters(), 1);
     return 0;
+}
+
+static int sh_cdh(int argc, const char** argv)
+{
+    if (argc > 2) {
+        fprintf(stderr, "usage: cdh [index]\n");
+        return 1;
+    }
+
+    if (argc == 1) {
+        if (g.cd_history.size() == 0) {
+            printf("cdh: no history available\n");
+            return 0;
+        }
+
+        for (int i = g.cd_history.size() - 1; i >= 0; --i)
+            printf("%lu: %s\n", g.cd_history.size() - i, g.cd_history.at(i).characters());
+        return 0;
+    }
+
+    bool ok;
+    size_t cd_history_index = String(argv[1]).to_uint(ok);
+
+    if (!ok || cd_history_index < 1 || cd_history_index > g.cd_history.size()) {
+        fprintf(stderr, "usage: cdh [index]\n");
+        return 1;
+    }
+
+    const char* path = g.cd_history.at(g.cd_history.size() - cd_history_index).characters();
+    const char* cd_args[] = { "cd", path };
+    return sh_cd(2, cd_args);
 }
 
 static int sh_history(int, const char**)
@@ -487,6 +522,10 @@ static bool handle_builtin(int argc, const char** argv, int& retval)
         return false;
     if (!strcmp(argv[0], "cd")) {
         retval = sh_cd(argc, argv);
+        return true;
+    }
+    if (!strcmp(argv[0], "cdh")) {
+        retval = sh_cdh(argc, argv);
         return true;
     }
     if (!strcmp(argv[0], "pwd")) {
