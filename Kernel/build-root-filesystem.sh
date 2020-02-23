@@ -111,8 +111,12 @@ else
     find ../Userland/ -type f -executable -exec cp {} mnt/bin/ \;
 fi
 chown 0:$wheel_gid mnt/bin/su
+chown 0:$phys_gid mnt/bin/shutdown
+chown 0:$phys_gid mnt/bin/reboot
 chmod 4750 mnt/bin/su
 chmod 4755 mnt/bin/ping
+chmod 4750 mnt/bin/reboot
+chmod 4750 mnt/bin/shutdown
 echo "done"
 
 printf "installing applications... "
