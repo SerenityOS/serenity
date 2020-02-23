@@ -120,6 +120,14 @@ public:
             m_parent->remove_child(*this);
     }
 
+    template<class T, class... Args>
+    inline NonnullRefPtr<T> add(Args&&... args)
+    {
+        auto t = T::construct(forward<Args>(args)...);
+        add_child(*t);
+        return t;
+    }
+
     virtual bool is_visible_for_timer_purposes() const;
 
 protected:
