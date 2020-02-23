@@ -351,7 +351,7 @@ Optional<KBuffer> procfs$interrupts(InodeIdentifier)
         obj.add("purpose", "Interrupt Handler"); // FIXME: Determine the right description for each interrupt handler.
         obj.add("interrupt_line", handler.interrupt_number());
         obj.add("cpu_handler", 0); // FIXME: Determine the responsible CPU for each interrupt handler.
-        obj.add("device_sharing", (unsigned)handler.get_sharing_devices_count());
+        obj.add("device_sharing", (unsigned)handler.sharing_devices_count());
         obj.add("call_count", (unsigned)handler.get_invoking_count());
     });
     array.finish();
