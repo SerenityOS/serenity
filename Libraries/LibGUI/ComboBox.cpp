@@ -30,7 +30,7 @@
 #include <LibGUI/ListView.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/ScrollBar.h>
-#include <LibGUI/TextEditor.h>
+#include <LibGUI/TextBox.h>
 #include <LibGUI/Window.h>
 
 namespace GUI {
@@ -38,7 +38,7 @@ namespace GUI {
 ComboBox::ComboBox(Widget* parent)
     : Widget(parent)
 {
-    m_editor = TextEditor::construct(TextEditor::Type::SingleLine, this);
+    m_editor = add<TextBox>();
     m_editor->on_change = [this] {
         if (on_change)
             on_change(m_editor->text(), m_list_view->selection().first());
@@ -148,6 +148,26 @@ void ComboBox::set_only_allow_values_from_model(bool b)
         return;
     m_only_allow_values_from_model = b;
     m_editor->set_readonly(m_only_allow_values_from_model);
+}
+
+Model* ComboBox::model()
+{
+    return m_list_view->model();
+}
+
+const Model* ComboBox::model() const
+{
+    return m_list_view->model();
+}
+
+int ComboBox::model_column() const
+{
+    return m_list_view->model_column();
+}
+
+void ComboBox::set_model_column(int column)
+{
+    m_list_view->set_model_column(column);
 }
 
 }

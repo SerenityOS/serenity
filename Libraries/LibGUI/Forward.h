@@ -45,6 +45,7 @@ class JsonArrayModel;
 class KeyEvent;
 class Label;
 class Layout;
+class ListView;
 class Menu;
 class MenuBar;
 class MenuItem;
