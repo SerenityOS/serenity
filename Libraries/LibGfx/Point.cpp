@@ -46,8 +46,8 @@ namespace IPC {
 
 bool decode(BufferStream& stream, Gfx::Point& point)
 {
-    int x;
-    int y;
+    int x = 0;
+    int y = 0;
     stream >> x;
     stream >> y;
     if (stream.handle_read_failure())

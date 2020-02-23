@@ -46,8 +46,8 @@ namespace IPC {
 
 bool decode(BufferStream& stream, Gfx::Size& size)
 {
-    int width;
-    int height;
+    int width = 0;
+    int height = 0;
     stream >> width;
     stream >> height;
     if (stream.handle_read_failure())
