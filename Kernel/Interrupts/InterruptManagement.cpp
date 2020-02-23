@@ -116,18 +116,18 @@ void InterruptManagement::switch_to_ioapic_mode()
     kprintf("Interrupts: Switch to IOAPIC mode failed, Reverting to PIC mode\n");
 }
 
-void AdvancedInterruptManagement::initialize(ACPI_RAW::MADT& p_madt)
+void AdvancedInterruptManagement::initialize(PhysicalAddress p_madt)
 {
     ASSERT(!InterruptManagement::initialized());
     s_interrupt_management = new AdvancedInterruptManagement(p_madt);
 }
 
-AdvancedInterruptManagement::AdvancedInterruptManagement(ACPI_RAW::MADT& p_madt)
+AdvancedInterruptManagement::AdvancedInterruptManagement(PhysicalAddress p_madt)
     : InterruptManagement(false)
     , m_madt(p_madt)
 {
     // FIXME: Check what is the actual data size then map accordingly
-    dbg() << "Interrupts: MADT @ P " << &p_madt;
+    dbg() << "Interrupts: MADT @ P " << p_madt.as_ptr();
     locate_isa_interrupt_overrides(p_madt);
     locate_ioapics(p_madt);
 }
@@ -166,10 +166,10 @@ void AdvancedInterruptManagement::switch_to_ioapic_mode()
     }
 }
 
-void AdvancedInterruptManagement::locate_ioapics(ACPI_RAW::MADT& p_madt)
+void AdvancedInterruptManagement::locate_ioapics(PhysicalAddress p_madt)
 {
-    auto region = MM.allocate_kernel_region(PhysicalAddress(page_base_of(&p_madt)), (PAGE_SIZE * 2), "Initializing Interrupts", Region::Access::Read);
-    auto& madt = *(const ACPI_RAW::MADT*)region->vaddr().offset(offset_in_page(&p_madt)).as_ptr();
+    auto region = MM.allocate_kernel_region(p_madt.page_base(), (PAGE_SIZE * 2), "Initializing Interrupts", Region::Access::Read);
+    auto& madt = *(const ACPI_RAW::MADT*)region->vaddr().offset(p_madt.offset_in_page().get()).as_ptr();
 
     int index = 0;
     if (madt.flags & PCAT_COMPAT_FLAG) {
@@ -200,10 +200,10 @@ void AdvancedInterruptManagement::locate_pci_interrupt_overrides()
     m_pci_interrupt_overrides = MultiProcessorParser::the().get_pci_interrupt_redirections();
 }
 
-void AdvancedInterruptManagement::locate_isa_interrupt_overrides(ACPI_RAW::MADT& p_madt)
+void AdvancedInterruptManagement::locate_isa_interrupt_overrides(PhysicalAddress p_madt)
 {
-    auto region = MM.allocate_kernel_region(PhysicalAddress(page_base_of(&p_madt)), (PAGE_SIZE * 2), "Initializing Interrupts", Region::Access::Read);
-    auto& madt = *(const ACPI_RAW::MADT*)region->vaddr().offset(offset_in_page(&p_madt)).as_ptr();
+    auto region = MM.allocate_kernel_region(p_madt.page_base(), (PAGE_SIZE * 2), "Initializing Interrupts", Region::Access::Read);
+    auto& madt = *(const ACPI_RAW::MADT*)region->vaddr().offset(p_madt.offset_in_page().get()).as_ptr();
 
     size_t entry_index = 0;
     size_t entries_length = madt.h.length - sizeof(ACPI_RAW::MADT);

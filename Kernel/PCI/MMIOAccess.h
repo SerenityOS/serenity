@@ -39,14 +39,14 @@ namespace Kernel {
 
 class PCI::MMIOAccess final : public PCI::Access {
 public:
-    static void initialize(ACPI_RAW::MCFG&);
+    static void initialize(PhysicalAddress mcfg);
     virtual void enumerate_all(Function<void(Address, ID)>&) override final;
 
     virtual String get_access_type() override final { return "MMIO-Access"; };
     virtual u32 get_segments_count();
 
 protected:
-    explicit MMIOAccess(ACPI_RAW::MCFG&);
+    explicit MMIOAccess(PhysicalAddress mcfg);
 
 private:
     virtual u8 read8_field(Address address, u32) override final;
@@ -60,7 +60,7 @@ private:
     virtual u8 get_segment_start_bus(u32);
     virtual u8 get_segment_end_bus(u32);
 
-    ACPI_RAW::MCFG& m_mcfg;
+    PhysicalAddress m_mcfg;
     HashMap<u16, MMIOSegment*>& m_segments;
     OwnPtr<Region> m_mmio_window_region;
     PCI::ChangeableAddress m_mapped_address;
