@@ -352,7 +352,7 @@ const LogStream& operator<<(const LogStream& stream, Color value)
 
 bool IPC::decode(BufferStream& stream, Color& color)
 {
-    u32 rgba;
+    u32 rgba = 0;
     stream >> rgba;
     if (stream.handle_read_failure())
         return false;
