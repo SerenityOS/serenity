@@ -47,15 +47,13 @@ MainWidget::MainWidget(AudioEngine& audio_engine)
     m_wave_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_wave_widget->set_preferred_size(0, 100);
 
-    m_roll_widget = RollWidget::construct(audio_engine);
+    m_tab_widget = add<GUI::TabWidget>();
+    m_roll_widget = m_tab_widget->add_tab<RollWidget>("Piano Roll", audio_engine);
+
     m_roll_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
     m_roll_widget->set_preferred_size(0, 300);
 
-    m_sampler_widget = SamplerWidget::construct(audio_engine);
-
-    m_tab_widget = add<GUI::TabWidget>();
-    m_tab_widget->add_widget("Piano Roll", m_roll_widget);
-    m_tab_widget->add_widget("Sampler", m_sampler_widget);
+    m_tab_widget->add_tab<SamplerWidget>("Sampler", audio_engine);
 
     m_keys_and_knobs_container = add<GUI::Widget>();
     m_keys_and_knobs_container->set_layout(make<GUI::HorizontalBoxLayout>());

@@ -124,17 +124,15 @@ void DisplayPropertiesWidget::create_frame()
 {
     auto tab_widget = m_root_widget->add<GUI::TabWidget>();
 
-    // First, let's create the "Background" tab
-    auto background_splitter = GUI::VerticalSplitter::construct();
-    tab_widget->add_widget("Wallpaper", background_splitter);
+    auto wallpaper_splitter = tab_widget->add_tab<GUI::VerticalSplitter>("Wallpaper");
 
-    auto background_content = background_splitter->add<GUI::Widget>();
-    background_content->set_layout(make<GUI::VerticalBoxLayout>());
-    background_content->layout()->set_margins({ 4, 4, 4, 4 });
+    auto wallpaper_content = wallpaper_splitter->add<GUI::Widget>();
+    wallpaper_content->set_layout(make<GUI::VerticalBoxLayout>());
+    wallpaper_content->layout()->set_margins({ 4, 4, 4, 4 });
 
-    m_wallpaper_preview = background_splitter->add<GUI::Label>();
+    m_wallpaper_preview = wallpaper_splitter->add<GUI::Label>();
 
-    auto wallpaper_list = background_content->add<GUI::ListView>();
+    auto wallpaper_list = wallpaper_content->add<GUI::ListView>();
     wallpaper_list->set_background_color(Color::White);
     wallpaper_list->set_model(*ItemListModel<AK::String>::create(m_wallpapers));
 
@@ -154,9 +152,7 @@ void DisplayPropertiesWidget::create_frame()
         m_wallpaper_preview->set_should_stretch_icon(true);
     };
 
-    // Let's add the settings tab
-    auto settings_splitter = GUI::VerticalSplitter::construct();
-    tab_widget->add_widget("Settings", settings_splitter);
+    auto settings_splitter = tab_widget->add_tab<GUI::VerticalSplitter>("Settings");
 
     auto settings_content = settings_splitter->add<GUI::Widget>();
     settings_content->set_layout(make<GUI::VerticalBoxLayout>());

@@ -70,9 +70,9 @@ static String human_readable_size(u32 size)
     return String::format("%u GB", size / GB);
 }
 
-static RefPtr<GUI::Widget> build_file_systems_tab();
-static RefPtr<GUI::Widget> build_pci_devices_tab();
-static RefPtr<GUI::Widget> build_devices_tab();
+static NonnullRefPtr<GUI::Widget> build_file_systems_tab();
+static NonnullRefPtr<GUI::Widget> build_pci_devices_tab();
+static NonnullRefPtr<GUI::Widget> build_devices_tab();
 static NonnullRefPtr<GUI::Widget> build_graphs_tab();
 
 int main(int argc, char** argv)
@@ -123,8 +123,7 @@ int main(int argc, char** argv)
 
     auto tabwidget = keeper->add<GUI::TabWidget>();
 
-    auto process_container_splitter = GUI::VerticalSplitter::construct();
-    tabwidget->add_widget("Processes", process_container_splitter);
+    auto process_container_splitter = tabwidget->add_tab<GUI::VerticalSplitter>("Processes");
 
     auto process_table_container = process_container_splitter->add<GUI::Widget>();
 
@@ -232,17 +231,10 @@ int main(int argc, char** argv)
 
     auto process_tab_widget = process_container_splitter->add<GUI::TabWidget>();
 
-    auto memory_map_widget = ProcessMemoryMapWidget::construct();
-    process_tab_widget->add_widget("Memory map", memory_map_widget);
-
-    auto open_files_widget = ProcessFileDescriptorMapWidget::construct();
-    process_tab_widget->add_widget("Open files", open_files_widget);
-
-    auto unveiled_paths_widget = ProcessUnveiledPathsWidget::construct();
-    process_tab_widget->add_widget("Unveiled paths", unveiled_paths_widget);
-
-    auto stacks_widget = ProcessStacksWidget::construct();
-    process_tab_widget->add_widget("Stacks", stacks_widget);
+    auto memory_map_widget = process_tab_widget->add_tab<ProcessMemoryMapWidget>("Memory map");
+    auto open_files_widget = process_tab_widget->add_tab<ProcessFileDescriptorMapWidget>("Open files");
+    auto unveiled_paths_widget = process_tab_widget->add_tab<ProcessUnveiledPathsWidget>("Unveiled paths");
+    auto stacks_widget = process_tab_widget->add_tab<ProcessStacksWidget>("Stacks");
 
     process_table_view->on_process_selected = [&](pid_t pid) {
         open_files_widget->set_pid(pid);
@@ -276,7 +268,7 @@ public:
     }
 };
 
-RefPtr<GUI::Widget> build_file_systems_tab()
+NonnullRefPtr<GUI::Widget> build_file_systems_tab()
 {
     auto fs_widget = GUI::LazyWidget::construct();
 
@@ -369,7 +361,7 @@ RefPtr<GUI::Widget> build_file_systems_tab()
     return fs_widget;
 }
 
-RefPtr<GUI::Widget> build_pci_devices_tab()
+NonnullRefPtr<GUI::Widget> build_pci_devices_tab()
 {
     auto pci_widget = GUI::LazyWidget::construct();
 
@@ -427,7 +419,7 @@ RefPtr<GUI::Widget> build_pci_devices_tab()
     return pci_widget;
 }
 
-RefPtr<GUI::Widget> build_devices_tab()
+NonnullRefPtr<GUI::Widget> build_devices_tab()
 {
     auto devices_widget = GUI::LazyWidget::construct();
 

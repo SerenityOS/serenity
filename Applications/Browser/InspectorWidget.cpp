@@ -54,15 +54,14 @@ InspectorWidget::InspectorWidget()
             m_computed_style_table_view->set_model(nullptr);
         }
     };
-    m_style_table_view = GUI::TableView::construct();
+
+    auto tab_widget = splitter->add<GUI::TabWidget>();
+
+    m_style_table_view = tab_widget->add_tab<GUI::TableView>("Styles");
     m_style_table_view->set_size_columns_to_fit_content(true);
 
-    m_computed_style_table_view = GUI::TableView::construct();
+    m_computed_style_table_view = tab_widget->add_tab<GUI::TableView>("Computed");
     m_computed_style_table_view->set_size_columns_to_fit_content(true);
-
-    auto tabwidget = splitter->add<GUI::TabWidget>();
-    tabwidget->add_widget("Styles", m_style_table_view);
-    tabwidget->add_widget("Computed", m_computed_style_table_view);
 }
 
 InspectorWidget::~InspectorWidget()

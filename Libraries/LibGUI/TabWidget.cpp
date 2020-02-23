@@ -41,10 +41,10 @@ TabWidget::~TabWidget()
 {
 }
 
-void TabWidget::add_widget(const StringView& title, Widget* widget)
+void TabWidget::add_widget(const StringView& title, Widget& widget)
 {
-    m_tabs.append({ title, widget });
-    add_child(*widget);
+    m_tabs.append({ title, &widget });
+    add_child(widget);
 }
 
 void TabWidget::set_active_widget(Widget* widget)

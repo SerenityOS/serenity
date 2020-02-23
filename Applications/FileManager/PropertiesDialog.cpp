@@ -54,11 +54,10 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
 
     auto tab_widget = main_widget->add<GUI::TabWidget>();
 
-    auto general_tab = tab_widget->add<GUI::Widget>();
+    auto general_tab = tab_widget->add_tab<GUI::Widget>("General");
     general_tab->set_layout(make<GUI::VerticalBoxLayout>());
     general_tab->layout()->set_margins({ 12, 8, 12, 8 });
     general_tab->layout()->set_spacing(10);
-    tab_widget->add_widget("General", general_tab);
 
     general_tab->layout()->add_spacer();
 
