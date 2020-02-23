@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <AK/StdLibExtras.h>
 #include <LibGUI/Frame.h>
 
 class GlyphMapWidget final : public GUI::Frame {
@@ -37,8 +38,8 @@ public:
     u8 selected_glyph() const { return m_selected_glyph; }
     void set_selected_glyph(u8);
 
-    int rows() const { return m_rows; }
-    int columns() const { return 256 / m_rows; }
+    int rows() const { return ceil_div(m_glyph_count, m_columns); }
+    int columns() const { return m_columns; }
 
     int preferred_width() const;
     int preferred_height() const;
@@ -52,13 +53,16 @@ public:
 
 private:
     explicit GlyphMapWidget(Gfx::Font&);
+    virtual bool accepts_focus() const override { return true; }
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
+    virtual void keydown_event(GUI::KeyEvent&) override;
 
     Gfx::Rect get_outer_rect(u8 glyph) const;
 
     RefPtr<Gfx::Font> m_font;
-    int m_rows { 8 };
+    int m_glyph_count { 256 };
+    int m_columns { 32 };
     int m_horizontal_spacing { 2 };
     int m_vertical_spacing { 2 };
     u8 m_selected_glyph { 0 };

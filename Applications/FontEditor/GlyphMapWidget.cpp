@@ -87,33 +87,79 @@ void GlyphMapWidget::paint_event(GUI::PaintEvent& event)
     painter.set_font(font());
     painter.fill_rect(frame_inner_rect(), palette().base());
 
-    u8 glyph = 0;
-
-    for (int row = 0; row < rows(); ++row) {
-        for (int column = 0; column < columns(); ++column, ++glyph) {
-            Gfx::Rect outer_rect = get_outer_rect(glyph);
-            Gfx::Rect inner_rect(
-                outer_rect.x() + m_horizontal_spacing / 2,
-                outer_rect.y() + m_vertical_spacing / 2,
-                font().max_glyph_width(),
-                font().glyph_height());
-            if (glyph == m_selected_glyph) {
-                painter.fill_rect(outer_rect, palette().selection());
-                painter.draw_glyph(inner_rect.location(), glyph, palette().selection_text());
-            } else {
-                painter.draw_glyph(inner_rect.location(), glyph, palette().base_text());
-            }
+    for (int glyph = 0; glyph < m_glyph_count; ++glyph) {
+        Gfx::Rect outer_rect = get_outer_rect(glyph);
+        Gfx::Rect inner_rect(
+            outer_rect.x() + m_horizontal_spacing / 2,
+            outer_rect.y() + m_vertical_spacing / 2,
+            font().max_glyph_width(),
+            font().glyph_height());
+        if (glyph == m_selected_glyph) {
+            painter.fill_rect(outer_rect, is_focused() ? palette().selection() : palette().inactive_selection());
+            painter.draw_glyph(inner_rect.location(), glyph, is_focused() ? palette().selection_text() : palette().inactive_selection_text());
+        } else {
+            painter.draw_glyph(inner_rect.location(), glyph, palette().base_text());
         }
     }
 }
 
 void GlyphMapWidget::mousedown_event(GUI::MouseEvent& event)
 {
+    GUI::Frame::mousedown_event(event);
+
     // FIXME: This is a silly loop.
-    for (unsigned glyph = 0; glyph < 256; ++glyph) {
+    for (int glyph = 0; glyph < m_glyph_count; ++glyph) {
         if (get_outer_rect(glyph).contains(event.position())) {
             set_selected_glyph(glyph);
             break;
         }
+    }
+}
+
+void GlyphMapWidget::keydown_event(GUI::KeyEvent& event)
+{
+    GUI::Frame::keydown_event(event);
+
+    if (event.key() == KeyCode::Key_Up) {
+        if (selected_glyph() >= m_columns) {
+            set_selected_glyph(selected_glyph() - m_columns);
+            return;
+        }
+    }
+    if (event.key() == KeyCode::Key_Down) {
+        if (selected_glyph() < m_glyph_count - m_columns) {
+            set_selected_glyph(selected_glyph() + m_columns);
+            return;
+        }
+    }
+    if (event.key() == KeyCode::Key_Left) {
+        if (selected_glyph() > 0) {
+            set_selected_glyph(selected_glyph() - 1);
+            return;
+        }
+    }
+    if (event.key() == KeyCode::Key_Right) {
+        if (selected_glyph() < m_glyph_count - 1) {
+            set_selected_glyph(selected_glyph() + 1);
+            return;
+        }
+    }
+    if (event.ctrl() && event.key() == KeyCode::Key_Home) {
+        set_selected_glyph(0);
+        return;
+    }
+    if (event.ctrl() && event.key() == KeyCode::Key_End) {
+        set_selected_glyph(m_glyph_count - 1);
+        return;
+    }
+    if (!event.ctrl() && event.key() == KeyCode::Key_Home) {
+        set_selected_glyph(selected_glyph() / m_columns * m_columns);
+        return;
+    }
+    if (!event.ctrl() && event.key() == KeyCode::Key_End) {
+        int new_selection = selected_glyph() / m_columns * m_columns + (m_columns - 1);
+        new_selection = clamp(new_selection, 0, m_glyph_count - 1);
+        set_selected_glyph(new_selection);
+        return;
     }
 }
