@@ -108,7 +108,7 @@ NonnullRefPtr<Font> Font::clone() const
         memcpy(new_widths, m_glyph_widths, 256);
     else
         memset(new_widths, m_glyph_width, 256);
-    return adopt(*new Font(m_name, new_rows, new_widths, m_fixed_width, m_glyph_width, 12, m_glyph_spacing));
+    return adopt(*new Font(m_name, new_rows, new_widths, m_fixed_width, m_glyph_width, m_glyph_height, m_glyph_spacing));
 }
 
 NonnullRefPtr<Font> Font::create(u8 glyph_height, u8 glyph_width, bool fixed)
