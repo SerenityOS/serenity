@@ -92,10 +92,6 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
     m_cursor_blink_timer = add<Core::Timer>();
     m_visual_beep_timer = add<Core::Timer>();
 
-    set_frame_shape(Gfx::FrameShape::Container);
-    set_frame_shadow(Gfx::FrameShadow::Sunken);
-    set_frame_thickness(2);
-
     m_scrollbar = add<GUI::ScrollBar>(Orientation::Vertical);
     m_scrollbar->set_relative_rect(0, 0, 16, 0);
     m_scrollbar->on_change = [this](int) {

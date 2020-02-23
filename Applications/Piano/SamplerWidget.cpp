@@ -36,9 +36,6 @@
 WaveEditor::WaveEditor(AudioEngine& audio_engine)
     : m_audio_engine(audio_engine)
 {
-    set_frame_thickness(2);
-    set_frame_shadow(Gfx::FrameShadow::Sunken);
-    set_frame_shape(Gfx::FrameShape::Container);
 }
 
 WaveEditor::~WaveEditor()
@@ -94,9 +91,6 @@ void WaveEditor::paint_event(GUI::PaintEvent& event)
 SamplerWidget::SamplerWidget(AudioEngine& audio_engine)
     : m_audio_engine(audio_engine)
 {
-    set_frame_thickness(2);
-    set_frame_shadow(Gfx::FrameShadow::Sunken);
-    set_frame_shape(Gfx::FrameShape::Container);
     set_layout(make<GUI::VerticalBoxLayout>());
     layout()->set_margins({ 10, 10, 10, 10 });
     layout()->set_spacing(10);

@@ -44,9 +44,6 @@
 HexEditor::HexEditor(GUI::Widget* parent)
     : ScrollableWidget(parent)
 {
-    set_frame_shape(Gfx::FrameShape::Container);
-    set_frame_shadow(Gfx::FrameShadow::Sunken);
-    set_frame_thickness(2);
     set_scrollbars_enabled(true);
     set_font(GFontDatabase::the().get_by_name("Csilla Thin"));
     set_background_role(ColorRole::Base);

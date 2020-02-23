@@ -38,9 +38,6 @@ ListView::ListView(Widget* parent)
 {
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
-    set_frame_shape(Gfx::FrameShape::Container);
-    set_frame_shadow(Gfx::FrameShadow::Sunken);
-    set_frame_thickness(2);
 }
 
 ListView::~ListView()

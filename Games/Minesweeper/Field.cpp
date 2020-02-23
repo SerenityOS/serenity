@@ -132,9 +132,6 @@ Field::Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_b
         m_time_label.set_text(String::format("%u.%u", m_time_elapsed / 10, m_time_elapsed % 10));
     };
     m_timer->set_interval(100);
-    set_frame_thickness(2);
-    set_frame_shape(Gfx::FrameShape::Container);
-    set_frame_shadow(Gfx::FrameShadow::Sunken);
     m_mine_bitmap = Gfx::Bitmap::load_from_file("/res/icons/minesweeper/mine.png");
     m_flag_bitmap = Gfx::Bitmap::load_from_file("/res/icons/minesweeper/flag.png");
     m_badflag_bitmap = Gfx::Bitmap::load_from_file("/res/icons/minesweeper/badflag.png");

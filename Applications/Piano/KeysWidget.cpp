@@ -32,9 +32,6 @@
 KeysWidget::KeysWidget(AudioEngine& audio_engine)
     : m_audio_engine(audio_engine)
 {
-    set_frame_thickness(2);
-    set_frame_shadow(Gfx::FrameShadow::Sunken);
-    set_frame_shape(Gfx::FrameShape::Container);
     set_fill_with_background_color(true);
 }
 

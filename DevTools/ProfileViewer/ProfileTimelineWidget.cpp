@@ -32,9 +32,6 @@ ProfileTimelineWidget::ProfileTimelineWidget(Profile& profile, GUI::Widget* pare
     : GUI::Frame(parent)
     , m_profile(profile)
 {
-    set_frame_thickness(2);
-    set_frame_shadow(Gfx::FrameShadow::Sunken);
-    set_frame_shape(Gfx::FrameShape::Container);
     set_background_color(Color::White);
     set_fill_with_background_color(true);
     set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);

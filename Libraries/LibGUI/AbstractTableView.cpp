@@ -42,10 +42,6 @@ static const int minimum_column_width = 2;
 AbstractTableView::AbstractTableView(Widget* parent)
     : AbstractView(parent)
 {
-    set_frame_shape(Gfx::FrameShape::Container);
-    set_frame_shadow(Gfx::FrameShadow::Sunken);
-    set_frame_thickness(2);
-
     set_should_hide_unnecessary_scrollbars(true);
 }
 
