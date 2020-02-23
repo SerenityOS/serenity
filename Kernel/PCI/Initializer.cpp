@@ -44,7 +44,7 @@ PCI::Initializer& PCI::Initializer::the()
     }
     return *s_pci_initializer;
 }
-void PCI::Initializer::initialize_pci_mmio_access(ACPI_RAW::MCFG& mcfg)
+void PCI::Initializer::initialize_pci_mmio_access(PhysicalAddress mcfg)
 {
     PCI::MMIOAccess::initialize(mcfg);
     detect_devices();
@@ -129,15 +129,12 @@ bool PCI::Initializer::test_pci_io()
 
 bool PCI::Initializer::test_pci_mmio()
 {
-    if (ACPIParser::the().find_table("MCFG") != nullptr)
-        return true;
-    else
-        return false;
+    return !ACPIParser::the().find_table("MCFG").is_null();
 }
 
 void PCI::Initializer::initialize_pci_mmio_access_after_test()
 {
-    initialize_pci_mmio_access(*(ACPI_RAW::MCFG*)(ACPIParser::the().find_table("MCFG")));
+    initialize_pci_mmio_access(ACPIParser::the().find_table("MCFG"));
 }
 
 void PCI::Initializer::dismiss()
