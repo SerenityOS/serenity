@@ -44,7 +44,7 @@ public:
     Function<void(int)> on_scale_change;
 
 private:
-    explicit QSWidget(GUI::Widget* parent = nullptr);
+    QSWidget();
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;

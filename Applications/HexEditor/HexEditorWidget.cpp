@@ -49,7 +49,7 @@ HexEditorWidget::HexEditorWidget()
     set_layout(make<GUI::VerticalBoxLayout>());
     layout()->set_spacing(0);
 
-    m_editor = HexEditor::construct(this);
+    m_editor = add<HexEditor>();
 
     m_editor->on_status_change = [this](int position, HexEditor::EditMode edit_mode, int selection_start, int selection_end) {
         m_statusbar->set_text(0, String::format("Offset: %8X", position));
@@ -66,7 +66,7 @@ HexEditorWidget::HexEditorWidget()
             update_title();
     };
 
-    m_statusbar = GUI::StatusBar::construct(5, this);
+    m_statusbar = add<GUI::StatusBar>(5);
 
     m_new_action = GUI::Action::create("New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [this](const GUI::Action&) {
         if (m_document_dirty) {

@@ -44,9 +44,8 @@ VBForm* VBForm::current()
     return s_current;
 }
 
-VBForm::VBForm(const String& name, GUI::Widget* parent)
-    : GUI::Widget(parent)
-    , m_name(name)
+VBForm::VBForm(const String& name)
+    : m_name(name)
 {
     s_current = this;
     set_fill_with_background_color(true);

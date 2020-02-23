@@ -56,7 +56,7 @@ public:
     void set_format(Format format) { m_format = format; }
 
 protected:
-    explicit ProgressBar(Widget* parent = nullptr);
+    ProgressBar();
 
     virtual void paint_event(PaintEvent&) override;
 

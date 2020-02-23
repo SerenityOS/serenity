@@ -65,8 +65,7 @@ public:
     };
 
 private:
-    explicit ScrollBar(Widget* parent = nullptr);
-    explicit ScrollBar(Orientation, Widget* parent = nullptr);
+    explicit ScrollBar(Gfx::Orientation = Gfx::Orientation::Vertical);
 
     virtual void paint_event(PaintEvent&) override;
     virtual void mousedown_event(MouseEvent&) override;

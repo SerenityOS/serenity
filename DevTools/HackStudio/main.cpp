@@ -286,7 +286,8 @@ int main(int argc, char** argv)
         auto icon_path = String::format("/res/icons/widgets/G%s.png", reg.class_name().characters());
         auto action = GUI::Action::create(reg.class_name(), Gfx::Bitmap::load_from_file(icon_path), [&reg](auto&) {
             g_form_editor_widget->set_tool(make<WidgetTool>(*g_form_editor_widget, reg));
-            auto widget = reg.construct(&g_form_editor_widget->form_widget());
+            auto widget = reg.construct();
+            g_form_editor_widget->form_widget().add_child(widget);
             widget->set_relative_rect(30, 30, 30, 30);
             g_form_editor_widget->model().update();
         });

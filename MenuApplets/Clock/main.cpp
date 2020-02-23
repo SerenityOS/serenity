@@ -38,7 +38,6 @@ class ClockWidget final : public GUI::Widget {
     C_OBJECT(ClockWidget)
 public:
     ClockWidget()
-        : GUI::Widget(nullptr)
     {
         m_time_width = Gfx::Font::default_bold_font().width("2222-22-22 22:22:22");
 

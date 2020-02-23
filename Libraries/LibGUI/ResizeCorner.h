@@ -34,7 +34,7 @@ public:
     virtual ~ResizeCorner() override;
 
 protected:
-    explicit ResizeCorner(Widget* parent = nullptr);
+    ResizeCorner();
 
     virtual void paint_event(PaintEvent&) override;
     virtual void mousedown_event(MouseEvent&) override;

@@ -56,7 +56,7 @@ public:
     Function<void()> on_return_pressed;
 
 protected:
-    explicit ComboBox(Widget* parent = nullptr);
+    ComboBox();
     virtual void resize_event(ResizeEvent&) override;
 
 private:

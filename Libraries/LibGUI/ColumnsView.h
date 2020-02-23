@@ -40,8 +40,8 @@ public:
     virtual ModelIndex index_at_event_position(const Gfx::Point&) const override;
 
 private:
-    ColumnsView(Widget* parent = nullptr);
-    virtual ~ColumnsView();
+    ColumnsView();
+    virtual ~ColumnsView() override;
     void push_column(ModelIndex& parent_index);
     void update_column_sizes();
 

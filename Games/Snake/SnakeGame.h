@@ -38,7 +38,7 @@ public:
     void reset();
 
 private:
-    explicit SnakeGame(GUI::Widget* parent = nullptr);
+    SnakeGame();
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;

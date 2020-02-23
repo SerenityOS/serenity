@@ -38,8 +38,7 @@
 
 namespace GUI {
 
-TableView::TableView(Widget* parent)
-    : AbstractTableView(parent)
+TableView::TableView()
 {
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);

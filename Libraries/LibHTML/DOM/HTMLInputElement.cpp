@@ -63,7 +63,7 @@ RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const StyleProperties*) 
         };
         widget = button;
     } else {
-        auto text_box = GUI::TextBox::construct(&html_view);
+        auto text_box = html_view.add<GUI::TextBox>();
         text_box->set_text(value());
         text_box->on_change = [this] {
             auto& widget = to<LayoutWidget>(layout_node())->widget();

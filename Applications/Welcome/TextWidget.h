@@ -32,10 +32,9 @@
 #include <LibGfx/TextAlignment.h>
 
 class TextWidget : public GUI::Frame {
-    C_OBJECT(TextWidget)
+    C_OBJECT(TextWidget);
+
 public:
-    explicit TextWidget(GUI::Widget* parent = nullptr);
-    TextWidget(const StringView& text, GUI::Widget* parent = nullptr);
     virtual ~TextWidget() override;
 
     String text() const { return m_text; }
@@ -53,6 +52,8 @@ public:
     void wrap_and_set_height();
 
 private:
+    explicit TextWidget(const StringView& text = {});
+
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;
 

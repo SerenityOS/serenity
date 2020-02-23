@@ -50,7 +50,7 @@ private:
     void update_title();
     void update_part_action();
 
-    IRCWindow& create_window(void* owner, IRCWindow::Type, const String& name);
+    NonnullRefPtr<IRCWindow> create_window(void* owner, IRCWindow::Type, const String& name);
     NonnullRefPtr<IRCClient> m_client;
     RefPtr<GUI::StackWidget> m_container;
     RefPtr<GUI::TableView> m_window_list;

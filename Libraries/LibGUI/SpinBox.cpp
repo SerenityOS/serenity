@@ -30,8 +30,7 @@
 
 namespace GUI {
 
-SpinBox::SpinBox(Widget* parent)
-    : Widget(parent)
+SpinBox::SpinBox()
 {
     m_editor = add<TextBox>();
     m_editor->set_text("0");

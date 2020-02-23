@@ -59,7 +59,7 @@ private:
 
     IRCClient& m_client;
     String m_name;
-    IRCWindow* m_window { nullptr };
+    RefPtr<IRCWindow> m_window;
 
     NonnullRefPtr<IRCLogBuffer> m_log;
 };

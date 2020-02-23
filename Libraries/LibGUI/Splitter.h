@@ -36,7 +36,7 @@ public:
     virtual ~Splitter() override;
 
 protected:
-    Splitter(Gfx::Orientation, Widget* parent = nullptr);
+    explicit Splitter(Gfx::Orientation);
 
     virtual void paint_event(PaintEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
@@ -68,8 +68,8 @@ public:
     virtual ~VerticalSplitter() override {}
 
 private:
-    explicit VerticalSplitter(Widget* parent = nullptr)
-        : Splitter(Gfx::Orientation::Vertical, parent)
+    VerticalSplitter()
+        : Splitter(Gfx::Orientation::Vertical)
     {
     }
 };
@@ -80,8 +80,8 @@ public:
     virtual ~HorizontalSplitter() override {}
 
 private:
-    explicit HorizontalSplitter(Widget* parent = nullptr)
-        : Splitter(Gfx::Orientation::Horizontal, parent)
+    HorizontalSplitter()
+        : Splitter(Gfx::Orientation::Horizontal)
     {
     }
 };

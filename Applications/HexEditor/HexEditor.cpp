@@ -41,8 +41,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-HexEditor::HexEditor(GUI::Widget* parent)
-    : ScrollableWidget(parent)
+HexEditor::HexEditor()
 {
     set_scrollbars_enabled(true);
     set_font(GFontDatabase::the().get_by_name("Csilla Thin"));

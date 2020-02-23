@@ -31,8 +31,7 @@
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/TableView.h>
 
-ProcessMemoryMapWidget::ProcessMemoryMapWidget(GUI::Widget* parent)
-    : GUI::Widget(parent)
+ProcessMemoryMapWidget::ProcessMemoryMapWidget()
 {
     set_layout(make<GUI::VerticalBoxLayout>());
     layout()->set_margins({ 4, 4, 4, 4 });

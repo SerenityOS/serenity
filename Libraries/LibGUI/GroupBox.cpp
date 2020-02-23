@@ -32,14 +32,8 @@
 
 namespace GUI {
 
-GroupBox::GroupBox(Widget* parent)
-    : GroupBox({}, parent)
-{
-}
-
-GroupBox::GroupBox(const StringView& title, Widget* parent)
-    : Widget(parent)
-    , m_title(title)
+GroupBox::GroupBox(const StringView& title)
+    : m_title(title)
 {
 }
 

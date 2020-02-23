@@ -75,8 +75,7 @@ static Gfx::CharacterBitmap* s_resize_corner_highlights_bitmap;
 static const int s_resize_corner_bitmap_width = 16;
 static const int s_resize_corner_bitmap_height = 16;
 
-ResizeCorner::ResizeCorner(Widget* parent)
-    : Widget(parent)
+ResizeCorner::ResizeCorner()
 {
     set_background_role(ColorRole::Button);
     set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);

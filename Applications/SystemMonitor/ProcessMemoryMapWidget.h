@@ -38,7 +38,7 @@ public:
     void refresh();
 
 private:
-    explicit ProcessMemoryMapWidget(GUI::Widget* parent);
+    ProcessMemoryMapWidget();
     RefPtr<GUI::TableView> m_table_view;
     RefPtr<GUI::JsonArrayModel> m_json_model;
     pid_t m_pid { -1 };

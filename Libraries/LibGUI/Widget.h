@@ -37,7 +37,7 @@
 
 #define REGISTER_GWIDGET(class_name)                          \
     extern WidgetClassRegistration registration_##class_name; \
-    WidgetClassRegistration registration_##class_name(#class_name, [](Widget* parent) { return class_name::construct(parent); });
+    WidgetClassRegistration registration_##class_name(#class_name, []() { return class_name::construct(); });
 
 template<>
 inline bool Core::is<GUI::Widget>(const Core::Object& object)
@@ -75,18 +75,18 @@ class WidgetClassRegistration {
     AK_MAKE_NONCOPYABLE(WidgetClassRegistration)
     AK_MAKE_NONMOVABLE(WidgetClassRegistration)
 public:
-    WidgetClassRegistration(const String& class_name, Function<NonnullRefPtr<Widget>(Widget*)> factory);
+    WidgetClassRegistration(const String& class_name, Function<NonnullRefPtr<Widget>()> factory);
     ~WidgetClassRegistration();
 
     String class_name() const { return m_class_name; }
-    NonnullRefPtr<Widget> construct(Widget* parent) const { return m_factory(parent); }
+    NonnullRefPtr<Widget> construct() const { return m_factory(); }
 
     static void for_each(Function<void(const WidgetClassRegistration&)>);
     static const WidgetClassRegistration* find(const String& class_name);
 
 private:
     String m_class_name;
-    Function<NonnullRefPtr<Widget>(Widget*)> m_factory;
+    Function<NonnullRefPtr<Widget>()> m_factory;
 };
 
 class Widget : public Core::Object {
@@ -259,7 +259,7 @@ public:
     void set_palette(const Gfx::Palette&);
 
 protected:
-    explicit Widget(Widget* parent = nullptr);
+    Widget();
 
     virtual void custom_layout() {}
     virtual void did_change_font() {}

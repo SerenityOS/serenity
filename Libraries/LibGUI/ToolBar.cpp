@@ -34,14 +34,8 @@
 
 namespace GUI {
 
-ToolBar::ToolBar(Widget* parent)
-    : ToolBar(Orientation::Horizontal, 16, parent)
-{
-}
-
-ToolBar::ToolBar(Orientation orientation, int button_size, Widget* parent)
-    : Widget(parent)
-    , m_button_size(button_size)
+ToolBar::ToolBar(Orientation orientation, int button_size)
+    : m_button_size(button_size)
 {
     if (orientation == Orientation::Horizontal) {
         set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
@@ -87,8 +81,7 @@ void ToolBar::add_action(Action& action)
 class SeparatorWidget final : public Widget {
     C_OBJECT(SeparatorWidget)
 public:
-    SeparatorWidget(Widget* parent)
-        : Widget(parent)
+    SeparatorWidget()
     {
         set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
         set_preferred_size(8, 22);
@@ -109,7 +102,7 @@ void ToolBar::add_separator()
 {
     auto item = make<Item>();
     item->type = Item::Type::Separator;
-    new SeparatorWidget(this);
+    add<SeparatorWidget>();
     m_items.append(move(item));
 }
 

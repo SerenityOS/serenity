@@ -30,8 +30,7 @@
 #include <LibCore/Timer.h>
 #include <LibGUI/BoxLayout.h>
 
-ProcessStacksWidget::ProcessStacksWidget(GUI::Widget* parent)
-    : GUI::Widget(parent)
+ProcessStacksWidget::ProcessStacksWidget()
 {
     set_layout(make<GUI::VerticalBoxLayout>());
     layout()->set_margins({ 4, 4, 4, 4 });

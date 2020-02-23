@@ -38,7 +38,7 @@ public:
     Function<void(LazyWidget&)> on_first_show;
 
 protected:
-    explicit LazyWidget(Widget* parent = nullptr);
+    LazyWidget();
 
 private:
     virtual void show_event(ShowEvent&) override;

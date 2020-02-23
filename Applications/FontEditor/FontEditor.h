@@ -40,7 +40,7 @@ public:
     virtual ~FontEditorWidget() override;
 
 private:
-    FontEditorWidget(const String& path, RefPtr<Gfx::Font>&&, GUI::Widget* parent = nullptr);
+    FontEditorWidget(const String& path, RefPtr<Gfx::Font>&&);
     RefPtr<Gfx::Font> m_edited_font;
 
     GlyphMapWidget* m_glyph_map_widget { nullptr };

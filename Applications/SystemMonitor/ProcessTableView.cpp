@@ -29,8 +29,7 @@
 #include <LibGUI/SortingProxyModel.h>
 #include <stdio.h>
 
-ProcessTableView::ProcessTableView(GUI::Widget* parent)
-    : TableView(parent)
+ProcessTableView::ProcessTableView()
 {
     set_size_columns_to_fit_content(true);
     set_model(GUI::SortingProxyModel::create(ProcessModel::create()));

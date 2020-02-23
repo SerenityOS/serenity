@@ -33,8 +33,7 @@
 
 namespace GUI {
 
-TabWidget::TabWidget(Widget* parent)
-    : Widget(parent)
+TabWidget::TabWidget()
 {
 }
 

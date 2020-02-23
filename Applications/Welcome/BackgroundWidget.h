@@ -31,10 +31,11 @@
 class BackgroundWidget : public GUI::Frame {
     C_OBJECT(BackgroundWidget)
 public:
-    explicit BackgroundWidget(GUI::Widget* parent = nullptr);
     virtual ~BackgroundWidget() override;
 
 private:
+    BackgroundWidget();
+
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;
 };

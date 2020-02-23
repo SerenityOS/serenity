@@ -33,8 +33,7 @@
 
 namespace GUI {
 
-ListView::ListView(Widget* parent)
-    : AbstractView(parent)
+ListView::ListView()
 {
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);

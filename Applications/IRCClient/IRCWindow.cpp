@@ -35,9 +35,8 @@
 #include <LibGUI/TextEditor.h>
 #include <LibHTML/HtmlView.h>
 
-IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& name, GUI::Widget* parent)
-    : GUI::Widget(parent)
-    , m_client(client)
+IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& name)
+    : m_client(client)
     , m_owner(owner)
     , m_type(type)
     , m_name(name)

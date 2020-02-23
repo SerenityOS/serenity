@@ -43,7 +43,6 @@ public:
         Query,
     };
 
-    IRCWindow(IRCClient&, void* owner, Type, const String& name, GUI::Widget* parent);
     virtual ~IRCWindow() override;
 
     String name() const { return m_name; }
@@ -67,6 +66,8 @@ public:
     const IRCQuery& query() const { return *(const IRCQuery*)m_owner; }
 
 private:
+    IRCWindow(IRCClient&, void* owner, Type, const String& name);
+
     IRCClient& m_client;
     void* m_owner { nullptr };
     Type m_type;

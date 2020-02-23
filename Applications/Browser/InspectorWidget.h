@@ -36,7 +36,7 @@ public:
     void set_document(Document*);
 
 private:
-    explicit InspectorWidget(GUI::Widget* parent);
+    InspectorWidget();
 
     RefPtr<GUI::TreeView> m_dom_tree_view;
     RefPtr<GUI::TableView> m_style_table_view;

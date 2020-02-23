@@ -36,12 +36,9 @@
 #include <unistd.h>
 
 class SquareButton final : public GUI::Button {
-public:
-    SquareButton(GUI::Widget* parent)
-        : GUI::Button(parent)
-    {
-    }
+    C_OBJECT(SquareButton);
 
+public:
     Function<void()> on_right_click;
     Function<void()> on_middle_click;
 
@@ -57,16 +54,15 @@ public:
         }
         GUI::Button::mousedown_event(event);
     }
+
+private:
+    SquareButton() {}
 };
 
 class SquareLabel final : public GUI::Label {
-public:
-    SquareLabel(Square& square, GUI::Widget* parent)
-        : GUI::Label(parent)
-        , m_square(square)
-    {
-    }
+    C_OBJECT(SquareLabel);
 
+public:
     Function<void()> on_chord_click;
 
     virtual void mousedown_event(GUI::MouseEvent& event) override
@@ -113,6 +109,12 @@ public:
         }
         m_square.field->set_chord_preview(m_square, m_chord);
         GUI::Label::mouseup_event(event);
+    }
+
+private:
+    explicit SquareLabel(Square& square)
+        : m_square(square)
+    {
     }
 
     Square& m_square;
@@ -243,7 +245,7 @@ void Field::reset()
             square.is_considering = false;
             square.is_swept = false;
             if (!square.label) {
-                square.label = new SquareLabel(square, this);
+                square.label = add<SquareLabel>(square);
                 square.label->set_background_color(Color::from_rgb(0xff4040));
             }
             square.label->set_fill_with_background_color(false);
@@ -251,7 +253,7 @@ void Field::reset()
             square.label->set_visible(false);
             square.label->set_icon(square.has_mine ? m_mine_bitmap : nullptr);
             if (!square.button) {
-                square.button = new SquareButton(this);
+                square.button = add<SquareButton>();
                 square.button->on_click = [this, &square](GUI::Button&) {
                     on_square_clicked(square);
                 };
@@ -513,10 +515,12 @@ void Field::set_single_chording(bool enabled)
     config->write_bool_entry("Minesweeper", "SingleChording", m_single_chording);
 }
 
+Square::Square()
+{
+}
+
 Square::~Square()
 {
-    delete label;
-    delete button;
 }
 
 template<typename Callback>

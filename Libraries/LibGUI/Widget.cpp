@@ -70,7 +70,7 @@ static HashMap<String, WidgetClassRegistration*>& widget_classes()
     return *map;
 }
 
-WidgetClassRegistration::WidgetClassRegistration(const String& class_name, Function<NonnullRefPtr<Widget>(Widget*)> factory)
+WidgetClassRegistration::WidgetClassRegistration(const String& class_name, Function<NonnullRefPtr<Widget>()> factory)
     : m_class_name(class_name)
     , m_factory(move(factory))
 {
@@ -93,8 +93,8 @@ const WidgetClassRegistration* WidgetClassRegistration::find(const String& class
     return widget_classes().get(class_name).value_or(nullptr);
 }
 
-Widget::Widget(Widget* parent)
-    : Core::Object(parent, true)
+Widget::Widget()
+    : Core::Object(nullptr, true)
     , m_background_role(Gfx::ColorRole::Window)
     , m_foreground_role(Gfx::ColorRole::WindowText)
     , m_font(Gfx::Font::default_font())

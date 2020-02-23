@@ -35,7 +35,7 @@ public:
     virtual ~NetworkStatisticsWidget() override;
 
 private:
-    explicit NetworkStatisticsWidget(GUI::Widget* parent = nullptr);
+    NetworkStatisticsWidget();
     void update_models();
 
     RefPtr<GUI::TableView> m_adapter_table_view;

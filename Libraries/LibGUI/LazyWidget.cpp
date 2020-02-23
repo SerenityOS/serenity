@@ -28,8 +28,7 @@
 
 namespace GUI {
 
-LazyWidget::LazyWidget(Widget* parent)
-    : Widget(parent)
+LazyWidget::LazyWidget()
 {
 }
 

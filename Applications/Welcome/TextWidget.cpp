@@ -33,14 +33,8 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
 
-TextWidget::TextWidget(GUI::Widget* parent)
-    : GUI::Frame(parent)
-{
-}
-
-TextWidget::TextWidget(const StringView& text, GUI::Widget* parent)
-    : GUI::Frame(parent)
-    , m_text(text)
+TextWidget::TextWidget(const StringView& text)
+    : m_text(text)
 {
 }
 

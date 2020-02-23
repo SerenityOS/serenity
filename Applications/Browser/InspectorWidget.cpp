@@ -35,8 +35,7 @@
 #include <LibHTML/DOMTreeModel.h>
 #include <LibHTML/StylePropertiesModel.h>
 
-InspectorWidget::InspectorWidget(GUI::Widget* parent)
-    : GUI::Widget(parent)
+InspectorWidget::InspectorWidget()
 {
     set_layout(make<GUI::VerticalBoxLayout>());
     auto splitter = add<GUI::VerticalSplitter>();

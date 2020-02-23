@@ -39,7 +39,7 @@ private:
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mouseup_event(GUI::MouseEvent&) override;
 
-    ProfileTimelineWidget(Profile&, GUI::Widget* parent);
+    explicit ProfileTimelineWidget(Profile&);
 
     u64 timestamp_at_x(int x) const;
 

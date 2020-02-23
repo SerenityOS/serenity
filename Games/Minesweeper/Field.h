@@ -37,7 +37,7 @@ class SquareLabel;
 class Square {
     AK_MAKE_NONCOPYABLE(Square)
 public:
-    Square() {}
+    Square();
     ~Square();
 
     Field* field { nullptr };
@@ -48,8 +48,8 @@ public:
     int row { 0 };
     int column { 0 };
     int number { 0 };
-    SquareButton* button { nullptr };
-    SquareLabel* label { nullptr };
+    RefPtr<SquareButton> button;
+    RefPtr<SquareLabel> label;
 
     template<typename Callback>
     void for_each_neighbor(Callback);
