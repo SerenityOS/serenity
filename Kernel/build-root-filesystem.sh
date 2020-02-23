@@ -128,7 +128,6 @@ cp ../Applications/HexEditor/HexEditor mnt/bin/HexEditor
 cp ../Applications/PaintBrush/PaintBrush mnt/bin/PaintBrush
 cp ../Applications/QuickShow/QuickShow mnt/bin/QuickShow
 cp ../Applications/Piano/Piano mnt/bin/Piano
-cp ../Applications/SystemDialog/SystemDialog mnt/bin/SystemDialog
 cp ../Applications/SystemMenu/SystemMenu mnt/bin/SystemMenu
 cp ../Applications/ChanViewer/ChanViewer mnt/bin/ChanViewer
 cp ../Applications/Calculator/Calculator mnt/bin/Calculator
