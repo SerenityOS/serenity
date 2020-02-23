@@ -34,6 +34,6 @@ public:
     static Vector<char const*> show();
 
 private:
-    PowerDialog(Core::Object* parent = nullptr);
+    PowerDialog();
     ~PowerDialog();
 };
