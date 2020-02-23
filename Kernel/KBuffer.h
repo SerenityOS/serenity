@@ -56,6 +56,7 @@ public:
     static NonnullRefPtr<KBufferImpl> copy(const void* data, size_t size, u8 access, const char* name)
     {
         auto buffer = create_with_size(size, access, name);
+        buffer->region().commit();
         memcpy(buffer->data(), data, size);
         return buffer;
     }
