@@ -28,6 +28,7 @@
 
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <AK/CircularQueue.h>
 #include <termios.h>
 
 struct GlobalState {
@@ -43,6 +44,7 @@ struct GlobalState {
     bool was_resized { false };
     int last_return_code { 0 };
     Vector<String> directory_stack;
+    CircularQueue<String, 8> cd_history; // FIXME: have a configurable cd history length
 };
 
 extern GlobalState g;
