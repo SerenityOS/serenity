@@ -43,9 +43,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    IRCAppWindow app_window;
-    app_window.show();
-
-    printf("Entering main loop...\n");
+    auto app_window = IRCAppWindow::construct();
+    app_window->show();
     return app.exec();
 }
