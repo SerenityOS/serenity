@@ -59,8 +59,8 @@ Vector<char const*> PowerDialog::show()
     return options[rc].cmd;
 }
 
-PowerDialog::PowerDialog(Core::Object* parent)
-    : GUI::Dialog(parent)
+PowerDialog::PowerDialog()
+	: GUI::Dialog(nullptr)
 {
     Gfx::Rect rect({ 0, 0, 180, 180 + ((options.size() - 3) * 16) });
     rect.center_within(GUI::Desktop::the().rect());
@@ -76,7 +76,7 @@ PowerDialog::PowerDialog(Core::Object* parent)
     main->layout()->set_spacing(8);
     main->set_fill_with_background_color(true);
 
-    auto header = GUI::Label::construct(main.ptr());
+    auto header = main->add<GUI::Label>();
     header->set_text("What would you like to do?");
     header->set_preferred_size(0, 16);
     header->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
@@ -85,7 +85,7 @@ PowerDialog::PowerDialog(Core::Object* parent)
     int selected = -1;
     for (int i = 0; i < options.size(); i++) {
         auto action = options[i];
-        auto radio = GUI::RadioButton::construct(main);
+        auto radio = main->add<GUI::RadioButton>();
         radio->set_enabled(action.enabled);
         radio->set_text(action.title);
 
@@ -99,17 +99,17 @@ PowerDialog::PowerDialog(Core::Object* parent)
         }
     }
 
-    auto button_box = GUI::Widget::construct(main.ptr());
+    auto button_box = main->add<GUI::Widget>();
     button_box->set_layout(make<GUI::HorizontalBoxLayout>());
     button_box->layout()->set_spacing(8);
 
-    auto ok_button = GUI::Button::construct(button_box);
+    auto ok_button = button_box->add<GUI::Button>();
     ok_button->on_click = [this, &selected](auto&) {
         done(selected);
     };
     ok_button->set_text("OK");
 
-    auto cancel_button = GUI::Button::construct(button_box);
+    auto cancel_button = button_box->add<GUI::Button>();
     cancel_button->on_click = [this](auto&) {
         done(-1);
     };
