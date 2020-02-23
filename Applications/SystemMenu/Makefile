@@ -1,5 +1,6 @@
 OBJS = \
-    main.o
+    main.o \
+	PowerDialog.o
 
 PROGRAM = SystemMenu
 
