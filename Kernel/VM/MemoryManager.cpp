@@ -298,8 +298,10 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(Thread::current);
-    if (g_in_irq)
+    if (g_in_irq) {
         dbg() << "BUG! Page fault while handling IRQ! code=" << fault.code() << ", vaddr=" << fault.vaddr();
+        dump_kernel_regions();
+    }
 #ifdef PAGE_FAULT_DEBUG
     dbgprintf("MM: handle_page_fault(%w) at V%p\n", fault.code(), fault.vaddr().get());
 #endif
