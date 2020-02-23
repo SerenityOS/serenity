@@ -63,7 +63,7 @@ int main(int argc, char** argv)
     widget->set_fill_with_background_color(true);
     widget->set_layout(make<GUI::VerticalBoxLayout>());
 
-    auto splitter = GUI::HorizontalSplitter::construct(widget);
+    auto splitter = widget->add<GUI::HorizontalSplitter>();
 
     RemoteProcess remote_process(pid);
 
@@ -72,11 +72,11 @@ int main(int argc, char** argv)
             window->set_title(String::format("Inspector: %s (%d)", remote_process.process_name().characters(), remote_process.pid()));
     };
 
-    auto tree_view = GUI::TreeView::construct(splitter);
+    auto tree_view = splitter->add<GUI::TreeView>();
     tree_view->set_model(remote_process.object_graph_model());
     tree_view->set_activates_on_selection(true);
 
-    auto properties_table_view = GUI::TableView::construct(splitter);
+    auto properties_table_view = splitter->add<GUI::TableView>();
     properties_table_view->set_size_columns_to_fit_content(true);
 
     tree_view->on_activation = [&](auto& index) {
