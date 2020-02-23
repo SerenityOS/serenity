@@ -54,10 +54,10 @@ void ColorPicker::build()
     horizontal_container->layout()->set_margins({ 4, 4, 4, 4 });
     set_main_widget(horizontal_container);
 
-    auto left_vertical_container = Widget::construct(horizontal_container.ptr());
+    auto left_vertical_container = horizontal_container->add<Widget>();
     left_vertical_container->set_layout(make<VerticalBoxLayout>());
 
-    auto right_vertical_container = Widget::construct(horizontal_container.ptr());
+    auto right_vertical_container = horizontal_container->add<Widget>();
     right_vertical_container->set_layout(make<VerticalBoxLayout>());
 
     enum RGBComponent {
@@ -66,19 +66,19 @@ void ColorPicker::build()
         Blue
     };
 
-    m_preview_widget = Frame::construct(right_vertical_container);
+    m_preview_widget = right_vertical_container->add<Frame>();
     auto pal = m_preview_widget->palette();
     pal.set_color(ColorRole::Background, m_color);
     m_preview_widget->set_fill_with_background_color(true);
     m_preview_widget->set_palette(pal);
     right_vertical_container->layout()->add_spacer();
-    auto cancel_button = Button::construct("Cancel", right_vertical_container);
+    auto cancel_button = right_vertical_container->add<Button>("Cancel");
     cancel_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     cancel_button->set_preferred_size(0, 20);
     cancel_button->on_click = [&](auto&) {
         done(Dialog::ExecCancel);
     };
-    auto ok_button = Button::construct("Okay", right_vertical_container);
+    auto ok_button = right_vertical_container->add<Button>("Okay");
     ok_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     ok_button->set_preferred_size(0, 20);
     ok_button->on_click = [&](auto&) {
@@ -86,7 +86,7 @@ void ColorPicker::build()
     };
 
     auto make_spinbox = [&](RGBComponent component, int initial_value) {
-        auto spinbox = SpinBox::construct(left_vertical_container);
+        auto spinbox = left_vertical_container->add<SpinBox>();
         spinbox->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
         spinbox->set_preferred_size(0, 20);
         spinbox->set_min(0);

@@ -47,22 +47,22 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Core::
     widget->set_fill_with_background_color(true);
     widget->set_layout(make<HorizontalBoxLayout>());
 
-    auto left_container = Widget::construct(widget.ptr());
+    auto left_container = widget->add<Widget>();
     left_container->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     left_container->set_preferred_size(48, 0);
     left_container->set_layout(make<VerticalBoxLayout>());
-    auto icon_label = Label::construct(left_container);
+    auto icon_label = left_container->add<Label>();
     icon_label->set_icon(m_icon);
     icon_label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     icon_label->set_preferred_size(40, 40);
     left_container->layout()->add_spacer();
 
-    auto right_container = Widget::construct(widget.ptr());
+    auto right_container = widget->add<Widget>();
     right_container->set_layout(make<VerticalBoxLayout>());
     right_container->layout()->set_margins({ 0, 4, 4, 4 });
 
     auto make_label = [&](const StringView& text, bool bold = false) {
-        auto label = Label::construct(text, right_container);
+        auto label = right_container->add<Label>(text);
         label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
         label->set_preferred_size(0, 14);
@@ -75,12 +75,12 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Core::
 
     right_container->layout()->add_spacer();
 
-    auto button_container = Widget::construct(right_container.ptr());
+    auto button_container = right_container->add<Widget>();
     button_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     button_container->set_preferred_size(0, 20);
     button_container->set_layout(make<HorizontalBoxLayout>());
     button_container->layout()->add_spacer();
-    auto ok_button = Button::construct("OK", button_container);
+    auto ok_button = button_container->add<Button>("OK");
     ok_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     ok_button->set_preferred_size(80, 20);
     ok_button->on_click = [this](auto&) {

@@ -86,26 +86,26 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
     horizontal_container->layout()->set_margins({ 4, 4, 4, 4 });
     horizontal_container->set_fill_with_background_color(true);
 
-    auto vertical_container = Widget::construct(horizontal_container.ptr());
+    auto vertical_container = horizontal_container->add<Widget>();
     vertical_container->set_layout(make<VerticalBoxLayout>());
     vertical_container->layout()->set_spacing(4);
 
-    auto upper_container = Widget::construct(vertical_container.ptr());
+    auto upper_container = vertical_container->add<Widget>();
     upper_container->set_layout(make<HorizontalBoxLayout>());
     upper_container->layout()->set_spacing(4);
     upper_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     upper_container->set_preferred_size(0, 26);
 
-    auto toolbar = ToolBar::construct(upper_container);
+    auto toolbar = upper_container->add<ToolBar>();
     toolbar->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     toolbar->set_preferred_size(85, 0);
     toolbar->set_has_frame(false);
 
-    auto location_textbox = TextBox::construct(upper_container);
+    auto location_textbox = upper_container->add<TextBox>();
     location_textbox->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     location_textbox->set_preferred_size(0, 20);
 
-    m_view = TableView::construct(vertical_container);
+    m_view = vertical_container->add<TableView>();
     m_view->set_model(SortingProxyModel::create(*m_model));
     m_view->set_column_hidden(FileSystemModel::Column::Owner, true);
     m_view->set_column_hidden(FileSystemModel::Column::Group, true);
@@ -132,7 +132,7 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
     toolbar->add_separator();
 
     auto mkdir_action = Action::create("New directory...", Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [this](const Action&) {
-        auto input_box = InputBox::construct("Enter name:", "New directory", this);
+        auto input_box = add<InputBox>("Enter name:", "New directory");
         if (input_box->exec() == InputBox::ExecOK && !input_box->text_value().is_empty()) {
             auto new_dir_path = FileSystemPath(String::format("%s/%s",
                                                    m_model->root_path().characters(),
@@ -148,21 +148,21 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
     });
     toolbar->add_action(*mkdir_action);
 
-    auto lower_container = Widget::construct(vertical_container.ptr());
+    auto lower_container = vertical_container->add<Widget>();
     lower_container->set_layout(make<VerticalBoxLayout>());
     lower_container->layout()->set_spacing(4);
     lower_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     lower_container->set_preferred_size(0, 60);
 
-    auto filename_container = Widget::construct(lower_container.ptr());
+    auto filename_container = lower_container->add<Widget>();
     filename_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     filename_container->set_preferred_size(0, 20);
     filename_container->set_layout(make<HorizontalBoxLayout>());
-    auto filename_label = Label::construct("File name:", filename_container);
+    auto filename_label = filename_container->add<Label>("File name:");
     filename_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     filename_label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     filename_label->set_preferred_size(60, 0);
-    m_filename_textbox = TextBox::construct(filename_container.ptr());
+    m_filename_textbox = filename_container->add<TextBox>();
     if (m_mode == Mode::Save) {
         m_filename_textbox->set_text(file_name);
         m_filename_textbox->set_focus(true);
@@ -185,14 +185,14 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
         set_preview(path);
     };
 
-    auto button_container = Widget::construct(lower_container.ptr());
+    auto button_container = lower_container->add<Widget>();
     button_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     button_container->set_preferred_size(0, 20);
     button_container->set_layout(make<HorizontalBoxLayout>());
     button_container->layout()->set_spacing(4);
     button_container->layout()->add_spacer();
 
-    auto cancel_button = Button::construct(button_container);
+    auto cancel_button = button_container->add<Button>();
     cancel_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     cancel_button->set_preferred_size(80, 0);
     cancel_button->set_text("Cancel");
@@ -200,7 +200,7 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
         done(ExecCancel);
     };
 
-    auto ok_button = Button::construct(button_container);
+    auto ok_button = button_container->add<Button>();
     ok_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     ok_button->set_preferred_size(80, 0);
     ok_button->set_text(ok_button_name(m_mode));
@@ -222,7 +222,7 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
         }
     };
 
-    auto preview_container = Frame::construct(horizontal_container);
+    auto preview_container = horizontal_container->add<Frame>();
     preview_container->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     preview_container->set_preferred_size(180, 0);
     preview_container->set_frame_shape(Gfx::FrameShape::Container);
@@ -231,17 +231,17 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
     preview_container->set_layout(make<VerticalBoxLayout>());
     preview_container->layout()->set_margins({ 8, 8, 8, 8 });
 
-    m_preview_image_label = Label::construct(preview_container);
+    m_preview_image_label = preview_container->add<Label>();
     m_preview_image_label->set_should_stretch_icon(true);
     m_preview_image_label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     m_preview_image_label->set_preferred_size(160, 160);
 
-    m_preview_name_label = Label::construct(preview_container);
+    m_preview_name_label = preview_container->add<Label>();
     m_preview_name_label->set_font(Gfx::Font::default_bold_font());
     m_preview_name_label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_preview_name_label->set_preferred_size(0, m_preview_name_label->font().glyph_height());
 
-    m_preview_geometry_label = Label::construct(preview_container);
+    m_preview_geometry_label = preview_container->add<Label>();
     m_preview_geometry_label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_preview_geometry_label->set_preferred_size(0, m_preview_name_label->font().glyph_height());
 }
