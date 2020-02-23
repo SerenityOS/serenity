@@ -47,7 +47,7 @@ public:
     Function<void(int value)> on_change;
 
 protected:
-    explicit SpinBox(Widget* parent = nullptr);
+    SpinBox();
 
     virtual void resize_event(ResizeEvent&) override;
 

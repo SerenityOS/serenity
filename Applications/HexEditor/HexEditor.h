@@ -67,7 +67,7 @@ public:
     Function<void()> on_change;
 
 protected:
-    HexEditor(GUI::Widget* parent);
+    HexEditor();
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;

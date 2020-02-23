@@ -33,7 +33,6 @@ namespace GUI {
 class ListView : public AbstractView {
     C_OBJECT(ListView)
 public:
-    explicit ListView(Widget* parent = nullptr);
     virtual ~ListView() override;
 
     int item_height() const { return 16; }
@@ -54,6 +53,8 @@ public:
     void set_model_column(int column) { m_model_column = column; }
 
 private:
+    ListView();
+
     virtual void did_update_model() override;
     virtual void paint_event(PaintEvent&) override;
     virtual void doubleclick_event(MouseEvent&) override;

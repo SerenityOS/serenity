@@ -52,13 +52,8 @@ static const int s_checked_bitmap_height = 9;
 static const int s_box_width = 13;
 static const int s_box_height = 13;
 
-CheckBox::CheckBox(Widget* parent)
-    : AbstractButton(parent)
-{
-}
-
-CheckBox::CheckBox(const StringView& text, Widget* parent)
-    : AbstractButton(text, parent)
+CheckBox::CheckBox(const StringView& text)
+    : AbstractButton(text)
 {
 }
 

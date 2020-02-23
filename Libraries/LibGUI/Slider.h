@@ -74,8 +74,7 @@ public:
     Function<void(int)> on_value_changed;
 
 protected:
-    explicit Slider(Widget* = nullptr);
-    explicit Slider(Orientation, Widget* = nullptr);
+    explicit Slider(Orientation = Orientation::Vertical);
 
     virtual void paint_event(PaintEvent&) override;
     virtual void mousedown_event(MouseEvent&) override;
@@ -106,8 +105,8 @@ public:
     virtual ~VerticalSlider() override {}
 
 private:
-    explicit VerticalSlider(Widget* parent = nullptr)
-        : Slider(Orientation::Vertical, parent)
+    VerticalSlider()
+        : Slider(Orientation::Vertical)
     {
     }
 };
@@ -118,8 +117,8 @@ public:
     virtual ~HorizontalSlider() override {}
 
 private:
-    explicit HorizontalSlider(Widget* parent = nullptr)
-        : Slider(Orientation::Horizontal, parent)
+    HorizontalSlider()
+        : Slider(Orientation::Horizontal)
     {
     }
 };

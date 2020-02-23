@@ -36,7 +36,6 @@ class UserNameWidget final : public GUI::Widget {
     C_OBJECT(UserNameWidget)
 public:
     UserNameWidget()
-        : GUI::Widget(nullptr)
     {
         m_username = getlogin();
         m_username_width = Gfx::Font::default_bold_font().width(m_username);

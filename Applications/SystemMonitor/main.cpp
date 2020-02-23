@@ -123,7 +123,7 @@ int main(int argc, char** argv)
 
     auto tabwidget = keeper->add<GUI::TabWidget>();
 
-    auto process_container_splitter = GUI::VerticalSplitter::construct(nullptr);
+    auto process_container_splitter = GUI::VerticalSplitter::construct();
     tabwidget->add_widget("Processes", process_container_splitter);
 
     auto process_table_container = process_container_splitter->add<GUI::Widget>();
@@ -136,7 +136,7 @@ int main(int argc, char** argv)
 
     tabwidget->add_widget("Devices", build_devices_tab());
 
-    auto network_stats_widget = NetworkStatisticsWidget::construct(nullptr);
+    auto network_stats_widget = NetworkStatisticsWidget::construct();
     tabwidget->add_widget("Network", network_stats_widget);
 
     process_table_container->set_layout(make<GUI::VerticalBoxLayout>());
@@ -232,16 +232,16 @@ int main(int argc, char** argv)
 
     auto process_tab_widget = process_container_splitter->add<GUI::TabWidget>();
 
-    auto memory_map_widget = ProcessMemoryMapWidget::construct(nullptr);
+    auto memory_map_widget = ProcessMemoryMapWidget::construct();
     process_tab_widget->add_widget("Memory map", memory_map_widget);
 
-    auto open_files_widget = ProcessFileDescriptorMapWidget::construct(nullptr);
+    auto open_files_widget = ProcessFileDescriptorMapWidget::construct();
     process_tab_widget->add_widget("Open files", open_files_widget);
 
-    auto unveiled_paths_widget = ProcessUnveiledPathsWidget::construct(nullptr);
+    auto unveiled_paths_widget = ProcessUnveiledPathsWidget::construct();
     process_tab_widget->add_widget("Unveiled paths", unveiled_paths_widget);
 
-    auto stacks_widget = ProcessStacksWidget::construct(nullptr);
+    auto stacks_widget = ProcessStacksWidget::construct();
     process_tab_widget->add_widget("Stacks", stacks_widget);
 
     process_table_view->on_process_selected = [&](pid_t pid) {

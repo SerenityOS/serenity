@@ -32,8 +32,7 @@
 
 namespace GUI {
 
-ProgressBar::ProgressBar(Widget* parent)
-    : Frame(parent)
+ProgressBar::ProgressBar()
 {
 }
 

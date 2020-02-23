@@ -39,8 +39,7 @@ namespace GUI {
 
 static const int minimum_column_width = 2;
 
-AbstractTableView::AbstractTableView(Widget* parent)
-    : AbstractView(parent)
+AbstractTableView::AbstractTableView()
 {
     set_should_hide_unnecessary_scrollbars(true);
 }

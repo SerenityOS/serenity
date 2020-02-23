@@ -90,7 +90,7 @@ int main(int argc, char** argv)
     dbg() << "UI_" << name << "::UI_" << name << "()";
     dbg() << "{";
 
-    dbg() << "    main_widget = GUI::Widget::construct(nullptr);";
+    dbg() << "    main_widget = GUI::Widget::construct();";
     dbg() << "    main_widget->set_fill_with_background_color(true);";
 
     widgets.as_array().for_each([&](auto& value) {
@@ -98,7 +98,7 @@ int main(int argc, char** argv)
         const JsonObject& widget_object = value.as_object();
         auto name = widget_object.get("name").to_string();
         auto class_name = widget_object.get("class").to_string();
-        dbg() << "    " << name << " = " << class_name << "::construct(main_widget);";
+        dbg() << "    " << name << " = main_widget->add<" << class_name << ">();";
 
         widget_object.for_each_member([&](auto& property_name, const JsonValue& property_value) {
             if (property_name == "class")

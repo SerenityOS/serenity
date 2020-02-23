@@ -28,8 +28,8 @@
 
 namespace GUI {
 
-TextBox::TextBox(Widget* parent)
-    : TextEditor(TextEditor::SingleLine, parent)
+TextBox::TextBox()
+    : TextEditor(TextEditor::SingleLine)
 {
 }
 

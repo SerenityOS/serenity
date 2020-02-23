@@ -32,13 +32,14 @@
 class ProcessStacksWidget final : public GUI::Widget {
     C_OBJECT(ProcessStacksWidget)
 public:
-    explicit ProcessStacksWidget(GUI::Widget* parent);
     virtual ~ProcessStacksWidget() override;
 
     void set_pid(pid_t);
     void refresh();
 
 private:
+    ProcessStacksWidget();
+
     pid_t m_pid { -1 };
     RefPtr<GUI::TextEditor> m_stacks_editor;
     RefPtr<Core::Timer> m_timer;

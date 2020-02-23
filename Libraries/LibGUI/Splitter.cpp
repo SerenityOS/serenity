@@ -32,9 +32,8 @@
 
 namespace GUI {
 
-Splitter::Splitter(Orientation orientation, Widget* parent)
-    : Frame(parent)
-    , m_orientation(orientation)
+Splitter::Splitter(Orientation orientation)
+    : m_orientation(orientation)
 {
     set_background_role(ColorRole::Button);
     set_layout(make<BoxLayout>(orientation));

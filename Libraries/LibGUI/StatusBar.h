@@ -41,8 +41,7 @@ public:
     void set_text(int index, const StringView&);
 
 protected:
-    explicit StatusBar(Widget* parent = nullptr);
-    explicit StatusBar(int label_count, Widget* parent = nullptr);
+    explicit StatusBar(int label_count = 1);
     virtual void paint_event(PaintEvent&) override;
 
 private:

@@ -29,8 +29,7 @@
 #include <LibGfx/Color.h>
 #include <LibGfx/Palette.h>
 
-BackgroundWidget::BackgroundWidget(GUI::Widget* parent)
-    : GUI::Frame(parent)
+BackgroundWidget::BackgroundWidget()
 {
 }
 

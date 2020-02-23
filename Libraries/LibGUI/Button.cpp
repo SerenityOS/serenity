@@ -36,13 +36,8 @@
 
 namespace GUI {
 
-Button::Button(Widget* parent)
-    : AbstractButton(parent)
-{
-}
-
-Button::Button(const StringView& text, Widget* parent)
-    : AbstractButton(text, parent)
+Button::Button(const StringView& text)
+    : AbstractButton(text)
 {
 }
 

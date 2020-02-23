@@ -33,7 +33,7 @@ namespace GUI {
 class TextBox : public TextEditor {
     C_OBJECT(TextBox)
 public:
-    explicit TextBox(Widget* parent = nullptr);
+    TextBox();
     virtual ~TextBox() override;
 };
 

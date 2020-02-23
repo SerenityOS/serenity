@@ -51,8 +51,7 @@ TreeView::MetadataForIndex& TreeView::ensure_metadata_for_index(const ModelIndex
     return new_metadata_ref;
 }
 
-TreeView::TreeView(Widget* parent)
-    : AbstractTableView(parent)
+TreeView::TreeView()
 {
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);

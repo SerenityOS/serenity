@@ -34,13 +34,7 @@
 
 namespace GUI {
 
-StatusBar::StatusBar(Widget* parent)
-    : StatusBar(1, parent)
-{
-}
-
-StatusBar::StatusBar(int label_count, Widget* parent)
-    : Widget(parent)
+StatusBar::StatusBar(int label_count)
 {
     set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     set_preferred_size(0, 20);
@@ -54,7 +48,7 @@ StatusBar::StatusBar(int label_count, Widget* parent)
     for (auto i = 0; i < label_count; i++)
         m_labels.append(create_label());
 
-    m_corner = ResizeCorner::construct(this);
+    m_corner = add<ResizeCorner>();
 }
 
 StatusBar::~StatusBar()
@@ -63,7 +57,7 @@ StatusBar::~StatusBar()
 
 NonnullRefPtr<Label> StatusBar::create_label()
 {
-    auto label = Label::construct(this);
+    auto label = add<Label>();
     label->set_frame_shadow(Gfx::FrameShadow::Sunken);
     label->set_frame_shape(Gfx::FrameShape::Panel);
     label->set_frame_thickness(1);

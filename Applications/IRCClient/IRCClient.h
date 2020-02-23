@@ -70,7 +70,7 @@ public:
     Function<void(const String&)> on_nickname_changed;
     Function<void(IRCChannel&)> on_part_from_channel;
 
-    Function<IRCWindow*(void*, IRCWindow::Type, const String&)> aid_create_window;
+    Function<NonnullRefPtr<IRCWindow>(void*, IRCWindow::Type, const String&)> aid_create_window;
     Function<IRCWindow*()> aid_get_active_window;
     Function<void()> aid_update_window_list;
 

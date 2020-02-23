@@ -32,14 +32,8 @@
 
 namespace GUI {
 
-Label::Label(Widget* parent)
-    : Label({}, parent)
-{
-}
-
-Label::Label(const StringView& text, Widget* parent)
-    : Frame(parent)
-    , m_text(text)
+Label::Label(const StringView& text)
+    : m_text(text)
 {
     set_frame_thickness(0);
     set_frame_shadow(Gfx::FrameShadow::Plain);

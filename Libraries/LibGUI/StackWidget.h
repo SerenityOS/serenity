@@ -42,7 +42,7 @@ public:
     Function<void(Widget*)> on_active_widget_change;
 
 protected:
-    explicit StackWidget(Widget* parent = nullptr);
+    StackWidget();
     virtual void child_event(Core::ChildEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
 

@@ -28,9 +28,8 @@
 #include "Profile.h"
 #include <LibGUI/Painter.h>
 
-ProfileTimelineWidget::ProfileTimelineWidget(Profile& profile, GUI::Widget* parent)
-    : GUI::Frame(parent)
-    , m_profile(profile)
+ProfileTimelineWidget::ProfileTimelineWidget(Profile& profile)
+    : m_profile(profile)
 {
     set_background_color(Color::White);
     set_fill_with_background_color(true);

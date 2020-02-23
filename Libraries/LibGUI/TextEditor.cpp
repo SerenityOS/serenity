@@ -49,14 +49,8 @@
 
 namespace GUI {
 
-TextEditor::TextEditor(Widget* parent)
-    : TextEditor(Type::MultiLine, parent)
-{
-}
-
-TextEditor::TextEditor(Type type, Widget* parent)
-    : ScrollableWidget(parent)
-    , m_type(type)
+TextEditor::TextEditor(Type type)
+    : m_type(type)
 {
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);

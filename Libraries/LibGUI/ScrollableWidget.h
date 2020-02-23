@@ -71,7 +71,7 @@ public:
     Gfx::Point to_widget_position(const Gfx::Point& content_position) const;
 
 protected:
-    explicit ScrollableWidget(Widget* parent = nullptr);
+    ScrollableWidget();
     virtual void custom_layout() override;
     virtual void resize_event(ResizeEvent&) override;
     virtual void mousewheel_event(MouseEvent&) override;

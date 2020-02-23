@@ -37,8 +37,7 @@
 
 namespace GUI {
 
-ItemView::ItemView(Widget* parent)
-    : AbstractView(parent)
+ItemView::ItemView()
 {
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);

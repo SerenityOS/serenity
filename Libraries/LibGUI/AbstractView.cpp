@@ -37,9 +37,8 @@
 
 namespace GUI {
 
-AbstractView::AbstractView(Widget* parent)
-    : ScrollableWidget(parent)
-    , m_selection(*this)
+AbstractView::AbstractView()
+    : m_selection(*this)
 {
 }
 

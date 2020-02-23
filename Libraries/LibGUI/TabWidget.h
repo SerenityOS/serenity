@@ -38,7 +38,6 @@ public:
         Bottom,
     };
 
-    explicit TabWidget(Widget* parent = nullptr);
     virtual ~TabWidget() override;
 
     TabPosition tab_position() const { return m_tab_position; }
@@ -56,6 +55,8 @@ public:
     void add_widget(const StringView&, Widget*);
 
 protected:
+    TabWidget();
+
     virtual void paint_event(PaintEvent&) override;
     virtual void child_event(Core::ChildEvent&) override;
     virtual void resize_event(ResizeEvent&) override;

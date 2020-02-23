@@ -30,8 +30,7 @@
 #include <LibGUI/JsonArrayModel.h>
 #include <LibGUI/TableView.h>
 
-NetworkStatisticsWidget::NetworkStatisticsWidget(GUI::Widget* parent)
-    : GUI::LazyWidget(parent)
+NetworkStatisticsWidget::NetworkStatisticsWidget()
 {
     on_first_show = [this](auto&) {
         set_layout(make<GUI::VerticalBoxLayout>());

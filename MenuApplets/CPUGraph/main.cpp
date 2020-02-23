@@ -37,7 +37,6 @@ class GraphWidget final : public GUI::Widget {
     C_OBJECT(GraphWidget)
 public:
     GraphWidget()
-        : GUI::Widget(nullptr)
     {
         start_timer(1000);
     }

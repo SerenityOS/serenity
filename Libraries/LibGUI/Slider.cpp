@@ -33,14 +33,8 @@
 
 namespace GUI {
 
-Slider::Slider(Widget* parent)
-    : Slider(Orientation::Horizontal, parent)
-{
-}
-
-Slider::Slider(Orientation orientation, Widget* parent)
-    : Widget(parent)
-    , m_orientation(orientation)
+Slider::Slider(Orientation orientation)
+    : m_orientation(orientation)
 {
 }
 

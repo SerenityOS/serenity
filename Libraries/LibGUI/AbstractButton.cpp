@@ -31,14 +31,8 @@
 
 namespace GUI {
 
-AbstractButton::AbstractButton(Widget* parent)
-    : AbstractButton({}, parent)
-{
-}
-
-AbstractButton::AbstractButton(const StringView& text, Widget* parent)
-    : Widget(parent)
-    , m_text(text)
+AbstractButton::AbstractButton(const StringView& text)
+    : m_text(text)
 {
     m_auto_repeat_timer = add<Core::Timer>();
     m_auto_repeat_timer->on_timeout = [this] {

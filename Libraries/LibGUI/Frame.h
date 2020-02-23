@@ -49,7 +49,7 @@ public:
     Gfx::Rect frame_inner_rect() const { return frame_inner_rect_for_size(size()); }
 
 protected:
-    explicit Frame(Widget* parent = nullptr);
+    Frame();
     void paint_event(PaintEvent&) override;
 
 private:

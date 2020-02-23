@@ -86,14 +86,8 @@ static Gfx::CharacterBitmap* s_down_arrow_bitmap;
 static Gfx::CharacterBitmap* s_left_arrow_bitmap;
 static Gfx::CharacterBitmap* s_right_arrow_bitmap;
 
-ScrollBar::ScrollBar(Widget* parent)
-    : ScrollBar(Orientation::Vertical, parent)
-{
-}
-
-ScrollBar::ScrollBar(Orientation orientation, Widget* parent)
-    : Widget(parent)
-    , m_orientation(orientation)
+ScrollBar::ScrollBar(Orientation orientation)
+    : m_orientation(orientation)
 {
     m_automatic_scrolling_timer = add<Core::Timer>();
     if (!s_up_arrow_bitmap)

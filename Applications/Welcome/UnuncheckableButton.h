@@ -31,8 +31,10 @@
 class UnuncheckableButton : public GUI::Button {
     C_OBJECT(UnuncheckableButton)
 public:
-    explicit UnuncheckableButton(GUI::Widget* parent = nullptr);
     virtual ~UnuncheckableButton() override;
 
     virtual bool is_uncheckable() const override { return false; }
+
+private:
+    UnuncheckableButton();
 };

@@ -200,7 +200,7 @@ int main(int argc, char** argv)
             dom_inspector_window = GUI::Window::construct();
             dom_inspector_window->set_rect(100, 100, 300, 500);
             dom_inspector_window->set_title("DOM inspector");
-            auto dom_inspector_widget = InspectorWidget::construct(nullptr);
+            auto dom_inspector_widget = InspectorWidget::construct();
             dom_inspector_window->set_main_widget(dom_inspector_widget);
         }
         auto* inspector_widget = static_cast<InspectorWidget*>(dom_inspector_window->main_widget());

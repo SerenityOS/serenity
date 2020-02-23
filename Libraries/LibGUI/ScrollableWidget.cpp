@@ -29,17 +29,16 @@
 
 namespace GUI {
 
-ScrollableWidget::ScrollableWidget(Widget* parent)
-    : Frame(parent)
+ScrollableWidget::ScrollableWidget()
 {
-    m_vertical_scrollbar = ScrollBar::construct(Orientation::Vertical, this);
+    m_vertical_scrollbar = add<ScrollBar>(Orientation::Vertical);
     m_vertical_scrollbar->set_step(4);
     m_vertical_scrollbar->on_change = [this](int) {
         did_scroll();
         update();
     };
 
-    m_horizontal_scrollbar = ScrollBar::construct(Orientation::Horizontal, this);
+    m_horizontal_scrollbar = add<ScrollBar>(Orientation::Horizontal);
     m_horizontal_scrollbar->set_step(4);
     m_horizontal_scrollbar->set_big_step(30);
     m_horizontal_scrollbar->on_change = [this](int) {
@@ -47,7 +46,7 @@ ScrollableWidget::ScrollableWidget(Widget* parent)
         update();
     };
 
-    m_corner_widget = Widget::construct(this);
+    m_corner_widget = add<Widget>();
     m_corner_widget->set_fill_with_background_color(true);
 }
 

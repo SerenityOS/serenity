@@ -73,7 +73,7 @@ public:
     NonnullRefPtr<Gfx::Font> font_for_index(const ModelIndex&) const;
 
 protected:
-    explicit AbstractView(Widget* parent = nullptr);
+    AbstractView();
     virtual ~AbstractView() override;
 
     virtual void mousedown_event(MouseEvent&) override;

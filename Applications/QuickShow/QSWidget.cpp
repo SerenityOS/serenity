@@ -32,8 +32,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 
-QSWidget::QSWidget(GUI::Widget* parent)
-    : GUI::Frame(parent)
+QSWidget::QSWidget()
 {
     set_fill_with_background_color(true);
     set_background_color(Color::Black);

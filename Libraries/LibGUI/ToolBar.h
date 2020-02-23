@@ -43,8 +43,7 @@ public:
     void set_has_frame(bool has_frame) { m_has_frame = has_frame; }
 
 protected:
-    explicit ToolBar(Widget* parent = nullptr);
-    explicit ToolBar(Orientation, int button_size, Widget* parent = nullptr);
+    explicit ToolBar(Gfx::Orientation = Gfx::Orientation::Horizontal, int button_size = 16);
 
     virtual void paint_event(PaintEvent&) override;
 

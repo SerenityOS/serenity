@@ -130,8 +130,7 @@ public:
     void set_syntax_highlighter(OwnPtr<SyntaxHighlighter>);
 
 protected:
-    explicit TextEditor(Widget* parent = nullptr);
-    explicit TextEditor(Type, Widget* parent = nullptr);
+    explicit TextEditor(Type = Type::MultiLine);
 
     virtual void did_change_font() override;
     virtual void paint_event(PaintEvent&) override;

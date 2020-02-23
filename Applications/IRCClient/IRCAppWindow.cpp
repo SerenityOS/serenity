@@ -78,7 +78,7 @@ void IRCAppWindow::update_title()
 void IRCAppWindow::setup_client()
 {
     m_client->aid_create_window = [this](void* owner, IRCWindow::Type type, const String& name) {
-        return &create_window(owner, type, name);
+        return create_window(owner, type, name);
     };
     m_client->aid_get_active_window = [this] {
         return static_cast<IRCWindow*>(m_container->active_widget());
@@ -237,7 +237,7 @@ void IRCAppWindow::update_part_action()
     m_part_action->set_enabled(is_open_channel);
 }
 
-IRCWindow& IRCAppWindow::create_window(void* owner, IRCWindow::Type type, const String& name)
+NonnullRefPtr<IRCWindow> IRCAppWindow::create_window(void* owner, IRCWindow::Type type, const String& name)
 {
-    return *new IRCWindow(m_client, owner, type, name, m_container);
+    return m_container->add<IRCWindow>(m_client, owner, type, name);
 }

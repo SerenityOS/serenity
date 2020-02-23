@@ -39,9 +39,8 @@
 #include <LibGfx/Font.h>
 #include <stdlib.h>
 
-FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edited_font, GUI::Widget* parent)
-    : GUI::Widget(parent)
-    , m_edited_font(move(edited_font))
+FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edited_font)
+    : m_edited_font(move(edited_font))
 {
     set_fill_with_background_color(true);
 

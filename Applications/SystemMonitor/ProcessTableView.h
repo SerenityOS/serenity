@@ -45,5 +45,5 @@ public:
     Function<void(pid_t)> on_process_selected;
 
 private:
-    explicit ProcessTableView(GUI::Widget* parent = nullptr);
+    ProcessTableView();
 };

@@ -36,7 +36,6 @@ class AudioWidget final : public GUI::Widget {
     C_OBJECT(AudioWidget)
 public:
     AudioWidget()
-        : GUI::Widget(nullptr)
     {
         m_audio_client = make<Audio::ClientConnection>();
         m_audio_client->on_muted_state_change = [this](bool muted) {

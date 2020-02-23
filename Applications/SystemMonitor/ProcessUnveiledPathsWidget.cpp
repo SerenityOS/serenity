@@ -29,12 +29,11 @@
 #include <LibGUI/JsonArrayModel.h>
 #include <LibGUI/TableView.h>
 
-ProcessUnveiledPathsWidget::ProcessUnveiledPathsWidget(GUI::Widget* parent)
-    : GUI::Widget(parent)
+ProcessUnveiledPathsWidget::ProcessUnveiledPathsWidget()
 {
     set_layout(make<GUI::VerticalBoxLayout>());
     layout()->set_margins({ 4, 4, 4, 4 });
-    m_table_view = GUI::TableView::construct(this);
+    m_table_view = add<GUI::TableView>();
     m_table_view->set_size_columns_to_fit_content(true);
 
     Vector<GUI::JsonArrayModel::FieldSpec> pid_unveil_fields;

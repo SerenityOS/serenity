@@ -62,9 +62,9 @@ int main(int argc, char** argv)
     main_widget->set_fill_with_background_color(true);
     main_widget->set_layout(make<GUI::VerticalBoxLayout>());
 
-    auto timeline_widget = ProfileTimelineWidget::construct(*profile, main_widget);
+    auto timeline_widget = main_widget->add<ProfileTimelineWidget>(*profile);
 
-    auto tree_view = GUI::TreeView::construct(main_widget);
+    auto tree_view = main_widget->add<GUI::TreeView>();
     tree_view->set_headers_visible(true);
     tree_view->set_size_columns_to_fit_content(true);
     tree_view->set_model(profile->model());

@@ -33,13 +33,8 @@
 
 namespace GUI {
 
-RadioButton::RadioButton(Widget* parent)
-    : RadioButton({}, parent)
-{
-}
-
-RadioButton::RadioButton(const StringView& text, Widget* parent)
-    : AbstractButton(text, parent)
+RadioButton::RadioButton(const StringView& text)
+    : AbstractButton(text)
 {
 }
 

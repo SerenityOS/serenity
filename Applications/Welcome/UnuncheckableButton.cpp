@@ -25,12 +25,8 @@
  */
 
 #include "UnuncheckableButton.h"
-#include <LibGUI/Painter.h>
-#include <LibGfx/Color.h>
-#include <LibGfx/Palette.h>
 
-UnuncheckableButton::UnuncheckableButton(GUI::Widget* parent)
-    : GUI::Button(parent)
+UnuncheckableButton::UnuncheckableButton()
 {
 }
 

@@ -35,8 +35,7 @@
 
 namespace GUI {
 
-ComboBox::ComboBox(Widget* parent)
-    : Widget(parent)
+ComboBox::ComboBox()
 {
     m_editor = add<TextBox>();
     m_editor->on_change = [this] {
@@ -57,11 +56,11 @@ ComboBox::ComboBox(Widget* parent)
             open();
     };
 
-    m_list_window = Window::construct(this);
+    m_list_window = add<Window>();
     // FIXME: This is obviously not a tooltip window, but it's the closest thing to what we want atm.
     m_list_window->set_window_type(WindowType::Tooltip);
 
-    m_list_view = ListView::construct(nullptr);
+    m_list_view = ListView::construct();
     m_list_view->horizontal_scrollbar().set_visible(false);
     m_list_window->set_main_widget(m_list_view);
 
