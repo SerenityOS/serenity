@@ -96,18 +96,18 @@ int main(int argc, char** argv)
     widget->set_layout(make<GUI::VerticalBoxLayout>());
     widget->layout()->set_spacing(0);
 
-    auto main_toolbar = GUI::ToolBar::construct(widget);
-    auto location_toolbar = GUI::ToolBar::construct(widget);
+    auto main_toolbar = widget->add<GUI::ToolBar>();
+    auto location_toolbar = widget->add<GUI::ToolBar>();
     location_toolbar->layout()->set_margins({ 6, 3, 6, 3 });
     location_toolbar->set_preferred_size(0, 25);
 
-    auto location_label = GUI::Label::construct("Location: ", location_toolbar);
+    auto location_label = location_toolbar->add<GUI::Label>("Location: ");
     location_label->size_to_fit();
 
-    auto location_textbox = GUI::TextEditor::construct(GUI::TextEditor::SingleLine, location_toolbar);
+    auto location_textbox = location_toolbar->add<GUI::TextBox>();
 
-    auto splitter = GUI::HorizontalSplitter::construct(widget);
-    auto tree_view = GUI::TreeView::construct(splitter);
+    auto splitter = widget->add<GUI::HorizontalSplitter>();
+    auto tree_view = splitter->add<GUI::TreeView>();
     auto directories_model = GUI::FileSystemModel::create("/", GUI::FileSystemModel::Mode::DirectoriesOnly);
     tree_view->set_model(directories_model);
     tree_view->set_column_hidden(GUI::FileSystemModel::Column::Icon, true);
@@ -120,11 +120,11 @@ int main(int argc, char** argv)
     tree_view->set_column_hidden(GUI::FileSystemModel::Column::SymlinkTarget, true);
     tree_view->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     tree_view->set_preferred_size(150, 0);
-    auto directory_view = DirectoryView::construct(splitter);
+    auto directory_view = splitter->add<DirectoryView>();
 
-    auto statusbar = GUI::StatusBar::construct(widget);
+    auto statusbar = widget->add<GUI::StatusBar>();
 
-    auto progressbar = GUI::ProgressBar::construct(statusbar);
+    auto progressbar = statusbar->add<GUI::ProgressBar>();
     progressbar->set_caption("Generating thumbnails: ");
     progressbar->set_format(GUI::ProgressBar::Format::ValueSlashMax);
     progressbar->set_visible(false);
@@ -171,7 +171,7 @@ int main(int argc, char** argv)
     });
 
     auto mkdir_action = GUI::Action::create("New directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&](const GUI::Action&) {
-        auto input_box = GUI::InputBox::construct("Enter name:", "New directory", window);
+        auto input_box = window->add<GUI::InputBox>("Enter name:", "New directory");
         if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty()) {
             auto new_dir_path = canonicalized_path(
                 String::format("%s/%s",
@@ -325,9 +325,9 @@ int main(int argc, char** argv)
 
                 RefPtr<PropertiesDialog> properties;
                 if (selected.is_empty()) {
-                    properties = PropertiesDialog::construct(model, path, true, window);
+                    properties = window->add<PropertiesDialog>(model, path, true);
                 } else {
-                    properties = PropertiesDialog::construct(model, selected.first(), false, window);
+                    properties = window->add<PropertiesDialog>(model, selected.first(), false);
                 }
 
                 properties->exec();

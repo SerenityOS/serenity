@@ -62,8 +62,8 @@ private:
         }
 
     protected:
-        Slider(Orientation orientation, GUI::Widget* parent)
-            : GUI::Slider(orientation, parent)
+        Slider(Orientation orientation)
+            : GUI::Slider(orientation)
         {
         }
 

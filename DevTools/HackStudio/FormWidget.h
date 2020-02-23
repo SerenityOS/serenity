@@ -53,7 +53,7 @@ private:
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
 
-    explicit FormWidget(FormEditorWidget& parent);
+    FormWidget();
 
     int m_grid_size { 5 };
 };

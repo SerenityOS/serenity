@@ -54,71 +54,71 @@ int main(int argc, char** argv)
     main_widget->set_layout(make<GUI::VerticalBoxLayout>());
     main_widget->layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto checkbox1 = GUI::CheckBox::construct("GCheckBox 1", main_widget);
+    auto checkbox1 = main_widget->add<GUI::CheckBox>("GCheckBox 1");
     (void)checkbox1;
-    auto checkbox2 = GUI::CheckBox::construct("GCheckBox 2", main_widget);
+    auto checkbox2 = main_widget->add<GUI::CheckBox>("GCheckBox 2");
     checkbox2->set_enabled(false);
 
-    auto radio1 = GUI::RadioButton::construct("GRadioButton 1", main_widget);
+    auto radio1 = main_widget->add<GUI::RadioButton>("GRadioButton 1");
     (void)radio1;
-    auto radio2 = GUI::RadioButton::construct("GRadioButton 2", main_widget);
+    auto radio2 = main_widget->add<GUI::RadioButton>("GRadioButton 2");
     radio2->set_enabled(false);
 
-    auto button1 = GUI::Button::construct("GButton 1", main_widget);
+    auto button1 = main_widget->add<GUI::Button>("GButton 1");
     (void)button1;
-    auto button2 = GUI::Button::construct("GButton 2", main_widget);
+    auto button2 = main_widget->add<GUI::Button>("GButton 2");
     button2->set_enabled(false);
 
-    auto progress1 = GUI::ProgressBar::construct(main_widget);
-    auto timer = Core::Timer::construct(100, [&] {
+    auto progress1 = main_widget->add<GUI::ProgressBar>();
+    auto timer = progress1->add<Core::Timer>(100, [&] {
         progress1->set_value(progress1->value() + 1);
         if (progress1->value() == progress1->max())
             progress1->set_value(progress1->min());
     });
 
-    auto label1 = GUI::Label::construct("GLabel 1", main_widget);
+    auto label1 = main_widget->add<GUI::Label>("GLabel 1");
     (void)label1;
-    auto label2 = GUI::Label::construct("GLabel 2", main_widget);
+    auto label2 = main_widget->add<GUI::Label>("GLabel 2");
     label2->set_enabled(false);
 
-    auto textbox1 = GUI::TextBox::construct(main_widget);
+    auto textbox1 = main_widget->add<GUI::TextBox>();
     textbox1->set_text("GTextBox 1");
-    auto textbox2 = GUI::TextBox::construct(main_widget);
+    auto textbox2 = main_widget->add<GUI::TextBox>();
     textbox2->set_text("GTextBox 2");
     textbox2->set_enabled(false);
 
-    auto spinbox1 = GUI::SpinBox::construct(main_widget);
+    auto spinbox1 = main_widget->add<GUI::SpinBox>();
     (void)spinbox1;
-    auto spinbox2 = GUI::SpinBox::construct(main_widget);
+    auto spinbox2 = main_widget->add<GUI::SpinBox>();
     spinbox2->set_enabled(false);
 
-    auto vertical_slider_container = GUI::Widget::construct(main_widget.ptr());
+    auto vertical_slider_container = main_widget->add<GUI::Widget>();
     vertical_slider_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     vertical_slider_container->set_preferred_size(0, 100);
     vertical_slider_container->set_layout(make<GUI::HorizontalBoxLayout>());
-    auto vslider1 = GUI::VerticalSlider::construct(vertical_slider_container);
+    auto vslider1 = vertical_slider_container->add<GUI::VerticalSlider>();
     (void)vslider1;
-    auto vslider2 = GUI::VerticalSlider::construct(vertical_slider_container);
+    auto vslider2 = vertical_slider_container->add<GUI::VerticalSlider>();
     vslider2->set_enabled(false);
-    auto vslider3 = GUI::VerticalSlider::construct(vertical_slider_container);
+    auto vslider3 = vertical_slider_container->add<GUI::VerticalSlider>();
     vslider3->set_max(5);
     vslider3->set_knob_size_mode(GUI::Slider::KnobSizeMode::Proportional);
 
-    auto slider1 = GUI::HorizontalSlider::construct(main_widget);
+    auto slider1 = main_widget->add<GUI::HorizontalSlider>();
     (void)slider1;
-    auto slider2 = GUI::HorizontalSlider::construct(main_widget);
+    auto slider2 = main_widget->add<GUI::HorizontalSlider>();
     slider2->set_enabled(false);
-    auto slider3 = GUI::HorizontalSlider::construct(main_widget);
+    auto slider3 = main_widget->add<GUI::HorizontalSlider>();
     slider3->set_max(5);
     slider3->set_knob_size_mode(GUI::Slider::KnobSizeMode::Proportional);
 
-    auto scrollbar1 = GUI::ScrollBar::construct(Orientation::Horizontal, main_widget);
+    auto scrollbar1 = main_widget->add<GUI::ScrollBar>(Orientation::Horizontal);
     scrollbar1->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     scrollbar1->set_preferred_size(0, 16);
     scrollbar1->set_min(0);
     scrollbar1->set_max(100);
     scrollbar1->set_value(50);
-    auto scrollbar2 = GUI::ScrollBar::construct(Orientation::Horizontal, main_widget);
+    auto scrollbar2 = main_widget->add<GUI::ScrollBar>(Orientation::Horizontal);
     scrollbar2->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     scrollbar2->set_preferred_size(0, 16);
     scrollbar2->set_enabled(false);

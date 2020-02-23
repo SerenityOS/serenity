@@ -60,7 +60,7 @@ class Field final : public GUI::Frame {
     friend class Square;
     friend class SquareLabel;
 public:
-    Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, GUI::Widget* parent, Function<void(Gfx::Size)> on_size_changed);
+    Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, Function<void(Gfx::Size)> on_size_changed);
     virtual ~Field() override;
 
     int rows() const { return m_rows; }

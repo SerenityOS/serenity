@@ -35,10 +35,10 @@ ProcessStacksWidget::ProcessStacksWidget(GUI::Widget* parent)
 {
     set_layout(make<GUI::VerticalBoxLayout>());
     layout()->set_margins({ 4, 4, 4, 4 });
-    m_stacks_editor = GUI::TextEditor::construct(GUI::TextEditor::Type::MultiLine, this);
+    m_stacks_editor = add<GUI::TextEditor>();
     m_stacks_editor->set_readonly(true);
 
-    m_timer = Core::Timer::construct(1000, [this] { refresh(); }, this);
+    m_timer = add<Core::Timer>(1000, [this] { refresh(); });
 }
 
 ProcessStacksWidget::~ProcessStacksWidget()

@@ -30,9 +30,8 @@
 #include <LibGUI/Painter.h>
 #include <limits>
 
-WaveWidget::WaveWidget(GUI::Widget* parent, AudioEngine& audio_engine)
-    : GUI::Frame(parent)
-    , m_audio_engine(audio_engine)
+WaveWidget::WaveWidget(AudioEngine& audio_engine)
+    : m_audio_engine(audio_engine)
 {
     set_frame_thickness(2);
     set_frame_shadow(Gfx::FrameShadow::Sunken);

@@ -29,9 +29,8 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
 
-GlyphMapWidget::GlyphMapWidget(Gfx::Font& mutable_font, GUI::Widget* parent)
-    : GUI::Frame(parent)
-    , m_font(mutable_font)
+GlyphMapWidget::GlyphMapWidget(Gfx::Font& mutable_font)
+    : m_font(mutable_font)
 {
     set_frame_thickness(2);
     set_frame_shape(Gfx::FrameShape::Container);

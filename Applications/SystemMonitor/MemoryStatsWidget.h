@@ -40,7 +40,7 @@ public:
     void refresh();
 
 private:
-    MemoryStatsWidget(GraphWidget& graph, GUI::Widget* parent);
+    MemoryStatsWidget(GraphWidget& graph);
 
     GraphWidget& m_graph;
     RefPtr<GUI::Label> m_user_physical_pages_label;

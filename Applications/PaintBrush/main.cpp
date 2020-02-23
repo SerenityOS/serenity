@@ -63,15 +63,15 @@ int main(int argc, char** argv)
     horizontal_container->set_layout(make<GUI::HorizontalBoxLayout>());
     horizontal_container->layout()->set_spacing(0);
 
-    new ToolboxWidget(horizontal_container);
+    horizontal_container->add<ToolboxWidget>();
 
-    auto vertical_container = GUI::Widget::construct(horizontal_container.ptr());
+    auto vertical_container = horizontal_container->add<GUI::Widget>();
     vertical_container->set_layout(make<GUI::VerticalBoxLayout>());
     vertical_container->layout()->set_spacing(0);
 
-    auto paintable_widget = PaintableWidget::construct(vertical_container);
+    auto paintable_widget = vertical_container->add<PaintableWidget>();
     paintable_widget->set_focus(true);
-    PaletteWidget::construct(*paintable_widget, vertical_container);
+    vertical_container->add<PaletteWidget>(*paintable_widget);
 
     window->show();
 

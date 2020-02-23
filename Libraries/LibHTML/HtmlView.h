@@ -62,7 +62,7 @@ public:
     virtual bool accepts_focus() const override { return true; }
 
 protected:
-    HtmlView(GUI::Widget* parent = nullptr);
+    HtmlView();
 
     virtual void resize_event(GUI::ResizeEvent&) override;
     virtual void paint_event(GUI::PaintEvent&) override;

@@ -49,7 +49,7 @@ private:
 
     void show_documentation_tooltip_if_available(const String&, const Gfx::Point& screen_location);
 
-    explicit Editor(GUI::Widget* parent);
+    explicit Editor();
 
     RefPtr<GUI::Window> m_documentation_tooltip_window;
     RefPtr<HtmlView> m_documentation_html_view;

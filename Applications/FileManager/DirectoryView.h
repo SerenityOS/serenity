@@ -90,7 +90,7 @@ public:
     GUI::FileSystemModel& model() { return *m_model; }
 
 private:
-    explicit DirectoryView(GUI::Widget* parent);
+    DirectoryView();
     const GUI::FileSystemModel& model() const { return *m_model; }
 
     void handle_activation(const GUI::ModelIndex&);

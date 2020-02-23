@@ -62,17 +62,17 @@ int main(int argc, char** argv)
     widget->set_fill_with_background_color(true);
     widget->set_layout(make<GUI::VerticalBoxLayout>());
 
-    auto board_combo = GUI::ComboBox::construct(widget);
+    auto board_combo = widget->add<GUI::ComboBox>();
     board_combo->set_only_allow_values_from_model(true);
     board_combo->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     board_combo->set_preferred_size(0, 20);
     board_combo->set_model(BoardListModel::create());
 
-    auto catalog_view = GUI::TableView::construct(widget);
+    auto catalog_view = widget->add<GUI::TableView>();
     catalog_view->set_model(ThreadCatalogModel::create());
     auto& catalog_model = *static_cast<ThreadCatalogModel*>(catalog_view->model());
 
-    auto statusbar = GUI::StatusBar::construct(widget);
+    auto statusbar = widget->add<GUI::StatusBar>();
 
     board_combo->on_change = [&] (auto&, const GUI::ModelIndex& index) {
         auto selected_board = board_combo->model()->data(index, GUI::Model::Role::Custom);

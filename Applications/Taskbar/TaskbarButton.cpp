@@ -28,9 +28,8 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/WindowServerConnection.h>
 
-TaskbarButton::TaskbarButton(const WindowIdentifier& identifier, GUI::Widget* parent)
-    : GUI::Button(parent)
-    , m_identifier(identifier)
+TaskbarButton::TaskbarButton(const WindowIdentifier& identifier)
+    : m_identifier(identifier)
 {
 }
 

@@ -45,12 +45,12 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
     set_layout(make<GUI::VerticalBoxLayout>());
 
     // Make a container for the log buffer view + (optional) member list.
-    auto container = GUI::HorizontalSplitter::construct(this);
+    auto container = add<GUI::HorizontalSplitter>();
 
-    m_html_view = HtmlView::construct(container);
+    m_html_view = container->add<HtmlView>();
 
     if (m_type == Channel) {
-        auto member_view = GUI::TableView::construct(container);
+        auto member_view = container->add<GUI::TableView>();
         member_view->set_headers_visible(false);
         member_view->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
         member_view->set_preferred_size(100, 0);
@@ -59,7 +59,7 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
         member_view->set_activates_on_selection(true);
     }
 
-    m_text_editor = GUI::TextEditor::construct(GUI::TextEditor::SingleLine, this);
+    m_text_editor = add<GUI::TextBox>();
     m_text_editor->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_text_editor->set_preferred_size(0, 19);
     m_text_editor->on_return_pressed = [this] {

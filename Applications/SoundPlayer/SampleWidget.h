@@ -39,7 +39,7 @@ public:
 
     void set_buffer(Audio::Buffer*);
 private:
-    explicit SampleWidget(GUI::Widget* parent);
+    SampleWidget();
     virtual void paint_event(GUI::PaintEvent&) override;
 
     RefPtr<Audio::Buffer> m_buffer;

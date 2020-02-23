@@ -43,7 +43,7 @@ public:
     void set_editor_has_focus(Badge<Editor>, bool);
 
 private:
-    explicit EditorWrapper(GUI::Widget* parent = nullptr);
+    explicit EditorWrapper();
 
     RefPtr<GUI::Label> m_filename_label;
     RefPtr<GUI::Label> m_cursor_label;

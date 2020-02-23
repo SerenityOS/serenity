@@ -42,7 +42,7 @@ public:
     Function<void()> on_command_exit;
 
 private:
-    explicit TerminalWrapper(GUI::Widget* parent);
+    explicit TerminalWrapper();
 
     RefPtr<ProcessStateWidget> m_process_state_widget;
     RefPtr<TerminalWidget> m_terminal_widget;

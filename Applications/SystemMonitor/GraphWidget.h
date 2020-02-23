@@ -41,7 +41,7 @@ public:
     Function<String(int value, int max)> text_formatter;
 
 private:
-    explicit GraphWidget(GUI::Widget* parent);
+    explicit GraphWidget();
 
     virtual void paint_event(GUI::PaintEvent&) override;
 

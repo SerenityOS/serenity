@@ -38,7 +38,7 @@ public:
     virtual ~RollWidget() override;
 
 private:
-    RollWidget(GUI::Widget* parent, AudioEngine&);
+    explicit RollWidget(AudioEngine&);
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent& event) override;

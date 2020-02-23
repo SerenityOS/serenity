@@ -80,7 +80,7 @@ static RefPtr<GUI::TabWidget> s_action_tab_widget;
 
 void add_new_editor(GUI::Widget& parent)
 {
-    auto wrapper = EditorWrapper::construct(nullptr);
+    auto wrapper = EditorWrapper::construct();
     if (s_action_tab_widget) {
         parent.insert_child_before(wrapper, *s_action_tab_widget);
     } else {
@@ -165,7 +165,7 @@ int main(int argc, char** argv)
     g_project = Project::load_from_file("little.files");
     ASSERT(g_project);
 
-    auto toolbar = GUI::ToolBar::construct(widget);
+    auto toolbar = widget->add<GUI::ToolBar>();
 
     auto selected_file_names = [&] {
         Vector<String> files;
@@ -176,7 +176,7 @@ int main(int argc, char** argv)
     };
 
     auto new_action = GUI::Action::create("Add new file to project...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GUI::Action&) {
-        auto input_box = GUI::InputBox::construct("Enter name of new file:", "Add new file to project", g_window);
+        auto input_box = g_window->add<GUI::InputBox>("Enter name of new file:", "Add new file to project");
         if (input_box->exec() == GUI::InputBox::ExecCancel)
             return;
         auto filename = input_box->text_value();
@@ -247,8 +247,8 @@ int main(int argc, char** argv)
     project_tree_view_context_menu->add_action(add_existing_file_action);
     project_tree_view_context_menu->add_action(delete_action);
 
-    auto outer_splitter = GUI::HorizontalSplitter::construct(widget);
-    g_project_tree_view = GUI::TreeView::construct(outer_splitter);
+    auto outer_splitter = widget->add<GUI::HorizontalSplitter>();
+    g_project_tree_view = outer_splitter->add<GUI::TreeView>();
     g_project_tree_view->set_model(g_project->model());
     g_project_tree_view->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     g_project_tree_view->set_preferred_size(140, 0);
@@ -263,11 +263,11 @@ int main(int argc, char** argv)
         delete_action->set_enabled(!g_project_tree_view->selection().is_empty());
     };
 
-    g_right_hand_stack = GUI::StackWidget::construct(outer_splitter);
+    g_right_hand_stack = outer_splitter->add<GUI::StackWidget>();
 
-    g_form_inner_container = GUI::Widget::construct(g_right_hand_stack);
+    g_form_inner_container = g_right_hand_stack->add<GUI::Widget>();
     g_form_inner_container->set_layout(make<GUI::HorizontalBoxLayout>());
-    auto form_widgets_toolbar = GUI::ToolBar::construct(Orientation::Vertical, 26, g_form_inner_container);
+    auto form_widgets_toolbar = g_form_inner_container->add<GUI::ToolBar>(Orientation::Vertical, 26);
     form_widgets_toolbar->set_preferred_size(38, 0);
 
     GUI::ActionGroup tool_actions;
@@ -296,19 +296,19 @@ int main(int argc, char** argv)
         form_widgets_toolbar->add_action(move(action));
     });
 
-    auto form_editor_inner_splitter = GUI::HorizontalSplitter::construct(g_form_inner_container);
+    auto form_editor_inner_splitter = g_form_inner_container->add<GUI::HorizontalSplitter>();
 
-    g_form_editor_widget = FormEditorWidget::construct(form_editor_inner_splitter);
+    g_form_editor_widget = form_editor_inner_splitter->add<FormEditorWidget>();
 
-    auto form_editing_pane_container = GUI::VerticalSplitter::construct(form_editor_inner_splitter);
+    auto form_editing_pane_container = form_editor_inner_splitter->add<GUI::VerticalSplitter>();
     form_editing_pane_container->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     form_editing_pane_container->set_preferred_size(190, 0);
     form_editing_pane_container->set_layout(make<GUI::VerticalBoxLayout>());
 
     auto add_properties_pane = [&](auto& text, auto pane_widget) {
-        auto wrapper = GUI::Widget::construct(form_editing_pane_container.ptr());
+        auto wrapper = form_editing_pane_container->add<GUI::Widget>();
         wrapper->set_layout(make<GUI::VerticalBoxLayout>());
-        auto label = GUI::Label::construct(text, wrapper);
+        auto label = wrapper->add<GUI::Label>(text);
         label->set_fill_with_background_color(true);
         label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         label->set_font(Gfx::Font::default_bold_font());
@@ -317,7 +317,7 @@ int main(int argc, char** argv)
         wrapper->add_child(pane_widget);
     };
 
-    auto form_widget_tree_view = GUI::TreeView::construct(nullptr);
+    auto form_widget_tree_view = GUI::TreeView::construct();
     form_widget_tree_view->set_model(g_form_editor_widget->model());
     form_widget_tree_view->on_selection_change = [&] {
         g_form_editor_widget->selection().disable_hooks();
@@ -343,9 +343,9 @@ int main(int argc, char** argv)
     };
 
     add_properties_pane("Form widget tree:", form_widget_tree_view);
-    add_properties_pane("Widget properties:", GUI::TableView::construct(nullptr));
+    add_properties_pane("Widget properties:", GUI::TableView::construct());
 
-    g_text_inner_splitter = GUI::VerticalSplitter::construct(g_right_hand_stack);
+    g_text_inner_splitter = g_right_hand_stack->add<GUI::VerticalSplitter>();
     g_text_inner_splitter->layout()->set_margins({ 0, 3, 0, 0 });
     add_new_editor(*g_text_inner_splitter);
 
@@ -420,7 +420,7 @@ int main(int argc, char** argv)
         open_file(filename);
     };
 
-    s_action_tab_widget = GUI::TabWidget::construct(g_text_inner_splitter);
+    s_action_tab_widget = g_text_inner_splitter->add<GUI::TabWidget>();
 
     s_action_tab_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     s_action_tab_widget->set_preferred_size(0, 24);
@@ -444,13 +444,13 @@ int main(int argc, char** argv)
         update_actions();
     });
 
-    auto find_in_files_widget = FindInFilesWidget::construct(nullptr);
+    auto find_in_files_widget = FindInFilesWidget::construct();
     s_action_tab_widget->add_widget("Find in files", find_in_files_widget);
 
-    auto terminal_wrapper = TerminalWrapper::construct(nullptr);
+    auto terminal_wrapper = TerminalWrapper::construct();
     s_action_tab_widget->add_widget("Console", terminal_wrapper);
 
-    auto locator = Locator::construct(widget);
+    auto locator = widget->add<Locator>();
 
     auto open_locator_action = GUI::Action::create("Open Locator...", { Mod_Ctrl, Key_K }, [&](auto&) {
         locator->open();

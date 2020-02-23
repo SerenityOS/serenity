@@ -37,7 +37,7 @@ public:
     virtual ~CalculatorWidget() override;
 
 private:
-    explicit CalculatorWidget(GUI::Widget*);
+    CalculatorWidget();
     void add_button(GUI::Button&, Calculator::Operation);
     void add_button(GUI::Button&, int);
     void add_button(GUI::Button&);

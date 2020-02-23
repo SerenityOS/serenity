@@ -30,16 +30,15 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/TextBox.h>
 
-CalculatorWidget::CalculatorWidget(GUI::Widget* parent)
-    : GUI::Widget(parent)
+CalculatorWidget::CalculatorWidget()
 {
     set_fill_with_background_color(true);
 
-    m_entry = GUI::TextBox::construct(this);
+    m_entry = add<GUI::TextBox>();
     m_entry->set_relative_rect(5, 5, 244, 26);
     m_entry->set_text_alignment(Gfx::TextAlignment::CenterRight);
 
-    m_label = GUI::Label::construct(this);
+    m_label = add<GUI::Label>();
     m_label->set_relative_rect(12, 42, 27, 27);
     m_label->set_foreground_color(Color::NamedColor::Red);
     m_label->set_frame_shadow(Gfx::FrameShadow::Sunken);
@@ -49,7 +48,7 @@ CalculatorWidget::CalculatorWidget(GUI::Widget* parent)
     update_display();
 
     for (int i = 0; i < 10; i++) {
-        m_digit_button[i] = GUI::Button::construct(this);
+        m_digit_button[i] = add<GUI::Button>();
         auto& button = *m_digit_button[i];
         int p = i ? i + 2 : 0;
         int x = 55 + (p % 3) * 39;
@@ -59,31 +58,31 @@ CalculatorWidget::CalculatorWidget(GUI::Widget* parent)
         add_button(button, i);
     }
 
-    m_mem_add_button = GUI::Button::construct(this);
+    m_mem_add_button = add<GUI::Button>();
     m_mem_add_button->move_to(9, 177);
     m_mem_add_button->set_foreground_color(Color::NamedColor::Red);
     m_mem_add_button->set_text("M+");
     add_button(*m_mem_add_button, Calculator::Operation::MemAdd);
 
-    m_mem_save_button = GUI::Button::construct(this);
+    m_mem_save_button = add<GUI::Button>();
     m_mem_save_button->move_to(9, 144);
     m_mem_save_button->set_foreground_color(Color::NamedColor::Red);
     m_mem_save_button->set_text("MS");
     add_button(*m_mem_save_button, Calculator::Operation::MemSave);
 
-    m_mem_recall_button = GUI::Button::construct(this);
+    m_mem_recall_button = add<GUI::Button>();
     m_mem_recall_button->move_to(9, 111);
     m_mem_recall_button->set_foreground_color(Color::NamedColor::Red);
     m_mem_recall_button->set_text("MR");
     add_button(*m_mem_recall_button, Calculator::Operation::MemRecall);
 
-    m_mem_clear_button = GUI::Button::construct(this);
+    m_mem_clear_button = add<GUI::Button>();
     m_mem_clear_button->move_to(9, 78);
     m_mem_clear_button->set_foreground_color(Color::NamedColor::Red);
     m_mem_clear_button->set_text("MC");
     add_button(*m_mem_clear_button, Calculator::Operation::MemClear);
 
-    m_clear_button = GUI::Button::construct(this);
+    m_clear_button = add<GUI::Button>();
     m_clear_button->set_foreground_color(Color::NamedColor::Red);
     m_clear_button->set_text("C");
     m_clear_button->on_click = [this](GUI::Button&) {
@@ -94,7 +93,7 @@ CalculatorWidget::CalculatorWidget(GUI::Widget* parent)
     add_button(*m_clear_button);
     m_clear_button->set_relative_rect(187, 40, 60, 28);
 
-    m_clear_error_button = GUI::Button::construct(this);
+    m_clear_error_button = add<GUI::Button>();
     m_clear_error_button->set_foreground_color(Color::NamedColor::Red);
     m_clear_error_button->set_text("CE");
     m_clear_error_button->on_click = [this](GUI::Button&) {
@@ -104,7 +103,7 @@ CalculatorWidget::CalculatorWidget(GUI::Widget* parent)
     add_button(*m_clear_error_button);
     m_clear_error_button->set_relative_rect(124, 40, 59, 28);
 
-    m_backspace_button = GUI::Button::construct(this);
+    m_backspace_button = add<GUI::Button>();
     m_backspace_button->set_foreground_color(Color::NamedColor::Red);
     m_backspace_button->set_text("Backspace");
     m_backspace_button->on_click = [this](GUI::Button&) {
@@ -114,7 +113,7 @@ CalculatorWidget::CalculatorWidget(GUI::Widget* parent)
     add_button(*m_backspace_button);
     m_backspace_button->set_relative_rect(55, 40, 65, 28);
 
-    m_decimal_point_button = GUI::Button::construct(this);
+    m_decimal_point_button = add<GUI::Button>();
     m_decimal_point_button->move_to(133, 177);
     m_decimal_point_button->set_foreground_color(Color::NamedColor::Blue);
     m_decimal_point_button->set_text(".");
@@ -124,55 +123,55 @@ CalculatorWidget::CalculatorWidget(GUI::Widget* parent)
     };
     add_button(*m_decimal_point_button);
 
-    m_sign_button = GUI::Button::construct(this);
+    m_sign_button = add<GUI::Button>();
     m_sign_button->move_to(94, 177);
     m_sign_button->set_foreground_color(Color::NamedColor::Blue);
     m_sign_button->set_text("+/-");
     add_button(*m_sign_button, Calculator::Operation::ToggleSign);
 
-    m_add_button = GUI::Button::construct(this);
+    m_add_button = add<GUI::Button>();
     m_add_button->move_to(172, 177);
     m_add_button->set_foreground_color(Color::NamedColor::Red);
     m_add_button->set_text("+");
     add_button(*m_add_button, Calculator::Operation::Add);
 
-    m_subtract_button = GUI::Button::construct(this);
+    m_subtract_button = add<GUI::Button>();
     m_subtract_button->move_to(172, 144);
     m_subtract_button->set_foreground_color(Color::NamedColor::Red);
     m_subtract_button->set_text("-");
     add_button(*m_subtract_button, Calculator::Operation::Subtract);
 
-    m_multiply_button = GUI::Button::construct(this);
+    m_multiply_button = add<GUI::Button>();
     m_multiply_button->move_to(172, 111);
     m_multiply_button->set_foreground_color(Color::NamedColor::Red);
     m_multiply_button->set_text("*");
     add_button(*m_multiply_button, Calculator::Operation::Multiply);
 
-    m_divide_button = GUI::Button::construct(this);
+    m_divide_button = add<GUI::Button>();
     m_divide_button->move_to(172, 78);
     m_divide_button->set_foreground_color(Color::NamedColor::Red);
     m_divide_button->set_text("/");
     add_button(*m_divide_button, Calculator::Operation::Divide);
 
-    m_sqrt_button = GUI::Button::construct(this);
+    m_sqrt_button = add<GUI::Button>();
     m_sqrt_button->move_to(211, 78);
     m_sqrt_button->set_foreground_color(Color::NamedColor::Blue);
     m_sqrt_button->set_text("sqrt");
     add_button(*m_sqrt_button, Calculator::Operation::Sqrt);
 
-    m_inverse_button = GUI::Button::construct(this);
+    m_inverse_button = add<GUI::Button>();
     m_inverse_button->move_to(211, 144);
     m_inverse_button->set_foreground_color(Color::NamedColor::Blue);
     m_inverse_button->set_text("1/x");
     add_button(*m_inverse_button, Calculator::Operation::Inverse);
 
-    m_percent_button = GUI::Button::construct(this);
+    m_percent_button = add<GUI::Button>();
     m_percent_button->move_to(211, 111);
     m_percent_button->set_foreground_color(Color::NamedColor::Blue);
     m_percent_button->set_text("%");
     add_button(*m_percent_button, Calculator::Operation::Percent);
 
-    m_equals_button = GUI::Button::construct(this);
+    m_equals_button = add<GUI::Button>();
     m_equals_button->move_to(211, 177);
     m_equals_button->set_foreground_color(Color::NamedColor::Red);
     m_equals_button->set_text("=");

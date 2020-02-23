@@ -28,8 +28,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGfx/Font.h>
 
-GraphWidget::GraphWidget(GUI::Widget* parent)
-    : GUI::Frame(parent)
+GraphWidget::GraphWidget()
 {
     set_frame_thickness(2);
     set_frame_shape(Gfx::FrameShape::Container);

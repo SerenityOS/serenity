@@ -166,16 +166,13 @@ void TerminalWrapper::kill_running_command()
     (void)killpg(m_pid, SIGTERM);
 }
 
-TerminalWrapper::TerminalWrapper(GUI::Widget* parent)
-    : GUI::Widget(parent)
+TerminalWrapper::TerminalWrapper()
 {
     set_layout(make<GUI::VerticalBoxLayout>());
 
     RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("Terminal");
-    m_terminal_widget = TerminalWidget::construct(-1, false, config);
-    add_child(*m_terminal_widget);
-
-    m_process_state_widget = ProcessStateWidget::construct(this);
+    m_terminal_widget = add<TerminalWidget>(-1, false, config);
+    m_process_state_widget = add<ProcessStateWidget>();
 }
 
 TerminalWrapper::~TerminalWrapper()

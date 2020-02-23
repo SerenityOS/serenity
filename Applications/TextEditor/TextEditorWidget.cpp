@@ -51,8 +51,8 @@ TextEditorWidget::TextEditorWidget()
     set_layout(make<GUI::VerticalBoxLayout>());
     layout()->set_spacing(0);
 
-    auto toolbar = GUI::ToolBar::construct(this);
-    m_editor = GUI::TextEditor::construct(GUI::TextEditor::MultiLine, this);
+    auto toolbar = add<GUI::ToolBar>();
+    m_editor = add<GUI::TextEditor>();
     m_editor->set_ruler_visible(true);
     m_editor->set_automatic_indentation_enabled(true);
     m_editor->set_line_wrapping_enabled(true);
@@ -70,7 +70,7 @@ TextEditorWidget::TextEditorWidget()
             update_title();
     };
 
-    m_find_replace_widget = GUI::Widget::construct(this);
+    m_find_replace_widget = add<GUI::Widget>();
     m_find_replace_widget->set_fill_with_background_color(true);
     m_find_replace_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_find_replace_widget->set_preferred_size(0, 48);
@@ -78,22 +78,22 @@ TextEditorWidget::TextEditorWidget()
     m_find_replace_widget->layout()->set_margins({ 2, 2, 2, 4 });
     m_find_replace_widget->set_visible(false);
 
-    m_find_widget = GUI::Widget::construct(m_find_replace_widget);
+    m_find_widget = m_find_replace_widget->add<GUI::Widget>();
     m_find_widget->set_fill_with_background_color(true);
     m_find_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_find_widget->set_preferred_size(0, 22);
     m_find_widget->set_layout(make<GUI::HorizontalBoxLayout>());
     m_find_widget->set_visible(false);
 
-    m_replace_widget = GUI::Widget::construct(m_find_replace_widget);
+    m_replace_widget = m_find_replace_widget->add<GUI::Widget>();
     m_replace_widget->set_fill_with_background_color(true);
     m_replace_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_replace_widget->set_preferred_size(0, 22);
     m_replace_widget->set_layout(make<GUI::HorizontalBoxLayout>());
     m_replace_widget->set_visible(false);
 
-    m_find_textbox = GUI::TextBox::construct(m_find_widget);
-    m_replace_textbox = GUI::TextBox::construct(m_replace_widget);
+    m_find_textbox = m_find_widget->add<GUI::TextBox>();
+    m_replace_textbox = m_replace_widget->add<GUI::TextBox>();
 
     m_find_next_action = GUI::Action::create("Find next", { Mod_Ctrl, Key_G }, [&](auto&) {
         auto needle = m_find_textbox->text();
@@ -202,12 +202,12 @@ TextEditorWidget::TextEditorWidget()
         }
     });
 
-    m_find_previous_button = GUI::Button::construct("Find previous", m_find_widget);
+    m_find_previous_button = m_find_widget->add<GUI::Button>("Find previous");
     m_find_previous_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     m_find_previous_button->set_preferred_size(150, 0);
     m_find_previous_button->set_action(*m_find_previous_action);
 
-    m_find_next_button = GUI::Button::construct("Find next", m_find_widget);
+    m_find_next_button = m_find_widget->add<GUI::Button>("Find next");
     m_find_next_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     m_find_next_button->set_preferred_size(150, 0);
     m_find_next_button->set_action(*m_find_next_action);
@@ -221,17 +221,17 @@ TextEditorWidget::TextEditorWidget()
         m_editor->set_focus(true);
     };
 
-    m_replace_previous_button = GUI::Button::construct("Replace previous", m_replace_widget);
+    m_replace_previous_button = m_replace_widget->add<GUI::Button>("Replace previous");
     m_replace_previous_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     m_replace_previous_button->set_preferred_size(100, 0);
     m_replace_previous_button->set_action(*m_replace_previous_action);
 
-    m_replace_next_button = GUI::Button::construct("Replace next", m_replace_widget);
+    m_replace_next_button = m_replace_widget->add<GUI::Button>("Replace next");
     m_replace_next_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     m_replace_next_button->set_preferred_size(100, 0);
     m_replace_next_button->set_action(*m_replace_next_action);
 
-    m_replace_all_button = GUI::Button::construct("Replace all", m_replace_widget);
+    m_replace_all_button = m_replace_widget->add<GUI::Button>("Replace all");
     m_replace_all_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     m_replace_all_button->set_preferred_size(100, 0);
     m_replace_all_button->set_action(*m_replace_all_action);
@@ -262,7 +262,7 @@ TextEditorWidget::TextEditorWidget()
     m_editor->add_custom_context_menu_action(*m_find_next_action);
     m_editor->add_custom_context_menu_action(*m_find_previous_action);
 
-    m_statusbar = GUI::StatusBar::construct(this);
+    m_statusbar = add<GUI::StatusBar>();
 
     m_editor->on_cursor_change = [this] {
         StringBuilder builder;
@@ -272,7 +272,7 @@ TextEditorWidget::TextEditorWidget()
 
     m_new_action = GUI::Action::create("New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [this](const GUI::Action&) {
         if (m_document_dirty) {
-            auto save_document_first_result = GUI::MessageBox::construct("Save Document First?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel, window())->exec();
+            auto save_document_first_result = GUI::MessageBox::show("Save Document First?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
             if (save_document_first_result == GUI::Dialog::ExecResult::ExecYes)
                 m_save_action->activate();
             if (save_document_first_result == GUI::Dialog::ExecResult::ExecCancel)
@@ -292,7 +292,7 @@ TextEditorWidget::TextEditorWidget()
             return;
 
         if (m_document_dirty) {
-            auto save_document_first_result = GUI::MessageBox::construct("Save Document First?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel, window())->exec();
+            auto save_document_first_result = GUI::MessageBox::show("Save Document First?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel, window());
             if (save_document_first_result == GUI::Dialog::ExecResult::ExecYes)
                 m_save_action->activate();
             if (save_document_first_result == GUI::Dialog::ExecResult::ExecCancel)
