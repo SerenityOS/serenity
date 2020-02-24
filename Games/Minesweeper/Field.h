@@ -65,11 +65,11 @@ public:
 
     int rows() const { return m_rows; }
     int columns() const { return m_columns; }
-    int mine_count() const { return m_mine_count; }
+    size_t mine_count() const { return m_mine_count; }
     int square_size() const { return 15; }
     bool is_single_chording() const { return m_single_chording; }
 
-    void set_field_size(int rows, int columns, int mine_count);
+    void set_field_size(int rows, int columns, size_t mine_count);
     void set_single_chording(bool new_val);
 
     void reset();
@@ -105,7 +105,7 @@ private:
 
     int m_rows { 0 };
     int m_columns { 0 };
-    int m_mine_count { 0 };
+    size_t m_mine_count { 0 };
     int m_unswept_empties { 0 };
     Vector<OwnPtr<Square>> m_squares;
     RefPtr<Gfx::Bitmap> m_mine_bitmap;
