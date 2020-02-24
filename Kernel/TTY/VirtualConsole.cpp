@@ -129,7 +129,7 @@ void VirtualConsole::switch_to(unsigned index)
             return;
         active_console->set_active(false);
     }
-    dbgprintf("VC: Switch to %u (%p)\n", index, s_consoles[index]);
+    dbg() << "VC: Switch to " << index << " (" << s_consoles[index] << ")";
     s_active_console = index;
     s_consoles[s_active_console]->set_active(true);
     Console::the().set_implementation(s_consoles[s_active_console]);
