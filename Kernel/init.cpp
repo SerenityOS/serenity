@@ -153,7 +153,7 @@ extern "C" [[noreturn]] void init()
     PIT::initialize();
 
     if (text_debug) {
-        dbgprintf("Text mode enabled\n");
+        dbg() << "Text mode enabled";
     } else {
         if (multiboot_info_ptr->framebuffer_type == 1 || multiboot_info_ptr->framebuffer_type == 2) {
             new MBVGADevice(
@@ -255,7 +255,7 @@ void init_stage2()
         }
 
         if (mbr.is_protective_mbr()) {
-            dbgprintf("GPT Partitioned Storage Detected!\n");
+            dbg() << "GPT Partitioned Storage Detected!";
             GPTPartitionTable gpt(root_dev);
             if (!gpt.initialize()) {
                 kprintf("init_stage2: couldn't read GPT from disk\n");
@@ -268,7 +268,7 @@ void init_stage2()
             }
             root_dev = *partition;
         } else {
-            dbgprintf("MBR Partitioned Storage Detected!\n");
+            dbg() << "MBR Partitioned Storage Detected!";
             if (mbr.contains_ebr()) {
                 EBRPartitionTable ebr(root_dev);
                 if (!ebr.initialize()) {
@@ -308,9 +308,9 @@ void init_stage2()
 
     Process::current->set_root_directory(VFS::the().root_custody());
 
-    dbgprintf("Load ksyms\n");
+    dbg() << "Load ksyms";
     load_ksyms();
-    dbgprintf("Loaded ksyms\n");
+    dbg() << "Loaded ksyms";
 
     // Now, detect whether or not there are actually any floppy disks attached to the system
     u8 detect = CMOS::read(0x10);
