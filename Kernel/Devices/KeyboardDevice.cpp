@@ -501,7 +501,7 @@ void KeyboardDevice::handle_irq(RegisterState&)
         }
 
 #ifdef KEYBOARD_DEBUG
-        dbgprintf("Keyboard::handle_irq: %b %s\n", ch, pressed ? "down" : "up");
+        dbg() << "Keyboard::handle_irq: " << String::format("%b", ch) << " " << (pressed ? "down" : "up");
 #endif
         switch (ch) {
         case 0x38:
