@@ -647,25 +647,25 @@ inline u32 Thread::effective_priority() const
     return m_priority + m_process.priority_boost() + m_priority_boost + m_extra_priority;
 }
 
-#define REQUIRE_NO_PROMISES                       \
-    do {                                          \
+#define REQUIRE_NO_PROMISES                      \
+    do {                                         \
         if (Process::current->has_promises()) {  \
-            dbg() << "Has made a promise";        \
-            cli();                                \
+            dbg() << "Has made a promise";       \
+            cli();                               \
             Process::current->crash(SIGABRT, 0); \
-            ASSERT_NOT_REACHED();                 \
-        }                                         \
+            ASSERT_NOT_REACHED();                \
+        }                                        \
     } while (0)
 
-#define REQUIRE_PROMISE(promise)                                    \
-    do {                                                            \
+#define REQUIRE_PROMISE(promise)                                   \
+    do {                                                           \
         if (Process::current->has_promises()                       \
             && !Process::current->has_promised(Pledge::promise)) { \
-            dbg() << "Has not pledged " << #promise;                \
-            cli();                                                  \
+            dbg() << "Has not pledged " << #promise;               \
+            cli();                                                 \
             Process::current->crash(SIGABRT, 0);                   \
-            ASSERT_NOT_REACHED();                                   \
-        }                                                           \
+            ASSERT_NOT_REACHED();                                  \
+        }                                                          \
     } while (0)
 
 }
