@@ -78,7 +78,7 @@ size_t InodeVMObject::amount_clean() const
 size_t InodeVMObject::amount_dirty() const
 {
     size_t count = 0;
-    for (int i = 0; i < m_dirty_pages.size(); ++i) {
+    for (size_t i = 0; i < m_dirty_pages.size(); ++i) {
         if (m_dirty_pages.get(i))
             ++count;
     }
