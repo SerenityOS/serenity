@@ -355,9 +355,9 @@ void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
 
 #ifdef SIGNAL_DEBUG
     if (sender)
-        dbgprintf("signal: %s(%u) sent %d to %s(%u)\n", sender->name().characters(), sender->pid(), signal, process().name().characters(), pid());
+        dbg() << "signal: " << sender->name().characters() << "(" << sender->pid() << ") sent " << signal << " to " << process().name().characters() << "(" << pid() << ")";
     else
-        dbgprintf("signal: kernel sent %d to %s(%u)\n", signal, process().name().characters(), pid());
+        dbg() << "signal: kernel sent " << signal << " to " << process().name().characters() << "(" << pid() << ")";
 #endif
 
     m_pending_signals |= 1 << (signal - 1);
