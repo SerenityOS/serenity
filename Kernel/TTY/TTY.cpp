@@ -88,11 +88,11 @@ ssize_t TTY::read(FileDescription&, u8* buffer, ssize_t size)
 ssize_t TTY::write(FileDescription&, const u8* buffer, ssize_t size)
 {
 #ifdef TTY_DEBUG
-    dbgprintf("TTY::write {%u} ", size);
+    dbg() << "TTY::write {" << String::format("%u", size) << "} ";
     for (size_t i = 0; i < size; ++i) {
-        dbgprintf("%b ", buffer[i]);
+        dbg() << String::format("%b ", buffer[i]);
     }
-    dbgprintf("\n");
+    dbg() << "";
 #endif
     on_tty_write(buffer, size);
     return size;
