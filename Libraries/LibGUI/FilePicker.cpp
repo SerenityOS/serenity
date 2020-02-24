@@ -34,6 +34,7 @@
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/MultiView.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/ToolBar.h>
@@ -98,15 +99,16 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
 
     auto toolbar = upper_container->add<ToolBar>();
     toolbar->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    toolbar->set_preferred_size(85, 0);
+    toolbar->set_preferred_size(165, 0);
     toolbar->set_has_frame(false);
 
     auto location_textbox = upper_container->add<TextBox>();
     location_textbox->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     location_textbox->set_preferred_size(0, 20);
 
-    m_view = vertical_container->add<TableView>();
+    m_view = vertical_container->add<MultiView>();
     m_view->set_model(SortingProxyModel::create(*m_model));
+    m_view->set_model_column(FileSystemModel::Column::Name);
     m_view->set_column_hidden(FileSystemModel::Column::Owner, true);
     m_view->set_column_hidden(FileSystemModel::Column::Group, true);
     m_view->set_column_hidden(FileSystemModel::Column::Permissions, true);
@@ -146,7 +148,18 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
             }
         }
     });
+
     toolbar->add_action(*mkdir_action);
+
+    toolbar->add_separator();
+
+    toolbar->add_action(m_view->view_as_icons_action());
+    toolbar->add_action(m_view->view_as_table_action());
+
+    // FIXME: Enable this once GUI::ColumnsView doesn't crash when used here.
+#if 0
+    toolbar->add_action(m_view->view_as_columns_action());
+#endif
 
     auto lower_container = vertical_container->add<Widget>();
     lower_container->set_layout(make<VerticalBoxLayout>());
@@ -172,7 +185,8 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
         on_file_return();
     };
 
-    m_view->on_selection = [this](auto& index) {
+    m_view->on_selection_change = [this] {
+        auto index = m_view->selection().first();
         auto& filter_model = (SortingProxyModel&)*m_view->model();
         auto local_index = filter_model.map_to_target(index);
         const FileSystemModel::Node& node = m_model->node(local_index);
