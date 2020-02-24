@@ -89,7 +89,7 @@ void PS2MouseDevice::handle_vmmouse_absolute_pointer()
     VMWareBackdoor::the().send(command);
     if (command.ax == 0xFFFF0000) {
 #ifdef PS2MOUSE_DEBUG
-        dbgprintf("Reset vmmouse.\n");
+        dbg() << "Reset vmmouse.";
 #endif
         VMWareBackdoor::the().disable_absolute_vmmouse();
         VMWareBackdoor::the().enable_absolute_vmmouse();
@@ -109,8 +109,8 @@ void PS2MouseDevice::handle_vmmouse_absolute_pointer()
     int z = (command.dx);
 
 #ifdef PS2MOUSE_DEBUG
-    dbgprintf("Absolute Mouse: Buttons %x\n", buttons);
-    dbgprintf("Mouse: X %d, Y %d, Z %d\n", x, y, z);
+    dbg() << "Absolute Mouse: Buttons " << String::format("%x", buttons);
+    dbg() << "Mouse: X " << x << ", Y " << y << ", Z " << z);
 #endif
     MousePacket packet;
     packet.x = x;
@@ -134,14 +134,14 @@ void PS2MouseDevice::handle_irq(RegisterState&)
 
     if (VMWareBackdoor::the().vmmouse_is_absolute()) {
 #ifdef PS2MOUSE_DEBUG
-        dbgprintf("Handling PS2 vmmouse.\n");
+        dbg() << "Handling PS2 vmmouse.";
 #endif
         IO::in8(I8042_BUFFER);
         handle_vmmouse_absolute_pointer();
         return;
     }
 #ifdef PS2MOUSE_DEBUG
-    dbgprintf("Handling classical PS2 mouse.\n");
+    dbg() << "Handling classical PS2 mouse.";
 #endif
     for (;;) {
         u8 status = IO::in8(I8042_STATUS);
@@ -154,12 +154,7 @@ void PS2MouseDevice::handle_irq(RegisterState&)
         auto commit_packet = [&] {
             m_data_state = 0;
 #ifdef PS2MOUSE_DEBUG
-            dbgprintf("PS2Mouse: %d, %d %s %s (buffered: %u)\n",
-                m_data[1],
-                m_data[2],
-                (m_data[0] & 1) ? "Left" : "",
-                (m_data[0] & 2) ? "Right" : "",
-                m_queue.size());
+            dbg() << ("PS2Mouse: " << m_data[1] << ", " << m_data[2] << " " << ((m_data[0] & 1) ? "Left" : "") << " " << ((m_data[0] & 2) ? "Right" : "") << " (buffered: " << m_queue.size() << ")";
 #endif
             parse_data_packet();
         };
@@ -167,7 +162,7 @@ void PS2MouseDevice::handle_irq(RegisterState&)
         switch (m_data_state) {
         case 0:
             if (!(data & 0x08)) {
-                dbgprintf("PS2Mouse: Stream out of sync.\n");
+                dbg() << "PS2Mouse: Stream out of sync.";
                 break;
             }
             ++m_data_state;
@@ -216,8 +211,8 @@ void PS2MouseDevice::parse_data_packet()
     packet.buttons = m_data[0] & 0x07;
     packet.is_relative = true;
 #ifdef PS2MOUSE_DEBUG
-    dbgprintf("PS2 Relative Mouse: Buttons %x\n", packet.buttons);
-    dbgprintf("Mouse: X %d, Y %d, Z %d\n", packet.x, packet.y, packet.z);
+    dbg() << "PS2 Relative Mouse: Buttons " << String::format("%x", packet.buttons);
+    dbg() << "Mouse: X " << packet.x << ", Y " << packet.y << ", Z " << packet.z;
 #endif
     m_queue.enqueue(packet);
 }
@@ -369,9 +364,9 @@ ssize_t PS2MouseDevice::read(FileDescription&, u8* buffer, ssize_t size)
     while (!m_queue.is_empty() && remaining_space_in_buffer) {
         auto packet = m_queue.dequeue();
 #ifdef PS2MOUSE_DEBUG
-        dbgprintf("PS2 Mouse Read: Buttons %x\n", packet.buttons);
-        dbgprintf("PS2 Mouse Read: X %d, Y %d, Z %d, Relative %d\n", packet.x, packet.y, packet.z, packet.buttons);
-        dbgprintf("PS2 Mouse Read: Filter packets\n");
+        dbg() << "PS2 Mouse Read: Buttons " << String::format("%x", packet.buttons);
+        dbg() << "PS2 Mouse: X " << packet.x << ", Y " << packet.y << ", Z " << packet.z << " Relative " << packet.buttons;
+        dbg() << "PS2 Mouse Read: Filter packets";
 #endif
         size_t bytes_read_from_packet = min(remaining_space_in_buffer, sizeof(MousePacket));
         memcpy(buffer + nread, &packet, bytes_read_from_packet);
