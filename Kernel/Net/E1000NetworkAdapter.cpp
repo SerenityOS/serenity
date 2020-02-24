@@ -302,7 +302,7 @@ void E1000NetworkAdapter::initialize_tx_descriptors()
 void E1000NetworkAdapter::out8(u16 address, u8 data)
 {
 #ifdef E1000_DEBUG
-    dbgprintf("E1000: OUT @ 0x%x\n", address);
+    dbg() << "E1000: OUT @ 0x" << address;
 #endif
     if (m_use_mmio) {
         auto* ptr = (volatile u8*)(m_mmio_base.get() + address);
@@ -315,7 +315,7 @@ void E1000NetworkAdapter::out8(u16 address, u8 data)
 void E1000NetworkAdapter::out16(u16 address, u16 data)
 {
 #ifdef E1000_DEBUG
-    dbgprintf("E1000: OUT @ 0x%x\n", address);
+    dbg() << "E1000: OUT @ 0x" << address;
 #endif
     if (m_use_mmio) {
         auto* ptr = (volatile u16*)(m_mmio_base.get() + address);
@@ -328,7 +328,7 @@ void E1000NetworkAdapter::out16(u16 address, u16 data)
 void E1000NetworkAdapter::out32(u16 address, u32 data)
 {
 #ifdef E1000_DEBUG
-    dbgprintf("E1000: OUT @ 0x%x\n", address);
+    dbg() << "E1000: OUT @ 0x" << address;
 #endif
     if (m_use_mmio) {
         auto* ptr = (volatile u32*)(m_mmio_base.get() + address);
@@ -341,7 +341,7 @@ void E1000NetworkAdapter::out32(u16 address, u32 data)
 u8 E1000NetworkAdapter::in8(u16 address)
 {
 #ifdef E1000_DEBUG
-    dbgprintf("E1000: IN @ 0x%x\n", address);
+    dbg() << "E1000: IN @ 0x" << address;
 #endif
     if (m_use_mmio)
         return *(volatile u8*)(m_mmio_base.get() + address);
@@ -351,7 +351,7 @@ u8 E1000NetworkAdapter::in8(u16 address)
 u16 E1000NetworkAdapter::in16(u16 address)
 {
 #ifdef E1000_DEBUG
-    dbgprintf("E1000: IN @ 0x%x\n", address);
+    dbg() << "E1000: IN @ 0x " << address;
 #endif
     if (m_use_mmio)
         return *(volatile u16*)(m_mmio_base.get() + address);
@@ -361,7 +361,7 @@ u16 E1000NetworkAdapter::in16(u16 address)
 u32 E1000NetworkAdapter::in32(u16 address)
 {
 #ifdef E1000_DEBUG
-    dbgprintf("E1000: IN @ 0x%x\n", address);
+    dbg() << "E1000: IN @ 0x" << address;
 #endif
     if (m_use_mmio)
         return *(volatile u32*)(m_mmio_base.get() + address);
