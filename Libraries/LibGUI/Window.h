@@ -148,9 +148,9 @@ public:
     Gfx::Bitmap* back_bitmap() { return m_back_bitmap.ptr(); }
 
     Gfx::Size size_increment() const { return m_size_increment; }
-    void set_size_increment(const Gfx::Size& increment) { m_size_increment = increment; }
+    void set_size_increment(const Gfx::Size&);
     Gfx::Size base_size() const { return m_base_size; }
-    void set_base_size(const Gfx::Size& size) { m_base_size = size; }
+    void set_base_size(const Gfx::Size&);
 
     void set_override_cursor(StandardCursor);
 

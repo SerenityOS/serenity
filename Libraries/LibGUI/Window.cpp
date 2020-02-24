@@ -670,4 +670,22 @@ Action* Window::action_for_key_event(const KeyEvent& event)
     return found_action;
 }
 
+void Window::set_base_size(const Gfx::Size& base_size)
+{
+    if (m_base_size == base_size)
+        return;
+    m_base_size = base_size;
+    if (m_window_id)
+        WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrement>(m_window_id, m_base_size, m_size_increment);
+}
+
+void Window::set_size_increment(const Gfx::Size& size_increment)
+{
+    if (m_size_increment == size_increment)
+        return;
+    m_size_increment = size_increment;
+    if (m_window_id)
+        WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrement>(m_window_id, m_base_size, m_size_increment);
+}
+
 }
