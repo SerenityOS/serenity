@@ -714,4 +714,19 @@ void ClientConnection::deboost()
         perror("deboost: set_process_boost");
 }
 
+OwnPtr<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrementResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowBaseSizeAndSizeIncrement& message)
+{
+    auto it = m_windows.find(message.window_id());
+    if (it == m_windows.end()) {
+        did_misbehave("SetWindowBaseSizeAndSizeIncrementResponse: Bad window ID");
+        return nullptr;
+    }
+
+    auto& window = *it->value;
+    window.set_base_size(message.base_size());
+    window.set_size_increment(message.size_increment());
+
+    return make<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrementResponse>();
+}
+
 }

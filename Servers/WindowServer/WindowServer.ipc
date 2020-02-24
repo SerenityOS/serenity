@@ -83,4 +83,6 @@ endpoint WindowServer = 2
     StartDrag(String text, String data_type, String data, i32 bitmap_id, Gfx::Size bitmap_size) => (bool started)
 
     SetSystemTheme(String theme_path, String theme_name) => (bool success)
+
+    SetWindowBaseSizeAndSizeIncrement(i32 window_id, Gfx::Size base_size, Gfx::Size size_increment) => ()
 }
