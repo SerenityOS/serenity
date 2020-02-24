@@ -90,11 +90,7 @@ NonnullOwnPtr<Region> Region::clone()
     if (m_shared || vmobject().is_inode()) {
         ASSERT(!m_stack);
 #ifdef MM_DEBUG
-        dbgprintf("%s<%u> Region::clone(): sharing %s (V%p)\n",
-            Process::current->name().characters(),
-            Process::current->pid(),
-            m_name.characters(),
-            vaddr().get());
+        dbg() << Process::current->name().characters() << "<" << Process::current->pid() << "> Region::clone(): sharing " << m_name.characters() << " (V" << String::format("%p", vaddr().get()) << ")";
 #endif
         // Create a new region backed by the same VMObject.
         auto region = Region::create_user_accessible(m_range, m_vmobject, m_offset_in_vmobject, m_name, m_access);
@@ -104,14 +100,12 @@ NonnullOwnPtr<Region> Region::clone()
     }
 
 #ifdef MM_DEBUG
-    dbgprintf("%s<%u> Region::clone(): cowing %s (V%p)\n",
-        Process::current->name().characters(),
-        Process::current->pid(),
-        m_name.characters(),
-        vaddr().get());
+    // FIXME: If m_name.characters() is returning null pointer, the debug message will lead to a crash
+    // For now we use String::format() to mitigate that.
+    dbg() << Process::current->name().characters() << "<" << Process::current->pid() << "> Region::clone(): cowing " << String::format("%s", m_name.characters()) << " (V" << String::format("%p", vaddr().get()) << ")",
 #endif
-    // Set up a COW region. The parent (this) region becomes COW as well!
-    ensure_cow_map().fill(true);
+        // Set up a COW region. The parent (this) region becomes COW as well!
+        ensure_cow_map().fill(true);
     remap();
     auto clone_region = Region::create_user_accessible(m_range, m_vmobject->clone(), m_offset_in_vmobject, m_name, m_access);
     clone_region->ensure_cow_map();
@@ -130,7 +124,7 @@ bool Region::commit()
 {
     InterruptDisabler disabler;
 #ifdef MM_DEBUG
-    dbgprintf("MM: commit %u pages in Region %p (VMO=%p) at V%p\n", vmobject().page_count(), this, &vmobject(), vaddr().get());
+    dbg() << "MM: commit " << vmobject().page_count() << " pages in Region " << this << " (VMO=" << &vmobject() << ") at V" << String::format("%p", vaddr().get());
 #endif
     for (size_t i = 0; i < page_count(); ++i) {
         if (!commit(i))
@@ -144,7 +138,7 @@ bool Region::commit(size_t page_index)
     ASSERT(vmobject().is_anonymous() || vmobject().is_purgeable());
     InterruptDisabler disabler;
 #ifdef MM_DEBUG
-    dbgprintf("MM: commit single page (%zu) in Region %p (VMO=%p) at V%p\n", page_index, vmobject().page_count(), this, &vmobject(), vaddr().get());
+    dbg() << "MM: commit single page" << String::format("%zu", page_index, vmobject().page_count()) << "in Region " << this << " (VMO=" << &vmobject() << ") at V" << String::format("%p", vaddr().get());
 #endif
     auto& vmobject_physical_page_entry = vmobject().physical_pages()[first_page_index() + page_index];
     if (!vmobject_physical_page_entry.is_null() && !vmobject_physical_page_entry->is_shared_zero_page())
@@ -300,7 +294,7 @@ void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
         MM.flush_tlb(vaddr);
 #ifdef MM_DEBUG
         auto& physical_page = vmobject().physical_pages()[first_page_index() + i];
-        dbgprintf("MM: >> Unmapped V%p => P%p <<\n", vaddr.get(), physical_page ? physical_page->paddr().get() : 0);
+        dbg() << "MM: >> Unmapped V" << String::format("%p", vaddr.get()) << " => P" << String::format("%p", physical_page ? physical_page->paddr().get() : 0) << " <<";
 #endif
     }
     if (deallocate_range == ShouldDeallocateVirtualMemoryRange::Yes)
@@ -319,7 +313,7 @@ void Region::map(PageDirectory& page_directory)
     set_page_directory(page_directory);
     InterruptDisabler disabler;
 #ifdef MM_DEBUG
-    dbgprintf("MM: Region::map() will map VMO pages %u - %u (VMO page count: %u)\n", first_page_index(), last_page_index(), vmobject().page_count());
+    dbg() << "MM: Region::map() will map VMO pages " << first_page_index() << " - " << last_page_index() << " (VMO page count: " << vmobject().page_count() << ")";
 #endif
     for (size_t page_index = 0; page_index < page_count(); ++page_index)
         map_individual_page_impl(page_index);
@@ -336,13 +330,13 @@ PageFaultResponse Region::handle_fault(const PageFault& fault)
     auto page_index_in_region = page_index_from_address(fault.vaddr());
     if (fault.type() == PageFault::Type::PageNotPresent) {
         if (fault.is_read() && !is_readable()) {
-            dbgprintf("NP(non-readable) fault in Region{%p}[%u]\n", this, page_index_in_region);
+            dbg() << "NP(non-readable) fault in Region{" << this << "}[" << page_index_in_region << "]";
             return PageFaultResponse::ShouldCrash;
         }
 
         if (vmobject().is_inode()) {
 #ifdef PAGE_FAULT_DEBUG
-            dbgprintf("NP(inode) fault in Region{%p}[%u]\n", this, page_index_in_region);
+            dbg() << "NP(inode) fault in Region{" << this << "}[" << page_index_in_region << "]";
 #endif
             return handle_inode_fault(page_index_in_region);
         }
@@ -360,11 +354,11 @@ PageFaultResponse Region::handle_fault(const PageFault& fault)
     ASSERT(fault.type() == PageFault::Type::ProtectionViolation);
     if (fault.access() == PageFault::Access::Write && is_writable() && should_cow(page_index_in_region)) {
 #ifdef PAGE_FAULT_DEBUG
-        dbgprintf("PV(cow) fault in Region{%p}[%u]\n", this, page_index_in_region);
+        dbg() << "PV(cow) fault in Region{" << this << "}[" << page_index_in_region << "]";
 #endif
         if (vmobject().physical_pages()[first_page_index() + page_index_in_region]->is_shared_zero_page()) {
 #ifdef PAGE_FAULT_DEBUG
-            dbgprintf("NP(zero) fault in Region{%p}[%u]\n", this, page_index_in_region);
+            dbg() << "NP(zero) fault in Region{" << this << "}[" << page_index_in_region << "]";
 #endif
             return handle_zero_fault(page_index_in_region);
         }
@@ -387,7 +381,7 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
 
     if (!vmobject_physical_page_entry.is_null() && !vmobject_physical_page_entry->is_shared_zero_page()) {
 #ifdef PAGE_FAULT_DEBUG
-        dbgprintf("MM: zero_page() but page already present. Fine with me!\n");
+        dbg() << "MM: zero_page() but page already present. Fine with me!";
 #endif
         remap_page(page_index_in_region);
         return PageFaultResponse::Continue;
@@ -403,7 +397,8 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
     }
 
 #ifdef PAGE_FAULT_DEBUG
-    dbgprintf("      >> ZERO P%p\n", physical_page->paddr().get());
+    dbg() << "      >> ZERO P\n"
+          << String::format("%p", physical_page->paddr().get());
 #endif
     vmobject_physical_page_entry = move(physical_page);
     remap_page(page_index_in_region);
@@ -416,7 +411,7 @@ PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
     auto& vmobject_physical_page_entry = vmobject().physical_pages()[first_page_index() + page_index_in_region];
     if (vmobject_physical_page_entry->ref_count() == 1) {
 #ifdef PAGE_FAULT_DEBUG
-        dbgprintf("    >> It's a COW page but nobody is sharing it anymore. Remap r/w\n");
+        dbg() << "    >> It's a COW page but nobody is sharing it anymore. Remap r/w";
 #endif
         set_should_cow(page_index_in_region, false);
         remap_page(page_index_in_region);
@@ -427,7 +422,7 @@ PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
         Thread::current->did_cow_fault();
 
 #ifdef PAGE_FAULT_DEBUG
-    dbgprintf("    >> It's a COW page and it's time to COW!\n");
+    dbg() << "    >> It's a COW page and it's time to COW!";
 #endif
     auto physical_page_to_copy = move(vmobject_physical_page_entry);
     auto physical_page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No);
@@ -438,7 +433,7 @@ PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
     u8* dest_ptr = MM.quickmap_page(*physical_page);
     const u8* src_ptr = vaddr().offset(page_index_in_region * PAGE_SIZE).as_ptr();
 #ifdef PAGE_FAULT_DEBUG
-    dbgprintf("      >> COW P%p <- P%p\n", physical_page->paddr().get(), physical_page_to_copy->paddr().get());
+    dbg() << "      >> COW P" << String::format("%p", physical_page->paddr().get()) << " <- P" << String::format("%p", physical_page_to_copy->paddr().get());
 #endif
     copy_from_user(dest_ptr, src_ptr, PAGE_SIZE);
     vmobject_physical_page_entry = move(physical_page);
@@ -466,7 +461,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
 
     if (!vmobject_physical_page_entry.is_null()) {
 #ifdef PAGE_FAULT_DEBUG
-        dbgprintf("MM: page_in_from_inode() but page already present. Fine with me!\n");
+        dbg() << ("MM: page_in_from_inode() but page already present. Fine with me!");
 #endif
         remap_page(page_index_in_region);
         return PageFaultResponse::Continue;
@@ -476,7 +471,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
         Thread::current->did_inode_fault();
 
 #ifdef MM_DEBUG
-    dbgprintf("MM: page_in_from_inode ready to read from inode\n");
+    dbg() << "MM: page_in_from_inode ready to read from inode";
 #endif
     sti();
     u8 page_buffer[PAGE_SIZE];
