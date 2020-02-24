@@ -1130,14 +1130,14 @@ Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(GroupIndex preferred_group_in
         auto block_bitmap = Bitmap::wrap(cached_bitmap.buffer.data(), blocks_in_group);
 
         BlockIndex first_block_in_group = (group_index - 1) * blocks_per_group() + first_block_index();
-        int free_region_size = 0;
-        int first_unset_bit_index = block_bitmap.find_longest_range_of_unset_bits(count - blocks.size(), free_region_size);
-        ASSERT(first_unset_bit_index != -1);
+        size_t free_region_size = 0;
+        auto first_unset_bit_index = block_bitmap.find_longest_range_of_unset_bits(count - blocks.size(), free_region_size);
+        ASSERT(first_unset_bit_index.has_value());
 #ifdef EXT2_DEBUG
         dbg() << "Ext2FS: allocating free region of size: " << free_region_size << "[" << group_index << "]";
 #endif
-        for (int i = 0; i < free_region_size; ++i) {
-            BlockIndex block_index = (unsigned)(first_unset_bit_index + i) + first_block_in_group;
+        for (size_t i = 0; i < free_region_size; ++i) {
+            BlockIndex block_index = (first_unset_bit_index.value() + i) + first_block_in_group;
             set_block_allocation_state(block_index, true);
             blocks.unchecked_append(block_index);
 #ifdef EXT2_DEBUG
@@ -1198,7 +1198,7 @@ unsigned Ext2FS::find_a_free_inode(GroupIndex preferred_group, off_t expected_si
 
     auto& cached_bitmap = get_bitmap_block(bgd.bg_inode_bitmap);
     auto inode_bitmap = Bitmap::wrap(cached_bitmap.buffer.data(), inodes_in_group);
-    for (int i = 0; i < inode_bitmap.size(); ++i) {
+    for (size_t i = 0; i < inode_bitmap.size(); ++i) {
         if (inode_bitmap.get(i))
             continue;
         first_free_inode_in_group = first_inode_in_group + i;

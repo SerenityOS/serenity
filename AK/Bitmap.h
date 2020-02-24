@@ -28,6 +28,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/Noncopyable.h>
+#include <AK/Optional.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #include <AK/kmalloc.h>
@@ -79,13 +80,13 @@ public:
         m_data = nullptr;
     }
 
-    int size() const { return m_size; }
-    bool get(int index) const
+    size_t size() const { return m_size; }
+    bool get(size_t index) const
     {
         ASSERT(index < m_size);
         return 0 != (m_data[index / 8] & (1u << (index % 8)));
     }
-    void set(int index, bool value) const
+    void set(size_t index, bool value) const
     {
         ASSERT(index < m_size);
         if (value)
@@ -97,7 +98,7 @@ public:
     u8* data() { return m_data; }
     const u8* data() const { return m_data; }
 
-    void grow(int size, bool default_value)
+    void grow(size_t size, bool default_value)
     {
         ASSERT(size > m_size);
 
@@ -129,27 +130,28 @@ public:
         memset(m_data, value ? 0xff : 0x00, size_in_bytes());
     }
 
-    int find_first_set() const
+    Optional<size_t> find_first_set() const
     {
-        int i = 0;
+        size_t i = 0;
         while (i < m_size / 8 && m_data[i] == 0x00)
             i++;
 
-        int j = 0;
-        for (j = i * 8; j < m_size; j++)
+        size_t j = 0;
+        for (j = i * 8; j < m_size; j++) {
             if (get(j))
                 return j;
+        }
 
-        return -1;
+        return {};
     }
 
-    int find_first_unset() const
+    Optional<size_t> find_first_unset() const
     {
-        int i = 0;
+        size_t i = 0;
         while (i < m_size / 8 && m_data[i] == 0xff)
             i++;
 
-        int j = 0;
+        size_t j = 0;
         for (j = i * 8; j < m_size; j++)
             if (!get(j))
                 return j;
@@ -157,20 +159,20 @@ public:
         return -1;
     }
 
-    int find_longest_range_of_unset_bits(int max_length, int& found_range_size) const
+    Optional<size_t> find_longest_range_of_unset_bits(size_t max_length, size_t& found_range_size) const
     {
-        int first_index = find_first_unset();
-        if (first_index == -1)
-            return -1;
+        auto first_index = find_first_unset();
+        if (!first_index.has_value())
+            return {};
 
-        int free_region_start = first_index;
-        int free_region_size = 1;
+        size_t free_region_start = first_index;
+        size_t free_region_size = 1;
 
-        int max_region_start = free_region_start;
-        int max_region_size = free_region_size;
+        size_t max_region_start = free_region_start;
+        size_t max_region_size = free_region_size;
 
         // Let's try and find the best fit possible
-        for (int j = first_index + 1; j < m_size && free_region_size < max_length; j++) {
+        for (size_t j = first_index + 1; j < m_size && free_region_size < max_length; j++) {
             if (!get(j)) {
                 if (free_region_size == 0)
                     free_region_start = j;
@@ -204,7 +206,7 @@ public:
         m_data = nullptr;
     }
 
-    explicit Bitmap(int size, bool default_value)
+    explicit Bitmap(size_t size, bool default_value)
         : m_size(size)
         , m_owned(true)
     {
@@ -221,10 +223,10 @@ public:
     }
 
 private:
-    int size_in_bytes() const { return ceil_div(m_size, 8); }
+    size_t size_in_bytes() const { return ceil_div(m_size, 8); }
 
     u8* m_data { nullptr };
-    int m_size { 0 };
+    size_t m_size { 0 };
     bool m_owned { false };
 };
 
