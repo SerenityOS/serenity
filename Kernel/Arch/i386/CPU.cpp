@@ -245,15 +245,7 @@ void page_fault_handler(RegisterState regs)
 
 #ifdef PAGE_FAULT_DEBUG
     u32 fault_page_directory = read_cr3();
-    dbgprintf("%s(%u): ring%u %s page fault in PD=%x, %s%s V%08x\n",
-        current ? Process::current->name().characters() : "(none)",
-        current ? Process::current->pid() : 0,
-        regs.cs & 3,
-        regs.exception_code & 1 ? "PV" : "NP",
-        fault_page_directory,
-        regs.exception_code & 8 ? "reserved-bit " : "",
-        regs.exception_code & 2 ? "write" : "read",
-        fault_address);
+    dbg() << (current ? Process::current->name().characters() : "(none)") << "(" << (current ? Process::current->pid() : 0) << "): ring" << (regs.cs & 3) << " " << (regs.exception_code & 1 ? "PV" : "NP") << " page fault in PD=" << String::format("%x", fault_page_directory) << ", " << (regs.exception_code & 8 ? "reserved-bit " : "") << regs.exception_code & 2 ? "write" : "read" <<" V" << String::format("%08x", fault_address);
 #endif
 
 #ifdef PAGE_FAULT_DEBUG
@@ -262,7 +254,7 @@ void page_fault_handler(RegisterState regs)
 
     bool faulted_in_userspace = (regs.cs & 3) == 3;
     if (faulted_in_userspace && !MM.validate_user_stack(*Process::current, VirtualAddress(regs.userspace_esp))) {
-        dbgprintf("Invalid stack pointer: %p\n", regs.userspace_esp);
+        dbg() << "Invalid stack pointer: " << String::format("%p", regs.userspace_esp);
         handle_crash(regs, "Bad stack on page fault", SIGSTKFLT);
         ASSERT_NOT_REACHED();
     }
@@ -309,7 +301,7 @@ void page_fault_handler(RegisterState regs)
         handle_crash(regs, "Page Fault", SIGSEGV);
     } else if (response == PageFaultResponse::Continue) {
 #ifdef PAGE_FAULT_DEBUG
-        dbgprintf("Continuing after resolved page fault\n");
+        dbg() << "Continuing after resolved page fault";
 #endif
     } else {
         ASSERT_NOT_REACHED();
@@ -674,7 +666,7 @@ void handle_interrupt(RegisterState regs)
         s_interrupt_handler[irq]->increment_invoking_counter();
         s_interrupt_handler[irq]->eoi();
     } else {
-        dbgprintf("No IRQ %d Handler installed!\n", irq);
+        dbg() << "No IRQ " << irq << " Handler installed!";
         hang();
     }
     --g_in_irq;

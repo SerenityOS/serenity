@@ -526,7 +526,7 @@ public:
         SplitQword end;
         read_tsc(end.lsw, end.msw);
         uint64_t diff = end.qw - m_start.qw;
-        dbgprintf("Stopwatch(%s): %Q ticks\n", m_name, diff);
+        dbg() << "Stopwatch(" << m_name << "): " << diff << " ticks";
     }
 
 private:
