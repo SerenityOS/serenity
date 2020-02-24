@@ -81,6 +81,11 @@ Model::ColumnMetadata SortingProxyModel::column_metadata(int index) const
 
 Variant SortingProxyModel::data(const ModelIndex& index, Role role) const
 {
+    auto target_index = map_to_target(index);
+    if (!target_index.is_valid()) {
+        dbg() << "BUG! SortingProxyModel: Unable to convert " << index << " to target";
+        return {};
+    }
     return target().data(map_to_target(index), role);
 }
 
