@@ -79,11 +79,11 @@ private:
         all_actions().resource().enqueue([this] {
             m_result = m_action();
             if (m_on_complete) {
-                Core::EventLoop::main().post_event(*this, make<Core::DeferredInvocationEvent>([this](auto&) {
+                Core::EventLoop::current().post_event(*this, make<Core::DeferredInvocationEvent>([this](auto&) {
                     m_on_complete(m_result.release_value());
                     this->unref();
                 }));
-                Core::EventLoop::main().wake();
+                Core::EventLoop::wake();
             } else
                 this->unref();
         });
