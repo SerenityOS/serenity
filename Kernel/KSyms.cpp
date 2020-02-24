@@ -144,7 +144,7 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
         for (u32* stack_ptr = (u32*)ebp;
              (Process::current ? Process::current->validate_read_from_kernel(VirtualAddress(stack_ptr), sizeof(void*) * 2) : 1); stack_ptr = (u32*)*stack_ptr) {
             u32 retaddr = stack_ptr[1];
-            dbgprintf("%x (next: %x)\n", retaddr, stack_ptr ? (u32*)*stack_ptr : 0);
+            dbg() << String::format("%x", retaddr) << " (next: " << String::format("%x", (stack_ptr ? (u32*)*stack_ptr : 0)) << ")";
         }
         return;
     }
@@ -155,17 +155,17 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
             break;
         if (!symbol.ksym) {
             if (Process::current && Process::current->elf_loader() && Process::current->elf_loader()->has_symbols()) {
-                dbgprintf("%p  %s\n", symbol.address, Process::current->elf_loader()->symbolicate(symbol.address).characters());
+                dbg() << String::format("%p", symbol.address) << "  " << Process::current->elf_loader()->symbolicate(symbol.address).characters();
             } else {
-                dbgprintf("%p (no ELF symbols for process)\n", symbol.address);
+                dbg() << String::format("%p", symbol.address) << " (no ELF symbols for process)";
             }
             continue;
         }
         unsigned offset = symbol.address - symbol.ksym->address;
         if (symbol.ksym->address == ksym_highest_address && offset > 4096)
-            dbgprintf("%p\n", symbol.address);
+            dbg() << String::format("%p", symbol.address);
         else
-            dbgprintf("%p  %s +%u\n", symbol.address, demangle(symbol.ksym->name).characters(), offset);
+            dbg() << String::format("%p", symbol.address) << "  " << demangle(symbol.ksym->name).characters() << " +" << offset;
     }
 }
 
