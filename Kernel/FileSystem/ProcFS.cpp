@@ -124,7 +124,7 @@ enum ProcFileType {
 static inline pid_t to_pid(const InodeIdentifier& identifier)
 {
 #ifdef PROCFS_DEBUG
-    dbgprintf("to_pid, index=%08x -> %u\n", identifier.index(), identifier.index() >> 16);
+    dbg() << "to_pid, index=" << String::format("%08x", identifier.index()) << " -> " << (identifier.index() >> 16);
 #endif
     return identifier.index() >> 16u;
 }
@@ -1092,7 +1092,7 @@ InodeIdentifier ProcFS::root_inode() const
 RefPtr<Inode> ProcFS::get_inode(InodeIdentifier inode_id) const
 {
 #ifdef PROCFS_DEBUG
-    dbgprintf("ProcFS::get_inode(%u)\n", inode_id.index());
+    dbg() << "ProcFS::get_inode(" << inode_id.index() << ")";
 #endif
     if (inode_id == root_inode())
         return m_root_inode;
@@ -1121,7 +1121,7 @@ ProcFSInode::~ProcFSInode()
 InodeMetadata ProcFSInode::metadata() const
 {
 #ifdef PROCFS_DEBUG
-    dbgprintf("ProcFSInode::metadata(%u)\n", index());
+    dbg() << "ProcFSInode::metadata(" << index() << ")";
 #endif
     InodeMetadata metadata;
     metadata.inode = identifier();
@@ -1133,7 +1133,7 @@ InodeMetadata ProcFSInode::metadata() const
     auto proc_file_type = to_proc_file_type(identifier());
 
 #ifdef PROCFS_DEBUG
-    dbgprintf("  -> pid: %d, fi: %u, pdi: %u\n", pid, proc_file_type, proc_parent_directory);
+    dbg() << "  -> pid: " << pid << ", fi: " << proc_file_type << ", pdi: " << proc_parent_directory;
 #endif
 
     if (is_process_related_file(identifier())) {
@@ -1179,7 +1179,7 @@ InodeMetadata ProcFSInode::metadata() const
     }
 
 #ifdef PROCFS_DEBUG
-    dbgprintf("Returning mode %o\n", metadata.mode);
+    dbg() << "Returning mode " << String::format("%o", metadata.mode);
 #endif
     return metadata;
 }
@@ -1187,7 +1187,7 @@ InodeMetadata ProcFSInode::metadata() const
 ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDescription* description) const
 {
 #ifdef PROCFS_DEBUG
-    dbgprintf("ProcFS: read_bytes %u\n", index());
+    dbg() << "ProcFS: read_bytes " << index();
 #endif
     ASSERT(offset >= 0);
     ASSERT(buffer);
@@ -1255,7 +1255,7 @@ InodeIdentifier ProcFS::ProcFSDirectoryEntry::identifier(unsigned fsid) const
 bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)> callback) const
 {
 #ifdef PROCFS_DEBUG
-    dbgprintf("ProcFS: traverse_as_directory %u\n", index());
+    dbg() << "ProcFS: traverse_as_directory " << index();
 #endif
 
     if (!Kernel::is_directory(identifier()))
