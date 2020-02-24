@@ -56,6 +56,10 @@ ScrollableWidget::~ScrollableWidget()
 
 void ScrollableWidget::mousewheel_event(MouseEvent& event)
 {
+    if (!m_scrollbars_enabled) {
+        event.ignore();
+        return;
+    }
     // FIXME: The wheel delta multiplier should probably come from... somewhere?
     vertical_scrollbar().set_value(vertical_scrollbar().value() + event.wheel_delta() * 20);
 }
