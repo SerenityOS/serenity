@@ -490,7 +490,7 @@ void Field::set_chord_preview(Square& square, bool chord_preview)
     });
 }
 
-void Field::set_field_size(int rows, int columns, int mine_count)
+void Field::set_field_size(int rows, int columns, size_t mine_count)
 {
     if (m_rows == rows && m_columns == columns && m_mine_count == mine_count)
         return;

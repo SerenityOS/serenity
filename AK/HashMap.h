@@ -50,8 +50,8 @@ public:
     HashMap() {}
 
     bool is_empty() const { return m_table.is_empty(); }
-    int size() const { return m_table.size(); }
-    int capacity() const { return m_table.capacity(); }
+    size_t size() const { return m_table.size(); }
+    size_t capacity() const { return m_table.capacity(); }
     void clear() { m_table.clear(); }
 
     void set(const K& key, const V& value) { m_table.set({ key, value }); }
@@ -92,7 +92,7 @@ public:
         return m_table.find(hash, finder);
     }
 
-    void ensure_capacity(int capacity) { m_table.ensure_capacity(capacity); }
+    void ensure_capacity(size_t capacity) { m_table.ensure_capacity(capacity); }
 
     Optional<typename Traits<V>::PeekType> get(const K& key) const
     {
