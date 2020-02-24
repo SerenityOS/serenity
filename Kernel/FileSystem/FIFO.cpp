@@ -120,11 +120,11 @@ ssize_t FIFO::read(FileDescription&, u8* buffer, ssize_t size)
     if (!m_writers && m_buffer.is_empty())
         return 0;
 #ifdef FIFO_DEBUG
-    dbgprintf("fifo: read(%u)\n", size);
+    dbg() << "fifo: read(" << size << ")\n";
 #endif
     ssize_t nread = m_buffer.read(buffer, size);
 #ifdef FIFO_DEBUG
-    dbgprintf("   -> read (%c) %u\n", buffer[0], nread);
+    dbg() << "   -> read (" << String::format("%c", buffer[0]) << ") " << nread;
 #endif
     return nread;
 }
@@ -136,7 +136,7 @@ ssize_t FIFO::write(FileDescription&, const u8* buffer, ssize_t size)
         return -EPIPE;
     }
 #ifdef FIFO_DEBUG
-    dbgprintf("fifo: write(%p, %u)\n", buffer, size);
+    dbg() << "fifo: write(" << String::format("%p", buffer) << ", " << size << ")";
 #endif
     return m_buffer.write(buffer, size);
 }
