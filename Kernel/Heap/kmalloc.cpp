@@ -116,7 +116,7 @@ void* kmalloc_impl(size_t size)
     ++g_kmalloc_call_count;
 
     if (g_dump_kmalloc_stacks && Kernel::ksyms_ready) {
-        dbgprintf("kmalloc(%u)\n", size);
+        dbg() << "kmalloc(" << size << ")";
         Kernel::dump_backtrace();
     }
 
