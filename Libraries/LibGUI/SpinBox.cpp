@@ -87,6 +87,25 @@ void SpinBox::set_range(int min, int max)
     update();
 }
 
+void SpinBox::keydown_event(KeyEvent& event)
+{
+    if (event.key() == KeyCode::Key_Up) {
+        set_value(m_value + 1);
+        return;
+    }
+    if (event.key() == KeyCode::Key_Down) {
+        set_value(m_value - 1);
+        return;
+    }
+
+    event.ignore();
+}
+
+void SpinBox::mousewheel_event(MouseEvent& event)
+{
+    set_value(m_value - event.wheel_delta());
+}
+
 void SpinBox::resize_event(ResizeEvent& event)
 {
     int frame_thickness = m_editor->frame_thickness();
