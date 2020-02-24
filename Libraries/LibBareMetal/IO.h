@@ -30,7 +30,6 @@
 
 #if defined(KERNEL)
 #    include <Kernel/Arch/i386/CPU.h>
-#    include <Kernel/Devices/VMWareBackdoor.h>
 #endif
 
 namespace IO {
