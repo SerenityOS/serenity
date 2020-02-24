@@ -343,7 +343,7 @@ bool Scheduler::pick_next()
                 auto name = process.name();
                 auto pid = process.pid();
                 auto exit_status = Process::reap(process);
-                dbgprintf("reaped unparented process %s(%u), exit status: %u\n", name.characters(), pid, exit_status);
+                dbg() << "reaped unparented process " << name.characters() << "(" << pid << "), exit status: " << exit_status.si_status;
             }
             return IterationDecision::Continue;
         }
@@ -374,7 +374,7 @@ bool Scheduler::pick_next()
         if (thread.dispatch_one_pending_signal() == ShouldUnblockThread::No)
             return IterationDecision::Continue;
         if (was_blocked) {
-            dbgprintf("Unblock %s(%u) due to signal\n", thread.process().name().characters(), thread.pid());
+            dbg() << "Unblock " << thread.process().name().characters() << "(" << thread.pid() << ") due to signal";
             ASSERT(thread.m_blocker != nullptr);
             thread.m_blocker->set_interrupted_by_signal();
             thread.unblock();
@@ -383,15 +383,15 @@ bool Scheduler::pick_next()
     });
 
 #ifdef SCHEDULER_RUNNABLE_DEBUG
-    dbgprintf("Non-runnables:\n");
+    dbg() << "Non-runnables:";
     Scheduler::for_each_nonrunnable([](Thread& thread) -> IterationDecision {
-        dbgprintf("  %-12s %s(%u:%u) @ %w:%x\n", thread.state_string(), thread.name().characters(), thread.pid(), thread.tid(), thread.tss().cs, thread.tss().eip);
+        dbg() << "  " << String::format("%-12s", thread.state_string()) << " " << thread.name().characters() << "(" << thread.pid() << ":" << thread.tid() << ") @ " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip);
         return IterationDecision::Continue;
     });
 
-    dbgprintf("Runnables:\n");
+    dbg() << "Runnables:";
     Scheduler::for_each_runnable([](Thread& thread) -> IterationDecision {
-        dbgprintf("  %3u/%2u %-12s %s(%u:%u) @ %w:%x\n", thread.effective_priority(), thread.priority(), thread.state_string(), thread.name().characters(), thread.pid(), thread.tid(), thread.tss().cs, thread.tss().eip);
+        dbg() << "  " << String::format("%3u", thread.effective_priority()) << "/" << String::format("%2u", thread.priority()) << " " << String::format("%-12s", thread.state_string()) << " " << thread.name().characters() << "(" << thread.pid() << ":" << thread.tid() << ") @ " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip);
         return IterationDecision::Continue;
     });
 #endif
@@ -426,12 +426,7 @@ bool Scheduler::pick_next()
         thread_to_schedule = g_colonel;
 
 #ifdef SCHEDULER_DEBUG
-    dbgprintf("switch to %s(%u:%u) @ %w:%x\n",
-        thread_to_schedule->name().characters(),
-        thread_to_schedule->pid(),
-        thread_to_schedule->tid(),
-        thread_to_schedule->tss().cs,
-        thread_to_schedule->tss().eip);
+    dbg() << "switch to " << thread_to_schedule->name().characters() << " (" << thread_to_schedule->pid() << ":" << thread_to_schedule->tid() << ") @ " << String::format("%w", thread_to_schedule->tss().cs) << ":" << String::format("%x", thread_to_schedule->tss().eip);
 #endif
 
     return context_switch(*thread_to_schedule);
@@ -450,7 +445,7 @@ bool Scheduler::donate_to(Thread* beneficiary, const char* reason)
 
     unsigned ticks_to_donate = min(ticks_left - 1, time_slice_for(*beneficiary));
 #ifdef SCHEDULER_DEBUG
-    dbgprintf("%s(%u:%u) donating %u ticks to %s(%u:%u), reason=%s\n", Process::current->name().characters(), Process::current->pid(), Thread::current->tid(), ticks_to_donate, beneficiary->process().name().characters(), beneficiary->pid(), beneficiary->tid(), reason);
+    dbg() << Process::current->name().characters() << "(" << Process::current->pid() << ":" << Thread::current->tid() << ") donating " << ticks_to_donate << " ticks to " << beneficiary->process().name().characters() << " (" << beneficiary->pid() << ":" << beneficiary->tid() << "), reason=" << reason;
 #endif
     context_switch(*beneficiary);
     beneficiary->set_ticks_left(ticks_to_donate);
@@ -501,11 +496,7 @@ bool Scheduler::context_switch(Thread& thread)
                      : "=m"(Thread::current->fpu_state()));
 
 #ifdef LOG_EVERY_CONTEXT_SWITCH
-        dbgprintf("Scheduler: %s(%u:%u) -> %s(%u:%u) [%u] %w:%x\n",
-            Process::current->name().characters(), Process::current->pid(), Thread::current->tid(),
-            thread.process().name().characters(), thread.process().pid(), thread.tid(),
-            thread.priority(),
-            thread.tss().cs, thread.tss().eip);
+        dbg() << "Scheduler: " << Process::current->name().characters() << " (" << Process::current->pid() << ":" << Thread::current->tid() << ") -> " << thread.process().name().characters() << "(" << thread.process().pid() << ":" << thread.tid() << ") [" << thread.priority() << "] " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip);
 #endif
     }
 
