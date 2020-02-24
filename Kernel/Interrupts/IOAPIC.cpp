@@ -186,11 +186,11 @@ void IOAPIC::configure_redirection_entry(int index, u8 interrupt_vector, u8 deli
     u32 redirection_entry2 = destination << 24;
     write_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET, redirection_entry1);
 #ifdef IOAPIC_DEBUG
-    dbgprintf("IOAPIC Value: 0x%x\n", read_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET));
+    dbg() << "IOAPIC Value: 0x" << String::format("%x", read_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET));
 #endif
     write_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET + 1, redirection_entry2);
 #ifdef IOAPIC_DEBUG
-    dbgprintf("IOAPIC Value: 0x%x\n", read_register((index << 1) + 0x11));
+    dbg() << "IOAPIC Value: 0x" << String::format("%x", read_register((index << 1) + 0x11));
 #endif
 }
 
@@ -293,7 +293,7 @@ void IOAPIC::write_register(u32 index, u32 value) const
     regs.select = index;
     regs.window = value;
 #ifdef IOAPIC_DEBUG
-    dbgprintf("IOAPIC Writing, Value 0x%x @ offset 0x%x\n", regs.window, regs.select);
+    dbg() << "IOAPIC Writing, Value 0x" << String::format("%x", regs.window) << " @ offset 0x" << String::format("%x", regs.select);
 #endif
 }
 u32 IOAPIC::read_register(u32 index) const
@@ -303,7 +303,7 @@ u32 IOAPIC::read_register(u32 index) const
     auto& regs = *(volatile ioapic_mmio_regs*)region->vaddr().offset(offset_in_page(&m_physical_access_registers)).as_ptr();
     regs.select = index;
 #ifdef IOAPIC_DEBUG
-    dbgprintf("IOAPIC Reading, Value 0x%x @ offset 0x%x\n", regs.window, regs.select);
+    dbg() << "IOAPIC Reading, Value 0x" << String::format("%x", regs.window) << " @ offset 0x" << String::format("%x", regs.select);
 #endif
     return regs.window;
 }
