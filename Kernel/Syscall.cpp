@@ -144,20 +144,20 @@ void syscall_handler(RegisterState& regs)
     auto& process = *Process::current;
 
     if (!MM.validate_user_stack(process, VirtualAddress(regs.userspace_esp))) {
-        dbgprintf("Invalid stack pointer: %p\n", regs.userspace_esp);
+        dbg() << "Invalid stack pointer: " << String::format("%p", regs.userspace_esp);
         handle_crash(regs, "Bad stack on syscall entry", SIGSTKFLT);
         ASSERT_NOT_REACHED();
     }
 
     auto* calling_region = MM.region_from_vaddr(process, VirtualAddress(regs.eip));
     if (!calling_region) {
-        dbgprintf("Syscall from %p which has no region\n", regs.eip);
+        dbg() << "Syscall from " << String::format("%p", regs.eip) << " which has no region";
         handle_crash(regs, "Syscall from unknown region", SIGSEGV);
         ASSERT_NOT_REACHED();
     }
 
     if (calling_region->is_writable()) {
-        dbgprintf("Syscall from writable memory at %p\n", regs.eip);
+        dbg() << "Syscall from writable memory at " << String::format("%p", regs.eip);
         handle_crash(regs, "Syscall from writable memory", SIGSEGV);
         ASSERT_NOT_REACHED();
     }
