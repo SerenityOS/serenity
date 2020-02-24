@@ -86,12 +86,13 @@ void* SharedBuffer::ref_for_process_and_get_address(Process& process)
 
     for (auto& ref : m_refs) {
         if (ref.pid == process.pid()) {
-            ref.count++;
-            m_total_refs++;
-            if (ref.region == nullptr) {
-                ref.region = process.allocate_region_with_vmobject(VirtualAddress(), size(), m_vmobject, 0, "SharedBuffer", PROT_READ | (m_writable ? PROT_WRITE : 0));
+            if (!ref.region) {
+                auto* region = process.allocate_region_with_vmobject(VirtualAddress(), size(), m_vmobject, 0, "SharedBuffer", PROT_READ | (m_writable ? PROT_WRITE : 0));
+                ref.region = region->make_weak_ptr();
                 ref.region->set_shared(true);
             }
+            ref.count++;
+            m_total_refs++;
             sanity_check("ref_for_process_and_get_address");
             return ref.region->vaddr().as_ptr();
         }

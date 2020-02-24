@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
+#include <AK/WeakPtr.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PurgeableVMObject.h>
 
@@ -42,7 +43,7 @@ private:
 
         pid_t pid;
         unsigned count { 0 };
-        Region* region { nullptr };
+        WeakPtr<Region> region;
     };
 
 public:
