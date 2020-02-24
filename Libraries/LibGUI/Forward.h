@@ -53,6 +53,7 @@ class Model;
 class ModelEditingDelegate;
 class ModelIndex;
 class MouseEvent;
+class MultiView;
 class PaintEvent;
 class Painter;
 class ResizeCorner;

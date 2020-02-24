@@ -40,6 +40,7 @@ OBJS = \
     Model.o \
     ModelIndex.o \
     ModelSelection.o \
+    MultiView.o \
     Notification.o \
     Painter.o \
     ProgressBar.o \
