@@ -145,7 +145,7 @@ void VMWareBackdoor::enable_absolute_vmmouse()
     InterruptDisabler disabler;
     if (!supported() || !detect_vmmouse())
         return;
-    dbgprintf("Enabling vmmouse, absolute mode\n");
+    dbg() << "Enabling vmmouse, absolute mode";
 
     VMWareCommand command;
 
