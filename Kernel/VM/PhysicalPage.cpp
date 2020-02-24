@@ -56,7 +56,7 @@ void PhysicalPage::return_to_freelist() &&
         MM.deallocate_user_physical_page(move(*this));
 
 #ifdef MM_DEBUG
-    dbgprintf("MM: P%x released to freelist\n", m_paddr.get());
+    dbg() << "MM: P" << String::format("%x", m_paddr.get()) << " released to freelist";
 #endif
 }
 
