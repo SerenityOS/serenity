@@ -48,7 +48,7 @@ SlavePTY::SlavePTY(MasterPTY& master, unsigned index)
 SlavePTY::~SlavePTY()
 {
 #ifdef SLAVEPTY_DEBUG
-    dbgprintf("~SlavePTY(%u)\n", m_index);
+    dbg() << "~SlavePTY(" << m_index << ")";
 #endif
     DevPtsFS::unregister_slave_pty(*this);
 }
