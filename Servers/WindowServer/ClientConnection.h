@@ -116,6 +116,7 @@ private:
     virtual OwnPtr<Messages::WindowServer::StartDragResponse> handle(const Messages::WindowServer::StartDrag&) override;
     virtual OwnPtr<Messages::WindowServer::SetSystemMenuResponse> handle(const Messages::WindowServer::SetSystemMenu&) override;
     virtual OwnPtr<Messages::WindowServer::SetSystemThemeResponse> handle(const Messages::WindowServer::SetSystemTheme&) override;
+    virtual OwnPtr<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrementResponse> handle(const Messages::WindowServer::SetWindowBaseSizeAndSizeIncrement&) override;
 
     HashMap<int, NonnullRefPtr<Window>> m_windows;
     HashMap<int, NonnullOwnPtr<MenuBar>> m_menubars;
