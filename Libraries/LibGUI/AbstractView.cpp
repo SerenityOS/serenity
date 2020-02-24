@@ -46,7 +46,7 @@ AbstractView::~AbstractView()
 {
 }
 
-void AbstractView::set_model(RefPtr<Model>&& model)
+void AbstractView::set_model(RefPtr<Model> model)
 {
     if (model == m_model)
         return;

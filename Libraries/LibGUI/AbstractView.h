@@ -37,7 +37,7 @@ class AbstractView : public ScrollableWidget {
     friend class Model;
 
 public:
-    void set_model(RefPtr<Model>&&);
+    void set_model(RefPtr<Model>);
     Model* model() { return m_model.ptr(); }
     const Model* model() const { return m_model.ptr(); }
 
