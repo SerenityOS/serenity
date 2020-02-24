@@ -52,14 +52,14 @@ public:
         , m_vmobject(PurgeableVMObject::create_with_size(size))
     {
 #ifdef SHARED_BUFFER_DEBUG
-        dbgprintf("Created shared buffer %d of size %d\n", m_shared_buffer_id, size);
+        dbg() << "Created shared buffer " << m_shared_buffer_id << " of size " << size;
 #endif
     }
 
     ~SharedBuffer()
     {
 #ifdef SHARED_BUFFER_DEBUG
-        dbgprintf("Destroyed shared buffer %d of size %d\n", m_shared_buffer_id, size());
+        dbg() << "Destroyed shared buffer " << m_shared_buffer_id << " of size " << size();
 #endif
     }
 
