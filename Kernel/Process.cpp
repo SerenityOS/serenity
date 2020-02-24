@@ -220,15 +220,15 @@ Region* Process::allocate_region_with_vmobject(const Range& range, NonnullRefPtr
     ASSERT(range.is_valid());
     size_t end_in_vmobject = offset_in_vmobject + range.size();
     if (end_in_vmobject <= offset_in_vmobject) {
-        dbgprintf("allocate_region_with_vmobject: Overflow (offset + size)\n");
+        dbg() << "allocate_region_with_vmobject: Overflow (offset + size)";
         return nullptr;
     }
     if (offset_in_vmobject >= vmobject->size()) {
-        dbgprintf("allocate_region_with_vmobject: Attempt to allocate a region with an offset past the end of its VMObject.\n");
+        dbg() << "allocate_region_with_vmobject: Attempt to allocate a region with an offset past the end of its VMObject.";
         return nullptr;
     }
     if (end_in_vmobject > vmobject->size()) {
-        dbgprintf("allocate_region_with_vmobject: Attempt to allocate a region with an end past the end of its VMObject.\n");
+        dbg() << "allocate_region_with_vmobject: Attempt to allocate a region with an end past the end of its VMObject.";
         return nullptr;
     }
     offset_in_vmobject &= PAGE_MASK;
@@ -710,7 +710,7 @@ pid_t Process::sys$fork(RegisterState& regs)
     child->m_umask = m_umask;
 
 #ifdef FORK_DEBUG
-    dbgprintf("fork: child=%p\n", child);
+    dbg() << "fork: child=" << child;
 #endif
 
     for (auto& region : m_regions) {
@@ -745,7 +745,7 @@ pid_t Process::sys$fork(RegisterState& regs)
     child_tss.ss = regs.userspace_ss;
 
 #ifdef FORK_DEBUG
-    dbgprintf("fork: child will begin executing at %w:%x with stack %w:%x, kstack %w:%x\n", child_tss.cs, child_tss.eip, child_tss.ss, child_tss.esp, child_tss.ss0, child_tss.esp0);
+    dbg() << "fork: child will begin executing at " << String::format("%w", child_tss.cs) << ":" << String::format("%x", child_tss.eip) << " with stack " << String::format("%w", child_tss.ss) << ":" << String::format("%x", child_tss.esp) << ", kstack " << String::format("%w", child_tss.ss0) << ":" << String::format("%x", child_tss.esp0);
 #endif
 
     {
@@ -840,7 +840,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     auto old_regions = move(m_regions);
     m_page_directory = PageDirectory::create_for_userspace(*this);
 #ifdef MM_DEBUG
-    dbgprintf("Process %u exec: PD=%x created\n", pid(), m_page_directory.ptr());
+    dbg() << "Process " << pid() << " exec: PD=" << m_page_directory.ptr() << " created";
 #endif
 
     MM.enter_process_paging_scope(*this);
@@ -1102,14 +1102,14 @@ KResultOr<NonnullRefPtr<FileDescription>> Process::find_elf_interpreter_for_exec
 
     auto elf_header = (Elf32_Ehdr*)first_page;
     if (!ELFImage::validate_elf_header(*elf_header, file_size)) {
-        dbgprintf("%s(%d) exec(%s): File has invalid ELF header\n", m_name.characters(), m_pid, path.characters());
+        dbg() << m_name.characters() << "(" << m_pid << ") exec(" << path.characters() << "): File has invalid ELF header";
         return KResult(-ENOEXEC);
     }
 
     // Not using KResultOr here because we'll want to do the same thing in userspace in the RTLD
     String interpreter_path;
     if (!ELFImage::validate_program_headers(*elf_header, file_size, (u8*)first_page, nread, interpreter_path)) {
-        dbgprintf("%s(%d) exec(%s): File has invalid ELF Program headers\n", m_name.characters(), m_pid, path.characters());
+        dbg() << m_name.characters() << "(" << m_pid << ") exec(" << path.characters() << "): File has invalid ELF Program headers";
         return KResult(-ENOEXEC);
     }
 
@@ -1118,10 +1118,10 @@ KResultOr<NonnullRefPtr<FileDescription>> Process::find_elf_interpreter_for_exec
         if (elf_header->e_type != ET_DYN)
             return KResult(-ENOEXEC);
 
-        dbgprintf("%s(%d) exec(%s): Using program interpreter %s\n", m_name.characters(), m_pid, path.characters(), interpreter_path.characters());
+        dbg() << m_name.characters() << "(" << m_pid << ") exec(" << path.characters() << "): Using program interpreter " << interpreter_path.characters();
         auto interp_result = VFS::the().open(interpreter_path, O_EXEC, 0, current_directory());
         if (interp_result.is_error()) {
-            dbgprintf("%s(%d) exec(%s): Unable to open program interpreter %s\n", m_name.characters(), m_pid, path.characters(), interpreter_path.characters());
+            dbg() << m_name.characters() << "(" << m_pid << ") exec(" << path.characters() << "): Unable to open program interpreter " << interpreter_path.characters();
             return interp_result.error();
         }
         auto interpreter_description = interp_result.value();
@@ -1142,20 +1142,19 @@ KResultOr<NonnullRefPtr<FileDescription>> Process::find_elf_interpreter_for_exec
 
         elf_header = (Elf32_Ehdr*)first_page;
         if (!ELFImage::validate_elf_header(*elf_header, interp_metadata.size)) {
-            dbgprintf("%s(%d) exec(%s): Interpreter (%s) has invalid ELF header\n", m_name.characters(), m_pid, path.characters(), interpreter_description->absolute_path().characters());
+            dbg() << m_name.characters() << "(" << m_pid << ") exec(" << path.characters() << "): Interpreter (" << interpreter_description->absolute_path().characters() << ") has invalid ELF header";
             return KResult(-ENOEXEC);
         }
 
         // Not using KResultOr here because we'll want to do the same thing in userspace in the RTLD
         String interpreter_interpreter_path;
         if (!ELFImage::validate_program_headers(*elf_header, interp_metadata.size, (u8*)first_page, nread, interpreter_interpreter_path)) {
-            dbgprintf("%s(%d) exec(%s): Interpreter (%s) has invalid ELF Program headers\n", m_name.characters(), m_pid, path.characters(), interpreter_description->absolute_path().characters());
+            dbg() << m_name.characters() << "(" << m_pid << ") exec(" << path.characters() << "): Interpreter (" << interpreter_description->absolute_path().characters() << ") has invalid ELF Program headers";
             return KResult(-ENOEXEC);
         }
 
         if (!interpreter_interpreter_path.is_empty()) {
-            dbgprintf("%s(%d) exec(%s): Interpreter (%s) has its own interpreter (%s)! No thank you!\n",
-                m_name.characters(), m_pid, path.characters(), interpreter_description->absolute_path().characters(), interpreter_interpreter_path.characters());
+            dbg() << m_name.characters() << "(" << m_pid << ") exec(" << path.characters() << "): Interpreter (" << interpreter_description->absolute_path().characters() << ") has its own interpreter (" << interpreter_interpreter_path.characters() << ")! No thank you!";
             return KResult(-ELOOP);
         }
 
@@ -1175,7 +1174,7 @@ KResultOr<NonnullRefPtr<FileDescription>> Process::find_elf_interpreter_for_exec
 int Process::exec(String path, Vector<String> arguments, Vector<String> environment, int recursion_depth)
 {
     if (recursion_depth > 2) {
-        dbgprintf("%s(%d) exec(%s): SHENANIGANS! recursed too far trying to find #! interpreter\n", m_name.characters(), m_pid, path.characters());
+        dbg() << m_name.characters() << "(" << m_pid << ") exec(" << path.characters() << "): SHENANIGANS! recursed too far trying to find #! interpreter";
         return -ELOOP;
     }
 
@@ -1374,7 +1373,7 @@ Process::Process(Thread*& first_thread, const String& name, uid_t uid, gid_t gid
 
     m_page_directory = PageDirectory::create_for_userspace(*this, fork_parent ? &fork_parent->page_directory().range_allocator() : nullptr);
 #ifdef MM_DEBUG
-    dbgprintf("Process %u ctor: PD=%x created\n", pid(), m_page_directory.ptr());
+    dbg() << "Process " << pid() << " ctor: PD=" << m_page_directory.ptr() << " created";
 #endif
 
     if (fork_parent) {
@@ -1523,11 +1522,11 @@ void Process::crash(int signal, u32 eip)
 
     if (eip >= 0xc0000000 && ksyms_ready) {
         auto* ksym = ksymbolicate(eip);
-        dbgprintf("\033[31;1m%p  %s +%d\033[0m\n", eip, ksym ? demangle(ksym->name).characters() : "(k?)", ksym ? eip - ksym->address : 0);
+        dbg() << "\033[31;1m" << String::format("%p", eip) << "  " << (ksym ? demangle(ksym->name).characters() : "(k?)") << " +" << (ksym ? eip - ksym->address : 0) << "\033[0m\n";
     } else if (m_elf_loader) {
-        dbgprintf("\033[31;1m%p  %s\033[0m\n", eip, m_elf_loader->symbolicate(eip).characters());
+        dbg() << "\033[31;1m" << String::format("%p", eip) << "  " << m_elf_loader->symbolicate(eip).characters() << "\033[0m\n";
     } else {
-        dbgprintf("\033[31;1m%p  (?)\033[0m\n", eip);
+        dbg() << "\033[31;1m" << String::format("%p", eip) << "  (?)\033[0m\n";
     }
     dump_backtrace();
 
@@ -1682,18 +1681,18 @@ ssize_t Process::do_write(FileDescription& description, const u8* data, int data
 
     if (description.should_append()) {
 #ifdef IO_DEBUG
-        dbgprintf("seeking to end (O_APPEND)\n");
+        dbg() << "seeking to end (O_APPEND)";
 #endif
         description.seek(0, SEEK_END);
     }
 
     while (nwritten < data_size) {
 #ifdef IO_DEBUG
-        dbgprintf("while %u < %u\n", nwritten, size);
+        dbg() << "while " << nwritten << " < " << size;
 #endif
         if (!description.can_write()) {
 #ifdef IO_DEBUG
-            dbgprintf("block write on %d\n", fd);
+            dbg() << "block write on " << description.absolute_path().characters();
 #endif
             if (Thread::current->block<Thread::WriteBlocker>(description) != Thread::BlockResult::WokeNormally) {
                 if (nwritten == 0)
@@ -1702,7 +1701,7 @@ ssize_t Process::do_write(FileDescription& description, const u8* data, int data
         }
         ssize_t rc = description.write(data + nwritten, data_size - nwritten);
 #ifdef IO_DEBUG
-        dbgprintf("   -> write returned %d\n", rc);
+        dbg() << "   -> write returned " << rc;
 #endif
         if (rc < 0) {
             // FIXME: Support returning partial nwritten with errno.
@@ -1726,7 +1725,7 @@ ssize_t Process::sys$write(int fd, const u8* data, ssize_t size)
     if (!validate_read(data, size))
         return -EFAULT;
 #ifdef DEBUG_IO
-    dbgprintf("%s(%u): sys$write(%d, %p, %u)\n", name().characters(), pid(), fd, data, size);
+    dbg() << name().characters() << "(" << pid() << "): sys$write(" << fd << ", " << (void*)const_cast<u8*>(data) << ", " << String::format("%u", size) << ")";
 #endif
     auto description = file_description(fd);
     if (!description)
@@ -1747,7 +1746,7 @@ ssize_t Process::sys$read(int fd, u8* buffer, ssize_t size)
     if (!validate_write(buffer, size))
         return -EFAULT;
 #ifdef DEBUG_IO
-    dbgprintf("%s(%u) sys$read(%d, %p, %u)\n", name().characters(), pid(), fd, buffer, size);
+    dbg() << name().characters() << "(" << pid() << ") sys$read(" << fd << ", " << (void*)buffer << ", " << size << ")";
 #endif
     auto description = file_description(fd);
     if (!description)
@@ -1772,7 +1771,7 @@ int Process::sys$close(int fd)
     REQUIRE_PROMISE(stdio);
     auto description = file_description(fd);
 #ifdef DEBUG_IO
-    dbgprintf("%s(%u) sys$close(%d) %p\n", name().characters(), pid(), fd, description.ptr());
+    dbg() << name().characters() << "(" << pid() << ") sys$close(" << fd << ") " << description.ptr();
 #endif
     if (!description)
         return -EBADF;
@@ -1812,7 +1811,7 @@ int Process::sys$fcntl(int fd, int cmd, u32 arg)
 {
     REQUIRE_PROMISE(stdio);
 #ifdef DEBUG_IO
-    dbgprintf("sys$fcntl: fd=%d, cmd=%d, arg=%u\n", fd, cmd, arg);
+    dbg() << "sys$fcntl: fd=" << fd << ", cmd=" << cmd << ", arg=" << arg;
 #endif
     auto description = file_description(fd);
     if (!description)
@@ -2837,7 +2836,7 @@ int Process::sys$select(const Syscall::SC_select_params* params)
         return error;
 
 #if defined(DEBUG_IO) || defined(DEBUG_POLL_SELECT)
-    dbgprintf("%s<%u> selecting on (read:%u, write:%u), timeout=%p\n", name().characters(), pid(), rfds.size(), wfds.size(), timeout);
+    dbg() << name().characters() << "<" << pid() << "> selecting on (read:" << rfds.size() << ", write:" << wfds.size() << "), timeout=" << timeout;
 #endif
 
     if (!timeout || select_has_timeout) {
@@ -2898,7 +2897,7 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
     }
 
 #if defined(DEBUG_IO) || defined(DEBUG_POLL_SELECT)
-    dbgprintf("%s<%u> polling on (read:%u, write:%u), timeout=%d\n", name().characters(), pid(), rfds.size(), wfds.size(), timeout);
+    dbg() << name().characters() << "<" << pid() << "> polling on (read:" << rfds.size() << ", write:" << wfds.size() << "), timeout=" << timeout;
 #endif
 
     if (has_timeout || timeout < 0) {
@@ -3575,7 +3574,7 @@ int Process::sys$create_shared_buffer(int size, void** buffer)
     copy_to_user(buffer, &address);
     ASSERT((int)shared_buffer->size() >= size);
 #ifdef SHARED_BUFFER_DEBUG
-    kprintf("%s(%u): Created shared buffer %d @ %p (%u bytes, vmobject is %u)\n", name().characters(), pid(), shared_buffer_id, *buffer, size, shared_buffer->size());
+    kprintf("%s(%u): Created shared buffer %d @ %p (%u bytes, vmobject is %u)\n", name().characters(), pid(), shared_buffer_id, buffer, size, shared_buffer->size());
 #endif
     shared_buffers().resource().set(shared_buffer_id, move(shared_buffer));
 
@@ -3711,7 +3710,7 @@ void Process::terminate_due_to_signal(u8 signal)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(signal < 32);
-    dbgprintf("terminate_due_to_signal %s(%u) <- %u\n", name().characters(), pid(), signal);
+    dbg() << "terminate_due_to_signal " << name().characters() << "(" << pid() << ") <- " << signal;
     m_termination_status = 0;
     m_termination_signal = signal;
     die();
@@ -4004,11 +4003,11 @@ int Process::sys$halt()
 
     REQUIRE_NO_PROMISES;
 
-    dbgprintf("acquiring FS locks...\n");
+    dbg() << "acquiring FS locks...";
     FS::lock_all();
-    dbgprintf("syncing mounted filesystems...\n");
+    dbg() << "syncing mounted filesystems...";
     FS::sync();
-    dbgprintf("attempting system shutdown...\n");
+    dbg() << "attempting system shutdown...";
     IO::out16(0x604, 0x2000);
 
     return ESUCCESS;
@@ -4021,11 +4020,11 @@ int Process::sys$reboot()
 
     REQUIRE_NO_PROMISES;
 
-    dbgprintf("acquiring FS locks...\n");
+    dbg() << "acquiring FS locks...";
     FS::lock_all();
-    dbgprintf("syncing mounted filesystems...\n");
+    dbg() << "syncing mounted filesystems...";
     FS::sync();
-    dbgprintf("attempting reboot via KB Controller...\n");
+    dbg() << "attempting reboot via KB Controller...";
     IO::out8(0x64, 0xFE);
 
     return ESUCCESS;
