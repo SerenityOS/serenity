@@ -952,6 +952,8 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
     m_futex_queues.clear();
 
+    m_region_lookup_cache = {};
+
     disown_all_shared_buffers();
 
     for (int i = 0; i < m_fds.size(); ++i) {
