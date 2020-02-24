@@ -386,6 +386,7 @@ void TreeView::keydown_event(KeyEvent& event)
         });
         if (found_index.is_valid()) {
             selection().set(found_index);
+            scroll_into_view(selection().first(), Orientation::Vertical);
             update();
         }
         return;
@@ -401,8 +402,11 @@ void TreeView::keydown_event(KeyEvent& event)
             previous_index = index;
             return IterationDecision::Continue;
         });
-        if (found_index.is_valid())
+        if (found_index.is_valid()) {
             selection().set(found_index);
+            scroll_into_view(selection().first(), Orientation::Vertical);
+            update();
+        }
         return;
     }
 
@@ -423,6 +427,7 @@ void TreeView::keydown_event(KeyEvent& event)
         }
         if (cursor_index.is_valid() && cursor_index.parent().is_valid()) {
             selection().set(cursor_index.parent());
+            scroll_into_view(selection().first(), Orientation::Vertical);
             return;
         }
     }
@@ -436,6 +441,7 @@ void TreeView::keydown_event(KeyEvent& event)
             }
 
             selection().set(model()->index(0, model()->tree_column(), cursor_index));
+            scroll_into_view(selection().first(), Orientation::Vertical);
             return;
         }
     }
