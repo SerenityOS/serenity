@@ -122,7 +122,7 @@ KResult IPv4Socket::bind(const sockaddr* user_address, socklen_t address_size)
     m_local_port = requested_local_port;
 
 #ifdef IPV4_SOCKET_DEBUG
-    dbgprintf("IPv4Socket::bind %s{%p} to %s:%u\n", class_name(), this, m_local_address.to_string().characters(), m_local_port);
+    dbg() << "IPv4Socket::bind " << class_name() << "{" << this << "} to " << m_local_address.to_string().characters() << ":" << m_local_port;
 #endif
 
     return protocol_bind();
@@ -316,7 +316,7 @@ ssize_t IPv4Socket::receive_packet_buffered(FileDescription& description, void* 
 
     if (addr) {
 #ifdef IPV4_SOCKET_DEBUG
-        dbgprintf("Incoming packet is from: %s:%u\n", packet.peer_address.to_string().characters(), packet.peer_port);
+        dbg() << "Incoming packet is from: " << packet.peer_address.to_string().characters() << ":" << packet.peer_port;
 #endif
         auto& ia = *(sockaddr_in*)addr;
         memcpy(&ia.sin_addr, &packet.peer_address, sizeof(IPv4Address));
