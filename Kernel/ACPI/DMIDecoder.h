@@ -1395,31 +1395,31 @@ public:
 
 private:
     void enumerate_smbios_tables();
-    SMBIOS::TableHeader* get_next_physical_table(SMBIOS::TableHeader& p_table);
-    SMBIOS::TableHeader* get_smbios_physical_table_by_handle(u16 handle);
-    SMBIOS::TableHeader* get_smbios_physical_table_by_type(u8 table_type);
-    char* get_smbios_string(SMBIOS::TableHeader& p_table, u8 string_number);
-    size_t get_table_size(SMBIOS::TableHeader& table);
+    PhysicalAddress get_next_physical_table(PhysicalAddress p_table);
+    PhysicalAddress get_smbios_physical_table_by_handle(u16 handle);
+    PhysicalAddress get_smbios_physical_table_by_type(u8 table_type);
+    char* get_smbios_string(PhysicalAddress, u8 string_number);
+    size_t get_table_size(PhysicalAddress);
 
     explicit DMIDecoder(bool trusted);
     void initialize_parser();
 
-    void set_64_bit_entry_initialization_values(SMBIOS::EntryPoint64bit&);
-    void set_32_bit_entry_initialization_values(SMBIOS::EntryPoint32bit&);
+    void set_64_bit_entry_initialization_values(PhysicalAddress);
+    void set_32_bit_entry_initialization_values(PhysicalAddress);
 
-    SMBIOS::EntryPoint32bit* find_entry32bit_point();
-    SMBIOS::EntryPoint64bit* find_entry64bit_point();
+    PhysicalAddress find_entry32bit_point();
+    PhysicalAddress find_entry64bit_point();
 
-    SMBIOS::EntryPoint32bit* m_entry32bit_point;
-    SMBIOS::EntryPoint64bit* m_entry64bit_point;
-    SMBIOS::TableHeader* m_structure_table;
+    PhysicalAddress m_entry32bit_point;
+    PhysicalAddress m_entry64bit_point;
+    PhysicalAddress m_structure_table;
     u32 m_structures_count;
     u32 m_table_length;
     bool m_use_64bit_entry;
     bool m_operable;
     bool m_untrusted;
 
-    SinglyLinkedList<SMBIOS::TableHeader*> m_smbios_tables;
+    SinglyLinkedList<PhysicalAddress> m_smbios_tables;
 };
 
 }
