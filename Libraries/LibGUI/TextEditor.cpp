@@ -615,7 +615,7 @@ void TextEditor::keydown_event(KeyEvent& event)
             on_escape_pressed();
         return;
     }
-    if (event.key() == KeyCode::Key_Up) {
+    if (is_multi_line() && event.key() == KeyCode::Key_Up) {
         if (m_cursor.line() > 0) {
             if (event.ctrl() && event.shift()) {
                 move_selected_lines_up();
@@ -632,7 +632,7 @@ void TextEditor::keydown_event(KeyEvent& event)
         }
         return;
     }
-    if (event.key() == KeyCode::Key_Down) {
+    if (is_multi_line() && event.key() == KeyCode::Key_Down) {
         if (m_cursor.line() < (line_count() - 1)) {
             if (event.ctrl() && event.shift()) {
                 move_selected_lines_down();
@@ -649,7 +649,7 @@ void TextEditor::keydown_event(KeyEvent& event)
         }
         return;
     }
-    if (event.key() == KeyCode::Key_PageUp) {
+    if (is_multi_line() && event.key() == KeyCode::Key_PageUp) {
         if (m_cursor.line() > 0) {
             size_t page_step = (size_t)visible_content_rect().height() / (size_t)line_height();
             size_t new_line = m_cursor.line() < page_step ? 0 : m_cursor.line() - page_step;
@@ -663,7 +663,7 @@ void TextEditor::keydown_event(KeyEvent& event)
         }
         return;
     }
-    if (event.key() == KeyCode::Key_PageDown) {
+    if (is_multi_line() && event.key() == KeyCode::Key_PageDown) {
         if (m_cursor.line() < (line_count() - 1)) {
             int new_line = min(line_count() - 1, m_cursor.line() + visible_content_rect().height() / line_height());
             int new_column = min(m_cursor.column(), lines()[new_line].length());
@@ -840,8 +840,12 @@ void TextEditor::keydown_event(KeyEvent& event)
         return;
     }
 
-    if (!is_readonly() && !event.ctrl() && !event.alt() && !event.text().is_empty())
+    if (!is_readonly() && !event.ctrl() && !event.alt() && !event.text().is_empty()) {
         insert_at_cursor_or_replace_selection(event.text());
+        return;
+    }
+
+    event.ignore();
 }
 
 void TextEditor::delete_current_line()
