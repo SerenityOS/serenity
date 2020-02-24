@@ -40,8 +40,7 @@
 
 #define SANITIZE_KMALLOC
 
-struct AllocationHeader
-{
+struct AllocationHeader {
     size_t allocation_size_in_chunks;
     u8 data[0];
 };
