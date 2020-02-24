@@ -46,9 +46,9 @@ void SharedBuffer::sanity_check(const char* what)
         found_refs += ref.count;
 
     if (found_refs != m_total_refs) {
-        dbgprintf("%s sanity -- SharedBuffer{%p} id: %d has total refs %d but we found %d\n", what, this, m_shared_buffer_id, m_total_refs, found_refs);
+        dbg() << what << " sanity -- SharedBuffer{" << this << "} id: " << m_shared_buffer_id << " has total refs " << m_total_refs << " but we found " << found_refs;
         for (const auto& ref : m_refs) {
-            dbgprintf("    ref from pid %d: refcnt %d\n", ref.pid, ref.count);
+            dbg() << "    ref from pid " << ref.pid << ": refcnt " << ref.count;
         }
         ASSERT_NOT_REACHED();
     }
@@ -129,12 +129,12 @@ void SharedBuffer::deref_for_process(Process& process)
             m_total_refs--;
             if (ref.count == 0) {
 #ifdef SHARED_BUFFER_DEBUG
-                dbgprintf("Releasing shared buffer reference on %d of size %d by PID %d\n", m_shared_buffer_id, size(), process.pid());
+                dbg() << "Releasing shared buffer reference on " << m_shared_buffer_id << " of size " << size() << " by PID " << process.pid();
 #endif
                 process.deallocate_region(*ref.region);
                 m_refs.unstable_remove(i);
 #ifdef SHARED_BUFFER_DEBUG
-                dbgprintf("Released shared buffer reference on %d of size %d by PID %d\n", m_shared_buffer_id, size(), process.pid());
+                dbg() << "Released shared buffer reference on " << m_shared_buffer_id << " of size " << size() << " by PID " << process.pid();
 #endif
                 sanity_check("deref_for_process");
                 destroy_if_unused();
@@ -154,12 +154,12 @@ void SharedBuffer::disown(pid_t pid)
         auto& ref = m_refs[i];
         if (ref.pid == pid) {
 #ifdef SHARED_BUFFER_DEBUG
-            dbgprintf("Disowning shared buffer %d of size %d by PID %d\n", m_shared_buffer_id, size(), pid);
+            dbg() << "Disowning shared buffer " << m_shared_buffer_id << " of size " << size() << " by PID " << pid;
 #endif
             m_total_refs -= ref.count;
             m_refs.unstable_remove(i);
 #ifdef SHARED_BUFFER_DEBUG
-            dbgprintf("Disowned shared buffer %d of size %d by PID %d\n", m_shared_buffer_id, size(), pid);
+            dbg() << "Disowned shared buffer " << m_shared_buffer_id << " of size " << size() << " by PID " << pid;
 #endif
             destroy_if_unused();
             return;
