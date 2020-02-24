@@ -114,7 +114,7 @@ PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_rang
 PageDirectory::~PageDirectory()
 {
 #ifdef MM_DEBUG
-    dbgprintf("MM: ~PageDirectory K%x\n", this);
+    dbg() << "MM: ~PageDirectory K" << this;
 #endif
     InterruptDisabler disabler;
     cr3_map().remove(cr3());
