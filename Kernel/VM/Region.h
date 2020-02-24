@@ -28,6 +28,7 @@
 
 #include <AK/InlineLinkedList.h>
 #include <AK/String.h>
+#include <AK/Weakable.h>
 #include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/VM/RangeAllocator.h>
 
@@ -41,7 +42,9 @@ enum class PageFaultResponse {
     Continue,
 };
 
-class Region final : public InlineLinkedListNode<Region> {
+class Region final
+    : public InlineLinkedListNode<Region>
+    , public Weakable<Region> {
     friend class MemoryManager;
 
     MAKE_SLAB_ALLOCATED(Region)

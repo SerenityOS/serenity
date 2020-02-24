@@ -273,7 +273,7 @@ Region* Process::region_from_range(const Range& range)
     for (auto& region : m_regions) {
         if (region.vaddr() == range.base() && region.size() == size) {
             m_region_lookup_cache.range = range;
-            m_region_lookup_cache.region = &region;
+            m_region_lookup_cache.region = region.make_weak_ptr();
             return &region;
         }
     }

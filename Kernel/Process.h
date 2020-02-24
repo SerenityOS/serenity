@@ -31,6 +31,7 @@
 #include <AK/InlineLinkedList.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/String.h>
+#include <AK/WeakPtr.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Lock.h>
@@ -479,7 +480,7 @@ private:
     NonnullOwnPtrVector<Region> m_regions;
     struct RegionLookupCache {
         Range range;
-        Region* region { nullptr };
+        WeakPtr<Region> region;
     };
     RegionLookupCache m_region_lookup_cache;
 
