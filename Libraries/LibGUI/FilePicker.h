@@ -28,7 +28,6 @@
 #include <AK/Optional.h>
 #include <LibCore/UserInfo.h>
 #include <LibGUI/Dialog.h>
-#include <LibGUI/TableView.h>
 
 namespace GUI {
 
@@ -67,7 +66,7 @@ private:
         }
     }
 
-    RefPtr<TableView> m_view;
+    RefPtr<MultiView> m_view;
     NonnullRefPtr<FileSystemModel> m_model;
     FileSystemPath m_selected_file;
 
