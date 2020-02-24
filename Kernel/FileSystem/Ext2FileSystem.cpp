@@ -245,9 +245,9 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
     }
     if (inode_dirty) {
 #ifdef EXT2_DEBUG
-        dbgprintf("Ext2FS: Writing %u direct block(s) to i_block array of inode %u\n", min(EXT2_NDIR_BLOCKS, blocks.size()), inode_index);
+        dbg() << "Ext2FS: Writing " << min(EXT2_NDIR_BLOCKS, blocks.size()) << " direct block(s) to i_block array of inode " << inode_index;
         for (int i = 0; i < min(EXT2_NDIR_BLOCKS, blocks.size()); ++i)
-            dbgprintf("   + %u\n", blocks[i]);
+            dbg() << "   + " << blocks[i];
 #endif
         write_ext2_inode(inode_index, e2inode);
         inode_dirty = false;
@@ -266,7 +266,7 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
         e2inode.i_block[EXT2_IND_BLOCK] = new_indirect_block;
         if (inode_dirty) {
 #ifdef EXT2_DEBUG
-            dbgprintf("Ext2FS: Adding the indirect block to i_block array of inode %u\n", inode_index);
+            dbg() << "Ext2FS: Adding the indirect block to i_block array of inode " << inode_index;
 #endif
             write_ext2_inode(inode_index, e2inode);
             inode_dirty = false;
@@ -303,7 +303,7 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
         e2inode.i_block[EXT2_DIND_BLOCK] = new_dindirect_block;
         if (inode_dirty) {
 #ifdef EXT2_DEBUG
-            dbgprintf("Ext2FS: Adding the doubly-indirect block to i_block array of inode %u\n", inode_index);
+            dbg() << "Ext2FS: Adding the doubly-indirect block to i_block array of inode " << inode_index;
 #endif
             write_ext2_inode(inode_index, e2inode);
             inode_dirty = false;
@@ -410,7 +410,7 @@ Vector<Ext2FS::BlockIndex> Ext2FS::block_list_for_inode_impl(const ext2_inode& e
     unsigned block_count = ceil_div(e2inode.i_size, block_size());
 
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS::block_list_for_inode(): i_size=%u, i_blocks=%u, block_count=%u\n", e2inode.i_size, e2inode.i_blocks, block_count);
+    dbg() << "Ext2FS::block_list_for_inode(): i_size=" << e2inode.i_size << ", i_blocks=" << e2inode.i_blocks << ", block_count=" << block_count;
 #endif
 
     unsigned blocks_remaining = block_count;
@@ -716,8 +716,8 @@ KResult Ext2FSInode::resize(u64 new_size)
     size_t blocks_needed_after = ceil_div(new_size, block_size);
 
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FSInode::resize(): blocks needed before (size was %Q): %d\n", old_size, blocks_needed_before);
-    dbgprintf("Ext2FSInode::resize(): blocks needed after  (size is  %Q): %d\n", new_size, blocks_needed_after);
+    dbg() << "Ext2FSInode::resize(): blocks needed before (size was " << old_size << "): " << blocks_needed_before;
+    dbg() << "Ext2FSInode::resize(): blocks needed after  (size is  " << new_size << "): " << blocks_needed_after;
 #endif
 
     if (blocks_needed_after > blocks_needed_before) {
@@ -875,7 +875,7 @@ bool Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
     while (entry < buffer.end_pointer()) {
         if (entry->inode != 0) {
 #ifdef EXT2_DEBUG
-            dbgprintf("Ext2Inode::traverse_as_directory: %u, name_len: %u, rec_len: %u, file_type: %u, name: %s\n", entry->inode, entry->name_len, entry->rec_len, entry->file_type, String(entry->name, entry->name_len).characters());
+            dbg() << "Ext2Inode::traverse_as_directory: " << entry->inode << ", name_len: " << entry->name_len << ", rec_len: " << entry->rec_len << ", file_type: " << entry->file_type << ", name: " << String(entry->name, entry->name_len).characters();
 #endif
             if (!callback({ entry->name, entry->name_len, { fsid(), entry->inode }, entry->file_type }))
                 break;
@@ -1091,7 +1091,7 @@ Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(GroupIndex preferred_group_in
 {
     LOCKER(m_lock);
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: allocate_blocks(preferred group: %u, count: %u)\n", preferred_group_index, count);
+    dbg() << "Ext2FS: allocate_blocks(preferred group: " << preferred_group_index << ", count: " << count << ")";
 #endif
     if (count == 0)
         return {};
@@ -1154,13 +1154,13 @@ unsigned Ext2FS::find_a_free_inode(GroupIndex preferred_group, off_t expected_si
 {
     LOCKER(m_lock);
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: find_a_free_inode(preferred_group: %u, expected_size: %ld)\n", preferred_group, expected_size);
+    dbg() << "Ext2FS: find_a_free_inode(preferred_group: " << preferred_group << ", expected_size: " << String::format("%ld", expected_size) << ")";
 #endif
 
     unsigned needed_blocks = ceil_div(expected_size, block_size());
 
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: minimum needed blocks: %u\n", needed_blocks);
+    dbg() << "Ext2FS: minimum needed blocks: " << needed_blocks;
 #endif
 
     unsigned group_index = 0;
@@ -1187,7 +1187,7 @@ unsigned Ext2FS::find_a_free_inode(GroupIndex preferred_group, off_t expected_si
     }
 
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: find_a_free_inode: found suitable group [%u] for new inode with %u blocks needed :^)\n", group_index, needed_blocks);
+    dbg() << "Ext2FS: find_a_free_inode: found suitable group [" << group_index << "] for new inode with " << needed_blocks << " blocks needed :^)";
 #endif
 
     auto& bgd = group_descriptor(group_index);
@@ -1212,7 +1212,7 @@ unsigned Ext2FS::find_a_free_inode(GroupIndex preferred_group, off_t expected_si
 
     unsigned inode = first_free_inode_in_group;
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: found suitable inode %u\n", inode);
+    dbg() << "Ext2FS: found suitable inode " << inode;
 #endif
 
     ASSERT(get_inode_allocation_state(inode) == false);
@@ -1259,7 +1259,7 @@ bool Ext2FS::set_inode_allocation_state(InodeIndex inode_index, bool new_state)
 
     bool current_state = cached_bitmap.bitmap(inodes_per_group()).get(bit_index);
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: set_inode_allocation_state(%u) %u -> %u\n", inode_index, current_state, new_state);
+    dbg() << "Ext2FS: set_inode_allocation_state(" << inode_index << ") " << String::format("%u", current_state) << " -> " << String::format("%u", new_state);
 #endif
 
     if (current_state == new_state) {
@@ -1272,7 +1272,7 @@ bool Ext2FS::set_inode_allocation_state(InodeIndex inode_index, bool new_state)
 
     // Update superblock
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: superblock free inode count %u -> %u\n", m_super_block.s_free_inodes_count, m_super_block.s_free_inodes_count - 1);
+    dbg() << "Ext2FS: superblock free inode count " << m_super_block.s_free_inodes_count << " -> " << (m_super_block.s_free_inodes_count - 1);
 #endif
     if (new_state)
         --m_super_block.s_free_inodes_count;
@@ -1287,7 +1287,7 @@ bool Ext2FS::set_inode_allocation_state(InodeIndex inode_index, bool new_state)
     else
         ++mutable_bgd.bg_free_inodes_count;
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: group free inode count %u -> %u\n", bgd.bg_free_inodes_count, bgd.bg_free_inodes_count - 1);
+    dbg() << "Ext2FS: group free inode count " << bgd.bg_free_inodes_count << " -> " << (bgd.bg_free_inodes_count - 1);
 #endif
 
     m_block_group_descriptors_dirty = true;
@@ -1318,7 +1318,7 @@ bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
     ASSERT(block_index != 0);
     LOCKER(m_lock);
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: set_block_allocation_state(block=%u, state=%u)\n", block_index, new_state);
+    dbg() << "Ext2FS: set_block_allocation_state(block=" << block_index << ", state=" << String::format("%u", new_state) << ")";
 #endif
 
     GroupIndex group_index = group_index_from_block_index(block_index);
@@ -1330,7 +1330,7 @@ bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
 
     bool current_state = cached_bitmap.bitmap(blocks_per_group()).get(bit_index);
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: block %u state: %u -> %u (in bitmap block %u)\n", block_index, current_state, new_state, bgd.bg_block_bitmap);
+    dbg() << "Ext2FS: block " << block_index << " state: " << String::format("%u", current_state) << " -> " << String::format("%u", new_state) << " (in bitmap block " << bgd.bg_block_bitmap << ")";
 #endif
 
     if (current_state == new_state) {
@@ -1343,7 +1343,7 @@ bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
 
     // Update superblock
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: superblock free block count %u -> %u\n", m_super_block.s_free_blocks_count, m_super_block.s_free_blocks_count - 1);
+    dbg() << "Ext2FS: superblock free block count " << m_super_block.s_free_blocks_count << " -> " << (m_super_block.s_free_blocks_count - 1);
 #endif
     if (new_state)
         --m_super_block.s_free_blocks_count;
@@ -1358,7 +1358,7 @@ bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
     else
         ++mutable_bgd.bg_free_blocks_count;
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: group %u free block count %u -> %u\n", group_index, bgd.bg_free_blocks_count, bgd.bg_free_blocks_count - 1);
+    dbg() << "Ext2FS: group " << group_index << " free block count " << bgd.bg_free_blocks_count << " -> " << (bgd.bg_free_blocks_count - 1);
 #endif
 
     m_block_group_descriptors_dirty = true;
@@ -1384,7 +1384,7 @@ KResult Ext2FS::create_directory(InodeIdentifier parent_id, const String& name, 
     auto& inode = inode_or_error.value();
 
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: create_directory: created new directory named '%s' with inode %u\n", name.characters(), inode->identifier().index());
+    dbg() << "Ext2FS: create_directory: created new directory named '" << name.characters() << "' with inode " << inode->identifier().index();
 #endif
 
     Vector<DirectoryEntry> entries;
@@ -1402,7 +1402,7 @@ KResult Ext2FS::create_directory(InodeIdentifier parent_id, const String& name, 
     auto& bgd = const_cast<ext2_group_desc&>(group_descriptor(group_index_from_inode(inode->identifier().index())));
     ++bgd.bg_used_dirs_count;
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: incremented bg_used_dirs_count %u -> %u\n", bgd.bg_used_dirs_count - 1, bgd.bg_used_dirs_count);
+    dbg() << "Ext2FS: incremented bg_used_dirs_count " << bgd.bg_used_dirs_count - 1 << " -> " << bgd.bg_used_dirs_count;
 #endif
 
     m_block_group_descriptors_dirty = true;
@@ -1421,7 +1421,7 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(InodeIdentifier parent_id, 
         return KResult(-ENOENT);
 
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: Adding inode '%s' (mode %o) to parent directory %u:\n", name.characters(), mode, parent_inode->identifier().index());
+    dbg() << "Ext2FS: Adding inode '" << name.characters() << "' (mode " << String::format("%o", mode) << ") to parent directory " << parent_inode->identifier().index();
 #endif
 
     size_t needed_blocks = ceil_div(size, block_size());
@@ -1478,7 +1478,7 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(InodeIdentifier parent_id, 
     ASSERT(success);
 
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: writing initial metadata for inode %u\n", inode_id);
+    dbg() << "Ext2FS: writing initial metadata for inode " << inode_id;
 #endif
     e2inode.i_flags = 0;
     success = write_ext2_inode(inode_id, e2inode);
