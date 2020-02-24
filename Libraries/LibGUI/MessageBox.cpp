@@ -35,7 +35,9 @@ namespace GUI {
 
 int MessageBox::show(const StringView& text, const StringView& title, Type type, InputType input_type, Core::Object* parent)
 {
-    auto box = parent->add<MessageBox>(text, title, type, input_type);
+    auto box = MessageBox::construct(text, title, type, input_type);
+    if (parent)
+        parent->add_child(box);
     return box->exec();
 }
 
