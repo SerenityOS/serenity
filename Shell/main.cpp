@@ -882,7 +882,7 @@ static int run_command(const String& cmd)
         for (size_t i = 0; i < children.size(); ++i) {
             auto& child = children[i];
             do {
-                int rc = waitpid(child.pid, &wstatus, WEXITED | WSTOPPED);
+                int rc = waitpid(child.pid, &wstatus, 0);
                 if (rc < 0 && errno != EINTR) {
                     if (errno != ECHILD)
                         perror("waitpid");
