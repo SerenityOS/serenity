@@ -69,6 +69,11 @@ double cos(double angle)
     return sin(angle + M_PI_2);
 }
 
+float cosf(float angle)
+{
+    return sinf(angle + M_PI_2);
+}
+
 // This can also be done with a taylor expansion, but for
 // now this works pretty well (and doesn't mess anything up
 // in quake in particular, which is very Floating-Point precision
@@ -84,10 +89,25 @@ double sin(double angle)
     return ret;
 }
 
+float sinf(float angle)
+{
+    float ret = 0.0f;
+    __asm__(
+        "fsin"
+        : "=t"(ret)
+        : "0"(angle));
+    return ret;
+}
+
 double pow(double x, double y)
 {
     //FIXME: Extremely unlikely to be standards compliant.
     return exp(y * log(x));
+}
+
+float powf(float x, float y)
+{
+    return (float)exp((double)y * log((double)x));
 }
 
 double ldexp(double x, int exp)
@@ -139,6 +159,15 @@ double sqrt(double x)
     return res;
 }
 
+float sqrtf(float x)
+{
+    float res;
+    __asm__("fsqrt"
+            : "=t"(res)
+            : "0"(x));
+    return res;
+}
+
 double sinh(double x)
 {
     double exponentiated = exp(x);
@@ -165,6 +194,11 @@ double log(double x)
     y = y + 2 * (x - exponentiated) / (x + exponentiated);
     exponentiated = exp(y);
     return y + 2 * (x - exponentiated) / (x + exponentiated);
+}
+
+float logf(float x)
+{
+    return (float)log(x);
 }
 
 double fmod(double index, double period)
@@ -208,6 +242,11 @@ double exp(double exponent)
     return result * taylor_series_result;
 }
 
+float expf(float exponent)
+{
+    return (float)exp(exponent);
+}
+
 double cosh(double x)
 {
     double exponentiated = exp(-x);
@@ -230,6 +269,11 @@ double atan2(double y, double x)
     if (y >= 0)
         return atan(y / x) + M_PI;
     return atan(y / x) - M_PI;
+}
+
+float atan2f(float y, float x)
+{
+    return (float)atan2(y, x);
 }
 
 double atan(double x)
@@ -265,9 +309,19 @@ double asin(double x)
     return value;
 }
 
+float asinf(float x)
+{
+    return (float)asin(x);
+}
+
 double acos(double x)
 {
     return M_PI_2 - asin(x);
+}
+
+float acosf(float x)
+{
+    return M_PI_2 - asinf(x);
 }
 
 double fabs(double value)
