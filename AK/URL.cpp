@@ -195,7 +195,7 @@ URL URL::complete_url(const String& string) const
 
     bool document_url_ends_in_slash = path()[path().length() - 1] == '/';
 
-    for (int i = 0; i < fspath.parts().size(); ++i) {
+    for (size_t i = 0; i < fspath.parts().size(); ++i) {
         if (i == fspath.parts().size() - 1 && !document_url_ends_in_slash)
             break;
         builder.append(fspath.parts()[i]);

@@ -128,7 +128,7 @@ public:
         return m_lines[index];
     }
 
-    int max_history_size() const { return 500; }
+    size_t max_history_size() const { return 500; }
     const NonnullOwnPtrVector<Line>& history() const { return m_history; }
 
     void inject_string(const StringView&);
@@ -184,8 +184,8 @@ private:
     NonnullOwnPtrVector<Line> m_history;
     NonnullOwnPtrVector<Line> m_lines;
 
-    int m_scroll_region_top { 0 };
-    int m_scroll_region_bottom { 0 };
+    size_t m_scroll_region_top { 0 };
+    size_t m_scroll_region_bottom { 0 };
 
     u16 m_columns { 1 };
     u16 m_rows { 1 };

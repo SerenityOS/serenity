@@ -122,7 +122,7 @@ void SharedBuffer::share_with(pid_t peer_pid)
 void SharedBuffer::deref_for_process(Process& process)
 {
     LOCKER(shared_buffers().lock());
-    for (int i = 0; i < m_refs.size(); ++i) {
+    for (size_t i = 0; i < m_refs.size(); ++i) {
         auto& ref = m_refs[i];
         if (ref.pid == process.pid()) {
             ref.count--;
@@ -150,7 +150,7 @@ void SharedBuffer::deref_for_process(Process& process)
 void SharedBuffer::disown(pid_t pid)
 {
     LOCKER(shared_buffers().lock());
-    for (int i = 0; i < m_refs.size(); ++i) {
+    for (size_t i = 0; i < m_refs.size(); ++i) {
         auto& ref = m_refs[i];
         if (ref.pid == pid) {
 #ifdef SHARED_BUFFER_DEBUG

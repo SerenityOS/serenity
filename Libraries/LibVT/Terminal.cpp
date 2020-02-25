@@ -961,12 +961,12 @@ void Terminal::unimplemented_escape()
     builder.appendf("((Unimplemented escape: %c", m_final);
     if (!m_parameters.is_empty()) {
         builder.append(" parameters:");
-        for (int i = 0; i < m_parameters.size(); ++i)
+        for (size_t i = 0; i < m_parameters.size(); ++i)
             builder.append((char)m_parameters[i]);
     }
     if (!m_intermediates.is_empty()) {
         builder.append(" intermediates:");
-        for (int i = 0; i < m_intermediates.size(); ++i)
+        for (size_t i = 0; i < m_intermediates.size(); ++i)
             builder.append((char)m_intermediates[i]);
     }
     builder.append("))");

@@ -59,7 +59,7 @@ ModelIndex SortingProxyModel::map_to_target(const ModelIndex& index) const
 {
     if (!index.is_valid())
         return {};
-    if (index.row() >= m_row_mappings.size() || index.column() >= column_count())
+    if (static_cast<size_t>(index.row()) >= m_row_mappings.size() || index.column() >= column_count())
         return {};
     return target().index(m_row_mappings[index.row()], index.column());
 }
@@ -143,7 +143,7 @@ void SortingProxyModel::resort()
 
         selection.clear();
         for (auto& index : selected_indexes_in_target) {
-            for (int i = 0; i < m_row_mappings.size(); ++i) {
+            for (size_t i = 0; i < m_row_mappings.size(); ++i) {
                 if (m_row_mappings[i] == index.row()) {
                     selection.add(this->index(i, index.column()));
                     continue;

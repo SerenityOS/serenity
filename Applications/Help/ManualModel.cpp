@@ -94,7 +94,7 @@ GUI::ModelIndex ManualModel::parent_index(const GUI::ModelIndex& index) const
                 return create_index(row, 0, parent);
         ASSERT_NOT_REACHED();
     }
-    for (int row = 0; row < parent->parent()->children().size(); row++) {
+    for (size_t row = 0; row < parent->parent()->children().size(); row++) {
         ManualNode* child_at_row = &parent->parent()->children()[row];
         if (child_at_row == parent)
             return create_index(row, 0, parent);

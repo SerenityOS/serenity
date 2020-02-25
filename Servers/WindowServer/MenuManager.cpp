@@ -67,7 +67,7 @@ MenuManager::~MenuManager()
 
 bool MenuManager::is_open(const Menu& menu) const
 {
-    for (int i = 0; i < m_open_menu_stack.size(); ++i) {
+    for (size_t i = 0; i < m_open_menu_stack.size(); ++i) {
         if (&menu == m_open_menu_stack[i].ptr())
             return true;
     }

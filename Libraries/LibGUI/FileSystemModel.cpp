@@ -44,7 +44,7 @@ ModelIndex FileSystemModel::Node::index(const FileSystemModel& model, int column
 {
     if (!parent)
         return {};
-    for (int row = 0; row < parent->children.size(); ++row) {
+    for (size_t row = 0; row < parent->children.size(); ++row) {
         if (&parent->children[row] == this)
             return model.create_index(row, column, const_cast<Node*>(this));
     }
@@ -169,7 +169,7 @@ ModelIndex FileSystemModel::index(const StringView& path, int column) const
     const Node* node = m_root;
     if (canonical_path.string() == "/")
         return m_root->index(*this, column);
-    for (int i = 0; i < canonical_path.parts().size(); ++i) {
+    for (size_t i = 0; i < canonical_path.parts().size(); ++i) {
         auto& part = canonical_path.parts()[i];
         bool found = false;
         for (auto& child : node->children) {
@@ -318,7 +318,7 @@ ModelIndex FileSystemModel::index(int row, int column, const ModelIndex& parent)
         return {};
     auto& node = this->node(parent);
     const_cast<Node&>(node).reify_if_needed(*this);
-    if (row >= node.children.size())
+    if (static_cast<size_t>(row) >= node.children.size())
         return {};
     return create_index(row, column, &node.children[row]);
 }

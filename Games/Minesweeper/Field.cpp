@@ -183,8 +183,8 @@ void Field::set_face(Face face)
 template<typename Callback>
 void Square::for_each_neighbor(Callback callback)
 {
-    int r = row;
-    int c = column;
+    size_t r = row;
+    size_t c = column;
     if (r > 0) // Up
         callback(field->square(r - 1, c));
     if (c > 0) // Left
@@ -217,7 +217,7 @@ void Field::reset()
 
     m_squares.resize(max(m_squares.size(), rows() * columns()));
 
-    for (int i = rows() * columns(); i < m_squares.size(); ++i) {
+    for (int i = rows() * columns(); i < static_cast<int>(m_squares.size()); ++i) {
         auto& square = m_squares[i];
         square->button->set_visible(false);
         square->label->set_visible(false);
@@ -230,12 +230,12 @@ void Field::reset()
             mines.set(location);
     }
 
-    int i = 0;
-    for (int r = 0; r < rows(); ++r) {
-        for (int c = 0; c < columns(); ++c) {
+    size_t i = 0;
+    for (size_t r = 0; r < rows(); ++r) {
+        for (size_t c = 0; c < columns(); ++c) {
             if (!m_squares[i])
                 m_squares[i] = make<Square>();
-            Gfx::Rect rect = { frame_thickness() + c * square_size(), frame_thickness() + r * square_size(), square_size(), square_size() };
+            Gfx::Rect rect = { frame_thickness() + static_cast<int>(c) * square_size(), frame_thickness() + static_cast<int>(r) * square_size(), square_size(), square_size() };
             auto& square = this->square(r, c);
             square.field = this;
             square.row = r;
@@ -276,10 +276,10 @@ void Field::reset()
         }
     }
 
-    for (int r = 0; r < rows(); ++r) {
-        for (int c = 0; c < columns(); ++c) {
+    for (size_t r = 0; r < rows(); ++r) {
+        for (size_t c = 0; c < columns(); ++c) {
             auto& square = this->square(r, c);
-            int number = 0;
+            size_t number = 0;
             square.for_each_neighbor([&number](auto& neighbor) {
                 number += neighbor.has_mine;
             });
@@ -380,7 +380,7 @@ void Field::on_square_chorded(Square& square)
         return;
     if (!square.number)
         return;
-    int adjacent_flags = 0;
+    size_t adjacent_flags = 0;
     square.for_each_neighbor([&](auto& neighbor) {
         if (neighbor.has_flag)
             ++adjacent_flags;
@@ -461,8 +461,8 @@ void Field::game_over()
 
 void Field::reveal_mines()
 {
-    for (int r = 0; r < rows(); ++r) {
-        for (int c = 0; c < columns(); ++c) {
+    for (size_t r = 0; r < rows(); ++r) {
+        for (size_t c = 0; c < columns(); ++c) {
             auto& square = this->square(r, c);
             if (square.has_mine && !square.has_flag) {
                 square.button->set_visible(false);
@@ -490,7 +490,7 @@ void Field::set_chord_preview(Square& square, bool chord_preview)
     });
 }
 
-void Field::set_field_size(int rows, int columns, size_t mine_count)
+void Field::set_field_size(size_t rows, size_t columns, size_t mine_count)
 {
     if (m_rows == rows && m_columns == columns && m_mine_count == mine_count)
         return;
@@ -526,6 +526,6 @@ Square::~Square()
 template<typename Callback>
 void Field::for_each_square(Callback callback)
 {
-    for (int i = 0; i < rows() * columns(); ++i)
+    for (size_t i = 0; i < rows() * columns(); ++i)
         callback(*m_squares[i]);
 }

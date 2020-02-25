@@ -296,7 +296,7 @@ void EventLoop::pump(WaitMode mode)
         events = move(m_queued_events);
     }
 
-    for (int i = 0; i < events.size(); ++i) {
+    for (size_t i = 0; i < events.size(); ++i) {
         auto& queued_event = events.at(i);
 #ifndef __clang__
         ASSERT(queued_event.event);

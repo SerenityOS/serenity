@@ -145,7 +145,7 @@ static inline int to_fd(const InodeIdentifier& identifier)
     return (identifier.index() & 0xff) - FI_MaxStaticFileIndex;
 }
 
-static inline int to_sys_index(const InodeIdentifier& identifier)
+static inline size_t to_sys_index(const InodeIdentifier& identifier)
 {
     ASSERT(to_proc_parent_directory(identifier) == PDI_Root_sys);
     ASSERT(to_proc_file_type(identifier) == FI_Root_sys_variable);
@@ -1271,7 +1271,7 @@ bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
         break;
 
     case FI_Root_sys:
-        for (int i = 1; i < sys_variables().size(); ++i) {
+        for (size_t i = 1; i < sys_variables().size(); ++i) {
             auto& variable = sys_variables()[i];
             callback({ variable.name.characters(), variable.name.length(), sys_var_to_identifier(fsid(), i), 0 });
         }
@@ -1356,7 +1356,7 @@ RefPtr<Inode> ProcFSInode::lookup(StringView name)
     }
 
     if (proc_file_type == FI_Root_sys) {
-        for (int i = 1; i < sys_variables().size(); ++i) {
+        for (size_t i = 1; i < sys_variables().size(); ++i) {
             auto& variable = sys_variables()[i];
             if (name == variable.name)
                 return fs().get_inode(sys_var_to_identifier(fsid(), i));

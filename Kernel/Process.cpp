@@ -255,7 +255,7 @@ bool Process::deallocate_region(Region& region)
     InterruptDisabler disabler;
     if (m_region_lookup_cache.region == &region)
         m_region_lookup_cache.region = nullptr;
-    for (int i = 0; i < m_regions.size(); ++i) {
+    for (size_t i = 0; i < m_regions.size(); ++i) {
         if (&m_regions[i] == &region) {
             m_regions.unstable_remove(i);
             return true;
@@ -956,7 +956,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
     disown_all_shared_buffers();
 
-    for (int i = 0; i < m_fds.size(); ++i) {
+    for (size_t i = 0; i < m_fds.size(); ++i) {
         auto& daf = m_fds[i];
         if (daf.description && daf.flags & FD_CLOEXEC) {
             daf.description->close();
@@ -1522,7 +1522,7 @@ RefPtr<FileDescription> Process::file_description(int fd) const
 {
     if (fd < 0)
         return nullptr;
-    if (fd < m_fds.size())
+    if (static_cast<size_t>(fd) < m_fds.size())
         return m_fds[fd].description.ptr();
     return nullptr;
 }
@@ -1531,7 +1531,7 @@ int Process::fd_flags(int fd) const
 {
     if (fd < 0)
         return -1;
-    if (fd < m_fds.size())
+    if (static_cast<size_t>(fd) < m_fds.size())
         return m_fds[fd].flags;
     return -1;
 }
@@ -3189,6 +3189,8 @@ int Process::sys$bind(int sockfd, const sockaddr* address, socklen_t address_len
 
 int Process::sys$listen(int sockfd, int backlog)
 {
+    if (backlog < 0)
+        return -EINVAL;
     auto description = file_description(sockfd);
     if (!description)
         return -EBADF;
@@ -4761,7 +4763,7 @@ int Process::sys$unveil(const Syscall::SC_unveil_params* user_params)
         }
     }
 
-    for (int i = 0; i < m_unveiled_paths.size(); ++i) {
+    for (size_t i = 0; i < m_unveiled_paths.size(); ++i) {
         auto& unveiled_path = m_unveiled_paths[i];
         if (unveiled_path.path == path.value()) {
             if (new_permissions & ~unveiled_path.permissions)

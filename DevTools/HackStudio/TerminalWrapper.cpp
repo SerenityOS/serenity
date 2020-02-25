@@ -143,7 +143,7 @@ void TerminalWrapper::run_command(const String& command)
         auto parts = command.split(' ');
         ASSERT(!parts.is_empty());
         const char** args = (const char**) calloc(parts.size() + 1, sizeof(const char*));
-        for (int i = 0; i < parts.size(); i++) {
+        for (size_t i = 0; i < parts.size(); i++) {
             args[i] = parts[i].characters();
         }
         rc = execvp(args[0], const_cast<char**>(args));

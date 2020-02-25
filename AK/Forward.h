@@ -101,7 +101,7 @@ class OwnPtr;
 template<typename T>
 class WeakPtr;
 
-template<typename T, int inline_capacity = 0>
+template<typename T, size_t inline_capacity = 0>
 class Vector;
 
 }

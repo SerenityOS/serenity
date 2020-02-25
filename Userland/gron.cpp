@@ -92,7 +92,7 @@ int main(int argc, char** argv)
 
 static void print(const String& name, const JsonValue& value, Vector<String>& trail)
 {
-    for (int i = 0; i < trail.size(); ++i)
+    for (size_t i = 0; i < trail.size(); ++i)
         printf("%s", trail[i].characters());
 
     printf("%s%s%s = ", color_name, name.characters(), color_off);

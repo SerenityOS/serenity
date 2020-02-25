@@ -212,7 +212,7 @@ bool MDText::parse(const StringView& str)
             while (offset < str.length() && str[offset] != ')');
 
             const StringView href = str.substring_view(start_of_href, offset - start_of_href);
-            for (int i = first_span_in_the_current_link; i < m_spans.size(); i++)
+            for (size_t i = first_span_in_the_current_link; i < m_spans.size(); i++)
                 m_spans[i].style.href = href;
             first_span_in_the_current_link = -1;
             break;

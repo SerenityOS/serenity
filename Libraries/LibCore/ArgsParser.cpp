@@ -48,14 +48,14 @@ void ArgsParser::parse(int argc, char** argv)
 
     int index_of_found_long_option = -1;
 
-    for (int i = 0; i < m_options.size(); i++) {
+    for (size_t i = 0; i < m_options.size(); i++) {
         auto& opt = m_options[i];
         if (opt.long_name) {
             option long_opt {
                 opt.long_name,
                 opt.requires_argument ? required_argument : no_argument,
                 &index_of_found_long_option,
-                i
+                static_cast<int>(i)
             };
             long_options.append(long_opt);
         }
@@ -107,7 +107,7 @@ void ArgsParser::parse(int argc, char** argv)
     int values_left = argc - optind;
     int num_values_for_arg[m_positional_args.size()];
     int total_values_required = 0;
-    for (int i = 0; i < m_positional_args.size(); i++) {
+    for (size_t i = 0; i < m_positional_args.size(); i++) {
         auto& arg = m_positional_args[i];
         num_values_for_arg[i] = arg.min_values;
         total_values_required += arg.min_values;
@@ -117,7 +117,7 @@ void ArgsParser::parse(int argc, char** argv)
         print_usage_and_exit();
     int extra_values_to_distribute = values_left - total_values_required;
 
-    for (int i = 0; i < m_positional_args.size(); i++) {
+    for (size_t i = 0; i < m_positional_args.size(); i++) {
         auto& arg = m_positional_args[i];
         int extra_values_to_this_arg = min(arg.max_values - arg.min_values, extra_values_to_distribute);
         num_values_for_arg[i] += extra_values_to_this_arg;
@@ -131,7 +131,7 @@ void ArgsParser::parse(int argc, char** argv)
         print_usage_and_exit();
     }
 
-    for (int i = 0; i < m_positional_args.size(); i++) {
+    for (size_t i = 0; i < m_positional_args.size(); i++) {
         auto& arg = m_positional_args[i];
         for (int j = 0; j < num_values_for_arg[i]; j++) {
             const char* value = argv[optind++];

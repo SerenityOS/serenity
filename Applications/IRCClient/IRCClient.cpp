@@ -241,7 +241,7 @@ void IRCClient::send_whois(const String& nick)
 void IRCClient::handle(const Message& msg)
 {
 #ifdef IRC_DEBUG
-    printf("IRCClient::execute: prefix='%s', command='%s', arguments=%d\n",
+    printf("IRCClient::execute: prefix='%s', command='%s', arguments=%zu\n",
         msg.prefix.characters(),
         msg.command.characters(),
         msg.arguments.size());
@@ -463,7 +463,7 @@ IRCChannel& IRCClient::ensure_channel(const String& name)
 
 void IRCClient::handle_ping(const Message& msg)
 {
-    if (msg.arguments.size() < 0)
+    if (msg.arguments.size() < 1)
         return;
     m_log->add_message(0, "", "Ping? Pong!");
     send_pong(msg.arguments[0]);
@@ -646,7 +646,7 @@ void IRCClient::unregister_subwindow(IRCWindow& subwindow)
     if (subwindow.type() == IRCWindow::Server) {
         m_server_subwindow = &subwindow;
     }
-    for (int i = 0; i < m_windows.size(); ++i) {
+    for (size_t i = 0; i < m_windows.size(); ++i) {
         if (m_windows.at(i) == &subwindow) {
             m_windows.remove(i);
             break;

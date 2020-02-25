@@ -63,7 +63,7 @@ public:
 
     ProfileNode& find_or_create_child(const String& symbol, u32 address, u32 offset, u64 timestamp)
     {
-        for (int i = 0; i < m_children.size(); ++i) {
+        for (size_t i = 0; i < m_children.size(); ++i) {
             auto& child = m_children[i];
             if (child->symbol() == symbol) {
                 return child;

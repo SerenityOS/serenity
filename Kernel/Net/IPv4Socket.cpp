@@ -128,7 +128,7 @@ KResult IPv4Socket::bind(const sockaddr* user_address, socklen_t address_size)
     return protocol_bind();
 }
 
-KResult IPv4Socket::listen(int backlog)
+KResult IPv4Socket::listen(size_t backlog)
 {
     int rc = allocate_local_port_if_needed();
     if (rc < 0)
@@ -138,7 +138,7 @@ KResult IPv4Socket::listen(int backlog)
     m_role = Role::Listener;
 
 #ifdef IPV4_SOCKET_DEBUG
-    kprintf("IPv4Socket{%p} listening with backlog=%d\n", this, backlog);
+    kprintf("IPv4Socket{%p} listening with backlog=%zu\n", this, backlog);
 #endif
 
     return protocol_listen();

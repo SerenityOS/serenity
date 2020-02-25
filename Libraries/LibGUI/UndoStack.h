@@ -52,8 +52,8 @@ private:
     };
 
     NonnullOwnPtrVector<UndoCommandsContainer> m_stack;
-    int m_stack_index { 0 };
-    int m_last_updated_undo_vector_size { 0 };
+    size_t m_stack_index { 0 };
+    size_t m_last_updated_undo_vector_size { 0 };
 };
 
 }

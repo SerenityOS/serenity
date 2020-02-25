@@ -74,7 +74,7 @@ void ColumnsView::paint_event(PaintEvent& event)
 
     int column_x = 0;
 
-    for (int i = 0; i < m_columns.size(); i++) {
+    for (size_t i = 0; i < m_columns.size(); i++) {
         auto& column = m_columns[i];
         auto* next_column = i + 1 == m_columns.size() ? nullptr : &m_columns[i + 1];
 

@@ -72,10 +72,11 @@ void AppletManager::add_applet(Window& applet)
     m_applets.append(applet.make_weak_ptr());
 
     quick_sort(m_applets.begin(), m_applets.end(), [](auto& a, auto& b) {
-        int index_a = order_vector.find_first_index(a->title());
-        int index_b = order_vector.find_first_index(b->title());
-
-        return index_a > index_b;
+        auto index_a = order_vector.find_first_index(a->title());
+        auto index_b = order_vector.find_first_index(b->title());
+        ASSERT(index_a.has_value());
+        ASSERT(index_b.has_value());
+        return index_a.value() > index_b.value();
     });
 
     calculate_applet_rects(MenuManager::the().window());

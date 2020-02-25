@@ -677,7 +677,7 @@ void Widget::focus_previous_widget()
 void Widget::focus_next_widget()
 {
     auto focusable_widgets = window()->focusable_widgets();
-    for (int i = 0; i < focusable_widgets.size(); ++i) {
+    for (size_t i = 0; i < focusable_widgets.size(); ++i) {
         if (focusable_widgets[i] != this)
             continue;
         if (i < focusable_widgets.size() - 1)

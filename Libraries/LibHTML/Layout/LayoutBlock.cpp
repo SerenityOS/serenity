@@ -143,7 +143,7 @@ void LayoutBlock::layout_inline_children()
 
         float justified_space_width = whitespace_count ? (excess_horizontal_space_including_whitespace / (float)whitespace_count) : 0;
 
-        for (int i = 0; i < line_box.fragments().size(); ++i) {
+        for (size_t i = 0; i < line_box.fragments().size(); ++i) {
             auto& fragment = line_box.fragments()[i];
             // Vertically align everyone's bottom to the line.
             // FIXME: Support other kinds of vertical alignment.
@@ -156,7 +156,7 @@ void LayoutBlock::layout_inline_children()
                         float diff = justified_space_width - fragment.rect().width();
                         fragment.rect().set_width(justified_space_width);
                         // Shift subsequent sibling fragments to the right to adjust for change in width.
-                        for (int j = i + 1; j < line_box.fragments().size(); ++j) {
+                        for (size_t j = i + 1; j < line_box.fragments().size(); ++j) {
                             line_box.fragments()[j].rect().move_by(diff, 0);
                         }
                     }

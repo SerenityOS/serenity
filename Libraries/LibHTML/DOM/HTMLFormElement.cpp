@@ -68,7 +68,7 @@ void HTMLFormElement::submit()
     });
 
     StringBuilder builder;
-    for (int i = 0; i < parameters.size(); ++i) {
+    for (size_t i = 0; i < parameters.size(); ++i) {
         builder.append(parameters[i].name);
         builder.append('=');
         builder.append(parameters[i].value);

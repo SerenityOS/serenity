@@ -52,7 +52,7 @@ void UndoStack::undo()
         return;
     }
 
-    for (int i = 0; i < undo_vector.size(); i++) {
+    for (size_t i = 0; i < undo_vector.size(); i++) {
         auto& undo_command = undo_vector[i];
         undo_command.undo();
     }
@@ -68,7 +68,7 @@ void UndoStack::redo()
     auto& undo_container = m_stack[m_stack_index - 1];
     auto& redo_vector = undo_container.m_undo_vector;
 
-    for (int i = redo_vector.size() - 1; i >= 0; i--) {
+    for (int i = static_cast<int>(redo_vector.size()) - 1; i >= 0; i--) {
         auto& undo_command = redo_vector[i];
         undo_command.redo();
     }
@@ -84,7 +84,7 @@ void UndoStack::push(NonnullOwnPtr<Command>&& command)
     }
 
     // Clear the elements of the stack before the m_undo_stack_index (Excluding our new element)
-    for (int i = 1; i < m_stack_index; i++)
+    for (size_t i = 1; i < m_stack_index; i++)
         m_stack.remove(1);
 
     if (m_stack_index > 0 && !m_stack.is_empty())

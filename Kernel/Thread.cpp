@@ -644,7 +644,7 @@ u32 Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vecto
 
     SmapDisabler disabler;
 
-    for (int i = 0; i < arguments.size(); ++i) {
+    for (size_t i = 0; i < arguments.size(); ++i) {
         argv[i] = bufptr;
         memcpy(bufptr, arguments[i].characters(), arguments[i].length());
         bufptr += arguments[i].length();
@@ -652,7 +652,7 @@ u32 Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vecto
     }
     argv[arguments.size()] = nullptr;
 
-    for (int i = 0; i < environment.size(); ++i) {
+    for (size_t i = 0; i < environment.size(); ++i) {
         env[i] = bufptr;
         memcpy(bufptr, environment[i].characters(), environment[i].length());
         bufptr += environment[i].length();

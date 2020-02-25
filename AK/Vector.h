@@ -28,6 +28,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/Forward.h>
+#include <AK/Optional.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Traits.h>
 #include <AK/kmalloc.h>
@@ -63,28 +64,28 @@ public:
         --m_index;
         return *this;
     }
-    VectorIterator operator-(int value) { return { m_vector, m_index - value }; }
-    VectorIterator operator+(int value) { return { m_vector, m_index + value }; }
+    VectorIterator operator-(size_t value) { return { m_vector, m_index - value }; }
+    VectorIterator operator+(size_t value) { return { m_vector, m_index + value }; }
     VectorIterator& operator=(const VectorIterator& other)
     {
         m_index = other.m_index;
         return *this;
     }
     ElementType& operator*() { return m_vector[m_index]; }
-    int operator-(const VectorIterator& other) { return m_index - other.m_index; }
+    size_t operator-(const VectorIterator& other) { return m_index - other.m_index; }
 
     bool is_end() const { return m_index == m_vector.size(); }
-    int index() const { return m_index; }
+    size_t index() const { return m_index; }
 
 private:
     friend VectorType;
-    VectorIterator(VectorType& vector, int index)
+    VectorIterator(VectorType& vector, size_t index)
         : m_vector(vector)
         , m_index(index)
     {
     }
     VectorType& m_vector;
-    int m_index { 0 };
+    size_t m_index { 0 };
 };
 
 template<typename T>
@@ -130,7 +131,7 @@ public:
     }
 };
 
-template<typename T, int inline_capacity>
+template<typename T, size_t inline_capacity>
 class Vector {
 public:
     Vector()
@@ -159,7 +160,7 @@ public:
     {
         if constexpr (inline_capacity > 0) {
             if (!m_outline_buffer) {
-                for (int i = 0; i < m_size; ++i) {
+                for (size_t i = 0; i < m_size; ++i) {
                     new (&inline_buffer()[i]) T(move(other.inline_buffer()[i]));
                     other.inline_buffer()[i].~T();
                 }
@@ -177,7 +178,7 @@ public:
         m_size = other.size();
     }
 
-    template<int other_inline_capacity>
+    template<size_t other_inline_capacity>
     Vector(const Vector<T, other_inline_capacity>& other)
     {
         ensure_capacity(other.size());
@@ -195,7 +196,7 @@ public:
             m_outline_buffer = other.m_outline_buffer;
             if constexpr (inline_capacity > 0) {
                 if (!m_outline_buffer) {
-                    for (int i = 0; i < m_size; ++i) {
+                    for (size_t i = 0; i < m_size; ++i) {
                         new (&inline_buffer()[i]) T(move(other.inline_buffer()[i]));
                         other.inline_buffer()[i].~T();
                     }
@@ -220,7 +221,7 @@ public:
 
     void clear_with_capacity()
     {
-        for (int i = 0; i < m_size; ++i)
+        for (size_t i = 0; i < m_size; ++i)
             data()[i].~T();
         m_size = 0;
     }
@@ -239,7 +240,7 @@ public:
 
     bool contains_slow(const T& value) const
     {
-        for (int i = 0; i < size(); ++i) {
+        for (size_t i = 0; i < size(); ++i) {
             if (at(i) == value)
                 return true;
         }
@@ -249,8 +250,8 @@ public:
     // NOTE: Vector::is_null() exists for the benefit of String::copy().
     bool is_null() const { return false; }
     bool is_empty() const { return size() == 0; }
-    int size() const { return m_size; }
-    int capacity() const { return m_capacity; }
+    size_t size() const { return m_size; }
+    size_t capacity() const { return m_capacity; }
 
     T* data()
     {
@@ -265,19 +266,19 @@ public:
         return m_outline_buffer;
     }
 
-    const T& at(int i) const
+    const T& at(size_t i) const
     {
         ASSERT(i >= 0 && i < m_size);
         return data()[i];
     }
-    T& at(int i)
+    T& at(size_t i)
     {
         ASSERT(i >= 0 && i < m_size);
         return data()[i];
     }
 
-    const T& operator[](int i) const { return at(i); }
-    T& operator[](int i) { return at(i); }
+    const T& operator[](size_t i) const { return at(i); }
+    T& operator[](size_t i) { return at(i); }
 
     const T& first() const { return at(0); }
     T& first() { return at(0); }
@@ -302,21 +303,21 @@ public:
         return value;
     }
 
-    T take(int index)
+    T take(size_t index)
     {
         T value = move(at(index));
         remove(index);
         return value;
     }
 
-    void unstable_remove(int index)
+    void unstable_remove(size_t index)
     {
         ASSERT(index < m_size);
         swap(at(index), at(m_size - 1));
         take_last();
     }
 
-    void remove(int index)
+    void remove(size_t index)
     {
         ASSERT(index < m_size);
 
@@ -324,7 +325,7 @@ public:
             TypedTransfer<T>::copy(slot(index), slot(index + 1), m_size - index - 1);
         } else {
             at(index).~T();
-            for (int i = index + 1; i < m_size; ++i) {
+            for (size_t i = index + 1; i < m_size; ++i) {
                 new (slot(i - 1)) T(move(at(i)));
                 at(i).~T();
             }
@@ -333,7 +334,7 @@ public:
         --m_size;
     }
 
-    void insert(int index, T&& value)
+    void insert(size_t index, T&& value)
     {
         ASSERT(index <= size());
         if (index == size())
@@ -343,7 +344,7 @@ public:
         if constexpr (Traits<T>::is_trivial()) {
             TypedTransfer<T>::move(slot(index + 1), slot(index), m_size - index - 1);
         } else {
-            for (int i = size() - 1; i > index; --i) {
+            for (size_t i = size() - 1; i > index; --i) {
                 new (slot(i)) T(move(at(i - 1)));
                 at(i - 1).~T();
             }
@@ -351,15 +352,15 @@ public:
         new (slot(index)) T(move(value));
     }
 
-    void insert(int index, const T& value)
+    void insert(size_t index, const T& value)
     {
         insert(index, T(value));
     }
 
     template<typename C>
-    void insert_before_matching(T&& value, C callback, int first_index = 0, int* inserted_index = nullptr)
+    void insert_before_matching(T&& value, C callback, size_t first_index = 0, size_t* inserted_index = nullptr)
     {
-        for (int i = first_index; i < size(); ++i) {
+        for (size_t i = first_index; i < size(); ++i) {
             if (callback(at(i))) {
                 insert(i, move(value));
                 if (inserted_index)
@@ -383,7 +384,7 @@ public:
         return *this;
     }
 
-    template<int other_inline_capacity>
+    template<size_t other_inline_capacity>
     Vector& operator=(const Vector<T, other_inline_capacity>& other)
     {
         clear();
@@ -416,7 +417,7 @@ public:
     template<typename Callback>
     void remove_first_matching(Callback callback)
     {
-        for (int i = 0; i < size(); ++i) {
+        for (size_t i = 0; i < size(); ++i) {
             if (callback(at(i))) {
                 remove(i);
                 return;
@@ -427,7 +428,7 @@ public:
     template<typename Callback>
     void remove_all_matching(Callback callback)
     {
-        for (int i = 0; i < size();) {
+        for (size_t i = 0; i < size();) {
             if (callback(at(i))) {
                 remove(i);
             } else {
@@ -491,7 +492,7 @@ public:
         auto other_size = other.size();
         grow_capacity(size() + other_size);
 
-        for (int i = size() + other_size - 1; i >= other.size(); --i) {
+        for (size_t i = size() + other_size - 1; i >= other.size(); --i) {
             new (slot(i)) T(move(at(i - other_size)));
             at(i - other_size).~T();
         }
@@ -501,7 +502,7 @@ public:
         m_size += other_size;
     }
 
-    void append(const T* values, int count)
+    void append(const T* values, size_t count)
     {
         if (!count)
             return;
@@ -510,24 +511,24 @@ public:
         m_size += count;
     }
 
-    void grow_capacity(int needed_capacity)
+    void grow_capacity(size_t needed_capacity)
     {
         if (m_capacity >= needed_capacity)
             return;
         ensure_capacity(padded_capacity(needed_capacity));
     }
 
-    void ensure_capacity(int needed_capacity)
+    void ensure_capacity(size_t needed_capacity)
     {
         if (m_capacity >= needed_capacity)
             return;
-        int new_capacity = needed_capacity;
+        size_t new_capacity = needed_capacity;
         auto* new_buffer = (T*)kmalloc(new_capacity * sizeof(T));
 
         if constexpr (Traits<T>::is_trivial()) {
             TypedTransfer<T>::copy(new_buffer, data(), m_size);
         } else {
-            for (int i = 0; i < m_size; ++i) {
+            for (size_t i = 0; i < m_size; ++i) {
                 new (&new_buffer[i]) T(move(at(i)));
                 at(i).~T();
             }
@@ -538,7 +539,7 @@ public:
         m_capacity = new_capacity;
     }
 
-    void shrink(int new_size)
+    void shrink(size_t new_size)
     {
         ASSERT(new_size <= size());
         if (new_size == size())
@@ -549,18 +550,18 @@ public:
             return;
         }
 
-        for (int i = new_size; i < size(); ++i)
+        for (size_t i = new_size; i < size(); ++i)
             at(i).~T();
         m_size = new_size;
     }
 
-    void resize(int new_size)
+    void resize(size_t new_size)
     {
         if (new_size <= size())
             return shrink(new_size);
 
         ensure_capacity(new_size);
-        for (int i = size(); i < new_size; ++i)
+        for (size_t i = size(); i < new_size; ++i)
             new (slot(i)) T;
         m_size = new_size;
     }
@@ -576,7 +577,7 @@ public:
     template<typename Finder>
     ConstIterator find(Finder finder) const
     {
-        for (int i = 0; i < m_size; ++i) {
+        for (size_t i = 0; i < m_size; ++i) {
             if (finder(at(i)))
                 return ConstIterator(*this, i);
         }
@@ -586,7 +587,7 @@ public:
     template<typename Finder>
     Iterator find(Finder finder)
     {
-        for (int i = 0; i < m_size; ++i) {
+        for (size_t i = 0; i < m_size; ++i) {
             if (finder(at(i)))
                 return Iterator(*this, i);
         }
@@ -603,13 +604,13 @@ public:
         return find([&](auto& other) { return value == other; });
     }
 
-    int find_first_index(const T& value)
+    Optional<size_t> find_first_index(const T& value)
     {
-        for (int i = 0; i < m_size; ++i) {
+        for (size_t i = 0; i < m_size; ++i) {
             if (value == at(i))
                 return i;
         }
-        return -1;
+        return {};
     }
 
 private:
@@ -618,13 +619,13 @@ private:
         m_capacity = inline_capacity;
     }
 
-    static int padded_capacity(int capacity)
+    static size_t padded_capacity(size_t capacity)
     {
-        return max(int(4), capacity + (capacity / 4) + 4);
+        return max(static_cast<size_t>(4), capacity + (capacity / 4) + 4);
     }
 
-    T* slot(int i) { return &data()[i]; }
-    const T* slot(int i) const { return &data()[i]; }
+    T* slot(size_t i) { return &data()[i]; }
+    const T* slot(size_t i) const { return &data()[i]; }
 
     T* inline_buffer()
     {
@@ -637,8 +638,8 @@ private:
         return reinterpret_cast<const T*>(m_inline_buffer_storage);
     }
 
-    int m_size { 0 };
-    int m_capacity { 0 };
+    size_t m_size { 0 };
+    size_t m_capacity { 0 };
 
     alignas(T) u8 m_inline_buffer_storage[sizeof(T) * inline_capacity];
     T* m_outline_buffer { nullptr };

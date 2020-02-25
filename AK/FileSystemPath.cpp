@@ -50,10 +50,10 @@ void FileSystemPath::canonicalize()
     if (!is_absolute_path)
         parts.prepend(".");
 
-    int approximate_canonical_length = 0;
+    size_t approximate_canonical_length = 0;
     Vector<String> canonical_parts;
 
-    for (int i = 0; i < parts.size(); ++i) {
+    for (size_t i = 0; i < parts.size(); ++i) {
         auto& part = parts[i];
         if (is_absolute_path || i != 0) {
             if (part == ".")
@@ -75,7 +75,7 @@ void FileSystemPath::canonicalize()
     }
 
     StringBuilder dirname_builder(approximate_canonical_length);
-    for (int i = 0; i < canonical_parts.size() - 1; ++i) {
+    for (size_t i = 0; i < canonical_parts.size() - 1; ++i) {
         auto& canonical_part = canonical_parts[i];
         if (is_absolute_path || i != 0)
             dirname_builder.append('/');
@@ -90,7 +90,7 @@ void FileSystemPath::canonicalize()
         m_extension = name_parts[1];
 
     StringBuilder builder(approximate_canonical_length);
-    for (int i = 0; i < canonical_parts.size(); ++i) {
+    for (size_t i = 0; i < canonical_parts.size(); ++i) {
         auto& canonical_part = canonical_parts[i];
         if (is_absolute_path || i != 0)
             builder.append('/');
