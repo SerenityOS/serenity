@@ -1,0 +1,13 @@
+diff --git a/src/renderer/renderer.c b/src/renderer/renderer.c
+index 90cfee9..4e36ed2 100644
+--- a/src/renderer/renderer.c
++++ b/src/renderer/renderer.c
+@@ -104,7 +104,7 @@ struct texture *renderFrame(struct renderer *r) {
+ 			char rem[64];
+ 			smartTime((msecTillFinished) / r->prefs.threadCount, rem);
+ 			float completion = ((float)completedSamples / totalTileSamples) * 100;
+-			logr(info, "[%s%.0f%%%s] μs/path: %.02f, etf: %s, %.02lfMs/s %s        \r",
++			logr(info, "[%s%.0f%%%s] us/path: %.02f, etf: %s, %.02lfMs/s %s        \r",
+ 				 KBLU,
+ 				 completion,
+ 				 KNRM,
