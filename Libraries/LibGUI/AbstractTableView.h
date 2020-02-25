@@ -70,6 +70,7 @@ public:
     virtual ModelIndex index_at_event_position(const Gfx::Point&, bool& is_toggle) const;
     virtual ModelIndex index_at_event_position(const Gfx::Point&) const override;
 
+    virtual void select_all() override;
 protected:
     virtual ~AbstractTableView() override;
     AbstractTableView();

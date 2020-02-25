@@ -43,7 +43,7 @@ public:
 
     ModelSelection& selection() { return m_selection; }
     const ModelSelection& selection() const { return m_selection; }
-    void select_all();
+    virtual void select_all() = 0;
 
     bool is_editable() const { return m_editable; }
     void set_editable(bool editable) { m_editable = editable; }
