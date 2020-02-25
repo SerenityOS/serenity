@@ -29,7 +29,6 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGfx/CharacterBitmap.h>
-#include <LibGfx/Palette.h>
 
 namespace GUI {
 
@@ -57,6 +56,28 @@ ColumnsView::ColumnsView()
 
 ColumnsView::~ColumnsView()
 {
+}
+
+void ColumnsView::select_all()
+{
+    Vector<Column> columns_for_selection;
+    selection().for_each_index([&](auto& index) {
+        for (auto& column : m_columns) {
+            if (column.parent_index == index.parent()) {
+                columns_for_selection.append(column);
+                return;
+            }
+        }
+        ASSERT_NOT_REACHED();
+    });
+
+    for (Column& column : columns_for_selection) {
+        int row_count = model()->row_count(column.parent_index);
+        for (int row = 0; row < row_count; row++) {
+            ModelIndex index = model()->index(row, m_model_column, column.parent_index);
+            selection().add(index);
+        }
+    }
 }
 
 void ColumnsView::paint_event(PaintEvent& event)
