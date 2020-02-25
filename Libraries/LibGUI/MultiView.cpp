@@ -137,6 +137,9 @@ void MultiView::set_model(RefPtr<Model> model)
 
 void MultiView::set_model_column(int column)
 {
+    if (m_model_column == column)
+        return;
+    m_model_column = column;
     m_item_view->set_model_column(column);
     m_columns_view->set_model_column(column);
 }
