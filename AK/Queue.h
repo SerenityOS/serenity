@@ -38,7 +38,7 @@ public:
     Queue() { }
     ~Queue() { }
 
-    int size() const { return m_size; }
+    size_t size() const { return m_size; }
     bool is_empty() const { return m_size == 0; }
 
     void enqueue(T&& value)
@@ -81,8 +81,8 @@ public:
 
 private:
     SinglyLinkedList<OwnPtr<Vector<T, segment_size>>> m_segments;
-    int m_index_into_first { 0 };
-    int m_size { 0 };
+    size_t m_index_into_first { 0 };
+    size_t m_size { 0 };
 };
 
 }
