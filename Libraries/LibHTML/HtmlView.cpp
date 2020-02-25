@@ -46,9 +46,8 @@
 #include <LibHTML/ResourceLoader.h>
 #include <stdio.h>
 
-HtmlView::HtmlView(GUI::Widget* parent)
-    : GUI::ScrollableWidget(parent)
-    , m_main_frame(::Frame::create(*this))
+HtmlView::HtmlView()
+    : m_main_frame(::Frame::create(*this))
 {
     main_frame().on_set_needs_display = [this](auto& content_rect) {
         if (content_rect.is_empty()) {
@@ -60,9 +59,6 @@ HtmlView::HtmlView(GUI::Widget* parent)
         update(adjusted_rect);
     };
 
-    set_frame_shape(Gfx::FrameShape::Container);
-    set_frame_shadow(Gfx::FrameShadow::Sunken);
-    set_frame_thickness(2);
     set_should_hide_unnecessary_scrollbars(true);
     set_background_role(ColorRole::Base);
 }
@@ -332,7 +328,7 @@ void HtmlView::load(const URL& url)
     if (on_load_start)
         on_load_start(url);
 
-    ResourceLoader::the().load(url, [=](auto data) {
+    ResourceLoader::the().load(url, [this, url](auto data) {
         if (data.is_null()) {
             dbg() << "Load failed!";
             ASSERT_NOT_REACHED();

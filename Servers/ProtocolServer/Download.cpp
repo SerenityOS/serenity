@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Badge.h>
 #include <ProtocolServer/Download.h>
 #include <ProtocolServer/PSClientConnection.h>
 
@@ -38,7 +39,7 @@ static HashMap<i32, RefPtr<Download>>& all_downloads()
 
 Download* Download::find_by_id(i32 id)
 {
-    return all_downloads().get(id).value_or(nullptr);
+    return const_cast<Download*>(all_downloads().get(id).value_or(nullptr));
 }
 
 Download::Download(PSClientConnection& client)
@@ -84,4 +85,3 @@ void Download::did_progress(size_t total_size, size_t downloaded_size)
     m_downloaded_size = downloaded_size;
     m_client->did_progress_download({}, *this);
 }
-

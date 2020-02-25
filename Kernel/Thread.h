@@ -26,26 +26,20 @@
 
 #pragma once
 
-#include <AK/Atomic.h>
 #include <AK/Function.h>
 #include <AK/IntrusiveList.h>
+#include <AK/Optional.h>
 #include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/UnixTypes.h>
-#include <Kernel/VM/Region.h>
 #include <LibC/fd_set.h>
 
-class Alarm;
-class FileDescription;
-class Process;
-class ProcessInspectionHandle;
-class Region;
-class WaitQueue;
+namespace Kernel {
 
 enum class ShouldUnblockThread {
     No = 0,
@@ -73,6 +67,8 @@ class Thread {
     friend class Scheduler;
 
 public:
+    static Thread* current;
+
     explicit Thread(Process&);
     ~Thread();
 
@@ -179,6 +175,7 @@ public:
         explicit WriteBlocker(const FileDescription&);
         virtual bool should_unblock(Thread&, time_t, long) override;
         virtual const char* state_string() const override { return "Writing"; }
+
     private:
         Optional<timeval> m_deadline;
     };
@@ -188,6 +185,7 @@ public:
         explicit ReadBlocker(const FileDescription&);
         virtual bool should_unblock(Thread&, time_t, long) override;
         virtual const char* state_string() const override { return "Reading"; }
+
     private:
         Optional<timeval> m_deadline;
     };
@@ -270,7 +268,7 @@ public:
     u32 frame_ptr() const { return m_tss.ebp; }
     u32 stack_ptr() const { return m_tss.esp; }
 
-    RegisterDump& get_register_dump_from_stack();
+    RegisterState& get_register_dump_from_stack();
 
     u16 selector() const { return m_far_ptr.selector; }
     TSS32& tss() { return m_tss; }
@@ -442,8 +440,9 @@ private:
     friend class WaitQueue;
     bool unlock_process_if_locked();
     void relock_process();
-
     String backtrace_impl() const;
+    void reset_fpu_state();
+
     Process& m_process;
     int m_tid { -1 };
     TSS32 m_tss;
@@ -579,3 +578,5 @@ inline IterationDecision Scheduler::for_each_nonrunnable(Callback callback)
 
 u16 thread_specific_selector();
 Descriptor& thread_specific_descriptor();
+
+}

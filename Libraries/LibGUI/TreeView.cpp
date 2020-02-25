@@ -24,10 +24,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGfx/Palette.h>
+#include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/TreeView.h>
+#include <LibGfx/Bitmap.h>
+#include <LibGfx/Palette.h>
 
 //#define DEBUG_ITEM_RECTS
 
@@ -49,8 +51,7 @@ TreeView::MetadataForIndex& TreeView::ensure_metadata_for_index(const ModelIndex
     return new_metadata_ref;
 }
 
-TreeView::TreeView(Widget* parent)
-    : AbstractTableView(parent)
+TreeView::TreeView()
 {
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
@@ -213,13 +214,13 @@ void TreeView::paint_event(PaintEvent& event)
 
         Color text_color = palette().color(foreground_role());
         if (is_selected_row)
-            text_color = Color::White;
+            text_color = is_focused() ? palette().selection_text() : palette().inactive_selection_text();
 
         Color background_color;
         Color key_column_background_color;
         if (is_selected_row) {
-            background_color = is_focused() ? palette().selection() : Color::from_rgb(0x606060);
-            key_column_background_color = is_focused() ? palette().selection() : Color::from_rgb(0x606060);
+            background_color = is_focused() ? palette().selection() : palette().inactive_selection();
+            key_column_background_color = is_focused() ? palette().selection() : palette().inactive_selection();
         } else {
             if (alternating_row_colors() && (painted_row_index % 2)) {
                 background_color = Color(220, 220, 220);
@@ -385,6 +386,7 @@ void TreeView::keydown_event(KeyEvent& event)
         });
         if (found_index.is_valid()) {
             selection().set(found_index);
+            scroll_into_view(selection().first(), Orientation::Vertical);
             update();
         }
         return;
@@ -400,8 +402,11 @@ void TreeView::keydown_event(KeyEvent& event)
             previous_index = index;
             return IterationDecision::Continue;
         });
-        if (found_index.is_valid())
+        if (found_index.is_valid()) {
             selection().set(found_index);
+            scroll_into_view(selection().first(), Orientation::Vertical);
+            update();
+        }
         return;
     }
 
@@ -415,8 +420,14 @@ void TreeView::keydown_event(KeyEvent& event)
     if (event.key() == KeyCode::Key_Left) {
         if (cursor_index.is_valid() && model()->row_count(cursor_index)) {
             auto& metadata = ensure_metadata_for_index(cursor_index);
-            if (metadata.open)
+            if (metadata.open) {
                 open_tree_node(false, metadata);
+                return;
+            }
+        }
+        if (cursor_index.is_valid() && cursor_index.parent().is_valid()) {
+            selection().set(cursor_index.parent());
+            scroll_into_view(selection().first(), Orientation::Vertical);
             return;
         }
     }
@@ -424,8 +435,13 @@ void TreeView::keydown_event(KeyEvent& event)
     if (event.key() == KeyCode::Key_Right) {
         if (cursor_index.is_valid() && model()->row_count(cursor_index)) {
             auto& metadata = ensure_metadata_for_index(cursor_index);
-            if (!metadata.open)
+            if (!metadata.open) {
                 open_tree_node(true, metadata);
+                return;
+            }
+
+            selection().set(model()->index(0, model()->tree_column(), cursor_index));
+            scroll_into_view(selection().first(), Orientation::Vertical);
             return;
         }
     }

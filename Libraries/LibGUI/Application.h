@@ -26,29 +26,15 @@
 
 #pragma once
 
-#include <AK/Badge.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
-#include <LibGfx/Palette.h>
+#include <AK/String.h>
+#include <LibCore/Forward.h>
+#include <LibGUI/Forward.h>
 #include <LibGUI/Shortcut.h>
-
-namespace AK {
-class SharedBuffer;
-}
-namespace Core {
-class EventLoop;
-}
-namespace Gfx {
-class Palette;
-class Point;
-}
+#include <LibGfx/Forward.h>
 
 namespace GUI {
-class Action;
-class KeyEvent;
-class MenuBar;
-class Window;
-class WindowServerConnection;
 
 class Application {
 public:
@@ -77,8 +63,8 @@ public:
     const String& invoked_as() const { return m_invoked_as; }
     const Vector<String>& args() const { return m_args; }
 
-    Palette palette() const { return Palette(*m_palette); }
-    void set_palette(const Palette&);
+    Gfx::Palette palette() const;
+    void set_palette(const Gfx::Palette&);
 
     void set_system_palette(SharedBuffer&);
 
@@ -89,7 +75,7 @@ private:
     RefPtr<Gfx::PaletteImpl> m_system_palette;
     HashMap<Shortcut, Action*> m_global_shortcut_actions;
     class TooltipWindow;
-    TooltipWindow* m_tooltip_window { nullptr };
+    RefPtr<TooltipWindow> m_tooltip_window;
     bool m_quit_when_last_window_deleted { true };
     String m_invoked_as;
     Vector<String> m_args;

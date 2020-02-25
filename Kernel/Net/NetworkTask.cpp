@@ -48,6 +48,8 @@
 //#define UDP_DEBUG
 //#define TCP_DEBUG
 
+namespace Kernel {
+
 static void handle_arp(const EthernetFrameHeader&, size_t frame_size);
 static void handle_ipv4(const EthernetFrameHeader&, size_t frame_size);
 static void handle_icmp(const EthernetFrameHeader&, const IPv4Packet&);
@@ -107,7 +109,7 @@ void NetworkTask_main()
     for (;;) {
         size_t packet_size = dequeue_packet(buffer, buffer_size);
         if (!packet_size) {
-            current->wait_on(packet_wait_queue);
+            Thread::current->wait_on(packet_wait_queue);
             continue;
         }
         if (packet_size < sizeof(EthernetFrameHeader)) {
@@ -621,4 +623,6 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
                 socket->send_tcp_packet(TCPFlags::ACK);
         }
     }
+}
+
 }

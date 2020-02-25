@@ -24,15 +24,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGfx/StylePainter.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/Palette.h>
+#include <LibGfx/StylePainter.h>
 
 namespace GUI {
 
-Frame::Frame(Widget* parent)
-    : Widget(parent)
+Frame::Frame()
 {
+    set_frame_thickness(2);
+    set_frame_shape(Gfx::FrameShape::Container);
+    set_frame_shadow(Gfx::FrameShadow::Sunken);
 }
 
 Frame::~Frame()

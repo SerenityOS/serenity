@@ -26,6 +26,7 @@
 
 #include "LookupServer.h"
 #include <LibCore/EventLoop.h>
+#include <LibCore/LocalServer.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)

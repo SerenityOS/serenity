@@ -24,7 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/String.h>
 #include <LibGUI/Icon.h>
+#include <LibGfx/Bitmap.h>
 
 GIcon::GIcon()
     : m_impl(GIconImpl::create())

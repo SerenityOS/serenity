@@ -26,13 +26,15 @@
 
 #pragma once
 
+#include <AK/ByteBuffer.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/StdLibExtras.h>
-#include <LibGfx/TextAlignment.h>
 #include <LibGUI/ScrollableWidget.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/TextAlignment.h>
 
 class HexEditor : public GUI::ScrollableWidget {
     C_OBJECT(HexEditor)
@@ -65,7 +67,7 @@ public:
     Function<void()> on_change;
 
 protected:
-    HexEditor(GUI::Widget* parent);
+    HexEditor();
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;

@@ -25,20 +25,16 @@
  */
 
 #include "TextWidget.h"
+#include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
-#include <LibGfx/Palette.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/Palette.h>
 
-TextWidget::TextWidget(GUI::Widget* parent)
-    : GUI::Frame(parent)
-{
-}
-
-TextWidget::TextWidget(const StringView& text, GUI::Widget* parent)
-    : GUI::Frame(parent)
-    , m_text(text)
+TextWidget::TextWidget(const StringView& text)
+    : m_text(text)
 {
 }
 
@@ -66,7 +62,7 @@ void TextWidget::paint_event(GUI::PaintEvent& event)
     if (frame_thickness() > 0)
         indent = font().glyph_width('x') / 2;
 
-    for (int i = 0; i < m_lines.size(); i++) {
+    for (size_t i = 0; i < m_lines.size(); i++) {
         auto& line = m_lines[i];
 
         auto text_rect = frame_inner_rect();
@@ -99,13 +95,13 @@ void TextWidget::wrap_and_set_height()
         if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n') {
             if (start.has_value())
                 words.append(m_text.substring(start.value(), i - start.value()));
-            start = -1;
+            start.clear();
         } else if (!start.has_value()) {
             start = i;
         }
     }
     if (start.has_value())
-        words.append(m_text.substring(start, m_text.length() - start.value()));
+        words.append(m_text.substring(start.value(), m_text.length() - start.value()));
 
     auto rect = frame_inner_rect();
     if (frame_thickness() > 0)
@@ -121,6 +117,7 @@ void TextWidget::wrap_and_set_height()
 
         if (line_width + word_width > rect.width()) {
             lines.append(builder.to_string());
+            builder.clear();
             line_width = 0;
         }
 

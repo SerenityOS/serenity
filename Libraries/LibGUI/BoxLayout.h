@@ -26,28 +26,29 @@
 
 #pragma once
 
+#include <LibGUI/Forward.h>
 #include <LibGUI/Layout.h>
-#include <LibGUI/Widget.h>
+#include <LibGfx/Orientation.h>
 
 namespace GUI {
 
 class BoxLayout : public Layout {
 public:
-    explicit BoxLayout(Orientation);
+    explicit BoxLayout(Gfx::Orientation);
     virtual ~BoxLayout() override {}
 
-    Orientation orientation() const { return m_orientation; }
+    Gfx::Orientation orientation() const { return m_orientation; }
 
     virtual void run(Widget&) override;
 
 private:
-    Orientation m_orientation;
+    Gfx::Orientation m_orientation;
 };
 
 class VerticalBoxLayout final : public BoxLayout {
 public:
     explicit VerticalBoxLayout()
-        : BoxLayout(Orientation::Vertical)
+        : BoxLayout(Gfx::Orientation::Vertical)
     {
     }
     virtual ~VerticalBoxLayout() override {}
@@ -56,7 +57,7 @@ public:
 class HorizontalBoxLayout final : public BoxLayout {
 public:
     explicit HorizontalBoxLayout()
-        : BoxLayout(Orientation::Horizontal)
+        : BoxLayout(Gfx::Orientation::Horizontal)
     {
     }
     virtual ~HorizontalBoxLayout() override {}

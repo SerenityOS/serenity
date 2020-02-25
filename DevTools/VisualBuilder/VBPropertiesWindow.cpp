@@ -59,7 +59,7 @@ public:
 
     virtual RefPtr<GUI::Widget> create_widget() override
     {
-        auto combo = GUI::ComboBox::construct(nullptr);
+        auto combo = GUI::ComboBox::construct();
         combo->set_only_allow_values_from_model(true);
         combo->set_model(adopt(*new BoolValuesModel));
         combo->on_return_pressed = [this] { commit(); };
@@ -87,7 +87,7 @@ VBPropertiesWindow::VBPropertiesWindow()
     widget->layout()->set_margins({ 2, 2, 2, 2 });
     set_main_widget(widget);
 
-    m_table_view = GUI::TableView::construct(widget);
+    m_table_view = widget->add<GUI::TableView>();
     m_table_view->set_headers_visible(false);
     m_table_view->set_editable(true);
 

@@ -26,7 +26,6 @@
 
 #include <AK/Assertions.h>
 #include <AK/JsonObject.h>
-#include <AK/kstdio.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Object.h>
@@ -103,7 +102,7 @@ void Object::insert_child_before(Object& new_child, Object& before_child)
 
 void Object::remove_child(Object& object)
 {
-    for (int i = 0; i < m_children.size(); ++i) {
+    for (size_t i = 0; i < m_children.size(); ++i) {
         if (m_children.ptr_at(i).ptr() == &object) {
             // NOTE: We protect the child so it survives the handling of ChildRemoved.
             NonnullRefPtr<Object> protector = object;
@@ -204,6 +203,11 @@ bool Object::is_visible_for_timer_purposes() const
     if (parent())
         return parent()->is_visible_for_timer_purposes();
     return true;
+}
+
+const LogStream& operator<<(const LogStream& stream, const Object& object)
+{
+    return stream << object.class_name() << '{' << &object << '}';
 }
 
 }

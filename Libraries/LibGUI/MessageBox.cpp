@@ -28,13 +28,16 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGfx/Font.h>
 #include <stdio.h>
 
 namespace GUI {
 
 int MessageBox::show(const StringView& text, const StringView& title, Type type, InputType input_type, Core::Object* parent)
 {
-    auto box = MessageBox::construct(text, title, type, input_type, parent);
+    auto box = MessageBox::construct(text, title, type, input_type);
+    if (parent)
+        parent->add_child(box);
     return box->exec();
 }
 
@@ -73,7 +76,17 @@ bool MessageBox::should_include_ok_button() const
 
 bool MessageBox::should_include_cancel_button() const
 {
-    return m_input_type == InputType::OKCancel;
+    return m_input_type == InputType::OKCancel || m_input_type == InputType::YesNoCancel;
+}
+
+bool MessageBox::should_include_yes_button() const
+{
+    return m_input_type == InputType::YesNo || m_input_type == InputType::YesNoCancel;
+}
+
+bool MessageBox::should_include_no_button() const
+{
+    return should_include_yes_button();
 }
 
 void MessageBox::build()
@@ -92,48 +105,46 @@ void MessageBox::build()
 
     RefPtr<Widget> message_container = widget;
     if (m_type != Type::None) {
-        message_container = Widget::construct(widget.ptr());
+        message_container = widget->add<Widget>();
         message_container->set_layout(make<HorizontalBoxLayout>());
         message_container->layout()->set_margins({ 8, 0, 8, 0 });
         message_container->layout()->set_spacing(8);
 
-        auto icon_label = Label::construct(message_container);
+        auto icon_label = message_container->add<Label>();
         icon_label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
         icon_label->set_preferred_size(32, 32);
         icon_label->set_icon(icon());
         icon_width = icon_label->icon()->width();
     }
 
-    auto label = Label::construct(m_text, message_container);
+    auto label = message_container->add<Label>(m_text);
     label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     label->set_preferred_size(text_width, 16);
 
-    auto button_container = Widget::construct(widget.ptr());
+    auto button_container = widget->add<Widget>();
     button_container->set_layout(make<HorizontalBoxLayout>());
     button_container->layout()->set_spacing(5);
     button_container->layout()->set_margins({ 15, 0, 15, 0 });
 
-    if (should_include_ok_button()) {
-        auto ok_button = Button::construct(button_container);
-        ok_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-        ok_button->set_preferred_size(0, 20);
-        ok_button->set_text("OK");
-        ok_button->on_click = [this](auto&) {
-            dbgprintf("GMessageBox: OK button clicked\n");
-            done(Dialog::ExecOK);
+    auto add_button = [&](String label, Dialog::ExecResult result) {
+        auto button = button_container->add<Button>();
+        button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+        button->set_preferred_size(0, 20);
+        button->set_text(label);
+        button->on_click = [this, label, result](auto&) {
+            dbg() << "GUI::MessageBox: '" << label << "' button clicked";
+            done(result);
         };
-    }
+    };
 
-    if (should_include_cancel_button()) {
-        auto cancel_button = Button::construct(button_container);
-        cancel_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-        cancel_button->set_preferred_size(0, 20);
-        cancel_button->set_text("Cancel");
-        cancel_button->on_click = [this](auto&) {
-            dbgprintf("GMessageBox: Cancel button clicked\n");
-            done(Dialog::ExecCancel);
-        };
-    }
+    if (should_include_ok_button())
+        add_button("OK", Dialog::ExecOK);
+    if (should_include_yes_button())
+        add_button("Yes", Dialog::ExecYes);
+    if (should_include_no_button())
+        add_button("No", Dialog::ExecNo);
+    if (should_include_cancel_button())
+        add_button("Cancel", Dialog::ExecCancel);
 
     set_rect(x(), y(), text_width + icon_width + 80, 100);
     set_resizable(false);

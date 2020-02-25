@@ -92,14 +92,10 @@ public:
     }
 
 private:
-    LocatorTextBox(GUI::Widget* parent)
-        : GUI::TextBox(parent)
-    {
-    }
+    LocatorTextBox() {}
 };
 
-Locator::Locator(GUI::Widget* parent)
-    : GUI::Widget(parent)
+Locator::Locator()
 {
     if (!s_cplusplus_icon) {
         s_file_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-unknown.png");
@@ -110,7 +106,7 @@ Locator::Locator(GUI::Widget* parent)
     set_layout(make<GUI::VerticalBoxLayout>());
     set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     set_preferred_size(0, 20);
-    m_textbox = LocatorTextBox::construct(this);
+    m_textbox = add<LocatorTextBox>();
     m_textbox->on_change = [this] {
         update_suggestions();
     };
@@ -154,7 +150,7 @@ Locator::Locator(GUI::Widget* parent)
     m_popup_window->set_window_type(GUI::WindowType::Tooltip);
     m_popup_window->set_rect(0, 0, 500, 200);
 
-    m_suggestion_view = GUI::TableView::construct(nullptr);
+    m_suggestion_view = GUI::TableView::construct();
     m_suggestion_view->set_size_columns_to_fit_content(true);
     m_suggestion_view->set_headers_visible(false);
     m_popup_window->set_main_widget(m_suggestion_view);

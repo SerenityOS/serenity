@@ -28,6 +28,8 @@
 
 // #define OFFD_DEBUG
 
+namespace Kernel {
+
 NonnullRefPtr<DiskPartition> DiskPartition::create(BlockDevice& device, unsigned block_offset, unsigned block_limit)
 {
     return adopt(*new DiskPartition(device, block_offset, block_limit));
@@ -66,4 +68,6 @@ bool DiskPartition::write_blocks(unsigned index, u16 count, const u8* data)
 const char* DiskPartition::class_name() const
 {
     return "DiskPartition";
+}
+
 }

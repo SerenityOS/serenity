@@ -26,31 +26,24 @@
 
 #pragma once
 
+#include <AK/FixedArray.h>
+#include <AK/HashMap.h>
 #include <AK/InlineLinkedList.h>
-#include <AK/NonnullRefPtrVector.h>
+#include <AK/NonnullOwnPtrVector.h>
 #include <AK/String.h>
-#include <AK/Types.h>
-#include <AK/Vector.h>
 #include <AK/WeakPtr.h>
-#include <AK/Weakable.h>
-#include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/FileSystem/InodeMetadata.h>
+#include <Kernel/Forward.h>
 #include <Kernel/Lock.h>
-#include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Syscall.h>
-#include <Kernel/TTY/TTY.h>
 #include <Kernel/Thread.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/VM/RangeAllocator.h>
 #include <LibC/signal_numbers.h>
 
 class ELFLoader;
-class FileDescription;
-class KBuffer;
-class PageDirectory;
-class Region;
-class VMObject;
-class ProcessTracer;
-class SharedBuffer;
+
+namespace Kernel {
 
 timeval kgettimeofday();
 void kgettimeofday(timeval&);
@@ -101,12 +94,13 @@ struct UnveiledPath {
     unsigned permissions { 0 };
 };
 
-class Process : public InlineLinkedListNode<Process>
-    , public Weakable<Process> {
+class Process : public InlineLinkedListNode<Process> {
     friend class InlineLinkedListNode<Process>;
     friend class Thread;
 
 public:
+    static Process* current;
+
     static Process* create_kernel_process(Thread*& first_thread, String&& name, void (*entry)());
     static Process* create_user_process(Thread*& first_thread, const String& path, uid_t, gid_t, pid_t ppid, int& error, Vector<String>&& arguments = Vector<String>(), Vector<String>&& environment = Vector<String>(), TTY* = nullptr);
     ~Process();
@@ -142,7 +136,7 @@ public:
     pid_t pgid() const { return m_pgid; }
     uid_t uid() const { return m_uid; }
     gid_t gid() const { return m_gid; }
-    const HashTable<gid_t>& extra_gids() const { return m_extra_gids; }
+    const FixedArray<gid_t>& extra_gids() const { return m_extra_gids; }
     uid_t euid() const { return m_euid; }
     gid_t egid() const { return m_egid; }
     pid_t ppid() const { return m_ppid; }
@@ -195,12 +189,11 @@ public:
     ssize_t sys$write(int fd, const u8*, ssize_t);
     ssize_t sys$writev(int fd, const struct iovec* iov, int iov_count);
     int sys$fstat(int fd, stat*);
-    int sys$lstat(const char*, size_t, stat*);
-    int sys$stat(const char*, size_t, stat*);
+    int sys$stat(const Syscall::SC_stat_params*);
     int sys$lseek(int fd, off_t, int whence);
     int sys$kill(pid_t pid, int sig);
     [[noreturn]] void sys$exit(int status);
-    int sys$sigreturn(RegisterDump& registers);
+    int sys$sigreturn(RegisterState& registers);
     pid_t sys$waitid(const Syscall::SC_waitid_params*);
     void* sys$mmap(const Syscall::SC_mmap_params*);
     int sys$munmap(void*, size_t size);
@@ -224,7 +217,7 @@ public:
     int sys$readlink(const Syscall::SC_readlink_params*);
     int sys$ttyname_r(int fd, char*, ssize_t);
     int sys$ptsname_r(int fd, char*, ssize_t);
-    pid_t sys$fork(RegisterDump&);
+    pid_t sys$fork(RegisterState&);
     int sys$execve(const Syscall::SC_execve_params*);
     int sys$getdtablesize();
     int sys$dup(int oldfd);
@@ -314,7 +307,7 @@ public:
     [[nodiscard]] static siginfo_t reap(Process&);
 
     const TTY* tty() const { return m_tty; }
-    void set_tty(TTY* tty) { m_tty = tty; }
+    void set_tty(TTY*);
 
     size_t region_count() const { return m_regions.size(); }
     const NonnullOwnPtrVector<Region>& regions() const { return m_regions; }
@@ -375,13 +368,14 @@ public:
     Region* allocate_region_with_vmobject(VirtualAddress, size_t, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const String& name, int prot, bool user_accessible = true);
     Region* allocate_file_backed_region(VirtualAddress, size_t, NonnullRefPtr<Inode>, const String& name, int prot);
     Region* allocate_region(VirtualAddress, size_t, const String& name, int prot = PROT_READ | PROT_WRITE, bool commit = true);
+    Region* allocate_region_with_vmobject(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const String& name, int prot, bool user_accessible = true);
+    Region* allocate_region(const Range&, const String& name, int prot = PROT_READ | PROT_WRITE, bool commit = true);
     bool deallocate_region(Region& region);
 
     Region& allocate_split_region(const Region& source_region, const Range&, size_t offset_in_vmobject);
     Vector<Region*, 2> split_region_around_range(const Region& source_region, const Range&);
 
-    void set_being_inspected(bool b) { m_being_inspected = b; }
-    bool is_being_inspected() const { return m_being_inspected; }
+    bool is_being_inspected() const { return m_inspector_count; }
 
     void terminate_due_to_signal(u8 signal);
     void send_signal(u8, Process* sender);
@@ -408,6 +402,9 @@ public:
     VeilState veil_state() const { return m_veil_state; }
     const Vector<UnveiledPath>& unveiled_paths() const { return m_unveiled_paths; }
 
+    void increment_inspector_count(Badge<ProcessInspectionHandle>) { ++m_inspector_count; }
+    void decrement_inspector_count(Badge<ProcessInspectionHandle>) { --m_inspector_count; }
+
 private:
     friend class MemoryManager;
     friend class Scheduler;
@@ -416,7 +413,7 @@ private:
     Process(Thread*& first_thread, const String& name, uid_t, gid_t, pid_t ppid, RingLevel, RefPtr<Custody> cwd = nullptr, RefPtr<Custody> executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
     static pid_t allocate_pid();
 
-    Range allocate_range(VirtualAddress, size_t);
+    Range allocate_range(VirtualAddress, size_t, size_t alignment = PAGE_SIZE);
 
     Region& add_region(NonnullOwnPtr<Region>);
 
@@ -467,7 +464,6 @@ private:
     u8 m_termination_signal { 0 };
     u16 m_thread_count { 0 };
 
-    bool m_being_inspected { false };
     bool m_dead { false };
     bool m_profiling { false };
 
@@ -484,14 +480,14 @@ private:
     NonnullOwnPtrVector<Region> m_regions;
     struct RegionLookupCache {
         Range range;
-        Region* region { nullptr };
+        WeakPtr<Region> region;
     };
     RegionLookupCache m_region_lookup_cache;
 
     pid_t m_ppid { 0 };
     mode_t m_umask { 022 };
 
-    HashTable<gid_t> m_extra_gids;
+    FixedArray<gid_t> m_extra_gids;
 
     RefPtr<ProcessTracer> m_tracer;
     OwnPtr<ELFLoader> m_elf_loader;
@@ -518,6 +514,8 @@ private:
     HashMap<u32, OwnPtr<WaitQueue>> m_futex_queues;
 
     OwnPtr<PerformanceEventBuffer> m_perf_event_buffer;
+
+    u32 m_inspector_count { 0 };
 };
 
 class ProcessInspectionHandle {
@@ -525,14 +523,17 @@ public:
     ProcessInspectionHandle(Process& process)
         : m_process(process)
     {
-        if (&process != &current->process()) {
-            ASSERT(!m_process.is_being_inspected());
-            m_process.set_being_inspected(true);
+        if (&process != Process::current) {
+            InterruptDisabler disabler;
+            m_process.increment_inspector_count({});
         }
     }
     ~ProcessInspectionHandle()
     {
-        m_process.set_being_inspected(false);
+        if (&m_process != Process::current) {
+            InterruptDisabler disabler;
+            m_process.decrement_inspector_count({});
+        }
     }
 
     Process& process() { return m_process; }
@@ -646,23 +647,25 @@ inline u32 Thread::effective_priority() const
     return m_priority + m_process.priority_boost() + m_priority_boost + m_extra_priority;
 }
 
-#define REQUIRE_NO_PROMISES                       \
-    do {                                          \
-        if (current->process().has_promises()) {  \
-            dbg() << "Has made a promise";        \
-            cli();                                \
-            current->process().crash(SIGABRT, 0); \
-            ASSERT_NOT_REACHED();                 \
-        }                                         \
+#define REQUIRE_NO_PROMISES                      \
+    do {                                         \
+        if (Process::current->has_promises()) {  \
+            dbg() << "Has made a promise";       \
+            cli();                               \
+            Process::current->crash(SIGABRT, 0); \
+            ASSERT_NOT_REACHED();                \
+        }                                        \
     } while (0)
 
-#define REQUIRE_PROMISE(promise)                                    \
-    do {                                                            \
-        if (current->process().has_promises()                       \
-            && !current->process().has_promised(Pledge::promise)) { \
-            dbg() << "Has not pledged " << #promise;                \
-            cli();                                                  \
-            current->process().crash(SIGABRT, 0);                   \
-            ASSERT_NOT_REACHED();                                   \
-        }                                                           \
+#define REQUIRE_PROMISE(promise)                                   \
+    do {                                                           \
+        if (Process::current->has_promises()                       \
+            && !Process::current->has_promised(Pledge::promise)) { \
+            dbg() << "Has not pledged " << #promise;               \
+            cli();                                                 \
+            Process::current->crash(SIGABRT, 0);                   \
+            ASSERT_NOT_REACHED();                                  \
+        }                                                          \
     } while (0)
+
+}

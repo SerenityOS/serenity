@@ -26,6 +26,7 @@
 
 #include "History.h"
 #include "ManualModel.h"
+#include <AK/ByteBuffer.h>
 #include <LibCore/File.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
@@ -81,18 +82,18 @@ int main(int argc, char* argv[])
     widget->set_layout(make<GUI::VerticalBoxLayout>());
     widget->layout()->set_spacing(0);
 
-    auto toolbar = GUI::ToolBar::construct(widget);
+    auto toolbar = widget->add<GUI::ToolBar>();
 
-    auto splitter = GUI::HorizontalSplitter::construct(widget);
+    auto splitter = widget->add<GUI::HorizontalSplitter>();
 
     auto model = ManualModel::create();
 
-    auto tree_view = GUI::TreeView::construct(splitter);
+    auto tree_view = splitter->add<GUI::TreeView>();
     tree_view->set_model(model);
     tree_view->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     tree_view->set_preferred_size(200, 500);
 
-    auto html_view = HtmlView::construct(splitter);
+    auto html_view = splitter->add<HtmlView>();
 
     History history;
 

@@ -26,14 +26,13 @@
 
 #include <LibGUI/Button.h>
 #include <LibGUI/SpinBox.h>
-#include <LibGUI/TextEditor.h>
+#include <LibGUI/TextBox.h>
 
 namespace GUI {
 
-SpinBox::SpinBox(Widget* parent)
-    : Widget(parent)
+SpinBox::SpinBox()
 {
-    m_editor = TextEditor::construct(TextEditor::Type::SingleLine, this);
+    m_editor = add<TextBox>();
     m_editor->set_text("0");
     m_editor->on_change = [this] {
         bool ok;
@@ -43,12 +42,12 @@ SpinBox::SpinBox(Widget* parent)
         else
             m_editor->set_text(String::number(m_value));
     };
-    m_increment_button = Button::construct(this);
+    m_increment_button = add<Button>();
     m_increment_button->set_focusable(false);
     m_increment_button->set_text("\xc3\xb6");
     m_increment_button->on_click = [this](auto&) { set_value(m_value + 1); };
     m_increment_button->set_auto_repeat_interval(150);
-    m_decrement_button = Button::construct(this);
+    m_decrement_button = add<Button>();
     m_decrement_button->set_focusable(false);
     m_decrement_button->set_text("\xc3\xb7");
     m_decrement_button->on_click = [this](auto&) { set_value(m_value - 1); };
@@ -86,6 +85,25 @@ void SpinBox::set_range(int min, int max)
         on_change(m_value);
 
     update();
+}
+
+void SpinBox::keydown_event(KeyEvent& event)
+{
+    if (event.key() == KeyCode::Key_Up) {
+        set_value(m_value + 1);
+        return;
+    }
+    if (event.key() == KeyCode::Key_Down) {
+        set_value(m_value - 1);
+        return;
+    }
+
+    event.ignore();
+}
+
+void SpinBox::mousewheel_event(MouseEvent& event)
+{
+    set_value(m_value - event.wheel_delta());
 }
 
 void SpinBox::resize_event(ResizeEvent& event)

@@ -27,7 +27,7 @@
 #include <AK/PrintfImplementation.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
-#include <stdarg.h>
+#include <AK/String.h>
 
 namespace AK {
 
@@ -93,9 +93,12 @@ ByteBuffer StringBuilder::to_byte_buffer()
 
 String StringBuilder::to_string()
 {
-    auto string = String((const char*)m_buffer.data(), m_length);
-    clear();
-    return string;
+    return String((const char*)m_buffer.data(), m_length);
+}
+
+String StringBuilder::build()
+{
+    return to_string();
 }
 
 StringView StringBuilder::string_view() const

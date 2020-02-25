@@ -29,6 +29,11 @@
 
 int main(int, char**)
 {
+    if (pledge("stdio", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     for (size_t i = 0; environ[i]; ++i)
         printf("%s\n", environ[i]);
     return 0;

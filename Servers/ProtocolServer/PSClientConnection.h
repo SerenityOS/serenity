@@ -26,13 +26,9 @@
 
 #pragma once
 
-#include <AK/Badge.h>
+#include <AK/HashMap.h>
 #include <LibIPC/ClientConnection.h>
 #include <ProtocolServer/ProtocolServerEndpoint.h>
-
-namespace AK {
-class SharedBuffer;
-}
 
 class Download;
 

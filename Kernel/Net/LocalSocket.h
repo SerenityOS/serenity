@@ -30,10 +30,14 @@
 #include <Kernel/DoubleBuffer.h>
 #include <Kernel/Net/Socket.h>
 
+namespace Kernel {
+
 class FileDescription;
 
-class LocalSocket final : public Socket, public InlineLinkedListNode<LocalSocket> {
+class LocalSocket final : public Socket
+    , public InlineLinkedListNode<LocalSocket> {
     friend class InlineLinkedListNode<LocalSocket>;
+
 public:
     static KResultOr<NonnullRefPtr<Socket>> create(int type);
     virtual ~LocalSocket() override;
@@ -46,7 +50,7 @@ public:
     // ^Socket
     virtual KResult bind(const sockaddr*, socklen_t) override;
     virtual KResult connect(FileDescription&, const sockaddr*, socklen_t, ShouldBlock = ShouldBlock::Yes) override;
-    virtual KResult listen(int) override;
+    virtual KResult listen(size_t) override;
     virtual void get_local_address(sockaddr*, socklen_t*) override;
     virtual void get_peer_address(sockaddr*, socklen_t*) override;
     virtual void attach(FileDescription&) override;
@@ -100,3 +104,5 @@ private:
     LocalSocket* m_prev { nullptr };
     LocalSocket* m_next { nullptr };
 };
+
+}

@@ -39,8 +39,7 @@ public:
     void set_title(const StringView&);
 
 protected:
-    explicit GroupBox(Widget* parent);
-    GroupBox(const StringView& title, Widget* parent);
+    explicit GroupBox(const StringView& title = {});
 
     virtual void paint_event(PaintEvent&) override;
 

@@ -62,7 +62,7 @@ public:
 
     void notify_about_new_screen_rect(const Gfx::Rect&);
     void notify_about_clipboard_contents_changed();
-    void post_paint_message(Window&);
+    void post_paint_message(Window&, bool ignore_occlusion = false);
 
     Menu* find_menu_by_id(int menu_id)
     {
@@ -114,6 +114,9 @@ private:
     virtual OwnPtr<Messages::WindowServer::SetWindowIconBitmapResponse> handle(const Messages::WindowServer::SetWindowIconBitmap&) override;
     virtual void handle(const Messages::WindowServer::WM_SetWindowTaskbarRect&) override;
     virtual OwnPtr<Messages::WindowServer::StartDragResponse> handle(const Messages::WindowServer::StartDrag&) override;
+    virtual OwnPtr<Messages::WindowServer::SetSystemMenuResponse> handle(const Messages::WindowServer::SetSystemMenu&) override;
+    virtual OwnPtr<Messages::WindowServer::SetSystemThemeResponse> handle(const Messages::WindowServer::SetSystemTheme&) override;
+    virtual OwnPtr<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrementResponse> handle(const Messages::WindowServer::SetWindowBaseSizeAndSizeIncrement&) override;
 
     HashMap<int, NonnullRefPtr<Window>> m_windows;
     HashMap<int, NonnullOwnPtr<MenuBar>> m_menubars;

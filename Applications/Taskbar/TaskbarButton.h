@@ -32,10 +32,11 @@
 class TaskbarButton final : public GUI::Button {
     C_OBJECT(TaskbarButton)
 public:
-    TaskbarButton(const WindowIdentifier&, GUI::Widget* parent);
     virtual ~TaskbarButton() override;
 
 private:
+    explicit TaskbarButton(const WindowIdentifier&);
+
     virtual void context_menu_event(GUI::ContextMenuEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;
 

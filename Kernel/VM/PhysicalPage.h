@@ -29,7 +29,9 @@
 #include <AK/NonnullRefPtr.h>
 #include <Kernel/Assertions.h>
 #include <Kernel/Heap/SlabAllocator.h>
-#include <Kernel/VM/PhysicalAddress.h>
+#include <LibBareMetal/Memory/PhysicalAddress.h>
+
+namespace Kernel {
 
 class PhysicalPage {
     friend class MemoryManager;
@@ -42,14 +44,14 @@ public:
 
     void ref()
     {
-        ASSERT(m_retain_count);
-        ++m_retain_count;
+        ASSERT(m_ref_count);
+        ++m_ref_count;
     }
 
     void unref()
     {
-        ASSERT(m_retain_count);
-        if (!--m_retain_count) {
+        ASSERT(m_ref_count);
+        if (!--m_ref_count) {
             if (m_may_return_to_freelist)
                 move(*this).return_to_freelist();
             delete this;
@@ -58,7 +60,9 @@ public:
 
     static NonnullRefPtr<PhysicalPage> create(PhysicalAddress, bool supervisor, bool may_return_to_freelist = true);
 
-    u16 ref_count() const { return m_retain_count; }
+    u32 ref_count() const { return m_ref_count; }
+
+    bool is_shared_zero_page() const;
 
 private:
     PhysicalPage(PhysicalAddress paddr, bool supervisor, bool may_return_to_freelist = true);
@@ -66,8 +70,10 @@ private:
 
     void return_to_freelist() &&;
 
-    u16 m_retain_count { 1 };
+    u32 m_ref_count { 1 };
     bool m_may_return_to_freelist { true };
     bool m_supervisor { false };
     PhysicalAddress m_paddr;
 };
+
+}

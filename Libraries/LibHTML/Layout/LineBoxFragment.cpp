@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Utf8View.h>
 #include <LibGUI/Painter.h>
 #include <LibHTML/Layout/LayoutDocument.h>
 #include <LibHTML/Layout/LayoutText.h>

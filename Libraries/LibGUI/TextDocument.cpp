@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Badge.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/TextDocument.h>
@@ -31,6 +32,11 @@
 #include <ctype.h>
 
 namespace GUI {
+
+NonnullRefPtr<TextDocument> TextDocument::create(Client* client)
+{
+    return adopt(*new TextDocument(client));
+}
 
 TextDocument::TextDocument(Client* client)
 {
@@ -43,6 +49,10 @@ TextDocument::TextDocument(Client* client)
         2000, [this] {
             update_undo_timer();
         });
+}
+
+TextDocument::~TextDocument()
+{
 }
 
 void TextDocument::set_text(const StringView& text)
@@ -379,7 +389,7 @@ Optional<TextDocumentSpan> TextDocument::first_non_skippable_span_before(const T
 
 Optional<TextDocumentSpan> TextDocument::first_non_skippable_span_after(const TextPosition& position) const
 {
-    for (int i = 0; i < m_spans.size(); ++i) {
+    for (size_t i = 0; i < m_spans.size(); ++i) {
         if (!m_spans[i].range.contains(position))
             continue;
         while ((i + 1) < m_spans.size() && m_spans[i + 1].is_skippable)

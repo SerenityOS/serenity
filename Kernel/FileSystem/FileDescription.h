@@ -28,24 +28,26 @@
 
 #include <AK/Badge.h>
 #include <AK/ByteBuffer.h>
-#include <AK/CircularQueue.h>
 #include <AK/RefCounted.h>
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/KBuffer.h>
-#include <Kernel/Net/Socket.h>
-#include <Kernel/VM/VirtualAddress.h>
+#include <LibBareMetal/Memory/VirtualAddress.h>
 
+namespace Kernel {
+
+class CharacterDevice;
 class File;
-class TTY;
 class MasterPTY;
 class Process;
 class Region;
-class CharacterDevice;
+class Socket;
+class TTY;
 
 class FileDescription : public RefCounted<FileDescription> {
+    MAKE_SLAB_ALLOCATED(FileDescription)
 public:
     static NonnullRefPtr<FileDescription> create(Custody&);
     static NonnullRefPtr<FileDescription> create(File&);
@@ -161,3 +163,5 @@ private:
 
     Lock m_lock { "FileDescription" };
 };
+
+}

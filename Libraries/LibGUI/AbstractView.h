@@ -27,20 +27,17 @@
 #pragma once
 
 #include <AK/Function.h>
-#include <LibGUI/Model.h>
 #include <LibGUI/ModelSelection.h>
 #include <LibGUI/ScrollableWidget.h>
 
 namespace GUI {
-
-class ModelEditingDelegate;
 
 class AbstractView : public ScrollableWidget {
     C_OBJECT_ABSTRACT(AbstractView)
     friend class Model;
 
 public:
-    void set_model(RefPtr<Model>&&);
+    void set_model(RefPtr<Model>);
     Model* model() { return m_model.ptr(); }
     const Model* model() const { return m_model.ptr(); }
 
@@ -67,6 +64,7 @@ public:
     Function<void(const ModelIndex&)> on_activation;
     Function<void(const ModelIndex&)> on_selection;
     Function<void(const ModelIndex&, const ContextMenuEvent&)> on_context_menu_request;
+    Function<void(const ModelIndex&, const DropEvent&)> on_drop;
 
     Function<OwnPtr<ModelEditingDelegate>(const ModelIndex&)> aid_create_editing_delegate;
 
@@ -75,7 +73,7 @@ public:
     NonnullRefPtr<Gfx::Font> font_for_index(const ModelIndex&) const;
 
 protected:
-    explicit AbstractView(Widget* parent);
+    AbstractView();
     virtual ~AbstractView() override;
 
     virtual void mousedown_event(MouseEvent&) override;
@@ -83,6 +81,7 @@ protected:
     virtual void mouseup_event(MouseEvent&) override;
     virtual void doubleclick_event(MouseEvent&) override;
     virtual void context_menu_event(ContextMenuEvent&) override;
+    virtual void drop_event(DropEvent&) override;
 
     virtual void did_scroll() override;
     void activate(const ModelIndex&);

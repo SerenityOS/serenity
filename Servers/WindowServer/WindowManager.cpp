@@ -33,6 +33,7 @@
 #include "Screen.h"
 #include "Window.h"
 #include <AK/LogStream.h>
+#include <AK/SharedBuffer.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
 #include <LibGfx/CharacterBitmap.h>
@@ -40,6 +41,7 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>
 #include <LibGfx/SystemTheme.h>
+#include <WindowServer/AppletManager.h>
 #include <WindowServer/Button.h>
 #include <WindowServer/ClientConnection.h>
 #include <WindowServer/Cursor.h>
@@ -100,7 +102,7 @@ NonnullRefPtr<Cursor> WindowManager::get_cursor(const String& name)
 
 void WindowManager::reload_config(bool set_screen)
 {
-    m_wm_config = Core::ConfigFile::get_for_app("WindowManager");
+    m_wm_config = Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini");
 
     m_double_click_speed = m_wm_config->read_num_entry("Input", "DoubleClickSpeed", 250);
 
@@ -186,6 +188,12 @@ void WindowManager::move_to_front_and_make_active(Window& window)
     recompute_occlusions();
 
     set_active_window(&window);
+
+    if (m_switcher.is_visible()) {
+        m_switcher.refresh();
+        m_switcher.select_window(window);
+        set_highlight_window(&window);
+    }
 }
 
 void WindowManager::remove_window(Window& window)
@@ -587,6 +595,21 @@ bool WindowManager::process_ongoing_drag(MouseEvent& event, Window*& hovered_win
 {
     if (!m_dnd_client)
         return false;
+
+    if (event.type() == Event::MouseMove) {
+        // We didn't let go of the drag yet, see if we should send some drag move events..
+        for_each_visible_window_from_front_to_back([&](Window& window) {
+            if (!window.rect().contains(event.position()))
+                return IterationDecision::Continue;
+            hovered_window = &window;
+            auto translated_event = event.translated(-window.position());
+            translated_event.set_drag(true);
+            translated_event.set_drag_data_type(m_dnd_data_type);
+            deliver_mouse_event(window, translated_event);
+            return IterationDecision::Break;
+        });
+    }
+
     if (!(event.type() == Event::MouseUp && event.button() == MouseButton::Left))
         return true;
 
@@ -725,55 +748,8 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
     }
 
     // FIXME: Now that the menubar has a dedicated window, is this special-casing really necessary?
-    if (!active_window_is_modal() && menubar_rect().contains(event.position())) {
+    if (MenuManager::the().has_open_menu() || (!active_window_is_modal() && menubar_rect().contains(event.position()))) {
         MenuManager::the().dispatch_event(event);
-        return;
-    }
-
-    if (!MenuManager::the().open_menu_stack().is_empty()) {
-        auto* topmost_menu = MenuManager::the().open_menu_stack().last().ptr();
-        ASSERT(topmost_menu);
-        auto* window = topmost_menu->menu_window();
-        ASSERT(window);
-
-        bool event_is_inside_current_menu = window->rect().contains(event.position());
-        if (event_is_inside_current_menu) {
-            hovered_window = window;
-            auto translated_event = event.translated(-window->position());
-            deliver_mouse_event(*window, translated_event);
-            return;
-        }
-
-        if (topmost_menu->hovered_item())
-            topmost_menu->clear_hovered_item();
-        if (event.type() == Event::MouseDown || event.type() == Event::MouseUp) {
-            auto* window_menu_of = topmost_menu->window_menu_of();
-            if (window_menu_of) {
-                bool event_is_inside_taskbar_button = window_menu_of->taskbar_rect().contains(event.position());
-                if (event_is_inside_taskbar_button && !topmost_menu->is_window_menu_open()) {
-                    topmost_menu->set_window_menu_open(true);
-                    return;
-                }
-            }
-
-            if (event.type() == Event::MouseDown) {
-                MenuManager::the().close_bar();
-                topmost_menu->set_window_menu_open(false);
-            }
-        }
-
-        if (event.type() == Event::MouseMove) {
-            for (auto& menu : MenuManager::the().open_menu_stack()) {
-                if (!menu)
-                    continue;
-                if (!menu->menu_window()->rect().contains(event.position()))
-                    continue;
-                hovered_window = menu->menu_window();
-                auto translated_event = event.translated(-menu->menu_window()->position());
-                deliver_mouse_event(*menu->menu_window(), translated_event);
-                break;
-            }
-        }
         return;
     }
 
@@ -935,12 +911,6 @@ Gfx::Rect WindowManager::menubar_rect() const
     return MenuManager::the().menubar_rect();
 }
 
-void WindowManager::draw_window_switcher()
-{
-    if (m_switcher.is_visible())
-        m_switcher.draw();
-}
-
 void WindowManager::event(Core::Event& event)
 {
     if (static_cast<Event&>(event).is_mouse_event()) {
@@ -963,7 +933,7 @@ void WindowManager::event(Core::Event& event)
         if (key_event.key() == Key_Logo) {
             if (key_event.type() == Event::KeyUp) {
                 if (!m_moved_or_resized_since_logo_keydown && !m_switcher.is_visible() && !m_move_window && !m_resize_window) {
-                    MenuManager::the().toggle_menu(MenuManager::the().system_menu());
+                    MenuManager::the().toggle_system_menu();
                     return;
                 }
 
@@ -1123,7 +1093,7 @@ void WindowManager::invalidate(const Window& window)
 void WindowManager::invalidate(const Window& window, const Gfx::Rect& rect)
 {
     if (window.type() == WindowType::MenuApplet) {
-        MenuManager::the().invalidate_applet(window, rect);
+        AppletManager::the().invalidate_applet(window, rect);
         return;
     }
 
@@ -1255,9 +1225,11 @@ Gfx::Rect WindowManager::dnd_rect() const
     return Gfx::Rect(location, { width, height }).inflated(4, 4);
 }
 
-void WindowManager::update_theme(String theme_path, String theme_name)
+bool WindowManager::update_theme(String theme_path, String theme_name)
 {
     auto new_theme = Gfx::load_system_theme(theme_path);
+    if (!new_theme)
+        return false;
     ASSERT(new_theme);
     Gfx::set_system_theme(*new_theme);
     m_palette = Gfx::PaletteImpl::create_with_shared_buffer(*new_theme);
@@ -1271,10 +1243,12 @@ void WindowManager::update_theme(String theme_path, String theme_name)
         }
         return IterationDecision::Continue;
     });
-    auto wm_config = Core::ConfigFile::get_for_app("WindowManager");
+    MenuManager::the().did_change_theme();
+    auto wm_config = Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini");
     wm_config->write_entry("Theme", "Name", theme_name);
     wm_config->sync();
     invalidate();
+    return true;
 }
 
 }

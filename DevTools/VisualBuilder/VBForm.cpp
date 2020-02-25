@@ -44,9 +44,8 @@ VBForm* VBForm::current()
     return s_current;
 }
 
-VBForm::VBForm(const String& name, GUI::Widget* parent)
-    : GUI::Widget(parent)
-    , m_name(name)
+VBForm::VBForm(const String& name)
+    : m_name(name)
 {
     s_current = this;
     set_fill_with_background_color(true);
@@ -172,7 +171,7 @@ void VBForm::keydown_event(GUI::KeyEvent& event)
             update();
             return;
         }
-        int selected_widget_index = 0;
+        size_t selected_widget_index = 0;
         for (; selected_widget_index < m_widgets.size(); ++selected_widget_index) {
             if (&m_widgets[selected_widget_index] == *m_selected_widgets.begin())
                 break;

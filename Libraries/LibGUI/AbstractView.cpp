@@ -25,6 +25,7 @@
  */
 
 #include <AK/StringBuilder.h>
+#include <AK/Vector.h>
 #include <Kernel/KeyCode.h>
 #include <LibGUI/AbstractView.h>
 #include <LibGUI/DragOperation.h>
@@ -36,9 +37,8 @@
 
 namespace GUI {
 
-AbstractView::AbstractView(Widget* parent)
-    : ScrollableWidget(parent)
-    , m_selection(*this)
+AbstractView::AbstractView()
+    : m_selection(*this)
 {
 }
 
@@ -46,7 +46,7 @@ AbstractView::~AbstractView()
 {
 }
 
-void AbstractView::set_model(RefPtr<Model>&& model)
+void AbstractView::set_model(RefPtr<Model> model)
 {
     if (model == m_model)
         return;
@@ -312,6 +312,21 @@ void AbstractView::context_menu_event(ContextMenuEvent& event)
 
     if (on_context_menu_request)
         on_context_menu_request(index, event);
+}
+
+void AbstractView::drop_event(DropEvent& event)
+{
+    event.accept();
+
+    if (!model())
+        return;
+
+    auto index = index_at_event_position(event.position());
+    if (!index.is_valid())
+        return;
+
+    if (on_drop)
+        on_drop(index, event);
 }
 
 }

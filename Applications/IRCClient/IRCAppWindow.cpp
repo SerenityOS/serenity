@@ -50,6 +50,7 @@ IRCAppWindow& IRCAppWindow::the()
 }
 
 IRCAppWindow::IRCAppWindow()
+    : m_client(IRCClient::construct())
 {
     ASSERT(!s_the);
     s_the = this;
@@ -71,67 +72,67 @@ IRCAppWindow::~IRCAppWindow()
 
 void IRCAppWindow::update_title()
 {
-    set_title(String::format("IRC Client: %s@%s:%d", m_client.nickname().characters(), m_client.hostname().characters(), m_client.port()));
+    set_title(String::format("IRC Client: %s@%s:%d", m_client->nickname().characters(), m_client->hostname().characters(), m_client->port()));
 }
 
 void IRCAppWindow::setup_client()
 {
-    m_client.aid_create_window = [this](void* owner, IRCWindow::Type type, const String& name) {
-        return &create_window(owner, type, name);
+    m_client->aid_create_window = [this](void* owner, IRCWindow::Type type, const String& name) {
+        return create_window(owner, type, name);
     };
-    m_client.aid_get_active_window = [this] {
+    m_client->aid_get_active_window = [this] {
         return static_cast<IRCWindow*>(m_container->active_widget());
     };
-    m_client.aid_update_window_list = [this] {
+    m_client->aid_update_window_list = [this] {
         m_window_list->model()->update();
     };
-    m_client.on_nickname_changed = [this](const String&) {
+    m_client->on_nickname_changed = [this](const String&) {
         update_title();
     };
-    m_client.on_part_from_channel = [this](auto&) {
+    m_client->on_part_from_channel = [this](auto&) {
         update_part_action();
     };
 
-    if (m_client.hostname().is_empty()) {
-        auto input_box = GUI::InputBox::construct("Enter server:", "Connect to server", this);
+    if (m_client->hostname().is_empty()) {
+        auto input_box = add<GUI::InputBox>("Enter server:", "Connect to server");
         auto result = input_box->exec();
         if (result == GUI::InputBox::ExecCancel)
             ::exit(0);
 
-        m_client.set_server(input_box->text_value(), 6667);
+        m_client->set_server(input_box->text_value(), 6667);
     }
     update_title();
-    bool success = m_client.connect();
+    bool success = m_client->connect();
     ASSERT(success);
 }
 
 void IRCAppWindow::setup_actions()
 {
     m_join_action = GUI::Action::create("Join channel", { Mod_Ctrl, Key_J }, Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-join.png"), [&](auto&) {
-        auto input_box = GUI::InputBox::construct("Enter channel name:", "Join channel", this);
+        auto input_box = add<GUI::InputBox>("Enter channel name:", "Join channel");
         if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty())
-            m_client.handle_join_action(input_box->text_value());
+            m_client->handle_join_action(input_box->text_value());
     });
 
     m_part_action = GUI::Action::create("Part from channel", { Mod_Ctrl, Key_P }, Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-part.png"), [this](auto&) {
-        auto* window = m_client.current_window();
+        auto* window = m_client->current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
             // FIXME: Perhaps this action should have been disabled instead of allowing us to activate it.
             return;
         }
-        m_client.handle_part_action(window->channel().name());
+        m_client->handle_part_action(window->channel().name());
     });
 
     m_whois_action = GUI::Action::create("Whois user", Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-whois.png"), [&](auto&) {
         auto input_box = GUI::InputBox::construct("Enter nickname:", "IRC WHOIS lookup", this);
         if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty())
-            m_client.handle_whois_action(input_box->text_value());
+            m_client->handle_whois_action(input_box->text_value());
     });
 
     m_open_query_action = GUI::Action::create("Open query", { Mod_Ctrl, Key_O }, Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-open-query.png"), [&](auto&) {
         auto input_box = GUI::InputBox::construct("Enter nickname:", "Open IRC query with...", this);
         if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty())
-            m_client.handle_open_query_action(input_box->text_value());
+            m_client->handle_open_query_action(input_box->text_value());
     });
 
     m_close_query_action = GUI::Action::create("Close query", { Mod_Ctrl, Key_D }, Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-close-query.png"), [](auto&) {
@@ -141,7 +142,7 @@ void IRCAppWindow::setup_actions()
     m_change_nick_action = GUI::Action::create("Change nickname", Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-nick.png"), [this](auto&) {
         auto input_box = GUI::InputBox::construct("Enter nickname:", "Change nickname", this);
         if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty())
-            m_client.handle_change_nick_action(input_box->text_value());
+            m_client->handle_change_nick_action(input_box->text_value());
     });
 }
 
@@ -184,7 +185,7 @@ void IRCAppWindow::setup_widgets()
     widget->set_layout(make<GUI::VerticalBoxLayout>());
     widget->layout()->set_spacing(0);
 
-    auto toolbar = GUI::ToolBar::construct(widget);
+    auto toolbar = widget->add<GUI::ToolBar>();
     toolbar->set_has_frame(false);
     toolbar->add_action(*m_change_nick_action);
     toolbar->add_separator();
@@ -195,25 +196,25 @@ void IRCAppWindow::setup_widgets()
     toolbar->add_action(*m_open_query_action);
     toolbar->add_action(*m_close_query_action);
 
-    auto outer_container = GUI::Widget::construct(widget.ptr());
+    auto outer_container = widget->add<GUI::Widget>();
     outer_container->set_layout(make<GUI::VerticalBoxLayout>());
     outer_container->layout()->set_margins({ 2, 0, 2, 2 });
 
-    auto horizontal_container = GUI::HorizontalSplitter::construct(outer_container);
+    auto horizontal_container = outer_container->add<GUI::HorizontalSplitter>();
 
-    m_window_list = GUI::TableView::construct(horizontal_container);
+    m_window_list = horizontal_container->add<GUI::TableView>();
     m_window_list->set_headers_visible(false);
     m_window_list->set_alternating_row_colors(false);
     m_window_list->set_size_columns_to_fit_content(true);
-    m_window_list->set_model(m_client.client_window_list_model());
+    m_window_list->set_model(m_client->client_window_list_model());
     m_window_list->set_activates_on_selection(true);
     m_window_list->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     m_window_list->set_preferred_size(100, 0);
     m_window_list->on_activation = [this](auto& index) {
-        set_active_window(m_client.window_at(index.row()));
+        set_active_window(m_client->window_at(index.row()));
     };
 
-    m_container = GUI::StackWidget::construct(horizontal_container);
+    m_container = horizontal_container->add<GUI::StackWidget>();
     m_container->on_active_widget_change = [this](auto*) {
         update_part_action();
     };
@@ -225,7 +226,7 @@ void IRCAppWindow::set_active_window(IRCWindow& window)
 {
     m_container->set_active_widget(&window);
     window.clear_unread_count();
-    auto index = m_window_list->model()->index(m_client.window_index(window));
+    auto index = m_window_list->model()->index(m_client->window_index(window));
     m_window_list->selection().set(index);
 }
 
@@ -236,7 +237,7 @@ void IRCAppWindow::update_part_action()
     m_part_action->set_enabled(is_open_channel);
 }
 
-IRCWindow& IRCAppWindow::create_window(void* owner, IRCWindow::Type type, const String& name)
+NonnullRefPtr<IRCWindow> IRCAppWindow::create_window(void* owner, IRCWindow::Type type, const String& name)
 {
-    return *new IRCWindow(m_client, owner, type, name, m_container);
+    return m_container->add<IRCWindow>(m_client, owner, type, name);
 }

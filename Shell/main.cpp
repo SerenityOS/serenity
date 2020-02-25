@@ -55,29 +55,67 @@ static int run_command(const String&);
 
 static String prompt()
 {
-    if (g.uid == 0)
-        return "# ";
+    auto* ps1 = getenv("PROMPT");
+    if (!ps1) {
+        if (g.uid == 0)
+            return "# ";
+
+        StringBuilder builder;
+        builder.appendf("\033]0;%s@%s:%s\007", g.username.characters(), g.hostname, g.cwd.characters());
+        builder.appendf("\033[31;1m%s\033[0m@\033[37;1m%s\033[0m:\033[32;1m%s\033[0m$> ", g.username.characters(), g.hostname, g.cwd.characters());
+        return builder.to_string();
+    }
 
     StringBuilder builder;
-    builder.appendf("\033]0;%s@%s:%s\007", g.username.characters(), g.hostname, g.cwd.characters());
-    builder.appendf("\033[31;1m%s\033[0m@\033[37;1m%s\033[0m:\033[32;1m%s\033[0m$> ", g.username.characters(), g.hostname, g.cwd.characters());
+    for (char* ptr = ps1; *ptr; ++ptr) {
+        if (*ptr == '\\') {
+            ++ptr;
+            if (!*ptr)
+                break;
+            switch (*ptr) {
+            case 'X':
+                builder.append("\033]0;");
+                break;
+            case 'a':
+                builder.append(0x07);
+                break;
+            case 'e':
+                builder.append(0x1b);
+                break;
+            case 'u':
+                builder.append(g.username);
+                break;
+            case 'h':
+                builder.append(g.hostname);
+                break;
+            case 'w':
+                builder.append(g.cwd);
+                break;
+            case 'p':
+                builder.append(g.uid == 0 ? '#' : '$');
+                break;
+            }
+            continue;
+        }
+        builder.append(*ptr);
+    }
     return builder.to_string();
 }
 
-static int sh_pwd(int, char**)
+static int sh_pwd(int, const char**)
 {
     printf("%s\n", g.cwd.characters());
     return 0;
 }
 
-static int sh_exit(int, char**)
+static int sh_exit(int, const char**)
 {
     printf("Good-bye!\n");
     exit(0);
     return 0;
 }
 
-static int sh_export(int argc, char** argv)
+static int sh_export(int argc, const char** argv)
 {
     if (argc == 1) {
         for (int i = 0; environ[i]; ++i)
@@ -98,7 +136,7 @@ static int sh_export(int argc, char** argv)
     return setenv_return;
 }
 
-static int sh_unset(int argc, char** argv)
+static int sh_unset(int argc, const char** argv)
 {
     if (argc != 2) {
         fprintf(stderr, "usage: unset variable\n");
@@ -109,7 +147,45 @@ static int sh_unset(int argc, char** argv)
     return 0;
 }
 
-static int sh_cd(int argc, char** argv)
+static String expand_tilde(const char* expression)
+{
+    int len = strlen(expression);
+    ASSERT(len > 0 && len + 1 <= PATH_MAX);
+    ASSERT(expression[0] == '~');
+
+    StringBuilder login_name;
+    int first_slash_index = len;
+    for (int i = 1; i < len; ++i) {
+        if (expression[i] == '/') {
+            first_slash_index = i;
+            break;
+        }
+        login_name.append(expression[i]);
+    }
+
+    StringBuilder path;
+    for (int i = first_slash_index; i < len; ++i)
+        path.append(expression[i]);
+
+    if (login_name.is_empty()) {
+        const char* home = getenv("HOME");
+        if (!home) {
+            auto passwd = getpwuid(getuid());
+            ASSERT(passwd && passwd->pw_dir);
+            return String::format("%s/%s", passwd->pw_dir, path.to_string().characters());
+        }
+        return String::format("%s/%s", home, path.to_string().characters());
+    }
+
+    auto passwd = getpwnam(login_name.to_string().characters());
+    if (!passwd)
+        return String(expression);
+    ASSERT(passwd->pw_dir);
+
+    return String::format("%s/%s", passwd->pw_dir, path.to_string().characters());
+}
+
+static int sh_cd(int argc, const char** argv)
 {
     char pathbuf[PATH_MAX];
 
@@ -123,6 +199,11 @@ static int sh_cd(int argc, char** argv)
             size_t len = strlen(oldpwd);
             ASSERT(len + 1 <= PATH_MAX);
             memcpy(pathbuf, oldpwd, len + 1);
+        } else if (argv[1][0] == '~') {
+            auto path = expand_tilde(argv[1]);
+            if (path.is_empty())
+                return 1;
+            strcpy(pathbuf, path.characters());
         } else if (argv[1][0] == '/') {
             memcpy(pathbuf, argv[1], strlen(argv[1]) + 1);
         } else {
@@ -158,15 +239,15 @@ static int sh_cd(int argc, char** argv)
     return 0;
 }
 
-static int sh_history(int, char**)
+static int sh_history(int, const char**)
 {
-    for (int i = 0; i < editor.history().size(); ++i) {
-        printf("%6d  %s\n", i, editor.history()[i].characters());
+    for (size_t i = 0; i < editor.history().size(); ++i) {
+        printf("%6zu  %s\n", i, editor.history()[i].characters());
     }
     return 0;
 }
 
-static int sh_time(int argc, char** argv)
+static int sh_time(int argc, const char** argv)
 {
     if (argc == 1) {
         printf("usage: time <command>\n");
@@ -185,7 +266,7 @@ static int sh_time(int argc, char** argv)
     return exit_code;
 }
 
-static int sh_umask(int argc, char** argv)
+static int sh_umask(int argc, const char** argv)
 {
     if (argc == 1) {
         mode_t old_mask = umask(0);
@@ -205,7 +286,7 @@ static int sh_umask(int argc, char** argv)
     return 0;
 }
 
-static int sh_popd(int argc, char** argv)
+static int sh_popd(int argc, const char** argv)
 {
     if (g.directory_stack.size() <= 1) {
         fprintf(stderr, "Shell: popd: directory stack empty\n");
@@ -267,7 +348,7 @@ static int sh_popd(int argc, char** argv)
     return 0;
 }
 
-static int sh_pushd(int argc, char** argv)
+static int sh_pushd(int argc, const char** argv)
 {
     StringBuilder path_builder;
     bool should_switch = true;
@@ -354,7 +435,7 @@ static int sh_pushd(int argc, char** argv)
     return 0;
 }
 
-static int sh_dirs(int argc, char** argv)
+static int sh_dirs(int argc, const char** argv)
 {
     // The first directory in the stack is ALWAYS the current directory
     g.directory_stack.at(0) = g.cwd.characters();
@@ -371,7 +452,7 @@ static int sh_dirs(int argc, char** argv)
     for (int i = 0; i < argc; i++) {
         const char* arg = argv[i];
         if (!strcmp(arg, "-c")) {
-            for (int i = 1; i < g.directory_stack.size(); i++)
+            for (size_t i = 1; i < g.directory_stack.size(); i++)
                 g.directory_stack.remove(i);
 
             printed = true;
@@ -398,7 +479,7 @@ static int sh_dirs(int argc, char** argv)
     return 0;
 }
 
-static bool handle_builtin(int argc, char** argv, int& retval)
+static bool handle_builtin(int argc, const char** argv, int& retval)
 {
     if (argc == 0)
         return false;
@@ -524,7 +605,7 @@ static Vector<String> expand_globs(const StringView& path, const StringView& bas
     builder.append(base);
     Vector<String> res;
 
-    for (int i = 0; i < parts.size(); ++i) {
+    for (size_t i = 0; i < parts.size(); ++i) {
         auto& part = parts[i];
         if (!is_glob(part)) {
             builder.append(part);
@@ -536,7 +617,7 @@ static Vector<String> expand_globs(const StringView& path, const StringView& bas
         StringView new_base_v = new_base;
         if (new_base_v.is_empty())
             new_base_v = ".";
-        Core::DirIterator di(new_base_v, Core::DirIterator::NoFlags);
+        Core::DirIterator di(new_base_v, Core::DirIterator::SkipParentAndBaseDir);
 
         if (di.has_error()) {
             return res;
@@ -547,10 +628,6 @@ static Vector<String> expand_globs(const StringView& path, const StringView& bas
 
             // Dotfiles have to be explicitly requested
             if (name[0] == '.' && part[0] != '.')
-                continue;
-
-            // And even if they are, skip . and ..
-            if (name == "." || name == "..")
                 continue;
 
             if (name.matches(part, String::CaseSensitivity::CaseSensitive)) {
@@ -681,7 +758,7 @@ static int run_command(const String& cmd)
 
         FileDescriptionCollector fds;
 
-        for (int i = 0; i < command.subcommands.size(); ++i) {
+        for (size_t i = 0; i < command.subcommands.size(); ++i) {
             auto& subcommand = command.subcommands[i];
             for (auto& redirection : subcommand.redirections) {
                 switch (redirection.type) {
@@ -737,7 +814,7 @@ static int run_command(const String& cmd)
 
         CommandTimer timer(cmd);
 
-        for (int i = 0; i < command.subcommands.size(); ++i) {
+        for (size_t i = 0; i < command.subcommands.size(); ++i) {
             auto& subcommand = command.subcommands[i];
             Vector<String> argv_string = process_arguments(subcommand.args);
             Vector<const char*> argv;
@@ -755,7 +832,7 @@ static int run_command(const String& cmd)
 #endif
 
             int retval = 0;
-            if (handle_builtin(argv.size() - 1, const_cast<char**>(argv.data()), retval))
+            if (handle_builtin(argv.size() - 1, argv.data(), retval))
                 return retval;
 
             pid_t child = fork();
@@ -802,7 +879,7 @@ static int run_command(const String& cmd)
 
         int wstatus = 0;
 
-        for (int i = 0; i < children.size(); ++i) {
+        for (size_t i = 0; i < children.size(); ++i) {
             auto& child = children[i];
             do {
                 int rc = waitpid(child.pid, &wstatus, WEXITED | WSTOPPED);

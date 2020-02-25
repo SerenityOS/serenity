@@ -26,8 +26,6 @@
 
 #include <AK/Assertions.h>
 #include <AK/JsonObject.h>
-#include <LibGfx/Bitmap.h>
-#include <LibGfx/Palette.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Button.h>
@@ -46,6 +44,9 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGUI/WindowServerConnection.h>
+#include <LibGfx/Bitmap.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/Palette.h>
 #include <unistd.h>
 
 namespace GUI {
@@ -69,7 +70,7 @@ static HashMap<String, WidgetClassRegistration*>& widget_classes()
     return *map;
 }
 
-WidgetClassRegistration::WidgetClassRegistration(const String& class_name, Function<NonnullRefPtr<Widget>(Widget*)> factory)
+WidgetClassRegistration::WidgetClassRegistration(const String& class_name, Function<NonnullRefPtr<Widget>()> factory)
     : m_class_name(class_name)
     , m_factory(move(factory))
 {
@@ -92,8 +93,10 @@ const WidgetClassRegistration* WidgetClassRegistration::find(const String& class
     return widget_classes().get(class_name).value_or(nullptr);
 }
 
-Widget::Widget(Widget* parent)
-    : Core::Object(parent, true)
+Widget::Widget()
+    : Core::Object(nullptr, true)
+    , m_background_role(Gfx::ColorRole::Window)
+    , m_foreground_role(Gfx::ColorRole::WindowText)
     , m_font(Gfx::Font::default_font())
     , m_palette(Application::the().palette().impl())
 {
@@ -182,6 +185,8 @@ void Widget::event(Core::Event& event)
         return handle_mouseup_event(static_cast<MouseEvent&>(event));
     case Event::MouseWheel:
         return mousewheel_event(static_cast<MouseEvent&>(event));
+    case Event::DragMove:
+        return drag_move_event(static_cast<DragEvent&>(event));
     case Event::Drop:
         return drop_event(static_cast<DropEvent&>(event));
     case Event::Enter:
@@ -245,6 +250,7 @@ void Widget::do_layout()
     if (!m_layout)
         return;
     m_layout->run(*this);
+    did_layout();
     update();
 }
 
@@ -376,6 +382,12 @@ void Widget::leave_event(Core::Event&)
 
 void Widget::change_event(Event&)
 {
+}
+
+void Widget::drag_move_event(DragEvent& event)
+{
+    dbg() << class_name() << "{" << this << "} DRAG MOVE  position: " << event.position() << ", data_type: '" << event.data_type() << "'";
+    event.ignore();
 }
 
 void Widget::drop_event(DropEvent& event)
@@ -665,7 +677,7 @@ void Widget::focus_previous_widget()
 void Widget::focus_next_widget()
 {
     auto focusable_widgets = window()->focusable_widgets();
-    for (int i = 0; i < focusable_widgets.size(); ++i) {
+    for (size_t i = 0; i < focusable_widgets.size(); ++i) {
         if (focusable_widgets[i] != this)
             continue;
         if (i < focusable_widgets.size() - 1)
@@ -720,6 +732,21 @@ Vector<Widget*> Widget::child_widgets() const
 void Widget::set_palette(const Palette& palette)
 {
     m_palette = palette.impl();
+}
+
+void Widget::set_background_role(ColorRole role)
+{
+    m_background_role = role;
+}
+
+void Widget::set_foreground_role(ColorRole role)
+{
+    m_foreground_role = role;
+}
+
+Gfx::Palette Widget::palette() const
+{
+    return Gfx::Palette(*m_palette);
 }
 
 }

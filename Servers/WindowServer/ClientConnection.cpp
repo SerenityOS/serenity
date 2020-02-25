@@ -24,9 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Badge.h>
 #include <AK/SharedBuffer.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/SystemTheme.h>
+#include <WindowServer/AppletManager.h>
 #include <WindowServer/ClientConnection.h>
 #include <WindowServer/Clipboard.h>
 #include <WindowServer/Compositor.h>
@@ -195,7 +197,7 @@ OwnPtr<Messages::WindowServer::AddMenuItemResponse> ClientConnection::handle(con
         if (!icon_buffer)
             return nullptr;
         // FIXME: Verify that the icon buffer can accomodate a 16x16 bitmap view.
-        auto shared_icon = Gfx::Bitmap::create_with_shared_buffer(Gfx::Bitmap::Format::RGBA32, icon_buffer.release_nonnull(), { 16, 16 });
+        auto shared_icon = Gfx::Bitmap::create_with_shared_buffer(Gfx::BitmapFormat::RGBA32, icon_buffer.release_nonnull(), { 16, 16 });
         menu_item->set_icon(shared_icon);
     }
     menu_item->set_submenu_id(message.submenu_id());
@@ -353,7 +355,7 @@ OwnPtr<Messages::WindowServer::SetWindowIconBitmapResponse> ClientConnection::ha
     if (!icon_buffer) {
         window.set_default_icon();
     } else {
-        window.set_icon(Gfx::Bitmap::create_with_shared_buffer(Gfx::Bitmap::Format::RGBA32, *icon_buffer, message.icon_size()));
+        window.set_icon(Gfx::Bitmap::create_with_shared_buffer(Gfx::BitmapFormat::RGBA32, *icon_buffer, message.icon_size()));
     }
 
     window.frame().invalidate_title_bar();
@@ -438,7 +440,7 @@ OwnPtr<Messages::WindowServer::CreateWindowResponse> ClientConnection::handle(co
     window->set_base_size(message.base_size());
     window->invalidate();
     if (window->type() == WindowType::MenuApplet)
-        MenuManager::the().add_applet(*window);
+        AppletManager::the().add_applet(*window);
     m_windows.set(window_id, move(window));
     return make<Messages::WindowServer::CreateWindowResponse>(window_id);
 }
@@ -453,7 +455,7 @@ OwnPtr<Messages::WindowServer::DestroyWindowResponse> ClientConnection::handle(c
     auto& window = *(*it).value;
 
     if (window.type() == WindowType::MenuApplet)
-        MenuManager::the().remove_applet(window);
+        AppletManager::the().remove_applet(window);
 
     WindowManager::the().invalidate(window);
     remove_child(window);
@@ -463,10 +465,10 @@ OwnPtr<Messages::WindowServer::DestroyWindowResponse> ClientConnection::handle(c
     return make<Messages::WindowServer::DestroyWindowResponse>();
 }
 
-void ClientConnection::post_paint_message(Window& window)
+void ClientConnection::post_paint_message(Window& window, bool ignore_occlusion)
 {
     auto rect_set = window.take_pending_paint_rects();
-    if (window.is_minimized() || window.is_occluded())
+    if (window.is_minimized() || (!ignore_occlusion && window.is_occluded()))
         return;
 
     post_message(Messages::WindowClient::Paint(window.window_id(), window.size(), rect_set.rects()));
@@ -480,8 +482,8 @@ void ClientConnection::handle(const Messages::WindowServer::InvalidateRect& mess
         return;
     }
     auto& window = *(*it).value;
-    for (int i = 0; i < message.rects().size(); ++i)
-        window.request_update(message.rects()[i].intersected({ {}, window.size() }));
+    for (size_t i = 0; i < message.rects().size(); ++i)
+        window.request_update(message.rects()[i].intersected({ {}, window.size() }), message.ignore_occlusion());
 }
 
 void ClientConnection::handle(const Messages::WindowServer::DidFinishPainting& message)
@@ -515,7 +517,7 @@ OwnPtr<Messages::WindowServer::SetWindowBackingStoreResponse> ClientConnection::
         if (!shared_buffer)
             return make<Messages::WindowServer::SetWindowBackingStoreResponse>();
         auto backing_store = Gfx::Bitmap::create_with_shared_buffer(
-            message.has_alpha_channel() ? Gfx::Bitmap::Format::RGBA32 : Gfx::Bitmap::Format::RGB32,
+            message.has_alpha_channel() ? Gfx::BitmapFormat::RGBA32 : Gfx::BitmapFormat::RGB32,
             *shared_buffer,
             message.size());
         window.set_backing_store(move(backing_store));
@@ -674,11 +676,30 @@ OwnPtr<Messages::WindowServer::StartDragResponse> ClientConnection::handle(const
             did_misbehave("SetAppletBackingStore: Shared buffer is too small for applet size");
             return nullptr;
         }
-        bitmap = Gfx::Bitmap::create_with_shared_buffer(Gfx::Bitmap::Format::RGBA32, *shared_buffer, message.bitmap_size());
+        bitmap = Gfx::Bitmap::create_with_shared_buffer(Gfx::BitmapFormat::RGBA32, *shared_buffer, message.bitmap_size());
     }
 
     wm.start_dnd_drag(*this, message.text(), bitmap, message.data_type(), message.data());
     return make<Messages::WindowServer::StartDragResponse>(true);
+}
+
+OwnPtr<Messages::WindowServer::SetSystemMenuResponse> ClientConnection::handle(const Messages::WindowServer::SetSystemMenu& message)
+{
+    auto it = m_menus.find(message.menu_id());
+    if (it == m_menus.end()) {
+        did_misbehave("SetSystemMenu called with invalid menu ID");
+        return nullptr;
+    }
+
+    auto& menu = it->value;
+    MenuManager::the().set_system_menu(menu);
+    return make<Messages::WindowServer::SetSystemMenuResponse>();
+}
+
+OwnPtr<Messages::WindowServer::SetSystemThemeResponse> ClientConnection::handle(const Messages::WindowServer::SetSystemTheme& message)
+{
+    bool success = WindowManager::the().update_theme(message.theme_path(), message.theme_name());
+    return make<Messages::WindowServer::SetSystemThemeResponse>(success);
 }
 
 void ClientConnection::boost()
@@ -691,6 +712,21 @@ void ClientConnection::deboost()
 {
     if (set_process_boost(client_pid(), 0) < 0)
         perror("deboost: set_process_boost");
+}
+
+OwnPtr<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrementResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowBaseSizeAndSizeIncrement& message)
+{
+    auto it = m_windows.find(message.window_id());
+    if (it == m_windows.end()) {
+        did_misbehave("SetWindowBaseSizeAndSizeIncrementResponse: Bad window ID");
+        return nullptr;
+    }
+
+    auto& window = *it->value;
+    window.set_base_size(message.base_size());
+    window.set_size_increment(message.size_increment());
+
+    return make<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrementResponse>();
 }
 
 }

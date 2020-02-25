@@ -25,8 +25,10 @@
  */
 
 #include <Kernel/Arch/i386/CPU.h>
-#include <Kernel/Random.h>
 #include <Kernel/Devices/RandomDevice.h>
+#include <Kernel/Random.h>
+
+namespace Kernel {
 
 static u32 random32()
 {
@@ -64,4 +66,6 @@ void get_good_random_bytes(u8* buffer, size_t buffer_size)
 void get_fast_random_bytes(u8* buffer, size_t buffer_size)
 {
     return get_good_random_bytes(buffer, buffer_size);
+}
+
 }

@@ -182,7 +182,7 @@ String get_duplicate_name(const String& path, int duplicate_count)
     FileSystemPath fsp(path);
     StringBuilder duplicated_name;
     duplicated_name.append('/');
-    for (int i = 0; i < fsp.parts().size() - 1; ++i) {
+    for (size_t i = 0; i < fsp.parts().size() - 1; ++i) {
         duplicated_name.appendf("%s/", fsp.parts()[i].characters());
     }
     auto prev_duplicate_tag = String::format("(%d)", duplicate_count);

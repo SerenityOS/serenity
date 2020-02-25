@@ -30,6 +30,7 @@
 #include "Screen.h"
 #include "Window.h"
 #include "WindowManager.h"
+#include <LibCore/Timer.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Painter.h>
 #include <LibThread/BackgroundAction.h>
@@ -59,8 +60,8 @@ WallpaperMode mode_to_enum(const String& name)
 
 Compositor::Compositor()
 {
-    m_compose_timer = Core::Timer::construct(this);
-    m_immediate_compose_timer = Core::Timer::construct(this);
+    m_compose_timer = add<Core::Timer>();
+    m_immediate_compose_timer = add<Core::Timer>();
 
     m_screen_can_set_buffer = Screen::the().can_set_buffer();
 
@@ -74,7 +75,7 @@ Compositor::Compositor()
     };
     m_compose_timer->set_single_shot(true);
     m_compose_timer->set_interval(1000 / 60);
-    m_immediate_compose_timer->on_timeout = [=]() {
+    m_immediate_compose_timer->on_timeout = [this]() {
 #if defined(COMPOSITOR_DEBUG)
         dbgprintf("Compositor: immediate frame callback: %d rects\n", m_dirty_rects.size());
 #endif
@@ -89,12 +90,12 @@ void Compositor::init_bitmaps()
     auto& screen = Screen::the();
     auto size = screen.size();
 
-    m_front_bitmap = Gfx::Bitmap::create_wrapper(Gfx::Bitmap::Format::RGB32, size, screen.pitch(), screen.scanline(0));
+    m_front_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::RGB32, size, screen.pitch(), screen.scanline(0));
 
     if (m_screen_can_set_buffer)
-        m_back_bitmap = Gfx::Bitmap::create_wrapper(Gfx::Bitmap::Format::RGB32, size, screen.pitch(), screen.scanline(size.height()));
+        m_back_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::RGB32, size, screen.pitch(), screen.scanline(size.height()));
     else
-        m_back_bitmap = Gfx::Bitmap::create(Gfx::Bitmap::Format::RGB32, size);
+        m_back_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, size);
 
     m_front_painter = make<Gfx::Painter>(*m_front_bitmap);
     m_back_painter = make<Gfx::Painter>(*m_back_bitmap);
@@ -436,9 +437,9 @@ void Compositor::draw_geometry_label()
     }
     auto geometry_label_rect = Gfx::Rect { 0, 0, wm.font().width(geometry_string) + 16, wm.font().glyph_height() + 10 };
     geometry_label_rect.center_within(window_being_moved_or_resized->rect());
-    m_back_painter->fill_rect(geometry_label_rect, Color::WarmGray);
-    m_back_painter->draw_rect(geometry_label_rect, Color::DarkGray);
-    m_back_painter->draw_text(geometry_label_rect, geometry_string, Gfx::TextAlignment::Center);
+    m_back_painter->fill_rect(geometry_label_rect, wm.palette().window());
+    m_back_painter->draw_rect(geometry_label_rect, wm.palette().threed_shadow2());
+    m_back_painter->draw_text(geometry_label_rect, geometry_string, Gfx::TextAlignment::Center, wm.palette().window_text());
     m_last_geometry_label_rect = geometry_label_rect;
 }
 
@@ -450,12 +451,12 @@ void Compositor::draw_cursor()
 
     if (wm.dnd_client()) {
         auto dnd_rect = wm.dnd_rect();
-        m_back_painter->fill_rect(dnd_rect, Color(110, 34, 9, 200));
+        m_back_painter->fill_rect(dnd_rect, wm.palette().selection().with_alpha(200));
         if (!wm.dnd_text().is_empty()) {
             auto text_rect = dnd_rect;
             if (wm.dnd_bitmap())
                 text_rect.move_by(wm.dnd_bitmap()->width(), 0);
-            m_back_painter->draw_text(text_rect, wm.dnd_text(), Gfx::TextAlignment::CenterLeft, Color::White);
+             m_back_painter->draw_text(text_rect, wm.dnd_text(), Gfx::TextAlignment::CenterLeft, wm.palette().selection_text());
         }
         if (wm.dnd_bitmap()) {
             m_back_painter->blit(dnd_rect.top_left(), *wm.dnd_bitmap(), wm.dnd_bitmap()->rect());

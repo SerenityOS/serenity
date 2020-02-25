@@ -28,14 +28,6 @@
 
 #include <LibGUI/Widget.h>
 
-namespace Core {
-class Timer;
-}
-namespace GUI {
-class JsonArrayModel;
-class TableView;
-}
-
 class ProcessMemoryMapWidget final : public GUI::Widget {
     C_OBJECT(ProcessMemoryMapWidget);
 
@@ -46,7 +38,7 @@ public:
     void refresh();
 
 private:
-    explicit ProcessMemoryMapWidget(GUI::Widget* parent);
+    ProcessMemoryMapWidget();
     RefPtr<GUI::TableView> m_table_view;
     RefPtr<GUI::JsonArrayModel> m_json_model;
     pid_t m_pid { -1 };

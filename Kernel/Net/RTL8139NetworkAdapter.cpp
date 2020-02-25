@@ -24,10 +24,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/IO.h>
 #include <Kernel/Net/RTL8139NetworkAdapter.h>
+#include <LibBareMetal/IO.h>
 
 //#define RTL8139_DEBUG
+
+namespace Kernel {
 
 #define REG_MAC 0x00
 #define REG_MAR0 0x08
@@ -135,18 +137,17 @@ void RTL8139NetworkAdapter::detect(const PCI::Address& address)
     (void)adopt(*new RTL8139NetworkAdapter(address, irq)).leak_ref();
 }
 
-RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address pci_address, u8 irq)
-    : IRQHandler(irq)
-    , m_pci_address(pci_address)
+RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address address, u8 irq)
+    : PCI::Device(address, irq)
 {
     set_interface_name("rtl8139");
 
-    kprintf("RTL8139: Found at PCI address %b:%b:%b\n", pci_address.bus(), pci_address.slot(), pci_address.function());
+    kprintf("RTL8139: Found at PCI address %b:%b:%b\n", pci_address().bus(), pci_address().slot(), pci_address().function());
 
-    enable_bus_mastering(m_pci_address);
+    enable_bus_mastering(pci_address());
 
-    m_io_base = PCI::get_BAR0(m_pci_address) & ~1;
-    m_interrupt_line = PCI::get_interrupt_line(m_pci_address);
+    m_io_base = PCI::get_BAR0(pci_address()) & ~1;
+    m_interrupt_line = PCI::get_interrupt_line(pci_address());
     kprintf("RTL8139: IO port base: %w\n", m_io_base);
     kprintf("RTL8139: Interrupt line: %u\n", m_interrupt_line);
 
@@ -177,7 +178,7 @@ RTL8139NetworkAdapter::~RTL8139NetworkAdapter()
 {
 }
 
-void RTL8139NetworkAdapter::handle_irq()
+void RTL8139NetworkAdapter::handle_irq(RegisterState&)
 {
     for (;;) {
         int status = in16(REG_ISR);
@@ -393,4 +394,6 @@ u16 RTL8139NetworkAdapter::in16(u16 address)
 u32 RTL8139NetworkAdapter::in32(u16 address)
 {
     return IO::in32(m_io_base + address);
+}
+
 }

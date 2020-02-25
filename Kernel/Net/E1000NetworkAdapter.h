@@ -27,12 +27,15 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
-#include <Kernel/IRQHandler.h>
+#include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/PCI/Access.h>
+#include <Kernel/PCI/Device.h>
+
+namespace Kernel {
 
 class E1000NetworkAdapter final : public NetworkAdapter
-    , public IRQHandler {
+    , public PCI::Device {
 public:
     static void detect(const PCI::Address&);
 
@@ -43,7 +46,7 @@ public:
     virtual bool link_up() override;
 
 private:
-    virtual void handle_irq() override;
+    virtual void handle_irq(RegisterState&) override;
     virtual const char* class_name() const override { return "E1000NetworkAdapter"; }
 
     struct [[gnu::packed]] e1000_rx_desc
@@ -86,7 +89,6 @@ private:
 
     void receive();
 
-    PCI::Address m_pci_address;
     u16 m_io_base { 0 };
     VirtualAddress m_mmio_base;
     OwnPtr<Region> m_mmio_region;
@@ -102,3 +104,4 @@ private:
 
     WaitQueue m_wait_queue;
 };
+}

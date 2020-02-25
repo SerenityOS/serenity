@@ -28,12 +28,6 @@
 
 #include <LibGUI/Widget.h>
 
-namespace GUI {
-class Button;
-class TableView;
-class TextBox;
-}
-
 class FindInFilesWidget final : public GUI::Widget {
     C_OBJECT(FindInFilesWidget)
 public:
@@ -42,7 +36,7 @@ public:
     void focus_textbox_and_select_all();
 
 private:
-    explicit FindInFilesWidget(GUI::Widget* parent);
+    explicit FindInFilesWidget();
 
     RefPtr<GUI::TextBox> m_textbox;
     RefPtr<GUI::Button> m_button;

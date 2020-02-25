@@ -45,7 +45,6 @@ class IRCClient final : public Core::Object {
     friend class IRCQuery;
 
 public:
-    IRCClient();
     virtual ~IRCClient() override;
 
     void set_server(const String& hostname, int port = 6667);
@@ -71,7 +70,7 @@ public:
     Function<void(const String&)> on_nickname_changed;
     Function<void(IRCChannel&)> on_part_from_channel;
 
-    Function<IRCWindow*(void*, IRCWindow::Type, const String&)> aid_create_window;
+    Function<NonnullRefPtr<IRCWindow>(void*, IRCWindow::Type, const String&)> aid_create_window;
     Function<IRCWindow*()> aid_get_active_window;
     Function<void()> aid_update_window_list;
 
@@ -85,13 +84,13 @@ public:
     const IRCWindow& window_at(int index) const { return *m_windows.at(index); }
     IRCWindow& window_at(int index) { return *m_windows.at(index); }
 
-    int window_index(const IRCWindow& window) const
+    size_t window_index(const IRCWindow& window) const
     {
-        for (int i = 0; i < m_windows.size(); ++i) {
+        for (size_t i = 0; i < m_windows.size(); ++i) {
             if (m_windows[i] == &window)
                 return i;
         }
-        return -1;
+        ASSERT_NOT_REACHED();
     }
 
     void did_part_from_channel(Badge<IRCChannel>, IRCChannel&);
@@ -114,6 +113,8 @@ public:
     void add_server_message(const String&, Color = Color::Black);
 
 private:
+    IRCClient();
+
     struct Message {
         String prefix;
         String command;

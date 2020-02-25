@@ -24,11 +24,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/HashMap.h>
 #include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/Routing.h>
 #include <Kernel/Thread.h>
 
 //#define ROUTING_DEBUG
+
+namespace Kernel {
 
 Lockable<HashMap<IPv4Address, MACAddress>>& arp_table()
 {
@@ -46,7 +49,7 @@ bool RoutingDecision::is_zero() const
 RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source)
 {
     if (target[0] == 127)
-        return { LoopbackAdapter::the(), {} };
+        return { LoopbackAdapter::the(), LoopbackAdapter::the().mac_address() };
 
     auto target_addr = target.to_u32();
     auto source_addr = source.to_u32();
@@ -67,6 +70,9 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source)
         if (adapter.ipv4_gateway().to_u32() != 0)
             gateway_adapter = adapter;
     });
+
+    if (local_adapter && target == local_adapter->ipv4_address())
+        return { local_adapter, local_adapter->mac_address() };
 
     if (!local_adapter && !gateway_adapter) {
 #ifdef ROUTING_DEBUG
@@ -131,7 +137,7 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source)
     request.set_sender_protocol_address(adapter->ipv4_address());
     adapter->send({ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }, request);
 
-    (void)current->block_until("Routing (ARP)", [next_hop_ip] {
+    (void)Thread::current->block_until("Routing (ARP)", [next_hop_ip] {
         return arp_table().resource().get(next_hop_ip).has_value();
     });
 
@@ -156,4 +162,6 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source)
 #endif
 
     return { nullptr, {} };
+}
+
 }

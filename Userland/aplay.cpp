@@ -41,6 +41,10 @@ int main(int argc, char** argv)
     auto audio_client = Audio::ClientConnection::construct();
     audio_client->handshake();
     Audio::WavLoader loader(argv[1]);
+    if (loader.has_error()) {
+        fprintf(stderr, "Failed to load WAV file: %s\n", loader.error_string());
+        return 1;
+    }
 
     printf("\033[34;1m Playing\033[0m: %s\n", argv[1]);
     printf("\033[34;1m  Format\033[0m: %u Hz, %u-bit, %s\n",

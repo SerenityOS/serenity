@@ -30,10 +30,13 @@
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/InodeVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/Region.h>
 
 //#define MM_DEBUG
 //#define PAGE_FAULT_DEBUG
+
+namespace Kernel {
 
 Region::Region(const Range& range, const String& name, u8 access, bool cacheable)
     : m_range(range)
@@ -81,15 +84,15 @@ Region::~Region()
 
 NonnullOwnPtr<Region> Region::clone()
 {
-    ASSERT(current);
+    ASSERT(Process::current);
 
     // FIXME: What should we do for privately mapped InodeVMObjects?
     if (m_shared || vmobject().is_inode()) {
         ASSERT(!m_stack);
 #ifdef MM_DEBUG
         dbgprintf("%s<%u> Region::clone(): sharing %s (V%p)\n",
-            current->process().name().characters(),
-            current->pid(),
+            Process::current->name().characters(),
+            Process::current->pid(),
             m_name.characters(),
             vaddr().get());
 #endif
@@ -102,8 +105,8 @@ NonnullOwnPtr<Region> Region::clone()
 
 #ifdef MM_DEBUG
     dbgprintf("%s<%u> Region::clone(): cowing %s (V%p)\n",
-        current->process().name().characters(),
-        current->pid(),
+        Process::current->name().characters(),
+        Process::current->pid(),
         m_name.characters(),
         vaddr().get());
 #endif
@@ -144,7 +147,7 @@ bool Region::commit(size_t page_index)
     dbgprintf("MM: commit single page (%zu) in Region %p (VMO=%p) at V%p\n", page_index, vmobject().page_count(), this, &vmobject(), vaddr().get());
 #endif
     auto& vmobject_physical_page_entry = vmobject().physical_pages()[first_page_index() + page_index];
-    if (!vmobject_physical_page_entry.is_null())
+    if (!vmobject_physical_page_entry.is_null() && !vmobject_physical_page_entry->is_shared_zero_page())
         return true;
     auto physical_page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
     if (!physical_page) {
@@ -161,7 +164,7 @@ u32 Region::cow_pages() const
     if (!m_cow_map)
         return 0;
     u32 count = 0;
-    for (int i = 0; i < m_cow_map->size(); ++i)
+    for (size_t i = 0; i < m_cow_map->size(); ++i)
         count += m_cow_map->get(i);
     return count;
 }
@@ -177,7 +180,8 @@ size_t Region::amount_resident() const
 {
     size_t bytes = 0;
     for (size_t i = 0; i < page_count(); ++i) {
-        if (m_vmobject->physical_pages()[first_page_index() + i])
+        auto& physical_page = m_vmobject->physical_pages()[first_page_index() + i];
+        if (physical_page && !physical_page->is_shared_zero_page())
             bytes += PAGE_SIZE;
     }
     return bytes;
@@ -188,7 +192,7 @@ size_t Region::amount_shared() const
     size_t bytes = 0;
     for (size_t i = 0; i < page_count(); ++i) {
         auto& physical_page = m_vmobject->physical_pages()[first_page_index() + i];
-        if (physical_page && physical_page->ref_count() > 1)
+        if (physical_page && physical_page->ref_count() > 1 && !physical_page->is_shared_zero_page())
             bytes += PAGE_SIZE;
     }
     return bytes;
@@ -231,6 +235,9 @@ NonnullOwnPtr<Region> Region::create_kernel_only(const Range& range, const Strin
 
 bool Region::should_cow(size_t page_index) const
 {
+    auto& slot = vmobject().physical_pages()[page_index];
+    if (slot && slot->is_shared_zero_page())
+        return true;
     if (m_shared)
         return false;
     return m_cow_map && m_cow_map->get(page_index);
@@ -339,16 +346,28 @@ PageFaultResponse Region::handle_fault(const PageFault& fault)
 #endif
             return handle_inode_fault(page_index_in_region);
         }
-#ifdef PAGE_FAULT_DEBUG
-        dbgprintf("NP(zero) fault in Region{%p}[%u]\n", this, page_index_in_region);
-#endif
+#ifdef MAP_SHARED_ZERO_PAGE_LAZILY
+        if (fault.is_read()) {
+            vmobject().physical_pages()[first_page_index() + page_index_in_region] = MM.shared_zero_page();
+            remap_page(page_index_in_region);
+            return PageFaultResponse::Continue;
+        }
         return handle_zero_fault(page_index_in_region);
+#else
+        ASSERT_NOT_REACHED();
+#endif
     }
     ASSERT(fault.type() == PageFault::Type::ProtectionViolation);
     if (fault.access() == PageFault::Access::Write && is_writable() && should_cow(page_index_in_region)) {
 #ifdef PAGE_FAULT_DEBUG
         dbgprintf("PV(cow) fault in Region{%p}[%u]\n", this, page_index_in_region);
 #endif
+        if (vmobject().physical_pages()[first_page_index() + page_index_in_region]->is_shared_zero_page()) {
+#ifdef PAGE_FAULT_DEBUG
+            dbgprintf("NP(zero) fault in Region{%p}[%u]\n", this, page_index_in_region);
+#endif
+            return handle_zero_fault(page_index_in_region);
+        }
         return handle_cow_fault(page_index_in_region);
     }
     kprintf("PV(error) fault in Region{%p}[%u] at V%p\n", this, page_index_in_region, fault.vaddr().get());
@@ -366,7 +385,7 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
 
     auto& vmobject_physical_page_entry = vmobject().physical_pages()[first_page_index() + page_index_in_region];
 
-    if (!vmobject_physical_page_entry.is_null()) {
+    if (!vmobject_physical_page_entry.is_null() && !vmobject_physical_page_entry->is_shared_zero_page()) {
 #ifdef PAGE_FAULT_DEBUG
         dbgprintf("MM: zero_page() but page already present. Fine with me!\n");
 #endif
@@ -374,8 +393,8 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
         return PageFaultResponse::Continue;
     }
 
-    if (current)
-        current->did_zero_fault();
+    if (Thread::current)
+        Thread::current->did_zero_fault();
 
     auto physical_page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
     if (physical_page.is_null()) {
@@ -404,8 +423,8 @@ PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
         return PageFaultResponse::Continue;
     }
 
-    if (current)
-        current->did_cow_fault();
+    if (Thread::current)
+        Thread::current->did_cow_fault();
 
 #ifdef PAGE_FAULT_DEBUG
     dbgprintf("    >> It's a COW page and it's time to COW!\n");
@@ -453,8 +472,8 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
         return PageFaultResponse::Continue;
     }
 
-    if (current)
-        current->did_inode_fault();
+    if (Thread::current)
+        Thread::current->did_inode_fault();
 
 #ifdef MM_DEBUG
     dbgprintf("MM: page_in_from_inode ready to read from inode\n");
@@ -484,4 +503,6 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
 
     remap_page(page_index_in_region);
     return PageFaultResponse::Continue;
+}
+
 }

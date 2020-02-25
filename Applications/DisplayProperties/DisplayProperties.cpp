@@ -47,7 +47,7 @@
 #include <Servers/WindowServer/WindowManager.h>
 
 DisplayPropertiesWidget::DisplayPropertiesWidget()
-    : m_wm_config(Core::ConfigFile::get_for_app("WindowManager"))
+    : m_wm_config(Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini"))
 {
     create_resolution_list();
     create_wallpaper_list();
@@ -122,25 +122,24 @@ void DisplayPropertiesWidget::create_wallpaper_list()
 
 void DisplayPropertiesWidget::create_frame()
 {
-    auto tab_widget = GUI::TabWidget::construct(m_root_widget);
+    auto tab_widget = m_root_widget->add<GUI::TabWidget>();
 
-    // First, let's create the "Background" tab
-    auto background_splitter = GUI::VerticalSplitter::construct(nullptr);
-    tab_widget->add_widget("Wallpaper", background_splitter);
+    auto wallpaper_splitter = tab_widget->add_tab<GUI::VerticalSplitter>("Wallpaper");
 
-    auto background_content = GUI::Widget::construct(background_splitter.ptr());
-    background_content->set_layout(make<GUI::VerticalBoxLayout>());
-    background_content->layout()->set_margins({ 4, 4, 4, 4 });
+    auto wallpaper_content = wallpaper_splitter->add<GUI::Widget>();
+    wallpaper_content->set_layout(make<GUI::VerticalBoxLayout>());
+    wallpaper_content->layout()->set_margins({ 4, 4, 4, 4 });
 
-    m_wallpaper_preview = GUI::Label::construct(background_splitter);
+    m_wallpaper_preview = wallpaper_splitter->add<GUI::Label>();
 
-    auto wallpaper_list = GUI::ListView::construct(background_content);
+    auto wallpaper_list = wallpaper_content->add<GUI::ListView>();
     wallpaper_list->set_background_color(Color::White);
     wallpaper_list->set_model(*ItemListModel<AK::String>::create(m_wallpapers));
 
     auto wallpaper_model = wallpaper_list->model();
     auto find_first_wallpaper_index = m_wallpapers.find_first_index(m_selected_wallpaper);
-    auto wallpaper_index_in_model = wallpaper_model->index(find_first_wallpaper_index, wallpaper_list->model_column());
+    ASSERT(find_first_wallpaper_index.has_value());
+    auto wallpaper_index_in_model = wallpaper_model->index(find_first_wallpaper_index.value(), wallpaper_list->model_column());
     if (wallpaper_model->is_valid(wallpaper_index_in_model))
         wallpaper_list->selection().set(wallpaper_index_in_model);
 
@@ -154,21 +153,20 @@ void DisplayPropertiesWidget::create_frame()
         m_wallpaper_preview->set_should_stretch_icon(true);
     };
 
-    // Let's add the settings tab
-    auto settings_splitter = GUI::VerticalSplitter::construct(nullptr);
-    tab_widget->add_widget("Settings", settings_splitter);
+    auto settings_splitter = tab_widget->add_tab<GUI::VerticalSplitter>("Settings");
 
-    auto settings_content = GUI::Widget::construct(settings_splitter.ptr());
+    auto settings_content = settings_splitter->add<GUI::Widget>();
     settings_content->set_layout(make<GUI::VerticalBoxLayout>());
     settings_content->layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto resolution_list = GUI::ListView::construct(settings_content);
+    auto resolution_list = settings_content->add<GUI::ListView>();
     resolution_list->set_background_color(Color::White);
     resolution_list->set_model(*ItemListModel<Gfx::Size>::create(m_resolutions));
 
     auto resolution_model = resolution_list->model();
     auto find_first_resolution_index = m_resolutions.find_first_index(m_selected_resolution);
-    auto resolution_index_in_model = resolution_model->index(find_first_resolution_index, resolution_list->model_column());
+    ASSERT(find_first_resolution_index.has_value());
+    auto resolution_index_in_model = resolution_model->index(find_first_resolution_index.value(), resolution_list->model_column());
     if (resolution_model->is_valid(resolution_index_in_model))
         resolution_list->selection().set(resolution_index_in_model);
 
@@ -180,13 +178,13 @@ void DisplayPropertiesWidget::create_frame()
     settings_content->layout()->add_spacer();
 
     // Add the apply and cancel buttons
-    auto bottom_widget = GUI::Widget::construct(m_root_widget.ptr());
+    auto bottom_widget = m_root_widget->add<GUI::Widget>();
     bottom_widget->set_layout(make<GUI::HorizontalBoxLayout>());
     bottom_widget->layout()->add_spacer();
     bottom_widget->set_size_policy(Orientation::Vertical, GUI::SizePolicy::Fixed);
     bottom_widget->set_preferred_size(1, 22);
 
-    auto apply_button = GUI::Button::construct(bottom_widget);
+    auto apply_button = bottom_widget->add<GUI::Button>();
     apply_button->set_text("Apply");
     apply_button->set_size_policy(Orientation::Vertical, GUI::SizePolicy::Fixed);
     apply_button->set_size_policy(Orientation::Horizontal, GUI::SizePolicy::Fixed);
@@ -195,7 +193,7 @@ void DisplayPropertiesWidget::create_frame()
         send_settings_to_window_server(tab_widget->active_tab_index());
     };
 
-    auto ok_button = GUI::Button::construct(bottom_widget);
+    auto ok_button = bottom_widget->add<GUI::Button>();
     ok_button->set_text("OK");
     ok_button->set_size_policy(Orientation::Vertical, GUI::SizePolicy::Fixed);
     ok_button->set_size_policy(Orientation::Horizontal, GUI::SizePolicy::Fixed);
@@ -205,7 +203,7 @@ void DisplayPropertiesWidget::create_frame()
         GUI::Application::the().quit();
     };
 
-    auto cancel_button = GUI::Button::construct(bottom_widget);
+    auto cancel_button = bottom_widget->add<GUI::Button>();
     cancel_button->set_text("Cancel");
     cancel_button->set_size_policy(Orientation::Vertical, GUI::SizePolicy::Fixed);
     cancel_button->set_size_policy(Orientation::Horizontal, GUI::SizePolicy::Fixed);

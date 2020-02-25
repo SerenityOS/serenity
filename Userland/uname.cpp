@@ -26,9 +26,15 @@
 
 #include <stdio.h>
 #include <sys/utsname.h>
+#include <unistd.h>
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     utsname uts;
     int rc = uname(&uts);
     if (rc < 0) {

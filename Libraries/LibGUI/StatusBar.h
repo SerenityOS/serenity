@@ -30,9 +30,6 @@
 
 namespace GUI {
 
-class Label;
-class ResizeCorner;
-
 class StatusBar : public Widget {
     C_OBJECT(StatusBar)
 public:
@@ -44,8 +41,7 @@ public:
     void set_text(int index, const StringView&);
 
 protected:
-    explicit StatusBar(Widget* parent);
-    explicit StatusBar(int label_count, Widget* parent);
+    explicit StatusBar(int label_count = 1);
     virtual void paint_event(PaintEvent&) override;
 
 private:

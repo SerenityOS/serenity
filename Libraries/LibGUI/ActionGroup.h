@@ -28,10 +28,9 @@
 
 #include <AK/HashTable.h>
 #include <AK/Weakable.h>
+#include <LibGUI/Forward.h>
 
 namespace GUI {
-
-class Action;
 
 class ActionGroup : public Weakable<ActionGroup> {
 public:

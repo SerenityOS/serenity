@@ -32,17 +32,10 @@
 #include <AK/String.h>
 #include <AK/URL.h>
 #include <AK/WeakPtr.h>
+#include <LibCore/Forward.h>
 #include <LibHTML/CSS/StyleResolver.h>
 #include <LibHTML/CSS/StyleSheet.h>
 #include <LibHTML/DOM/ParentNode.h>
-
-namespace Core {
-class Timer;
-}
-
-namespace Gfx {
-class Palette;
-}
 
 class Frame;
 class HTMLBodyElement;

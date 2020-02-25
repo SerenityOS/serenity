@@ -26,13 +26,12 @@
 
 #pragma once
 
-#include <AK/Badge.h>
+#include <AK/Forward.h>
 #include <AK/Noncopyable.h>
+#include <AK/RefCounted.h>
+#include <AK/RefPtr.h>
+#include <LibGUI/Forward.h>
 #include <LibGfx/SystemTheme.h>
-
-namespace GUI {
-class Application;
-}
 
 namespace Gfx {
 
@@ -40,13 +39,14 @@ class PaletteImpl : public RefCounted<PaletteImpl> {
     AK_MAKE_NONCOPYABLE(PaletteImpl)
     AK_MAKE_NONMOVABLE(PaletteImpl)
 public:
+    ~PaletteImpl();
     static NonnullRefPtr<PaletteImpl> create_with_shared_buffer(SharedBuffer&);
     NonnullRefPtr<PaletteImpl> clone() const;
 
     Color color(ColorRole) const;
     const SystemTheme& theme() const;
 
-    void replace_internal_buffer(Badge<GUI::Application>, SharedBuffer& buffer) { m_theme_buffer = buffer; }
+    void replace_internal_buffer(Badge<GUI::Application>, SharedBuffer& buffer);
 
 private:
     explicit PaletteImpl(SharedBuffer&);
@@ -64,6 +64,8 @@ public:
     Color window_text() const { return color(ColorRole::WindowText); }
     Color selection() const { return color(ColorRole::Selection); }
     Color selection_text() const { return color(ColorRole::SelectionText); }
+    Color inactive_selection() const { return color(ColorRole::InactiveSelection); }
+    Color inactive_selection_text() const { return color(ColorRole::InactiveSelectionText); }
     Color desktop_background() const { return color(ColorRole::DesktopBackground); }
     Color active_window_border1() const { return color(ColorRole::ActiveWindowBorder1); }
     Color active_window_border2() const { return color(ColorRole::ActiveWindowBorder2); }
@@ -92,6 +94,12 @@ public:
     Color hover_highlight() const { return color(ColorRole::ThreedHighlight); }
     Color rubber_band_fill() const { return color(ColorRole::RubberBandFill); }
     Color rubber_band_border() const { return color(ColorRole::RubberBandBorder); }
+    Color ruler() const { return color(ColorRole::Ruler); }
+    Color ruler_border() const { return color(ColorRole::RulerBorder); }
+    Color ruler_active_text() const { return color(ColorRole::RulerActiveText); }
+    Color ruler_inactive_text() const { return color(ColorRole::RulerInactiveText); }
+    Color text_cursor() const { return color(ColorRole::TextCursor); }
+    Color focus_outline() const { return color(ColorRole::FocusOutline); }
 
     Color link() const { return color(ColorRole::Link); }
     Color active_link() const { return color(ColorRole::ActiveLink); }

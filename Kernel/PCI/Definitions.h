@@ -29,6 +29,9 @@
 #include <AK/Function.h>
 #include <AK/Types.h>
 
+namespace Kernel {
+
+
 #define PCI_VENDOR_ID 0x00           // word
 #define PCI_DEVICE_ID 0x02           // word
 #define PCI_COMMAND 0x04             // word
@@ -162,6 +165,8 @@ struct ChangeableAddress : public Address {
 
 ID get_id(PCI::Address);
 void enumerate_all(Function<void(Address, ID)> callback);
+void enable_interrupt_line(Address);
+void disable_interrupt_line(Address);
 u8 get_interrupt_line(Address);
 u32 get_BAR0(Address);
 u32 get_BAR1(Address);
@@ -184,5 +189,7 @@ class MMIOAccess;
 class IOAccess;
 class MMIOSegment;
 class Device;
+
+}
 
 }

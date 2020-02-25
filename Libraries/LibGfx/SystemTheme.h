@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <AK/SharedBuffer.h>
+#include <AK/Forward.h>
 #include <AK/Types.h>
 #include <LibGfx/Color.h>
 
@@ -64,11 +64,19 @@ enum class ColorRole {
     HoverHighlight,
     Selection,
     SelectionText,
+    InactiveSelection,
+    InactiveSelectionText,
     RubberBandFill,
     RubberBandBorder,
     Link,
     ActiveLink,
     VisitedLink,
+    Ruler,
+    RulerBorder,
+    RulerActiveText,
+    RulerInactiveText,
+    TextCursor,
+    FocusOutline,
 
     __Count,
 

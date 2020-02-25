@@ -26,13 +26,11 @@
 
 #pragma once
 
-#include <AK/Badge.h>
 #include <AK/Function.h>
 #include <AK/String.h>
+#include <LibGUI/Forward.h>
 
 namespace GUI {
-
-class WindowServerConnection;
 
 class Clipboard {
 public:

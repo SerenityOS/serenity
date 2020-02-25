@@ -30,11 +30,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/Weakable.h>
 #include <LibGfx/Rect.h>
-
-namespace Gfx {
-class CharacterBitmap;
-class Painter;
-}
+#include <LibGfx/Forward.h>
 
 namespace WindowServer {
 

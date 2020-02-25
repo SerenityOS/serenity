@@ -26,22 +26,17 @@
 
 #pragma once
 
-#include <AK/Badge.h>
-#include <AK/HashMap.h>
+#include <AK/Function.h>
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Object.h>
-#include <LibGfx/Bitmap.h>
-#include <LibGfx/Rect.h>
+#include <LibGUI/Forward.h>
 #include <LibGUI/WindowType.h>
+#include <LibGfx/Color.h>
+#include <LibGfx/Forward.h>
+#include <LibGfx/Rect.h>
 
 namespace GUI {
-
-class Action;
-class KeyEvent;
-class WMEvent;
-class Widget;
-class WindowServerConnection;
 
 enum class StandardCursor {
     None = 0,
@@ -153,9 +148,9 @@ public:
     Gfx::Bitmap* back_bitmap() { return m_back_bitmap.ptr(); }
 
     Gfx::Size size_increment() const { return m_size_increment; }
-    void set_size_increment(const Gfx::Size& increment) { m_size_increment = increment; }
+    void set_size_increment(const Gfx::Size&);
     Gfx::Size base_size() const { return m_base_size; }
-    void set_base_size(const Gfx::Size& size) { m_base_size = size; }
+    void set_base_size(const Gfx::Size&);
 
     void set_override_cursor(StandardCursor);
 
@@ -184,9 +179,10 @@ private:
     virtual bool is_window() const override final { return true; }
 
     NonnullRefPtr<Gfx::Bitmap> create_backing_bitmap(const Gfx::Size&);
-    NonnullRefPtr<Gfx::Bitmap> create_shared_bitmap(Gfx::Bitmap::Format, const Gfx::Size&);
+    NonnullRefPtr<Gfx::Bitmap> create_shared_bitmap(Gfx::BitmapFormat, const Gfx::Size&);
     void set_current_backing_bitmap(Gfx::Bitmap&, bool flush_immediately = false);
     void flip(const Vector<Gfx::Rect, 32>& dirty_rects);
+    void force_update();
 
     RefPtr<Gfx::Bitmap> m_front_bitmap;
     RefPtr<Gfx::Bitmap> m_back_bitmap;

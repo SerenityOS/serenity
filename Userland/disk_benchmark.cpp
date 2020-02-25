@@ -128,7 +128,7 @@ int main(int argc, char** argv)
                 usleep(100);
             }
             auto average = average_result(results);
-            printf("\nFinished: runs=%d time=%dms write_bps=%llu read_bps=%llu\n", results.size(), timer.elapsed(), average.write_bps, average.read_bps);
+            printf("\nFinished: runs=%zu time=%dms write_bps=%llu read_bps=%llu\n", results.size(), timer.elapsed(), average.write_bps, average.read_bps);
 
             sleep(1);
         }

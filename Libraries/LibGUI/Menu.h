@@ -26,19 +26,12 @@
 
 #pragma once
 
-#include <AK/Function.h>
 #include <AK/NonnullOwnPtrVector.h>
-#include <AK/NonnullRefPtr.h>
 #include <LibCore/Object.h>
-#include <LibGUI/MenuItem.h>
-
-namespace Gfx {
-class Point;
-}
+#include <LibGUI/Forward.h>
+#include <LibGfx/Forward.h>
 
 namespace GUI {
-
-class Action;
 
 class Menu final : public Core::Object {
     C_OBJECT(Menu)
@@ -46,11 +39,18 @@ public:
     explicit Menu(const StringView& name = "");
     virtual ~Menu() override;
 
+    void realize_menu_if_needed()
+    {
+        if (menu_id() == -1)
+            realize_menu();
+    }
+
     static Menu* from_menu_id(int);
+    int menu_id() const { return m_menu_id; }
 
     const String& name() const { return m_name; }
 
-    Action* action_at(int);
+    Action* action_at(size_t);
 
     void add_action(NonnullRefPtr<Action>);
     void add_separator();
@@ -59,12 +59,9 @@ public:
     void popup(const Gfx::Point& screen_position);
     void dismiss();
 
-    Function<void(unsigned)> on_item_activation;
-
 private:
     friend class MenuBar;
 
-    int menu_id() const { return m_menu_id; }
     int realize_menu();
     void unrealize_menu();
     void realize_if_needed();

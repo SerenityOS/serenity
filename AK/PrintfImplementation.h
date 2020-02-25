@@ -28,6 +28,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/LogStream.h>
+#include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #include <stdarg.h>
 
@@ -228,23 +229,25 @@ template<typename PutChFunc>
 }
 
 template<typename PutChFunc>
-[[gnu::always_inline]] inline int print_string(PutChFunc putch, char*& bufptr, const char* str, bool leftPad, u32 fieldWidth)
+[[gnu::always_inline]] inline int print_string(PutChFunc putch, char*& bufptr, const char* str, bool left_pad, size_t field_width, bool dot)
 {
     size_t len = strlen(str);
-    if (!fieldWidth || fieldWidth < len)
-        fieldWidth = len;
-    if (!leftPad) {
-        for (unsigned i = 0; i < fieldWidth - len; ++i)
+    if (!dot && (!field_width || field_width < len))
+        field_width = len;
+    size_t pad_amount = field_width > len ? field_width - len : 0;
+
+    if (!left_pad) {
+        for (size_t i = 0; i < pad_amount; ++i)
             putch(bufptr, ' ');
     }
-    for (unsigned i = 0; i < len; ++i) {
+    for (size_t i = 0; i < min(len, field_width); ++i) {
         putch(bufptr, str[i]);
     }
-    if (leftPad) {
-        for (unsigned i = 0; i < fieldWidth - len; ++i)
+    if (left_pad) {
+        for (size_t i = 0; i < pad_amount; ++i)
             putch(bufptr, ' ');
     }
-    return fieldWidth;
+    return field_width;
 }
 
 template<typename PutChFunc>
@@ -270,6 +273,7 @@ template<typename PutChFunc>
     for (p = fmt; *p; ++p) {
         bool left_pad = false;
         bool zeroPad = false;
+        bool dot = false;
         unsigned fieldWidth = 0;
         unsigned long_qualifiers = 0;
         bool size_qualifier = false;
@@ -279,9 +283,11 @@ template<typename PutChFunc>
         if (*p == '%' && *(p + 1)) {
         one_more:
             ++p;
-            // FIXME: This is just a hack workaround to prevent choking on '.' specifiers
-            if (*p == '.')
-                goto one_more;
+            if (*p == '.') {
+                dot = true;
+                if (*(p + 1))
+                    goto one_more;
+            }
             if (*p == '-') {
                 left_pad = true;
                 if (*(p + 1))
@@ -326,7 +332,7 @@ template<typename PutChFunc>
             switch (*p) {
             case 's': {
                 const char* sp = va_arg(ap, const char*);
-                ret += print_string(putch, bufptr, sp ? sp : "(null)", left_pad, fieldWidth);
+                ret += print_string(putch, bufptr, sp ? sp : "(null)", left_pad, fieldWidth, dot);
             } break;
 
             case 'd':
@@ -352,7 +358,7 @@ template<typename PutChFunc>
                 ret += print_hex(putch, bufptr, va_arg(ap, u64), false, false, left_pad, zeroPad, 16);
                 break;
 
-#ifndef KERNEL
+#if !defined(BOOTSTRAPPER) && !defined(KERNEL)
             case 'g':
             case 'f':
                 // FIXME: Print as float!

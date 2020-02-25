@@ -29,15 +29,12 @@
 #include "Process.h"
 #include "RTC.h"
 #include "Scheduler.h"
-#include "kstdio.h"
 #include <AK/Types.h>
 #include <Kernel/ACPI/ACPIDynamicParser.h>
 #include <Kernel/ACPI/ACPIStaticParser.h>
 #include <Kernel/ACPI/DMIDecoder.h>
-#include <Kernel/Arch/i386/APIC.h>
+#include <Kernel/ACPI/MultiProcessorParser.h>
 #include <Kernel/Arch/i386/CPU.h>
-#include <Kernel/Arch/i386/PIC.h>
-#include <Kernel/Arch/i386/PIT.h>
 #include <Kernel/CMOS.h>
 #include <Kernel/Devices/BXVGADevice.h>
 #include <Kernel/Devices/DebugLogDevice.h>
@@ -51,6 +48,7 @@
 #include <Kernel/Devices/MBVGADevice.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/Devices/PATAChannel.h>
+#include <Kernel/Devices/PIT.h>
 #include <Kernel/Devices/PS2MouseDevice.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Devices/SB16.h>
@@ -61,6 +59,9 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/Heap/kmalloc.h>
+#include <Kernel/Interrupts/APIC.h>
+#include <Kernel/Interrupts/InterruptManagement.h>
+#include <Kernel/Interrupts/PIC.h>
 #include <Kernel/KParams.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/Net/LoopbackAdapter.h>
@@ -72,14 +73,6 @@
 #include <Kernel/TTY/VirtualConsole.h>
 #include <Kernel/VM/MemoryManager.h>
 
-[[noreturn]] static void init_stage2();
-static void setup_serial_debug();
-static void setup_acpi();
-static void setup_vmmouse();
-static void setup_pci();
-
-VirtualConsole* tty0;
-
 // Defined in the linker script
 typedef void (*ctor_func_t)();
 extern ctor_func_t start_ctors;
@@ -87,6 +80,17 @@ extern ctor_func_t end_ctors;
 
 extern u32 __stack_chk_guard;
 u32 __stack_chk_guard;
+
+namespace Kernel {
+
+[[noreturn]] static void init_stage2();
+static void setup_serial_debug();
+static void setup_acpi();
+static void setup_vmmouse();
+static void setup_pci();
+static void setup_interrupts();
+
+VirtualConsole* tty0;
 
 extern "C" [[noreturn]] void init()
 {
@@ -102,8 +106,11 @@ extern "C" [[noreturn]] void init()
     MemoryManager::initialize();
 
     bool text_debug = KParams::the().has("text_debug");
+    gdt_init();
+    idt_init();
 
     setup_acpi();
+    setup_interrupts();
 
     new VFS;
     new DebugLogDevice;
@@ -114,10 +121,8 @@ extern "C" [[noreturn]] void init()
 
     __stack_chk_guard = get_good_random<u32>();
 
+    PIT::initialize();
     RTC::initialize();
-    PIC::initialize();
-    gdt_init();
-    idt_init();
 
     // call global constructors after gtd and itd init
     for (ctor_func_t* ctor = &start_ctors; ctor < &end_ctors; ctor++)
@@ -141,7 +146,7 @@ extern "C" [[noreturn]] void init()
     VirtualConsole::switch_to(0);
 
     // Sample test to see if the ACPI parser is working...
-    kprintf("ACPI: HPET table @ P 0x%x\n", ACPIParser::the().find_table("HPET"));
+    kprintf("ACPI: HPET table @ P 0x%x\n", ACPIParser::the().find_table("HPET").get());
 
     setup_pci();
 
@@ -173,17 +178,17 @@ extern "C" [[noreturn]] void init()
     Process::create_kernel_process(syncd_thread, "syncd", [] {
         for (;;) {
             VFS::the().sync();
-            current->sleep(1 * TICKS_PER_SECOND);
+            Thread::current->sleep(1 * TICKS_PER_SECOND);
         }
     });
 
     Process::create_kernel_process(g_finalizer, "Finalizer", [] {
-        current->set_priority(THREAD_PRIORITY_LOW);
+        Thread::current->set_priority(THREAD_PRIORITY_LOW);
         for (;;) {
             {
                 InterruptDisabler disabler;
                 if (!g_finalizer_has_work)
-                    current->wait_on(*g_finalizer_wait_queue);
+                    Thread::current->wait_on(*g_finalizer_wait_queue);
                 ASSERT(g_finalizer_has_work);
                 g_finalizer_has_work = false;
             }
@@ -290,7 +295,6 @@ void init_stage2()
             }
         }
     }
-
     auto e2fs = Ext2FS::create(root_dev);
     if (!e2fs->initialize()) {
         kprintf("init_stage2: couldn't open root filesystem\n");
@@ -302,7 +306,7 @@ void init_stage2()
         hang();
     }
 
-    current->process().set_root_directory(VFS::the().root_custody());
+    Process::current->set_root_directory(VFS::the().root_custody());
 
     dbgprintf("Load ksyms\n");
     load_ksyms();
@@ -355,7 +359,7 @@ void init_stage2()
         Process::create_kernel_process(thread, "NetworkTask", NetworkTask_main);
     }
 
-    current->process().sys$exit(0);
+    Process::current->sys$exit(0);
     ASSERT_NOT_REACHED();
 }
 
@@ -455,4 +459,40 @@ void setup_pci()
         hang();
     }
     PCI::Initializer::the().dismiss();
+}
+
+static void setup_interrupt_management()
+{
+    auto madt = ACPIParser::the().find_table("APIC");
+    if (madt.is_null()) {
+        InterruptManagement::initialize();
+        return;
+    }
+    AdvancedInterruptManagement::initialize(madt);
+}
+
+void setup_interrupts()
+{
+    setup_interrupt_management();
+
+    if (!KParams::the().has("smp")) {
+        InterruptManagement::the().switch_to_pic_mode();
+        return;
+    }
+    auto smp = KParams::the().get("smp");
+    if (smp == "off") {
+        InterruptManagement::the().switch_to_pic_mode();
+        return;
+    }
+    if (smp == "on") {
+        ASSERT_NOT_REACHED(); // FIXME: The IOAPIC mode is not stable yet so we can't use it now.
+        InterruptManagement::the().switch_to_ioapic_mode();
+        APIC::init();
+        APIC::enable_bsp();
+        return;
+    }
+
+    kprintf("smp boot argmuent has an invalid value.\n");
+    hang();
+}
 }

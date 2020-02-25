@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/ByteBuffer.h>
 #include <AK/RefCounted.h>
 #include <AK/URL.h>
 #include <AK/WeakPtr.h>

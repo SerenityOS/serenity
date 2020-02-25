@@ -70,12 +70,12 @@ int main(int argc, char** argv)
         perror("setgroups");
         return 1;
     }
-    rc = setgid(uid);
+    rc = setgid(gid);
     if (rc < 0) {
         perror("setgid");
         return 1;
     }
-    rc = setuid(gid);
+    rc = setuid(uid);
     if (rc < 0) {
         perror("setuid");
         return 1;

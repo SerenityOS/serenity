@@ -24,21 +24,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGfx/Palette.h>
-#include <LibGfx/StylePainter.h>
 #include <LibGUI/GroupBox.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/Palette.h>
+#include <LibGfx/StylePainter.h>
 
 namespace GUI {
 
-GroupBox::GroupBox(Widget* parent)
-    : GroupBox({}, parent)
-{
-}
-
-GroupBox::GroupBox(const StringView& title, Widget* parent)
-    : Widget(parent)
-    , m_title(title)
+GroupBox::GroupBox(const StringView& title)
+    : m_title(title)
 {
 }
 

@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGfx/Palette.h>
+#include <LibCore/EventLoop.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Desktop.h>
@@ -33,6 +33,8 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGUI/WindowServerConnection.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/Palette.h>
 
 namespace GUI {
 
@@ -105,7 +107,18 @@ Action* Application::action_for_key_event(const KeyEvent& event)
 }
 
 class Application::TooltipWindow final : public Window {
+    C_OBJECT(TooltipWindow);
+
 public:
+    void set_tooltip(const StringView& tooltip)
+    {
+        // FIXME: Add some kind of GLabel auto-sizing feature.
+        int text_width = m_label->font().width(tooltip);
+        set_rect(100, 100, text_width + 10, m_label->font().glyph_height() + 8);
+        m_label->set_text(tooltip);
+    }
+
+private:
     TooltipWindow()
     {
         set_window_type(WindowType::Tooltip);
@@ -118,21 +131,13 @@ public:
         set_main_widget(m_label);
     }
 
-    void set_tooltip(const StringView& tooltip)
-    {
-        // FIXME: Add some kind of GLabel auto-sizing feature.
-        int text_width = m_label->font().width(tooltip);
-        set_rect(100, 100, text_width + 10, m_label->font().glyph_height() + 8);
-        m_label->set_text(tooltip);
-    }
-
     RefPtr<Label> m_label;
 };
 
 void Application::show_tooltip(const StringView& tooltip, const Gfx::Point& screen_location)
 {
     if (!m_tooltip_window) {
-        m_tooltip_window = new TooltipWindow;
+        m_tooltip_window = TooltipWindow::construct();
         m_tooltip_window->set_double_buffering_enabled(false);
     }
     m_tooltip_window->set_tooltip(tooltip);
@@ -186,6 +191,11 @@ void Application::set_system_palette(SharedBuffer& buffer)
 void Application::set_palette(const Palette& palette)
 {
     m_palette = palette.impl();
+}
+
+Gfx::Palette Application::palette() const
+{
+    return Palette(*m_palette);
 }
 
 }

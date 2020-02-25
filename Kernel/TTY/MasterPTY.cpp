@@ -34,14 +34,16 @@
 
 //#define MASTERPTY_DEBUG
 
+namespace Kernel {
+
 MasterPTY::MasterPTY(unsigned index)
     : CharacterDevice(200, index)
     , m_slave(adopt(*new SlavePTY(*this, index)))
     , m_index(index)
 {
     m_pts_name = String::format("/dev/pts/%u", m_index);
-    set_uid(current->process().uid());
-    set_gid(current->process().gid());
+    set_uid(Process::current->uid());
+    set_gid(Process::current->gid());
 }
 
 MasterPTY::~MasterPTY()
@@ -135,4 +137,6 @@ int MasterPTY::ioctl(FileDescription& description, unsigned request, unsigned ar
 String MasterPTY::absolute_path(const FileDescription&) const
 {
     return String::format("ptm:%s", m_pts_name.characters());
+}
+
 }

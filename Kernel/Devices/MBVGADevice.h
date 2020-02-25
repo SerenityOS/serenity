@@ -29,7 +29,9 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <Kernel/Devices/BlockDevice.h>
-#include <Kernel/VM/PhysicalAddress.h>
+#include <LibBareMetal/Memory/PhysicalAddress.h>
+
+namespace Kernel {
 
 class MBVGADevice final : public BlockDevice {
     AK_MAKE_ETERNAL
@@ -57,3 +59,5 @@ private:
     int m_framebuffer_width { 0 };
     int m_framebuffer_height { 0 };
 };
+
+}

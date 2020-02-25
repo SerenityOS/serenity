@@ -26,13 +26,11 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
+#include <AK/Forward.h>
 #include <AK/RefPtr.h>
 #include <AK/StringImpl.h>
 #include <AK/StringView.h>
 #include <AK/Traits.h>
-#include <AK/Vector.h>
-#include <AK/kstdio.h>
 
 namespace AK {
 
@@ -159,6 +157,8 @@ public:
 
     bool starts_with(const StringView&) const;
     bool ends_with(const StringView&) const;
+    bool starts_with(char) const;
+    bool ends_with(char) const;
 
     bool operator==(const String&) const;
     bool operator!=(const String& other) const { return !(*this == other); }
@@ -264,7 +264,6 @@ inline bool StringView::operator==(const String& string) const
 template<>
 struct Traits<String> : public GenericTraits<String> {
     static unsigned hash(const String& s) { return s.impl() ? s.impl()->hash() : 0; }
-    static void dump(const String& s) { kprintf("%s", s.characters()); }
 };
 
 struct CaseInsensitiveStringTraits : public AK::Traits<String> {
@@ -304,7 +303,10 @@ inline bool operator<=(const char* characters, const String& string)
     return !(characters > string);
 }
 
+String escape_html_entities(const StringView& html);
+
 }
 
 using AK::CaseInsensitiveStringTraits;
 using AK::String;
+using AK::escape_html_entities;

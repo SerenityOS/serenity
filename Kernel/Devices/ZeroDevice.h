@@ -28,6 +28,8 @@
 
 #include "CharacterDevice.h"
 
+namespace Kernel {
+
 class ZeroDevice final : public CharacterDevice {
     AK_MAKE_ETERNAL
 public:
@@ -42,3 +44,5 @@ private:
     virtual bool can_write(const FileDescription&) const override { return true; }
     virtual const char* class_name() const override { return "ZeroDevice"; }
 };
+
+}

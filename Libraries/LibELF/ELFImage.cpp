@@ -25,7 +25,6 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <AK/kstdio.h>
 #include <LibELF/ELFImage.h>
 
 ELFImage::ELFImage(const u8* buffer, size_t size)
@@ -148,7 +147,7 @@ bool ELFImage::parse()
             m_symbol_table_section_index = i;
         }
         if (sh.sh_type == SHT_STRTAB && i != header().e_shstrndx) {
-            if (StringView(".strtab") == section_header_table_string(sh.sh_name))
+            if (section_header_table_string(sh.sh_name) == ELF_STRTAB)
                 m_string_table_section_index = i;
         }
     }

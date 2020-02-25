@@ -115,8 +115,10 @@ int feof(FILE* stream)
 
 int fflush(FILE* stream)
 {
-    // FIXME: fflush(NULL) should flush all open output streams.
-    ASSERT(stream);
+    if (!stream) {
+        dbg() << "FIXME: fflush(nullptr) should flush all open streams";
+        return 0;
+    }
     if (!stream->buffer_index)
         return 0;
     int rc = write(stream->fd, stream->buffer, stream->buffer_index);
@@ -390,13 +392,13 @@ int dbgprintf(const char* fmt, ...)
     return ret;
 }
 
-static void stdout_putch(char*&, char ch)
+[[gnu::always_inline]] inline void stdout_putch(char*&, char ch)
 {
     putchar(ch);
 }
 
 static FILE* __current_stream = nullptr;
-static void stream_putch(char*&, char ch)
+[[gnu::always_inline]] inline static void stream_putch(char*&, char ch)
 {
     fputc(ch, __current_stream);
 }
@@ -452,7 +454,7 @@ int sprintf(char* buffer, const char* fmt, ...)
 }
 
 static size_t __vsnprintf_space_remaining;
-static void sized_buffer_putch(char*& bufptr, char ch)
+[[gnu::always_inline]] inline void sized_buffer_putch(char*& bufptr, char ch)
 {
     if (__vsnprintf_space_remaining) {
         *bufptr++ = ch;

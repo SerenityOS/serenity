@@ -26,16 +26,12 @@
 
 #pragma once
 
-#include <LibCore/EventLoop.h>
+#include <AK/OwnPtr.h>
 #include <LibCore/Object.h>
-
-namespace Gfx {
-class Bitmap;
-}
+#include <LibGUI/Forward.h>
+#include <LibGfx/Forward.h>
 
 namespace GUI {
-
-class WindowServerConnection;
 
 class DragOperation : public Core::Object {
     C_OBJECT(DragOperation)

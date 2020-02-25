@@ -52,6 +52,7 @@ public:
     Function<void(const StringView&)> on_path_change;
     Function<void(GUI::AbstractView&)> on_selection_change;
     Function<void(const GUI::AbstractView&, const GUI::ModelIndex&, const GUI::ContextMenuEvent&)> on_context_menu_request;
+    Function<void(const GUI::AbstractView&, const GUI::ModelIndex&, const GUI::DropEvent&)> on_drop;
     Function<void(const StringView&)> on_status_message;
     Function<void(int done, int total)> on_thumbnail_progress;
 
@@ -89,7 +90,7 @@ public:
     GUI::FileSystemModel& model() { return *m_model; }
 
 private:
-    explicit DirectoryView(GUI::Widget* parent);
+    DirectoryView();
     const GUI::FileSystemModel& model() const { return *m_model; }
 
     void handle_activation(const GUI::ModelIndex&);
@@ -100,7 +101,7 @@ private:
     ViewMode m_view_mode { Invalid };
 
     NonnullRefPtr<GUI::FileSystemModel> m_model;
-    int m_path_history_position { 0 };
+    size_t m_path_history_position { 0 };
     Vector<String> m_path_history;
     void add_path_to_history(const StringView& path);
 

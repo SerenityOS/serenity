@@ -43,6 +43,8 @@
 
 //#define IPV4_SOCKET_DEBUG
 
+namespace Kernel {
+
 Lockable<HashTable<IPv4Socket*>>& IPv4Socket::all_sockets()
 {
     static Lockable<HashTable<IPv4Socket*>>* s_table;
@@ -66,7 +68,7 @@ IPv4Socket::IPv4Socket(int type, int protocol)
     : Socket(AF_INET, type, protocol)
 {
 #ifdef IPV4_SOCKET_DEBUG
-    kprintf("%s(%u) IPv4Socket{%p} created with type=%u, protocol=%d\n", current->process().name().characters(), current->pid(), this, type, protocol);
+    kprintf("%s(%u) IPv4Socket{%p} created with type=%u, protocol=%d\n", Process::current->name().characters(), Process::current->pid(), this, type, protocol);
 #endif
     m_buffer_mode = type == SOCK_STREAM ? BufferMode::Bytes : BufferMode::Packets;
     if (m_buffer_mode == BufferMode::Bytes) {
@@ -109,9 +111,9 @@ KResult IPv4Socket::bind(const sockaddr* user_address, socklen_t address_size)
         return KResult(-EINVAL);
 
     auto requested_local_port = ntohs(address.sin_port);
-    if (!current->process().is_superuser()) {
+    if (!Process::current->is_superuser()) {
         if (requested_local_port < 1024) {
-            dbg() << current->process() << " (uid " << current->process().uid() << ") attempted to bind " << class_name() << " to port " << requested_local_port;
+            dbg() << Process::current << " (uid " << Process::current->uid() << ") attempted to bind " << class_name() << " to port " << requested_local_port;
             return KResult(-EACCES);
         }
     }
@@ -126,7 +128,7 @@ KResult IPv4Socket::bind(const sockaddr* user_address, socklen_t address_size)
     return protocol_bind();
 }
 
-KResult IPv4Socket::listen(int backlog)
+KResult IPv4Socket::listen(size_t backlog)
 {
     int rc = allocate_local_port_if_needed();
     if (rc < 0)
@@ -136,7 +138,7 @@ KResult IPv4Socket::listen(int backlog)
     m_role = Role::Listener;
 
 #ifdef IPV4_SOCKET_DEBUG
-    kprintf("IPv4Socket{%p} listening with backlog=%d\n", this, backlog);
+    kprintf("IPv4Socket{%p} listening with backlog=%zu\n", this, backlog);
 #endif
 
     return protocol_listen();
@@ -230,7 +232,7 @@ ssize_t IPv4Socket::sendto(FileDescription&, const void* data, size_t data_lengt
 
     int nsent = protocol_send(data, data_length);
     if (nsent > 0)
-        current->did_ipv4_socket_write(nsent);
+        Thread::current->did_ipv4_socket_write(nsent);
     return nsent;
 }
 
@@ -242,7 +244,7 @@ ssize_t IPv4Socket::receive_byte_buffered(FileDescription& description, void* bu
         if (!description.is_blocking())
             return -EAGAIN;
 
-        auto res = current->block<Thread::ReadBlocker>(description);
+        auto res = Thread::current->block<Thread::ReadBlocker>(description);
 
         LOCKER(lock());
         if (!m_can_read) {
@@ -257,7 +259,7 @@ ssize_t IPv4Socket::receive_byte_buffered(FileDescription& description, void* bu
     ASSERT(!m_receive_buffer.is_empty());
     int nreceived = m_receive_buffer.read((u8*)buffer, buffer_length);
     if (nreceived > 0)
-        current->did_ipv4_socket_read((size_t)nreceived);
+        Thread::current->did_ipv4_socket_read((size_t)nreceived);
 
     m_can_read = !m_receive_buffer.is_empty();
     return nreceived;
@@ -291,7 +293,7 @@ ssize_t IPv4Socket::receive_packet_buffered(FileDescription& description, void* 
             return 0;
         }
 
-        auto res = current->block<Thread::ReadBlocker>(description);
+        auto res = Thread::current->block<Thread::ReadBlocker>(description);
 
         LOCKER(lock());
         if (!m_can_read) {
@@ -349,7 +351,7 @@ ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t 
         nreceived = receive_packet_buffered(description, buffer, buffer_length, flags, addr, addr_length);
 
     if (nreceived > 0)
-        current->did_ipv4_socket_read(nreceived);
+        Thread::current->did_ipv4_socket_read(nreceived);
     return nreceived;
 }
 
@@ -461,7 +463,7 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, unsigned arg)
 {
     REQUIRE_PROMISE(inet);
     auto* ifr = (ifreq*)arg;
-    if (!current->process().validate_read_typed(ifr))
+    if (!Process::current->validate_read_typed(ifr))
         return -EFAULT;
 
     char namebuf[IFNAMSIZ + 1];
@@ -473,7 +475,7 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, unsigned arg)
 
     switch (request) {
     case SIOCSIFADDR:
-        if (!current->process().is_superuser())
+        if (!Process::current->is_superuser())
             return -EPERM;
         if (ifr->ifr_addr.sa_family != AF_INET)
             return -EAFNOSUPPORT;
@@ -481,14 +483,14 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, unsigned arg)
         return 0;
 
     case SIOCGIFADDR:
-        if (!current->process().validate_write_typed(ifr))
+        if (!Process::current->validate_write_typed(ifr))
             return -EFAULT;
         ifr->ifr_addr.sa_family = AF_INET;
         ((sockaddr_in&)ifr->ifr_addr).sin_addr.s_addr = adapter->ipv4_address().to_u32();
         return 0;
 
     case SIOCGIFHWADDR:
-        if (!current->process().validate_write_typed(ifr))
+        if (!Process::current->validate_write_typed(ifr))
             return -EFAULT;
         ifr->ifr_hwaddr.sa_family = AF_INET;
         {
@@ -510,4 +512,6 @@ void IPv4Socket::shut_down_for_reading()
 {
     Socket::shut_down_for_reading();
     m_can_read = true;
+}
+
 }

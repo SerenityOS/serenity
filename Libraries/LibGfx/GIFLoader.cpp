@@ -27,6 +27,7 @@
 #include <AK/BufferStream.h>
 #include <AK/ByteBuffer.h>
 #include <AK/FileSystemPath.h>
+#include <AK/MappedFile.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibGfx/GIFLoader.h>
 #include <stdio.h>
@@ -199,7 +200,7 @@ RefPtr<Gfx::Bitmap> load_gif_impl(const u8* data, size_t data_size)
         if (sentinel == 0x2c) {
             images.append(make<ImageDescriptor>());
             auto& image = images.last();
-            u8 packed_fields;
+            u8 packed_fields { 0 };
             stream >> image.x;
             stream >> image.y;
             stream >> image.width;
@@ -248,13 +249,13 @@ RefPtr<Gfx::Bitmap> load_gif_impl(const u8* data, size_t data_size)
     }
 
     // We exited the block loop after finding a trailer. We should have everything needed.
-    printf("Image count: %d\n", images.size());
+    printf("Image count: %zu\n", images.size());
     if (images.is_empty())
         return nullptr;
 
-    for (int i = 0; i < images.size(); ++i) {
+    for (size_t i = 0; i < images.size(); ++i) {
         auto& image = images.at(i);
-        printf("Image %d: %d,%d %dx%d  %d bytes LZW-encoded\n", i, image.x, image.y, image.width, image.height, image.lzw_encoded_bytes.size());
+        printf("Image %zu: %d,%d %dx%d  %zu bytes LZW-encoded\n", i, image.x, image.y, image.width, image.height, image.lzw_encoded_bytes.size());
 
         // FIXME: Decode the LZW-encoded bytes and turn them into an image.
     }

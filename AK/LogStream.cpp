@@ -49,40 +49,54 @@ const LogStream& operator<<(const LogStream& stream, const StringView& value)
 
 const LogStream& operator<<(const LogStream& stream, int value)
 {
-    return stream << String::number(value);
+    char buffer[32];
+    sprintf(buffer, "%d", value);
+    return stream << buffer;
 }
 
 const LogStream& operator<<(const LogStream& stream, long value)
 {
-    return stream << String::number(value);
+    char buffer[32];
+    sprintf(buffer, "%ld", value);
+    return stream << buffer;
 }
 
 const LogStream& operator<<(const LogStream& stream, long long value)
 {
-    return stream << String::number(value);
+    char buffer[32];
+    sprintf(buffer, "%lld", value);
+    return stream << buffer;
 }
 
 const LogStream& operator<<(const LogStream& stream, unsigned value)
 {
-    return stream << String::number(value);
+    char buffer[32];
+    sprintf(buffer, "%u", value);
+    return stream << buffer;
 }
 
 const LogStream& operator<<(const LogStream& stream, unsigned long long value)
 {
-    return stream << String::number(value);
+    char buffer[32];
+    sprintf(buffer, "%llu", value);
+    return stream << buffer;
 }
 
 const LogStream& operator<<(const LogStream& stream, unsigned long value)
 {
-    return stream << String::number(value);
+    char buffer[32];
+    sprintf(buffer, "%lu", value);
+    return stream << buffer;
 }
 
 const LogStream& operator<<(const LogStream& stream, const void* value)
 {
-    return stream << String::format("%p", value);
+    char buffer[32];
+    sprintf(buffer, "%p", value);
+    return stream << buffer;
 }
 
-#if defined(__serenity__) && !defined(KERNEL)
+#if defined(__serenity__) && !defined(KERNEL) && !defined(BOOTSTRAPPER)
 static TriState got_process_name = TriState::Unknown;
 static char process_name_buffer[256];
 #endif
@@ -90,7 +104,7 @@ static char process_name_buffer[256];
 DebugLogStream dbg()
 {
     DebugLogStream stream;
-#if defined(__serenity__) && !defined(KERNEL)
+#if defined(__serenity__) && !defined(KERNEL) && !defined(BOOTSTRAPPER)
     if (got_process_name == TriState::Unknown) {
         if (get_process_name(process_name_buffer, sizeof(process_name_buffer)) == 0)
             got_process_name = TriState::True;
@@ -100,13 +114,22 @@ DebugLogStream dbg()
     if (got_process_name == TriState::True)
         stream << "\033[33;1m" << process_name_buffer << '(' << getpid() << ")\033[0m: ";
 #endif
-#if defined(__serenity__) && defined(KERNEL)
-    if (current)
-        stream << "\033[34;1m[" << *current << "]\033[0m: ";
+#if defined(__serenity__) && defined(KERNEL) && !defined(BOOTSTRAPPER)
+    if (Kernel::Thread::current)
+        stream << "\033[34;1m[" << *Kernel::Thread::current << "]\033[0m: ";
     else
         stream << "\033[36;1m[Kernel]\033[0m: ";
 #endif
+#if defined(BOOTSTRAPPER) && !defined(__serenity__) && !defined(KERNEL)
+    stream << "\033[36;1m[Bootstrapper]\033[0m: ";
+#endif
     return stream;
+}
+
+DebugLogStream::~DebugLogStream()
+{
+    char newline = '\n';
+    write(&newline, 1);
 }
 
 }

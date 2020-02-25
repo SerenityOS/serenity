@@ -33,6 +33,8 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/FileSystem/Custody.h>
 
+namespace Kernel {
+
 InlineLinkedList<Inode>& all_inodes()
 {
     static InlineLinkedList<Inode>* list;
@@ -212,4 +214,6 @@ void Inode::set_metadata_dirty(bool metadata_dirty)
             watcher->notify_inode_event({}, InodeWatcher::Event::Type::Modified);
         }
     }
+}
+
 }

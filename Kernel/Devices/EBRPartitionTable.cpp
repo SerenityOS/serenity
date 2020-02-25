@@ -29,6 +29,8 @@
 
 #define EBR_DEBUG
 
+namespace Kernel {
+
 EBRPartitionTable::EBRPartitionTable(NonnullRefPtr<BlockDevice> device)
     : m_device(move(device))
 {
@@ -193,4 +195,6 @@ RefPtr<DiskPartition> EBRPartitionTable::partition(unsigned index)
     if (index > 4)
         return get_non_extended_partition(index - m_ebr_chained_extensions_count);
     return get_non_extended_partition(index);
+}
+
 }

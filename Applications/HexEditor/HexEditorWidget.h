@@ -34,10 +34,6 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 
-namespace GUI {
-class StatusBar;
-}
-
 class HexEditor;
 
 class HexEditorWidget final : public GUI::Widget {

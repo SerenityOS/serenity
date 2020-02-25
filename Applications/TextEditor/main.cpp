@@ -25,18 +25,19 @@
  */
 
 #include "TextEditorWidget.h"
+#include <LibGfx/Bitmap.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio rpath accept cpath wpath shared_buffer unix fattr", nullptr) < 0) {
+    if (pledge("stdio thread rpath accept cpath wpath shared_buffer unix fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     GUI::Application app(argc, argv);
 
-    if (pledge("stdio rpath accept cpath wpath shared_buffer", nullptr) < 0) {
+    if (pledge("stdio thread rpath accept cpath wpath shared_buffer", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

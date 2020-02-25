@@ -24,8 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Rect.h"
 #include <AK/StdLibExtras.h>
+#include <AK/String.h>
+#include <AK/Vector.h>
+#include <LibGfx/Rect.h>
 
 namespace Gfx {
 
@@ -127,6 +129,32 @@ void Rect::align_within(const Rect& other, TextAlignment alignment)
         center_vertically_within(other);
         return;
     }
+}
+
+String Rect::to_string() const
+{
+    return String::format("[%d,%d %dx%d]", x(), y(), width(), height());
+}
+
+const LogStream& operator<<(const LogStream& stream, const Rect& value)
+{
+    return stream << value.to_string();
+}
+
+}
+
+namespace IPC {
+
+bool decode(BufferStream& stream, Gfx::Rect& rect)
+{
+    Gfx::Point point;
+    Gfx::Size size;
+    if (!decode(stream, point))
+        return false;
+    if (!decode(stream, size))
+        return false;
+    rect = { point, size };
+    return true;
 }
 
 }

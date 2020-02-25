@@ -32,7 +32,7 @@
 
 namespace AK {
 
-template<typename T, int Capacity>
+template<typename T, size_t Capacity>
 class CircularDeque : public CircularQueue<T, Capacity> {
 public:
     T dequeue_end()

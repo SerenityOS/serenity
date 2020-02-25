@@ -29,10 +29,11 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/Region.h>
 
+namespace Kernel {
+
 NonnullRefPtr<InodeVMObject> InodeVMObject::create_with_inode(Inode& inode)
 {
     size_t size = inode.size();
-    InterruptDisabler disabler;
     if (inode.vmobject())
         return *inode.vmobject();
     auto vmobject = adopt(*new InodeVMObject(inode, size));
@@ -77,7 +78,7 @@ size_t InodeVMObject::amount_clean() const
 size_t InodeVMObject::amount_dirty() const
 {
     size_t count = 0;
-    for (int i = 0; i < m_dirty_pages.size(); ++i) {
+    for (size_t i = 0; i < m_dirty_pages.size(); ++i) {
         if (m_dirty_pages.get(i))
             ++count;
     }
@@ -194,4 +195,6 @@ u32 InodeVMObject::executable_mappings() const
             ++count;
     });
     return count;
+}
+
 }

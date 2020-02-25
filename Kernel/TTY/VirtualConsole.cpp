@@ -25,12 +25,14 @@
  */
 
 #include "VirtualConsole.h"
-#include "IO.h"
-#include "StdLib.h"
-#include <Kernel/Heap/kmalloc.h>
 #include <AK/String.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Devices/KeyboardDevice.h>
+#include <Kernel/Heap/kmalloc.h>
+#include <LibBareMetal/IO.h>
+#include <LibBareMetal/StdLib.h>
+
+namespace Kernel {
 
 static u8* s_vga_buffer;
 static VirtualConsole* s_consoles[6];
@@ -61,6 +63,14 @@ void VirtualConsole::initialize()
     s_vga_buffer = (u8*)0xc00b8000;
     memset(s_consoles, 0, sizeof(s_consoles));
     s_active_console = -1;
+}
+
+void VirtualConsole::set_graphical(bool graphical)
+{
+    if (graphical)
+        set_vga_start_row(0);
+
+    m_graphical = graphical;
 }
 
 VirtualConsole::VirtualConsole(unsigned index, InitialContents initial_contents)
@@ -587,4 +597,6 @@ void VirtualConsole::set_vga_start_row(u16 row)
     IO::out8(0x3d5, MSB(m_current_vga_start_address));
     IO::out8(0x3d4, 0x0d);
     IO::out8(0x3d5, LSB(m_current_vga_start_address));
+}
+
 }

@@ -28,6 +28,8 @@
 
 #include <AK/Types.h>
 
+namespace Kernel {
+
 #define VMMOUSE_GETVERSION 10
 #define VMMOUSE_DATA 39
 #define VMMOUSE_STATUS 40
@@ -73,3 +75,5 @@ private:
     bool m_supported;
     bool m_vmmouse_absolute { false };
 };
+
+}

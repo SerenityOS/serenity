@@ -32,6 +32,8 @@
 #include <Kernel/Scheduler.h>
 #include <LibELF/ELFLoader.h>
 
+namespace Kernel {
+
 static KSym* s_ksyms;
 u32 ksym_lowest_address = 0xffffffff;
 u32 ksym_highest_address = 0;
@@ -134,13 +136,13 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
     int recognized_symbol_count = 0;
     if (use_ksyms) {
         for (u32* stack_ptr = (u32*)ebp;
-             (current ? current->process().validate_read_from_kernel(VirtualAddress(stack_ptr), sizeof(void*) * 2) : 1) && recognized_symbol_count < max_recognized_symbol_count; stack_ptr = (u32*)*stack_ptr) {
+             (Process::current ? Process::current->validate_read_from_kernel(VirtualAddress(stack_ptr), sizeof(void*) * 2) : 1) && recognized_symbol_count < max_recognized_symbol_count; stack_ptr = (u32*)*stack_ptr) {
             u32 retaddr = stack_ptr[1];
             recognized_symbols[recognized_symbol_count++] = { retaddr, ksymbolicate(retaddr) };
         }
     } else {
         for (u32* stack_ptr = (u32*)ebp;
-             (current ? current->process().validate_read_from_kernel(VirtualAddress(stack_ptr), sizeof(void*) * 2) : 1); stack_ptr = (u32*)*stack_ptr) {
+             (Process::current ? Process::current->validate_read_from_kernel(VirtualAddress(stack_ptr), sizeof(void*) * 2) : 1); stack_ptr = (u32*)*stack_ptr) {
             u32 retaddr = stack_ptr[1];
             dbgprintf("%x (next: %x)\n", retaddr, stack_ptr ? (u32*)*stack_ptr : 0);
         }
@@ -152,8 +154,8 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
         if (!symbol.address)
             break;
         if (!symbol.ksym) {
-            if (current && current->process().elf_loader() && current->process().elf_loader()->has_symbols()) {
-                dbgprintf("%p  %s\n", symbol.address, current->process().elf_loader()->symbolicate(symbol.address).characters());
+            if (Process::current && Process::current->elf_loader() && Process::current->elf_loader()->has_symbols()) {
+                dbgprintf("%p  %s\n", symbol.address, Process::current->elf_loader()->symbolicate(symbol.address).characters());
             } else {
                 dbgprintf("%p (no ELF symbols for process)\n", symbol.address);
             }
@@ -188,4 +190,6 @@ void load_ksyms()
     auto buffer = description->read_entire_file();
     ASSERT(buffer);
     load_ksyms_from_data(buffer);
+}
+
 }

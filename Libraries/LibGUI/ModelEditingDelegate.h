@@ -77,7 +77,7 @@ public:
 
     virtual RefPtr<Widget> create_widget() override
     {
-        auto textbox = TextBox::construct(nullptr);
+        auto textbox = TextBox::construct();
         textbox->on_return_pressed = [this] {
             commit();
         };

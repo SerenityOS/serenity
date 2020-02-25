@@ -27,6 +27,8 @@
 #include <Kernel/Process.h>
 #include <Kernel/SharedBuffer.h>
 
+namespace Kernel {
+
 Lockable<HashMap<int, NonnullOwnPtr<SharedBuffer>>>& shared_buffers()
 {
     static Lockable<HashMap<int, NonnullOwnPtr<SharedBuffer>>>* map;
@@ -84,12 +86,15 @@ void* SharedBuffer::ref_for_process_and_get_address(Process& process)
 
     for (auto& ref : m_refs) {
         if (ref.pid == process.pid()) {
-            ref.count++;
-            m_total_refs++;
-            if (ref.region == nullptr) {
-                ref.region = process.allocate_region_with_vmobject(VirtualAddress(), size(), m_vmobject, 0, "SharedBuffer", PROT_READ | (m_writable ? PROT_WRITE : 0));
+            if (!ref.region) {
+                auto* region = process.allocate_region_with_vmobject(VirtualAddress(), size(), m_vmobject, 0, "SharedBuffer", PROT_READ | (m_writable ? PROT_WRITE : 0));
+                if (!region)
+                    return (void*)-ENOMEM;
+                ref.region = region->make_weak_ptr();
                 ref.region->set_shared(true);
             }
+            ref.count++;
+            m_total_refs++;
             sanity_check("ref_for_process_and_get_address");
             return ref.region->vaddr().as_ptr();
         }
@@ -100,6 +105,8 @@ void* SharedBuffer::ref_for_process_and_get_address(Process& process)
 void SharedBuffer::share_with(pid_t peer_pid)
 {
     LOCKER(shared_buffers().lock());
+    if (m_global)
+        return;
     for (auto& ref : m_refs) {
         if (ref.pid == peer_pid) {
             // don't increment the reference count yet; let them get_shared_buffer it first.
@@ -115,7 +122,7 @@ void SharedBuffer::share_with(pid_t peer_pid)
 void SharedBuffer::deref_for_process(Process& process)
 {
     LOCKER(shared_buffers().lock());
-    for (int i = 0; i < m_refs.size(); ++i) {
+    for (size_t i = 0; i < m_refs.size(); ++i) {
         auto& ref = m_refs[i];
         if (ref.pid == process.pid()) {
             ref.count--;
@@ -143,7 +150,7 @@ void SharedBuffer::deref_for_process(Process& process)
 void SharedBuffer::disown(pid_t pid)
 {
     LOCKER(shared_buffers().lock());
-    for (int i = 0; i < m_refs.size(); ++i) {
+    for (size_t i = 0; i < m_refs.size(); ++i) {
         auto& ref = m_refs[i];
         if (ref.pid == pid) {
 #ifdef SHARED_BUFFER_DEBUG
@@ -184,4 +191,6 @@ void SharedBuffer::seal()
             ref.region->remap();
         }
     }
+}
+
 }

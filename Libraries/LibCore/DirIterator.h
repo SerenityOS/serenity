@@ -36,6 +36,7 @@ public:
     enum Flags {
         NoFlags = 0x0,
         SkipDots = 0x1,
+        SkipParentAndBaseDir = 0x2,
     };
 
     DirIterator(const StringView& path, Flags = Flags::NoFlags);
@@ -46,11 +47,13 @@ public:
     const char* error_string() const { return strerror(m_error); }
     bool has_next();
     String next_path();
+    String next_full_path();
 
 private:
     DIR* m_dir = nullptr;
     int m_error = 0;
     String m_next;
+    String m_path;
     int m_flags;
 
     bool advance_next();

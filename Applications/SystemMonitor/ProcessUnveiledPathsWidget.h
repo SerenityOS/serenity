@@ -28,10 +28,6 @@
 
 #include <LibGUI/Widget.h>
 
-namespace GUI {
-class TableView;
-}
-
 class ProcessUnveiledPathsWidget final : public GUI::Widget {
     C_OBJECT(ProcessUnveiledPathsWidget);
 public:
@@ -40,7 +36,7 @@ public:
     void set_pid(pid_t);
 
 private:
-    explicit ProcessUnveiledPathsWidget(GUI::Widget* parent);
+    ProcessUnveiledPathsWidget();
 
     RefPtr<GUI::TableView> m_table_view;
     pid_t m_pid { -1 };

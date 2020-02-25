@@ -30,6 +30,8 @@
 #include <AK/Vector.h>
 #include <Kernel/Devices/DiskPartition.h>
 
+namespace Kernel {
+
 #define MBR_SIGNATURE 0xaa55
 #define MBR_PROTECTIVE 0xEE
 #define EBR_CHS_CONTAINER 0x05
@@ -76,3 +78,5 @@ private:
 
     u8 m_cached_header[512];
 };
+
+}

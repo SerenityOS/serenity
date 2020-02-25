@@ -31,6 +31,8 @@
 #include <AK/Vector.h>
 #include <Kernel/Devices/DiskPartition.h>
 
+namespace Kernel {
+
 #define GPT_SIGNATURE2 0x54524150
 #define GPT_SIGNATURE 0x20494645
 #define BytesPerSector 512
@@ -85,3 +87,5 @@ private:
 
     u8 m_cached_header[512];
 };
+
+}

@@ -26,8 +26,8 @@
 
 #pragma once
 
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <AK/ByteBuffer.h>
+#include <AK/Forward.h>
 #include <stdarg.h>
 
 namespace AK {
@@ -45,8 +45,7 @@ public:
     void appendf(const char*, ...);
     void appendvf(const char*, va_list);
 
-    String build() { return to_string(); }
-
+    String build();
     String to_string();
     ByteBuffer to_byte_buffer();
 
@@ -54,6 +53,7 @@ public:
     void clear();
 
     size_t length() const { return m_length; }
+    bool is_empty() const { return m_length == 0; }
     void trim(size_t count) { m_length -= count; }
 
 private:

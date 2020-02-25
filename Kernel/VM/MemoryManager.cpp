@@ -26,19 +26,26 @@
 
 #include "CMOS.h"
 #include "Process.h"
-#include "StdLib.h"
 #include <AK/Assertions.h>
-#include <AK/kstdio.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/InodeVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <Kernel/VM/PageDirectory.h>
+#include <Kernel/VM/PhysicalRegion.h>
 #include <Kernel/VM/PurgeableVMObject.h>
+#include <LibBareMetal/StdLib.h>
 
 //#define MM_DEBUG
 //#define PAGE_FAULT_DEBUG
+
+extern uintptr_t start_of_kernel_text;
+extern uintptr_t start_of_kernel_data;
+extern uintptr_t end_of_kernel_bss;
+
+namespace Kernel {
 
 static MemoryManager* s_the;
 
@@ -50,13 +57,12 @@ MemoryManager& MM
 MemoryManager::MemoryManager()
 {
     m_kernel_page_directory = PageDirectory::create_kernel_page_directory();
-
     parse_memory_map();
-
-    asm volatile("movl %%eax, %%cr3" ::"a"(kernel_page_directory().cr3()));
-
+    write_cr3(kernel_page_directory().cr3());
     setup_low_identity_mapping();
     protect_kernel_image();
+
+    m_shared_zero_page = allocate_user_physical_page();
 }
 
 MemoryManager::~MemoryManager()
@@ -66,8 +72,6 @@ MemoryManager::~MemoryManager()
 void MemoryManager::protect_kernel_image()
 {
     // Disable writing to the kernel text and rodata segments.
-    extern uintptr_t start_of_kernel_text;
-    extern uintptr_t start_of_kernel_data;
     for (size_t i = (uintptr_t)&start_of_kernel_text; i < (uintptr_t)&start_of_kernel_data; i += PAGE_SIZE) {
         auto& pte = ensure_pte(kernel_page_directory(), VirtualAddress(i));
         pte.set_writable(false);
@@ -75,7 +79,6 @@ void MemoryManager::protect_kernel_image()
 
     if (g_cpu_supports_nx) {
         // Disable execution of the kernel data and bss segments.
-        extern uintptr_t end_of_kernel_bss;
         for (size_t i = (uintptr_t)&start_of_kernel_data; i < (uintptr_t)&end_of_kernel_bss; i += PAGE_SIZE) {
             auto& pte = ensure_pte(kernel_page_directory(), VirtualAddress(i));
             pte.set_execute_disabled(true);
@@ -188,6 +191,21 @@ void MemoryManager::parse_memory_map()
         m_user_physical_pages += region.finalize_capacity();
 }
 
+const PageTableEntry* MemoryManager::pte(const PageDirectory& page_directory, VirtualAddress vaddr)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    u32 page_directory_table_index = (vaddr.get() >> 30) & 0x3;
+    u32 page_directory_index = (vaddr.get() >> 21) & 0x1ff;
+    u32 page_table_index = (vaddr.get() >> 12) & 0x1ff;
+
+    auto* pd = quickmap_pd(const_cast<PageDirectory&>(page_directory), page_directory_table_index);
+    const PageDirectoryEntry& pde = pd[page_directory_index];
+    if (!pde.is_present())
+        return nullptr;
+
+    return &quickmap_pt(PhysicalAddress((uintptr_t)pde.page_table_base()))[page_table_index];
+}
+
 PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, VirtualAddress vaddr)
 {
     ASSERT_INTERRUPTS_DISABLED();
@@ -245,7 +263,9 @@ Region* MemoryManager::user_region_from_vaddr(Process& process, VirtualAddress v
         if (region.contains(vaddr))
             return &region;
     }
+#ifdef MM_DEBUG
     dbg() << process << " Couldn't find user region for " << vaddr;
+#endif
     return nullptr;
 }
 
@@ -267,7 +287,7 @@ Region* MemoryManager::region_from_vaddr(VirtualAddress vaddr)
 {
     if (auto* region = kernel_region_from_vaddr(vaddr))
         return region;
-    auto page_directory = PageDirectory::find_by_cr3(cpu_cr3());
+    auto page_directory = PageDirectory::find_by_cr3(read_cr3());
     if (!page_directory)
         return nullptr;
     ASSERT(page_directory->process());
@@ -277,7 +297,11 @@ Region* MemoryManager::region_from_vaddr(VirtualAddress vaddr)
 PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(current);
+    ASSERT(Thread::current);
+    if (g_in_irq) {
+        dbg() << "BUG! Page fault while handling IRQ! code=" << fault.code() << ", vaddr=" << fault.vaddr();
+        dump_kernel_regions();
+    }
 #ifdef PAGE_FAULT_DEBUG
     dbgprintf("MM: handle_page_fault(%w) at V%p\n", fault.code(), fault.vaddr().get());
 #endif
@@ -301,7 +325,7 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringVi
         region = Region::create_user_accessible(range, name, access, cacheable);
     else
         region = Region::create_kernel_only(range, name, access, cacheable);
-    region->set_page_directory(kernel_page_directory());
+    region->map(kernel_page_directory());
     if (should_commit)
         region->commit();
     return region;
@@ -472,20 +496,16 @@ RefPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
 
 void MemoryManager::enter_process_paging_scope(Process& process)
 {
-    ASSERT(current);
+    ASSERT(Thread::current);
     InterruptDisabler disabler;
 
-    current->tss().cr3 = process.page_directory().cr3();
-    asm volatile("movl %%eax, %%cr3" ::"a"(process.page_directory().cr3())
-                 : "memory");
+    Thread::current->tss().cr3 = process.page_directory().cr3();
+    write_cr3(process.page_directory().cr3());
 }
 
 void MemoryManager::flush_entire_tlb()
 {
-    asm volatile(
-        "mov %%cr3, %%eax\n"
-        "mov %%eax, %%cr3\n" ::
-            : "%eax", "memory");
+    write_cr3(read_cr3());
 }
 
 void MemoryManager::flush_tlb(VirtualAddress vaddr)
@@ -611,6 +631,17 @@ bool MemoryManager::validate_kernel_read(const Process& process, VirtualAddress 
     return validate_range<AccessSpace::Kernel, AccessType::Read>(process, vaddr, size);
 }
 
+bool MemoryManager::can_read_without_faulting(const Process& process, VirtualAddress vaddr, size_t size) const
+{
+    // FIXME: Use the size argument!
+    UNUSED_PARAM(size);
+    auto* pte = const_cast<MemoryManager*>(this)->pte(process.page_directory(), vaddr);
+    if (!pte)
+        return false;
+    return pte->is_present();
+}
+
+
 bool MemoryManager::validate_user_read(const Process& process, VirtualAddress vaddr, size_t size) const
 {
     if (!is_user_address(vaddr))
@@ -676,16 +707,16 @@ void MemoryManager::dump_kernel_regions()
 
 ProcessPagingScope::ProcessPagingScope(Process& process)
 {
-    ASSERT(current);
-    asm("movl %%cr3, %%eax"
-        : "=a"(m_previous_cr3));
+    ASSERT(Thread::current);
+    m_previous_cr3 = read_cr3();
     MM.enter_process_paging_scope(process);
 }
 
 ProcessPagingScope::~ProcessPagingScope()
 {
     InterruptDisabler disabler;
-    current->tss().cr3 = m_previous_cr3;
-    asm volatile("movl %%eax, %%cr3" ::"a"(m_previous_cr3)
-                 : "memory");
+    Thread::current->tss().cr3 = m_previous_cr3;
+    write_cr3(m_previous_cr3);
+}
+
 }

@@ -26,6 +26,8 @@
 
 #include <Kernel/Net/LoopbackAdapter.h>
 
+namespace Kernel {
+
 LoopbackAdapter& LoopbackAdapter::the()
 {
     static LoopbackAdapter* the;
@@ -38,6 +40,7 @@ LoopbackAdapter::LoopbackAdapter()
 {
     set_interface_name("loop");
     set_mtu(65536);
+    set_mac_address({ 19, 85, 2, 9, 0x55, 0xaa });
 }
 
 LoopbackAdapter::~LoopbackAdapter()
@@ -48,4 +51,6 @@ void LoopbackAdapter::send_raw(const u8* data, size_t size)
 {
     dbgprintf("LoopbackAdapter: Sending %d byte(s) to myself.\n", size);
     did_receive(data, size);
+}
+
 }

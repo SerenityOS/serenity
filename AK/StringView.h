@@ -26,13 +26,10 @@
 
 #pragma once
 
-#include <AK/Vector.h>
+#include <AK/Forward.h>
+#include <AK/StdLibExtras.h>
 
 namespace AK {
-
-class ByteBuffer;
-class String;
-class StringImpl;
 
 class StringView {
 public:
@@ -66,6 +63,8 @@ public:
 
     bool starts_with(const StringView&) const;
     bool ends_with(const StringView&) const;
+    bool starts_with(char) const;
+    bool ends_with(char) const;
 
     StringView substring_view(size_t start, size_t length) const;
     Vector<StringView> split_view(char, bool keep_empty = false) const;

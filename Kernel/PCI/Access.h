@@ -29,6 +29,8 @@
 #include <AK/String.h>
 #include <Kernel/PCI/Definitions.h>
 
+namespace Kernel {
+
 class PCI::Access {
 public:
     virtual void enumerate_all(Function<void(Address, ID)>&) = 0;
@@ -54,6 +56,14 @@ public:
         return space_size;
     }
     virtual ID get_id(Address address) final;
+    virtual void enable_interrupt_line(Address address) final
+    {
+        write16_field(address, PCI_COMMAND, read16_field(address, PCI_COMMAND) & ~(1 << 10));
+    }
+    virtual void disable_interrupt_line(Address address) final
+    {
+        write16_field(address, PCI_COMMAND, read16_field(address, PCI_COMMAND) | 1 << 10);
+    }
     virtual u8 get_revision_id(Address address) { return read8_field(address, PCI_REVISION_ID); }
     virtual u8 get_subclass(Address address) { return read8_field(address, PCI_SUBCLASS); }
     virtual u8 get_class(Address address) { return read8_field(address, PCI_CLASS); }
@@ -86,3 +96,5 @@ protected:
     virtual void write16_field(Address address, u32 field, u16 value) = 0;
     virtual void write32_field(Address address, u32 field, u32 value) = 0;
 };
+
+}

@@ -29,12 +29,8 @@
 #include <LibGUI/Painter.h>
 #include <LibM/math.h>
 
-SampleWidget::SampleWidget(GUI::Widget* parent)
-    : GUI::Frame(parent)
+SampleWidget::SampleWidget()
 {
-    set_frame_shape(Gfx::FrameShape::Container);
-    set_frame_shadow(Gfx::FrameShadow::Sunken);
-    set_frame_thickness(2);
 }
 
 SampleWidget::~SampleWidget()
@@ -58,7 +54,7 @@ void SampleWidget::paint_event(GUI::PaintEvent& event)
     if (m_buffer) {
         int samples_per_pixel = m_buffer->sample_count() / frame_inner_rect().width();
         for (int sample_index = 0; sample_index < m_buffer->sample_count() && (x - x_offset) < frame_inner_rect().width(); ++sample_index) {
-            float sample = fabsf(m_buffer->samples()[sample_index].left);
+            float sample = fabsf((float)m_buffer->samples()[sample_index].left);
 
             sample_max = max(sample, sample_max);
             ++count;

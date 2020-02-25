@@ -27,12 +27,13 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <Kernel/InterruptHandler.h>
+#include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/PCI/Definitions.h>
 
-class PCI::Device : public InterruptHandler {
+namespace Kernel {
+class PCI::Device : public IRQHandler {
 public:
-    Address get_pci_address() const { return m_pci_address; };
+    Address pci_address() const { return m_pci_address; };
 
 protected:
     Device(Address pci_address);
@@ -42,3 +43,4 @@ protected:
 private:
     Address m_pci_address;
 };
+}

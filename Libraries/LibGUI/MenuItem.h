@@ -26,15 +26,11 @@
 
 #pragma once
 
-#include <AK/Badge.h>
-#include <AK/NonnullOwnPtr.h>
-#include <AK/OwnPtr.h>
-#include <AK/String.h>
+#include <AK/Forward.h>
+#include <AK/RefPtr.h>
+#include <LibGUI/Forward.h>
 
 namespace GUI {
-
-class Action;
-class Menu;
 
 class MenuItem {
 public:
@@ -68,8 +64,8 @@ public:
     bool is_enabled() const { return m_enabled; }
     void set_enabled(bool);
 
-    void set_menu_id(Badge<Menu>, unsigned menu_id) { m_menu_id = menu_id; }
-    void set_identifier(Badge<Menu>, unsigned identifier) { m_identifier = identifier; }
+    void set_menu_id(Badge<Menu>, unsigned menu_id);
+    void set_identifier(Badge<Menu>, unsigned identifier);
 
 private:
     void update_window_server();

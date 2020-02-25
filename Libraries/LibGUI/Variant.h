@@ -31,10 +31,6 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGUI/Icon.h>
 
-namespace AK {
-class JsonValue;
-}
-
 namespace GUI {
 
 class Variant {

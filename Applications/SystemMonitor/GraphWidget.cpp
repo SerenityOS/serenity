@@ -26,13 +26,10 @@
 
 #include "GraphWidget.h"
 #include <LibGUI/Painter.h>
+#include <LibGfx/Font.h>
 
-GraphWidget::GraphWidget(GUI::Widget* parent)
-    : GUI::Frame(parent)
+GraphWidget::GraphWidget()
 {
-    set_frame_thickness(2);
-    set_frame_shape(Gfx::FrameShape::Container);
-    set_frame_shadow(Gfx::FrameShadow::Sunken);
 }
 
 GraphWidget::~GraphWidget()
@@ -57,7 +54,7 @@ void GraphWidget::paint_event(GUI::PaintEvent& event)
     float scale = (float)inner_rect.height() / (float)m_max;
 
     Gfx::Point prev_point;
-    for (int i = 0; i < m_values.size(); ++i) {
+    for (size_t i = 0; i < m_values.size(); ++i) {
         int x = inner_rect.right() - (i * 2) + 1;
         if (x < 0)
             break;

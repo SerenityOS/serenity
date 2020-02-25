@@ -42,12 +42,13 @@
  *  [ ] handle fire bitmap edges better
 */
 
-#include <LibGfx/Bitmap.h>
+#include <LibCore/ElapsedTimer.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Bitmap.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -95,7 +96,7 @@ public:
     void set_stat_label(RefPtr<GUI::Label> l) { stats = l; };
 
 private:
-    explicit Fire(GUI::Widget* parent = nullptr);
+    Fire();
     RefPtr<Gfx::Bitmap> bitmap;
     RefPtr<GUI::Label> stats;
 
@@ -111,10 +112,9 @@ private:
     int phase;
 };
 
-Fire::Fire(GUI::Widget* parent)
-    : GUI::Widget(parent)
+Fire::Fire()
 {
-    bitmap = Gfx::Bitmap::create(Gfx::Bitmap::Format::Indexed8, { 320, 200 });
+    bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::Indexed8, { 320, 200 });
 
     /* Initialize fire palette */
     for (int i = 0; i < 30; i++)
@@ -249,7 +249,7 @@ int main(int argc, char** argv)
     auto fire = Fire::construct();
     window->set_main_widget(fire);
 
-    auto time = GUI::Label::construct(fire);
+    auto time = fire->add<GUI::Label>();
     time->set_relative_rect({ 0, 4, 40, 10 });
     time->move_by({ window->width() - time->width(), 0 });
     time->set_foreground_color(Color::from_rgb(0x444444));

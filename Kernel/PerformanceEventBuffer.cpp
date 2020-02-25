@@ -26,8 +26,11 @@
 
 #include <AK/JsonArraySerializer.h>
 #include <AK/JsonObjectSerializer.h>
+#include <AK/JsonObject.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/PerformanceEventBuffer.h>
+
+namespace Kernel {
 
 PerformanceEventBuffer::PerformanceEventBuffer()
     : m_buffer(KBuffer::create_with_size(4 * MB))
@@ -67,7 +70,7 @@ KResult PerformanceEventBuffer::append(int type, uintptr_t arg1, uintptr_t arg2)
     Vector<uintptr_t> backtrace;
     {
         SmapDisabler disabler;
-        backtrace = current->raw_backtrace(ebp);
+        backtrace = Thread::current->raw_backtrace(ebp);
     }
     event.stack_size = min(sizeof(event.stack) / sizeof(uintptr_t), static_cast<size_t>(backtrace.size()));
     memcpy(event.stack, backtrace.data(), event.stack_size * sizeof(uintptr_t));
@@ -123,4 +126,6 @@ KBuffer PerformanceEventBuffer::to_json(pid_t pid, const String& executable_path
     array.finish();
     object.finish();
     return builder.build();
+}
+
 }

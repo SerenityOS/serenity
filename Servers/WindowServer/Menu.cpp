@@ -125,33 +125,36 @@ void Menu::redraw()
 
 Window& Menu::ensure_menu_window()
 {
+    if (m_menu_window)
+        return *m_menu_window;
+
     int width = this->content_width();
-    if (!m_menu_window) {
-        Gfx::Point next_item_location(frame_thickness(), frame_thickness());
-        for (auto& item : m_items) {
-            int height = 0;
-            if (item.type() == MenuItem::Text)
-                height = item_height();
-            else if (item.type() == MenuItem::Separator)
-                height = 8;
-            item.set_rect({ next_item_location, { width - frame_thickness() * 2, height } });
-            next_item_location.move_by(0, height);
-        }
 
-        int window_height_available = Screen::the().height() - MenuManager::the().menubar_rect().height() - frame_thickness() * 2;
-        int max_window_height = (window_height_available / item_height()) * item_height() + frame_thickness() * 2;
-        int content_height = m_items.is_empty() ? 0 : (m_items.last().rect().bottom() + 1) + frame_thickness();
-        int window_height = min(max_window_height, content_height);
-        if (window_height < content_height) {
-            m_scrollable = true;
-            m_max_scroll_offset = item_count() - window_height / item_height() + 2;
-        }
-
-        auto window = Window::construct(*this, WindowType::Menu);
-        window->set_rect(0, 0, width, window_height);
-        m_menu_window = move(window);
-        draw();
+    Gfx::Point next_item_location(frame_thickness(), frame_thickness());
+    for (auto& item : m_items) {
+        int height = 0;
+        if (item.type() == MenuItem::Text)
+            height = item_height();
+        else if (item.type() == MenuItem::Separator)
+            height = 8;
+        item.set_rect({ next_item_location, { width - frame_thickness() * 2, height } });
+        next_item_location.move_by(0, height);
     }
+
+    int window_height_available = Screen::the().height() - MenuManager::the().menubar_rect().height() - frame_thickness() * 2;
+    int max_window_height = (window_height_available / item_height()) * item_height() + frame_thickness() * 2;
+    int content_height = m_items.is_empty() ? 0 : (m_items.last().rect().bottom() + 1) + frame_thickness();
+    int window_height = min(max_window_height, content_height);
+    if (window_height < content_height) {
+        m_scrollable = true;
+        m_max_scroll_offset = item_count() - window_height / item_height() + 2;
+    }
+
+    auto window = Window::construct(*this, WindowType::Menu);
+    window->set_rect(0, 0, width, window_height);
+    m_menu_window = move(window);
+    draw();
+
     return *m_menu_window;
 }
 
@@ -396,11 +399,11 @@ void Menu::event(Core::Event& event)
             do {
                 if (m_hovered_item_index == 0)
                     m_hovered_item_index = m_items.size() - 1;
-                else if (m_hovered_item_index < 0)
-                    return;
                 else
                     --m_hovered_item_index;
             } while (hovered_item()->type() == MenuItem::Separator);
+
+            ASSERT(m_hovered_item_index >= 0 && m_hovered_item_index <= static_cast<int>(m_items.size()) - 1);
 
             if (is_scrollable() && m_hovered_item_index < m_scroll_offset)
                 --m_scroll_offset;
@@ -412,17 +415,17 @@ void Menu::event(Core::Event& event)
         if (key == Key_Down) {
             ASSERT(m_items.at(0).type() != MenuItem::Separator);
 
-            if (is_scrollable() && m_hovered_item_index == m_items.size() - 1)
+            if (is_scrollable() && m_hovered_item_index == static_cast<int>(m_items.size()) - 1)
                 return;
 
             do {
-                if (m_hovered_item_index == m_items.size() - 1)
+                if (m_hovered_item_index == static_cast<int>(m_items.size()) - 1)
                     m_hovered_item_index = 0;
-                else if (m_hovered_item_index > m_items.size() - 1)
-                    return;
                 else
                     ++m_hovered_item_index;
             } while (hovered_item()->type() == MenuItem::Separator);
+
+            ASSERT(m_hovered_item_index >= 0 && m_hovered_item_index <= static_cast<int>(m_items.size()) - 1);
 
             if (is_scrollable() && m_hovered_item_index >= (m_scroll_offset + visible_item_count()))
                 ++m_scroll_offset;

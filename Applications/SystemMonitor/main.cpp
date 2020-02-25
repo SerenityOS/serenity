@@ -44,6 +44,7 @@
 #include <LibGUI/JsonArrayModel.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/LazyWidget.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/SortingProxyModel.h>
@@ -52,6 +53,7 @@
 #include <LibGUI/ToolBar.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Palette.h>
 #include <LibPCIDB/Database.h>
 #include <signal.h>
 #include <stdio.h>
@@ -68,9 +70,9 @@ static String human_readable_size(u32 size)
     return String::format("%u GB", size / GB);
 }
 
-static RefPtr<GUI::Widget> build_file_systems_tab();
-static RefPtr<GUI::Widget> build_pci_devices_tab();
-static RefPtr<GUI::Widget> build_devices_tab();
+static NonnullRefPtr<GUI::Widget> build_file_systems_tab();
+static NonnullRefPtr<GUI::Widget> build_pci_devices_tab();
+static NonnullRefPtr<GUI::Widget> build_devices_tab();
 static NonnullRefPtr<GUI::Widget> build_graphs_tab();
 
 int main(int argc, char** argv)
@@ -119,12 +121,11 @@ int main(int argc, char** argv)
     keeper->set_fill_with_background_color(true);
     keeper->layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto tabwidget = GUI::TabWidget::construct(keeper);
+    auto tabwidget = keeper->add<GUI::TabWidget>();
 
-    auto process_container_splitter = GUI::VerticalSplitter::construct(nullptr);
-    tabwidget->add_widget("Processes", process_container_splitter);
+    auto process_container_splitter = tabwidget->add_tab<GUI::VerticalSplitter>("Processes");
 
-    auto process_table_container = GUI::Widget::construct(process_container_splitter.ptr());
+    auto process_table_container = process_container_splitter->add<GUI::Widget>();
 
     tabwidget->add_widget("Graphs", build_graphs_tab());
 
@@ -134,22 +135,23 @@ int main(int argc, char** argv)
 
     tabwidget->add_widget("Devices", build_devices_tab());
 
-    auto network_stats_widget = NetworkStatisticsWidget::construct(nullptr);
+    auto network_stats_widget = NetworkStatisticsWidget::construct();
     tabwidget->add_widget("Network", network_stats_widget);
 
     process_table_container->set_layout(make<GUI::VerticalBoxLayout>());
-    process_table_container->layout()->set_margins({ 4, 0, 4, 4 });
+    process_table_container->layout()->set_margins({ 4, 0, 4, 0 });
     process_table_container->layout()->set_spacing(0);
 
-    auto toolbar = GUI::ToolBar::construct(process_table_container);
+    auto toolbar = process_table_container->add<GUI::ToolBar>();
     toolbar->set_has_frame(false);
-    auto process_table_view = ProcessTableView::construct(process_table_container);
+    auto process_table_view = process_table_container->add<ProcessTableView>();
 
-    auto refresh_timer = Core::Timer::construct(1000, [&] {
-        process_table_view->refresh();
-        if (auto* memory_stats_widget = MemoryStatsWidget::the())
-            memory_stats_widget->refresh();
-    }, window);
+    auto refresh_timer = window->add<Core::Timer>(
+        1000, [&] {
+            process_table_view->refresh();
+            if (auto* memory_stats_widget = MemoryStatsWidget::the())
+                memory_stats_widget->refresh();
+        });
 
     auto kill_action = GUI::Action::create("Kill process", { Mod_Ctrl, Key_K }, Gfx::Bitmap::load_from_file("/res/icons/kill16.png"), [process_table_view](const GUI::Action&) {
         pid_t pid = process_table_view->selected_pid();
@@ -227,19 +229,12 @@ int main(int argc, char** argv)
 
     app.set_menubar(move(menubar));
 
-    auto process_tab_widget = GUI::TabWidget::construct(process_container_splitter);
+    auto process_tab_widget = process_container_splitter->add<GUI::TabWidget>();
 
-    auto memory_map_widget = ProcessMemoryMapWidget::construct(nullptr);
-    process_tab_widget->add_widget("Memory map", memory_map_widget);
-
-    auto open_files_widget = ProcessFileDescriptorMapWidget::construct(nullptr);
-    process_tab_widget->add_widget("Open files", open_files_widget);
-
-    auto unveiled_paths_widget = ProcessUnveiledPathsWidget::construct(nullptr);
-    process_tab_widget->add_widget("Unveiled paths", unveiled_paths_widget);
-
-    auto stacks_widget = ProcessStacksWidget::construct(nullptr);
-    process_tab_widget->add_widget("Stacks", stacks_widget);
+    auto memory_map_widget = process_tab_widget->add_tab<ProcessMemoryMapWidget>("Memory map");
+    auto open_files_widget = process_tab_widget->add_tab<ProcessFileDescriptorMapWidget>("Open files");
+    auto unveiled_paths_widget = process_tab_widget->add_tab<ProcessUnveiledPathsWidget>("Unveiled paths");
+    auto stacks_widget = process_tab_widget->add_tab<ProcessStacksWidget>("Stacks");
 
     process_table_view->on_process_selected = [&](pid_t pid) {
         open_files_widget->set_pid(pid);
@@ -273,14 +268,14 @@ public:
     }
 };
 
-RefPtr<GUI::Widget> build_file_systems_tab()
+NonnullRefPtr<GUI::Widget> build_file_systems_tab()
 {
     auto fs_widget = GUI::LazyWidget::construct();
 
-    fs_widget->on_first_show = [](auto& self) {
+    fs_widget->on_first_show = [](GUI::LazyWidget& self) {
         self.set_layout(make<GUI::VerticalBoxLayout>());
         self.layout()->set_margins({ 4, 4, 4, 4 });
-        auto fs_table_view = GUI::TableView::construct(&self);
+        auto fs_table_view = self.add<GUI::TableView>();
         fs_table_view->set_size_columns_to_fit_content(true);
 
         Vector<GUI::JsonArrayModel::FieldSpec> df_fields;
@@ -290,7 +285,11 @@ RefPtr<GUI::Widget> build_file_systems_tab()
         df_fields.empend(
             "Size", Gfx::TextAlignment::CenterRight,
             [](const JsonObject& object) {
-                return human_readable_size(object.get("total_block_count").to_u32() * object.get("block_size").to_u32());
+                StringBuilder size_builder;
+                size_builder.append(" ");
+                size_builder.append(human_readable_size(object.get("total_block_count").to_u32() * object.get("block_size").to_u32()));
+                size_builder.append(" ");
+                return size_builder.to_string();
             },
             [](const JsonObject& object) {
                 return object.get("total_block_count").to_u32() * object.get("block_size").to_u32();
@@ -362,14 +361,14 @@ RefPtr<GUI::Widget> build_file_systems_tab()
     return fs_widget;
 }
 
-RefPtr<GUI::Widget> build_pci_devices_tab()
+NonnullRefPtr<GUI::Widget> build_pci_devices_tab()
 {
     auto pci_widget = GUI::LazyWidget::construct();
 
-    pci_widget->on_first_show = [](auto& self) {
+    pci_widget->on_first_show = [](GUI::LazyWidget& self) {
         self.set_layout(make<GUI::VerticalBoxLayout>());
         self.layout()->set_margins({ 4, 4, 4, 4 });
-        auto pci_table_view = GUI::TableView::construct(&self);
+        auto pci_table_view = self.add<GUI::TableView>();
         pci_table_view->set_size_columns_to_fit_content(true);
 
         auto db = PCIDB::Database::open();
@@ -420,15 +419,15 @@ RefPtr<GUI::Widget> build_pci_devices_tab()
     return pci_widget;
 }
 
-RefPtr<GUI::Widget> build_devices_tab()
+NonnullRefPtr<GUI::Widget> build_devices_tab()
 {
     auto devices_widget = GUI::LazyWidget::construct();
 
-    devices_widget->on_first_show = [](auto& self) {
+    devices_widget->on_first_show = [](GUI::LazyWidget& self) {
         self.set_layout(make<GUI::VerticalBoxLayout>());
         self.layout()->set_margins({ 4, 4, 4, 4 });
 
-        auto devices_table_view = GUI::TableView::construct(&self);
+        auto devices_table_view = self.add<GUI::TableView>();
         devices_table_view->set_size_columns_to_fit_content(true);
         devices_table_view->set_model(GUI::SortingProxyModel::create(DevicesModel::create()));
         devices_table_view->model()->update();
@@ -441,18 +440,18 @@ NonnullRefPtr<GUI::Widget> build_graphs_tab()
 {
     auto graphs_container = GUI::LazyWidget::construct();
 
-    graphs_container->on_first_show = [](auto& self) {
+    graphs_container->on_first_show = [](GUI::LazyWidget& self) {
         self.set_fill_with_background_color(true);
         self.set_background_role(ColorRole::Button);
         self.set_layout(make<GUI::VerticalBoxLayout>());
         self.layout()->set_margins({ 4, 4, 4, 4 });
 
-        auto cpu_graph_group_box = GUI::GroupBox::construct("CPU usage", &self);
+        auto cpu_graph_group_box = self.add<GUI::GroupBox>("CPU usage");
         cpu_graph_group_box->set_layout(make<GUI::VerticalBoxLayout>());
         cpu_graph_group_box->layout()->set_margins({ 6, 16, 6, 6 });
         cpu_graph_group_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
         cpu_graph_group_box->set_preferred_size(0, 120);
-        auto cpu_graph = GraphWidget::construct(cpu_graph_group_box);
+        auto cpu_graph = cpu_graph_group_box->add<GraphWidget>();
         cpu_graph->set_max(100);
         cpu_graph->set_text_color(Color::Green);
         cpu_graph->set_graph_color(Color::from_rgb(0x00bb00));
@@ -464,19 +463,19 @@ NonnullRefPtr<GUI::Widget> build_graphs_tab()
             graph->add_value(cpu_percent);
         };
 
-        auto memory_graph_group_box = GUI::GroupBox::construct("Memory usage", &self);
+        auto memory_graph_group_box = self.add<GUI::GroupBox>("Memory usage");
         memory_graph_group_box->set_layout(make<GUI::VerticalBoxLayout>());
         memory_graph_group_box->layout()->set_margins({ 6, 16, 6, 6 });
         memory_graph_group_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
         memory_graph_group_box->set_preferred_size(0, 120);
-        auto memory_graph = GraphWidget::construct(memory_graph_group_box);
+        auto memory_graph = memory_graph_group_box->add<GraphWidget>();
         memory_graph->set_text_color(Color::Cyan);
         memory_graph->set_graph_color(Color::from_rgb(0x00bbbb));
         memory_graph->text_formatter = [](int value, int max) {
             return String::format("%d / %d KB", value, max);
         };
 
-        auto memory_stats_widget = MemoryStatsWidget::construct(*memory_graph, &self);
+        auto memory_stats_widget = self.add<MemoryStatsWidget>(*memory_graph);
     };
     return graphs_container;
 }

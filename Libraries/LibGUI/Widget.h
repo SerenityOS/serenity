@@ -26,31 +26,18 @@
 
 #pragma once
 
-#include <AK/Badge.h>
-#include <AK/HashMap.h>
 #include <AK/String.h>
-#include <LibCore/ElapsedTimer.h>
 #include <LibCore/Object.h>
-#include <LibGfx/Color.h>
-#include <LibGfx/Font.h>
-#include <LibGfx/Orientation.h>
-#include <LibGfx/Palette.h>
-#include <LibGfx/Rect.h>
-#include <LibGfx/SystemTheme.h>
 #include <LibGUI/Event.h>
-#include <LibGUI/Shortcut.h>
+#include <LibGUI/Forward.h>
+#include <LibGfx/Color.h>
+#include <LibGfx/Forward.h>
+#include <LibGfx/Orientation.h>
+#include <LibGfx/Rect.h>
 
 #define REGISTER_GWIDGET(class_name)                          \
     extern WidgetClassRegistration registration_##class_name; \
-    WidgetClassRegistration registration_##class_name(#class_name, [](Widget* parent) { return class_name::construct(parent); });
-
-namespace Gfx {
-class Bitmap;
-}
-
-namespace GUI {
-class Widget;
-}
+    WidgetClassRegistration registration_##class_name(#class_name, []() { return class_name::construct(); });
 
 template<>
 inline bool Core::is<GUI::Widget>(const Core::Object& object)
@@ -59,11 +46,6 @@ inline bool Core::is<GUI::Widget>(const Core::Object& object)
 }
 
 namespace GUI {
-
-class Action;
-class Layout;
-class Menu;
-class Window;
 
 enum class SizePolicy {
     Fixed,
@@ -89,24 +71,22 @@ enum class VerticalDirection {
     Down
 };
 
-class Widget;
-
 class WidgetClassRegistration {
     AK_MAKE_NONCOPYABLE(WidgetClassRegistration)
     AK_MAKE_NONMOVABLE(WidgetClassRegistration)
 public:
-    WidgetClassRegistration(const String& class_name, Function<NonnullRefPtr<Widget>(Widget*)> factory);
+    WidgetClassRegistration(const String& class_name, Function<NonnullRefPtr<Widget>()> factory);
     ~WidgetClassRegistration();
 
     String class_name() const { return m_class_name; }
-    NonnullRefPtr<Widget> construct(Widget* parent) const { return m_factory(parent); }
+    NonnullRefPtr<Widget> construct() const { return m_factory(); }
 
     static void for_each(Function<void(const WidgetClassRegistration&)>);
     static const WidgetClassRegistration* find(const String& class_name);
 
 private:
     String m_class_name;
-    Function<NonnullRefPtr<Widget>(Widget*)> m_factory;
+    Function<NonnullRefPtr<Widget>()> m_factory;
 };
 
 class Widget : public Core::Object {
@@ -191,11 +171,11 @@ public:
     void move_by(int x, int y) { move_by({ x, y }); }
     void move_by(const Gfx::Point& delta) { set_relative_rect({ relative_position().translated(delta), size() }); }
 
-    ColorRole background_role() const { return m_background_role; }
-    void set_background_role(ColorRole role) { m_background_role = role; }
+    Gfx::ColorRole background_role() const { return m_background_role; }
+    void set_background_role(Gfx::ColorRole);
 
-    ColorRole foreground_role() const { return m_foreground_role; }
-    void set_foreground_role(ColorRole role) { m_foreground_role = role; }
+    Gfx::ColorRole foreground_role() const { return m_foreground_role; }
+    void set_foreground_role(Gfx::ColorRole);
 
     Color background_color() const { return m_background_color; }
     Color foreground_color() const { return m_foreground_color; }
@@ -275,14 +255,15 @@ public:
 
     void do_layout();
 
-    Palette palette() const { return Palette(*m_palette); }
-    void set_palette(const Palette&);
+    Gfx::Palette palette() const;
+    void set_palette(const Gfx::Palette&);
 
 protected:
-    explicit Widget(Widget* parent = nullptr);
+    Widget();
 
     virtual void custom_layout() {}
     virtual void did_change_font() {}
+    virtual void did_layout() {}
     virtual void paint_event(PaintEvent&);
     virtual void resize_event(ResizeEvent&);
     virtual void show_event(ShowEvent&);
@@ -302,6 +283,7 @@ protected:
     virtual void leave_event(Core::Event&);
     virtual void child_event(Core::ChildEvent&) override;
     virtual void change_event(Event&);
+    virtual void drag_move_event(DragEvent&);
     virtual void drop_event(DropEvent&);
 
 private:
@@ -319,8 +301,8 @@ private:
     OwnPtr<Layout> m_layout;
 
     Gfx::Rect m_relative_rect;
-    ColorRole m_background_role { ColorRole::Window };
-    ColorRole m_foreground_role { ColorRole::WindowText };
+    Gfx::ColorRole m_background_role;
+    Gfx::ColorRole m_foreground_role;
     Color m_background_color;
     Color m_foreground_color;
     NonnullRefPtr<Gfx::Font> m_font;

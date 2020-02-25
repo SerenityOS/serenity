@@ -28,13 +28,6 @@
 
 #include <LibGUI/Widget.h>
 
-namespace Core {
-class Timer;
-}
-namespace GUI {
-class Label;
-}
-
 class ProcessStateWidget final : public GUI::Widget {
     C_OBJECT(ProcessStateWidget)
 public:
@@ -43,7 +36,7 @@ public:
     void set_tty_fd(int);
 
 private:
-    explicit ProcessStateWidget(GUI::Widget* parent);
+    explicit ProcessStateWidget();
 
     void refresh();
 

@@ -29,10 +29,6 @@
 #include <LibGfx/TextAlignment.h>
 #include <LibGUI/Frame.h>
 
-namespace Gfx {
-class Bitmap;
-}
-
 namespace GUI {
 
 class Label : public Frame {
@@ -56,8 +52,7 @@ public:
     void size_to_fit();
 
 protected:
-    explicit Label(Widget* parent = nullptr);
-    Label(const StringView& text, Widget* parent = nullptr);
+    explicit Label(const StringView& text = {});
 
     virtual void paint_event(PaintEvent&) override;
 

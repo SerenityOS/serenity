@@ -31,19 +31,13 @@
 #include <AK/Vector.h>
 #include <LibGUI/Widget.h>
 
-namespace GUI {
-class Button;
-class Label;
-class TextBox;
-}
-
 class CalculatorWidget final : public GUI::Widget {
     C_OBJECT(CalculatorWidget)
 public:
     virtual ~CalculatorWidget() override;
 
 private:
-    explicit CalculatorWidget(GUI::Widget*);
+    CalculatorWidget();
     void add_button(GUI::Button&, Calculator::Operation);
     void add_button(GUI::Button&, int);
     void add_button(GUI::Button&);

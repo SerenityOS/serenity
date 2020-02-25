@@ -26,18 +26,17 @@
 
 #include <AK/CircularQueue.h>
 #include <LibCore/ProcessStatisticsReader.h>
-#include <LibGfx/Palette.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Palette.h>
 #include <stdio.h>
 
 class GraphWidget final : public GUI::Widget {
     C_OBJECT(GraphWidget)
 public:
     GraphWidget()
-        : GUI::Widget(nullptr)
     {
         start_timer(1000);
     }
@@ -125,6 +124,7 @@ int main(int argc, char** argv)
     }
 
     auto window = GUI::Window::construct();
+    window->set_title("CPUGraph");
     window->set_window_type(GUI::WindowType::MenuApplet);
     window->resize(30, 16);
 

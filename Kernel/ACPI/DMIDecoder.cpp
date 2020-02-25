@@ -25,8 +25,10 @@
  */
 
 #include <Kernel/ACPI/DMIDecoder.h>
-#include <Kernel/StdLib.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <LibBareMetal/StdLib.h>
+
+namespace Kernel {
 
 static DMIDecoder* s_dmi_decoder;
 
@@ -273,4 +275,6 @@ char* DMIDecoder::get_smbios_string(SMBIOS::TableHeader&, u8)
     kprintf("DMIDecoder::get_smbios_string() is not implemented.\n");
     ASSERT_NOT_REACHED();
     return nullptr;
+}
+
 }

@@ -29,6 +29,8 @@
 #include <KBufferBuilder.h>
 #include <stdarg.h>
 
+namespace Kernel {
+
 inline bool KBufferBuilder::can_append(size_t size) const
 {
     bool has_space = ((m_size + size) < m_buffer.size());
@@ -89,4 +91,6 @@ void KBufferBuilder::appendf(const char* fmt, ...)
     va_start(ap, fmt);
     appendvf(fmt, ap);
     va_end(ap);
+}
+
 }

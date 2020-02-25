@@ -28,6 +28,8 @@
 
 #include <Kernel/Net/IPv4.h>
 
+namespace Kernel {
+
 class [[gnu::packed]] UDPPacket
 {
 public:
@@ -57,3 +59,5 @@ private:
 };
 
 static_assert(sizeof(UDPPacket) == 8);
+
+}

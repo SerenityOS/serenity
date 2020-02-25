@@ -26,12 +26,13 @@
 
 #pragma once
 
-#include <AK/Bitmap.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/String.h>
+#include <AK/Weakable.h>
 #include <Kernel/Heap/SlabAllocator.h>
-#include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/RangeAllocator.h>
+
+namespace Kernel {
 
 class Inode;
 class VMObject;
@@ -41,7 +42,9 @@ enum class PageFaultResponse {
     Continue,
 };
 
-class Region final : public InlineLinkedListNode<Region> {
+class Region final
+    : public InlineLinkedListNode<Region>
+    , public Weakable<Region> {
     friend class MemoryManager;
 
     MAKE_SLAB_ALLOCATED(Region)
@@ -185,10 +188,12 @@ private:
     NonnullRefPtr<VMObject> m_vmobject;
     String m_name;
     u8 m_access { 0 };
-    bool m_shared { false };
-    bool m_user_accessible { false };
-    bool m_cacheable { false };
-    bool m_stack { false };
-    bool m_mmap { false };
+    bool m_shared : 1 { false };
+    bool m_user_accessible : 1 { false };
+    bool m_cacheable : 1 { false };
+    bool m_stack : 1 { false };
+    bool m_mmap : 1 { false };
     mutable OwnPtr<Bitmap> m_cow_map;
 };
+
+}

@@ -142,14 +142,13 @@ public:
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
     void set_rect_without_repaint(const Gfx::Rect& rect)
     {
+        ASSERT(!rect.is_empty());
         if (m_rect == rect)
             return;
         auto old_rect = m_rect;
         m_rect = rect;
         m_frame.notify_window_rect_changed(old_rect, rect);
     }
-
-    void set_rect_from_window_manager_resize(const Gfx::Rect&);
 
     void set_taskbar_rect(const Gfx::Rect& rect) { m_taskbar_rect = rect; }
     const Gfx::Rect& taskbar_rect() const { return m_taskbar_rect; }
@@ -209,7 +208,7 @@ public:
     const Cursor* override_cursor() const { return m_override_cursor.ptr(); }
     void set_override_cursor(RefPtr<Cursor>&& cursor) { m_override_cursor = move(cursor); }
 
-    void request_update(const Gfx::Rect&);
+    void request_update(const Gfx::Rect&, bool ignore_occlusion = false);
     Gfx::DisjointRectSet take_pending_paint_rects() { return move(m_pending_paint_rects); }
 
     bool in_minimize_animation() const { return m_minimize_animation_step != -1; }
@@ -224,7 +223,7 @@ public:
     Window* m_next { nullptr };
     Window* m_prev { nullptr };
 
-    void detach_client(Badge<ClientConnection>) { m_client = nullptr; }
+    void detach_client(Badge<ClientConnection>);
 
 private:
     void handle_mouse_event(const MouseEvent&);

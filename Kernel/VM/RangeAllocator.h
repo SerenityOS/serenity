@@ -29,7 +29,9 @@
 #include <AK/String.h>
 #include <AK/Traits.h>
 #include <AK/Vector.h>
-#include <Kernel/VM/VirtualAddress.h>
+#include <LibBareMetal/Memory/VirtualAddress.h>
+
+namespace Kernel {
 
 class Range {
     friend class RangeAllocator;
@@ -82,7 +84,7 @@ public:
     void initialize_with_range(VirtualAddress, size_t);
     void initialize_from_parent(const RangeAllocator&);
 
-    Range allocate_anywhere(size_t);
+    Range allocate_anywhere(size_t, size_t alignment = PAGE_SIZE);
     Range allocate_specific(VirtualAddress, size_t);
     void deallocate(Range);
 
@@ -100,9 +102,11 @@ inline const LogStream& operator<<(const LogStream& stream, const Range& value)
     return stream << String::format("Range(%x-%x)", value.base().get(), value.end().get() - 1);
 }
 
+}
+
 namespace AK {
 template<>
-struct Traits<Range> : public GenericTraits<Range> {
+struct Traits<Kernel::Range> : public GenericTraits<Kernel::Range> {
     static constexpr bool is_trivial() { return true; }
 };
 }

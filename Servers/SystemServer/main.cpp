@@ -26,7 +26,9 @@
 
 #include "Service.h"
 #include <AK/Assertions.h>
+#include <AK/ByteBuffer.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <errno.h>

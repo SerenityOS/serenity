@@ -28,6 +28,8 @@
 
 #include <Kernel/Devices/Device.h>
 
+namespace Kernel {
+
 class CharacterDevice : public Device {
 public:
     virtual ~CharacterDevice() override;
@@ -41,3 +43,5 @@ protected:
 private:
     virtual bool is_character_device() const final { return true; }
 };
+
+}

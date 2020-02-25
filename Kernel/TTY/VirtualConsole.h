@@ -26,9 +26,11 @@
 
 #pragma once
 
-#include "Console.h"
 #include <Kernel/Devices/KeyboardDevice.h>
 #include <Kernel/TTY/TTY.h>
+#include <LibBareMetal/Output/Console.h>
+
+namespace Kernel {
 
 class VirtualConsole final : public TTY
     , public KeyboardClient
@@ -47,7 +49,7 @@ public:
     static void initialize();
 
     bool is_graphical() { return m_graphical; }
-    void set_graphical(bool graphical) { m_graphical = graphical; }
+    void set_graphical(bool graphical);
 
 private:
     // ^KeyboardClient
@@ -116,3 +118,5 @@ private:
     u8* m_horizontal_tabs { nullptr };
     char m_tty_name[32];
 };
+
+}

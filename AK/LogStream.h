@@ -29,7 +29,7 @@
 #include <AK/Types.h>
 #include <AK/kstdio.h>
 
-#ifndef KERNEL
+#if !defined(KERNEL) && !defined(BOOTSTRAPPER)
 #    include <AK/ScopedValueRollback.h>
 #    include <AK/StringView.h>
 #    include <errno.h>
@@ -44,7 +44,7 @@ class StringView;
 class LogStream {
 public:
     LogStream()
-#ifndef KERNEL
+#if !defined(KERNEL) && !defined(BOOTSTRAPPER)
         : m_errno_restorer(errno)
 #endif
     {
@@ -54,7 +54,7 @@ public:
     virtual void write(const char*, int) const = 0;
 
 private:
-#ifndef KERNEL
+#if !defined(KERNEL) && !defined(BOOTSTRAPPER)
     ScopedValueRollback<int> m_errno_restorer;
 #endif
 };
@@ -62,11 +62,7 @@ private:
 class DebugLogStream final : public LogStream {
 public:
     DebugLogStream() {}
-    virtual ~DebugLogStream() override
-    {
-        char newline = '\n';
-        write(&newline, 1);
-    }
+    virtual ~DebugLogStream() override;
 
     virtual void write(const char* characters, int length) const override
     {

@@ -31,7 +31,9 @@
 #include <Kernel/Syscall.h>
 #include <Kernel/VM/MemoryManager.h>
 
-extern "C" void syscall_handler(RegisterDump);
+namespace Kernel {
+
+extern "C" void syscall_handler(RegisterState);
 extern "C" void syscall_asm_entry();
 
 asm(
@@ -62,7 +64,7 @@ asm(
 
 namespace Syscall {
 
-static int handle(RegisterDump&, u32 function, u32 arg1, u32 arg2, u32 arg3);
+static int handle(RegisterState&, u32 function, u32 arg1, u32 arg2, u32 arg3);
 
 void initialize()
 {
@@ -80,11 +82,11 @@ static Handler s_syscall_table[] = {
 #undef __ENUMERATE_SYSCALL
 #undef __ENUMERATE_REMOVED_SYSCALL
 
-int handle(RegisterDump& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
+int handle(RegisterState& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
 {
     ASSERT_INTERRUPTS_ENABLED();
-    auto& process = current->process();
-    current->did_syscall();
+    auto& process = *Process::current;
+    Thread::current->did_syscall();
 
     if (function == SC_exit || function == SC_exit_thread) {
         // These syscalls need special handling since they never return to the caller.
@@ -119,13 +121,13 @@ int handle(RegisterDump& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
 
 }
 
-void syscall_handler(RegisterDump regs)
+void syscall_handler(RegisterState regs)
 {
     // Special handling of the "gettid" syscall since it's extremely hot.
     // FIXME: Remove this hack once userspace locks stop calling it so damn much.
     if (regs.eax == SC_gettid) {
-        regs.eax = current->process().sys$gettid();
-        current->did_syscall();
+        regs.eax = Process::current->sys$gettid();
+        Thread::current->did_syscall();
         return;
     }
 
@@ -138,7 +140,7 @@ void syscall_handler(RegisterDump regs)
     asm volatile(""
                  : "=m"(*ptr));
 
-    auto& process = current->process();
+    auto& process = *Process::current;
 
     if (!MM.validate_user_stack(process, VirtualAddress(regs.userspace_esp))) {
         dbgprintf("Invalid stack pointer: %p\n", regs.userspace_esp);
@@ -170,8 +172,10 @@ void syscall_handler(RegisterDump regs)
     process.big_lock().unlock();
 
     // Check if we're supposed to return to userspace or just die.
-    current->die_if_needed();
+    Thread::current->die_if_needed();
 
-    if (current->has_unmasked_pending_signals())
-        (void)current->block<Thread::SemiPermanentBlocker>(Thread::SemiPermanentBlocker::Reason::Signal);
+    if (Thread::current->has_unmasked_pending_signals())
+        (void)Thread::current->block<Thread::SemiPermanentBlocker>(Thread::SemiPermanentBlocker::Reason::Signal);
+}
+
 }

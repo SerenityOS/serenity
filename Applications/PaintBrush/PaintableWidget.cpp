@@ -37,8 +37,7 @@ PaintableWidget& PaintableWidget::the()
     return *s_the;
 }
 
-PaintableWidget::PaintableWidget(GUI::Widget* parent)
-    : GUI::Widget(parent)
+PaintableWidget::PaintableWidget()
 {
     ASSERT(!s_the);
     s_the = this;
@@ -47,7 +46,7 @@ PaintableWidget::PaintableWidget(GUI::Widget* parent)
     pal.set_color(ColorRole::Window, Color::MidGray);
     set_palette(pal);
     set_background_color(Color::MidGray);
-    m_bitmap = Gfx::Bitmap::create(Gfx::Bitmap::Format::RGB32, { 600, 400 });
+    m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, { 600, 400 });
     m_bitmap->fill(Color::White);
 }
 

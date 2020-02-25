@@ -28,7 +28,7 @@
 
 #include <AK/String.h>
 
-#ifndef SERENITY_LIBC_BUILD
+#ifndef BUILDING_SERENITY_TOOLCHAIN
 #include <cxxabi.h>
 #endif
 
@@ -36,7 +36,7 @@ namespace AK {
 
 inline String demangle(const StringView& name)
 {
-#ifdef SERENITY_LIBC_BUILD
+#ifdef BUILDING_SERENITY_TOOLCHAIN
     return name;
 #else
     int status = 0;

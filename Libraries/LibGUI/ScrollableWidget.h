@@ -30,8 +30,6 @@
 
 namespace GUI {
 
-class ScrollBar;
-
 class ScrollableWidget : public Frame {
     C_OBJECT(ScrollableWidget)
 public:
@@ -73,7 +71,7 @@ public:
     Gfx::Point to_widget_position(const Gfx::Point& content_position) const;
 
 protected:
-    explicit ScrollableWidget(Widget* parent);
+    ScrollableWidget();
     virtual void custom_layout() override;
     virtual void resize_event(ResizeEvent&) override;
     virtual void mousewheel_event(MouseEvent&) override;

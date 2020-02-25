@@ -33,14 +33,9 @@
 constexpr int note_height = 20;
 constexpr int roll_height = note_count * note_height;
 
-RollWidget::RollWidget(GUI::Widget* parent, AudioEngine& audio_engine)
-    : ScrollableWidget(parent)
-    , m_audio_engine(audio_engine)
+RollWidget::RollWidget(AudioEngine& audio_engine)
+    : m_audio_engine(audio_engine)
 {
-    set_frame_thickness(2);
-    set_frame_shadow(Gfx::FrameShadow::Sunken);
-    set_frame_shape(Gfx::FrameShape::Container);
-
     set_should_hide_unnecessary_scrollbars(true);
     set_content_size({ 0, roll_height });
     vertical_scrollbar().set_value(roll_height / 2);

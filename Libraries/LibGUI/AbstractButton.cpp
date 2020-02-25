@@ -24,22 +24,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGfx/Palette.h>
+#include <LibCore/Timer.h>
 #include <LibGUI/AbstractButton.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/Palette.h>
 
 namespace GUI {
 
-AbstractButton::AbstractButton(Widget* parent)
-    : AbstractButton({}, parent)
+AbstractButton::AbstractButton(const StringView& text)
+    : m_text(text)
 {
-}
-
-AbstractButton::AbstractButton(const StringView& text, Widget* parent)
-    : Widget(parent)
-    , m_text(text)
-{
-    m_auto_repeat_timer = Core::Timer::construct(this);
+    m_auto_repeat_timer = add<Core::Timer>();
     m_auto_repeat_timer->on_timeout = [this] {
         click();
     };
@@ -185,7 +180,7 @@ void AbstractButton::paint_text(Painter& painter, const Gfx::Rect& rect, const G
         return;
     painter.draw_text(clipped_rect, text(), font, text_alignment, palette().button_text(), Gfx::TextElision::Right);
     if (is_focused())
-        painter.draw_rect(clipped_rect.inflated(6, 4), Color(140, 140, 140));
+        painter.draw_rect(clipped_rect.inflated(6, 4), palette().focus_outline());
 }
 
 void AbstractButton::change_event(Event& event)

@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/HashMap.h>
 #include <LibIPC/ServerConnection.h>
 #include <ProtocolServer/ProtocolClientEndpoint.h>
 #include <ProtocolServer/ProtocolServerEndpoint.h>

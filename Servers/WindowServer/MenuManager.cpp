@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Shannon Booth <shannon.ml.booth@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,11 +25,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Badge.h>
 #include <AK/FileSystemPath.h>
 #include <AK/QuickSort.h>
 #include <LibCore/DirIterator.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Painter.h>
+#include <WindowServer/AppletManager.h>
 #include <WindowServer/MenuManager.h>
 #include <WindowServer/Screen.h>
 #include <WindowServer/WindowManager.h>
@@ -49,134 +52,7 @@ MenuManager& MenuManager::the()
 MenuManager::MenuManager()
 {
     s_the = this;
-    m_username = getlogin();
     m_needs_window_resize = true;
-
-    HashTable<String> seen_app_categories;
-    {
-        Core::DirIterator dt("/res/apps", Core::DirIterator::SkipDots);
-        while (dt.has_next()) {
-            auto af_name = dt.next_path();
-            auto af_path = String::format("/res/apps/%s", af_name.characters());
-            auto af = Core::ConfigFile::open(af_path);
-            if (!af->has_key("App", "Name") || !af->has_key("App", "Executable"))
-                continue;
-            auto app_name = af->read_entry("App", "Name");
-            auto app_executable = af->read_entry("App", "Executable");
-            auto app_category = af->read_entry("App", "Category");
-            auto app_icon_path = af->read_entry("Icons", "16x16");
-            m_apps.append({ app_executable, app_name, app_icon_path, app_category });
-            seen_app_categories.set(app_category);
-        }
-    }
-
-    Vector<String> sorted_app_categories;
-    for (auto& category : seen_app_categories)
-        sorted_app_categories.append(category);
-    quick_sort(sorted_app_categories.begin(), sorted_app_categories.end(), [](auto& a, auto& b) { return a < b; });
-
-    u8 system_menu_name[] = { 0xc3, 0xb8, 0 };
-    m_system_menu = Menu::construct(nullptr, -1, String((const char*)system_menu_name));
-
-    // First we construct all the necessary app category submenus.
-    for (const auto& category : sorted_app_categories) {
-
-        if (m_app_category_menus.contains(category))
-            continue;
-        auto category_menu = Menu::construct(nullptr, 5000 + m_app_category_menus.size(), category);
-        category_menu->on_item_activation = [this](auto& item) {
-            if (item.identifier() >= 1 && item.identifier() <= 1u + m_apps.size() - 1) {
-                if (fork() == 0) {
-                    const auto& bin = m_apps[item.identifier() - 1].executable;
-                    execl(bin.characters(), bin.characters(), nullptr);
-                    ASSERT_NOT_REACHED();
-                }
-            }
-        };
-        auto item = make<MenuItem>(*m_system_menu, -1, category);
-        item->set_submenu_id(category_menu->menu_id());
-        m_system_menu->add_item(move(item));
-        m_app_category_menus.set(category, move(category_menu));
-    }
-
-    // Then we create and insert all the app menu items into the right place.
-    int app_identifier = 1;
-    for (const auto& app : m_apps) {
-        RefPtr<Gfx::Bitmap> icon;
-        if (!app.icon_path.is_empty())
-             icon = Gfx::Bitmap::load_from_file(app.icon_path);
-
-        auto parent_menu = m_app_category_menus.get(app.category).value_or(*m_system_menu);
-        parent_menu->add_item(make<MenuItem>(*m_system_menu, app_identifier++, app.name, String(), true, false, false, icon));
-    }
-
-    m_system_menu->add_item(make<MenuItem>(*m_system_menu, MenuItem::Separator));
-
-    m_themes_menu = Menu::construct(nullptr, 9000, "Themes");
-
-    auto themes_menu_item = make<MenuItem>(*m_system_menu, 100, "Themes");
-    themes_menu_item->set_submenu_id(m_themes_menu->menu_id());
-    m_system_menu->add_item(move(themes_menu_item));
-
-    {
-        Core::DirIterator dt("/res/themes", Core::DirIterator::SkipDots);
-        while (dt.has_next()) {
-            auto theme_name = dt.next_path();
-            auto theme_path = String::format("/res/themes/%s", theme_name.characters());
-            m_themes.append({ FileSystemPath(theme_name).title(), theme_path });
-        }
-        quick_sort(m_themes.begin(), m_themes.end(), [](auto& a, auto& b) { return a.name < b.name; });
-    }
-
-    {
-        int theme_identifier = 9000;
-        for (auto& theme : m_themes) {
-            m_themes_menu->add_item(make<MenuItem>(*m_themes_menu, theme_identifier++, theme.name));
-        }
-    }
-
-    m_themes_menu->on_item_activation = [this](MenuItem& item) {
-        auto& theme = m_themes[(int)item.identifier() - 9000];
-        WindowManager::the().update_theme(theme.path, theme.name);
-        ++m_theme_index;
-    };
-
-    m_system_menu->add_item(make<MenuItem>(*m_system_menu, MenuItem::Separator));
-    m_system_menu->add_item(make<MenuItem>(*m_system_menu, 100, "Reload WM Config File"));
-
-    m_system_menu->add_item(make<MenuItem>(*m_system_menu, MenuItem::Separator));
-    m_system_menu->add_item(make<MenuItem>(*m_system_menu, 200, "About...", String(), true, false, false, Gfx::Bitmap::load_from_file("/res/icons/16x16/ladybug.png")));
-    m_system_menu->add_item(make<MenuItem>(*m_system_menu, MenuItem::Separator));
-    m_system_menu->add_item(make<MenuItem>(*m_system_menu, 300, "Shutdown..."));
-    m_system_menu->on_item_activation = [this](MenuItem& item) {
-        if (item.identifier() >= 1 && item.identifier() <= 1u + m_apps.size() - 1) {
-            if (fork() == 0) {
-                const auto& bin = m_apps[item.identifier() - 1].executable;
-                execl(bin.characters(), bin.characters(), nullptr);
-                ASSERT_NOT_REACHED();
-            }
-        }
-        switch (item.identifier()) {
-        case 100:
-            WindowManager::the().reload_config(true);
-            break;
-        case 200:
-            if (fork() == 0) {
-                execl("/bin/About", "/bin/About", nullptr);
-                ASSERT_NOT_REACHED();
-            }
-            return;
-        case 300:
-            if (fork() == 0) {
-                execl("/bin/SystemDialog", "/bin/SystemDialog", "--shutdown", nullptr);
-                ASSERT_NOT_REACHED();
-            }
-            return;
-        }
-#ifdef DEBUG_MENUS
-        dbg() << "Menu 1 item activated: " << item.text();
-#endif
-    };
 
     // NOTE: This ensures that the system menu has the correct dimensions.
     set_current_menubar(nullptr);
@@ -191,7 +67,7 @@ MenuManager::~MenuManager()
 
 bool MenuManager::is_open(const Menu& menu) const
 {
-    for (int i = 0; i < m_open_menu_stack.size(); ++i) {
+    for (size_t i = 0; i < m_open_menu_stack.size(); ++i) {
         if (&menu == m_open_menu_stack[i].ptr())
             return true;
     }
@@ -215,29 +91,8 @@ void MenuManager::draw()
     auto menubar_rect = this->menubar_rect();
 
     if (m_needs_window_resize) {
-        int username_width = Gfx::Font::default_bold_font().width(m_username);
-
-        m_username_rect = {
-            menubar_rect.right() - menubar_menu_margin() / 2 - Gfx::Font::default_bold_font().width(m_username),
-            menubar_rect.y(),
-            username_width,
-            menubar_rect.height()
-        };
-
-        int right_edge_x = m_username_rect.left() - 4;
-        for (auto& existing_applet : m_applets) {
-            if (!existing_applet)
-                continue;
-
-            Gfx::Rect new_applet_rect(right_edge_x - existing_applet->size().width(), 0, existing_applet->size().width(), existing_applet->size().height());
-            Gfx::Rect dummy_menubar_rect(0, 0, 0, 18);
-            new_applet_rect.center_vertically_within(dummy_menubar_rect);
-
-            existing_applet->set_rect_in_menubar(new_applet_rect);
-            right_edge_x = existing_applet->rect_in_menubar().x() - 4;
-        }
-
         m_window->set_rect(menubar_rect);
+        AppletManager::the().calculate_applet_rects(window());
         m_needs_window_resize = false;
     }
 
@@ -251,7 +106,7 @@ void MenuManager::draw()
         if (is_open(menu)) {
             painter.fill_rect(menu.rect_in_menubar(), palette.menu_selection());
             painter.draw_rect(menu.rect_in_menubar(), palette.menu_selection().darkened());
-            text_color = Color::White;
+            text_color = palette.menu_selection_text();
         }
         painter.draw_text(
             menu.text_rect_in_menubar(),
@@ -263,18 +118,7 @@ void MenuManager::draw()
         return IterationDecision::Continue;
     });
 
-    painter.draw_text(m_username_rect, m_username, Gfx::Font::default_bold_font(), Gfx::TextAlignment::CenterRight, palette.window_text());
-
-    for (auto& applet : m_applets) {
-        if (!applet)
-            continue;
-        draw_applet(*applet);
-    }
-}
-
-void MenuManager::tick_clock()
-{
-    refresh();
+    AppletManager::the().draw();
 }
 
 void MenuManager::refresh()
@@ -290,25 +134,9 @@ void MenuManager::event(Core::Event& event)
     if (WindowManager::the().active_window_is_modal())
         return Core::Object::event(event);
 
-    if (event.type() == Event::MouseMove || event.type() == Event::MouseUp || event.type() == Event::MouseDown || event.type() == Event::MouseWheel) {
-
-        auto& mouse_event = static_cast<MouseEvent&>(event);
-        for_each_active_menubar_menu([&](Menu& menu) {
-            if (menu.rect_in_menubar().contains(mouse_event.position())) {
-                handle_menu_mouse_event(menu, mouse_event);
-                return IterationDecision::Break;
-            }
-            return IterationDecision::Continue;
-        });
-
-        for (auto& applet : m_applets) {
-            if (!applet)
-                continue;
-            if (!applet->rect_in_menubar().contains(mouse_event.position()))
-                continue;
-            auto local_event = mouse_event.translated(-applet->rect_in_menubar().location());
-            applet->event(local_event);
-        }
+    if (static_cast<Event&>(event).is_mouse_event()) {
+        handle_mouse_event(static_cast<MouseEvent&>(event));
+        return;
     }
 
     if (static_cast<Event&>(event).is_key_event()) {
@@ -331,10 +159,75 @@ void MenuManager::event(Core::Event& event)
     return Core::Object::event(event);
 }
 
+void MenuManager::handle_mouse_event(MouseEvent& mouse_event)
+{
+    bool handled_menubar_event = false;
+    for_each_active_menubar_menu([&](Menu& menu) {
+        if (menu.rect_in_menubar().contains(mouse_event.position())) {
+            handle_menu_mouse_event(menu, mouse_event);
+            handled_menubar_event = true;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+    if (handled_menubar_event)
+        return;
+
+    if (has_open_menu()) {
+        auto* topmost_menu = m_open_menu_stack.last().ptr();
+        ASSERT(topmost_menu);
+        auto* window = topmost_menu->menu_window();
+        ASSERT(window);
+        ASSERT(window->is_visible());
+
+        bool event_is_inside_current_menu = window->rect().contains(mouse_event.position());
+        if (event_is_inside_current_menu) {
+            WindowManager::the().set_hovered_window(window);
+            auto translated_event = mouse_event.translated(-window->position());
+            WindowManager::the().deliver_mouse_event(*window, translated_event);
+            return;
+        }
+
+        if (topmost_menu->hovered_item())
+            topmost_menu->clear_hovered_item();
+        if (mouse_event.type() == Event::MouseDown || mouse_event.type() == Event::MouseUp) {
+            auto* window_menu_of = topmost_menu->window_menu_of();
+            if (window_menu_of) {
+                bool event_is_inside_taskbar_button = window_menu_of->taskbar_rect().contains(mouse_event.position());
+                if (event_is_inside_taskbar_button && !topmost_menu->is_window_menu_open()) {
+                    topmost_menu->set_window_menu_open(true);
+                    return;
+                }
+            }
+
+            if (mouse_event.type() == Event::MouseDown) {
+                close_bar();
+                topmost_menu->set_window_menu_open(false);
+            }
+        }
+
+        if (mouse_event.type() == Event::MouseMove) {
+            for (auto& menu : m_open_menu_stack) {
+                if (!menu)
+                    continue;
+                if (!menu->menu_window()->rect().contains(mouse_event.position()))
+                    continue;
+                WindowManager::the().set_hovered_window(menu->menu_window());
+                auto translated_event = mouse_event.translated(-menu->menu_window()->position());
+                WindowManager::the().deliver_mouse_event(*menu->menu_window(), translated_event);
+                break;
+            }
+        }
+        return;
+    }
+
+    AppletManager::the().dispatch_event(static_cast<Event&>(mouse_event));
+}
+
 void MenuManager::handle_menu_mouse_event(Menu& menu, const MouseEvent& event)
 {
     bool is_hover_with_any_menu_open = event.type() == MouseEvent::MouseMove
-        && !m_open_menu_stack.is_empty()
+        && has_open_menu()
         && (m_open_menu_stack.first()->menubar() || m_open_menu_stack.first() == m_system_menu.ptr());
     bool is_mousedown_with_left_button = event.type() == MouseEvent::MouseDown && event.button() == MouseButton::Left;
     bool should_open_menu = &menu != m_current_menu && (is_hover_with_any_menu_open || is_mousedown_with_left_button);
@@ -358,7 +251,7 @@ void MenuManager::set_needs_window_resize()
 
 void MenuManager::close_all_menus_from_client(Badge<ClientConnection>, ClientConnection& client)
 {
-    if (m_open_menu_stack.is_empty())
+    if (!has_open_menu())
         return;
     if (m_open_menu_stack.first()->client() != &client)
         return;
@@ -448,6 +341,9 @@ void MenuManager::open_menu(Menu& menu)
 
 void MenuManager::set_current_menu(Menu* menu, bool is_submenu)
 {
+    if (menu == m_current_menu)
+        return;
+
     if (!is_submenu) {
         if (menu)
             close_everyone_not_in_lineage(*menu);
@@ -460,8 +356,9 @@ void MenuManager::set_current_menu(Menu* menu, bool is_submenu)
         return;
     }
 
-    m_open_menu_stack.append(menu->make_weak_ptr());
     m_current_menu = menu->make_weak_ptr();
+    if (m_open_menu_stack.find([menu](auto& other) { return menu == other.ptr(); }).is_end())
+        m_open_menu_stack.append(menu->make_weak_ptr());
 }
 
 void MenuManager::close_bar()
@@ -470,58 +367,9 @@ void MenuManager::close_bar()
     m_bar_open = false;
 }
 
-void MenuManager::add_applet(Window& applet)
-{
-    int right_edge_x = m_username_rect.left() - 4;
-    for (auto& existing_applet : m_applets) {
-        if (existing_applet)
-            right_edge_x = existing_applet->rect_in_menubar().x() - 4;
-    }
-
-    Gfx::Rect new_applet_rect(right_edge_x - applet.size().width(), 0, applet.size().width(), applet.size().height());
-    Gfx::Rect dummy_menubar_rect(0, 0, 0, 18);
-    new_applet_rect.center_vertically_within(dummy_menubar_rect);
-
-    applet.set_rect_in_menubar(new_applet_rect);
-    m_applets.append(applet.make_weak_ptr());
-}
-
-void MenuManager::remove_applet(Window& applet)
-{
-    m_applets.remove_first_matching([&](auto& entry) {
-        return &applet == entry.ptr();
-    });
-}
-
-void MenuManager::draw_applet(const Window& applet)
-{
-    if (!applet.backing_store())
-        return;
-    Gfx::Painter painter(*window().backing_store());
-    painter.fill_rect(applet.rect_in_menubar(), WindowManager::the().palette().window());
-    painter.blit(applet.rect_in_menubar().location(), *applet.backing_store(), applet.backing_store()->rect());
-}
-
-void MenuManager::invalidate_applet(const Window& applet, const Gfx::Rect& rect)
-{
-    draw_applet(applet);
-    window().invalidate(rect.translated(applet.rect_in_menubar().location()));
-}
-
 Gfx::Rect MenuManager::menubar_rect() const
 {
     return { 0, 0, Screen::the().rect().width(), 18 };
-}
-
-Menu* MenuManager::find_internal_menu_by_id(int menu_id)
-{
-    if (m_themes_menu->menu_id() == menu_id)
-        return m_themes_menu.ptr();
-    for (auto& it : m_app_category_menus) {
-        if (menu_id == it.value->menu_id())
-            return it.value;
-    }
-    return nullptr;
 }
 
 void MenuManager::set_current_menubar(MenuBar* menubar)
@@ -550,6 +398,18 @@ void MenuManager::close_menubar(MenuBar& menubar)
 {
     if (current_menubar() == &menubar)
         set_current_menubar(nullptr);
+}
+
+void MenuManager::set_system_menu(Menu& menu)
+{
+    m_system_menu = menu.make_weak_ptr();
+    set_current_menubar(m_current_menubar);
+}
+
+void MenuManager::did_change_theme()
+{
+    ++m_theme_index;
+    refresh();
 }
 
 }

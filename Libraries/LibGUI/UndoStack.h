@@ -27,11 +27,9 @@
 #pragma once
 
 #include <AK/NonnullOwnPtrVector.h>
-#include <LibGUI/Command.h>
+#include <LibGUI/Forward.h>
 
 namespace GUI {
-
-class Command;
 
 class UndoStack {
 public:
@@ -54,8 +52,8 @@ private:
     };
 
     NonnullOwnPtrVector<UndoCommandsContainer> m_stack;
-    int m_stack_index { 0 };
-    int m_last_updated_undo_vector_size { 0 };
+    size_t m_stack_index { 0 };
+    size_t m_last_updated_undo_vector_size { 0 };
 };
 
 }

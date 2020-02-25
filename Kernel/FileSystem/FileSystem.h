@@ -26,21 +26,15 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/Function.h>
-#include <AK/HashMap.h>
-#include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
-#include <AK/WeakPtr.h>
-#include <AK/kstdio.h>
-#include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
-#include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/KResult.h>
 #include <Kernel/Lock.h>
 #include <Kernel/UnixTypes.h>
+
+namespace Kernel {
 
 static const u32 mepoch = 476763780;
 
@@ -123,12 +117,13 @@ inline bool InodeIdentifier::is_root_inode() const
     return (*this) == fs()->root_inode();
 }
 
+}
+
 namespace AK {
 
 template<>
-struct Traits<InodeIdentifier> : public GenericTraits<InodeIdentifier> {
-    static unsigned hash(const InodeIdentifier& inode) { return pair_int_hash(inode.fsid(), inode.index()); }
-    static void dump(const InodeIdentifier& inode) { kprintf("%02u:%08u", inode.fsid(), inode.index()); }
+struct Traits<Kernel::InodeIdentifier> : public GenericTraits<Kernel::InodeIdentifier> {
+    static unsigned hash(const Kernel::InodeIdentifier& inode) { return pair_int_hash(inode.fsid(), inode.index()); }
 };
 
 }

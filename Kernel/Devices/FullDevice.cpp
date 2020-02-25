@@ -26,8 +26,9 @@
 
 #include "FullDevice.h"
 #include <AK/StdLibExtras.h>
-#include <AK/kstdio.h>
 #include <LibC/errno_numbers.h>
+
+namespace Kernel {
 
 FullDevice::FullDevice()
     : CharacterDevice(1, 7)
@@ -55,4 +56,6 @@ ssize_t FullDevice::write(FileDescription&, const u8*, ssize_t size)
     if (size == 0)
         return 0;
     return -ENOSPC;
+}
+
 }

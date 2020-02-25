@@ -26,15 +26,13 @@
 
 #pragma once
 
-#include <AK/Badge.h>
 #include <AK/OwnPtr.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
+#include <LibGUI/Forward.h>
 #include <LibGUI/Margins.h>
 
 namespace GUI {
-
-class Widget;
 
 class Layout {
 public:

@@ -26,10 +26,12 @@
 
 #pragma once
 
-#include <AK/HashTable.h>
+#include <AK/FixedArray.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/KResult.h>
 #include <Kernel/UnixTypes.h>
+
+namespace Kernel {
 
 class Process;
 
@@ -56,7 +58,7 @@ struct InodeMetadata {
     bool may_write(const Process&) const;
     bool may_execute(const Process&) const;
 
-    bool may_read(uid_t u, gid_t g, const HashTable<gid_t>& eg) const
+    bool may_read(uid_t u, gid_t g, const FixedArray<gid_t>& eg) const
     {
         if (u == 0)
             return true;
@@ -67,7 +69,7 @@ struct InodeMetadata {
         return mode & 0004;
     }
 
-    bool may_write(uid_t u, gid_t g, const HashTable<gid_t>& eg) const
+    bool may_write(uid_t u, gid_t g, const FixedArray<gid_t>& eg) const
     {
         if (u == 0)
             return true;
@@ -78,7 +80,7 @@ struct InodeMetadata {
         return mode & 0002;
     }
 
-    bool may_execute(uid_t u, gid_t g, const HashTable<gid_t>& eg) const
+    bool may_execute(uid_t u, gid_t g, const FixedArray<gid_t>& eg) const
     {
         if (u == 0)
             return true;
@@ -89,17 +91,17 @@ struct InodeMetadata {
         return mode & 0001;
     }
 
-    bool is_directory() const { return ::is_directory(mode); }
-    bool is_character_device() const { return ::is_character_device(mode); }
-    bool is_block_device() const { return ::is_block_device(mode); }
+    bool is_directory() const { return Kernel::is_directory(mode); }
+    bool is_character_device() const { return Kernel::is_character_device(mode); }
+    bool is_block_device() const { return Kernel::is_block_device(mode); }
     bool is_device() const { return is_character_device() || is_block_device(); }
-    bool is_regular_file() const { return ::is_regular_file(mode); }
-    bool is_fifo() const { return ::is_fifo(mode); }
-    bool is_symlink() const { return ::is_symlink(mode); }
-    bool is_socket() const { return ::is_socket(mode); }
-    bool is_sticky() const { return ::is_sticky(mode); }
-    bool is_setuid() const { return ::is_setuid(mode); }
-    bool is_setgid() const { return ::is_setgid(mode); }
+    bool is_regular_file() const { return Kernel::is_regular_file(mode); }
+    bool is_fifo() const { return Kernel::is_fifo(mode); }
+    bool is_symlink() const { return Kernel::is_symlink(mode); }
+    bool is_socket() const { return Kernel::is_socket(mode); }
+    bool is_sticky() const { return Kernel::is_sticky(mode); }
+    bool is_setuid() const { return Kernel::is_setuid(mode); }
+    bool is_setgid() const { return Kernel::is_setgid(mode); }
 
     KResult stat(stat& buffer) const
     {
@@ -136,3 +138,5 @@ struct InodeMetadata {
     unsigned major_device { 0 };
     unsigned minor_device { 0 };
 };
+
+}

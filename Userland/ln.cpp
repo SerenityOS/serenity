@@ -32,6 +32,11 @@
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio cpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     bool symbolic = false;
     const char* target = nullptr;
     const char* path = nullptr;

@@ -69,7 +69,7 @@ TaskbarWindow::~TaskbarWindow()
 
 void TaskbarWindow::create_quick_launch_bar()
 {
-    auto quick_launch_bar = GUI::Frame::construct(main_widget());
+    auto quick_launch_bar = main_widget()->add<GUI::Frame>();
     quick_launch_bar->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     quick_launch_bar->set_layout(make<GUI::HorizontalBoxLayout>());
     quick_launch_bar->layout()->set_spacing(3);
@@ -93,7 +93,7 @@ void TaskbarWindow::create_quick_launch_bar()
         auto app_executable = af->read_entry("App", "Executable");
         auto app_icon_path = af->read_entry("Icons", "16x16");
 
-        auto button = GUI::Button::construct(quick_launch_bar);
+        auto button = quick_launch_bar->add<GUI::Button>();
         button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
         button->set_preferred_size(22, 22);
         button->set_button_style(Gfx::ButtonStyle::CoolBar);
@@ -129,7 +129,7 @@ void TaskbarWindow::on_screen_rect_change(const Gfx::Rect& rect)
 
 NonnullRefPtr<GUI::Button> TaskbarWindow::create_button(const WindowIdentifier& identifier)
 {
-    auto button = TaskbarButton::construct(identifier, main_widget());
+    auto button = main_widget()->add<TaskbarButton>(identifier);
     button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     button->set_preferred_size(140, 22);
     button->set_checkable(true);
@@ -179,7 +179,7 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
         if (auto* window = WindowList::the().window(identifier)) {
             auto buffer = SharedBuffer::create_from_shared_buffer_id(changed_event.icon_buffer_id());
             ASSERT(buffer);
-            window->button()->set_icon(Gfx::Bitmap::create_with_shared_buffer(Gfx::Bitmap::Format::RGBA32, *buffer, changed_event.icon_size()));
+            window->button()->set_icon(Gfx::Bitmap::create_with_shared_buffer(Gfx::BitmapFormat::RGBA32, *buffer, changed_event.icon_size()));
         }
         break;
     }

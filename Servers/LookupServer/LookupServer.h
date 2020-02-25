@@ -31,11 +31,6 @@
 #include <AK/HashMap.h>
 #include <LibCore/Object.h>
 
-namespace Core {
-class LocalSocket;
-class LocalServer;
-}
-
 class DNSAnswer;
 
 class LookupServer final : public Core::Object {

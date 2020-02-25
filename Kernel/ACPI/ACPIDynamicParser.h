@@ -28,15 +28,17 @@
 
 #include <AK/RefPtr.h>
 #include <Kernel/ACPI/ACPIStaticParser.h>
-#include <Kernel/IRQHandler.h>
+#include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Lock.h>
-#include <Kernel/VM/PhysicalAddress.h>
 #include <Kernel/VM/PhysicalPage.h>
+#include <LibBareMetal/Memory/PhysicalAddress.h>
+
+namespace Kernel {
 
 class ACPIDynamicParser final : public IRQHandler
     , ACPIStaticParser {
 public:
-    static void initialize(ACPI_RAW::RSDPDescriptor20& rsdp);
+    static void initialize(PhysicalAddress rsdp);
     static void initialize_without_rsdp();
 
     virtual void enable_aml_interpretation() override;
@@ -47,12 +49,14 @@ public:
 
 protected:
     ACPIDynamicParser();
-    explicit ACPIDynamicParser(ACPI_RAW::RSDPDescriptor20&);
+    explicit ACPIDynamicParser(PhysicalAddress);
 
 private:
     void build_namespace();
     // ^IRQHandler
-    virtual void handle_irq() override;
+    virtual void handle_irq(RegisterState&) override;
 
     OwnPtr<Region> m_acpi_namespace;
 };
+
+}

@@ -27,10 +27,10 @@
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
-#include <stdarg.h>
+#include <AK/Vector.h>
 
 #ifndef KERNEL
-#include <inttypes.h>
+#    include <inttypes.h>
 #endif
 
 #ifdef KERNEL
@@ -295,6 +295,13 @@ bool String::starts_with(const StringView& str) const
     return !memcmp(characters(), str.characters_without_null_termination(), str.length());
 }
 
+bool String::starts_with(char ch) const
+{
+    if (is_empty())
+        return false;
+    return characters()[0] == ch;
+}
+
 bool String::ends_with(const StringView& str) const
 {
     if (str.is_empty())
@@ -306,6 +313,12 @@ bool String::ends_with(const StringView& str) const
     return !memcmp(characters() + (length() - str.length()), str.characters_without_null_termination(), str.length());
 }
 
+bool String::ends_with(char ch) const
+{
+    if (is_empty())
+        return false;
+    return characters()[length() - 1] == ch;
+}
 String String::repeated(char ch, size_t count)
 {
     if (!count)
@@ -391,5 +404,20 @@ bool String::equals_ignoring_case(const StringView& other) const
     return true;
 }
 
+String escape_html_entities(const StringView& html)
+{
+    StringBuilder builder;
+    for (size_t i = 0; i < html.length(); ++i) {
+        if (html[i] == '<')
+            builder.append("&lt;");
+        else if (html[i] == '>')
+            builder.append("&gt;");
+        else if (html[i] == '&')
+            builder.append("&amp;");
+        else
+            builder.append(html[i]);
+    }
+    return builder.to_string();
 }
 
+}

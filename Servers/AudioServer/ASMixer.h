@@ -27,6 +27,7 @@
 #pragma once
 
 #include "ASClientConnection.h"
+#include <AK/Badge.h>
 #include <AK/ByteBuffer.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/Queue.h>

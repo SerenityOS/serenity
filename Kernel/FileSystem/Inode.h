@@ -26,22 +26,20 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/Function.h>
+#include <AK/HashTable.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/RefCounted.h>
+#include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
+#include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
 #include <Kernel/Lock.h>
 
-class FileDescription;
-class InodeVMObject;
-class InodeWatcher;
-class LocalSocket;
-class Custody;
+namespace Kernel {
 
 class Inode : public RefCounted<Inode>
     , public Weakable<Inode>
@@ -132,3 +130,5 @@ private:
     HashTable<InodeWatcher*> m_watchers;
     bool m_metadata_dirty { false };
 };
+
+}

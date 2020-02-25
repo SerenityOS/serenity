@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/ByteBuffer.h>
 #include <AK/String.h>
 #include <LibCore/File.h>
 #include <LibMarkdown/MDDocument.h>
@@ -45,7 +46,8 @@ int main(int argc, char* argv[])
         else
             file_name = argv[i];
 
-    auto file = Core::File::construct();;
+    auto file = Core::File::construct();
+    ;
     bool success;
     if (file_name == nullptr) {
         success = file->open(STDIN_FILENO, Core::IODevice::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescription::No);

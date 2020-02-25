@@ -33,6 +33,8 @@
 #include <AK/Weakable.h>
 #include <Kernel/Lock.h>
 
+namespace Kernel {
+
 class Inode;
 class PhysicalPage;
 
@@ -76,3 +78,5 @@ private:
     VMObject& operator=(VMObject&&) = delete;
     VMObject(VMObject&&) = delete;
 };
+
+}

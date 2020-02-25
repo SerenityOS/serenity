@@ -28,13 +28,8 @@
 #include <AK/Optional.h>
 #include <LibCore/UserInfo.h>
 #include <LibGUI/Dialog.h>
-#include <LibGUI/TableView.h>
 
 namespace GUI {
-
-class FileSystemModel;
-class Label;
-class TextBox;
 
 class FilePicker final : public Dialog {
     C_OBJECT(FilePicker)
@@ -71,7 +66,7 @@ private:
         }
     }
 
-    RefPtr<TableView> m_view;
+    RefPtr<MultiView> m_view;
     NonnullRefPtr<FileSystemModel> m_model;
     FileSystemPath m_selected_file;
 

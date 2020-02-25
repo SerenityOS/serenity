@@ -26,13 +26,9 @@
 
 #pragma once
 
-#include <LibCore/Timer.h>
-#include <LibGfx/TextAlignment.h>
 #include <LibGUI/Widget.h>
 
 namespace GUI {
-
-class Painter;
 
 class AbstractButton : public Widget {
     C_OBJECT_ABSTRACT(GAbstractButton)
@@ -64,8 +60,7 @@ public:
     void set_auto_repeat_interval(int interval) { m_auto_repeat_interval = interval; }
 
 protected:
-    explicit AbstractButton(Widget* parent);
-    AbstractButton(const StringView&, Widget* parent);
+    explicit AbstractButton(const StringView& = {});
 
     virtual void mousedown_event(MouseEvent&) override;
     virtual void mousemove_event(MouseEvent&) override;

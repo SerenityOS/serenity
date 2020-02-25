@@ -19,6 +19,7 @@ OBJS = \
     Desktop.o \
     Dialog.o \
     DragOperation.o \
+    Event.o \
     FilePicker.o \
     FileSystemModel.o \
     FontDatabase.o \
@@ -37,7 +38,10 @@ OBJS = \
     MenuItem.o \
     MessageBox.o \
     Model.o \
+    ModelIndex.o \
     ModelSelection.o \
+    MultiView.o \
+    Notification.o \
     Painter.o \
     ProgressBar.o \
     RadioButton.o \
@@ -71,6 +75,15 @@ Application.cpp: ../../Servers/WindowServer/WindowServerEndpoint.h
 
 ../../Servers/WindowServer/WindowServerEndpoint.h:
 	@flock $(dir $(@)) $(MAKE) -C $(dir $(@))
+
+# HACK: NotificationServer depends on LibGUI so we don't flock for these..
+Notification.cpp: ../../Servers/NotificationServer/NotificationServerEndpoint.h ../../Servers/NotificationServer/NotificationClientEndpoint.h
+
+../../Servers/NotificationServer/NotificationServerEndpoint.h:
+	$(MAKE) -C $(dir $(@)) NotificationServerEndpoint.h
+
+../../Servers/NotificationServer/NotificationClientEndpoint.h:
+	$(MAKE) -C $(dir $(@)) NotificationClientEndpoint.h
 
 install:
 	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/LibGUI/

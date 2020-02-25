@@ -31,6 +31,7 @@
 #include "Screen.h"
 #include "WindowClientEndpoint.h"
 #include "WindowManager.h"
+#include <AK/Badge.h>
 
 namespace WindowServer {
 
@@ -96,13 +97,14 @@ void Window::set_title(const String& title)
 
 void Window::set_rect(const Gfx::Rect& rect)
 {
+    ASSERT(!rect.is_empty());
     Gfx::Rect old_rect;
     if (m_rect == rect)
         return;
     old_rect = m_rect;
     m_rect = rect;
     if (!m_client && (!m_backing_store || old_rect.size() != rect.size())) {
-        m_backing_store = Gfx::Bitmap::create(Gfx::Bitmap::Format::RGB32, m_rect.size());
+        m_backing_store = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, m_rect.size());
     }
     m_frame.notify_window_rect_changed(old_rect, rect);
 }
@@ -113,7 +115,7 @@ void Window::handle_mouse_event(const MouseEvent& event)
 
     switch (event.type()) {
     case Event::MouseMove:
-        m_client->post_message(Messages::WindowClient::MouseMove(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta()));
+        m_client->post_message(Messages::WindowClient::MouseMove(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta(), event.is_drag(), event.drag_data_type()));
         break;
     case Event::MouseDown:
         m_client->post_message(Messages::WindowClient::MouseDown(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta()));
@@ -315,11 +317,11 @@ void Window::set_default_icon()
     m_icon = default_window_icon();
 }
 
-void Window::request_update(const Gfx::Rect& rect)
+void Window::request_update(const Gfx::Rect& rect, bool ignore_occlusion)
 {
     if (m_pending_paint_rects.is_empty()) {
-        deferred_invoke([this](auto&) {
-            client()->post_paint_message(*this);
+        deferred_invoke([this, ignore_occlusion](auto&) {
+            client()->post_paint_message(*this, ignore_occlusion);
         });
     }
     m_pending_paint_rects.add(rect);
@@ -411,6 +413,11 @@ void Window::set_tiled(WindowTileType tiled)
         break;
     }
     Core::EventLoop::current().post_event(*this, make<ResizeEvent>(old_rect, m_rect));
+}
+
+void Window::detach_client(Badge<ClientConnection>)
+{
+    m_client = nullptr;
 }
 
 }

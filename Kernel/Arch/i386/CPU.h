@@ -28,12 +28,14 @@
 
 #include <AK/Badge.h>
 #include <AK/Noncopyable.h>
-#include <Kernel/VM/PhysicalAddress.h>
-#include <Kernel/VM/VirtualAddress.h>
-#include <Kernel/kstdio.h>
+#include <LibBareMetal/Memory/PhysicalAddress.h>
+#include <LibBareMetal/Memory/VirtualAddress.h>
 
 #define PAGE_SIZE 4096
+#define GENERIC_INTERRUPT_HANDLERS_COUNT 128
 #define PAGE_MASK ((uintptr_t)0xfffff000u)
+
+namespace Kernel {
 
 class MemoryManager;
 class PageDirectory;
@@ -114,6 +116,7 @@ union [[gnu::packed]] Descriptor
 
 class PageDirectoryEntry {
 public:
+    const PageTableEntry* page_table_base() const { return reinterpret_cast<PageTableEntry*>(m_raw & 0xfffff000u); }
     PageTableEntry* page_table_base() { return reinterpret_cast<PageTableEntry*>(m_raw & 0xfffff000u); }
     void set_page_table_base(u32 value)
     {
@@ -242,16 +245,19 @@ public:
     u64 raw[4];
 };
 
-class IRQHandler;
-struct RegisterDump;
+class GenericInterruptHandler;
+struct RegisterState;
 
 void gdt_init();
 void idt_init();
 void sse_init();
 void register_interrupt_handler(u8 number, void (*f)());
 void register_user_callable_interrupt_handler(u8 number, void (*f)());
-void register_irq_handler(u8 number, IRQHandler&);
-void unregister_irq_handler(u8 number, IRQHandler&);
+GenericInterruptHandler& get_interrupt_handler(u8 interrupt_number);
+void register_generic_interrupt_handler(u8 number, GenericInterruptHandler&);
+void replace_single_handler_with_shared(GenericInterruptHandler&);
+void replace_shared_handler_with_single(GenericInterruptHandler&);
+void unregister_generic_interrupt_handler(u8 number, GenericInterruptHandler&);
 void flush_idt();
 void flush_gdt();
 void load_task_register(u16 selector);
@@ -259,7 +265,7 @@ u16 gdt_alloc_entry();
 void gdt_free_entry(u16);
 Descriptor& get_gdt_entry(u16 selector);
 void write_gdt_entry(u16 selector, Descriptor&);
-void handle_crash(RegisterDump&, const char* description, int signal);
+void handle_crash(RegisterState&, const char* description, int signal);
 
 [[noreturn]] static inline void hang()
 {
@@ -279,15 +285,6 @@ void handle_crash(RegisterDump&, const char* description, int signal);
                                : "memory")
 #define memory_barrier() asm volatile("" :: \
                                           : "memory")
-
-inline u32 cpu_cr3()
-{
-    u32 cr3;
-    asm volatile("movl %%cr3, %%eax"
-                 : "=a"(cr3));
-    return cr3;
-}
-
 inline u32 cpu_flags()
 {
     u32 flags;
@@ -425,7 +422,7 @@ private:
     VirtualAddress m_vaddr;
 };
 
-struct [[gnu::packed]] RegisterDump
+struct [[gnu::packed]] RegisterState
 {
     u32 ss;
     u32 gs;
@@ -473,6 +470,9 @@ inline uintptr_t offset_in_page(const void* address)
 {
     return offset_in_page((uintptr_t)address);
 }
+
+u32 read_cr3();
+void write_cr3(u32);
 
 class CPUID {
 public:
@@ -596,3 +596,7 @@ public:
 private:
     u32 m_flags;
 };
+
+extern u32 g_in_irq;
+
+}

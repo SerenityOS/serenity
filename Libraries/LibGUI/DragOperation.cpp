@@ -24,9 +24,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGfx/Bitmap.h>
+#include <AK/Badge.h>
+#include <AK/SharedBuffer.h>
+#include <LibCore/EventLoop.h>
 #include <LibGUI/DragOperation.h>
 #include <LibGUI/WindowServerConnection.h>
+#include <LibGfx/Bitmap.h>
 
 namespace GUI {
 

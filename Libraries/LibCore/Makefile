@@ -1,7 +1,9 @@
 OBJS = \
     ArgsParser.o \
+    DateTime.o \
     IODevice.o \
     File.o \
+    SocketAddress.o \
     Socket.o \
     LocalSocket.o \
     LocalServer.o \
@@ -10,6 +12,7 @@ OBJS = \
     UdpSocket.o \
     UdpServer.o \
     ElapsedTimer.o \
+    MimeData.o \
     Notifier.o \
     HttpRequest.o \
     HttpResponse.o \

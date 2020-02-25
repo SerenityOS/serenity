@@ -27,6 +27,8 @@
 #include <Kernel/Thread.h>
 #include <Kernel/WaitQueue.h>
 
+namespace Kernel {
+
 WaitQueue::WaitQueue()
 {
 }
@@ -61,4 +63,6 @@ void WaitQueue::wake_all()
     while (!m_threads.is_empty())
         m_threads.take_first()->wake_from_queue();
     Scheduler::stop_idling();
+}
+
 }

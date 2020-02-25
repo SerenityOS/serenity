@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/SharedBuffer.h>
 #include <LibCore/ConfigFile.h>
 #include <LibGfx/SystemTheme.h>
 
@@ -76,6 +77,8 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
     DO_COLOR(HoverHighlight);
     DO_COLOR(Selection);
     DO_COLOR(SelectionText);
+    DO_COLOR(InactiveSelection);
+    DO_COLOR(InactiveSelectionText);
     DO_COLOR(Window);
     DO_COLOR(WindowText);
     DO_COLOR(Base);
@@ -105,6 +108,12 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
     DO_COLOR(Link);
     DO_COLOR(ActiveLink);
     DO_COLOR(VisitedLink);
+    DO_COLOR(Ruler);
+    DO_COLOR(RulerBorder);
+    DO_COLOR(RulerActiveText);
+    DO_COLOR(RulerInactiveText);
+    DO_COLOR(TextCursor);
+    DO_COLOR(FocusOutline);
 
     buffer->seal();
     buffer->share_globally();

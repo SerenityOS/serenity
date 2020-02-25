@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Badge.h>
 #include <LibGfx/CharacterBitmap.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Painter.h>

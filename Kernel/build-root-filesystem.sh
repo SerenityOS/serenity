@@ -6,6 +6,8 @@ wheel_gid=1
 tty_gid=2
 phys_gid=3
 audio_gid=4
+window_uid=13
+window_gid=13
 
 die() {
     echo "die: $*"
@@ -57,9 +59,9 @@ chmod 666 mnt/dev/debuglog
 mknod mnt/dev/keyboard c 85 1
 chmod 440 mnt/dev/keyboard
 chown 0:$phys_gid mnt/dev/keyboard
-mknod mnt/dev/psaux c 10 1
-chmod 440 mnt/dev/psaux
-chown 0:$phys_gid mnt/dev/psaux
+mknod mnt/dev/mouse c 10 1
+chmod 440 mnt/dev/mouse
+chown 0:$phys_gid mnt/dev/mouse
 mknod mnt/dev/audio c 42 42
 chmod 220 mnt/dev/audio
 chown 0:$audio_gid mnt/dev/audio
@@ -83,6 +85,10 @@ cp -R ../Base/* mnt/
 cp -R ../Root/* mnt/
 cp kernel.map mnt/res/
 chmod 400 mnt/res/kernel.map
+
+chmod 660 mnt/etc/WindowServer/WindowServer.ini
+chown $window_uid:$window_gid mnt/etc/WindowServer/WindowServer.ini
+
 echo "done"
 
 printf "installing users... "
@@ -105,8 +111,12 @@ else
     find ../Userland/ -type f -executable -exec cp {} mnt/bin/ \;
 fi
 chown 0:$wheel_gid mnt/bin/su
+chown 0:$phys_gid mnt/bin/shutdown
+chown 0:$phys_gid mnt/bin/reboot
 chmod 4750 mnt/bin/su
 chmod 4755 mnt/bin/ping
+chmod 4750 mnt/bin/reboot
+chmod 4750 mnt/bin/shutdown
 echo "done"
 
 printf "installing applications... "
@@ -122,7 +132,7 @@ cp ../Applications/HexEditor/HexEditor mnt/bin/HexEditor
 cp ../Applications/PaintBrush/PaintBrush mnt/bin/PaintBrush
 cp ../Applications/QuickShow/QuickShow mnt/bin/QuickShow
 cp ../Applications/Piano/Piano mnt/bin/Piano
-cp ../Applications/SystemDialog/SystemDialog mnt/bin/SystemDialog
+cp ../Applications/SystemMenu/SystemMenu mnt/bin/SystemMenu
 cp ../Applications/ChanViewer/ChanViewer mnt/bin/ChanViewer
 cp ../Applications/Calculator/Calculator mnt/bin/Calculator
 cp ../Applications/SoundPlayer/SoundPlayer mnt/bin/SoundPlayer
@@ -131,7 +141,6 @@ cp ../Applications/Welcome/Welcome mnt/bin/Welcome
 cp ../Applications/Help/Help mnt/bin/Help
 cp ../Applications/Browser/Browser mnt/bin/Browser
 cp ../Demos/HelloWorld/HelloWorld mnt/bin/HelloWorld
-cp ../Demos/HelloWorld2/HelloWorld2 mnt/bin/HelloWorld2
 cp ../Demos/WidgetGallery/WidgetGallery mnt/bin/WidgetGallery
 cp ../Demos/Fire/Fire mnt/bin/Fire
 cp ../Demos/DynamicLink/LinkDemo/LinkDemo mnt/bin/LinkDemo
@@ -148,10 +157,13 @@ cp ../Servers/AudioServer/AudioServer mnt/bin/AudioServer
 cp ../Servers/TTYServer/TTYServer mnt/bin/TTYServer
 cp ../Servers/TelnetServer/TelnetServer mnt/bin/TelnetServer
 cp ../Servers/ProtocolServer/ProtocolServer mnt/bin/ProtocolServer
+cp ../Servers/NotificationServer/NotificationServer mnt/bin/NotificationServer
+cp ../Servers/WebServer/WebServer mnt/bin/WebServer
 cp ../Shell/Shell mnt/bin/Shell
 cp ../MenuApplets/Audio/Audio.MenuApplet mnt/bin/
 cp ../MenuApplets/CPUGraph/CPUGraph.MenuApplet mnt/bin/
 cp ../MenuApplets/Clock/Clock.MenuApplet mnt/bin/
+cp ../MenuApplets/UserName/UserName.MenuApplet mnt/bin
 echo "done"
 
 printf "installing dynamic libraries... "
@@ -161,7 +173,6 @@ echo "done"
 printf "installing shortcuts... "
 ln -s FileManager mnt/bin/fm
 ln -s HelloWorld mnt/bin/hw
-ln -s HelloWorld2 mnt/bin/hw2
 ln -s IRCClient mnt/bin/irc
 ln -s Minesweeper mnt/bin/ms
 ln -s Shell mnt/bin/sh
@@ -184,6 +195,7 @@ ln -s Browser mnt/bin/br
 ln -s HackStudio mnt/bin/hs
 ln -s SystemMonitor mnt/bin/sm
 ln -s ProfileViewer mnt/bin/pv
+ln -s WebServer mnt/bin/ws
 echo "done"
 
 mkdir -p mnt/boot/

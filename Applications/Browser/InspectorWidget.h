@@ -28,11 +28,6 @@
 
 class Document;
 
-namespace GUI {
-class TableView;
-class TreeView;
-}
-
 class InspectorWidget final : public GUI::Widget {
     C_OBJECT(InspectorWidget)
 public:
@@ -41,7 +36,7 @@ public:
     void set_document(Document*);
 
 private:
-    explicit InspectorWidget(GUI::Widget* parent);
+    InspectorWidget();
 
     RefPtr<GUI::TreeView> m_dom_tree_view;
     RefPtr<GUI::TableView> m_style_table_view;

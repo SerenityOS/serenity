@@ -32,6 +32,8 @@
 
 //#define TTY_DEBUG
 
+namespace Kernel {
+
 TTY::TTY(unsigned major, unsigned minor)
     : CharacterDevice(major, minor)
 {
@@ -52,7 +54,9 @@ void TTY::set_default_termios()
 
 ssize_t TTY::read(FileDescription&, u8* buffer, ssize_t size)
 {
-    if (m_input_buffer.size() < size)
+    ASSERT(size >= 0);
+
+    if (m_input_buffer.size() < static_cast<size_t>(size))
         size = m_input_buffer.size();
 
     if (in_canonical_mode()) {
@@ -271,7 +275,7 @@ void TTY::set_termios(const termios& t)
 int TTY::ioctl(FileDescription&, unsigned request, unsigned arg)
 {
     REQUIRE_PROMISE(tty);
-    auto& process = current->process();
+    auto& process = *Process::current;
     pid_t pgid;
     termios* tp;
     winsize* ws;
@@ -344,4 +348,6 @@ void TTY::set_size(unsigned short columns, unsigned short rows)
 void TTY::hang_up()
 {
     generate_signal(SIGHUP);
+}
+
 }

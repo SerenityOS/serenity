@@ -30,14 +30,11 @@
 
 namespace GUI {
 
-class Painter;
-
-// FIXME: Rename this to something without "table cell" in the name.
 class TableCellPaintingDelegate {
 public:
     virtual ~TableCellPaintingDelegate() {}
 
-    virtual void paint(Painter&, const Gfx::Rect&, const Palette&, const Model&, const ModelIndex&) = 0;
+    virtual void paint(Painter&, const Gfx::Rect&, const Gfx::Palette&, const Model&, const ModelIndex&) = 0;
 };
 
 class AbstractTableView : public AbstractView {
@@ -76,7 +73,7 @@ public:
     virtual void select_all() override;
 protected:
     virtual ~AbstractTableView() override;
-    explicit AbstractTableView(Widget* parent);
+    AbstractTableView();
 
     virtual void did_update_model() override;
     virtual void mouseup_event(MouseEvent&) override;

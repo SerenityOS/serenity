@@ -35,8 +35,6 @@
 
 namespace GUI {
 
-class Action;
-
 class Button : public AbstractButton {
     C_OBJECT(Button)
 public:
@@ -64,8 +62,7 @@ public:
     void set_focusable(bool b) { m_focusable = b; }
 
 protected:
-    Button(const StringView& text, Widget* parent);
-    explicit Button(Widget* parent);
+    explicit Button(const StringView& text = {});
     virtual void paint_event(PaintEvent&) override;
 
 private:

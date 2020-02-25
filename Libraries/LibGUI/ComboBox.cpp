@@ -28,16 +28,16 @@
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/ListView.h>
+#include <LibGUI/Model.h>
 #include <LibGUI/ScrollBar.h>
-#include <LibGUI/TextEditor.h>
+#include <LibGUI/TextBox.h>
 #include <LibGUI/Window.h>
 
 namespace GUI {
 
-ComboBox::ComboBox(Widget* parent)
-    : Widget(parent)
+ComboBox::ComboBox()
 {
-    m_editor = TextEditor::construct(TextEditor::Type::SingleLine, this);
+    m_editor = add<TextBox>();
     m_editor->on_change = [this] {
         if (on_change)
             on_change(m_editor->text(), m_list_view->selection().first());
@@ -46,7 +46,7 @@ ComboBox::ComboBox(Widget* parent)
         if (on_return_pressed)
             on_return_pressed();
     };
-    m_open_button = Button::construct(this);
+    m_open_button = add<Button>();
     m_open_button->set_focusable(false);
     m_open_button->set_text("\xc3\xb7");
     m_open_button->on_click = [this](auto&) {
@@ -56,11 +56,11 @@ ComboBox::ComboBox(Widget* parent)
             open();
     };
 
-    m_list_window = Window::construct(this);
+    m_list_window = add<Window>();
     // FIXME: This is obviously not a tooltip window, but it's the closest thing to what we want atm.
     m_list_window->set_window_type(WindowType::Tooltip);
 
-    m_list_view = ListView::construct(nullptr);
+    m_list_view = ListView::construct();
     m_list_view->horizontal_scrollbar().set_visible(false);
     m_list_window->set_main_widget(m_list_view);
 
@@ -147,6 +147,26 @@ void ComboBox::set_only_allow_values_from_model(bool b)
         return;
     m_only_allow_values_from_model = b;
     m_editor->set_readonly(m_only_allow_values_from_model);
+}
+
+Model* ComboBox::model()
+{
+    return m_list_view->model();
+}
+
+const Model* ComboBox::model() const
+{
+    return m_list_view->model();
+}
+
+int ComboBox::model_column() const
+{
+    return m_list_view->model_column();
+}
+
+void ComboBox::set_model_column(int column)
+{
+    m_list_view->set_model_column(column);
 }
 
 }

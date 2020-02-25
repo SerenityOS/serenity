@@ -38,7 +38,6 @@ public:
         Bottom,
     };
 
-    explicit TabWidget(Widget* parent);
     virtual ~TabWidget() override;
 
     TabPosition tab_position() const { return m_tab_position; }
@@ -53,9 +52,19 @@ public:
     int bar_height() const { return 21; }
     int container_padding() const { return 2; }
 
-    void add_widget(const StringView&, Widget*);
+    void add_widget(const StringView&, Widget&);
+
+    template<class T, class... Args>
+    inline NonnullRefPtr<T> add_tab(const StringView& title, Args&&... args)
+    {
+        auto t = T::construct(forward<Args>(args)...);
+        add_widget(title, *t);
+        return t;
+    }
 
 protected:
+    TabWidget();
+
     virtual void paint_event(PaintEvent&) override;
     virtual void child_event(Core::ChildEvent&) override;
     virtual void resize_event(ResizeEvent&) override;

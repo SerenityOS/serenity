@@ -26,8 +26,7 @@
 
 #pragma once
 
-#include <AK/LogStream.h>
-#include <AK/String.h>
+#include <AK/Forward.h>
 #include <LibGfx/Orientation.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Size.h>
@@ -264,6 +263,11 @@ public:
             && m_size == other.m_size;
     }
 
+    bool operator!=(const Rect& other) const
+    {
+        return !(*this == other);
+    }
+
     void intersect(const Rect&);
 
     static Rect from_two_points(const Point& a, const Point& b)
@@ -308,7 +312,7 @@ public:
         set_y(other.center().y() - height() / 2);
     }
 
-    String to_string() const { return String::format("[%d,%d %dx%d]", x(), y(), width(), height()); }
+    String to_string() const;
 
 private:
     Point m_location;
@@ -327,9 +331,10 @@ inline void Point::constrain(const Rect& rect)
         set_y(rect.bottom());
 }
 
-inline const LogStream& operator<<(const LogStream& stream, const Rect& value)
-{
-    return stream << value.to_string();
+const LogStream& operator<<(const LogStream&, const Rect&);
+
 }
 
+namespace IPC {
+bool decode(BufferStream&, Gfx::Rect&);
 }

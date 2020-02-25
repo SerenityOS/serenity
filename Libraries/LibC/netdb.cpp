@@ -37,6 +37,8 @@
 
 extern "C" {
 
+int h_errno;
+
 static hostent __gethostbyname_buffer;
 static char __gethostbyname_name_buffer[512];
 static in_addr_t __gethostbyname_address;
@@ -196,4 +198,11 @@ hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
 
     return &__gethostbyaddr_buffer;
 }
+
+struct servent* getservbyname(const char* name, const char* protocol)
+{
+    dbg() << "FIXME: getservbyname(\"" << name << "\", \"" << protocol << "\")";
+    ASSERT_NOT_REACHED();
+}
+
 }

@@ -29,17 +29,22 @@
 #include <Kernel/KBuffer.h>
 #include <Kernel/KResult.h>
 
-struct [[gnu::packed]] MallocPerformanceEvent {
+namespace Kernel {
+
+struct [[gnu::packed]] MallocPerformanceEvent
+{
     size_t size;
     uintptr_t ptr;
 };
 
-struct [[gnu::packed]] FreePerformanceEvent {
+struct [[gnu::packed]] FreePerformanceEvent
+{
     size_t size;
     uintptr_t ptr;
 };
 
-struct [[gnu::packed]] PerformanceEvent {
+struct [[gnu::packed]] PerformanceEvent
+{
     u8 type { 0 };
     u8 stack_size { 0 };
     u64 timestamp;
@@ -71,3 +76,5 @@ private:
     size_t m_count { 0 };
     KBuffer m_buffer;
 };
+
+}

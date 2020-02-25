@@ -25,10 +25,15 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/BufferStream.h>
+#include <AK/Optional.h>
+#include <AK/String.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/SystemTheme.h>
 #include <ctype.h>
 #include <stdio.h>
+
+namespace Gfx {
 
 Color::Color(NamedColor named)
 {
@@ -337,4 +342,20 @@ Optional<Color> Color::from_string(const StringView& string)
         return {};
 
     return Color(r.value(), g.value(), b.value(), a.value());
+}
+}
+
+const LogStream& operator<<(const LogStream& stream, Color value)
+{
+    return stream << value.to_string();
+}
+
+bool IPC::decode(BufferStream& stream, Color& color)
+{
+    u32 rgba = 0;
+    stream >> rgba;
+    if (stream.handle_read_failure())
+        return false;
+    color = Color::from_rgba(rgba);
+    return true;
 }

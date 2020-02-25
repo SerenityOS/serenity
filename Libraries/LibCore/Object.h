@@ -26,19 +26,13 @@
 
 #pragma once
 
-#include <AK/Badge.h>
-#include <AK/Function.h>
+#include <AK/Forward.h>
 #include <AK/IntrusiveList.h>
 #include <AK/Noncopyable.h>
 #include <AK/NonnullRefPtrVector.h>
-#include <AK/StdLibExtras.h>
 #include <AK/String.h>
-#include <AK/Vector.h>
 #include <AK/Weakable.h>
-
-namespace AK {
-class JsonObject;
-}
+#include <LibCore/Forward.h>
 
 namespace Core {
 
@@ -46,12 +40,6 @@ enum class TimerShouldFireWhenNotVisible {
     No = 0,
     Yes
 };
-
-class ChildEvent;
-class CustomEvent;
-class Event;
-class EventLoop;
-class TimerEvent;
 
 #define C_OBJECT(klass)                                                \
 public:                                                                \
@@ -132,6 +120,14 @@ public:
             m_parent->remove_child(*this);
     }
 
+    template<class T, class... Args>
+    inline NonnullRefPtr<T> add(Args&&... args)
+    {
+        auto t = T::construct(forward<Args>(args)...);
+        add_child(*t);
+        return t;
+    }
+
     virtual bool is_visible_for_timer_purposes() const;
 
 protected:
@@ -178,9 +174,6 @@ inline void Object::for_each_child_of_type(Callback callback)
     });
 }
 
-inline const LogStream& operator<<(const LogStream& stream, const Object& object)
-{
-    return stream << object.class_name() << '{' << &object << '}';
-}
+const LogStream& operator<<(const LogStream&, const Object&);
 
 }

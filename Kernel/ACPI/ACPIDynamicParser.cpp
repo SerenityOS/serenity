@@ -27,7 +27,9 @@
 #include <Kernel/ACPI/ACPIDynamicParser.h>
 #include <Kernel/ACPI/ACPIParser.h>
 
-void ACPIDynamicParser::initialize(ACPI_RAW::RSDPDescriptor20& rsdp)
+namespace Kernel {
+
+void ACPIDynamicParser::initialize(PhysicalAddress rsdp)
 {
     if (!ACPIStaticParser::is_initialized()) {
         new ACPIDynamicParser(rsdp);
@@ -47,14 +49,14 @@ ACPIDynamicParser::ACPIDynamicParser()
 {
     kprintf("ACPI: Dynamic Parsing Enabled, Can parse AML\n");
 }
-ACPIDynamicParser::ACPIDynamicParser(ACPI_RAW::RSDPDescriptor20& rsdp)
+ACPIDynamicParser::ACPIDynamicParser(PhysicalAddress rsdp)
     : IRQHandler(9)
     , ACPIStaticParser(rsdp)
 {
     kprintf("ACPI: Dynamic Parsing Enabled, Can parse AML\n");
 }
 
-void ACPIDynamicParser::handle_irq()
+void ACPIDynamicParser::handle_irq(RegisterState&)
 {
     // FIXME: Implement IRQ handling of ACPI signals!
     ASSERT_NOT_REACHED();
@@ -90,4 +92,6 @@ void ACPIDynamicParser::build_namespace()
 {
     // FIXME: Implement AML Interpretation to build the ACPI namespace
     ASSERT_NOT_REACHED();
+}
+
 }

@@ -26,9 +26,8 @@
 
 #pragma once
 
-#include <AK/Optional.h>
-#include <AK/String.h>
-#include <AK/Types.h>
+#include <AK/Forward.h>
+#include <AK/StdLibExtras.h>
 
 namespace Gfx {
 
@@ -274,11 +273,12 @@ private:
     RGBA32 m_value { 0 };
 };
 
-inline const LogStream& operator<<(const LogStream& stream, Color value)
-{
-    return stream << value.to_string();
-}
+const LogStream& operator<<(const LogStream&, Color);
 
 }
 
 using Gfx::Color;
+
+namespace IPC {
+bool decode(BufferStream&, Gfx::Color&);
+}

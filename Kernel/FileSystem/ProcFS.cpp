@@ -25,21 +25,22 @@
  */
 
 #include "ProcFS.h"
-#include "Console.h"
 #include "KSyms.h"
 #include "Process.h"
 #include "Scheduler.h"
-#include "StdLib.h"
 #include <AK/JsonArraySerializer.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonObjectSerializer.h>
 #include <AK/JsonValue.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/DiskBackedFileSystem.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Heap/kmalloc.h>
+#include <Kernel/Interrupts/GenericInterruptHandler.h>
+#include <Kernel/Interrupts/InterruptManagement.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/KParams.h>
 #include <Kernel/Module.h>
@@ -50,9 +51,14 @@
 #include <Kernel/Net/UDPSocket.h>
 #include <Kernel/PCI/Access.h>
 #include <Kernel/Profiling.h>
+#include <Kernel/TTY/TTY.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PurgeableVMObject.h>
+#include <LibBareMetal/Output/Console.h>
+#include <LibBareMetal/StdLib.h>
 #include <LibC/errno_numbers.h>
+
+namespace Kernel {
 
 enum ProcParentDirectory {
     PDI_AbstractRoot = 0,
@@ -77,6 +83,7 @@ enum ProcFileType {
     FI_Root_cpuinfo,
     FI_Root_inodes,
     FI_Root_dmesg,
+    FI_Root_interrupts,
     FI_Root_pci,
     FI_Root_devices,
     FI_Root_uptime,
@@ -138,7 +145,7 @@ static inline int to_fd(const InodeIdentifier& identifier)
     return (identifier.index() & 0xff) - FI_MaxStaticFileIndex;
 }
 
-static inline int to_sys_index(const InodeIdentifier& identifier)
+static inline size_t to_sys_index(const InodeIdentifier& identifier)
 {
     ASSERT(to_proc_parent_directory(identifier) == PDI_Root_sys);
     ASSERT(to_proc_file_type(identifier) == FI_Root_sys_variable);
@@ -288,7 +295,7 @@ Optional<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
     for (auto& region : process.regions()) {
-        if (!region.is_user_accessible() && !current->process().is_superuser())
+        if (!region.is_user_accessible() && !Process::current->is_superuser())
             continue;
         auto region_object = array.add_object();
         region_object.add("readable", region.is_readable());
@@ -330,6 +337,22 @@ Optional<KBuffer> procfs$pci(InodeIdentifier)
         obj.add("class", PCI::get_class(address));
         obj.add("subsystem_id", PCI::get_subsystem_id(address));
         obj.add("subsystem_vendor_id", PCI::get_subsystem_vendor_id(address));
+    });
+    array.finish();
+    return builder.build();
+}
+
+Optional<KBuffer> procfs$interrupts(InodeIdentifier)
+{
+    KBufferBuilder builder;
+    JsonArraySerializer array { builder };
+    InterruptManagement::the().enumerate_interrupt_handlers([&array](GenericInterruptHandler& handler) {
+        auto obj = array.add_object();
+        obj.add("purpose", "Interrupt Handler"); // FIXME: Determine the right description for each interrupt handler.
+        obj.add("interrupt_line", handler.interrupt_number());
+        obj.add("cpu_handler", 0); // FIXME: Determine the responsible CPU for each interrupt handler.
+        obj.add("device_sharing", (unsigned)handler.sharing_devices_count());
+        obj.add("call_count", (unsigned)handler.get_invoking_count());
     });
     array.finish();
     return builder.build();
@@ -394,29 +417,31 @@ Optional<KBuffer> procfs$profile(InodeIdentifier)
 {
     InterruptDisabler disabler;
     KBufferBuilder builder;
-    JsonArraySerializer array(builder);
-    bool mask_kernel_addresses = !current->process().is_superuser();
+
+    JsonObjectSerializer object(builder);
+    object.add("pid", Profiling::pid());
+    object.add("executable", Profiling::executable_path());
+
+    auto array = object.add_array("events");
+    bool mask_kernel_addresses = !Process::current->is_superuser();
     Profiling::for_each_sample([&](auto& sample) {
         auto object = array.add_object();
-        object.add("pid", sample.pid);
+        object.add("type", "sample");
         object.add("tid", sample.tid);
         object.add("timestamp", sample.timestamp);
-        auto frames_array = object.add_array("frames");
+        auto frames_array = object.add_array("stack");
         for (size_t i = 0; i < Profiling::max_stack_frame_count; ++i) {
             if (sample.frames[i] == 0)
                 break;
-            auto frame_object = frames_array.add_object();
             u32 address = (u32)sample.frames[i];
             if (mask_kernel_addresses && !is_user_address(VirtualAddress(address)))
                 address = 0xdeadc0de;
-            frame_object.add("address", address);
-            frame_object.add("symbol", sample.symbolicated_frames[i]);
-            frame_object.add("offset", JsonValue((u32)sample.offsets[i]));
-            frame_object.finish();
+            frames_array.add(address);
         }
         frames_array.finish();
     });
     array.finish();
+    object.finish();
     return builder.build();
 }
 
@@ -636,7 +661,7 @@ Optional<KBuffer> procfs$pid_root(InodeIdentifier identifier)
 Optional<KBuffer> procfs$self(InodeIdentifier)
 {
     char buffer[16];
-    sprintf(buffer, "%u", current->pid());
+    sprintf(buffer, "%u", Process::current->pid());
     return KBuffer::copy((const u8*)buffer, strlen(buffer));
 }
 
@@ -1219,7 +1244,7 @@ bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
     dbgprintf("ProcFS: traverse_as_directory %u\n", index());
 #endif
 
-    if (!::is_directory(identifier()))
+    if (!Kernel::is_directory(identifier()))
         return false;
 
     auto pid = to_pid(identifier());
@@ -1246,7 +1271,7 @@ bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
         break;
 
     case FI_Root_sys:
-        for (int i = 1; i < sys_variables().size(); ++i) {
+        for (size_t i = 1; i < sys_variables().size(); ++i) {
             auto& variable = sys_variables()[i];
             callback({ variable.name.characters(), variable.name.length(), sys_var_to_identifier(fsid(), i), 0 });
         }
@@ -1331,7 +1356,7 @@ RefPtr<Inode> ProcFSInode::lookup(StringView name)
     }
 
     if (proc_file_type == FI_Root_sys) {
-        for (int i = 1; i < sys_variables().size(); ++i) {
+        for (size_t i = 1; i < sys_variables().size(); ++i) {
             auto& variable = sys_variables()[i];
             if (name == variable.name)
                 return fs().get_inode(sys_var_to_identifier(fsid(), i));
@@ -1584,6 +1609,7 @@ ProcFS::ProcFS()
     m_entries[FI_Root_dmesg] = { "dmesg", FI_Root_dmesg, true, procfs$dmesg };
     m_entries[FI_Root_self] = { "self", FI_Root_self, false, procfs$self };
     m_entries[FI_Root_pci] = { "pci", FI_Root_pci, false, procfs$pci };
+    m_entries[FI_Root_interrupts] = { "interrupts", FI_Root_interrupts, false, procfs$interrupts };
     m_entries[FI_Root_devices] = { "devices", FI_Root_devices, false, procfs$devices };
     m_entries[FI_Root_uptime] = { "uptime", FI_Root_uptime, false, procfs$uptime };
     m_entries[FI_Root_cmdline] = { "cmdline", FI_Root_cmdline, true, procfs$cmdline };
@@ -1621,4 +1647,6 @@ ProcFS::ProcFSDirectoryEntry* ProcFS::get_directory_entry(InodeIdentifier identi
 KResult ProcFSInode::chown(uid_t, gid_t)
 {
     return KResult(-EPERM);
+}
+
 }

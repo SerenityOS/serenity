@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibCore/ElapsedTimer.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/TextBox.h>
 #include <LibHTML/DOM/Document.h>
@@ -51,7 +52,7 @@ RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const StyleProperties*) 
 
     RefPtr<GUI::Widget> widget;
     if (type() == "submit") {
-        auto button = GUI::Button::construct(value(), &html_view);
+        auto button = html_view.add<GUI::Button>(value());
         int text_width = Gfx::Font::default_font().width(value());
         button->set_relative_rect(0, 0, text_width + 20, 20);
         button->on_click = [this](auto&) {
@@ -62,7 +63,7 @@ RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const StyleProperties*) 
         };
         widget = button;
     } else {
-        auto text_box = GUI::TextBox::construct(&html_view);
+        auto text_box = html_view.add<GUI::TextBox>();
         text_box->set_text(value());
         text_box->on_change = [this] {
             auto& widget = to<LayoutWidget>(layout_node())->widget();

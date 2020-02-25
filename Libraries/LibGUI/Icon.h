@@ -27,7 +27,9 @@
 #pragma once
 
 #include <AK/HashMap.h>
-#include <LibGfx/Bitmap.h>
+#include <AK/NonnullRefPtr.h>
+#include <AK/RefCounted.h>
+#include <LibGfx/Forward.h>
 
 class GIconImpl : public RefCounted<GIconImpl> {
 public:

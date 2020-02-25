@@ -26,10 +26,7 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/HashMap.h>
 #include <LibGUI/AbstractTableView.h>
-#include <LibGUI/Model.h>
 
 namespace GUI {
 
@@ -39,7 +36,7 @@ public:
     virtual ~TableView() override;
 
 protected:
-    explicit TableView(Widget* parent);
+    TableView();
 
     virtual void paint_event(PaintEvent&) override;
 };

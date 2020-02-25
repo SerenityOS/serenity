@@ -35,6 +35,8 @@
 #include <Kernel/Net/IPv4SocketTuple.h>
 #include <Kernel/Net/Socket.h>
 
+namespace Kernel {
+
 class NetworkAdapter;
 class TCPPacket;
 class TCPSocket;
@@ -49,7 +51,7 @@ public:
     virtual void close() override;
     virtual KResult bind(const sockaddr*, socklen_t) override;
     virtual KResult connect(FileDescription&, const sockaddr*, socklen_t, ShouldBlock = ShouldBlock::Yes) override;
-    virtual KResult listen(int) override;
+    virtual KResult listen(size_t) override;
     virtual void get_local_address(sockaddr*, socklen_t*) override;
     virtual void get_peer_address(sockaddr*, socklen_t*) override;
     virtual void attach(FileDescription&) override;
@@ -137,3 +139,5 @@ private:
 
     Optional<KBuffer> m_scratch_buffer;
 };
+
+}

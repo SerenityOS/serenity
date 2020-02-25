@@ -30,11 +30,10 @@
 #include <AK/Optional.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
-#include <AK/kstdio.h>
 
 namespace AK {
 
-template<typename K, typename V, typename KeyTraits = Traits<K>>
+template<typename K, typename V, typename KeyTraits>
 class HashMap {
 private:
     struct Entry {
@@ -45,21 +44,14 @@ private:
     struct EntryTraits {
         static unsigned hash(const Entry& entry) { return KeyTraits::hash(entry.key); }
         static bool equals(const Entry& a, const Entry& b) { return KeyTraits::equals(a.key, b.key); }
-        static void dump(const Entry& entry)
-        {
-            kprintf("key=");
-            KeyTraits::dump(entry.key);
-            kprintf(" value=");
-            Traits<V>::dump(entry.value);
-        }
     };
 
 public:
     HashMap() {}
 
     bool is_empty() const { return m_table.is_empty(); }
-    int size() const { return m_table.size(); }
-    int capacity() const { return m_table.capacity(); }
+    size_t size() const { return m_table.size(); }
+    size_t capacity() const { return m_table.capacity(); }
     void clear() { m_table.clear(); }
 
     void set(const K& key, const V& value) { m_table.set({ key, value }); }
@@ -100,9 +92,7 @@ public:
         return m_table.find(hash, finder);
     }
 
-    void ensure_capacity(int capacity) { m_table.ensure_capacity(capacity); }
-
-    void dump() const { m_table.dump(); }
+    void ensure_capacity(size_t capacity) { m_table.ensure_capacity(capacity); }
 
     Optional<typename Traits<V>::PeekType> get(const K& key) const
     {

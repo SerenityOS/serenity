@@ -29,9 +29,11 @@
 #include <AK/Types.h>
 #include <Kernel/ACPI/Definitions.h>
 #include <Kernel/FileSystem/File.h>
-#include <Kernel/VM/PhysicalAddress.h>
 #include <Kernel/VM/Region.h>
-#include <Kernel/VM/VirtualAddress.h>
+#include <LibBareMetal/Memory/PhysicalAddress.h>
+#include <LibBareMetal/Memory/VirtualAddress.h>
+
+namespace Kernel {
 
 class ACPIParser {
 public:
@@ -39,7 +41,7 @@ public:
 
     static bool is_initialized();
     static void initialize_limited();
-    virtual ACPI_RAW::SDTHeader* find_table(const char* sig);
+    virtual PhysicalAddress find_table(const char* sig);
 
     virtual void do_acpi_reboot();
     virtual void do_acpi_shutdown();
@@ -54,3 +56,5 @@ protected:
     explicit ACPIParser(bool usable);
     bool m_operable;
 };
+
+}

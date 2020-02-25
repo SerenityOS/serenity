@@ -44,11 +44,8 @@ public:
 
     void refresh();
 
-    virtual void event(Core::Event&) override;
-
     bool is_open(const Menu&) const;
-
-    Vector<WeakPtr<Menu>>& open_menu_stack() { return m_open_menu_stack; }
+    bool has_open_menu() const { return !m_open_menu_stack.is_empty(); }
 
     Gfx::Rect menubar_rect() const;
     static int menubar_menu_margin() { return 16; }
@@ -71,23 +68,31 @@ public:
 
     void close_all_menus_from_client(Badge<ClientConnection>, ClientConnection&);
 
-    void add_applet(Window&);
-    void remove_applet(Window&);
-    void invalidate_applet(const Window&, const Gfx::Rect&);
+    void toggle_system_menu()
+    {
+        if (m_system_menu)
+            toggle_menu(*m_system_menu);
+    }
 
-    Color menu_selection_color() const { return m_menu_selection_color; }
-    Menu& system_menu() { return *m_system_menu; }
-    Menu* find_internal_menu_by_id(int);
+    Menu* system_menu() { return m_system_menu; }
+    void set_system_menu(Menu&);
+
     int theme_index() const { return m_theme_index; }
+
+    Window& window() { return *m_window; }
 
     template<typename Callback>
     void for_each_active_menubar_menu(Callback callback)
     {
-        if (callback(system_menu()) == IterationDecision::Break)
-            return;
+        if (system_menu()) {
+            if (callback(*system_menu()) == IterationDecision::Break)
+                return;
+        }
         if (m_current_menubar)
             m_current_menubar->for_each_menu(callback);
     }
+
+    void did_change_theme();
 
 private:
     const Gfx::Font& menu_font() const;
@@ -95,49 +100,25 @@ private:
 
     void close_menus(const Vector<Menu*>&);
 
-    Window& window() { return *m_window; }
     const Window& window() const { return *m_window; }
 
+    virtual void event(Core::Event&) override;
+    void handle_mouse_event(MouseEvent&);
     void handle_menu_mouse_event(Menu&, const MouseEvent&);
 
     void draw();
-    void draw_applet(const Window&);
-    void tick_clock();
 
     RefPtr<Window> m_window;
-    String m_username;
 
     WeakPtr<Menu> m_current_menu;
     Vector<WeakPtr<Menu>> m_open_menu_stack;
 
-    Vector<WeakPtr<Window>> m_applets;
-
-    Gfx::Rect m_username_rect;
+    WeakPtr<Menu> m_system_menu;
 
     bool m_needs_window_resize { false };
     bool m_bar_open { false };
 
-    struct AppMetadata {
-        String executable;
-        String name;
-        String icon_path;
-        String category;
-    };
-    Vector<AppMetadata> m_apps;
-
-    HashMap<String, NonnullRefPtr<Menu>> m_app_category_menus;
-
-    struct ThemeMetadata {
-        String name;
-        String path;
-    };
-
-    RefPtr<Menu> m_system_menu;
-    Color m_menu_selection_color;
-
     int m_theme_index { 0 };
-    Vector<ThemeMetadata> m_themes;
-    RefPtr<Menu> m_themes_menu;
 
     WeakPtr<MenuBar> m_current_menubar;
 };

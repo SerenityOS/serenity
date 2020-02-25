@@ -30,9 +30,6 @@
 
 namespace GUI {
 
-class Button;
-class TextEditor;
-
 class SpinBox : public Widget {
     C_OBJECT(SpinBox)
 public:
@@ -50,8 +47,10 @@ public:
     Function<void(int value)> on_change;
 
 protected:
-    explicit SpinBox(Widget* parent = nullptr);
+    SpinBox();
 
+    virtual void keydown_event(KeyEvent&) override;
+    virtual void mousewheel_event(MouseEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
 
 private:

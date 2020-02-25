@@ -28,8 +28,10 @@
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Bitmap.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)
@@ -58,7 +60,7 @@ int main(int argc, char** argv)
     window->set_resizable(false);
     window->set_rect({ 300, 200, 254, 213 });
 
-    auto calc_widget = CalculatorWidget::construct(nullptr);
+    auto calc_widget = CalculatorWidget::construct();
     window->set_main_widget(calc_widget);
 
     window->show();

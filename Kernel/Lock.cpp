@@ -24,8 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <Kernel/KSyms.h>
 #include <Kernel/Lock.h>
 #include <Kernel/Thread.h>
+
+namespace Kernel {
 
 void Lock::lock()
 {
@@ -38,13 +41,13 @@ void Lock::lock()
     for (;;) {
         bool expected = false;
         if (m_lock.compare_exchange_strong(expected, true, AK::memory_order_acq_rel)) {
-            if (!m_holder || m_holder == current) {
-                m_holder = current;
+            if (!m_holder || m_holder == Thread::current) {
+                m_holder = Thread::current;
                 ++m_level;
                 m_lock.store(false, AK::memory_order_release);
                 return;
             }
-            current->wait_on(m_queue, &m_lock, m_holder, m_name);
+            Thread::current->wait_on(m_queue, &m_lock, m_holder, m_name);
         }
     }
 }
@@ -54,7 +57,7 @@ void Lock::unlock()
     for (;;) {
         bool expected = false;
         if (m_lock.compare_exchange_strong(expected, true, AK::memory_order_acq_rel)) {
-            ASSERT(m_holder == current);
+            ASSERT(m_holder == Thread::current);
             ASSERT(m_level);
             --m_level;
             if (m_level) {
@@ -73,12 +76,14 @@ void Lock::unlock()
 bool Lock::force_unlock_if_locked()
 {
     InterruptDisabler disabler;
-    if (m_holder != current)
+    if (m_holder != Thread::current)
         return false;
     ASSERT(m_level == 1);
-    ASSERT(m_holder == current);
+    ASSERT(m_holder == Thread::current);
     m_holder = nullptr;
     --m_level;
     m_queue.wake_one();
     return true;
+}
+
 }

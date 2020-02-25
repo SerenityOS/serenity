@@ -27,9 +27,9 @@
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/DirIterator.h>
-#include <LibGfx/Bitmap.h>
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/Bitmap.h>
 #include <LibThread/BackgroundAction.h>
 #include <dirent.h>
 #include <grp.h>
@@ -44,7 +44,7 @@ ModelIndex FileSystemModel::Node::index(const FileSystemModel& model, int column
 {
     if (!parent)
         return {};
-    for (int row = 0; row < parent->children.size(); ++row) {
+    for (size_t row = 0; row < parent->children.size(); ++row) {
         if (&parent->children[row] == this)
             return model.create_index(row, column, const_cast<Node*>(this));
     }
@@ -169,7 +169,7 @@ ModelIndex FileSystemModel::index(const StringView& path, int column) const
     const Node* node = m_root;
     if (canonical_path.string() == "/")
         return m_root->index(*this, column);
-    for (int i = 0; i < canonical_path.parts().size(); ++i) {
+    for (size_t i = 0; i < canonical_path.parts().size(); ++i) {
         auto& part = canonical_path.parts()[i];
         bool found = false;
         for (auto& child : node->children) {
@@ -318,7 +318,7 @@ ModelIndex FileSystemModel::index(int row, int column, const ModelIndex& parent)
         return {};
     auto& node = this->node(parent);
     const_cast<Node&>(node).reify_if_needed(*this);
-    if (row >= node.children.size())
+    if (static_cast<size_t>(row) >= node.children.size())
         return {};
     return create_index(row, column, &node.children[row]);
 }
@@ -555,6 +555,16 @@ Model::ColumnMetadata FileSystemModel::column_metadata(int column) const
         return { 120, Gfx::TextAlignment::CenterLeft };
     }
     ASSERT_NOT_REACHED();
+}
+
+bool FileSystemModel::accepts_drag(const ModelIndex& index, const StringView& data_type)
+{
+    if (!index.is_valid())
+        return false;
+    if (data_type != "text/uri-list")
+        return false;
+    auto& node = this->node(index);
+    return node.is_directory();
 }
 
 }

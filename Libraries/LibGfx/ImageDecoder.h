@@ -57,7 +57,7 @@ public:
     Size size() const { return m_plugin->size(); }
     int width() const { return size().width(); }
     int height() const { return size().height(); }
-    RefPtr<Gfx::Bitmap> bitmap() const { return m_plugin->bitmap(); }
+    RefPtr<Gfx::Bitmap> bitmap() const;
     void set_volatile() { m_plugin->set_volatile(); }
     [[nodiscard]] bool set_nonvolatile() { return m_plugin->set_nonvolatile(); }
 

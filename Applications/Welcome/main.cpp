@@ -24,94 +24,158 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Optional.h>
 #include <AK/String.h>
+#include <AK/StringBuilder.h>
 #include <AK/Vector.h>
+#include <LibCore/File.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/Label.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/StackWidget.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/PNGLoader.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/Bitmap.h>
+#include <stdio.h>
+#include <unistd.h>
 
+#include "BackgroundWidget.h"
 #include "TextWidget.h"
-
-extern const u8 _binary_background_png_start[];
-extern const u8 _binary_background_png_size;
+#include "UnuncheckableButton.h"
 
 struct ContentPage {
     String menu_name;
     String title;
+    String icon = String::empty();
     Vector<String> content;
 };
 
+Optional<Vector<ContentPage>> parse_welcome_file(const String& path)
+{
+    const auto error = Optional<Vector<ContentPage>>();
+    auto file = Core::File::construct(path);
+
+    if (!file->open(Core::IODevice::ReadOnly))
+        return error;
+
+    Vector<ContentPage> pages;
+    StringBuilder current_output_line;
+    bool started = false;
+    ContentPage current;
+    while (true) {
+        auto buffer = file->read_line(4096);
+        if (buffer.is_null()) {
+            if (file->error()) {
+                file->close();
+                return error;
+            }
+
+            break;
+        }
+
+        auto line = String((char*)buffer.data());
+        if (line.length() > 1)
+            line = line.substring(0, line.length() - 1); // remove newline
+        switch (line[0]) {
+        case '*':
+            dbg() << "menu_item line:\t" << line;
+            if (started)
+                pages.append(current);
+            else
+                started = true;
+
+            current = {};
+            current.menu_name = line.substring(2, line.length() - 2);
+            break;
+        case '$':
+            dbg() << "icon line: \t" << line;
+            current.icon = line.substring(2, line.length() - 2);
+            break;
+        case '>':
+            dbg() << "title line:\t" << line;
+            current.title = line.substring(2, line.length() - 2);
+            break;
+        case '\n':
+            dbg() << "newline";
+
+            if (!current_output_line.to_string().is_empty())
+                current.content.append(current_output_line.to_string());
+            current_output_line.clear();
+            break;
+        case '#':
+            dbg() << "comment line:\t" << line;
+            break;
+        default:
+            dbg() << "content line:\t" << line;
+            if (current_output_line.length() != 0)
+                current_output_line.append(' ');
+            current_output_line.append(line);
+            break;
+        }
+    }
+
+    if (started) {
+        current.content.append(current_output_line.to_string());
+        pages.append(current);
+    }
+
+    file->close();
+    return pages;
+}
+
 int main(int argc, char** argv)
 {
-    Vector<ContentPage> pages = {
-        {
-            "Welcome",
-            "Welcome",
-            {
-                "Welcome to the exciting new world of Serenity, where the year is 1998 and the leading OS vendor has decided to merge their flagship product with a Unix-like kernel.",
-                "Sit back and relax as you take a brief tour of the options available on this screen.",
-                "If you want to explore an option, just click it.",
-            },
-        },
-        {
-            "Register Now",
-            "Register Now!",
-            {
-                "Registering your copy of Serenity opens the doors to full integration of Serenity into your life, your being, and your soul.",
-                "By registering Serenity, you enter into the draw to win a lifetime supply of milk, delivered fresh each day by a mystical horse wearing a full tuxedo.",
-                "To register, simply write your contact details on a piece of paper and hold it up to your monitor.",
-            },
-        },
-        {
-            "Connect to the Internet",
-            "Connect to the Internet",
-            {
-                "On the Internet, you can correspond through electronic mail (e-mail), get the latest news and financial information, and visit Web sites around the world, most of which will make you really angry.",
-                "Serenity includes several internet applications, such as an IRC (Internet relay chat) client, 4chan browser, telnet server, and basic utilities like ping.",
-                "Come chat with us today! How bad can it be?",
-            },
-        },
-        {
-            "Have fun",
-            "Play Some Games!",
-            {
-                "Serenity includes several games built right into the base system. These include the classic game Snake and the anti-productivity mainstay Minesweeper.",
-                "With a little extra effort, you can even play the original id Software hit DOOM, albeit without sound. No sound just means you won't alert your boss, so it's more of a feature than a limitation.",
-            },
-        },
-    };
+    if (pledge("stdio shared_buffer rpath unix cpath fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
 
     GUI::Application app(argc, argv);
 
+    if (pledge("stdio shared_buffer rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
+    if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    unveil(nullptr, nullptr);
+
+    Optional<Vector<ContentPage>> _pages = parse_welcome_file("/res/welcome.txt");
+    if (!_pages.has_value()) {
+        GUI::MessageBox::show("Could not open Welcome file.", "Welcome", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, nullptr);
+        return 1;
+    }
+    auto pages = _pages.value();
+
     auto window = GUI::Window::construct();
-    window->set_title("Welcome to Serenity");
+    window->set_title("Welcome");
     Gfx::Rect window_rect { 0, 0, 640, 360 };
     window_rect.center_within(GUI::Desktop::the().rect());
     window->set_resizable(true);
     window->set_rect(window_rect);
 
-    auto background = GUI::Label::construct();
+    auto background = BackgroundWidget::construct();
     window->set_main_widget(background);
-    background->set_fill_with_background_color(true);
+    background->set_fill_with_background_color(false);
     background->set_layout(make<GUI::VerticalBoxLayout>());
-    background->layout()->set_margins({ 8, 8, 8, 8 });
+    background->layout()->set_margins({ 16, 8, 16, 8 });
     background->layout()->set_spacing(8);
-    background->set_icon(Gfx::load_png_from_memory((const u8*)&_binary_background_png_start, (size_t)&_binary_background_png_size));
     background->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
-    background->set_preferred_size(background->icon()->size());
 
     //
     // header
     //
 
-    auto header = GUI::Label::construct(background.ptr());
-    header->set_font(Gfx::Font::default_bold_font());
-    header->set_text("Welcome to Serenity");
+    auto header = background->add<GUI::Label>();
+    header->set_font(Gfx::Font::load_from_file("/res/fonts/PebbletonBold11.font"));
+    header->set_text("Welcome to SerenityOS!");
     header->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     header->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     header->set_preferred_size(0, 30);
@@ -120,30 +184,44 @@ int main(int argc, char** argv)
     // main section
     //
 
-    auto main_section = GUI::Widget::construct(background.ptr());
+    auto main_section = background->add<GUI::Widget>();
     main_section->set_layout(make<GUI::HorizontalBoxLayout>());
     main_section->layout()->set_margins({ 0, 0, 0, 0 });
     main_section->layout()->set_spacing(8);
     main_section->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
 
-    auto menu = GUI::Widget::construct(main_section.ptr());
+    auto menu = main_section->add<GUI::Widget>();
     menu->set_layout(make<GUI::VerticalBoxLayout>());
     menu->layout()->set_margins({ 0, 0, 0, 0 });
-    menu->layout()->set_spacing(8);
+    menu->layout()->set_spacing(4);
     menu->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    menu->set_preferred_size(200, 0);
+    menu->set_preferred_size(100, 0);
 
-    auto stack = GUI::StackWidget::construct(main_section);
+    auto stack = main_section->add<GUI::StackWidget>();
     stack->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
 
+    bool first = true;
     for (auto& page : pages) {
-        auto content = GUI::Widget::construct(stack.ptr());
+        auto content = stack->add<GUI::Widget>();
         content->set_layout(make<GUI::VerticalBoxLayout>());
         content->layout()->set_margins({ 0, 0, 0, 0 });
         content->layout()->set_spacing(8);
         content->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
 
-        auto content_title = GUI::Label::construct(content);
+        auto title_box = content->add<GUI::Widget>();
+        title_box->set_layout(make<GUI::HorizontalBoxLayout>());
+        title_box->layout()->set_spacing(4);
+        title_box->set_preferred_size(0, 16);
+        title_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+
+        if (!page.icon.is_empty()) {
+            auto icon = title_box->add<GUI::Label>();
+            icon->set_icon(Gfx::Bitmap::load_from_file(page.icon));
+            icon->set_preferred_size(16, 16);
+            icon->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+        }
+
+        auto content_title = title_box->add<GUI::Label>();
         content_title->set_font(Gfx::Font::default_bold_font());
         content_title->set_text(page.title);
         content_title->set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -151,7 +229,7 @@ int main(int argc, char** argv)
         content_title->set_preferred_size(0, 10);
 
         for (auto& paragraph : page.content) {
-            auto content_text = TextWidget::construct(content);
+            auto content_text = content->add<TextWidget>();
             content_text->set_font(Gfx::Font::default_font());
             content_text->set_text(paragraph);
             content_text->set_text_alignment(Gfx::TextAlignment::TopLeft);
@@ -159,16 +237,24 @@ int main(int argc, char** argv)
             content_text->wrap_and_set_height();
         }
 
-        auto menu_option = GUI::Button::construct(menu);
+        auto menu_option = menu->add<UnuncheckableButton>();
         menu_option->set_font(Gfx::Font::default_font());
         menu_option->set_text(page.menu_name);
         menu_option->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         menu_option->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
         menu_option->set_preferred_size(0, 20);
+        menu_option->set_checkable(true);
+        menu_option->set_exclusive(true);
+
+        if (first)
+            menu_option->set_checked(true);
+
         menu_option->on_click = [content = content.ptr(), &stack](auto&) {
             stack->set_active_widget(content);
             content->invalidate_layout();
         };
+
+        first = false;
     }
 
     window->show();

@@ -28,7 +28,8 @@
 #include <AK/JsonObject.h>
 #include <AK/NeverDestroyed.h>
 #include <AK/SharedBuffer.h>
-#include <LibGfx/Bitmap.h>
+#include <LibCore/EventLoop.h>
+#include <LibCore/MimeData.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Event.h>
@@ -36,6 +37,7 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGUI/WindowServerConnection.h>
+#include <LibGfx/Bitmap.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -188,7 +190,7 @@ void Window::event(Core::Event& event)
         if (!m_main_widget)
             return;
         auto result = m_main_widget->hit_test(drop_event.position());
-        auto local_event = make<DropEvent>(result.local_position, drop_event.text(), drop_event.data_type(), drop_event.data());
+        auto local_event = make<DropEvent>(result.local_position, drop_event.text(), drop_event.mime_data());
         ASSERT(result.widget);
         return result.widget->dispatch_event(*local_event, this);
     }
@@ -319,6 +321,16 @@ void Window::event(Core::Event& event)
     if (event.type() > Event::__Begin_WM_Events && event.type() < Event::__End_WM_Events)
         return wm_event(static_cast<WMEvent&>(event));
 
+    if (event.type() == Event::DragMove) {
+        if (!m_main_widget)
+            return;
+        auto& drag_event = static_cast<DragEvent&>(event);
+        auto result = m_main_widget->hit_test(drag_event.position());
+        auto local_event = make<DragEvent>(static_cast<Event::Type>(drag_event.type()), result.local_position, drag_event.data_type());
+        ASSERT(result.widget);
+        return result.widget->dispatch_event(*local_event, this);
+    }
+
     Core::Object::event(event);
 }
 
@@ -329,7 +341,14 @@ bool Window::is_visible() const
 
 void Window::update()
 {
-    update({ 0, 0, width(), height() });
+    auto rect = this->rect();
+    update({ 0, 0, rect.width(), rect.height() });
+}
+
+void Window::force_update()
+{
+    auto rect = this->rect();
+    WindowServerConnection::the().post_message(Messages::WindowServer::InvalidateRect(m_window_id, { { 0, 0, rect.width(), rect.height() } }, true));
 }
 
 void Window::update(const Gfx::Rect& a_rect)
@@ -354,7 +373,7 @@ void Window::update(const Gfx::Rect& a_rect)
             Vector<Gfx::Rect> rects_to_send;
             for (auto& r : rects)
                 rects_to_send.append(r);
-            WindowServerConnection::the().post_message(Messages::WindowServer::InvalidateRect(m_window_id, rects_to_send));
+            WindowServerConnection::the().post_message(Messages::WindowServer::InvalidateRect(m_window_id, rects_to_send, false));
         });
     }
     m_pending_paint_event_rects.append(a_rect);
@@ -482,7 +501,7 @@ void Window::flip(const Vector<Gfx::Rect, 32>& dirty_rects)
     m_back_bitmap->shared_buffer()->set_volatile();
 }
 
-NonnullRefPtr<Gfx::Bitmap> Window::create_shared_bitmap(Gfx::Bitmap::Format format, const Gfx::Size& size)
+NonnullRefPtr<Gfx::Bitmap> Window::create_shared_bitmap(Gfx::BitmapFormat format, const Gfx::Size& size)
 {
     ASSERT(WindowServerConnection::the().server_pid());
     ASSERT(!size.is_empty());
@@ -496,7 +515,7 @@ NonnullRefPtr<Gfx::Bitmap> Window::create_shared_bitmap(Gfx::Bitmap::Format form
 
 NonnullRefPtr<Gfx::Bitmap> Window::create_backing_bitmap(const Gfx::Size& size)
 {
-    auto format = m_has_alpha_channel ? Gfx::Bitmap::Format::RGBA32 : Gfx::Bitmap::Format::RGB32;
+    auto format = m_has_alpha_channel ? Gfx::BitmapFormat::RGBA32 : Gfx::BitmapFormat::RGB32;
     return create_shared_bitmap(format, size);
 }
 
@@ -515,7 +534,7 @@ void Window::set_icon(const Gfx::Bitmap* icon)
     if (m_icon == icon)
         return;
 
-    m_icon = create_shared_bitmap(Gfx::Bitmap::Format::RGBA32, icon->size());
+    m_icon = create_shared_bitmap(Gfx::BitmapFormat::RGBA32, icon->size());
     {
         Painter painter(*m_icon);
         painter.blit({ 0, 0 }, *icon, icon->rect());
@@ -614,7 +633,7 @@ void Window::schedule_relayout()
 void Window::update_all_windows(Badge<WindowServerConnection>)
 {
     for (auto* window : *all_windows) {
-        window->update();
+        window->force_update();
     }
 }
 
@@ -649,6 +668,24 @@ Action* Window::action_for_key_event(const KeyEvent& event)
         return IterationDecision::Continue;
     });
     return found_action;
+}
+
+void Window::set_base_size(const Gfx::Size& base_size)
+{
+    if (m_base_size == base_size)
+        return;
+    m_base_size = base_size;
+    if (m_window_id)
+        WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrement>(m_window_id, m_base_size, m_size_increment);
+}
+
+void Window::set_size_increment(const Gfx::Size& size_increment)
+{
+    if (m_size_increment == size_increment)
+        return;
+    m_size_increment = size_increment;
+    if (m_window_id)
+        WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrement>(m_window_id, m_base_size, m_size_increment);
 }
 
 }

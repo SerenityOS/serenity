@@ -24,12 +24,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Badge.h>
 #include <AK/IDAllocator.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/Time.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/LocalServer.h>
 #include <LibCore/LocalSocket.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
@@ -53,13 +55,29 @@ namespace Core {
 
 class RPCClient;
 
+struct EventLoopTimer {
+    int timer_id { 0 };
+    int interval { 0 };
+    timeval fire_time { 0, 0 };
+    bool should_reload { false };
+    TimerShouldFireWhenNotVisible fire_when_not_visible { TimerShouldFireWhenNotVisible::No };
+    WeakPtr<Object> owner;
+
+    void reload(const timeval& now);
+    bool has_expired(const timeval& now) const;
+};
+
+struct EventLoop::Private {
+    LibThread::Lock lock;
+};
+
 static EventLoop* s_main_event_loop;
 static Vector<EventLoop*>* s_event_loop_stack;
 static IDAllocator s_id_allocator;
-HashMap<int, NonnullOwnPtr<EventLoop::EventLoopTimer>>* EventLoop::s_timers;
-HashTable<Notifier*>* EventLoop::s_notifiers;
+static HashMap<int, NonnullOwnPtr<EventLoopTimer>>* s_timers;
+static HashTable<Notifier*>* s_notifiers;
 int EventLoop::s_wake_pipe_fds[2];
-RefPtr<LocalServer> EventLoop::s_rpc_server;
+static RefPtr<LocalServer> s_rpc_server;
 HashMap<int, RefPtr<RPCClient>> s_rpc_clients;
 
 class RPCClient : public Object {
@@ -72,7 +90,7 @@ public:
         s_rpc_clients.set(m_client_id, this);
         add_child(*m_socket);
         m_socket->on_ready_to_read = [this] {
-            i32 length;
+            u32 length;
             int nread = m_socket->read((u8*)&length, sizeof(length));
             if (nread == 0) {
                 dbg() << "RPC client disconnected";
@@ -99,7 +117,7 @@ public:
     void send_response(const JsonObject& response)
     {
         auto serialized = response.to_string();
-        i32 length = serialized.length();
+        u32 length = serialized.length();
         m_socket->write((const u8*)&length, sizeof(length));
         m_socket->write(serialized);
     }
@@ -161,10 +179,11 @@ private:
 };
 
 EventLoop::EventLoop()
+    : m_private(make<Private>())
 {
     if (!s_event_loop_stack) {
         s_event_loop_stack = new Vector<EventLoop*>;
-        s_timers = new HashMap<int, NonnullOwnPtr<EventLoop::EventLoopTimer>>;
+        s_timers = new HashMap<int, NonnullOwnPtr<EventLoopTimer>>;
         s_notifiers = new HashTable<Notifier*>;
     }
 
@@ -273,11 +292,11 @@ void EventLoop::pump(WaitMode mode)
 
     decltype(m_queued_events) events;
     {
-        LOCKER(m_lock);
+        LOCKER(m_private->lock);
         events = move(m_queued_events);
     }
 
-    for (int i = 0; i < events.size(); ++i) {
+    for (size_t i = 0; i < events.size(); ++i) {
         auto& queued_event = events.at(i);
 #ifndef __clang__
         ASSERT(queued_event.event);
@@ -307,7 +326,7 @@ void EventLoop::pump(WaitMode mode)
         }
 
         if (m_exit_requested) {
-            LOCKER(m_lock);
+            LOCKER(m_private->lock);
 #ifdef CEVENTLOOP_DEBUG
             dbg() << "Core::EventLoop: Exit requested. Rejigging " << (events.size() - i) << " events.";
 #endif
@@ -324,11 +343,11 @@ void EventLoop::pump(WaitMode mode)
 
 void EventLoop::post_event(Object& receiver, NonnullOwnPtr<Event>&& event)
 {
-    LOCKER(m_lock);
+    LOCKER(m_private->lock);
 #ifdef CEVENTLOOP_DEBUG
     dbg() << "Core::EventLoop::post_event: {" << m_queued_events.size() << "} << receiver=" << receiver << ", event=" << event;
 #endif
-    m_queued_events.append({ receiver.make_weak_ptr(), move(event) });
+    m_queued_events.empend(receiver, move(event));
 }
 
 void EventLoop::wait_for_event(WaitMode mode)
@@ -359,7 +378,7 @@ void EventLoop::wait_for_event(WaitMode mode)
 
     bool queued_events_is_empty;
     {
-        LOCKER(m_lock);
+        LOCKER(m_private->lock);
         queued_events_is_empty = m_queued_events.is_empty();
     }
 
@@ -433,12 +452,12 @@ void EventLoop::wait_for_event(WaitMode mode)
     }
 }
 
-bool EventLoop::EventLoopTimer::has_expired(const timeval& now) const
+bool EventLoopTimer::has_expired(const timeval& now) const
 {
     return now.tv_sec > fire_time.tv_sec || (now.tv_sec == fire_time.tv_sec && now.tv_usec >= fire_time.tv_usec);
 }
 
-void EventLoop::EventLoopTimer::reload(const timeval& now)
+void EventLoopTimer::reload(const timeval& now)
 {
     fire_time = now;
     fire_time.tv_sec += interval / 1000;
@@ -507,6 +526,22 @@ void EventLoop::wake()
         perror("EventLoop::wake: write");
         ASSERT_NOT_REACHED();
     }
+}
+
+EventLoop::QueuedEvent::QueuedEvent(Object& receiver, NonnullOwnPtr<Event> event)
+    : receiver(receiver.make_weak_ptr())
+    , event(move(event))
+{
+}
+
+EventLoop::QueuedEvent::QueuedEvent(QueuedEvent&& other)
+    : receiver(other.receiver)
+    , event(move(other.event))
+{
+}
+
+EventLoop::QueuedEvent::~QueuedEvent()
+{
 }
 
 }

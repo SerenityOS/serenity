@@ -32,7 +32,9 @@
 #include <Kernel/Net/EthernetFrameHeader.h>
 #include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/NetworkAdapter.h>
-#include <Kernel/StdLib.h>
+#include <LibBareMetal/StdLib.h>
+
+namespace Kernel {
 
 static Lockable<HashTable<NetworkAdapter*>>& all_adapters()
 {
@@ -192,4 +194,6 @@ void NetworkAdapter::set_interface_name(const StringView& basename)
     builder.append(basename);
     builder.append('0');
     m_name = builder.to_string();
+}
+
 }

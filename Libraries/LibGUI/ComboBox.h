@@ -26,13 +26,9 @@
 
 #pragma once
 
-#include <LibGUI/ListView.h>
 #include <LibGUI/Widget.h>
 
 namespace GUI {
-
-class Button;
-class TextEditor;
 
 class ComboBox : public Widget {
     C_OBJECT(ComboBox)
@@ -46,25 +42,25 @@ public:
     void close();
     void select_all();
 
-    Model* model() { return m_list_view->model(); }
-    const Model* model() const { return m_list_view->model(); }
+    Model* model();
+    const Model* model() const;
     void set_model(NonnullRefPtr<Model>);
 
     bool only_allow_values_from_model() const { return m_only_allow_values_from_model; }
     void set_only_allow_values_from_model(bool);
 
-    int model_column() const { return m_list_view->model_column(); }
-    void set_model_column(int column) { m_list_view->set_model_column(column); }
+    int model_column() const;
+    void set_model_column(int);
 
     Function<void(const String&, const ModelIndex&)> on_change;
     Function<void()> on_return_pressed;
 
 protected:
-    explicit ComboBox(Widget* parent = nullptr);
+    ComboBox();
     virtual void resize_event(ResizeEvent&) override;
 
 private:
-    RefPtr<TextEditor> m_editor;
+    RefPtr<TextBox> m_editor;
     RefPtr<Button> m_open_button;
     RefPtr<Window> m_list_window;
     RefPtr<ListView> m_list_view;

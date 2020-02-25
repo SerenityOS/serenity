@@ -31,6 +31,7 @@
 #include <AK/FixedArray.h>
 #include <AK/Noncopyable.h>
 #include <AK/Queue.h>
+#include <LibAudio/Buffer.h>
 
 class AudioEngine {
     AK_MAKE_NONCOPYABLE(AudioEngine)
@@ -40,7 +41,7 @@ public:
     ~AudioEngine();
 
     const FixedArray<Sample>& buffer() const { return *m_front_buffer_ptr; }
-    void reset();
+    const Vector<Audio::Sample>& recorded_sample() const { return m_recorded_sample; }
     Switch roll_note(int y, int x) const { return m_roll_notes[y][x]; }
     int current_column() const { return m_current_column; }
     int octave() const { return m_octave; }
@@ -55,6 +56,8 @@ public:
     int tick() const { return m_tick; }
 
     void fill_buffer(FixedArray<Sample>& buffer);
+    void reset();
+    String set_recorded_sample(const StringView& path);
     void set_note(int note, Switch);
     void set_note_current_octave(int note, Switch);
     void set_roll_note(int y, int x, Switch);
@@ -68,11 +71,12 @@ public:
     void set_delay(int delay);
 
 private:
-    double sine(size_t note);
-    double saw(size_t note);
-    double square(size_t note);
-    double triangle(size_t note);
-    double noise() const;
+    Audio::Sample sine(size_t note);
+    Audio::Sample saw(size_t note);
+    Audio::Sample square(size_t note);
+    Audio::Sample triangle(size_t note);
+    Audio::Sample noise() const;
+    Audio::Sample recorded_sample(size_t note);
 
     void update_roll();
     void set_notes_from_roll();
@@ -85,6 +89,8 @@ private:
     FixedArray<Sample>* m_back_buffer_ptr { &m_back_buffer };
 
     Queue<NonnullOwnPtr<FixedArray<Sample>>> m_delay_buffers;
+
+    Vector<Audio::Sample> m_recorded_sample;
 
     u8 m_note_on[note_count] { 0 };
     double m_power[note_count] { 0 };

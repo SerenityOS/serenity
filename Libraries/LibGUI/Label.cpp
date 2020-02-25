@@ -24,22 +24,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGfx/Bitmap.h>
-#include <LibGfx/Palette.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/Bitmap.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/Palette.h>
 
 namespace GUI {
 
-Label::Label(Widget* parent)
-    : Frame(parent)
+Label::Label(const StringView& text)
+    : m_text(text)
 {
-}
-
-Label::Label(const StringView& text, Widget* parent)
-    : Frame(parent)
-    , m_text(text)
-{
+    set_frame_thickness(0);
+    set_frame_shadow(Gfx::FrameShadow::Plain);
+    set_frame_shape(Gfx::FrameShape::NoFrame);
 }
 
 Label::~Label()

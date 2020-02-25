@@ -40,6 +40,8 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/errno_numbers.h>
 
+namespace Kernel {
+
 NonnullRefPtr<FileDescription> FileDescription::create(Custody& custody)
 {
     auto description = adopt(*new FileDescription(InodeFile::create(custody.inode())));
@@ -170,7 +172,6 @@ ByteBuffer FileDescription::read_entire_file()
     return m_inode->read_entire(this);
 }
 
-
 ssize_t FileDescription::get_dir_entries(u8* buffer, ssize_t size)
 {
     LOCKER(m_lock);
@@ -181,7 +182,10 @@ ssize_t FileDescription::get_dir_entries(u8* buffer, ssize_t size)
     if (!metadata.is_valid())
         return -EIO;
 
-    int size_to_allocate = max(PAGE_SIZE, metadata.size);
+    if (size < 0)
+        return -EINVAL;
+
+    size_t size_to_allocate = max(PAGE_SIZE, metadata.size);
 
     auto temp_buffer = ByteBuffer::create_uninitialized(size_to_allocate);
     BufferStream stream(temp_buffer);
@@ -194,8 +198,8 @@ ssize_t FileDescription::get_dir_entries(u8* buffer, ssize_t size)
     });
     stream.snip();
 
-    if (size < temp_buffer.size())
-        return -1;
+    if (static_cast<size_t>(size) < temp_buffer.size())
+        return -EINVAL;
 
     copy_to_user(buffer, temp_buffer.data(), temp_buffer.size());
     return stream.offset();
@@ -339,4 +343,6 @@ KResult FileDescription::chown(uid_t uid, gid_t gid)
 {
     LOCKER(m_lock);
     return m_file->chown(uid, gid);
+}
+
 }

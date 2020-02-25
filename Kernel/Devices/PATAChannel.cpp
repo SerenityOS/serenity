@@ -27,10 +27,13 @@
 #include "PATADiskDevice.h"
 #include <AK/ByteBuffer.h>
 #include <Kernel/Devices/PATAChannel.h>
+#include <Kernel/Devices/PIT.h>
 #include <Kernel/FileSystem/ProcFS.h>
-#include <Kernel/IO.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <LibBareMetal/IO.h>
+
+namespace Kernel {
 
 #define PATA_PRIMARY_IRQ 14
 #define PATA_SECONDARY_IRQ 15
@@ -114,11 +117,18 @@ static Lock& s_lock()
 
 OwnPtr<PATAChannel> PATAChannel::create(ChannelType type, bool force_pio)
 {
-    return make<PATAChannel>(type, force_pio);
+    PCI::Address pci_address;
+    PCI::enumerate_all([&](const PCI::Address& address, PCI::ID id) {
+        if (PCI::get_class(address) == PCI_Mass_Storage_Class && PCI::get_subclass(address) == PCI_IDE_Controller_Subclass) {
+            pci_address = address;
+            kprintf("PATAChannel: PATA Controller found! id=%w:%w\n", id.vendor_id, id.device_id);
+        }
+    });
+    return make<PATAChannel>(pci_address, type, force_pio);
 }
 
-PATAChannel::PATAChannel(ChannelType type, bool force_pio)
-    : IRQHandler((type == ChannelType::Primary ? PATA_PRIMARY_IRQ : PATA_SECONDARY_IRQ))
+PATAChannel::PATAChannel(PCI::Address address, ChannelType type, bool force_pio)
+    : PCI::Device(address, (type == ChannelType::Primary ? PATA_PRIMARY_IRQ : PATA_SECONDARY_IRQ))
     , m_channel_number((type == ChannelType::Primary ? 0 : 1))
     , m_io_base((type == ChannelType::Primary ? 0x1F0 : 0x170))
     , m_control_base((type == ChannelType::Primary ? 0x3f6 : 0x376))
@@ -140,17 +150,6 @@ PATAChannel::~PATAChannel()
 
 void PATAChannel::initialize(bool force_pio)
 {
-    PCI::enumerate_all([this](const PCI::Address& address, PCI::ID id) {
-        if (PCI::get_class(address) == PCI_Mass_Storage_Class && PCI::get_subclass(address) == PCI_IDE_Controller_Subclass) {
-            m_pci_address = address;
-            kprintf("PATAChannel: PATA Controller found! id=%w:%w\n", id.vendor_id, id.device_id);
-        }
-    });
-
-    if (m_pci_address.is_null()) {
-        kprintf("PATAChannel: PCI address was null; can not set up DMA\n");
-        return;
-    }
 
     if (force_pio) {
         kprintf("PATAChannel: Requested to force PIO mode; not setting up DMA\n");
@@ -158,9 +157,9 @@ void PATAChannel::initialize(bool force_pio)
     }
 
     // Let's try to set up DMA transfers.
-    PCI::enable_bus_mastering(m_pci_address);
+    PCI::enable_bus_mastering(pci_address());
     prdt().end_of_table = 0x8000;
-    m_bus_master_base = PCI::get_BAR4(m_pci_address) & 0xfffc;
+    m_bus_master_base = PCI::get_BAR4(pci_address()) & 0xfffc;
     m_dma_buffer_page = MM.allocate_supervisor_physical_page();
     kprintf("PATAChannel: Bus master IDE: I/O @ %x\n", m_bus_master_base);
 }
@@ -182,11 +181,11 @@ void PATAChannel::wait_for_irq()
 {
     cli();
     enable_irq();
-    current->wait_on(m_irq_queue);
+    Thread::current->wait_on(m_irq_queue);
     disable_irq();
 }
 
-void PATAChannel::handle_irq()
+void PATAChannel::handle_irq(RegisterState&)
 {
     u8 status = IO::in8(m_io_base + ATA_REG_STATUS);
     if (status & ATA_SR_ERR) {
@@ -277,8 +276,8 @@ bool PATAChannel::ata_read_sectors_with_dma(u32 lba, u16 count, u8* outbuf, bool
     LOCKER(s_lock());
 #ifdef PATA_DEBUG
     kprintf("%s(%u): PATAChannel::ata_read_sectors_with_dma (%u x%u) -> %p\n",
-        current->process().name().characters(),
-        current->pid(), lba, count, outbuf);
+        Process::current->name().characters(),
+        Process::current->pid(), lba, count, outbuf);
 #endif
 
     prdt().offset = m_dma_buffer_page->paddr();
@@ -350,8 +349,8 @@ bool PATAChannel::ata_write_sectors_with_dma(u32 lba, u16 count, const u8* inbuf
     LOCKER(s_lock());
 #ifdef PATA_DEBUG
     kprintf("%s(%u): PATAChannel::ata_write_sectors_with_dma (%u x%u) <- %p\n",
-        current->process().name().characters(),
-        current->pid(), lba, count, inbuf);
+        Process::current->name().characters(),
+        Process::current->pid(), lba, count, inbuf);
 #endif
 
     prdt().offset = m_dma_buffer_page->paddr();
@@ -421,8 +420,8 @@ bool PATAChannel::ata_read_sectors(u32 start_sector, u16 count, u8* outbuf, bool
     LOCKER(s_lock());
 #ifdef PATA_DEBUG
     kprintf("%s(%u): PATAChannel::ata_read_sectors request (%u sector(s) @ %u into %p)\n",
-        current->process().name().characters(),
-        current->pid(),
+        Process::current->name().characters(),
+        Process::current->pid(),
         count,
         start_sector,
         outbuf);
@@ -479,8 +478,8 @@ bool PATAChannel::ata_write_sectors(u32 start_sector, u16 count, const u8* inbuf
     LOCKER(s_lock());
 #ifdef PATA_DEBUG
     kprintf("%s(%u): PATAChannel::ata_write_sectors request (%u sector(s) @ %u)\n",
-        current->process().name().characters(),
-        current->pid(),
+        Process::current->name().characters(),
+        Process::current->pid(),
         count,
         start_sector);
 #endif
@@ -532,4 +531,6 @@ bool PATAChannel::ata_write_sectors(u32 start_sector, u16 count, const u8* inbuf
     ASSERT(!(status & ATA_SR_BSY));
 
     return !m_device_error;
+}
+
 }

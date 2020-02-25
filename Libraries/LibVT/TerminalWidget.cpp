@@ -29,8 +29,9 @@
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <AK/Utf8View.h>
 #include <Kernel/KeyCode.h>
-#include <LibGfx/Font.h>
+#include <LibCore/MimeData.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
@@ -38,6 +39,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Font.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -87,14 +89,10 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
     , m_config(move(config))
 {
     set_pty_master_fd(ptm_fd);
-    m_cursor_blink_timer = Core::Timer::construct();
-    m_visual_beep_timer = Core::Timer::construct();
+    m_cursor_blink_timer = add<Core::Timer>();
+    m_visual_beep_timer = add<Core::Timer>();
 
-    set_frame_shape(Gfx::FrameShape::Container);
-    set_frame_shadow(Gfx::FrameShadow::Sunken);
-    set_frame_thickness(2);
-
-    m_scrollbar = GUI::ScrollBar::construct(Orientation::Vertical, this);
+    m_scrollbar = add<GUI::ScrollBar>(Orientation::Vertical);
     m_scrollbar->set_relative_rect(0, 0, 16, 0);
     m_scrollbar->on_change = [this](int) {
         force_repaint();
@@ -698,21 +696,23 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
 
 void TerminalWidget::drop_event(GUI::DropEvent& event)
 {
-    if (event.data_type() == "text") {
+    if (event.mime_data().has_text()) {
         event.accept();
-        write(m_ptm_fd, event.data().characters(), event.data().length());
-    } else if (event.data_type() == "url-list") {
+        auto text = event.mime_data().text();
+        write(m_ptm_fd, text.characters(), text.length());
+    } else if (event.mime_data().has_urls()) {
         event.accept();
-        auto lines = event.data().split('\n');
+        auto urls = event.mime_data().urls();
         bool first = true;
-        for (auto& line : lines) {
-            if (!first)
+        for (auto& url : event.mime_data().urls()) {
+            if (!first) {
                 write(m_ptm_fd, " ", 1);
-            first = false;
-
-            if (line.starts_with("file://"))
-                line = line.substring(7, line.length() - 7);
-            write(m_ptm_fd, line.characters(), line.length());
+                first = false;
+            }
+            if (url.protocol() == "file")
+                write(m_ptm_fd, url.path().characters(), url.path().length());
+            else
+                write(m_ptm_fd, url.to_string().characters(), url.to_string().length());
         }
     }
 }

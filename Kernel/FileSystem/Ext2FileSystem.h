@@ -27,15 +27,18 @@
 #pragma once
 
 #include <AK/Bitmap.h>
-#include <Kernel/KBuffer.h>
+#include <AK/HashMap.h>
 #include <Kernel/FileSystem/DiskBackedFileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/ext2_fs.h>
+#include <Kernel/KBuffer.h>
 #include <Kernel/UnixTypes.h>
 
 struct ext2_group_desc;
 struct ext2_inode;
 struct ext2_super_block;
+
+namespace Kernel {
 
 class Ext2FS;
 
@@ -46,8 +49,8 @@ public:
     virtual ~Ext2FSInode() override;
 
     size_t size() const { return m_raw_inode.i_size; }
-    bool is_symlink() const { return ::is_symlink(m_raw_inode.i_mode); }
-    bool is_directory() const { return ::is_directory(m_raw_inode.i_mode); }
+    bool is_symlink() const { return Kernel::is_symlink(m_raw_inode.i_mode); }
+    bool is_directory() const { return Kernel::is_directory(m_raw_inode.i_mode); }
 
     // ^Inode (RefCounted magic)
     virtual void one_ref_left() override;
@@ -132,11 +135,12 @@ private:
 
     BlockIndex first_block_index() const;
     InodeIndex find_a_free_inode(GroupIndex preferred_group, off_t expected_size);
-    Vector<BlockIndex> allocate_blocks(GroupIndex preferred_group_index, int count);
+    Vector<BlockIndex> allocate_blocks(GroupIndex preferred_group_index, size_t count);
     BlockIndex allocate_block(GroupIndex preferred_group_index);
     GroupIndex group_index_from_inode(InodeIndex) const;
     GroupIndex group_index_from_block_index(BlockIndex) const;
 
+    Vector<BlockIndex> block_list_for_inode_impl(const ext2_inode&, bool include_block_list_blocks = false) const;
     Vector<BlockIndex> block_list_for_inode(const ext2_inode&, bool include_block_list_blocks = false) const;
     bool write_block_list_for_inode(InodeIndex, ext2_inode&, const Vector<BlockIndex>&);
 
@@ -171,7 +175,8 @@ private:
         CachedBitmap(BlockIndex bi, KBuffer&& buf)
             : bitmap_block_index(bi)
             , buffer(move(buf))
-        {}
+        {
+        }
         BlockIndex bitmap_block_index { 0 };
         bool dirty { false };
         KBuffer buffer;
@@ -191,4 +196,6 @@ inline Ext2FS& Ext2FSInode::fs()
 inline const Ext2FS& Ext2FSInode::fs() const
 {
     return static_cast<const Ext2FS&>(Inode::fs());
+}
+
 }

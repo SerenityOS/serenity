@@ -31,10 +31,7 @@
 #include <AK/JsonValue.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
-
-namespace GUI {
-class Model;
-}
+#include <LibGUI/Forward.h>
 
 class ProfileModel;
 
@@ -66,7 +63,7 @@ public:
 
     ProfileNode& find_or_create_child(const String& symbol, u32 address, u32 offset, u64 timestamp)
     {
-        for (int i = 0; i < m_children.size(); ++i) {
+        for (size_t i = 0; i < m_children.size(); ++i) {
             auto& child = m_children[i];
             if (child->symbol() == symbol) {
                 return child;
@@ -104,7 +101,6 @@ private:
 
 class Profile {
 public:
-    static OwnPtr<Profile> load_from_file(const StringView& path);
     static OwnPtr<Profile> load_from_perfcore_file(const StringView& path);
     ~Profile();
 

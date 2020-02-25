@@ -24,6 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Badge.h>
+#include <AK/SharedBuffer.h>
 #include <LibGfx/Palette.h>
 
 namespace Gfx {
@@ -71,6 +73,15 @@ void Palette::set_color(ColorRole role, Color color)
         m_impl = m_impl->clone();
     auto& theme = const_cast<SystemTheme&>(impl().theme());
     theme.color[(int)role] = color;
+}
+
+PaletteImpl::~PaletteImpl()
+{
+}
+
+void PaletteImpl::replace_internal_buffer(Badge<GUI::Application>, SharedBuffer& buffer)
+{
+    m_theme_buffer = buffer;
 }
 
 }

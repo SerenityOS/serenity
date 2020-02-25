@@ -28,16 +28,22 @@
 #include <AK/StringBuilder.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/KSyms.h>
 #include <Kernel/Process.h>
 #include <Kernel/Profiling.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <Kernel/VM/PageDirectory.h>
 #include <LibC/signal_numbers.h>
 #include <LibELF/ELFLoader.h>
 
 //#define SIGNAL_DEBUG
 //#define THREAD_DEBUG
+
+namespace Kernel {
+
+Thread* Thread::current;
 
 static FPUState s_clean_fpu_state;
 
@@ -88,7 +94,7 @@ Thread::Thread(Process& process)
 #endif
     set_default_signal_dispositions();
     m_fpu_state = (FPUState*)kmalloc_aligned(sizeof(FPUState), 16);
-    memcpy(m_fpu_state, &s_clean_fpu_state, sizeof(FPUState));
+    reset_fpu_state();
     memset(&m_tss, 0, sizeof(m_tss));
     m_tss.iomapbase = sizeof(TSS32);
 
@@ -230,7 +236,7 @@ u64 Thread::sleep(u32 ticks)
 {
     ASSERT(state() == Thread::Running);
     u64 wakeup_time = g_uptime + ticks;
-    auto ret = current->block<Thread::SleepBlocker>(wakeup_time);
+    auto ret = Thread::current->block<Thread::SleepBlocker>(wakeup_time);
     if (wakeup_time > g_uptime) {
         ASSERT(ret != Thread::BlockResult::WokeNormally);
     }
@@ -240,7 +246,7 @@ u64 Thread::sleep(u32 ticks)
 u64 Thread::sleep_until(u64 wakeup_time)
 {
     ASSERT(state() == Thread::Running);
-    auto ret = current->block<Thread::SleepBlocker>(wakeup_time);
+    auto ret = Thread::current->block<Thread::SleepBlocker>(wakeup_time);
     if (wakeup_time > g_uptime)
         ASSERT(ret != Thread::BlockResult::WokeNormally);
     return wakeup_time;
@@ -568,8 +574,8 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
 
     // We now place the thread state on the userspace stack.
     // Note that when we are in the kernel (ie. blocking) we cannot use the
-    // tss, as that will contain kernel state; instead, we use a RegisterDump.
-    // Conversely, when the thread isn't blocking the RegisterDump may not be
+    // tss, as that will contain kernel state; instead, we use a RegisterState.
+    // Conversely, when the thread isn't blocking the RegisterState may not be
     // valid (fork, exec etc) but the tss will, so we use that instead.
     if (!in_kernel()) {
         u32* stack = &m_tss.esp;
@@ -612,12 +618,12 @@ void Thread::push_value_on_stack(uintptr_t value)
     copy_to_user(stack_ptr, &value);
 }
 
-RegisterDump& Thread::get_register_dump_from_stack()
+RegisterState& Thread::get_register_dump_from_stack()
 {
     // The userspace registers should be stored at the top of the stack
     // We have to subtract 2 because the processor decrements the kernel
     // stack before pushing the args.
-    return *(RegisterDump*)(kernel_stack_top() - sizeof(RegisterDump));
+    return *(RegisterState*)(kernel_stack_top() - sizeof(RegisterState));
 }
 
 u32 Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment)
@@ -638,7 +644,7 @@ u32 Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vecto
 
     SmapDisabler disabler;
 
-    for (int i = 0; i < arguments.size(); ++i) {
+    for (size_t i = 0; i < arguments.size(); ++i) {
         argv[i] = bufptr;
         memcpy(bufptr, arguments[i].characters(), arguments[i].length());
         bufptr += arguments[i].length();
@@ -646,7 +652,7 @@ u32 Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vecto
     }
     argv[arguments.size()] = nullptr;
 
-    for (int i = 0; i < environment.size(); ++i) {
+    for (size_t i = 0; i < environment.size(); ++i) {
         env[i] = bufptr;
         memcpy(bufptr, environment[i].characters(), environment[i].length());
         bufptr += environment[i].length();
@@ -807,7 +813,7 @@ Vector<uintptr_t> Thread::raw_backtrace(uintptr_t ebp) const
     ProcessPagingScope paging_scope(process);
     Vector<uintptr_t, Profiling::max_stack_frame_count> backtrace;
     backtrace.append(ebp);
-    for (uintptr_t* stack_ptr = (uintptr_t*)ebp; process.validate_read_from_kernel(VirtualAddress(stack_ptr), sizeof(uintptr_t) * 2); stack_ptr = (uintptr_t*)*stack_ptr) {
+    for (uintptr_t* stack_ptr = (uintptr_t*)ebp; process.validate_read_from_kernel(VirtualAddress(stack_ptr), sizeof(uintptr_t) * 2) && MM.can_read_without_faulting(process, VirtualAddress(stack_ptr), sizeof(uintptr_t) * 2); stack_ptr = (uintptr_t*)*stack_ptr) {
         uintptr_t retaddr = stack_ptr[1];
         backtrace.append(retaddr);
         if (backtrace.size() == Profiling::max_stack_frame_count)
@@ -871,4 +877,11 @@ Thread* Thread::from_tid(int tid)
         return IterationDecision::Continue;
     });
     return found_thread;
+}
+
+void Thread::reset_fpu_state()
+{
+    memcpy(m_fpu_state, &s_clean_fpu_state, sizeof(FPUState));
+}
+
 }

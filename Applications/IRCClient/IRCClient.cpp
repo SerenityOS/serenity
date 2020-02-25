@@ -33,6 +33,7 @@
 #include "IRCWindowListModel.h"
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/DateTime.h>
 #include <LibCore/Notifier.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -141,7 +142,7 @@ void IRCClient::process_line(ByteBuffer&& line)
     } state
         = Start;
 
-    for (int i = 0; i < line.size(); ++i) {
+    for (size_t i = 0; i < line.size(); ++i) {
         char ch = line[i];
         if (ch == '\r')
             continue;
@@ -240,7 +241,7 @@ void IRCClient::send_whois(const String& nick)
 void IRCClient::handle(const Message& msg)
 {
 #ifdef IRC_DEBUG
-    printf("IRCClient::execute: prefix='%s', command='%s', arguments=%d\n",
+    printf("IRCClient::execute: prefix='%s', command='%s', arguments=%zu\n",
         msg.prefix.characters(),
         msg.command.characters(),
         msg.arguments.size());
@@ -435,7 +436,7 @@ void IRCClient::handle_privmsg_or_notice(const Message& msg, PrivmsgOrNotice typ
 
 IRCQuery* IRCClient::query_with_name(const String& name)
 {
-    return m_queries.get(name).value_or(nullptr);
+    return const_cast<IRCQuery*>(m_queries.get(name).value_or(nullptr));
 }
 
 IRCQuery& IRCClient::ensure_query(const String& name)
@@ -462,7 +463,7 @@ IRCChannel& IRCClient::ensure_channel(const String& name)
 
 void IRCClient::handle_ping(const Message& msg)
 {
-    if (msg.arguments.size() < 0)
+    if (msg.arguments.size() < 1)
         return;
     m_log->add_message(0, "", "Ping? Pong!");
     send_pong(msg.arguments[0]);
@@ -625,16 +626,8 @@ void IRCClient::handle_rpl_topicwhotime(const Message& msg)
     auto setat = msg.arguments[3];
     bool ok;
     time_t setat_time = setat.to_uint(ok);
-    if (ok) {
-        auto* tm = localtime(&setat_time);
-        setat = String::format("%4u-%02u-%02u %02u:%02u:%02u",
-            tm->tm_year + 1900,
-            tm->tm_mon + 1,
-            tm->tm_mday,
-            tm->tm_hour,
-            tm->tm_min,
-            tm->tm_sec);
-    }
+    if (ok)
+        setat = Core::DateTime::from_timestamp(setat_time).to_string();
     ensure_channel(channel_name).add_message(String::format("*** (set by %s at %s)", nick.characters(), setat.characters()), Color::Blue);
 }
 
@@ -653,7 +646,7 @@ void IRCClient::unregister_subwindow(IRCWindow& subwindow)
     if (subwindow.type() == IRCWindow::Server) {
         m_server_subwindow = &subwindow;
     }
-    for (int i = 0; i < m_windows.size(); ++i) {
+    for (size_t i = 0; i < m_windows.size(); ++i) {
         if (m_windows.at(i) == &subwindow) {
             m_windows.remove(i);
             break;

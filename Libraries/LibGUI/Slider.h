@@ -45,12 +45,14 @@ public:
     int value() const { return m_value; }
     int min() const { return m_min; }
     int max() const { return m_max; }
+    int step() const { return m_step; }
 
     void set_range(int min, int max);
     void set_value(int);
 
     void set_min(int min) { set_range(min, max()); }
     void set_max(int max) { set_range(min(), max); }
+    void set_step(int step) { m_step = step; }
 
     void set_knob_size_mode(KnobSizeMode mode) { m_knob_size_mode = mode; }
     KnobSizeMode knob_size_mode() const { return m_knob_size_mode; }
@@ -72,13 +74,13 @@ public:
     Function<void(int)> on_value_changed;
 
 protected:
-    explicit Slider(Widget*);
-    explicit Slider(Orientation, Widget*);
+    explicit Slider(Orientation = Orientation::Vertical);
 
     virtual void paint_event(PaintEvent&) override;
     virtual void mousedown_event(MouseEvent&) override;
     virtual void mousemove_event(MouseEvent&) override;
     virtual void mouseup_event(MouseEvent&) override;
+    virtual void mousewheel_event(MouseEvent&) override;
     virtual void leave_event(Core::Event&) override;
     virtual void change_event(Event&) override;
 
@@ -88,6 +90,7 @@ private:
     int m_value { 0 };
     int m_min { 0 };
     int m_max { 100 };
+    int m_step { 1 };
     bool m_knob_hovered { false };
     bool m_dragging { false };
     int m_drag_origin_value { 0 };
@@ -102,8 +105,8 @@ public:
     virtual ~VerticalSlider() override {}
 
 private:
-    explicit VerticalSlider(Widget* parent)
-        : Slider(Orientation::Vertical, parent)
+    VerticalSlider()
+        : Slider(Orientation::Vertical)
     {
     }
 };
@@ -114,8 +117,8 @@ public:
     virtual ~HorizontalSlider() override {}
 
 private:
-    explicit HorizontalSlider(Widget* parent)
-        : Slider(Orientation::Horizontal, parent)
+    HorizontalSlider()
+        : Slider(Orientation::Horizontal)
     {
     }
 };

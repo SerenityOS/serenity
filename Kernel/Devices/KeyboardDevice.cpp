@@ -25,14 +25,16 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/ByteBuffer.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
-#include <Kernel/Arch/i386/PIC.h>
 #include <Kernel/Devices/KeyboardDevice.h>
-#include <Kernel/IO.h>
 #include <Kernel/TTY/VirtualConsole.h>
+#include <LibBareMetal/IO.h>
 
 //#define KEYBOARD_DEBUG
+
+namespace Kernel {
 
 #define IRQ_KEYBOARD 1
 #define I8042_BUFFER 0x60
@@ -483,7 +485,7 @@ void KeyboardDevice::key_state_changed(u8 raw, bool pressed)
     m_has_e0_prefix = false;
 }
 
-void KeyboardDevice::handle_irq()
+void KeyboardDevice::handle_irq(RegisterState&)
 {
     for (;;) {
         u8 status = IO::in8(I8042_STATUS);
@@ -618,4 +620,6 @@ void KeyboardDevice::set_maps(const char* n_map, const char* n_shift_map, const 
         alt_map[i] = n_alt_map[i];
         altgr_map[i] = n_altgr_map[i];
     }
+}
+
 }

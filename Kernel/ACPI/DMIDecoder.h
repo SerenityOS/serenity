@@ -26,11 +26,14 @@
 
 #pragma once
 
+#include <AK/SinglyLinkedList.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
-#include <Kernel/VM/PhysicalAddress.h>
 #include <Kernel/VM/Region.h>
-#include <Kernel/VM/VirtualAddress.h>
+#include <LibBareMetal/Memory/PhysicalAddress.h>
+#include <LibBareMetal/Memory/VirtualAddress.h>
+
+namespace Kernel {
 
 namespace SMBIOS {
 struct [[gnu::packed]] LegacyEntryPoint32bit
@@ -1418,3 +1421,5 @@ private:
 
     SinglyLinkedList<SMBIOS::TableHeader*> m_smbios_tables;
 };
+
+}

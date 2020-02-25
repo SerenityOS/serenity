@@ -24,10 +24,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "AppletManager.h"
 #include "Compositor.h"
 #include "EventLoop.h"
 #include "Screen.h"
 #include "WindowManager.h"
+#include <AK/SharedBuffer.h>
 #include <LibCore/ConfigFile.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/SystemTheme.h>
@@ -36,7 +38,7 @@
 
 int main(int, char**)
 {
-    if (pledge("stdio video thread shared_buffer accept rpath wpath cpath unix proc exec fattr", nullptr) < 0) {
+    if (pledge("stdio video thread shared_buffer accept rpath wpath cpath unix proc fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -46,20 +48,12 @@ int main(int, char**)
         return 1;
     }
 
-    if (unveil("/etc/passwd", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
     if (unveil("/tmp", "cw") < 0) {
         perror("unveil");
         return 1;
     }
 
-    // FIXME: WindowServer should obviously not hardcode this.
-    //        Instead, we should have a ConfigServer or similar that allows programs
-    //        to get/set user settings over IPC without giving them access to any files.
-    if (unveil("/home/anon/WindowManager.ini", "rwc") < 0) {
+    if (unveil("/etc/WindowServer/WindowServer.ini", "rwc") < 0) {
         perror("unveil");
         return 1;
     }
@@ -79,7 +73,7 @@ int main(int, char**)
         return 1;
     }
 
-    auto wm_config = Core::ConfigFile::get_for_app("WindowManager");
+    auto wm_config = Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini");
     auto theme_name = wm_config->read_entry("Theme", "Name", "Default");
 
     auto theme = Gfx::load_system_theme(String::format("/res/themes/%s.ini", theme_name.characters()));
@@ -89,7 +83,7 @@ int main(int, char**)
 
     WindowServer::EventLoop loop;
 
-    if (pledge("stdio video thread shared_buffer accept rpath wpath cpath proc exec", nullptr) < 0) {
+    if (pledge("stdio video thread shared_buffer accept rpath wpath cpath proc", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -98,6 +92,7 @@ int main(int, char**)
         wm_config->read_num_entry("Screen", "Height", 768));
     WindowServer::Compositor::the();
     auto wm = WindowServer::WindowManager::construct(*palette);
+    auto am = WindowServer::AppletManager::construct();
     auto mm = WindowServer::MenuManager::construct();
 
     if (unveil("/tmp", "") < 0) {
@@ -106,11 +101,6 @@ int main(int, char**)
     }
 
     if (unveil("/dev", "") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/bin", "x") < 0) {
         perror("unveil");
         return 1;
     }

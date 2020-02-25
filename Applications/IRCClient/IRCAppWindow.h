@@ -31,14 +31,9 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 
-namespace GUI {
-class StackWidget;
-class TableView;
-}
-
 class IRCAppWindow : public GUI::Window {
+    C_OBJECT(IRCAppWindow);
 public:
-    IRCAppWindow();
     virtual ~IRCAppWindow() override;
 
     static IRCAppWindow& the();
@@ -46,6 +41,8 @@ public:
     void set_active_window(IRCWindow&);
 
 private:
+    IRCAppWindow();
+
     void setup_client();
     void setup_actions();
     void setup_menus();
@@ -53,8 +50,8 @@ private:
     void update_title();
     void update_part_action();
 
-    IRCWindow& create_window(void* owner, IRCWindow::Type, const String& name);
-    IRCClient m_client;
+    NonnullRefPtr<IRCWindow> create_window(void* owner, IRCWindow::Type, const String& name);
+    NonnullRefPtr<IRCClient> m_client;
     RefPtr<GUI::StackWidget> m_container;
     RefPtr<GUI::TableView> m_window_list;
     RefPtr<GUI::Action> m_join_action;

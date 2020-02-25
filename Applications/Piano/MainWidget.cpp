@@ -30,8 +30,10 @@
 #include "KeysWidget.h"
 #include "KnobsWidget.h"
 #include "RollWidget.h"
+#include "SamplerWidget.h"
 #include "WaveWidget.h"
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/TabWidget.h>
 
 MainWidget::MainWidget(AudioEngine& audio_engine)
     : m_audio_engine(audio_engine)
@@ -41,24 +43,28 @@ MainWidget::MainWidget(AudioEngine& audio_engine)
     layout()->set_margins({ 2, 2, 2, 2 });
     set_fill_with_background_color(true);
 
-    m_wave_widget = WaveWidget::construct(this, audio_engine);
+    m_wave_widget = add<WaveWidget>(audio_engine);
     m_wave_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_wave_widget->set_preferred_size(0, 100);
 
-    m_roll_widget = RollWidget::construct(this, audio_engine);
+    m_tab_widget = add<GUI::TabWidget>();
+    m_roll_widget = m_tab_widget->add_tab<RollWidget>("Piano Roll", audio_engine);
+
     m_roll_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
     m_roll_widget->set_preferred_size(0, 300);
 
-    m_keys_and_knobs_container = GUI::Widget::construct(this);
+    m_tab_widget->add_tab<SamplerWidget>("Sampler", audio_engine);
+
+    m_keys_and_knobs_container = add<GUI::Widget>();
     m_keys_and_knobs_container->set_layout(make<GUI::HorizontalBoxLayout>());
     m_keys_and_knobs_container->layout()->set_spacing(2);
     m_keys_and_knobs_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_keys_and_knobs_container->set_preferred_size(0, 100);
     m_keys_and_knobs_container->set_fill_with_background_color(true);
 
-    m_keys_widget = KeysWidget::construct(m_keys_and_knobs_container, audio_engine);
+    m_keys_widget = m_keys_and_knobs_container->add<KeysWidget>(audio_engine);
 
-    m_knobs_widget = KnobsWidget::construct(m_keys_and_knobs_container, audio_engine, *this);
+    m_knobs_widget = m_keys_and_knobs_container->add<KnobsWidget>(audio_engine, *this);
     m_knobs_widget->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     m_knobs_widget->set_preferred_size(350, 0);
 }

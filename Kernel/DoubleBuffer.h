@@ -30,6 +30,8 @@
 #include <Kernel/KBuffer.h>
 #include <Kernel/Lock.h>
 
+namespace Kernel {
+
 class DoubleBuffer {
 public:
     explicit DoubleBuffer(size_t capacity = 65536);
@@ -62,3 +64,5 @@ private:
     bool m_empty { true };
     mutable Lock m_lock { "DoubleBuffer" };
 };
+
+}

@@ -27,10 +27,13 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
+#include <AK/WeakPtr.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PurgeableVMObject.h>
 
-struct SharedBuffer {
+namespace Kernel {
+
+class SharedBuffer {
 private:
     struct Reference {
         Reference(pid_t pid)
@@ -40,7 +43,7 @@ private:
 
         pid_t pid;
         unsigned count { 0 };
-        Region* region { nullptr };
+        WeakPtr<Region> region;
     };
 
 public:
@@ -83,3 +86,5 @@ public:
 };
 
 Lockable<HashMap<int, NonnullOwnPtr<SharedBuffer>>>& shared_buffers();
+
+}

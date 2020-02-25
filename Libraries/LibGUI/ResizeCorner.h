@@ -34,15 +34,12 @@ public:
     virtual ~ResizeCorner() override;
 
 protected:
-    explicit ResizeCorner(Widget* parent);
+    ResizeCorner();
 
     virtual void paint_event(PaintEvent&) override;
     virtual void mousedown_event(MouseEvent&) override;
     virtual void enter_event(Core::Event&) override;
     virtual void leave_event(Core::Event&) override;
-
-private:
-    RefPtr<Gfx::Bitmap> m_bitmap;
 };
 
 }

@@ -27,17 +27,18 @@
 #pragma once
 
 #include <AK/Assertions.h>
-#include <AK/Types.h>
 #include <AK/Function.h>
 #include <AK/IntrusiveList.h>
+#include <AK/Types.h>
+
+namespace Kernel {
 
 class Process;
 class Thread;
 class WaitQueue;
-struct RegisterDump;
+struct RegisterState;
 struct SchedulerData;
 
-extern Thread* current;
 extern Thread* g_finalizer;
 extern Thread* g_colonel;
 extern WaitQueue* g_finalizer_wait_queue;
@@ -48,7 +49,7 @@ extern SchedulerData* g_scheduler_data;
 class Scheduler {
 public:
     static void initialize();
-    static void timer_tick(RegisterDump&);
+    static void timer_tick(RegisterState&);
     static bool pick_next();
     static void pick_next_and_switch_now();
     static void switch_now();
@@ -74,3 +75,5 @@ public:
 private:
     static void prepare_for_iret_to_new_process();
 };
+
+}

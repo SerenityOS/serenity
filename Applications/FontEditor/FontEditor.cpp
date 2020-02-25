@@ -36,11 +36,11 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/TextBox.h>
+#include <LibGfx/Font.h>
 #include <stdlib.h>
 
-FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edited_font, GUI::Widget* parent)
-    : GUI::Widget(parent)
-    , m_edited_font(move(edited_font))
+FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edited_font)
+    : m_edited_font(move(edited_font))
 {
     set_fill_with_background_color(true);
 
@@ -49,10 +49,10 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edite
     else
         m_path = path;
 
-    m_glyph_map_widget = GlyphMapWidget::construct(*m_edited_font, this);
+    m_glyph_map_widget = add<GlyphMapWidget>(*m_edited_font);
     m_glyph_map_widget->move_to({ 90, 5 });
 
-    m_glyph_editor_widget = GlyphEditorWidget::construct(*m_edited_font, this);
+    m_glyph_editor_widget = add<GlyphEditorWidget>(*m_edited_font);
     m_glyph_editor_widget->move_to({ 5, 5 });
 
     m_ui = make<UI_FontEditorBottom>();

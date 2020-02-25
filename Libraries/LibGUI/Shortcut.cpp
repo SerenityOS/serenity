@@ -24,7 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <AK/Vector.h>
 #include <LibGUI/Shortcut.h>
 
 namespace GUI {
@@ -262,7 +264,7 @@ String Shortcut::to_string() const
     parts.append(key_code_to_string(m_key));
 
     StringBuilder builder;
-    for (int i = 0; i < parts.size(); ++i) {
+    for (size_t i = 0; i < parts.size(); ++i) {
         builder.append(parts[i]);
         if (i != parts.size() - 1)
             builder.append('+');

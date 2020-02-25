@@ -28,11 +28,11 @@
 #include <LibGUI/FontDatabase.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Font.h>
 #include <stdlib.h>
 #include <time.h>
 
-SnakeGame::SnakeGame(GUI::Widget* parent)
-    : GUI::Widget(parent)
+SnakeGame::SnakeGame()
 {
     set_font(GFontDatabase::the().get_by_name("Liza Regular"));
     m_fruit_bitmaps.append(*Gfx::Bitmap::load_from_file("/res/icons/snake/paprika.png"));
@@ -66,7 +66,7 @@ void SnakeGame::reset()
 
 bool SnakeGame::is_available(const Coordinate& coord)
 {
-    for (int i = 0; i < m_tail.size(); ++i) {
+    for (size_t i = 0; i < m_tail.size(); ++i) {
         if (m_tail[i] == coord)
             return false;
     }
@@ -134,7 +134,7 @@ void SnakeGame::timer_event(Core::TimerEvent&)
 
     dirty_cells.append(m_head);
 
-    for (int i = 0; i < m_tail.size(); ++i) {
+    for (size_t i = 0; i < m_tail.size(); ++i) {
         if (m_head == m_tail[i]) {
             game_over();
             return;

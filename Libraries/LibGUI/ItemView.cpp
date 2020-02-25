@@ -33,16 +33,14 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
 
+//#define DRAGDROP_DEBUG
+
 namespace GUI {
 
-ItemView::ItemView(Widget* parent)
-    : AbstractView(parent)
+ItemView::ItemView()
 {
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
-    set_frame_shape(Gfx::FrameShape::Container);
-    set_frame_shadow(Gfx::FrameShadow::Sunken);
-    set_frame_thickness(2);
     horizontal_scrollbar().set_visible(false);
 }
 
@@ -187,6 +185,25 @@ void ItemView::mouseup_event(MouseEvent& event)
     AbstractView::mouseup_event(event);
 }
 
+void ItemView::drag_move_event(DragEvent& event)
+{
+    auto index = index_at_event_position(event.position());
+    ModelIndex new_drop_candidate_index;
+    if (index.is_valid()) {
+        bool acceptable = model()->accepts_drag(index, event.data_type());
+#ifdef DRAGDROP_DEBUG
+        dbg() << "Drag of type '" << event.data_type() << "' moving over " << index << ", acceptable: " << acceptable;
+#endif
+        if (acceptable)
+            new_drop_candidate_index = index;
+    }
+    if (m_drop_candidate_index != new_drop_candidate_index) {
+        m_drop_candidate_index = new_drop_candidate_index;
+        update();
+    }
+    event.accept();
+}
+
 void ItemView::mousemove_event(MouseEvent& event)
 {
     if (!model())
@@ -247,6 +264,7 @@ void ItemView::paint_event(PaintEvent& event)
     painter.add_clip_rect(widget_inner_rect());
     painter.add_clip_rect(event.rect());
     painter.fill_rect(event.rect(), widget_background_color);
+    painter.translate(frame_thickness(), frame_thickness());
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
     auto column_metadata = model()->column_metadata(m_model_column);
@@ -257,7 +275,7 @@ void ItemView::paint_event(PaintEvent& event)
         bool is_selected_item = selection().contains(model_index);
         Color background_color;
         if (is_selected_item) {
-            background_color = is_focused() ? palette().selection() : Color::from_rgb(0x606060);
+            background_color = is_focused() ? palette().selection() : palette().inactive_selection();
         } else {
             background_color = widget_background_color;
         }
@@ -277,11 +295,16 @@ void ItemView::paint_event(PaintEvent& event)
 
         Color text_color;
         if (is_selected_item)
-            text_color = palette().selection_text();
+            text_color = is_focused() ? palette().selection_text() : palette().inactive_selection_text();
         else
             text_color = model()->data(model_index, Model::Role::ForegroundColor).to_color(palette().color(foreground_role()));
         painter.fill_rect(text_rect, background_color);
         painter.draw_text(text_rect, item_text.to_string(), font, Gfx::TextAlignment::Center, text_color, Gfx::TextElision::Right);
+
+        if (model_index == m_drop_candidate_index) {
+            // FIXME: This visualization is not great, as it's also possible to drop things on the text label..
+            painter.draw_rect(icon_rect.inflated(8, 8), palette().selection(), true);
+        }
     };
 }
 

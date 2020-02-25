@@ -33,8 +33,10 @@
 #include <LibELF/ELFImage.h>
 
 #ifdef KERNEL
-#include <Kernel/VM/VirtualAddress.h>
+#    include <LibBareMetal/Memory/VirtualAddress.h>
+namespace Kernel {
 class Region;
+}
 #endif
 
 class ELFLoader {
@@ -80,7 +82,7 @@ private:
         StringView name;
     };
 #ifdef KERNEL
-    mutable OwnPtr<Region> m_sorted_symbols_region;
+    mutable OwnPtr<Kernel::Region> m_sorted_symbols_region;
 #else
     mutable Vector<SortedSymbol> m_sorted_symbols;
 #endif

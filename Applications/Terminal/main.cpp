@@ -34,11 +34,14 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/FontDatabase.h>
 #include <LibGUI/GroupBox.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/Slider.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/Palette.h>
 #include <LibVT/TerminalWidget.h>
 #include <assert.h>
 #include <errno.h>
@@ -114,7 +117,7 @@ static void run_command(int ptm_fd, String command)
             args[1] = "-c";
             args[2] = command.characters();
         }
-        const char* envs[] = { "TERM=xterm", "PATH=/bin:/usr/bin:/usr/local/bin", nullptr };
+        const char* envs[] = { "PROMPT=\\X\\u@\\h:\\w\\a\\e[33;1m\\h\\e[0m \\e[32;1m\\w\\e[0m \\p ", "TERM=xterm", "PATH=/bin:/usr/bin:/usr/local/bin", nullptr };
         rc = execve(shell.characters(), const_cast<char**>(args), const_cast<char**>(envs));
         if (rc < 0) {
             perror("execve");
@@ -137,26 +140,26 @@ RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
     settings->set_layout(make<GUI::VerticalBoxLayout>());
     settings->layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto radio_container = GUI::GroupBox::construct("Bell Mode", settings);
+    auto radio_container = settings->add<GUI::GroupBox>("Bell Mode");
     radio_container->set_layout(make<GUI::VerticalBoxLayout>());
     radio_container->layout()->set_margins({ 6, 16, 6, 6 });
     radio_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     radio_container->set_preferred_size(100, 70);
 
-    auto sysbell_radio = GUI::RadioButton::construct("Use (Audible) System Bell", radio_container);
-    auto visbell_radio = GUI::RadioButton::construct("Use (Visual) Terminal Bell", radio_container);
+    auto sysbell_radio = radio_container->add<GUI::RadioButton>("Use (Audible) System Bell");
+    auto visbell_radio = radio_container->add<GUI::RadioButton>("Use (Visual) Terminal Bell");
     sysbell_radio->set_checked(terminal.should_beep());
     visbell_radio->set_checked(!terminal.should_beep());
     sysbell_radio->on_checked = [&terminal](const bool checked) {
         terminal.set_should_beep(checked);
     };
 
-    auto slider_container = GUI::GroupBox::construct("Background Opacity", settings);
+    auto slider_container = settings->add<GUI::GroupBox>("Background Opacity");
     slider_container->set_layout(make<GUI::VerticalBoxLayout>());
     slider_container->layout()->set_margins({ 6, 16, 6, 6 });
     slider_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     slider_container->set_preferred_size(100, 50);
-    auto slider = GUI::HorizontalSlider::construct(slider_container);
+    auto slider = slider_container->add<GUI::HorizontalSlider>();
 
     slider->on_value_changed = [&terminal](int value) {
         terminal.set_opacity(value);

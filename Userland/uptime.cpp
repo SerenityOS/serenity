@@ -25,12 +25,23 @@
  */
 
 #include <stdio.h>
+#include <unistd.h>
 
 int main(int, char**)
 {
+    if (pledge("stdio rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     FILE* fp = fopen("/proc/uptime", "r");
     if (!fp) {
         perror("fopen(/proc/uptime)");
+        return 1;
+    }
+
+    if (pledge("stdio", nullptr) < 0) {
+        perror("pledge");
         return 1;
     }
 

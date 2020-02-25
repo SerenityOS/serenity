@@ -24,18 +24,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Assertions.h>
 #include <AK/StringBuilder.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ProgressBar.h>
+#include <LibGfx/Palette.h>
 
 namespace GUI {
 
-ProgressBar::ProgressBar(Widget* parent)
-    : Frame(parent)
+ProgressBar::ProgressBar()
 {
-    set_frame_shape(Gfx::FrameShape::Container);
-    set_frame_shadow(Gfx::FrameShadow::Sunken);
-    set_frame_thickness(2);
 }
 
 ProgressBar::~ProgressBar()

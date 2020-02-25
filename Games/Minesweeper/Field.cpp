@@ -31,16 +31,14 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/Palette.h>
 #include <time.h>
 #include <unistd.h>
 
 class SquareButton final : public GUI::Button {
-public:
-    SquareButton(GUI::Widget* parent)
-        : GUI::Button(parent)
-    {
-    }
+    C_OBJECT(SquareButton);
 
+public:
     Function<void()> on_right_click;
     Function<void()> on_middle_click;
 
@@ -56,23 +54,21 @@ public:
         }
         GUI::Button::mousedown_event(event);
     }
+
+private:
+    SquareButton() {}
 };
 
 class SquareLabel final : public GUI::Label {
-public:
-    SquareLabel(Square& square, GUI::Widget* parent)
-        : GUI::Label(parent)
-        , m_square(square)
-    {
-    }
+    C_OBJECT(SquareLabel);
 
+public:
     Function<void()> on_chord_click;
 
     virtual void mousedown_event(GUI::MouseEvent& event) override
     {
         if (event.button() == GUI::MouseButton::Right || event.button() == GUI::MouseButton::Left) {
-            if (event.buttons() == (GUI::MouseButton::Right | GUI::MouseButton::Left) ||
-                  m_square.field->is_single_chording()) {
+            if (event.buttons() == (GUI::MouseButton::Right | GUI::MouseButton::Left) || m_square.field->is_single_chording()) {
                 m_chord = true;
                 m_square.field->set_chord_preview(m_square, true);
             }
@@ -115,27 +111,29 @@ public:
         GUI::Label::mouseup_event(event);
     }
 
+private:
+    explicit SquareLabel(Square& square)
+        : m_square(square)
+    {
+    }
+
     Square& m_square;
     bool m_chord { false };
 };
 
-Field::Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, GUI::Widget* parent, Function<void(Gfx::Size)> on_size_changed)
-    : GUI::Frame(parent)
-    , m_face_button(face_button)
+Field::Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, Function<void(Gfx::Size)> on_size_changed)
+    : m_face_button(face_button)
     , m_flag_label(flag_label)
     , m_time_label(time_label)
     , m_on_size_changed(move(on_size_changed))
 {
     srand(time(nullptr));
-    m_timer = Core::Timer::construct();
+    m_timer = add<Core::Timer>();
     m_timer->on_timeout = [this] {
         ++m_time_elapsed;
         m_time_label.set_text(String::format("%u.%u", m_time_elapsed / 10, m_time_elapsed % 10));
     };
     m_timer->set_interval(100);
-    set_frame_thickness(2);
-    set_frame_shape(Gfx::FrameShape::Container);
-    set_frame_shadow(Gfx::FrameShadow::Sunken);
     m_mine_bitmap = Gfx::Bitmap::load_from_file("/res/icons/minesweeper/mine.png");
     m_flag_bitmap = Gfx::Bitmap::load_from_file("/res/icons/minesweeper/flag.png");
     m_badflag_bitmap = Gfx::Bitmap::load_from_file("/res/icons/minesweeper/badflag.png");
@@ -185,8 +183,8 @@ void Field::set_face(Face face)
 template<typename Callback>
 void Square::for_each_neighbor(Callback callback)
 {
-    int r = row;
-    int c = column;
+    size_t r = row;
+    size_t c = column;
     if (r > 0) // Up
         callback(field->square(r - 1, c));
     if (c > 0) // Left
@@ -219,7 +217,7 @@ void Field::reset()
 
     m_squares.resize(max(m_squares.size(), rows() * columns()));
 
-    for (int i = rows() * columns(); i < m_squares.size(); ++i) {
+    for (int i = rows() * columns(); i < static_cast<int>(m_squares.size()); ++i) {
         auto& square = m_squares[i];
         square->button->set_visible(false);
         square->label->set_visible(false);
@@ -232,12 +230,12 @@ void Field::reset()
             mines.set(location);
     }
 
-    int i = 0;
-    for (int r = 0; r < rows(); ++r) {
-        for (int c = 0; c < columns(); ++c) {
+    size_t i = 0;
+    for (size_t r = 0; r < rows(); ++r) {
+        for (size_t c = 0; c < columns(); ++c) {
             if (!m_squares[i])
                 m_squares[i] = make<Square>();
-            Gfx::Rect rect = { frame_thickness() + c * square_size(), frame_thickness() + r * square_size(), square_size(), square_size() };
+            Gfx::Rect rect = { frame_thickness() + static_cast<int>(c) * square_size(), frame_thickness() + static_cast<int>(r) * square_size(), square_size(), square_size() };
             auto& square = this->square(r, c);
             square.field = this;
             square.row = r;
@@ -247,7 +245,7 @@ void Field::reset()
             square.is_considering = false;
             square.is_swept = false;
             if (!square.label) {
-                square.label = new SquareLabel(square, this);
+                square.label = add<SquareLabel>(square);
                 square.label->set_background_color(Color::from_rgb(0xff4040));
             }
             square.label->set_fill_with_background_color(false);
@@ -255,7 +253,7 @@ void Field::reset()
             square.label->set_visible(false);
             square.label->set_icon(square.has_mine ? m_mine_bitmap : nullptr);
             if (!square.button) {
-                square.button = new SquareButton(this);
+                square.button = add<SquareButton>();
                 square.button->on_click = [this, &square](GUI::Button&) {
                     on_square_clicked(square);
                 };
@@ -278,10 +276,10 @@ void Field::reset()
         }
     }
 
-    for (int r = 0; r < rows(); ++r) {
-        for (int c = 0; c < columns(); ++c) {
+    for (size_t r = 0; r < rows(); ++r) {
+        for (size_t c = 0; c < columns(); ++c) {
             auto& square = this->square(r, c);
-            int number = 0;
+            size_t number = 0;
             square.for_each_neighbor([&number](auto& neighbor) {
                 number += neighbor.has_mine;
             });
@@ -327,12 +325,12 @@ void Field::paint_event(GUI::PaintEvent& event)
     for (int y = inner_rect.top() - 1; y <= inner_rect.bottom(); y += square_size()) {
         Gfx::Point a { inner_rect.left(), y };
         Gfx::Point b { inner_rect.right(), y };
-        painter.draw_line(a, b, Color::MidGray);
+        painter.draw_line(a, b, palette().threed_shadow1());
     }
     for (int x = frame_inner_rect().left() - 1; x <= frame_inner_rect().right(); x += square_size()) {
         Gfx::Point a { x, inner_rect.top() };
         Gfx::Point b { x, inner_rect.bottom() };
-        painter.draw_line(a, b, Color::MidGray);
+        painter.draw_line(a, b, palette().threed_shadow1());
     }
 }
 
@@ -382,7 +380,7 @@ void Field::on_square_chorded(Square& square)
         return;
     if (!square.number)
         return;
-    int adjacent_flags = 0;
+    size_t adjacent_flags = 0;
     square.for_each_neighbor([&](auto& neighbor) {
         if (neighbor.has_flag)
             ++adjacent_flags;
@@ -463,8 +461,8 @@ void Field::game_over()
 
 void Field::reveal_mines()
 {
-    for (int r = 0; r < rows(); ++r) {
-        for (int c = 0; c < columns(); ++c) {
+    for (size_t r = 0; r < rows(); ++r) {
+        for (size_t c = 0; c < columns(); ++c) {
             auto& square = this->square(r, c);
             if (square.has_mine && !square.has_flag) {
                 square.button->set_visible(false);
@@ -492,7 +490,7 @@ void Field::set_chord_preview(Square& square, bool chord_preview)
     });
 }
 
-void Field::set_field_size(int rows, int columns, int mine_count)
+void Field::set_field_size(size_t rows, size_t columns, size_t mine_count)
 {
     if (m_rows == rows && m_columns == columns && m_mine_count == mine_count)
         return;
@@ -510,21 +508,24 @@ void Field::set_field_size(int rows, int columns, int mine_count)
     m_on_size_changed(preferred_size());
 }
 
-void Field::set_single_chording(bool enabled) {
+void Field::set_single_chording(bool enabled)
+{
     auto config = Core::ConfigFile::get_for_app("Minesweeper");
     m_single_chording = enabled;
     config->write_bool_entry("Minesweeper", "SingleChording", m_single_chording);
 }
 
+Square::Square()
+{
+}
+
 Square::~Square()
 {
-    delete label;
-    delete button;
 }
 
 template<typename Callback>
 void Field::for_each_square(Callback callback)
 {
-    for (int i = 0; i < rows() * columns(); ++i)
+    for (size_t i = 0; i < rows() * columns(); ++i)
         callback(*m_squares[i]);
 }

@@ -38,7 +38,7 @@ public:
     void reset();
 
 private:
-    explicit SnakeGame(GUI::Widget* parent = nullptr);
+    SnakeGame();
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
@@ -81,7 +81,7 @@ private:
     Coordinate m_fruit;
     int m_fruit_type { 0 };
 
-    int m_length { 0 };
+    size_t m_length { 0 };
     unsigned m_score { 0 };
     String m_score_text;
     unsigned m_high_score { 0 };

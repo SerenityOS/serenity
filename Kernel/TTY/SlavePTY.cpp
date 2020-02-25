@@ -31,14 +31,16 @@
 
 //#define SLAVEPTY_DEBUG
 
+namespace Kernel {
+
 SlavePTY::SlavePTY(MasterPTY& master, unsigned index)
     : TTY(201, index)
     , m_master(master)
     , m_index(index)
 {
     sprintf(m_tty_name, "/dev/pts/%u", m_index);
-    set_uid(current->process().uid());
-    set_gid(current->process().gid());
+    set_uid(Process::current->uid());
+    set_gid(Process::current->gid());
     DevPtsFS::register_slave_pty(*this);
     set_size(80, 25);
 }
@@ -96,4 +98,6 @@ ssize_t SlavePTY::read(FileDescription& description, u8* buffer, ssize_t size)
 void SlavePTY::close()
 {
     m_master->notify_slave_closed({});
+}
+
 }

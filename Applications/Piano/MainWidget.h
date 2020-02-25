@@ -33,6 +33,7 @@
 class AudioEngine;
 class WaveWidget;
 class RollWidget;
+class SamplerWidget;
 class KeysWidget;
 class KnobsWidget;
 
@@ -57,6 +58,8 @@ private:
 
     RefPtr<WaveWidget> m_wave_widget;
     RefPtr<RollWidget> m_roll_widget;
+    RefPtr<SamplerWidget> m_sampler_widget;
+    RefPtr<GUI::TabWidget> m_tab_widget;
     RefPtr<GUI::Widget> m_keys_and_knobs_container;
     RefPtr<KeysWidget> m_keys_widget;
     RefPtr<KnobsWidget> m_knobs_widget;

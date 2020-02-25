@@ -26,23 +26,16 @@
 
 #pragma once
 
-#include <AK/Badge.h>
-#include <AK/Bitmap.h>
-#include <AK/ByteBuffer.h>
 #include <AK/HashTable.h>
 #include <AK/NonnullRefPtrVector.h>
-#include <AK/RefCounted.h>
-#include <AK/RefPtr.h>
 #include <AK/String.h>
-#include <AK/Types.h>
-#include <AK/Vector.h>
-#include <AK/Weakable.h>
 #include <Kernel/Arch/i386/CPU.h>
-#include <Kernel/FileSystem/InodeIdentifier.h>
+#include <Kernel/Forward.h>
 #include <Kernel/VM/PhysicalPage.h>
-#include <Kernel/VM/PhysicalRegion.h>
 #include <Kernel/VM/Region.h>
 #include <Kernel/VM/VMObject.h>
+
+namespace Kernel {
 
 #define PAGE_ROUND_UP(x) ((((u32)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1)))
 
@@ -71,7 +64,7 @@ inline u32 virtual_to_low_physical(u32 physical)
 class KBuffer;
 class SynthFSInode;
 
-#define MM MemoryManager::the()
+#define MM Kernel::MemoryManager::the()
 
 class MemoryManager {
     AK_MAKE_ETERNAL
@@ -97,6 +90,8 @@ public:
     bool validate_user_write(const Process&, VirtualAddress, size_t) const;
 
     bool validate_kernel_read(const Process&, VirtualAddress, size_t) const;
+
+    bool can_read_without_faulting(const Process&, VirtualAddress, size_t) const;
 
     enum class ShouldZeroFill {
         No,
@@ -132,12 +127,16 @@ public:
 
     void dump_kernel_regions();
 
+    PhysicalPage& shared_zero_page() { return *m_shared_zero_page; }
+
 private:
     MemoryManager();
     ~MemoryManager();
 
-    enum class AccessSpace { Kernel, User };
-    enum class AccessType { Read, Write };
+    enum class AccessSpace { Kernel,
+        User };
+    enum class AccessType { Read,
+        Write };
     template<AccessSpace, AccessType>
     bool validate_range(const Process&, VirtualAddress, size_t) const;
 
@@ -167,10 +166,13 @@ private:
 
     PageDirectory& kernel_page_directory() { return *m_kernel_page_directory; }
 
+    const PageTableEntry* pte(const PageDirectory&, VirtualAddress);
     PageTableEntry& ensure_pte(PageDirectory&, VirtualAddress);
 
     RefPtr<PageDirectory> m_kernel_page_directory;
     RefPtr<PhysicalPage> m_low_page_table;
+
+    RefPtr<PhysicalPage> m_shared_zero_page;
 
     unsigned m_user_physical_pages { 0 };
     unsigned m_user_physical_pages_used { 0 };
@@ -222,4 +224,11 @@ inline bool is_user_range(VirtualAddress vaddr, size_t size)
     if (vaddr.offset(size) < vaddr)
         return false;
     return is_user_address(vaddr) && is_user_address(vaddr.offset(size));
+}
+
+inline bool PhysicalPage::is_shared_zero_page() const
+{
+    return this == &MM.shared_zero_page();
+}
+
 }

@@ -400,6 +400,7 @@ struct pollfd {
 #define SO_KEEPALIVE 3
 #define SO_ERROR 4
 #define SO_PEERCRED 5
+#define SO_REUSEADDR 6
 
 #define IPPROTO_IP 0
 #define IPPROTO_ICMP 1

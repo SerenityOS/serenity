@@ -37,4 +37,10 @@ ImageDecoder::ImageDecoder(const u8* data, size_t size)
 ImageDecoder::~ImageDecoder()
 {
 }
+
+RefPtr<Gfx::Bitmap> ImageDecoder::bitmap() const
+{
+    return m_plugin->bitmap();
+}
+
 }

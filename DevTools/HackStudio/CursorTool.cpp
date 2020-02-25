@@ -29,6 +29,7 @@
 #include "FormWidget.h"
 #include "WidgetTreeModel.h"
 #include <AK/LogStream.h>
+#include <LibGfx/Palette.h>
 
 void CursorTool::on_mousedown(GUI::MouseEvent& event)
 {

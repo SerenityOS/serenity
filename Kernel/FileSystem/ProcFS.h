@@ -26,11 +26,14 @@
 
 #pragma once
 
+#include <AK/HashMap.h>
 #include <AK/Types.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/KBuffer.h>
 #include <Kernel/Lock.h>
+
+namespace Kernel {
 
 class Process;
 
@@ -147,3 +150,5 @@ private:
 
     NonnullRefPtr<FileDescription> m_fd;
 };
+
+}

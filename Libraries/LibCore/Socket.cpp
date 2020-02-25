@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/ByteBuffer.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Socket.h>
 #include <arpa/inet.h>
@@ -112,6 +113,8 @@ bool Socket::connect(const SocketAddress& address)
     saddr.sun_family = AF_LOCAL;
     strcpy(saddr.sun_path, address.to_string().characters());
 
+    m_destination_address = address;
+
     return common_connect((const sockaddr*)&saddr, sizeof(saddr));
 }
 
@@ -136,7 +139,9 @@ bool Socket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
             };
             return true;
         }
-        perror("Socket::common_connect: connect");
+        int saved_errno = errno;
+        fprintf(stderr, "Core::Socket: Failed to connect() to %s: %s\n", destination_address().to_string().characters(), strerror(saved_errno));
+        errno = saved_errno;
         return false;
     }
 #ifdef CSOCKET_DEBUG
@@ -161,12 +166,12 @@ ByteBuffer Socket::receive(int max_size)
 
 bool Socket::send(const ByteBuffer& data)
 {
-    int nsent = ::send(fd(), data.data(), data.size(), 0);
+    ssize_t nsent = ::send(fd(), data.data(), data.size(), 0);
     if (nsent < 0) {
         set_error(errno);
         return false;
     }
-    ASSERT(nsent == data.size());
+    ASSERT(static_cast<size_t>(nsent) == data.size());
     return true;
 }
 

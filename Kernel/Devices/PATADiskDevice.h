@@ -31,8 +31,10 @@
 #pragma once
 
 #include <Kernel/Devices/BlockDevice.h>
-#include <Kernel/IRQHandler.h>
+#include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Lock.h>
+
+namespace Kernel {
 
 class PATAChannel;
 
@@ -59,10 +61,10 @@ public:
     void set_drive_geometry(u16, u16, u16);
 
     // ^BlockDevice
-    virtual ssize_t read(FileDescription&, u8*, ssize_t) override { return 0; }
-    virtual bool can_read(const FileDescription&) const override { return true; }
-    virtual ssize_t write(FileDescription&, const u8*, ssize_t) override { return 0; }
-    virtual bool can_write(const FileDescription&) const override { return true; }
+    virtual ssize_t read(FileDescription&, u8*, ssize_t) override;
+    virtual bool can_read(const FileDescription&) const override;
+    virtual ssize_t write(FileDescription&, const u8*, ssize_t) override;
+    virtual bool can_write(const FileDescription&) const override;
 
 protected:
     explicit PATADiskDevice(PATAChannel&, DriveType, int, int);
@@ -86,3 +88,5 @@ private:
 
     PATAChannel& m_channel;
 };
+
+}

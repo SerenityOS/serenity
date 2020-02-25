@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/ByteBuffer.h>
 #include <AK/FileSystemPath.h>
 #include <AK/MappedFile.h>
 #include <AK/NetworkOrdered.h>
@@ -356,9 +357,9 @@ template<bool has_alpha, u8 filter_type>
             for (int i = 0; i < context.width; ++i) {
                 auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
                 auto& color = context.palette_data.at((int)palette_index[i]);
-                auto transparency = context.palette_transparency_data.size() >= palette_index[i] + 1
-                    ? (int)context.palette_transparency_data.data()[palette_index[i]]
-                    : 0xFF;
+                auto transparency = context.palette_transparency_data.size() >= palette_index[i] + 1u
+                    ? context.palette_transparency_data.data()[palette_index[i]]
+                    : 0xff;
                 pixel.r = color.r;
                 pixel.g = color.g;
                 pixel.b = color.b;
@@ -519,7 +520,7 @@ static bool decode_png_bitmap(PNGLoadingContext& context)
         }
     }
 
-    context.bitmap = Bitmap::create_purgeable(context.has_alpha() ? Bitmap::Format::RGBA32 : Bitmap::Format::RGB32, { context.width, context.height });
+    context.bitmap = Bitmap::create_purgeable(context.has_alpha() ? BitmapFormat::RGBA32 : BitmapFormat::RGB32, { context.width, context.height });
 
     unfilter(context);
 

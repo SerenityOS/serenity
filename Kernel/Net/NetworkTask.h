@@ -26,4 +26,8 @@
 
 #pragma once
 
+namespace Kernel {
+
 void NetworkTask_main();
+
+}

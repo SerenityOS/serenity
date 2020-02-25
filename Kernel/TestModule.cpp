@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/kstdio.h>
 #include <Kernel/Process.h>
 
 extern "C" const char module_name[] = "TestModule";
@@ -37,8 +36,8 @@ extern "C" void module_init()
         kprintf("i is now %d\n", i);
     }
 
-    kprintf("current pid: %d\n", current->process().sys$getpid());
-    kprintf("current process name: %s\n", current->process().name().characters());
+    kprintf("current pid: %d\n", Process::current->sys$getpid());
+    kprintf("current process name: %s\n", Process::current->name().characters());
 }
 
 extern "C" void module_fini()

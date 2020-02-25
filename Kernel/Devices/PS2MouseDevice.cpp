@@ -26,7 +26,9 @@
 
 #include <Kernel/Devices/PS2MouseDevice.h>
 #include <Kernel/Devices/VMWareBackdoor.h>
-#include <Kernel/IO.h>
+#include <LibBareMetal/IO.h>
+
+namespace Kernel {
 
 #define IRQ_MOUSE 12
 #define I8042_BUFFER 0x60
@@ -127,7 +129,7 @@ void PS2MouseDevice::handle_vmmouse_absolute_pointer()
     m_queue.enqueue(packet);
 }
 
-void PS2MouseDevice::handle_irq()
+void PS2MouseDevice::handle_irq(RegisterState&)
 {
 
     if (VMWareBackdoor::the().vmmouse_is_absolute()) {
@@ -382,4 +384,6 @@ ssize_t PS2MouseDevice::read(FileDescription&, u8* buffer, ssize_t size)
 ssize_t PS2MouseDevice::write(FileDescription&, const u8*, ssize_t)
 {
     return 0;
+}
+
 }

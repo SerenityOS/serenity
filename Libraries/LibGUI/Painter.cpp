@@ -27,6 +27,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Bitmap.h>
 
 namespace GUI {
 Painter::Painter(Gfx::Bitmap& bitmap)

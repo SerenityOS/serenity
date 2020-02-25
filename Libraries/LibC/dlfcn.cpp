@@ -74,8 +74,7 @@ void* dlopen(const char* filename, int flags)
 
     auto existing_elf_object = g_elf_objects.get(file_path.basename());
     if (existing_elf_object.has_value()) {
-        void* referenced_object = existing_elf_object.value().leak_ref();
-        return referenced_object;
+        return const_cast<ELFDynamicLoader*>(existing_elf_object.value());
     }
 
     int fd = open(filename, O_RDONLY);
@@ -110,7 +109,7 @@ void* dlopen(const char* filename, int flags)
     g_dlerror_msg = "Successfully loaded ELF object.";
 
     // we have one refcount already
-    return g_elf_objects.get(file_path.basename()).value().ptr();
+    return const_cast<ELFDynamicLoader*>(g_elf_objects.get(file_path.basename()).value());
 }
 
 void* dlsym(void* handle, const char* symbol_name)

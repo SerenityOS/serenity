@@ -24,12 +24,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/String.h>
+#include <LibCore/DateTime.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     time_t now = time(nullptr);
 
     if (argc == 2 && !strcmp(argv[1], "-u")) {
@@ -37,13 +44,6 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    auto* tm = localtime(&now);
-    printf("%4u-%02u-%02u %02u:%02u:%02u\n",
-        tm->tm_year + 1900,
-        tm->tm_mon + 1,
-        tm->tm_mday,
-        tm->tm_hour,
-        tm->tm_min,
-        tm->tm_sec);
+    printf("%s\n", Core::DateTime::from_timestamp(now).to_string().characters());
     return 0;
 }

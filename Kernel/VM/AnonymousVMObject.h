@@ -26,8 +26,10 @@
 
 #pragma once
 
-#include <Kernel/VM/PhysicalAddress.h>
 #include <Kernel/VM/VMObject.h>
+#include <LibBareMetal/Memory/PhysicalAddress.h>
+
+namespace Kernel {
 
 class AnonymousVMObject : public VMObject {
 public:
@@ -51,3 +53,5 @@ private:
 
     virtual bool is_anonymous() const override { return true; }
 };
+
+}

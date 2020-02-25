@@ -38,6 +38,8 @@
 #include <Kernel/Net/IPv4.h>
 #include <Kernel/Net/MACAddress.h>
 
+namespace Kernel {
+
 class NetworkAdapter;
 
 class NetworkAdapter : public RefCounted<NetworkAdapter> {
@@ -99,3 +101,5 @@ private:
     u32 m_bytes_out { 0 };
     u32 m_mtu { 1500 };
 };
+
+}

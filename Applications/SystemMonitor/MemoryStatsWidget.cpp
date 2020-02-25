@@ -28,10 +28,11 @@
 #include "GraphWidget.h"
 #include <AK/JsonObject.h>
 #include <LibCore/File.h>
-#include <LibGfx/StylePainter.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/StylePainter.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -42,9 +43,8 @@ MemoryStatsWidget* MemoryStatsWidget::the()
     return s_the;
 }
 
-MemoryStatsWidget::MemoryStatsWidget(GraphWidget& graph, GUI::Widget* parent)
-    : GUI::Widget(parent)
-    , m_graph(graph)
+MemoryStatsWidget::MemoryStatsWidget(GraphWidget& graph)
+    : m_graph(graph)
 {
     ASSERT(!s_the);
     s_the = this;
@@ -57,14 +57,14 @@ MemoryStatsWidget::MemoryStatsWidget(GraphWidget& graph, GUI::Widget* parent)
     layout()->set_spacing(3);
 
     auto build_widgets_for_label = [this](const String& description) -> RefPtr<GUI::Label> {
-        auto container = GUI::Widget::construct(this);
+        auto container = add<GUI::Widget>();
         container->set_layout(make<GUI::HorizontalBoxLayout>());
         container->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
         container->set_preferred_size(275, 12);
-        auto description_label = GUI::Label::construct(description, container);
+        auto description_label = container->add<GUI::Label>(description);
         description_label->set_font(Gfx::Font::default_bold_font());
         description_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        auto label = GUI::Label::construct(container);
+        auto label = container->add<GUI::Label>();
         label->set_text_alignment(Gfx::TextAlignment::CenterRight);
         return label;
     };

@@ -26,12 +26,10 @@
 
 #pragma once
 
-#include <AK/LogStream.h>
-#include <AK/String.h>
+#include <AK/Traits.h>
+#include <LibGUI/Forward.h>
 
 namespace GUI {
-
-class Model;
 
 class ModelIndex {
     friend class Model;
@@ -72,12 +70,7 @@ private:
     void* m_internal_data { nullptr };
 };
 
-inline const LogStream& operator<<(const LogStream& stream, const ModelIndex& value)
-{
-    if (value.internal_data())
-        return stream << String::format("ModelIndex(%d,%d,%p)", value.row(), value.column(), value.internal_data());
-    return stream << String::format("ModelIndex(%d,%d)", value.row(), value.column());
-}
+const LogStream& operator<<(const LogStream&, const ModelIndex&);
 
 }
 

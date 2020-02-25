@@ -40,6 +40,8 @@ struct siginfo;
 typedef u32 socklen_t;
 }
 
+namespace Kernel {
+
 #define ENUMERATE_SYSCALLS                          \
     __ENUMERATE_SYSCALL(sleep)                      \
     __ENUMERATE_SYSCALL(yield)                      \
@@ -56,7 +58,6 @@ typedef u32 socklen_t;
     __ENUMERATE_SYSCALL(mmap)                       \
     __ENUMERATE_SYSCALL(munmap)                     \
     __ENUMERATE_SYSCALL(get_dir_entries)            \
-    __ENUMERATE_SYSCALL(lstat)                      \
     __ENUMERATE_SYSCALL(getcwd)                     \
     __ENUMERATE_SYSCALL(gettimeofday)               \
     __ENUMERATE_SYSCALL(gethostname)                \
@@ -239,6 +240,7 @@ struct StringListArgument {
 struct SC_mmap_params {
     uint32_t addr;
     uint32_t size;
+    uint32_t alignment;
     int32_t prot;
     int32_t flags;
     int32_t fd;
@@ -413,6 +415,12 @@ struct SC_waitid_params {
     int options;
 };
 
+struct SC_stat_params {
+    StringArgument path;
+    struct stat* statbuf;
+    bool follow_symlinks;
+};
+
 void initialize();
 int sync();
 
@@ -469,3 +477,7 @@ ENUMERATE_SYSCALLS
 #undef __ENUMERATE_SYSCALL
 #undef __ENUMERATE_REMOVED_SYSCALL
 #define syscall Syscall::invoke
+
+}
+
+using namespace Kernel;

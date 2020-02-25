@@ -29,8 +29,7 @@
 
 namespace GUI {
 
-StackWidget::StackWidget(Widget* parent)
-    : Widget(parent)
+StackWidget::StackWidget()
 {
 }
 

@@ -39,6 +39,8 @@
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/UnixTypes.h>
 
+namespace Kernel {
+
 class Device : public File {
 public:
     virtual ~Device() override;
@@ -71,3 +73,5 @@ private:
     uid_t m_uid { 0 };
     gid_t m_gid { 0 };
 };
+
+}

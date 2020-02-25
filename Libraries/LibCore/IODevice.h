@@ -26,8 +26,7 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/StringView.h>
+#include <AK/Forward.h>
 #include <LibCore/Object.h>
 
 namespace Core {
@@ -59,12 +58,12 @@ public:
 
     int read(u8* buffer, int length);
 
-    ByteBuffer read(int max_size);
-    ByteBuffer read_line(int max_size);
+    ByteBuffer read(size_t max_size);
+    ByteBuffer read_line(size_t max_size);
     ByteBuffer read_all();
 
     bool write(const u8*, int size);
-    bool write(const StringView& v) { return write((const u8*)v.characters_without_null_termination(), v.length()); }
+    bool write(const StringView&);
 
     // FIXME: I would like this to be const but currently it needs to call populate_read_buffer().
     bool can_read_line();

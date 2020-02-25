@@ -30,7 +30,9 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
 #include <AK/SinglyLinkedList.h>
-#include <Kernel/Arch/i386/PIT.h>
+#include <Kernel/Devices/PIT.h>
+
+namespace Kernel {
 
 struct Timer {
     u64 id;
@@ -72,3 +74,5 @@ private:
     u64 m_timer_id_count { 0 };
     SinglyLinkedList<NonnullOwnPtr<Timer>> m_timer_queue;
 };
+
+}

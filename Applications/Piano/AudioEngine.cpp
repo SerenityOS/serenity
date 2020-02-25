@@ -26,6 +26,7 @@
  */
 
 #include "AudioEngine.h"
+#include <LibAudio/WavLoader.h>
 #include <limits>
 #include <math.h>
 
@@ -77,33 +78,36 @@ void AudioEngine::fill_buffer(FixedArray<Sample>& buffer)
                 ASSERT_NOT_REACHED();
             }
 
-            double val = 0;
+            Audio::Sample sample;
             switch (m_wave) {
             case Wave::Sine:
-                val = (volume * m_power[note]) * sine(note);
+                sample = sine(note);
                 break;
             case Wave::Saw:
-                val = (volume * m_power[note]) * saw(note);
+                sample = saw(note);
                 break;
             case Wave::Square:
-                val = (volume * m_power[note]) * square(note);
+                sample = square(note);
                 break;
             case Wave::Triangle:
-                val = (volume * m_power[note]) * triangle(note);
+                sample = triangle(note);
                 break;
             case Wave::Noise:
-                val = (volume * m_power[note]) * noise();
+                sample = noise();
+                break;
+            case Wave::RecordedSample:
+                sample = recorded_sample(note);
                 break;
             default:
                 ASSERT_NOT_REACHED();
             }
-            buffer[i].left += val;
+            buffer[i].left += sample.left * m_power[note] * volume;
+            buffer[i].right += sample.right * m_power[note] * volume;
         }
-        buffer[i].right = buffer[i].left;
     }
 
     if (m_delay) {
-        if (m_delay_buffers.size() >= m_delay) {
+        if (m_delay_buffers.size() >= static_cast<size_t>(m_delay)) {
             auto to_blend = m_delay_buffers.dequeue();
             for (size_t i = 0; i < to_blend->size(); ++i) {
                 buffer[i].left += (*to_blend)[i].left * 0.333333;
@@ -143,9 +147,40 @@ void AudioEngine::reset()
     m_previous_column = horizontal_notes - 1;
 }
 
+String AudioEngine::set_recorded_sample(const StringView& path)
+{
+    Audio::WavLoader wav_loader(path);
+    if (wav_loader.has_error())
+        return String(wav_loader.error_string());
+    auto wav_buffer = wav_loader.get_more_samples(60 * sample_rate * sizeof(Sample)); // 1 minute maximum
+
+    if (!m_recorded_sample.is_empty())
+        m_recorded_sample.clear();
+    m_recorded_sample.resize(wav_buffer->sample_count());
+
+    double peak = 0;
+    for (int i = 0; i < wav_buffer->sample_count(); ++i) {
+        double left_abs = fabs(wav_buffer->samples()[i].left);
+        double right_abs = fabs(wav_buffer->samples()[i].right);
+        if (left_abs > peak)
+            peak = left_abs;
+        if (right_abs > peak)
+            peak = right_abs;
+    }
+
+    if (peak) {
+        for (int i = 0; i < wav_buffer->sample_count(); ++i) {
+            m_recorded_sample[i].left = wav_buffer->samples()[i].left / peak;
+            m_recorded_sample[i].right = wav_buffer->samples()[i].right / peak;
+        }
+    }
+
+    return String::empty();
+}
+
 // All of the information for these waves is on Wikipedia.
 
-double AudioEngine::sine(size_t note)
+Audio::Sample AudioEngine::sine(size_t note)
 {
     double pos = note_frequencies[note] / sample_rate;
     double sin_step = pos * 2 * M_PI;
@@ -154,7 +189,7 @@ double AudioEngine::sine(size_t note)
     return w;
 }
 
-double AudioEngine::saw(size_t note)
+Audio::Sample AudioEngine::saw(size_t note)
 {
     double saw_step = note_frequencies[note] / sample_rate;
     double t = m_pos[note];
@@ -163,7 +198,7 @@ double AudioEngine::saw(size_t note)
     return w;
 }
 
-double AudioEngine::square(size_t note)
+Audio::Sample AudioEngine::square(size_t note)
 {
     double pos = note_frequencies[note] / sample_rate;
     double square_step = pos * 2 * M_PI;
@@ -172,7 +207,7 @@ double AudioEngine::square(size_t note)
     return w;
 }
 
-double AudioEngine::triangle(size_t note)
+Audio::Sample AudioEngine::triangle(size_t note)
 {
     double triangle_step = note_frequencies[note] / sample_rate;
     double t = m_pos[note];
@@ -181,11 +216,28 @@ double AudioEngine::triangle(size_t note)
     return w;
 }
 
-double AudioEngine::noise() const
+Audio::Sample AudioEngine::noise() const
 {
     double random_percentage = static_cast<double>(rand()) / RAND_MAX;
     double w = (random_percentage * 2) - 1;
     return w;
+}
+
+Audio::Sample AudioEngine::recorded_sample(size_t note)
+{
+    int t = m_pos[note];
+    if (t >= static_cast<int>(m_recorded_sample.size()))
+        return 0;
+    double w_left = m_recorded_sample[t].left;
+    double w_right = m_recorded_sample[t].right;
+    if (t + 1 < static_cast<int>(m_recorded_sample.size())) {
+        double t_fraction = m_pos[note] - t;
+        w_left += (m_recorded_sample[t + 1].left - m_recorded_sample[t].left) * t_fraction;
+        w_right += (m_recorded_sample[t + 1].right - m_recorded_sample[t].right) * t_fraction;
+    }
+    double recorded_sample_step = note_frequencies[note] / middle_c;
+    m_pos[note] += recorded_sample_step;
+    return { w_left, w_right };
 }
 
 static inline double calculate_step(double distance, int milliseconds)

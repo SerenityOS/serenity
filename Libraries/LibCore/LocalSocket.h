@@ -26,12 +26,9 @@
 
 #pragma once
 
-#include <AK/Badge.h>
 #include <LibCore/Socket.h>
 
 namespace Core {
-
-class LocalServer;
 
 class LocalSocket final : public Socket {
     C_OBJECT(LocalSocket)

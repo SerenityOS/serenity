@@ -27,15 +27,9 @@
 #pragma once
 
 #include <AK/Noncopyable.h>
+#include <LibGUI/Forward.h>
 
 class FormEditorWidget;
-
-namespace GUI {
-class KeyEvent;
-class MouseEvent;
-class PaintEvent;
-class Painter;
-}
 
 class Tool {
     AK_MAKE_NONCOPYABLE(Tool)

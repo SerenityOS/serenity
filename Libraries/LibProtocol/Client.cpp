@@ -74,7 +74,7 @@ void Client::handle(const Messages::ProtocolClient::DownloadFinished& message)
 
 void Client::handle(const Messages::ProtocolClient::DownloadProgress& message)
 {
-    if (auto download = m_downloads.get(message.download_id()).value_or(nullptr)) {
+    if (auto download = const_cast<Download*>(m_downloads.get(message.download_id()).value_or(nullptr))) {
         download->did_progress({}, message.total_size(), message.downloaded_size());
     }
 }

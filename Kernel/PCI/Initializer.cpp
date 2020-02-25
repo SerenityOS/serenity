@@ -25,13 +25,15 @@
  */
 
 #include <Kernel/ACPI/ACPIParser.h>
-#include <Kernel/IO.h>
 #include <Kernel/KParams.h>
 #include <Kernel/Net/E1000NetworkAdapter.h>
 #include <Kernel/Net/RTL8139NetworkAdapter.h>
 #include <Kernel/PCI/IOAccess.h>
 #include <Kernel/PCI/Initializer.h>
 #include <Kernel/PCI/MMIOAccess.h>
+#include <LibBareMetal/IO.h>
+
+namespace Kernel {
 
 static PCI::Initializer* s_pci_initializer;
 
@@ -42,7 +44,7 @@ PCI::Initializer& PCI::Initializer::the()
     }
     return *s_pci_initializer;
 }
-void PCI::Initializer::initialize_pci_mmio_access(ACPI_RAW::MCFG& mcfg)
+void PCI::Initializer::initialize_pci_mmio_access(PhysicalAddress mcfg)
 {
     PCI::MMIOAccess::initialize(mcfg);
     detect_devices();
@@ -127,15 +129,12 @@ bool PCI::Initializer::test_pci_io()
 
 bool PCI::Initializer::test_pci_mmio()
 {
-    if (ACPIParser::the().find_table("MCFG") != nullptr)
-        return true;
-    else
-        return false;
+    return !ACPIParser::the().find_table("MCFG").is_null();
 }
 
 void PCI::Initializer::initialize_pci_mmio_access_after_test()
 {
-    initialize_pci_mmio_access(*(ACPI_RAW::MCFG*)(ACPIParser::the().find_table("MCFG")));
+    initialize_pci_mmio_access(ACPIParser::the().find_table("MCFG"));
 }
 
 void PCI::Initializer::dismiss()
@@ -149,4 +148,6 @@ void PCI::Initializer::dismiss()
 
 PCI::Initializer::~Initializer()
 {
+}
+
 }

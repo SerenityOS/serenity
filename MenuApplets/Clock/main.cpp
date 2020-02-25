@@ -25,11 +25,12 @@
  */
 
 #include <LibCore/Timer.h>
-#include <LibGfx/Palette.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/Palette.h>
 #include <stdio.h>
 #include <time.h>
 
@@ -37,11 +38,10 @@ class ClockWidget final : public GUI::Widget {
     C_OBJECT(ClockWidget)
 public:
     ClockWidget()
-        : GUI::Widget(nullptr)
     {
         m_time_width = Gfx::Font::default_bold_font().width("2222-22-22 22:22:22");
 
-        m_timer = Core::Timer::construct(1000, [this] {
+        m_timer = add<Core::Timer>(1000, [this] {
             static time_t last_update_time;
             time_t now = time(nullptr);
             if (now != last_update_time) {
@@ -103,6 +103,7 @@ int main(int argc, char** argv)
     }
 
     auto window = GUI::Window::construct();
+    window->set_title("Clock");
     window->set_window_type(GUI::WindowType::MenuApplet);
 
     auto widget = ClockWidget::construct();

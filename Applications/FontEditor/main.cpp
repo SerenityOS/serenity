@@ -28,8 +28,11 @@
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Bitmap.h>
+#include <LibGfx/Font.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)

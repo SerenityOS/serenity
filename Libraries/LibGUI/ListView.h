@@ -26,20 +26,13 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/HashMap.h>
 #include <LibGUI/AbstractView.h>
-#include <LibGUI/Model.h>
 
 namespace GUI {
-
-class ScrollBar;
-class Painter;
 
 class ListView : public AbstractView {
     C_OBJECT(ListView)
 public:
-    explicit ListView(Widget* parent);
     virtual ~ListView() override;
 
     int item_height() const { return 16; }
@@ -61,6 +54,8 @@ public:
 
     virtual void select_all() override;
 private:
+    ListView();
+
     virtual void did_update_model() override;
     virtual void paint_event(PaintEvent&) override;
     virtual void doubleclick_event(MouseEvent&) override;

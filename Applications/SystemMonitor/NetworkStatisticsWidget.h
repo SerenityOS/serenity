@@ -29,17 +29,13 @@
 #include <LibCore/Timer.h>
 #include <LibGUI/LazyWidget.h>
 
-namespace GUI {
-class TableView;
-}
-
 class NetworkStatisticsWidget final : public GUI::LazyWidget {
     C_OBJECT(NetworkStatisticsWidget)
 public:
     virtual ~NetworkStatisticsWidget() override;
 
 private:
-    explicit NetworkStatisticsWidget(GUI::Widget* parent = nullptr);
+    NetworkStatisticsWidget();
     void update_models();
 
     RefPtr<GUI::TableView> m_adapter_table_view;

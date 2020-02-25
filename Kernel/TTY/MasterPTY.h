@@ -30,6 +30,8 @@
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/DoubleBuffer.h>
 
+namespace Kernel {
+
 class SlavePTY;
 
 class MasterPTY final : public CharacterDevice {
@@ -63,3 +65,5 @@ private:
     DoubleBuffer m_buffer;
     String m_pts_name;
 };
+
+}

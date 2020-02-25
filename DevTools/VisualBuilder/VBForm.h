@@ -33,8 +33,8 @@
 class VBForm : public GUI::Widget {
     C_OBJECT(VBForm)
     friend class VBWidget;
+
 public:
-    explicit VBForm(const String& name, GUI::Widget* parent = nullptr);
     virtual ~VBForm() override;
 
     static VBForm* current();
@@ -66,6 +66,8 @@ protected:
     virtual void keydown_event(GUI::KeyEvent&) override;
 
 private:
+    explicit VBForm(const String& name);
+
     void grabber_mousedown_event(GUI::MouseEvent&, Direction grabber);
     void set_single_selected_widget(VBWidget*);
     void add_to_selection(VBWidget&);

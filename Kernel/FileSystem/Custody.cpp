@@ -26,9 +26,12 @@
 
 #include <AK/HashTable.h>
 #include <AK/StringBuilder.h>
+#include <AK/Vector.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Lock.h>
+
+namespace Kernel {
 
 static Lockable<InlineLinkedList<Custody>>& all_custodies()
 {
@@ -108,4 +111,6 @@ void Custody::did_mount_on(Badge<VFS>)
 void Custody::did_rename(Badge<VFS>, const String& name)
 {
     m_name = name;
+}
+
 }

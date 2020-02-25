@@ -24,11 +24,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Badge.h>
+#include <AK/SharedBuffer.h>
 #include <ProtocolServer/Download.h>
 #include <ProtocolServer/PSClientConnection.h>
 #include <ProtocolServer/Protocol.h>
 #include <ProtocolServer/ProtocolClientEndpoint.h>
-#include <AK/SharedBuffer.h>
 
 static HashMap<int, RefPtr<PSClientConnection>> s_connections;
 

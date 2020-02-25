@@ -28,7 +28,9 @@
 #include <AK/String.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Devices/VMWareBackdoor.h>
-#include <Kernel/IO.h>
+#include <LibBareMetal/IO.h>
+
+namespace Kernel {
 
 #define VMWARE_CMD_GETVERSION 0x0a
 
@@ -201,4 +203,6 @@ void VMWareBackdoor::send(VMWareCommand& command)
         dbg() << "VMWareBackdoor Command Send Results: EAX " << String::format("%x", command.ax) << " EBX " << String::format("%x", command.bx) << " ECX " << String::format("%x", command.cx) << " EDX " << String::format("%x", command.dx);
 #endif
     }
+}
+
 }

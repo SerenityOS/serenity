@@ -26,15 +26,10 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/HashMap.h>
 #include <LibGUI/AbstractView.h>
-#include <LibGUI/Model.h>
+#include <LibGUI/Forward.h>
 
 namespace GUI {
-
-class ScrollBar;
-class Painter;
 
 class ItemView : public AbstractView {
     C_OBJECT(ItemView)
@@ -54,7 +49,7 @@ public:
 
     virtual void select_all() override;
 private:
-    explicit ItemView(Widget* parent);
+    ItemView();
 
     virtual void did_update_model() override;
     virtual void paint_event(PaintEvent&) override;
@@ -64,6 +59,7 @@ private:
     virtual void mousemove_event(MouseEvent&) override;
     virtual void mouseup_event(MouseEvent&) override;
     virtual void keydown_event(KeyEvent&) override;
+    virtual void drag_move_event(DragEvent&) override;
 
     int item_count() const;
     Gfx::Rect item_rect(int item_index) const;
@@ -82,6 +78,8 @@ private:
     Gfx::Point m_rubber_band_origin;
     Gfx::Point m_rubber_band_current;
     Vector<ModelIndex> m_rubber_band_remembered_selection;
+
+    ModelIndex m_drop_candidate_index;
 };
 
 }

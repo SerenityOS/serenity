@@ -26,10 +26,13 @@
 
 #pragma once
 
+#include <AK/HashMap.h>
 #include <AK/Optional.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/KBuffer.h>
+
+namespace Kernel {
 
 class TmpFSInode;
 
@@ -106,3 +109,5 @@ private:
     };
     HashMap<String, Child> m_children;
 };
+
+}

@@ -26,7 +26,6 @@
 
 #pragma once
 
-#include <AK/Function.h>
 #include <LibGUI/TextEditor.h>
 
 namespace GUI {
@@ -34,7 +33,7 @@ namespace GUI {
 class TextBox : public TextEditor {
     C_OBJECT(TextBox)
 public:
-    explicit TextBox(Widget* parent);
+    TextBox();
     virtual ~TextBox() override;
 };
 

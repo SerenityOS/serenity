@@ -38,12 +38,12 @@ namespace AK {
 
 class ByteBufferImpl : public RefCounted<ByteBufferImpl> {
 public:
-    static NonnullRefPtr<ByteBufferImpl> create_uninitialized(int size);
-    static NonnullRefPtr<ByteBufferImpl> create_zeroed(int);
-    static NonnullRefPtr<ByteBufferImpl> copy(const void*, int);
-    static NonnullRefPtr<ByteBufferImpl> wrap(void*, int);
-    static NonnullRefPtr<ByteBufferImpl> wrap(const void*, int);
-    static NonnullRefPtr<ByteBufferImpl> adopt(void*, int);
+    static NonnullRefPtr<ByteBufferImpl> create_uninitialized(size_t size);
+    static NonnullRefPtr<ByteBufferImpl> create_zeroed(size_t);
+    static NonnullRefPtr<ByteBufferImpl> copy(const void*, size_t);
+    static NonnullRefPtr<ByteBufferImpl> wrap(void*, size_t);
+    static NonnullRefPtr<ByteBufferImpl> wrap(const void*, size_t);
+    static NonnullRefPtr<ByteBufferImpl> adopt(void*, size_t);
 
     ~ByteBufferImpl() { clear(); }
 
@@ -56,18 +56,18 @@ public:
         m_data = nullptr;
     }
 
-    u8& operator[](int i)
+    u8& operator[](size_t i)
     {
         ASSERT(i < m_size);
         return m_data[i];
     }
-    const u8& operator[](int i) const
+    const u8& operator[](size_t i) const
     {
         ASSERT(i < m_size);
         return m_data[i];
     }
     bool is_empty() const { return !m_size; }
-    int size() const { return m_size; }
+    size_t size() const { return m_size; }
 
     u8* data() { return m_data; }
     const u8* data() const { return m_data; }
@@ -79,13 +79,13 @@ public:
     const void* end_pointer() const { return m_data + m_size; }
 
     // NOTE: trim() does not reallocate.
-    void trim(int size)
+    void trim(size_t size)
     {
         ASSERT(size <= m_size);
         m_size = size;
     }
 
-    void grow(int size);
+    void grow(size_t size);
 
 private:
     enum ConstructionMode {
@@ -94,13 +94,13 @@ private:
         Wrap,
         Adopt
     };
-    explicit ByteBufferImpl(int);                       // For ConstructionMode=Uninitialized
-    ByteBufferImpl(const void*, int, ConstructionMode); // For ConstructionMode=Copy
-    ByteBufferImpl(void*, int, ConstructionMode);       // For ConstructionMode=Wrap/Adopt
+    explicit ByteBufferImpl(size_t);                       // For ConstructionMode=Uninitialized
+    ByteBufferImpl(const void*, size_t, ConstructionMode); // For ConstructionMode=Copy
+    ByteBufferImpl(void*, size_t, ConstructionMode);       // For ConstructionMode=Wrap/Adopt
     ByteBufferImpl() {}
 
     u8* m_data { nullptr };
-    int m_size { 0 };
+    size_t m_size { 0 };
     bool m_owned { false };
 };
 
@@ -129,12 +129,12 @@ public:
         return *this;
     }
 
-    static ByteBuffer create_uninitialized(int size) { return ByteBuffer(ByteBufferImpl::create_uninitialized(size)); }
-    static ByteBuffer create_zeroed(int size) { return ByteBuffer(ByteBufferImpl::create_zeroed(size)); }
-    static ByteBuffer copy(const void* data, int size) { return ByteBuffer(ByteBufferImpl::copy(data, size)); }
-    static ByteBuffer wrap(const void* data, int size) { return ByteBuffer(ByteBufferImpl::wrap(data, size)); }
-    static ByteBuffer wrap(void* data, int size) { return ByteBuffer(ByteBufferImpl::wrap(data, size)); }
-    static ByteBuffer adopt(void* data, int size) { return ByteBuffer(ByteBufferImpl::adopt(data, size)); }
+    static ByteBuffer create_uninitialized(size_t size) { return ByteBuffer(ByteBufferImpl::create_uninitialized(size)); }
+    static ByteBuffer create_zeroed(size_t size) { return ByteBuffer(ByteBufferImpl::create_zeroed(size)); }
+    static ByteBuffer copy(const void* data, size_t size) { return ByteBuffer(ByteBufferImpl::copy(data, size)); }
+    static ByteBuffer wrap(const void* data, size_t size) { return ByteBuffer(ByteBufferImpl::wrap(data, size)); }
+    static ByteBuffer wrap(void* data, size_t size) { return ByteBuffer(ByteBufferImpl::wrap(data, size)); }
+    static ByteBuffer adopt(void* data, size_t size) { return ByteBuffer(ByteBufferImpl::adopt(data, size)); }
 
     ~ByteBuffer() { clear(); }
     void clear() { m_impl = nullptr; }
@@ -143,18 +143,18 @@ public:
     bool operator!() const { return is_null(); }
     bool is_null() const { return m_impl == nullptr; }
 
-    u8& operator[](int i)
+    u8& operator[](size_t i)
     {
         ASSERT(m_impl);
         return (*m_impl)[i];
     }
-    u8 operator[](int i) const
+    u8 operator[](size_t i) const
     {
         ASSERT(m_impl);
         return (*m_impl)[i];
     }
     bool is_empty() const { return !m_impl || m_impl->is_empty(); }
-    int size() const { return m_impl ? m_impl->size() : 0; }
+    size_t size() const { return m_impl ? m_impl->size() : 0; }
 
     u8* data() { return m_impl ? m_impl->data() : nullptr; }
     const u8* data() const { return m_impl ? m_impl->data() : nullptr; }
@@ -173,13 +173,13 @@ public:
     }
 
     // NOTE: trim() does not reallocate.
-    void trim(int size)
+    void trim(size_t size)
     {
         if (m_impl)
             m_impl->trim(size);
     }
 
-    ByteBuffer slice_view(int offset, int size) const
+    ByteBuffer slice_view(size_t offset, size_t size) const
     {
         if (is_null())
             return {};
@@ -190,7 +190,7 @@ public:
         return wrap(offset_pointer(offset), size);
     }
 
-    ByteBuffer slice(int offset, int size) const
+    ByteBuffer slice(size_t offset, size_t size) const
     {
         if (is_null())
             return {};
@@ -201,7 +201,7 @@ public:
         return copy(offset_pointer(offset), size);
     }
 
-    void grow(int size)
+    void grow(size_t size)
     {
         if (!m_impl)
             m_impl = ByteBufferImpl::create_uninitialized(size);
@@ -209,7 +209,7 @@ public:
             m_impl->grow(size);
     }
 
-    void append(const void* data, int data_size)
+    void append(const void* data, size_t data_size)
     {
         int old_size = size();
         grow(size() + data_size);
@@ -225,14 +225,14 @@ private:
     RefPtr<ByteBufferImpl> m_impl;
 };
 
-inline ByteBufferImpl::ByteBufferImpl(int size)
+inline ByteBufferImpl::ByteBufferImpl(size_t size)
     : m_size(size)
 {
     m_data = static_cast<u8*>(kmalloc(size));
     m_owned = true;
 }
 
-inline ByteBufferImpl::ByteBufferImpl(const void* data, int size, ConstructionMode mode)
+inline ByteBufferImpl::ByteBufferImpl(const void* data, size_t size, ConstructionMode mode)
     : m_size(size)
 {
     ASSERT(mode == Copy);
@@ -241,7 +241,7 @@ inline ByteBufferImpl::ByteBufferImpl(const void* data, int size, ConstructionMo
     m_owned = true;
 }
 
-inline ByteBufferImpl::ByteBufferImpl(void* data, int size, ConstructionMode mode)
+inline ByteBufferImpl::ByteBufferImpl(void* data, size_t size, ConstructionMode mode)
     : m_data(static_cast<u8*>(data))
     , m_size(size)
 {
@@ -252,7 +252,7 @@ inline ByteBufferImpl::ByteBufferImpl(void* data, int size, ConstructionMode mod
     }
 }
 
-inline void ByteBufferImpl::grow(int size)
+inline void ByteBufferImpl::grow(size_t size)
 {
     ASSERT(size > m_size);
     ASSERT(m_owned);
@@ -264,34 +264,34 @@ inline void ByteBufferImpl::grow(int size)
     kfree(old_data);
 }
 
-inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::create_uninitialized(int size)
+inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::create_uninitialized(size_t size)
 {
     return ::adopt(*new ByteBufferImpl(size));
 }
 
-inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::create_zeroed(int size)
+inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::create_zeroed(size_t size)
 {
     auto buffer = ::adopt(*new ByteBufferImpl(size));
     memset(buffer->data(), 0, size);
     return buffer;
 }
 
-inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::copy(const void* data, int size)
+inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::copy(const void* data, size_t size)
 {
     return ::adopt(*new ByteBufferImpl(data, size, Copy));
 }
 
-inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::wrap(void* data, int size)
+inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::wrap(void* data, size_t size)
 {
     return ::adopt(*new ByteBufferImpl(data, size, Wrap));
 }
 
-inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::wrap(const void* data, int size)
+inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::wrap(const void* data, size_t size)
 {
     return ::adopt(*new ByteBufferImpl(const_cast<void*>(data), size, Wrap));
 }
 
-inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::adopt(void* data, int size)
+inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::adopt(void* data, size_t size)
 {
     return ::adopt(*new ByteBufferImpl(data, size, Adopt));
 }

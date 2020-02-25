@@ -30,6 +30,8 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
 
+namespace Kernel {
+
 static const uintptr_t userspace_range_base = 0x00800000;
 static const uintptr_t userspace_range_ceiling = 0xbe000000;
 static const uintptr_t kernelspace_range_base = 0xc0800000;
@@ -116,4 +118,6 @@ PageDirectory::~PageDirectory()
 #endif
     InterruptDisabler disabler;
     cr3_map().remove(cr3());
+}
+
 }

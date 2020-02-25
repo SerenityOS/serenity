@@ -26,19 +26,23 @@
 
 #pragma once
 
-#include <AK/Badge.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
+#include <Kernel/Forward.h>
+#include <Kernel/Heap/SlabAllocator.h>
 
-class Inode;
-class VFS;
+namespace Kernel {
 
 // FIXME: Custody needs some locking.
 
-class Custody : public RefCounted<Custody>
+class Custody
+    : public RefCounted<Custody>
     , public InlineLinkedListNode<Custody> {
+
+    MAKE_SLAB_ALLOCATED(Custody)
+
 public:
     static Custody* get_if_cached(Custody* parent, const StringView& name);
     static NonnullRefPtr<Custody> get_or_create(Custody* parent, const StringView& name, Inode&, int mount_flags);
@@ -79,3 +83,5 @@ private:
     bool m_mounted_on { false };
     int m_mount_flags { 0 };
 };
+
+}

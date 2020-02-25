@@ -30,10 +30,9 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/WeakPtr.h>
+#include <LibCore/Forward.h>
 
 namespace Core {
-
-class Object;
 
 class Event {
 public:

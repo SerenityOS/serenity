@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/Vector.h>
 
 namespace IPC {
 
@@ -38,7 +38,7 @@ public:
 
     virtual int endpoint_magic() const = 0;
     virtual int message_id() const = 0;
-    virtual String message_name() const = 0;
+    virtual const char* message_name() const = 0;
     virtual MessageBuffer encode() const = 0;
 
 protected:

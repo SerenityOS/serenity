@@ -24,20 +24,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGfx/StylePainter.h>
+#include <AK/Assertions.h>
+#include <AK/StdLibExtras.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Slider.h>
+#include <LibGfx/Palette.h>
+#include <LibGfx/StylePainter.h>
 
 namespace GUI {
 
-Slider::Slider(Widget* parent)
-    : Slider(Orientation::Horizontal, parent)
-{
-}
-
-Slider::Slider(Orientation orientation, Widget* parent)
-    : Widget(parent)
-    , m_orientation(orientation)
+Slider::Slider(Orientation orientation)
+    : m_orientation(orientation)
 {
 }
 
@@ -162,6 +159,19 @@ void Slider::mouseup_event(MouseEvent& event)
     }
 
     return Widget::mouseup_event(event);
+}
+
+void Slider::mousewheel_event(MouseEvent& event)
+{
+    if (!is_enabled())
+        return;
+
+    if (orientation() == Orientation::Horizontal)
+        set_value(value() - event.wheel_delta() * m_step);
+    else
+        set_value(value() + event.wheel_delta() * m_step);
+
+    Widget::mousewheel_event(event);
 }
 
 void Slider::leave_event(Core::Event& event)

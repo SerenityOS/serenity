@@ -26,10 +26,10 @@
 
 #pragma once
 
-#include "FileSystem.h"
-#include <AK/ByteBuffer.h>
+#include <Kernel/FileSystem/FileSystem.h>
+#include <Kernel/Forward.h>
 
-class DiskCache;
+namespace Kernel {
 
 class DiskBackedFS : public FS {
 public:
@@ -60,3 +60,5 @@ private:
     NonnullRefPtr<BlockDevice> m_device;
     mutable OwnPtr<DiskCache> m_cache;
 };
+
+}

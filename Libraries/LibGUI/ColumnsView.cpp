@@ -25,6 +25,7 @@
  */
 
 #include <LibGUI/ColumnsView.h>
+#include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGfx/CharacterBitmap.h>
@@ -45,16 +46,11 @@ static const char* s_arrow_bitmap_data = {
 static const int s_arrow_bitmap_width = 9;
 static const int s_arrow_bitmap_height = 9;
 
-ColumnsView::ColumnsView(Widget* parent)
-    : AbstractView(parent)
+ColumnsView::ColumnsView()
 {
     set_fill_with_background_color(true);
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
-    set_frame_shape(Gfx::FrameShape::Container);
-    set_frame_shadow(Gfx::FrameShadow::Sunken);
-    set_frame_thickness(2);
-
     m_columns.append({ {}, 0 });
 }
 
@@ -99,7 +95,7 @@ void ColumnsView::paint_event(PaintEvent& event)
 
     int column_x = 0;
 
-    for (int i = 0; i < m_columns.size(); i++) {
+    for (size_t i = 0; i < m_columns.size(); i++) {
         auto& column = m_columns[i];
         auto* next_column = i + 1 == m_columns.size() ? nullptr : &m_columns[i + 1];
 
@@ -115,8 +111,10 @@ void ColumnsView::paint_event(PaintEvent& event)
             Color background_color = palette().color(background_role());
             Color text_color = palette().color(foreground_role());
 
-            if (next_column != nullptr && next_column->parent_index == index)
-                background_color = background_color.blend(palette().selection().with_alpha(100));
+            if (next_column != nullptr && next_column->parent_index == index) {
+                background_color = palette().inactive_selection();
+                text_color = palette().inactive_selection_text();
+            }
 
             if (is_selected_row) {
                 background_color = palette().selection();

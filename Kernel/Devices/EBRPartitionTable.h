@@ -31,6 +31,8 @@
 #include <Kernel/Devices/DiskPartition.h>
 #include <Kernel/Devices/MBRPartitionTable.h>
 
+namespace Kernel {
+
 struct [[gnu::packed]] EBRPartitionExtension
 {
     u8 unused_area[446];
@@ -65,3 +67,5 @@ private:
     u8 m_cached_mbr_header[512];
     u8 m_cached_ebr_header[512];
 };
+
+}

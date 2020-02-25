@@ -82,4 +82,11 @@ in_addr_t inet_addr(const char* str)
         return INADDR_NONE;
     return tmp;
 }
+
+char* inet_ntoa(struct in_addr in)
+{
+    static char buffer[32];
+    inet_ntop(AF_INET, &in.s_addr, buffer, sizeof(buffer));
+    return buffer;
+}
 }

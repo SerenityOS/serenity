@@ -25,12 +25,15 @@
  */
 
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/DiskBackedFileSystem.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/KBuffer.h>
 #include <Kernel/Process.h>
 
 //#define DBFS_DEBUG
+
+namespace Kernel {
 
 struct CacheEntry {
     time_t timestamp { 0 };
@@ -239,4 +242,6 @@ DiskCache& DiskBackedFS::cache() const
     if (!m_cache)
         m_cache = make<DiskCache>(const_cast<DiskBackedFS&>(*this));
     return *m_cache;
+}
+
 }

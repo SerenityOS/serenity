@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/HashMap.h>
 #include <LibGUI/AbstractTableView.h>
 
 namespace GUI {
@@ -35,12 +36,12 @@ class TreeView : public AbstractTableView {
 public:
     virtual ~TreeView() override;
 
-    virtual void scroll_into_view(const ModelIndex&, Orientation);
+    virtual void scroll_into_view(const ModelIndex&, Gfx::Orientation);
 
     virtual int item_count() const override;
 
 protected:
-    explicit TreeView(Widget*);
+    TreeView();
 
     virtual void paint_event(PaintEvent&) override;
     virtual void doubleclick_event(MouseEvent&) override;

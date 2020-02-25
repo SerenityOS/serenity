@@ -31,6 +31,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
+#include <LibGUI/Model.h>
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Window.h>
 #include <stdio.h>
@@ -43,13 +44,7 @@ int main(int argc, char** argv)
     }
 
     const char* path = argv[1];
-    OwnPtr<Profile> profile;
-
-    if (!strcmp(path, "perfcore")) {
-        profile = Profile::load_from_perfcore_file(path);
-    } else {
-        profile = Profile::load_from_file(path);
-    }
+    auto profile = Profile::load_from_perfcore_file(path);
 
     if (!profile) {
         fprintf(stderr, "Unable to load profile '%s'\n", path);
@@ -67,9 +62,9 @@ int main(int argc, char** argv)
     main_widget->set_fill_with_background_color(true);
     main_widget->set_layout(make<GUI::VerticalBoxLayout>());
 
-    auto timeline_widget = ProfileTimelineWidget::construct(*profile, main_widget);
+    auto timeline_widget = main_widget->add<ProfileTimelineWidget>(*profile);
 
-    auto tree_view = GUI::TreeView::construct(main_widget);
+    auto tree_view = main_widget->add<GUI::TreeView>();
     tree_view->set_headers_visible(true);
     tree_view->set_size_columns_to_fit_content(true);
     tree_view->set_model(profile->model());

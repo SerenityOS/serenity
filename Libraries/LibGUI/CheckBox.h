@@ -26,8 +26,6 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/String.h>
 #include <LibGUI/AbstractButton.h>
 
 namespace GUI {
@@ -40,8 +38,7 @@ public:
     virtual void click() override;
 
 private:
-    CheckBox(const StringView&, Widget* parent);
-    explicit CheckBox(Widget* parent);
+    explicit CheckBox(const StringView& = {});
 
     // These don't make sense for a check box, so hide them.
     using AbstractButton::auto_repeat_interval;

@@ -37,9 +37,12 @@
 // severely limited kmalloc heap.
 
 #include <AK/Assertions.h>
+#include <AK/ByteBuffer.h>
 #include <AK/LogStream.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/Region.h>
+
+namespace Kernel {
 
 class KBufferImpl : public RefCounted<KBufferImpl> {
 public:
@@ -53,6 +56,7 @@ public:
     static NonnullRefPtr<KBufferImpl> copy(const void* data, size_t size, u8 access, const char* name)
     {
         auto buffer = create_with_size(size, access, name);
+        buffer->region().commit();
         memcpy(buffer->data(), data, size);
         return buffer;
     }
@@ -67,6 +71,9 @@ public:
         ASSERT(size <= capacity());
         m_size = size;
     }
+
+    const Region& region() const { return *m_region; }
+    Region& region() { return *m_region; }
 
 private:
     explicit KBufferImpl(NonnullOwnPtr<Region>&& region, size_t size)
@@ -117,4 +124,6 @@ private:
 inline const LogStream& operator<<(const LogStream& stream, const KBuffer& value)
 {
     return stream << StringView(value.data(), value.size());
+}
+
 }
