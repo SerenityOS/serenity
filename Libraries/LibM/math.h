@@ -84,6 +84,7 @@ double ldexp(double, int exp);
 float ldexpf(float, int exp);
 
 double pow(double x, double y);
+float powf(float x, float y);
 
 double log2(double);
 float log2f(float);
