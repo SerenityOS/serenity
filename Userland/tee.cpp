@@ -73,7 +73,7 @@ static void copy_stdin(Vector<int>& fds, bool* err)
         }
 
         Vector<int> broken_fds;
-        for (int i = 0; i < fds.size(); ++i) {
+        for (size_t i = 0; i < fds.size(); ++i) {
             auto fd = fds.at(i);
             int twrite = 0;
             while (twrite != nread) {

@@ -145,19 +145,19 @@ void TabWidget::paint_event(PaintEvent& event)
 
     Gfx::StylePainter::paint_frame(painter, container_rect, palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Raised, 2);
 
-    for (int i = 0; i < m_tabs.size(); ++i) {
+    for (size_t i = 0; i < m_tabs.size(); ++i) {
         if (m_tabs[i].widget == m_active_widget)
             continue;
-        bool hovered = i == m_hovered_tab_index;
+        bool hovered = static_cast<int>(i) == m_hovered_tab_index;
         auto button_rect = this->button_rect(i);
         Gfx::StylePainter::paint_tab_button(painter, button_rect, palette(), false, hovered, m_tabs[i].widget->is_enabled());
         painter.draw_text(button_rect.translated(0, 1), m_tabs[i].title, Gfx::TextAlignment::Center, palette().button_text());
     }
 
-    for (int i = 0; i < m_tabs.size(); ++i) {
+    for (size_t i = 0; i < m_tabs.size(); ++i) {
         if (m_tabs[i].widget != m_active_widget)
             continue;
-        bool hovered = i == m_hovered_tab_index;
+        bool hovered = static_cast<int>(i) == m_hovered_tab_index;
         auto button_rect = this->button_rect(i);
         Gfx::StylePainter::paint_tab_button(painter, button_rect, palette(), true, hovered, m_tabs[i].widget->is_enabled());
         painter.draw_text(button_rect.translated(0, 1), m_tabs[i].title, Gfx::TextAlignment::Center, palette().button_text());
@@ -190,7 +190,7 @@ int TabWidget::TabData::width(const Gfx::Font& font) const
 
 void TabWidget::mousedown_event(MouseEvent& event)
 {
-    for (int i = 0; i < m_tabs.size(); ++i) {
+    for (size_t i = 0; i < m_tabs.size(); ++i) {
         auto button_rect = this->button_rect(i);
         if (!button_rect.contains(event.position()))
             continue;
@@ -202,7 +202,7 @@ void TabWidget::mousedown_event(MouseEvent& event)
 void TabWidget::mousemove_event(MouseEvent& event)
 {
     int hovered_tab = -1;
-    for (int i = 0; i < m_tabs.size(); ++i) {
+    for (size_t i = 0; i < m_tabs.size(); ++i) {
         auto button_rect = this->button_rect(i);
         if (!button_rect.contains(event.position()))
             continue;
@@ -243,7 +243,7 @@ void TabWidget::set_tab_position(TabPosition tab_position)
 
 int TabWidget::active_tab_index() const
 {
-    for (int i = 0; i < m_tabs.size(); i++) {
+    for (size_t i = 0; i < m_tabs.size(); i++) {
         if (m_tabs.at(i).widget == m_active_widget)
             return i;
     }

@@ -222,7 +222,7 @@ void AbstractTableView::update_headers()
 
 AbstractTableView::ColumnData& AbstractTableView::column_data(int column) const
 {
-    if (column >= m_column_data.size())
+    if (static_cast<size_t>(column) >= m_column_data.size())
         m_column_data.resize(column + 1);
     return m_column_data.at(column);
 }

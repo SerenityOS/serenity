@@ -58,9 +58,9 @@ void BoxLayout::run(Widget& widget)
     if (should_log)
         dbgprintf("BoxLayout:  Starting with available size: %s\n", available_size.to_string().characters());
 
-    int last_entry_with_automatic_size = -1;
+    Optional<size_t> last_entry_with_automatic_size;
 
-    for (int i = 0; i < m_entries.size(); ++i) {
+    for (size_t i = 0; i < m_entries.size(); ++i) {
         auto& entry = m_entries[i];
         if (entry.type == Entry::Type::Spacer) {
             ++number_of_visible_entries;
@@ -123,7 +123,7 @@ void BoxLayout::run(Widget& widget)
     int current_x = margins().left();
     int current_y = margins().top();
 
-    for (int i = 0; i < m_entries.size(); ++i) {
+    for (size_t i = 0; i < m_entries.size(); ++i) {
         auto& entry = m_entries[i];
         if (entry.type == Entry::Type::Spacer) {
             current_x += automatic_size.width();
@@ -141,7 +141,7 @@ void BoxLayout::run(Widget& widget)
         }
         ASSERT(entry.widget);
 
-        if (i == last_entry_with_automatic_size) {
+        if (last_entry_with_automatic_size.has_value() && i == last_entry_with_automatic_size.value()) {
             rect.set_size(automatic_size_for_last_entry);
         } else {
             rect.set_size(automatic_size);

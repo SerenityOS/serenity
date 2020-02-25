@@ -50,7 +50,7 @@ public:
 
     const String& name() const { return m_name; }
 
-    Action* action_at(int);
+    Action* action_at(size_t);
 
     void add_action(NonnullRefPtr<Action>);
     void add_separator();

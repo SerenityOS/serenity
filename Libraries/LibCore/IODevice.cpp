@@ -60,7 +60,7 @@ int IODevice::read(u8* buffer, int length)
     return read_buffer.size();
 }
 
-ByteBuffer IODevice::read(int max_size)
+ByteBuffer IODevice::read(size_t max_size)
 {
     if (m_fd < 0)
         return {};
@@ -68,8 +68,8 @@ ByteBuffer IODevice::read(int max_size)
         return {};
     auto buffer = ByteBuffer::create_uninitialized(max_size);
     auto* buffer_ptr = (char*)buffer.data();
-    int remaining_buffer_space = buffer.size();
-    int taken_from_buffered = 0;
+    size_t remaining_buffer_space = buffer.size();
+    size_t taken_from_buffered = 0;
     if (!m_buffered_data.is_empty()) {
         taken_from_buffered = min(remaining_buffer_space, m_buffered_data.size());
         memcpy(buffer_ptr, m_buffered_data.data(), taken_from_buffered);
@@ -171,7 +171,7 @@ ByteBuffer IODevice::read_all()
     return ByteBuffer::copy(data.data(), data.size());
 }
 
-ByteBuffer IODevice::read_line(int max_size)
+ByteBuffer IODevice::read_line(size_t max_size)
 {
     if (m_fd < 0)
         return {};
@@ -189,7 +189,7 @@ ByteBuffer IODevice::read_line(int max_size)
         return buffer;
     }
     auto line = ByteBuffer::create_uninitialized(max_size + 1);
-    int line_index = 0;
+    size_t line_index = 0;
     while (line_index < max_size) {
         u8 ch = m_buffered_data[line_index];
         line[line_index++] = ch;

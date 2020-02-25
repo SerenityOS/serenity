@@ -203,7 +203,7 @@ void LayoutText::split_into_lines(LayoutBlock& container)
         words.append({ Utf8View(view), start, length });
     });
 
-    for (int i = 0; i < words.size(); ++i) {
+    for (size_t i = 0; i < words.size(); ++i) {
         auto& word = words[i];
 
         float word_width;

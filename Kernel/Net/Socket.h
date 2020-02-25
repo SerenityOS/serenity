@@ -99,7 +99,7 @@ public:
 
     virtual KResult bind(const sockaddr*, socklen_t) = 0;
     virtual KResult connect(FileDescription&, const sockaddr*, socklen_t, ShouldBlock) = 0;
-    virtual KResult listen(int) = 0;
+    virtual KResult listen(size_t) = 0;
     virtual void get_local_address(sockaddr*, socklen_t*) = 0;
     virtual void get_peer_address(sockaddr*, socklen_t*) = 0;
     virtual bool is_local() const { return false; }
@@ -138,8 +138,8 @@ protected:
 
     KResult queue_connection_from(NonnullRefPtr<Socket>);
 
-    int backlog() const { return m_backlog; }
-    void set_backlog(int backlog) { m_backlog = backlog; }
+    size_t backlog() const { return m_backlog; }
+    void set_backlog(size_t backlog) { m_backlog = backlog; }
 
     virtual const char* class_name() const override { return "Socket"; }
 
@@ -160,7 +160,7 @@ private:
     int m_domain { 0 };
     int m_type { 0 };
     int m_protocol { 0 };
-    int m_backlog { 0 };
+    size_t m_backlog { 0 };
     SetupState m_setup_state { SetupState::Unstarted };
     bool m_connected { false };
     bool m_shut_down_for_reading { false };

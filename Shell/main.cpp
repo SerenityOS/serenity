@@ -241,8 +241,8 @@ static int sh_cd(int argc, const char** argv)
 
 static int sh_history(int, const char**)
 {
-    for (int i = 0; i < editor.history().size(); ++i) {
-        printf("%6d  %s\n", i, editor.history()[i].characters());
+    for (size_t i = 0; i < editor.history().size(); ++i) {
+        printf("%6zu  %s\n", i, editor.history()[i].characters());
     }
     return 0;
 }
@@ -452,7 +452,7 @@ static int sh_dirs(int argc, const char** argv)
     for (int i = 0; i < argc; i++) {
         const char* arg = argv[i];
         if (!strcmp(arg, "-c")) {
-            for (int i = 1; i < g.directory_stack.size(); i++)
+            for (size_t i = 1; i < g.directory_stack.size(); i++)
                 g.directory_stack.remove(i);
 
             printed = true;
@@ -605,7 +605,7 @@ static Vector<String> expand_globs(const StringView& path, const StringView& bas
     builder.append(base);
     Vector<String> res;
 
-    for (int i = 0; i < parts.size(); ++i) {
+    for (size_t i = 0; i < parts.size(); ++i) {
         auto& part = parts[i];
         if (!is_glob(part)) {
             builder.append(part);
@@ -758,7 +758,7 @@ static int run_command(const String& cmd)
 
         FileDescriptionCollector fds;
 
-        for (int i = 0; i < command.subcommands.size(); ++i) {
+        for (size_t i = 0; i < command.subcommands.size(); ++i) {
             auto& subcommand = command.subcommands[i];
             for (auto& redirection : subcommand.redirections) {
                 switch (redirection.type) {
@@ -814,7 +814,7 @@ static int run_command(const String& cmd)
 
         CommandTimer timer(cmd);
 
-        for (int i = 0; i < command.subcommands.size(); ++i) {
+        for (size_t i = 0; i < command.subcommands.size(); ++i) {
             auto& subcommand = command.subcommands[i];
             Vector<String> argv_string = process_arguments(subcommand.args);
             Vector<const char*> argv;
@@ -879,7 +879,7 @@ static int run_command(const String& cmd)
 
         int wstatus = 0;
 
-        for (int i = 0; i < children.size(); ++i) {
+        for (size_t i = 0; i < children.size(); ++i) {
             auto& child = children[i];
             do {
                 int rc = waitpid(child.pid, &wstatus, WEXITED | WSTOPPED);

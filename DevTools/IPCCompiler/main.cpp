@@ -263,7 +263,7 @@ int main(int argc, char** argv)
             }
 
             builder.append('(');
-            for (int i = 0; i < parameters.size(); ++i) {
+            for (size_t i = 0; i < parameters.size(); ++i) {
                 auto& parameter = parameters[i];
                 builder.append("const ");
                 builder.append(parameter.type);
@@ -273,7 +273,7 @@ int main(int argc, char** argv)
                     builder.append(", ");
             }
             builder.append(") : ");
-            for (int i = 0; i < parameters.size(); ++i) {
+            for (size_t i = 0; i < parameters.size(); ++i) {
                 auto& parameter = parameters[i];
                 builder.append("m_");
                 builder.append(parameter.name);
@@ -310,9 +310,9 @@ int main(int argc, char** argv)
                 dbg() << "        " << parameter.type << " " << parameter.name << " = " << initial_value << ";";
 
                 if (parameter.type == "Vector<Gfx::Rect>") {
-                    dbg() << "        int " << parameter.name << "_size = 0;";
+                    dbg() << "        u64 " << parameter.name << "_size = 0;";
                     dbg() << "        stream >> " << parameter.name << "_size;";
-                    dbg() << "        for (int i = 0; i < " << parameter.name << "_size; ++i) {";
+                    dbg() << "        for (size_t i = 0; i < " << parameter.name << "_size; ++i) {";
                     dbg() << "            Gfx::Rect rect;";
                     dbg() << "            if (!decoder.decode(rect))";
                     dbg() << "                return nullptr;";
@@ -325,7 +325,7 @@ int main(int argc, char** argv)
             }
 
             StringBuilder builder;
-            for (int i = 0; i < parameters.size(); ++i) {
+            for (size_t i = 0; i < parameters.size(); ++i) {
                 auto& parameter = parameters[i];
                 builder.append(parameter.name);
                 if (i != parameters.size() - 1)
@@ -355,7 +355,7 @@ int main(int argc, char** argv)
                     dbg() << "        stream << m_" << parameter.name << ".width();";
                     dbg() << "        stream << m_" << parameter.name << ".height();";
                 } else if (parameter.type == "Vector<Gfx::Rect>") {
-                    dbg() << "        stream << m_" << parameter.name << ".size();";
+                    dbg() << "        stream << (u64)m_" << parameter.name << ".size();";
                     dbg() << "        for (auto& rect : m_" << parameter.name << ") {";
                     dbg() << "            stream << rect.x();";
                     dbg() << "            stream << rect.y();";

@@ -69,8 +69,8 @@ void dump_tree(const Node& node)
 
 void dump_tree(const LayoutNode& layout_node)
 {
-    static int indent = 0;
-    for (int i = 0; i < indent; ++i)
+    static size_t indent = 0;
+    for (size_t i = 0; i < indent; ++i)
         dbgprintf("    ");
 
     String tag_name;
@@ -122,17 +122,17 @@ void dump_tree(const LayoutNode& layout_node)
 
     if (layout_node.is_block() && static_cast<const LayoutBlock&>(layout_node).children_are_inline()) {
         auto& block = static_cast<const LayoutBlock&>(layout_node);
-        for (int i = 0; i < indent; ++i)
+        for (size_t i = 0; i < indent; ++i)
             dbgprintf("    ");
         dbgprintf("  Line boxes (%d):\n", block.line_boxes().size());
-        for (int line_box_index = 0; line_box_index < block.line_boxes().size(); ++line_box_index) {
+        for (size_t line_box_index = 0; line_box_index < block.line_boxes().size(); ++line_box_index) {
             auto& line_box = block.line_boxes()[line_box_index];
-            for (int i = 0; i < indent; ++i)
+            for (size_t i = 0; i < indent; ++i)
                 dbgprintf("    ");
             dbgprintf("    [%d] width: %g\n", line_box_index, line_box.width());
-            for (int fragment_index = 0; fragment_index < line_box.fragments().size(); ++fragment_index) {
+            for (size_t fragment_index = 0; fragment_index < line_box.fragments().size(); ++fragment_index) {
                 auto& fragment = line_box.fragments()[fragment_index];
-                for (int i = 0; i < indent; ++i)
+                for (size_t i = 0; i < indent; ++i)
                     dbgprintf("    ");
                 dbgprintf("      [%d] layout_node: %s{%p}, start: %d, length: %d, rect: %s\n",
                     fragment_index,
@@ -142,7 +142,7 @@ void dump_tree(const LayoutNode& layout_node)
                     fragment.length(),
                     fragment.rect().to_string().characters());
                 if (fragment.layout_node().is_text()) {
-                    for (int i = 0; i < indent; ++i)
+                    for (size_t i = 0; i < indent; ++i)
                         dbgprintf("    ");
                     auto& layout_text = static_cast<const LayoutText&>(fragment.layout_node());
                     auto fragment_text = layout_text.text_for_rendering().substring(fragment.start(), fragment.length());
@@ -153,7 +153,7 @@ void dump_tree(const LayoutNode& layout_node)
     }
 
     layout_node.style().for_each_property([&](auto property_id, auto& value) {
-        for (int i = 0; i < indent; ++i)
+        for (size_t i = 0; i < indent; ++i)
             dbgprintf("    ");
         dbgprintf("  (%s: %s)\n", CSS::string_from_property_id(property_id), value.to_string().characters());
     });
@@ -195,7 +195,7 @@ void dump_rule(const StyleRule& rule)
             if (*relation_description)
                 dbgprintf("{%s} ", relation_description);
 
-            for (int i = 0; i < complex_selector.compound_selector.size(); ++i) {
+            for (size_t i = 0; i < complex_selector.compound_selector.size(); ++i) {
                 auto& simple_selector = complex_selector.compound_selector[i];
                 const char* type_description = "Unknown";
                 switch (simple_selector.type) {

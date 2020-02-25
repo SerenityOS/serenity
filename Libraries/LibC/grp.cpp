@@ -116,7 +116,7 @@ next_entry:
     String line(s, Chomp);
     auto parts = line.split(':', true);
     if (parts.size() != 4) {
-        fprintf(stderr, "getgrent(): Malformed entry on line %u: '%s' has %u parts\n", __grdb_line_number, line.characters(), parts.size());
+        fprintf(stderr, "getgrent(): Malformed entry on line %u: '%s' has %zu parts\n", __grdb_line_number, line.characters(), parts.size());
         goto next_entry;
     }
     auto& e_name = parts[0];
@@ -133,7 +133,7 @@ next_entry:
     __grdb_entry->gr_gid = e_gid;
     __grdb_entry->gr_name = __grdb_entry->name_buffer;
     __grdb_entry->gr_passwd = __grdb_entry->passwd_buffer;
-    for (ssize_t i = 0; i < members.size(); ++i) {
+    for (size_t i = 0; i < members.size(); ++i) {
         __grdb_entry->members[i] = __grdb_entry->members_buffer[i];
         strcpy(__grdb_entry->members_buffer[i], members[i].characters());
     }

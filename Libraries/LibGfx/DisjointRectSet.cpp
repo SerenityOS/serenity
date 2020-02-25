@@ -48,9 +48,9 @@ void DisjointRectSet::shatter()
     do {
         pass_had_intersections = false;
         output.clear_with_capacity();
-        for (int i = 0; i < m_rects.size(); ++i) {
+        for (size_t i = 0; i < m_rects.size(); ++i) {
             auto& r1 = m_rects[i];
-            for (int j = 0; j < m_rects.size(); ++j) {
+            for (size_t j = 0; j < m_rects.size(); ++j) {
                 if (i == j)
                     continue;
                 auto& r2 = m_rects[j];

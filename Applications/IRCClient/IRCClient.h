@@ -84,13 +84,13 @@ public:
     const IRCWindow& window_at(int index) const { return *m_windows.at(index); }
     IRCWindow& window_at(int index) { return *m_windows.at(index); }
 
-    int window_index(const IRCWindow& window) const
+    size_t window_index(const IRCWindow& window) const
     {
-        for (int i = 0; i < m_windows.size(); ++i) {
+        for (size_t i = 0; i < m_windows.size(); ++i) {
             if (m_windows[i] == &window)
                 return i;
         }
-        return -1;
+        ASSERT_NOT_REACHED();
     }
 
     void did_part_from_channel(Badge<IRCChannel>, IRCChannel&);

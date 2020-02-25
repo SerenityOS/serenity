@@ -108,7 +108,7 @@ Range RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
     size_t offset_from_effective_base = 0;
 #endif
 
-    for (int i = 0; i < m_available_ranges.size(); ++i) {
+    for (size_t i = 0; i < m_available_ranges.size(); ++i) {
         auto& available_range = m_available_ranges[i];
         // FIXME: This check is probably excluding some valid candidates when using a large alignment.
         if (available_range.size() < (effective_size + alignment))
@@ -142,7 +142,7 @@ Range RangeAllocator::allocate_specific(VirtualAddress base, size_t size)
         return {};
 
     Range allocated_range(base, size);
-    for (int i = 0; i < m_available_ranges.size(); ++i) {
+    for (size_t i = 0; i < m_available_ranges.size(); ++i) {
         auto& available_range = m_available_ranges[i];
         if (!available_range.contains(base, size))
             continue;
@@ -181,7 +181,7 @@ void RangeAllocator::deallocate(Range range)
         },
         &nearby_index);
 
-    int inserted_index = 0;
+    size_t inserted_index = 0;
     if (existing_range) {
         existing_range->m_size += range.size();
         inserted_index = nearby_index;

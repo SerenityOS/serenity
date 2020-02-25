@@ -40,7 +40,7 @@ public:
     void go_forward();
 
     bool can_go_back() { return m_current > 0; }
-    bool can_go_forward() { return m_current + 1 < m_items.size(); }
+    bool can_go_forward() { return m_current + 1 < static_cast<int>(m_items.size()); }
 
     void clear();
 

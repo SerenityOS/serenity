@@ -108,7 +108,7 @@ void Profile::rebuild_tree()
     Vector<NonnullRefPtr<ProfileNode>> roots;
 
     auto find_or_create_root = [&roots](const String& symbol, u32 address, u32 offset, u64 timestamp) -> ProfileNode& {
-        for (int i = 0; i < roots.size(); ++i) {
+        for (size_t i = 0; i < roots.size(); ++i) {
             auto& root = roots[i];
             if (root->symbol() == symbol) {
                 return root;
@@ -152,12 +152,12 @@ void Profile::rebuild_tree()
         auto for_each_frame = [&]<typename Callback>(Callback callback)
         {
             if (!m_inverted) {
-                for (int i = 0; i < sample.frames.size(); ++i) {
+                for (size_t i = 0; i < sample.frames.size(); ++i) {
                     if (callback(sample.frames.at(i)) == IterationDecision::Break)
                         break;
                 }
             } else {
-                for (int i = sample.frames.size() - 1; i >= 0; --i) {
+                for (size_t i = sample.frames.size() - 1; i >= 0; --i) {
                     if (callback(sample.frames.at(i)) == IterationDecision::Break)
                         break;
                 }

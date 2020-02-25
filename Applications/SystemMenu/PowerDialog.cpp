@@ -62,7 +62,7 @@ Vector<char const*> PowerDialog::show()
 PowerDialog::PowerDialog()
 	: GUI::Dialog(nullptr)
 {
-    Gfx::Rect rect({ 0, 0, 180, 180 + ((options.size() - 3) * 16) });
+    Gfx::Rect rect({ 0, 0, 180, 180 + ((static_cast<int>(options.size()) - 3) * 16) });
     rect.center_within(GUI::Desktop::the().rect());
     set_rect(rect);
     set_resizable(false);
@@ -83,7 +83,7 @@ PowerDialog::PowerDialog()
     header->set_font(Gfx::Font::default_bold_font());
 
     int selected = -1;
-    for (int i = 0; i < options.size(); i++) {
+    for (size_t i = 0; i < options.size(); i++) {
         auto action = options[i];
         auto radio = main->add<GUI::RadioButton>();
         radio->set_enabled(action.enabled);

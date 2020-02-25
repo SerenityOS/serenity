@@ -389,7 +389,7 @@ Optional<TextDocumentSpan> TextDocument::first_non_skippable_span_before(const T
 
 Optional<TextDocumentSpan> TextDocument::first_non_skippable_span_after(const TextPosition& position) const
 {
-    for (int i = 0; i < m_spans.size(); ++i) {
+    for (size_t i = 0; i < m_spans.size(); ++i) {
         if (!m_spans[i].range.contains(position))
             continue;
         while ((i + 1) < m_spans.size() && m_spans[i + 1].is_skippable)

@@ -358,7 +358,7 @@ int main(int argc, char** argv)
             wrappers.append(&child);
             return IterationDecision::Continue;
         });
-        for (int i = 0; i < wrappers.size(); ++i) {
+        for (size_t i = 0; i < wrappers.size(); ++i) {
             if (g_current_editor_wrapper.ptr() == wrappers[i]) {
                 if (i == wrappers.size() - 1)
                     wrappers[0]->editor().set_focus(true);

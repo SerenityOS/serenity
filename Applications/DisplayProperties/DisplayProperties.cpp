@@ -138,7 +138,8 @@ void DisplayPropertiesWidget::create_frame()
 
     auto wallpaper_model = wallpaper_list->model();
     auto find_first_wallpaper_index = m_wallpapers.find_first_index(m_selected_wallpaper);
-    auto wallpaper_index_in_model = wallpaper_model->index(find_first_wallpaper_index, wallpaper_list->model_column());
+    ASSERT(find_first_wallpaper_index.has_value());
+    auto wallpaper_index_in_model = wallpaper_model->index(find_first_wallpaper_index.value(), wallpaper_list->model_column());
     if (wallpaper_model->is_valid(wallpaper_index_in_model))
         wallpaper_list->selection().set(wallpaper_index_in_model);
 
@@ -164,7 +165,8 @@ void DisplayPropertiesWidget::create_frame()
 
     auto resolution_model = resolution_list->model();
     auto find_first_resolution_index = m_resolutions.find_first_index(m_selected_resolution);
-    auto resolution_index_in_model = resolution_model->index(find_first_resolution_index, resolution_list->model_column());
+    ASSERT(find_first_resolution_index.has_value());
+    auto resolution_index_in_model = resolution_model->index(find_first_resolution_index.value(), resolution_list->model_column());
     if (resolution_model->is_valid(resolution_index_in_model))
         resolution_list->selection().set(resolution_index_in_model);
 

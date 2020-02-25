@@ -24,9 +24,9 @@ void SyntaxHighlighter::cursor_did_change()
     ASSERT(m_editor);
     auto& document = m_editor->document();
     if (m_has_brace_buddies) {
-        if (m_brace_buddies[0].index >= 0 && m_brace_buddies[0].index < document.spans().size())
+        if (m_brace_buddies[0].index >= 0 && m_brace_buddies[0].index < static_cast<int>(document.spans().size()))
             document.set_span_at_index(m_brace_buddies[0].index, m_brace_buddies[0].span_backup);
-        if (m_brace_buddies[1].index >= 0 && m_brace_buddies[1].index < document.spans().size())
+        if (m_brace_buddies[1].index >= 0 && m_brace_buddies[1].index < static_cast<int>(document.spans().size()))
             document.set_span_at_index(m_brace_buddies[1].index, m_brace_buddies[1].span_backup);
         m_has_brace_buddies = false;
         m_editor->update();

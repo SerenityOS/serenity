@@ -482,7 +482,7 @@ void ClientConnection::handle(const Messages::WindowServer::InvalidateRect& mess
         return;
     }
     auto& window = *(*it).value;
-    for (int i = 0; i < message.rects().size(); ++i)
+    for (size_t i = 0; i < message.rects().size(); ++i)
         window.request_update(message.rects()[i].intersected({ {}, window.size() }), message.ignore_occlusion());
 }
 

@@ -66,7 +66,7 @@ void WindowSwitcher::set_visible(bool visible)
 
 Window* WindowSwitcher::selected_window()
 {
-    if (m_selected_index < 0 || m_selected_index >= m_windows.size())
+    if (m_selected_index < 0 || m_selected_index >= static_cast<int>(m_windows.size()))
         return nullptr;
     return m_windows[m_selected_index].ptr();
 }
@@ -78,7 +78,7 @@ void WindowSwitcher::event(Core::Event& event)
 
     auto& mouse_event = static_cast<MouseEvent&>(event);
     int new_hovered_index = -1;
-    for (int i = 0; i < m_windows.size(); ++i) {
+    for (size_t i = 0; i < m_windows.size(); ++i) {
         auto item_rect = this->item_rect(i);
         if (item_rect.contains(mouse_event.position())) {
             new_hovered_index = i;
@@ -128,20 +128,20 @@ void WindowSwitcher::on_key_event(const KeyEvent& event)
     int new_selected_index;
 
     if (!event.shift()) {
-        new_selected_index = (m_selected_index + 1) % m_windows.size();
+        new_selected_index = (m_selected_index + 1) % static_cast<int>(m_windows.size());
     } else {
-        new_selected_index = (m_selected_index - 1) % m_windows.size();
+        new_selected_index = (m_selected_index - 1) % static_cast<int>(m_windows.size());
         if (new_selected_index < 0)
-            new_selected_index = m_windows.size() - 1;
+            new_selected_index = static_cast<int>(m_windows.size()) - 1;
     }
-    ASSERT(new_selected_index < m_windows.size());
+    ASSERT(new_selected_index < static_cast<int>(m_windows.size()));
 
     select_window_at_index(new_selected_index);
 }
 
 void WindowSwitcher::select_window(Window& window)
 {
-    for (int i = 0; i < m_windows.size(); ++i) {
+    for (size_t i = 0; i < m_windows.size(); ++i) {
         if (m_windows.at(i) == &window) {
             select_window_at_index(i);
             return;
@@ -180,17 +180,17 @@ void WindowSwitcher::draw()
     Gfx::Painter painter(*m_switcher_window->backing_store());
     painter.fill_rect({ {}, m_rect.size() }, palette.window());
     painter.draw_rect({ {}, m_rect.size() }, palette.threed_shadow2());
-    for (int index = 0; index < m_windows.size(); ++index) {
+    for (size_t index = 0; index < m_windows.size(); ++index) {
         auto& window = *m_windows.at(index);
         auto item_rect = this->item_rect(index);
         Color text_color;
         Color rect_text_color;
-        if (index == m_selected_index) {
+        if (static_cast<int>(index) == m_selected_index) {
             painter.fill_rect(item_rect, palette.selection());
             text_color = palette.selection_text();
             rect_text_color = palette.threed_shadow1();
         } else {
-            if (index == m_hovered_index)
+            if (static_cast<int>(index) == m_hovered_index)
                 Gfx::StylePainter::paint_button(painter, item_rect, palette, Gfx::ButtonStyle::CoolBar, false, true);
             text_color = palette.window_text();
             rect_text_color = palette.threed_shadow2();

@@ -89,7 +89,7 @@ public:
     {
         // Double check we don't already have the event waiting for us.
         // Otherwise we might end up blocked for a while for no reason.
-        for (ssize_t i = 0; i < m_unprocessed_messages.size(); ++i) {
+        for (size_t i = 0; i < m_unprocessed_messages.size(); ++i) {
             if (m_unprocessed_messages[i]->message_id() == MessageType::static_message_id()) {
                 auto message = move(m_unprocessed_messages[i]);
                 m_unprocessed_messages.remove(i);
@@ -108,7 +108,7 @@ public:
             ASSERT(FD_ISSET(m_connection->fd(), &rfds));
             if (!drain_messages_from_server())
                 return nullptr;
-            for (ssize_t i = 0; i < m_unprocessed_messages.size(); ++i) {
+            for (size_t i = 0; i < m_unprocessed_messages.size(); ++i) {
                 if (m_unprocessed_messages[i]->message_id() == MessageType::static_message_id()) {
                     auto message = move(m_unprocessed_messages[i]);
                     m_unprocessed_messages.remove(i);
@@ -127,7 +127,7 @@ public:
             ASSERT_NOT_REACHED();
             return false;
         }
-        ASSERT(nwritten == buffer.size());
+        ASSERT(static_cast<size_t>(nwritten) == buffer.size());
         return true;
     }
 

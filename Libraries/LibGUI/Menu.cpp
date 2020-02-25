@@ -108,7 +108,7 @@ int Menu::realize_menu()
     dbgprintf("GUI::Menu::realize_menu(): New menu ID: %d\n", m_menu_id);
 #endif
     ASSERT(m_menu_id > 0);
-    for (int i = 0; i < m_items.size(); ++i) {
+    for (size_t i = 0; i < m_items.size(); ++i) {
         auto& item = m_items[i];
         item.set_menu_id({}, m_menu_id);
         item.set_identifier({}, i);
@@ -157,7 +157,7 @@ void Menu::unrealize_menu()
     m_menu_id = 0;
 }
 
-Action* Menu::action_at(int index)
+Action* Menu::action_at(size_t index)
 {
     if (index >= m_items.size())
         return nullptr;
