@@ -1,3 +1,7 @@
 diff --git a/configure b/configure
 new file mode 100644
-index 0000000..e69de29
+index 0000000..04bfb39
+--- /dev/null
++++ b/configure
+@@ -0,0 +1 @@
++#nop
