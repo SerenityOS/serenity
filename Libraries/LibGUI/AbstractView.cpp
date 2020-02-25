@@ -125,18 +125,6 @@ void AbstractView::stop_editing()
     }
 }
 
-void AbstractView::select_all()
-{
-    ASSERT(model());
-    int rows = model()->row_count();
-    int columns = model()->column_count();
-
-    for (int i = 0; i < rows; ++i) {
-        for (int j = 0; j < columns; ++j)
-            selection().add(model()->index(i, j));
-    }
-}
-
 void AbstractView::activate(const ModelIndex& index)
 {
     if (on_activation)

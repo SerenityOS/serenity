@@ -43,6 +43,15 @@ ListView::~ListView()
 {
 }
 
+void ListView::select_all()
+{
+    selection().clear();
+    for (int item_index = 0; item_index < item_count(); ++item_index) {
+        auto index = model()->index(item_index, m_model_column);
+        selection().add(index);
+    }
+}
+
 void ListView::update_content_size()
 {
     if (!model())

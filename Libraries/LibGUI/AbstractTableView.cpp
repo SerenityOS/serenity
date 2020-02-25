@@ -48,6 +48,15 @@ AbstractTableView::~AbstractTableView()
 {
 }
 
+void AbstractTableView::select_all()
+{
+    selection().clear();
+    for (int item_index = 0; item_index < item_count(); ++item_index) {
+        auto index = model()->index(item_index);
+        selection().add(index);
+    }
+}
+
 void AbstractTableView::update_column_sizes()
 {
     if (!m_size_columns_to_fit_content)

@@ -48,6 +48,15 @@ ItemView::~ItemView()
 {
 }
 
+void ItemView::select_all()
+{
+    selection().clear();
+    for (int item_index = 0; item_index < item_count(); ++item_index) {
+        auto index = model()->index(item_index, model_column());
+        selection().add(index);
+    }
+}
+
 void ItemView::scroll_into_view(const ModelIndex& index, Orientation orientation)
 {
     ScrollableWidget::scroll_into_view(item_rect(index.row()), orientation);
