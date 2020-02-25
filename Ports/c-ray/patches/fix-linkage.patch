@@ -7,7 +7,7 @@ index 5ccce96..1db6074 100644
    			target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARY})
  		else()
 -  			target_link_libraries(${PROJECT_NAME} -lpthread -lm ${SDL2_LIBRARY})
-+			target_link_libraries(${PROJECT_NAME} -lSDL2 -lgui -ldraw -lipc -lcore -lpthread -lm -lstdc++)
++			target_link_libraries(${PROJECT_NAME} -lSDL2 -lgui -ldraw -lgfx -lipc -lcore -lpthread -lm -lstdc++)
  		endif()
  		add_definitions(-DUI_ENABLED)
  	else()
