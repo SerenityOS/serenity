@@ -26,6 +26,10 @@
 
 #pragma once
 
+#ifndef __serenity__
+#    include <new>
+#endif
+
 #ifdef KERNEL
 #    define AK_MAKE_ETERNAL                                               \
     public:                                                               \
