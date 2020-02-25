@@ -107,7 +107,7 @@ void AudioEngine::fill_buffer(FixedArray<Sample>& buffer)
     }
 
     if (m_delay) {
-        if (m_delay_buffers.size() >= m_delay) {
+        if (m_delay_buffers.size() >= static_cast<size_t>(m_delay)) {
             auto to_blend = m_delay_buffers.dequeue();
             for (size_t i = 0; i < to_blend->size(); ++i) {
                 buffer[i].left += (*to_blend)[i].left * 0.333333;
