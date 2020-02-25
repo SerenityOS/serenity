@@ -25,6 +25,7 @@
  */
 
 #include "SnakeGame.h"
+#include <LibCore/ConfigFile.h>
 #include <LibGUI/FontDatabase.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
@@ -42,8 +43,9 @@ SnakeGame::SnakeGame()
     srand(time(nullptr));
     reset();
 
-    m_high_score = 0;
-    m_high_score_text = "Best: 0";
+    auto config = Core::ConfigFile::get_for_app("Snake");
+    m_high_score = config->read_num_entry("Snake", "HighScore", 0);
+    m_high_score_text = String::format("Best: %u", m_high_score);
 }
 
 SnakeGame::~SnakeGame()
@@ -149,6 +151,8 @@ void SnakeGame::timer_event(Core::TimerEvent&)
             m_high_score = m_score;
             m_high_score_text = String::format("Best: %u", m_high_score);
             update(high_score_rect());
+            auto config = Core::ConfigFile::get_for_app("Snake");
+            config->write_num_entry("Snake", "HighScore", m_high_score);
         }
         update(score_rect());
         dirty_cells.append(m_fruit);
