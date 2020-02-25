@@ -315,6 +315,20 @@ Optional<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
         region_object.add("amount_dirty", (u32)region.amount_dirty());
         region_object.add("cow_pages", region.cow_pages());
         region_object.add("name", region.name());
+
+        StringBuilder pagemap_builder;
+        for (size_t i = 0; i < region.page_count(); ++i) {
+            auto page_index = region.first_page_index() + i;
+            auto& physical_page_slot = region.vmobject().physical_pages()[page_index];
+            if (!physical_page_slot)
+                pagemap_builder.append('N');
+            else if (physical_page_slot == MM.shared_zero_page())
+                pagemap_builder.append('Z');
+            else
+                pagemap_builder.append('P');
+        }
+        region_object.add("pagemap", pagemap_builder.to_string());
+
     }
     array.finish();
     return builder.build();
