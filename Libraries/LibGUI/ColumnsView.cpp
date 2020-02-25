@@ -29,6 +29,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGfx/CharacterBitmap.h>
+#include <LibGfx/Palette.h>
 
 namespace GUI {
 
