@@ -28,8 +28,41 @@
 #include <LibCore/Timer.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/JsonArrayModel.h>
+#include <LibGUI/Painter.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/TableView.h>
+#include <LibGfx/Palette.h>
+
+class PagemapPaintingDelegate final : public GUI::TableCellPaintingDelegate {
+public:
+    virtual ~PagemapPaintingDelegate() override {}
+
+    virtual void paint(GUI::Painter& painter, const Gfx::Rect& a_rect, const Gfx::Palette&, const GUI::Model& model, const GUI::ModelIndex& index) override
+    {
+        auto rect = a_rect.shrunken(2, 2);
+        auto pagemap = model.data(index, GUI::Model::Role::Custom).to_string();
+
+        float scale_factor = (float)pagemap.length() / (float)rect.width();
+
+        for (int i = 0; i < rect.width(); ++i) {
+            int x = rect.x() + i;
+            char c = pagemap[(float)i * scale_factor];
+            Color color;
+            if (c == 'N') // Null (no page at all, typically an inode-backed page that hasn't been paged in.)
+                color = Color::White;
+            else if (c == 'Z') // Zero (globally shared zero page, typically an untouched anonymous page.)
+                color = Color::from_rgb(0xc0c0ff);
+            else if (c == 'P') // Physical (a resident page)
+                color = Color::Black;
+            else
+                ASSERT_NOT_REACHED();
+
+            painter.draw_line({ x, rect.top() }, { x, rect.bottom() }, color);
+        }
+
+        painter.draw_rect(rect, Color::Black);
+    }
+};
 
 ProcessMemoryMapWidget::ProcessMemoryMapWidget()
 {
@@ -67,10 +100,25 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget()
             return "Volatile";
         return "Non-volatile";
     });
+    pid_vm_fields.empend(
+        "Page map", Gfx::TextAlignment::CenterLeft,
+        [](auto&) {
+            return GUI::Variant();
+        },
+        [](auto&) {
+            return GUI::Variant();
+        },
+        [](const JsonObject& object) {
+            auto pagemap = object.get("pagemap").as_string_or({});
+            return pagemap;
+        });
     pid_vm_fields.empend("cow_pages", "# CoW", Gfx::TextAlignment::CenterRight);
     pid_vm_fields.empend("name", "Name", Gfx::TextAlignment::CenterLeft);
     m_json_model = GUI::JsonArrayModel::create({}, move(pid_vm_fields));
     m_table_view->set_model(GUI::SortingProxyModel::create(*m_json_model));
+
+    m_table_view->set_cell_painting_delegate(6, make<PagemapPaintingDelegate>());
+
     m_table_view->model()->set_key_column_and_sort_order(0, GUI::SortOrder::Ascending);
     m_timer = add<Core::Timer>(1000, [this] { refresh(); });
 }
