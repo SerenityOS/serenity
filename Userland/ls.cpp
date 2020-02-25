@@ -145,9 +145,9 @@ int print_escaped(const char* name)
     return printed;
 }
 
-int print_name(const struct stat& st, const String& name, const char* path_for_link_resolution = nullptr)
+size_t print_name(const struct stat& st, const String& name, const char* path_for_link_resolution = nullptr)
 {
-    int nprinted = 0;
+    size_t nprinted = 0;
 
     if (!flag_colorize || !output_is_terminal) {
         nprinted = printf("%s", name.characters());
@@ -345,7 +345,7 @@ int do_file_system_object_long(const char* path)
     return 0;
 }
 
-bool print_filesystem_object_short(const char* path, const char* name, int* nprinted)
+bool print_filesystem_object_short(const char* path, const char* name, size_t* nprinted)
 {
     struct stat st;
     int rc = lstat(path, &st);
@@ -363,7 +363,7 @@ int do_file_system_object_short(const char* path)
     Core::DirIterator di(path, !flag_show_dotfiles ? Core::DirIterator::SkipDots : Core::DirIterator::Flags::NoFlags);
     if (di.has_error()) {
         if (di.error() == ENOTDIR) {
-            int nprinted;
+            size_t nprinted = 0;
             bool status = print_filesystem_object_short(path, path, &nprinted);
             printf("\n");
             if (status)
@@ -385,8 +385,8 @@ int do_file_system_object_short(const char* path)
     quick_sort(names.begin(), names.end(), [](auto& a, auto& b) { return a < b; });
 
     size_t printed_on_row = 0;
-    int nprinted;
-    for (int i = 0; i < names.size(); ++i) {
+    size_t nprinted = 0;
+    for (size_t i = 0; i < names.size(); ++i) {
         auto& name = names[i];
         StringBuilder builder;
         builder.append(path);
@@ -404,7 +404,7 @@ int do_file_system_object_short(const char* path)
         size_t column_width = longest_name + (offset > 0 ? offset : 2);
         printed_on_row += column_width;
 
-        for (int j = nprinted; i != (names.size() - 1) && j < (int)column_width; ++j)
+        for (size_t j = nprinted; i != (names.size() - 1) && j < column_width; ++j)
             printf(" ");
         if ((printed_on_row + column_width) >= terminal_columns) {
             printf("\n");

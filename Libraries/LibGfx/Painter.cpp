@@ -767,7 +767,7 @@ void Painter::draw_text(const Rect& rect, const StringView& raw_text, const Font
 
     static const int line_spacing = 4;
     int line_height = font.glyph_height() + line_spacing;
-    Rect bounding_rect { 0, 0, 0, (lines.size() * line_height) - line_spacing };
+    Rect bounding_rect { 0, 0, 0, (static_cast<int>(lines.size()) * line_height) - line_spacing };
 
     for (auto& line : lines) {
         auto line_width = font.width(line);
@@ -795,9 +795,9 @@ void Painter::draw_text(const Rect& rect, const StringView& raw_text, const Font
         ASSERT_NOT_REACHED();
     }
 
-    for (int i = 0; i < lines.size(); ++i) {
+    for (size_t i = 0; i < lines.size(); ++i) {
         auto& line = lines[i];
-        Rect line_rect { bounding_rect.x(), bounding_rect.y() + i * line_height, bounding_rect.width(), line_height };
+        Rect line_rect { bounding_rect.x(), bounding_rect.y() + static_cast<int>(i) * line_height, bounding_rect.width(), line_height };
         line_rect.intersect(rect);
         draw_text_line(line_rect, line, font, alignment, color, elision);
     }

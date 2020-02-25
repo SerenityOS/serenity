@@ -226,11 +226,11 @@ Audio::Sample AudioEngine::noise() const
 Audio::Sample AudioEngine::recorded_sample(size_t note)
 {
     int t = m_pos[note];
-    if (t >= m_recorded_sample.size())
+    if (t >= static_cast<int>(m_recorded_sample.size()))
         return 0;
     double w_left = m_recorded_sample[t].left;
     double w_right = m_recorded_sample[t].right;
-    if (t + 1 < m_recorded_sample.size()) {
+    if (t + 1 < static_cast<int>(m_recorded_sample.size())) {
         double t_fraction = m_pos[note] - t;
         w_left += (m_recorded_sample[t + 1].left - m_recorded_sample[t].left) * t_fraction;
         w_right += (m_recorded_sample[t + 1].right - m_recorded_sample[t].right) * t_fraction;

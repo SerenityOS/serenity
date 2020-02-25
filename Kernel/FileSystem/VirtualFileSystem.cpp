@@ -93,7 +93,7 @@ KResult VFS::unmount(InodeIdentifier guest_inode_id)
     LOCKER(m_lock);
     dbg() << "VFS: unmount called with inode " << guest_inode_id;
 
-    for (int i = 0; i < m_mounts.size(); ++i) {
+    for (size_t i = 0; i < m_mounts.size(); ++i) {
         auto& mount = m_mounts.at(i);
         if (mount.guest() == guest_inode_id) {
             auto result = mount.guest_fs().prepare_to_unmount();
@@ -788,7 +788,7 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
 
     NonnullRefPtr<Custody> custody = path[0] == '/' ? current_root : base;
 
-    for (int i = 0; i < parts.size(); ++i) {
+    for (size_t i = 0; i < parts.size(); ++i) {
         Custody& parent = custody;
         auto parent_metadata = parent.inode().metadata();
         if (!parent_metadata.is_directory())

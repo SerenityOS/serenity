@@ -58,8 +58,8 @@ public:
 
     int read(u8* buffer, int length);
 
-    ByteBuffer read(int max_size);
-    ByteBuffer read_line(int max_size);
+    ByteBuffer read(size_t max_size);
+    ByteBuffer read_line(size_t max_size);
     ByteBuffer read_all();
 
     bool write(const u8*, int size);

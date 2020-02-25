@@ -192,7 +192,7 @@ KResult LocalSocket::connect(FileDescription& description, const sockaddr* addre
     return KSuccess;
 }
 
-KResult LocalSocket::listen(int backlog)
+KResult LocalSocket::listen(size_t backlog)
 {
     LOCKER(lock());
     if (type() != SOCK_STREAM)
@@ -200,7 +200,7 @@ KResult LocalSocket::listen(int backlog)
     set_backlog(backlog);
     m_connect_side_role = m_role = Role::Listener;
 #ifdef DEBUG_LOCAL_SOCKET
-    kprintf("LocalSocket{%p} listening with backlog=%d\n", this, backlog);
+    kprintf("LocalSocket{%p} listening with backlog=%zu\n", this, backlog);
 #endif
     return KSuccess;
 }

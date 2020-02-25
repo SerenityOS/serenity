@@ -125,7 +125,7 @@ public:
             }
         }
 
-        ASSERT(nwritten == buffer.size());
+        ASSERT(static_cast<size_t>(nwritten) == buffer.size());
     }
 
     void drain_messages_from_client()

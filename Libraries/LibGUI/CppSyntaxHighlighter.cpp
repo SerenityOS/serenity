@@ -72,8 +72,8 @@ void CppSyntaxHighlighter::highlight_matching_token_pair()
         Backward,
     };
 
-    auto find_span_of_type = [&](int i, CppToken::Type type, CppToken::Type not_type, Direction direction) {
-        int nesting_level = 0;
+    auto find_span_of_type = [&](auto i, CppToken::Type type, CppToken::Type not_type, Direction direction) -> Optional<size_t> {
+        size_t nesting_level = 0;
         bool forward = direction == Direction::Forward;
         for (forward ? ++i : --i; forward ? (i < document.spans().size()) : (i >= 0); forward ? ++i : --i) {
             auto& span = document.spans().at(i);
@@ -85,7 +85,7 @@ void CppSyntaxHighlighter::highlight_matching_token_pair()
                     return i;
             }
         }
-        return -1;
+        return {};
     };
 
     auto make_buddies = [&](int index0, int index1) {
@@ -114,15 +114,15 @@ void CppSyntaxHighlighter::highlight_matching_token_pair()
         { CppToken::Type::LeftBracket, CppToken::Type::RightBracket },
     };
 
-    for (int i = 0; i < document.spans().size(); ++i) {
+    for (size_t i = 0; i < document.spans().size(); ++i) {
         auto& span = const_cast<GUI::TextDocumentSpan&>(document.spans().at(i));
         auto token_type = (CppToken::Type)((uintptr_t)span.data);
 
         for (auto& pair : pairs) {
             if (token_type == pair.open && span.range.start() == m_editor->cursor()) {
                 auto buddy = find_span_of_type(i, pair.close, pair.open, Direction::Forward);
-                if (buddy != -1)
-                    make_buddies(i, buddy);
+                if (buddy.has_value())
+                    make_buddies(i, buddy.value());
                 return;
             }
         }
@@ -133,8 +133,8 @@ void CppSyntaxHighlighter::highlight_matching_token_pair()
         for (auto& pair : pairs) {
             if (token_type == pair.close && right_of_end == m_editor->cursor()) {
                 auto buddy = find_span_of_type(i, pair.open, pair.close, Direction::Backward);
-                if (buddy != -1)
-                    make_buddies(i, buddy);
+                if (buddy.has_value())
+                    make_buddies(i, buddy.value());
                 return;
             }
         }

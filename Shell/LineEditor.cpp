@@ -162,7 +162,7 @@ Vector<String> LineEditor::tab_complete_first_token(const String& token)
         cut_mismatching_chars(completion, m_path[i], token.length());
         seen_others = true;
     }
-    for (int i = index + 1; i < m_path.size() && m_path[i].starts_with(token); ++i) {
+    for (size_t i = index + 1; i < m_path.size() && m_path[i].starts_with(token); ++i) {
         cut_mismatching_chars(completion, m_path[i], token.length());
         suggestions.append(m_path[i]);
         seen_others = true;
@@ -433,7 +433,7 @@ String LineEditor::get_line(const String& prompt)
                     size_t num_printed = 0;
                     putchar('\n');
                     for (auto& suggestion : suggestions) {
-                        int next_column = num_printed + suggestion.length() + longest_suggestion_length + 2;
+                        size_t next_column = num_printed + suggestion.length() + longest_suggestion_length + 2;
 
                         if (next_column > m_num_columns) {
                             putchar('\n');
@@ -498,7 +498,7 @@ String LineEditor::get_line(const String& prompt)
             if (ch == 0xc) {                    // ^L
                 printf("\033[3J\033[H\033[2J"); // Clear screen.
                 fputs(prompt.characters(), stdout);
-                for (int i = 0; i < m_buffer.size(); ++i)
+                for (size_t i = 0; i < m_buffer.size(); ++i)
                     fputc(m_buffer[i], stdout);
                 if (m_cursor < (size_t)m_buffer.size())
                     printf("\033[%zuD", (size_t)m_buffer.size() - m_cursor); // Move cursor N steps left.

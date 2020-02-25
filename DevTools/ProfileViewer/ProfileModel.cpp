@@ -62,7 +62,7 @@ GUI::ModelIndex ProfileModel::parent_index(const GUI::ModelIndex& index) const
 
     // NOTE: If the parent has no parent, it's a root, so we have to look among the roots.
     if (!node.parent()->parent()) {
-        for (int row = 0; row < m_profile.roots().size(); ++row) {
+        for (size_t row = 0; row < m_profile.roots().size(); ++row) {
             if (m_profile.roots()[row].ptr() == node.parent()) {
                 return create_index(row, index.column(), node.parent());
             }
@@ -71,7 +71,7 @@ GUI::ModelIndex ProfileModel::parent_index(const GUI::ModelIndex& index) const
         return {};
     }
 
-    for (int row = 0; row < node.parent()->parent()->children().size(); ++row) {
+    for (size_t row = 0; row < node.parent()->parent()->children().size(); ++row) {
         if (node.parent()->parent()->children()[row].ptr() == node.parent())
             return create_index(row, index.column(), node.parent());
     }

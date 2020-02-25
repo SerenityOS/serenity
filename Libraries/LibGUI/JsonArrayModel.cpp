@@ -50,7 +50,7 @@ void JsonArrayModel::update()
 
 Model::ColumnMetadata JsonArrayModel::column_metadata(int column) const
 {
-    ASSERT(column < m_fields.size());
+    ASSERT(column < static_cast<int>(m_fields.size()));
     return { 100, m_fields[column].text_alignment };
 }
 

@@ -1352,7 +1352,7 @@ void TextEditor::recompute_visual_lines(size_t line_index)
     visual_data.visual_line_breaks.append(line.length());
 
     if (is_line_wrapping_enabled())
-        visual_data.visual_rect = { m_horizontal_content_padding, 0, available_width, visual_data.visual_line_breaks.size() * line_height() };
+        visual_data.visual_rect = { m_horizontal_content_padding, 0, available_width, static_cast<int>(visual_data.visual_line_breaks.size()) * line_height() };
     else
         visual_data.visual_rect = { m_horizontal_content_padding, 0, font().width(line.view()), line_height() };
 }

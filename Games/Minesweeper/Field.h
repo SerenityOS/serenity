@@ -45,9 +45,9 @@ public:
     bool has_mine { false };
     bool has_flag { false };
     bool is_considering { false };
-    int row { 0 };
-    int column { 0 };
-    int number { 0 };
+    size_t row { 0 };
+    size_t column { 0 };
+    size_t number { 0 };
     RefPtr<SquareButton> button;
     RefPtr<SquareLabel> label;
 
@@ -63,13 +63,13 @@ public:
     Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, Function<void(Gfx::Size)> on_size_changed);
     virtual ~Field() override;
 
-    int rows() const { return m_rows; }
-    int columns() const { return m_columns; }
+    size_t rows() const { return m_rows; }
+    size_t columns() const { return m_columns; }
     size_t mine_count() const { return m_mine_count; }
     int square_size() const { return 15; }
     bool is_single_chording() const { return m_single_chording; }
 
-    void set_field_size(int rows, int columns, size_t mine_count);
+    void set_field_size(size_t rows, size_t columns, size_t mine_count);
     void set_single_chording(bool new_val);
 
     void reset();
@@ -87,8 +87,8 @@ private:
     void set_chord_preview(Square&, bool);
     void set_flag(Square&, bool);
 
-    Square& square(int row, int column) { return *m_squares[row * columns() + column]; }
-    const Square& square(int row, int column) const { return *m_squares[row * columns() + column]; }
+    Square& square(size_t row, size_t column) { return *m_squares[row * columns() + column]; }
+    const Square& square(size_t row, size_t column) const { return *m_squares[row * columns() + column]; }
 
     void flood_fill(Square&);
     void on_square_clicked_impl(Square&, bool);
@@ -103,10 +103,10 @@ private:
     };
     void set_face(Face);
 
-    int m_rows { 0 };
-    int m_columns { 0 };
+    size_t m_rows { 0 };
+    size_t m_columns { 0 };
     size_t m_mine_count { 0 };
-    int m_unswept_empties { 0 };
+    size_t m_unswept_empties { 0 };
     Vector<OwnPtr<Square>> m_squares;
     RefPtr<Gfx::Bitmap> m_mine_bitmap;
     RefPtr<Gfx::Bitmap> m_flag_bitmap;
@@ -120,8 +120,8 @@ private:
     GUI::Label& m_flag_label;
     GUI::Label& m_time_label;
     RefPtr<Core::Timer> m_timer;
-    int m_time_elapsed { 0 };
-    int m_flags_left { 0 };
+    size_t m_time_elapsed { 0 };
+    size_t m_flags_left { 0 };
     Face m_face { Face::Default };
     bool m_chord_preview { false };
     bool m_first_click { true };

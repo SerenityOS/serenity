@@ -71,7 +71,7 @@ void RemoteProcess::handle_get_all_objects_response(const JsonObject& response)
         remote_objects.append(move(remote_object));
     }
 
-    for (int i = 0; i < remote_objects.size(); ++i) {
+    for (size_t i = 0; i < remote_objects.size(); ++i) {
         auto& remote_object = remote_objects.ptr_at(i);
         auto* parent = objects_by_address.get(remote_object->parent_address).value_or(nullptr);
         if (!parent) {

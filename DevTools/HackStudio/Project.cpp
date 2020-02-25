@@ -146,7 +146,7 @@ public:
             return {};
         }
 
-        for (int row = 0; row < node.parent->parent->children.size(); ++row) {
+        for (size_t row = 0; row < node.parent->parent->children.size(); ++row) {
             if (node.parent->parent->children[row].ptr() == node.parent)
                 return create_index(row, 0, node.parent);
         }
@@ -260,7 +260,7 @@ void Project::rebuild_tree()
         ProjectTreeNode* current = root.ptr();
         StringBuilder partial_path;
 
-        for (int i = 0; i < path.parts().size(); ++i) {
+        for (size_t i = 0; i < path.parts().size(); ++i) {
             auto& part = path.parts().at(i);
             if (part == ".")
                 continue;

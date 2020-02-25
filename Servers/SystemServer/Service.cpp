@@ -241,7 +241,7 @@ void Service::spawn()
 
         char* argv[m_extra_arguments.size() + 2];
         argv[0] = const_cast<char*>(m_executable_path.characters());
-        for (int i = 0; i < m_extra_arguments.size(); i++)
+        for (size_t i = 0; i < m_extra_arguments.size(); i++)
             argv[i + 1] = const_cast<char*>(m_extra_arguments[i].characters());
         argv[m_extra_arguments.size() + 1] = nullptr;
 

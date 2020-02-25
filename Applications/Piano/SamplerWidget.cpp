@@ -70,7 +70,7 @@ void WaveEditor::paint_event(GUI::PaintEvent& event)
     painter.set_pixel({ prev_x, left_prev_y }, left_wave_colors[RecordedSample]);
     painter.set_pixel({ prev_x, right_prev_y }, right_wave_colors[RecordedSample]);
 
-    for (int x = 1; x < recorded_sample.size(); ++x) {
+    for (size_t x = 1; x < recorded_sample.size(); ++x) {
         int left_y = sample_to_y(recorded_sample[x].left);
         int right_y = sample_to_y(recorded_sample[x].right);
 

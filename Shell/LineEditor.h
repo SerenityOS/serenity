@@ -59,13 +59,13 @@ private:
 
     Vector<char, 1024> m_buffer;
     size_t m_cursor { 0 };
-    int m_times_tab_pressed { 0 };
-    int m_num_columns { 0 };
+    size_t m_times_tab_pressed { 0 };
+    size_t m_num_columns { 0 };
 
     // FIXME: This should be something more take_first()-friendly.
     Vector<String> m_history;
-    int m_history_cursor { 0 };
-    int m_history_capacity { 100 };
+    size_t m_history_cursor { 0 };
+    size_t m_history_capacity { 100 };
 
     Vector<String, 256> m_path;
 

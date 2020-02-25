@@ -668,15 +668,15 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDes
 
     const int block_size = fs().block_size();
 
-    int first_block_logical_index = offset / block_size;
-    int last_block_logical_index = (offset + count) / block_size;
+    size_t first_block_logical_index = offset / block_size;
+    size_t last_block_logical_index = (offset + count) / block_size;
     if (last_block_logical_index >= m_block_list.size())
         last_block_logical_index = m_block_list.size() - 1;
 
     int offset_into_first_block = offset % block_size;
 
     ssize_t nread = 0;
-    int remaining_count = min((off_t)count, (off_t)size() - offset);
+    size_t remaining_count = min((off_t)count, (off_t)size() - offset);
     u8* out = buffer;
 
 #ifdef EXT2_DEBUG
@@ -685,7 +685,7 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDes
 
     u8 block[max_block_size];
 
-    for (int bi = first_block_logical_index; remaining_count && bi <= last_block_logical_index; ++bi) {
+    for (size_t bi = first_block_logical_index; remaining_count && bi <= last_block_logical_index; ++bi) {
         auto block_index = m_block_list[bi];
         ASSERT(block_index);
         bool success = fs().read_block(block_index, block, description);
@@ -694,8 +694,8 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDes
             return -EIO;
         }
 
-        int offset_into_block = (bi == first_block_logical_index) ? offset_into_first_block : 0;
-        int num_bytes_to_copy = min(block_size - offset_into_block, remaining_count);
+        size_t offset_into_block = (bi == first_block_logical_index) ? offset_into_first_block : 0;
+        size_t num_bytes_to_copy = min(block_size - offset_into_block, remaining_count);
         memcpy(out, block + offset_into_block, num_bytes_to_copy);
         remaining_count -= num_bytes_to_copy;
         nread += num_bytes_to_copy;
@@ -712,8 +712,8 @@ KResult Ext2FSInode::resize(u64 new_size)
         return KSuccess;
 
     u64 block_size = fs().block_size();
-    int blocks_needed_before = ceil_div(old_size, block_size);
-    int blocks_needed_after = ceil_div(new_size, block_size);
+    size_t blocks_needed_before = ceil_div(old_size, block_size);
+    size_t blocks_needed_after = ceil_div(new_size, block_size);
 
 #ifdef EXT2_DEBUG
     dbgprintf("Ext2FSInode::resize(): blocks needed before (size was %Q): %d\n", old_size, blocks_needed_before);
@@ -777,7 +777,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const u8* data, Fi
         }
     }
 
-    const ssize_t block_size = fs().block_size();
+    const size_t block_size = fs().block_size();
     u64 old_size = size();
     u64 new_size = max(static_cast<u64>(offset) + count, (u64)size());
 
@@ -793,17 +793,17 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const u8* data, Fi
         return -EIO;
     }
 
-    int first_block_logical_index = offset / block_size;
-    int last_block_logical_index = (offset + count) / block_size;
+    size_t first_block_logical_index = offset / block_size;
+    size_t last_block_logical_index = (offset + count) / block_size;
     if (last_block_logical_index >= m_block_list.size())
         last_block_logical_index = m_block_list.size() - 1;
 
-    int offset_into_first_block = offset % block_size;
+    size_t offset_into_first_block = offset % block_size;
 
-    int last_logical_block_index_in_file = new_size / block_size;
+    size_t last_logical_block_index_in_file = new_size / block_size;
 
     ssize_t nwritten = 0;
-    int remaining_count = min((off_t)count, (off_t)new_size - offset);
+    size_t remaining_count = min((off_t)count, (off_t)new_size - offset);
     const u8* in = data;
 
 #ifdef EXT2_DEBUG
@@ -811,9 +811,9 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const u8* data, Fi
 #endif
 
     auto buffer_block = ByteBuffer::create_uninitialized(block_size);
-    for (int bi = first_block_logical_index; remaining_count && bi <= last_block_logical_index; ++bi) {
-        int offset_into_block = (bi == first_block_logical_index) ? offset_into_first_block : 0;
-        int num_bytes_to_copy = min(block_size - offset_into_block, remaining_count);
+    for (size_t bi = first_block_logical_index; remaining_count && bi <= last_block_logical_index; ++bi) {
+        size_t offset_into_block = (bi == first_block_logical_index) ? offset_into_first_block : 0;
+        size_t num_bytes_to_copy = min(block_size - offset_into_block, remaining_count);
 
         ByteBuffer block;
         if (offset_into_block != 0 || num_bytes_to_copy != block_size) {
@@ -828,8 +828,8 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const u8* data, Fi
 
         memcpy(block.data() + offset_into_block, in, num_bytes_to_copy);
         if (bi == last_logical_block_index_in_file && num_bytes_to_copy < block_size) {
-            int padding_start = new_size % block_size;
-            int padding_bytes = block_size - padding_start;
+            size_t padding_start = new_size % block_size;
+            size_t padding_bytes = block_size - padding_start;
 #ifdef EXT2_DEBUG
             dbg() << "Ext2FS: Padding last block of file with zero x " << padding_bytes << " (new_size=" << new_size << ", offset_into_block=" << offset_into_block << ", num_bytes_to_copy=" << num_bytes_to_copy << ")";
 #endif
@@ -905,7 +905,7 @@ bool Ext2FSInode::write_directory(const Vector<FS::DirectoryEntry>& entries)
     auto directory_data = ByteBuffer::create_uninitialized(occupied_size);
 
     BufferStream stream(directory_data);
-    for (int i = 0; i < entries.size(); ++i) {
+    for (size_t i = 0; i < entries.size(); ++i) {
         auto& entry = entries[i];
 
         int record_length = EXT2_DIR_REC_LEN(entry.name_length);
@@ -1087,7 +1087,7 @@ Ext2FS::BlockIndex Ext2FS::allocate_block(GroupIndex preferred_group_index)
     return block_index;
 }
 
-Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(GroupIndex preferred_group_index, int count)
+Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(GroupIndex preferred_group_index, size_t count)
 {
     LOCKER(m_lock);
 #ifdef EXT2_DEBUG
@@ -1424,7 +1424,7 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(InodeIdentifier parent_id, 
     dbgprintf("Ext2FS: Adding inode '%s' (mode %o) to parent directory %u:\n", name.characters(), mode, parent_inode->identifier().index());
 #endif
 
-    auto needed_blocks = ceil_div(size, block_size());
+    size_t needed_blocks = ceil_div(size, block_size());
     if ((size_t)needed_blocks > super_block().s_free_blocks_count) {
         dbg() << "Ext2FS: create_inode: not enough free blocks";
         return KResult(-ENOSPC);
