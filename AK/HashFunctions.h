@@ -58,3 +58,8 @@ inline unsigned ptr_hash(uintptr_t ptr)
     else
         return int_hash((u32)ptr);
 }
+
+inline unsigned ptr_hash(const void* ptr)
+{
+    return ptr_hash((uintptr_t)(ptr));
+}
