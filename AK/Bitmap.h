@@ -39,12 +39,12 @@ class Bitmap {
     AK_MAKE_NONCOPYABLE(Bitmap)
 public:
     // NOTE: A wrapping Bitmap won't try to free the wrapped data.
-    static Bitmap wrap(u8* data, int size)
+    static Bitmap wrap(u8* data, size_t size)
     {
         return Bitmap(data, size);
     }
 
-    static Bitmap create(int size, bool default_value = 0)
+    static Bitmap create(size_t size, bool default_value = 0)
     {
         return Bitmap(size, default_value);
     }
@@ -215,7 +215,7 @@ public:
         fill(default_value);
     }
 
-    Bitmap(u8* data, int size)
+    Bitmap(u8* data, size_t size)
         : m_data(data)
         , m_size(size)
         , m_owned(false)
