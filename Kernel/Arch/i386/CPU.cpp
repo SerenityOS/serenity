@@ -39,6 +39,7 @@
 #include <Kernel/KSyms.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <LibBareMetal/IO.h>
 #include <LibC/mallocdefs.h>
 
 //#define PAGE_FAULT_DEBUG
@@ -833,3 +834,13 @@ void __assertion_failed(const char* msg, const char* file, unsigned line, const 
         ;
 }
 #endif
+
+NonMaskableInterruptDisabler::NonMaskableInterruptDisabler()
+{
+    IO::out8(0x70, IO::in8(0x70) | 0x80);
+}
+
+NonMaskableInterruptDisabler::~NonMaskableInterruptDisabler()
+{
+    IO::out8(0x70, IO::in8(0x70) & 0x7F);
+}
