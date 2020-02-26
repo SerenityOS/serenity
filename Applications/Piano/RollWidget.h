@@ -42,6 +42,12 @@ private:
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent& event) override;
+    virtual void mousewheel_event(GUI::MouseEvent&) override;
 
     AudioEngine& m_audio_engine;
+
+    int m_roll_width;
+    int m_num_notes;
+    double m_note_width;
+    int m_zoom_level { 1 };
 };
