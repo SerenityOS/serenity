@@ -7,6 +7,7 @@ OBJS = \
     ../AK/StringBuilder.o \
     ../AK/StringImpl.o \
     ../AK/StringView.o \
+    ../AK/StringUtils.o \
     ../Libraries/LibELF/ELFImage.o \
     ../Libraries/LibELF/ELFLoader.o \
     ../Libraries/LibBareMetal/Output/Console.o \

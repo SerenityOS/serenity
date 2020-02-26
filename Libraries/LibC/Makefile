@@ -3,6 +3,7 @@ AK_OBJS = \
     ../../AK/String.o \
     ../../AK/StringView.o \
     ../../AK/StringBuilder.o \
+    ../../AK/StringUtils.o \
     ../../AK/FileSystemPath.o \
     ../../AK/URL.o \
     ../../AK/JsonValue.o \

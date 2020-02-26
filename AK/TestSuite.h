@@ -182,7 +182,7 @@ NonnullRefPtrVector<TestCase> TestSuite::find_cases(const String& search, bool f
 {
     NonnullRefPtrVector<TestCase> matches;
     for (const auto& t : m_cases) {
-        if (!search.is_empty() && !t.name().matches(search, String::CaseSensitivity::CaseInsensitive)) {
+        if (!search.is_empty() && !t.name().matches(search, CaseSensitivity::CaseInsensitive)) {
             continue;
         }
 

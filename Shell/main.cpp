@@ -630,7 +630,7 @@ static Vector<String> expand_globs(const StringView& path, const StringView& bas
             if (name[0] == '.' && part[0] != '.')
                 continue;
 
-            if (name.matches(part, String::CaseSensitivity::CaseSensitive)) {
+            if (name.matches(part, CaseSensitivity::CaseSensitive)) {
 
                 StringBuilder nested_base;
                 nested_base.append(new_base);
