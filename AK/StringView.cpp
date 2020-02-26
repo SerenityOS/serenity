@@ -143,6 +143,11 @@ bool StringView::ends_with(const StringView& str) const
     return !memcmp(characters_without_null_termination() + length() - str.length(), str.characters_without_null_termination(), str.length());
 }
 
+bool StringView::matches(const StringView& mask, CaseSensitivity case_sensitivity) const
+{
+    return StringUtils::matches(*this, mask, case_sensitivity);
+}
+
 StringView StringView::substring_view(size_t start, size_t length) const
 {
     ASSERT(start + length <= m_length);

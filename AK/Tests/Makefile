@@ -3,6 +3,7 @@ SHARED_TEST_SOURCES = \
 	../StringImpl.cpp \
 	../StringBuilder.cpp \
 	../StringView.cpp \
+	../StringUtils.cpp \
 	../LogStream.cpp \
 	../JsonValue.cpp \
 	../JsonParser.cpp \
