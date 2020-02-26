@@ -132,7 +132,7 @@ int ConfigFile::read_num_entry(const String& group, const String& key, int defau
     }
 
     bool ok;
-    int value = read_entry(group, key).to_uint(ok);
+    int value = read_entry(group, key).to_int(ok);
     if (!ok)
         return default_value;
     return value;
