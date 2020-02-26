@@ -4,6 +4,7 @@ PROGRAM = Generate_CSS_PropertyID_h
 
 OBJS = \
     Generate_CSS_PropertyID_h.o \
+    ../../../../AK/StringUtils.o \
     ../../../../AK/String.o \
     ../../../../AK/StringImpl.o \
     ../../../../AK/StringBuilder.o \

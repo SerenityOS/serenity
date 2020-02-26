@@ -29,6 +29,7 @@
 #include <AK/Forward.h>
 #include <AK/RefPtr.h>
 #include <AK/StringImpl.h>
+#include <AK/StringUtils.h>
 #include <AK/StringView.h>
 #include <AK/Traits.h>
 
@@ -108,13 +109,8 @@ public:
     {
     }
 
-    enum class CaseSensitivity {
-        CaseInsensitive,
-        CaseSensitive,
-    };
-
     static String repeated(char, size_t count);
-    bool matches(const StringView& pattern, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
+    bool matches(const StringView& mask, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
 
     // FIXME: These should be shared between String and StringView somehow!
     int to_int(bool& ok) const;
@@ -244,7 +240,6 @@ public:
     }
 
 private:
-    bool match_helper(const StringView& mask) const;
     RefPtr<StringImpl> m_impl;
 };
 
