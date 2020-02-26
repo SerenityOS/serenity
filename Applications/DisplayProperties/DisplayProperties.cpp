@@ -138,10 +138,11 @@ void DisplayPropertiesWidget::create_frame()
 
     auto wallpaper_model = wallpaper_list->model();
     auto find_first_wallpaper_index = m_wallpapers.find_first_index(m_selected_wallpaper);
-    ASSERT(find_first_wallpaper_index.has_value());
-    auto wallpaper_index_in_model = wallpaper_model->index(find_first_wallpaper_index.value(), wallpaper_list->model_column());
-    if (wallpaper_model->is_valid(wallpaper_index_in_model))
-        wallpaper_list->selection().set(wallpaper_index_in_model);
+    if (find_first_wallpaper_index.has_value()) {
+        auto wallpaper_index_in_model = wallpaper_model->index(find_first_wallpaper_index.value(), wallpaper_list->model_column());
+        if (wallpaper_model->is_valid(wallpaper_index_in_model))
+            wallpaper_list->selection().set(wallpaper_index_in_model);
+    }
 
     wallpaper_list->horizontal_scrollbar().set_visible(false);
     wallpaper_list->on_selection = [this](auto& index) {
