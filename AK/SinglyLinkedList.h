@@ -34,6 +34,7 @@ namespace AK {
 template<typename ListType, typename ElementType>
 class SinglyLinkedListIterator {
 public:
+    SinglyLinkedListIterator() {}
     bool operator!=(const SinglyLinkedListIterator& other) const { return m_node != other.m_node; }
     SinglyLinkedListIterator& operator++()
     {
@@ -44,7 +45,6 @@ public:
     ElementType& operator*() { return m_node->value; }
     ElementType* operator->() { return &m_node->value; }
     bool is_end() const { return !m_node; }
-    static SinglyLinkedListIterator universal_end() { return SinglyLinkedListIterator(nullptr); }
 
 private:
     friend ListType;
@@ -160,12 +160,12 @@ public:
     using Iterator = SinglyLinkedListIterator<SinglyLinkedList, T>;
     friend Iterator;
     Iterator begin() { return Iterator(m_head); }
-    Iterator end() { return Iterator::universal_end(); }
+    Iterator end() { return {}; }
 
     using ConstIterator = SinglyLinkedListIterator<const SinglyLinkedList, const T>;
     friend ConstIterator;
     ConstIterator begin() const { return ConstIterator(m_head); }
-    ConstIterator end() const { return ConstIterator::universal_end(); }
+    ConstIterator end() const { return {}; }
 
     template<typename Finder>
     ConstIterator find(Finder finder) const
