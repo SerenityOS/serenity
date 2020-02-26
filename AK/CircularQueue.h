@@ -64,7 +64,7 @@ public:
         if (m_size == Capacity)
             slot.~T();
 
-        new (&slot) T(value);
+        new (&slot) T(move(value));
         if (m_size == Capacity)
             m_head = (m_head + 1) % Capacity;
         else
