@@ -56,6 +56,13 @@ enum Switch {
     On,
 };
 
+struct RollNote {
+    u32 length() const { return (off_sample - on_sample) + 1; }
+
+    u32 on_sample;
+    u32 off_sample;
+};
+
 enum Direction {
     Down,
     Up,
@@ -196,7 +203,10 @@ constexpr int black_keys_per_octave = 5;
 constexpr int octave_min = 1;
 constexpr int octave_max = 7;
 
-constexpr int horizontal_notes = 32;
+constexpr double beats_per_minute = 60;
+constexpr int beats_per_bar = 4;
+constexpr int notes_per_beat = 4;
+constexpr int roll_length = (sample_rate / (beats_per_minute / 60)) * beats_per_bar;
 
 // Equal temperament, A = 440Hz
 // We calculate note frequencies relative to A4:

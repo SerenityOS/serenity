@@ -63,7 +63,7 @@ KnobsWidget::KnobsWidget(AudioEngine& audio_engine, MainWidget& main_widget)
     m_decay_value = m_values_container->add<GUI::Label>(String::number(m_audio_engine.decay()));
     m_sustain_value = m_values_container->add<GUI::Label>(String::number(m_audio_engine.sustain()));
     m_release_value = m_values_container->add<GUI::Label>(String::number(m_audio_engine.release()));
-    m_delay_value = m_values_container->add<GUI::Label>(String::number(m_audio_engine.delay() / m_audio_engine.tick()));
+    m_delay_value = m_values_container->add<GUI::Label>(String::number(m_audio_engine.delay()));
 
     m_knobs_container = add<GUI::Widget>();
     m_knobs_container->set_layout(make<GUI::HorizontalBoxLayout>());
@@ -144,12 +144,12 @@ KnobsWidget::KnobsWidget(AudioEngine& audio_engine, MainWidget& main_widget)
     constexpr int max_delay = 8;
     m_delay_knob = m_knobs_container->add<GUI::VerticalSlider>();
     m_delay_knob->set_range(0, max_delay);
-    m_delay_knob->set_value(max_delay - (m_audio_engine.delay() / m_audio_engine.tick()));
+    m_delay_knob->set_value(max_delay - m_audio_engine.delay());
     m_delay_knob->on_value_changed = [this](int value) {
-        int new_delay = m_audio_engine.tick() * (max_delay - value);
+        int new_delay = max_delay - value;
         m_audio_engine.set_delay(new_delay);
         ASSERT(new_delay == m_audio_engine.delay());
-        m_delay_value->set_text(String::number(new_delay / m_audio_engine.tick()));
+        m_delay_value->set_text(String::number(new_delay));
     };
 }
 

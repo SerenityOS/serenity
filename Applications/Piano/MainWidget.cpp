@@ -79,9 +79,7 @@ MainWidget::~MainWidget()
 void MainWidget::custom_event(Core::CustomEvent&)
 {
     m_wave_widget->update();
-
-    if (m_audio_engine.time() == 0)
-        m_roll_widget->update();
+    m_roll_widget->update();
 }
 
 void MainWidget::keydown_event(GUI::KeyEvent& event)

@@ -80,11 +80,13 @@ int main(int argc, char** argv)
             if (need_to_write_wav) {
                 need_to_write_wav = false;
                 audio_engine.reset();
-                while (audio_engine.current_column() < horizontal_notes - 1) {
+                audio_engine.set_should_loop(false);
+                do {
                     audio_engine.fill_buffer(buffer);
                     wav_writer.write_samples(reinterpret_cast<u8*>(buffer.data()), buffer_size);
-                }
+                } while (audio_engine.time());
                 audio_engine.reset();
+                audio_engine.set_should_loop(true);
                 wav_writer.finalize();
             }
         }
