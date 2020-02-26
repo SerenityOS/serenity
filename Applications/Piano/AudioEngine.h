@@ -30,8 +30,10 @@
 #include "Music.h"
 #include <AK/FixedArray.h>
 #include <AK/Noncopyable.h>
-#include <AK/Queue.h>
+#include <AK/SinglyLinkedList.h>
 #include <LibAudio/Buffer.h>
+
+typedef AK::SinglyLinkedListIterator<SinglyLinkedList<RollNote>, RollNote> RollIter;
 
 class AudioEngine {
     AK_MAKE_NONCOPYABLE(AudioEngine)
@@ -42,8 +44,7 @@ public:
 
     const FixedArray<Sample>& buffer() const { return *m_front_buffer_ptr; }
     const Vector<Audio::Sample>& recorded_sample() const { return m_recorded_sample; }
-    Switch roll_note(int y, int x) const { return m_roll_notes[y][x]; }
-    int current_column() const { return m_current_column; }
+    const SinglyLinkedList<RollNote>& roll_notes(int note) const { return m_roll_notes[note]; }
     int octave() const { return m_octave; }
     int octave_base() const { return (m_octave - octave_min) * 12; }
     int wave() const { return m_wave; }
@@ -53,14 +54,14 @@ public:
     int release() const { return m_release; }
     int delay() const { return m_delay; }
     int time() const { return m_time; }
-    int tick() const { return m_tick; }
 
     void fill_buffer(FixedArray<Sample>& buffer);
     void reset();
+    void set_should_loop(bool b) { m_should_loop = b; }
     String set_recorded_sample(const StringView& path);
     void set_note(int note, Switch);
     void set_note_current_octave(int note, Switch);
-    void set_roll_note(int y, int x, Switch);
+    void set_roll_note(int note, u32 on_sample, u32 off_sample);
     void set_octave(Direction);
     void set_wave(int wave);
     void set_wave(Direction);
@@ -78,9 +79,7 @@ private:
     Audio::Sample noise() const;
     Audio::Sample recorded_sample(size_t note);
 
-    void update_roll();
-    void set_notes_from_roll();
-
+    void sync_roll(int note);
     void set_sustain_impl(int sustain);
 
     FixedArray<Sample> m_front_buffer { sample_count };
@@ -88,7 +87,7 @@ private:
     FixedArray<Sample>* m_front_buffer_ptr { &m_front_buffer };
     FixedArray<Sample>* m_back_buffer_ptr { &m_back_buffer };
 
-    Queue<NonnullOwnPtr<FixedArray<Sample>>> m_delay_buffers;
+    Vector<Sample> m_delay_buffer;
 
     Vector<Audio::Sample> m_recorded_sample;
 
@@ -108,11 +107,13 @@ private:
     int m_release;
     double m_release_step[note_count];
     int m_delay { 0 };
+    size_t m_delay_samples { 0 };
+    size_t m_delay_index { 0 };
 
-    int m_time { 0 };
-    int m_tick { 8 };
+    u32 m_time { 0 };
 
-    Switch m_roll_notes[note_count][horizontal_notes] { { Off } };
-    int m_current_column { 0 };
-    int m_previous_column { horizontal_notes - 1 };
+    bool m_should_loop { true };
+
+    SinglyLinkedList<RollNote> m_roll_notes[note_count];
+    RollIter m_roll_iters[note_count];
 };

@@ -46,11 +46,19 @@ void AudioEngine::fill_buffer(FixedArray<Sample>& buffer)
 {
     memset(buffer.data(), 0, buffer_size);
 
-    if (m_time == 0)
-        set_notes_from_roll();
-
     for (size_t i = 0; i < buffer.size(); ++i) {
         for (size_t note = 0; note < note_count; ++note) {
+            if (!m_roll_iters[note].is_end()) {
+                if (m_roll_iters[note]->on_sample == m_time) {
+                    set_note(note, On);
+                } else if (m_roll_iters[note]->off_sample == m_time) {
+                    set_note(note, Off);
+                    ++m_roll_iters[note];
+                    if (m_roll_iters[note].is_end())
+                        m_roll_iters[note] = m_roll_notes[note].begin();
+                }
+            }
+
             switch (m_envelope[note]) {
             case Done:
                 continue;
@@ -104,25 +112,21 @@ void AudioEngine::fill_buffer(FixedArray<Sample>& buffer)
             buffer[i].left += sample.left * m_power[note] * volume;
             buffer[i].right += sample.right * m_power[note] * volume;
         }
-    }
 
-    if (m_delay) {
-        if (m_delay_buffers.size() >= static_cast<size_t>(m_delay)) {
-            auto to_blend = m_delay_buffers.dequeue();
-            for (size_t i = 0; i < to_blend->size(); ++i) {
-                buffer[i].left += (*to_blend)[i].left * 0.333333;
-                buffer[i].right += (*to_blend)[i].right * 0.333333;
-            }
+        if (m_delay) {
+            buffer[i].left += m_delay_buffer[m_delay_index].left * 0.333333;
+            buffer[i].right += m_delay_buffer[m_delay_index].right * 0.333333;
+            m_delay_buffer[m_delay_index].left = buffer[i].left;
+            m_delay_buffer[m_delay_index].right = buffer[i].right;
+            if (++m_delay_index >= m_delay_samples)
+                m_delay_index = 0;
         }
 
-        auto delay_buffer = make<FixedArray<Sample>>(buffer.size());
-        memcpy(delay_buffer->data(), buffer.data(), buffer_size);
-        m_delay_buffers.enqueue(move(delay_buffer));
-    }
-
-    if (++m_time == m_tick) {
-        m_time = 0;
-        update_roll();
+        if (++m_time >= roll_length) {
+            m_time = 0;
+            if (!m_should_loop)
+                break;
+        }
     }
 
     memcpy(m_back_buffer_ptr->data(), buffer.data(), buffer_size);
@@ -136,15 +140,14 @@ void AudioEngine::reset()
     m_front_buffer_ptr = &m_front_buffer;
     m_back_buffer_ptr = &m_back_buffer;
 
-    m_delay_buffers.clear();
+    memset(m_delay_buffer.data(), 0, m_delay_buffer.size() * sizeof(Sample));
+    m_delay_index = 0;
 
     memset(m_note_on, 0, sizeof(m_note_on));
     memset(m_power, 0, sizeof(m_power));
     memset(m_envelope, 0, sizeof(m_envelope));
 
     m_time = 0;
-    m_current_column = 0;
-    m_previous_column = horizontal_notes - 1;
 }
 
 String AudioEngine::set_recorded_sample(const StringView& path)
@@ -280,33 +283,54 @@ void AudioEngine::set_note_current_octave(int note, Switch switch_note)
     set_note(note + octave_base(), switch_note);
 }
 
-void AudioEngine::set_roll_note(int y, int x, Switch switch_note)
+void AudioEngine::sync_roll(int note)
 {
-    ASSERT(x >= 0 && x < horizontal_notes);
-    ASSERT(y >= 0 && y < note_count);
-
-    m_roll_notes[y][x] = switch_note;
-
-    if (x == m_current_column && switch_note == Off) // If you turn off a note that is playing.
-        set_note((note_count - 1) - y, Off);
+    auto it = m_roll_notes[note].find([&](auto& roll_note) { return roll_note.off_sample > m_time; });
+    if (it.is_end())
+        m_roll_iters[note] = m_roll_notes[note].begin();
+    else
+        m_roll_iters[note] = it;
 }
 
-void AudioEngine::update_roll()
+void AudioEngine::set_roll_note(int note, u32 on_sample, u32 off_sample)
 {
-    if (++m_current_column == horizontal_notes)
-        m_current_column = 0;
-    if (++m_previous_column == horizontal_notes)
-        m_previous_column = 0;
-}
+    RollNote new_roll_note = { on_sample, off_sample };
 
-void AudioEngine::set_notes_from_roll()
-{
-    for (int note = 0; note < note_count; ++note) {
-        if (m_roll_notes[note][m_previous_column] == On)
-            set_note((note_count - 1) - note, Off);
-        if (m_roll_notes[note][m_current_column] == On)
-            set_note((note_count - 1) - note, On);
+    ASSERT(note >= 0 && note < note_count);
+    ASSERT(new_roll_note.off_sample < roll_length);
+    ASSERT(new_roll_note.length() >= 2);
+
+    for (auto it = m_roll_notes[note].begin(); !it.is_end();) {
+        if (it->on_sample > new_roll_note.off_sample) {
+            m_roll_notes[note].insert_before(it, new_roll_note);
+            sync_roll(note);
+            return;
+        }
+        if (it->on_sample == new_roll_note.on_sample && it->off_sample == new_roll_note.off_sample) {
+            if (m_time >= it->on_sample && m_time <= it->off_sample)
+                set_note(note, Off);
+            m_roll_notes[note].remove(it);
+            sync_roll(note);
+            return;
+        }
+        if ((new_roll_note.on_sample == 0 || it->on_sample >= new_roll_note.on_sample - 1) && it->on_sample <= new_roll_note.off_sample) {
+            if (m_time >= new_roll_note.off_sample && m_time <= it->off_sample)
+                set_note(note, Off);
+            m_roll_notes[note].remove(it);
+            it = m_roll_notes[note].begin();
+            continue;
+        }
+        if (it->on_sample < new_roll_note.on_sample && it->off_sample >= new_roll_note.on_sample) {
+            if (m_time >= new_roll_note.off_sample && m_time <= it->off_sample)
+                set_note(note, Off);
+            it->off_sample = new_roll_note.on_sample - 1;
+            ASSERT(it->length() >= 2);
+        }
+        ++it;
     }
+
+    m_roll_notes[note].append(new_roll_note);
+    sync_roll(note);
 }
 
 void AudioEngine::set_octave(Direction direction)
@@ -373,6 +397,9 @@ void AudioEngine::set_release(int release)
 void AudioEngine::set_delay(int delay)
 {
     ASSERT(delay >= 0);
-    m_delay_buffers.clear();
     m_delay = delay;
+    m_delay_samples = m_delay == 0 ? 0 : (sample_rate / (beats_per_minute / 60)) / m_delay;
+    m_delay_buffer.resize(m_delay_samples);
+    memset(m_delay_buffer.data(), 0, m_delay_buffer.size() * sizeof(Sample));
+    m_delay_index = 0;
 }
