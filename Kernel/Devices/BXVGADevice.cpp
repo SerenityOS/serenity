@@ -64,9 +64,19 @@ BXVGADevice& BXVGADevice::the()
 
 BXVGADevice::BXVGADevice()
     : BlockDevice(29, 0)
+
 {
     s_the = this;
     m_framebuffer_address = PhysicalAddress(find_framebuffer_address());
+    set_safe_resolution();
+}
+
+void BXVGADevice::set_safe_resolution()
+{
+    m_framebuffer_width = 1024;
+    m_framebuffer_height = 768;
+    m_framebuffer_pitch = m_framebuffer_width * sizeof(u32);
+    set_resolution(m_framebuffer_width, m_framebuffer_height);
 }
 
 void BXVGADevice::set_register(u16 index, u16 data)
@@ -75,12 +85,23 @@ void BXVGADevice::set_register(u16 index, u16 data)
     IO::out16(VBE_DISPI_IOPORT_DATA, data);
 }
 
-void BXVGADevice::set_resolution(int width, int height)
+u16 BXVGADevice::get_register(u16 index)
 {
-    m_framebuffer_pitch = width * sizeof(u32);
-    m_framebuffer_width = width;
-    m_framebuffer_height = height;
+    IO::out16(VBE_DISPI_IOPORT_INDEX, index);
+    return IO::in16(VBE_DISPI_IOPORT_DATA);
+}
 
+void BXVGADevice::revert_resolution()
+{
+    set_resolution_registers(m_framebuffer_width, m_framebuffer_height);
+    ASSERT(validate_setup_resolution(m_framebuffer_width, m_framebuffer_height));
+}
+
+void BXVGADevice::set_resolution_registers(int width, int height)
+{
+#ifdef BXVGA_DEBUG
+    dbg() << "BXVGADevice resolution registers set to - " << width << "x" << height;
+#endif
     set_register(VBE_DISPI_INDEX_ENABLE, VBE_DISPI_DISABLED);
     set_register(VBE_DISPI_INDEX_XRES, (u16)width);
     set_register(VBE_DISPI_INDEX_YRES, (u16)height);
@@ -89,8 +110,38 @@ void BXVGADevice::set_resolution(int width, int height)
     set_register(VBE_DISPI_INDEX_BPP, 32);
     set_register(VBE_DISPI_INDEX_ENABLE, VBE_DISPI_ENABLED | VBE_DISPI_LFB_ENABLED);
     set_register(VBE_DISPI_INDEX_BANK, 0);
+}
 
-    dbg() << "BXVGADevice resolution set to " << m_framebuffer_width << "x" << m_framebuffer_height << " (pitch=" << m_framebuffer_pitch << ")";
+bool BXVGADevice::test_resolution(int width, int height)
+{
+#ifdef BXVGA_DEBUG
+    dbg() << "BXVGADevice resolution test - " << width << "x" << height;
+#endif
+    set_resolution_registers(width, height);
+    bool resolution_changed = validate_setup_resolution(width, height);
+    revert_resolution();
+    return resolution_changed;
+}
+bool BXVGADevice::set_resolution(int width, int height)
+{
+    if (!test_resolution(width, height))
+        return false;
+
+    set_resolution_registers(width, height);
+    dbg() << "BXVGADevice resolution set to " << width << "x" << height << " (pitch=" << m_framebuffer_pitch << ")";
+
+    m_framebuffer_width = width;
+    m_framebuffer_height = height;
+    m_framebuffer_pitch = width * sizeof(u32);
+    return true;
+}
+
+bool BXVGADevice::validate_setup_resolution(int width, int height)
+{
+    if ((u16)width != get_register(VBE_DISPI_INDEX_XRES) || (u16)height != get_register(VBE_DISPI_INDEX_YRES)) {
+        return false;
+    }
+    return true;
 }
 
 void BXVGADevice::set_y_offset(int y_offset)
@@ -174,7 +225,18 @@ int BXVGADevice::ioctl(FileDescription&, unsigned request, unsigned arg)
             return -EFAULT;
         if (resolution->width > MAX_RESOLUTION_WIDTH || resolution->height > MAX_RESOLUTION_HEIGHT)
             return -EINVAL;
-        set_resolution(resolution->width, resolution->height);
+        if (!set_resolution(resolution->width, resolution->height)) {
+#ifdef BXVGA_DEBUG
+            dbg() << "Reverting Resolution: [" << m_framebuffer_width << "x" << m_framebuffer_height << "]";
+#endif
+            resolution->pitch = m_framebuffer_pitch;
+            resolution->width = m_framebuffer_width;
+            resolution->height = m_framebuffer_height;
+            return -EINVAL;
+        }
+#ifdef BXVGA_DEBUG
+        dbg() << "New resolution: [" << m_framebuffer_width << "x" << m_framebuffer_height << "]";
+#endif
         resolution->pitch = m_framebuffer_pitch;
         resolution->width = m_framebuffer_width;
         resolution->height = m_framebuffer_height;
