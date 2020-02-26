@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
