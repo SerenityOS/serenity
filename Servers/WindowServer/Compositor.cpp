@@ -92,11 +92,14 @@ void Compositor::init_bitmaps()
 
     m_front_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::RGB32, size, screen.pitch(), screen.scanline(0));
 
-    if (m_screen_can_set_buffer)
+    if (m_screen_can_set_buffer) {
         m_back_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::RGB32, size, screen.pitch(), screen.scanline(size.height()));
-    else
+#if defined(COMPOSITOR_DEBUG)
+        dbg() << "Gfx::Bitmap::create_wrapper(" << (u8)Gfx::BitmapFormat::RGB32 << ", " << size << ", " << screen.pitch() << ", " << screen.scanline(size.height()) << ");";
+#endif
+    } else {
         m_back_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, size);
-
+    }
     m_front_painter = make<Gfx::Painter>(*m_front_bitmap);
     m_back_painter = make<Gfx::Painter>(*m_back_bitmap);
 
@@ -456,7 +459,7 @@ void Compositor::draw_cursor()
             auto text_rect = dnd_rect;
             if (wm.dnd_bitmap())
                 text_rect.move_by(wm.dnd_bitmap()->width(), 0);
-             m_back_painter->draw_text(text_rect, wm.dnd_text(), Gfx::TextAlignment::CenterLeft, wm.palette().selection_text());
+            m_back_painter->draw_text(text_rect, wm.dnd_text(), Gfx::TextAlignment::CenterLeft, wm.palette().selection_text());
         }
         if (wm.dnd_bitmap()) {
             m_back_painter->blit(dnd_rect.top_left(), *wm.dnd_bitmap(), wm.dnd_bitmap()->rect());
