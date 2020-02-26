@@ -74,7 +74,6 @@ KResult VFS::mount(FS& file_system, Custody& mount_point, int flags)
     // FIXME: check that this is not already a mount point
     Mount mount { file_system, &mount_point, flags };
     m_mounts.append(move(mount));
-    mount_point.did_mount_on({});
     return KSuccess;
 }
 
@@ -84,7 +83,6 @@ KResult VFS::bind_mount(Custody& source, Custody& mount_point, int flags)
     // FIXME: check that this is not already a mount point
     Mount mount { source.inode(), mount_point, flags };
     m_mounts.append(move(mount));
-    mount_point.did_mount_on({});
     return KSuccess;
 }
 
@@ -471,7 +469,6 @@ KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
         auto result = new_parent_inode.remove_child(new_basename);
         if (result.is_error())
             return result;
-        new_custody.did_delete({});
     }
 
     auto result = new_parent_inode.add_child(old_inode.identifier(), new_basename, old_inode.mode());
@@ -481,7 +478,6 @@ KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
     result = old_parent_inode.remove_child(FileSystemPath(old_path).basename());
     if (result.is_error())
         return result;
-    old_custody.did_rename({}, new_basename);
 
     return KSuccess;
 }
@@ -582,7 +578,6 @@ KResult VFS::unlink(StringView path, Custody& base)
     if (result.is_error())
         return result;
 
-    custody.did_delete({});
     return KSuccess;
 }
 
