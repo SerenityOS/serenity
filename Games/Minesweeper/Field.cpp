@@ -156,7 +156,13 @@ Field::Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_b
         int mine_count = config->read_num_entry("Game", "MineCount", 10);
         int rows = config->read_num_entry("Game", "Rows", 9);
         int columns = config->read_num_entry("Game", "Columns", 9);
-        set_field_size(rows, columns, mine_count);
+
+        // Do a quick sanity check to make sure the user hasn't tried anything crazy
+        if (mine_count > rows * columns || rows <= 0 || columns <= 0 || mine_count <= 0)
+            set_field_size(9, 9, 10);
+        else
+            set_field_size(rows, columns, mine_count);
+
         set_single_chording(single_chording);
     }
 }
