@@ -369,6 +369,12 @@ private:
     u32 m_flags;
 };
 
+class NonMaskableInterruptDisabler {
+public:
+    NonMaskableInterruptDisabler();
+    ~NonMaskableInterruptDisabler();
+};
+
 /* Map IRQ0-15 @ ISR 0x50-0x5F */
 #define IRQ_VECTOR_BASE 0x50
 
