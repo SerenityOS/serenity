@@ -53,7 +53,7 @@ DateTime DateTime::from_timestamp(time_t timestamp)
 
 String DateTime::to_string() const
 {
-    return String::format("%04u-%02u-%02u %02u:%02u:%02u", m_year, m_month, m_day, m_hour, m_minute, m_day);
+    return String::format("%04u-%02u-%02u %02u:%02u:%02u", m_year, m_month, m_day, m_hour, m_minute, m_second);
 }
 
 const LogStream& operator<<(const LogStream& stream, const DateTime& value)
