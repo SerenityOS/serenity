@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2019-2020, Jesse Buhagiar <jooster669@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,10 +30,10 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/ConfigFile.h>
+#include <LibGUI/Label.h>
+#include <LibGUI/Widget.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Size.h>
-#include <LibGUI/Widget.h>
-#include <LibGUI/Label.h>
 
 class DisplayPropertiesWidget final {
 public:
