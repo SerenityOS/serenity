@@ -291,10 +291,19 @@ int TTY::ioctl(FileDescription&, unsigned request, unsigned arg)
     case TIOCGPGRP:
         return m_pgid;
     case TIOCSPGRP:
-        // FIXME: Validate pgid fully.
         pgid = static_cast<pid_t>(arg);
-        if (pgid < 0)
+        if (pgid <= 0)
             return -EINVAL;
+        {
+            InterruptDisabler disabler;
+            auto* process = Process::from_pid(pgid);
+            if (!process)
+                return -EPERM;
+            if (pgid != process->pgid())
+                return -EPERM;
+            if (Process::current->sid() != process->sid())
+                return -EPERM;
+        }
         m_pgid = pgid;
         return 0;
     case TCGETS:
