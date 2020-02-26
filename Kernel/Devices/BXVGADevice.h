@@ -52,10 +52,17 @@ private:
     virtual bool read_blocks(unsigned, u16, u8*) override { return false; }
     virtual bool write_blocks(unsigned, u16, const u8*) override { return false; }
 
+    void set_safe_resolution();
+
     void set_register(u16 index, u16 value);
+    u16 get_register(u16 index);
+    bool validate_setup_resolution(int width, int height);
     u32 find_framebuffer_address();
+    void revert_resolution();
+    bool test_resolution(int width, int height);
     size_t framebuffer_size_in_bytes() const { return m_framebuffer_pitch * m_framebuffer_height * 2; }
-    void set_resolution(int width, int height);
+    bool set_resolution(int width, int height);
+    void set_resolution_registers(int width, int height);
     void set_y_offset(int);
 
     PhysicalAddress m_framebuffer_address;
