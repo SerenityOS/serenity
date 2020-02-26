@@ -79,7 +79,7 @@ public:
 private:
     friend HashTableType;
 
-    explicit HashTableIterator(HashTableType& table, bool is_end, BucketIteratorType bucket_iterator = BucketIteratorType::universal_end(), size_t bucket_index = 0)
+    explicit HashTableIterator(HashTableType& table, bool is_end, BucketIteratorType bucket_iterator = {}, size_t bucket_index = 0)
         : m_table(table)
         , m_bucket_index(bucket_index)
         , m_is_end(is_end)
@@ -87,7 +87,7 @@ private:
     {
         ASSERT(!table.m_clearing);
         ASSERT(!table.m_rehashing);
-        if (!is_end && !m_table.is_empty() && !(m_bucket_iterator != BucketIteratorType::universal_end())) {
+        if (!is_end && !m_table.is_empty() && m_bucket_iterator.is_end()) {
             m_bucket_iterator = m_table.bucket(0).begin();
             if (m_bucket_iterator.is_end())
                 skip_to_next();
