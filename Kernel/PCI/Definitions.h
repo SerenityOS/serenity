@@ -169,10 +169,52 @@ struct ChangeableAddress : public Address {
     }
 };
 
+struct [[gnu::packed]] Capability
+{
+    u8 capbility_id;
+    u8 next_capability_pointer;
+};
+
+enum class CapabilityID {
+    Reserved = 0x0,
+    PowerManagementInterface = 0x1,
+    AGP = 0x2,
+    VPD = 0x3,
+    SlotIdentification = 4,
+    MSI = 0x5,
+    CompactPCIHotSwap = 0x6,
+    PCI_X = 0x7,
+    HyperTransport = 0x8,
+    VendorSpecific = 0x9,
+    DebugPort = 0xA,
+    CompactPCI = 0xB,
+    PCIHotPlug = 0xC,
+    AGP_8x = 0xE,
+    SecureDevice = 0xF,
+    PCIe = 0x10,
+    MSIx = 0x11
+};
+
+struct [[gnu::packed]] MessageCapability : public Capability
+{
+    u16 message_control;
+    u32 message_address;
+    u16 message_data;
+};
+
+struct [[gnu::packed]] Message64BitCapability : public Capability
+{
+    u16 message_control;
+    u32 message_address;
+    u32 message_upper_address;
+    u16 message_data;
+};
+
 ID get_id(PCI::Address);
 void enumerate_all(Function<void(Address, ID)> callback);
 void enable_interrupt_line(Address);
 void disable_interrupt_line(Address);
+bool support_capability_list(Address address);
 u8 get_interrupt_line(Address);
 void raw_access(Address, u32, size_t, u32);
 u32 get_BAR0(Address);
@@ -198,5 +240,201 @@ class MMIOSegment;
 class Device;
 
 }
+namespace PCIExpress {
+struct [[gnu::packed]] Capbility
+{
+    PCI::Capability header;
+    u16 pcie_capabilities_register;
+    u32 device_capabilities;
+    u16 device_control;
+    u16 device_status;
+    u32 link_capabilities;
+    u16 link_control;
+    u16 link_status;
+    u32 slot_capabilities;
+    u16 slot_control;
+    u16 slot_status;
+    u16 root_control;
+    u16 root_capabilities;
+    u32 root_status;
+    u32 device_capabilities2;
+    u16 device_control2;
+    u16 device_status2;
+    u32 link_capabilities2;
+    u16 link_control2;
+    u16 link_status2;
+    u32 slot_capabilities2;
+    u16 slot_control2;
+    u16 slot_status2;
+};
 
+struct [[gnu::packed]] ExtendedCapabilityHeader
+{
+    u16 pcie_extended_capability_id;
+    u16 attributes; /* bits 0-3: Capability Version, bits 4-15: Next Capability offset */
+};
+
+enum ExtendedCapabilityID {
+    AER = 0x1,
+    VirtualChannel = 0x2,
+    VirtualChannel2 = 0x9,
+    DeviceSerialNumber = 0x3,
+    RootComplexLinkDeclaration = 0x5,
+    RootComplexInternalLinkControl = 0x6,
+    PowerBudgeting = 0x4,
+    ACS = 0xD,
+    RootComplexEventCollectorEndpointAssociation = 0x7,
+    MFVC = 0x8, /* Multi-Function Virtual Channel */
+    VendorSpecific = 0xB,
+    RCRB = 0xA,
+    Multicast = 0x12,
+    ResizableBAR = 0x15,
+};
+
+struct [[gnu::packed]] VirtualChannelResource
+{
+    u32 capability; /* VC Resource Capability Register */
+    u32 control;    /* VC Resource Control Register */
+    u16 reserved;
+    u16 status; /* VC Resource Status Register */
+};
+
+struct [[gnu::packed]] ElementSelfDescription
+{
+    u8 reserved;
+    u8 link_entries_count; /* Number of Link Entries */
+    u8 component_id;
+    u8 port_number;
+};
+
+struct [[gnu::packed]] LinkDescription
+{
+    u16 attributes;
+    u8 target_component_id;
+    u8 target_port_id;
+};
+
+struct [[gnu::packed]] LinkEntry
+{
+    LinkDescription description;
+    u32 reserved;
+    u64 link_address;
+};
+
+namespace Capability {
+struct [[gnu::packed]] AdvancedErrorReporting
+{
+    ExtendedCapabilityHeader header;
+    u32 uncorrectable_error_status;   /* Uncorrectable Error Status Register */
+    u32 uncorrectable_error_mask;     /* Uncorrectable Error Mask Register */
+    u32 uncorrectable_error_severity; /* Uncorrectable Error Severity Register */
+    u32 correctable_error_status;     /* Correctable Error Status Register */
+    u32 correctable_error_mask;       /* Correctable Error Mask Register */
+    u32 aecc;                         /* Advanced Error Capabilities and Control Register */
+    u32 header_log[4];                /* Header Log Register */
+    u32 root_error_command;
+    u32 root_error_status;
+    u16 correctable_error_source_identification; /* Correctable Error Source Identification Register */
+    u16 error_source_identification;             /* Error Source Identification Register */
+    u32 tlp_prefix_log[4];                       /* TLP Prefix Log Register */
+};
+
+struct [[gnu::packed]] VirtualChannel
+{
+    ExtendedCapabilityHeader header;
+    u32 port_vc_capability1; /* Port VC Capability Register 1  */
+    u32 port_vc_capability2; /* Port VC Capability Register 2 */
+    u16 port_vc_control;     /* Port VC Control Register */
+    u16 port_vc_status;      /* Port VC Status Register */
+    VirtualChannelResource resources[];
+};
+
+struct [[gnu::packed]] RootComplexLinkDeclaration
+{
+    ExtendedCapabilityHeader header;
+    ElementSelfDescription description;
+    u32 reserved;
+    LinkEntry link1;
+    LinkEntry optional_links[];
+};
+
+struct [[gnu::packed]] RootComplexInternalLinkControl
+{
+    ExtendedCapabilityHeader header;
+    u32 root_complex_link_capabilities;
+    u16 root_complex_link_control;
+    u16 root_complex_link_status;
+};
+
+struct [[gnu::packed]] PowerBudgeting
+{
+    ExtendedCapabilityHeader header;
+    u8 data_select;
+    u8 reserved[3];
+    u32 data;                   /* Data Register */
+    u8 power_budget_capability; /* Power Budget Capability Register */
+    u8 reserved2[3];
+};
+
+struct [[gnu::packed]] ACS
+{
+    ExtendedCapabilityHeader header;
+    u16 acs_capability;           /* ACS Capability Register */
+    u16 acs_control;              /* ACS Control Register */
+    u32 egress_control_vector;    /* Egress Control Vector */
+    u32 egress_control_vectors[]; /* (additional Egress Control Vector DWORDs if required) */
+};
+
+struct [[gnu::packed]] RootComplexEventCollectorEndpointAssociation
+{
+    ExtendedCapabilityHeader header;
+    u32 association_bitmap; /* Association Bitmap for Root Complex Integrated Devices */
+};
+
+struct [[gnu::packed]] MFVC /* Multi-Function Virtual Channel */
+{
+    ExtendedCapabilityHeader header;
+    u32 port_vc_capability1; /* Port VC Capability Register 1  */
+    u32 port_vc_capability2; /* Port VC Capability Register 2 */
+    u16 port_vc_control;     /* Port VC Control Register */
+    u16 port_vc_status;      /* Port VC Status Register */
+    VirtualChannelResource resources[];
+};
+
+struct [[gnu::packed]] VendorSpecific
+{
+    ExtendedCapabilityHeader header;
+    u32 vendor_specific_header;
+    u8 vendor_specific_registers[];
+};
+
+struct [[gnu::packed]] RCRB
+{
+    ExtendedCapabilityHeader header;
+    u16 vendor_id;
+    u16 device_id;
+    u32 rcrb_capabilites;
+    u32 rcrb_control;
+    u32 reserved;
+};
+
+struct [[gnu::packed]] Multicast
+{
+    ExtendedCapabilityHeader header;
+    u16 capability_register; /* Multicast Capability Register */
+    u16 control_register;    /* Multicast Control Register */
+    u32 base_address;        /* MC_Base_Address Register */
+    u32 receive;             /* MC_Receive Register */
+    u32 block_all;           /* MC_Block_All Register */
+    u32 block_untranslated;  /* MC_Block_Untranslated Register */
+    u32 overlay_bar;         /* MC_Overlay_BAR */
+};
+
+struct [[gnu::packed]] ResizableBAR
+{
+    ExtendedCapabilityHeader header;
+};
+}
+
+}
 }
