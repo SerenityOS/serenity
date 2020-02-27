@@ -106,9 +106,9 @@ void WindowManager::reload_config(bool set_screen)
 
     m_double_click_speed = m_wm_config->read_num_entry("Input", "DoubleClickSpeed", 250);
 
-    if (set_screen)
-        set_resolution(m_wm_config->read_num_entry("Screen", "Width", 1920),
-            m_wm_config->read_num_entry("Screen", "Height", 1080));
+    if (set_screen) {
+        set_resolution(m_wm_config->read_num_entry("Screen", "Width", 1920), m_wm_config->read_num_entry("Screen", "Height", 1080));
+    }
 
     m_arrow_cursor = get_cursor("Arrow", { 2, 2 });
     m_hand_cursor = get_cursor("Hand", { 8, 4 });
@@ -132,19 +132,32 @@ const Gfx::Font& WindowManager::window_title_font() const
     return Gfx::Font::default_bold_font();
 }
 
-void WindowManager::set_resolution(int width, int height)
+bool WindowManager::set_resolution(int width, int height)
 {
-    Compositor::the().set_resolution(width, height);
+    bool success = Compositor::the().set_resolution(width, height);
     MenuManager::the().set_needs_window_resize();
     ClientConnection::for_each_client([&](ClientConnection& client) {
         client.notify_about_new_screen_rect(Screen::the().rect());
     });
     if (m_wm_config) {
-        dbg() << "Saving resolution: " << Gfx::Size(width, height) << " to config file at " << m_wm_config->file_name();
-        m_wm_config->write_num_entry("Screen", "Width", width);
-        m_wm_config->write_num_entry("Screen", "Height", height);
-        m_wm_config->sync();
+        if (success) {
+            dbg() << "Saving resolution: " << Gfx::Size(width, height) << " to config file at " << m_wm_config->file_name();
+            m_wm_config->write_num_entry("Screen", "Width", width);
+            m_wm_config->write_num_entry("Screen", "Height", height);
+            m_wm_config->sync();
+        } else {
+            dbg() << "Saving fallback resolution: " << resolution() << " to config file at " << m_wm_config->file_name();
+            m_wm_config->write_num_entry("Screen", "Width", resolution().width());
+            m_wm_config->write_num_entry("Screen", "Height", resolution().height());
+            m_wm_config->sync();
+        }
     }
+    return success;
+}
+
+Gfx::Size WindowManager::resolution() const
+{
+    return Screen::the().size();
 }
 
 void WindowManager::add_window(Window& window)

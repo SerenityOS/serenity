@@ -68,12 +68,23 @@ Screen::~Screen()
 {
 }
 
-void Screen::set_resolution(int width, int height)
+bool Screen::set_resolution(int width, int height)
 {
     FBResolution resolution { 0, (int)width, (int)height };
     int rc = fb_set_resolution(m_framebuffer_fd, &resolution);
-    ASSERT(rc == 0);
-    on_change_resolution(resolution.pitch, resolution.width, resolution.height);
+#ifdef WSSCREEN_DEBUG
+    dbg() << "fb_set_resolution() - return code " << rc;
+#endif
+    if (rc == 0) {
+        on_change_resolution(resolution.pitch, resolution.width, resolution.height);
+        return true;
+    }
+    if (rc == -1) {
+        dbg() << "Invalid resolution " << width << "x" << height;
+        on_change_resolution(resolution.pitch, resolution.width, resolution.height);
+        return false;
+    }
+    ASSERT_NOT_REACHED();
 }
 
 void Screen::on_change_resolution(int pitch, int width, int height)
