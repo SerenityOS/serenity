@@ -65,15 +65,18 @@ int main(int argc, char** argv)
         else
             tty = "n/a";
 
+        auto* state = proc.threads.is_empty() ? "Zombie" : proc.threads.first().state.characters();
+        auto times_scheduled = proc.threads.is_empty() ? 0 : proc.threads.first().times_scheduled;
+
         printf("%-3u %-3u %-3u %-3u %-3u  %-11s  %-3u  %-9u  %-3u %-5s %s\n",
             proc.pid,
             proc.pgid,
             proc.pgp,
             proc.sid,
             proc.uid,
-            proc.threads.first().state.characters(),
+            state,
             proc.ppid,
-            proc.threads.first().times_scheduled,
+            times_scheduled,
             proc.nfds,
             tty.characters(),
             proc.name.characters());
