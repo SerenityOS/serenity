@@ -2101,7 +2101,6 @@ int Process::sys$killpg(int pgrp, int signum)
     if (pgrp < 0)
         return -EINVAL;
 
-    InterruptDisabler disabler;
     return do_killpg(pgrp, signum);
 }
 
@@ -2173,6 +2172,8 @@ KResult Process::do_kill(Process& process, int signal)
 
 KResult Process::do_killpg(pid_t pgrp, int signal)
 {
+    InterruptDisabler disabler;
+
     ASSERT(pgrp >= 0);
 
     // Send the signal to all processes in the given group.
