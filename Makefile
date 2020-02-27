@@ -15,6 +15,10 @@ SUBDIRS += \
 	Games \
 	Demos
 
+ifneq (, $(shell which ccache))
+  export PRE_CXX=ccache
+endif
+
 include Makefile.subdir
 
 all: subdirs
