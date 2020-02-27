@@ -300,6 +300,7 @@ void Thread::finalize()
     if (m_joiner) {
         ASSERT(m_joiner->m_joinee == this);
         static_cast<JoinBlocker*>(m_joiner->m_blocker)->set_joinee_exit_value(m_exit_value);
+        static_cast<JoinBlocker*>(m_joiner->m_blocker)->set_interrupted_by_death();
         m_joiner->m_joinee = nullptr;
         // NOTE: We clear the joiner pointer here as well, to be tidy.
         m_joiner = nullptr;
