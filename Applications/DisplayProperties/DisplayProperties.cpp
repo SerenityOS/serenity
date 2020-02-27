@@ -37,6 +37,7 @@
 #include <LibGUI/GroupBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/ListView.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/TabWidget.h>
@@ -62,6 +63,8 @@ void DisplayPropertiesWidget::create_resolution_list()
     m_resolutions.append({ 800, 600 });
     m_resolutions.append({ 1024, 768 });
     m_resolutions.append({ 1280, 720 });
+    m_resolutions.append({ 1368, 768 });
+    m_resolutions.append({ 1366, 768 });
     m_resolutions.append({ 1280, 1024 });
     m_resolutions.append({ 1440, 900 });
     m_resolutions.append({ 1600, 900 });
@@ -223,7 +226,9 @@ void DisplayPropertiesWidget::send_settings_to_window_server(int tab_index)
         GUI::Desktop::the().set_wallpaper(builder.to_string());
     } else if (tab_index == TabIndices::Settings) {
         dbg() << "Attempting to set resolution " << m_selected_resolution;
-        GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetResolution>(m_selected_resolution);
+        auto result = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetResolution>(m_selected_resolution);
+        if (!result->success())
+            GUI::MessageBox::show(String::format("Reverting to resolution %dx%d", result->resolution().width(), result->resolution().height()), String::format("Unable to set resolution"), GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK);
     } else {
         dbg() << "Invalid tab index " << tab_index;
     }
