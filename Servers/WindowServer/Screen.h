@@ -40,7 +40,7 @@ public:
     Screen(unsigned width, unsigned height);
     ~Screen();
 
-    void set_resolution(int width, int height);
+    bool set_resolution(int width, int height);
     bool can_set_buffer() { return m_can_set_buffer; }
     void set_buffer(int index);
 

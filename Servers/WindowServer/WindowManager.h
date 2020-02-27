@@ -141,7 +141,8 @@ public:
     const Gfx::Font& font() const;
     const Gfx::Font& window_title_font() const;
 
-    void set_resolution(int width, int height);
+    bool set_resolution(int width, int height);
+    Gfx::Size resolution() const;
 
     void set_active_window(Window*);
     void set_hovered_button(Button*);
