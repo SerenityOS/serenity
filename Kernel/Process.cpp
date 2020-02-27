@@ -4511,6 +4511,8 @@ int Process::sys$profiling_enable(pid_t pid)
     auto* process = Process::from_pid(pid);
     if (!process)
         return -ESRCH;
+    if (process->is_dead())
+        return -ESRCH;
     if (!is_superuser() && process->uid() != m_uid)
         return -EPERM;
     Profiling::start(*process);
