@@ -145,6 +145,11 @@ void disable_interrupt_line(Address address)
     PCI::Access::the().disable_interrupt_line(address);
 }
 
+bool support_capability_list(Address address)
+{
+    return PCI::Access::the().support_capability_list(address);
+}
+
 u8 get_interrupt_line(Address address)
 {
     return PCI::Access::the().get_interrupt_line(address);

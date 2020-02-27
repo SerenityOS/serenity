@@ -56,6 +56,12 @@ public:
         return space_size;
     }
     virtual ID get_id(Address address) final;
+
+    virtual bool support_capability_list(Address address) final
+    {
+        return read8_field(address, PCI_CAPABILITIES_POINTER) != 0;
+    }
+
     virtual void enable_interrupt_line(Address address) final
     {
         write16_field(address, PCI_COMMAND, read16_field(address, PCI_COMMAND) & ~(1 << 10));
