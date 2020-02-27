@@ -83,4 +83,4 @@ TEST_CASE(assign_copy_self)
     EXPECT_EQ(object->ref_count(), 1);
 }
 
-TEST_MAIN(String)
+TEST_MAIN(RefPtr)
