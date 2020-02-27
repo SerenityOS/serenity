@@ -2213,8 +2213,11 @@ int Process::sys$kill(pid_t pid, int signal)
 
     if (signal < 0 || signal >= 32)
         return -EINVAL;
-    if (pid <= 0)
+    if (pid <= 0) {
+        if (pid == INT32_MIN)
+            return -EINVAL;
         return do_killpg(-pid, signal);
+    }
     if (pid == -1) {
         // FIXME: Send to all processes.
         return -ENOTIMPL;
