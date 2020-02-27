@@ -704,14 +704,20 @@ OwnPtr<Messages::WindowServer::SetSystemThemeResponse> ClientConnection::handle(
 
 void ClientConnection::boost()
 {
+    // FIXME: Re-enable this when we have a solution for boosting.
+#if 0
     if (set_process_boost(client_pid(), 10) < 0)
         perror("boost: set_process_boost");
+#endif
 }
 
 void ClientConnection::deboost()
 {
+    // FIXME: Re-enable this when we have a solution for boosting.
+#if 0
     if (set_process_boost(client_pid(), 0) < 0)
         perror("deboost: set_process_boost");
+#endif
 }
 
 OwnPtr<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrementResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowBaseSizeAndSizeIncrement& message)
