@@ -3844,10 +3844,14 @@ int Process::sys$join_thread(int tid, void** exit_value)
         if (result == Thread::BlockResult::InterruptedByDeath) {
             // NOTE: This cleans things up so that Thread::finalize() won't
             //       get confused about a missing joiner when finalizing the joinee.
-            InterruptDisabler disabler;
-            Thread::current->m_joinee->m_joiner = nullptr;
-            Thread::current->m_joinee = nullptr;
-            return 0;
+            InterruptDisabler disabler_t;
+
+            if (Thread::current->m_joinee) {
+                Thread::current->m_joinee->m_joiner = nullptr;
+                Thread::current->m_joinee = nullptr;
+            }
+
+            break;
         }
     }
 
