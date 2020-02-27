@@ -33,7 +33,7 @@
 
 namespace Kernel {
 
-extern "C" void syscall_handler(RegisterState);
+extern "C" void syscall_handler(RegisterState&);
 extern "C" void syscall_asm_entry();
 
 asm(
@@ -52,8 +52,9 @@ asm(
     "    cld\n"
     "    xor %esi, %esi\n"
     "    xor %edi, %edi\n"
+    "    push %esp\n"
     "    call syscall_handler\n"
-    "    add $0x4, %esp\n"
+    "    add $0x8, %esp\n"
     "    popl %gs\n"
     "    popl %fs\n"
     "    popl %es\n"
@@ -121,7 +122,7 @@ int handle(RegisterState& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
 
 }
 
-void syscall_handler(RegisterState regs)
+void syscall_handler(RegisterState& regs)
 {
     // Special handling of the "gettid" syscall since it's extremely hot.
     // FIXME: Remove this hack once userspace locks stop calling it so damn much.
