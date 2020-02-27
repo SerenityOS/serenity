@@ -156,9 +156,10 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
     toolbar->add_action(m_view->view_as_icons_action());
     toolbar->add_action(m_view->view_as_table_action());
 
-    // FIXME: Enable this once GUI::ColumnsView doesn't crash when used here.
+#ifdef MULTIVIEW_WITH_COLUMNSVIEW
     m_view->view_as_columns_action().set_enabled(false);
     toolbar->add_action(m_view->view_as_columns_action());
+#endif
 
     auto lower_container = vertical_container->add<Widget>();
     lower_container->set_layout(make<VerticalBoxLayout>());
