@@ -3719,6 +3719,8 @@ void Process::terminate_due_to_signal(u8 signal)
 void Process::send_signal(u8 signal, Process* sender)
 {
     InterruptDisabler disabler;
+    if (!m_thread_count)
+        return;
     auto* thread = Thread::from_tid(m_pid);
     if (!thread)
         thread = &any_thread();
