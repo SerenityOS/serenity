@@ -40,7 +40,6 @@ namespace Profiling {
 static KBufferImpl* s_profiling_buffer;
 static size_t s_slot_count;
 static size_t s_next_slot_index;
-static Process* s_process;
 static u32 s_pid;
 
 String& executable_path()
@@ -58,9 +57,10 @@ u32 pid()
 
 void start(Process& process)
 {
-    s_process = &process;
-
-    executable_path() = process.executable()->absolute_path().impl();
+    if (process.executable())
+        executable_path() = process.executable()->absolute_path().impl();
+    else
+        executable_path() = {};
     s_pid = process.pid();
 
     if (!s_profiling_buffer) {
@@ -87,7 +87,6 @@ Sample& next_sample_slot()
 
 void stop()
 {
-    s_process = nullptr;
 }
 
 void did_exec(const String& new_executable_path)
