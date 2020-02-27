@@ -114,5 +114,8 @@ FILE* tmpfile();
 char* tmpnam(char*);
 FILE* popen(const char* command, const char* type);
 int pclose(FILE*);
+void flockfile(FILE*);
+int ftrylockfile(FILE*);
+void funlockfile(FILE*);
 
 __END_DECLS

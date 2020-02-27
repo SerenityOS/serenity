@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Atomic.h>
 #include <AK/LogStream.h>
 #include <AK/PrintfImplementation.h>
 #include <AK/ScopedValueRollback.h>
@@ -32,6 +33,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <sched.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -73,12 +75,31 @@ void __stdio_init()
     init_FILE(*stderr, 2, _IONBF);
 }
 
+class FileLock {
+public:
+    FileLock(FILE* file) : m_file(file)
+    {
+        flockfile(m_file);
+    }
+
+    ~FileLock()
+    {
+        funlockfile(m_file);
+    }
+
+private:
+    FILE* m_file;
+};
+
 int setvbuf(FILE* stream, char* buf, int mode, size_t size)
 {
+    FileLock lock(stream);
+
     if (mode != _IONBF && mode != _IOLBF && mode != _IOFBF) {
         errno = EINVAL;
         return -1;
     }
+
     stream->mode = mode;
     if (buf) {
         stream->buffer = buf;
@@ -115,10 +136,13 @@ int feof(FILE* stream)
 
 int fflush(FILE* stream)
 {
+    FileLock lock(stream);
+
     if (!stream) {
         dbg() << "FIXME: fflush(nullptr) should flush all open streams";
         return 0;
     }
+
     if (!stream->buffer_index)
         return 0;
     int rc = write(stream->fd, stream->buffer, stream->buffer_index);
@@ -227,6 +251,9 @@ ssize_t getline(char** lineptr, size_t* n, FILE* stream)
 int ungetc(int c, FILE* stream)
 {
     ASSERT(stream);
+
+    FileLock lock(stream);
+
     if (c == EOF)
         return EOF;
     if (stream->have_ungotten)
@@ -240,12 +267,16 @@ int ungetc(int c, FILE* stream)
 int fputc(int ch, FILE* stream)
 {
     assert(stream);
+
+    FileLock lock(stream);
+
     assert(stream->buffer_index < stream->buffer_size);
     stream->buffer[stream->buffer_index++] = ch;
     if (stream->buffer_index >= stream->buffer_size)
         fflush(stream);
     else if (stream->mode == _IONBF || (stream->mode == _IOLBF && ch == '\n'))
         fflush(stream);
+
     if (stream->eof || stream->error)
         return EOF;
     return (u8)ch;
@@ -282,6 +313,7 @@ int puts(const char* s)
 void clearerr(FILE* stream)
 {
     assert(stream);
+    FileLock lock(stream);
     stream->eof = false;
     stream->error = 0;
 }
@@ -294,6 +326,9 @@ int ferror(FILE* stream)
 size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream)
 {
     assert(stream);
+
+    FileLock lock(stream);
+
     if (!size)
         return 0;
 
@@ -339,6 +374,9 @@ size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream)
 int fseek(FILE* stream, long offset, int whence)
 {
     assert(stream);
+
+    FileLock lock(stream);
+
     fflush(stream);
     off_t off = lseek(stream->fd, offset, whence);
     if (off < 0)
@@ -353,6 +391,8 @@ int fseek(FILE* stream, long offset, int whence)
 long ftell(FILE* stream)
 {
     assert(stream);
+    FileLock lock(stream);
+
     fflush(stream);
     return lseek(stream->fd, 0, SEEK_CUR);
 }
@@ -535,10 +575,18 @@ FILE* fdopen(int fd, const char* mode)
 
 int fclose(FILE* stream)
 {
-    fflush(stream);
-    int rc = close(stream->fd);
+    int rc;
+
+    {
+        FileLock lock(stream);
+
+        fflush(stream);
+        rc = close(stream->fd);
+    }
+
     if (stream != &__default_streams[0] && stream != &__default_streams[1] && stream != &__default_streams[2])
         free(stream);
+
     return rc;
 }
 
@@ -682,14 +730,40 @@ int vfscanf(FILE* stream, const char* fmt, va_list ap)
 
 void flockfile(FILE* filehandle)
 {
-    (void)filehandle;
-    dbgprintf("FIXME: Implement flockfile()\n");
+    int current = gettid();
+
+    auto& atomic = reinterpret_cast<Atomic<bool>&>(filehandle->lock);
+    while (true) {
+        bool expected = false;
+        if (!atomic.compare_exchange_strong(expected, true, AK::memory_order_acq_rel)) {
+            if (filehandle->lock_owner == current)
+                return;
+
+            sched_yield();
+            continue;
+        }
+
+        filehandle->lock_owner = gettid();
+        return;
+    }
+}
+
+int ftrylockfile(FILE *filehandle)
+{
+    auto& atomic = reinterpret_cast<Atomic<bool>&>(filehandle->lock);
+
+    bool expected = false;
+    if (!atomic.compare_exchange_strong(expected, true, AK::memory_order_acq_rel))
+        return ENOLCK;
+
+    filehandle->lock_owner = gettid();
+    return 0;
 }
 
 void funlockfile(FILE* filehandle)
 {
-    (void)filehandle;
-    dbgprintf("FIXME: Implement funlockfile()\n");
+    filehandle->lock_owner = 0;
+    filehandle->lock = false;
 }
 
 FILE* tmpfile()

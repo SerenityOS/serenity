@@ -44,6 +44,8 @@ struct __STDIO_FILE {
     size_t buffer_size;
     size_t buffer_index;
     int have_ungotten;
+    int lock_owner;
+    bool lock;
     char ungotten;
     char default_buffer[BUFSIZ];
 };
