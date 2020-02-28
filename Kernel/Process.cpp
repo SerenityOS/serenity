@@ -66,9 +66,9 @@
 #include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/TTY/TTY.h>
 #include <Kernel/Thread.h>
-#include <Kernel/VM/SharedInodeVMObject.h>
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/PurgeableVMObject.h>
+#include <Kernel/VM/SharedInodeVMObject.h>
 #include <LibBareMetal/IO.h>
 #include <LibBareMetal/Output/Console.h>
 #include <LibBareMetal/StdLib.h>
@@ -205,16 +205,6 @@ Region* Process::allocate_region(VirtualAddress vaddr, size_t size, const String
     return allocate_region(range, name, prot, commit);
 }
 
-Region* Process::allocate_file_backed_region(VirtualAddress vaddr, size_t size, NonnullRefPtr<Inode> inode, const String& name, int prot)
-{
-    auto range = allocate_range(vaddr, size);
-    if (!range.is_valid())
-        return nullptr;
-    auto& region = add_region(Region::create_user_accessible(range, inode, name, prot_to_region_access_flags(prot)));
-    region.map(page_directory());
-    return &region;
-}
-
 Region* Process::allocate_region_with_vmobject(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, int prot, bool user_accessible)
 {
     ASSERT(range.is_valid());
@@ -240,7 +230,6 @@ Region* Process::allocate_region_with_vmobject(const Range& range, NonnullRefPtr
     region->map(page_directory());
     return region;
 }
-
 
 Region* Process::allocate_region_with_vmobject(VirtualAddress vaddr, size_t size, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, int prot, bool user_accessible)
 {
