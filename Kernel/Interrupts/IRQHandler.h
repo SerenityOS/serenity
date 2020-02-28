@@ -26,10 +26,12 @@
 
 #pragma once
 
+#include <AK/RefPtr.h>
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
+#include <Kernel/Interrupts/IRQController.h>
 
 namespace Kernel {
 
@@ -53,11 +55,12 @@ public:
 
 protected:
     void change_irq_number(u8 irq);
-    explicit IRQHandler(u8 irq);
+    IRQHandler(u8 irq);
 
 private:
     bool m_shared_with_others { false };
     bool m_enabled { false };
+    RefPtr<IRQController> m_responsible_irq_controller;
 };
 
 }
