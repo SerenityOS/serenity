@@ -30,6 +30,7 @@
 #include <Kernel/Interrupts/IOAPIC.h>
 #include <Kernel/Interrupts/InterruptManagement.h>
 #include <Kernel/Interrupts/PIC.h>
+#include <Kernel/Interrupts/SpuriousInterruptHandler.h>
 #include <Kernel/VM/MemoryManager.h>
 
 #define PCAT_COMPAT_FLAG 0x1
@@ -91,6 +92,10 @@ void InterruptManagement::disable(u8 interrupt_vector)
 
 void InterruptManagement::eoi(u8 interrupt_vector)
 {
+    if (m_interrupt_controllers.size() == 1 && m_interrupt_controllers[0]->type() == IRQControllerType::i8259) {
+        m_interrupt_controllers[0]->eoi(interrupt_vector);
+        return;
+    }
     for (auto& irq_controller : InterruptManagement::the().m_interrupt_controllers) {
         ASSERT(irq_controller != nullptr);
         if (irq_controller->get_gsi_base() <= interrupt_vector)
@@ -109,6 +114,8 @@ IRQController& InterruptManagement::get_interrupt_controller(int index)
 void InterruptManagement::switch_to_pic_mode()
 {
     kprintf("Interrupts: PIC mode by default\n");
+    SpuriousInterruptHandler::initialize(7);
+    SpuriousInterruptHandler::initialize(15);
 }
 
 void InterruptManagement::switch_to_ioapic_mode()
@@ -135,6 +142,8 @@ AdvancedInterruptManagement::AdvancedInterruptManagement(PhysicalAddress p_madt)
 void AdvancedInterruptManagement::switch_to_pic_mode()
 {
     kprintf("Interrupts: Switch to Legacy PIC mode\n");
+    SpuriousInterruptHandler::initialize(7);
+    SpuriousInterruptHandler::initialize(15);
     for (auto& irq_controller : m_interrupt_controllers) {
         ASSERT(irq_controller);
         if (irq_controller->type() == IRQControllerType::i82093AA) {
