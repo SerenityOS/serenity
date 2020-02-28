@@ -106,7 +106,7 @@ PCI::Initializer::Initializer()
 }
 bool PCI::Initializer::test_acpi()
 {
-    if ((KParams::the().has("noacpi")) || !ACPIParser::the().is_operable())
+    if ((KParams::the().has("noacpi")) || !ACPI::Parser::the().is_operable())
         return false;
     else
         return true;
@@ -129,12 +129,12 @@ bool PCI::Initializer::test_pci_io()
 
 bool PCI::Initializer::test_pci_mmio()
 {
-    return !ACPIParser::the().find_table("MCFG").is_null();
+    return !ACPI::Parser::the().find_table("MCFG").is_null();
 }
 
 void PCI::Initializer::initialize_pci_mmio_access_after_test()
 {
-    initialize_pci_mmio_access(ACPIParser::the().find_table("MCFG"));
+    initialize_pci_mmio_access(ACPI::Parser::the().find_table("MCFG"));
 }
 
 void PCI::Initializer::dismiss()
