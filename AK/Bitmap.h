@@ -94,6 +94,12 @@ public:
         else
             m_data[index / 8] &= static_cast<u8>(~(1u << (index % 8)));
     }
+    void set_range(size_t start, size_t len, bool value)
+    {
+        for (size_t index = start; index < start + len; ++index) {
+            set(index, value);
+        }
+    }
 
     u8* data() { return m_data; }
     const u8* data() const { return m_data; }
@@ -136,8 +142,7 @@ public:
         while (i < m_size / 8 && m_data[i] == 0x00)
             i++;
 
-        size_t j = 0;
-        for (j = i * 8; j < m_size; j++) {
+        for (size_t j = i * 8; j < m_size; j++) {
             if (get(j))
                 return j;
         }
@@ -151,8 +156,7 @@ public:
         while (i < m_size / 8 && m_data[i] == 0xff)
             i++;
 
-        size_t j = 0;
-        for (j = i * 8; j < m_size; j++)
+        for (size_t j = i * 8; j < m_size; j++)
             if (!get(j))
                 return j;
 
