@@ -109,8 +109,8 @@ extern "C" [[noreturn]] void init()
     gdt_init();
     idt_init();
 
-    setup_acpi();
     setup_interrupts();
+    setup_acpi();
 
     new VFS;
     new DebugLogDevice;
@@ -146,7 +146,7 @@ extern "C" [[noreturn]] void init()
     VirtualConsole::switch_to(0);
 
     // Sample test to see if the ACPI parser is working...
-    kprintf("ACPI: HPET table @ P 0x%x\n", ACPIParser::the().find_table("HPET").get());
+    kprintf("ACPI: HPET table @ P 0x%x\n", ACPI::Parser::the().find_table("HPET").get());
 
     setup_pci();
 
@@ -403,21 +403,21 @@ extern "C" int __cxa_atexit(void (*)(void*), void*, void*)
 void setup_acpi()
 {
     if (!KParams::the().has("acpi")) {
-        ACPIDynamicParser::initialize_without_rsdp();
+        ACPI::DynamicParser::initialize_without_rsdp();
         return;
     }
 
     auto acpi = KParams::the().get("acpi");
     if (acpi == "off") {
-        ACPIParser::initialize_limited();
+        ACPI::Parser::initialize_limited();
         return;
     }
     if (acpi == "on") {
-        ACPIDynamicParser::initialize_without_rsdp();
+        ACPI::DynamicParser::initialize_without_rsdp();
         return;
     }
     if (acpi == "limited") {
-        ACPIStaticParser::initialize_without_rsdp();
+        ACPI::StaticParser::initialize_without_rsdp();
         return;
     }
     kprintf("acpi boot argmuent has an invalid value.\n");
@@ -461,19 +461,9 @@ void setup_pci()
     PCI::Initializer::the().dismiss();
 }
 
-static void setup_interrupt_management()
-{
-    auto madt = ACPIParser::the().find_table("APIC");
-    if (madt.is_null()) {
-        InterruptManagement::initialize();
-        return;
-    }
-    AdvancedInterruptManagement::initialize(madt);
-}
-
 void setup_interrupts()
 {
-    setup_interrupt_management();
+    InterruptManagement::initialize();
 
     if (!KParams::the().has("smp")) {
         InterruptManagement::the().switch_to_pic_mode();
