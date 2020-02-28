@@ -126,9 +126,6 @@ void Compositor::compose()
     dirty_rects.add(Gfx::Rect::intersection(m_last_cursor_rect, Screen::the().rect()));
     dirty_rects.add(Gfx::Rect::intersection(m_last_dnd_rect, Screen::the().rect()));
     dirty_rects.add(Gfx::Rect::intersection(current_cursor_rect(), Screen::the().rect()));
-#ifdef DEBUG_COUNTERS
-    dbgprintf("[WM] compose #%u (%u rects)\n", ++m_compose_count, dirty_rects.rects().size());
-#endif
 
     auto any_dirty_rect_intersects_window = [&dirty_rects](const Window& window) {
         auto window_frame_rect = window.frame().rect();
@@ -263,10 +260,6 @@ void Compositor::compose()
 void Compositor::flush(const Gfx::Rect& a_rect)
 {
     auto rect = Gfx::Rect::intersection(a_rect, Screen::the().rect());
-
-#ifdef DEBUG_COUNTERS
-    dbgprintf("[WM] flush #%u (%d,%d %dx%d)\n", ++m_flush_count, rect.x(), rect.y(), rect.width(), rect.height());
-#endif
 
     Gfx::RGBA32* front_ptr = m_front_bitmap->scanline(rect.y()) + rect.x();
     Gfx::RGBA32* back_ptr = m_back_bitmap->scanline(rect.y()) + rect.x();
