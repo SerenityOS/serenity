@@ -101,11 +101,13 @@ OBJS = \
     TTY/VirtualConsole.o \
     Thread.o \
     VM/AnonymousVMObject.o \
+    VM/InodeVMObject.o \
     VM/MemoryManager.o \
     VM/PageDirectory.o \
     VM/PhysicalPage.o \
     VM/PhysicalRegion.o \
     VM/PurgeableVMObject.o \
+    VM/PrivateInodeVMObject.o \
     VM/RangeAllocator.o \
     VM/Region.o \
     VM/SharedInodeVMObject.o \

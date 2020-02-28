@@ -25,40 +25,32 @@
  */
 
 #include <Kernel/FileSystem/Inode.h>
-#include <Kernel/VM/MemoryManager.h>
-#include <Kernel/VM/Region.h>
-#include <Kernel/VM/SharedInodeVMObject.h>
+#include <Kernel/VM/PrivateInodeVMObject.h>
 
 namespace Kernel {
 
-NonnullRefPtr<SharedInodeVMObject> SharedInodeVMObject::create_with_inode(Inode& inode)
+NonnullRefPtr<PrivateInodeVMObject> PrivateInodeVMObject::create_with_inode(Inode& inode)
 {
-    size_t size = inode.size();
-    if (inode.shared_vmobject())
-        return *inode.shared_vmobject();
-    auto vmobject = adopt(*new SharedInodeVMObject(inode, size));
-    vmobject->inode().set_shared_vmobject(*vmobject);
-    return vmobject;
+    return adopt(*new PrivateInodeVMObject(inode, inode.size()));
 }
 
-NonnullRefPtr<VMObject> SharedInodeVMObject::clone()
+NonnullRefPtr<VMObject> PrivateInodeVMObject::clone()
 {
-    return adopt(*new SharedInodeVMObject(*this));
+    return adopt(*new PrivateInodeVMObject(*this));
 }
 
-SharedInodeVMObject::SharedInodeVMObject(Inode& inode, size_t size)
+PrivateInodeVMObject::PrivateInodeVMObject(Inode& inode, size_t size)
     : InodeVMObject(inode, size)
 {
 }
 
-SharedInodeVMObject::SharedInodeVMObject(const SharedInodeVMObject& other)
+PrivateInodeVMObject::PrivateInodeVMObject(const PrivateInodeVMObject& other)
     : InodeVMObject(other)
 {
 }
 
-SharedInodeVMObject::~SharedInodeVMObject()
+PrivateInodeVMObject::~PrivateInodeVMObject()
 {
-    ASSERT(inode().shared_vmobject() == this);
 }
 
 }

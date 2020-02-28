@@ -28,45 +28,24 @@
 
 #include <AK/Bitmap.h>
 #include <Kernel/UnixTypes.h>
-#include <Kernel/VM/VMObject.h>
+#include <Kernel/VM/InodeVMObject.h>
 
 namespace Kernel {
 
-class SharedInodeVMObject final : public VMObject {
+class SharedInodeVMObject final : public InodeVMObject {
+    AK_MAKE_NONMOVABLE(SharedInodeVMObject);
+
 public:
     virtual ~SharedInodeVMObject() override;
 
     static NonnullRefPtr<SharedInodeVMObject> create_with_inode(Inode&);
     virtual NonnullRefPtr<VMObject> clone() override;
 
-    Inode& inode() { return *m_inode; }
-    const Inode& inode() const { return *m_inode; }
-
-    void inode_contents_changed(Badge<Inode>, off_t, ssize_t, const u8*);
-    void inode_size_changed(Badge<Inode>, size_t old_size, size_t new_size);
-
-    size_t amount_dirty() const;
-    size_t amount_clean() const;
-
-    int release_all_clean_pages();
-
-    u32 writable_mappings() const;
-    u32 executable_mappings() const;
-
 private:
     explicit SharedInodeVMObject(Inode&, size_t);
     explicit SharedInodeVMObject(const SharedInodeVMObject&);
 
     SharedInodeVMObject& operator=(const SharedInodeVMObject&) = delete;
-    SharedInodeVMObject& operator=(SharedInodeVMObject&&) = delete;
-    SharedInodeVMObject(SharedInodeVMObject&&) = delete;
-
-    virtual bool is_inode() const override { return true; }
-
-    int release_all_clean_pages_impl();
-
-    NonnullRefPtr<Inode> m_inode;
-    Bitmap m_dirty_pages;
 };
 
 }
