@@ -32,11 +32,11 @@
 
 namespace Kernel {
 
-class InodeVMObject final : public VMObject {
+class SharedInodeVMObject final : public VMObject {
 public:
-    virtual ~InodeVMObject() override;
+    virtual ~SharedInodeVMObject() override;
 
-    static NonnullRefPtr<InodeVMObject> create_with_inode(Inode&);
+    static NonnullRefPtr<SharedInodeVMObject> create_with_inode(Inode&);
     virtual NonnullRefPtr<VMObject> clone() override;
 
     Inode& inode() { return *m_inode; }
@@ -54,12 +54,12 @@ public:
     u32 executable_mappings() const;
 
 private:
-    explicit InodeVMObject(Inode&, size_t);
-    explicit InodeVMObject(const InodeVMObject&);
+    explicit SharedInodeVMObject(Inode&, size_t);
+    explicit SharedInodeVMObject(const SharedInodeVMObject&);
 
-    InodeVMObject& operator=(const InodeVMObject&) = delete;
-    InodeVMObject& operator=(InodeVMObject&&) = delete;
-    InodeVMObject(InodeVMObject&&) = delete;
+    SharedInodeVMObject& operator=(const SharedInodeVMObject&) = delete;
+    SharedInodeVMObject& operator=(SharedInodeVMObject&&) = delete;
+    SharedInodeVMObject(SharedInodeVMObject&&) = delete;
 
     virtual bool is_inode() const override { return true; }
 

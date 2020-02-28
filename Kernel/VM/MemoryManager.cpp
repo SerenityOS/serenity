@@ -31,7 +31,7 @@
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/VM/AnonymousVMObject.h>
-#include <Kernel/VM/InodeVMObject.h>
+#include <Kernel/VM/SharedInodeVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/PhysicalRegion.h>

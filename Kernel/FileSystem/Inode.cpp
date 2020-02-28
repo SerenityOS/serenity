@@ -29,7 +29,7 @@
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/InodeWatcher.h>
 #include <Kernel/Net/LocalSocket.h>
-#include <Kernel/VM/InodeVMObject.h>
+#include <Kernel/VM/SharedInodeVMObject.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/FileSystem/Custody.h>
 
@@ -128,14 +128,14 @@ void Inode::will_be_destroyed()
 
 void Inode::inode_contents_changed(off_t offset, ssize_t size, const u8* data)
 {
-    if (m_vmobject)
-        m_vmobject->inode_contents_changed({}, offset, size, data);
+    if (m_shared_vmobject)
+        m_shared_vmobject->inode_contents_changed({}, offset, size, data);
 }
 
 void Inode::inode_size_changed(size_t old_size, size_t new_size)
 {
-    if (m_vmobject)
-        m_vmobject->inode_size_changed({}, old_size, new_size);
+    if (m_shared_vmobject)
+        m_shared_vmobject->inode_size_changed({}, old_size, new_size);
 }
 
 int Inode::set_atime(time_t)
@@ -163,9 +163,9 @@ KResult Inode::decrement_link_count()
     return KResult(-ENOTIMPL);
 }
 
-void Inode::set_vmobject(VMObject& vmobject)
+void Inode::set_shared_vmobject(SharedInodeVMObject& vmobject)
 {
-    m_vmobject = vmobject.make_weak_ptr();
+    m_shared_vmobject = vmobject.make_weak_ptr();
 }
 
 bool Inode::bind_socket(LocalSocket& socket)

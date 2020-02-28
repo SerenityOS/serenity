@@ -66,7 +66,7 @@
 #include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/TTY/TTY.h>
 #include <Kernel/Thread.h>
-#include <Kernel/VM/InodeVMObject.h>
+#include <Kernel/VM/SharedInodeVMObject.h>
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/PurgeableVMObject.h>
 #include <LibBareMetal/IO.h>
@@ -340,10 +340,10 @@ static bool validate_inode_mmap_prot(const Process& process, int prot, const Ino
     if ((prot & PROT_READ) && !metadata.may_read(process))
         return false;
     InterruptDisabler disabler;
-    if (inode.vmobject()) {
-        if ((prot & PROT_EXEC) && inode.vmobject()->writable_mappings())
+    if (inode.shared_vmobject()) {
+        if ((prot & PROT_EXEC) && inode.shared_vmobject()->writable_mappings())
             return false;
-        if ((prot & PROT_WRITE) && inode.vmobject()->executable_mappings())
+        if ((prot & PROT_WRITE) && inode.shared_vmobject()->executable_mappings())
             return false;
     }
     return true;
@@ -548,7 +548,7 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
         if (whole_region->access() == prot_to_region_access_flags(prot))
             return 0;
         if (whole_region->vmobject().is_inode()
-            && !validate_inode_mmap_prot(*this, prot, static_cast<const InodeVMObject&>(whole_region->vmobject()).inode())) {
+            && !validate_inode_mmap_prot(*this, prot, static_cast<const SharedInodeVMObject&>(whole_region->vmobject()).inode())) {
             return -EACCES;
         }
         whole_region->set_readable(prot & PROT_READ);
@@ -567,7 +567,7 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
         if (old_region->access() == prot_to_region_access_flags(prot))
             return 0;
         if (old_region->vmobject().is_inode()
-            && !validate_inode_mmap_prot(*this, prot, static_cast<const InodeVMObject&>(old_region->vmobject()).inode())) {
+            && !validate_inode_mmap_prot(*this, prot, static_cast<const SharedInodeVMObject&>(old_region->vmobject()).inode())) {
             return -EACCES;
         }
 
@@ -663,12 +663,12 @@ int Process::sys$purge(int mode)
         }
     }
     if (mode & PURGE_ALL_CLEAN_INODE) {
-        NonnullRefPtrVector<InodeVMObject> vmobjects;
+        NonnullRefPtrVector<SharedInodeVMObject> vmobjects;
         {
             InterruptDisabler disabler;
             MM.for_each_vmobject([&](auto& vmobject) {
                 if (vmobject.is_inode())
-                    vmobjects.append(static_cast<InodeVMObject&>(vmobject));
+                    vmobjects.append(static_cast<SharedInodeVMObject&>(vmobject));
                 return IterationDecision::Continue;
             });
         }
@@ -816,14 +816,14 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     if (parts.is_empty())
         return -ENOENT;
 
-    RefPtr<InodeVMObject> vmobject;
+    RefPtr<SharedInodeVMObject> vmobject;
     if (interpreter_description) {
-        vmobject = InodeVMObject::create_with_inode(*interpreter_description->inode());
+        vmobject = SharedInodeVMObject::create_with_inode(*interpreter_description->inode());
     } else {
-        vmobject = InodeVMObject::create_with_inode(*main_program_description->inode());
+        vmobject = SharedInodeVMObject::create_with_inode(*main_program_description->inode());
     }
 
-    if (static_cast<const InodeVMObject&>(*vmobject).writable_mappings()) {
+    if (static_cast<const SharedInodeVMObject&>(*vmobject).writable_mappings()) {
         dbg() << "Refusing to execute a write-mapped program";
         return -ETXTBSY;
     }
@@ -3107,10 +3107,10 @@ size_t Process::amount_dirty_private() const
 
 size_t Process::amount_clean_inode() const
 {
-    HashTable<const InodeVMObject*> vmobjects;
+    HashTable<const SharedInodeVMObject*> vmobjects;
     for (auto& region : m_regions) {
         if (region.vmobject().is_inode())
-            vmobjects.set(&static_cast<const InodeVMObject&>(region.vmobject()));
+            vmobjects.set(&static_cast<const SharedInodeVMObject&>(region.vmobject()));
     }
     size_t amount = 0;
     for (auto& vmobject : vmobjects)
