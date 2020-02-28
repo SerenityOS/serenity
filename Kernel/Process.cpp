@@ -721,7 +721,7 @@ pid_t Process::sys$fork(RegisterState& regs)
         child_region.map(child->page_directory());
 
         if (&region == m_master_tls_region)
-            child->m_master_tls_region = &child_region;
+            child->m_master_tls_region = child_region.make_weak_ptr();
     }
 
     child->m_extra_gids = m_extra_gids;
@@ -963,7 +963,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     m_unveiled_paths.clear();
 
     // Copy of the master TLS region that we will clone for new threads
-    m_master_tls_region = master_tls_region;
+    m_master_tls_region = master_tls_region->make_weak_ptr();
 
     auto main_program_metadata = main_program_description->metadata();
 

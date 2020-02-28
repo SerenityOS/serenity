@@ -498,7 +498,7 @@ private:
     RefPtr<ProcessTracer> m_tracer;
     OwnPtr<ELFLoader> m_elf_loader;
 
-    Region* m_master_tls_region { nullptr };
+    WeakPtr<Region> m_master_tls_region;
     size_t m_master_tls_size { 0 };
     size_t m_master_tls_alignment { 0 };
 
