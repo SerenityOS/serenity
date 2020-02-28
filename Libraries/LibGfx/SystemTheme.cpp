@@ -43,7 +43,7 @@ const SystemTheme& current_system_theme()
 int current_system_theme_buffer_id()
 {
     ASSERT(theme_buffer);
-    return theme_buffer->shared_buffer_id();
+    return theme_buffer->shbuf_id();
 }
 
 void set_system_theme(SharedBuffer& buffer)

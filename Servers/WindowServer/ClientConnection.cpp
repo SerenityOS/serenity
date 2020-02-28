@@ -193,7 +193,7 @@ OwnPtr<Messages::WindowServer::AddMenuItemResponse> ClientConnection::handle(con
     auto& menu = *(*it).value;
     auto menu_item = make<MenuItem>(menu, identifier, message.text(), message.shortcut(), message.enabled(), message.checkable(), message.checked());
     if (message.icon_buffer_id() != -1) {
-        auto icon_buffer = SharedBuffer::create_from_shared_buffer_id(message.icon_buffer_id());
+        auto icon_buffer = SharedBuffer::create_from_shbuf_id(message.icon_buffer_id());
         if (!icon_buffer)
             return nullptr;
         // FIXME: Verify that the icon buffer can accomodate a 16x16 bitmap view.
@@ -349,7 +349,7 @@ OwnPtr<Messages::WindowServer::SetWindowIconBitmapResponse> ClientConnection::ha
     }
     auto& window = *(*it).value;
 
-    auto icon_buffer = SharedBuffer::create_from_shared_buffer_id(message.icon_buffer_id());
+    auto icon_buffer = SharedBuffer::create_from_shbuf_id(message.icon_buffer_id());
 
     if (!icon_buffer) {
         window.set_default_icon();
@@ -393,7 +393,7 @@ OwnPtr<Messages::WindowServer::GetWindowRectResponse> ClientConnection::handle(c
 
 OwnPtr<Messages::WindowServer::SetClipboardContentsResponse> ClientConnection::handle(const Messages::WindowServer::SetClipboardContents& message)
 {
-    auto shared_buffer = SharedBuffer::create_from_shared_buffer_id(message.shared_buffer_id());
+    auto shared_buffer = SharedBuffer::create_from_shbuf_id(message.shbuf_id());
     if (!shared_buffer) {
         did_misbehave("SetClipboardContents: Bad shared buffer ID");
         return nullptr;
@@ -406,7 +406,7 @@ OwnPtr<Messages::WindowServer::GetClipboardContentsResponse> ClientConnection::h
 {
     auto& clipboard = Clipboard::the();
 
-    i32 shared_buffer_id = -1;
+    i32 shbuf_id = -1;
     if (clipboard.size()) {
         // FIXME: Optimize case where an app is copy/pasting within itself.
         //        We can just reuse the SharedBuffer then, since it will have the same peer PID.
@@ -416,13 +416,13 @@ OwnPtr<Messages::WindowServer::GetClipboardContentsResponse> ClientConnection::h
         memcpy(shared_buffer->data(), clipboard.data(), clipboard.size());
         shared_buffer->seal();
         shared_buffer->share_with(client_pid());
-        shared_buffer_id = shared_buffer->shared_buffer_id();
+        shbuf_id = shared_buffer->shbuf_id();
 
         // FIXME: This is a workaround for the fact that SharedBuffers will go away if neither side is retaining them.
         //        After we respond to GetClipboardContents, we have to wait for the client to ref the buffer on his side.
         m_last_sent_clipboard_content = move(shared_buffer);
     }
-    return make<Messages::WindowServer::GetClipboardContentsResponse>(shared_buffer_id, clipboard.size(), clipboard.data_type());
+    return make<Messages::WindowServer::GetClipboardContentsResponse>(shbuf_id, clipboard.size(), clipboard.data_type());
 }
 
 OwnPtr<Messages::WindowServer::CreateWindowResponse> ClientConnection::handle(const Messages::WindowServer::CreateWindow& message)
@@ -509,10 +509,10 @@ OwnPtr<Messages::WindowServer::SetWindowBackingStoreResponse> ClientConnection::
         return nullptr;
     }
     auto& window = *(*it).value;
-    if (window.last_backing_store() && window.last_backing_store()->shared_buffer_id() == message.shared_buffer_id()) {
+    if (window.last_backing_store() && window.last_backing_store()->shbuf_id() == message.shbuf_id()) {
         window.swap_backing_stores();
     } else {
-        auto shared_buffer = SharedBuffer::create_from_shared_buffer_id(message.shared_buffer_id());
+        auto shared_buffer = SharedBuffer::create_from_shbuf_id(message.shbuf_id());
         if (!shared_buffer)
             return make<Messages::WindowServer::SetWindowBackingStoreResponse>();
         auto backing_store = Gfx::Bitmap::create_with_shared_buffer(
@@ -669,7 +669,7 @@ OwnPtr<Messages::WindowServer::StartDragResponse> ClientConnection::handle(const
 
     RefPtr<Gfx::Bitmap> bitmap;
     if (message.bitmap_id() != -1) {
-        auto shared_buffer = SharedBuffer::create_from_shared_buffer_id(message.bitmap_id());
+        auto shared_buffer = SharedBuffer::create_from_shbuf_id(message.bitmap_id());
         ssize_t size_in_bytes = message.bitmap_size().area() * sizeof(Gfx::RGBA32);
         if (size_in_bytes > shared_buffer->size()) {
             did_misbehave("SetAppletBackingStore: Shared buffer is too small for applet size");

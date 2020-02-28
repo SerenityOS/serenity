@@ -64,7 +64,7 @@ public:
         ++m_played_samples;
 
         if (m_position >= m_current->sample_count()) {
-            m_client->did_finish_playing_buffer({}, m_current->shared_buffer_id());
+            m_client->did_finish_playing_buffer({}, m_current->shbuf_id());
             m_current = nullptr;
             m_position = 0;
         }
@@ -93,7 +93,7 @@ public:
     int get_playing_buffer() const
     {
         if (m_current)
-            return m_current->shared_buffer_id();
+            return m_current->shbuf_id();
         return -1;
     }
 

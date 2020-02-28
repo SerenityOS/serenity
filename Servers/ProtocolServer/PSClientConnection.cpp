@@ -82,9 +82,9 @@ void PSClientConnection::did_finish_download(Badge<Download>, Download& download
         memcpy(buffer->data(), download.payload().data(), download.payload().size());
         buffer->seal();
         buffer->share_with(client_pid());
-        m_shared_buffers.set(buffer->shared_buffer_id(), buffer);
+        m_shared_buffers.set(buffer->shbuf_id(), buffer);
     }
-    post_message(Messages::ProtocolClient::DownloadFinished(download.id(), success, download.total_size(), buffer ? buffer->shared_buffer_id() : -1));
+    post_message(Messages::ProtocolClient::DownloadFinished(download.id(), success, download.total_size(), buffer ? buffer->shbuf_id() : -1));
 }
 
 void PSClientConnection::did_progress_download(Badge<Download>, Download& download)
@@ -99,6 +99,6 @@ OwnPtr<Messages::ProtocolServer::GreetResponse> PSClientConnection::handle(const
 
 OwnPtr<Messages::ProtocolServer::DisownSharedBufferResponse> PSClientConnection::handle(const Messages::ProtocolServer::DisownSharedBuffer& message)
 {
-    m_shared_buffers.remove(message.shared_buffer_id());
+    m_shared_buffers.remove(message.shbuf_id());
     return make<Messages::ProtocolServer::DisownSharedBufferResponse>();
 }

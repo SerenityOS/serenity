@@ -45,7 +45,7 @@ void ClientConnection::enqueue(const Buffer& buffer)
 {
     for (;;) {
         const_cast<Buffer&>(buffer).shared_buffer().share_with(server_pid());
-        auto response = send_sync<Messages::AudioServer::EnqueueBuffer>(buffer.shared_buffer_id(), buffer.sample_count());
+        auto response = send_sync<Messages::AudioServer::EnqueueBuffer>(buffer.shbuf_id(), buffer.sample_count());
         if (response->success())
             break;
         sleep(1);
@@ -55,7 +55,7 @@ void ClientConnection::enqueue(const Buffer& buffer)
 bool ClientConnection::try_enqueue(const Buffer& buffer)
 {
     const_cast<Buffer&>(buffer).shared_buffer().share_with(server_pid());
-    auto response = send_sync<Messages::AudioServer::EnqueueBuffer>(buffer.shared_buffer_id(), buffer.sample_count());
+    auto response = send_sync<Messages::AudioServer::EnqueueBuffer>(buffer.shbuf_id(), buffer.sample_count());
     return response->success();
 }
 

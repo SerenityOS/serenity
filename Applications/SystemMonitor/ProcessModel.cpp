@@ -267,7 +267,7 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, Role role) const
         switch (index.column()) {
         case Column::Icon:
             if (thread.current_state.icon_id != -1) {
-                auto icon_buffer = SharedBuffer::create_from_shared_buffer_id(thread.current_state.icon_id);
+                auto icon_buffer = SharedBuffer::create_from_shbuf_id(thread.current_state.icon_id);
                 if (icon_buffer) {
                     auto icon_bitmap = Gfx::Bitmap::create_with_shared_buffer(Gfx::BitmapFormat::RGBA32, *icon_buffer, { 16, 16 });
                     if (icon_bitmap)
