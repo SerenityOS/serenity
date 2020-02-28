@@ -4,7 +4,7 @@ endpoint ProtocolServer = 9
     Greet() => (i32 client_id)
 
     // FIXME: It would be nice if the kernel provided a way to avoid this
-    DisownSharedBuffer(i32 shared_buffer_id) => ()
+    DisownSharedBuffer(i32 shbuf_id) => ()
 
     // Test if a specific protocol is supported, e.g "http"
     IsSupportedProtocol(String protocol) => (bool supported)

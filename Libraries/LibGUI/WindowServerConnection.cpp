@@ -53,9 +53,9 @@ WindowServerConnection& WindowServerConnection::the()
     return *s_connection;
 }
 
-static void set_system_theme_from_shared_buffer_id(int id)
+static void set_system_theme_from_shbuf_id(int id)
 {
-    auto system_theme = SharedBuffer::create_from_shared_buffer_id(id);
+    auto system_theme = SharedBuffer::create_from_shbuf_id(id);
     ASSERT(system_theme);
     Gfx::set_system_theme(*system_theme);
     Application::the().set_system_palette(*system_theme);
@@ -65,13 +65,13 @@ void WindowServerConnection::handshake()
 {
     auto response = send_sync<Messages::WindowServer::Greet>();
     set_my_client_id(response->client_id());
-    set_system_theme_from_shared_buffer_id(response->system_theme_buffer_id());
+    set_system_theme_from_shbuf_id(response->system_theme_buffer_id());
     Desktop::the().did_receive_screen_rect({}, response->screen_rect());
 }
 
 void WindowServerConnection::handle(const Messages::WindowClient::UpdateSystemTheme& message)
 {
-    set_system_theme_from_shared_buffer_id(message.system_theme_buffer_id());
+    set_system_theme_from_shbuf_id(message.system_theme_buffer_id());
     Window::update_all_windows({});
 }
 

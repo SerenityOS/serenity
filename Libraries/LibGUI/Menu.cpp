@@ -128,7 +128,7 @@ int Menu::realize_menu()
             if (action.icon()) {
                 ASSERT(action.icon()->format() == Gfx::BitmapFormat::RGBA32);
                 ASSERT(action.icon()->size() == Gfx::Size(16, 16));
-                if (action.icon()->shared_buffer_id() == -1) {
+                if (action.icon()->shbuf_id() == -1) {
                     auto shared_buffer = SharedBuffer::create_with_size(action.icon()->size_in_bytes());
                     ASSERT(shared_buffer);
                     auto shared_icon = Gfx::Bitmap::create_with_shared_buffer(Gfx::BitmapFormat::RGBA32, *shared_buffer, action.icon()->size());
@@ -137,7 +137,7 @@ int Menu::realize_menu()
                     shared_buffer->share_with(WindowServerConnection::the().server_pid());
                     action.set_icon(shared_icon);
                 }
-                icon_buffer_id = action.icon()->shared_buffer_id();
+                icon_buffer_id = action.icon()->shbuf_id();
             }
             auto shortcut_text = action.shortcut().is_valid() ? action.shortcut().to_string() : String();
             bool exclusive = action.group() && action.group()->is_exclusive() && action.is_checkable();

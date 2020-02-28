@@ -529,21 +529,21 @@ void sync()
     syscall(SC_sync);
 }
 
-int create_shared_buffer(int size, void** buffer)
+int shbuf_create(int size, void** buffer)
 {
-    int rc = syscall(SC_create_shared_buffer, size, buffer);
+    int rc = syscall(SC_shbuf_create, size, buffer);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int share_buffer_with(int shared_buffer_id, pid_t peer_pid)
+int shbuf_allow_pid(int shbuf_id, pid_t peer_pid)
 {
-    int rc = syscall(SC_share_buffer_with, shared_buffer_id, peer_pid);
+    int rc = syscall(SC_shbuf_allow_pid, shbuf_id, peer_pid);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int share_buffer_globally(int shared_buffer_id)
+int shbuf_allow_all(int shbuf_id)
 {
-    int rc = syscall(SC_share_buffer_globally, shared_buffer_id);
+    int rc = syscall(SC_shbuf_allow_all, shbuf_id);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
@@ -553,9 +553,9 @@ int set_process_icon(int icon_id)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-void* get_shared_buffer(int shared_buffer_id)
+void* shbuf_get(int shbuf_id)
 {
-    int rc = syscall(SC_get_shared_buffer, shared_buffer_id);
+    int rc = syscall(SC_shbuf_get, shbuf_id);
     if (rc < 0 && -rc < EMAXERRNO) {
         errno = -rc;
         return (void*)-1;
@@ -563,21 +563,21 @@ void* get_shared_buffer(int shared_buffer_id)
     return (void*)rc;
 }
 
-int release_shared_buffer(int shared_buffer_id)
+int shbuf_release(int shbuf_id)
 {
-    int rc = syscall(SC_release_shared_buffer, shared_buffer_id);
+    int rc = syscall(SC_shbuf_release, shbuf_id);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int get_shared_buffer_size(int shared_buffer_id)
+int shbuf_get_size(int shbuf_id)
 {
-    int rc = syscall(SC_get_shared_buffer_size, shared_buffer_id);
+    int rc = syscall(SC_shbuf_get_size, shbuf_id);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int seal_shared_buffer(int shared_buffer_id)
+int shbuf_seal(int shbuf_id)
 {
-    int rc = syscall(SC_seal_shared_buffer, shared_buffer_id);
+    int rc = syscall(SC_shbuf_seal, shbuf_id);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
