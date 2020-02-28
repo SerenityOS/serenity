@@ -24,41 +24,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/FileSystem/Inode.h>
-#include <Kernel/VM/MemoryManager.h>
-#include <Kernel/VM/Region.h>
-#include <Kernel/VM/SharedInodeVMObject.h>
+#pragma once
+
+#include <AK/Bitmap.h>
+#include <Kernel/UnixTypes.h>
+#include <Kernel/VM/InodeVMObject.h>
 
 namespace Kernel {
 
-NonnullRefPtr<SharedInodeVMObject> SharedInodeVMObject::create_with_inode(Inode& inode)
-{
-    size_t size = inode.size();
-    if (inode.shared_vmobject())
-        return *inode.shared_vmobject();
-    auto vmobject = adopt(*new SharedInodeVMObject(inode, size));
-    vmobject->inode().set_shared_vmobject(*vmobject);
-    return vmobject;
-}
+class PrivateInodeVMObject final : public InodeVMObject {
+    AK_MAKE_NONMOVABLE(PrivateInodeVMObject);
 
-NonnullRefPtr<VMObject> SharedInodeVMObject::clone()
-{
-    return adopt(*new SharedInodeVMObject(*this));
-}
+public:
+    virtual ~PrivateInodeVMObject() override;
 
-SharedInodeVMObject::SharedInodeVMObject(Inode& inode, size_t size)
-    : InodeVMObject(inode, size)
-{
-}
+    static NonnullRefPtr<PrivateInodeVMObject> create_with_inode(Inode&);
+    virtual NonnullRefPtr<VMObject> clone() override;
 
-SharedInodeVMObject::SharedInodeVMObject(const SharedInodeVMObject& other)
-    : InodeVMObject(other)
-{
-}
+private:
+    explicit PrivateInodeVMObject(Inode&, size_t);
+    explicit PrivateInodeVMObject(const PrivateInodeVMObject&);
 
-SharedInodeVMObject::~SharedInodeVMObject()
-{
-    ASSERT(inode().shared_vmobject() == this);
-}
+    PrivateInodeVMObject& operator=(const PrivateInodeVMObject&) = delete;
+};
 
 }
