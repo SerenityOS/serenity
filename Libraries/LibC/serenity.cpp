@@ -84,4 +84,44 @@ int perf_event(int type, uintptr_t arg1, uintptr_t arg2)
     int rc = syscall(SC_perf_event, type, arg1, arg2);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
+
+void* shbuf_get(int shbuf_id, size_t* size)
+{
+    int rc = syscall(SC_shbuf_get, shbuf_id, size);
+    if (rc < 0 && -rc < EMAXERRNO) {
+        errno = -rc;
+        return (void*)-1;
+    }
+    return (void*)rc;
+}
+
+int shbuf_release(int shbuf_id)
+{
+    int rc = syscall(SC_shbuf_release, shbuf_id);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int shbuf_seal(int shbuf_id)
+{
+    int rc = syscall(SC_shbuf_seal, shbuf_id);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int shbuf_create(int size, void** buffer)
+{
+    int rc = syscall(SC_shbuf_create, size, buffer);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int shbuf_allow_pid(int shbuf_id, pid_t peer_pid)
+{
+    int rc = syscall(SC_shbuf_allow_pid, shbuf_id, peer_pid);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int shbuf_allow_all(int shbuf_id)
+{
+    int rc = syscall(SC_shbuf_allow_all, shbuf_id);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
 }
