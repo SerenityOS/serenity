@@ -37,6 +37,7 @@ enum class HandlerPurpose : u8 {
     IRQHandler = 1,
     SharedIRQHandler = 2,
     UnhandledInterruptHandler = 3,
+    SpuriousInterruptHandler = 4
 };
 
 class GenericInterruptHandler {
