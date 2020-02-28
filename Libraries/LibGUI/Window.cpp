@@ -38,6 +38,7 @@
 #include <LibGUI/Window.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Bitmap.h>
+#include <serenity.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>

@@ -31,6 +31,14 @@
 
 __BEGIN_DECLS
 
+int shbuf_create(int, void** buffer);
+int shbuf_allow_pid(int, pid_t peer_pid);
+int shbuf_allow_all(int);
+void* shbuf_get(int shbuf_id);
+int shbuf_release(int shbuf_id);
+int shbuf_seal(int shbuf_id);
+int shbuf_get_size(int shbuf_id);
+
 int module_load(const char* path, size_t path_length);
 int module_unload(const char* name, size_t name_length);
 
