@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,41 +24,46 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/FileSystem/Inode.h>
-#include <Kernel/VM/MemoryManager.h>
-#include <Kernel/VM/Region.h>
-#include <Kernel/VM/SharedInodeVMObject.h>
+#pragma once
+
+#include <AK/Bitmap.h>
+#include <Kernel/UnixTypes.h>
+#include <Kernel/VM/VMObject.h>
 
 namespace Kernel {
 
-NonnullRefPtr<SharedInodeVMObject> SharedInodeVMObject::create_with_inode(Inode& inode)
-{
-    size_t size = inode.size();
-    if (inode.shared_vmobject())
-        return *inode.shared_vmobject();
-    auto vmobject = adopt(*new SharedInodeVMObject(inode, size));
-    vmobject->inode().set_shared_vmobject(*vmobject);
-    return vmobject;
-}
+class InodeVMObject : public VMObject {
+public:
+    virtual ~InodeVMObject() override;
 
-NonnullRefPtr<VMObject> SharedInodeVMObject::clone()
-{
-    return adopt(*new SharedInodeVMObject(*this));
-}
+    Inode& inode() { return *m_inode; }
+    const Inode& inode() const { return *m_inode; }
 
-SharedInodeVMObject::SharedInodeVMObject(Inode& inode, size_t size)
-    : InodeVMObject(inode, size)
-{
-}
+    void inode_contents_changed(Badge<Inode>, off_t, ssize_t, const u8*);
+    void inode_size_changed(Badge<Inode>, size_t old_size, size_t new_size);
 
-SharedInodeVMObject::SharedInodeVMObject(const SharedInodeVMObject& other)
-    : InodeVMObject(other)
-{
-}
+    size_t amount_dirty() const;
+    size_t amount_clean() const;
 
-SharedInodeVMObject::~SharedInodeVMObject()
-{
-    ASSERT(inode().shared_vmobject() == this);
-}
+    int release_all_clean_pages();
+
+    u32 writable_mappings() const;
+    u32 executable_mappings() const;
+
+protected:
+    explicit InodeVMObject(Inode&, size_t);
+    explicit InodeVMObject(const InodeVMObject&);
+
+    InodeVMObject& operator=(const InodeVMObject&) = delete;
+    InodeVMObject& operator=(InodeVMObject&&) = delete;
+    InodeVMObject(InodeVMObject&&) = delete;
+
+    virtual bool is_inode() const final { return true; }
+
+    int release_all_clean_pages_impl();
+
+    NonnullRefPtr<Inode> m_inode;
+    Bitmap m_dirty_pages;
+};
 
 }

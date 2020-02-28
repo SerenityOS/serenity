@@ -663,12 +663,12 @@ int Process::sys$purge(int mode)
         }
     }
     if (mode & PURGE_ALL_CLEAN_INODE) {
-        NonnullRefPtrVector<SharedInodeVMObject> vmobjects;
+        NonnullRefPtrVector<InodeVMObject> vmobjects;
         {
             InterruptDisabler disabler;
             MM.for_each_vmobject([&](auto& vmobject) {
                 if (vmobject.is_inode())
-                    vmobjects.append(static_cast<SharedInodeVMObject&>(vmobject));
+                    vmobjects.append(static_cast<InodeVMObject&>(vmobject));
                 return IterationDecision::Continue;
             });
         }

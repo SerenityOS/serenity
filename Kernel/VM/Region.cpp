@@ -452,7 +452,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
     LOCKER(vmobject().m_paging_lock);
     cli();
 
-    auto& inode_vmobject = static_cast<SharedInodeVMObject&>(vmobject());
+    auto& inode_vmobject = static_cast<InodeVMObject&>(vmobject());
     auto& vmobject_physical_page_entry = inode_vmobject.physical_pages()[first_page_index() + page_index_in_region];
 
 #ifdef PAGE_FAULT_DEBUG
