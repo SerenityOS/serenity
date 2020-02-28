@@ -45,6 +45,8 @@ private:
     explicit PrivateInodeVMObject(Inode&, size_t);
     explicit PrivateInodeVMObject(const PrivateInodeVMObject&);
 
+    virtual const char* class_name() const override { return "PrivateInodeVMObject"; }
+
     PrivateInodeVMObject& operator=(const PrivateInodeVMObject&) = delete;
 };
 
