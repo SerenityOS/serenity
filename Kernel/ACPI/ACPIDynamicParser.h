@@ -34,9 +34,9 @@
 #include <LibBareMetal/Memory/PhysicalAddress.h>
 
 namespace Kernel {
-
-class ACPIDynamicParser final : public IRQHandler
-    , ACPIStaticParser {
+namespace ACPI {
+class DynamicParser final : public IRQHandler
+    , StaticParser {
 public:
     static void initialize(PhysicalAddress rsdp);
     static void initialize_without_rsdp();
@@ -48,8 +48,8 @@ public:
     virtual void do_acpi_shutdown() override;
 
 protected:
-    ACPIDynamicParser();
-    explicit ACPIDynamicParser(PhysicalAddress);
+    DynamicParser();
+    explicit DynamicParser(PhysicalAddress);
 
 private:
     void build_namespace();
@@ -59,4 +59,5 @@ private:
     OwnPtr<Region> m_acpi_namespace;
 };
 
+}
 }

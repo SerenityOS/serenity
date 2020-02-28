@@ -30,42 +30,40 @@
 #include <AK/OwnPtr.h>
 
 namespace Kernel {
+namespace ACPI {
 
-class ACPIStaticParser : ACPIParser {
-public:
-    static void initialize(PhysicalAddress rsdp);
-    static void initialize_without_rsdp();
-    static bool is_initialized();
+    class StaticParser : Parser {
+    public:
+        static void initialize(PhysicalAddress rsdp);
+        static void initialize_without_rsdp();
+        static bool is_initialized();
 
-    virtual PhysicalAddress find_table(const char* sig) override;
-    virtual void do_acpi_reboot() override;
-    virtual void do_acpi_shutdown() override;
-    virtual bool is_operable() override { return m_operable; }
+        virtual PhysicalAddress find_table(const char* sig) override;
+        virtual void do_acpi_reboot() override;
+        virtual void do_acpi_shutdown() override;
+        virtual bool is_operable() override { return m_operable; }
 
-protected:
-    ACPIStaticParser();
-    explicit ACPIStaticParser(PhysicalAddress);
+    protected:
+        StaticParser();
+        explicit StaticParser(PhysicalAddress);
 
-private:
-    void locate_static_data();
-    void locate_all_aml_tables();
-    void locate_main_system_description_table();
-    void initialize_main_system_description_table();
-    size_t get_table_size(PhysicalAddress);
-    u8 get_table_revision(PhysicalAddress);
-    void init_fadt();
-    PhysicalAddress search_rsdp_in_ebda(u16 ebda_segment);
-    PhysicalAddress search_rsdp_in_bios_area();
-    PhysicalAddress search_rsdp();
+    private:
+        void locate_static_data();
+        void locate_main_system_description_table();
+        void initialize_main_system_description_table();
+        size_t get_table_size(PhysicalAddress);
+        u8 get_table_revision(PhysicalAddress);
+        void init_fadt();
+        void init_facs();
 
-    PhysicalAddress m_rsdp;
-    PhysicalAddress m_main_system_description_table;
+        PhysicalAddress m_rsdp;
+        PhysicalAddress m_main_system_description_table;
 
-    OwnPtr<ACPI::MainSystemDescriptionTable> m_main_sdt;
-    OwnPtr<ACPI::FixedACPIData> m_fadt;
+        Vector<PhysicalAddress> m_sdt_pointers;
+        PhysicalAddress m_fadt;
+        PhysicalAddress m_facs;
 
-    Vector<ACPI_RAW::SDTHeader*> m_aml_tables_ptrs;
-    bool m_xsdt_supported;
-};
-
+        bool m_xsdt_supported;
+    };
+}
 }

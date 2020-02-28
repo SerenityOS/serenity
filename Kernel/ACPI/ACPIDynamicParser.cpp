@@ -28,70 +28,71 @@
 #include <Kernel/ACPI/ACPIParser.h>
 
 namespace Kernel {
-
-void ACPIDynamicParser::initialize(PhysicalAddress rsdp)
-{
-    if (!ACPIStaticParser::is_initialized()) {
-        new ACPIDynamicParser(rsdp);
+namespace ACPI {
+    void DynamicParser::initialize(PhysicalAddress rsdp)
+    {
+        if (!StaticParser::is_initialized()) {
+            new DynamicParser(rsdp);
+        }
     }
-}
-void ACPIDynamicParser::initialize_without_rsdp()
-{
-    if (!ACPIStaticParser::is_initialized()) {
-        new ACPIDynamicParser();
+    void DynamicParser::initialize_without_rsdp()
+    {
+        if (!StaticParser::is_initialized()) {
+            new DynamicParser();
+        }
     }
-}
 
-ACPIDynamicParser::ACPIDynamicParser()
-    : IRQHandler(9)
-    , ACPIStaticParser()
+    DynamicParser::DynamicParser()
+        : IRQHandler(9)
+        , StaticParser()
 
-{
-    kprintf("ACPI: Dynamic Parsing Enabled, Can parse AML\n");
-}
-ACPIDynamicParser::ACPIDynamicParser(PhysicalAddress rsdp)
-    : IRQHandler(9)
-    , ACPIStaticParser(rsdp)
-{
-    kprintf("ACPI: Dynamic Parsing Enabled, Can parse AML\n");
-}
+    {
+        kprintf("ACPI: Dynamic Parsing Enabled, Can parse AML\n");
+    }
+    DynamicParser::DynamicParser(PhysicalAddress rsdp)
+        : IRQHandler(9)
+        , StaticParser(rsdp)
+    {
+        kprintf("ACPI: Dynamic Parsing Enabled, Can parse AML\n");
+    }
 
-void ACPIDynamicParser::handle_irq(RegisterState&)
-{
-    // FIXME: Implement IRQ handling of ACPI signals!
-    ASSERT_NOT_REACHED();
-}
+    void DynamicParser::handle_irq(RegisterState&)
+    {
+        // FIXME: Implement IRQ handling of ACPI signals!
+        ASSERT_NOT_REACHED();
+    }
 
-void ACPIDynamicParser::enable_aml_interpretation()
-{
-    // FIXME: Implement AML Interpretation
-    ASSERT_NOT_REACHED();
-}
-void ACPIDynamicParser::enable_aml_interpretation(File&)
-{
-    // FIXME: Implement AML Interpretation
-    ASSERT_NOT_REACHED();
-}
-void ACPIDynamicParser::enable_aml_interpretation(u8*, u32)
-{
-    // FIXME: Implement AML Interpretation
-    ASSERT_NOT_REACHED();
-}
-void ACPIDynamicParser::disable_aml_interpretation()
-{
-    // FIXME: Implement AML Interpretation
-    ASSERT_NOT_REACHED();
-}
-void ACPIDynamicParser::do_acpi_shutdown()
-{
-    // FIXME: Implement AML Interpretation to perform ACPI shutdown
-    ASSERT_NOT_REACHED();
-}
+    void DynamicParser::enable_aml_interpretation()
+    {
+        // FIXME: Implement AML Interpretation
+        ASSERT_NOT_REACHED();
+    }
+    void DynamicParser::enable_aml_interpretation(File&)
+    {
+        // FIXME: Implement AML Interpretation
+        ASSERT_NOT_REACHED();
+    }
+    void DynamicParser::enable_aml_interpretation(u8*, u32)
+    {
+        // FIXME: Implement AML Interpretation
+        ASSERT_NOT_REACHED();
+    }
+    void DynamicParser::disable_aml_interpretation()
+    {
+        // FIXME: Implement AML Interpretation
+        ASSERT_NOT_REACHED();
+    }
+    void DynamicParser::do_acpi_shutdown()
+    {
+        // FIXME: Implement AML Interpretation to perform ACPI shutdown
+        ASSERT_NOT_REACHED();
+    }
 
-void ACPIDynamicParser::build_namespace()
-{
-    // FIXME: Implement AML Interpretation to build the ACPI namespace
-    ASSERT_NOT_REACHED();
-}
+    void DynamicParser::build_namespace()
+    {
+        // FIXME: Implement AML Interpretation to build the ACPI namespace
+        ASSERT_NOT_REACHED();
+    }
 
+}
 }
