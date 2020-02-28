@@ -62,12 +62,13 @@ bool SharedIRQHandler::eoi()
 #ifdef INTERRUPT_DEBUG
     dbg() << "EOI IRQ " << interrupt_number();
 #endif
-    InterruptManagement::the().eoi(interrupt_number());
+    m_responsible_irq_controller->eoi(interrupt_number());
     return true;
 }
 
 SharedIRQHandler::SharedIRQHandler(u8 irq)
     : GenericInterruptHandler(irq)
+    , m_responsible_irq_controller(InterruptManagement::the().get_responsible_irq_controller(irq))
 {
 #ifdef INTERRUPT_DEBUG
     kprintf("Shared Interrupt Handler registered @ %d\n", m_interrupt_number);
@@ -114,7 +115,7 @@ void SharedIRQHandler::enable_interrupt_vector()
     if (m_enabled)
         return;
     m_enabled = true;
-    InterruptManagement::the().enable(interrupt_number());
+    m_responsible_irq_controller->enable(interrupt_number());
 }
 
 void SharedIRQHandler::disable_interrupt_vector()
@@ -122,7 +123,7 @@ void SharedIRQHandler::disable_interrupt_vector()
     if (!m_enabled)
         return;
     m_enabled = false;
-    InterruptManagement::the().disable(interrupt_number());
+    m_responsible_irq_controller->disable(interrupt_number());
 }
 
 }
