@@ -33,6 +33,7 @@
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Interrupts/InterruptManagement.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
+#include <Kernel/Interrupts/SpuriousInterruptHandler.h>
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Process.h>
@@ -245,7 +246,8 @@ void page_fault_handler(RegisterState regs)
 
 #ifdef PAGE_FAULT_DEBUG
     u32 fault_page_directory = read_cr3();
-    dbg() << (current ? Process::current->name().characters() : "(none)") << "(" << (current ? Process::current->pid() : 0) << "): ring" << (regs.cs & 3) << " " << (regs.exception_code & 1 ? "PV" : "NP") << " page fault in PD=" << String::format("%x", fault_page_directory) << ", " << (regs.exception_code & 8 ? "reserved-bit " : "") << regs.exception_code & 2 ? "write" : "read" <<" V" << String::format("%08x", fault_address);
+    dbg() << (current ? Process::current->name().characters() : "(none)") << "(" << (current ? Process::current->pid() : 0) << "): ring" << (regs.cs & 3) << " " << (regs.exception_code & 1 ? "PV" : "NP") << " page fault in PD=" << String::format("%x", fault_page_directory) << ", " << (regs.exception_code & 8 ? "reserved-bit " : "") << regs.exception_code & 2 ? "write" : "read"
+            << " V" << String::format("%08x", fault_address);
 #endif
 
 #ifdef PAGE_FAULT_DEBUG
@@ -661,14 +663,10 @@ void handle_interrupt(RegisterState regs)
     ++g_in_irq;
     ASSERT(regs.isr_number >= 0x50 && regs.isr_number <= 0x5f);
     u8 irq = (u8)(regs.isr_number - 0x50);
-    if (s_interrupt_handler[irq]) {
-        s_interrupt_handler[irq]->handle_interrupt(regs);
-        s_interrupt_handler[irq]->increment_invoking_counter();
-        s_interrupt_handler[irq]->eoi();
-    } else {
-        dbg() << "No IRQ " << irq << " Handler installed!";
-        hang();
-    }
+    ASSERT(s_interrupt_handler[irq]);
+    s_interrupt_handler[irq]->handle_interrupt(regs);
+    s_interrupt_handler[irq]->increment_invoking_counter();
+    s_interrupt_handler[irq]->eoi();
     --g_in_irq;
 }
 
