@@ -3280,9 +3280,9 @@ int Process::sys$accept(int accepting_socket_fd, sockaddr* user_address, socklen
     return accepted_socket_fd;
 }
 
-int Process::sys$connect(int sockfd, const sockaddr* address, socklen_t address_size)
+int Process::sys$connect(int sockfd, const sockaddr* user_address, socklen_t user_address_size)
 {
-    if (!validate_read(address, address_size))
+    if (!validate_read(user_address, user_address_size))
         return -EFAULT;
     int fd = alloc_fd();
     if (fd < 0)
@@ -3295,8 +3295,12 @@ int Process::sys$connect(int sockfd, const sockaddr* address, socklen_t address_
 
     auto& socket = *description->socket();
     REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
-    SmapDisabler disabler;
-    return socket.connect(*description, address, address_size, description->is_blocking() ? ShouldBlock::Yes : ShouldBlock::No);
+
+    u8 address[sizeof(sockaddr_un)];
+    size_t address_size = min(sizeof(address), static_cast<size_t>(user_address_size));
+    copy_from_user(address, user_address, address_size);
+
+    return socket.connect(*description, (const sockaddr*)address, address_size, description->is_blocking() ? ShouldBlock::Yes : ShouldBlock::No);
 }
 
 int Process::sys$shutdown(int sockfd, int how)
