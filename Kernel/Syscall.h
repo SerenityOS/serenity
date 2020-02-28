@@ -121,7 +121,6 @@ namespace Kernel {
     __ENUMERATE_SYSCALL(chown)                \
     __ENUMERATE_SYSCALL(fchmod)               \
     __ENUMERATE_SYSCALL(symlink)              \
-    __ENUMERATE_SYSCALL(shbuf_get_size)       \
     __ENUMERATE_SYSCALL(shbuf_seal)           \
     __ENUMERATE_SYSCALL(sendto)               \
     __ENUMERATE_SYSCALL(recvfrom)             \

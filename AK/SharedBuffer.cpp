@@ -67,14 +67,10 @@ bool SharedBuffer::share_globally()
 
 RefPtr<SharedBuffer> SharedBuffer::create_from_shbuf_id(int shbuf_id)
 {
-    void* data = shbuf_get(shbuf_id);
+    size_t size = 0;
+    void* data = shbuf_get(shbuf_id, &size);
     if (data == (void*)-1) {
         perror("shbuf_get");
-        return nullptr;
-    }
-    int size = shbuf_get_size(shbuf_id);
-    if (size < 0) {
-        perror("shbuf_get_size");
         return nullptr;
     }
     return adopt(*new SharedBuffer(shbuf_id, size, data));
