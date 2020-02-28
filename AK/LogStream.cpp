@@ -126,6 +126,31 @@ DebugLogStream dbg()
     return stream;
 }
 
+#if defined(KERNEL)
+KernelLogStream klog()
+{
+    KernelLogStream stream;
+    if (Kernel::Thread::current)
+        stream << "\033[34;1m[" << *Kernel::Thread::current << "]\033[0m: ";
+    else
+        stream << "\033[36;1m[Kernel]\033[0m: ";
+    return stream;
+}
+#elif !defined(BOOTSTRAPPER)
+DebugLogStream klog()
+{
+    return dbg();
+}
+#endif
+
+#if defined(KERNEL)
+KernelLogStream::~KernelLogStream()
+{
+    char newline = '\n';
+    write(&newline, 1);
+}
+#endif
+
 DebugLogStream::~DebugLogStream()
 {
     char newline = '\n';
