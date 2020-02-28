@@ -57,7 +57,6 @@ public:
 
     static NonnullOwnPtr<Region> create_user_accessible(const Range&, const StringView& name, u8 access, bool cacheable = true);
     static NonnullOwnPtr<Region> create_user_accessible(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable = true);
-    static NonnullOwnPtr<Region> create_user_accessible(const Range&, NonnullRefPtr<Inode>, const StringView& name, u8 access, bool cacheable = true);
     static NonnullOwnPtr<Region> create_kernel_only(const Range&, const StringView& name, u8 access, bool cacheable = true);
     static NonnullOwnPtr<Region> create_kernel_only(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable = true);
 
@@ -163,7 +162,6 @@ public:
     // NOTE: These are public so we can make<> them.
     Region(const Range&, const String&, u8 access, bool cacheable);
     Region(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const String&, u8 access, bool cacheable);
-    Region(const Range&, NonnullRefPtr<Inode>, const String&, u8 access, bool cacheable);
 
 private:
     Bitmap& ensure_cow_map() const;
