@@ -72,7 +72,6 @@ SharedIRQHandler::SharedIRQHandler(u8 irq)
 #ifdef INTERRUPT_DEBUG
     kprintf("Shared Interrupt Handler registered @ %d\n", m_interrupt_number);
 #endif
-    register_generic_interrupt_handler(irq, *this);
     disable_interrupt_vector();
 }
 
@@ -82,7 +81,6 @@ SharedIRQHandler::~SharedIRQHandler()
     kprintf("Shared Interrupt Handler unregistered @ %d\n", interrupt_number());
 #endif
     disable_interrupt_vector();
-    unregister_generic_interrupt_handler(interrupt_number(), *this);
 }
 
 void SharedIRQHandler::handle_interrupt(RegisterState& regs)
