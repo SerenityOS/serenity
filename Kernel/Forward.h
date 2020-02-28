@@ -39,7 +39,7 @@ class FileDescription;
 class IPv4Socket;
 class Inode;
 class InodeIdentifier;
-class InodeVMObject;
+class SharedInodeVMObject;
 class InodeWatcher;
 class KBuffer;
 class KResult;

@@ -101,7 +101,6 @@ OBJS = \
     TTY/VirtualConsole.o \
     Thread.o \
     VM/AnonymousVMObject.o \
-    VM/InodeVMObject.o \
     VM/MemoryManager.o \
     VM/PageDirectory.o \
     VM/PhysicalPage.o \
@@ -109,6 +108,7 @@ OBJS = \
     VM/PurgeableVMObject.o \
     VM/RangeAllocator.o \
     VM/Region.o \
+    VM/SharedInodeVMObject.o \
     VM/VMObject.o \
     ACPI/ACPIParser.o \
     ACPI/ACPIStaticParser.o \

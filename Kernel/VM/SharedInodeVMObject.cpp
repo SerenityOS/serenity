@@ -25,46 +25,46 @@
  */
 
 #include <Kernel/FileSystem/Inode.h>
-#include <Kernel/VM/InodeVMObject.h>
+#include <Kernel/VM/SharedInodeVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/Region.h>
 
 namespace Kernel {
 
-NonnullRefPtr<InodeVMObject> InodeVMObject::create_with_inode(Inode& inode)
+NonnullRefPtr<SharedInodeVMObject> SharedInodeVMObject::create_with_inode(Inode& inode)
 {
     size_t size = inode.size();
-    if (inode.vmobject())
-        return *inode.vmobject();
-    auto vmobject = adopt(*new InodeVMObject(inode, size));
-    vmobject->inode().set_vmobject(*vmobject);
+    if (inode.shared_vmobject())
+        return *inode.shared_vmobject();
+    auto vmobject = adopt(*new SharedInodeVMObject(inode, size));
+    vmobject->inode().set_shared_vmobject(*vmobject);
     return vmobject;
 }
 
-NonnullRefPtr<VMObject> InodeVMObject::clone()
+NonnullRefPtr<VMObject> SharedInodeVMObject::clone()
 {
-    return adopt(*new InodeVMObject(*this));
+    return adopt(*new SharedInodeVMObject(*this));
 }
 
-InodeVMObject::InodeVMObject(Inode& inode, size_t size)
+SharedInodeVMObject::SharedInodeVMObject(Inode& inode, size_t size)
     : VMObject(size)
     , m_inode(inode)
     , m_dirty_pages(page_count(), false)
 {
 }
 
-InodeVMObject::InodeVMObject(const InodeVMObject& other)
+SharedInodeVMObject::SharedInodeVMObject(const SharedInodeVMObject& other)
     : VMObject(other)
     , m_inode(other.m_inode)
 {
 }
 
-InodeVMObject::~InodeVMObject()
+SharedInodeVMObject::~SharedInodeVMObject()
 {
-    ASSERT(inode().vmobject() == this);
+    ASSERT(inode().shared_vmobject() == this);
 }
 
-size_t InodeVMObject::amount_clean() const
+size_t SharedInodeVMObject::amount_clean() const
 {
     size_t count = 0;
     ASSERT(page_count() == (size_t)m_dirty_pages.size());
@@ -75,7 +75,7 @@ size_t InodeVMObject::amount_clean() const
     return count * PAGE_SIZE;
 }
 
-size_t InodeVMObject::amount_dirty() const
+size_t SharedInodeVMObject::amount_dirty() const
 {
     size_t count = 0;
     for (size_t i = 0; i < m_dirty_pages.size(); ++i) {
@@ -85,7 +85,7 @@ size_t InodeVMObject::amount_dirty() const
     return count * PAGE_SIZE;
 }
 
-void InodeVMObject::inode_size_changed(Badge<Inode>, size_t old_size, size_t new_size)
+void SharedInodeVMObject::inode_size_changed(Badge<Inode>, size_t old_size, size_t new_size)
 {
     dbg() << "VMObject::inode_size_changed: {" << m_inode->fsid() << ":" << m_inode->index() << "} " << old_size << " -> " << new_size;
 
@@ -102,7 +102,7 @@ void InodeVMObject::inode_size_changed(Badge<Inode>, size_t old_size, size_t new
     });
 }
 
-void InodeVMObject::inode_contents_changed(Badge<Inode>, off_t offset, ssize_t size, const u8* data)
+void SharedInodeVMObject::inode_contents_changed(Badge<Inode>, off_t offset, ssize_t size, const u8* data)
 {
     (void)size;
     (void)data;
@@ -153,13 +153,13 @@ void InodeVMObject::inode_contents_changed(Badge<Inode>, off_t offset, ssize_t s
     });
 }
 
-int InodeVMObject::release_all_clean_pages()
+int SharedInodeVMObject::release_all_clean_pages()
 {
     LOCKER(m_paging_lock);
     return release_all_clean_pages_impl();
 }
 
-int InodeVMObject::release_all_clean_pages_impl()
+int SharedInodeVMObject::release_all_clean_pages_impl()
 {
     int count = 0;
     InterruptDisabler disabler;
@@ -175,20 +175,20 @@ int InodeVMObject::release_all_clean_pages_impl()
     return count;
 }
 
-u32 InodeVMObject::writable_mappings() const
+u32 SharedInodeVMObject::writable_mappings() const
 {
     u32 count = 0;
-    const_cast<InodeVMObject&>(*this).for_each_region([&](auto& region) {
+    const_cast<SharedInodeVMObject&>(*this).for_each_region([&](auto& region) {
         if (region.is_writable())
             ++count;
     });
     return count;
 }
 
-u32 InodeVMObject::executable_mappings() const
+u32 SharedInodeVMObject::executable_mappings() const
 {
     u32 count = 0;
-    const_cast<InodeVMObject&>(*this).for_each_region([&](auto& region) {
+    const_cast<SharedInodeVMObject&>(*this).for_each_region([&](auto& region) {
         if (region.is_executable())
             ++count;
     });
