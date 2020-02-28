@@ -93,6 +93,7 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget()
             builder.append('T');
         return builder.to_string();
     });
+    pid_vm_fields.empend("vmobject", "VMObject type", Gfx::TextAlignment::CenterLeft);
     pid_vm_fields.empend("Purgeable", Gfx::TextAlignment::CenterLeft, [](auto& object) {
         if (!object.get("purgeable").to_bool())
             return "";
@@ -117,7 +118,7 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget()
     m_json_model = GUI::JsonArrayModel::create({}, move(pid_vm_fields));
     m_table_view->set_model(GUI::SortingProxyModel::create(*m_json_model));
 
-    m_table_view->set_cell_painting_delegate(6, make<PagemapPaintingDelegate>());
+    m_table_view->set_cell_painting_delegate(7, make<PagemapPaintingDelegate>());
 
     m_table_view->model()->set_key_column_and_sort_order(0, GUI::SortOrder::Ascending);
     m_timer = add<Core::Timer>(1000, [this] { refresh(); });
