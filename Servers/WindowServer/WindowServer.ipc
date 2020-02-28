@@ -57,9 +57,9 @@ endpoint WindowServer = 2
     SetGlobalCursorTracking(i32 window_id, bool enabled) => ()
     SetWindowOpacity(i32 window_id, float opacity) => ()
 
-    SetWindowBackingStore(i32 window_id, i32 bpp, i32 pitch, i32 shared_buffer_id, bool has_alpha_channel, Gfx::Size size, bool flush_immediately) => ()
-    GetClipboardContents() => (i32 shared_buffer_id, i32 content_size, String content_type)
-    SetClipboardContents(i32 shared_buffer_id, i32 content_size, String content_type) => ()
+    SetWindowBackingStore(i32 window_id, i32 bpp, i32 pitch, i32 shbuf_id, bool has_alpha_channel, Gfx::Size size, bool flush_immediately) => ()
+    GetClipboardContents() => (i32 shbuf_id, i32 content_size, String content_type)
+    SetClipboardContents(i32 shbuf_id, i32 content_size, String content_type) => ()
 
     WM_SetActiveWindow(i32 client_id, i32 window_id) =|
     WM_SetWindowMinimized(i32 client_id, i32 window_id, bool minimized) =|

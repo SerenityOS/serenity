@@ -55,7 +55,7 @@ DragOperation::Outcome DragOperation::exec()
     if (m_bitmap) {
         shared_bitmap = m_bitmap->to_shareable_bitmap();
         shared_bitmap->shared_buffer()->share_with(WindowServerConnection::the().server_pid());
-        bitmap_id = shared_bitmap->shared_buffer_id();
+        bitmap_id = shared_bitmap->shbuf_id();
         bitmap_size = shared_bitmap->size();
     }
 

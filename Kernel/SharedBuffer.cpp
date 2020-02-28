@@ -46,7 +46,7 @@ void SharedBuffer::sanity_check(const char* what)
         found_refs += ref.count;
 
     if (found_refs != m_total_refs) {
-        dbg() << what << " sanity -- SharedBuffer{" << this << "} id: " << m_shared_buffer_id << " has total refs " << m_total_refs << " but we found " << found_refs;
+        dbg() << what << " sanity -- SharedBuffer{" << this << "} id: " << m_shbuf_id << " has total refs " << m_total_refs << " but we found " << found_refs;
         for (const auto& ref : m_refs) {
             dbg() << "    ref from pid " << ref.pid << ": refcnt " << ref.count;
         }
@@ -109,7 +109,7 @@ void SharedBuffer::share_with(pid_t peer_pid)
         return;
     for (auto& ref : m_refs) {
         if (ref.pid == peer_pid) {
-            // don't increment the reference count yet; let them get_shared_buffer it first.
+            // don't increment the reference count yet; let them shbuf_get it first.
             sanity_check("share_with (old ref)");
             return;
         }
@@ -129,12 +129,12 @@ void SharedBuffer::deref_for_process(Process& process)
             m_total_refs--;
             if (ref.count == 0) {
 #ifdef SHARED_BUFFER_DEBUG
-                dbg() << "Releasing shared buffer reference on " << m_shared_buffer_id << " of size " << size() << " by PID " << process.pid();
+                dbg() << "Releasing shared buffer reference on " << m_shbuf_id << " of size " << size() << " by PID " << process.pid();
 #endif
                 process.deallocate_region(*ref.region);
                 m_refs.unstable_remove(i);
 #ifdef SHARED_BUFFER_DEBUG
-                dbg() << "Released shared buffer reference on " << m_shared_buffer_id << " of size " << size() << " by PID " << process.pid();
+                dbg() << "Released shared buffer reference on " << m_shbuf_id << " of size " << size() << " by PID " << process.pid();
 #endif
                 sanity_check("deref_for_process");
                 destroy_if_unused();
@@ -154,12 +154,12 @@ void SharedBuffer::disown(pid_t pid)
         auto& ref = m_refs[i];
         if (ref.pid == pid) {
 #ifdef SHARED_BUFFER_DEBUG
-            dbg() << "Disowning shared buffer " << m_shared_buffer_id << " of size " << size() << " by PID " << pid;
+            dbg() << "Disowning shared buffer " << m_shbuf_id << " of size " << size() << " by PID " << pid;
 #endif
             m_total_refs -= ref.count;
             m_refs.unstable_remove(i);
 #ifdef SHARED_BUFFER_DEBUG
-            dbg() << "Disowned shared buffer " << m_shared_buffer_id << " of size " << size() << " by PID " << pid;
+            dbg() << "Disowned shared buffer " << m_shbuf_id << " of size " << size() << " by PID " << pid;
 #endif
             destroy_if_unused();
             return;
@@ -173,10 +173,10 @@ void SharedBuffer::destroy_if_unused()
     sanity_check("destroy_if_unused");
     if (m_total_refs == 0) {
 #ifdef SHARED_BUFFER_DEBUG
-        kprintf("Destroying unused SharedBuffer{%p} id: %d\n", this, m_shared_buffer_id);
+        kprintf("Destroying unused SharedBuffer{%p} id: %d\n", this, m_shbuf_id);
 #endif
         auto count_before = shared_buffers().resource().size();
-        shared_buffers().resource().remove(m_shared_buffer_id);
+        shared_buffers().resource().remove(m_shbuf_id);
         ASSERT(count_before != shared_buffers().resource().size());
     }
 }

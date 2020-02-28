@@ -41,15 +41,15 @@ bool Download::stop()
     return m_client->stop_download({}, *this);
 }
 
-void Download::did_finish(Badge<Client>, bool success, u32 total_size, i32 shared_buffer_id)
+void Download::did_finish(Badge<Client>, bool success, u32 total_size, i32 shbuf_id)
 {
     if (!on_finish)
         return;
 
     ByteBuffer payload;
     RefPtr<SharedBuffer> shared_buffer;
-    if (success && shared_buffer_id != -1) {
-        shared_buffer = SharedBuffer::create_from_shared_buffer_id(shared_buffer_id);
+    if (success && shbuf_id != -1) {
+        shared_buffer = SharedBuffer::create_from_shbuf_id(shbuf_id);
         payload = ByteBuffer::wrap(shared_buffer->data(), total_size);
     }
     on_finish(success, payload, move(shared_buffer));

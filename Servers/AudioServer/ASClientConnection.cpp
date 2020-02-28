@@ -92,7 +92,7 @@ OwnPtr<Messages::AudioServer::SetMainMixVolumeResponse> ASClientConnection::hand
 
 OwnPtr<Messages::AudioServer::EnqueueBufferResponse> ASClientConnection::handle(const Messages::AudioServer::EnqueueBuffer& message)
 {
-    auto shared_buffer = SharedBuffer::create_from_shared_buffer_id(message.buffer_id());
+    auto shared_buffer = SharedBuffer::create_from_shbuf_id(message.buffer_id());
     if (!shared_buffer) {
         // FIXME: The shared buffer should have been retrieved for us already.
         //        We don't want to do IPC error checking at this layer.

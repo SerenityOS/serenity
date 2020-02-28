@@ -64,7 +64,7 @@ public:
     int width() const { return m_size.width(); }
     int height() const { return m_size.height(); }
     size_t pitch() const { return m_pitch; }
-    int shared_buffer_id() const;
+    int shbuf_id() const;
 
     SharedBuffer* shared_buffer() { return m_shared_buffer.ptr(); }
     const SharedBuffer* shared_buffer() const { return m_shared_buffer.ptr(); }

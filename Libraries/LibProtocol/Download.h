@@ -49,7 +49,7 @@ public:
     Function<void(bool success, const ByteBuffer& payload, RefPtr<SharedBuffer> payload_storage)> on_finish;
     Function<void(u32 total_size, u32 downloaded_size)> on_progress;
 
-    void did_finish(Badge<Client>, bool success, u32 total_size, i32 shared_buffer_id);
+    void did_finish(Badge<Client>, bool success, u32 total_size, i32 shbuf_id);
     void did_progress(Badge<Client>, u32 total_size, u32 downloaded_size);
 
 private:

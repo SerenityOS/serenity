@@ -477,7 +477,7 @@ void Window::set_hovered_widget(Widget* widget)
 
 void Window::set_current_backing_bitmap(Gfx::Bitmap& bitmap, bool flush_immediately)
 {
-    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowBackingStore>(m_window_id, 32, bitmap.pitch(), bitmap.shared_buffer_id(), bitmap.has_alpha_channel(), bitmap.size(), flush_immediately);
+    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowBackingStore>(m_window_id, 32, bitmap.pitch(), bitmap.shbuf_id(), bitmap.has_alpha_channel(), bitmap.size(), flush_immediately);
 }
 
 void Window::flip(const Vector<Gfx::Rect, 32>& dirty_rects)
@@ -551,17 +551,17 @@ void Window::apply_icon()
     if (!m_window_id)
         return;
 
-    int rc = seal_shared_buffer(m_icon->shared_buffer_id());
+    int rc = shbuf_seal(m_icon->shbuf_id());
     ASSERT(rc == 0);
 
-    rc = share_buffer_globally(m_icon->shared_buffer_id());
+    rc = shbuf_allow_all(m_icon->shbuf_id());
     ASSERT(rc == 0);
 
     static bool has_set_process_icon;
     if (!has_set_process_icon)
-        set_process_icon(m_icon->shared_buffer_id());
+        set_process_icon(m_icon->shbuf_id());
 
-    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowIconBitmap>(m_window_id, m_icon->shared_buffer_id(), m_icon->size());
+    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowIconBitmap>(m_window_id, m_icon->shbuf_id(), m_icon->size());
 }
 
 void Window::start_wm_resize()

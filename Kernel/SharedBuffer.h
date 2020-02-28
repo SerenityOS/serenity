@@ -48,18 +48,18 @@ private:
 
 public:
     SharedBuffer(int id, int size)
-        : m_shared_buffer_id(id)
+        : m_shbuf_id(id)
         , m_vmobject(PurgeableVMObject::create_with_size(size))
     {
 #ifdef SHARED_BUFFER_DEBUG
-        dbg() << "Created shared buffer " << m_shared_buffer_id << " of size " << size;
+        dbg() << "Created shared buffer " << m_shbuf_id << " of size " << size;
 #endif
     }
 
     ~SharedBuffer()
     {
 #ifdef SHARED_BUFFER_DEBUG
-        dbg() << "Destroyed shared buffer " << m_shared_buffer_id << " of size " << size();
+        dbg() << "Destroyed shared buffer " << m_shbuf_id << " of size " << size();
 #endif
     }
 
@@ -75,9 +75,9 @@ public:
     void seal();
     PurgeableVMObject& vmobject() { return m_vmobject; }
     const PurgeableVMObject& vmobject() const { return m_vmobject; }
-    int id() const { return m_shared_buffer_id; }
+    int id() const { return m_shbuf_id; }
 
-    int m_shared_buffer_id { -1 };
+    int m_shbuf_id { -1 };
     bool m_writable { true };
     bool m_global { false };
     NonnullRefPtr<PurgeableVMObject> m_vmobject;

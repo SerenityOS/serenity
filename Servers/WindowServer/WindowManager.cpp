@@ -252,13 +252,13 @@ void WindowManager::tell_wm_listener_about_window_icon(Window& listener, Window&
         return;
     if (window.is_internal())
         return;
-    if (window.icon().shared_buffer_id() == -1)
+    if (window.icon().shbuf_id() == -1)
         return;
-    dbg() << "WindowServer: Sharing icon buffer " << window.icon().shared_buffer_id() << " with PID " << listener.client()->client_pid();
-    if (share_buffer_with(window.icon().shared_buffer_id(), listener.client()->client_pid()) < 0) {
+    dbg() << "WindowServer: Sharing icon buffer " << window.icon().shbuf_id() << " with PID " << listener.client()->client_pid();
+    if (shbuf_allow_pid(window.icon().shbuf_id(), listener.client()->client_pid()) < 0) {
         ASSERT_NOT_REACHED();
     }
-    listener.client()->post_message(Messages::WindowClient::WM_WindowIconBitmapChanged(listener.window_id(), window.client_id(), window.window_id(), window.icon().shared_buffer_id(), window.icon().size()));
+    listener.client()->post_message(Messages::WindowClient::WM_WindowIconBitmapChanged(listener.window_id(), window.client_id(), window.window_id(), window.icon().shbuf_id(), window.icon().size()));
 }
 
 void WindowManager::tell_wm_listeners_window_state_changed(Window& window)

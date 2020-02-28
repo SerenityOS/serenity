@@ -158,9 +158,9 @@ void Bitmap::set_volatile()
     return rc == 0;
 }
 
-int Bitmap::shared_buffer_id() const
+int Bitmap::shbuf_id() const
 {
-    return m_shared_buffer ? m_shared_buffer->shared_buffer_id() : -1;
+    return m_shared_buffer ? m_shared_buffer->shbuf_id() : -1;
 }
 
 }

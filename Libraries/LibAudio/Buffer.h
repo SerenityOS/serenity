@@ -121,7 +121,7 @@ public:
     int sample_count() const { return m_sample_count; }
     const void* data() const { return m_buffer->data(); }
     int size_in_bytes() const { return m_sample_count * (int)sizeof(Sample); }
-    int shared_buffer_id() const { return m_buffer->shared_buffer_id(); }
+    int shbuf_id() const { return m_buffer->shbuf_id(); }
     SharedBuffer& shared_buffer() { return *m_buffer; }
 
 private:

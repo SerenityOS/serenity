@@ -37,19 +37,19 @@ namespace AK {
 RefPtr<SharedBuffer> SharedBuffer::create_with_size(int size)
 {
     void* data;
-    int shared_buffer_id = create_shared_buffer(size, &data);
-    if (shared_buffer_id < 0) {
-        perror("create_shared_buffer");
+    int shbuf_id = shbuf_create(size, &data);
+    if (shbuf_id < 0) {
+        perror("shbuf_create");
         return nullptr;
     }
-    return adopt(*new SharedBuffer(shared_buffer_id, size, data));
+    return adopt(*new SharedBuffer(shbuf_id, size, data));
 }
 
 bool SharedBuffer::share_with(pid_t peer)
 {
-    int ret = share_buffer_with(shared_buffer_id(), peer);
+    int ret = shbuf_allow_pid(shbuf_id(), peer);
     if (ret < 0) {
-        perror("share_buffer_with");
+        perror("shbuf_allow_pid");
         return false;
     }
     return true;
@@ -57,31 +57,31 @@ bool SharedBuffer::share_with(pid_t peer)
 
 bool SharedBuffer::share_globally()
 {
-    int ret = share_buffer_globally(shared_buffer_id());
+    int ret = shbuf_allow_all(shbuf_id());
     if (ret < 0) {
-        perror("share_buffer_globally");
+        perror("shbuf_allow_all");
         return false;
     }
     return true;
 }
 
-RefPtr<SharedBuffer> SharedBuffer::create_from_shared_buffer_id(int shared_buffer_id)
+RefPtr<SharedBuffer> SharedBuffer::create_from_shbuf_id(int shbuf_id)
 {
-    void* data = get_shared_buffer(shared_buffer_id);
+    void* data = shbuf_get(shbuf_id);
     if (data == (void*)-1) {
-        perror("get_shared_buffer");
+        perror("shbuf_get");
         return nullptr;
     }
-    int size = get_shared_buffer_size(shared_buffer_id);
+    int size = shbuf_get_size(shbuf_id);
     if (size < 0) {
-        perror("get_shared_buffer_size");
+        perror("shbuf_get_size");
         return nullptr;
     }
-    return adopt(*new SharedBuffer(shared_buffer_id, size, data));
+    return adopt(*new SharedBuffer(shbuf_id, size, data));
 }
 
-SharedBuffer::SharedBuffer(int shared_buffer_id, int size, void* data)
-    : m_shared_buffer_id(shared_buffer_id)
+SharedBuffer::SharedBuffer(int shbuf_id, int size, void* data)
+    : m_shbuf_id(shbuf_id)
     , m_size(size)
     , m_data(data)
 {
@@ -89,32 +89,32 @@ SharedBuffer::SharedBuffer(int shared_buffer_id, int size, void* data)
 
 SharedBuffer::~SharedBuffer()
 {
-    if (m_shared_buffer_id >= 0) {
-        int rc = release_shared_buffer(m_shared_buffer_id);
+    if (m_shbuf_id >= 0) {
+        int rc = shbuf_release(m_shbuf_id);
         if (rc < 0) {
-            perror("release_shared_buffer");
+            perror("shbuf_release");
         }
     }
 }
 
 void SharedBuffer::seal()
 {
-    int rc = seal_shared_buffer(m_shared_buffer_id);
+    int rc = shbuf_seal(m_shbuf_id);
     if (rc < 0) {
-        perror("seal_shared_buffer");
+        perror("shbuf_seal");
         ASSERT_NOT_REACHED();
     }
 }
 
 void SharedBuffer::set_volatile()
 {
-    u32 rc = syscall(SC_set_shared_buffer_volatile, m_shared_buffer_id, true);
+    u32 rc = syscall(SC_shbuf_set_volatile, m_shbuf_id, true);
     ASSERT(rc == 0);
 }
 
 bool SharedBuffer::set_nonvolatile()
 {
-    u32 rc = syscall(SC_set_shared_buffer_volatile, m_shared_buffer_id, false);
+    u32 rc = syscall(SC_shbuf_set_volatile, m_shbuf_id, false);
     if (rc == 0)
         return true;
     if (rc == 1)
