@@ -48,6 +48,7 @@
 #include <WindowServer/WindowClientEndpoint.h>
 #include <errno.h>
 #include <stdio.h>
+#include <serenity.h>
 #include <time.h>
 #include <unistd.h>
 

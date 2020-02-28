@@ -61,13 +61,6 @@ void sysbeep();
 int systrace(pid_t);
 int gettid();
 int donate(int tid);
-int shbuf_create(int, void** buffer);
-int shbuf_allow_pid(int, pid_t peer_pid);
-int shbuf_allow_all(int);
-void* shbuf_get(int shbuf_id);
-int shbuf_release(int shbuf_id);
-int shbuf_seal(int shbuf_id);
-int shbuf_get_size(int shbuf_id);
 int set_process_icon(int icon_id);
 inline int getpagesize() { return 4096; }
 pid_t fork();
