@@ -3634,9 +3634,11 @@ int Process::sys$shbuf_release(int shbuf_id)
     return 0;
 }
 
-void* Process::sys$shbuf_get(int shbuf_id)
+void* Process::sys$shbuf_get(int shbuf_id, size_t* user_size)
 {
     REQUIRE_PROMISE(shared_buffer);
+    if (user_size && !validate_write_typed(user_size))
+        return (void*)-EFAULT;
     LOCKER(shared_buffers().lock());
     auto it = shared_buffers().resource().find(shbuf_id);
     if (it == shared_buffers().resource().end())
@@ -3647,6 +3649,10 @@ void* Process::sys$shbuf_get(int shbuf_id)
 #ifdef SHARED_BUFFER_DEBUG
     kprintf("%s(%u): Retaining shared buffer %d, buffer count: %u\n", name().characters(), pid(), shbuf_id, shared_buffers().resource().size());
 #endif
+    if (user_size) {
+        size_t size = shared_buffer.size();
+        copy_to_user(user_size, &size);
+    }
     return shared_buffer.ref_for_process_and_get_address(*this);
 }
 
@@ -3665,22 +3671,6 @@ int Process::sys$shbuf_seal(int shbuf_id)
 #endif
     shared_buffer.seal();
     return 0;
-}
-
-int Process::sys$shbuf_get_size(int shbuf_id)
-{
-    REQUIRE_PROMISE(shared_buffer);
-    LOCKER(shared_buffers().lock());
-    auto it = shared_buffers().resource().find(shbuf_id);
-    if (it == shared_buffers().resource().end())
-        return -EINVAL;
-    auto& shared_buffer = *(*it).value;
-    if (!shared_buffer.is_shared_with(m_pid))
-        return -EPERM;
-#ifdef SHARED_BUFFER_DEBUG
-    kprintf("%s(%u): Get shared buffer %d size: %u\n", name().characters(), pid(), shbuf_id, shared_buffers().resource().size());
-#endif
-    return shared_buffer.size();
 }
 
 int Process::sys$shbuf_set_volatile(int shbuf_id, bool state)

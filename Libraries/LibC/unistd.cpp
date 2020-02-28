@@ -553,9 +553,9 @@ int set_process_icon(int icon_id)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-void* shbuf_get(int shbuf_id)
+void* shbuf_get(int shbuf_id, size_t* size)
 {
-    int rc = syscall(SC_shbuf_get, shbuf_id);
+    int rc = syscall(SC_shbuf_get, shbuf_id, size);
     if (rc < 0 && -rc < EMAXERRNO) {
         errno = -rc;
         return (void*)-1;
@@ -566,12 +566,6 @@ void* shbuf_get(int shbuf_id)
 int shbuf_release(int shbuf_id)
 {
     int rc = syscall(SC_shbuf_release, shbuf_id);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
-int shbuf_get_size(int shbuf_id)
-{
-    int rc = syscall(SC_shbuf_get_size, shbuf_id);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
