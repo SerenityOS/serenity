@@ -40,6 +40,8 @@
 
 namespace Kernel {
 
+class ISAInterruptOverrideMetadata;
+
 class InterruptManagement {
 public:
     static InterruptManagement& the();
@@ -48,32 +50,17 @@ public:
 
     virtual void switch_to_pic_mode();
     virtual void switch_to_ioapic_mode();
+    RefPtr<IRQController> get_responsible_irq_controller(u8 interrupt_vector);
 
-    void enable(u8 interrupt_vector);
-    void disable(u8 interrupt_vector);
-    void eoi(u8 interrupt_vector);
     void enumerate_interrupt_handlers(Function<void(GenericInterruptHandler&)>);
     IRQController& get_interrupt_controller(int index);
 
-protected:
-    explicit InterruptManagement(bool create_default_controller);
-    FixedArray<OwnPtr<IRQController>> m_interrupt_controllers { 1 };
-};
-
-class ISAInterruptOverrideMetadata;
-class AdvancedInterruptManagement : public InterruptManagement {
-    friend class IOAPIC;
-
-public:
-    static void initialize(PhysicalAddress madt);
-    virtual void switch_to_ioapic_mode() override;
-    virtual void switch_to_pic_mode() override;
-
 private:
-    explicit AdvancedInterruptManagement(PhysicalAddress madt);
-    void locate_ioapics(PhysicalAddress madt);
-    void locate_isa_interrupt_overrides(PhysicalAddress madt);
+    InterruptManagement();
+    PhysicalAddress search_for_madt();
+    void locate_apic_data();
     void locate_pci_interrupt_overrides();
+    FixedArray<RefPtr<IRQController>> m_interrupt_controllers { 1 };
     Vector<RefPtr<ISAInterruptOverrideMetadata>> m_isa_interrupt_overrides;
     Vector<RefPtr<PCIInterruptOverrideMetadata>> m_pci_interrupt_overrides;
     PhysicalAddress m_madt;

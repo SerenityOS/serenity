@@ -45,12 +45,13 @@ bool SpuriousInterruptHandler::eoi()
 {
     // FIXME: Actually check if IRQ7 or IRQ15 are spurious, and if not, call EOI with the correct interrupt number.
     if (interrupt_number() == 15)
-        InterruptManagement::the().eoi(7);
+        m_responsible_irq_controller->eoi(7);
     return false;
 }
 
 SpuriousInterruptHandler::SpuriousInterruptHandler(u8 irq)
     : GenericInterruptHandler(irq)
+    , m_responsible_irq_controller(InterruptManagement::the().get_responsible_irq_controller(irq))
 {
 }
 
@@ -69,7 +70,7 @@ void SpuriousInterruptHandler::enable_interrupt_vector()
     if (m_enabled)
         return;
     m_enabled = true;
-    InterruptManagement::the().enable(interrupt_number());
+    m_responsible_irq_controller->enable(interrupt_number());
 }
 
 void SpuriousInterruptHandler::disable_interrupt_vector()
@@ -77,7 +78,7 @@ void SpuriousInterruptHandler::disable_interrupt_vector()
     if (!m_enabled)
         return;
     m_enabled = false;
-    InterruptManagement::the().disable(interrupt_number());
+    m_responsible_irq_controller->disable(interrupt_number());
 }
 
 }

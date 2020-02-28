@@ -34,6 +34,7 @@ namespace Kernel {
 
 IRQHandler::IRQHandler(u8 irq)
     : GenericInterruptHandler(irq)
+    , m_responsible_irq_controller(InterruptManagement::the().get_responsible_irq_controller(irq))
 {
 }
 
@@ -47,7 +48,8 @@ bool IRQHandler::eoi()
     dbg() << "EOI IRQ " << interrupt_number();
 #endif
     if (!m_shared_with_others) {
-        InterruptManagement::the().eoi(interrupt_number());
+        ASSERT(!m_responsible_irq_controller.is_null());
+        m_responsible_irq_controller->eoi(interrupt_number());
         return true;
     }
     return false;
@@ -59,7 +61,7 @@ void IRQHandler::enable_irq()
     dbg() << "Enable IRQ " << interrupt_number();
 #endif
     if (!m_shared_with_others)
-        InterruptManagement::the().enable(interrupt_number());
+        m_responsible_irq_controller->enable(interrupt_number());
     else
         m_enabled = true;
 }
@@ -70,7 +72,7 @@ void IRQHandler::disable_irq()
     dbg() << "Disable IRQ " << interrupt_number();
 #endif
     if (!m_shared_with_others)
-        InterruptManagement::the().disable(interrupt_number());
+        m_responsible_irq_controller->disable(interrupt_number());
     else
         m_enabled = false;
 }
@@ -79,6 +81,7 @@ void IRQHandler::change_irq_number(u8 irq)
 {
     InterruptDisabler disabler;
     change_interrupt_number(irq);
+    m_responsible_irq_controller = InterruptManagement::the().get_responsible_irq_controller(irq);
 }
 
 }
