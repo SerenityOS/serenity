@@ -315,6 +315,7 @@ Optional<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
         region_object.add("amount_dirty", (u32)region.amount_dirty());
         region_object.add("cow_pages", region.cow_pages());
         region_object.add("name", region.name());
+        region_object.add("vmobject", region.vmobject().class_name());
 
         StringBuilder pagemap_builder;
         for (size_t i = 0; i < region.page_count(); ++i) {

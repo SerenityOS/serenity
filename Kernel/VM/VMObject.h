@@ -59,6 +59,8 @@ public:
 
     size_t size() const { return m_physical_pages.size() * PAGE_SIZE; }
 
+    virtual const char* class_name() const = 0;
+
     // For InlineLinkedListNode
     VMObject* m_next { nullptr };
     VMObject* m_prev { nullptr };

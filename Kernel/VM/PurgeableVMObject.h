@@ -50,6 +50,8 @@ private:
     explicit PurgeableVMObject(size_t);
     explicit PurgeableVMObject(const PurgeableVMObject&);
 
+    virtual const char* class_name() const override { return "PurgeableVMObject"; }
+
     int purge_impl();
 
     PurgeableVMObject& operator=(const PurgeableVMObject&) = delete;

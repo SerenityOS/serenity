@@ -44,6 +44,8 @@ protected:
     explicit AnonymousVMObject(size_t);
     explicit AnonymousVMObject(const AnonymousVMObject&);
 
+    virtual const char* class_name() const override { return "AnonymousVMObject"; }
+
 private:
     AnonymousVMObject(PhysicalAddress, size_t);
 

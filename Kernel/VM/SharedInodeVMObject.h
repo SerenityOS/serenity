@@ -45,6 +45,8 @@ private:
     explicit SharedInodeVMObject(Inode&, size_t);
     explicit SharedInodeVMObject(const SharedInodeVMObject&);
 
+    virtual const char* class_name() const override { return "SharedInodeVMObject"; }
+
     SharedInodeVMObject& operator=(const SharedInodeVMObject&) = delete;
 };
 
