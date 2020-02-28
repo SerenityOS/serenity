@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2020, Fei Wu <f.eiwu@yahoo.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,46 +24,61 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <AK/CircularDeque.h>
+#include <AK/StdLibExtras.h>
+#include <AK/String.h>
+#include <AK/TestSuite.h>
 
-#include <AK/Assertions.h>
-#include <AK/CircularQueue.h>
-#include <AK/Types.h>
+TEST_CASE(enqueue_begin)
+{
+    CircularDeque<int, 3> ints;
 
-namespace AK {
+    ints.enqueue_begin(0);
+    EXPECT_EQ(ints.size(), 1);
+    EXPECT_EQ(ints.first(), 0);
 
-template<typename T, size_t Capacity>
-class CircularDeque : public CircularQueue<T, Capacity> {
-public:
-    void enqueue_begin(T&& value)
-    {
-        const auto new_head = (this->m_head - 1 + Capacity) % Capacity;
-        auto& slot = this->elements()[new_head];
-        if (this->m_size == Capacity)
-            slot.~T();
-        else
-            ++this->m_size;
+    ints.enqueue_begin(1);
+    EXPECT_EQ(ints.size(), 2);
+    EXPECT_EQ(ints.first(), 1);
+    EXPECT_EQ(ints.last(), 0);
 
-        new (&slot) T(move(value));
-        this->m_head = new_head;
-    }
+    ints.enqueue_begin(2);
+    EXPECT_EQ(ints.size(), 3);
+    EXPECT_EQ(ints.first(), 2);
+    EXPECT_EQ(ints.last(), 0);
 
-    void enqueue_begin(const T& value)
-    {
-        enqueue_begin(T(value));
-    }
-
-    T dequeue_end()
-    {
-        ASSERT(!this->is_empty());
-        auto& slot = this->elements()[(this->m_head + this->m_size - 1) % Capacity];
-        T value = move(slot);
-        slot.~T();
-        this->m_size--;
-        return value;
-    }
-};
-
+    ints.enqueue_begin(3);
+    EXPECT_EQ(ints.size(), 3);
+    EXPECT_EQ(ints.first(), 3);
+    EXPECT_EQ(ints.at(1), 2);
+    EXPECT_EQ(ints.last(), 1);
 }
 
-using AK::CircularDeque;
+TEST_CASE(enqueue_begin_being_moved_from)
+{
+    CircularDeque<String, 2> strings;
+
+    String str{"test"};
+    strings.enqueue_begin(move(str));
+    EXPECT(str.is_null());
+}
+
+TEST_CASE(deque_end)
+{
+    CircularDeque<int, 3> ints;
+    ints.enqueue(0);
+    ints.enqueue(1);
+    ints.enqueue(2);
+    EXPECT_EQ(ints.size(), 3);
+
+    EXPECT_EQ(ints.dequeue_end(), 2);
+    EXPECT_EQ(ints.size(), 2);
+
+    EXPECT_EQ(ints.dequeue_end(), 1);
+    EXPECT_EQ(ints.size(), 1);
+
+    EXPECT_EQ(ints.dequeue_end(), 0);
+    EXPECT(ints.is_empty());
+}
+
+TEST_MAIN(CircularDeque)
