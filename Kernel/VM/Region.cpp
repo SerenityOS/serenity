@@ -28,7 +28,7 @@
 #include <Kernel/Process.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/AnonymousVMObject.h>
-#include <Kernel/VM/InodeVMObject.h>
+#include <Kernel/VM/SharedInodeVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/Region.h>
@@ -50,7 +50,7 @@ Region::Region(const Range& range, const String& name, u8 access, bool cacheable
 
 Region::Region(const Range& range, NonnullRefPtr<Inode> inode, const String& name, u8 access, bool cacheable)
     : m_range(range)
-    , m_vmobject(InodeVMObject::create_with_inode(*inode))
+    , m_vmobject(SharedInodeVMObject::create_with_inode(*inode))
     , m_name(name)
     , m_access(access)
     , m_cacheable(cacheable)
@@ -86,7 +86,7 @@ NonnullOwnPtr<Region> Region::clone()
 {
     ASSERT(Process::current);
 
-    // FIXME: What should we do for privately mapped InodeVMObjects?
+    // FIXME: What should we do for privately mapped SharedInodeVMObjects?
     if (m_shared || vmobject().is_inode()) {
         ASSERT(!m_stack);
 #ifdef MM_DEBUG
@@ -167,7 +167,7 @@ size_t Region::amount_dirty() const
 {
     if (!vmobject().is_inode())
         return amount_resident();
-    return static_cast<const InodeVMObject&>(vmobject()).amount_dirty();
+    return static_cast<const SharedInodeVMObject&>(vmobject()).amount_dirty();
 }
 
 size_t Region::amount_resident() const
@@ -452,7 +452,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
     LOCKER(vmobject().m_paging_lock);
     cli();
 
-    auto& inode_vmobject = static_cast<InodeVMObject&>(vmobject());
+    auto& inode_vmobject = static_cast<SharedInodeVMObject&>(vmobject());
     auto& vmobject_physical_page_entry = inode_vmobject.physical_pages()[first_page_index() + page_index_in_region];
 
 #ifdef PAGE_FAULT_DEBUG

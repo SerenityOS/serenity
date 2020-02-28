@@ -99,9 +99,9 @@ public:
 
     void will_be_destroyed();
 
-    void set_vmobject(VMObject&);
-    InodeVMObject* vmobject() { return m_vmobject.ptr(); }
-    const InodeVMObject* vmobject() const { return m_vmobject.ptr(); }
+    void set_shared_vmobject(SharedInodeVMObject&);
+    SharedInodeVMObject* shared_vmobject() { return m_shared_vmobject.ptr(); }
+    const SharedInodeVMObject* shared_vmobject() const { return m_shared_vmobject.ptr(); }
 
     static void sync();
 
@@ -125,7 +125,7 @@ protected:
 private:
     FS& m_fs;
     unsigned m_index { 0 };
-    WeakPtr<InodeVMObject> m_vmobject;
+    WeakPtr<SharedInodeVMObject> m_shared_vmobject;
     RefPtr<LocalSocket> m_socket;
     HashTable<InodeWatcher*> m_watchers;
     bool m_metadata_dirty { false };
