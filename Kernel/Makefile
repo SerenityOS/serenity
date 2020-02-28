@@ -19,6 +19,7 @@ OBJS = \
     Interrupts/PIC.o \
     Interrupts/GenericInterruptHandler.o \
     Interrupts/UnhandledInterruptHandler.o \
+    Interrupts/SpuriousInterruptHandler.o \
     Interrupts/IRQHandler.o \
     Interrupts/SharedIRQHandler.o \
     CMOS.o \
