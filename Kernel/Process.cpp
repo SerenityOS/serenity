@@ -321,19 +321,22 @@ static bool validate_mmap_prot(int prot, bool map_stack)
     return true;
 }
 
-static bool validate_inode_mmap_prot(const Process& process, int prot, const Inode& inode)
+static bool validate_inode_mmap_prot(const Process& process, int prot, const Inode& inode, bool map_shared)
 {
     auto metadata = inode.metadata();
-    if ((prot & PROT_WRITE) && !metadata.may_write(process))
-        return false;
     if ((prot & PROT_READ) && !metadata.may_read(process))
         return false;
-    InterruptDisabler disabler;
-    if (inode.shared_vmobject()) {
-        if ((prot & PROT_EXEC) && inode.shared_vmobject()->writable_mappings())
+
+    if (map_shared) {
+        if ((prot & PROT_WRITE) && !metadata.may_write(process))
             return false;
-        if ((prot & PROT_WRITE) && inode.shared_vmobject()->executable_mappings())
-            return false;
+        InterruptDisabler disabler;
+        if (inode.shared_vmobject()) {
+            if ((prot & PROT_EXEC) && inode.shared_vmobject()->writable_mappings())
+                return false;
+            if ((prot & PROT_WRITE) && inode.shared_vmobject()->executable_mappings())
+                return false;
+        }
     }
     return true;
 }
@@ -433,9 +436,6 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* user_params)
             return (void*)-EINVAL;
         if (static_cast<size_t>(offset) & ~PAGE_MASK)
             return (void*)-EINVAL;
-        // FIXME: Implement MAP_PRIVATE for FileDescription-backed mmap
-        if (map_private)
-            return (void*)-ENOTSUP;
         auto description = file_description(fd);
         if (!description)
             return (void*)-EBADF;
@@ -443,18 +443,20 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* user_params)
             return (void*)-ENODEV;
         if ((prot & PROT_READ) && !description->is_readable())
             return (void*)-EACCES;
-        if ((prot & PROT_WRITE) && !description->is_writable())
-            return (void*)-EACCES;
-        if (description->inode()) {
-            if (!validate_inode_mmap_prot(*this, prot, *description->inode()))
+        if (map_shared) {
+            if ((prot & PROT_WRITE) && !description->is_writable())
                 return (void*)-EACCES;
         }
-        auto region_or_error = description->mmap(*this, VirtualAddress(addr), static_cast<size_t>(offset), size, prot);
+        if (description->inode()) {
+            if (!validate_inode_mmap_prot(*this, prot, *description->inode(), map_shared))
+                return (void*)-EACCES;
+        }
+        auto region_or_error = description->mmap(*this, VirtualAddress(addr), static_cast<size_t>(offset), size, prot, map_shared);
         if (region_or_error.is_error()) {
             // Fail if MAP_FIXED or address is 0, retry otherwise
             if (map_fixed || addr == 0)
                 return (void*)(int)region_or_error.error();
-            region_or_error = description->mmap(*this, {}, static_cast<size_t>(offset), size, prot);
+            region_or_error = description->mmap(*this, {}, static_cast<size_t>(offset), size, prot, map_shared);
         }
         if (region_or_error.is_error())
             return (void*)(int)region_or_error.error();
@@ -537,7 +539,7 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
         if (whole_region->access() == prot_to_region_access_flags(prot))
             return 0;
         if (whole_region->vmobject().is_inode()
-            && !validate_inode_mmap_prot(*this, prot, static_cast<const SharedInodeVMObject&>(whole_region->vmobject()).inode())) {
+            && !validate_inode_mmap_prot(*this, prot, static_cast<const SharedInodeVMObject&>(whole_region->vmobject()).inode(), whole_region->is_shared())) {
             return -EACCES;
         }
         whole_region->set_readable(prot & PROT_READ);
@@ -556,7 +558,7 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
         if (old_region->access() == prot_to_region_access_flags(prot))
             return 0;
         if (old_region->vmobject().is_inode()
-            && !validate_inode_mmap_prot(*this, prot, static_cast<const SharedInodeVMObject&>(old_region->vmobject()).inode())) {
+            && !validate_inode_mmap_prot(*this, prot, static_cast<const SharedInodeVMObject&>(old_region->vmobject()).inode(), old_region->is_shared())) {
             return -EACCES;
         }
 
