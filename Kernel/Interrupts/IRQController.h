@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <AK/Types.h>
 
@@ -36,7 +37,7 @@ enum class IRQControllerType {
     i82093AA = 2 /* Intel 82093AA I/O ADVANCED PROGRAMMABLE INTERRUPT CONTROLLER (IOAPIC) */
 };
 
-class IRQController {
+class IRQController : public RefCounted<IRQController> {
 public:
     virtual ~IRQController() {}
 

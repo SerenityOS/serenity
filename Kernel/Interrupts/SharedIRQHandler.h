@@ -28,6 +28,7 @@
 
 #include <AK/HashTable.h>
 #include <AK/NonnullOwnPtr.h>
+#include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
@@ -57,5 +58,6 @@ private:
     explicit SharedIRQHandler(u8 interrupt_number);
     bool m_enabled;
     HashTable<GenericInterruptHandler*> m_handlers;
+    RefPtr<IRQController> m_responsible_irq_controller;
 };
 }

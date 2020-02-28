@@ -53,22 +53,7 @@ InterruptManagement& InterruptManagement::the()
 void InterruptManagement::initialize()
 {
     ASSERT(!InterruptManagement::initialized());
-    s_interrupt_management = new InterruptManagement(true);
-}
-
-InterruptManagement::InterruptManagement(bool create_default_controller)
-{
-    if (create_default_controller)
-        m_interrupt_controllers[0] = make<PIC>();
-}
-
-void InterruptManagement::enable(u8 interrupt_vector)
-{
-    for (auto& irq_controller : InterruptManagement::the().m_interrupt_controllers) {
-        if (irq_controller->get_gsi_base() <= interrupt_vector)
-            if (!irq_controller->is_hard_disabled())
-                irq_controller->enable(interrupt_vector);
-    }
+    s_interrupt_management = new InterruptManagement();
 }
 
 void InterruptManagement::enumerate_interrupt_handlers(Function<void(GenericInterruptHandler&)> callback)
@@ -80,66 +65,49 @@ void InterruptManagement::enumerate_interrupt_handlers(Function<void(GenericInte
     }
 }
 
-void InterruptManagement::disable(u8 interrupt_vector)
-{
-    for (auto& irq_controller : InterruptManagement::the().m_interrupt_controllers) {
-        ASSERT(irq_controller != nullptr);
-        if (irq_controller->get_gsi_base() <= interrupt_vector)
-            if (!irq_controller->is_hard_disabled())
-                irq_controller->disable(interrupt_vector);
-    }
-}
-
-void InterruptManagement::eoi(u8 interrupt_vector)
-{
-    if (m_interrupt_controllers.size() == 1 && m_interrupt_controllers[0]->type() == IRQControllerType::i8259) {
-        m_interrupt_controllers[0]->eoi(interrupt_vector);
-        return;
-    }
-    for (auto& irq_controller : InterruptManagement::the().m_interrupt_controllers) {
-        ASSERT(irq_controller != nullptr);
-        if (irq_controller->get_gsi_base() <= interrupt_vector)
-            if (!irq_controller->is_hard_disabled())
-                irq_controller->eoi(interrupt_vector);
-    }
-}
-
 IRQController& InterruptManagement::get_interrupt_controller(int index)
 {
     ASSERT(index >= 0);
-    ASSERT(m_interrupt_controllers[index] != nullptr);
+    ASSERT(!m_interrupt_controllers[index].is_null());
     return *m_interrupt_controllers[index];
 }
 
-void InterruptManagement::switch_to_pic_mode()
+RefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(u8 interrupt_vector)
 {
-    kprintf("Interrupts: PIC mode by default\n");
-    SpuriousInterruptHandler::initialize(7);
-    SpuriousInterruptHandler::initialize(15);
+    if (m_interrupt_controllers.size() == 1 && m_interrupt_controllers[0]->type() == IRQControllerType::i8259) {
+        return m_interrupt_controllers[0];
+    }
+    for (auto irq_controller : m_interrupt_controllers) {
+        if (irq_controller->get_gsi_base() <= interrupt_vector)
+            if (!irq_controller->is_hard_disabled())
+                return irq_controller;
+    }
+    ASSERT_NOT_REACHED();
 }
 
-void InterruptManagement::switch_to_ioapic_mode()
+PhysicalAddress InterruptManagement::search_for_madt()
 {
-    kprintf("Interrupts: Switch to IOAPIC mode failed, Reverting to PIC mode\n");
+    dbg() << "Early access to ACPI tables for interrupt setup";
+    auto rsdp = ACPI::StaticParsing::search_rsdp();
+    if (rsdp.is_null())
+        return {};
+    return ACPI::StaticParsing::search_table(rsdp, "APIC");
 }
 
-void AdvancedInterruptManagement::initialize(PhysicalAddress p_madt)
+InterruptManagement::InterruptManagement()
+    : m_madt(search_for_madt())
 {
-    ASSERT(!InterruptManagement::initialized());
-    s_interrupt_management = new AdvancedInterruptManagement(p_madt);
-}
+    if (m_madt.is_null()) {
+        m_interrupt_controllers[0] = adopt(*new PIC());
+        return;
+    }
 
-AdvancedInterruptManagement::AdvancedInterruptManagement(PhysicalAddress p_madt)
-    : InterruptManagement(false)
-    , m_madt(p_madt)
-{
     // FIXME: Check what is the actual data size then map accordingly
-    dbg() << "Interrupts: MADT @ P " << p_madt.as_ptr();
-    locate_isa_interrupt_overrides(p_madt);
-    locate_ioapics(p_madt);
+    dbg() << "Interrupts: MADT @ P " << m_madt.as_ptr();
+    locate_apic_data();
 }
 
-void AdvancedInterruptManagement::switch_to_pic_mode()
+void InterruptManagement::switch_to_pic_mode()
 {
     kprintf("Interrupts: Switch to Legacy PIC mode\n");
     SpuriousInterruptHandler::initialize(7);
@@ -155,7 +123,7 @@ void AdvancedInterruptManagement::switch_to_pic_mode()
     }
 }
 
-void AdvancedInterruptManagement::switch_to_ioapic_mode()
+void InterruptManagement::switch_to_ioapic_mode()
 {
     kprintf("Interrupts: Switch to IOAPIC mode\n");
     if (m_interrupt_controllers.size() == 1) {
@@ -175,52 +143,31 @@ void AdvancedInterruptManagement::switch_to_ioapic_mode()
     }
 }
 
-void AdvancedInterruptManagement::locate_ioapics(PhysicalAddress p_madt)
+void InterruptManagement::locate_apic_data()
 {
-    auto region = MM.allocate_kernel_region(p_madt.page_base(), (PAGE_SIZE * 2), "Initializing Interrupts", Region::Access::Read);
-    auto& madt = *(const ACPI_RAW::MADT*)region->vaddr().offset(p_madt.offset_in_page().get()).as_ptr();
+    ASSERT(!m_madt.is_null());
+    auto region = MM.allocate_kernel_region(m_madt.page_base(), (PAGE_SIZE * 2), "Initializing Interrupts", Region::Access::Read);
+    auto& madt = *(const ACPI::Structures::MADT*)region->vaddr().offset(m_madt.offset_in_page().get()).as_ptr();
 
-    int index = 0;
+    int irq_controller_count = 0;
     if (madt.flags & PCAT_COMPAT_FLAG) {
-        m_interrupt_controllers[0] = make<PIC>();
-        index++;
+        m_interrupt_controllers[0] = adopt(*new PIC());
+        irq_controller_count++;
     }
     size_t entry_index = 0;
-    size_t entries_length = madt.h.length - sizeof(ACPI_RAW::MADT);
+    size_t entries_length = madt.h.length - sizeof(ACPI::Structures::MADT);
     auto* madt_entry = madt.entries;
     while (entries_length > 0) {
         size_t entry_length = madt_entry->length;
-        if (madt_entry->type == (u8)ACPI_RAW::MADTEntryType::IOAPIC) {
-            auto* ioapic_entry = (const ACPI_RAW::MADT_IOAPIC*)madt_entry;
+        if (madt_entry->type == (u8)ACPI::Structures::MADTEntryType::IOAPIC) {
+            auto* ioapic_entry = (const ACPI::Structures::MADTEntries::IOAPIC*)madt_entry;
             dbg() << "IOAPIC found @ MADT entry " << entry_index << ", MMIO Registers @ Px" << String::format("%x", ioapic_entry->ioapic_address);
-            m_interrupt_controllers.resize(1 + index);
-            m_interrupt_controllers[index] = make<IOAPIC>(*(ioapic_mmio_regs*)ioapic_entry->ioapic_address, ioapic_entry->gsi_base, m_isa_interrupt_overrides, m_pci_interrupt_overrides);
-            index++;
+            m_interrupt_controllers.resize(1 + irq_controller_count);
+            m_interrupt_controllers[irq_controller_count] = adopt(*new IOAPIC(*(ioapic_mmio_regs*)ioapic_entry->ioapic_address, ioapic_entry->gsi_base, m_isa_interrupt_overrides, m_pci_interrupt_overrides));
+            irq_controller_count++;
         }
-        madt_entry = (ACPI_RAW::MADTEntryHeader*)(VirtualAddress((u32)madt_entry).offset(entry_length).get());
-        entries_length -= entry_length;
-        entry_index++;
-    }
-}
-void AdvancedInterruptManagement::locate_pci_interrupt_overrides()
-{
-    // FIXME: calling the MultiProcessorParser causes a pagefault.
-    ASSERT_NOT_REACHED();
-    m_pci_interrupt_overrides = MultiProcessorParser::the().get_pci_interrupt_redirections();
-}
-
-void AdvancedInterruptManagement::locate_isa_interrupt_overrides(PhysicalAddress p_madt)
-{
-    auto region = MM.allocate_kernel_region(p_madt.page_base(), (PAGE_SIZE * 2), "Initializing Interrupts", Region::Access::Read);
-    auto& madt = *(const ACPI_RAW::MADT*)region->vaddr().offset(p_madt.offset_in_page().get()).as_ptr();
-
-    size_t entry_index = 0;
-    size_t entries_length = madt.h.length - sizeof(ACPI_RAW::MADT);
-    auto* madt_entry = madt.entries;
-    while (entries_length > 0) {
-        size_t entry_length = madt_entry->length;
-        if (madt_entry->type == (u8)ACPI_RAW::MADTEntryType::InterruptSourceOverride) {
-            auto* interrupt_override_entry = (const ACPI_RAW::MADT_InterruptSourceOverride*)madt_entry;
+        if (madt_entry->type == (u8)ACPI::Structures::MADTEntryType::InterruptSourceOverride) {
+            auto* interrupt_override_entry = (const ACPI::Structures::MADTEntries::InterruptSourceOverride*)madt_entry;
             m_isa_interrupt_overrides.append(adopt(*new ISAInterruptOverrideMetadata(
                 interrupt_override_entry->bus,
                 interrupt_override_entry->source,
@@ -228,10 +175,16 @@ void AdvancedInterruptManagement::locate_isa_interrupt_overrides(PhysicalAddress
                 interrupt_override_entry->flags)));
             dbg() << "Interrupts: Overriding INT 0x" << String::format("%x", interrupt_override_entry->source) << " with GSI " << interrupt_override_entry->global_system_interrupt << ", for bus 0x" << String::format("%x", interrupt_override_entry->bus);
         }
-        madt_entry = (ACPI_RAW::MADTEntryHeader*)(VirtualAddress((u32)madt_entry).offset(entry_length).get());
+        madt_entry = (ACPI::Structures::MADTEntryHeader*)(VirtualAddress((u32)madt_entry).offset(entry_length).get());
         entries_length -= entry_length;
         entry_index++;
     }
+}
+void InterruptManagement::locate_pci_interrupt_overrides()
+{
+    // FIXME: calling the MultiProcessorParser causes a pagefault.
+    ASSERT_NOT_REACHED();
+    m_pci_interrupt_overrides = MultiProcessorParser::the().get_pci_interrupt_redirections();
 }
 
 ISAInterruptOverrideMetadata::ISAInterruptOverrideMetadata(u8 bus, u8 source, u32 global_system_interrupt, u16 flags)
