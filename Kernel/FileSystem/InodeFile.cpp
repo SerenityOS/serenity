@@ -29,6 +29,7 @@
 #include <Kernel/FileSystem/InodeFile.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Process.h>
+#include <Kernel/VM/SharedInodeVMObject.h>
 
 namespace Kernel {
 
@@ -63,7 +64,7 @@ KResultOr<Region*> InodeFile::mmap(Process& process, FileDescription& descriptio
 {
     ASSERT(offset == 0);
     // FIXME: If PROT_EXEC, check that the underlying file system isn't mounted noexec.
-    auto* region = process.allocate_file_backed_region(preferred_vaddr, size, inode(), description.absolute_path(), prot);
+    auto* region = process.allocate_region_with_vmobject(preferred_vaddr, size, SharedInodeVMObject::create_with_inode(inode()), offset, description.absolute_path(), prot);
     if (!region)
         return KResult(-ENOMEM);
     return region;

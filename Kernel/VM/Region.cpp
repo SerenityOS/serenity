@@ -48,16 +48,6 @@ Region::Region(const Range& range, const String& name, u8 access, bool cacheable
     MM.register_region(*this);
 }
 
-Region::Region(const Range& range, NonnullRefPtr<Inode> inode, const String& name, u8 access, bool cacheable)
-    : m_range(range)
-    , m_vmobject(SharedInodeVMObject::create_with_inode(*inode))
-    , m_name(name)
-    , m_access(access)
-    , m_cacheable(cacheable)
-{
-    MM.register_region(*this);
-}
-
 Region::Region(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, u8 access, bool cacheable)
     : m_range(range)
     , m_offset_in_vmobject(offset_in_vmobject)
@@ -202,13 +192,6 @@ NonnullOwnPtr<Region> Region::create_user_accessible(const Range& range, const S
 NonnullOwnPtr<Region> Region::create_user_accessible(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable)
 {
     auto region = make<Region>(range, move(vmobject), offset_in_vmobject, name, access, cacheable);
-    region->m_user_accessible = true;
-    return region;
-}
-
-NonnullOwnPtr<Region> Region::create_user_accessible(const Range& range, NonnullRefPtr<Inode> inode, const StringView& name, u8 access, bool cacheable)
-{
-    auto region = make<Region>(range, move(inode), name, access, cacheable);
     region->m_user_accessible = true;
     return region;
 }
