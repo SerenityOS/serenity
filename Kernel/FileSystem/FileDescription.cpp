@@ -281,10 +281,10 @@ InodeMetadata FileDescription::metadata() const
     return {};
 }
 
-KResultOr<Region*> FileDescription::mmap(Process& process, VirtualAddress vaddr, size_t offset, size_t size, int prot)
+KResultOr<Region*> FileDescription::mmap(Process& process, VirtualAddress vaddr, size_t offset, size_t size, int prot, bool shared)
 {
     LOCKER(m_lock);
-    return m_file->mmap(process, *this, vaddr, offset, size, prot);
+    return m_file->mmap(process, *this, vaddr, offset, size, prot, shared);
 }
 
 KResult FileDescription::truncate(u64 length)

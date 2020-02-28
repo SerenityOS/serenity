@@ -29,6 +29,7 @@
 #include <Kernel/FileSystem/InodeFile.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Process.h>
+#include <Kernel/VM/PrivateInodeVMObject.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
 
 namespace Kernel {
@@ -60,11 +61,18 @@ ssize_t InodeFile::write(FileDescription& description, const u8* data, ssize_t c
     return nwritten;
 }
 
-KResultOr<Region*> InodeFile::mmap(Process& process, FileDescription& description, VirtualAddress preferred_vaddr, size_t offset, size_t size, int prot)
+KResultOr<Region*> InodeFile::mmap(Process& process, FileDescription& description, VirtualAddress preferred_vaddr, size_t offset, size_t size, int prot, bool shared)
 {
     ASSERT(offset == 0);
     // FIXME: If PROT_EXEC, check that the underlying file system isn't mounted noexec.
-    auto* region = process.allocate_region_with_vmobject(preferred_vaddr, size, SharedInodeVMObject::create_with_inode(inode()), offset, description.absolute_path(), prot);
+    RefPtr<InodeVMObject> vmobject;
+    if (shared)
+        vmobject = SharedInodeVMObject::create_with_inode(inode());
+    else
+        vmobject = PrivateInodeVMObject::create_with_inode(inode());
+    if (!vmobject)
+        return KResult(-ENOMEM);
+    auto* region = process.allocate_region_with_vmobject(preferred_vaddr, size, *vmobject, offset, description.absolute_path(), prot);
     if (!region)
         return KResult(-ENOMEM);
     return region;

@@ -49,7 +49,7 @@ public:
 
     virtual ssize_t read(FileDescription&, u8*, ssize_t) override;
     virtual ssize_t write(FileDescription&, const u8*, ssize_t) override;
-    virtual KResultOr<Region*> mmap(Process&, FileDescription&, VirtualAddress preferred_vaddr, size_t offset, size_t size, int prot) override;
+    virtual KResultOr<Region*> mmap(Process&, FileDescription&, VirtualAddress preferred_vaddr, size_t offset, size_t size, int prot, bool shared) override;
 
     virtual String absolute_path(const FileDescription&) const override;
 

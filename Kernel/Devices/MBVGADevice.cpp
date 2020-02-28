@@ -51,9 +51,11 @@ MBVGADevice::MBVGADevice(PhysicalAddress addr, int pitch, int width, int height)
     s_the = this;
 }
 
-KResultOr<Region*> MBVGADevice::mmap(Process& process, FileDescription&, VirtualAddress preferred_vaddr, size_t offset, size_t size, int prot)
+KResultOr<Region*> MBVGADevice::mmap(Process& process, FileDescription&, VirtualAddress preferred_vaddr, size_t offset, size_t size, int prot, bool shared)
 {
     REQUIRE_PROMISE(video);
+    if (!shared)
+        return KResult(-ENODEV);
     ASSERT(offset == 0);
     ASSERT(size == framebuffer_size_in_bytes());
     auto vmobject = AnonymousVMObject::create_for_physical_range(m_framebuffer_address, framebuffer_size_in_bytes());

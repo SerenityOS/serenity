@@ -41,7 +41,7 @@ public:
     MBVGADevice(PhysicalAddress addr, int pitch, int width, int height);
 
     virtual int ioctl(FileDescription&, unsigned request, unsigned arg) override;
-    virtual KResultOr<Region*> mmap(Process&, FileDescription&, VirtualAddress preferred_vaddr, size_t offset, size_t, int prot) override;
+    virtual KResultOr<Region*> mmap(Process&, FileDescription&, VirtualAddress preferred_vaddr, size_t offset, size_t, int prot, bool shared) override;
 
 private:
     virtual const char* class_name() const override { return "MBVGA"; }

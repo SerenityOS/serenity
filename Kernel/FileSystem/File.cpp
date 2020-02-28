@@ -54,7 +54,7 @@ int File::ioctl(FileDescription&, unsigned, unsigned)
     return -ENOTTY;
 }
 
-KResultOr<Region*> File::mmap(Process&, FileDescription&, VirtualAddress, size_t, size_t, int)
+KResultOr<Region*> File::mmap(Process&, FileDescription&, VirtualAddress, size_t, size_t, int, bool)
 {
     return KResult(-ENODEV);
 }
