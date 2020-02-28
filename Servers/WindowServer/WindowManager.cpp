@@ -51,7 +51,6 @@
 #include <time.h>
 #include <unistd.h>
 
-//#define DEBUG_COUNTERS
 //#define RESIZE_DEBUG
 //#define MOVE_DEBUG
 //#define DOUBLECLICK_DEBUG

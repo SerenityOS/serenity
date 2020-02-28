@@ -71,8 +71,6 @@ private:
     void draw_menubar();
     void run_animations();
 
-    unsigned m_compose_count { 0 };
-    unsigned m_flush_count { 0 };
     RefPtr<Core::Timer> m_compose_timer;
     RefPtr<Core::Timer> m_immediate_compose_timer;
     bool m_flash_flush { false };
