@@ -34,10 +34,10 @@
 #include <LibBareMetal/Memory/VirtualAddress.h>
 
 namespace Kernel {
-
-class ACPIParser {
+namespace ACPI {
+class Parser {
 public:
-    static ACPIParser& the();
+    static Parser& the();
 
     static bool is_initialized();
     static void initialize_limited();
@@ -53,8 +53,8 @@ public:
     virtual bool is_operable();
 
 protected:
-    explicit ACPIParser(bool usable);
+    explicit Parser(bool usable);
     bool m_operable;
 };
-
+}
 }
