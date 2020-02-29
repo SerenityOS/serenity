@@ -58,8 +58,7 @@ ELFDynamicLoader::ELFDynamicLoader(const char* filename, int fd, size_t size)
 {
     String file_mmap_name = String::format("ELF_DYN: %s", m_filename.characters());
 
-    // FIXME: When MAP_PRIVATE is implemented for file-backed regions, change to MAP_PRIVATE
-    m_file_mapping = mmap_with_name(nullptr, size, PROT_READ, MAP_SHARED, m_image_fd, 0, file_mmap_name.characters());
+    m_file_mapping = mmap_with_name(nullptr, size, PROT_READ, MAP_PRIVATE, m_image_fd, 0, file_mmap_name.characters());
     if (MAP_FAILED == m_file_mapping) {
         m_valid = false;
     }
@@ -97,6 +96,10 @@ bool ELFDynamicLoader::load_from_image(unsigned flags)
 
     load_program_headers(elf_image);
 
+    // Don't need this private mapping anymore
+    munmap(m_file_mapping, m_file_size);
+    m_file_mapping = MAP_FAILED;
+
     m_dynamic_object = AK::make<ELFDynamicObject>(m_text_segment_load_address, m_dynamic_section_address);
 
     return load_stage_2(flags);
@@ -112,6 +115,7 @@ bool ELFDynamicLoader::load_stage_2(unsigned flags)
 #endif
 
     if (m_dynamic_object->has_text_relocations()) {
+        dbg() << "Someone linked non -fPIC code into " << m_filename << " :(";
         ASSERT(m_text_segment_load_address.get() != 0);
         if (0 > mprotect(m_text_segment_load_address.as_ptr(), m_text_segment_size, PROT_READ | PROT_WRITE)) {
             perror("mprotect .text: PROT_READ | PROT_WRITE"); // FIXME: dlerror?
@@ -140,8 +144,6 @@ bool ELFDynamicLoader::load_stage_2(unsigned flags)
 
 void ELFDynamicLoader::load_program_headers(const ELFImage& elf_image)
 {
-    size_t total_required_allocation_size = 0; // NOTE: If we don't have any TEXTREL, we can keep RO data RO, which would be nice
-
     Vector<ProgramHeaderRegion> program_headers;
 
     ProgramHeaderRegion* text_region_ptr = nullptr;
@@ -152,8 +154,6 @@ void ELFDynamicLoader::load_program_headers(const ELFImage& elf_image)
     elf_image.for_each_program_header([&](const ELFImage::ProgramHeader& program_header) {
         ProgramHeaderRegion new_region;
         new_region.set_program_header(program_header.raw_header());
-        if (new_region.is_load())
-            total_required_allocation_size += new_region.required_load_size();
         program_headers.append(move(new_region));
         auto& region = program_headers.last();
         if (region.is_tls_template())
@@ -173,19 +173,12 @@ void ELFDynamicLoader::load_program_headers(const ELFImage& elf_image)
 
     // Process regions in order: .text, .data, .tls
     auto* region = text_region_ptr;
-    // FIXME: When MAP_PRIVATE is implemented for file-backed regions, change to MAP_PRIVATE without the mprotect and memcpy
-    //void* text_segment_begin = mmap_with_name(nullptr, region->required_load_size(), region->mmap_prot(), MAP_PRIVATE, m_image_fd, region->offset(), String::format(".text: %s", m_filename.characters()).characters());
-    void* text_segment_begin = mmap_with_name(nullptr, region->required_load_size(), PROT_READ | PROT_WRITE , MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, String::format(".text: %s", m_filename.characters()).characters());
+    void* text_segment_begin = mmap_with_name(nullptr, region->required_load_size(), region->mmap_prot(), MAP_PRIVATE, m_image_fd, region->offset(), String::format(".text: %s", m_filename.characters()).characters());
     if (MAP_FAILED == text_segment_begin) {
         ASSERT_NOT_REACHED();
     }
     m_text_segment_size = region->required_load_size();
     m_text_segment_load_address = VirtualAddress { (u32)text_segment_begin };
-    memcpy(m_text_segment_load_address.as_ptr(), (u8*)m_file_mapping + region->offset(), region->size_in_image());
-    if (0 > mprotect(text_segment_begin, m_text_segment_size, region->mmap_prot())) {
-        perror("mprotect .text PROT_READ | PROT_EXEC");
-        ASSERT_NOT_REACHED();
-    }
 
     m_dynamic_section_address = dynamic_region_desired_vaddr.offset(m_text_segment_load_address.get());
 
