@@ -203,6 +203,32 @@ public:
         return first_index;
     }
 
+    Optional<size_t> find_first_fit(size_t minimum_length) const
+    {
+        auto first_index = find_first_unset();
+        if (!first_index.has_value())
+            return {};
+        if (minimum_length == 1)
+            return first_index;
+
+        size_t free_region_start = first_index.value();
+        size_t free_region_size = 1;
+
+        // Let's try to find the first fit
+        for (size_t j = first_index.value() + 1; j < m_size; j++) {
+            if (!get(j)) {
+                if (free_region_size == 0)
+                    free_region_start = j;
+                if (++free_region_size == minimum_length)
+                    return free_region_start;
+            } else {
+                free_region_start = 0;
+                free_region_size = 0;
+            }
+        }
+        return {};
+    }
+
     Bitmap()
         : m_size(0)
         , m_owned(true)
