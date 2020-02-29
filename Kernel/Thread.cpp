@@ -816,6 +816,7 @@ String Thread::backtrace_impl() const
 
 Vector<uintptr_t> Thread::raw_backtrace(uintptr_t ebp) const
 {
+    InterruptDisabler disabler;
     auto& process = const_cast<Process&>(this->process());
     ProcessPagingScope paging_scope(process);
     Vector<uintptr_t, Profiling::max_stack_frame_count> backtrace;
