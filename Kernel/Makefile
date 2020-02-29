@@ -30,6 +30,9 @@ OBJS = \
     Time/RTC.o \
     Time/HPET.o \
     Time/HPETComparator.o \
+    Devices/AHCIController.o \
+    Devices/AHCIPort.o \
+    Devices/AHCIDiskDevice.o \
     Devices/BXVGADevice.o \
     Devices/BlockDevice.o \
     Devices/CharacterDevice.o \
@@ -51,6 +54,7 @@ OBJS = \
     Devices/RandomDevice.o \
     Devices/SB16.o \
     Devices/SerialDevice.o \
+    Devices/StorageDevice.o \
     Devices/ZeroDevice.o \
     Devices/VMWareBackdoor.o \
     DoubleBuffer.o \

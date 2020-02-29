@@ -36,6 +36,7 @@
 #include <Kernel/ACPI/MultiProcessorParser.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/CMOS.h>
+#include <Kernel/Devices/AHCIController.h>
 #include <Kernel/Devices/BXVGADevice.h>
 #include <Kernel/Devices/DebugLogDevice.h>
 #include <Kernel/Devices/DiskPartition.h>
@@ -210,6 +211,7 @@ void init_stage2()
     new FullDevice;
     new RandomDevice;
     new PTYMultiplexer;
+    AHCIController::create();
 
     bool dmi_unreliable = KParams::the().has("dmi_unreliable");
     if (dmi_unreliable) {

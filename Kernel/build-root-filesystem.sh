@@ -74,6 +74,12 @@ mknod mnt/dev/hdd b 4 1
 for hd in a b c d; do
     chmod 600 mnt/dev/hd$hd
 done
+mknod mnt/dev/sda b 8 0
+mknod mnt/dev/sdb b 8 16
+mknod mnt/dev/sdc b 8 32
+for sd in a b c; do
+    chmod 600 mnt/dev/sd$sd
+done
 
 ln -s /proc/self/fd/0 mnt/dev/stdin
 ln -s /proc/self/fd/1 mnt/dev/stdout

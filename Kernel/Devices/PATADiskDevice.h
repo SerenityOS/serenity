@@ -30,7 +30,7 @@
 //
 #pragma once
 
-#include <Kernel/Devices/BlockDevice.h>
+#include <Kernel/Devices/StorageDevice.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Lock.h>
 
@@ -38,7 +38,7 @@ namespace Kernel {
 
 class PATAChannel;
 
-class PATADiskDevice final : public BlockDevice {
+class PATADiskDevice final : public StorageDevice {
     AK_MAKE_ETERNAL
 public:
     // Type of drive this IDEDiskDevice is on the ATA channel.
@@ -58,14 +58,6 @@ public:
     virtual bool read_blocks(unsigned index, u16 count, u8*) override;
     virtual bool write_blocks(unsigned index, u16 count, const u8*) override;
 
-    void set_drive_geometry(u16, u16, u16);
-
-    // ^BlockDevice
-    virtual ssize_t read(FileDescription&, u8*, ssize_t) override;
-    virtual bool can_read(const FileDescription&) const override;
-    virtual ssize_t write(FileDescription&, const u8*, ssize_t) override;
-    virtual bool can_write(const FileDescription&) const override;
-
 protected:
     explicit PATADiskDevice(PATAChannel&, DriveType, int, int);
 
@@ -81,9 +73,6 @@ private:
     bool is_slave() const;
 
     Lock m_lock { "IDEDiskDevice" };
-    u16 m_cylinders { 0 };
-    u16 m_heads { 0 };
-    u16 m_sectors_per_track { 0 };
     DriveType m_drive_type { DriveType::Master };
 
     PATAChannel& m_channel;
