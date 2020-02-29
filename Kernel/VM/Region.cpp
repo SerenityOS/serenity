@@ -28,10 +28,10 @@
 #include <Kernel/Process.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/AnonymousVMObject.h>
-#include <Kernel/VM/SharedInodeVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/Region.h>
+#include <Kernel/VM/SharedInodeVMObject.h>
 
 //#define MM_DEBUG
 //#define PAGE_FAULT_DEBUG
@@ -80,7 +80,7 @@ NonnullOwnPtr<Region> Region::clone()
     if (m_shared || vmobject().is_inode()) {
         ASSERT(!m_stack);
 #ifdef MM_DEBUG
-        dbg() << Process::current->name().characters() << "<" << Process::current->pid() << "> Region::clone(): sharing " << m_name.characters() << " (V" << String::format("%p", vaddr().get()) << ")";
+        dbg() << "Region::clone(): Sharing " << name() << " (" << vaddr() << ")";
 #endif
         // Create a new region backed by the same VMObject.
         auto region = Region::create_user_accessible(m_range, m_vmobject, m_offset_in_vmobject, m_name, m_access);
@@ -90,12 +90,10 @@ NonnullOwnPtr<Region> Region::clone()
     }
 
 #ifdef MM_DEBUG
-    // FIXME: If m_name.characters() is returning null pointer, the debug message will lead to a crash
-    // For now we use String::format() to mitigate that.
-    dbg() << Process::current->name().characters() << "<" << Process::current->pid() << "> Region::clone(): cowing " << String::format("%s", m_name.characters()) << " (V" << String::format("%p", vaddr().get()) << ")",
+    dbg() << "Region::clone(): CoWing " << name() << " (" << vaddr() << ")";
 #endif
-        // Set up a COW region. The parent (this) region becomes COW as well!
-        ensure_cow_map().fill(true);
+    // Set up a COW region. The parent (this) region becomes COW as well!
+    ensure_cow_map().fill(true);
     remap();
     auto clone_region = Region::create_user_accessible(m_range, m_vmobject->clone(), m_offset_in_vmobject, m_name, m_access);
     clone_region->ensure_cow_map();
@@ -114,7 +112,7 @@ bool Region::commit()
 {
     InterruptDisabler disabler;
 #ifdef MM_DEBUG
-    dbg() << "MM: commit " << vmobject().page_count() << " pages in Region " << this << " (VMO=" << &vmobject() << ") at V" << String::format("%p", vaddr().get());
+    dbg() << "MM: Commit " << page_count() << " pages in Region " << this << " (VMO=" << &vmobject() << ") at " << vaddr();
 #endif
     for (size_t i = 0; i < page_count(); ++i) {
         if (!commit(i))
@@ -127,9 +125,6 @@ bool Region::commit(size_t page_index)
 {
     ASSERT(vmobject().is_anonymous() || vmobject().is_purgeable());
     InterruptDisabler disabler;
-#ifdef MM_DEBUG
-    dbg() << "MM: commit single page" << String::format("%zu", page_index, vmobject().page_count()) << "in Region " << this << " (VMO=" << &vmobject() << ") at V" << String::format("%p", vaddr().get());
-#endif
     auto& vmobject_physical_page_entry = vmobject().physical_pages()[first_page_index() + page_index];
     if (!vmobject_physical_page_entry.is_null() && !vmobject_physical_page_entry->is_shared_zero_page())
         return true;

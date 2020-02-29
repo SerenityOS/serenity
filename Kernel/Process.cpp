@@ -1093,14 +1093,14 @@ KResultOr<NonnullRefPtr<FileDescription>> Process::find_elf_interpreter_for_exec
 
     auto elf_header = (Elf32_Ehdr*)first_page;
     if (!ELFImage::validate_elf_header(*elf_header, file_size)) {
-        dbg() << m_name.characters() << "(" << m_pid << ") exec(" << path.characters() << "): File has invalid ELF header";
+        dbg() << "exec(" << path << "): File has invalid ELF header";
         return KResult(-ENOEXEC);
     }
 
     // Not using KResultOr here because we'll want to do the same thing in userspace in the RTLD
     String interpreter_path;
     if (!ELFImage::validate_program_headers(*elf_header, file_size, (u8*)first_page, nread, interpreter_path)) {
-        dbg() << m_name.characters() << "(" << m_pid << ") exec(" << path.characters() << "): File has invalid ELF Program headers";
+        dbg() << "exec(" << path << "): File has invalid ELF Program headers";
         return KResult(-ENOEXEC);
     }
 
@@ -1109,10 +1109,10 @@ KResultOr<NonnullRefPtr<FileDescription>> Process::find_elf_interpreter_for_exec
         if (elf_header->e_type != ET_DYN)
             return KResult(-ENOEXEC);
 
-        dbg() << m_name.characters() << "(" << m_pid << ") exec(" << path.characters() << "): Using program interpreter " << interpreter_path.characters();
+        dbg() << "exec(" << path << "): Using program interpreter " << interpreter_path;
         auto interp_result = VFS::the().open(interpreter_path, O_EXEC, 0, current_directory());
         if (interp_result.is_error()) {
-            dbg() << m_name.characters() << "(" << m_pid << ") exec(" << path.characters() << "): Unable to open program interpreter " << interpreter_path.characters();
+            dbg() << "exec(" << path << "): Unable to open program interpreter " << interpreter_path;
             return interp_result.error();
         }
         auto interpreter_description = interp_result.value();
@@ -1133,19 +1133,19 @@ KResultOr<NonnullRefPtr<FileDescription>> Process::find_elf_interpreter_for_exec
 
         elf_header = (Elf32_Ehdr*)first_page;
         if (!ELFImage::validate_elf_header(*elf_header, interp_metadata.size)) {
-            dbg() << m_name.characters() << "(" << m_pid << ") exec(" << path.characters() << "): Interpreter (" << interpreter_description->absolute_path().characters() << ") has invalid ELF header";
+            dbg() << "exec(" << path << "): Interpreter (" << interpreter_description->absolute_path() << ") has invalid ELF header";
             return KResult(-ENOEXEC);
         }
 
         // Not using KResultOr here because we'll want to do the same thing in userspace in the RTLD
         String interpreter_interpreter_path;
         if (!ELFImage::validate_program_headers(*elf_header, interp_metadata.size, (u8*)first_page, nread, interpreter_interpreter_path)) {
-            dbg() << m_name.characters() << "(" << m_pid << ") exec(" << path.characters() << "): Interpreter (" << interpreter_description->absolute_path().characters() << ") has invalid ELF Program headers";
+            dbg() << "exec(" << path << "): Interpreter (" << interpreter_description->absolute_path() << ") has invalid ELF Program headers";
             return KResult(-ENOEXEC);
         }
 
         if (!interpreter_interpreter_path.is_empty()) {
-            dbg() << m_name.characters() << "(" << m_pid << ") exec(" << path.characters() << "): Interpreter (" << interpreter_description->absolute_path().characters() << ") has its own interpreter (" << interpreter_interpreter_path.characters() << ")! No thank you!";
+            dbg() << "exec(" << path << "): Interpreter (" << interpreter_description->absolute_path() << ") has its own interpreter (" << interpreter_interpreter_path << ")! No thank you!";
             return KResult(-ELOOP);
         }
 
@@ -1165,7 +1165,7 @@ KResultOr<NonnullRefPtr<FileDescription>> Process::find_elf_interpreter_for_exec
 int Process::exec(String path, Vector<String> arguments, Vector<String> environment, int recursion_depth)
 {
     if (recursion_depth > 2) {
-        dbg() << m_name.characters() << "(" << m_pid << ") exec(" << path.characters() << "): SHENANIGANS! recursed too far trying to find #! interpreter";
+        dbg() << "exec(" << path << "): SHENANIGANS! recursed too far trying to find #! interpreter";
         return -ELOOP;
     }
 
@@ -1513,9 +1513,9 @@ void Process::crash(int signal, u32 eip)
 
     if (eip >= 0xc0000000 && ksyms_ready) {
         auto* ksym = ksymbolicate(eip);
-        dbg() << "\033[31;1m" << String::format("%p", eip) << "  " << (ksym ? demangle(ksym->name).characters() : "(k?)") << " +" << (ksym ? eip - ksym->address : 0) << "\033[0m\n";
+        dbg() << "\033[31;1m" << String::format("%p", eip) << "  " << (ksym ? demangle(ksym->name) : "(k?)") << " +" << (ksym ? eip - ksym->address : 0) << "\033[0m\n";
     } else if (m_elf_loader) {
-        dbg() << "\033[31;1m" << String::format("%p", eip) << "  " << m_elf_loader->symbolicate(eip).characters() << "\033[0m\n";
+        dbg() << "\033[31;1m" << String::format("%p", eip) << "  " << m_elf_loader->symbolicate(eip) << "\033[0m\n";
     } else {
         dbg() << "\033[31;1m" << String::format("%p", eip) << "  (?)\033[0m\n";
     }
@@ -1683,7 +1683,7 @@ ssize_t Process::do_write(FileDescription& description, const u8* data, int data
 #endif
         if (!description.can_write()) {
 #ifdef IO_DEBUG
-            dbg() << "block write on " << description.absolute_path().characters();
+            dbg() << "block write on " << description.absolute_path();
 #endif
             if (Thread::current->block<Thread::WriteBlocker>(description) != Thread::BlockResult::WokeNormally) {
                 if (nwritten == 0)
@@ -1716,7 +1716,7 @@ ssize_t Process::sys$write(int fd, const u8* data, ssize_t size)
     if (!validate_read(data, size))
         return -EFAULT;
 #ifdef DEBUG_IO
-    dbg() << name().characters() << "(" << pid() << "): sys$write(" << fd << ", " << (void*)const_cast<u8*>(data) << ", " << String::format("%u", size) << ")";
+    dbg() << "sys$write(" << fd << ", " << (const void*)(data) << ", " << size << ")";
 #endif
     auto description = file_description(fd);
     if (!description)
@@ -1737,7 +1737,7 @@ ssize_t Process::sys$read(int fd, u8* buffer, ssize_t size)
     if (!validate_write(buffer, size))
         return -EFAULT;
 #ifdef DEBUG_IO
-    dbg() << name().characters() << "(" << pid() << ") sys$read(" << fd << ", " << (void*)buffer << ", " << size << ")";
+    dbg() << "sys$read(" << fd << ", " << (const void*)buffer << ", " << size << ")";
 #endif
     auto description = file_description(fd);
     if (!description)
@@ -1762,7 +1762,7 @@ int Process::sys$close(int fd)
     REQUIRE_PROMISE(stdio);
     auto description = file_description(fd);
 #ifdef DEBUG_IO
-    dbg() << name().characters() << "(" << pid() << ") sys$close(" << fd << ") " << description.ptr();
+    dbg() << "sys$close(" << fd << ") " << description.ptr();
 #endif
     if (!description)
         return -EBADF;
@@ -2827,7 +2827,7 @@ int Process::sys$select(const Syscall::SC_select_params* params)
         return error;
 
 #if defined(DEBUG_IO) || defined(DEBUG_POLL_SELECT)
-    dbg() << name().characters() << "<" << pid() << "> selecting on (read:" << rfds.size() << ", write:" << wfds.size() << "), timeout=" << timeout;
+    dbg() << "selecting on (read:" << rfds.size() << ", write:" << wfds.size() << "), timeout=" << timeout;
 #endif
 
     if (!timeout || select_has_timeout) {
@@ -2888,7 +2888,7 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
     }
 
 #if defined(DEBUG_IO) || defined(DEBUG_POLL_SELECT)
-    dbg() << name().characters() << "<" << pid() << "> polling on (read:" << rfds.size() << ", write:" << wfds.size() << "), timeout=" << timeout;
+    dbg() << "polling on (read:" << rfds.size() << ", write:" << wfds.size() << "), timeout=" << timeout;
 #endif
 
     if (has_timeout || timeout < 0) {
@@ -3695,7 +3695,7 @@ void Process::terminate_due_to_signal(u8 signal)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(signal < 32);
-    dbg() << "terminate_due_to_signal " << name().characters() << "(" << pid() << ") <- " << signal;
+    dbg() << "Terminating due to signal " << signal;
     m_termination_status = 0;
     m_termination_signal = signal;
     die();

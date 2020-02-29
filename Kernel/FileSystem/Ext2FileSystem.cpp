@@ -245,8 +245,8 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
     }
     if (inode_dirty) {
 #ifdef EXT2_DEBUG
-        dbg() << "Ext2FS: Writing " << min(EXT2_NDIR_BLOCKS, blocks.size()) << " direct block(s) to i_block array of inode " << inode_index;
-        for (int i = 0; i < min(EXT2_NDIR_BLOCKS, blocks.size()); ++i)
+        dbg() << "Ext2FS: Writing " << min((size_t)EXT2_NDIR_BLOCKS, blocks.size()) << " direct block(s) to i_block array of inode " << inode_index;
+        for (size_t i = 0; i < min((size_t)EXT2_NDIR_BLOCKS, blocks.size()); ++i)
             dbg() << "   + " << blocks[i];
 #endif
         write_ext2_inode(inode_index, e2inode);
@@ -875,7 +875,7 @@ bool Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
     while (entry < buffer.end_pointer()) {
         if (entry->inode != 0) {
 #ifdef EXT2_DEBUG
-            dbg() << "Ext2Inode::traverse_as_directory: " << entry->inode << ", name_len: " << entry->name_len << ", rec_len: " << entry->rec_len << ", file_type: " << entry->file_type << ", name: " << String(entry->name, entry->name_len).characters();
+            dbg() << "Ext2Inode::traverse_as_directory: " << entry->inode << ", name_len: " << entry->name_len << ", rec_len: " << entry->rec_len << ", file_type: " << entry->file_type << ", name: " << String(entry->name, entry->name_len);
 #endif
             if (!callback({ entry->name, entry->name_len, { fsid(), entry->inode }, entry->file_type }))
                 break;
@@ -1384,7 +1384,7 @@ KResult Ext2FS::create_directory(InodeIdentifier parent_id, const String& name, 
     auto& inode = inode_or_error.value();
 
 #ifdef EXT2_DEBUG
-    dbg() << "Ext2FS: create_directory: created new directory named '" << name.characters() << "' with inode " << inode->identifier().index();
+    dbg() << "Ext2FS: create_directory: created new directory named '" << name << "' with inode " << inode->identifier();
 #endif
 
     Vector<DirectoryEntry> entries;
@@ -1421,7 +1421,7 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(InodeIdentifier parent_id, 
         return KResult(-ENOENT);
 
 #ifdef EXT2_DEBUG
-    dbg() << "Ext2FS: Adding inode '" << name.characters() << "' (mode " << String::format("%o", mode) << ") to parent directory " << parent_inode->identifier().index();
+    dbg() << "Ext2FS: Adding inode '" << name << "' (mode " << String::format("%o", mode) << ") to parent directory " << parent_inode->identifier();
 #endif
 
     size_t needed_blocks = ceil_div(size, block_size());
