@@ -348,16 +348,16 @@ void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
     // FIXME: Figure out what to do for masked signals. Should we also ignore them here?
     if (should_ignore_signal(signal)) {
 #ifdef SIGNAL_DEBUG
-        dbg() << "signal " << signal << " was ignored by " << process();
+        dbg() << "Signal " << signal << " was ignored by " << process();
 #endif
         return;
     }
 
 #ifdef SIGNAL_DEBUG
     if (sender)
-        dbg() << "signal: " << sender->name().characters() << "(" << sender->pid() << ") sent " << signal << " to " << process().name().characters() << "(" << pid() << ")";
+        dbg() << "Signal: " << *sender << " sent " << signal << " to " << process();
     else
-        dbg() << "signal: kernel sent " << signal << " to " << process().name().characters() << "(" << pid() << ")";
+        dbg() << "Signal: Kernel sent " << signal << " to " << process();
 #endif
 
     m_pending_signals |= 1 << (signal - 1);
