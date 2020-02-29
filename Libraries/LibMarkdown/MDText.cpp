@@ -73,8 +73,8 @@ String MDText::render_to_html() const
             // not be open for the new span. Close
             // it and all the open tags that follow
             // it.
-            for (auto it2 = --open_tags.end(); it2 >= it; --it2) {
-                const String& tag = *it2;
+            for (ssize_t j = open_tags.size() - 1; j >= static_cast<ssize_t>(it.index()); --j) {
+                auto& tag = open_tags[j];
                 builder.appendf("</%s>", tag.characters());
                 if (tag == "a") {
                     current_style.href = {};
@@ -101,8 +101,8 @@ String MDText::render_to_html() const
         builder.append(span.text);
     }
 
-    for (auto it = --open_tags.end(); it >= open_tags.begin(); --it) {
-        const String& tag = *it;
+    for (ssize_t i = open_tags.size() - 1; i >= 0; --i) {
+        auto& tag = open_tags[i];
         builder.appendf("</%s>", tag.characters());
     }
 
