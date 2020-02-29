@@ -110,6 +110,7 @@ int main(int argc, char** argv)
 
     auto icon_label = right_container->add<GUI::Label>();
     icon_label->set_icon(Gfx::Bitmap::load_from_file("/res/icons/buggie.png"));
+    icon_label->set_tooltip("Buggie");
     icon_label->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     icon_label->set_preferred_size(icon_label->icon()->size());
 
