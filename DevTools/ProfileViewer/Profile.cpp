@@ -157,7 +157,7 @@ void Profile::rebuild_tree()
                         break;
                 }
             } else {
-                for (size_t i = sample.frames.size() - 1; i >= 0; --i) {
+                for (ssize_t i = sample.frames.size() - 1; i >= 0; --i) {
                     if (callback(sample.frames.at(i)) == IterationDecision::Break)
                         break;
                 }
