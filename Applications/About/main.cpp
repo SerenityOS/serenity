@@ -57,24 +57,33 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->set_title("About SerenityOS");
-    Gfx::Rect window_rect { 0, 0, 240, 180 };
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/ladybug.png"));
+    Gfx::Rect window_rect { 0, 0, 224, 178 };
     window_rect.center_within(GUI::Desktop::the().rect());
     window->set_resizable(false);
     window->set_rect(window_rect);
 
-    auto widget = GUI::Widget::construct();
-    window->set_main_widget(widget);
-    widget->set_fill_with_background_color(true);
-    widget->set_layout(make<GUI::VerticalBoxLayout>());
-    widget->layout()->set_margins({ 0, 8, 0, 8 });
-    widget->layout()->set_spacing(8);
+    auto outer_widget = GUI::Widget::construct();
+    window->set_main_widget(outer_widget);
+    outer_widget->set_fill_with_background_color(true);
+    outer_widget->set_layout(make<GUI::VerticalBoxLayout>());
+    outer_widget->layout()->set_margins({ 8, 8, 8, 8 });
 
-    auto icon_label = widget->add<GUI::Label>();
-    icon_label->set_icon(Gfx::Bitmap::load_from_file("/res/icons/serenity.png"));
-    icon_label->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    icon_label->set_preferred_size(icon_label->icon()->size());
+    auto inner_widget = outer_widget->add<GUI::Widget>();
+    inner_widget->set_layout(make<GUI::HorizontalBoxLayout>());
+    inner_widget->layout()->set_spacing(8);
 
-    auto label = widget->add<GUI::Label>();
+    auto left_outer_container = inner_widget->add<GUI::Widget>();
+    left_outer_container->set_layout(make<GUI::HorizontalBoxLayout>());
+
+    auto left_inner_container = left_outer_container->add<GUI::Widget>();
+    left_inner_container->set_layout(make<GUI::VerticalBoxLayout>());
+    left_inner_container->layout()->set_spacing(8);
+    left_inner_container->set_preferred_size(0, 50);
+    left_inner_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+
+    auto label = left_inner_container->add<GUI::Label>();
+    label->set_text_alignment(Gfx::TextAlignment::CenterRight);
     label->set_font(Gfx::Font::default_bold_font());
     label->set_text("SerenityOS");
     label->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
@@ -84,22 +93,27 @@ int main(int argc, char** argv)
     int rc = uname(&uts);
     ASSERT(rc == 0);
 
-    auto version_label = widget->add<GUI::Label>();
+    auto version_label = left_inner_container->add<GUI::Label>();
+    version_label->set_text_alignment(Gfx::TextAlignment::CenterRight);
     version_label->set_text(String::format("Version %s", uts.release));
     version_label->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     version_label->set_preferred_size(0, 11);
 
-    auto git_info_label = widget->add<GUI::Label>();
-    git_info_label->set_text(String::format("Built on %s@%s", GIT_BRANCH, GIT_COMMIT));
+    auto git_info_label = left_inner_container->add<GUI::Label>();
+    git_info_label->set_text_alignment(Gfx::TextAlignment::CenterRight);
+    git_info_label->set_text(String::format("%s@%s", GIT_BRANCH, GIT_COMMIT));
     git_info_label->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     git_info_label->set_preferred_size(0, 11);
 
-    auto git_changes_label = widget->add<GUI::Label>();
-    git_changes_label->set_text(String::format("Changes: %s", GIT_CHANGES));
-    git_changes_label->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    git_changes_label->set_preferred_size(0, 11);
+    auto right_container = inner_widget->add<GUI::Widget>();
+    right_container->set_layout(make<GUI::VerticalBoxLayout>());
 
-    auto quit_button = widget->add<GUI::Button>();
+    auto icon_label = right_container->add<GUI::Label>();
+    icon_label->set_icon(Gfx::Bitmap::load_from_file("/res/icons/buggie.png"));
+    icon_label->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    icon_label->set_preferred_size(icon_label->icon()->size());
+
+    auto quit_button = outer_widget->add<GUI::Button>();
     quit_button->set_text("Okay");
     quit_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     quit_button->set_preferred_size(100, 20);
