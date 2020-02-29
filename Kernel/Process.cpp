@@ -1695,8 +1695,8 @@ ssize_t Process::do_write(FileDescription& description, const u8* data, int data
         dbg() << "   -> write returned " << rc;
 #endif
         if (rc < 0) {
-            // FIXME: Support returning partial nwritten with errno.
-            ASSERT(nwritten == 0);
+            if (nwritten)
+                return nwritten;
             return rc;
         }
         if (rc == 0)
