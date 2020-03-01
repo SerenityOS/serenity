@@ -65,7 +65,7 @@ Socket::~Socket()
 void Socket::set_setup_state(SetupState new_setup_state)
 {
 #ifdef SOCKET_DEBUG
-    kprintf("%s(%u) Socket{%p} setup state moving from %s to %s\n", Process::current->name().characters(), Process::current->pid(), this, to_string(m_setup_state), to_string(new_setup_state));
+    dbg() << "Socket{" << this << "} setup state moving from " << to_string(m_setup_state) << " to " << to_string(new_setup_state);
 #endif
 
     m_setup_state = new_setup_state;
@@ -77,7 +77,7 @@ RefPtr<Socket> Socket::accept()
     if (m_pending.is_empty())
         return nullptr;
 #ifdef SOCKET_DEBUG
-    kprintf("%s(%u) Socket{%p} de-queueing connection\n", Process::current->name().characters(), Process::current->pid(), this);
+    dbg() << "Socket{" << this << "} de-queueing connection";
 #endif
     auto client = m_pending.take_first();
     ASSERT(!client->is_connected());
@@ -91,7 +91,7 @@ RefPtr<Socket> Socket::accept()
 KResult Socket::queue_connection_from(NonnullRefPtr<Socket> peer)
 {
 #ifdef SOCKET_DEBUG
-    kprintf("%s(%u) Socket{%p} queueing connection\n", Process::current->name().characters(), Process::current->pid(), this);
+    dbg() << "Socket{" << this << "} queueing connection";
 #endif
     LOCKER(m_lock);
     if (m_pending.size() >= m_backlog)
