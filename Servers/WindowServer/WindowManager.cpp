@@ -52,6 +52,7 @@
 #include <time.h>
 #include <unistd.h>
 
+//#define WINDOWMANAGER_DEBUG
 //#define RESIZE_DEBUG
 //#define MOVE_DEBUG
 //#define DOUBLECLICK_DEBUG
@@ -255,7 +256,9 @@ void WindowManager::tell_wm_listener_about_window_icon(Window& listener, Window&
         return;
     if (window.icon().shbuf_id() == -1)
         return;
+#ifdef WINDOWMANAGER_DEBUG
     dbg() << "WindowServer: Sharing icon buffer " << window.icon().shbuf_id() << " with PID " << listener.client()->client_pid();
+#endif
     if (shbuf_allow_pid(window.icon().shbuf_id(), listener.client()->client_pid()) < 0) {
         ASSERT_NOT_REACHED();
     }
@@ -290,7 +293,9 @@ void WindowManager::notify_title_changed(Window& window)
 {
     if (window.type() != WindowType::Normal)
         return;
+#ifdef WINDOWMANAGER_DEBUG
     dbg() << "[WM] Window{" << &window << "} title set to \"" << window.title() << '"';
+#endif
     invalidate(window.frame().rect());
     if (m_switcher.is_visible())
         m_switcher.refresh();
