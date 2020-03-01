@@ -314,11 +314,12 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringVi
     ASSERT(!(size % PAGE_SIZE));
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     ASSERT(range.is_valid());
+    auto vmobject = AnonymousVMObject::create_with_size(size);
     OwnPtr<Region> region;
     if (user_accessible)
-        region = Region::create_user_accessible(range, name, access, cacheable);
+        region = Region::create_user_accessible(range, vmobject, 0, name, access, cacheable);
     else
-        region = Region::create_kernel_only(range, name, access, cacheable);
+        region = Region::create_kernel_only(range, vmobject, 0, name, access, cacheable);
     region->map(kernel_page_directory());
     if (should_commit)
         region->commit();
