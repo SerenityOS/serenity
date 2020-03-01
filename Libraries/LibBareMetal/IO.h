@@ -26,6 +26,9 @@
 
 #pragma once
 
+#include <AK/Assertions.h>
+#include <AK/LogStream.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 
 #if defined(KERNEL)
@@ -99,4 +102,65 @@ inline void delay()
     }
 }
 
+}
+
+class IOAddress {
+public:
+    IOAddress() {}
+    explicit IOAddress(u16 address)
+        : m_address(address)
+    {
+    }
+
+    IOAddress offset(u16 o) const { return IOAddress(m_address + o); }
+    u16 get() const { return m_address; }
+    void set(u16 address) { m_address = address; }
+    void mask(u16 m) { m_address &= m; }
+
+    template<typename T>
+    [[gnu::always_inline]] inline T in()
+    {
+        if constexpr (sizeof(T) == 4)
+            return IO::in32(get());
+        if constexpr (sizeof(T) == 2)
+            return IO::in16(get());
+        if constexpr (sizeof(T) == 1)
+            return IO::in8(get());
+        ASSERT_NOT_REACHED();
+    }
+
+    template<typename T>
+    [[gnu::always_inline]] inline void out(T value)
+    {
+        if constexpr (sizeof(T) == 4) {
+            IO::out32(get(), value);
+            return;
+        }
+        if constexpr (sizeof(T) == 2) {
+            IO::out16(get(), value);
+            return;
+        }
+        if constexpr (sizeof(T) == 1) {
+            IO::out8(get(), value);
+            return;
+        }
+        ASSERT_NOT_REACHED();
+    }
+
+    bool is_null() const { return m_address == 0; }
+
+    bool operator==(const IOAddress& other) const { return m_address == other.m_address; }
+    bool operator!=(const IOAddress& other) const { return m_address != other.m_address; }
+    bool operator>(const IOAddress& other) const { return m_address > other.m_address; }
+    bool operator>=(const IOAddress& other) const { return m_address >= other.m_address; }
+    bool operator<(const IOAddress& other) const { return m_address < other.m_address; }
+    bool operator<=(const IOAddress& other) const { return m_address <= other.m_address; }
+
+private:
+    u16 m_address { 0 };
+};
+
+inline const LogStream& operator<<(const LogStream& stream, IOAddress value)
+{
+    return stream << "IO " << String::format("%x", value.get());
 }
