@@ -106,6 +106,7 @@ public:
     OwnPtr<Region> allocate_kernel_region(size_t, const StringView& name, u8 access, bool user_accessible = false, bool should_commit = true, bool cacheable = true);
     OwnPtr<Region> allocate_kernel_region(PhysicalAddress, size_t, const StringView& name, u8 access, bool user_accessible = false, bool cacheable = false);
     OwnPtr<Region> allocate_kernel_region_with_vmobject(VMObject&, size_t, const StringView& name, u8 access, bool user_accessible = false, bool cacheable = false);
+    OwnPtr<Region> allocate_kernel_region_with_vmobject(const Range&, VMObject&, const StringView& name, u8 access, bool user_accessible = false, bool cacheable = false);
     OwnPtr<Region> allocate_user_accessible_kernel_region(size_t, const StringView& name, u8 access, bool cacheable = false);
 
     unsigned user_physical_pages() const { return m_user_physical_pages; }
