@@ -699,18 +699,4 @@ void MemoryManager::dump_kernel_regions()
     }
 }
 
-ProcessPagingScope::ProcessPagingScope(Process& process)
-{
-    ASSERT(Thread::current);
-    m_previous_cr3 = read_cr3();
-    MM.enter_process_paging_scope(process);
-}
-
-ProcessPagingScope::~ProcessPagingScope()
-{
-    InterruptDisabler disabler;
-    Thread::current->tss().cr3 = m_previous_cr3;
-    write_cr3(m_previous_cr3);
-}
-
 }
