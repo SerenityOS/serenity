@@ -3091,10 +3091,10 @@ size_t Process::amount_dirty_private() const
 
 size_t Process::amount_clean_inode() const
 {
-    HashTable<const SharedInodeVMObject*> vmobjects;
+    HashTable<const InodeVMObject*> vmobjects;
     for (auto& region : m_regions) {
         if (region.vmobject().is_inode())
-            vmobjects.set(&static_cast<const SharedInodeVMObject&>(region.vmobject()));
+            vmobjects.set(&static_cast<const InodeVMObject&>(region.vmobject()));
     }
     size_t amount = 0;
     for (auto& vmobject : vmobjects)
