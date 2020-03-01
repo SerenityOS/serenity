@@ -24,7 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/StringBuilder.h>
+#include <AK/Vector.h>
 #include <LibCore/Timer.h>
+#include <LibCore/ConfigFile.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
@@ -39,7 +42,12 @@ class ClockWidget final : public GUI::Widget {
 public:
     ClockWidget()
     {
-        m_time_width = Gfx::Font::default_bold_font().width("2222-22-22 22:22:22");
+        auto config = Core::ConfigFile::open("/etc/WindowServer/Applet.ini");
+        m_format = config->read_entry("Clock", "Format");
+
+        m_time_width = Gfx::Font::default_bold_font().width(convert((tm){
+				66, 59, 23, 31, 11, 2222, 6, 365, 0
+			}));
 
         m_timer = add<Core::Timer>(1000, [this] {
             static time_t last_update_time;
@@ -55,7 +63,7 @@ public:
 
     int get_width()
     {
-        return m_time_width + menubar_menu_margin();
+        return m_time_width + menubar_menu_margin() * 0;
     }
 
 private:
@@ -66,13 +74,7 @@ private:
         time_t now = time(nullptr);
         auto* tm = localtime(&now);
 
-        auto time_text = String::format("%4u-%02u-%02u %02u:%02u:%02u",
-            tm->tm_year + 1900,
-            tm->tm_mon + 1,
-            tm->tm_mday,
-            tm->tm_hour,
-            tm->tm_min,
-            tm->tm_sec);
+        auto time_text = convert(*tm);
 
         GUI::Painter painter(*this);
         painter.fill_rect(event.rect(), palette().window());
@@ -84,8 +86,55 @@ private:
         update();
     }
 
+    // FIXME: Find a better name for this function
+    String convert(tm tm)
+    {
+	(void) tm;
+    	StringBuilder builder;
+	auto format_parts = m_format.split('%');
+
+	for(size_t i = 0; i < format_parts.size(); i++)
+	{
+		if(i == 0){
+			builder.append(format_parts[i]);
+			continue;
+		}
+		
+		switch(format_parts[i].characters()[0]){
+			case 'S':
+				builder.append(String::format("%02i", tm.tm_sec));
+				break;
+			case 'M':
+				builder.append(String::format("%02i", tm.tm_min));
+				break;
+			case 'H':
+				builder.append(String::format("%02i", tm.tm_hour));
+				break;
+
+			case 'd':
+				builder.append(String::format("%02i", tm.tm_mday));
+				break;
+			case 'm':
+				builder.append(String::format("%02i", tm.tm_mon + 1));
+				break;
+			case 'y':
+				builder.append(String::format("%02i", tm.tm_year + 1900));
+				break;
+
+			default:
+				builder.append("%");
+				builder.append(format_parts[i]);
+				continue;
+		}
+		builder.append(format_parts[i].substring(1, format_parts[i].length() - 1));
+	}	
+
+	return builder.to_string();
+    }
+
     RefPtr<Core::Timer> m_timer;
     int m_time_width;
+    String m_format;
 };
 
 int main(int argc, char** argv)
