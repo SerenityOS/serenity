@@ -762,8 +762,8 @@ void Process::kill_threads_except_self()
 
     for_each_thread([&](Thread& thread) {
         if (&thread == Thread::current
-                || thread.state() == Thread::State::Dead
-                || thread.state() == Thread::State::Dying)
+            || thread.state() == Thread::State::Dead
+            || thread.state() == Thread::State::Dying)
             return IterationDecision::Continue;
 
         // At this point, we have no joiner anymore
