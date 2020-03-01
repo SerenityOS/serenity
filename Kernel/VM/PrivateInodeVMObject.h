@@ -42,6 +42,8 @@ public:
     virtual NonnullRefPtr<VMObject> clone() override;
 
 private:
+    virtual bool is_private_inode() const override { return true; }
+
     explicit PrivateInodeVMObject(Inode&, size_t);
     explicit PrivateInodeVMObject(const PrivateInodeVMObject&);
 
