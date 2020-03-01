@@ -33,8 +33,8 @@ namespace AK {
 
 inline void StringBuilder::will_append(size_t size)
 {
-    if ((m_length + size) > (size_t)m_buffer.size())
-        m_buffer.grow(max((size_t)16, (size_t)m_buffer.size() * 2 + size));
+    if ((m_length + size) > m_buffer.size())
+        m_buffer.grow(max(static_cast<size_t>(16), m_buffer.size() * 2 + size));
 }
 
 StringBuilder::StringBuilder(size_t initial_capacity)

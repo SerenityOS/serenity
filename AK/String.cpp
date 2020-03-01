@@ -143,7 +143,7 @@ Vector<String> String::split_limit(char separator, size_t limit, bool keep_empty
 
     Vector<String> v;
     size_t substart = 0;
-    for (size_t i = 0; i < length() && ((size_t)v.size() + 1) != limit; ++i) {
+    for (size_t i = 0; i < length() && (v.size() + 1) != limit; ++i) {
         char ch = characters()[i];
         if (ch == separator) {
             size_t sublen = i - substart;

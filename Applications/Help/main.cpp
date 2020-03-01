@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
             return;
         }
         auto buffer = file->read_all();
-        StringView source { (const char*)buffer.data(), (size_t)buffer.size() };
+        StringView source { (const char*)buffer.data(), buffer.size() };
 
         MDDocument md_document;
         bool success = md_document.parse(source);

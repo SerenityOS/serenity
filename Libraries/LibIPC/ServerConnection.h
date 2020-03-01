@@ -121,7 +121,7 @@ public:
     bool post_message(const Message& message)
     {
         auto buffer = message.encode();
-        int nwritten = write(m_connection->fd(), buffer.data(), (size_t)buffer.size());
+        int nwritten = write(m_connection->fd(), buffer.data(), buffer.size());
         if (nwritten < 0) {
             perror("write");
             ASSERT_NOT_REACHED();
@@ -165,7 +165,7 @@ private:
         }
 
         size_t decoded_bytes = 0;
-        for (size_t index = 0; index < (size_t)bytes.size(); index += decoded_bytes) {
+        for (size_t index = 0; index < bytes.size(); index += decoded_bytes) {
             auto remaining_bytes = ByteBuffer::wrap(bytes.data() + index, bytes.size() - index);
             if (auto message = LocalEndpoint::decode_message(remaining_bytes, decoded_bytes)) {
                 m_unprocessed_messages.append(move(message));
