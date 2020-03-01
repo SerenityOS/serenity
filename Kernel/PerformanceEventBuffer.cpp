@@ -103,25 +103,25 @@ KBuffer PerformanceEventBuffer::to_json(pid_t pid, const String& executable_path
     auto array = object.add_array("events");
     for (size_t i = 0; i < m_count; ++i) {
         auto& event = at(i);
-        auto object = array.add_object();
+        auto event_object = array.add_object();
         switch (event.type) {
         case PERF_EVENT_MALLOC:
-            object.add("type", "malloc");
-            object.add("ptr", static_cast<u64>(event.data.malloc.ptr));
-            object.add("size", static_cast<u64>(event.data.malloc.size));
+            event_object.add("type", "malloc");
+            event_object.add("ptr", static_cast<u64>(event.data.malloc.ptr));
+            event_object.add("size", static_cast<u64>(event.data.malloc.size));
             break;
         case PERF_EVENT_FREE:
-            object.add("type", "free");
-            object.add("ptr", static_cast<u64>(event.data.free.ptr));
+            event_object.add("type", "free");
+            event_object.add("ptr", static_cast<u64>(event.data.free.ptr));
             break;
         }
-        object.add("timestamp", event.timestamp);
-        auto stack_array = object.add_array("stack");
+        event_object.add("timestamp", event.timestamp);
+        auto stack_array = event_object.add_array("stack");
         for (size_t j = 0; j < event.stack_size; ++j) {
             stack_array.add(event.stack[j]);
         }
         stack_array.finish();
-        object.finish();
+        event_object.finish();
     }
     array.finish();
     object.finish();
