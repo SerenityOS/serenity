@@ -238,7 +238,6 @@ EH_ENTRY(14, page_fault);
 void page_fault_handler(RegisterState regs)
 {
     clac();
-    //ASSERT(current);
 
     u32 fault_address;
     asm("movl %%cr2, %%eax"
@@ -246,8 +245,12 @@ void page_fault_handler(RegisterState regs)
 
 #ifdef PAGE_FAULT_DEBUG
     u32 fault_page_directory = read_cr3();
-    dbg() << (current ? Process::current->name().characters() : "(none)") << "(" << (current ? Process::current->pid() : 0) << "): ring" << (regs.cs & 3) << " " << (regs.exception_code & 1 ? "PV" : "NP") << " page fault in PD=" << String::format("%x", fault_page_directory) << ", " << (regs.exception_code & 8 ? "reserved-bit " : "") << regs.exception_code & 2 ? "write" : "read"
-            << " V" << String::format("%08x", fault_address);
+    dbg() << "Ring " << (regs.cs & 3)
+          << " " << (regs.exception_code & 1 ? "PV" : "NP")
+          << " page fault in PD=" << String::format("%x", fault_page_directory) << ", "
+          << (regs.exception_code & 8 ? "reserved-bit " : "")
+          << (regs.exception_code & 2 ? "write" : "read")
+          << " " << VirtualAddress(fault_address);
 #endif
 
 #ifdef PAGE_FAULT_DEBUG
