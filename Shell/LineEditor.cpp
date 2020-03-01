@@ -184,8 +184,6 @@ Vector<String> LineEditor::tab_complete_other_token(String& token)
     String path;
     Vector<String> suggestions;
 
-    ASSERT(token.length() != 0);
-
     ssize_t last_slash = token.length() - 1;
     while (last_slash >= 0 && token[last_slash] != '/')
         --last_slash;
