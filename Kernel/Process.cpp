@@ -3028,7 +3028,7 @@ void Process::finalize()
 #endif
 
     if (m_perf_event_buffer) {
-        auto description_or_error = VFS::the().open("perfcore", O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { m_uid, m_gid });
+        auto description_or_error = VFS::the().open(String::format("perfcore.%d", m_pid), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { m_uid, m_gid });
         if (!description_or_error.is_error()) {
             auto& description = description_or_error.value();
             auto json = m_perf_event_buffer->to_json(m_pid, m_executable ? m_executable->absolute_path() : "");
