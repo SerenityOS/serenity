@@ -76,8 +76,7 @@ NonnullOwnPtr<Region> Region::clone()
 {
     ASSERT(Process::current);
 
-    // FIXME: What should we do for privately mapped SharedInodeVMObjects?
-    if (m_shared || vmobject().is_inode()) {
+    if (m_shared) {
         ASSERT(!m_stack);
 #ifdef MM_DEBUG
         dbg() << "Region::clone(): Sharing " << name() << " (" << vaddr() << ")";
@@ -100,7 +99,6 @@ NonnullOwnPtr<Region> Region::clone()
     if (m_stack) {
         ASSERT(is_readable());
         ASSERT(is_writable());
-        ASSERT(!is_shared());
         ASSERT(vmobject().is_anonymous());
         clone_region->set_stack(true);
     }
