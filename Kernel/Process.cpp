@@ -67,6 +67,7 @@
 #include <Kernel/TTY/TTY.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/PageDirectory.h>
+#include <Kernel/VM/PrivateInodeVMObject.h>
 #include <Kernel/VM/PurgeableVMObject.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
 #include <LibBareMetal/IO.h>
@@ -808,17 +809,8 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     if (parts.is_empty())
         return -ENOENT;
 
-    RefPtr<SharedInodeVMObject> vmobject;
-    if (interpreter_description) {
-        vmobject = SharedInodeVMObject::create_with_inode(*interpreter_description->inode());
-    } else {
-        vmobject = SharedInodeVMObject::create_with_inode(*main_program_description->inode());
-    }
-
-    if (static_cast<const SharedInodeVMObject&>(*vmobject).writable_mappings()) {
-        dbg() << "Refusing to execute a write-mapped program";
-        return -ETXTBSY;
-    }
+    auto& inode = interpreter_description ? *interpreter_description->inode() : *main_program_description->inode();
+    auto vmobject = PrivateInodeVMObject::create_with_inode(inode);
 
     // Disable profiling temporarily in case it's running on this process.
     bool was_profiling = is_profiling();
