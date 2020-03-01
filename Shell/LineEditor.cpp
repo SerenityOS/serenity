@@ -304,7 +304,7 @@ String LineEditor::get_line(const String& prompt)
                 fflush(stdout);
                 return;
             }
-            m_buffer.remove(m_cursor - 1);
+            m_buffer.remove(m_cursor);
             fputs("\033[3~", stdout);
             fflush(stdout);
             vt_save_cursor();
