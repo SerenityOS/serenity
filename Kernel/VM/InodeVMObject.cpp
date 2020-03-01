@@ -41,7 +41,10 @@ InodeVMObject::InodeVMObject(Inode& inode, size_t size)
 InodeVMObject::InodeVMObject(const InodeVMObject& other)
     : VMObject(other)
     , m_inode(other.m_inode)
+    , m_dirty_pages(page_count(), false)
 {
+    for (size_t i = 0; i < page_count(); ++i)
+        m_dirty_pages.set(i, other.m_dirty_pages.get(i));
 }
 
 InodeVMObject::~InodeVMObject()
@@ -51,7 +54,7 @@ InodeVMObject::~InodeVMObject()
 size_t InodeVMObject::amount_clean() const
 {
     size_t count = 0;
-    ASSERT(page_count() == (size_t)m_dirty_pages.size());
+    ASSERT(page_count() == m_dirty_pages.size());
     for (size_t i = 0; i < page_count(); ++i) {
         if (!m_dirty_pages.get(i) && m_physical_pages[i])
             ++count;
