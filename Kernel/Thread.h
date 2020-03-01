@@ -486,6 +486,7 @@ private:
     u32 m_priority_boost { 0 };
 
     u8 m_stop_signal { 0 };
+    State m_stop_state { Invalid };
 
     bool m_dump_backtrace_on_finalization { false };
     bool m_should_die { false };

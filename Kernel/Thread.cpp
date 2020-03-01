@@ -495,13 +495,19 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
     m_pending_signals &= ~(1 << (signal - 1));
 
     if (signal == SIGSTOP) {
-        m_stop_signal = SIGSTOP;
-        set_state(Stopped);
+        if (!is_stopped()) {
+            m_stop_signal = SIGSTOP;
+            m_stop_state = m_state;
+            set_state(State::Stopped);
+        }
         return ShouldUnblockThread::No;
     }
 
-    if (signal == SIGCONT && state() == Stopped)
-        set_state(Runnable);
+    if (signal == SIGCONT && is_stopped()) {
+        ASSERT(m_stop_state != State::Invalid);
+        set_state(m_stop_state);
+        m_stop_state = State::Invalid;
+    }
 
     auto handler_vaddr = action.handler_or_sigaction;
     if (handler_vaddr.is_null()) {
