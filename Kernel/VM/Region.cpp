@@ -146,7 +146,7 @@ size_t Region::amount_dirty() const
 {
     if (!vmobject().is_inode())
         return amount_resident();
-    return static_cast<const SharedInodeVMObject&>(vmobject()).amount_dirty();
+    return static_cast<const InodeVMObject&>(vmobject()).amount_dirty();
 }
 
 size_t Region::amount_resident() const
