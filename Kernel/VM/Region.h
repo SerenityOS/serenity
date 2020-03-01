@@ -55,9 +55,7 @@ public:
         Execute = 4,
     };
 
-    static NonnullOwnPtr<Region> create_user_accessible(const Range&, const StringView& name, u8 access, bool cacheable = true);
     static NonnullOwnPtr<Region> create_user_accessible(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable = true);
-    static NonnullOwnPtr<Region> create_kernel_only(const Range&, const StringView& name, u8 access, bool cacheable = true);
     static NonnullOwnPtr<Region> create_kernel_only(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable = true);
 
     ~Region();
@@ -160,7 +158,6 @@ public:
     Region* m_prev { nullptr };
 
     // NOTE: These are public so we can make<> them.
-    Region(const Range&, const String&, u8 access, bool cacheable);
     Region(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const String&, u8 access, bool cacheable);
 
 private:
