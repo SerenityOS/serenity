@@ -51,9 +51,9 @@ IOAPIC::IOAPIC(ioapic_mmio_regs& regs, u32 gsi_base, Vector<RefPtr<ISAInterruptO
     , m_isa_interrupt_overrides(isa_overrides)
     , m_pci_interrupt_overrides(pci_overrides)
 {
-    kprintf("IOAPIC ID: 0x%x\n", m_id);
-    kprintf("IOAPIC Version: 0x%x, Redirection Entries count - %u\n", m_version, m_redirection_entries);
-    kprintf("IOAPIC Arbitration ID 0x%x\n", read_register(0x2));
+    klog() << "IOAPIC ID: 0x" << String::format("%x", m_id);
+    klog() << "IOAPIC Version: 0x" << String::format("%x", m_version) << ", Redirection Entries count - " << m_redirection_entries;
+    klog() << "IOAPIC Arbitration ID 0x" << String::format("%x", read_register(0x2));
     mask_all_redirection_entries();
 }
 

@@ -47,13 +47,13 @@ namespace ACPI {
         , StaticParser()
 
     {
-        kprintf("ACPI: Dynamic Parsing Enabled, Can parse AML\n");
+        klog() << "ACPI: Dynamic Parsing Enabled, Can parse AML";
     }
     DynamicParser::DynamicParser(PhysicalAddress rsdp)
         : IRQHandler(9)
         , StaticParser(rsdp)
     {
-        kprintf("ACPI: Dynamic Parsing Enabled, Can parse AML\n");
+        klog() << "ACPI: Dynamic Parsing Enabled, Can parse AML";
     }
 
     void DynamicParser::handle_irq(RegisterState&)

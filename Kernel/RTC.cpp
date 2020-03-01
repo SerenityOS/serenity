@@ -25,6 +25,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/LogStream.h>
 #include <Kernel/CMOS.h>
 #include <Kernel/RTC.h>
 
@@ -154,7 +155,7 @@ time_t now()
     unsigned year, month, day, hour, minute, second;
     read_registers(year, month, day, hour, minute, second);
 
-    kprintf("year: %d, month: %d, day: %d\n", year, month, day);
+    klog() << "year: " << year << ", month: " << month << ", day: " << day;
 
     ASSERT(year >= 2018);
 

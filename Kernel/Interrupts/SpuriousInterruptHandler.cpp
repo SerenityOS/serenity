@@ -62,7 +62,7 @@ SpuriousInterruptHandler::~SpuriousInterruptHandler()
 void SpuriousInterruptHandler::handle_interrupt(RegisterState&)
 {
     // FIXME: Actually check if IRQ7 or IRQ15 are spurious, and if not, call the real handler to handle the IRQ.
-    kprintf("Spurious Interrupt, vector %d\n", interrupt_number());
+    klog() << "Spurious Interrupt, vector " << interrupt_number();
 }
 
 void SpuriousInterruptHandler::enable_interrupt_vector()
