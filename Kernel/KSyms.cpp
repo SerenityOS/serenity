@@ -155,7 +155,7 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
             break;
         if (!symbol.ksym) {
             if (Process::current && Process::current->elf_loader() && Process::current->elf_loader()->has_symbols()) {
-                dbg() << String::format("%p", symbol.address) << "  " << Process::current->elf_loader()->symbolicate(symbol.address).characters();
+                dbg() << String::format("%p", symbol.address) << "  " << Process::current->elf_loader()->symbolicate(symbol.address);
             } else {
                 dbg() << String::format("%p", symbol.address) << " (no ELF symbols for process)";
             }
@@ -165,7 +165,7 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
         if (symbol.ksym->address == ksym_highest_address && offset > 4096)
             dbg() << String::format("%p", symbol.address);
         else
-            dbg() << String::format("%p", symbol.address) << "  " << demangle(symbol.ksym->name).characters() << " +" << offset;
+            dbg() << String::format("%p", symbol.address) << "  " << demangle(symbol.ksym->name) << " +" << offset;
     }
 }
 
