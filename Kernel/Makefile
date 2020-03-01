@@ -109,6 +109,7 @@ OBJS = \
     VM/PhysicalRegion.o \
     VM/PurgeableVMObject.o \
     VM/PrivateInodeVMObject.o \
+    VM/ProcessPagingScope.o \
     VM/RangeAllocator.o \
     VM/Region.o \
     VM/SharedInodeVMObject.o \
