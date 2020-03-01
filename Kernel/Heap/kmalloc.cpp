@@ -124,7 +124,7 @@ void* kmalloc_impl(size_t size)
 
     if (sum_free < real_size) {
         Kernel::dump_backtrace();
-        kprintf("%s(%u) kmalloc(): PANIC! Out of memory (sucks, dude)\nsum_free=%u, real_size=%u\n", Kernel::Process::current->name().characters(), Kernel::Process::current->pid(), sum_free, real_size);
+        klog() << "kmalloc(): PANIC! Out of memory (sucks, dude)\nsum_free=" << sum_free << ", real_size=" << real_size;
         Kernel::hang();
     }
 
@@ -174,7 +174,7 @@ void* kmalloc_impl(size_t size)
         }
     }
 
-    kprintf("%s(%u) kmalloc(): PANIC! Out of memory (no suitable block for size %u)\n", Kernel::Process::current->name().characters(), Kernel::Process::current->pid(), size);
+    klog() << "kmalloc(): PANIC! Out of memory (no suitable block for size " << size << ")";
     Kernel::dump_backtrace();
     Kernel::hang();
 }

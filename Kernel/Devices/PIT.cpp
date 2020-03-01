@@ -84,7 +84,7 @@ PIT::PIT()
 
     IO::out8(PIT_CTL, TIMER0_SELECT | WRITE_WORD | MODE_SQUARE_WAVE);
 
-    kprintf("PIT: %u Hz, square wave (%x)\n", TICKS_PER_SECOND, m_default_timer_reload);
+    klog() << "PIT: " << TICKS_PER_SECOND << " Hz, square wave (" << String::format("%x", m_default_timer_reload) << ")";
 
     IO::out8(TIMER0_CTL, LSB(m_default_timer_reload));
     IO::out8(TIMER0_CTL, MSB(m_default_timer_reload));

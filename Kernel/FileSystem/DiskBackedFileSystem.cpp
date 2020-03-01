@@ -125,7 +125,7 @@ DiskBackedFS::~DiskBackedFS()
 bool DiskBackedFS::write_block(unsigned index, const u8* data, FileDescription* description)
 {
 #ifdef DBFS_DEBUG
-    kprintf("DiskBackedFileSystem::write_block %u, size=%u\n", index, data.size());
+    klog() << "DiskBackedFileSystem::write_block " << index << ", size=" << data.size();
 #endif
 
     bool allow_cache = !description || !description->is_direct();
@@ -149,7 +149,7 @@ bool DiskBackedFS::write_block(unsigned index, const u8* data, FileDescription* 
 bool DiskBackedFS::write_blocks(unsigned index, unsigned count, const u8* data, FileDescription* description)
 {
 #ifdef DBFS_DEBUG
-    kprintf("DiskBackedFileSystem::write_blocks %u x%u\n", index, count);
+    klog() << "DiskBackedFileSystem::write_blocks " << index << " x%u" << count;
 #endif
     for (unsigned i = 0; i < count; ++i)
         write_block(index + i, data + i * block_size(), description);
@@ -159,7 +159,7 @@ bool DiskBackedFS::write_blocks(unsigned index, unsigned count, const u8* data, 
 bool DiskBackedFS::read_block(unsigned index, u8* buffer, FileDescription* description) const
 {
 #ifdef DBFS_DEBUG
-    kprintf("DiskBackedFileSystem::read_block %u\n", index);
+    klog() << "DiskBackedFileSystem::read_block " << index;
 #endif
 
     bool allow_cache = !description || !description->is_direct();

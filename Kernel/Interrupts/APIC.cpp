@@ -172,7 +172,7 @@ namespace APIC {
             return false;
 
         PhysicalAddress apic_base = get_base();
-        kprintf("Initializing APIC, base: P%x\n", apic_base);
+        klog() << "Initializing APIC, base: P " << String::format("%p", apic_base);
         set_base(apic_base);
 
         g_apic_base = apic_base.as_ptr();
@@ -188,7 +188,7 @@ namespace APIC {
 
     void enable(u32 cpu)
     {
-        kprintf("Enabling local APIC for cpu #%u\n", cpu);
+        klog() << "Enabling local APIC for cpu #" << cpu;
 
         // set spurious interrupt vector
         write_register(APIC_REG_SIV, read_register(APIC_REG_SIV) | 0x100);

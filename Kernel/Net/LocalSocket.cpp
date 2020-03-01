@@ -68,7 +68,7 @@ LocalSocket::LocalSocket(int type)
     m_prebind_mode = 0666;
 
 #ifdef DEBUG_LOCAL_SOCKET
-    kprintf("%s(%u) LocalSocket{%p} created with type=%u\n", Process::current->name().characters(), Process::current->pid(), this, type);
+    dbg() << "LocalSocket{" << this << "} created with type=" << type;
 #endif
 }
 
@@ -105,7 +105,7 @@ KResult LocalSocket::bind(const sockaddr* user_address, socklen_t address_size)
     auto path = String(address.sun_path, strnlen(address.sun_path, sizeof(address.sun_path)));
 
 #ifdef DEBUG_LOCAL_SOCKET
-    kprintf("%s(%u) LocalSocket{%p} bind(%s)\n", Process::current->name().characters(), Process::current->pid(), this, safe_address);
+    dbg() << "LocalSocket{" << this << "} bind(" << safe_address << ")";
 #endif
 
     mode_t mode = S_IFSOCK | (m_prebind_mode & 04777);
@@ -145,7 +145,7 @@ KResult LocalSocket::connect(FileDescription& description, const sockaddr* addre
     memcpy(safe_address, local_address.sun_path, sizeof(local_address.sun_path));
 
 #ifdef DEBUG_LOCAL_SOCKET
-    kprintf("%s(%u) LocalSocket{%p} connect(%s)\n", Process::current->name().characters(), Process::current->pid(), this, safe_address);
+    dbg() << "LocalSocket{" << this << "} connect(" << safe_address << ")";
 #endif
 
     auto description_or_error = VFS::the().open(safe_address, O_RDWR, 0, Process::current->current_directory());
@@ -181,7 +181,7 @@ KResult LocalSocket::connect(FileDescription& description, const sockaddr* addre
     }
 
 #ifdef DEBUG_LOCAL_SOCKET
-    kprintf("%s(%u) LocalSocket{%p} connect(%s) status is %s\n", Process::current->name().characters(), Process::current->pid(), this, safe_address, to_string(setup_state()));
+    dbg() << "LocalSocket{" << this << "} connect(" << safe_address << ") status is " << to_string(setup_state());
 #endif
 
     if (!is_connected()) {
@@ -200,7 +200,7 @@ KResult LocalSocket::listen(size_t backlog)
     set_backlog(backlog);
     m_connect_side_role = m_role = Role::Listener;
 #ifdef DEBUG_LOCAL_SOCKET
-    kprintf("LocalSocket{%p} listening with backlog=%zu\n", this, backlog);
+    dbg() << "LocalSocket{" << this << "} listening with backlog=" << backlog;
 #endif
     return KSuccess;
 }

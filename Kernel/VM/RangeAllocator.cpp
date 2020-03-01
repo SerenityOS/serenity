@@ -130,7 +130,7 @@ Range RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
 #endif
         return allocated_range;
     }
-    kprintf("VRA: Failed to allocate anywhere: %zu, %zu\n", size, alignment);
+    klog() << "VRA: Failed to allocate anywhere: " << size << ", " << alignment;
     return {};
 }
 
@@ -155,7 +155,7 @@ Range RangeAllocator::allocate_specific(VirtualAddress base, size_t size)
 #endif
         return allocated_range;
     }
-    kprintf("VRA: Failed to allocate specific range: %x(%u)\n", base.get(), size);
+    dbg() << "VRA: Failed to allocate specific range: " << base << "(" << size << ")";
     return {};
 }
 

@@ -54,11 +54,11 @@ bool MBRPartitionTable::initialize()
     auto& header = this->header();
 
 #ifdef MBR_DEBUG
-    kprintf("MBRPartitionTable::initialize: mbr_signature=%#x\n", header.mbr_signature);
+    klog() << "MBRPartitionTable::initialize: mbr_signature=0x" << String::format("%x", header.mbr_signature);
 #endif
 
     if (header.mbr_signature != MBR_SIGNATURE) {
-        kprintf("MBRPartitionTable::initialize: bad mbr signature %#x\n", header.mbr_signature);
+        klog() << "MBRPartitionTable::initialize: bad mbr signature 0x" << String::format("%x", header.mbr_signature);
         return false;
     }
 
@@ -87,24 +87,24 @@ RefPtr<DiskPartition> MBRPartitionTable::partition(unsigned index)
     auto& entry = header.entry[index - 1];
 
     if (header.mbr_signature != MBR_SIGNATURE) {
-        kprintf("MBRPartitionTable::initialize: bad mbr signature - not initalized? %#x\n", header.mbr_signature);
+        klog() << "MBRPartitionTable::initialize: bad mbr signature - not initalized? 0x" << String::format("%x", header.mbr_signature);
         return nullptr;
     }
 
 #ifdef MBR_DEBUG
-    kprintf("MBRPartitionTable::partition: status=%#x offset=%#x\n", entry.status, entry.offset);
+    klog() << "MBRPartitionTable::partition: status=0x" << String::format("%x", entry.status) << " offset=0x" << String::format("%x", entry.offset);
 #endif
 
     if (entry.offset == 0x00) {
 #ifdef MBR_DEBUG
-        kprintf("MBRPartitionTable::partition: missing partition requested index=%d\n", index);
+        klog() << "MBRPartitionTable::partition: missing partition requested index=" << index;
 #endif
 
         return nullptr;
     }
 
 #ifdef MBR_DEBUG
-    kprintf("MBRPartitionTable::partition: found partition index=%d type=%x\n", index, entry.type);
+    klog() << "MBRPartitionTable::partition: found partition index=" << index << " type=" << String::format("%x", entry.type);
 #endif
 
     return DiskPartition::create(m_device, entry.offset, (entry.offset + entry.length));

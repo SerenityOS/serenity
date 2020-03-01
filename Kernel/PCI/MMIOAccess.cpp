@@ -58,7 +58,7 @@ PCI::MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
     , m_segments(*new HashMap<u16, MMIOSegment*>())
     , m_mapped_address(ChangeableAddress(0xFFFF, 0xFF, 0xFF, 0xFF))
 {
-    kprintf("PCI: Using MMIO Mechanism for PCI Configuartion Space Access\n");
+    klog() << "PCI: Using MMIO Mechanism for PCI Configuartion Space Access";
     m_mmio_window_region = MM.allocate_kernel_region(PAGE_ROUND_UP(PCI_MMIO_CONFIG_SPACE_SIZE), "PCI MMIO", Region::Access::Read | Region::Access::Write);
 
     auto checkup_region = MM.allocate_kernel_region(p_mcfg.page_base(), (PAGE_SIZE * 2), "PCI MCFG Checkup", Region::Access::Read | Region::Access::Write);
@@ -70,7 +70,7 @@ PCI::MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
     u32 length = sdt->length;
     u8 revision = sdt->revision;
 
-    kprintf("PCI: MCFG, length - %u, revision %d\n", length, revision);
+    klog() << "PCI: MCFG, length - " << length << ", revision " << revision;
     checkup_region->unmap();
 
     auto mcfg_region = MM.allocate_kernel_region(p_mcfg.page_base(), PAGE_ROUND_UP(length) + PAGE_SIZE, "PCI Parsing MCFG", Region::Access::Read | Region::Access::Write);
@@ -86,10 +86,10 @@ PCI::MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
         u32 lower_addr = mcfg.descriptors[index].base_addr;
 
         m_segments.set(index, new PCI::MMIOSegment(PhysicalAddress(lower_addr), start_bus, end_bus));
-        kprintf("PCI: New PCI segment @ P 0x%x, PCI buses (%d-%d)\n", lower_addr, start_bus, end_bus);
+        klog() << "PCI: New PCI segment @ P " << String::format("%p", lower_addr) << ", PCI buses (" << start_bus << "-" << end_bus << ")";
     }
     mcfg_region->unmap();
-    kprintf("PCI: MMIO segments - %d\n", m_segments.size());
+    klog() << "PCI: MMIO segments - " << m_segments.size();
     InterruptDisabler disabler;
 #ifdef PCI_DEBUG
     dbg() << "PCI: mapped address (" << String::format("%w", m_mapped_address.seg()) << ":" << String::format("%b", m_mapped_address.bus()) << ":" << String::format("%b", m_mapped_address.slot()) << "." << String::format("%b", m_mapped_address.function()) << ")";

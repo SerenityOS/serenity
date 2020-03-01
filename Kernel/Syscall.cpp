@@ -70,7 +70,7 @@ static int handle(RegisterState&, u32 function, u32 arg1, u32 arg2, u32 arg3);
 void initialize()
 {
     register_user_callable_interrupt_handler(0x82, syscall_asm_entry);
-    kprintf("Syscall: int 0x82 handler installed\n");
+    klog() << "Syscall: int 0x82 handler installed";
 }
 
 #pragma GCC diagnostic ignored "-Wcast-function-type"

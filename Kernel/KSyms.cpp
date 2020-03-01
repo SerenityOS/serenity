@@ -81,7 +81,7 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
     s_ksyms = static_cast<KSym*>(kmalloc_eternal(sizeof(KSym) * ksym_count));
     ++bufptr; // skip newline
 
-    kprintf("Loading ksyms...");
+    klog() << "Loading ksyms...";
 
     unsigned current_ksym_index = 0;
 
@@ -110,7 +110,7 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
         ++bufptr;
         ++current_ksym_index;
     }
-    kprintf("ok\n");
+    klog() << "ok";
     ksyms_ready = true;
 }
 

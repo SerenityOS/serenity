@@ -109,7 +109,7 @@ InterruptManagement::InterruptManagement()
 
 void InterruptManagement::switch_to_pic_mode()
 {
-    kprintf("Interrupts: Switch to Legacy PIC mode\n");
+    klog() << "Interrupts: Switch to Legacy PIC mode";
     SpuriousInterruptHandler::initialize(7);
     SpuriousInterruptHandler::initialize(15);
     for (auto& irq_controller : m_interrupt_controllers) {
@@ -125,10 +125,10 @@ void InterruptManagement::switch_to_pic_mode()
 
 void InterruptManagement::switch_to_ioapic_mode()
 {
-    kprintf("Interrupts: Switch to IOAPIC mode\n");
+    klog() << "Interrupts: Switch to IOAPIC mode";
     if (m_interrupt_controllers.size() == 1) {
         if (get_interrupt_controller(0).type() == IRQControllerType::i8259) {
-            kprintf("Interrupts: NO IOAPIC detected, Reverting to PIC mode.\n");
+            klog() << "Interrupts: NO IOAPIC detected, Reverting to PIC mode.";
             return;
         }
     }

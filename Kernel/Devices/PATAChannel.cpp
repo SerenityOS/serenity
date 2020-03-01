@@ -261,7 +261,7 @@ bool PATAChannel::ata_read_sectors_with_dma(u32 lba, u16 count, u8* outbuf, bool
 {
     LOCKER(s_lock());
 #ifdef PATA_DEBUG
-    dbg() << Process::current->name().characters() << "(" << Process::current->pid() << "): PATAChannel::ata_read_sectors_with_dma (" << lba << " x" << count << ") -> " << outbuf;
+    dbg() << "PATAChannel::ata_read_sectors_with_dma (" << lba << " x" << count << ") -> " << outbuf;
 #endif
 
     prdt().offset = m_dma_buffer_page->paddr();
@@ -332,7 +332,7 @@ bool PATAChannel::ata_write_sectors_with_dma(u32 lba, u16 count, const u8* inbuf
 {
     LOCKER(s_lock());
 #ifdef PATA_DEBUG
-    dbg() << Process::current->name().characters() << "(" << Process::current->pid() << "): PATAChannel::ata_write_sectors_with_dma (" << lba << " x" << count << ") <- " << inbuf;
+    dbg() << "PATAChannel::ata_write_sectors_with_dma (" << lba << " x" << count << ") <- " << inbuf;
 #endif
 
     prdt().offset = m_dma_buffer_page->paddr();
@@ -401,7 +401,7 @@ bool PATAChannel::ata_read_sectors(u32 start_sector, u16 count, u8* outbuf, bool
     ASSERT(count <= 256);
     LOCKER(s_lock());
 #ifdef PATA_DEBUG
-    dbg() << Process::current->name().characters() << "(" << Process::current->pid() << "): PATAChannel::ata_read_sectors request (" << count << " sector(s) @ " << start_sector << " into " << outbuf << ")";
+    dbg() << "PATAChannel::ata_read_sectors request (" << count << " sector(s) @ " << start_sector << " into " << outbuf << ")";
 #endif
 
     while (m_io_base.offset(ATA_REG_STATUS).in<u8>() & ATA_SR_BSY)

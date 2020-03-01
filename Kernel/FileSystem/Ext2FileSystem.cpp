@@ -100,20 +100,20 @@ bool Ext2FS::initialize()
 
     auto& super_block = this->super_block();
 #ifdef EXT2_DEBUG
-    kprintf("ext2fs: super block magic: %x (super block size: %u)\n", super_block.s_magic, sizeof(ext2_super_block));
+    klog() << "ext2fs: super block magic: " << String::format("%x", super_block.s_magic) << " (super block size: " << sizeof(ext2_super_block) << ")";
 #endif
     if (super_block.s_magic != EXT2_SUPER_MAGIC)
         return false;
 
 #ifdef EXT2_DEBUG
-    kprintf("ext2fs: %u inodes, %u blocks\n", super_block.s_inodes_count, super_block.s_blocks_count);
-    kprintf("ext2fs: block size = %u\n", EXT2_BLOCK_SIZE(&super_block));
-    kprintf("ext2fs: first data block = %u\n", super_block.s_first_data_block);
-    kprintf("ext2fs: inodes per block = %u\n", inodes_per_block());
-    kprintf("ext2fs: inodes per group = %u\n", inodes_per_group());
-    kprintf("ext2fs: free inodes = %u\n", super_block.s_free_inodes_count);
-    kprintf("ext2fs: desc per block = %u\n", EXT2_DESC_PER_BLOCK(&super_block));
-    kprintf("ext2fs: desc size = %u\n", EXT2_DESC_SIZE(&super_block));
+    klog() << "ext2fs: " << super_block.s_inodes_count << " inodes, " << super_block.s_blocks_count << " blocks";
+    klog() << "ext2fs: block size = " << EXT2_BLOCK_SIZE(&super_block);
+    klog() << "ext2fs: first data block = " << super_block.s_first_data_block;
+    klog() << "ext2fs: inodes per block = " << inodes_per_block();
+    klog() << "ext2fs: inodes per group = " << inodes_per_group();
+    klog() << "ext2fs: free inodes = " << super_block.s_free_inodes_count;
+    klog() << "ext2fs: desc per block = " << EXT2_DESC_PER_BLOCK(&super_block);
+    klog() << "ext2fs: desc size = " << EXT2_DESC_SIZE(&super_block);
 #endif
 
     set_block_size(EXT2_BLOCK_SIZE(&super_block));
@@ -123,7 +123,7 @@ bool Ext2FS::initialize()
     m_block_group_count = ceil_div(super_block.s_blocks_count, super_block.s_blocks_per_group);
 
     if (m_block_group_count == 0) {
-        kprintf("ext2fs: no block groups :(\n");
+        klog() << "ext2fs: no block groups :(";
         return false;
     }
 
@@ -135,11 +135,7 @@ bool Ext2FS::initialize()
 #ifdef EXT2_DEBUG
     for (unsigned i = 1; i <= m_block_group_count; ++i) {
         auto& group = group_descriptor(i);
-        kprintf("ext2fs: group[%u] { block_bitmap: %u, inode_bitmap: %u, inode_table: %u }\n",
-            i,
-            group.bg_block_bitmap,
-            group.bg_inode_bitmap,
-            group.bg_inode_table);
+        klog() << "ext2fs: group[" << i << "] { block_bitmap: " << group.bg_block_bitmap << ", inode_bitmap: " << group.bg_inode_bitmap << ", inode_table: " << group.bg_inode_table << " }";
     }
 #endif
 
@@ -662,7 +658,7 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDes
         m_block_list = fs().block_list_for_inode(m_raw_inode);
 
     if (m_block_list.is_empty()) {
-        kprintf("ext2fs: read_bytes: empty block list for inode %u\n", index());
+        klog() << "ext2fs: read_bytes: empty block list for inode " << index();
         return -EIO;
     }
 
@@ -690,7 +686,7 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDes
         ASSERT(block_index);
         bool success = fs().read_block(block_index, block, description);
         if (!success) {
-            kprintf("ext2fs: read_bytes: read_block(%u) failed (lbi: %u)\n", block_index, bi);
+            klog() << "ext2fs: read_bytes: read_block(" << block_index << ") failed (lbi: " << bi << ")";
             return -EIO;
         }
 
@@ -1182,7 +1178,7 @@ unsigned Ext2FS::find_a_free_inode(GroupIndex preferred_group, off_t expected_si
     }
 
     if (!group_index) {
-        kprintf("Ext2FS: find_a_free_inode: no suitable group found for new inode with %u blocks needed :(\n", needed_blocks);
+        klog() << "Ext2FS: find_a_free_inode: no suitable group found for new inode with " << needed_blocks << " blocks needed :(";
         return 0;
     }
 
@@ -1206,7 +1202,7 @@ unsigned Ext2FS::find_a_free_inode(GroupIndex preferred_group, off_t expected_si
     }
 
     if (!first_free_inode_in_group) {
-        kprintf("Ext2FS: first_free_inode_in_group returned no inode, despite bgd claiming there are inodes :(\n");
+        klog() << "Ext2FS: first_free_inode_in_group returned no inode, despite bgd claiming there are inodes :(";
         return 0;
     }
 
@@ -1433,7 +1429,7 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(InodeIdentifier parent_id, 
     // NOTE: This doesn't commit the inode allocation just yet!
     auto inode_id = find_a_free_inode(0, size);
     if (!inode_id) {
-        kprintf("Ext2FS: create_inode: allocate_inode failed\n");
+        klog() << "Ext2FS: create_inode: allocate_inode failed";
         return KResult(-ENOSPC);
     }
 

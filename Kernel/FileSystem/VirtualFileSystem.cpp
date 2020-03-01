@@ -52,7 +52,7 @@ VFS& VFS::the()
 VFS::VFS()
 {
 #ifdef VFS_DEBUG
-    kprintf("VFS: Constructing VFS\n");
+    klog() << "VFS: Constructing VFS";
 #endif
     s_the = this;
 }
@@ -112,7 +112,7 @@ KResult VFS::unmount(InodeIdentifier guest_inode_id)
 bool VFS::mount_root(FS& file_system)
 {
     if (m_root_inode) {
-        kprintf("VFS: mount_root can't mount another root\n");
+        klog() << "VFS: mount_root can't mount another root";
         return false;
     }
 
@@ -121,7 +121,7 @@ bool VFS::mount_root(FS& file_system)
     auto root_inode_id = mount.guest().fs()->root_inode();
     auto root_inode = mount.guest().fs()->get_inode(root_inode_id);
     if (!root_inode->is_directory()) {
-        kprintf("VFS: root inode (%02u:%08u) for / is not a directory :(\n", root_inode_id.fsid(), root_inode_id.index());
+        klog() << "VFS: root inode (" << String::format("%02u", root_inode_id.fsid()) << ":" << String::format("%08u", root_inode_id.index()) << ") for / is not a directory :(";
         return false;
     }
 
@@ -133,7 +133,7 @@ bool VFS::mount_root(FS& file_system)
     } else {
         sprintf(device_name, "not-a-disk");
     }
-    kprintf("VFS: mounted root on %s (%s)\n", m_root_inode->fs().class_name(), device_name);
+    klog() << "VFS: mounted root on " << m_root_inode->fs().class_name() << " (" << device_name << ")";
 
     m_mounts.append(move(mount));
     return true;

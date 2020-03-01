@@ -117,7 +117,7 @@ extern "C" [[noreturn]] void init()
 
     new Console;
 
-    kprintf("Starting SerenityOS...\n");
+    klog() << "Starting SerenityOS...";
 
     __stack_chk_guard = get_good_random<u32>();
 
@@ -146,7 +146,7 @@ extern "C" [[noreturn]] void init()
     VirtualConsole::switch_to(0);
 
     // Sample test to see if the ACPI parser is working...
-    kprintf("ACPI: HPET table @ P 0x%x\n", ACPI::Parser::the().find_table("HPET").get());
+    klog() << "ACPI: HPET table @ " << ACPI::Parser::the().find_table("HPET");
 
     setup_pci();
 
@@ -229,7 +229,7 @@ void init_stage2()
     }
 
     if (!root.starts_with("/dev/hda")) {
-        kprintf("init_stage2: root filesystem must be on the first IDE hard drive (/dev/hda)\n");
+        klog() << "init_stage2: root filesystem must be on the first IDE hard drive (/dev/hda)";
         hang();
     }
 
@@ -243,14 +243,14 @@ void init_stage2()
         unsigned partition_number = root.to_uint(ok);
 
         if (!ok) {
-            kprintf("init_stage2: couldn't parse partition number from root kernel parameter\n");
+            klog() << "init_stage2: couldn't parse partition number from root kernel parameter";
             hang();
         }
 
         MBRPartitionTable mbr(root_dev);
 
         if (!mbr.initialize()) {
-            kprintf("init_stage2: couldn't read MBR from disk\n");
+            klog() << "init_stage2: couldn't read MBR from disk";
             hang();
         }
 
@@ -258,12 +258,12 @@ void init_stage2()
             dbg() << "GPT Partitioned Storage Detected!";
             GPTPartitionTable gpt(root_dev);
             if (!gpt.initialize()) {
-                kprintf("init_stage2: couldn't read GPT from disk\n");
+                klog() << "init_stage2: couldn't read GPT from disk";
                 hang();
             }
             auto partition = gpt.partition(partition_number);
             if (!partition) {
-                kprintf("init_stage2: couldn't get partition %d\n", partition_number);
+                klog() << "init_stage2: couldn't get partition " << partition_number;
                 hang();
             }
             root_dev = *partition;
@@ -272,23 +272,23 @@ void init_stage2()
             if (mbr.contains_ebr()) {
                 EBRPartitionTable ebr(root_dev);
                 if (!ebr.initialize()) {
-                    kprintf("init_stage2: couldn't read EBR from disk\n");
+                    klog() << "init_stage2: couldn't read EBR from disk";
                     hang();
                 }
                 auto partition = ebr.partition(partition_number);
                 if (!partition) {
-                    kprintf("init_stage2: couldn't get partition %d\n", partition_number);
+                    klog() << "init_stage2: couldn't get partition " << partition_number;
                     hang();
                 }
                 root_dev = *partition;
             } else {
                 if (partition_number < 1 || partition_number > 4) {
-                    kprintf("init_stage2: invalid partition number %d; expected 1 to 4\n", partition_number);
+                    klog() << "init_stage2: invalid partition number " << partition_number << "; expected 1 to 4";
                     hang();
                 }
                 auto partition = mbr.partition(partition_number);
                 if (!partition) {
-                    kprintf("init_stage2: couldn't get partition %d\n", partition_number);
+                    klog() << "init_stage2: couldn't get partition " << partition_number;
                     hang();
                 }
                 root_dev = *partition;
@@ -297,12 +297,12 @@ void init_stage2()
     }
     auto e2fs = Ext2FS::create(root_dev);
     if (!e2fs->initialize()) {
-        kprintf("init_stage2: couldn't open root filesystem\n");
+        klog() << "init_stage2: couldn't open root filesystem";
         hang();
     }
 
     if (!VFS::the().mount_root(e2fs)) {
-        kprintf("VFS::mount_root failed\n");
+        klog() << "VFS::mount_root failed";
         hang();
     }
 
@@ -318,16 +318,16 @@ void init_stage2()
     RefPtr<FloppyDiskDevice> fd1;
     if ((detect >> 4) & 0x4) {
         fd0 = FloppyDiskDevice::create(FloppyDiskDevice::DriveType::Master);
-        kprintf("fd0 is 1.44MB floppy drive\n");
+        klog() << "fd0 is 1.44MB floppy drive";
     } else {
-        kprintf("fd0 type unsupported! Type == 0x%x\n", detect >> 4);
+        klog() << "fd0 type unsupported! Type == 0x", String::format("%x", detect >> 4);
     }
 
     if (detect & 0x0f) {
         fd1 = FloppyDiskDevice::create(FloppyDiskDevice::DriveType::Slave);
-        kprintf("fd1 is 1.44MB floppy drive");
+        klog() << "fd1 is 1.44MB floppy drive";
     } else {
-        kprintf("fd1 type unsupported! Type == 0x%x\n", detect & 0x0f);
+        klog() << "fd1 type unsupported! Type == 0x", String::format("%x", detect & 0x0f);
     }
 
     int error;
@@ -340,7 +340,7 @@ void init_stage2()
         Thread* thread = nullptr;
         Process::create_user_process(thread, "/bin/Shell", (uid_t)0, (gid_t)0, (pid_t)0, error, {}, {}, tty0);
         if (error != 0) {
-            kprintf("init_stage2: error spawning Shell: %d\n", error);
+            klog() << "init_stage2: error spawning Shell: " << error;
             hang();
         }
         thread->set_priority(THREAD_PRIORITY_HIGH);
@@ -349,7 +349,7 @@ void init_stage2()
         Thread* thread = nullptr;
         Process::create_user_process(thread, "/bin/SystemServer", (uid_t)0, (gid_t)0, (pid_t)0, error, {}, {}, tty0);
         if (error != 0) {
-            kprintf("init_stage2: error spawning SystemServer: %d\n", error);
+            klog() << "init_stage2: error spawning SystemServer: " << error;
             hang();
         }
         thread->set_priority(THREAD_PRIORITY_HIGH);
@@ -376,7 +376,7 @@ void setup_serial_debug()
         return true;
     };
 
-    // serial_debug will output all the kprintf and dbgprintf data to COM1 at
+    // serial_debug will output all the klog() and dbg() data to COM1 at
     // 8-N-1 57600 baud. this is particularly useful for debugging the boot
     // process on live hardware.
     //
@@ -420,7 +420,7 @@ void setup_acpi()
         ACPI::StaticParser::initialize_without_rsdp();
         return;
     }
-    kprintf("acpi boot argmuent has an invalid value.\n");
+    klog() << "acpi boot argmuent has an invalid value.";
     hang();
 }
 
@@ -438,7 +438,7 @@ void setup_vmmouse()
         VMWareBackdoor::the().enable_absolute_vmmouse();
         return;
     }
-    kprintf("vmmouse boot argmuent has an invalid value.\n");
+    klog() << "vmmouse boot argmuent has an invalid value.";
     hang();
 }
 
@@ -455,7 +455,7 @@ void setup_pci()
     } else if (pci_mmio == "off") {
         PCI::Initializer::the().test_and_initialize(true);
     } else {
-        kprintf("pci_mmio boot argmuent has an invalid value.\n");
+        klog() << "pci_mmio boot argmuent has an invalid value.";
         hang();
     }
     PCI::Initializer::the().dismiss();
@@ -482,7 +482,7 @@ void setup_interrupts()
         return;
     }
 
-    kprintf("smp boot argmuent has an invalid value.\n");
+    klog() << "smp boot argmuent has an invalid value.";
     hang();
 }
 }

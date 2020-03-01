@@ -97,11 +97,11 @@ VMWareBackdoor& VMWareBackdoor::the()
 VMWareBackdoor::VMWareBackdoor()
 {
     if (!detect_presence()) {
-        kprintf("VMWare Backdoor: Not supported!\n");
+        klog() << "VMWare Backdoor: Not supported!";
         m_supported = false;
         return;
     }
-    kprintf("VMWare Backdoor: Supported.\n");
+    klog() << "VMWare Backdoor: Supported.";
     m_supported = true;
 }
 bool VMWareBackdoor::detect_presence()
@@ -153,7 +153,7 @@ void VMWareBackdoor::enable_absolute_vmmouse()
     command.command = VMMOUSE_STATUS;
     send(command);
     if (command.ax == 0xFFFF0000) {
-        kprintf("VMMouse retuned bad status.\n");
+        klog() << "VMMouse retuned bad status.";
         return;
     }
 

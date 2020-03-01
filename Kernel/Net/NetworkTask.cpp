@@ -72,12 +72,7 @@ void NetworkTask_main()
             adapter.set_ipv4_gateway({ 10, 0, 2, 2 });
         }
 
-        kprintf("NetworkTask: %s network adapter found: hw=%s address=%s netmask=%s gateway=%s\n",
-            adapter.class_name(),
-            adapter.mac_address().to_string().characters(),
-            adapter.ipv4_address().to_string().characters(),
-            adapter.ipv4_netmask().to_string().characters(),
-            adapter.ipv4_gateway().to_string().characters());
+        klog() << "NetworkTask: " << adapter.class_name() << " network adapter found: hw=" << adapter.mac_address().to_string().characters() << " address=" << adapter.ipv4_address().to_string().characters() << " netmask=" << adapter.ipv4_netmask().to_string().characters() << " gateway=" << adapter.ipv4_gateway().to_string().characters();
 
         adapter.on_receive = [&]() {
             pending_packets++;
@@ -95,7 +90,7 @@ void NetworkTask_main()
             packet_size = adapter.dequeue_packet(buffer, buffer_size);
             pending_packets--;
 #ifdef NETWORK_TASK_DEBUG
-            kprintf("NetworkTask: Dequeued packet from %s (%d bytes)\n", adapter.name().characters(), packet_size);
+            klog() << "NetworkTask: Dequeued packet from " << adapter.name().characters() << " (" << packet_size << " bytes)";
 #endif
         });
         return packet_size;
@@ -105,7 +100,7 @@ void NetworkTask_main()
     auto buffer_region = MM.allocate_kernel_region(buffer_size, "Kernel Packet Buffer", Region::Access::Read | Region::Access::Write, false, true);
     auto buffer = (u8*)buffer_region->vaddr().get();
 
-    kprintf("NetworkTask: Enter main loop.\n");
+    klog() << "NetworkTask: Enter main loop.";
     for (;;) {
         size_t packet_size = dequeue_packet(buffer, buffer_size);
         if (!packet_size) {
@@ -113,36 +108,32 @@ void NetworkTask_main()
             continue;
         }
         if (packet_size < sizeof(EthernetFrameHeader)) {
-            kprintf("NetworkTask: Packet is too small to be an Ethernet packet! (%zu)\n", packet_size);
+            klog() << "NetworkTask: Packet is too small to be an Ethernet packet! (" << packet_size << ")";
             continue;
         }
         auto& eth = *(const EthernetFrameHeader*)buffer;
 #ifdef ETHERNET_DEBUG
-        kprintf("NetworkTask: From %s to %s, ether_type=%w, packet_length=%u\n",
-            eth.source().to_string().characters(),
-            eth.destination().to_string().characters(),
-            eth.ether_type(),
-            packet_size);
+        klog() << "NetworkTask: From " << eth.source().to_string().characters() << " to " << eth.destination().to_string().characters() << ", ether_type=" << String::format("%w", eth.ether_type()) << ", packet_length=" << packet_size;
 #endif
 
 #ifdef ETHERNET_VERY_DEBUG
         for (size_t i = 0; i < packet_size; i++) {
-            kprintf("%b", buffer[i]);
+            klog() << String::format("%b", buffer[i]);
 
             switch (i % 16) {
             case 7:
-                kprintf("  ");
+                klog() << "  ";
                 break;
             case 15:
-                kprintf("\n");
+                klog() << "";
                 break;
             default:
-                kprintf(" ");
+                klog() << " ";
                 break;
             }
         }
 
-        kprintf("\n");
+        klog() << "";
 #endif
 
         switch (eth.ether_type()) {
@@ -156,7 +147,7 @@ void NetworkTask_main()
             // ignore
             break;
         default:
-            kprintf("NetworkTask: Unknown ethernet type %#04x\n", eth.ether_type());
+            klog() << "NetworkTask: Unknown ethernet type 0x" << String::format("%x", eth.ether_type());
         }
     }
 }
@@ -165,30 +156,21 @@ void handle_arp(const EthernetFrameHeader& eth, size_t frame_size)
 {
     constexpr size_t minimum_arp_frame_size = sizeof(EthernetFrameHeader) + sizeof(ARPPacket);
     if (frame_size < minimum_arp_frame_size) {
-        kprintf("handle_arp: Frame too small (%d, need %d)\n", frame_size, minimum_arp_frame_size);
+        klog() << "handle_arp: Frame too small (" << frame_size << ", need " << minimum_arp_frame_size << ")";
         return;
     }
     auto& packet = *static_cast<const ARPPacket*>(eth.payload());
     if (packet.hardware_type() != 1 || packet.hardware_address_length() != sizeof(MACAddress)) {
-        kprintf("handle_arp: Hardware type not ethernet (%w, len=%u)\n",
-            packet.hardware_type(),
-            packet.hardware_address_length());
+        klog() << "handle_arp: Hardware type not ethernet (" << String::format("%w", packet.hardware_type()) << ", len=" << packet.hardware_address_length() << ")";
         return;
     }
     if (packet.protocol_type() != EtherType::IPv4 || packet.protocol_address_length() != sizeof(IPv4Address)) {
-        kprintf("handle_arp: Protocol type not IPv4 (%w, len=%u)\n",
-            packet.hardware_type(),
-            packet.protocol_address_length());
+        klog() << "handle_arp: Protocol type not IPv4 (" << String::format("%w", packet.hardware_type()) << ", len=" << packet.protocol_address_length() << ")";
         return;
     }
 
 #ifdef ARP_DEBUG
-    kprintf("handle_arp: operation=%w, sender=%s/%s, target=%s/%s\n",
-        packet.operation(),
-        packet.sender_hardware_address().to_string().characters(),
-        packet.sender_protocol_address().to_string().characters(),
-        packet.target_hardware_address().to_string().characters(),
-        packet.target_protocol_address().to_string().characters());
+    klog() << "handle_arp: operation=" << String::format("%w", packet.operation()) << ", sender=" << packet.sender_hardware_address().to_string().characters() << "/" << packet.sender_protocol_address().to_string().characters() << ", target=" << packet.target_hardware_address().to_string().characters() << "/" << packet.target_protocol_address().to_string().characters();
 #endif
 
     if (!packet.sender_hardware_address().is_zero() && !packet.sender_protocol_address().is_zero()) {
@@ -198,9 +180,9 @@ void handle_arp(const EthernetFrameHeader& eth, size_t frame_size)
         LOCKER(arp_table().lock());
         arp_table().resource().set(packet.sender_protocol_address(), packet.sender_hardware_address());
 
-        kprintf("ARP table (%d entries):\n", arp_table().resource().size());
+        klog() << "ARP table (" << arp_table().resource().size() << " entries):";
         for (auto& it : arp_table().resource()) {
-            kprintf("%s :: %s\n", it.value.to_string().characters(), it.key.to_string().characters());
+            klog() << it.value.to_string().characters() << " :: " << it.key.to_string().characters();
         }
     }
 
@@ -208,8 +190,7 @@ void handle_arp(const EthernetFrameHeader& eth, size_t frame_size)
         // Who has this IP address?
         if (auto adapter = NetworkAdapter::from_ipv4_address(packet.target_protocol_address())) {
             // We do!
-            kprintf("handle_arp: Responding to ARP request for my IPv4 address (%s)\n",
-                adapter->ipv4_address().to_string().characters());
+            klog() << "handle_arp: Responding to ARP request for my IPv4 address (" << adapter->ipv4_address().to_string().characters() << ")";
             ARPPacket response;
             response.set_operation(ARPOperation::Response);
             response.set_target_hardware_address(packet.sender_hardware_address());
@@ -227,26 +208,24 @@ void handle_ipv4(const EthernetFrameHeader& eth, size_t frame_size)
 {
     constexpr size_t minimum_ipv4_frame_size = sizeof(EthernetFrameHeader) + sizeof(IPv4Packet);
     if (frame_size < minimum_ipv4_frame_size) {
-        kprintf("handle_ipv4: Frame too small (%d, need %d)\n", frame_size, minimum_ipv4_frame_size);
+        klog() << "handle_ipv4: Frame too small (" << frame_size << ", need " << minimum_ipv4_frame_size << ")";
         return;
     }
     auto& packet = *static_cast<const IPv4Packet*>(eth.payload());
 
     if (packet.length() < sizeof(IPv4Packet)) {
-        kprintf("handle_ipv4: IPv4 packet too short (%u, need %u)\n", packet.length(), sizeof(IPv4Packet));
+        klog() << "handle_ipv4: IPv4 packet too short (" << packet.length() << ", need " << sizeof(IPv4Packet) << ")";
         return;
     }
 
     size_t actual_ipv4_packet_length = frame_size - sizeof(EthernetFrameHeader);
     if (packet.length() > actual_ipv4_packet_length) {
-        kprintf("handle_ipv4: IPv4 packet claims to be longer than it is (%u, actually %zu)\n", packet.length(), actual_ipv4_packet_length);
+        klog() << "handle_ipv4: IPv4 packet claims to be longer than it is (" << packet.length() << ", actually " << actual_ipv4_packet_length << ")";
         return;
     }
 
 #ifdef IPV4_DEBUG
-    kprintf("handle_ipv4: source=%s, target=%s\n",
-        packet.source().to_string().characters(),
-        packet.destination().to_string().characters());
+    klog() << "handle_ipv4: source=" << packet.source().to_string().characters() << ", target=" << packet.destination().to_string().characters();
 #endif
 
     switch ((IPv4Protocol)packet.protocol()) {
@@ -257,7 +236,7 @@ void handle_ipv4(const EthernetFrameHeader& eth, size_t frame_size)
     case IPv4Protocol::TCP:
         return handle_tcp(packet);
     default:
-        kprintf("handle_ipv4: Unhandled protocol %u\n", packet.protocol());
+        klog() << "handle_ipv4: Unhandled protocol " << packet.protocol();
         break;
     }
 }
@@ -266,11 +245,7 @@ void handle_icmp(const EthernetFrameHeader& eth, const IPv4Packet& ipv4_packet)
 {
     auto& icmp_header = *static_cast<const ICMPHeader*>(ipv4_packet.payload());
 #ifdef ICMP_DEBUG
-    kprintf("handle_icmp: source=%s, destination=%s, type=%b, code=%b\n",
-        ipv4_packet.source().to_string().characters(),
-        ipv4_packet.destination().to_string().characters(),
-        icmp_header.type(),
-        icmp_header.code());
+    klog() << "handle_icmp: source=" << ipv4_packet.source().to_string().characters() << ", destination=" << ipv4_packet.destination().to_string().characters() << ", type=" << String::format("%b", icmp_header.type()) << ", code=" << String::format("%b", icmp_header.code());
 #endif
 
     {
@@ -289,10 +264,7 @@ void handle_icmp(const EthernetFrameHeader& eth, const IPv4Packet& ipv4_packet)
 
     if (icmp_header.type() == ICMPType::EchoRequest) {
         auto& request = reinterpret_cast<const ICMPEchoPacket&>(icmp_header);
-        kprintf("handle_icmp: EchoRequest from %s: id=%u, seq=%u\n",
-            ipv4_packet.source().to_string().characters(),
-            (u16)request.identifier,
-            (u16)request.sequence_number);
+        klog() << "handle_icmp: EchoRequest from " << ipv4_packet.source().to_string().characters() << ": id=" << (u16)request.identifier << ", seq=" << (u16)request.sequence_number;
         size_t icmp_packet_size = ipv4_packet.payload_size();
         auto buffer = ByteBuffer::create_zeroed(icmp_packet_size);
         auto& response = *(ICMPEchoPacket*)buffer.data();
@@ -311,29 +283,24 @@ void handle_icmp(const EthernetFrameHeader& eth, const IPv4Packet& ipv4_packet)
 void handle_udp(const IPv4Packet& ipv4_packet)
 {
     if (ipv4_packet.payload_size() < sizeof(UDPPacket)) {
-        kprintf("handle_udp: Packet too small (%u, need %zu)\n", ipv4_packet.payload_size());
+        klog() << "handle_udp: Packet too small (" << ipv4_packet.payload_size() << ", need " << sizeof(UDPPacket) << ")";
         return;
     }
 
     auto adapter = NetworkAdapter::from_ipv4_address(ipv4_packet.destination());
     if (!adapter) {
-        kprintf("handle_udp: this packet is not for me, it's for %s\n", ipv4_packet.destination().to_string().characters());
+        klog() << "handle_udp: this packet is not for me, it's for " << ipv4_packet.destination().to_string().characters();
         return;
     }
 
     auto& udp_packet = *static_cast<const UDPPacket*>(ipv4_packet.payload());
 #ifdef UDP_DEBUG
-    kprintf("handle_udp: source=%s:%u, destination=%s:%u length=%u\n",
-        ipv4_packet.source().to_string().characters(),
-        udp_packet.source_port(),
-        ipv4_packet.destination().to_string().characters(),
-        udp_packet.destination_port(),
-        udp_packet.length());
+    klog() << "handle_udp: source=" << ipv4_packet.source().to_string().characters() << ":" << udp_packet.source_port() << ", destination=" << ipv4_packet.destination().to_string().characters() << ":" << udp_packet.destination_port() << " length=" << udp_packet.length();
 #endif
 
     auto socket = UDPSocket::from_port(udp_packet.destination_port());
     if (!socket) {
-        kprintf("handle_udp: No UDP socket for port %u\n", udp_packet.destination_port());
+        klog() << "handle_udp: No UDP socket for port " << udp_packet.destination_port();
         return;
     }
 
@@ -345,7 +312,7 @@ void handle_udp(const IPv4Packet& ipv4_packet)
 void handle_tcp(const IPv4Packet& ipv4_packet)
 {
     if (ipv4_packet.payload_size() < sizeof(TCPPacket)) {
-        kprintf("handle_tcp: IPv4 payload is too small to be a TCP packet (%u, need %zu)\n", ipv4_packet.payload_size(), sizeof(TCPPacket));
+        klog() << "handle_tcp: IPv4 payload is too small to be a TCP packet (" << ipv4_packet.payload_size() << ", need " << sizeof(TCPPacket) << ")";
         return;
     }
 
@@ -354,62 +321,36 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
     size_t minimum_tcp_header_size = 5 * sizeof(u32);
     size_t maximum_tcp_header_size = 15 * sizeof(u32);
     if (tcp_packet.header_size() < minimum_tcp_header_size || tcp_packet.header_size() > maximum_tcp_header_size) {
-        kprintf("handle_tcp: TCP packet header has invalid size %zu\n", tcp_packet.header_size());
+        klog() << "handle_tcp: TCP packet header has invalid size " << tcp_packet.header_size();
     }
 
     if (ipv4_packet.payload_size() < tcp_packet.header_size()) {
-        kprintf("handle_tcp: IPv4 payload is smaller than TCP header claims (%u, supposedly %u)\n", ipv4_packet.payload_size(), tcp_packet.header_size());
+        klog() << "handle_tcp: IPv4 payload is smaller than TCP header claims (" << ipv4_packet.payload_size() << ", supposedly " << tcp_packet.header_size() << ")";
         return;
     }
 
     size_t payload_size = ipv4_packet.payload_size() - tcp_packet.header_size();
 
 #ifdef TCP_DEBUG
-    kprintf("handle_tcp: source=%s:%u, destination=%s:%u seq_no=%u, ack_no=%u, flags=%w (%s%s%s%s), window_size=%u, payload_size=%u\n",
-        ipv4_packet.source().to_string().characters(),
-        tcp_packet.source_port(),
-        ipv4_packet.destination().to_string().characters(),
-        tcp_packet.destination_port(),
-        tcp_packet.sequence_number(),
-        tcp_packet.ack_number(),
-        tcp_packet.flags(),
-        tcp_packet.has_syn() ? "SYN " : "",
-        tcp_packet.has_ack() ? "ACK " : "",
-        tcp_packet.has_fin() ? "FIN " : "",
-        tcp_packet.has_rst() ? "RST " : "",
-        tcp_packet.window_size(),
-        payload_size);
+    klog() << "handle_tcp: source=" << ipv4_packet.source().to_string().characters() << ":" << tcp_packet.source_port() << ", destination=" << ipv4_packet.destination().to_string().characters() << ":" << tcp_packet.destination_port() << " seq_no=" << tcp_packet.sequence_number() << ", ack_no=" << tcp_packet.ack_number() << ", flags=" << String::format("%w", tcp_packet.flags()) << " (" << (tcp_packet.has_syn() ? "SYN " : "") << (tcp_packet.has_ack() ? "ACK " : "") << (tcp_packet.has_fin() ? "FIN " : "") << (tcp_packet.has_rst() ? "RST " : "") << "), window_size=" << tcp_packet.window_size() << ", payload_size=" << payload_size;
 #endif
 
     auto adapter = NetworkAdapter::from_ipv4_address(ipv4_packet.destination());
     if (!adapter) {
-        kprintf("handle_tcp: this packet is not for me, it's for %s\n", ipv4_packet.destination().to_string().characters());
+        klog() << "handle_tcp: this packet is not for me, it's for " << ipv4_packet.destination().to_string().characters();
         return;
     }
 
     IPv4SocketTuple tuple(ipv4_packet.destination(), tcp_packet.destination_port(), ipv4_packet.source(), tcp_packet.source_port());
 
 #ifdef TCP_DEBUG
-    kprintf("handle_tcp: looking for socket; tuple=%s\n", tuple.to_string().characters());
+    klog() << "handle_tcp: looking for socket; tuple=" << tuple.to_string().characters();
 #endif
 
     auto socket = TCPSocket::from_tuple(tuple);
     if (!socket) {
-        kprintf("handle_tcp: No TCP socket for tuple %s\n", tuple.to_string().characters());
-        kprintf("handle_tcp: source=%s:%u, destination=%s:%u seq_no=%u, ack_no=%u, flags=%w (%s%s%s%s), window_size=%u, payload_size=%u\n",
-            ipv4_packet.source().to_string().characters(),
-            tcp_packet.source_port(),
-            ipv4_packet.destination().to_string().characters(),
-            tcp_packet.destination_port(),
-            tcp_packet.sequence_number(),
-            tcp_packet.ack_number(),
-            tcp_packet.flags(),
-            tcp_packet.has_syn() ? "SYN " : "",
-            tcp_packet.has_ack() ? "ACK " : "",
-            tcp_packet.has_fin() ? "FIN " : "",
-            tcp_packet.has_rst() ? "RST " : "",
-            tcp_packet.window_size(),
-            payload_size);
+        klog() << "handle_tcp: No TCP socket for tuple " << tuple.to_string().characters();
+        klog() << "handle_tcp: source=" << ipv4_packet.source().to_string().characters() << ":" << tcp_packet.source_port() << ", destination=" << ipv4_packet.destination().to_string().characters() << ":" << tcp_packet.destination_port() << " seq_no=" << tcp_packet.sequence_number() << ", ack_no=" << tcp_packet.ack_number() << ", flags=" << String::format("%w", tcp_packet.flags()) << " (" << (tcp_packet.has_syn() ? "SYN " : "") << (tcp_packet.has_ack() ? "ACK " : "") << (tcp_packet.has_fin() ? "FIN " : "") << (tcp_packet.has_rst() ? "RST " : "") << "), window_size=" << tcp_packet.window_size() << ", payload_size=" << payload_size;
         return;
     }
 
@@ -417,18 +358,18 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
     ASSERT(socket->local_port() == tcp_packet.destination_port());
 
 #ifdef TCP_DEBUG
-    kprintf("handle_tcp: got socket; state=%s\n", socket->tuple().to_string().characters(), TCPSocket::to_string(socket->state()));
+    klog() << "handle_tcp: got socket; state=" << socket->tuple().to_string().characters() << " " << TCPSocket::to_string(socket->state());
 #endif
 
     socket->receive_tcp_packet(tcp_packet, ipv4_packet.payload_size());
 
     switch (socket->state()) {
     case TCPSocket::State::Closed:
-        kprintf("handle_tcp: unexpected flags in Closed state\n");
+        klog() << "handle_tcp: unexpected flags in Closed state";
         // TODO: we may want to send an RST here, maybe as a configurable option
         return;
     case TCPSocket::State::TimeWait:
-        kprintf("handle_tcp: unexpected flags in TimeWait state\n");
+        klog() << "handle_tcp: unexpected flags in TimeWait state";
         socket->send_tcp_packet(TCPFlags::RST);
         socket->set_state(TCPSocket::State::Closed);
         return;
@@ -436,17 +377,17 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
         switch (tcp_packet.flags()) {
         case TCPFlags::SYN: {
 #ifdef TCP_DEBUG
-            kprintf("handle_tcp: incoming connection\n");
+            klog() << "handle_tcp: incoming connection";
 #endif
             auto& local_address = ipv4_packet.destination();
             auto& peer_address = ipv4_packet.source();
             auto client = socket->create_client(local_address, tcp_packet.destination_port(), peer_address, tcp_packet.source_port());
             if (!client) {
-                kprintf("handle_tcp: couldn't create client socket\n");
+                klog() << "handle_tcp: couldn't create client socket";
                 return;
             }
 #ifdef TCP_DEBUG
-            kprintf("handle_tcp: created new client socket with tuple %s\n", client->tuple().to_string().characters());
+            klog() << "handle_tcp: created new client socket with tuple " << client->tuple().to_string().characters();
 #endif
             client->set_sequence_number(1000);
             client->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
@@ -455,7 +396,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
             return;
         }
         default:
-            kprintf("handle_tcp: unexpected flags in Listen state\n");
+            klog() << "handle_tcp: unexpected flags in Listen state";
             // socket->send_tcp_packet(TCPFlags::RST);
             return;
         }
@@ -488,7 +429,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
             socket->set_setup_state(Socket::SetupState::Completed);
             return;
         default:
-            kprintf("handle_tcp: unexpected flags in SynSent state\n");
+            klog() << "handle_tcp: unexpected flags in SynSent state";
             socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
             socket->set_error(TCPSocket::Error::UnexpectedFlagsDuringConnect);
@@ -503,7 +444,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
             switch (socket->direction()) {
             case TCPSocket::Direction::Incoming:
                 if (!socket->has_originator()) {
-                    kprintf("handle_tcp: connection doesn't have an originating socket; maybe it went away?\n");
+                    klog() << "handle_tcp: connection doesn't have an originating socket; maybe it went away?";
                     socket->send_tcp_packet(TCPFlags::RST);
                     socket->set_state(TCPSocket::State::Closed);
                     return;
@@ -519,7 +460,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
                 socket->set_connected(true);
                 return;
             default:
-                kprintf("handle_tcp: got ACK in SynReceived state but direction is invalid (%s)\n", TCPSocket::to_string(socket->direction()));
+                klog() << "handle_tcp: got ACK in SynReceived state but direction is invalid (" << TCPSocket::to_string(socket->direction()) << ")";
                 socket->send_tcp_packet(TCPFlags::RST);
                 socket->set_state(TCPSocket::State::Closed);
                 return;
@@ -527,7 +468,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
 
             return;
         default:
-            kprintf("handle_tcp: unexpected flags in SynReceived state\n");
+            klog() << "handle_tcp: unexpected flags in SynReceived state";
             socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
             return;
@@ -535,7 +476,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
     case TCPSocket::State::CloseWait:
         switch (tcp_packet.flags()) {
         default:
-            kprintf("handle_tcp: unexpected flags in CloseWait state\n");
+            klog() << "handle_tcp: unexpected flags in CloseWait state";
             socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
             return;
@@ -547,7 +488,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
             socket->set_state(TCPSocket::State::Closed);
             return;
         default:
-            kprintf("handle_tcp: unexpected flags in LastAck state\n");
+            klog() << "handle_tcp: unexpected flags in LastAck state";
             socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
             return;
@@ -563,7 +504,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
             socket->set_state(TCPSocket::State::Closing);
             return;
         default:
-            kprintf("handle_tcp: unexpected flags in FinWait1 state\n");
+            klog() << "handle_tcp: unexpected flags in FinWait1 state";
             socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
             return;
@@ -578,7 +519,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
             socket->set_state(TCPSocket::State::Closed);
             return;
         default:
-            kprintf("handle_tcp: unexpected flags in FinWait2 state\n");
+            klog() << "handle_tcp: unexpected flags in FinWait2 state";
             socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
             return;
@@ -590,7 +531,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
             socket->set_state(TCPSocket::State::TimeWait);
             return;
         default:
-            kprintf("handle_tcp: unexpected flags in Closing state\n");
+            klog() << "handle_tcp: unexpected flags in Closing state";
             socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
             return;
@@ -610,12 +551,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
         socket->set_ack_number(tcp_packet.sequence_number() + payload_size);
 
 #ifdef TCP_DEBUG
-        kprintf("Got packet with ack_no=%u, seq_no=%u, payload_size=%u, acking it with new ack_no=%u, seq_no=%u\n",
-            tcp_packet.ack_number(),
-            tcp_packet.sequence_number(),
-            payload_size,
-            socket->ack_number(),
-            socket->sequence_number());
+        klog() << "Got packet with ack_no=" << tcp_packet.ack_number() << ", seq_no=" << tcp_packet.sequence_number() << ", payload_size=" << payload_size << ", acking it with new ack_no=" << socket->ack_number() << ", seq_no=" << socket->sequence_number();
 #endif
 
         if (payload_size) {

@@ -742,7 +742,7 @@ pid_t Process::sys$fork(RegisterState& regs)
         g_processes->prepend(child);
     }
 #ifdef TASK_DEBUG
-    kprintf("Process %u (%s) forked from %u @ %p\n", child->pid(), child->name().characters(), m_pid, child_tss.eip);
+    klog() << "Process " << child->pid() << " (" << child->name().characters() << ") forked from " << m_pid << " @ " << String::format("%p", child_tss.eip);
 #endif
 
     child_first_thread->set_state(Thread::State::Skip1SchedulerPass);
@@ -915,14 +915,14 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
         };
         bool success = loader->load();
         if (!success) {
-            kprintf("do_exec: Failure loading %s\n", path.characters());
+            klog() << "do_exec: Failure loading " << path.characters();
             return -ENOEXEC;
         }
         // FIXME: Validate that this virtual address is within executable region,
         //     instead of just non-null. You could totally have a DSO with entry point of
         //     the beginning of the text segement.
         if (!loader->entry().offset(totally_random_offset).get()) {
-            kprintf("do_exec: Failure loading %s, entry pointer is invalid! (%p)\n", path.characters(), loader->entry().offset(totally_random_offset).get());
+            klog() << "do_exec: Failure loading " << path.characters() << ", entry pointer is invalid! (" << String::format("%p", loader->entry().offset(totally_random_offset).get()) << ")";
             return -ENOEXEC;
         }
 
@@ -934,7 +934,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
         kill_threads_except_self();
 
 #ifdef EXEC_DEBUG
-        kprintf("Memory layout after ELF load:");
+        klog() << "Memory layout after ELF load:";
         dump_regions();
 #endif
     }
@@ -1033,7 +1033,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     tss.ss2 = m_pid;
 
 #ifdef TASK_DEBUG
-    kprintf("Process %u (%s) exec'd %s @ %p\n", pid(), name().characters(), path.characters(), tss.eip);
+    klog() << "Process exec'd " << path.characters() << " @ " << String::format("%p", tss.eip);
 #endif
 
     if (was_profiling)
@@ -1315,7 +1315,7 @@ Process* Process::create_user_process(Thread*& first_thread, const String& path,
         g_processes->prepend(process);
     }
 #ifdef TASK_DEBUG
-    kprintf("Process %u (%s) spawned @ %p\n", process->pid(), process->name().characters(), first_thread->tss().eip);
+    klog() << "Process " << process->pid() << " (" << process->name().characters() << ") spawned @ " << String::format("%p", first_thread->tss().eip);
 #endif
     error = 0;
     return process;
@@ -1330,7 +1330,7 @@ Process* Process::create_kernel_process(Thread*& first_thread, String&& name, vo
         InterruptDisabler disabler;
         g_processes->prepend(process);
 #ifdef TASK_DEBUG
-        kprintf("Kernel process %u (%s) spawned @ %p\n", process->pid(), process->name().characters(), first_thread->tss().eip);
+        klog() << "Kernel process " << process->pid() << " (" << process->name().characters() << ") spawned @ " << String::format("%p", first_thread->tss().eip);
 #endif
     }
 
@@ -1376,22 +1376,11 @@ Process::~Process()
 
 void Process::dump_regions()
 {
-    kprintf("Process %s(%u) regions:\n", name().characters(), pid());
-    kprintf("BEGIN       END         SIZE        ACCESS  NAME\n");
+    klog() << "Process regions:";
+    klog() << "BEGIN       END         SIZE        ACCESS  NAME";
     for (auto& region : m_regions) {
-        kprintf("%08x -- %08x    %08x    %c%c%c%c%c%c    %s\n",
-            region.vaddr().get(),
-            region.vaddr().offset(region.size() - 1).get(),
-            region.size(),
-            region.is_readable() ? 'R' : ' ',
-            region.is_writable() ? 'W' : ' ',
-            region.is_executable() ? 'X' : ' ',
-            region.is_shared() ? 'S' : ' ',
-            region.is_stack() ? 'T' : ' ',
-            region.vmobject().is_purgeable() ? 'P' : ' ',
-            region.name().characters());
+        klog() << String::format("%08x", region.vaddr().get()) << " -- " << String::format("%08x", region.vaddr().offset(region.size() - 1).get()) << "    " << String::format("%08x", region.size()) << "    " << (region.is_readable() ? 'R' : ' ') << (region.is_writable() ? 'W' : ' ') << (region.is_executable() ? 'X' : ' ') << (region.is_shared() ? 'S' : ' ') << (region.is_stack() ? 'T' : ' ') << (region.vmobject().is_purgeable() ? 'P' : ' ') << "    " << region.name().characters();
     }
-
     MM.dump_kernel_regions();
 }
 
@@ -1399,7 +1388,7 @@ void Process::sys$exit(int status)
 {
     cli();
 #ifdef TASK_DEBUG
-    kprintf("sys$exit: %s(%u) exit with status %d\n", name().characters(), pid(), status);
+    klog() << "sys$exit: exit with status " << status;
 #endif
 
     if (status != 0)
@@ -2145,7 +2134,7 @@ KResult Process::do_kill(Process& process, int signal)
     if (!is_superuser() && m_euid != process.m_uid && m_uid != process.m_uid)
         return KResult(-EPERM);
     if (process.is_ring0() && signal == SIGKILL) {
-        kprintf("%s(%u) attempted to send SIGKILL to ring 0 process %s(%u)\n", name().characters(), m_pid, process.name().characters(), process.pid());
+        klog() << "attempted to send SIGKILL to ring 0 process " << process.name().characters() << "(" << process.pid() << ")";
         return KResult(-EPERM);
     }
     if (signal != 0)
@@ -3561,7 +3550,7 @@ int Process::sys$shbuf_create(int size, void** buffer)
     copy_to_user(buffer, &address);
     ASSERT((int)shared_buffer->size() >= size);
 #ifdef SHARED_BUFFER_DEBUG
-    kprintf("%s(%u): Created shared buffer %d @ %p (%u bytes, vmobject is %u)\n", name().characters(), pid(), shbuf_id, buffer, size, shared_buffer->size());
+    klog() << "Created shared buffer " << shbuf_id << " @ " << buffer << " (" << size << " bytes, vmobject is " << shared_buffer->size() << ")";
 #endif
     shared_buffers().resource().set(shbuf_id, move(shared_buffer));
 
@@ -3615,7 +3604,7 @@ int Process::sys$shbuf_release(int shbuf_id)
     if (!shared_buffer.is_shared_with(m_pid))
         return -EPERM;
 #ifdef SHARED_BUFFER_DEBUG
-    kprintf("%s(%u): Releasing shared buffer %d, buffer count: %u\n", name().characters(), pid(), shbuf_id, shared_buffers().resource().size());
+    klog() << "Releasing shared buffer " << shbuf_id << ", buffer count: " << shared_buffers().resource().size();
 #endif
     shared_buffer.deref_for_process(*this);
     return 0;
@@ -3634,7 +3623,7 @@ void* Process::sys$shbuf_get(int shbuf_id, size_t* user_size)
     if (!shared_buffer.is_shared_with(m_pid))
         return (void*)-EPERM;
 #ifdef SHARED_BUFFER_DEBUG
-    kprintf("%s(%u): Retaining shared buffer %d, buffer count: %u\n", name().characters(), pid(), shbuf_id, shared_buffers().resource().size());
+    klog() << "Retaining shared buffer " << shbuf_id << ", buffer count: " << shared_buffers().resource().size();
 #endif
     if (user_size) {
         size_t size = shared_buffer.size();
@@ -3654,7 +3643,7 @@ int Process::sys$shbuf_seal(int shbuf_id)
     if (!shared_buffer.is_shared_with(m_pid))
         return -EPERM;
 #ifdef SHARED_BUFFER_DEBUG
-    kprintf("%s(%u): Sealing shared buffer %d\n", name().characters(), pid(), shbuf_id);
+    klog() << "Sealing shared buffer " << shbuf_id;
 #endif
     shared_buffer.seal();
     return 0;
@@ -3671,7 +3660,7 @@ int Process::sys$shbuf_set_volatile(int shbuf_id, bool state)
     if (!shared_buffer.is_shared_with(m_pid))
         return -EPERM;
 #ifdef SHARED_BUFFER_DEBUG
-    kprintf("%s(%u): Set shared buffer %d volatile: %u\n", name().characters(), pid(), shbuf_id, state);
+    klog() << "Set shared buffer " << shbuf_id << " volatile: " << state;
 #endif
     if (!state) {
         bool was_purged = shared_buffer.vmobject().was_purged();
