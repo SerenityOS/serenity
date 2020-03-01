@@ -113,7 +113,6 @@ void IOAPIC::isa_identity_map(int index)
     configure_redirection_entry(index, index + IRQ_VECTOR_BASE, DeliveryMode::Normal, true, false, false, true, 1);
 }
 
-
 void IOAPIC::map_pci_interrupts()
 {
     configure_redirection_entry(11, 11 + IRQ_VECTOR_BASE, DeliveryMode::Normal, false, false, true, true, 0);
