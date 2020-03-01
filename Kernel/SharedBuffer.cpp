@@ -173,7 +173,7 @@ void SharedBuffer::destroy_if_unused()
     sanity_check("destroy_if_unused");
     if (m_total_refs == 0) {
 #ifdef SHARED_BUFFER_DEBUG
-        kprintf("Destroying unused SharedBuffer{%p} id: %d\n", this, m_shbuf_id);
+        dbg() << "Destroying unused SharedBuffer{" << this << "} id: " << m_shbuf_id;
 #endif
         auto count_before = shared_buffers().resource().size();
         shared_buffers().resource().remove(m_shbuf_id);

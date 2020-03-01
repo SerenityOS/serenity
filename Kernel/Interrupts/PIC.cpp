@@ -190,7 +190,7 @@ void PIC::initialize()
     // ...except IRQ2, since that's needed for the master to let through slave interrupts.
     enable(2);
 
-    kprintf("PIC(i8259): cascading mode, vectors 0x%b-0x%b\n", IRQ_VECTOR_BASE, IRQ_VECTOR_BASE + 0xf);
+    klog() << "PIC(i8259): cascading mode, vectors 0x" << String::format("%x", IRQ_VECTOR_BASE) << "-0x" << String::format("%x", IRQ_VECTOR_BASE + 0xf);
 }
 
 u16 PIC::get_isr() const

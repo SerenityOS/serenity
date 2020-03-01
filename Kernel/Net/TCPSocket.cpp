@@ -48,9 +48,7 @@ void TCPSocket::for_each(Function<void(TCPSocket&)> callback)
 void TCPSocket::set_state(State new_state)
 {
 #ifdef TCP_SOCKET_DEBUG
-    kprintf("%s(%u) TCPSocket{%p} state moving from %s to %s\n",
-        Process::current->name().characters(), Process::current->pid(), this,
-        to_string(m_state), to_string(new_state));
+    dbg() << "TCPSocket{" << this << "} state moving from " << to_string(m_state) << " to " << to_string(new_state);
 #endif
 
     m_state = new_state;
@@ -170,7 +168,7 @@ int TCPSocket::protocol_receive(const KBuffer& packet_buffer, void* buffer, size
     auto& tcp_packet = *static_cast<const TCPPacket*>(ipv4_packet.payload());
     size_t payload_size = packet_buffer.size() - sizeof(IPv4Packet) - tcp_packet.header_size();
 #ifdef TCP_SOCKET_DEBUG
-    kprintf("payload_size %u, will it fit in %u?\n", payload_size, buffer_size);
+    klog() << "payload_size " << payload_size << ", will it fit in " << buffer_size << "?";
 #endif
     ASSERT(buffer_size >= payload_size);
     memcpy(buffer, tcp_packet.payload(), payload_size);
@@ -243,18 +241,7 @@ void TCPSocket::send_outgoing_packets()
 
 #ifdef TCP_SOCKET_DEBUG
         auto& tcp_packet = *(TCPPacket*)(packet.buffer.data());
-        kprintf("sending tcp packet from %s:%u to %s:%u with (%s%s%s%s) seq_no=%u, ack_no=%u, tx_counter=%u\n",
-            local_address().to_string().characters(),
-            local_port(),
-            peer_address().to_string().characters(),
-            peer_port(),
-            tcp_packet.has_syn() ? "SYN " : "",
-            tcp_packet.has_ack() ? "ACK " : "",
-            tcp_packet.has_fin() ? "FIN " : "",
-            tcp_packet.has_rst() ? "RST " : "",
-            tcp_packet.sequence_number(),
-            tcp_packet.ack_number(),
-            packet.tx_counter);
+        klog() << "sending tcp packet from " << local_address().to_string().characters() << ":" << local_port() << " to " << peer_address().to_string().characters() << ":" << peer_port() << " with (" << (tcp_packet.has_syn() ? "SYN " : "") << (tcp_packet.has_ack() ? "ACK " : "") << (tcp_packet.has_fin() ? "FIN " : "") << (tcp_packet.has_rst() ? "RST " : "") << ") seq_no=" << tcp_packet.sequence_number() << ", ack_no=" << tcp_packet.ack_number() << ", tx_counter=" << packet.tx_counter;
 #endif
         routing_decision.adapter->send_ipv4(
             routing_decision.next_hop, peer_address(), IPv4Protocol::TCP,

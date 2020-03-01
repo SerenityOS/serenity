@@ -134,7 +134,7 @@ bool FloppyDiskDevice::read_sectors_with_dma(u16 lba, u16 count, u8* outbuf)
 {
     LOCKER(m_lock); // Acquire lock
 #ifdef FLOPPY_DEBUG
-    kprintf("fdc: read_sectors_with_dma lba = %d count = %d\n", lba, count);
+    klog() << "fdc: read_sectors_with_dma lba = " << lba << " count = " << count;
 #endif
 
     motor_enable(is_slave()); // Should I bother casting this?!
@@ -142,7 +142,7 @@ bool FloppyDiskDevice::read_sectors_with_dma(u16 lba, u16 count, u8* outbuf)
     recalibrate();
 
     if (!seek(lba)) {
-        kprintf("fdc: failed to seek to lba = %d!\n", lba);
+        klog() << "fdc: failed to seek to lba = " << lba << "!";
         return false;
     }
 
@@ -168,7 +168,7 @@ bool FloppyDiskDevice::read_sectors_with_dma(u16 lba, u16 count, u8* outbuf)
     u16 sector = lba2sector(lba);
 
 #ifdef FLOPPY_DEBUG
-    kprintf("fdc: addr = 0x%x c = %d h = %d s = %d\n", lba * BYTES_PER_SECTOR, cylinder, head, sector);
+    klog() << "fdc: addr = 0x" << String::format("%x", lba * BYTES_PER_SECTOR) << " c = " << cylinder << " h = " << head << " s = " << sector;
 #endif
 
     // Intel recommends 3 attempts for a read/write
@@ -194,13 +194,13 @@ bool FloppyDiskDevice::read_sectors_with_dma(u16 lba, u16 count, u8* outbuf)
         // the command executed correctly
         u8 cmd_st0 = read_byte();
         if ((cmd_st0 & 0xc0) != 0) {
-            kprintf("fdc: read failed with error code (st0) 0x%x\n", cmd_st0 >> 6);
+            klog() << "fdc: read failed with error code (st0) 0x" << String::format("%x", cmd_st0 >> 6);
             return false;
         }
 
         u8 cmd_st1 = read_byte();
         if (cmd_st1 != 0) {
-            kprintf("fdc: read failed with error code (st1) 0x%x\n", cmd_st1);
+            klog() << "fdc: read failed with error code (st1) 0x" << String::format("%x", cmd_st1);
             return false;
         }
 
@@ -212,7 +212,7 @@ bool FloppyDiskDevice::read_sectors_with_dma(u16 lba, u16 count, u8* outbuf)
 
         if (cyl != cylinder) {
 #ifdef FLOPPY_DEBUG
-            kprintf("fdc: cyl != cylinder (cyl = %d cylinder = %d)! Retrying...\n", cyl, cylinder);
+            klog() << "fdc: cyl != cylinder (cyl = " << cyl << " cylinder = " << cylinder << ")! Retrying...";
 #endif
             continue;
         }
@@ -230,7 +230,7 @@ bool FloppyDiskDevice::read_sectors_with_dma(u16 lba, u16 count, u8* outbuf)
     }
 
 #ifdef FLOPPY_DEBUG
-    kprintf("fdc: out of read attempts (check your hardware maybe!?)\n");
+    klog() << "fdc: out of read attempts (check your hardware maybe!?)";
 #endif
     return false;
 }
@@ -239,7 +239,7 @@ bool FloppyDiskDevice::write_sectors_with_dma(u16 lba, u16 count, const u8* inbu
 {
     LOCKER(m_lock); // Acquire lock
 #ifdef FLOPPY_DEBUG
-    kprintf("fdc: write_sectors_with_dma lba = %d count = %d\n", lba, count);
+    klog() << "fdc: write_sectors_with_dma lba = " << lba << " count = " << count;
 #endif
 
     motor_enable(is_slave() ? 1 : 0); // Should I bother casting this?!
@@ -247,7 +247,7 @@ bool FloppyDiskDevice::write_sectors_with_dma(u16 lba, u16 count, const u8* inbu
     recalibrate(); // Recalibrate the drive
 
     if (!seek(lba)) {
-        kprintf("fdc: failed to seek to lba = %d!\n", lba);
+        klog() << "fdc: failed to seek to lba = " << lba << "!";
         return false;
     }
 
@@ -269,7 +269,7 @@ bool FloppyDiskDevice::write_sectors_with_dma(u16 lba, u16 count, const u8* inbu
     u16 sector = lba2sector(lba);
 
 #ifdef FLOPPY_DEBUG
-    kprintf("fdc: addr = 0x%x c = %d h = %d s = %d\n", lba * BYTES_PER_SECTOR, cylinder, head, sector);
+    klog() << "fdc: addr = 0x" << String::format("%x", lba * BYTES_PER_SECTOR) << " c = " << cylinder << " h = " << head << " s = " << sector;
 #endif
 
     for (int i = 0; i < 3; i++) {
@@ -292,13 +292,13 @@ bool FloppyDiskDevice::write_sectors_with_dma(u16 lba, u16 count, const u8* inbu
         // Flush FIFO
         u8 cmd_st0 = read_byte();
         if ((cmd_st0 & 0xc0) != 0) {
-            kprintf("fdc: write failed! Error code 0x%x\n", cmd_st0 >> 6);
+            klog() << "fdc: write failed! Error code 0x" << String::format("%x", cmd_st0 >> 6);
             return false;
         }
 
         u8 cmd_st1 = read_byte();
         if (cmd_st1 != 0) {
-            kprintf("fdc: write failed with error code (st1) 0x%x\n", cmd_st1);
+            klog() << "fdc: write failed with error code (st1) 0x" << String::format("%x", cmd_st1);
             return false;
         }
 
@@ -310,7 +310,7 @@ bool FloppyDiskDevice::write_sectors_with_dma(u16 lba, u16 count, const u8* inbu
 
         if (cyl != cylinder) {
 #ifdef FLOPPY_DEBUG
-            kprintf("fdc: cyl != cylinder (cyl = %d cylinder = %d)! Retrying...\n", cyl, cylinder);
+            klog() << "fdc: cyl != cylinder (cyl = " << cyl << " cylinder = " << cylinder << ")! Retrying...";
 #endif
             continue;
         }
@@ -328,7 +328,7 @@ bool FloppyDiskDevice::write_sectors_with_dma(u16 lba, u16 count, const u8* inbu
     }
 
 #ifdef FLOPPY_DEBUG
-    kprintf("fdc: out of read attempts (check your hardware maybe!?)\n");
+    klog() << "fdc: out of read attempts (check your hardware maybe!?)";
 #endif
     return false;
 }
@@ -336,7 +336,7 @@ bool FloppyDiskDevice::write_sectors_with_dma(u16 lba, u16 count, const u8* inbu
 bool FloppyDiskDevice::wait_for_irq()
 {
 #ifdef FLOPPY_DEBUG
-    kprintf("fdc: Waiting for interrupt...\n");
+    klog() << "fdc: Waiting for interrupt...";
 #endif
 
     while (!m_interrupted) {
@@ -353,7 +353,7 @@ void FloppyDiskDevice::handle_irq(RegisterState&)
     m_interrupted = true;
 
 #ifdef FLOPPY_DEBUG
-    kprintf("fdc: Received IRQ!\n");
+    klog() << "fdc: Received IRQ!";
 #endif
 }
 
@@ -367,7 +367,7 @@ void FloppyDiskDevice::send_byte(u8 value) const
     }
 
 #ifdef FLOPPY_DEBUG
-    kprintf("fdc: FIFO write timed out!\n");
+    klog() << "fdc: FIFO write timed out!";
 #endif
 }
 
@@ -381,7 +381,7 @@ void FloppyDiskDevice::send_byte(FloppyCommand value) const
     }
 
 #ifdef FLOPPY_DEBUG
-    kprintf("fdc: FIFO write timed out!\n");
+    klog() << "fdc: FIFO write timed out!";
 #endif
 }
 
@@ -394,7 +394,7 @@ u8 FloppyDiskDevice::read_byte() const
     }
 
 #ifdef FLOPPY_DEBUG
-    kprintf("fdc: FIFO read timed out!\n");
+    klog() << "fdc: FIFO read timed out!";
 #endif
 
     return 0xff;
@@ -429,7 +429,7 @@ bool FloppyDiskDevice::is_busy() const
 bool FloppyDiskDevice::recalibrate()
 {
 #ifdef FLOPPY_DEBUG
-    kprintf("fdc: recalibrating drive...\n");
+    klog() << "fdc: recalibrating drive...";
 #endif
 
     u8 slave = is_slave();
@@ -451,7 +451,7 @@ bool FloppyDiskDevice::recalibrate()
     }
 
 #ifdef FLOPPY_DEBUG
-    kprintf("fdc: failed to calibrate drive (check your hardware!)\n");
+    klog() << "fdc: failed to calibrate drive (check your hardware!)";
 #endif
     return false;
 }
@@ -465,7 +465,7 @@ bool FloppyDiskDevice::seek(u16 lba)
     // First, we need to enable the correct drive motor
     motor_enable(slave);
 #ifdef FLOPPY_DEBUG
-    kprintf("fdc: seeking to cylinder %d on side %d on drive %d\n", cylinder, head, slave);
+    klog() << "fdc: seeking to cylinder " << cylinder << " on side " << head << " on drive " << slave;
 #endif
 
     // Try at most 5 times to seek to the desired cylinder
@@ -482,7 +482,7 @@ bool FloppyDiskDevice::seek(u16 lba)
 
         if ((st0 >> 5) != 1 || pcn != cylinder || (st0 & 0x01)) {
 #ifdef FLOPPY_DEBUG
-            kprintf("fdc: failed to seek to cylinder %d on attempt %d!\n", cylinder, attempt);
+            klog() << "fdc: failed to seek to cylinder " << cylinder << " on attempt " << attempt << "!";
 #endif
             continue;
         }
@@ -490,7 +490,7 @@ bool FloppyDiskDevice::seek(u16 lba)
         return true;
     }
 
-    kprintf("fdc: failed to seek after 3 attempts! Aborting...\n");
+    klog() << "fdc: failed to seek after 3 attempts! Aborting...";
     return false;
 }
 
@@ -498,7 +498,7 @@ bool FloppyDiskDevice::seek(u16 lba)
 void FloppyDiskDevice::initialize()
 {
 #ifdef FLOPPY_DEBUG
-    kprintf("fdc: m_io_base = 0x%x IRQn = %d\n", m_io_base_addr, IRQ_FLOPPY_DRIVE);
+    klog() << "fdc: m_io_base = 0x" << String::format("%x", m_io_base_addr) << " IRQn = " << IRQ_FLOPPY_DRIVE;
 #endif
 
     enable_irq();
@@ -506,7 +506,7 @@ void FloppyDiskDevice::initialize()
     // Get the version of the Floppy Disk Controller
     send_byte(FloppyCommand::Version);
     m_controller_version = read_byte();
-    kprintf("fdc: Version = 0x%x\n", m_controller_version);
+    klog() << "fdc: Version = 0x" << String::format("%x", m_controller_version);
 
     // Reset
     write_dor(0);
@@ -523,7 +523,7 @@ void FloppyDiskDevice::initialize()
         u8 sr0 = read_byte();
         u8 trk = read_byte();
 
-        kprintf("sr0 = 0x%x, cyl = 0x%x\n", sr0, trk);
+        klog() << "sr0 = 0x" << String::format("%x", sr0) << ", cyl = 0x" << String::format("%x", trk);
     }
 
     // This is hardcoded for a 3.5" floppy disk drive
@@ -534,7 +534,7 @@ void FloppyDiskDevice::initialize()
     // Allocate a buffer page for us to read into. This only needs to be one sector in size.
     m_dma_buffer_page = MM.allocate_supervisor_physical_page();
 #ifdef FLOPPY_DEBUG
-    kprintf("fdc: allocated supervisor page at paddr 0x%x\n", m_dma_buffer_page->paddr());
+    klog() << "fdc: allocated supervisor page at paddr 0x", String::format("%x", m_dma_buffer_page->paddr());
 #endif
 
     // Now, let's initialise channel 2 of the DMA controller!
@@ -557,7 +557,7 @@ void FloppyDiskDevice::initialize()
     IO::out8(0xA, 0x2); // Unmask Channel 2
 
 #ifdef FLOPPY_DEBUG
-    kprintf("fdc: fd%d initialised succesfully!\n", is_slave() ? 1 : 0);
+    klog() << "fdc: fd" << (is_slave() ? 1 : 0) << " initialised succesfully!";
 #endif
 }
 

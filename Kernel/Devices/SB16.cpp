@@ -103,7 +103,7 @@ void SB16::initialize()
 
     auto data = dsp_read();
     if (data != 0xaa) {
-        kprintf("SB16: sb not ready");
+        klog() << "SB16: sb not ready";
         return;
     }
 
@@ -112,9 +112,9 @@ void SB16::initialize()
     m_major_version = dsp_read();
     auto vmin = dsp_read();
 
-    kprintf("SB16: found version %d.%d\n", m_major_version, vmin);
+    klog() << "SB16: found version " << m_major_version << "." << vmin;
     set_irq_register(SB16_DEFAULT_IRQ);
-    kprintf("SB16: IRQ %d\n", get_irq_line());
+    klog() << "SB16: IRQ " << get_irq_line();
 }
 
 void SB16::set_irq_register(u8 irq_number)
@@ -235,7 +235,7 @@ ssize_t SB16::write(FileDescription&, const u8* data, ssize_t length)
     }
 
 #ifdef SB16_DEBUG
-    kprintf("SB16: Writing buffer of %d bytes\n", length);
+    klog() << "SB16: Writing buffer of " << length << " bytes";
 #endif
     ASSERT(length <= PAGE_SIZE);
     const int BLOCK_SIZE = 32 * 1024;

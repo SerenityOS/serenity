@@ -63,9 +63,9 @@ PageDirectory::PageDirectory()
     PhysicalAddress boot_pdpt_paddr(virtual_to_low_physical((uintptr_t)boot_pdpt));
     PhysicalAddress boot_pd0_paddr(virtual_to_low_physical((uintptr_t)boot_pd0));
     PhysicalAddress boot_pd3_paddr(virtual_to_low_physical((uintptr_t)boot_pd3));
-    kprintf("MM: boot_pdpt @ P%p\n", boot_pdpt_paddr.get());
-    kprintf("MM: boot_pd0 @ P%p\n", boot_pd0_paddr.get());
-    kprintf("MM: boot_pd3 @ P%p\n", boot_pd3_paddr.get());
+    klog() << "MM: boot_pdpt @ " << boot_pdpt_paddr;
+    klog() << "MM: boot_pd0 @ " << boot_pd0_paddr;
+    klog() << "MM: boot_pd3 @ " << boot_pd3_paddr;
     m_directory_table = PhysicalPage::create(boot_pdpt_paddr, true, false);
     m_directory_pages[0] = PhysicalPage::create(boot_pd0_paddr, true, false);
     m_directory_pages[3] = PhysicalPage::create(boot_pd3_paddr, true, false);

@@ -34,7 +34,7 @@ void Lock::lock()
 {
     ASSERT(!Scheduler::is_active());
     if (!are_interrupts_enabled()) {
-        kprintf("Interrupts disabled when trying to take Lock{%s}\n", m_name);
+        klog() << "Interrupts disabled when trying to take Lock{" << m_name << "}";
         dump_backtrace();
         hang();
     }

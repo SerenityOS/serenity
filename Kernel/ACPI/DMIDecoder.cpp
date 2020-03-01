@@ -62,7 +62,7 @@ void DMIDecoder::initialize_untrusted()
 
 void DMIDecoder::set_64_bit_entry_initialization_values(PhysicalAddress entry)
 {
-    kprintf("DMIDecoder: SMBIOS 64bit Entry point @ P 0x%x\n", m_entry64bit_point.get());
+    klog() << "DMIDecoder: SMBIOS 64bit Entry point @ P " << String::format("%p", m_entry64bit_point.get());
     m_use_64bit_entry = true;
 
     auto region = MM.allocate_kernel_region(entry.page_base(), PAGE_ROUND_UP(SMBIOS_SEARCH_AREA_SIZE), "DMI Decoder 64 bit Initialization", Region::Access::Read, false, false);
@@ -74,7 +74,7 @@ void DMIDecoder::set_64_bit_entry_initialization_values(PhysicalAddress entry)
 
 void DMIDecoder::set_32_bit_entry_initialization_values(PhysicalAddress entry)
 {
-    kprintf("DMIDecoder: SMBIOS 32bit Entry point @ P 0x%x\n", m_entry32bit_point.get());
+    klog() << "DMIDecoder: SMBIOS 32bit Entry point @ P " << String::format("%p", m_entry32bit_point.get());
     m_use_64bit_entry = false;
 
     auto region = MM.allocate_kernel_region(entry.page_base(), PAGE_ROUND_UP(SMBIOS_SEARCH_AREA_SIZE), "DMI Decoder 32 bit Initialization", Region::Access::Read, false, false);
@@ -90,18 +90,18 @@ void DMIDecoder::initialize_parser()
 
     if (m_entry32bit_point.is_null() && m_entry64bit_point.is_null()) {
         m_operable = false;
-        kprintf("DMI Decoder is disabled. Cannot find SMBIOS tables.\n");
+        klog() << "DMI Decoder is disabled. Cannot find SMBIOS tables.";
         return;
     }
 
     m_operable = true;
-    kprintf("DMI Decoder is enabled\n");
+    klog() << "DMI Decoder is enabled";
     if (!m_entry64bit_point.is_null()) {
         set_64_bit_entry_initialization_values(m_entry64bit_point);
     } else if (!m_entry32bit_point.is_null()) {
         set_32_bit_entry_initialization_values(m_entry32bit_point);
     }
-    kprintf("DMIDecoder: Data table @ P 0x%x\n", m_structure_table.get());
+    klog() << "DMIDecoder: Data table @ P " << String::format("%p", m_structure_table.get());
     enumerate_smbios_tables();
 }
 
@@ -125,10 +125,10 @@ void DMIDecoder::enumerate_smbios_tables()
 #endif
         structures_count++;
         if (v_table_ptr->type == (u8)SMBIOS::TableType::EndOfTable) {
-            kprintf("DMIDecoder: Detected table with type 127, End of SMBIOS data.\n");
+            klog() << "DMIDecoder: Detected table with type 127, End of SMBIOS data.";
             break;
         }
-        kprintf("DMIDecoder: Detected table with type %d\n", v_table_ptr->type);
+        klog() << "DMIDecoder: Detected table with type " << v_table_ptr->type;
         m_smbios_tables.append(p_table);
         table_length -= v_table_ptr->length;
 
@@ -205,7 +205,7 @@ DMIDecoder::DMIDecoder(bool trusted)
     , m_untrusted(!trusted)
 {
     if (!trusted) {
-        kprintf("DMI Decoder initialized as untrusted due to user request.\n");
+        klog() << "DMI Decoder initialized as untrusted due to user request.";
     }
     initialize_parser();
 }
@@ -249,7 +249,7 @@ PhysicalAddress DMIDecoder::find_entry32bit_point()
 Vector<SMBIOS::PhysicalMemoryArray*>& DMIDecoder::get_physical_memory_areas()
 {
     // FIXME: Implement it...
-    kprintf("DMIDecoder::get_physical_memory_areas() is not implemented.\n");
+    klog() << "DMIDecoder::get_physical_memory_areas() is not implemented.";
     ASSERT_NOT_REACHED();
 }
 bool DMIDecoder::is_reliable()
@@ -264,7 +264,7 @@ u64 DMIDecoder::get_bios_characteristics()
     auto* bios_info = (SMBIOS::BIOSInfo*)get_smbios_physical_table_by_type(0).as_ptr();
     ASSERT(bios_info != nullptr);
 
-    kprintf("DMIDecoder: BIOS info @ P 0x%x\n", bios_info);
+    klog() << "DMIDecoder: BIOS info @ P " << String::format("%p", bios_info);
     return bios_info->bios_characteristics;
 }
 
@@ -272,7 +272,7 @@ char* DMIDecoder::get_smbios_string(PhysicalAddress, u8)
 {
     // FIXME: Implement it...
     // FIXME: Make sure we have some mapping here so we don't rely on existing identity mapping...
-    kprintf("DMIDecoder::get_smbios_string() is not implemented.\n");
+    klog() << "DMIDecoder::get_smbios_string() is not implemented.";
     ASSERT_NOT_REACHED();
     return nullptr;
 }

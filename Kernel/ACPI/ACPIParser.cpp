@@ -51,49 +51,49 @@ namespace ACPI {
     Parser::Parser(bool usable)
     {
         if (usable) {
-            kprintf("ACPI: Setting up a functional parser\n");
+            klog() << "ACPI: Setting up a functional parser";
         } else {
-            kprintf("ACPI: Limited Initialization. Vital functions are disabled by a request\n");
+            klog() << "ACPI: Limited Initialization. Vital functions are disabled by a request";
         }
         s_acpi_parser = this;
     }
 
     PhysicalAddress Parser::find_table(const char*)
     {
-        kprintf("ACPI: Requested to search for a table, Abort!\n");
+        klog() << "ACPI: Requested to search for a table, Abort!";
         return {};
     }
 
     void Parser::do_acpi_reboot()
     {
-        kprintf("ACPI: Cannot invoke reboot!\n");
+        klog() << "ACPI: Cannot invoke reboot!";
         ASSERT_NOT_REACHED();
     }
 
     void Parser::do_acpi_shutdown()
     {
-        kprintf("ACPI: Cannot invoke shutdown!\n");
+        klog() << "ACPI: Cannot invoke shutdown!";
         ASSERT_NOT_REACHED();
     }
 
     void Parser::enable_aml_interpretation()
     {
-        kprintf("ACPI: No AML Interpretation Allowed\n");
+        klog() << "ACPI: No AML Interpretation Allowed";
         ASSERT_NOT_REACHED();
     }
     void Parser::enable_aml_interpretation(File&)
     {
-        kprintf("ACPI: No AML Interpretation Allowed\n");
+        klog() << "ACPI: No AML Interpretation Allowed";
         ASSERT_NOT_REACHED();
     }
     void Parser::enable_aml_interpretation(u8*, u32)
     {
-        kprintf("ACPI: No AML Interpretation Allowed\n");
+        klog() << "ACPI: No AML Interpretation Allowed";
         ASSERT_NOT_REACHED();
     }
     void Parser::disable_aml_interpretation()
     {
-        kprintf("ACPI Limited: No AML Interpretation Allowed\n");
+        klog() << "ACPI Limited: No AML Interpretation Allowed";
         ASSERT_NOT_REACHED();
     }
     bool Parser::is_operable()

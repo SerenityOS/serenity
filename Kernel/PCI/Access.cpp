@@ -57,7 +57,7 @@ void PCI::Access::enumerate_functions(int type, u8 bus, u8 slot, u8 function, Fu
     if (read_type(address) == PCI_TYPE_BRIDGE) {
         u8 secondary_bus = read8_field(address, PCI_SECONDARY_BUS);
 #ifdef PCI_DEBUG
-        kprintf("PCI: Found secondary bus: %u\n", secondary_bus);
+        klog() << "PCI: Found secondary bus: " << secondary_bus;
 #endif
         ASSERT(secondary_bus != bus);
         enumerate_bus(type, secondary_bus, callback);

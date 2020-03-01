@@ -25,6 +25,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Arch/i386/ISRStubs.h>
@@ -140,13 +141,12 @@ static void dump(const RegisterState& regs)
         esp = regs.userspace_esp;
     }
 
-    kprintf("exception code: %04x (isr: %04x)\n", regs.exception_code, regs.isr_number);
-    kprintf("  pc=%04x:%08x flags=%04x\n", (u16)regs.cs, regs.eip, (u16)regs.eflags);
-    kprintf(" stk=%04x:%08x\n", ss, esp);
-    kprintf("  ds=%04x es=%04x fs=%04x gs=%04x\n", (u16)regs.ds, (u16)regs.es, (u16)regs.fs, (u16)regs.gs);
-    kprintf("eax=%08x ebx=%08x ecx=%08x edx=%08x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
-    kprintf("ebp=%08x esp=%08x esi=%08x edi=%08x\n", regs.ebp, esp, regs.esi, regs.edi);
-
+    klog() << "exception code: " << String::format("%04x", regs.exception_code) << " (isr: " << String::format("%04x", regs.isr_number);
+    klog() << "  pc=" << String::format("%04x", (u16)regs.cs) << ":" << String::format("%08x", regs.eip) << " flags=" << String::format("%04x", (u16)regs.eflags);
+    klog() << " stk=" << String::format("%04x", ss) << ":" << String::format("%08x", esp);
+    klog() << "  ds=" << String::format("%04x", (u16)regs.ds) << " es=" << String::format("%04x", (u16)regs.es) << " fs=" << String::format("%04x", (u16)regs.fs) << " gs=" << String::format("%04x", (u16)regs.gs);
+    klog() << "eax=" << String::format("%08x", regs.eax) << " ebx=" << String::format("%08x", regs.ebx) << " ecx=" << String::format("%08x", regs.ecx) << " edx=" << String::format("%08x", regs.edx);
+    klog() << "ebp=" << String::format("%08x", regs.ebp) << " esp=" << String::format("%08x", regs.esp) << " esi=" << String::format("%08x", regs.esi) << " edi=" << String::format("%08x", regs.edi);
     u32 cr0;
     asm("movl %%cr0, %%eax"
         : "=a"(cr0));
@@ -157,27 +157,19 @@ static void dump(const RegisterState& regs)
     u32 cr4;
     asm("movl %%cr4, %%eax"
         : "=a"(cr4));
-    kprintf("cr0=%08x cr2=%08x cr3=%08x cr4=%08x\n", cr0, cr2, cr3, cr4);
+    klog() << "cr0=" << String::format("%08x", cr0) << " cr2=" << String::format("%08x", cr2) << " cr3=" << String::format("%08x", cr3) << " cr4=" << String::format("%08x", cr4);
 
     if (Process::current && Process::current->validate_read((void*)regs.eip, 8)) {
         SmapDisabler disabler;
         u8* codeptr = (u8*)regs.eip;
-        kprintf("code: %02x %02x %02x %02x %02x %02x %02x %02x\n",
-            codeptr[0],
-            codeptr[1],
-            codeptr[2],
-            codeptr[3],
-            codeptr[4],
-            codeptr[5],
-            codeptr[6],
-            codeptr[7]);
+        klog() << "code: " << String::format("%02x", codeptr[0]) << " " << String::format("%02x", codeptr[1]) << " " << String::format("%02x", codeptr[2]) << " " << String::format("%02x", codeptr[3]) << " " << String::format("%02x", codeptr[4]) << " " << String::format("%02x", codeptr[5]) << " " << String::format("%02x", codeptr[6]) << " " << String::format("%02x", codeptr[7]);
     }
 }
 
 void handle_crash(RegisterState& regs, const char* description, int signal)
 {
     if (!Process::current) {
-        kprintf("%s with !current\n", description);
+        klog() << description << " with !current";
         hang();
     }
 
@@ -185,16 +177,11 @@ void handle_crash(RegisterState& regs, const char* description, int signal)
     // make sure we switch back to the right page tables.
     MM.enter_process_paging_scope(*Process::current);
 
-    kprintf("\033[31;1mCRASH: %s. %s: %s(%u)\033[0m\n",
-        description,
-        Process::current->is_ring0() ? "Kernel" : "Process",
-        Process::current->name().characters(),
-        Process::current->pid());
-
+    klog() << "CRASH: " << description << ". " << (Process::current->is_ring0() ? "Kernel" : "Process") << ": " << Process::current->name().characters() << "(" << Process::current->pid() << ")";
     dump(regs);
 
     if (Process::current->is_ring0()) {
-        kprintf("Oh shit, we've crashed in ring 0 :(\n");
+        klog() << "Oh shit, we've crashed in ring 0 :(";
         dump_backtrace();
         hang();
     }
@@ -272,15 +259,7 @@ void page_fault_handler(RegisterState regs)
             return;
         }
 
-        kprintf("\033[31;1m%s(%u:%u) Unrecoverable page fault, %s%s%s address %p\033[0m\n",
-            Process::current->name().characters(),
-            Process::current->pid(),
-            Thread::current->tid(),
-            regs.exception_code & PageFaultFlags::ReservedBitViolation ? "reserved bit violation / " : "",
-            regs.exception_code & PageFaultFlags::InstructionFetch ? "instruction fetch / " : "",
-            regs.exception_code & PageFaultFlags::Write ? "write to" : "read from",
-            fault_address);
-
+        klog() << "tid - (" << Thread::current->tid() << ") Unrecoverable page fault, " << (regs.exception_code & PageFaultFlags::ReservedBitViolation ? "reserved bit violation / " : "") << ":" << (regs.exception_code & PageFaultFlags::InstructionFetch ? "instruction fetch / " : "") << ":" << (regs.exception_code & PageFaultFlags::Write ? "write to" : "read from") << " address " << String::format("%p", fault_address);
         u32 malloc_scrub_pattern = explode_byte(MALLOC_SCRUB_BYTE);
         u32 free_scrub_pattern = explode_byte(FREE_SCRUB_BYTE);
         u32 kmalloc_scrub_pattern = explode_byte(KMALLOC_SCRUB_BYTE);
@@ -288,19 +267,19 @@ void page_fault_handler(RegisterState regs)
         u32 slab_alloc_scrub_pattern = explode_byte(SLAB_ALLOC_SCRUB_BYTE);
         u32 slab_dealloc_scrub_pattern = explode_byte(SLAB_DEALLOC_SCRUB_BYTE);
         if ((fault_address & 0xffff0000) == (malloc_scrub_pattern & 0xffff0000)) {
-            kprintf("\033[33;1mNote: Address %p looks like it may be uninitialized malloc() memory\033[0m\n", fault_address);
+            klog() << "Note: Address " << String::format("%p", fault_address) << " looks like it may be uninitialized malloc() memory";
         } else if ((fault_address & 0xffff0000) == (free_scrub_pattern & 0xffff0000)) {
-            kprintf("\033[33;1mNote: Address %p looks like it may be recently free()'d memory\033[0m\n", fault_address);
+            klog() << "Note: Address " << String::format("%p", fault_address) << " looks like it may be recently free()'d memory";
         } else if ((fault_address & 0xffff0000) == (kmalloc_scrub_pattern & 0xffff0000)) {
-            kprintf("\033[33;1mNote: Address %p looks like it may be uninitialized kmalloc() memory\033[0m\n", fault_address);
+            klog() << "Note: Address " << String::format("%p", fault_address) << " looks like it may be uninitialized kmalloc() memory";
         } else if ((fault_address & 0xffff0000) == (kfree_scrub_pattern & 0xffff0000)) {
-            kprintf("\033[33;1mNote: Address %p looks like it may be recently kfree()'d memory\033[0m\n", fault_address);
+            klog() << "Note: Address " << String::format("%p", fault_address) << " looks like it may be recently kfree()'d memory";
         } else if ((fault_address & 0xffff0000) == (slab_alloc_scrub_pattern & 0xffff0000)) {
-            kprintf("\033[33;1mNote: Address %p looks like it may be uninitialized slab_alloc() memory\033[0m\n", fault_address);
+            klog() << "Note: Address " << String::format("%p", fault_address) << " looks like it may be uninitialized slab_alloc() memory";
         } else if ((fault_address & 0xffff0000) == (slab_dealloc_scrub_pattern & 0xffff0000)) {
-            kprintf("\033[33;1mNote: Address %p looks like it may be recently slab_dealloc()'d memory\033[0m\n", fault_address);
+            klog() << "Note: Address " << String::format("%p", fault_address) << " looks like it may be recently slab_dealloc()'d memory";
         } else if (fault_address < 4096) {
-            kprintf("\033[33;1mNote: Address %p looks like a possible nullptr dereference\033[0m\n", fault_address);
+            klog() << "Note: Address " << String::format("%p", fault_address) << " looks like a possible nullptr dereference";
         }
 
         handle_crash(regs, "Page Fault", SIGSEGV);
@@ -313,21 +292,21 @@ void page_fault_handler(RegisterState regs)
     }
 }
 
-#define EH(i, msg)                                                    \
-    static void _exception##i()                                       \
-    {                                                                 \
-        kprintf(msg "\n");                                            \
-        u32 cr0, cr2, cr3, cr4;                                       \
-        asm("movl %%cr0, %%eax"                                       \
-            : "=a"(cr0));                                             \
-        asm("movl %%cr2, %%eax"                                       \
-            : "=a"(cr2));                                             \
-        asm("movl %%cr3, %%eax"                                       \
-            : "=a"(cr3));                                             \
-        asm("movl %%cr4, %%eax"                                       \
-            : "=a"(cr4));                                             \
-        kprintf("CR0=%x CR2=%x CR3=%x CR4=%x\n", cr0, cr2, cr3, cr4); \
-        hang();                                                       \
+#define EH(i, msg)                                                                                                                                                             \
+    static void _exception##i()                                                                                                                                                \
+    {                                                                                                                                                                          \
+        klog() << msg;                                                                                                                                                         \
+        u32 cr0, cr2, cr3, cr4;                                                                                                                                                \
+        asm("movl %%cr0, %%eax"                                                                                                                                                \
+            : "=a"(cr0));                                                                                                                                                      \
+        asm("movl %%cr2, %%eax"                                                                                                                                                \
+            : "=a"(cr2));                                                                                                                                                      \
+        asm("movl %%cr3, %%eax"                                                                                                                                                \
+            : "=a"(cr3));                                                                                                                                                      \
+        asm("movl %%cr4, %%eax"                                                                                                                                                \
+            : "=a"(cr4));                                                                                                                                                      \
+        klog() << "CR0=" << String::format("%x", cr0) << " CR2=" << String::format("%x", cr2) << " CR3=" << String::format("%x", cr3) << " CR4=" << String::format("%x", cr4); \
+        hang();                                                                                                                                                                \
     }
 
 EH(1, "Debug exception")
@@ -409,7 +388,7 @@ void gdt_init()
 
 static void unimp_trap()
 {
-    kprintf("Unhandled IRQ.");
+    klog() << "Unhandled IRQ.";
     hang();
 }
 
@@ -735,7 +714,7 @@ void cpu_setup()
 
     if (g_cpu_supports_sse) {
         sse_init();
-        kprintf("x86: SSE support enabled\n");
+        klog() << "x86: SSE support enabled";
     }
 
     asm volatile(
@@ -743,7 +722,7 @@ void cpu_setup()
         "orl $0x00010000, %%eax\n"
         "movl %%eax, %%cr0\n" ::
             : "%eax", "memory");
-    kprintf("x86: WP support enabled\n");
+    klog() << "x86: WP support enabled";
 
     if (g_cpu_supports_pge) {
         // Turn on CR4.PGE so the CPU will respect the G bit in page tables.
@@ -751,9 +730,9 @@ void cpu_setup()
             "mov %cr4, %eax\n"
             "orl $0x80, %eax\n"
             "mov %eax, %cr4\n");
-        kprintf("x86: PGE support enabled\n");
+        klog() << "x86: PGE support enabled";
     } else {
-        kprintf("x86: PGE support not detected\n");
+        klog() << "x86: PGE support not detected";
     }
 
     if (g_cpu_supports_nx) {
@@ -763,9 +742,9 @@ void cpu_setup()
             "rdmsr\n"
             "orl $0x800, %eax\n"
             "wrmsr\n");
-        kprintf("x86: NX support enabled\n");
+        klog() << "x86: NX support enabled";
     } else {
-        kprintf("x86: NX support not detected\n");
+        klog() << "x86: NX support not detected";
     }
 
     if (g_cpu_supports_smep) {
@@ -774,21 +753,21 @@ void cpu_setup()
             "mov %cr4, %eax\n"
             "orl $0x100000, %eax\n"
             "mov %eax, %cr4\n");
-        kprintf("x86: SMEP support enabled\n");
+        klog() << "x86: SMEP support enabled";
     } else {
-        kprintf("x86: SMEP support not detected\n");
+        klog() << "x86: SMEP support not detected";
     }
 
     if (g_cpu_supports_smap) {
         // Turn on CR4.SMAP
-        kprintf("x86: Enabling SMAP\n");
+        klog() << "x86: Enabling SMAP";
         asm volatile(
             "mov %cr4, %eax\n"
             "orl $0x200000, %eax\n"
             "mov %eax, %cr4\n");
-        kprintf("x86: SMAP support enabled\n");
+        klog() << "x86: SMAP support enabled";
     } else {
-        kprintf("x86: SMAP support not detected\n");
+        klog() << "x86: SMAP support not detected";
     }
 
     if (g_cpu_supports_umip) {
@@ -796,7 +775,7 @@ void cpu_setup()
             "mov %cr4, %eax\n"
             "orl $0x800, %eax\n"
             "mov %eax, %cr4\n");
-        kprintf("x86: UMIP support enabled\n");
+        klog() << "x86: UMIP support enabled";
     }
 
     if (g_cpu_supports_tsc) {
@@ -804,13 +783,13 @@ void cpu_setup()
             "mov %cr4, %eax\n"
             "orl $0x4, %eax\n"
             "mov %eax, %cr4\n");
-        kprintf("x86: RDTSC support restricted\n");
+        klog() << "x86: RDTSC support restricted";
     }
 
     if (g_cpu_supports_rdrand) {
-        kprintf("x86: Using RDRAND for good randomness\n");
+        klog() << "x86: Using RDRAND for good randomness";
     } else {
-        kprintf("x86: No RDRAND support detected. Randomness will be shitty\n");
+        klog() << "x86: No RDRAND support detected. Randomness will be shitty";
     }
 }
 
@@ -834,7 +813,8 @@ void write_cr3(u32 cr3)
 void __assertion_failed(const char* msg, const char* file, unsigned line, const char* func)
 {
     asm volatile("cli");
-    kprintf("ASSERTION FAILED: %s\n%s:%u in %s\n", msg, file, line, func);
+    klog() << "ASSERTION FAILED: " << msg << "\n"
+           << file << ":" << line << " in " << func;
 
     // Switch back to the current process's page tables if there are any.
     // Otherwise stack walking will be a disaster.

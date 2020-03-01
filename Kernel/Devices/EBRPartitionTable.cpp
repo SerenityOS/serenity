@@ -69,11 +69,11 @@ bool EBRPartitionTable::initialize()
     m_ebr_container_id = index_of_ebr_container() + 1;
 
 #ifdef EBR_DEBUG
-    kprintf("EBRPartitionTable::initialize: MBR_signature=%#x\n", header.mbr_signature);
+    klog() << "EBRPartitionTable::initialize: MBR_signature=0x" << String::format("%x", header.mbr_signature);
 #endif
 
     if (header.mbr_signature != MBR_SIGNATURE) {
-        kprintf("EBRPartitionTable::initialize: bad MBR signature %#x\n", header.mbr_signature);
+        klog() << "EBRPartitionTable::initialize: bad MBR signature 0x" << String::format("%x", header.mbr_signature);
         return false;
     }
 
@@ -94,7 +94,7 @@ bool EBRPartitionTable::initialize()
 
     m_ebr_chained_extensions_count = index;
 
-    kprintf("EBRPartitionTable::initialize: Extended partitions count - %d\n", m_ebr_chained_extensions_count);
+    klog() << "EBRPartitionTable::initialize: Extended partitions count - " << m_ebr_chained_extensions_count;
 
     return true;
 }
@@ -105,19 +105,19 @@ RefPtr<DiskPartition> EBRPartitionTable::get_non_extended_partition(unsigned ind
     auto& entry = header.entry[index - 1];
 
 #ifdef EBR_DEBUG
-    kprintf("EBRPartitionTable::partition: status=%#x offset=%#x\n", entry.status, entry.offset);
+    klog() << "EBRPartitionTable::partition: status=0x" << String::format("%x", entry.status) << " offset=0x" << String::format("%x", entry.offset);
 #endif
 
     if (entry.offset == 0x00) {
 #ifdef EBR_DEBUG
-        kprintf("EBRPartitionTable::partition: missing partition requested index=%d\n", index);
+        klog() << "EBRPartitionTable::partition: missing partition requested index=" << index;
 #endif
 
         return nullptr;
     }
 
 #ifdef EBR_DEBUG
-    kprintf("EBRPartitionTable::partition: found partition index=%d type=%x\n", index, entry.type);
+    klog() << "EBRPartitionTable::partition: found partition index=" << index << " type=" << String::format("%x", entry.type);
 #endif
 
     return DiskPartition::create(m_device, entry.offset, (entry.offset + entry.length));
@@ -130,12 +130,12 @@ RefPtr<DiskPartition> EBRPartitionTable::get_extended_partition(unsigned index)
     auto& header = this->header();
 
 #ifdef EBR_DEBUG
-    kprintf("EBRPartitionTable::partition: relative index %d\n", relative_index);
+    klog() << "EBRPartitionTable::partition: relative index " << relative_index;
 #endif
 
     auto& ebr_entry = header.entry[m_ebr_container_id - 1];
 #ifdef EBR_DEBUG
-    kprintf("EBRPartitionTable::partition: Extended partition, offset 0x%x, type %x\n", ebr_entry.offset, ebr_entry.type);
+    klog() << "EBRPartitionTable::partition: Extended partition, offset 0x" << String::format("%x", ebr_entry.offset) << ", type " << String::format("%x", ebr_entry.type);
 #endif
 
     if (!m_device->read_block(ebr_entry.offset, m_cached_ebr_header)) {
@@ -144,8 +144,8 @@ RefPtr<DiskPartition> EBRPartitionTable::get_extended_partition(unsigned index)
     size_t i = 0;
     while (i < relative_index) {
 #ifdef EBR_DEBUG
-        kprintf("EBRPartitionTable::partition: logical partition, relative offset 0x%x, type %x\n", ebr_extension().entry.offset, ebr_extension().entry.type);
-        kprintf("EBRPartitionTable::partition: next logical partition, relative offset 0x%x, type %x\n", ebr_extension().next_chained_ebr_extension.offset, ebr_extension().next_chained_ebr_extension.type);
+        klog() << "EBRPartitionTable::partition: logical partition, relative offset 0x" << String::format("%x", ebr_extension().entry.offset) << ", type " << String::format("%x", ebr_extension().entry.type);
+        klog() << "EBRPartitionTable::partition: next logical partition, relative offset 0x" << String::format("%x", ebr_extension().next_chained_ebr_extension.offset) << ", type " << String::format("%x", ebr_extension().next_chained_ebr_extension.type);
 #endif
         if (ebr_extension().next_chained_ebr_extension.offset == 0 && ebr_extension().next_chained_ebr_extension.type == 0) {
             break;
@@ -158,19 +158,19 @@ RefPtr<DiskPartition> EBRPartitionTable::get_extended_partition(unsigned index)
     }
 
 #ifdef EBR_DEBUG
-    kprintf("EBRPartitionTable::partition: status=%#x offset=%#x\n", ebr_extension().entry.status, ebr_extension().entry.offset + ebr_entry.offset);
+    klog() << "EBRPartitionTable::partition: status=" << String::format("%x", ebr_extension().entry.status) << " offset=" << String::format("%x", ebr_extension().entry.offset + ebr_entry.offset);
 #endif
 
     if (ebr_extension().entry.offset == 0x00) {
 #ifdef EBR_DEBUG
-        kprintf("EBRPartitionTable::partition: missing partition requested index=%d\n", index);
+        klog() << "EBRPartitionTable::partition: missing partition requested index=" << index;
 #endif
 
         return nullptr;
     }
 
 #ifdef EBR_DEBUG
-    kprintf("EBRPartitionTable::partition: found partition index=%d type=%x\n", index, ebr_extension().entry.type);
+    klog() << "EBRPartitionTable::partition: found partition index=" << index << " type=" << String::format("%x", ebr_extension().entry.type);
 #endif
 
     return DiskPartition::create(m_device, ebr_extension().entry.offset + ebr_entry.offset, (ebr_extension().entry.offset + ebr_entry.offset + ebr_extension().entry.length));
@@ -187,7 +187,7 @@ RefPtr<DiskPartition> EBRPartitionTable::partition(unsigned index)
 
     auto& header = this->header();
     if (header.mbr_signature != MBR_SIGNATURE) {
-        kprintf("EBRPartitionTable::initialize: bad MBR signature - not initalized? %#x\n", header.mbr_signature);
+        klog() << "EBRPartitionTable::initialize: bad MBR signature - not initalized? 0x" << String::format("%x", header.mbr_signature);
         return nullptr;
     }
     if (index_is_extended_partition(index))

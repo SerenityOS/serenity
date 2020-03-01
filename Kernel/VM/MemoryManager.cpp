@@ -31,11 +31,11 @@
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/VM/AnonymousVMObject.h>
-#include <Kernel/VM/SharedInodeVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/PhysicalRegion.h>
 #include <Kernel/VM/PurgeableVMObject.h>
+#include <Kernel/VM/SharedInodeVMObject.h>
 #include <LibBareMetal/StdLib.h>
 
 //#define MM_DEBUG
@@ -121,13 +121,7 @@ void MemoryManager::parse_memory_map()
 
     auto* mmap = (multiboot_memory_map_t*)(low_physical_to_virtual(multiboot_info_ptr->mmap_addr));
     for (; (unsigned long)mmap < (low_physical_to_virtual(multiboot_info_ptr->mmap_addr)) + (multiboot_info_ptr->mmap_length); mmap = (multiboot_memory_map_t*)((unsigned long)mmap + mmap->size + sizeof(mmap->size))) {
-        kprintf("MM: Multiboot mmap: base_addr = 0x%x%08x, length = 0x%x%08x, type = 0x%x\n",
-            (uintptr_t)(mmap->addr >> 32),
-            (uintptr_t)(mmap->addr & 0xffffffff),
-            (uintptr_t)(mmap->len >> 32),
-            (uintptr_t)(mmap->len & 0xffffffff),
-            (uintptr_t)mmap->type);
-
+        klog() << "MM: Multiboot mmap: base_addr = " << String::format("0x%08x", mmap->addr) << ", length = " << String::format("0x%08x", mmap->len) << ", type = 0x" << String::format("%x", mmap->type);
         if (mmap->type != MULTIBOOT_MEMORY_AVAILABLE)
             continue;
 
@@ -140,23 +134,22 @@ void MemoryManager::parse_memory_map()
 
         auto diff = (uintptr_t)mmap->addr % PAGE_SIZE;
         if (diff != 0) {
-            kprintf("MM: got an unaligned region base from the bootloader; correcting %p by %d bytes\n", mmap->addr, diff);
+            klog() << "MM: got an unaligned region base from the bootloader; correcting " << String::format("%p", mmap->addr) << " by " << diff << " bytes";
             diff = PAGE_SIZE - diff;
             mmap->addr += diff;
             mmap->len -= diff;
         }
         if ((mmap->len % PAGE_SIZE) != 0) {
-            kprintf("MM: got an unaligned region length from the bootloader; correcting %d by %d bytes\n", mmap->len, mmap->len % PAGE_SIZE);
+            klog() << "MM: got an unaligned region length from the bootloader; correcting " << mmap->len << " by " << (mmap->len % PAGE_SIZE) << " bytes";
             mmap->len -= mmap->len % PAGE_SIZE;
         }
         if (mmap->len < PAGE_SIZE) {
-            kprintf("MM: memory region from bootloader is too small; we want >= %d bytes, but got %d bytes\n", PAGE_SIZE, mmap->len);
+            klog() << "MM: memory region from bootloader is too small; we want >= " << PAGE_SIZE << " bytes, but got " << mmap->len << " bytes";
             continue;
         }
 
 #ifdef MM_DEBUG
-        kprintf("MM: considering memory at %p - %p\n",
-            (uintptr_t)mmap->addr, (uintptr_t)(mmap->addr + mmap->len));
+        klog() << "MM: considering memory at " << String::format("%p", (uintptr_t)mmap->addr) << " - " << String::format("%p", (uintptr_t)(mmap->addr + mmap->len));
 #endif
 
         for (size_t page_base = mmap->addr; page_base < (mmap->addr + mmap->len); page_base += PAGE_SIZE) {
@@ -301,7 +294,7 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
 #endif
     auto* region = region_from_vaddr(fault.vaddr());
     if (!region) {
-        kprintf("NP(error) fault at invalid address V%p\n", fault.vaddr().get());
+        klog() << "NP(error) fault at invalid address V" << String::format("%p", fault.vaddr().get());
         return PageFaultResponse::ShouldCrash;
     }
 
@@ -366,9 +359,7 @@ void MemoryManager::deallocate_user_physical_page(PhysicalPage&& page)
 {
     for (auto& region : m_user_physical_regions) {
         if (!region.contains(page)) {
-            kprintf(
-                "MM: deallocate_user_physical_page: %p not in %p -> %p\n",
-                page.paddr().get(), region.lower().get(), region.upper().get());
+            klog() << "MM: deallocate_user_physical_page: " << page.paddr() << " not in " << region.lower() << " -> " << region.upper();
             continue;
         }
 
@@ -378,7 +369,7 @@ void MemoryManager::deallocate_user_physical_page(PhysicalPage&& page)
         return;
     }
 
-    kprintf("MM: deallocate_user_physical_page couldn't figure out region for user page @ %p\n", page.paddr().get());
+    klog() << "MM: deallocate_user_physical_page couldn't figure out region for user page @ " << page.paddr();
     ASSERT_NOT_REACHED();
 }
 
@@ -400,7 +391,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
 
     if (!page) {
         if (m_user_physical_regions.is_empty()) {
-            kprintf("MM: no user physical regions available (?)\n");
+            klog() << "MM: no user physical regions available (?)";
         }
 
         for_each_vmobject([&](auto& vmobject) {
@@ -408,7 +399,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
                 auto& purgeable_vmobject = static_cast<PurgeableVMObject&>(vmobject);
                 int purged_page_count = purgeable_vmobject.purge_with_interrupts_disabled({});
                 if (purged_page_count) {
-                    kprintf("MM: Purge saved the day! Purged %d pages from PurgeableVMObject{%p}\n", purged_page_count, &purgeable_vmobject);
+                    klog() << "MM: Purge saved the day! Purged " << purged_page_count << " pages from PurgeableVMObject{" << &purgeable_vmobject << "}";
                     page = find_free_user_physical_page();
                     ASSERT(page);
                     return IterationDecision::Break;
@@ -418,7 +409,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
         });
 
         if (!page) {
-            kprintf("MM: no user physical pages available\n");
+            klog() << "MM: no user physical pages available";
             ASSERT_NOT_REACHED();
             return {};
         }
@@ -442,9 +433,7 @@ void MemoryManager::deallocate_supervisor_physical_page(PhysicalPage&& page)
 {
     for (auto& region : m_super_physical_regions) {
         if (!region.contains(page)) {
-            kprintf(
-                "MM: deallocate_supervisor_physical_page: %p not in %p -> %p\n",
-                page.paddr().get(), region.lower().get(), region.upper().get());
+            klog() << "MM: deallocate_supervisor_physical_page: " << page.paddr() << " not in " << region.lower() << " -> " << region.upper();
             continue;
         }
 
@@ -453,7 +442,7 @@ void MemoryManager::deallocate_supervisor_physical_page(PhysicalPage&& page)
         return;
     }
 
-    kprintf("MM: deallocate_supervisor_physical_page couldn't figure out region for super page @ %p\n", page.paddr().get());
+    klog() << "MM: deallocate_supervisor_physical_page couldn't figure out region for super page @ " << page.paddr();
     ASSERT_NOT_REACHED();
 }
 
@@ -470,10 +459,10 @@ RefPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
 
     if (!page) {
         if (m_super_physical_regions.is_empty()) {
-            kprintf("MM: no super physical regions available (?)\n");
+            klog() << "MM: no super physical regions available (?)";
         }
 
-        kprintf("MM: no super physical pages available\n");
+        klog() << "MM: no super physical pages available";
         ASSERT_NOT_REACHED();
         return {};
     }
@@ -680,20 +669,10 @@ void MemoryManager::unregister_region(Region& region)
 
 void MemoryManager::dump_kernel_regions()
 {
-    kprintf("Kernel regions:\n");
-    kprintf("BEGIN       END         SIZE        ACCESS  NAME\n");
+    klog() << "Kernel regions:";
+    klog() << "BEGIN       END         SIZE        ACCESS  NAME";
     for (auto& region : MM.m_kernel_regions) {
-        kprintf("%08x -- %08x    %08x    %c%c%c%c%c%c    %s\n",
-            region.vaddr().get(),
-            region.vaddr().offset(region.size() - 1).get(),
-            region.size(),
-            region.is_readable() ? 'R' : ' ',
-            region.is_writable() ? 'W' : ' ',
-            region.is_executable() ? 'X' : ' ',
-            region.is_shared() ? 'S' : ' ',
-            region.is_stack() ? 'T' : ' ',
-            region.vmobject().is_purgeable() ? 'P' : ' ',
-            region.name().characters());
+        klog() << String::format("%08x", region.vaddr().get()) << " -- " << String::format("%08x", region.vaddr().offset(region.size() - 1).get()) << "    " << String::format("%08x", region.size()) << "    " << (region.is_readable() ? 'R' : ' ') << (region.is_writable() ? 'W' : ' ') << (region.is_executable() ? 'X' : ' ') << (region.is_shared() ? 'S' : ' ') << (region.is_stack() ? 'T' : ' ') << (region.vmobject().is_purgeable() ? 'P' : ' ') << "    " << region.name().characters();
     }
 }
 

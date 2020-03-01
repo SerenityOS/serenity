@@ -79,7 +79,7 @@ ByteBuffer Inode::read_entire(FileDescription* descriptor) const
             break;
     }
     if (nread < 0) {
-        kprintf("Inode::read_entire: ERROR: %d\n", nread);
+        klog() << "Inode::read_entire: ERROR: " << nread;
         return nullptr;
     }
 

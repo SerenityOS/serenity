@@ -68,7 +68,7 @@ IPv4Socket::IPv4Socket(int type, int protocol)
     : Socket(AF_INET, type, protocol)
 {
 #ifdef IPV4_SOCKET_DEBUG
-    kprintf("%s(%u) IPv4Socket{%p} created with type=%u, protocol=%d\n", Process::current->name().characters(), Process::current->pid(), this, type, protocol);
+    dbg() << "IPv4Socket{" << this << "} created with type=" << type << ", protocol=" << protocol;
 #endif
     m_buffer_mode = type == SOCK_STREAM ? BufferMode::Bytes : BufferMode::Packets;
     if (m_buffer_mode == BufferMode::Bytes) {
@@ -138,7 +138,7 @@ KResult IPv4Socket::listen(size_t backlog)
     m_role = Role::Listener;
 
 #ifdef IPV4_SOCKET_DEBUG
-    kprintf("IPv4Socket{%p} listening with backlog=%zu\n", this, backlog);
+    dbg() << "IPv4Socket{" << this << "} listening with backlog=" << backlog;
 #endif
 
     return protocol_listen();
@@ -201,7 +201,7 @@ ssize_t IPv4Socket::sendto(FileDescription&, const void* data, size_t data_lengt
 
     if (addr) {
         if (addr->sa_family != AF_INET) {
-            kprintf("sendto: Bad address family: %u is not AF_INET!\n", addr->sa_family);
+            klog() << "sendto: Bad address family: " << addr->sa_family << " is not AF_INET!";
             return -EAFNOSUPPORT;
         }
 
@@ -222,7 +222,7 @@ ssize_t IPv4Socket::sendto(FileDescription&, const void* data, size_t data_lengt
         return rc;
 
 #ifdef IPV4_SOCKET_DEBUG
-    kprintf("sendto: destination=%s:%u\n", m_peer_address.to_string().characters(), m_peer_port);
+    klog() << "sendto: destination=" << m_peer_address.to_string().characters() << ":" << m_peer_port;
 #endif
 
     if (type() == SOCK_RAW) {
@@ -283,13 +283,13 @@ ssize_t IPv4Socket::receive_packet_buffered(FileDescription& description, void* 
             packet = m_receive_queue.take_first();
             m_can_read = !m_receive_queue.is_empty();
 #ifdef IPV4_SOCKET_DEBUG
-            kprintf("IPv4Socket(%p): recvfrom without blocking %d bytes, packets in queue: %zu\n", this, packet.data.value().size(), m_receive_queue.size_slow());
+            dbg() << "IPv4Socket(" << this << "): recvfrom without blocking " << packet.data.value().size() << " bytes, packets in queue: " << m_receive_queue.size_slow();
 #endif
         }
     }
     if (!packet.data.has_value()) {
         if (protocol_is_disconnected()) {
-            kprintf("IPv4Socket{%p} is protocol-disconnected, returning 0 in recvfrom!\n", this);
+            dbg() << "IPv4Socket{" << this << "} is protocol-disconnected, returning 0 in recvfrom!";
             return 0;
         }
 
@@ -308,7 +308,7 @@ ssize_t IPv4Socket::receive_packet_buffered(FileDescription& description, void* 
         packet = m_receive_queue.take_first();
         m_can_read = !m_receive_queue.is_empty();
 #ifdef IPV4_SOCKET_DEBUG
-        kprintf("IPv4Socket(%p): recvfrom with blocking %d bytes, packets in queue: %zu\n", this, packet.data.value().size(), m_receive_queue.size_slow());
+        dbg() << "IPv4Socket(" << this << "): recvfrom with blocking " << packet.data.value().size() << " bytes, packets in queue: " << m_receive_queue.size_slow();
 #endif
     }
     ASSERT(packet.data.has_value());
@@ -341,7 +341,7 @@ ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t 
         return -EINVAL;
 
 #ifdef IPV4_SOCKET_DEBUG
-    kprintf("recvfrom: type=%d, local_port=%u\n", type(), local_port());
+    klog() << "recvfrom: type=" << type() << ", local_port=" << local_port();
 #endif
 
     ssize_t nreceived = 0;
@@ -367,7 +367,7 @@ bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
     if (buffer_mode() == BufferMode::Bytes) {
         size_t space_in_receive_buffer = m_receive_buffer.space_for_writing();
         if (packet_size > space_in_receive_buffer) {
-            kprintf("IPv4Socket(%p): did_receive refusing packet since buffer is full.\n", this);
+            dbg() << "IPv4Socket(" << this << "): did_receive refusing packet since buffer is full.";
             ASSERT(m_can_read);
             return false;
         }
@@ -377,7 +377,7 @@ bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
     } else {
         // FIXME: Maybe track the number of packets so we don't have to walk the entire packet queue to count them..
         if (m_receive_queue.size_slow() > 2000) {
-            kprintf("IPv4Socket(%p): did_receive refusing packet since queue is full.\n", this);
+            dbg() << "IPv4Socket(" << this << "): did_receive refusing packet since queue is full.";
             return false;
         }
         m_receive_queue.append({ source_address, source_port, move(packet) });
@@ -386,9 +386,9 @@ bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
     m_bytes_received += packet_size;
 #ifdef IPV4_SOCKET_DEBUG
     if (buffer_mode() == BufferMode::Bytes)
-        kprintf("IPv4Socket(%p): did_receive %d bytes, total_received=%u\n", this, packet_size, m_bytes_received);
+        dbg() << "IPv4Socket(" << this << "): did_receive " << packet_size << " bytes, total_received=" << m_bytes_received;
     else
-        kprintf("IPv4Socket(%p): did_receive %d bytes, total_received=%u, packets in queue: %zu\n", this, packet_size, m_bytes_received, m_receive_queue.size_slow());
+        dbg() << "IPv4Socket(" << this << "): did_receive " << packet_size << " bytes, total_received=" << m_bytes_received << ", packets in queue: " << m_receive_queue.size_slow();
 #endif
     return true;
 }

@@ -246,7 +246,7 @@ void PS2MouseDevice::check_device_presence()
     u8 maybe_ack = mouse_read();
     if (maybe_ack == I8042_ACK) {
         m_device_present = true;
-        kprintf("PS2MouseDevice: Device detected\n");
+        klog() << "PS2MouseDevice: Device detected";
 
         // the mouse will send a packet of data, since that's what we asked
         // for. we don't care about the content.
@@ -255,7 +255,7 @@ void PS2MouseDevice::check_device_presence()
         mouse_read();
     } else {
         m_device_present = false;
-        kprintf("PS2MouseDevice: Device not detected\n");
+        klog() << "PS2MouseDevice: Device not detected";
     }
 }
 
@@ -307,9 +307,9 @@ void PS2MouseDevice::initialize_device()
 
     if (device_id == PS2MOUSE_INTELLIMOUSE_ID) {
         m_has_wheel = true;
-        kprintf("PS2MouseDevice: Mouse wheel enabled!\n");
+        klog() << "PS2MouseDevice: Mouse wheel enabled!";
     } else {
-        kprintf("PS2MouseDevice: No mouse wheel detected!\n");
+        klog() << "PS2MouseDevice: No mouse wheel detected!";
     }
 
     enable_irq();

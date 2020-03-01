@@ -48,11 +48,11 @@ MultiProcessorParser::MultiProcessorParser()
     , m_operable((m_floating_pointer != (uintptr_t) nullptr))
 {
     if (m_floating_pointer != (uintptr_t) nullptr) {
-        kprintf("MultiProcessor: Floating Pointer Structure @ P 0x%x\n", m_floating_pointer);
+        klog() << "MultiProcessor: Floating Pointer Structure @ P " << String::format("%p", m_floating_pointer);
         parse_floating_pointer_data();
         parse_configuration_table();
     } else {
-        kprintf("MultiProcessor: Can't Locate Floating Pointer Structure, disabled.\n");
+        klog() << "MultiProcessor: Can't Locate Floating Pointer Structure, disabled.";
     }
 }
 
@@ -128,7 +128,7 @@ uintptr_t MultiProcessorParser::search_floating_pointer()
     uintptr_t mp_floating_pointer = (uintptr_t) nullptr;
     auto region = MM.allocate_kernel_region(PhysicalAddress(0), PAGE_SIZE, "MultiProcessor Parser Floating Pointer Structure Finding", Region::Access::Read);
     u16 ebda_seg = (u16) * ((uint16_t*)((region->vaddr().get() & PAGE_MASK) + 0x40e));
-    kprintf("MultiProcessor: Probing EBDA, Segment 0x%x\n", ebda_seg);
+    klog() << "MultiProcessor: Probing EBDA, Segment 0x" << String::format("%x", ebda_seg);
 
     mp_floating_pointer = search_floating_pointer_in_ebda(ebda_seg);
     if (mp_floating_pointer != (uintptr_t) nullptr)
@@ -195,12 +195,7 @@ Vector<RefPtr<PCIInterruptOverrideMetadata>> MultiProcessorParser::get_pci_inter
         for (auto id : pci_bus_ids) {
             if (id == v_entry_ptr->source_bus_id) {
 
-                kprintf("Interrupts: Bus %d, Polarity 0x%x, Trigger Mode 0x%x, INT %x, IOAPIC %d, IOAPIC INTIN %d\n", v_entry_ptr->source_bus_id,
-                    v_entry_ptr->polarity,
-                    v_entry_ptr->trigger_mode,
-                    v_entry_ptr->source_bus_irq,
-                    v_entry_ptr->destination_ioapic_id,
-                    v_entry_ptr->destination_ioapic_intin_pin);
+                klog() << "Interrupts: Bus " << v_entry_ptr->source_bus_id << ", Polarity " << v_entry_ptr->polarity << ", Trigger Mode " << v_entry_ptr->trigger_mode << ", INT " << v_entry_ptr->source_bus_irq << ", IOAPIC " << v_entry_ptr->destination_ioapic_id << ", IOAPIC INTIN " << v_entry_ptr->destination_ioapic_intin_pin;
                 overrides.append(adopt(*new PCIInterruptOverrideMetadata(
                     v_entry_ptr->source_bus_id,
                     v_entry_ptr->polarity,
@@ -213,14 +208,7 @@ Vector<RefPtr<PCIInterruptOverrideMetadata>> MultiProcessorParser::get_pci_inter
     }
 
     for (auto override_metadata : overrides) {
-        kprintf("Interrupts: Bus %d, Polarity 0x%x, PCI Device %d, Trigger Mode 0x%x, INT %x, IOAPIC %d, IOAPIC INTIN %d\n",
-            override_metadata->bus(),
-            override_metadata->polarity(),
-            override_metadata->pci_device_number(),
-            override_metadata->trigger_mode(),
-            override_metadata->pci_interrupt_pin(),
-            override_metadata->ioapic_id(),
-            override_metadata->ioapic_interrupt_pin());
+        klog() << "Interrupts: Bus " << override_metadata->bus() << ", Polarity " << override_metadata->polarity() << ", PCI Device " << override_metadata->pci_device_number() << ", Trigger Mode " << override_metadata->trigger_mode() << ", INT " << override_metadata->pci_interrupt_pin() << ", IOAPIC " << override_metadata->ioapic_id() << ", IOAPIC INTIN " << override_metadata->ioapic_interrupt_pin();
     }
     return overrides;
 }

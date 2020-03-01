@@ -58,13 +58,7 @@ void PCI::Initializer::initialize_pci_io_access()
 void PCI::Initializer::detect_devices()
 {
     PCI::enumerate_all([&](const PCI::Address& address, PCI::ID id) {
-        kprintf("PCI: device @ %w:%b:%b.%d [%w:%w]\n",
-            address.seg(),
-            address.bus(),
-            address.slot(),
-            address.function(),
-            id.vendor_id,
-            id.device_id);
+        klog() << "PCI: device @ " << String::format("%w", address.seg()) << ":" << String::format("%b", address.bus()) << ":" << String::format("%b", address.slot()) << "." << String::format("%d", address.function()) << " [" << String::format("%w", id.vendor_id) << ":" << String::format("%w", id.device_id) << "]";
         E1000NetworkAdapter::detect(address);
         RTL8139NetworkAdapter::detect(address);
     });
@@ -76,7 +70,7 @@ void PCI::Initializer::test_and_initialize(bool disable_pci_mmio)
         if (test_pci_io()) {
             initialize_pci_io_access();
         } else {
-            kprintf("No PCI Bus Access Method Detected, Halt!\n");
+            klog() << "No PCI Bus Access Method Detected, Halt!";
             ASSERT_NOT_REACHED(); // NO PCI Access ?!
         }
         return;
@@ -88,7 +82,7 @@ void PCI::Initializer::test_and_initialize(bool disable_pci_mmio)
             if (test_pci_io()) {
                 initialize_pci_io_access();
             } else {
-                kprintf("No PCI Bus Access Method Detected, Halt!\n");
+                klog() << "No PCI Bus Access Method Detected, Halt!";
                 ASSERT_NOT_REACHED(); // NO PCI Access ?!
             }
         }
@@ -96,7 +90,7 @@ void PCI::Initializer::test_and_initialize(bool disable_pci_mmio)
         if (test_pci_io()) {
             initialize_pci_io_access();
         } else {
-            kprintf("No PCI Bus Access Method Detected, Halt!\n");
+            klog() << "No PCI Bus Access Method Detected, Halt!";
             ASSERT_NOT_REACHED(); // NO PCI Access ?!
         }
     }
@@ -114,16 +108,16 @@ bool PCI::Initializer::test_acpi()
 
 bool PCI::Initializer::test_pci_io()
 {
-    kprintf("Testing PCI via manual probing... ");
+    klog() << "Testing PCI via manual probing... ";
     u32 tmp = 0x80000000;
     IO::out32(PCI_ADDRESS_PORT, tmp);
     tmp = IO::in32(PCI_ADDRESS_PORT);
     if (tmp == 0x80000000) {
-        kprintf("PCI IO Supported!\n");
+        klog() << "PCI IO Supported!";
         return true;
     }
 
-    kprintf("PCI IO Not Supported!\n");
+    klog() << "PCI IO Not Supported!";
     return false;
 }
 
@@ -141,7 +135,7 @@ void PCI::Initializer::dismiss()
 {
     if (s_pci_initializer == nullptr)
         return;
-    kprintf("PCI Subsystem Initializer dismissed.\n");
+    klog() << "PCI Subsystem Initializer dismissed.";
     delete s_pci_initializer;
     s_pci_initializer = nullptr;
 }

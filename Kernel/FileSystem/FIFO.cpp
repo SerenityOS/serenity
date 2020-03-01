@@ -78,12 +78,12 @@ void FIFO::attach(Direction direction)
     if (direction == Direction::Reader) {
         ++m_readers;
 #ifdef FIFO_DEBUG
-        kprintf("open reader (%u)\n", m_readers);
+        klog() << "open reader (" << m_readers << ")";
 #endif
     } else if (direction == Direction::Writer) {
         ++m_writers;
 #ifdef FIFO_DEBUG
-        kprintf("open writer (%u)\n", m_writers);
+        klog() << "open writer (" << m_writers << ")";
 #endif
     }
 }
@@ -92,13 +92,13 @@ void FIFO::detach(Direction direction)
 {
     if (direction == Direction::Reader) {
 #ifdef FIFO_DEBUG
-        kprintf("close reader (%u - 1)\n", m_readers);
+        klog() << "close reader (" << m_readers << " - 1)";
 #endif
         ASSERT(m_readers);
         --m_readers;
     } else if (direction == Direction::Writer) {
 #ifdef FIFO_DEBUG
-        kprintf("close writer (%u - 1)\n", m_writers);
+        klog() << "close writer (" << m_writers << " - 1)";
 #endif
         ASSERT(m_writers);
         --m_writers;
