@@ -135,10 +135,11 @@ void E1000NetworkAdapter::detect(const PCI::Address& address)
 
 E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, u8 irq)
     : PCI::Device(address, irq)
+    , m_io_base(PCI::get_BAR1(pci_address()) & ~1)
 {
     set_interface_name("e1k");
 
-    kprintf("E1000: Found at PCI address @ %w:%b:%b.%b\n", pci_address().seg(), pci_address().bus(), pci_address().slot(), pci_address().function());
+    klog() << "E1000: Found at PCI address @ " << String::format("%w", pci_address().seg()) << ":" << String::format("%b", pci_address().bus()) << ":" << String::format("%b", pci_address().slot()) << "." << String::format("%b", pci_address().function());
 
     enable_bus_mastering(pci_address());
 
@@ -146,17 +147,16 @@ E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, u8 irq)
     m_mmio_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of(PCI::get_BAR0(pci_address()))), PAGE_ROUND_UP(mmio_base_size), "E1000 MMIO", Region::Access::Read | Region::Access::Write, false, false);
     m_mmio_base = m_mmio_region->vaddr();
     m_use_mmio = true;
-    m_io_base = PCI::get_BAR1(pci_address()) & ~1;
     m_interrupt_line = PCI::get_interrupt_line(pci_address());
-    kprintf("E1000: IO port base: %w\n", m_io_base);
-    kprintf("E1000: MMIO base: P%x\n", PCI::get_BAR0(pci_address()) & 0xfffffffc);
-    kprintf("E1000: MMIO base size: %u bytes\n", mmio_base_size);
-    kprintf("E1000: Interrupt line: %u\n", m_interrupt_line);
+    klog() << "E1000: port base: " << m_io_base;
+    klog() << "E1000: MMIO base: " << PhysicalAddress(PCI::get_BAR0(pci_address()) & 0xfffffffc);
+    klog() << "E1000: MMIO base size: " << mmio_base_size << " bytes";
+    klog() << "E1000: Interrupt line: " << m_interrupt_line;
     detect_eeprom();
-    kprintf("E1000: Has EEPROM? %u\n", m_has_eeprom);
+    klog() << "E1000: Has EEPROM? " << m_has_eeprom;
     read_mac_address();
     const auto& mac = mac_address();
-    kprintf("E1000: MAC address: %b:%b:%b:%b:%b:%b\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    klog() << "E1000: MAC address: " << String::format("%b", mac[0]) << ":" << String::format("%b", mac[1]) << ":" << String::format("%b", mac[2]) << ":" << String::format("%b", mac[3]) << ":" << String::format("%b", mac[4]) << ":" << String::format("%b", mac[5]);
 
     u32 flags = in32(REG_CTRL);
     out32(REG_CTRL, flags | ECTRL_SLU);
@@ -309,7 +309,7 @@ void E1000NetworkAdapter::out8(u16 address, u8 data)
         *ptr = data;
         return;
     }
-    IO::out8(m_io_base + address, data);
+    m_io_base.offset(address).out(data);
 }
 
 void E1000NetworkAdapter::out16(u16 address, u16 data)
@@ -322,7 +322,7 @@ void E1000NetworkAdapter::out16(u16 address, u16 data)
         *ptr = data;
         return;
     }
-    IO::out16(m_io_base + address, data);
+    m_io_base.offset(address).out(data);
 }
 
 void E1000NetworkAdapter::out32(u16 address, u32 data)
@@ -335,7 +335,7 @@ void E1000NetworkAdapter::out32(u16 address, u32 data)
         *ptr = data;
         return;
     }
-    IO::out32(m_io_base + address, data);
+    m_io_base.offset(address).out(data);
 }
 
 u8 E1000NetworkAdapter::in8(u16 address)
@@ -345,7 +345,7 @@ u8 E1000NetworkAdapter::in8(u16 address)
 #endif
     if (m_use_mmio)
         return *(volatile u8*)(m_mmio_base.get() + address);
-    return IO::in8(m_io_base + address);
+    return m_io_base.offset(address).in<u8>();
 }
 
 u16 E1000NetworkAdapter::in16(u16 address)
@@ -355,7 +355,7 @@ u16 E1000NetworkAdapter::in16(u16 address)
 #endif
     if (m_use_mmio)
         return *(volatile u16*)(m_mmio_base.get() + address);
-    return IO::in16(m_io_base + address);
+    return m_io_base.offset(address).in<u16>();
 }
 
 u32 E1000NetworkAdapter::in32(u16 address)
@@ -365,7 +365,7 @@ u32 E1000NetworkAdapter::in32(u16 address)
 #endif
     if (m_use_mmio)
         return *(volatile u32*)(m_mmio_base.get() + address);
-    return IO::in32(m_io_base + address);
+    return m_io_base.offset(address).in<u32>();
 }
 
 void E1000NetworkAdapter::send_raw(const u8* data, size_t length)
@@ -373,7 +373,7 @@ void E1000NetworkAdapter::send_raw(const u8* data, size_t length)
     disable_irq();
     u32 tx_current = in32(REG_TXDESCTAIL);
 #ifdef E1000_DEBUG
-    kprintf("E1000: Sending packet (%zu bytes)\n", length);
+    klog() << "E1000: Sending packet (" << length << " bytes)";
 #endif
     auto& descriptor = m_tx_descriptors[tx_current];
     ASSERT(length <= 8192);
@@ -383,7 +383,7 @@ void E1000NetworkAdapter::send_raw(const u8* data, size_t length)
     descriptor.status = 0;
     descriptor.cmd = CMD_EOP | CMD_IFCS | CMD_RS;
 #ifdef E1000_DEBUG
-    kprintf("E1000: Using tx descriptor %d (head is at %d)\n", tx_current, in32(REG_TXDESCHEAD));
+    klog() << "E1000: Using tx descriptor " << tx_current << " (head is at " << in32(REG_TXDESCHEAD) << ")";
 #endif
     tx_current = (tx_current + 1) % number_of_tx_descriptors;
     out32(REG_TXDESCTAIL, tx_current);
@@ -397,7 +397,7 @@ void E1000NetworkAdapter::send_raw(const u8* data, size_t length)
         Thread::current->wait_on(m_wait_queue);
     }
 #ifdef E1000_DEBUG
-    kprintf("E1000: Sent packet, status is now %b!\n", descriptor.status);
+    klog() << "E1000: Sent packet, status is now " << String::format("%b",descriptor.status) << "!";
 #endif
 }
 
@@ -414,7 +414,7 @@ void E1000NetworkAdapter::receive()
         auto* buffer = (u8*)(m_rx_descriptors[rx_current].addr + 0xc0000000);
         u16 length = m_rx_descriptors[rx_current].length;
 #ifdef E1000_DEBUG
-        kprintf("E1000: Received 1 packet @ %p (%zu) bytes!\n", buffer, length);
+        klog() << "E1000: Received 1 packet @ " << buffer << " (" << length << ") bytes!";
 #endif
         did_receive(buffer, length);
         m_rx_descriptors[rx_current].status = 0;
