@@ -541,7 +541,7 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
         if (whole_region->access() == prot_to_region_access_flags(prot))
             return 0;
         if (whole_region->vmobject().is_inode()
-            && !validate_inode_mmap_prot(*this, prot, static_cast<const SharedInodeVMObject&>(whole_region->vmobject()).inode(), whole_region->is_shared())) {
+            && !validate_inode_mmap_prot(*this, prot, static_cast<const InodeVMObject&>(whole_region->vmobject()).inode(), whole_region->is_shared())) {
             return -EACCES;
         }
         whole_region->set_readable(prot & PROT_READ);
@@ -560,7 +560,7 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
         if (old_region->access() == prot_to_region_access_flags(prot))
             return 0;
         if (old_region->vmobject().is_inode()
-            && !validate_inode_mmap_prot(*this, prot, static_cast<const SharedInodeVMObject&>(old_region->vmobject()).inode(), old_region->is_shared())) {
+            && !validate_inode_mmap_prot(*this, prot, static_cast<const InodeVMObject&>(old_region->vmobject()).inode(), old_region->is_shared())) {
             return -EACCES;
         }
 
