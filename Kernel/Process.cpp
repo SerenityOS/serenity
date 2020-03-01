@@ -810,7 +810,12 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
         return -ENOENT;
 
     auto& inode = interpreter_description ? *interpreter_description->inode() : *main_program_description->inode();
-    auto vmobject = PrivateInodeVMObject::create_with_inode(inode);
+    auto vmobject = SharedInodeVMObject::create_with_inode(inode);
+
+    if (static_cast<const SharedInodeVMObject&>(*vmobject).writable_mappings()) {
+        dbg() << "Refusing to execute a write-mapped program";
+        return -ETXTBSY;
+    }
 
     // Disable profiling temporarily in case it's running on this process.
     bool was_profiling = is_profiling();
