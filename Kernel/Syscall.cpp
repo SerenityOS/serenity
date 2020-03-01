@@ -65,60 +65,60 @@ asm(
 
 namespace Syscall {
 
-static int handle(RegisterState&, u32 function, u32 arg1, u32 arg2, u32 arg3);
+    static int handle(RegisterState&, u32 function, u32 arg1, u32 arg2, u32 arg3);
 
-void initialize()
-{
-    register_user_callable_interrupt_handler(0x82, syscall_asm_entry);
-    klog() << "Syscall: int 0x82 handler installed";
-}
+    void initialize()
+    {
+        register_user_callable_interrupt_handler(0x82, syscall_asm_entry);
+        klog() << "Syscall: int 0x82 handler installed";
+    }
 
 #pragma GCC diagnostic ignored "-Wcast-function-type"
-typedef int (Process::*Handler)(u32, u32, u32);
+    typedef int (Process::*Handler)(u32, u32, u32);
 #define __ENUMERATE_REMOVED_SYSCALL(x) nullptr,
 #define __ENUMERATE_SYSCALL(x) reinterpret_cast<Handler>(&Process::sys$##x),
-static Handler s_syscall_table[] = {
-    ENUMERATE_SYSCALLS
-};
+    static Handler s_syscall_table[] = {
+        ENUMERATE_SYSCALLS
+    };
 #undef __ENUMERATE_SYSCALL
 #undef __ENUMERATE_REMOVED_SYSCALL
 
-int handle(RegisterState& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
-{
-    ASSERT_INTERRUPTS_ENABLED();
-    auto& process = *Process::current;
-    Thread::current->did_syscall();
+    int handle(RegisterState& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
+    {
+        ASSERT_INTERRUPTS_ENABLED();
+        auto& process = *Process::current;
+        Thread::current->did_syscall();
 
-    if (function == SC_exit || function == SC_exit_thread) {
-        // These syscalls need special handling since they never return to the caller.
-        cli();
-        if (auto* tracer = process.tracer())
-            tracer->did_syscall(function, arg1, arg2, arg3, 0);
-        if (function == SC_exit)
-            process.sys$exit((int)arg1);
-        else
-            process.sys$exit_thread((void*)arg1);
-        ASSERT_NOT_REACHED();
-        return 0;
+        if (function == SC_exit || function == SC_exit_thread) {
+            // These syscalls need special handling since they never return to the caller.
+            cli();
+            if (auto* tracer = process.tracer())
+                tracer->did_syscall(function, arg1, arg2, arg3, 0);
+            if (function == SC_exit)
+                process.sys$exit((int)arg1);
+            else
+                process.sys$exit_thread((void*)arg1);
+            ASSERT_NOT_REACHED();
+            return 0;
+        }
+
+        if (function == SC_fork)
+            return process.sys$fork(regs);
+
+        if (function == SC_sigreturn)
+            return process.sys$sigreturn(regs);
+
+        if (function >= Function::__Count) {
+            dbg() << process << ": Unknown syscall %u requested (" << arg1 << ", " << arg2 << ", " << arg3 << ")";
+            return -ENOSYS;
+        }
+
+        if (s_syscall_table[function] == nullptr) {
+            dbg() << process << ": Null syscall " << function << " requested: \"" << to_string((Function)function) << "\", you probably need to rebuild this program.";
+            return -ENOSYS;
+        }
+        return (process.*(s_syscall_table[function]))(arg1, arg2, arg3);
     }
-
-    if (function == SC_fork)
-        return process.sys$fork(regs);
-
-    if (function == SC_sigreturn)
-        return process.sys$sigreturn(regs);
-
-    if (function >= Function::__Count) {
-        dbg() << process << ": Unknown syscall %u requested (" << arg1 << ", " << arg2 << ", " << arg3 << ")";
-        return -ENOSYS;
-    }
-
-    if (s_syscall_table[function] == nullptr) {
-        dbg() << process << ": Null syscall " << function << " requested: \"" << to_string((Function)function) << "\", you probably need to rebuild this program.";
-        return -ENOSYS;
-    }
-    return (process.*(s_syscall_table[function]))(arg1, arg2, arg3);
-}
 
 }
 
