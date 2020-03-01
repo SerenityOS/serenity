@@ -43,6 +43,7 @@
 #include <Kernel/PCI/Device.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/WaitQueue.h>
+#include <LibBareMetal/IO.h>
 #include <LibBareMetal/Memory/PhysicalAddress.h>
 
 namespace Kernel {
@@ -86,8 +87,8 @@ private:
 
     // Data members
     u8 m_channel_number { 0 }; // Channel number. 0 = master, 1 = slave
-    u16 m_io_base { 0x1F0 };
-    u16 m_control_base { 0 };
+    IOAddress m_io_base;
+    IOAddress m_control_base;
     volatile u8 m_device_error { 0 };
 
     WaitQueue m_irq_queue;
@@ -95,7 +96,7 @@ private:
     PhysicalRegionDescriptor& prdt() { return *reinterpret_cast<PhysicalRegionDescriptor*>(m_prdt_page->paddr().offset(0xc0000000).as_ptr()); }
     RefPtr<PhysicalPage> m_prdt_page;
     RefPtr<PhysicalPage> m_dma_buffer_page;
-    u16 m_bus_master_base { 0 };
+    IOAddress m_bus_master_base;
     Lockable<bool> m_dma_enabled;
 
     RefPtr<PATADiskDevice> m_master;

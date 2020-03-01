@@ -55,14 +55,14 @@ const char* PATADiskDevice::class_name() const
 
 bool PATADiskDevice::read_blocks(unsigned index, u16 count, u8* out)
 {
-    if (m_channel.m_bus_master_base && m_channel.m_dma_enabled.resource())
+    if (!m_channel.m_bus_master_base.is_null() && m_channel.m_dma_enabled.resource())
         return read_sectors_with_dma(index, count, out);
     return read_sectors(index, count, out);
 }
 
 bool PATADiskDevice::write_blocks(unsigned index, u16 count, const u8* data)
 {
-    if (m_channel.m_bus_master_base && m_channel.m_dma_enabled.resource())
+    if (!m_channel.m_bus_master_base.is_null() && m_channel.m_dma_enabled.resource())
         return write_sectors_with_dma(index, count, data);
     for (unsigned i = 0; i < count; ++i) {
         if (!write_sectors(index + i, 1, data + i * 512))
@@ -94,7 +94,7 @@ ssize_t PATADiskDevice::read(FileDescription& fd, u8* outbuf, ssize_t len)
     }
 
 #ifdef PATA_DEVICE_DEBUG
-    kprintf("PATADiskDevice::read() index=%d whole_blocks=%d remaining=%d\n", index, whole_blocks, remaining);
+    klog() << "PATADiskDevice::read() index=" << index << " whole_blocks=" << whole_blocks << " remaining=" << remaining;
 #endif
 
     if (whole_blocks > 0) {
@@ -135,7 +135,7 @@ ssize_t PATADiskDevice::write(FileDescription& fd, const u8* inbuf, ssize_t len)
     }
 
 #ifdef PATA_DEVICE_DEBUG
-    kprintf("PATADiskDevice::write() index=%d whole_blocks=%d remaining=%d\n", index, whole_blocks, remaining);
+    klog() << "PATADiskDevice::write() index=" << index << " whole_blocks=" << whole_blocks << " remaining=" << remaining;
 #endif
 
     if (whole_blocks > 0) {
