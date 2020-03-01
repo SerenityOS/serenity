@@ -887,8 +887,10 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
                 prot |= PROT_WRITE;
             if (is_executable)
                 prot |= PROT_EXEC;
-            if (auto* region = allocate_region_with_vmobject(vaddr.offset(totally_random_offset), size, *vmobject, offset_in_image, String(name), prot))
+            if (auto* region = allocate_region_with_vmobject(vaddr.offset(totally_random_offset), size, *vmobject, offset_in_image, String(name), prot)) {
+                region->set_shared(true);
                 return region->vaddr().as_ptr();
+            }
             return nullptr;
         };
         loader->alloc_section_hook = [&](VirtualAddress vaddr, size_t size, size_t alignment, bool is_readable, bool is_writable, const String& name) -> u8* {
