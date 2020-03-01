@@ -79,12 +79,16 @@ int main(int argc, char** argv)
     }
 
     bool recursive = false;
-    const char* path = nullptr;
+    Vector<const char*> paths;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(recursive, "Delete directories recursively", "recursive", 'r');
-    args_parser.add_positional_argument(path, "File to remove", "path");
+    args_parser.add_positional_argument(paths, "Path(s) to remove", "path");
     args_parser.parse(argc, argv);
 
-    return remove(recursive, path);
+    int rc = 0;
+    for (auto& path : paths) {
+        rc |= remove(recursive, path);
+    }
+    return rc;
 }
