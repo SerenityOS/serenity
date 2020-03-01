@@ -40,7 +40,7 @@ StringView::StringView(const String& string)
 
 StringView::StringView(const ByteBuffer& buffer)
     : m_characters((const char*)buffer.data())
-    , m_length((size_t)buffer.size())
+    , m_length(buffer.size())
 {
 }
 

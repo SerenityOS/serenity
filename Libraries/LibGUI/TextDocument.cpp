@@ -86,7 +86,7 @@ void TextDocument::set_text(const StringView& text)
 size_t TextDocumentLine::first_non_whitespace_column() const
 {
     for (size_t i = 0; i < length(); ++i) {
-        if (!isspace(m_text[(int)i]))
+        if (!isspace(m_text[i]))
             return i;
     }
     return length();

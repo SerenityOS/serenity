@@ -599,7 +599,7 @@ void Scheduler::timer_tick(RegisterState& regs)
         sample.pid = Process::current->pid();
         sample.tid = Thread::current->tid();
         sample.timestamp = g_uptime;
-        for (size_t i = 0; i < min((size_t)backtrace.size(), Profiling::max_stack_frame_count); ++i) {
+        for (size_t i = 0; i < min(backtrace.size(), Profiling::max_stack_frame_count); ++i) {
             sample.frames[i] = backtrace[i];
         }
     }
