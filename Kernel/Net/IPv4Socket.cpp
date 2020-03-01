@@ -113,7 +113,7 @@ KResult IPv4Socket::bind(const sockaddr* user_address, socklen_t address_size)
     auto requested_local_port = ntohs(address.sin_port);
     if (!Process::current->is_superuser()) {
         if (requested_local_port < 1024) {
-            dbg() << Process::current << " (uid " << Process::current->uid() << ") attempted to bind " << class_name() << " to port " << requested_local_port;
+            dbg() << "UID " << Process::current->uid() << " attempted to bind " << class_name() << " to port " << requested_local_port;
             return KResult(-EACCES);
         }
     }
@@ -122,7 +122,7 @@ KResult IPv4Socket::bind(const sockaddr* user_address, socklen_t address_size)
     m_local_port = requested_local_port;
 
 #ifdef IPV4_SOCKET_DEBUG
-    dbg() << "IPv4Socket::bind " << class_name() << "{" << this << "} to " << m_local_address.to_string().characters() << ":" << m_local_port;
+    dbg() << "IPv4Socket::bind " << class_name() << "{" << this << "} to " << m_local_address << ":" << m_local_port;
 #endif
 
     return protocol_bind();
@@ -316,7 +316,7 @@ ssize_t IPv4Socket::receive_packet_buffered(FileDescription& description, void* 
 
     if (addr) {
 #ifdef IPV4_SOCKET_DEBUG
-        dbg() << "Incoming packet is from: " << packet.peer_address.to_string().characters() << ":" << packet.peer_port;
+        dbg() << "Incoming packet is from: " << packet.peer_address << ":" << packet.peer_port;
 #endif
         auto& ia = *(sockaddr_in*)addr;
         memcpy(&ia.sin_addr, &packet.peer_address, sizeof(IPv4Address));
