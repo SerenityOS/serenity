@@ -767,6 +767,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
 
     // FIXME: Now that the menubar has a dedicated window, is this special-casing really necessary?
     if (MenuManager::the().has_open_menu() || (!active_window_is_modal() && menubar_rect().contains(event.position()))) {
+        clear_resize_candidate();
         MenuManager::the().dispatch_event(event);
         return;
     }
