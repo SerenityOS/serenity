@@ -177,7 +177,7 @@ void handle_crash(RegisterState& regs, const char* description, int signal)
     // make sure we switch back to the right page tables.
     MM.enter_process_paging_scope(*Process::current);
 
-    klog() << "CRASH: " << description << ". " << (Process::current->is_ring0() ? "Kernel" : "Process") << ": " << Process::current->name().characters() << "(" << Process::current->pid() << ")";
+    klog() << "CRASH: " << description << ". Ring " << (Process::current->is_ring0() ? 0 : 3) << ".";
     dump(regs);
 
     if (Process::current->is_ring0()) {
