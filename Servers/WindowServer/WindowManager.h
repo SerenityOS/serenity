@@ -217,20 +217,6 @@ private:
     RefPtr<Cursor> m_move_cursor;
     RefPtr<Cursor> m_drag_cursor;
 
-    Color m_background_color;
-    Color m_active_window_border_color;
-    Color m_active_window_border_color2;
-    Color m_active_window_title_color;
-    Color m_inactive_window_border_color;
-    Color m_inactive_window_border_color2;
-    Color m_inactive_window_title_color;
-    Color m_moving_window_border_color;
-    Color m_moving_window_border_color2;
-    Color m_moving_window_title_color;
-    Color m_highlight_window_border_color;
-    Color m_highlight_window_border_color2;
-    Color m_highlight_window_title_color;
-
     InlineLinkedList<Window> m_windows_in_order;
 
     struct DoubleClickInfo {
