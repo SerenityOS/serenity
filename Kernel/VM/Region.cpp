@@ -66,7 +66,7 @@ NonnullOwnPtr<Region> Region::clone()
 {
     ASSERT(Process::current);
 
-    if (m_shared) {
+    if (m_shared || vmobject().is_shared_inode()) {
         ASSERT(!m_stack);
 #ifdef MM_DEBUG
         dbg() << "Region::clone(): Sharing " << name() << " (" << vaddr() << ")";
