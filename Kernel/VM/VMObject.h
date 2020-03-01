@@ -52,6 +52,8 @@ public:
     virtual bool is_anonymous() const { return false; }
     virtual bool is_purgeable() const { return false; }
     virtual bool is_inode() const { return false; }
+    virtual bool is_shared_inode() const { return false; }
+    virtual bool is_private_inode() const { return false; }
 
     size_t page_count() const { return m_physical_pages.size(); }
     const FixedArray<RefPtr<PhysicalPage>>& physical_pages() const { return m_physical_pages; }

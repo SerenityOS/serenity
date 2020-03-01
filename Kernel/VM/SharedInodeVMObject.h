@@ -42,6 +42,8 @@ public:
     virtual NonnullRefPtr<VMObject> clone() override;
 
 private:
+    virtual bool is_shared_inode() const override { return true; }
+
     explicit SharedInodeVMObject(Inode&, size_t);
     explicit SharedInodeVMObject(const SharedInodeVMObject&);
 
