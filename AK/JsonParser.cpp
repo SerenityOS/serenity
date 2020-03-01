@@ -130,7 +130,7 @@ String JsonParser::consume_quoted_string()
         return String::empty();
 
     auto& last_string_starting_with_character = m_last_string_starting_with_character[(u8)buffer.first()];
-    if (last_string_starting_with_character.length() == (size_t)buffer.size()) {
+    if (last_string_starting_with_character.length() == buffer.size()) {
         if (!memcmp(last_string_starting_with_character.characters(), buffer.data(), buffer.size()))
             return last_string_starting_with_character;
     }

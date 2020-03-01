@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
 
     dbg() << "Loading man page from " << file->filename();
     auto buffer = file->read_all();
-    String source { (const char*)buffer.data(), (size_t)buffer.size() };
+    auto source = String::copy(buffer);
 
     printf("%s(%s)\t\tSerenityOS manual\n", name, section);
 

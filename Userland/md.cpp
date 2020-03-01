@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
     auto buffer = file->read_all();
     dbg() << "Read size " << buffer.size();
 
-    String input { (const char*)buffer.data(), (size_t)buffer.size() };
+    auto input = String::copy(buffer);
     MDDocument document;
     success = document.parse(input);
 

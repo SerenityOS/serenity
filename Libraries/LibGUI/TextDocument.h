@@ -75,9 +75,9 @@ public:
     static NonnullRefPtr<TextDocument> create(Client* client = nullptr);
     ~TextDocument();
 
-    size_t line_count() const { return (size_t)m_lines.size(); }
-    const TextDocumentLine& line(size_t line_index) const { return m_lines[(int)line_index]; }
-    TextDocumentLine& line(size_t line_index) { return m_lines[(int)line_index]; }
+    size_t line_count() const { return m_lines.size(); }
+    const TextDocumentLine& line(size_t line_index) const { return m_lines[line_index]; }
+    TextDocumentLine& line(size_t line_index) { return m_lines[line_index]; }
 
     void set_spans(const Vector<TextDocumentSpan>& spans) { m_spans = spans; }
 
@@ -88,7 +88,7 @@ public:
 
     bool has_spans() const { return !m_spans.is_empty(); }
     const Vector<TextDocumentSpan>& spans() const { return m_spans; }
-    void set_span_at_index(size_t index, TextDocumentSpan span) { m_spans[(int)index] = move(span); }
+    void set_span_at_index(size_t index, TextDocumentSpan span) { m_spans[index] = move(span); }
 
     void append_line(NonnullOwnPtr<TextDocumentLine>);
     void remove_line(size_t line_index);
@@ -156,7 +156,7 @@ public:
 
     StringView view() const { return { characters(), (size_t)length() }; }
     const char* characters() const { return m_text.data(); }
-    size_t length() const { return (size_t)m_text.size() - 1; }
+    size_t length() const { return m_text.size() - 1; }
     void set_text(TextDocument&, const StringView&);
     void append(TextDocument&, char);
     void prepend(TextDocument&, char);

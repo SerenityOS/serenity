@@ -559,7 +559,8 @@ void TextEditor::move_selected_lines_down()
     get_selection_line_boundaries(first_line, last_line);
 
     auto& lines = document().lines();
-    if (last_line >= (size_t)(lines.size() - 1))
+    ASSERT(lines.size() != 0);
+    if (last_line >= lines.size() - 1)
         return;
 
     lines.insert((int)first_line, lines.take((int)last_line + 1));

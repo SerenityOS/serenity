@@ -66,21 +66,21 @@ void LineEditor::insert(const String& string)
     fputs(string.characters(), stdout);
     fflush(stdout);
 
-    if (m_cursor == (size_t)m_buffer.size()) {
-        m_buffer.append(string.characters(), (int)string.length());
-        m_cursor = (size_t)m_buffer.size();
+    if (m_cursor == m_buffer.size()) {
+        m_buffer.append(string.characters(), string.length());
+        m_cursor = m_buffer.size();
         return;
     }
 
     vt_save_cursor();
     vt_clear_to_end_of_line();
-    for (size_t i = m_cursor; i < (size_t)m_buffer.size(); ++i)
-        fputc(m_buffer[(int)i], stdout);
+    for (size_t i = m_cursor; i < m_buffer.size(); ++i)
+        fputc(m_buffer[i], stdout);
     vt_restore_cursor();
 
-    m_buffer.ensure_capacity(m_buffer.size() + (int)string.length());
+    m_buffer.ensure_capacity(m_buffer.size() + string.length());
     for (size_t i = 0; i < string.length(); ++i)
-        m_buffer.insert((int)m_cursor + (int)i, string[i]);
+        m_buffer.insert(m_cursor + i, string[i]);
     m_cursor += string.length();
 }
 
@@ -89,19 +89,19 @@ void LineEditor::insert(const char ch)
     putchar(ch);
     fflush(stdout);
 
-    if (m_cursor == (size_t)m_buffer.size()) {
+    if (m_cursor == m_buffer.size()) {
         m_buffer.append(ch);
-        m_cursor = (size_t)m_buffer.size();
+        m_cursor = m_buffer.size();
         return;
     }
 
     vt_save_cursor();
     vt_clear_to_end_of_line();
-    for (size_t i = m_cursor; i < (size_t)m_buffer.size(); ++i)
-        fputc(m_buffer[(int)i], stdout);
+    for (size_t i = m_cursor; i < m_buffer.size(); ++i)
+        fputc(m_buffer[i], stdout);
     vt_restore_cursor();
 
-    m_buffer.insert((int)m_cursor, ch);
+    m_buffer.insert(m_cursor, ch);
     ++m_cursor;
 }
 
@@ -173,7 +173,7 @@ Vector<String> LineEditor::tab_complete_first_token(const String& token)
     if (completion.length() > token.length())
         insert(completion.substring(token.length(), completion.length() - token.length()));
     // If we have a single match, we add a space, unless we already have one.
-    if (!seen_others && (m_cursor == (size_t)m_buffer.size() || m_buffer[(int)m_cursor] != ' '))
+    if (!seen_others && (m_cursor == m_buffer.size() || m_buffer[m_cursor] != ' '))
         insert(' ');
 
     return suggestions;
@@ -184,18 +184,20 @@ Vector<String> LineEditor::tab_complete_other_token(String& token)
     String path;
     Vector<String> suggestions;
 
-    int last_slash = (int)token.length() - 1;
+    ASSERT(token.length() != 0);
+
+    ssize_t last_slash = token.length() - 1;
     while (last_slash >= 0 && token[last_slash] != '/')
         --last_slash;
 
     if (last_slash >= 0) {
         // Split on the last slash. We'll use the first part as the directory
         // to search and the second part as the token to complete.
-        path = token.substring(0, (size_t)last_slash + 1);
+        path = token.substring(0, last_slash + 1);
         if (path[0] != '/')
             path = String::format("%s/%s", g.cwd.characters(), path.characters());
         path = canonicalized_path(path);
-        token = token.substring((size_t)last_slash + 1, token.length() - (size_t)last_slash - 1);
+        token = token.substring(last_slash + 1, token.length() - last_slash - 1);
     } else {
         // We have no slashes, so the directory to search is the current
         // directory and the token to complete is just the original token.
@@ -247,7 +249,7 @@ Vector<String> LineEditor::tab_complete_other_token(String& token)
         if (!stat_error) {
             if (S_ISDIR(program_status.st_mode))
                 insert('/');
-            else if (m_cursor == (size_t)m_buffer.size() || m_buffer[(int)m_cursor] != ' ')
+            else if (m_cursor == m_buffer.size() || m_buffer[m_cursor] != ' ')
                 insert(' ');
         }
     }
@@ -297,17 +299,17 @@ String LineEditor::get_line(const String& prompt)
         }
 
         auto do_delete = [&] {
-            if (m_cursor == (size_t)m_buffer.size()) {
+            if (m_cursor == m_buffer.size()) {
                 fputc('\a', stdout);
                 fflush(stdout);
                 return;
             }
-            m_buffer.remove((int)m_cursor - 1);
+            m_buffer.remove(m_cursor - 1);
             fputs("\033[3~", stdout);
             fflush(stdout);
             vt_save_cursor();
             vt_clear_to_end_of_line();
-            for (size_t i = m_cursor; i < (size_t)m_buffer.size(); ++i)
+            for (size_t i = m_cursor; i < m_buffer.size(); ++i)
                 fputc(m_buffer[i], stdout);
             vt_restore_cursor();
         };
@@ -353,7 +355,7 @@ String LineEditor::get_line(const String& prompt)
                     m_state = InputState::Free;
                     continue;
                 case 'C': // right
-                    if (m_cursor < (size_t)m_buffer.size()) {
+                    if (m_cursor < m_buffer.size()) {
                         ++m_cursor;
                         fputs("\033[C", stdout);
                         fflush(stdout);
@@ -369,10 +371,10 @@ String LineEditor::get_line(const String& prompt)
                     m_state = InputState::Free;
                     continue;
                 case 'F':
-                    if (m_cursor < (size_t)m_buffer.size()) {
-                        fprintf(stdout, "\033[%zuC", (size_t)m_buffer.size() - m_cursor);
+                    if (m_cursor < m_buffer.size()) {
+                        fprintf(stdout, "\033[%zuC", m_buffer.size() - m_cursor);
                         fflush(stdout);
-                        m_cursor = (size_t)m_buffer.size();
+                        m_cursor = m_buffer.size();
                     }
                     m_state = InputState::Free;
                     continue;
@@ -398,10 +400,10 @@ String LineEditor::get_line(const String& prompt)
             }
 
             if (ch == '\t') {
-                bool is_empty_token = m_cursor == 0 || m_buffer[(int)m_cursor - 1] == ' ';
+                bool is_empty_token = m_cursor == 0 || m_buffer[m_cursor - 1] == ' ';
                 m_times_tab_pressed++;
 
-                int token_start = (int)m_cursor - 1;
+                int token_start = m_cursor - 1;
                 if (!is_empty_token) {
                     while (token_start >= 0 && m_buffer[token_start] != ' ')
                         --token_start;
@@ -416,7 +418,7 @@ String LineEditor::get_line(const String& prompt)
                     }
                 }
 
-                String token = is_empty_token ? String() : String(&m_buffer[token_start], m_cursor - (size_t)token_start);
+                String token = is_empty_token ? String() : String(&m_buffer[token_start], m_cursor - token_start);
                 Vector<String> suggestions;
 
                 if (is_first_token)
@@ -463,13 +465,13 @@ String LineEditor::get_line(const String& prompt)
                     fflush(stdout);
                     return;
                 }
-                m_buffer.remove((int)m_cursor - 1);
+                m_buffer.remove(m_cursor - 1);
                 --m_cursor;
                 putchar(8);
                 vt_save_cursor();
                 vt_clear_to_end_of_line();
-                for (size_t i = m_cursor; i < (size_t)m_buffer.size(); ++i)
-                    fputc(m_buffer[(int)i], stdout);
+                for (size_t i = m_cursor; i < m_buffer.size(); ++i)
+                    fputc(m_buffer[i], stdout);
                 vt_restore_cursor();
             };
 
@@ -480,7 +482,7 @@ String LineEditor::get_line(const String& prompt)
             if (ch == g.termios.c_cc[VWERASE]) {
                 bool has_seen_nonspace = false;
                 while (m_cursor > 0) {
-                    if (isspace(m_buffer[(int)m_cursor - 1])) {
+                    if (isspace(m_buffer[m_cursor - 1])) {
                         if (has_seen_nonspace)
                             break;
                     } else {
@@ -500,8 +502,8 @@ String LineEditor::get_line(const String& prompt)
                 fputs(prompt.characters(), stdout);
                 for (size_t i = 0; i < m_buffer.size(); ++i)
                     fputc(m_buffer[i], stdout);
-                if (m_cursor < (size_t)m_buffer.size())
-                    printf("\033[%zuD", (size_t)m_buffer.size() - m_cursor); // Move cursor N steps left.
+                if (m_cursor < m_buffer.size())
+                    printf("\033[%zuD", m_buffer.size() - m_cursor); // Move cursor N steps left.
                 fflush(stdout);
                 continue;
             }
@@ -521,10 +523,10 @@ String LineEditor::get_line(const String& prompt)
                 continue;
             }
             if (ch == 0x05) { // ^E
-                if (m_cursor < (size_t)m_buffer.size()) {
-                    printf("\033[%zuC", (size_t)m_buffer.size() - m_cursor);
+                if (m_cursor < m_buffer.size()) {
+                    printf("\033[%zuC", m_buffer.size() - m_cursor);
                     fflush(stdout);
-                    m_cursor = (size_t)m_buffer.size();
+                    m_cursor = m_buffer.size();
                 }
                 continue;
             }
