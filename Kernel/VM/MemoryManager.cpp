@@ -310,17 +310,14 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
 
 OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringView& name, u8 access, bool user_accessible, bool should_commit, bool cacheable)
 {
-    InterruptDisabler disabler;
     ASSERT(!(size % PAGE_SIZE));
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
-    ASSERT(range.is_valid());
+    if (!range.is_valid())
+        return nullptr;
     auto vmobject = AnonymousVMObject::create_with_size(size);
-    OwnPtr<Region> region;
-    if (user_accessible)
-        region = Region::create_user_accessible(range, vmobject, 0, name, access, cacheable);
-    else
-        region = Region::create_kernel_only(range, vmobject, 0, name, access, cacheable);
-    region->map(kernel_page_directory());
+    auto region = allocate_kernel_region_with_vmobject(range, vmobject, name, access, user_accessible, cacheable);
+    if (!region)
+        return nullptr;
     if (should_commit)
         region->commit();
     return region;
@@ -328,20 +325,14 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringVi
 
 OwnPtr<Region> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size_t size, const StringView& name, u8 access, bool user_accessible, bool cacheable)
 {
-    InterruptDisabler disabler;
     ASSERT(!(size % PAGE_SIZE));
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
-    ASSERT(range.is_valid());
+    if (!range.is_valid())
+        return nullptr;
     auto vmobject = AnonymousVMObject::create_for_physical_range(paddr, size);
     if (!vmobject)
         return nullptr;
-    OwnPtr<Region> region;
-    if (user_accessible)
-        region = Region::create_user_accessible(range, vmobject.release_nonnull(), 0, name, access, cacheable);
-    else
-        region = Region::create_kernel_only(range, vmobject.release_nonnull(), 0, name, access, cacheable);
-    region->map(kernel_page_directory());
-    return region;
+    return allocate_kernel_region_with_vmobject(range, *vmobject, name, access, user_accessible, cacheable);
 }
 
 OwnPtr<Region> MemoryManager::allocate_user_accessible_kernel_region(size_t size, const StringView& name, u8 access, bool cacheable)
@@ -349,19 +340,26 @@ OwnPtr<Region> MemoryManager::allocate_user_accessible_kernel_region(size_t size
     return allocate_kernel_region(size, name, access, true, true, cacheable);
 }
 
-OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VMObject& vmobject, size_t size, const StringView& name, u8 access, bool user_accessible, bool cacheable)
+OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(const Range& range, VMObject& vmobject, const StringView& name, u8 access, bool user_accessible, bool cacheable)
 {
     InterruptDisabler disabler;
-    ASSERT(!(size % PAGE_SIZE));
-    auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
-    ASSERT(range.is_valid());
     OwnPtr<Region> region;
     if (user_accessible)
         region = Region::create_user_accessible(range, vmobject, 0, name, access, cacheable);
     else
         region = Region::create_kernel_only(range, vmobject, 0, name, access, cacheable);
-    region->map(kernel_page_directory());
+    if (region)
+        region->map(kernel_page_directory());
     return region;
+}
+
+OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VMObject& vmobject, size_t size, const StringView& name, u8 access, bool user_accessible, bool cacheable)
+{
+    ASSERT(!(size % PAGE_SIZE));
+    auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
+    if (!range.is_valid())
+        return nullptr;
+    return allocate_kernel_region_with_vmobject(range, vmobject, name, access, user_accessible, cacheable);
 }
 
 void MemoryManager::deallocate_user_physical_page(PhysicalPage&& page)
