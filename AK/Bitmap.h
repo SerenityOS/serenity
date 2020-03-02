@@ -199,14 +199,14 @@ public:
         return first_index;
     }
 
-    explicit Bitmap()
+    Bitmap()
         : m_size(0)
         , m_owned(true)
     {
         m_data = nullptr;
     }
 
-    explicit Bitmap(size_t size, bool default_value)
+    Bitmap(size_t size, bool default_value)
         : m_size(size)
         , m_owned(true)
     {
