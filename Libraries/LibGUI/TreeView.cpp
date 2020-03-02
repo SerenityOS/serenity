@@ -125,13 +125,7 @@ void TreeView::traverse_in_paint_order(Callback callback) const
     auto& model = *this->model();
     int indent_level = 1;
     int y_offset = 0;
-    int tree_column = model.tree_column();
-    int tree_column_x_offset = 0;
-
-    for (int i = 0; i < tree_column; ++i) {
-        if (!is_column_hidden(i))
-            tree_column_x_offset += column_width(i);
-    }
+    int tree_column_x_offset = this->tree_column_x_offset();
 
     Function<IterationDecision(const ModelIndex&)> traverse_index = [&](const ModelIndex& index) {
         int row_count_at_index = model.row_count(index);
@@ -145,7 +139,7 @@ void TreeView::traverse_in_paint_order(Callback callback) const
             };
             Gfx::Rect toggle_rect;
             if (row_count_at_index > 0) {
-                int toggle_x = tree_column_x_offset + horizontal_padding() + indent_width_in_pixels() * indent_level - icon_size() / 2 - 4;
+                int toggle_x = tree_column_x_offset + horizontal_padding() + (indent_width_in_pixels() * indent_level) - (icon_size() / 2) - 4;
                 toggle_rect = { toggle_x, rect.y(), toggle_size(), toggle_size() };
                 toggle_rect.center_vertically_within(rect);
             }
@@ -190,11 +184,8 @@ void TreeView::paint_event(PaintEvent& event)
 
     auto visible_content_rect = this->visible_content_rect();
     int tree_column = model.tree_column();
-    int tree_column_x_offset = 0;
-    for (int i = 0; i < tree_column; ++i) {
-        if (!is_column_hidden(i))
-            tree_column_x_offset += column_width(i);
-    }
+    int tree_column_x_offset = this->tree_column_x_offset();
+
     int y_offset = header_height();
 
     int painted_row_index = 0;
@@ -515,6 +506,19 @@ void TreeView::update_column_sizes()
     auto& column_data = this->column_data(tree_column);
     column_data.width = max(column_data.width, tree_column_width);
     column_data.has_initialized_width = true;
+}
+
+int TreeView::tree_column_x_offset() const
+{
+    int tree_column = model()->tree_column();
+    int offset = 0;
+    for (int i = 0; i < tree_column; ++i) {
+        if (!is_column_hidden(i)) {
+            offset += column_width(i);
+            offset += horizontal_padding();
+        }
+    }
+    return offset;
 }
 
 }
