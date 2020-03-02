@@ -858,6 +858,8 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
     ASSERT(region);
 
+    region->set_shared(true);
+
     Region* master_tls_region { nullptr };
     size_t master_tls_size = 0;
     size_t master_tls_alignment = 0;
