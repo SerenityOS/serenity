@@ -47,7 +47,7 @@ public:
     u32 offset() const { return m_offset; }
     u64 timestamp() const { return m_timestamp; }
 
-    u32 sample_count() const { return m_sample_count; }
+    u32 event_count() const { return m_event_count; }
 
     int child_count() const { return m_children.size(); }
     const Vector<NonnullRefPtr<ProfileNode>>& children() const { return m_children; }
@@ -77,7 +77,7 @@ public:
     ProfileNode* parent() { return m_parent; }
     const ProfileNode* parent() const { return m_parent; }
 
-    void increment_sample_count() { ++m_sample_count; }
+    void increment_event_count() { ++m_event_count; }
 
     void sort_children();
 
@@ -94,7 +94,7 @@ private:
     String m_symbol;
     u32 m_address { 0 };
     u32 m_offset { 0 };
-    u32 m_sample_count { 0 };
+    u32 m_event_count { 0 };
     u64 m_timestamp { 0 };
     Vector<NonnullRefPtr<ProfileNode>> m_children;
 };
@@ -114,7 +114,7 @@ public:
         u32 offset { 0 };
     };
 
-    struct Sample {
+    struct Event {
         u64 timestamp { 0 };
         String type;
         uintptr_t ptr { 0 };
@@ -123,7 +123,7 @@ public:
         Vector<Frame> frames;
     };
 
-    const Vector<Sample>& samples() const { return m_samples; }
+    const Vector<Event>& events() const { return m_events; }
 
     u64 length_in_ms() const { return m_last_timestamp - m_first_timestamp; }
     u64 first_timestamp() const { return m_first_timestamp; }
@@ -148,7 +148,7 @@ private:
     u64 m_first_timestamp { 0 };
     u64 m_last_timestamp { 0 };
 
-    Vector<Sample> m_samples;
+    Vector<Event> m_events;
 
     bool m_has_timestamp_filter_range { false };
     u64 m_timestamp_filter_range_start { 0 };
