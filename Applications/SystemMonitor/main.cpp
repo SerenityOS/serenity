@@ -293,6 +293,15 @@ NonnullRefPtr<GUI::Widget> build_file_systems_tab()
             },
             [](const JsonObject& object) {
                 return object.get("total_block_count").to_u32() * object.get("block_size").to_u32();
+            },
+            [](const JsonObject& object) {
+                auto total_blocks = object.get("total_block_count").to_u32();
+                if (total_blocks == 0)
+                    return 0;
+                auto free_blocks = object.get("free_block_count").to_u32();
+                auto used_blocks = total_blocks - free_blocks;
+                int percentage = (int)((float)used_blocks / (float)total_blocks * 100.0f);
+                return percentage;
             });
         df_fields.empend(
             "Used", Gfx::TextAlignment::CenterRight,
@@ -306,15 +315,6 @@ NonnullRefPtr<GUI::Widget> build_file_systems_tab()
                 auto free_blocks = object.get("free_block_count").to_u32();
                 auto used_blocks = total_blocks - free_blocks;
                 return used_blocks * object.get("block_size").to_u32();
-            },
-            [](const JsonObject& object) {
-                auto total_blocks = object.get("total_block_count").to_u32();
-                if (total_blocks == 0)
-                    return 0;
-                auto free_blocks = object.get("free_block_count").to_u32();
-                auto used_blocks = total_blocks - free_blocks;
-                int percentage = (int)((float)used_blocks / (float)total_blocks * 100.0f);
-                return percentage;
             });
         df_fields.empend(
             "Available", Gfx::TextAlignment::CenterRight,
