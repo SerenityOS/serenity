@@ -48,6 +48,7 @@ public:
     u64 timestamp() const { return m_timestamp; }
 
     u32 event_count() const { return m_event_count; }
+    u32 self_count() const { return m_self_count; }
 
     int child_count() const { return m_children.size(); }
     const Vector<NonnullRefPtr<ProfileNode>>& children() const { return m_children; }
@@ -78,6 +79,7 @@ public:
     const ProfileNode* parent() const { return m_parent; }
 
     void increment_event_count() { ++m_event_count; }
+    void increment_self_count() { ++m_self_count; }
 
     void sort_children();
 
@@ -95,6 +97,7 @@ private:
     u32 m_address { 0 };
     u32 m_offset { 0 };
     u32 m_event_count { 0 };
+    u32 m_self_count { 0 };
     u64 m_timestamp { 0 };
     Vector<NonnullRefPtr<ProfileNode>> m_children;
 };
