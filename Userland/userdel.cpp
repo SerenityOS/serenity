@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020, Fei Wu <f.eiwu@yahoo.com>
+ * Copyright (c) 2020, Fei Wu <f.eiwu@yahoo.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
