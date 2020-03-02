@@ -386,7 +386,11 @@ public:
 
     Lock& big_lock() { return m_big_lock; }
 
-    const ELFLoader* elf_loader() const { return m_elf_loader.ptr(); }
+    struct ELFBundle {
+        OwnPtr<Region> region;
+        OwnPtr<ELFLoader> elf_loader;
+    };
+    OwnPtr<ELFBundle> elf_bundle() const;
 
     int icon_id() const { return m_icon_id; }
 
@@ -495,7 +499,6 @@ private:
     FixedArray<gid_t> m_extra_gids;
 
     RefPtr<ProcessTracer> m_tracer;
-    OwnPtr<ELFLoader> m_elf_loader;
 
     WeakPtr<Region> m_master_tls_region;
     size_t m_master_tls_size { 0 };

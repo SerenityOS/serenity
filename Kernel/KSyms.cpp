@@ -127,6 +127,11 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
         hang();
         return;
     }
+
+    OwnPtr<Process::ELFBundle> elf_bundle;
+    if (Process::current)
+        elf_bundle = Process::current->elf_bundle();
+
     struct RecognizedSymbol {
         u32 address;
         const KSym* ksym;
@@ -154,8 +159,8 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
         if (!symbol.address)
             break;
         if (!symbol.ksym) {
-            if (Process::current && Process::current->elf_loader() && Process::current->elf_loader()->has_symbols()) {
-                dbg() << String::format("%p", symbol.address) << "  " << Process::current->elf_loader()->symbolicate(symbol.address);
+            if (elf_bundle && elf_bundle->elf_loader->has_symbols()) {
+                dbg() << String::format("%p", symbol.address) << "  " << elf_bundle->elf_loader->symbolicate(symbol.address);
             } else {
                 dbg() << String::format("%p", symbol.address) << " (no ELF symbols for process)";
             }
