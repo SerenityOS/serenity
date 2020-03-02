@@ -138,11 +138,10 @@ public:
     void set_inverted(bool);
 
 private:
-    explicit Profile(const JsonArray&);
+    explicit Profile(Vector<Event>);
 
     void rebuild_tree();
 
-    JsonArray m_json;
     RefPtr<ProfileModel> m_model;
     Vector<NonnullRefPtr<ProfileNode>> m_roots;
     u64 m_first_timestamp { 0 };

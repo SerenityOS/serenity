@@ -43,52 +43,16 @@ static void sort_profile_nodes(Vector<NonnullRefPtr<ProfileNode>>& nodes)
         child->sort_children();
 }
 
-Profile::Profile(const JsonArray& json)
-    : m_json(json)
+Profile::Profile(Vector<Event> events)
+    : m_events(move(events))
 {
-    m_first_timestamp = m_json.at(0).as_object().get("timestamp").to_number<u64>();
-    m_last_timestamp = m_json.at(m_json.size() - 1).as_object().get("timestamp").to_number<u64>();
+    m_first_timestamp = m_events.first().timestamp;
+    m_last_timestamp = m_events.last().timestamp;
 
     m_model = ProfileModel::create(*this);
 
-    m_events.ensure_capacity(m_json.size());
-    for (auto& event_value : m_json.values()) {
-
-        auto& event_object = event_value.as_object();
-
-        Event event;
-        event.timestamp = event_object.get("timestamp").to_number<u64>();
-        event.type = event_object.get("type").to_string();
-
-        if (event.type == "malloc") {
-            event.ptr = event_object.get("ptr").to_number<u32>();
-            event.size = event_object.get("size").to_number<u32>();
-        } else if (event.type == "free") {
-            event.ptr = event_object.get("ptr").to_number<u32>();
-        }
-
-        auto frames_value = event_object.get("frames");
-        auto& frames_array = frames_value.as_array();
-
-        if (frames_array.size() < 2)
-            continue;
-
-        u32 innermost_frame_address = frames_array.at(1).as_object().get("address").to_number<u32>();
-        event.in_kernel = innermost_frame_address >= 0xc0000000;
-
-        for (int i = frames_array.size() - 1; i >= 1; --i) {
-            auto& frame_value = frames_array.at(i);
-            auto& frame_object = frame_value.as_object();
-            Frame frame;
-            frame.symbol = frame_object.get("symbol").as_string_or({});
-            frame.address = frame_object.get("address").as_u32();
-            frame.offset = frame_object.get("offset").as_u32();
-            event.frames.append(move(frame));
-        };
-
-        m_deepest_stack_depth = max((u32)frames_array.size(), m_deepest_stack_depth);
-
-        m_events.append(move(event));
+    for (auto& event : m_events) {
+        m_deepest_stack_depth = max((u32)event.frames.size(), m_deepest_stack_depth);
     }
 
     rebuild_tree();
@@ -226,21 +190,26 @@ OwnPtr<Profile> Profile::load_from_perfcore_file(const StringView& path)
     if (perf_events.is_empty())
         return nullptr;
 
-    JsonArray profile_events;
+    Vector<Event> events;
 
     for (auto& perf_event_value : perf_events.values()) {
         auto& perf_event = perf_event_value.as_object();
 
-        JsonObject object;
-        object.set("timestamp", perf_event.get("timestamp"));
-        object.set("type", perf_event.get("type"));
-        object.set("ptr", perf_event.get("ptr"));
-        object.set("size", perf_event.get("size"));
+        Event event;
 
-        JsonArray frames_array;
+        event.timestamp = perf_event.get("timestamp").to_number<u64>();
+        event.type = perf_event.get("type").to_string();
+
+        if (event.type == "malloc") {
+            event.ptr = perf_event.get("ptr").to_number<uintptr_t>();
+            event.size = perf_event.get("size").to_number<size_t>();
+        } else if (event.type == "free") {
+            event.ptr = perf_event.get("ptr").to_number<uintptr_t>();
+        }
+
         auto stack_array = perf_event.get("stack").as_array();
-
-        for (auto& frame : stack_array.values()) {
+        for (ssize_t i = stack_array.values().size() - 1; i >= 1; --i) {
+            auto& frame = stack_array.at(i);
             auto ptr = frame.to_number<u32>();
             u32 offset = 0;
             String symbol;
@@ -258,18 +227,19 @@ OwnPtr<Profile> Profile::load_from_perfcore_file(const StringView& path)
             if (symbol == "??")
                 symbol = String::format("??", ptr);
 
-            JsonObject frame_object;
-            frame_object.set("address", ptr);
-            frame_object.set("symbol", symbol);
-            frame_object.set("offset", offset);
-            frames_array.append(move(frame_object));
+            event.frames.append({ symbol, ptr, offset });
         }
 
-        object.set("frames", move(frames_array));
-        profile_events.append(move(object));
+        if (event.frames.size() < 2)
+            continue;
+
+        uintptr_t innermost_frame_address = event.frames.at(1).address;
+        event.in_kernel = innermost_frame_address >= 0xc0000000;
+
+        events.append(move(event));
     }
 
-    return NonnullOwnPtr<Profile>(NonnullOwnPtr<Profile>::Adopt, *new Profile(move(profile_events)));
+    return NonnullOwnPtr<Profile>(NonnullOwnPtr<Profile>::Adopt, *new Profile(move(events)));
 }
 
 void ProfileNode::sort_children()
