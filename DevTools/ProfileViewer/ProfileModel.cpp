@@ -98,6 +98,8 @@ String ProfileModel::column_name(int column) const
     switch (column) {
     case Column::SampleCount:
         return "# Samples";
+    case Column::SelfCount:
+        return "# Self";
     case Column::StackFrame:
         return "Stack Frame";
     default:
@@ -108,7 +110,7 @@ String ProfileModel::column_name(int column) const
 
 GUI::Model::ColumnMetadata ProfileModel::column_metadata(int column) const
 {
-    if (column == Column::SampleCount)
+    if (column == Column::SampleCount || column == Column::SelfCount)
         return ColumnMetadata { 0, Gfx::TextAlignment::CenterRight };
     return {};
 }
@@ -127,6 +129,8 @@ GUI::Variant ProfileModel::data(const GUI::ModelIndex& index, Role role) const
     if (role == Role::Display) {
         if (index.column() == Column::SampleCount)
             return node->event_count();
+        if (index.column() == Column::SelfCount)
+            return node->self_count();
         if (index.column() == Column::StackFrame)
             return node->symbol();
         return {};
