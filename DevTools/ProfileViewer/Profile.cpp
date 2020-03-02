@@ -69,6 +69,7 @@ GUI::Model& Profile::model()
 
 void Profile::rebuild_tree()
 {
+    u32 filtered_event_count = 0;
     Vector<NonnullRefPtr<ProfileNode>> roots;
 
     auto find_or_create_root = [&roots](const String& symbol, u32 address, u32 offset, u64 timestamp) -> ProfileNode& {
@@ -146,10 +147,13 @@ void Profile::rebuild_tree()
                 node->increment_self_count();
             return IterationDecision::Continue;
         });
+
+        ++filtered_event_count;
     }
 
     sort_profile_nodes(roots);
 
+    m_filtered_event_count = filtered_event_count;
     m_roots = move(roots);
     m_model->update();
 }
@@ -275,4 +279,11 @@ void Profile::set_inverted(bool inverted)
         return;
     m_inverted = inverted;
     rebuild_tree();
+}
+
+void Profile::set_show_percentages(bool show_percentages)
+{
+    if (m_show_percentages == show_percentages)
+        return;
+    m_show_percentages = show_percentages;
 }
