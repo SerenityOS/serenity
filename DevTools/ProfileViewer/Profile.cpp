@@ -117,18 +117,18 @@ void Profile::rebuild_tree()
         {
             if (!m_inverted) {
                 for (size_t i = 0; i < event.frames.size(); ++i) {
-                    if (callback(event.frames.at(i)) == IterationDecision::Break)
+                    if (callback(event.frames.at(i), i == event.frames.size() - 1) == IterationDecision::Break)
                         break;
                 }
             } else {
                 for (ssize_t i = event.frames.size() - 1; i >= 0; --i) {
-                    if (callback(event.frames.at(i)) == IterationDecision::Break)
+                    if (callback(event.frames.at(i), static_cast<size_t>(i) == event.frames.size() - 1) == IterationDecision::Break)
                         break;
                 }
             }
         };
 
-        for_each_frame([&](const Frame& frame) {
+        for_each_frame([&](const Frame& frame, bool is_innermost_frame) {
             auto& symbol = frame.symbol;
             auto& address = frame.address;
             auto& offset = frame.offset;
@@ -142,6 +142,8 @@ void Profile::rebuild_tree()
                 node = &node->find_or_create_child(symbol, address, offset, event.timestamp);
 
             node->increment_event_count();
+            if (is_innermost_frame)
+                node->increment_self_count();
             return IterationDecision::Continue;
         });
     }
