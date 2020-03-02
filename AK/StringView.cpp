@@ -174,45 +174,12 @@ StringView StringView::substring_view_starting_after_substring(const StringView&
 
 int StringView::to_int(bool& ok) const
 {
-    bool negative = false;
-    int value = 0;
-    size_t i = 0;
-
-    if (is_empty()) {
-        ok = false;
-        return 0;
-    }
-
-    if (characters_without_null_termination()[0] == '-') {
-        i++;
-        negative = true;
-    }
-    for (; i < length(); i++) {
-        if (characters_without_null_termination()[i] < '0' || characters_without_null_termination()[i] > '9') {
-            ok = false;
-            return 0;
-        }
-        value = value * 10;
-        value += characters_without_null_termination()[i] - '0';
-    }
-    ok = true;
-
-    return negative ? -value : value;
+    return StringUtils::convert_to_int(*this, ok);
 }
 
 unsigned StringView::to_uint(bool& ok) const
 {
-    unsigned value = 0;
-    for (size_t i = 0; i < length(); ++i) {
-        if (characters_without_null_termination()[i] < '0' || characters_without_null_termination()[i] > '9') {
-            ok = false;
-            return 0;
-        }
-        value = value * 10;
-        value += characters_without_null_termination()[i] - '0';
-    }
-    ok = true;
-    return value;
+    return StringUtils::convert_to_uint(*this, ok);
 }
 
 unsigned StringView::hash() const
