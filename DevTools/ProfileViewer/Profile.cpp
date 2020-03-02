@@ -36,7 +36,7 @@
 static void sort_profile_nodes(Vector<NonnullRefPtr<ProfileNode>>& nodes)
 {
     quick_sort(nodes.begin(), nodes.end(), [](auto& a, auto& b) {
-        return a->sample_count() >= b->sample_count();
+        return a->event_count() >= b->event_count();
     });
 
     for (auto& child : nodes)
@@ -51,30 +51,30 @@ Profile::Profile(const JsonArray& json)
 
     m_model = ProfileModel::create(*this);
 
-    m_samples.ensure_capacity(m_json.size());
-    for (auto& sample_value : m_json.values()) {
+    m_events.ensure_capacity(m_json.size());
+    for (auto& event_value : m_json.values()) {
 
-        auto& sample_object = sample_value.as_object();
+        auto& event_object = event_value.as_object();
 
-        Sample sample;
-        sample.timestamp = sample_object.get("timestamp").to_number<u64>();
-        sample.type = sample_object.get("type").to_string();
+        Event event;
+        event.timestamp = event_object.get("timestamp").to_number<u64>();
+        event.type = event_object.get("type").to_string();
 
-        if (sample.type == "malloc") {
-            sample.ptr = sample_object.get("ptr").to_number<u32>();
-            sample.size = sample_object.get("size").to_number<u32>();
-        } else if (sample.type == "free") {
-            sample.ptr = sample_object.get("ptr").to_number<u32>();
+        if (event.type == "malloc") {
+            event.ptr = event_object.get("ptr").to_number<u32>();
+            event.size = event_object.get("size").to_number<u32>();
+        } else if (event.type == "free") {
+            event.ptr = event_object.get("ptr").to_number<u32>();
         }
 
-        auto frames_value = sample_object.get("frames");
+        auto frames_value = event_object.get("frames");
         auto& frames_array = frames_value.as_array();
 
         if (frames_array.size() < 2)
             continue;
 
         u32 innermost_frame_address = frames_array.at(1).as_object().get("address").to_number<u32>();
-        sample.in_kernel = innermost_frame_address >= 0xc0000000;
+        event.in_kernel = innermost_frame_address >= 0xc0000000;
 
         for (int i = frames_array.size() - 1; i >= 1; --i) {
             auto& frame_value = frames_array.at(i);
@@ -83,12 +83,12 @@ Profile::Profile(const JsonArray& json)
             frame.symbol = frame_object.get("symbol").as_string_or({});
             frame.address = frame_object.get("address").as_u32();
             frame.offset = frame_object.get("offset").as_u32();
-            sample.frames.append(move(frame));
+            event.frames.append(move(frame));
         };
 
         m_deepest_stack_depth = max((u32)frames_array.size(), m_deepest_stack_depth);
 
-        m_samples.append(move(sample));
+        m_events.append(move(event));
     }
 
     rebuild_tree();
@@ -121,30 +121,30 @@ void Profile::rebuild_tree()
 
     HashTable<uintptr_t> live_allocations;
 
-    for (auto& sample : m_samples) {
+    for (auto& event : m_events) {
         if (has_timestamp_filter_range()) {
-            auto timestamp = sample.timestamp;
+            auto timestamp = event.timestamp;
             if (timestamp < m_timestamp_filter_range_start || timestamp > m_timestamp_filter_range_end)
                 continue;
         }
 
-        if (sample.type == "malloc")
-            live_allocations.set(sample.ptr);
-        else if (sample.type == "free")
-            live_allocations.remove(sample.ptr);
+        if (event.type == "malloc")
+            live_allocations.set(event.ptr);
+        else if (event.type == "free")
+            live_allocations.remove(event.ptr);
     }
 
-    for (auto& sample : m_samples) {
+    for (auto& event : m_events) {
         if (has_timestamp_filter_range()) {
-            auto timestamp = sample.timestamp;
+            auto timestamp = event.timestamp;
             if (timestamp < m_timestamp_filter_range_start || timestamp > m_timestamp_filter_range_end)
                 continue;
         }
 
-        if (sample.type == "malloc" && !live_allocations.contains(sample.ptr))
+        if (event.type == "malloc" && !live_allocations.contains(event.ptr))
             continue;
 
-        if (sample.type == "free")
+        if (event.type == "free")
             continue;
 
         ProfileNode* node = nullptr;
@@ -152,13 +152,13 @@ void Profile::rebuild_tree()
         auto for_each_frame = [&]<typename Callback>(Callback callback)
         {
             if (!m_inverted) {
-                for (size_t i = 0; i < sample.frames.size(); ++i) {
-                    if (callback(sample.frames.at(i)) == IterationDecision::Break)
+                for (size_t i = 0; i < event.frames.size(); ++i) {
+                    if (callback(event.frames.at(i)) == IterationDecision::Break)
                         break;
                 }
             } else {
-                for (ssize_t i = sample.frames.size() - 1; i >= 0; --i) {
-                    if (callback(sample.frames.at(i)) == IterationDecision::Break)
+                for (ssize_t i = event.frames.size() - 1; i >= 0; --i) {
+                    if (callback(event.frames.at(i)) == IterationDecision::Break)
                         break;
                 }
             }
@@ -173,11 +173,11 @@ void Profile::rebuild_tree()
                 return IterationDecision::Break;
 
             if (!node)
-                node = &find_or_create_root(symbol, address, offset, sample.timestamp);
+                node = &find_or_create_root(symbol, address, offset, event.timestamp);
             else
-                node = &node->find_or_create_child(symbol, address, offset, sample.timestamp);
+                node = &node->find_or_create_child(symbol, address, offset, event.timestamp);
 
-            node->increment_sample_count();
+            node->increment_event_count();
             return IterationDecision::Continue;
         });
     }

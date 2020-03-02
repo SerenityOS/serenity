@@ -126,7 +126,7 @@ GUI::Variant ProfileModel::data(const GUI::ModelIndex& index, Role role) const
     }
     if (role == Role::Display) {
         if (index.column() == Column::SampleCount)
-            return node->sample_count();
+            return node->event_count();
         if (index.column() == Column::StackFrame)
             return node->symbol();
         return {};
