@@ -754,7 +754,7 @@ struct RecognizedSymbol {
     const KSym* ksym;
 };
 
-static bool symbolicate(const RecognizedSymbol& symbol, const Process& process, StringBuilder& builder)
+static bool symbolicate(const RecognizedSymbol& symbol, const Process& process, StringBuilder& builder, Process::ELFBundle* elf_bundle)
 {
     if (!symbol.address)
         return false;
@@ -764,8 +764,8 @@ static bool symbolicate(const RecognizedSymbol& symbol, const Process& process, 
         if (!is_user_address(VirtualAddress(symbol.address))) {
             builder.append("0xdeadc0de\n");
         } else {
-            if (!Scheduler::is_active() && process.elf_loader() && process.elf_loader()->has_symbols())
-                builder.appendf("%p  %s\n", symbol.address, process.elf_loader()->symbolicate(symbol.address).characters());
+            if (!Scheduler::is_active() && elf_bundle && elf_bundle->elf_loader->has_symbols())
+                builder.appendf("%p  %s\n", symbol.address, elf_bundle->elf_loader->symbolicate(symbol.address).characters());
             else
                 builder.appendf("%p\n", symbol.address);
         }
@@ -794,6 +794,7 @@ String Thread::backtrace_impl() const
     }
 
     auto& process = const_cast<Process&>(this->process());
+    auto elf_bundle = process.elf_bundle();
     ProcessPagingScope paging_scope(process);
 
     uintptr_t stack_ptr = start_frame;
@@ -815,7 +816,7 @@ String Thread::backtrace_impl() const
 
     StringBuilder builder;
     for (auto& symbol : recognized_symbols) {
-        if (!symbolicate(symbol, process, builder))
+        if (!symbolicate(symbol, process, builder, elf_bundle.ptr()))
             break;
     }
     return builder.to_string();
