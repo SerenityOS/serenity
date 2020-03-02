@@ -126,6 +126,8 @@ public:
         Vector<Frame> frames;
     };
 
+    u32 filtered_event_count() const { return m_filtered_event_count; }
+
     const Vector<Event>& events() const { return m_events; }
 
     u64 length_in_ms() const { return m_last_timestamp - m_first_timestamp; }
@@ -140,6 +142,9 @@ public:
     bool is_inverted() const { return m_inverted; }
     void set_inverted(bool);
 
+    bool show_percentages() const { return m_show_percentages; }
+    void set_show_percentages(bool);
+
 private:
     explicit Profile(Vector<Event>);
 
@@ -147,6 +152,7 @@ private:
 
     RefPtr<ProfileModel> m_model;
     Vector<NonnullRefPtr<ProfileNode>> m_roots;
+    u32 m_filtered_event_count { 0 };
     u64 m_first_timestamp { 0 };
     u64 m_last_timestamp { 0 };
 
@@ -158,4 +164,5 @@ private:
 
     u32 m_deepest_stack_depth { 0 };
     bool m_inverted { false };
+    bool m_show_percentages { false };
 };
