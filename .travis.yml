@@ -1,4 +1,4 @@
-sudo: require
+os: linux
 dist: xenial
 
 language: cpp
