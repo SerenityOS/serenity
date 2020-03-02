@@ -832,9 +832,6 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     dbg() << "Process " << pid() << " exec: PD=" << m_page_directory.ptr() << " created";
 #endif
 
-    MM.enter_process_paging_scope(*this);
-
-    Region* region { nullptr };
 
     InodeMetadata loader_metadata;
 
@@ -848,23 +845,22 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     // FIXME: We should be able to load both the PT_INTERP interpreter and the main program... once the RTLD is smart enough
     if (interpreter_description) {
         loader_metadata = interpreter_description->metadata();
-        region = allocate_region_with_vmobject(VirtualAddress(), loader_metadata.size, *vmobject, 0, interpreter_description->absolute_path(), PROT_READ, false);
         // we don't need the interpreter file desciption after we've loaded (or not) it into memory
         interpreter_description = nullptr;
     } else {
         loader_metadata = main_program_description->metadata();
-        region = allocate_region_with_vmobject(VirtualAddress(), loader_metadata.size, *vmobject, 0, main_program_description->absolute_path(), PROT_READ, false);
     }
 
-    ASSERT(region);
-
-    region->set_shared(true);
+    auto region = MM.allocate_kernel_region_with_vmobject(*vmobject, PAGE_ROUND_UP(loader_metadata.size), "ELF loading", Region::Access::Read);
+    if (!region)
+        return -ENOMEM;
 
     Region* master_tls_region { nullptr };
     size_t master_tls_size = 0;
     size_t master_tls_alignment = 0;
     u32 entry_eip = 0;
 
+    MM.enter_process_paging_scope(*this);
     OwnPtr<ELFLoader> loader;
     {
         ArmedScopeGuard rollback_regions_guard([&]() {
