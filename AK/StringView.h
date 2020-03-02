@@ -77,9 +77,8 @@ public:
     // following newline.".
     Vector<StringView> lines(bool consider_cr = true) const;
 
-    // FIXME: These should be shared between String and StringView somehow!
-    unsigned to_uint(bool& ok) const;
     int to_int(bool& ok) const;
+    unsigned to_uint(bool& ok) const;
 
     // Create a new substring view of this string view, starting either at the beginning of
     // the given substring view, or after its end, and continuing until the end of this string
