@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2020, Marios Prokopakis <mariosprokopakis@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,6 +25,7 @@
  */
 
 #include <AK/QuickSort.h>
+#include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <stdio.h>
@@ -34,11 +35,20 @@
 struct Index {
     enum class Type {
         SingleIndex,
+        SliceIndex,
         RangedIndex
     };
     ssize_t m_from { -1 };
     ssize_t m_to { -1 };
     Type m_type { Type::SingleIndex };
+
+    bool intersects(const Index& other)
+    {
+        if (m_type != Type::RangedIndex)
+            return m_from == other.m_from;
+
+        return !(other.m_from > m_to || other.m_to < m_from);
+    }
 };
 
 static void print_usage_and_exit(int ret)
@@ -49,8 +59,18 @@ static void print_usage_and_exit(int ret)
 
 static void add_if_not_exists(Vector<Index>& indexes, Index data)
 {
-    auto find = [data](auto& other) { return other.m_from == data.m_from && other.m_to == data.m_to; };
-    if (indexes.find(find) == indexes.end()) {
+    bool append_to_vector = true;
+    for (auto& index : indexes) {
+        if (index.intersects(data)) {
+            if (index.m_type == Index::Type::RangedIndex) {
+                index.m_from = AK::min(index.m_from, data.m_from);
+                index.m_to = AK::max(index.m_to, data.m_to);
+            }
+            append_to_vector = false;
+        }
+    }
+
+    if (append_to_vector) {
         indexes.append(data);
     }
 }
@@ -81,10 +101,8 @@ static void expand_list(Vector<String>& tokens, Vector<Index>& indexes)
                 print_usage_and_exit(1);
             }
 
-            for (ssize_t i = 1; i <= index; ++i) {
-                Index tmp = { i, i, Index::Type::SingleIndex };
-                add_if_not_exists(indexes, tmp);
-            }
+            Index tmp = { 1, index, Index::Type::RangedIndex };
+            add_if_not_exists(indexes, tmp);
         } else if (token[token.length() - 1] == '-') {
             bool ok = true;
             ssize_t index = token.substring(0, token.length() - 1).to_int(ok);
@@ -97,7 +115,7 @@ static void expand_list(Vector<String>& tokens, Vector<Index>& indexes)
                 fprintf(stderr, "cut: byte/character positions are numbered from 1\n");
                 print_usage_and_exit(1);
             }
-            Index tmp = { index, -1, Index::Type::RangedIndex };
+            Index tmp = { index, -1, Index::Type::SliceIndex };
             add_if_not_exists(indexes, tmp);
         } else {
             auto range = token.split('-');
@@ -123,10 +141,8 @@ static void expand_list(Vector<String>& tokens, Vector<Index>& indexes)
                     print_usage_and_exit(1);
                 }
 
-                for (; index1 <= index2; ++index1) {
-                    Index tmp = { index1, index1, Index::Type::SingleIndex };
-                    add_if_not_exists(indexes, tmp);
-                }
+                Index tmp = { index1, index2, Index::Type::RangedIndex };
+                add_if_not_exists(indexes, tmp);
             } else if (range.size() == 1) {
                 bool ok = true;
                 ssize_t index = range[0].to_int(ok);
@@ -167,14 +183,15 @@ static void cut_file(const String& file, const Vector<Index>& byte_vector)
         line[line_length - 1] = '\0';
         line_length--;
         for (auto& i : byte_vector) {
-            if (i.m_type == Index::Type::RangedIndex && i.m_from < line_length) {
+            if (i.m_type == Index::Type::SliceIndex && i.m_from < line_length)
                 printf("%s", line + i.m_from - 1);
-                break;
-            }
-
-            if (i.m_from <= line_length)
+            else if (i.m_type == Index::Type::SingleIndex && i.m_from <= line_length)
                 printf("%c", line[i.m_from - 1]);
-            else
+            else if (i.m_type == Index::Type::RangedIndex && i.m_from <= line_length) {
+                auto to = i.m_to > line_length ? line_length : i.m_to;
+                auto sub_string = String(line).substring(i.m_from - 1, to - i.m_from + 1);
+                printf("%s", sub_string.characters());
+            } else
                 break;
         }
         printf("\n");
@@ -207,7 +224,6 @@ int main(int argc, char** argv)
         } else if (!strcmp(argv[i], "--help") || !strcmp(argv[i], "-h")) {
             print_usage_and_exit(1);
         } else if (argv[i][0] != '-') {
-            //file = argv[i++];
             files.append(argv[i++]);
         } else {
             fprintf(stderr, "cut: invalid argument %s\n", argv[i]);
@@ -215,17 +231,15 @@ int main(int argc, char** argv)
         }
     }
 
-    if (files.is_empty() || byte_list == "") {
+    if (files.is_empty() || byte_list == "")
         print_usage_and_exit(1);
-    }
 
     Vector<Index> byte_vector;
     expand_list(tokens, byte_vector);
     quick_sort(byte_vector, [](auto& a, auto& b) { return a.m_from < b.m_from; });
     /* Process each file */
-    for (auto& file : files) {
+    for (auto& file : files)
         cut_file(file, byte_vector);
-    }
 
     return 0;
 }
