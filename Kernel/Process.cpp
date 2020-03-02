@@ -947,7 +947,6 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 #endif
     }
 
-    m_elf_loader = move(loader);
     m_executable = main_program_description->custody();
 
     m_promises = m_execpromises;
@@ -1516,8 +1515,8 @@ void Process::crash(int signal, u32 eip)
     if (eip >= 0xc0000000 && ksyms_ready) {
         auto* ksym = ksymbolicate(eip);
         dbg() << "\033[31;1m" << String::format("%p", eip) << "  " << (ksym ? demangle(ksym->name) : "(k?)") << " +" << (ksym ? eip - ksym->address : 0) << "\033[0m\n";
-    } else if (m_elf_loader) {
-        dbg() << "\033[31;1m" << String::format("%p", eip) << "  " << m_elf_loader->symbolicate(eip) << "\033[0m\n";
+    } else if (auto elf_bundle = this->elf_bundle()) {
+        dbg() << "\033[31;1m" << String::format("%p", eip) << "  " << elf_bundle->elf_loader->symbolicate(eip) << "\033[0m\n";
     } else {
         dbg() << "\033[31;1m" << String::format("%p", eip) << "  (?)\033[0m\n";
     }
@@ -3051,7 +3050,6 @@ void Process::finalize()
     m_cwd = nullptr;
     m_root_directory = nullptr;
     m_root_directory_relative_to_global_root = nullptr;
-    m_elf_loader = nullptr;
 
     disown_all_shared_buffers();
     {
@@ -4813,6 +4811,20 @@ int Process::sys$perf_event(int type, uintptr_t arg1, uintptr_t arg2)
 void Process::set_tty(TTY* tty)
 {
     m_tty = tty;
+}
+
+OwnPtr<Process::ELFBundle> Process::elf_bundle() const
+{
+    if (!m_executable)
+        return nullptr;
+    auto bundle = make<ELFBundle>();
+    ASSERT(m_executable->inode().shared_vmobject());
+    auto& vmobject = *m_executable->inode().shared_vmobject();
+    bundle->region = MM.allocate_kernel_region_with_vmobject(const_cast<SharedInodeVMObject&>(vmobject), vmobject.size(), "ELF bundle", Region::Access::Read);
+    if (!bundle->region)
+        return nullptr;
+    bundle->elf_loader = make<ELFLoader>(bundle->region->vaddr().as_ptr(), bundle->region->size());
+    return bundle;
 }
 
 }
