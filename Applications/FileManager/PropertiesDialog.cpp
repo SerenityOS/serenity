@@ -43,16 +43,15 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
     auto file_path = FileSystemPath(path);
     ASSERT(file_path.is_valid());
 
-    auto main_widget = GUI::Widget::construct();
-    main_widget->set_layout(make<GUI::VerticalBoxLayout>());
-    main_widget->layout()->set_margins({ 4, 4, 4, 4 });
-    main_widget->set_fill_with_background_color(true);
+    auto& main_widget = set_main_widget<GUI::Widget>();
+    main_widget.set_layout(make<GUI::VerticalBoxLayout>());
+    main_widget.layout()->set_margins({ 4, 4, 4, 4 });
+    main_widget.set_fill_with_background_color(true);
 
-    set_main_widget(main_widget);
     set_rect({ 0, 0, 360, 420 });
     set_resizable(false);
 
-    auto tab_widget = main_widget->add<GUI::TabWidget>();
+    auto tab_widget = main_widget.add<GUI::TabWidget>();
 
     auto general_tab = tab_widget->add_tab<GUI::Widget>("General");
     general_tab->set_layout(make<GUI::VerticalBoxLayout>());
@@ -131,8 +130,8 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
 
     general_tab->layout()->add_spacer();
 
-    auto button_widget = main_widget->add<GUI::Widget>();
-    button_widget->set_layout(make<GUI::HorizontalBoxLayout>());
+    auto button_widget = main_widget.add<GUI::Widget>();
+    button_widget->set_layout<GUI::HorizontalBoxLayout>();
     button_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     button_widget->set_preferred_size(0, 24);
     button_widget->layout()->set_spacing(5);

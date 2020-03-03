@@ -78,13 +78,13 @@ int main(int argc, char* argv[])
     window->set_title("Help");
     window->set_rect(300, 200, 570, 500);
 
-    auto widget = GUI::Widget::construct();
-    widget->set_layout(make<GUI::VerticalBoxLayout>());
-    widget->layout()->set_spacing(0);
+    auto& widget = window->set_main_widget<GUI::Widget>();
+    widget.set_layout<GUI::VerticalBoxLayout>();
+    widget.layout()->set_spacing(0);
 
-    auto toolbar = widget->add<GUI::ToolBar>();
+    auto toolbar = widget.add<GUI::ToolBar>();
 
-    auto splitter = widget->add<GUI::HorizontalSplitter>();
+    auto splitter = widget.add<GUI::HorizontalSplitter>();
 
     auto model = ManualModel::create();
 
@@ -195,7 +195,6 @@ int main(int argc, char* argv[])
 
     app.set_menubar(move(menubar));
 
-    window->set_main_widget(widget);
     window->set_focused_widget(tree_view);
     window->show();
 

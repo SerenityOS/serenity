@@ -57,22 +57,21 @@ int main(int argc, char** argv)
     window->set_rect(100, 100, 800, 500);
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-chanviewer.png"));
 
-    auto widget = GUI::Widget::construct();
-    window->set_main_widget(widget);
-    widget->set_fill_with_background_color(true);
-    widget->set_layout(make<GUI::VerticalBoxLayout>());
+    auto& widget = window->set_main_widget<GUI::Widget>();
+    widget.set_fill_with_background_color(true);
+    widget.set_layout<GUI::VerticalBoxLayout>();
 
-    auto board_combo = widget->add<GUI::ComboBox>();
+    auto board_combo = widget.add<GUI::ComboBox>();
     board_combo->set_only_allow_values_from_model(true);
     board_combo->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     board_combo->set_preferred_size(0, 20);
     board_combo->set_model(BoardListModel::create());
 
-    auto catalog_view = widget->add<GUI::TableView>();
+    auto catalog_view = widget.add<GUI::TableView>();
     catalog_view->set_model(ThreadCatalogModel::create());
     auto& catalog_model = *static_cast<ThreadCatalogModel*>(catalog_view->model());
 
-    auto statusbar = widget->add<GUI::StatusBar>();
+    auto statusbar = widget.add<GUI::StatusBar>();
 
     board_combo->on_change = [&] (auto&, const GUI::ModelIndex& index) {
         auto selected_board = board_combo->model()->data(index, GUI::Model::Role::Custom);

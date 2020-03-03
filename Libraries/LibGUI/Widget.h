@@ -98,6 +98,13 @@ public:
     const Layout* layout() const { return m_layout.ptr(); }
     void set_layout(OwnPtr<Layout>&&);
 
+    template<typename T>
+    T& set_layout()
+    {
+        set_layout(make<T>());
+        return static_cast<T&>(*layout());
+    }
+
     SizePolicy horizontal_size_policy() const { return m_horizontal_size_policy; }
     SizePolicy vertical_size_policy() const { return m_vertical_size_policy; }
     SizePolicy size_policy(Orientation orientation) { return orientation == Orientation::Horizontal ? m_horizontal_size_policy : m_vertical_size_policy; }

@@ -92,12 +92,12 @@ int main(int argc, char** argv)
     auto heigth = config->read_num_entry("Window", "Heigth", 480);
     window->set_rect({ left, top, width, heigth });
 
-    auto widget = GUI::Widget::construct();
-    widget->set_layout(make<GUI::VerticalBoxLayout>());
-    widget->layout()->set_spacing(0);
+    auto& widget = window->set_main_widget<GUI::Widget>();
+    widget.set_layout<GUI::VerticalBoxLayout>();
+    widget.layout()->set_spacing(0);
 
-    auto main_toolbar = widget->add<GUI::ToolBar>();
-    auto location_toolbar = widget->add<GUI::ToolBar>();
+    auto main_toolbar = widget.add<GUI::ToolBar>();
+    auto location_toolbar = widget.add<GUI::ToolBar>();
     location_toolbar->layout()->set_margins({ 6, 3, 6, 3 });
     location_toolbar->set_preferred_size(0, 25);
 
@@ -106,7 +106,7 @@ int main(int argc, char** argv)
 
     auto location_textbox = location_toolbar->add<GUI::TextBox>();
 
-    auto splitter = widget->add<GUI::HorizontalSplitter>();
+    auto splitter = widget.add<GUI::HorizontalSplitter>();
     auto tree_view = splitter->add<GUI::TreeView>();
     auto directories_model = GUI::FileSystemModel::create("/", GUI::FileSystemModel::Mode::DirectoriesOnly);
     tree_view->set_model(directories_model);
@@ -122,7 +122,7 @@ int main(int argc, char** argv)
     tree_view->set_preferred_size(150, 0);
     auto directory_view = splitter->add<DirectoryView>();
 
-    auto statusbar = widget->add<GUI::StatusBar>();
+    auto statusbar = widget.add<GUI::StatusBar>();
 
     auto progressbar = statusbar->add<GUI::ProgressBar>();
     progressbar->set_caption("Generating thumbnails: ");
@@ -641,7 +641,6 @@ int main(int argc, char** argv)
     directory_view->open(initial_location);
     directory_view->set_focus(true);
 
-    window->set_main_widget(widget);
     window->show();
 
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-folder.png"));
