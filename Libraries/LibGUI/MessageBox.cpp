@@ -131,7 +131,7 @@ void MessageBox::build()
         button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
         button->set_preferred_size(0, 20);
         button->set_text(label);
-        button->on_click = [this, label, result](auto&) {
+        button->on_click = [this, label, result] {
             dbg() << "GUI::MessageBox: '" << label << "' button clicked";
             done(result);
         };

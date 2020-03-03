@@ -37,8 +37,8 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/StackWidget.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/Font.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Font.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -249,7 +249,7 @@ int main(int argc, char** argv)
         if (first)
             menu_option->set_checked(true);
 
-        menu_option->on_click = [content = content.ptr(), &stack](auto&) {
+        menu_option->on_click = [content = content.ptr(), &stack] {
             stack->set_active_widget(content);
             content->invalidate_layout();
         };

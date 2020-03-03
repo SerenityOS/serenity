@@ -210,7 +210,7 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
     cancel_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     cancel_button->set_preferred_size(80, 0);
     cancel_button->set_text("Cancel");
-    cancel_button->on_click = [this](auto&) {
+    cancel_button->on_click = [this] {
         done(ExecCancel);
     };
 
@@ -218,7 +218,7 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
     ok_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     ok_button->set_preferred_size(80, 0);
     ok_button->set_text(ok_button_name(m_mode));
-    ok_button->on_click = [this](auto&) {
+    ok_button->on_click = [this] {
         on_file_return();
     };
 
