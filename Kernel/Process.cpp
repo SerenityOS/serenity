@@ -4290,6 +4290,13 @@ int Process::sys$clock_nanosleep(const Syscall::SC_clock_nanosleep_params* user_
         if (wakeup_time > g_uptime) {
             u32 ticks_left = wakeup_time - g_uptime;
             if (!is_absolute && params.remaining_sleep) {
+                if (!validate_write_typed(params.remaining_sleep)) {
+                    // This can happen because the lock is dropped while
+                    // sleeping, thus giving other threads the opportunity
+                    // to make the region unwritable.
+                    return -EFAULT;
+                }
+
                 timespec remaining_sleep;
                 memset(&remaining_sleep, 0, sizeof(timespec));
                 remaining_sleep.tv_sec = ticks_left / TICKS_PER_SECOND;
