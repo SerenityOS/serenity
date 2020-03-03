@@ -43,8 +43,10 @@ public:
     static void initialize_limited();
     virtual PhysicalAddress find_table(const char* sig);
 
-    virtual void do_acpi_reboot();
-    virtual void do_acpi_shutdown();
+    virtual void try_acpi_reboot();
+    virtual bool can_reboot() { return false; }
+    virtual void try_acpi_shutdown();
+    virtual bool can_shutdown() { return false; }
 
     virtual void enable_aml_interpretation();
     virtual void enable_aml_interpretation(File&);
