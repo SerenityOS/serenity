@@ -121,7 +121,7 @@ void SortingProxyModel::resort()
         did_update();
         return;
     }
-    quick_sort(m_row_mappings.begin(), m_row_mappings.end(), [&](auto row1, auto row2) -> bool {
+    quick_sort(m_row_mappings, [&](auto row1, auto row2) -> bool {
         auto data1 = target().data(target().index(row1, m_key_column), Model::Role::Sort);
         auto data2 = target().data(target().index(row2, m_key_column), Model::Role::Sort);
         if (data1 == data2)

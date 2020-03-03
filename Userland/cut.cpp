@@ -221,7 +221,7 @@ int main(int argc, char** argv)
 
     Vector<Index> byte_vector;
     expand_list(tokens, byte_vector);
-    quick_sort(byte_vector.begin(), byte_vector.end(), [](auto& a, auto& b) { return a.m_from < b.m_from; });
+    quick_sort(byte_vector, [](auto& a, auto& b) { return a.m_from < b.m_from; });
     /* Process each file */
     for (auto& file : files) {
         cut_file(file, byte_vector);

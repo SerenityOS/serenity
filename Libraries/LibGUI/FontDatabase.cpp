@@ -71,7 +71,7 @@ void GFontDatabase::for_each_font(Function<void(const StringView&)> callback)
     names.ensure_capacity(m_name_to_metadata.size());
     for (auto& it : m_name_to_metadata)
         names.append(it.key);
-    quick_sort(names.begin(), names.end(), AK::is_less_than<String>);
+    quick_sort(names);
     for (auto& name : names)
         callback(name);
 }
@@ -84,7 +84,7 @@ void GFontDatabase::for_each_fixed_width_font(Function<void(const StringView&)> 
         if (it.value.is_fixed_width)
             names.append(it.key);
     }
-    quick_sort(names.begin(), names.end(), AK::is_less_than<String>);
+    quick_sort(names);
     for (auto& name : names)
         callback(name);
 }

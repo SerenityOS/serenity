@@ -123,7 +123,7 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
     Vector<String> sorted_app_categories;
     for (auto& category : seen_app_categories)
         sorted_app_categories.append(category);
-    quick_sort(sorted_app_categories.begin(), sorted_app_categories.end(), [](auto& a, auto& b) { return a < b; });
+    quick_sort(sorted_app_categories);
 
     u8 system_menu_name[] = { 0xc3, 0xb8, 0 };
     auto system_menu = GUI::Menu::construct(String((const char*)system_menu_name));
@@ -175,7 +175,7 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
             auto theme_path = String::format("/res/themes/%s", theme_name.characters());
             g_themes.append({ FileSystemPath(theme_name).title(), theme_path });
         }
-        quick_sort(g_themes.begin(), g_themes.end(), [](auto& a, auto& b) { return a.name < b.name; });
+        quick_sort(g_themes, [](auto& a, auto& b) { return a.name < b.name; });
     }
 
     {

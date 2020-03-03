@@ -60,7 +60,7 @@ struct Project::ProjectTreeNode : public RefCounted<ProjectTreeNode> {
     {
         if (type == Type::File)
             return;
-        quick_sort(children.begin(), children.end(), [](auto& a, auto& b) {
+        quick_sort(children, [](auto& a, auto& b) {
             return a->name < b->name;
         });
         for (auto& child : children)
