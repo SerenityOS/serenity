@@ -35,30 +35,29 @@
 
 namespace Kernel {
 namespace ACPI {
-class DynamicParser final : public IRQHandler
-    , StaticParser {
-public:
-    static void initialize(PhysicalAddress rsdp);
-    static void initialize_without_rsdp();
+    class DynamicParser final : public IRQHandler
+        , StaticParser {
+    public:
+        static void initialize(PhysicalAddress rsdp);
+        static void initialize_without_rsdp();
 
-    virtual void enable_aml_interpretation() override;
-    virtual void enable_aml_interpretation(File& dsdt_file) override;
-    virtual void enable_aml_interpretation(u8* physical_dsdt, u32 dsdt_payload_legnth) override;
-    virtual void disable_aml_interpretation() override;    
-    virtual void try_acpi_shutdown() override;
-    virtual bool can_shutdown() override { return true; }
+        virtual void enable_aml_interpretation() override;
+        virtual void enable_aml_interpretation(File& dsdt_file) override;
+        virtual void enable_aml_interpretation(u8* physical_dsdt, u32 dsdt_payload_legnth) override;
+        virtual void disable_aml_interpretation() override;
+        virtual void try_acpi_shutdown() override;
+        virtual bool can_shutdown() override { return true; }
 
-protected:
-    DynamicParser();
-    explicit DynamicParser(PhysicalAddress);
+    protected:
+        DynamicParser();
+        explicit DynamicParser(PhysicalAddress);
 
-private:
-    void build_namespace();
-    // ^IRQHandler
-    virtual void handle_irq(RegisterState&) override;
+    private:
+        void build_namespace();
+        // ^IRQHandler
+        virtual void handle_irq(RegisterState&) override;
 
-    OwnPtr<Region> m_acpi_namespace;
-};
-
+        OwnPtr<Region> m_acpi_namespace;
+    };
 }
 }
