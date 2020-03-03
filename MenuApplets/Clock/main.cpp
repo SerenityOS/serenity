@@ -98,12 +98,12 @@ private:
 
 	for(size_t i = 0; i < format_parts.size(); i++)
 	{
-		// If the first part actually start with a %
+		// If the first part don't start with a %
 		if(i == 0 && !m_format.starts_with('%')){
 			builder.append(format_parts[i]);
 			continue;
 		}
-		
+
 		switch(format_parts[i].characters()[0]){
 			case 'S':
 				builder.append(String::format("%02i", tm.tm_sec));
@@ -115,6 +115,16 @@ private:
 				builder.append(String::format("%02i", tm.tm_hour));
 				break;
 
+			case 'h':
+				if(tm.tm_hour != 0)
+					builder.append(String::format("%02i", tm.tm_hour < 12 ? tm.tm_hour : tm.tm_hour - 12));
+				else
+					builder.append(String("12"));
+				break;
+			case 'a':
+				builder.append(String(tm.tm_hour < 12 && tm.tm_hour > 0 ? "AM" : "PM"));
+				break;
+
 			case 'd':
 				builder.append(String::format("%02i", tm.tm_mday));
 				break;
@@ -122,7 +132,7 @@ private:
 				builder.append(String::format("%02i", tm.tm_mon + 1));
 				break;
 			case 'y':
-				builder.append(String::format("%02i", tm.tm_year + 1900));
+				builder.append(String::format("%04i", tm.tm_year + 1900));
 				break;
 
 			default:
@@ -130,6 +140,8 @@ private:
 				builder.append(format_parts[i]);
 				continue;
 		}
+
+		// This will add all the part, minus the first character, which is the parameter
 		builder.append(format_parts[i].substring(1, format_parts[i].length() - 1));
 	}	
 
