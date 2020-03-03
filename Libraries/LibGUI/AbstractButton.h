@@ -70,6 +70,8 @@ protected:
     virtual void leave_event(Core::Event&) override;
     virtual void change_event(Event&) override;
 
+    virtual void save_to(JsonObject&) override;
+
     void paint_text(Painter&, const Gfx::Rect&, const Gfx::Font&, Gfx::TextAlignment);
 
 private:

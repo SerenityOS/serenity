@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/JsonObject.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/AbstractButton.h>
 #include <LibGUI/Painter.h>
@@ -194,6 +195,15 @@ void AbstractButton::change_event(Event& event)
         }
     }
     Widget::change_event(event);
+}
+
+void AbstractButton::save_to(JsonObject& json)
+{
+    json.set("text", m_text);
+    json.set("checked", m_checked);
+    json.set("checkable", m_checkable);
+    json.set("exclusive", m_exclusive);
+    Widget::save_to(json);
 }
 
 }
