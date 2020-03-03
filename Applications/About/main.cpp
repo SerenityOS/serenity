@@ -63,21 +63,20 @@ int main(int argc, char** argv)
     window->set_resizable(false);
     window->set_rect(window_rect);
 
-    auto outer_widget = GUI::Widget::construct();
-    window->set_main_widget(outer_widget);
-    outer_widget->set_fill_with_background_color(true);
-    outer_widget->set_layout(make<GUI::VerticalBoxLayout>());
-    outer_widget->layout()->set_margins({ 8, 8, 8, 8 });
+    auto& outer_widget = window->set_main_widget<GUI::Widget>();
+    outer_widget.set_fill_with_background_color(true);
+    outer_widget.set_layout<GUI::VerticalBoxLayout>();
+    outer_widget.layout()->set_margins({ 8, 8, 8, 8 });
 
-    auto inner_widget = outer_widget->add<GUI::Widget>();
-    inner_widget->set_layout(make<GUI::HorizontalBoxLayout>());
+    auto inner_widget = outer_widget.add<GUI::Widget>();
+    inner_widget->set_layout<GUI::HorizontalBoxLayout>();
     inner_widget->layout()->set_spacing(8);
 
     auto left_outer_container = inner_widget->add<GUI::Widget>();
-    left_outer_container->set_layout(make<GUI::HorizontalBoxLayout>());
+    left_outer_container->set_layout<GUI::HorizontalBoxLayout>();
 
     auto left_inner_container = left_outer_container->add<GUI::Widget>();
-    left_inner_container->set_layout(make<GUI::VerticalBoxLayout>());
+    left_inner_container->set_layout<GUI::VerticalBoxLayout>();
     left_inner_container->layout()->set_spacing(8);
     left_inner_container->set_preferred_size(0, 50);
     left_inner_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
@@ -106,7 +105,7 @@ int main(int argc, char** argv)
     git_info_label->set_preferred_size(0, 11);
 
     auto right_container = inner_widget->add<GUI::Widget>();
-    right_container->set_layout(make<GUI::VerticalBoxLayout>());
+    right_container->set_layout<GUI::VerticalBoxLayout>();
 
     auto icon_label = right_container->add<GUI::Label>();
     icon_label->set_icon(Gfx::Bitmap::load_from_file("/res/icons/buggie.png"));
@@ -114,7 +113,7 @@ int main(int argc, char** argv)
     icon_label->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     icon_label->set_preferred_size(icon_label->icon()->size());
 
-    auto quit_button = outer_widget->add<GUI::Button>();
+    auto quit_button = outer_widget.add<GUI::Button>();
     quit_button->set_text("Okay");
     quit_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     quit_button->set_preferred_size(100, 20);

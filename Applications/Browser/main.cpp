@@ -75,13 +75,13 @@ int main(int argc, char** argv)
     auto window = GUI::Window::construct();
     window->set_rect(100, 100, 640, 480);
 
-    auto widget = GUI::Widget::construct();
-    widget->set_fill_with_background_color(true);
-    widget->set_layout(make<GUI::VerticalBoxLayout>());
-    widget->layout()->set_spacing(0);
+    auto& widget = window->set_main_widget<GUI::Widget>();
+    widget.set_fill_with_background_color(true);
+    widget.set_layout<GUI::VerticalBoxLayout>();
+    widget.layout()->set_spacing(0);
 
-    auto toolbar = widget->add<GUI::ToolBar>();
-    auto html_widget = widget->add<HtmlView>();
+    auto toolbar = widget.add<GUI::ToolBar>();
+    auto html_widget = widget.add<HtmlView>();
 
     History<URL> history;
 
@@ -151,7 +151,7 @@ int main(int argc, char** argv)
         location_box->set_focus(true);
     });
 
-    auto statusbar = widget->add<GUI::StatusBar>();
+    auto statusbar = widget.add<GUI::StatusBar>();
 
     html_widget->on_link_hover = [&](auto& href) {
         statusbar->set_text(href);
@@ -200,8 +200,7 @@ int main(int argc, char** argv)
             dom_inspector_window = GUI::Window::construct();
             dom_inspector_window->set_rect(100, 100, 300, 500);
             dom_inspector_window->set_title("DOM inspector");
-            auto dom_inspector_widget = InspectorWidget::construct();
-            dom_inspector_window->set_main_widget(dom_inspector_widget);
+            dom_inspector_window->set_main_widget<InspectorWidget>();
         }
         auto* inspector_widget = static_cast<InspectorWidget*>(dom_inspector_window->main_widget());
         inspector_widget->set_document(html_widget->document());
@@ -244,7 +243,6 @@ int main(int argc, char** argv)
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png"));
 
     window->set_title("Browser");
-    window->set_main_widget(widget);
     window->show();
 
     URL url_to_load = home_url;

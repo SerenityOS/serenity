@@ -60,8 +60,7 @@ int main(int argc, char** argv)
     window->set_resizable(false);
     window->set_rect({ 300, 200, 254, 213 });
 
-    auto calc_widget = CalculatorWidget::construct();
-    window->set_main_widget(calc_widget);
+    window->set_main_widget<CalculatorWidget>();
 
     window->show();
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-calculator.png"));

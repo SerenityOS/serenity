@@ -39,17 +39,16 @@ int main(int argc, char** argv)
     window->set_rect(100, 100, 240, 160);
     window->set_title("Hello World!");
 
-    auto main_widget = GUI::Widget::construct();
-    window->set_main_widget(main_widget);
-    main_widget->set_fill_with_background_color(true);
-    main_widget->set_background_color(Color::White);
-    main_widget->set_layout(make<GUI::VerticalBoxLayout>());
-    main_widget->layout()->set_margins({ 4, 4, 4, 4 });
+    auto& main_widget = window->set_main_widget<GUI::Widget>();
+    main_widget.set_fill_with_background_color(true);
+    main_widget.set_background_color(Color::White);
+    auto& layout = main_widget.set_layout<GUI::VerticalBoxLayout>();
+    layout.set_margins({ 4, 4, 4, 4 });
 
-    auto label = main_widget->add<GUI::Label>();
+    auto label = main_widget.add<GUI::Label>();
     label->set_text("Hello\nWorld!");
 
-    auto button = main_widget->add<GUI::Button>();
+    auto button = main_widget.add<GUI::Button>();
     button->set_text("Good-bye");
     button->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     button->set_preferred_size(0, 20);
