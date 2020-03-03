@@ -50,7 +50,7 @@ public:
 			}));
 
 	int interval = config->read_num_entry("Clock", "Interval");
-	if(interval <= 0) interval = 1;
+	interval = interval <= 0 ? 1 : interval;
 
         m_timer = add<Core::Timer>(1000 * interval, [this] {
             static time_t last_update_time;
@@ -98,7 +98,7 @@ private:
 
 	for(size_t i = 0; i < format_parts.size(); i++)
 	{
-		// If the first part don't start with a %
+		// If the first part doesn't start with a %
 		if(i == 0 && !m_format.starts_with('%')){
 			builder.append(format_parts[i]);
 			continue;
@@ -141,7 +141,7 @@ private:
 				continue;
 		}
 
-		// This will add all the part, minus the first character, which is the parameter
+		// This will add the text after the first character
 		builder.append(format_parts[i].substring(1, format_parts[i].length() - 1));
 	}	
 
