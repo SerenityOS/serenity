@@ -102,28 +102,33 @@ namespace ACPI {
         klog() << "ACPI: Fixed ACPI data, Revision " << sdt->revision << ", Length " << sdt->length << " bytes";
     }
 
-    void StaticParser::do_acpi_reboot()
+    bool StaticParser::can_reboot()
+    {
+        // FIXME: Determine if we need to do MMIO/PCI/IO access to reboot, according to ACPI spec 6.2, Section 4.8.3.6
+        auto region = MM.allocate_kernel_region(m_fadt.page_base(), (PAGE_SIZE * 2), "ACPI Static Parser", Region::Access::Read);
+        auto* fadt = (const Structures::FADT*)region->vaddr().offset(m_fadt.offset_in_page().get()).as_ptr();
+        return fadt->h.revision >= 2;
+    }
+
+    void StaticParser::try_acpi_reboot()
     {
         // FIXME: Determine if we need to do MMIO/PCI/IO access to reboot, according to ACPI spec 6.2, Section 4.8.3.6
 #ifdef ACPI_DEBUG
-        dbg() << "ACPI: Rebooting, Probing FADT (P @ " << m_fadt.ptr() << ")";
+        dbg() << "ACPI: Rebooting, Probing FADT (" << m_fadt << ")";
 #endif
+
         auto region = MM.allocate_kernel_region(m_fadt.page_base(), (PAGE_SIZE * 2), "ACPI Static Parser", Region::Access::Read);
         auto* fadt = (const Structures::FADT*)region->vaddr().offset(m_fadt.offset_in_page().get()).as_ptr();
         if (fadt->h.revision >= 2) {
             klog() << "ACPI: Reboot, Sending value 0x" << String::format("%x", fadt->reset_value) << " to Port 0x" << String::format("%x", fadt->reset_reg.address);
             IO::out8(fadt->reset_reg.address, fadt->reset_value);
-        } else {
-            klog() << "ACPI: Reboot, Not supported!";
         }
-
-        ASSERT_NOT_REACHED(); /// If rebooting didn't work, halt.
+        klog() << "ACPI: Reboot, Not supported!";
     }
 
-    void StaticParser::do_acpi_shutdown()
+    void StaticParser::try_acpi_shutdown()
     {
         klog() << "ACPI: Shutdown is not supported with the current configuration, Abort!";
-        ASSERT_NOT_REACHED();
     }
 
     size_t StaticParser::get_table_size(PhysicalAddress table_header)

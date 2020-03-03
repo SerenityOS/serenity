@@ -44,8 +44,9 @@ public:
     virtual void enable_aml_interpretation() override;
     virtual void enable_aml_interpretation(File& dsdt_file) override;
     virtual void enable_aml_interpretation(u8* physical_dsdt, u32 dsdt_payload_legnth) override;
-    virtual void disable_aml_interpretation() override;
-    virtual void do_acpi_shutdown() override;
+    virtual void disable_aml_interpretation() override;    
+    virtual void try_acpi_shutdown() override;
+    virtual bool can_shutdown() override { return true; }
 
 protected:
     DynamicParser();

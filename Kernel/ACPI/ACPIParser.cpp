@@ -64,16 +64,14 @@ namespace ACPI {
         return {};
     }
 
-    void Parser::do_acpi_reboot()
+    void Parser::try_acpi_reboot()
     {
         klog() << "ACPI: Cannot invoke reboot!";
-        ASSERT_NOT_REACHED();
     }
 
-    void Parser::do_acpi_shutdown()
+    void Parser::try_acpi_shutdown()
     {
         klog() << "ACPI: Cannot invoke shutdown!";
-        ASSERT_NOT_REACHED();
     }
 
     void Parser::enable_aml_interpretation()

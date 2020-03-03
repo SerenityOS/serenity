@@ -82,7 +82,7 @@ namespace ACPI {
         // FIXME: Implement AML Interpretation
         ASSERT_NOT_REACHED();
     }
-    void DynamicParser::do_acpi_shutdown()
+    void DynamicParser::try_acpi_shutdown()
     {
         // FIXME: Implement AML Interpretation to perform ACPI shutdown
         ASSERT_NOT_REACHED();
