@@ -42,7 +42,7 @@ class ClockWidget final : public GUI::Widget {
 public:
     ClockWidget()
     {
-        auto config = Core::ConfigFile::open("/etc/WindowServer/Applet.ini");
+        auto config = Core::ConfigFile::open("/etc/WindowServer/MenuApplets.ini");
         m_format = config->read_entry("Clock", "Format");
 
         m_time_width = Gfx::Font::default_bold_font().width(convert((tm){
