@@ -134,7 +134,9 @@ private:
 			case 'y':
 				builder.append(String::format("%04i", tm.tm_year + 1900));
 				break;
-
+			case 'Y':
+				builder.append(String::format("%02i", tm.tm_year % 100));
+				break;
 			default:
 				builder.append("%");
 				builder.append(format_parts[i]);
