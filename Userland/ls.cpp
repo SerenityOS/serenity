@@ -326,7 +326,7 @@ int do_file_system_object_long(const char* path)
         files.append(move(metadata));
     }
 
-    quick_sort(files.begin(), files.end(), [](auto& a, auto& b) {
+    quick_sort(files, [](auto& a, auto& b) {
         if (flag_sort_by_timestamp) {
             if (flag_reverse_sort)
                 return a.stat.st_mtime > b.stat.st_mtime;
@@ -382,7 +382,7 @@ int do_file_system_object_short(const char* path)
         if (names.last().length() > longest_name)
             longest_name = name.length();
     }
-    quick_sort(names.begin(), names.end(), [](auto& a, auto& b) { return a < b; });
+    quick_sort(names);
 
     size_t printed_on_row = 0;
     size_t nprinted = 0;

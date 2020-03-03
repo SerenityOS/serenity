@@ -401,7 +401,7 @@ bool Scheduler::pick_next()
         sorted_runnables.append(&thread);
         return IterationDecision::Continue;
     });
-    quick_sort(sorted_runnables.begin(), sorted_runnables.end(), [](auto& a, auto& b) { return a->effective_priority() >= b->effective_priority(); });
+    quick_sort(sorted_runnables, [](auto& a, auto& b) { return a->effective_priority() >= b->effective_priority(); });
 
     Thread* thread_to_schedule = nullptr;
 

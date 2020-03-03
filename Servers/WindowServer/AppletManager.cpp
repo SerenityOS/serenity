@@ -71,7 +71,7 @@ void AppletManager::add_applet(Window& applet)
 {
     m_applets.append(applet.make_weak_ptr());
 
-    quick_sort(m_applets.begin(), m_applets.end(), [](auto& a, auto& b) {
+    quick_sort(m_applets, [](auto& a, auto& b) {
         auto index_a = order_vector.find_first_index(a->title());
         auto index_b = order_vector.find_first_index(b->title());
         ASSERT(index_a.has_value());
