@@ -75,13 +75,13 @@ void ColorPicker::build()
     auto cancel_button = right_vertical_container->add<Button>("Cancel");
     cancel_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     cancel_button->set_preferred_size(0, 20);
-    cancel_button->on_click = [&](auto&) {
+    cancel_button->on_click = [&] {
         done(Dialog::ExecCancel);
     };
     auto ok_button = right_vertical_container->add<Button>("Okay");
     ok_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     ok_button->set_preferred_size(0, 20);
-    ok_button->on_click = [&](auto&) {
+    ok_button->on_click = [&] {
         done(Dialog::ExecOK);
     };
 

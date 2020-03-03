@@ -49,7 +49,7 @@ ComboBox::ComboBox()
     m_open_button = add<Button>();
     m_open_button->set_focusable(false);
     m_open_button->set_text("\xc3\xb7");
-    m_open_button->on_click = [this](auto&) {
+    m_open_button->on_click = [this] {
         if (m_list_window->is_visible())
             close();
         else

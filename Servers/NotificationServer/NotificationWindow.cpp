@@ -83,7 +83,7 @@ NotificationWindow::NotificationWindow(const String& text, const String& title)
     right_container->set_layout(make<GUI::HorizontalBoxLayout>());
 
     auto button = right_container->add<GUI::Button>("Okay");
-    button->on_click = [this](auto&) {
+    button->on_click = [this] {
         s_windows.remove(this);
         close();
     };

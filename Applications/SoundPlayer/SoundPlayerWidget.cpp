@@ -81,14 +81,14 @@ SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, NonnullRefPtr<Audio::C
     m_play = control_widget->add<GUI::Button>();
     m_play->set_icon(*m_pause_icon);
     m_play->set_enabled(false);
-    m_play->on_click = [this](GUI::Button& button) {
-        button.set_icon(m_manager.toggle_pause() ? *m_play_icon : *m_pause_icon);
+    m_play->on_click = [this] {
+        m_play->set_icon(m_manager.toggle_pause() ? *m_play_icon : *m_pause_icon);
     };
 
     m_stop = control_widget->add<GUI::Button>();
     m_stop->set_enabled(false);
     m_stop->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/stop.png"));
-    m_stop->on_click = [&](GUI::Button&) { m_manager.stop(); };
+    m_stop->on_click = [this] { m_manager.stop(); };
 
     m_status = add<GUI::Label>();
     m_status->set_frame_shape(Gfx::FrameShape::Box);

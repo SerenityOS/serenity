@@ -50,7 +50,7 @@ Window& WindowList::ensure_window(const WindowIdentifier& identifier)
         return *it->value;
     auto window = make<Window>(identifier);
     window->set_button(aid_create_button(identifier));
-    window->button()->on_click = [window = window.ptr(), identifier](auto&) {
+    window->button()->on_click = [window = window.ptr(), identifier] {
         if (window->is_minimized() || !window->is_active()) {
             GUI::WindowServerConnection::the().post_message(Messages::WindowServer::WM_SetActiveWindow(identifier.client_id(), identifier.window_id()));
         } else {
