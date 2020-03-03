@@ -49,7 +49,10 @@ public:
 				66, 59, 23, 31, 11, 2222, 6, 365, 0
 			}));
 
-        m_timer = add<Core::Timer>(1000, [this] {
+	int interval = config->read_num_entry("Clock", "Interval");
+	if(interval <= 0) interval = 1;
+
+        m_timer = add<Core::Timer>(1000 * interval, [this] {
             static time_t last_update_time;
             time_t now = time(nullptr);
             if (now != last_update_time) {
@@ -95,7 +98,8 @@ private:
 
 	for(size_t i = 0; i < format_parts.size(); i++)
 	{
-		if(i == 0){
+		// If the first part actually start with a %
+		if(i == 0 && !m_format.starts_with('%')){
 			builder.append(format_parts[i]);
 			continue;
 		}
