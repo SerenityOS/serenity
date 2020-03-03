@@ -829,7 +829,6 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     dbg() << "Process " << pid() << " exec: PD=" << m_page_directory.ptr() << " created";
 #endif
 
-
     InodeMetadata loader_metadata;
 
     // FIXME: Hoooo boy this is a hack if I ever saw one.
