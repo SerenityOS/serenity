@@ -39,8 +39,10 @@ namespace ACPI {
         static bool is_initialized();
 
         virtual PhysicalAddress find_table(const char* sig) override;
-        virtual void do_acpi_reboot() override;
-        virtual void do_acpi_shutdown() override;
+        virtual void try_acpi_reboot() override;
+        virtual bool can_reboot() override;
+        virtual bool can_shutdown() override { return false; }
+        virtual void try_acpi_shutdown() override;
         virtual bool is_operable() override { return m_operable; }
 
     protected:
