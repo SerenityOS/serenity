@@ -36,4 +36,6 @@ public:
 private:
     PowerDialog();
     ~PowerDialog();
+
+    int m_selected_option { -1 };
 };

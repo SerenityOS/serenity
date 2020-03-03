@@ -82,20 +82,19 @@ PowerDialog::PowerDialog()
     header->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     header->set_font(Gfx::Font::default_bold_font());
 
-    int selected = -1;
     for (size_t i = 0; i < options.size(); i++) {
         auto action = options[i];
         auto radio = main->add<GUI::RadioButton>();
         radio->set_enabled(action.enabled);
         radio->set_text(action.title);
 
-        radio->on_checked = [&selected, i](auto) {
-            selected = i;
+        radio->on_checked = [this, i](auto) {
+            m_selected_option = i;
         };
 
         if (action.default_action) {
             radio->set_checked(true);
-            selected = i;
+            m_selected_option = i;
         }
     }
 
@@ -104,8 +103,8 @@ PowerDialog::PowerDialog()
     button_box->layout()->set_spacing(8);
 
     auto ok_button = button_box->add<GUI::Button>();
-    ok_button->on_click = [this, &selected](auto&) {
-        done(selected);
+    ok_button->on_click = [this](auto&) {
+        done(m_selected_option);
     };
     ok_button->set_text("OK");
 
