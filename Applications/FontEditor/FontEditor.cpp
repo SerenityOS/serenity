@@ -75,13 +75,13 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edite
     };
 
     m_ui->save_button->set_text("Save");
-    m_ui->save_button->on_click = [this](GUI::Button&) {
+    m_ui->save_button->on_click = [this] {
         dbgprintf("write to file: '%s'\n", m_path.characters());
         m_edited_font->write_to_file(m_path);
     };
 
     m_ui->quit_button->set_text("Quit");
-    m_ui->quit_button->on_click = [](auto&) {
+    m_ui->quit_button->on_click = [] {
         exit(0);
     };
 

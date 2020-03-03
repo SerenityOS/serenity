@@ -83,7 +83,7 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Core::
     auto ok_button = button_container->add<Button>("OK");
     ok_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     ok_button->set_preferred_size(80, 20);
-    ok_button->on_click = [this](auto&) {
+    ok_button->on_click = [this] {
         done(Dialog::ExecOK);
     };
 }

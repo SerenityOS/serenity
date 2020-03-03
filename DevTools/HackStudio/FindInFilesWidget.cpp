@@ -147,7 +147,7 @@ FindInFilesWidget::FindInFilesWidget()
         current_editor().set_focus(true);
     };
 
-    m_button->on_click = [this](auto&) {
+    m_button->on_click = [this] {
         auto results_model = find_in_files(m_textbox->text());
         m_result_view->set_model(results_model);
     };

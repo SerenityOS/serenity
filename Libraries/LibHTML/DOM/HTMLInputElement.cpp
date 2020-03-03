@@ -55,7 +55,7 @@ RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const StyleProperties*) 
         auto button = html_view.add<GUI::Button>(value());
         int text_width = Gfx::Font::default_font().width(value());
         button->set_relative_rect(0, 0, text_width + 20, 20);
-        button->on_click = [this](auto&) {
+        button->on_click = [this] {
             if (auto* form = first_ancestor_of_type<HTMLFormElement>()) {
                 // FIXME: Remove this const_cast once we have a non-const first_ancestor_of_type.
                 const_cast<HTMLFormElement*>(form)->submit();

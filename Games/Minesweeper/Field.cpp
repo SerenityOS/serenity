@@ -147,7 +147,7 @@ Field::Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_b
     set_fill_with_background_color(true);
     reset();
 
-    m_face_button.on_click = [this](auto&) { reset(); };
+    m_face_button.on_click = [this] { reset(); };
     set_face(Face::Default);
 
     {
@@ -260,7 +260,7 @@ void Field::reset()
             square.label->set_icon(square.has_mine ? m_mine_bitmap : nullptr);
             if (!square.button) {
                 square.button = add<SquareButton>();
-                square.button->on_click = [this, &square](GUI::Button&) {
+                square.button->on_click = [this, &square] {
                     on_square_clicked(square);
                 };
                 square.button->on_right_click = [this, &square] {

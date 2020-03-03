@@ -45,12 +45,12 @@ SpinBox::SpinBox()
     m_increment_button = add<Button>();
     m_increment_button->set_focusable(false);
     m_increment_button->set_text("\xc3\xb6");
-    m_increment_button->on_click = [this](auto&) { set_value(m_value + 1); };
+    m_increment_button->on_click = [this] { set_value(m_value + 1); };
     m_increment_button->set_auto_repeat_interval(150);
     m_decrement_button = add<Button>();
     m_decrement_button->set_focusable(false);
     m_decrement_button->set_text("\xc3\xb7");
-    m_decrement_button->on_click = [this](auto&) { set_value(m_value - 1); };
+    m_decrement_button->on_click = [this] { set_value(m_value - 1); };
     m_decrement_button->set_auto_repeat_interval(150);
 }
 

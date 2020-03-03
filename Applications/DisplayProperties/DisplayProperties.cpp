@@ -193,7 +193,7 @@ void DisplayPropertiesWidget::create_frame()
     apply_button->set_size_policy(Orientation::Vertical, GUI::SizePolicy::Fixed);
     apply_button->set_size_policy(Orientation::Horizontal, GUI::SizePolicy::Fixed);
     apply_button->set_preferred_size(60, 22);
-    apply_button->on_click = [this, tab_widget](GUI::Button&) {
+    apply_button->on_click = [this, tab_widget] {
         send_settings_to_window_server(tab_widget->active_tab_index());
     };
 
@@ -202,7 +202,7 @@ void DisplayPropertiesWidget::create_frame()
     ok_button->set_size_policy(Orientation::Vertical, GUI::SizePolicy::Fixed);
     ok_button->set_size_policy(Orientation::Horizontal, GUI::SizePolicy::Fixed);
     ok_button->set_preferred_size(60, 22);
-    ok_button->on_click = [this, tab_widget](GUI::Button&) {
+    ok_button->on_click = [this, tab_widget] {
         send_settings_to_window_server(tab_widget->active_tab_index());
         GUI::Application::the().quit();
     };
@@ -212,7 +212,7 @@ void DisplayPropertiesWidget::create_frame()
     cancel_button->set_size_policy(Orientation::Vertical, GUI::SizePolicy::Fixed);
     cancel_button->set_size_policy(Orientation::Horizontal, GUI::SizePolicy::Fixed);
     cancel_button->set_preferred_size(60, 22);
-    cancel_button->on_click = [](auto&) {
+    cancel_button->on_click = [] {
         GUI::Application::the().quit();
     };
 }

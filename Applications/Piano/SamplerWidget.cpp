@@ -107,7 +107,7 @@ SamplerWidget::SamplerWidget(AudioEngine& audio_engine)
     m_open_button->set_preferred_size(24, 24);
     m_open_button->set_focusable(false);
     m_open_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"));
-    m_open_button->on_click = [this](const auto&) {
+    m_open_button->on_click = [this] {
         Optional<String> open_path = GUI::FilePicker::get_open_filepath();
         if (!open_path.has_value())
             return;

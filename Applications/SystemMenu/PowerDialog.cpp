@@ -103,13 +103,13 @@ PowerDialog::PowerDialog()
     button_box->layout()->set_spacing(8);
 
     auto ok_button = button_box->add<GUI::Button>();
-    ok_button->on_click = [this](auto&) {
+    ok_button->on_click = [this] {
         done(m_selected_option);
     };
     ok_button->set_text("OK");
 
     auto cancel_button = button_box->add<GUI::Button>();
-    cancel_button->on_click = [this](auto&) {
+    cancel_button->on_click = [this] {
         done(-1);
     };
     cancel_button->set_text("Cancel");

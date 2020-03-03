@@ -118,7 +118,7 @@ int main(int argc, char** argv)
     quit_button->set_text("Okay");
     quit_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     quit_button->set_preferred_size(100, 20);
-    quit_button->on_click = [](GUI::Button&) {
+    quit_button->on_click = [] {
         GUI::Application::the().quit(0);
     };
 
