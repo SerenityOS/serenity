@@ -127,7 +127,7 @@ void LineEditor::cache_path()
         }
     }
 
-    quick_sort(m_path.begin(), m_path.end(), AK::is_less_than<String>);
+    quick_sort(m_path);
 }
 
 void LineEditor::cut_mismatching_chars(String& completion, const String& other, size_t start_compare)

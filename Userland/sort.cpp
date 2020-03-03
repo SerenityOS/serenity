@@ -50,7 +50,7 @@ int main(int argc, char** argv)
         lines.append(buffer);
     }
 
-    quick_sort(lines.begin(), lines.end(), [](auto& a, auto& b) {
+    quick_sort(lines, [](auto& a, auto& b) {
         return strcmp(a.characters(), b.characters()) < 0;
     });
 

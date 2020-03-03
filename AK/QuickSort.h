@@ -30,14 +30,8 @@
 
 namespace AK {
 
-template<typename T>
-bool is_less_than(const T& a, const T& b)
-{
-    return a < b;
-}
-
 template<typename Iterator, typename LessThan>
-void quick_sort(Iterator start, Iterator end, LessThan less_than = is_less_than)
+void quick_sort(Iterator start, Iterator end, LessThan less_than)
 {
     int size = end - start;
     if (size <= 1)
@@ -60,6 +54,24 @@ void quick_sort(Iterator start, Iterator end, LessThan less_than = is_less_than)
     swap(*start, *(start + i - 1));
     quick_sort(start, start + i - 1, less_than);
     quick_sort(start + i, end, less_than);
+}
+
+template<typename Iterator>
+void quick_sort(Iterator start, Iterator end)
+{
+    quick_sort(start, end, [](auto& a, auto& b) { return a < b; });
+}
+
+template<typename Collection, typename LessThan>
+void quick_sort(Collection& collection, LessThan less_than)
+{
+    quick_sort(collection.begin(), collection.end(), move(less_than));
+}
+
+template<typename Collection>
+void quick_sort(Collection& collection)
+{
+    quick_sort(collection.begin(), collection.end());
 }
 
 }

@@ -542,7 +542,7 @@ void IRCClient::handle_rpl_namreply(const Message& msg)
     auto& channel = ensure_channel(channel_name);
     auto members = msg.arguments[3].split(' ');
 
-    quick_sort(members.begin(), members.end(), [](auto& a, auto& b) {
+    quick_sort(members, [](auto& a, auto& b) {
         return strcasecmp(a.characters(), b.characters()) < 0;
     });
 

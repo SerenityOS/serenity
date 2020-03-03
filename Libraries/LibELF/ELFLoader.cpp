@@ -179,7 +179,7 @@ String ELFLoader::symbolicate(u32 address, u32* out_offset) const
             m_sorted_symbols.append({ symbol.value(), symbol.name() });
             return IterationDecision::Continue;
         });
-        quick_sort(m_sorted_symbols.begin(), m_sorted_symbols.end(), [](auto& a, auto& b) {
+        quick_sort(m_sorted_symbols, [](auto& a, auto& b) {
             return a.address < b.address;
         });
     }
