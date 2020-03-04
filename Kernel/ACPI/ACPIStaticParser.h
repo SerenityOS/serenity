@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <ACPI/ACPIParser.h>
+#include <Kernel/ACPI/ACPIParser.h>
 #include <AK/OwnPtr.h>
 
 namespace Kernel {
