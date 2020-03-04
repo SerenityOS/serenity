@@ -37,13 +37,13 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         layout()->set_margins({ 4, 4, 4, 4 });
         set_fill_with_background_color(true);
 
-        auto adapters_group_box = add<GUI::GroupBox>("Adapters");
-        adapters_group_box->set_layout<GUI::VerticalBoxLayout>();
-        adapters_group_box->layout()->set_margins({ 6, 16, 6, 6 });
-        adapters_group_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        adapters_group_box->set_preferred_size(0, 120);
+        auto& adapters_group_box = add<GUI::GroupBox>("Adapters");
+        adapters_group_box.set_layout<GUI::VerticalBoxLayout>();
+        adapters_group_box.layout()->set_margins({ 6, 16, 6, 6 });
+        adapters_group_box.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+        adapters_group_box.set_preferred_size(0, 120);
 
-        m_adapter_table_view = adapters_group_box->add<GUI::TableView>();
+        m_adapter_table_view = adapters_group_box.add<GUI::TableView>();
         m_adapter_table_view->set_size_columns_to_fit_content(true);
 
         Vector<GUI::JsonArrayModel::FieldSpec> net_adapters_fields;
@@ -57,13 +57,13 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         net_adapters_fields.empend("bytes_out", "Bytes Out", Gfx::TextAlignment::CenterRight);
         m_adapter_table_view->set_model(GUI::JsonArrayModel::create("/proc/net/adapters", move(net_adapters_fields)));
 
-        auto sockets_group_box = add<GUI::GroupBox>("Sockets");
-        sockets_group_box->set_layout<GUI::VerticalBoxLayout>();
-        sockets_group_box->layout()->set_margins({ 6, 16, 6, 6 });
-        sockets_group_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
-        sockets_group_box->set_preferred_size(0, 0);
+        auto& sockets_group_box = add<GUI::GroupBox>("Sockets");
+        sockets_group_box.set_layout<GUI::VerticalBoxLayout>();
+        sockets_group_box.layout()->set_margins({ 6, 16, 6, 6 });
+        sockets_group_box.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
+        sockets_group_box.set_preferred_size(0, 0);
 
-        m_socket_table_view = sockets_group_box->add<GUI::TableView>();
+        m_socket_table_view = sockets_group_box.add<GUI::TableView>();
         m_socket_table_view->set_size_columns_to_fit_content(true);
 
         Vector<GUI::JsonArrayModel::FieldSpec> net_tcp_fields;

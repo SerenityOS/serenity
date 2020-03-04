@@ -68,14 +68,14 @@ TaskbarWindow::~TaskbarWindow()
 
 void TaskbarWindow::create_quick_launch_bar()
 {
-    auto quick_launch_bar = main_widget()->add<GUI::Frame>();
-    quick_launch_bar->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    quick_launch_bar->set_layout<GUI::HorizontalBoxLayout>();
-    quick_launch_bar->layout()->set_spacing(3);
-    quick_launch_bar->layout()->set_margins({ 3, 0, 3, 0 });
-    quick_launch_bar->set_frame_thickness(1);
-    quick_launch_bar->set_frame_shape(Gfx::FrameShape::Container);
-    quick_launch_bar->set_frame_shadow(Gfx::FrameShadow::Raised);
+    auto& quick_launch_bar = main_widget()->add<GUI::Frame>();
+    quick_launch_bar.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    quick_launch_bar.set_layout<GUI::HorizontalBoxLayout>();
+    quick_launch_bar.layout()->set_spacing(3);
+    quick_launch_bar.layout()->set_margins({ 3, 0, 3, 0 });
+    quick_launch_bar.set_frame_thickness(1);
+    quick_launch_bar.set_frame_shape(Gfx::FrameShape::Container);
+    quick_launch_bar.set_frame_shadow(Gfx::FrameShadow::Raised);
 
     int total_width = 6;
     bool first = true;
@@ -92,15 +92,15 @@ void TaskbarWindow::create_quick_launch_bar()
         auto app_executable = af->read_entry("App", "Executable");
         auto app_icon_path = af->read_entry("Icons", "16x16");
 
-        auto button = quick_launch_bar->add<GUI::Button>();
-        button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-        button->set_preferred_size(22, 22);
-        button->set_button_style(Gfx::ButtonStyle::CoolBar);
+        auto& button = quick_launch_bar.add<GUI::Button>();
+        button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+        button.set_preferred_size(22, 22);
+        button.set_button_style(Gfx::ButtonStyle::CoolBar);
 
-        button->set_icon(Gfx::Bitmap::load_from_file(app_icon_path));
+        button.set_icon(Gfx::Bitmap::load_from_file(app_icon_path));
         // FIXME: the tooltip ends up outside the screen rect.
-        button->set_tooltip(name);
-        button->on_click = [app_executable] {
+        button.set_tooltip(name);
+        button.on_click = [app_executable] {
             pid_t pid = fork();
             if (pid < 0) {
                 perror("fork");
@@ -117,7 +117,7 @@ void TaskbarWindow::create_quick_launch_bar()
         total_width += 22;
     }
 
-    quick_launch_bar->set_preferred_size(total_width, 22);
+    quick_launch_bar.set_preferred_size(total_width, 22);
 }
 
 void TaskbarWindow::on_screen_rect_change(const Gfx::Rect& rect)
@@ -128,11 +128,11 @@ void TaskbarWindow::on_screen_rect_change(const Gfx::Rect& rect)
 
 NonnullRefPtr<GUI::Button> TaskbarWindow::create_button(const WindowIdentifier& identifier)
 {
-    auto button = main_widget()->add<TaskbarButton>(identifier);
-    button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    button->set_preferred_size(140, 22);
-    button->set_checkable(true);
-    button->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    auto& button = main_widget()->add<TaskbarButton>(identifier);
+    button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    button.set_preferred_size(140, 22);
+    button.set_checkable(true);
+    button.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     return button;
 }
 

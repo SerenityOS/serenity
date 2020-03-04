@@ -68,60 +68,60 @@ int main(int argc, char** argv)
     outer_widget.set_layout<GUI::VerticalBoxLayout>();
     outer_widget.layout()->set_margins({ 8, 8, 8, 8 });
 
-    auto inner_widget = outer_widget.add<GUI::Widget>();
-    inner_widget->set_layout<GUI::HorizontalBoxLayout>();
-    inner_widget->layout()->set_spacing(8);
+    auto& inner_widget = outer_widget.add<GUI::Widget>();
+    inner_widget.set_layout<GUI::HorizontalBoxLayout>();
+    inner_widget.layout()->set_spacing(8);
 
-    auto left_outer_container = inner_widget->add<GUI::Widget>();
-    left_outer_container->set_layout<GUI::HorizontalBoxLayout>();
+    auto& left_outer_container = inner_widget.add<GUI::Widget>();
+    left_outer_container.set_layout<GUI::HorizontalBoxLayout>();
 
-    auto left_inner_container = left_outer_container->add<GUI::Widget>();
-    left_inner_container->set_layout<GUI::VerticalBoxLayout>();
-    left_inner_container->layout()->set_spacing(8);
-    left_inner_container->set_preferred_size(0, 50);
-    left_inner_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    auto& left_inner_container = left_outer_container.add<GUI::Widget>();
+    left_inner_container.set_layout<GUI::VerticalBoxLayout>();
+    left_inner_container.layout()->set_spacing(8);
+    left_inner_container.set_preferred_size(0, 50);
+    left_inner_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
 
-    auto label = left_inner_container->add<GUI::Label>();
-    label->set_text_alignment(Gfx::TextAlignment::CenterRight);
-    label->set_font(Gfx::Font::default_bold_font());
-    label->set_text("SerenityOS");
-    label->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    label->set_preferred_size(0, 11);
+    auto& label = left_inner_container.add<GUI::Label>();
+    label.set_text_alignment(Gfx::TextAlignment::CenterRight);
+    label.set_font(Gfx::Font::default_bold_font());
+    label.set_text("SerenityOS");
+    label.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    label.set_preferred_size(0, 11);
 
     utsname uts;
     int rc = uname(&uts);
     ASSERT(rc == 0);
 
-    auto version_label = left_inner_container->add<GUI::Label>();
-    version_label->set_text_alignment(Gfx::TextAlignment::CenterRight);
-    version_label->set_text(String::format("Version %s", uts.release));
-    version_label->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    version_label->set_preferred_size(0, 11);
+    auto& version_label = left_inner_container.add<GUI::Label>();
+    version_label.set_text_alignment(Gfx::TextAlignment::CenterRight);
+    version_label.set_text(String::format("Version %s", uts.release));
+    version_label.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    version_label.set_preferred_size(0, 11);
 
-    auto git_info_label = left_inner_container->add<GUI::Label>();
-    git_info_label->set_text_alignment(Gfx::TextAlignment::CenterRight);
-    git_info_label->set_text(String::format("%s@%s", GIT_BRANCH, GIT_COMMIT));
-    git_info_label->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    git_info_label->set_preferred_size(0, 11);
+    auto& git_info_label = left_inner_container.add<GUI::Label>();
+    git_info_label.set_text_alignment(Gfx::TextAlignment::CenterRight);
+    git_info_label.set_text(String::format("%s@%s", GIT_BRANCH, GIT_COMMIT));
+    git_info_label.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    git_info_label.set_preferred_size(0, 11);
 
-    auto right_container = inner_widget->add<GUI::Widget>();
-    right_container->set_layout<GUI::VerticalBoxLayout>();
+    auto& right_container = inner_widget.add<GUI::Widget>();
+    right_container.set_layout<GUI::VerticalBoxLayout>();
 
-    auto icon_label = right_container->add<GUI::Label>();
-    icon_label->set_icon(Gfx::Bitmap::load_from_file("/res/icons/buggie.png"));
-    icon_label->set_tooltip("Buggie");
-    icon_label->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    icon_label->set_preferred_size(icon_label->icon()->size());
+    auto& icon_label = right_container.add<GUI::Label>();
+    icon_label.set_icon(Gfx::Bitmap::load_from_file("/res/icons/buggie.png"));
+    icon_label.set_tooltip("Buggie");
+    icon_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    icon_label.set_preferred_size(icon_label.icon()->size());
 
-    auto quit_button = outer_widget.add<GUI::Button>();
-    quit_button->set_text("Okay");
-    quit_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    quit_button->set_preferred_size(100, 20);
-    quit_button->on_click = [] {
+    auto& quit_button = outer_widget.add<GUI::Button>();
+    quit_button.set_text("Okay");
+    quit_button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    quit_button.set_preferred_size(100, 20);
+    quit_button.on_click = [] {
         GUI::Application::the().quit(0);
     };
 
-    quit_button->set_focus(true);
+    quit_button.set_focus(true);
     window->show();
     return app.exec();
 }

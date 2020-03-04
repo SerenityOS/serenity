@@ -52,10 +52,10 @@ RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const StyleProperties*) 
 
     RefPtr<GUI::Widget> widget;
     if (type() == "submit") {
-        auto button = html_view.add<GUI::Button>(value());
+        auto& button = html_view.add<GUI::Button>(value());
         int text_width = Gfx::Font::default_font().width(value());
-        button->set_relative_rect(0, 0, text_width + 20, 20);
-        button->on_click = [this] {
+        button.set_relative_rect(0, 0, text_width + 20, 20);
+        button.on_click = [this] {
             if (auto* form = first_ancestor_of_type<HTMLFormElement>()) {
                 // FIXME: Remove this const_cast once we have a non-const first_ancestor_of_type.
                 const_cast<HTMLFormElement*>(form)->submit();
@@ -63,14 +63,14 @@ RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const StyleProperties*) 
         };
         widget = button;
     } else {
-        auto text_box = html_view.add<GUI::TextBox>();
-        text_box->set_text(value());
-        text_box->on_change = [this] {
+        auto& text_box = html_view.add<GUI::TextBox>();
+        text_box.set_text(value());
+        text_box.on_change = [this] {
             auto& widget = to<LayoutWidget>(layout_node())->widget();
             const_cast<HTMLInputElement*>(this)->set_attribute("value", static_cast<const GUI::TextBox&>(widget).text());
         };
         int text_width = Gfx::Font::default_font().width(value());
-        text_box->set_relative_rect(0, 0, text_width + 20, 20);
+        text_box.set_relative_rect(0, 0, text_width + 20, 20);
         widget = text_box;
     }
 

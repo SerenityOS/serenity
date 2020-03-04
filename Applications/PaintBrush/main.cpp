@@ -64,13 +64,13 @@ int main(int argc, char** argv)
 
     horizontal_container.add<ToolboxWidget>();
 
-    auto vertical_container = horizontal_container.add<GUI::Widget>();
-    vertical_container->set_layout<GUI::VerticalBoxLayout>();
-    vertical_container->layout()->set_spacing(0);
+    auto& vertical_container = horizontal_container.add<GUI::Widget>();
+    vertical_container.set_layout<GUI::VerticalBoxLayout>();
+    vertical_container.layout()->set_spacing(0);
 
-    auto paintable_widget = vertical_container->add<PaintableWidget>();
-    paintable_widget->set_focus(true);
-    vertical_container->add<PaletteWidget>(*paintable_widget);
+    auto& paintable_widget = vertical_container.add<PaintableWidget>();
+    paintable_widget.set_focus(true);
+    vertical_container.add<PaletteWidget>(paintable_widget);
 
     window->show();
 
@@ -88,7 +88,7 @@ int main(int argc, char** argv)
             GUI::MessageBox::show(String::format("Failed to load '%s'", open_path.value().characters()), "Open failed", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window);
             return;
         }
-        paintable_widget->set_bitmap(*bitmap);
+        paintable_widget.set_bitmap(*bitmap);
     }));
     app_menu->add_separator();
     app_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {

@@ -53,11 +53,11 @@ void ColorPicker::build()
     horizontal_container.set_layout<HorizontalBoxLayout>();
     horizontal_container.layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto left_vertical_container = horizontal_container.add<Widget>();
-    left_vertical_container->set_layout<VerticalBoxLayout>();
+    auto& left_vertical_container = horizontal_container.add<Widget>();
+    left_vertical_container.set_layout<VerticalBoxLayout>();
 
-    auto right_vertical_container = horizontal_container.add<Widget>();
-    right_vertical_container->set_layout<VerticalBoxLayout>();
+    auto& right_vertical_container = horizontal_container.add<Widget>();
+    right_vertical_container.set_layout<VerticalBoxLayout>();
 
     enum RGBComponent {
         Red,
@@ -65,34 +65,34 @@ void ColorPicker::build()
         Blue
     };
 
-    m_preview_widget = right_vertical_container->add<Frame>();
+    m_preview_widget = right_vertical_container.add<Frame>();
     auto pal = m_preview_widget->palette();
     pal.set_color(ColorRole::Background, m_color);
     m_preview_widget->set_fill_with_background_color(true);
     m_preview_widget->set_palette(pal);
-    right_vertical_container->layout()->add_spacer();
-    auto cancel_button = right_vertical_container->add<Button>("Cancel");
-    cancel_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    cancel_button->set_preferred_size(0, 20);
-    cancel_button->on_click = [&] {
+    right_vertical_container.layout()->add_spacer();
+    auto& cancel_button = right_vertical_container.add<Button>("Cancel");
+    cancel_button.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    cancel_button.set_preferred_size(0, 20);
+    cancel_button.on_click = [&] {
         done(Dialog::ExecCancel);
     };
-    auto ok_button = right_vertical_container->add<Button>("Okay");
-    ok_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    ok_button->set_preferred_size(0, 20);
-    ok_button->on_click = [&] {
+    auto& ok_button = right_vertical_container.add<Button>("Okay");
+    ok_button.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    ok_button.set_preferred_size(0, 20);
+    ok_button.on_click = [&] {
         done(Dialog::ExecOK);
     };
 
     auto make_spinbox = [&](RGBComponent component, int initial_value) {
-        auto spinbox = left_vertical_container->add<SpinBox>();
-        spinbox->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-        spinbox->set_preferred_size(0, 20);
-        spinbox->set_min(0);
-        spinbox->set_max(255);
-        spinbox->set_value(initial_value);
+        auto& spinbox = left_vertical_container.add<SpinBox>();
+        spinbox.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+        spinbox.set_preferred_size(0, 20);
+        spinbox.set_min(0);
+        spinbox.set_max(255);
+        spinbox.set_value(initial_value);
 
-        spinbox->on_change = [this, component](auto value) {
+        spinbox.on_change = [this, component](auto value) {
             if (component == Red)
                 m_color.set_red(value);
             if (component == Green)
@@ -105,7 +105,6 @@ void ColorPicker::build()
             m_preview_widget->set_palette(pal);
             m_preview_widget->update();
         };
-        return spinbox;
     };
 
     make_spinbox(Red, m_color.red());

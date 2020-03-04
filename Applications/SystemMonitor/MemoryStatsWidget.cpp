@@ -57,15 +57,15 @@ MemoryStatsWidget::MemoryStatsWidget(GraphWidget& graph)
     layout()->set_spacing(3);
 
     auto build_widgets_for_label = [this](const String& description) -> RefPtr<GUI::Label> {
-        auto container = add<GUI::Widget>();
-        container->set_layout<GUI::HorizontalBoxLayout>();
-        container->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-        container->set_preferred_size(275, 12);
-        auto description_label = container->add<GUI::Label>(description);
-        description_label->set_font(Gfx::Font::default_bold_font());
-        description_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        auto label = container->add<GUI::Label>();
-        label->set_text_alignment(Gfx::TextAlignment::CenterRight);
+        auto& container = add<GUI::Widget>();
+        container.set_layout<GUI::HorizontalBoxLayout>();
+        container.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+        container.set_preferred_size(275, 12);
+        auto& description_label = container.add<GUI::Label>(description);
+        description_label.set_font(Gfx::Font::default_bold_font());
+        description_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        auto& label = container.add<GUI::Label>();
+        label.set_text_alignment(Gfx::TextAlignment::CenterRight);
         return label;
     };
 

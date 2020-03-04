@@ -41,24 +41,24 @@ SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, NonnullRefPtr<Audio::C
     set_layout<GUI::VerticalBoxLayout>();
     layout()->set_margins({ 2, 2, 2, 2 });
 
-    auto status_widget = add<GUI::Widget>();
-    status_widget->set_fill_with_background_color(true);
-    status_widget->set_layout<GUI::HorizontalBoxLayout>();
+    auto& status_widget = add<GUI::Widget>();
+    status_widget.set_fill_with_background_color(true);
+    status_widget.set_layout<GUI::HorizontalBoxLayout>();
 
-    m_elapsed = status_widget->add<GUI::Label>();
+    m_elapsed = status_widget.add<GUI::Label>();
     m_elapsed->set_frame_shape(Gfx::FrameShape::Container);
     m_elapsed->set_frame_shadow(Gfx::FrameShadow::Sunken);
     m_elapsed->set_frame_thickness(2);
     m_elapsed->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     m_elapsed->set_preferred_size(80, 0);
 
-    auto sample_widget_container = status_widget->add<GUI::Widget>();
-    sample_widget_container->set_layout<GUI::HorizontalBoxLayout>();
-    sample_widget_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
+    auto& sample_widget_container = status_widget.add<GUI::Widget>();
+    sample_widget_container.set_layout<GUI::HorizontalBoxLayout>();
+    sample_widget_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
 
-    m_sample_widget = sample_widget_container->add<SampleWidget>();
+    m_sample_widget = sample_widget_container.add<SampleWidget>();
 
-    m_remaining = status_widget->add<GUI::Label>();
+    m_remaining = status_widget.add<GUI::Label>();
     m_remaining->set_frame_shape(Gfx::FrameShape::Container);
     m_remaining->set_frame_shadow(Gfx::FrameShadow::Sunken);
     m_remaining->set_frame_thickness(2);
@@ -70,22 +70,22 @@ SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, NonnullRefPtr<Audio::C
     m_slider->set_enabled(false);
     m_slider->on_knob_released = [&](int value) { m_manager.seek(denormalize_rate(value)); };
 
-    auto control_widget = add<GUI::Widget>();
-    control_widget->set_fill_with_background_color(true);
-    control_widget->set_layout<GUI::HorizontalBoxLayout>();
-    control_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    control_widget->set_preferred_size(0, 30);
-    control_widget->layout()->set_margins({ 10, 2, 10, 2 });
-    control_widget->layout()->set_spacing(10);
+    auto& control_widget = add<GUI::Widget>();
+    control_widget.set_fill_with_background_color(true);
+    control_widget.set_layout<GUI::HorizontalBoxLayout>();
+    control_widget.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    control_widget.set_preferred_size(0, 30);
+    control_widget.layout()->set_margins({ 10, 2, 10, 2 });
+    control_widget.layout()->set_spacing(10);
 
-    m_play = control_widget->add<GUI::Button>();
+    m_play = control_widget.add<GUI::Button>();
     m_play->set_icon(*m_pause_icon);
     m_play->set_enabled(false);
     m_play->on_click = [this] {
         m_play->set_icon(m_manager.toggle_pause() ? *m_play_icon : *m_pause_icon);
     };
 
-    m_stop = control_widget->add<GUI::Button>();
+    m_stop = control_widget.add<GUI::Button>();
     m_stop->set_enabled(false);
     m_stop->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/stop.png"));
     m_stop->on_click = [this] { m_manager.stop(); };

@@ -109,28 +109,28 @@ void MessageBox::build()
         message_container->layout()->set_margins({ 8, 0, 8, 0 });
         message_container->layout()->set_spacing(8);
 
-        auto icon_label = message_container->add<Label>();
-        icon_label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-        icon_label->set_preferred_size(32, 32);
-        icon_label->set_icon(icon());
-        icon_width = icon_label->icon()->width();
+        auto& icon_label = message_container->add<Label>();
+        icon_label.set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+        icon_label.set_preferred_size(32, 32);
+        icon_label.set_icon(icon());
+        icon_width = icon_label.icon()->width();
     }
 
-    auto label = message_container->add<Label>(m_text);
-    label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    label->set_preferred_size(text_width, 16);
+    auto& label = message_container->add<Label>(m_text);
+    label.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    label.set_preferred_size(text_width, 16);
 
-    auto button_container = widget.add<Widget>();
-    button_container->set_layout<HorizontalBoxLayout>();
-    button_container->layout()->set_spacing(5);
-    button_container->layout()->set_margins({ 15, 0, 15, 0 });
+    auto& button_container = widget.add<Widget>();
+    button_container.set_layout<HorizontalBoxLayout>();
+    button_container.layout()->set_spacing(5);
+    button_container.layout()->set_margins({ 15, 0, 15, 0 });
 
     auto add_button = [&](String label, Dialog::ExecResult result) {
-        auto button = button_container->add<Button>();
-        button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-        button->set_preferred_size(0, 20);
-        button->set_text(label);
-        button->on_click = [this, label, result] {
+        auto& button = button_container.add<Button>();
+        button.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+        button.set_preferred_size(0, 20);
+        button.set_text(label);
+        button.on_click = [this, label, result] {
             dbg() << "GUI::MessageBox: '" << label << "' button clicked";
             done(result);
         };
