@@ -115,13 +115,12 @@ int main(int argc, char** argv)
     window->set_title("System Monitor");
     window->set_rect(20, 200, 680, 400);
 
-    auto keeper = GUI::Widget::construct();
-    window->set_main_widget(keeper);
-    keeper->set_layout<GUI::VerticalBoxLayout>();
-    keeper->set_fill_with_background_color(true);
-    keeper->layout()->set_margins({ 4, 4, 4, 4 });
+    auto& keeper = window->set_main_widget<GUI::Widget>();
+    keeper.set_layout<GUI::VerticalBoxLayout>();
+    keeper.set_fill_with_background_color(true);
+    keeper.layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto tabwidget = keeper->add<GUI::TabWidget>();
+    auto tabwidget = keeper.add<GUI::TabWidget>();
 
     auto process_container_splitter = tabwidget->add_tab<GUI::VerticalSplitter>("Processes");
 

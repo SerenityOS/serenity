@@ -128,8 +128,7 @@ int main(int argc, char** argv)
     window->set_window_type(GUI::WindowType::MenuApplet);
     window->resize(30, 16);
 
-    auto widget = GraphWidget::construct();
-    window->set_main_widget(widget);
+    window->set_main_widget<GraphWidget>();
     window->show();
 
     if (unveil("/res", "r") < 0) {

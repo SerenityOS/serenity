@@ -106,13 +106,12 @@ RefPtr<GUI::Window> make_toolbox_window()
     window->set_title("Widgets");
     window->set_rect(20, 200, 80, 300);
 
-    auto widget = GUI::Widget::construct();
-    widget->set_fill_with_background_color(true);
-    widget->set_layout<GUI::VerticalBoxLayout>();
-    widget->layout()->set_spacing(0);
-    window->set_main_widget(widget);
+    auto& widget = window->set_main_widget<GUI::Widget>();
+    widget.set_fill_with_background_color(true);
+    widget.set_layout<GUI::VerticalBoxLayout>();
+    widget.layout()->set_spacing(0);
 
-    auto label_button = widget->add<GUI::Button>();
+    auto label_button = widget.add<GUI::Button>();
     label_button->set_button_style(Gfx::ButtonStyle::CoolBar);
     label_button->set_tooltip("GLabel");
     label_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/vbwidgets/label.png"));
@@ -121,7 +120,7 @@ RefPtr<GUI::Window> make_toolbox_window()
             form->insert_widget(VBWidgetType::GLabel);
     };
 
-    auto button_button = widget->add<GUI::Button>();
+    auto button_button = widget.add<GUI::Button>();
     button_button->set_button_style(Gfx::ButtonStyle::CoolBar);
     button_button->set_tooltip("GButton");
     button_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/vbwidgets/button.png"));
@@ -129,7 +128,7 @@ RefPtr<GUI::Window> make_toolbox_window()
         if (auto* form = VBForm::current())
             form->insert_widget(VBWidgetType::GButton);
     };
-    auto spinbox_button = widget->add<GUI::Button>();
+    auto spinbox_button = widget.add<GUI::Button>();
     spinbox_button->set_button_style(Gfx::ButtonStyle::CoolBar);
     spinbox_button->set_tooltip("GSpinBox");
     spinbox_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/vbwidgets/spinbox.png"));
@@ -137,7 +136,7 @@ RefPtr<GUI::Window> make_toolbox_window()
         if (auto* form = VBForm::current())
             form->insert_widget(VBWidgetType::GSpinBox);
     };
-    auto editor_button = widget->add<GUI::Button>();
+    auto editor_button = widget.add<GUI::Button>();
     editor_button->set_button_style(Gfx::ButtonStyle::CoolBar);
     editor_button->set_tooltip("GTextEditor");
     editor_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/vbwidgets/textbox.png"));
@@ -145,7 +144,7 @@ RefPtr<GUI::Window> make_toolbox_window()
         if (auto* form = VBForm::current())
             form->insert_widget(VBWidgetType::GTextEditor);
     };
-    auto progress_bar_button = widget->add<GUI::Button>();
+    auto progress_bar_button = widget.add<GUI::Button>();
     progress_bar_button->set_button_style(Gfx::ButtonStyle::CoolBar);
     progress_bar_button->set_tooltip("GProgressBar");
     progress_bar_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/vbwidgets/progressbar.png"));
@@ -153,7 +152,7 @@ RefPtr<GUI::Window> make_toolbox_window()
         if (auto* form = VBForm::current())
             form->insert_widget(VBWidgetType::GProgressBar);
     };
-    auto slider_button = widget->add<GUI::Button>();
+    auto slider_button = widget.add<GUI::Button>();
     slider_button->set_button_style(Gfx::ButtonStyle::CoolBar);
     slider_button->set_tooltip("GSlider");
     slider_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/vbwidgets/slider.png"));
@@ -161,7 +160,7 @@ RefPtr<GUI::Window> make_toolbox_window()
         if (auto* form = VBForm::current())
             form->insert_widget(VBWidgetType::GSlider);
     };
-    auto checkbox_button = widget->add<GUI::Button>();
+    auto checkbox_button = widget.add<GUI::Button>();
     checkbox_button->set_button_style(Gfx::ButtonStyle::CoolBar);
     checkbox_button->set_tooltip("GCheckBox");
     checkbox_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/vbwidgets/checkbox.png"));
@@ -169,7 +168,7 @@ RefPtr<GUI::Window> make_toolbox_window()
         if (auto* form = VBForm::current())
             form->insert_widget(VBWidgetType::GCheckBox);
     };
-    auto radiobutton_button = widget->add<GUI::Button>();
+    auto radiobutton_button = widget.add<GUI::Button>();
     radiobutton_button->set_button_style(Gfx::ButtonStyle::CoolBar);
     radiobutton_button->set_tooltip("GRadioButton");
     radiobutton_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/filled-radio-circle.png"));
@@ -177,7 +176,7 @@ RefPtr<GUI::Window> make_toolbox_window()
         if (auto* form = VBForm::current())
             form->insert_widget(VBWidgetType::GRadioButton);
     };
-    auto scrollbar_button = widget->add<GUI::Button>();
+    auto scrollbar_button = widget.add<GUI::Button>();
     scrollbar_button->set_button_style(Gfx::ButtonStyle::CoolBar);
     scrollbar_button->set_tooltip("GScrollBar");
     scrollbar_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/vbwidgets/scrollbar.png"));
@@ -185,7 +184,7 @@ RefPtr<GUI::Window> make_toolbox_window()
         if (auto* form = VBForm::current())
             form->insert_widget(VBWidgetType::GScrollBar);
     };
-    auto groupbox_button = widget->add<GUI::Button>();
+    auto groupbox_button = widget.add<GUI::Button>();
     groupbox_button->set_button_style(Gfx::ButtonStyle::CoolBar);
     groupbox_button->set_tooltip("GGroupBox");
     groupbox_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/vbwidgets/groupbox.png"));

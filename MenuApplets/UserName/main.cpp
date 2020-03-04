@@ -92,10 +92,8 @@ int main(int argc, char** argv)
     window->set_title("UserName");
     window->set_window_type(GUI::WindowType::MenuApplet);
 
-    auto widget = UserNameWidget::construct();
-
-    window->resize(widget->get_width(), 16);
-    window->set_main_widget(widget);
+    auto& widget = window->set_main_widget<UserNameWidget>();
+    window->resize(widget.get_width(), 16);
     window->show();
 
     if (pledge("stdio shared_buffer rpath", nullptr) < 0) {

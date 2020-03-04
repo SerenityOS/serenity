@@ -81,13 +81,12 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
 {
     set_title(m_mode == Mode::Open ? "Open File" : "Save File");
     set_rect(200, 200, 700, 400);
-    auto horizontal_container = Widget::construct();
-    set_main_widget(horizontal_container);
-    horizontal_container->set_layout<HorizontalBoxLayout>();
-    horizontal_container->layout()->set_margins({ 4, 4, 4, 4 });
-    horizontal_container->set_fill_with_background_color(true);
+    auto& horizontal_container = set_main_widget<Widget>();
+    horizontal_container.set_layout<HorizontalBoxLayout>();
+    horizontal_container.layout()->set_margins({ 4, 4, 4, 4 });
+    horizontal_container.set_fill_with_background_color(true);
 
-    auto vertical_container = horizontal_container->add<Widget>();
+    auto vertical_container = horizontal_container.add<Widget>();
     vertical_container->set_layout<VerticalBoxLayout>();
     vertical_container->layout()->set_spacing(4);
 
@@ -236,7 +235,7 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
         }
     };
 
-    auto preview_container = horizontal_container->add<Frame>();
+    auto preview_container = horizontal_container.add<Frame>();
     preview_container->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     preview_container->set_preferred_size(180, 0);
     preview_container->set_layout<VerticalBoxLayout>();

@@ -42,12 +42,11 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Core::
     set_title(String::format("About %s", m_name.characters()));
     set_resizable(false);
 
-    auto widget = Widget::construct();
-    set_main_widget(widget);
-    widget->set_fill_with_background_color(true);
-    widget->set_layout<HorizontalBoxLayout>();
+    auto& widget = set_main_widget<Widget>();
+    widget.set_fill_with_background_color(true);
+    widget.set_layout<HorizontalBoxLayout>();
 
-    auto left_container = widget->add<Widget>();
+    auto left_container = widget.add<Widget>();
     left_container->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     left_container->set_preferred_size(48, 0);
     left_container->set_layout<VerticalBoxLayout>();
@@ -57,7 +56,7 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Core::
     icon_label->set_preferred_size(40, 40);
     left_container->layout()->add_spacer();
 
-    auto right_container = widget->add<Widget>();
+    auto right_container = widget.add<Widget>();
     right_container->set_layout<VerticalBoxLayout>();
     right_container->layout()->set_margins({ 0, 4, 4, 4 });
 

@@ -122,13 +122,12 @@ private:
     TooltipWindow()
     {
         set_window_type(WindowType::Tooltip);
-        m_label = Label::construct();
+        m_label = set_main_widget<Label>();
         m_label->set_background_color(Color::from_rgb(0xdac7b5));
         m_label->set_fill_with_background_color(true);
         m_label->set_frame_thickness(1);
         m_label->set_frame_shape(Gfx::FrameShape::Container);
         m_label->set_frame_shadow(Gfx::FrameShadow::Plain);
-        set_main_widget(m_label);
     }
 
     RefPtr<Label> m_label;

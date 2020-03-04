@@ -57,12 +57,11 @@ int main(int argc, char** argv)
     window->set_title("Minesweeper");
     window->set_rect(100, 100, 139, 175);
 
-    auto widget = GUI::Widget::construct();
-    window->set_main_widget(widget);
-    widget->set_layout<GUI::VerticalBoxLayout>();
-    widget->layout()->set_spacing(0);
+    auto& widget = window->set_main_widget<GUI::Widget>();
+    widget.set_layout<GUI::VerticalBoxLayout>();
+    widget.layout()->set_spacing(0);
 
-    auto container = widget->add<GUI::Widget>();
+    auto container = widget.add<GUI::Widget>();
     container->set_fill_with_background_color(true);
     container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     container->set_preferred_size(0, 36);
@@ -77,7 +76,7 @@ int main(int argc, char** argv)
     auto time_icon_label = container->add<GUI::Label>();
     time_icon_label->set_icon(Gfx::Bitmap::load_from_file("/res/icons/minesweeper/timer.png"));
     auto time_label = container->add<GUI::Label>();
-    auto field = widget->add<Field>(*flag_label, *time_label, *face_button, [&](auto size) {
+    auto field = widget.add<Field>(*flag_label, *time_label, *face_button, [&](auto size) {
         size.set_height(size.height() + container->preferred_size().height());
         window->resize(size);
     });
