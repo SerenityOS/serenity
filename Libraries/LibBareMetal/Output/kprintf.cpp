@@ -155,6 +155,8 @@ static void debugger_putch(char*&, char ch)
 
 extern "C" int dbgputstr(const char* characters, int length)
 {
+    if (!characters)
+        return 0;
     for (int i = 0; i < length; ++i)
         debugger_out(characters[i]);
     return 0;
@@ -162,6 +164,8 @@ extern "C" int dbgputstr(const char* characters, int length)
 
 extern "C" int kernelputstr(const char* characters, int length)
 {
+    if (!characters)
+        return 0;
     for (int i = 0; i < length; ++i)
         console_out(characters[i]);
     return 0;
