@@ -168,7 +168,7 @@ void TerminalWrapper::kill_running_command()
 
 TerminalWrapper::TerminalWrapper()
 {
-    set_layout(make<GUI::VerticalBoxLayout>());
+    set_layout<GUI::VerticalBoxLayout>();
 
     RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("Terminal");
     m_terminal_widget = add<TerminalWidget>(-1, false, config);

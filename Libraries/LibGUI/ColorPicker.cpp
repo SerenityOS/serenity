@@ -50,15 +50,15 @@ void ColorPicker::build()
 {
     auto horizontal_container = Widget::construct();
     horizontal_container->set_fill_with_background_color(true);
-    horizontal_container->set_layout(make<HorizontalBoxLayout>());
+    horizontal_container->set_layout<HorizontalBoxLayout>();
     horizontal_container->layout()->set_margins({ 4, 4, 4, 4 });
     set_main_widget(horizontal_container);
 
     auto left_vertical_container = horizontal_container->add<Widget>();
-    left_vertical_container->set_layout(make<VerticalBoxLayout>());
+    left_vertical_container->set_layout<VerticalBoxLayout>();
 
     auto right_vertical_container = horizontal_container->add<Widget>();
-    right_vertical_container->set_layout(make<VerticalBoxLayout>());
+    right_vertical_container->set_layout<VerticalBoxLayout>();
 
     enum RGBComponent {
         Red,

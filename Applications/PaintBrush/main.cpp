@@ -60,13 +60,13 @@ int main(int argc, char** argv)
 
     auto horizontal_container = GUI::Widget::construct();
     window->set_main_widget(horizontal_container);
-    horizontal_container->set_layout(make<GUI::HorizontalBoxLayout>());
+    horizontal_container->set_layout<GUI::HorizontalBoxLayout>();
     horizontal_container->layout()->set_spacing(0);
 
     horizontal_container->add<ToolboxWidget>();
 
     auto vertical_container = horizontal_container->add<GUI::Widget>();
-    vertical_container->set_layout(make<GUI::VerticalBoxLayout>());
+    vertical_container->set_layout<GUI::VerticalBoxLayout>();
     vertical_container->layout()->set_spacing(0);
 
     auto paintable_widget = vertical_container->add<PaintableWidget>();

@@ -60,7 +60,7 @@ int main(int argc, char** argv)
     auto main_widget = GUI::Widget::construct();
     window->set_main_widget(main_widget);
     main_widget->set_fill_with_background_color(true);
-    main_widget->set_layout(make<GUI::VerticalBoxLayout>());
+    main_widget->set_layout<GUI::VerticalBoxLayout>();
 
     auto timeline_widget = main_widget->add<ProfileTimelineWidget>(*profile);
 

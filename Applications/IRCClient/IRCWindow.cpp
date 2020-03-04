@@ -41,7 +41,7 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
     , m_type(type)
     , m_name(name)
 {
-    set_layout(make<GUI::VerticalBoxLayout>());
+    set_layout<GUI::VerticalBoxLayout>();
 
     // Make a container for the log buffer view + (optional) member list.
     auto container = add<GUI::HorizontalSplitter>();

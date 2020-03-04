@@ -108,7 +108,7 @@ RefPtr<GUI::Window> make_toolbox_window()
 
     auto widget = GUI::Widget::construct();
     widget->set_fill_with_background_color(true);
-    widget->set_layout(make<GUI::VerticalBoxLayout>());
+    widget->set_layout<GUI::VerticalBoxLayout>();
     widget->layout()->set_spacing(0);
     window->set_main_widget(widget);
 

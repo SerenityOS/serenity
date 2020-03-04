@@ -48,7 +48,7 @@
 
 TextEditorWidget::TextEditorWidget()
 {
-    set_layout(make<GUI::VerticalBoxLayout>());
+    set_layout<GUI::VerticalBoxLayout>();
     layout()->set_spacing(0);
 
     auto toolbar = add<GUI::ToolBar>();
@@ -74,7 +74,7 @@ TextEditorWidget::TextEditorWidget()
     m_find_replace_widget->set_fill_with_background_color(true);
     m_find_replace_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_find_replace_widget->set_preferred_size(0, 48);
-    m_find_replace_widget->set_layout(make<GUI::VerticalBoxLayout>());
+    m_find_replace_widget->set_layout<GUI::VerticalBoxLayout>();
     m_find_replace_widget->layout()->set_margins({ 2, 2, 2, 4 });
     m_find_replace_widget->set_visible(false);
 
@@ -82,14 +82,14 @@ TextEditorWidget::TextEditorWidget()
     m_find_widget->set_fill_with_background_color(true);
     m_find_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_find_widget->set_preferred_size(0, 22);
-    m_find_widget->set_layout(make<GUI::HorizontalBoxLayout>());
+    m_find_widget->set_layout<GUI::HorizontalBoxLayout>();
     m_find_widget->set_visible(false);
 
     m_replace_widget = m_find_replace_widget->add<GUI::Widget>();
     m_replace_widget->set_fill_with_background_color(true);
     m_replace_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_replace_widget->set_preferred_size(0, 22);
-    m_replace_widget->set_layout(make<GUI::HorizontalBoxLayout>());
+    m_replace_widget->set_layout<GUI::HorizontalBoxLayout>();
     m_replace_widget->set_visible(false);
 
     m_find_textbox = m_find_widget->add<GUI::TextBox>();

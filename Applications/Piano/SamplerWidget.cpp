@@ -91,13 +91,13 @@ void WaveEditor::paint_event(GUI::PaintEvent& event)
 SamplerWidget::SamplerWidget(AudioEngine& audio_engine)
     : m_audio_engine(audio_engine)
 {
-    set_layout(make<GUI::VerticalBoxLayout>());
+    set_layout<GUI::VerticalBoxLayout>();
     layout()->set_margins({ 10, 10, 10, 10 });
     layout()->set_spacing(10);
     set_fill_with_background_color(true);
 
     m_open_button_and_recorded_sample_name_container = add<GUI::Widget>();
-    m_open_button_and_recorded_sample_name_container->set_layout(make<GUI::HorizontalBoxLayout>());
+    m_open_button_and_recorded_sample_name_container->set_layout<GUI::HorizontalBoxLayout>();
     m_open_button_and_recorded_sample_name_container->layout()->set_spacing(10);
     m_open_button_and_recorded_sample_name_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_open_button_and_recorded_sample_name_container->set_preferred_size(0, 24);

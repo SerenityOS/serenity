@@ -57,7 +57,7 @@ void InputBox::build()
 
     set_rect(x(), y(), max_width + 80, 80);
 
-    widget->set_layout(make<VerticalBoxLayout>());
+    widget->set_layout<VerticalBoxLayout>();
     widget->set_fill_with_background_color(true);
 
     widget->layout()->set_margins({ 8, 8, 8, 8 });
@@ -74,10 +74,10 @@ void InputBox::build()
     auto button_container_outer = widget->add<Widget>();
     button_container_outer->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     button_container_outer->set_preferred_size(0, 20);
-    button_container_outer->set_layout(make<VerticalBoxLayout>());
+    button_container_outer->set_layout<VerticalBoxLayout>();
 
     auto button_container_inner = button_container_outer->add<Widget>();
-    button_container_inner->set_layout(make<HorizontalBoxLayout>());
+    button_container_inner->set_layout<HorizontalBoxLayout>();
     button_container_inner->layout()->set_spacing(8);
 
     m_cancel_button = button_container_inner->add<Button>();
