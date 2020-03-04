@@ -85,6 +85,8 @@ public:
 
 inline const LogStream& operator<<(const LogStream& stream, const char* value)
 {
+    if (!value)
+        return stream << "(null)";
     int length = 0;
     const char* p = value;
     while (*(p++))
