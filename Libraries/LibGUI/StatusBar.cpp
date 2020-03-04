@@ -57,11 +57,11 @@ StatusBar::~StatusBar()
 
 NonnullRefPtr<Label> StatusBar::create_label()
 {
-    auto label = add<Label>();
-    label->set_frame_shadow(Gfx::FrameShadow::Sunken);
-    label->set_frame_shape(Gfx::FrameShape::Panel);
-    label->set_frame_thickness(1);
-    label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    auto& label = add<Label>();
+    label.set_frame_shadow(Gfx::FrameShadow::Sunken);
+    label.set_frame_shape(Gfx::FrameShape::Panel);
+    label.set_frame_thickness(1);
+    label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     return label;
 }
 

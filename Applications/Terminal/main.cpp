@@ -140,33 +140,33 @@ RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
     settings.set_layout<GUI::VerticalBoxLayout>();
     settings.layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto radio_container = settings.add<GUI::GroupBox>("Bell Mode");
-    radio_container->set_layout<GUI::VerticalBoxLayout>();
-    radio_container->layout()->set_margins({ 6, 16, 6, 6 });
-    radio_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    radio_container->set_preferred_size(100, 70);
+    auto& radio_container = settings.add<GUI::GroupBox>("Bell Mode");
+    radio_container.set_layout<GUI::VerticalBoxLayout>();
+    radio_container.layout()->set_margins({ 6, 16, 6, 6 });
+    radio_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    radio_container.set_preferred_size(100, 70);
 
-    auto sysbell_radio = radio_container->add<GUI::RadioButton>("Use (Audible) System Bell");
-    auto visbell_radio = radio_container->add<GUI::RadioButton>("Use (Visual) Terminal Bell");
-    sysbell_radio->set_checked(terminal.should_beep());
-    visbell_radio->set_checked(!terminal.should_beep());
-    sysbell_radio->on_checked = [&terminal](const bool checked) {
+    auto& sysbell_radio = radio_container.add<GUI::RadioButton>("Use (Audible) System Bell");
+    auto& visbell_radio = radio_container.add<GUI::RadioButton>("Use (Visual) Terminal Bell");
+    sysbell_radio.set_checked(terminal.should_beep());
+    visbell_radio.set_checked(!terminal.should_beep());
+    sysbell_radio.on_checked = [&terminal](const bool checked) {
         terminal.set_should_beep(checked);
     };
 
-    auto slider_container = settings.add<GUI::GroupBox>("Background Opacity");
-    slider_container->set_layout<GUI::VerticalBoxLayout>();
-    slider_container->layout()->set_margins({ 6, 16, 6, 6 });
-    slider_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    slider_container->set_preferred_size(100, 50);
-    auto slider = slider_container->add<GUI::HorizontalSlider>();
+    auto& slider_container = settings.add<GUI::GroupBox>("Background Opacity");
+    slider_container.set_layout<GUI::VerticalBoxLayout>();
+    slider_container.layout()->set_margins({ 6, 16, 6, 6 });
+    slider_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    slider_container.set_preferred_size(100, 50);
+    auto& slider = slider_container.add<GUI::HorizontalSlider>();
 
-    slider->on_value_changed = [&terminal](int value) {
+    slider.on_value_changed = [&terminal](int value) {
         terminal.set_opacity(value);
     };
 
-    slider->set_range(0, 255);
-    slider->set_value(terminal.opacity());
+    slider.set_range(0, 255);
+    slider.set_value(terminal.opacity());
 
     return window;
 }

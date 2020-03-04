@@ -121,11 +121,11 @@ public:
     }
 
     template<class T, class... Args>
-    inline NonnullRefPtr<T> add(Args&&... args)
+    inline T& add(Args&&... args)
     {
-        auto t = T::construct(forward<Args>(args)...);
-        add_child(*t);
-        return t;
+        auto child = T::construct(forward<Args>(args)...);
+        add_child(*child);
+        return child;
     }
 
     virtual bool is_visible_for_timer_purposes() const;

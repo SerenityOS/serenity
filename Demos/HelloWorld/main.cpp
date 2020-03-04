@@ -45,14 +45,14 @@ int main(int argc, char** argv)
     auto& layout = main_widget.set_layout<GUI::VerticalBoxLayout>();
     layout.set_margins({ 4, 4, 4, 4 });
 
-    auto label = main_widget.add<GUI::Label>();
-    label->set_text("Hello\nWorld!");
+    auto& label = main_widget.add<GUI::Label>();
+    label.set_text("Hello\nWorld!");
 
-    auto button = main_widget.add<GUI::Button>();
-    button->set_text("Good-bye");
-    button->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    button->set_preferred_size(0, 20);
-    button->on_click = [&] {
+    auto& button = main_widget.add<GUI::Button>();
+    button.set_text("Good-bye");
+    button.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    button.set_preferred_size(0, 20);
+    button.on_click = [&] {
         app.quit();
     };
 

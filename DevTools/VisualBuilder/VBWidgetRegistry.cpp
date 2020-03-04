@@ -104,43 +104,43 @@ static RefPtr<GUI::Widget> build_gwidget(VBWidgetType type, GUI::Widget* parent)
     case VBWidgetType::GGroupBox:
         return parent->add<GUI::GroupBox>("groupbox_1");
     case VBWidgetType::GLabel: {
-        auto label = parent->add<GUI::Label>();
-        label->set_fill_with_background_color(true);
-        label->set_text("label_1");
+        auto& label = parent->add<GUI::Label>();
+        label.set_fill_with_background_color(true);
+        label.set_text("label_1");
         return label;
     }
     case VBWidgetType::GButton: {
-        auto button = parent->add<GUI::Button>();
-        button->set_text("button_1");
+        auto& button = parent->add<GUI::Button>();
+        button.set_text("button_1");
         return button;
     }
     case VBWidgetType::GSpinBox: {
-        auto box = parent->add<GUI::SpinBox>();
-        box->set_range(0, 100);
-        box->set_value(0);
+        auto& box = parent->add<GUI::SpinBox>();
+        box.set_range(0, 100);
+        box.set_value(0);
         return box;
     }
     case VBWidgetType::GTextEditor: {
-        auto editor = parent->add<GUI::TextEditor>();
-        editor->set_ruler_visible(false);
+        auto& editor = parent->add<GUI::TextEditor>();
+        editor.set_ruler_visible(false);
         return editor;
     }
     case VBWidgetType::GProgressBar: {
-        auto bar = parent->add<GUI::ProgressBar>();
-        bar->set_format(GUI::ProgressBar::Format::NoText);
-        bar->set_range(0, 100);
-        bar->set_value(50);
+        auto& bar = parent->add<GUI::ProgressBar>();
+        bar.set_format(GUI::ProgressBar::Format::NoText);
+        bar.set_range(0, 100);
+        bar.set_value(50);
         return bar;
     }
     case VBWidgetType::GSlider: {
-        auto slider = parent->add<GUI::HorizontalSlider>();
-        slider->set_range(0, 100);
-        slider->set_value(50);
+        auto& slider = parent->add<GUI::HorizontalSlider>();
+        slider.set_range(0, 100);
+        slider.set_value(50);
         return slider;
     }
     case VBWidgetType::GCheckBox: {
-        auto box = parent->add<GUI::CheckBox>();
-        box->set_text("checkbox_1");
+        auto& box = parent->add<GUI::CheckBox>();
+        box.set_text("checkbox_1");
         return box;
     }
     case VBWidgetType::GRadioButton:

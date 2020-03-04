@@ -38,19 +38,19 @@ EditorWrapper::EditorWrapper()
 {
     set_layout<GUI::VerticalBoxLayout>();
 
-    auto label_wrapper = add<GUI::Widget>();
-    label_wrapper->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    label_wrapper->set_preferred_size(0, 14);
-    label_wrapper->set_fill_with_background_color(true);
-    label_wrapper->set_layout<GUI::HorizontalBoxLayout>();
-    label_wrapper->layout()->set_margins({ 2, 0, 2, 0 });
+    auto& label_wrapper = add<GUI::Widget>();
+    label_wrapper.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    label_wrapper.set_preferred_size(0, 14);
+    label_wrapper.set_fill_with_background_color(true);
+    label_wrapper.set_layout<GUI::HorizontalBoxLayout>();
+    label_wrapper.layout()->set_margins({ 2, 0, 2, 0 });
 
-    m_filename_label = label_wrapper->add<GUI::Label>("(Untitled)");
+    m_filename_label = label_wrapper.add<GUI::Label>("(Untitled)");
     m_filename_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     m_filename_label->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_filename_label->set_preferred_size(0, 14);
 
-    m_cursor_label = label_wrapper->add<GUI::Label>("(Cursor)");
+    m_cursor_label = label_wrapper.add<GUI::Label>("(Cursor)");
     m_cursor_label->set_text_alignment(Gfx::TextAlignment::CenterRight);
     m_cursor_label->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_cursor_label->set_preferred_size(0, 14);

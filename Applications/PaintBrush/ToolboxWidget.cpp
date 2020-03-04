@@ -74,15 +74,15 @@ ToolboxWidget::ToolboxWidget()
     layout()->set_margins({ 4, 4, 4, 4 });
 
     auto add_tool = [&](const StringView& name, const StringView& icon_name, OwnPtr<Tool>&& tool) {
-        auto button = add<ToolButton>(name, move(tool));
-        button->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        button->set_preferred_size(0, 32);
-        button->set_checkable(true);
-        button->set_exclusive(true);
+        auto& button = add<ToolButton>(name, move(tool));
+        button.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+        button.set_preferred_size(0, 32);
+        button.set_checkable(true);
+        button.set_exclusive(true);
 
-        button->set_icon(Gfx::Bitmap::load_from_file(String::format("/res/icons/paintbrush/%s.png", String(icon_name).characters())));
+        button.set_icon(Gfx::Bitmap::load_from_file(String::format("/res/icons/paintbrush/%s.png", String(icon_name).characters())));
 
-        button->on_checked = [button = button.ptr()](auto checked) {
+        button.on_checked = [button = &button](auto checked) {
             if (checked)
                 PaintableWidget::the().set_tool(&button->tool());
             else
