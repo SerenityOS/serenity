@@ -416,7 +416,8 @@ void TextEditor::paint_event(PaintEvent& event)
 #endif
             if (!document().has_spans()) {
                 // Fast-path for plain text
-                painter.draw_text(visual_line_rect, visual_line_text, m_text_alignment, palette().color(foreground_role()));
+                auto color = palette().color(is_enabled() ? foreground_role() : Gfx::ColorRole::DisabledText);
+                painter.draw_text(visual_line_rect, visual_line_text, m_text_alignment, color);
             } else {
                 int advance = font().glyph_width(' ') + font().glyph_spacing();
                 Gfx::Rect character_rect = { visual_line_rect.location(), { font().glyph_width(' '), line_height() } };
