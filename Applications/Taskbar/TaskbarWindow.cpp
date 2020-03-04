@@ -46,15 +46,14 @@ TaskbarWindow::TaskbarWindow()
 
     GUI::Desktop::the().on_rect_change = [this](const Gfx::Rect& rect) { on_screen_rect_change(rect); };
 
-    auto widget = GUI::Frame::construct();
-    widget->set_fill_with_background_color(true);
-    widget->set_layout<GUI::HorizontalBoxLayout>();
-    widget->layout()->set_margins({ 3, 2, 3, 2 });
-    widget->layout()->set_spacing(3);
-    widget->set_frame_thickness(1);
-    widget->set_frame_shape(Gfx::FrameShape::Panel);
-    widget->set_frame_shadow(Gfx::FrameShadow::Raised);
-    set_main_widget(widget);
+    auto& widget = set_main_widget<GUI::Frame>();
+    widget.set_fill_with_background_color(true);
+    widget.set_layout<GUI::HorizontalBoxLayout>();
+    widget.layout()->set_margins({ 3, 2, 3, 2 });
+    widget.layout()->set_spacing(3);
+    widget.set_frame_thickness(1);
+    widget.set_frame_shape(Gfx::FrameShape::Panel);
+    widget.set_frame_shadow(Gfx::FrameShadow::Raised);
 
     WindowList::the().aid_create_button = [this](auto& identifier) {
         return create_button(identifier);

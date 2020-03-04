@@ -87,22 +87,21 @@ int main(int argc, char** argv)
     }
 
     auto window = GUI::Window::construct();
-    auto widget = QSWidget::construct();
-    widget->set_path(path);
-    widget->set_bitmap(*bitmap);
+    auto& widget = window->set_main_widget<QSWidget>();
+    widget.set_path(path);
+    widget.set_bitmap(*bitmap);
 
     auto update_window_title = [&](int scale) {
-        window->set_title(String::format("QuickShow: %s %s %d%%", widget->path().characters(), widget->bitmap()->size().to_string().characters(), scale));
+        window->set_title(String::format("QuickShow: %s %s %d%%", widget.path().characters(), widget.bitmap()->size().to_string().characters(), scale));
     };
 
     window->set_double_buffering_enabled(true);
     update_window_title(100);
     window->set_rect(200, 200, bitmap->width(), bitmap->height());
 
-    widget->on_scale_change = [&](int scale) {
+    widget.on_scale_change = [&](int scale) {
         update_window_title(scale);
     };
-    window->set_main_widget(widget);
 
     window->show();
 

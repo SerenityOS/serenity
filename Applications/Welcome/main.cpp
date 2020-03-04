@@ -161,19 +161,18 @@ int main(int argc, char** argv)
     window->set_resizable(true);
     window->set_rect(window_rect);
 
-    auto background = BackgroundWidget::construct();
-    window->set_main_widget(background);
-    background->set_fill_with_background_color(false);
-    background->set_layout<GUI::VerticalBoxLayout>();
-    background->layout()->set_margins({ 16, 8, 16, 8 });
-    background->layout()->set_spacing(8);
-    background->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
+    auto& background = window->set_main_widget<BackgroundWidget>();
+    background.set_fill_with_background_color(false);
+    background.set_layout<GUI::VerticalBoxLayout>();
+    background.layout()->set_margins({ 16, 8, 16, 8 });
+    background.layout()->set_spacing(8);
+    background.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
 
     //
     // header
     //
 
-    auto header = background->add<GUI::Label>();
+    auto header = background.add<GUI::Label>();
     header->set_font(Gfx::Font::load_from_file("/res/fonts/PebbletonBold11.font"));
     header->set_text("Welcome to SerenityOS!");
     header->set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -184,7 +183,7 @@ int main(int argc, char** argv)
     // main section
     //
 
-    auto main_section = background->add<GUI::Widget>();
+    auto main_section = background.add<GUI::Widget>();
     main_section->set_layout<GUI::HorizontalBoxLayout>();
     main_section->layout()->set_margins({ 0, 0, 0, 0 });
     main_section->layout()->set_spacing(8);

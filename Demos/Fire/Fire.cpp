@@ -246,14 +246,13 @@ int main(int argc, char** argv)
     window->set_resizable(false);
     window->set_rect(100, 100, 640, 400);
 
-    auto fire = Fire::construct();
-    window->set_main_widget(fire);
+    auto& fire = window->set_main_widget<Fire>();
 
-    auto time = fire->add<GUI::Label>();
+    auto time = fire.add<GUI::Label>();
     time->set_relative_rect({ 0, 4, 40, 10 });
     time->move_by({ window->width() - time->width(), 0 });
     time->set_foreground_color(Color::from_rgb(0x444444));
-    fire->set_stat_label(time);
+    fire.set_stat_label(time);
 
     window->show();
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-demo.png"));

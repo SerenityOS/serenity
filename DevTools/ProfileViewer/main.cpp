@@ -57,14 +57,13 @@ int main(int argc, char** argv)
     window->set_title("ProfileViewer");
     window->set_rect(100, 100, 800, 600);
 
-    auto main_widget = GUI::Widget::construct();
-    window->set_main_widget(main_widget);
-    main_widget->set_fill_with_background_color(true);
-    main_widget->set_layout<GUI::VerticalBoxLayout>();
+    auto& main_widget = window->set_main_widget<GUI::Widget>();
+    main_widget.set_fill_with_background_color(true);
+    main_widget.set_layout<GUI::VerticalBoxLayout>();
 
-    auto timeline_widget = main_widget->add<ProfileTimelineWidget>(*profile);
+    auto timeline_widget = main_widget.add<ProfileTimelineWidget>(*profile);
 
-    auto tree_view = main_widget->add<GUI::TreeView>();
+    auto tree_view = main_widget.add<GUI::TreeView>();
     tree_view->set_headers_visible(true);
     tree_view->set_size_columns_to_fit_content(true);
     tree_view->set_model(profile->model());

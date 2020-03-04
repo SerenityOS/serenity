@@ -52,8 +52,7 @@ int main(int argc, char** argv)
     AudioEngine audio_engine;
 
     auto window = GUI::Window::construct();
-    auto main_widget = MainWidget::construct(audio_engine);
-    window->set_main_widget(main_widget);
+    auto& main_widget = window->set_main_widget<MainWidget>(audio_engine);
     window->set_title("Piano");
     window->set_rect(90, 90, 840, 600);
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-piano.png"));
@@ -74,7 +73,7 @@ int main(int argc, char** argv)
         for (;;) {
             audio_engine.fill_buffer(buffer);
             audio->write(reinterpret_cast<u8*>(buffer.data()), buffer_size);
-            Core::EventLoop::current().post_event(*main_widget, make<Core::CustomEvent>(0));
+            Core::EventLoop::current().post_event(main_widget, make<Core::CustomEvent>(0));
             Core::EventLoop::wake();
 
             if (need_to_write_wav) {

@@ -55,15 +55,14 @@ int main(int argc, char** argv)
     window->set_title("Snake");
     window->set_rect(100, 100, 320, 320);
 
-    auto game = SnakeGame::construct();
-    window->set_main_widget(game);
+    auto& game = window->set_main_widget<SnakeGame>();
 
     auto menubar = make<GUI::MenuBar>();
 
     auto app_menu = GUI::Menu::construct("Snake");
 
     app_menu->add_action(GUI::Action::create("New game", { Mod_None, Key_F2 }, [&](const GUI::Action&) {
-        game->reset();
+        game.reset();
     }));
     app_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the().quit(0);

@@ -69,14 +69,13 @@ PowerDialog::PowerDialog()
     set_title("SerenityOS");
     set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/power.png"));
 
-    auto main = GUI::Widget::construct();
-    set_main_widget(main);
-    main->set_layout<GUI::VerticalBoxLayout>();
-    main->layout()->set_margins({ 8, 8, 8, 8 });
-    main->layout()->set_spacing(8);
-    main->set_fill_with_background_color(true);
+    auto& main = set_main_widget<GUI::Widget>();
+    main.set_layout<GUI::VerticalBoxLayout>();
+    main.layout()->set_margins({ 8, 8, 8, 8 });
+    main.layout()->set_spacing(8);
+    main.set_fill_with_background_color(true);
 
-    auto header = main->add<GUI::Label>();
+    auto header = main.add<GUI::Label>();
     header->set_text("What would you like to do?");
     header->set_preferred_size(0, 16);
     header->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
@@ -84,7 +83,7 @@ PowerDialog::PowerDialog()
 
     for (size_t i = 0; i < options.size(); i++) {
         auto action = options[i];
-        auto radio = main->add<GUI::RadioButton>();
+        auto radio = main.add<GUI::RadioButton>();
         radio->set_enabled(action.enabled);
         radio->set_text(action.title);
 
@@ -98,7 +97,7 @@ PowerDialog::PowerDialog()
         }
     }
 
-    auto button_box = main->add<GUI::Widget>();
+    auto button_box = main.add<GUI::Widget>();
     button_box->set_layout<GUI::HorizontalBoxLayout>();
     button_box->layout()->set_spacing(8);
 

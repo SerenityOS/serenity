@@ -48,30 +48,29 @@ InputBox::~InputBox()
 
 void InputBox::build()
 {
-    auto widget = Widget::construct();
-    set_main_widget(widget);
+    auto& widget = set_main_widget<Widget>();
 
-    int text_width = widget->font().width(m_prompt);
-    int title_width = widget->font().width(title()) + 24 /* icon, plus a little padding -- not perfect */;
+    int text_width = widget.font().width(m_prompt);
+    int title_width = widget.font().width(title()) + 24 /* icon, plus a little padding -- not perfect */;
     int max_width = AK::max(text_width, title_width);
 
     set_rect(x(), y(), max_width + 80, 80);
 
-    widget->set_layout<VerticalBoxLayout>();
-    widget->set_fill_with_background_color(true);
+    widget.set_layout<VerticalBoxLayout>();
+    widget.set_fill_with_background_color(true);
 
-    widget->layout()->set_margins({ 8, 8, 8, 8 });
-    widget->layout()->set_spacing(8);
+    widget.layout()->set_margins({ 8, 8, 8, 8 });
+    widget.layout()->set_spacing(8);
 
-    auto label = widget->add<Label>(m_prompt);
+    auto label = widget.add<Label>(m_prompt);
     label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     label->set_preferred_size(text_width, 16);
 
-    m_text_editor = widget->add<TextBox>();
+    m_text_editor = widget.add<TextBox>();
     m_text_editor->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_text_editor->set_preferred_size(0, 19);
 
-    auto button_container_outer = widget->add<Widget>();
+    auto button_container_outer = widget.add<Widget>();
     button_container_outer->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     button_container_outer->set_preferred_size(0, 20);
     button_container_outer->set_layout<VerticalBoxLayout>();

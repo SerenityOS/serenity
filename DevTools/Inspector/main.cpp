@@ -58,12 +58,11 @@ int main(int argc, char** argv)
     window->set_title("Inspector");
     window->set_rect(150, 150, 300, 500);
 
-    auto widget = GUI::Widget::construct();
-    window->set_main_widget(widget);
-    widget->set_fill_with_background_color(true);
-    widget->set_layout<GUI::VerticalBoxLayout>();
+    auto& widget = window->set_main_widget<GUI::Widget>();
+    widget.set_fill_with_background_color(true);
+    widget.set_layout<GUI::VerticalBoxLayout>();
 
-    auto splitter = widget->add<GUI::HorizontalSplitter>();
+    auto splitter = widget.add<GUI::HorizontalSplitter>();
 
     RemoteProcess remote_process(pid);
 

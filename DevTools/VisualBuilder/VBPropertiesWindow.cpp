@@ -81,13 +81,12 @@ VBPropertiesWindow::VBPropertiesWindow()
     set_title("Properties");
     set_rect(780, 200, 240, 280);
 
-    auto widget = GUI::Widget::construct();
-    widget->set_fill_with_background_color(true);
-    widget->set_layout<GUI::VerticalBoxLayout>();
-    widget->layout()->set_margins({ 2, 2, 2, 2 });
-    set_main_widget(widget);
+    auto& widget = set_main_widget<GUI::Widget>();
+    widget.set_fill_with_background_color(true);
+    widget.set_layout<GUI::VerticalBoxLayout>();
+    widget.layout()->set_margins({ 2, 2, 2, 2 });
 
-    m_table_view = widget->add<GUI::TableView>();
+    m_table_view = widget.add<GUI::TableView>();
     m_table_view->set_headers_visible(false);
     m_table_view->set_editable(true);
 

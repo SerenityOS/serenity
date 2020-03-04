@@ -60,9 +60,8 @@ ComboBox::ComboBox()
     // FIXME: This is obviously not a tooltip window, but it's the closest thing to what we want atm.
     m_list_window->set_window_type(WindowType::Tooltip);
 
-    m_list_view = ListView::construct();
+    m_list_view = m_list_window->set_main_widget<ListView>();
     m_list_view->horizontal_scrollbar().set_visible(false);
-    m_list_window->set_main_widget(m_list_view);
 
     m_list_view->on_selection = [this](auto& index) {
         ASSERT(model());
