@@ -36,8 +36,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
-PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, bool disable_rename, Core::Object* parent)
-    : Dialog(parent)
+PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, bool disable_rename, Window* parent_window)
+    : Dialog(parent_window)
     , m_model(model)
 {
     auto file_path = FileSystemPath(path);

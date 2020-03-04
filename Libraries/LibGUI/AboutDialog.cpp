@@ -33,8 +33,8 @@
 
 namespace GUI {
 
-AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Core::Object* parent)
-    : Dialog(parent)
+AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window* parent_window)
+    : Dialog(parent_window)
     , m_name(name)
     , m_icon(icon)
 {

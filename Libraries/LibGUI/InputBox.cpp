@@ -34,8 +34,8 @@
 
 namespace GUI {
 
-InputBox::InputBox(const StringView& prompt, const StringView& title, Core::Object* parent)
-    : Dialog(parent)
+InputBox::InputBox(const StringView& prompt, const StringView& title, GUI::Window* parent_window)
+    : Dialog(parent_window)
     , m_prompt(prompt)
 {
     set_title(title);

@@ -74,8 +74,8 @@ Optional<String> FilePicker::get_save_filepath(const String& title, const String
     return {};
 }
 
-FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView& path, Core::Object* parent)
-    : Dialog(parent)
+FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView& path, Window* parent_window)
+    : Dialog(parent_window)
     , m_model(FileSystemModel::create())
     , m_mode(mode)
 {

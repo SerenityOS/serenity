@@ -53,7 +53,7 @@ public:
     virtual void close() override;
 
 protected:
-    explicit Dialog(Core::Object* parent);
+    explicit Dialog(Window* parent_window);
 
 private:
     OwnPtr<Core::EventLoop> m_event_loop;
