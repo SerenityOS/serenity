@@ -88,8 +88,8 @@ namespace ACPI {
 
     void StaticParser::init_fadt()
     {
-        kprintf("ACPI: Initializing Fixed ACPI data\n");
-        kprintf("ACPI: Searching for the Fixed ACPI Data Table\n");
+        klog() << "ACPI: Initializing Fixed ACPI data";
+        klog() << "ACPI: Searching for the Fixed ACPI Data Table";
 
         m_fadt = find_table("FACP");
         ASSERT(!m_fadt.is_null());
@@ -99,7 +99,7 @@ namespace ACPI {
 #ifdef ACPI_DEBUG
         dbg() << "ACPI: FADT @ V " << sdt << ", P " << (void*)fadt.as_ptr();
 #endif
-        kprintf("ACPI: Fixed ACPI data, Revision %u, Length %u bytes\n", sdt->revision, sdt->length);
+        klog() << "ACPI: Fixed ACPI data, Revision " << sdt->revision << ", Length " << sdt->length << " bytes";
     }
 
     void StaticParser::do_acpi_reboot()
@@ -111,10 +111,10 @@ namespace ACPI {
         auto region = MM.allocate_kernel_region(m_fadt.page_base(), (PAGE_SIZE * 2), "ACPI Static Parser", Region::Access::Read);
         auto* fadt = (const Structures::FADT*)region->vaddr().offset(m_fadt.offset_in_page().get()).as_ptr();
         if (fadt->h.revision >= 2) {
-            kprintf("ACPI: Reboot, Sending value 0%x to Port 0x%x\n", fadt->reset_value, fadt->reset_reg.address);
+            klog() << "ACPI: Reboot, Sending value 0x" << String::format("%x", fadt->reset_value) << " to Port 0x" << String::format("%x", fadt->reset_reg.address);
             IO::out8(fadt->reset_reg.address, fadt->reset_value);
         } else {
-            kprintf("ACPI: Reboot, Not supported!\n");
+            klog() << "ACPI: Reboot, Not supported!";
         }
 
         ASSERT_NOT_REACHED(); /// If rebooting didn't work, halt.
@@ -122,7 +122,7 @@ namespace ACPI {
 
     void StaticParser::do_acpi_shutdown()
     {
-        kprintf("ACPI: Shutdown is not supported with the current configuration, Abort!\n");
+        klog() << "ACPI: Shutdown is not supported with the current configuration, Abort!";
         ASSERT_NOT_REACHED();
     }
 
@@ -159,12 +159,12 @@ namespace ACPI {
 
         auto main_sdt_region = MM.allocate_kernel_region(m_main_system_description_table.page_base(), PAGE_ROUND_UP(length) + PAGE_SIZE, "ACPI Static Parser Initialization", Region::Access::Read, false, true);
         auto* sdt = (volatile Structures::SDTHeader*)main_sdt_region->vaddr().offset(m_main_system_description_table.offset_in_page().get()).as_ptr();
-        kprintf("ACPI: Main Description Table valid? 0x%x\n", StaticParsing::validate_table(const_cast<Structures::SDTHeader&>(*sdt), length));
+        klog() << "ACPI: Main Description Table valid? " << StaticParsing::validate_table(const_cast<Structures::SDTHeader&>(*sdt), length);
 
         if (m_xsdt_supported) {
             volatile auto* xsdt = (volatile Structures::XSDT*)sdt;
-            kprintf("ACPI: Using XSDT, Enumerating tables @ P 0x%x\n", m_main_system_description_table.get());
-            kprintf("ACPI: XSDT Revision %d, Total length - %u\n", revision, length);
+            klog() << "ACPI: Using XSDT, Enumerating tables @ P " << String::format("%p", m_main_system_description_table.get());
+            klog() << "ACPI: XSDT Revision " << revision << ", Total length - " << length;
 #ifdef ACPI_DEBUG
             dbg() << "ACPI: XSDT pointer @ V " << xsdt;
 #endif
@@ -176,8 +176,8 @@ namespace ACPI {
             }
         } else {
             volatile auto* rsdt = (volatile Structures::RSDT*)sdt;
-            kprintf("ACPI: Using RSDT, Enumerating tables @ P 0x%x\n", m_main_system_description_table.get());
-            kprintf("ACPI: RSDT Revision %d, Total length - %u\n", revision, length);
+            klog() << "ACPI: Using RSDT, Enumerating tables @ P " << String::format("%p", m_main_system_description_table.get());
+            klog() << "ACPI: RSDT Revision " << revision << ", Total length - " << length;
 #ifdef ACPI_DEBUG
             dbg() << "ACPI: RSDT pointer @ V " << rsdt;
 #endif
@@ -215,12 +215,12 @@ namespace ACPI {
         , m_rsdp(StaticParsing::search_rsdp())
     {
         if (!m_rsdp.is_null()) {
-            kprintf("ACPI: Using RSDP @ P 0x%x\n", m_rsdp);
+            klog() << "ACPI: Using RSDP @ P " << String::format("%p", m_rsdp);
             m_operable = true;
             locate_static_data();
         } else {
             m_operable = false;
-            kprintf("ACPI: Disabled, due to RSDP being absent\n");
+            klog() << "ACPI: Disabled, due to RSDP being absent";
         }
     }
 
@@ -228,7 +228,7 @@ namespace ACPI {
         : Parser(true)
         , m_rsdp(rsdp)
     {
-        kprintf("ACPI: Using RSDP @ Px%x\n", rsdp.get());
+        klog() << "ACPI: Using RSDP @ P " << String::format("%p", rsdp.get());
         m_operable = true;
         locate_static_data();
     }
@@ -279,7 +279,7 @@ namespace ACPI {
         PhysicalAddress rsdp;
         auto region = MM.allocate_kernel_region(PhysicalAddress(0), PAGE_SIZE, "ACPI RSDP Searching", Region::Access::Read);
         u16 ebda_seg = (u16) * ((uint16_t*)((region->vaddr().get() & PAGE_MASK) + 0x40e));
-        kprintf("ACPI: Probing EBDA, Segment 0x%x\n", ebda_seg);
+        klog() << "ACPI: Probing EBDA, Segment 0x" << String::format("%x", ebda_seg);
 
         rsdp = search_rsdp_in_ebda(ebda_seg);
         if (!rsdp.is_null())

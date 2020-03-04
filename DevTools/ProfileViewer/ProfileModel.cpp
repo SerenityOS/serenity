@@ -97,7 +97,9 @@ String ProfileModel::column_name(int column) const
 {
     switch (column) {
     case Column::SampleCount:
-        return "# Samples";
+        return m_profile.show_percentages() ? "% Samples" : "# Samples";
+    case Column::SelfCount:
+        return m_profile.show_percentages() ? "% Self" : "# Self";
     case Column::StackFrame:
         return "Stack Frame";
     default:
@@ -108,7 +110,7 @@ String ProfileModel::column_name(int column) const
 
 GUI::Model::ColumnMetadata ProfileModel::column_metadata(int column) const
 {
-    if (column == Column::SampleCount)
+    if (column == Column::SampleCount || column == Column::SelfCount)
         return ColumnMetadata { 0, Gfx::TextAlignment::CenterRight };
     return {};
 }
@@ -125,8 +127,16 @@ GUI::Variant ProfileModel::data(const GUI::ModelIndex& index, Role role) const
         return {};
     }
     if (role == Role::Display) {
-        if (index.column() == Column::SampleCount)
-            return node->sample_count();
+        if (index.column() == Column::SampleCount) {
+            if (m_profile.show_percentages())
+                return ((float)node->event_count() / (float)m_profile.filtered_event_count()) * 100.0f;
+            return node->event_count();
+        }
+        if (index.column() == Column::SelfCount) {
+            if (m_profile.show_percentages())
+                return ((float)node->self_count() / (float)m_profile.filtered_event_count()) * 100.0f;
+            return node->self_count();
+        }
         if (index.column() == Column::StackFrame)
             return node->symbol();
         return {};

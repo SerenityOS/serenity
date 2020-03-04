@@ -184,7 +184,7 @@ int main(int, char**)
             threads.append(&it.value);
         }
 
-        quick_sort(threads.begin(), threads.end(), [](auto* p1, auto* p2) {
+        quick_sort(threads, [](auto* p1, auto* p2) {
             return p2->times_scheduled_since_prev < p1->times_scheduled_since_prev;
         });
 

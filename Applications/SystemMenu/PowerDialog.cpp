@@ -69,51 +69,49 @@ PowerDialog::PowerDialog()
     set_title("SerenityOS");
     set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/power.png"));
 
-    auto main = GUI::Widget::construct();
-    set_main_widget(main);
-    main->set_layout(make<GUI::VerticalBoxLayout>());
-    main->layout()->set_margins({ 8, 8, 8, 8 });
-    main->layout()->set_spacing(8);
-    main->set_fill_with_background_color(true);
+    auto& main = set_main_widget<GUI::Widget>();
+    main.set_layout<GUI::VerticalBoxLayout>();
+    main.layout()->set_margins({ 8, 8, 8, 8 });
+    main.layout()->set_spacing(8);
+    main.set_fill_with_background_color(true);
 
-    auto header = main->add<GUI::Label>();
-    header->set_text("What would you like to do?");
-    header->set_preferred_size(0, 16);
-    header->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    header->set_font(Gfx::Font::default_bold_font());
+    auto& header = main.add<GUI::Label>();
+    header.set_text("What would you like to do?");
+    header.set_preferred_size(0, 16);
+    header.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    header.set_font(Gfx::Font::default_bold_font());
 
-    int selected = -1;
     for (size_t i = 0; i < options.size(); i++) {
         auto action = options[i];
-        auto radio = main->add<GUI::RadioButton>();
-        radio->set_enabled(action.enabled);
-        radio->set_text(action.title);
+        auto& radio = main.add<GUI::RadioButton>();
+        radio.set_enabled(action.enabled);
+        radio.set_text(action.title);
 
-        radio->on_checked = [&selected, i](auto) {
-            selected = i;
+        radio.on_checked = [this, i](auto) {
+            m_selected_option = i;
         };
 
         if (action.default_action) {
-            radio->set_checked(true);
-            selected = i;
+            radio.set_checked(true);
+            m_selected_option = i;
         }
     }
 
-    auto button_box = main->add<GUI::Widget>();
-    button_box->set_layout(make<GUI::HorizontalBoxLayout>());
-    button_box->layout()->set_spacing(8);
+    auto& button_box = main.add<GUI::Widget>();
+    button_box.set_layout<GUI::HorizontalBoxLayout>();
+    button_box.layout()->set_spacing(8);
 
-    auto ok_button = button_box->add<GUI::Button>();
-    ok_button->on_click = [this, &selected](auto&) {
-        done(selected);
+    auto& ok_button = button_box.add<GUI::Button>();
+    ok_button.on_click = [this] {
+        done(m_selected_option);
     };
-    ok_button->set_text("OK");
+    ok_button.set_text("OK");
 
-    auto cancel_button = button_box->add<GUI::Button>();
-    cancel_button->on_click = [this](auto&) {
+    auto& cancel_button = button_box.add<GUI::Button>();
+    cancel_button.on_click = [this] {
         done(-1);
     };
-    cancel_button->set_text("Cancel");
+    cancel_button.set_text("Cancel");
 }
 
 PowerDialog::~PowerDialog()

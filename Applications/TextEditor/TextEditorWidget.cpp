@@ -48,10 +48,10 @@
 
 TextEditorWidget::TextEditorWidget()
 {
-    set_layout(make<GUI::VerticalBoxLayout>());
+    set_layout<GUI::VerticalBoxLayout>();
     layout()->set_spacing(0);
 
-    auto toolbar = add<GUI::ToolBar>();
+    auto& toolbar = add<GUI::ToolBar>();
     m_editor = add<GUI::TextEditor>();
     m_editor->set_ruler_visible(true);
     m_editor->set_automatic_indentation_enabled(true);
@@ -74,7 +74,7 @@ TextEditorWidget::TextEditorWidget()
     m_find_replace_widget->set_fill_with_background_color(true);
     m_find_replace_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_find_replace_widget->set_preferred_size(0, 48);
-    m_find_replace_widget->set_layout(make<GUI::VerticalBoxLayout>());
+    m_find_replace_widget->set_layout<GUI::VerticalBoxLayout>();
     m_find_replace_widget->layout()->set_margins({ 2, 2, 2, 4 });
     m_find_replace_widget->set_visible(false);
 
@@ -82,14 +82,14 @@ TextEditorWidget::TextEditorWidget()
     m_find_widget->set_fill_with_background_color(true);
     m_find_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_find_widget->set_preferred_size(0, 22);
-    m_find_widget->set_layout(make<GUI::HorizontalBoxLayout>());
+    m_find_widget->set_layout<GUI::HorizontalBoxLayout>();
     m_find_widget->set_visible(false);
 
     m_replace_widget = m_find_replace_widget->add<GUI::Widget>();
     m_replace_widget->set_fill_with_background_color(true);
     m_replace_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_replace_widget->set_preferred_size(0, 22);
-    m_replace_widget->set_layout(make<GUI::HorizontalBoxLayout>());
+    m_replace_widget->set_layout<GUI::HorizontalBoxLayout>();
     m_replace_widget->set_visible(false);
 
     m_find_textbox = m_find_widget->add<GUI::TextBox>();
@@ -391,21 +391,21 @@ TextEditorWidget::TextEditorWidget()
 
     GUI::Application::the().set_menubar(move(menubar));
 
-    toolbar->add_action(*m_new_action);
-    toolbar->add_action(*m_open_action);
-    toolbar->add_action(*m_save_action);
+    toolbar.add_action(*m_new_action);
+    toolbar.add_action(*m_open_action);
+    toolbar.add_action(*m_save_action);
 
-    toolbar->add_separator();
+    toolbar.add_separator();
 
-    toolbar->add_action(m_editor->cut_action());
-    toolbar->add_action(m_editor->copy_action());
-    toolbar->add_action(m_editor->paste_action());
-    toolbar->add_action(m_editor->delete_action());
+    toolbar.add_action(m_editor->cut_action());
+    toolbar.add_action(m_editor->copy_action());
+    toolbar.add_action(m_editor->paste_action());
+    toolbar.add_action(m_editor->delete_action());
 
-    toolbar->add_separator();
+    toolbar.add_separator();
 
-    toolbar->add_action(m_editor->undo_action());
-    toolbar->add_action(m_editor->redo_action());
+    toolbar.add_action(m_editor->undo_action());
+    toolbar.add_action(m_editor->redo_action());
 }
 
 TextEditorWidget::~TextEditorWidget()

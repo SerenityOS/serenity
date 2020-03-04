@@ -46,11 +46,10 @@ int main(int argc, char** argv)
     window->set_title("Hex Editor");
     window->set_rect(20, 200, 640, 400);
 
-    auto hex_editor_widget = HexEditorWidget::construct();
-    window->set_main_widget(hex_editor_widget);
+    auto& hex_editor_widget = window->set_main_widget<HexEditorWidget>();
 
     window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
-        if (hex_editor_widget->request_close())
+        if (hex_editor_widget.request_close())
             return GUI::Window::CloseRequestDecision::Close;
         return GUI::Window::CloseRequestDecision::StayOpen;
     };
@@ -59,7 +58,7 @@ int main(int argc, char** argv)
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-hexeditor.png"));
 
     if (argc >= 2)
-        hex_editor_widget->open_file(argv[1]);
+        hex_editor_widget.open_file(argv[1]);
 
     return app.exec();
 }

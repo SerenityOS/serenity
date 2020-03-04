@@ -94,8 +94,7 @@ int main(int argc, char** argv)
     window->set_window_type(GUI::WindowType::MenuApplet);
     window->resize(12, 16);
 
-    auto widget = AudioWidget::construct();
-    window->set_main_widget(widget);
+    window->set_main_widget<AudioWidget>();
     window->show();
 
     if (unveil("/res", "r") < 0) {

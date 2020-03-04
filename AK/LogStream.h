@@ -70,8 +70,23 @@ public:
     }
 };
 
+#if !defined(BOOTSTRAPPER) && defined(KERNEL)
+class KernelLogStream final : public LogStream {
+public:
+    KernelLogStream() {}
+    virtual ~KernelLogStream() override;
+
+    virtual void write(const char* characters, int length) const override
+    {
+        kernelputstr(characters, length);
+    }
+};
+#endif
+
 inline const LogStream& operator<<(const LogStream& stream, const char* value)
 {
+    if (!value)
+        return stream << "(null)";
     int length = 0;
     const char* p = value;
     while (*(p++))
@@ -103,7 +118,14 @@ inline const LogStream& operator<<(const LogStream& stream, bool value)
 
 DebugLogStream dbg();
 
+#if defined(KERNEL)
+KernelLogStream klog();
+#elif !defined(BOOTSTRAPPER)
+DebugLogStream klog();
+#endif
+
 }
 
 using AK::dbg;
+using AK::klog;
 using AK::LogStream;

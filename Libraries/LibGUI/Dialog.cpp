@@ -31,8 +31,8 @@
 
 namespace GUI {
 
-Dialog::Dialog(Core::Object* parent)
-    : Window(parent)
+Dialog::Dialog(Window* parent_window)
+    : Window(parent_window)
 {
     set_modal(true);
 }

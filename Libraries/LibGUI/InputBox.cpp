@@ -34,8 +34,8 @@
 
 namespace GUI {
 
-InputBox::InputBox(const StringView& prompt, const StringView& title, Core::Object* parent)
-    : Dialog(parent)
+InputBox::InputBox(const StringView& prompt, const StringView& title, GUI::Window* parent_window)
+    : Dialog(parent_window)
     , m_prompt(prompt)
 {
     set_title(title);
@@ -48,52 +48,51 @@ InputBox::~InputBox()
 
 void InputBox::build()
 {
-    auto widget = Widget::construct();
-    set_main_widget(widget);
+    auto& widget = set_main_widget<Widget>();
 
-    int text_width = widget->font().width(m_prompt);
-    int title_width = widget->font().width(title()) + 24 /* icon, plus a little padding -- not perfect */;
+    int text_width = widget.font().width(m_prompt);
+    int title_width = widget.font().width(title()) + 24 /* icon, plus a little padding -- not perfect */;
     int max_width = AK::max(text_width, title_width);
 
     set_rect(x(), y(), max_width + 80, 80);
 
-    widget->set_layout(make<VerticalBoxLayout>());
-    widget->set_fill_with_background_color(true);
+    widget.set_layout<VerticalBoxLayout>();
+    widget.set_fill_with_background_color(true);
 
-    widget->layout()->set_margins({ 8, 8, 8, 8 });
-    widget->layout()->set_spacing(8);
+    widget.layout()->set_margins({ 8, 8, 8, 8 });
+    widget.layout()->set_spacing(8);
 
-    auto label = widget->add<Label>(m_prompt);
-    label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-    label->set_preferred_size(text_width, 16);
+    auto& label = widget.add<Label>(m_prompt);
+    label.set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+    label.set_preferred_size(text_width, 16);
 
-    m_text_editor = widget->add<TextBox>();
+    m_text_editor = widget.add<TextBox>();
     m_text_editor->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_text_editor->set_preferred_size(0, 19);
 
-    auto button_container_outer = widget->add<Widget>();
-    button_container_outer->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    button_container_outer->set_preferred_size(0, 20);
-    button_container_outer->set_layout(make<VerticalBoxLayout>());
+    auto& button_container_outer = widget.add<Widget>();
+    button_container_outer.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    button_container_outer.set_preferred_size(0, 20);
+    button_container_outer.set_layout<VerticalBoxLayout>();
 
-    auto button_container_inner = button_container_outer->add<Widget>();
-    button_container_inner->set_layout(make<HorizontalBoxLayout>());
-    button_container_inner->layout()->set_spacing(8);
+    auto& button_container_inner = button_container_outer.add<Widget>();
+    button_container_inner.set_layout<HorizontalBoxLayout>();
+    button_container_inner.layout()->set_spacing(8);
 
-    m_cancel_button = button_container_inner->add<Button>();
+    m_cancel_button = button_container_inner.add<Button>();
     m_cancel_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_cancel_button->set_preferred_size(0, 20);
     m_cancel_button->set_text("Cancel");
-    m_cancel_button->on_click = [this](auto&) {
+    m_cancel_button->on_click = [this] {
         dbgprintf("GInputBox: Cancel button clicked\n");
         done(ExecCancel);
     };
 
-    m_ok_button = button_container_inner->add<Button>();
+    m_ok_button = button_container_inner.add<Button>();
     m_ok_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_ok_button->set_preferred_size(0, 20);
     m_ok_button->set_text("OK");
-    m_ok_button->on_click = [this](auto&) {
+    m_ok_button->on_click = [this] {
         dbgprintf("GInputBox: OK button clicked\n");
         m_text_value = m_text_editor->text();
         done(ExecOK);

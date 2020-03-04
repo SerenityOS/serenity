@@ -92,7 +92,7 @@ void Button::click()
         set_checked(!is_checked());
     }
     if (on_click)
-        on_click(*this);
+        on_click();
     if (m_action)
         m_action->activate(this);
 }

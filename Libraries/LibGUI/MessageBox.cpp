@@ -33,16 +33,16 @@
 
 namespace GUI {
 
-int MessageBox::show(const StringView& text, const StringView& title, Type type, InputType input_type, Core::Object* parent)
+int MessageBox::show(const StringView& text, const StringView& title, Type type, InputType input_type, Window* parent_window)
 {
     auto box = MessageBox::construct(text, title, type, input_type);
-    if (parent)
-        parent->add_child(box);
+    if (parent_window)
+        parent_window->add_child(box);
     return box->exec();
 }
 
-MessageBox::MessageBox(const StringView& text, const StringView& title, Type type, InputType input_type, Core::Object* parent)
-    : Dialog(parent)
+MessageBox::MessageBox(const StringView& text, const StringView& title, Type type, InputType input_type, Window* parent_window)
+    : Dialog(parent_window)
     , m_text(text)
     , m_type(type)
     , m_input_type(input_type)
@@ -91,47 +91,46 @@ bool MessageBox::should_include_no_button() const
 
 void MessageBox::build()
 {
-    auto widget = Widget::construct();
-    set_main_widget(widget);
+    auto& widget = set_main_widget<Widget>();
 
-    int text_width = widget->font().width(m_text);
+    int text_width = widget.font().width(m_text);
     int icon_width = 0;
 
-    widget->set_layout(make<VerticalBoxLayout>());
-    widget->set_fill_with_background_color(true);
+    widget.set_layout<VerticalBoxLayout>();
+    widget.set_fill_with_background_color(true);
 
-    widget->layout()->set_margins({ 0, 15, 0, 15 });
-    widget->layout()->set_spacing(15);
+    widget.layout()->set_margins({ 0, 15, 0, 15 });
+    widget.layout()->set_spacing(15);
 
     RefPtr<Widget> message_container = widget;
     if (m_type != Type::None) {
-        message_container = widget->add<Widget>();
-        message_container->set_layout(make<HorizontalBoxLayout>());
+        message_container = widget.add<Widget>();
+        message_container->set_layout<HorizontalBoxLayout>();
         message_container->layout()->set_margins({ 8, 0, 8, 0 });
         message_container->layout()->set_spacing(8);
 
-        auto icon_label = message_container->add<Label>();
-        icon_label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-        icon_label->set_preferred_size(32, 32);
-        icon_label->set_icon(icon());
-        icon_width = icon_label->icon()->width();
+        auto& icon_label = message_container->add<Label>();
+        icon_label.set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+        icon_label.set_preferred_size(32, 32);
+        icon_label.set_icon(icon());
+        icon_width = icon_label.icon()->width();
     }
 
-    auto label = message_container->add<Label>(m_text);
-    label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    label->set_preferred_size(text_width, 16);
+    auto& label = message_container->add<Label>(m_text);
+    label.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    label.set_preferred_size(text_width, 16);
 
-    auto button_container = widget->add<Widget>();
-    button_container->set_layout(make<HorizontalBoxLayout>());
-    button_container->layout()->set_spacing(5);
-    button_container->layout()->set_margins({ 15, 0, 15, 0 });
+    auto& button_container = widget.add<Widget>();
+    button_container.set_layout<HorizontalBoxLayout>();
+    button_container.layout()->set_spacing(5);
+    button_container.layout()->set_margins({ 15, 0, 15, 0 });
 
     auto add_button = [&](String label, Dialog::ExecResult result) {
-        auto button = button_container->add<Button>();
-        button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-        button->set_preferred_size(0, 20);
-        button->set_text(label);
-        button->on_click = [this, label, result](auto&) {
+        auto& button = button_container.add<Button>();
+        button.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+        button.set_preferred_size(0, 20);
+        button.set_text(label);
+        button.on_click = [this, label, result] {
             dbg() << "GUI::MessageBox: '" << label << "' button clicked";
             done(result);
         };

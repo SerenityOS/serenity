@@ -70,8 +70,7 @@ int main(int argc, char** argv)
     window->set_title("Font Editor");
     window->set_rect({ 50, 50, 390, 342 });
 
-    auto font_editor = FontEditorWidget::construct(path, move(edited_font));
-    window->set_main_widget(font_editor);
+    window->set_main_widget<FontEditorWidget>(path, move(edited_font));
     window->show();
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-font-editor.png"));
 

@@ -106,10 +106,8 @@ int main(int argc, char** argv)
     window->set_title("Clock");
     window->set_window_type(GUI::WindowType::MenuApplet);
 
-    auto widget = ClockWidget::construct();
-
-    window->resize(widget->get_width(), 16);
-    window->set_main_widget(widget);
+    auto& widget = window->set_main_widget<ClockWidget>();
+    window->resize(widget.get_width(), 16);
     window->show();
 
     if (unveil("/res", "r") < 0) {

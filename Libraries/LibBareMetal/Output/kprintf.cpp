@@ -96,7 +96,7 @@ static void serial_putch(char ch)
         was_cr = false;
 }
 
-static void console_putch(char*&, char ch)
+static void console_out(char ch)
 {
     if (serial_debug)
         serial_putch(ch);
@@ -108,6 +108,11 @@ static void console_putch(char*&, char ch)
     } else {
         IO::out8(0xe9, ch);
     }
+}
+
+static void console_putch(char*&, char ch)
+{
+    console_out(ch);
 }
 
 int kprintf(const char* fmt, ...)
@@ -150,8 +155,19 @@ static void debugger_putch(char*&, char ch)
 
 extern "C" int dbgputstr(const char* characters, int length)
 {
+    if (!characters)
+        return 0;
     for (int i = 0; i < length; ++i)
         debugger_out(characters[i]);
+    return 0;
+}
+
+extern "C" int kernelputstr(const char* characters, int length)
+{
+    if (!characters)
+        return 0;
+    for (int i = 0; i < length; ++i)
+        console_out(characters[i]);
     return 0;
 }
 

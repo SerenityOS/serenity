@@ -57,17 +57,16 @@ int main(int argc, char** argv)
     window->set_title("ProfileViewer");
     window->set_rect(100, 100, 800, 600);
 
-    auto main_widget = GUI::Widget::construct();
-    window->set_main_widget(main_widget);
-    main_widget->set_fill_with_background_color(true);
-    main_widget->set_layout(make<GUI::VerticalBoxLayout>());
+    auto& main_widget = window->set_main_widget<GUI::Widget>();
+    main_widget.set_fill_with_background_color(true);
+    main_widget.set_layout<GUI::VerticalBoxLayout>();
 
-    auto timeline_widget = main_widget->add<ProfileTimelineWidget>(*profile);
+    main_widget.add<ProfileTimelineWidget>(*profile);
 
-    auto tree_view = main_widget->add<GUI::TreeView>();
-    tree_view->set_headers_visible(true);
-    tree_view->set_size_columns_to_fit_content(true);
-    tree_view->set_model(profile->model());
+    auto& tree_view = main_widget.add<GUI::TreeView>();
+    tree_view.set_headers_visible(true);
+    tree_view.set_size_columns_to_fit_content(true);
+    tree_view.set_model(profile->model());
 
     auto menubar = make<GUI::MenuBar>();
     auto app_menu = GUI::Menu::construct("ProfileViewer");
@@ -83,6 +82,15 @@ int main(int argc, char** argv)
     invert_action->set_checkable(true);
     invert_action->set_checked(false);
     view_menu->add_action(invert_action);
+
+    auto percent_action = GUI::Action::create("Show percentages", { Mod_Ctrl, Key_P }, [&](auto& action) {
+        action.set_checked(!action.is_checked());
+        profile->set_show_percentages(action.is_checked());
+        tree_view.update();
+    });
+    percent_action->set_checkable(true);
+    percent_action->set_checked(false);
+    view_menu->add_action(percent_action);
 
     menubar->add_menu(move(view_menu));
 

@@ -50,7 +50,7 @@ DiskPartition::~DiskPartition()
 bool DiskPartition::read_blocks(unsigned index, u16 count, u8* out)
 {
 #ifdef OFFD_DEBUG
-    kprintf("DiskPartition::read_blocks %u (really: %u) count=%u\n", index, m_block_offset + index, count);
+    klog() << "DiskPartition::read_blocks " << index << " (really: " << (m_block_offset + index) << ") count=" << count;
 #endif
 
     return m_device->read_blocks(m_block_offset + index, count, out);
@@ -59,7 +59,7 @@ bool DiskPartition::read_blocks(unsigned index, u16 count, u8* out)
 bool DiskPartition::write_blocks(unsigned index, u16 count, const u8* data)
 {
 #ifdef OFFD_DEBUG
-    kprintf("DiskPartition::write_blocks %u (really: %u) count=%u\n", index, m_block_offset + index, count);
+    klog() << "DiskPartition::write_blocks " << index << " (really: " << (m_block_offset + index) << ") count=" << count;
 #endif
 
     return m_device->write_blocks(m_block_offset + index, count, data);

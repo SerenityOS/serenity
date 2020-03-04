@@ -42,7 +42,7 @@ void SharedIRQHandler::initialize(u8 interrupt_number)
 void SharedIRQHandler::register_handler(GenericInterruptHandler& handler)
 {
 #ifdef INTERRUPT_DEBUG
-    kprintf("Interrupt Handler registered @ Shared Interrupt Handler %d\n", m_interrupt_number);
+    klog() << "Interrupt Handler registered @ Shared Interrupt Handler " << m_interrupt_number;
 #endif
     m_handlers.set(&handler);
     enable_interrupt_vector();
@@ -50,7 +50,7 @@ void SharedIRQHandler::register_handler(GenericInterruptHandler& handler)
 void SharedIRQHandler::unregister_handler(GenericInterruptHandler& handler)
 {
 #ifdef INTERRUPT_DEBUG
-    kprintf("Interrupt Handler unregistered @ Shared Interrupt Handler %d\n", m_interrupt_number);
+    klog() << "Interrupt Handler unregistered @ Shared Interrupt Handler " << m_interrupt_number;
 #endif
     m_handlers.remove(&handler);
     if (m_handlers.is_empty())
@@ -71,7 +71,7 @@ SharedIRQHandler::SharedIRQHandler(u8 irq)
     , m_responsible_irq_controller(InterruptManagement::the().get_responsible_irq_controller(irq))
 {
 #ifdef INTERRUPT_DEBUG
-    kprintf("Shared Interrupt Handler registered @ %d\n", m_interrupt_number);
+    klog() << "Shared Interrupt Handler registered @ " << m_interrupt_number;
 #endif
     disable_interrupt_vector();
 }
@@ -79,7 +79,7 @@ SharedIRQHandler::SharedIRQHandler(u8 irq)
 SharedIRQHandler::~SharedIRQHandler()
 {
 #ifdef INTERRUPT_DEBUG
-    kprintf("Shared Interrupt Handler unregistered @ %d\n", interrupt_number());
+    klog() << "Shared Interrupt Handler unregistered @ " << interrupt_number();
 #endif
     disable_interrupt_vector();
 }

@@ -129,7 +129,7 @@ static RefPtr<SearchResultsModel> find_in_files(const StringView& text)
 
 FindInFilesWidget::FindInFilesWidget()
 {
-    set_layout(make<GUI::VerticalBoxLayout>());
+    set_layout<GUI::VerticalBoxLayout>();
     m_textbox = add<GUI::TextBox>();
     m_textbox->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_textbox->set_preferred_size(0, 20);
@@ -147,7 +147,7 @@ FindInFilesWidget::FindInFilesWidget()
         current_editor().set_focus(true);
     };
 
-    m_button->on_click = [this](auto&) {
+    m_button->on_click = [this] {
         auto results_model = find_in_files(m_textbox->text());
         m_result_view->set_model(results_model);
     };

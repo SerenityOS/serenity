@@ -125,6 +125,14 @@ public:
     const Widget* main_widget() const { return m_main_widget; }
     void set_main_widget(Widget*);
 
+    template<class T, class... Args>
+    inline T& set_main_widget(Args&&... args)
+    {
+        auto widget = T::construct(forward<Args>(args)...);
+        set_main_widget(widget.ptr());
+        return *widget;
+    }
+
     Widget* focused_widget() { return m_focused_widget; }
     const Widget* focused_widget() const { return m_focused_widget; }
     void set_focused_widget(Widget*);

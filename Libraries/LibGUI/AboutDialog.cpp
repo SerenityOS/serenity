@@ -33,8 +33,8 @@
 
 namespace GUI {
 
-AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Core::Object* parent)
-    : Dialog(parent)
+AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window* parent_window)
+    : Dialog(parent_window)
     , m_name(name)
     , m_icon(icon)
 {
@@ -42,48 +42,47 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Core::
     set_title(String::format("About %s", m_name.characters()));
     set_resizable(false);
 
-    auto widget = Widget::construct();
-    set_main_widget(widget);
-    widget->set_fill_with_background_color(true);
-    widget->set_layout(make<HorizontalBoxLayout>());
+    auto& widget = set_main_widget<Widget>();
+    widget.set_fill_with_background_color(true);
+    widget.set_layout<HorizontalBoxLayout>();
 
-    auto left_container = widget->add<Widget>();
-    left_container->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    left_container->set_preferred_size(48, 0);
-    left_container->set_layout(make<VerticalBoxLayout>());
-    auto icon_label = left_container->add<Label>();
-    icon_label->set_icon(m_icon);
-    icon_label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-    icon_label->set_preferred_size(40, 40);
-    left_container->layout()->add_spacer();
+    auto& left_container = widget.add<Widget>();
+    left_container.set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    left_container.set_preferred_size(48, 0);
+    left_container.set_layout<VerticalBoxLayout>();
+    auto& icon_label = left_container.add<Label>();
+    icon_label.set_icon(m_icon);
+    icon_label.set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+    icon_label.set_preferred_size(40, 40);
+    left_container.layout()->add_spacer();
 
-    auto right_container = widget->add<Widget>();
-    right_container->set_layout(make<VerticalBoxLayout>());
-    right_container->layout()->set_margins({ 0, 4, 4, 4 });
+    auto& right_container = widget.add<Widget>();
+    right_container.set_layout<VerticalBoxLayout>();
+    right_container.layout()->set_margins({ 0, 4, 4, 4 });
 
     auto make_label = [&](const StringView& text, bool bold = false) {
-        auto label = right_container->add<Label>(text);
-        label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-        label->set_preferred_size(0, 14);
+        auto& label = right_container.add<Label>(text);
+        label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        label.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+        label.set_preferred_size(0, 14);
         if (bold)
-            label->set_font(Gfx::Font::default_bold_font());
+            label.set_font(Gfx::Font::default_bold_font());
     };
     make_label(m_name, true);
     make_label("SerenityOS");
     make_label("(C) The SerenityOS developers");
 
-    right_container->layout()->add_spacer();
+    right_container.layout()->add_spacer();
 
-    auto button_container = right_container->add<Widget>();
-    button_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    button_container->set_preferred_size(0, 20);
-    button_container->set_layout(make<HorizontalBoxLayout>());
-    button_container->layout()->add_spacer();
-    auto ok_button = button_container->add<Button>("OK");
-    ok_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-    ok_button->set_preferred_size(80, 20);
-    ok_button->on_click = [this](auto&) {
+    auto& button_container = right_container.add<Widget>();
+    button_container.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    button_container.set_preferred_size(0, 20);
+    button_container.set_layout<HorizontalBoxLayout>();
+    button_container.layout()->add_spacer();
+    auto& ok_button = button_container.add<Button>("OK");
+    ok_button.set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+    ok_button.set_preferred_size(80, 20);
+    ok_button.on_click = [this] {
         done(Dialog::ExecOK);
     };
 }

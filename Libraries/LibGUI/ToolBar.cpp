@@ -59,21 +59,21 @@ void ToolBar::add_action(Action& action)
     item->type = Item::Type::Action;
     item->action = action;
 
-    auto button = add<Button>();
+    auto& button = add<Button>();
     if (action.group() && action.group()->is_exclusive())
-        button->set_exclusive(true);
-    button->set_action(*item->action);
-    button->set_tooltip(item->action->text());
+        button.set_exclusive(true);
+    button.set_action(*item->action);
+    button.set_tooltip(item->action->text());
     if (item->action->icon())
-        button->set_icon(item->action->icon());
+        button.set_icon(item->action->icon());
     else
-        button->set_text(item->action->text());
+        button.set_text(item->action->text());
 
-    button->set_button_style(Gfx::ButtonStyle::CoolBar);
-    button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-    ASSERT(button->size_policy(Orientation::Horizontal) == SizePolicy::Fixed);
-    ASSERT(button->size_policy(Orientation::Vertical) == SizePolicy::Fixed);
-    button->set_preferred_size(m_button_size + 8, m_button_size + 8);
+    button.set_button_style(Gfx::ButtonStyle::CoolBar);
+    button.set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+    ASSERT(button.size_policy(Orientation::Horizontal) == SizePolicy::Fixed);
+    ASSERT(button.size_policy(Orientation::Vertical) == SizePolicy::Fixed);
+    button.set_preferred_size(m_button_size + 8, m_button_size + 8);
 
     m_items.append(move(item));
 }

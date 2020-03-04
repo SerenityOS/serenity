@@ -85,7 +85,7 @@ CalculatorWidget::CalculatorWidget()
     m_clear_button = add<GUI::Button>();
     m_clear_button->set_foreground_color(Color::NamedColor::Red);
     m_clear_button->set_text("C");
-    m_clear_button->on_click = [this](GUI::Button&) {
+    m_clear_button->on_click = [this] {
         m_keypad.set_value(0.0);
         m_calculator.clear_operation();
         update_display();
@@ -96,7 +96,7 @@ CalculatorWidget::CalculatorWidget()
     m_clear_error_button = add<GUI::Button>();
     m_clear_error_button->set_foreground_color(Color::NamedColor::Red);
     m_clear_error_button->set_text("CE");
-    m_clear_error_button->on_click = [this](GUI::Button&) {
+    m_clear_error_button->on_click = [this] {
         m_calculator.clear_error();
         update_display();
     };
@@ -106,7 +106,7 @@ CalculatorWidget::CalculatorWidget()
     m_backspace_button = add<GUI::Button>();
     m_backspace_button->set_foreground_color(Color::NamedColor::Red);
     m_backspace_button->set_text("Backspace");
-    m_backspace_button->on_click = [this](GUI::Button&) {
+    m_backspace_button->on_click = [this] {
         m_keypad.type_backspace();
         update_display();
     };
@@ -117,7 +117,7 @@ CalculatorWidget::CalculatorWidget()
     m_decimal_point_button->move_to(133, 177);
     m_decimal_point_button->set_foreground_color(Color::NamedColor::Blue);
     m_decimal_point_button->set_text(".");
-    m_decimal_point_button->on_click = [this](GUI::Button&) {
+    m_decimal_point_button->on_click = [this] {
         m_keypad.type_decimal_point();
         update_display();
     };
@@ -175,7 +175,7 @@ CalculatorWidget::CalculatorWidget()
     m_equals_button->move_to(211, 177);
     m_equals_button->set_foreground_color(Color::NamedColor::Red);
     m_equals_button->set_text("=");
-    m_equals_button->on_click = [this](GUI::Button&) {
+    m_equals_button->on_click = [this] {
         double argument = m_keypad.value();
         double res = m_calculator.finish_operation(argument);
         m_keypad.set_value(res);
@@ -191,7 +191,7 @@ CalculatorWidget::~CalculatorWidget()
 void CalculatorWidget::add_button(GUI::Button& button, Calculator::Operation operation)
 {
     add_button(button);
-    button.on_click = [this, operation](GUI::Button&) {
+    button.on_click = [this, operation] {
         double argument = m_keypad.value();
         double res = m_calculator.begin_operation(operation, argument);
         m_keypad.set_value(res);
@@ -203,7 +203,7 @@ void CalculatorWidget::add_button(GUI::Button& button, int digit)
 {
     add_button(button);
     button.set_text(String::number(digit));
-    button.on_click = [this, digit](GUI::Button&) {
+    button.on_click = [this, digit] {
         m_keypad.type_digit(digit);
         update_display();
     };

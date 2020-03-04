@@ -30,6 +30,7 @@
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/PCI/Access.h>
 #include <Kernel/PCI/Device.h>
+#include <LibBareMetal/IO.h>
 
 namespace Kernel {
 
@@ -62,7 +63,7 @@ private:
     u16 in16(u16 address);
     u32 in32(u16 address);
 
-    u16 m_io_base { 0 };
+    IOAddress m_io_base;
     u8 m_interrupt_line { 0 };
     u32 m_rx_buffer_addr { 0 };
     u16 m_rx_buffer_offset { 0 };
