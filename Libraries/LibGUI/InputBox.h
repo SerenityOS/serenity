@@ -33,7 +33,7 @@ namespace GUI {
 class InputBox : public Dialog {
     C_OBJECT(InputBox)
 public:
-    explicit InputBox(const StringView& prompt, const StringView& title, Core::Object* parent = nullptr);
+    explicit InputBox(const StringView& prompt, const StringView& title, Window* parent_window = nullptr);
     virtual ~InputBox() override;
 
     String text_value() const { return m_text_value; }

@@ -40,7 +40,7 @@ public:
     virtual ~PropertiesDialog() override;
 
 private:
-    PropertiesDialog(GUI::FileSystemModel&, String, bool disable_rename, Core::Object* parent = nullptr);
+    PropertiesDialog(GUI::FileSystemModel&, String, bool disable_rename, Window* parent = nullptr);
 
     struct PropertyValuePair {
         String property;

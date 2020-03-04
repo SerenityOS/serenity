@@ -171,12 +171,12 @@ int main(int argc, char** argv)
     });
 
     auto mkdir_action = GUI::Action::create("New directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&](const GUI::Action&) {
-        auto& input_box = window->add<GUI::InputBox>("Enter name:", "New directory");
-        if (input_box.exec() == GUI::InputBox::ExecOK && !input_box.text_value().is_empty()) {
+        auto input_box = GUI::InputBox::construct("Enter name:", "New directory", window);
+        if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty()) {
             auto new_dir_path = canonicalized_path(
                 String::format("%s/%s",
                     directory_view.path().characters(),
-                    input_box.text_value().characters()));
+                    input_box->text_value().characters()));
             int rc = mkdir(new_dir_path.characters(), 0777);
             if (rc < 0) {
                 GUI::MessageBox::show(String::format("mkdir(\"%s\") failed: %s", new_dir_path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window);

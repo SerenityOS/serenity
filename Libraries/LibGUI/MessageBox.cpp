@@ -33,16 +33,16 @@
 
 namespace GUI {
 
-int MessageBox::show(const StringView& text, const StringView& title, Type type, InputType input_type, Core::Object* parent)
+int MessageBox::show(const StringView& text, const StringView& title, Type type, InputType input_type, Window* parent_window)
 {
     auto box = MessageBox::construct(text, title, type, input_type);
-    if (parent)
-        parent->add_child(box);
+    if (parent_window)
+        parent_window->add_child(box);
     return box->exec();
 }
 
-MessageBox::MessageBox(const StringView& text, const StringView& title, Type type, InputType input_type, Core::Object* parent)
-    : Dialog(parent)
+MessageBox::MessageBox(const StringView& text, const StringView& title, Type type, InputType input_type, Window* parent_window)
+    : Dialog(parent_window)
     , m_text(text)
     , m_type(type)
     , m_input_type(input_type)

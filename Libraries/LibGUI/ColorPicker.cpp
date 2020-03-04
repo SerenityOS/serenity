@@ -34,8 +34,8 @@
 
 namespace GUI {
 
-ColorPicker::ColorPicker(Color color, Core::Object* parent)
-    : Dialog(parent)
+ColorPicker::ColorPicker(Color color, Window* parent_window)
+    : Dialog(parent_window)
     , m_color(color)
 {
     set_title("Edit Color");
