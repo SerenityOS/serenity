@@ -117,7 +117,7 @@ int main(int argc, char** argv)
 
     auto keeper = GUI::Widget::construct();
     window->set_main_widget(keeper);
-    keeper->set_layout(make<GUI::VerticalBoxLayout>());
+    keeper->set_layout<GUI::VerticalBoxLayout>();
     keeper->set_fill_with_background_color(true);
     keeper->layout()->set_margins({ 4, 4, 4, 4 });
 
@@ -138,7 +138,7 @@ int main(int argc, char** argv)
     auto network_stats_widget = NetworkStatisticsWidget::construct();
     tabwidget->add_widget("Network", network_stats_widget);
 
-    process_table_container->set_layout(make<GUI::VerticalBoxLayout>());
+    process_table_container->set_layout<GUI::VerticalBoxLayout>();
     process_table_container->layout()->set_margins({ 4, 0, 4, 0 });
     process_table_container->layout()->set_spacing(0);
 
@@ -273,7 +273,7 @@ NonnullRefPtr<GUI::Widget> build_file_systems_tab()
     auto fs_widget = GUI::LazyWidget::construct();
 
     fs_widget->on_first_show = [](GUI::LazyWidget& self) {
-        self.set_layout(make<GUI::VerticalBoxLayout>());
+        self.set_layout<GUI::VerticalBoxLayout>();
         self.layout()->set_margins({ 4, 4, 4, 4 });
         auto fs_table_view = self.add<GUI::TableView>();
         fs_table_view->set_size_columns_to_fit_content(true);
@@ -366,7 +366,7 @@ NonnullRefPtr<GUI::Widget> build_pci_devices_tab()
     auto pci_widget = GUI::LazyWidget::construct();
 
     pci_widget->on_first_show = [](GUI::LazyWidget& self) {
-        self.set_layout(make<GUI::VerticalBoxLayout>());
+        self.set_layout<GUI::VerticalBoxLayout>();
         self.layout()->set_margins({ 4, 4, 4, 4 });
         auto pci_table_view = self.add<GUI::TableView>();
         pci_table_view->set_size_columns_to_fit_content(true);
@@ -424,7 +424,7 @@ NonnullRefPtr<GUI::Widget> build_devices_tab()
     auto devices_widget = GUI::LazyWidget::construct();
 
     devices_widget->on_first_show = [](GUI::LazyWidget& self) {
-        self.set_layout(make<GUI::VerticalBoxLayout>());
+        self.set_layout<GUI::VerticalBoxLayout>();
         self.layout()->set_margins({ 4, 4, 4, 4 });
 
         auto devices_table_view = self.add<GUI::TableView>();
@@ -443,11 +443,11 @@ NonnullRefPtr<GUI::Widget> build_graphs_tab()
     graphs_container->on_first_show = [](GUI::LazyWidget& self) {
         self.set_fill_with_background_color(true);
         self.set_background_role(ColorRole::Button);
-        self.set_layout(make<GUI::VerticalBoxLayout>());
+        self.set_layout<GUI::VerticalBoxLayout>();
         self.layout()->set_margins({ 4, 4, 4, 4 });
 
         auto cpu_graph_group_box = self.add<GUI::GroupBox>("CPU usage");
-        cpu_graph_group_box->set_layout(make<GUI::VerticalBoxLayout>());
+        cpu_graph_group_box->set_layout<GUI::VerticalBoxLayout>();
         cpu_graph_group_box->layout()->set_margins({ 6, 16, 6, 6 });
         cpu_graph_group_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
         cpu_graph_group_box->set_preferred_size(0, 120);
@@ -464,7 +464,7 @@ NonnullRefPtr<GUI::Widget> build_graphs_tab()
         };
 
         auto memory_graph_group_box = self.add<GUI::GroupBox>("Memory usage");
-        memory_graph_group_box->set_layout(make<GUI::VerticalBoxLayout>());
+        memory_graph_group_box->set_layout<GUI::VerticalBoxLayout>();
         memory_graph_group_box->layout()->set_margins({ 6, 16, 6, 6 });
         memory_graph_group_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
         memory_graph_group_box->set_preferred_size(0, 120);

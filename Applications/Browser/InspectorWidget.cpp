@@ -37,7 +37,7 @@
 
 InspectorWidget::InspectorWidget()
 {
-    set_layout(make<GUI::VerticalBoxLayout>());
+    set_layout<GUI::VerticalBoxLayout>();
     auto splitter = add<GUI::VerticalSplitter>();
     m_dom_tree_view = splitter->add<GUI::TreeView>();
     m_dom_tree_view->on_selection = [this](auto& index) {

@@ -164,7 +164,7 @@ int main(int argc, char** argv)
     auto background = BackgroundWidget::construct();
     window->set_main_widget(background);
     background->set_fill_with_background_color(false);
-    background->set_layout(make<GUI::VerticalBoxLayout>());
+    background->set_layout<GUI::VerticalBoxLayout>();
     background->layout()->set_margins({ 16, 8, 16, 8 });
     background->layout()->set_spacing(8);
     background->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
@@ -185,13 +185,13 @@ int main(int argc, char** argv)
     //
 
     auto main_section = background->add<GUI::Widget>();
-    main_section->set_layout(make<GUI::HorizontalBoxLayout>());
+    main_section->set_layout<GUI::HorizontalBoxLayout>();
     main_section->layout()->set_margins({ 0, 0, 0, 0 });
     main_section->layout()->set_spacing(8);
     main_section->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
 
     auto menu = main_section->add<GUI::Widget>();
-    menu->set_layout(make<GUI::VerticalBoxLayout>());
+    menu->set_layout<GUI::VerticalBoxLayout>();
     menu->layout()->set_margins({ 0, 0, 0, 0 });
     menu->layout()->set_spacing(4);
     menu->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
@@ -203,13 +203,13 @@ int main(int argc, char** argv)
     bool first = true;
     for (auto& page : pages) {
         auto content = stack->add<GUI::Widget>();
-        content->set_layout(make<GUI::VerticalBoxLayout>());
+        content->set_layout<GUI::VerticalBoxLayout>();
         content->layout()->set_margins({ 0, 0, 0, 0 });
         content->layout()->set_spacing(8);
         content->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
 
         auto title_box = content->add<GUI::Widget>();
-        title_box->set_layout(make<GUI::HorizontalBoxLayout>());
+        title_box->set_layout<GUI::HorizontalBoxLayout>();
         title_box->layout()->set_spacing(4);
         title_box->set_preferred_size(0, 16);
         title_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);

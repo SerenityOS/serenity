@@ -64,13 +64,13 @@ VBForm::VBForm(const String& name)
     m_context_menu->add_action(GUI::Action::create("Lay out horizontally", Gfx::Bitmap::load_from_file("/res/icons/16x16/layout-horizontally.png"), [this](auto&) {
         if (auto* widget = single_selected_widget()) {
             dbg() << "Giving " << *widget->gwidget() << " a horizontal box layout";
-            widget->gwidget()->set_layout(make<GUI::HorizontalBoxLayout>());
+            widget->gwidget()->set_layout<GUI::HorizontalBoxLayout>();
         }
     }));
     m_context_menu->add_action(GUI::Action::create("Lay out vertically", Gfx::Bitmap::load_from_file("/res/icons/16x16/layout-vertically.png"), [this](auto&) {
         if (auto* widget = single_selected_widget()) {
             dbg() << "Giving " << *widget->gwidget() << " a vertical box layout";
-            widget->gwidget()->set_layout(make<GUI::VerticalBoxLayout>());
+            widget->gwidget()->set_layout<GUI::VerticalBoxLayout>();
         }
     }));
     m_context_menu->add_separator();

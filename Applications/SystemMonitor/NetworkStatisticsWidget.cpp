@@ -33,12 +33,12 @@
 NetworkStatisticsWidget::NetworkStatisticsWidget()
 {
     on_first_show = [this](auto&) {
-        set_layout(make<GUI::VerticalBoxLayout>());
+        set_layout<GUI::VerticalBoxLayout>();
         layout()->set_margins({ 4, 4, 4, 4 });
         set_fill_with_background_color(true);
 
         auto adapters_group_box = add<GUI::GroupBox>("Adapters");
-        adapters_group_box->set_layout(make<GUI::VerticalBoxLayout>());
+        adapters_group_box->set_layout<GUI::VerticalBoxLayout>();
         adapters_group_box->layout()->set_margins({ 6, 16, 6, 6 });
         adapters_group_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
         adapters_group_box->set_preferred_size(0, 120);
@@ -58,7 +58,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         m_adapter_table_view->set_model(GUI::JsonArrayModel::create("/proc/net/adapters", move(net_adapters_fields)));
 
         auto sockets_group_box = add<GUI::GroupBox>("Sockets");
-        sockets_group_box->set_layout(make<GUI::VerticalBoxLayout>());
+        sockets_group_box->set_layout<GUI::VerticalBoxLayout>();
         sockets_group_box->layout()->set_margins({ 6, 16, 6, 6 });
         sockets_group_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
         sockets_group_box->set_preferred_size(0, 0);

@@ -103,7 +103,7 @@ Locator::Locator()
         s_header_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-header.png");
     }
 
-    set_layout(make<GUI::VerticalBoxLayout>());
+    set_layout<GUI::VerticalBoxLayout>();
     set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     set_preferred_size(0, 20);
     m_textbox = add<LocatorTextBox>();

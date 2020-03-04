@@ -44,7 +44,7 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
     ASSERT(file_path.is_valid());
 
     auto& main_widget = set_main_widget<GUI::Widget>();
-    main_widget.set_layout(make<GUI::VerticalBoxLayout>());
+    main_widget.set_layout<GUI::VerticalBoxLayout>();
     main_widget.layout()->set_margins({ 4, 4, 4, 4 });
     main_widget.set_fill_with_background_color(true);
 
@@ -54,14 +54,14 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
     auto tab_widget = main_widget.add<GUI::TabWidget>();
 
     auto general_tab = tab_widget->add_tab<GUI::Widget>("General");
-    general_tab->set_layout(make<GUI::VerticalBoxLayout>());
+    general_tab->set_layout<GUI::VerticalBoxLayout>();
     general_tab->layout()->set_margins({ 12, 8, 12, 8 });
     general_tab->layout()->set_spacing(10);
 
     general_tab->layout()->add_spacer();
 
     auto file_container = general_tab->add<GUI::Widget>();
-    file_container->set_layout(make<GUI::HorizontalBoxLayout>());
+    file_container->set_layout<GUI::HorizontalBoxLayout>();
     file_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     file_container->layout()->set_spacing(20);
     file_container->set_preferred_size(0, 34);
@@ -216,7 +216,7 @@ bool PropertiesDialog::apply_changes()
 void PropertiesDialog::make_permission_checkboxes(NonnullRefPtr<GUI::Widget>& parent, PermissionMasks masks, String label_string, mode_t mode)
 {
     auto widget = parent->add<GUI::Widget>();
-    widget->set_layout(make<GUI::HorizontalBoxLayout>());
+    widget->set_layout<GUI::HorizontalBoxLayout>();
     widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     widget->set_preferred_size(0, 16);
     widget->layout()->set_spacing(10);
@@ -245,7 +245,7 @@ void PropertiesDialog::make_property_value_pairs(const Vector<PropertyValuePair>
     property_labels.ensure_capacity(pairs.size());
     for (auto pair : pairs) {
         auto label_container = parent->add<GUI::Widget>();
-        label_container->set_layout(make<GUI::HorizontalBoxLayout>());
+        label_container->set_layout<GUI::HorizontalBoxLayout>();
         label_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
         label_container->set_preferred_size(0, 14);
         label_container->layout()->set_spacing(12);

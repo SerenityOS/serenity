@@ -45,12 +45,12 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Core::
     auto widget = Widget::construct();
     set_main_widget(widget);
     widget->set_fill_with_background_color(true);
-    widget->set_layout(make<HorizontalBoxLayout>());
+    widget->set_layout<HorizontalBoxLayout>();
 
     auto left_container = widget->add<Widget>();
     left_container->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     left_container->set_preferred_size(48, 0);
-    left_container->set_layout(make<VerticalBoxLayout>());
+    left_container->set_layout<VerticalBoxLayout>();
     auto icon_label = left_container->add<Label>();
     icon_label->set_icon(m_icon);
     icon_label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
@@ -58,7 +58,7 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Core::
     left_container->layout()->add_spacer();
 
     auto right_container = widget->add<Widget>();
-    right_container->set_layout(make<VerticalBoxLayout>());
+    right_container->set_layout<VerticalBoxLayout>();
     right_container->layout()->set_margins({ 0, 4, 4, 4 });
 
     auto make_label = [&](const StringView& text, bool bold = false) {
@@ -78,7 +78,7 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Core::
     auto button_container = right_container->add<Widget>();
     button_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     button_container->set_preferred_size(0, 20);
-    button_container->set_layout(make<HorizontalBoxLayout>());
+    button_container->set_layout<HorizontalBoxLayout>();
     button_container->layout()->add_spacer();
     auto ok_button = button_container->add<Button>("OK");
     ok_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
