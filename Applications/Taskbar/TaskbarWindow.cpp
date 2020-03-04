@@ -48,7 +48,7 @@ TaskbarWindow::TaskbarWindow()
 
     auto widget = GUI::Frame::construct();
     widget->set_fill_with_background_color(true);
-    widget->set_layout(make<GUI::HorizontalBoxLayout>());
+    widget->set_layout<GUI::HorizontalBoxLayout>();
     widget->layout()->set_margins({ 3, 2, 3, 2 });
     widget->layout()->set_spacing(3);
     widget->set_frame_thickness(1);
@@ -71,7 +71,7 @@ void TaskbarWindow::create_quick_launch_bar()
 {
     auto quick_launch_bar = main_widget()->add<GUI::Frame>();
     quick_launch_bar->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    quick_launch_bar->set_layout(make<GUI::HorizontalBoxLayout>());
+    quick_launch_bar->set_layout<GUI::HorizontalBoxLayout>();
     quick_launch_bar->layout()->set_spacing(3);
     quick_launch_bar->layout()->set_margins({ 3, 0, 3, 0 });
     quick_launch_bar->set_frame_thickness(1);

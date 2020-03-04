@@ -138,11 +138,11 @@ RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
     window->set_main_widget(settings);
     settings->set_fill_with_background_color(true);
     settings->set_background_role(ColorRole::Button);
-    settings->set_layout(make<GUI::VerticalBoxLayout>());
+    settings->set_layout<GUI::VerticalBoxLayout>();
     settings->layout()->set_margins({ 4, 4, 4, 4 });
 
     auto radio_container = settings->add<GUI::GroupBox>("Bell Mode");
-    radio_container->set_layout(make<GUI::VerticalBoxLayout>());
+    radio_container->set_layout<GUI::VerticalBoxLayout>();
     radio_container->layout()->set_margins({ 6, 16, 6, 6 });
     radio_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     radio_container->set_preferred_size(100, 70);
@@ -156,7 +156,7 @@ RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
     };
 
     auto slider_container = settings->add<GUI::GroupBox>("Background Opacity");
-    slider_container->set_layout(make<GUI::VerticalBoxLayout>());
+    slider_container->set_layout<GUI::VerticalBoxLayout>();
     slider_container->layout()->set_margins({ 6, 16, 6, 6 });
     slider_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     slider_container->set_preferred_size(100, 50);

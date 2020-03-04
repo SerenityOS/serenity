@@ -61,7 +61,7 @@ int main(int argc, char** argv)
     auto widget = GUI::Widget::construct();
     window->set_main_widget(widget);
     widget->set_fill_with_background_color(true);
-    widget->set_layout(make<GUI::VerticalBoxLayout>());
+    widget->set_layout<GUI::VerticalBoxLayout>();
 
     auto splitter = widget->add<GUI::HorizontalSplitter>();
 

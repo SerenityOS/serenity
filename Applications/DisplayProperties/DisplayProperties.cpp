@@ -103,7 +103,7 @@ void DisplayPropertiesWidget::create_resolution_list()
 void DisplayPropertiesWidget::create_root_widget()
 {
     m_root_widget = GUI::Widget::construct();
-    m_root_widget->set_layout(make<GUI::VerticalBoxLayout>());
+    m_root_widget->set_layout<GUI::VerticalBoxLayout>();
     m_root_widget->set_fill_with_background_color(true);
     m_root_widget->layout()->set_margins({ 4, 4, 4, 16 });
 }
@@ -130,7 +130,7 @@ void DisplayPropertiesWidget::create_frame()
     auto wallpaper_splitter = tab_widget->add_tab<GUI::VerticalSplitter>("Wallpaper");
 
     auto wallpaper_content = wallpaper_splitter->add<GUI::Widget>();
-    wallpaper_content->set_layout(make<GUI::VerticalBoxLayout>());
+    wallpaper_content->set_layout<GUI::VerticalBoxLayout>();
     wallpaper_content->layout()->set_margins({ 4, 4, 4, 4 });
 
     m_wallpaper_preview = wallpaper_splitter->add<GUI::Label>();
@@ -160,7 +160,7 @@ void DisplayPropertiesWidget::create_frame()
     auto settings_splitter = tab_widget->add_tab<GUI::VerticalSplitter>("Settings");
 
     auto settings_content = settings_splitter->add<GUI::Widget>();
-    settings_content->set_layout(make<GUI::VerticalBoxLayout>());
+    settings_content->set_layout<GUI::VerticalBoxLayout>();
     settings_content->layout()->set_margins({ 4, 4, 4, 4 });
 
     auto resolution_list = settings_content->add<GUI::ListView>();
@@ -183,7 +183,7 @@ void DisplayPropertiesWidget::create_frame()
 
     // Add the apply and cancel buttons
     auto bottom_widget = m_root_widget->add<GUI::Widget>();
-    bottom_widget->set_layout(make<GUI::HorizontalBoxLayout>());
+    bottom_widget->set_layout<GUI::HorizontalBoxLayout>();
     bottom_widget->layout()->add_spacer();
     bottom_widget->set_size_policy(Orientation::Vertical, GUI::SizePolicy::Fixed);
     bottom_widget->set_preferred_size(1, 22);

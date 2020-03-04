@@ -66,7 +66,7 @@ public:
 
 ProcessMemoryMapWidget::ProcessMemoryMapWidget()
 {
-    set_layout(make<GUI::VerticalBoxLayout>());
+    set_layout<GUI::VerticalBoxLayout>();
     layout()->set_margins({ 4, 4, 4, 4 });
     m_table_view = add<GUI::TableView>();
     m_table_view->set_size_columns_to_fit_content(true);

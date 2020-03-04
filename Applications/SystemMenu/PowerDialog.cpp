@@ -71,7 +71,7 @@ PowerDialog::PowerDialog()
 
     auto main = GUI::Widget::construct();
     set_main_widget(main);
-    main->set_layout(make<GUI::VerticalBoxLayout>());
+    main->set_layout<GUI::VerticalBoxLayout>();
     main->layout()->set_margins({ 8, 8, 8, 8 });
     main->layout()->set_spacing(8);
     main->set_fill_with_background_color(true);
@@ -99,7 +99,7 @@ PowerDialog::PowerDialog()
     }
 
     auto button_box = main->add<GUI::Widget>();
-    button_box->set_layout(make<GUI::HorizontalBoxLayout>());
+    button_box->set_layout<GUI::HorizontalBoxLayout>();
     button_box->layout()->set_spacing(8);
 
     auto ok_button = button_box->add<GUI::Button>();

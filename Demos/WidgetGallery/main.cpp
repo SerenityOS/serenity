@@ -51,7 +51,7 @@ int main(int argc, char** argv)
     auto main_widget = GUI::Widget::construct();
     window->set_main_widget(main_widget);
     main_widget->set_fill_with_background_color(true);
-    main_widget->set_layout(make<GUI::VerticalBoxLayout>());
+    main_widget->set_layout<GUI::VerticalBoxLayout>();
     main_widget->layout()->set_margins({ 4, 4, 4, 4 });
 
     auto checkbox1 = main_widget->add<GUI::CheckBox>("GCheckBox 1");
@@ -95,7 +95,7 @@ int main(int argc, char** argv)
     auto vertical_slider_container = main_widget->add<GUI::Widget>();
     vertical_slider_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     vertical_slider_container->set_preferred_size(0, 100);
-    vertical_slider_container->set_layout(make<GUI::HorizontalBoxLayout>());
+    vertical_slider_container->set_layout<GUI::HorizontalBoxLayout>();
     auto vslider1 = vertical_slider_container->add<GUI::VerticalSlider>();
     (void)vslider1;
     auto vslider2 = vertical_slider_container->add<GUI::VerticalSlider>();
