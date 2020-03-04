@@ -38,7 +38,7 @@ public:
     Color color() const { return m_color; }
 
 private:
-    explicit ColorPicker(Color, Core::Object* parent = nullptr);
+    explicit ColorPicker(Color, Window* parent_window = nullptr);
 
     void build();
 

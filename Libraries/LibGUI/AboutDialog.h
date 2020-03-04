@@ -35,14 +35,14 @@ class AboutDialog final : public Dialog {
 public:
     virtual ~AboutDialog() override;
 
-    static void show(const StringView& name, const Gfx::Bitmap* icon = nullptr, Core::Object* parent = nullptr)
+    static void show(const StringView& name, const Gfx::Bitmap* icon = nullptr, Window* parent_window = nullptr)
     {
-        auto dialog = AboutDialog::construct(name, icon, parent);
+        auto dialog = AboutDialog::construct(name, icon, parent_window);
         dialog->exec();
     }
 
 private:
-    AboutDialog(const StringView& name, const Gfx::Bitmap* icon = nullptr, Core::Object* parent = nullptr);
+    AboutDialog(const StringView& name, const Gfx::Bitmap* icon = nullptr, Window* parent_window = nullptr);
 
     String m_name;
     RefPtr<Gfx::Bitmap> m_icon;

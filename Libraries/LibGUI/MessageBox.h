@@ -49,10 +49,10 @@ public:
 
     virtual ~MessageBox() override;
 
-    static int show(const StringView& text, const StringView& title, Type type = Type::None, InputType = InputType::OK, Core::Object* parent = nullptr);
+    static int show(const StringView& text, const StringView& title, Type type = Type::None, InputType = InputType::OK, Window* parent_window = nullptr);
 
 private:
-    explicit MessageBox(const StringView& text, const StringView& title, Type type = Type::None, InputType = InputType::OK, Core::Object* parent = nullptr);
+    explicit MessageBox(const StringView& text, const StringView& title, Type type = Type::None, InputType = InputType::OK, Window* parent_window = nullptr);
 
     bool should_include_ok_button() const;
     bool should_include_cancel_button() const;

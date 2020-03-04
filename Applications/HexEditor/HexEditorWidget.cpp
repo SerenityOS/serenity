@@ -78,7 +78,7 @@ HexEditorWidget::HexEditorWidget()
             m_save_action->activate();
         }
 
-        auto input_box = GUI::InputBox::construct("Enter new file size:", "New file size", this);
+        auto input_box = GUI::InputBox::construct("Enter new file size:", "New file size", window());
         if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty()) {
             auto valid = false;
             auto file_size = input_box->text_value().to_int(valid);
@@ -154,7 +154,7 @@ HexEditorWidget::HexEditorWidget()
     }
 
     m_goto_decimal_offset_action = GUI::Action::create("Go To Offset (Decimal)...", { Mod_Ctrl | Mod_Shift, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GUI::Action&) {
-        auto input_box = GUI::InputBox::construct("Enter Decimal offset:", "Go To", this);
+        auto input_box = GUI::InputBox::construct("Enter Decimal offset:", "Go To", window());
         if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty()) {
             auto valid = false;
             auto new_offset = input_box->text_value().to_int(valid);
@@ -165,7 +165,7 @@ HexEditorWidget::HexEditorWidget()
     });
 
     m_goto_hex_offset_action = GUI::Action::create("Go To Offset (Hex)...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GUI::Action&) {
-        auto input_box = GUI::InputBox::construct("Enter Hex offset:", "Go To", this);
+        auto input_box = GUI::InputBox::construct("Enter Hex offset:", "Go To", window());
         if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty()) {
             auto new_offset = strtol(input_box->text_value().characters(), nullptr, 16);
             m_editor->set_position(new_offset);
@@ -174,7 +174,7 @@ HexEditorWidget::HexEditorWidget()
 
     auto edit_menu = GUI::Menu::construct("Edit");
     edit_menu->add_action(GUI::Action::create("Fill selection...", { Mod_Ctrl, Key_B }, [&](const GUI::Action&) {
-        auto input_box = GUI::InputBox::construct("Fill byte (hex):", "Fill Selection", this);
+        auto input_box = GUI::InputBox::construct("Fill byte (hex):", "Fill Selection", window());
         if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty()) {
             auto fill_byte = strtol(input_box->text_value().characters(), nullptr, 16);
             m_editor->fill_selection(fill_byte);
