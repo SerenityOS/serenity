@@ -172,84 +172,84 @@ int main(int argc, char** argv)
     // header
     //
 
-    auto header = background.add<GUI::Label>();
-    header->set_font(Gfx::Font::load_from_file("/res/fonts/PebbletonBold11.font"));
-    header->set_text("Welcome to SerenityOS!");
-    header->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    header->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    header->set_preferred_size(0, 30);
+    auto& header = background.add<GUI::Label>();
+    header.set_font(Gfx::Font::load_from_file("/res/fonts/PebbletonBold11.font"));
+    header.set_text("Welcome to SerenityOS!");
+    header.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    header.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    header.set_preferred_size(0, 30);
 
     //
     // main section
     //
 
-    auto main_section = background.add<GUI::Widget>();
-    main_section->set_layout<GUI::HorizontalBoxLayout>();
-    main_section->layout()->set_margins({ 0, 0, 0, 0 });
-    main_section->layout()->set_spacing(8);
-    main_section->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
+    auto& main_section = background.add<GUI::Widget>();
+    main_section.set_layout<GUI::HorizontalBoxLayout>();
+    main_section.layout()->set_margins({ 0, 0, 0, 0 });
+    main_section.layout()->set_spacing(8);
+    main_section.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
 
-    auto menu = main_section->add<GUI::Widget>();
-    menu->set_layout<GUI::VerticalBoxLayout>();
-    menu->layout()->set_margins({ 0, 0, 0, 0 });
-    menu->layout()->set_spacing(4);
-    menu->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    menu->set_preferred_size(100, 0);
+    auto& menu = main_section.add<GUI::Widget>();
+    menu.set_layout<GUI::VerticalBoxLayout>();
+    menu.layout()->set_margins({ 0, 0, 0, 0 });
+    menu.layout()->set_spacing(4);
+    menu.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
+    menu.set_preferred_size(100, 0);
 
-    auto stack = main_section->add<GUI::StackWidget>();
-    stack->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
+    auto& stack = main_section.add<GUI::StackWidget>();
+    stack.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
 
     bool first = true;
     for (auto& page : pages) {
-        auto content = stack->add<GUI::Widget>();
-        content->set_layout<GUI::VerticalBoxLayout>();
-        content->layout()->set_margins({ 0, 0, 0, 0 });
-        content->layout()->set_spacing(8);
-        content->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
+        auto& content = stack.add<GUI::Widget>();
+        content.set_layout<GUI::VerticalBoxLayout>();
+        content.layout()->set_margins({ 0, 0, 0, 0 });
+        content.layout()->set_spacing(8);
+        content.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
 
-        auto title_box = content->add<GUI::Widget>();
-        title_box->set_layout<GUI::HorizontalBoxLayout>();
-        title_box->layout()->set_spacing(4);
-        title_box->set_preferred_size(0, 16);
-        title_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+        auto& title_box = content.add<GUI::Widget>();
+        title_box.set_layout<GUI::HorizontalBoxLayout>();
+        title_box.layout()->set_spacing(4);
+        title_box.set_preferred_size(0, 16);
+        title_box.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
 
         if (!page.icon.is_empty()) {
-            auto icon = title_box->add<GUI::Label>();
-            icon->set_icon(Gfx::Bitmap::load_from_file(page.icon));
-            icon->set_preferred_size(16, 16);
-            icon->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+            auto& icon = title_box.add<GUI::Label>();
+            icon.set_icon(Gfx::Bitmap::load_from_file(page.icon));
+            icon.set_preferred_size(16, 16);
+            icon.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
         }
 
-        auto content_title = title_box->add<GUI::Label>();
-        content_title->set_font(Gfx::Font::default_bold_font());
-        content_title->set_text(page.title);
-        content_title->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        content_title->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        content_title->set_preferred_size(0, 10);
+        auto& content_title = title_box.add<GUI::Label>();
+        content_title.set_font(Gfx::Font::default_bold_font());
+        content_title.set_text(page.title);
+        content_title.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        content_title.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+        content_title.set_preferred_size(0, 10);
 
         for (auto& paragraph : page.content) {
-            auto content_text = content->add<TextWidget>();
-            content_text->set_font(Gfx::Font::default_font());
-            content_text->set_text(paragraph);
-            content_text->set_text_alignment(Gfx::TextAlignment::TopLeft);
-            content_text->set_line_height(12);
-            content_text->wrap_and_set_height();
+            auto& content_text = content.add<TextWidget>();
+            content_text.set_font(Gfx::Font::default_font());
+            content_text.set_text(paragraph);
+            content_text.set_text_alignment(Gfx::TextAlignment::TopLeft);
+            content_text.set_line_height(12);
+            content_text.wrap_and_set_height();
         }
 
-        auto menu_option = menu->add<UnuncheckableButton>();
-        menu_option->set_font(Gfx::Font::default_font());
-        menu_option->set_text(page.menu_name);
-        menu_option->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        menu_option->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        menu_option->set_preferred_size(0, 20);
-        menu_option->set_checkable(true);
-        menu_option->set_exclusive(true);
+        auto& menu_option = menu.add<UnuncheckableButton>();
+        menu_option.set_font(Gfx::Font::default_font());
+        menu_option.set_text(page.menu_name);
+        menu_option.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        menu_option.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+        menu_option.set_preferred_size(0, 20);
+        menu_option.set_checkable(true);
+        menu_option.set_exclusive(true);
 
         if (first)
-            menu_option->set_checked(true);
+            menu_option.set_checked(true);
 
-        menu_option->on_click = [content = content.ptr(), &stack] {
-            stack->set_active_widget(content);
+        menu_option.on_click = [content = &content, &stack] {
+            stack.set_active_widget(content);
             content->invalidate_layout();
         };
 

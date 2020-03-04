@@ -69,11 +69,11 @@ private:
 
     RefPtr<GUI::TextBox> m_find_textbox;
     RefPtr<GUI::TextBox> m_replace_textbox;
-    GUI::Button* m_find_previous_button { nullptr };
-    GUI::Button* m_find_next_button { nullptr };
-    GUI::Button* m_replace_previous_button { nullptr };
-    GUI::Button* m_replace_next_button { nullptr };
-    GUI::Button* m_replace_all_button { nullptr };
+    RefPtr<GUI::Button> m_find_previous_button;
+    RefPtr<GUI::Button> m_find_next_button;
+    RefPtr<GUI::Button> m_replace_previous_button;
+    RefPtr<GUI::Button> m_replace_next_button;
+    RefPtr<GUI::Button> m_replace_all_button;
     RefPtr<GUI::Widget> m_find_replace_widget;
     RefPtr<GUI::Widget> m_find_widget;
     RefPtr<GUI::Widget> m_replace_widget;

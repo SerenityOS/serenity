@@ -68,22 +68,22 @@ NotificationWindow::NotificationWindow(const String& text, const String& title)
     widget.layout()->set_margins({ 4, 4, 4, 4 });
     widget.layout()->set_spacing(4);
 
-    auto left_container = widget.add<GUI::Widget>();
-    left_container->set_layout<GUI::VerticalBoxLayout>();
+    auto& left_container = widget.add<GUI::Widget>();
+    left_container.set_layout<GUI::VerticalBoxLayout>();
 
-    auto title_label = left_container->add<GUI::Label>(title);
-    title_label->set_font(Gfx::Font::default_bold_font());
-    title_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    auto text_label = left_container->add<GUI::Label>(text);
-    text_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    auto& title_label = left_container.add<GUI::Label>(title);
+    title_label.set_font(Gfx::Font::default_bold_font());
+    title_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    auto& text_label = left_container.add<GUI::Label>(text);
+    text_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
-    auto right_container = widget.add<GUI::Widget>();
-    right_container->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    right_container->set_preferred_size(40, 0);
-    right_container->set_layout<GUI::HorizontalBoxLayout>();
+    auto& right_container = widget.add<GUI::Widget>();
+    right_container.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
+    right_container.set_preferred_size(40, 0);
+    right_container.set_layout<GUI::HorizontalBoxLayout>();
 
-    auto button = right_container->add<GUI::Button>("Okay");
-    button->on_click = [this] {
+    auto& button = right_container.add<GUI::Button>("Okay");
+    button.on_click = [this] {
         s_windows.remove(this);
         close();
     };

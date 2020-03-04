@@ -43,8 +43,8 @@ private:
     FontEditorWidget(const String& path, RefPtr<Gfx::Font>&&);
     RefPtr<Gfx::Font> m_edited_font;
 
-    GlyphMapWidget* m_glyph_map_widget { nullptr };
-    GlyphEditorWidget* m_glyph_editor_widget { nullptr };
+    RefPtr<GlyphMapWidget> m_glyph_map_widget;
+    RefPtr<GlyphEditorWidget> m_glyph_editor_widget;
 
     String m_path;
 

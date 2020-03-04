@@ -51,7 +51,7 @@ TextEditorWidget::TextEditorWidget()
     set_layout<GUI::VerticalBoxLayout>();
     layout()->set_spacing(0);
 
-    auto toolbar = add<GUI::ToolBar>();
+    auto& toolbar = add<GUI::ToolBar>();
     m_editor = add<GUI::TextEditor>();
     m_editor->set_ruler_visible(true);
     m_editor->set_automatic_indentation_enabled(true);
@@ -391,21 +391,21 @@ TextEditorWidget::TextEditorWidget()
 
     GUI::Application::the().set_menubar(move(menubar));
 
-    toolbar->add_action(*m_new_action);
-    toolbar->add_action(*m_open_action);
-    toolbar->add_action(*m_save_action);
+    toolbar.add_action(*m_new_action);
+    toolbar.add_action(*m_open_action);
+    toolbar.add_action(*m_save_action);
 
-    toolbar->add_separator();
+    toolbar.add_separator();
 
-    toolbar->add_action(m_editor->cut_action());
-    toolbar->add_action(m_editor->copy_action());
-    toolbar->add_action(m_editor->paste_action());
-    toolbar->add_action(m_editor->delete_action());
+    toolbar.add_action(m_editor->cut_action());
+    toolbar.add_action(m_editor->copy_action());
+    toolbar.add_action(m_editor->paste_action());
+    toolbar.add_action(m_editor->delete_action());
 
-    toolbar->add_separator();
+    toolbar.add_separator();
 
-    toolbar->add_action(m_editor->undo_action());
-    toolbar->add_action(m_editor->redo_action());
+    toolbar.add_action(m_editor->undo_action());
+    toolbar.add_action(m_editor->redo_action());
 }
 
 TextEditorWidget::~TextEditorWidget()

@@ -75,43 +75,43 @@ PowerDialog::PowerDialog()
     main.layout()->set_spacing(8);
     main.set_fill_with_background_color(true);
 
-    auto header = main.add<GUI::Label>();
-    header->set_text("What would you like to do?");
-    header->set_preferred_size(0, 16);
-    header->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    header->set_font(Gfx::Font::default_bold_font());
+    auto& header = main.add<GUI::Label>();
+    header.set_text("What would you like to do?");
+    header.set_preferred_size(0, 16);
+    header.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    header.set_font(Gfx::Font::default_bold_font());
 
     for (size_t i = 0; i < options.size(); i++) {
         auto action = options[i];
-        auto radio = main.add<GUI::RadioButton>();
-        radio->set_enabled(action.enabled);
-        radio->set_text(action.title);
+        auto& radio = main.add<GUI::RadioButton>();
+        radio.set_enabled(action.enabled);
+        radio.set_text(action.title);
 
-        radio->on_checked = [this, i](auto) {
+        radio.on_checked = [this, i](auto) {
             m_selected_option = i;
         };
 
         if (action.default_action) {
-            radio->set_checked(true);
+            radio.set_checked(true);
             m_selected_option = i;
         }
     }
 
-    auto button_box = main.add<GUI::Widget>();
-    button_box->set_layout<GUI::HorizontalBoxLayout>();
-    button_box->layout()->set_spacing(8);
+    auto& button_box = main.add<GUI::Widget>();
+    button_box.set_layout<GUI::HorizontalBoxLayout>();
+    button_box.layout()->set_spacing(8);
 
-    auto ok_button = button_box->add<GUI::Button>();
-    ok_button->on_click = [this] {
+    auto& ok_button = button_box.add<GUI::Button>();
+    ok_button.on_click = [this] {
         done(m_selected_option);
     };
-    ok_button->set_text("OK");
+    ok_button.set_text("OK");
 
-    auto cancel_button = button_box->add<GUI::Button>();
-    cancel_button->on_click = [this] {
+    auto& cancel_button = button_box.add<GUI::Button>();
+    cancel_button.on_click = [this] {
         done(-1);
     };
-    cancel_button->set_text("Cancel");
+    cancel_button.set_text("Cancel");
 }
 
 PowerDialog::~PowerDialog()

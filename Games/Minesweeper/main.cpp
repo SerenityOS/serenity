@@ -51,7 +51,6 @@ int main(int argc, char** argv)
         return 1;
     }
 
-
     auto window = GUI::Window::construct();
     window->set_resizable(false);
     window->set_title("Minesweeper");
@@ -61,23 +60,23 @@ int main(int argc, char** argv)
     widget.set_layout<GUI::VerticalBoxLayout>();
     widget.layout()->set_spacing(0);
 
-    auto container = widget.add<GUI::Widget>();
-    container->set_fill_with_background_color(true);
-    container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    container->set_preferred_size(0, 36);
-    container->set_layout<GUI::HorizontalBoxLayout>();
-    auto flag_icon_label = container->add<GUI::Label>();
-    flag_icon_label->set_icon(Gfx::Bitmap::load_from_file("/res/icons/minesweeper/flag.png"));
-    auto flag_label = container->add<GUI::Label>();
-    auto face_button = container->add<GUI::Button>();
-    face_button->set_button_style(Gfx::ButtonStyle::CoolBar);
-    face_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    face_button->set_preferred_size(36, 0);
-    auto time_icon_label = container->add<GUI::Label>();
-    time_icon_label->set_icon(Gfx::Bitmap::load_from_file("/res/icons/minesweeper/timer.png"));
-    auto time_label = container->add<GUI::Label>();
-    auto field = widget.add<Field>(*flag_label, *time_label, *face_button, [&](auto size) {
-        size.set_height(size.height() + container->preferred_size().height());
+    auto& container = widget.add<GUI::Widget>();
+    container.set_fill_with_background_color(true);
+    container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    container.set_preferred_size(0, 36);
+    container.set_layout<GUI::HorizontalBoxLayout>();
+    auto& flag_icon_label = container.add<GUI::Label>();
+    flag_icon_label.set_icon(Gfx::Bitmap::load_from_file("/res/icons/minesweeper/flag.png"));
+    auto& flag_label = container.add<GUI::Label>();
+    auto& face_button = container.add<GUI::Button>();
+    face_button.set_button_style(Gfx::ButtonStyle::CoolBar);
+    face_button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
+    face_button.set_preferred_size(36, 0);
+    auto& time_icon_label = container.add<GUI::Label>();
+    time_icon_label.set_icon(Gfx::Bitmap::load_from_file("/res/icons/minesweeper/timer.png"));
+    auto& time_label = container.add<GUI::Label>();
+    auto& field = widget.add<Field>(flag_label, time_label, face_button, [&](auto size) {
+        size.set_height(size.height() + container.preferred_size().height());
         window->resize(size);
     });
 
@@ -86,20 +85,18 @@ int main(int argc, char** argv)
     auto app_menu = GUI::Menu::construct("Minesweeper");
 
     app_menu->add_action(GUI::Action::create("New game", { Mod_None, Key_F2 }, [&](const GUI::Action&) {
-        field->reset();
+        field.reset();
     }));
-
 
     app_menu->add_separator();
 
-
     NonnullRefPtr<GUI::Action> chord_toggler_action = GUI::Action::create("Single-click chording", [&](const GUI::Action&) {
-        bool toggled = !field->is_single_chording();
-        field->set_single_chording(toggled);
+        bool toggled = !field.is_single_chording();
+        field.set_single_chording(toggled);
         chord_toggler_action->set_checked(toggled);
     });
     chord_toggler_action->set_checkable(true);
-    chord_toggler_action->set_checked(field->is_single_chording());
+    chord_toggler_action->set_checked(field.is_single_chording());
 
     app_menu->add_action(*chord_toggler_action);
     app_menu->add_separator();
@@ -112,16 +109,16 @@ int main(int argc, char** argv)
 
     auto difficulty_menu = GUI::Menu::construct("Difficulty");
     difficulty_menu->add_action(GUI::Action::create("Beginner", { Mod_Ctrl, Key_B }, [&](const GUI::Action&) {
-        field->set_field_size(9, 9, 10);
+        field.set_field_size(9, 9, 10);
     }));
     difficulty_menu->add_action(GUI::Action::create("Intermediate", { Mod_Ctrl, Key_I }, [&](const GUI::Action&) {
-        field->set_field_size(16, 16, 40);
+        field.set_field_size(16, 16, 40);
     }));
     difficulty_menu->add_action(GUI::Action::create("Expert", { Mod_Ctrl, Key_E }, [&](const GUI::Action&) {
-        field->set_field_size(16, 30, 99);
+        field.set_field_size(16, 30, 99);
     }));
     difficulty_menu->add_action(GUI::Action::create("Madwoman", { Mod_Ctrl, Key_M }, [&](const GUI::Action&) {
-        field->set_field_size(32, 60, 350);
+        field.set_field_size(32, 60, 350);
     }));
     menubar->add_menu(move(difficulty_menu));
 

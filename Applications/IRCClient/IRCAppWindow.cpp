@@ -94,12 +94,12 @@ void IRCAppWindow::setup_client()
     };
 
     if (m_client->hostname().is_empty()) {
-        auto input_box = add<GUI::InputBox>("Enter server:", "Connect to server");
-        auto result = input_box->exec();
+        auto& input_box = add<GUI::InputBox>("Enter server:", "Connect to server");
+        auto result = input_box.exec();
         if (result == GUI::InputBox::ExecCancel)
             ::exit(0);
 
-        m_client->set_server(input_box->text_value(), 6667);
+        m_client->set_server(input_box.text_value(), 6667);
     }
     update_title();
     bool success = m_client->connect();
@@ -109,9 +109,9 @@ void IRCAppWindow::setup_client()
 void IRCAppWindow::setup_actions()
 {
     m_join_action = GUI::Action::create("Join channel", { Mod_Ctrl, Key_J }, Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-join.png"), [&](auto&) {
-        auto input_box = add<GUI::InputBox>("Enter channel name:", "Join channel");
-        if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty())
-            m_client->handle_join_action(input_box->text_value());
+        auto& input_box = add<GUI::InputBox>("Enter channel name:", "Join channel");
+        if (input_box.exec() == GUI::InputBox::ExecOK && !input_box.text_value().is_empty())
+            m_client->handle_join_action(input_box.text_value());
     });
 
     m_part_action = GUI::Action::create("Part from channel", { Mod_Ctrl, Key_P }, Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-part.png"), [this](auto&) {
@@ -184,24 +184,24 @@ void IRCAppWindow::setup_widgets()
     widget.set_layout<GUI::VerticalBoxLayout>();
     widget.layout()->set_spacing(0);
 
-    auto toolbar = widget.add<GUI::ToolBar>();
-    toolbar->set_has_frame(false);
-    toolbar->add_action(*m_change_nick_action);
-    toolbar->add_separator();
-    toolbar->add_action(*m_join_action);
-    toolbar->add_action(*m_part_action);
-    toolbar->add_separator();
-    toolbar->add_action(*m_whois_action);
-    toolbar->add_action(*m_open_query_action);
-    toolbar->add_action(*m_close_query_action);
+    auto& toolbar = widget.add<GUI::ToolBar>();
+    toolbar.set_has_frame(false);
+    toolbar.add_action(*m_change_nick_action);
+    toolbar.add_separator();
+    toolbar.add_action(*m_join_action);
+    toolbar.add_action(*m_part_action);
+    toolbar.add_separator();
+    toolbar.add_action(*m_whois_action);
+    toolbar.add_action(*m_open_query_action);
+    toolbar.add_action(*m_close_query_action);
 
-    auto outer_container = widget.add<GUI::Widget>();
-    outer_container->set_layout<GUI::VerticalBoxLayout>();
-    outer_container->layout()->set_margins({ 2, 0, 2, 2 });
+    auto& outer_container = widget.add<GUI::Widget>();
+    outer_container.set_layout<GUI::VerticalBoxLayout>();
+    outer_container.layout()->set_margins({ 2, 0, 2, 2 });
 
-    auto horizontal_container = outer_container->add<GUI::HorizontalSplitter>();
+    auto& horizontal_container = outer_container.add<GUI::HorizontalSplitter>();
 
-    m_window_list = horizontal_container->add<GUI::TableView>();
+    m_window_list = horizontal_container.add<GUI::TableView>();
     m_window_list->set_headers_visible(false);
     m_window_list->set_alternating_row_colors(false);
     m_window_list->set_size_columns_to_fit_content(true);
@@ -213,7 +213,7 @@ void IRCAppWindow::setup_widgets()
         set_active_window(m_client->window_at(index.row()));
     };
 
-    m_container = horizontal_container->add<GUI::StackWidget>();
+    m_container = horizontal_container.add<GUI::StackWidget>();
     m_container->on_active_widget_change = [this](auto*) {
         update_part_action();
     };

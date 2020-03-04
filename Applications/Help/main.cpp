@@ -82,18 +82,18 @@ int main(int argc, char* argv[])
     widget.set_layout<GUI::VerticalBoxLayout>();
     widget.layout()->set_spacing(0);
 
-    auto toolbar = widget.add<GUI::ToolBar>();
+    auto& toolbar = widget.add<GUI::ToolBar>();
 
-    auto splitter = widget.add<GUI::HorizontalSplitter>();
+    auto& splitter = widget.add<GUI::HorizontalSplitter>();
 
     auto model = ManualModel::create();
 
-    auto tree_view = splitter->add<GUI::TreeView>();
-    tree_view->set_model(model);
-    tree_view->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    tree_view->set_preferred_size(200, 500);
+    auto& tree_view = splitter.add<GUI::TreeView>();
+    tree_view.set_model(model);
+    tree_view.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
+    tree_view.set_preferred_size(200, 500);
 
-    auto html_view = splitter->add<HtmlView>();
+    auto& html_view = splitter.add<HtmlView>();
 
     History history;
 
@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
 
     auto open_page = [&](const String& path) {
         if (path.is_null()) {
-            html_view->set_document(nullptr);
+            html_view.set_document(nullptr);
             return;
         }
 
@@ -130,16 +130,16 @@ int main(int argc, char* argv[])
 
         String html = md_document.render_to_html();
         auto html_document = parse_html_document(html);
-        html_view->set_document(html_document);
+        html_view.set_document(html_document);
 
-        String page_and_section = model->page_and_section(tree_view->selection().first());
+        String page_and_section = model->page_and_section(tree_view.selection().first());
         window->set_title(String::format("Help: %s", page_and_section.characters()));
     };
 
-    tree_view->on_selection_change = [&] {
-        String path = model->page_path(tree_view->selection().first());
+    tree_view.on_selection_change = [&] {
+        String path = model->page_path(tree_view.selection().first());
         if (path.is_null()) {
-            html_view->set_document(nullptr);
+            html_view.set_document(nullptr);
             return;
         }
         history.push(path);
@@ -147,7 +147,7 @@ int main(int argc, char* argv[])
         open_page(path);
     };
 
-    html_view->on_link_click = [&](const String& href) {
+    html_view.on_link_click = [&](const String& href) {
         char* current_path = strdup(history.current().characters());
         char* dir_path = dirname(current_path);
         char* path = realpath(String::format("%s/%s", dir_path, href.characters()).characters(), nullptr);
@@ -173,8 +173,8 @@ int main(int argc, char* argv[])
     go_back_action->set_enabled(false);
     go_forward_action->set_enabled(false);
 
-    toolbar->add_action(*go_back_action);
-    toolbar->add_action(*go_forward_action);
+    toolbar.add_action(*go_back_action);
+    toolbar.add_action(*go_forward_action);
 
     auto menubar = make<GUI::MenuBar>();
 
@@ -195,7 +195,7 @@ int main(int argc, char* argv[])
 
     app.set_menubar(move(menubar));
 
-    window->set_focused_widget(tree_view);
+    window->set_focused_widget(&tree_view);
     window->show();
 
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/book.png"));

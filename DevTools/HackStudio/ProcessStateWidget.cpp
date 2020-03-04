@@ -40,21 +40,21 @@ ProcessStateWidget::ProcessStateWidget()
 
     set_layout<GUI::HorizontalBoxLayout>();
 
-    auto pid_label_label = add<GUI::Label>("Process:");
-    pid_label_label->set_font(Gfx::Font::default_bold_font());
+    auto& pid_label_label = add<GUI::Label>("Process:");
+    pid_label_label.set_font(Gfx::Font::default_bold_font());
     m_pid_label = add<GUI::Label>("");
 
-    auto state_label_label = add<GUI::Label>("State:");
-    state_label_label->set_font(Gfx::Font::default_bold_font());
+    auto& state_label_label = add<GUI::Label>("State:");
+    state_label_label.set_font(Gfx::Font::default_bold_font());
     m_state_label = add<GUI::Label>("");
 
     // FIXME: This should show CPU% instead.
-    auto cpu_label_label = add<GUI::Label>("Times scheduled:");
-    cpu_label_label->set_font(Gfx::Font::default_bold_font());
+    auto& cpu_label_label = add<GUI::Label>("Times scheduled:");
+    cpu_label_label.set_font(Gfx::Font::default_bold_font());
     m_cpu_label = add<GUI::Label>("");
 
-    auto memory_label_label = add<GUI::Label>("Memory (resident):");
-    memory_label_label->set_font(Gfx::Font::default_bold_font());
+    auto& memory_label_label = add<GUI::Label>("Memory (resident):");
+    memory_label_label.set_font(Gfx::Font::default_bold_font());
     m_memory_label = add<GUI::Label>("");
 
     m_timer = add<Core::Timer>(500, [this] {

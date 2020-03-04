@@ -75,9 +75,9 @@ private:
         return "Unknown";
     }
 
-    NonnullRefPtr<GUI::Button> make_button(String, NonnullRefPtr<GUI::Widget>&);
-    void make_divider(NonnullRefPtr<GUI::Widget>&);
-    void make_property_value_pairs(const Vector<PropertyValuePair>& pairs, NonnullRefPtr<GUI::Widget>& parent);
+    GUI::Button& make_button(String, GUI::Widget& parent);
+    void make_divider(GUI::Widget& parent);
+    void make_property_value_pairs(const Vector<PropertyValuePair>& pairs, GUI::Widget& parent);
     void make_permission_checkboxes(NonnullRefPtr<GUI::Widget>& parent, PermissionMasks, String label_string, mode_t mode);
     void permission_changed(mode_t mask, bool set);
     bool apply_changes();

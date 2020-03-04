@@ -62,7 +62,7 @@ int main(int argc, char** argv)
     widget.set_fill_with_background_color(true);
     widget.set_layout<GUI::VerticalBoxLayout>();
 
-    auto splitter = widget.add<GUI::HorizontalSplitter>();
+    auto& splitter = widget.add<GUI::HorizontalSplitter>();
 
     RemoteProcess remote_process(pid);
 
@@ -71,16 +71,16 @@ int main(int argc, char** argv)
             window->set_title(String::format("Inspector: %s (%d)", remote_process.process_name().characters(), remote_process.pid()));
     };
 
-    auto tree_view = splitter->add<GUI::TreeView>();
-    tree_view->set_model(remote_process.object_graph_model());
-    tree_view->set_activates_on_selection(true);
+    auto& tree_view = splitter.add<GUI::TreeView>();
+    tree_view.set_model(remote_process.object_graph_model());
+    tree_view.set_activates_on_selection(true);
 
-    auto properties_table_view = splitter->add<GUI::TableView>();
-    properties_table_view->set_size_columns_to_fit_content(true);
+    auto& properties_table_view = splitter.add<GUI::TableView>();
+    properties_table_view.set_size_columns_to_fit_content(true);
 
-    tree_view->on_activation = [&](auto& index) {
+    tree_view.on_activation = [&](auto& index) {
         auto* remote_object = static_cast<RemoteObject*>(index.internal_data());
-        properties_table_view->set_model(remote_object->property_model());
+        properties_table_view.set_model(remote_object->property_model());
     };
 
     window->show();

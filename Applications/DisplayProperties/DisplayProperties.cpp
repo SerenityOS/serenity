@@ -125,30 +125,30 @@ void DisplayPropertiesWidget::create_wallpaper_list()
 
 void DisplayPropertiesWidget::create_frame()
 {
-    auto tab_widget = m_root_widget->add<GUI::TabWidget>();
+    auto& tab_widget = m_root_widget->add<GUI::TabWidget>();
 
-    auto wallpaper_splitter = tab_widget->add_tab<GUI::VerticalSplitter>("Wallpaper");
+    auto wallpaper_splitter = tab_widget.add_tab<GUI::VerticalSplitter>("Wallpaper");
 
-    auto wallpaper_content = wallpaper_splitter->add<GUI::Widget>();
-    wallpaper_content->set_layout<GUI::VerticalBoxLayout>();
-    wallpaper_content->layout()->set_margins({ 4, 4, 4, 4 });
+    auto& wallpaper_content = wallpaper_splitter->add<GUI::Widget>();
+    wallpaper_content.set_layout<GUI::VerticalBoxLayout>();
+    wallpaper_content.layout()->set_margins({ 4, 4, 4, 4 });
 
     m_wallpaper_preview = wallpaper_splitter->add<GUI::Label>();
 
-    auto wallpaper_list = wallpaper_content->add<GUI::ListView>();
-    wallpaper_list->set_background_color(Color::White);
-    wallpaper_list->set_model(*ItemListModel<AK::String>::create(m_wallpapers));
+    auto& wallpaper_list = wallpaper_content.add<GUI::ListView>();
+    wallpaper_list.set_background_color(Color::White);
+    wallpaper_list.set_model(*ItemListModel<AK::String>::create(m_wallpapers));
 
-    auto wallpaper_model = wallpaper_list->model();
+    auto wallpaper_model = wallpaper_list.model();
     auto find_first_wallpaper_index = m_wallpapers.find_first_index(m_selected_wallpaper);
     if (find_first_wallpaper_index.has_value()) {
-        auto wallpaper_index_in_model = wallpaper_model->index(find_first_wallpaper_index.value(), wallpaper_list->model_column());
+        auto wallpaper_index_in_model = wallpaper_model->index(find_first_wallpaper_index.value(), wallpaper_list.model_column());
         if (wallpaper_model->is_valid(wallpaper_index_in_model))
-            wallpaper_list->selection().set(wallpaper_index_in_model);
+            wallpaper_list.selection().set(wallpaper_index_in_model);
     }
 
-    wallpaper_list->horizontal_scrollbar().set_visible(false);
-    wallpaper_list->on_selection = [this](auto& index) {
+    wallpaper_list.horizontal_scrollbar().set_visible(false);
+    wallpaper_list.on_selection = [this](auto& index) {
         StringBuilder builder;
         m_selected_wallpaper = m_wallpapers.at(index.row());
         builder.append("/res/wallpapers/");
@@ -157,62 +157,62 @@ void DisplayPropertiesWidget::create_frame()
         m_wallpaper_preview->set_should_stretch_icon(true);
     };
 
-    auto settings_splitter = tab_widget->add_tab<GUI::VerticalSplitter>("Settings");
+    auto settings_splitter = tab_widget.add_tab<GUI::VerticalSplitter>("Settings");
 
-    auto settings_content = settings_splitter->add<GUI::Widget>();
-    settings_content->set_layout<GUI::VerticalBoxLayout>();
-    settings_content->layout()->set_margins({ 4, 4, 4, 4 });
+    auto& settings_content = settings_splitter->add<GUI::Widget>();
+    settings_content.set_layout<GUI::VerticalBoxLayout>();
+    settings_content.layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto resolution_list = settings_content->add<GUI::ListView>();
-    resolution_list->set_background_color(Color::White);
-    resolution_list->set_model(*ItemListModel<Gfx::Size>::create(m_resolutions));
+    auto& resolution_list = settings_content.add<GUI::ListView>();
+    resolution_list.set_background_color(Color::White);
+    resolution_list.set_model(*ItemListModel<Gfx::Size>::create(m_resolutions));
 
-    auto resolution_model = resolution_list->model();
+    auto resolution_model = resolution_list.model();
     auto find_first_resolution_index = m_resolutions.find_first_index(m_selected_resolution);
     ASSERT(find_first_resolution_index.has_value());
-    auto resolution_index_in_model = resolution_model->index(find_first_resolution_index.value(), resolution_list->model_column());
+    auto resolution_index_in_model = resolution_model->index(find_first_resolution_index.value(), resolution_list.model_column());
     if (resolution_model->is_valid(resolution_index_in_model))
-        resolution_list->selection().set(resolution_index_in_model);
+        resolution_list.selection().set(resolution_index_in_model);
 
-    resolution_list->horizontal_scrollbar().set_visible(false);
-    resolution_list->on_selection = [this](auto& index) {
+    resolution_list.horizontal_scrollbar().set_visible(false);
+    resolution_list.on_selection = [this](auto& index) {
         m_selected_resolution = m_resolutions.at(index.row());
     };
 
-    settings_content->layout()->add_spacer();
+    settings_content.layout()->add_spacer();
 
     // Add the apply and cancel buttons
-    auto bottom_widget = m_root_widget->add<GUI::Widget>();
-    bottom_widget->set_layout<GUI::HorizontalBoxLayout>();
-    bottom_widget->layout()->add_spacer();
-    bottom_widget->set_size_policy(Orientation::Vertical, GUI::SizePolicy::Fixed);
-    bottom_widget->set_preferred_size(1, 22);
+    auto& bottom_widget = m_root_widget->add<GUI::Widget>();
+    bottom_widget.set_layout<GUI::HorizontalBoxLayout>();
+    bottom_widget.layout()->add_spacer();
+    bottom_widget.set_size_policy(Orientation::Vertical, GUI::SizePolicy::Fixed);
+    bottom_widget.set_preferred_size(1, 22);
 
-    auto apply_button = bottom_widget->add<GUI::Button>();
-    apply_button->set_text("Apply");
-    apply_button->set_size_policy(Orientation::Vertical, GUI::SizePolicy::Fixed);
-    apply_button->set_size_policy(Orientation::Horizontal, GUI::SizePolicy::Fixed);
-    apply_button->set_preferred_size(60, 22);
-    apply_button->on_click = [this, tab_widget] {
+    auto& apply_button = bottom_widget.add<GUI::Button>();
+    apply_button.set_text("Apply");
+    apply_button.set_size_policy(Orientation::Vertical, GUI::SizePolicy::Fixed);
+    apply_button.set_size_policy(Orientation::Horizontal, GUI::SizePolicy::Fixed);
+    apply_button.set_preferred_size(60, 22);
+    apply_button.on_click = [this, tab_widget = &tab_widget] {
         send_settings_to_window_server(tab_widget->active_tab_index());
     };
 
-    auto ok_button = bottom_widget->add<GUI::Button>();
-    ok_button->set_text("OK");
-    ok_button->set_size_policy(Orientation::Vertical, GUI::SizePolicy::Fixed);
-    ok_button->set_size_policy(Orientation::Horizontal, GUI::SizePolicy::Fixed);
-    ok_button->set_preferred_size(60, 22);
-    ok_button->on_click = [this, tab_widget] {
+    auto& ok_button = bottom_widget.add<GUI::Button>();
+    ok_button.set_text("OK");
+    ok_button.set_size_policy(Orientation::Vertical, GUI::SizePolicy::Fixed);
+    ok_button.set_size_policy(Orientation::Horizontal, GUI::SizePolicy::Fixed);
+    ok_button.set_preferred_size(60, 22);
+    ok_button.on_click = [this, tab_widget = &tab_widget] {
         send_settings_to_window_server(tab_widget->active_tab_index());
         GUI::Application::the().quit();
     };
 
-    auto cancel_button = bottom_widget->add<GUI::Button>();
-    cancel_button->set_text("Cancel");
-    cancel_button->set_size_policy(Orientation::Vertical, GUI::SizePolicy::Fixed);
-    cancel_button->set_size_policy(Orientation::Horizontal, GUI::SizePolicy::Fixed);
-    cancel_button->set_preferred_size(60, 22);
-    cancel_button->on_click = [] {
+    auto& cancel_button = bottom_widget.add<GUI::Button>();
+    cancel_button.set_text("Cancel");
+    cancel_button.set_size_policy(Orientation::Vertical, GUI::SizePolicy::Fixed);
+    cancel_button.set_size_policy(Orientation::Horizontal, GUI::SizePolicy::Fixed);
+    cancel_button.set_preferred_size(60, 22);
+    cancel_button.on_click = [] {
         GUI::Application::the().quit();
     };
 }
