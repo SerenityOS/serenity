@@ -179,13 +179,12 @@ void IRCAppWindow::setup_menus()
 
 void IRCAppWindow::setup_widgets()
 {
-    auto widget = GUI::Widget::construct();
-    set_main_widget(widget);
-    widget->set_fill_with_background_color(true);
-    widget->set_layout<GUI::VerticalBoxLayout>();
-    widget->layout()->set_spacing(0);
+    auto& widget = set_main_widget<GUI::Widget>();
+    widget.set_fill_with_background_color(true);
+    widget.set_layout<GUI::VerticalBoxLayout>();
+    widget.layout()->set_spacing(0);
 
-    auto toolbar = widget->add<GUI::ToolBar>();
+    auto toolbar = widget.add<GUI::ToolBar>();
     toolbar->set_has_frame(false);
     toolbar->add_action(*m_change_nick_action);
     toolbar->add_separator();
@@ -196,7 +195,7 @@ void IRCAppWindow::setup_widgets()
     toolbar->add_action(*m_open_query_action);
     toolbar->add_action(*m_close_query_action);
 
-    auto outer_container = widget->add<GUI::Widget>();
+    auto outer_container = widget.add<GUI::Widget>();
     outer_container->set_layout<GUI::VerticalBoxLayout>();
     outer_container->layout()->set_margins({ 2, 0, 2, 2 });
 

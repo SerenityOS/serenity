@@ -134,14 +134,13 @@ RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
     window->set_rect(50, 50, 200, 140);
     window->set_modal(true);
 
-    auto settings = GUI::Widget::construct();
-    window->set_main_widget(settings);
-    settings->set_fill_with_background_color(true);
-    settings->set_background_role(ColorRole::Button);
-    settings->set_layout<GUI::VerticalBoxLayout>();
-    settings->layout()->set_margins({ 4, 4, 4, 4 });
+    auto& settings = window->set_main_widget<GUI::Widget>();
+    settings.set_fill_with_background_color(true);
+    settings.set_background_role(ColorRole::Button);
+    settings.set_layout<GUI::VerticalBoxLayout>();
+    settings.layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto radio_container = settings->add<GUI::GroupBox>("Bell Mode");
+    auto radio_container = settings.add<GUI::GroupBox>("Bell Mode");
     radio_container->set_layout<GUI::VerticalBoxLayout>();
     radio_container->layout()->set_margins({ 6, 16, 6, 6 });
     radio_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
@@ -155,7 +154,7 @@ RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
         terminal.set_should_beep(checked);
     };
 
-    auto slider_container = settings->add<GUI::GroupBox>("Background Opacity");
+    auto slider_container = settings.add<GUI::GroupBox>("Background Opacity");
     slider_container->set_layout<GUI::VerticalBoxLayout>();
     slider_container->layout()->set_margins({ 6, 16, 6, 6 });
     slider_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
@@ -227,24 +226,23 @@ int main(int argc, char** argv)
     window->set_double_buffering_enabled(false);
 
     RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("Terminal");
-    auto terminal = TerminalWidget::construct(ptm_fd, true, config);
-    terminal->on_command_exit = [&] {
+    auto& terminal = window->set_main_widget<TerminalWidget>(ptm_fd, true, config);
+    terminal.on_command_exit = [&] {
         app.quit(0);
     };
-    terminal->on_title_change = [&](auto& title) {
+    terminal.on_title_change = [&](auto& title) {
         window->set_title(title);
     };
-    window->set_main_widget(terminal);
     window->move_to(300, 300);
-    terminal->apply_size_increments_to_window(*window);
+    terminal.apply_size_increments_to_window(*window);
     window->show();
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"));
-    terminal->set_should_beep(config->read_bool_entry("Window", "AudibleBeep", false));
+    terminal.set_should_beep(config->read_bool_entry("Window", "AudibleBeep", false));
 
     RefPtr<GUI::Window> settings_window;
 
     auto new_opacity = config->read_num_entry("Window", "Opacity", 255);
-    terminal->set_opacity(new_opacity);
+    terminal.set_opacity(new_opacity);
     window->set_has_alpha_channel(new_opacity < 255);
 
     auto menubar = make<GUI::MenuBar>();
@@ -259,7 +257,7 @@ int main(int argc, char** argv)
     app_menu->add_action(GUI::Action::create("Settings...", Gfx::Bitmap::load_from_file("/res/icons/gear16.png"),
         [&](const GUI::Action&) {
             if (!settings_window) {
-                settings_window = create_settings_window(*terminal);
+                settings_window = create_settings_window(terminal);
                 settings_window->on_close_request = [&] {
                     settings_window = nullptr;
                     return GUI::Window::CloseRequestDecision::Close;
@@ -276,8 +274,8 @@ int main(int argc, char** argv)
     menubar->add_menu(move(app_menu));
 
     auto edit_menu = GUI::Menu::construct("Edit");
-    edit_menu->add_action(terminal->copy_action());
-    edit_menu->add_action(terminal->paste_action());
+    edit_menu->add_action(terminal.copy_action());
+    edit_menu->add_action(terminal.paste_action());
     menubar->add_menu(move(edit_menu));
 
     GUI::ActionGroup font_action_group;
@@ -286,16 +284,16 @@ int main(int argc, char** argv)
     GFontDatabase::the().for_each_fixed_width_font([&](const StringView& font_name) {
         auto action = GUI::Action::create(font_name, [&](GUI::Action& action) {
             action.set_checked(true);
-            terminal->set_font(GFontDatabase::the().get_by_name(action.text()));
+            terminal.set_font(GFontDatabase::the().get_by_name(action.text()));
             auto metadata = GFontDatabase::the().get_metadata_by_name(action.text());
             ASSERT(metadata.has_value());
             config->write_entry("Text", "Font", metadata.value().path);
             config->sync();
-            terminal->force_repaint();
+            terminal.force_repaint();
         });
         font_action_group.add_action(*action);
         action->set_checkable(true);
-        if (terminal->font().name() == font_name)
+        if (terminal.font().name() == font_name)
             action->set_checked(true);
         font_menu->add_action(*action);
     });

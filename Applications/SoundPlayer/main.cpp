@@ -66,24 +66,24 @@ int main(int argc, char** argv)
 
     auto menubar = make<GUI::MenuBar>();
     auto app_menu = GUI::Menu::construct("SoundPlayer");
-    auto player = SoundPlayerWidget::construct(window, audio_client);
+    auto& player = window->set_main_widget<SoundPlayerWidget>(window, audio_client);
 
     if (argc > 1) {
         String path = argv[1];
-        player->open_file(path);
-        player->manager().play();
+        player.open_file(path);
+        player.manager().play();
     }
 
     auto hide_scope = GUI::Action::create("Hide scope", { Mod_Ctrl, Key_H }, [&](GUI::Action& action) {
         action.set_checked(!action.is_checked());
-        player->hide_scope(action.is_checked());
+        player.hide_scope(action.is_checked());
     });
     hide_scope->set_checkable(true);
 
     app_menu->add_action(GUI::CommonActions::make_open_action([&](auto&) {
         Optional<String> path = GUI::FilePicker::get_open_filepath("Open wav file...");
         if (path.has_value()) {
-            player->open_file(path.value());
+            player.open_file(path.value());
         }
     }));
     app_menu->add_action(move(hide_scope));
@@ -101,8 +101,6 @@ int main(int argc, char** argv)
     menubar->add_menu(move(help_menu));
     app.set_menubar(move(menubar));
 
-    window->set_main_widget(player);
     window->show();
-
     return app.exec();
 }

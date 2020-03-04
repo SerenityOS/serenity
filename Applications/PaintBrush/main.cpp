@@ -58,14 +58,13 @@ int main(int argc, char** argv)
     window->set_rect(100, 100, 640, 480);
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-paintbrush.png"));
 
-    auto horizontal_container = GUI::Widget::construct();
-    window->set_main_widget(horizontal_container);
-    horizontal_container->set_layout<GUI::HorizontalBoxLayout>();
-    horizontal_container->layout()->set_spacing(0);
+    auto& horizontal_container = window->set_main_widget<GUI::Widget>();
+    horizontal_container.set_layout<GUI::HorizontalBoxLayout>();
+    horizontal_container.layout()->set_spacing(0);
 
-    horizontal_container->add<ToolboxWidget>();
+    horizontal_container.add<ToolboxWidget>();
 
-    auto vertical_container = horizontal_container->add<GUI::Widget>();
+    auto vertical_container = horizontal_container.add<GUI::Widget>();
     vertical_container->set_layout<GUI::VerticalBoxLayout>();
     vertical_container->layout()->set_spacing(0);
 

@@ -141,12 +141,11 @@ int main(int argc, char** argv)
     g_window->set_rect(90, 90, 840, 600);
     g_window->set_title("HackStudio");
 
-    auto widget = GUI::Widget::construct();
-    g_window->set_main_widget(widget);
+    auto& widget = g_window->set_main_widget<GUI::Widget>();
 
-    widget->set_fill_with_background_color(true);
-    widget->set_layout<GUI::VerticalBoxLayout>();
-    widget->layout()->set_spacing(0);
+    widget.set_fill_with_background_color(true);
+    widget.set_layout<GUI::VerticalBoxLayout>();
+    widget.layout()->set_spacing(0);
 
     StringBuilder path;
     path.append(getenv("PATH"));
@@ -165,7 +164,7 @@ int main(int argc, char** argv)
     g_project = Project::load_from_file("little.files");
     ASSERT(g_project);
 
-    auto toolbar = widget->add<GUI::ToolBar>();
+    auto toolbar = widget.add<GUI::ToolBar>();
 
     auto selected_file_names = [&] {
         Vector<String> files;
@@ -247,7 +246,7 @@ int main(int argc, char** argv)
     project_tree_view_context_menu->add_action(add_existing_file_action);
     project_tree_view_context_menu->add_action(delete_action);
 
-    auto outer_splitter = widget->add<GUI::HorizontalSplitter>();
+    auto outer_splitter = widget.add<GUI::HorizontalSplitter>();
     g_project_tree_view = outer_splitter->add<GUI::TreeView>();
     g_project_tree_view->set_model(g_project->model());
     g_project_tree_view->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
@@ -448,7 +447,7 @@ int main(int argc, char** argv)
     auto find_in_files_widget = s_action_tab_widget->add_tab<FindInFilesWidget>("Find in files");
     auto terminal_wrapper = s_action_tab_widget->add_tab<TerminalWrapper>("Console");
 
-    auto locator = widget->add<Locator>();
+    auto locator = widget.add<Locator>();
 
     auto open_locator_action = GUI::Action::create("Open Locator...", { Mod_Ctrl, Key_K }, [&](auto&) {
         locator->open();
