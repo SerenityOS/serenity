@@ -158,6 +158,21 @@ void Widget::set_relative_rect(const Gfx::Rect& a_rect)
 
 void Widget::event(Core::Event& event)
 {
+    if (!is_enabled()) {
+        switch (event.type()) {
+        case Event::MouseUp:
+        case Event::MouseDown:
+        case Event::MouseMove:
+        case Event::MouseWheel:
+        case Event::MouseDoubleClick:
+        case Event::KeyUp:
+        case Event::KeyDown:
+            return;
+        default:
+            break;
+        }
+    }
+
     switch (event.type()) {
     case Event::Paint:
         return handle_paint_event(static_cast<PaintEvent&>(event));
