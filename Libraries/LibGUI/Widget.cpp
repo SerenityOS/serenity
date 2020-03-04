@@ -299,10 +299,6 @@ void Widget::handle_leave_event(Core::Event& event)
     leave_event(event);
 }
 
-void Widget::click_event(MouseEvent&)
-{
-}
-
 void Widget::doubleclick_event(MouseEvent&)
 {
 }

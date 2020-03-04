@@ -281,7 +281,6 @@ protected:
     virtual void mousedown_event(MouseEvent&);
     virtual void mouseup_event(MouseEvent&);
     virtual void mousewheel_event(MouseEvent&);
-    virtual void click_event(MouseEvent&);
     virtual void doubleclick_event(MouseEvent&);
     virtual void context_menu_event(ContextMenuEvent&);
     virtual void focusin_event(Core::Event&);
