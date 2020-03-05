@@ -96,6 +96,14 @@ void RemoteProcess::send_request(const JsonObject& request)
     m_socket->write(serialized);
 }
 
+void RemoteProcess::set_inspected_object(uintptr_t address)
+{
+    JsonObject request;
+    request.set("type", "SetInspectedObject");
+    request.set("address", address);
+    send_request(request);
+}
+
 void RemoteProcess::update()
 {
     m_socket->on_connected = [this] {
