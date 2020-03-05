@@ -31,11 +31,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+RemoteProcess* s_the;
+
+RemoteProcess& RemoteProcess::the()
+{
+    return *s_the;
+}
+
 RemoteProcess::RemoteProcess(pid_t pid)
     : m_pid(pid)
     , m_object_graph_model(RemoteObjectGraphModel::create(*this))
     , m_socket(Core::LocalSocket::construct())
 {
+    s_the = this;
 }
 
 void RemoteProcess::handle_identify_response(const JsonObject& response)
@@ -101,6 +109,16 @@ void RemoteProcess::set_inspected_object(uintptr_t address)
     JsonObject request;
     request.set("type", "SetInspectedObject");
     request.set("address", address);
+    send_request(request);
+}
+
+void RemoteProcess::set_property(uintptr_t object, const StringView& name, const JsonValue& value)
+{
+    JsonObject request;
+    request.set("type", "SetProperty");
+    request.set("address", object);
+    request.set("name", JsonValue(name));
+    request.set("value", value);
     send_request(request);
 }
 
