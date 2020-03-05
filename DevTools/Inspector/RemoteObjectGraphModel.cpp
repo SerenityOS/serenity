@@ -37,6 +37,7 @@ RemoteObjectGraphModel::RemoteObjectGraphModel(RemoteProcess& process)
 {
     m_object_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/inspector-object.png"));
     m_window_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/window.png"));
+    m_layout_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/layout.png"));
 }
 
 RemoteObjectGraphModel::~RemoteObjectGraphModel()
@@ -100,6 +101,8 @@ GUI::Variant RemoteObjectGraphModel::data(const GUI::ModelIndex& index, Role rol
     if (role == Role::Icon) {
         if (remote_object->class_name == "Window")
             return m_window_icon;
+        if (remote_object->class_name.ends_with("Layout"))
+            return m_layout_icon;
         return m_object_icon;
     }
     if (role == Role::Display) {
