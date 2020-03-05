@@ -31,6 +31,7 @@
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/TabWidget.h>
+#include <grp.h>
 #include <limits.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -95,8 +96,8 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
     }
 
     struct passwd* user_pw = getpwuid(st.st_uid);
-    struct passwd* group_pw = getpwuid(st.st_gid);
-    ASSERT(user_pw && group_pw);
+    struct group* group_gr = getgrgid(st.st_gid);
+    ASSERT(user_pw && group_gr);
 
     m_mode = st.st_mode;
 
@@ -116,7 +117,7 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
 
     properties.append({ "Size:", String::format("%zu bytes", st.st_size) });
     properties.append({ "Owner:", String::format("%s (%lu)", user_pw->pw_name, static_cast<u32>(user_pw->pw_uid)) });
-    properties.append({ "Group:", String::format("%s (%lu)", group_pw->pw_name, static_cast<u32>(group_pw->pw_uid)) });
+    properties.append({ "Group:", String::format("%s (%lu)", group_gr->gr_name, static_cast<u32>(group_gr->gr_gid)) });
     properties.append({ "Created at:", GUI::FileSystemModel::timestamp_string(st.st_ctime) });
     properties.append({ "Last modified:", GUI::FileSystemModel::timestamp_string(st.st_mtime) });
 
