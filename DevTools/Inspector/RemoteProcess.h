@@ -43,6 +43,8 @@ public:
     RemoteObjectGraphModel& object_graph_model() { return *m_object_graph_model; }
     const NonnullOwnPtrVector<RemoteObject>& roots() const { return m_roots; }
 
+    void set_inspected_object(uintptr_t);
+
     Function<void()> on_update;
 
 private:
