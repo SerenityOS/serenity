@@ -171,8 +171,25 @@ public:
                         m_inspected_object->decrement_inspector_count({});
                     m_inspected_object = object.make_weak_ptr();
                     m_inspected_object->increment_inspector_count({});
+                    break;
                 }
             }
+            return;
+        }
+
+        if (type == "SetProperty") {
+            auto address = request.get("address").to_number<uintptr_t>();
+            for (auto& object : Object::all_objects()) {
+                if ((uintptr_t)&object == address) {
+                    bool success = object.set_property(request.get("name").to_string(), request.get("value"));
+                    JsonObject response;
+                    response.set("type", "SetProperty");
+                    response.set("success", success);
+                    send_response(response);
+                    break;
+                }
+            }
+            return;
         }
 
         if (type == "Disconnect") {
