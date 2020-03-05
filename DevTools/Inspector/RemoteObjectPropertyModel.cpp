@@ -26,6 +26,7 @@
 
 #include "RemoteObjectPropertyModel.h"
 #include "RemoteObject.h"
+#include "RemoteProcess.h"
 
 RemoteObjectPropertyModel::RemoteObjectPropertyModel(RemoteObject& object)
     : m_object(object)
@@ -68,5 +69,14 @@ void RemoteObjectPropertyModel::update()
     m_object.json.for_each_member([this](auto& name, auto& value) {
         m_properties.append({ name, value });
     });
+    did_update();
+}
+
+void RemoteObjectPropertyModel::set_data(const GUI::ModelIndex& index, const GUI::Variant& new_value)
+{
+    auto& property = m_properties[index.row()];
+    uintptr_t address = m_object.json.get("address").to_number<uintptr_t>();
+    RemoteProcess::the().set_property(address, property.name.to_string(), new_value.to_string());
+    property.value = new_value.to_string();
     did_update();
 }
