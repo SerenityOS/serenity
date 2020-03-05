@@ -233,10 +233,10 @@ String FileSystemModel::name_for_uid(uid_t uid) const
     return (*it).value;
 }
 
-String FileSystemModel::name_for_gid(uid_t gid) const
+String FileSystemModel::name_for_gid(gid_t gid) const
 {
-    auto it = m_user_names.find(gid);
-    if (it == m_user_names.end())
+    auto it = m_group_names.find(gid);
+    if (it == m_group_names.end())
         return String::number(gid);
     return (*it).value;
 }
