@@ -44,6 +44,7 @@ RemoteProcess::RemoteProcess(pid_t pid)
     , m_socket(Core::LocalSocket::construct())
 {
     s_the = this;
+    m_socket->set_blocking(true);
 }
 
 void RemoteProcess::handle_identify_response(const JsonObject& response)
@@ -151,10 +152,19 @@ void RemoteProcess::update()
         int nread = m_socket->read((u8*)&length, sizeof(length));
         ASSERT(nread == sizeof(length));
 
-        auto data = m_socket->read(length);
-        ASSERT(data.size() == length);
+        ByteBuffer data;
+        size_t remaining_bytes = length;
 
-        dbg() << "Got packet size " << length << " and read that many bytes";
+        while (remaining_bytes) {
+            auto packet = m_socket->read(remaining_bytes);
+            if (packet.size() == 0)
+                break;
+            data.append(packet.data(), packet.size());
+            remaining_bytes -= packet.size();
+        }
+
+        ASSERT(data.size() == length);
+        dbg() << "Got data size " << length << " and read that many bytes";
 
         auto json_value = JsonValue::from_string(data);
         ASSERT(json_value.is_object());
