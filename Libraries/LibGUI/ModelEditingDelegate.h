@@ -34,7 +34,6 @@ namespace GUI {
 
 class ModelEditingDelegate {
 public:
-    ModelEditingDelegate() {}
     virtual ~ModelEditingDelegate() {}
 
     void bind(Model& model, const ModelIndex& index)
@@ -57,6 +56,8 @@ public:
     virtual void will_begin_editing() {}
 
 protected:
+    ModelEditingDelegate() {}
+
     virtual RefPtr<Widget> create_widget() = 0;
     void commit()
     {
