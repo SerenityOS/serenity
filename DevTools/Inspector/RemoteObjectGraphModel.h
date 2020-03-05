@@ -57,4 +57,5 @@ private:
 
     GIcon m_object_icon;
     GIcon m_window_icon;
+    GIcon m_layout_icon;
 };
