@@ -58,6 +58,8 @@ public:
     static PIT& the();
     u32 ticks_this_second() const;
 
+    virtual const char* purpose() const override { return "System Timer"; }
+
 private:
     PIT();
     // ^IRQHandler

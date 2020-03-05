@@ -57,6 +57,8 @@ public:
     virtual ssize_t write(FileDescription&, const u8* buffer, ssize_t) override;
     virtual bool can_write(const FileDescription&) const override { return true; }
 
+    virtual const char* purpose() const override { return class_name(); }
+
 private:
     // ^IRQHandler
     virtual void handle_irq(RegisterState&) override;
