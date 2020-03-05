@@ -72,6 +72,8 @@ public:
     RefPtr<PATADiskDevice> master_device() { return m_master; };
     RefPtr<PATADiskDevice> slave_device() { return m_slave; };
 
+    virtual const char* purpose() const override { return "PATA Channel"; }
+
 private:
     //^ IRQHandler
     virtual void handle_irq(RegisterState&) override;

@@ -172,6 +172,8 @@ public:
     virtual ssize_t write(FileDescription&, const u8*, ssize_t) override { return 0; }
     virtual bool can_write(const FileDescription&) const override { return true; }
 
+    virtual const char* purpose() const override { return "Floppy Disk Controller"; }
+
 protected:
     explicit FloppyDiskDevice(DriveType);
 

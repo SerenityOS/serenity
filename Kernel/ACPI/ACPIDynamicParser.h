@@ -47,6 +47,7 @@ namespace ACPI {
         virtual void disable_aml_interpretation() override;
         virtual void try_acpi_shutdown() override;
         virtual bool can_shutdown() override { return true; }
+        virtual const char* purpose() const override { return "ACPI Parser"; }
 
     protected:
         DynamicParser();

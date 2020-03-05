@@ -46,6 +46,8 @@ public:
     virtual void send_raw(const u8*, size_t) override;
     virtual bool link_up() override;
 
+    virtual const char* purpose() const override { return class_name(); }
+
 private:
     virtual void handle_irq(RegisterState&) override;
     virtual const char* class_name() const override { return "E1000NetworkAdapter"; }

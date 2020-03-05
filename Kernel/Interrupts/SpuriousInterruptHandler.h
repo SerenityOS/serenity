@@ -50,7 +50,9 @@ public:
     virtual bool is_shared_handler() const override { return false; }
     virtual bool is_sharing_with_others() const override { return false; }
 
-    virtual HandlerPurpose purpose() const override { return HandlerPurpose::SpuriousInterruptHandler; }
+    virtual HandlerType type() const override { return HandlerType::SpuriousInterruptHandler; }
+    virtual const char* purpose() const override { return "Spurious Interrupt Handler"; }
+    virtual const char* controller() const override { return m_responsible_irq_controller->model(); }
 
 private:
     void enable_interrupt_vector();
