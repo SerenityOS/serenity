@@ -410,17 +410,17 @@ static void revert_to_unused_handler(u8 interrupt_number)
 void register_generic_interrupt_handler(u8 interrupt_number, GenericInterruptHandler& handler)
 {
     if (s_interrupt_handler[interrupt_number] != nullptr) {
-        if (s_interrupt_handler[interrupt_number]->purpose() == HandlerPurpose::UnhandledInterruptHandler) {
+        if (s_interrupt_handler[interrupt_number]->type() == HandlerType::UnhandledInterruptHandler) {
             s_interrupt_handler[interrupt_number] = &handler;
             return;
         }
         if (s_interrupt_handler[interrupt_number]->is_shared_handler() && !s_interrupt_handler[interrupt_number]->is_sharing_with_others()) {
-            ASSERT(s_interrupt_handler[interrupt_number]->purpose() == HandlerPurpose::SharedIRQHandler);
+            ASSERT(s_interrupt_handler[interrupt_number]->type() == HandlerType::SharedIRQHandler);
             static_cast<SharedIRQHandler*>(s_interrupt_handler[interrupt_number])->register_handler(handler);
             return;
         }
         if (!s_interrupt_handler[interrupt_number]->is_shared_handler()) {
-            ASSERT(s_interrupt_handler[interrupt_number]->purpose() == HandlerPurpose::IRQHandler);
+            ASSERT(s_interrupt_handler[interrupt_number]->type() == HandlerType::IRQHandler);
             auto& previous_handler = *s_interrupt_handler[interrupt_number];
             s_interrupt_handler[interrupt_number] = nullptr;
             SharedIRQHandler::initialize(interrupt_number);
@@ -437,12 +437,12 @@ void register_generic_interrupt_handler(u8 interrupt_number, GenericInterruptHan
 void unregister_generic_interrupt_handler(u8 interrupt_number, GenericInterruptHandler& handler)
 {
     ASSERT(s_interrupt_handler[interrupt_number] != nullptr);
-    if (s_interrupt_handler[interrupt_number]->purpose() == HandlerPurpose::UnhandledInterruptHandler) {
+    if (s_interrupt_handler[interrupt_number]->type() == HandlerType::UnhandledInterruptHandler) {
         dbg() << "Trying to unregister unused handler (?)";
         return;
     }
     if (s_interrupt_handler[interrupt_number]->is_shared_handler() && !s_interrupt_handler[interrupt_number]->is_sharing_with_others()) {
-        ASSERT(s_interrupt_handler[interrupt_number]->purpose() == HandlerPurpose::SharedIRQHandler);
+        ASSERT(s_interrupt_handler[interrupt_number]->type() == HandlerType::SharedIRQHandler);
         static_cast<SharedIRQHandler*>(s_interrupt_handler[interrupt_number])->unregister_handler(handler);
         if (!static_cast<SharedIRQHandler*>(s_interrupt_handler[interrupt_number])->sharing_devices_count()) {
             revert_to_unused_handler(interrupt_number);
@@ -450,7 +450,7 @@ void unregister_generic_interrupt_handler(u8 interrupt_number, GenericInterruptH
         return;
     }
     if (!s_interrupt_handler[interrupt_number]->is_shared_handler()) {
-        ASSERT(s_interrupt_handler[interrupt_number]->purpose() == HandlerPurpose::IRQHandler);
+        ASSERT(s_interrupt_handler[interrupt_number]->type() == HandlerType::IRQHandler);
         revert_to_unused_handler(interrupt_number);
         return;
     }

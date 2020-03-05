@@ -47,7 +47,9 @@ public:
 
     virtual bool eoi() override;
 
-    virtual HandlerPurpose purpose() const override { return HandlerPurpose::IRQHandler; }
+    virtual HandlerType type() const override { return HandlerType::IRQHandler; }
+    virtual const char* purpose() const override { return "IRQ Handler"; }
+    virtual const char* controller() const override { return m_responsible_irq_controller->model(); }
 
     virtual size_t sharing_devices_count() const override { return 0; }
     virtual bool is_shared_handler() const override { return false; }
