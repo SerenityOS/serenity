@@ -173,6 +173,15 @@ void Object::save_to(JsonObject& json)
     json.set("parent", (uintptr_t)parent());
 }
 
+bool Object::set_property(const StringView& name, const JsonValue& value)
+{
+    if (name == "name") {
+        set_name(value.to_string());
+        return true;
+    }
+    return false;
+}
+
 bool Object::is_ancestor_of(const Object& other) const
 {
     if (&other == this)
