@@ -112,6 +112,8 @@ public:
     }
     virtual ~RPCClient() override
     {
+        if (m_inspected_object)
+            m_inspected_object->decrement_inspector_count({});
     }
 
     void send_response(const JsonObject& response)
@@ -161,6 +163,18 @@ public:
             return;
         }
 
+        if (type == "SetInspectedObject") {
+            auto address = request.get("address").to_number<uintptr_t>();
+            for (auto& object : Object::all_objects()) {
+                if ((uintptr_t)&object == address) {
+                    if (m_inspected_object)
+                        m_inspected_object->decrement_inspector_count({});
+                    m_inspected_object = object.make_weak_ptr();
+                    m_inspected_object->increment_inspector_count({});
+                }
+            }
+        }
+
         if (type == "Disconnect") {
             shutdown();
             return;
@@ -175,6 +189,7 @@ public:
 
 private:
     RefPtr<LocalSocket> m_socket;
+    WeakPtr<Object> m_inspected_object;
     int m_client_id { -1 };
 };
 

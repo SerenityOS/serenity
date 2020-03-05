@@ -36,6 +36,8 @@
 
 namespace Core {
 
+class RPCClient;
+
 enum class TimerShouldFireWhenNotVisible {
     No = 0,
     Yes
@@ -130,6 +132,11 @@ public:
 
     virtual bool is_visible_for_timer_purposes() const;
 
+    bool is_being_inspected() const { return m_inspector_count; }
+
+    void increment_inspector_count(Badge<RPCClient>);
+    void decrement_inspector_count(Badge<RPCClient>);
+
 protected:
     explicit Object(Object* parent = nullptr, bool is_widget = false);
 
@@ -139,10 +146,14 @@ protected:
     // NOTE: You may get child events for children that are not yet fully constructed!
     virtual void child_event(ChildEvent&);
 
+    virtual void did_begin_inspection() {}
+    virtual void did_end_inspection() {}
+
 private:
     Object* m_parent { nullptr };
     String m_name;
     int m_timer_id { 0 };
+    unsigned m_inspector_count { 0 };
     bool m_widget { false };
     NonnullRefPtrVector<Object> m_children;
 };

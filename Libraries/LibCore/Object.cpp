@@ -25,6 +25,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/Badge.h>
 #include <AK/JsonObject.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
@@ -167,9 +168,9 @@ void Object::deferred_invoke(Function<void(Object&)> invokee)
 void Object::save_to(JsonObject& json)
 {
     json.set("class_name", class_name());
-    json.set("address", String::format("%p", this));
+    json.set("address", (uintptr_t)this);
     json.set("name", name());
-    json.set("parent", String::format("%p", parent()));
+    json.set("parent", (uintptr_t)parent());
 }
 
 bool Object::is_ancestor_of(const Object& other) const
@@ -203,6 +204,20 @@ bool Object::is_visible_for_timer_purposes() const
     if (parent())
         return parent()->is_visible_for_timer_purposes();
     return true;
+}
+
+void Object::increment_inspector_count(Badge<RPCClient>)
+{
+    ++m_inspector_count;
+    if (m_inspector_count == 1)
+        did_begin_inspection();
+}
+
+void Object::decrement_inspector_count(Badge<RPCClient>)
+{
+    --m_inspector_count;
+    if (!m_inspector_count)
+        did_end_inspection();
 }
 
 const LogStream& operator<<(const LogStream& stream, const Object& object)
