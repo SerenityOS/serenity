@@ -33,7 +33,7 @@
 
 namespace Kernel {
 
-enum class HandlerPurpose : u8 {
+enum class HandlerType : u8 {
     IRQHandler = 1,
     SharedIRQHandler = 2,
     UnhandledInterruptHandler = 3,
@@ -56,7 +56,9 @@ public:
     virtual bool is_shared_handler() const = 0;
     virtual bool is_sharing_with_others() const = 0;
 
-    virtual HandlerPurpose purpose() const = 0;
+    virtual HandlerType type() const = 0;
+    virtual const char* purpose() const = 0;
+    virtual const char* controller() const = 0;
 
     virtual bool eoi() = 0;
     void increment_invoking_counter();

@@ -32,7 +32,6 @@ namespace Kernel {
 class HardwareTimer : public IRQHandler {
 public:
     u32 seconds_since_boot();
-
 protected:
     HardwareTimer(u8 irq_number);
     u32 m_seconds_since_boot { 0 };
