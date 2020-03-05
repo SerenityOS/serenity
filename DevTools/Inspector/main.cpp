@@ -86,7 +86,7 @@ int main(int argc, char** argv)
     tree_view.on_activation = [&](auto& index) {
         auto* remote_object = static_cast<RemoteObject*>(index.internal_data());
         properties_table_view.set_model(remote_object->property_model());
-        remote_process.set_inspected_object(remote_object->json.get("address").to_number<uintptr_t>());
+        remote_process.set_inspected_object(remote_object->address);
     };
 
     window->show();
