@@ -363,8 +363,9 @@ Optional<KBuffer> procfs$interrupts(InodeIdentifier)
     JsonArraySerializer array { builder };
     InterruptManagement::the().enumerate_interrupt_handlers([&array](GenericInterruptHandler& handler) {
         auto obj = array.add_object();
-        obj.add("purpose", "Interrupt Handler"); // FIXME: Determine the right description for each interrupt handler.
+        obj.add("purpose", handler.purpose());
         obj.add("interrupt_line", handler.interrupt_number());
+        obj.add("controller", handler.controller());
         obj.add("cpu_handler", 0); // FIXME: Determine the responsible CPU for each interrupt handler.
         obj.add("device_sharing", (unsigned)handler.sharing_devices_count());
         obj.add("call_count", (unsigned)handler.get_invoking_count());
