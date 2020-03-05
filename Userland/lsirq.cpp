@@ -58,17 +58,18 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    printf("%-18s %-10s %-13s\n", "Device", "Interrupt", "Call Counter");
+    printf("%4s  %-10s\n", " ", "CPU0");
     auto file_contents = proc_interrupts->read_all();
     auto json = JsonValue::from_string(file_contents).as_array();
     json.for_each([](auto& value) {
         auto handler = value.as_object();
         auto purpose = handler.get("purpose").to_string();
         auto interrupt = handler.get("interrupt_line").to_string();
+        auto controller = handler.get("controller").to_string();
         auto call_count = handler.get("call_count").to_string();
 
-        printf("%-18s %-10s %-13s\n",
-            purpose.characters(), interrupt.characters(), call_count.characters());
+        printf("%4s: %-10s %-10s  %-30s\n",
+            interrupt.characters(), call_count.characters(), controller.characters(), purpose.characters());
     });
 
     return 0;
