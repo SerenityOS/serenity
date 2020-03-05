@@ -25,6 +25,7 @@
  */
 
 #include <AK/Badge.h>
+#include <AK/JsonObject.h>
 #include <LibGUI/Layout.h>
 #include <LibGUI/Widget.h>
 
@@ -118,6 +119,34 @@ void Layout::set_margins(const Margins& margins)
     m_margins = margins;
     if (m_owner)
         m_owner->notify_layout_changed({});
+}
+
+void Layout::save_to(JsonObject& json)
+{
+    Core::Object::save_to(json);
+    json.set("spacing", m_spacing);
+
+    JsonObject margins_object;
+    margins_object.set("left", m_margins.left());
+    margins_object.set("right", m_margins.right());
+    margins_object.set("top", m_margins.top());
+    margins_object.set("bottom", m_margins.bottom());
+    json.set("margins", move(margins_object));
+
+    JsonArray entries_array;
+    for (auto& entry : m_entries) {
+        JsonObject entry_object;
+        if (entry.type == Entry::Type::Widget) {
+            entry_object.set("type", "Widget");
+            entry_object.set("widget", (uintptr_t)entry.widget.ptr());
+        } else if (entry.type == Entry::Type::Spacer) {
+            entry_object.set("type", "Spacer");
+        } else {
+            ASSERT_NOT_REACHED();
+        }
+        entries_array.append(move(entry_object));
+    }
+    json.set("entries", move(entries_array));
 }
 
 }

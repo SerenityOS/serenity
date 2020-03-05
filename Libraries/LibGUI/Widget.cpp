@@ -242,12 +242,15 @@ void Widget::handle_paint_event(PaintEvent& event)
     second_paint_event(event);
 }
 
-void Widget::set_layout(OwnPtr<Layout>&& layout)
+void Widget::set_layout(NonnullRefPtr<Layout> layout)
 {
-    if (m_layout)
+    if (m_layout) {
         m_layout->notify_disowned({}, *this);
+        m_layout->remove_from_parent();
+    }
     m_layout = move(layout);
     if (m_layout) {
+        add_child(*m_layout);
         m_layout->notify_adopted({}, *this);
         do_layout();
     } else {

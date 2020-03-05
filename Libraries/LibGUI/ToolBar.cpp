@@ -44,7 +44,7 @@ ToolBar::ToolBar(Orientation orientation, int button_size)
         set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
         set_preferred_size(button_size + 12, 0);
     }
-    set_layout(make<BoxLayout>(orientation));
+    set_layout<BoxLayout>(orientation);
     layout()->set_spacing(0);
     layout()->set_margins({ 2, 2, 2, 2 });
 }
