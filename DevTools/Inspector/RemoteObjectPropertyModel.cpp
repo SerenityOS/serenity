@@ -56,7 +56,7 @@ GUI::Variant RemoteObjectPropertyModel::data(const GUI::ModelIndex& index, Role 
         case Column::Name:
             return property.name;
         case Column::Value:
-            return property.value;
+            return property.value.to_string();
         }
     }
     return {};
