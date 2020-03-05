@@ -96,13 +96,14 @@ public:
 
     Layout* layout() { return m_layout.ptr(); }
     const Layout* layout() const { return m_layout.ptr(); }
-    void set_layout(OwnPtr<Layout>&&);
+    void set_layout(NonnullRefPtr<Layout>);
 
-    template<typename T>
-    T& set_layout()
+    template<class T, class... Args>
+    inline T& set_layout(Args&&... args)
     {
-        set_layout(make<T>());
-        return static_cast<T&>(*layout());
+        auto layout = T::construct(forward<Args>(args)...);
+        set_layout(*layout);
+        return layout;
     }
 
     SizePolicy horizontal_size_policy() const { return m_horizontal_size_policy; }
@@ -304,7 +305,7 @@ private:
     void focus_next_widget();
 
     Window* m_window { nullptr };
-    OwnPtr<Layout> m_layout;
+    RefPtr<Layout> m_layout;
 
     Gfx::Rect m_relative_rect;
     Gfx::ColorRole m_background_role;

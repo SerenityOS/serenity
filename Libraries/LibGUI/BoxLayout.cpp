@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/JsonObject.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/Orientation.h>
@@ -172,6 +173,12 @@ void BoxLayout::run(Widget& widget)
         else
             current_y += rect.height() + spacing();
     }
+}
+
+void BoxLayout::save_to(JsonObject& json)
+{
+    Layout::save_to(json);
+    json.set("orientation", m_orientation == Gfx::Orientation::Vertical ? "Vertical" : "Horizontal");
 }
 
 }
