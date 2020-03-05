@@ -71,6 +71,7 @@ protected:
     virtual void change_event(Event&) override;
 
     virtual void save_to(JsonObject&) override;
+    virtual bool set_property(const StringView& name, const JsonValue& value) override;
 
     void paint_text(Painter&, const Gfx::Rect&, const Gfx::Font&, Gfx::TextAlignment);
 
