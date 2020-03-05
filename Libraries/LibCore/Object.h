@@ -111,6 +111,7 @@ public:
     virtual bool is_window() const { return false; }
 
     virtual void save_to(AK::JsonObject&);
+    virtual bool set_property(const StringView& name, const JsonValue& value);
 
     static IntrusiveList<Object, &Object::m_all_objects_list_node>& all_objects();
 
