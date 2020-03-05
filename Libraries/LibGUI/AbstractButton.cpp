@@ -206,4 +206,26 @@ void AbstractButton::save_to(JsonObject& json)
     Widget::save_to(json);
 }
 
+bool AbstractButton::set_property(const StringView& name, const JsonValue& value)
+{
+    if (name == "text") {
+        set_text(value.to_string());
+        return true;
+    }
+    if (name == "checked") {
+        set_checked(value.to_bool());
+        return true;
+    }
+    if (name == "checkable") {
+        set_checkable(value.to_bool());
+        return true;
+    }
+    if (name == "exclusive") {
+        set_exclusive(value.to_bool());
+        return true;
+    }
+
+    return Widget::set_property(name, value);
+}
+
 }

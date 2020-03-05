@@ -296,6 +296,8 @@ protected:
     virtual void did_begin_inspection() override;
     virtual void did_end_inspection() override;
 
+    virtual bool set_property(const StringView& name, const JsonValue& value) override;
+
 private:
     void handle_paint_event(PaintEvent&);
     void handle_resize_event(ResizeEvent&);
