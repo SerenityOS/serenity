@@ -695,9 +695,9 @@ void Window::did_remove_widget(Badge<Widget>, const Widget& widget)
         m_focused_widget = nullptr;
     if (m_hovered_widget == &widget)
         m_hovered_widget = nullptr;
-    if (m_global_cursor_tracking_widget)
+    if (m_global_cursor_tracking_widget == &widget)
         m_global_cursor_tracking_widget = nullptr;
-    if (m_automatic_cursor_tracking_widget)
+    if (m_automatic_cursor_tracking_widget == &widget)
         m_automatic_cursor_tracking_widget = nullptr;
 }
 
