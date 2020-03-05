@@ -179,6 +179,8 @@ public:
 
     Action* action_for_key_event(const KeyEvent&);
 
+    void did_remove_widget(Badge<Widget>, const Widget&);
+
 protected:
     Window(Core::Object* parent = nullptr);
     virtual void wm_event(WMEvent&);

@@ -123,6 +123,8 @@ void Widget::child_event(Core::ChildEvent& event)
             else
                 invalidate_layout();
         }
+        if (event.child() && Core::is<Widget>(*event.child()))
+            window()->did_remove_widget({}, Core::to<Widget>(*event.child()));
         update();
     }
     return Core::Object::child_event(event);

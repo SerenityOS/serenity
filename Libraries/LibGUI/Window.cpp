@@ -689,4 +689,16 @@ void Window::set_size_increment(const Gfx::Size& size_increment)
         WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrement>(m_window_id, m_base_size, m_size_increment);
 }
 
+void Window::did_remove_widget(Badge<Widget>, const Widget& widget)
+{
+    if (m_focused_widget == &widget)
+        m_focused_widget = nullptr;
+    if (m_hovered_widget == &widget)
+        m_hovered_widget = nullptr;
+    if (m_global_cursor_tracking_widget)
+        m_global_cursor_tracking_widget = nullptr;
+    if (m_automatic_cursor_tracking_widget)
+        m_automatic_cursor_tracking_widget = nullptr;
+}
+
 }
