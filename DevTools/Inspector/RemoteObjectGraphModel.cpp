@@ -98,7 +98,7 @@ GUI::Variant RemoteObjectGraphModel::data(const GUI::ModelIndex& index, Role rol
 {
     auto* remote_object = static_cast<RemoteObject*>(index.internal_data());
     if (role == Role::Icon) {
-        if (remote_object->class_name == "GWindow")
+        if (remote_object->class_name == "Window")
             return m_window_icon;
         return m_object_icon;
     }
