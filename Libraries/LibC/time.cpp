@@ -24,10 +24,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/String.h>
+#include <AK/StringBuilder.h>
 #include <Kernel/KernelInfoPage.h>
 #include <Kernel/Syscall.h>
 #include <assert.h>
 #include <errno.h>
+#include <stdio.h>
 #include <string.h>
 #include <sys/time.h>
 #include <sys/times.h>
@@ -61,9 +64,9 @@ int gettimeofday(struct timeval* __restrict__ tv, void* __restrict__)
     return 0;
 }
 
-char* ctime(const time_t*)
+char* ctime(const time_t* t)
 {
-    return const_cast<char*>("ctime() not implemented");
+    return asctime(localtime(t));
 }
 
 static inline bool __is_leap_year(int year)
@@ -106,53 +109,217 @@ time_t mktime(struct tm* tm)
     int seconds = tm->tm_hour * 3600 + tm->tm_min * 60 + tm->tm_sec;
     for (int year = 70; year < tm->tm_year; ++year)
         days += 365 + __is_leap_year(1900 + year);
+
     tm->tm_yday = tm->tm_mday - 1;
     for (int month = 0; month < tm->tm_mon; ++month)
         tm->tm_yday += __days_per_month[month];
+    if (tm->tm_mon > 1 && __is_leap_year(1900 + tm->tm_year))
+        ++tm->tm_yday;
+
     days += tm->tm_yday;
-    return days * __seconds_per_day + seconds;
+    return days * __seconds_per_day + seconds + timezone;
 }
 
 struct tm* localtime(const time_t* t)
 {
-    if (!t)
-        return nullptr;
     static struct tm tm_buf;
     return localtime_r(t, &tm_buf);
 }
 
+struct tm* localtime_r(const time_t* t, struct tm* tm)
+{
+    if (!t)
+        return nullptr;
+    time_to_tm(tm, (*t) - timezone);
+    return tm;
+}
+
 struct tm* gmtime(const time_t* t)
 {
-    // FIXME: This is obviously not correct. What about timezones bro?
-    return localtime(t);
+    static struct tm tm_buf;
+    return gmtime_r(t, &tm_buf);
 }
 
 struct tm* gmtime_r(const time_t* t, struct tm* tm)
 {
-    // FIXME: This is obviously not correct. What about timezones bro?
-    return localtime_r(t, tm);
+    if (!t)
+        return nullptr;
+    time_to_tm(tm, *t);
+    return tm;
 }
 
-char* asctime(const struct tm*)
+static char wday_short_names[7][4] = {
+    "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
+};
+
+static char wday_long_names[7][10] = {
+    "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+};
+
+static char mon_short_names[12][4] = {
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+};
+
+static char mon_long_names[12][10] = {
+    "January", "February", "March", "April", "May", "June",
+    "July", "Auguest", "September", "October", "November", "December"
+};
+
+char* asctime(const struct tm* tm)
 {
-    ASSERT_NOT_REACHED();
+    constexpr int maxLength = 69;
+    StringBuilder builder { maxLength };
+    builder.appendf("%.3s %.3s %2d %02d:%02d:%02d %4d\n", wday_short_names[tm->tm_wday],
+        mon_short_names[tm->tm_mon], tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, 1900 + tm->tm_year);
+
+    static char result[maxLength];
+    strncpy(result, builder.build().characters(), sizeof result);
+    return result;
 }
 
-size_t strftime(char* destination, size_t, const char*, const struct tm*)
+//FIXME: Some formats are not supported.
+size_t strftime(char* destination, size_t max_size, const char* format, const struct tm* tm)
 {
-    // FIXME: Stubbed function to make nasm work. Should be properly implemented
-    strcpy(destination, "strftime_unimplemented");
-    return strlen("strftime_unimplemented");
+    StringBuilder builder { max_size - 1 };
+
+    const int format_len = strlen(format);
+    for (int i = 0; i < format_len; ++i) {
+        if (format[i] != '%') {
+            builder.append(format[i]);
+        } else {
+            if (++i >= format_len)
+                return 0;
+
+            switch (format[i]) {
+            case 'a':
+                builder.append(wday_short_names[tm->tm_wday]);
+                break;
+            case 'A':
+                builder.append(wday_long_names[tm->tm_wday]);
+                break;
+            case 'b':
+                builder.append(mon_short_names[tm->tm_mon]);
+                break;
+            case 'B':
+                builder.append(mon_long_names[tm->tm_mon]);
+                break;
+            case 'C':
+                builder.appendf("%02d", (tm->tm_year + 1900) / 100);
+                break;
+            case 'd':
+                builder.appendf("%02d", tm->tm_mday);
+                break;
+            case 'D':
+                builder.appendf("%02d/%02d/%02d", tm->tm_mon + 1, tm->tm_mday, (tm->tm_year + 1900) % 100);
+                break;
+            case 'e':
+                builder.appendf("%2d", tm->tm_mday);
+                break;
+            case 'h':
+                builder.append(mon_short_names[tm->tm_mon]);
+                break;
+            case 'H':
+                builder.appendf("%02d", tm->tm_hour);
+                break;
+            case 'I':
+                builder.appendf("%02d", tm->tm_hour % 12);
+                break;
+            case 'j':
+                builder.appendf("%03d", tm->tm_yday + 1);
+                break;
+            case 'm':
+                builder.appendf("%02d", tm->tm_mon + 1);
+                break;
+            case 'M':
+                builder.appendf("%02d", tm->tm_min);
+                break;
+            case 'n':
+                builder.append('\n');
+                break;
+            case 'p':
+                builder.append(tm->tm_hour < 12 ? "a.m." : "p.m.");
+                break;
+            case 'r':
+                builder.appendf("%02d:%02d:%02d %s", tm->tm_hour % 12, tm->tm_min, tm->tm_sec, tm->tm_hour < 12 ? "a.m." : "p.m.");
+                break;
+            case 'R':
+                builder.appendf("%02d:%02d", tm->tm_hour, tm->tm_min);
+                break;
+            case 'S':
+                builder.appendf("%02d", tm->tm_sec);
+                break;
+            case 't':
+                builder.append('\t');
+                break;
+            case 'T':
+                builder.appendf("%02d:%02d:%02d", tm->tm_hour, tm->tm_min, tm->tm_sec);
+                break;
+            case 'u':
+                builder.appendf("%d", tm->tm_wday ? tm->tm_wday : 7);
+                break;
+            case 'U': {
+                const int wday_of_year_beginning = (tm->tm_wday + 6 * tm->tm_yday) % 7;
+                const int week_number = (tm->tm_yday + wday_of_year_beginning) / 7;
+                builder.appendf("%02d", week_number);
+                break;
+            }
+            case 'V': {
+                const int wday_of_year_beginning = (tm->tm_wday + 6 + 6 * tm->tm_yday) % 7;
+                int week_number = (tm->tm_yday + wday_of_year_beginning) / 7 + 1;
+                if (wday_of_year_beginning > 3) {
+                    if (tm->tm_yday >= 7 - wday_of_year_beginning)
+                        --week_number;
+                    else {
+                        const int days_of_last_year = 365 + __is_leap_year(tm->tm_year + 1900);
+                        const int wday_of_last_year_beginning = (wday_of_year_beginning + 6 * days_of_last_year) % 7;
+                        week_number = (days_of_last_year + wday_of_last_year_beginning) / 7 + 1;
+                        if (wday_of_year_beginning > 3)
+                            --week_number;
+                    }
+                }
+                builder.appendf("%02d", week_number);
+                break;
+            }
+            case 'w':
+                builder.appendf("%d", tm->tm_wday);
+                break;
+            case 'W': {
+                const int wday_of_year_beginning = (tm->tm_wday + 6 + 6 * tm->tm_yday) % 7;
+                const int week_number = (tm->tm_yday + wday_of_year_beginning) / 7;
+                builder.appendf("%02d", week_number);
+                break;
+            }
+            case 'y':
+                builder.appendf("%02d", (tm->tm_year + 1900) % 100);
+                break;
+            case 'Y':
+                builder.appendf("%d", tm->tm_year + 1900);
+                break;
+            case '%':
+                builder.append('%');
+                break;
+            default:
+                return 0;
+            }
+        }
+        if (builder.length() > max_size - 1)
+                return 0;
+    }
+
+    strcpy(destination, builder.build().characters());
+    return builder.length();
 }
 
-long timezone;
+long timezone = 0;
 long altzone;
 char* tzname[2];
 int daylight;
 
 void tzset()
 {
-    ASSERT_NOT_REACHED();
+    //FIXME: Here we prepend we are in UTC+0.
+    timezone = 0;
 }
 
 clock_t clock()
@@ -178,11 +345,5 @@ int clock_nanosleep(clockid_t clock_id, int flags, const struct timespec* reques
 int clock_getres(clockid_t, struct timespec*)
 {
     ASSERT_NOT_REACHED();
-}
-
-struct tm* localtime_r(const time_t* t, struct tm* tm)
-{
-    time_to_tm(tm, *t);
-    return tm;
 }
 }
