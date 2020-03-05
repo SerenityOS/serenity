@@ -109,7 +109,7 @@ GUI::Variant RemoteObjectGraphModel::data(const GUI::ModelIndex& index, Role rol
         return m_object_icon;
     }
     if (role == Role::Display) {
-        return String::format("%s{%s}", remote_object->class_name.characters(), remote_object->address.characters());
+        return String::format("%s{%p}", remote_object->class_name.characters(), remote_object->address);
     }
     return {};
 }

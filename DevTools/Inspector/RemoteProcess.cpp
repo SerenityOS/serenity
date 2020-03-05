@@ -65,14 +65,14 @@ void RemoteProcess::handle_get_all_objects_response(const JsonObject& response)
     auto& object_array = objects.as_array();
 
     NonnullOwnPtrVector<RemoteObject> remote_objects;
-    HashMap<String, RemoteObject*> objects_by_address;
+    HashMap<uintptr_t, RemoteObject*> objects_by_address;
 
     for (auto& value : object_array.values()) {
         ASSERT(value.is_object());
         auto& object = value.as_object();
         auto remote_object = make<RemoteObject>();
-        remote_object->address = object.get("address").to_string();
-        remote_object->parent_address = object.get("parent").to_string();
+        remote_object->address = object.get("address").to_number<uintptr_t>();
+        remote_object->parent_address = object.get("parent").to_number<uintptr_t>();
         remote_object->name = object.get("name").to_string();
         remote_object->class_name = object.get("class_name").to_string();
         remote_object->json = object;
