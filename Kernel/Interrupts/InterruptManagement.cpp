@@ -63,7 +63,7 @@ void InterruptManagement::enumerate_interrupt_handlers(Function<void(GenericInte
 {
     for (int i = 0; i < GENERIC_INTERRUPT_HANDLERS_COUNT; i++) {
         auto& handler = get_interrupt_handler(i);
-        if (handler.get_invoking_count() > 0)
+        if (handler.type() != HandlerType::UnhandledInterruptHandler)
             callback(handler);
     }
 }
