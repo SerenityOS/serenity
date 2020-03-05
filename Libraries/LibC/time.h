@@ -43,7 +43,7 @@ struct tm {
     int tm_isdst; /* Daylight saving time */
 };
 
-extern long timezone;
+extern long timezone; /* The difference in seconds between UTC and local time */
 extern long altzone;
 extern char* tzname[2];
 extern int daylight;
