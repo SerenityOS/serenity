@@ -739,6 +739,31 @@ void Widget::save_to(AK::JsonObject& json)
     Core::Object::save_to(json);
 }
 
+bool Widget::set_property(const StringView& name, const JsonValue& value)
+{
+    if (name == "fill_with_background_color") {
+        set_fill_with_background_color(value.to_bool());
+        return true;
+    }
+    if (name == "tooltip") {
+        set_tooltip(value.to_string());
+        return true;
+    }
+    if (name == "enable") {
+        set_enabled(value.to_bool());
+        return true;
+    }
+    if (name == "focused") {
+        set_focus(value.to_bool());
+        return true;
+    }
+    if (name == "visible") {
+        set_visible(value.to_bool());
+        return true;
+    }
+    return Core::Object::set_property(name, value);
+}
+
 Vector<Widget*> Widget::child_widgets() const
 {
     Vector<Widget*> widgets;
