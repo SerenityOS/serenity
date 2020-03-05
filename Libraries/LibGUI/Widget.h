@@ -293,6 +293,9 @@ protected:
     virtual void drag_move_event(DragEvent&);
     virtual void drop_event(DropEvent&);
 
+    virtual void did_begin_inspection() override;
+    virtual void did_end_inspection() override;
+
 private:
     void handle_paint_event(PaintEvent&);
     void handle_resize_event(ResizeEvent&);
