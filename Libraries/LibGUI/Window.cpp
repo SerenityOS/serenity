@@ -63,7 +63,7 @@ Window::Window(Core::Object* parent)
 {
     all_windows->set(this);
     m_rect_when_windowless = { 100, 400, 140, 140 };
-    m_title_when_windowless = "GWindow";
+    m_title_when_windowless = "GUI::Window";
 }
 
 Window::~Window()
