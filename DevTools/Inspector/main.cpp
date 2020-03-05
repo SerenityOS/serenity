@@ -30,6 +30,7 @@
 #include "RemoteProcess.h"
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/ModelEditingDelegate.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/TreeView.h>
@@ -77,6 +78,10 @@ int main(int argc, char** argv)
 
     auto& properties_table_view = splitter.add<GUI::TableView>();
     properties_table_view.set_size_columns_to_fit_content(true);
+    properties_table_view.set_editable(true);
+    properties_table_view.aid_create_editing_delegate = [](auto&) {
+        return make<GUI::StringModelEditingDelegate>();
+    };
 
     tree_view.on_activation = [&](auto& index) {
         auto* remote_object = static_cast<RemoteObject*>(index.internal_data());

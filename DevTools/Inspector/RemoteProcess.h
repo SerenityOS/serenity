@@ -34,6 +34,8 @@ class RemoteObject;
 
 class RemoteProcess {
 public:
+    static RemoteProcess& the();
+
     explicit RemoteProcess(pid_t);
     void update();
 
@@ -44,6 +46,8 @@ public:
     const NonnullOwnPtrVector<RemoteObject>& roots() const { return m_roots; }
 
     void set_inspected_object(uintptr_t);
+
+    void set_property(uintptr_t object, const StringView& name, const JsonValue& value);
 
     Function<void()> on_update;
 
