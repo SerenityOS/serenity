@@ -41,7 +41,7 @@ public:
     virtual u16 get_isr() const override;
     virtual u16 get_irr() const override;
     virtual u32 get_gsi_base() const override { return 0; }
-    virtual const char* model() const override { return "Dual Intel 8259"; }
+    virtual const char* model() const override { return "Dual i8259"; }
     virtual IRQControllerType type() const override { return IRQControllerType::i8259; }
 
 private:
