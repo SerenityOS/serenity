@@ -28,10 +28,11 @@
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Interrupts/APIC.h>
+#include <Kernel/Interrupts/SpuriousInterruptHandler.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <LibBareMetal/IO.h>
 
-#define IRQ_APIC_SPURIOUS 0x1f
+#define IRQ_APIC_SPURIOUS 0x7f
 
 #define APIC_BASE_MSR 0x1b
 
@@ -39,6 +40,7 @@
 #define APIC_REG_LD 0xd0
 #define APIC_REG_DF 0xe0
 #define APIC_REG_SIV 0xf0
+#define APIC_REG_TPR 0x80
 #define APIC_REG_ICR_LOW 0x300
 #define APIC_REG_ICR_HIGH 0x310
 #define APIC_REG_LVT_TIMER 0x320
@@ -49,13 +51,6 @@
 #define APIC_REG_LVT_ERR 0x370
 
 namespace Kernel {
-
-extern "C" void apic_spurious_interrupt_entry();
-
-asm(
-    ".globl apic_spurious_interrupt_entry \n"
-    "apic_spurious_interrupt_entry: \n"
-    "    iret\n");
 
 namespace APIC {
 
@@ -120,14 +115,14 @@ namespace APIC {
     static void write_register(u32 offset, u32 value)
     {
         auto lapic_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)g_apic_base)), PAGE_SIZE, "LAPIC Write Access", Region::Access::Read | Region::Access::Write, false, true);
-        auto* lapic = (u32*)lapic_region->vaddr().offset(offset_in_page((u32)g_apic_base)).offset(offset).as_ptr();
+        auto* lapic = (volatile u32*)lapic_region->vaddr().offset(offset_in_page((u32)g_apic_base)).offset(offset).as_ptr();
         *lapic = value;
     }
 
     static u32 read_register(u32 offset)
     {
         auto lapic_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)g_apic_base)), PAGE_SIZE, "LAPIC Read Access", Region::Access::Read, false, true);
-        auto* lapic = (u32*)lapic_region->vaddr().offset(offset_in_page((u32)g_apic_base)).offset(offset).as_ptr();
+        auto* lapic = (volatile u32*)lapic_region->vaddr().offset(offset_in_page((u32)g_apic_base)).offset(offset).as_ptr();
         return *lapic;
     }
 
@@ -190,23 +185,27 @@ namespace APIC {
     {
         klog() << "Enabling local APIC for cpu #" << cpu;
 
+        // dummy read, apparently to avoid a bug in old CPUs.
+        read_register(APIC_REG_SIV);
         // set spurious interrupt vector
-        write_register(APIC_REG_SIV, read_register(APIC_REG_SIV) | 0x100);
+        write_register(APIC_REG_SIV, IRQ_APIC_SPURIOUS | 0x100);
 
         // local destination mode (flat mode)
         write_register(APIC_REG_DF, 0xf0000000);
 
         // set destination id (note that this limits it to 8 cpus)
-        write_register(APIC_REG_LD, (1 << cpu) << 24);
+        write_register(APIC_REG_LD, 0);
 
-        register_interrupt_handler(IRQ_APIC_SPURIOUS, apic_spurious_interrupt_entry);
+        SpuriousInterruptHandler::initialize(IRQ_APIC_SPURIOUS);
 
-        write_register(APIC_REG_LVT_TIMER, APIC_LVT(0xff, 0) | APIC_LVT_MASKED);
-        write_register(APIC_REG_LVT_THERMAL, APIC_LVT(0xff, 0) | APIC_LVT_MASKED);
-        write_register(APIC_REG_LVT_PERFORMANCE_COUNTER, APIC_LVT(0xff, 0) | APIC_LVT_MASKED);
-        write_register(APIC_REG_LVT_LINT0, APIC_LVT(0x1f, 7) | APIC_LVT_MASKED);
-        write_register(APIC_REG_LVT_LINT1, APIC_LVT(0xff, 4) | APIC_LVT_TRIGGER_LEVEL); // nmi
-        write_register(APIC_REG_LVT_ERR, APIC_LVT(0xe3, 0) | APIC_LVT_MASKED);
+        write_register(APIC_REG_LVT_TIMER, APIC_LVT(0, 0) | APIC_LVT_MASKED);
+        write_register(APIC_REG_LVT_THERMAL, APIC_LVT(0, 0) | APIC_LVT_MASKED);
+        write_register(APIC_REG_LVT_PERFORMANCE_COUNTER, APIC_LVT(0, 0) | APIC_LVT_MASKED);
+        write_register(APIC_REG_LVT_LINT0, APIC_LVT(0, 7) | APIC_LVT_MASKED);
+        write_register(APIC_REG_LVT_LINT1, APIC_LVT(0, 0) | APIC_LVT_TRIGGER_LEVEL);
+        write_register(APIC_REG_LVT_ERR, APIC_LVT(0, 0) | APIC_LVT_MASKED);
+
+        write_register(APIC_REG_TPR, 0);
 
         if (cpu != 0) {
             static volatile u32 foo = 0;
