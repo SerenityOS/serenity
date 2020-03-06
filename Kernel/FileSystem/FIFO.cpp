@@ -136,7 +136,7 @@ ssize_t FIFO::write(FileDescription&, const u8* buffer, ssize_t size)
         return -EPIPE;
     }
 #ifdef FIFO_DEBUG
-    dbg() << "fifo: write(" << (const void*)buffer) << ", " << size << ")";
+    dbg() << "fifo: write(" << (const void*)buffer << ", " << size << ")";
 #endif
     return m_buffer.write(buffer, size);
 }
