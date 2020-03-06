@@ -110,7 +110,7 @@ void PS2MouseDevice::handle_vmmouse_absolute_pointer()
 
 #ifdef PS2MOUSE_DEBUG
     dbg() << "Absolute Mouse: Buttons " << String::format("%x", buttons);
-    dbg() << "Mouse: X " << x << ", Y " << y << ", Z " << z);
+    dbg() << "Mouse: X " << x << ", Y " << y << ", Z " << z;
 #endif
     MousePacket packet;
     packet.x = x;
@@ -154,7 +154,7 @@ void PS2MouseDevice::handle_irq(RegisterState&)
         auto commit_packet = [&] {
             m_data_state = 0;
 #ifdef PS2MOUSE_DEBUG
-            dbg() << ("PS2Mouse: " << m_data[1] << ", " << m_data[2] << " " << ((m_data[0] & 1) ? "Left" : "") << " " << ((m_data[0] & 2) ? "Right" : "") << " (buffered: " << m_queue.size() << ")";
+            dbg() << "PS2Mouse: " << m_data[1] << ", " << m_data[2] << " " << ((m_data[0] & 1) ? "Left" : "") << " " << ((m_data[0] & 2) ? "Right" : "") << " (buffered: " << m_queue.size() << ")";
 #endif
             parse_data_packet();
         };
