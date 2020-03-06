@@ -45,7 +45,7 @@ GFontDatabase::GFontDatabase()
 {
     Core::DirIterator di("/res/fonts", Core::DirIterator::SkipDots);
     if (di.has_error()) {
-        fprintf(stderr, "CDirIterator: %s\n", di.error_string());
+        fprintf(stderr, "DirIterator: %s\n", di.error_string());
         exit(1);
     }
     while (di.has_next()) {

@@ -75,7 +75,7 @@ off_t find_seek_pos(Core::File& file, int wanted_lines)
     off_t end = pos;
     int lines = 0;
 
-    // FIXME: Reading char-by-char is only OK if CIODevice's read buffer
+    // FIXME: Reading char-by-char is only OK if IODevice's read buffer
     // is smart enough to not read char-by-char. Fix it there, or fix it here :)
     for (; pos >= 0; pos--) {
         file.seek(pos);

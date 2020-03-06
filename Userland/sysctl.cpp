@@ -78,7 +78,7 @@ static int handle_show_all()
 {
     Core::DirIterator di("/proc/sys", Core::DirIterator::SkipDots);
     if (di.has_error()) {
-        fprintf(stderr, "CDirIterator: %s\n", di.error_string());
+        fprintf(stderr, "DirIterator: %s\n", di.error_string());
         return 1;
     }
 

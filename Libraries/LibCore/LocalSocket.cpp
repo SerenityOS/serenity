@@ -37,7 +37,7 @@ namespace Core {
 LocalSocket::LocalSocket(int fd, Object* parent)
     : Socket(Socket::Type::Local, parent)
 {
-    // NOTE: This constructor is used by CLocalServer::accept(), so the socket is already connected.
+    // NOTE: This constructor is used by LocalServer::accept(), so the socket is already connected.
     m_connected = true;
     set_fd(fd);
     set_mode(IODevice::ReadWrite);

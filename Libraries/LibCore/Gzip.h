@@ -28,8 +28,12 @@
 #include <AK/Optional.h>
 #include <AK/String.h>
 
-class CGzip {
+namespace Core {
+
+class Gzip {
 public:
     static bool is_compressed(const ByteBuffer& data);
     static Optional<ByteBuffer> decompress(const ByteBuffer& data);
 };
+
+}
