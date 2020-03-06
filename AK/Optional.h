@@ -150,9 +150,6 @@ public:
         return fallback;
     }
 
-    SET_TYPESTATE(consumed)
-    operator bool() const { return m_has_value; }
-
 private:
     // Call when we don't want to alter the consume state
     const T& value_without_consume_state() const

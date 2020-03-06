@@ -209,7 +209,7 @@ NonnullRefPtr<StyleProperties> Element::computed_style()
         };
         for (CSS::PropertyID id : box_model_metrics) {
             auto prop = layout_node()->style().property(id);
-            if (prop)
+            if (prop.has_value())
                 properties->set_property(id, prop.value());
         }
     }

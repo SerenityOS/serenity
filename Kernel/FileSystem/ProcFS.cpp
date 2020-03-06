@@ -1228,7 +1228,7 @@ ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDes
     if (!description) {
         generated_data = (*read_callback)(identifier());
     } else {
-        if (!description->generator_cache())
+        if (!description->generator_cache().has_value())
             description->generator_cache() = (*read_callback)(identifier());
         generated_data = description->generator_cache();
     }
@@ -1242,7 +1242,7 @@ ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDes
 
     ssize_t nread = min(static_cast<off_t>(data.value().size() - offset), static_cast<off_t>(count));
     memcpy(buffer, data.value().data() + offset, nread);
-    if (nread == 0 && description && description->generator_cache())
+    if (nread == 0 && description && description->generator_cache().has_value())
         description->generator_cache().clear();
 
     return nread;
