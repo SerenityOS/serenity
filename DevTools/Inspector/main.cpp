@@ -45,6 +45,23 @@
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio shared_buffer rpath accept unix cpath fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
+    if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/tmp", "rwc") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    unveil(nullptr, nullptr);
+
     if (argc != 2)
         print_usage_and_exit();
 
@@ -91,5 +108,11 @@ int main(int argc, char** argv)
 
     window->show();
     remote_process.update();
+
+    if (pledge("stdio shared_buffer rpath accept unix", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     return app.exec();
 }
