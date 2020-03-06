@@ -475,10 +475,7 @@ void setup_interrupts()
         return;
     }
     if (smp == "on") {
-        ASSERT_NOT_REACHED(); // FIXME: The IOAPIC mode is not stable yet so we can't use it now.
         InterruptManagement::the().switch_to_ioapic_mode();
-        APIC::init();
-        APIC::enable_bsp();
         return;
     }
 
