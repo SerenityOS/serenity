@@ -61,6 +61,6 @@ private:
 
     Profile& m_profile;
 
-    GIcon m_user_frame_icon;
-    GIcon m_kernel_frame_icon;
+    GUI::Icon m_user_frame_icon;
+    GUI::Icon m_kernel_frame_icon;
 };

@@ -281,11 +281,11 @@ int main(int argc, char** argv)
     GUI::ActionGroup font_action_group;
     font_action_group.set_exclusive(true);
     auto font_menu = GUI::Menu::construct("Font");
-    GFontDatabase::the().for_each_fixed_width_font([&](const StringView& font_name) {
+    GUI::FontDatabase::the().for_each_fixed_width_font([&](const StringView& font_name) {
         auto action = GUI::Action::create(font_name, [&](GUI::Action& action) {
             action.set_checked(true);
-            terminal.set_font(GFontDatabase::the().get_by_name(action.text()));
-            auto metadata = GFontDatabase::the().get_metadata_by_name(action.text());
+            terminal.set_font(GUI::FontDatabase::the().get_by_name(action.text()));
+            auto metadata = GUI::FontDatabase::the().get_metadata_by_name(action.text());
             ASSERT(metadata.has_value());
             config->write_entry("Text", "Font", metadata.value().path);
             config->sync();

@@ -28,23 +28,25 @@
 #include <LibGUI/Icon.h>
 #include <LibGfx/Bitmap.h>
 
-GIcon::GIcon()
-    : m_impl(GIconImpl::create())
+namespace GUI {
+
+Icon::Icon()
+    : m_impl(IconImpl::create())
 {
 }
 
-GIcon::GIcon(const GIconImpl& impl)
-    : m_impl(const_cast<GIconImpl&>(impl))
+Icon::Icon(const IconImpl& impl)
+    : m_impl(const_cast<IconImpl&>(impl))
 {
 }
 
-GIcon::GIcon(const GIcon& other)
+Icon::Icon(const Icon& other)
     : m_impl(other.m_impl)
 {
 }
 
-GIcon::GIcon(RefPtr<Gfx::Bitmap>&& bitmap)
-    : GIcon()
+Icon::Icon(RefPtr<Gfx::Bitmap>&& bitmap)
+    : Icon()
 {
     if (bitmap) {
         ASSERT(bitmap->width() == bitmap->height());
@@ -53,8 +55,8 @@ GIcon::GIcon(RefPtr<Gfx::Bitmap>&& bitmap)
     }
 }
 
-GIcon::GIcon(RefPtr<Gfx::Bitmap>&& bitmap1, RefPtr<Gfx::Bitmap>&& bitmap2)
-    : GIcon(move(bitmap1))
+Icon::Icon(RefPtr<Gfx::Bitmap>&& bitmap1, RefPtr<Gfx::Bitmap>&& bitmap2)
+    : Icon(move(bitmap1))
 {
     if (bitmap2) {
         ASSERT(bitmap2->width() == bitmap2->height());
@@ -63,7 +65,7 @@ GIcon::GIcon(RefPtr<Gfx::Bitmap>&& bitmap1, RefPtr<Gfx::Bitmap>&& bitmap2)
     }
 }
 
-const Gfx::Bitmap* GIconImpl::bitmap_for_size(int size) const
+const Gfx::Bitmap* IconImpl::bitmap_for_size(int size) const
 {
     auto it = m_bitmaps.find(size);
     if (it != m_bitmaps.end())
@@ -81,7 +83,7 @@ const Gfx::Bitmap* GIconImpl::bitmap_for_size(int size) const
     return best_fit;
 }
 
-void GIconImpl::set_bitmap_for_size(int size, RefPtr<Gfx::Bitmap>&& bitmap)
+void IconImpl::set_bitmap_for_size(int size, RefPtr<Gfx::Bitmap>&& bitmap)
 {
     if (!bitmap) {
         m_bitmaps.remove(size);
@@ -90,9 +92,11 @@ void GIconImpl::set_bitmap_for_size(int size, RefPtr<Gfx::Bitmap>&& bitmap)
     m_bitmaps.set(size, move(bitmap));
 }
 
-GIcon GIcon::default_icon(const StringView& name)
+Icon Icon::default_icon(const StringView& name)
 {
     auto bitmap16 = Gfx::Bitmap::load_from_file(String::format("/res/icons/16x16/%s.png", String(name).characters()));
     auto bitmap32 = Gfx::Bitmap::load_from_file(String::format("/res/icons/32x32/%s.png", String(name).characters()));
-    return GIcon(move(bitmap16), move(bitmap32));
+    return Icon(move(bitmap16), move(bitmap32));
+}
+
 }

@@ -44,7 +44,7 @@
 HexEditor::HexEditor()
 {
     set_scrollbars_enabled(true);
-    set_font(GFontDatabase::the().get_by_name("Csilla Thin"));
+    set_font(GUI::FontDatabase::the().get_by_name("Csilla Thin"));
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
     vertical_scrollbar().set_step(line_height());

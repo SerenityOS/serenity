@@ -71,9 +71,9 @@ private:
     NonnullRefPtrVector<ProjectFile> m_files;
     RefPtr<ProjectTreeNode> m_root_node;
 
-    GIcon m_directory_icon;
-    GIcon m_file_icon;
-    GIcon m_cplusplus_icon;
-    GIcon m_header_icon;
-    GIcon m_project_icon;
+    GUI::Icon m_directory_icon;
+    GUI::Icon m_file_icon;
+    GUI::Icon m_cplusplus_icon;
+    GUI::Icon m_header_icon;
+    GUI::Icon m_project_icon;
 };

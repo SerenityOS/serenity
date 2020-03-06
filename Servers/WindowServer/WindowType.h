@@ -26,7 +26,7 @@
 
 #pragma once
 
-// Keep this in sync with GWindowType.
+// Keep this in sync with GUI::WindowType.
 enum class WindowType {
     Invalid = 0,
     Normal,
