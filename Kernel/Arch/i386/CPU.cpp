@@ -625,6 +625,8 @@ void idt_init()
     register_interrupt_handler(0xce, interrupt_126_asm_entry);
     register_interrupt_handler(0xcf, interrupt_127_asm_entry);
 
+    dbg() << "Installing Unhandled Handlers";
+
     for (u8 i = 0; i < GENERIC_INTERRUPT_HANDLERS_COUNT; ++i) {
         new UnhandledInterruptHandler(i);
     }
@@ -643,7 +645,7 @@ void handle_interrupt(RegisterState regs)
 {
     clac();
     ++g_in_irq;
-    ASSERT(regs.isr_number >= 0x50 && regs.isr_number <= 0x5f);
+    ASSERT(regs.isr_number >= IRQ_VECTOR_BASE && regs.isr_number <= (IRQ_VECTOR_BASE + GENERIC_INTERRUPT_HANDLERS_COUNT));
     u8 irq = (u8)(regs.isr_number - 0x50);
     ASSERT(s_interrupt_handler[irq]);
     s_interrupt_handler[irq]->handle_interrupt(regs);
