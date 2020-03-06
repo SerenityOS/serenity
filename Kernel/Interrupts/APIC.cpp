@@ -167,7 +167,7 @@ namespace APIC {
             return false;
 
         PhysicalAddress apic_base = get_base();
-        klog() << "Initializing APIC, base: P " << String::format("%p", apic_base);
+        klog() << "Initializing APIC, base: " << apic_base;
         set_base(apic_base);
 
         g_apic_base = apic_base.as_ptr();

@@ -252,7 +252,7 @@ void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
         MM.flush_tlb(vaddr);
 #ifdef MM_DEBUG
         auto& physical_page = vmobject().physical_pages()[first_page_index() + i];
-        dbg() << "MM: >> Unmapped V" << String::format("%p", vaddr.get()) << " => P" << String::format("%p", physical_page ? physical_page->paddr().get() : 0) << " <<";
+        dbg() << "MM: >> Unmapped " << vaddr << " => P" << String::format("%p", physical_page ? physical_page->paddr().get() : 0) << " <<";
 #endif
     }
     if (deallocate_range == ShouldDeallocateVirtualMemoryRange::Yes)
@@ -358,8 +358,7 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
     }
 
 #ifdef PAGE_FAULT_DEBUG
-    dbg() << "      >> ZERO P\n"
-          << String::format("%p", physical_page->paddr().get());
+    dbg() << "      >> ZERO " << physical_page->paddr();
 #endif
     vmobject_physical_page_entry = move(physical_page);
     remap_page(page_index_in_region);
@@ -394,7 +393,7 @@ PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
     u8* dest_ptr = MM.quickmap_page(*physical_page);
     const u8* src_ptr = vaddr().offset(page_index_in_region * PAGE_SIZE).as_ptr();
 #ifdef PAGE_FAULT_DEBUG
-    dbg() << "      >> COW P" << String::format("%p", physical_page->paddr().get()) << " <- P" << String::format("%p", physical_page_to_copy->paddr().get());
+    dbg() << "      >> COW " << physical_page->paddr() << " <- " << physical_page_to_copy->paddr();
 #endif
     copy_from_user(dest_ptr, src_ptr, PAGE_SIZE);
     vmobject_physical_page_entry = move(physical_page);

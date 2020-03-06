@@ -86,7 +86,7 @@ PCI::MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
         u32 lower_addr = mcfg.descriptors[index].base_addr;
 
         m_segments.set(index, new PCI::MMIOSegment(PhysicalAddress(lower_addr), start_bus, end_bus));
-        klog() << "PCI: New PCI segment @ P " << String::format("%p", lower_addr) << ", PCI buses (" << start_bus << "-" << end_bus << ")";
+        klog() << "PCI: New PCI segment @ " << PhysicalAddress(lower_addr) << ", PCI buses (" << start_bus << "-" << end_bus << ")";
     }
     mcfg_region->unmap();
     klog() << "PCI: MMIO segments - " << m_segments.size();
