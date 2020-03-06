@@ -94,6 +94,10 @@ private:
 
     IOAddress m_io_base;
     VirtualAddress m_mmio_base;
+    OwnPtr<Region> m_rx_descriptors_region;
+    OwnPtr<Region> m_tx_descriptors_region;
+    Vector<OwnPtr<Region>> m_rx_buffers_regions;
+    Vector<OwnPtr<Region>> m_tx_buffers_regions;
     OwnPtr<Region> m_mmio_region;
     u8 m_interrupt_line { 0 };
     bool m_has_eeprom { false };
@@ -101,9 +105,6 @@ private:
 
     static const int number_of_rx_descriptors = 32;
     static const int number_of_tx_descriptors = 8;
-
-    e1000_rx_desc* m_rx_descriptors;
-    e1000_tx_desc* m_tx_descriptors;
 
     WaitQueue m_wait_queue;
 };
