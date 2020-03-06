@@ -220,8 +220,6 @@ void SB16::handle_irq(RegisterState&)
 
 void SB16::wait_for_irq()
 {
-    cli();
-    enable_irq();
     Thread::current->wait_on(m_irq_queue);
     disable_irq();
 }
@@ -259,6 +257,9 @@ ssize_t SB16::write(FileDescription&, const u8* data, ssize_t length)
         sample_count /= 2;
 
     sample_count -= 1;
+
+    cli();
+    enable_irq();
 
     dsp_write(command);
     dsp_write(mode);

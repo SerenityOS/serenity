@@ -85,6 +85,8 @@ private:
     bool ata_read_sectors(u32, u16, u8*, bool);
     bool ata_write_sectors(u32, u16, const u8*, bool);
 
+    inline void prepare_for_irq();
+
     // Data members
     u8 m_channel_number { 0 }; // Channel number. 0 = master, 1 = slave
     IOAddress m_io_base;
