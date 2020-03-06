@@ -61,8 +61,7 @@ bool inline static is_all_masked(u8 reg)
 void PIC::disable(u8 irq)
 {
     InterruptDisabler disabler;
-    if (is_hard_disabled())
-        return;
+    ASSERT(!is_hard_disabled());
     u8 imr;
     if (irq >= 8) {
         imr = IO::in8(PIC1_CMD);
@@ -99,8 +98,7 @@ bool PIC::is_vector_enabled(u8 irq) const
 void PIC::enable(u8 irq)
 {
     InterruptDisabler disabler;
-    if (is_hard_disabled())
-        return;
+    ASSERT(!is_hard_disabled());
     u8 imr;
     if (irq >= 8) {
         imr = IO::in8(PIC1_CMD);
@@ -117,8 +115,7 @@ void PIC::enable(u8 irq)
 void PIC::eoi(u8 irq) const
 {
     InterruptDisabler disabler;
-    if (is_hard_disabled())
-        return;
+    ASSERT(!is_hard_disabled());
     if (irq >= 8)
         IO::out8(PIC1_CTL, 0x20);
     IO::out8(PIC0_CTL, 0x20);
