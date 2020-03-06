@@ -235,6 +235,9 @@ void TerminalWidget::keydown_event(GUI::KeyEvent& event)
         }
         write(m_ptm_fd, "\033[6~", 4);
         return;
+    case KeyCode::Key_Alt:
+        m_alt_key_held = true;
+        return;
     default:
         break;
     }
@@ -270,6 +273,17 @@ void TerminalWidget::keydown_event(GUI::KeyEvent& event)
 
     if (event.key() != Key_Control && event.key() != Key_Alt && event.key() != Key_Shift)
         m_scrollbar->set_value(m_scrollbar->max());
+}
+
+void TerminalWidget::keyup_event(GUI::KeyEvent& event)
+{
+    switch (event.key()) {
+    case KeyCode::Key_Alt:
+        m_alt_key_held = false;
+        return;
+    default:
+        break;
+    }
 }
 
 void TerminalWidget::paint_event(GUI::PaintEvent& event)
@@ -490,6 +504,15 @@ bool TerminalWidget::selection_contains(const VT::Position& position) const
     if (!has_selection())
         return false;
 
+    if (m_rectangle_selection) {
+        auto min_selection_column = min(m_selection_start.column(), m_selection_end.column());
+        auto max_selection_column = max(m_selection_start.column(), m_selection_end.column());
+        auto min_selection_row = min(m_selection_start.row(), m_selection_end.row());
+        auto max_selection_row = max(m_selection_start.row(), m_selection_end.row());
+
+        return position.column() >= min_selection_column && position.column() <= max_selection_column && position.row() >= min_selection_row && position.row() <= max_selection_row;
+    }
+
     return position >= normalized_selection_start() && position <= normalized_selection_end();
 }
 
@@ -569,6 +592,11 @@ void TerminalWidget::mousedown_event(GUI::MouseEvent& event)
             m_selection_start = buffer_position_at(event.position());
             m_selection_end = {};
         }
+        if (m_alt_key_held)
+            m_rectangle_selection = true;
+        else if (m_rectangle_selection)
+            m_rectangle_selection = false;
+
         update();
     }
 }
@@ -613,7 +641,7 @@ String TerminalWidget::selected_text() const
                 break;
             }
             builder.append(line.characters[column]);
-            if (column == line.m_length - 1) {
+            if (column == line.m_length - 1 || (m_rectangle_selection && column == last_column)) {
                 builder.append('\n');
             }
         }
@@ -624,12 +652,12 @@ String TerminalWidget::selected_text() const
 
 int TerminalWidget::first_selection_column_on_row(int row) const
 {
-    return row == normalized_selection_start().row() ? normalized_selection_start().column() : 0;
+    return row == normalized_selection_start().row() || m_rectangle_selection ? normalized_selection_start().column() : 0;
 }
 
 int TerminalWidget::last_selection_column_on_row(int row) const
 {
-    return row == normalized_selection_end().row() ? normalized_selection_end().column() : m_terminal.columns() - 1;
+    return row == normalized_selection_end().row() || m_rectangle_selection ? normalized_selection_end().column() : m_terminal.columns() - 1;
 }
 
 void TerminalWidget::terminal_history_changed()
