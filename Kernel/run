@@ -23,6 +23,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 -s -m $SERENITY_RAM_SIZE
 -cpu max
 -d cpu_reset,guest_errors
+-smp 2
 -device VGA,vgamem_mb=64
 -hda _disk_image
 -device ich9-ahci
@@ -37,6 +38,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 -cpu max
 -machine q35
 -d cpu_reset,guest_errors
+-smp 2
 -device VGA,vgamem_mb=64
 -device piix3-ide
 -drive file=_disk_image,id=disk,if=none
