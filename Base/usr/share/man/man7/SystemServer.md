@@ -31,7 +31,7 @@ The service is advised to set this flag using [`fcntl`(2)](../man2/fcntl.md) and
 unset `SOCKET_TAKEOVER` from the environment in order not to confuse its
 children.
 
-LibCore provides `CLocalServer::take_over_from_system_server()` method that
+LibCore provides `Core::LocalServer::take_over_from_system_server()` method that
 performs the service side of the socket takeover automatically.
 
 If a service is configured as *lazy*, SystemServer will actually listen on the

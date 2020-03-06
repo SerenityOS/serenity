@@ -95,7 +95,7 @@ void FileSystemModel::Node::traverse_if_needed(const FileSystemModel& model)
     auto full_path = this->full_path(model);
     Core::DirIterator di(full_path, Core::DirIterator::SkipDots);
     if (di.has_error()) {
-        fprintf(stderr, "CDirIterator: %s\n", di.error_string());
+        fprintf(stderr, "DirIterator: %s\n", di.error_string());
         return;
     }
 

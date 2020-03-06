@@ -38,26 +38,26 @@ namespace Core {
 static ByteBuffer handle_content_encoding(const ByteBuffer& buf, const String& content_encoding)
 {
 #ifdef CHTTPJOB_DEBUG
-    dbg() << "CHttpJob::handle_content_encoding: buf has content_encoding = " << content_encoding;
+    dbg() << "HttpJob::handle_content_encoding: buf has content_encoding = " << content_encoding;
 #endif
 
     if (content_encoding == "gzip") {
-        if (!CGzip::is_compressed(buf)) {
-            dbg() << "CHttpJob::handle_content_encoding: buf is not gzip compressed!";
+        if (!Gzip::is_compressed(buf)) {
+            dbg() << "HttpJob::handle_content_encoding: buf is not gzip compressed!";
         }
 
 #ifdef CHTTPJOB_DEBUG
-        dbg() << "CHttpJob::handle_content_encoding: buf is gzip compressed!";
+        dbg() << "HttpJob::handle_content_encoding: buf is gzip compressed!";
 #endif
 
-        auto uncompressed = CGzip::decompress(buf);
+        auto uncompressed = Gzip::decompress(buf);
         if (!uncompressed.has_value()) {
-            dbg() << "CHttpJob::handle_content_encoding: Gzip::decompress() failed. Returning original buffer.";
+            dbg() << "HttpJob::handle_content_encoding: Gzip::decompress() failed. Returning original buffer.";
             return buf;
         }
 
 #ifdef CHTTPJOB_DEBUG
-        dbg() << "CHttpJob::handle_content_encoding: Gzip::decompress() successful.\n"
+        dbg() << "HttpJob::handle_content_encoding: Gzip::decompress() successful.\n"
               << "  Input size = " << buf.size() << "\n"
               << "  Output size = " << uncompressed.value().size();
 #endif
@@ -81,7 +81,7 @@ void HttpJob::on_socket_connected()
 {
     auto raw_request = m_request.to_raw_request();
 #if 0
-    dbg() << "CHttpJob: raw_request:";
+    dbg() << "HttpJob: raw_request:";
     dbg() << String::copy(raw_request).characters();
 #endif
 
@@ -97,18 +97,18 @@ void HttpJob::on_socket_connected()
                 return;
             auto line = m_socket->read_line(PAGE_SIZE);
             if (line.is_null()) {
-                fprintf(stderr, "CHttpJob: Expected HTTP status\n");
+                fprintf(stderr, "HttpJob: Expected HTTP status\n");
                 return deferred_invoke([this](auto&) { did_fail(NetworkJob::Error::TransmissionFailed); });
             }
             auto parts = String::copy(line, Chomp).split(' ');
             if (parts.size() < 3) {
-                fprintf(stderr, "CHttpJob: Expected 3-part HTTP status, got '%s'\n", line.data());
+                fprintf(stderr, "HttpJob: Expected 3-part HTTP status, got '%s'\n", line.data());
                 return deferred_invoke([this](auto&) { did_fail(NetworkJob::Error::ProtocolFailed); });
             }
             bool ok;
             m_code = parts[1].to_uint(ok);
             if (!ok) {
-                fprintf(stderr, "CHttpJob: Expected numeric HTTP status\n");
+                fprintf(stderr, "HttpJob: Expected numeric HTTP status\n");
                 return deferred_invoke([this](auto&) { did_fail(NetworkJob::Error::ProtocolFailed); });
             }
             m_state = State::InHeaders;
@@ -119,7 +119,7 @@ void HttpJob::on_socket_connected()
                 return;
             auto line = m_socket->read_line(PAGE_SIZE);
             if (line.is_null()) {
-                fprintf(stderr, "CHttpJob: Expected HTTP header\n");
+                fprintf(stderr, "HttpJob: Expected HTTP header\n");
                 return did_fail(NetworkJob::Error::ProtocolFailed);
             }
             auto chomped_line = String::copy(line, Chomp);
@@ -129,18 +129,18 @@ void HttpJob::on_socket_connected()
             }
             auto parts = chomped_line.split(':');
             if (parts.is_empty()) {
-                fprintf(stderr, "CHttpJob: Expected HTTP header with key/value\n");
+                fprintf(stderr, "HttpJob: Expected HTTP header with key/value\n");
                 return deferred_invoke([this](auto&) { did_fail(NetworkJob::Error::ProtocolFailed); });
             }
             auto name = parts[0];
             if (chomped_line.length() < name.length() + 2) {
-                fprintf(stderr, "CHttpJob: Malformed HTTP header: '%s' (%zu)\n", chomped_line.characters(), chomped_line.length());
+                fprintf(stderr, "HttpJob: Malformed HTTP header: '%s' (%zu)\n", chomped_line.characters(), chomped_line.length());
                 return deferred_invoke([this](auto&) { did_fail(NetworkJob::Error::ProtocolFailed); });
             }
             auto value = chomped_line.substring(name.length() + 2, chomped_line.length() - name.length() - 2);
             m_headers.set(name, value);
 #ifdef CHTTPJOB_DEBUG
-            dbg() << "CHttpJob: [" << name << "] = '" << value << "'";
+            dbg() << "HttpJob: [" << name << "] = '" << value << "'";
 #endif
             return;
         }
@@ -192,7 +192,7 @@ void HttpJob::start()
     m_socket = TCPSocket::construct(this);
     m_socket->on_connected = [this] {
 #ifdef CHTTPJOB_DEBUG
-        dbg() << "CHttpJob: on_connected callback";
+        dbg() << "HttpJob: on_connected callback";
 #endif
         on_socket_connected();
     };

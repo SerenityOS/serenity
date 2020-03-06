@@ -33,7 +33,7 @@ namespace Core {
 UdpSocket::UdpSocket(int fd, Object* parent)
     : Socket(Socket::Type::UDP, parent)
 {
-    // NOTE: This constructor is used by CUdpServer::accept(), so the socket is already connected.
+    // NOTE: This constructor is used by UdpServer::accept(), so the socket is already connected.
     m_connected = true;
     set_fd(fd);
     set_mode(IODevice::ReadWrite);

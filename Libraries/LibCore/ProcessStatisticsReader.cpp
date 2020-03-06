@@ -40,7 +40,7 @@ HashMap<pid_t, Core::ProcessStatistics> ProcessStatisticsReader::get_all()
 {
     auto file = Core::File::construct("/proc/all");
     if (!file->open(Core::IODevice::ReadOnly)) {
-        fprintf(stderr, "CProcessStatisticsReader: Failed to open /proc/all: %s\n", file->error_string());
+        fprintf(stderr, "ProcessStatisticsReader: Failed to open /proc/all: %s\n", file->error_string());
         return {};
     }
 

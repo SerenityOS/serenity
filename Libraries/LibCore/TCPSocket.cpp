@@ -33,7 +33,7 @@ namespace Core {
 TCPSocket::TCPSocket(int fd, Object* parent)
     : Socket(Socket::Type::TCP, parent)
 {
-    // NOTE: This constructor is used by CTCPServer::accept(), so the socket is already connected.
+    // NOTE: This constructor is used by TCPServer::accept(), so the socket is already connected.
     m_connected = true;
     set_fd(fd);
     set_mode(IODevice::ReadWrite);
