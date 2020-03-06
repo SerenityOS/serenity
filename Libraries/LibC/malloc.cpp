@@ -303,11 +303,12 @@ static void free_impl(void* ptr)
         if (auto* allocator = big_allocator_for_size(block->m_size)) {
             if (allocator->blocks.size() < number_of_big_blocks_to_keep_around_per_size_class) {
                 allocator->blocks.append(block);
-                if (mprotect(block, block->m_size, PROT_NONE) < 0) {
+                size_t this_block_size = block->m_size;
+                if (mprotect(block, this_block_size, PROT_NONE) < 0) {
                     perror("mprotect");
                     ASSERT_NOT_REACHED();
                 }
-                if (madvise(block, block->m_size, MADV_SET_VOLATILE) != 0) {
+                if (madvise(block, this_block_size, MADV_SET_VOLATILE) != 0) {
                     perror("madvise");
                     ASSERT_NOT_REACHED();
                 }
