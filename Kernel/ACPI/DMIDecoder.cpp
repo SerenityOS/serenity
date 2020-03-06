@@ -62,7 +62,7 @@ void DMIDecoder::initialize_untrusted()
 
 void DMIDecoder::set_64_bit_entry_initialization_values(PhysicalAddress entry)
 {
-    klog() << "DMIDecoder: SMBIOS 64bit Entry point @ P " << String::format("%p", m_entry64bit_point.get());
+    klog() << "DMIDecoder: SMBIOS 64bit Entry point @ " << m_entry64bit_point;
     m_use_64bit_entry = true;
 
     auto region = MM.allocate_kernel_region(entry.page_base(), PAGE_ROUND_UP(SMBIOS_SEARCH_AREA_SIZE), "DMI Decoder 64 bit Initialization", Region::Access::Read, false, false);
@@ -74,7 +74,7 @@ void DMIDecoder::set_64_bit_entry_initialization_values(PhysicalAddress entry)
 
 void DMIDecoder::set_32_bit_entry_initialization_values(PhysicalAddress entry)
 {
-    klog() << "DMIDecoder: SMBIOS 32bit Entry point @ P " << String::format("%p", m_entry32bit_point.get());
+    klog() << "DMIDecoder: SMBIOS 32bit Entry point @ " << m_entry32bit_point;
     m_use_64bit_entry = false;
 
     auto region = MM.allocate_kernel_region(entry.page_base(), PAGE_ROUND_UP(SMBIOS_SEARCH_AREA_SIZE), "DMI Decoder 32 bit Initialization", Region::Access::Read, false, false);
@@ -101,7 +101,7 @@ void DMIDecoder::initialize_parser()
     } else if (!m_entry32bit_point.is_null()) {
         set_32_bit_entry_initialization_values(m_entry32bit_point);
     }
-    klog() << "DMIDecoder: Data table @ P " << String::format("%p", m_structure_table.get());
+    klog() << "DMIDecoder: Data table @ " << m_structure_table;
     enumerate_smbios_tables();
 }
 
@@ -264,7 +264,7 @@ u64 DMIDecoder::get_bios_characteristics()
     auto* bios_info = (SMBIOS::BIOSInfo*)get_smbios_physical_table_by_type(0).as_ptr();
     ASSERT(bios_info != nullptr);
 
-    klog() << "DMIDecoder: BIOS info @ P " << String::format("%p", bios_info);
+    klog() << "DMIDecoder: BIOS info @ " << PhysicalAddress((uintptr_t)bios_info);
     return bios_info->bios_characteristics;
 }
 

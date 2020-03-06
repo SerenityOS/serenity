@@ -168,7 +168,7 @@ namespace ACPI {
 
         if (m_xsdt_supported) {
             volatile auto* xsdt = (volatile Structures::XSDT*)sdt;
-            klog() << "ACPI: Using XSDT, Enumerating tables @ P " << String::format("%p", m_main_system_description_table.get());
+            klog() << "ACPI: Using XSDT, Enumerating tables @ " << m_main_system_description_table;
             klog() << "ACPI: XSDT Revision " << revision << ", Total length - " << length;
 #ifdef ACPI_DEBUG
             dbg() << "ACPI: XSDT pointer @ V " << xsdt;
@@ -181,7 +181,7 @@ namespace ACPI {
             }
         } else {
             volatile auto* rsdt = (volatile Structures::RSDT*)sdt;
-            klog() << "ACPI: Using RSDT, Enumerating tables @ P " << String::format("%p", m_main_system_description_table.get());
+            klog() << "ACPI: Using RSDT, Enumerating tables @ " << m_main_system_description_table;
             klog() << "ACPI: RSDT Revision " << revision << ", Total length - " << length;
 #ifdef ACPI_DEBUG
             dbg() << "ACPI: RSDT pointer @ V " << rsdt;
@@ -220,7 +220,7 @@ namespace ACPI {
         , m_rsdp(StaticParsing::search_rsdp())
     {
         if (!m_rsdp.is_null()) {
-            klog() << "ACPI: Using RSDP @ P " << String::format("%p", m_rsdp);
+            klog() << "ACPI: Using RSDP @ " << m_rsdp;
             m_operable = true;
             locate_static_data();
         } else {
@@ -233,7 +233,7 @@ namespace ACPI {
         : Parser(true)
         , m_rsdp(rsdp)
     {
-        klog() << "ACPI: Using RSDP @ P " << String::format("%p", rsdp.get());
+        klog() << "ACPI: Using RSDP @ " << rsdp;
         m_operable = true;
         locate_static_data();
     }

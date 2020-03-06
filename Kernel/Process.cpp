@@ -922,7 +922,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
         //     instead of just non-null. You could totally have a DSO with entry point of
         //     the beginning of the text segement.
         if (!loader->entry().offset(totally_random_offset).get()) {
-            klog() << "do_exec: Failure loading " << path.characters() << ", entry pointer is invalid! (" << String::format("%p", loader->entry().offset(totally_random_offset).get()) << ")";
+            klog() << "do_exec: Failure loading " << path.characters() << ", entry pointer is invalid! (" << loader->entry().offset(totally_random_offset) << ")";
             return -ENOEXEC;
         }
 
