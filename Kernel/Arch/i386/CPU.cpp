@@ -655,8 +655,8 @@ void handle_interrupt(RegisterState regs)
     ASSERT(s_interrupt_handler[irq]);
     s_interrupt_handler[irq]->handle_interrupt(regs);
     s_interrupt_handler[irq]->increment_invoking_counter();
-    s_interrupt_handler[irq]->eoi();
     --g_in_irq;
+    s_interrupt_handler[irq]->eoi();
 }
 
 void sse_init()
