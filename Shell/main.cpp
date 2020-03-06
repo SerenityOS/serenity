@@ -982,6 +982,13 @@ int main(int argc, char** argv)
         perror("ttyname_r");
 
     {
+        auto* cwd = getcwd(nullptr, 0);
+        g.cwd = cwd;
+        setenv("PWD", cwd, 1);
+        free(cwd);
+    }
+
+    {
         auto* pw = getpwuid(getuid());
         if (pw) {
             g.username = pw->pw_name;
@@ -1010,13 +1017,6 @@ int main(int argc, char** argv)
             run_command(String::copy(line, Chomp));
         }
         return 0;
-    }
-
-    {
-        auto* cwd = getcwd(nullptr, 0);
-        g.cwd = cwd;
-        setenv("PWD", cwd, 1);
-        free(cwd);
     }
 
     g.directory_stack.append(g.cwd);
