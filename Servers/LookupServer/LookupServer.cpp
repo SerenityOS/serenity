@@ -117,7 +117,7 @@ void LookupServer::service_client(RefPtr<Core::LocalSocket> socket)
 
     Vector<String> responses;
 
-    if (auto known_host = m_etc_hosts.get(hostname)) {
+    if (auto known_host = m_etc_hosts.get(hostname); known_host.has_value()) {
         responses.append(known_host.value());
     } else if (!hostname.is_empty()) {
         bool did_timeout;

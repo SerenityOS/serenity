@@ -165,14 +165,14 @@ public:
         if (!first_index.has_value())
             return {};
 
-        size_t free_region_start = first_index;
+        size_t free_region_start = first_index.value();
         size_t free_region_size = 1;
 
         size_t max_region_start = free_region_start;
         size_t max_region_size = free_region_size;
 
         // Let's try and find the best fit possible
-        for (size_t j = first_index + 1; j < m_size && free_region_size < max_length; j++) {
+        for (size_t j = first_index.value() + 1; j < m_size && free_region_size < max_length; j++) {
             if (!get(j)) {
                 if (free_region_size == 0)
                     free_region_start = j;
