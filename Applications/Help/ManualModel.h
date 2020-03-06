@@ -52,6 +52,6 @@ public:
 private:
     ManualModel();
 
-    GIcon m_section_icon;
-    GIcon m_page_icon;
+    GUI::Icon m_section_icon;
+    GUI::Icon m_page_icon;
 };

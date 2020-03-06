@@ -56,7 +56,7 @@ TextEditor::TextEditor(Type type)
     set_foreground_role(ColorRole::BaseText);
     set_document(TextDocument::create());
     set_scrollbars_enabled(is_multi_line());
-    set_font(GFontDatabase::the().get_by_name("Csilla Thin"));
+    set_font(FontDatabase::the().get_by_name("Csilla Thin"));
     // FIXME: Recompute vertical scrollbar step size on font change.
     vertical_scrollbar().set_step(line_height());
     m_cursor = { 0, 0 };

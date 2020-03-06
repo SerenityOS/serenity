@@ -79,7 +79,7 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
     m_name_box->set_text(m_name);
     m_name_box->on_change = [&, disable_rename]() {
         if (disable_rename) {
-            m_name_box->set_text(m_name); //FIXME: GTextBox does not support set_enabled yet...
+            m_name_box->set_text(m_name); //FIXME: GUI::TextBox does not support set_enabled yet...
         } else {
             m_name_dirty = m_name != m_name_box->text();
             m_apply_button->set_enabled(true);

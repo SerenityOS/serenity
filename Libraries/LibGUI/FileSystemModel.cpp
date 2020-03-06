@@ -199,14 +199,14 @@ FileSystemModel::FileSystemModel(const StringView& root_path, Mode mode)
     : m_root_path(canonicalized_path(root_path))
     , m_mode(mode)
 {
-    m_directory_icon = GIcon::default_icon("filetype-folder");
-    m_file_icon = GIcon::default_icon("filetype-unknown");
-    m_symlink_icon = GIcon::default_icon("filetype-symlink");
-    m_socket_icon = GIcon::default_icon("filetype-socket");
-    m_executable_icon = GIcon::default_icon("filetype-executable");
-    m_filetype_image_icon = GIcon::default_icon("filetype-image");
-    m_filetype_sound_icon = GIcon::default_icon("filetype-sound");
-    m_filetype_html_icon = GIcon::default_icon("filetype-html");
+    m_directory_icon = Icon::default_icon("filetype-folder");
+    m_file_icon = Icon::default_icon("filetype-unknown");
+    m_symlink_icon = Icon::default_icon("filetype-symlink");
+    m_socket_icon = Icon::default_icon("filetype-socket");
+    m_executable_icon = Icon::default_icon("filetype-executable");
+    m_filetype_image_icon = Icon::default_icon("filetype-image");
+    m_filetype_sound_icon = Icon::default_icon("filetype-sound");
+    m_filetype_html_icon = Icon::default_icon("filetype-html");
 
     setpwent();
     while (auto* passwd = getpwent())
@@ -341,7 +341,7 @@ Variant FileSystemModel::data(const ModelIndex& index, Role role) const
     auto& node = this->node(index);
 
     if (role == Role::Custom) {
-        // For GFileSystemModel, custom role means the full path.
+        // For GUI::FileSystemModel, custom role means the full path.
         ASSERT(index.column() == Column::Name);
         return node.full_path(*this);
     }
@@ -409,7 +409,7 @@ Variant FileSystemModel::data(const ModelIndex& index, Role role) const
     return {};
 }
 
-GIcon FileSystemModel::icon_for_file(const mode_t mode, const String& name) const
+Icon FileSystemModel::icon_for_file(const mode_t mode, const String& name) const
 {
     if (S_ISDIR(mode))
         return m_directory_icon;
@@ -428,14 +428,14 @@ GIcon FileSystemModel::icon_for_file(const mode_t mode, const String& name) cons
     return m_file_icon;
 }
 
-GIcon FileSystemModel::icon_for(const Node& node) const
+Icon FileSystemModel::icon_for(const Node& node) const
 {
     if (node.name.to_lowercase().ends_with(".png")) {
         if (!node.thumbnail) {
             if (!const_cast<FileSystemModel*>(this)->fetch_thumbnail_for(node))
                 return m_filetype_image_icon;
         }
-        return GIcon(m_filetype_image_icon.bitmap_for_size(16), *node.thumbnail);
+        return GUI::Icon(m_filetype_image_icon.bitmap_for_size(16), *node.thumbnail);
     }
 
     return icon_for_file(node.mode, node.name);

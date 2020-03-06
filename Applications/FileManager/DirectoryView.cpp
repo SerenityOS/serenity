@@ -144,8 +144,8 @@ DirectoryView::DirectoryView()
     };
 
     //  NOTE: We're using the on_update hook on the GSortingProxyModel here instead of
-    //        the GFileSystemModel's hook. This is because GSortingProxyModel has already
-    //        installed an on_update hook on the GFileSystemModel internally.
+    //        the GUI::FileSystemModel's hook. This is because GSortingProxyModel has already
+    //        installed an on_update hook on the GUI::FileSystemModel internally.
     // FIXME: This is an unfortunate design. We should come up with something better.
     m_table_view->model()->on_update = [this] {
         for_each_view_implementation([](auto& view) {

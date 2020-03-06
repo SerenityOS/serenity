@@ -44,7 +44,7 @@ public:
     Variant(const char*);
     Variant(const String&);
     Variant(const Gfx::Bitmap&);
-    Variant(const GIcon&);
+    Variant(const GUI::Icon&);
     Variant(const Gfx::Point&);
     Variant(const Gfx::Size&);
     Variant(const Gfx::Rect&);
@@ -207,10 +207,10 @@ public:
         return *m_value.as_bitmap;
     }
 
-    GIcon as_icon() const
+    GUI::Icon as_icon() const
     {
         ASSERT(type() == Type::Icon);
-        return GIcon(*m_value.as_icon);
+        return GUI::Icon(*m_value.as_icon);
     }
 
     Color as_color() const
@@ -263,7 +263,7 @@ private:
     union {
         StringImpl* as_string;
         Gfx::Bitmap* as_bitmap;
-        GIconImpl* as_icon;
+        GUI::IconImpl* as_icon;
         Gfx::Font* as_font;
         bool as_bool;
         i32 as_i32;

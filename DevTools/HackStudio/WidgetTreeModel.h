@@ -47,5 +47,5 @@ private:
     explicit WidgetTreeModel(GUI::Widget&);
 
     NonnullRefPtr<GUI::Widget> m_root;
-    GIcon m_widget_icon;
+    GUI::Icon m_widget_icon;
 };

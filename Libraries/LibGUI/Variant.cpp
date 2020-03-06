@@ -190,10 +190,10 @@ Variant::Variant(const Gfx::Bitmap& value)
     AK::ref_if_not_null(m_value.as_bitmap);
 }
 
-Variant::Variant(const GIcon& value)
+Variant::Variant(const GUI::Icon& value)
     : m_type(Type::Icon)
 {
-    m_value.as_icon = &const_cast<GIconImpl&>(value.impl());
+    m_value.as_icon = &const_cast<GUI::IconImpl&>(value.impl());
     AK::ref_if_not_null(m_value.as_icon);
 }
 
@@ -398,7 +398,7 @@ String Variant::to_string() const
     case Type::Bitmap:
         return "[Gfx::Bitmap]";
     case Type::Icon:
-        return "[GIcon]";
+        return "[GUI::Icon]";
     case Type::Color:
         return as_color().to_string();
     case Type::Point:

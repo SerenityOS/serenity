@@ -31,31 +31,33 @@
 #include <AK/RefCounted.h>
 #include <LibGfx/Forward.h>
 
-class GIconImpl : public RefCounted<GIconImpl> {
+namespace GUI {
+
+class IconImpl : public RefCounted<IconImpl> {
 public:
-    static NonnullRefPtr<GIconImpl> create() { return adopt(*new GIconImpl); }
-    ~GIconImpl() {}
+    static NonnullRefPtr<IconImpl> create() { return adopt(*new IconImpl); }
+    ~IconImpl() {}
 
     const Gfx::Bitmap* bitmap_for_size(int) const;
     void set_bitmap_for_size(int, RefPtr<Gfx::Bitmap>&&);
 
 private:
-    GIconImpl() {}
+    IconImpl() {}
     HashMap<int, RefPtr<Gfx::Bitmap>> m_bitmaps;
 };
 
-class GIcon {
+class Icon {
 public:
-    GIcon();
-    explicit GIcon(RefPtr<Gfx::Bitmap>&&);
-    explicit GIcon(RefPtr<Gfx::Bitmap>&&, RefPtr<Gfx::Bitmap>&&);
-    explicit GIcon(const GIconImpl&);
-    GIcon(const GIcon&);
-    ~GIcon() {}
+    Icon();
+    explicit Icon(RefPtr<Gfx::Bitmap>&&);
+    explicit Icon(RefPtr<Gfx::Bitmap>&&, RefPtr<Gfx::Bitmap>&&);
+    explicit Icon(const IconImpl&);
+    Icon(const Icon&);
+    ~Icon() {}
 
-    static GIcon default_icon(const StringView&);
+    static Icon default_icon(const StringView&);
 
-    GIcon& operator=(const GIcon& other)
+    Icon& operator=(const Icon& other)
     {
         if (this != &other)
             m_impl = other.m_impl;
@@ -65,8 +67,10 @@ public:
     const Gfx::Bitmap* bitmap_for_size(int size) const { return m_impl->bitmap_for_size(size); }
     void set_bitmap_for_size(int size, RefPtr<Gfx::Bitmap>&& bitmap) { m_impl->set_bitmap_for_size(size, move(bitmap)); }
 
-    const GIconImpl& impl() const { return *m_impl; }
+    const IconImpl& impl() const { return *m_impl; }
 
 private:
-    NonnullRefPtr<GIconImpl> m_impl;
+    NonnullRefPtr<IconImpl> m_impl;
 };
+
+}
