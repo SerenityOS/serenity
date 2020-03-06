@@ -35,7 +35,7 @@
 
 SnakeGame::SnakeGame()
 {
-    set_font(GFontDatabase::the().get_by_name("Liza Regular"));
+    set_font(GUI::FontDatabase::the().get_by_name("Liza Regular"));
     m_fruit_bitmaps.append(*Gfx::Bitmap::load_from_file("/res/icons/snake/paprika.png"));
     m_fruit_bitmaps.append(*Gfx::Bitmap::load_from_file("/res/icons/snake/eggplant.png"));
     m_fruit_bitmaps.append(*Gfx::Bitmap::load_from_file("/res/icons/snake/cauliflower.png"));
