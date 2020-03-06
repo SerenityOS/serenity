@@ -48,7 +48,7 @@ MultiProcessorParser::MultiProcessorParser()
     , m_operable((m_floating_pointer != (uintptr_t) nullptr))
 {
     if (m_floating_pointer != (uintptr_t) nullptr) {
-        klog() << "MultiProcessor: Floating Pointer Structure @ P " << String::format("%p", m_floating_pointer);
+        klog() << "MultiProcessor: Floating Pointer Structure @ " << PhysicalAddress(m_floating_pointer);
         parse_floating_pointer_data();
         parse_configuration_table();
     } else {

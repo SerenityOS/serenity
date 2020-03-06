@@ -210,11 +210,11 @@ PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
     PageDirectoryEntry& pde = pd[page_directory_index];
     if (!pde.is_present()) {
 #ifdef MM_DEBUG
-        dbg() << "MM: PDE " << page_directory_index << " not present (requested for V" << String::format("%p", vaddr.get()) << "), allocating";
+        dbg() << "MM: PDE " << page_directory_index << " not present (requested for " << vaddr << "), allocating";
 #endif
         auto page_table = allocate_user_physical_page(ShouldZeroFill::Yes);
 #ifdef MM_DEBUG
-        dbg() << "MM: PD K" << &page_directory << " (" << (&page_directory == m_kernel_page_directory ? "Kernel" : "User") << ") at P" << String::format("%p", page_directory.cr3()) << " allocated page table " << String::format("#%u", page_directory_index) << " (for V" << String::format("%p", vaddr.get()) << ") at P" << String::format("%p", page_table->paddr().get());
+        dbg() << "MM: PD K" << &page_directory << " (" << (&page_directory == m_kernel_page_directory ? "Kernel" : "User") << ") at " << PhysicalAddress(page_directory.cr3()) << " allocated page table #" << page_directory_index << " (for " << vaddr << ") at " << page_table->paddr();
 #endif
         pde.set_page_table_base(page_table->paddr().get());
         pde.set_user_allowed(true);
@@ -290,11 +290,11 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
         dump_kernel_regions();
     }
 #ifdef PAGE_FAULT_DEBUG
-    dbg() << "MM: handle_page_fault(" << String::format("%w", fault.code()) << ") at V" << String::format("%p", fault.vaddr().get());
+    dbg() << "MM: handle_page_fault(" << String::format("%w", fault.code()) << ") at " << fault.vaddr();
 #endif
     auto* region = region_from_vaddr(fault.vaddr());
     if (!region) {
-        klog() << "NP(error) fault at invalid address V" << String::format("%p", fault.vaddr().get());
+        klog() << "NP(error) fault at invalid address " << fault.vaddr();
         return PageFaultResponse::ShouldCrash;
     }
 
@@ -416,7 +416,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
     }
 
 #ifdef MM_DEBUG
-    dbg() << "MM: allocate_user_physical_page vending P" << String::format("%p", page->paddr().get());
+    dbg() << "MM: allocate_user_physical_page vending " << page->paddr();
 #endif
 
     if (should_zero_fill == ShouldZeroFill::Yes) {
@@ -468,7 +468,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
     }
 
 #ifdef MM_DEBUG
-    dbg() << "MM: allocate_supervisor_physical_page vending P" << String::format("%p", page->paddr().get());
+    dbg() << "MM: allocate_supervisor_physical_page vending " << page->paddr();
 #endif
 
     fast_u32_fill((u32*)page->paddr().offset(0xc0000000).as_ptr(), 0, PAGE_SIZE / sizeof(u32));
@@ -493,7 +493,7 @@ void MemoryManager::flush_entire_tlb()
 void MemoryManager::flush_tlb(VirtualAddress vaddr)
 {
 #ifdef MM_DEBUG
-    dbg() << "MM: Flush page V" << String::format("%p", vaddr.get());
+    dbg() << "MM: Flush page " << vaddr;
 #endif
     asm volatile("invlpg %0"
                  :

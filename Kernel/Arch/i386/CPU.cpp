@@ -246,7 +246,7 @@ void page_fault_handler(RegisterState regs)
 
     bool faulted_in_userspace = (regs.cs & 3) == 3;
     if (faulted_in_userspace && !MM.validate_user_stack(*Process::current, VirtualAddress(regs.userspace_esp))) {
-        dbg() << "Invalid stack pointer: " << String::format("%p", regs.userspace_esp);
+        dbg() << "Invalid stack pointer: " << VirtualAddress(regs.userspace_esp);
         handle_crash(regs, "Bad stack on page fault", SIGSTKFLT);
         ASSERT_NOT_REACHED();
     }
@@ -271,19 +271,19 @@ void page_fault_handler(RegisterState regs)
         u32 slab_alloc_scrub_pattern = explode_byte(SLAB_ALLOC_SCRUB_BYTE);
         u32 slab_dealloc_scrub_pattern = explode_byte(SLAB_DEALLOC_SCRUB_BYTE);
         if ((fault_address & 0xffff0000) == (malloc_scrub_pattern & 0xffff0000)) {
-            klog() << "Note: Address " << String::format("%p", fault_address) << " looks like it may be uninitialized malloc() memory";
+            klog() << "Note: Address " << VirtualAddress(fault_address) << " looks like it may be uninitialized malloc() memory";
         } else if ((fault_address & 0xffff0000) == (free_scrub_pattern & 0xffff0000)) {
-            klog() << "Note: Address " << String::format("%p", fault_address) << " looks like it may be recently free()'d memory";
+            klog() << "Note: Address " << VirtualAddress(fault_address) << " looks like it may be recently free()'d memory";
         } else if ((fault_address & 0xffff0000) == (kmalloc_scrub_pattern & 0xffff0000)) {
-            klog() << "Note: Address " << String::format("%p", fault_address) << " looks like it may be uninitialized kmalloc() memory";
+            klog() << "Note: Address " << VirtualAddress(fault_address) << " looks like it may be uninitialized kmalloc() memory";
         } else if ((fault_address & 0xffff0000) == (kfree_scrub_pattern & 0xffff0000)) {
-            klog() << "Note: Address " << String::format("%p", fault_address) << " looks like it may be recently kfree()'d memory";
+            klog() << "Note: Address " << VirtualAddress(fault_address) << " looks like it may be recently kfree()'d memory";
         } else if ((fault_address & 0xffff0000) == (slab_alloc_scrub_pattern & 0xffff0000)) {
-            klog() << "Note: Address " << String::format("%p", fault_address) << " looks like it may be uninitialized slab_alloc() memory";
+            klog() << "Note: Address " << VirtualAddress(fault_address) << " looks like it may be uninitialized slab_alloc() memory";
         } else if ((fault_address & 0xffff0000) == (slab_dealloc_scrub_pattern & 0xffff0000)) {
-            klog() << "Note: Address " << String::format("%p", fault_address) << " looks like it may be recently slab_dealloc()'d memory";
+            klog() << "Note: Address " << VirtualAddress(fault_address) << " looks like it may be recently slab_dealloc()'d memory";
         } else if (fault_address < 4096) {
-            klog() << "Note: Address " << String::format("%p", fault_address) << " looks like a possible nullptr dereference";
+            klog() << "Note: Address " << VirtualAddress(fault_address) << " looks like a possible nullptr dereference";
         }
 
         handle_crash(regs, "Page Fault", SIGSEGV);
