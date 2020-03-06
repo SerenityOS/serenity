@@ -136,7 +136,6 @@ private:
     BlockIndex first_block_index() const;
     InodeIndex find_a_free_inode(GroupIndex preferred_group, off_t expected_size);
     Vector<BlockIndex> allocate_blocks(GroupIndex preferred_group_index, size_t count);
-    BlockIndex allocate_block(GroupIndex preferred_group_index);
     GroupIndex group_index_from_inode(InodeIndex) const;
     GroupIndex group_index_from_block_index(BlockIndex) const;
 

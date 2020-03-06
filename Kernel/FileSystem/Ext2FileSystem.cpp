@@ -1049,40 +1049,6 @@ bool Ext2FS::write_ext2_inode(unsigned inode, const ext2_inode& e2inode)
     return success;
 }
 
-Ext2FS::BlockIndex Ext2FS::allocate_block(GroupIndex preferred_group_index)
-{
-    LOCKER(m_lock);
-#ifdef EXT2_DEBUG
-    dbg() << "Ext2FS: allocate_block() preferred_group_index: " << preferred_group_index;
-#endif
-    bool found_a_group = false;
-    GroupIndex group_index = preferred_group_index;
-
-    if (group_descriptor(preferred_group_index).bg_free_blocks_count) {
-        found_a_group = true;
-    } else {
-        for (group_index = 1; group_index < m_block_group_count; ++group_index) {
-            if (group_descriptor(group_index).bg_free_blocks_count) {
-                found_a_group = true;
-                break;
-            }
-        }
-    }
-    ASSERT(found_a_group);
-    auto& bgd = group_descriptor(group_index);
-    auto& cached_bitmap = get_bitmap_block(bgd.bg_block_bitmap);
-
-    int blocks_in_group = min(blocks_per_group(), super_block().s_blocks_count);
-    auto block_bitmap = Bitmap::wrap(cached_bitmap.buffer.data(), blocks_in_group);
-
-    BlockIndex first_block_in_group = (group_index - 1) * blocks_per_group() + first_block_index();
-    auto first_unset_bit_index = block_bitmap.find_first_unset();
-    ASSERT(first_unset_bit_index.has_value());
-    BlockIndex block_index = first_unset_bit_index.value() + first_block_in_group;
-    set_block_allocation_state(block_index, true);
-    return block_index;
-}
-
 Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(GroupIndex preferred_group_index, size_t count)
 {
     LOCKER(m_lock);
