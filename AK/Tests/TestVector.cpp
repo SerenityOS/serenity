@@ -43,16 +43,16 @@ TEST_CASE(ints)
     ints.append(1);
     ints.append(2);
     ints.append(3);
-    EXPECT_EQ(ints.size(), 3);
+    EXPECT_EQ(ints.size(), 3u);
     EXPECT_EQ(ints.take_last(), 3);
-    EXPECT_EQ(ints.size(), 2);
+    EXPECT_EQ(ints.size(), 2u);
     EXPECT_EQ(ints.take_last(), 2);
-    EXPECT_EQ(ints.size(), 1);
+    EXPECT_EQ(ints.size(), 1u);
     EXPECT_EQ(ints.take_last(), 1);
-    EXPECT_EQ(ints.size(), 0);
+    EXPECT_EQ(ints.size(), 0u);
 
     ints.clear();
-    EXPECT_EQ(ints.size(), 0);
+    EXPECT_EQ(ints.size(), 0u);
 }
 
 TEST_CASE(strings)
@@ -108,8 +108,8 @@ TEST_CASE(prepend_vector)
 
     ints.prepend(move(more_ints));
 
-    EXPECT_EQ(ints.size(), 6);
-    EXPECT_EQ(more_ints.size(), 0);
+    EXPECT_EQ(ints.size(), 6u);
+    EXPECT_EQ(more_ints.size(), 0u);
 
     EXPECT_EQ(ints[0], 4);
     EXPECT_EQ(ints[1], 5);
@@ -119,12 +119,12 @@ TEST_CASE(prepend_vector)
     EXPECT_EQ(ints[5], 3);
 
     ints.prepend(move(more_ints));
-    EXPECT_EQ(ints.size(), 6);
-    EXPECT_EQ(more_ints.size(), 0);
+    EXPECT_EQ(ints.size(), 6u);
+    EXPECT_EQ(more_ints.size(), 0u);
 
     more_ints.prepend(move(ints));
-    EXPECT_EQ(more_ints.size(), 6);
-    EXPECT_EQ(ints.size(), 0);
+    EXPECT_EQ(more_ints.size(), 6u);
+    EXPECT_EQ(ints.size(), 0u);
 }
 
 TEST_CASE(prepend_vector_object)
@@ -149,17 +149,17 @@ TEST_CASE(prepend_vector_object)
     objects.empend(make<SubObject>(2));
     objects.empend(make<SubObject>(3));
 
-    EXPECT_EQ(objects.size(), 3);
+    EXPECT_EQ(objects.size(), 3u);
 
     Vector<Object> more_objects;
     more_objects.empend(make<SubObject>(4));
     more_objects.empend(make<SubObject>(5));
     more_objects.empend(make<SubObject>(6));
-    EXPECT_EQ(more_objects.size(), 3);
+    EXPECT_EQ(more_objects.size(), 3u);
 
     objects.prepend(move(more_objects));
-    EXPECT_EQ(more_objects.size(), 0);
-    EXPECT_EQ(objects.size(), 6);
+    EXPECT_EQ(more_objects.size(), 0u);
+    EXPECT_EQ(objects.size(), 6u);
 
     EXPECT_EQ(objects[0].subobject->value, 4);
     EXPECT_EQ(objects[1].subobject->value, 5);
@@ -179,7 +179,7 @@ TEST_CASE(vector_compare)
         same_ints.append(i);
     }
 
-    EXPECT_EQ(ints.size(), 1000);
+    EXPECT_EQ(ints.size(), 1000u);
     EXPECT_EQ(ints, same_ints);
 
     Vector<String> strings;
@@ -190,7 +190,7 @@ TEST_CASE(vector_compare)
         same_strings.append(String::number(i));
     }
 
-    EXPECT_EQ(strings.size(), 1000);
+    EXPECT_EQ(strings.size(), 1000u);
     EXPECT_EQ(strings, same_strings);
 }
 
@@ -206,18 +206,18 @@ TEST_CASE(grow_past_inline_capacity)
 
     auto strings = make_vector();
 
-    EXPECT_EQ(strings.size(), 32);
+    EXPECT_EQ(strings.size(), 32u);
     EXPECT_EQ(strings[31], "31");
 
     strings.clear();
-    EXPECT_EQ(strings.size(), 0);
-    EXPECT_EQ(strings.capacity(), 16);
+    EXPECT_EQ(strings.size(), 0u);
+    EXPECT_EQ(strings.capacity(), 16u);
 
     strings = make_vector();
 
     strings.clear_with_capacity();
-    EXPECT_EQ(strings.size(), 0);
-    EXPECT(strings.capacity() >= 32);
+    EXPECT_EQ(strings.size(), 0u);
+    EXPECT(strings.capacity() >= 32u);
 }
 
 BENCHMARK_CASE(vector_append_trivial)
@@ -230,7 +230,7 @@ BENCHMARK_CASE(vector_append_trivial)
     for (int i = 0; i < 100; ++i) {
         Vector<int> tmp;
         tmp.append(ints);
-        EXPECT_EQ(tmp.size(), 1000000);
+        EXPECT_EQ(tmp.size(), 1000000u);
     }
 }
 
@@ -244,7 +244,7 @@ BENCHMARK_CASE(vector_remove_trivial)
     while (!ints.is_empty()) {
         ints.remove(0);
     }
-    EXPECT_EQ(ints.size(), 0);
+    EXPECT_EQ(ints.size(), 0u);
 }
 
 TEST_CASE(vector_remove)
@@ -257,25 +257,25 @@ TEST_CASE(vector_remove)
     ints.append(5);
 
     ints.remove(1);
-    EXPECT_EQ(ints.size(), 4);
+    EXPECT_EQ(ints.size(), 4u);
     EXPECT_EQ(ints[0], 1);
     EXPECT_EQ(ints[1], 3);
     EXPECT_EQ(ints[2], 4);
     EXPECT_EQ(ints[3], 5);
 
     ints.remove(0);
-    EXPECT_EQ(ints.size(), 3);
+    EXPECT_EQ(ints.size(), 3u);
     EXPECT_EQ(ints[0], 3);
     EXPECT_EQ(ints[1], 4);
     EXPECT_EQ(ints[2], 5);
 
     ints.take_last();
-    EXPECT_EQ(ints.size(), 2);
+    EXPECT_EQ(ints.size(), 2u);
     EXPECT_EQ(ints[0], 3);
     EXPECT_EQ(ints[1], 4);
 
     ints.take_first();
-    EXPECT_EQ(ints.size(), 1);
+    EXPECT_EQ(ints.size(), 1u);
     EXPECT_EQ(ints[0], 4);
 }
 
@@ -287,12 +287,12 @@ TEST_CASE(nonnullownptrvector)
     NonnullOwnPtrVector<Object> objects;
 
     objects.append(make<Object>());
-    EXPECT_EQ(objects.size(), 1);
+    EXPECT_EQ(objects.size(), 1u);
 
     OwnPtr<Object> o = make<Object>();
     objects.append(o.release_nonnull());
     EXPECT(o == nullptr);
-    EXPECT_EQ(objects.size(), 2);
+    EXPECT_EQ(objects.size(), 2u);
 }
 
 TEST_CASE(insert_trivial)
@@ -304,7 +304,7 @@ TEST_CASE(insert_trivial)
     ints.append(30);
     ints.append(40);
     ints.insert(2, 15);
-    EXPECT_EQ(ints.size(), 6);
+    EXPECT_EQ(ints.size(), 6u);
     EXPECT_EQ(ints[0], 0);
     EXPECT_EQ(ints[1], 10);
     EXPECT_EQ(ints[2], 15);

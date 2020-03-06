@@ -41,13 +41,13 @@ TEST_CASE(populate_int)
     ints.enqueue(1);
     ints.enqueue(2);
     ints.enqueue(3);
-    EXPECT_EQ(ints.size(), 3);
+    EXPECT_EQ(ints.size(), 3u);
     EXPECT_EQ(ints.dequeue(), 1);
-    EXPECT_EQ(ints.size(), 2);
+    EXPECT_EQ(ints.size(), 2u);
     EXPECT_EQ(ints.dequeue(), 2);
-    EXPECT_EQ(ints.size(), 1);
+    EXPECT_EQ(ints.size(), 1u);
     EXPECT_EQ(ints.dequeue(), 3);
-    EXPECT_EQ(ints.size(), 0);
+    EXPECT_EQ(ints.size(), 0u);
 }
 
 TEST_CASE(populate_string)
@@ -55,7 +55,7 @@ TEST_CASE(populate_string)
     Queue<String> strings;
     strings.enqueue("ABC");
     strings.enqueue("DEF");
-    EXPECT_EQ(strings.size(), 2);
+    EXPECT_EQ(strings.size(), 2u);
     EXPECT_EQ(strings.dequeue(), "ABC");
     EXPECT_EQ(strings.dequeue(), "DEF");
     EXPECT(strings.is_empty());
@@ -66,7 +66,7 @@ TEST_CASE(order)
     Queue<String> strings;
     EXPECT(strings.is_empty());
 
-    for (int i = 0; i < 10000; ++i) {
+    for (size_t i = 0; i < 10000; ++i) {
         strings.enqueue(String::number(i));
         EXPECT_EQ(strings.size(), i + 1);
     }

@@ -59,7 +59,7 @@ TEST_CASE(convert_to_int)
     AK::StringUtils::convert_to_int("-", ok);
     EXPECT(!ok);
 
-    int actual = actual = AK::StringUtils::convert_to_int("0", ok);
+    int actual = AK::StringUtils::convert_to_int("0", ok);
     EXPECT(ok && actual == 0);
 
     actual = AK::StringUtils::convert_to_int("1", ok);
