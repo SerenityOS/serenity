@@ -104,7 +104,7 @@ ByteBuffer IODevice::read(size_t max_size)
 
 bool IODevice::can_read_from_fd() const
 {
-    // FIXME: Can we somehow remove this once CSocket is implemented using non-blocking sockets?
+    // FIXME: Can we somehow remove this once Core::Socket is implemented using non-blocking sockets?
     fd_set rfds;
     FD_ZERO(&rfds);
     FD_SET(m_fd, &rfds);

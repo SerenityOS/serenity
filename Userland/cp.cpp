@@ -176,7 +176,7 @@ bool copy_directory(String src_path, String dst_path)
     }
     Core::DirIterator di(src_path, Core::DirIterator::SkipDots);
     if (di.has_error()) {
-        fprintf(stderr, "cp: CDirIterator: %s\n", di.error_string());
+        fprintf(stderr, "cp: DirIterator: %s\n", di.error_string());
         return false;
     }
     while (di.has_next()) {

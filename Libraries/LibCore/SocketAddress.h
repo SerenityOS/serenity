@@ -77,7 +77,7 @@ public:
         case Type::Local:
             return m_local_address;
         default:
-            return "[CSocketAddress]";
+            return "[SocketAddress]";
         }
     }
 
