@@ -47,10 +47,15 @@ public:
     static InterruptManagement& the();
     static void initialize();
     static bool initialized();
+    static u8 acquire_mapped_interrupt_number(u8);
 
     virtual void switch_to_pic_mode();
     virtual void switch_to_ioapic_mode();
     RefPtr<IRQController> get_responsible_irq_controller(u8 interrupt_vector);
+
+    Vector<RefPtr<ISAInterruptOverrideMetadata>> isa_overrides();
+
+    u8 get_mapped_vector_number(u8 original_vector);
 
     void enumerate_interrupt_handlers(Function<void(GenericInterruptHandler&)>);
     IRQController& get_interrupt_controller(int index);
@@ -60,6 +65,7 @@ private:
     PhysicalAddress search_for_madt();
     void locate_apic_data();
     void locate_pci_interrupt_overrides();
+    bool m_smp_enabled { false };
     FixedArray<RefPtr<IRQController>> m_interrupt_controllers { 1 };
     Vector<RefPtr<ISAInterruptOverrideMetadata>> m_isa_interrupt_overrides;
     Vector<RefPtr<PCIInterruptOverrideMetadata>> m_pci_interrupt_overrides;

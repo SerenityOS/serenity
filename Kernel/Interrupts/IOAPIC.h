@@ -41,7 +41,7 @@ class PCIInterruptOverrideMetadata;
 
 class IOAPIC final : public IRQController {
 public:
-    IOAPIC(ioapic_mmio_regs& regs, u32 gsi_base, Vector<RefPtr<ISAInterruptOverrideMetadata>>& overrides, Vector<RefPtr<PCIInterruptOverrideMetadata>>& pci_overrides);
+    IOAPIC(ioapic_mmio_regs& regs, u32 gsi_base);
     virtual void enable(u8 number) override;
     virtual void disable(u8 number) override;
     virtual void hard_disable() override;
@@ -81,7 +81,5 @@ private:
     u8 m_id;
     u8 m_version;
     u32 m_redirection_entries;
-    Vector<RefPtr<ISAInterruptOverrideMetadata>> m_isa_interrupt_overrides;
-    Vector<RefPtr<PCIInterruptOverrideMetadata>> m_pci_interrupt_overrides;
 };
 }
