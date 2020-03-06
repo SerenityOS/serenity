@@ -136,6 +136,8 @@ void E1000NetworkAdapter::detect(const PCI::Address& address)
 E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, u8 irq)
     : PCI::Device(address, irq)
     , m_io_base(PCI::get_BAR1(pci_address()) & ~1)
+    , m_rx_descriptors_region(MM.allocate_contiguous_kernel_region(PAGE_ROUND_UP(sizeof(e1000_rx_desc) * number_of_rx_descriptors + 16), "E1000 RX", Region::Access::Read | Region::Access::Write))
+    , m_tx_descriptors_region(MM.allocate_contiguous_kernel_region(PAGE_ROUND_UP(sizeof(e1000_tx_desc) * number_of_tx_descriptors + 16), "E1000 TX", Region::Access::Read | Region::Access::Write))
 {
     set_interface_name("e1k");
 
@@ -250,21 +252,15 @@ bool E1000NetworkAdapter::link_up()
 
 void E1000NetworkAdapter::initialize_rx_descriptors()
 {
-    auto ptr = (FlatPtr)kmalloc_eternal(sizeof(e1000_rx_desc) * number_of_rx_descriptors + 16);
-    // Make sure it's 16-byte aligned.
-    if (ptr % 16)
-        ptr = (ptr + 16) - (ptr % 16);
-    m_rx_descriptors = (e1000_rx_desc*)ptr;
+    auto* rx_descriptors = (e1000_tx_desc*)m_rx_descriptors_region->vaddr().as_ptr();
     for (int i = 0; i < number_of_rx_descriptors; ++i) {
-        auto& descriptor = m_rx_descriptors[i];
-        auto addr = (FlatPtr)kmalloc_eternal(8192 + 16);
-        if (addr % 16)
-            addr = (addr + 16) - (addr % 16);
-        descriptor.addr = addr - 0xc0000000;
+        auto& descriptor = rx_descriptors[i];
+        m_rx_buffers_regions.append(MM.allocate_contiguous_kernel_region(PAGE_ROUND_UP(8192), "E1000 RX buffer", Region::Access::Read | Region::Access::Write));
+        descriptor.addr = m_rx_buffers_regions[i]->vmobject().physical_pages()[0]->paddr().get();
         descriptor.status = 0;
     }
 
-    out32(REG_RXDESCLO, (u32)ptr - 0xc0000000);
+    out32(REG_RXDESCLO, m_rx_descriptors_region->vmobject().physical_pages()[0]->paddr().get());
     out32(REG_RXDESCHI, 0);
     out32(REG_RXDESCLEN, number_of_rx_descriptors * sizeof(e1000_rx_desc));
     out32(REG_RXDESCHEAD, 0);
@@ -275,21 +271,15 @@ void E1000NetworkAdapter::initialize_rx_descriptors()
 
 void E1000NetworkAdapter::initialize_tx_descriptors()
 {
-    auto ptr = (FlatPtr)kmalloc_eternal(sizeof(e1000_tx_desc) * number_of_tx_descriptors + 16);
-    // Make sure it's 16-byte aligned.
-    if (ptr % 16)
-        ptr = (ptr + 16) - (ptr % 16);
-    m_tx_descriptors = (e1000_tx_desc*)ptr;
+    auto* tx_descriptors = (e1000_tx_desc*)m_tx_descriptors_region->vaddr().as_ptr();
     for (int i = 0; i < number_of_tx_descriptors; ++i) {
-        auto& descriptor = m_tx_descriptors[i];
-        auto addr = (FlatPtr)kmalloc_eternal(8192 + 16);
-        if (addr % 16)
-            addr = (addr + 16) - (addr % 16);
-        descriptor.addr = addr - 0xc0000000;
+        auto& descriptor = tx_descriptors[i];
+        m_tx_buffers_regions.append(MM.allocate_contiguous_kernel_region(PAGE_ROUND_UP(8192), "E1000 TX buffer", Region::Access::Read | Region::Access::Write));
+        descriptor.addr = m_tx_buffers_regions[i]->vmobject().physical_pages()[0]->paddr().get();
         descriptor.cmd = 0;
     }
 
-    out32(REG_TXDESCLO, (u32)ptr - 0xc0000000);
+    out32(REG_TXDESCLO, m_tx_descriptors_region->vmobject().physical_pages()[0]->paddr().get());
     out32(REG_TXDESCHI, 0);
     out32(REG_TXDESCLEN, number_of_tx_descriptors * sizeof(e1000_tx_desc));
     out32(REG_TXDESCHEAD, 0);
@@ -375,9 +365,10 @@ void E1000NetworkAdapter::send_raw(const u8* data, size_t length)
 #ifdef E1000_DEBUG
     klog() << "E1000: Sending packet (" << length << " bytes)";
 #endif
-    auto& descriptor = m_tx_descriptors[tx_current];
+    auto* tx_descriptors = (e1000_tx_desc*)m_tx_descriptors_region->vaddr().as_ptr();
+    auto& descriptor = tx_descriptors[tx_current];
     ASSERT(length <= 8192);
-    auto* vptr = (void*)(descriptor.addr + 0xc0000000);
+    auto* vptr = (void*)m_tx_buffers_regions[tx_current]->vaddr().as_ptr();
     memcpy(vptr, data, length);
     descriptor.length = length;
     descriptor.status = 0;
@@ -397,27 +388,28 @@ void E1000NetworkAdapter::send_raw(const u8* data, size_t length)
         Thread::current->wait_on(m_wait_queue);
     }
 #ifdef E1000_DEBUG
-    klog() << "E1000: Sent packet, status is now " << String::format("%b",descriptor.status) << "!";
+    klog() << "E1000: Sent packet, status is now " << String::format("%b", descriptor.status) << "!";
 #endif
 }
 
 void E1000NetworkAdapter::receive()
 {
+    auto* rx_descriptors = (e1000_tx_desc*)m_rx_descriptors_region->vaddr().as_ptr();
     u32 rx_current;
     for (;;) {
         rx_current = in32(REG_RXDESCTAIL);
         if (rx_current == in32(REG_RXDESCHEAD))
             return;
         rx_current = (rx_current + 1) % number_of_rx_descriptors;
-        if (!(m_rx_descriptors[rx_current].status & 1))
+        if (!(rx_descriptors[rx_current].status & 1))
             break;
-        auto* buffer = (u8*)(m_rx_descriptors[rx_current].addr + 0xc0000000);
-        u16 length = m_rx_descriptors[rx_current].length;
+        auto* buffer = m_rx_buffers_regions[rx_current]->vaddr().as_ptr();
+        u16 length = rx_descriptors[rx_current].length;
 #ifdef E1000_DEBUG
         klog() << "E1000: Received 1 packet @ " << buffer << " (" << length << ") bytes!";
 #endif
         did_receive(buffer, length);
-        m_rx_descriptors[rx_current].status = 0;
+        rx_descriptors[rx_current].status = 0;
         out32(REG_RXDESCTAIL, rx_current);
     }
 }
