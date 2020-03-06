@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2019-2020, Shannon Booth <shannon.ml.booth@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,20 +27,15 @@
 
 #include <AK/Function.h>
 #include <AK/String.h>
-#include <LibBareMetal/IO.h>
 #include <Kernel/Syscall.h>
+#include <LibBareMetal/IO.h>
+#include <LibCore/ArgsParser.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <sys/wait.h>
 
 #pragma GCC optimize("O0")
-
-static void print_usage_and_exit()
-{
-    printf("usage: crash -[AsdiamfMFTtSxyXUIc]\n");
-    exit(0);
-}
 
 class Crash {
 public:
@@ -108,77 +104,58 @@ private:
 
 int main(int argc, char** argv)
 {
-    enum Mode {
-        TestAllCrashTypes,
-        SegmentationViolation,
-        DivisionByZero,
-        IllegalInstruction,
-        Abort,
-        WriteToUninitializedMallocMemory,
-        WriteToFreedMemory,
-        ReadFromUninitializedMallocMemory,
-        ReadFromFreedMemory,
-        WriteToReadonlyMemory,
-        InvalidStackPointerOnSyscall,
-        InvalidStackPointerOnPageFault,
-        SyscallFromWritableMemory,
-        WriteToFreedMemoryStillCachedByMalloc,
-        ReadFromFreedMemoryStillCachedByMalloc,
-        ExecuteNonExecutableMemory,
-        TriggerUserModeInstructionPrevention,
-        UseIOInstruction,
-        ReadTimestampCounter,
-    };
-    Mode mode = SegmentationViolation;
+    bool do_all_crash_types = false;
+    bool do_segmentation_violation = false;
+    bool do_division_by_zero = false;
+    bool do_illegal_instruction = false;
+    bool do_abort = false;
+    bool do_write_to_uninitialized_malloc_memory = false;
+    bool do_write_to_freed_memory = false;
+    bool do_write_to_read_only_memory = false;
+    bool do_read_from_uninitialized_malloc_memory = false;
+    bool do_read_from_freed_memory = false;
+    bool do_invalid_stack_pointer_on_syscall = false;
+    bool do_invalid_stack_pointer_on_page_fault  = false;
+    bool do_syscall_from_writeable_memory = false;
+    bool do_write_to_freed_memory_still_cached_by_malloc = false;
+    bool do_read_from_freed_memory_still_cached_by_malloc = false;
+    bool do_execute_non_executable_memory = false;
+    bool do_trigger_user_mode_instruction_prevention = false;
+    bool do_use_io_instruction = false;
+    bool do_read_cpu_counter = false;
 
-    if (argc != 2)
-        print_usage_and_exit();
+    auto args_parser = Core::ArgsParser();
+    args_parser.add_option(do_all_crash_types, "Test that all of the following crash types crash as expected", nullptr, 'A');
+    args_parser.add_option(do_segmentation_violation, "Perform a segmentation violation by dereferencing an invalid pointer", nullptr, 's');
+    args_parser.add_option(do_division_by_zero, "Perform a division by zero", nullptr, 'd');
+    args_parser.add_option(do_illegal_instruction, "Execute an illegal CPU instruction", nullptr, 'i');
+    args_parser.add_option(do_abort, "Call `abort()`", nullptr, 'a');
+    args_parser.add_option(do_read_from_uninitialized_malloc_memory, "Read a pointer from uninitialized malloc memory, then read from it", nullptr, 'm');
+    args_parser.add_option(do_read_from_freed_memory, "Read a pointer from memory freed using `free()`, then read from it", nullptr, 'f');
+    args_parser.add_option(do_write_to_uninitialized_malloc_memory, "Read a pointer from uninitialized malloc memory, then write to it", nullptr, 'M');
+    args_parser.add_option(do_write_to_freed_memory, "Read a pointer from memory freed using `free()`, then write to it", nullptr, 'F');
+    args_parser.add_option(do_write_to_read_only_memory, "Write to read-only memory", nullptr, 'r');
+    args_parser.add_option(do_invalid_stack_pointer_on_syscall, "Make a syscall while using an invalid stack pointer", nullptr, 'T');
+    args_parser.add_option(do_invalid_stack_pointer_on_page_fault, "Trigger a page fault while using an invalid stack pointer", nullptr, 't');
+    args_parser.add_option(do_syscall_from_writeable_memory, "Make a syscall from writeable memory", nullptr, 'S');
+    args_parser.add_option(do_write_to_freed_memory_still_cached_by_malloc, "Read from recently freed memory (tests an opportunistic malloc guard)", nullptr, 'x');
+    args_parser.add_option(do_read_from_freed_memory_still_cached_by_malloc, "Write to recently free memory (tests an opportunistic malloc guard)", nullptr, 'y');
+    args_parser.add_option(do_execute_non_executable_memory, "Attempt to execute non-executable memory (not mapped with PROT_EXEC)", nullptr, 'X');
+    args_parser.add_option(do_trigger_user_mode_instruction_prevention, "Attempt to trigger an x86 User Mode Instruction Prevention fault", nullptr, 'U');
+    args_parser.add_option(do_use_io_instruction, "Use an x86 I/O instruction in userspace", nullptr, 'I');
+    args_parser.add_option(do_read_cpu_counter, "Read the x86 TSC (Time Stamp Counter) directly", nullptr, 'c');
 
-    if (String(argv[1]) == "-A")
-        mode = TestAllCrashTypes;
-    else if (String(argv[1]) == "-s")
-        mode = SegmentationViolation;
-    else if (String(argv[1]) == "-d")
-        mode = DivisionByZero;
-    else if (String(argv[1]) == "-i")
-        mode = IllegalInstruction;
-    else if (String(argv[1]) == "-a")
-        mode = Abort;
-    else if (String(argv[1]) == "-m")
-        mode = ReadFromUninitializedMallocMemory;
-    else if (String(argv[1]) == "-f")
-        mode = ReadFromFreedMemory;
-    else if (String(argv[1]) == "-M")
-        mode = WriteToUninitializedMallocMemory;
-    else if (String(argv[1]) == "-F")
-        mode = WriteToFreedMemory;
-    else if (String(argv[1]) == "-r")
-        mode = WriteToReadonlyMemory;
-    else if (String(argv[1]) == "-T")
-        mode = InvalidStackPointerOnSyscall;
-    else if (String(argv[1]) == "-t")
-        mode = InvalidStackPointerOnPageFault;
-    else if (String(argv[1]) == "-S")
-        mode = SyscallFromWritableMemory;
-    else if (String(argv[1]) == "-x")
-        mode = ReadFromFreedMemoryStillCachedByMalloc;
-    else if (String(argv[1]) == "-y")
-        mode = WriteToFreedMemoryStillCachedByMalloc;
-    else if (String(argv[1]) == "-X")
-        mode = ExecuteNonExecutableMemory;
-    else if (String(argv[1]) == "-U")
-        mode = TriggerUserModeInstructionPrevention;
-    else if (String(argv[1]) == "-I")
-        mode = UseIOInstruction;
-    else if (String(argv[1]) == "-c")
-        mode = ReadTimestampCounter;
-    else
-        print_usage_and_exit();
+    if (argc != 2) {
+        args_parser.print_usage(stderr, argv[0]);
+        exit(1);
+    }
 
-    Crash::RunType run_type = mode == TestAllCrashTypes ? Crash::RunType::UsingChildProcess
-                                                        : Crash::RunType::UsingCurrentProcess;
+    args_parser.parse(argc, argv);
 
-    if (mode == SegmentationViolation || mode == TestAllCrashTypes) {
+    Crash::RunType run_type = do_all_crash_types ? Crash::RunType::UsingChildProcess
+                                                 : Crash::RunType::UsingCurrentProcess;
+
+    if (do_segmentation_violation || do_all_crash_types) {
         Crash("Segmentation violation", []() {
             volatile int* crashme = nullptr;
             *crashme = 0xbeef;
@@ -186,7 +163,7 @@ int main(int argc, char** argv)
         }).run(run_type);
     }
 
-    if (mode == DivisionByZero || mode == TestAllCrashTypes) {
+    if (do_division_by_zero || do_all_crash_types) {
         Crash("Division by zero", []() {
             volatile int lala = 10;
             volatile int zero = 0;
@@ -196,21 +173,21 @@ int main(int argc, char** argv)
         }).run(run_type);
     }
 
-    if (mode == IllegalInstruction || mode == TestAllCrashTypes) {
+    if (do_illegal_instruction|| do_all_crash_types) {
         Crash("Illegal instruction", []() {
             asm volatile("ud2");
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
 
-    if (mode == Abort || mode == TestAllCrashTypes) {
+    if (do_abort || do_all_crash_types) {
         Crash("Abort", []() {
             abort();
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
 
-    if (mode == ReadFromUninitializedMallocMemory || mode == TestAllCrashTypes) {
+    if (do_read_from_uninitialized_malloc_memory || do_all_crash_types) {
         Crash("Read from uninitialized malloc memory", []() {
             auto* uninitialized_memory = (volatile u32**)malloc(1024);
             if (!uninitialized_memory)
@@ -222,7 +199,7 @@ int main(int argc, char** argv)
         }).run(run_type);
     }
 
-    if (mode == ReadFromFreedMemory || mode == TestAllCrashTypes) {
+    if (do_read_from_uninitialized_malloc_memory || do_all_crash_types) {
         Crash("Read from freed memory", []() {
             auto* uninitialized_memory = (volatile u32**)malloc(1024);
             if (!uninitialized_memory)
@@ -235,7 +212,7 @@ int main(int argc, char** argv)
         }).run(run_type);
     }
 
-    if (mode == WriteToUninitializedMallocMemory || mode == TestAllCrashTypes) {
+    if (do_write_to_uninitialized_malloc_memory || do_all_crash_types) {
         Crash("Write to uninitialized malloc memory", []() {
             auto* uninitialized_memory = (volatile u32**)malloc(1024);
             if (!uninitialized_memory)
@@ -246,7 +223,7 @@ int main(int argc, char** argv)
         }).run(run_type);
     }
 
-    if (mode == WriteToFreedMemory || mode == TestAllCrashTypes) {
+    if (do_write_to_freed_memory || do_all_crash_types) {
         Crash("Write to freed memory", []() {
             auto* uninitialized_memory = (volatile u32**)malloc(1024);
             if (!uninitialized_memory)
@@ -258,7 +235,7 @@ int main(int argc, char** argv)
         }).run(run_type);
     }
 
-    if (mode == WriteToReadonlyMemory || mode == TestAllCrashTypes) {
+    if (do_write_to_read_only_memory || do_all_crash_types) {
         Crash("Write to read only memory", []() {
             auto* ptr = (u8*)mmap(nullptr, 4096, PROT_READ | PROT_WRITE, MAP_ANON, 0, 0);
             if (ptr != MAP_FAILED)
@@ -274,7 +251,7 @@ int main(int argc, char** argv)
         }).run(run_type);
     }
 
-    if (mode == InvalidStackPointerOnSyscall || mode == TestAllCrashTypes) {
+    if (do_invalid_stack_pointer_on_syscall || do_all_crash_types) {
         Crash("Invalid stack pointer on syscall", []() {
             u8* makeshift_stack = (u8*)mmap(nullptr, 0, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_STACK, 0, 0);
             if (!makeshift_stack)
@@ -296,7 +273,7 @@ int main(int argc, char** argv)
         }).run(run_type);
     }
 
-    if (mode == InvalidStackPointerOnPageFault || mode == TestAllCrashTypes) {
+    if (do_invalid_stack_pointer_on_page_fault || do_all_crash_types) {
         Crash("Invalid stack pointer on page fault", []() {
             u8* bad_stack = (u8*)mmap(nullptr, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
             if (!bad_stack)
@@ -309,7 +286,7 @@ int main(int argc, char** argv)
         }).run(run_type);
     }
 
-    if (mode == SyscallFromWritableMemory || mode == TestAllCrashTypes) {
+    if (do_syscall_from_writeable_memory || do_all_crash_types) {
         Crash("Syscall from writable memory", []() {
             u8 buffer[] = { 0xb8, Syscall::SC_getuid, 0, 0, 0, 0xcd, 0x82 };
             ((void (*)())buffer)();
@@ -317,7 +294,7 @@ int main(int argc, char** argv)
         }).run(run_type);
     }
 
-    if (mode == ReadFromFreedMemoryStillCachedByMalloc || mode == TestAllCrashTypes) {
+    if (do_read_from_freed_memory_still_cached_by_malloc || do_all_crash_types) {
         Crash("Read from memory still cached by malloc", []() {
             auto* ptr = (u8*)malloc(1024);
             if (!ptr)
@@ -331,7 +308,7 @@ int main(int argc, char** argv)
         }).run(run_type);
     }
 
-    if (mode == WriteToFreedMemoryStillCachedByMalloc || mode == TestAllCrashTypes) {
+    if (do_write_to_freed_memory_still_cached_by_malloc || do_all_crash_types) {
         Crash("Write to freed memory still cached by malloc", []() {
             auto* ptr = (u8*)malloc(1024);
             if (!ptr)
@@ -343,7 +320,7 @@ int main(int argc, char** argv)
         }).run(run_type);
     }
 
-    if (mode == ExecuteNonExecutableMemory || mode == TestAllCrashTypes) {
+    if (do_execute_non_executable_memory || do_all_crash_types) {
         Crash("Execute non executable memory", []() {
             auto* ptr = (u8*)mmap(nullptr, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
             if (ptr == MAP_FAILED)
@@ -356,14 +333,14 @@ int main(int argc, char** argv)
         }).run(run_type);
     }
 
-    if (mode == TriggerUserModeInstructionPrevention || mode == TestAllCrashTypes) {
+    if (do_trigger_user_mode_instruction_prevention || do_all_crash_types) {
         Crash("Trigger x86 User Mode Instruction Prevention", []() {
             asm volatile("str %eax");
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
 
-    if (mode == UseIOInstruction || mode == TestAllCrashTypes) {
+    if (do_use_io_instruction || do_all_crash_types) {
         Crash("Attempt to use an I/O instruction", [] {
             u8 keyboard_status = IO::in8(0x64);
             printf("Keyboard status: %#02x\n", keyboard_status);
@@ -371,7 +348,7 @@ int main(int argc, char** argv)
         }).run(run_type);
     }
 
-    if (mode == ReadTimestampCounter || mode == TestAllCrashTypes) {
+    if (do_read_cpu_counter || do_all_crash_types) {
         Crash("Read the CPU timestamp counter", [] {
             asm volatile("rdtsc");
             return Crash::Failure::DidNotCrash;
