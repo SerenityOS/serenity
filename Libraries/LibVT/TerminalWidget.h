@@ -92,6 +92,7 @@ private:
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
+    virtual void keyup_event(GUI::KeyEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mousewheel_event(GUI::MouseEvent&) override;
@@ -130,6 +131,8 @@ private:
 
     bool m_should_beep { false };
     bool m_belling { false };
+    bool m_alt_key_held { false };
+    bool m_rectangle_selection { false };
 
     int m_pixel_width { 0 };
     int m_pixel_height { 0 };
