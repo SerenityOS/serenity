@@ -109,7 +109,7 @@ public:
     ModelIndex index(const StringView& path, int column) const;
 
     const Node& node(const ModelIndex& index) const;
-    GIcon icon_for_file(const mode_t mode, const String& name) const;
+    GUI::Icon icon_for_file(const mode_t mode, const String& name) const;
 
     Function<void(int done, int total)> on_thumbnail_progress;
     Function<void()> on_root_path_change;
@@ -141,20 +141,20 @@ private:
     HashMap<gid_t, String> m_group_names;
 
     bool fetch_thumbnail_for(const Node& node);
-    GIcon icon_for(const Node& node) const;
+    GUI::Icon icon_for(const Node& node) const;
 
     String m_root_path;
     Mode m_mode { Invalid };
     OwnPtr<Node> m_root { nullptr };
 
-    GIcon m_directory_icon;
-    GIcon m_file_icon;
-    GIcon m_symlink_icon;
-    GIcon m_socket_icon;
-    GIcon m_executable_icon;
-    GIcon m_filetype_image_icon;
-    GIcon m_filetype_sound_icon;
-    GIcon m_filetype_html_icon;
+    GUI::Icon m_directory_icon;
+    GUI::Icon m_file_icon;
+    GUI::Icon m_symlink_icon;
+    GUI::Icon m_socket_icon;
+    GUI::Icon m_executable_icon;
+    GUI::Icon m_filetype_image_icon;
+    GUI::Icon m_filetype_sound_icon;
+    GUI::Icon m_filetype_html_icon;
 
     unsigned m_thumbnail_progress { 0 };
     unsigned m_thumbnail_progress_total { 0 };

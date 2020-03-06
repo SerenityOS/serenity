@@ -51,7 +51,7 @@ private:
 
     NonnullRefPtr<Document> m_document;
 
-    GIcon m_document_icon;
-    GIcon m_element_icon;
-    GIcon m_text_icon;
+    GUI::Icon m_document_icon;
+    GUI::Icon m_element_icon;
+    GUI::Icon m_text_icon;
 };

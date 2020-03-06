@@ -370,9 +370,9 @@ TextEditorWidget::TextEditorWidget()
     menubar->add_menu(move(edit_menu));
 
     auto font_menu = GUI::Menu::construct("Font");
-    GFontDatabase::the().for_each_fixed_width_font([&](const StringView& font_name) {
+    GUI::FontDatabase::the().for_each_fixed_width_font([&](const StringView& font_name) {
         font_menu->add_action(GUI::Action::create(font_name, [this](const GUI::Action& action) {
-            m_editor->set_font(GFontDatabase::the().get_by_name(action.text()));
+            m_editor->set_font(GUI::FontDatabase::the().get_by_name(action.text()));
             m_editor->update();
         }));
     });

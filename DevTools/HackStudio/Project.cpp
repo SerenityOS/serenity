@@ -169,11 +169,11 @@ Project::Project(const String& path, Vector<String>&& filenames)
 {
     m_name = FileSystemPath(m_path).basename();
 
-    m_file_icon = GIcon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-unknown.png"));
-    m_cplusplus_icon = GIcon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-cplusplus.png"));
-    m_header_icon = GIcon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-header.png"));
-    m_directory_icon = GIcon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-folder.png"));
-    m_project_icon = GIcon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-hack-studio.png"));
+    m_file_icon = GUI::Icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-unknown.png"));
+    m_cplusplus_icon = GUI::Icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-cplusplus.png"));
+    m_header_icon = GUI::Icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-header.png"));
+    m_directory_icon = GUI::Icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-folder.png"));
+    m_project_icon = GUI::Icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-hack-studio.png"));
 
     for (auto& filename : filenames) {
         m_files.append(ProjectFile::construct_with_name(filename));

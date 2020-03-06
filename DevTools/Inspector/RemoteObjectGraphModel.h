@@ -55,8 +55,8 @@ private:
 
     RemoteProcess& m_process;
 
-    GIcon m_object_icon;
-    GIcon m_window_icon;
-    GIcon m_layout_icon;
-    GIcon m_timer_icon;
+    GUI::Icon m_object_icon;
+    GUI::Icon m_window_icon;
+    GUI::Icon m_layout_icon;
+    GUI::Icon m_timer_icon;
 };

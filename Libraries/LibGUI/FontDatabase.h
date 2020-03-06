@@ -31,15 +31,17 @@
 #include <AK/String.h>
 #include <LibGfx/Forward.h>
 
+namespace GUI {
+
 struct Metadata {
     String path;
     bool is_fixed_width;
     int glyph_height;
 };
 
-class GFontDatabase {
+class FontDatabase {
 public:
-    static GFontDatabase& the();
+    static FontDatabase& the();
 
     RefPtr<Gfx::Font> get_by_name(const StringView&);
     void for_each_font(Function<void(const StringView&)>);
@@ -51,8 +53,10 @@ public:
     }
 
 private:
-    GFontDatabase();
-    ~GFontDatabase();
+    FontDatabase();
+    ~FontDatabase();
 
     HashMap<String, Metadata> m_name_to_metadata;
 };
+
+}
