@@ -140,13 +140,19 @@ PATAChannel::PATAChannel(PCI::Address address, ChannelType type, bool force_pio)
     ProcFS::add_sys_bool("ide_dma", m_dma_enabled);
 
     m_prdt_page = MM.allocate_supervisor_physical_page();
-
     initialize(force_pio);
     detect_disks();
+    disable_irq();
 }
 
 PATAChannel::~PATAChannel()
 {
+}
+
+void PATAChannel::prepare_for_irq()
+{
+    cli();
+    enable_irq();
 }
 
 void PATAChannel::initialize(bool force_pio)
@@ -158,6 +164,7 @@ void PATAChannel::initialize(bool force_pio)
     }
     // Let's try to set up DMA transfers.
     PCI::enable_bus_mastering(pci_address());
+    PCI::enable_interrupt_line(pci_address());
     prdt().end_of_table = 0x8000;
     m_dma_buffer_page = MM.allocate_supervisor_physical_page();
     klog() << "PATAChannel: Bus master IDE: " << m_bus_master_base;
@@ -170,8 +177,6 @@ static void print_ide_status(u8 status)
 
 void PATAChannel::wait_for_irq()
 {
-    cli();
-    enable_irq();
     Thread::current->wait_on(m_irq_queue);
     disable_irq();
 }
@@ -313,6 +318,7 @@ bool PATAChannel::ata_read_sectors_with_dma(u32 lba, u16 count, u8* outbuf, bool
     m_io_base.offset(ATA_REG_COMMAND).out<u8>(ATA_CMD_READ_DMA_EXT);
     io_delay();
 
+    prepare_for_irq();
     // Start bus master
     m_bus_master_base.out<u8>(0x9);
 
@@ -383,9 +389,9 @@ bool PATAChannel::ata_write_sectors_with_dma(u32 lba, u16 count, const u8* inbuf
     m_io_base.offset(ATA_REG_COMMAND).out<u8>(ATA_CMD_WRITE_DMA_EXT);
     io_delay();
 
+    prepare_for_irq();
     // Start bus master
     m_bus_master_base.out<u8>(0x1);
-
     wait_for_irq();
 
     if (m_device_error)
@@ -425,6 +431,7 @@ bool PATAChannel::ata_read_sectors(u32 start_sector, u16 count, u8* outbuf, bool
     while (!(m_io_base.offset(ATA_REG_STATUS).in<u8>() & ATA_SR_DRDY))
         ;
 
+    prepare_for_irq();
     m_io_base.offset(ATA_REG_COMMAND).out<u8>(ATA_CMD_READ_PIO);
     wait_for_irq();
 
@@ -440,7 +447,7 @@ bool PATAChannel::ata_read_sectors(u32 start_sector, u16 count, u8* outbuf, bool
         u8 status = m_io_base.offset(ATA_REG_STATUS).in<u8>();
         ASSERT(status & ATA_SR_DRQ);
 #ifdef PATA_DEBUG
-        dbg() << "PATAChannel: Retrieving 512 bytes (part " << i << ") (status=" << String::format("%b", status) << "), outbuf=(" << (inbuf + (512 * i)) << ")...";
+        dbg() << "PATAChannel: Retrieving 512 bytes (part " << i << ") (status=" << String::format("%b", status) << "), outbuf=(" << (outbuf + (512 * i)) << ")...";
 #endif
 
         IO::repeated_in16(m_io_base.offset(ATA_REG_DATA).get(), outbuf + (512 * i), 256);
@@ -493,11 +500,12 @@ bool PATAChannel::ata_write_sectors(u32 start_sector, u16 count, const u8* inbuf
 #endif
 
         IO::repeated_out16(m_io_base.offset(ATA_REG_DATA).get(), inbuf + (512 * i), 256);
+        prepare_for_irq();
         wait_for_irq();
         status = m_io_base.offset(ATA_REG_STATUS).in<u8>();
         ASSERT(!(status & ATA_SR_BSY));
     }
-
+    prepare_for_irq();
     m_io_base.offset(ATA_REG_COMMAND).out<u8>(ATA_CMD_CACHE_FLUSH);
     wait_for_irq();
     u8 status = m_io_base.offset(ATA_REG_STATUS).in<u8>();
