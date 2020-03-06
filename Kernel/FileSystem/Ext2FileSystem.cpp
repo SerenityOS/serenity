@@ -1076,9 +1076,9 @@ Ext2FS::BlockIndex Ext2FS::allocate_block(GroupIndex preferred_group_index)
     auto block_bitmap = Bitmap::wrap(cached_bitmap.buffer.data(), blocks_in_group);
 
     BlockIndex first_block_in_group = (group_index - 1) * blocks_per_group() + first_block_index();
-    int first_unset_bit_index = block_bitmap.find_first_unset();
-    ASSERT(first_unset_bit_index != -1);
-    BlockIndex block_index = (unsigned)first_unset_bit_index + first_block_in_group;
+    auto first_unset_bit_index = block_bitmap.find_first_unset();
+    ASSERT(first_unset_bit_index.has_value());
+    BlockIndex block_index = first_unset_bit_index.value() + first_block_in_group;
     set_block_allocation_state(block_index, true);
     return block_index;
 }
