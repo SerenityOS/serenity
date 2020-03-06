@@ -62,6 +62,7 @@ void MultiProcessorParser::parse_floating_pointer_data()
     auto* floating_pointer = (MultiProcessor::FloatingPointer*)floating_pointer_region->vaddr().offset(offset_in_page((u32)m_floating_pointer)).as_ptr();
     m_configuration_table = floating_pointer->physical_address_ptr;
     m_specification_revision = floating_pointer->specification_revision;
+    dbg() << "Features " << floating_pointer->feature_info[0] << ", IMCR? " << (floating_pointer->feature_info[0] & (1 << 7));
 }
 
 size_t MultiProcessorParser::get_configuration_table_length()
