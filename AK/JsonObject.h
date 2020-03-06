@@ -85,14 +85,9 @@ public:
         return m_members.contains(key);
     }
 
-    void set(const String& key, JsonValue&& value)
+    void set(const String& key, JsonValue value)
     {
         m_members.set(key, move(value));
-    }
-
-    void set(const String& key, const JsonValue& value)
-    {
-        m_members.set(key, JsonValue(value));
     }
 
     template<typename Callback>
