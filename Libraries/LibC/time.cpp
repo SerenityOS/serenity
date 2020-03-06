@@ -304,7 +304,7 @@ size_t strftime(char* destination, size_t max_size, const char* format, const st
             }
         }
         if (builder.length() > max_size - 1)
-                return 0;
+            return 0;
     }
 
     strcpy(destination, builder.build().characters());
