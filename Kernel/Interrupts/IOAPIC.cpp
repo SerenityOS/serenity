@@ -42,15 +42,14 @@ enum DeliveryMode {
     External = 7
 };
 
-IOAPIC::IOAPIC(ioapic_mmio_regs& regs, u32 gsi_base, Vector<RefPtr<ISAInterruptOverrideMetadata>>& isa_overrides, Vector<RefPtr<PCIInterruptOverrideMetadata>>& pci_overrides)
+IOAPIC::IOAPIC(ioapic_mmio_regs& regs, u32 gsi_base)
     : m_physical_access_registers(regs)
     , m_gsi_base(gsi_base)
     , m_id((read_register(0x0) >> 24) & 0xFF)
     , m_version(read_register(0x1) & 0xFF)
     , m_redirection_entries((read_register(0x1) >> 16) + 1)
-    , m_isa_interrupt_overrides(isa_overrides)
-    , m_pci_interrupt_overrides(pci_overrides)
 {
+    InterruptDisabler disabler;
     klog() << "IOAPIC ID: 0x" << String::format("%x", m_id);
     klog() << "IOAPIC Version: 0x" << String::format("%x", m_version) << ", Redirection Entries count - " << m_redirection_entries;
     klog() << "IOAPIC Arbitration ID 0x" << String::format("%x", read_register(0x2));
@@ -63,11 +62,8 @@ void IOAPIC::initialize()
 
 void IOAPIC::map_interrupt_redirection(u8 interrupt_vector)
 {
-    if (interrupt_vector == 11) {
-        configure_redirection_entry(11, 11 + IRQ_VECTOR_BASE, DeliveryMode::LowPriority, false, true, true, true, 0);
-        return;
-    }
-    for (auto redirection_override : m_isa_interrupt_overrides) {
+    InterruptDisabler disabler;
+    for (auto redirection_override : InterruptManagement::the().isa_overrides()) {
         ASSERT(!redirection_override.is_null());
         if (redirection_override->source() != interrupt_vector)
             continue;
@@ -102,7 +98,7 @@ void IOAPIC::map_interrupt_redirection(u8 interrupt_vector)
             trigger_level_mode = true;
             break;
         }
-        configure_redirection_entry(redirection_override->gsi(), redirection_override->source() + IRQ_VECTOR_BASE, DeliveryMode::LowPriority, false, active_low, trigger_level_mode, true, 0);
+        configure_redirection_entry(redirection_override->gsi(), InterruptManagement::acquire_mapped_interrupt_number(redirection_override->source()) + IRQ_VECTOR_BASE, DeliveryMode::Normal, false, active_low, trigger_level_mode, true, 0);
         return;
     }
     isa_identity_map(interrupt_vector);
@@ -110,18 +106,20 @@ void IOAPIC::map_interrupt_redirection(u8 interrupt_vector)
 
 void IOAPIC::isa_identity_map(int index)
 {
-    configure_redirection_entry(index, index + IRQ_VECTOR_BASE, DeliveryMode::Normal, true, false, false, true, 1);
+    InterruptDisabler disabler;
+    configure_redirection_entry(index, InterruptManagement::acquire_mapped_interrupt_number(index) + IRQ_VECTOR_BASE, DeliveryMode::Normal, false, false, false, true, 0);
 }
 
 void IOAPIC::map_pci_interrupts()
 {
+    InterruptDisabler disabler;
     configure_redirection_entry(11, 11 + IRQ_VECTOR_BASE, DeliveryMode::Normal, false, false, true, true, 0);
 }
 
 void IOAPIC::map_isa_interrupts()
 {
     InterruptDisabler disabler;
-    for (auto redirection_override : m_isa_interrupt_overrides) {
+    for (auto redirection_override : InterruptManagement::the().isa_overrides()) {
         ASSERT(!redirection_override.is_null());
         bool active_low;
         // See ACPI spec Version 6.2, page 205 to learn more about Interrupt Overriding Flags.
@@ -154,7 +152,7 @@ void IOAPIC::map_isa_interrupts()
             trigger_level_mode = true;
             break;
         }
-        configure_redirection_entry(redirection_override->gsi(), redirection_override->source() + IRQ_VECTOR_BASE, 0, false, active_low, trigger_level_mode, true, 0);
+        configure_redirection_entry(redirection_override->gsi(), InterruptManagement::acquire_mapped_interrupt_number(redirection_override->source()) + IRQ_VECTOR_BASE, 0, false, active_low, trigger_level_mode, true, 0);
     }
 }
 
@@ -180,6 +178,7 @@ void IOAPIC::reset_redirection_entry(int index) const
 
 void IOAPIC::configure_redirection_entry(int index, u8 interrupt_vector, u8 delivery_mode, bool logical_destination, bool active_low, bool trigger_level_mode, bool masked, u8 destination) const
 {
+    InterruptDisabler disabler;
     ASSERT((u32)index < m_redirection_entries);
     u32 redirection_entry1 = interrupt_vector | (delivery_mode & 0b111) << 8 | logical_destination << 11 | active_low << 13 | trigger_level_mode << 15 | masked << 16;
     u32 redirection_entry2 = destination << 24;
@@ -236,7 +235,7 @@ int IOAPIC::find_redirection_entry_by_vector(u8 vector) const
 {
     InterruptDisabler disabler;
     for (size_t index = 0; index < m_redirection_entries; index++) {
-        if (read_redirection_entry_vector(index) == (vector + IRQ_VECTOR_BASE))
+        if (read_redirection_entry_vector(index) == (InterruptManagement::acquire_mapped_interrupt_number(vector) + IRQ_VECTOR_BASE))
             return index;
     }
     return -1;

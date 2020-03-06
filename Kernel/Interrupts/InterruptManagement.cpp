@@ -27,11 +27,14 @@
 #include <AK/FixedArray.h>
 #include <Kernel/ACPI/MultiProcessorParser.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Interrupts/IOAPIC.h>
 #include <Kernel/Interrupts/InterruptManagement.h>
 #include <Kernel/Interrupts/PIC.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
+#include <Kernel/Interrupts/UnhandledInterruptHandler.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <LibBareMetal/IO.h>
 
 #define PCAT_COMPAT_FLAG 0x1
 
@@ -72,6 +75,26 @@ IRQController& InterruptManagement::get_interrupt_controller(int index)
     return *m_interrupt_controllers[index];
 }
 
+Vector<RefPtr<ISAInterruptOverrideMetadata>> InterruptManagement::isa_overrides()
+{
+    return m_isa_interrupt_overrides;
+}
+
+u8 InterruptManagement::acquire_mapped_interrupt_number(u8 number)
+{
+    if (!InterruptManagement::initialized()) {
+        // This is necessary, because we install UnhandledInterruptHandlers before we actually initialize the Interrupt Management object...
+        return number;
+    }
+    return InterruptManagement::the().get_mapped_vector_number(number);
+}
+
+u8 InterruptManagement::get_mapped_vector_number(u8 original_vector)
+{
+    // FIXME: For SMP configuration (with IOAPICs) use a better routing scheme to make redirections more efficient.
+    return original_vector;
+}
+
 RefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(u8 interrupt_vector)
 {
     if (m_interrupt_controllers.size() == 1 && m_interrupt_controllers[0]->type() == IRQControllerType::i8259) {
@@ -110,6 +133,8 @@ InterruptManagement::InterruptManagement()
 void InterruptManagement::switch_to_pic_mode()
 {
     klog() << "Interrupts: Switch to Legacy PIC mode";
+    InterruptDisabler disabler;
+    m_smp_enabled = false;
     SpuriousInterruptHandler::initialize(7);
     SpuriousInterruptHandler::initialize(15);
     for (auto& irq_controller : m_interrupt_controllers) {
@@ -126,6 +151,8 @@ void InterruptManagement::switch_to_pic_mode()
 void InterruptManagement::switch_to_ioapic_mode()
 {
     klog() << "Interrupts: Switch to IOAPIC mode";
+    InterruptDisabler disabler;
+    m_smp_enabled = true;
     if (m_interrupt_controllers.size() == 1) {
         if (get_interrupt_controller(0).type() == IRQControllerType::i8259) {
             klog() << "Interrupts: NO IOAPIC detected, Reverting to PIC mode.";
@@ -141,6 +168,9 @@ void InterruptManagement::switch_to_ioapic_mode()
             dbg() << "Interrupts: Detected " << irq_controller->model();
         }
     }
+    APIC::init();
+    APIC::enable_bsp();
+    MultiProcessorParser::initialize();
 }
 
 void InterruptManagement::locate_apic_data()
@@ -163,7 +193,7 @@ void InterruptManagement::locate_apic_data()
             auto* ioapic_entry = (const ACPI::Structures::MADTEntries::IOAPIC*)madt_entry;
             dbg() << "IOAPIC found @ MADT entry " << entry_index << ", MMIO Registers @ Px" << String::format("%x", ioapic_entry->ioapic_address);
             m_interrupt_controllers.resize(1 + irq_controller_count);
-            m_interrupt_controllers[irq_controller_count] = adopt(*new IOAPIC(*(ioapic_mmio_regs*)ioapic_entry->ioapic_address, ioapic_entry->gsi_base, m_isa_interrupt_overrides, m_pci_interrupt_overrides));
+            m_interrupt_controllers[irq_controller_count] = adopt(*new IOAPIC(*(ioapic_mmio_regs*)ioapic_entry->ioapic_address, ioapic_entry->gsi_base));
             irq_controller_count++;
         }
         if (madt_entry->type == (u8)ACPI::Structures::MADTEntryType::InterruptSourceOverride) {
