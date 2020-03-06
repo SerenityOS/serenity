@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/String.h>
 #include <LibCore/DateTime.h>
 #include <sys/time.h>
 #include <time.h>
@@ -51,9 +50,15 @@ DateTime DateTime::from_timestamp(time_t timestamp)
     return dt;
 }
 
-String DateTime::to_string() const
+String DateTime::to_string(const String& format) const
 {
-    return String::format("%04u-%02u-%02u %02u:%02u:%02u", m_year, m_month, m_day, m_hour, m_minute, m_second);
+    struct tm tm;
+    localtime_r(&m_timestamp, &tm);
+    char buff[256];
+    if (!strftime(buff, sizeof buff, format.characters(), &tm))
+        return String();
+
+    return buff;
 }
 
 const LogStream& operator<<(const LogStream& stream, const DateTime& value)
