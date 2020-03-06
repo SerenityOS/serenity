@@ -377,9 +377,9 @@ void E1000NetworkAdapter::send_raw(const u8* data, size_t length)
     klog() << "E1000: Using tx descriptor " << tx_current << " (head is at " << in32(REG_TXDESCHEAD) << ")";
 #endif
     tx_current = (tx_current + 1) % number_of_tx_descriptors;
-    out32(REG_TXDESCTAIL, tx_current);
     cli();
     enable_irq();
+    out32(REG_TXDESCTAIL, tx_current);
     for (;;) {
         if (descriptor.status) {
             sti();
