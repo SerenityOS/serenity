@@ -68,8 +68,7 @@ public:
     const JsonValue& operator[](int index) const { return at(index); }
 
     void clear() { m_values.clear(); }
-    void append(const JsonValue& value) { m_values.append(value); }
-    void append(JsonValue&& value) { m_values.append(move(value)); }
+    void append(JsonValue value) { m_values.append(move(value)); }
 
     template<typename Builder>
     typename Builder::OutputType serialized() const;
