@@ -33,7 +33,7 @@ TEST_CASE(construct_empty)
     EXPECT(StringView().is_null());
     EXPECT(StringView().is_empty());
     EXPECT(!StringView().characters_without_null_termination());
-    EXPECT_EQ(StringView().length(), size_t { 0 });
+    EXPECT_EQ(StringView().length(), 0u);
 }
 
 TEST_CASE(view_literal)
@@ -87,7 +87,7 @@ TEST_CASE(lines)
     String test_string = "a\nb\r\nc\rd";
     StringView test_string_view = test_string.view();
     Vector<StringView> test_string_vector = test_string_view.lines();
-    EXPECT_EQ(test_string_vector.size(), 4);
+    EXPECT_EQ(test_string_vector.size(), 4u);
     EXPECT(test_string_vector.at(0) == String("a"));
     EXPECT(test_string_vector.at(1) == String("b"));
     EXPECT(test_string_vector.at(2) == String("c"));
@@ -96,7 +96,7 @@ TEST_CASE(lines)
     test_string = "```\nHello there\r\nHello there\n```";
     test_string_view = test_string.view();
     test_string_vector = test_string_view.lines();
-    EXPECT_EQ(test_string_vector.size(), 4);
+    EXPECT_EQ(test_string_vector.size(), 4u);
     EXPECT(test_string_vector.at(0) == String("```"));
     EXPECT(test_string_vector.at(1) == String("Hello there"));
     EXPECT(test_string_vector.at(2) == String("Hello there"));
@@ -105,7 +105,7 @@ TEST_CASE(lines)
     test_string = "\n\n\n";
     test_string_view = test_string.view();
     test_string_vector = test_string_view.lines();
-    EXPECT_EQ(test_string_vector.size(), 3);
+    EXPECT_EQ(test_string_vector.size(), 3u);
     EXPECT_EQ(test_string_vector.at(0).is_empty(), true);
     EXPECT_EQ(test_string_vector.at(1).is_empty(), true);
     EXPECT_EQ(test_string_vector.at(2).is_empty(), true);
