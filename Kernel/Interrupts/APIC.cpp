@@ -159,6 +159,7 @@ void eoi()
 
 bool init()
 {
+    // FIXME: Use the ACPI MADT table
     if (!MSR::have())
         return false;
 
@@ -189,7 +190,7 @@ void enable(u32 cpu)
     // dummy read, apparently to avoid a bug in old CPUs.
     read_register(APIC_REG_SIV);
     // set spurious interrupt vector
-    write_register(APIC_REG_SIV, IRQ_APIC_SPURIOUS | 0x100);
+    write_register(APIC_REG_SIV, (IRQ_APIC_SPURIOUS + IRQ_VECTOR_BASE) | 0x100);
 
     // local destination mode (flat mode)
     write_register(APIC_REG_DF, 0xf0000000);
