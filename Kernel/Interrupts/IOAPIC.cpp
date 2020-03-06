@@ -245,6 +245,7 @@ int IOAPIC::find_redirection_entry_by_vector(u8 vector) const
 void IOAPIC::disable(u8 interrupt_vector)
 {
     InterruptDisabler disabler;
+    ASSERT(!is_hard_disabled());
     int index = find_redirection_entry_by_vector(interrupt_vector);
     if (index == (-1)) {
         map_interrupt_redirection(interrupt_vector);
@@ -257,6 +258,7 @@ void IOAPIC::disable(u8 interrupt_vector)
 void IOAPIC::enable(u8 interrupt_vector)
 {
     InterruptDisabler disabler;
+    ASSERT(!is_hard_disabled());
     int index = find_redirection_entry_by_vector(interrupt_vector);
     if (index == (-1)) {
         map_interrupt_redirection(interrupt_vector);
@@ -269,6 +271,7 @@ void IOAPIC::enable(u8 interrupt_vector)
 void IOAPIC::eoi(u8) const
 {
     InterruptDisabler disabler;
+    ASSERT(!is_hard_disabled());
     APIC::eoi();
 }
 
