@@ -103,6 +103,7 @@ OBJS = \
     TTY/VirtualConsole.o \
     Thread.o \
     VM/AnonymousVMObject.o \
+    VM/ContiguousVMObject.o \
     VM/InodeVMObject.o \
     VM/MemoryManager.o \
     VM/PageDirectory.o \
