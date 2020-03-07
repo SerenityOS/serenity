@@ -238,15 +238,17 @@ ssize_t IPv4Socket::sendto(FileDescription&, const void* data, size_t data_lengt
 
 ssize_t IPv4Socket::receive_byte_buffered(FileDescription& description, void* buffer, size_t buffer_length, int, sockaddr*, socklen_t*)
 {
+    Locker locker(lock());
     if (m_receive_buffer.is_empty()) {
         if (protocol_is_disconnected())
             return 0;
         if (!description.is_blocking())
             return -EAGAIN;
 
+        locker.unlock();
         auto res = Thread::current->block<Thread::ReadBlocker>(description);
+        locker.lock();
 
-        LOCKER(lock());
         if (!m_can_read) {
             if (res != Thread::BlockResult::WokeNormally)
                 return -EINTR;
@@ -267,9 +269,9 @@ ssize_t IPv4Socket::receive_byte_buffered(FileDescription& description, void* bu
 
 ssize_t IPv4Socket::receive_packet_buffered(FileDescription& description, void* buffer, size_t buffer_length, int flags, sockaddr* addr, socklen_t* addr_length)
 {
+    Locker locker(lock());
     ReceivedPacket packet;
     {
-        LOCKER(lock());
         if (m_receive_queue.is_empty()) {
             // FIXME: Shouldn't this return -ENOTCONN instead of EOF?
             //        But if so, we still need to deliver at least one EOF read to userspace.. right?
@@ -293,9 +295,10 @@ ssize_t IPv4Socket::receive_packet_buffered(FileDescription& description, void* 
             return 0;
         }
 
+        locker.unlock();
         auto res = Thread::current->block<Thread::ReadBlocker>(description);
+        locker.lock();
 
-        LOCKER(lock());
         if (!m_can_read) {
             if (res != Thread::BlockResult::WokeNormally)
                 return -EINTR;
