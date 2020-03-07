@@ -2815,6 +2815,17 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     if (!timeout || select_has_timeout) {
         if (Thread::current->block<Thread::SelectBlocker>(computed_timeout, select_has_timeout, rfds, wfds, efds) != Thread::BlockResult::WokeNormally)
             return -EINTR;
+        // While we blocked, the process lock was dropped. This gave other threads
+        // the opportunity to mess with the memory. For example, it could free the
+        // region, and map it to a region to which it has no write permissions.
+        // Therefore, we need to re-validate all pointers.
+        if (writefds && !validate_write_typed(writefds))
+            return -EFAULT;
+        if (readfds && !validate_write_typed(readfds))
+            return -EFAULT;
+        // See the fixme below.
+        if (exceptfds && !validate_write_typed(exceptfds))
+            return -EFAULT;
     }
 
     int marked_fd_count = 0;
