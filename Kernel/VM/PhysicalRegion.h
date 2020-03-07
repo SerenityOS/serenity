@@ -28,6 +28,7 @@
 
 #include <AK/Bitmap.h>
 #include <AK/NonnullRefPtr.h>
+#include <AK/Optional.h>
 #include <AK/RefCounted.h>
 #include <Kernel/VM/PhysicalPage.h>
 
@@ -51,10 +52,14 @@ public:
     bool contains(PhysicalPage& page) const { return page.paddr() >= m_lower && page.paddr() <= m_upper; }
 
     RefPtr<PhysicalPage> take_free_page(bool supervisor);
+    Vector<RefPtr<PhysicalPage>> take_contiguous_free_pages(size_t count, bool supervisor);
     void return_page_at(PhysicalAddress addr);
     void return_page(PhysicalPage&& page) { return_page_at(page.paddr()); }
 
 private:
+    unsigned find_contiguous_free_pages(size_t count);
+    Optional<unsigned> find_and_allocate_contiguous_range(size_t count);
+
     PhysicalRegion(PhysicalAddress lower, PhysicalAddress upper);
 
     PhysicalAddress m_lower;

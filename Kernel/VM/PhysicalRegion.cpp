@@ -27,6 +27,7 @@
 #include <AK/Bitmap.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefPtr.h>
+#include <AK/Vector.h>
 #include <Kernel/Assertions.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/VM/PhysicalRegion.h>
@@ -63,6 +64,51 @@ unsigned PhysicalRegion::finalize_capacity()
     return size();
 }
 
+Vector<RefPtr<PhysicalPage>> PhysicalRegion::take_contiguous_free_pages(size_t count, bool supervisor)
+{
+    ASSERT(m_pages);
+    ASSERT(m_used != m_pages);
+
+    Vector<RefPtr<PhysicalPage>> physical_pages;
+    physical_pages.ensure_capacity(count);
+
+    auto first_contiguous_page = find_contiguous_free_pages(count);
+
+    for (size_t index = 0; index < count; index++) {
+        physical_pages.append(PhysicalPage::create(m_lower.offset(PAGE_SIZE * (index + first_contiguous_page)), supervisor));
+    }
+    return physical_pages;
+}
+
+unsigned PhysicalRegion::find_contiguous_free_pages(size_t count)
+{
+    ASSERT(count != 0);
+    // search from the last page we allocated
+    auto range = find_and_allocate_contiguous_range(count);
+    ASSERT(range.has_value());
+    return range.value();
+}
+
+Optional<unsigned> PhysicalRegion::find_and_allocate_contiguous_range(size_t count)
+{
+    ASSERT(count != 0);
+    size_t found_pages_count = 0;
+    auto first_index = m_bitmap.find_longest_range_of_unset_bits(count, found_pages_count);
+    if (!first_index.has_value())
+        return {};
+
+    auto page = first_index.value();
+    if (count == found_pages_count) {
+        for (unsigned page_index = page; page_index < (page + count); page_index++) {
+            m_bitmap.set(page_index, true);
+        }
+        m_used += count;
+        m_last = page + count;
+        return page;
+    }
+    return {};
+}
+
 RefPtr<PhysicalPage> PhysicalRegion::take_free_page(bool supervisor)
 {
     ASSERT(m_pages);
@@ -70,29 +116,7 @@ RefPtr<PhysicalPage> PhysicalRegion::take_free_page(bool supervisor)
     if (m_used == m_pages)
         return nullptr;
 
-    // search from the last page we allocated
-    for (unsigned page = m_last; page < m_pages; page++) {
-        if (!m_bitmap.get(page)) {
-            m_bitmap.set(page, true);
-            m_used++;
-            m_last = page + 1;
-            return PhysicalPage::create(m_lower.offset(page * PAGE_SIZE), supervisor);
-        }
-    }
-
-    // wrap back around to the start in case we missed something
-    for (unsigned page = 0; page < m_last; page++) {
-        if (!m_bitmap.get(page)) {
-            m_bitmap.set(page, true);
-            m_used++;
-            m_last = page + 1;
-            return PhysicalPage::create(m_lower.offset(page * PAGE_SIZE), supervisor);
-        }
-    }
-
-    ASSERT_NOT_REACHED();
-
-    return nullptr;
+    return PhysicalPage::create(m_lower.offset(find_contiguous_free_pages(1) * PAGE_SIZE), supervisor);
 }
 
 void PhysicalRegion::return_page_at(PhysicalAddress addr)
