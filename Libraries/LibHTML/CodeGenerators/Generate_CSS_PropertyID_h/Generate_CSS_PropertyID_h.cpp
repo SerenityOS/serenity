@@ -62,6 +62,7 @@ int main(int argc, char** argv)
     dbg() << "#include <AK/StringView.h>";
     dbg() << "#include <AK/Traits.h>";
 
+    dbg() << "namespace Web {";
     dbg() << "namespace CSS {";
     dbg() << "enum class PropertyID {";
     dbg() << "    Invalid,";
@@ -75,11 +76,12 @@ int main(int argc, char** argv)
 PropertyID property_id_from_string(const StringView&);\n\
 const char* string_from_property_id(PropertyID);\n\
 }\n\
+}\n\
 \n\
 namespace AK {\n\
 template<>\n\
-struct Traits<CSS::PropertyID> : public GenericTraits<CSS::PropertyID> {\n\
-    static unsigned hash(CSS::PropertyID property_id) { return int_hash((unsigned)property_id); }\n\
+struct Traits<Web::CSS::PropertyID> : public GenericTraits<Web::CSS::PropertyID> {\n\
+    static unsigned hash(Web::CSS::PropertyID property_id) { return int_hash((unsigned)property_id); }\n\
 };\n\
 }\n";
 

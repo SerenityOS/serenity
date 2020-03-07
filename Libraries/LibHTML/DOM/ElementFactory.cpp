@@ -41,6 +41,8 @@
 #include <LibHTML/DOM/HTMLStyleElement.h>
 #include <LibHTML/DOM/HTMLTitleElement.h>
 
+namespace Web {
+
 NonnullRefPtr<Element> create_element(Document& document, const String& tag_name)
 {
     auto lowercase_tag_name = tag_name.to_lowercase();
@@ -81,4 +83,6 @@ NonnullRefPtr<Element> create_element(Document& document, const String& tag_name
         return adopt(*new HTMLHeadingElement(document, lowercase_tag_name));
     }
     return adopt(*new Element(document, lowercase_tag_name));
+}
+
 }

@@ -28,6 +28,8 @@
 
 #include <LibHTML/Layout/LayoutBlock.h>
 
+namespace Web {
+
 class LayoutTableRow;
 
 class LayoutTable final : public LayoutBlock {
@@ -49,4 +51,6 @@ template<>
 inline bool is<LayoutTable>(const LayoutNode& node)
 {
     return node.is_table();
+}
+
 }

@@ -29,6 +29,8 @@
 #include <LibCore/Forward.h>
 #include <LibHTML/DOM/HTMLElement.h>
 
+namespace Web {
+
 class HTMLBlinkElement : public HTMLElement {
 public:
     HTMLBlinkElement(Document&, const String& tag_name);
@@ -39,3 +41,5 @@ private:
 
     NonnullRefPtr<Core::Timer> m_timer;
 };
+
+}

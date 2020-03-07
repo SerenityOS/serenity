@@ -50,7 +50,7 @@ void __libc_init()
 }
 
 extern u32 __stack_chk_guard;
-u32 __stack_chk_guard = (u32)0xc0000c13;
+u32 __stack_chk_guard = (u32)0xc6c7c8c9;
 
 [[noreturn]] void __stack_chk_fail()
 {

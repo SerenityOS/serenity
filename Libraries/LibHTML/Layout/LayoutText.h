@@ -29,6 +29,8 @@
 #include <LibHTML/DOM/Text.h>
 #include <LibHTML/Layout/LayoutNode.h>
 
+namespace Web {
+
 class LineBoxFragment;
 
 class LayoutText : public LayoutNode {
@@ -63,4 +65,6 @@ template<>
 inline bool is<LayoutText>(const LayoutNode& node)
 {
     return node.is_text();
+}
+
 }

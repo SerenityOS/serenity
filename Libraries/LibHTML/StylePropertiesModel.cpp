@@ -29,6 +29,8 @@
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/CSS/StyleProperties.h>
 
+namespace Web {
+
 StylePropertiesModel::StylePropertiesModel(const StyleProperties& properties)
     : m_properties(properties)
 {
@@ -71,4 +73,6 @@ GUI::Variant StylePropertiesModel::data(const GUI::ModelIndex& index, Role role)
 void StylePropertiesModel::update()
 {
     did_update();
+}
+
 }

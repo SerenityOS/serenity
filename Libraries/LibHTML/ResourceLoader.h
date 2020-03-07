@@ -34,6 +34,8 @@ namespace Protocol {
 class Client;
 }
 
+namespace Web {
+
 class ResourceLoader : public Core::Object {
     C_OBJECT(ResourceLoader)
 public:
@@ -53,3 +55,5 @@ private:
     Protocol::Client& protocol_client() { return *m_protocol_client; }
     RefPtr<Protocol::Client> m_protocol_client;
 };
+
+}

@@ -28,6 +28,8 @@
 #include <LibHTML/Layout/LayoutBlock.h>
 #include <LibHTML/Layout/LayoutReplaced.h>
 
+namespace Web {
+
 LayoutReplaced::LayoutReplaced(const Element& element, NonnullRefPtr<StyleProperties> style)
     : LayoutBox(&element, move(style))
 {
@@ -47,4 +49,6 @@ void LayoutReplaced::split_into_lines(LayoutBlock& container)
     if (line_box->width() > 0 && line_box->width() + width() > container.width())
         line_box = &container.add_line_box();
     line_box->add_fragment(*this, 0, 0, width(), height());
+}
+
 }

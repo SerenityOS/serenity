@@ -29,6 +29,8 @@
 #include <AK/String.h>
 #include <LibHTML/DOM/CharacterData.h>
 
+namespace Web {
+
 class Text final : public CharacterData {
 public:
     explicit Text(Document&, const String&);
@@ -44,4 +46,6 @@ template<>
 inline bool is<Text>(const Node& node)
 {
     return node.is_text();
+}
+
 }

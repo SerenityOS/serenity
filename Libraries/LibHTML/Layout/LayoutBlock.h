@@ -29,6 +29,8 @@
 #include <LibHTML/Layout/LayoutBox.h>
 #include <LibHTML/Layout/LineBox.h>
 
+namespace Web {
+
 class Element;
 
 class LayoutBlock : public LayoutBox {
@@ -102,4 +104,6 @@ template<>
 inline bool is<LayoutBlock>(const LayoutNode& node)
 {
     return node.is_block();
+}
+
 }

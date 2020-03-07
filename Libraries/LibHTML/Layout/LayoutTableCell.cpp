@@ -27,6 +27,8 @@
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/Layout/LayoutTableCell.h>
 
+namespace Web {
+
 LayoutTableCell::LayoutTableCell(const Element& element, NonnullRefPtr<StyleProperties> style)
     : LayoutBlock(&element, move(style))
 {
@@ -34,4 +36,6 @@ LayoutTableCell::LayoutTableCell(const Element& element, NonnullRefPtr<StyleProp
 
 LayoutTableCell::~LayoutTableCell()
 {
+}
+
 }

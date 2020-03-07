@@ -30,6 +30,8 @@
 #include <AK/OwnPtr.h>
 #include <LibHTML/CSS/StyleProperties.h>
 
+namespace Web {
+
 class Document;
 class Element;
 class ParentNode;
@@ -56,3 +58,5 @@ private:
 
     Document& m_document;
 };
+
+}

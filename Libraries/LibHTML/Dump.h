@@ -26,6 +26,8 @@
 
 #pragma once
 
+namespace Web {
+
 class Node;
 class LayoutNode;
 class StyleRule;
@@ -37,3 +39,5 @@ void dump_sheet(const StyleSheet&);
 void dump_rule(const StyleRule&);
 
 #undef HTML_DEBUG
+
+}

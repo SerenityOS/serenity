@@ -49,11 +49,11 @@ public:
     void add_message(const String& text, Color = Color::Black);
     void dump() const;
 
-    const Document& document() const { return *m_document; }
-    Document& document() { return *m_document; }
+    const Web::Document& document() const { return *m_document; }
+    Web::Document& document() { return *m_document; }
 
 private:
     IRCLogBuffer();
-    RefPtr<Document> m_document;
-    RefPtr<Element> m_container_element;
+    RefPtr<Web::Document> m_document;
+    RefPtr<Web::Element> m_container_element;
 };

@@ -29,6 +29,8 @@
 #include <LibHTML/HtmlView.h>
 #include <LibHTML/Layout/LayoutDocument.h>
 
+namespace Web {
+
 Frame::Frame(HtmlView& html_view)
     : m_html_view(html_view.make_weak_ptr())
 {
@@ -77,4 +79,6 @@ void Frame::set_needs_display(const Gfx::Rect& rect)
     if (!on_set_needs_display)
         return;
     on_set_needs_display(rect);
+}
+
 }

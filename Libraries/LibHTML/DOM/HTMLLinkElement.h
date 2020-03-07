@@ -28,6 +28,8 @@
 
 #include <LibHTML/DOM/HTMLElement.h>
 
+namespace Web {
+
 class HTMLLinkElement final : public HTMLElement {
 public:
     HTMLLinkElement(Document&, const String& tag_name);
@@ -44,4 +46,6 @@ template<>
 inline bool is<HTMLLinkElement>(const Node& node)
 {
     return is<Element>(node) && to<Element>(node).tag_name().to_lowercase() == "link";
+}
+
 }

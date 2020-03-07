@@ -28,6 +28,8 @@
 
 #include <LibHTML/Layout/LayoutBox.h>
 
+namespace Web {
+
 class LayoutListItemMarker final : public LayoutBox {
 public:
     LayoutListItemMarker();
@@ -38,3 +40,5 @@ public:
 private:
     virtual const char* class_name() const override { return "LayoutListItemMarker"; }
 };
+
+}

@@ -28,6 +28,8 @@
 
 #include <LibHTML/Layout/LayoutReplaced.h>
 
+namespace Web {
+
 class LayoutWidget : public LayoutReplaced {
 public:
     LayoutWidget(const Element&, GUI::Widget&);
@@ -51,4 +53,6 @@ template<>
 inline bool is<LayoutWidget>(const LayoutNode& node)
 {
     return node.is_widget();
+}
+
 }

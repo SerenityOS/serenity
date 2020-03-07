@@ -27,6 +27,8 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <LibGUI/Model.h>
 
+namespace Web {
+
 class StyleProperties;
 
 class StylePropertiesModel final : public GUI::Model {
@@ -57,3 +59,5 @@ private:
     };
     Vector<Value> m_values;
 };
+
+}

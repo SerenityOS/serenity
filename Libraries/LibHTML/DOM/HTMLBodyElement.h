@@ -28,6 +28,8 @@
 
 #include <LibHTML/DOM/HTMLElement.h>
 
+namespace Web {
+
 class HTMLBodyElement : public HTMLElement {
 public:
     HTMLBodyElement(Document&, const String& tag_name);
@@ -41,4 +43,6 @@ template<>
 inline bool is<HTMLBodyElement>(const Node& node)
 {
     return is<Element>(node) && to<Element>(node).tag_name().to_lowercase() == "body";
+}
+
 }

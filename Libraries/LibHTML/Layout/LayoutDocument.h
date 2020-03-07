@@ -29,6 +29,8 @@
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/Layout/LayoutBlock.h>
 
+namespace Web {
+
 class LayoutDocument final : public LayoutBlock {
 public:
     explicit LayoutDocument(const Document&, NonnullRefPtr<StyleProperties>);
@@ -46,3 +48,5 @@ public:
 private:
     LayoutRange m_selection;
 };
+
+}

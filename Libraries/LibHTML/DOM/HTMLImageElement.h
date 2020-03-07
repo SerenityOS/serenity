@@ -30,6 +30,8 @@
 #include <LibGfx/Forward.h>
 #include <LibHTML/DOM/HTMLElement.h>
 
+namespace Web {
+
 class LayoutDocument;
 
 class HTMLImageElement : public HTMLElement {
@@ -57,3 +59,5 @@ private:
     RefPtr<Gfx::ImageDecoder> m_image_decoder;
     ByteBuffer m_encoded_data;
 };
+
+}

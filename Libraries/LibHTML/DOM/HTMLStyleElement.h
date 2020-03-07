@@ -28,6 +28,8 @@
 
 #include <LibHTML/DOM/HTMLElement.h>
 
+namespace Web {
+
 class StyleSheet;
 
 class HTMLStyleElement : public HTMLElement {
@@ -41,3 +43,5 @@ public:
 private:
     RefPtr<StyleSheet> m_stylesheet;
 };
+
+}

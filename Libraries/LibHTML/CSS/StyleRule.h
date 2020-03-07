@@ -30,6 +30,8 @@
 #include <LibHTML/CSS/Selector.h>
 #include <LibHTML/CSS/StyleDeclaration.h>
 
+namespace Web {
+
 class StyleRule : public RefCounted<StyleRule> {
 public:
     static NonnullRefPtr<StyleRule> create(Vector<Selector>&& selectors, NonnullRefPtr<StyleDeclaration>&& declaration)
@@ -48,3 +50,5 @@ private:
     Vector<Selector> m_selectors;
     NonnullRefPtr<StyleDeclaration> m_declaration;
 };
+
+}

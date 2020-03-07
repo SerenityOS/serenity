@@ -27,9 +27,9 @@
 #pragma once
 
 #include <LibGUI/TextEditor.h>
+#include <LibHTML/Forward.h>
 
 class EditorWrapper;
-class HtmlView;
 
 class Editor final : public GUI::TextEditor {
     C_OBJECT(Editor)
@@ -52,6 +52,6 @@ private:
     explicit Editor();
 
     RefPtr<GUI::Window> m_documentation_tooltip_window;
-    RefPtr<HtmlView> m_documentation_html_view;
+    RefPtr<Web::HtmlView> m_documentation_html_view;
     String m_last_parsed_token;
 };

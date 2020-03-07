@@ -27,12 +27,12 @@
 #pragma once
 
 #include <LibGUI/Widget.h>
+#include <LibHTML/Forward.h>
 
 class IRCChannel;
 class IRCClient;
 class IRCQuery;
 class IRCLogBuffer;
-class HtmlView;
 
 class IRCWindow : public GUI::Widget {
     C_OBJECT(IRCWindow)
@@ -72,7 +72,7 @@ private:
     void* m_owner { nullptr };
     Type m_type;
     String m_name;
-    RefPtr<HtmlView> m_html_view;
+    RefPtr<Web::HtmlView> m_html_view;
     RefPtr<GUI::TextEditor> m_text_editor;
     RefPtr<IRCLogBuffer> m_log_buffer;
     int m_unread_count { 0 };

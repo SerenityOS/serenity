@@ -32,6 +32,8 @@
 #include <ctype.h>
 #include <stdio.h>
 
+namespace Web {
+
 DOMTreeModel::DOMTreeModel(Document& document)
     : m_document(document)
 {
@@ -150,4 +152,6 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, Role role) const
 void DOMTreeModel::update()
 {
     did_update();
+}
+
 }

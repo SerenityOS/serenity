@@ -29,6 +29,8 @@
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/Layout/LayoutBlock.h>
 
+namespace Web {
+
 class LayoutListItemMarker;
 
 class LayoutListItem final : public LayoutBlock {
@@ -43,3 +45,5 @@ private:
 
     RefPtr<LayoutListItemMarker> m_marker;
 };
+
+}

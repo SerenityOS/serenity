@@ -60,6 +60,7 @@ int main(int argc, char** argv)
 
     dbg() << "#include <AK/Assertions.h>";
     dbg() << "#include <LibHTML/CSS/PropertyID.h>";
+    dbg() << "namespace Web {";
     dbg() << "namespace CSS {";
 
     dbg() << "PropertyID property_id_from_string(const StringView& string) {";
@@ -84,6 +85,7 @@ int main(int argc, char** argv)
     dbg() << "    default:";
     dbg() << "        return \"(invalid CSS::PropertyID)\";";
     dbg() << "    }";
+    dbg() << "}";
     dbg() << "}";
     dbg() << "}";
 

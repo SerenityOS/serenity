@@ -29,6 +29,8 @@
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/DOM/Text.h>
 
+namespace Web {
+
 namespace SelectorEngine {
 
 static bool matches_hover_pseudo_class(const Element& element)
@@ -143,6 +145,8 @@ bool matches(const Selector& selector, const Element& element)
 {
     ASSERT(!selector.complex_selectors().is_empty());
     return matches(selector, selector.complex_selectors().size() - 1, element);
+}
+
 }
 
 }

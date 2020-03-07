@@ -29,6 +29,8 @@
 #include <LibGfx/FloatRect.h>
 #include <LibHTML/Layout/LayoutNode.h>
 
+namespace Web {
+
 class LayoutBox : public LayoutNodeWithStyleAndBoxModelMetrics {
 public:
     const Gfx::FloatRect& rect() const { return m_rect; }
@@ -73,4 +75,6 @@ template<>
 inline bool is<LayoutBox>(const LayoutNode& node)
 {
     return node.is_box();
+}
+
 }

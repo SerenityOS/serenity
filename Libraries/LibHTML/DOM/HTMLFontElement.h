@@ -28,6 +28,8 @@
 
 #include <LibHTML/DOM/HTMLElement.h>
 
+namespace Web {
+
 class HTMLFontElement : public HTMLElement {
 public:
     HTMLFontElement(Document&, const String& tag_name);
@@ -35,3 +37,5 @@ public:
 
     virtual void apply_presentational_hints(StyleProperties&) const override;
 };
+
+}

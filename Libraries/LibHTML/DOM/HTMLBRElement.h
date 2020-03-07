@@ -28,6 +28,8 @@
 
 #include <LibHTML/DOM/HTMLElement.h>
 
+namespace Web {
+
 class HTMLBRElement final : public HTMLElement {
 public:
     HTMLBRElement(Document&, const String& tag_name);
@@ -40,4 +42,6 @@ template<>
 inline bool is<HTMLBRElement>(const Node& node)
 {
     return is<Element>(node) && to<Element>(node).tag_name().to_lowercase() == "br";
+}
+
 }

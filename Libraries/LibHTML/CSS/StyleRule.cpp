@@ -26,6 +26,8 @@
 
 #include <LibHTML/CSS/StyleRule.h>
 
+namespace Web {
+
 StyleRule::StyleRule(Vector<Selector>&& selectors, NonnullRefPtr<StyleDeclaration>&& declaration)
     : m_selectors(move(selectors))
     , m_declaration(move(declaration))
@@ -34,4 +36,6 @@ StyleRule::StyleRule(Vector<Selector>&& selectors, NonnullRefPtr<StyleDeclaratio
 
 StyleRule::~StyleRule()
 {
+}
+
 }

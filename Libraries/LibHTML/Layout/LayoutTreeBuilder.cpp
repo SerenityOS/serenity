@@ -31,6 +31,8 @@
 #include <LibHTML/Layout/LayoutText.h>
 #include <LibHTML/Layout/LayoutTreeBuilder.h>
 
+namespace Web {
+
 LayoutTreeBuilder::LayoutTreeBuilder()
 {
 }
@@ -84,4 +86,6 @@ RefPtr<LayoutNode> LayoutTreeBuilder::build(Node& node)
     // FIXME: Support building partial trees.
     ASSERT(is<Document>(node));
     return create_layout_tree(node, nullptr);
+}
+
 }

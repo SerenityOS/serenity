@@ -32,6 +32,8 @@
 #include <LibHTML/Parser/CSSParser.h>
 #include <LibHTML/ResourceLoader.h>
 
+namespace Web {
+
 HTMLLinkElement::HTMLLinkElement(Document& document, const String& tag_name)
     : HTMLElement(document, tag_name)
 {
@@ -59,4 +61,6 @@ void HTMLLinkElement::inserted_into(Node&)
             document().update_style();
         });
     }
+}
+
 }

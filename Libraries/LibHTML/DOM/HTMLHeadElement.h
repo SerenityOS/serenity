@@ -28,6 +28,8 @@
 
 #include <LibHTML/DOM/HTMLElement.h>
 
+namespace Web {
+
 class HTMLHeadElement : public HTMLElement {
 public:
     HTMLHeadElement(Document&, const String& tag_name);
@@ -38,4 +40,6 @@ template<>
 inline bool is<HTMLHeadElement>(const Node& node)
 {
     return is<Element>(node) && to<Element>(node).tag_name().to_lowercase() == "head";
+}
+
 }

@@ -31,6 +31,8 @@
 #include <LibHTML/Layout/LayoutBlock.h>
 #include <LibHTML/Layout/LayoutNode.h>
 
+namespace Web {
+
 LayoutNode::LayoutNode(const Node* node)
     : m_node(node)
 {
@@ -151,4 +153,6 @@ Gfx::FloatPoint LayoutNode::box_type_agnostic_position() const
         });
     }
     return position;
+}
+
 }

@@ -27,6 +27,8 @@
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/Layout/LayoutBox.h>
 
+namespace Web {
+
 class LayoutReplaced : public LayoutBox {
 public:
     LayoutReplaced(const Element&, NonnullRefPtr<StyleProperties>);
@@ -46,4 +48,6 @@ template<>
 inline bool is<LayoutReplaced>(const LayoutNode& node)
 {
     return node.is_replaced();
+}
+
 }
