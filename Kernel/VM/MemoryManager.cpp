@@ -32,6 +32,7 @@
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/VM/AnonymousVMObject.h>
+#include <Kernel/VM/ContiguousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/PhysicalRegion.h>
@@ -302,6 +303,19 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     return region->handle_fault(fault);
 }
 
+OwnPtr<Region> MemoryManager::allocate_contiguous_kernel_region(size_t size, const StringView& name, u8 access, bool user_accessible, bool cacheable)
+{
+    ASSERT(!(size % PAGE_SIZE));
+    auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
+    if (!range.is_valid())
+        return nullptr;
+    auto vmobject = ContiguousVMObject::create_with_size(size);
+    auto region = allocate_kernel_region_with_vmobject(range, vmobject, name, access, user_accessible, cacheable);
+    if (!region)
+        return nullptr;
+    return region;
+}
+
 OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringView& name, u8 access, bool user_accessible, bool should_commit, bool cacheable)
 {
     ASSERT(!(size % PAGE_SIZE));
@@ -445,6 +459,36 @@ void MemoryManager::deallocate_supervisor_physical_page(PhysicalPage&& page)
 
     klog() << "MM: deallocate_supervisor_physical_page couldn't figure out region for super page @ " << page.paddr();
     ASSERT_NOT_REACHED();
+}
+
+Vector<RefPtr<PhysicalPage>> MemoryManager::allocate_contiguous_supervisor_physical_pages(size_t size)
+{
+    ASSERT(!(size % PAGE_SIZE));
+    InterruptDisabler disabler;
+    size_t count = ceil_div(size, PAGE_SIZE);
+    Vector<RefPtr<PhysicalPage>> physical_pages;
+    physical_pages.ensure_capacity(count);
+
+    for (auto& region : m_super_physical_regions) {
+        physical_pages = region.take_contiguous_free_pages((count), true);
+        if (physical_pages.is_empty())
+            continue;
+    }
+
+    if (physical_pages.is_empty()) {
+        if (m_super_physical_regions.is_empty()) {
+            klog() << "MM: no super physical regions available (?)";
+        }
+
+        klog() << "MM: no super physical pages available";
+        ASSERT_NOT_REACHED();
+        return {};
+    }
+
+    auto cleanup_region = MM.allocate_kernel_region(physical_pages[0]->paddr(), PAGE_SIZE * count, "MemoryManager Allocation Sanitization", Region::Access::Read | Region::Access::Write);
+    fast_u32_fill((u32*)cleanup_region->vaddr().as_ptr(), 0, (PAGE_SIZE * count) / sizeof(u32));
+    m_super_physical_pages_used += count;
+    return physical_pages;
 }
 
 RefPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
