@@ -39,7 +39,7 @@ String Value::to_string() const
         return "null";
 
     if (is_undefined())
-        return "null";
+        return "undefined";
 
     if (is_number()) {
         // FIXME: This needs improvement.
