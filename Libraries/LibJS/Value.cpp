@@ -53,4 +53,9 @@ String Value::to_string() const
     ASSERT_NOT_REACHED();
 }
 
+const LogStream& operator<<(const LogStream& stream, const Value& value)
+{
+    return stream << value.to_string();
+}
+
 }
