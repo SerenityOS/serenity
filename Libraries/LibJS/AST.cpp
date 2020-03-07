@@ -111,8 +111,21 @@ void ScopeNode::dump(int indent) const
 
 void BinaryExpression::dump(int indent) const
 {
-    ASTNode::dump(indent);
+    const char* op_string = nullptr;
+    switch (m_op) {
+    case BinaryOp::Plus:
+        op_string = "+";
+        break;
+    case BinaryOp::Minus:
+        op_string = "-";
+        break;
+    }
+
+    print_indent(indent);
+    printf("%s\n", class_name());
     m_lhs->dump(indent + 1);
+    print_indent(indent + 1);
+    printf("%s\n", op_string);
     m_rhs->dump(indent + 1);
 }
 
