@@ -9,6 +9,7 @@ compiler:
 cache:
   directories:
   - /var/cache/apt/archives/*.deb
+  - Toolchain/Cache/
 
 notifications:
   irc:
@@ -30,7 +31,8 @@ before_install:
 
 script:
 - cd Toolchain
-- ./BuildIt.sh
+- TRY_USE_LOCAL_TOOLCHAIN=y ./BuildIt.sh
 - cd ../Kernel
 - ./makeall.sh
 - ../Meta/lint-shell-scripts.sh
+- du -ch ../Toolchain/Cache/* || true
