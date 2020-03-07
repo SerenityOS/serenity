@@ -37,6 +37,9 @@ public:
 
     virtual void parse_attribute(const String&, const String&) override;
     virtual void apply_presentational_hints(StyleProperties&) const override;
+
+private:
+    RefPtr<ImageStyleValue> m_background_style_value;
 };
 
 template<>
