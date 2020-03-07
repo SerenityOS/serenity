@@ -26,6 +26,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/LogStream.h>
+#include <AK/String.h>
 #include <AK/Utf8View.h>
 
 namespace AK {
@@ -185,11 +186,11 @@ u32 Utf8CodepointIterator::operator*() const
 
     bool first_byte_makes_sense = decode_first_byte(m_ptr[0], codepoint_length_in_bytes, codepoint_value_so_far);
     if (!first_byte_makes_sense) {
-        dbg() << "First byte doesn't make sense, bytes: " << StringView((const char*)m_ptr, m_length);
+        dbg() << "First byte doesn't make sense: " << String::format("0x%02x", m_ptr[0]);
     }
     ASSERT(first_byte_makes_sense);
     if (codepoint_length_in_bytes > m_length) {
-        dbg() << "Not enough bytes (need " << codepoint_length_in_bytes << ", have " << m_length << "), first byte is: " << m_ptr[0] << " " << (const char*)m_ptr;
+        dbg() << "Not enough bytes (need " << codepoint_length_in_bytes << ", have " << m_length << "), first byte is: " << String::format("0x%02x", m_ptr[0]);
     }
     ASSERT(codepoint_length_in_bytes <= m_length);
 
