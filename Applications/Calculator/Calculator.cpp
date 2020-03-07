@@ -28,6 +28,9 @@
 #include <AK/Assertions.h>
 #include <math.h>
 
+#define MAX 2147483647
+#define MIN -2147483647
+
 Calculator::Calculator()
 {
 }
@@ -104,10 +107,19 @@ double Calculator::finish_operation(double argument)
         return argument;
 
     case Operation::Add:
-        res = m_saved_argument + argument;
+        if ((argument > MAX - m_saved_argument) || (m_saved_argument > MAX + argument)) {
+            m_has_error = true;
+            return argument;
+        } else {
+            res = m_saved_argument + argument;
+        }
         break;
     case Operation::Subtract:
-        res = m_saved_argument - argument;
+        if ((argument < MIN + m_saved_argument) || (m_saved_argument < MIN + argument)) {
+            m_has_error = true;
+        } else {
+            res = m_saved_argument - argument;
+        }
         break;
     case Operation::Multiply:
         res = m_saved_argument * argument;
