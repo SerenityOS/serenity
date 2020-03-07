@@ -123,17 +123,6 @@ inline Value js_null()
     return Value(Value::Type::Null);
 }
 
-inline const LogStream& operator<<(const LogStream& stream, const Value& value)
-{
-    switch (value.type()) {
-    case Value::Type::Boolean:
-        return stream << value.as_bool();
-    case Value::Type::Number:
-        return stream << (i32)value.as_double();
-    default:
-        ASSERT_NOT_REACHED();
-        return stream;
-    }
-}
+const LogStream& operator<<(const LogStream&, const Value&);
 
 }
