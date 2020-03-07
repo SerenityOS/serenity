@@ -32,15 +32,15 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/Window.h>
-#include <LibHTML/CSS/StyleResolver.h>
-#include <LibHTML/DOM/Element.h>
-#include <LibHTML/Dump.h>
-#include <LibHTML/HtmlView.h>
-#include <LibHTML/Layout/LayoutBlock.h>
-#include <LibHTML/Layout/LayoutInline.h>
-#include <LibHTML/Layout/LayoutNode.h>
-#include <LibHTML/Parser/CSSParser.h>
-#include <LibHTML/Parser/HTMLParser.h>
+#include <LibWeb/CSS/StyleResolver.h>
+#include <LibWeb/DOM/Element.h>
+#include <LibWeb/Dump.h>
+#include <LibWeb/HtmlView.h>
+#include <LibWeb/Layout/LayoutBlock.h>
+#include <LibWeb/Layout/LayoutInline.h>
+#include <LibWeb/Layout/LayoutNode.h>
+#include <LibWeb/Parser/CSSParser.h>
+#include <LibWeb/Parser/HTMLParser.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)

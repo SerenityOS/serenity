@@ -27,7 +27,7 @@
 #pragma once
 
 #include <LibGUI/Widget.h>
-#include <LibHTML/Forward.h>
+#include <LibWeb/Forward.h>
 
 class IRCChannel;
 class IRCClient;
