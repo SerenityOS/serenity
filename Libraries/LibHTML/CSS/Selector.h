@@ -30,6 +30,8 @@
 #include <AK/Vector.h>
 #include <LibHTML/CSS/Specificity.h>
 
+namespace Web {
+
 class Selector {
 public:
     struct SimpleSelector {
@@ -90,3 +92,5 @@ public:
 private:
     Vector<ComplexSelector> m_complex_selectors;
 };
+
+}

@@ -29,6 +29,8 @@
 #include <LibHTML/DOM/HTMLBRElement.h>
 #include <LibHTML/Layout/LayoutNode.h>
 
+namespace Web {
+
 class LayoutBreak final : public LayoutNodeWithStyleAndBoxModelMetrics {
 public:
     explicit LayoutBreak(const HTMLBRElement&);
@@ -40,3 +42,5 @@ private:
     virtual const char* class_name() const override { return "LayoutBreak"; }
     virtual void split_into_lines(LayoutBlock&) override;
 };
+
+}

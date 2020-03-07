@@ -28,6 +28,8 @@
 #include <LibHTML/CSS/StyleValue.h>
 #include <LibHTML/DOM/HTMLFontElement.h>
 
+namespace Web {
+
 HTMLFontElement::HTMLFontElement(Document& document, const String& tag_name)
     : HTMLElement(document, tag_name)
 {
@@ -46,4 +48,6 @@ void HTMLFontElement::apply_presentational_hints(StyleProperties& style) const
                 style.set_property(CSS::PropertyID::Color, ColorStyleValue::create(color.value()));
         }
     });
+}
+
 }

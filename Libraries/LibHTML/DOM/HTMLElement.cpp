@@ -26,6 +26,8 @@
 
 #include <LibHTML/DOM/HTMLElement.h>
 
+namespace Web {
+
 HTMLElement::HTMLElement(Document& document, const String& tag_name)
     : Element(document, tag_name)
 {
@@ -33,4 +35,6 @@ HTMLElement::HTMLElement(Document& document, const String& tag_name)
 
 HTMLElement::~HTMLElement()
 {
+}
+
 }

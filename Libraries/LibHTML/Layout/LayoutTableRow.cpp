@@ -28,6 +28,8 @@
 #include <LibHTML/Layout/LayoutTableCell.h>
 #include <LibHTML/Layout/LayoutTableRow.h>
 
+namespace Web {
+
 LayoutTableRow::LayoutTableRow(const Element& element, NonnullRefPtr<StyleProperties> style)
     : LayoutBox(&element, move(style))
 {
@@ -60,4 +62,6 @@ LayoutTableRow* LayoutTableRow::next_row()
 const LayoutTableRow* LayoutTableRow::next_row() const
 {
     return next_sibling_of_type<LayoutTableRow>();
+}
+
 }

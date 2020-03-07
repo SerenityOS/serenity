@@ -30,6 +30,8 @@
 #include <LibHTML/DOM/HTMLBlinkElement.h>
 #include <LibHTML/Layout/LayoutNode.h>
 
+namespace Web {
+
 HTMLBlinkElement::HTMLBlinkElement(Document& document, const String& tag_name)
     : HTMLElement(document, tag_name)
     , m_timer(Core::Timer::construct())
@@ -50,4 +52,6 @@ void HTMLBlinkElement::blink()
 
     layout_node()->set_visible(!layout_node()->is_visible());
     layout_node()->set_needs_display();
+}
+
 }

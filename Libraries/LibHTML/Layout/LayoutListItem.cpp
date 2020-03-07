@@ -27,6 +27,8 @@
 #include <LibHTML/Layout/LayoutListItem.h>
 #include <LibHTML/Layout/LayoutListItemMarker.h>
 
+namespace Web {
+
 LayoutListItem::LayoutListItem(const Element& element, NonnullRefPtr<StyleProperties> style)
     : LayoutBlock(&element, move(style))
 {
@@ -49,4 +51,6 @@ void LayoutListItem::layout()
 
     Gfx::FloatRect marker_rect { x() - 8, y(), 4, height() };
     m_marker->set_rect(marker_rect);
+}
+
 }

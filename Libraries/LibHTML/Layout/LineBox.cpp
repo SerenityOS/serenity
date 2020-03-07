@@ -30,6 +30,8 @@
 #include <LibHTML/Layout/LineBox.h>
 #include <ctype.h>
 
+namespace Web {
+
 void LineBox::add_fragment(const LayoutNode& layout_node, int start, int length, int width, int height)
 {
     bool text_align_is_justify = layout_node.style().string_or_fallback(CSS::PropertyID::TextAlign, "left") == "justify";
@@ -65,4 +67,6 @@ void LineBox::trim_trailing_whitespace()
         last_fragment.m_rect.set_width(last_fragment.m_rect.width() - space_width);
         m_width -= space_width;
     }
+}
+
 }

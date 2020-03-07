@@ -28,6 +28,8 @@
 
 #include <LibHTML/Layout/LayoutBox.h>
 
+namespace Web {
+
 class LayoutBlock;
 
 class LayoutInline : public LayoutNodeWithStyleAndBoxModelMetrics {
@@ -36,3 +38,5 @@ public:
     virtual ~LayoutInline() override;
     virtual const char* class_name() const override { return "LayoutInline"; }
 };
+
+}

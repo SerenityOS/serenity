@@ -32,6 +32,8 @@
 #include <LibHTML/Layout/LayoutImage.h>
 #include <LibHTML/ResourceLoader.h>
 
+namespace Web {
+
 HTMLImageElement::HTMLImageElement(Document& document, const String& tag_name)
     : HTMLElement(document, tag_name)
 {
@@ -120,4 +122,6 @@ void HTMLImageElement::set_volatile(Badge<LayoutDocument>, bool v)
     if (has_image)
         return;
     m_image_decoder = Gfx::ImageDecoder::create(m_encoded_data.data(), m_encoded_data.size());
+}
+
 }

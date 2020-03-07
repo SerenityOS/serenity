@@ -28,6 +28,8 @@
 #include <LibHTML/Layout/LayoutTable.h>
 #include <LibHTML/Layout/LayoutTableRow.h>
 
+namespace Web {
+
 LayoutTable::LayoutTable(const Element& element, NonnullRefPtr<StyleProperties> style)
     : LayoutBlock(&element, move(style))
 {
@@ -51,4 +53,6 @@ LayoutTableRow* LayoutTable::first_row()
 const LayoutTableRow* LayoutTable::first_row() const
 {
     return first_child_of_type<LayoutTableRow>();
+}
+
 }

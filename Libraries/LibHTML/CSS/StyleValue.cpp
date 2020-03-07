@@ -32,6 +32,8 @@
 #include <LibHTML/Frame.h>
 #include <LibHTML/ResourceLoader.h>
 
+namespace Web {
+
 StyleValue::StyleValue(Type type)
     : m_type(type)
 {
@@ -75,4 +77,6 @@ ImageStyleValue::ImageStyleValue(const URL& url, Document& document)
         // FIXME: Do less than a full repaint if possible?
         m_document->frame()->set_needs_display({});
     });
+}
+
 }

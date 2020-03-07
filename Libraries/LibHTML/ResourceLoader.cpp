@@ -30,6 +30,8 @@
 #include <LibProtocol/Client.h>
 #include <LibProtocol/Download.h>
 
+namespace Web {
+
 ResourceLoader& ResourceLoader::the()
 {
     static ResourceLoader* s_the;
@@ -82,4 +84,6 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&)> call
 
     dbg() << "Unimplemented protocol: " << url.protocol();
     ASSERT_NOT_REACHED();
+}
+
 }

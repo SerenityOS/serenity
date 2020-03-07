@@ -29,6 +29,8 @@
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/DOM/HTMLBodyElement.h>
 
+namespace Web {
+
 HTMLBodyElement::HTMLBodyElement(Document& document, const String& tag_name)
     : HTMLElement(document, tag_name)
 {
@@ -70,4 +72,6 @@ void HTMLBodyElement::parse_attribute(const String& name, const String& value)
         if (color.has_value())
             document().set_visited_link_color(color.value());
     }
+}
+
 }

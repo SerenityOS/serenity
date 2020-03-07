@@ -35,6 +35,8 @@
 #include <LibHTML/Layout/LayoutNode.h>
 #include <LibHTML/Layout/LayoutText.h>
 
+namespace Web {
+
 Node::Node(Document& document, NodeType type)
     : m_document(document)
     , m_type(type)
@@ -113,4 +115,6 @@ bool Node::is_link() const
     if (!enclosing_link)
         return false;
     return enclosing_link->has_attribute("href");
+}
+
 }

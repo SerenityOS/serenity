@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,26 +26,12 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtrVector.h>
-#include <LibHTML/CSS/StyleRule.h>
-
 namespace Web {
 
-class StyleSheet : public RefCounted<StyleSheet> {
-public:
-    static NonnullRefPtr<StyleSheet> create(NonnullRefPtrVector<StyleRule>&& rules)
-    {
-        return adopt(*new StyleSheet(move(rules)));
-    }
-
-    ~StyleSheet();
-
-    const NonnullRefPtrVector<StyleRule>& rules() const { return m_rules; }
-
-private:
-    explicit StyleSheet(NonnullRefPtrVector<StyleRule>&&);
-
-    NonnullRefPtrVector<StyleRule> m_rules;
-};
+class Document;
+class Element;
+class Frame;
+class HtmlView;
+class Node;
 
 }

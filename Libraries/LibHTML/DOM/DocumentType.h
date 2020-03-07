@@ -28,6 +28,8 @@
 
 #include <LibHTML/DOM/Node.h>
 
+namespace Web {
+
 class DocumentType final : public Node {
 public:
     explicit DocumentType(Document&);
@@ -40,4 +42,6 @@ template<>
 inline bool is<DocumentType>(const Node& node)
 {
     return node.type() == NodeType::DOCUMENT_TYPE_NODE;
+}
+
 }

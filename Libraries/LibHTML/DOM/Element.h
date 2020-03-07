@@ -30,6 +30,8 @@
 #include <LibHTML/DOM/ParentNode.h>
 #include <LibHTML/Layout/LayoutNode.h>
 
+namespace Web {
+
 class LayoutNodeWithStyle;
 
 class Attribute {
@@ -101,4 +103,6 @@ template<>
 inline bool is<Element>(const Node& node)
 {
     return node.is_element();
+}
+
 }

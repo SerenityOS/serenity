@@ -30,6 +30,8 @@
 #include <LibHTML/Frame.h>
 #include <LibHTML/HtmlView.h>
 
+namespace Web {
+
 HTMLFormElement::HTMLFormElement(Document& document, const String& tag_name)
     : HTMLElement(document, tag_name)
 {
@@ -79,4 +81,6 @@ void HTMLFormElement::submit()
 
     // FIXME: We shouldn't let the form just do this willy-nilly.
     document().frame()->html_view()->load(url);
+}
+
 }

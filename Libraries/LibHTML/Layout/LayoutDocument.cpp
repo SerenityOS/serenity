@@ -29,6 +29,8 @@
 #include <LibHTML/Layout/LayoutDocument.h>
 #include <LibHTML/Layout/LayoutImage.h>
 
+namespace Web {
+
 LayoutDocument::LayoutDocument(const Document& document, NonnullRefPtr<StyleProperties> style)
     : LayoutBlock(&document, move(style))
 {
@@ -64,4 +66,6 @@ void LayoutDocument::did_set_viewport_rect(Badge<Frame>, const Gfx::Rect& a_view
         const_cast<HTMLImageElement&>(layout_image.node()).set_volatile({}, !viewport_rect.intersects(layout_image.rect()));
         return IterationDecision::Continue;
     });
+}
+
 }

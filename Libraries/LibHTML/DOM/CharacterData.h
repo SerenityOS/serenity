@@ -29,6 +29,8 @@
 #include <AK/String.h>
 #include <LibHTML/DOM/Node.h>
 
+namespace Web {
+
 class CharacterData : public Node {
 public:
     virtual ~CharacterData() override;
@@ -48,4 +50,6 @@ template<>
 inline bool is<CharacterData>(const Node& node)
 {
     return node.is_character_data();
+}
+
 }

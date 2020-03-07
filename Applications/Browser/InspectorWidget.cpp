@@ -41,13 +41,13 @@ InspectorWidget::InspectorWidget()
     auto& splitter = add<GUI::VerticalSplitter>();
     m_dom_tree_view = splitter.add<GUI::TreeView>();
     m_dom_tree_view->on_selection = [this](auto& index) {
-        auto* node = static_cast<Node*>(index.internal_data());
+        auto* node = static_cast<Web::Node*>(index.internal_data());
         node->document().set_inspected_node(node);
         if (node->is_element()) {
-            auto element = to<Element>(*node);
+            auto element = Web::to<Web::Element>(*node);
             if (element.resolved_style()) {
-                m_style_table_view->set_model(StylePropertiesModel::create(*element.resolved_style()));
-                m_computed_style_table_view->set_model(StylePropertiesModel::create(*element.computed_style()));
+                m_style_table_view->set_model(Web::StylePropertiesModel::create(*element.resolved_style()));
+                m_computed_style_table_view->set_model(Web::StylePropertiesModel::create(*element.computed_style()));
             }
         } else {
             m_style_table_view->set_model(nullptr);
@@ -68,10 +68,10 @@ InspectorWidget::~InspectorWidget()
 {
 }
 
-void InspectorWidget::set_document(Document* document)
+void InspectorWidget::set_document(Web::Document* document)
 {
     if (m_document == document)
         return;
     m_document = document;
-    m_dom_tree_view->set_model(DOMTreeModel::create(*document));
+    m_dom_tree_view->set_model(Web::DOMTreeModel::create(*document));
 }

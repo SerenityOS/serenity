@@ -30,6 +30,8 @@
 #include <LibGfx/Rect.h>
 #include <LibGUI/Forward.h>
 
+namespace Web {
+
 class RenderingContext {
 public:
     explicit RenderingContext(GUI::Painter& painter, const Palette& palette)
@@ -53,3 +55,5 @@ private:
     Gfx::Rect m_viewport_rect;
     bool m_should_show_line_box_borders { false };
 };
+
+}

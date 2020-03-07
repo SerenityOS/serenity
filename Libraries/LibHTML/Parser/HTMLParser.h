@@ -29,7 +29,11 @@
 #include <AK/NonnullRefPtr.h>
 #include <LibHTML/DOM/Document.h>
 
+namespace Web {
+
 class DocumentFragment;
 
 RefPtr<Document> parse_html_document(const StringView&, const URL& = URL());
 RefPtr<DocumentFragment> parse_html_fragment(Document&, const StringView&);
+
+}

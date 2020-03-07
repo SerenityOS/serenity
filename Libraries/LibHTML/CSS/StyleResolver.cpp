@@ -34,6 +34,8 @@
 #include <ctype.h>
 #include <stdio.h>
 
+namespace Web {
+
 StyleResolver::StyleResolver(Document& document)
     : m_document(document)
 {
@@ -293,4 +295,6 @@ NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const Element& eleme
     }
 
     return style;
+}
+
 }

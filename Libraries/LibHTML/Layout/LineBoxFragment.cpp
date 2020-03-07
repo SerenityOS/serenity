@@ -31,6 +31,8 @@
 #include <LibHTML/Layout/LineBoxFragment.h>
 #include <LibHTML/RenderingContext.h>
 
+namespace Web {
+
 void LineBoxFragment::render(RenderingContext& context)
 {
     for (auto* ancestor = layout_node().parent(); ancestor; ancestor = ancestor->parent()) {
@@ -74,4 +76,6 @@ int LineBoxFragment::text_index_at(float x) const
         width_so_far += glyph_width + glyph_spacing;
     }
     return m_start + m_length - 1;
+}
+
 }

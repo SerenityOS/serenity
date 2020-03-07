@@ -28,9 +28,13 @@
 
 #include <LibHTML/CSS/Length.h>
 
+namespace Web {
+
 struct LengthBox {
     Length top;
     Length right;
     Length bottom;
     Length left;
 };
+
+}

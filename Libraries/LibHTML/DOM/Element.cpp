@@ -37,6 +37,8 @@
 #include <LibHTML/Layout/LayoutTableRow.h>
 #include <LibHTML/Layout/LayoutTreeBuilder.h>
 
+namespace Web {
+
 Element::Element(Document& document, const String& tag_name)
     : ParentNode(document, NodeType::ELEMENT_NODE)
     , m_tag_name(tag_name)
@@ -214,4 +216,6 @@ NonnullRefPtr<StyleProperties> Element::computed_style()
         }
     }
     return properties;
+}
+
 }

@@ -29,6 +29,8 @@
 #include <AK/String.h>
 #include <LibHTML/DOM/CharacterData.h>
 
+namespace Web {
+
 class Comment final : public CharacterData {
 public:
     explicit Comment(Document&, const String&);
@@ -41,4 +43,6 @@ template<>
 inline bool is<Comment>(const Node& node)
 {
     return node.is_comment();
+}
+
 }

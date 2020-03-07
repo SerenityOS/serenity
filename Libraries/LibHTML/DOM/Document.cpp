@@ -43,6 +43,8 @@
 #include <LibHTML/Layout/LayoutTreeBuilder.h>
 #include <stdio.h>
 
+namespace Web {
+
 Document::Document()
     : ParentNode(*this, NodeType::DOCUMENT_NODE)
     , m_style_resolver(make<StyleResolver>(*this))
@@ -328,4 +330,6 @@ Color Document::visited_link_color() const
     if (!frame())
         return Color::Magenta;
     return frame()->html_view()->palette().visited_link();
+}
+
 }

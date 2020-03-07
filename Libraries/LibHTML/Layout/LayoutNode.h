@@ -36,6 +36,8 @@
 #include <LibHTML/RenderingContext.h>
 #include <LibHTML/TreeNode.h>
 
+namespace Web {
+
 class Document;
 class Element;
 class LayoutBlock;
@@ -314,4 +316,6 @@ inline T* LayoutNode::first_ancestor_of_type()
             return &to<T>(*ancestor);
     }
     return nullptr;
+}
+
 }

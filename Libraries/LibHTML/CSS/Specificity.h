@@ -26,6 +26,8 @@
 
 #pragma once
 
+namespace Web {
+
 class Specificity {
 public:
     Specificity(unsigned ids, unsigned classes, unsigned tag_names)
@@ -58,3 +60,5 @@ private:
     unsigned m_classes { 0 };
     unsigned m_tag_names { 0 };
 };
+
+}

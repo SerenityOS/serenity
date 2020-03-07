@@ -26,6 +26,8 @@
 
 #include <LibHTML/DOM/HTMLHeadingElement.h>
 
+namespace Web {
+
 HTMLHeadingElement::HTMLHeadingElement(Document& document, const String& tag_name)
     : HTMLElement(document, tag_name)
 {
@@ -33,4 +35,6 @@ HTMLHeadingElement::HTMLHeadingElement(Document& document, const String& tag_nam
 
 HTMLHeadingElement::~HTMLHeadingElement()
 {
+}
+
 }

@@ -29,6 +29,8 @@
 #include <LibHTML/FontCache.h>
 #include <ctype.h>
 
+namespace Web {
+
 StyleProperties::StyleProperties()
 {
 }
@@ -176,4 +178,6 @@ bool StyleProperties::operator==(const StyleProperties& other) const
     }
 
     return true;
+}
+
 }

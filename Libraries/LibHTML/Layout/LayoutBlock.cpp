@@ -33,6 +33,8 @@
 #include <LibHTML/Layout/LayoutText.h>
 #include <math.h>
 
+namespace Web {
+
 LayoutBlock::LayoutBlock(const Node* node, NonnullRefPtr<StyleProperties> style)
     : LayoutBox(node, move(style))
 {
@@ -383,4 +385,6 @@ LineBox& LayoutBlock::add_line_box()
 {
     m_line_boxes.append(LineBox());
     return m_line_boxes.last();
+}
+
 }

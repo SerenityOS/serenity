@@ -28,6 +28,8 @@
 
 #include <LibHTML/DOM/ParentNode.h>
 
+namespace Web {
+
 class DocumentFragment : public ParentNode {
 public:
     DocumentFragment(Document& document)
@@ -42,4 +44,6 @@ template<>
 inline bool is<DocumentFragment>(const Node& node)
 {
     return node.is_document_fragment();
+}
+
 }

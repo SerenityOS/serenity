@@ -26,6 +26,8 @@
 
 #include <LibHTML/Layout/BoxModelMetrics.h>
 
+namespace Web {
+
 BoxModelMetrics::BoxModelMetrics()
 {
 }
@@ -42,4 +44,6 @@ BoxModelMetrics::PixelBox BoxModelMetrics::full_margin() const
         m_margin.bottom.to_px() + m_border.bottom.to_px() + m_padding.bottom.to_px(),
         m_margin.left.to_px() + m_border.left.to_px() + m_padding.left.to_px(),
     };
+}
+
 }

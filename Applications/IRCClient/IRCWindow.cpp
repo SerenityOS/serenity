@@ -46,7 +46,7 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
     // Make a container for the log buffer view + (optional) member list.
     auto& container = add<GUI::HorizontalSplitter>();
 
-    m_html_view = container.add<HtmlView>();
+    m_html_view = container.add<Web::HtmlView>();
 
     if (m_type == Channel) {
         auto& member_view = container.add<GUI::TableView>();
@@ -82,7 +82,7 @@ IRCWindow::~IRCWindow()
 void IRCWindow::set_log_buffer(const IRCLogBuffer& log_buffer)
 {
     m_log_buffer = &log_buffer;
-    m_html_view->set_document(const_cast<Document*>(&log_buffer.document()));
+    m_html_view->set_document(const_cast<Web::Document*>(&log_buffer.document()));
 }
 
 bool IRCWindow::is_active() const

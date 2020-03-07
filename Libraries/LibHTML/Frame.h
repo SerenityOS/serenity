@@ -34,6 +34,8 @@
 #include <LibGfx/Size.h>
 #include <LibHTML/TreeNode.h>
 
+namespace Web {
+
 class Document;
 class HtmlView;
 
@@ -67,3 +69,5 @@ private:
     Gfx::Size m_size;
     Gfx::Rect m_viewport_rect;
 };
+
+}

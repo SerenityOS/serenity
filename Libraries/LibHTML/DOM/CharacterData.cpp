@@ -26,6 +26,8 @@
 
 #include <LibHTML/DOM/CharacterData.h>
 
+namespace Web {
+
 CharacterData::CharacterData(Document& document, NodeType type, const String& data)
     : Node(document, type)
     , m_data(data)
@@ -34,4 +36,6 @@ CharacterData::CharacterData(Document& document, NodeType type, const String& da
 
 CharacterData::~CharacterData()
 {
+}
+
 }
