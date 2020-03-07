@@ -28,6 +28,8 @@
 
 #include <LibHTML/DOM/HTMLElement.h>
 
+namespace Web {
+
 class HTMLFormElement : public HTMLElement {
 public:
     HTMLFormElement(Document&, const String& tag_name);
@@ -43,4 +45,6 @@ template<>
 inline bool is<HTMLFormElement>(const Node& node)
 {
     return is<Element>(node) && to<Element>(node).tag_name().to_lowercase() == "form";
+}
+
 }

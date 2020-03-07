@@ -26,6 +26,8 @@
 
 #include <LibHTML/CSS/StyleSheet.h>
 
+namespace Web {
+
 StyleSheet::StyleSheet(NonnullRefPtrVector<StyleRule>&& rules)
     : m_rules(move(rules))
 {
@@ -33,4 +35,6 @@ StyleSheet::StyleSheet(NonnullRefPtrVector<StyleRule>&& rules)
 
 StyleSheet::~StyleSheet()
 {
+}
+
 }

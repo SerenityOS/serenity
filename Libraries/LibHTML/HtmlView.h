@@ -29,6 +29,8 @@
 #include <LibGUI/ScrollableWidget.h>
 #include <LibHTML/DOM/Document.h>
 
+namespace Web {
+
 class Frame;
 
 class HtmlView : public GUI::ScrollableWidget {
@@ -43,8 +45,8 @@ public:
     const LayoutDocument* layout_root() const;
     LayoutDocument* layout_root();
 
-    ::Frame& main_frame() { return *m_main_frame; }
-    const ::Frame& main_frame() const { return *m_main_frame; }
+    Web::Frame& main_frame() { return *m_main_frame; }
+    const Web::Frame& main_frame() const { return *m_main_frame; }
 
     void reload();
     void load(const URL&);
@@ -77,8 +79,10 @@ private:
     void layout_and_sync_size();
     void dump_selection(const char* event_name);
 
-    RefPtr<::Frame> m_main_frame;
+    RefPtr<Web::Frame> m_main_frame;
 
     bool m_should_show_line_box_borders { false };
     bool m_in_mouse_selection { false };
 };
+
+}

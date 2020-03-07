@@ -28,6 +28,8 @@
 
 #include <LibGUI/Model.h>
 
+namespace Web {
+
 class Document;
 
 class DOMTreeModel final : public GUI::Model {
@@ -55,3 +57,5 @@ private:
     GUI::Icon m_element_icon;
     GUI::Icon m_text_icon;
 };
+
+}

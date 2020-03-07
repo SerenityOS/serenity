@@ -28,6 +28,8 @@
 
 #include <AK/String.h>
 
+namespace Web {
+
 class Length {
 public:
     enum class Type {
@@ -75,4 +77,6 @@ private:
 inline const LogStream& operator<<(const LogStream& stream, const Length& value)
 {
     return stream << value.to_string();
+}
+
 }

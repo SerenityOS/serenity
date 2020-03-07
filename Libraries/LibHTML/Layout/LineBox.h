@@ -29,6 +29,8 @@
 #include <AK/Vector.h>
 #include <LibHTML/Layout/LineBoxFragment.h>
 
+namespace Web {
+
 class LineBox {
 public:
     LineBox() {}
@@ -46,3 +48,5 @@ private:
     Vector<LineBoxFragment> m_fragments;
     float m_width { 0 };
 };
+
+}

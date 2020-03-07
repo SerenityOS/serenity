@@ -29,6 +29,8 @@
 #include <LibGfx/Size.h>
 #include <LibHTML/CSS/LengthBox.h>
 
+namespace Web {
+
 class BoxModelMetrics {
 public:
     BoxModelMetrics();
@@ -56,3 +58,5 @@ private:
     LengthBox m_padding;
     LengthBox m_border;
 };
+
+}

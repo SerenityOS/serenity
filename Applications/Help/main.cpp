@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
     tree_view.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     tree_view.set_preferred_size(200, 500);
 
-    auto& html_view = splitter.add<HtmlView>();
+    auto& html_view = splitter.add<Web::HtmlView>();
 
     History history;
 
@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
         ASSERT(success);
 
         String html = md_document.render_to_html();
-        auto html_document = parse_html_document(html);
+        auto html_document = Web::parse_html_document(html);
         html_view.set_document(html_document);
 
         String page_and_section = model->page_and_section(tree_view.selection().first());

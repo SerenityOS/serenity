@@ -28,6 +28,8 @@
 
 #include <AK/RefPtr.h>
 
+namespace Web {
+
 class Node;
 class LayoutNode;
 
@@ -37,3 +39,5 @@ public:
 
     RefPtr<LayoutNode> build(Node&);
 };
+
+}

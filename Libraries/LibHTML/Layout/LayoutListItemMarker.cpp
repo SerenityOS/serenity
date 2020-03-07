@@ -27,6 +27,8 @@
 #include <LibGUI/Painter.h>
 #include <LibHTML/Layout/LayoutListItemMarker.h>
 
+namespace Web {
+
 LayoutListItemMarker::LayoutListItemMarker()
     : LayoutBox(nullptr, StyleProperties::create())
 {
@@ -43,4 +45,6 @@ void LayoutListItemMarker::render(RenderingContext& context)
     // FIXME: It would be nicer to not have to go via the parent here to get our inherited style.
     auto color = parent()->style().color_or_fallback(CSS::PropertyID::Color, document(), context.palette().base_text());
     context.painter().fill_rect(bullet_rect, color);
+}
+
 }

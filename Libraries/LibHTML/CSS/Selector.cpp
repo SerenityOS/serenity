@@ -26,6 +26,8 @@
 
 #include <LibHTML/CSS/Selector.h>
 
+namespace Web {
+
 Selector::Selector(Vector<ComplexSelector>&& component_lists)
     : m_complex_selectors(move(component_lists))
 {
@@ -60,4 +62,6 @@ Specificity Selector::specificity() const
     }
 
     return { ids, classes, tag_names };
+}
+
 }

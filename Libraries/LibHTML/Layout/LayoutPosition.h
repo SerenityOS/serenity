@@ -28,6 +28,8 @@
 
 #include <AK/RefPtr.h>
 
+namespace Web {
+
 class LayoutNode;
 
 struct LayoutPosition {
@@ -80,3 +82,5 @@ private:
     LayoutPosition m_start;
     LayoutPosition m_end;
 };
+
+}

@@ -34,6 +34,8 @@
 #include <LibHTML/HtmlView.h>
 #include <LibHTML/Layout/LayoutWidget.h>
 
+namespace Web {
+
 HTMLInputElement::HTMLInputElement(Document& document, const String& tag_name)
     : HTMLElement(document, tag_name)
 {
@@ -75,4 +77,6 @@ RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const StyleProperties*) 
     }
 
     return adopt(*new LayoutWidget(*this, *widget));
+}
+
 }

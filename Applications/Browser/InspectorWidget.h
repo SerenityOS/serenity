@@ -25,15 +25,14 @@
  */
 
 #include <LibGUI/Widget.h>
-
-class Document;
+#include <LibHTML/Forward.h>
 
 class InspectorWidget final : public GUI::Widget {
     C_OBJECT(InspectorWidget)
 public:
     virtual ~InspectorWidget();
 
-    void set_document(Document*);
+    void set_document(Web::Document*);
 
 private:
     InspectorWidget();
@@ -41,5 +40,5 @@ private:
     RefPtr<GUI::TreeView> m_dom_tree_view;
     RefPtr<GUI::TableView> m_style_table_view;
     RefPtr<GUI::TableView> m_computed_style_table_view;
-    RefPtr<Document> m_document;
+    RefPtr<Web::Document> m_document;
 };

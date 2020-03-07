@@ -34,6 +34,8 @@
 //#define DRAW_BOXES_AROUND_LAYOUT_NODES
 //#define DRAW_BOXES_AROUND_HOVERED_NODES
 
+namespace Web {
+
 void LayoutBox::paint_border(RenderingContext& context, Edge edge, const Gfx::FloatRect& rect, CSS::PropertyID style_property_id, CSS::PropertyID color_property_id, CSS::PropertyID width_property_id)
 {
     auto border_width = style().property(width_property_id);
@@ -237,4 +239,6 @@ void LayoutBox::set_needs_display()
 bool LayoutBox::is_body() const
 {
     return node() && node() == document().body();
+}
+
 }

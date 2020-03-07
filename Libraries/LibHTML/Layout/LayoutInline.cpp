@@ -28,6 +28,8 @@
 #include <LibHTML/Layout/LayoutBlock.h>
 #include <LibHTML/Layout/LayoutInline.h>
 
+namespace Web {
+
 LayoutInline::LayoutInline(const Element& element, NonnullRefPtr<StyleProperties> style)
     : LayoutNodeWithStyleAndBoxModelMetrics(&element, move(style))
 {
@@ -36,4 +38,6 @@ LayoutInline::LayoutInline(const Element& element, NonnullRefPtr<StyleProperties
 
 LayoutInline::~LayoutInline()
 {
+}
+
 }

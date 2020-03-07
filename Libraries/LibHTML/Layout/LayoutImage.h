@@ -29,6 +29,8 @@
 #include <LibHTML/DOM/HTMLImageElement.h>
 #include <LibHTML/Layout/LayoutReplaced.h>
 
+namespace Web {
+
 class HTMLImageElement;
 
 class LayoutImage : public LayoutReplaced {
@@ -52,4 +54,6 @@ template<>
 inline bool is<LayoutImage>(const LayoutNode& node)
 {
     return node.is_image();
+}
+
 }

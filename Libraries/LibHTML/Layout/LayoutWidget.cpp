@@ -30,6 +30,8 @@
 #include <LibGUI/Widget.h>
 #include <LibHTML/Layout/LayoutWidget.h>
 
+namespace Web {
+
 LayoutWidget::LayoutWidget(const Element& element, GUI::Widget& widget)
     : LayoutReplaced(element, StyleProperties::create())
     , m_widget(widget)
@@ -51,4 +53,6 @@ void LayoutWidget::layout()
 void LayoutWidget::render(RenderingContext& context)
 {
     LayoutReplaced::render(context);
+}
+
 }

@@ -37,6 +37,8 @@
 #include <ctype.h>
 #include <stdio.h>
 
+namespace Web {
+
 static bool is_valid_in_attribute_name(char ch)
 {
     return isalnum(ch) || ch == '_' || ch == '-';
@@ -377,4 +379,6 @@ RefPtr<Document> parse_html_document(const StringView& html, const URL& url)
     fire_insertion_callbacks(document);
 
     return document;
+}
+
 }

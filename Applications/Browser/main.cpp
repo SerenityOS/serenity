@@ -64,7 +64,7 @@ int main(int argc, char** argv)
     GUI::Application app(argc, argv);
 
     // Connect to the ProtocolServer immediately so we can drop the "unix" pledge.
-    ResourceLoader::the();
+    Web::ResourceLoader::the();
 
     if (pledge("stdio shared_buffer accept rpath", nullptr) < 0) {
         perror("pledge");
@@ -81,7 +81,7 @@ int main(int argc, char** argv)
     widget.layout()->set_spacing(0);
 
     auto& toolbar = widget.add<GUI::ToolBar>();
-    auto& html_widget = widget.add<HtmlView>();
+    auto& html_widget = widget.add<Web::HtmlView>();
 
     History<URL> history;
 
@@ -157,12 +157,12 @@ int main(int argc, char** argv)
         statusbar.set_text(href);
     };
 
-    ResourceLoader::the().on_load_counter_change = [&] {
-        if (ResourceLoader::the().pending_loads() == 0) {
+    Web::ResourceLoader::the().on_load_counter_change = [&] {
+        if (Web::ResourceLoader::the().pending_loads() == 0) {
             statusbar.set_text("");
             return;
         }
-        statusbar.set_text(String::format("Loading (%d pending resources...)", ResourceLoader::the().pending_loads()));
+        statusbar.set_text(String::format("Loading (%d pending resources...)", Web::ResourceLoader::the().pending_loads()));
     };
 
     auto menubar = make<GUI::MenuBar>();

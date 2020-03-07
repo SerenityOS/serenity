@@ -26,6 +26,8 @@
 
 #include <LibHTML/CSS/StyleDeclaration.h>
 
+namespace Web {
+
 StyleDeclaration::StyleDeclaration(Vector<StyleProperty>&& properties)
     : m_properties(move(properties))
 {
@@ -33,4 +35,6 @@ StyleDeclaration::StyleDeclaration(Vector<StyleProperty>&& properties)
 
 StyleDeclaration::~StyleDeclaration()
 {
+}
+
 }

@@ -30,6 +30,8 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/Weakable.h>
 
+namespace Web {
+
 // FIXME: I wish I didn't have to forward declare these, but I can't seem to avoid
 //        it if I still want to have for_each_in_subtree_of_type<U> inline here.
 class Node;
@@ -292,4 +294,6 @@ inline bool TreeNode<T>::is_ancestor_of(const TreeNode<T>& other) const
             return true;
     }
     return false;
+}
+
 }

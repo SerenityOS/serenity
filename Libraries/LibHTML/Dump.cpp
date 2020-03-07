@@ -38,6 +38,8 @@
 #include <LibHTML/Layout/LayoutText.h>
 #include <stdio.h>
 
+namespace Web {
+
 void dump_tree(const Node& node)
 {
     static int indent = 0;
@@ -251,4 +253,6 @@ void dump_sheet(const StyleSheet& sheet)
     for (auto& rule : sheet.rules()) {
         dump_rule(rule);
     }
+}
+
 }

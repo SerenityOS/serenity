@@ -32,6 +32,8 @@
 #include <LibGfx/Forward.h>
 #include <LibHTML/CSS/StyleValue.h>
 
+namespace Web {
+
 class StyleProperties : public RefCounted<StyleProperties> {
 public:
     StyleProperties();
@@ -75,3 +77,5 @@ private:
 
     mutable RefPtr<Gfx::Font> m_font;
 };
+
+}

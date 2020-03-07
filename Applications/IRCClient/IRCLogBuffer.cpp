@@ -43,14 +43,14 @@ NonnullRefPtr<IRCLogBuffer> IRCLogBuffer::create()
 
 IRCLogBuffer::IRCLogBuffer()
 {
-    m_document = adopt(*new Document);
-    m_document->append_child(adopt(*new DocumentType(document())));
+    m_document = adopt(*new Web::Document);
+    m_document->append_child(adopt(*new Web::DocumentType(document())));
     auto html_element = create_element(document(), "html");
     m_document->append_child(html_element);
     auto head_element = create_element(document(), "head");
     html_element->append_child(head_element);
     auto style_element = create_element(document(), "style");
-    style_element->append_child(adopt(*new Text(document(), "div { font-family: Csilla; font-weight: lighter; }")));
+    style_element->append_child(adopt(*new Web::Text(document(), "div { font-family: Csilla; font-weight: lighter; }")));
     head_element->append_child(style_element);
     auto body_element = create_element(document(), "body");
     html_element->append_child(body_element);

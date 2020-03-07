@@ -309,7 +309,8 @@ PageFaultResponse Region::handle_fault(const PageFault& fault)
         }
         return handle_zero_fault(page_index_in_region);
 #else
-        ASSERT_NOT_REACHED();
+        dbg() << "BUG! Unexpected NP fault at " << fault.vaddr();
+        return PageFaultResponse::ShouldCrash;
 #endif
     }
     ASSERT(fault.type() == PageFault::Type::ProtectionViolation);

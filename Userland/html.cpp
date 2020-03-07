@@ -61,10 +61,10 @@ int main(int argc, char** argv)
     }
 
     String html = String::copy(f->read_all());
-    auto document = parse_html_document(html);
+    auto document = Web::parse_html_document(html);
 
     auto window = GUI::Window::construct();
-    auto& widget = window->set_main_widget<HtmlView>();
+    auto& widget = window->set_main_widget<Web::HtmlView>();
     widget.set_document(document);
     if (!widget.document()->title().is_null())
         window->set_title(String::format("%s - HTML", widget.document()->title().characters()));

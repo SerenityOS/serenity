@@ -28,6 +28,8 @@
 
 #include <LibGfx/FloatRect.h>
 
+namespace Web {
+
 class LayoutNode;
 class RenderingContext;
 
@@ -63,3 +65,5 @@ private:
     int m_length { 0 };
     Gfx::FloatRect m_rect;
 };
+
+}

@@ -28,6 +28,8 @@
 
 #include <LibHTML/DOM/Node.h>
 
+namespace Web {
+
 class ParentNode : public Node {
 public:
     template<typename F> void for_each_child(F) const;
@@ -52,4 +54,6 @@ inline void ParentNode::for_each_child(Callback callback)
 {
     for (auto* node = first_child(); node; node = node->next_sibling())
         callback(*node);
+}
+
 }

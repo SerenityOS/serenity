@@ -28,4 +28,8 @@
 
 #include <LibHTML/DOM/Element.h>
 
+namespace Web {
+
 NonnullRefPtr<Element> create_element(Document&, const String& tag_name);
+
+}

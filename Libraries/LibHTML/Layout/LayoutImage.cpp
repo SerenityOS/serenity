@@ -29,6 +29,8 @@
 #include <LibGUI/Painter.h>
 #include <LibHTML/Layout/LayoutImage.h>
 
+namespace Web {
+
 LayoutImage::LayoutImage(const HTMLImageElement& element, NonnullRefPtr<StyleProperties> style)
     : LayoutReplaced(element, move(style))
 {
@@ -82,4 +84,6 @@ void LayoutImage::render(RenderingContext& context)
 bool LayoutImage::renders_as_alt_text() const
 {
     return !node().image_decoder();
+}
+
 }

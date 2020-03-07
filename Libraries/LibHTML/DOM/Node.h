@@ -32,6 +32,8 @@
 #include <AK/Vector.h>
 #include <LibHTML/TreeNode.h>
 
+namespace Web {
+
 enum class NodeType : unsigned {
     INVALID = 0,
     ELEMENT_NODE = 1,
@@ -184,4 +186,6 @@ inline const T* Node::first_ancestor_of_type() const
             return to<T>(ancestor);
     }
     return nullptr;
+}
+
 }

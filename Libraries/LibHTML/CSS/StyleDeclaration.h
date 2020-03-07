@@ -30,6 +30,8 @@
 #include <AK/Vector.h>
 #include <LibHTML/CSS/StyleValue.h>
 
+namespace Web {
+
 struct StyleProperty {
     CSS::PropertyID property_id;
     NonnullRefPtr<StyleValue> value;
@@ -52,3 +54,5 @@ public:
 
     Vector<StyleProperty> m_properties;
 };
+
+}

@@ -34,6 +34,8 @@
 #include <LibHTML/Layout/LayoutText.h>
 #include <ctype.h>
 
+namespace Web {
+
 LayoutText::LayoutText(const Text& text)
     : LayoutNode(&text)
 {
@@ -230,4 +232,6 @@ void LayoutText::split_into_lines(LayoutBlock& container)
             available_width = container.width();
         }
     }
+}
+
 }

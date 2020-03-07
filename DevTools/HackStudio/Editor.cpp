@@ -48,7 +48,7 @@ Editor::Editor()
     m_documentation_tooltip_window = GUI::Window::construct();
     m_documentation_tooltip_window->set_rect(0, 0, 500, 400);
     m_documentation_tooltip_window->set_window_type(GUI::WindowType::Tooltip);
-    m_documentation_html_view = m_documentation_tooltip_window->set_main_widget<HtmlView>();
+    m_documentation_html_view = m_documentation_tooltip_window->set_main_widget<Web::HtmlView>();
 }
 
 Editor::~Editor()
@@ -145,7 +145,7 @@ void Editor::show_documentation_tooltip_if_available(const String& hovered_token
 
     auto html_text = man_document.render_to_html();
 
-    auto html_document = parse_html_document(html_text);
+    auto html_document = Web::parse_html_document(html_text);
     if (!html_document) {
         dbg() << "failed to parse HTML";
         return;
@@ -153,10 +153,10 @@ void Editor::show_documentation_tooltip_if_available(const String& hovered_token
 
     // FIXME: LibHTML needs a friendlier DOM manipulation API. Something like innerHTML :^)
     auto style_element = create_element(*html_document, "style");
-    style_element->append_child(adopt(*new Text(*html_document, "body { background-color: #dac7b5; }")));
+    style_element->append_child(adopt(*new Web::Text(*html_document, "body { background-color: #dac7b5; }")));
 
     // FIXME: This const_cast should not be necessary.
-    auto* head_element = const_cast<HTMLHeadElement*>(html_document->head());
+    auto* head_element = const_cast<Web::HTMLHeadElement*>(html_document->head());
     ASSERT(head_element);
     head_element->append_child(style_element);
 

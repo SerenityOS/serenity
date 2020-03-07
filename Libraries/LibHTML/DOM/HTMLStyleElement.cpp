@@ -30,6 +30,8 @@
 #include <LibHTML/DOM/Text.h>
 #include <LibHTML/Parser/CSSParser.h>
 
+namespace Web {
+
 HTMLStyleElement::HTMLStyleElement(Document& document, const String& tag_name)
     : HTMLElement(document, tag_name)
 {
@@ -58,4 +60,6 @@ void HTMLStyleElement::removed_from(Node& old_parent)
         // FIXME: Remove the sheet from the document
     }
     return HTMLElement::removed_from(old_parent);
+}
+
 }

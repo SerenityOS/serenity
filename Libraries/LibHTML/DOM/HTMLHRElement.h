@@ -28,8 +28,12 @@
 
 #include <LibHTML/DOM/HTMLElement.h>
 
+namespace Web {
+
 class HTMLHRElement : public HTMLElement {
 public:
     HTMLHRElement(Document&, const String& tag_name);
     virtual ~HTMLHRElement() override;
 };
+
+}

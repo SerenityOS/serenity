@@ -37,6 +37,8 @@
 #include <LibHTML/CSS/StyleSheet.h>
 #include <LibHTML/DOM/ParentNode.h>
 
+namespace Web {
+
 class Frame;
 class HTMLBodyElement;
 class HTMLHtmlElement;
@@ -143,4 +145,6 @@ template<>
 inline bool is<Document>(const Node& node)
 {
     return node.is_document();
+}
+
 }

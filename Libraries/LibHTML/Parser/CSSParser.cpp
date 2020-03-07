@@ -39,6 +39,8 @@
         ASSERT_NOT_REACHED();                                             \
     }
 
+namespace Web {
+
 static Optional<Color> parse_css_color(const StringView& view)
 {
     auto color = Color::from_string(view);
@@ -630,4 +632,6 @@ RefPtr<StyleDeclaration> parse_css_declaration(const StringView& css)
 {
     CSSParser parser(css);
     return parser.parse_standalone_declaration();
+}
+
 }

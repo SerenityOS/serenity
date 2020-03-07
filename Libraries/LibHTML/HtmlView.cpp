@@ -25,6 +25,7 @@
  */
 
 #include <AK/FileSystemPath.h>
+#include <AK/URL.h>
 #include <LibCore/File.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Painter.h>
@@ -46,8 +47,10 @@
 #include <LibHTML/ResourceLoader.h>
 #include <stdio.h>
 
+namespace Web {
+
 HtmlView::HtmlView()
-    : m_main_frame(::Frame::create(*this))
+    : m_main_frame(Web::Frame::create(*this))
 {
     main_frame().on_set_needs_display = [this](auto& content_rect) {
         if (content_rect.is_empty()) {
@@ -320,7 +323,7 @@ static RefPtr<Document> create_image_document(const ByteBuffer& data, const URL&
 
 void HtmlView::load(const URL& url)
 {
-    dbg() << "HtmlView::load: " << url;
+    dbg() << "HtmlView::load: " << url.to_string();
 
     if (window())
         window()->set_override_cursor(GUI::StandardCursor::None);
@@ -409,4 +412,6 @@ void HtmlView::dump_selection(const char* event_name)
 void HtmlView::did_scroll()
 {
     main_frame().set_viewport_rect(visible_content_rect());
+}
+
 }

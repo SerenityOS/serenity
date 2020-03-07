@@ -28,10 +28,14 @@
 
 #include <LibHTML/CSS/Selector.h>
 
+namespace Web {
+
 class Element;
 
 namespace SelectorEngine {
 
 bool matches(const Selector&, const Element&);
+
+}
 
 }

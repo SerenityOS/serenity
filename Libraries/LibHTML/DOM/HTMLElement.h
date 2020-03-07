@@ -28,6 +28,8 @@
 
 #include <LibHTML/DOM/Element.h>
 
+namespace Web {
+
 class HTMLElement : public Element {
 public:
     HTMLElement(Document&, const String& tag_name);
@@ -43,4 +45,6 @@ template<>
 inline bool is<HTMLElement>(const Node& node)
 {
     return node.is_html_element();
+}
+
 }

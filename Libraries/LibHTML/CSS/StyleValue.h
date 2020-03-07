@@ -37,6 +37,8 @@
 #include <LibHTML/CSS/Length.h>
 #include <LibHTML/CSS/PropertyID.h>
 
+namespace Web {
+
 class Document;
 
 namespace CSS {
@@ -222,3 +224,5 @@ private:
     WeakPtr<Document> m_document;
     RefPtr<Gfx::Bitmap> m_bitmap;
 };
+
+}
