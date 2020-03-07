@@ -118,7 +118,8 @@ void TextDocumentLine::set_text(TextDocument& document, const StringView& text)
         return;
     }
     m_text.resize((int)text.length() + 1);
-    memcpy(m_text.data(), text.characters_without_null_termination(), text.length() + 1);
+    memcpy(m_text.data(), text.characters_without_null_termination(), text.length());
+    m_text.last() = 0;
     document.update_views({});
 }
 
