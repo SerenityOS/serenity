@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -e
-
 # This file will need to be run in bash, for now.
+
+
+# === CONFIGURATION AND SETUP ===
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -42,6 +44,44 @@ GCC_MD5SUM="e03739b042a14376d727ddcfd05a9bc3"
 GCC_NAME="gcc-$GCC_VERSION"
 GCC_PKG="${GCC_NAME}.tar.gz"
 GCC_BASE_URL="http://ftp.gnu.org/gnu/gcc"
+
+
+# === CHECK CACHE AND REUSE ===
+
+pushd "$DIR"
+    if [ "${TRY_USE_LOCAL_TOOLCHAIN}" = "y" ] ; then
+        echo "Checking cached toolchain:"
+
+        DEPS_CONFIG="
+            uname=$(uname),TARGET=${TARGET},
+            BuildItHash=$($MD5SUM $(basename $0)),
+            MAKE=${MAKE},MD5SUM=${MD5SUM},NPROC=${NPROC},
+            CC=${CC},CXX=${CXX},with_gmp=${with_gmp},LDFLAGS=${LDFLAGS},
+            BINUTILS_VERSION=${BINUTILS_VERSION},BINUTILS_MD5SUM=${BINUTILS_MD5SUM},
+            GCC_VERSION=${GCC_VERSION},GCC_MD5SUM=${GCC_MD5SUM}"
+        echo "Config is:${DEPS_CONFIG}"
+        if ! DEPS_HASH=$($DIR/ComputeDependenciesHash.sh $MD5SUM <<<"${DEPS_CONFIG}"); then
+            echo "Dependency hashing failed"
+            echo "Will rebuild toolchain from scratch, and NOT SAVE THE RESULT."
+            echo "Someone should look into this, but for now it'll work, albeit inefficient."
+            # Should be empty anyway, but just to make sure:
+            DEPS_HASH=""
+        elif [ -r "Cache/ToolchainLocal_${DEPS_HASH}.tar.gz" ] ; then
+            echo "Cache at Cache/ToolchainLocal_${DEPS_HASH}.tar.gz exists!"
+            echo "Extracting toolchain from cache:"
+            tar xzf "Cache/ToolchainLocal_${DEPS_HASH}.tar.gz"
+            echo "Done 'building' the toolchain."
+            exit 0
+        else
+            echo "Cache at Cache/ToolchainLocal_${DEPS_HASH}.tar.gz does not exist."
+            echo "Will rebuild toolchain from scratch, and save the result."
+        fi
+
+    fi
+popd
+
+
+# === DOWNLOAD AND PATCH ===
 
 pushd "$DIR/Tarballs"
     md5="$($MD5SUM $BINUTILS_PKG | cut -f1 -d' ')"
@@ -98,8 +138,10 @@ pushd "$DIR/Tarballs"
 
 popd
 
-mkdir -p "$PREFIX"
 
+# === COMPILE AND INSTALL ===
+
+mkdir -p "$PREFIX"
 mkdir -p "$DIR/Build/binutils"
 mkdir -p "$DIR/Build/gcc"
 
@@ -162,3 +204,25 @@ pushd "$DIR/Build/"
     popd
 popd
 
+
+# == SAVE TO CACHE ==
+
+pushd "$DIR"
+    if [ "${TRY_USE_LOCAL_TOOLCHAIN}" = "y" ] ; then
+        # TODO: Compress with -z.  It's factor 3, and costs no time.
+        echo "Caching toolchain:"
+
+        if [ -z "${DEPS_HASH}" ] ; then
+            echo "NOT SAVED, because hashing failed."
+            echo "It's computed in the beginning; see there for the error message."
+        elif [ -e "Cache/ToolchainLocal_${DEPS_HASH}.tar.gz" ] ; then
+            # Note: This checks for *existence*.  Initially we checked for
+            # *readability*. If Travis borks permissions, there's not much we can do.
+            echo "Cache exists but was not used?!"
+            echo "Not touching cache then."
+        else
+            mkdir -p Cache/
+            tar czf "Cache/ToolchainLocal_${DEPS_HASH}.tar.gz" Local/
+        fi
+    fi
+popd
