@@ -51,6 +51,12 @@ public:
     bool is_object() const { return m_type == Type::Object; }
     bool is_boolean() const { return m_type == Type::Boolean; }
 
+    explicit Value(bool value)
+        : m_type(Type::Boolean)
+    {
+        m_value.as_bool = value;
+    }
+
     explicit Value(double value)
         : m_type(Type::Number)
     {
@@ -98,6 +104,12 @@ public:
     {
         ASSERT(type() == Type::Object);
         return m_value.as_object;
+    }
+
+    const StringImpl* as_string() const
+    {
+        ASSERT(is_string());
+        return m_value.as_string;
     }
 
     String to_string() const;
