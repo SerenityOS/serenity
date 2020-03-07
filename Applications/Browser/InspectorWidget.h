@@ -25,7 +25,7 @@
  */
 
 #include <LibGUI/Widget.h>
-#include <LibHTML/Forward.h>
+#include <LibWeb/Forward.h>
 
 class InspectorWidget final : public GUI::Widget {
     C_OBJECT(InspectorWidget)

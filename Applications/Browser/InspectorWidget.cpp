@@ -30,10 +30,10 @@
 #include <LibGUI/TableView.h>
 #include <LibGUI/TreeView.h>
 #include <LibGUI/TabWidget.h>
-#include <LibHTML/DOM/Document.h>
-#include <LibHTML/DOM/Element.h>
-#include <LibHTML/DOMTreeModel.h>
-#include <LibHTML/StylePropertiesModel.h>
+#include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/Element.h>
+#include <LibWeb/DOMTreeModel.h>
+#include <LibWeb/StylePropertiesModel.h>
 
 InspectorWidget::InspectorWidget()
 {

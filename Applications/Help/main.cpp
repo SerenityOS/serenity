@@ -40,10 +40,10 @@
 #include <LibGUI/ToolBar.h>
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Window.h>
-#include <LibHTML/HtmlView.h>
-#include <LibHTML/Layout/LayoutNode.h>
-#include <LibHTML/Parser/CSSParser.h>
-#include <LibHTML/Parser/HTMLParser.h>
+#include <LibWeb/HtmlView.h>
+#include <LibWeb/Layout/LayoutNode.h>
+#include <LibWeb/Parser/CSSParser.h>
+#include <LibWeb/Parser/HTMLParser.h>
 #include <LibMarkdown/MDDocument.h>
 #include <libgen.h>
 #include <stdio.h>

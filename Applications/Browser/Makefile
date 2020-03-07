@@ -4,11 +4,11 @@ OBJS = \
 
 PROGRAM = Browser
 
-LIB_DEPS = GUI HTML Gfx IPC Protocol Core
+LIB_DEPS = GUI Web Gfx IPC Protocol Core
 
-main.cpp: ../../Libraries/LibHTML/CSS/PropertyID.h
-../../Libraries/LibHTML/CSS/PropertyID.h:
-	@flock ../../Libraries/LibHTML $(MAKE) -C ../../Libraries/LibHTML
+main.cpp: ../../Libraries/LibWeb/CSS/PropertyID.h
+../../Libraries/LibWeb/CSS/PropertyID.h:
+	@flock ../../Libraries/LibWeb $(MAKE) -C ../../Libraries/LibWeb
 
 main.cpp: ../../Servers/ProtocolServer/ProtocolClientEndpoint.h
 ../../Servers/ProtocolServer/ProtocolClientEndpoint.h:

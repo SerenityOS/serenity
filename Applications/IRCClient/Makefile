@@ -11,6 +11,6 @@ OBJS = \
 
 PROGRAM = IRCClient
 
-LIB_DEPS = GUI HTML Gfx Protocol IPC Thread Pthread Core
+LIB_DEPS = GUI Web Gfx Protocol IPC Thread Pthread Core
 
 include ../../Makefile.common
