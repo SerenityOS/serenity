@@ -26,13 +26,13 @@
 
 #include "IRCLogBuffer.h"
 #include <AK/StringBuilder.h>
-#include <LibHTML/DOM/DocumentFragment.h>
-#include <LibHTML/DOM/DocumentType.h>
-#include <LibHTML/DOM/ElementFactory.h>
-#include <LibHTML/DOM/HTMLBodyElement.h>
-#include <LibHTML/DOM/Text.h>
-#include <LibHTML/Dump.h>
-#include <LibHTML/Parser/HTMLParser.h>
+#include <LibWeb/DOM/DocumentFragment.h>
+#include <LibWeb/DOM/DocumentType.h>
+#include <LibWeb/DOM/ElementFactory.h>
+#include <LibWeb/DOM/HTMLBodyElement.h>
+#include <LibWeb/DOM/Text.h>
+#include <LibWeb/Dump.h>
+#include <LibWeb/Parser/HTMLParser.h>
 #include <stdio.h>
 #include <time.h>
 

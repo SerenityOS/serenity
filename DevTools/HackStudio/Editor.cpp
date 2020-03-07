@@ -34,11 +34,11 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/Window.h>
-#include <LibHTML/DOM/ElementFactory.h>
-#include <LibHTML/DOM/HTMLHeadElement.h>
-#include <LibHTML/DOM/Text.h>
-#include <LibHTML/HtmlView.h>
-#include <LibHTML/Parser/HTMLParser.h>
+#include <LibWeb/DOM/ElementFactory.h>
+#include <LibWeb/DOM/HTMLHeadElement.h>
+#include <LibWeb/DOM/Text.h>
+#include <LibWeb/HtmlView.h>
+#include <LibWeb/Parser/HTMLParser.h>
 #include <LibMarkdown/MDDocument.h>
 
 //#define EDITOR_DEBUG
@@ -151,7 +151,7 @@ void Editor::show_documentation_tooltip_if_available(const String& hovered_token
         return;
     }
 
-    // FIXME: LibHTML needs a friendlier DOM manipulation API. Something like innerHTML :^)
+    // FIXME: LibWeb needs a friendlier DOM manipulation API. Something like innerHTML :^)
     auto style_element = create_element(*html_document, "style");
     style_element->append_child(adopt(*new Web::Text(*html_document, "body { background-color: #dac7b5; }")));
 

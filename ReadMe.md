@@ -49,7 +49,7 @@ I'm also on [Patreon](https://www.patreon.com/serenityos) and [GitHub Sponsors](
 * 2D graphics library (LibGfx)
 * GUI toolkit (LibGUI)
 * Cross-process communication library (LibIPC)
-* HTML/CSS engine (LibHTML)
+* HTML/CSS engine (LibWeb)
 * Markdown (LibMarkdown)
 * Audio (LibAudio)
 * PCI database (LibPCIDB)

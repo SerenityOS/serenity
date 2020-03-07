@@ -27,7 +27,7 @@
 #pragma once
 
 #include <LibGUI/TextEditor.h>
-#include <LibHTML/Forward.h>
+#include <LibWeb/Forward.h>
 
 class EditorWrapper;
 
