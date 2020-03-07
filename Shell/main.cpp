@@ -187,33 +187,35 @@ static String expand_tilde(const char* expression)
 
 static int sh_cd(int argc, const char** argv)
 {
-    char pathbuf[PATH_MAX];
+    String new_path;
 
     if (argc == 1) {
-        strcpy(pathbuf, g.home.characters());
+        new_path = g.home;
     } else {
         if (strcmp(argv[1], "-") == 0) {
             char* oldpwd = getenv("OLDPWD");
             if (oldpwd == nullptr)
                 return 1;
-            size_t len = strlen(oldpwd);
-            ASSERT(len + 1 <= PATH_MAX);
-            memcpy(pathbuf, oldpwd, len + 1);
+            new_path = oldpwd;
         } else if (argv[1][0] == '~') {
             auto path = expand_tilde(argv[1]);
             if (path.is_empty())
                 return 1;
-            strcpy(pathbuf, path.characters());
+            new_path = path;
         } else if (argv[1][0] == '/') {
-            memcpy(pathbuf, argv[1], strlen(argv[1]) + 1);
+            new_path = argv[1];
         } else {
-            sprintf(pathbuf, "%s/%s", g.cwd.characters(), argv[1]);
+            StringBuilder builder;
+            builder.append(g.cwd);
+            builder.append('/');
+            builder.append(argv[1]);
+            new_path = builder.to_string();
         }
     }
 
-    FileSystemPath canonical_path(pathbuf);
+    FileSystemPath canonical_path(new_path);
     if (!canonical_path.is_valid()) {
-        printf("FileSystemPath failed to canonicalize '%s'\n", pathbuf);
+        printf("FileSystemPath failed to canonicalize '%s'\n", new_path.characters());
         return 1;
     }
     const char* path = canonical_path.string().characters();
