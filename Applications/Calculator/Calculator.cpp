@@ -122,10 +122,18 @@ double Calculator::finish_operation(double argument)
         }
         break;
     case Operation::Multiply:
-        res = m_saved_argument * argument;
+        if ((argument > MAX / m_saved_argument) || (m_saved_argument > MAX / argument)) {
+            m_has_error = true;
+            return argument;
+        } else {
+            res = m_saved_argument * argument;
+        }
         break;
     case Operation::Divide:
         if (argument == 0.0) {
+            m_has_error = true;
+            return argument;
+        } else if ((argument > MIN * m_saved_argument) || (m_saved_argument > MIN * argument)) {
             m_has_error = true;
             return argument;
         }
