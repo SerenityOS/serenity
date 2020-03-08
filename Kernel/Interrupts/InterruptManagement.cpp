@@ -177,7 +177,7 @@ void InterruptManagement::locate_apic_data()
 {
     ASSERT(!m_madt.is_null());
     auto region = MM.allocate_kernel_region(m_madt.page_base(), (PAGE_SIZE * 2), "Initializing Interrupts", Region::Access::Read);
-    auto& madt = *(const ACPI::Structures::MADT*)region->vaddr().offset(m_madt.offset_in_page().get()).as_ptr();
+    auto& madt = *(const ACPI::Structures::MADT*)region->vaddr().offset(m_madt.offset_in_page()).as_ptr();
 
     int irq_controller_count = 0;
     if (madt.flags & PCAT_COMPAT_FLAG) {
