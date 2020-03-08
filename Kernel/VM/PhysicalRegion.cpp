@@ -105,9 +105,9 @@ void PhysicalRegion::return_page_at(PhysicalAddress addr)
 
     ptrdiff_t local_offset = addr.get() - m_lower.get();
     ASSERT(local_offset >= 0);
-    ASSERT((uintptr_t)local_offset < (uintptr_t)(m_pages * PAGE_SIZE));
+    ASSERT((FlatPtr)local_offset < (FlatPtr)(m_pages * PAGE_SIZE));
 
-    auto page = (uintptr_t)local_offset / PAGE_SIZE;
+    auto page = (FlatPtr)local_offset / PAGE_SIZE;
     if (page < m_last)
         m_last = page;
 

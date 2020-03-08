@@ -134,7 +134,7 @@ void DMIDecoder::enumerate_smbios_tables()
 
         size_t table_size = get_table_size(p_table);
         p_table = p_table.offset(table_size);
-        v_table_ptr = (SMBIOS::TableHeader*)((uintptr_t)v_table_ptr + table_size);
+        v_table_ptr = (SMBIOS::TableHeader*)((FlatPtr)v_table_ptr + table_size);
 #ifdef SMBIOS_DEBUG
         dbg() << "DMIDecoder: Next table @ P 0x" << p_table.get();
 #endif
@@ -221,7 +221,7 @@ PhysicalAddress DMIDecoder::find_entry64bit_point()
         dbg() << "DMI Decoder: Looking for 64 bit Entry point @ V " << (void*)entry_str << " P " << (void*)tested_physical_ptr;
 #endif
         if (!strncmp("_SM3_", entry_str, strlen("_SM3_")))
-            return PhysicalAddress((uintptr_t)tested_physical_ptr);
+            return PhysicalAddress((FlatPtr)tested_physical_ptr);
 
         tested_physical_ptr += 16;
     }
@@ -239,7 +239,7 @@ PhysicalAddress DMIDecoder::find_entry32bit_point()
         dbg() << "DMI Decoder: Looking for 32 bit Entry point @ V " << (void*)entry_str << " P " << (void*)tested_physical_ptr;
 #endif
         if (!strncmp("_SM_", entry_str, strlen("_SM_")))
-            return PhysicalAddress((uintptr_t)tested_physical_ptr);
+            return PhysicalAddress((FlatPtr)tested_physical_ptr);
 
         tested_physical_ptr += 16;
     }
@@ -264,7 +264,7 @@ u64 DMIDecoder::get_bios_characteristics()
     auto* bios_info = (SMBIOS::BIOSInfo*)get_smbios_physical_table_by_type(0).as_ptr();
     ASSERT(bios_info != nullptr);
 
-    klog() << "DMIDecoder: BIOS info @ " << PhysicalAddress((uintptr_t)bios_info);
+    klog() << "DMIDecoder: BIOS info @ " << PhysicalAddress((FlatPtr)bios_info);
     return bios_info->bios_characteristics;
 }
 

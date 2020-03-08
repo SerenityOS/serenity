@@ -32,15 +32,15 @@
 class PhysicalAddress {
 public:
     PhysicalAddress() {}
-    explicit PhysicalAddress(uintptr_t address)
+    explicit PhysicalAddress(FlatPtr address)
         : m_address(address)
     {
     }
 
-    PhysicalAddress offset(uintptr_t o) const { return PhysicalAddress(m_address + o); }
-    uintptr_t get() const { return m_address; }
-    void set(uintptr_t address) { m_address = address; }
-    void mask(uintptr_t m) { m_address &= m; }
+    PhysicalAddress offset(FlatPtr o) const { return PhysicalAddress(m_address + o); }
+    FlatPtr get() const { return m_address; }
+    void set(FlatPtr address) { m_address = address; }
+    void mask(FlatPtr m) { m_address &= m; }
 
     bool is_null() const { return m_address == 0; }
 
@@ -58,7 +58,7 @@ public:
     bool operator<=(const PhysicalAddress& other) const { return m_address <= other.m_address; }
 
 private:
-    uintptr_t m_address { 0 };
+    FlatPtr m_address { 0 };
 };
 
 inline const LogStream& operator<<(const LogStream& stream, PhysicalAddress value)

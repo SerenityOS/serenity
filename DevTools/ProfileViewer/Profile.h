@@ -120,7 +120,7 @@ public:
     struct Event {
         u64 timestamp { 0 };
         String type;
-        uintptr_t ptr { 0 };
+        FlatPtr ptr { 0 };
         size_t size { 0 };
         bool in_kernel { false };
         Vector<Frame> frames;

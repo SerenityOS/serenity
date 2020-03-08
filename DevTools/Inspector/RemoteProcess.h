@@ -45,9 +45,9 @@ public:
     RemoteObjectGraphModel& object_graph_model() { return *m_object_graph_model; }
     const NonnullOwnPtrVector<RemoteObject>& roots() const { return m_roots; }
 
-    void set_inspected_object(uintptr_t);
+    void set_inspected_object(FlatPtr);
 
-    void set_property(uintptr_t object, const StringView& name, const JsonValue& value);
+    void set_property(FlatPtr object, const StringView& name, const JsonValue& value);
 
     Function<void()> on_update;
 

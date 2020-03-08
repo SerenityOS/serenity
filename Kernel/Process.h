@@ -297,7 +297,7 @@ public:
     int sys$chroot(const char* path, size_t path_length, int mount_flags);
     int sys$pledge(const Syscall::SC_pledge_params*);
     int sys$unveil(const Syscall::SC_unveil_params*);
-    int sys$perf_event(int type, uintptr_t arg1, uintptr_t arg2);
+    int sys$perf_event(int type, FlatPtr arg1, FlatPtr arg2);
 
     template<bool sockname, typename Params>
     int get_sock_or_peer_name(const Params&);

@@ -37,7 +37,7 @@ PerformanceEventBuffer::PerformanceEventBuffer()
 {
 }
 
-KResult PerformanceEventBuffer::append(int type, uintptr_t arg1, uintptr_t arg2)
+KResult PerformanceEventBuffer::append(int type, FlatPtr arg1, FlatPtr arg2)
 {
     if (count() >= capacity())
         return KResult(-ENOBUFS);
@@ -63,17 +63,17 @@ KResult PerformanceEventBuffer::append(int type, uintptr_t arg1, uintptr_t arg2)
         return KResult(-EINVAL);
     }
 
-    uintptr_t ebp;
+    FlatPtr ebp;
     asm volatile("movl %%ebp, %%eax"
                  : "=a"(ebp));
-    //copy_from_user(&ebp, (uintptr_t*)current->get_register_dump_from_stack().ebp);
-    Vector<uintptr_t> backtrace;
+    //copy_from_user(&ebp, (FlatPtr*)current->get_register_dump_from_stack().ebp);
+    Vector<FlatPtr> backtrace;
     {
         SmapDisabler disabler;
         backtrace = Thread::current->raw_backtrace(ebp);
     }
-    event.stack_size = min(sizeof(event.stack) / sizeof(uintptr_t), static_cast<size_t>(backtrace.size()));
-    memcpy(event.stack, backtrace.data(), event.stack_size * sizeof(uintptr_t));
+    event.stack_size = min(sizeof(event.stack) / sizeof(FlatPtr), static_cast<size_t>(backtrace.size()));
+    memcpy(event.stack, backtrace.data(), event.stack_size * sizeof(FlatPtr));
 
 #ifdef VERY_DEBUG
     for (size_t i = 0; i < event.stack_size; ++i)

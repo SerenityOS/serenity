@@ -294,7 +294,7 @@ static void free_impl(void* ptr)
 
     LOCKER(malloc_lock());
 
-    void* block_base = (void*)((uintptr_t)ptr & block_mask);
+    void* block_base = (void*)((FlatPtr)ptr & block_mask);
     size_t magic = *(size_t*)block_base;
 
     if (magic == MAGIC_BIGALLOC_HEADER) {
@@ -372,14 +372,14 @@ void* malloc(size_t size)
 {
     void* ptr = malloc_impl(size);
     if (s_profiling)
-        perf_event(PERF_EVENT_MALLOC, size, reinterpret_cast<uintptr_t>(ptr));
+        perf_event(PERF_EVENT_MALLOC, size, reinterpret_cast<FlatPtr>(ptr));
     return ptr;
 }
 
 void free(void* ptr)
 {
     if (s_profiling)
-        perf_event(PERF_EVENT_FREE, reinterpret_cast<uintptr_t>(ptr), 0);
+        perf_event(PERF_EVENT_FREE, reinterpret_cast<FlatPtr>(ptr), 0);
     free_impl(ptr);
 }
 
@@ -396,7 +396,7 @@ size_t malloc_size(void* ptr)
     if (!ptr)
         return 0;
     LOCKER(malloc_lock());
-    void* page_base = (void*)((uintptr_t)ptr & block_mask);
+    void* page_base = (void*)((FlatPtr)ptr & block_mask);
     auto* header = (const CommonHeader*)page_base;
     auto size = header->m_size;
     if (header->m_magic == MAGIC_BIGALLOC_HEADER)
