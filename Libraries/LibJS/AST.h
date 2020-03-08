@@ -127,6 +127,30 @@ private:
     NonnullOwnPtr<Expression> m_argument;
 };
 
+class IfStatement : public ASTNode {
+public:
+    explicit IfStatement(NonnullOwnPtr<Expression> predicate, NonnullOwnPtr<ScopeNode> consequent, NonnullOwnPtr<ScopeNode> alternate)
+        : m_predicate(move(predicate))
+        , m_consequent(move(consequent))
+        , m_alternate(move(alternate))
+    {
+    }
+
+    const Expression& predicate() const { return *m_predicate; }
+    const ScopeNode& consequent() const { return *m_consequent; }
+    const ScopeNode& alternate() const { return *m_alternate; }
+
+    virtual Value execute(Interpreter&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    virtual const char* class_name() const override { return "IfStatement"; }
+
+    NonnullOwnPtr<Expression> m_predicate;
+    NonnullOwnPtr<ScopeNode> m_consequent;
+    NonnullOwnPtr<ScopeNode> m_alternate;
+};
+
 enum class BinaryOp {
     Plus,
     Minus,
