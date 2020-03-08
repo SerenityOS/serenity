@@ -66,7 +66,7 @@ void DMIDecoder::set_64_bit_entry_initialization_values(PhysicalAddress entry)
     m_use_64bit_entry = true;
 
     auto region = MM.allocate_kernel_region(entry.page_base(), PAGE_ROUND_UP(SMBIOS_SEARCH_AREA_SIZE), "DMI Decoder 64 bit Initialization", Region::Access::Read, false, false);
-    auto& entry_ptr = *(SMBIOS::EntryPoint64bit*)region->vaddr().offset(entry.offset_in_page().get()).as_ptr();
+    auto& entry_ptr = *(SMBIOS::EntryPoint64bit*)region->vaddr().offset(entry.offset_in_page()).as_ptr();
     m_structure_table = PhysicalAddress(entry_ptr.table_ptr);
     m_structures_count = entry_ptr.table_maximum_size;
     m_table_length = entry_ptr.table_maximum_size;
@@ -78,7 +78,7 @@ void DMIDecoder::set_32_bit_entry_initialization_values(PhysicalAddress entry)
     m_use_64bit_entry = false;
 
     auto region = MM.allocate_kernel_region(entry.page_base(), PAGE_ROUND_UP(SMBIOS_SEARCH_AREA_SIZE), "DMI Decoder 32 bit Initialization", Region::Access::Read, false, false);
-    auto& entry_ptr = *(SMBIOS::EntryPoint32bit*)region->vaddr().offset(entry.offset_in_page().get()).as_ptr();
+    auto& entry_ptr = *(SMBIOS::EntryPoint32bit*)region->vaddr().offset(entry.offset_in_page()).as_ptr();
 
     m_structure_table = PhysicalAddress(entry_ptr.legacy_structure.smbios_table_ptr);
     m_structures_count = entry_ptr.legacy_structure.smbios_tables_count;
@@ -112,7 +112,7 @@ void DMIDecoder::enumerate_smbios_tables()
     auto p_table = m_structure_table;
 
     auto region = MM.allocate_kernel_region(p_table.page_base(), PAGE_ROUND_UP(table_length), "DMI Decoder Enumerating SMBIOS", Region::Access::Read, false, false);
-    volatile SMBIOS::TableHeader* v_table_ptr = (SMBIOS::TableHeader*)region->vaddr().offset(p_table.offset_in_page().get()).as_ptr();
+    volatile SMBIOS::TableHeader* v_table_ptr = (SMBIOS::TableHeader*)region->vaddr().offset(p_table.offset_in_page()).as_ptr();
 
 #ifdef SMBIOS_DEBUG
     dbg() << "DMIDecoder: Total Table length " << m_table_length;
@@ -145,7 +145,7 @@ void DMIDecoder::enumerate_smbios_tables()
 size_t DMIDecoder::get_table_size(PhysicalAddress table)
 {
     auto region = MM.allocate_kernel_region(table.page_base(), PAGE_ROUND_UP(m_table_length), "DMI Decoder Determining table size", Region::Access::Read, false, false);
-    auto& table_v_ptr = (SMBIOS::TableHeader&)*region->vaddr().offset(table.offset_in_page().get()).as_ptr();
+    auto& table_v_ptr = (SMBIOS::TableHeader&)*region->vaddr().offset(table.offset_in_page()).as_ptr();
 #ifdef SMBIOS_DEBUG
     dbg() << "DMIDecoder: table legnth - " << table_v_ptr.length;
 #endif
@@ -175,7 +175,7 @@ PhysicalAddress DMIDecoder::get_smbios_physical_table_by_handle(u16 handle)
         if (table.is_null())
             continue;
         auto region = MM.allocate_kernel_region(table.page_base(), PAGE_SIZE * 2, "DMI Decoder Finding Table", Region::Access::Read, false, false);
-        SMBIOS::TableHeader* table_v_ptr = (SMBIOS::TableHeader*)region->vaddr().offset(table.offset_in_page().get()).as_ptr();
+        SMBIOS::TableHeader* table_v_ptr = (SMBIOS::TableHeader*)region->vaddr().offset(table.offset_in_page()).as_ptr();
 
         if (table_v_ptr->handle == handle) {
             return table;
@@ -190,7 +190,7 @@ PhysicalAddress DMIDecoder::get_smbios_physical_table_by_type(u8 table_type)
         if (table.is_null())
             continue;
         auto region = MM.allocate_kernel_region(table.page_base(), PAGE_ROUND_UP(PAGE_SIZE * 2), "DMI Decoder Finding Table", Region::Access::Read, false, false);
-        SMBIOS::TableHeader* table_v_ptr = (SMBIOS::TableHeader*)region->vaddr().offset(table.offset_in_page().get()).as_ptr();
+        SMBIOS::TableHeader* table_v_ptr = (SMBIOS::TableHeader*)region->vaddr().offset(table.offset_in_page()).as_ptr();
         if (table_v_ptr->type == table_type) {
             return table;
         }
