@@ -156,7 +156,7 @@ public:
             if (!get(j))
                 return j;
 
-        return -1;
+        return {};
     }
 
     Optional<size_t> find_longest_range_of_unset_bits(size_t max_length, size_t& found_range_size) const
