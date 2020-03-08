@@ -85,16 +85,16 @@ public:
     virtual uint8_t get_segment_end_bus(u32 segment) = 0;
     virtual String get_access_type() = 0;
 
+    virtual void write8_field(Address address, u32 field, u8 value) = 0;
+    virtual void write16_field(Address address, u32 field, u16 value) = 0;
+    virtual void write32_field(Address address, u32 field, u32 value) = 0;
+
 protected:
     Access();
 
     virtual u8 read8_field(Address address, u32 field) = 0;
     virtual u16 read16_field(Address address, u32 field) = 0;
     virtual u32 read32_field(Address address, u32 field) = 0;
-
-    virtual void write8_field(Address address, u32 field, u8 value) = 0;
-    virtual void write16_field(Address address, u32 field, u16 value) = 0;
-    virtual void write32_field(Address address, u32 field, u32 value) = 0;
 };
 
 }
