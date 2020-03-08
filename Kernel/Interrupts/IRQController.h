@@ -41,14 +41,16 @@ class IRQController : public RefCounted<IRQController> {
 public:
     virtual ~IRQController() {}
 
-    virtual void enable(u8 number) = 0;
-    virtual void disable(u8 number) = 0;
+    virtual void enable(const GenericInterruptHandler&) = 0;
+    virtual void disable(const GenericInterruptHandler&) = 0;
     virtual void hard_disable() { m_hard_disabled = true; }
     virtual bool is_vector_enabled(u8 number) const = 0;
     bool is_enabled() const { return m_enabled && !m_hard_disabled; }
     bool is_hard_disabled() const { return m_hard_disabled; }
-    virtual void eoi(u8 number) const = 0;
-    virtual u32 get_gsi_base() const = 0;
+    virtual void eoi(const GenericInterruptHandler&) const = 0;
+    virtual void spurious_eoi(const GenericInterruptHandler&) const = 0;
+    virtual size_t interrupt_vectors_count() const = 0;
+    virtual u32 gsi_base() const = 0;
     virtual u16 get_isr() const = 0;
     virtual u16 get_irr() const = 0;
     virtual const char* model() const = 0;

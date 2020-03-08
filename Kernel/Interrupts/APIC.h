@@ -36,7 +36,7 @@ void enable_bsp();
 void eoi();
 bool init();
 void enable(u32 cpu);
-
+u8 spurious_interrupt_vector();
 }
 
 }

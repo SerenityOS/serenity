@@ -27,6 +27,7 @@
 #include <AK/Assertions.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Interrupts/PIC.h>
 #include <LibBareMetal/IO.h>
 
@@ -58,10 +59,12 @@ bool inline static is_all_masked(u8 reg)
     return reg == 0xFF;
 }
 
-void PIC::disable(u8 irq)
+void PIC::disable(const GenericInterruptHandler& handler)
 {
     InterruptDisabler disabler;
     ASSERT(!is_hard_disabled());
+    ASSERT(handler.interrupt_number() >= gsi_base() && handler.interrupt_number() < interrupt_vectors_count());
+    u8 irq = handler.interrupt_number();
     u8 imr;
     if (irq >= 8) {
         imr = IO::in8(PIC1_CMD);
@@ -82,6 +85,13 @@ PIC::PIC()
     initialize();
 }
 
+void PIC::spurious_eoi(const GenericInterruptHandler& handler) const
+{
+    ASSERT(handler.type() == HandlerType::SpuriousInterruptHandler);
+    if (handler.interrupt_number() == 15)
+        eoi_interrupt(7);
+}
+
 bool PIC::is_vector_enabled(u8 irq) const
 {
     u8 imr;
@@ -95,7 +105,15 @@ bool PIC::is_vector_enabled(u8 irq) const
     return imr != 0;
 }
 
-void PIC::enable(u8 irq)
+void PIC::enable(const GenericInterruptHandler& handler)
+{
+    InterruptDisabler disabler;
+    ASSERT(!is_hard_disabled());
+    ASSERT(handler.interrupt_number() >= gsi_base() && handler.interrupt_number() < interrupt_vectors_count());
+    enable_vector(handler.interrupt_number());
+}
+
+void PIC::enable_vector(u8 irq)
 {
     InterruptDisabler disabler;
     ASSERT(!is_hard_disabled());
@@ -112,10 +130,16 @@ void PIC::enable(u8 irq)
     m_enabled = true;
 }
 
-void PIC::eoi(u8 irq) const
+void PIC::eoi(const GenericInterruptHandler& handler) const
 {
     InterruptDisabler disabler;
     ASSERT(!is_hard_disabled());
+    ASSERT(handler.interrupt_number() >= gsi_base() && handler.interrupt_number() < interrupt_vectors_count());
+    eoi_interrupt(handler.interrupt_number());
+}
+
+void PIC::eoi_interrupt(u8 irq) const
+{
     if (irq >= 8)
         IO::out8(PIC1_CTL, 0x20);
     IO::out8(PIC0_CTL, 0x20);
@@ -159,7 +183,7 @@ void PIC::remap(u8 offset)
     IO::out8(PIC1_CMD, 0xff);
 
     // ...except IRQ2, since that's needed for the master to let through slave interrupts.
-    enable(2);
+    enable_vector(2);
 }
 
 void PIC::initialize()
@@ -185,7 +209,7 @@ void PIC::initialize()
     IO::out8(PIC1_CMD, 0xff);
 
     // ...except IRQ2, since that's needed for the master to let through slave interrupts.
-    enable(2);
+    enable_vector(2);
 
     klog() << "PIC(i8259): cascading mode, vectors 0x" << String::format("%x", IRQ_VECTOR_BASE) << "-0x" << String::format("%x", IRQ_VECTOR_BASE + 0xf);
 }
