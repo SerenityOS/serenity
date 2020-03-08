@@ -66,7 +66,7 @@ PCI::MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
     dbg() << "PCI: Checking MCFG Table length to choose the correct mapping size";
 #endif
 
-    auto* sdt = (ACPI::Structures::SDTHeader*)checkup_region->vaddr().offset(p_mcfg.offset_in_page().get()).as_ptr();
+    auto* sdt = (ACPI::Structures::SDTHeader*)checkup_region->vaddr().offset(p_mcfg.offset_in_page()).as_ptr();
     u32 length = sdt->length;
     u8 revision = sdt->revision;
 
@@ -75,7 +75,7 @@ PCI::MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
 
     auto mcfg_region = MM.allocate_kernel_region(p_mcfg.page_base(), PAGE_ROUND_UP(length) + PAGE_SIZE, "PCI Parsing MCFG", Region::Access::Read | Region::Access::Write);
 
-    auto& mcfg = *(ACPI::Structures::MCFG*)mcfg_region->vaddr().offset(p_mcfg.offset_in_page().get()).as_ptr();
+    auto& mcfg = *(ACPI::Structures::MCFG*)mcfg_region->vaddr().offset(p_mcfg.offset_in_page()).as_ptr();
 #ifdef PCI_DEBUG
     dbg() << "PCI: Checking MCFG @ V " << &mcfg << ", P 0x" << String::format("%x", p_mcfg.get());
 #endif
