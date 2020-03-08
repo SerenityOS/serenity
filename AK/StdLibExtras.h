@@ -320,8 +320,19 @@ struct IsSame<T, T> {
     };
 };
 
+template<bool condition, class TrueType, class FalseType>
+struct Conditional {
+    typedef TrueType Type;
+};
+
+template<class TrueType, class FalseType>
+struct Conditional<false, TrueType, FalseType> {
+    typedef FalseType Type;
+};
+
 }
 
+using AK::Conditional;
 using AK::ceil_div;
 using AK::clamp;
 using AK::exchange;
