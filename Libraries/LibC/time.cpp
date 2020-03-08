@@ -168,14 +168,9 @@ static char mon_long_names[12][10] = {
 
 char* asctime(const struct tm* tm)
 {
-    constexpr int maxLength = 69;
-    StringBuilder builder { maxLength };
-    builder.appendf("%.3s %.3s %2d %02d:%02d:%02d %4d\n", wday_short_names[tm->tm_wday],
-        mon_short_names[tm->tm_mon], tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, 1900 + tm->tm_year);
-
-    static char result[maxLength];
-    strncpy(result, builder.build().characters(), sizeof result);
-    return result;
+    static char buffer[69];
+    strftime(buffer, sizeof buffer, "%a %b %e %T %Y", tm);
+    return buffer;
 }
 
 //FIXME: Some formats are not supported.
