@@ -114,6 +114,22 @@ Value BinaryExpression::execute(Interpreter& interpreter) const
 
     ASSERT_NOT_REACHED();
 }
+
+Value LogicalExpression::execute(Interpreter& interpreter) const
+{
+    auto lhs_result = m_lhs->execute(interpreter).as_bool();
+
+    if (m_op == LogicalOp::Not)
+        return Value(!lhs_result);
+
+    auto rhs_result = m_rhs->execute(interpreter).as_bool();
+    switch (m_op) {
+    case LogicalOp::And:
+        return Value(lhs_result && rhs_result);
+    case LogicalOp::Or:
+        return Value(lhs_result || rhs_result);
+    case LogicalOp::Not:
+        ASSERT_NOT_REACHED();
     }
 
     ASSERT_NOT_REACHED();
@@ -161,6 +177,24 @@ void BinaryExpression::dump(int indent) const
     m_rhs->dump(indent + 1);
 }
 
+void LogicalExpression::dump(int indent) const
+{
+    const char* op_string = nullptr;
+    switch (m_op) {
+    case LogicalOp::And:
+        op_string = "&&";
+        break;
+    case LogicalOp::Or:
+        op_string = "||";
+        break;
+    case LogicalOp::Not:
+        op_string = "!";
+        print_indent(indent);
+        printf("%s\n", class_name());
+        print_indent(indent + 1);
+        printf("%s\n", op_string);
+        m_lhs->dump(indent + 1);
+        return;
     }
 
     print_indent(indent);
