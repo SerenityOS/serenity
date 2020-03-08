@@ -45,6 +45,10 @@ public:
     virtual String get_access_type() override final { return "MMIO-Access"; };
     virtual u32 get_segments_count();
 
+    virtual void write8_field(Address address, u32, u8) override final;
+    virtual void write16_field(Address address, u32, u16) override final;
+    virtual void write32_field(Address address, u32, u32) override final;
+
 protected:
     explicit MMIOAccess(PhysicalAddress mcfg);
 
@@ -52,9 +56,6 @@ private:
     virtual u8 read8_field(Address address, u32) override final;
     virtual u16 read16_field(Address address, u32) override final;
     virtual u32 read32_field(Address address, u32) override final;
-    virtual void write8_field(Address address, u32, u8) override final;
-    virtual void write16_field(Address address, u32, u16) override final;
-    virtual void write32_field(Address address, u32, u32) override final;
 
     void map_device(Address address);
     virtual u8 get_segment_start_bus(u32);
