@@ -16,7 +16,7 @@ SHARED_TEST_OBJS = ${SHARED_TEST_SOURCES:.cpp=.host.o}
 OBJS = ${SRCS:.cpp=.host.o} $(SHARED_TEST_OBJS)
 APPS = ${SRCS:.cpp=}
 
-EXTRA_CLEAN = $(APPS) *.o
+EXTRA_CLEAN = $(APPS) *.o ../*.host.o
 
 USE_HOST_CXX = 1
 
