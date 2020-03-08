@@ -129,6 +129,7 @@ private:
 enum class BinaryOp {
     Plus,
     Minus,
+    TypedEquals,
 };
 
 class BinaryExpression : public Expression {
