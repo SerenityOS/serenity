@@ -118,6 +118,61 @@ const Value typed_eq(const Value lhs, const Value rhs)
     ASSERT_NOT_REACHED();
 }
 
+Value greater(Value lhs, Value rhs)
+{
+    ASSERT(lhs.is_number());
+    ASSERT(rhs.is_number());
+    return Value(lhs.as_double() > rhs.as_double());
+}
+
+Value smaller(Value lhs, Value rhs)
+{
+    ASSERT(lhs.is_number());
+    ASSERT(rhs.is_number());
+    return Value(lhs.as_double() < rhs.as_double());
+}
+
+Value bit_and(Value lhs, Value rhs)
+{
+    ASSERT(lhs.is_number());
+    ASSERT(rhs.is_number());
+    return Value((i32)lhs.as_double() & (i32)rhs.as_double());
+}
+
+Value bit_or(Value lhs, Value rhs)
+{
+    ASSERT(lhs.is_number());
+    ASSERT(rhs.is_number());
+    return Value((i32)lhs.as_double() | (i32)rhs.as_double());
+}
+
+Value bit_xor(Value lhs, Value rhs)
+{
+    ASSERT(lhs.is_number());
+    ASSERT(rhs.is_number());
+    return Value((i32)lhs.as_double() ^ (i32)rhs.as_double());
+}
+
+Value bit_not(Value lhs)
+{
+    ASSERT(lhs.is_number());
+    return Value(~(i32)lhs.as_double());
+}
+
+Value bit_left(Value lhs, Value rhs)
+{
+    ASSERT(lhs.is_number());
+    ASSERT(rhs.is_number());
+    return Value((i32)lhs.as_double() << (i32)rhs.as_double());
+}
+
+Value bit_right(Value lhs, Value rhs)
+{
+    ASSERT(lhs.is_number());
+    ASSERT(rhs.is_number());
+    return Value((i32)lhs.as_double() >> (i32)rhs.as_double());
+}
+
 Value BinaryExpression::execute(Interpreter& interpreter) const
 {
     auto lhs_result = m_lhs->execute(interpreter);
@@ -130,6 +185,22 @@ Value BinaryExpression::execute(Interpreter& interpreter) const
         return sub(lhs_result, rhs_result);
     case BinaryOp::TypedEquals:
         return typed_eq(lhs_result, rhs_result);
+    case BinaryOp::TypedInequals:
+        return Value(!typed_eq(lhs_result, rhs_result).as_bool());
+    case BinaryOp::Greater:
+        return greater(lhs_result, rhs_result);
+    case BinaryOp::Smaller:
+        return smaller(lhs_result, rhs_result);
+    case BinaryOp::BitAnd:
+        return bit_and(lhs_result, rhs_result);
+    case BinaryOp::BitOr:
+        return bit_or(lhs_result, rhs_result);
+    case BinaryOp::BitXor:
+        return bit_xor(lhs_result, rhs_result);
+    case BinaryOp::BitLeftShift:
+        return bit_left(lhs_result, rhs_result);
+    case BinaryOp::BitRightShift:
+        return bit_right(lhs_result, rhs_result);
     }
 
     ASSERT_NOT_REACHED();
@@ -150,6 +221,17 @@ Value LogicalExpression::execute(Interpreter& interpreter) const
         return Value(lhs_result || rhs_result);
     case LogicalOp::Not:
         ASSERT_NOT_REACHED();
+    }
+
+    ASSERT_NOT_REACHED();
+}
+
+Value UnaryExpression::execute(Interpreter& interpreter) const
+{
+    auto lhs_result = m_lhs->execute(interpreter);
+    switch (m_op) {
+    case UnaryOp::BitNot:
+        return bit_not(lhs_result);
     }
 
     ASSERT_NOT_REACHED();
@@ -187,6 +269,30 @@ void BinaryExpression::dump(int indent) const
     case BinaryOp::TypedEquals:
         op_string = "===";
         break;
+    case BinaryOp::TypedInequals:
+        op_string = "!==";
+        break;
+    case BinaryOp::Greater:
+        op_string = ">";
+        break;
+    case BinaryOp::Smaller:
+        op_string = "<";
+        break;
+    case BinaryOp::BitAnd:
+        op_string = "&";
+        break;
+    case BinaryOp::BitOr:
+        op_string = "|";
+        break;
+    case BinaryOp::BitXor:
+        op_string = "^";
+        break;
+    case BinaryOp::BitLeftShift:
+        op_string = "<<";
+        break;
+    case BinaryOp::BitRightShift:
+        op_string = ">>";
+        break;
     }
 
     print_indent(indent);
@@ -223,6 +329,22 @@ void LogicalExpression::dump(int indent) const
     print_indent(indent + 1);
     printf("%s\n", op_string);
     m_rhs->dump(indent + 1);
+}
+
+void UnaryExpression::dump(int indent) const
+{
+    const char* op_string = nullptr;
+    switch (m_op) {
+    case UnaryOp::BitNot:
+        op_string = "~";
+        break;
+    }
+
+    print_indent(indent);
+    printf("%s\n", class_name());
+    print_indent(indent + 1);
+    printf("%s\n", op_string);
+    m_lhs->dump(indent + 1);
 }
 
 void CallExpression::dump(int indent) const
