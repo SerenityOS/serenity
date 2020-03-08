@@ -75,6 +75,29 @@ Value sub(Value lhs, Value rhs)
     return Value(lhs.as_double() - rhs.as_double());
 }
 
+const Value typed_eq(const Value lhs, const Value rhs)
+{
+    if (rhs.type() != lhs.type())
+        return Value(false);
+
+    switch (lhs.type()) {
+    case Value::Type::Undefined:
+        return Value(true);
+    case Value::Type::Null:
+        return Value(true);
+    case Value::Type::Number:
+        return Value(lhs.as_double() == rhs.as_double());
+    case Value::Type::String:
+        return Value(lhs.as_string() == rhs.as_string());
+    case Value::Type::Boolean:
+        return Value(lhs.as_bool() == rhs.as_bool());
+    case Value::Type::Object:
+        return Value(lhs.as_object() == rhs.as_object());
+    }
+
+    ASSERT_NOT_REACHED();
+}
+
 Value BinaryExpression::execute(Interpreter& interpreter) const
 {
     auto lhs_result = m_lhs->execute(interpreter);
@@ -85,6 +108,12 @@ Value BinaryExpression::execute(Interpreter& interpreter) const
         return add(lhs_result, rhs_result);
     case BinaryOp::Minus:
         return sub(lhs_result, rhs_result);
+    case BinaryOp::TypedEquals:
+        return typed_eq(lhs_result, rhs_result);
+    }
+
+    ASSERT_NOT_REACHED();
+}
     }
 
     ASSERT_NOT_REACHED();
@@ -119,6 +148,19 @@ void BinaryExpression::dump(int indent) const
     case BinaryOp::Minus:
         op_string = "-";
         break;
+    case BinaryOp::TypedEquals:
+        op_string = "===";
+        break;
+    }
+
+    print_indent(indent);
+    printf("%s\n", class_name());
+    m_lhs->dump(indent + 1);
+    print_indent(indent + 1);
+    printf("%s\n", op_string);
+    m_rhs->dump(indent + 1);
+}
+
     }
 
     print_indent(indent);
