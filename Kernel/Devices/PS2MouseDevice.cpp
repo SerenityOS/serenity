@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Memory.h>
 #include <Kernel/Devices/PS2MouseDevice.h>
 #include <Kernel/Devices/VMWareBackdoor.h>
 #include <LibBareMetal/IO.h>
