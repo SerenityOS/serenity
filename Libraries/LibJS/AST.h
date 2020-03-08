@@ -155,6 +155,14 @@ enum class BinaryOp {
     Plus,
     Minus,
     TypedEquals,
+    TypedInequals,
+    Greater,
+    Smaller,
+    BitAnd,
+    BitOr,
+    BitXor,
+    BitLeftShift,
+    BitRightShift,
 };
 
 class BinaryExpression : public Expression {
@@ -208,6 +216,28 @@ private:
     LogicalOp m_op;
     NonnullOwnPtr<Expression> m_lhs;
     OwnPtr<Expression> m_rhs;
+};
+
+enum class UnaryOp {
+    BitNot,
+};
+
+class UnaryExpression : public Expression {
+public:
+    UnaryExpression(UnaryOp op, NonnullOwnPtr<Expression> lhs)
+        : m_op(op)
+        , m_lhs(move(lhs))
+    {
+    }
+
+    virtual Value execute(Interpreter&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    virtual const char* class_name() const override { return "UnaryExpression"; }
+
+    UnaryOp m_op;
+    NonnullOwnPtr<Expression> m_lhs;
 };
 
 class Literal : public Expression {
