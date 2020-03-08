@@ -52,7 +52,7 @@ public:
 
     virtual HandlerType type() const override { return HandlerType::SpuriousInterruptHandler; }
     virtual const char* purpose() const override { return "Spurious Interrupt Handler"; }
-    virtual const char* controller() const override { return m_responsible_irq_controller->model(); }
+    virtual const char* controller() const override;
 
 private:
     void enable_interrupt_vector();
