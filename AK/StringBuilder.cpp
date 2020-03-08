@@ -54,11 +54,7 @@ void StringBuilder::append(const StringView& str)
 
 void StringBuilder::append(const char* characters, size_t length)
 {
-    if (!length)
-        return;
-    will_append(length);
-    memcpy(m_buffer.data() + m_length, characters, length);
-    m_length += length;
+    append(StringView { characters, length });
 }
 
 void StringBuilder::append(char ch)
