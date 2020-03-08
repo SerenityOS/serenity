@@ -177,7 +177,7 @@ public:
             return !cstring;
         if (!cstring)
             return false;
-        return !strcmp(characters(), cstring);
+        return !__builtin_strcmp(characters(), cstring);
     }
 
     bool operator!=(const char* cstring) const
@@ -273,7 +273,7 @@ inline bool operator<(const char* characters, const String& string)
     if (string.is_null())
         return false;
 
-    return strcmp(characters, string.characters()) < 0;
+    return __builtin_strcmp(characters, string.characters()) < 0;
 }
 
 inline bool operator>=(const char* characters, const String& string)
@@ -289,7 +289,7 @@ inline bool operator>(const char* characters, const String& string)
     if (string.is_null())
         return false;
 
-    return strcmp(characters, string.characters()) > 0;
+    return __builtin_strcmp(characters, string.characters()) > 0;
 }
 
 inline bool operator<=(const char* characters, const String& string)

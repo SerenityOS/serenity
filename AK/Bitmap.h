@@ -112,7 +112,7 @@ public:
         fill(default_value);
 
         if (previous_data != nullptr) {
-            memcpy(m_data, previous_data, previous_size_bytes);
+            __builtin_memcpy(m_data, previous_data, previous_size_bytes);
 
             if ((previous_size % 8) != 0) {
                 if (default_value)
@@ -127,7 +127,7 @@ public:
 
     void fill(bool value)
     {
-        memset(m_data, value ? 0xff : 0x00, size_in_bytes());
+        __builtin_memset(m_data, value ? 0xff : 0x00, size_in_bytes());
     }
 
     Optional<size_t> find_first_set() const
