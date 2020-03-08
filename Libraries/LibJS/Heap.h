@@ -58,7 +58,6 @@ private:
 
     void collect_roots(HashTable<Cell*>&);
     void visit_live_cells(const HashTable<Cell*>& roots, HashTable<Cell*>& live_cells);
-    void clear_all_mark_bits();
     void mark_live_cells(const HashTable<Cell*>& live_cells);
     void sweep_dead_cells();
 
