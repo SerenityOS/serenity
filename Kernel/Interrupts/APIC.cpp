@@ -157,6 +157,11 @@ void eoi()
     write_register(APIC_REG_EOI, 0x0);
 }
 
+u8 spurious_interrupt_vector()
+{
+    return IRQ_APIC_SPURIOUS;
+}
+
 bool init()
 {
     // FIXME: Use the ACPI MADT table

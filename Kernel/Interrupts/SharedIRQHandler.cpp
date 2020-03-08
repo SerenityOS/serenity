@@ -62,7 +62,7 @@ bool SharedIRQHandler::eoi()
 #ifdef INTERRUPT_DEBUG
     dbg() << "EOI IRQ " << interrupt_number();
 #endif
-    m_responsible_irq_controller->eoi(interrupt_number());
+    m_responsible_irq_controller->eoi(*this);
     return true;
 }
 
@@ -115,7 +115,7 @@ void SharedIRQHandler::enable_interrupt_vector()
     if (m_enabled)
         return;
     m_enabled = true;
-    m_responsible_irq_controller->enable(interrupt_number());
+    m_responsible_irq_controller->enable(*this);
 }
 
 void SharedIRQHandler::disable_interrupt_vector()
@@ -123,7 +123,7 @@ void SharedIRQHandler::disable_interrupt_vector()
     if (!m_enabled)
         return;
     m_enabled = false;
-    m_responsible_irq_controller->disable(interrupt_number());
+    m_responsible_irq_controller->disable(*this);
 }
 
 }
