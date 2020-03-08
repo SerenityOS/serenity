@@ -141,7 +141,7 @@ E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, u8 irq)
 {
     set_interface_name("e1k");
 
-    klog() << "E1000: Found at PCI address @ " << String::format("%w", pci_address().seg()) << ":" << String::format("%b", pci_address().bus()) << ":" << String::format("%b", pci_address().slot()) << "." << String::format("%b", pci_address().function());
+    klog() << "E1000: Found @ " << pci_address();
 
     enable_bus_mastering(pci_address());
 

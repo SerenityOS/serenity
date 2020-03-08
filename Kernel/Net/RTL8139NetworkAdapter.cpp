@@ -146,7 +146,7 @@ RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address address, u8 irq)
     m_tx_buffers.ensure_capacity(RTL8139_TX_BUFFER_COUNT);
     set_interface_name("rtl8139");
 
-    klog() << "RTL8139: Found at PCI address " << String::format("%w", pci_address().seg()) << ":" << String::format("%b", pci_address().bus()) << ":" << String::format("%b", pci_address().slot()) << "." << String::format("%b", pci_address().function());
+    klog() << "RTL8139: Found @ " << pci_address();
 
     enable_bus_mastering(pci_address());
 
