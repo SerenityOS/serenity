@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <AK/LogStream.h>
 #include <AK/Types.h>
 
 namespace Kernel {
@@ -128,6 +129,11 @@ namespace PCI {
         u8 m_slot { 0 };
         u8 m_function { 0 };
     };
+
+    inline const LogStream& operator<<(const LogStream& stream, const Address value)
+    {
+        return stream << "PCI [" << String::format("%w", value.seg()) << ":" << String::format("%b", value.bus()) << ":" << String::format("%b", value.slot()) << "." << String::format("%b", value.function()) << "]";
+    }
 
     struct ChangeableAddress : public Address {
         ChangeableAddress()
