@@ -107,9 +107,28 @@ void PCI::Access::disable_bus_mastering(Address address)
 }
 
 namespace PCI {
+
     void enumerate_all(Function<void(Address, ID)> callback)
     {
         PCI::Access::the().enumerate_all(callback);
+    }
+
+    void raw_access(Address address, u32 field, size_t access_size, u32 value)
+    {
+        ASSERT(access_size != 0);
+        if (access_size == 1) {
+            PCI::Access::the().write8_field(address, field, value);
+            return;
+        }
+        if (access_size == 2) {
+            PCI::Access::the().write16_field(address, field, value);
+            return;
+        }
+        if (access_size == 4) {
+            PCI::Access::the().write32_field(address, field, value);
+            return;
+        }
+        ASSERT_NOT_REACHED();
     }
 
     ID get_id(Address address)

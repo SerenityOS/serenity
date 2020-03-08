@@ -25,6 +25,7 @@
  */
 
 #include <Kernel/ACPI/ACPIStaticParser.h>
+#include <Kernel/PCI/Access.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <LibBareMetal/IO.h>
 #include <LibBareMetal/StdLib.h>
@@ -104,26 +105,118 @@ namespace ACPI {
 
     bool StaticParser::can_reboot()
     {
-        // FIXME: Determine if we need to do MMIO/PCI/IO access to reboot, according to ACPI spec 6.2, Section 4.8.3.6
         auto region = MM.allocate_kernel_region(m_fadt.page_base(), (PAGE_SIZE * 2), "ACPI Static Parser", Region::Access::Read);
         auto* fadt = (const Structures::FADT*)region->vaddr().offset(m_fadt.offset_in_page()).as_ptr();
-        return fadt->h.revision >= 2;
+        if (fadt->h.revision < 2)
+            return false;
+        return (fadt->flags & (u32)FADTFeatureFlags::RESET_REG_SUPPORTED) != 0;
+    }
+
+    void StaticParser::access_generic_address(const Structures::GenericAddressStructure& structure, u32 value)
+    {
+        switch (structure.address_space) {
+        case (u8)GenericAddressStructure::AddressSpace::SystemIO: {
+            dbg() << "ACPI: Sending value 0x" << String::format("%x", value) << " to " << IOAddress(structure.address);
+            switch (structure.access_size) {
+            case (u8)GenericAddressStructure::AccessSize::Byte: {
+                IO::out8(structure.address, value);
+                break;
+            }
+            case (u8)GenericAddressStructure::AccessSize::Word: {
+                IO::out16(structure.address, value);
+                break;
+            }
+            case (u8)GenericAddressStructure::AccessSize::DWord: {
+                IO::out32(structure.address, value);
+                break;
+            }
+            case (u8)GenericAddressStructure::AccessSize::QWord: {
+                dbg() << "Trying to send QWord to IO port";
+                ASSERT_NOT_REACHED();
+                break;
+            }
+            default:
+                // FIXME: Determine if for reset register we can actually determine the right IO operation.
+                dbg() << "ACPI Warning: Unknown access size " << structure.access_size;
+                IO::out8(structure.address, value);
+                break;
+            }
+            return;
+        }
+        case (u8)GenericAddressStructure::AddressSpace::SystemMemory: {
+            auto p_reg = PhysicalAddress(structure.address);
+            auto p_region = MM.allocate_kernel_region(p_reg.page_base(), (PAGE_SIZE * 2), "ACPI Static Parser", Region::Access::Read);
+            dbg() << "ACPI: Sending value 0x" << String::format("%x", value) << " to " << p_reg;
+            switch (structure.access_size) {
+            case (u8)GenericAddressStructure::AccessSize::Byte: {
+                auto* reg = (volatile u8*)p_region->vaddr().offset(p_reg.offset_in_page()).as_ptr();
+                (*reg) = value;
+                break;
+            }
+            case (u8)GenericAddressStructure::AccessSize::Word: {
+                auto* reg = (volatile u16*)p_region->vaddr().offset(p_reg.offset_in_page()).as_ptr();
+                (*reg) = value;
+                break;
+            }
+            case (u8)GenericAddressStructure::AccessSize::DWord: {
+                auto* reg = (volatile u32*)p_region->vaddr().offset(p_reg.offset_in_page()).as_ptr();
+                (*reg) = value;
+                break;
+            }
+            case (u8)GenericAddressStructure::AccessSize::QWord: {
+                auto* reg = (volatile u64*)p_region->vaddr().offset(p_reg.offset_in_page()).as_ptr();
+                (*reg) = value;
+                break;
+            }
+            default:
+                ASSERT_NOT_REACHED();
+            }
+            return;
+        }
+        case (u8)GenericAddressStructure::AddressSpace::PCIConfigurationSpace: {
+            // According to the ACPI specification 6.2, page 168, PCI addresses must be confined to devices on Segment group 0, bus 0.
+            auto pci_address = PCI::Address(0, 0, ((structure.address >> 24) & 0xFF), ((structure.address >> 16) & 0xFF));
+            dbg() << "ACPI: Sending value 0x" << String::format("%x", value) << " to " << pci_address;
+            u32 offset_in_pci_address = structure.address & 0xFFFF;
+            if (structure.access_size == (u8)GenericAddressStructure::AccessSize::QWord) {
+                dbg() << "Trying to send QWord to PCI configuration space";
+                ASSERT_NOT_REACHED();
+            }
+            ASSERT(structure.access_size != (u8)GenericAddressStructure::AccessSize::Undefined);
+            PCI::raw_access(pci_address, offset_in_pci_address, (1 << (structure.access_size - 1)), value);
+            return;
+        }
+        default:
+            ASSERT_NOT_REACHED();
+        }
+        ASSERT_NOT_REACHED();
+    }
+
+    bool StaticParser::validate_reset_register()
+    {
+        // According to the ACPI spec 6.2, page 152, The reset register can only be located in I/O bus, PCI bus or memory-mapped.
+        auto region = MM.allocate_kernel_region(m_fadt.page_base(), (PAGE_SIZE * 2), "ACPI Static Parser", Region::Access::Read);
+        auto* fadt = (const Structures::FADT*)region->vaddr().offset(m_fadt.offset_in_page()).as_ptr();
+        return (fadt->reset_reg.address_space == (u8)GenericAddressStructure::AddressSpace::PCIConfigurationSpace || fadt->reset_reg.address_space == (u8)GenericAddressStructure::AddressSpace::SystemMemory || fadt->reset_reg.address_space == (u8)GenericAddressStructure::AddressSpace::SystemIO);
     }
 
     void StaticParser::try_acpi_reboot()
     {
-        // FIXME: Determine if we need to do MMIO/PCI/IO access to reboot, according to ACPI spec 6.2, Section 4.8.3.6
+        InterruptDisabler disabler;
+        if (!can_reboot()) {
+            klog() << "ACPI: Reboot, Not supported!";
+            return;
+        }
 #ifdef ACPI_DEBUG
         dbg() << "ACPI: Rebooting, Probing FADT (" << m_fadt << ")";
 #endif
 
         auto region = MM.allocate_kernel_region(m_fadt.page_base(), (PAGE_SIZE * 2), "ACPI Static Parser", Region::Access::Read);
         auto* fadt = (const Structures::FADT*)region->vaddr().offset(m_fadt.offset_in_page()).as_ptr();
-        if (fadt->h.revision >= 2) {
-            klog() << "ACPI: Reboot, Sending value 0x" << String::format("%x", fadt->reset_value) << " to Port 0x" << String::format("%x", fadt->reset_reg.address);
-            IO::out8(fadt->reset_reg.address, fadt->reset_value);
-        }
-        klog() << "ACPI: Reboot, Not supported!";
+        ASSERT(validate_reset_register());
+        access_generic_address(fadt->reset_reg, fadt->reset_value);
+        for (;;)
+            ;
     }
 
     void StaticParser::try_acpi_shutdown()
@@ -352,6 +445,5 @@ namespace ACPI {
         }
         return {};
     }
-
 }
 }

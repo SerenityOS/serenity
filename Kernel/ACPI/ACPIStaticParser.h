@@ -58,6 +58,9 @@ namespace ACPI {
         void init_fadt();
         void init_facs();
 
+        bool validate_reset_register();
+        void access_generic_address(const Structures::GenericAddressStructure&, u32 value);
+
         PhysicalAddress m_rsdp;
         PhysicalAddress m_main_system_description_table;
 

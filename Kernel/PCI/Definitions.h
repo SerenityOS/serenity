@@ -174,6 +174,7 @@ namespace PCI {
     void enable_interrupt_line(Address);
     void disable_interrupt_line(Address);
     u8 get_interrupt_line(Address);
+    void raw_access(Address, u32, size_t, u32);
     u32 get_BAR0(Address);
     u32 get_BAR1(Address);
     u32 get_BAR2(Address);
