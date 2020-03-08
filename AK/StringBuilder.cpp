@@ -85,19 +85,19 @@ void StringBuilder::appendf(const char* fmt, ...)
     va_end(ap);
 }
 
-ByteBuffer StringBuilder::to_byte_buffer()
+ByteBuffer StringBuilder::to_byte_buffer() const
 {
-    m_buffer.trim(m_length);
-    m_length = 0;
-    return move(m_buffer);
+    ByteBuffer buffer_copy = m_buffer.isolated_copy();
+    buffer_copy.trim(m_length);
+    return buffer_copy;
 }
 
-String StringBuilder::to_string()
+String StringBuilder::to_string() const
 {
     return String((const char*)m_buffer.data(), m_length);
 }
 
-String StringBuilder::build()
+String StringBuilder::build() const
 {
     return to_string();
 }
