@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <AK/Forward.h>
+#include <AK/String.h>
 #include <time.h>
 
 namespace Core {
@@ -43,7 +43,7 @@ public:
     unsigned minute() const { return m_minute; }
     unsigned second() const { return m_second; }
 
-    String to_string() const;
+    String to_string(const String& format = "%Y-%m-%d %H:%M:%S") const;
 
     static DateTime now();
     static DateTime from_timestamp(time_t);
