@@ -71,6 +71,16 @@ Value IfStatement::execute(Interpreter& interpreter) const
         return interpreter.run(*m_alternate);
 }
 
+Value WhileStatement::execute(Interpreter& interpreter) const
+{
+    Value last_value = js_undefined();
+    while (m_predicate->execute(interpreter).as_bool()) {
+        last_value = interpreter.run(*m_body);
+    }
+
+    return last_value;
+}
+
 Value add(Value lhs, Value rhs)
 {
     ASSERT(lhs.is_number());
@@ -257,6 +267,16 @@ void IfStatement::dump(int indent) const
     print_indent(indent);
     printf("Else\n");
     alternate().dump(indent + 1);
+}
+
+void WhileStatement::dump(int indent) const
+{
+    ASTNode::dump(indent);
+
+    print_indent(indent);
+    printf("While\n");
+    predicate().dump(indent + 1);
+    body().dump(indent + 1);
 }
 
 }

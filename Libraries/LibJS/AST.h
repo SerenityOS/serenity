@@ -151,6 +151,27 @@ private:
     NonnullOwnPtr<ScopeNode> m_alternate;
 };
 
+class WhileStatement : public ASTNode {
+public:
+    WhileStatement(NonnullOwnPtr<Expression> predicate, NonnullOwnPtr<ScopeNode> body)
+        : m_predicate(move(predicate))
+        , m_body(move(body))
+    {
+    }
+
+    const Expression& predicate() const { return *m_predicate; }
+    const ScopeNode& body() const { return *m_body; }
+
+    virtual Value execute(Interpreter&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    virtual const char* class_name() const override { return "WhileStatement"; }
+
+    NonnullOwnPtr<Expression> m_predicate;
+    NonnullOwnPtr<ScopeNode> m_body;
+};
+
 enum class BinaryOp {
     Plus,
     Minus,
