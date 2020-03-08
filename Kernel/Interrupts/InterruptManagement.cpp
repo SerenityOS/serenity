@@ -81,19 +81,31 @@ Vector<RefPtr<ISAInterruptOverrideMetadata>> InterruptManagement::isa_overrides(
     return m_isa_interrupt_overrides;
 }
 
-u8 InterruptManagement::acquire_mapped_interrupt_number(u8 number)
+u8 InterruptManagement::acquire_mapped_interrupt_number(u8 original_irq)
 {
     if (!InterruptManagement::initialized()) {
         // This is necessary, because we install UnhandledInterruptHandlers before we actually initialize the Interrupt Management object...
-        return number;
+        return original_irq;
     }
-    return InterruptManagement::the().get_mapped_vector_number(number);
+    return InterruptManagement::the().get_mapped_interrupt_vector(original_irq);
 }
 
-u8 InterruptManagement::get_mapped_vector_number(u8 original_vector)
+u8 InterruptManagement::acquire_irq_number(u8 mapped_interrupt_vector)
+{
+    ASSERT(InterruptManagement::initialized());
+    return InterruptManagement::the().get_irq_vector(mapped_interrupt_vector);
+}
+
+u8 InterruptManagement::get_mapped_interrupt_vector(u8 original_irq)
 {
     // FIXME: For SMP configuration (with IOAPICs) use a better routing scheme to make redirections more efficient.
-    return original_vector;
+    return original_irq;
+}
+
+u8 InterruptManagement::get_irq_vector(u8 mapped_interrupt_vector)
+{
+    // FIXME: For SMP configuration (with IOAPICs) use a better routing scheme to make redirections more efficient.
+    return mapped_interrupt_vector;
 }
 
 RefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(u8 interrupt_vector)
