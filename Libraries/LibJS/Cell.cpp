@@ -24,50 +24,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibJS/AST.h>
-#include <LibJS/Interpreter.h>
-#include <LibJS/Object.h>
-#include <LibJS/Value.h>
+#include <AK/LogStream.h>
+#include <LibJS/Cell.h>
 
 namespace JS {
 
-Interpreter::Interpreter()
-    : m_heap(*this)
+const LogStream& operator<<(const LogStream& stream, const Cell* cell)
 {
-    m_global_object = heap().allocate<Object>();
-}
-
-Interpreter::~Interpreter()
-{
-}
-
-Value Interpreter::run(const ScopeNode& scope_node)
-{
-    enter_scope(scope_node);
-
-    Value last_value = js_undefined();
-    for (auto& node : scope_node.children()) {
-        last_value = node.execute(*this);
-    }
-
-    exit_scope(scope_node);
-    return last_value;
-}
-
-void Interpreter::enter_scope(const ScopeNode& scope_node)
-{
-    m_scope_stack.append({ scope_node });
-}
-
-void Interpreter::exit_scope(const ScopeNode& scope_node)
-{
-    ASSERT(&m_scope_stack.last().scope_node == &scope_node);
-    m_scope_stack.take_last();
-}
-
-void Interpreter::do_return()
-{
-    dbg() << "FIXME: Implement Interpreter::do_return()";
+    if (!cell)
+        return stream << "Cell{nullptr}";
+    return stream << cell->class_name() << '{' << static_cast<const void*>(cell) << '}';
 }
 
 }

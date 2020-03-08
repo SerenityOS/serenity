@@ -39,7 +39,7 @@ Value ScopeNode::execute(Interpreter& interpreter) const
 
 Value FunctionDeclaration::execute(Interpreter& interpreter) const
 {
-    auto* function = new Function(name(), body());
+    auto* function = interpreter.heap().allocate<Function>(name(), body());
     interpreter.global_object().put(m_name, Value(function));
     return Value(function);
 }

@@ -28,6 +28,7 @@
 
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Heap.h>
 
 namespace JS {
 
@@ -45,11 +46,15 @@ public:
     Object& global_object() { return *m_global_object; }
     const Object& global_object() const { return *m_global_object; }
 
+    Heap& heap() { return m_heap; }
+
     void do_return();
 
 private:
     void enter_scope(const ScopeNode&);
     void exit_scope(const ScopeNode&);
+
+    Heap m_heap;
 
     Vector<ScopeFrame> m_scope_stack;
 

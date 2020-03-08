@@ -24,50 +24,41 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibJS/AST.h>
-#include <LibJS/Interpreter.h>
-#include <LibJS/Object.h>
-#include <LibJS/Value.h>
+#include <AK/Assertions.h>
+#include <LibJS/HeapBlock.h>
 
 namespace JS {
 
-Interpreter::Interpreter()
-    : m_heap(*this)
+HeapBlock::HeapBlock(size_t cell_size)
+    : m_cell_size(cell_size)
 {
-    m_global_object = heap().allocate<Object>();
-}
-
-Interpreter::~Interpreter()
-{
-}
-
-Value Interpreter::run(const ScopeNode& scope_node)
-{
-    enter_scope(scope_node);
-
-    Value last_value = js_undefined();
-    for (auto& node : scope_node.children()) {
-        last_value = node.execute(*this);
+    for (size_t i = 0; i < cell_count(); ++i) {
+        auto* freelist_entry = static_cast<FreelistEntry*>(cell(i));
+        freelist_entry->set_live(false);
+        if (i == cell_count() - 1)
+            freelist_entry->next = nullptr;
+        else
+            freelist_entry->next = static_cast<FreelistEntry*>(cell(i + 1));
     }
-
-    exit_scope(scope_node);
-    return last_value;
+    m_freelist = static_cast<FreelistEntry*>(cell(0));
 }
 
-void Interpreter::enter_scope(const ScopeNode& scope_node)
+Cell* HeapBlock::allocate()
 {
-    m_scope_stack.append({ scope_node });
+    if (!m_freelist)
+        return nullptr;
+    return exchange(m_freelist, m_freelist->next);
 }
 
-void Interpreter::exit_scope(const ScopeNode& scope_node)
+void HeapBlock::deallocate(Cell* cell)
 {
-    ASSERT(&m_scope_stack.last().scope_node == &scope_node);
-    m_scope_stack.take_last();
-}
-
-void Interpreter::do_return()
-{
-    dbg() << "FIXME: Implement Interpreter::do_return()";
+    ASSERT(cell->is_live());
+    ASSERT(!cell->is_marked());
+    cell->~Cell();
+    auto* freelist_entry = static_cast<FreelistEntry*>(cell);
+    freelist_entry->set_live(false);
+    freelist_entry->next = m_freelist;
+    m_freelist = freelist_entry;
 }
 
 }
