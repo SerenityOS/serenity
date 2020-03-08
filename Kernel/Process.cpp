@@ -2427,6 +2427,12 @@ pid_t Process::sys$waitid(const Syscall::SC_waitid_params* user_params)
     auto siginfo_or_error = do_waitid(static_cast<idtype_t>(params.idtype), params.id, params.options);
     if (siginfo_or_error.is_error())
         return siginfo_or_error.error();
+    // While we waited, the process lock was dropped. This gave other threads
+    // the opportunity to mess with the memory. For example, it could free the
+    // region, and map it to a region to which it has no write permissions.
+    // Therefore, we need to re-validate the pointer.
+    if (!validate_write_typed(params.infop))
+        return -EFAULT;
 
     copy_to_user(params.infop, &siginfo_or_error.value());
     return 0;
