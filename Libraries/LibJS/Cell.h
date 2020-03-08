@@ -24,50 +24,39 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibJS/AST.h>
-#include <LibJS/Interpreter.h>
-#include <LibJS/Object.h>
-#include <LibJS/Value.h>
+#pragma once
+
+#include <AK/Forward.h>
 
 namespace JS {
 
-Interpreter::Interpreter()
-    : m_heap(*this)
-{
-    m_global_object = heap().allocate<Object>();
-}
+class Cell {
+public:
+    virtual ~Cell() {}
 
-Interpreter::~Interpreter()
-{
-}
+    bool is_marked() const { return m_mark; }
+    void set_marked(bool b) { m_mark = b; }
 
-Value Interpreter::run(const ScopeNode& scope_node)
-{
-    enter_scope(scope_node);
+    bool is_live() const { return m_live; }
+    void set_live(bool b) { m_live = b; }
 
-    Value last_value = js_undefined();
-    for (auto& node : scope_node.children()) {
-        last_value = node.execute(*this);
+    virtual const char* class_name() const = 0;
+
+    class Visitor {
+    public:
+        virtual void did_visit(Cell*) = 0;
+    };
+
+    virtual void visit_graph(Visitor& visitor)
+    {
+        visitor.did_visit(this);
     }
 
-    exit_scope(scope_node);
-    return last_value;
-}
+private:
+    bool m_mark { false };
+    bool m_live { true };
+};
 
-void Interpreter::enter_scope(const ScopeNode& scope_node)
-{
-    m_scope_stack.append({ scope_node });
-}
-
-void Interpreter::exit_scope(const ScopeNode& scope_node)
-{
-    ASSERT(&m_scope_stack.last().scope_node == &scope_node);
-    m_scope_stack.take_last();
-}
-
-void Interpreter::do_return()
-{
-    dbg() << "FIXME: Implement Interpreter::do_return()";
-}
+const LogStream& operator<<(const LogStream&, const Cell*);
 
 }
