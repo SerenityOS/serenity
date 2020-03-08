@@ -26,13 +26,14 @@
 
 #include "ELFLoader.h"
 #include <AK/Demangle.h>
+#include <AK/Memory.h>
 #include <AK/QuickSort.h>
 
 #ifdef KERNEL
-#include <Kernel/VM/MemoryManager.h>
-#define do_memcpy copy_to_user
+#    include <Kernel/VM/MemoryManager.h>
+#    define do_memcpy copy_to_user
 #else
-#define do_memcpy memcpy
+#    define do_memcpy memcpy
 #endif
 
 //#define ELFLOADER_DEBUG

@@ -29,6 +29,7 @@
 #include <AK/LogStream.h>
 #include <AK/StdLibExtras.h>
 #include <errno.h>
+#include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
 

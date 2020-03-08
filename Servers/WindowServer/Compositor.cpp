@@ -30,6 +30,7 @@
 #include "Screen.h"
 #include "Window.h"
 #include "WindowManager.h"
+#include <AK/Memory.h>
 #include <LibCore/Timer.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Painter.h>

@@ -26,10 +26,10 @@
 
 #include <AK/StdLibExtras.h>
 #include <LibCore/ArgsParser.h>
-
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int head(const String& filename, bool print_filename, int line_count, int char_count);
 

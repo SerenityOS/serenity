@@ -31,6 +31,7 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibGfx/GIFLoader.h>
 #include <stdio.h>
+#include <string.h>
 
 namespace Gfx {
 

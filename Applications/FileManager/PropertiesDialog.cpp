@@ -35,6 +35,7 @@
 #include <limits.h>
 #include <pwd.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, bool disable_rename, Window* parent_window)

@@ -45,6 +45,7 @@
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/ToolBar.h>
 #include <LibGfx/Font.h>
+#include <string.h>
 
 TextEditorWidget::TextEditorWidget()
 {

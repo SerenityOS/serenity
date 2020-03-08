@@ -27,6 +27,7 @@
 #pragma once
 
 #include <LibGUI/Widget.h>
+#include <string.h>
 
 class Editor;
 
