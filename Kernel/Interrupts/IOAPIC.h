@@ -42,14 +42,16 @@ class PCIInterruptOverrideMetadata;
 class IOAPIC final : public IRQController {
 public:
     IOAPIC(ioapic_mmio_regs& regs, u32 gsi_base);
-    virtual void enable(u8 number) override;
-    virtual void disable(u8 number) override;
+    virtual void enable(const GenericInterruptHandler&) override;
+    virtual void disable(const GenericInterruptHandler&) override;
     virtual void hard_disable() override;
-    virtual void eoi(u8 number) const override;
+    virtual void eoi(const GenericInterruptHandler&) const override;
+    virtual void spurious_eoi(const GenericInterruptHandler&) const override;
     virtual bool is_vector_enabled(u8 number) const override;
     virtual u16 get_isr() const override;
     virtual u16 get_irr() const override;
-    virtual u32 get_gsi_base() const override { return m_gsi_base; }
+    virtual u32 gsi_base() const override { return m_gsi_base; }
+    virtual size_t interrupt_vectors_count() const { return m_redirection_entries_count; }
     virtual const char* model() const override { return "IOAPIC"; };
     virtual IRQControllerType type() const override { return IRQControllerType::i82093AA; }
 
@@ -80,6 +82,6 @@ private:
     u32 m_gsi_base;
     u8 m_id;
     u8 m_version;
-    u32 m_redirection_entries;
+    size_t m_redirection_entries_count;
 };
 }

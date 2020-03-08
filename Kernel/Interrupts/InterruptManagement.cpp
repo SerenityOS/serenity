@@ -114,7 +114,7 @@ RefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(u8 int
         return m_interrupt_controllers[0];
     }
     for (auto irq_controller : m_interrupt_controllers) {
-        if (irq_controller->get_gsi_base() <= interrupt_vector)
+        if (irq_controller->gsi_base() <= interrupt_vector)
             if (!irq_controller->is_hard_disabled())
                 return irq_controller;
     }
