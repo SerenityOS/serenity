@@ -148,24 +148,6 @@ struct tm* gmtime_r(const time_t* t, struct tm* tm)
     return tm;
 }
 
-static char wday_short_names[7][4] = {
-    "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
-};
-
-static char wday_long_names[7][10] = {
-    "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
-};
-
-static char mon_short_names[12][4] = {
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-};
-
-static char mon_long_names[12][10] = {
-    "January", "February", "March", "April", "May", "June",
-    "July", "Auguest", "September", "October", "November", "December"
-};
-
 char* asctime(const struct tm* tm)
 {
     static char buffer[69];
@@ -176,6 +158,21 @@ char* asctime(const struct tm* tm)
 //FIXME: Some formats are not supported.
 size_t strftime(char* destination, size_t max_size, const char* format, const struct tm* tm)
 {
+    const char wday_short_names[7][4] = {
+        "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
+    };
+    const char wday_long_names[7][10] = {
+        "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+    };
+    const char mon_short_names[12][4] = {
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    };
+    const char mon_long_names[12][10] = {
+        "January", "February", "March", "April", "May", "June",
+        "July", "Auguest", "September", "October", "November", "December"
+    };
+
     StringBuilder builder { max_size - 1 };
 
     const int format_len = strlen(format);
@@ -266,10 +263,10 @@ size_t strftime(char* destination, size_t max_size, const char* format, const st
                     if (tm->tm_yday >= 7 - wday_of_year_beginning)
                         --week_number;
                     else {
-                        const int days_of_last_year = 365 + __is_leap_year(tm->tm_year + 1900);
+                        const int days_of_last_year = 365 + __is_leap_year(tm->tm_year + 1900 - 1);
                         const int wday_of_last_year_beginning = (wday_of_year_beginning + 6 * days_of_last_year) % 7;
                         week_number = (days_of_last_year + wday_of_last_year_beginning) / 7 + 1;
-                        if (wday_of_year_beginning > 3)
+                        if (wday_of_last_year_beginning > 3)
                             --week_number;
                     }
                 }
