@@ -66,7 +66,6 @@ void Heap::collect_garbage()
     HashTable<Cell*> live_cells;
     visit_live_cells(roots, live_cells);
 
-    clear_all_mark_bits();
     mark_live_cells(live_cells);
     sweep_dead_cells();
 }
@@ -114,15 +113,6 @@ void Heap::visit_live_cells(const HashTable<Cell*>& roots, HashTable<Cell*>& liv
 #endif
 }
 
-void Heap::clear_all_mark_bits()
-{
-    for (auto& block : m_blocks) {
-        block->for_each_cell([&](Cell* cell) {
-            cell->set_marked(false);
-        });
-    }
-}
-
 void Heap::mark_live_cells(const HashTable<Cell*>& live_cells)
 {
 #ifdef HEAP_DEBUG
@@ -147,11 +137,15 @@ void Heap::sweep_dead_cells()
 #endif
     for (auto& block : m_blocks) {
         block->for_each_cell([&](Cell* cell) {
-            if (cell->is_live() && !cell->is_marked()) {
+            if (cell->is_live()) {
+                if (!cell->is_marked()) {
 #ifdef HEAP_DEBUG
-                dbg() << "  ~ " << cell;
+                    dbg() << "  ~ " << cell;
 #endif
-                block->deallocate(cell);
+                    block->deallocate(cell);
+                } else {
+                    cell->set_marked(false);
+                }
             }
         });
     }
