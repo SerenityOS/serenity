@@ -29,6 +29,9 @@
 namespace JS {
 
 class ASTNode;
+class Cell;
+class Heap;
+class HeapBlock;
 class Interpreter;
 class Object;
 class ScopeNode;

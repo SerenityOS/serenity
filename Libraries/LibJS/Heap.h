@@ -24,50 +24,46 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibJS/AST.h>
-#include <LibJS/Interpreter.h>
-#include <LibJS/Object.h>
-#include <LibJS/Value.h>
+#pragma once
+
+#include <AK/Noncopyable.h>
+#include <AK/NonnullOwnPtr.h>
+#include <AK/Types.h>
+#include <AK/Vector.h>
+#include <LibJS/Cell.h>
+#include <LibJS/Forward.h>
 
 namespace JS {
 
-Interpreter::Interpreter()
-    : m_heap(*this)
-{
-    m_global_object = heap().allocate<Object>();
-}
+class Heap {
+    AK_MAKE_NONCOPYABLE(Heap);
+    AK_MAKE_NONMOVABLE(Heap);
 
-Interpreter::~Interpreter()
-{
-}
+public:
+    explicit Heap(Interpreter&);
+    ~Heap();
 
-Value Interpreter::run(const ScopeNode& scope_node)
-{
-    enter_scope(scope_node);
-
-    Value last_value = js_undefined();
-    for (auto& node : scope_node.children()) {
-        last_value = node.execute(*this);
+    template<typename T, typename... Args>
+    T* allocate(Args&&... args)
+    {
+        auto* memory = allocate_cell(sizeof(T));
+        new (memory) T(forward<Args>(args)...);
+        return static_cast<T*>(memory);
     }
 
-    exit_scope(scope_node);
-    return last_value;
-}
+    void collect_garbage();
 
-void Interpreter::enter_scope(const ScopeNode& scope_node)
-{
-    m_scope_stack.append({ scope_node });
-}
+private:
+    Cell* allocate_cell(size_t);
 
-void Interpreter::exit_scope(const ScopeNode& scope_node)
-{
-    ASSERT(&m_scope_stack.last().scope_node == &scope_node);
-    m_scope_stack.take_last();
-}
+    void collect_roots(HashTable<Cell*>&);
+    void visit_live_cells(const HashTable<Cell*>& roots, HashTable<Cell*>& live_cells);
+    void clear_all_mark_bits();
+    void mark_live_cells(const HashTable<Cell*>& live_cells);
+    void sweep_dead_cells();
 
-void Interpreter::do_return()
-{
-    dbg() << "FIXME: Implement Interpreter::do_return()";
-}
+    Interpreter& m_interpreter;
+    Vector<NonnullOwnPtr<HeapBlock>> m_blocks;
+};
 
 }

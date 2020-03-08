@@ -30,6 +30,14 @@
 
 namespace JS {
 
+Object::Object()
+{
+}
+
+Object::~Object()
+{
+}
+
 Value Object::get(String property_name) const
 {
     return m_properties.get(property_name).value_or(js_undefined());
@@ -38,6 +46,15 @@ Value Object::get(String property_name) const
 void Object::put(String property_name, Value value)
 {
     m_properties.set(property_name, move(value));
+}
+
+void Object::visit_graph(Cell::Visitor& visitor)
+{
+    Cell::visit_graph(visitor);
+    for (auto& it : m_properties) {
+        if (it.value.is_object())
+            it.value.as_object()->visit_graph(visitor);
+    }
 }
 
 }

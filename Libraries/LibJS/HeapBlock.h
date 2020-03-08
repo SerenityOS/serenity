@@ -24,50 +24,43 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibJS/AST.h>
-#include <LibJS/Interpreter.h>
-#include <LibJS/Object.h>
-#include <LibJS/Value.h>
+#pragma once
+
+#include <AK/Types.h>
+#include <LibJS/Cell.h>
+#include <LibJS/Forward.h>
 
 namespace JS {
 
-Interpreter::Interpreter()
-    : m_heap(*this)
-{
-    m_global_object = heap().allocate<Object>();
-}
+class HeapBlock {
+public:
+    static constexpr size_t block_size = 16 * KB;
 
-Interpreter::~Interpreter()
-{
-}
+    explicit HeapBlock(size_t cell_size);
 
-Value Interpreter::run(const ScopeNode& scope_node)
-{
-    enter_scope(scope_node);
+    size_t cell_size() const { return m_cell_size; }
+    size_t cell_count() const { return (block_size - sizeof(HeapBlock)) / m_cell_size; }
 
-    Value last_value = js_undefined();
-    for (auto& node : scope_node.children()) {
-        last_value = node.execute(*this);
+    Cell* cell(size_t index) { return reinterpret_cast<Cell*>(&m_storage[index * cell_size()]); }
+
+    Cell* allocate();
+    void deallocate(Cell*);
+
+    template<typename Callback>
+    void for_each_cell(Callback callback)
+    {
+        for (size_t i = 0; i < cell_count(); ++i)
+            callback(cell(i));
     }
 
-    exit_scope(scope_node);
-    return last_value;
-}
+private:
+    struct FreelistEntry : public Cell {
+        FreelistEntry* next;
+    };
 
-void Interpreter::enter_scope(const ScopeNode& scope_node)
-{
-    m_scope_stack.append({ scope_node });
-}
-
-void Interpreter::exit_scope(const ScopeNode& scope_node)
-{
-    ASSERT(&m_scope_stack.last().scope_node == &scope_node);
-    m_scope_stack.take_last();
-}
-
-void Interpreter::do_return()
-{
-    dbg() << "FIXME: Implement Interpreter::do_return()";
-}
+    size_t m_cell_size { 0 };
+    FreelistEntry* m_freelist { nullptr };
+    u8 m_storage[];
+};
 
 }

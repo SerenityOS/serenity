@@ -1,6 +1,9 @@
 OBJS = \
     AST.o \
+    Cell.o \
     Function.o \
+    Heap.o \
+    HeapBlock.o \
     Interpreter.o \
     Object.o \
     Value.o
