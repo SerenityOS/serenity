@@ -138,7 +138,7 @@ void Layout::save_to(JsonObject& json)
         JsonObject entry_object;
         if (entry.type == Entry::Type::Widget) {
             entry_object.set("type", "Widget");
-            entry_object.set("widget", (uintptr_t)entry.widget.ptr());
+            entry_object.set("widget", (FlatPtr)entry.widget.ptr());
         } else if (entry.type == Entry::Type::Spacer) {
             entry_object.set("type", "Spacer");
         } else {

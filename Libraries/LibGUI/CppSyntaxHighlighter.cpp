@@ -77,7 +77,7 @@ void CppSyntaxHighlighter::highlight_matching_token_pair()
         bool forward = direction == Direction::Forward;
         for (forward ? ++i : --i; forward ? (i < document.spans().size()) : (i >= 0); forward ? ++i : --i) {
             auto& span = document.spans().at(i);
-            auto span_token_type = (CppToken::Type)((uintptr_t)span.data);
+            auto span_token_type = (CppToken::Type)((FlatPtr)span.data);
             if (span_token_type == not_type) {
                 ++nesting_level;
             } else if (span_token_type == type) {
@@ -116,7 +116,7 @@ void CppSyntaxHighlighter::highlight_matching_token_pair()
 
     for (size_t i = 0; i < document.spans().size(); ++i) {
         auto& span = const_cast<GUI::TextDocumentSpan&>(document.spans().at(i));
-        auto token_type = (CppToken::Type)((uintptr_t)span.data);
+        auto token_type = (CppToken::Type)((FlatPtr)span.data);
 
         for (auto& pair : pairs) {
             if (token_type == pair.open && span.range.start() == m_editor->cursor()) {

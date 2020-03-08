@@ -247,7 +247,7 @@ namespace ACPI {
             dbg() << "ACPI: Looking for RSDP in EBDA @ V " << (void*)rsdp_str << ", P " << (void*)p_rsdp_str;
 #endif
             if (!strncmp("RSD PTR ", rsdp_str, strlen("RSD PTR ")))
-                return PhysicalAddress((uintptr_t)p_rsdp_str);
+                return PhysicalAddress((FlatPtr)p_rsdp_str);
             p_rsdp_str += 16;
         }
         return {};
@@ -262,7 +262,7 @@ namespace ACPI {
             dbg() << "ACPI: Looking for RSDP in BIOS ROM area @ V " << (void*)rsdp_str << ", P " << (void*)p_rsdp_str;
 #endif
             if (!strncmp("RSD PTR ", rsdp_str, strlen("RSD PTR ")))
-                return PhysicalAddress((uintptr_t)p_rsdp_str);
+                return PhysicalAddress((FlatPtr)p_rsdp_str);
             p_rsdp_str += 16;
         }
         return {};
@@ -320,8 +320,8 @@ namespace ACPI {
         auto main_sdt_region = MM.allocate_kernel_region(xsdt.page_base(), PAGE_SIZE, "ACPI Static Parsing search_table_in_xsdt()", Region::Access::Read, false, true);
         auto* xsdt_ptr = (volatile Structures::XSDT*)main_sdt_region->vaddr().offset(xsdt.offset_in_page().get()).as_ptr();
         for (u32 i = 0; i < ((xsdt_ptr->h.length - sizeof(Structures::SDTHeader)) / sizeof(u64)); i++) {
-            if (match_table_signature(PhysicalAddress((uintptr_t)xsdt_ptr->table_ptrs[i]), signature))
-                return PhysicalAddress((uintptr_t)xsdt_ptr->table_ptrs[i]);
+            if (match_table_signature(PhysicalAddress((FlatPtr)xsdt_ptr->table_ptrs[i]), signature))
+                return PhysicalAddress((FlatPtr)xsdt_ptr->table_ptrs[i]);
         }
         return {};
     }
@@ -347,8 +347,8 @@ namespace ACPI {
         auto* rsdt_ptr = (volatile Structures::RSDT*)main_sdt_region->vaddr().offset(rsdt.offset_in_page().get()).as_ptr();
 
         for (u32 i = 0; i < ((rsdt_ptr->h.length - sizeof(Structures::SDTHeader)) / sizeof(u32)); i++) {
-            if (match_table_signature(PhysicalAddress((uintptr_t)rsdt_ptr->table_ptrs[i]), signature))
-                return PhysicalAddress((uintptr_t)rsdt_ptr->table_ptrs[i]);
+            if (match_table_signature(PhysicalAddress((FlatPtr)rsdt_ptr->table_ptrs[i]), signature))
+                return PhysicalAddress((FlatPtr)rsdt_ptr->table_ptrs[i]);
         }
         return {};
     }

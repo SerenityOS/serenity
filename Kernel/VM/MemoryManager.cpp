@@ -41,9 +41,9 @@
 //#define MM_DEBUG
 //#define PAGE_FAULT_DEBUG
 
-extern uintptr_t start_of_kernel_text;
-extern uintptr_t start_of_kernel_data;
-extern uintptr_t end_of_kernel_bss;
+extern FlatPtr start_of_kernel_text;
+extern FlatPtr start_of_kernel_data;
+extern FlatPtr end_of_kernel_bss;
 
 namespace Kernel {
 
@@ -72,14 +72,14 @@ MemoryManager::~MemoryManager()
 void MemoryManager::protect_kernel_image()
 {
     // Disable writing to the kernel text and rodata segments.
-    for (size_t i = (uintptr_t)&start_of_kernel_text; i < (uintptr_t)&start_of_kernel_data; i += PAGE_SIZE) {
+    for (size_t i = (FlatPtr)&start_of_kernel_text; i < (FlatPtr)&start_of_kernel_data; i += PAGE_SIZE) {
         auto& pte = ensure_pte(kernel_page_directory(), VirtualAddress(i));
         pte.set_writable(false);
     }
 
     if (g_cpu_supports_nx) {
         // Disable execution of the kernel data and bss segments.
-        for (size_t i = (uintptr_t)&start_of_kernel_data; i < (uintptr_t)&end_of_kernel_bss; i += PAGE_SIZE) {
+        for (size_t i = (FlatPtr)&start_of_kernel_data; i < (FlatPtr)&end_of_kernel_bss; i += PAGE_SIZE) {
             auto& pte = ensure_pte(kernel_page_directory(), VirtualAddress(i));
             pte.set_execute_disabled(true);
         }
@@ -104,7 +104,7 @@ void MemoryManager::setup_low_identity_mapping()
     if (g_cpu_supports_nx)
         pde_zero.set_execute_disabled(true);
 
-    for (uintptr_t offset = (1 * MB); offset < (2 * MB); offset += PAGE_SIZE) {
+    for (FlatPtr offset = (1 * MB); offset < (2 * MB); offset += PAGE_SIZE) {
         auto& page_table_page = m_low_page_table;
         auto& pte = quickmap_pt(page_table_page->paddr())[offset / PAGE_SIZE];
         pte.set_physical_page_base(offset);
@@ -132,7 +132,7 @@ void MemoryManager::parse_memory_map()
         if ((mmap->addr + mmap->len) > 0xffffffff)
             continue;
 
-        auto diff = (uintptr_t)mmap->addr % PAGE_SIZE;
+        auto diff = (FlatPtr)mmap->addr % PAGE_SIZE;
         if (diff != 0) {
             klog() << "MM: got an unaligned region base from the bootloader; correcting " << String::format("%p", mmap->addr) << " by " << diff << " bytes";
             diff = PAGE_SIZE - diff;
@@ -149,7 +149,7 @@ void MemoryManager::parse_memory_map()
         }
 
 #ifdef MM_DEBUG
-        klog() << "MM: considering memory at " << String::format("%p", (uintptr_t)mmap->addr) << " - " << String::format("%p", (uintptr_t)(mmap->addr + mmap->len));
+        klog() << "MM: considering memory at " << String::format("%p", (FlatPtr)mmap->addr) << " - " << String::format("%p", (FlatPtr)(mmap->addr + mmap->len));
 #endif
 
         for (size_t page_base = mmap->addr; page_base < (mmap->addr + mmap->len); page_base += PAGE_SIZE) {
@@ -196,7 +196,7 @@ const PageTableEntry* MemoryManager::pte(const PageDirectory& page_directory, Vi
     if (!pde.is_present())
         return nullptr;
 
-    return &quickmap_pt(PhysicalAddress((uintptr_t)pde.page_table_base()))[page_table_index];
+    return &quickmap_pt(PhysicalAddress((FlatPtr)pde.page_table_base()))[page_table_index];
 }
 
 PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, VirtualAddress vaddr)
@@ -224,7 +224,7 @@ PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
         page_directory.m_physical_pages.set(page_directory_index, move(page_table));
     }
 
-    return quickmap_pt(PhysicalAddress((uintptr_t)pde.page_table_base()))[page_table_index];
+    return quickmap_pt(PhysicalAddress((FlatPtr)pde.page_table_base()))[page_table_index];
 }
 
 void MemoryManager::initialize()

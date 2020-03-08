@@ -97,7 +97,7 @@ public:
     const Process& process() const { return m_process; }
 
     String backtrace(ProcessInspectionHandle&) const;
-    Vector<uintptr_t> raw_backtrace(uintptr_t ebp) const;
+    Vector<FlatPtr> raw_backtrace(FlatPtr ebp) const;
 
     const String& name() const { return m_name; }
     void set_name(StringView s) { m_name = s; }
@@ -360,7 +360,7 @@ public:
     FPUState& fpu_state() { return *m_fpu_state; }
 
     void set_default_signal_dispositions();
-    void push_value_on_stack(uintptr_t);
+    void push_value_on_stack(FlatPtr);
 
     u32 make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment);
 

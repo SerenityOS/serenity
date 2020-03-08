@@ -225,14 +225,14 @@ protected:
 
     Vector<unsigned> get_pci_bus_ids();
 
-    uintptr_t search_floating_pointer();
-    uintptr_t search_floating_pointer_in_ebda(u16 ebda_segment);
-    uintptr_t search_floating_pointer_in_bios_area();
+    FlatPtr search_floating_pointer();
+    FlatPtr search_floating_pointer_in_ebda(u16 ebda_segment);
+    FlatPtr search_floating_pointer_in_bios_area();
 
-    uintptr_t m_floating_pointer;
-    uintptr_t m_configuration_table;
-    Vector<uintptr_t> m_io_interrupt_redirection_entries;
-    Vector<uintptr_t> m_bus_entries;
+    FlatPtr m_floating_pointer;
+    FlatPtr m_configuration_table;
+    Vector<FlatPtr> m_io_interrupt_redirection_entries;
+    Vector<FlatPtr> m_bus_entries;
     bool m_operable;
 
     size_t m_configuration_table_length;

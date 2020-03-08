@@ -84,7 +84,7 @@ void Profile::rebuild_tree()
         return new_root;
     };
 
-    HashTable<uintptr_t> live_allocations;
+    HashTable<FlatPtr> live_allocations;
 
     for (auto& event : m_events) {
         if (has_timestamp_filter_range()) {
@@ -207,10 +207,10 @@ OwnPtr<Profile> Profile::load_from_perfcore_file(const StringView& path)
         event.type = perf_event.get("type").to_string();
 
         if (event.type == "malloc") {
-            event.ptr = perf_event.get("ptr").to_number<uintptr_t>();
+            event.ptr = perf_event.get("ptr").to_number<FlatPtr>();
             event.size = perf_event.get("size").to_number<size_t>();
         } else if (event.type == "free") {
-            event.ptr = perf_event.get("ptr").to_number<uintptr_t>();
+            event.ptr = perf_event.get("ptr").to_number<FlatPtr>();
         }
 
         auto stack_array = perf_event.get("stack").as_array();
@@ -239,7 +239,7 @@ OwnPtr<Profile> Profile::load_from_perfcore_file(const StringView& path)
         if (event.frames.size() < 2)
             continue;
 
-        uintptr_t innermost_frame_address = event.frames.at(1).address;
+        FlatPtr innermost_frame_address = event.frames.at(1).address;
         event.in_kernel = innermost_frame_address >= 0xc0000000;
 
         events.append(move(event));

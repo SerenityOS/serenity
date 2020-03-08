@@ -33,7 +33,7 @@
 
 #define PAGE_SIZE 4096
 #define GENERIC_INTERRUPT_HANDLERS_COUNT 128
-#define PAGE_MASK ((uintptr_t)0xfffff000u)
+#define PAGE_MASK ((FlatPtr)0xfffff000u)
 
 namespace Kernel {
 
@@ -451,24 +451,24 @@ struct [[gnu::aligned(16)]] FPUState
     u8 buffer[512];
 };
 
-inline constexpr uintptr_t page_base_of(uintptr_t address)
+inline constexpr FlatPtr page_base_of(FlatPtr address)
 {
     return address & PAGE_MASK;
 }
 
-inline uintptr_t page_base_of(const void* address)
+inline FlatPtr page_base_of(const void* address)
 {
-    return page_base_of((uintptr_t)address);
+    return page_base_of((FlatPtr)address);
 }
 
-inline constexpr uintptr_t offset_in_page(uintptr_t address)
+inline constexpr FlatPtr offset_in_page(FlatPtr address)
 {
     return address & (~PAGE_MASK);
 }
 
-inline uintptr_t offset_in_page(const void* address)
+inline FlatPtr offset_in_page(const void* address)
 {
-    return offset_in_page((uintptr_t)address);
+    return offset_in_page((FlatPtr)address);
 }
 
 u32 read_cr3();
