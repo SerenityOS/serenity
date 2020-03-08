@@ -81,4 +81,10 @@ void SpuriousInterruptHandler::disable_interrupt_vector()
     m_responsible_irq_controller->disable(interrupt_number());
 }
 
+const char* SpuriousInterruptHandler::controller() const
+{
+    if (m_responsible_irq_controller->type() == IRQControllerType::i82093AA)
+        return "";
+    return m_responsible_irq_controller->model();
+}
 }
