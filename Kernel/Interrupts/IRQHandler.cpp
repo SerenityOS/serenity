@@ -49,7 +49,7 @@ bool IRQHandler::eoi()
 #endif
     if (!m_shared_with_others) {
         ASSERT(!m_responsible_irq_controller.is_null());
-        m_responsible_irq_controller->eoi(interrupt_number());
+        m_responsible_irq_controller->eoi(*this);
         return true;
     }
     return false;
@@ -61,7 +61,7 @@ void IRQHandler::enable_irq()
     dbg() << "Enable IRQ " << interrupt_number();
 #endif
     if (!m_shared_with_others)
-        m_responsible_irq_controller->enable(interrupt_number());
+        m_responsible_irq_controller->enable(*this);
     else
         m_enabled = true;
 }
@@ -72,7 +72,7 @@ void IRQHandler::disable_irq()
     dbg() << "Disable IRQ " << interrupt_number();
 #endif
     if (!m_shared_with_others)
-        m_responsible_irq_controller->disable(interrupt_number());
+        m_responsible_irq_controller->disable(*this);
     else
         m_enabled = false;
 }
