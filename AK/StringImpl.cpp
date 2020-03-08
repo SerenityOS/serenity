@@ -24,10 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "StringImpl.h"
-#include "HashTable.h"
-#include "StdLibExtras.h"
-#include "kmalloc.h"
+#include <AK/HashTable.h>
+#include <AK/Memory.h>
+#include <AK/StdLibExtras.h>
+#include <AK/StringImpl.h>
+#include <AK/kmalloc.h>
 
 //#define DEBUG_STRINGIMPL
 
