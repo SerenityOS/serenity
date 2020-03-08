@@ -27,6 +27,7 @@
 #include <AK/String.h>
 #include <LibCore/ElapsedTimer.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 void usage(void)

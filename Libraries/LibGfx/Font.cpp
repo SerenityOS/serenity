@@ -25,8 +25,8 @@
  */
 
 #include "Font.h"
-#include "Emoji.h"
 #include "Bitmap.h"
+#include "Emoji.h"
 #include <AK/BufferStream.h>
 #include <AK/MappedFile.h>
 #include <AK/StdLibExtras.h>
@@ -35,9 +35,10 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
-#include <stdlib.h>
 
 namespace Gfx {
 

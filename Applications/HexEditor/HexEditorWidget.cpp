@@ -43,6 +43,7 @@
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/ToolBar.h>
 #include <stdio.h>
+#include <string.h>
 
 HexEditorWidget::HexEditorWidget()
 {

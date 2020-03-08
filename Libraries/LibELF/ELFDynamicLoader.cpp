@@ -32,6 +32,7 @@
 #include <mman.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define DYNAMIC_LOAD_DEBUG
 //#define DYNAMIC_LOAD_VERBOSE
@@ -163,8 +164,7 @@ void ELFDynamicLoader::load_program_headers(const ELFImage& elf_image)
                 text_region_ptr = &region;
             else
                 data_region_ptr = &region;
-        }
-        else if (region.is_dynamic()) {
+        } else if (region.is_dynamic()) {
             dynamic_region_desired_vaddr = region.desired_load_address();
         }
     });

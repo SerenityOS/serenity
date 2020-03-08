@@ -29,6 +29,7 @@
 #include <LibELF/ELFDynamicObject.h>
 #include <LibELF/exec_elf.h>
 #include <stdio.h>
+#include <string.h>
 
 static const char* name_for_dtag(Elf32_Sword d_tag);
 

@@ -29,6 +29,7 @@
 #include <LibCore/File.h>
 #include <LibMarkdown/MDDocument.h>
 #include <stdio.h>
+#include <string.h>
 
 int main(int argc, char* argv[])
 {
