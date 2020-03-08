@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/NonnullOwnPtrVector.h>
+#include <AK/OwnPtr.h>
 #include <AK/String.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Value.h>
@@ -150,6 +151,39 @@ private:
     BinaryOp m_op;
     NonnullOwnPtr<Expression> m_lhs;
     NonnullOwnPtr<Expression> m_rhs;
+};
+
+enum class LogicalOp {
+    And,
+    Or,
+    Not
+};
+
+class LogicalExpression : public Expression {
+public:
+    LogicalExpression(LogicalOp op, NonnullOwnPtr<Expression> lhs, NonnullOwnPtr<Expression> rhs)
+        : m_op(op)
+        , m_lhs(move(lhs))
+        , m_rhs(move(rhs))
+    {
+    }
+
+    LogicalExpression(LogicalOp op, NonnullOwnPtr<Expression> lhs)
+        : m_op(op)
+        , m_lhs(move(lhs))
+    {
+        ASSERT(op == LogicalOp::Not);
+    }
+
+    virtual Value execute(Interpreter&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    virtual const char* class_name() const override { return "LogicalExpression"; }
+
+    LogicalOp m_op;
+    NonnullOwnPtr<Expression> m_lhs;
+    OwnPtr<Expression> m_rhs;
 };
 
 class Literal : public Expression {
