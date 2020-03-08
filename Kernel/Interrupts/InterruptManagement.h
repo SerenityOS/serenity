@@ -47,7 +47,8 @@ public:
     static InterruptManagement& the();
     static void initialize();
     static bool initialized();
-    static u8 acquire_mapped_interrupt_number(u8);
+    static u8 acquire_mapped_interrupt_number(u8 original_irq);
+    static u8 acquire_irq_number(u8 mapped_interrupt_vector);
 
     virtual void switch_to_pic_mode();
     virtual void switch_to_ioapic_mode();
@@ -57,7 +58,8 @@ public:
 
     Vector<RefPtr<ISAInterruptOverrideMetadata>> isa_overrides();
 
-    u8 get_mapped_vector_number(u8 original_vector);
+    u8 get_mapped_interrupt_vector(u8 original_irq);
+    u8 get_irq_vector(u8 mapped_interrupt_vector);
 
     void enumerate_interrupt_handlers(Function<void(GenericInterruptHandler&)>);
     IRQController& get_interrupt_controller(int index);
