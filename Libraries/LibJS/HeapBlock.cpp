@@ -24,47 +24,41 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/NonnullOwnPtr.h>
-#include <LibJS/AST.h>
-#include <LibJS/Interpreter.h>
-#include <LibJS/Object.h>
-#include <LibJS/Value.h>
-#include <stdio.h>
+#include <AK/Assertions.h>
+#include <LibJS/HeapBlock.h>
 
-int main()
+namespace JS {
+
+HeapBlock::HeapBlock(size_t cell_size)
+    : m_cell_size(cell_size)
 {
-    // function foo() { return 1 + 2; }
-    // foo();
-    auto program = make<JS::Program>();
+    for (size_t i = 0; i < cell_count(); ++i) {
+        auto* freelist_entry = static_cast<FreelistEntry*>(cell(i));
+        freelist_entry->set_live(false);
+        if (i == cell_count() - 1)
+            freelist_entry->next = nullptr;
+        else
+            freelist_entry->next = static_cast<FreelistEntry*>(cell(i + 1));
+    }
+    m_freelist = static_cast<FreelistEntry*>(cell(0));
+}
 
-    auto block = make<JS::BlockStatement>();
-    block->append<JS::ReturnStatement>(
-        make<JS::BinaryExpression>(
-            JS::BinaryOp::Plus,
-            make<JS::BinaryExpression>(
-                JS::BinaryOp::Plus,
-                make<JS::Literal>(JS::Value(1)),
-                make<JS::Literal>(JS::Value(2))),
-            make<JS::Literal>(JS::Value(3))));
+Cell* HeapBlock::allocate()
+{
+    if (!m_freelist)
+        return nullptr;
+    return exchange(m_freelist, m_freelist->next);
+}
 
-    program->append<JS::FunctionDeclaration>("foo", move(block));
-    program->append<JS::CallExpression>("foo");
+void HeapBlock::deallocate(Cell* cell)
+{
+    ASSERT(cell->is_live());
+    ASSERT(!cell->is_marked());
+    cell->~Cell();
+    auto* freelist_entry = static_cast<FreelistEntry*>(cell);
+    freelist_entry->set_live(false);
+    freelist_entry->next = m_freelist;
+    m_freelist = freelist_entry;
+}
 
-    program->dump(0);
-
-    JS::Interpreter interpreter;
-    auto result = interpreter.run(*program);
-    dbg() << "Interpreter returned " << result;
-
-    printf("%s\n", result.to_string().characters());
-
-    interpreter.heap().allocate<JS::Object>();
-
-    dbg() << "Collecting garbage...";
-    interpreter.heap().collect_garbage();
-
-    interpreter.global_object().put("foo", JS::Value(123));
-    dbg() << "Collecting garbage after overwriting global_object.foo...";
-    interpreter.heap().collect_garbage();
-    return 0;
 }

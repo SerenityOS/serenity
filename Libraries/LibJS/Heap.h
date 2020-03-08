@@ -24,47 +24,46 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#pragma once
+
+#include <AK/Noncopyable.h>
 #include <AK/NonnullOwnPtr.h>
-#include <LibJS/AST.h>
-#include <LibJS/Interpreter.h>
-#include <LibJS/Object.h>
-#include <LibJS/Value.h>
-#include <stdio.h>
+#include <AK/Types.h>
+#include <AK/Vector.h>
+#include <LibJS/Cell.h>
+#include <LibJS/Forward.h>
 
-int main()
-{
-    // function foo() { return 1 + 2; }
-    // foo();
-    auto program = make<JS::Program>();
+namespace JS {
 
-    auto block = make<JS::BlockStatement>();
-    block->append<JS::ReturnStatement>(
-        make<JS::BinaryExpression>(
-            JS::BinaryOp::Plus,
-            make<JS::BinaryExpression>(
-                JS::BinaryOp::Plus,
-                make<JS::Literal>(JS::Value(1)),
-                make<JS::Literal>(JS::Value(2))),
-            make<JS::Literal>(JS::Value(3))));
+class Heap {
+    AK_MAKE_NONCOPYABLE(Heap);
+    AK_MAKE_NONMOVABLE(Heap);
 
-    program->append<JS::FunctionDeclaration>("foo", move(block));
-    program->append<JS::CallExpression>("foo");
+public:
+    explicit Heap(Interpreter&);
+    ~Heap();
 
-    program->dump(0);
+    template<typename T, typename... Args>
+    T* allocate(Args&&... args)
+    {
+        auto* memory = allocate_cell(sizeof(T));
+        new (memory) T(forward<Args>(args)...);
+        return static_cast<T*>(memory);
+    }
 
-    JS::Interpreter interpreter;
-    auto result = interpreter.run(*program);
-    dbg() << "Interpreter returned " << result;
+    void collect_garbage();
 
-    printf("%s\n", result.to_string().characters());
+private:
+    Cell* allocate_cell(size_t);
 
-    interpreter.heap().allocate<JS::Object>();
+    void collect_roots(HashTable<Cell*>&);
+    void visit_live_cells(const HashTable<Cell*>& roots, HashTable<Cell*>& live_cells);
+    void clear_all_mark_bits();
+    void mark_live_cells(const HashTable<Cell*>& live_cells);
+    void sweep_dead_cells();
 
-    dbg() << "Collecting garbage...";
-    interpreter.heap().collect_garbage();
+    Interpreter& m_interpreter;
+    Vector<NonnullOwnPtr<HeapBlock>> m_blocks;
+};
 
-    interpreter.global_object().put("foo", JS::Value(123));
-    dbg() << "Collecting garbage after overwriting global_object.foo...";
-    interpreter.heap().collect_garbage();
-    return 0;
 }

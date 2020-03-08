@@ -26,13 +26,28 @@
 
 #pragma once
 
+#include <AK/HashMap.h>
+#include <AK/Optional.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Heap.h>
 
 namespace JS {
 
-struct ScopeFrame {
-    const ScopeNode& scope_node;
+class ScopeFrame {
+public:
+    ScopeFrame(const ScopeNode& scope_node, const ScopeFrame* parent);
+
+    Optional<Value> get_var(String name) const;
+    void put_var(String name, Value value);
+
+    const ScopeNode& scope_node() const { return m_scope_node; }
+
+private:
+    const ScopeNode& m_scope_node;
+    const ScopeFrame* m_parent;
+    HashMap<String, Value> m_vars;
 };
 
 class Interpreter {
@@ -40,20 +55,25 @@ public:
     Interpreter();
     ~Interpreter();
 
-    Value run(const ScopeNode&);
+    Value run(const ScopeNode& scope_node, bool parented = true);
+
+    ScopeFrame& current_frame() { return m_scope_stack.last(); }
+    const ScopeFrame& current_frame() const { return m_scope_stack.last(); }
 
     Object& global_object() { return *m_global_object; }
     const Object& global_object() const { return *m_global_object; }
 
+    Heap& heap() { return m_heap; }
+
     void do_return();
 
 private:
+    void enter_scope_unparented(const ScopeNode&);
     void enter_scope(const ScopeNode&);
     void exit_scope(const ScopeNode&);
 
-    Vector<ScopeFrame> m_scope_stack;
-
+    Heap m_heap;
     Object* m_global_object { nullptr };
+    Vector<ScopeFrame> m_scope_stack;
 };
-
 }

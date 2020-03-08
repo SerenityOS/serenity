@@ -24,47 +24,43 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/NonnullOwnPtr.h>
-#include <LibJS/AST.h>
-#include <LibJS/Interpreter.h>
-#include <LibJS/Object.h>
-#include <LibJS/Value.h>
-#include <stdio.h>
+#pragma once
 
-int main()
-{
-    // function foo() { return 1 + 2; }
-    // foo();
-    auto program = make<JS::Program>();
+#include <AK/Types.h>
+#include <LibJS/Cell.h>
+#include <LibJS/Forward.h>
 
-    auto block = make<JS::BlockStatement>();
-    block->append<JS::ReturnStatement>(
-        make<JS::BinaryExpression>(
-            JS::BinaryOp::Plus,
-            make<JS::BinaryExpression>(
-                JS::BinaryOp::Plus,
-                make<JS::Literal>(JS::Value(1)),
-                make<JS::Literal>(JS::Value(2))),
-            make<JS::Literal>(JS::Value(3))));
+namespace JS {
 
-    program->append<JS::FunctionDeclaration>("foo", move(block));
-    program->append<JS::CallExpression>("foo");
+class HeapBlock {
+public:
+    static constexpr size_t block_size = 16 * KB;
 
-    program->dump(0);
+    explicit HeapBlock(size_t cell_size);
 
-    JS::Interpreter interpreter;
-    auto result = interpreter.run(*program);
-    dbg() << "Interpreter returned " << result;
+    size_t cell_size() const { return m_cell_size; }
+    size_t cell_count() const { return (block_size - sizeof(HeapBlock)) / m_cell_size; }
 
-    printf("%s\n", result.to_string().characters());
+    Cell* cell(size_t index) { return reinterpret_cast<Cell*>(&m_storage[index * cell_size()]); }
 
-    interpreter.heap().allocate<JS::Object>();
+    Cell* allocate();
+    void deallocate(Cell*);
 
-    dbg() << "Collecting garbage...";
-    interpreter.heap().collect_garbage();
+    template<typename Callback>
+    void for_each_cell(Callback callback)
+    {
+        for (size_t i = 0; i < cell_count(); ++i)
+            callback(cell(i));
+    }
 
-    interpreter.global_object().put("foo", JS::Value(123));
-    dbg() << "Collecting garbage after overwriting global_object.foo...";
-    interpreter.heap().collect_garbage();
-    return 0;
+private:
+    struct FreelistEntry : public Cell {
+        FreelistEntry* next;
+    };
+
+    size_t m_cell_size { 0 };
+    FreelistEntry* m_freelist { nullptr };
+    u8 m_storage[];
+};
+
 }

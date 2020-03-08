@@ -24,47 +24,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/NonnullOwnPtr.h>
-#include <LibJS/AST.h>
-#include <LibJS/Interpreter.h>
-#include <LibJS/Object.h>
-#include <LibJS/Value.h>
-#include <stdio.h>
+#include <AK/LogStream.h>
+#include <LibJS/Cell.h>
 
-int main()
+namespace JS {
+
+const LogStream& operator<<(const LogStream& stream, const Cell* cell)
 {
-    // function foo() { return 1 + 2; }
-    // foo();
-    auto program = make<JS::Program>();
+    if (!cell)
+        return stream << "Cell{nullptr}";
+    return stream << cell->class_name() << '{' << static_cast<const void*>(cell) << '}';
+}
 
-    auto block = make<JS::BlockStatement>();
-    block->append<JS::ReturnStatement>(
-        make<JS::BinaryExpression>(
-            JS::BinaryOp::Plus,
-            make<JS::BinaryExpression>(
-                JS::BinaryOp::Plus,
-                make<JS::Literal>(JS::Value(1)),
-                make<JS::Literal>(JS::Value(2))),
-            make<JS::Literal>(JS::Value(3))));
-
-    program->append<JS::FunctionDeclaration>("foo", move(block));
-    program->append<JS::CallExpression>("foo");
-
-    program->dump(0);
-
-    JS::Interpreter interpreter;
-    auto result = interpreter.run(*program);
-    dbg() << "Interpreter returned " << result;
-
-    printf("%s\n", result.to_string().characters());
-
-    interpreter.heap().allocate<JS::Object>();
-
-    dbg() << "Collecting garbage...";
-    interpreter.heap().collect_garbage();
-
-    interpreter.global_object().put("foo", JS::Value(123));
-    dbg() << "Collecting garbage after overwriting global_object.foo...";
-    interpreter.heap().collect_garbage();
-    return 0;
 }

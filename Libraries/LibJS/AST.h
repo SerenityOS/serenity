@@ -73,6 +73,7 @@ public:
     Program() {}
 
 private:
+    virtual Value execute(Interpreter&) const override;
     virtual const char* class_name() const override { return "Program"; }
 };
 

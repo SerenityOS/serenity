@@ -24,47 +24,39 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/NonnullOwnPtr.h>
-#include <LibJS/AST.h>
-#include <LibJS/Interpreter.h>
-#include <LibJS/Object.h>
-#include <LibJS/Value.h>
-#include <stdio.h>
+#pragma once
 
-int main()
-{
-    // function foo() { return 1 + 2; }
-    // foo();
-    auto program = make<JS::Program>();
+#include <AK/Forward.h>
 
-    auto block = make<JS::BlockStatement>();
-    block->append<JS::ReturnStatement>(
-        make<JS::BinaryExpression>(
-            JS::BinaryOp::Plus,
-            make<JS::BinaryExpression>(
-                JS::BinaryOp::Plus,
-                make<JS::Literal>(JS::Value(1)),
-                make<JS::Literal>(JS::Value(2))),
-            make<JS::Literal>(JS::Value(3))));
+namespace JS {
 
-    program->append<JS::FunctionDeclaration>("foo", move(block));
-    program->append<JS::CallExpression>("foo");
+class Cell {
+public:
+    virtual ~Cell() {}
 
-    program->dump(0);
+    bool is_marked() const { return m_mark; }
+    void set_marked(bool b) { m_mark = b; }
 
-    JS::Interpreter interpreter;
-    auto result = interpreter.run(*program);
-    dbg() << "Interpreter returned " << result;
+    bool is_live() const { return m_live; }
+    void set_live(bool b) { m_live = b; }
 
-    printf("%s\n", result.to_string().characters());
+    virtual const char* class_name() const = 0;
 
-    interpreter.heap().allocate<JS::Object>();
+    class Visitor {
+    public:
+        virtual void did_visit(Cell*) = 0;
+    };
 
-    dbg() << "Collecting garbage...";
-    interpreter.heap().collect_garbage();
+    virtual void visit_graph(Visitor& visitor)
+    {
+        visitor.did_visit(this);
+    }
 
-    interpreter.global_object().put("foo", JS::Value(123));
-    dbg() << "Collecting garbage after overwriting global_object.foo...";
-    interpreter.heap().collect_garbage();
-    return 0;
+private:
+    bool m_mark { false };
+    bool m_live { true };
+};
+
+const LogStream& operator<<(const LogStream&, const Cell*);
+
 }

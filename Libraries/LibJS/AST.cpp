@@ -37,21 +37,31 @@ Value ScopeNode::execute(Interpreter& interpreter) const
     return interpreter.run(*this);
 }
 
+Value Program::execute(Interpreter& interpreter) const
+{
+    return interpreter.run(*this, false);
+}
+
 Value FunctionDeclaration::execute(Interpreter& interpreter) const
 {
-    auto* function = new Function(name(), body());
-    interpreter.global_object().put(m_name, Value(function));
+    auto* function = interpreter.heap().allocate<Function>(name(), body());
+    interpreter.current_frame().put_var(m_name, Value(function));
     return Value(function);
 }
 
 Value CallExpression::execute(Interpreter& interpreter) const
 {
-    auto callee = interpreter.global_object().get(name());
+    auto callee_optional = interpreter.current_frame().get_var(name());
+    auto callee = js_undefined();
+
+    ASSERT(callee_optional.has_value());
+    callee = callee_optional.value();
+
     ASSERT(callee.is_object());
     auto* callee_object = callee.as_object();
     ASSERT(callee_object->is_function());
     auto& function = static_cast<Function&>(*callee_object);
-    return interpreter.run(function.body());
+    return interpreter.run(function.body(), false);
 }
 
 Value ReturnStatement::execute(Interpreter& interpreter) const

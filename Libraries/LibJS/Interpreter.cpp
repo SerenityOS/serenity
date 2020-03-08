@@ -28,21 +28,52 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Object.h>
 #include <LibJS/Value.h>
+#include <stdio.h>
 
 namespace JS {
 
-Interpreter::Interpreter()
+ScopeFrame::ScopeFrame(const ScopeNode& scope_node, const ScopeFrame* parent)
+    : m_scope_node(scope_node)
+    , m_parent(parent)
 {
-    m_global_object = new Object;
+}
+
+Optional<Value> ScopeFrame::get_var(String name) const
+{
+    auto found = Optional<Value>();
+
+    if (m_parent) {
+        found = m_parent->get_var(name);
+    }
+    if (!found.has_value()) {
+        found = m_vars.get(name);
+    }
+
+    return found;
+}
+
+void ScopeFrame::put_var(String name, Value value)
+{
+    m_vars.set(move(name), move(value));
+}
+
+Interpreter::Interpreter()
+    : m_heap(*this)
+{
+    m_global_object = heap().allocate<Object>();
 }
 
 Interpreter::~Interpreter()
 {
 }
 
-Value Interpreter::run(const ScopeNode& scope_node)
+Value Interpreter::run(const ScopeNode& scope_node, bool parented)
 {
-    enter_scope(scope_node);
+    if (parented) {
+        enter_scope(scope_node);
+    } else {
+        enter_scope_unparented(scope_node);
+    }
 
     Value last_value = js_undefined();
     for (auto& node : scope_node.children()) {
@@ -55,12 +86,21 @@ Value Interpreter::run(const ScopeNode& scope_node)
 
 void Interpreter::enter_scope(const ScopeNode& scope_node)
 {
-    m_scope_stack.append({ scope_node });
+    if (m_scope_stack.size() == 0) {
+        enter_scope_unparented(scope_node);
+    } else {
+        m_scope_stack.append(ScopeFrame(scope_node, &m_scope_stack.last()));
+    }
+}
+
+void Interpreter::enter_scope_unparented(const ScopeNode& scope_node)
+{
+    m_scope_stack.append(ScopeFrame(scope_node, nullptr));
 }
 
 void Interpreter::exit_scope(const ScopeNode& scope_node)
 {
-    ASSERT(&m_scope_stack.last().scope_node == &scope_node);
+    ASSERT(&m_scope_stack.last().scope_node() == &scope_node);
     m_scope_stack.take_last();
 }
 

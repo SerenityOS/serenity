@@ -115,7 +115,7 @@ public:
     String to_string() const;
 
 private:
-    Type m_type { Type::Undefined };
+    Type m_type{ Type::Undefined };
 
     union {
         bool as_bool;
