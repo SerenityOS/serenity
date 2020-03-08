@@ -168,9 +168,9 @@ void Object::deferred_invoke(Function<void(Object&)> invokee)
 void Object::save_to(JsonObject& json)
 {
     json.set("class_name", class_name());
-    json.set("address", (uintptr_t)this);
+    json.set("address", (FlatPtr)this);
     json.set("name", name());
-    json.set("parent", (uintptr_t)parent());
+    json.set("parent", (FlatPtr)parent());
 }
 
 bool Object::set_property(const StringView& name, const JsonValue& value)

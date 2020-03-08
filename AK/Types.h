@@ -28,6 +28,7 @@
 
 #include <AK/IterationDecision.h>
 #include <AK/Platform.h>
+#include <AK/StdLibExtras.h>
 
 #ifdef __serenity__
 typedef unsigned char u8;
@@ -88,6 +89,8 @@ typedef __PTRDIFF_TYPE__ __ptrdiff_t;
 #endif
 
 #endif
+
+typedef Conditional<sizeof(void*) == 8, u64, u32>::Type FlatPtr;
 
 constexpr unsigned KB = 1024;
 constexpr unsigned MB = KB * KB;

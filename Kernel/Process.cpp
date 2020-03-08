@@ -393,7 +393,7 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* user_params)
 
     if (size == 0)
         return (void*)-EINVAL;
-    if ((uintptr_t)addr & ~PAGE_MASK)
+    if ((FlatPtr)addr & ~PAGE_MASK)
         return (void*)-EINVAL;
 
     bool map_shared = flags & MAP_SHARED;
@@ -1324,7 +1324,7 @@ Process* Process::create_user_process(Thread*& first_thread, const String& path,
 Process* Process::create_kernel_process(Thread*& first_thread, String&& name, void (*e)())
 {
     auto* process = new Process(first_thread, move(name), (uid_t)0, (gid_t)0, (pid_t)0, Ring0);
-    first_thread->tss().eip = (uintptr_t)e;
+    first_thread->tss().eip = (FlatPtr)e;
 
     if (process->pid() != 0) {
         InterruptDisabler disabler;
@@ -1474,7 +1474,7 @@ int Process::sys$sigreturn(RegisterState& registers)
     stack_ptr++;
 
     //pop edi, esi, ebp, esp, ebx, edx, ecx and eax
-    memcpy(&registers.edi, stack_ptr, 8 * sizeof(uintptr_t));
+    memcpy(&registers.edi, stack_ptr, 8 * sizeof(FlatPtr));
     stack_ptr += 8;
 
     registers.eip = *stack_ptr;
@@ -3740,13 +3740,13 @@ int Process::sys$create_thread(void* (*entry)(void*), void* argument, const Sysc
     thread->set_joinable(is_thread_joinable);
 
     auto& tss = thread->tss();
-    tss.eip = (uintptr_t)entry;
+    tss.eip = (FlatPtr)entry;
     tss.eflags = 0x0202;
     tss.cr3 = page_directory().cr3();
     tss.esp = user_stack_address;
 
     // NOTE: The stack needs to be 16-byte aligned.
-    thread->push_value_on_stack((uintptr_t)argument);
+    thread->push_value_on_stack((FlatPtr)argument);
     thread->push_value_on_stack(0);
 
     thread->make_thread_specific_region({});
@@ -4531,7 +4531,7 @@ Thread& Process::any_thread()
 
 WaitQueue& Process::futex_queue(i32* userspace_address)
 {
-    auto& queue = m_futex_queues.ensure((uintptr_t)userspace_address);
+    auto& queue = m_futex_queues.ensure((FlatPtr)userspace_address);
     if (!queue)
         queue = make<WaitQueue>();
     return *queue;
@@ -4793,7 +4793,7 @@ int Process::sys$unveil(const Syscall::SC_unveil_params* user_params)
     return 0;
 }
 
-int Process::sys$perf_event(int type, uintptr_t arg1, uintptr_t arg2)
+int Process::sys$perf_event(int type, FlatPtr arg1, FlatPtr arg2)
 {
     if (!m_perf_event_buffer)
         m_perf_event_buffer = make<PerformanceEventBuffer>();

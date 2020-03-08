@@ -164,9 +164,9 @@ public:
         }
 
         if (type == "SetInspectedObject") {
-            auto address = request.get("address").to_number<uintptr_t>();
+            auto address = request.get("address").to_number<FlatPtr>();
             for (auto& object : Object::all_objects()) {
-                if ((uintptr_t)&object == address) {
+                if ((FlatPtr)&object == address) {
                     if (m_inspected_object)
                         m_inspected_object->decrement_inspector_count({});
                     m_inspected_object = object.make_weak_ptr();
@@ -178,9 +178,9 @@ public:
         }
 
         if (type == "SetProperty") {
-            auto address = request.get("address").to_number<uintptr_t>();
+            auto address = request.get("address").to_number<FlatPtr>();
             for (auto& object : Object::all_objects()) {
-                if ((uintptr_t)&object == address) {
+                if ((FlatPtr)&object == address) {
                     bool success = object.set_property(request.get("name").to_string(), request.get("value"));
                     JsonObject response;
                     response.set("type", "SetProperty");

@@ -34,13 +34,13 @@ namespace Kernel {
 struct [[gnu::packed]] MallocPerformanceEvent
 {
     size_t size;
-    uintptr_t ptr;
+    FlatPtr ptr;
 };
 
 struct [[gnu::packed]] FreePerformanceEvent
 {
     size_t size;
-    uintptr_t ptr;
+    FlatPtr ptr;
 };
 
 struct [[gnu::packed]] PerformanceEvent
@@ -52,14 +52,14 @@ struct [[gnu::packed]] PerformanceEvent
         MallocPerformanceEvent malloc;
         FreePerformanceEvent free;
     } data;
-    uintptr_t stack[32];
+    FlatPtr stack[32];
 };
 
 class PerformanceEventBuffer {
 public:
     PerformanceEventBuffer();
 
-    KResult append(int type, uintptr_t arg1, uintptr_t arg2);
+    KResult append(int type, FlatPtr arg1, FlatPtr arg2);
 
     size_t capacity() const { return m_buffer.size() / sizeof(PerformanceEvent); }
     size_t count() const { return m_count; }

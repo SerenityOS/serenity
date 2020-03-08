@@ -112,8 +112,8 @@ Range RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
         if (available_range.size() < (effective_size + alignment))
             continue;
 
-        uintptr_t initial_base = available_range.base().offset(offset_from_effective_base).get();
-        uintptr_t aligned_base = round_up_to_power_of_two(initial_base, alignment);
+        FlatPtr initial_base = available_range.base().offset(offset_from_effective_base).get();
+        FlatPtr aligned_base = round_up_to_power_of_two(initial_base, alignment);
 
         Range allocated_range(VirtualAddress(aligned_base), size);
         if (available_range == allocated_range) {

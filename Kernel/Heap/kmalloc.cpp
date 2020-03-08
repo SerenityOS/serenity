@@ -188,7 +188,7 @@ void kfree(void* ptr)
     ++g_kfree_call_count;
 
     auto* a = (AllocationHeader*)((((u8*)ptr) - sizeof(AllocationHeader)));
-    uintptr_t start = ((uintptr_t)a - (uintptr_t)BASE_PHYSICAL) / CHUNK_SIZE;
+    FlatPtr start = ((FlatPtr)a - (FlatPtr)BASE_PHYSICAL) / CHUNK_SIZE;
 
     for (size_t k = start; k < (start + a->allocation_size_in_chunks); ++k)
         alloc_map[k / 8] &= ~(1 << (k % 8));

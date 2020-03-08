@@ -625,10 +625,10 @@ void Thread::set_default_signal_dispositions()
     m_signal_action_data[SIGWINCH].handler_or_sigaction = VirtualAddress(SIG_IGN);
 }
 
-void Thread::push_value_on_stack(uintptr_t value)
+void Thread::push_value_on_stack(FlatPtr value)
 {
     m_tss.esp -= 4;
-    uintptr_t* stack_ptr = (uintptr_t*)m_tss.esp;
+    FlatPtr* stack_ptr = (FlatPtr*)m_tss.esp;
     copy_to_user(stack_ptr, &value);
 }
 
@@ -681,9 +681,9 @@ u32 Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vecto
     };
 
     // NOTE: The stack needs to be 16-byte aligned.
-    push_on_new_stack((uintptr_t)env);
-    push_on_new_stack((uintptr_t)argv);
-    push_on_new_stack((uintptr_t)argc);
+    push_on_new_stack((FlatPtr)env);
+    push_on_new_stack((FlatPtr)argv);
+    push_on_new_stack((FlatPtr)argc);
     push_on_new_stack(0);
     return new_esp;
 }
@@ -797,20 +797,20 @@ String Thread::backtrace_impl() const
     auto elf_bundle = process.elf_bundle();
     ProcessPagingScope paging_scope(process);
 
-    uintptr_t stack_ptr = start_frame;
+    FlatPtr stack_ptr = start_frame;
     for (;;) {
         if (!process.validate_read_from_kernel(VirtualAddress(stack_ptr), sizeof(void*) * 2))
             break;
-        uintptr_t retaddr;
+        FlatPtr retaddr;
 
-        if (is_user_range(VirtualAddress(stack_ptr), sizeof(uintptr_t) * 2)) {
-            copy_from_user(&retaddr, &((uintptr_t*)stack_ptr)[1]);
+        if (is_user_range(VirtualAddress(stack_ptr), sizeof(FlatPtr) * 2)) {
+            copy_from_user(&retaddr, &((FlatPtr*)stack_ptr)[1]);
             recognized_symbols.append({ retaddr, ksymbolicate(retaddr) });
-            copy_from_user(&stack_ptr, (uintptr_t*)stack_ptr);
+            copy_from_user(&stack_ptr, (FlatPtr*)stack_ptr);
         } else {
-            memcpy(&retaddr, &((uintptr_t*)stack_ptr)[1], sizeof(uintptr_t));
+            memcpy(&retaddr, &((FlatPtr*)stack_ptr)[1], sizeof(FlatPtr));
             recognized_symbols.append({ retaddr, ksymbolicate(retaddr) });
-            memcpy(&stack_ptr, (uintptr_t*)stack_ptr, sizeof(uintptr_t));
+            memcpy(&stack_ptr, (FlatPtr*)stack_ptr, sizeof(FlatPtr));
         }
     }
 
@@ -822,15 +822,15 @@ String Thread::backtrace_impl() const
     return builder.to_string();
 }
 
-Vector<uintptr_t> Thread::raw_backtrace(uintptr_t ebp) const
+Vector<FlatPtr> Thread::raw_backtrace(FlatPtr ebp) const
 {
     InterruptDisabler disabler;
     auto& process = const_cast<Process&>(this->process());
     ProcessPagingScope paging_scope(process);
-    Vector<uintptr_t, Profiling::max_stack_frame_count> backtrace;
+    Vector<FlatPtr, Profiling::max_stack_frame_count> backtrace;
     backtrace.append(ebp);
-    for (uintptr_t* stack_ptr = (uintptr_t*)ebp; process.validate_read_from_kernel(VirtualAddress(stack_ptr), sizeof(uintptr_t) * 2) && MM.can_read_without_faulting(process, VirtualAddress(stack_ptr), sizeof(uintptr_t) * 2); stack_ptr = (uintptr_t*)*stack_ptr) {
-        uintptr_t retaddr = stack_ptr[1];
+    for (FlatPtr* stack_ptr = (FlatPtr*)ebp; process.validate_read_from_kernel(VirtualAddress(stack_ptr), sizeof(FlatPtr) * 2) && MM.can_read_without_faulting(process, VirtualAddress(stack_ptr), sizeof(FlatPtr) * 2); stack_ptr = (FlatPtr*)*stack_ptr) {
+        FlatPtr retaddr = stack_ptr[1];
         backtrace.append(retaddr);
         if (backtrace.size() == Profiling::max_stack_frame_count)
             break;

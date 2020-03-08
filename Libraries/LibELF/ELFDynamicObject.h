@@ -228,32 +228,32 @@ private:
     unsigned m_symbol_count { 0 };
 
     // Begin Section information collected from DT_* entries
-    uintptr_t m_init_offset { 0 };
-    uintptr_t m_fini_offset { 0 };
+    FlatPtr m_init_offset { 0 };
+    FlatPtr m_fini_offset { 0 };
 
-    uintptr_t m_init_array_offset { 0 };
+    FlatPtr m_init_array_offset { 0 };
     size_t m_init_array_size { 0 };
-    uintptr_t m_fini_array_offset { 0 };
+    FlatPtr m_fini_array_offset { 0 };
     size_t m_fini_array_size { 0 };
 
-    uintptr_t m_hash_table_offset { 0 };
+    FlatPtr m_hash_table_offset { 0 };
 
-    uintptr_t m_string_table_offset { 0 };
+    FlatPtr m_string_table_offset { 0 };
     size_t m_size_of_string_table { 0 };
-    uintptr_t m_symbol_table_offset { 0 };
+    FlatPtr m_symbol_table_offset { 0 };
     size_t m_size_of_symbol_table_entry { 0 };
 
     Elf32_Sword m_procedure_linkage_table_relocation_type { -1 };
-    uintptr_t m_plt_relocation_offset_location { 0 }; // offset of PLT relocations, at end of relocations
+    FlatPtr m_plt_relocation_offset_location { 0 }; // offset of PLT relocations, at end of relocations
     size_t m_size_of_plt_relocation_entry_list { 0 };
-    uintptr_t m_procedure_linkage_table_offset { 0 };
+    FlatPtr m_procedure_linkage_table_offset { 0 };
 
     // NOTE: We'll only ever either RELA or REL entries, not both (thank god)
     // NOTE: The x86 ABI will only ever genrerate REL entries.
     size_t m_number_of_relocations { 0 };
     size_t m_size_of_relocation_entry { 0 };
     size_t m_size_of_relocation_table { 0 };
-    uintptr_t m_relocation_table_offset { 0 };
+    FlatPtr m_relocation_table_offset { 0 };
 
     // DT_FLAGS
     Elf32_Word m_dt_flags { 0 };

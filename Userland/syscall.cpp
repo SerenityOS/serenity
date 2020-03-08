@@ -46,10 +46,10 @@ Syscall::Function syscall_table[] = {
     ENUMERATE_SYSCALLS
 };
 
-uintptr_t arg[SC_NARG];
+FlatPtr arg[SC_NARG];
 char buf[BUFSIZ];
 
-uintptr_t parse(char* s);
+FlatPtr parse(char* s);
 
 int main(int argc, char** argv)
 {
@@ -104,13 +104,13 @@ int main(int argc, char** argv)
     return -1;
 }
 
-uintptr_t parse(char* s)
+FlatPtr parse(char* s)
 {
     char* t;
-    uintptr_t l;
+    FlatPtr l;
 
     if (strcmp(s, "buf") == 0) {
-        return (uintptr_t)buf;
+        return (FlatPtr)buf;
     }
 
     l = strtoul(s, &t, 0);
@@ -118,5 +118,5 @@ uintptr_t parse(char* s)
         return l;
     }
 
-    return (uintptr_t)s;
+    return (FlatPtr)s;
 }

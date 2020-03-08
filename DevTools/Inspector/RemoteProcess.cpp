@@ -65,14 +65,14 @@ void RemoteProcess::handle_get_all_objects_response(const JsonObject& response)
     auto& object_array = objects.as_array();
 
     NonnullOwnPtrVector<RemoteObject> remote_objects;
-    HashMap<uintptr_t, RemoteObject*> objects_by_address;
+    HashMap<FlatPtr, RemoteObject*> objects_by_address;
 
     for (auto& value : object_array.values()) {
         ASSERT(value.is_object());
         auto& object = value.as_object();
         auto remote_object = make<RemoteObject>();
-        remote_object->address = object.get("address").to_number<uintptr_t>();
-        remote_object->parent_address = object.get("parent").to_number<uintptr_t>();
+        remote_object->address = object.get("address").to_number<FlatPtr>();
+        remote_object->parent_address = object.get("parent").to_number<FlatPtr>();
         remote_object->name = object.get("name").to_string();
         remote_object->class_name = object.get("class_name").to_string();
         remote_object->json = object;
@@ -105,7 +105,7 @@ void RemoteProcess::send_request(const JsonObject& request)
     m_socket->write(serialized);
 }
 
-void RemoteProcess::set_inspected_object(uintptr_t address)
+void RemoteProcess::set_inspected_object(FlatPtr address)
 {
     JsonObject request;
     request.set("type", "SetInspectedObject");
@@ -113,7 +113,7 @@ void RemoteProcess::set_inspected_object(uintptr_t address)
     send_request(request);
 }
 
-void RemoteProcess::set_property(uintptr_t object, const StringView& name, const JsonValue& value)
+void RemoteProcess::set_property(FlatPtr object, const StringView& name, const JsonValue& value)
 {
     JsonObject request;
     request.set("type", "SetProperty");

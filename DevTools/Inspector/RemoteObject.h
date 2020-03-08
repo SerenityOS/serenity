@@ -42,8 +42,8 @@ public:
     RemoteObject* parent { nullptr };
     NonnullOwnPtrVector<RemoteObject> children;
 
-    uintptr_t address { 0 };
-    uintptr_t parent_address { 0 };
+    FlatPtr address { 0 };
+    FlatPtr parent_address { 0 };
     String class_name;
     String name;
 
