@@ -252,7 +252,7 @@ inline bool StringView::operator==(const String& string) const
         return false;
     if (m_characters == string.characters())
         return true;
-    return !memcmp(m_characters, string.characters(), m_length);
+    return !__builtin_memcmp(m_characters, string.characters(), m_length);
 }
 
 template<>

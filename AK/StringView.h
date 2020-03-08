@@ -47,7 +47,7 @@ public:
     }
     [[gnu::always_inline]] inline StringView(const char* cstring)
         : m_characters(cstring)
-        , m_length(cstring ? strlen(cstring) : 0)
+        , m_length(cstring ? __builtin_strlen(cstring) : 0)
     {
     }
 
@@ -105,10 +105,10 @@ public:
             return !cstring;
         if (!cstring)
             return false;
-        size_t other_length = strlen(cstring);
+        size_t other_length = __builtin_strlen(cstring);
         if (m_length != other_length)
             return false;
-        return !memcmp(m_characters, cstring, m_length);
+        return !__builtin_memcmp(m_characters, cstring, m_length);
     }
     bool operator!=(const char* cstring) const
     {
@@ -125,7 +125,7 @@ public:
             return false;
         if (length() != other.length())
             return false;
-        return !memcmp(m_characters, other.m_characters, m_length);
+        return !__builtin_memcmp(m_characters, other.m_characters, m_length);
     }
 
     bool operator!=(const StringView& other) const

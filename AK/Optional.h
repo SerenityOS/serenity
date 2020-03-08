@@ -29,6 +29,7 @@
 #include <AK/Assertions.h>
 #include <AK/Platform.h>
 #include <AK/StdLibExtras.h>
+#include <AK/Types.h>
 
 namespace AK {
 
@@ -157,7 +158,7 @@ private:
         ASSERT(m_has_value);
         return *reinterpret_cast<const T*>(&m_storage);
     }
-    unsigned char m_storage[sizeof(T)] { 0 };
+    u8 m_storage[sizeof(T)] { 0 };
     bool m_has_value { false };
 };
 
