@@ -61,6 +61,16 @@ Value ReturnStatement::execute(Interpreter& interpreter) const
     return value;
 }
 
+Value IfStatement::execute(Interpreter& interpreter) const
+{
+    auto predicate_result = m_predicate->execute(interpreter);
+
+    if (predicate_result.as_bool())
+        return interpreter.run(*m_consequent);
+    else
+        return interpreter.run(*m_alternate);
+}
+
 Value add(Value lhs, Value rhs)
 {
     ASSERT(lhs.is_number());
@@ -234,6 +244,19 @@ void ReturnStatement::dump(int indent) const
 {
     ASTNode::dump(indent);
     argument().dump(indent + 1);
+}
+
+void IfStatement::dump(int indent) const
+{
+    ASTNode::dump(indent);
+
+    print_indent(indent);
+    printf("If\n");
+    predicate().dump(indent + 1);
+    consequent().dump(indent + 1);
+    print_indent(indent);
+    printf("Else\n");
+    alternate().dump(indent + 1);
 }
 
 }
