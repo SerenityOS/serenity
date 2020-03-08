@@ -25,10 +25,11 @@
  */
 
 #include "Painter.h"
+#include "Bitmap.h"
 #include "Emoji.h"
 #include "Font.h"
-#include "Bitmap.h"
 #include <AK/Assertions.h>
+#include <AK/Memory.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
@@ -38,15 +39,15 @@
 #include <unistd.h>
 
 #if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC optimize("O3")
+#    pragma GCC optimize("O3")
 #endif
 
 #ifndef ALWAYS_INLINE
-#if __has_attribute(always_inline)
-#define ALWAYS_INLINE __attribute__((always_inline))
-#else
-#define ALWAYS_INLINE inline
-#endif
+#    if __has_attribute(always_inline)
+#        define ALWAYS_INLINE __attribute__((always_inline))
+#    else
+#        define ALWAYS_INLINE inline
+#    endif
 #endif
 
 namespace Gfx {

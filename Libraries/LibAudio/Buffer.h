@@ -27,9 +27,10 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/SharedBuffer.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
-#include <AK/SharedBuffer.h>
+#include <string.h>
 
 namespace Audio {
 
@@ -126,15 +127,15 @@ public:
 
 private:
     explicit Buffer(Vector<Sample>&& samples)
-        : m_buffer(*SharedBuffer::create_with_size(samples.size() * sizeof(Sample))),
-        m_sample_count(samples.size())
+        : m_buffer(*SharedBuffer::create_with_size(samples.size() * sizeof(Sample)))
+        , m_sample_count(samples.size())
     {
         memcpy(m_buffer->data(), samples.data(), samples.size() * sizeof(Sample));
     }
 
     explicit Buffer(NonnullRefPtr<SharedBuffer>&& buffer, int sample_count)
-        : m_buffer(move(buffer)),
-        m_sample_count(sample_count)
+        : m_buffer(move(buffer))
+        , m_sample_count(sample_count)
     {
     }
 

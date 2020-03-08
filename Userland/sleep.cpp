@@ -27,6 +27,7 @@
 #include <AK/String.h>
 #include <signal.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 void handle_sigint(int)

@@ -26,6 +26,7 @@
 
 #include <AK/StringBuilder.h>
 #include <LibMarkdown/MDText.h>
+#include <string.h>
 
 static String unescape(const StringView& text)
 {

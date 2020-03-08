@@ -30,6 +30,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 int parse_options(const StringView& options)

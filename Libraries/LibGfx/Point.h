@@ -29,6 +29,7 @@
 #include <AK/Forward.h>
 #include <AK/StdLibExtras.h>
 #include <LibGfx/Orientation.h>
+#include <stdlib.h>
 
 namespace Gfx {
 

@@ -38,6 +38,7 @@
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/ToolBar.h>
+#include <string.h>
 
 namespace GUI {
 

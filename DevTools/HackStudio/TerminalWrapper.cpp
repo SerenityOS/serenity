@@ -35,6 +35,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -142,7 +143,7 @@ void TerminalWrapper::run_command(const String& command)
 
         auto parts = command.split(' ');
         ASSERT(!parts.is_empty());
-        const char** args = (const char**) calloc(parts.size() + 1, sizeof(const char*));
+        const char** args = (const char**)calloc(parts.size() + 1, sizeof(const char*));
         for (size_t i = 0; i < parts.size(); i++) {
             args[i] = parts[i].characters();
         }

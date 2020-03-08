@@ -31,6 +31,7 @@
 #include <LibGfx/Point.h>
 #include <LibGfx/Size.h>
 #include <LibGfx/TextAlignment.h>
+#include <stdlib.h>
 
 namespace Gfx {
 

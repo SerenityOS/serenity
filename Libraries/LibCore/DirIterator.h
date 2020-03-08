@@ -28,6 +28,7 @@
 
 #include <AK/String.h>
 #include <dirent.h>
+#include <string.h>
 
 namespace Core {
 

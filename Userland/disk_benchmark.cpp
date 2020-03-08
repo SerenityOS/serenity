@@ -29,12 +29,13 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <LibCore/ElapsedTimer.h>
+#include <fcntl.h>
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <fcntl.h>
-#include <unistd.h>
+#include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 struct Result {
     u64 write_bps;

@@ -40,13 +40,14 @@
 #include <LibGUI/ToolBar.h>
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Window.h>
+#include <LibMarkdown/MDDocument.h>
 #include <LibWeb/HtmlView.h>
 #include <LibWeb/Layout/LayoutNode.h>
 #include <LibWeb/Parser/CSSParser.h>
 #include <LibWeb/Parser/HTMLParser.h>
-#include <LibMarkdown/MDDocument.h>
 #include <libgen.h>
 #include <stdio.h>
+#include <string.h>
 
 int main(int argc, char* argv[])
 {

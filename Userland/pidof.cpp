@@ -32,6 +32,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 static int pid_of(const String& process_name, bool single_shot, bool omit_pid, pid_t pid)
