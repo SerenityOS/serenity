@@ -157,7 +157,7 @@ private:
         ASSERT(m_has_value);
         return *reinterpret_cast<const T*>(&m_storage);
     }
-    u8 m_storage[sizeof(T)] { 0 };
+    unsigned char m_storage[sizeof(T)] { 0 };
     bool m_has_value { false };
 };
 

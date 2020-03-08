@@ -213,7 +213,7 @@ public:
     {
         int old_size = size();
         grow(size() + data_size);
-        memcpy(this->data() + old_size, data, data_size);
+        __builtin_memcpy(this->data() + old_size, data, data_size);
     }
 
 private:
@@ -237,7 +237,7 @@ inline ByteBufferImpl::ByteBufferImpl(const void* data, size_t size, Constructio
 {
     ASSERT(mode == Copy);
     m_data = static_cast<u8*>(kmalloc(size));
-    memcpy(m_data, data, size);
+    __builtin_memcpy(m_data, data, size);
     m_owned = true;
 }
 
@@ -257,7 +257,7 @@ inline void ByteBufferImpl::grow(size_t size)
     ASSERT(size > m_size);
     ASSERT(m_owned);
     u8* new_data = static_cast<u8*>(kmalloc(size));
-    memcpy(new_data, m_data, m_size);
+    __builtin_memcpy(new_data, m_data, m_size);
     u8* old_data = m_data;
     m_data = new_data;
     m_size = size;
@@ -272,7 +272,7 @@ inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::create_uninitialized(size_t
 inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::create_zeroed(size_t size)
 {
     auto buffer = ::adopt(*new ByteBufferImpl(size));
-    memset(buffer->data(), 0, size);
+    __builtin_memset(buffer->data(), 0, size);
     return buffer;
 }
 

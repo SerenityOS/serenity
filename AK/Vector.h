@@ -96,7 +96,7 @@ public:
         if (!count)
             return;
         if constexpr (Traits<T>::is_trivial()) {
-            memmove(destination, source, count * sizeof(T));
+            __builtin_memmove(destination, source, count * sizeof(T));
             return;
         }
         for (size_t i = 0; i < count; ++i)
@@ -108,7 +108,7 @@ public:
         if (!count)
             return;
         if constexpr (Traits<T>::is_trivial()) {
-            memmove(destination, source, count * sizeof(T));
+            __builtin_memmove(destination, source, count * sizeof(T));
             return;
         }
         for (size_t i = 0; i < count; ++i)
@@ -121,7 +121,7 @@ public:
             return true;
 
         if constexpr (Traits<T>::is_trivial())
-            return !memcmp(a, b, count * sizeof(T));
+            return !__builtin_memcmp(a, b, count * sizeof(T));
 
         for (size_t i = 0; i < count; ++i) {
             if (a[i] != b[i])
@@ -641,7 +641,7 @@ private:
     size_t m_size { 0 };
     size_t m_capacity { 0 };
 
-    alignas(T) u8 m_inline_buffer_storage[sizeof(T) * inline_capacity];
+    alignas(T) unsigned char m_inline_buffer_storage[sizeof(T) * inline_capacity];
     T* m_outline_buffer { nullptr };
 };
 
