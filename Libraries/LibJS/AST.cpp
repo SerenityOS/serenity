@@ -138,7 +138,13 @@ void CallExpression::dump(int indent) const
 void Literal::dump(int indent) const
 {
     print_indent(indent);
-    printf("%d\n", (i32)m_value.as_double());
+    if (m_value.is_object())
+        ASSERT_NOT_REACHED();
+
+    if (m_value.is_string())
+        printf("%s\n", m_value.as_string()->characters());
+    else
+        printf("%s\n", m_value.to_string().characters());
 }
 
 void FunctionDeclaration::dump(int indent) const
