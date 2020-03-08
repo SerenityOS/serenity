@@ -33,6 +33,8 @@
 
 int main()
 {
+    // function foo() { return 1 + 2; }
+    // foo();
     auto program = make<JS::Program>();
 
     auto block = make<JS::BlockStatement>();
@@ -55,5 +57,14 @@ int main()
     dbg() << "Interpreter returned " << result;
 
     printf("%s\n", result.to_string().characters());
+
+    interpreter.heap().allocate<JS::Object>();
+
+    dbg() << "Collecting garbage...";
+    interpreter.heap().collect_garbage();
+
+    interpreter.global_object().put("foo", JS::Value(123));
+    dbg() << "Collecting garbage after overwriting global_object.foo...";
+    interpreter.heap().collect_garbage();
     return 0;
 }
