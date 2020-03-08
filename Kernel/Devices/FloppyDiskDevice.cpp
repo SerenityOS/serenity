@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Memory.h>
 #include <Kernel/Devices/FloppyDiskDevice.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <LibBareMetal/IO.h>

@@ -25,6 +25,7 @@
  */
 
 #include "ZeroDevice.h"
+#include <AK/Memory.h>
 #include <AK/StdLibExtras.h>
 
 namespace Kernel {

@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Memory.h>
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
 #include <Kernel/Thread.h>

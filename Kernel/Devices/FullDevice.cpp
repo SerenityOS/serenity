@@ -25,6 +25,7 @@
  */
 
 #include "FullDevice.h"
+#include <AK/Memory.h>
 #include <AK/StdLibExtras.h>
 #include <LibC/errno_numbers.h>
 

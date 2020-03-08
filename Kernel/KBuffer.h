@@ -39,6 +39,7 @@
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
 #include <AK/LogStream.h>
+#include <AK/Memory.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/Region.h>
 
