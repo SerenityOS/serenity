@@ -26,7 +26,7 @@
 
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Devices/PCSpeaker.h>
-#include <Kernel/Devices/PIT.h>
+#include <Kernel/Time/PIT.h>
 #include <LibBareMetal/IO.h>
 
 void PCSpeaker::tone_on(int frequency)

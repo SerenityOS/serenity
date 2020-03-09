@@ -26,13 +26,13 @@
 
 #include <AK/QuickSort.h>
 #include <AK/TemporaryChange.h>
-#include <Kernel/Devices/PIT.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Net/Socket.h>
 #include <Kernel/Process.h>
 #include <Kernel/Profiling.h>
 #include <Kernel/RTC.h>
 #include <Kernel/Scheduler.h>
+#include <Kernel/Time/TimeManagement.h>
 #include <Kernel/TimerQueue.h>
 
 //#define LOG_EVERY_CONTEXT_SWITCH
@@ -588,8 +588,8 @@ void Scheduler::timer_tick(const RegisterState& regs)
     ++g_uptime;
 
     timeval tv;
-    tv.tv_sec = RTC::boot_time() + PIT::the().seconds_since_boot();
-    tv.tv_usec = PIT::the().ticks_this_second() * 1000;
+    tv.tv_sec = TimeManagement::the().epoch_time();
+    tv.tv_usec = TimeManagement::the().ticks_this_second() * 1000;
     Process::update_info_page_timestamp(tv);
 
     if (Process::current->is_profiling()) {
