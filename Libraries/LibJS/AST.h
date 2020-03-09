@@ -40,6 +40,7 @@ public:
     virtual const char* class_name() const = 0;
     virtual Value execute(Interpreter&) const = 0;
     virtual void dump(int indent) const;
+    virtual bool is_identifier() const { return false; }
 
 protected:
     ASTNode() {}
@@ -188,7 +189,7 @@ enum class BinaryOp {
 
 class BinaryExpression : public Expression {
 public:
-    BinaryExpression(BinaryOp op, NonnullOwnPtr<Expression> lhs, NonnullOwnPtr<Expression> rhs)
+    BinaryExpression(BinaryOp op, NonnullOwnPtr<ASTNode> lhs, NonnullOwnPtr<ASTNode> rhs)
         : m_op(op)
         , m_lhs(move(lhs))
         , m_rhs(move(rhs))
@@ -202,8 +203,8 @@ private:
     virtual const char* class_name() const override { return "BinaryExpression"; }
 
     BinaryOp m_op;
-    NonnullOwnPtr<Expression> m_lhs;
-    NonnullOwnPtr<Expression> m_rhs;
+    NonnullOwnPtr<ASTNode> m_lhs;
+    NonnullOwnPtr<ASTNode> m_rhs;
 };
 
 enum class LogicalOp {
@@ -270,6 +271,25 @@ private:
     Value m_value;
 };
 
+class Identifier final : public ASTNode {
+public:
+    explicit Identifier(String string)
+        : m_string(move(string))
+    {
+    }
+
+    const String& string() const { return m_string; }
+
+    virtual Value execute(Interpreter&) const override;
+    virtual void dump(int indent) const override;
+    virtual bool is_identifier() const override { return true; }
+
+private:
+    virtual const char* class_name() const override { return "Identifier"; }
+
+    String m_string;
+};
+
 class CallExpression : public Expression {
 public:
     explicit CallExpression(String name)
@@ -286,6 +306,50 @@ private:
     virtual const char* class_name() const override { return "CallExpression"; }
 
     String m_name;
+};
+
+enum class AssignmentOp {
+    Assign,
+};
+
+class AssignmentExpression : public Expression {
+public:
+    AssignmentExpression(AssignmentOp op, NonnullOwnPtr<ASTNode> lhs, NonnullOwnPtr<ASTNode> rhs)
+        : m_op(op)
+        , m_lhs(move(lhs))
+        , m_rhs(move(rhs))
+    {
+    }
+
+    virtual Value execute(Interpreter&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    virtual const char* class_name() const override { return "AssignmentExpression"; }
+
+    AssignmentOp m_op;
+    NonnullOwnPtr<ASTNode> m_lhs;
+    NonnullOwnPtr<ASTNode> m_rhs;
+};
+
+class VariableDeclaration : public ASTNode {
+public:
+    VariableDeclaration(NonnullOwnPtr<Identifier> name, OwnPtr<ASTNode> initializer)
+        : m_name(move(name))
+        , m_initializer(move(initializer))
+    {
+    }
+
+    const Identifier& name() const { return *m_name; }
+
+    virtual Value execute(Interpreter&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    virtual const char* class_name() const override { return "VariableDeclaration"; }
+
+    NonnullOwnPtr<Identifier> m_name;
+    OwnPtr<ASTNode> m_initializer;
 };
 
 }

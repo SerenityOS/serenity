@@ -393,4 +393,64 @@ void WhileStatement::dump(int indent) const
     body().dump(indent + 1);
 }
 
+Value Identifier::execute(Interpreter& interpreter) const
+{
+    return interpreter.get_variable(string());
+}
+
+void Identifier::dump(int indent) const
+{
+    print_indent(indent);
+    printf("Identifier \"%s\"\n", m_string.characters());
+}
+
+Value AssignmentExpression::execute(Interpreter& interpreter) const
+{
+    ASSERT(m_lhs->is_identifier());
+    auto name = static_cast<const Identifier&>(*m_lhs).string();
+    auto rhs_result = m_rhs->execute(interpreter);
+
+    switch (m_op) {
+    case AssignmentOp::Assign:
+        interpreter.set_variable(name, rhs_result);
+        break;
+    }
+    return rhs_result;
+}
+
+void AssignmentExpression::dump(int indent) const
+{
+    const char* op_string = nullptr;
+    switch (m_op) {
+    case AssignmentOp::Assign:
+        op_string = "=";
+        break;
+    }
+
+    ASTNode::dump(indent);
+    print_indent(indent + 1);
+    printf("%s\n", op_string);
+    m_lhs->dump(indent + 1);
+    m_rhs->dump(indent + 1);
+}
+
+Value VariableDeclaration::execute(Interpreter& interpreter) const
+{
+    interpreter.declare_variable(name().string());
+    if (m_initializer) {
+        auto initalizer_result = m_initializer->execute(interpreter);
+        interpreter.set_variable(name().string(), initalizer_result);
+    }
+    return js_undefined();
+}
+
+
+void VariableDeclaration::dump(int indent) const
+{
+    ASTNode::dump(indent);
+    m_name->dump(indent + 1);
+    if (m_initializer)
+        m_initializer->dump(indent + 1);
+}
+
 }
