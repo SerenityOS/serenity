@@ -31,24 +31,13 @@
 #include <LibJS/Value.h>
 #include <stdio.h>
 
+//static void build_program_1(JS::Program&);
+static void build_program_2(JS::Program&);
+
 int main()
 {
-    // function foo() { return (1 + 2) + 3; }
-    // foo();
     auto program = make<JS::Program>();
-
-    auto block = make<JS::BlockStatement>();
-    block->append<JS::ReturnStatement>(
-        make<JS::BinaryExpression>(
-            JS::BinaryOp::Plus,
-            make<JS::BinaryExpression>(
-                JS::BinaryOp::Plus,
-                make<JS::Literal>(JS::Value(1)),
-                make<JS::Literal>(JS::Value(2))),
-            make<JS::Literal>(JS::Value(3))));
-
-    program->append<JS::FunctionDeclaration>("foo", move(block));
-    program->append<JS::CallExpression>("foo");
+    build_program_2(*program);
 
     program->dump(0);
 
@@ -67,4 +56,60 @@ int main()
     dbg() << "Collecting garbage after overwriting global_object.foo...";
     interpreter.heap().collect_garbage();
     return 0;
+}
+
+#if 0
+void build_program_1(JS::Program& program)
+{
+    // function foo() { return (1 + 2) + 3; }
+    // foo();
+
+    auto block = make<JS::BlockStatement>();
+    block->append<JS::ReturnStatement>(
+        make<JS::BinaryExpression>(
+            JS::BinaryOp::Plus,
+            make<JS::BinaryExpression>(
+                JS::BinaryOp::Plus,
+                make<JS::Literal>(JS::Value(1)),
+                make<JS::Literal>(JS::Value(2))),
+            make<JS::Literal>(JS::Value(3))));
+
+    program.append<JS::FunctionDeclaration>("foo", move(block));
+    program.append<JS::CallExpression>("foo");
+}
+#endif
+
+void build_program_2(JS::Program& program)
+{
+    // c = 1;
+    // function foo() {
+    //   var a = 5;
+    //   var b = 7;
+    //   return a + b + c;
+    // }
+    // foo();
+
+    program.append<JS::AssignmentExpression>(
+        JS::AssignmentOp::Assign,
+        make<JS::Identifier>("c"),
+        make<JS::Literal>(JS::Value(1)));
+
+    auto block = make<JS::BlockStatement>();
+    block->append<JS::VariableDeclaration>(
+        make<JS::Identifier>("a"),
+        make<JS::Literal>(JS::Value(5)));
+    block->append<JS::VariableDeclaration>(
+        make<JS::Identifier>("b"),
+        make<JS::Literal>(JS::Value(7)));
+
+    block->append<JS::ReturnStatement>(
+        make<JS::BinaryExpression>(
+            JS::BinaryOp::Plus,
+            make<JS::BinaryExpression>(
+                JS::BinaryOp::Plus,
+                make<JS::Identifier>("a"),
+                make<JS::Identifier>("b")),
+            make<JS::Identifier>("c")));
+    program.append<JS::FunctionDeclaration>("foo", move(block));
+    program.append<JS::CallExpression>("foo");
 }
