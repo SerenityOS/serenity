@@ -210,17 +210,12 @@ Value LogicalExpression::execute(Interpreter& interpreter) const
 {
     auto lhs_result = m_lhs->execute(interpreter).as_bool();
 
-    if (m_op == LogicalOp::Not)
-        return Value(!lhs_result);
-
     auto rhs_result = m_rhs->execute(interpreter).as_bool();
     switch (m_op) {
     case LogicalOp::And:
         return Value(lhs_result && rhs_result);
     case LogicalOp::Or:
         return Value(lhs_result || rhs_result);
-    case LogicalOp::Not:
-        ASSERT_NOT_REACHED();
     }
 
     ASSERT_NOT_REACHED();
@@ -232,6 +227,8 @@ Value UnaryExpression::execute(Interpreter& interpreter) const
     switch (m_op) {
     case UnaryOp::BitNot:
         return bit_not(lhs_result);
+    case UnaryOp::Not:
+        return Value(!lhs_result.as_bool());
     }
 
     ASSERT_NOT_REACHED();
@@ -313,14 +310,6 @@ void LogicalExpression::dump(int indent) const
     case LogicalOp::Or:
         op_string = "||";
         break;
-    case LogicalOp::Not:
-        op_string = "!";
-        print_indent(indent);
-        printf("%s\n", class_name());
-        print_indent(indent + 1);
-        printf("%s\n", op_string);
-        m_lhs->dump(indent + 1);
-        return;
     }
 
     print_indent(indent);
@@ -337,6 +326,9 @@ void UnaryExpression::dump(int indent) const
     switch (m_op) {
     case UnaryOp::BitNot:
         op_string = "~";
+        break;
+    case UnaryOp::Not:
+        op_string = "!";
         break;
     }
 
