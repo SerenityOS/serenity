@@ -44,7 +44,7 @@ class GenericInterruptHandler {
 public:
     static GenericInterruptHandler& from(u8 interrupt_number);
     virtual ~GenericInterruptHandler();
-    virtual void handle_interrupt(RegisterState& regs) = 0;
+    virtual void handle_interrupt(const RegisterState& regs) = 0;
 
     u8 interrupt_number() const { return m_interrupt_number; }
 

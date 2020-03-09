@@ -130,7 +130,7 @@ void PS2MouseDevice::handle_vmmouse_absolute_pointer()
     m_queue.enqueue(packet);
 }
 
-void PS2MouseDevice::handle_irq(RegisterState&)
+void PS2MouseDevice::handle_irq(const RegisterState&)
 {
 
     if (VMWareBackdoor::the().vmmouse_is_absolute()) {

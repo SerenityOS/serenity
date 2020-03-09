@@ -207,7 +207,7 @@ void SB16::dma_start(uint32_t length)
     IO::out8(0xd4, (channel % 4));
 }
 
-void SB16::handle_irq(RegisterState&)
+void SB16::handle_irq(const RegisterState&)
 {
     // Stop sound output ready for the next block.
     dsp_write(0xd5);

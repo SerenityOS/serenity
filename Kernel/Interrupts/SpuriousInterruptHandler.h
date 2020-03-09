@@ -39,7 +39,7 @@ class SpuriousInterruptHandler final : public GenericInterruptHandler {
 public:
     static void initialize(u8 interrupt_number);
     virtual ~SpuriousInterruptHandler();
-    virtual void handle_interrupt(RegisterState& regs) override;
+    virtual void handle_interrupt(const RegisterState& regs) override;
 
     void register_handler(GenericInterruptHandler&);
     void unregister_handler(GenericInterruptHandler&);

@@ -37,7 +37,7 @@ public:
     explicit UnhandledInterruptHandler(u8 interrupt_vector);
     virtual ~UnhandledInterruptHandler();
 
-    virtual void handle_interrupt(RegisterState&) override;
+    virtual void handle_interrupt(const RegisterState&) override;
 
     virtual bool eoi() override;
 

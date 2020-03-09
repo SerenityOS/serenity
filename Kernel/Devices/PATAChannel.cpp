@@ -180,7 +180,7 @@ void PATAChannel::wait_for_irq()
     disable_irq();
 }
 
-void PATAChannel::handle_irq(RegisterState&)
+void PATAChannel::handle_irq(const RegisterState&)
 {
     u8 status = m_io_base.offset(ATA_REG_STATUS).in<u8>();
     if (status & ATA_SR_ERR) {

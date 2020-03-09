@@ -177,7 +177,7 @@ E1000NetworkAdapter::~E1000NetworkAdapter()
 {
 }
 
-void E1000NetworkAdapter::handle_irq(RegisterState&)
+void E1000NetworkAdapter::handle_irq(const RegisterState&)
 {
     out32(REG_IMASK, 0x1);
 

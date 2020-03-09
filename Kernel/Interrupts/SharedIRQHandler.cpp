@@ -84,7 +84,7 @@ SharedIRQHandler::~SharedIRQHandler()
     disable_interrupt_vector();
 }
 
-void SharedIRQHandler::handle_interrupt(RegisterState& regs)
+void SharedIRQHandler::handle_interrupt(const RegisterState& regs)
 {
     ASSERT_INTERRUPTS_DISABLED();
     increment_invoking_counter();

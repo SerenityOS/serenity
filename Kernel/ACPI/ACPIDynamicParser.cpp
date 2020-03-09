@@ -56,7 +56,7 @@ namespace ACPI {
         klog() << "ACPI: Dynamic Parsing Enabled, Can parse AML";
     }
 
-    void DynamicParser::handle_irq(RegisterState&)
+    void DynamicParser::handle_irq(const RegisterState&)
     {
         // FIXME: Implement IRQ handling of ACPI signals!
         ASSERT_NOT_REACHED();
