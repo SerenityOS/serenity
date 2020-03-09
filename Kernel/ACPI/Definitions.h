@@ -184,30 +184,16 @@ namespace ACPI {
             u64 address;
         };
 
-        struct [[gnu::packed]] TimerStructure
-        {
-            u64 configuration_capability;
-            u64 comparator_value;
-            u64 fsb_interrupt_route;
-        };
-
         struct [[gnu::packed]] HPET
         {
             SDTHeader h;
-            u64 capabilities;
-            u64 reserved;
-            u64 configuration;
-            u64 reserved2;
-            u64 interrupt_status;
-            u64 reserved3;
-            u64 main_counter_value;
-            u64 reserved4;
-            TimerStructure timer0;
-            u64 reserved5;
-            TimerStructure timer1;
-            u64 reserved6;
-            TimerStructure timer2;
-            u64 reserved7;
+            u8 hardware_revision_id;
+            u8 attributes;
+            u16 pci_vendor_id;
+            GenericAddressStructure event_timer_block;
+            u8 hpet_number;
+            u16 mininum_clock_tick;
+            u8 page_protection;
         };
 
         struct [[gnu::packed]] FADT
