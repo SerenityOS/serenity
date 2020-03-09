@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <LibJS/Forward.h>
 
 namespace JS {
 
@@ -45,6 +46,7 @@ public:
     class Visitor {
     public:
         virtual void visit(Cell*) = 0;
+        void visit(Value);
     };
 
     virtual void visit_children(Visitor&) {}
