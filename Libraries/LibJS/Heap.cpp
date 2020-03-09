@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Badge.h>
 #include <AK/HashTable.h>
 #include <LibJS/Heap.h>
 #include <LibJS/HeapBlock.h>
@@ -72,7 +73,7 @@ void Heap::collect_garbage()
 
 void Heap::collect_roots(HashTable<Cell*>& roots)
 {
-    roots.set(&m_interpreter.global_object());
+    m_interpreter.collect_roots({}, roots);
 
 #ifdef HEAP_DEBUG
     dbg() << "collect_roots:";
