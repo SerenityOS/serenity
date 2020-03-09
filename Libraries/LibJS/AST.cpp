@@ -458,4 +458,14 @@ void VariableDeclaration::dump(int indent) const
         m_initializer->dump(indent + 1);
 }
 
+void ObjectExpression::dump(int indent) const
+{
+    ASTNode::dump(indent);
+}
+
+Value ObjectExpression::execute(Interpreter& interpreter) const
+{
+    return Value(interpreter.heap().allocate<Object>());
+}
+
 }
