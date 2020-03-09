@@ -188,7 +188,6 @@ private:
 enum class LogicalOp {
     And,
     Or,
-    Not
 };
 
 class LogicalExpression : public Expression {
@@ -200,13 +199,6 @@ public:
     {
     }
 
-    LogicalExpression(LogicalOp op, NonnullOwnPtr<Expression> lhs)
-        : m_op(op)
-        , m_lhs(move(lhs))
-    {
-        ASSERT(op == LogicalOp::Not);
-    }
-
     virtual Value execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
 
@@ -215,11 +207,12 @@ private:
 
     LogicalOp m_op;
     NonnullOwnPtr<Expression> m_lhs;
-    OwnPtr<Expression> m_rhs;
+    NonnullOwnPtr<Expression> m_rhs;
 };
 
 enum class UnaryOp {
     BitNot,
+    Not,
 };
 
 class UnaryExpression : public Expression {
