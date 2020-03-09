@@ -129,7 +129,7 @@ private:
 
 class IfStatement : public ASTNode {
 public:
-    explicit IfStatement(NonnullOwnPtr<Expression> predicate, NonnullOwnPtr<ScopeNode> consequent, NonnullOwnPtr<ScopeNode> alternate)
+    IfStatement(NonnullOwnPtr<Expression> predicate, NonnullOwnPtr<ScopeNode> consequent, NonnullOwnPtr<ScopeNode> alternate)
         : m_predicate(move(predicate))
         , m_consequent(move(consequent))
         , m_alternate(move(alternate))
