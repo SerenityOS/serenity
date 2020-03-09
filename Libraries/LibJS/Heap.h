@@ -57,7 +57,6 @@ private:
     Cell* allocate_cell(size_t);
 
     void collect_roots(HashTable<Cell*>&);
-    void visit_live_cells(const HashTable<Cell*>& roots, HashTable<Cell*>& live_cells);
     void mark_live_cells(const HashTable<Cell*>& live_cells);
     void sweep_dead_cells();
 

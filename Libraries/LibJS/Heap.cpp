@@ -63,11 +63,7 @@ void Heap::collect_garbage()
 {
     HashTable<Cell*> roots;
     collect_roots(roots);
-
-    HashTable<Cell*> live_cells;
-    visit_live_cells(roots, live_cells);
-
-    mark_live_cells(live_cells);
+    mark_live_cells(roots);
     sweep_dead_cells();
 }
 
@@ -83,48 +79,30 @@ void Heap::collect_roots(HashTable<Cell*>& roots)
 #endif
 }
 
-class LivenessVisitor final : public Cell::Visitor {
+class MarkingVisitor final : public Cell::Visitor {
 public:
-    LivenessVisitor(HashTable<Cell*>& live_cells)
-        : m_live_cells(live_cells)
+    MarkingVisitor() {}
+
+    virtual void visit(Cell* cell)
     {
-    }
-
-    virtual void did_visit(Cell* cell) override
-    {
-        m_live_cells.set(cell);
-    }
-
-private:
-    HashTable<Cell*>& m_live_cells;
-};
-
-void Heap::visit_live_cells(const HashTable<Cell*>& roots, HashTable<Cell*>& live_cells)
-{
-    LivenessVisitor visitor(live_cells);
-    for (auto* root : roots) {
-        root->visit_graph(visitor);
-    }
-
-#ifdef HEAP_DEBUG
-    dbg() << "visit_live_cells:";
-    for (auto* cell : live_cells) {
-        dbg() << "  @ " << cell;
-    }
-#endif
-}
-
-void Heap::mark_live_cells(const HashTable<Cell*>& live_cells)
-{
-#ifdef HEAP_DEBUG
-    dbg() << "mark_live_cells:";
-#endif
-    for (auto& cell : live_cells) {
+        if (cell->is_marked())
+            return;
 #ifdef HEAP_DEBUG
         dbg() << "  ! " << cell;
 #endif
         cell->set_marked(true);
+        cell->visit_children(*this);
     }
+};
+
+void Heap::mark_live_cells(const HashTable<Cell*>& roots)
+{
+#ifdef HEAP_DEBUG
+    dbg() << "mark_live_cells:";
+#endif
+    MarkingVisitor visitor;
+    for (auto* root : roots)
+        visitor.visit(root);
 }
 
 void Heap::sweep_dead_cells()
@@ -147,5 +125,4 @@ void Heap::sweep_dead_cells()
         });
     }
 }
-
 }

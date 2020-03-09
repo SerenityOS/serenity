@@ -44,13 +44,10 @@ public:
 
     class Visitor {
     public:
-        virtual void did_visit(Cell*) = 0;
+        virtual void visit(Cell*) = 0;
     };
 
-    virtual void visit_graph(Visitor& visitor)
-    {
-        visitor.did_visit(this);
-    }
+    virtual void visit_children(Visitor&) {}
 
 private:
     bool m_mark { false };

@@ -48,12 +48,12 @@ void Object::put(String property_name, Value value)
     m_properties.set(property_name, move(value));
 }
 
-void Object::visit_graph(Cell::Visitor& visitor)
+void Object::visit_children(Cell::Visitor& visitor)
 {
-    Cell::visit_graph(visitor);
+    Cell::visit_children(visitor);
     for (auto& it : m_properties) {
         if (it.value.is_object())
-            it.value.as_object()->visit_graph(visitor);
+            visitor.visit(it.value.as_object());
     }
 }
 
