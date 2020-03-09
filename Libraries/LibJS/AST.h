@@ -352,4 +352,15 @@ private:
     OwnPtr<ASTNode> m_initializer;
 };
 
+class ObjectExpression : public Expression {
+public:
+    ObjectExpression() {}
+
+    virtual Value execute(Interpreter&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    virtual const char* class_name() const override { return "ObjectExpression"; }
+};
+
 }
