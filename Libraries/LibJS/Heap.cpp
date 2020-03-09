@@ -118,15 +118,11 @@ void Heap::mark_live_cells(const HashTable<Cell*>& live_cells)
 #ifdef HEAP_DEBUG
     dbg() << "mark_live_cells:";
 #endif
-    for (auto& block : m_blocks) {
-        block->for_each_cell([&](Cell* cell) {
-            if (live_cells.contains(cell)) {
+    for (auto& cell : live_cells) {
 #ifdef HEAP_DEBUG
-                dbg() << "  ! " << cell;
+        dbg() << "  ! " << cell;
 #endif
-                cell->set_marked(true);
-            }
-        });
+        cell->set_marked(true);
     }
 }
 
