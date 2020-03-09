@@ -26,8 +26,16 @@
 
 #include <AK/LogStream.h>
 #include <LibJS/Cell.h>
+#include <LibJS/Object.h>
+#include <LibJS/Value.h>
 
 namespace JS {
+
+void Cell::Visitor::visit(Value value)
+{
+    if (value.is_object())
+        visit(value.as_object());
+}
 
 const LogStream& operator<<(const LogStream& stream, const Cell* cell)
 {

@@ -51,10 +51,8 @@ void Object::put(String property_name, Value value)
 void Object::visit_children(Cell::Visitor& visitor)
 {
     Cell::visit_children(visitor);
-    for (auto& it : m_properties) {
-        if (it.value.is_object())
-            visitor.visit(it.value.as_object());
-    }
+    for (auto& it : m_properties)
+        visitor.visit(it.value);
 }
 
 }
