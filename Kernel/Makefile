@@ -24,7 +24,12 @@ OBJS = \
     Interrupts/IRQHandler.o \
     Interrupts/SharedIRQHandler.o \
     CMOS.o \
-    Devices/PIT.o \
+    Time/PIT.o \
+    Time/TimeManagement.o \
+    Time/HardwareTimer.o \
+    Time/RTC.o \
+    Time/HPET.o \
+    Time/HPETComparator.o \
     Devices/BXVGADevice.o \
     Devices/BlockDevice.o \
     Devices/CharacterDevice.o \
@@ -48,7 +53,6 @@ OBJS = \
     Devices/SerialDevice.o \
     Devices/ZeroDevice.o \
     Devices/VMWareBackdoor.o \
-    Devices/HardwareTimer.o \
     DoubleBuffer.o \
     FileSystem/Custody.o \
     FileSystem/DevPtsFS.o \

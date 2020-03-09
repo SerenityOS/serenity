@@ -37,7 +37,6 @@
 #include <Kernel/Devices/KeyboardDevice.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/Devices/PCSpeaker.h>
-#include <Kernel/Devices/PIT.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/DevPtsFS.h>
@@ -67,6 +66,7 @@
 #include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/TTY/TTY.h>
 #include <Kernel/Thread.h>
+#include <Kernel/Time/TimeManagement.h>
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/PrivateInodeVMObject.h>
 #include <Kernel/VM/PurgeableVMObject.h>
@@ -2105,13 +2105,13 @@ unsigned Process::sys$alarm(unsigned seconds)
     REQUIRE_PROMISE(stdio);
     unsigned previous_alarm_remaining = 0;
     if (m_alarm_deadline && m_alarm_deadline > g_uptime) {
-        previous_alarm_remaining = (m_alarm_deadline - g_uptime) / TICKS_PER_SECOND;
+        previous_alarm_remaining = (m_alarm_deadline - g_uptime) / TimeManagement::the().ticks_per_second();
     }
     if (!seconds) {
         m_alarm_deadline = 0;
         return previous_alarm_remaining;
     }
-    m_alarm_deadline = g_uptime + seconds * TICKS_PER_SECOND;
+    m_alarm_deadline = g_uptime + seconds * TimeManagement::the().ticks_per_second();
     return previous_alarm_remaining;
 }
 
@@ -2231,10 +2231,10 @@ int Process::sys$sleep(unsigned seconds)
     REQUIRE_PROMISE(stdio);
     if (!seconds)
         return 0;
-    u64 wakeup_time = Thread::current->sleep(seconds * TICKS_PER_SECOND);
+    u64 wakeup_time = Thread::current->sleep(seconds * TimeManagement::the().ticks_per_second());
     if (wakeup_time > g_uptime) {
         u32 ticks_left_until_original_wakeup_time = wakeup_time - g_uptime;
-        return ticks_left_until_original_wakeup_time / TICKS_PER_SECOND;
+        return ticks_left_until_original_wakeup_time / TimeManagement::the().ticks_per_second();
     }
     return 0;
 }
@@ -4268,8 +4268,12 @@ int Process::sys$clock_gettime(clockid_t clock_id, timespec* user_ts)
 
     switch (clock_id) {
     case CLOCK_MONOTONIC:
-        ts.tv_sec = g_uptime / TICKS_PER_SECOND;
-        ts.tv_nsec = (g_uptime % TICKS_PER_SECOND) * 1000000;
+        ts.tv_sec = TimeManagement::the().seconds_since_boot();
+        ts.tv_nsec = TimeManagement::the().ticks_this_second() * 1000000;
+        break;
+    case CLOCK_REALTIME:
+        ts.tv_sec = TimeManagement::the().epoch_time();
+        ts.tv_nsec = TimeManagement::the().ticks_this_second() * 1000000;
         break;
     default:
         return -EINVAL;
@@ -4322,8 +4326,8 @@ int Process::sys$clock_nanosleep(const Syscall::SC_clock_nanosleep_params* user_
 
                 timespec remaining_sleep;
                 memset(&remaining_sleep, 0, sizeof(timespec));
-                remaining_sleep.tv_sec = ticks_left / TICKS_PER_SECOND;
-                ticks_left -= remaining_sleep.tv_sec * TICKS_PER_SECOND;
+                remaining_sleep.tv_sec = ticks_left / TimeManagement::the().ticks_per_second();
+                ticks_left -= remaining_sleep.tv_sec * TimeManagement::the().ticks_per_second();
                 remaining_sleep.tv_nsec = ticks_left * 1000000;
                 copy_to_user(params.remaining_sleep, &remaining_sleep);
             }
