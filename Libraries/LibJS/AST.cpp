@@ -40,7 +40,7 @@ Value ScopeNode::execute(Interpreter& interpreter) const
 Value FunctionDeclaration::execute(Interpreter& interpreter) const
 {
     auto* function = interpreter.heap().allocate<Function>(name(), body());
-    interpreter.global_object().put(m_name, Value(function));
+    interpreter.set_variable(m_name, Value(function));
     return Value(function);
 }
 
@@ -51,7 +51,7 @@ Value CallExpression::execute(Interpreter& interpreter) const
         return js_undefined();
     }
 
-    auto callee = interpreter.global_object().get(name());
+    auto callee = interpreter.get_variable(name());
     ASSERT(callee.is_object());
     auto* callee_object = callee.as_object();
     ASSERT(callee_object->is_function());
