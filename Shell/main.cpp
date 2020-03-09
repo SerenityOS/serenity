@@ -187,6 +187,11 @@ static String expand_tilde(const char* expression)
 
 static int sh_cd(int argc, const char** argv)
 {
+    if (argc > 2) {
+        fprintf(stderr, "cd: too many arguments\n");
+        return 1;
+    }
+
     String new_path;
 
     if (argc == 1) {
