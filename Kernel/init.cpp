@@ -48,7 +48,6 @@
 #include <Kernel/Devices/MBVGADevice.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/Devices/PATAChannel.h>
-#include <Kernel/Devices/PIT.h>
 #include <Kernel/Devices/PS2MouseDevice.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Devices/SB16.h>
@@ -71,6 +70,7 @@
 #include <Kernel/Random.h>
 #include <Kernel/TTY/PTYMultiplexer.h>
 #include <Kernel/TTY/VirtualConsole.h>
+#include <Kernel/Time/TimeManagement.h>
 #include <Kernel/VM/MemoryManager.h>
 
 // Defined in the linker script
@@ -89,6 +89,7 @@ static void setup_acpi();
 static void setup_vmmouse();
 static void setup_pci();
 static void setup_interrupts();
+static void setup_time_management();
 
 VirtualConsole* tty0;
 
@@ -121,8 +122,7 @@ extern "C" [[noreturn]] void init()
 
     __stack_chk_guard = get_good_random<u32>();
 
-    PIT::initialize();
-    RTC::initialize();
+    setup_time_management();
 
     // call global constructors after gtd and itd init
     for (ctor_func_t* ctor = &start_ctors; ctor < &end_ctors; ctor++)
@@ -150,8 +150,6 @@ extern "C" [[noreturn]] void init()
 
     setup_pci();
 
-    PIT::initialize();
-
     if (text_debug) {
         dbg() << "Text mode enabled";
     } else {
@@ -178,7 +176,7 @@ extern "C" [[noreturn]] void init()
     Process::create_kernel_process(syncd_thread, "syncd", [] {
         for (;;) {
             VFS::the().sync();
-            Thread::current->sleep(1 * TICKS_PER_SECOND);
+            Thread::current->sleep(1 * TimeManagement::the().ticks_per_second());
         }
     });
 
@@ -480,6 +478,26 @@ void setup_interrupts()
     }
 
     klog() << "smp boot argmuent has an invalid value.";
+    hang();
+}
+
+void setup_time_management()
+{
+    if (!KParams::the().has("time")) {
+        TimeManagement::initialize(true);
+        return;
+    }
+    auto time = KParams::the().get("time");
+    if (time == "legacy") {
+        TimeManagement::initialize(false);
+        return;
+    }
+    if (time == "modern") {
+        TimeManagement::initialize(true);
+        return;
+    }
+
+    kprintf("time boot argmuent has an invalid value.\n");
     hang();
 }
 }

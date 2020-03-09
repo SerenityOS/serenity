@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,53 +26,30 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/NonnullOwnPtr.h>
-#include <AK/OwnPtr.h>
-#include <AK/SinglyLinkedList.h>
-#include <Kernel/Time/TimeManagement.h>
+#include <AK/NonnullRefPtr.h>
+#include <Kernel/RTC.h>
+#include <Kernel/Time/HardwareTimer.h>
 
 namespace Kernel {
-
-struct Timer {
-    u64 id;
-    u64 expires;
-    Function<void()> callback;
-    bool operator<(const Timer& rhs) const
-    {
-        return expires < rhs.expires;
-    }
-    bool operator>(const Timer& rhs) const
-    {
-        return expires > rhs.expires;
-    }
-    bool operator==(const Timer& rhs) const
-    {
-        return id == rhs.id;
-    }
-};
-
-enum TimeUnit {
-    MS = OPTIMAL_TICKS_PER_SECOND_RATE / 1000,
-    S = OPTIMAL_TICKS_PER_SECOND_RATE,
-    M = OPTIMAL_TICKS_PER_SECOND_RATE * 60
-};
-
-class TimerQueue {
+class RealTimeClock final : public HardwareTimer {
 public:
-    static TimerQueue& the();
+    static NonnullRefPtr<RealTimeClock> create(Function<void(const RegisterState&)> callback);
+    virtual HardwareTimerType timer_type() const override { return HardwareTimerType::RTC; }
+    virtual const char* model() const override { return "Real Time Clock"; }
+    virtual size_t ticks_per_second() const override;
 
-    u64 add_timer(NonnullOwnPtr<Timer>&&);
-    u64 add_timer(u64 duration, TimeUnit, Function<void()>&& callback);
-    bool cancel_timer(u64 id);
-    void fire();
+    virtual bool is_periodic() const override { return true; }
+    virtual bool is_periodic_capable() const override { return true; }
+    virtual void set_periodic() override {}
+    virtual void set_non_periodic() override {}
+
+    virtual void reset_to_default_ticks_per_second() override;
+    virtual bool try_to_set_frequency(size_t frequency) override;
+    virtual bool is_capable_of_frequency(size_t frequency) const override;
+    virtual size_t calculate_nearest_possible_frequency(size_t frequency) const override;
 
 private:
-    void update_next_timer_due();
-
-    u64 m_next_timer_due { 0 };
-    u64 m_timer_id_count { 0 };
-    SinglyLinkedList<NonnullOwnPtr<Timer>> m_timer_queue;
+    explicit RealTimeClock(Function<void(const RegisterState&)> callback);
+    virtual void handle_irq(const RegisterState&) override;
 };
-
 }
