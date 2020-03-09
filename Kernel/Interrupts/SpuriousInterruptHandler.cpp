@@ -59,7 +59,7 @@ SpuriousInterruptHandler::~SpuriousInterruptHandler()
 {
 }
 
-void SpuriousInterruptHandler::handle_interrupt(RegisterState&)
+void SpuriousInterruptHandler::handle_interrupt(const RegisterState&)
 {
     // FIXME: Actually check if IRQ7 or IRQ15 are spurious, and if not, call the real handler to handle the IRQ.
     klog() << "Spurious Interrupt, vector " << interrupt_number();

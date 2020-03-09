@@ -49,7 +49,7 @@ public:
     virtual const char* purpose() const override { return class_name(); }
 
 private:
-    virtual void handle_irq(RegisterState&) override;
+    virtual void handle_irq(const RegisterState&) override;
     virtual const char* class_name() const override { return "E1000NetworkAdapter"; }
 
     struct [[gnu::packed]] e1000_rx_desc
