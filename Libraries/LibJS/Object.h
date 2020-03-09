@@ -44,7 +44,7 @@ public:
     virtual bool is_function() const { return false; }
 
     virtual const char* class_name() const override { return "Object"; }
-    virtual void visit_graph(Cell::Visitor&) override;
+    virtual void visit_children(Cell::Visitor&) override;
 
 private:
     HashMap<String, Value> m_properties;
