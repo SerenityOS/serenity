@@ -46,6 +46,11 @@ Value FunctionDeclaration::execute(Interpreter& interpreter) const
 
 Value CallExpression::execute(Interpreter& interpreter) const
 {
+    if (name() == "$gc") {
+        interpreter.heap().collect_garbage();
+        return js_undefined();
+    }
+
     auto callee = interpreter.global_object().get(name());
     ASSERT(callee.is_object());
     auto* callee_object = callee.as_object();
