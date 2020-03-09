@@ -56,7 +56,7 @@ Value Interpreter::run(const ScopeNode& scope_node)
 
 void Interpreter::enter_scope(const ScopeNode& scope_node)
 {
-    m_scope_stack.append({ scope_node });
+    m_scope_stack.append({ scope_node, {} });
 }
 
 void Interpreter::exit_scope(const ScopeNode& scope_node)
@@ -68,6 +68,36 @@ void Interpreter::exit_scope(const ScopeNode& scope_node)
 void Interpreter::do_return()
 {
     dbg() << "FIXME: Implement Interpreter::do_return()";
+}
+
+void Interpreter::declare_variable(String name)
+{
+    m_scope_stack.last().variables.set(move(name), js_undefined());
+}
+
+void Interpreter::set_variable(String name, Value value)
+{
+    for (ssize_t i = m_scope_stack.size() - 1; i >= 0; --i) {
+        auto& scope = m_scope_stack.at(i);
+        if (scope.variables.contains(name)) {
+            scope.variables.set(move(name), move(value));
+            return;
+        }
+    }
+
+    global_object().put(move(name), move(value));
+}
+
+Value Interpreter::get_variable(const String& name)
+{
+    for (ssize_t i = m_scope_stack.size() - 1; i >= 0; --i) {
+        auto& scope = m_scope_stack.at(i);
+        auto value = scope.variables.get(name);
+        if (value.has_value())
+            return value.value();
+    }
+
+    return global_object().get(name);
 }
 
 }

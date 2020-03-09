@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/HashMap.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap.h>
@@ -34,6 +35,7 @@ namespace JS {
 
 struct ScopeFrame {
     const ScopeNode& scope_node;
+    HashMap<String, Value> variables;
 };
 
 class Interpreter {
@@ -49,6 +51,10 @@ public:
     Heap& heap() { return m_heap; }
 
     void do_return();
+
+    Value get_variable(const String& name);
+    void set_variable(String name, Value);
+    void declare_variable(String name);
 
 private:
     void enter_scope(const ScopeNode&);
