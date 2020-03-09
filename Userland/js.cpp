@@ -31,14 +31,14 @@
 #include <LibJS/Value.h>
 #include <stdio.h>
 
-//static void build_program_1(JS::Program&);
-//static void build_program_2(JS::Program&);
-static void build_program_3(JS::Program&);
+#define PROGRAM 2
+
+static void build_program(JS::Program&);
 
 int main()
 {
     auto program = make<JS::Program>();
-    build_program_3(*program);
+    build_program(*program);
 
     program->dump(0);
 
@@ -53,8 +53,8 @@ int main()
     return 0;
 }
 
-#if 0
-void build_program_1(JS::Program& program)
+#if PROGRAM == 1
+void build_program(JS::Program& program)
 {
     // function foo() { return (1 + 2) + 3; }
     // foo();
@@ -72,10 +72,8 @@ void build_program_1(JS::Program& program)
     program.append<JS::FunctionDeclaration>("foo", move(block));
     program.append<JS::CallExpression>("foo");
 }
-#endif
-
-#if 0
-void build_program_2(JS::Program& program)
+#elif PROGRAM == 2
+void build_program(JS::Program& program)
 {
     // c = 1;
     // function foo() {
@@ -109,9 +107,8 @@ void build_program_2(JS::Program& program)
     program.append<JS::FunctionDeclaration>("foo", move(block));
     program.append<JS::CallExpression>("foo");
 }
-#endif
-
-void build_program_3(JS::Program& program)
+#elif PROGRAM == 3
+void build_program(JS::Program& program)
 {
     // function foo() {
     //   var x = {};
@@ -128,3 +125,4 @@ void build_program_3(JS::Program& program)
     program.append<JS::FunctionDeclaration>("foo", move(block));
     program.append<JS::CallExpression>("foo");
 }
+#endif
