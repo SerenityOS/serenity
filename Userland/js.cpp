@@ -32,12 +32,13 @@
 #include <stdio.h>
 
 //static void build_program_1(JS::Program&);
-static void build_program_2(JS::Program&);
+//static void build_program_2(JS::Program&);
+static void build_program_3(JS::Program&);
 
 int main()
 {
     auto program = make<JS::Program>();
-    build_program_2(*program);
+    build_program_3(*program);
 
     program->dump(0);
 
@@ -47,13 +48,7 @@ int main()
 
     printf("%s\n", result.to_string().characters());
 
-    interpreter.heap().allocate<JS::Object>();
-
-    dbg() << "Collecting garbage...";
-    interpreter.heap().collect_garbage();
-
-    interpreter.global_object().put("foo", JS::Value(123));
-    dbg() << "Collecting garbage after overwriting global_object.foo...";
+    dbg() << "Collecting garbage on exit...";
     interpreter.heap().collect_garbage();
     return 0;
 }
@@ -79,6 +74,7 @@ void build_program_1(JS::Program& program)
 }
 #endif
 
+#if 0
 void build_program_2(JS::Program& program)
 {
     // c = 1;
@@ -110,6 +106,25 @@ void build_program_2(JS::Program& program)
                 make<JS::Identifier>("a"),
                 make<JS::Identifier>("b")),
             make<JS::Identifier>("c")));
+    program.append<JS::FunctionDeclaration>("foo", move(block));
+    program.append<JS::CallExpression>("foo");
+}
+#endif
+
+void build_program_3(JS::Program& program)
+{
+    // function foo() {
+    //   var x = {};
+    //   $gc();
+    // }
+    // foo();
+
+    auto block = make<JS::BlockStatement>();
+    block->append<JS::VariableDeclaration>(
+        make<JS::Identifier>("x"),
+        make<JS::ObjectExpression>());
+    block->append<JS::CallExpression>("$gc");
+
     program.append<JS::FunctionDeclaration>("foo", move(block));
     program.append<JS::CallExpression>("foo");
 }
