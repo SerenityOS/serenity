@@ -56,6 +56,8 @@ public:
     void set_variable(String name, Value);
     void declare_variable(String name);
 
+    void collect_roots(Badge<Heap>, HashTable<Cell*>&);
+
 private:
     void enter_scope(const ScopeNode&);
     void exit_scope(const ScopeNode&);

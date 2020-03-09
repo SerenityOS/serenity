@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Badge.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Object.h>
@@ -98,6 +99,18 @@ Value Interpreter::get_variable(const String& name)
     }
 
     return global_object().get(name);
+}
+
+void Interpreter::collect_roots(Badge<Heap>, HashTable<Cell*>& roots)
+{
+    roots.set(m_global_object);
+
+    for (auto& scope : m_scope_stack) {
+        for (auto& it : scope.variables) {
+            if (it.value.is_object())
+                roots.set(it.value.as_object());
+        }
+    }
 }
 
 }
