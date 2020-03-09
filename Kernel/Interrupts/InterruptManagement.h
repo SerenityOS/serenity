@@ -51,6 +51,8 @@ public:
 
     virtual void switch_to_pic_mode();
     virtual void switch_to_ioapic_mode();
+
+    bool smp_enabled() const { return m_smp_enabled; }
     RefPtr<IRQController> get_responsible_irq_controller(u8 interrupt_vector);
 
     Vector<RefPtr<ISAInterruptOverrideMetadata>> isa_overrides();
