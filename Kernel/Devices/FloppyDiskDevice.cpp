@@ -348,7 +348,7 @@ bool FloppyDiskDevice::wait_for_irq()
     return true;
 }
 
-void FloppyDiskDevice::handle_irq(RegisterState&)
+void FloppyDiskDevice::handle_irq(const RegisterState&)
 {
     // The only thing we need to do is acknowledge the IRQ happened
     m_interrupted = true;
