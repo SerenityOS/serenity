@@ -177,7 +177,7 @@ RTL8139NetworkAdapter::~RTL8139NetworkAdapter()
 {
 }
 
-void RTL8139NetworkAdapter::handle_irq(RegisterState&)
+void RTL8139NetworkAdapter::handle_irq(const RegisterState&)
 {
     for (;;) {
         int status = in16(REG_ISR);

@@ -179,7 +179,7 @@ protected:
 
 private:
     // ^IRQHandler
-    virtual void handle_irq(RegisterState&) override;
+    virtual void handle_irq(const RegisterState&) override;
 
     // ^DiskDevice
     virtual const char* class_name() const override;

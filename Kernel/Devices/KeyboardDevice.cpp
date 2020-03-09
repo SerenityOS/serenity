@@ -485,7 +485,7 @@ void KeyboardDevice::key_state_changed(u8 raw, bool pressed)
     m_has_e0_prefix = false;
 }
 
-void KeyboardDevice::handle_irq(RegisterState&)
+void KeyboardDevice::handle_irq(const RegisterState&)
 {
     for (;;) {
         u8 status = IO::in8(I8042_STATUS);
