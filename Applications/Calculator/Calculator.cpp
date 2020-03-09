@@ -27,9 +27,7 @@
 #include "Calculator.h"
 #include <AK/Assertions.h>
 #include <math.h>
-
-const double MAX = 2147483647;
-const double MIN = -2147483647;
+#include <climits>
 
 Calculator::Calculator()
 {
@@ -107,21 +105,21 @@ double Calculator::finish_operation(double argument)
         return argument;
 
     case Operation::Add:
-        if ((argument > MAX - m_saved_argument) || (m_saved_argument > MAX + argument)) {
+        if ((argument > INT_MAX - m_saved_argument) || (m_saved_argument > INT_MAX + argument)) {
             m_has_error = true;
             return argument;
         }
         res = m_saved_argument + argument;
         break;
     case Operation::Subtract:
-        if ((argument < MIN + m_saved_argument) || (m_saved_argument < MIN + argument)) {
+        if ((argument < INT_MIN + m_saved_argument) || (m_saved_argument < INT_MIN + argument)) {
             m_has_error = true;
         }
         res = m_saved_argument - argument;
         break;
     case Operation::Multiply:
         if (argument != 0 && m_saved_argument != 0) {
-            if ((argument > MAX / m_saved_argument) || (m_saved_argument > MAX / argument)) {
+            if ((argument > INT_MAX / m_saved_argument) || (m_saved_argument > INT_MAX / argument)) {
                 m_has_error = true;
                 return argument;
             }
@@ -132,7 +130,7 @@ double Calculator::finish_operation(double argument)
         if (argument == 0.0) {
             m_has_error = true;
             return argument;
-        } else if ((argument > MIN * m_saved_argument) || (m_saved_argument > MIN * argument)) {
+        } else if ((argument > INT_MIN * m_saved_argument) || (m_saved_argument > INT_MIN * argument)) {
             m_has_error = true;
             return argument;
         }
