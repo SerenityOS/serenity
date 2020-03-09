@@ -26,8 +26,8 @@
 
 #include "Calculator.h"
 #include <AK/Assertions.h>
-#include <math.h>
 #include <climits>
+#include <math.h>
 
 Calculator::Calculator()
 {
@@ -105,24 +105,22 @@ double Calculator::finish_operation(double argument)
         return argument;
 
     case Operation::Add:
-        if ((argument > INT_MAX - m_saved_argument) || (m_saved_argument > INT_MAX + argument)) {
+        if (__builtin_add_overflow_p((int)m_saved_argument, (int)argument, (int)&res)) {
             m_has_error = true;
             return argument;
         }
         res = m_saved_argument + argument;
         break;
     case Operation::Subtract:
-        if ((argument < INT_MIN + m_saved_argument) || (m_saved_argument < INT_MIN + argument)) {
+        if (__builtin_sub_overflow_p((int)m_saved_argument, (int)argument, (int)&res)) {
             m_has_error = true;
         }
         res = m_saved_argument - argument;
         break;
     case Operation::Multiply:
-        if (argument != 0 && m_saved_argument != 0) {
-            if ((argument > INT_MAX / m_saved_argument) || (m_saved_argument > INT_MAX / argument)) {
-                m_has_error = true;
-                return argument;
-            }
+        if (__builtin_mul_overflow_p((int)m_saved_argument, (int)argument, (int)&res)) {
+            m_has_error = true;
+            return argument;
         }
         res = m_saved_argument * argument;
         break;
@@ -130,7 +128,7 @@ double Calculator::finish_operation(double argument)
         if (argument == 0.0) {
             m_has_error = true;
             return argument;
-        } else if ((argument > INT_MIN * m_saved_argument) || (m_saved_argument > INT_MIN * argument)) {
+        } else if (__builtin_mul_overflow_p((int)m_saved_argument, (int)(1 / argument), (int)&res)) {
             m_has_error = true;
             return argument;
         }
