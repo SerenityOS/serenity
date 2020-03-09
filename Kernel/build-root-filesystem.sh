@@ -140,6 +140,7 @@ cp ../Applications/DisplayProperties/DisplayProperties mnt/bin/DisplayProperties
 cp ../Applications/Welcome/Welcome mnt/bin/Welcome
 cp ../Applications/Help/Help mnt/bin/Help
 cp ../Applications/Browser/Browser mnt/bin/Browser
+cp ../Games/Solitaire/Solitaire mnt/bin/Solitaire
 cp ../Demos/HelloWorld/HelloWorld mnt/bin/HelloWorld
 cp ../Demos/WidgetGallery/WidgetGallery mnt/bin/WidgetGallery
 cp ../Demos/Fire/Fire mnt/bin/Fire
@@ -196,6 +197,7 @@ ln -s HackStudio mnt/bin/hs
 ln -s SystemMonitor mnt/bin/sm
 ln -s ProfileViewer mnt/bin/pv
 ln -s WebServer mnt/bin/ws
+ln -s Solitaire mnt/bin/sl
 echo "done"
 
 mkdir -p mnt/boot/
