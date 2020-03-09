@@ -33,7 +33,7 @@
 
 int main()
 {
-    // function foo() { return 1 + 2; }
+    // function foo() { return (1 + 2) + 3; }
     // foo();
     auto program = make<JS::Program>();
 
