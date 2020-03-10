@@ -72,6 +72,61 @@ bool Value::to_boolean() const
     }
 }
 
+Value greater_than(Value lhs, Value rhs)
+{
+    ASSERT(lhs.is_number());
+    ASSERT(rhs.is_number());
+    return Value(lhs.as_double() > rhs.as_double());
+}
+
+Value less_than(Value lhs, Value rhs)
+{
+    ASSERT(lhs.is_number());
+    ASSERT(rhs.is_number());
+    return Value(lhs.as_double() < rhs.as_double());
+}
+
+Value bitwise_and(Value lhs, Value rhs)
+{
+    ASSERT(lhs.is_number());
+    ASSERT(rhs.is_number());
+    return Value((i32)lhs.as_double() & (i32)rhs.as_double());
+}
+
+Value bitwise_or(Value lhs, Value rhs)
+{
+    ASSERT(lhs.is_number());
+    ASSERT(rhs.is_number());
+    return Value((i32)lhs.as_double() | (i32)rhs.as_double());
+}
+
+Value bitwise_xor(Value lhs, Value rhs)
+{
+    ASSERT(lhs.is_number());
+    ASSERT(rhs.is_number());
+    return Value((i32)lhs.as_double() ^ (i32)rhs.as_double());
+}
+
+Value bitwise_not(Value lhs)
+{
+    ASSERT(lhs.is_number());
+    return Value(~(i32)lhs.as_double());
+}
+
+Value left_shift(Value lhs, Value rhs)
+{
+    ASSERT(lhs.is_number());
+    ASSERT(rhs.is_number());
+    return Value((i32)lhs.as_double() << (i32)rhs.as_double());
+}
+
+Value right_shift(Value lhs, Value rhs)
+{
+    ASSERT(lhs.is_number());
+    ASSERT(rhs.is_number());
+    return Value((i32)lhs.as_double() >> (i32)rhs.as_double());
+}
+
 const LogStream& operator<<(const LogStream& stream, const Value& value)
 {
     return stream << value.to_string();
