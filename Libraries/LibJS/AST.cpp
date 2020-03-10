@@ -123,61 +123,6 @@ const Value typed_eq(const Value lhs, const Value rhs)
     ASSERT_NOT_REACHED();
 }
 
-Value greater(Value lhs, Value rhs)
-{
-    ASSERT(lhs.is_number());
-    ASSERT(rhs.is_number());
-    return Value(lhs.as_double() > rhs.as_double());
-}
-
-Value smaller(Value lhs, Value rhs)
-{
-    ASSERT(lhs.is_number());
-    ASSERT(rhs.is_number());
-    return Value(lhs.as_double() < rhs.as_double());
-}
-
-Value bit_and(Value lhs, Value rhs)
-{
-    ASSERT(lhs.is_number());
-    ASSERT(rhs.is_number());
-    return Value((i32)lhs.as_double() & (i32)rhs.as_double());
-}
-
-Value bit_or(Value lhs, Value rhs)
-{
-    ASSERT(lhs.is_number());
-    ASSERT(rhs.is_number());
-    return Value((i32)lhs.as_double() | (i32)rhs.as_double());
-}
-
-Value bit_xor(Value lhs, Value rhs)
-{
-    ASSERT(lhs.is_number());
-    ASSERT(rhs.is_number());
-    return Value((i32)lhs.as_double() ^ (i32)rhs.as_double());
-}
-
-Value bit_not(Value lhs)
-{
-    ASSERT(lhs.is_number());
-    return Value(~(i32)lhs.as_double());
-}
-
-Value bit_left(Value lhs, Value rhs)
-{
-    ASSERT(lhs.is_number());
-    ASSERT(rhs.is_number());
-    return Value((i32)lhs.as_double() << (i32)rhs.as_double());
-}
-
-Value bit_right(Value lhs, Value rhs)
-{
-    ASSERT(lhs.is_number());
-    ASSERT(rhs.is_number());
-    return Value((i32)lhs.as_double() >> (i32)rhs.as_double());
-}
-
 Value BinaryExpression::execute(Interpreter& interpreter) const
 {
     auto lhs_result = m_lhs->execute(interpreter);
@@ -192,20 +137,20 @@ Value BinaryExpression::execute(Interpreter& interpreter) const
         return typed_eq(lhs_result, rhs_result);
     case BinaryOp::TypedInequals:
         return Value(!typed_eq(lhs_result, rhs_result).to_boolean());
-    case BinaryOp::Greater:
-        return greater(lhs_result, rhs_result);
-    case BinaryOp::Smaller:
-        return smaller(lhs_result, rhs_result);
-    case BinaryOp::BitAnd:
-        return bit_and(lhs_result, rhs_result);
-    case BinaryOp::BitOr:
-        return bit_or(lhs_result, rhs_result);
-    case BinaryOp::BitXor:
-        return bit_xor(lhs_result, rhs_result);
-    case BinaryOp::BitLeftShift:
-        return bit_left(lhs_result, rhs_result);
-    case BinaryOp::BitRightShift:
-        return bit_right(lhs_result, rhs_result);
+    case BinaryOp::GreaterThan:
+        return greater_than(lhs_result, rhs_result);
+    case BinaryOp::LessThan:
+        return less_than(lhs_result, rhs_result);
+    case BinaryOp::BitwiseAnd:
+        return bitwise_and(lhs_result, rhs_result);
+    case BinaryOp::BitwiseOr:
+        return bitwise_or(lhs_result, rhs_result);
+    case BinaryOp::BitwiseXor:
+        return bitwise_xor(lhs_result, rhs_result);
+    case BinaryOp::LeftShift:
+        return left_shift(lhs_result, rhs_result);
+    case BinaryOp::RightShift:
+        return right_shift(lhs_result, rhs_result);
     }
 
     ASSERT_NOT_REACHED();
@@ -230,7 +175,7 @@ Value UnaryExpression::execute(Interpreter& interpreter) const
     auto lhs_result = m_lhs->execute(interpreter);
     switch (m_op) {
     case UnaryOp::BitNot:
-        return bit_not(lhs_result);
+        return bitwise_not(lhs_result);
     case UnaryOp::Not:
         return Value(!lhs_result.to_boolean());
     }
@@ -273,25 +218,25 @@ void BinaryExpression::dump(int indent) const
     case BinaryOp::TypedInequals:
         op_string = "!==";
         break;
-    case BinaryOp::Greater:
+    case BinaryOp::GreaterThan:
         op_string = ">";
         break;
-    case BinaryOp::Smaller:
+    case BinaryOp::LessThan:
         op_string = "<";
         break;
-    case BinaryOp::BitAnd:
+    case BinaryOp::BitwiseAnd:
         op_string = "&";
         break;
-    case BinaryOp::BitOr:
+    case BinaryOp::BitwiseOr:
         op_string = "|";
         break;
-    case BinaryOp::BitXor:
+    case BinaryOp::BitwiseXor:
         op_string = "^";
         break;
-    case BinaryOp::BitLeftShift:
+    case BinaryOp::LeftShift:
         op_string = "<<";
         break;
-    case BinaryOp::BitRightShift:
+    case BinaryOp::RightShift:
         op_string = ">>";
         break;
     }
