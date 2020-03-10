@@ -285,6 +285,35 @@ public:
         return {};
     }
 
+    Optional<size_t> find_best_fit(size_t minimum_length) const
+    {
+        size_t start = 0;
+        size_t best_region_start = 0;
+        size_t best_region_size = max_size;
+        bool found = false;
+        
+        while (true) {
+            // Look for the next block which is bigger than requested length.
+            auto length_of_found_range = find_next_range_of_unset_bits(start, minimum_length, best_region_size);
+            if (length_of_found_range.has_value()) {
+                if (best_region_size > length_of_found_range.value() || !found) {
+                    best_region_start = start;
+                    best_region_size = length_of_found_range.value();
+                    found = true;
+                }
+                start += length_of_found_range.value();
+            } else {
+                // There are no ranges which can fit requested length.
+                break;
+            }
+        }
+
+        if (found) {
+            return best_region_start;
+        }
+        return {};
+    }
+
     Bitmap()
         : m_size(0)
         , m_owned(true)
