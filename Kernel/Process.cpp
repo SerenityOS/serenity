@@ -1818,15 +1818,19 @@ int Process::sys$fcntl(int fd, int cmd, u32 arg)
     return 0;
 }
 
-int Process::sys$fstat(int fd, stat* statbuf)
+int Process::sys$fstat(int fd, stat* user_statbuf)
 {
     REQUIRE_PROMISE(stdio);
-    if (!validate_write_typed(statbuf))
+    if (!validate_write_typed(user_statbuf))
         return -EFAULT;
     auto description = file_description(fd);
     if (!description)
         return -EBADF;
-    return description->fstat(*statbuf);
+    stat buffer;
+    memset(&buffer, 0, sizeof(buffer));
+    int rc = description->fstat(buffer);
+    copy_to_user(user_statbuf, &buffer);
+    return rc;
 }
 
 int Process::sys$stat(const Syscall::SC_stat_params* user_params)
