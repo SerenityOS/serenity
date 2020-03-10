@@ -95,9 +95,6 @@ public:
     void did_change_theme();
 
 private:
-    const Gfx::Font& menu_font() const;
-    const Gfx::Font& app_menu_font() const;
-
     void close_menus(const Vector<Menu*>&);
 
     const Window& window() const { return *m_window; }
