@@ -74,16 +74,6 @@ bool MenuManager::is_open(const Menu& menu) const
     return false;
 }
 
-const Gfx::Font& MenuManager::menu_font() const
-{
-    return Gfx::Font::default_font();
-}
-
-const Gfx::Font& MenuManager::app_menu_font() const
-{
-    return Gfx::Font::default_bold_font();
-}
-
 void MenuManager::draw()
 {
     auto& wm = WindowManager::the();
@@ -100,7 +90,7 @@ void MenuManager::draw()
 
     painter.fill_rect(menubar_rect, palette.window());
     painter.draw_line({ 0, menubar_rect.bottom() }, { menubar_rect.right(), menubar_rect.bottom() }, palette.threed_shadow1());
-    int index = 0;
+
     for_each_active_menubar_menu([&](Menu& menu) {
         Color text_color = palette.window_text();
         if (is_open(menu)) {
@@ -111,10 +101,9 @@ void MenuManager::draw()
         painter.draw_text(
             menu.text_rect_in_menubar(),
             menu.name(),
-            index == 1 ? app_menu_font() : menu_font(),
+            menu.title_font(),
             Gfx::TextAlignment::CenterLeft,
             text_color);
-        ++index;
         return IterationDecision::Continue;
     });
 
@@ -382,13 +371,11 @@ void MenuManager::set_current_menubar(MenuBar* menubar)
     dbg() << "[WM] Current menubar is now " << menubar;
 #endif
     Gfx::Point next_menu_location { MenuManager::menubar_menu_margin() / 2, 0 };
-    int index = 0;
     for_each_active_menubar_menu([&](Menu& menu) {
-        int text_width = index == 1 ? Gfx::Font::default_bold_font().width(menu.name()) : Gfx::Font::default_font().width(menu.name());
+        int text_width = menu.title_font().width(menu.name());
         menu.set_rect_in_menubar({ next_menu_location.x() - MenuManager::menubar_menu_margin() / 2, 0, text_width + MenuManager::menubar_menu_margin(), menubar_rect().height() - 1 });
         menu.set_text_rect_in_menubar({ next_menu_location, { text_width, menubar_rect().height() } });
         next_menu_location.move_by(menu.rect_in_menubar().width(), 0);
-        ++index;
         return IterationDecision::Continue;
     });
     refresh();

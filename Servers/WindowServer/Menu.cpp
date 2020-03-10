@@ -56,6 +56,16 @@ Menu::~Menu()
 {
 }
 
+void Menu::set_title_font(const Gfx::Font& font)
+{
+    m_title_font = &font;
+}
+
+const Gfx::Font& Menu::title_font() const
+{
+    return *m_title_font;
+}
+
 const Gfx::Font& Menu::font() const
 {
     return Gfx::Font::default_font();
