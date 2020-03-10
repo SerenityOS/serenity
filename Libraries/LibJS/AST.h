@@ -29,6 +29,7 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
+#include <AK/Traits.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Value.h>
 
@@ -274,20 +275,26 @@ private:
 class Identifier final : public ASTNode {
 public:
     explicit Identifier(String string)
-        : m_string(move(string))
+        : m_name(move(string))
     {
     }
 
-    const String& string() const { return m_string; }
+    const String& name() const { return m_name; }
 
     virtual Value execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual bool is_identifier() const override { return true; }
+    bool is_valid() const;
 
 private:
     virtual const char* class_name() const override { return "Identifier"; }
 
-    String m_string;
+    const String m_name;
+};
+
+struct IdentifierTraits {
+    static unsigned hash(const Identifier& identifier) { return Traits<String>::hash(identifier.name()); }
+    static bool equals(const Identifier& a, const Identifier& b) { return a.name() == b.name(); }
 };
 
 class CallExpression : public Expression {

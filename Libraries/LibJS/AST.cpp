@@ -399,19 +399,30 @@ void WhileStatement::dump(int indent) const
 
 Value Identifier::execute(Interpreter& interpreter) const
 {
-    return interpreter.get_variable(string());
+    return interpreter.get_variable(name());
 }
 
 void Identifier::dump(int indent) const
 {
     print_indent(indent);
-    printf("Identifier \"%s\"\n", m_string.characters());
+    printf("Identifier \"%s\"\n", m_name.characters());
+}
+
+bool Identifier::is_valid() const
+{
+    if (m_name.is_empty() || (m_name[0] >= '0' && m_name[0] <= '9'))
+        return false;
+    for (const auto c : m_name) {
+        if (!((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '$' || c == '_'))
+            return false;
+    }
+    return true;
 }
 
 Value AssignmentExpression::execute(Interpreter& interpreter) const
 {
     ASSERT(m_lhs->is_identifier());
-    auto name = static_cast<const Identifier&>(*m_lhs).string();
+    auto name = static_cast<const Identifier&>(*m_lhs).name();
     auto rhs_result = m_rhs->execute(interpreter);
 
     switch (m_op) {
@@ -440,14 +451,13 @@ void AssignmentExpression::dump(int indent) const
 
 Value VariableDeclaration::execute(Interpreter& interpreter) const
 {
-    interpreter.declare_variable(name().string());
+    interpreter.declare_variable(name().name());
     if (m_initializer) {
         auto initalizer_result = m_initializer->execute(interpreter);
-        interpreter.set_variable(name().string(), initalizer_result);
+        interpreter.set_variable(name().name(), initalizer_result);
     }
     return js_undefined();
 }
-
 
 void VariableDeclaration::dump(int indent) const
 {
