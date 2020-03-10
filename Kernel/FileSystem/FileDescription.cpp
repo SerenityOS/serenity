@@ -76,7 +76,6 @@ FileDescription::~FileDescription()
 
 KResult FileDescription::fstat(stat& buffer)
 {
-    SmapDisabler disabler;
     if (is_fifo()) {
         memset(&buffer, 0, sizeof(buffer));
         buffer.st_mode = 001000;
