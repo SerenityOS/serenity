@@ -150,7 +150,16 @@ void* kmalloc_impl(size_t size)
     size_t chunks_needed = (real_size + CHUNK_SIZE - 1) / CHUNK_SIZE;
 
     Bitmap bitmap_wrapper = Bitmap::wrap(alloc_map, POOL_SIZE / CHUNK_SIZE);
-    auto first_chunk = bitmap_wrapper.find_first_fit(chunks_needed);
+    Optional<size_t> first_chunk;
+
+    // Choose the right politic for allocation.
+    constexpr u32 best_fit_threshold = 128;
+    if (chunks_needed < best_fit_threshold) {
+        first_chunk = bitmap_wrapper.find_first_fit(chunks_needed);
+    } else {
+        first_chunk = bitmap_wrapper.find_best_fit(chunks_needed);
+    }
+
     if (!first_chunk.has_value()) {
         klog() << "kmalloc(): PANIC! Out of memory (no suitable block for size " << size << ")";
         Kernel::dump_backtrace();
