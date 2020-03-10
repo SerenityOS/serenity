@@ -25,6 +25,9 @@
  */
 
 #include <AK/NonnullOwnPtr.h>
+#include <AK/NonnullOwnPtrVector.h>
+#include <AK/String.h>
+#include <AK/Vector.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Object.h>
@@ -32,7 +35,7 @@
 #include <LibJS/Value.h>
 #include <stdio.h>
 
-#define PROGRAM 4
+#define PROGRAM 6
 
 static void build_program(JS::Program&, JS::Heap&);
 
@@ -161,5 +164,29 @@ void build_program(JS::Program& program, JS::Heap& heap)
     program.append<JS::MemberExpression>(
         make<JS::Literal>(JS::Value(js_string(heap, "hello friends"))),
         make<JS::Identifier>("length"));
+}
+#elif PROGRAM == 6
+void build_program(JS::Program& program, JS::Heap&)
+{
+    // function foo(a, b) {
+    //   return a + b;
+    // }
+    // foo(1, 2 + 3);
+
+    auto block = make<JS::BlockStatement>();
+    block->append<JS::ReturnStatement>(
+        make<JS::BinaryExpression>(
+            JS::BinaryOp::Plus,
+            make<JS::Identifier>("a"),
+            make<JS::Identifier>("b")));
+    program.append<JS::FunctionDeclaration>("foo", move(block), Vector<String> { "a", "b" });
+
+    NonnullOwnPtrVector<JS::Expression> arguments;
+    arguments.append(make<JS::Literal>(JS::Value(1)));
+    arguments.append(make<JS::BinaryExpression>(
+        JS::BinaryOp::Plus,
+        make<JS::Literal>(JS::Value(2)),
+        make<JS::Literal>(JS::Value(3))));
+    program.append<JS::CallExpression>("foo", move(arguments));
 }
 #endif
