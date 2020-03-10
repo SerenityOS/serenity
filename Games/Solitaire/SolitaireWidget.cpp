@@ -212,7 +212,7 @@ void SolitaireWidget::mousedown_event(GUI::MouseEvent& event)
                         update_score(5);
                         m_has_to_repaint = true;
                     }
-                } else {
+                } else if (m_focused_cards.is_empty()) {
                     to_check.add_all_grabbed_cards(click_location, m_focused_cards);
                     m_mouse_down_location = click_location;
                     to_check.set_focused(true);
@@ -313,8 +313,10 @@ void SolitaireWidget::doubleclick_event(GUI::MouseEvent& event)
         return;
     }
 
-    auto click_location = event.position();
+    if (!m_focused_cards.is_empty())
+        return;
 
+    auto click_location = event.position();
     for (auto& to_check : m_stacks) {
         if (to_check.type() == CardStack::Type::Foundation)
             continue;
