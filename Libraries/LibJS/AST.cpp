@@ -70,7 +70,7 @@ Value IfStatement::execute(Interpreter& interpreter) const
 {
     auto predicate_result = m_predicate->execute(interpreter);
 
-    if (predicate_result.as_bool())
+    if (predicate_result.to_boolean())
         return interpreter.run(*m_consequent);
     else
         return interpreter.run(*m_alternate);
@@ -79,7 +79,7 @@ Value IfStatement::execute(Interpreter& interpreter) const
 Value WhileStatement::execute(Interpreter& interpreter) const
 {
     Value last_value = js_undefined();
-    while (m_predicate->execute(interpreter).as_bool()) {
+    while (m_predicate->execute(interpreter).to_boolean()) {
         last_value = interpreter.run(*m_body);
     }
 
@@ -213,9 +213,8 @@ Value BinaryExpression::execute(Interpreter& interpreter) const
 
 Value LogicalExpression::execute(Interpreter& interpreter) const
 {
-    auto lhs_result = m_lhs->execute(interpreter).as_bool();
-
-    auto rhs_result = m_rhs->execute(interpreter).as_bool();
+    auto lhs_result = m_lhs->execute(interpreter).to_boolean();
+    auto rhs_result = m_rhs->execute(interpreter).to_boolean();
     switch (m_op) {
     case LogicalOp::And:
         return Value(lhs_result && rhs_result);
