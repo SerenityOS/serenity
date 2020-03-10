@@ -189,7 +189,7 @@ enum class BinaryOp {
 
 class BinaryExpression : public Expression {
 public:
-    BinaryExpression(BinaryOp op, NonnullOwnPtr<ASTNode> lhs, NonnullOwnPtr<ASTNode> rhs)
+    BinaryExpression(BinaryOp op, NonnullOwnPtr<Expression> lhs, NonnullOwnPtr<Expression> rhs)
         : m_op(op)
         , m_lhs(move(lhs))
         , m_rhs(move(rhs))
@@ -203,8 +203,8 @@ private:
     virtual const char* class_name() const override { return "BinaryExpression"; }
 
     BinaryOp m_op;
-    NonnullOwnPtr<ASTNode> m_lhs;
-    NonnullOwnPtr<ASTNode> m_rhs;
+    NonnullOwnPtr<Expression> m_lhs;
+    NonnullOwnPtr<Expression> m_rhs;
 };
 
 enum class LogicalOp {
@@ -271,7 +271,7 @@ private:
     Value m_value;
 };
 
-class Identifier final : public ASTNode {
+class Identifier final : public Expression {
 public:
     explicit Identifier(String string)
         : m_string(move(string))
@@ -314,7 +314,7 @@ enum class AssignmentOp {
 
 class AssignmentExpression : public Expression {
 public:
-    AssignmentExpression(AssignmentOp op, NonnullOwnPtr<ASTNode> lhs, NonnullOwnPtr<ASTNode> rhs)
+    AssignmentExpression(AssignmentOp op, NonnullOwnPtr<ASTNode> lhs, NonnullOwnPtr<Expression> rhs)
         : m_op(op)
         , m_lhs(move(lhs))
         , m_rhs(move(rhs))
@@ -329,12 +329,12 @@ private:
 
     AssignmentOp m_op;
     NonnullOwnPtr<ASTNode> m_lhs;
-    NonnullOwnPtr<ASTNode> m_rhs;
+    NonnullOwnPtr<Expression> m_rhs;
 };
 
 class VariableDeclaration : public ASTNode {
 public:
-    VariableDeclaration(NonnullOwnPtr<Identifier> name, OwnPtr<ASTNode> initializer)
+    VariableDeclaration(NonnullOwnPtr<Identifier> name, OwnPtr<Expression> initializer)
         : m_name(move(name))
         , m_initializer(move(initializer))
     {
@@ -349,7 +349,7 @@ private:
     virtual const char* class_name() const override { return "VariableDeclaration"; }
 
     NonnullOwnPtr<Identifier> m_name;
-    OwnPtr<ASTNode> m_initializer;
+    OwnPtr<Expression> m_initializer;
 };
 
 class ObjectExpression : public Expression {
