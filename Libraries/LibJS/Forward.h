@@ -36,5 +36,6 @@ class Interpreter;
 class Object;
 class ScopeNode;
 class Value;
+enum class DeclarationType;
 
 }
