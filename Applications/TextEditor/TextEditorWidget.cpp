@@ -485,8 +485,10 @@ bool TextEditorWidget::request_close()
         return true;
     auto result = GUI::MessageBox::show("The document has been modified. Would you like to save?", "Unsaved changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel, window());
 
-    if (result == GUI::MessageBox::ExecYes)
+    if (result == GUI::MessageBox::ExecYes) {
         m_save_action->activate();
+        return true;
+    }
 
     if (result == GUI::MessageBox::ExecNo)
         return true;
