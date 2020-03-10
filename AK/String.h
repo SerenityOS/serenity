@@ -57,6 +57,8 @@ namespace AK {
 
 class String {
 public:
+    using ConstIterator = const char*;
+
     ~String() {}
 
     String() {}
@@ -144,11 +146,13 @@ public:
     bool is_empty() const { return length() == 0; }
     size_t length() const { return m_impl ? m_impl->length() : 0; }
     const char* characters() const { return m_impl ? m_impl->characters() : nullptr; }
-    char operator[](size_t i) const
+    const char& operator[](size_t i) const
     {
-        ASSERT(m_impl);
         return (*m_impl)[i];
     }
+
+    ConstIterator begin() const { return characters(); }
+    ConstIterator end() const { return begin() + length(); }
 
     bool starts_with(const StringView&) const;
     bool ends_with(const StringView&) const;
@@ -302,5 +306,5 @@ String escape_html_entities(const StringView& html);
 }
 
 using AK::CaseInsensitiveStringTraits;
-using AK::String;
 using AK::escape_html_entities;
+using AK::String;
