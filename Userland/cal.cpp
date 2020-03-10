@@ -25,6 +25,7 @@
  */
 
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DateTime.h>
 #include <stdio.h>
 #include <time.h>
 
@@ -41,26 +42,6 @@ int target_day;
 
 int current_year;
 int current_month;
-
-int day_of_week(int day, int month, int year)
-{
-    static const int seek_table[] = { 0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4 };
-    if (month < 3)
-        --year;
-
-    return (year + year / 4 - year / 100 + year / 400 + seek_table[month - 1] + day) % 7;
-}
-
-int get_number_of_days(int month, int year)
-{
-    bool is_leap_year = ((year % 400 == 0) || (year % 4 == 0 && year % 100 != 0));
-    bool is_long_month = (month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12);
-
-    if (month == 2)
-        return is_leap_year ? 29 : 28;
-
-    return is_long_month ? 31 : 30;
-}
 
 void append_to_print(char* buffer, int row, int column, char* text)
 {
@@ -85,8 +66,8 @@ void insert_month_to_print(int column, int month, int year)
     printing_row++;
 
     int day_to_print = 1;
-    int first_day_of_week_for_month = day_of_week(1, month, year);
-    int days_in_the_month = get_number_of_days(month, year);
+    int first_day_of_week_for_month = Core::DateTime::day_of_week(1, month, year);
+    int days_in_the_month = Core::DateTime::get_number_of_days_in_month(month, year);
     int last_written_chars = 0;
     for (int i = 1; day_to_print <= days_in_the_month; ++i) {
         if (i - 1 < first_day_of_week_for_month) {

@@ -51,6 +51,26 @@ DateTime DateTime::from_timestamp(time_t timestamp)
     return dt;
 }
 
+int DateTime::day_of_week(int year, int month, int day)
+{
+    static const int seek_table[] = { 0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4 };
+    if (month < 3)
+        --year;
+
+    return (year + year / 4 - year / 100 + year / 400 + seek_table[month - 1] + day) % 7;
+}
+
+int DateTime::get_number_of_days_in_month(int year, int month)
+{
+    bool is_leap_year = ((year % 400 == 0) || (year % 4 == 0 && year % 100 != 0));
+    bool is_long_month = (month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12);
+
+    if (month == 2)
+        return is_leap_year ? 29 : 28;
+
+    return is_long_month ? 31 : 30;
+}
+
 String DateTime::to_string() const
 {
     return String::format("%04u-%02u-%02u %02u:%02u:%02u", m_year, m_month, m_day, m_hour, m_minute, m_second);

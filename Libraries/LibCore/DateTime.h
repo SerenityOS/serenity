@@ -47,6 +47,8 @@ public:
 
     static DateTime now();
     static DateTime from_timestamp(time_t);
+    static int day_of_week(int year, int month, int day);
+    static int get_number_of_days_in_month(int year, int month);
 
 private:
     time_t m_timestamp { 0 };
