@@ -191,7 +191,7 @@ Value BinaryExpression::execute(Interpreter& interpreter) const
     case BinaryOp::TypedEquals:
         return typed_eq(lhs_result, rhs_result);
     case BinaryOp::TypedInequals:
-        return Value(!typed_eq(lhs_result, rhs_result).as_bool());
+        return Value(!typed_eq(lhs_result, rhs_result).to_boolean());
     case BinaryOp::Greater:
         return greater(lhs_result, rhs_result);
     case BinaryOp::Smaller:
@@ -232,7 +232,7 @@ Value UnaryExpression::execute(Interpreter& interpreter) const
     case UnaryOp::BitNot:
         return bit_not(lhs_result);
     case UnaryOp::Not:
-        return Value(!lhs_result.as_bool());
+        return Value(!lhs_result.to_boolean());
     }
 
     ASSERT_NOT_REACHED();
