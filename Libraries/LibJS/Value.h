@@ -113,6 +113,7 @@ public:
     }
 
     String to_string() const;
+    bool to_boolean() const;
 
 private:
     Type m_type { Type::Undefined };

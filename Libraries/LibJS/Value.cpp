@@ -53,6 +53,25 @@ String Value::to_string() const
     ASSERT_NOT_REACHED();
 }
 
+bool Value::to_boolean() const
+{
+    switch (m_type) {
+    case Type::Boolean:
+        return m_value.as_bool;
+    case Type::Number:
+        return m_value.as_double == 0 || m_value.as_double == -0;
+    case Type::Null:
+    case Type::Undefined:
+        return false;
+    case Type::String:
+        return String(as_string()).is_empty();
+    case Type::Object:
+        return true;
+    default:
+        ASSERT_NOT_REACHED();
+    }
+}
+
 const LogStream& operator<<(const LogStream& stream, const Value& value)
 {
     return stream << value.to_string();
