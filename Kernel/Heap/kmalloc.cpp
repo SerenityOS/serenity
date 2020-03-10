@@ -30,6 +30,8 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/Bitmap.h>
+#include <AK/Optional.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Heap/kmalloc.h>
@@ -109,6 +111,23 @@ void* kmalloc_page_aligned(size_t size)
     return ptr;
 }
 
+inline void* kmalloc_allocate(size_t first_chunk, size_t chunks_needed)
+{
+    auto* a = (AllocationHeader*)(BASE_PHYSICAL + (first_chunk * CHUNK_SIZE));
+    u8* ptr = a->data;
+    a->allocation_size_in_chunks = chunks_needed;
+
+    Bitmap bitmap_wrapper = Bitmap::wrap(alloc_map, POOL_SIZE / CHUNK_SIZE);
+    bitmap_wrapper.set_range(first_chunk, chunks_needed, true);
+
+    sum_alloc += a->allocation_size_in_chunks * CHUNK_SIZE;
+    sum_free -= a->allocation_size_in_chunks * CHUNK_SIZE;
+#ifdef SANITIZE_KMALLOC
+    memset(ptr, KMALLOC_SCRUB_BYTE, (a->allocation_size_in_chunks * CHUNK_SIZE) - sizeof(AllocationHeader));
+#endif
+    return ptr;
+}
+
 void* kmalloc_impl(size_t size)
 {
     Kernel::InterruptDisabler disabler;
@@ -128,55 +147,17 @@ void* kmalloc_impl(size_t size)
         Kernel::hang();
     }
 
-    size_t chunks_needed = real_size / CHUNK_SIZE;
-    if (real_size % CHUNK_SIZE)
-        ++chunks_needed;
+    size_t chunks_needed = (real_size + CHUNK_SIZE - 1) / CHUNK_SIZE;
 
-    size_t chunks_here = 0;
-    size_t first_chunk = 0;
-
-    for (size_t i = 0; i < (POOL_SIZE / CHUNK_SIZE / 8); ++i) {
-        if (alloc_map[i] == 0xff) {
-            // Skip over completely full bucket.
-            chunks_here = 0;
-            continue;
-        }
-        // FIXME: This scan can be optimized further with LZCNT.
-        for (size_t j = 0; j < 8; ++j) {
-            if (!(alloc_map[i] & (1 << j))) {
-                if (chunks_here == 0) {
-                    // Mark where potential allocation starts.
-                    first_chunk = i * 8 + j;
-                }
-
-                ++chunks_here;
-
-                if (chunks_here == chunks_needed) {
-                    auto* a = (AllocationHeader*)(BASE_PHYSICAL + (first_chunk * CHUNK_SIZE));
-                    u8* ptr = a->data;
-                    a->allocation_size_in_chunks = chunks_needed;
-
-                    for (size_t k = first_chunk; k < (first_chunk + chunks_needed); ++k) {
-                        alloc_map[k / 8] |= 1 << (k % 8);
-                    }
-
-                    sum_alloc += a->allocation_size_in_chunks * CHUNK_SIZE;
-                    sum_free -= a->allocation_size_in_chunks * CHUNK_SIZE;
-#ifdef SANITIZE_KMALLOC
-                    memset(ptr, KMALLOC_SCRUB_BYTE, (a->allocation_size_in_chunks * CHUNK_SIZE) - sizeof(AllocationHeader));
-#endif
-                    return ptr;
-                }
-            } else {
-                // This is in use, so restart chunks_here counter.
-                chunks_here = 0;
-            }
-        }
+    Bitmap bitmap_wrapper = Bitmap::wrap(alloc_map, POOL_SIZE / CHUNK_SIZE);
+    auto first_chunk = bitmap_wrapper.find_first_fit(chunks_needed);
+    if (!first_chunk.has_value()) {
+        klog() << "kmalloc(): PANIC! Out of memory (no suitable block for size " << size << ")";
+        Kernel::dump_backtrace();
+        Kernel::hang();
     }
 
-    klog() << "kmalloc(): PANIC! Out of memory (no suitable block for size " << size << ")";
-    Kernel::dump_backtrace();
-    Kernel::hang();
+    return kmalloc_allocate(first_chunk.value(), chunks_needed);
 }
 
 void kfree(void* ptr)
@@ -190,8 +171,8 @@ void kfree(void* ptr)
     auto* a = (AllocationHeader*)((((u8*)ptr) - sizeof(AllocationHeader)));
     FlatPtr start = ((FlatPtr)a - (FlatPtr)BASE_PHYSICAL) / CHUNK_SIZE;
 
-    for (size_t k = start; k < (start + a->allocation_size_in_chunks); ++k)
-        alloc_map[k / 8] &= ~(1 << (k % 8));
+    Bitmap bitmap_wrapper = Bitmap::wrap(alloc_map, POOL_SIZE / CHUNK_SIZE);
+    bitmap_wrapper.set_range(start, a->allocation_size_in_chunks, false);
 
     sum_alloc -= a->allocation_size_in_chunks * CHUNK_SIZE;
     sum_free += a->allocation_size_in_chunks * CHUNK_SIZE;
