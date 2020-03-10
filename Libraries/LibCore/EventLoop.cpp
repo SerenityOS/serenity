@@ -28,6 +28,7 @@
 #include <AK/IDAllocator.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <AK/NeverDestroyed.h>
 #include <AK/Time.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
@@ -73,7 +74,7 @@ struct EventLoop::Private {
 
 static EventLoop* s_main_event_loop;
 static Vector<EventLoop*>* s_event_loop_stack;
-static IDAllocator s_id_allocator;
+static NeverDestroyed<IDAllocator> s_id_allocator;
 static HashMap<int, NonnullOwnPtr<EventLoopTimer>>* s_timers;
 static HashTable<Notifier*>* s_notifiers;
 int EventLoop::s_wake_pipe_fds[2];
@@ -85,7 +86,7 @@ class RPCClient : public Object {
 public:
     explicit RPCClient(RefPtr<LocalSocket> socket)
         : m_socket(move(socket))
-        , m_client_id(s_id_allocator.allocate())
+        , m_client_id(s_id_allocator->allocate())
     {
         s_rpc_clients.set(m_client_id, this);
         add_child(*m_socket);
@@ -201,7 +202,7 @@ public:
     void shutdown()
     {
         s_rpc_clients.remove(m_client_id);
-        s_id_allocator.deallocate(m_client_id);
+        s_id_allocator->deallocate(m_client_id);
     }
 
 private:
@@ -524,7 +525,7 @@ int EventLoop::register_timer(Object& object, int milliseconds, bool should_relo
     timer->reload(now);
     timer->should_reload = should_reload;
     timer->fire_when_not_visible = fire_when_not_visible;
-    int timer_id = s_id_allocator.allocate();
+    int timer_id = s_id_allocator->allocate();
     timer->timer_id = timer_id;
     s_timers->set(timer_id, move(timer));
     return timer_id;
@@ -532,7 +533,7 @@ int EventLoop::register_timer(Object& object, int milliseconds, bool should_relo
 
 bool EventLoop::unregister_timer(int timer_id)
 {
-    s_id_allocator.deallocate(timer_id);
+    s_id_allocator->deallocate(timer_id);
     auto it = s_timers->find(timer_id);
     if (it == s_timers->end())
         return false;
