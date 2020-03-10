@@ -41,4 +41,15 @@ MenuBar::~MenuBar()
 {
 }
 
+void MenuBar::add_menu(Menu& menu)
+{
+    menu.set_menubar(this);
+
+    // NOTE: We assume that the first menu is the App menu, which has a bold font.
+    if (m_menus.is_empty())
+        menu.set_title_font(Gfx::Font::default_bold_font());
+
+    m_menus.append(&menu);
+}
+
 }

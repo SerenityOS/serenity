@@ -41,11 +41,7 @@ public:
     ClientConnection& client() { return m_client; }
     const ClientConnection& client() const { return m_client; }
     int menubar_id() const { return m_menubar_id; }
-    void add_menu(Menu& menu)
-    {
-        menu.set_menubar(this);
-        m_menus.append(&menu);
-    }
+    void add_menu(Menu&);
 
     template<typename Callback>
     void for_each_menu(Callback callback)
