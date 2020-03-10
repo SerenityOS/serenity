@@ -46,6 +46,7 @@ namespace GUI {
     __TOKEN(Semicolon)             \
     __TOKEN(DoubleQuotedString)    \
     __TOKEN(SingleQuotedString)    \
+    __TOKEN(EscapeSequence)        \
     __TOKEN(Comment)               \
     __TOKEN(Number)                \
     __TOKEN(Keyword)               \

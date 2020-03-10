@@ -243,6 +243,61 @@ Vector<CppToken> CppLexer::lex()
         tokens.append(token);
     };
 
+    auto match_escape_sequence = [&]() -> size_t {
+        switch (peek(1)) {
+        case '\'':
+        case '"':
+        case '?':
+        case '\\':
+        case 'a':
+        case 'b':
+        case 'f':
+        case 'n':
+        case 'r':
+        case 't':
+        case 'v':
+            return 2;
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7': {
+            size_t octal_digits = 1;
+            for (size_t i = 0; i < 2; ++i) {
+                char next = peek(2 + i);
+                if (next < '0' || next > '7')
+                    break;
+                ++octal_digits;
+            }
+            return 1 + octal_digits;
+        }
+        case 'x': {
+            size_t hex_digits = 0;
+            for (size_t i = 0; i < 2; ++i) {
+                if (!isxdigit(peek(2 + i)))
+                    break;
+                ++hex_digits;
+            }
+            return 2 + hex_digits;
+        }
+        case 'u': {
+            bool is_unicode = true;
+            for (size_t i = 0; i < 4; ++i) {
+                if (!isxdigit(peek(2 + i))) {
+                    is_unicode = false;
+                    break;
+                }
+            }
+            return is_unicode ? 6 : 0;
+        }
+        default:
+            return 0;
+        }
+    };
+
     while (m_index < m_input.length()) {
         auto ch = peek();
         if (isspace(ch)) {
@@ -328,6 +383,19 @@ Vector<CppToken> CppLexer::lex()
             begin_token();
             consume();
             while (peek()) {
+                if (peek() == '\\') {
+                    size_t escape = match_escape_sequence();
+                    if (escape > 0) {
+                        commit_token(CppToken::Type::DoubleQuotedString);
+                        begin_token();
+                        for (size_t i = 0; i < escape; ++i)
+                            consume();
+                        commit_token(CppToken::Type::EscapeSequence);
+                        begin_token();
+                        continue;
+                    }
+                }
+
                 if (consume() == '"')
                     break;
             }
@@ -338,6 +406,19 @@ Vector<CppToken> CppLexer::lex()
             begin_token();
             consume();
             while (peek()) {
+                if (peek() == '\\') {
+                    size_t escape = match_escape_sequence();
+                    if (escape > 0) {
+                        commit_token(CppToken::Type::SingleQuotedString);
+                        begin_token();
+                        for (size_t i = 0; i < escape; ++i)
+                            consume();
+                        commit_token(CppToken::Type::EscapeSequence);
+                        begin_token();
+                        continue;
+                    }
+                }
+
                 if (consume() == '\'')
                     break;
             }
