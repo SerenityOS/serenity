@@ -136,6 +136,15 @@ inline Value js_null()
     return Value(Value::Type::Null);
 }
 
+Value greater_than(Value lhs, Value rhs);
+Value less_than(Value lhs, Value rhs);
+Value bitwise_and(Value lhs, Value rhs);
+Value bitwise_or(Value lhs, Value rhs);
+Value bitwise_xor(Value lhs, Value rhs);
+Value bitwise_not(Value);
+Value left_shift(Value lhs, Value rhs);
+Value right_shift(Value lhs, Value rhs);
+
 const LogStream& operator<<(const LogStream&, const Value&);
 
 }

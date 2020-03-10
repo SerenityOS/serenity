@@ -178,13 +178,13 @@ enum class BinaryOp {
     Minus,
     TypedEquals,
     TypedInequals,
-    Greater,
-    Smaller,
-    BitAnd,
-    BitOr,
-    BitXor,
-    BitLeftShift,
-    BitRightShift,
+    GreaterThan,
+    LessThan,
+    BitwiseAnd,
+    BitwiseOr,
+    BitwiseXor,
+    LeftShift,
+    RightShift,
 };
 
 class BinaryExpression : public Expression {
