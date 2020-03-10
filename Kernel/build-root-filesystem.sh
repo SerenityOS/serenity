@@ -135,6 +135,7 @@ cp ../Applications/Piano/Piano mnt/bin/Piano
 cp ../Applications/SystemMenu/SystemMenu mnt/bin/SystemMenu
 cp ../Applications/ChanViewer/ChanViewer mnt/bin/ChanViewer
 cp ../Applications/Calculator/Calculator mnt/bin/Calculator
+cp ../Applications/Calendar/Calendar mnt/bin/Calendar
 cp ../Applications/SoundPlayer/SoundPlayer mnt/bin/SoundPlayer
 cp ../Applications/DisplayProperties/DisplayProperties mnt/bin/DisplayProperties
 cp ../Applications/Welcome/Welcome mnt/bin/Welcome
@@ -189,6 +190,7 @@ ln -s Piano mnt/bin/pi
 ln -s SystemDialog mnt/bin/sd
 ln -s ChanViewer mnt/bin/cv
 ln -s Calculator mnt/bin/calc
+ln -s Calendar mnt/bin/calendar
 ln -s Inspector mnt/bin/ins
 ln -s SoundPlayer mnt/bin/sp
 ln -s Help mnt/bin/help
