@@ -34,6 +34,8 @@ namespace AK {
 
 class StringView {
 public:
+    using ConstIterator = const char*;
+
     StringView() {}
     StringView(const char* characters, size_t length)
         : m_characters(characters)
@@ -58,7 +60,10 @@ public:
     bool is_empty() const { return m_length == 0; }
     const char* characters_without_null_termination() const { return m_characters; }
     size_t length() const { return m_length; }
-    char operator[](size_t index) const { return m_characters[index]; }
+    const char& operator[](size_t index) const { return m_characters[index]; }
+
+    ConstIterator begin() const { return characters_without_null_termination(); }
+    ConstIterator end() const { return begin() + length(); }
 
     unsigned hash() const;
 
