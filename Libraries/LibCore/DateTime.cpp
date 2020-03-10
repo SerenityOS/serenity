@@ -36,6 +36,22 @@ DateTime DateTime::now()
     return from_timestamp(time(nullptr));
 }
 
+DateTime DateTime::create(unsigned year, unsigned month, unsigned day, unsigned hour, unsigned minute, unsigned second)
+{
+    DateTime dt;
+    dt.m_year = year;
+    dt.m_month = month;
+    dt.m_day = day;
+    dt.m_hour = hour;
+    dt.m_minute = minute;
+    dt.m_second = second;
+
+    struct tm tm = { (int)second, (int)minute, (int)hour, (int)day, (int)month, (int)year, (int)dt.weekday(), (int)dt.day_of_year(), -1 };
+    dt.m_timestamp = mktime(&tm);
+
+    return dt;
+}
+
 DateTime DateTime::from_timestamp(time_t timestamp)
 {
     struct tm tm;
@@ -49,6 +65,55 @@ DateTime DateTime::from_timestamp(time_t timestamp)
     dt.m_second = tm.tm_sec;
     dt.m_timestamp = timestamp;
     return dt;
+}
+
+unsigned DateTime::weekday() const
+{
+    int target_year = m_year;
+    static const int seek_table[] = { 0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4 };
+    if (m_month < 3)
+        --target_year;
+
+    return (target_year + target_year / 4 - target_year / 100 + target_year / 400 + seek_table[m_month - 1] + m_day) % 7;
+}
+
+unsigned DateTime::days_in_month() const
+{
+    bool is_long_month = (m_month == 1 || m_month == 3 || m_month == 5 || m_month == 7 || m_month == 8 || m_month == 10 || m_month == 12);
+
+    if (m_month == 2)
+        return is_leap_year() ? 29 : 28;
+
+    return is_long_month ? 31 : 30;
+}
+
+unsigned DateTime::day_of_year() const
+{
+    static const int seek_table[] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
+    int day_of_year = seek_table[m_month - 1] + m_day;
+
+    if (is_leap_year() && m_month > 3)
+        day_of_year++;
+
+    return day_of_year - 1;
+}
+
+bool DateTime::is_leap_year() const
+{
+    return ((m_year % 400 == 0) || (m_year % 4 == 0 && m_year % 100 != 0));
+}
+
+void DateTime::set_time(unsigned year, unsigned month, unsigned day, unsigned hour, unsigned minute, unsigned second)
+{
+    m_year = year;
+    m_month = month;
+    m_day = day;
+    m_hour = hour;
+    m_minute = minute;
+    m_second = second;
+
+    struct tm tm = { (int)second, (int)minute, (int)hour, (int)day, (int)month, (int)year, (int)weekday(), (int)day_of_year(), -1 };
+    m_timestamp = mktime(&tm);
 }
 
 String DateTime::to_string(const String& format) const

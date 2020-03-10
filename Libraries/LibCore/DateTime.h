@@ -42,9 +42,15 @@ public:
     unsigned hour() const { return m_hour; }
     unsigned minute() const { return m_minute; }
     unsigned second() const { return m_second; }
+    unsigned weekday() const;
+    unsigned days_in_month() const;
+    unsigned day_of_year() const;
+    bool is_leap_year() const;
 
+    void set_time(unsigned year, unsigned month = 1, unsigned day = 0, unsigned hour = 0, unsigned minute = 0, unsigned second = 0);
     String to_string(const String& format = "%Y-%m-%d %H:%M:%S") const;
 
+    static DateTime create(unsigned year, unsigned month = 1, unsigned day = 0, unsigned hour = 0, unsigned minute = 0, unsigned second = 0);
     static DateTime now();
     static DateTime from_timestamp(time_t);
 
