@@ -92,10 +92,12 @@ void build_program(JS::Program& program)
     auto block = make<JS::BlockStatement>();
     block->append<JS::VariableDeclaration>(
         make<JS::Identifier>("a"),
-        make<JS::Literal>(JS::Value(5)));
+        make<JS::Literal>(JS::Value(5)),
+        JS::DeclarationType::Var);
     block->append<JS::VariableDeclaration>(
         make<JS::Identifier>("b"),
-        make<JS::Literal>(JS::Value(7)));
+        make<JS::Literal>(JS::Value(7)),
+        JS::DeclarationType::Var);
 
     block->append<JS::ReturnStatement>(
         make<JS::BinaryExpression>(
@@ -120,13 +122,38 @@ void build_program(JS::Program& program)
     auto block = make<JS::BlockStatement>();
     block->append<JS::VariableDeclaration>(
         make<JS::Identifier>("x"),
-        make<JS::ObjectExpression>());
+        make<JS::ObjectExpression>(),
+        JS::DeclarationType::Var);
     block->append<JS::CallExpression>("$gc");
 
     program.append<JS::FunctionDeclaration>("foo", move(block));
     program.append<JS::CallExpression>("foo");
 }
 #elif PROGRAM == 4
+void build_program(JS::Program& program)
+{
+    // function foo() {
+    //   function bar() {
+    //      var y = 6;
+    //   }
+    //
+    //   bar()
+    //   return y;
+    // }
+    // foo(); //I should return `undefined` because y is bound to the inner-most enclosing function, i.e the nested one (bar()), therefore, it's undefined in the scope of foo()
+
+    auto block_bar = make<JS::BlockStatement>();
+    block_bar->append<JS::VariableDeclaration>(make<JS::Identifier>("y"), make<JS::Literal>(JS::Value(6)), JS::DeclarationType::Var);
+
+    auto block_foo = make<JS::BlockStatement>();
+    block_foo->append<JS::FunctionDeclaration>("bar", move(block_bar));
+    block_foo->append<JS::CallExpression>("bar");
+    block_foo->append<JS::ReturnStatement>(make<JS::Identifier>("y"));
+
+    program.append<JS::FunctionDeclaration>("foo", move(block_foo));
+    program.append<JS::CallExpression>("foo");
+}
+#elif PROGRAM == 5
 void build_program(JS::Program& program, JS::Heap& heap)
 {
     // "hello friends".length
