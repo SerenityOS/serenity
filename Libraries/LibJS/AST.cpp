@@ -56,7 +56,7 @@ Value CallExpression::execute(Interpreter& interpreter) const
     auto* callee_object = callee.as_object();
     ASSERT(callee_object->is_function());
     auto& function = static_cast<Function&>(*callee_object);
-    return interpreter.run(function.body());
+    return interpreter.run(function.body(), ScopeType::Function);
 }
 
 Value ReturnStatement::execute(Interpreter& interpreter) const
@@ -379,17 +379,30 @@ void AssignmentExpression::dump(int indent) const
 
 Value VariableDeclaration::execute(Interpreter& interpreter) const
 {
-    interpreter.declare_variable(name().string());
+    interpreter.declare_variable(name().string(), m_declaration_type);
     if (m_initializer) {
         auto initalizer_result = m_initializer->execute(interpreter);
         interpreter.set_variable(name().string(), initalizer_result);
     }
+
     return js_undefined();
 }
 
 void VariableDeclaration::dump(int indent) const
 {
+    const char* op_string = nullptr;
+    switch (m_declaration_type) {
+    case DeclarationType::Let:
+        op_string = "Let";
+        break;
+    case DeclarationType::Var:
+        op_string = "Var";
+        break;
+    }
+
     ASTNode::dump(indent);
+    print_indent(indent + 1);
+    printf("%s\n", op_string);
     m_name->dump(indent + 1);
     if (m_initializer)
         m_initializer->dump(indent + 1);

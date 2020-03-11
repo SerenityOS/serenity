@@ -332,10 +332,16 @@ private:
     NonnullOwnPtr<Expression> m_rhs;
 };
 
+enum class DeclarationType {
+    Var,
+    Let,
+};
+
 class VariableDeclaration : public ASTNode {
 public:
-    VariableDeclaration(NonnullOwnPtr<Identifier> name, OwnPtr<Expression> initializer)
-        : m_name(move(name))
+    VariableDeclaration(NonnullOwnPtr<Identifier> name, OwnPtr<Expression> initializer, DeclarationType declaration_type)
+        : m_declaration_type(declaration_type)
+        , m_name(move(name))
         , m_initializer(move(initializer))
     {
     }
@@ -348,6 +354,7 @@ public:
 private:
     virtual const char* class_name() const override { return "VariableDeclaration"; }
 
+    DeclarationType m_declaration_type;
     NonnullOwnPtr<Identifier> m_name;
     OwnPtr<Expression> m_initializer;
 };

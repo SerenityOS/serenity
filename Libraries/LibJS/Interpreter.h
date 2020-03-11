@@ -33,7 +33,13 @@
 
 namespace JS {
 
+enum class ScopeType {
+    Function,
+    Block,
+};
+
 struct ScopeFrame {
+    ScopeType type;
     const ScopeNode& scope_node;
     HashMap<String, Value> variables;
 };
@@ -43,7 +49,7 @@ public:
     Interpreter();
     ~Interpreter();
 
-    Value run(const ScopeNode&);
+    Value run(const ScopeNode&, ScopeType = ScopeType::Block);
 
     Object& global_object() { return *m_global_object; }
     const Object& global_object() const { return *m_global_object; }
@@ -54,12 +60,12 @@ public:
 
     Value get_variable(const String& name);
     void set_variable(String name, Value);
-    void declare_variable(String name);
+    void declare_variable(String name, DeclarationType);
 
     void collect_roots(Badge<Heap>, HashTable<Cell*>&);
 
 private:
-    void enter_scope(const ScopeNode&);
+    void enter_scope(const ScopeNode&, ScopeType);
     void exit_scope(const ScopeNode&);
 
     Heap m_heap;
