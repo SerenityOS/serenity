@@ -32,6 +32,7 @@
 #include <LibCore/MimeData.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
+#include <LibGUI/ActionGroup.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CppSyntaxHighlighter.h>
@@ -378,10 +379,34 @@ TextEditorWidget::TextEditorWidget()
         }));
     });
 
+    syntax_actions = GUI::ActionGroup {};
+    syntax_actions.set_exclusive(true);
+
+    auto syntax_menu = GUI::Menu::construct("Syntax");
+    m_plain_text_highlight = GUI::Action::create("Plain Text", [&](GUI::Action& action) {
+        action.set_checked(true);
+        m_editor->set_syntax_highlighter(nullptr);
+        m_editor->update();
+    });
+    m_plain_text_highlight->set_checkable(true);
+    m_plain_text_highlight->set_checked(true);
+    syntax_actions.add_action(*m_plain_text_highlight);
+    syntax_menu->add_action(*m_plain_text_highlight);
+
+    m_cpp_highlight = GUI::Action::create("C++", [&](GUI::Action& action) {
+        action.set_checked(true);
+        m_editor->set_syntax_highlighter(make<GUI::CppSyntaxHighlighter>());
+        m_editor->update();
+    });
+    m_cpp_highlight->set_checkable(true);
+    syntax_actions.add_action(*m_cpp_highlight);
+    syntax_menu->add_action(*m_cpp_highlight);
+
     auto view_menu = GUI::Menu::construct("View");
     view_menu->add_action(*m_line_wrapping_setting_action);
     view_menu->add_separator();
     view_menu->add_submenu(move(font_menu));
+    view_menu->add_submenu(move(syntax_menu));
     menubar->add_menu(move(view_menu));
 
     auto help_menu = GUI::Menu::construct("Help");
@@ -420,7 +445,9 @@ void TextEditorWidget::set_path(const FileSystemPath& file)
     m_extension = file.extension();
 
     if (m_extension == "cpp" || m_extension == "h")
-        m_editor->set_syntax_highlighter(make<GUI::CppSyntaxHighlighter>());
+        m_cpp_highlight->activate();
+    else
+        m_plain_text_highlight->activate();
 
     update_title();
 }
