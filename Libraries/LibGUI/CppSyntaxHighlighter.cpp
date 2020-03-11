@@ -21,7 +21,8 @@ static TextStyle style_for_token_type(CppToken::Type type)
         return { Color::from_rgb(0x092e64) };
     case CppToken::Type::DoubleQuotedString:
     case CppToken::Type::SingleQuotedString:
-    case CppToken::Type::Number:
+    case CppToken::Type::Integer:
+    case CppToken::Type::Float:
         return { Color::from_rgb(0x800000) };
     case CppToken::Type::EscapeSequence:
         return { Color::from_rgb(0x800080), &Gfx::Font::default_bold_fixed_width_font() };

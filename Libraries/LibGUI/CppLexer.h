@@ -48,7 +48,8 @@ namespace GUI {
     __TOKEN(SingleQuotedString)    \
     __TOKEN(EscapeSequence)        \
     __TOKEN(Comment)               \
-    __TOKEN(Number)                \
+    __TOKEN(Integer)               \
+    __TOKEN(Float)                 \
     __TOKEN(Keyword)               \
     __TOKEN(KnownType)             \
     __TOKEN(Identifier)
