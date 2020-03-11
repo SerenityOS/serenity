@@ -425,12 +425,81 @@ Vector<CppToken> CppLexer::lex()
             commit_token(CppToken::Type::SingleQuotedString);
             continue;
         }
-        if (isdigit(ch)) {
+        if (isdigit(ch) || (ch == '.' && isdigit(peek(1)))) {
             begin_token();
-            while (peek() && isdigit(peek())) {
+            consume();
+
+            auto type = ch == '.' ? CppToken::Type::Float : CppToken::Type::Integer;
+            bool is_hex = false;
+            bool is_binary = false;
+
+            auto match_exponent = [&]() -> size_t {
+                char ch = peek();
+                if (ch != 'e' && ch != 'E' && ch != 'p' && ch != 'P')
+                    return 0;
+
+                type = CppToken::Type::Float;
+                size_t length = 1;
+                ch = peek(length);
+                if (ch == '+' || ch == '-') {
+                    ++length;
+                }
+                for (ch = peek(length); isdigit(ch); ch = peek(length)) {
+                    ++length;
+                }
+                return length;
+            };
+
+            auto match_type_literal = [&]() -> size_t {
+                size_t length = 0;
+                for (;;) {
+                    char ch = peek(length);
+                    if ((ch == 'u' || ch == 'U') && type == CppToken::Type::Integer) {
+                        ++length;
+                    } else if ((ch == 'f' || ch == 'F') && !is_binary) {
+                        type = CppToken::Type::Float;
+                        ++length;
+                    } else if (ch == 'l' || ch == 'L') {
+                        ++length;
+                    } else
+                        return length;
+                }
+            };
+
+            if (peek() == 'b' || peek() == 'B') {
                 consume();
+                is_binary = true;
+                for (char ch = peek(); ch == '0' || ch == '1' || (ch == '\'' && peek(1) != '\''); ch = peek()) {
+                    consume();
+                }
+            } else {
+                if (peek() == 'x' || peek() == 'X') {
+                    consume();
+                    is_hex = true;
+                }
+
+                for (char ch = peek(); (is_hex ? isxdigit(ch) : isdigit(ch)) || (ch == '\'' && peek(1) != '\'') || ch == '.'; ch = peek()) {
+                    if (ch == '.') {
+                        if (type == CppToken::Type::Integer) {
+                            type = CppToken::Type::Float;
+                        } else
+                            break;
+                    };
+                    consume();
+                }
             }
-            commit_token(CppToken::Type::Number);
+
+            if (!is_binary) {
+                size_t length = match_exponent();
+                for (size_t i = 0; i < length; ++i)
+                    consume();
+            }
+
+            size_t length = match_type_literal();
+            for (size_t i = 0; i < length; ++i)
+                consume();
+
+            commit_token(type);
             continue;
         }
         if (is_valid_first_character_of_identifier(ch)) {
