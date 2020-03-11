@@ -348,6 +348,8 @@ void Window::update()
 
 void Window::force_update()
 {
+    if (!this->is_visible())
+        return;
     auto rect = this->rect();
     WindowServerConnection::the().post_message(Messages::WindowServer::InvalidateRect(m_window_id, { { 0, 0, rect.width(), rect.height() } }, true));
 }
@@ -633,8 +635,8 @@ void Window::schedule_relayout()
 
 void Window::update_all_windows(Badge<WindowServerConnection>)
 {
-    for (auto* window : *all_windows) {
-        window->force_update();
+    for (auto& e : *reified_windows) {
+        e.value->force_update();
     }
 }
 
