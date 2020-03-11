@@ -35,6 +35,8 @@ namespace GUI {
     __TOKEN(Unknown)               \
     __TOKEN(Whitespace)            \
     __TOKEN(PreprocessorStatement) \
+    __TOKEN(IncludeStatement)      \
+    __TOKEN(IncludePath)           \
     __TOKEN(LeftParen)             \
     __TOKEN(RightParen)            \
     __TOKEN(LeftCurly)             \
