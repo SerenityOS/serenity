@@ -485,6 +485,14 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, unsigned arg)
         adapter->set_ipv4_address(IPv4Address(((sockaddr_in&)ifr->ifr_addr).sin_addr.s_addr));
         return 0;
 
+    case SIOCSIFNETMASK:
+        if (!Process::current->is_superuser())
+            return -EPERM;
+        if (ifr->ifr_addr.sa_family != AF_INET)
+            return -EAFNOSUPPORT;
+        adapter->set_ipv4_netmask(IPv4Address(((sockaddr_in&)ifr->ifr_netmask).sin_addr.s_addr));
+        return 0;
+
     case SIOCGIFADDR:
         if (!Process::current->validate_write_typed(ifr))
             return -EFAULT;
