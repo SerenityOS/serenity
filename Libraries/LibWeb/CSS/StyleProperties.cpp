@@ -114,7 +114,9 @@ void StyleProperties::load_font() const
         Core::DirIterator it { "/res/fonts/", Core::DirIterator::Flags::SkipDots };
         while (it.has_next()) {
             String name = it.next_path();
-            ASSERT(name.ends_with(".font"));
+
+            if (!name.ends_with(".font"))
+                continue;
             if (!name.starts_with(expected_name))
                 continue;
 
