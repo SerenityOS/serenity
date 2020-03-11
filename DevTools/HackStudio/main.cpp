@@ -66,6 +66,7 @@
 
 NonnullRefPtrVector<EditorWrapper> g_all_editor_wrappers;
 RefPtr<EditorWrapper> g_current_editor_wrapper;
+Function<void(String)> g_open_file;
 
 String g_currently_open_file;
 OwnPtr<Project> g_project;
@@ -529,6 +530,8 @@ int main(int argc, char** argv)
         remove_current_editor_action->set_enabled(g_all_editor_wrappers.size() > 1);
     };
 
+    g_open_file = open_file;
+
     open_file("main.cpp");
 
     update_actions();
@@ -547,8 +550,15 @@ void run(TerminalWrapper& wrapper)
 
 void open_file(const String& filename)
 {
-    auto file = g_project->get_file(filename);
-    current_editor().set_document(const_cast<GUI::TextDocument&>(file->document()));
+    auto project_file = g_project->get_file(filename);
+    if (project_file) {
+        current_editor().set_document(const_cast<GUI::TextDocument&>(project_file->document()));
+        current_editor().set_readonly(false);
+    } else {
+        auto external_file = ProjectFile::construct_with_name(filename);
+        current_editor().set_document(const_cast<GUI::TextDocument&>(external_file->document()));
+        current_editor().set_readonly(true);
+    }
 
     if (filename.ends_with(".cpp") || filename.ends_with(".h"))
         current_editor().set_syntax_highlighter(make<GUI::CppSyntaxHighlighter>());
