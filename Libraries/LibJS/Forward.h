@@ -37,5 +37,6 @@ class Object;
 class PrimitiveString;
 class ScopeNode;
 class Value;
+enum class DeclarationType;
 
 }

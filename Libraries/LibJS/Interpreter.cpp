@@ -42,9 +42,9 @@ Interpreter::~Interpreter()
 {
 }
 
-Value Interpreter::run(const ScopeNode& scope_node)
+Value Interpreter::run(const ScopeNode& scope_node, ScopeType scope_type)
 {
-    enter_scope(scope_node);
+    enter_scope(scope_node, scope_type);
 
     Value last_value = js_undefined();
     for (auto& node : scope_node.children()) {
@@ -55,9 +55,9 @@ Value Interpreter::run(const ScopeNode& scope_node)
     return last_value;
 }
 
-void Interpreter::enter_scope(const ScopeNode& scope_node)
+void Interpreter::enter_scope(const ScopeNode& scope_node, ScopeType scope_type)
 {
-    m_scope_stack.append({ scope_node, {} });
+    m_scope_stack.append({ scope_type, scope_node, {} });
 }
 
 void Interpreter::exit_scope(const ScopeNode& scope_node)
@@ -71,9 +71,24 @@ void Interpreter::do_return()
     dbg() << "FIXME: Implement Interpreter::do_return()";
 }
 
-void Interpreter::declare_variable(String name)
+void Interpreter::declare_variable(String name, DeclarationType declaration_type)
 {
-    m_scope_stack.last().variables.set(move(name), js_undefined());
+    switch (declaration_type) {
+    case DeclarationType::Var:
+        for (ssize_t i = m_scope_stack.size() - 1; i >= 0; --i) {
+            auto& scope = m_scope_stack.at(i);
+            if (scope.type == ScopeType::Function) {
+                scope.variables.set(move(name), js_undefined());
+                return;
+            }
+        }
+
+        global_object().put(move(name), js_undefined());
+        break;
+    case DeclarationType::Let:
+        m_scope_stack.last().variables.set(move(name), js_undefined());
+        break;
+    }
 }
 
 void Interpreter::set_variable(String name, Value value)
