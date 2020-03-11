@@ -34,14 +34,14 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/Window.h>
+#include <LibMarkdown/MDDocument.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/HTMLHeadElement.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HtmlView.h>
 #include <LibWeb/Parser/HTMLParser.h>
-#include <LibMarkdown/MDDocument.h>
 
-//#define EDITOR_DEBUG
+// #define EDITOR_DEBUG
 
 Editor::Editor()
 {
@@ -193,4 +193,77 @@ void Editor::mousemove_event(GUI::MouseEvent& event)
         }
     }
     GUI::Application::the().hide_tooltip();
+}
+
+void Editor::mousedown_event(GUI::MouseEvent& event)
+{
+    if (!(event.modifiers() & Mod_Ctrl)) {
+        GUI::TextEditor::mousedown_event(event);
+        return;
+    }
+
+    auto text_position = text_position_at(event.position());
+    if (!text_position.is_valid()) {
+        GUI::TextEditor::mousedown_event(event);
+        return;
+    }
+
+    for (auto& span : document().spans()) {
+        if (span.range.contains(text_position)) {
+            auto adjusted_range = span.range;
+            adjusted_range.end().set_column(adjusted_range.end().column() + 1);
+            auto span_text = document().text_in_range(adjusted_range);
+            auto header_path = span_text.substring(1, span_text.length() - 2);
+#ifdef EDITOR_DEBUG
+            dbg() << "Ctrl+click: " << adjusted_range << " \"" << header_path << "\"";
+#endif
+            navigate_to_include_if_available(header_path);
+            return;
+        }
+    }
+
+    GUI::TextEditor::mousedown_event(event);
+}
+
+static HashMap<String, String>& include_paths()
+{
+    static HashMap<String, String> paths;
+
+    auto add_directory = [](String base, Optional<String> recursive, auto handle_directory) -> void {
+        Core::DirIterator it(recursive.value_or(base), Core::DirIterator::Flags::SkipDots);
+        while (it.has_next()) {
+            auto path = it.next_full_path();
+            if (!Core::File::is_directory(path)) {
+                auto key = path.substring(base.length() + 1, path.length() - base.length() - 1);
+#ifdef EDITOR_DEBUG
+                dbg() << "Adding header \"" << key << "\" in path \"" << path << "\"";
+#endif
+                paths.set(key, path);
+            } else {
+                handle_directory(base, path, handle_directory);
+            }
+        }
+    };
+
+    if (paths.is_empty()) {
+        add_directory(".", {}, add_directory);
+        add_directory("/usr/local/include", {}, add_directory);
+        add_directory("/usr/local/include/c++/9.2.0", {}, add_directory);
+        add_directory("/usr/include", {}, add_directory);
+    }
+
+    return paths;
+}
+
+void Editor::navigate_to_include_if_available(String path)
+{
+    auto it = include_paths().find(path);
+    if (it == include_paths().end()) {
+#ifdef EDITOR_DEBUG
+        dbg() << "no header " << path << " found.";
+#endif
+        return;
+    }
+
+    on_open(it->value);
 }
