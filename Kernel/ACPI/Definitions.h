@@ -122,6 +122,13 @@ namespace ACPI {
             DWord = 3,
             QWord = 4
         };
+        enum class BitWidth {
+            Undefined = 0,
+            Byte = 8,
+            Word = 16,
+            DWord = 32,
+            QWord = 64
+        };
     }
 
     namespace Structures {
