@@ -147,6 +147,23 @@ public:
         ASSERT_NOT_REACHED();
     }
 
+    inline void out(u32 value, u8 bit_width)
+    {
+        if (bit_width == 32) {
+            IO::out32(get(), value);
+            return;
+        }
+        if (bit_width == 16) {
+            IO::out16(get(), value);
+            return;
+        }
+        if (bit_width == 8) {
+            IO::out8(get(), value);
+            return;
+        }
+        ASSERT_NOT_REACHED();
+    }
+
     bool is_null() const { return m_address == 0; }
 
     bool operator==(const IOAddress& other) const { return m_address == other.m_address; }
