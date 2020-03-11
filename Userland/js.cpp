@@ -55,7 +55,7 @@ int main()
 }
 
 #if PROGRAM == 1
-void build_program(JS::Program& program)
+void build_program(JS::Program& program, JS::Heap&)
 {
     // function foo() { return (1 + 2) + 3; }
     // foo();
@@ -74,7 +74,7 @@ void build_program(JS::Program& program)
     program.append<JS::CallExpression>("foo");
 }
 #elif PROGRAM == 2
-void build_program(JS::Program& program)
+void build_program(JS::Program& program, JS::Heap&)
 {
     // c = 1;
     // function foo() {
@@ -111,7 +111,7 @@ void build_program(JS::Program& program)
     program.append<JS::CallExpression>("foo");
 }
 #elif PROGRAM == 3
-void build_program(JS::Program& program)
+void build_program(JS::Program& program, JS::Heap&)
 {
     // function foo() {
     //   var x = {};
@@ -130,7 +130,7 @@ void build_program(JS::Program& program)
     program.append<JS::CallExpression>("foo");
 }
 #elif PROGRAM == 4
-void build_program(JS::Program& program)
+void build_program(JS::Program& program, JS::Heap&)
 {
     // function foo() {
     //   function bar() {
