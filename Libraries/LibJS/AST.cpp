@@ -44,6 +44,11 @@ Value FunctionDeclaration::execute(Interpreter& interpreter) const
     return Value(function);
 }
 
+Value ExpressionStatement::execute(Interpreter& interpreter) const
+{
+    return m_expression->execute(interpreter);
+}
+
 Value CallExpression::execute(Interpreter& interpreter) const
 {
     if (name() == "$gc") {
@@ -61,7 +66,7 @@ Value CallExpression::execute(Interpreter& interpreter) const
 
 Value ReturnStatement::execute(Interpreter& interpreter) const
 {
-    auto value = argument().execute(interpreter);
+    auto value = argument() ? argument()->execute(interpreter) : js_undefined();
     interpreter.do_return();
     return value;
 }
@@ -310,7 +315,8 @@ void FunctionDeclaration::dump(int indent) const
 void ReturnStatement::dump(int indent) const
 {
     ASTNode::dump(indent);
-    argument().dump(indent + 1);
+    if (argument())
+        argument()->dump(indent + 1);
 }
 
 void IfStatement::dump(int indent) const
@@ -411,6 +417,12 @@ void VariableDeclaration::dump(int indent) const
 void ObjectExpression::dump(int indent) const
 {
     ASTNode::dump(indent);
+}
+
+void ExpressionStatement::dump(int indent) const
+{
+    ASTNode::dump(indent);
+    m_expression->dump(indent + 1);
 }
 
 Value ObjectExpression::execute(Interpreter& interpreter) const
