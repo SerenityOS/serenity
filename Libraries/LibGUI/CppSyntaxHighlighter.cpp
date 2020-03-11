@@ -23,10 +23,12 @@ static TextStyle style_for_token_type(CppToken::Type type)
     case CppToken::Type::SingleQuotedString:
     case CppToken::Type::Integer:
     case CppToken::Type::Float:
+    case CppToken::Type::IncludePath:
         return { Color::from_rgb(0x800000) };
     case CppToken::Type::EscapeSequence:
         return { Color::from_rgb(0x800080), &Gfx::Font::default_bold_fixed_width_font() };
     case CppToken::Type::PreprocessorStatement:
+    case CppToken::Type::IncludeStatement:
         return { Color::from_rgb(0x008080) };
     case CppToken::Type::Comment:
         return { Color::from_rgb(0x008000) };

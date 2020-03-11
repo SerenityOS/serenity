@@ -345,8 +345,40 @@ Vector<CppToken> CppLexer::lex()
         }
         if (ch == '#') {
             begin_token();
+            consume();
+
+            if (is_valid_first_character_of_identifier(peek()))
+                while (peek() && is_valid_nonfirst_character_of_identifier(peek()))
+                    consume();
+
+            auto directive = StringView(m_input.characters_without_null_termination() + token_start_index, m_index - token_start_index);
+            if (directive == "#include") {
+                commit_token(CppToken::Type::IncludeStatement);
+
+                begin_token();
+                while (isspace(peek()))
+                    consume();
+                commit_token(CppToken::Type::Whitespace);
+
+                begin_token();
+                if (peek() == '<' || peek() == '"') {
+                    char closing = consume() == '<' ? '>' : '"';
+                    while (peek() != closing && peek() != '\n')
+                        consume();
+
+                    if (consume() == '\n') {
+                        commit_token(CppToken::Type::IncludePath);
+                        continue;
+                    } else {
+                        commit_token(CppToken::Type::IncludePath);
+                        begin_token();
+                    }
+                }
+            }
+
             while (peek() && peek() != '\n')
                 consume();
+
             commit_token(CppToken::Type::PreprocessorStatement);
             continue;
         }
