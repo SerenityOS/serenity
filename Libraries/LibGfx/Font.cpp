@@ -178,6 +178,9 @@ RefPtr<Font> Font::load_from_file(const StringView& path)
         return nullptr;
 
     auto font = load_from_memory((const u8*)mapped_file.data());
+    if (!font)
+        return nullptr;
+
     font->m_mapped_file = move(mapped_file);
     return font;
 }
