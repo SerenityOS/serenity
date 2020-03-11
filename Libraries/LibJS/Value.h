@@ -50,6 +50,7 @@ public:
     bool is_string() const { return m_type == Type::String; }
     bool is_object() const { return m_type == Type::Object; }
     bool is_boolean() const { return m_type == Type::Boolean; }
+    bool is_cell() const { return is_string() || is_object(); }
 
     explicit Value(bool value)
         : m_type(Type::Boolean)
@@ -73,6 +74,12 @@ public:
         : m_type(Type::Object)
     {
         m_value.as_object = object;
+    }
+
+    explicit Value(PrimitiveString* string)
+        : m_type(Type::String)
+    {
+        m_value.as_string = string;
     }
 
     explicit Value(Type type)
@@ -106,14 +113,28 @@ public:
         return m_value.as_object;
     }
 
-    const StringImpl* as_string() const
+    PrimitiveString* as_string()
     {
         ASSERT(is_string());
         return m_value.as_string;
     }
 
+    const PrimitiveString* as_string() const
+    {
+        ASSERT(is_string());
+        return m_value.as_string;
+    }
+
+    Cell* as_cell()
+    {
+        ASSERT(is_cell());
+        return m_value.as_cell;
+    }
+
     String to_string() const;
     bool to_boolean() const;
+
+    Value to_object(Heap&) const;
 
 private:
     Type m_type { Type::Undefined };
@@ -121,8 +142,9 @@ private:
     union {
         bool as_bool;
         double as_double;
-        StringImpl* as_string;
+        PrimitiveString* as_string;
         Object* as_object;
+        Cell* as_cell;
     } m_value;
 };
 

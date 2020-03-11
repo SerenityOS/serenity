@@ -131,6 +131,7 @@ RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
 {
     auto window = GUI::Window::construct();
     window->set_title("Terminal Settings");
+    window->set_resizable(false);
     window->set_rect(50, 50, 200, 140);
     window->set_modal(true);
 

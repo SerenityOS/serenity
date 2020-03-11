@@ -297,13 +297,7 @@ void CallExpression::dump(int indent) const
 void Literal::dump(int indent) const
 {
     print_indent(indent);
-    if (m_value.is_object())
-        ASSERT_NOT_REACHED();
-
-    if (m_value.is_string())
-        printf("%s\n", m_value.as_string()->characters());
-    else
-        printf("%s\n", m_value.to_string().characters());
+    printf("Literal _%s_\n", m_value.to_string().characters());
 }
 
 void FunctionDeclaration::dump(int indent) const
@@ -422,6 +416,28 @@ void ObjectExpression::dump(int indent) const
 Value ObjectExpression::execute(Interpreter& interpreter) const
 {
     return Value(interpreter.heap().allocate<Object>());
+}
+
+void MemberExpression::dump(int indent) const
+{
+    ASTNode::dump(indent);
+    m_object->dump(indent + 1);
+    m_property->dump(indent + 1);
+}
+
+Value MemberExpression::execute(Interpreter& interpreter) const
+{
+    auto object_result = m_object->execute(interpreter).to_object(interpreter.heap());
+    ASSERT(object_result.is_object());
+
+    String property_name;
+    if (m_property->is_identifier()) {
+        property_name = static_cast<const Identifier&>(*m_property).string();
+    } else {
+        ASSERT_NOT_REACHED();
+    }
+
+    return object_result.as_object()->get(property_name);
 }
 
 }

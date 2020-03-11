@@ -24,19 +24,26 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <LibJS/PrimitiveString.h>
+#include <LibJS/StringObject.h>
+#include <LibJS/Value.h>
 
 namespace JS {
 
-class ASTNode;
-class Cell;
-class Heap;
-class HeapBlock;
-class Interpreter;
-class Object;
-class PrimitiveString;
-class ScopeNode;
-class Value;
-enum class DeclarationType;
+StringObject::StringObject(PrimitiveString* string)
+    : m_string(string)
+{
+    put("length", Value(static_cast<i32>(m_string->string().length())));
+}
+
+StringObject::~StringObject()
+{
+}
+
+void StringObject::visit_children(Cell::Visitor& visitor)
+{
+    Object::visit_children(visitor);
+    visitor.visit(m_string);
+}
 
 }

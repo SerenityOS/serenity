@@ -26,17 +26,20 @@
 
 #pragma once
 
+#include <LibJS/Object.h>
+
 namespace JS {
 
-class ASTNode;
-class Cell;
-class Heap;
-class HeapBlock;
-class Interpreter;
-class Object;
-class PrimitiveString;
-class ScopeNode;
-class Value;
-enum class DeclarationType;
+class StringObject final : public Object {
+public:
+    explicit StringObject(PrimitiveString*);
+    virtual ~StringObject() override;
+
+    virtual void visit_children(Visitor&) override;
+
+private:
+    virtual const char* class_name() const override { return "StringObject"; }
+    PrimitiveString* m_string { nullptr };
+};
 
 }

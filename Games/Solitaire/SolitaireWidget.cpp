@@ -183,7 +183,6 @@ void SolitaireWidget::mousedown_event(GUI::MouseEvent& event)
     for (auto& to_check : m_stacks) {
         if (to_check.bounding_box().contains(click_location)) {
             if (to_check.type() == CardStack::Type::Stock) {
-
                 auto& waste = stack(Waste);
                 auto& stock = stack(Stock);
 
@@ -200,8 +199,9 @@ void SolitaireWidget::mousedown_event(GUI::MouseEvent& event)
                     waste.set_dirty();
                     m_has_to_repaint = true;
                     update_score(-100);
-                } else
+                } else {
                     move_card(stock, waste);
+                }
             } else if (!to_check.is_empty()) {
                 auto& top_card = to_check.peek();
 
@@ -212,7 +212,7 @@ void SolitaireWidget::mousedown_event(GUI::MouseEvent& event)
                         update_score(5);
                         m_has_to_repaint = true;
                     }
-                } else {
+                } else if (m_focused_cards.is_empty()) {
                     to_check.add_all_grabbed_cards(click_location, m_focused_cards);
                     m_mouse_down_location = click_location;
                     to_check.set_focused(true);
@@ -238,8 +238,7 @@ void SolitaireWidget::mouseup_event(GUI::MouseEvent& event)
             continue;
 
         for (auto& focused_card : m_focused_cards) {
-            if (stack.bounding_box().intersects(focused_card.rect())
-                || stack.bounding_box().contains(event.position())) {
+            if (stack.bounding_box().intersects(focused_card.rect())) {
                 if (stack.is_allowed_to_push(m_focused_cards.at(0))) {
                     for (auto& to_intersect : m_focused_cards) {
                         mark_intersecting_stacks_dirty(to_intersect);
@@ -313,8 +312,10 @@ void SolitaireWidget::doubleclick_event(GUI::MouseEvent& event)
         return;
     }
 
-    auto click_location = event.position();
+    if (!m_focused_cards.is_empty())
+        return;
 
+    auto click_location = event.position();
     for (auto& to_check : m_stacks) {
         if (to_check.type() == CardStack::Type::Foundation)
             continue;
