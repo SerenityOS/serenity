@@ -87,6 +87,15 @@ namespace ACPI {
         m_facs = find_table("FACS");
     }
 
+    const FADTFlags::HardwareFeatures& StaticParser::hardware_features() const
+    {
+        return m_hardware_flags;
+    }
+    const FADTFlags::x86_Specific_Flags& StaticParser::x86_specific_flags() const
+    {
+        return m_x86_specific_flags;
+    }
+
     void StaticParser::init_fadt()
     {
         klog() << "ACPI: Initializing Fixed ACPI data";
@@ -96,11 +105,40 @@ namespace ACPI {
         ASSERT(!m_fadt.is_null());
 
         auto checkup_region = MM.allocate_kernel_region(m_fadt.page_base(), (PAGE_SIZE * 2), "ACPI Static Parser", Region::Access::Read);
-        auto* sdt = (const Structures::SDTHeader*)checkup_region->vaddr().offset(m_fadt.offset_in_page()).as_ptr();
+        auto* sdt = (const Structures::FADT*)checkup_region->vaddr().offset(m_fadt.offset_in_page()).as_ptr();
 #ifdef ACPI_DEBUG
         dbg() << "ACPI: FADT @ V " << sdt << ", P " << (void*)fadt.as_ptr();
 #endif
-        klog() << "ACPI: Fixed ACPI data, Revision " << sdt->revision << ", Length " << sdt->length << " bytes";
+        klog() << "ACPI: Fixed ACPI data, Revision " << sdt->h.revision << ", Length " << sdt->h.length << " bytes";
+        klog() << "ACPI: DSDT " << PhysicalAddress(sdt->dsdt_ptr);
+        m_x86_specific_flags.cmos_rtc_not_present = (sdt->ia_pc_boot_arch_flags & (u8)FADTFlags::IA_PC_Flags::CMOS_RTC_Not_Present);
+        m_x86_specific_flags.keyboard_8042 = (sdt->ia_pc_boot_arch_flags & (u8)FADTFlags::IA_PC_Flags::PS2_8042);
+        m_x86_specific_flags.legacy_devices = (sdt->ia_pc_boot_arch_flags & (u8)FADTFlags::IA_PC_Flags::Legacy_Devices);
+        m_x86_specific_flags.msi_not_supported = (sdt->ia_pc_boot_arch_flags & (u8)FADTFlags::IA_PC_Flags::MSI_Not_Supported);
+        m_x86_specific_flags.vga_not_present = (sdt->ia_pc_boot_arch_flags & (u8)FADTFlags::IA_PC_Flags::VGA_Not_Present);
+
+        m_hardware_flags.cpu_software_sleep = (sdt->flags & (u32)FADTFlags::FeatureFlags::CPU_SW_SLP);
+        m_hardware_flags.docking_capability = (sdt->flags & (u32)FADTFlags::FeatureFlags::DCK_CAP);
+        m_hardware_flags.fix_rtc = (sdt->flags & (u32)FADTFlags::FeatureFlags::FIX_RTC);
+        m_hardware_flags.force_apic_cluster_model = (sdt->flags & (u32)FADTFlags::FeatureFlags::FORCE_APIC_CLUSTER_MODEL);
+        m_hardware_flags.force_apic_physical_destination_mode = (sdt->flags & (u32)FADTFlags::FeatureFlags::FORCE_APIC_PHYSICAL_DESTINATION_MODE);
+        m_hardware_flags.hardware_reduced_acpi = (sdt->flags & (u32)FADTFlags::FeatureFlags::HW_REDUCED_ACPI);
+        m_hardware_flags.headless = (sdt->flags & (u32)FADTFlags::FeatureFlags::HEADLESS);
+        m_hardware_flags.low_power_s0_idle_capable = (sdt->flags & (u32)FADTFlags::FeatureFlags::LOW_POWER_S0_IDLE_CAPABLE);
+        m_hardware_flags.multiprocessor_c2 = (sdt->flags & (u32)FADTFlags::FeatureFlags::P_LVL2_UP);
+        m_hardware_flags.pci_express_wake = (sdt->flags & (u32)FADTFlags::FeatureFlags::PCI_EXP_WAK);
+        m_hardware_flags.power_button = (sdt->flags & (u32)FADTFlags::FeatureFlags::PWR_BUTTON);
+        m_hardware_flags.processor_c1 = (sdt->flags & (u32)FADTFlags::FeatureFlags::PROC_C1);
+        m_hardware_flags.remote_power_on_capable = (sdt->flags & (u32)FADTFlags::FeatureFlags::REMOTE_POWER_ON_CAPABLE);
+        m_hardware_flags.reset_register_supported = (sdt->flags & (u32)FADTFlags::FeatureFlags::RESET_REG_SUPPORTED);
+        m_hardware_flags.rtc_s4 = (sdt->flags & (u32)FADTFlags::FeatureFlags::RTC_s4);
+        m_hardware_flags.s4_rtc_status_valid = (sdt->flags & (u32)FADTFlags::FeatureFlags::S4_RTC_STS_VALID);
+        m_hardware_flags.sealed_case = (sdt->flags & (u32)FADTFlags::FeatureFlags::SEALED_CASE);
+        m_hardware_flags.sleep_button = (sdt->flags & (u32)FADTFlags::FeatureFlags::SLP_BUTTON);
+        m_hardware_flags.timer_value_extension = (sdt->flags & (u32)FADTFlags::FeatureFlags::TMR_VAL_EXT);
+        m_hardware_flags.use_platform_clock = (sdt->flags & (u32)FADTFlags::FeatureFlags::USE_PLATFORM_CLOCK);
+        m_hardware_flags.wbinvd = (sdt->flags & (u32)FADTFlags::FeatureFlags::WBINVD);
+        m_hardware_flags.wbinvd_flush = (sdt->flags & (u32)FADTFlags::FeatureFlags::WBINVD_FLUSH);
     }
 
     bool StaticParser::can_reboot()
@@ -109,7 +147,7 @@ namespace ACPI {
         auto* fadt = (const Structures::FADT*)region->vaddr().offset(m_fadt.offset_in_page()).as_ptr();
         if (fadt->h.revision < 2)
             return false;
-        return (fadt->flags & (u32)FADTFeatureFlags::RESET_REG_SUPPORTED) != 0;
+        return m_hardware_flags.reset_register_supported;
     }
 
     void StaticParser::access_generic_address(const Structures::GenericAddressStructure& structure, u32 value)
