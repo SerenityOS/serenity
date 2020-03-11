@@ -1064,7 +1064,6 @@ Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(GroupIndex preferred_group_in
 #endif
     blocks.ensure_capacity(count);
 
-    bool found_a_group = false;
     GroupIndex group_index = preferred_group_index;
 
     if (!group_descriptor(preferred_group_index).bg_free_blocks_count) {
@@ -1072,6 +1071,8 @@ Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(GroupIndex preferred_group_in
     }
 
     while (blocks.size() < count) {
+
+        bool found_a_group = false;
         if (group_descriptor(group_index).bg_free_blocks_count) {
             found_a_group = true;
         } else {
@@ -1084,6 +1085,7 @@ Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(GroupIndex preferred_group_in
                 }
             }
         }
+
         ASSERT(found_a_group);
         auto& bgd = group_descriptor(group_index);
         auto& cached_bitmap = get_bitmap_block(bgd.bg_block_bitmap);
