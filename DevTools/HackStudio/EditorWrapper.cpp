@@ -33,6 +33,7 @@
 #include <LibGfx/Font.h>
 
 extern RefPtr<EditorWrapper> g_current_editor_wrapper;
+extern Function<void(String)> g_open_file;
 
 EditorWrapper::EditorWrapper()
 {
@@ -66,6 +67,10 @@ EditorWrapper::EditorWrapper()
 
     m_editor->on_focus = [this] {
         g_current_editor_wrapper = this;
+    };
+
+    m_editor->on_open = [this](String path) {
+        g_open_file(path);
     };
 }
 

@@ -37,6 +37,7 @@ public:
     virtual ~Editor() override;
 
     Function<void()> on_focus;
+    Function<void(String)> on_open;
 
     EditorWrapper& wrapper();
     const EditorWrapper& wrapper() const;
@@ -46,8 +47,10 @@ private:
     virtual void focusout_event(Core::Event&) override;
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
+    virtual void mousedown_event(GUI::MouseEvent&) override;
 
     void show_documentation_tooltip_if_available(const String&, const Gfx::Point& screen_location);
+    void navigate_to_include_if_available(String);
 
     explicit Editor();
 
