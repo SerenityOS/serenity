@@ -48,6 +48,9 @@ public:
     virtual void try_acpi_shutdown();
     virtual bool can_shutdown() { return false; }
 
+    virtual const FADTFlags::HardwareFeatures& hardware_features() const;
+    virtual const FADTFlags::x86_Specific_Flags& x86_specific_flags() const;
+
     virtual void enable_aml_interpretation();
     virtual void enable_aml_interpretation(File&);
     virtual void enable_aml_interpretation(u8*, u32);
