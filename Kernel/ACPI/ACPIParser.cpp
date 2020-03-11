@@ -94,6 +94,16 @@ namespace ACPI {
         klog() << "ACPI Limited: No AML Interpretation Allowed";
         ASSERT_NOT_REACHED();
     }
+    const FADTFlags::HardwareFeatures& Parser::hardware_features() const
+    {
+        klog() << "ACPI Limited: Hardware features cannot be obtained";
+        ASSERT_NOT_REACHED();
+    }
+    const FADTFlags::x86_Specific_Flags& Parser::x86_specific_flags() const
+    {
+        klog() << "ACPI Limited: x86 specific features cannot be obtained";
+        ASSERT_NOT_REACHED();
+    }
     bool Parser::is_operable()
     {
         return false;
