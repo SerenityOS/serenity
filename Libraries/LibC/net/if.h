@@ -38,6 +38,7 @@ struct ifreq {
         struct sockaddr ifru_addr;
         struct sockaddr ifru_dstaddr;
         struct sockaddr ifru_broadaddr;
+        struct sockaddr ifru_netmask;
         struct sockaddr ifru_hwaddr;
         short ifru_flags;
         int ifru_metric;
@@ -49,6 +50,7 @@ struct ifreq {
 #define ifr_addr ifr_ifru.ifru_addr           // address
 #define ifr_dstaddr ifr_ifru.ifru_dstaddr     // other end of p-to-p link
 #define ifr_broadaddr ifr_ifru.ifru_broadaddr // broadcast address
+#define ifr_netmask ifr_ifru.ifru_netmask     // network mask
 #define ifr_flags ifr_ifru.ifru_flags         // flags
 #define ifr_metric ifr_ifru.ifru_metric       // metric
 #define ifr_mtu ifr_ifru.ifru_metric          // mtu (overload)
