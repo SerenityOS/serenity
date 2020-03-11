@@ -1498,7 +1498,8 @@ void TextEditor::set_syntax_highlighter(OwnPtr<SyntaxHighlighter> highlighter)
     if (m_highlighter) {
         m_highlighter->attach(*this);
         m_highlighter->rehighlight();
-    }
+    } else
+        document().set_spans({});
 }
 
 int TextEditor::line_height() const
