@@ -24,18 +24,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <LibJS/Heap.h>
+#include <LibJS/PrimitiveString.h>
 
 namespace JS {
 
-class ASTNode;
-class Cell;
-class Heap;
-class HeapBlock;
-class Interpreter;
-class Object;
-class PrimitiveString;
-class ScopeNode;
-class Value;
+PrimitiveString::PrimitiveString(String string)
+    : m_string(move(string))
+{
+}
+
+PrimitiveString::~PrimitiveString()
+{
+}
+
+PrimitiveString* js_string(Heap& heap, String string)
+{
+    return heap.allocate<PrimitiveString>(move(string));
+}
 
 }

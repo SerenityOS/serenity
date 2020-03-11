@@ -6,6 +6,7 @@ OBJS = \
     HeapBlock.o \
     Interpreter.o \
     Object.o \
+    PrimitiveString.o \
     Value.o
 
 LIBRARY = libjs.a
