@@ -154,29 +154,24 @@ namespace ACPI {
     {
         switch (structure.address_space) {
         case (u8)GenericAddressStructure::AddressSpace::SystemIO: {
-            dbg() << "ACPI: Sending value 0x" << String::format("%x", value) << " to " << IOAddress(structure.address);
+            IOAddress address(structure.address);
+            dbg() << "ACPI: Sending value 0x" << String::format("%x", value) << " to " << address;
             switch (structure.access_size) {
-            case (u8)GenericAddressStructure::AccessSize::Byte: {
-                IO::out8(structure.address, value);
-                break;
-            }
-            case (u8)GenericAddressStructure::AccessSize::Word: {
-                IO::out16(structure.address, value);
-                break;
-            }
-            case (u8)GenericAddressStructure::AccessSize::DWord: {
-                IO::out32(structure.address, value);
-                break;
-            }
             case (u8)GenericAddressStructure::AccessSize::QWord: {
                 dbg() << "Trying to send QWord to IO port";
                 ASSERT_NOT_REACHED();
                 break;
             }
-            default:
-                // FIXME: Determine if for reset register we can actually determine the right IO operation.
+            case (u8)GenericAddressStructure::AccessSize::Undefined: {
                 dbg() << "ACPI Warning: Unknown access size " << structure.access_size;
-                IO::out8(structure.address, value);
+                ASSERT(structure.bit_width != (u8)GenericAddressStructure::BitWidth::QWord);
+                ASSERT(structure.bit_width != (u8)GenericAddressStructure::BitWidth::Undefined);
+                dbg() << "ACPI: Bit Width - " << structure.bit_width << " bits";
+                address.out(value, structure.bit_width);
+                break;
+            }
+            default:
+                address.out(value, (8 << (structure.access_size - 1)));
                 break;
             }
             return;
