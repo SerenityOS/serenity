@@ -144,6 +144,46 @@ Value right_shift(Value lhs, Value rhs)
     return Value((i32)lhs.as_double() >> (i32)rhs.as_double());
 }
 
+Value add(Value lhs, Value rhs)
+
+{
+    ASSERT(lhs.is_number());
+    ASSERT(rhs.is_number());
+    return Value(lhs.as_double() + rhs.as_double());
+}
+
+Value sub(Value lhs, Value rhs)
+{
+    ASSERT(lhs.is_number());
+    ASSERT(rhs.is_number());
+    return Value(lhs.as_double() - rhs.as_double());
+}
+
+Value typed_eq(Value lhs, Value rhs)
+{
+    if (rhs.type() != lhs.type())
+        return Value(false);
+
+    switch (lhs.type()) {
+    case Value::Type::Undefined:
+        return Value(true);
+    case Value::Type::Null:
+        return Value(true);
+    case Value::Type::Number:
+        return Value(lhs.as_double() == rhs.as_double());
+    case Value::Type::String:
+        return Value(lhs.as_string() == rhs.as_string());
+    case Value::Type::Boolean:
+        return Value(lhs.as_bool() == rhs.as_bool());
+    case Value::Type::Object:
+        return Value(lhs.as_object() == rhs.as_object());
+    }
+
+    ASSERT_NOT_REACHED();
+}
+
+
+
 const LogStream& operator<<(const LogStream& stream, const Value& value)
 {
     return stream << value.to_string();
