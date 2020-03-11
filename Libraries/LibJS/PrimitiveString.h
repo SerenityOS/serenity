@@ -26,16 +26,24 @@
 
 #pragma once
 
+#include <AK/String.h>
+#include <LibJS/Cell.h>
+
 namespace JS {
 
-class ASTNode;
-class Cell;
-class Heap;
-class HeapBlock;
-class Interpreter;
-class Object;
-class PrimitiveString;
-class ScopeNode;
-class Value;
+class PrimitiveString final : public Cell {
+public:
+    explicit PrimitiveString(String);
+    virtual ~PrimitiveString();
+
+    const String& string() const { return m_string; }
+
+private:
+    virtual const char* class_name() const override { return "PrimitiveString"; }
+
+    String m_string;
+};
+
+PrimitiveString* js_string(Heap&, String);
 
 }
