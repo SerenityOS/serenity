@@ -79,7 +79,7 @@ void Window::close()
 
 void Window::move_to_front()
 {
-    if (!m_window_id)
+    if (!is_visible())
         return;
 
     WindowServerConnection::the().send_sync<Messages::WindowServer::MoveWindowToFront>(m_window_id);
@@ -87,7 +87,7 @@ void Window::move_to_front()
 
 void Window::show()
 {
-    if (m_window_id)
+    if (is_visible())
         return;
     auto response = WindowServerConnection::the().send_sync<Messages::WindowServer::CreateWindow>(
         m_rect_when_windowless,
@@ -103,6 +103,7 @@ void Window::show()
         (i32)m_window_type,
         m_title_when_windowless);
     m_window_id = response->window_id();
+    m_visible = true;
 
     apply_icon();
 
@@ -113,11 +114,12 @@ void Window::show()
 
 void Window::hide()
 {
-    if (!m_window_id)
+    if (!is_visible())
         return;
     reified_windows->remove(m_window_id);
     WindowServerConnection::the().send_sync<Messages::WindowServer::DestroyWindow>(m_window_id);
     m_window_id = 0;
+    m_visible = false;
     m_pending_paint_event_rects.clear();
     m_back_bitmap = nullptr;
     m_front_bitmap = nullptr;
@@ -136,21 +138,21 @@ void Window::hide()
 void Window::set_title(const StringView& title)
 {
     m_title_when_windowless = title;
-    if (!m_window_id)
+    if (!is_visible())
         return;
     WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowTitle>(m_window_id, title);
 }
 
 String Window::title() const
 {
-    if (!m_window_id)
+    if (!is_visible())
         return m_title_when_windowless;
     return WindowServerConnection::the().send_sync<Messages::WindowServer::GetWindowTitle>(m_window_id)->title();
 }
 
 Gfx::Rect Window::rect() const
 {
-    if (!m_window_id)
+    if (!is_visible())
         return m_rect_when_windowless;
     return WindowServerConnection::the().send_sync<Messages::WindowServer::GetWindowRect>(m_window_id)->rect();
 }
@@ -158,7 +160,7 @@ Gfx::Rect Window::rect() const
 void Window::set_rect(const Gfx::Rect& a_rect)
 {
     m_rect_when_windowless = a_rect;
-    if (!m_window_id) {
+    if (!is_visible()) {
         if (m_main_widget)
             m_main_widget->resize(m_rect_when_windowless.size());
         return;
@@ -179,7 +181,7 @@ void Window::set_window_type(WindowType window_type)
 
 void Window::set_override_cursor(StandardCursor cursor)
 {
-    if (!m_window_id)
+    if (!is_visible())
         return;
     WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowOverrideCursor>(m_window_id, (u32)cursor);
 }
@@ -228,7 +230,7 @@ void Window::event(Core::Event& event)
     }
 
     if (event.type() == Event::MultiPaint) {
-        if (!m_window_id)
+        if (!is_visible())
             return;
         if (!m_main_widget)
             return;
@@ -266,7 +268,7 @@ void Window::event(Core::Event& event)
         else if (created_new_backing_store)
             set_current_backing_bitmap(*m_back_bitmap, true);
 
-        if (m_window_id) {
+        if (is_visible()) {
             Vector<Gfx::Rect> rects_to_send;
             for (auto& r : rects)
                 rects_to_send.append(r);
@@ -337,7 +339,7 @@ void Window::event(Core::Event& event)
 
 bool Window::is_visible() const
 {
-    return m_window_id != 0;
+    return m_visible;
 }
 
 void Window::update()
@@ -348,7 +350,7 @@ void Window::update()
 
 void Window::force_update()
 {
-    if (!this->is_visible())
+    if (!is_visible())
         return;
     auto rect = this->rect();
     WindowServerConnection::the().post_message(Messages::WindowServer::InvalidateRect(m_window_id, { { 0, 0, rect.width(), rect.height() } }, true));
@@ -356,7 +358,7 @@ void Window::force_update()
 
 void Window::update(const Gfx::Rect& a_rect)
 {
-    if (!m_window_id)
+    if (!is_visible())
         return;
 
     for (auto& pending_rect : m_pending_paint_event_rects) {
@@ -439,7 +441,7 @@ void Window::set_has_alpha_channel(bool value)
     if (m_has_alpha_channel == value)
         return;
     m_has_alpha_channel = value;
-    if (!m_window_id)
+    if (!is_visible())
         return;
 
     m_pending_paint_event_rects.clear();
@@ -452,14 +454,14 @@ void Window::set_has_alpha_channel(bool value)
 
 void Window::set_double_buffering_enabled(bool value)
 {
-    ASSERT(!m_window_id);
+    ASSERT(!is_visible());
     m_double_buffering_enabled = value;
 }
 
 void Window::set_opacity(float opacity)
 {
     m_opacity_when_windowless = opacity;
-    if (!m_window_id)
+    if (!is_visible())
         return;
     WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowOpacity>(m_window_id, opacity);
 }
@@ -524,7 +526,7 @@ NonnullRefPtr<Gfx::Bitmap> Window::create_backing_bitmap(const Gfx::Size& size)
 
 void Window::set_modal(bool modal)
 {
-    ASSERT(!m_window_id);
+    ASSERT(!is_visible());
     m_modal = modal;
 }
 
@@ -551,7 +553,7 @@ void Window::apply_icon()
     if (!m_icon)
         return;
 
-    if (!m_window_id)
+    if (!is_visible())
         return;
 
     int rc = shbuf_seal(m_icon->shbuf_id());
@@ -615,7 +617,7 @@ void Window::set_fullscreen(bool fullscreen)
     if (m_fullscreen == fullscreen)
         return;
     m_fullscreen = fullscreen;
-    if (!m_window_id)
+    if (!is_visible())
         return;
     WindowServerConnection::the().send_sync<Messages::WindowServer::SetFullscreen>(m_window_id, fullscreen);
 }
@@ -678,7 +680,7 @@ void Window::set_base_size(const Gfx::Size& base_size)
     if (m_base_size == base_size)
         return;
     m_base_size = base_size;
-    if (m_window_id)
+    if (is_visible())
         WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrement>(m_window_id, m_base_size, m_size_increment);
 }
 
@@ -687,7 +689,7 @@ void Window::set_size_increment(const Gfx::Size& size_increment)
     if (m_size_increment == size_increment)
         return;
     m_size_increment = size_increment;
-    if (m_window_id)
+    if (is_visible())
         WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrement>(m_window_id, m_base_size, m_size_increment);
 }
 
