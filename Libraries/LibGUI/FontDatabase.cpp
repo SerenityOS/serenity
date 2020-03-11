@@ -52,6 +52,9 @@ FontDatabase::FontDatabase()
     }
     while (di.has_next()) {
         String name = di.next_path();
+        if (!name.ends_with(".font"))
+            continue;
+
         auto path = String::format("/res/fonts/%s", name.characters());
         if (auto font = Gfx::Font::load_from_file(path)) {
             Metadata metadata;
