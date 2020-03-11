@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@gmx.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,18 +26,43 @@
 
 #pragma once
 
+#include "AST.h"
+#include "Lexer.h"
+#include <AK/NonnullOwnPtr.h>
+
 namespace JS {
+class Parser {
+public:
+    explicit Parser(Lexer lexer);
 
-class ASTNode;
-class Cell;
-class Expression;
-class Heap;
-class HeapBlock;
-class Interpreter;
-class Object;
-class PrimitiveString;
-class ScopeNode;
-class Value;
-enum class DeclarationType;
+    NonnullOwnPtr<Program> parse_program();
 
+    NonnullOwnPtr<Statement> parse_statement();
+    NonnullOwnPtr<BlockStatement> parse_block_statement();
+    NonnullOwnPtr<ReturnStatement> parse_return_statement();
+    NonnullOwnPtr<FunctionDeclaration> parse_function_declaration();
+    NonnullOwnPtr<VariableDeclaration> parse_variable_declaration();
+
+    NonnullOwnPtr<Expression> parse_expression();
+    NonnullOwnPtr<Expression> parse_primary_expression();
+    NonnullOwnPtr<ObjectExpression> parse_object_expression();
+    NonnullOwnPtr<Expression> parse_secondary_expression(NonnullOwnPtr<Expression>);
+    NonnullOwnPtr<CallExpression> parse_call_expression(NonnullOwnPtr<Expression>);
+
+    bool has_errors() const { return m_has_errors; }
+
+private:
+    bool match_expression() const;
+    bool match_secondary_expression() const;
+    bool match_statement() const;
+    bool match(TokenType type) const;
+    bool done() const;
+    void expected(const char* what);
+    Token consume();
+    Token consume(TokenType type);
+
+    Lexer m_lexer;
+    Token m_current_token;
+    bool m_has_errors = false;
+};
 }

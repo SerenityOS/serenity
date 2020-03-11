@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@gmx.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,18 +26,36 @@
 
 #pragma once
 
+#include "Token.h"
+
+#include <AK/HashMap.h>
+#include <AK/String.h>
+#include <AK/StringView.h>
+
 namespace JS {
 
-class ASTNode;
-class Cell;
-class Expression;
-class Heap;
-class HeapBlock;
-class Interpreter;
-class Object;
-class PrimitiveString;
-class ScopeNode;
-class Value;
-enum class DeclarationType;
+class Lexer {
+public:
+    explicit Lexer(StringView source);
+    Token next();
+
+private:
+    void consume();
+    bool is_eof() const;
+    bool is_identifier_start() const;
+    bool is_identifier_middle() const;
+    bool is_line_comment_start() const;
+    bool is_block_comment_start() const;
+    bool is_block_comment_end() const;
+
+    StringView m_source;
+    size_t m_position = 0;
+    Token m_current_token;
+    int m_current_char;
+
+    static HashMap<String, TokenType> s_keywords;
+    static HashMap<String, TokenType> s_two_char_tokens;
+    static HashMap<char, TokenType> s_single_char_tokens;
+};
 
 }

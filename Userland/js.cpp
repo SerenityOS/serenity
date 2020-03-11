@@ -28,20 +28,20 @@
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Object.h>
+#include <LibJS/Parser.h>
 #include <LibJS/PrimitiveString.h>
 #include <LibJS/Value.h>
 #include <stdio.h>
 
-#define PROGRAM 4
+#define PROGRAM 6
 
-static void build_program(JS::Program&, JS::Heap&);
+static NonnullOwnPtr<JS::Program> build_program(JS::Heap&);
 
 int main()
 {
     JS::Interpreter interpreter;
 
-    auto program = make<JS::Program>();
-    build_program(*program, interpreter.heap());
+    auto program = build_program(interpreter.heap());
     program->dump(0);
 
     auto result = interpreter.run(*program);
@@ -55,7 +55,7 @@ int main()
 }
 
 #if PROGRAM == 1
-void build_program(JS::Program& program, JS::Heap&)
+NonnullOwnPtr<JS::Program> build_program(JS::Heap&)
 {
     // function foo() { return (1 + 2) + 3; }
     // foo();
@@ -70,11 +70,13 @@ void build_program(JS::Program& program, JS::Heap&)
                 make<JS::Literal>(JS::Value(2))),
             make<JS::Literal>(JS::Value(3))));
 
-    program.append<JS::FunctionDeclaration>("foo", move(block));
-    program.append<JS::CallExpression>("foo");
+    auto program = make<JS::Program>();
+    program->append<JS::FunctionDeclaration>("foo", move(block));
+    program->append<JS::ExpressionStatement>(make<JS::CallExpression>("foo"));
+    return program;
 }
 #elif PROGRAM == 2
-void build_program(JS::Program& program, JS::Heap&)
+NonnullOwnPtr<JS::Program> build_program(JS::Heap&)
 {
     // c = 1;
     // function foo() {
@@ -84,10 +86,11 @@ void build_program(JS::Program& program, JS::Heap&)
     // }
     // foo();
 
-    program.append<JS::AssignmentExpression>(
+    auto program = make<JS::Program>();
+    program->append<JS::ExpressionStatement>(make<JS::AssignmentExpression>(
         JS::AssignmentOp::Assign,
         make<JS::Identifier>("c"),
-        make<JS::Literal>(JS::Value(1)));
+        make<JS::Literal>(JS::Value(1))));
 
     auto block = make<JS::BlockStatement>();
     block->append<JS::VariableDeclaration>(
@@ -107,11 +110,14 @@ void build_program(JS::Program& program, JS::Heap&)
                 make<JS::Identifier>("a"),
                 make<JS::Identifier>("b")),
             make<JS::Identifier>("c")));
-    program.append<JS::FunctionDeclaration>("foo", move(block));
-    program.append<JS::CallExpression>("foo");
+
+    program->append<JS::FunctionDeclaration>("foo", move(block));
+    program->append<JS::ExpressionStatement>(make<JS::CallExpression>("foo"));
+
+    return program;
 }
 #elif PROGRAM == 3
-void build_program(JS::Program& program, JS::Heap&)
+NonnullOwnPtr<JS::Program> build_program(JS::Heap&)
 {
     // function foo() {
     //   var x = {};
@@ -124,13 +130,15 @@ void build_program(JS::Program& program, JS::Heap&)
         make<JS::Identifier>("x"),
         make<JS::ObjectExpression>(),
         JS::DeclarationType::Var);
-    block->append<JS::CallExpression>("$gc");
+    block->append<JS::ExpressionStatement>(make<JS::CallExpression>("$gc"));
 
-    program.append<JS::FunctionDeclaration>("foo", move(block));
-    program.append<JS::CallExpression>("foo");
+    auto program = make<JS::Program>();
+    program->append<JS::FunctionDeclaration>("foo", move(block));
+    program->append<JS::ExpressionStatement>(make<JS::CallExpression>("foo"));
+    return program;
 }
 #elif PROGRAM == 4
-void build_program(JS::Program& program, JS::Heap&)
+NonnullOwnPtr<JS::Program> build_program(JS::Heap&)
 {
     // function foo() {
     //   function bar() {
@@ -147,19 +155,38 @@ void build_program(JS::Program& program, JS::Heap&)
 
     auto block_foo = make<JS::BlockStatement>();
     block_foo->append<JS::FunctionDeclaration>("bar", move(block_bar));
-    block_foo->append<JS::CallExpression>("bar");
+    block_foo->append<JS::ExpressionStatement>(make<JS::CallExpression>("bar"));
     block_foo->append<JS::ReturnStatement>(make<JS::Identifier>("y"));
 
-    program.append<JS::FunctionDeclaration>("foo", move(block_foo));
-    program.append<JS::CallExpression>("foo");
+    auto program = make<JS::Program>();
+    program->append<JS::FunctionDeclaration>("foo", move(block_foo));
+    program->append<JS::ExpressionStatement>(make<JS::CallExpression>("foo"));
+    return program;
 }
 #elif PROGRAM == 5
-void build_program(JS::Program& program, JS::Heap& heap)
+NonnullOwnPtr<JS::Program> build_program(JS::Heap& heap)
 {
     // "hello friends".length
 
-    program.append<JS::MemberExpression>(
+    auto program = make<JS::Program>();
+    program->append<JS::ExpressionStatement>(make<JS::MemberExpression>(
         make<JS::Literal>(JS::Value(js_string(heap, "hello friends"))),
-        make<JS::Identifier>("length"));
+        make<JS::Identifier>("length")));
+
+    return program;
+}
+#elif PROGRAM == 6
+NonnullOwnPtr<JS::Program> build_program(JS::Heap&)
+{
+    const char* source = "var foo = 1;\n"
+                         "function bar() {\n"
+                         "    return 38;\n"
+                         "}\n"
+                         "foo = {};\n"
+                         "foo = bar() + 4;\n"
+                         "foo;\n";
+
+    auto parser = JS::Parser(JS::Lexer(source));
+    return parser.parse_program();
 }
 #endif

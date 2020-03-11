@@ -5,9 +5,12 @@ OBJS = \
     Heap.o \
     HeapBlock.o \
     Interpreter.o \
+    Lexer.o \
     Object.o \
+    Parser.o \
     PrimitiveString.o \
     StringObject.o \
+    Token.o \
     Value.o
 
 LIBRARY = libjs.a
