@@ -91,43 +91,6 @@ Value WhileStatement::execute(Interpreter& interpreter) const
     return last_value;
 }
 
-Value add(Value lhs, Value rhs)
-{
-    ASSERT(lhs.is_number());
-    ASSERT(rhs.is_number());
-    return Value(lhs.as_double() + rhs.as_double());
-}
-
-Value sub(Value lhs, Value rhs)
-{
-    ASSERT(lhs.is_number());
-    ASSERT(rhs.is_number());
-    return Value(lhs.as_double() - rhs.as_double());
-}
-
-const Value typed_eq(const Value lhs, const Value rhs)
-{
-    if (rhs.type() != lhs.type())
-        return Value(false);
-
-    switch (lhs.type()) {
-    case Value::Type::Undefined:
-        return Value(true);
-    case Value::Type::Null:
-        return Value(true);
-    case Value::Type::Number:
-        return Value(lhs.as_double() == rhs.as_double());
-    case Value::Type::String:
-        return Value(lhs.as_string() == rhs.as_string());
-    case Value::Type::Boolean:
-        return Value(lhs.as_bool() == rhs.as_bool());
-    case Value::Type::Object:
-        return Value(lhs.as_object() == rhs.as_object());
-    }
-
-    ASSERT_NOT_REACHED();
-}
-
 Value BinaryExpression::execute(Interpreter& interpreter) const
 {
     auto lhs_result = m_lhs->execute(interpreter);
