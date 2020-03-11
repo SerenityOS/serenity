@@ -77,7 +77,18 @@ void CppSyntaxHighlighter::highlight_matching_token_pair()
     auto find_span_of_type = [&](auto i, CppToken::Type type, CppToken::Type not_type, Direction direction) -> Optional<size_t> {
         size_t nesting_level = 0;
         bool forward = direction == Direction::Forward;
-        for (forward ? ++i : --i; forward ? (i < document.spans().size()) : (i >= 0); forward ? ++i : --i) {
+
+        if (forward) {
+            ++i;
+            if (i >= document.spans().size())
+                return {};
+        } else {
+            if (i == 0)
+                return {};
+            --i;
+        }
+
+        for (;;) {
             auto& span = document.spans().at(i);
             auto span_token_type = (CppToken::Type)((FlatPtr)span.data);
             if (span_token_type == not_type) {
@@ -86,7 +97,18 @@ void CppSyntaxHighlighter::highlight_matching_token_pair()
                 if (nesting_level-- <= 0)
                     return i;
             }
+
+            if (forward) {
+                ++i;
+                if (i >= document.spans().size())
+                    return {};
+            } else {
+                if (i == 0)
+                    return {};
+                --i;
+            }
         }
+
         return {};
     };
 
