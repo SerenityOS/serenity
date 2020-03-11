@@ -28,6 +28,7 @@
 
 #include <AK/FileSystemPath.h>
 #include <AK/Function.h>
+#include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Widget.h>
@@ -77,6 +78,10 @@ private:
     RefPtr<GUI::Widget> m_find_replace_widget;
     RefPtr<GUI::Widget> m_find_widget;
     RefPtr<GUI::Widget> m_replace_widget;
+
+    GUI::ActionGroup syntax_actions;
+    RefPtr<GUI::Action> m_plain_text_highlight;
+    RefPtr<GUI::Action> m_cpp_highlight;
 
     bool m_document_dirty { false };
     bool m_document_opening { false };
