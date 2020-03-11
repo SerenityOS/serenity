@@ -25,7 +25,10 @@
  */
 
 #include <AK/String.h>
+#include <LibJS/Heap.h>
 #include <LibJS/Object.h>
+#include <LibJS/PrimitiveString.h>
+#include <LibJS/StringObject.h>
 #include <LibJS/Value.h>
 
 namespace JS {
@@ -50,6 +53,9 @@ String Value::to_string() const
         return String::format("{%s}", as_object()->class_name());
     }
 
+    if (is_string())
+        return m_value.as_string->string();
+
     ASSERT_NOT_REACHED();
 }
 
@@ -64,12 +70,23 @@ bool Value::to_boolean() const
     case Type::Undefined:
         return false;
     case Type::String:
-        return String(as_string()).is_empty();
+        return !as_string()->string().is_empty();
     case Type::Object:
         return true;
     default:
         ASSERT_NOT_REACHED();
     }
+}
+
+Value Value::to_object(Heap& heap) const
+{
+    if (is_object())
+        return Value(as_object());
+
+    if (is_string())
+        return Value(heap.allocate<StringObject>(m_value.as_string));
+
+    ASSERT_NOT_REACHED();
 }
 
 Value greater_than(Value lhs, Value rhs)

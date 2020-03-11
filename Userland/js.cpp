@@ -28,21 +28,22 @@
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Object.h>
+#include <LibJS/PrimitiveString.h>
 #include <LibJS/Value.h>
 #include <stdio.h>
 
-#define PROGRAM 2
+#define PROGRAM 4
 
-static void build_program(JS::Program&);
+static void build_program(JS::Program&, JS::Heap&);
 
 int main()
 {
-    auto program = make<JS::Program>();
-    build_program(*program);
+    JS::Interpreter interpreter;
 
+    auto program = make<JS::Program>();
+    build_program(*program, interpreter.heap());
     program->dump(0);
 
-    JS::Interpreter interpreter;
     auto result = interpreter.run(*program);
     dbg() << "Interpreter returned " << result;
 
@@ -124,5 +125,14 @@ void build_program(JS::Program& program)
 
     program.append<JS::FunctionDeclaration>("foo", move(block));
     program.append<JS::CallExpression>("foo");
+}
+#elif PROGRAM == 4
+void build_program(JS::Program& program, JS::Heap& heap)
+{
+    // "hello friends".length
+
+    program.append<JS::MemberExpression>(
+        make<JS::Literal>(JS::Value(js_string(heap, "hello friends"))),
+        make<JS::Identifier>("length"));
 }
 #endif

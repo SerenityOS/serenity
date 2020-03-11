@@ -387,7 +387,6 @@ Value VariableDeclaration::execute(Interpreter& interpreter) const
     return js_undefined();
 }
 
-
 void VariableDeclaration::dump(int indent) const
 {
     ASTNode::dump(indent);
@@ -404,6 +403,28 @@ void ObjectExpression::dump(int indent) const
 Value ObjectExpression::execute(Interpreter& interpreter) const
 {
     return Value(interpreter.heap().allocate<Object>());
+}
+
+void MemberExpression::dump(int indent) const
+{
+    ASTNode::dump(indent);
+    m_object->dump(indent + 1);
+    m_property->dump(indent + 1);
+}
+
+Value MemberExpression::execute(Interpreter& interpreter) const
+{
+    auto object_result = m_object->execute(interpreter).to_object(interpreter.heap());
+    ASSERT(object_result.is_object());
+
+    String property_name;
+    if (m_property->is_identifier()) {
+        property_name = static_cast<const Identifier&>(*m_property).string();
+    } else {
+        ASSERT_NOT_REACHED();
+    }
+
+    return object_result.as_object()->get(property_name);
 }
 
 }

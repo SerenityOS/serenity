@@ -363,4 +363,22 @@ private:
     virtual const char* class_name() const override { return "ObjectExpression"; }
 };
 
+class MemberExpression final : public Expression {
+public:
+    MemberExpression(NonnullOwnPtr<Expression> object, NonnullOwnPtr<Expression> property)
+        : m_object(move(object))
+        , m_property(move(property))
+    {
+    }
+
+    virtual Value execute(Interpreter&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    virtual const char* class_name() const override { return "MemberExpression"; }
+
+    NonnullOwnPtr<Expression> m_object;
+    NonnullOwnPtr<Expression> m_property;
+};
+
 }
