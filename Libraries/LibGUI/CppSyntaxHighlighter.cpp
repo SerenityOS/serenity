@@ -5,11 +5,6 @@
 
 namespace GUI {
 
-struct TextStyle {
-    Color color;
-    const Gfx::Font* font { nullptr };
-};
-
 static TextStyle style_for_token_type(CppToken::Type type)
 {
     switch (type) {
@@ -79,105 +74,20 @@ void CppSyntaxHighlighter::rehighlight()
     m_editor->update();
 }
 
-void CppSyntaxHighlighter::highlight_matching_token_pair()
+Vector<SyntaxHighlighter::MatchingTokenPair> CppSyntaxHighlighter::matching_token_pairs() const
 {
-    ASSERT(m_editor);
-    auto& document = m_editor->document();
-
-    enum class Direction {
-        Forward,
-        Backward,
-    };
-
-    auto find_span_of_type = [&](auto i, CppToken::Type type, CppToken::Type not_type, Direction direction) -> Optional<size_t> {
-        size_t nesting_level = 0;
-        bool forward = direction == Direction::Forward;
-
-        if (forward) {
-            ++i;
-            if (i >= document.spans().size())
-                return {};
-        } else {
-            if (i == 0)
-                return {};
-            --i;
-        }
-
-        for (;;) {
-            auto& span = document.spans().at(i);
-            auto span_token_type = (CppToken::Type)((FlatPtr)span.data);
-            if (span_token_type == not_type) {
-                ++nesting_level;
-            } else if (span_token_type == type) {
-                if (nesting_level-- <= 0)
-                    return i;
-            }
-
-            if (forward) {
-                ++i;
-                if (i >= document.spans().size())
-                    return {};
-            } else {
-                if (i == 0)
-                    return {};
-                --i;
-            }
-        }
-
-        return {};
-    };
-
-    auto make_buddies = [&](int index0, int index1) {
-        auto& buddy0 = const_cast<GUI::TextDocumentSpan&>(document.spans()[index0]);
-        auto& buddy1 = const_cast<GUI::TextDocumentSpan&>(document.spans()[index1]);
-        m_has_brace_buddies = true;
-        m_brace_buddies[0].index = index0;
-        m_brace_buddies[1].index = index1;
-        m_brace_buddies[0].span_backup = buddy0;
-        m_brace_buddies[1].span_backup = buddy1;
-        buddy0.background_color = Color::DarkCyan;
-        buddy1.background_color = Color::DarkCyan;
-        buddy0.color = Color::White;
-        buddy1.color = Color::White;
-        m_editor->update();
-    };
-
-    struct MatchingTokenPair {
-        CppToken::Type open;
-        CppToken::Type close;
-    };
-
-    MatchingTokenPair pairs[] = {
-        { CppToken::Type::LeftCurly, CppToken::Type::RightCurly },
-        { CppToken::Type::LeftParen, CppToken::Type::RightParen },
-        { CppToken::Type::LeftBracket, CppToken::Type::RightBracket },
-    };
-
-    for (size_t i = 0; i < document.spans().size(); ++i) {
-        auto& span = const_cast<GUI::TextDocumentSpan&>(document.spans().at(i));
-        auto token_type = (CppToken::Type)((FlatPtr)span.data);
-
-        for (auto& pair : pairs) {
-            if (token_type == pair.open && span.range.start() == m_editor->cursor()) {
-                auto buddy = find_span_of_type(i, pair.close, pair.open, Direction::Forward);
-                if (buddy.has_value())
-                    make_buddies(i, buddy.value());
-                return;
-            }
-        }
-
-        auto right_of_end = span.range.end();
-        right_of_end.set_column(right_of_end.column() + 1);
-
-        for (auto& pair : pairs) {
-            if (token_type == pair.close && right_of_end == m_editor->cursor()) {
-                auto buddy = find_span_of_type(i, pair.open, pair.close, Direction::Backward);
-                if (buddy.has_value())
-                    make_buddies(i, buddy.value());
-                return;
-            }
-        }
+    static Vector<SyntaxHighlighter::MatchingTokenPair> pairs;
+    if (pairs.is_empty()) {
+        pairs.append({ reinterpret_cast<void*>(CppToken::Type::LeftCurly), reinterpret_cast<void*>(CppToken::Type::RightCurly) });
+        pairs.append({ reinterpret_cast<void*>(CppToken::Type::LeftParen), reinterpret_cast<void*>(CppToken::Type::RightParen) });
+        pairs.append({ reinterpret_cast<void*>(CppToken::Type::LeftBracket), reinterpret_cast<void*>(CppToken::Type::RightBracket) });
     }
+    return pairs;
+}
+
+bool CppSyntaxHighlighter::token_types_equal(void* token1, void* token2) const
+{
+    return static_cast<GUI::CppToken::Type>(reinterpret_cast<size_t>(token1)) == static_cast<GUI::CppToken::Type>(reinterpret_cast<size_t>(token2));
 }
 
 CppSyntaxHighlighter::~CppSyntaxHighlighter()
