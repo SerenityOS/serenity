@@ -136,6 +136,12 @@ NonnullOwnPtr<Expression> Parser::parse_secondary_expression(NonnullOwnPtr<Expre
     case TokenType::Period:
         consume();
         return make<MemberExpression>(move(lhs), parse_expression());
+    case TokenType::PlusPlus:
+        consume();
+        return make<UpdateExpression>(UpdateOp::Increment, move(lhs));
+    case TokenType::MinusMinus:
+        consume();
+        return make<UpdateExpression>(UpdateOp::Decrement, move(lhs));
     default:
         m_has_errors = true;
         expected("secondary expression (missing switch case)");
@@ -257,7 +263,9 @@ bool Parser::match_secondary_expression() const
         || type == TokenType::Slash
         || type == TokenType::Equals
         || type == TokenType::ParenOpen
-        || type == TokenType::Period;
+        || type == TokenType::Period
+        || type == TokenType::PlusPlus
+        || type == TokenType::MinusMinus;
 }
 
 bool Parser::match_statement() const
