@@ -57,7 +57,12 @@ Value Interpreter::run(const ScopeNode& scope_node, HashMap<String, Value> scope
 
 void Interpreter::enter_scope(const ScopeNode& scope_node, HashMap<String, Value> scope_variables, ScopeType scope_type)
 {
-    m_scope_stack.append({ scope_type, scope_node, move(scope_variables) });
+    HashMap<String, Variable> scope_variables_with_declaration_type;
+    for (String name : scope_variables.keys()) {
+        scope_variables_with_declaration_type.set(name, { scope_variables.get(name).value(), DeclarationType::Var });
+    }
+
+    m_scope_stack.append({ scope_type, scope_node, move(scope_variables_with_declaration_type) });
 }
 
 void Interpreter::exit_scope(const ScopeNode& scope_node)
@@ -78,7 +83,10 @@ void Interpreter::declare_variable(String name, DeclarationType declaration_type
         for (ssize_t i = m_scope_stack.size() - 1; i >= 0; --i) {
             auto& scope = m_scope_stack.at(i);
             if (scope.type == ScopeType::Function) {
-                scope.variables.set(move(name), js_undefined());
+                if (scope.variables.get(name).has_value() && scope.variables.get(name).value().declaration_type != DeclarationType::Var)
+                    ASSERT_NOT_REACHED();
+
+                scope.variables.set(move(name), { js_undefined(), declaration_type });
                 return;
             }
         }
@@ -86,7 +94,11 @@ void Interpreter::declare_variable(String name, DeclarationType declaration_type
         global_object().put(move(name), js_undefined());
         break;
     case DeclarationType::Let:
-        m_scope_stack.last().variables.set(move(name), js_undefined());
+    case DeclarationType::Const:
+        if (m_scope_stack.last().variables.get(name).has_value() && m_scope_stack.last().variables.get(name).value().declaration_type != DeclarationType::Var)
+            ASSERT_NOT_REACHED();
+
+        m_scope_stack.last().variables.set(move(name), { js_undefined(), declaration_type });
         break;
     }
 }
@@ -95,8 +107,13 @@ void Interpreter::set_variable(String name, Value value)
 {
     for (ssize_t i = m_scope_stack.size() - 1; i >= 0; --i) {
         auto& scope = m_scope_stack.at(i);
-        if (scope.variables.contains(name)) {
-            scope.variables.set(move(name), move(value));
+
+        auto possible_match = scope.variables.get(name);
+        if (possible_match.has_value()) {
+            if (possible_match.value().declaration_type == DeclarationType::Const)
+                ASSERT_NOT_REACHED();
+
+            scope.variables.set(move(name), { move(value), possible_match.value().declaration_type });
             return;
         }
     }
@@ -110,7 +127,7 @@ Value Interpreter::get_variable(const String& name)
         auto& scope = m_scope_stack.at(i);
         auto value = scope.variables.get(name);
         if (value.has_value())
-            return value.value();
+            return value.value().value;
     }
 
     return global_object().get(name);
@@ -122,8 +139,8 @@ void Interpreter::collect_roots(Badge<Heap>, HashTable<Cell*>& roots)
 
     for (auto& scope : m_scope_stack) {
         for (auto& it : scope.variables) {
-            if (it.value.is_cell())
-                roots.set(it.value.as_cell());
+            if (it.value.value.is_cell())
+                roots.set(it.value.value.as_cell());
         }
     }
 }

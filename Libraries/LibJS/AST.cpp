@@ -456,6 +456,7 @@ Value UpdateExpression::execute(Interpreter& interpreter) const
         break;
     case UpdateOp::Decrement:
         interpreter.set_variable(name, Value(previous_value.as_double() - 1));
+        break;
     }
 
     return previous_value;
@@ -520,19 +521,22 @@ Value VariableDeclaration::execute(Interpreter& interpreter) const
 
 void VariableDeclaration::dump(int indent) const
 {
-    const char* op_string = nullptr;
+    const char* declaration_type_string = nullptr;
     switch (m_declaration_type) {
     case DeclarationType::Let:
-        op_string = "Let";
+        declaration_type_string = "Let";
         break;
     case DeclarationType::Var:
-        op_string = "Var";
+        declaration_type_string = "Var";
+        break;
+    case DeclarationType::Const:
+        declaration_type_string = "Const";
         break;
     }
 
     ASTNode::dump(indent);
     print_indent(indent + 1);
-    printf("%s\n", op_string);
+    printf("%s\n", declaration_type_string);
     m_name->dump(indent + 1);
     if (m_initializer)
         m_initializer->dump(indent + 1);
