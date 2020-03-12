@@ -58,6 +58,7 @@ enum class TokenType {
     ExclamationMarkEquals,
     ExclamationMarkEqualsEquals,
     Finally,
+    For,
     Function,
     GreaterThan,
     GreaterThanEquals,
