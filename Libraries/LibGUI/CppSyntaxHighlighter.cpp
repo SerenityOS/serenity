@@ -37,6 +37,18 @@ static TextStyle style_for_token_type(CppToken::Type type)
     }
 }
 
+bool CppSyntaxHighlighter::is_identifier(void* token) const
+{
+    auto cpp_token = static_cast<GUI::CppToken::Type>(reinterpret_cast<size_t>(token));
+    return cpp_token == GUI::CppToken::Type::Identifier;
+}
+
+bool CppSyntaxHighlighter::is_navigatable(void* token) const
+{
+    auto cpp_token = static_cast<GUI::CppToken::Type>(reinterpret_cast<size_t>(token));
+    return cpp_token == GUI::CppToken::Type::IncludePath;
+}
+
 void CppSyntaxHighlighter::rehighlight()
 {
     ASSERT(m_editor);
