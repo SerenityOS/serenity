@@ -383,6 +383,22 @@ Value AssignmentExpression::execute(Interpreter& interpreter) const
     case AssignmentOp::Assign:
         interpreter.set_variable(name, rhs_result);
         break;
+    case AssignmentOp::PlusEquals:
+        rhs_result = add(m_lhs->execute(interpreter), rhs_result);
+        interpreter.set_variable(name, rhs_result);
+        break;
+    case AssignmentOp::MinusEquals:
+        rhs_result = sub(m_lhs->execute(interpreter), rhs_result);
+        interpreter.set_variable(name, rhs_result);
+        break;
+    case AssignmentOp::AsteriskEquals:
+        rhs_result = mul(m_lhs->execute(interpreter), rhs_result);
+        interpreter.set_variable(name, rhs_result);
+        break;
+    case AssignmentOp::SlashEquals:
+        rhs_result = div(m_lhs->execute(interpreter), rhs_result);
+        interpreter.set_variable(name, rhs_result);
+        break;
     }
     return rhs_result;
 }
@@ -393,6 +409,18 @@ void AssignmentExpression::dump(int indent) const
     switch (m_op) {
     case AssignmentOp::Assign:
         op_string = "=";
+        break;
+    case AssignmentOp::PlusEquals:
+        op_string = "+=";
+        break;
+    case AssignmentOp::MinusEquals:
+        op_string = "-=";
+        break;
+    case AssignmentOp::AsteriskEquals:
+        op_string = "*=";
+        break;
+    case AssignmentOp::SlashEquals:
+        op_string = "/=";
         break;
     }
 
