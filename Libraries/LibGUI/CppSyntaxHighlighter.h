@@ -14,7 +14,10 @@ public:
 
     virtual SyntaxLanguage language() const override { return SyntaxLanguage::Cpp; }
     virtual void rehighlight() override;
-    virtual void highlight_matching_token_pair() override;
+
+protected:
+    virtual Vector<MatchingTokenPair> matching_token_pairs() const override;
+    virtual bool token_types_equal(void*, void*) const override;
 };
 
 }
