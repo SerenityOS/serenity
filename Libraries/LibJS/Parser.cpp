@@ -124,15 +124,27 @@ NonnullOwnPtr<Expression> Parser::parse_secondary_expression(NonnullOwnPtr<Expre
     case TokenType::Plus:
         consume();
         return make<BinaryExpression>(BinaryOp::Plus, move(lhs), parse_expression());
+    case TokenType::PlusEquals:
+        consume();
+        return make<AssignmentExpression>(AssignmentOp::PlusEquals, move(lhs), parse_expression());
     case TokenType::Minus:
         consume();
         return make<BinaryExpression>(BinaryOp::Minus, move(lhs), parse_expression());
+    case TokenType::MinusEquals:
+        consume();
+        return make<AssignmentExpression>(AssignmentOp::MinusEquals, move(lhs), parse_expression());
     case TokenType::Asterisk:
         consume();
         return make<BinaryExpression>(BinaryOp::Asterisk, move(lhs), parse_expression());
+    case TokenType::AsteriskEquals:
+        consume();
+        return make<AssignmentExpression>(AssignmentOp::AsteriskEquals, move(lhs), parse_expression());
     case TokenType::Slash:
         consume();
         return make<BinaryExpression>(BinaryOp::Slash, move(lhs), parse_expression());
+    case TokenType::SlashEquals:
+        consume();
+        return make<AssignmentExpression>(AssignmentOp::SlashEquals, move(lhs), parse_expression());
     case TokenType::GreaterThanEquals:
         consume();
         return make<BinaryExpression>(BinaryOp::GreaterThanEquals, move(lhs), parse_expression());
@@ -250,9 +262,13 @@ bool Parser::match_secondary_expression() const
 {
     auto type = m_current_token.type();
     return type == TokenType::Plus
+        || type == TokenType::PlusEquals
         || type == TokenType::Minus
+        || type == TokenType::MinusEquals
         || type == TokenType::Asterisk
+        || type == TokenType::AsteriskEquals
         || type == TokenType::Slash
+        || type == TokenType::SlashEquals
         || type == TokenType::Equals
         || type == TokenType::GreaterThanEquals
         || type == TokenType::LessThanEquals
