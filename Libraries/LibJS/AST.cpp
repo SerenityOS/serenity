@@ -105,6 +105,30 @@ Value WhileStatement::execute(Interpreter& interpreter) const
     return last_value;
 }
 
+Value ForStatement::execute(Interpreter& interpreter) const
+{
+    Value last_value = js_undefined();
+
+    if (m_init)
+        m_init->execute(interpreter);
+
+    if (m_test) {
+        while (m_test->execute(interpreter).to_boolean()) {
+            last_value = interpreter.run(*m_body);
+            if (m_update)
+                m_update->execute(interpreter);
+        }
+    } else {
+        while (true) {
+            last_value = interpreter.run(*m_body);
+            if (m_update)
+                m_update->execute(interpreter);
+        }
+    }
+
+    return last_value;
+}
+
 Value BinaryExpression::execute(Interpreter& interpreter) const
 {
     auto lhs_result = m_lhs->execute(interpreter);
@@ -359,6 +383,21 @@ void WhileStatement::dump(int indent) const
     print_indent(indent);
     printf("While\n");
     predicate().dump(indent + 1);
+    body().dump(indent + 1);
+}
+
+void ForStatement::dump(int indent) const
+{
+    ASTNode::dump(indent);
+
+    print_indent(indent);
+    printf("For\n");
+    if (init())
+        init()->dump(indent + 1);
+    if (test())
+        test()->dump(indent + 1);
+    if (update())
+        update()->dump(indent + 1);
     body().dump(indent + 1);
 }
 

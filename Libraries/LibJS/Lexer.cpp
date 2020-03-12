@@ -51,6 +51,7 @@ Lexer::Lexer(StringView source)
         s_keywords.set("do", TokenType::Do);
         s_keywords.set("else", TokenType::Else);
         s_keywords.set("finally", TokenType::Finally);
+        s_keywords.set("for", TokenType::For);
         s_keywords.set("function", TokenType::Function);
         s_keywords.set("if", TokenType::If);
         s_keywords.set("interface", TokenType::Interface);

@@ -42,6 +42,7 @@ public:
     NonnullOwnPtr<ReturnStatement> parse_return_statement();
     NonnullOwnPtr<FunctionDeclaration> parse_function_declaration();
     NonnullOwnPtr<VariableDeclaration> parse_variable_declaration();
+    NonnullOwnPtr<ForStatement> parse_for_statement();
 
     NonnullOwnPtr<Expression> parse_expression();
     NonnullOwnPtr<Expression> parse_primary_expression();

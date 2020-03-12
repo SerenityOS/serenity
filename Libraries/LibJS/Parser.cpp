@@ -66,6 +66,8 @@ NonnullOwnPtr<Statement> Parser::parse_statement()
         return parse_return_statement();
     case TokenType::Var:
         return parse_variable_declaration();
+    case TokenType::For:
+        return parse_for_statement();
     default:
         m_has_errors = true;
         expected("statement (missing switch case)");
@@ -251,6 +253,53 @@ NonnullOwnPtr<VariableDeclaration> Parser::parse_variable_declaration()
     return make<VariableDeclaration>(make<Identifier>(name), move(initializer), DeclarationType::Var);
 }
 
+NonnullOwnPtr<ForStatement> Parser::parse_for_statement()
+{
+    consume(TokenType::For);
+
+    consume(TokenType::ParenOpen);
+
+    OwnPtr<Statement> init = nullptr;
+    switch (m_current_token.type()) {
+    case TokenType::Var:
+        init = parse_variable_declaration();
+        break;
+    case TokenType::Semicolon:
+        break;
+    default:
+        init = parse_statement();
+        break;
+    }
+
+    consume(TokenType::Semicolon);
+
+    OwnPtr<Expression> test = nullptr;
+    switch (m_current_token.type()) {
+    case TokenType::Semicolon:
+        break;
+    default:
+        test = parse_expression();
+        break;
+    }
+
+    consume(TokenType::Semicolon);
+
+    OwnPtr<Expression> update = nullptr;
+    switch (m_current_token.type()) {
+    case TokenType::Semicolon:
+        break;
+    default:
+        update = parse_expression();
+        break;
+    }
+
+    consume(TokenType::ParenClose);
+
+    auto body = parse_block_statement();
+
+    return make<ForStatement>(move(init), move(test), move(update), move(body));
+}
+
 bool Parser::match(TokenType type) const
 {
     return m_current_token.type() == type;
@@ -306,6 +355,7 @@ bool Parser::match_statement() const
         || type == TokenType::If
         || type == TokenType::Try
         || type == TokenType::While
+        || type == TokenType::For
         || type == TokenType::Const
         || type == TokenType::CurlyOpen
         || type == TokenType::Var;
