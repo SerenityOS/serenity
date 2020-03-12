@@ -43,6 +43,15 @@ int main(int argc, char** argv)
         printf("%lld\n", now);
         return 0;
     }
+    if (argc == 3 && !strcmp(argv[1], "-s")) {
+        bool ok;
+        timespec ts = { String(argv[2]).to_uint(ok), 0 };
+        if (!ok) {
+            printf("date: Invalid timestamp value\n");
+            return 1;
+        }
+        return clock_settime(CLOCK_REALTIME, &ts);
+    }
 
     printf("%s\n", Core::DateTime::from_timestamp(now).to_string().characters());
     return 0;
