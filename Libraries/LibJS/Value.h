@@ -168,6 +168,8 @@ Value left_shift(Value lhs, Value rhs);
 Value right_shift(Value lhs, Value rhs);
 Value add(Value lhs, Value rhs);
 Value sub(Value lhs, Value rhs);
+Value mul(Value lhs, Value rhs);
+Value div(Value lhs, Value rhs);
 Value typed_eq(Value lhs, Value rhs);
 
 const LogStream& operator<<(const LogStream&, const Value&);

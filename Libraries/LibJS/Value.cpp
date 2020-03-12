@@ -145,7 +145,6 @@ Value right_shift(Value lhs, Value rhs)
 }
 
 Value add(Value lhs, Value rhs)
-
 {
     ASSERT(lhs.is_number());
     ASSERT(rhs.is_number());
@@ -157,6 +156,20 @@ Value sub(Value lhs, Value rhs)
     ASSERT(lhs.is_number());
     ASSERT(rhs.is_number());
     return Value(lhs.as_double() - rhs.as_double());
+}
+
+Value mul(Value lhs, Value rhs)
+{
+    ASSERT(lhs.is_number());
+    ASSERT(rhs.is_number());
+    return Value(lhs.as_double() * rhs.as_double());
+}
+
+Value div(Value lhs, Value rhs)
+{
+    ASSERT(lhs.is_number());
+    ASSERT(rhs.is_number());
+    return Value(lhs.as_double() / rhs.as_double());
 }
 
 Value typed_eq(Value lhs, Value rhs)
