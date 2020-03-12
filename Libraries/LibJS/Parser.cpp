@@ -157,6 +157,12 @@ NonnullOwnPtr<Expression> Parser::parse_secondary_expression(NonnullOwnPtr<Expre
     case TokenType::LessThanEquals:
         consume();
         return make<BinaryExpression>(BinaryOp::LessThanEquals, move(lhs), parse_expression());
+    case TokenType::EqualsEqualsEquals:
+        consume();
+        return make<BinaryExpression>(BinaryOp::TypedEquals, move(lhs), parse_expression());
+    case TokenType::ExclamationMarkEqualsEquals:
+        consume();
+        return make<BinaryExpression>(BinaryOp::TypedInequals, move(lhs), parse_expression());
     case TokenType::ParenOpen:
         return parse_call_expression(move(lhs));
     case TokenType::Equals:
@@ -276,6 +282,8 @@ bool Parser::match_secondary_expression() const
         || type == TokenType::Slash
         || type == TokenType::SlashEquals
         || type == TokenType::Equals
+        || type == TokenType::EqualsEqualsEquals
+        || type == TokenType::ExclamationMarkEqualsEquals
         || type == TokenType::GreaterThan
         || type == TokenType::GreaterThanEquals
         || type == TokenType::LessThan
