@@ -6,6 +6,7 @@ OBJS = \
     HeapBlock.o \
     Interpreter.o \
     Lexer.o \
+    NativeFunction.o \
     Object.o \
     Parser.o \
     PrimitiveString.o \

@@ -29,6 +29,7 @@
 #include <LibJS/AST.h>
 #include <LibJS/Function.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/NativeFunction.h>
 #include <LibJS/PrimitiveString.h>
 #include <LibJS/Value.h>
 #include <stdio.h>
@@ -62,20 +63,25 @@ Value CallExpression::execute(Interpreter& interpreter) const
     auto callee = interpreter.get_variable(name());
     ASSERT(callee.is_object());
     auto* callee_object = callee.as_object();
-    ASSERT(callee_object->is_function());
-    auto& function = static_cast<Function&>(*callee_object);
 
-    const size_t arguments_size = m_arguments.size();
-    ASSERT(function.parameters().size() == arguments_size);
-    HashMap<String, Value> passed_parameters;
-    for (size_t i = 0; i < arguments_size; ++i) {
-        auto name = function.parameters()[i];
+    Vector<Argument> passed_arguments;
+    for (size_t i = 0; i < m_arguments.size(); ++i) {
+        String name;
+        if (callee_object->is_function())
+            name = static_cast<Function&>(*callee_object).parameters()[i];
         auto value = m_arguments[i].execute(interpreter);
         dbg() << name << ": " << value;
-        passed_parameters.set(move(name), move(value));
+        passed_arguments.append({ move(name), move(value) });
     }
 
-    return interpreter.run(function.body(), move(passed_parameters), ScopeType::Function);
+    if (callee_object->is_function())
+        return interpreter.run(static_cast<Function&>(*callee_object).body(), move(passed_arguments), ScopeType::Function);
+
+    if (callee_object->is_native_function()) {
+        return static_cast<NativeFunction&>(*callee_object).native_function()(move(passed_arguments));
+    }
+
+    ASSERT_NOT_REACHED();
 }
 
 Value ReturnStatement::execute(Interpreter& interpreter) const

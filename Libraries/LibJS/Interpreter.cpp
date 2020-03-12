@@ -27,8 +27,10 @@
 #include <AK/Badge.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/NativeFunction.h>
 #include <LibJS/Object.h>
 #include <LibJS/Value.h>
+#include <stdio.h>
 
 namespace JS {
 
@@ -36,15 +38,20 @@ Interpreter::Interpreter()
     : m_heap(*this)
 {
     m_global_object = heap().allocate<Object>();
+    m_global_object->put("print", Value(heap().allocate<NativeFunction>([](Vector<Argument> arguments) -> Value {
+        for (auto& argument : arguments)
+            printf("%s ", argument.value.to_string().characters());
+        return js_undefined();
+    })));
 }
 
 Interpreter::~Interpreter()
 {
 }
 
-Value Interpreter::run(const ScopeNode& scope_node, HashMap<String, Value> scope_variables, ScopeType scope_type)
+Value Interpreter::run(const ScopeNode& scope_node, Vector<Argument> arguments, ScopeType scope_type)
 {
-    enter_scope(scope_node, move(scope_variables), scope_type);
+    enter_scope(scope_node, move(arguments), scope_type);
 
     Value last_value = js_undefined();
     for (auto& node : scope_node.children()) {
@@ -55,13 +62,12 @@ Value Interpreter::run(const ScopeNode& scope_node, HashMap<String, Value> scope
     return last_value;
 }
 
-void Interpreter::enter_scope(const ScopeNode& scope_node, HashMap<String, Value> scope_variables, ScopeType scope_type)
+void Interpreter::enter_scope(const ScopeNode& scope_node, Vector<Argument> arguments, ScopeType scope_type)
 {
     HashMap<String, Variable> scope_variables_with_declaration_type;
-    for (String name : scope_variables.keys()) {
-        scope_variables_with_declaration_type.set(name, { scope_variables.get(name).value(), DeclarationType::Var });
+    for (auto& argument : arguments) {
+        scope_variables_with_declaration_type.set(argument.name, { argument.value, DeclarationType::Var });
     }
-
     m_scope_stack.append({ scope_type, scope_node, move(scope_variables_with_declaration_type) });
 }
 
