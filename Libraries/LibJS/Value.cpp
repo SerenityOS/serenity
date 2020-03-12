@@ -81,10 +81,10 @@ bool Value::to_boolean() const
 Value Value::to_object(Heap& heap) const
 {
     if (is_object())
-        return Value(as_object());
+        return const_cast<Object*>(as_object());
 
     if (is_string())
-        return Value(heap.allocate<StringObject>(m_value.as_string));
+        return heap.allocate<StringObject>(m_value.as_string);
 
     ASSERT_NOT_REACHED();
 }

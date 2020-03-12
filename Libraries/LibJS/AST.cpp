@@ -44,8 +44,8 @@ Value ScopeNode::execute(Interpreter& interpreter) const
 Value FunctionDeclaration::execute(Interpreter& interpreter) const
 {
     auto* function = interpreter.heap().allocate<Function>(name(), body(), parameters());
-    interpreter.set_variable(m_name, Value(function));
-    return Value(function);
+    interpreter.set_variable(m_name, function);
+    return function;
 }
 
 Value ExpressionStatement::execute(Interpreter& interpreter) const
@@ -564,7 +564,7 @@ void ExpressionStatement::dump(int indent) const
 
 Value ObjectExpression::execute(Interpreter& interpreter) const
 {
-    return Value(interpreter.heap().allocate<Object>());
+    return interpreter.heap().allocate<Object>();
 }
 
 void MemberExpression::dump(int indent) const
@@ -591,7 +591,7 @@ Value MemberExpression::execute(Interpreter& interpreter) const
 
 Value StringLiteral::execute(Interpreter& interpreter) const
 {
-    return Value(js_string(interpreter.heap(), m_value));
+    return js_string(interpreter.heap(), m_value);
 }
 
 Value NumericLiteral::execute(Interpreter&) const

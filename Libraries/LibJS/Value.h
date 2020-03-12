@@ -70,13 +70,13 @@ public:
         m_value.as_double = value;
     }
 
-    explicit Value(Object* object)
+    Value(Object* object)
         : m_type(Type::Object)
     {
         m_value.as_object = object;
     }
 
-    explicit Value(PrimitiveString* string)
+    Value(PrimitiveString* string)
         : m_type(Type::String)
     {
         m_value.as_string = string;

@@ -38,11 +38,11 @@ Interpreter::Interpreter()
     : m_heap(*this)
 {
     m_global_object = heap().allocate<Object>();
-    m_global_object->put("print", Value(heap().allocate<NativeFunction>([](Vector<Argument> arguments) -> Value {
+    m_global_object->put("print", heap().allocate<NativeFunction>([](Vector<Argument> arguments) -> Value {
         for (auto& argument : arguments)
             printf("%s ", argument.value.to_string().characters());
         return js_undefined();
-    })));
+    }));
 }
 
 Interpreter::~Interpreter()
