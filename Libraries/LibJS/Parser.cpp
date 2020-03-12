@@ -127,6 +127,12 @@ NonnullOwnPtr<Expression> Parser::parse_secondary_expression(NonnullOwnPtr<Expre
     case TokenType::Minus:
         consume();
         return make<BinaryExpression>(BinaryOp::Minus, move(lhs), parse_expression());
+    case TokenType::Asterisk:
+        consume();
+        return make<BinaryExpression>(BinaryOp::Asterisk, move(lhs), parse_expression());
+    case TokenType::Slash:
+        consume();
+        return make<BinaryExpression>(BinaryOp::Slash, move(lhs), parse_expression());
     case TokenType::ParenOpen:
         return parse_call_expression(move(lhs));
     case TokenType::Equals:
