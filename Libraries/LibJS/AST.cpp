@@ -24,6 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/HashMap.h>
+#include <AK/StringBuilder.h>
 #include <LibJS/AST.h>
 #include <LibJS/Function.h>
 #include <LibJS/Interpreter.h>
@@ -40,7 +42,7 @@ Value ScopeNode::execute(Interpreter& interpreter) const
 
 Value FunctionDeclaration::execute(Interpreter& interpreter) const
 {
-    auto* function = interpreter.heap().allocate<Function>(name(), body());
+    auto* function = interpreter.heap().allocate<Function>(name(), body(), parameters());
     interpreter.set_variable(m_name, Value(function));
     return Value(function);
 }
@@ -62,7 +64,18 @@ Value CallExpression::execute(Interpreter& interpreter) const
     auto* callee_object = callee.as_object();
     ASSERT(callee_object->is_function());
     auto& function = static_cast<Function&>(*callee_object);
-    return interpreter.run(function.body(), ScopeType::Function);
+
+    const size_t arguments_size = m_arguments.size();
+    ASSERT(function.parameters().size() == arguments_size);
+    HashMap<String, Value> passed_parameters;
+    for (size_t i = 0; i < arguments_size; ++i) {
+        auto name = function.parameters()[i];
+        auto value = m_arguments[i].execute(interpreter);
+        dbg() << name << ": " << value;
+        passed_parameters.set(move(name), move(value));
+    }
+
+    return interpreter.run(function.body(), move(passed_parameters), ScopeType::Function);
 }
 
 Value ReturnStatement::execute(Interpreter& interpreter) const
@@ -283,8 +296,19 @@ void BooleanLiteral::dump(int indent) const
 
 void FunctionDeclaration::dump(int indent) const
 {
+    bool first_time = true;
+    StringBuilder parameters_builder;
+    for (const auto& parameter : m_parameters) {
+        if (first_time)
+            first_time = false;
+        else
+            parameters_builder.append(',');
+
+        parameters_builder.append(parameter);
+    }
+
     print_indent(indent);
-    printf("%s '%s'\n", class_name(), name().characters());
+    printf("%s '%s(%s)'\n", class_name(), name().characters(), parameters_builder.build().characters());
     body().dump(indent + 1);
 }
 

@@ -42,9 +42,9 @@ Interpreter::~Interpreter()
 {
 }
 
-Value Interpreter::run(const ScopeNode& scope_node, ScopeType scope_type)
+Value Interpreter::run(const ScopeNode& scope_node, HashMap<String, Value> scope_variables, ScopeType scope_type)
 {
-    enter_scope(scope_node, scope_type);
+    enter_scope(scope_node, move(scope_variables), scope_type);
 
     Value last_value = js_undefined();
     for (auto& node : scope_node.children()) {
@@ -55,9 +55,9 @@ Value Interpreter::run(const ScopeNode& scope_node, ScopeType scope_type)
     return last_value;
 }
 
-void Interpreter::enter_scope(const ScopeNode& scope_node, ScopeType scope_type)
+void Interpreter::enter_scope(const ScopeNode& scope_node, HashMap<String, Value> scope_variables, ScopeType scope_type)
 {
-    m_scope_stack.append({ scope_type, scope_node, {} });
+    m_scope_stack.append({ scope_type, scope_node, move(scope_variables) });
 }
 
 void Interpreter::exit_scope(const ScopeNode& scope_node)
