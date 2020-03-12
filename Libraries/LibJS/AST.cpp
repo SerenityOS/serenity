@@ -46,6 +46,11 @@ Value FunctionDeclaration::execute(Interpreter& interpreter) const
     return Value(function);
 }
 
+Value ExpressionStatement::execute(Interpreter& interpreter) const
+{
+    return m_expression->execute(interpreter);
+}
+
 Value CallExpression::execute(Interpreter& interpreter) const
 {
     if (name() == "$gc") {
@@ -74,7 +79,7 @@ Value CallExpression::execute(Interpreter& interpreter) const
 
 Value ReturnStatement::execute(Interpreter& interpreter) const
 {
-    auto value = argument().execute(interpreter);
+    auto value = argument() ? argument()->execute(interpreter) : js_undefined();
     interpreter.do_return();
     return value;
 }
@@ -97,43 +102,6 @@ Value WhileStatement::execute(Interpreter& interpreter) const
     }
 
     return last_value;
-}
-
-Value add(Value lhs, Value rhs)
-{
-    ASSERT(lhs.is_number());
-    ASSERT(rhs.is_number());
-    return Value(lhs.as_double() + rhs.as_double());
-}
-
-Value sub(Value lhs, Value rhs)
-{
-    ASSERT(lhs.is_number());
-    ASSERT(rhs.is_number());
-    return Value(lhs.as_double() - rhs.as_double());
-}
-
-const Value typed_eq(const Value lhs, const Value rhs)
-{
-    if (rhs.type() != lhs.type())
-        return Value(false);
-
-    switch (lhs.type()) {
-    case Value::Type::Undefined:
-        return Value(true);
-    case Value::Type::Null:
-        return Value(true);
-    case Value::Type::Number:
-        return Value(lhs.as_double() == rhs.as_double());
-    case Value::Type::String:
-        return Value(lhs.as_string() == rhs.as_string());
-    case Value::Type::Boolean:
-        return Value(lhs.as_bool() == rhs.as_bool());
-    case Value::Type::Object:
-        return Value(lhs.as_object() == rhs.as_object());
-    }
-
-    ASSERT_NOT_REACHED();
 }
 
 Value BinaryExpression::execute(Interpreter& interpreter) const
@@ -334,7 +302,8 @@ void FunctionDeclaration::dump(int indent) const
 void ReturnStatement::dump(int indent) const
 {
     ASTNode::dump(indent);
-    argument().dump(indent + 1);
+    if (argument())
+        argument()->dump(indent + 1);
 }
 
 void IfStatement::dump(int indent) const
@@ -435,6 +404,12 @@ void VariableDeclaration::dump(int indent) const
 void ObjectExpression::dump(int indent) const
 {
     ASTNode::dump(indent);
+}
+
+void ExpressionStatement::dump(int indent) const
+{
+    ASTNode::dump(indent);
+    m_expression->dump(indent + 1);
 }
 
 Value ObjectExpression::execute(Interpreter& interpreter) const

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@gmx.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,50 +24,45 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/ByteBuffer.h>
+#pragma once
+
+#include "AST.h"
+#include "Lexer.h"
 #include <AK/NonnullOwnPtr.h>
-#include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
-#include <LibJS/AST.h>
-#include <LibJS/Interpreter.h>
-#include <LibJS/Object.h>
-#include <LibJS/Parser.h>
-#include <LibJS/PrimitiveString.h>
-#include <LibJS/Value.h>
-#include <stdio.h>
 
-#define PROGRAM 6
+namespace JS {
+class Parser {
+public:
+    explicit Parser(Lexer lexer);
 
-int main(int argc, char** argv)
-{
-    bool dump_ast = false;
-    const char* script_path = nullptr;
+    NonnullOwnPtr<Program> parse_program();
 
-    Core::ArgsParser args_parser;
-    args_parser.add_option(dump_ast, "Dump the AST", "ast-dump", 'A');
-    args_parser.add_positional_argument(script_path, "Path to script file", "script");
-    args_parser.parse(argc, argv);
+    NonnullOwnPtr<Statement> parse_statement();
+    NonnullOwnPtr<BlockStatement> parse_block_statement();
+    NonnullOwnPtr<ReturnStatement> parse_return_statement();
+    NonnullOwnPtr<FunctionDeclaration> parse_function_declaration();
+    NonnullOwnPtr<VariableDeclaration> parse_variable_declaration();
 
-    auto file = Core::File::construct(script_path);
-    if (!file->open(Core::IODevice::ReadOnly)) {
-        fprintf(stderr, "Failed to open %s: %s\n", script_path, file->error_string());
-        return 1;
-    }
-    auto file_contents = file->read_all();
+    NonnullOwnPtr<Expression> parse_expression();
+    NonnullOwnPtr<Expression> parse_primary_expression();
+    NonnullOwnPtr<ObjectExpression> parse_object_expression();
+    NonnullOwnPtr<Expression> parse_secondary_expression(NonnullOwnPtr<Expression>);
+    NonnullOwnPtr<CallExpression> parse_call_expression(NonnullOwnPtr<Expression>);
 
-    JS::Interpreter interpreter;
+    bool has_errors() const { return m_has_errors; }
 
-    auto program = JS::Parser(JS::Lexer(file_contents)).parse_program();
+private:
+    bool match_expression() const;
+    bool match_secondary_expression() const;
+    bool match_statement() const;
+    bool match(TokenType type) const;
+    bool done() const;
+    void expected(const char* what);
+    Token consume();
+    Token consume(TokenType type);
 
-    if (dump_ast)
-        program->dump(0);
-
-    auto result = interpreter.run(*program);
-    dbg() << "Interpreter returned " << result;
-
-    printf("%s\n", result.to_string().characters());
-
-    dbg() << "Collecting garbage on exit...";
-    interpreter.heap().collect_garbage();
-    return 0;
+    Lexer m_lexer;
+    Token m_current_token;
+    bool m_has_errors = false;
+};
 }

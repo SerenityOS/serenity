@@ -49,7 +49,31 @@ protected:
 private:
 };
 
-class ScopeNode : public ASTNode {
+class Statement : public ASTNode {
+};
+
+class ErrorStatement final : public Statement {
+public:
+    Value execute(Interpreter&) const { return js_undefined(); }
+    const char* class_name() const override { return "ErrorStatement"; }
+};
+
+class ExpressionStatement final : public Statement {
+public:
+    ExpressionStatement(NonnullOwnPtr<Expression> expression)
+        : m_expression(move(expression))
+    {
+    }
+
+    Value execute(Interpreter&) const override;
+    const char* class_name() const override { return "ExpressionStatement"; }
+    virtual void dump(int indent) const override;
+
+private:
+    NonnullOwnPtr<Expression> m_expression;
+};
+
+class ScopeNode : public Statement {
 public:
     template<typename T, typename... Args>
     T& append(Args&&... args)
@@ -58,8 +82,12 @@ public:
         m_children.append(move(child));
         return static_cast<T&>(m_children.last());
     }
+    void append(NonnullOwnPtr<Statement> child)
+    {
+        m_children.append(move(child));
+    }
 
-    const NonnullOwnPtrVector<ASTNode>& children() const { return m_children; }
+    const NonnullOwnPtrVector<Statement>& children() const { return m_children; }
     virtual Value execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
 
@@ -67,7 +95,7 @@ protected:
     ScopeNode() {}
 
 private:
-    NonnullOwnPtrVector<ASTNode> m_children;
+    NonnullOwnPtrVector<Statement> m_children;
 };
 
 class Program : public ScopeNode {
@@ -86,7 +114,7 @@ private:
     virtual const char* class_name() const override { return "BlockStatement"; }
 };
 
-class FunctionDeclaration : public ASTNode {
+class FunctionDeclaration : public Statement {
 public:
     FunctionDeclaration(String name, NonnullOwnPtr<ScopeNode> body, Vector<String> parameters = {})
         : m_name(move(name))
@@ -114,14 +142,20 @@ class Expression : public ASTNode {
 public:
 };
 
-class ReturnStatement : public ASTNode {
+class ErrorExpression final : public Expression {
 public:
-    explicit ReturnStatement(NonnullOwnPtr<Expression> argument)
+    Value execute(Interpreter&) const { return js_undefined(); }
+    const char* class_name() const override { return "ErrorExpression"; }
+};
+
+class ReturnStatement : public Statement {
+public:
+    explicit ReturnStatement(OwnPtr<Expression> argument)
         : m_argument(move(argument))
     {
     }
 
-    const Expression& argument() const { return *m_argument; }
+    const Expression* argument() const { return m_argument; }
 
     virtual Value execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
@@ -129,10 +163,10 @@ public:
 private:
     virtual const char* class_name() const override { return "ReturnStatement"; }
 
-    NonnullOwnPtr<Expression> m_argument;
+    OwnPtr<Expression> m_argument;
 };
 
-class IfStatement : public ASTNode {
+class IfStatement : public Statement {
 public:
     IfStatement(NonnullOwnPtr<Expression> predicate, NonnullOwnPtr<ScopeNode> consequent, NonnullOwnPtr<ScopeNode> alternate)
         : m_predicate(move(predicate))
@@ -156,7 +190,7 @@ private:
     NonnullOwnPtr<ScopeNode> m_alternate;
 };
 
-class WhileStatement : public ASTNode {
+class WhileStatement : public Statement {
 public:
     WhileStatement(NonnullOwnPtr<Expression> predicate, NonnullOwnPtr<ScopeNode> body)
         : m_predicate(move(predicate))
@@ -343,7 +377,7 @@ enum class DeclarationType {
     Let,
 };
 
-class VariableDeclaration : public ASTNode {
+class VariableDeclaration : public Statement {
 public:
     VariableDeclaration(NonnullOwnPtr<Identifier> name, OwnPtr<Expression> initializer, DeclarationType declaration_type)
         : m_declaration_type(declaration_type)
