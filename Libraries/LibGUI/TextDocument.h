@@ -46,6 +46,7 @@ struct TextDocumentSpan {
     Color color;
     Optional<Color> background_color;
     bool is_skippable { false };
+    bool is_underlined { false };
     const Gfx::Font* font { nullptr };
     void* data { nullptr };
 };
@@ -87,6 +88,7 @@ public:
     NonnullOwnPtrVector<TextDocumentLine>& lines() { return m_lines; }
 
     bool has_spans() const { return !m_spans.is_empty(); }
+    Vector<TextDocumentSpan>& spans() { return m_spans; }
     const Vector<TextDocumentSpan>& spans() const { return m_spans; }
     void set_span_at_index(size_t index, TextDocumentSpan span) { m_spans[index] = move(span); }
 

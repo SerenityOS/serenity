@@ -127,6 +127,7 @@ public:
     void set_cursor(size_t line, size_t column);
     void set_cursor(const TextPosition&);
 
+    const SyntaxHighlighter* syntax_highlighter() const;
     void set_syntax_highlighter(OwnPtr<SyntaxHighlighter>);
 
 protected:
