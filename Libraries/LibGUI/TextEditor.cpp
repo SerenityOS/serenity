@@ -1497,10 +1497,7 @@ void TextEditor::flush_pending_change_notification_if_needed()
 
 const SyntaxHighlighter* TextEditor::syntax_highlighter() const
 {
-    if (m_highlighter)
-        return m_highlighter.ptr();
-    else
-        return nullptr;
+    return m_highlighter.ptr();
 }
 
 void TextEditor::set_syntax_highlighter(OwnPtr<SyntaxHighlighter> highlighter)

@@ -22,6 +22,9 @@ public:
     virtual void rehighlight() = 0;
     virtual void highlight_matching_token_pair() = 0;
 
+    virtual bool is_identifier(void*) const { return false; };
+    virtual bool is_navigatable(void*) const { return false; };
+
     void attach(TextEditor& editor);
     void detach();
     void cursor_did_change();
