@@ -8,7 +8,13 @@ namespace GUI {
 
 enum class SyntaxLanguage {
     PlainText,
-    Cpp
+    Cpp,
+    Javascript
+};
+
+struct TextStyle {
+    Color color;
+    const Gfx::Font* font { nullptr };
 };
 
 class SyntaxHighlighter {
@@ -20,7 +26,7 @@ public:
 
     virtual SyntaxLanguage language() const = 0;
     virtual void rehighlight() = 0;
-    virtual void highlight_matching_token_pair() = 0;
+    virtual void highlight_matching_token_pair();
 
     virtual bool is_identifier(void*) const { return false; };
     virtual bool is_navigatable(void*) const { return false; };
@@ -33,6 +39,14 @@ protected:
     SyntaxHighlighter() {}
 
     WeakPtr<TextEditor> m_editor;
+
+    struct MatchingTokenPair {
+        void* open;
+        void* close;
+    };
+
+    virtual Vector<MatchingTokenPair> matching_token_pairs() const = 0;
+    virtual bool token_types_equal(void*, void*) const = 0;
 
     struct BuddySpan {
         int index { -1 };
