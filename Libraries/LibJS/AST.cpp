@@ -318,6 +318,9 @@ void CallExpression::dump(int indent) const
 {
     print_indent(indent);
     printf("%s '%s'\n", class_name(), name().characters());
+
+    for (auto& argument : m_arguments)
+        argument.dump(indent + 1);
 }
 
 void StringLiteral::dump(int indent) const
