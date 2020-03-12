@@ -48,6 +48,8 @@ private:
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
+    virtual void keydown_event(GUI::KeyEvent&) override;
+    virtual void keyup_event(GUI::KeyEvent&) override;
 
     void show_documentation_tooltip_if_available(const String&, const Gfx::Point& screen_location);
     void navigate_to_include_if_available(String);
@@ -57,4 +59,7 @@ private:
     RefPtr<GUI::Window> m_documentation_tooltip_window;
     RefPtr<Web::HtmlView> m_documentation_html_view;
     String m_last_parsed_token;
+    GUI::TextPosition m_previous_text_position { 0, 0 };
+    bool m_hovering_link { false };
+    bool m_holding_ctrl { false };
 };
