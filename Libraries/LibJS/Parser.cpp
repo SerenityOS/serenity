@@ -191,13 +191,24 @@ NonnullOwnPtr<Expression> Parser::parse_secondary_expression(NonnullOwnPtr<Expre
 
 NonnullOwnPtr<CallExpression> Parser::parse_call_expression(NonnullOwnPtr<Expression> lhs)
 {
-    // FIXME: allow arguments
     consume(TokenType::ParenOpen);
+
+    NonnullOwnPtrVector<Expression> arguments;
+
+    for (;;) {
+        if (match_expression()) {
+            arguments.append(parse_expression());
+            if (!match(TokenType::Comma))
+                break;
+            consume();
+        }
+    }
+
     consume(TokenType::ParenClose);
 
     // FIXME: Allow lhs expression instead of just a string
     if (lhs->is_identifier()) {
-        return make<CallExpression>(static_cast<Identifier*>(lhs.ptr())->string());
+        return make<CallExpression>(static_cast<Identifier*>(lhs.ptr())->string(), move(arguments));
     }
 
     m_has_errors = true;
