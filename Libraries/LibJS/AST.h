@@ -211,6 +211,33 @@ private:
     NonnullOwnPtr<ScopeNode> m_body;
 };
 
+class ForStatement : public Statement {
+public:
+    ForStatement(OwnPtr<Statement> init, OwnPtr<Expression> test, OwnPtr<Expression> update, NonnullOwnPtr<ScopeNode> body)
+        : m_init(move(init))
+        , m_test(move(test))
+        , m_update(move(update))
+        , m_body(move(body))
+    {
+    }
+
+    const Statement* init() const { return m_init; }
+    const Expression* test() const { return m_test; }
+    const Expression* update() const { return m_update; }
+    const ScopeNode& body() const { return *m_body; }
+
+    virtual Value execute(Interpreter&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    virtual const char* class_name() const override { return "ForStatement"; }
+
+    OwnPtr<Statement> m_init;
+    OwnPtr<Expression> m_test;
+    OwnPtr<Expression> m_update;
+    NonnullOwnPtr<ScopeNode> m_body;
+};
+
 enum class BinaryOp {
     Plus,
     Minus,
