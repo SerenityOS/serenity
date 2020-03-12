@@ -26,29 +26,23 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
-#include <LibJS/Cell.h>
-#include <LibJS/Forward.h>
-#include <LibJS/Cell.h>
+#include <AK/Function.h>
+#include <LibJS/Object.h>
 
 namespace JS {
 
-class Object : public Cell {
+class NativeFunction final : public Object {
 public:
-    Object();
-    virtual ~Object();
+    explicit NativeFunction(AK::Function<Value(Vector<Argument>)>);
+    virtual ~NativeFunction() override;
 
-    Value get(String property_name) const;
-    void put(String property_name, Value);
-
-    virtual bool is_function() const { return false; }
-    virtual bool is_native_function() const { return false; }
-
-    virtual const char* class_name() const override { return "Object"; }
-    virtual void visit_children(Cell::Visitor&) override;
+    AK::Function<Value(Vector<Argument>)>& native_function() { return m_native_function; }
 
 private:
-    HashMap<String, Value> m_properties;
+    virtual bool is_native_function() const override { return true; }
+    virtual const char* class_name() const override { return "NativeFunction"; }
+
+    AK::Function<Value(Vector<Argument>)> m_native_function;
 };
 
 }

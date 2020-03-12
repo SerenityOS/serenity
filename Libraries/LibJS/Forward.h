@@ -29,6 +29,7 @@
 namespace JS {
 
 class ASTNode;
+class Argument;
 class Cell;
 class Expression;
 class Heap;

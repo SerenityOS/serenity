@@ -24,31 +24,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <AK/HashMap.h>
-#include <LibJS/Cell.h>
-#include <LibJS/Forward.h>
-#include <LibJS/Cell.h>
+#include <LibJS/Interpreter.h>
+#include <LibJS/NativeFunction.h>
+#include <LibJS/Value.h>
 
 namespace JS {
 
-class Object : public Cell {
-public:
-    Object();
-    virtual ~Object();
+NativeFunction::NativeFunction(AK::Function<Value(Vector<Argument>)> native_function)
+    : m_native_function(move(native_function))
+{
+}
 
-    Value get(String property_name) const;
-    void put(String property_name, Value);
-
-    virtual bool is_function() const { return false; }
-    virtual bool is_native_function() const { return false; }
-
-    virtual const char* class_name() const override { return "Object"; }
-    virtual void visit_children(Cell::Visitor&) override;
-
-private:
-    HashMap<String, Value> m_properties;
-};
+NativeFunction::~NativeFunction()
+{
+}
 
 }

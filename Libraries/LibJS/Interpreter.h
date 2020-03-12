@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/HashMap.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap.h>
@@ -50,12 +51,17 @@ struct ScopeFrame {
     HashMap<String, Variable> variables;
 };
 
+struct Argument {
+    String name;
+    Value value;
+};
+
 class Interpreter {
 public:
     Interpreter();
     ~Interpreter();
 
-    Value run(const ScopeNode&, HashMap<String, Value> scope_variables = {}, ScopeType = ScopeType::Block);
+    Value run(const ScopeNode&, Vector<Argument> = {}, ScopeType = ScopeType::Block);
 
     Object& global_object() { return *m_global_object; }
     const Object& global_object() const { return *m_global_object; }
@@ -71,7 +77,7 @@ public:
     void collect_roots(Badge<Heap>, HashTable<Cell*>&);
 
 private:
-    void enter_scope(const ScopeNode&, HashMap<String, Value> scope_variables, ScopeType);
+    void enter_scope(const ScopeNode&, Vector<Argument>, ScopeType);
     void exit_scope(const ScopeNode&);
 
     Heap m_heap;
