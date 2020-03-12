@@ -86,9 +86,9 @@ NonnullOwnPtr<Expression> Parser::parse_primary_expression()
     case TokenType::Identifier:
         return make<Identifier>(consume().value());
     case TokenType::NumericLiteral:
-        return make<Literal>(Value(consume().double_value()));
+        return make<NumericLiteral>(consume().double_value());
     case TokenType::BoolLiteral:
-        return make<Literal>(Value(consume().bool_value()));
+        return make<BooleanLiteral>(consume().bool_value());
     case TokenType::CurlyOpen:
         return parse_object_expression();
     default:

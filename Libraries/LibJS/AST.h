@@ -290,19 +290,56 @@ private:
 };
 
 class Literal : public Expression {
+protected:
+    explicit Literal() {}
+};
+
+class BooleanLiteral final : public Literal {
 public:
-    explicit Literal(Value value)
+    explicit BooleanLiteral(bool value)
+        : m_value(value)
+    {
+    }
+
+    virtual Value execute(Interpreter&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    virtual const char* class_name() const override { return "BooleanLiteral"; }
+
+    bool m_value { false };
+};
+
+class NumericLiteral final : public Literal {
+public:
+    explicit NumericLiteral(double value)
+        : m_value(value)
+    {
+    }
+
+    virtual Value execute(Interpreter&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    virtual const char* class_name() const override { return "NumericLiteral"; }
+
+    double m_value { 0 };
+};
+
+class StringLiteral final : public Literal {
+public:
+    explicit StringLiteral(String value)
         : m_value(move(value))
     {
     }
 
-    virtual Value execute(Interpreter&) const override { return m_value; }
+    virtual Value execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
 
 private:
-    virtual const char* class_name() const override { return "Literal"; }
+    virtual const char* class_name() const override { return "StringLiteral"; }
 
-    Value m_value;
+    String m_value;
 };
 
 class Identifier final : public Expression {

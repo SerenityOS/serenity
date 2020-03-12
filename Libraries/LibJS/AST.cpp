@@ -27,6 +27,7 @@
 #include <LibJS/AST.h>
 #include <LibJS/Function.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/PrimitiveString.h>
 #include <LibJS/Value.h>
 #include <stdio.h>
 
@@ -262,10 +263,22 @@ void CallExpression::dump(int indent) const
     printf("%s '%s'\n", class_name(), name().characters());
 }
 
-void Literal::dump(int indent) const
+void StringLiteral::dump(int indent) const
 {
     print_indent(indent);
-    printf("Literal _%s_\n", m_value.to_string().characters());
+    printf("StringLiteral \"%s\"\n", m_value.characters());
+}
+
+void NumericLiteral::dump(int indent) const
+{
+    print_indent(indent);
+    printf("NumberLiteral %g\n", m_value);
+}
+
+void BooleanLiteral::dump(int indent) const
+{
+    print_indent(indent);
+    printf("BooleanLiteral %s\n", m_value ? "true" : "false");
 }
 
 void FunctionDeclaration::dump(int indent) const
@@ -413,6 +426,21 @@ Value MemberExpression::execute(Interpreter& interpreter) const
     }
 
     return object_result.as_object()->get(property_name);
+}
+
+Value StringLiteral::execute(Interpreter& interpreter) const
+{
+    return Value(js_string(interpreter.heap(), m_value));
+}
+
+Value NumericLiteral::execute(Interpreter&) const
+{
+    return Value(m_value);
+}
+
+Value BooleanLiteral::execute(Interpreter&) const
+{
+    return Value(m_value);
 }
 
 }
