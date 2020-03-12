@@ -442,6 +442,25 @@ Value AssignmentExpression::execute(Interpreter& interpreter) const
     return rhs_result;
 }
 
+Value UpdateExpression::execute(Interpreter& interpreter) const
+{
+    ASSERT(m_argument->is_identifier());
+    auto name = static_cast<const Identifier&>(*m_argument).string();
+
+    auto previous_value = interpreter.get_variable(name);
+    ASSERT(previous_value.is_number());
+
+    switch (m_op) {
+    case UpdateOp::Increment:
+        interpreter.set_variable(name, Value(previous_value.as_double() + 1));
+        break;
+    case UpdateOp::Decrement:
+        interpreter.set_variable(name, Value(previous_value.as_double() - 1));
+    }
+
+    return previous_value;
+}
+
 void AssignmentExpression::dump(int indent) const
 {
     const char* op_string = nullptr;
@@ -468,6 +487,24 @@ void AssignmentExpression::dump(int indent) const
     printf("%s\n", op_string);
     m_lhs->dump(indent + 1);
     m_rhs->dump(indent + 1);
+}
+
+void UpdateExpression::dump(int indent) const
+{
+    const char* op_string = nullptr;
+    switch (m_op) {
+    case UpdateOp::Increment:
+        op_string = "++";
+        break;
+    case UpdateOp::Decrement:
+        op_string = "--";
+        break;
+    }
+
+    ASTNode::dump(indent);
+    print_indent(indent + 1);
+    printf("%s\n", op_string);
+    m_argument->dump(indent + 1);
 }
 
 Value VariableDeclaration::execute(Interpreter& interpreter) const
