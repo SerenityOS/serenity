@@ -213,11 +213,11 @@ Token Lexer::next()
         token_type = TokenType::Eof;
     } else {
         bool found_three_char_token = false;
-        if (m_position+1 < m_source.length()) {
-            char secondChar = m_source[m_position];
-            char thirdChar = m_source[m_position+1];
-            char threeChars[] { (char)m_current_char, secondChar, thirdChar, 0 };
-            auto it = s_three_char_tokens.find(threeChars);
+        if (m_position + 1 < m_source.length()) {
+            char second_char = m_source[m_position];
+            char third_char = m_source[m_position + 1];
+            char three_chars[] { (char)m_current_char, second_char, third_char, 0 };
+            auto it = s_three_char_tokens.find(three_chars);
             if (it != s_three_char_tokens.end()) {
                 found_three_char_token = true;
                 consume();
@@ -229,9 +229,9 @@ Token Lexer::next()
 
         bool found_two_char_token = false;
         if (!found_three_char_token && !is_eof()) {
-            char secondChar = m_source[m_position];
-            char twoChars[] { (char)m_current_char, secondChar, 0 };
-            auto it = s_two_char_tokens.find(twoChars);
+            char second_char = m_source[m_position];
+            char two_chars[] { (char)m_current_char, second_char, 0 };
+            auto it = s_two_char_tokens.find(two_chars);
             if (it != s_two_char_tokens.end()) {
                 found_two_char_token = true;
                 consume();
