@@ -1,3 +1,1 @@
-function foo() {
-    "hello friends".length
-}
+"hello friends".length

@@ -132,6 +132,9 @@ NonnullOwnPtr<Expression> Parser::parse_secondary_expression(NonnullOwnPtr<Expre
     case TokenType::Equals:
         consume();
         return make<AssignmentExpression>(AssignmentOp::Assign, move(lhs), parse_expression());
+    case TokenType::Period:
+        consume();
+        return make<MemberExpression>(move(lhs), parse_expression());
     default:
         m_has_errors = true;
         expected("secondary expression (missing switch case)");
@@ -239,7 +242,8 @@ bool Parser::match_secondary_expression() const
         || type == TokenType::Asterisk
         || type == TokenType::Slash
         || type == TokenType::Equals
-        || type == TokenType::ParenOpen;
+        || type == TokenType::ParenOpen
+        || type == TokenType::Period;
 }
 
 bool Parser::match_statement() const
