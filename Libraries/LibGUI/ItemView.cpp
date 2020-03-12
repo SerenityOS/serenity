@@ -129,7 +129,7 @@ ModelIndex ItemView::index_at_event_position(const Gfx::Point& position) const
     ASSERT(model());
     // FIXME: Since all items are the same size, just compute the clicked item index
     //        instead of iterating over everything.
-    auto adjusted_position = position.translated(0, vertical_scrollbar().value());
+    auto adjusted_position = this->adjusted_position(position);
     const auto& column_metadata = model()->column_metadata(model_column());
     const auto& font = column_metadata.font ? *column_metadata.font : this->font();
     for (int item_index = 0; item_index < item_count(); ++item_index) {
@@ -143,6 +143,11 @@ ModelIndex ItemView::index_at_event_position(const Gfx::Point& position) const
             return index;
     }
     return {};
+}
+
+Gfx::Point ItemView::adjusted_position(const Gfx::Point& position) const
+{
+    return position.translated(0, vertical_scrollbar().value());
 }
 
 void ItemView::mousedown_event(MouseEvent& event)
@@ -169,10 +174,12 @@ void ItemView::mousedown_event(MouseEvent& event)
         selection().clear();
     }
 
+    auto adjusted_position = this->adjusted_position(event.position());
+
     m_might_drag = false;
     m_rubber_banding = true;
-    m_rubber_band_origin = event.position();
-    m_rubber_band_current = event.position();
+    m_rubber_band_origin = adjusted_position;
+    m_rubber_band_current = adjusted_position;
 }
 
 void ItemView::mouseup_event(MouseEvent& event)
@@ -210,8 +217,9 @@ void ItemView::mousemove_event(MouseEvent& event)
         return AbstractView::mousemove_event(event);
 
     if (m_rubber_banding) {
-        if (m_rubber_band_current != event.position()) {
-            m_rubber_band_current = event.position();
+        auto adjusted_position = this->adjusted_position(event.position());
+        if (m_rubber_band_current != adjusted_position) {
+            m_rubber_band_current = adjusted_position;
             auto rubber_band_rect = Gfx::Rect::from_two_points(m_rubber_band_origin, m_rubber_band_current);
             selection().clear();
             for (auto item_index : items_intersecting_rect(rubber_band_rect)) {
@@ -249,6 +257,8 @@ void ItemView::second_paint_event(PaintEvent& event)
 
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
+    painter.translate(frame_thickness(), frame_thickness());
+    painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
     auto rubber_band_rect = Gfx::Rect::from_two_points(m_rubber_band_origin, m_rubber_band_current);
     painter.fill_rect(rubber_band_rect, parent_widget()->palette().rubber_band_fill());
