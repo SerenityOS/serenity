@@ -24,7 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/ByteBuffer.h>
 #include <AK/NonnullOwnPtr.h>
+#include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Object.h>
@@ -35,14 +38,29 @@
 
 #define PROGRAM 6
 
-static NonnullOwnPtr<JS::Program> build_program(JS::Heap&);
-
-int main()
+int main(int argc, char** argv)
 {
+    bool dump_ast = false;
+    const char* script_path = nullptr;
+
+    Core::ArgsParser args_parser;
+    args_parser.add_option(dump_ast, "Dump the AST", "ast-dump", 'A');
+    args_parser.add_positional_argument(script_path, "Path to script file", "script");
+    args_parser.parse(argc, argv);
+
+    auto file = Core::File::construct(script_path);
+    if (!file->open(Core::IODevice::ReadOnly)) {
+        fprintf(stderr, "Failed to open %s: %s\n", script_path, file->error_string());
+        return 1;
+    }
+    auto file_contents = file->read_all();
+
     JS::Interpreter interpreter;
 
-    auto program = build_program(interpreter.heap());
-    program->dump(0);
+    auto program = JS::Parser(JS::Lexer(file_contents)).parse_program();
+
+    if (dump_ast)
+        program->dump(0);
 
     auto result = interpreter.run(*program);
     dbg() << "Interpreter returned " << result;
@@ -54,139 +72,3 @@ int main()
     return 0;
 }
 
-#if PROGRAM == 1
-NonnullOwnPtr<JS::Program> build_program(JS::Heap&)
-{
-    // function foo() { return (1 + 2) + 3; }
-    // foo();
-
-    auto block = make<JS::BlockStatement>();
-    block->append<JS::ReturnStatement>(
-        make<JS::BinaryExpression>(
-            JS::BinaryOp::Plus,
-            make<JS::BinaryExpression>(
-                JS::BinaryOp::Plus,
-                make<JS::Literal>(JS::Value(1)),
-                make<JS::Literal>(JS::Value(2))),
-            make<JS::Literal>(JS::Value(3))));
-
-    auto program = make<JS::Program>();
-    program->append<JS::FunctionDeclaration>("foo", move(block));
-    program->append<JS::ExpressionStatement>(make<JS::CallExpression>("foo"));
-    return program;
-}
-#elif PROGRAM == 2
-NonnullOwnPtr<JS::Program> build_program(JS::Heap&)
-{
-    // c = 1;
-    // function foo() {
-    //   var a = 5;
-    //   var b = 7;
-    //   return a + b + c;
-    // }
-    // foo();
-
-    auto program = make<JS::Program>();
-    program->append<JS::ExpressionStatement>(make<JS::AssignmentExpression>(
-        JS::AssignmentOp::Assign,
-        make<JS::Identifier>("c"),
-        make<JS::Literal>(JS::Value(1))));
-
-    auto block = make<JS::BlockStatement>();
-    block->append<JS::VariableDeclaration>(
-        make<JS::Identifier>("a"),
-        make<JS::Literal>(JS::Value(5)),
-        JS::DeclarationType::Var);
-    block->append<JS::VariableDeclaration>(
-        make<JS::Identifier>("b"),
-        make<JS::Literal>(JS::Value(7)),
-        JS::DeclarationType::Var);
-
-    block->append<JS::ReturnStatement>(
-        make<JS::BinaryExpression>(
-            JS::BinaryOp::Plus,
-            make<JS::BinaryExpression>(
-                JS::BinaryOp::Plus,
-                make<JS::Identifier>("a"),
-                make<JS::Identifier>("b")),
-            make<JS::Identifier>("c")));
-
-    program->append<JS::FunctionDeclaration>("foo", move(block));
-    program->append<JS::ExpressionStatement>(make<JS::CallExpression>("foo"));
-
-    return program;
-}
-#elif PROGRAM == 3
-NonnullOwnPtr<JS::Program> build_program(JS::Heap&)
-{
-    // function foo() {
-    //   var x = {};
-    //   $gc();
-    // }
-    // foo();
-
-    auto block = make<JS::BlockStatement>();
-    block->append<JS::VariableDeclaration>(
-        make<JS::Identifier>("x"),
-        make<JS::ObjectExpression>(),
-        JS::DeclarationType::Var);
-    block->append<JS::ExpressionStatement>(make<JS::CallExpression>("$gc"));
-
-    auto program = make<JS::Program>();
-    program->append<JS::FunctionDeclaration>("foo", move(block));
-    program->append<JS::ExpressionStatement>(make<JS::CallExpression>("foo"));
-    return program;
-}
-#elif PROGRAM == 4
-NonnullOwnPtr<JS::Program> build_program(JS::Heap&)
-{
-    // function foo() {
-    //   function bar() {
-    //      var y = 6;
-    //   }
-    //
-    //   bar()
-    //   return y;
-    // }
-    // foo(); //I should return `undefined` because y is bound to the inner-most enclosing function, i.e the nested one (bar()), therefore, it's undefined in the scope of foo()
-
-    auto block_bar = make<JS::BlockStatement>();
-    block_bar->append<JS::VariableDeclaration>(make<JS::Identifier>("y"), make<JS::Literal>(JS::Value(6)), JS::DeclarationType::Var);
-
-    auto block_foo = make<JS::BlockStatement>();
-    block_foo->append<JS::FunctionDeclaration>("bar", move(block_bar));
-    block_foo->append<JS::ExpressionStatement>(make<JS::CallExpression>("bar"));
-    block_foo->append<JS::ReturnStatement>(make<JS::Identifier>("y"));
-
-    auto program = make<JS::Program>();
-    program->append<JS::FunctionDeclaration>("foo", move(block_foo));
-    program->append<JS::ExpressionStatement>(make<JS::CallExpression>("foo"));
-    return program;
-}
-#elif PROGRAM == 5
-NonnullOwnPtr<JS::Program> build_program(JS::Heap& heap)
-{
-    // "hello friends".length
-
-    auto program = make<JS::Program>();
-    program->append<JS::ExpressionStatement>(make<JS::MemberExpression>(
-        make<JS::Literal>(JS::Value(js_string(heap, "hello friends"))),
-        make<JS::Identifier>("length")));
-
-    return program;
-}
-#elif PROGRAM == 6
-NonnullOwnPtr<JS::Program> build_program(JS::Heap&)
-{
-    const char* source = "var foo = 1;\n"
-                         "function bar() {\n"
-                         "    return 38;\n"
-                         "}\n"
-                         "foo = {};\n"
-                         "foo = bar() + 4;\n"
-                         "foo;\n";
-
-    auto parser = JS::Parser(JS::Lexer(source));
-    return parser.parse_program();
-}
-#endif
