@@ -425,6 +425,7 @@ void TextEditor::paint_event(PaintEvent& event)
                     const Gfx::Font* font = &this->font();
                     Color color;
                     Optional<Color> background_color;
+                    bool underline = false;
                     TextPosition physical_position(line_index, start_of_visual_line + i);
                     // FIXME: This is *horribly* inefficient.
                     for (auto& span : document().spans()) {
@@ -434,11 +435,15 @@ void TextEditor::paint_event(PaintEvent& event)
                         if (span.font)
                             font = span.font;
                         background_color = span.background_color;
+                        underline = span.is_underlined;
                         break;
                     }
                     if (background_color.has_value())
                         painter.fill_rect(character_rect, background_color.value());
                     painter.draw_text(character_rect, visual_line_text.substring_view(i, 1), *font, m_text_alignment, color);
+                    if (underline) {
+                        painter.draw_line(character_rect.bottom_left().translated(0, 1), character_rect.bottom_right().translated(0, 1), color);
+                    }
                     character_rect.move_by(advance, 0);
                 }
             }
@@ -1488,6 +1493,14 @@ void TextEditor::flush_pending_change_notification_if_needed()
     if (m_highlighter)
         m_highlighter->rehighlight();
     m_has_pending_change_notification = false;
+}
+
+const SyntaxHighlighter* TextEditor::syntax_highlighter() const
+{
+    if (m_highlighter)
+        return m_highlighter.ptr();
+    else
+        return nullptr;
 }
 
 void TextEditor::set_syntax_highlighter(OwnPtr<SyntaxHighlighter> highlighter)
