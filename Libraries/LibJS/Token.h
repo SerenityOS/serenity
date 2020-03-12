@@ -35,10 +35,13 @@ enum class TokenType {
     Ampersand,
     AmpersandEquals,
     Asterisk,
+    AsteriskAsteriskEquals,
     AsteriskEquals,
+    Await,
     BoolLiteral,
     BracketClose,
     BracketOpen,
+    Caret,
     Catch,
     Class,
     Comma,
@@ -48,7 +51,9 @@ enum class TokenType {
     Delete,
     Do,
     DoubleAmpersand,
+    DoubleAsterisk,
     DoublePipe,
+    DoubleQuestionMark,
     Else,
     Eof,
     Equals,
@@ -64,6 +69,8 @@ enum class TokenType {
     GreaterThanEquals,
     Identifier,
     If,
+    In,
+    Instanceof,
     Interface,
     Invalid,
     LessThan,
@@ -86,17 +93,26 @@ enum class TokenType {
     PlusEquals,
     PlusPlus,
     QuestionMark,
+    QuestionMarkPeriod,
     RegexLiteral,
     Return,
     Semicolon,
     ShiftLeft,
+    ShiftLeftEquals,
     ShiftRight,
+    ShiftRightEquals,
     Slash,
     SlashEquals,
     StringLiteral,
+    Tilde,
     Try,
+    Typeof,
+    UnsignedShiftRight,
+    UnsignedShiftRightEquals,
     Var,
-    While
+    Void,
+    While,
+    Yield,
 };
 
 class Token {
@@ -124,4 +140,12 @@ private:
     StringView m_value;
 };
 
+}
+
+namespace AK {
+template<>
+struct Traits<JS::TokenType> : public GenericTraits<JS::TokenType> {
+    static constexpr bool is_trivial() { return true; }
+    static unsigned hash(JS::TokenType t) { return int_hash((int)t); }
+};
 }
