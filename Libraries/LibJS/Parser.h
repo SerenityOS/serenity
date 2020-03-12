@@ -31,6 +31,12 @@
 #include <AK/NonnullOwnPtr.h>
 
 namespace JS {
+
+enum class Associativity {
+    Left,
+    Right
+};
+
 class Parser {
 public:
     explicit Parser(Lexer lexer);
@@ -44,15 +50,17 @@ public:
     NonnullOwnPtr<VariableDeclaration> parse_variable_declaration();
     NonnullOwnPtr<ForStatement> parse_for_statement();
 
-    NonnullOwnPtr<Expression> parse_expression();
+    NonnullOwnPtr<Expression> parse_expression(int min_precedence, Associativity associate = Associativity::Right);
     NonnullOwnPtr<Expression> parse_primary_expression();
     NonnullOwnPtr<ObjectExpression> parse_object_expression();
-    NonnullOwnPtr<Expression> parse_secondary_expression(NonnullOwnPtr<Expression>);
+    NonnullOwnPtr<Expression> parse_secondary_expression(NonnullOwnPtr<Expression>, int min_precedence, Associativity associate = Associativity::Right);
     NonnullOwnPtr<CallExpression> parse_call_expression(NonnullOwnPtr<Expression>);
 
     bool has_errors() const { return m_has_errors; }
 
 private:
+    int operator_precedence(TokenType) const;
+    Associativity operator_associativity(TokenType) const;
     bool match_expression() const;
     bool match_secondary_expression() const;
     bool match_statement() const;

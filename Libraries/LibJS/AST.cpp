@@ -54,7 +54,7 @@ Value ExpressionStatement::execute(Interpreter& interpreter) const
 
 Value CallExpression::execute(Interpreter& interpreter) const
 {
-    auto callee = interpreter.get_variable(name());
+    auto callee = m_callee->execute(interpreter);
     ASSERT(callee.is_object());
     ASSERT(callee.as_object()->is_function());
     auto* function = static_cast<Function*>(callee.as_object());
@@ -304,9 +304,8 @@ void UnaryExpression::dump(int indent) const
 
 void CallExpression::dump(int indent) const
 {
-    print_indent(indent);
-    printf("%s '%s'\n", class_name(), name().characters());
-
+    ASTNode::dump(indent);
+    m_callee->dump(indent + 1);
     for (auto& argument : m_arguments)
         argument.dump(indent + 1);
 }

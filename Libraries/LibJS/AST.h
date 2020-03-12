@@ -398,8 +398,8 @@ private:
 
 class CallExpression : public Expression {
 public:
-    explicit CallExpression(String name, NonnullOwnPtrVector<Expression> arguments = {})
-        : m_name(move(name))
+    explicit CallExpression(NonnullOwnPtr<Expression> callee, NonnullOwnPtrVector<Expression> arguments = {})
+        : m_callee(move(callee))
         , m_arguments(move(arguments))
     {
     }
@@ -407,12 +407,10 @@ public:
     virtual Value execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
 
-    const String& name() const { return m_name; }
-
 private:
     virtual const char* class_name() const override { return "CallExpression"; }
 
-    String m_name;
+    NonnullOwnPtr<Expression> m_callee;
     const NonnullOwnPtrVector<Expression> m_arguments;
 };
 

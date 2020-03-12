@@ -25,14 +25,142 @@
  */
 
 #include "Parser.h"
+#include <AK/HashMap.h>
 #include <AK/StdLibExtras.h>
 #include <stdio.h>
 
 namespace JS {
+
+static HashMap<TokenType, int> g_operator_precedence;
+
 Parser::Parser(Lexer lexer)
     : m_lexer(move(lexer))
     , m_current_token(m_lexer.next())
 {
+    if (g_operator_precedence.is_empty()) {
+        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
+        g_operator_precedence.set(TokenType::Period, 20);
+        g_operator_precedence.set(TokenType::BracketOpen, 20);
+        g_operator_precedence.set(TokenType::ParenOpen, 20);
+        g_operator_precedence.set(TokenType::QuestionMarkPeriod, 20);
+
+        g_operator_precedence.set(TokenType::New, 19);
+
+        g_operator_precedence.set(TokenType::PlusPlus, 18);
+        g_operator_precedence.set(TokenType::MinusMinus, 18);
+
+        g_operator_precedence.set(TokenType::ExclamationMark, 17);
+        g_operator_precedence.set(TokenType::Tilde, 17);
+        g_operator_precedence.set(TokenType::Typeof, 17);
+        g_operator_precedence.set(TokenType::Void, 17);
+        g_operator_precedence.set(TokenType::Delete, 17);
+        g_operator_precedence.set(TokenType::Await, 17);
+
+        g_operator_precedence.set(TokenType::DoubleAsterisk, 16);
+
+        g_operator_precedence.set(TokenType::Asterisk, 15);
+        g_operator_precedence.set(TokenType::Slash, 15);
+        g_operator_precedence.set(TokenType::Percent, 15);
+
+        g_operator_precedence.set(TokenType::Plus, 14);
+        g_operator_precedence.set(TokenType::Minus, 14);
+
+        g_operator_precedence.set(TokenType::ShiftLeft, 13);
+        g_operator_precedence.set(TokenType::ShiftRight, 13);
+        g_operator_precedence.set(TokenType::UnsignedShiftRight, 13);
+
+        g_operator_precedence.set(TokenType::LessThan, 12);
+        g_operator_precedence.set(TokenType::LessThanEquals, 12);
+        g_operator_precedence.set(TokenType::GreaterThan, 12);
+        g_operator_precedence.set(TokenType::GreaterThanEquals, 12);
+        g_operator_precedence.set(TokenType::In, 12);
+        g_operator_precedence.set(TokenType::Instanceof, 12);
+
+        g_operator_precedence.set(TokenType::EqualsEquals, 11);
+        g_operator_precedence.set(TokenType::ExclamationMarkEquals, 11);
+        g_operator_precedence.set(TokenType::EqualsEqualsEquals, 11);
+        g_operator_precedence.set(TokenType::ExclamationMarkEqualsEquals, 11);
+
+        g_operator_precedence.set(TokenType::Ampersand, 10);
+
+        g_operator_precedence.set(TokenType::Caret, 9);
+
+        g_operator_precedence.set(TokenType::Pipe, 8);
+
+        g_operator_precedence.set(TokenType::DoubleQuestionMark, 7);
+
+        g_operator_precedence.set(TokenType::DoubleAmpersand, 6);
+
+        g_operator_precedence.set(TokenType::DoublePipe, 5);
+
+        g_operator_precedence.set(TokenType::QuestionMark, 4);
+
+        g_operator_precedence.set(TokenType::Equals, 3);
+        g_operator_precedence.set(TokenType::PlusEquals, 3);
+        g_operator_precedence.set(TokenType::MinusEquals, 3);
+        g_operator_precedence.set(TokenType::AsteriskAsteriskEquals, 3);
+        g_operator_precedence.set(TokenType::AsteriskEquals, 3);
+        g_operator_precedence.set(TokenType::SlashEquals, 3);
+        g_operator_precedence.set(TokenType::PercentEquals, 3);
+        g_operator_precedence.set(TokenType::ShiftLeftEquals, 3);
+        g_operator_precedence.set(TokenType::ShiftRightEquals, 3);
+        g_operator_precedence.set(TokenType::UnsignedShiftRightEquals, 3);
+        g_operator_precedence.set(TokenType::PipeEquals, 3);
+
+        g_operator_precedence.set(TokenType::Yield, 2);
+
+        g_operator_precedence.set(TokenType::Comma, 1);
+    }
+}
+
+int Parser::operator_precedence(TokenType type) const
+{
+    auto it = g_operator_precedence.find(type);
+    if (it == g_operator_precedence.end()) {
+        fprintf(stderr, "No precedence for operator %s\n", Token::name(type));
+        ASSERT_NOT_REACHED();
+        return -1;
+    }
+
+    return it->value;
+}
+
+Associativity Parser::operator_associativity(TokenType type) const
+{
+    switch (type) {
+    case TokenType::Period:
+    case TokenType::BracketOpen:
+    case TokenType::ParenOpen:
+    case TokenType::QuestionMarkPeriod:
+    case TokenType::Asterisk:
+    case TokenType::Slash:
+    case TokenType::Percent:
+    case TokenType::Plus:
+    case TokenType::Minus:
+    case TokenType::ShiftLeft:
+    case TokenType::ShiftRight:
+    case TokenType::UnsignedShiftRight:
+    case TokenType::LessThan:
+    case TokenType::LessThanEquals:
+    case TokenType::GreaterThan:
+    case TokenType::GreaterThanEquals:
+    case TokenType::In:
+    case TokenType::Instanceof:
+    case TokenType::EqualsEquals:
+    case TokenType::ExclamationMarkEquals:
+    case TokenType::EqualsEqualsEquals:
+    case TokenType::ExclamationMarkEqualsEquals:
+    case TokenType::Ampersand:
+    case TokenType::Caret:
+    case TokenType::Pipe:
+    case TokenType::DoubleQuestionMark:
+    case TokenType::DoubleAmpersand:
+    case TokenType::DoublePipe:
+    case TokenType::Comma:
+        return Associativity::Left;
+    default:
+        return Associativity::Right;
+    }
 }
 
 NonnullOwnPtr<Program> Parser::parse_program()
@@ -54,7 +182,7 @@ NonnullOwnPtr<Program> Parser::parse_program()
 NonnullOwnPtr<Statement> Parser::parse_statement()
 {
     if (match_expression()) {
-        return make<JS::ExpressionStatement>(parse_expression());
+        return make<JS::ExpressionStatement>(parse_expression(0));
     }
 
     switch (m_current_token.type()) {
@@ -83,7 +211,7 @@ NonnullOwnPtr<Expression> Parser::parse_primary_expression()
     switch (m_current_token.type()) {
     case TokenType::ParenOpen: {
         consume(TokenType::ParenOpen);
-        auto expression = parse_expression();
+        auto expression = parse_expression(0);
         consume(TokenType::ParenClose);
         return expression;
     }
@@ -113,68 +241,75 @@ NonnullOwnPtr<ObjectExpression> Parser::parse_object_expression()
     return make<ObjectExpression>();
 }
 
-NonnullOwnPtr<Expression> Parser::parse_expression()
+NonnullOwnPtr<Expression> Parser::parse_expression(int min_precedence, Associativity associativity)
 {
     auto expression = parse_primary_expression();
     while (match_secondary_expression()) {
-        expression = parse_secondary_expression(move(expression));
+        int new_precedence = operator_precedence(m_current_token.type());
+        if (new_precedence < min_precedence)
+            break;
+        if (new_precedence == min_precedence && associativity == Associativity::Left)
+            break;
+
+        Associativity new_associativity = operator_associativity(m_current_token.type());
+        expression = parse_secondary_expression(move(expression), new_precedence, new_associativity);
     }
     return expression;
 }
 
-NonnullOwnPtr<Expression> Parser::parse_secondary_expression(NonnullOwnPtr<Expression> lhs)
+NonnullOwnPtr<Expression> Parser::parse_secondary_expression(NonnullOwnPtr<Expression> lhs, int min_precedence, Associativity associativity)
 {
     switch (m_current_token.type()) {
     case TokenType::Plus:
         consume();
-        return make<BinaryExpression>(BinaryOp::Plus, move(lhs), parse_expression());
+        return make<BinaryExpression>(BinaryOp::Plus, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::PlusEquals:
         consume();
-        return make<AssignmentExpression>(AssignmentOp::AdditionAssignment, move(lhs), parse_expression());
+        return make<AssignmentExpression>(AssignmentOp::AdditionAssignment, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::Minus:
         consume();
-        return make<BinaryExpression>(BinaryOp::Minus, move(lhs), parse_expression());
+        return make<BinaryExpression>(BinaryOp::Minus, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::MinusEquals:
         consume();
-        return make<AssignmentExpression>(AssignmentOp::SubtractionAssignment, move(lhs), parse_expression());
+        return make<AssignmentExpression>(AssignmentOp::SubtractionAssignment, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::Asterisk:
         consume();
-        return make<BinaryExpression>(BinaryOp::Asterisk, move(lhs), parse_expression());
+        return make<BinaryExpression>(BinaryOp::Asterisk, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::AsteriskEquals:
         consume();
-        return make<AssignmentExpression>(AssignmentOp::MultiplicationAssignment, move(lhs), parse_expression());
+        return make<AssignmentExpression>(AssignmentOp::MultiplicationAssignment, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::Slash:
         consume();
-        return make<BinaryExpression>(BinaryOp::Slash, move(lhs), parse_expression());
+        return make<BinaryExpression>(BinaryOp::Slash, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::SlashEquals:
         consume();
-        return make<AssignmentExpression>(AssignmentOp::DivisionAssignment, move(lhs), parse_expression());
+        return make<AssignmentExpression>(AssignmentOp::DivisionAssignment, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::GreaterThan:
         consume();
-        return make<BinaryExpression>(BinaryOp::GreaterThan, move(lhs), parse_expression());
+        return make<BinaryExpression>(BinaryOp::GreaterThan, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::GreaterThanEquals:
         consume();
-        return make<BinaryExpression>(BinaryOp::GreaterThanEquals, move(lhs), parse_expression());
+        return make<BinaryExpression>(BinaryOp::GreaterThanEquals, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::LessThan:
         consume();
-        return make<BinaryExpression>(BinaryOp::LessThan, move(lhs), parse_expression());
+        return make<BinaryExpression>(BinaryOp::LessThan, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::LessThanEquals:
         consume();
-        return make<BinaryExpression>(BinaryOp::LessThanEquals, move(lhs), parse_expression());
+        return make<BinaryExpression>(BinaryOp::LessThanEquals, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::EqualsEqualsEquals:
         consume();
-        return make<BinaryExpression>(BinaryOp::TypedEquals, move(lhs), parse_expression());
+        return make<BinaryExpression>(BinaryOp::TypedEquals, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::ExclamationMarkEqualsEquals:
         consume();
-        return make<BinaryExpression>(BinaryOp::TypedInequals, move(lhs), parse_expression());
+        return make<BinaryExpression>(BinaryOp::TypedInequals, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::ParenOpen:
         return parse_call_expression(move(lhs));
     case TokenType::Equals:
         consume();
-        return make<AssignmentExpression>(AssignmentOp::Assignment, move(lhs), parse_expression());
+        return make<AssignmentExpression>(AssignmentOp::Assignment, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::Period:
         consume();
-        return make<MemberExpression>(move(lhs), parse_expression());
+        return make<MemberExpression>(move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::PlusPlus:
         consume();
         return make<UpdateExpression>(UpdateOp::Increment, move(lhs));
@@ -196,7 +331,7 @@ NonnullOwnPtr<CallExpression> Parser::parse_call_expression(NonnullOwnPtr<Expres
     NonnullOwnPtrVector<Expression> arguments;
 
     while (match_expression()) {
-        arguments.append(parse_expression());
+        arguments.append(parse_expression(0));
         if (!match(TokenType::Comma))
             break;
         consume();
@@ -204,20 +339,14 @@ NonnullOwnPtr<CallExpression> Parser::parse_call_expression(NonnullOwnPtr<Expres
 
     consume(TokenType::ParenClose);
 
-    // FIXME: Allow lhs expression instead of just a string
-    if (lhs->is_identifier()) {
-        return make<CallExpression>(static_cast<Identifier*>(lhs.ptr())->string(), move(arguments));
-    }
-
-    m_has_errors = true;
-    return make<CallExpression>("***ERROR***");
+    return make<CallExpression>(move(lhs), move(arguments));
 }
 
 NonnullOwnPtr<ReturnStatement> Parser::parse_return_statement()
 {
     consume(TokenType::Return);
     if (match_expression()) {
-        return make<ReturnStatement>(parse_expression());
+        return make<ReturnStatement>(parse_expression(0));
     }
     return make<ReturnStatement>(nullptr);
 }
@@ -283,7 +412,7 @@ NonnullOwnPtr<VariableDeclaration> Parser::parse_variable_declaration()
     OwnPtr<Expression> initializer;
     if (match(TokenType::Equals)) {
         consume();
-        initializer = parse_expression();
+        initializer = parse_expression(0);
     }
     return make<VariableDeclaration>(make<Identifier>(name), move(initializer), declaration_type);
 }
@@ -313,7 +442,7 @@ NonnullOwnPtr<ForStatement> Parser::parse_for_statement()
     case TokenType::Semicolon:
         break;
     default:
-        test = parse_expression();
+        test = parse_expression(0);
         break;
     }
 
@@ -324,7 +453,7 @@ NonnullOwnPtr<ForStatement> Parser::parse_for_statement()
     case TokenType::Semicolon:
         break;
     default:
-        update = parse_expression();
+        update = parse_expression(0);
         break;
     }
 
@@ -405,9 +534,9 @@ bool Parser::done() const
 
 Token Parser::consume()
 {
-    auto oldToken = m_current_token;
+    auto old_token = m_current_token;
     m_current_token = m_lexer.next();
-    return oldToken;
+    return old_token;
 }
 
 Token Parser::consume(TokenType type)
