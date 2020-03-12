@@ -96,11 +96,25 @@ Value greater_than(Value lhs, Value rhs)
     return Value(lhs.as_double() > rhs.as_double());
 }
 
+Value greater_than_equals(Value lhs, Value rhs)
+{
+    ASSERT(lhs.is_number());
+    ASSERT(rhs.is_number());
+    return Value(lhs.as_double() >= rhs.as_double());
+}
+
 Value less_than(Value lhs, Value rhs)
 {
     ASSERT(lhs.is_number());
     ASSERT(rhs.is_number());
     return Value(lhs.as_double() < rhs.as_double());
+}
+
+Value less_than_equals(Value lhs, Value rhs)
+{
+    ASSERT(lhs.is_number());
+    ASSERT(rhs.is_number());
+    return Value(lhs.as_double() <= rhs.as_double());
 }
 
 Value bitwise_and(Value lhs, Value rhs)
