@@ -33,6 +33,7 @@
 namespace JS {
 
 HashMap<String, TokenType> Lexer::s_keywords;
+HashMap<String, TokenType> Lexer::s_three_char_tokens;
 HashMap<String, TokenType> Lexer::s_two_char_tokens;
 HashMap<char, TokenType> Lexer::s_single_char_tokens;
 
@@ -60,6 +61,11 @@ Lexer::Lexer(StringView source)
         s_keywords.set("try", TokenType::Try);
         s_keywords.set("var", TokenType::Var);
         s_keywords.set("while", TokenType::While);
+    }
+
+    if (s_three_char_tokens.is_empty()) {
+        s_three_char_tokens.set("===", TokenType::EqualsEqualsEquals);
+        s_three_char_tokens.set("!==", TokenType::ExclamationMarkEqualsEquals);
     }
 
     if (s_two_char_tokens.is_empty()) {
@@ -174,7 +180,7 @@ Token Lexer::next()
     }
 
     size_t value_start = m_position;
-    TokenType token_type;
+    auto token_type = TokenType::Invalid;
 
     if (is_identifier_start()) {
         // identifier or keyword
@@ -205,8 +211,23 @@ Token Lexer::next()
     } else if (m_current_char == EOF) {
         token_type = TokenType::Eof;
     } else {
+        bool found_three_char_token = false;
+        if (m_position+1 < m_source.length()) {
+            char secondChar = m_source[m_position];
+            char thirdChar = m_source[m_position+1];
+            char threeChars[] { (char)m_current_char, secondChar, thirdChar, 0 };
+            auto it = s_three_char_tokens.find(threeChars);
+            if (it != s_three_char_tokens.end()) {
+                found_three_char_token = true;
+                consume();
+                consume();
+                consume();
+                token_type = it->value;
+            }
+        }
+
         bool found_two_char_token = false;
-        if (!is_eof()) {
+        if (!found_three_char_token && !is_eof()) {
             char secondChar = m_source[m_position];
             char twoChars[] { (char)m_current_char, secondChar, 0 };
             auto it = s_two_char_tokens.find(twoChars);
@@ -218,15 +239,19 @@ Token Lexer::next()
             }
         }
 
-        if (!found_two_char_token) {
+        bool found_one_char_token = false;
+        if (!found_three_char_token && !found_two_char_token) {
             auto it = s_single_char_tokens.find(m_current_char);
             if (it != s_single_char_tokens.end()) {
+                found_one_char_token = true;
                 consume();
                 token_type = it->value;
-            } else {
-                consume();
-                token_type = TokenType::Invalid;
             }
+        }
+
+        if (!found_three_char_token && !found_two_char_token && !found_one_char_token) {
+            consume();
+            token_type = TokenType::Invalid;
         }
     }
 

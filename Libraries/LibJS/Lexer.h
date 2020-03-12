@@ -54,6 +54,7 @@ private:
     int m_current_char;
 
     static HashMap<String, TokenType> s_keywords;
+    static HashMap<String, TokenType> s_three_char_tokens;
     static HashMap<String, TokenType> s_two_char_tokens;
     static HashMap<char, TokenType> s_single_char_tokens;
 };
