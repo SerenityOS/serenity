@@ -38,6 +38,7 @@
 #include <LibGUI/CppSyntaxHighlighter.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/FontDatabase.h>
+#include <LibGUI/JSSyntaxHighlighter.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
@@ -402,6 +403,15 @@ TextEditorWidget::TextEditorWidget()
     syntax_actions.add_action(*m_cpp_highlight);
     syntax_menu->add_action(*m_cpp_highlight);
 
+    m_js_highlight = GUI::Action::create("Javascript", [&](GUI::Action& action) {
+        action.set_checked(true);
+        m_editor->set_syntax_highlighter(make<GUI::JSSyntaxHighlighter>());
+        m_editor->update();
+    });
+    m_js_highlight->set_checkable(true);
+    syntax_actions.add_action(*m_js_highlight);
+    syntax_menu->add_action(*m_js_highlight);
+
     auto view_menu = GUI::Menu::construct("View");
     view_menu->add_action(*m_line_wrapping_setting_action);
     view_menu->add_separator();
@@ -446,6 +456,8 @@ void TextEditorWidget::set_path(const FileSystemPath& file)
 
     if (m_extension == "cpp" || m_extension == "h")
         m_cpp_highlight->activate();
+    else if (m_extension == "js")
+        m_js_highlight->activate();
     else
         m_plain_text_highlight->activate();
 
