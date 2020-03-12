@@ -419,22 +419,22 @@ Value AssignmentExpression::execute(Interpreter& interpreter) const
     auto rhs_result = m_rhs->execute(interpreter);
 
     switch (m_op) {
-    case AssignmentOp::Assign:
+    case AssignmentOp::Assignment:
         interpreter.set_variable(name, rhs_result);
         break;
-    case AssignmentOp::PlusEquals:
+    case AssignmentOp::AdditionAssignment:
         rhs_result = add(m_lhs->execute(interpreter), rhs_result);
         interpreter.set_variable(name, rhs_result);
         break;
-    case AssignmentOp::MinusEquals:
+    case AssignmentOp::SubtractionAssignment:
         rhs_result = sub(m_lhs->execute(interpreter), rhs_result);
         interpreter.set_variable(name, rhs_result);
         break;
-    case AssignmentOp::AsteriskEquals:
+    case AssignmentOp::MultiplicationAssignment:
         rhs_result = mul(m_lhs->execute(interpreter), rhs_result);
         interpreter.set_variable(name, rhs_result);
         break;
-    case AssignmentOp::SlashEquals:
+    case AssignmentOp::DivisionAssignment:
         rhs_result = div(m_lhs->execute(interpreter), rhs_result);
         interpreter.set_variable(name, rhs_result);
         break;
@@ -446,19 +446,19 @@ void AssignmentExpression::dump(int indent) const
 {
     const char* op_string = nullptr;
     switch (m_op) {
-    case AssignmentOp::Assign:
+    case AssignmentOp::Assignment:
         op_string = "=";
         break;
-    case AssignmentOp::PlusEquals:
+    case AssignmentOp::AdditionAssignment:
         op_string = "+=";
         break;
-    case AssignmentOp::MinusEquals:
+    case AssignmentOp::SubtractionAssignment:
         op_string = "-=";
         break;
-    case AssignmentOp::AsteriskEquals:
+    case AssignmentOp::MultiplicationAssignment:
         op_string = "*=";
         break;
-    case AssignmentOp::SlashEquals:
+    case AssignmentOp::DivisionAssignment:
         op_string = "/=";
         break;
     }
