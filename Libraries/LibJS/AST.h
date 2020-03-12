@@ -391,6 +391,10 @@ private:
 
 enum class AssignmentOp {
     Assign,
+    PlusEquals,
+    MinusEquals,
+    AsteriskEquals,
+    SlashEquals,
 };
 
 class AssignmentExpression : public Expression {
