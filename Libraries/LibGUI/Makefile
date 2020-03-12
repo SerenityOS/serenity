@@ -29,6 +29,7 @@ OBJS = \
     InputBox.o \
     ItemView.o \
     JsonArrayModel.o \
+    JSSyntaxHighlighter.o \
     Label.o \
     Layout.o \
     LazyWidget.o \
