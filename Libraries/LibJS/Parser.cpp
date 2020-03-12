@@ -195,13 +195,11 @@ NonnullOwnPtr<CallExpression> Parser::parse_call_expression(NonnullOwnPtr<Expres
 
     NonnullOwnPtrVector<Expression> arguments;
 
-    for (;;) {
-        if (match_expression()) {
-            arguments.append(parse_expression());
-            if (!match(TokenType::Comma))
-                break;
-            consume();
-        }
+    while (match_expression()) {
+        arguments.append(parse_expression());
+        if (!match(TokenType::Comma))
+            break;
+        consume();
     }
 
     consume(TokenType::ParenClose);
