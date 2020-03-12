@@ -33,11 +33,12 @@ namespace JS {
 
 class Function : public Object {
 public:
-    Function(String name, const ScopeNode& body);
+    Function(String name, const ScopeNode& body, Vector<String> parameters = {});
     virtual ~Function();
 
     const String& name() const { return m_name; }
     const ScopeNode& body() const { return m_body; }
+    const Vector<String>& parameters() const { return m_parameters; };
 
 protected:
     virtual const char* class_name() const override { return "Function"; }
@@ -47,6 +48,7 @@ private:
 
     String m_name;
     const ScopeNode& m_body;
+    const Vector<String> m_parameters;
 };
 
 }

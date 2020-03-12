@@ -71,4 +71,3 @@ int main(int argc, char** argv)
     interpreter.heap().collect_garbage();
     return 0;
 }
-

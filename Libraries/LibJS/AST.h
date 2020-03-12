@@ -29,6 +29,7 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
+#include <AK/Vector.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Value.h>
 
@@ -115,14 +116,16 @@ private:
 
 class FunctionDeclaration : public Statement {
 public:
-    FunctionDeclaration(String name, NonnullOwnPtr<ScopeNode> body)
+    FunctionDeclaration(String name, NonnullOwnPtr<ScopeNode> body, Vector<String> parameters = {})
         : m_name(move(name))
         , m_body(move(body))
+        , m_parameters(move(parameters))
     {
     }
 
     String name() const { return m_name; }
     const ScopeNode& body() const { return *m_body; }
+    const Vector<String>& parameters() const { return m_parameters; };
 
     virtual Value execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
@@ -132,6 +135,7 @@ private:
 
     String m_name;
     NonnullOwnPtr<ScopeNode> m_body;
+    const Vector<String> m_parameters;
 };
 
 class Expression : public ASTNode {
@@ -363,8 +367,9 @@ private:
 
 class CallExpression : public Expression {
 public:
-    explicit CallExpression(String name)
+    explicit CallExpression(String name, NonnullOwnPtrVector<Expression> arguments = {})
         : m_name(move(name))
+        , m_arguments(move(arguments))
     {
     }
 
@@ -377,6 +382,7 @@ private:
     virtual const char* class_name() const override { return "CallExpression"; }
 
     String m_name;
+    const NonnullOwnPtrVector<Expression> m_arguments;
 };
 
 enum class AssignmentOp {
