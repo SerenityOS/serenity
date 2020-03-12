@@ -332,7 +332,7 @@ void StringLiteral::dump(int indent) const
 void NumericLiteral::dump(int indent) const
 {
     print_indent(indent);
-    printf("NumberLiteral %g\n", m_value);
+    printf("NumericLiteral %g\n", m_value);
 }
 
 void BooleanLiteral::dump(int indent) const
