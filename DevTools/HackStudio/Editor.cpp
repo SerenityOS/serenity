@@ -31,8 +31,10 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/CppLexer.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
+#include <LibGUI/SyntaxHighlighter.h>
 #include <LibGUI/Window.h>
 #include <LibMarkdown/MDDocument.h>
 #include <LibWeb/DOM/ElementFactory.h>
@@ -92,6 +94,8 @@ void Editor::paint_event(GUI::PaintEvent& event)
         if (horizontal_scrollbar().is_visible())
             rect.set_height(rect.height() - horizontal_scrollbar().height());
         painter.draw_rect(rect, palette().selection());
+
+        window()->set_override_cursor(m_hovering_link && m_holding_ctrl ? GUI::StandardCursor::Hand : GUI::StandardCursor::IBeam);
     }
 }
 
@@ -176,11 +180,22 @@ void Editor::mousemove_event(GUI::MouseEvent& event)
 
     auto text_position = text_position_at(event.position());
     if (!text_position.is_valid()) {
-        GUI::Application::the().hide_tooltip();
+        m_documentation_tooltip_window->hide();
         return;
     }
 
+    bool hide_tooltip = true;
+    bool is_over_header = false;
+
     for (auto& span : document().spans()) {
+        if (span.range.contains(m_previous_text_position) && !span.range.contains(text_position)) {
+            auto token = static_cast<GUI::CppToken::Type>(reinterpret_cast<size_t>(span.data));
+            if (token == GUI::CppToken::Type::IncludePath && span.is_underlined) {
+                span.is_underlined = false;
+                wrapper().editor().update();
+            }
+        }
+
         if (span.range.contains(text_position)) {
             auto adjusted_range = span.range;
             adjusted_range.end().set_column(adjusted_range.end().column() + 1);
@@ -188,15 +203,37 @@ void Editor::mousemove_event(GUI::MouseEvent& event)
 #ifdef EDITOR_DEBUG
             dbg() << "Hovering: " << adjusted_range << " \"" << hovered_span_text << "\"";
 #endif
-            show_documentation_tooltip_if_available(hovered_span_text, event.position().translated(screen_relative_rect().location()));
-            return;
+
+            auto token = static_cast<GUI::CppToken::Type>(reinterpret_cast<size_t>(span.data));
+            if (token == GUI::CppToken::Type::IncludePath) {
+                is_over_header = true;
+                bool was_underlined = span.is_underlined;
+                span.is_underlined = event.modifiers() & Mod_Ctrl;
+                if (span.is_underlined != was_underlined) {
+                    wrapper().editor().update();
+                }
+            } else if (token == GUI::CppToken::Type::Identifier) {
+                show_documentation_tooltip_if_available(hovered_span_text, event.position().translated(screen_relative_rect().location()));
+                hide_tooltip = false;
+            }
         }
     }
-    GUI::Application::the().hide_tooltip();
+
+    m_previous_text_position = text_position;
+    if (hide_tooltip)
+        m_documentation_tooltip_window->hide();
+
+    m_hovering_link = is_over_header && (event.modifiers() & Mod_Ctrl);
 }
 
 void Editor::mousedown_event(GUI::MouseEvent& event)
 {
+    auto highlighter = wrapper().editor().syntax_highlighter();
+    if (!highlighter || highlighter->language() != GUI::SyntaxLanguage::Cpp) {
+        GUI::TextEditor::mousedown_event(event);
+        return;
+    }
+
     if (!(event.modifiers() & Mod_Ctrl)) {
         GUI::TextEditor::mousedown_event(event);
         return;
@@ -210,6 +247,12 @@ void Editor::mousedown_event(GUI::MouseEvent& event)
 
     for (auto& span : document().spans()) {
         if (span.range.contains(text_position)) {
+            auto token = static_cast<GUI::CppToken::Type>(reinterpret_cast<size_t>(span.data));
+            if (token != GUI::CppToken::Type::IncludePath) {
+                GUI::TextEditor::mousedown_event(event);
+                return;
+            }
+
             auto adjusted_range = span.range;
             adjusted_range.end().set_column(adjusted_range.end().column() + 1);
             auto span_text = document().text_in_range(adjusted_range);
@@ -223,6 +266,20 @@ void Editor::mousedown_event(GUI::MouseEvent& event)
     }
 
     GUI::TextEditor::mousedown_event(event);
+}
+
+void Editor::keydown_event(GUI::KeyEvent& event)
+{
+    if (event.key() == Key_Control)
+        m_holding_ctrl = true;
+    GUI::TextEditor::keydown_event(event);
+}
+
+void Editor::keyup_event(GUI::KeyEvent& event)
+{
+    if (event.key() == Key_Control)
+        m_holding_ctrl = false;
+    GUI::TextEditor::keyup_event(event);
 }
 
 static HashMap<String, String>& include_paths()
