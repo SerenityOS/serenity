@@ -195,6 +195,13 @@ Token Lexer::next()
             consume();
         }
         token_type = TokenType::NumericLiteral;
+    } else if (m_current_char == '"') {
+        consume();
+        while (m_current_char != '"') {
+            consume();
+        }
+        consume();
+        token_type = TokenType::StringLiteral;
     } else if (m_current_char == EOF) {
         token_type = TokenType::Eof;
     } else {
