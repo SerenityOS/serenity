@@ -33,16 +33,16 @@ namespace JS {
 
 class NativeFunction final : public Object {
 public:
-    explicit NativeFunction(AK::Function<Value(Vector<Argument>)>);
+    explicit NativeFunction(AK::Function<Value(Interpreter&, Vector<Argument>)>);
     virtual ~NativeFunction() override;
 
-    AK::Function<Value(Vector<Argument>)>& native_function() { return m_native_function; }
+    AK::Function<Value(Interpreter&, Vector<Argument>)>& native_function() { return m_native_function; }
 
 private:
     virtual bool is_native_function() const override { return true; }
     virtual const char* class_name() const override { return "NativeFunction"; }
 
-    AK::Function<Value(Vector<Argument>)> m_native_function;
+    AK::Function<Value(Interpreter&, Vector<Argument>)> m_native_function;
 };
 
 }

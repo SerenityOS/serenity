@@ -55,11 +55,6 @@ Value ExpressionStatement::execute(Interpreter& interpreter) const
 
 Value CallExpression::execute(Interpreter& interpreter) const
 {
-    if (name() == "$gc") {
-        interpreter.heap().collect_garbage();
-        return js_undefined();
-    }
-
     auto callee = interpreter.get_variable(name());
     ASSERT(callee.is_object());
     auto* callee_object = callee.as_object();
@@ -78,7 +73,7 @@ Value CallExpression::execute(Interpreter& interpreter) const
         return interpreter.run(static_cast<Function&>(*callee_object).body(), move(passed_arguments), ScopeType::Function);
 
     if (callee_object->is_native_function()) {
-        return static_cast<NativeFunction&>(*callee_object).native_function()(move(passed_arguments));
+        return static_cast<NativeFunction&>(*callee_object).native_function()(interpreter, move(passed_arguments));
     }
 
     ASSERT_NOT_REACHED();

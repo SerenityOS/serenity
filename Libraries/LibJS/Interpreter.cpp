@@ -38,9 +38,14 @@ Interpreter::Interpreter()
     : m_heap(*this)
 {
     m_global_object = heap().allocate<Object>();
-    m_global_object->put("print", heap().allocate<NativeFunction>([](Vector<Argument> arguments) -> Value {
+    m_global_object->put("print", heap().allocate<NativeFunction>([](Interpreter&, Vector<Argument> arguments) -> Value {
         for (auto& argument : arguments)
             printf("%s ", argument.value.to_string().characters());
+        return js_undefined();
+    }));
+    m_global_object->put("gc", heap().allocate<NativeFunction>([](Interpreter& interpreter, Vector<Argument>) -> Value {
+        dbg() << "Forced garbage collection requested!";
+        interpreter.heap().collect_garbage();
         return js_undefined();
     }));
 }

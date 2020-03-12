@@ -1,5 +1,5 @@
 function foo() {
     var x = {};
-    $gc();
+    gc();
 }
 foo();
