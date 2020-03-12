@@ -46,6 +46,7 @@ public:
     void set_model_column(int column) { m_model_column = column; }
 
     virtual ModelIndex index_at_event_position(const Gfx::Point&) const override;
+    Gfx::Point adjusted_position(const Gfx::Point&) const;
 
     virtual void select_all() override;
 private:
