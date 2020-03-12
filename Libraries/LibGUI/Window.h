@@ -221,6 +221,7 @@ private:
     bool m_show_titlebar { true };
     bool m_layout_pending { false };
     bool m_visible_for_timer_purposes { true };
+    bool m_visible { false };
 };
 
 }
