@@ -65,6 +65,7 @@ NonnullOwnPtr<Statement> Parser::parse_statement()
     case TokenType::Return:
         return parse_return_statement();
     case TokenType::Var:
+    case TokenType::Let:
         return parse_variable_declaration();
     default:
         m_has_errors = true;
@@ -205,14 +206,27 @@ NonnullOwnPtr<FunctionDeclaration> Parser::parse_function_declaration()
 
 NonnullOwnPtr<VariableDeclaration> Parser::parse_variable_declaration()
 {
-    consume(TokenType::Var);
+    DeclarationType declaration_type;
+
+    switch (m_current_token.type()) {
+    case TokenType::Var:
+        declaration_type = DeclarationType::Var;
+        consume(TokenType::Var);
+        break;
+    case TokenType::Let:
+        declaration_type = DeclarationType::Let;
+        consume(TokenType::Let);
+        break;
+    default:
+        ASSERT_NOT_REACHED();
+    }
     auto name = consume(TokenType::Identifier).value();
     OwnPtr<Expression> initializer;
     if (match(TokenType::Equals)) {
         consume();
         initializer = parse_expression();
     }
-    return make<VariableDeclaration>(make<Identifier>(name), move(initializer), DeclarationType::Var);
+    return make<VariableDeclaration>(make<Identifier>(name), move(initializer), declaration_type);
 }
 
 bool Parser::match(TokenType type) const
