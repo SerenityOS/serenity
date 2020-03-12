@@ -74,6 +74,7 @@ typedef int clockid_t;
 #define TIMER_ABSTIME 99
 
 int clock_gettime(clockid_t, struct timespec*);
+int clock_settime(clockid_t, struct timespec*);
 int clock_nanosleep(clockid_t, int flags, const struct timespec* requested_sleep, struct timespec* remaining_sleep);
 int clock_getres(clockid_t, struct timespec* result);
 struct tm* gmtime_r(const time_t* timep, struct tm* result);
