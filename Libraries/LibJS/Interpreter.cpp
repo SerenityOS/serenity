@@ -122,8 +122,8 @@ void Interpreter::collect_roots(Badge<Heap>, HashTable<Cell*>& roots)
 
     for (auto& scope : m_scope_stack) {
         for (auto& it : scope.variables) {
-            if (it.value.is_object())
-                roots.set(it.value.as_object());
+            if (it.value.is_cell())
+                roots.set(it.value.as_cell());
         }
     }
 }
