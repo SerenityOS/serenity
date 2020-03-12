@@ -25,6 +25,7 @@
  */
 
 #include "Token.h"
+#include <AK/Assertions.h>
 
 namespace JS {
 
@@ -37,14 +38,20 @@ const char* Token::name(TokenType type)
         return "AmpersandEquals";
     case TokenType::Asterisk:
         return "Asterisk";
+    case TokenType::AsteriskAsteriskEquals:
+        return "AsteriskAsteriskEquals";
     case TokenType::AsteriskEquals:
         return "AsteriskEquals";
+    case TokenType::Await:
+        return "Await";
     case TokenType::BoolLiteral:
         return "BoolLiteral";
     case TokenType::BracketOpen:
         return "BracketOpen";
     case TokenType::BracketClose:
         return "BracketClose";
+    case TokenType::Caret:
+        return "Caret";
     case TokenType::Catch:
         return "Catch";
     case TokenType::Class:
@@ -63,8 +70,12 @@ const char* Token::name(TokenType type)
         return "Do";
     case TokenType::DoubleAmpersand:
         return "DoubleAmpersand";
+    case TokenType::DoubleAsterisk:
+        return "DoubleAsterisk";
     case TokenType::DoublePipe:
         return "DoublePipe";
+    case TokenType::DoubleQuestionMark:
+        return "DoubleQuestionMark";
     case TokenType::Else:
         return "Else";
     case TokenType::Eof:
@@ -77,6 +88,8 @@ const char* Token::name(TokenType type)
         return "ExclamationMark";
     case TokenType::ExclamationMarkEquals:
         return "ExclamationMarkEquals";
+    case TokenType::ExclamationMarkEqualsEquals:
+        return "ExclamationMarkEqualsEquals";
     case TokenType::Finally:
         return "Finally";
     case TokenType::Function:
@@ -87,6 +100,10 @@ const char* Token::name(TokenType type)
         return "Identifier";
     case TokenType::If:
         return "If";
+    case TokenType::In:
+        return "In";
+    case TokenType::Instanceof:
+        return "Instanceof";
     case TokenType::Interface:
         return "Interface";
     case TokenType::Invalid:
@@ -129,6 +146,8 @@ const char* Token::name(TokenType type)
         return "PlusPlus";
     case TokenType::QuestionMark:
         return "QuestionMark";
+    case TokenType::QuestionMarkPeriod:
+        return "QuestionMarkPeriod";
     case TokenType::RegexLiteral:
         return "RegexLiteral";
     case TokenType::Return:
@@ -137,21 +156,38 @@ const char* Token::name(TokenType type)
         return "Semicolon";
     case TokenType::ShiftLeft:
         return "ShiftLeft";
+    case TokenType::ShiftLeftEquals:
+        return "ShiftLeftEquals";
     case TokenType::ShiftRight:
         return "ShiftRight";
+    case TokenType::ShiftRightEquals:
+        return "ShiftRightEquals";
     case TokenType::Slash:
         return "Slash";
     case TokenType::SlashEquals:
         return "SlashEquals";
     case TokenType::StringLiteral:
         return "StringLiteral";
+    case TokenType::Tilde:
+        return "Tilde";
     case TokenType::Try:
         return "Try";
+    case TokenType::Typeof:
+        return "Typeof";
+    case TokenType::UnsignedShiftRight:
+        return "UnsignedShiftRight";
+    case TokenType::UnsignedShiftRightEquals:
+        return "UnsignedShiftRightEquals";
     case TokenType::Var:
         return "Var";
+    case TokenType::Void:
+        return "Void";
     case TokenType::While:
         return "While";
+    case TokenType::Yield:
+        return "Yield";
     default:
+        ASSERT_NOT_REACHED();
         return "<Unknown>";
     }
 }
