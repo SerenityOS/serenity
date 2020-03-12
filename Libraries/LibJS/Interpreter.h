@@ -30,6 +30,7 @@
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap.h>
+#include <LibJS/Value.h>
 
 namespace JS {
 
@@ -38,10 +39,15 @@ enum class ScopeType {
     Block,
 };
 
+struct Variable {
+    Value value;
+    DeclarationType declaration_type;
+};
+
 struct ScopeFrame {
     ScopeType type;
     const ScopeNode& scope_node;
-    HashMap<String, Value> variables;
+    HashMap<String, Variable> variables;
 };
 
 class Interpreter {
