@@ -435,6 +435,7 @@ private:
 enum class DeclarationType {
     Var,
     Let,
+    Const,
 };
 
 class VariableDeclaration : public Statement {

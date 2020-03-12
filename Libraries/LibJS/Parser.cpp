@@ -66,6 +66,7 @@ NonnullOwnPtr<Statement> Parser::parse_statement()
         return parse_return_statement();
     case TokenType::Var:
     case TokenType::Let:
+    case TokenType::Const:
         return parse_variable_declaration();
     default:
         m_has_errors = true;
@@ -222,6 +223,10 @@ NonnullOwnPtr<VariableDeclaration> Parser::parse_variable_declaration()
     case TokenType::Let:
         declaration_type = DeclarationType::Let;
         consume(TokenType::Let);
+        break;
+    case TokenType::Const:
+        declaration_type = DeclarationType::Const;
+        consume(TokenType::Const);
         break;
     default:
         ASSERT_NOT_REACHED();
