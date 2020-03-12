@@ -159,7 +159,9 @@ inline Value js_null()
 }
 
 Value greater_than(Value lhs, Value rhs);
+Value greater_than_equals(Value lhs, Value rhs);
 Value less_than(Value lhs, Value rhs);
+Value less_than_equals(Value lhs, Value rhs);
 Value bitwise_and(Value lhs, Value rhs);
 Value bitwise_or(Value lhs, Value rhs);
 Value bitwise_xor(Value lhs, Value rhs);

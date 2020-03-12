@@ -125,8 +125,12 @@ Value BinaryExpression::execute(Interpreter& interpreter) const
         return Value(!typed_eq(lhs_result, rhs_result).to_boolean());
     case BinaryOp::GreaterThan:
         return greater_than(lhs_result, rhs_result);
+    case BinaryOp::GreaterThanEquals:
+        return greater_than_equals(lhs_result, rhs_result);
     case BinaryOp::LessThan:
         return less_than(lhs_result, rhs_result);
+    case BinaryOp::LessThanEquals:
+        return less_than_equals(lhs_result, rhs_result);
     case BinaryOp::BitwiseAnd:
         return bitwise_and(lhs_result, rhs_result);
     case BinaryOp::BitwiseOr:
@@ -213,8 +217,14 @@ void BinaryExpression::dump(int indent) const
     case BinaryOp::GreaterThan:
         op_string = ">";
         break;
+    case BinaryOp::GreaterThanEquals:
+        op_string = ">=";
+        break;
     case BinaryOp::LessThan:
         op_string = "<";
+        break;
+    case BinaryOp::LessThanEquals:
+        op_string = "<=";
         break;
     case BinaryOp::BitwiseAnd:
         op_string = "&";
