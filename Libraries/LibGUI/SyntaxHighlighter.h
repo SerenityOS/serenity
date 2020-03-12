@@ -6,6 +6,11 @@
 
 namespace GUI {
 
+enum class SyntaxLanguage {
+    PlainText,
+    Cpp
+};
+
 class SyntaxHighlighter {
     AK_MAKE_NONCOPYABLE(SyntaxHighlighter);
     AK_MAKE_NONMOVABLE(SyntaxHighlighter);
@@ -13,6 +18,7 @@ class SyntaxHighlighter {
 public:
     virtual ~SyntaxHighlighter();
 
+    virtual SyntaxLanguage language() const = 0;
     virtual void rehighlight() = 0;
     virtual void highlight_matching_token_pair() = 0;
 

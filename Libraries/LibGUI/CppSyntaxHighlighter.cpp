@@ -56,7 +56,7 @@ void CppSyntaxHighlighter::rehighlight()
         span.color = style.color;
         span.font = style.font;
         span.is_skippable = token.m_type == CppToken::Type::Whitespace;
-        span.data = (void*)token.m_type;
+        span.data = reinterpret_cast<void*>(token.m_type);
         spans.append(span);
     }
     m_editor->document().set_spans(spans);
