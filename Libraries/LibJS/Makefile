@@ -2,6 +2,7 @@ OBJS = \
     AST.o \
     Cell.o \
     Function.o \
+    GlobalObject.o \
     Heap.o \
     HeapBlock.o \
     Interpreter.o \
