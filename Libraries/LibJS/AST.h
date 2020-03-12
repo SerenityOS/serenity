@@ -214,6 +214,8 @@ private:
 enum class BinaryOp {
     Plus,
     Minus,
+    Asterisk,
+    Slash,
     TypedEquals,
     TypedInequals,
     GreaterThan,

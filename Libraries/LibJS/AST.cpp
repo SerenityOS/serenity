@@ -115,6 +115,10 @@ Value BinaryExpression::execute(Interpreter& interpreter) const
         return add(lhs_result, rhs_result);
     case BinaryOp::Minus:
         return sub(lhs_result, rhs_result);
+    case BinaryOp::Asterisk:
+        return mul(lhs_result, rhs_result);
+    case BinaryOp::Slash:
+        return div(lhs_result, rhs_result);
     case BinaryOp::TypedEquals:
         return typed_eq(lhs_result, rhs_result);
     case BinaryOp::TypedInequals:
@@ -193,6 +197,12 @@ void BinaryExpression::dump(int indent) const
         break;
     case BinaryOp::Minus:
         op_string = "-";
+        break;
+    case BinaryOp::Asterisk:
+        op_string = "*";
+        break;
+    case BinaryOp::Slash:
+        op_string = "/";
         break;
     case BinaryOp::TypedEquals:
         op_string = "===";
