@@ -46,6 +46,7 @@
 #include <LibGUI/CppSyntaxHighlighter.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/InputBox.h>
+#include <LibGUI/JSSyntaxHighlighter.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
@@ -590,6 +591,10 @@ void open_file(const String& filename)
 
     if (filename.ends_with(".cpp") || filename.ends_with(".h"))
         current_editor().set_syntax_highlighter(make<GUI::CppSyntaxHighlighter>());
+    else if (filename.ends_with(".js"))
+        current_editor().set_syntax_highlighter(make<GUI::JSSyntaxHighlighter>());
+    else
+        current_editor().set_syntax_highlighter(nullptr);
 
     if (filename.ends_with(".frm")) {
         set_edit_mode(EditMode::Form);
