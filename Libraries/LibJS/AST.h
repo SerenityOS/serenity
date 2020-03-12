@@ -444,6 +444,29 @@ private:
     NonnullOwnPtr<Expression> m_rhs;
 };
 
+enum class UpdateOp {
+    Increment,
+    Decrement,
+};
+
+class UpdateExpression : public Expression {
+public:
+    UpdateExpression(UpdateOp op, NonnullOwnPtr<Expression> argument)
+        : m_op(op)
+        , m_argument(move(argument))
+    {
+    }
+
+    virtual Value execute(Interpreter&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    virtual const char* class_name() const override { return "UpdateExpression"; }
+
+    UpdateOp m_op;
+    NonnullOwnPtr<Identifier> m_argument;
+};
+
 enum class DeclarationType {
     Var,
     Let,
