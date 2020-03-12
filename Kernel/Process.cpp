@@ -4283,6 +4283,23 @@ int Process::sys$clock_gettime(clockid_t clock_id, timespec* user_ts)
     return 0;
 }
 
+int Process::sys$clock_settime(clockid_t clock_id, timespec* user_ts)
+{
+    SmapDisabler disabler;
+    REQUIRE_PROMISE(stdio);
+    if (!validate_write_typed(user_ts))
+        return -EFAULT;
+
+    switch (clock_id) {
+    case CLOCK_REALTIME:
+        TimeManagement::the().set_epoch_time(user_ts->tv_sec);
+        break;
+    default:
+        return -EINVAL;
+    }
+    return 0;
+}
+
 int Process::sys$clock_nanosleep(const Syscall::SC_clock_nanosleep_params* user_params)
 {
     REQUIRE_PROMISE(stdio);
