@@ -417,11 +417,11 @@ private:
 };
 
 enum class AssignmentOp {
-    Assign,
-    PlusEquals,
-    MinusEquals,
-    AsteriskEquals,
-    SlashEquals,
+    Assignment,
+    AdditionAssignment,
+    SubtractionAssignment,
+    MultiplicationAssignment,
+    DivisionAssignment,
 };
 
 class AssignmentExpression : public Expression {

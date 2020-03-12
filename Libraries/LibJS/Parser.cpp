@@ -128,25 +128,25 @@ NonnullOwnPtr<Expression> Parser::parse_secondary_expression(NonnullOwnPtr<Expre
         return make<BinaryExpression>(BinaryOp::Plus, move(lhs), parse_expression());
     case TokenType::PlusEquals:
         consume();
-        return make<AssignmentExpression>(AssignmentOp::PlusEquals, move(lhs), parse_expression());
+        return make<AssignmentExpression>(AssignmentOp::AdditionAssignment, move(lhs), parse_expression());
     case TokenType::Minus:
         consume();
         return make<BinaryExpression>(BinaryOp::Minus, move(lhs), parse_expression());
     case TokenType::MinusEquals:
         consume();
-        return make<AssignmentExpression>(AssignmentOp::MinusEquals, move(lhs), parse_expression());
+        return make<AssignmentExpression>(AssignmentOp::SubtractionAssignment, move(lhs), parse_expression());
     case TokenType::Asterisk:
         consume();
         return make<BinaryExpression>(BinaryOp::Asterisk, move(lhs), parse_expression());
     case TokenType::AsteriskEquals:
         consume();
-        return make<AssignmentExpression>(AssignmentOp::AsteriskEquals, move(lhs), parse_expression());
+        return make<AssignmentExpression>(AssignmentOp::MultiplicationAssignment, move(lhs), parse_expression());
     case TokenType::Slash:
         consume();
         return make<BinaryExpression>(BinaryOp::Slash, move(lhs), parse_expression());
     case TokenType::SlashEquals:
         consume();
-        return make<AssignmentExpression>(AssignmentOp::SlashEquals, move(lhs), parse_expression());
+        return make<AssignmentExpression>(AssignmentOp::DivisionAssignment, move(lhs), parse_expression());
     case TokenType::GreaterThan:
         consume();
         return make<BinaryExpression>(BinaryOp::GreaterThan, move(lhs), parse_expression());
@@ -169,7 +169,7 @@ NonnullOwnPtr<Expression> Parser::parse_secondary_expression(NonnullOwnPtr<Expre
         return parse_call_expression(move(lhs));
     case TokenType::Equals:
         consume();
-        return make<AssignmentExpression>(AssignmentOp::Assign, move(lhs), parse_expression());
+        return make<AssignmentExpression>(AssignmentOp::Assignment, move(lhs), parse_expression());
     case TokenType::Period:
         consume();
         return make<MemberExpression>(move(lhs), parse_expression());
