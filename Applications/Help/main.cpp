@@ -134,7 +134,7 @@ int main(int argc, char* argv[])
         html_view.set_document(html_document);
 
         String page_and_section = model->page_and_section(tree_view.selection().first());
-        window->set_title(String::format("Help: %s", page_and_section.characters()));
+        window->set_title(String::format("%s - Help", page_and_section.characters()));
     };
 
     tree_view.on_selection_change = [&] {
