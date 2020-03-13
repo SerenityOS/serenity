@@ -67,6 +67,11 @@ static u32 time_slice_for(const Thread& thread)
     return 10;
 }
 
+timeval Scheduler::time_since_boot()
+{
+    return { TimeManagement::the().seconds_since_boot(), (suseconds_t)TimeManagement::the().ticks_this_second() * 1000 };
+}
+
 Thread* g_finalizer;
 Thread* g_colonel;
 WaitQueue* g_finalizer_wait_queue;
@@ -138,7 +143,7 @@ Thread::WriteBlocker::WriteBlocker(const FileDescription& description)
     if (description.is_socket()) {
         auto& socket = *description.socket();
         if (socket.has_send_timeout()) {
-            timeval deadline = kgettimeofday();
+            timeval deadline = Scheduler::time_since_boot();
             deadline.tv_sec += socket.send_timeout().tv_sec;
             deadline.tv_usec += socket.send_timeout().tv_usec;
             deadline.tv_sec += (socket.send_timeout().tv_usec / 1000000) * 1;
@@ -163,7 +168,7 @@ Thread::ReadBlocker::ReadBlocker(const FileDescription& description)
     if (description.is_socket()) {
         auto& socket = *description.socket();
         if (socket.has_receive_timeout()) {
-            timeval deadline = kgettimeofday();
+            timeval deadline = Scheduler::time_since_boot();
             deadline.tv_sec += socket.receive_timeout().tv_sec;
             deadline.tv_usec += socket.receive_timeout().tv_usec;
             deadline.tv_sec += (socket.receive_timeout().tv_usec / 1000000) * 1;
@@ -325,8 +330,7 @@ bool Scheduler::pick_next()
         return context_switch(*g_colonel);
     }
 
-    struct timeval now;
-    kgettimeofday(now);
+    auto now = time_since_boot();
 
     auto now_sec = now.tv_sec;
     auto now_usec = now.tv_usec;

@@ -30,6 +30,7 @@
 #include <AK/Function.h>
 #include <AK/IntrusiveList.h>
 #include <AK/Types.h>
+#include <Kernel/UnixTypes.h>
 
 namespace Kernel {
 
@@ -51,6 +52,7 @@ public:
     static void initialize();
     static void timer_tick(const RegisterState&);
     static bool pick_next();
+    static timeval time_since_boot();
     static void pick_next_and_switch_now();
     static void switch_now();
     static bool yield();
