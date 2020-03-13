@@ -296,9 +296,6 @@ NonnullOwnPtr<ForStatement> Parser::parse_for_statement()
 
     OwnPtr<Statement> init = nullptr;
     switch (m_current_token.type()) {
-    case TokenType::Var:
-        init = parse_variable_declaration();
-        break;
     case TokenType::Semicolon:
         break;
     default:
