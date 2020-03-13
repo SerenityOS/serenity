@@ -466,6 +466,7 @@ typedef enum {
 
 typedef int clockid_t;
 
+#define CLOCK_REALTIME 0
 #define CLOCK_MONOTONIC 1
 #define TIMER_ABSTIME 99
 
