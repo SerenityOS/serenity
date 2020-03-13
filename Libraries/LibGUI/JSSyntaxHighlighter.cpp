@@ -38,6 +38,7 @@ static TextStyle style_for_token_type(JS::TokenType type)
     case JS::TokenType::BoolLiteral:
     case JS::TokenType::NullLiteral:
         return { Color::Black, &Gfx::Font::default_bold_fixed_width_font() };
+    case JS::TokenType::Await:
     case JS::TokenType::Catch:
     case JS::TokenType::Class:
     case JS::TokenType::Const:
@@ -48,14 +49,19 @@ static TextStyle style_for_token_type(JS::TokenType type)
     case JS::TokenType::For:
     case JS::TokenType::Function:
     case JS::TokenType::If:
+    case JS::TokenType::In:
+    case JS::TokenType::Instanceof:
     case JS::TokenType::Interface:
     case JS::TokenType::Let:
     case JS::TokenType::New:
     case JS::TokenType::QuestionMark:
     case JS::TokenType::Return:
     case JS::TokenType::Try:
+    case JS::TokenType::Typeof:
     case JS::TokenType::Var:
+    case JS::TokenType::Void:
     case JS::TokenType::While:
+    case JS::TokenType::Yield:
         return { Color::Black, &Gfx::Font::default_bold_fixed_width_font() };
     case JS::TokenType::Identifier:
         return { Color::from_rgb(0x092e64) };
