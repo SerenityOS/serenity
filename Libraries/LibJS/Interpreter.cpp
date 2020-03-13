@@ -96,7 +96,7 @@ void Interpreter::declare_variable(String name, DeclarationType declaration_type
         break;
     case DeclarationType::Let:
     case DeclarationType::Const:
-        if (m_scope_stack.last().variables.get(name).has_value() && m_scope_stack.last().variables.get(name).value().declaration_type != DeclarationType::Var)
+        if (m_scope_stack.last().variables.get(name).has_value())
             ASSERT_NOT_REACHED();
 
         m_scope_stack.last().variables.set(move(name), { js_undefined(), declaration_type });
