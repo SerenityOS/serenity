@@ -29,10 +29,7 @@
 
 namespace JS {
 
-Function::Function(String name, const ScopeNode& body, Vector<String> parameters)
-    : m_name(move(name))
-    , m_body(body)
-    , m_parameters(move(parameters))
+Function::Function()
 {
 }
 

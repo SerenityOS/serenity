@@ -27,22 +27,22 @@
 #pragma once
 
 #include <AK/Function.h>
-#include <LibJS/Object.h>
+#include <LibJS/Function.h>
 
 namespace JS {
 
-class NativeFunction final : public Object {
+class NativeFunction final : public Function {
 public:
-    explicit NativeFunction(AK::Function<Value(Interpreter&, Vector<Argument>)>);
+    explicit NativeFunction(AK::Function<Value(Interpreter&, Vector<Value>)>);
     virtual ~NativeFunction() override;
 
-    AK::Function<Value(Interpreter&, Vector<Argument>)>& native_function() { return m_native_function; }
+    virtual Value call(Interpreter&, Vector<Value>) override;
 
 private:
     virtual bool is_native_function() const override { return true; }
     virtual const char* class_name() const override { return "NativeFunction"; }
 
-    AK::Function<Value(Interpreter&, Vector<Argument>)> m_native_function;
+    AK::Function<Value(Interpreter&, Vector<Value>)> m_native_function;
 };
 
 }

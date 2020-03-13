@@ -24,24 +24,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibJS/Interpreter.h>
-#include <LibJS/NativeFunction.h>
-#include <LibJS/Value.h>
+#pragma once
+
+#include <LibJS/Function.h>
 
 namespace JS {
 
-NativeFunction::NativeFunction(AK::Function<Value(Interpreter&, Vector<Value>)> native_function)
-    : m_native_function(move(native_function))
-{
-}
+class ScriptFunction final : public Function {
+public:
+    ScriptFunction(const ScopeNode& body, Vector<String> parameters = {});
+    virtual ~ScriptFunction();
 
-NativeFunction::~NativeFunction()
-{
-}
+    const ScopeNode& body() const { return m_body; }
+    const Vector<String>& parameters() const { return m_parameters; };
 
-Value NativeFunction::call(Interpreter& interpreter, Vector<Value> arguments)
-{
-    return m_native_function(interpreter, move(arguments));
-}
+    virtual Value call(Interpreter&, Vector<Value>) override;
+
+private:
+    virtual bool is_script_function() const final { return true; }
+    virtual const char* class_name() const override { return "ScriptFunction"; }
+
+    const ScopeNode& m_body;
+    const Vector<String> m_parameters;
+};
 
 }

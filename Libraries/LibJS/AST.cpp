@@ -27,10 +27,9 @@
 #include <AK/HashMap.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/AST.h>
-#include <LibJS/Function.h>
 #include <LibJS/Interpreter.h>
-#include <LibJS/NativeFunction.h>
 #include <LibJS/PrimitiveString.h>
+#include <LibJS/ScriptFunction.h>
 #include <LibJS/Value.h>
 #include <stdio.h>
 
@@ -43,7 +42,7 @@ Value ScopeNode::execute(Interpreter& interpreter) const
 
 Value FunctionDeclaration::execute(Interpreter& interpreter) const
 {
-    auto* function = interpreter.heap().allocate<Function>(name(), body(), parameters());
+    auto* function = interpreter.heap().allocate<ScriptFunction>(body(), parameters());
     interpreter.set_variable(m_name, function);
     return function;
 }
@@ -57,26 +56,14 @@ Value CallExpression::execute(Interpreter& interpreter) const
 {
     auto callee = interpreter.get_variable(name());
     ASSERT(callee.is_object());
-    auto* callee_object = callee.as_object();
+    ASSERT(callee.as_object()->is_function());
+    auto* function = static_cast<Function*>(callee.as_object());
 
-    Vector<Argument> passed_arguments;
-    for (size_t i = 0; i < m_arguments.size(); ++i) {
-        String name;
-        if (callee_object->is_function())
-            name = static_cast<Function&>(*callee_object).parameters()[i];
-        auto value = m_arguments[i].execute(interpreter);
-        dbg() << name << ": " << value;
-        passed_arguments.append({ move(name), move(value) });
-    }
+    Vector<Value> argument_values;
+    for (size_t i = 0; i < m_arguments.size(); ++i)
+        argument_values.append(m_arguments[i].execute(interpreter));
 
-    if (callee_object->is_function())
-        return interpreter.run(static_cast<Function&>(*callee_object).body(), move(passed_arguments), ScopeType::Function);
-
-    if (callee_object->is_native_function()) {
-        return static_cast<NativeFunction&>(*callee_object).native_function()(interpreter, move(passed_arguments));
-    }
-
-    ASSERT_NOT_REACHED();
+    return function->call(interpreter, move(argument_values));
 }
 
 Value ReturnStatement::execute(Interpreter& interpreter) const

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@gmx.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,23 +25,32 @@
  */
 
 #include <LibJS/Interpreter.h>
-#include <LibJS/NativeFunction.h>
+#include <LibJS/ScriptFunction.h>
 #include <LibJS/Value.h>
 
 namespace JS {
 
-NativeFunction::NativeFunction(AK::Function<Value(Interpreter&, Vector<Value>)> native_function)
-    : m_native_function(move(native_function))
+ScriptFunction::ScriptFunction(const ScopeNode& body, Vector<String> parameters)
+    : m_body(body)
+    , m_parameters(move(parameters))
 {
 }
 
-NativeFunction::~NativeFunction()
+ScriptFunction::~ScriptFunction()
 {
 }
 
-Value NativeFunction::call(Interpreter& interpreter, Vector<Value> arguments)
+Value ScriptFunction::call(Interpreter& interpreter, Vector<Value> argument_values)
 {
-    return m_native_function(interpreter, move(arguments));
+    Vector<Argument> arguments;
+    for (size_t i = 0; i < m_parameters.size(); ++i) {
+        auto name = parameters()[i];
+        auto value = js_undefined();
+        if (i < argument_values.size())
+            value = argument_values[i];
+        arguments.append({ move(name), move(value) });
+    }
+    return interpreter.run(m_body, move(arguments), ScopeType::Function);
 }
 
 }
