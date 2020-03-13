@@ -119,6 +119,7 @@ Editor& current_editor()
 
 static void build(TerminalWrapper&);
 static void run(TerminalWrapper&);
+void open_project(String);
 void open_file(const String&);
 bool make_is_available();
 
@@ -158,12 +159,7 @@ int main(int argc, char** argv)
     if (!make_is_available())
         GUI::MessageBox::show("The 'make' command is not available. You probably want to install the binutils, gcc, and make ports from the root of the Serenity repository.", "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, g_window);
 
-    if (chdir("/home/anon/little") < 0) {
-        perror("chdir");
-        return 1;
-    }
-    g_project = Project::load_from_file("little.files");
-    ASSERT(g_project);
+    open_project("/home/anon/js/javascript.files");
 
     auto& toolbar = widget.add<GUI::ToolBar>();
 
@@ -396,6 +392,15 @@ int main(int argc, char** argv)
         update_actions();
     });
 
+    auto open_action = GUI::Action::create("Open Project", { Mod_Ctrl | Mod_Shift, Key_O }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"), [&](auto&) {
+        auto open_path = GUI::FilePicker::get_open_filepath();
+        if (!open_path.has_value())
+            return;
+        open_project(open_path.value());
+        open_file(g_project->default_file());
+        update_actions();
+    });
+
     auto save_action = GUI::Action::create("Save", { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"), [&](auto&) {
         if (g_currently_open_file.is_empty())
             return;
@@ -456,7 +461,9 @@ int main(int argc, char** argv)
 
     auto menubar = make<GUI::MenuBar>();
     auto app_menu = GUI::Menu::construct("HackStudio");
+    app_menu->add_action(open_action);
     app_menu->add_action(save_action);
+    app_menu->add_separator();
     app_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app.quit();
     }));
@@ -532,7 +539,7 @@ int main(int argc, char** argv)
 
     g_open_file = open_file;
 
-    open_file("main.cpp");
+    open_file(g_project->default_file());
 
     update_actions();
     return app.exec();
@@ -540,12 +547,33 @@ int main(int argc, char** argv)
 
 void build(TerminalWrapper& wrapper)
 {
-    wrapper.run_command("make");
+    if (g_project->type() == ProjectType::Javascript && g_currently_open_file.ends_with(".js"))
+        wrapper.run_command(String::format("js -A %s", g_currently_open_file.characters()));
+    else
+        wrapper.run_command("make");
 }
 
 void run(TerminalWrapper& wrapper)
 {
-    wrapper.run_command("make run");
+    if (g_project->type() == ProjectType::Javascript && g_currently_open_file.ends_with(".js"))
+        wrapper.run_command(String::format("js %s", g_currently_open_file.characters()));
+    else
+        wrapper.run_command("make run");
+}
+
+void open_project(String filename)
+{
+    FileSystemPath path(filename);
+    if (chdir(path.dirname().characters()) < 0) {
+        perror("chdir");
+        exit(1);
+    }
+    g_project = Project::load_from_file(filename);
+    ASSERT(g_project);
+    if (g_project_tree_view) {
+        g_project_tree_view->set_model(g_project->model());
+        g_project_tree_view->update();
+    }
 }
 
 void open_file(const String& filename)
