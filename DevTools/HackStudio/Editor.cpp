@@ -93,9 +93,10 @@ void Editor::paint_event(GUI::PaintEvent& event)
         if (horizontal_scrollbar().is_visible())
             rect.set_height(rect.height() - horizontal_scrollbar().height());
         painter.draw_rect(rect, palette().selection());
-
-        window()->set_override_cursor(m_hovering_link && m_holding_ctrl ? GUI::StandardCursor::Hand : GUI::StandardCursor::IBeam);
     }
+
+    if (m_hovering_editor)
+        window()->set_override_cursor(m_hovering_link && m_holding_ctrl ? GUI::StandardCursor::Hand : GUI::StandardCursor::IBeam);
 }
 
 static HashMap<String, String>& man_paths()
@@ -281,6 +282,18 @@ void Editor::keyup_event(GUI::KeyEvent& event)
     if (event.key() == Key_Control)
         m_holding_ctrl = false;
     GUI::TextEditor::keyup_event(event);
+}
+
+void Editor::enter_event(Core::Event& event)
+{
+    m_hovering_editor = true;
+    GUI::TextEditor::enter_event(event);
+}
+
+void Editor::leave_event(Core::Event& event)
+{
+    m_hovering_editor = false;
+    GUI::TextEditor::leave_event(event);
 }
 
 static HashMap<String, String>& include_paths()
