@@ -28,20 +28,27 @@
 #include <AK/Time.h>
 #include <LibCore/ElapsedTimer.h>
 #include <sys/time.h>
+#include <time.h>
 
 namespace Core {
 
 void ElapsedTimer::start()
 {
     m_valid = true;
-    gettimeofday(&m_start_time, nullptr);
+    timespec now_spec;
+    clock_gettime(CLOCK_MONOTONIC, &now_spec);
+    m_start_time.tv_sec = now_spec.tv_sec;
+    m_start_time.tv_usec = now_spec.tv_nsec / 1000;
 }
 
 int ElapsedTimer::elapsed() const
 {
     ASSERT(is_valid());
     struct timeval now;
-    gettimeofday(&now, nullptr);
+    timespec now_spec;
+    clock_gettime(CLOCK_MONOTONIC, &now_spec);
+    now.tv_sec = now_spec.tv_sec;
+    now.tv_usec = now_spec.tv_nsec / 1000;
     struct timeval diff;
     timeval_sub(now, m_start_time, diff);
     return diff.tv_sec * 1000 + diff.tv_usec / 1000;
