@@ -9,18 +9,18 @@
 
 namespace JS {
 
-GlobalObject::GlobalObject(Heap& heap)
+GlobalObject::GlobalObject()
 {
-    put("print", heap.allocate<NativeFunction>([](Interpreter&, Vector<Value> arguments) -> Value {
+    put_native_function("print", [](Interpreter&, Vector<Value> arguments) -> Value {
         for (auto& argument : arguments)
             printf("%s ", argument.to_string().characters());
         return js_undefined();
-    }));
-    put("gc", heap.allocate<NativeFunction>([](Interpreter& interpreter, Vector<Value>) -> Value {
+    });
+    put_native_function("gc", [](Interpreter& interpreter, Vector<Value>) -> Value {
         dbg() << "Forced garbage collection requested!";
         interpreter.heap().collect_garbage();
         return js_undefined();
-    }));
+    });
 }
 
 GlobalObject::~GlobalObject()

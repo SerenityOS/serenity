@@ -6,7 +6,7 @@ namespace JS {
 
 class GlobalObject final : public Object {
 public:
-    explicit GlobalObject(Heap&);
+    explicit GlobalObject();
     virtual ~GlobalObject() override;
 
 private:

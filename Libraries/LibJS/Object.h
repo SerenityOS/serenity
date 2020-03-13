@@ -41,6 +41,8 @@ public:
     Value get(String property_name) const;
     void put(String property_name, Value);
 
+    void put_native_function(String property_name, AK::Function<Value(Interpreter&, Vector<Value>)>);
+
     virtual bool is_function() const { return false; }
     virtual bool is_native_function() const { return false; }
 
