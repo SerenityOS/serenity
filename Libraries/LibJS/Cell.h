@@ -51,6 +51,8 @@ public:
 
     virtual void visit_children(Visitor&) {}
 
+    Heap& heap();
+
 private:
     bool m_mark { false };
     bool m_live { true };

@@ -25,12 +25,30 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/NonnullOwnPtr.h>
+#include <AK/kmalloc.h>
 #include <LibJS/HeapBlock.h>
+#include <sys/mman.h>
 
 namespace JS {
 
-HeapBlock::HeapBlock(size_t cell_size)
-    : m_cell_size(cell_size)
+NonnullOwnPtr<HeapBlock> HeapBlock::create_with_cell_size(Heap& heap, size_t cell_size)
+{
+    auto* block = (HeapBlock*)serenity_mmap(nullptr, block_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, block_size, "HeapBlock");
+    ASSERT(block != MAP_FAILED);
+    new (block) HeapBlock(heap, cell_size);
+    return NonnullOwnPtr<HeapBlock>(NonnullOwnPtr<HeapBlock>::Adopt, *block);
+}
+
+void HeapBlock::operator delete(void* ptr)
+{
+    int rc = munmap(ptr, block_size);
+    ASSERT(rc == 0);
+}
+
+HeapBlock::HeapBlock(Heap& heap, size_t cell_size)
+    : m_heap(heap)
+    , m_cell_size(cell_size)
 {
     for (size_t i = 0; i < cell_count(); ++i) {
         auto* freelist_entry = static_cast<FreelistEntry*>(cell(i));

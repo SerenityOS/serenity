@@ -53,10 +53,10 @@ Cell* Heap::allocate_cell(size_t size)
             return cell;
     }
 
-    auto* block = (HeapBlock*)malloc(HeapBlock::block_size);
-    new (block) HeapBlock(size);
-    m_blocks.append(NonnullOwnPtr<HeapBlock>(NonnullOwnPtr<HeapBlock>::Adopt, *block));
-    return block->allocate();
+    auto block = HeapBlock::create_with_cell_size(*this, size);
+    auto* cell = block->allocate();
+    m_blocks.append(move(block));
+    return cell;
 }
 
 void Heap::collect_garbage()
