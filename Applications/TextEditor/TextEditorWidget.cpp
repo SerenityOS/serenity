@@ -467,10 +467,10 @@ void TextEditorWidget::set_path(const FileSystemPath& file)
 void TextEditorWidget::update_title()
 {
     StringBuilder builder;
-    builder.append("Text Editor: ");
     builder.append(m_path);
     if (m_document_dirty)
         builder.append(" (*)");
+    builder.append(" - Text Editor");
     window()->set_title(builder.to_string());
 }
 

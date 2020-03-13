@@ -493,7 +493,7 @@ int main(int argc, char** argv)
     main_toolbar.add_action(*view_as_columns_action);
 
     directory_view.on_path_change = [&](const String& new_path) {
-        window->set_title(String::format("File Manager: %s", new_path.characters()));
+        window->set_title(String::format("%s - File Manager", new_path.characters()));
         location_textbox.set_text(new_path);
         auto new_index = directories_model->index(new_path, GUI::FileSystemModel::Column::Name);
         if (new_index.is_valid()) {

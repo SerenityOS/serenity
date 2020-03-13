@@ -48,7 +48,7 @@ int main(int argc, char** argv)
     window->set_rect(300, 100, SolitaireWidget::width, SolitaireWidget::height);
 
     auto widget = SolitaireWidget::construct(window, [&](uint32_t score) {
-        window->set_title(String::format("Solitaire - Score: %u", score));
+        window->set_title(String::format("Score: %u - Solitaire", score));
     });
 
     auto menu_bar = make<GUI::MenuBar>();

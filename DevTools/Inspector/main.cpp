@@ -86,7 +86,7 @@ int main(int argc, char** argv)
 
     remote_process.on_update = [&] {
         if (!remote_process.process_name().is_null())
-            window->set_title(String::format("Inspector: %s (%d)", remote_process.process_name().characters(), remote_process.pid()));
+            window->set_title(String::format("%s (%d) - Inspector", remote_process.process_name().characters(), remote_process.pid()));
     };
 
     auto& tree_view = splitter.add<GUI::TreeView>();
