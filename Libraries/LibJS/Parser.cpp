@@ -245,9 +245,10 @@ NonnullOwnPtr<FunctionDeclaration> Parser::parse_function_declaration()
     consume(TokenType::Function);
     auto name = consume(TokenType::Identifier).value();
     consume(TokenType::ParenOpen);
+    Vector<String> parameters;
     while (match(TokenType::Identifier)) {
-        // FIXME: actually add parameters to function
-        consume(TokenType::Identifier);
+        auto parameter = consume(TokenType::Identifier).value();
+        parameters.append(parameter);
         if (match(TokenType::ParenClose)) {
             break;
         }
@@ -255,7 +256,7 @@ NonnullOwnPtr<FunctionDeclaration> Parser::parse_function_declaration()
     }
     consume(TokenType::ParenClose);
     auto body = parse_block_statement();
-    return make<FunctionDeclaration>(name, move(body));
+    return make<FunctionDeclaration>(name, move(body), move(parameters));
 }
 
 NonnullOwnPtr<VariableDeclaration> Parser::parse_variable_declaration()
