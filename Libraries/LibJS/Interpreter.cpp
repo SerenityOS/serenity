@@ -37,7 +37,7 @@ namespace JS {
 Interpreter::Interpreter()
     : m_heap(*this)
 {
-    m_global_object = heap().allocate<GlobalObject>(heap());
+    m_global_object = heap().allocate<GlobalObject>();
 }
 
 Interpreter::~Interpreter()
