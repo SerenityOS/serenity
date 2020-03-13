@@ -35,8 +35,9 @@ namespace JS {
 class HeapBlock {
 public:
     static constexpr size_t block_size = 16 * KB;
+    static NonnullOwnPtr<HeapBlock> create_with_cell_size(Heap&, size_t);
 
-    explicit HeapBlock(size_t cell_size);
+    void operator delete(void*);
 
     size_t cell_size() const { return m_cell_size; }
     size_t cell_count() const { return (block_size - sizeof(HeapBlock)) / m_cell_size; }
@@ -53,11 +54,21 @@ public:
             callback(cell(i));
     }
 
+    Heap& heap() { return m_heap; }
+
+    static HeapBlock* from_cell(Cell* cell)
+    {
+        return reinterpret_cast<HeapBlock*>((FlatPtr)cell & ~(block_size - 1));
+    }
+
 private:
+    HeapBlock(Heap&, size_t cell_size);
+
     struct FreelistEntry : public Cell {
         FreelistEntry* next;
     };
 
+    Heap& m_heap;
     size_t m_cell_size { 0 };
     FreelistEntry* m_freelist { nullptr };
     u8 m_storage[];
