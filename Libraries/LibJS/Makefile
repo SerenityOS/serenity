@@ -11,6 +11,7 @@ OBJS = \
     Object.o \
     Parser.o \
     PrimitiveString.o \
+    ScriptFunction.o \
     StringObject.o \
     Token.o \
     Value.o
