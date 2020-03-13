@@ -115,7 +115,8 @@ Lexer::Lexer(StringView source)
 
 void Lexer::consume()
 {
-    if (is_eof()) {
+    if (m_position >= m_source.length()) {
+        m_position = m_source.length() + 1;
         m_current_char = EOF;
         return;
     }
@@ -125,7 +126,7 @@ void Lexer::consume()
 
 bool Lexer::is_eof() const
 {
-    return m_position >= m_source.length();
+    return m_current_char == EOF;
 }
 
 bool Lexer::is_identifier_start() const
@@ -157,12 +158,12 @@ Token Lexer::next()
 {
     size_t trivia_start = m_position;
 
-    // consume up whitespace and comments
+    // consume whitespace and comments
     while (true) {
         if (isspace(m_current_char)) {
             do {
                 consume();
-            } while (!is_eof() && isspace(m_current_char));
+            } while (isspace(m_current_char));
         } else if (is_line_comment_start()) {
             consume();
             do {
@@ -228,7 +229,7 @@ Token Lexer::next()
         }
 
         bool found_two_char_token = false;
-        if (!found_three_char_token && !is_eof()) {
+        if (!found_three_char_token && m_position < m_source.length()) {
             char second_char = m_source[m_position];
             char two_chars[] { (char)m_current_char, second_char, 0 };
             auto it = s_two_char_tokens.find(two_chars);
