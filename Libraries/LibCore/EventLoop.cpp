@@ -420,7 +420,10 @@ void EventLoop::wait_for_event(WaitMode mode)
     bool should_wait_forever = false;
     if (mode == WaitMode::WaitForEvents) {
         if (!s_timers->is_empty() && queued_events_is_empty) {
-            gettimeofday(&now, nullptr);
+            timespec now_spec;
+            clock_gettime(CLOCK_MONOTONIC, &now_spec);
+            now.tv_sec = now_spec.tv_sec;
+            now.tv_usec = now_spec.tv_nsec / 1000;
             get_next_timer_expiration(timeout);
             timeval_sub(timeout, now, timeout);
             if (timeout.tv_sec < 0) {
@@ -446,7 +449,10 @@ void EventLoop::wait_for_event(WaitMode mode)
     }
 
     if (!s_timers->is_empty()) {
-        gettimeofday(&now, nullptr);
+        timespec now_spec;
+        clock_gettime(CLOCK_MONOTONIC, &now_spec);
+        now.tv_sec = now_spec.tv_sec;
+        now.tv_usec = now_spec.tv_nsec / 1000;
     }
 
     for (auto& it : *s_timers) {
@@ -521,7 +527,10 @@ int EventLoop::register_timer(Object& object, int milliseconds, bool should_relo
     timer->owner = object.make_weak_ptr();
     timer->interval = milliseconds;
     timeval now;
-    gettimeofday(&now, nullptr);
+    timespec now_spec;
+    clock_gettime(CLOCK_MONOTONIC, &now_spec);
+    now.tv_sec = now_spec.tv_sec;
+    now.tv_usec = now_spec.tv_nsec / 1000;
     timer->reload(now);
     timer->should_reload = should_reload;
     timer->fire_when_not_visible = fire_when_not_visible;
