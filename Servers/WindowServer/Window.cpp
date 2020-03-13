@@ -385,39 +385,56 @@ void Window::set_fullscreen(bool fullscreen)
     set_rect(new_window_rect);
 }
 
+Gfx::Rect Window::tiled_rect(WindowTileType tiled) const
+{
+    int frame_width = (m_frame.rect().width() - m_rect.width()) / 2;
+    switch (tiled) {
+    case WindowTileType::None:
+        return m_untiled_rect;
+    case WindowTileType::Left:
+        return Gfx::Rect(0,
+            WindowManager::the().maximized_window_rect(*this).y(),
+            Screen::the().width() / 2 - frame_width,
+            WindowManager::the().maximized_window_rect(*this).height());
+    case WindowTileType::Right:
+        return Gfx::Rect(Screen::the().width() / 2 + frame_width,
+            WindowManager::the().maximized_window_rect(*this).y(),
+            Screen::the().width() / 2 - frame_width,
+            WindowManager::the().maximized_window_rect(*this).height());
+    default :
+        ASSERT_NOT_REACHED();
+    }
+}
+
 void Window::set_tiled(WindowTileType tiled)
 {
     if (m_tiled == tiled)
         return;
+
     m_tiled = tiled;
     auto old_rect = m_rect;
-
-    int frame_width = (m_frame.rect().width() - m_rect.width()) / 2;
-    switch (tiled) {
-    case WindowTileType::None:
-        set_rect(m_untiled_rect);
-        break;
-    case WindowTileType::Left:
+    if (tiled != WindowTileType::None)
         m_untiled_rect = m_rect;
-        set_rect(0,
-            WindowManager::the().maximized_window_rect(*this).y(),
-            Screen::the().width() / 2 - frame_width,
-            WindowManager::the().maximized_window_rect(*this).height());
-        break;
-    case WindowTileType::Right:
-        m_untiled_rect = m_rect;
-        set_rect(Screen::the().width() / 2 + frame_width,
-            WindowManager::the().maximized_window_rect(*this).y(),
-            Screen::the().width() / 2 - frame_width,
-            WindowManager::the().maximized_window_rect(*this).height());
-        break;
-    }
+    set_rect(tiled_rect(tiled));
     Core::EventLoop::current().post_event(*this, make<ResizeEvent>(old_rect, m_rect));
 }
 
 void Window::detach_client(Badge<ClientConnection>)
 {
     m_client = nullptr;
+}
+
+void Window::recalculate_rect()
+{
+    if (!is_resizable())
+        return;
+
+    auto old_rect = m_rect;
+    if (m_tiled != WindowTileType::None)
+        set_rect(tiled_rect(m_tiled));
+    else if (is_maximized())
+        set_rect(WindowManager::the().maximized_window_rect(*this));
+    Core::EventLoop::current().post_event(*this, make<ResizeEvent>(old_rect, m_rect));
 }
 
 }
