@@ -227,10 +227,10 @@ void HexEditorWidget::set_path(const FileSystemPath& file)
 void HexEditorWidget::update_title()
 {
     StringBuilder builder;
-    builder.append("Hex Editor: ");
     builder.append(m_path);
     if (m_document_dirty)
         builder.append(" (*)");
+    builder.append(" - Hex Editor");
     window()->set_title(builder.to_string());
 }
 

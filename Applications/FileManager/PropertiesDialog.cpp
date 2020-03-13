@@ -159,7 +159,7 @@ PropertiesDialog::~PropertiesDialog() {}
 void PropertiesDialog::update()
 {
     m_icon->set_icon(const_cast<Gfx::Bitmap*>(m_model.icon_for_file(m_mode, m_name).bitmap_for_size(32)));
-    set_title(String::format("Properties of \"%s\"", m_name.characters()));
+    set_title(String::format("%s - Properties", m_name.characters()));
 }
 
 void PropertiesDialog::permission_changed(mode_t mask, bool set)

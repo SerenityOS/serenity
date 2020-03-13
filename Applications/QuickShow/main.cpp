@@ -92,7 +92,7 @@ int main(int argc, char** argv)
     widget.set_bitmap(*bitmap);
 
     auto update_window_title = [&](int scale) {
-        window->set_title(String::format("QuickShow: %s %s %d%%", widget.path().characters(), widget.bitmap()->size().to_string().characters(), scale));
+        window->set_title(String::format("%s %s %d%% - QuickShow", widget.path().characters(), widget.bitmap()->size().to_string().characters(), scale));
     };
 
     window->set_double_buffering_enabled(true);

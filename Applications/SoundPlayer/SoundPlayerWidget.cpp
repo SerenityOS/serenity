@@ -142,7 +142,7 @@ void SoundPlayerWidget::open_file(String path)
     m_play->set_enabled(true);
     m_stop->set_enabled(true);
 
-    m_window.set_title(String::format("SoundPlayer - \"%s\"", loader->file()->filename().characters()));
+    m_window.set_title(String::format("%s - SoundPlayer", loader->file()->filename().characters()));
     m_status->set_text(String::format(
         "Sample rate %uHz, %u %s, %u bits per sample",
         loader->sample_rate(),
