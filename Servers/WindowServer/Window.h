@@ -218,6 +218,9 @@ public:
     void start_minimize_animation() { m_minimize_animation_step = 0; }
     void end_minimize_animation() { m_minimize_animation_step = -1; }
 
+    Gfx::Rect tiled_rect(WindowTileType) const;
+    void recalculate_rect();
+
     // For InlineLinkedList.
     // FIXME: Maybe make a ListHashSet and then WindowManager can just use that.
     Window* m_next { nullptr };

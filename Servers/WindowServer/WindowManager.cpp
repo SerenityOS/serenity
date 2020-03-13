@@ -140,6 +140,12 @@ bool WindowManager::set_resolution(int width, int height)
     ClientConnection::for_each_client([&](ClientConnection& client) {
         client.notify_about_new_screen_rect(Screen::the().rect());
     });
+    if (success) {
+        for_each_window([](Window& window) {
+            window.recalculate_rect();
+            return IterationDecision::Continue;
+        });
+    }
     if (m_wm_config) {
         if (success) {
             dbg() << "Saving resolution: " << Gfx::Size(width, height) << " to config file at " << m_wm_config->file_name();
