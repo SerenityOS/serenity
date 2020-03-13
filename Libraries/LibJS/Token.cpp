@@ -84,6 +84,8 @@ const char* Token::name(TokenType type)
         return "Equals";
     case TokenType::EqualsEquals:
         return "EqualsEquals";
+    case TokenType::EqualsEqualsEquals:
+        return "EqualsEqualsEquals";
     case TokenType::ExclamationMark:
         return "ExclamationMark";
     case TokenType::ExclamationMarkEquals:
@@ -92,10 +94,14 @@ const char* Token::name(TokenType type)
         return "ExclamationMarkEqualsEquals";
     case TokenType::Finally:
         return "Finally";
+    case TokenType::For:
+        return "For";
     case TokenType::Function:
         return "Function";
     case TokenType::GreaterThan:
         return "GreaterThan";
+    case TokenType::GreaterThanEquals:
+        return "GreaterThanEquals";
     case TokenType::Identifier:
         return "Identifier";
     case TokenType::If:
@@ -110,6 +116,8 @@ const char* Token::name(TokenType type)
         return "Invalid";
     case TokenType::LessThan:
         return "LessThan";
+    case TokenType::LessThanEquals:
+        return "LessThanEquals";
     case TokenType::Let:
         return "Let";
     case TokenType::Minus:
