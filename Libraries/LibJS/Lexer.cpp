@@ -205,7 +205,7 @@ Token Lexer::next()
         token_type = TokenType::NumericLiteral;
     } else if (m_current_char == '"') {
         consume();
-        while (m_current_char != '"') {
+        while (m_current_char != '"' && !is_eof()) {
             consume();
         }
         consume();
