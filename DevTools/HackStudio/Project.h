@@ -33,6 +33,12 @@
 #include <LibGUI/Icon.h>
 #include <LibGUI/Model.h>
 
+enum class ProjectType {
+    Unknown,
+    Cpp,
+    Javascript
+};
+
 class Project {
     AK_MAKE_NONCOPYABLE(Project)
     AK_MAKE_NONMOVABLE(Project)
@@ -47,7 +53,9 @@ public:
 
     ProjectFile* get_file(const String& filename);
 
+    ProjectType type() const { return m_type; }
     GUI::Model& model() { return *m_model; }
+    String default_file() const;
 
     template<typename Callback>
     void for_each_text_file(Callback callback) const
@@ -65,6 +73,7 @@ private:
     const ProjectTreeNode& root_node() const { return *m_root_node; }
     void rebuild_tree();
 
+    ProjectType m_type { ProjectType::Unknown };
     String m_name;
     String m_path;
     RefPtr<GUI::Model> m_model;
