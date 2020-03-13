@@ -2788,7 +2788,7 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     timeval computed_timeout;
     bool select_has_timeout = false;
     if (timeout && (timeout->tv_sec || timeout->tv_usec)) {
-        timeval_add(kgettimeofday(), *timeout, computed_timeout);
+        timeval_add(Scheduler::time_since_boot(), *timeout, computed_timeout);
         select_has_timeout = true;
     }
 
@@ -2886,7 +2886,7 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
             timeout -= 1000;
         }
         tvtimeout.tv_usec = timeout * 1000;
-        timeval_add(kgettimeofday(), tvtimeout, actual_timeout);
+        timeval_add(Scheduler::time_since_boot(), tvtimeout, actual_timeout);
         has_timeout = true;
     }
 
