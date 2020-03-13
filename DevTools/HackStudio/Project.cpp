@@ -28,10 +28,12 @@
 #include <AK/FileSystemPath.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 struct Project::ProjectTreeNode : public RefCounted<ProjectTreeNode> {
     enum class Type {
@@ -194,15 +196,53 @@ OwnPtr<Project> Project::load_from_file(const String& path)
     if (!file->open(Core::File::ReadOnly))
         return nullptr;
 
+    auto type = ProjectType::Cpp;
     Vector<String> files;
+
+    auto add_glob = [&](String path) {
+        auto split = path.split('*', true);
+        for (auto& item : split) {
+            dbg() << item;
+        }
+        ASSERT(split.size() == 2);
+        auto cwd = getcwd(nullptr, 0);
+        Core::DirIterator it(cwd, Core::DirIterator::Flags::SkipParentAndBaseDir);
+        while (it.has_next()) {
+            auto path = it.next_path();
+            if (!split[0].is_empty() && !path.starts_with(split[0]))
+                continue;
+
+            if (!split[1].is_empty() && !path.ends_with(split[1]))
+                continue;
+
+            files.append(path);
+        }
+    };
+
     for (;;) {
         auto line = file->read_line(1024);
         if (line.is_null())
             break;
-        files.append(String::copy(line, Chomp));
+
+        auto path = String::copy(line, Chomp);
+        if (path.contains("*"))
+            add_glob(path);
+        else
+            files.append(path);
     }
 
-    return OwnPtr(new Project(path, move(files)));
+    for (auto& file : files) {
+        if (file.ends_with(".js")) {
+            type = ProjectType::Javascript;
+            break;
+        }
+    }
+
+    quick_sort(files);
+
+    auto project = OwnPtr(new Project(path, move(files)));
+    project->m_type = type;
+    return project;
 }
 
 bool Project::add_file(const String& filename)
@@ -247,6 +287,17 @@ ProjectFile* Project::get_file(const String& filename)
             return &file;
     }
     return nullptr;
+}
+
+String Project::default_file() const
+{
+    if (m_type == ProjectType::Cpp)
+        return "main.cpp";
+
+    if (m_files.size() > 0)
+        return m_files.first().name();
+
+    ASSERT_NOT_REACHED();
 }
 
 void Project::rebuild_tree()
