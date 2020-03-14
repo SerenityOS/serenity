@@ -451,9 +451,10 @@ enum class UpdateOp {
 
 class UpdateExpression : public Expression {
 public:
-    UpdateExpression(UpdateOp op, NonnullOwnPtr<Expression> argument)
+    UpdateExpression(UpdateOp op, NonnullOwnPtr<Expression> argument, bool prefixed = false)
         : m_op(op)
         , m_argument(move(argument))
+        , m_prefixed(prefixed)
     {
     }
 
@@ -465,6 +466,7 @@ private:
 
     UpdateOp m_op;
     NonnullOwnPtr<Identifier> m_argument;
+    bool m_prefixed;
 };
 
 enum class DeclarationType {
