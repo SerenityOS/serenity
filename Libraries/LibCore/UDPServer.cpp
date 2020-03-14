@@ -27,25 +27,25 @@
 #include <AK/IPv4Address.h>
 #include <AK/Types.h>
 #include <LibCore/Notifier.h>
-#include <LibCore/UdpServer.h>
-#include <LibCore/UdpSocket.h>
+#include <LibCore/UDPServer.h>
+#include <LibCore/UDPSocket.h>
 #include <stdio.h>
 #include <sys/socket.h>
 
 namespace Core {
 
-UdpServer::UdpServer(Object* parent)
+UDPServer::UDPServer(Object* parent)
     : Object(parent)
 {
     m_fd = socket(AF_INET, SOCK_DGRAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
     ASSERT(m_fd >= 0);
 }
 
-UdpServer::~UdpServer()
+UDPServer::~UDPServer()
 {
 }
 
-bool UdpServer::listen(const IPv4Address& address, u16 port)
+bool UDPServer::listen(const IPv4Address& address, u16 port)
 {
     if (m_listening)
         return false;
@@ -68,7 +68,7 @@ bool UdpServer::listen(const IPv4Address& address, u16 port)
     return true;
 }
 
-RefPtr<UdpSocket> UdpServer::accept()
+RefPtr<UDPSocket> UDPServer::accept()
 {
     ASSERT(m_listening);
     sockaddr_in in;
@@ -79,10 +79,10 @@ RefPtr<UdpSocket> UdpServer::accept()
         return nullptr;
     }
 
-    return UdpSocket::construct(accepted_fd);
+    return UDPSocket::construct(accepted_fd);
 }
 
-Optional<IPv4Address> UdpServer::local_address() const
+Optional<IPv4Address> UDPServer::local_address() const
 {
     if (m_fd == -1)
         return {};
@@ -95,7 +95,7 @@ Optional<IPv4Address> UdpServer::local_address() const
     return IPv4Address(address.sin_addr.s_addr);
 }
 
-Optional<u16> UdpServer::local_port() const
+Optional<u16> UDPServer::local_port() const
 {
     if (m_fd == -1)
         return {};

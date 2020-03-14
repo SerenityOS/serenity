@@ -1,33 +1,33 @@
 OBJS = \
     ArgsParser.o \
+    ConfigFile.o \
     DateTime.o \
-    IODevice.o \
-    File.o \
-    SocketAddress.o \
-    Socket.o \
-    LocalSocket.o \
-    LocalServer.o \
-    TCPSocket.o \
-    TCPServer.o \
-    UdpSocket.o \
-    UdpServer.o \
+    DirIterator.o \
     ElapsedTimer.o \
-    MimeData.o \
-    Notifier.o \
+    Event.o \
+    EventLoop.o \
+    File.o \
+    Gzip.o \
+    HttpJob.o \
     HttpRequest.o \
     HttpResponse.o \
-    HttpJob.o \
+    IODevice.o \
+    LocalServer.o \
+    LocalSocket.o \
+    MimeData.o \
     NetworkJob.o \
     NetworkResponse.o \
+    Notifier.o \
     Object.o \
-    Timer.o \
-    EventLoop.o \
-    ConfigFile.o \
-    Event.o \
     ProcessStatisticsReader.o \
-    DirIterator.o \
+    Socket.o \
+    SocketAddress.o \
+    TCPServer.o \
+    TCPSocket.o \
+    Timer.o \
+    UDPServer.o \
+    UDPSocket.o \
     UserInfo.o \
-    Gzip.o \
     puff.o
 
 LIBRARY = libcore.a
