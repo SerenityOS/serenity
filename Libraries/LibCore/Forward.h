@@ -54,8 +54,8 @@ class TCPServer;
 class TCPSocket;
 class Timer;
 class TimerEvent;
-class UdpServer;
-class UdpSocket;
+class UDPServer;
+class UDPSocket;
 
 enum class TimerShouldFireWhenNotVisible;
 

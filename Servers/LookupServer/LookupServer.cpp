@@ -35,7 +35,7 @@
 #include <LibCore/File.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/LocalSocket.h>
-#include <LibCore/UdpSocket.h>
+#include <LibCore/UDPSocket.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -176,7 +176,7 @@ Vector<String> LookupServer::lookup(const String& hostname, bool& did_timeout, u
 
     auto buffer = request.to_byte_buffer();
 
-    auto udp_socket = Core::UdpSocket::construct();
+    auto udp_socket = Core::UDPSocket::construct();
     udp_socket->set_blocking(true);
 
     struct timeval timeout {

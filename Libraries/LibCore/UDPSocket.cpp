@@ -24,20 +24,37 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <LibCore/Socket.h>
+#include <LibCore/UDPSocket.h>
+#include <errno.h>
+#include <sys/socket.h>
 
 namespace Core {
 
-class UdpSocket final : public Socket {
-    C_OBJECT(UdpSocket)
-public:
-    virtual ~UdpSocket() override;
+UDPSocket::UDPSocket(int fd, Object* parent)
+    : Socket(Socket::Type::UDP, parent)
+{
+    // NOTE: This constructor is used by UDPServer::accept(), so the socket is already connected.
+    m_connected = true;
+    set_fd(fd);
+    set_mode(IODevice::ReadWrite);
+    set_error(0);
+}
 
-private:
-    UdpSocket(int fd, Object* parent = nullptr);
-    explicit UdpSocket(Object* parent = nullptr);
-};
+UDPSocket::UDPSocket(Object* parent)
+    : Socket(Socket::Type::UDP, parent)
+{
+    int fd = socket(AF_INET, SOCK_DGRAM | SOCK_NONBLOCK, 0);
+    if (fd < 0) {
+        set_error(errno);
+    } else {
+        set_fd(fd);
+        set_mode(IODevice::ReadWrite);
+        set_error(0);
+    }
+}
+
+UDPSocket::~UDPSocket()
+{
+}
 
 }
