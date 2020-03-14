@@ -58,6 +58,8 @@ class Node
     : public TreeNode<Node>
     , public Bindings::Wrappable {
 public:
+    using WrapperType = Bindings::NodeWrapper;
+
     virtual ~Node();
 
     NodeType type() const { return m_type; }
