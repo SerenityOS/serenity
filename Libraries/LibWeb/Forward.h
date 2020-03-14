@@ -34,4 +34,14 @@ class Frame;
 class HtmlView;
 class Node;
 
+namespace Bindings {
+
+class DocumentWrapper;
+class NodeWrapper;
+class Wrappable;
+class Wrapper;
+
+}
+
+
 }
