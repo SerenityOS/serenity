@@ -95,6 +95,13 @@ Value WhileStatement::execute(Interpreter& interpreter) const
 
 Value ForStatement::execute(Interpreter& interpreter) const
 {
+    OwnPtr<BlockStatement> wrapper;
+
+    if (m_init->is_variable_declaration() && static_cast<const VariableDeclaration*>(m_init.ptr())->declaration_type() != DeclarationType::Var) {
+        wrapper = make<BlockStatement>();
+        interpreter.enter_scope(*wrapper, {}, ScopeType::Block);
+    }
+
     Value last_value = js_undefined();
 
     if (m_init)
@@ -113,6 +120,9 @@ Value ForStatement::execute(Interpreter& interpreter) const
                 m_update->execute(interpreter);
         }
     }
+
+    if (wrapper)
+        interpreter.exit_scope(*wrapper);
 
     return last_value;
 }

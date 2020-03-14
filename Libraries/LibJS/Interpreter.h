@@ -76,10 +76,10 @@ public:
 
     void collect_roots(Badge<Heap>, HashTable<Cell*>&);
 
-private:
     void enter_scope(const ScopeNode&, Vector<Argument>, ScopeType);
     void exit_scope(const ScopeNode&);
 
+private:
     Heap m_heap;
 
     Vector<ScopeFrame> m_scope_stack;
