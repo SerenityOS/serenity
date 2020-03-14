@@ -50,6 +50,8 @@ private:
 };
 
 class Statement : public ASTNode {
+public:
+    virtual bool is_variable_declaration() const { return false; }
 };
 
 class ErrorStatement final : public Statement {
@@ -480,7 +482,9 @@ public:
     {
     }
 
+    virtual bool is_variable_declaration() const override { return true; }
     const Identifier& name() const { return *m_name; }
+    DeclarationType declaration_type() const { return m_declaration_type; }
 
     virtual Value execute(Interpreter&) const override;
     virtual void dump(int indent) const override;

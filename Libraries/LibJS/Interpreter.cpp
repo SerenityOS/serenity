@@ -68,8 +68,8 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, Vector<Argument> argu
 
 void Interpreter::exit_scope(const ScopeNode& scope_node)
 {
-    ASSERT(&m_scope_stack.last().scope_node == &scope_node);
-    m_scope_stack.take_last();
+    while (&m_scope_stack.last().scope_node != &scope_node)
+        m_scope_stack.take_last();
 }
 
 void Interpreter::do_return()
