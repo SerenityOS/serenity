@@ -10,3 +10,4 @@ IndentPPDirectives: AfterHash
 BreakBeforeBraces: Custom
 BraceWrapping:
     AfterFunction: true
+NamespaceIndentation: None
