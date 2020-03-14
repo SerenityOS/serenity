@@ -216,6 +216,9 @@ double Token::double_value() const
 
 String Token::string_value() const
 {
+    if (m_value.length() >= 2 && m_value[0] == '"' && m_value[m_value.length() - 1]) {
+        return m_value.substring_view(1, m_value.length() - 2);
+    }
     // FIXME: unescape the string and remove quotes
     return m_value;
 }
