@@ -186,7 +186,7 @@ Value UnaryExpression::execute(Interpreter& interpreter) const
 {
     auto lhs_result = m_lhs->execute(interpreter);
     switch (m_op) {
-    case UnaryOp::BitNot:
+    case UnaryOp::BitwiseNot:
         return bitwise_not(lhs_result);
     case UnaryOp::Not:
         return Value(!lhs_result.to_boolean());
@@ -297,7 +297,7 @@ void UnaryExpression::dump(int indent) const
 {
     const char* op_string = nullptr;
     switch (m_op) {
-    case UnaryOp::BitNot:
+    case UnaryOp::BitwiseNot:
         op_string = "~";
         break;
     case UnaryOp::Not:
