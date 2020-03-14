@@ -38,6 +38,7 @@
 #include <LibWeb/DOM/HTMLImageElement.h>
 #include <LibWeb/DOM/HTMLInputElement.h>
 #include <LibWeb/DOM/HTMLLinkElement.h>
+#include <LibWeb/DOM/HTMLScriptElement.h>
 #include <LibWeb/DOM/HTMLStyleElement.h>
 #include <LibWeb/DOM/HTMLTitleElement.h>
 
@@ -82,6 +83,8 @@ NonnullRefPtr<Element> create_element(Document& document, const String& tag_name
         || lowercase_tag_name == "h6") {
         return adopt(*new HTMLHeadingElement(document, lowercase_tag_name));
     }
+    if (lowercase_tag_name == "script")
+        return adopt(*new HTMLScriptElement(document, lowercase_tag_name));
     return adopt(*new Element(document, lowercase_tag_name));
 }
 

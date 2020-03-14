@@ -28,6 +28,9 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/MessageBox.h>
+#include <LibJS/GlobalObject.h>
+#include <LibJS/Interpreter.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentType.h>
@@ -330,6 +333,21 @@ Color Document::visited_link_color() const
     if (!frame())
         return Color::Magenta;
     return frame()->html_view()->palette().visited_link();
+}
+
+JS::Interpreter& Document::interpreter()
+{
+    if (!m_interpreter) {
+        m_interpreter = make<JS::Interpreter>();
+
+        m_interpreter->global_object().put_native_function("alert", [](JS::Interpreter&, Vector<JS::Value> arguments) -> JS::Value {
+            if (arguments.size() < 1)
+                return JS::js_undefined();
+            GUI::MessageBox::show(arguments[0].to_string(), "Alert", GUI::MessageBox::Type::Information);
+            return JS::js_undefined();
+        });
+    }
+    return *m_interpreter;
 }
 
 }
