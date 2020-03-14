@@ -450,14 +450,20 @@ Value UpdateExpression::execute(Interpreter& interpreter) const
     auto previous_value = interpreter.get_variable(name);
     ASSERT(previous_value.is_number());
 
+    int op_result = 0;
     switch (m_op) {
     case UpdateOp::Increment:
-        interpreter.set_variable(name, Value(previous_value.as_double() + 1));
+        op_result = 1;
         break;
     case UpdateOp::Decrement:
-        interpreter.set_variable(name, Value(previous_value.as_double() - 1));
+        op_result = -1;
         break;
     }
+
+    interpreter.set_variable(name, Value(previous_value.as_double() + op_result));
+
+    if (m_prefixed)
+        return JS::Value(previous_value.as_double() + op_result);
 
     return previous_value;
 }
@@ -504,8 +510,13 @@ void UpdateExpression::dump(int indent) const
 
     ASTNode::dump(indent);
     print_indent(indent + 1);
-    printf("%s\n", op_string);
+    if (m_prefixed)
+        printf("%s\n", op_string);
     m_argument->dump(indent + 1);
+    if (!m_prefixed) {
+        print_indent(indent + 1);
+        printf("%s\n", op_string);
+    }
 }
 
 Value VariableDeclaration::execute(Interpreter& interpreter) const
