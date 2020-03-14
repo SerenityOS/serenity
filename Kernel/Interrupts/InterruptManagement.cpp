@@ -34,6 +34,7 @@
 #include <Kernel/Interrupts/PIC.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
+#include <Kernel/Syscall.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <LibBareMetal/IO.h>
 
@@ -99,6 +100,8 @@ u8 InterruptManagement::acquire_irq_number(u8 mapped_interrupt_vector)
 u8 InterruptManagement::get_mapped_interrupt_vector(u8 original_irq)
 {
     // FIXME: For SMP configuration (with IOAPICs) use a better routing scheme to make redirections more efficient.
+    // FIXME: Find a better way to handle conflict with Syscall interrupt gate.
+    ASSERT((original_irq + IRQ_VECTOR_BASE) != syscall_vector);
     return original_irq;
 }
 
