@@ -178,6 +178,8 @@ const char* Token::name(TokenType type)
         return "UnsignedShiftRight";
     case TokenType::UnsignedShiftRightEquals:
         return "UnsignedShiftRightEquals";
+    case TokenType::UnterminatedStringLiteral:
+        return "UnterminatedStringLiteral";
     case TokenType::Var:
         return "Var";
     case TokenType::Void:

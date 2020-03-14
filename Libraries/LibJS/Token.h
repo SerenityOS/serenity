@@ -109,6 +109,7 @@ enum class TokenType {
     Typeof,
     UnsignedShiftRight,
     UnsignedShiftRightEquals,
+    UnterminatedStringLiteral,
     Var,
     Void,
     While,
