@@ -233,6 +233,29 @@ NonnullOwnPtr<Expression> Parser::parse_primary_expression()
     }
 }
 
+NonnullOwnPtr<Expression> Parser::parse_unary_prefixed_expression()
+{
+    switch (m_current_token.type()) {
+    case TokenType::PlusPlus:
+        consume();
+        return make<UpdateExpression>(UpdateOp::Increment, parse_primary_expression(), true);
+    case TokenType::MinusMinus:
+        consume();
+        return make<UpdateExpression>(UpdateOp::Decrement, parse_primary_expression(), true);
+    case TokenType::ExclamationMark:
+        consume();
+        return make<UnaryExpression>(UnaryOp::Not, parse_primary_expression());
+    case TokenType::Tilde:
+        consume();
+        return make<UnaryExpression>(UnaryOp::BitwiseNot, parse_primary_expression());
+    default:
+        m_has_errors = true;
+        expected("primary expression (missing switch case)");
+        consume();
+        return make<ErrorExpression>();
+    }
+}
+
 NonnullOwnPtr<ObjectExpression> Parser::parse_object_expression()
 {
     // FIXME: Parse actual object expression
@@ -243,6 +266,9 @@ NonnullOwnPtr<ObjectExpression> Parser::parse_object_expression()
 
 NonnullOwnPtr<Expression> Parser::parse_expression(int min_precedence, Associativity associativity)
 {
+    if (match_unary_prefixed_expression())
+        return parse_unary_prefixed_expression();
+
     auto expression = parse_primary_expression();
     while (match_secondary_expression()) {
         int new_precedence = operator_precedence(m_current_token.type());
@@ -477,7 +503,17 @@ bool Parser::match_expression() const
         || type == TokenType::New
         || type == TokenType::CurlyOpen
         || type == TokenType::BracketOpen
-        || type == TokenType::ParenOpen;
+        || type == TokenType::ParenOpen
+        || match_unary_prefixed_expression();
+}
+
+bool Parser::match_unary_prefixed_expression() const
+{
+    auto type = m_current_token.type();
+    return type == TokenType::PlusPlus
+        || type == TokenType::MinusMinus
+        || type == TokenType::ExclamationMark
+        || type == TokenType::Tilde;
 }
 
 bool Parser::match_secondary_expression() const
