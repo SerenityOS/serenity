@@ -72,6 +72,12 @@ public:
         return value ? *value : JsonValue(JsonValue::Type::Undefined);
     }
 
+    JsonValue get_or(const String& key, JsonValue alternative) const
+    {
+        auto* value = get_ptr(key);
+        return value ? *value : alternative;
+    }
+
     const JsonValue* get_ptr(const String& key) const
     {
         auto it = m_members.find(key);
