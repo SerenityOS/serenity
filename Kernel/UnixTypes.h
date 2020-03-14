@@ -528,6 +528,17 @@ struct ifreq {
 #define ifr_hwaddr ifr_ifru.ifru_hwaddr       // MAC address
 };
 
+struct rtentry {
+    struct sockaddr rt_gateway; /* the gateway address */
+    struct sockaddr rt_genmask; /* the target network mask */
+    unsigned short int rt_flags;
+    char* rt_dev;
+    /* FIXME: complete the struct */
+};
+
+#define RTF_UP 0x1      /* do not delete the route */
+#define RTF_GATEWAY 0x2 /* the route is a gateway and not an end host */
+
 #define AT_FDCWD -100
 
 #define PURGE_ALL_VOLATILE 0x1

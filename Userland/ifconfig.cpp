@@ -31,6 +31,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <net/if.h>
+#include <net/route.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <string.h>
@@ -164,9 +165,27 @@ int main(int argc, char** argv)
         }
 
         if (value_gateway) {
-            // ioctl does not support rtentry yet
-            fprintf(stderr, "Changing the gateway is not supported yet\n");
-            return 1;
+            auto address = IPv4Address::from_string(value_gateway);
+
+            int fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
+            if (fd < 0) {
+                perror("socket");
+                return 1;
+            }
+
+            struct rtentry rt;
+            memset(&rt, 0, sizeof(rt));
+
+            rt.rt_dev = const_cast<char*>(ifname.characters());
+            rt.rt_gateway.sa_family = AF_INET;
+            ((sockaddr_in&)rt.rt_gateway).sin_addr.s_addr = address.value().to_in_addr_t();
+            rt.rt_flags = RTF_UP | RTF_GATEWAY;
+
+            int rc = ioctl(fd, SIOCADDRT, &rt);
+            if (rc < 0) {
+                perror("ioctl(SIOCADDRT)");
+                return 1;
+            }
         }
     }
     return 0;
