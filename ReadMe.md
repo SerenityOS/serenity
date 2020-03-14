@@ -39,8 +39,13 @@ I'm also on [Patreon](https://www.patreon.com/serenityos) and [GitHub Sponsors](
 
 * Launch/session daemon (SystemServer)
 * Compositing window server (WindowServer)
+* Text console manager (TTYServer)
 * DNS client (LookupServer)
+* Network protocols server (ProtocolServer)
 * Software-mixing sound daemon (AudioServer)
+* Desktop notifications (NotificationServer)
+* HTTP server (WebServer)
+* Telnet server (TelnetServer)
 
 ## Libraries
 
