@@ -29,6 +29,7 @@ LIBWEB_OBJS = \
     DOM/HTMLImageElement.o \
     DOM/HTMLInputElement.o \
     DOM/HTMLLinkElement.o \
+    DOM/HTMLScriptElement.o \
     DOM/HTMLStyleElement.o \
     DOM/HTMLTitleElement.o \
     DOM/Node.o \
