@@ -26,6 +26,7 @@
 
 #include "Token.h"
 #include <AK/Assertions.h>
+#include <AK/StringBuilder.h>
 
 namespace JS {
 
@@ -209,6 +210,7 @@ const char* Token::name() const
 
 double Token::double_value() const
 {
+    ASSERT(type() == TokenType::NumericLiteral);
     // FIXME: need to parse double instead of int
     bool ok;
     return m_value.to_int(ok);
@@ -216,15 +218,58 @@ double Token::double_value() const
 
 String Token::string_value() const
 {
-    if (m_value.length() >= 2 && m_value[0] == '"' && m_value[m_value.length() - 1]) {
-        return m_value.substring_view(1, m_value.length() - 2);
+    ASSERT(type() == TokenType::StringLiteral);
+    StringBuilder builder;
+    for (size_t i = 1; i < m_value.length() - 1; ++i) {
+        if (m_value[i] == '\\' && i + 1 < m_value.length() - 1) {
+            i++;
+            switch (m_value[i]) {
+            case 'b':
+                builder.append('\b');
+                break;
+            case 'f':
+                builder.append('\f');
+                break;
+            case 'n':
+                builder.append('\n');
+                break;
+            case 'r':
+                builder.append('\r');
+                break;
+            case 't':
+                builder.append('\t');
+                break;
+            case 'v':
+                builder.append('\v');
+                break;
+            case '0':
+                builder.append((char)0);
+                break;
+            case '\'':
+                builder.append('\'');
+                break;
+            case '"':
+                builder.append('"');
+                break;
+            case '\\':
+                builder.append('\\');
+                break;
+            default:
+                // FIXME: Also parse octal, hex and unicode sequences
+                // should anything else generate a syntax error?
+                builder.append(m_value[i]);
+            }
+
+        } else {
+            builder.append(m_value[i]);
+        }
     }
-    // FIXME: unescape the string and remove quotes
-    return m_value;
+    return builder.to_string();
 }
 
 bool Token::bool_value() const
 {
+    ASSERT(type() == TokenType::BoolLiteral);
     return m_value == "true";
 }
 
