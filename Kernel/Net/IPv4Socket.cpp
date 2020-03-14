@@ -465,50 +465,100 @@ KResult IPv4Socket::getsockopt(FileDescription& description, int level, int opti
 int IPv4Socket::ioctl(FileDescription&, unsigned request, unsigned arg)
 {
     REQUIRE_PROMISE(inet);
-    auto* ifr = (ifreq*)arg;
-    if (!Process::current->validate_read_typed(ifr))
-        return -EFAULT;
 
-    char namebuf[IFNAMSIZ + 1];
-    memcpy(namebuf, ifr->ifr_name, IFNAMSIZ);
-    namebuf[sizeof(namebuf) - 1] = '\0';
-    auto adapter = NetworkAdapter::lookup_by_name(namebuf);
-    if (!adapter)
-        return -ENODEV;
+    auto ioctl_route = [request, arg]() {
+        auto* route = (rtentry*)arg;
+        if (!Process::current->validate_read_typed(route))
+            return -EFAULT;
+
+        char namebuf[IFNAMSIZ + 1];
+        memcpy(namebuf, route->rt_dev, IFNAMSIZ);
+        namebuf[sizeof(namebuf) - 1] = '\0';
+
+        auto adapter = NetworkAdapter::lookup_by_name(namebuf);
+        if (!adapter)
+            return -ENODEV;
+
+        switch (request) {
+        case SIOCADDRT:
+            if (!Process::current->is_superuser())
+                return -EPERM;
+            if (route->rt_gateway.sa_family != AF_INET)
+                return -EAFNOSUPPORT;
+            if ((route->rt_flags & (RTF_UP | RTF_GATEWAY)) != (RTF_UP | RTF_GATEWAY))
+                return -EINVAL; // FIXME: Find the correct value to return
+            adapter->set_ipv4_gateway(IPv4Address(((sockaddr_in&)route->rt_gateway).sin_addr.s_addr));
+            return 0;
+
+        case SIOCDELRT:
+            // FIXME: Support gateway deletion
+            return 0;
+        }
+
+        return -EINVAL;
+    };
+
+    auto ioctl_interface = [request, arg]() {
+        auto* ifr = (ifreq*)arg;
+        if (!Process::current->validate_read_typed(ifr))
+            return -EFAULT;
+
+        char namebuf[IFNAMSIZ + 1];
+        memcpy(namebuf, ifr->ifr_name, IFNAMSIZ);
+        namebuf[sizeof(namebuf) - 1] = '\0';
+
+        auto adapter = NetworkAdapter::lookup_by_name(namebuf);
+        if (!adapter)
+            return -ENODEV;
+
+        switch (request) {
+        case SIOCSIFADDR:
+            if (!Process::current->is_superuser())
+                return -EPERM;
+            if (ifr->ifr_addr.sa_family != AF_INET)
+                return -EAFNOSUPPORT;
+            adapter->set_ipv4_address(IPv4Address(((sockaddr_in&)ifr->ifr_addr).sin_addr.s_addr));
+            return 0;
+
+        case SIOCSIFNETMASK:
+            if (!Process::current->is_superuser())
+                return -EPERM;
+            if (ifr->ifr_addr.sa_family != AF_INET)
+                return -EAFNOSUPPORT;
+            adapter->set_ipv4_netmask(IPv4Address(((sockaddr_in&)ifr->ifr_netmask).sin_addr.s_addr));
+            return 0;
+
+        case SIOCGIFADDR:
+            if (!Process::current->validate_write_typed(ifr))
+                return -EFAULT;
+            ifr->ifr_addr.sa_family = AF_INET;
+            ((sockaddr_in&)ifr->ifr_addr).sin_addr.s_addr = adapter->ipv4_address().to_u32();
+            return 0;
+
+        case SIOCGIFHWADDR:
+            if (!Process::current->validate_write_typed(ifr))
+                return -EFAULT;
+            ifr->ifr_hwaddr.sa_family = AF_INET;
+            {
+                auto mac_address = adapter->mac_address();
+                memcpy(ifr->ifr_hwaddr.sa_data, &mac_address, sizeof(MACAddress));
+            }
+            return 0;
+        }
+
+        return -EINVAL;
+    };
 
     switch (request) {
     case SIOCSIFADDR:
-        if (!Process::current->is_superuser())
-            return -EPERM;
-        if (ifr->ifr_addr.sa_family != AF_INET)
-            return -EAFNOSUPPORT;
-        adapter->set_ipv4_address(IPv4Address(((sockaddr_in&)ifr->ifr_addr).sin_addr.s_addr));
-        return 0;
-
     case SIOCSIFNETMASK:
-        if (!Process::current->is_superuser())
-            return -EPERM;
-        if (ifr->ifr_addr.sa_family != AF_INET)
-            return -EAFNOSUPPORT;
-        adapter->set_ipv4_netmask(IPv4Address(((sockaddr_in&)ifr->ifr_netmask).sin_addr.s_addr));
-        return 0;
-
     case SIOCGIFADDR:
-        if (!Process::current->validate_write_typed(ifr))
-            return -EFAULT;
-        ifr->ifr_addr.sa_family = AF_INET;
-        ((sockaddr_in&)ifr->ifr_addr).sin_addr.s_addr = adapter->ipv4_address().to_u32();
-        return 0;
-
     case SIOCGIFHWADDR:
-        if (!Process::current->validate_write_typed(ifr))
-            return -EFAULT;
-        ifr->ifr_hwaddr.sa_family = AF_INET;
-        {
-            auto mac_address = adapter->mac_address();
-            memcpy(ifr->ifr_hwaddr.sa_data, &mac_address, sizeof(MACAddress));
-        }
-        return 0;
+        return ioctl_interface();
+
+    case SIOCADDRT:
+    case SIOCDELRT:
+        return ioctl_route();
     }
 
     return -EINVAL;
