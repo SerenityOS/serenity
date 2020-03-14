@@ -35,6 +35,16 @@
 
 namespace FileUtils {
 
+int delete_file(String path)
+{
+
+    if (unlink(path.characters()) < 0) {
+        return errno;
+    }
+    dbg() << "FileUtils: unlink(%s" << path << ") succeeded";
+    return 0;
+}
+
 int delete_directory(String directory, String& file_that_caused_error)
 {
     Core::DirIterator iterator(directory, Core::DirIterator::SkipDots);
@@ -70,7 +80,37 @@ int delete_directory(String directory, String& file_that_caused_error)
 
     return 0;
 }
+bool move_file_or_directory(const String& src_path, const String& dst_path)
+{
+    // stat the lcoation so we can detect if this is a directory or a file
+    struct stat st;
 
+    if (lstat(src_path.characters(), &st)) {
+        dbg() << "FileUtils: move_file_or_directory-> lstat(" << src_path << ") failed!";
+        return false;
+    }
+
+    if (!copy_file_or_directory(src_path, dst_path)) {
+        dbg() << "FileUtils: move_file_or_directory-> copy_file_or_directory(" << src_path << "," << dst_path << ") failed!";
+        return false;
+    }
+    if (S_ISDIR(st.st_mode)) {
+        String error_path;
+        if (delete_directory(src_path, error_path) < 0) {
+            dbg() << "FileUtils: move_file_or_directory-> delete_directory(" << src_path << ") succeeded!";
+            dbg() << "Culprit: " << src_path;
+            return false;
+        }
+        dbg() << "FileUtils: move_file_or_directory-> delete_directory(" << src_path << ") succeeded!";
+        return true;
+    }
+    if (FileUtils::delete_file(src_path.characters()) < 0) {
+        dbg() << "FileUtils: move_file_or_directory-> delete_file(" << src_path << ") failed!";
+        return false;
+    }
+    dbg() << "FileUtils: move_file_or_directory-> delete_file(" << src_path << ") succeeded!";
+    return true;
+}
 bool copy_file_or_directory(const String& src_path, const String& dst_path)
 {
     int duplicate_count = 0;
@@ -197,4 +237,4 @@ String get_duplicate_name(const String& path, int duplicate_count)
     }
     return duplicated_name.build();
 }
-}
+} // namespace FileUtils
