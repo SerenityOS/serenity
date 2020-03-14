@@ -304,7 +304,7 @@ private:
 };
 
 enum class UnaryOp {
-    BitNot,
+    BitwiseNot,
     Not,
 };
 
