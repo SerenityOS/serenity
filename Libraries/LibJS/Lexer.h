@@ -38,6 +38,7 @@ class Lexer {
 public:
     explicit Lexer(StringView source);
     Token next();
+    bool has_errors() const { return m_has_errors; }
 
 private:
     void consume();
@@ -48,10 +49,13 @@ private:
     bool is_block_comment_start() const;
     bool is_block_comment_end() const;
 
+    void syntax_error(const char*);
+
     StringView m_source;
     size_t m_position = 0;
     Token m_current_token;
     int m_current_char;
+    bool m_has_errors = false;
 
     static HashMap<String, TokenType> s_keywords;
     static HashMap<String, TokenType> s_three_char_tokens;
