@@ -30,6 +30,7 @@
 #include <AK/RefPtr.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/TreeNode.h>
 
 namespace Web {
@@ -53,7 +54,9 @@ class LayoutNode;
 class StyleResolver;
 class StyleProperties;
 
-class Node : public TreeNode<Node> {
+class Node
+    : public TreeNode<Node>
+    , public Bindings::Wrappable {
 public:
     virtual ~Node();
 

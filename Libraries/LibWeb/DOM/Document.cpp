@@ -31,6 +31,7 @@
 #include <LibGUI/MessageBox.h>
 #include <LibJS/GlobalObject.h>
 #include <LibJS/Interpreter.h>
+#include <LibWeb/Bindings/DocumentWrapper.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentType.h>
@@ -346,6 +347,8 @@ JS::Interpreter& Document::interpreter()
             GUI::MessageBox::show(arguments[0].to_string(), "Alert", GUI::MessageBox::Type::Information);
             return JS::js_undefined();
         });
+
+        m_interpreter->global_object().put("document", wrap(m_interpreter->heap(), *this));
     }
     return *m_interpreter;
 }
