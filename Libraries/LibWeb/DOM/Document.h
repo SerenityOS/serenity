@@ -51,6 +51,8 @@ class StyleSheet;
 
 class Document : public ParentNode {
 public:
+    using WrapperType = Bindings::DocumentWrapper;
+
     Document();
     virtual ~Document() override;
 
