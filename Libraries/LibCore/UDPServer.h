@@ -33,15 +33,15 @@
 
 namespace Core {
 
-class UdpServer : public Object {
-    C_OBJECT(UdpServer)
+class UDPServer : public Object {
+    C_OBJECT(UDPServer)
 public:
-    virtual ~UdpServer() override;
+    virtual ~UDPServer() override;
 
     bool is_listening() const { return m_listening; }
     bool listen(const IPv4Address& address, u16 port);
 
-    RefPtr<UdpSocket> accept();
+    RefPtr<UDPSocket> accept();
 
     Optional<IPv4Address> local_address() const;
     Optional<u16> local_port() const;
@@ -49,7 +49,7 @@ public:
     Function<void()> on_ready_to_accept;
 
 private:
-    explicit UdpServer(Object* parent = nullptr);
+    explicit UDPServer(Object* parent = nullptr);
 
     int m_fd { -1 };
     bool m_listening { false };
