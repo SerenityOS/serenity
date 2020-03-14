@@ -55,11 +55,16 @@ I'm also on [Patreon](https://www.patreon.com/serenityos) and [GitHub Sponsors](
 * GUI toolkit (LibGUI)
 * Cross-process communication library (LibIPC)
 * HTML/CSS engine (LibWeb)
+* JavaScript engine (LibJS)
 * Markdown (LibMarkdown)
 * Audio (LibAudio)
 * PCI database (LibPCIDB)
 * Terminal emulation (LibVT)
 * Network protocols (HTTP) (LibProtocol)
+* Mathematical functions (LibM)
+* ELF file handing (LibELF)
+* POSIX threading (LibPthread)
+* Higher-level threading (LibThread)
 
 ## Userland features
 
