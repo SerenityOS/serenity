@@ -169,6 +169,12 @@ bool Lexer::is_block_comment_end() const
     return m_current_char == '*' && m_position < m_source.length() && m_source[m_position] == '/';
 }
 
+void Lexer::syntax_error(const char* msg)
+{
+    m_has_errors = true;
+    fprintf(stderr, "Syntax Error: %s\n", msg);
+}
+
 Token Lexer::next()
 {
     size_t trivia_start = m_position;
@@ -218,13 +224,22 @@ Token Lexer::next()
             consume();
         }
         token_type = TokenType::NumericLiteral;
-    } else if (m_current_char == '"') {
+    } else if (m_current_char == '"' || m_current_char == '\'') {
+        char stop_char = m_current_char;
         consume();
-        while (m_current_char != '"' && !is_eof()) {
+        while (m_current_char != stop_char && m_current_char != '\n' && !is_eof()) {
+            if (m_current_char == '\\') {
+                consume();
+            }
             consume();
         }
-        consume();
-        token_type = TokenType::StringLiteral;
+        if (m_current_char != stop_char) {
+            syntax_error("unterminated string literal");
+            token_type = TokenType::UnterminatedStringLiteral;
+        } else {
+            consume();
+            token_type = TokenType::StringLiteral;
+        }
     } else if (m_current_char == EOF) {
         token_type = TokenType::Eof;
     } else {
