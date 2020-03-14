@@ -52,6 +52,7 @@ public:
 
     NonnullOwnPtr<Expression> parse_expression(int min_precedence, Associativity associate = Associativity::Right);
     NonnullOwnPtr<Expression> parse_primary_expression();
+    NonnullOwnPtr<Expression> parse_unary_prefixed_expression();
     NonnullOwnPtr<ObjectExpression> parse_object_expression();
     NonnullOwnPtr<Expression> parse_secondary_expression(NonnullOwnPtr<Expression>, int min_precedence, Associativity associate = Associativity::Right);
     NonnullOwnPtr<CallExpression> parse_call_expression(NonnullOwnPtr<Expression>);
@@ -62,6 +63,7 @@ private:
     int operator_precedence(TokenType) const;
     Associativity operator_associativity(TokenType) const;
     bool match_expression() const;
+    bool match_unary_prefixed_expression() const;
     bool match_secondary_expression() const;
     bool match_statement() const;
     bool match(TokenType type) const;
