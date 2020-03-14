@@ -32,6 +32,8 @@
 #    include <LibC/fd_set.h>
 #endif
 
+constexpr int syscall_vector = 0x82;
+
 extern "C" {
 struct timeval;
 struct timespec;
