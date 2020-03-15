@@ -56,7 +56,7 @@ public:
 
 class ErrorStatement final : public Statement {
 public:
-    Value execute(Interpreter&) const { return js_undefined(); }
+    Value execute(Interpreter&) const override { return js_undefined(); }
     const char* class_name() const override { return "ErrorStatement"; }
 };
 
@@ -147,7 +147,7 @@ public:
 
 class ErrorExpression final : public Expression {
 public:
-    Value execute(Interpreter&) const { return js_undefined(); }
+    Value execute(Interpreter&) const override { return js_undefined(); }
     const char* class_name() const override { return "ErrorExpression"; }
 };
 
