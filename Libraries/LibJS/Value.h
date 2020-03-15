@@ -133,6 +133,7 @@ public:
 
     String to_string() const;
     bool to_boolean() const;
+    i32 to_i32() const;
 
     Value to_object(Heap&) const;
 

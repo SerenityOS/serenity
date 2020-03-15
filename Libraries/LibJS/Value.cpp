@@ -89,6 +89,18 @@ Value Value::to_object(Heap& heap) const
     ASSERT_NOT_REACHED();
 }
 
+i32 Value::to_i32() const
+{
+    switch (m_type) {
+    case Type::Boolean:
+        return m_value.as_bool;
+    case Type::Number:
+        return static_cast<i32>(m_value.as_double);
+    default:
+        ASSERT_NOT_REACHED();
+    }
+}
+
 Value greater_than(Value lhs, Value rhs)
 {
     ASSERT(lhs.is_number());
@@ -208,8 +220,6 @@ Value typed_eq(Value lhs, Value rhs)
 
     ASSERT_NOT_REACHED();
 }
-
-
 
 const LogStream& operator<<(const LogStream& stream, const Value& value)
 {
