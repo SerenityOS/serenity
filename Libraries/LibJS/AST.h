@@ -142,6 +142,7 @@ private:
 
 class Expression : public ASTNode {
 public:
+    virtual bool is_member_expression() const { return false; }
 };
 
 class ErrorExpression final : public Expression {
@@ -521,7 +522,10 @@ public:
     virtual Value execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
 
+    const Expression& object() const { return *m_object; }
+
 private:
+    virtual bool is_member_expression() const override { return true; }
     virtual const char* class_name() const override { return "MemberExpression"; }
 
     NonnullOwnPtr<Expression> m_object;

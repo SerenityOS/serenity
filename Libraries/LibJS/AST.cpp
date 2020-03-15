@@ -63,7 +63,18 @@ Value CallExpression::execute(Interpreter& interpreter) const
     for (size_t i = 0; i < m_arguments.size(); ++i)
         argument_values.append(m_arguments[i].execute(interpreter));
 
-    return function->call(interpreter, move(argument_values));
+    Value this_value = js_undefined();
+    if (m_callee->is_member_expression())
+        this_value = static_cast<const MemberExpression&>(*m_callee).object().execute(interpreter).to_object(interpreter.heap());
+
+    if (!this_value.is_undefined())
+        interpreter.push_this_value(this_value);
+
+    auto result = function->call(interpreter, move(argument_values));
+
+    if (!this_value.is_undefined())
+        interpreter.pop_this_value();
+    return result;
 }
 
 Value ReturnStatement::execute(Interpreter& interpreter) const

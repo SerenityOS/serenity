@@ -79,10 +79,20 @@ public:
     void enter_scope(const ScopeNode&, Vector<Argument>, ScopeType);
     void exit_scope(const ScopeNode&);
 
+    void push_this_value(Value value) { m_this_stack.append(move(value)); }
+    void pop_this_value() { m_this_stack.take_last(); }
+    Value this_value() const
+    {
+        if (m_this_stack.is_empty())
+            return m_global_object;
+        return m_this_stack.last();
+    }
+
 private:
     Heap m_heap;
 
     Vector<ScopeFrame> m_scope_stack;
+    Vector<Value> m_this_stack;
 
     Object* m_global_object { nullptr };
 };
