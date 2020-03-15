@@ -114,6 +114,17 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
     DO_COLOR(RulerInactiveText);
     DO_COLOR(TextCursor);
     DO_COLOR(FocusOutline);
+    DO_COLOR(SyntaxComment);
+    DO_COLOR(SyntaxNumber);
+    DO_COLOR(SyntaxString);
+    DO_COLOR(SyntaxType);
+    DO_COLOR(SyntaxPunctuation);
+    DO_COLOR(SyntaxOperator);
+    DO_COLOR(SyntaxKeyword);
+    DO_COLOR(SyntaxControlKeyword);
+    DO_COLOR(SyntaxIdentifier);
+    DO_COLOR(SyntaxPreprocessorStatement);
+    DO_COLOR(SyntaxPreprocessorValue);
 
     buffer->seal();
     buffer->share_globally();

@@ -1211,7 +1211,7 @@ void TextEditor::did_change()
             if (on_change)
                 on_change();
             if (m_highlighter)
-                m_highlighter->rehighlight();
+                m_highlighter->rehighlight(palette());
             m_has_pending_change_notification = false;
         });
     }
@@ -1491,7 +1491,7 @@ void TextEditor::flush_pending_change_notification_if_needed()
     if (on_change)
         on_change();
     if (m_highlighter)
-        m_highlighter->rehighlight();
+        m_highlighter->rehighlight(palette());
     m_has_pending_change_notification = false;
 }
 
@@ -1507,7 +1507,7 @@ void TextEditor::set_syntax_highlighter(OwnPtr<SyntaxHighlighter> highlighter)
     m_highlighter = move(highlighter);
     if (m_highlighter) {
         m_highlighter->attach(*this);
-        m_highlighter->rehighlight();
+        m_highlighter->rehighlight(palette());
     } else
         document().set_spans({});
 }

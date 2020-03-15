@@ -28,33 +28,36 @@
 #include <LibGUI/CppSyntaxHighlighter.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/Palette.h>
 
 namespace GUI {
 
-static TextStyle style_for_token_type(CppToken::Type type)
+static TextStyle style_for_token_type(Gfx::Palette palette, CppToken::Type type)
 {
     switch (type) {
     case CppToken::Type::Keyword:
-        return { Color::Black, &Gfx::Font::default_bold_fixed_width_font() };
+        return { palette.syntax_keyword(), &Gfx::Font::default_bold_fixed_width_font() };
     case CppToken::Type::KnownType:
-        return { Color::from_rgb(0x800080), &Gfx::Font::default_bold_fixed_width_font() };
+        return { palette.syntax_type(), &Gfx::Font::default_bold_fixed_width_font() };
     case CppToken::Type::Identifier:
-        return { Color::from_rgb(0x092e64) };
+        return { palette.syntax_identifier() };
     case CppToken::Type::DoubleQuotedString:
     case CppToken::Type::SingleQuotedString:
+        return { palette.syntax_string() };
     case CppToken::Type::Integer:
     case CppToken::Type::Float:
+        return { palette.syntax_number() };
     case CppToken::Type::IncludePath:
-        return { Color::from_rgb(0x800000) };
+        return { palette.syntax_preprocessor_value() };
     case CppToken::Type::EscapeSequence:
-        return { Color::from_rgb(0x800080), &Gfx::Font::default_bold_fixed_width_font() };
+        return { palette.syntax_keyword(), &Gfx::Font::default_bold_fixed_width_font() };
     case CppToken::Type::PreprocessorStatement:
     case CppToken::Type::IncludeStatement:
-        return { Color::from_rgb(0x008080) };
+        return { palette.syntax_preprocessor_statement() };
     case CppToken::Type::Comment:
-        return { Color::from_rgb(0x008000) };
+        return { palette.syntax_comment() };
     default:
-        return { Color::Black };
+        return { palette.base_text() };
     }
 }
 
@@ -70,7 +73,7 @@ bool CppSyntaxHighlighter::is_navigatable(void* token) const
     return cpp_token == GUI::CppToken::Type::IncludePath;
 }
 
-void CppSyntaxHighlighter::rehighlight()
+void CppSyntaxHighlighter::rehighlight(Gfx::Palette palette)
 {
     ASSERT(m_editor);
     auto text = m_editor->text();
@@ -85,7 +88,7 @@ void CppSyntaxHighlighter::rehighlight()
         GUI::TextDocumentSpan span;
         span.range.set_start({ token.m_start.line, token.m_start.column });
         span.range.set_end({ token.m_end.line, token.m_end.column });
-        auto style = style_for_token_type(token.m_type);
+        auto style = style_for_token_type(palette, token.m_type);
         span.color = style.color;
         span.font = style.font;
         span.is_skippable = token.m_type == CppToken::Type::Whitespace;
