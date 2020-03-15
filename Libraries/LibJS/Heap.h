@@ -53,6 +53,8 @@ public:
 
     void collect_garbage();
 
+    Interpreter& interpreter() { return m_interpreter; }
+
 private:
     Cell* allocate_cell(size_t);
 

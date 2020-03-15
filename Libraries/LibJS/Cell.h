@@ -52,6 +52,7 @@ public:
     virtual void visit_children(Visitor&) {}
 
     Heap& heap();
+    Interpreter& interpreter();
 
 private:
     bool m_mark { false };
