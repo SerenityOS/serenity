@@ -27,53 +27,108 @@
 #include <LibGUI/JSSyntaxHighlighter.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/Palette.h>
 #include <LibJS/Lexer.h>
 #include <LibJS/Token.h>
 
 namespace GUI {
 
-static TextStyle style_for_token_type(JS::TokenType type)
+static TextStyle style_for_token_type(Gfx::Palette palette, JS::TokenType type)
 {
     switch (type) {
+    case JS::TokenType::Invalid:
+    case JS::TokenType::Eof:
+        return { palette.syntax_comment() };
+    case JS::TokenType::NumericLiteral:
+        return { palette.syntax_number() };
+    case JS::TokenType::StringLiteral:
+    case JS::TokenType::RegexLiteral:
+    case JS::TokenType::UnterminatedStringLiteral:
+        return { palette.syntax_string() };
+    case JS::TokenType::BracketClose:
+    case JS::TokenType::BracketOpen:
+    case JS::TokenType::Caret:
+    case JS::TokenType::Comma:
+    case JS::TokenType::CurlyClose:
+    case JS::TokenType::CurlyOpen:
+    case JS::TokenType::ParenClose:
+    case JS::TokenType::ParenOpen:
+    case JS::TokenType::Semicolon:
+        return { palette.syntax_punctuation() };
+    case JS::TokenType::Ampersand:
+    case JS::TokenType::AmpersandEquals:
+    case JS::TokenType::Asterisk:
+    case JS::TokenType::AsteriskAsteriskEquals:
+    case JS::TokenType::AsteriskEquals:
+    case JS::TokenType::DoubleAmpersand:
+    case JS::TokenType::DoubleAsterisk:
+    case JS::TokenType::DoublePipe:
+    case JS::TokenType::DoubleQuestionMark:
+    case JS::TokenType::Equals:
+    case JS::TokenType::EqualsEquals:
+    case JS::TokenType::EqualsEqualsEquals:
+    case JS::TokenType::ExclamationMark:
+    case JS::TokenType::ExclamationMarkEquals:
+    case JS::TokenType::ExclamationMarkEqualsEquals:
+    case JS::TokenType::GreaterThan:
+    case JS::TokenType::GreaterThanEquals:
+    case JS::TokenType::LessThan:
+    case JS::TokenType::LessThanEquals:
+    case JS::TokenType::Minus:
+    case JS::TokenType::MinusEquals:
+    case JS::TokenType::MinusMinus:
+    case JS::TokenType::Percent:
+    case JS::TokenType::PercentEquals:
+    case JS::TokenType::Period:
+    case JS::TokenType::Pipe:
+    case JS::TokenType::PipeEquals:
+    case JS::TokenType::Plus:
+    case JS::TokenType::PlusEquals:
+    case JS::TokenType::PlusPlus:
+    case JS::TokenType::QuestionMark:
+    case JS::TokenType::QuestionMarkPeriod:
+    case JS::TokenType::ShiftLeft:
+    case JS::TokenType::ShiftLeftEquals:
+    case JS::TokenType::ShiftRight:
+    case JS::TokenType::ShiftRightEquals:
+    case JS::TokenType::Slash:
+    case JS::TokenType::SlashEquals:
+    case JS::TokenType::Tilde:
+    case JS::TokenType::UnsignedShiftRight:
+    case JS::TokenType::UnsignedShiftRightEquals:
+        return { palette.syntax_operator() };
     case JS::TokenType::BoolLiteral:
-    case JS::TokenType::NullLiteral:
-        return { Color::Black, &Gfx::Font::default_bold_fixed_width_font() };
-    case JS::TokenType::Await:
-    case JS::TokenType::Catch:
     case JS::TokenType::Class:
     case JS::TokenType::Const:
     case JS::TokenType::Delete:
-    case JS::TokenType::Do:
-    case JS::TokenType::Else:
-    case JS::TokenType::Finally:
-    case JS::TokenType::For:
     case JS::TokenType::Function:
-    case JS::TokenType::If:
     case JS::TokenType::In:
     case JS::TokenType::Instanceof:
     case JS::TokenType::Interface:
     case JS::TokenType::Let:
     case JS::TokenType::New:
-    case JS::TokenType::QuestionMark:
-    case JS::TokenType::Return:
-    case JS::TokenType::Try:
+    case JS::TokenType::NullLiteral:
     case JS::TokenType::Typeof:
     case JS::TokenType::Var:
     case JS::TokenType::Void:
+        return { palette.syntax_keyword(), &Gfx::Font::default_bold_fixed_width_font() };
+    case JS::TokenType::Await:
+    case JS::TokenType::Catch:
+    case JS::TokenType::Do:
+    case JS::TokenType::Else:
+    case JS::TokenType::Finally:
+    case JS::TokenType::For:
+    case JS::TokenType::If:
+    case JS::TokenType::Return:
+    case JS::TokenType::Try:
     case JS::TokenType::While:
     case JS::TokenType::Yield:
-        return { Color::Black, &Gfx::Font::default_bold_fixed_width_font() };
+        return { palette.syntax_control_keyword(), &Gfx::Font::default_bold_fixed_width_font() };
     case JS::TokenType::Identifier:
-        return { Color::from_rgb(0x092e64) };
-    case JS::TokenType::NumericLiteral:
-    case JS::TokenType::StringLiteral:
-    case JS::TokenType::RegexLiteral:
-        return { Color::from_rgb(0x800000) };
-    case JS::TokenType::Invalid:
-    case JS::TokenType::Eof:
-        return { Color::from_rgb(0x008000) };
+        return { palette.syntax_identifier() };
+
     default:
-        return { Color::Black };
+        return { palette.base_text() };
     }
 }
 
@@ -89,7 +144,7 @@ bool JSSyntaxHighlighter::is_navigatable(void* token) const
     return false;
 }
 
-void JSSyntaxHighlighter::rehighlight()
+void JSSyntaxHighlighter::rehighlight(Gfx::Palette palette)
 {
     ASSERT(m_editor);
     auto text = m_editor->text();
@@ -100,7 +155,7 @@ void JSSyntaxHighlighter::rehighlight()
     GUI::TextPosition position { 0, 0 };
     GUI::TextPosition start { 0, 0 };
 
-    auto advance_position = [&](char ch) {
+    auto advance_position = [&position](char ch) {
         if (ch == '\n') {
             position.set_line(position.line() + 1);
             position.set_column(0);
@@ -108,51 +163,37 @@ void JSSyntaxHighlighter::rehighlight()
             position.set_column(position.column() + 1);
     };
 
+    auto append_token = [&](StringView str, const JS::Token& token, bool is_trivia) {
+        if (str.is_empty())
+            return;
+
+        start = position;
+        for (size_t i = 0; i < str.length() - 1; ++i)
+            advance_position(str[i]);
+
+        GUI::TextDocumentSpan span;
+        span.range.set_start(start);
+        span.range.set_end({ position.line(), position.column() });
+        auto type = is_trivia ? JS::TokenType::Invalid : token.type();
+        auto style = style_for_token_type(palette, type);
+        span.color = style.color;
+        span.font = style.font;
+        span.is_skippable = is_trivia;
+        span.data = reinterpret_cast<void*>(static_cast<size_t>(type));
+        spans.append(span);
+        advance_position(str[str.length() - 1]);
+
+#ifdef DEBUG_SYNTAX_HIGHLIGHTING
+        dbg() << token.name() << (is_trivia ? " (trivia) @ \"" : " @ \"") << token.value() << "\" "
+              << span.range.start().line() << ":" << span.range.start().column() << " - "
+              << span.range.end().line() << ":" << span.range.end().column();
+#endif
+    };
+
     bool was_eof = false;
     for (auto token = lexer.next(); !was_eof; token = lexer.next()) {
-        start = position;
-        if (!token.trivia().is_empty()) {
-            for (auto ch : token.trivia())
-                advance_position(ch);
-
-            GUI::TextDocumentSpan span;
-
-            span.range.set_start(start);
-            if (position.column() > 0)
-                span.range.set_end({ position.line(), position.column() - 1 });
-            else
-                span.range.set_end({ position.line() - 1, 0 });
-            auto style = style_for_token_type(JS::TokenType::Invalid);
-            span.color = style.color;
-            span.font = style.font;
-            span.is_skippable = true;
-            spans.append(span);
-#ifdef DEBUG_SYNTAX_HIGHLIGHTING
-            dbg() << token.name() << " \"" << token.trivia() << "\" (trivia) @ " << span.range.start().line() << ":" << span.range.start().column() << " - " << span.range.end().line() << ":" << span.range.end().column();
-#endif
-        }
-
-        start = position;
-        if (!token.value().is_empty()) {
-            for (auto ch : token.value())
-                advance_position(ch);
-
-            GUI::TextDocumentSpan span;
-            span.range.set_start(start);
-            if (position.column() > 0)
-                span.range.set_end({ position.line(), position.column() - 1 });
-            else
-                span.range.set_end({ position.line() - 1, 0 });
-            auto style = style_for_token_type(token.type());
-            span.color = style.color;
-            span.font = style.font;
-            span.is_skippable = false;
-            span.data = reinterpret_cast<void*>(token.type());
-            spans.append(span);
-#ifdef DEBUG_SYNTAX_HIGHLIGHTING
-            dbg() << token.name() << " @ \"" << token.value() << "\" " << span.range.start().line() << ":" << span.range.start().column() << " - " << span.range.end().line() << ":" << span.range.end().column();
-#endif
-        }
+        append_token(token.trivia(), token, true);
+        append_token(token.value(), token, false);
 
         if (token.type() == JS::TokenType::Eof)
             was_eof = true;
