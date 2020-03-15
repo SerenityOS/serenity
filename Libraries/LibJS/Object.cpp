@@ -87,4 +87,34 @@ bool Object::has_own_property(const String& property_name) const
     return m_properties.get(property_name).has_value();
 }
 
+Value Object::to_primitive(PreferredType preferred_type) const
+{
+    Value result = js_undefined();
+
+    switch (preferred_type) {
+    case PreferredType::Default:
+    case PreferredType::Number: {
+        result = value_of();
+        if (result.is_object()) {
+            result = to_string();
+        }
+        break;
+    }
+    case PreferredType::String: {
+        result = to_string();
+        if (result.is_object())
+            result = value_of();
+        break;
+    }
+    }
+
+    ASSERT(!result.is_object());
+    return result;
+}
+
+Value Object::to_string() const
+{
+    return js_string(heap(), String::format("[object %s]", class_name()));
+}
+
 }

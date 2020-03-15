@@ -40,7 +40,7 @@ void Cell::Visitor::visit(Value value)
         visit(value.as_cell());
 }
 
-Heap& Cell::heap()
+Heap& Cell::heap() const
 {
     return HeapBlock::from_cell(this)->heap();
 }

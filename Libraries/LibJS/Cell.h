@@ -51,7 +51,7 @@ public:
 
     virtual void visit_children(Visitor&) {}
 
-    Heap& heap();
+    Heap& heap() const;
     Interpreter& interpreter();
 
 private:
