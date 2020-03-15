@@ -26,6 +26,7 @@
 
 #include <AK/LogStream.h>
 #include <LibJS/Cell.h>
+#include <LibJS/Heap.h>
 #include <LibJS/HeapBlock.h>
 #include <LibJS/Object.h>
 #include <LibJS/PrimitiveString.h>
@@ -42,6 +43,11 @@ void Cell::Visitor::visit(Value value)
 Heap& Cell::heap()
 {
     return HeapBlock::from_cell(this)->heap();
+}
+
+Interpreter& Cell::interpreter()
+{
+    return heap().interpreter();
 }
 
 const LogStream& operator<<(const LogStream& stream, const Cell* cell)
