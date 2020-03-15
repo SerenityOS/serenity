@@ -1540,15 +1540,115 @@ void Process::crash(int signal, u32 eip)
     } else {
         dbg() << "\033[31;1m" << String::format("%p", eip) << "  (?)\033[0m\n";
     }
+
     dump_backtrace();
     m_termination_signal = signal;
     dump_regions();
     ASSERT(is_ring3());
     die();
+
     // We can not return from here, as there is nowhere
     // to unwind to, so die right away.
     Thread::current->die_if_needed();
     ASSERT_NOT_REACHED();
+}
+
+void Process::create_core_dump()
+{
+    Elf32_Ehdr elf_file_header;
+    size_t offset = 0;
+
+    auto pname = String(m_name);
+    auto fd_or_error = VFS::the().open(String::format("%s_%u.core", pname.characters(), RTC::now()), O_CREAT | O_WRONLY | O_EXCL, 0400, current_directory(), UidAndGid { m_uid, m_gid });
+    auto& fd = fd_or_error.value();
+
+    elf_file_header.e_ident[EI_MAG0] = 0x7f;
+    elf_file_header.e_ident[EI_MAG1] = 'E';
+    elf_file_header.e_ident[EI_MAG2] = 'L';
+    elf_file_header.e_ident[EI_MAG3] = 'F';
+    elf_file_header.e_ident[EI_CLASS] = ELFCLASS32;
+    elf_file_header.e_ident[EI_DATA] = ELFDATA2LSB;
+    elf_file_header.e_ident[EI_VERSION] = EV_CURRENT;
+    elf_file_header.e_ident[EI_OSABI] = 0; // ELFOSABI_NONE
+    elf_file_header.e_ident[EI_ABIVERSION] = 0;
+    elf_file_header.e_ident[EI_PAD + 1] = 0;
+    elf_file_header.e_ident[EI_PAD + 2] = 0;
+    elf_file_header.e_ident[EI_PAD + 3] = 0;
+    elf_file_header.e_ident[EI_PAD + 4] = 0;
+    elf_file_header.e_ident[EI_PAD + 5] = 0;
+    elf_file_header.e_ident[EI_PAD + 6] = 0;
+    elf_file_header.e_ident[EI_NIDENT] = 16;
+    elf_file_header.e_type = ET_CORE;
+    elf_file_header.e_machine = EM_386;
+    elf_file_header.e_version = 1;
+    elf_file_header.e_entry = 0;
+    elf_file_header.e_phoff = sizeof(Elf32_Ehdr);
+    elf_file_header.e_shoff = 0;
+    elf_file_header.e_flags = 0;
+    elf_file_header.e_ehsize = sizeof(Elf32_Ehdr);
+    elf_file_header.e_shentsize = sizeof(Elf32_Shdr);
+    elf_file_header.e_phentsize = sizeof(Elf32_Phdr);
+    elf_file_header.e_phnum = m_regions.size() + 1; // +1 for NOTE section
+    elf_file_header.e_shnum = 0;
+    elf_file_header.e_shstrndx = SHN_UNDEF;
+
+    fd->write(reinterpret_cast<uint8_t*>(&elf_file_header), sizeof(Elf32_Ehdr));
+
+    // TODO: We need to generate appropriate PT_NOTE sections to store
+    // register information and process status stuff here. This is done
+    // by creating a PT_NOTE Phdr for every threa and filling
+    // in the appropriate fields.
+
+    // Dump all regions to file
+    for (auto& region : m_regions) {
+        Elf32_Phdr phdr;
+        auto& vmobj = region.vmobject();
+
+        phdr.p_type = PT_LOAD;
+        phdr.p_offset = offset;
+        phdr.p_vaddr = reinterpret_cast<uint32_t>(region.vaddr().as_ptr());
+        phdr.p_paddr = 0;
+
+        size_t mapped_page_count = 0;
+        for (size_t page_num = 0; page_num < region.page_count(); page_num++) {
+            PhysicalPage* page = vmobj.physical_pages()[page_num];
+            if (!page)
+                continue;
+
+            mapped_page_count++;
+        }
+
+        phdr.p_filesz = mapped_page_count * PAGE_SIZE;
+        phdr.p_memsz = region.page_count() * PAGE_SIZE;
+        phdr.p_align = 0;
+
+        phdr.p_flags = region.is_readable() ? PF_R : 0;
+        if (region.is_writable())
+            phdr.p_flags |= PF_W;
+        if (region.is_executable())
+            phdr.p_flags |= PF_X;
+
+        offset += phdr.p_filesz;
+
+        fd->write(reinterpret_cast<uint8_t*>(&phdr), sizeof(Elf32_Phdr));
+    }
+
+    // Let's actually dump all the memory into the core file
+    for (auto& region : m_regions) {
+        // Remap the region so that it's readable by us.
+        region.set_readable(true);
+        region.remap();
+
+        // Now let's walk the physical pages and see which ones are actually mapped.
+        auto& vmobj = region.vmobject();
+        for (size_t i = 0; i < region.page_count(); i++) {
+            PhysicalPage* page = vmobj.physical_pages()[region.first_page_index() + i];
+            if (!page)
+                continue;
+
+            fd->write(reinterpret_cast<uint8_t*>((region.vaddr().as_ptr() + (i * PAGE_SIZE))), PAGE_SIZE);
+        }
+    }
 }
 
 Process* Process::from_pid(pid_t pid)
@@ -3080,6 +3180,14 @@ void Process::finalize()
     dbg() << "Finalizing process " << *this;
 #endif
 
+    dbg() << m_should_dump_core;
+    if (m_should_dump_core) {
+        ProcessPagingScope scope(*this);
+        dbg() << "Creating dump of physical memory...";
+        create_core_dump();
+        dbg() << "Done!";
+    }
+
     if (m_perf_event_buffer) {
         auto description_or_error = VFS::the().open(String::format("perfcore.%d", m_pid), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { m_uid, m_gid });
         if (!description_or_error.is_error()) {
@@ -3088,7 +3196,6 @@ void Process::finalize()
             description->write(json.data(), json.size());
         }
     }
-
     m_fds.clear();
     m_tty = nullptr;
     m_executable = nullptr;

@@ -541,6 +541,8 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
             set_state(Stopped);
             return ShouldUnblockThread::No;
         case DefaultSignalAction::DumpCore:
+            m_process.set_dump_core(true);
+            dbg() << "Yikes!";
             process().for_each_thread([](auto& thread) {
                 thread.set_dump_backtrace_on_finalization();
                 return IterationDecision::Continue;
@@ -575,8 +577,7 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
 
     m_signal_mask |= new_signal_mask;
 
-    auto setup_stack = [&]<typename ThreadState>(ThreadState state, u32 * stack)
-    {
+    auto setup_stack = [&]<typename ThreadState>(ThreadState state, u32* stack) {
         u32 old_esp = *stack;
         u32 ret_eip = state.eip;
         u32 ret_eflags = state.eflags;

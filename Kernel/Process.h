@@ -312,6 +312,7 @@ public:
 
     [[noreturn]] void crash(int signal, u32 eip);
     [[nodiscard]] static siginfo_t reap(Process&);
+    void create_core_dump();
 
     const TTY* tty() const { return m_tty; }
     void set_tty(TTY*);
@@ -382,6 +383,7 @@ public:
 
     void terminate_due_to_signal(u8 signal);
     void send_signal(u8, Process* sender);
+    void set_dump_core(bool enable) { m_should_dump_core = enable; }
 
     u16 thread_count() const { return m_thread_count; }
 
@@ -482,6 +484,7 @@ private:
     u8 m_termination_status { 0 };
     u8 m_termination_signal { 0 };
     u16 m_thread_count { 0 };
+    bool m_should_dump_core { false };
 
     bool m_dead { false };
     bool m_profiling { false };
