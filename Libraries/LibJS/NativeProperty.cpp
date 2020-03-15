@@ -24,43 +24,33 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <AK/HashMap.h>
-#include <LibJS/Cell.h>
-#include <LibJS/Forward.h>
-#include <LibJS/Cell.h>
+#include <LibJS/NativeProperty.h>
+#include <LibJS/Value.h>
 
 namespace JS {
 
-class Object : public Cell {
-public:
-    Object();
-    virtual ~Object();
+NativeProperty::NativeProperty(AK::Function<Value(Object*)> getter, AK::Function<void(Object*, Value)> setter)
+    : m_getter(move(getter))
+    , m_setter(move(setter))
+{
+}
 
-    Value get(String property_name) const;
-    void put(String property_name, Value);
+NativeProperty::~NativeProperty()
+{
+}
 
-    void put_native_function(String property_name, AK::Function<Value(Interpreter&, Vector<Value>)>);
-    void put_native_property(String property_name, AK::Function<Value(Object*)> getter, AK::Function<void(Object*, Value)> setter);
+Value NativeProperty::get(Object* object) const
+{
+    if (!m_getter)
+        return js_undefined();
+    return m_getter(object);
+}
 
-    virtual bool is_function() const { return false; }
-    virtual bool is_native_function() const { return false; }
-    virtual bool is_string_object() const { return false; }
-    virtual bool is_native_property() const { return false; }
-
-    virtual const char* class_name() const override { return "Object"; }
-    virtual void visit_children(Cell::Visitor&) override;
-
-    Object* prototype() { return m_prototype; }
-    const Object* prototype() const { return m_prototype; }
-    void set_prototype(Object* prototype) { m_prototype = prototype; }
-
-    bool has_own_property(const String& property_name) const;
-
-private:
-    HashMap<String, Value> m_properties;
-    Object* m_prototype { nullptr };
-};
+void NativeProperty::set(Object* object, Value value)
+{
+    if (!m_setter)
+        return;
+    m_setter(object, move(value));
+}
 
 }

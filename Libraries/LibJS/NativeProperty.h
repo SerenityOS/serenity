@@ -26,41 +26,25 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
-#include <LibJS/Cell.h>
-#include <LibJS/Forward.h>
-#include <LibJS/Cell.h>
+#include <AK/Function.h>
+#include <LibJS/Object.h>
 
 namespace JS {
 
-class Object : public Cell {
+class NativeProperty final : public Object {
 public:
-    Object();
-    virtual ~Object();
+    NativeProperty(AK::Function<Value(Object*)> getter, AK::Function<void(Object*, Value)> setter);
+    virtual ~NativeProperty() override;
 
-    Value get(String property_name) const;
-    void put(String property_name, Value);
-
-    void put_native_function(String property_name, AK::Function<Value(Interpreter&, Vector<Value>)>);
-    void put_native_property(String property_name, AK::Function<Value(Object*)> getter, AK::Function<void(Object*, Value)> setter);
-
-    virtual bool is_function() const { return false; }
-    virtual bool is_native_function() const { return false; }
-    virtual bool is_string_object() const { return false; }
-    virtual bool is_native_property() const { return false; }
-
-    virtual const char* class_name() const override { return "Object"; }
-    virtual void visit_children(Cell::Visitor&) override;
-
-    Object* prototype() { return m_prototype; }
-    const Object* prototype() const { return m_prototype; }
-    void set_prototype(Object* prototype) { m_prototype = prototype; }
-
-    bool has_own_property(const String& property_name) const;
+    Value get(Object*) const;
+    void set(Object*, Value);
 
 private:
-    HashMap<String, Value> m_properties;
-    Object* m_prototype { nullptr };
+    virtual bool is_native_property() const override { return true; }
+    virtual const char* class_name() const override { return "NativeProperty"; }
+
+    AK::Function<Value(Object*)> m_getter;
+    AK::Function<void(Object*, Value)> m_setter;
 };
 
 }

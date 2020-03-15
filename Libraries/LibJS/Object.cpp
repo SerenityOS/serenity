@@ -28,6 +28,7 @@
 #include <LibJS/Heap.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/NativeFunction.h>
+#include <LibJS/NativeProperty.h>
 #include <LibJS/Object.h>
 #include <LibJS/Value.h>
 
@@ -47,8 +48,11 @@ Value Object::get(String property_name) const
     const Object* object = this;
     while (object) {
         auto value = object->m_properties.get(property_name);
-        if (value.has_value())
+        if (value.has_value()) {
+            if (value.value().is_object() && value.value().as_object()->is_native_property())
+                return static_cast<const NativeProperty*>(value.value().as_object())->get(const_cast<Object*>(this));
             return value.value();
+        }
         object = object->prototype();
     }
     return js_undefined();
@@ -62,6 +66,11 @@ void Object::put(String property_name, Value value)
 void Object::put_native_function(String property_name, AK::Function<Value(Interpreter&, Vector<Value>)> native_function)
 {
     put(property_name, heap().allocate<NativeFunction>(move(native_function)));
+}
+
+void Object::put_native_property(String property_name, AK::Function<Value(Object*)> getter, AK::Function<void(Object*, Value)> setter)
+{
+    put(property_name, heap().allocate<NativeProperty>(move(getter), move(setter)));
 }
 
 void Object::visit_children(Cell::Visitor& visitor)
