@@ -42,7 +42,14 @@ Object::~Object()
 
 Value Object::get(String property_name) const
 {
-    return m_properties.get(property_name).value_or(js_undefined());
+    const Object* object = this;
+    while (object) {
+        auto value = object->m_properties.get(property_name);
+        if (value.has_value())
+            return value.value();
+        object = object->prototype();
+    }
+    return js_undefined();
 }
 
 void Object::put(String property_name, Value value)
@@ -58,6 +65,8 @@ void Object::put_native_function(String property_name, AK::Function<Value(Interp
 void Object::visit_children(Cell::Visitor& visitor)
 {
     Cell::visit_children(visitor);
+    if (m_prototype)
+        visitor.visit(m_prototype);
     for (auto& it : m_properties)
         visitor.visit(it.value);
 }

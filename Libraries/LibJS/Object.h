@@ -45,12 +45,18 @@ public:
 
     virtual bool is_function() const { return false; }
     virtual bool is_native_function() const { return false; }
+    virtual bool is_string_object() const { return false; }
 
     virtual const char* class_name() const override { return "Object"; }
     virtual void visit_children(Cell::Visitor&) override;
 
+    Object* prototype() { return m_prototype; }
+    const Object* prototype() const { return m_prototype; }
+    void set_prototype(Object* prototype) { m_prototype = prototype; }
+
 private:
     HashMap<String, Value> m_properties;
+    Object* m_prototype { nullptr };
 };
 
 }
