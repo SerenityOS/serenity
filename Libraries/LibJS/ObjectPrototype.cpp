@@ -43,6 +43,17 @@ ObjectPrototype::ObjectPrototype()
             return js_undefined();
         return Value(this_object->has_own_property(arguments[0].to_string()));
     });
+
+    put_native_function("toString", [](Object* this_object, Vector<Value>) -> Value {
+        ASSERT(this_object);
+
+        return Value(this_object->to_string());
+    });
+
+    put_native_function("valueOf", [](Object* this_object, Vector<Value>) -> Value {
+        ASSERT(this_object);
+        return this_object->value_of();
+    });
 }
 
 ObjectPrototype::~ObjectPrototype()

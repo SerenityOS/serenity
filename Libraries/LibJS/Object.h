@@ -27,9 +27,11 @@
 #pragma once
 
 #include <AK/HashMap.h>
+#include <AK/String.h>
 #include <LibJS/Cell.h>
 #include <LibJS/Forward.h>
-#include <LibJS/Cell.h>
+#include <LibJS/PrimitiveString.h>
+#include <LibJS/Value.h>
 
 namespace JS {
 
@@ -57,6 +59,15 @@ public:
     void set_prototype(Object* prototype) { m_prototype = prototype; }
 
     bool has_own_property(const String& property_name) const;
+    enum class PreferredType {
+        Default,
+        String,
+        Number,
+    };
+
+    virtual Value value_of() const { return Value(const_cast<Object*>(this)); }
+    virtual Value to_primitive(PreferredType preferred_type = PreferredType::Default) const;
+    virtual Value to_string() const;
 
 private:
     HashMap<String, Value> m_properties;
