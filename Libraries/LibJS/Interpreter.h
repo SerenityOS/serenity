@@ -74,7 +74,7 @@ public:
     void set_variable(String name, Value);
     void declare_variable(String name, DeclarationType);
 
-    void collect_roots(Badge<Heap>, HashTable<Cell*>&);
+    void gather_roots(Badge<Heap>, HashTable<Cell*>&);
 
     void enter_scope(const ScopeNode&, Vector<Argument>, ScopeType);
     void exit_scope(const ScopeNode&);
