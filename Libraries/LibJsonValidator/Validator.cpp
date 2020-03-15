@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibCore/File.h>
 #include <LibJsonValidator/JsonSchemaNode.h>
 #include <LibJsonValidator/Validator.h>
 
@@ -37,22 +38,40 @@ Validator::~Validator()
 {
 }
 
-JsonValue Validator::run(const JsonSchemaNode&, const int /*fd*/)
+JsonValue Validator::run(const JsonSchemaNode& node, const String& filename)
 {
-    ASSERT_NOT_REACHED();
-    return JsonValue();
+    auto schema_file = Core::File::construct(filename);
+    if (!schema_file->open(Core::IODevice::ReadOnly)) {
+        fprintf(stderr, "Couldn't open %s for reading: %s\n", filename.characters(), schema_file->error_string());
+        return false;
+    }
+    JsonValue json = JsonValue::from_string(schema_file->read_all());
+
+    return run(node, json);
 }
 
-JsonValue Validator::run(const JsonSchemaNode&, const String& /*content*/)
+JsonValue Validator::run(const JsonSchemaNode& node, const FILE* fd)
 {
-    ASSERT_NOT_REACHED();
-    return JsonValue();
+    StringBuilder builder;
+    for (;;) {
+        char buffer[1024];
+        if (!fgets(buffer, sizeof(buffer), const_cast<FILE*>(fd)))
+            break;
+        builder.append(buffer);
+    }
+
+    JsonValue json = JsonValue::from_string(builder.to_string());
+
+    return run(node, json);
 }
 
-JsonValue Validator::run(const JsonSchemaNode&, const JsonValue& /*json*/)
+JsonValue Validator::run(const JsonSchemaNode& node, const JsonValue& json)
 {
-    ASSERT_NOT_REACHED();
-    return JsonValue();
+#ifdef JSON_SCHEMA_DEBUG
+    printf("Run Validator on node: %lu\n", reinterpret_cast<intptr_t>(&node));
+#endif
+
+    return JsonValue(node.validate(json));
 }
 
 }

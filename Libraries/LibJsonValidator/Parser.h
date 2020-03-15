@@ -28,6 +28,7 @@
 
 #include <AK/JsonValue.h>
 #include <LibJsonValidator/Forward.h>
+#include <stdio.h>
 
 namespace JsonValidator {
 
@@ -36,8 +37,8 @@ public:
     Parser();
     ~Parser();
 
-    JsonValue run(const int fd);
-    JsonValue run(const String& content);
+    JsonValue run(const FILE* fd);
+    JsonValue run(const String& filename);
     JsonValue run(const JsonValue& json);
 
     const JsonSchemaNode* root_node() const { return m_root_node; }
@@ -45,7 +46,7 @@ public:
 private:
     JsonSchemaNode* m_root_node { nullptr };
 
-    JsonSchemaNode* get_typed_node(const JsonObject& json_object);
+    JsonSchemaNode* get_typed_node(const JsonValue&);
 
     void add_parser_error(String);
     Vector<String> m_parser_errors;

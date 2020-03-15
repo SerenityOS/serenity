@@ -32,14 +32,17 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/String.h>
 
+#ifndef __serenity__
+#    include <regex.h>
+#endif
 namespace JsonValidator {
 
 enum class InstanceType : u8 {
     //Null,
-    //Boolean,
+    Boolean,
     Object,
     Array,
-    //Number,
+    Number,
     String,
 };
 
@@ -49,9 +52,11 @@ class JsonSchemaNode {
 public:
     virtual ~JsonSchemaNode() {}
     virtual const char* class_name() const = 0;
-    virtual void dump(int indent) const;
+    virtual void dump(int indent, String additional = "") const;
 
-    void set_default(JsonValue default_value)
+    virtual JsonValue validate(const JsonValue&) const;
+
+    void set_default_value(JsonValue default_value)
     {
         m_default_value = default_value;
     }
@@ -66,6 +71,58 @@ public:
         m_type = type;
     }
 
+    void set_required(bool required)
+    {
+        m_required = required;
+    }
+
+    void set_enum_items(JsonValue enum_items)
+    {
+        m_enum_items = enum_items;
+    }
+
+    void set_identified_by_pattern(bool identified_by_pattern, const String& pattern)
+    {
+        m_identified_by_pattern = identified_by_pattern;
+        m_pattern = pattern;
+#ifndef __serenity__
+        if (regcomp(&m_pattern_regex, pattern.characters(), REG_EXTENDED)) {
+            perror("regcomp");
+        }
+#endif
+    }
+
+    bool identified_by_pattern() { return m_identified_by_pattern; }
+
+    bool match_against_pattern(const String& value)
+    {
+#ifdef __serenity__
+        UNUSED_PARAM(value);
+        if (m_pattern == "^.*$") {
+            // FIXME: Match everything, to be replaced with below code from else case when
+            // posix pattern matching implemented
+            return true;
+        }
+#else
+        int reti = regexec(&m_pattern_regex, value.characters(), 0, NULL, 0);
+        if (!reti) {
+            return true;
+        } else if (reti == REG_NOMATCH) {
+        } else {
+            char buf[100];
+            regerror(reti, &m_pattern_regex, buf, sizeof(buf));
+            fprintf(stderr, "Regex match failed: %s\n", buf);
+        }
+#endif
+        return false;
+    }
+
+    bool required() { return m_required; }
+    InstanceType type() { return m_type; }
+    const String id() { return m_id; }
+    JsonValue default_value() { return m_default_value; }
+    JsonValue enum_items() { return m_enum_items; }
+
 protected:
     JsonSchemaNode() {}
     JsonSchemaNode(String id, InstanceType type)
@@ -74,10 +131,18 @@ protected:
     {
     }
 
+    bool m_required { false };
+
 private:
     String m_id;
     InstanceType m_type;
     JsonValue m_default_value;
+    JsonValue m_enum_items;
+    bool m_identified_by_pattern { false };
+    String m_pattern;
+#ifndef __serenity__
+    regex_t m_pattern_regex;
+#endif
 };
 
 class StringNode : public JsonSchemaNode {
@@ -87,10 +152,52 @@ public:
     {
     }
 
-    virtual void dump(int indent) const override;
+    virtual void dump(int indent, String additional) const override;
+    virtual JsonValue validate(const JsonValue&) const override;
 
 private:
     virtual const char* class_name() const override { return "StringNode"; }
+
+    Optional<u32> m_max_length;
+    Optional<u32> m_min_length;
+    Optional<String> m_pattern;
+};
+
+class NumberNode : public JsonSchemaNode {
+public:
+    NumberNode(String id)
+        : JsonSchemaNode(id, InstanceType::Number)
+    {
+    }
+
+    virtual void dump(int indent, String additional) const override;
+    virtual JsonValue validate(const JsonValue&) const override;
+
+private:
+    virtual const char* class_name() const override { return "NumberNode"; }
+
+    Optional<float> m_multiple_of;
+    Optional<float> m_maximum;
+    Optional<float> m_exclusive_maximum;
+    Optional<float> m_minimum;
+    Optional<float> m_exclusive_minimum;
+};
+
+class BooleanNode : public JsonSchemaNode {
+public:
+    BooleanNode(String id, bool value)
+        : JsonSchemaNode(id, InstanceType::Boolean)
+        , m_value(value)
+    {
+    }
+
+    virtual void dump(int indent, String additional) const override;
+    virtual JsonValue validate(const JsonValue&) const override;
+
+private:
+    virtual const char* class_name() const override { return "BooleanNode"; }
+
+    bool m_value;
 };
 
 class ObjectNode : public JsonSchemaNode {
@@ -112,11 +219,17 @@ public:
         m_properties.set(name, node);
     }
 
-    virtual void dump(int indent) const override;
+    virtual void dump(int indent, String additional) const override;
+    virtual JsonValue validate(const JsonValue&) const override;
 
     void append_required(String required)
     {
         m_required.append(required);
+    }
+
+    void set_additional_properties(bool additional_properties)
+    {
+        m_additional_properties = additional_properties;
     }
 
     const HashMap<String, JsonSchemaNode*>& properties() const { return m_properties; }
@@ -126,7 +239,11 @@ private:
     virtual const char* class_name() const override { return "ObjectNode"; }
 
     HashMap<String, JsonSchemaNode*> m_properties;
+
+    Optional<u32> m_max_properties;
+    u32 m_min_properties = 0;
     Vector<String> m_required;
+    bool m_additional_properties { true };
 };
 
 class ArrayNode : public JsonSchemaNode {
@@ -135,6 +252,7 @@ public:
         : JsonSchemaNode("", InstanceType::Array)
     {
     }
+
     ArrayNode(String id)
         : JsonSchemaNode(id, InstanceType::Array)
     {
@@ -142,23 +260,35 @@ public:
 
     ~ArrayNode()
     {
-        if (m_items)
-            delete m_items;
+        if (m_items.size())
+            for (auto* ptr : m_items)
+                if (ptr)
+                    delete ptr;
     }
 
-    virtual void dump(int indent) const override;
+    virtual void dump(int indent, String additional) const override;
+    virtual JsonValue validate(const JsonValue&) const override;
 
-    JsonSchemaNode& items() { return *m_items; }
-    void set_items(JsonSchemaNode*&& items) { m_items = items; }
+    const Vector<JsonSchemaNode*>& items() { return m_items; }
+    void append_item(JsonSchemaNode*&& item) { m_items.append(item); }
 
-    bool unique_items() { return m_unique_items; }
-    void set_unique_items(bool enabled) { m_unique_items = enabled; }
+    bool unique_items() const { return m_unique_items; }
+    void set_unique_items(bool unique_items) { m_unique_items = unique_items; }
+
+    bool items_is_array() const { return m_items_is_array; }
+    void set_items_is_array(bool items_is_array) { m_items_is_array = items_is_array; }
+
+    const JsonSchemaNode* additional_items() const { return m_additional_items; }
+    void set_additional_items(JsonSchemaNode* additional_items) { m_additional_items = additional_items; }
 
 private:
     virtual const char* class_name() const override { return "ArrayNode"; }
 
-    JsonSchemaNode* m_items;
+    Vector<JsonSchemaNode*> m_items;
+    bool m_items_is_array { false };
+    JsonSchemaNode* m_additional_items;
+    Optional<u32> m_max_items;
+    u32 m_min_items = 0;
     bool m_unique_items { false };
 };
-
 }

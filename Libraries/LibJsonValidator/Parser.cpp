@@ -26,8 +26,10 @@
 
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <LibCore/File.h>
 #include <LibJsonValidator/JsonSchemaNode.h>
 #include <LibJsonValidator/Parser.h>
+#include <stdio.h>
 
 namespace JsonValidator {
 
@@ -39,16 +41,31 @@ Parser::~Parser()
 {
 }
 
-JsonValue Parser::run(const int /*fd*/)
+JsonValue Parser::run(const FILE* fd)
 {
-    ASSERT_NOT_REACHED();
-    return JsonValue();
+    StringBuilder builder;
+    for (;;) {
+        char buffer[1024];
+        if (!fgets(buffer, sizeof(buffer), const_cast<FILE*>(fd)))
+            break;
+        builder.append(buffer);
+    }
+
+    JsonValue schema_json = JsonValue::from_string(builder.to_string());
+
+    return run(schema_json);
 }
 
-JsonValue Parser::run(const String& /*content*/)
+JsonValue Parser::run(const String& filename)
 {
-    ASSERT_NOT_REACHED();
-    return JsonValue();
+    auto schema_file = Core::File::construct(filename);
+    if (!schema_file->open(Core::IODevice::ReadOnly)) {
+        fprintf(stderr, "Couldn't open %s for reading: %s\n", filename.characters(), schema_file->error_string());
+        return false;
+    }
+    JsonValue schema_json = JsonValue::from_string(schema_file->read_all());
+
+    return run(schema_json);
 }
 
 JsonValue Parser::run(const JsonValue& json)
@@ -59,12 +76,10 @@ JsonValue Parser::run(const JsonValue& json)
 
     auto json_object = json.as_object();
 
-    if (!json_object.has("$schema")) {
-        add_parser_error("no json schema provided");
-    }
-
     // FIXME: Here, we should load the file given in $schema, and check the $id in the root. This will provide the actual schema version used, that could be located anywhere.
-    if (json_object.get("$schema").as_string_or("") != "https://json-schema.org/draft/2019-09/schema") {
+    static String known_schema = "https://json-schema.org/draft/2019-09/schema";
+
+    if (json_object.get("$schema").as_string_or(known_schema) != known_schema) {
         add_parser_error("unknown json schema provided, currently, only \"https://json-schema.org/draft/2019-09/schema\" is allowed for $schema.");
     }
 
@@ -85,57 +100,151 @@ void Parser::add_parser_error(String error)
     m_parser_errors.append(error);
 }
 
-JsonSchemaNode* Parser::get_typed_node(const JsonObject& json_object)
+JsonSchemaNode* Parser::get_typed_node(const JsonValue& json_value)
 {
     JsonSchemaNode* node { nullptr };
-    JsonValue id = json_object.get("$id");
-    JsonValue type = json_object.get("type");
 
-    if (type.is_string()) {
-        if (type.as_string() == "object") {
+    if (json_value.is_array()) {
+        node = new ArrayNode("");
+        ArrayNode* array_node = static_cast<ArrayNode*>(node);
+
+        for (auto& item : json_value.as_array().values()) {
+            ASSERT(item.is_object());
+            JsonSchemaNode* child_node = get_typed_node(item);
+            if (child_node)
+                static_cast<ArrayNode*>(array_node)->append_item(move(child_node));
+        }
+    } else if (json_value.is_bool()) {
+        node = new BooleanNode("", json_value.as_bool());
+    } else if (json_value.is_object()) {
+        JsonObject json_object = json_value.as_object();
+        JsonValue id = json_object.get("$id");
+        JsonValue type = json_object.get("type");
+
+        if (type.is_array()) {
+            add_parser_error("multiple types for element not supported.");
+        }
+        auto type_str = type.as_string_or("");
+
+        if (type_str == "object" || json_object.has("properties")) {
+            node = new ObjectNode(id.as_string_or(""));
+            ObjectNode* obj_node = static_cast<ObjectNode*>(node);
+
             auto properties = json_object.get_or("properties", JsonObject());
             if (!properties.is_object()) {
-                add_parser_error("properties element is not of type 'object'");
+                add_parser_error("properties value is not a json object");
+            } else {
+
+                properties.as_object().for_each_member([&](auto& key, auto& json_value) {
+                    if (!json_value.is_object()) {
+                        add_parser_error("property element is not a json object");
+                    } else {
+                        JsonSchemaNode* child_node = get_typed_node(json_value);
+                        if (child_node)
+                            obj_node->append_property(key, child_node);
+                    }
+                });
             }
-
-            node = new ObjectNode(id.as_string_or(""));
-
-            properties.as_object().for_each_member([&](auto& key, auto& json_value) {
-                if (!json_value.is_object()) {
-                    add_parser_error("properties element is not of type object");
+            auto pattern_properties = json_object.get_or("patternProperties", JsonObject());
+            if (!properties.is_object()) {
+                add_parser_error("patternProperties value is not a json object");
+            } else {
+                if (pattern_properties.is_object()) {
+                    pattern_properties.as_object().for_each_member([&](auto& key, auto& json_value) {
+                        if (!json_value.is_object()) {
+                            add_parser_error("patternProperty element is not a json object");
+                        } else {
+                            JsonSchemaNode* child_node = get_typed_node(json_value);
+                            if (child_node) {
+                                child_node->set_identified_by_pattern(true, key);
+                                obj_node->append_property(key, child_node);
+                            }
+                        }
+                    });
                 }
-                JsonSchemaNode* child_node = get_typed_node(json_value.as_object());
-                if (child_node)
-                    static_cast<ObjectNode*>(node)->append_property(key, child_node);
-            });
-        } else if (type.as_string() == "array") {
-            if (!json_object.has("items")) {
-                add_parser_error("no items in array type!");
             }
+            // FIXME: additionalProperties could be any valid json schema, not just true/false.
+            auto additional_properties = json_object.get_or("additionalProperties", JsonValue(true));
+            if (!additional_properties.is_bool()) {
+                add_parser_error("additionalProperties value is not a json bool");
+            } else {
+                obj_node->set_additional_properties(additional_properties.as_bool());
 
-            auto items = json_object.get_or("items", JsonObject());
-            if (!items.is_object()) {
-                add_parser_error("items element is not of type 'object'");
+                auto required = json_object.get_or("required", JsonArray());
+                if (!required.is_array()) {
+                    add_parser_error("required value is not a json array");
+                } else {
+                    for (auto& required_property : required.as_array().values()) {
+                        if (!required_property.is_string()) {
+                            add_parser_error("required value is not string");
+                            continue;
+                        }
+                        bool found = false;
+                        for (auto property : obj_node->properties()) {
+                            if (property.key == required_property.as_string()) {
+                                found = true;
+                                property.value->set_required(true);
+                            }
+                        }
+                        if (!found) {
+                            StringBuilder b;
+                            b.appendf("Specified required element '%s' not found in properties", required_property.as_string().characters());
+                            add_parser_error(b.build());
+                        }
+                    }
+                }
             }
-
+        } else if (type_str == "array" || json_object.has("items") || json_object.has("additionalItems") || json_object.has("unevaluatedItems")) {
             node = new ArrayNode(id.as_string_or(""));
-            JsonObject items_object = items.as_object();
-            JsonSchemaNode* child_node = get_typed_node(items_object);
+            ArrayNode* array_node = static_cast<ArrayNode*>(node);
 
-            if (child_node)
-                static_cast<ArrayNode*>(node)->set_items(move(child_node));
+            if (json_object.has("uniqueItems")) {
+                array_node->set_unique_items(true);
+            }
 
-        } else if (type.as_string() == "string") {
+            if (json_object.has("additionalItems")) {
+                array_node->set_additional_items(get_typed_node(json_object.get("additionalItems")));
+            }
+
+            if (json_object.has("items")) {
+                auto items = json_object.get_or("items", JsonObject());
+                if (!items.is_object() && !items.is_array()) {
+                    StringBuilder b;
+                    b.appendf("items value is not a json object/array, it is: %s", items.to_string().characters());
+                    add_parser_error(b.build());
+                }
+
+                if (items.is_object()) {
+                    JsonObject items_object = items.as_object();
+                    JsonSchemaNode* child_node = get_typed_node(items_object);
+                    if (child_node)
+                        static_cast<ArrayNode*>(node)->append_item(move(child_node));
+                } else if (items.is_array()) {
+                    static_cast<ArrayNode*>(node)->set_items_is_array(true);
+                    JsonArray items_array = items.as_array();
+                    for (auto& item : items_array.values()) {
+                        ASSERT(item.is_object());
+                        JsonSchemaNode* child_node = get_typed_node(item);
+                        if (child_node)
+                            static_cast<ArrayNode*>(node)->append_item(move(child_node));
+                    }
+                }
+            }
+        } else if (type_str == "string") {
             node = new StringNode(id.as_string_or(""));
+        } else if (type_str == "integer") {
+            node = new NumberNode(id.as_string_or(""));
         } else {
-            add_parser_error("type not supported!");
+            if (json_object.is_empty()) {
+                node = new BooleanNode("", true);
+            } else {
+                StringBuilder b;
+                b.appendf("type not supported: %s, JSON is: %s!", type_str.characters(), json_value.to_string().characters());
+                add_parser_error(b.build());
+            }
         }
-
-    } else if (type.is_array()) {
-        add_parser_error("multiple types for element not supported.");
     }
 
     return node;
 }
-
 }

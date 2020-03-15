@@ -30,6 +30,7 @@
 #include <LibCore/File.h>
 #include <LibJsonValidator/JsonSchemaNode.h>
 #include <LibJsonValidator/Parser.h>
+#include <LibJsonValidator/Validator.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -42,13 +43,19 @@ int main(int argc, char** argv)
     }
 #endif
 
-    if (argc != 2) {
-        fprintf(stderr, "usage: jsonvalidator <file>\n");
+    if (argc != 3) {
+        fprintf(stderr, "usage: jsonvalidator <schema-file> <json-file>\n");
         return 0;
     }
-    auto file = Core::File::construct(argv[1]);
-    if (!file->open(Core::IODevice::ReadOnly)) {
-        fprintf(stderr, "Couldn't open %s for reading: %s\n", argv[1], file->error_string());
+    auto schema_file = Core::File::construct(argv[1]);
+    if (!schema_file->open(Core::IODevice::ReadOnly)) {
+        fprintf(stderr, "Couldn't open %s for reading: %s\n", argv[1], schema_file->error_string());
+        return 1;
+    }
+
+    auto json_file = Core::File::construct(argv[2]);
+    if (!json_file->open(Core::IODevice::ReadOnly)) {
+        fprintf(stderr, "Couldn't open %s for reading: %s\n", argv[2], json_file->error_string());
         return 1;
     }
 
@@ -59,18 +66,43 @@ int main(int argc, char** argv)
     }
 #endif
 
-    auto json = JsonValue::from_string(file->read_all());
+    auto schema_json = JsonValue::from_string(schema_file->read_all());
 
     JsonValidator::Parser parser;
-    JsonValue result = parser.run(json);
-    if (result.is_bool() && result.as_bool()) {
+    JsonValue parser_result = parser.run(schema_json);
+    if (parser_result.is_bool() && parser_result.as_bool()) {
         fprintf(stdout, "Parsing sucessfull.\n\n");
         parser.root_node()->dump(0);
 
-    } else if (result.is_object()) {
-        fprintf(stderr, "Parser returned error (%i): %s\n",
-            result.as_object().get("code").as_i32(),
-            result.as_object().get("message").as_string_or("").characters());
+    } else if (parser_result.is_object()) {
+        fprintf(stderr, "Parser returned error: %s\n",
+            parser_result.as_object().get("message").as_string_or("").characters());
+    }
+
+    auto json_file_content = JsonValue::from_string(json_file->read_all());
+
+    JsonValidator::Validator validator;
+    JsonValue validator_result = validator.run(*parser.root_node(), json_file_content);
+
+    if (validator_result.is_bool() && validator_result.as_bool()) {
+        fprintf(stdout, "Validation sucessfull.\n\n");
+
+    } else {
+        if (validator_result.is_object())
+            fprintf(stderr, "Validator returned error: %s\n",
+                validator_result.as_object().get("message").as_string_or("").characters());
+        else if (validator_result.is_array()) {
+            fprintf(stderr, "Validator returned errors:\n");
+            for (auto& value : validator_result.as_array().values())
+                if (value.is_string())
+                    fprintf(stderr, "%s\n", value.as_string().characters());
+                else
+                    fprintf(stderr, "Value is not string, but %s\n", value.to_string().characters());
+        } else if (validator_result.is_string())
+            fprintf(stderr, "Validator returned error: %s\n",
+                validator_result.as_string().characters());
+
+        return 1;
     }
 
     return 0;

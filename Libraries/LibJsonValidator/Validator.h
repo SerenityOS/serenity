@@ -28,6 +28,7 @@
 
 #include <AK/JsonValue.h>
 #include <LibJsonValidator/Forward.h>
+#include <stdio.h>
 
 namespace JsonValidator {
 
@@ -36,8 +37,8 @@ public:
     Validator();
     ~Validator();
 
-    JsonValue run(const JsonSchemaNode&, const int fd);
-    JsonValue run(const JsonSchemaNode&, const String& content);
+    JsonValue run(const JsonSchemaNode&, const FILE* fd);
+    JsonValue run(const JsonSchemaNode&, const String& file_name);
     JsonValue run(const JsonSchemaNode&, const JsonValue& json);
 };
 }
