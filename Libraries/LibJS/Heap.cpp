@@ -62,14 +62,14 @@ Cell* Heap::allocate_cell(size_t size)
 void Heap::collect_garbage()
 {
     HashTable<Cell*> roots;
-    collect_roots(roots);
+    gather_roots(roots);
     mark_live_cells(roots);
     sweep_dead_cells();
 }
 
-void Heap::collect_roots(HashTable<Cell*>& roots)
+void Heap::gather_roots(HashTable<Cell*>& roots)
 {
-    m_interpreter.collect_roots({}, roots);
+    m_interpreter.gather_roots({}, roots);
 
 #ifdef HEAP_DEBUG
     dbg() << "collect_roots:";
