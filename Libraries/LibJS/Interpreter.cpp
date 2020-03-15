@@ -136,7 +136,7 @@ Value Interpreter::get_variable(const String& name)
     return global_object().get(name);
 }
 
-void Interpreter::collect_roots(Badge<Heap>, HashTable<Cell*>& roots)
+void Interpreter::gather_roots(Badge<Heap>, HashTable<Cell*>& roots)
 {
     roots.set(m_global_object);
     roots.set(m_string_prototype);
