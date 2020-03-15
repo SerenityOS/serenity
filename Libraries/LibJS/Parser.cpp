@@ -348,6 +348,12 @@ NonnullOwnPtr<Expression> Parser::parse_secondary_expression(NonnullOwnPtr<Expre
     case TokenType::MinusMinus:
         consume();
         return make<UpdateExpression>(UpdateOp::Decrement, move(lhs));
+    case TokenType::DoubleAmpersand:
+        consume();
+        return make<LogicalExpression>(LogicalOp::And, move(lhs), parse_expression(min_precedence, associativity));
+    case TokenType::DoublePipe:
+        consume();
+        return make<LogicalExpression>(LogicalOp::Or, move(lhs), parse_expression(min_precedence, associativity));
     default:
         m_has_errors = true;
         expected("secondary expression (missing switch case)");
