@@ -349,6 +349,18 @@ void BooleanLiteral::dump(int indent) const
     printf("BooleanLiteral %s\n", m_value ? "true" : "false");
 }
 
+void UndefinedLiteral::dump(int indent) const
+{
+    print_indent(indent);
+    printf("undefined\n");
+}
+
+void NullLiteral::dump(int indent) const
+{
+    print_indent(indent);
+    printf("null\n");
+}
+
 void FunctionDeclaration::dump(int indent) const
 {
     bool first_time = true;
@@ -615,6 +627,16 @@ Value NumericLiteral::execute(Interpreter&) const
 Value BooleanLiteral::execute(Interpreter&) const
 {
     return Value(m_value);
+}
+
+Value UndefinedLiteral::execute(Interpreter&) const
+{
+    return js_undefined();
+}
+
+Value NullLiteral::execute(Interpreter&) const
+{
+    return js_null();
 }
 
 }

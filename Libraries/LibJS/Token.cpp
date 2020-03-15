@@ -183,6 +183,8 @@ const char* Token::name(TokenType type)
         return "Try";
     case TokenType::Typeof:
         return "Typeof";
+    case TokenType::UndefinedLiteral:
+        return "UndefinedLiteral";
     case TokenType::UnsignedShiftRight:
         return "UnsignedShiftRight";
     case TokenType::UnsignedShiftRightEquals:

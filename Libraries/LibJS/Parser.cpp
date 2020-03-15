@@ -223,6 +223,12 @@ NonnullOwnPtr<Expression> Parser::parse_primary_expression()
         return make<BooleanLiteral>(consume().bool_value());
     case TokenType::StringLiteral:
         return make<StringLiteral>(consume().string_value());
+    case TokenType::NullLiteral:
+        consume();
+        return make<NullLiteral>();
+    case TokenType::UndefinedLiteral:
+        consume();
+        return make<UndefinedLiteral>();
     case TokenType::CurlyOpen:
         return parse_object_expression();
     default:
@@ -498,6 +504,7 @@ bool Parser::match_expression() const
     return type == TokenType::BoolLiteral
         || type == TokenType::NumericLiteral
         || type == TokenType::StringLiteral
+        || type == TokenType::UndefinedLiteral
         || type == TokenType::NullLiteral
         || type == TokenType::Identifier
         || type == TokenType::New
