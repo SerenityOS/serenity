@@ -144,6 +144,11 @@ void Interpreter::collect_roots(Badge<Heap>, HashTable<Cell*>& roots)
                 roots.set(it.value.value.as_cell());
         }
     }
+
+    for (auto& this_value : m_this_stack) {
+        if (this_value.is_cell())
+            roots.set(this_value.as_cell());
+    }
 }
 
 }
