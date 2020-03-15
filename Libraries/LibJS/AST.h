@@ -248,6 +248,8 @@ enum class BinaryOp {
     Slash,
     TypedEquals,
     TypedInequals,
+    AbstractEquals,
+    AbstractInequals,
     GreaterThan,
     GreaterThanEquals,
     LessThan,

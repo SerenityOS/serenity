@@ -209,7 +209,7 @@ Value typed_eq(Value lhs, Value rhs)
     case Value::Type::Number:
         return Value(lhs.as_double() == rhs.as_double());
     case Value::Type::String:
-        return Value(lhs.as_string() == rhs.as_string());
+        return Value(lhs.as_string()->string() == rhs.as_string()->string());
     case Value::Type::Boolean:
         return Value(lhs.as_bool() == rhs.as_bool());
     case Value::Type::Object:
@@ -217,6 +217,35 @@ Value typed_eq(Value lhs, Value rhs)
     }
 
     ASSERT_NOT_REACHED();
+}
+
+Value eq(Value lhs, Value rhs)
+{
+    if (lhs.type() == rhs.type())
+        return typed_eq(lhs, rhs);
+
+    if ((lhs.is_undefined() || lhs.is_null()) && (rhs.is_undefined() || rhs.is_null()))
+        return Value(true);
+
+    if (lhs.is_object() && rhs.is_boolean())
+        return eq(lhs.as_object()->to_primitive(), rhs.to_number());
+
+    if (lhs.is_boolean() && rhs.is_object())
+        return eq(lhs.to_number(), rhs.as_object()->to_primitive());
+
+    if (lhs.is_object())
+        return eq(lhs.as_object()->to_primitive(), rhs);
+
+    if (rhs.is_object())
+        return eq(lhs, rhs.as_object()->to_primitive());
+
+    if (lhs.is_number() || rhs.is_number())
+        return Value(lhs.to_number().as_double() == rhs.to_number().as_double());
+
+    if ((lhs.is_string() && rhs.is_boolean()) || (lhs.is_string() && rhs.is_boolean()))
+        return Value(lhs.to_number().as_double() == rhs.to_number().as_double());
+
+    return Value(false);
 }
 
 const LogStream& operator<<(const LogStream& stream, const Value& value)
