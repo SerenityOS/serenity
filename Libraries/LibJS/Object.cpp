@@ -46,7 +46,6 @@ Value Object::get(String property_name) const
 {
     const Object* object = this;
     while (object) {
-        dbg() << "Object::get() trying '" << property_name << "' in " << object->class_name();
         auto value = object->m_properties.get(property_name);
         if (value.has_value())
             return value.value();
