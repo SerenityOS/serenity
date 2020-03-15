@@ -187,6 +187,15 @@ int main(int argc, char** argv)
         }
     });
 
+    auto open_terminal_action = GUI::Action::create("Open Terminal here...", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"), [&](const GUI::Action&) {
+        if (!fork()) {
+            int rc = execl("/bin/Terminal", "Terminal", "-d", directory_view.path().characters(), nullptr);
+            if (rc < 0)
+                perror("execl");
+            exit(1);
+        }
+    });
+
     RefPtr<GUI::Action> view_as_table_action;
     RefPtr<GUI::Action> view_as_icons_action;
     RefPtr<GUI::Action> view_as_columns_action;
@@ -553,6 +562,7 @@ int main(int argc, char** argv)
     file_context_menu->add_action(properties_action);
 
     directory_view_context_menu->add_action(mkdir_action);
+    directory_view_context_menu->add_action(open_terminal_action);
 
     tree_view_directory_context_menu->add_action(copy_action);
     tree_view_directory_context_menu->add_action(paste_action);
