@@ -334,6 +334,12 @@ NonnullOwnPtr<Expression> Parser::parse_secondary_expression(NonnullOwnPtr<Expre
     case TokenType::ExclamationMarkEqualsEquals:
         consume();
         return make<BinaryExpression>(BinaryOp::TypedInequals, move(lhs), parse_expression(min_precedence, associativity));
+    case TokenType::EqualsEquals:
+        consume();
+        return make<BinaryExpression>(BinaryOp::AbstractEquals, move(lhs), parse_expression(min_precedence, associativity));
+    case TokenType::ExclamationMarkEquals:
+        consume();
+        return make<BinaryExpression>(BinaryOp::AbstractInequals, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::ParenOpen:
         return parse_call_expression(move(lhs));
     case TokenType::Equals:
@@ -543,6 +549,8 @@ bool Parser::match_secondary_expression() const
         || type == TokenType::Equals
         || type == TokenType::EqualsEqualsEquals
         || type == TokenType::ExclamationMarkEqualsEquals
+        || type == TokenType::EqualsEquals
+        || type == TokenType::ExclamationMarkEquals
         || type == TokenType::GreaterThan
         || type == TokenType::GreaterThanEquals
         || type == TokenType::LessThan
