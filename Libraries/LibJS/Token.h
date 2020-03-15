@@ -107,6 +107,7 @@ enum class TokenType {
     Tilde,
     Try,
     Typeof,
+    UndefinedLiteral,
     UnsignedShiftRight,
     UnsignedShiftRightEquals,
     UnterminatedStringLiteral,
