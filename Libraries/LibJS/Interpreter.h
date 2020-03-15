@@ -71,7 +71,7 @@ public:
     void do_return();
 
     Value get_variable(const String& name);
-    void set_variable(String name, Value);
+    void set_variable(String name, Value, bool first_assignment = false);
     void declare_variable(String name, DeclarationType);
 
     void gather_roots(Badge<Heap>, HashTable<Cell*>&);
