@@ -155,7 +155,11 @@ Value BinaryExpression::execute(Interpreter& interpreter) const
     case BinaryOp::TypedEquals:
         return typed_eq(lhs_result, rhs_result);
     case BinaryOp::TypedInequals:
-        return Value(!typed_eq(lhs_result, rhs_result).to_boolean());
+        return Value(!typed_eq(lhs_result, rhs_result).as_bool());
+    case BinaryOp::AbstractEquals:
+        return eq(lhs_result, rhs_result);
+    case BinaryOp::AbstractInequals:
+        return Value(!eq(lhs_result, rhs_result).as_bool());
     case BinaryOp::GreaterThan:
         return greater_than(lhs_result, rhs_result);
     case BinaryOp::GreaterThanEquals:
@@ -246,6 +250,12 @@ void BinaryExpression::dump(int indent) const
         break;
     case BinaryOp::TypedInequals:
         op_string = "!==";
+        break;
+    case BinaryOp::AbstractEquals:
+        op_string = "==";
+        break;
+    case BinaryOp::AbstractInequals:
+        op_string = "!=";
         break;
     case BinaryOp::GreaterThan:
         op_string = ">";
