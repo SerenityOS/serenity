@@ -24,26 +24,34 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <LibJS/Object.h>
+#include <AK/Function.h>
+#include <LibJS/Heap.h>
+#include <LibJS/Interpreter.h>
+#include <LibJS/PrimitiveString.h>
+#include <LibJS/StringObject.h>
+#include <LibJS/StringPrototype.h>
+#include <LibJS/Value.h>
 
 namespace JS {
 
-class StringObject final : public Object {
-public:
-    explicit StringObject(PrimitiveString*);
-    virtual ~StringObject() override;
+StringPrototype::StringPrototype()
+{
+    put_native_function("charAt", [](Interpreter& interpreter, Vector<Value> arguments) -> Value {
+        i32 index = 0;
+        if (!arguments.is_empty())
+            index = arguments[0].to_i32();
+        Value this_value = interpreter.this_value();
+        ASSERT(this_value.is_object());
+        ASSERT(this_value.as_object()->is_string_object());
+        auto underlying_string = static_cast<const StringObject*>(this_value.as_object())->primitive_string()->string();
+        if (index < 0 || index >= static_cast<i32>(underlying_string.length()))
+            return js_string(interpreter.heap(), String::empty());
+        return js_string(interpreter.heap(), underlying_string.substring(index, 1));
+    });
+}
 
-    virtual void visit_children(Visitor&) override;
-
-    const PrimitiveString* primitive_string() const { return m_string; }
-
-private:
-    virtual const char* class_name() const override { return "StringObject"; }
-    virtual bool is_string_object() const override { return true; }
-
-    PrimitiveString* m_string { nullptr };
-};
+StringPrototype::~StringPrototype()
+{
+}
 
 }

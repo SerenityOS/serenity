@@ -13,6 +13,7 @@ OBJS = \
     PrimitiveString.o \
     ScriptFunction.o \
     StringObject.o \
+    StringPrototype.o \
     Token.o \
     Value.o
 

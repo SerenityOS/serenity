@@ -30,20 +30,13 @@
 
 namespace JS {
 
-class StringObject final : public Object {
+class StringPrototype final : public Object {
 public:
-    explicit StringObject(PrimitiveString*);
-    virtual ~StringObject() override;
-
-    virtual void visit_children(Visitor&) override;
-
-    const PrimitiveString* primitive_string() const { return m_string; }
+    StringPrototype();
+    virtual ~StringPrototype() override;
 
 private:
-    virtual const char* class_name() const override { return "StringObject"; }
-    virtual bool is_string_object() const override { return true; }
-
-    PrimitiveString* m_string { nullptr };
+    virtual const char* class_name() const override { return "StringPrototype"; }
 };
 
 }

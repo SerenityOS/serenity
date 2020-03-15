@@ -24,8 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibJS/Heap.h>
 #include <LibJS/PrimitiveString.h>
 #include <LibJS/StringObject.h>
+#include <LibJS/StringPrototype.h>
 #include <LibJS/Value.h>
 
 namespace JS {
@@ -33,6 +35,7 @@ namespace JS {
 StringObject::StringObject(PrimitiveString* string)
     : m_string(string)
 {
+    set_prototype(heap().allocate<StringPrototype>());
     put("length", Value(static_cast<i32>(m_string->string().length())));
 }
 
