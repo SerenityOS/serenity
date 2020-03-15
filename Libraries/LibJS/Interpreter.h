@@ -88,6 +88,8 @@ public:
         return m_this_stack.last();
     }
 
+    Object* string_prototype() { return m_string_prototype; }
+
 private:
     Heap m_heap;
 
@@ -95,6 +97,7 @@ private:
     Vector<Value> m_this_stack;
 
     Object* m_global_object { nullptr };
+    Object* m_string_prototype { nullptr };
 };
 
 }

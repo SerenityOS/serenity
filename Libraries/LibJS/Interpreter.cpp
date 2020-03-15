@@ -30,6 +30,7 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/NativeFunction.h>
 #include <LibJS/Object.h>
+#include <LibJS/StringPrototype.h>
 #include <LibJS/Value.h>
 
 namespace JS {
@@ -38,6 +39,7 @@ Interpreter::Interpreter()
     : m_heap(*this)
 {
     m_global_object = heap().allocate<GlobalObject>();
+    m_string_prototype = heap().allocate<StringPrototype>();
 }
 
 Interpreter::~Interpreter()
@@ -137,6 +139,7 @@ Value Interpreter::get_variable(const String& name)
 void Interpreter::collect_roots(Badge<Heap>, HashTable<Cell*>& roots)
 {
     roots.set(m_global_object);
+    roots.set(m_string_prototype);
 
     for (auto& scope : m_scope_stack) {
         for (auto& it : scope.variables) {
