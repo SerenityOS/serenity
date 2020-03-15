@@ -76,8 +76,8 @@ void ArrayNode::dump(int indent, String = "") const
     JsonSchemaNode::dump(indent, m_unique_items ? " with unique_items" : "");
 
     if (m_items.size())
-        for (auto* item : m_items)
-            item->dump(indent + 1);
+        for (auto& item : m_items)
+            item.dump(indent + 1);
 }
 
 void StringNode::dump(int indent, String = "") const
@@ -282,7 +282,6 @@ JsonValue ArrayNode::validate(const JsonValue& json) const
 
     // validate each json array element against the items spec
     HashMap<u32, bool> hashes;
-    JsonSchemaNode* item { nullptr };
     for (size_t i = 0; i < values.size(); ++i) {
         auto& value = values[i];
 
@@ -297,16 +296,14 @@ JsonValue ArrayNode::validate(const JsonValue& json) const
 
         if (m_items_is_array) {
             if (m_items.size() > i) {
-                auto& item = m_items.at(i);
-                res.append(item->validate(value));
+                res.append(m_items.at(i).validate(value));
             } else {
                 if (m_additional_items)
                     res.append(m_additional_items->validate(value));
             }
         } else {
             if (m_items.size()) {
-                item = m_items.at(0);
-                res.append(item->validate(value));
+                res.append(m_items.at(0).validate(value));
             }
         }
     }

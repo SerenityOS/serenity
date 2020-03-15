@@ -30,6 +30,8 @@
 #include <AK/HashMap.h>
 #include <AK/JsonValue.h>
 #include <AK/NonnullOwnPtr.h>
+#include <AK/NonnullOwnPtrVector.h>
+#include <AK/OwnPtr.h>
 #include <AK/String.h>
 
 #ifndef __serenity__
@@ -81,7 +83,7 @@ public:
         m_enum_items = enum_items;
     }
 
-    void set_identified_by_pattern(bool identified_by_pattern, const String& pattern)
+    void set_identified_by_pattern(bool identified_by_pattern, const String pattern)
     {
         m_identified_by_pattern = identified_by_pattern;
         m_pattern = pattern;
@@ -92,9 +94,9 @@ public:
 #endif
     }
 
-    bool identified_by_pattern() { return m_identified_by_pattern; }
+    bool identified_by_pattern() const { return m_identified_by_pattern; }
 
-    bool match_against_pattern(const String& value)
+    bool match_against_pattern(const String value) const
     {
 #ifdef __serenity__
         UNUSED_PARAM(value);
@@ -117,11 +119,11 @@ public:
         return false;
     }
 
-    bool required() { return m_required; }
-    InstanceType type() { return m_type; }
-    const String id() { return m_id; }
-    JsonValue default_value() { return m_default_value; }
-    JsonValue enum_items() { return m_enum_items; }
+    bool required() const { return m_required; }
+    InstanceType type() const { return m_type; }
+    const String id() const { return m_id; }
+    JsonValue default_value() const { return m_default_value; }
+    JsonValue enum_items() const { return m_enum_items; }
 
 protected:
     JsonSchemaNode() {}
@@ -205,18 +207,16 @@ public:
     ObjectNode()
         : JsonSchemaNode("", InstanceType::Object)
     {
-        m_properties = HashMap<String, JsonSchemaNode*>();
     }
 
     ObjectNode(String id)
         : JsonSchemaNode(id, InstanceType::Object)
     {
-        m_properties = HashMap<String, JsonSchemaNode*>();
     }
 
-    void append_property(const String& name, JsonSchemaNode* node)
+    void append_property(const String name, NonnullOwnPtr<JsonSchemaNode>&& node)
     {
-        m_properties.set(name, node);
+        m_properties.set(name, move(node));
     }
 
     virtual void dump(int indent, String additional) const override;
@@ -232,13 +232,14 @@ public:
         m_additional_properties = additional_properties;
     }
 
-    const HashMap<String, JsonSchemaNode*>& properties() const { return m_properties; }
+    HashMap<String, NonnullOwnPtr<JsonSchemaNode>>& properties() { return m_properties; }
+    const HashMap<String, NonnullOwnPtr<JsonSchemaNode>>& properties() const { return m_properties; }
     const Vector<String>& required() const { return m_required; }
 
 private:
     virtual const char* class_name() const override { return "ObjectNode"; }
 
-    HashMap<String, JsonSchemaNode*> m_properties;
+    HashMap<String, NonnullOwnPtr<JsonSchemaNode>> m_properties;
 
     Optional<u32> m_max_properties;
     u32 m_min_properties = 0;
@@ -260,17 +261,13 @@ public:
 
     ~ArrayNode()
     {
-        if (m_items.size())
-            for (auto* ptr : m_items)
-                if (ptr)
-                    delete ptr;
     }
 
     virtual void dump(int indent, String additional) const override;
     virtual JsonValue validate(const JsonValue&) const override;
 
-    const Vector<JsonSchemaNode*>& items() { return m_items; }
-    void append_item(JsonSchemaNode*&& item) { m_items.append(item); }
+    const NonnullOwnPtrVector<JsonSchemaNode>& items() { return m_items; }
+    void append_item(NonnullOwnPtr<JsonSchemaNode>&& item) { m_items.append(move(item)); }
 
     bool unique_items() const { return m_unique_items; }
     void set_unique_items(bool unique_items) { m_unique_items = unique_items; }
@@ -278,15 +275,15 @@ public:
     bool items_is_array() const { return m_items_is_array; }
     void set_items_is_array(bool items_is_array) { m_items_is_array = items_is_array; }
 
-    const JsonSchemaNode* additional_items() const { return m_additional_items; }
-    void set_additional_items(JsonSchemaNode* additional_items) { m_additional_items = additional_items; }
+    const OwnPtr<JsonSchemaNode>& additional_items() const { return m_additional_items; }
+    void set_additional_items(OwnPtr<JsonSchemaNode>&& additional_items) { m_additional_items = move(additional_items); }
 
 private:
     virtual const char* class_name() const override { return "ArrayNode"; }
 
-    Vector<JsonSchemaNode*> m_items;
+    NonnullOwnPtrVector<JsonSchemaNode> m_items;
+    OwnPtr<JsonSchemaNode> m_additional_items;
     bool m_items_is_array { false };
-    JsonSchemaNode* m_additional_items;
     Optional<u32> m_max_items;
     u32 m_min_items = 0;
     bool m_unique_items { false };

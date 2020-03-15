@@ -38,7 +38,7 @@ Validator::~Validator()
 {
 }
 
-JsonValue Validator::run(const JsonSchemaNode& node, const String& filename)
+JsonValue Validator::run(const JsonSchemaNode& node, const String filename)
 {
     auto schema_file = Core::File::construct(filename);
     if (!schema_file->open(Core::IODevice::ReadOnly)) {

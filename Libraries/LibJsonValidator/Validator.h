@@ -38,7 +38,7 @@ public:
     ~Validator();
 
     JsonValue run(const JsonSchemaNode&, const FILE* fd);
-    JsonValue run(const JsonSchemaNode&, const String& file_name);
+    JsonValue run(const JsonSchemaNode&, const String file_name);
     JsonValue run(const JsonSchemaNode&, const JsonValue& json);
 };
 }

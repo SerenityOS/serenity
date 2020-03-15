@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/JsonValue.h>
+#include <AK/OwnPtr.h>
 #include <LibJsonValidator/Forward.h>
 #include <stdio.h>
 
@@ -38,15 +39,14 @@ public:
     ~Parser();
 
     JsonValue run(const FILE* fd);
-    JsonValue run(const String& filename);
+    JsonValue run(const String filename);
     JsonValue run(const JsonValue& json);
 
-    const JsonSchemaNode* root_node() const { return m_root_node; }
+    OwnPtr<JsonSchemaNode>&& root_node() { return move(m_root_node); }
 
 private:
-    JsonSchemaNode* m_root_node { nullptr };
-
-    JsonSchemaNode* get_typed_node(const JsonValue&);
+    OwnPtr<JsonSchemaNode> m_root_node;
+    OwnPtr<JsonSchemaNode> get_typed_node(const JsonValue&);
 
     void add_parser_error(String);
     Vector<String> m_parser_errors;
