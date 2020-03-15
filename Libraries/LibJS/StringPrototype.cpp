@@ -25,6 +25,7 @@
  */
 
 #include <AK/Function.h>
+#include <AK/StringBuilder.h>
 #include <LibJS/Heap.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/PrimitiveString.h>
@@ -34,13 +35,11 @@
 
 namespace JS {
 
-
-
 StringPrototype::StringPrototype()
 {
     put_native_property(
         "length", [](Object* this_object) {
-        ASSERT(this_object);
+            ASSERT(this_object);
             ASSERT(this_object->is_string_object());
             return Value((i32) static_cast<const StringObject*>(this_object)->primitive_string()->string().length());
         },
@@ -55,6 +54,22 @@ StringPrototype::StringPrototype()
         if (index < 0 || index >= static_cast<i32>(underlying_string.length()))
             return js_string(this_object->heap(), String::empty());
         return js_string(this_object->heap(), underlying_string.substring(index, 1));
+    });
+    put_native_function("repeat", [](Object* this_object, Vector<Value> arguments) -> Value {
+        ASSERT(this_object->is_string_object());
+        if (arguments.is_empty())
+            return js_string(this_object->heap(), String::empty());
+        i32 count = 0;
+        count = arguments[0].to_i32();
+        if (count < 0) {
+            // FIXME: throw RangeError
+            return js_undefined();
+        }
+        auto* string_object = static_cast<StringObject*>(this_object);
+        StringBuilder builder;
+        for (i32 i = 0; i < count; ++i)
+            builder.append(string_object->primitive_string()->string());
+        return js_string(this_object->heap(), builder.to_string());
     });
 }
 
