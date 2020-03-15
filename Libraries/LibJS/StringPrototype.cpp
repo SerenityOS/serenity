@@ -34,25 +34,27 @@
 
 namespace JS {
 
+
+
 StringPrototype::StringPrototype()
 {
     put_native_property(
-        "length", [](Object* object) {
-            ASSERT(object->is_string_object());
-            return Value((i32) static_cast<const StringObject*>(object)->primitive_string()->string().length());
+        "length", [](Object* this_object) {
+        ASSERT(this_object);
+            ASSERT(this_object->is_string_object());
+            return Value((i32) static_cast<const StringObject*>(this_object)->primitive_string()->string().length());
         },
         nullptr);
-    put_native_function("charAt", [](Interpreter& interpreter, Vector<Value> arguments) -> Value {
+    put_native_function("charAt", [](Object* this_object, Vector<Value> arguments) -> Value {
+        ASSERT(this_object);
         i32 index = 0;
         if (!arguments.is_empty())
             index = arguments[0].to_i32();
-        Value this_value = interpreter.this_value();
-        ASSERT(this_value.is_object());
-        ASSERT(this_value.as_object()->is_string_object());
-        auto underlying_string = static_cast<const StringObject*>(this_value.as_object())->primitive_string()->string();
+        ASSERT(this_object->is_string_object());
+        auto underlying_string = static_cast<const StringObject*>(this_object)->primitive_string()->string();
         if (index < 0 || index >= static_cast<i32>(underlying_string.length()))
-            return js_string(interpreter.heap(), String::empty());
-        return js_string(interpreter.heap(), underlying_string.substring(index, 1));
+            return js_string(this_object->heap(), String::empty());
+        return js_string(this_object->heap(), underlying_string.substring(index, 1));
     });
 }
 

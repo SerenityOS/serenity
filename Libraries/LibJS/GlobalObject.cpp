@@ -11,14 +11,14 @@ namespace JS {
 
 GlobalObject::GlobalObject()
 {
-    put_native_function("print", [](Interpreter&, Vector<Value> arguments) -> Value {
+    put_native_function("print", [](Object*, Vector<Value> arguments) -> Value {
         for (auto& argument : arguments)
             printf("%s ", argument.to_string().characters());
         return js_undefined();
     });
-    put_native_function("gc", [](Interpreter& interpreter, Vector<Value>) -> Value {
+    put_native_function("gc", [](Object* this_object, Vector<Value>) -> Value {
         dbg() << "Forced garbage collection requested!";
-        interpreter.heap().collect_garbage();
+        this_object->heap().collect_garbage();
         return js_undefined();
     });
 }

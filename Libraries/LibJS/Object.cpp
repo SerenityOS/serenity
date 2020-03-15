@@ -63,7 +63,7 @@ void Object::put(String property_name, Value value)
     m_properties.set(property_name, move(value));
 }
 
-void Object::put_native_function(String property_name, AK::Function<Value(Interpreter&, Vector<Value>)> native_function)
+void Object::put_native_function(String property_name, AK::Function<Value(Object*, Vector<Value>)> native_function)
 {
     put(property_name, heap().allocate<NativeFunction>(move(native_function)));
 }
