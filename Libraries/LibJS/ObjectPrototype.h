@@ -26,39 +26,17 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
-#include <LibJS/Cell.h>
-#include <LibJS/Forward.h>
-#include <LibJS/Cell.h>
+#include <LibJS/Object.h>
 
 namespace JS {
 
-class Object : public Cell {
+class ObjectPrototype final : public Object {
 public:
-    Object();
-    virtual ~Object();
-
-    Value get(String property_name) const;
-    void put(String property_name, Value);
-
-    void put_native_function(String property_name, AK::Function<Value(Interpreter&, Vector<Value>)>);
-
-    virtual bool is_function() const { return false; }
-    virtual bool is_native_function() const { return false; }
-    virtual bool is_string_object() const { return false; }
-
-    virtual const char* class_name() const override { return "Object"; }
-    virtual void visit_children(Cell::Visitor&) override;
-
-    Object* prototype() { return m_prototype; }
-    const Object* prototype() const { return m_prototype; }
-    void set_prototype(Object* prototype) { m_prototype = prototype; }
-
-    bool has_own_property(const String& property_name) const;
+    ObjectPrototype();
+    virtual ~ObjectPrototype() override;
 
 private:
-    HashMap<String, Value> m_properties;
-    Object* m_prototype { nullptr };
+    virtual const char* class_name() const override { return "ObjectPrototype"; }
 };
 
 }

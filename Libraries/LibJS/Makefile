@@ -9,6 +9,7 @@ OBJS = \
     Lexer.o \
     NativeFunction.o \
     Object.o \
+    ObjectPrototype.o \
     Parser.o \
     PrimitiveString.o \
     ScriptFunction.o \

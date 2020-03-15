@@ -26,6 +26,7 @@
 
 #include <AK/String.h>
 #include <LibJS/Heap.h>
+#include <LibJS/Interpreter.h>
 #include <LibJS/NativeFunction.h>
 #include <LibJS/Object.h>
 #include <LibJS/Value.h>
@@ -34,6 +35,7 @@ namespace JS {
 
 Object::Object()
 {
+    set_prototype(interpreter().object_prototype());
 }
 
 Object::~Object()
@@ -44,6 +46,7 @@ Value Object::get(String property_name) const
 {
     const Object* object = this;
     while (object) {
+        dbg() << "Object::get() trying '" << property_name << "' in " << object->class_name();
         auto value = object->m_properties.get(property_name);
         if (value.has_value())
             return value.value();
@@ -69,6 +72,11 @@ void Object::visit_children(Cell::Visitor& visitor)
         visitor.visit(m_prototype);
     for (auto& it : m_properties)
         visitor.visit(it.value);
+}
+
+bool Object::has_own_property(const String& property_name) const
+{
+    return m_properties.get(property_name).has_value();
 }
 
 }

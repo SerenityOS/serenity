@@ -24,41 +24,31 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <AK/HashMap.h>
-#include <LibJS/Cell.h>
-#include <LibJS/Forward.h>
-#include <LibJS/Cell.h>
+#include <AK/Function.h>
+#include <AK/String.h>
+#include <LibJS/Heap.h>
+#include <LibJS/Interpreter.h>
+#include <LibJS/ObjectPrototype.h>
+#include <LibJS/Value.h>
 
 namespace JS {
 
-class Object : public Cell {
-public:
-    Object();
-    virtual ~Object();
+ObjectPrototype::ObjectPrototype()
+{
+    set_prototype(nullptr);
 
-    Value get(String property_name) const;
-    void put(String property_name, Value);
+    put_native_function("hasOwnProperty", [](Interpreter& interpreter, Vector<Value> arguments) -> Value {
+        dbg() << "hasOwnProperty";
+        if (arguments.is_empty())
+            return js_undefined();
+        Value this_value = interpreter.this_value();
+        ASSERT(this_value.is_object());
+        return Value(this_value.as_object()->has_own_property(arguments[0].to_string()));
+    });
+}
 
-    void put_native_function(String property_name, AK::Function<Value(Interpreter&, Vector<Value>)>);
-
-    virtual bool is_function() const { return false; }
-    virtual bool is_native_function() const { return false; }
-    virtual bool is_string_object() const { return false; }
-
-    virtual const char* class_name() const override { return "Object"; }
-    virtual void visit_children(Cell::Visitor&) override;
-
-    Object* prototype() { return m_prototype; }
-    const Object* prototype() const { return m_prototype; }
-    void set_prototype(Object* prototype) { m_prototype = prototype; }
-
-    bool has_own_property(const String& property_name) const;
-
-private:
-    HashMap<String, Value> m_properties;
-    Object* m_prototype { nullptr };
-};
+ObjectPrototype::~ObjectPrototype()
+{
+}
 
 }
