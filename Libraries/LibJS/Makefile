@@ -8,6 +8,7 @@ OBJS = \
     Interpreter.o \
     Lexer.o \
     NativeFunction.o \
+    NativeProperty.o \
     Object.o \
     ObjectPrototype.o \
     Parser.o \

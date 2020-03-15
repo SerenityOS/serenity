@@ -36,6 +36,12 @@ namespace JS {
 
 StringPrototype::StringPrototype()
 {
+    put_native_property(
+        "length", [](Object* object) {
+            ASSERT(object->is_string_object());
+            return Value((i32) static_cast<const StringObject*>(object)->primitive_string()->string().length());
+        },
+        nullptr);
     put_native_function("charAt", [](Interpreter& interpreter, Vector<Value> arguments) -> Value {
         i32 index = 0;
         if (!arguments.is_empty())
