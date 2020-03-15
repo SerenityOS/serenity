@@ -535,7 +535,7 @@ Value VariableDeclaration::execute(Interpreter& interpreter) const
     interpreter.declare_variable(name().string(), m_declaration_type);
     if (m_initializer) {
         auto initalizer_result = m_initializer->execute(interpreter);
-        interpreter.set_variable(name().string(), initalizer_result);
+        interpreter.set_variable(name().string(), initalizer_result, true);
     }
 
     return js_undefined();
