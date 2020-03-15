@@ -37,13 +37,11 @@ ObjectPrototype::ObjectPrototype()
 {
     set_prototype(nullptr);
 
-    put_native_function("hasOwnProperty", [](Interpreter& interpreter, Vector<Value> arguments) -> Value {
-        dbg() << "hasOwnProperty";
+    put_native_function("hasOwnProperty", [](Object* this_object, Vector<Value> arguments) -> Value {
+        ASSERT(this_object);
         if (arguments.is_empty())
             return js_undefined();
-        Value this_value = interpreter.this_value();
-        ASSERT(this_value.is_object());
-        return Value(this_value.as_object()->has_own_property(arguments[0].to_string()));
+        return Value(this_object->has_own_property(arguments[0].to_string()));
     });
 }
 
