@@ -56,7 +56,7 @@ public:
 
     Heap& heap() { return m_heap; }
 
-    static HeapBlock* from_cell(Cell* cell)
+    static HeapBlock* from_cell(const Cell* cell)
     {
         return reinterpret_cast<HeapBlock*>((FlatPtr)cell & ~(block_size - 1));
     }

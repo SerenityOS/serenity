@@ -44,14 +44,12 @@ String Value::to_string() const
     if (is_undefined())
         return "undefined";
 
-    if (is_number()) {
+    if (is_number())
         // FIXME: This needs improvement.
         return String::number((i32)as_double());
-    }
 
-    if (is_object()) {
-        return String::format("{%s}", as_object()->class_name());
-    }
+    if (is_object())
+        return as_object()->to_primitive(Object::PreferredType::String).to_string();
 
     if (is_string())
         return m_value.as_string->string();
@@ -89,113 +87,113 @@ Value Value::to_object(Heap& heap) const
     ASSERT_NOT_REACHED();
 }
 
-i32 Value::to_i32() const
+Value Value::to_number() const
 {
     switch (m_type) {
     case Type::Boolean:
-        return m_value.as_bool;
+        return Value(m_value.as_bool ? 1 : 0);
     case Type::Number:
-        return static_cast<i32>(m_value.as_double);
-    default:
+        return Value(m_value.as_double);
+    case Type::Null:
+        return Value(0);
+    case Type::String: {
+        bool ok;
+        //FIXME: Parse in a better way
+        auto parsed_int = as_string()->string().to_int(ok);
+        if (ok)
+            return Value(parsed_int);
+
+        //FIXME: Implement 'NaN'
         ASSERT_NOT_REACHED();
+
+        break;
     }
+    case Type::Undefined:
+        //FIXME: Implement 'NaN'
+        ASSERT_NOT_REACHED();
+    case Type::Object:
+        return m_value.as_object->to_primitive(Object::PreferredType::Number).to_number();
+    }
+
+    ASSERT_NOT_REACHED();
+}
+
+i32 Value::to_i32() const
+{
+    return static_cast<i32>(to_number().as_double());
 }
 
 Value greater_than(Value lhs, Value rhs)
 {
-    ASSERT(lhs.is_number());
-    ASSERT(rhs.is_number());
-    return Value(lhs.as_double() > rhs.as_double());
+    return Value(lhs.to_number().as_double() > rhs.to_number().as_double());
 }
 
 Value greater_than_equals(Value lhs, Value rhs)
 {
-    ASSERT(lhs.is_number());
-    ASSERT(rhs.is_number());
-    return Value(lhs.as_double() >= rhs.as_double());
+    return Value(lhs.to_number().as_double() >= rhs.to_number().as_double());
 }
 
 Value less_than(Value lhs, Value rhs)
 {
-    ASSERT(lhs.is_number());
-    ASSERT(rhs.is_number());
-    return Value(lhs.as_double() < rhs.as_double());
+    return Value(lhs.to_number().as_double() < rhs.to_number().as_double());
 }
 
 Value less_than_equals(Value lhs, Value rhs)
 {
-    ASSERT(lhs.is_number());
-    ASSERT(rhs.is_number());
-    return Value(lhs.as_double() <= rhs.as_double());
+    return Value(lhs.to_number().as_double() <= rhs.to_number().as_double());
 }
 
 Value bitwise_and(Value lhs, Value rhs)
 {
-    ASSERT(lhs.is_number());
-    ASSERT(rhs.is_number());
-    return Value((i32)lhs.as_double() & (i32)rhs.as_double());
+    return Value((i32)lhs.to_number().as_double() & (i32)rhs.to_number().as_double());
 }
 
 Value bitwise_or(Value lhs, Value rhs)
 {
-    ASSERT(lhs.is_number());
-    ASSERT(rhs.is_number());
-    return Value((i32)lhs.as_double() | (i32)rhs.as_double());
+    return Value((i32)lhs.to_number().as_double() | (i32)rhs.to_number().as_double());
 }
 
 Value bitwise_xor(Value lhs, Value rhs)
 {
-    ASSERT(lhs.is_number());
-    ASSERT(rhs.is_number());
-    return Value((i32)lhs.as_double() ^ (i32)rhs.as_double());
+    return Value((i32)lhs.to_number().as_double() ^ (i32)rhs.to_number().as_double());
 }
 
 Value bitwise_not(Value lhs)
 {
-    ASSERT(lhs.is_number());
-    return Value(~(i32)lhs.as_double());
+    return Value(~(i32)lhs.to_number().as_double());
 }
 
 Value left_shift(Value lhs, Value rhs)
 {
-    ASSERT(lhs.is_number());
-    ASSERT(rhs.is_number());
-    return Value((i32)lhs.as_double() << (i32)rhs.as_double());
+    return Value((i32)lhs.to_number().as_double() << (i32)rhs.to_number().as_double());
 }
 
 Value right_shift(Value lhs, Value rhs)
 {
-    ASSERT(lhs.is_number());
-    ASSERT(rhs.is_number());
-    return Value((i32)lhs.as_double() >> (i32)rhs.as_double());
+    return Value((i32)lhs.to_number().as_double() >> (i32)rhs.to_number().as_double());
 }
 
 Value add(Value lhs, Value rhs)
 {
-    ASSERT(lhs.is_number());
-    ASSERT(rhs.is_number());
-    return Value(lhs.as_double() + rhs.as_double());
+    if (lhs.is_string() || rhs.is_string())
+        return js_string((lhs.is_string() ? lhs : rhs).as_string()->heap(), String::format("%s%s", lhs.to_string().characters(), rhs.to_string().characters()));
+
+    return Value(lhs.to_number().as_double() + rhs.to_number().as_double());
 }
 
 Value sub(Value lhs, Value rhs)
 {
-    ASSERT(lhs.is_number());
-    ASSERT(rhs.is_number());
-    return Value(lhs.as_double() - rhs.as_double());
+    return Value(lhs.to_number().as_double() - rhs.to_number().as_double());
 }
 
 Value mul(Value lhs, Value rhs)
 {
-    ASSERT(lhs.is_number());
-    ASSERT(rhs.is_number());
-    return Value(lhs.as_double() * rhs.as_double());
+    return Value(lhs.to_number().as_double() * rhs.to_number().as_double());
 }
 
 Value div(Value lhs, Value rhs)
 {
-    ASSERT(lhs.is_number());
-    ASSERT(rhs.is_number());
-    return Value(lhs.as_double() / rhs.as_double());
+    return Value(lhs.to_number().as_double() / rhs.to_number().as_double());
 }
 
 Value typed_eq(Value lhs, Value rhs)

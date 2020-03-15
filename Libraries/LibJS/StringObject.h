@@ -36,8 +36,11 @@ public:
     virtual ~StringObject() override;
 
     virtual void visit_children(Visitor&) override;
-
     const PrimitiveString* primitive_string() const { return m_string; }
+    virtual Value value_of() const override
+    {
+        return Value(m_string);
+    }
 
 private:
     virtual const char* class_name() const override { return "StringObject"; }
