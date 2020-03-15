@@ -105,6 +105,18 @@ public:
     Color active_link() const { return color(ColorRole::ActiveLink); }
     Color visited_link() const { return color(ColorRole::VisitedLink); }
 
+    Color syntax_comment() const { return color(ColorRole::SyntaxComment); }
+    Color syntax_number() const { return color(ColorRole::SyntaxNumber); }
+    Color syntax_string() const { return color(ColorRole::SyntaxString); }
+    Color syntax_identifier() const { return color(ColorRole::SyntaxIdentifier); }
+    Color syntax_type() const { return color(ColorRole::SyntaxType); }
+    Color syntax_punctuation() const { return color(ColorRole::SyntaxPunctuation); }
+    Color syntax_operator() const { return color(ColorRole::SyntaxOperator); }
+    Color syntax_keyword() const { return color(ColorRole::SyntaxKeyword); }
+    Color syntax_control_keyword() const { return color(ColorRole::SyntaxControlKeyword); }
+    Color syntax_preprocessor_statement() const { return color(ColorRole::SyntaxPreprocessorStatement); }
+    Color syntax_preprocessor_value() const { return color(ColorRole::SyntaxPreprocessorValue); }
+
     Color color(ColorRole role) const { return m_impl->color(role); }
 
     void set_color(ColorRole, Color);

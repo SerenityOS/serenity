@@ -77,6 +77,17 @@ enum class ColorRole {
     RulerInactiveText,
     TextCursor,
     FocusOutline,
+    SyntaxComment,
+    SyntaxNumber,
+    SyntaxString,
+    SyntaxType,
+    SyntaxPunctuation,
+    SyntaxOperator,
+    SyntaxKeyword,
+    SyntaxControlKeyword,
+    SyntaxIdentifier,
+    SyntaxPreprocessorStatement,
+    SyntaxPreprocessorValue,
 
     __Count,
 

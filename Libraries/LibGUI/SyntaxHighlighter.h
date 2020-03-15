@@ -29,6 +29,7 @@
 #include <AK/Noncopyable.h>
 #include <AK/WeakPtr.h>
 #include <LibGUI/TextDocument.h>
+#include <LibGfx/Palette.h>
 
 namespace GUI {
 
@@ -51,7 +52,7 @@ public:
     virtual ~SyntaxHighlighter();
 
     virtual SyntaxLanguage language() const = 0;
-    virtual void rehighlight() = 0;
+    virtual void rehighlight(Gfx::Palette) = 0;
     virtual void highlight_matching_token_pair();
 
     virtual bool is_identifier(void*) const { return false; };
