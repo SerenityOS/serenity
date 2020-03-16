@@ -28,6 +28,7 @@
 #include <AK/QuickSort.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/UserInfo.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Desktop.h>
@@ -77,6 +78,11 @@ int main(int argc, char** argv)
 
     if (pledge("stdio shared_buffer accept rpath proc exec", nullptr) < 0) {
         perror("pledge");
+        return 1;
+    }
+
+    if (chdir(get_current_user_home_path().characters()) < 0) {
+        perror("chdir");
         return 1;
     }
 
@@ -150,7 +156,8 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
             dbg() << "Activated app with ID " << app_identifier;
             if (fork() == 0) {
                 const auto& bin = g_apps[app_identifier].executable;
-                execl(bin.characters(), bin.characters(), nullptr);
+                if (execl(bin.characters(), bin.characters(), nullptr) < 0)
+                    perror("execl");
                 ASSERT_NOT_REACHED();
             }
         }));
