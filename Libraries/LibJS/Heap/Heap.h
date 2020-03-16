@@ -55,6 +55,9 @@ public:
 
     Interpreter& interpreter() { return m_interpreter; }
 
+    bool should_collect_on_every_allocation() const { return m_should_collect_on_every_allocation; }
+    void set_should_collect_on_every_allocation(bool b) { m_should_collect_on_every_allocation = b; }
+
 private:
     Cell* allocate_cell(size_t);
 
@@ -64,6 +67,8 @@ private:
     void sweep_dead_cells();
 
     Cell* cell_from_possible_pointer(FlatPtr);
+
+    bool m_should_collect_on_every_allocation { false };
 
     Interpreter& m_interpreter;
     Vector<NonnullOwnPtr<HeapBlock>> m_blocks;

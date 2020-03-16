@@ -41,10 +41,12 @@
 int main(int argc, char** argv)
 {
     bool dump_ast = false;
+    bool gc_on_every_allocation = false;
     const char* script_path = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(dump_ast, "Dump the AST", "ast-dump", 'A');
+    args_parser.add_option(gc_on_every_allocation, "GC on every allocation", "gc-on-every-allocation", 'g');
     args_parser.add_positional_argument(script_path, "Path to script file", "script");
     args_parser.parse(argc, argv);
 
@@ -56,6 +58,7 @@ int main(int argc, char** argv)
     auto file_contents = file->read_all();
 
     JS::Interpreter interpreter;
+    interpreter.heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
 
     auto program = JS::Parser(JS::Lexer(file_contents)).parse_program();
 
