@@ -188,6 +188,13 @@ void Service::spawn()
     } else if (m_pid == 0) {
         // We are the child.
 
+        if (!m_working_directory.is_null()) {
+            if (chdir(m_working_directory.characters()) < 0) {
+                perror("chdir");
+                ASSERT_NOT_REACHED();
+            }
+        }
+
         struct sched_param p;
         p.sched_priority = m_priority;
         int rc = sched_setparam(0, &p);
@@ -320,6 +327,8 @@ Service::Service(const Core::ConfigFile& config, const StringView& name)
         m_socket_permissions = strtol(socket_permissions_string.characters(), nullptr, 8) & 04777;
         setup_socket();
     }
+
+    m_working_directory = config.read_entry(name, "WorkingDirectory");
 }
 
 void Service::save_to(JsonObject& json)
@@ -352,4 +361,5 @@ void Service::save_to(JsonObject& json)
         json.set("pid", nullptr);
 
     json.set("restart_attempts", m_restart_attempts);
+    json.set("working_directory", m_working_directory);
 }

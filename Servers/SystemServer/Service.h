@@ -81,6 +81,9 @@ private:
     // times where it has exited unsuccessfully and too quickly.
     int m_restart_attempts { 0 };
 
+    // The working directory in which to spawn the service
+    String m_working_directory;
+
     void resolve_user();
     void setup_socket();
     void setup_notifier();

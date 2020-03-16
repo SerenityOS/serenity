@@ -25,6 +25,7 @@ describing how to launch and manage this service.
 * `Socket` - a path to a socket to create on behalf of the service. For lazy services, SystemServer will actually watch the socket for new connection attempts. An open file descriptor to this socket will be passed as fd 3 to the service.
 * `SocketPermissions` - (octal) file system permissions for the socket file. The default permissions are 0600.
 * `User` - a name of the user to run the service as. This impacts what UID, GID (and extra GIDs) the service processes have. By default, services are run as root.
+* `WorkingDirectory` - The working directory in which the service is spawned. By Default, services are spawned in the root (`"/"`) directory.
 
 ## Environment
 
