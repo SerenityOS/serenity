@@ -24,17 +24,26 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibJS/Function.h>
-#include <LibJS/Value.h>
+#include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/NativeFunction.h>
+#include <LibJS/Runtime/Value.h>
 
 namespace JS {
 
-Function::Function()
+NativeFunction::NativeFunction(AK::Function<Value(Object*, Vector<Value>)> native_function)
+    : m_native_function(move(native_function))
 {
 }
 
-Function::~Function()
+NativeFunction::~NativeFunction()
 {
+}
+
+Value NativeFunction::call(Interpreter& interpreter, Vector<Value> arguments)
+{
+    auto this_value = interpreter.this_value();
+    ASSERT(this_value.is_object());
+    return m_native_function(this_value.as_object(), move(arguments));
 }
 
 }

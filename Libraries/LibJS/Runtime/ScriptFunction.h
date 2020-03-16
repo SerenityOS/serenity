@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <LibJS/Function.h>
+#include <LibJS/Runtime/Function.h>
 
 namespace JS {
 

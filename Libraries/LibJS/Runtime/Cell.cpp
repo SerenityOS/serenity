@@ -24,19 +24,37 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <LibJS/Object.h>
+#include <AK/LogStream.h>
+#include <LibJS/Heap/Heap.h>
+#include <LibJS/Heap/HeapBlock.h>
+#include <LibJS/Runtime/Cell.h>
+#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/Value.h>
 
 namespace JS {
 
-class StringPrototype final : public Object {
-public:
-    StringPrototype();
-    virtual ~StringPrototype() override;
+void Cell::Visitor::visit(Value value)
+{
+    if (value.is_cell())
+        visit(value.as_cell());
+}
 
-private:
-    virtual const char* class_name() const override { return "StringPrototype"; }
-};
+Heap& Cell::heap() const
+{
+    return HeapBlock::from_cell(this)->heap();
+}
+
+Interpreter& Cell::interpreter()
+{
+    return heap().interpreter();
+}
+
+const LogStream& operator<<(const LogStream& stream, const Cell* cell)
+{
+    if (!cell)
+        return stream << "Cell{nullptr}";
+    return stream << cell->class_name() << '{' << static_cast<const void*>(cell) << '}';
+}
 
 }

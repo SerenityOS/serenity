@@ -27,7 +27,7 @@
 #include <AK/Assertions.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/kmalloc.h>
-#include <LibJS/HeapBlock.h>
+#include <LibJS/Heap/HeapBlock.h>
 #include <sys/mman.h>
 
 namespace JS {

@@ -30,10 +30,10 @@
 #include <LibCore/File.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
-#include <LibJS/Object.h>
 #include <LibJS/Parser.h>
-#include <LibJS/PrimitiveString.h>
-#include <LibJS/Value.h>
+#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/Value.h>
 #include <stdio.h>
 
 #define PROGRAM 6

@@ -27,7 +27,7 @@
 #pragma once
 
 #include <AK/WeakPtr.h>
-#include <LibJS/Heap.h>
+#include <LibJS/Heap/Heap.h>
 #include <LibWeb/Forward.h>
 
 namespace Web {

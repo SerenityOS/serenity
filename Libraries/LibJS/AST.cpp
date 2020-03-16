@@ -28,9 +28,9 @@
 #include <AK/StringBuilder.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
-#include <LibJS/PrimitiveString.h>
-#include <LibJS/ScriptFunction.h>
-#include <LibJS/Value.h>
+#include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/ScriptFunction.h>
+#include <LibJS/Runtime/Value.h>
 #include <stdio.h>
 
 namespace JS {

@@ -26,10 +26,10 @@
 
 #include <AK/Badge.h>
 #include <AK/HashTable.h>
-#include <LibJS/Heap.h>
-#include <LibJS/HeapBlock.h>
+#include <LibJS/Heap/Heap.h>
+#include <LibJS/Heap/HeapBlock.h>
 #include <LibJS/Interpreter.h>
-#include <LibJS/Object.h>
+#include <LibJS/Runtime/Object.h>
 
 #define HEAP_DEBUG
 

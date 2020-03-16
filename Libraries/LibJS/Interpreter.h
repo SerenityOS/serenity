@@ -30,8 +30,8 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
-#include <LibJS/Heap.h>
-#include <LibJS/Value.h>
+#include <LibJS/Heap/Heap.h>
+#include <LibJS/Runtime/Value.h>
 
 namespace JS {
 

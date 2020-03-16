@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibJS/PrimitiveString.h>
-#include <LibJS/Value.h>
+#include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>

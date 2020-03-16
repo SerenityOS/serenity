@@ -26,44 +26,52 @@
 
 #pragma once
 
-#include <AK/Noncopyable.h>
-#include <AK/NonnullOwnPtr.h>
 #include <AK/Types.h>
-#include <AK/Vector.h>
-#include <LibJS/Cell.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Runtime/Cell.h>
 
 namespace JS {
 
-class Heap {
-    AK_MAKE_NONCOPYABLE(Heap);
-    AK_MAKE_NONMOVABLE(Heap);
-
+class HeapBlock {
 public:
-    explicit Heap(Interpreter&);
-    ~Heap();
+    static constexpr size_t block_size = 16 * KB;
+    static NonnullOwnPtr<HeapBlock> create_with_cell_size(Heap&, size_t);
 
-    template<typename T, typename... Args>
-    T* allocate(Args&&... args)
+    void operator delete(void*);
+
+    size_t cell_size() const { return m_cell_size; }
+    size_t cell_count() const { return (block_size - sizeof(HeapBlock)) / m_cell_size; }
+
+    Cell* cell(size_t index) { return reinterpret_cast<Cell*>(&m_storage[index * cell_size()]); }
+
+    Cell* allocate();
+    void deallocate(Cell*);
+
+    template<typename Callback>
+    void for_each_cell(Callback callback)
     {
-        auto* memory = allocate_cell(sizeof(T));
-        new (memory) T(forward<Args>(args)...);
-        return static_cast<T*>(memory);
+        for (size_t i = 0; i < cell_count(); ++i)
+            callback(cell(i));
     }
 
-    void collect_garbage();
+    Heap& heap() { return m_heap; }
 
-    Interpreter& interpreter() { return m_interpreter; }
+    static HeapBlock* from_cell(const Cell* cell)
+    {
+        return reinterpret_cast<HeapBlock*>((FlatPtr)cell & ~(block_size - 1));
+    }
 
 private:
-    Cell* allocate_cell(size_t);
+    HeapBlock(Heap&, size_t cell_size);
 
-    void gather_roots(HashTable<Cell*>&);
-    void mark_live_cells(const HashTable<Cell*>& live_cells);
-    void sweep_dead_cells();
+    struct FreelistEntry : public Cell {
+        FreelistEntry* next;
+    };
 
-    Interpreter& m_interpreter;
-    Vector<NonnullOwnPtr<HeapBlock>> m_blocks;
+    Heap& m_heap;
+    size_t m_cell_size { 0 };
+    FreelistEntry* m_freelist { nullptr };
+    u8 m_storage[];
 };
 
 }

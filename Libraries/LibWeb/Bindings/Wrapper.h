@@ -28,7 +28,7 @@
 
 #include <AK/NonnullRefPtr.h>
 #include <AK/Weakable.h>
-#include <LibJS/Object.h>
+#include <LibJS/Runtime/Object.h>
 #include <LibWeb/Forward.h>
 
 namespace Web {

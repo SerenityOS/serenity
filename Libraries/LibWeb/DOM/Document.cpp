@@ -29,8 +29,8 @@
 #include <LibCore/Timer.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/MessageBox.h>
-#include <LibJS/GlobalObject.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/Document.h>

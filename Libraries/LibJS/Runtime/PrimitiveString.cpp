@@ -24,33 +24,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibJS/NativeProperty.h>
-#include <LibJS/Value.h>
+#include <LibJS/Heap/Heap.h>
+#include <LibJS/Runtime/PrimitiveString.h>
 
 namespace JS {
 
-NativeProperty::NativeProperty(AK::Function<Value(Object*)> getter, AK::Function<void(Object*, Value)> setter)
-    : m_getter(move(getter))
-    , m_setter(move(setter))
+PrimitiveString::PrimitiveString(String string)
+    : m_string(move(string))
 {
 }
 
-NativeProperty::~NativeProperty()
+PrimitiveString::~PrimitiveString()
 {
 }
 
-Value NativeProperty::get(Object* object) const
+PrimitiveString* js_string(Heap& heap, String string)
 {
-    if (!m_getter)
-        return js_undefined();
-    return m_getter(object);
-}
-
-void NativeProperty::set(Object* object, Value value)
-{
-    if (!m_setter)
-        return;
-    m_setter(object, move(value));
+    return heap.allocate<PrimitiveString>(move(string));
 }
 
 }

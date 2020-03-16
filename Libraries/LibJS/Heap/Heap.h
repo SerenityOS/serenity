@@ -26,23 +26,44 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <LibJS/Function.h>
+#include <AK/Noncopyable.h>
+#include <AK/NonnullOwnPtr.h>
+#include <AK/Types.h>
+#include <AK/Vector.h>
+#include <LibJS/Forward.h>
+#include <LibJS/Runtime/Cell.h>
 
 namespace JS {
 
-class NativeFunction final : public Function {
-public:
-    explicit NativeFunction(AK::Function<Value(Object*, Vector<Value>)>);
-    virtual ~NativeFunction() override;
+class Heap {
+    AK_MAKE_NONCOPYABLE(Heap);
+    AK_MAKE_NONMOVABLE(Heap);
 
-    virtual Value call(Interpreter&, Vector<Value>) override;
+public:
+    explicit Heap(Interpreter&);
+    ~Heap();
+
+    template<typename T, typename... Args>
+    T* allocate(Args&&... args)
+    {
+        auto* memory = allocate_cell(sizeof(T));
+        new (memory) T(forward<Args>(args)...);
+        return static_cast<T*>(memory);
+    }
+
+    void collect_garbage();
+
+    Interpreter& interpreter() { return m_interpreter; }
 
 private:
-    virtual bool is_native_function() const override { return true; }
-    virtual const char* class_name() const override { return "NativeFunction"; }
+    Cell* allocate_cell(size_t);
 
-    AK::Function<Value(Object*, Vector<Value>)> m_native_function;
+    void gather_roots(HashTable<Cell*>&);
+    void mark_live_cells(const HashTable<Cell*>& live_cells);
+    void sweep_dead_cells();
+
+    Interpreter& m_interpreter;
+    Vector<NonnullOwnPtr<HeapBlock>> m_blocks;
 };
 
 }
