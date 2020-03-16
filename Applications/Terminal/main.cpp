@@ -197,22 +197,11 @@ int main(int argc, char** argv)
     }
 
     const char* command_to_execute = nullptr;
-    const char* working_directory_chars = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(command_to_execute, "Execute this command inside the terminal", nullptr, 'e', "command");
-    args_parser.add_option(working_directory_chars, "Set the working directory", nullptr, 'd', "directory");
 
     args_parser.parse(argc, argv);
-
-    String working_directory(working_directory_chars);
-
-    if (working_directory.is_empty()) {
-        working_directory = get_current_user_home_path();
-    }
-
-    if (chdir(working_directory.characters()) < 0)
-        perror("chdir");
 
     int ptm_fd = posix_openpt(O_RDWR | O_CLOEXEC);
     if (ptm_fd < 0) {
