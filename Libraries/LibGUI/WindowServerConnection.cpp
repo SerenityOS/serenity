@@ -73,6 +73,9 @@ void WindowServerConnection::handle(const Messages::WindowClient::UpdateSystemTh
 {
     set_system_theme_from_shbuf_id(message.system_theme_buffer_id());
     Window::update_all_windows({});
+    Window::for_each_window({}, [](auto& window) {
+        Core::EventLoop::current().post_event(window, make<ThemeChangeEvent>());
+    });
 }
 
 void WindowServerConnection::handle(const Messages::WindowClient::Paint& message)

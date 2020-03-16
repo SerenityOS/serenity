@@ -334,6 +334,22 @@ void Window::event(Core::Event& event)
         return result.widget->dispatch_event(*local_event, this);
     }
 
+    if (event.type() == Event::ThemeChange) {
+        if (!m_main_widget)
+            return;
+        auto theme_event = static_cast<ThemeChangeEvent&>(event);
+        auto dispatch_theme_change = [&](auto& widget, auto recursive) {
+            widget.dispatch_event(theme_event, this);
+            widget.for_each_child_widget([&](auto& widget) -> IterationDecision {
+                widget.dispatch_event(theme_event, this);
+                recursive(widget, recursive);
+                return IterationDecision::Continue;
+            });
+        };
+        dispatch_theme_change(*m_main_widget.ptr(), dispatch_theme_change);
+        return;
+    }
+
     Core::Object::event(event);
 }
 
@@ -633,6 +649,14 @@ void Window::schedule_relayout()
         update();
         m_layout_pending = false;
     });
+}
+
+void Window::for_each_window(Badge<WindowServerConnection>, Function<void(Window&)> callback)
+{
+    for (auto& e : *reified_windows) {
+        ASSERT(e.value);
+        callback(*e.value);
+    }
 }
 
 void Window::update_all_windows(Badge<WindowServerConnection>)
