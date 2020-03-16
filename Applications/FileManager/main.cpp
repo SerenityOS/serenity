@@ -189,8 +189,12 @@ int main(int argc, char** argv)
 
     auto open_terminal_action = GUI::Action::create("Open Terminal here...", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"), [&](const GUI::Action&) {
         if (!fork()) {
-            int rc = execl("/bin/Terminal", "Terminal", "-d", directory_view.path().characters(), nullptr);
-            if (rc < 0)
+            if (chdir(directory_view.path().characters()) < 0) {
+                perror("chdir");
+                exit(1);
+            }
+
+            if (execl("/bin/Terminal", "Terminal", nullptr) < 0)
                 perror("execl");
             exit(1);
         }
