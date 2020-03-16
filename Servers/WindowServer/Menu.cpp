@@ -281,14 +281,9 @@ MenuItem* Menu::hovered_item() const
 
 void Menu::update_for_new_hovered_item()
 {
-    if (hovered_item() && hovered_item()->is_submenu()) {
-        MenuManager::the().close_everyone_not_in_lineage(*hovered_item()->submenu());
+    MenuManager::the().close_everyone_not_in_lineage(*this);
+    if (hovered_item() && hovered_item()->is_submenu())
         hovered_item()->submenu()->popup(hovered_item()->rect().top_right().translated(menu_window()->rect().location()), true);
-    } else {
-        MenuManager::the().close_everyone_not_in_lineage(*this);
-        MenuManager::the().set_current_menu(this);
-        menu_window()->set_visible(true);
-    }
     redraw();
 }
 
