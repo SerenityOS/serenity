@@ -1,12 +1,12 @@
 var d = "Double quoted string\n";
-print(d);
+console.log(d);
 var s = 'Single quoted string\n';
-print(s)
+console.log(s)
 var e = "Escaped characters \b \f \n \r \t \v \' \" \\ \n";
-print(e)
+console.log(e)
 var u = "Unterminated string
         this is not possible in js\n";
-print(u);
+console.log(u);
 
 var u2 = 'This is neither\n
-print(u2);
+console.log(u2);

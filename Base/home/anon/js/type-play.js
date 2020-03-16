@@ -1,12 +1,12 @@
 const object = {};
 
-print(true == 1);
-print(null == undefined);
-print("12" == 12);
-print(1 + "12");
-print(12 / "12" == true);
-print(2 * "12");
-print(~"24");
-print(~true);
-print(2*2 + "4");
-print(object == "[object Object]");
+console.log(true == 1);
+console.log(null == undefined);
+console.log("12" == 12);
+console.log(1 + "12");
+console.log(12 / "12" == true);
+console.log(2 * "12");
+console.log(~"24");
+console.log(~true);
+console.log(2*2 + "4");
+console.log(object == "[object Object]");
