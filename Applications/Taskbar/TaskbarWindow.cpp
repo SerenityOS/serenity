@@ -28,6 +28,7 @@
 #include "TaskbarButton.h"
 #include <AK/SharedBuffer.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/UserInfo.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Desktop.h>
@@ -105,6 +106,10 @@ void TaskbarWindow::create_quick_launch_bar()
             if (pid < 0) {
                 perror("fork");
             } else if (pid == 0) {
+                if (chdir(get_current_user_home_path().characters()) < 0) {
+                    perror("chdir");
+                    exit(1);
+                }
                 execl(app_executable.characters(), app_executable.characters(), nullptr);
                 perror("execl");
                 ASSERT_NOT_REACHED();
