@@ -30,6 +30,9 @@
 #include <LibJS/Heap/HeapBlock.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Object.h>
+#include <serenity.h>
+#include <setjmp.h>
+#include <stdio.h>
 
 #define HEAP_DEBUG
 
@@ -71,12 +74,74 @@ void Heap::gather_roots(HashTable<Cell*>& roots)
 {
     m_interpreter.gather_roots({}, roots);
 
+    gather_conservative_roots(roots);
+
 #ifdef HEAP_DEBUG
-    dbg() << "collect_roots:";
+    dbg() << "gather_roots:";
     for (auto* root : roots) {
         dbg() << "  + " << root;
     }
 #endif
+}
+
+void Heap::gather_conservative_roots(HashTable<Cell*>& roots)
+{
+    FlatPtr dummy;
+
+#ifdef HEAP_DEBUG
+    dbg() << "gather_conservative_roots:";
+#endif
+
+    jmp_buf buf;
+    setjmp(buf);
+
+    HashTable<FlatPtr> possible_pointers;
+
+    for (size_t i = 0; i < (sizeof(buf->regs) / sizeof(FlatPtr)); ++i)
+        possible_pointers.set(buf->regs[i]);
+
+    FlatPtr stack_base;
+    size_t stack_size;
+    if (get_stack_bounds(&stack_base, &stack_size) < 0) {
+        perror("get_stack_bounds");
+        ASSERT_NOT_REACHED();
+    }
+
+    FlatPtr stack_reference = reinterpret_cast<FlatPtr>(&dummy);
+    FlatPtr stack_top = stack_base + stack_size;
+
+    for (FlatPtr stack_address = stack_reference; stack_address < stack_top; stack_address += sizeof(FlatPtr)) {
+        auto data = *reinterpret_cast<FlatPtr*>(stack_address);
+        possible_pointers.set(data);
+    }
+
+    for (auto possible_pointer : possible_pointers) {
+        if (!possible_pointer)
+            continue;
+#ifdef HEAP_DEBUG
+        dbg() << "  ? " << (const void*)possible_pointer;
+#endif
+        if (auto* cell = cell_from_possible_pointer(possible_pointer)) {
+            if (cell->is_live()) {
+#ifdef HEAP_DEBUG
+                dbg() << "  ?-> " << (const void*)cell;
+#endif
+                roots.set(cell);
+            } else {
+#ifdef HEAP_DEBUG
+                dbg() << "  #-> " << (const void*)cell;
+#endif
+            }
+        }
+    }
+}
+
+Cell* Heap::cell_from_possible_pointer(FlatPtr pointer)
+{
+    auto* possible_heap_block = HeapBlock::from_cell(reinterpret_cast<const Cell*>(pointer));
+    if (m_blocks.find([possible_heap_block](auto& block) { return block.ptr() == possible_heap_block; }) == m_blocks.end())
+        return nullptr;
+    return possible_heap_block->cell_from_possible_pointer(pointer);
 }
 
 class MarkingVisitor final : public Cell::Visitor {
@@ -101,8 +166,11 @@ void Heap::mark_live_cells(const HashTable<Cell*>& roots)
     dbg() << "mark_live_cells:";
 #endif
     MarkingVisitor visitor;
-    for (auto* root : roots)
+    for (auto* root : roots) {
+        if (!root)
+            continue;
         visitor.visit(root);
+    }
 }
 
 void Heap::sweep_dead_cells()
