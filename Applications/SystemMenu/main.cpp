@@ -90,11 +90,6 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil("/etc/PowerOptions.ini", "r")) {
-        perror("unveil");
-        return 1;
-    }
-
     unveil(nullptr, nullptr);
 
     return app.exec();
