@@ -1279,6 +1279,13 @@ void TextEditor::resize_event(ResizeEvent& event)
     recompute_all_visual_lines();
 }
 
+void TextEditor::theme_change_event(ThemeChangeEvent& event)
+{
+    ScrollableWidget::theme_change_event(event);
+    if (m_highlighter)
+        m_highlighter->rehighlight(palette());
+}
+
 void TextEditor::set_selection(const TextRange& selection)
 {
     if (m_selection == selection)
