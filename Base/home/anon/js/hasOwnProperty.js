@@ -1,2 +1,2 @@
 var x = "foobar";
-print(x.hasOwnProperty("length"));
+console.log(x.hasOwnProperty("length"));

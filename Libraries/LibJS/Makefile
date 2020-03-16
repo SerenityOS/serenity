@@ -6,6 +6,7 @@ OBJS = \
     Lexer.o \
     Parser.o \
     Runtime/Cell.o \
+    Runtime/ConsoleObject.o \
     Runtime/Function.o \
     Runtime/GlobalObject.o \
     Runtime/NativeFunction.o \

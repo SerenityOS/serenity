@@ -1,2 +1,2 @@
 var foo = "foobar";
-print(foo.charAt(3));
+console.log(foo.charAt(3));
