@@ -24,37 +24,26 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/LogStream.h>
-#include <LibJS/Cell.h>
-#include <LibJS/Heap.h>
-#include <LibJS/HeapBlock.h>
-#include <LibJS/Object.h>
-#include <LibJS/PrimitiveString.h>
-#include <LibJS/Value.h>
+#pragma once
+
+#include <AK/String.h>
+#include <LibJS/Runtime/Cell.h>
 
 namespace JS {
 
-void Cell::Visitor::visit(Value value)
-{
-    if (value.is_cell())
-        visit(value.as_cell());
-}
+class PrimitiveString final : public Cell {
+public:
+    explicit PrimitiveString(String);
+    virtual ~PrimitiveString();
 
-Heap& Cell::heap() const
-{
-    return HeapBlock::from_cell(this)->heap();
-}
+    const String& string() const { return m_string; }
 
-Interpreter& Cell::interpreter()
-{
-    return heap().interpreter();
-}
+private:
+    virtual const char* class_name() const override { return "PrimitiveString"; }
 
-const LogStream& operator<<(const LogStream& stream, const Cell* cell)
-{
-    if (!cell)
-        return stream << "Cell{nullptr}";
-    return stream << cell->class_name() << '{' << static_cast<const void*>(cell) << '}';
-}
+    String m_string;
+};
+
+PrimitiveString* js_string(Heap&, String);
 
 }

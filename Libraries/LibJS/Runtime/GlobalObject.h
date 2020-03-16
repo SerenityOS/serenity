@@ -1,6 +1,6 @@
 #pragma once
 
-#include <LibJS/Object.h>
+#include <LibJS/Runtime/Object.h>
 
 namespace JS {
 

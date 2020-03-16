@@ -27,23 +27,22 @@
 #pragma once
 
 #include <AK/String.h>
-#include <LibJS/Cell.h>
+#include <LibJS/Runtime/Object.h>
 
 namespace JS {
 
-class PrimitiveString final : public Cell {
+class Function : public Object {
 public:
-    explicit PrimitiveString(String);
-    virtual ~PrimitiveString();
+    virtual ~Function();
 
-    const String& string() const { return m_string; }
+    virtual Value call(Interpreter&, Vector<Value>) = 0;
+
+protected:
+    Function();
+    virtual const char* class_name() const override { return "Function"; }
 
 private:
-    virtual const char* class_name() const override { return "PrimitiveString"; }
-
-    String m_string;
+    virtual bool is_function() const final { return true; }
 };
-
-PrimitiveString* js_string(Heap&, String);
 
 }

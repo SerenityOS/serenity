@@ -25,12 +25,12 @@
  */
 
 #include <AK/String.h>
-#include <LibJS/Heap.h>
+#include <LibJS/Heap/Heap.h>
 #include <LibJS/Interpreter.h>
-#include <LibJS/NativeFunction.h>
-#include <LibJS/NativeProperty.h>
-#include <LibJS/Object.h>
-#include <LibJS/Value.h>
+#include <LibJS/Runtime/NativeFunction.h>
+#include <LibJS/Runtime/NativeProperty.h>
+#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/Value.h>
 
 namespace JS {
 

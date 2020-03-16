@@ -24,54 +24,29 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <AK/Types.h>
-#include <LibJS/Cell.h>
-#include <LibJS/Forward.h>
+#include <LibJS/Heap/Heap.h>
+#include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/StringObject.h>
+#include <LibJS/Runtime/StringPrototype.h>
+#include <LibJS/Runtime/Value.h>
 
 namespace JS {
 
-class HeapBlock {
-public:
-    static constexpr size_t block_size = 16 * KB;
-    static NonnullOwnPtr<HeapBlock> create_with_cell_size(Heap&, size_t);
+StringObject::StringObject(PrimitiveString* string)
+    : m_string(string)
+{
+    set_prototype(interpreter().string_prototype());
+}
 
-    void operator delete(void*);
+StringObject::~StringObject()
+{
+}
 
-    size_t cell_size() const { return m_cell_size; }
-    size_t cell_count() const { return (block_size - sizeof(HeapBlock)) / m_cell_size; }
-
-    Cell* cell(size_t index) { return reinterpret_cast<Cell*>(&m_storage[index * cell_size()]); }
-
-    Cell* allocate();
-    void deallocate(Cell*);
-
-    template<typename Callback>
-    void for_each_cell(Callback callback)
-    {
-        for (size_t i = 0; i < cell_count(); ++i)
-            callback(cell(i));
-    }
-
-    Heap& heap() { return m_heap; }
-
-    static HeapBlock* from_cell(const Cell* cell)
-    {
-        return reinterpret_cast<HeapBlock*>((FlatPtr)cell & ~(block_size - 1));
-    }
-
-private:
-    HeapBlock(Heap&, size_t cell_size);
-
-    struct FreelistEntry : public Cell {
-        FreelistEntry* next;
-    };
-
-    Heap& m_heap;
-    size_t m_cell_size { 0 };
-    FreelistEntry* m_freelist { nullptr };
-    u8 m_storage[];
-};
+void StringObject::visit_children(Cell::Visitor& visitor)
+{
+    Object::visit_children(visitor);
+    visitor.visit(m_string);
+}
 
 }

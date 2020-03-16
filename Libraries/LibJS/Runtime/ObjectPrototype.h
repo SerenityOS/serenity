@@ -24,23 +24,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibJS/Heap.h>
-#include <LibJS/PrimitiveString.h>
+#pragma once
+
+#include <LibJS/Runtime/Object.h>
 
 namespace JS {
 
-PrimitiveString::PrimitiveString(String string)
-    : m_string(move(string))
-{
-}
+class ObjectPrototype final : public Object {
+public:
+    ObjectPrototype();
+    virtual ~ObjectPrototype() override;
 
-PrimitiveString::~PrimitiveString()
-{
-}
-
-PrimitiveString* js_string(Heap& heap, String string)
-{
-    return heap.allocate<PrimitiveString>(move(string));
-}
+private:
+    virtual const char* class_name() const override { return "ObjectPrototype"; }
+};
 
 }

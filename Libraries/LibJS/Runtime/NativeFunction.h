@@ -24,29 +24,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibJS/Heap.h>
-#include <LibJS/Interpreter.h>
-#include <LibJS/PrimitiveString.h>
-#include <LibJS/StringObject.h>
-#include <LibJS/StringPrototype.h>
-#include <LibJS/Value.h>
+#pragma once
+
+#include <AK/Function.h>
+#include <LibJS/Runtime/Function.h>
 
 namespace JS {
 
-StringObject::StringObject(PrimitiveString* string)
-    : m_string(string)
-{
-    set_prototype(interpreter().string_prototype());
-}
+class NativeFunction final : public Function {
+public:
+    explicit NativeFunction(AK::Function<Value(Object*, Vector<Value>)>);
+    virtual ~NativeFunction() override;
 
-StringObject::~StringObject()
-{
-}
+    virtual Value call(Interpreter&, Vector<Value>) override;
 
-void StringObject::visit_children(Cell::Visitor& visitor)
-{
-    Object::visit_children(visitor);
-    visitor.visit(m_string);
-}
+private:
+    virtual bool is_native_function() const override { return true; }
+    virtual const char* class_name() const override { return "NativeFunction"; }
+
+    AK::Function<Value(Object*, Vector<Value>)> m_native_function;
+};
 
 }

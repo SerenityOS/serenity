@@ -26,12 +26,12 @@
 
 #include <AK/Function.h>
 #include <AK/StringBuilder.h>
-#include <LibJS/Heap.h>
+#include <LibJS/Heap/Heap.h>
 #include <LibJS/Interpreter.h>
-#include <LibJS/PrimitiveString.h>
-#include <LibJS/StringObject.h>
-#include <LibJS/StringPrototype.h>
-#include <LibJS/Value.h>
+#include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/StringObject.h>
+#include <LibJS/Runtime/StringPrototype.h>
+#include <LibJS/Runtime/Value.h>
 
 namespace JS {
 

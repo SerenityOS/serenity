@@ -24,29 +24,33 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <LibJS/Object.h>
+#include <LibJS/Runtime/NativeProperty.h>
+#include <LibJS/Runtime/Value.h>
 
 namespace JS {
 
-class StringObject final : public Object {
-public:
-    explicit StringObject(PrimitiveString*);
-    virtual ~StringObject() override;
+NativeProperty::NativeProperty(AK::Function<Value(Object*)> getter, AK::Function<void(Object*, Value)> setter)
+    : m_getter(move(getter))
+    , m_setter(move(setter))
+{
+}
 
-    virtual void visit_children(Visitor&) override;
-    const PrimitiveString* primitive_string() const { return m_string; }
-    virtual Value value_of() const override
-    {
-        return Value(m_string);
-    }
+NativeProperty::~NativeProperty()
+{
+}
 
-private:
-    virtual const char* class_name() const override { return "StringObject"; }
-    virtual bool is_string_object() const override { return true; }
+Value NativeProperty::get(Object* object) const
+{
+    if (!m_getter)
+        return js_undefined();
+    return m_getter(object);
+}
 
-    PrimitiveString* m_string { nullptr };
-};
+void NativeProperty::set(Object* object, Value value)
+{
+    if (!m_setter)
+        return;
+    m_setter(object, move(value));
+}
 
 }

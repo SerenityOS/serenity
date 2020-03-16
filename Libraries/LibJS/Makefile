@@ -1,23 +1,23 @@
 OBJS = \
     AST.o \
-    Cell.o \
-    Function.o \
-    GlobalObject.o \
-    Heap.o \
-    HeapBlock.o \
+    Heap/Heap.o \
+    Heap/HeapBlock.o \
     Interpreter.o \
     Lexer.o \
-    NativeFunction.o \
-    NativeProperty.o \
-    Object.o \
-    ObjectPrototype.o \
     Parser.o \
-    PrimitiveString.o \
-    ScriptFunction.o \
-    StringObject.o \
-    StringPrototype.o \
-    Token.o \
-    Value.o
+    Runtime/Cell.o \
+    Runtime/Function.o \
+    Runtime/GlobalObject.o \
+    Runtime/NativeFunction.o \
+    Runtime/NativeProperty.o \
+    Runtime/Object.o \
+    Runtime/ObjectPrototype.o \
+    Runtime/PrimitiveString.o \
+    Runtime/ScriptFunction.o \
+    Runtime/StringObject.o \
+    Runtime/StringPrototype.o \
+    Runtime/Value.o \
+    Token.o
 
 LIBRARY = libjs.a
 
