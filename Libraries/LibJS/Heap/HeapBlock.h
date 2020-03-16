@@ -61,6 +61,14 @@ public:
         return reinterpret_cast<HeapBlock*>((FlatPtr)cell & ~(block_size - 1));
     }
 
+    Cell* cell_from_possible_pointer(FlatPtr pointer)
+    {
+        if (pointer < reinterpret_cast<FlatPtr>(m_storage))
+            return nullptr;
+        size_t cell_index = (pointer - reinterpret_cast<FlatPtr>(m_storage)) / m_cell_size;
+        return cell(cell_index);
+    }
+
 private:
     HeapBlock(Heap&, size_t cell_size);
 

@@ -59,8 +59,11 @@ private:
     Cell* allocate_cell(size_t);
 
     void gather_roots(HashTable<Cell*>&);
+    void gather_conservative_roots(HashTable<Cell*>&);
     void mark_live_cells(const HashTable<Cell*>& live_cells);
     void sweep_dead_cells();
+
+    Cell* cell_from_possible_pointer(FlatPtr);
 
     Interpreter& m_interpreter;
     Vector<NonnullOwnPtr<HeapBlock>> m_blocks;
