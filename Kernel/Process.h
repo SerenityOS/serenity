@@ -298,6 +298,7 @@ public:
     int sys$pledge(const Syscall::SC_pledge_params*);
     int sys$unveil(const Syscall::SC_unveil_params*);
     int sys$perf_event(int type, FlatPtr arg1, FlatPtr arg2);
+    int sys$get_stack_bounds(FlatPtr* stack_base, size_t* stack_size);
 
     template<bool sockname, typename Params>
     int get_sock_or_peer_name(const Params&);
