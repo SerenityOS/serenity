@@ -49,6 +49,9 @@ Heap::~Heap()
 
 Cell* Heap::allocate_cell(size_t size)
 {
+    if (should_collect_on_every_allocation())
+        collect_garbage();
+
     for (auto& block : m_blocks) {
         if (size > block->cell_size())
             continue;
