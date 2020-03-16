@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@gmx.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,25 +24,33 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <AK/String.h>
-#include <LibJS/Object.h>
+#include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/ScriptFunction.h>
+#include <LibJS/Runtime/Value.h>
 
 namespace JS {
 
-class Function : public Object {
-public:
-    virtual ~Function();
+ScriptFunction::ScriptFunction(const ScopeNode& body, Vector<String> parameters)
+    : m_body(body)
+    , m_parameters(move(parameters))
+{
+}
 
-    virtual Value call(Interpreter&, Vector<Value>) = 0;
+ScriptFunction::~ScriptFunction()
+{
+}
 
-protected:
-    Function();
-    virtual const char* class_name() const override { return "Function"; }
-
-private:
-    virtual bool is_function() const final { return true; }
-};
+Value ScriptFunction::call(Interpreter& interpreter, Vector<Value> argument_values)
+{
+    Vector<Argument> arguments;
+    for (size_t i = 0; i < m_parameters.size(); ++i) {
+        auto name = parameters()[i];
+        auto value = js_undefined();
+        if (i < argument_values.size())
+            value = argument_values[i];
+        arguments.append({ move(name), move(value) });
+    }
+    return interpreter.run(m_body, move(arguments), ScopeType::Function);
+}
 
 }

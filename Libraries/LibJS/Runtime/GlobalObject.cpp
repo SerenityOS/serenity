@@ -1,10 +1,11 @@
 #include <AK/LogStream.h>
 #include <AK/String.h>
-#include <LibJS/GlobalObject.h>
-#include <LibJS/Heap.h>
+#include <LibJS/Heap/Heap.h>
 #include <LibJS/Interpreter.h>
-#include <LibJS/NativeFunction.h>
-#include <LibJS/Value.h>
+#include <LibJS/Runtime/ConsoleObject.h>
+#include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/NativeFunction.h>
+#include <LibJS/Runtime/Value.h>
 #include <stdio.h>
 
 namespace JS {

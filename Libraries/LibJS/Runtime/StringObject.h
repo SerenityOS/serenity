@@ -26,17 +26,27 @@
 
 #pragma once
 
-#include <LibJS/Object.h>
+#include <LibJS/Runtime/Object.h>
 
 namespace JS {
 
-class ObjectPrototype final : public Object {
+class StringObject final : public Object {
 public:
-    ObjectPrototype();
-    virtual ~ObjectPrototype() override;
+    explicit StringObject(PrimitiveString*);
+    virtual ~StringObject() override;
+
+    virtual void visit_children(Visitor&) override;
+    const PrimitiveString* primitive_string() const { return m_string; }
+    virtual Value value_of() const override
+    {
+        return Value(m_string);
+    }
 
 private:
-    virtual const char* class_name() const override { return "ObjectPrototype"; }
+    virtual const char* class_name() const override { return "StringObject"; }
+    virtual bool is_string_object() const override { return true; }
+
+    PrimitiveString* m_string { nullptr };
 };
 
 }

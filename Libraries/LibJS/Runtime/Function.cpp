@@ -24,39 +24,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Function.h>
-#include <AK/String.h>
-#include <LibJS/Heap.h>
-#include <LibJS/Interpreter.h>
-#include <LibJS/ObjectPrototype.h>
-#include <LibJS/Value.h>
+#include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/Value.h>
 
 namespace JS {
 
-ObjectPrototype::ObjectPrototype()
+Function::Function()
 {
-    set_prototype(nullptr);
-
-    put_native_function("hasOwnProperty", [](Object* this_object, Vector<Value> arguments) -> Value {
-        ASSERT(this_object);
-        if (arguments.is_empty())
-            return js_undefined();
-        return Value(this_object->has_own_property(arguments[0].to_string()));
-    });
-
-    put_native_function("toString", [](Object* this_object, Vector<Value>) -> Value {
-        ASSERT(this_object);
-
-        return Value(this_object->to_string());
-    });
-
-    put_native_function("valueOf", [](Object* this_object, Vector<Value>) -> Value {
-        ASSERT(this_object);
-        return this_object->value_of();
-    });
 }
 
-ObjectPrototype::~ObjectPrototype()
+Function::~Function()
 {
 }
 

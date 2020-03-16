@@ -28,10 +28,10 @@
 
 #include <AK/HashMap.h>
 #include <AK/String.h>
-#include <LibJS/Cell.h>
 #include <LibJS/Forward.h>
-#include <LibJS/PrimitiveString.h>
-#include <LibJS/Value.h>
+#include <LibJS/Runtime/Cell.h>
+#include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/Value.h>
 
 namespace JS {
 

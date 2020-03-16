@@ -31,7 +31,7 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
-#include <LibJS/Value.h>
+#include <LibJS/Runtime/Value.h>
 
 namespace JS {
 

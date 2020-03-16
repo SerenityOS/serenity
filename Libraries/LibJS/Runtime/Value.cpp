@@ -25,11 +25,11 @@
  */
 
 #include <AK/String.h>
-#include <LibJS/Heap.h>
-#include <LibJS/Object.h>
-#include <LibJS/PrimitiveString.h>
-#include <LibJS/StringObject.h>
-#include <LibJS/Value.h>
+#include <LibJS/Heap/Heap.h>
+#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/StringObject.h>
+#include <LibJS/Runtime/Value.h>
 
 namespace JS {
 

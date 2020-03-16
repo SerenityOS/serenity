@@ -26,13 +26,13 @@
 
 #include <AK/Badge.h>
 #include <LibJS/AST.h>
-#include <LibJS/GlobalObject.h>
 #include <LibJS/Interpreter.h>
-#include <LibJS/NativeFunction.h>
-#include <LibJS/Object.h>
-#include <LibJS/ObjectPrototype.h>
-#include <LibJS/StringPrototype.h>
-#include <LibJS/Value.h>
+#include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/NativeFunction.h>
+#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/ObjectPrototype.h>
+#include <LibJS/Runtime/StringPrototype.h>
+#include <LibJS/Runtime/Value.h>
 
 namespace JS {
 

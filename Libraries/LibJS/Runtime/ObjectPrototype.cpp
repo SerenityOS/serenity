@@ -24,27 +24,40 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
 #include <AK/Function.h>
-#include <LibJS/Object.h>
+#include <AK/String.h>
+#include <LibJS/Heap/Heap.h>
+#include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/ObjectPrototype.h>
+#include <LibJS/Runtime/Value.h>
 
 namespace JS {
 
-class NativeProperty final : public Object {
-public:
-    NativeProperty(AK::Function<Value(Object*)> getter, AK::Function<void(Object*, Value)> setter);
-    virtual ~NativeProperty() override;
+ObjectPrototype::ObjectPrototype()
+{
+    set_prototype(nullptr);
 
-    Value get(Object*) const;
-    void set(Object*, Value);
+    put_native_function("hasOwnProperty", [](Object* this_object, Vector<Value> arguments) -> Value {
+        ASSERT(this_object);
+        if (arguments.is_empty())
+            return js_undefined();
+        return Value(this_object->has_own_property(arguments[0].to_string()));
+    });
 
-private:
-    virtual bool is_native_property() const override { return true; }
-    virtual const char* class_name() const override { return "NativeProperty"; }
+    put_native_function("toString", [](Object* this_object, Vector<Value>) -> Value {
+        ASSERT(this_object);
 
-    AK::Function<Value(Object*)> m_getter;
-    AK::Function<void(Object*, Value)> m_setter;
-};
+        return Value(this_object->to_string());
+    });
+
+    put_native_function("valueOf", [](Object* this_object, Vector<Value>) -> Value {
+        ASSERT(this_object);
+        return this_object->value_of();
+    });
+}
+
+ObjectPrototype::~ObjectPrototype()
+{
+}
 
 }

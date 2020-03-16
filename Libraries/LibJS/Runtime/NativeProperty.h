@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@gmx.de>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,33 +24,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibJS/Interpreter.h>
-#include <LibJS/ScriptFunction.h>
-#include <LibJS/Value.h>
+#pragma once
+
+#include <AK/Function.h>
+#include <LibJS/Runtime/Object.h>
 
 namespace JS {
 
-ScriptFunction::ScriptFunction(const ScopeNode& body, Vector<String> parameters)
-    : m_body(body)
-    , m_parameters(move(parameters))
-{
-}
+class NativeProperty final : public Object {
+public:
+    NativeProperty(AK::Function<Value(Object*)> getter, AK::Function<void(Object*, Value)> setter);
+    virtual ~NativeProperty() override;
 
-ScriptFunction::~ScriptFunction()
-{
-}
+    Value get(Object*) const;
+    void set(Object*, Value);
 
-Value ScriptFunction::call(Interpreter& interpreter, Vector<Value> argument_values)
-{
-    Vector<Argument> arguments;
-    for (size_t i = 0; i < m_parameters.size(); ++i) {
-        auto name = parameters()[i];
-        auto value = js_undefined();
-        if (i < argument_values.size())
-            value = argument_values[i];
-        arguments.append({ move(name), move(value) });
-    }
-    return interpreter.run(m_body, move(arguments), ScopeType::Function);
-}
+private:
+    virtual bool is_native_property() const override { return true; }
+    virtual const char* class_name() const override { return "NativeProperty"; }
+
+    AK::Function<Value(Object*)> m_getter;
+    AK::Function<void(Object*, Value)> m_setter;
+};
 
 }
