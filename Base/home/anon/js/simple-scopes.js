@@ -8,4 +8,4 @@ function foo() {
     return y;
 }
 
-print(foo());
+console.log(foo());
