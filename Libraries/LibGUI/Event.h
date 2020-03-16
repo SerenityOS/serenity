@@ -28,9 +28,9 @@
 
 #include <Kernel/KeyCode.h>
 #include <LibCore/Event.h>
+#include <LibGUI/WindowType.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>
-#include <LibGUI/WindowType.h>
 
 namespace GUI {
 
@@ -62,6 +62,7 @@ public:
         EnabledChange,
         DragMove,
         Drop,
+        ThemeChange,
 
         __Begin_WM_Events,
         WM_WindowRemoved,
@@ -338,6 +339,14 @@ private:
     Gfx::Point m_position;
     String m_text;
     NonnullRefPtr<Core::MimeData> m_mime_data;
+};
+
+class ThemeChangeEvent final : public Event {
+public:
+    ThemeChangeEvent()
+        : Event(Type::ThemeChange)
+    {
+    }
 };
 
 }

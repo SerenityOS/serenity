@@ -292,6 +292,7 @@ protected:
     virtual void change_event(Event&);
     virtual void drag_move_event(DragEvent&);
     virtual void drop_event(DropEvent&);
+    virtual void theme_change_event(ThemeChangeEvent&);
 
     virtual void did_begin_inspection() override;
     virtual void did_end_inspection() override;

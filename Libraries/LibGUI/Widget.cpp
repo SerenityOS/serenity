@@ -206,6 +206,8 @@ void Widget::event(Core::Event& event)
         return drag_move_event(static_cast<DragEvent&>(event));
     case Event::Drop:
         return drop_event(static_cast<DropEvent&>(event));
+    case Event::ThemeChange:
+        return theme_change_event(static_cast<ThemeChangeEvent&>(event));
     case Event::Enter:
         return handle_enter_event(event);
     case Event::Leave:
@@ -415,6 +417,10 @@ void Widget::drop_event(DropEvent& event)
 {
     dbg() << class_name() << "{" << this << "} DROP  position: " << event.position() << ", text: '" << event.text() << "'";
     event.ignore();
+}
+
+void Widget::theme_change_event(ThemeChangeEvent&)
+{
 }
 
 void Widget::update()

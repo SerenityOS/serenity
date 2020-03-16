@@ -148,6 +148,7 @@ protected:
     virtual void leave_event(Core::Event&) override;
     virtual void context_menu_event(ContextMenuEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
+    virtual void theme_change_event(ThemeChangeEvent&) override;
     virtual void cursor_did_change() {}
 
     TextPosition text_position_at(const Gfx::Point&) const;
