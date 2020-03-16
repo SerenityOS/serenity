@@ -68,4 +68,6 @@ int purge(int mode);
 
 int perf_event(int type, uintptr_t arg1, uintptr_t arg2);
 
+int get_stack_bounds(uintptr_t* user_stack_base, size_t* user_stack_size);
+
 __END_DECLS

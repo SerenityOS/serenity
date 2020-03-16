@@ -178,7 +178,8 @@ namespace Kernel {
     __ENUMERATE_SYSCALL(pledge)               \
     __ENUMERATE_SYSCALL(unveil)               \
     __ENUMERATE_SYSCALL(perf_event)           \
-    __ENUMERATE_SYSCALL(shutdown)
+    __ENUMERATE_SYSCALL(shutdown)             \
+    __ENUMERATE_SYSCALL(get_stack_bounds)
 
 namespace Syscall {
 
