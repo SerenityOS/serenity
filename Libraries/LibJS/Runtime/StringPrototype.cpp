@@ -44,7 +44,7 @@ StringPrototype::StringPrototype()
             return Value((i32) static_cast<const StringObject*>(this_object)->primitive_string()->string().length());
         },
         nullptr);
-    put_native_function("charAt", [](Object* this_object, Vector<Value> arguments) -> Value {
+    put_native_function("charAt", [](Object* this_object, const Vector<Value>& arguments) -> Value {
         ASSERT(this_object);
         i32 index = 0;
         if (!arguments.is_empty())
@@ -55,7 +55,7 @@ StringPrototype::StringPrototype()
             return js_string(this_object->heap(), String::empty());
         return js_string(this_object->heap(), underlying_string.substring(index, 1));
     });
-    put_native_function("repeat", [](Object* this_object, Vector<Value> arguments) -> Value {
+    put_native_function("repeat", [](Object* this_object, const Vector<Value>& arguments) -> Value {
         ASSERT(this_object->is_string_object());
         if (arguments.is_empty())
             return js_string(this_object->heap(), String::empty());

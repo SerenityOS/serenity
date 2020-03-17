@@ -40,7 +40,7 @@ ScriptFunction::~ScriptFunction()
 {
 }
 
-Value ScriptFunction::call(Interpreter& interpreter, Vector<Value> argument_values)
+Value ScriptFunction::call(Interpreter& interpreter, const Vector<Value>& argument_values)
 {
     Vector<Argument> arguments;
     for (size_t i = 0; i < m_parameters.size(); ++i) {
@@ -50,7 +50,7 @@ Value ScriptFunction::call(Interpreter& interpreter, Vector<Value> argument_valu
             value = argument_values[i];
         arguments.append({ move(name), move(value) });
     }
-    return interpreter.run(m_body, move(arguments), ScopeType::Function);
+    return interpreter.run(m_body, arguments, ScopeType::Function);
 }
 
 }

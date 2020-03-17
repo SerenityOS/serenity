@@ -30,7 +30,7 @@
 
 namespace JS {
 
-NativeFunction::NativeFunction(AK::Function<Value(Object*, Vector<Value>)> native_function)
+NativeFunction::NativeFunction(AK::Function<Value(Object*, const Vector<Value>&)> native_function)
     : m_native_function(move(native_function))
 {
 }
@@ -39,11 +39,11 @@ NativeFunction::~NativeFunction()
 {
 }
 
-Value NativeFunction::call(Interpreter& interpreter, Vector<Value> arguments)
+Value NativeFunction::call(Interpreter& interpreter, const Vector<Value>& arguments)
 {
     auto this_value = interpreter.this_value();
     ASSERT(this_value.is_object());
-    return m_native_function(this_value.as_object(), move(arguments));
+    return m_native_function(this_value.as_object(), arguments);
 }
 
 }

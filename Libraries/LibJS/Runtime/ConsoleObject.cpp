@@ -32,7 +32,7 @@ namespace JS {
 
 ConsoleObject::ConsoleObject()
 {
-    put_native_function("log", [](Object*, Vector<Value> arguments) -> Value {
+    put_native_function("log", [](Object*, const Vector<Value>& arguments) -> Value {
         for (auto& argument : arguments)
             printf("%s ", argument.to_string().characters());
         return js_undefined();
