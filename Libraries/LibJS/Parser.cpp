@@ -254,6 +254,9 @@ NonnullOwnPtr<Expression> Parser::parse_unary_prefixed_expression()
     case TokenType::Tilde:
         consume();
         return make<UnaryExpression>(UnaryOp::BitwiseNot, parse_primary_expression());
+    case TokenType::Typeof:
+        consume();
+        return make<UnaryExpression>(UnaryOp::Typeof, parse_primary_expression());
     default:
         m_has_errors = true;
         expected("primary expression (missing switch case)");
@@ -532,7 +535,8 @@ bool Parser::match_unary_prefixed_expression() const
     return type == TokenType::PlusPlus
         || type == TokenType::MinusMinus
         || type == TokenType::ExclamationMark
-        || type == TokenType::Tilde;
+        || type == TokenType::Tilde
+        || type == TokenType::Typeof;
 }
 
 bool Parser::match_secondary_expression() const
