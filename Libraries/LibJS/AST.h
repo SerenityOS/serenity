@@ -309,6 +309,7 @@ private:
 enum class UnaryOp {
     BitwiseNot,
     Not,
+    Typeof,
 };
 
 class UnaryExpression : public Expression {
