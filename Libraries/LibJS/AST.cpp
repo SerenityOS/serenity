@@ -199,6 +199,23 @@ Value UnaryExpression::execute(Interpreter& interpreter) const
         return bitwise_not(lhs_result);
     case UnaryOp::Not:
         return Value(!lhs_result.to_boolean());
+    case UnaryOp::Typeof:
+        switch (lhs_result.type()) {
+        case Value::Type::Undefined:
+            return js_string(interpreter.heap(), "undefined");
+        case Value::Type::Null:
+            // yes, this is on purpose. yes, this is how javascript works.
+            // yes, it's silly.
+            return js_string(interpreter.heap(), "object");
+        case Value::Type::Number:
+            return js_string(interpreter.heap(), "number");
+        case Value::Type::String:
+            return js_string(interpreter.heap(), "string");
+        case Value::Type::Object:
+            return js_string(interpreter.heap(), "object");
+        case Value::Type::Boolean:
+            return js_string(interpreter.heap(), "boolean");
+        }
     }
 
     ASSERT_NOT_REACHED();
@@ -317,6 +334,9 @@ void UnaryExpression::dump(int indent) const
         break;
     case UnaryOp::Not:
         op_string = "!";
+        break;
+    case UnaryOp::Typeof:
+        op_string = "typeof ";
         break;
     }
 
