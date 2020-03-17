@@ -51,6 +51,11 @@ struct ScopeFrame {
     HashMap<String, Variable> variables;
 };
 
+struct CallFrame {
+    Value this_value;
+    Vector<Value> arguments;
+};
+
 struct Argument {
     String name;
     Value value;
@@ -79,13 +84,13 @@ public:
     void enter_scope(const ScopeNode&, Vector<Argument>, ScopeType);
     void exit_scope(const ScopeNode&);
 
-    void push_this_value(Value value) { m_this_stack.append(move(value)); }
-    void pop_this_value() { m_this_stack.take_last(); }
+    CallFrame& push_call_frame() { m_call_stack.append({ js_undefined(), {} }); return m_call_stack.last(); }
+    void pop_call_frame() { m_call_stack.take_last(); }
     Value this_value() const
     {
-        if (m_this_stack.is_empty())
+        if (m_call_stack.is_empty())
             return m_global_object;
-        return m_this_stack.last();
+        return m_call_stack.last().this_value;
     }
 
     Object* string_prototype() { return m_string_prototype; }
@@ -95,7 +100,7 @@ private:
     Heap m_heap;
 
     Vector<ScopeFrame> m_scope_stack;
-    Vector<Value> m_this_stack;
+    Vector<CallFrame> m_call_stack;
 
     Object* m_global_object { nullptr };
     Object* m_string_prototype { nullptr };
