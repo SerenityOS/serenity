@@ -37,7 +37,7 @@ ObjectPrototype::ObjectPrototype()
 {
     set_prototype(nullptr);
 
-    put_native_function("hasOwnProperty", [](Object* this_object, Vector<Value> arguments) -> Value {
+    put_native_function("hasOwnProperty", [](Object* this_object, const Vector<Value>& arguments) -> Value {
         ASSERT(this_object);
         if (arguments.is_empty())
             return js_undefined();
