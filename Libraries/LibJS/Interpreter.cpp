@@ -151,9 +151,13 @@ void Interpreter::gather_roots(Badge<Heap>, HashTable<Cell*>& roots)
         }
     }
 
-    for (auto& this_value : m_this_stack) {
-        if (this_value.is_cell())
-            roots.set(this_value.as_cell());
+    for (auto& call_frame : m_call_stack) {
+        if (call_frame.this_value.is_cell())
+            roots.set(call_frame.this_value.as_cell());
+        for (auto& argument : call_frame.arguments) {
+            if (argument.is_cell())
+                roots.set(argument.as_cell());
+        }
     }
 }
 
