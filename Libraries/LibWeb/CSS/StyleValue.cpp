@@ -75,7 +75,8 @@ ImageStyleValue::ImageStyleValue(const URL& url, Document& document)
         if (!m_bitmap)
             return;
         // FIXME: Do less than a full repaint if possible?
-        m_document->frame()->set_needs_display({});
+        if (m_document->frame())
+            m_document->frame()->set_needs_display({});
     });
 }
 
