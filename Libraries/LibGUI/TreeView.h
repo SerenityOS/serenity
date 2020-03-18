@@ -39,6 +39,7 @@ public:
     virtual void scroll_into_view(const ModelIndex&, Gfx::Orientation);
 
     virtual int item_count() const override;
+    virtual void toggle_index(const ModelIndex&) override;
 
 protected:
     TreeView();
@@ -60,7 +61,6 @@ private:
     int toggle_size() const { return 9; }
     int text_padding() const { return 2; }
     int tree_column_x_offset() const;
-    virtual void toggle_index(const ModelIndex&) override;
     virtual void update_column_sizes() override;
 
     template<typename Callback>

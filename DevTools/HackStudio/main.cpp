@@ -187,6 +187,7 @@ int main(int argc, char** argv)
             // FIXME: Should we unlink the file here maybe?
             return;
         }
+        g_project_tree_view->toggle_index(g_project_tree_view->model()->index(0, 0));
         open_file(filename);
     });
 
@@ -199,6 +200,7 @@ int main(int argc, char** argv)
             GUI::MessageBox::show(String::format("Failed to add '%s' to project", filename.characters()), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, g_window);
             return;
         }
+        g_project_tree_view->toggle_index(g_project_tree_view->model()->index(0, 0));
         open_file(filename);
     });
 
@@ -249,6 +251,7 @@ int main(int argc, char** argv)
     g_project_tree_view->set_model(g_project->model());
     g_project_tree_view->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     g_project_tree_view->set_preferred_size(140, 0);
+    g_project_tree_view->toggle_index(g_project_tree_view->model()->index(0, 0));
 
     g_project_tree_view->on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
         if (index.is_valid()) {
@@ -573,6 +576,7 @@ void open_project(String filename)
     ASSERT(g_project);
     if (g_project_tree_view) {
         g_project_tree_view->set_model(g_project->model());
+        g_project_tree_view->toggle_index(g_project_tree_view->model()->index(0, 0));
         g_project_tree_view->update();
     }
 }
