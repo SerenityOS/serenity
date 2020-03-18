@@ -31,6 +31,7 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/TreeNode.h>
 
 namespace Web {
@@ -56,9 +57,18 @@ class StyleProperties;
 
 class Node
     : public TreeNode<Node>
+    , public EventTarget
     , public Bindings::Wrappable {
 public:
     using WrapperType = Bindings::NodeWrapper;
+
+    using TreeNode<Node>::ref;
+    using TreeNode<Node>::unref;
+
+    // ^EventTarget
+    virtual void ref_event_target() final { ref(); }
+    virtual void unref_event_target() final { unref(); }
+    virtual void dispatch_event(String event_name) final;
 
     virtual ~Node();
 

@@ -40,7 +40,7 @@ public:
     const Document& node() const;
 
 private:
-    virtual const char* class_name() const override { return "Document"; }
+    virtual const char* class_name() const override { return "DocumentWrapper"; }
 };
 
 }
