@@ -44,7 +44,7 @@ private:
     virtual bool is_script_function() const final { return true; }
     virtual const char* class_name() const override { return "ScriptFunction"; }
 
-    const ScopeNode& m_body;
+    NonnullRefPtr<ScopeNode> m_body;
     const Vector<String> m_parameters;
 };
 

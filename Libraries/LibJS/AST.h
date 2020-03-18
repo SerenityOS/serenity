@@ -26,8 +26,8 @@
 
 #pragma once
 
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/OwnPtr.h>
+#include <AK/NonnullRefPtrVector.h>
+#include <AK/RefPtr.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
@@ -35,7 +35,14 @@
 
 namespace JS {
 
-class ASTNode {
+template<class T, class... Args>
+static inline NonnullRefPtr<T>
+create_ast_node(Args&&... args)
+{
+    return adopt(*new T(forward<Args>(args)...));
+}
+
+class ASTNode : public RefCounted<ASTNode> {
 public:
     virtual ~ASTNode() {}
     virtual const char* class_name() const = 0;
@@ -62,7 +69,7 @@ public:
 
 class ExpressionStatement final : public Statement {
 public:
-    ExpressionStatement(NonnullOwnPtr<Expression> expression)
+    ExpressionStatement(NonnullRefPtr<Expression> expression)
         : m_expression(move(expression))
     {
     }
@@ -72,7 +79,7 @@ public:
     virtual void dump(int indent) const override;
 
 private:
-    NonnullOwnPtr<Expression> m_expression;
+    NonnullRefPtr<Expression> m_expression;
 };
 
 class ScopeNode : public Statement {
@@ -84,12 +91,12 @@ public:
         m_children.append(move(child));
         return static_cast<T&>(m_children.last());
     }
-    void append(NonnullOwnPtr<Statement> child)
+    void append(NonnullRefPtr<Statement> child)
     {
         m_children.append(move(child));
     }
 
-    const NonnullOwnPtrVector<Statement>& children() const { return m_children; }
+    const NonnullRefPtrVector<Statement>& children() const { return m_children; }
     virtual Value execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
 
@@ -97,7 +104,7 @@ protected:
     ScopeNode() {}
 
 private:
-    NonnullOwnPtrVector<Statement> m_children;
+    NonnullRefPtrVector<Statement> m_children;
 };
 
 class Program : public ScopeNode {
@@ -118,7 +125,7 @@ private:
 
 class FunctionDeclaration : public Statement {
 public:
-    FunctionDeclaration(String name, NonnullOwnPtr<ScopeNode> body, Vector<String> parameters = {})
+    FunctionDeclaration(String name, NonnullRefPtr<ScopeNode> body, Vector<String> parameters = {})
         : m_name(move(name))
         , m_body(move(body))
         , m_parameters(move(parameters))
@@ -136,7 +143,7 @@ private:
     virtual const char* class_name() const override { return "FunctionDeclaration"; }
 
     String m_name;
-    NonnullOwnPtr<ScopeNode> m_body;
+    NonnullRefPtr<ScopeNode> m_body;
     const Vector<String> m_parameters;
 };
 
@@ -153,7 +160,7 @@ public:
 
 class ReturnStatement : public Statement {
 public:
-    explicit ReturnStatement(OwnPtr<Expression> argument)
+    explicit ReturnStatement(RefPtr<Expression> argument)
         : m_argument(move(argument))
     {
     }
@@ -166,12 +173,12 @@ public:
 private:
     virtual const char* class_name() const override { return "ReturnStatement"; }
 
-    OwnPtr<Expression> m_argument;
+    RefPtr<Expression> m_argument;
 };
 
 class IfStatement : public Statement {
 public:
-    IfStatement(NonnullOwnPtr<Expression> predicate, NonnullOwnPtr<ScopeNode> consequent, NonnullOwnPtr<ScopeNode> alternate)
+    IfStatement(NonnullRefPtr<Expression> predicate, NonnullRefPtr<ScopeNode> consequent, NonnullRefPtr<ScopeNode> alternate)
         : m_predicate(move(predicate))
         , m_consequent(move(consequent))
         , m_alternate(move(alternate))
@@ -188,14 +195,14 @@ public:
 private:
     virtual const char* class_name() const override { return "IfStatement"; }
 
-    NonnullOwnPtr<Expression> m_predicate;
-    NonnullOwnPtr<ScopeNode> m_consequent;
-    NonnullOwnPtr<ScopeNode> m_alternate;
+    NonnullRefPtr<Expression> m_predicate;
+    NonnullRefPtr<ScopeNode> m_consequent;
+    NonnullRefPtr<ScopeNode> m_alternate;
 };
 
 class WhileStatement : public Statement {
 public:
-    WhileStatement(NonnullOwnPtr<Expression> predicate, NonnullOwnPtr<ScopeNode> body)
+    WhileStatement(NonnullRefPtr<Expression> predicate, NonnullRefPtr<ScopeNode> body)
         : m_predicate(move(predicate))
         , m_body(move(body))
     {
@@ -210,13 +217,13 @@ public:
 private:
     virtual const char* class_name() const override { return "WhileStatement"; }
 
-    NonnullOwnPtr<Expression> m_predicate;
-    NonnullOwnPtr<ScopeNode> m_body;
+    NonnullRefPtr<Expression> m_predicate;
+    NonnullRefPtr<ScopeNode> m_body;
 };
 
 class ForStatement : public Statement {
 public:
-    ForStatement(OwnPtr<Statement> init, OwnPtr<Expression> test, OwnPtr<Expression> update, NonnullOwnPtr<ScopeNode> body)
+    ForStatement(RefPtr<Statement> init, RefPtr<Expression> test, RefPtr<Expression> update, NonnullRefPtr<ScopeNode> body)
         : m_init(move(init))
         , m_test(move(test))
         , m_update(move(update))
@@ -235,10 +242,10 @@ public:
 private:
     virtual const char* class_name() const override { return "ForStatement"; }
 
-    OwnPtr<Statement> m_init;
-    OwnPtr<Expression> m_test;
-    OwnPtr<Expression> m_update;
-    NonnullOwnPtr<ScopeNode> m_body;
+    RefPtr<Statement> m_init;
+    RefPtr<Expression> m_test;
+    RefPtr<Expression> m_update;
+    NonnullRefPtr<ScopeNode> m_body;
 };
 
 enum class BinaryOp {
@@ -263,7 +270,7 @@ enum class BinaryOp {
 
 class BinaryExpression : public Expression {
 public:
-    BinaryExpression(BinaryOp op, NonnullOwnPtr<Expression> lhs, NonnullOwnPtr<Expression> rhs)
+    BinaryExpression(BinaryOp op, NonnullRefPtr<Expression> lhs, NonnullRefPtr<Expression> rhs)
         : m_op(op)
         , m_lhs(move(lhs))
         , m_rhs(move(rhs))
@@ -277,8 +284,8 @@ private:
     virtual const char* class_name() const override { return "BinaryExpression"; }
 
     BinaryOp m_op;
-    NonnullOwnPtr<Expression> m_lhs;
-    NonnullOwnPtr<Expression> m_rhs;
+    NonnullRefPtr<Expression> m_lhs;
+    NonnullRefPtr<Expression> m_rhs;
 };
 
 enum class LogicalOp {
@@ -288,7 +295,7 @@ enum class LogicalOp {
 
 class LogicalExpression : public Expression {
 public:
-    LogicalExpression(LogicalOp op, NonnullOwnPtr<Expression> lhs, NonnullOwnPtr<Expression> rhs)
+    LogicalExpression(LogicalOp op, NonnullRefPtr<Expression> lhs, NonnullRefPtr<Expression> rhs)
         : m_op(op)
         , m_lhs(move(lhs))
         , m_rhs(move(rhs))
@@ -302,8 +309,8 @@ private:
     virtual const char* class_name() const override { return "LogicalExpression"; }
 
     LogicalOp m_op;
-    NonnullOwnPtr<Expression> m_lhs;
-    NonnullOwnPtr<Expression> m_rhs;
+    NonnullRefPtr<Expression> m_lhs;
+    NonnullRefPtr<Expression> m_rhs;
 };
 
 enum class UnaryOp {
@@ -314,7 +321,7 @@ enum class UnaryOp {
 
 class UnaryExpression : public Expression {
 public:
-    UnaryExpression(UnaryOp op, NonnullOwnPtr<Expression> lhs)
+    UnaryExpression(UnaryOp op, NonnullRefPtr<Expression> lhs)
         : m_op(op)
         , m_lhs(move(lhs))
     {
@@ -327,7 +334,7 @@ private:
     virtual const char* class_name() const override { return "UnaryExpression"; }
 
     UnaryOp m_op;
-    NonnullOwnPtr<Expression> m_lhs;
+    NonnullRefPtr<Expression> m_lhs;
 };
 
 class Literal : public Expression {
@@ -432,7 +439,7 @@ private:
 
 class CallExpression : public Expression {
 public:
-    explicit CallExpression(NonnullOwnPtr<Expression> callee, NonnullOwnPtrVector<Expression> arguments = {})
+    explicit CallExpression(NonnullRefPtr<Expression> callee, NonnullRefPtrVector<Expression> arguments = {})
         : m_callee(move(callee))
         , m_arguments(move(arguments))
     {
@@ -444,8 +451,8 @@ public:
 private:
     virtual const char* class_name() const override { return "CallExpression"; }
 
-    NonnullOwnPtr<Expression> m_callee;
-    const NonnullOwnPtrVector<Expression> m_arguments;
+    NonnullRefPtr<Expression> m_callee;
+    const NonnullRefPtrVector<Expression> m_arguments;
 };
 
 enum class AssignmentOp {
@@ -458,7 +465,7 @@ enum class AssignmentOp {
 
 class AssignmentExpression : public Expression {
 public:
-    AssignmentExpression(AssignmentOp op, NonnullOwnPtr<ASTNode> lhs, NonnullOwnPtr<Expression> rhs)
+    AssignmentExpression(AssignmentOp op, NonnullRefPtr<ASTNode> lhs, NonnullRefPtr<Expression> rhs)
         : m_op(op)
         , m_lhs(move(lhs))
         , m_rhs(move(rhs))
@@ -472,8 +479,8 @@ private:
     virtual const char* class_name() const override { return "AssignmentExpression"; }
 
     AssignmentOp m_op;
-    NonnullOwnPtr<ASTNode> m_lhs;
-    NonnullOwnPtr<Expression> m_rhs;
+    NonnullRefPtr<ASTNode> m_lhs;
+    NonnullRefPtr<Expression> m_rhs;
 };
 
 enum class UpdateOp {
@@ -483,7 +490,7 @@ enum class UpdateOp {
 
 class UpdateExpression : public Expression {
 public:
-    UpdateExpression(UpdateOp op, NonnullOwnPtr<Expression> argument, bool prefixed = false)
+    UpdateExpression(UpdateOp op, NonnullRefPtr<Expression> argument, bool prefixed = false)
         : m_op(op)
         , m_argument(move(argument))
         , m_prefixed(prefixed)
@@ -497,7 +504,7 @@ private:
     virtual const char* class_name() const override { return "UpdateExpression"; }
 
     UpdateOp m_op;
-    NonnullOwnPtr<Identifier> m_argument;
+    NonnullRefPtr<Identifier> m_argument;
     bool m_prefixed;
 };
 
@@ -509,7 +516,7 @@ enum class DeclarationType {
 
 class VariableDeclaration : public Statement {
 public:
-    VariableDeclaration(NonnullOwnPtr<Identifier> name, OwnPtr<Expression> initializer, DeclarationType declaration_type)
+    VariableDeclaration(NonnullRefPtr<Identifier> name, RefPtr<Expression> initializer, DeclarationType declaration_type)
         : m_declaration_type(declaration_type)
         , m_name(move(name))
         , m_initializer(move(initializer))
@@ -527,8 +534,8 @@ private:
     virtual const char* class_name() const override { return "VariableDeclaration"; }
 
     DeclarationType m_declaration_type;
-    NonnullOwnPtr<Identifier> m_name;
-    OwnPtr<Expression> m_initializer;
+    NonnullRefPtr<Identifier> m_name;
+    RefPtr<Expression> m_initializer;
 };
 
 class ObjectExpression : public Expression {
@@ -544,7 +551,7 @@ private:
 
 class MemberExpression final : public Expression {
 public:
-    MemberExpression(NonnullOwnPtr<Expression> object, NonnullOwnPtr<Expression> property)
+    MemberExpression(NonnullRefPtr<Expression> object, NonnullRefPtr<Expression> property)
         : m_object(move(object))
         , m_property(move(property))
     {
@@ -559,8 +566,8 @@ private:
     virtual bool is_member_expression() const override { return true; }
     virtual const char* class_name() const override { return "MemberExpression"; }
 
-    NonnullOwnPtr<Expression> m_object;
-    NonnullOwnPtr<Expression> m_property;
+    NonnullRefPtr<Expression> m_object;
+    NonnullRefPtr<Expression> m_property;
 };
 
 }

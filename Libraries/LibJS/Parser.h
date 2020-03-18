@@ -28,7 +28,7 @@
 
 #include "AST.h"
 #include "Lexer.h"
-#include <AK/NonnullOwnPtr.h>
+#include <AK/NonnullRefPtr.h>
 
 namespace JS {
 
@@ -41,21 +41,21 @@ class Parser {
 public:
     explicit Parser(Lexer lexer);
 
-    NonnullOwnPtr<Program> parse_program();
+    NonnullRefPtr<Program> parse_program();
 
-    NonnullOwnPtr<Statement> parse_statement();
-    NonnullOwnPtr<BlockStatement> parse_block_statement();
-    NonnullOwnPtr<ReturnStatement> parse_return_statement();
-    NonnullOwnPtr<FunctionDeclaration> parse_function_declaration();
-    NonnullOwnPtr<VariableDeclaration> parse_variable_declaration();
-    NonnullOwnPtr<ForStatement> parse_for_statement();
+    NonnullRefPtr<Statement> parse_statement();
+    NonnullRefPtr<BlockStatement> parse_block_statement();
+    NonnullRefPtr<ReturnStatement> parse_return_statement();
+    NonnullRefPtr<FunctionDeclaration> parse_function_declaration();
+    NonnullRefPtr<VariableDeclaration> parse_variable_declaration();
+    NonnullRefPtr<ForStatement> parse_for_statement();
 
-    NonnullOwnPtr<Expression> parse_expression(int min_precedence, Associativity associate = Associativity::Right);
-    NonnullOwnPtr<Expression> parse_primary_expression();
-    NonnullOwnPtr<Expression> parse_unary_prefixed_expression();
-    NonnullOwnPtr<ObjectExpression> parse_object_expression();
-    NonnullOwnPtr<Expression> parse_secondary_expression(NonnullOwnPtr<Expression>, int min_precedence, Associativity associate = Associativity::Right);
-    NonnullOwnPtr<CallExpression> parse_call_expression(NonnullOwnPtr<Expression>);
+    NonnullRefPtr<Expression> parse_expression(int min_precedence, Associativity associate = Associativity::Right);
+    NonnullRefPtr<Expression> parse_primary_expression();
+    NonnullRefPtr<Expression> parse_unary_prefixed_expression();
+    NonnullRefPtr<ObjectExpression> parse_object_expression();
+    NonnullRefPtr<Expression> parse_secondary_expression(NonnullRefPtr<Expression>, int min_precedence, Associativity associate = Associativity::Right);
+    NonnullRefPtr<CallExpression> parse_call_expression(NonnullRefPtr<Expression>);
 
     bool has_errors() const { return m_has_errors; }
 
