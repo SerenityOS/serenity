@@ -378,6 +378,8 @@ RefPtr<Document> parse_html_document(const StringView& html, const URL& url)
     };
     fire_insertion_callbacks(document);
 
+    document->dispatch_event("DOMContentLoaded");
+
     return document;
 }
 
