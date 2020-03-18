@@ -128,7 +128,7 @@ void CalendarWidget::CalendarTile::update_values(Calendar& calendar, int index, 
     m_display_weekday_name = index < 7;
 
     if (m_display_weekday_name) {
-        const String m_day_names[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+        static const String m_day_names[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
         m_weekday_name = m_day_names[index];
     }
 
