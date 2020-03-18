@@ -13,10 +13,13 @@ public:
     virtual ~CalendarWidget() override;
 
 private:
+    virtual void resize_event(GUI::ResizeEvent&) override;
+
     void update_calendar_tiles(int target_year, int target_month);
     void show_add_event_window(Calendar* calendar);
 
     OwnPtr<Calendar> m_calendar;
+    RefPtr<GUI::Widget> m_bottom_container;
     RefPtr<GUI::Label> m_selected_date_label;
     RefPtr<GUI::Button> m_prev_month_button;
     RefPtr<GUI::Button> m_next_month_button;
