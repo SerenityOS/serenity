@@ -26,21 +26,23 @@
 
 #pragma once
 
-#include <LibWeb/Bindings/EventTargetWrapper.h>
+#include <LibWeb/Bindings/Wrapper.h>
 
 namespace Web {
 namespace Bindings {
 
-class NodeWrapper : public EventTargetWrapper {
+class EventTargetWrapper : public Wrapper {
 public:
-    explicit NodeWrapper(Node&);
-    virtual ~NodeWrapper() override;
+    explicit EventTargetWrapper(EventTarget&);
+    virtual ~EventTargetWrapper() override;
 
-    Node& node();
-    const Node& node() const;
+    EventTarget& impl() { return *m_impl; }
+    const EventTarget& impl() const { return *m_impl; }
 
 private:
-    virtual const char* class_name() const override { return "NodeWrapper"; }
+    virtual const char* class_name() const override { return "EventTargetWrapper"; }
+
+    NonnullRefPtr<EventTarget> m_impl;
 };
 
 }

@@ -33,13 +33,23 @@ namespace Web {
 namespace Bindings {
 
 NodeWrapper::NodeWrapper(Node& node)
-    : m_node(node)
+    : EventTargetWrapper(node)
 {
     put("nodeName", JS::js_string(heap(), node.tag_name()));
 }
 
 NodeWrapper::~NodeWrapper()
 {
+}
+
+Node& NodeWrapper::node()
+{
+    return static_cast<Node&>(EventTargetWrapper::impl());
+}
+
+const Node& NodeWrapper::node() const
+{
+    return static_cast<const Node&>(EventTargetWrapper::impl());
 }
 
 }

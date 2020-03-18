@@ -30,6 +30,8 @@ namespace Web {
 
 class Document;
 class Element;
+class EventListener;
+class EventTarget;
 class Frame;
 class HtmlView;
 class Node;
@@ -37,6 +39,8 @@ class Node;
 namespace Bindings {
 
 class DocumentWrapper;
+class EventListenerWrapper;
+class EventTargetWrapper;
 class NodeWrapper;
 class Wrappable;
 class Wrapper;

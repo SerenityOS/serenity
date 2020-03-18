@@ -1,7 +1,9 @@
 LIBWEB_OBJS = \
-    Bindings/Wrappable.o \
-    Bindings/NodeWrapper.o \
     Bindings/DocumentWrapper.o \
+    Bindings/EventListenerWrapper.o \
+    Bindings/EventTargetWrapper.o \
+    Bindings/NodeWrapper.o \
+    Bindings/Wrappable.o \
     CSS/DefaultStyleSheetSource.o \
     CSS/PropertyID.o \
     CSS/Selector.o \
@@ -18,6 +20,8 @@ LIBWEB_OBJS = \
     DOM/DocumentType.o \
     DOM/Element.o \
     DOM/ElementFactory.o \
+    DOM/EventListener.o \
+    DOM/EventTarget.o \
     DOM/HTMLAnchorElement.o \
     DOM/HTMLBRElement.o \
     DOM/HTMLBlinkElement.o \
