@@ -26,11 +26,13 @@
 
 #pragma once
 
+#include <AK/HashTable.h>
 #include <AK/Noncopyable.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Heap/Handle.h>
 #include <LibJS/Runtime/Cell.h>
 
 namespace JS {
@@ -58,6 +60,9 @@ public:
     bool should_collect_on_every_allocation() const { return m_should_collect_on_every_allocation; }
     void set_should_collect_on_every_allocation(bool b) { m_should_collect_on_every_allocation = b; }
 
+    void did_create_handle(Badge<HandleImpl>, HandleImpl&);
+    void did_destroy_handle(Badge<HandleImpl>, HandleImpl&);
+
 private:
     Cell* allocate_cell(size_t);
 
@@ -72,6 +77,7 @@ private:
 
     Interpreter& m_interpreter;
     Vector<NonnullOwnPtr<HeapBlock>> m_blocks;
+    HashTable<HandleImpl*> m_handles;
 };
 
 }

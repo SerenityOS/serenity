@@ -26,6 +26,7 @@
 
 #include <AK/Badge.h>
 #include <AK/HashTable.h>
+#include <LibJS/Heap/Handle.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Heap/HeapBlock.h>
 #include <LibJS/Interpreter.h>
@@ -78,6 +79,9 @@ void Heap::gather_roots(HashTable<Cell*>& roots)
     m_interpreter.gather_roots({}, roots);
 
     gather_conservative_roots(roots);
+
+    for (auto* handle : m_handles)
+        roots.set(handle->cell());
 
 #ifdef HEAP_DEBUG
     dbg() << "gather_roots:";
@@ -196,4 +200,17 @@ void Heap::sweep_dead_cells()
         });
     }
 }
+
+void Heap::did_create_handle(Badge<HandleImpl>, HandleImpl& impl)
+{
+    ASSERT(!m_handles.contains(&impl));
+    m_handles.set(&impl);
+}
+
+void Heap::did_destroy_handle(Badge<HandleImpl>, HandleImpl& impl)
+{
+    ASSERT(m_handles.contains(&impl));
+    m_handles.remove(&impl);
+}
+
 }
