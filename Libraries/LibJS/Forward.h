@@ -33,6 +33,7 @@ class Argument;
 class Cell;
 class Expression;
 class Function;
+class HandleImpl;
 class Heap;
 class HeapBlock;
 class Interpreter;
@@ -41,5 +42,8 @@ class PrimitiveString;
 class ScopeNode;
 class Value;
 enum class DeclarationType;
+
+template<class T>
+class Handle;
 
 }
