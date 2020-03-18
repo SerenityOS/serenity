@@ -32,6 +32,7 @@ class ASTNode;
 class Argument;
 class Cell;
 class Expression;
+class Function;
 class Heap;
 class HeapBlock;
 class Interpreter;
