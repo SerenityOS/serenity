@@ -72,7 +72,7 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, Vector<Argument> argu
 
 void Interpreter::exit_scope(const ScopeNode& scope_node)
 {
-    while (&m_scope_stack.last().scope_node != &scope_node)
+    while (m_scope_stack.last().scope_node.ptr() != &scope_node)
         m_scope_stack.take_last();
 }
 
