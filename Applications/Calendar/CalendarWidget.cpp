@@ -49,10 +49,10 @@ CalendarWidget::CalendarWidget()
         update_calendar_tiles(m_target_year, m_target_month);
     };
 
-    m_prev_month_button = add<GUI::Button>();
-    m_prev_month_button->set_text("Add Event");
-    m_prev_month_button->set_relative_rect(475, 13, 100, 25);
-    m_prev_month_button->on_click = [this] {
+    m_add_event_button = add<GUI::Button>();
+    m_add_event_button->set_text("Add Event");
+    m_add_event_button->set_relative_rect(475, 13, 100, 25);
+    m_add_event_button->on_click = [this] {
         AddEventDialog::show(m_calendar, window());
     };
 
