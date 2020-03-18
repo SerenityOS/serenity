@@ -20,6 +20,7 @@ private:
     RefPtr<GUI::Label> m_selected_date_label;
     RefPtr<GUI::Button> m_prev_month_button;
     RefPtr<GUI::Button> m_next_month_button;
+    RefPtr<GUI::Button> m_add_event_button;
 
     class CalendarTile final : public GUI::Frame {
         C_OBJECT(CalendarTile)
