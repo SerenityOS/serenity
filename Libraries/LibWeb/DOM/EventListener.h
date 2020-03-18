@@ -1,7 +1,7 @@
 #pragma once
 
 #include <AK/RefCounted.h>
-#include <LibJS/Forward.h>
+#include <LibJS/Heap/Handle.h>
 #include <LibWeb/Bindings/Wrappable.h>
 
 namespace Web {
@@ -12,15 +12,15 @@ class EventListener
 public:
     using WrapperType = Bindings::EventListenerWrapper;
 
-    explicit EventListener(JS::Function* function)
-        : m_function(function)
+    explicit EventListener(JS::Handle<JS::Function> function)
+        : m_function(move(function))
     {
     }
 
-    JS::Function* function() { return m_function; }
+    JS::Function* function();
 
 private:
-    JS::Function* m_function { nullptr };
+    JS::Handle<JS::Function> m_function;
 };
 
 }

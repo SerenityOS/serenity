@@ -41,7 +41,6 @@ public:
 
 private:
     virtual const char* class_name() const override { return "EventListenerWrapper"; }
-    virtual void visit_children(JS::Cell::Visitor&) override;
 
     NonnullRefPtr<EventListener> m_impl;
 };
