@@ -26,6 +26,7 @@
 
 #include "LineEditor.h"
 #include "GlobalState.h"
+#include <AK/StringBuilder.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
@@ -217,13 +218,31 @@ Vector<String> LineEditor::tab_complete_other_token(String& token)
 
     bool seen_others = false;
     Core::DirIterator files(path, Core::DirIterator::SkipDots);
+    auto path_equality = [&token](const auto& file) -> bool {
+        if (file.starts_with(token))
+            return true;
+        if (token.starts_with('\'')) {
+            for (size_t i = 0; i < token.length() - 1 and i < file.length(); ++i)
+                if (token[i + 1] != file[i])
+                    return false;
+            return true;
+        }
+        return false;
+    };
+
     while (files.has_next()) {
         auto file = files.next_path();
-        if (file.starts_with(token)) {
+        if (path_equality(file)) {
             if (!token.is_empty())
                 suggestions.append(file);
             if (completion.is_empty()) {
-                completion = file; // Will only be set once.
+                StringBuilder completion_builder { file.length() + 2 };
+                if (file.contains(" "))
+                    completion_builder.append('\'');
+                completion_builder.append(file);
+                if (file.contains(" "))
+                    completion_builder.append('\'');
+                completion = completion_builder.build(); // Will only be set once.
             } else {
                 cut_mismatching_chars(completion, file, token.length());
                 if (completion.is_empty()) // We cut everything off!
