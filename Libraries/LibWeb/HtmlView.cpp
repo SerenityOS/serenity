@@ -184,6 +184,7 @@ void HtmlView::mousemove_event(GUI::MouseEvent& event)
 #endif
                 is_hovering_link = true;
             }
+            const_cast<Node*>(node)->dispatch_event("mousemove");
         }
         if (m_in_mouse_selection) {
             layout_root()->selection().set_end({ result.layout_node, result.index_in_node });
@@ -234,6 +235,7 @@ void HtmlView::mousedown_event(GUI::MouseEvent& event)
                     m_in_mouse_selection = true;
                 }
             }
+            const_cast<Node*>(node)->dispatch_event("mousedown");
         }
     }
     if (hovered_node_changed)

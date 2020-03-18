@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <script>
+        function foo() {
+            alert("It loaded!");
+        }
+        document.addEventListener("DOMContentLoaded", foo);
+
+        function on_mousedown() {
+            alert("Mouse down!");
+        }
+
+        function on_mousemove() {
+            alert("Mouse move!");
+        }
+
+        document.getElementById("my_div").addEventListener("mousedown", on_mousedown);
+        document.getElementById("my_div").addEventListener("mousemove", on_mousemove);
+    </script>
+    </head>
+    <body>
+        <div id="my_div">Hello there!</div>
+    </body>
+</html>
