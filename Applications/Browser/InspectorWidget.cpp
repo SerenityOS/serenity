@@ -44,7 +44,7 @@ InspectorWidget::InspectorWidget()
         auto* node = static_cast<Web::Node*>(index.internal_data());
         node->document().set_inspected_node(node);
         if (node->is_element()) {
-            auto element = Web::to<Web::Element>(*node);
+            auto& element = Web::to<Web::Element>(*node);
             if (element.resolved_style()) {
                 m_style_table_view->set_model(Web::StylePropertiesModel::create(*element.resolved_style()));
                 m_computed_style_table_view->set_model(Web::StylePropertiesModel::create(*element.computed_style()));
