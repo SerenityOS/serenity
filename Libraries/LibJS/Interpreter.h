@@ -47,7 +47,7 @@ struct Variable {
 
 struct ScopeFrame {
     ScopeType type;
-    const ScopeNode& scope_node;
+    NonnullRefPtr<ScopeNode> scope_node;
     HashMap<String, Variable> variables;
 };
 

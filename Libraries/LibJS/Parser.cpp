@@ -163,9 +163,9 @@ Associativity Parser::operator_associativity(TokenType type) const
     }
 }
 
-NonnullOwnPtr<Program> Parser::parse_program()
+NonnullRefPtr<Program> Parser::parse_program()
 {
-    auto program = make<Program>();
+    auto program = adopt(*new Program);
     while (!done()) {
         if (match(TokenType::Semicolon)) {
             consume();
@@ -179,10 +179,10 @@ NonnullOwnPtr<Program> Parser::parse_program()
     return program;
 }
 
-NonnullOwnPtr<Statement> Parser::parse_statement()
+NonnullRefPtr<Statement> Parser::parse_statement()
 {
     if (match_expression()) {
-        return make<JS::ExpressionStatement>(parse_expression(0));
+        return adopt(*new ExpressionStatement(parse_expression(0)));
     }
 
     switch (m_current_token.type()) {
@@ -202,11 +202,11 @@ NonnullOwnPtr<Statement> Parser::parse_statement()
         m_has_errors = true;
         expected("statement (missing switch case)");
         consume();
-        return make<ErrorStatement>();
+        return create_ast_node<ErrorStatement>();
     }
 }
 
-NonnullOwnPtr<Expression> Parser::parse_primary_expression()
+NonnullRefPtr<Expression> Parser::parse_primary_expression()
 {
     switch (m_current_token.type()) {
     case TokenType::ParenOpen: {
@@ -216,64 +216,64 @@ NonnullOwnPtr<Expression> Parser::parse_primary_expression()
         return expression;
     }
     case TokenType::Identifier:
-        return make<Identifier>(consume().value());
+        return create_ast_node<Identifier>(consume().value());
     case TokenType::NumericLiteral:
-        return make<NumericLiteral>(consume().double_value());
+        return create_ast_node<NumericLiteral>(consume().double_value());
     case TokenType::BoolLiteral:
-        return make<BooleanLiteral>(consume().bool_value());
+        return create_ast_node<BooleanLiteral>(consume().bool_value());
     case TokenType::StringLiteral:
-        return make<StringLiteral>(consume().string_value());
+        return create_ast_node<StringLiteral>(consume().string_value());
     case TokenType::NullLiteral:
         consume();
-        return make<NullLiteral>();
+        return create_ast_node<NullLiteral>();
     case TokenType::UndefinedLiteral:
         consume();
-        return make<UndefinedLiteral>();
+        return create_ast_node<UndefinedLiteral>();
     case TokenType::CurlyOpen:
         return parse_object_expression();
     default:
         m_has_errors = true;
         expected("primary expression (missing switch case)");
         consume();
-        return make<ErrorExpression>();
+        return create_ast_node<ErrorExpression>();
     }
 }
 
-NonnullOwnPtr<Expression> Parser::parse_unary_prefixed_expression()
+NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
 {
     switch (m_current_token.type()) {
     case TokenType::PlusPlus:
         consume();
-        return make<UpdateExpression>(UpdateOp::Increment, parse_primary_expression(), true);
+        return create_ast_node<UpdateExpression>(UpdateOp::Increment, parse_primary_expression(), true);
     case TokenType::MinusMinus:
         consume();
-        return make<UpdateExpression>(UpdateOp::Decrement, parse_primary_expression(), true);
+        return create_ast_node<UpdateExpression>(UpdateOp::Decrement, parse_primary_expression(), true);
     case TokenType::ExclamationMark:
         consume();
-        return make<UnaryExpression>(UnaryOp::Not, parse_primary_expression());
+        return create_ast_node<UnaryExpression>(UnaryOp::Not, parse_primary_expression());
     case TokenType::Tilde:
         consume();
-        return make<UnaryExpression>(UnaryOp::BitwiseNot, parse_primary_expression());
+        return create_ast_node<UnaryExpression>(UnaryOp::BitwiseNot, parse_primary_expression());
     case TokenType::Typeof:
         consume();
-        return make<UnaryExpression>(UnaryOp::Typeof, parse_primary_expression());
+        return create_ast_node<UnaryExpression>(UnaryOp::Typeof, parse_primary_expression());
     default:
         m_has_errors = true;
         expected("primary expression (missing switch case)");
         consume();
-        return make<ErrorExpression>();
+        return create_ast_node<ErrorExpression>();
     }
 }
 
-NonnullOwnPtr<ObjectExpression> Parser::parse_object_expression()
+NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
 {
     // FIXME: Parse actual object expression
     consume(TokenType::CurlyOpen);
     consume(TokenType::CurlyClose);
-    return make<ObjectExpression>();
+    return create_ast_node<ObjectExpression>();
 }
 
-NonnullOwnPtr<Expression> Parser::parse_expression(int min_precedence, Associativity associativity)
+NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associativity associativity)
 {
     if (match_unary_prefixed_expression())
         return parse_unary_prefixed_expression();
@@ -292,90 +292,90 @@ NonnullOwnPtr<Expression> Parser::parse_expression(int min_precedence, Associati
     return expression;
 }
 
-NonnullOwnPtr<Expression> Parser::parse_secondary_expression(NonnullOwnPtr<Expression> lhs, int min_precedence, Associativity associativity)
+NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expression> lhs, int min_precedence, Associativity associativity)
 {
     switch (m_current_token.type()) {
     case TokenType::Plus:
         consume();
-        return make<BinaryExpression>(BinaryOp::Plus, move(lhs), parse_expression(min_precedence, associativity));
+        return create_ast_node<BinaryExpression>(BinaryOp::Plus, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::PlusEquals:
         consume();
-        return make<AssignmentExpression>(AssignmentOp::AdditionAssignment, move(lhs), parse_expression(min_precedence, associativity));
+        return create_ast_node<AssignmentExpression>(AssignmentOp::AdditionAssignment, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::Minus:
         consume();
-        return make<BinaryExpression>(BinaryOp::Minus, move(lhs), parse_expression(min_precedence, associativity));
+        return create_ast_node<BinaryExpression>(BinaryOp::Minus, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::MinusEquals:
         consume();
-        return make<AssignmentExpression>(AssignmentOp::SubtractionAssignment, move(lhs), parse_expression(min_precedence, associativity));
+        return create_ast_node<AssignmentExpression>(AssignmentOp::SubtractionAssignment, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::Asterisk:
         consume();
-        return make<BinaryExpression>(BinaryOp::Asterisk, move(lhs), parse_expression(min_precedence, associativity));
+        return create_ast_node<BinaryExpression>(BinaryOp::Asterisk, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::AsteriskEquals:
         consume();
-        return make<AssignmentExpression>(AssignmentOp::MultiplicationAssignment, move(lhs), parse_expression(min_precedence, associativity));
+        return create_ast_node<AssignmentExpression>(AssignmentOp::MultiplicationAssignment, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::Slash:
         consume();
-        return make<BinaryExpression>(BinaryOp::Slash, move(lhs), parse_expression(min_precedence, associativity));
+        return create_ast_node<BinaryExpression>(BinaryOp::Slash, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::SlashEquals:
         consume();
-        return make<AssignmentExpression>(AssignmentOp::DivisionAssignment, move(lhs), parse_expression(min_precedence, associativity));
+        return create_ast_node<AssignmentExpression>(AssignmentOp::DivisionAssignment, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::GreaterThan:
         consume();
-        return make<BinaryExpression>(BinaryOp::GreaterThan, move(lhs), parse_expression(min_precedence, associativity));
+        return create_ast_node<BinaryExpression>(BinaryOp::GreaterThan, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::GreaterThanEquals:
         consume();
-        return make<BinaryExpression>(BinaryOp::GreaterThanEquals, move(lhs), parse_expression(min_precedence, associativity));
+        return create_ast_node<BinaryExpression>(BinaryOp::GreaterThanEquals, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::LessThan:
         consume();
-        return make<BinaryExpression>(BinaryOp::LessThan, move(lhs), parse_expression(min_precedence, associativity));
+        return create_ast_node<BinaryExpression>(BinaryOp::LessThan, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::LessThanEquals:
         consume();
-        return make<BinaryExpression>(BinaryOp::LessThanEquals, move(lhs), parse_expression(min_precedence, associativity));
+        return create_ast_node<BinaryExpression>(BinaryOp::LessThanEquals, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::EqualsEqualsEquals:
         consume();
-        return make<BinaryExpression>(BinaryOp::TypedEquals, move(lhs), parse_expression(min_precedence, associativity));
+        return create_ast_node<BinaryExpression>(BinaryOp::TypedEquals, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::ExclamationMarkEqualsEquals:
         consume();
-        return make<BinaryExpression>(BinaryOp::TypedInequals, move(lhs), parse_expression(min_precedence, associativity));
+        return create_ast_node<BinaryExpression>(BinaryOp::TypedInequals, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::EqualsEquals:
         consume();
-        return make<BinaryExpression>(BinaryOp::AbstractEquals, move(lhs), parse_expression(min_precedence, associativity));
+        return create_ast_node<BinaryExpression>(BinaryOp::AbstractEquals, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::ExclamationMarkEquals:
         consume();
-        return make<BinaryExpression>(BinaryOp::AbstractInequals, move(lhs), parse_expression(min_precedence, associativity));
+        return create_ast_node<BinaryExpression>(BinaryOp::AbstractInequals, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::ParenOpen:
         return parse_call_expression(move(lhs));
     case TokenType::Equals:
         consume();
-        return make<AssignmentExpression>(AssignmentOp::Assignment, move(lhs), parse_expression(min_precedence, associativity));
+        return create_ast_node<AssignmentExpression>(AssignmentOp::Assignment, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::Period:
         consume();
-        return make<MemberExpression>(move(lhs), parse_expression(min_precedence, associativity));
+        return create_ast_node<MemberExpression>(move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::PlusPlus:
         consume();
-        return make<UpdateExpression>(UpdateOp::Increment, move(lhs));
+        return create_ast_node<UpdateExpression>(UpdateOp::Increment, move(lhs));
     case TokenType::MinusMinus:
         consume();
-        return make<UpdateExpression>(UpdateOp::Decrement, move(lhs));
+        return create_ast_node<UpdateExpression>(UpdateOp::Decrement, move(lhs));
     case TokenType::DoubleAmpersand:
         consume();
-        return make<LogicalExpression>(LogicalOp::And, move(lhs), parse_expression(min_precedence, associativity));
+        return create_ast_node<LogicalExpression>(LogicalOp::And, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::DoublePipe:
         consume();
-        return make<LogicalExpression>(LogicalOp::Or, move(lhs), parse_expression(min_precedence, associativity));
+        return create_ast_node<LogicalExpression>(LogicalOp::Or, move(lhs), parse_expression(min_precedence, associativity));
     default:
         m_has_errors = true;
         expected("secondary expression (missing switch case)");
         consume();
-        return make<ErrorExpression>();
+        return create_ast_node<ErrorExpression>();
     }
 }
 
-NonnullOwnPtr<CallExpression> Parser::parse_call_expression(NonnullOwnPtr<Expression> lhs)
+NonnullRefPtr<CallExpression> Parser::parse_call_expression(NonnullRefPtr<Expression> lhs)
 {
     consume(TokenType::ParenOpen);
 
-    NonnullOwnPtrVector<Expression> arguments;
+    NonnullRefPtrVector<Expression> arguments;
 
     while (match_expression()) {
         arguments.append(parse_expression(0));
@@ -386,21 +386,21 @@ NonnullOwnPtr<CallExpression> Parser::parse_call_expression(NonnullOwnPtr<Expres
 
     consume(TokenType::ParenClose);
 
-    return make<CallExpression>(move(lhs), move(arguments));
+    return create_ast_node<CallExpression>(move(lhs), move(arguments));
 }
 
-NonnullOwnPtr<ReturnStatement> Parser::parse_return_statement()
+NonnullRefPtr<ReturnStatement> Parser::parse_return_statement()
 {
     consume(TokenType::Return);
     if (match_expression()) {
-        return make<ReturnStatement>(parse_expression(0));
+        return create_ast_node<ReturnStatement>(parse_expression(0));
     }
-    return make<ReturnStatement>(nullptr);
+    return create_ast_node<ReturnStatement>(nullptr);
 }
 
-NonnullOwnPtr<BlockStatement> Parser::parse_block_statement()
+NonnullRefPtr<BlockStatement> Parser::parse_block_statement()
 {
-    auto block = make<BlockStatement>();
+    auto block = create_ast_node<BlockStatement>();
     consume(TokenType::CurlyOpen);
     while (!done() && !match(TokenType::CurlyClose)) {
         if (match(TokenType::Semicolon)) {
@@ -416,7 +416,7 @@ NonnullOwnPtr<BlockStatement> Parser::parse_block_statement()
     return block;
 }
 
-NonnullOwnPtr<FunctionDeclaration> Parser::parse_function_declaration()
+NonnullRefPtr<FunctionDeclaration> Parser::parse_function_declaration()
 {
     consume(TokenType::Function);
     auto name = consume(TokenType::Identifier).value();
@@ -432,10 +432,10 @@ NonnullOwnPtr<FunctionDeclaration> Parser::parse_function_declaration()
     }
     consume(TokenType::ParenClose);
     auto body = parse_block_statement();
-    return make<FunctionDeclaration>(name, move(body), move(parameters));
+    return create_ast_node<FunctionDeclaration>(name, move(body), move(parameters));
 }
 
-NonnullOwnPtr<VariableDeclaration> Parser::parse_variable_declaration()
+NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration()
 {
     DeclarationType declaration_type;
 
@@ -456,21 +456,21 @@ NonnullOwnPtr<VariableDeclaration> Parser::parse_variable_declaration()
         ASSERT_NOT_REACHED();
     }
     auto name = consume(TokenType::Identifier).value();
-    OwnPtr<Expression> initializer;
+    RefPtr<Expression> initializer;
     if (match(TokenType::Equals)) {
         consume();
         initializer = parse_expression(0);
     }
-    return make<VariableDeclaration>(make<Identifier>(name), move(initializer), declaration_type);
+    return create_ast_node<VariableDeclaration>(create_ast_node<Identifier>(name), move(initializer), declaration_type);
 }
 
-NonnullOwnPtr<ForStatement> Parser::parse_for_statement()
+NonnullRefPtr<ForStatement> Parser::parse_for_statement()
 {
     consume(TokenType::For);
 
     consume(TokenType::ParenOpen);
 
-    OwnPtr<Statement> init = nullptr;
+    RefPtr<Statement> init;
     switch (m_current_token.type()) {
     case TokenType::Semicolon:
         break;
@@ -481,7 +481,7 @@ NonnullOwnPtr<ForStatement> Parser::parse_for_statement()
 
     consume(TokenType::Semicolon);
 
-    OwnPtr<Expression> test = nullptr;
+    RefPtr<Expression> test;
     switch (m_current_token.type()) {
     case TokenType::Semicolon:
         break;
@@ -492,7 +492,7 @@ NonnullOwnPtr<ForStatement> Parser::parse_for_statement()
 
     consume(TokenType::Semicolon);
 
-    OwnPtr<Expression> update = nullptr;
+    RefPtr<Expression> update;
     switch (m_current_token.type()) {
     case TokenType::Semicolon:
         break;
@@ -505,7 +505,7 @@ NonnullOwnPtr<ForStatement> Parser::parse_for_statement()
 
     auto body = parse_block_statement();
 
-    return make<ForStatement>(move(init), move(test), move(update), move(body));
+    return create_ast_node<ForStatement>(move(init), move(test), move(update), move(body));
 }
 
 bool Parser::match(TokenType type) const
