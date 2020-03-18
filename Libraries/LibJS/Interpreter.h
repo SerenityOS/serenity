@@ -84,6 +84,8 @@ public:
     void enter_scope(const ScopeNode&, Vector<Argument>, ScopeType);
     void exit_scope(const ScopeNode&);
 
+    Value call(Function*, Value this_value, const Vector<Value>& arguments);
+
     CallFrame& push_call_frame() { m_call_stack.append({ js_undefined(), {} }); return m_call_stack.last(); }
     void pop_call_frame() { m_call_stack.take_last(); }
     Value this_value() const
