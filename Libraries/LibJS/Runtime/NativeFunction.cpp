@@ -42,8 +42,11 @@ NativeFunction::~NativeFunction()
 Value NativeFunction::call(Interpreter& interpreter, const Vector<Value>& arguments)
 {
     auto this_value = interpreter.this_value();
-    ASSERT(this_value.is_object());
-    return m_native_function(this_value.as_object(), arguments);
+    // FIXME: Why are we here with a non-object 'this'?
+    Object* this_object = nullptr;
+    if (this_value.is_object())
+        this_object = this_value.as_object();
+    return m_native_function(this_object, arguments);
 }
 
 }
