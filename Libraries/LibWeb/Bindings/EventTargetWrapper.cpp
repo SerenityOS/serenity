@@ -18,8 +18,8 @@ EventTargetWrapper::EventTargetWrapper(EventTarget& impl)
         auto event_name = arguments[0].to_string();
         ASSERT(arguments[1].is_object());
         ASSERT(arguments[1].as_object()->is_function());
-        auto listener = adopt(*new EventListener(static_cast<JS::Function*>(const_cast<Object*>(arguments[1].as_object()))));
-        wrap(this_object->heap(), *listener);
+        auto* function = static_cast<JS::Function*>(const_cast<Object*>(arguments[1].as_object()));
+        auto listener = adopt(*new EventListener(JS::make_handle(function)));
         static_cast<EventTargetWrapper*>(this_object)->impl().add_event_listener(event_name, move(listener));
         return JS::js_undefined();
     });

@@ -14,11 +14,5 @@ EventListenerWrapper::~EventListenerWrapper()
 {
 }
 
-void EventListenerWrapper::visit_children(JS::Cell::Visitor& visitor)
-{
-    Wrapper::visit_children(visitor);
-    visitor.visit(impl().function());
-}
-
 }
 }
