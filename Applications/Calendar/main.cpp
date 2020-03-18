@@ -32,12 +32,9 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->set_title("Calendar");
-    window->set_rect(20, 200, 596, 476);
-    //TODO: Allow proper resize
-    window->set_resizable(false);
+    window->set_rect(20, 200, 596, 475);
 
     window->set_main_widget<CalendarWidget>();
-
     window->show();
 
     auto menubar = make<GUI::MenuBar>();

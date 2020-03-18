@@ -10,19 +10,34 @@
 
 CalendarWidget::CalendarWidget()
 {
-    set_fill_with_background_color(true);
     m_calendar = make<Calendar>(Core::DateTime::now());
 
-    m_selected_date_label = add<GUI::Label>();
-    m_selected_date_label->set_relative_rect(20, 13, 100, 25);
-    m_selected_date_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    m_selected_date_label->set_font(Gfx::Font::default_bold_font());
-    m_selected_date_label->set_text(m_calendar->selected_date_text());
+    set_fill_with_background_color(true);
+    set_layout<GUI::VerticalBoxLayout>();
 
-    m_prev_month_button = add<GUI::Button>();
-    m_prev_month_button->set_text("<");
+    auto& top_container = add<Widget>();
+    top_container.set_layout<GUI::HorizontalBoxLayout>();
+    top_container.layout()->set_margins({ 4, 4, 4, 4 });
+    top_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    top_container.set_preferred_size(0, 45);
+
+    auto& top_left_container = top_container.add<Widget>();
+    top_left_container.set_layout<GUI::HorizontalBoxLayout>();
+    top_left_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    top_left_container.set_preferred_size(0, 45);
+
+    m_selected_date_label = top_left_container.add<GUI::Label>(m_calendar->selected_date_text());
+    m_selected_date_label->set_font(Gfx::Font::default_bold_font());
+    m_selected_date_label->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    m_selected_date_label->set_preferred_size(80, 14);
+    m_selected_date_label->set_text_alignment(Gfx::TextAlignment::Center);
+
+    m_bottom_container = add<Widget>();
+
+    m_prev_month_button = top_left_container.add<GUI::Button>("<");
     m_prev_month_button->set_font(Gfx::Font::default_bold_font());
-    m_prev_month_button->set_relative_rect(90, 5, 40, 40);
+    m_prev_month_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    m_prev_month_button->set_preferred_size(40, 40);
     m_prev_month_button->on_click = [this] {
         int m_target_month = m_calendar->selected_month() - 1;
         int m_target_year = m_calendar->selected_year();
@@ -34,10 +49,10 @@ CalendarWidget::CalendarWidget()
         update_calendar_tiles(m_target_year, m_target_month);
     };
 
-    m_next_month_button = add<GUI::Button>();
-    m_next_month_button->set_text(">");
+    m_next_month_button = top_left_container.add<GUI::Button>(">");
     m_next_month_button->set_font(Gfx::Font::default_bold_font());
-    m_next_month_button->set_relative_rect(131, 5, 40, 40);
+    m_next_month_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    m_next_month_button->set_preferred_size(40, 40);
     m_next_month_button->on_click = [this] {
         int m_target_month = m_calendar->selected_month() + 1;
         int m_target_year = m_calendar->selected_year();
@@ -49,9 +64,14 @@ CalendarWidget::CalendarWidget()
         update_calendar_tiles(m_target_year, m_target_month);
     };
 
-    m_add_event_button = add<GUI::Button>();
-    m_add_event_button->set_text("Add Event");
-    m_add_event_button->set_relative_rect(475, 13, 100, 25);
+    auto& top_right_container = top_container.add<Widget>();
+    top_right_container.set_layout<GUI::HorizontalBoxLayout>();
+    top_right_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    top_right_container.set_preferred_size(0, 45);
+
+    m_add_event_button = top_right_container.add<GUI::Button>("Add Event");
+    m_add_event_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    m_add_event_button->set_preferred_size(100, 25);
     m_add_event_button->on_click = [this] {
         AddEventDialog::show(m_calendar, window());
     };
@@ -62,6 +82,20 @@ CalendarWidget::CalendarWidget()
 CalendarWidget::~CalendarWidget()
 {
 }
+void CalendarWidget::resize_event(GUI::ResizeEvent& event)
+{
+    m_tile_width = event.size().width() / 7;
+    m_tile_height = (event.size().height() - 47) / 5;
+
+    int i = 0;
+    for (int y = 0; y < 5; y++)
+        for (int x = 0; x < 7; x++) {
+            int x_offset = x * m_tile_width;
+            int y_offset = (y * m_tile_height);
+            m_calendar_tiles[i]->set_relative_rect(x_offset, y_offset, m_tile_width, m_tile_height);
+            i++;
+        }
+}
 
 void CalendarWidget::update_calendar_tiles(int target_year, int target_month)
 {
@@ -71,7 +105,7 @@ void CalendarWidget::update_calendar_tiles(int target_year, int target_month)
         for (int x = 0; x < 7; x++) {
             auto date_time = Core::DateTime::create(target_year, target_month, 1);
             int x_offset = x * m_tile_width;
-            int y_offset = (y * m_tile_height) + 50;
+            int y_offset = (y * m_tile_height);
 
             unsigned int start_of_month = date_time.weekday();
             unsigned int year;
@@ -98,7 +132,7 @@ void CalendarWidget::update_calendar_tiles(int target_year, int target_month)
             }
 
             if (!m_calendar_tiles[i]) {
-                m_calendar_tiles[i] = add<CalendarTile>(*m_calendar, i, date_time);
+                m_calendar_tiles[i] = m_bottom_container->add<CalendarTile>(*m_calendar, i, date_time);
                 m_calendar_tiles[i]->set_frame_thickness(0);
                 m_calendar_tiles[i]->set_relative_rect(x_offset, y_offset, 85, 85);
             } else {
