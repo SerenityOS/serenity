@@ -43,8 +43,13 @@ Value ScopeNode::execute(Interpreter& interpreter) const
 Value FunctionDeclaration::execute(Interpreter& interpreter) const
 {
     auto* function = interpreter.heap().allocate<ScriptFunction>(body(), parameters());
-    interpreter.set_variable(m_name, function);
+    interpreter.set_variable(name(), function);
     return function;
+}
+
+Value FunctionExpression::execute(Interpreter& interpreter) const
+{
+    return interpreter.heap().allocate<ScriptFunction>(body(), parameters());
 }
 
 Value ExpressionStatement::execute(Interpreter& interpreter) const
@@ -385,11 +390,11 @@ void NullLiteral::dump(int indent) const
     printf("null\n");
 }
 
-void FunctionDeclaration::dump(int indent) const
+void FunctionNode::dump(int indent, const char* class_name) const
 {
     bool first_time = true;
     StringBuilder parameters_builder;
-    for (const auto& parameter : m_parameters) {
+    for (const auto& parameter : parameters()) {
         if (first_time)
             first_time = false;
         else
@@ -399,8 +404,18 @@ void FunctionDeclaration::dump(int indent) const
     }
 
     print_indent(indent);
-    printf("%s '%s(%s)'\n", class_name(), name().characters(), parameters_builder.build().characters());
+    printf("%s '%s(%s)'\n", class_name, name().characters(), parameters_builder.build().characters());
     body().dump(indent + 1);
+}
+
+void FunctionDeclaration::dump(int indent) const
+{
+    FunctionNode::dump(indent, class_name());
+}
+
+void FunctionExpression::dump(int indent) const
+{
+    FunctionNode::dump(indent, class_name());
 }
 
 void ReturnStatement::dump(int indent) const
