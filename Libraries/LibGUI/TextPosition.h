@@ -60,7 +60,7 @@ private:
 inline const LogStream& operator<<(const LogStream& stream, const TextPosition& value)
 {
     if (!value.is_valid())
-        return stream << "GTextPosition(Invalid)";
+        return stream << "GUI::TextPosition(Invalid)";
     return stream << String::format("(%zu,%zu)", value.line(), value.column());
 }
 

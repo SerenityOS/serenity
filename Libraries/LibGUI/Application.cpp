@@ -112,7 +112,7 @@ class Application::TooltipWindow final : public Window {
 public:
     void set_tooltip(const StringView& tooltip)
     {
-        // FIXME: Add some kind of GLabel auto-sizing feature.
+        // FIXME: Add some kind of GUI::Label auto-sizing feature.
         int text_width = m_label->font().width(tooltip);
         set_rect(100, 100, text_width + 10, m_label->font().glyph_height() + 8);
         m_label->set_text(tooltip);
