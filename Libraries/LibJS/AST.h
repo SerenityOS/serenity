@@ -123,33 +123,62 @@ private:
     virtual const char* class_name() const override { return "BlockStatement"; }
 };
 
-class FunctionDeclaration : public Statement {
+class Expression : public ASTNode {
 public:
-    FunctionDeclaration(String name, NonnullRefPtr<ScopeNode> body, Vector<String> parameters = {})
+    virtual bool is_member_expression() const { return false; }
+};
+
+class FunctionNode {
+public:
+    String name() const { return m_name; }
+    const ScopeNode& body() const { return *m_body; }
+    const Vector<String>& parameters() const { return m_parameters; };
+
+protected:
+    FunctionNode(String name, NonnullRefPtr<ScopeNode> body, Vector<String> parameters = {})
         : m_name(move(name))
         , m_body(move(body))
         , m_parameters(move(parameters))
     {
     }
 
-    String name() const { return m_name; }
-    const ScopeNode& body() const { return *m_body; }
-    const Vector<String>& parameters() const { return m_parameters; };
+    void dump(int indent, const char* class_name) const;
+
+private:
+    String m_name;
+    NonnullRefPtr<ScopeNode> m_body;
+    const Vector<String> m_parameters;
+};
+
+class FunctionDeclaration final
+    : public Statement
+    , public FunctionNode {
+public:
+    FunctionDeclaration(String name, NonnullRefPtr<ScopeNode> body, Vector<String> parameters = {})
+        : FunctionNode(move(name), move(body), move(parameters))
+    {
+    }
 
     virtual Value execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
 
 private:
     virtual const char* class_name() const override { return "FunctionDeclaration"; }
-
-    String m_name;
-    NonnullRefPtr<ScopeNode> m_body;
-    const Vector<String> m_parameters;
 };
 
-class Expression : public ASTNode {
+class FunctionExpression final : public Expression
+    , public FunctionNode {
 public:
-    virtual bool is_member_expression() const { return false; }
+    FunctionExpression(String name, NonnullRefPtr<ScopeNode> body, Vector<String> parameters = {})
+        : FunctionNode(move(name), move(body), move(parameters))
+    {
+    }
+
+    virtual Value execute(Interpreter&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    virtual const char* class_name() const override { return "FunctionExpression"; }
 };
 
 class ErrorExpression final : public Expression {
