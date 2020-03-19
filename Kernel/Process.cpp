@@ -4772,6 +4772,14 @@ int Process::sys$unveil(const Syscall::SC_unveil_params* user_params)
     if (path.value().is_empty() || path.value().characters()[0] != '/')
         return -EINVAL;
 
+    auto custody_or_error = VFS::the().resolve_path_without_veil(path.value(), root_directory());
+    if (custody_or_error.is_error())
+        // FIXME Should this be EINVAL?
+        return custody_or_error.error();
+
+    auto& custody = custody_or_error.value();
+    auto new_unveiled_path = custody->absolute_path();
+
     auto permissions = validate_and_copy_string_from_user(params.permissions);
     if (permissions.is_null())
         return -EFAULT;
@@ -4798,7 +4806,7 @@ int Process::sys$unveil(const Syscall::SC_unveil_params* user_params)
 
     for (size_t i = 0; i < m_unveiled_paths.size(); ++i) {
         auto& unveiled_path = m_unveiled_paths[i];
-        if (unveiled_path.path == path.value()) {
+        if (unveiled_path.path == new_unveiled_path) {
             if (new_permissions & ~unveiled_path.permissions)
                 return -EPERM;
             unveiled_path.permissions = new_permissions;
@@ -4806,7 +4814,7 @@ int Process::sys$unveil(const Syscall::SC_unveil_params* user_params)
         }
     }
 
-    m_unveiled_paths.append({ path.value(), new_permissions });
+    m_unveiled_paths.append({ new_unveiled_path, new_permissions });
     ASSERT(m_veil_state != VeilState::Locked);
     m_veil_state = VeilState::Dropped;
     return 0;
