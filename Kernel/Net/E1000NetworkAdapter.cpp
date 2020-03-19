@@ -36,7 +36,10 @@ namespace Kernel {
 #define REG_STATUS 0x0008
 #define REG_EEPROM 0x0014
 #define REG_CTRL_EXT 0x0018
-#define REG_IMASK 0x00D0
+#define REG_INTERRUPT_CAUSE_READ 0x00C0
+#define REG_INTERRUPT_RATE 0x00C4
+#define REG_INTERRUPT_MASK_SET 0x00D0
+#define REG_INTERRUPT_MASK_CLEAR 0x00D8
 #define REG_RCTRL 0x0100
 #define REG_RXDESCLO 0x2800
 #define REG_RXDESCHI 0x2804
@@ -121,6 +124,21 @@ namespace Kernel {
 #define STATUS_SPEED_1000MB1 0x80
 #define STATUS_SPEED_1000MB2 0xC0
 
+// Interrupt Masks
+
+#define INTERRUPT_TXDW (1 << 0)
+#define INTERRUPT_TXQE (1 << 1)
+#define INTERRUPT_LSC (1 << 2)
+#define INTERRUPT_RXSEQ (1 << 3)
+#define INTERRUPT_RXDMT0 (1 << 4)
+#define INTERRUPT_RXO (1 << 6)
+#define INTERRUPT_RXT0 (1 << 7)
+#define INTERRUPT_MDAC (1 << 9)
+#define INTERRUPT_RXCFG (1 << 10)
+#define INTERRUPT_PHYINT (1 << 12)
+#define INTERRUPT_TXD_LOW (1 << 15)
+#define INTERRUPT_SRPD (1 << 16)
+
 void E1000NetworkAdapter::detect(const PCI::Address& address)
 {
     if (address.is_null())
@@ -163,12 +181,14 @@ E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, u8 irq)
     u32 flags = in32(REG_CTRL);
     out32(REG_CTRL, flags | ECTRL_SLU);
 
+    out16(REG_INTERRUPT_RATE, 6000); // Interrupt rate of 1.536 milliseconds
+
     initialize_rx_descriptors();
     initialize_tx_descriptors();
 
-    out32(REG_IMASK, 0x1f6dc);
-    out32(REG_IMASK, 0xff & ~4);
-    in32(0xc0);
+    out32(REG_INTERRUPT_MASK_SET, 0x1f6dc);
+    out32(REG_INTERRUPT_MASK_SET, INTERRUPT_LSC | INTERRUPT_RXT0);
+    in32(REG_INTERRUPT_CAUSE_READ);
 
     enable_irq();
 }
@@ -179,21 +199,23 @@ E1000NetworkAdapter::~E1000NetworkAdapter()
 
 void E1000NetworkAdapter::handle_irq(const RegisterState&)
 {
-    out32(REG_IMASK, 0x1);
+    out32(REG_INTERRUPT_MASK_CLEAR, 0xffffffff);
 
-    u32 status = in32(0xc0);
+    u32 status = in32(REG_INTERRUPT_CAUSE_READ);
     if (status & 4) {
         u32 flags = in32(REG_CTRL);
         out32(REG_CTRL, flags | ECTRL_SLU);
     }
-    if (status & 0x10) {
-        // Threshold OK?
-    }
     if (status & 0x80) {
         receive();
     }
+    if (status & 0x10) {
+        // Threshold OK?
+    }
 
     m_wait_queue.wake_all();
+
+    out32(REG_INTERRUPT_MASK_SET, INTERRUPT_LSC | INTERRUPT_RXT0 | INTERRUPT_RXO);
 }
 
 void E1000NetworkAdapter::detect_eeprom()
