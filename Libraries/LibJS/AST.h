@@ -49,6 +49,7 @@ public:
     virtual Value execute(Interpreter&) const = 0;
     virtual void dump(int indent) const;
     virtual bool is_identifier() const { return false; }
+    virtual bool is_member_expression() const { return false; }
 
 protected:
     ASTNode() {}
@@ -124,8 +125,6 @@ private:
 };
 
 class Expression : public ASTNode {
-public:
-    virtual bool is_member_expression() const { return false; }
 };
 
 class FunctionNode {
@@ -594,6 +593,7 @@ public:
     virtual void dump(int indent) const override;
 
     const Expression& object() const { return *m_object; }
+    const Expression& property() const { return *m_property; }
 
 private:
     virtual bool is_member_expression() const override { return true; }

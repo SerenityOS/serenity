@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/AST.h>
@@ -476,31 +477,42 @@ void Identifier::dump(int indent) const
 
 Value AssignmentExpression::execute(Interpreter& interpreter) const
 {
-    ASSERT(m_lhs->is_identifier());
-    auto name = static_cast<const Identifier&>(*m_lhs).string();
+    AK::Function<void(Value)> commit;
+    if (m_lhs->is_identifier()) {
+        commit = [&](Value value) {
+            auto name = static_cast<const Identifier&>(*m_lhs).string();
+            interpreter.set_variable(name, value);
+        };
+    } else if (m_lhs->is_member_expression()) {
+        commit = [&](Value value) {
+            auto object = static_cast<const MemberExpression&>(*m_lhs).object().execute(interpreter).to_object(interpreter.heap());
+            ASSERT(object.is_object());
+            auto property_name = static_cast<const Identifier&>(static_cast<const MemberExpression&>(*m_lhs).property()).string();
+            object.as_object()->put(property_name, value);
+        };
+    } else {
+        ASSERT_NOT_REACHED();
+    }
+
     auto rhs_result = m_rhs->execute(interpreter);
 
     switch (m_op) {
     case AssignmentOp::Assignment:
-        interpreter.set_variable(name, rhs_result);
         break;
     case AssignmentOp::AdditionAssignment:
         rhs_result = add(m_lhs->execute(interpreter), rhs_result);
-        interpreter.set_variable(name, rhs_result);
         break;
     case AssignmentOp::SubtractionAssignment:
         rhs_result = sub(m_lhs->execute(interpreter), rhs_result);
-        interpreter.set_variable(name, rhs_result);
         break;
     case AssignmentOp::MultiplicationAssignment:
         rhs_result = mul(m_lhs->execute(interpreter), rhs_result);
-        interpreter.set_variable(name, rhs_result);
         break;
     case AssignmentOp::DivisionAssignment:
         rhs_result = div(m_lhs->execute(interpreter), rhs_result);
-        interpreter.set_variable(name, rhs_result);
         break;
     }
+    commit(rhs_result);
     return rhs_result;
 }
 
