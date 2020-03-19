@@ -53,19 +53,19 @@ int main(int argc, char** argv)
     main_widget.set_layout<GUI::VerticalBoxLayout>();
     main_widget.layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto& checkbox1 = main_widget.add<GUI::CheckBox>("GCheckBox 1");
+    auto& checkbox1 = main_widget.add<GUI::CheckBox>("CheckBox 1");
     (void)checkbox1;
-    auto& checkbox2 = main_widget.add<GUI::CheckBox>("GCheckBox 2");
+    auto& checkbox2 = main_widget.add<GUI::CheckBox>("CheckBox 2");
     checkbox2.set_enabled(false);
 
-    auto& radio1 = main_widget.add<GUI::RadioButton>("GRadioButton 1");
+    auto& radio1 = main_widget.add<GUI::RadioButton>("RadioButton 1");
     (void)radio1;
-    auto& radio2 = main_widget.add<GUI::RadioButton>("GRadioButton 2");
+    auto& radio2 = main_widget.add<GUI::RadioButton>("RadioButton 2");
     radio2.set_enabled(false);
 
-    auto& button1 = main_widget.add<GUI::Button>("GButton 1");
+    auto& button1 = main_widget.add<GUI::Button>("Button 1");
     (void)button1;
-    auto& button2 = main_widget.add<GUI::Button>("GButton 2");
+    auto& button2 = main_widget.add<GUI::Button>("Button 2");
     button2.set_enabled(false);
 
     auto& progress1 = main_widget.add<GUI::ProgressBar>();
@@ -75,15 +75,15 @@ int main(int argc, char** argv)
             progress1.set_value(progress1.min());
     });
 
-    auto& label1 = main_widget.add<GUI::Label>("GLabel 1");
+    auto& label1 = main_widget.add<GUI::Label>("Label 1");
     (void)label1;
-    auto& label2 = main_widget.add<GUI::Label>("GLabel 2");
+    auto& label2 = main_widget.add<GUI::Label>("Label 2");
     label2.set_enabled(false);
 
     auto& textbox1 = main_widget.add<GUI::TextBox>();
-    textbox1.set_text("GTextBox 1");
+    textbox1.set_text("TextBox 1");
     auto& textbox2 = main_widget.add<GUI::TextBox>();
-    textbox2.set_text("GTextBox 2");
+    textbox2.set_text("TextBox 2");
     textbox2.set_enabled(false);
 
     auto& spinbox1 = main_widget.add<GUI::SpinBox>();
