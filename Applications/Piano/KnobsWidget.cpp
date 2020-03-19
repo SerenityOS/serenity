@@ -68,7 +68,7 @@ KnobsWidget::KnobsWidget(AudioEngine& audio_engine, MainWidget& main_widget)
     m_knobs_container = add<GUI::Widget>();
     m_knobs_container->set_layout<GUI::HorizontalBoxLayout>();
 
-    // FIXME: Implement vertical flipping in GSlider, not here.
+    // FIXME: Implement vertical flipping in GUI::Slider, not here.
 
     m_octave_knob = m_knobs_container->add<GUI::VerticalSlider>();
     m_octave_knob->set_tooltip("Z: octave down, X: octave up");

@@ -143,8 +143,8 @@ DirectoryView::DirectoryView()
             on_path_change(model().root_path());
     };
 
-    //  NOTE: We're using the on_update hook on the GSortingProxyModel here instead of
-    //        the GUI::FileSystemModel's hook. This is because GSortingProxyModel has already
+    //  NOTE: We're using the on_update hook on the GUI::SortingProxyModel here instead of
+    //        the GUI::FileSystemModel's hook. This is because GUI::SortingProxyModel has already
     //        installed an on_update hook on the GUI::FileSystemModel internally.
     // FIXME: This is an unfortunate design. We should come up with something better.
     m_table_view->model()->on_update = [this] {
@@ -321,7 +321,7 @@ void DirectoryView::update_statusbar()
     if (selected_item_count == 1) {
         auto index = current_view().selection().first();
 
-        // FIXME: This is disgusting. This code should not even be aware that there is a GSortingProxyModel in the table view.
+        // FIXME: This is disgusting. This code should not even be aware that there is a GUI::SortingProxyModel in the table view.
         if (m_view_mode == ViewMode::List) {
             auto& filter_model = (GUI::SortingProxyModel&)*m_table_view->model();
             index = filter_model.map_to_target(index);
