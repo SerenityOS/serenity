@@ -43,10 +43,12 @@ public:
 
     NonnullRefPtr<Program> parse_program();
 
+    template<typename FunctionNodeType>
+    NonnullRefPtr<FunctionNodeType> parse_function_node();
+
     NonnullRefPtr<Statement> parse_statement();
     NonnullRefPtr<BlockStatement> parse_block_statement();
     NonnullRefPtr<ReturnStatement> parse_return_statement();
-    NonnullRefPtr<FunctionDeclaration> parse_function_declaration();
     NonnullRefPtr<VariableDeclaration> parse_variable_declaration();
     NonnullRefPtr<ForStatement> parse_for_statement();
 

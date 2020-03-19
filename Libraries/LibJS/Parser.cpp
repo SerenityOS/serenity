@@ -187,7 +187,7 @@ NonnullRefPtr<Statement> Parser::parse_statement()
 
     switch (m_current_token.type()) {
     case TokenType::Function:
-        return parse_function_declaration();
+        return parse_function_node<FunctionDeclaration>();
     case TokenType::CurlyOpen:
         return parse_block_statement();
     case TokenType::Return:
@@ -231,6 +231,8 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
         return create_ast_node<UndefinedLiteral>();
     case TokenType::CurlyOpen:
         return parse_object_expression();
+    case TokenType::Function:
+        return parse_function_node<FunctionExpression>();
     default:
         m_has_errors = true;
         expected("primary expression (missing switch case)");
@@ -416,10 +418,17 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement()
     return block;
 }
 
-NonnullRefPtr<FunctionDeclaration> Parser::parse_function_declaration()
+template<typename FunctionNodeType>
+NonnullRefPtr<FunctionNodeType> Parser::parse_function_node()
 {
     consume(TokenType::Function);
-    auto name = consume(TokenType::Identifier).value();
+    String name;
+    if (FunctionNodeType::must_have_name()) {
+        name = consume(TokenType::Identifier).value();
+    } else {
+        if (match(TokenType::Identifier))
+            name = consume(TokenType::Identifier).value();
+    }
     consume(TokenType::ParenOpen);
     Vector<String> parameters;
     while (match(TokenType::Identifier)) {
@@ -432,7 +441,7 @@ NonnullRefPtr<FunctionDeclaration> Parser::parse_function_declaration()
     }
     consume(TokenType::ParenClose);
     auto body = parse_block_statement();
-    return create_ast_node<FunctionDeclaration>(name, move(body), move(parameters));
+    return create_ast_node<FunctionNodeType>(name, move(body), move(parameters));
 }
 
 NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration()
@@ -526,6 +535,7 @@ bool Parser::match_expression() const
         || type == TokenType::CurlyOpen
         || type == TokenType::BracketOpen
         || type == TokenType::ParenOpen
+        || type == TokenType::Function
         || match_unary_prefixed_expression();
 }
 
