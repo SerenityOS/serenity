@@ -35,7 +35,7 @@
 #include <LibGfx/Orientation.h>
 #include <LibGfx/Rect.h>
 
-#define REGISTER_GWIDGET(class_name)                          \
+#define REGISTER_WIDGET(class_name)                           \
     extern WidgetClassRegistration registration_##class_name; \
     WidgetClassRegistration registration_##class_name(#class_name, []() { return class_name::construct(); });
 
