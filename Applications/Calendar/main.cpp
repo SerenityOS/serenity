@@ -36,6 +36,7 @@ int main(int argc, char** argv)
 
     window->set_main_widget<CalendarWidget>();
     window->show();
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-calendar.png"));
 
     auto menubar = make<GUI::MenuBar>();
 
