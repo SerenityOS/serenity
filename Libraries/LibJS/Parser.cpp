@@ -181,10 +181,6 @@ NonnullRefPtr<Program> Parser::parse_program()
 
 NonnullRefPtr<Statement> Parser::parse_statement()
 {
-    if (match_expression()) {
-        return adopt(*new ExpressionStatement(parse_expression(0)));
-    }
-
     switch (m_current_token.type()) {
     case TokenType::Function:
         return parse_function_node<FunctionDeclaration>();
@@ -199,6 +195,8 @@ NonnullRefPtr<Statement> Parser::parse_statement()
     case TokenType::For:
         return parse_for_statement();
     default:
+        if (match_expression())
+            return adopt(*new ExpressionStatement(parse_expression(0)));
         m_has_errors = true;
         expected("statement (missing switch case)");
         consume();
