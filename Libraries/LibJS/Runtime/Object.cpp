@@ -60,6 +60,17 @@ Value Object::get(String property_name) const
 
 void Object::put(String property_name, Value value)
 {
+    Object* object = this;
+    while (object) {
+        auto value_here = object->m_properties.get(property_name);
+        if (value_here.has_value()) {
+            if (value_here.value().is_object() && value_here.value().as_object()->is_native_property()) {
+                static_cast<NativeProperty*>(value_here.value().as_object())->set(const_cast<Object*>(this), value);
+                return;
+            }
+        }
+        object = object->prototype();
+    }
     m_properties.set(property_name, move(value));
 }
 
