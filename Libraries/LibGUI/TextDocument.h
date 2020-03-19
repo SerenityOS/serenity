@@ -149,9 +149,6 @@ private:
 };
 
 class TextDocumentLine {
-    friend class GTextEditor;
-    friend class TextDocument;
-
 public:
     explicit TextDocumentLine(TextDocument&);
     explicit TextDocumentLine(TextDocument&, const StringView&);
