@@ -154,6 +154,8 @@ class FunctionDeclaration final
     : public Statement
     , public FunctionNode {
 public:
+    static bool must_have_name() { return true; }
+
     FunctionDeclaration(String name, NonnullRefPtr<ScopeNode> body, Vector<String> parameters = {})
         : FunctionNode(move(name), move(body), move(parameters))
     {
@@ -169,6 +171,8 @@ private:
 class FunctionExpression final : public Expression
     , public FunctionNode {
 public:
+    static bool must_have_name() { return false; }
+
     FunctionExpression(String name, NonnullRefPtr<ScopeNode> body, Vector<String> parameters = {})
         : FunctionNode(move(name), move(body), move(parameters))
     {
