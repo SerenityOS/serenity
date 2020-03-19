@@ -768,10 +768,20 @@ KResult VFS::validate_path_against_process_veil(StringView path, int options)
 
 KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level)
 {
-    auto result = validate_path_against_process_veil(path, options);
+    auto custody_or_error = resolve_path_without_veil(path, base, out_parent, options, symlink_recursion_level);
+    if (custody_or_error.is_error())
+        return custody_or_error.error();
+
+    auto& custody = custody_or_error.value();
+    auto result = validate_path_against_process_veil(custody->absolute_path(), options);
     if (result.is_error())
         return result;
 
+    return custody;
+}
+
+KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path_without_veil(StringView path, Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level)
+{
     if (symlink_recursion_level >= symlink_recursion_limit)
         return KResult(-ELOOP);
 
@@ -845,7 +855,7 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
             remaining_path.append('.');
             remaining_path.append(path.substring_view_starting_after_substring(part));
 
-            return resolve_path(remaining_path.to_string(), *symlink_target.value(), out_parent, options, symlink_recursion_level + 1);
+            return resolve_path_without_veil(remaining_path.to_string(), *symlink_target.value(), out_parent, options, symlink_recursion_level + 1);
         }
     }
 
