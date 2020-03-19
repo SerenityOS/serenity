@@ -26,31 +26,26 @@
 
 #pragma once
 
+#include <LibWeb/Bindings/Wrapper.h>
+
 namespace Web {
-
-class CanvasRenderingContext2D;
-class Document;
-class Element;
-class EventListener;
-class EventTarget;
-class Frame;
-class HTMLElement;
-class HTMLCanvasElement;
-class HtmlView;
-class Node;
-
 namespace Bindings {
 
-class CanvasRenderingContext2DWrapper;
-class DocumentWrapper;
-class EventListenerWrapper;
-class EventTargetWrapper;
-class HTMLCanvasElementWrapper;
-class NodeWrapper;
-class Wrappable;
-class Wrapper;
+class CanvasRenderingContext2DWrapper : public Wrapper {
+public:
+    explicit CanvasRenderingContext2DWrapper(CanvasRenderingContext2D&);
+    virtual ~CanvasRenderingContext2DWrapper() override;
+
+    CanvasRenderingContext2D& impl() { return m_impl; }
+    const CanvasRenderingContext2D& impl() const { return m_impl; }
+
+private:
+    virtual const char* class_name() const override { return "CanvasRenderingContext2DWrapper"; }
+
+    NonnullRefPtr<CanvasRenderingContext2D> m_impl;
+};
+
+CanvasRenderingContext2DWrapper* wrap(JS::Heap&, CanvasRenderingContext2D&);
 
 }
-
-
 }
