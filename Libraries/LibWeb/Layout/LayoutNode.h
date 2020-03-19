@@ -87,6 +87,7 @@ public:
     virtual bool is_replaced() const { return false; }
     virtual bool is_widget() const { return false; }
     virtual bool is_image() const { return false; }
+    virtual bool is_canvas() const { return false; }
     virtual bool is_box() const { return false; }
     virtual bool is_table() const { return false; }
     virtual bool is_table_row() const { return false; }

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Canvas 2D test!</title>
+<style type="text/css">
+body {
+    background-color: #000;
+    color: #fff; /* another css comment */
+}
+canvas {
+    border-width: 1px;
+    border-style: solid;
+    border-color: #fff;
+}
+</style>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        ctx = document.getElementById("foo").getContext("2d");
+        ctx.fillStyle = 'red';
+        ctx.fillRect(10, 10, 200, 100);
+    });
+</script>
+</head>
+<body link="#44f" vlink="#c4c" background="90s-bg.png">
+    <canvas id="foo" width="300" height="200"></canvas>
+</body>
+</html>

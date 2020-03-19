@@ -29,6 +29,7 @@
 #include <LibWeb/DOM/HTMLBRElement.h>
 #include <LibWeb/DOM/HTMLBlinkElement.h>
 #include <LibWeb/DOM/HTMLBodyElement.h>
+#include <LibWeb/DOM/HTMLCanvasElement.h>
 #include <LibWeb/DOM/HTMLFontElement.h>
 #include <LibWeb/DOM/HTMLFormElement.h>
 #include <LibWeb/DOM/HTMLHRElement.h>
@@ -85,6 +86,8 @@ NonnullRefPtr<Element> create_element(Document& document, const String& tag_name
     }
     if (lowercase_tag_name == "script")
         return adopt(*new HTMLScriptElement(document, lowercase_tag_name));
+    if (lowercase_tag_name == "canvas")
+        return adopt(*new HTMLCanvasElement(document, lowercase_tag_name));
     return adopt(*new Element(document, lowercase_tag_name));
 }
 

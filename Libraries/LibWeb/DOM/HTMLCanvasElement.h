@@ -26,30 +26,40 @@
 
 #pragma once
 
+#include <AK/ByteBuffer.h>
+#include <LibGfx/Forward.h>
+#include <LibWeb/DOM/HTMLElement.h>
+
 namespace Web {
 
-class CanvasRenderingContext2D;
-class Document;
-class Element;
-class EventListener;
-class EventTarget;
-class Frame;
-class HTMLElement;
-class HTMLCanvasElement;
-class HtmlView;
-class Node;
+class LayoutDocument;
 
-namespace Bindings {
+class HTMLCanvasElement : public HTMLElement {
+public:
+    using WrapperType = Bindings::HTMLCanvasElementWrapper;
 
-class CanvasRenderingContext2DWrapper;
-class DocumentWrapper;
-class EventListenerWrapper;
-class EventTargetWrapper;
-class HTMLCanvasElementWrapper;
-class NodeWrapper;
-class Wrappable;
-class Wrapper;
+    HTMLCanvasElement(Document&, const String& tag_name);
+    virtual ~HTMLCanvasElement() override;
 
+    int preferred_width() const;
+    int preferred_height() const;
+
+    const Gfx::Bitmap* bitmap() const { return m_bitmap; }
+    Gfx::Bitmap& ensure_bitmap();
+
+    CanvasRenderingContext2D* get_context(String type);
+
+private:
+    virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
+
+    RefPtr<Gfx::Bitmap> m_bitmap;
+    RefPtr<CanvasRenderingContext2D> m_context;
+};
+
+template<>
+inline bool is<HTMLCanvasElement>(const Node& node)
+{
+    return is<Element>(node) && to<Element>(node).tag_name().to_lowercase() == "canvas";
 }
 
 

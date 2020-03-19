@@ -43,5 +43,7 @@ private:
     virtual const char* class_name() const override { return "NodeWrapper"; }
 };
 
+NodeWrapper* wrap(JS::Heap&, Node&);
+
 }
 }

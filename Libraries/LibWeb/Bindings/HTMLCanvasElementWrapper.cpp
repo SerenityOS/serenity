@@ -24,33 +24,44 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <AK/Function.h>
+#include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/Value.h>
+#include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
+#include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>
+#include <LibWeb/DOM/CanvasRenderingContext2D.h>
+#include <LibWeb/DOM/HTMLCanvasElement.h>
 
 namespace Web {
-
-class CanvasRenderingContext2D;
-class Document;
-class Element;
-class EventListener;
-class EventTarget;
-class Frame;
-class HTMLElement;
-class HTMLCanvasElement;
-class HtmlView;
-class Node;
-
 namespace Bindings {
 
-class CanvasRenderingContext2DWrapper;
-class DocumentWrapper;
-class EventListenerWrapper;
-class EventTargetWrapper;
-class HTMLCanvasElementWrapper;
-class NodeWrapper;
-class Wrappable;
-class Wrapper;
-
+HTMLCanvasElementWrapper::HTMLCanvasElementWrapper(HTMLCanvasElement& element)
+    : NodeWrapper(element)
+{
+    put_native_function("getContext", [this](JS::Object*, const Vector<JS::Value>& arguments) -> JS::Value {
+        if (arguments.size() >= 1) {
+            dbg() << "Calling getContext on " << node().tag_name();
+            auto* context = node().get_context(arguments[0].to_string());
+            dbg() << "getContext got 2D context=" << context;
+            return wrap(heap(), *context);
+        }
+        return JS::js_undefined();
+    });
 }
 
+HTMLCanvasElementWrapper::~HTMLCanvasElementWrapper()
+{
+}
 
+HTMLCanvasElement& HTMLCanvasElementWrapper::node()
+{
+    return static_cast<HTMLCanvasElement&>(NodeWrapper::node());
+}
+
+const HTMLCanvasElement& HTMLCanvasElementWrapper::node() const
+{
+    return static_cast<const HTMLCanvasElement&>(NodeWrapper::node());
+}
+
+}
 }

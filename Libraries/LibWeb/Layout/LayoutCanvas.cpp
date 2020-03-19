@@ -24,33 +24,41 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <LibGUI/Painter.h>
+#include <LibGfx/Font.h>
+#include <LibGfx/StylePainter.h>
+#include <LibWeb/Layout/LayoutCanvas.h>
 
 namespace Web {
 
-class CanvasRenderingContext2D;
-class Document;
-class Element;
-class EventListener;
-class EventTarget;
-class Frame;
-class HTMLElement;
-class HTMLCanvasElement;
-class HtmlView;
-class Node;
-
-namespace Bindings {
-
-class CanvasRenderingContext2DWrapper;
-class DocumentWrapper;
-class EventListenerWrapper;
-class EventTargetWrapper;
-class HTMLCanvasElementWrapper;
-class NodeWrapper;
-class Wrappable;
-class Wrapper;
-
+LayoutCanvas::LayoutCanvas(const HTMLCanvasElement& element, NonnullRefPtr<StyleProperties> style)
+    : LayoutReplaced(element, move(style))
+{
 }
 
+LayoutCanvas::~LayoutCanvas()
+{
+}
+
+void LayoutCanvas::layout()
+{
+    rect().set_width(node().preferred_width());
+    rect().set_height(node().preferred_height());
+    LayoutReplaced::layout();
+}
+
+void LayoutCanvas::render(RenderingContext& context)
+{
+    if (!is_visible())
+        return;
+
+    // FIXME: This should be done at a different level. Also rect() does not include padding etc!
+    if (!context.viewport_rect().intersects(enclosing_int_rect(rect())))
+        return;
+
+    if (node().bitmap())
+        context.painter().draw_scaled_bitmap(enclosing_int_rect(rect()), *node().bitmap(), node().bitmap()->rect());
+    LayoutReplaced::render(context);
+}
 
 }

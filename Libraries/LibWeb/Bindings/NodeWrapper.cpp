@@ -26,11 +26,24 @@
 
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibWeb/Bindings/DocumentWrapper.h>
+#include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>
 #include <LibWeb/Bindings/NodeWrapper.h>
+#include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/HTMLCanvasElement.h>
 #include <LibWeb/DOM/Node.h>
 
 namespace Web {
 namespace Bindings {
+
+NodeWrapper* wrap(JS::Heap& heap, Node& node)
+{
+    if (is<Document>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(heap, to<Document>(node)));
+    if (is<HTMLCanvasElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(heap, to<HTMLCanvasElement>(node)));
+    return static_cast<NodeWrapper*>(wrap_impl(heap, node));
+}
 
 NodeWrapper::NodeWrapper(Node& node)
     : EventTargetWrapper(node)
