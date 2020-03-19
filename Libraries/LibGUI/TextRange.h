@@ -88,7 +88,7 @@ private:
 inline const LogStream& operator<<(const LogStream& stream, const TextRange& value)
 {
     if (!value.is_valid())
-        return stream << "GTextRange(Invalid)";
+        return stream << "GUI::TextRange(Invalid)";
     return stream << value.start() << '-' << value.end();
 }
 
