@@ -61,25 +61,25 @@ void CardStack::draw(GUI::Painter& painter, const Gfx::Color& background_color)
         if (is_empty()) {
             painter.fill_rect(m_base.shrunken(Card::width / 4, Card::height / 4), background_color.lightened(1.5));
             painter.fill_rect(m_base.shrunken(Card::width / 2, Card::height / 2), background_color);
-            painter.draw_rect(m_base, Color::Black);
+            painter.draw_rect(m_base, background_color.darkened(0.5));
         }
         break;
     case Foundation:
         if (is_empty() || (m_stack.size() == 1 && peek().is_moving())) {
-            painter.draw_rect(m_base, Color::DarkGray);
+            painter.draw_rect(m_base, background_color.darkened(0.5));
             for (int y = 0; y < (m_base.height() - 4) / 8; ++y) {
                 for (int x = 0; x < (m_base.width() - 4) / 5; ++x) {
-                    painter.draw_rect({ 4 + m_base.x() + x * 5, 4 + m_base.y() + y * 8, 1, 1 }, Color::DarkGray);
+                    painter.draw_rect({ 4 + m_base.x() + x * 5, 4 + m_base.y() + y * 8, 1, 1 }, background_color.darkened(0.5));
                 }
             }
         }
         break;
     case Waste:
         if (is_empty() || (m_stack.size() == 1 && peek().is_moving()))
-            painter.draw_rect(m_base, Color::DarkGray);
+            painter.draw_rect(m_base, background_color.darkened(0.5));
         break;
     case Normal:
-        painter.draw_rect(m_base, Color::DarkGray);
+        painter.draw_rect(m_base, background_color.darkened(0.5));
         break;
     default:
         ASSERT_NOT_REACHED();
