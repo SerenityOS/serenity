@@ -69,6 +69,8 @@ CalendarWidget::CalendarWidget()
     top_right_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     top_right_container.set_preferred_size(0, 45);
 
+    top_right_container.layout()->add_spacer();
+
     m_add_event_button = top_right_container.add<GUI::Button>("Add Event");
     m_add_event_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     m_add_event_button->set_preferred_size(100, 25);
@@ -188,22 +190,22 @@ void CalendarWidget::CalendarTile::paint_event(GUI::PaintEvent& event)
         painter.draw_line(frame_inner_rect().top_left(), frame_inner_rect().top_right(), Color::NamedColor::Black);
     painter.draw_line(frame_inner_rect().bottom_left(), frame_inner_rect().bottom_right(), Color::NamedColor::Black);
 
-    Gfx::Rect day_rect;
+    Gfx::Rect day_rect = Gfx::Rect(frame_inner_rect().x(), frame_inner_rect().y(), frame_inner_rect().width(), font().glyph_height() + 4);
 
     if (m_display_weekday_name) {
-        auto weekday_rect = frame_inner_rect().shrunken(0, frame_inner_rect().height() / 1.2);
+        auto weekday_rect = Gfx::Rect(frame_inner_rect().x(), frame_inner_rect().y(), frame_inner_rect().width(), font().glyph_height() + 4);
         weekday_rect.set_top(frame_inner_rect().y() + 2);
         painter.draw_text(weekday_rect, m_weekday_name, Gfx::Font::default_bold_font(), Gfx::TextAlignment::Center, Color::Black);
 
-        day_rect = frame_inner_rect().shrunken(0, frame_inner_rect().height() / 1.2);
-        day_rect.set_top(frame_inner_rect().y() + 15);
+        day_rect.set_y(frame_inner_rect().y() + 15);
     } else {
-        day_rect = frame_inner_rect().shrunken(0, frame_inner_rect().height() / 1.2);
-        day_rect.set_top(frame_inner_rect().y() + 4);
+        day_rect = Gfx::Rect(frame_inner_rect().x(), frame_inner_rect().y(), frame_inner_rect().width(), font().glyph_height() + 4);
+        day_rect.set_y(frame_inner_rect().y() + 4);
     }
 
     if (m_calendar.is_today(m_date_time)) {
-        auto highlight_rect = day_rect.shrunken(day_rect.width() - (font().glyph_width('x') * (m_display_date.length() + 1)) - 4, 0);
+        int highlight_rect_width = (font().glyph_width('0') * (m_display_date.length() + 1)) + 2;
+        auto highlight_rect = Gfx::Rect(day_rect.width() / 2 - (highlight_rect_width / 2), day_rect.y(), highlight_rect_width, font().glyph_height() + 4);
         painter.draw_rect(highlight_rect, Color::NamedColor::Blue);
         painter.draw_text(day_rect, m_display_date, Gfx::Font::default_bold_font(), Gfx::TextAlignment::Center, Color::Black);
     } else
