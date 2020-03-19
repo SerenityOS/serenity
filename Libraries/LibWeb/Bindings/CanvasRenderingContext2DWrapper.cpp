@@ -24,33 +24,42 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <AK/Function.h>
+#include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/Value.h>
+#include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
+#include <LibWeb/DOM/CanvasRenderingContext2D.h>
 
 namespace Web {
-
-class CanvasRenderingContext2D;
-class Document;
-class Element;
-class EventListener;
-class EventTarget;
-class Frame;
-class HTMLElement;
-class HTMLCanvasElement;
-class HtmlView;
-class Node;
-
 namespace Bindings {
 
-class CanvasRenderingContext2DWrapper;
-class DocumentWrapper;
-class EventListenerWrapper;
-class EventTargetWrapper;
-class HTMLCanvasElementWrapper;
-class NodeWrapper;
-class Wrappable;
-class Wrapper;
-
+CanvasRenderingContext2DWrapper* wrap(JS::Heap& heap, CanvasRenderingContext2D& impl)
+{
+    return static_cast<CanvasRenderingContext2DWrapper*>(wrap_impl(heap, impl));
 }
 
+CanvasRenderingContext2DWrapper::CanvasRenderingContext2DWrapper(CanvasRenderingContext2D& impl)
+    : m_impl(impl)
+{
+    put_native_property(
+        "fillStyle",
+        [this](JS::Object*) {
+            return JS::js_string(heap(), m_impl->fill_style());
+        },
+        [this](JS::Object*, JS::Value value) {
+            m_impl->set_fill_style(value.to_string());
+        });
+    put_native_function("fillRect", [this](JS::Object*, const Vector<JS::Value>& arguments) {
+        if (arguments.size() >= 4) {
+            m_impl->fill_rect(arguments[0].to_i32(), arguments[1].to_i32(), arguments[2].to_i32(), arguments[3].to_i32());
+        }
+        return JS::js_undefined();
+    });
+}
 
+CanvasRenderingContext2DWrapper::~CanvasRenderingContext2DWrapper()
+{
+}
+
+}
 }

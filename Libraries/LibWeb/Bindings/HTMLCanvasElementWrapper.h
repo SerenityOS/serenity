@@ -26,31 +26,22 @@
 
 #pragma once
 
+#include <LibWeb/Bindings/NodeWrapper.h>
+
 namespace Web {
-
-class CanvasRenderingContext2D;
-class Document;
-class Element;
-class EventListener;
-class EventTarget;
-class Frame;
-class HTMLElement;
-class HTMLCanvasElement;
-class HtmlView;
-class Node;
-
 namespace Bindings {
 
-class CanvasRenderingContext2DWrapper;
-class DocumentWrapper;
-class EventListenerWrapper;
-class EventTargetWrapper;
-class HTMLCanvasElementWrapper;
-class NodeWrapper;
-class Wrappable;
-class Wrapper;
+class HTMLCanvasElementWrapper : public NodeWrapper {
+public:
+    explicit HTMLCanvasElementWrapper(HTMLCanvasElement&);
+    virtual ~HTMLCanvasElementWrapper() override;
+
+    HTMLCanvasElement& node();
+    const HTMLCanvasElement& node() const;
+
+private:
+    virtual const char* class_name() const override { return "HTMLCanvasElementWrapper"; }
+};
 
 }
-
-
 }

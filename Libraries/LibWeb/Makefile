@@ -1,7 +1,9 @@
 LIBWEB_OBJS = \
+    Bindings/CanvasRenderingContext2DWrapper.o \
     Bindings/DocumentWrapper.o \
     Bindings/EventListenerWrapper.o \
     Bindings/EventTargetWrapper.o \
+    Bindings/HTMLCanvasElementWrapper.o \
     Bindings/NodeWrapper.o \
     Bindings/Wrappable.o \
     CSS/DefaultStyleSheetSource.o \
@@ -14,6 +16,7 @@ LIBWEB_OBJS = \
     CSS/StyleRule.o \
     CSS/StyleSheet.o \
     CSS/StyleValue.o \
+    DOM/CanvasRenderingContext2D.o \
     DOM/CharacterData.o \
     DOM/Comment.o \
     DOM/Document.o \
@@ -26,6 +29,7 @@ LIBWEB_OBJS = \
     DOM/HTMLBRElement.o \
     DOM/HTMLBlinkElement.o \
     DOM/HTMLBodyElement.o \
+    DOM/HTMLCanvasElement.o \
     DOM/HTMLElement.o \
     DOM/HTMLFontElement.o \
     DOM/HTMLFormElement.o \
@@ -52,6 +56,7 @@ LIBWEB_OBJS = \
     Layout/LayoutBlock.o \
     Layout/LayoutBox.o \
     Layout/LayoutBreak.o \
+    Layout/LayoutCanvas.o \
     Layout/LayoutDocument.o \
     Layout/LayoutImage.o \
     Layout/LayoutInline.o \

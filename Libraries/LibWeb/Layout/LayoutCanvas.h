@@ -26,31 +26,32 @@
 
 #pragma once
 
+#include <LibWeb/DOM/HTMLCanvasElement.h>
+#include <LibWeb/Layout/LayoutReplaced.h>
+
 namespace Web {
 
-class CanvasRenderingContext2D;
-class Document;
-class Element;
-class EventListener;
-class EventTarget;
-class Frame;
-class HTMLElement;
 class HTMLCanvasElement;
-class HtmlView;
-class Node;
 
-namespace Bindings {
+class LayoutCanvas : public LayoutReplaced {
+public:
+    LayoutCanvas(const HTMLCanvasElement&, NonnullRefPtr<StyleProperties>);
+    virtual ~LayoutCanvas() override;
 
-class CanvasRenderingContext2DWrapper;
-class DocumentWrapper;
-class EventListenerWrapper;
-class EventTargetWrapper;
-class HTMLCanvasElementWrapper;
-class NodeWrapper;
-class Wrappable;
-class Wrapper;
+    virtual void layout() override;
+    virtual void render(RenderingContext&) override;
 
+    const HTMLCanvasElement& node() const { return static_cast<const HTMLCanvasElement&>(LayoutReplaced::node()); }
+
+private:
+    virtual const char* class_name() const override { return "LayoutCanvas"; }
+    virtual bool is_canvas() const override { return true; }
+};
+
+template<>
+inline bool is<LayoutCanvas>(const LayoutNode& node)
+{
+    return node.is_canvas();
 }
-
 
 }
