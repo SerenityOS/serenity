@@ -45,7 +45,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-//#define DEBUG_GTEXTEDITOR
+//#define DEBUG_TEXTEDITOR
 
 namespace GUI {
 
@@ -411,7 +411,7 @@ void TextEditor::paint_event(PaintEvent& event)
         for_each_visual_line(line_index, [&](const Gfx::Rect& visual_line_rect, const StringView& visual_line_text, size_t start_of_visual_line) {
             if (is_multi_line() && line_index == m_cursor.line())
                 painter.fill_rect(visual_line_rect, widget_background_color.darkened(0.9f));
-#ifdef DEBUG_GTEXTEDITOR
+#ifdef DEBUG_TEXTEDITOR
             painter.draw_rect(visual_line_rect, Color::Cyan);
 #endif
             if (!document().has_spans()) {
