@@ -87,7 +87,7 @@ public:
     template<typename T, typename... Args>
     T& append(Args&&... args)
     {
-        auto child = make<T>(forward<Args>(args)...);
+        auto child = create_ast_node<T>(forward<Args>(args)...);
         m_children.append(move(child));
         return static_cast<T&>(m_children.last());
     }
