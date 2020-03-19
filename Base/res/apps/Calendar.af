@@ -1,0 +1,8 @@
+[App]
+Name=Calendar
+Executable=/bin/Calendar
+Category=Utilities
+
+[Icons]
+16x16=/res/icons/16x16/app-calendar.png
+32x32=
