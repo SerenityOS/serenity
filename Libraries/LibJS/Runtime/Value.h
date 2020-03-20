@@ -52,6 +52,11 @@ public:
     bool is_boolean() const { return m_type == Type::Boolean; }
     bool is_cell() const { return is_string() || is_object(); }
 
+    Value()
+        : m_type(Type::Undefined)
+    {
+    }
+
     explicit Value(bool value)
         : m_type(Type::Boolean)
     {
