@@ -56,6 +56,19 @@ public:
     bool is_empty() const { return m_length == 0; }
     void trim(size_t count) { m_length -= count; }
 
+    template<class SeparatorType, class CollectionType>
+    void join(const SeparatorType& separator, const CollectionType& collection)
+    {
+        bool first = true;
+        for (auto& item : collection) {
+            if (first)
+                first = false;
+            else
+                append(separator);
+            append(item);
+        }
+    }
+
 private:
     void will_append(size_t);
 
