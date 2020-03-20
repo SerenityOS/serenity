@@ -30,23 +30,13 @@
 
 namespace JS {
 
-class Array final : public Object {
+class ArrayPrototype final : public Object {
 public:
-    Array();
-    virtual ~Array() override;
-
-    i32 length() const { return static_cast<i32>(m_elements.size()); }
-    const Vector<Value>& elements() const { return m_elements; }
-    Vector<Value>& elements() { return m_elements; }
-
-    void push(Value);
+    ArrayPrototype();
+    virtual ~ArrayPrototype() override;
 
 private:
-    virtual const char* class_name() const override { return "Array"; }
-    virtual void visit_children(Cell::Visitor&) override;
-    virtual bool is_array() const override { return true; }
-
-    Vector<Value> m_elements;
+    virtual const char* class_name() const override { return "ArrayPrototype"; }
 };
 
 }

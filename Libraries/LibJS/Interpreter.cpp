@@ -27,6 +27,7 @@
 #include <AK/Badge.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/ArrayPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/Object.h>
@@ -42,6 +43,7 @@ Interpreter::Interpreter()
     m_global_object = heap().allocate<GlobalObject>();
     m_object_prototype = heap().allocate<ObjectPrototype>();
     m_string_prototype = heap().allocate<StringPrototype>();
+    m_array_prototype = heap().allocate<ArrayPrototype>();
 }
 
 Interpreter::~Interpreter()
@@ -143,6 +145,7 @@ void Interpreter::gather_roots(Badge<Heap>, HashTable<Cell*>& roots)
     roots.set(m_global_object);
     roots.set(m_string_prototype);
     roots.set(m_object_prototype);
+    roots.set(m_array_prototype);
 
     for (auto& scope : m_scope_stack) {
         for (auto& it : scope.variables) {
