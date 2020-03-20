@@ -66,13 +66,7 @@ Options parse_options(int argc, char* argv[])
     } else {
         // Copy the rest of our command-line args.
         StringBuilder builder;
-        bool first = true;
-        for (auto& word : text) {
-            if (!first)
-                builder.append(' ');
-            first = false;
-            builder.append(word);
-        }
+        builder.join(' ', text);
         options.data = builder.to_string();
     }
 
