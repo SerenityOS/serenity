@@ -27,6 +27,7 @@
 #include <AK/String.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/NativeProperty.h>
 #include <LibJS/Runtime/Object.h>
@@ -47,6 +48,15 @@ Value Object::get(String property_name) const
 {
     const Object* object = this;
     while (object) {
+        if (object->is_array()) {
+            auto* array = static_cast<const Array*>(object);
+            bool ok;
+            i32 index = property_name.to_int(ok);
+            if (ok) {
+                if (index >= 0 && index < array->length())
+                    return array->elements()[index];
+            }
+        }
         auto value = object->m_properties.get(property_name);
         if (value.has_value()) {
             if (value.value().is_object() && value.value().as_object()->is_native_property())
@@ -62,6 +72,16 @@ void Object::put(String property_name, Value value)
 {
     Object* object = this;
     while (object) {
+        if (object->is_array()) {
+            auto* array = static_cast<Array*>(object);
+            bool ok;
+            i32 index = property_name.to_int(ok);
+            if (ok && index >= 0) {
+                if (index >= array->length())
+                    array->elements().resize(index + 1);
+                array->elements()[index] = value;
+            }
+        }
         auto value_here = object->m_properties.get(property_name);
         if (value_here.has_value()) {
             if (value_here.value().is_object() && value_here.value().as_object()->is_native_property()) {

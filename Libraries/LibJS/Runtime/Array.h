@@ -37,6 +37,7 @@ public:
 
     i32 length() const { return static_cast<i32>(m_elements.size()); }
     const Vector<Value>& elements() const { return m_elements; }
+    Vector<Value>& elements() { return m_elements; }
 
     void append(Value);
 
