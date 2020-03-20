@@ -601,17 +601,21 @@ private:
 
 class MemberExpression final : public Expression {
 public:
-    MemberExpression(NonnullRefPtr<Expression> object, NonnullRefPtr<Expression> property)
+    MemberExpression(NonnullRefPtr<Expression> object, NonnullRefPtr<Expression> property, bool computed = false)
         : m_object(move(object))
         , m_property(move(property))
+        , m_computed(computed)
     {
     }
 
     virtual Value execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
 
+    bool is_computed() const { return m_computed; }
     const Expression& object() const { return *m_object; }
     const Expression& property() const { return *m_property; }
+
+    String computed_property_name(Interpreter&) const;
 
 private:
     virtual bool is_member_expression() const override { return true; }
@@ -619,6 +623,7 @@ private:
 
     NonnullRefPtr<Expression> m_object;
     NonnullRefPtr<Expression> m_property;
+    bool m_computed { false };
 };
 
 }
