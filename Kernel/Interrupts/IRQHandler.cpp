@@ -36,6 +36,7 @@ IRQHandler::IRQHandler(u8 irq)
     : GenericInterruptHandler(irq)
     , m_responsible_irq_controller(InterruptManagement::the().get_responsible_irq_controller(irq))
 {
+    disable_irq();
 }
 
 IRQHandler::~IRQHandler()
@@ -60,10 +61,9 @@ void IRQHandler::enable_irq()
 #ifdef IRQ_DEBUG
     dbg() << "Enable IRQ " << interrupt_number();
 #endif
+    m_enabled = true;
     if (!m_shared_with_others)
         m_responsible_irq_controller->enable(*this);
-    else
-        m_enabled = true;
 }
 
 void IRQHandler::disable_irq()
@@ -71,10 +71,9 @@ void IRQHandler::disable_irq()
 #ifdef IRQ_DEBUG
     dbg() << "Disable IRQ " << interrupt_number();
 #endif
+    m_enabled = false;
     if (!m_shared_with_others)
         m_responsible_irq_controller->disable(*this);
-    else
-        m_enabled = false;
 }
 
 void IRQHandler::change_irq_number(u8 irq)
