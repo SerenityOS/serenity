@@ -57,10 +57,22 @@ int main(int argc, char** argv)
     }
     auto file_contents = file->read_all();
 
+    StringView source;
+    if (file_contents.size() >= 2 && file_contents[0] == '#' && file_contents[1] == '!') {
+        size_t i = 0;
+        for (i = 2; i < file_contents.size(); ++i) {
+            if (file_contents[i] == '\n')
+                break;
+        }
+        source = StringView((const char*)file_contents.data() + i, file_contents.size() - i);
+    } else {
+        source = file_contents;
+    }
+
     JS::Interpreter interpreter;
     interpreter.heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
 
-    auto program = JS::Parser(JS::Lexer(file_contents)).parse_program();
+    auto program = JS::Parser(JS::Lexer(source)).parse_program();
 
     if (dump_ast)
         program->dump(0);
