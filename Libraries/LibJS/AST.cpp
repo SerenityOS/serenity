@@ -480,7 +480,7 @@ Value AssignmentExpression::execute(Interpreter& interpreter) const
         commit = [&](Value value) {
             auto object = static_cast<const MemberExpression&>(*m_lhs).object().execute(interpreter).to_object(interpreter.heap());
             ASSERT(object.is_object());
-            auto property_name = static_cast<const Identifier&>(static_cast<const MemberExpression&>(*m_lhs).property()).string();
+            auto property_name = static_cast<const MemberExpression&>(*m_lhs).computed_property_name(interpreter);
             object.as_object()->put(property_name, value);
         };
     } else {
@@ -638,24 +638,26 @@ Value ObjectExpression::execute(Interpreter& interpreter) const
 
 void MemberExpression::dump(int indent) const
 {
-    ASTNode::dump(indent);
+    print_indent(indent);
+    printf("%s (computed=%s)\n", class_name(), is_computed() ? "true" : "false");
     m_object->dump(indent + 1);
     m_property->dump(indent + 1);
+}
+
+String MemberExpression::computed_property_name(Interpreter& interpreter) const
+{
+    if (!is_computed()) {
+        ASSERT(m_property->is_identifier());
+        return static_cast<const Identifier&>(*m_property).string();
+    }
+    return m_property->execute(interpreter).to_string();
 }
 
 Value MemberExpression::execute(Interpreter& interpreter) const
 {
     auto object_result = m_object->execute(interpreter).to_object(interpreter.heap());
     ASSERT(object_result.is_object());
-
-    String property_name;
-    if (m_property->is_identifier()) {
-        property_name = static_cast<const Identifier&>(*m_property).string();
-    } else {
-        ASSERT_NOT_REACHED();
-    }
-
-    return object_result.as_object()->get(property_name);
+    return object_result.as_object()->get(computed_property_name(interpreter));
 }
 
 Value StringLiteral::execute(Interpreter& interpreter) const

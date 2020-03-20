@@ -369,6 +369,12 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
     case TokenType::Period:
         consume();
         return create_ast_node<MemberExpression>(move(lhs), parse_expression(min_precedence, associativity));
+    case TokenType::BracketOpen: {
+        consume(TokenType::BracketOpen);
+        auto expression = create_ast_node<MemberExpression>(move(lhs), parse_expression(min_precedence, associativity), true);
+        consume(TokenType::BracketClose);
+        return expression;
+    }
     case TokenType::PlusPlus:
         consume();
         return create_ast_node<UpdateExpression>(UpdateOp::Increment, move(lhs));
@@ -587,6 +593,7 @@ bool Parser::match_secondary_expression() const
         || type == TokenType::LessThanEquals
         || type == TokenType::ParenOpen
         || type == TokenType::Period
+        || type == TokenType::BracketOpen
         || type == TokenType::PlusPlus
         || type == TokenType::MinusMinus;
 }
