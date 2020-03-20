@@ -29,6 +29,7 @@
 #include <AK/StringBuilder.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/ScriptFunction.h>
 #include <LibJS/Runtime/Value.h>
@@ -680,6 +681,23 @@ Value UndefinedLiteral::execute(Interpreter&) const
 Value NullLiteral::execute(Interpreter&) const
 {
     return js_null();
+}
+
+void ArrayExpression::dump(int indent) const
+{
+    ASTNode::dump(indent);
+    for (auto& element : m_elements) {
+        element.dump(indent + 1);
+    }
+}
+
+Value ArrayExpression::execute(Interpreter& interpreter) const
+{
+    auto* array = interpreter.heap().allocate<Array>();
+    for (auto& element : m_elements) {
+        array->append(element.execute(interpreter));
+    }
+    return array;
 }
 
 }
