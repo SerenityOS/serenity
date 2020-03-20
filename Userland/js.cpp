@@ -42,10 +42,12 @@ int main(int argc, char** argv)
 {
     bool dump_ast = false;
     bool gc_on_every_allocation = false;
+    bool print_last_result = false;
     const char* script_path = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(dump_ast, "Dump the AST", "ast-dump", 'A');
+    args_parser.add_option(dump_ast, "Print last result", "print-last-result", 'l');
     args_parser.add_option(gc_on_every_allocation, "GC on every allocation", "gc-on-every-allocation", 'g');
     args_parser.add_positional_argument(script_path, "Path to script file", "script");
     args_parser.parse(argc, argv);
@@ -80,7 +82,8 @@ int main(int argc, char** argv)
     auto result = interpreter.run(*program);
     dbg() << "Interpreter returned " << result;
 
-    printf("%s\n", result.to_string().characters());
+    if (print_last_result)
+        printf("%s\n", result.to_string().characters());
 
     dbg() << "Collecting garbage on exit...";
     interpreter.heap().collect_garbage();
