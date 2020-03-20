@@ -393,16 +393,8 @@ void NullLiteral::dump(int indent) const
 
 void FunctionNode::dump(int indent, const char* class_name) const
 {
-    bool first_time = true;
     StringBuilder parameters_builder;
-    for (const auto& parameter : parameters()) {
-        if (first_time)
-            first_time = false;
-        else
-            parameters_builder.append(',');
-
-        parameters_builder.append(parameter);
-    }
+    parameters_builder.join(',', parameters());
 
     print_indent(indent);
     printf("%s '%s(%s)'\n", class_name, name().characters(), parameters_builder.build().characters());
