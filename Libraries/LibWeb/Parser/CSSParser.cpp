@@ -153,6 +153,42 @@ NonnullRefPtr<StyleValue> parse_css_value(const StringView& string)
     return StringStyleValue::create(string);
 }
 
+RefPtr<StyleValue> parse_line_width(const StringView& part)
+{
+    NonnullRefPtr<StyleValue> value = parse_css_value(part);
+    if (value->is_length())
+        return value;
+    return nullptr;
+}
+
+RefPtr<StyleValue> parse_color(const StringView& part)
+{
+    NonnullRefPtr<StyleValue> value = parse_css_value(part);
+    if (value->is_color())
+        return value;
+    return nullptr;
+}
+
+RefPtr<StyleValue> parse_line_style(const StringView& part)
+{
+    NonnullRefPtr<StyleValue> value = parse_css_value(part);
+    if (value->is_string()) {
+        if (value->to_string() == "dotted")
+            return value;
+        if (value->to_string() == "dashed")
+            return value;
+        if (value->to_string() == "solid")
+            return value;
+        if (value->to_string() == "double")
+            return value;
+        if (value->to_string() == "groove")
+            return value;
+        if (value->to_string() == "ridge")
+            return value;
+    }
+    return nullptr;
+}
+
 class CSSParser {
 public:
     CSSParser(const StringView& input)
