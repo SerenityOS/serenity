@@ -64,8 +64,6 @@ public:
     void increment_invoking_counter();
 
 protected:
-    void enable_interrupt_vector();
-    void disable_interrupt_vector();
     void change_interrupt_number(u8 number);
     explicit GenericInterruptHandler(u8 interrupt_number);
 
