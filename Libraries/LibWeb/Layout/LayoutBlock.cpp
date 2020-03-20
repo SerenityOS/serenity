@@ -359,7 +359,10 @@ HitTestResult LayoutBlock::hit_test(const Gfx::Point& position) const
             }
         }
     }
-    return {};
+
+    // FIXME: This should be smarter about the text position if we're hitting a block
+    //        that has text inside it, but `position` is to the right of the text box.
+    return { rect().contains(position.x(), position.y()) ? this : nullptr };
 }
 
 NonnullRefPtr<StyleProperties> LayoutBlock::style_for_anonymous_block() const
