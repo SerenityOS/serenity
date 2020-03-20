@@ -20,7 +20,7 @@ sudo id
 
 MAKE="make"
 
-if [ "$(uname -s)" = "OpenBSD" ]; then
+if [ "$(uname -s)" = "OpenBSD" ] || [ "$(uname -s)" = "FreeBSD" ]; then
 	MAKE="gmake"
 fi
 
