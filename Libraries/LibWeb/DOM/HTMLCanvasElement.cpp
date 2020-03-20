@@ -59,7 +59,7 @@ int HTMLCanvasElement::preferred_height() const
     if (ok)
         return height;
 
-    return 300;
+    return 150;
 }
 
 RefPtr<LayoutNode> HTMLCanvasElement::create_layout_node(const StyleProperties* parent_style) const
