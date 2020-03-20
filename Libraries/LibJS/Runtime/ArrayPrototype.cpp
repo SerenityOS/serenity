@@ -24,29 +24,29 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <LibJS/Runtime/Object.h>
+#include <AK/Function.h>
+#include <LibJS/Heap/Heap.h>
+#include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/ArrayPrototype.h>
+#include <LibJS/Runtime/Value.h>
 
 namespace JS {
 
-class Array final : public Object {
-public:
-    Array();
-    virtual ~Array() override;
+ArrayPrototype::ArrayPrototype()
+{
+    put_native_function("push", [](Object* this_object, const Vector<Value>& arguments) -> Value {
+        if (arguments.is_empty())
+            return js_undefined();
+        ASSERT(this_object);
+        ASSERT(this_object->is_array());
+        static_cast<Array*>(this_object)->push(arguments[0]);
+        return Value(static_cast<const Array*>(this_object)->length());
+    });
+}
 
-    i32 length() const { return static_cast<i32>(m_elements.size()); }
-    const Vector<Value>& elements() const { return m_elements; }
-    Vector<Value>& elements() { return m_elements; }
-
-    void push(Value);
-
-private:
-    virtual const char* class_name() const override { return "Array"; }
-    virtual void visit_children(Cell::Visitor&) override;
-    virtual bool is_array() const override { return true; }
-
-    Vector<Value> m_elements;
-};
+ArrayPrototype::~ArrayPrototype()
+{
+}
 
 }

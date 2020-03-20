@@ -697,7 +697,7 @@ Value ArrayExpression::execute(Interpreter& interpreter) const
 {
     auto* array = interpreter.heap().allocate<Array>();
     for (auto& element : m_elements) {
-        array->append(element.execute(interpreter));
+        array->push(element.execute(interpreter));
     }
     return array;
 }

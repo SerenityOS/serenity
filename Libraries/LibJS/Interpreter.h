@@ -97,6 +97,7 @@ public:
 
     Object* string_prototype() { return m_string_prototype; }
     Object* object_prototype() { return m_object_prototype; }
+    Object* array_prototype() { return m_array_prototype; }
 
 private:
     Heap m_heap;
@@ -107,6 +108,7 @@ private:
     Object* m_global_object { nullptr };
     Object* m_string_prototype { nullptr };
     Object* m_object_prototype { nullptr };
+    Object* m_array_prototype { nullptr };
 };
 
 }

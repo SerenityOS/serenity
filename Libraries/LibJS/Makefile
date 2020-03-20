@@ -7,6 +7,7 @@ OBJS = \
     Lexer.o \
     Parser.o \
     Runtime/Array.o \
+    Runtime/ArrayPrototype.o \
     Runtime/Cell.o \
     Runtime/ConsoleObject.o \
     Runtime/Function.o \

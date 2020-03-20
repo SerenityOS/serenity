@@ -25,12 +25,14 @@
  */
 
 #include <AK/Function.h>
+#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
 
 namespace JS {
 
 Array::Array()
 {
+    set_prototype(interpreter().array_prototype());
     put_native_property(
         "length",
         [this](Object*) {
@@ -45,7 +47,7 @@ Array::~Array()
 {
 }
 
-void Array::append(Value value)
+void Array::push(Value value)
 {
     m_elements.append(value);
 }
