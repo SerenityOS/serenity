@@ -231,6 +231,8 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
         return parse_object_expression();
     case TokenType::Function:
         return parse_function_node<FunctionExpression>();
+    case TokenType::BracketOpen:
+        return parse_array_expression();
     default:
         m_has_errors = true;
         expected("primary expression (missing switch case)");
@@ -271,6 +273,22 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
     consume(TokenType::CurlyOpen);
     consume(TokenType::CurlyClose);
     return create_ast_node<ObjectExpression>();
+}
+
+NonnullRefPtr<ArrayExpression> Parser::parse_array_expression()
+{
+    consume(TokenType::BracketOpen);
+
+    NonnullRefPtrVector<Expression> elements;
+    while (match_expression()) {
+        elements.append(parse_expression(0));
+        if (!match(TokenType::Comma))
+            break;
+        consume(TokenType::Comma);
+    }
+
+    consume(TokenType::BracketClose);
+    return create_ast_node<ArrayExpression>(move(elements));
 }
 
 NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associativity associativity)

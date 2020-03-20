@@ -581,6 +581,24 @@ private:
     virtual const char* class_name() const override { return "ObjectExpression"; }
 };
 
+class ArrayExpression : public Expression {
+public:
+    ArrayExpression(NonnullRefPtrVector<Expression> elements)
+        : m_elements(move(elements))
+    {
+    }
+
+    const NonnullRefPtrVector<Expression>& elements() const { return m_elements; }
+
+    virtual Value execute(Interpreter&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    virtual const char* class_name() const override { return "ArrayExpression"; }
+
+    NonnullRefPtrVector<Expression> m_elements;
+};
+
 class MemberExpression final : public Expression {
 public:
     MemberExpression(NonnullRefPtr<Expression> object, NonnullRefPtr<Expression> property)
