@@ -35,6 +35,7 @@ ConsoleObject::ConsoleObject()
     put_native_function("log", [](Object*, const Vector<Value>& arguments) -> Value {
         for (auto& argument : arguments)
             printf("%s ", argument.to_string().characters());
+        printf("\n");
         return js_undefined();
     });
 }
