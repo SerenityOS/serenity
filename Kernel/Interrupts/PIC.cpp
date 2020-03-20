@@ -66,9 +66,9 @@ void PIC::disable(const GenericInterruptHandler& handler)
     ASSERT(handler.interrupt_number() >= gsi_base() && handler.interrupt_number() < interrupt_vectors_count());
     u8 irq = handler.interrupt_number();
     u8 imr;
-    if (irq >= 8) {
+    if (irq & 8) {
         imr = IO::in8(PIC1_CMD);
-        imr |= 1 << (irq - 8);
+        imr |= 1 << (irq & 7);
         IO::out8(PIC1_CMD, imr);
     } else {
         imr = IO::in8(PIC0_CMD);
@@ -88,16 +88,20 @@ PIC::PIC()
 void PIC::spurious_eoi(const GenericInterruptHandler& handler) const
 {
     ASSERT(handler.type() == HandlerType::SpuriousInterruptHandler);
-    if (handler.interrupt_number() == 15)
-        eoi_interrupt(7);
+    if (handler.interrupt_number() == 7)
+        return;
+    if (handler.interrupt_number() == 15) {
+        IO::in8(PIC1_CMD); /* dummy read */
+        IO::out8(PIC0_CTL, 0x60 | (2));
+    }
 }
 
 bool PIC::is_vector_enabled(u8 irq) const
 {
     u8 imr;
-    if (irq >= 8) {
+    if (irq & 8) {
         imr = IO::in8(PIC1_CMD);
-        imr &= 1 << (irq - 8);
+        imr &= 1 << (irq & 7);
     } else {
         imr = IO::in8(PIC0_CMD);
         imr &= 1 << irq;
@@ -118,9 +122,9 @@ void PIC::enable_vector(u8 irq)
     InterruptDisabler disabler;
     ASSERT(!is_hard_disabled());
     u8 imr;
-    if (irq >= 8) {
+    if (irq & 8) {
         imr = IO::in8(PIC1_CMD);
-        imr &= ~(1 << (irq - 8));
+        imr &= ~(1 << (irq & 7));
         IO::out8(PIC1_CMD, imr);
     } else {
         imr = IO::in8(PIC0_CMD);
@@ -140,9 +144,14 @@ void PIC::eoi(const GenericInterruptHandler& handler) const
 
 void PIC::eoi_interrupt(u8 irq) const
 {
-    if (irq >= 8)
-        IO::out8(PIC1_CTL, 0x20);
-    IO::out8(PIC0_CTL, 0x20);
+    if (irq & 8) {
+        IO::in8(PIC1_CMD); /* dummy read */
+        IO::out8(PIC1_CTL, 0x60 | (irq & 7));
+        IO::out8(PIC0_CTL, 0x60 | (2));
+        return;
+    }
+    IO::in8(PIC0_CMD); /* dummy read */
+    IO::out8(PIC0_CTL, 0x60 | irq);
 }
 
 void PIC::complete_eoi() const
@@ -175,8 +184,8 @@ void PIC::remap(u8 offset)
     IO::out8(PIC1_CMD, SLAVE_INDEX);
 
     /* ICW4 (set x86 mode) */
-    IO::out8(PIC0_CMD, 0x01);
-    IO::out8(PIC1_CMD, 0x01);
+    IO::out8(PIC0_CMD, ICW4_8086);
+    IO::out8(PIC1_CMD, ICW4_8086);
 
     // Mask -- start out with all IRQs disabled.
     IO::out8(PIC0_CMD, 0xff);
@@ -201,8 +210,8 @@ void PIC::initialize()
     IO::out8(PIC1_CMD, SLAVE_INDEX);
 
     /* ICW4 (set x86 mode) */
-    IO::out8(PIC0_CMD, 0x01);
-    IO::out8(PIC1_CMD, 0x01);
+    IO::out8(PIC0_CMD, ICW4_8086);
+    IO::out8(PIC1_CMD, ICW4_8086);
 
     // Mask -- start out with all IRQs disabled.
     IO::out8(PIC0_CMD, 0xff);
