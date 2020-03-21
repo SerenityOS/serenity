@@ -623,10 +623,10 @@ void VariableDeclaration::dump(int indent) const
 void ObjectExpression::dump(int indent) const
 {
     ASTNode::dump(indent);
-    for (String property_key : m_properties.keys()) {
+    for (auto it : m_properties) {
         print_indent(indent + 1);
-        printf("%s: ", property_key.characters());
-        m_properties.get(property_key).value()->dump(0);
+        printf("%s: ", it.key.characters());
+        it.value->dump(0);
     }
 }
 
@@ -639,10 +639,8 @@ void ExpressionStatement::dump(int indent) const
 Value ObjectExpression::execute(Interpreter& interpreter) const
 {
     auto object = interpreter.heap().allocate<Object>();
-    for (String property_key : m_properties.keys()) {
-        object->put(property_key, m_properties.get(property_key).value()->execute(interpreter));
-    }
-
+    for (auto it : m_properties)
+        object->put(it.key, it.value->execute(interpreter));
     return object;
 }
 
