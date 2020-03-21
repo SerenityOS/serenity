@@ -341,7 +341,7 @@ JS::Interpreter& Document::interpreter()
     if (!m_interpreter) {
         m_interpreter = make<JS::Interpreter>();
 
-        m_interpreter->global_object().put_native_function("alert", [](JS::Object*, Vector<JS::Value> arguments) -> JS::Value {
+        m_interpreter->global_object().put_native_function("alert", [](JS::Object*, const Vector<JS::Value>& arguments) -> JS::Value {
             if (arguments.size() < 1)
                 return JS::js_undefined();
             GUI::MessageBox::show(arguments[0].to_string(), "Alert", GUI::MessageBox::Type::Information);

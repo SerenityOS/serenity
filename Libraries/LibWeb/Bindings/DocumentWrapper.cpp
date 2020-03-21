@@ -36,7 +36,7 @@ namespace Bindings {
 DocumentWrapper::DocumentWrapper(Document& document)
     : NodeWrapper(document)
 {
-    put_native_function("getElementById", [this](JS::Object*, Vector<JS::Value> arguments) -> JS::Value {
+    put_native_function("getElementById", [this](JS::Object*, const Vector<JS::Value>& arguments) -> JS::Value {
         if (arguments.is_empty())
             return JS::js_null();
         auto id = arguments[0].to_string();
