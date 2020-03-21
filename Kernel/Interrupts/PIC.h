@@ -38,6 +38,7 @@ public:
     virtual void hard_disable() override;
     virtual void eoi(const GenericInterruptHandler&) const override;
     virtual bool is_vector_enabled(u8 number) const override;
+    virtual bool is_enabled() const override;
     virtual void spurious_eoi(const GenericInterruptHandler&) const override;
     virtual u16 get_isr() const override;
     virtual u16 get_irr() const override;
@@ -47,6 +48,7 @@ public:
     virtual IRQControllerType type() const override { return IRQControllerType::i8259; }
 
 private:
+    u16 m_cached_irq_mask { 0xffff };
     void eoi_interrupt(u8 irq) const;
     void enable_vector(u8 number);
     void remap(u8 offset);

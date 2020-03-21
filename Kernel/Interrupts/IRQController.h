@@ -45,7 +45,7 @@ public:
     virtual void disable(const GenericInterruptHandler&) = 0;
     virtual void hard_disable() { m_hard_disabled = true; }
     virtual bool is_vector_enabled(u8 number) const = 0;
-    bool is_enabled() const { return m_enabled && !m_hard_disabled; }
+    virtual bool is_enabled() const = 0;
     bool is_hard_disabled() const { return m_hard_disabled; }
     virtual void eoi(const GenericInterruptHandler&) const = 0;
     virtual void spurious_eoi(const GenericInterruptHandler&) const = 0;
@@ -59,7 +59,6 @@ public:
 protected:
     IRQController() {}
     virtual void initialize() = 0;
-    bool m_enabled { false };
     bool m_hard_disabled { false };
 };
 }
