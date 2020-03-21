@@ -185,7 +185,8 @@ void HtmlView::mousemove_event(GUI::MouseEvent& event)
 #endif
                 is_hovering_link = true;
             }
-            const_cast<Node*>(node)->dispatch_event(MouseEvent::create("mousemove", 2, 3));
+            auto offset = compute_mouse_event_offset(event.position(), *result.layout_node);
+            const_cast<Node*>(node)->dispatch_event(MouseEvent::create("mousemove", offset.x(), offset.y()));
         }
         if (m_in_mouse_selection) {
             layout_root()->selection().set_end({ result.layout_node, result.index_in_node });
@@ -236,7 +237,8 @@ void HtmlView::mousedown_event(GUI::MouseEvent& event)
                     m_in_mouse_selection = true;
                 }
             }
-            const_cast<Node*>(node)->dispatch_event(MouseEvent::create("mousedown", 2, 3));
+            auto offset = compute_mouse_event_offset(event.position(), *result.layout_node);
+            const_cast<Node*>(node)->dispatch_event(MouseEvent::create("mousedown", offset.x(), offset.y()));
         }
     }
     if (hovered_node_changed)
@@ -251,8 +253,10 @@ void HtmlView::mouseup_event(GUI::MouseEvent& event)
 
     auto result = layout_root()->hit_test(to_content_position(event.position()));
     if (result.layout_node) {
-        if (auto* node = result.layout_node->node())
-            const_cast<Node*>(node)->dispatch_event(MouseEvent::create("mouseup", 2, 3));
+        if (auto* node = result.layout_node->node()) {
+            auto offset = compute_mouse_event_offset(event.position(), *result.layout_node);
+            const_cast<Node*>(node)->dispatch_event(MouseEvent::create("mouseup", offset.x(), offset.y()));
+        }
     }
 
     if (event.button() == GUI::MouseButton::Left) {
@@ -421,6 +425,17 @@ void HtmlView::dump_selection(const char* event_name)
 void HtmlView::did_scroll()
 {
     main_frame().set_viewport_rect(visible_content_rect());
+}
+
+Gfx::Point HtmlView::compute_mouse_event_offset(const Gfx::Point& event_position, const LayoutNode& layout_node) const
+{
+    auto content_event_position = to_content_position(event_position);
+    auto top_left_of_layout_node = layout_node.box_type_agnostic_position();
+
+    return {
+        content_event_position.x() - static_cast<int>(top_left_of_layout_node.x()),
+        content_event_position.y() - static_cast<int>(top_left_of_layout_node.y())
+    };
 }
 
 }
