@@ -248,6 +248,12 @@ void HtmlView::mouseup_event(GUI::MouseEvent& event)
     if (!layout_root())
         return GUI::ScrollableWidget::mouseup_event(event);
 
+    auto result = layout_root()->hit_test(to_content_position(event.position()));
+    if (result.layout_node) {
+        if (auto* node = result.layout_node->node())
+            const_cast<Node*>(node)->dispatch_event("mouseup");
+    }
+
     if (event.button() == GUI::MouseButton::Left) {
         dump_selection("MouseUp");
         m_in_mouse_selection = false;
