@@ -26,6 +26,10 @@ if [ `uname -s` = "OpenBSD" ]; then
     export CXX=eg++
     export with_gmp=/usr/local
     export LDFLAGS=-Wl,-z,notext
+elif [ `uname -s` = "FreeBSD" ]; then
+    MAKE=gmake
+    MD5SUM="md5 -q"
+    NPROC="sysctl -n hw.ncpu"
 fi
 
 echo PREFIX is "$PREFIX"

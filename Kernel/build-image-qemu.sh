@@ -24,6 +24,9 @@ if [ "$(uname -s)" = "OpenBSD" ]; then
     VND=$(vnconfig _disk_image)
     (echo "e 0"; echo 83; echo n; echo 0; echo "*"; echo "quit") | fdisk -e "$VND"
     mkfs.ext2 -I 128 -F "/dev/${VND}i" || die "could not create filesystem"
+elif [ "$(uname -s)" = "FreeBSD" ]; then
+    MD=$(mdconfig _disk_image)
+    mke2fs -q -I 128 _disk_image || die "could not create filesystem"
 else
     if [ -x /sbin/mke2fs ]; then
         /sbin/mke2fs -q -I 128 _disk_image || die "could not create filesystem"
@@ -39,6 +42,8 @@ if [ "$(uname -s)" = "Darwin" ]; then
     fuse-ext2 _disk_image mnt -o rw+,allow_other,uid=501,gid=20 || die "could not mount filesystem"
 elif [ "$(uname -s)" = "OpenBSD" ]; then
     mount -t ext2fs "/dev/${VND}i" mnt/ || die "could not mount filesystem"
+elif [ "$(uname -s)" = "FreeBSD" ]; then
+    fuse-ext2 -o rw+ "/dev/${MD}" mnt/ || die "could not mount filesystem"
 else
     mount _disk_image mnt/ || die "could not mount filesystem"
 fi
@@ -50,7 +55,9 @@ cleanup() {
         umount mnt || ( sleep 1 && sync && umount mnt )
         rm -rf mnt
         if [ "$(uname -s)" = "OpenBSD" ]; then
-           vnconfig -u "$VND"
+            vnconfig -u "$VND"
+        elif [ "$(uname -s)" = "FreeBSD" ]; then
+            mdconfig -d -u "$MD"
         fi
         echo "done"
     fi
