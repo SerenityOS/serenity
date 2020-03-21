@@ -24,37 +24,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <LibWeb/Bindings/EventWrapper.h>
+#include <LibWeb/Bindings/MouseEventWrapper.h>
+#include <LibWeb/DOM/MouseEvent.h>
 
 namespace Web {
-
-class CanvasRenderingContext2D;
-class Document;
-class Element;
-class Event;
-class EventListener;
-class EventTarget;
-class Frame;
-class HTMLElement;
-class HTMLCanvasElement;
-class HtmlView;
-class MouseEvent;
-class Node;
-
 namespace Bindings {
 
-class CanvasRenderingContext2DWrapper;
-class DocumentWrapper;
-class EventWrapper;
-class EventListenerWrapper;
-class EventTargetWrapper;
-class HTMLCanvasElementWrapper;
-class MouseEventWrapper;
-class NodeWrapper;
-class Wrappable;
-class Wrapper;
-
+EventWrapper* wrap(JS::Heap& heap, Event& event)
+{
+    if (event.is_mouse_event())
+        return static_cast<EventWrapper*>(wrap_impl(heap, static_cast<MouseEvent&>(event)));
+    return static_cast<EventWrapper*>(wrap_impl(heap, event));
 }
 
+EventWrapper::EventWrapper(Event& event)
+    : m_event(event)
+{
+}
 
+EventWrapper::~EventWrapper()
+{
+}
+
+}
 }

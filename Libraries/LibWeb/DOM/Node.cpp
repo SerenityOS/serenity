@@ -29,9 +29,11 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/ScriptFunction.h>
+#include <LibWeb/Bindings/EventWrapper.h>
 #include <LibWeb/Bindings/NodeWrapper.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventListener.h>
 #include <LibWeb/DOM/HTMLAnchorElement.h>
 #include <LibWeb/DOM/Node.h>
@@ -123,21 +125,22 @@ bool Node::is_link() const
     return enclosing_link->has_attribute("href");
 }
 
-void Node::dispatch_event(String event_name)
+void Node::dispatch_event(NonnullRefPtr<Event> event)
 {
     for (auto& listener : listeners()) {
-        if (listener.event_name == event_name) {
+        if (listener.event_name == event->name()) {
             auto* function = const_cast<EventListener&>(*listener.listener).function();
             static_cast<const JS::ScriptFunction*>(function)->body().dump(0);
             auto* this_value = wrap(function->heap(), *this);
             dbg() << "calling event listener with this=" << this_value;
-            document().interpreter().call(function, this_value, {});
+            auto* event_wrapper = wrap(function->heap(), *event);
+            document().interpreter().call(function, this_value, { event_wrapper });
         }
     }
 
     // FIXME: This is a hack. We should follow the real rules of event bubbling.
     if (parent())
-        parent()->dispatch_event(move(event_name));
+        parent()->dispatch_event(move(event));
 }
 
 }

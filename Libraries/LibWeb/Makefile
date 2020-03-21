@@ -1,9 +1,11 @@
 LIBWEB_OBJS = \
     Bindings/CanvasRenderingContext2DWrapper.o \
     Bindings/DocumentWrapper.o \
+    Bindings/EventWrapper.o \
     Bindings/EventListenerWrapper.o \
     Bindings/EventTargetWrapper.o \
     Bindings/HTMLCanvasElementWrapper.o \
+    Bindings/MouseEventWrapper.o \
     Bindings/NodeWrapper.o \
     Bindings/Wrappable.o \
     CSS/DefaultStyleSheetSource.o \
@@ -23,6 +25,7 @@ LIBWEB_OBJS = \
     DOM/DocumentType.o \
     DOM/Element.o \
     DOM/ElementFactory.o \
+    DOM/Event.o \
     DOM/EventListener.o \
     DOM/EventTarget.o \
     DOM/HTMLAnchorElement.o \
@@ -43,6 +46,7 @@ LIBWEB_OBJS = \
     DOM/HTMLScriptElement.o \
     DOM/HTMLStyleElement.o \
     DOM/HTMLTitleElement.o \
+    DOM/MouseEvent.o \
     DOM/Node.o \
     DOM/ParentNode.o \
     DOM/Text.o \

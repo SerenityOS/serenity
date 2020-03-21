@@ -26,35 +26,22 @@
 
 #pragma once
 
+#include <LibWeb/Bindings/EventWrapper.h>
+
 namespace Web {
-
-class CanvasRenderingContext2D;
-class Document;
-class Element;
-class Event;
-class EventListener;
-class EventTarget;
-class Frame;
-class HTMLElement;
-class HTMLCanvasElement;
-class HtmlView;
-class MouseEvent;
-class Node;
-
 namespace Bindings {
 
-class CanvasRenderingContext2DWrapper;
-class DocumentWrapper;
-class EventWrapper;
-class EventListenerWrapper;
-class EventTargetWrapper;
-class HTMLCanvasElementWrapper;
-class MouseEventWrapper;
-class NodeWrapper;
-class Wrappable;
-class Wrapper;
+class MouseEventWrapper : public EventWrapper {
+public:
+    explicit MouseEventWrapper(MouseEvent&);
+    virtual ~MouseEventWrapper() override;
+
+    MouseEvent& event();
+    const MouseEvent& event() const;
+
+private:
+    virtual const char* class_name() const override { return "MouseEventWrapper"; }
+};
 
 }
-
-
 }

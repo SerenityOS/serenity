@@ -32,6 +32,7 @@
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/ElementFactory.h>
+#include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Parser/HTMLParser.h>
 #include <ctype.h>
@@ -378,7 +379,7 @@ RefPtr<Document> parse_html_document(const StringView& html, const URL& url)
     };
     fire_insertion_callbacks(document);
 
-    document->dispatch_event("DOMContentLoaded");
+    document->dispatch_event(Event::create("DOMContentLoaded"));
 
     return document;
 }
