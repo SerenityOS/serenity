@@ -147,15 +147,13 @@ static int sh_unset(int argc, const char** argv)
     return 0;
 }
 
-static String expand_tilde(const char* expression)
+static String expand_tilde(const String& expression)
 {
-    int len = strlen(expression);
-    ASSERT(len > 0 && len + 1 <= PATH_MAX);
-    ASSERT(expression[0] == '~');
+    ASSERT(expression.starts_with('~'));
 
     StringBuilder login_name;
-    int first_slash_index = len;
-    for (int i = 1; i < len; ++i) {
+    size_t first_slash_index = expression.length();
+    for (size_t i = 1; i < expression.length(); ++i) {
         if (expression[i] == '/') {
             first_slash_index = i;
             break;
@@ -164,7 +162,7 @@ static String expand_tilde(const char* expression)
     }
 
     StringBuilder path;
-    for (int i = first_slash_index; i < len; ++i)
+    for (size_t i = first_slash_index; i < expression.length(); ++i)
         path.append(expression[i]);
 
     if (login_name.is_empty()) {
@@ -179,7 +177,7 @@ static String expand_tilde(const char* expression)
 
     auto passwd = getpwnam(login_name.to_string().characters());
     if (!passwd)
-        return String(expression);
+        return expression;
     ASSERT(passwd->pw_dir);
 
     return String::format("%s/%s", passwd->pw_dir, path.to_string().characters());
@@ -206,11 +204,6 @@ static int sh_cd(int argc, const char** argv)
             if (oldpwd == nullptr)
                 return 1;
             new_path = oldpwd;
-        } else if (argv[1][0] == '~') {
-            auto path = expand_tilde(argv[1]);
-            if (path.is_empty())
-                return 1;
-            new_path = path;
         } else if (argv[1][0] == '/') {
             new_path = argv[1];
         } else {
@@ -730,6 +723,9 @@ static Vector<String> process_arguments(const Vector<String>& args)
         auto expanded_parameters = expand_parameters(arg);
 
         for (auto& exp_arg : expanded_parameters) {
+            if (exp_arg.starts_with('~'))
+                exp_arg = expand_tilde(exp_arg);
+
             auto expanded_globs = expand_globs(exp_arg, "");
             for (auto& path : expanded_globs)
                 argv_string.append(path);
