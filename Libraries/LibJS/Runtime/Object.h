@@ -40,8 +40,11 @@ public:
     Object();
     virtual ~Object();
 
-    Value get(String property_name) const;
-    void put(String property_name, Value);
+    Value get(const String& property_name) const;
+    void put(const String& property_name, Value);
+
+    virtual Optional<Value> get_own_property(const String& property_name) const;
+    virtual bool put_own_property(const String& property_name, Value);
 
     void put_native_function(String property_name, AK::Function<Value(Object*, Vector<Value>)>);
     void put_native_property(String property_name, AK::Function<Value(Object*)> getter, AK::Function<void(Object*, Value)> setter);

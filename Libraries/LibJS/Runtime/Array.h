@@ -45,6 +45,8 @@ private:
     virtual const char* class_name() const override { return "Array"; }
     virtual void visit_children(Cell::Visitor&) override;
     virtual bool is_array() const override { return true; }
+    virtual Optional<Value> get_own_property(const String& property_name) const override;
+    virtual bool put_own_property(const String& property_name, Value) override;
 
     Vector<Value> m_elements;
 };
