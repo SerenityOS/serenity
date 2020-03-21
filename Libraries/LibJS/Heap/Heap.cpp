@@ -185,7 +185,10 @@ void Heap::sweep_dead_cells()
 #ifdef HEAP_DEBUG
     dbg() << "sweep_dead_cells:";
 #endif
+    Vector<HeapBlock*, 32> empty_blocks;
+
     for (auto& block : m_blocks) {
+        bool block_has_live_cells = false;
         block->for_each_cell([&](Cell* cell) {
             if (cell->is_live()) {
                 if (!cell->is_marked()) {
@@ -195,9 +198,21 @@ void Heap::sweep_dead_cells()
                     block->deallocate(cell);
                 } else {
                     cell->set_marked(false);
+                    block_has_live_cells = true;
                 }
             }
         });
+        if (!block_has_live_cells)
+            empty_blocks.append(block);
+    }
+
+    for (auto* block : empty_blocks) {
+        dbg() << " - Reclaim HeapBlock @ " << block << ": cell_size=" << block->cell_size();
+        m_blocks.remove_first_matching([block](auto& entry) { return entry == block; });
+    }
+
+    for (auto& block : m_blocks) {
+        dbg() << " > Live HeapBlock @ " << block << ": cell_size=" << block->cell_size();
     }
 }
 
