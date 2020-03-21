@@ -42,7 +42,7 @@ private:
     virtual bool is_native_function() const override { return true; }
     virtual const char* class_name() const override { return "NativeFunction"; }
 
-    AK::Function<Value(Object*, Vector<Value>)> m_native_function;
+    AK::Function<Value(Object*, const Vector<Value>&)> m_native_function;
 };
 
 }
