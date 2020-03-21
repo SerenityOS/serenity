@@ -12,6 +12,7 @@ OBJS = \
     Runtime/ConsoleObject.o \
     Runtime/Function.o \
     Runtime/GlobalObject.o \
+    Runtime/MathObject.o \
     Runtime/NativeFunction.o \
     Runtime/NativeProperty.o \
     Runtime/Object.o \
