@@ -47,6 +47,18 @@ HTMLCanvasElementWrapper::HTMLCanvasElementWrapper(HTMLCanvasElement& element)
         }
         return JS::js_undefined();
     });
+    put_native_property(
+        "width",
+        [this](JS::Object*) {
+            return JS::Value(node().preferred_width());
+        },
+        nullptr);
+    put_native_property(
+        "height",
+        [this](JS::Object*) {
+            return JS::Value(node().preferred_height());
+        },
+        nullptr);
 }
 
 HTMLCanvasElementWrapper::~HTMLCanvasElementWrapper()
