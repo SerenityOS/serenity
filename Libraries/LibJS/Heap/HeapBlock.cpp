@@ -28,13 +28,16 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/kmalloc.h>
 #include <LibJS/Heap/HeapBlock.h>
+#include <stdio.h>
 #include <sys/mman.h>
 
 namespace JS {
 
 NonnullOwnPtr<HeapBlock> HeapBlock::create_with_cell_size(Heap& heap, size_t cell_size)
 {
-    auto* block = (HeapBlock*)serenity_mmap(nullptr, block_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, block_size, "HeapBlock");
+    char name[64];
+    snprintf(name, sizeof(name), "LibJS: HeapBlock(%zu)", cell_size);
+    auto* block = (HeapBlock*)serenity_mmap(nullptr, block_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, block_size, name);
     ASSERT(block != MAP_FAILED);
     new (block) HeapBlock(heap, cell_size);
     return NonnullOwnPtr<HeapBlock>(NonnullOwnPtr<HeapBlock>::Adopt, *block);
