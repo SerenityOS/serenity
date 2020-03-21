@@ -117,6 +117,11 @@ void IOAPIC::map_pci_interrupts()
     configure_redirection_entry(11, 11 + IRQ_VECTOR_BASE, DeliveryMode::Normal, false, false, true, true, 0);
 }
 
+bool IOAPIC::is_enabled() const
+{
+    return !is_hard_disabled();
+}
+
 void IOAPIC::spurious_eoi(const GenericInterruptHandler& handler) const
 {
     InterruptDisabler disabler;
@@ -213,8 +218,10 @@ void IOAPIC::mask_all_redirection_entries() const
 void IOAPIC::mask_redirection_entry(u8 index) const
 {
     ASSERT((u32)index < m_redirection_entries_count);
-    u32 redirection_entry = read_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET) | (1 << 16);
-    write_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET, redirection_entry);
+    u32 redirection_entry = read_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET);
+    if (redirection_entry & (1 << 16))
+        return;
+    write_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET, redirection_entry | (1 << 16));
 }
 
 bool IOAPIC::is_redirection_entry_masked(u8 index) const
@@ -227,6 +234,8 @@ void IOAPIC::unmask_redirection_entry(u8 index) const
 {
     ASSERT((u32)index < m_redirection_entries_count);
     u32 redirection_entry = read_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET);
+    if (!(redirection_entry & (1 << 16)))
+        return;
     write_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET, redirection_entry & ~(1 << 16));
 }
 
