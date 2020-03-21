@@ -30,6 +30,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/MessageBox.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
 #include <LibWeb/CSS/StyleResolver.h>
@@ -345,6 +346,22 @@ JS::Interpreter& Document::interpreter()
             if (arguments.size() < 1)
                 return JS::js_undefined();
             GUI::MessageBox::show(arguments[0].to_string(), "Alert", GUI::MessageBox::Type::Information);
+            return JS::js_undefined();
+        });
+
+        m_interpreter->global_object().put_native_function("setInterval", [this](JS::Object*, const Vector<JS::Value>& arguments) -> JS::Value {
+            if (arguments.size() < 2)
+                return JS::js_undefined();
+            ASSERT(arguments[0].is_object());
+            ASSERT(arguments[0].as_object()->is_function());
+            auto callback = make_handle(const_cast<JS::Object*>(arguments[0].as_object()));
+
+            // FIXME: This timer should not be leaked! It should also be removable with clearInterval()!
+            (void)Core::Timer::construct(
+                arguments[1].to_i32(), [this, callback] {
+                    const_cast<JS::Function*>(static_cast<const JS::Function*>(callback.cell()))->call(*m_interpreter, {});
+                }).leak_ref();
+
             return JS::js_undefined();
         });
 
