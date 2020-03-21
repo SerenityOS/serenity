@@ -44,54 +44,53 @@ Object::~Object()
 {
 }
 
-Value Object::get(String property_name) const
+Optional<Value> Object::get_own_property(const String& property_name) const
+{
+    auto value_here = m_properties.get(property_name);
+    if (value_here.has_value() && value_here.value().is_object() && value_here.value().as_object()->is_native_property())
+        return static_cast<NativeProperty*>(value_here.value().as_object())->get(const_cast<Object*>(this));
+    return value_here;
+}
+
+bool Object::put_own_property(const String& property_name, Value value)
+{
+    auto value_here = m_properties.get(property_name);
+    if (value_here.has_value() && value_here.value().is_object() && value_here.value().as_object()->is_native_property()) {
+        static_cast<NativeProperty*>(value_here.value().as_object())->set(const_cast<Object*>(this), value);
+    } else {
+        m_properties.set(property_name, value);
+    }
+    return true;
+}
+
+Value Object::get(const String& property_name) const
 {
     const Object* object = this;
     while (object) {
-        if (object->is_array()) {
-            auto* array = static_cast<const Array*>(object);
-            bool ok;
-            i32 index = property_name.to_int(ok);
-            if (ok) {
-                if (index >= 0 && index < array->length())
-                    return array->elements()[index];
-            }
-        }
-        auto value = object->m_properties.get(property_name);
-        if (value.has_value()) {
-            if (value.value().is_object() && value.value().as_object()->is_native_property())
-                return static_cast<const NativeProperty*>(value.value().as_object())->get(const_cast<Object*>(this));
+        auto value = object->get_own_property(property_name);
+        if (value.has_value())
             return value.value();
-        }
         object = object->prototype();
     }
     return js_undefined();
 }
 
-void Object::put(String property_name, Value value)
+void Object::put(const String& property_name, Value value)
 {
     Object* object = this;
     while (object) {
-        if (object->is_array()) {
-            auto* array = static_cast<Array*>(object);
-            bool ok;
-            i32 index = property_name.to_int(ok);
-            if (ok && index >= 0) {
-                if (index >= array->length())
-                    array->elements().resize(index + 1);
-                array->elements()[index] = value;
-            }
-        }
         auto value_here = object->m_properties.get(property_name);
         if (value_here.has_value()) {
             if (value_here.value().is_object() && value_here.value().as_object()->is_native_property()) {
                 static_cast<NativeProperty*>(value_here.value().as_object())->set(const_cast<Object*>(this), value);
                 return;
             }
+            if (object->put_own_property(property_name, value))
+                return;
         }
         object = object->prototype();
     }
-    m_properties.set(property_name, move(value));
+    put_own_property(property_name, value);
 }
 
 void Object::put_native_function(String property_name, AK::Function<Value(Object*, Vector<Value>)> native_function)
@@ -147,5 +146,4 @@ Value Object::to_string() const
 {
     return js_string(heap(), String::format("[object %s]", class_name()));
 }
-
 }
