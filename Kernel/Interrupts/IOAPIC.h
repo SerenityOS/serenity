@@ -48,6 +48,7 @@ public:
     virtual void eoi(const GenericInterruptHandler&) const override;
     virtual void spurious_eoi(const GenericInterruptHandler&) const override;
     virtual bool is_vector_enabled(u8 number) const override;
+    virtual bool is_enabled() const override;
     virtual u16 get_isr() const override;
     virtual u16 get_irr() const override;
     virtual u32 gsi_base() const override { return m_gsi_base; }
