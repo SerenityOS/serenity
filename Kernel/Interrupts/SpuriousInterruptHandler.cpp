@@ -44,7 +44,7 @@ void SpuriousInterruptHandler::unregister_handler(GenericInterruptHandler&)
 bool SpuriousInterruptHandler::eoi()
 {
     // FIXME: Actually check if IRQ7 or IRQ15 are spurious, and if not, call EOI with the correct interrupt number.
-    m_responsible_irq_controller->spurious_eoi(*this);
+    m_responsible_irq_controller->eoi(*this);
     return false;
 }
 
