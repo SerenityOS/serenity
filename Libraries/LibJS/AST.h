@@ -211,7 +211,7 @@ private:
 
 class IfStatement : public Statement {
 public:
-    IfStatement(NonnullRefPtr<Expression> predicate, NonnullRefPtr<ScopeNode> consequent, NonnullRefPtr<ScopeNode> alternate)
+    IfStatement(NonnullRefPtr<Expression> predicate, NonnullRefPtr<ScopeNode> consequent, RefPtr<ScopeNode> alternate)
         : m_predicate(move(predicate))
         , m_consequent(move(consequent))
         , m_alternate(move(alternate))
@@ -220,7 +220,7 @@ public:
 
     const Expression& predicate() const { return *m_predicate; }
     const ScopeNode& consequent() const { return *m_consequent; }
-    const ScopeNode& alternate() const { return *m_alternate; }
+    const ScopeNode* alternate() const { return m_alternate; }
 
     virtual Value execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
@@ -230,7 +230,7 @@ private:
 
     NonnullRefPtr<Expression> m_predicate;
     NonnullRefPtr<ScopeNode> m_consequent;
-    NonnullRefPtr<ScopeNode> m_alternate;
+    RefPtr<ScopeNode> m_alternate;
 };
 
 class WhileStatement : public Statement {
