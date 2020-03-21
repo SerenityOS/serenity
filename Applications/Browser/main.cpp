@@ -81,7 +81,13 @@ int main(int argc, char** argv)
     widget.layout()->set_spacing(0);
 
     auto& toolbar = widget.add<GUI::ToolBar>();
+    auto& bookmarksbar = widget.add<GUI::Widget>();
     auto& html_widget = widget.add<Web::HtmlView>();
+
+    bool bookmarksbar_enabled = true;
+    bookmarksbar.set_layout<GUI::HorizontalBoxLayout>();
+    bookmarksbar.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    bookmarksbar.set_preferred_size(0, bookmarksbar_enabled ? 20 : 0);
 
     History<URL> history;
 
@@ -231,6 +237,17 @@ int main(int argc, char** argv)
     line_box_borders_action->set_checked(false);
     debug_menu->add_action(line_box_borders_action);
     menubar->add_menu(move(debug_menu));
+
+    auto bookmarks_menu = GUI::Menu::construct("Bookmarks");
+    auto show_bookmarksbar_action = GUI::Action::create("Show bookmarks bar", [&](auto& action) {
+        action.set_checked(!action.is_checked());
+        bookmarksbar.set_preferred_size(0, action.is_checked() ? 20 : 0);
+        bookmarksbar.update();
+    });
+    show_bookmarksbar_action->set_checkable(true);
+    show_bookmarksbar_action->set_checked(bookmarksbar_enabled);
+    bookmarks_menu->add_action(show_bookmarksbar_action);
+    menubar->add_menu(move(bookmarks_menu));
 
     auto help_menu = GUI::Menu::construct("Help");
     help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
