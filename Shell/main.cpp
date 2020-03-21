@@ -755,15 +755,15 @@ static int run_command(const String& cmd)
 
 #ifdef SH_DEBUG
     for (auto& command : commands) {
-        for (int i = 0; i < command.subcommands.size(); ++i) {
-            for (int j = 0; j < i; ++j)
+        for (size_t i = 0; i < command.subcommands.size(); ++i) {
+            for (size_t j = 0; j < i; ++j)
                 dbgprintf("    ");
             for (auto& arg : command.subcommands[i].args) {
                 dbgprintf("<%s> ", arg.characters());
             }
             dbgprintf("\n");
             for (auto& redirecton : command.subcommands[i].redirections) {
-                for (int j = 0; j < i; ++j)
+                for (size_t j = 0; j < i; ++j)
                     dbgprintf("    ");
                 dbgprintf("  ");
                 switch (redirecton.type) {
