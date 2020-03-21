@@ -348,7 +348,12 @@ JS::Interpreter& Document::interpreter()
             return JS::js_undefined();
         });
 
-        m_interpreter->global_object().put("document", wrap(m_interpreter->heap(), *this));
+        m_interpreter->global_object().put_native_property(
+            "document",
+            [this](JS::Object*) {
+                return wrap(m_interpreter->heap(), *this);
+            },
+            nullptr);
     }
     return *m_interpreter;
 }
