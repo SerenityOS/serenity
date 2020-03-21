@@ -105,7 +105,7 @@ printf "installing userland... "
 
 if [ "$(uname -s)" = "Darwin" ]; then
     find ../Userland/ -type f -perm +111 -exec cp {} mnt/bin/ \;
-elif [ "$(uname -s)" = "OpenBSD" ]; then
+elif [ "$(uname -s)" = "OpenBSD" ] || [ "$(uname -s)" = "FreeBSD" ]; then
     find ../Userland/ -type f -perm -555 -exec cp {} mnt/bin/ \;
 else
     find ../Userland/ -type f -executable -exec cp {} mnt/bin/ \;
