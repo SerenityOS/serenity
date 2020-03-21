@@ -269,10 +269,27 @@ NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
 
 NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
 {
-    // FIXME: Parse actual object expression
+    HashMap<String, NonnullRefPtr<Expression>> properties;
     consume(TokenType::CurlyOpen);
+
+    while (!match(TokenType::CurlyClose)) {
+        auto identifier = create_ast_node<Identifier>(consume(TokenType::Identifier).value());
+
+        if (match(TokenType::Colon)) {
+            consume(TokenType::Colon);
+            properties.set(identifier->string(), parse_expression(0));
+        } else {
+            properties.set(identifier->string(), identifier);
+        }
+
+        if (!match(TokenType::Comma))
+            break;
+
+        consume(TokenType::Comma);
+    }
+
     consume(TokenType::CurlyClose);
-    return create_ast_node<ObjectExpression>();
+    return create_ast_node<ObjectExpression>(properties);
 }
 
 NonnullRefPtr<ArrayExpression> Parser::parse_array_expression()

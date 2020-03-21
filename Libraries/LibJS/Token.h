@@ -44,6 +44,7 @@ enum class TokenType {
     Caret,
     Catch,
     Class,
+    Colon,
     Comma,
     Const,
     CurlyClose,

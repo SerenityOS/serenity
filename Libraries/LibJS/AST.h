@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/HashMap.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
@@ -572,13 +573,18 @@ private:
 
 class ObjectExpression : public Expression {
 public:
-    ObjectExpression() {}
+    ObjectExpression(HashMap<String, NonnullRefPtr<Expression>> properties = {})
+        : m_properties(properties)
+    {
+    }
 
     virtual Value execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
 
 private:
     virtual const char* class_name() const override { return "ObjectExpression"; }
+
+    HashMap<String, NonnullRefPtr<Expression>> m_properties;
 };
 
 class ArrayExpression : public Expression {
