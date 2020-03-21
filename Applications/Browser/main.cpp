@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "BookmarksBarWidget.h"
 #include "History.h"
 #include "InspectorWidget.h"
 #include <LibCore/File.h>
@@ -53,6 +54,7 @@
 #include <stdlib.h>
 
 static const char* home_url = "file:///home/anon/www/welcome.html";
+static const char* bookmarks_filename = "/home/anon/bookmarks.json";
 
 int main(int argc, char** argv)
 {
@@ -71,7 +73,6 @@ int main(int argc, char** argv)
         return 1;
     }
 
-
     auto window = GUI::Window::construct();
     window->set_rect(100, 100, 640, 480);
 
@@ -80,14 +81,15 @@ int main(int argc, char** argv)
     widget.set_layout<GUI::VerticalBoxLayout>();
     widget.layout()->set_spacing(0);
 
+    bool bookmarksbar_enabled = true;
+
     auto& toolbar = widget.add<GUI::ToolBar>();
-    auto& bookmarksbar = widget.add<GUI::Widget>();
+    auto& bookmarksbar = widget.add<BookmarksBarWidget>(bookmarks_filename, bookmarksbar_enabled);
     auto& html_widget = widget.add<Web::HtmlView>();
 
-    bool bookmarksbar_enabled = true;
-    bookmarksbar.set_layout<GUI::HorizontalBoxLayout>();
-    bookmarksbar.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    bookmarksbar.set_preferred_size(0, bookmarksbar_enabled ? 20 : 0);
+    bookmarksbar.on_bookmark_click = [&](auto&, auto& url) {
+        html_widget.load(url);
+    };
 
     History<URL> history;
 
@@ -161,6 +163,10 @@ int main(int argc, char** argv)
 
     html_widget.on_link_hover = [&](auto& href) {
         statusbar.set_text(href);
+    };
+
+    bookmarksbar.on_bookmark_hover = [&](auto&, auto& url) {
+        statusbar.set_text(url);
     };
 
     Web::ResourceLoader::the().on_load_counter_change = [&] {
@@ -241,7 +247,7 @@ int main(int argc, char** argv)
     auto bookmarks_menu = GUI::Menu::construct("Bookmarks");
     auto show_bookmarksbar_action = GUI::Action::create("Show bookmarks bar", [&](auto& action) {
         action.set_checked(!action.is_checked());
-        bookmarksbar.set_preferred_size(0, action.is_checked() ? 20 : 0);
+        bookmarksbar.set_visible(action.is_checked());
         bookmarksbar.update();
     });
     show_bookmarksbar_action->set_checkable(true);
