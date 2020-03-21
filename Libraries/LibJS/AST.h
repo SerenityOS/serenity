@@ -574,7 +574,7 @@ private:
 class ObjectExpression : public Expression {
 public:
     ObjectExpression(HashMap<String, NonnullRefPtr<Expression>> properties = {})
-        : m_properties(properties)
+        : m_properties(move(properties))
     {
     }
 
