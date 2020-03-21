@@ -45,7 +45,7 @@ public:
 
     void add_event_listener(String event_name, NonnullRefPtr<EventListener>);
 
-    virtual void dispatch_event(String event_name) = 0;
+    virtual void dispatch_event(NonnullRefPtr<Event>) = 0;
 
     struct EventListenerRegistration {
         String event_name;

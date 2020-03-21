@@ -36,6 +36,7 @@
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/HTMLAnchorElement.h>
 #include <LibWeb/DOM/HTMLImageElement.h>
+#include <LibWeb/DOM/MouseEvent.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/Frame.h>
@@ -184,7 +185,7 @@ void HtmlView::mousemove_event(GUI::MouseEvent& event)
 #endif
                 is_hovering_link = true;
             }
-            const_cast<Node*>(node)->dispatch_event("mousemove");
+            const_cast<Node*>(node)->dispatch_event(MouseEvent::create("mousemove", 2, 3));
         }
         if (m_in_mouse_selection) {
             layout_root()->selection().set_end({ result.layout_node, result.index_in_node });
@@ -235,7 +236,7 @@ void HtmlView::mousedown_event(GUI::MouseEvent& event)
                     m_in_mouse_selection = true;
                 }
             }
-            const_cast<Node*>(node)->dispatch_event("mousedown");
+            const_cast<Node*>(node)->dispatch_event(MouseEvent::create("mousedown", 2, 3));
         }
     }
     if (hovered_node_changed)
@@ -251,7 +252,7 @@ void HtmlView::mouseup_event(GUI::MouseEvent& event)
     auto result = layout_root()->hit_test(to_content_position(event.position()));
     if (result.layout_node) {
         if (auto* node = result.layout_node->node())
-            const_cast<Node*>(node)->dispatch_event("mouseup");
+            const_cast<Node*>(node)->dispatch_event(MouseEvent::create("mouseup", 2, 3));
     }
 
     if (event.button() == GUI::MouseButton::Left) {

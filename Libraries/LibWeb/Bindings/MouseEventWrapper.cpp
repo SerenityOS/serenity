@@ -24,37 +24,44 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <AK/Function.h>
+#include <LibJS/Runtime/Function.h>
+#include <LibWeb/Bindings/MouseEventWrapper.h>
+#include <LibWeb/DOM/MouseEvent.h>
 
 namespace Web {
-
-class CanvasRenderingContext2D;
-class Document;
-class Element;
-class Event;
-class EventListener;
-class EventTarget;
-class Frame;
-class HTMLElement;
-class HTMLCanvasElement;
-class HtmlView;
-class MouseEvent;
-class Node;
-
 namespace Bindings {
 
-class CanvasRenderingContext2DWrapper;
-class DocumentWrapper;
-class EventWrapper;
-class EventListenerWrapper;
-class EventTargetWrapper;
-class HTMLCanvasElementWrapper;
-class MouseEventWrapper;
-class NodeWrapper;
-class Wrappable;
-class Wrapper;
-
+MouseEventWrapper::MouseEventWrapper(MouseEvent& event)
+    : EventWrapper(event)
+{
+    put_native_property(
+        "offsetX",
+        [this](JS::Object*) {
+            return JS::Value(this->event().offset_x());
+        },
+        nullptr);
+    put_native_property(
+        "offsetY",
+        [this](JS::Object*) {
+            return JS::Value(this->event().offset_y());
+        },
+        nullptr);
 }
 
+MouseEventWrapper::~MouseEventWrapper()
+{
+}
 
+const MouseEvent& MouseEventWrapper::event() const
+{
+    return static_cast<const MouseEvent&>(EventWrapper::event());
+}
+
+MouseEvent& MouseEventWrapper::event()
+{
+    return static_cast<MouseEvent&>(EventWrapper::event());
+}
+
+}
 }
