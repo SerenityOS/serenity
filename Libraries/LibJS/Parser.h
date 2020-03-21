@@ -51,6 +51,7 @@ public:
     NonnullRefPtr<ReturnStatement> parse_return_statement();
     NonnullRefPtr<VariableDeclaration> parse_variable_declaration();
     NonnullRefPtr<ForStatement> parse_for_statement();
+    NonnullRefPtr<IfStatement> parse_if_statement();
 
     NonnullRefPtr<Expression> parse_expression(int min_precedence, Associativity associate = Associativity::Right);
     NonnullRefPtr<Expression> parse_primary_expression();

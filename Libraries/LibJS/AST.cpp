@@ -91,8 +91,11 @@ Value IfStatement::execute(Interpreter& interpreter) const
 
     if (predicate_result.to_boolean())
         return interpreter.run(*m_consequent);
-    else
+
+    if (m_alternate)
         return interpreter.run(*m_alternate);
+
+    return js_undefined();
 }
 
 Value WhileStatement::execute(Interpreter& interpreter) const
@@ -427,9 +430,11 @@ void IfStatement::dump(int indent) const
     printf("If\n");
     predicate().dump(indent + 1);
     consequent().dump(indent + 1);
-    print_indent(indent);
-    printf("Else\n");
-    alternate().dump(indent + 1);
+    if (alternate()) {
+        print_indent(indent);
+        printf("Else\n");
+        alternate()->dump(indent + 1);
+    }
 }
 
 void WhileStatement::dump(int indent) const
