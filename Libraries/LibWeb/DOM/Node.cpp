@@ -43,6 +43,8 @@
 #include <LibWeb/Layout/LayoutNode.h>
 #include <LibWeb/Layout/LayoutText.h>
 
+//#define EVENT_DEBUG
+
 namespace Web {
 
 Node::Node(Document& document, NodeType type)
@@ -130,9 +132,13 @@ void Node::dispatch_event(NonnullRefPtr<Event> event)
     for (auto& listener : listeners()) {
         if (listener.event_name == event->name()) {
             auto* function = const_cast<EventListener&>(*listener.listener).function();
+#ifdef EVENT_DEBUG
             static_cast<const JS::ScriptFunction*>(function)->body().dump(0);
+#endif
             auto* this_value = wrap(function->heap(), *this);
+#ifdef EVENT_DEBUG
             dbg() << "calling event listener with this=" << this_value;
+#endif
             auto* event_wrapper = wrap(function->heap(), *event);
             document().interpreter().call(function, this_value, { event_wrapper });
         }
