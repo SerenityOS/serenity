@@ -28,6 +28,7 @@
 #include <AK/BufferStream.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
+#include <AK/Vector.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/SystemTheme.h>
 #include <ctype.h>
@@ -118,6 +119,38 @@ Color::Color(NamedColor named)
 String Color::to_string() const
 {
     return String::format("#%b%b%b%b", red(), green(), blue(), alpha());
+}
+
+static Optional<Color> parse_rgb_color(const StringView& string)
+{
+    ASSERT(string.starts_with("rgb("));
+    ASSERT(string.ends_with(")"));
+
+    auto substring = string.substring_view(4, string.length() - 5);
+    auto parts = substring.split_view(',');
+
+    if (parts.size() != 3)
+        return {};
+
+    bool ok;
+    auto r = parts[0].to_int(ok);
+    if (!ok)
+        return {};
+    auto g = parts[1].to_int(ok);
+    if (!ok)
+        return {};
+    auto b = parts[2].to_int(ok);
+    if (!ok)
+        return {};
+
+    if (r < 0 || r > 255)
+        return {};
+    if (g < 0 || g > 255)
+        return {};
+    if (b < 0 || b > 255)
+        return {};
+
+    return Color(r, g, b);
 }
 
 Optional<Color> Color::from_string(const StringView& string)
@@ -291,6 +324,9 @@ Optional<Color> Color::from_string(const StringView& string)
         if (string == web_colors[i].name)
             return Color::from_rgb(web_colors[i].color);
     }
+
+    if (string.starts_with("rgb(") && string.ends_with(")"))
+        return parse_rgb_color(string);
 
     if (string[0] != '#')
         return {};
