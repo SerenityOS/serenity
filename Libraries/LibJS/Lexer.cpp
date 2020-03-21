@@ -107,6 +107,7 @@ Lexer::Lexer(StringView source)
         s_single_char_tokens.set('[', TokenType::BracketOpen);
         s_single_char_tokens.set(']', TokenType::BracketClose);
         s_single_char_tokens.set('^', TokenType::Caret);
+        s_single_char_tokens.set(':', TokenType::Colon);
         s_single_char_tokens.set(',', TokenType::Comma);
         s_single_char_tokens.set('{', TokenType::CurlyOpen);
         s_single_char_tokens.set('}', TokenType::CurlyClose);

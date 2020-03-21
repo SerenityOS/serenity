@@ -57,6 +57,8 @@ const char* Token::name(TokenType type)
         return "Catch";
     case TokenType::Class:
         return "Class";
+    case TokenType::Colon:
+        return "Colon";
     case TokenType::Comma:
         return "Comma";
     case TokenType::Const:
