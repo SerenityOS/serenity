@@ -60,7 +60,8 @@ Cell* Heap::allocate_cell(size_t size)
             return cell;
     }
 
-    auto block = HeapBlock::create_with_cell_size(*this, size);
+    size_t cell_size = round_up_to_power_of_two(size, 16);
+    auto block = HeapBlock::create_with_cell_size(*this, cell_size);
     auto* cell = block->allocate();
     m_blocks.append(move(block));
     return cell;
