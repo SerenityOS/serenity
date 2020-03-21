@@ -194,6 +194,8 @@ NonnullRefPtr<Statement> Parser::parse_statement()
         return parse_variable_declaration();
     case TokenType::For:
         return parse_for_statement();
+    case TokenType::If:
+        return parse_if_statement();
     default:
         if (match_expression())
             return adopt(*new ExpressionStatement(parse_expression(0)));
@@ -510,6 +512,17 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration()
         initializer = parse_expression(0);
     }
     return create_ast_node<VariableDeclaration>(create_ast_node<Identifier>(name), move(initializer), declaration_type);
+}
+
+NonnullRefPtr<IfStatement> Parser::parse_if_statement()
+{
+    consume(TokenType::If);
+    consume(TokenType::ParenOpen);
+    auto predicate = parse_expression(0);
+    consume(TokenType::ParenClose);
+    auto consequent = parse_block_statement();
+    // FIXME: Parse "else"
+    return create_ast_node<IfStatement>(move(predicate), move(consequent), nullptr);
 }
 
 NonnullRefPtr<ForStatement> Parser::parse_for_statement()
