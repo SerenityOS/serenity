@@ -59,4 +59,28 @@ void Array::visit_children(Cell::Visitor& visitor)
         visitor.visit(element);
 }
 
+Optional<Value> Array::get_own_property(const String& property_name) const
+{
+    bool ok;
+    i32 index = property_name.to_int(ok);
+    if (ok) {
+        if (index >= 0 && index < length())
+            return m_elements[index];
+    }
+    return Object::get_own_property(property_name);
+}
+
+bool Array::put_own_property(const String& property_name, Value value)
+{
+    bool ok;
+    i32 index = property_name.to_int(ok);
+    if (ok && index >= 0) {
+        if (index >= length())
+            m_elements.resize(index + 1);
+        m_elements[index] = value;
+        return true;
+    }
+    return Object::put_own_property(property_name, value);
+}
+
 }
