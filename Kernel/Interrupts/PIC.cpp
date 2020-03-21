@@ -137,8 +137,13 @@ void PIC::eoi(const GenericInterruptHandler& handler) const
 {
     InterruptDisabler disabler;
     ASSERT(!is_hard_disabled());
-    ASSERT(handler.interrupt_number() >= gsi_base() && handler.interrupt_number() < interrupt_vectors_count());
-    eoi_interrupt(handler.interrupt_number());
+    u8 irq = handler.interrupt_number();
+    ASSERT(irq >= gsi_base() && irq < interrupt_vectors_count());
+    if ((1 << irq) & m_cached_irq_mask) {
+        spurious_eoi(handler);
+        return;
+    }
+    eoi_interrupt(irq);
 }
 
 void PIC::eoi_interrupt(u8 irq) const
