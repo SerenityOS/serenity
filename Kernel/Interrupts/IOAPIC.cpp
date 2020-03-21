@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Optional.h>
 #include <AK/StringView.h>
 #include <Kernel/ACPI/MultiProcessorParser.h>
 #include <Kernel/Arch/i386/CPU.h>
@@ -251,14 +252,14 @@ u8 IOAPIC::read_redirection_entry_vector(u8 index) const
     return (read_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET) & 0xFF);
 }
 
-int IOAPIC::find_redirection_entry_by_vector(u8 vector) const
+Optional<int> IOAPIC::find_redirection_entry_by_vector(u8 vector) const
 {
     InterruptDisabler disabler;
     for (size_t index = 0; index < m_redirection_entries_count; index++) {
         if (read_redirection_entry_vector(index) == (InterruptManagement::acquire_mapped_interrupt_number(vector) + IRQ_VECTOR_BASE))
             return index;
     }
-    return -1;
+    return {};
 }
 
 void IOAPIC::disable(const GenericInterruptHandler& handler)
@@ -267,13 +268,13 @@ void IOAPIC::disable(const GenericInterruptHandler& handler)
     ASSERT(!is_hard_disabled());
     u8 interrupt_vector = handler.interrupt_number();
     ASSERT(interrupt_vector >= gsi_base() && interrupt_vector < interrupt_vectors_count());
-    int index = find_redirection_entry_by_vector(interrupt_vector);
-    if (index == (-1)) {
+    auto found_index = find_redirection_entry_by_vector(interrupt_vector);
+    if (!found_index.has_value()) {
         map_interrupt_redirection(interrupt_vector);
-        index = find_redirection_entry_by_vector(interrupt_vector);
+        found_index = find_redirection_entry_by_vector(interrupt_vector);
     }
-    ASSERT(index != (-1));
-    mask_redirection_entry(index);
+    ASSERT(found_index.has_value());
+    mask_redirection_entry(found_index.value());
 }
 
 void IOAPIC::enable(const GenericInterruptHandler& handler)
@@ -282,13 +283,13 @@ void IOAPIC::enable(const GenericInterruptHandler& handler)
     ASSERT(!is_hard_disabled());
     u8 interrupt_vector = handler.interrupt_number();
     ASSERT(interrupt_vector >= gsi_base() && interrupt_vector < interrupt_vectors_count());
-    int index = find_redirection_entry_by_vector(interrupt_vector);
-    if (index == (-1)) {
+    auto found_index = find_redirection_entry_by_vector(interrupt_vector);
+    if (!found_index.has_value()) {
         map_interrupt_redirection(interrupt_vector);
-        index = find_redirection_entry_by_vector(interrupt_vector);
+        found_index = find_redirection_entry_by_vector(interrupt_vector);
     }
-    ASSERT(index != (-1));
-    unmask_redirection_entry(index);
+    ASSERT(found_index.has_value());
+    unmask_redirection_entry(found_index.value());
 }
 
 void IOAPIC::eoi(const GenericInterruptHandler& handler) const
