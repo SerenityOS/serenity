@@ -700,8 +700,7 @@ static Vector<String> expand_globs(const StringView& path, const StringView& bas
 
 static Vector<String> expand_parameters(const StringView& param)
 {
-    bool is_variable = param.length() > 1 && param[0] == '$';
-    if (!is_variable)
+    if (!param.starts_with('$'))
         return { param };
 
     String variable_name = String(param.substring_view(1, param.length() - 1));
