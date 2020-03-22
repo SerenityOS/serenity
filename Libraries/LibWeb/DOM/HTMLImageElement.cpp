@@ -43,7 +43,7 @@ HTMLImageElement::~HTMLImageElement()
 {
 }
 
-void HTMLImageElement::parse_attribute(const String& name, const String& value)
+void HTMLImageElement::parse_attribute(const FlyString& name, const String& value)
 {
     if (name.equals_ignoring_case("src"))
         load_image(value);

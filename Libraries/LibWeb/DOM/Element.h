@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <AK/String.h>
 #include <LibWeb/DOM/ParentNode.h>
 #include <LibWeb/Layout/LayoutNode.h>
@@ -36,19 +37,19 @@ class LayoutNodeWithStyle;
 
 class Attribute {
 public:
-    Attribute(const String& name, const String& value)
+    Attribute(const FlyString& name, const String& value)
         : m_name(name)
         , m_value(value)
     {
     }
 
-    const String& name() const { return m_name; }
+    const FlyString& name() const { return m_name; }
     const String& value() const { return m_value; }
 
     void set_value(const String& value) { m_value = value; }
 
 private:
-    String m_name;
+    FlyString m_name;
     String m_value;
 };
 
@@ -59,9 +60,9 @@ public:
 
     virtual String tag_name() const final { return m_tag_name; }
 
-    bool has_attribute(const String& name) const { return !attribute(name).is_null(); }
-    String attribute(const String& name) const;
-    void set_attribute(const String& name, const String& value);
+    bool has_attribute(const FlyString& name) const { return !attribute(name).is_null(); }
+    String attribute(const FlyString& name) const;
+    void set_attribute(const FlyString& name, const String& value);
 
     void set_attributes(Vector<Attribute>&&);
 
@@ -75,7 +76,7 @@ public:
     bool has_class(const StringView&) const;
 
     virtual void apply_presentational_hints(StyleProperties&) const {}
-    virtual void parse_attribute(const String& name, const String& value);
+    virtual void parse_attribute(const FlyString& name, const String& value);
 
     void recompute_style();
 
@@ -90,8 +91,8 @@ public:
 private:
     RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
 
-    Attribute* find_attribute(const String& name);
-    const Attribute* find_attribute(const String& name) const;
+    Attribute* find_attribute(const FlyString& name);
+    const Attribute* find_attribute(const FlyString& name) const;
 
     String m_tag_name;
     Vector<Attribute> m_attributes;
