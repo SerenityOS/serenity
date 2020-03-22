@@ -89,6 +89,7 @@ void Window::show()
 {
     if (is_visible())
         return;
+    m_override_cursor = StandardCursor::None;
     auto response = WindowServerConnection::the().send_sync<Messages::WindowServer::CreateWindow>(
         m_rect_when_windowless,
         m_has_alpha_channel,
@@ -123,6 +124,7 @@ void Window::hide()
     m_pending_paint_event_rects.clear();
     m_back_bitmap = nullptr;
     m_front_bitmap = nullptr;
+    m_override_cursor = StandardCursor::None;
 
     bool app_has_visible_windows = false;
     for (auto& window : *all_windows) {
@@ -183,7 +185,10 @@ void Window::set_override_cursor(StandardCursor cursor)
 {
     if (!is_visible())
         return;
+    if (m_override_cursor == cursor)
+        return;
     WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowOverrideCursor>(m_window_id, (u32)cursor);
+    m_override_cursor = cursor;
 }
 
 void Window::event(Core::Event& event)
