@@ -55,10 +55,10 @@ private:
 
 class Element : public ParentNode {
 public:
-    Element(Document&, const String& tag_name);
+    Element(Document&, const FlyString& tag_name);
     virtual ~Element() override;
 
-    virtual String tag_name() const final { return m_tag_name; }
+    virtual FlyString tag_name() const final { return m_tag_name; }
 
     bool has_attribute(const FlyString& name) const { return !attribute(name).is_null(); }
     String attribute(const FlyString& name) const;
@@ -94,7 +94,7 @@ private:
     Attribute* find_attribute(const FlyString& name);
     const Attribute* find_attribute(const FlyString& name) const;
 
-    String m_tag_name;
+    FlyString m_tag_name;
     Vector<Attribute> m_attributes;
 
     RefPtr<StyleProperties> m_resolved_style;

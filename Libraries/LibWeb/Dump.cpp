@@ -75,7 +75,7 @@ void dump_tree(const LayoutNode& layout_node)
     for (size_t i = 0; i < indent; ++i)
         dbgprintf("    ");
 
-    String tag_name;
+    FlyString tag_name;
     if (layout_node.is_anonymous())
         tag_name = "(anonymous)";
     else if (is<Text>(layout_node.node()))

@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <AK/String.h>
 #include <LibWeb/DOM/CharacterData.h>
 
@@ -36,7 +37,7 @@ public:
     explicit Text(Document&, const String&);
     virtual ~Text() override;
 
-    virtual String tag_name() const override { return "#text"; }
+    virtual FlyString tag_name() const override { return "#text"; }
 
 private:
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;

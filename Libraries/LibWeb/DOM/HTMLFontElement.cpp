@@ -30,7 +30,7 @@
 
 namespace Web {
 
-HTMLFontElement::HTMLFontElement(Document& document, const String& tag_name)
+HTMLFontElement::HTMLFontElement(Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)
 {
 }

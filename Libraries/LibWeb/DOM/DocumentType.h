@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <LibWeb/DOM/Node.h>
 
 namespace Web {
@@ -35,7 +36,7 @@ public:
     explicit DocumentType(Document&);
     virtual ~DocumentType() override;
 
-    virtual String tag_name() const override { return "#doctype"; }
+    virtual FlyString tag_name() const override { return "#doctype"; }
 };
 
 template<>

@@ -32,7 +32,7 @@
 
 namespace Web {
 
-HTMLBlinkElement::HTMLBlinkElement(Document& document, const String& tag_name)
+HTMLBlinkElement::HTMLBlinkElement(Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)
     , m_timer(Core::Timer::construct())
 {

@@ -32,7 +32,7 @@ namespace Web {
 
 class HTMLHRElement : public HTMLElement {
 public:
-    HTMLHRElement(Document&, const String& tag_name);
+    HTMLHRElement(Document&, const FlyString& tag_name);
     virtual ~HTMLHRElement() override;
 };
 

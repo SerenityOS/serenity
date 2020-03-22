@@ -33,7 +33,7 @@
 
 namespace Web {
 
-HTMLScriptElement::HTMLScriptElement(Document& document, const String& tag_name)
+HTMLScriptElement::HTMLScriptElement(Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)
 {
 }
