@@ -32,7 +32,7 @@ namespace Web {
 
 class HTMLBodyElement : public HTMLElement {
 public:
-    HTMLBodyElement(Document&, const String& tag_name);
+    HTMLBodyElement(Document&, const FlyString& tag_name);
     virtual ~HTMLBodyElement() override;
 
     virtual void parse_attribute(const FlyString&, const String&) override;
@@ -45,7 +45,7 @@ private:
 template<>
 inline bool is<HTMLBodyElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name().to_lowercase() == "body";
+    return is<Element>(node) && to<Element>(node).tag_name().equals_ignoring_case("body");
 }
 
 }

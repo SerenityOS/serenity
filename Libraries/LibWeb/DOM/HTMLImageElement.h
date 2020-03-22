@@ -36,7 +36,7 @@ class LayoutDocument;
 
 class HTMLImageElement : public HTMLElement {
 public:
-    HTMLImageElement(Document&, const String& tag_name);
+    HTMLImageElement(Document&, const FlyString& tag_name);
     virtual ~HTMLImageElement() override;
 
     virtual void parse_attribute(const FlyString& name, const String& value) override;

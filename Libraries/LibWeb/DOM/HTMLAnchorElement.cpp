@@ -28,7 +28,7 @@
 
 namespace Web {
 
-HTMLAnchorElement::HTMLAnchorElement(Document& document, const String& tag_name)
+HTMLAnchorElement::HTMLAnchorElement(Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)
 {
 }

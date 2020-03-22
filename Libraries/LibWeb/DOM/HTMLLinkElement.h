@@ -32,7 +32,7 @@ namespace Web {
 
 class HTMLLinkElement final : public HTMLElement {
 public:
-    HTMLLinkElement(Document&, const String& tag_name);
+    HTMLLinkElement(Document&, const FlyString& tag_name);
     virtual ~HTMLLinkElement() override;
 
     virtual void inserted_into(Node&) override;
@@ -45,7 +45,7 @@ public:
 template<>
 inline bool is<HTMLLinkElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name().to_lowercase() == "link";
+    return is<Element>(node) && to<Element>(node).tag_name().equals_ignoring_case("link");
 }
 
 }

@@ -45,7 +45,7 @@
 
 namespace Web {
 
-NonnullRefPtr<Element> create_element(Document& document, const String& tag_name)
+NonnullRefPtr<Element> create_element(Document& document, const FlyString& tag_name)
 {
     auto lowercase_tag_name = tag_name.to_lowercase();
     if (lowercase_tag_name == "a")

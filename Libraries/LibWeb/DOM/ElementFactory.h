@@ -30,6 +30,6 @@
 
 namespace Web {
 
-NonnullRefPtr<Element> create_element(Document&, const String& tag_name);
+NonnullRefPtr<Element> create_element(Document&, const FlyString& tag_name);
 
 }

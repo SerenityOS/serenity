@@ -28,7 +28,7 @@
 
 namespace Web {
 
-HTMLTitleElement::HTMLTitleElement(Document& document, const String& tag_name)
+HTMLTitleElement::HTMLTitleElement(Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)
 {
 }
