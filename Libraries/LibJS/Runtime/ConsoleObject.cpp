@@ -25,6 +25,7 @@
  */
 
 #include <AK/Function.h>
+#include <AK/FlyString.h>
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <stdio.h>
 

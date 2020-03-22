@@ -657,7 +657,7 @@ void MemberExpression::dump(int indent) const
     m_property->dump(indent + 1);
 }
 
-String MemberExpression::computed_property_name(Interpreter& interpreter) const
+FlyString MemberExpression::computed_property_name(Interpreter& interpreter) const
 {
     if (!is_computed()) {
         ASSERT(m_property->is_identifier());

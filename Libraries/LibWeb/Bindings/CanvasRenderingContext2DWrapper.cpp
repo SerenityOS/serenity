@@ -25,6 +25,7 @@
  */
 
 #include <AK/Function.h>
+#include <AK/FlyString.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>

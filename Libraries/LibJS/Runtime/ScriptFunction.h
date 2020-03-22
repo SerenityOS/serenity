@@ -32,11 +32,11 @@ namespace JS {
 
 class ScriptFunction final : public Function {
 public:
-    ScriptFunction(const ScopeNode& body, Vector<String> parameters = {});
+    ScriptFunction(const ScopeNode& body, Vector<FlyString> parameters = {});
     virtual ~ScriptFunction();
 
     const ScopeNode& body() const { return m_body; }
-    const Vector<String>& parameters() const { return m_parameters; };
+    const Vector<FlyString>& parameters() const { return m_parameters; };
 
     virtual Value call(Interpreter&, const Vector<Value>&) override;
 
@@ -45,7 +45,7 @@ private:
     virtual const char* class_name() const override { return "ScriptFunction"; }
 
     NonnullRefPtr<ScopeNode> m_body;
-    const Vector<String> m_parameters;
+    const Vector<FlyString> m_parameters;
 };
 
 }

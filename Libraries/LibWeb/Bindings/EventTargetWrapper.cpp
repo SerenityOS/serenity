@@ -25,6 +25,7 @@
  */
 
 #include <AK/Function.h>
+#include <AK/FlyString.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibWeb/Bindings/EventListenerWrapper.h>
 #include <LibWeb/Bindings/EventTargetWrapper.h>

@@ -28,6 +28,7 @@
 
 #include <AK/HashMap.h>
 #include <AK/String.h>
+#include <AK/FlyString.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Heap.h>
@@ -48,7 +49,7 @@ struct Variable {
 struct ScopeFrame {
     ScopeType type;
     NonnullRefPtr<ScopeNode> scope_node;
-    HashMap<String, Variable> variables;
+    HashMap<FlyString, Variable> variables;
 };
 
 struct CallFrame {
@@ -57,7 +58,7 @@ struct CallFrame {
 };
 
 struct Argument {
-    String name;
+    FlyString name;
     Value value;
 };
 
@@ -75,9 +76,9 @@ public:
 
     void do_return();
 
-    Value get_variable(const String& name);
-    void set_variable(String name, Value, bool first_assignment = false);
-    void declare_variable(String name, DeclarationType);
+    Value get_variable(const FlyString& name);
+    void set_variable(const FlyString& name, Value, bool first_assignment = false);
+    void declare_variable(const FlyString& name, DeclarationType);
 
     void gather_roots(Badge<Heap>, HashTable<Cell*>&);
 
@@ -86,7 +87,11 @@ public:
 
     Value call(Function*, Value this_value, const Vector<Value>& arguments);
 
-    CallFrame& push_call_frame() { m_call_stack.append({ js_undefined(), {} }); return m_call_stack.last(); }
+    CallFrame& push_call_frame()
+    {
+        m_call_stack.append({ js_undefined(), {} });
+        return m_call_stack.last();
+    }
     void pop_call_frame() { m_call_stack.take_last(); }
     Value this_value() const
     {

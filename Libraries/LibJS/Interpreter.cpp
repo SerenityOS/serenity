@@ -65,7 +65,7 @@ Value Interpreter::run(const ScopeNode& scope_node, Vector<Argument> arguments, 
 
 void Interpreter::enter_scope(const ScopeNode& scope_node, Vector<Argument> arguments, ScopeType scope_type)
 {
-    HashMap<String, Variable> scope_variables_with_declaration_type;
+    HashMap<FlyString, Variable> scope_variables_with_declaration_type;
     for (auto& argument : arguments) {
         scope_variables_with_declaration_type.set(argument.name, { argument.value, DeclarationType::Var });
     }
@@ -83,7 +83,7 @@ void Interpreter::do_return()
     dbg() << "FIXME: Implement Interpreter::do_return()";
 }
 
-void Interpreter::declare_variable(String name, DeclarationType declaration_type)
+void Interpreter::declare_variable(const FlyString& name, DeclarationType declaration_type)
 {
     switch (declaration_type) {
     case DeclarationType::Var:
@@ -110,7 +110,7 @@ void Interpreter::declare_variable(String name, DeclarationType declaration_type
     }
 }
 
-void Interpreter::set_variable(String name, Value value, bool first_assignment)
+void Interpreter::set_variable(const FlyString& name, Value value, bool first_assignment)
 {
     for (ssize_t i = m_scope_stack.size() - 1; i >= 0; --i) {
         auto& scope = m_scope_stack.at(i);
@@ -128,7 +128,7 @@ void Interpreter::set_variable(String name, Value value, bool first_assignment)
     global_object().put(move(name), move(value));
 }
 
-Value Interpreter::get_variable(const String& name)
+Value Interpreter::get_variable(const FlyString& name)
 {
     for (ssize_t i = m_scope_stack.size() - 1; i >= 0; --i) {
         auto& scope = m_scope_stack.at(i);

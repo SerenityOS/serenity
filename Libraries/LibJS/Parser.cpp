@@ -271,7 +271,7 @@ NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
 
 NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
 {
-    HashMap<String, NonnullRefPtr<Expression>> properties;
+    HashMap<FlyString, NonnullRefPtr<Expression>> properties;
     consume(TokenType::CurlyOpen);
 
     while (!match(TokenType::CurlyClose)) {
@@ -471,7 +471,7 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node()
             name = consume(TokenType::Identifier).value();
     }
     consume(TokenType::ParenOpen);
-    Vector<String> parameters;
+    Vector<FlyString> parameters;
     while (match(TokenType::Identifier)) {
         auto parameter = consume(TokenType::Identifier).value();
         parameters.append(parameter);
