@@ -49,7 +49,7 @@ Element::~Element()
 {
 }
 
-Attribute* Element::find_attribute(const String& name)
+Attribute* Element::find_attribute(const FlyString& name)
 {
     for (auto& attribute : m_attributes) {
         if (attribute.name() == name)
@@ -58,7 +58,7 @@ Attribute* Element::find_attribute(const String& name)
     return nullptr;
 }
 
-const Attribute* Element::find_attribute(const String& name) const
+const Attribute* Element::find_attribute(const FlyString& name) const
 {
     for (auto& attribute : m_attributes) {
         if (attribute.name() == name)
@@ -67,14 +67,14 @@ const Attribute* Element::find_attribute(const String& name) const
     return nullptr;
 }
 
-String Element::attribute(const String& name) const
+String Element::attribute(const FlyString& name) const
 {
     if (auto* attribute = find_attribute(name))
         return attribute->value();
     return {};
 }
 
-void Element::set_attribute(const String& name, const String& value)
+void Element::set_attribute(const FlyString& name, const String& value)
 {
     if (auto* attribute = find_attribute(name))
         attribute->set_value(value);
@@ -131,7 +131,7 @@ RefPtr<LayoutNode> Element::create_layout_node(const StyleProperties* parent_sty
     ASSERT_NOT_REACHED();
 }
 
-void Element::parse_attribute(const String&, const String&)
+void Element::parse_attribute(const FlyString&, const String&)
 {
 }
 

@@ -39,7 +39,7 @@ public:
     HTMLImageElement(Document&, const String& tag_name);
     virtual ~HTMLImageElement() override;
 
-    virtual void parse_attribute(const String& name, const String& value) override;
+    virtual void parse_attribute(const FlyString& name, const String& value) override;
 
     String alt() const { return attribute("alt"); }
     String src() const { return attribute("src"); }
