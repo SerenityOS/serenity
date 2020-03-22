@@ -48,6 +48,8 @@
 #include <LibWeb/ResourceLoader.h>
 #include <stdio.h>
 
+//#define SELECTION_DEBUG
+
 namespace Web {
 
 HtmlView::HtmlView()
@@ -417,9 +419,12 @@ const Document* HtmlView::document() const
 
 void HtmlView::dump_selection(const char* event_name)
 {
+    UNUSED_PARAM(event_name);
+#ifdef SELECTION_DEBUG
     dbg() << event_name << " selection start: "
           << layout_root()->selection().start().layout_node << ":" << layout_root()->selection().start().index_in_node << ", end: "
           << layout_root()->selection().end().layout_node << ":" << layout_root()->selection().end().index_in_node;
+#endif
 }
 
 void HtmlView::did_scroll()
