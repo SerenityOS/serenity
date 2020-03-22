@@ -39,7 +39,7 @@
 
 namespace Web {
 
-Element::Element(Document& document, const String& tag_name)
+Element::Element(Document& document, const FlyString& tag_name)
     : ParentNode(document, NodeType::ELEMENT_NODE)
     , m_tag_name(tag_name)
 {

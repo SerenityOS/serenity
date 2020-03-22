@@ -32,7 +32,7 @@ namespace Web {
 
 class HTMLHeadingElement : public HTMLElement {
 public:
-    HTMLHeadingElement(Document&, const String& tag_name);
+    HTMLHeadingElement(Document&, const FlyString& tag_name);
     virtual ~HTMLHeadingElement() override;
 };
 

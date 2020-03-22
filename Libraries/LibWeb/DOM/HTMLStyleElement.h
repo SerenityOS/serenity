@@ -34,7 +34,7 @@ class StyleSheet;
 
 class HTMLStyleElement : public HTMLElement {
 public:
-    HTMLStyleElement(Document&, const String& tag_name);
+    HTMLStyleElement(Document&, const FlyString& tag_name);
     virtual ~HTMLStyleElement() override;
 
     virtual void inserted_into(Node&) override;

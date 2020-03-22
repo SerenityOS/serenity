@@ -32,7 +32,7 @@
 
 namespace Web {
 
-HTMLStyleElement::HTMLStyleElement(Document& document, const String& tag_name)
+HTMLStyleElement::HTMLStyleElement(Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)
 {
 }

@@ -38,7 +38,7 @@ class HTMLCanvasElement : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLCanvasElementWrapper;
 
-    HTMLCanvasElement(Document&, const String& tag_name);
+    HTMLCanvasElement(Document&, const FlyString& tag_name);
     virtual ~HTMLCanvasElement() override;
 
     int preferred_width() const;
@@ -59,7 +59,7 @@ private:
 template<>
 inline bool is<HTMLCanvasElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name().to_lowercase() == "canvas";
+    return is<Element>(node) && to<Element>(node).tag_name().equals_ignoring_case("canvas");
 }
 
 

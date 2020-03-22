@@ -32,7 +32,7 @@ namespace Web {
 
 class HTMLScriptElement : public HTMLElement {
 public:
-    HTMLScriptElement(Document&, const String& tag_name);
+    HTMLScriptElement(Document&, const FlyString& tag_name);
     virtual ~HTMLScriptElement() override;
 
     virtual void inserted_into(Node&) override;

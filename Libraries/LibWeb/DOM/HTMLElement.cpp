@@ -28,7 +28,7 @@
 
 namespace Web {
 
-HTMLElement::HTMLElement(Document& document, const String& tag_name)
+HTMLElement::HTMLElement(Document& document, const FlyString& tag_name)
     : Element(document, tag_name)
 {
 }

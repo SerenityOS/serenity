@@ -32,7 +32,7 @@ namespace Web {
 
 class HTMLElement : public Element {
 public:
-    HTMLElement(Document&, const String& tag_name);
+    HTMLElement(Document&, const FlyString& tag_name);
     virtual ~HTMLElement() override;
 
     String title() const { return attribute("title"); }

@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <LibWeb/DOM/ParentNode.h>
 
 namespace Web {
@@ -37,7 +38,7 @@ public:
     {
     }
 
-    virtual String tag_name() const override { return "#document-fragment"; }
+    virtual FlyString tag_name() const override { return "#document-fragment"; }
 };
 
 template<>

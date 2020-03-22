@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <AK/Function.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
@@ -69,7 +70,7 @@ public:
     void add_sheet(const StyleSheet& sheet) { m_sheets.append(sheet); }
     const NonnullRefPtrVector<StyleSheet>& stylesheets() const { return m_sheets; }
 
-    virtual String tag_name() const override { return "#document"; }
+    virtual FlyString tag_name() const override { return "#document"; }
 
     void set_hovered_node(Node*);
     Node* hovered_node() { return m_hovered_node; }

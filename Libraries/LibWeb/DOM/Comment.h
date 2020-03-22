@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/FlyString.h>
 #include <LibWeb/DOM/CharacterData.h>
 
 namespace Web {
@@ -36,7 +36,7 @@ public:
     explicit Comment(Document&, const String&);
     virtual ~Comment() override;
 
-    virtual String tag_name() const override { return "#comment"; }
+    virtual FlyString tag_name() const override { return "#comment"; }
 };
 
 template<>

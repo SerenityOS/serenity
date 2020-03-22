@@ -32,7 +32,7 @@ namespace Web {
 
 class HTMLFormElement : public HTMLElement {
 public:
-    HTMLFormElement(Document&, const String& tag_name);
+    HTMLFormElement(Document&, const FlyString& tag_name);
     virtual ~HTMLFormElement() override;
 
     String action() const { return attribute("action"); }
@@ -44,7 +44,7 @@ public:
 template<>
 inline bool is<HTMLFormElement>(const Node& node)
 {
-    return is<Element>(node) && to<Element>(node).tag_name().to_lowercase() == "form";
+    return is<Element>(node) && to<Element>(node).tag_name().equals_ignoring_case("form");
 }
 
 }

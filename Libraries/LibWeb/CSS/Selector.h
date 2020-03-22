@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/FlyString.h>
 #include <AK/Vector.h>
 #include <LibWeb/CSS/Specificity.h>
 
@@ -55,7 +55,7 @@ public:
         };
         PseudoClass pseudo_class { PseudoClass::None };
 
-        String value;
+        FlyString value;
 
         enum class AttributeMatchType {
             None,
@@ -64,7 +64,7 @@ public:
         };
 
         AttributeMatchType attribute_match_type { AttributeMatchType::None };
-        String attribute_name;
+        FlyString attribute_name;
         String attribute_value;
     };
 
