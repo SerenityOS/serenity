@@ -7,6 +7,7 @@ SHARED_TEST_SOURCES = \
 	../LogStream.cpp \
 	../JsonValue.cpp \
 	../JsonParser.cpp \
+    ../FlyString.cpp \
     ../FileSystemPath.cpp \
     ../URL.cpp \
     ../Utf8View.cpp

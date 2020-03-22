@@ -28,11 +28,19 @@
 #include <AK/Memory.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
+#include <AK/FlyString.h>
 #include <AK/Vector.h>
 
 namespace AK {
 
 StringView::StringView(const String& string)
+    : m_impl(string.impl())
+    , m_characters(string.characters())
+    , m_length(string.length())
+{
+}
+
+StringView::StringView(const FlyString& string)
     : m_impl(string.impl())
     , m_characters(string.characters())
     , m_length(string.length())
