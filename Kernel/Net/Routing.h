@@ -30,8 +30,7 @@
 
 namespace Kernel {
 
-struct RoutingDecision
-{
+struct RoutingDecision {
     RefPtr<NetworkAdapter> adapter;
     MACAddress next_hop;
 

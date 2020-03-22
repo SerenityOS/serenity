@@ -30,8 +30,8 @@
 #include <AK/Function.h>
 #include <AK/SinglyLinkedList.h>
 #include <AK/Types.h>
-#include <AK/Weakable.h>
 #include <AK/WeakPtr.h>
+#include <AK/Weakable.h>
 #include <Kernel/KBuffer.h>
 #include <Kernel/Net/ARP.h>
 #include <Kernel/Net/ICMP.h>

@@ -261,10 +261,10 @@ void page_fault_handler(RegisterState regs)
         }
 
         dbg() << "Unrecoverable page fault, "
-               << (regs.exception_code & PageFaultFlags::ReservedBitViolation ? "reserved bit violation / " : "")
-               << (regs.exception_code & PageFaultFlags::InstructionFetch ? "instruction fetch / " : "")
-               << (regs.exception_code & PageFaultFlags::Write ? "write to" : "read from")
-               << " address " << VirtualAddress(fault_address);
+              << (regs.exception_code & PageFaultFlags::ReservedBitViolation ? "reserved bit violation / " : "")
+              << (regs.exception_code & PageFaultFlags::InstructionFetch ? "instruction fetch / " : "")
+              << (regs.exception_code & PageFaultFlags::Write ? "write to" : "read from")
+              << " address " << VirtualAddress(fault_address);
         u32 malloc_scrub_pattern = explode_byte(MALLOC_SCRUB_BYTE);
         u32 free_scrub_pattern = explode_byte(FREE_SCRUB_BYTE);
         u32 kmalloc_scrub_pattern = explode_byte(KMALLOC_SCRUB_BYTE);
