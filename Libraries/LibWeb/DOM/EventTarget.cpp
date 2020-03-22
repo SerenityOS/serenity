@@ -37,9 +37,9 @@ EventTarget::~EventTarget()
 {
 }
 
-void EventTarget::add_event_listener(String event_name, NonnullRefPtr<EventListener> listener)
+void EventTarget::add_event_listener(const FlyString& event_name, NonnullRefPtr<EventListener> listener)
 {
-    m_listeners.append({ move(event_name), move(listener) });
+    m_listeners.append({ event_name, move(listener) });
 }
 
 }

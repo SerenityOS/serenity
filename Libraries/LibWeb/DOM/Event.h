@@ -1,7 +1,6 @@
 #pragma once
 
-#include <AK/RefCounted.h>
-#include <AK/String.h>
+#include <AK/FlyString.h>
 #include <LibWeb/Bindings/Wrappable.h>
 
 namespace Web {
@@ -12,25 +11,25 @@ class Event
 public:
     using WrapperType = Bindings::EventWrapper;
 
-    static NonnullRefPtr<Event> create(String event_name)
+    static NonnullRefPtr<Event> create(const FlyString& event_name)
     {
-        return adopt(*new Event(move(event_name)));
+        return adopt(*new Event(event_name));
     }
 
     virtual ~Event() {}
 
-    const String& name() const { return m_event_name; }
+    const FlyString& name() const { return m_event_name; }
 
     virtual bool is_mouse_event() const { return false; }
 
 protected:
-    Event(String event_name)
-        : m_event_name(move(event_name))
+    Event(const FlyString& event_name)
+        : m_event_name(event_name)
     {
     }
 
 private:
-    String m_event_name;
+    FlyString m_event_name;
 };
 
 }
