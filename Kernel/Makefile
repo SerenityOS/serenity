@@ -1,13 +1,14 @@
 OBJS = \
     ../AK/FileSystemPath.o \
+    ../AK/FlyString.o \
     ../AK/JsonParser.o \
     ../AK/JsonValue.o \
     ../AK/LogStream.o \
     ../AK/String.o \
     ../AK/StringBuilder.o \
     ../AK/StringImpl.o \
-    ../AK/StringView.o \
     ../AK/StringUtils.o \
+    ../AK/StringView.o \
     ../Libraries/LibELF/ELFImage.o \
     ../Libraries/LibELF/ELFLoader.o \
     ../Libraries/LibBareMetal/Output/Console.o \

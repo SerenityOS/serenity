@@ -1,16 +1,17 @@
 AK_OBJS = \
-    ../../AK/StringImpl.o \
-    ../../AK/String.o \
-    ../../AK/StringView.o \
-    ../../AK/StringBuilder.o \
-    ../../AK/StringUtils.o \
     ../../AK/FileSystemPath.o \
-    ../../AK/URL.o \
-    ../../AK/JsonValue.o \
+    ../../AK/FlyString.o \
     ../../AK/JsonParser.o \
+    ../../AK/JsonValue.o \
     ../../AK/LogStream.o \
     ../../AK/MappedFile.o \
     ../../AK/SharedBuffer.o \
+    ../../AK/String.o \
+    ../../AK/StringBuilder.o \
+    ../../AK/StringImpl.o \
+    ../../AK/StringUtils.o \
+    ../../AK/StringView.o \
+    ../../AK/URL.o \
     ../../AK/Utf8View.o
 
 LIBC_OBJS = \

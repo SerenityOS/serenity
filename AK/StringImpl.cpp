@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/FlyString.h>
 #include <AK/HashTable.h>
 #include <AK/Memory.h>
 #include <AK/StdLibExtras.h>
@@ -72,6 +73,8 @@ StringImpl::StringImpl(ConstructWithInlineBufferTag, size_t length)
 
 StringImpl::~StringImpl()
 {
+    if (m_fly)
+        FlyString::did_destroy_impl({}, *this);
 #ifdef DEBUG_STRINGIMPL
     --g_stringimpl_count;
     g_all_live_stringimpls->remove(this);
