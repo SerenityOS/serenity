@@ -85,4 +85,7 @@ endpoint WindowServer = 2
     SetSystemTheme(String theme_path, String theme_name) => (bool success)
 
     SetWindowBaseSizeAndSizeIncrement(i32 window_id, Gfx::Size base_size, Gfx::Size size_increment) => ()
+
+    EnableDisplayLink() =|
+    DisableDisplayLink() =|
 }

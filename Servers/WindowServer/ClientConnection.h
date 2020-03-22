@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Badge.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
@@ -38,6 +39,7 @@
 
 namespace WindowServer {
 
+class Compositor;
 class Window;
 class Menu;
 class MenuBar;
@@ -71,6 +73,8 @@ public:
             return nullptr;
         return const_cast<Menu*>(menu.value().ptr());
     }
+
+    void notify_display_link(Badge<Compositor>);
 
 private:
     explicit ClientConnection(Core::LocalSocket&, int client_id);
@@ -117,6 +121,8 @@ private:
     virtual OwnPtr<Messages::WindowServer::SetSystemMenuResponse> handle(const Messages::WindowServer::SetSystemMenu&) override;
     virtual OwnPtr<Messages::WindowServer::SetSystemThemeResponse> handle(const Messages::WindowServer::SetSystemTheme&) override;
     virtual OwnPtr<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrementResponse> handle(const Messages::WindowServer::SetWindowBaseSizeAndSizeIncrement&) override;
+    virtual void handle(const Messages::WindowServer::EnableDisplayLink&) override;
+    virtual void handle(const Messages::WindowServer::DisableDisplayLink&) override;
 
     HashMap<int, NonnullRefPtr<Window>> m_windows;
     HashMap<int, NonnullOwnPtr<MenuBar>> m_menubars;
@@ -126,6 +132,8 @@ private:
     int m_next_menubar_id { 10000 };
     int m_next_menu_id { 20000 };
     int m_next_window_id { 1982 };
+
+    bool m_has_display_link { false };
 
     RefPtr<SharedBuffer> m_last_sent_clipboard_content;
 };

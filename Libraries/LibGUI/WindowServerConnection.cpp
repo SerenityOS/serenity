@@ -31,6 +31,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Desktop.h>
+#include <LibGUI/DisplayLink.h>
 #include <LibGUI/DragOperation.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Menu.h>
@@ -337,6 +338,11 @@ void WindowServerConnection::handle(const Messages::WindowClient::WindowStateCha
 {
     if (auto* window = Window::from_window_id(message.window_id()))
         window->notify_state_changed({}, message.minimized(), message.occluded());
+}
+
+void WindowServerConnection::handle(const Messages::WindowClient::DisplayLinkNotification&)
+{
+    DisplayLink::notify({});
 }
 
 }
