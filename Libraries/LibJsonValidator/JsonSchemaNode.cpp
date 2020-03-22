@@ -130,8 +130,8 @@ JsonValue JsonSchemaNode::validate(const JsonValue& json) const
     }
 
     // check if required is matching
-    if (m_required && json.is_null())
-        return JsonValue("item is required, but is not persistent");
+    if (m_required && (json.is_null() || json.is_undefined()))
+        return JsonValue("item is required, but is not present");
 
     return JsonValue(true);
 }
@@ -184,6 +184,27 @@ JsonValue merge_results(JsonArray values)
             return result;
     }
     return JsonValue(boolean_result);
+}
+
+String JsonSchemaNode::path() const
+{
+    StringBuilder b;
+    String member_name;
+    if (parent()) {
+        b.append(parent()->path());
+        if (parent()->type() == InstanceType::Object) {
+            for (auto& item : static_cast<ObjectNode*>(parent())->properties()) {
+                if (item.value.ptr() == this) {
+                    member_name = item.key;
+                }
+            }
+        }
+    }
+    b.appendf("/%s", (!id().is_empty() ? id() : to_string(type())).characters());
+    if (!member_name.is_empty()) {
+        b.appendf("[%s]", member_name.characters());
+    }
+    return b.build();
 }
 
 JsonValue ObjectNode::validate(const JsonValue& json) const
@@ -247,7 +268,7 @@ JsonValue ObjectNode::validate(const JsonValue& json) const
 #endif
         } else if (property.value->required()) {
             StringBuilder b;
-            b.appendf("required value %s not found at %s", property.key.characters(), property.value->id().characters());
+            b.appendf("required value %s not found at %s", property.key.characters(), property.value->path().characters());
             return JsonValue(b.build());
         }
     }

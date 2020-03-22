@@ -74,9 +74,10 @@ int main(int argc, char** argv)
         fprintf(stdout, "Parsing sucessfull.\n\n");
         parser.root_node()->dump(0);
 
-    } else if (parser_result.is_object()) {
+    } else {
         fprintf(stderr, "Parser returned error: %s\n",
-            parser_result.as_object().get("message").as_string_or("").characters());
+            parser_result.to_string().characters());
+        return 1;
     }
 
     auto json_file_content = JsonValue::from_string(json_file->read_all());

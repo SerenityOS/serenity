@@ -84,6 +84,9 @@ JsonValue Parser::run(const JsonValue& json)
     }
 
     m_root_node = get_typed_node(json_object);
+    if (!m_root_node.ptr()) {
+        add_parser_error("root node could not be identified correctly");
+    }
 
     if (m_parser_errors.size()) {
         JsonArray vals;
@@ -100,22 +103,22 @@ void Parser::add_parser_error(String error)
     m_parser_errors.append(error);
 }
 
-OwnPtr<JsonSchemaNode> Parser::get_typed_node(const JsonValue& json_value)
+OwnPtr<JsonSchemaNode> Parser::get_typed_node(const JsonValue& json_value, JsonSchemaNode* parent)
 {
     OwnPtr<JsonSchemaNode> node;
 
     if (json_value.is_array()) {
-        node = make<ArrayNode>("");
+        node = make<ArrayNode>(parent, "");
         ArrayNode& array_node = *static_cast<ArrayNode*>(node.ptr());
 
         for (auto& item : json_value.as_array().values()) {
             ASSERT(item.is_object());
-            OwnPtr<JsonSchemaNode> child_node = get_typed_node(item);
+            OwnPtr<JsonSchemaNode> child_node = get_typed_node(item, node.ptr());
             if (child_node)
                 array_node.append_item(child_node.release_nonnull());
         }
     } else if (json_value.is_bool()) {
-        node = make<BooleanNode>("", json_value.as_bool());
+        node = make<BooleanNode>(parent, "", json_value.as_bool());
     } else if (json_value.is_object()) {
         JsonObject json_object = json_value.as_object();
         JsonValue id = json_object.get("$id");
@@ -127,7 +130,7 @@ OwnPtr<JsonSchemaNode> Parser::get_typed_node(const JsonValue& json_value)
         auto type_str = type.as_string_or("");
 
         if (type_str == "object" || json_object.has("properties")) {
-            node = make<ObjectNode>(id.as_string_or(""));
+            node = make<ObjectNode>(parent, id.as_string_or(""));
             ObjectNode& obj_node = *static_cast<ObjectNode*>(node.ptr());
 
             auto properties = json_object.get_or("properties", JsonObject());
@@ -139,7 +142,7 @@ OwnPtr<JsonSchemaNode> Parser::get_typed_node(const JsonValue& json_value)
                     if (!json_value.is_object()) {
                         add_parser_error("property element is not a json object");
                     } else {
-                        OwnPtr<JsonSchemaNode> child_node = get_typed_node(json_value);
+                        OwnPtr<JsonSchemaNode> child_node = get_typed_node(json_value, node.ptr());
                         if (child_node)
                             obj_node.append_property(key, child_node.release_nonnull());
                     }
@@ -154,7 +157,7 @@ OwnPtr<JsonSchemaNode> Parser::get_typed_node(const JsonValue& json_value)
                         if (!json_value.is_object()) {
                             add_parser_error("patternProperty element is not a json object");
                         } else {
-                            OwnPtr<JsonSchemaNode> child_node = get_typed_node(json_value);
+                            OwnPtr<JsonSchemaNode> child_node = get_typed_node(json_value, node.ptr());
                             if (child_node) {
                                 child_node->set_identified_by_pattern(true, key);
                                 obj_node.append_property(key, child_node.release_nonnull());
@@ -195,7 +198,7 @@ OwnPtr<JsonSchemaNode> Parser::get_typed_node(const JsonValue& json_value)
                 }
             }
         } else if (type_str == "array" || json_object.has("items") || json_object.has("additionalItems") || json_object.has("unevaluatedItems")) {
-            node = make<ArrayNode>(id.as_string_or(""));
+            node = make<ArrayNode>(parent, id.as_string_or(""));
             ArrayNode& array_node = *static_cast<ArrayNode*>(node.ptr());
 
             if (json_object.has("uniqueItems")) {
@@ -203,7 +206,7 @@ OwnPtr<JsonSchemaNode> Parser::get_typed_node(const JsonValue& json_value)
             }
 
             if (json_object.has("additionalItems")) {
-                array_node.set_additional_items(get_typed_node(json_object.get("additionalItems")));
+                array_node.set_additional_items(get_typed_node(json_object.get("additionalItems"), node.ptr()));
             }
 
             if (json_object.has("items")) {
@@ -216,7 +219,7 @@ OwnPtr<JsonSchemaNode> Parser::get_typed_node(const JsonValue& json_value)
 
                 if (items.is_object()) {
                     JsonObject items_object = items.as_object();
-                    OwnPtr<JsonSchemaNode> child_node = get_typed_node(items_object);
+                    OwnPtr<JsonSchemaNode> child_node = get_typed_node(items_object, node.ptr());
                     if (child_node)
                         array_node.append_item(child_node.release_nonnull());
                 } else if (items.is_array()) {
@@ -224,19 +227,19 @@ OwnPtr<JsonSchemaNode> Parser::get_typed_node(const JsonValue& json_value)
                     JsonArray items_array = items.as_array();
                     for (auto& item : items_array.values()) {
                         ASSERT(item.is_object());
-                        OwnPtr<JsonSchemaNode> child_node = get_typed_node(item);
+                        OwnPtr<JsonSchemaNode> child_node = get_typed_node(item, node.ptr());
                         if (child_node)
                             array_node.append_item(child_node.release_nonnull());
                     }
                 }
             }
         } else if (type_str == "string") {
-            node = make<StringNode>(id.as_string_or(""));
+            node = make<StringNode>(parent, id.as_string_or(""));
         } else if (type_str == "integer") {
-            node = make<NumberNode>(id.as_string_or(""));
+            node = make<NumberNode>(parent, id.as_string_or(""));
         } else {
             if (json_object.is_empty()) {
-                node = make<BooleanNode>("", true);
+                node = make<BooleanNode>(parent, "", true);
             } else {
                 StringBuilder b;
                 b.appendf("type not supported: %s, JSON is: %s!", type_str.characters(), json_value.to_string().characters());

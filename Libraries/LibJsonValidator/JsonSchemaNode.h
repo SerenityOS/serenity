@@ -125,8 +125,21 @@ public:
     JsonValue default_value() const { return m_default_value; }
     JsonValue enum_items() const { return m_enum_items; }
 
+    JsonSchemaNode* parent() const { return m_parent; }
+    String path() const;
+
 protected:
     JsonSchemaNode() {}
+    JsonSchemaNode(JsonSchemaNode* parent)
+        : m_parent(parent)
+    {
+    }
+    JsonSchemaNode(JsonSchemaNode* parent, String id, InstanceType type)
+        : m_id(move(id))
+        , m_type(type)
+        , m_parent(parent)
+    {
+    }
     JsonSchemaNode(String id, InstanceType type)
         : m_id(move(id))
         , m_type(type)
@@ -145,12 +158,13 @@ private:
 #ifndef __serenity__
     regex_t m_pattern_regex;
 #endif
+    JsonSchemaNode* m_parent;
 };
 
 class StringNode : public JsonSchemaNode {
 public:
-    StringNode(String id)
-        : JsonSchemaNode(id, InstanceType::String)
+    StringNode(JsonSchemaNode* parent, String id)
+        : JsonSchemaNode(parent, id, InstanceType::String)
     {
     }
 
@@ -167,8 +181,8 @@ private:
 
 class NumberNode : public JsonSchemaNode {
 public:
-    NumberNode(String id)
-        : JsonSchemaNode(id, InstanceType::Number)
+    NumberNode(JsonSchemaNode* parent, String id)
+        : JsonSchemaNode(parent, id, InstanceType::Number)
     {
     }
 
@@ -187,8 +201,8 @@ private:
 
 class BooleanNode : public JsonSchemaNode {
 public:
-    BooleanNode(String id, bool value)
-        : JsonSchemaNode(id, InstanceType::Boolean)
+    BooleanNode(JsonSchemaNode* parent, String id, bool value)
+        : JsonSchemaNode(parent, id, InstanceType::Boolean)
         , m_value(value)
     {
     }
@@ -204,13 +218,13 @@ private:
 
 class ObjectNode : public JsonSchemaNode {
 public:
-    ObjectNode()
-        : JsonSchemaNode("", InstanceType::Object)
+    ObjectNode(JsonSchemaNode* parent)
+        : JsonSchemaNode(parent, "", InstanceType::Object)
     {
     }
 
-    ObjectNode(String id)
-        : JsonSchemaNode(id, InstanceType::Object)
+    ObjectNode(JsonSchemaNode* parent, String id)
+        : JsonSchemaNode(parent, id, InstanceType::Object)
     {
     }
 
@@ -254,8 +268,18 @@ public:
     {
     }
 
+    ArrayNode(JsonSchemaNode* parent)
+        : JsonSchemaNode(parent, "", InstanceType::Array)
+    {
+    }
+
     ArrayNode(String id)
         : JsonSchemaNode(id, InstanceType::Array)
+    {
+    }
+
+    ArrayNode(JsonSchemaNode* parent, String id)
+        : JsonSchemaNode(parent, id, InstanceType::Array)
     {
     }
 

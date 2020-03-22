@@ -42,11 +42,11 @@ public:
     JsonValue run(const String filename);
     JsonValue run(const JsonValue& json);
 
-    OwnPtr<JsonSchemaNode>&& root_node() { return move(m_root_node); }
+    OwnPtr<JsonSchemaNode>& root_node() { return m_root_node; }
 
 private:
     OwnPtr<JsonSchemaNode> m_root_node;
-    OwnPtr<JsonSchemaNode> get_typed_node(const JsonValue&);
+    OwnPtr<JsonSchemaNode> get_typed_node(const JsonValue&, JsonSchemaNode* parent = nullptr);
 
     void add_parser_error(String);
     Vector<String> m_parser_errors;
