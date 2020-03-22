@@ -28,6 +28,8 @@ public:
 private:
     explicit CanvasRenderingContext2D(HTMLCanvasElement&);
 
+    void did_draw(const Gfx::Rect&);
+
     OwnPtr<Gfx::Painter> painter();
 
     WeakPtr<HTMLCanvasElement> m_element;
