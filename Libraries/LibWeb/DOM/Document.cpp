@@ -373,11 +373,20 @@ JS::Interpreter& Document::interpreter()
             ASSERT(arguments[0].is_object());
             ASSERT(arguments[0].as_object()->is_function());
             auto callback = make_handle(const_cast<JS::Object*>(arguments[0].as_object()));
+            // FIXME: Don't hand out raw DisplayLink ID's to JavaScript!
             i32 link_id = GUI::DisplayLink::register_callback([this, callback](i32 link_id) {
                 const_cast<JS::Function*>(static_cast<const JS::Function*>(callback.cell()))->call(*m_interpreter, {});
                 GUI::DisplayLink::unregister_callback(link_id);
             });
             return JS::Value(link_id);
+        });
+
+        m_interpreter->global_object().put_native_function("cancelAnimationFrame", [](JS::Object*, const Vector<JS::Value>& arguments) -> JS::Value {
+            if (arguments.size() < 1)
+                return JS::js_undefined();
+            // FIXME: We should not be passing untrusted numbers to DisplayLink::unregistered_callback()!
+            GUI::DisplayLink::unregister_callback(arguments[0].to_i32());
+            return JS::js_undefined();
         });
 
         m_interpreter->global_object().put_native_property(
