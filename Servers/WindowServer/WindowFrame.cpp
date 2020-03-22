@@ -45,11 +45,11 @@ static const char* s_close_button_bitmap_data = {
     "###  ###"
     " ###### "
     "  ####  "
-    "   ##   "
     "  ####  "
     " ###### "
     "###  ###"
     "##    ##"
+    "        "
 };
 
 static Gfx::CharacterBitmap* s_close_button_bitmap;
