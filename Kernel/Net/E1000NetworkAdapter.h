@@ -29,9 +29,9 @@
 #include <AK/OwnPtr.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Net/NetworkAdapter.h>
-#include <LibBareMetal/IO.h>
 #include <Kernel/PCI/Access.h>
 #include <Kernel/PCI/Device.h>
+#include <LibBareMetal/IO.h>
 
 namespace Kernel {
 

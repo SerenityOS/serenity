@@ -26,8 +26,8 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/HashMap.h>
+#include <AK/String.h>
 
 class KParams {
     AK_MAKE_ETERNAL
