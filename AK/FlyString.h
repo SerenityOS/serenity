@@ -48,6 +48,8 @@ public:
 
     int to_int(bool& ok) const;
 
+    bool equals_ignoring_case(const StringView&) const;
+
     static void did_destroy_impl(Badge<StringImpl>, StringImpl&);
 
 private:
