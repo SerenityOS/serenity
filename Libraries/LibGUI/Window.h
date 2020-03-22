@@ -212,6 +212,7 @@ private:
     Gfx::Size m_base_size;
     Color m_background_color { Color::WarmGray };
     WindowType m_window_type { WindowType::Normal };
+    StandardCursor m_override_cursor { StandardCursor::None };
     bool m_is_active { false };
     bool m_has_alpha_channel { false };
     bool m_double_buffering_enabled { true };
