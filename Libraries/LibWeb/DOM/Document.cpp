@@ -28,6 +28,7 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/DisplayLink.h>
 #include <LibGUI/MessageBox.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Function.h>
@@ -360,9 +361,23 @@ JS::Interpreter& Document::interpreter()
             (void)Core::Timer::construct(
                 arguments[1].to_i32(), [this, callback] {
                     const_cast<JS::Function*>(static_cast<const JS::Function*>(callback.cell()))->call(*m_interpreter, {});
-                }).leak_ref();
+                })
+                .leak_ref();
 
             return JS::js_undefined();
+        });
+
+        m_interpreter->global_object().put_native_function("requestAnimationFrame", [this](JS::Object*, const Vector<JS::Value>& arguments) -> JS::Value {
+            if (arguments.size() < 1)
+                return JS::js_undefined();
+            ASSERT(arguments[0].is_object());
+            ASSERT(arguments[0].as_object()->is_function());
+            auto callback = make_handle(const_cast<JS::Object*>(arguments[0].as_object()));
+            i32 link_id = GUI::DisplayLink::register_callback([this, callback](i32 link_id) {
+                const_cast<JS::Function*>(static_cast<const JS::Function*>(callback.cell()))->call(*m_interpreter, {});
+                GUI::DisplayLink::unregister_callback(link_id);
+            });
+            return JS::Value(link_id);
         });
 
         m_interpreter->global_object().put_native_property(

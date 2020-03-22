@@ -30,7 +30,19 @@ void CanvasRenderingContext2D::fill_rect(int x, int y, int width, int height)
     if (!painter)
         return;
 
-    painter->fill_rect({ x, y, width, height }, m_fill_style);
+    Gfx::Rect rect(x, y, width, height);
+    painter->fill_rect(rect, m_fill_style);
+    did_draw(rect);
+}
+
+void CanvasRenderingContext2D::did_draw(const Gfx::Rect&)
+{
+    // FIXME: Make use of the rect to reduce the invalidated area when possible.
+    if (!m_element)
+        return;
+    if (!m_element->layout_node())
+        return;
+    m_element->layout_node()->set_needs_display();
 }
 
 OwnPtr<Gfx::Painter> CanvasRenderingContext2D::painter()
