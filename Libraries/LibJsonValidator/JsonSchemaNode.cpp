@@ -243,7 +243,7 @@ JsonValue ObjectNode::validate(const JsonValue& json) const
                     json_property_keys.remove(n.value());
 
             StringBuilder keys_builder;
-            keys_builder.join(matched, ", ");
+            keys_builder.join<String, Vector<String>>(", ", matched);
 #ifdef JSON_SCHEMA_DEBUG
             printf("%lu/%lu key(s) matched the pattern: %s\n", matched.size(), members_count, keys_builder.build().characters());
 #endif
@@ -277,7 +277,8 @@ JsonValue ObjectNode::validate(const JsonValue& json) const
     if (!m_additional_properties && json_property_keys.size()) {
         StringBuilder props_builder;
         props_builder.append("found additional properties \"");
-        props_builder.join(json_property_keys, ", ");
+        props_builder.join<String, Vector<String>>(", ", json_property_keys);
+
         props_builder.append("\", but not allowed due to additionalProperties");
         return JsonValue(props_builder.build());
     }
