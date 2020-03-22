@@ -4,14 +4,15 @@ PROGRAM = IPCCompiler
 
 OBJS = \
     main.o \
-    ../../AK/String.o \
-    ../../AK/StringImpl.o \
-    ../../AK/StringBuilder.o \
-    ../../AK/StringView.o \
-    ../../AK/StringUtils.o \
-    ../../AK/JsonValue.o \
+    ../../AK/FlyString.o \
     ../../AK/JsonParser.o \
+    ../../AK/JsonValue.o \
     ../../AK/LogStream.o \
+    ../../AK/String.o \
+    ../../AK/StringBuilder.o \
+    ../../AK/StringImpl.o \
+    ../../AK/StringUtils.o \
+    ../../AK/StringView.o \
     ../../Libraries/LibCore/IODevice.o \
     ../../Libraries/LibCore/File.o \
     ../../Libraries/LibCore/Object.o \

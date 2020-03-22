@@ -45,6 +45,7 @@ class StringBuilder;
 class StringImpl;
 class StringView;
 class URL;
+class FlyString;
 class Utf8View;
 
 template<typename T>
@@ -137,5 +138,6 @@ using AK::StringImpl;
 using AK::StringView;
 using AK::Traits;
 using AK::URL;
+using AK::FlyString;
 using AK::Utf8View;
 using AK::Vector;

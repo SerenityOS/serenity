@@ -26,7 +26,9 @@
 
 #include <AK/TestSuite.h>
 
+#include <AK/FlyString.h>
 #include <AK/String.h>
+#include <AK/StringBuilder.h>
 
 TEST_CASE(construct_empty)
 {
@@ -135,6 +137,26 @@ TEST_CASE(to_lowercase)
 TEST_CASE(to_uppercase)
 {
     EXPECT(String("AbC").to_uppercase() == "ABC");
+}
+
+TEST_CASE(flystring)
+{
+    {
+        FlyString a("foo");
+        FlyString b("foo");
+        EXPECT_EQ(a.impl(), b.impl());
+    }
+
+    {
+        String a = "foo";
+        FlyString b = a;
+        StringBuilder builder;
+        builder.append('f');
+        builder.append("oo");
+        FlyString c = builder.to_string();
+        EXPECT_EQ(a.impl(), b.impl());
+        EXPECT_EQ(a.impl(), c.impl());
+    }
 }
 
 TEST_MAIN(String)

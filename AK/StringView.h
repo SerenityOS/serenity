@@ -55,6 +55,7 @@ public:
 
     StringView(const ByteBuffer&);
     StringView(const String&);
+    StringView(const FlyString&);
 
     bool is_null() const { return !m_characters; }
     bool is_empty() const { return m_length == 0; }
