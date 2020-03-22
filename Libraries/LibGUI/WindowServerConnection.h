@@ -74,6 +74,7 @@ private:
     virtual void handle(const Messages::WindowClient::DragCancelled&) override;
     virtual void handle(const Messages::WindowClient::UpdateSystemTheme&) override;
     virtual void handle(const Messages::WindowClient::WindowStateChanged&) override;
+    virtual void handle(const Messages::WindowClient::DisplayLinkNotification&) override;
 };
 
 }

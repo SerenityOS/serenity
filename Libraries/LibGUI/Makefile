@@ -18,6 +18,7 @@ OBJS = \
     CppSyntaxHighlighter.o \
     Desktop.o \
     Dialog.o \
+    DisplayLink.o \
     DragOperation.o \
     Event.o \
     FilePicker.o \

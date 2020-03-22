@@ -734,4 +734,22 @@ OwnPtr<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrementResponse> Client
     return make<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrementResponse>();
 }
 
+void ClientConnection::handle(const Messages::WindowServer::EnableDisplayLink&)
+{
+    m_has_display_link = true;
+}
+
+void ClientConnection::handle(const Messages::WindowServer::DisableDisplayLink&)
+{
+    m_has_display_link = false;
+}
+
+void ClientConnection::notify_display_link(Badge<Compositor>)
+{
+    if (!m_has_display_link)
+        return;
+
+    post_message(Messages::WindowClient::DisplayLinkNotification());
+}
+
 }

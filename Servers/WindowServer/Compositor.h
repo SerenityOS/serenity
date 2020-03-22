@@ -70,6 +70,7 @@ private:
     void draw_geometry_label();
     void draw_menubar();
     void run_animations();
+    void notify_display_links();
 
     RefPtr<Core::Timer> m_compose_timer;
     RefPtr<Core::Timer> m_immediate_compose_timer;

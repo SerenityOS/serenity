@@ -25,6 +25,7 @@
  */
 
 #include "Compositor.h"
+#include "ClientConnection.h"
 #include "Event.h"
 #include "EventLoop.h"
 #include "Screen.h"
@@ -69,6 +70,7 @@ Compositor::Compositor()
     init_bitmaps();
 
     m_compose_timer->on_timeout = [&]() {
+        notify_display_links();
 #if defined(COMPOSITOR_DEBUG)
         dbgprintf("Compositor: delayed frame callback: %d rects\n", m_dirty_rects.size());
 #endif
@@ -464,6 +466,13 @@ void Compositor::draw_cursor()
         m_last_dnd_rect = {};
     }
     m_last_cursor_rect = cursor_rect;
+}
+
+void Compositor::notify_display_links()
+{
+    ClientConnection::for_each_client([](auto& client) {
+        client.notify_display_link({});
+    });
 }
 
 }

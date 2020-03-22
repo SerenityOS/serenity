@@ -35,4 +35,6 @@ endpoint WindowClient = 4
     DragDropped(i32 window_id, Gfx::Point mouse_position, String text, String data_type, String data) =|
 
     UpdateSystemTheme(i32 system_theme_buffer_id) =|
+
+    DisplayLinkNotification() =|
 }
