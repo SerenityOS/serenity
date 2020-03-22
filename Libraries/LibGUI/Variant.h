@@ -43,6 +43,7 @@ public:
     Variant(unsigned);
     Variant(const char*);
     Variant(const String&);
+    Variant(const FlyString&);
     Variant(const Gfx::Bitmap&);
     Variant(const GUI::Icon&);
     Variant(const Gfx::Point&);
