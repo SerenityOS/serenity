@@ -70,11 +70,11 @@ PhysicalAddress StaticParser::find_table(const char* sig)
         auto region = MM.allocate_kernel_region(p_sdt.page_base(), (PAGE_SIZE * 2), "ACPI Static Parser Tables Finding", Region::Access::Read);
         auto* sdt = (const Structures::SDTHeader*)region->vaddr().offset(p_sdt.offset_in_page()).as_ptr();
 #ifdef ACPI_DEBUG
-        dbg() << "ACPI: Examining Table @ P " << physical_sdt_ptr;
+        dbg() << "ACPI: Examining Table @ P " << p_sdt;
 #endif
         if (!strncmp(sdt->sig, sig, 4)) {
 #ifdef ACPI_DEBUG
-            dbg() << "ACPI: Found Table @ P " << physical_sdt_ptr;
+            dbg() << "ACPI: Found Table @ P " << p_sdt;
 #endif
             return p_sdt;
         }
@@ -107,7 +107,7 @@ void StaticParser::init_fadt()
     auto checkup_region = MM.allocate_kernel_region(m_fadt.page_base(), (PAGE_SIZE * 2), "ACPI Static Parser", Region::Access::Read);
     auto* sdt = (const Structures::FADT*)checkup_region->vaddr().offset(m_fadt.offset_in_page()).as_ptr();
 #ifdef ACPI_DEBUG
-    dbg() << "ACPI: FADT @ V " << sdt << ", P " << (void*)fadt.as_ptr();
+    dbg() << "ACPI: FADT @ V " << sdt << ", P " << (void*)m_fadt.as_ptr();
 #endif
     klog() << "ACPI: Fixed ACPI data, Revision " << sdt->h.revision << ", Length " << sdt->h.length << " bytes";
     klog() << "ACPI: DSDT " << PhysicalAddress(sdt->dsdt_ptr);
