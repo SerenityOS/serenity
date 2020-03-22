@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Forward.h>
 #include <AK/Types.h>
 #include <AK/kstdio.h>
 
@@ -37,9 +38,6 @@
 #endif
 
 namespace AK {
-
-class String;
-class StringView;
 
 class LogStream {
 public:
@@ -95,6 +93,7 @@ inline const LogStream& operator<<(const LogStream& stream, const char* value)
     return stream;
 }
 
+const LogStream& operator<<(const LogStream&, const FlyString&);
 const LogStream& operator<<(const LogStream&, const String&);
 const LogStream& operator<<(const LogStream&, const StringView&);
 const LogStream& operator<<(const LogStream&, int);

@@ -111,25 +111,16 @@ public:
     {
     }
 
+    String(const FlyString&);
+
     static String repeated(char, size_t count);
     bool matches(const StringView& mask, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
 
     int to_int(bool& ok) const;
     unsigned to_uint(bool& ok) const;
 
-    String to_lowercase() const
-    {
-        if (!m_impl)
-            return String();
-        return m_impl->to_lowercase();
-    }
-
-    String to_uppercase() const
-    {
-        if (!m_impl)
-            return String();
-        return m_impl->to_uppercase();
-    }
+    String to_lowercase() const;
+    String to_uppercase() const;
 
     bool equals_ignoring_case(const StringView&) const;
 

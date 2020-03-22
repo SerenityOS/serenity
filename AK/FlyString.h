@@ -46,6 +46,8 @@ public:
 
     StringView view() const { return { characters(), length() }; }
 
+    FlyString to_lowercase() const;
+
     int to_int(bool& ok) const;
 
     bool equals_ignoring_case(const StringView&) const;
