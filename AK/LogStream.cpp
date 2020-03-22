@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/FlyString.h>
 #include <AK/LogStream.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
@@ -39,6 +40,11 @@ const LogStream& operator<<(const LogStream& stream, const String& value)
 {
     stream.write(value.characters(), value.length());
     return stream;
+}
+
+const LogStream& operator<<(const LogStream& stream, const FlyString& value)
+{
+    return stream << value.view();
 }
 
 const LogStream& operator<<(const LogStream& stream, const StringView& value)

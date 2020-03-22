@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/FlyString.h>
 #include <AK/Memory.h>
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
@@ -319,6 +320,25 @@ String escape_html_entities(const StringView& html)
             builder.append(html[i]);
     }
     return builder.to_string();
+}
+
+String::String(const FlyString& string)
+    : m_impl(string.impl())
+{
+}
+
+String String::to_lowercase() const
+{
+    if (!m_impl)
+        return {};
+    return m_impl->to_lowercase();
+}
+
+String String::to_uppercase() const
+{
+    if (!m_impl)
+        return {};
+    return m_impl->to_uppercase();
 }
 
 }
