@@ -26,8 +26,8 @@
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <AK/Noncopyable.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibWeb/Forward.h>
 
@@ -43,12 +43,12 @@ public:
     void ref() { ref_event_target(); }
     void unref() { unref_event_target(); }
 
-    void add_event_listener(String event_name, NonnullRefPtr<EventListener>);
+    void add_event_listener(const FlyString& event_name, NonnullRefPtr<EventListener>);
 
     virtual void dispatch_event(NonnullRefPtr<Event>) = 0;
 
     struct EventListenerRegistration {
-        String event_name;
+        FlyString event_name;
         NonnullRefPtr<EventListener> listener;
     };
 

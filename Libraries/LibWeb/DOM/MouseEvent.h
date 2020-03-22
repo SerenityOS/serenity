@@ -8,9 +8,9 @@ class MouseEvent final : public Event {
 public:
     using WrapperType = Bindings::MouseEventWrapper;
 
-    static NonnullRefPtr<MouseEvent> create(String event_name, i32 offset_x, i32 offset_y)
+    static NonnullRefPtr<MouseEvent> create(const FlyString& event_name, i32 offset_x, i32 offset_y)
     {
-        return adopt(*new MouseEvent(move(event_name), offset_x, offset_y));
+        return adopt(*new MouseEvent(event_name, offset_x, offset_y));
     }
 
     virtual ~MouseEvent() override {}
@@ -19,8 +19,8 @@ public:
     i32 offset_y() const { return m_offset_y; }
 
 protected:
-    MouseEvent(String event_name, i32 offset_x, i32 offset_y)
-        : Event(move(event_name))
+    MouseEvent(const FlyString& event_name, i32 offset_x, i32 offset_y)
+        : Event(event_name)
         , m_offset_x(offset_x)
         , m_offset_y(offset_y)
     {
