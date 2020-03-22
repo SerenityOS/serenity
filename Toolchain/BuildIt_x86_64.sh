@@ -12,11 +12,11 @@ TARGET="$ARCH-pc-serenity"
 PREFIX="$DIR/Local/x86_64"
 SYSROOT="$DIR/../Root"
 
-MAKE=make
-MD5SUM=md5sum
-NPROC=nproc
+MAKE="make"
+MD5SUM="md5sum"
+NPROC="nproc"
 
-if [ `uname -s` = "OpenBSD" ]; then
+if [ "$(uname -s)" = "OpenBSD" ]; then
     MAKE=gmake
     MD5SUM="md5 -q"
     NPROC="sysctl -n hw.ncpuonline"
@@ -24,7 +24,7 @@ if [ `uname -s` = "OpenBSD" ]; then
     export CXX=eg++
     export with_gmp=/usr/local
     export LDFLAGS=-Wl,-z,notext
-elif [ `uname -s` = "FreeBSD" ]; then
+elif [ "$(uname -s)" = "FreeBSD" ]; then
     MAKE=gmake
     MD5SUM="md5 -q"
     NPROC="sysctl -n hw.ncpu"
@@ -41,8 +41,8 @@ BINUTILS_NAME="binutils-$BINUTILS_VERSION"
 BINUTILS_PKG="${BINUTILS_NAME}.tar.gz"
 BINUTILS_BASE_URL="http://ftp.gnu.org/gnu/binutils"
 
-GCC_VERSION="9.2.0"
-GCC_MD5SUM="e03739b042a14376d727ddcfd05a9bc3"
+GCC_VERSION="9.3.0"
+GCC_MD5SUM="9b7e8f6cfad96114e726c752935af58a"
 GCC_NAME="gcc-$GCC_VERSION"
 GCC_PKG="${GCC_NAME}.tar.gz"
 GCC_BASE_URL="http://ftp.gnu.org/gnu/gcc"
@@ -135,11 +135,11 @@ pushd "$DIR/Build/x86_64"
     popd
 
     pushd gcc
-        if [ `uname -s` = "OpenBSD" ]; then
-            perl -pi -e 's/-no-pie/-nopie/g' "$DIR"/Tarballs/gcc-9.2.0/gcc/configure
+        if [ "$(uname -s)" = "OpenBSD" ]; then
+            perl -pi -e 's/-no-pie/-nopie/g' "$DIR/Tarballs/gcc-$GCC_VERSION/gcc/configure"
         fi
 
-        "$DIR"/Tarballs/gcc-9.2.0/configure --prefix="$PREFIX" \
+        "$DIR/Tarballs/gcc-$GCC_VERSION/configure" --prefix="$PREFIX" \
                                             --target="$TARGET" \
                                             --with-sysroot="$SYSROOT" \
                                             --disable-nls \
@@ -161,8 +161,8 @@ pushd "$DIR/Build/x86_64"
         echo "XXX install libstdc++"
         "$MAKE" install-target-libstdc++-v3 || exit 1
 
-        if [ `uname -s` = "OpenBSD" ]; then
-            cd "$DIR"/Local/libexec/gcc/x86_64-pc-serenity/9.2.0 && ln -sf liblto_plugin.so.0.0 liblto_plugin.so
+        if [ "$(uname -s)" = "OpenBSD" ]; then
+            cd "$DIR/Local/libexec/gcc/x86_64-pc-serenity/$GCC_VERSION" && ln -sf liblto_plugin.so.0.0 liblto_plugin.so
         fi
     popd
 popd
