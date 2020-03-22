@@ -348,8 +348,7 @@ Vector<Region*, 2> Process::split_region_around_range(const Region& source_regio
 
     ASSERT(!remaining_ranges_after_unmap.is_empty());
     auto make_replacement_region = [&](const Range& new_range) -> Region& {
-        ASSERT(new_range.base() >= old_region_range.base());
-        ASSERT(new_range.end() <= old_region_range.end());
+        ASSERT(old_region_range.contains(new_range));
         size_t new_range_offset_in_vmobject = source_region.offset_in_vmobject() + (new_range.base().get() - old_region_range.base().get());
         return allocate_split_region(source_region, new_range, new_range_offset_in_vmobject);
     };
