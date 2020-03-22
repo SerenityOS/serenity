@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/FlyString.h>
 #include <AK/JsonValue.h>
 #include <LibGUI/Variant.h>
 
@@ -125,6 +126,11 @@ Variant::Variant(bool value)
 
 Variant::Variant(const char* cstring)
     : Variant(String(cstring))
+{
+}
+
+Variant::Variant(const FlyString& value)
+    : Variant(String(value.impl()))
 {
 }
 
