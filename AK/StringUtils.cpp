@@ -143,6 +143,26 @@ unsigned convert_to_uint(const StringView& str, bool& ok)
     return value;
 }
 
+static inline char to_lowercase(char c)
+{
+    if (c >= 'A' && c <= 'Z')
+        return c | 0x20;
+    return c;
+}
+
+bool equals_ignoring_case(const StringView& a, const StringView& b)
+{
+    if (a.impl() && a.impl() == b.impl())
+        return true;
+    if (a.length() != b.length())
+        return false;
+    for (size_t i = 0; i < a.length(); ++i) {
+        if (to_lowercase(a.characters_without_null_termination()[i]) != to_lowercase(b.characters_without_null_termination()[i]))
+            return false;
+    }
+    return true;
+}
+
 }
 
 }

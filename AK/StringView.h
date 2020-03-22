@@ -139,6 +139,8 @@ public:
         return !(*this == other);
     }
 
+    const StringImpl* impl() const { return m_impl; }
+
 private:
     friend class String;
     const StringImpl* m_impl { nullptr };
