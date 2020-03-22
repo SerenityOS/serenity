@@ -184,20 +184,20 @@ namespace Kernel {
 
 namespace Syscall {
 
-    enum Function {
+enum Function {
 #undef __ENUMERATE_SYSCALL
 #undef __ENUMERATE_REMOVED_SYSCALL
 #define __ENUMERATE_REMOVED_SYSCALL(x) SC_##x,
 #define __ENUMERATE_SYSCALL(x) SC_##x,
-        ENUMERATE_SYSCALLS
+    ENUMERATE_SYSCALLS
 #undef __ENUMERATE_SYSCALL
 #undef __ENUMERATE_REMOVED_SYSCALL
-            __Count
-    };
+        __Count
+};
 
-    inline constexpr const char* to_string(Function function)
-    {
-        switch (function) {
+inline constexpr const char* to_string(Function function)
+{
+    switch (function) {
 #undef __ENUMERATE_SYSCALL
 #undef __ENUMERATE_REMOVED_SYSCALL
 #define __ENUMERATE_REMOVED_SYSCALL(x) \
@@ -206,267 +206,267 @@ namespace Syscall {
 #define __ENUMERATE_SYSCALL(x) \
     case SC_##x:               \
         return #x;
-            ENUMERATE_SYSCALLS
+        ENUMERATE_SYSCALLS
 #undef __ENUMERATE_SYSCALL
 #undef __ENUMERATE_REMOVED_SYSCALL
-        default:
-            break;
-        }
-        return "Unknown";
+    default:
+        break;
     }
+    return "Unknown";
+}
 
 #ifdef __serenity__
-    struct StringArgument {
-        const char* characters { nullptr };
-        size_t length { 0 };
-    };
+struct StringArgument {
+    const char* characters { nullptr };
+    size_t length { 0 };
+};
 
-    template<typename DataType, typename SizeType>
-    struct MutableBufferArgument {
-        DataType* data { nullptr };
-        SizeType size { 0 };
-    };
+template<typename DataType, typename SizeType>
+struct MutableBufferArgument {
+    DataType* data { nullptr };
+    SizeType size { 0 };
+};
 
-    template<typename DataType, typename SizeType>
-    struct ImmutableBufferArgument {
-        const DataType* data { nullptr };
-        SizeType size { 0 };
-    };
+template<typename DataType, typename SizeType>
+struct ImmutableBufferArgument {
+    const DataType* data { nullptr };
+    SizeType size { 0 };
+};
 
-    struct StringListArgument {
-        StringArgument* strings { nullptr };
-        size_t length { 0 };
-    };
+struct StringListArgument {
+    StringArgument* strings { nullptr };
+    size_t length { 0 };
+};
 
-    struct SC_mmap_params {
-        uint32_t addr;
-        uint32_t size;
-        uint32_t alignment;
-        int32_t prot;
-        int32_t flags;
-        int32_t fd;
-        int32_t offset; // FIXME: 64-bit off_t?
-        StringArgument name;
-    };
+struct SC_mmap_params {
+    uint32_t addr;
+    uint32_t size;
+    uint32_t alignment;
+    int32_t prot;
+    int32_t flags;
+    int32_t fd;
+    int32_t offset; // FIXME: 64-bit off_t?
+    StringArgument name;
+};
 
-    struct SC_open_params {
-        int dirfd;
-        StringArgument path;
-        int options;
-        u16 mode;
-    };
+struct SC_open_params {
+    int dirfd;
+    StringArgument path;
+    int options;
+    u16 mode;
+};
 
-    struct SC_select_params {
-        int nfds;
-        fd_set* readfds;
-        fd_set* writefds;
-        fd_set* exceptfds;
-        struct timeval* timeout;
-    };
+struct SC_select_params {
+    int nfds;
+    fd_set* readfds;
+    fd_set* writefds;
+    fd_set* exceptfds;
+    struct timeval* timeout;
+};
 
-    struct SC_clock_nanosleep_params {
-        int clock_id;
-        int flags;
-        const struct timespec* requested_sleep;
-        struct timespec* remaining_sleep;
-    };
+struct SC_clock_nanosleep_params {
+    int clock_id;
+    int flags;
+    const struct timespec* requested_sleep;
+    struct timespec* remaining_sleep;
+};
 
-    struct SC_sendto_params {
-        int sockfd;
-        ImmutableBufferArgument<void, size_t> data;
-        int flags;
-        const sockaddr* addr;
-        socklen_t addr_length;
-    };
+struct SC_sendto_params {
+    int sockfd;
+    ImmutableBufferArgument<void, size_t> data;
+    int flags;
+    const sockaddr* addr;
+    socklen_t addr_length;
+};
 
-    struct SC_recvfrom_params {
-        int sockfd;
-        MutableBufferArgument<void, size_t> buffer;
-        int flags;
-        sockaddr* addr;
-        socklen_t* addr_length;
-    };
+struct SC_recvfrom_params {
+    int sockfd;
+    MutableBufferArgument<void, size_t> buffer;
+    int flags;
+    sockaddr* addr;
+    socklen_t* addr_length;
+};
 
-    struct SC_getsockopt_params {
-        int sockfd;
-        int level;
-        int option;
-        void* value;
-        socklen_t* value_size;
-    };
+struct SC_getsockopt_params {
+    int sockfd;
+    int level;
+    int option;
+    void* value;
+    socklen_t* value_size;
+};
 
-    struct SC_setsockopt_params {
-        int sockfd;
-        int level;
-        int option;
-        const void* value;
-        socklen_t value_size;
-    };
+struct SC_setsockopt_params {
+    int sockfd;
+    int level;
+    int option;
+    const void* value;
+    socklen_t value_size;
+};
 
-    struct SC_getsockname_params {
-        int sockfd;
-        sockaddr* addr;
-        socklen_t* addrlen;
-    };
+struct SC_getsockname_params {
+    int sockfd;
+    sockaddr* addr;
+    socklen_t* addrlen;
+};
 
-    struct SC_getpeername_params {
-        int sockfd;
-        sockaddr* addr;
-        socklen_t* addrlen;
-    };
+struct SC_getpeername_params {
+    int sockfd;
+    sockaddr* addr;
+    socklen_t* addrlen;
+};
 
-    struct SC_futex_params {
-        i32* userspace_address;
-        int futex_op;
-        i32 val;
-        const timespec* timeout;
-    };
+struct SC_futex_params {
+    i32* userspace_address;
+    int futex_op;
+    i32 val;
+    const timespec* timeout;
+};
 
-    struct SC_setkeymap_params {
-        const char* map;
-        const char* shift_map;
-        const char* alt_map;
-        const char* altgr_map;
-    };
+struct SC_setkeymap_params {
+    const char* map;
+    const char* shift_map;
+    const char* alt_map;
+    const char* altgr_map;
+};
 
-    struct SC_create_thread_params {
-        unsigned int m_detach_state = 0; // JOINABLE or DETACHED
-        int m_schedule_priority = 30;    // THREAD_PRIORITY_NORMAL
-        // FIXME: Implment guard pages in create_thread (unreadable pages at "overflow" end of stack)
-        // "If an implementation rounds up the value of guardsize to a multiple of {PAGESIZE},
-        // a call to pthread_attr_getguardsize() specifying attr shall store in the guardsize
-        // parameter the guard size specified by the previous pthread_attr_setguardsize() function call"
-        // ... ok, if you say so posix. Guess we get to lie to people about guard page size
-        unsigned int m_guard_page_size = 0;          // Rounded up to PAGE_SIZE
-        unsigned int m_reported_guard_page_size = 0; // The lie we tell callers
-        unsigned int m_stack_size = 4 * MB;          // Default PTHREAD_STACK_MIN
-        void* m_stack_location = nullptr;            // nullptr means any, o.w. process virtual address
-    };
+struct SC_create_thread_params {
+    unsigned int m_detach_state = 0; // JOINABLE or DETACHED
+    int m_schedule_priority = 30;    // THREAD_PRIORITY_NORMAL
+    // FIXME: Implment guard pages in create_thread (unreadable pages at "overflow" end of stack)
+    // "If an implementation rounds up the value of guardsize to a multiple of {PAGESIZE},
+    // a call to pthread_attr_getguardsize() specifying attr shall store in the guardsize
+    // parameter the guard size specified by the previous pthread_attr_setguardsize() function call"
+    // ... ok, if you say so posix. Guess we get to lie to people about guard page size
+    unsigned int m_guard_page_size = 0;          // Rounded up to PAGE_SIZE
+    unsigned int m_reported_guard_page_size = 0; // The lie we tell callers
+    unsigned int m_stack_size = 4 * MB;          // Default PTHREAD_STACK_MIN
+    void* m_stack_location = nullptr;            // nullptr means any, o.w. process virtual address
+};
 
-    struct SC_realpath_params {
-        StringArgument path;
-        MutableBufferArgument<char, size_t> buffer;
-    };
+struct SC_realpath_params {
+    StringArgument path;
+    MutableBufferArgument<char, size_t> buffer;
+};
 
-    struct SC_set_mmap_name_params {
-        void* addr;
-        size_t size;
-        StringArgument name;
-    };
+struct SC_set_mmap_name_params {
+    void* addr;
+    size_t size;
+    StringArgument name;
+};
 
-    struct SC_execve_params {
-        StringArgument path;
-        StringListArgument arguments;
-        StringListArgument environment;
-    };
+struct SC_execve_params {
+    StringArgument path;
+    StringListArgument arguments;
+    StringListArgument environment;
+};
 
-    struct SC_readlink_params {
-        StringArgument path;
-        MutableBufferArgument<char, size_t> buffer;
-    };
+struct SC_readlink_params {
+    StringArgument path;
+    MutableBufferArgument<char, size_t> buffer;
+};
 
-    struct SC_link_params {
-        StringArgument old_path;
-        StringArgument new_path;
-    };
+struct SC_link_params {
+    StringArgument old_path;
+    StringArgument new_path;
+};
 
-    struct SC_chown_params {
-        StringArgument path;
-        u32 uid;
-        u32 gid;
-    };
+struct SC_chown_params {
+    StringArgument path;
+    u32 uid;
+    u32 gid;
+};
 
-    struct SC_mknod_params {
-        StringArgument path;
-        u16 mode;
-        u32 dev;
-    };
+struct SC_mknod_params {
+    StringArgument path;
+    u16 mode;
+    u32 dev;
+};
 
-    struct SC_symlink_params {
-        StringArgument target;
-        StringArgument linkpath;
-    };
+struct SC_symlink_params {
+    StringArgument target;
+    StringArgument linkpath;
+};
 
-    struct SC_rename_params {
-        StringArgument old_path;
-        StringArgument new_path;
-    };
+struct SC_rename_params {
+    StringArgument old_path;
+    StringArgument new_path;
+};
 
-    struct SC_mount_params {
-        StringArgument source;
-        StringArgument target;
-        StringArgument fs_type;
-        int flags;
-    };
+struct SC_mount_params {
+    StringArgument source;
+    StringArgument target;
+    StringArgument fs_type;
+    int flags;
+};
 
-    struct SC_pledge_params {
-        StringArgument promises;
-        StringArgument execpromises;
-    };
+struct SC_pledge_params {
+    StringArgument promises;
+    StringArgument execpromises;
+};
 
-    struct SC_unveil_params {
-        StringArgument path;
-        StringArgument permissions;
-    };
+struct SC_unveil_params {
+    StringArgument path;
+    StringArgument permissions;
+};
 
-    struct SC_waitid_params {
-        int idtype;
-        int id;
-        struct siginfo* infop;
-        int options;
-    };
+struct SC_waitid_params {
+    int idtype;
+    int id;
+    struct siginfo* infop;
+    int options;
+};
 
-    struct SC_stat_params {
-        StringArgument path;
-        struct stat* statbuf;
-        bool follow_symlinks;
-    };
+struct SC_stat_params {
+    StringArgument path;
+    struct stat* statbuf;
+    bool follow_symlinks;
+};
 
-    void initialize();
-    int sync();
+void initialize();
+int sync();
 
-    inline u32 invoke(Function function)
-    {
-        u32 result;
-        asm volatile("int $0x82"
-                     : "=a"(result)
-                     : "a"(function)
-                     : "memory");
-        return result;
-    }
+inline u32 invoke(Function function)
+{
+    u32 result;
+    asm volatile("int $0x82"
+                 : "=a"(result)
+                 : "a"(function)
+                 : "memory");
+    return result;
+}
 
-    template<typename T1>
-    inline u32 invoke(Function function, T1 arg1)
-    {
-        u32 result;
-        asm volatile("int $0x82"
-                     : "=a"(result)
-                     : "a"(function), "d"((u32)arg1)
-                     : "memory");
-        return result;
-    }
+template<typename T1>
+inline u32 invoke(Function function, T1 arg1)
+{
+    u32 result;
+    asm volatile("int $0x82"
+                 : "=a"(result)
+                 : "a"(function), "d"((u32)arg1)
+                 : "memory");
+    return result;
+}
 
-    template<typename T1, typename T2>
-    inline u32 invoke(Function function, T1 arg1, T2 arg2)
-    {
-        u32 result;
-        asm volatile("int $0x82"
-                     : "=a"(result)
-                     : "a"(function), "d"((u32)arg1), "c"((u32)arg2)
-                     : "memory");
-        return result;
-    }
+template<typename T1, typename T2>
+inline u32 invoke(Function function, T1 arg1, T2 arg2)
+{
+    u32 result;
+    asm volatile("int $0x82"
+                 : "=a"(result)
+                 : "a"(function), "d"((u32)arg1), "c"((u32)arg2)
+                 : "memory");
+    return result;
+}
 
-    template<typename T1, typename T2, typename T3>
-    inline u32 invoke(Function function, T1 arg1, T2 arg2, T3 arg3)
-    {
-        u32 result;
-        asm volatile("int $0x82"
-                     : "=a"(result)
-                     : "a"(function), "d"((u32)arg1), "c"((u32)arg2), "b"((u32)arg3)
-                     : "memory");
-        return result;
-    }
+template<typename T1, typename T2, typename T3>
+inline u32 invoke(Function function, T1 arg1, T2 arg2, T3 arg3)
+{
+    u32 result;
+    asm volatile("int $0x82"
+                 : "=a"(result)
+                 : "a"(function), "d"((u32)arg1), "c"((u32)arg2), "b"((u32)arg3)
+                 : "memory");
+    return result;
+}
 #endif
 
 }

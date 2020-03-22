@@ -30,8 +30,8 @@
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
-#include <Kernel/Interrupts/IRQController.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
+#include <Kernel/Interrupts/IRQController.h>
 
 namespace Kernel {
 

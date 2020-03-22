@@ -28,85 +28,85 @@
 
 namespace Kernel {
 namespace ACPI {
-    static Parser* s_acpi_parser;
+static Parser* s_acpi_parser;
 
-    Parser& Parser::the()
-    {
-        ASSERT(s_acpi_parser != nullptr);
-        return *s_acpi_parser;
-    }
+Parser& Parser::the()
+{
+    ASSERT(s_acpi_parser != nullptr);
+    return *s_acpi_parser;
+}
 
-    void Parser::initialize_limited()
-    {
-        if (!Parser::is_initialized()) {
-            s_acpi_parser = new Parser(false);
-        }
+void Parser::initialize_limited()
+{
+    if (!Parser::is_initialized()) {
+        s_acpi_parser = new Parser(false);
     }
+}
 
-    bool Parser::is_initialized()
-    {
-        return (s_acpi_parser != nullptr);
-    }
+bool Parser::is_initialized()
+{
+    return (s_acpi_parser != nullptr);
+}
 
-    Parser::Parser(bool usable)
-    {
-        if (usable) {
-            klog() << "ACPI: Setting up a functional parser";
-        } else {
-            klog() << "ACPI: Limited Initialization. Vital functions are disabled by a request";
-        }
-        s_acpi_parser = this;
+Parser::Parser(bool usable)
+{
+    if (usable) {
+        klog() << "ACPI: Setting up a functional parser";
+    } else {
+        klog() << "ACPI: Limited Initialization. Vital functions are disabled by a request";
     }
+    s_acpi_parser = this;
+}
 
-    PhysicalAddress Parser::find_table(const char*)
-    {
-        klog() << "ACPI: Requested to search for a table, Abort!";
-        return {};
-    }
+PhysicalAddress Parser::find_table(const char*)
+{
+    klog() << "ACPI: Requested to search for a table, Abort!";
+    return {};
+}
 
-    void Parser::try_acpi_reboot()
-    {
-        klog() << "ACPI: Cannot invoke reboot!";
-    }
+void Parser::try_acpi_reboot()
+{
+    klog() << "ACPI: Cannot invoke reboot!";
+}
 
-    void Parser::try_acpi_shutdown()
-    {
-        klog() << "ACPI: Cannot invoke shutdown!";
-    }
+void Parser::try_acpi_shutdown()
+{
+    klog() << "ACPI: Cannot invoke shutdown!";
+}
 
-    void Parser::enable_aml_interpretation()
-    {
-        klog() << "ACPI: No AML Interpretation Allowed";
-        ASSERT_NOT_REACHED();
-    }
-    void Parser::enable_aml_interpretation(File&)
-    {
-        klog() << "ACPI: No AML Interpretation Allowed";
-        ASSERT_NOT_REACHED();
-    }
-    void Parser::enable_aml_interpretation(u8*, u32)
-    {
-        klog() << "ACPI: No AML Interpretation Allowed";
-        ASSERT_NOT_REACHED();
-    }
-    void Parser::disable_aml_interpretation()
-    {
-        klog() << "ACPI Limited: No AML Interpretation Allowed";
-        ASSERT_NOT_REACHED();
-    }
-    const FADTFlags::HardwareFeatures& Parser::hardware_features() const
-    {
-        klog() << "ACPI Limited: Hardware features cannot be obtained";
-        ASSERT_NOT_REACHED();
-    }
-    const FADTFlags::x86_Specific_Flags& Parser::x86_specific_flags() const
-    {
-        klog() << "ACPI Limited: x86 specific features cannot be obtained";
-        ASSERT_NOT_REACHED();
-    }
-    bool Parser::is_operable()
-    {
-        return false;
-    }
+void Parser::enable_aml_interpretation()
+{
+    klog() << "ACPI: No AML Interpretation Allowed";
+    ASSERT_NOT_REACHED();
+}
+void Parser::enable_aml_interpretation(File&)
+{
+    klog() << "ACPI: No AML Interpretation Allowed";
+    ASSERT_NOT_REACHED();
+}
+void Parser::enable_aml_interpretation(u8*, u32)
+{
+    klog() << "ACPI: No AML Interpretation Allowed";
+    ASSERT_NOT_REACHED();
+}
+void Parser::disable_aml_interpretation()
+{
+    klog() << "ACPI Limited: No AML Interpretation Allowed";
+    ASSERT_NOT_REACHED();
+}
+const FADTFlags::HardwareFeatures& Parser::hardware_features() const
+{
+    klog() << "ACPI Limited: Hardware features cannot be obtained";
+    ASSERT_NOT_REACHED();
+}
+const FADTFlags::x86_Specific_Flags& Parser::x86_specific_flags() const
+{
+    klog() << "ACPI Limited: x86 specific features cannot be obtained";
+    ASSERT_NOT_REACHED();
+}
+bool Parser::is_operable()
+{
+    return false;
+}
 }
 }

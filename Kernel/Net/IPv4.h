@@ -26,10 +26,10 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/Assertions.h>
 #include <AK/IPv4Address.h>
 #include <AK/NetworkOrdered.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 
 namespace Kernel {

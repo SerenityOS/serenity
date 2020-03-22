@@ -68,134 +68,134 @@ namespace Kernel {
 //#define PCI_DEBUG 1
 
 namespace PCI {
-    struct ID {
-        u16 vendor_id { 0 };
-        u16 device_id { 0 };
+struct ID {
+    u16 vendor_id { 0 };
+    u16 device_id { 0 };
 
-        bool is_null() const { return !vendor_id && !device_id; }
+    bool is_null() const { return !vendor_id && !device_id; }
 
-        bool operator==(const ID& other) const
-        {
-            return vendor_id == other.vendor_id && device_id == other.device_id;
-        }
-        bool operator!=(const ID& other) const
-        {
-            return vendor_id != other.vendor_id || device_id != other.device_id;
-        }
-    };
-
-    struct Address {
-    public:
-        Address() {}
-        Address(u16 seg)
-            : m_seg(seg)
-            , m_bus(0)
-            , m_slot(0)
-            , m_function(0)
-        {
-        }
-        Address(u16 seg, u8 bus, u8 slot, u8 function)
-            : m_seg(seg)
-            , m_bus(bus)
-            , m_slot(slot)
-            , m_function(function)
-        {
-        }
-
-        Address(const Address& address)
-            : m_seg(address.seg())
-            , m_bus(address.bus())
-            , m_slot(address.slot())
-            , m_function(address.function())
-        {
-        }
-
-        bool is_null() const { return !m_bus && !m_slot && !m_function; }
-        operator bool() const { return !is_null(); }
-
-        u16 seg() const { return m_seg; }
-        u8 bus() const { return m_bus; }
-        u8 slot() const { return m_slot; }
-        u8 function() const { return m_function; }
-
-        u32 io_address_for_field(u8 field) const
-        {
-            return 0x80000000u | (m_bus << 16u) | (m_slot << 11u) | (m_function << 8u) | (field & 0xfc);
-        }
-
-    protected:
-        u32 m_seg { 0 };
-        u8 m_bus { 0 };
-        u8 m_slot { 0 };
-        u8 m_function { 0 };
-    };
-
-    inline const LogStream& operator<<(const LogStream& stream, const Address value)
+    bool operator==(const ID& other) const
     {
-        return stream << "PCI [" << String::format("%w", value.seg()) << ":" << String::format("%b", value.bus()) << ":" << String::format("%b", value.slot()) << "." << String::format("%b", value.function()) << "]";
+        return vendor_id == other.vendor_id && device_id == other.device_id;
+    }
+    bool operator!=(const ID& other) const
+    {
+        return vendor_id != other.vendor_id || device_id != other.device_id;
+    }
+};
+
+struct Address {
+public:
+    Address() {}
+    Address(u16 seg)
+        : m_seg(seg)
+        , m_bus(0)
+        , m_slot(0)
+        , m_function(0)
+    {
+    }
+    Address(u16 seg, u8 bus, u8 slot, u8 function)
+        : m_seg(seg)
+        , m_bus(bus)
+        , m_slot(slot)
+        , m_function(function)
+    {
     }
 
-    struct ChangeableAddress : public Address {
-        ChangeableAddress()
-            : Address(0)
-        {
-        }
-        explicit ChangeableAddress(u16 seg)
-            : Address(seg)
-        {
-        }
-        ChangeableAddress(u16 seg, u8 bus, u8 slot, u8 function)
-            : Address(seg, bus, slot, function)
-        {
-        }
-        void set_seg(u16 seg) { m_seg = seg; }
-        void set_bus(u8 bus) { m_bus = bus; }
-        void set_slot(u8 slot) { m_slot = slot; }
-        void set_function(u8 function) { m_function = function; }
-        bool operator==(const Address& address)
-        {
-            if (m_seg == address.seg() && m_bus == address.bus() && m_slot == address.slot() && m_function == address.function())
-                return true;
-            else
-                return false;
-        }
-        const ChangeableAddress& operator=(const Address& address)
-        {
-            set_seg(address.seg());
-            set_bus(address.bus());
-            set_slot(address.slot());
-            set_function(address.function());
-            return *this;
-        }
-    };
+    Address(const Address& address)
+        : m_seg(address.seg())
+        , m_bus(address.bus())
+        , m_slot(address.slot())
+        , m_function(address.function())
+    {
+    }
 
-    ID get_id(PCI::Address);
-    void enumerate_all(Function<void(Address, ID)> callback);
-    void enable_interrupt_line(Address);
-    void disable_interrupt_line(Address);
-    u8 get_interrupt_line(Address);
-    void raw_access(Address, u32, size_t, u32);
-    u32 get_BAR0(Address);
-    u32 get_BAR1(Address);
-    u32 get_BAR2(Address);
-    u32 get_BAR3(Address);
-    u32 get_BAR4(Address);
-    u32 get_BAR5(Address);
-    u8 get_revision_id(Address);
-    u8 get_subclass(Address);
-    u8 get_class(Address);
-    u16 get_subsystem_id(Address);
-    u16 get_subsystem_vendor_id(Address);
-    size_t get_BAR_Space_Size(Address, u8);
-    void enable_bus_mastering(Address);
-    void disable_bus_mastering(Address);
+    bool is_null() const { return !m_bus && !m_slot && !m_function; }
+    operator bool() const { return !is_null(); }
 
-    class Initializer;
-    class Access;
-    class MMIOAccess;
-    class IOAccess;
-    class MMIOSegment;
-    class Device;
+    u16 seg() const { return m_seg; }
+    u8 bus() const { return m_bus; }
+    u8 slot() const { return m_slot; }
+    u8 function() const { return m_function; }
+
+    u32 io_address_for_field(u8 field) const
+    {
+        return 0x80000000u | (m_bus << 16u) | (m_slot << 11u) | (m_function << 8u) | (field & 0xfc);
+    }
+
+protected:
+    u32 m_seg { 0 };
+    u8 m_bus { 0 };
+    u8 m_slot { 0 };
+    u8 m_function { 0 };
+};
+
+inline const LogStream& operator<<(const LogStream& stream, const Address value)
+{
+    return stream << "PCI [" << String::format("%w", value.seg()) << ":" << String::format("%b", value.bus()) << ":" << String::format("%b", value.slot()) << "." << String::format("%b", value.function()) << "]";
+}
+
+struct ChangeableAddress : public Address {
+    ChangeableAddress()
+        : Address(0)
+    {
+    }
+    explicit ChangeableAddress(u16 seg)
+        : Address(seg)
+    {
+    }
+    ChangeableAddress(u16 seg, u8 bus, u8 slot, u8 function)
+        : Address(seg, bus, slot, function)
+    {
+    }
+    void set_seg(u16 seg) { m_seg = seg; }
+    void set_bus(u8 bus) { m_bus = bus; }
+    void set_slot(u8 slot) { m_slot = slot; }
+    void set_function(u8 function) { m_function = function; }
+    bool operator==(const Address& address)
+    {
+        if (m_seg == address.seg() && m_bus == address.bus() && m_slot == address.slot() && m_function == address.function())
+            return true;
+        else
+            return false;
+    }
+    const ChangeableAddress& operator=(const Address& address)
+    {
+        set_seg(address.seg());
+        set_bus(address.bus());
+        set_slot(address.slot());
+        set_function(address.function());
+        return *this;
+    }
+};
+
+ID get_id(PCI::Address);
+void enumerate_all(Function<void(Address, ID)> callback);
+void enable_interrupt_line(Address);
+void disable_interrupt_line(Address);
+u8 get_interrupt_line(Address);
+void raw_access(Address, u32, size_t, u32);
+u32 get_BAR0(Address);
+u32 get_BAR1(Address);
+u32 get_BAR2(Address);
+u32 get_BAR3(Address);
+u32 get_BAR4(Address);
+u32 get_BAR5(Address);
+u8 get_revision_id(Address);
+u8 get_subclass(Address);
+u8 get_class(Address);
+u16 get_subsystem_id(Address);
+u16 get_subsystem_vendor_id(Address);
+size_t get_BAR_Space_Size(Address, u8);
+void enable_bus_mastering(Address);
+void disable_bus_mastering(Address);
+
+class Initializer;
+class Access;
+class MMIOAccess;
+class IOAccess;
+class MMIOSegment;
+class Device;
 
 }
 

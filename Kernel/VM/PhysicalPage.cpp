@@ -24,9 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <Kernel/Heap/kmalloc.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PhysicalPage.h>
-#include <Kernel/Heap/kmalloc.h>
 
 namespace Kernel {
 

@@ -54,177 +54,177 @@ namespace Kernel {
 
 namespace APIC {
 
-    class ICRReg {
-        u32 m_reg { 0 };
+class ICRReg {
+    u32 m_reg { 0 };
 
-    public:
-        enum DeliveryMode {
-            Fixed = 0x0,
-            LowPriority = 0x1,
-            SMI = 0x2,
-            NMI = 0x4,
-            INIT = 0x5,
-            StartUp = 0x6,
-        };
-        enum DestinationMode {
-            Physical = 0x0,
-            Logical = 0x0,
-        };
-        enum Level {
-            DeAssert = 0x0,
-            Assert = 0x1
-        };
-        enum class TriggerMode {
-            Edge = 0x0,
-            Level = 0x1,
-        };
-        enum DestinationShorthand {
-            NoShorthand = 0x0,
-            Self = 0x1,
-            AllIncludingSelf = 0x2,
-            AllExcludingSelf = 0x3,
-        };
-
-        ICRReg(u8 vector, DeliveryMode delivery_mode, DestinationMode destination_mode, Level level, TriggerMode trigger_mode, DestinationShorthand destination)
-            : m_reg(vector | (delivery_mode << 8) | (destination_mode << 11) | (level << 14) | (static_cast<u32>(trigger_mode) << 15) | (destination << 18))
-        {
-        }
-
-        u32 low() const { return m_reg; }
-        u32 high() const { return 0; }
+public:
+    enum DeliveryMode {
+        Fixed = 0x0,
+        LowPriority = 0x1,
+        SMI = 0x2,
+        NMI = 0x4,
+        INIT = 0x5,
+        StartUp = 0x6,
+    };
+    enum DestinationMode {
+        Physical = 0x0,
+        Logical = 0x0,
+    };
+    enum Level {
+        DeAssert = 0x0,
+        Assert = 0x1
+    };
+    enum class TriggerMode {
+        Edge = 0x0,
+        Level = 0x1,
+    };
+    enum DestinationShorthand {
+        NoShorthand = 0x0,
+        Self = 0x1,
+        AllIncludingSelf = 0x2,
+        AllExcludingSelf = 0x3,
     };
 
-    static volatile u8* g_apic_base = nullptr;
-
-    static PhysicalAddress get_base()
+    ICRReg(u8 vector, DeliveryMode delivery_mode, DestinationMode destination_mode, Level level, TriggerMode trigger_mode, DestinationShorthand destination)
+        : m_reg(vector | (delivery_mode << 8) | (destination_mode << 11) | (level << 14) | (static_cast<u32>(trigger_mode) << 15) | (destination << 18))
     {
-        u32 lo, hi;
-        MSR msr(APIC_BASE_MSR);
-        msr.get(lo, hi);
-        return PhysicalAddress(lo & 0xfffff000);
     }
 
-    static void set_base(const PhysicalAddress& base)
-    {
-        u32 hi = 0;
-        u32 lo = base.get() | 0x800;
-        MSR msr(APIC_BASE_MSR);
-        msr.set(lo, hi);
-    }
+    u32 low() const { return m_reg; }
+    u32 high() const { return 0; }
+};
 
-    static void write_register(u32 offset, u32 value)
-    {
-        auto lapic_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)g_apic_base)), PAGE_SIZE, "LAPIC Write Access", Region::Access::Read | Region::Access::Write, false, true);
-        auto* lapic = (volatile u32*)lapic_region->vaddr().offset(offset_in_page((u32)g_apic_base)).offset(offset).as_ptr();
-        *lapic = value;
-    }
+static volatile u8* g_apic_base = nullptr;
 
-    static u32 read_register(u32 offset)
-    {
-        auto lapic_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)g_apic_base)), PAGE_SIZE, "LAPIC Read Access", Region::Access::Read, false, true);
-        auto* lapic = (volatile u32*)lapic_region->vaddr().offset(offset_in_page((u32)g_apic_base)).offset(offset).as_ptr();
-        return *lapic;
-    }
+static PhysicalAddress get_base()
+{
+    u32 lo, hi;
+    MSR msr(APIC_BASE_MSR);
+    msr.get(lo, hi);
+    return PhysicalAddress(lo & 0xfffff000);
+}
 
-    static void write_icr(const ICRReg& icr)
-    {
-        write_register(APIC_REG_ICR_HIGH, icr.high());
-        write_register(APIC_REG_ICR_LOW, icr.low());
-    }
+static void set_base(const PhysicalAddress& base)
+{
+    u32 hi = 0;
+    u32 lo = base.get() | 0x800;
+    MSR msr(APIC_BASE_MSR);
+    msr.set(lo, hi);
+}
+
+static void write_register(u32 offset, u32 value)
+{
+    auto lapic_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)g_apic_base)), PAGE_SIZE, "LAPIC Write Access", Region::Access::Read | Region::Access::Write, false, true);
+    auto* lapic = (volatile u32*)lapic_region->vaddr().offset(offset_in_page((u32)g_apic_base)).offset(offset).as_ptr();
+    *lapic = value;
+}
+
+static u32 read_register(u32 offset)
+{
+    auto lapic_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)g_apic_base)), PAGE_SIZE, "LAPIC Read Access", Region::Access::Read, false, true);
+    auto* lapic = (volatile u32*)lapic_region->vaddr().offset(offset_in_page((u32)g_apic_base)).offset(offset).as_ptr();
+    return *lapic;
+}
+
+static void write_icr(const ICRReg& icr)
+{
+    write_register(APIC_REG_ICR_HIGH, icr.high());
+    write_register(APIC_REG_ICR_LOW, icr.low());
+}
 
 #define APIC_LVT_MASKED (1 << 16)
 #define APIC_LVT_TRIGGER_LEVEL (1 << 14)
 #define APIC_LVT(iv, dm) ((iv & 0xff) | ((dm & 0x7) << 8))
 
-    asm(
-        ".globl apic_ap_start \n"
-        ".type apic_ap_start, @function \n"
-        "apic_ap_start: \n"
-        ".set begin_apic_ap_start, . \n"
-        "    jmp apic_ap_start\n" // TODO: implement
-        ".set end_apic_ap_start, . \n"
-        "\n"
-        ".globl apic_ap_start_size \n"
-        "apic_ap_start_size: \n"
-        ".word end_apic_ap_start - begin_apic_ap_start \n");
+asm(
+    ".globl apic_ap_start \n"
+    ".type apic_ap_start, @function \n"
+    "apic_ap_start: \n"
+    ".set begin_apic_ap_start, . \n"
+    "    jmp apic_ap_start\n" // TODO: implement
+    ".set end_apic_ap_start, . \n"
+    "\n"
+    ".globl apic_ap_start_size \n"
+    "apic_ap_start_size: \n"
+    ".word end_apic_ap_start - begin_apic_ap_start \n");
 
-    extern "C" void apic_ap_start(void);
-    extern "C" u16 apic_ap_start_size;
+extern "C" void apic_ap_start(void);
+extern "C" u16 apic_ap_start_size;
 
-    void eoi()
-    {
-        write_register(APIC_REG_EOI, 0x0);
-    }
+void eoi()
+{
+    write_register(APIC_REG_EOI, 0x0);
+}
 
-    bool init()
-    {
-        if (!MSR::have())
-            return false;
+bool init()
+{
+    if (!MSR::have())
+        return false;
 
-        // check if we support local apic
-        CPUID id(1);
-        if ((id.edx() & (1 << 9)) == 0)
-            return false;
+    // check if we support local apic
+    CPUID id(1);
+    if ((id.edx() & (1 << 9)) == 0)
+        return false;
 
-        PhysicalAddress apic_base = get_base();
-        klog() << "Initializing APIC, base: " << apic_base;
-        set_base(apic_base);
+    PhysicalAddress apic_base = get_base();
+    klog() << "Initializing APIC, base: " << apic_base;
+    set_base(apic_base);
 
-        g_apic_base = apic_base.as_ptr();
+    g_apic_base = apic_base.as_ptr();
 
-        return true;
-    }
+    return true;
+}
 
-    void enable_bsp()
-    {
-        // FIXME: Ensure this method can only be executed by the BSP.
-        enable(0);
-    }
+void enable_bsp()
+{
+    // FIXME: Ensure this method can only be executed by the BSP.
+    enable(0);
+}
 
-    void enable(u32 cpu)
-    {
-        klog() << "Enabling local APIC for cpu #" << cpu;
+void enable(u32 cpu)
+{
+    klog() << "Enabling local APIC for cpu #" << cpu;
 
-        // dummy read, apparently to avoid a bug in old CPUs.
-        read_register(APIC_REG_SIV);
-        // set spurious interrupt vector
-        write_register(APIC_REG_SIV, IRQ_APIC_SPURIOUS | 0x100);
+    // dummy read, apparently to avoid a bug in old CPUs.
+    read_register(APIC_REG_SIV);
+    // set spurious interrupt vector
+    write_register(APIC_REG_SIV, IRQ_APIC_SPURIOUS | 0x100);
 
-        // local destination mode (flat mode)
-        write_register(APIC_REG_DF, 0xf0000000);
+    // local destination mode (flat mode)
+    write_register(APIC_REG_DF, 0xf0000000);
 
-        // set destination id (note that this limits it to 8 cpus)
-        write_register(APIC_REG_LD, 0);
+    // set destination id (note that this limits it to 8 cpus)
+    write_register(APIC_REG_LD, 0);
 
-        SpuriousInterruptHandler::initialize(IRQ_APIC_SPURIOUS);
+    SpuriousInterruptHandler::initialize(IRQ_APIC_SPURIOUS);
 
-        write_register(APIC_REG_LVT_TIMER, APIC_LVT(0, 0) | APIC_LVT_MASKED);
-        write_register(APIC_REG_LVT_THERMAL, APIC_LVT(0, 0) | APIC_LVT_MASKED);
-        write_register(APIC_REG_LVT_PERFORMANCE_COUNTER, APIC_LVT(0, 0) | APIC_LVT_MASKED);
-        write_register(APIC_REG_LVT_LINT0, APIC_LVT(0, 7) | APIC_LVT_MASKED);
-        write_register(APIC_REG_LVT_LINT1, APIC_LVT(0, 0) | APIC_LVT_TRIGGER_LEVEL);
-        write_register(APIC_REG_LVT_ERR, APIC_LVT(0, 0) | APIC_LVT_MASKED);
+    write_register(APIC_REG_LVT_TIMER, APIC_LVT(0, 0) | APIC_LVT_MASKED);
+    write_register(APIC_REG_LVT_THERMAL, APIC_LVT(0, 0) | APIC_LVT_MASKED);
+    write_register(APIC_REG_LVT_PERFORMANCE_COUNTER, APIC_LVT(0, 0) | APIC_LVT_MASKED);
+    write_register(APIC_REG_LVT_LINT0, APIC_LVT(0, 7) | APIC_LVT_MASKED);
+    write_register(APIC_REG_LVT_LINT1, APIC_LVT(0, 0) | APIC_LVT_TRIGGER_LEVEL);
+    write_register(APIC_REG_LVT_ERR, APIC_LVT(0, 0) | APIC_LVT_MASKED);
 
-        write_register(APIC_REG_TPR, 0);
+    write_register(APIC_REG_TPR, 0);
 
-        if (cpu != 0) {
-            static volatile u32 foo = 0;
+    if (cpu != 0) {
+        static volatile u32 foo = 0;
 
-            // INIT
-            write_icr(ICRReg(0, ICRReg::INIT, ICRReg::Physical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::AllExcludingSelf));
+        // INIT
+        write_icr(ICRReg(0, ICRReg::INIT, ICRReg::Physical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::AllExcludingSelf));
 
-            for (foo = 0; foo < 0x800000; foo++)
-                ; // TODO: 10 millisecond delay
+        for (foo = 0; foo < 0x800000; foo++)
+            ; // TODO: 10 millisecond delay
 
-            for (int i = 0; i < 2; i++) {
-                // SIPI
-                write_icr(ICRReg(0x08, ICRReg::StartUp, ICRReg::Physical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::AllExcludingSelf)); // start execution at P8000
+        for (int i = 0; i < 2; i++) {
+            // SIPI
+            write_icr(ICRReg(0x08, ICRReg::StartUp, ICRReg::Physical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::AllExcludingSelf)); // start execution at P8000
 
-                for (foo = 0; foo < 0x80000; foo++)
-                    ; // TODO: 200 microsecond delay
-            }
+            for (foo = 0; foo < 0x80000; foo++)
+                ; // TODO: 200 microsecond delay
         }
     }
+}
 
 }
 

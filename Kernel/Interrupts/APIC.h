@@ -32,10 +32,10 @@ namespace Kernel {
 
 namespace APIC {
 
-    void enable_bsp();
-    void eoi();
-    bool init();
-    void enable(u32 cpu);
+void enable_bsp();
+void eoi();
+bool init();
+void enable(u32 cpu);
 
 }
 

@@ -25,8 +25,8 @@
  */
 
 #include <AK/JsonArraySerializer.h>
-#include <AK/JsonObjectSerializer.h>
 #include <AK/JsonObject.h>
+#include <AK/JsonObjectSerializer.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/PerformanceEventBuffer.h>
 

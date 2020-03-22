@@ -32,48 +32,48 @@
 namespace Kernel {
 namespace ACPI {
 
-    class StaticParser : Parser {
-    public:
-        static void initialize(PhysicalAddress rsdp);
-        static void initialize_without_rsdp();
-        static bool is_initialized();
+class StaticParser : Parser {
+public:
+    static void initialize(PhysicalAddress rsdp);
+    static void initialize_without_rsdp();
+    static bool is_initialized();
 
-        virtual PhysicalAddress find_table(const char* sig) override;
-        virtual void try_acpi_reboot() override;
-        virtual bool can_reboot() override;
-        virtual bool can_shutdown() override { return false; }
-        virtual void try_acpi_shutdown() override;
-        virtual bool is_operable() override { return m_operable; }
+    virtual PhysicalAddress find_table(const char* sig) override;
+    virtual void try_acpi_reboot() override;
+    virtual bool can_reboot() override;
+    virtual bool can_shutdown() override { return false; }
+    virtual void try_acpi_shutdown() override;
+    virtual bool is_operable() override { return m_operable; }
 
-        virtual const FADTFlags::HardwareFeatures& hardware_features() const override;
-        virtual const FADTFlags::x86_Specific_Flags& x86_specific_flags() const override;
+    virtual const FADTFlags::HardwareFeatures& hardware_features() const override;
+    virtual const FADTFlags::x86_Specific_Flags& x86_specific_flags() const override;
 
-    protected:
-        StaticParser();
-        explicit StaticParser(PhysicalAddress);
+protected:
+    StaticParser();
+    explicit StaticParser(PhysicalAddress);
 
-    private:
-        void locate_static_data();
-        void locate_main_system_description_table();
-        void initialize_main_system_description_table();
-        size_t get_table_size(PhysicalAddress);
-        u8 get_table_revision(PhysicalAddress);
-        void init_fadt();
-        void init_facs();
+private:
+    void locate_static_data();
+    void locate_main_system_description_table();
+    void initialize_main_system_description_table();
+    size_t get_table_size(PhysicalAddress);
+    u8 get_table_revision(PhysicalAddress);
+    void init_fadt();
+    void init_facs();
 
-        bool validate_reset_register();
-        void access_generic_address(const Structures::GenericAddressStructure&, u32 value);
+    bool validate_reset_register();
+    void access_generic_address(const Structures::GenericAddressStructure&, u32 value);
 
-        PhysicalAddress m_rsdp;
-        PhysicalAddress m_main_system_description_table;
+    PhysicalAddress m_rsdp;
+    PhysicalAddress m_main_system_description_table;
 
-        Vector<PhysicalAddress> m_sdt_pointers;
-        PhysicalAddress m_fadt;
-        PhysicalAddress m_facs;
+    Vector<PhysicalAddress> m_sdt_pointers;
+    PhysicalAddress m_fadt;
+    PhysicalAddress m_facs;
 
-        bool m_xsdt_supported;
-        FADTFlags::HardwareFeatures m_hardware_flags;
-        FADTFlags::x86_Specific_Flags m_x86_specific_flags;
-    };
+    bool m_xsdt_supported;
+    FADTFlags::HardwareFeatures m_hardware_flags;
+    FADTFlags::x86_Specific_Flags m_x86_specific_flags;
+};
 }
 }
