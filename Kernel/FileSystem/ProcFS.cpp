@@ -329,7 +329,6 @@ Optional<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
                 pagemap_builder.append('P');
         }
         region_object.add("pagemap", pagemap_builder.to_string());
-
     }
     array.finish();
     return builder.build();
