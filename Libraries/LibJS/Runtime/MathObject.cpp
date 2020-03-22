@@ -25,6 +25,7 @@
  */
 
 #include <AK/Function.h>
+#include <AK/FlyString.h>
 #include <LibJS/Runtime/MathObject.h>
 
 namespace JS {

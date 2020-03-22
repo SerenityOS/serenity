@@ -25,6 +25,7 @@
  */
 
 #include <AK/Function.h>
+#include <AK/FlyString.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibWeb/Bindings/MouseEventWrapper.h>
 #include <LibWeb/DOM/MouseEvent.h>

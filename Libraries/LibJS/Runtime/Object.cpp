@@ -44,7 +44,7 @@ Object::~Object()
 {
 }
 
-Optional<Value> Object::get_own_property(const String& property_name) const
+Optional<Value> Object::get_own_property(const FlyString& property_name) const
 {
     auto value_here = m_properties.get(property_name);
     if (value_here.has_value() && value_here.value().is_object() && value_here.value().as_object()->is_native_property())
@@ -52,7 +52,7 @@ Optional<Value> Object::get_own_property(const String& property_name) const
     return value_here;
 }
 
-bool Object::put_own_property(const String& property_name, Value value)
+bool Object::put_own_property(const FlyString& property_name, Value value)
 {
     auto value_here = m_properties.get(property_name);
     if (value_here.has_value() && value_here.value().is_object() && value_here.value().as_object()->is_native_property()) {
@@ -63,7 +63,7 @@ bool Object::put_own_property(const String& property_name, Value value)
     return true;
 }
 
-Value Object::get(const String& property_name) const
+Value Object::get(const FlyString& property_name) const
 {
     const Object* object = this;
     while (object) {
@@ -75,7 +75,7 @@ Value Object::get(const String& property_name) const
     return js_undefined();
 }
 
-void Object::put(const String& property_name, Value value)
+void Object::put(const FlyString& property_name, Value value)
 {
     Object* object = this;
     while (object) {
@@ -93,12 +93,12 @@ void Object::put(const String& property_name, Value value)
     put_own_property(property_name, value);
 }
 
-void Object::put_native_function(String property_name, AK::Function<Value(Object*, Vector<Value>)> native_function)
+void Object::put_native_function(const FlyString& property_name, AK::Function<Value(Object*, Vector<Value>)> native_function)
 {
     put(property_name, heap().allocate<NativeFunction>(move(native_function)));
 }
 
-void Object::put_native_property(String property_name, AK::Function<Value(Object*)> getter, AK::Function<void(Object*, Value)> setter)
+void Object::put_native_property(const FlyString& property_name, AK::Function<Value(Object*)> getter, AK::Function<void(Object*, Value)> setter)
 {
     put(property_name, heap().allocate<NativeProperty>(move(getter), move(setter)));
 }
@@ -112,7 +112,7 @@ void Object::visit_children(Cell::Visitor& visitor)
         visitor.visit(it.value);
 }
 
-bool Object::has_own_property(const String& property_name) const
+bool Object::has_own_property(const FlyString& property_name) const
 {
     return m_properties.get(property_name).has_value();
 }
