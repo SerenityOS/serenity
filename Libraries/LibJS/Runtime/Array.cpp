@@ -59,7 +59,7 @@ void Array::visit_children(Cell::Visitor& visitor)
         visitor.visit(element);
 }
 
-Optional<Value> Array::get_own_property(const String& property_name) const
+Optional<Value> Array::get_own_property(const FlyString& property_name) const
 {
     bool ok;
     i32 index = property_name.to_int(ok);
@@ -70,7 +70,7 @@ Optional<Value> Array::get_own_property(const String& property_name) const
     return Object::get_own_property(property_name);
 }
 
-bool Array::put_own_property(const String& property_name, Value value)
+bool Array::put_own_property(const FlyString& property_name, Value value)
 {
     bool ok;
     i32 index = property_name.to_int(ok);

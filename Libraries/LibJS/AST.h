@@ -30,6 +30,7 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
+#include <AK/FlyString.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/Value.h>
@@ -130,13 +131,13 @@ class Expression : public ASTNode {
 
 class FunctionNode {
 public:
-    String name() const { return m_name; }
+    const FlyString& name() const { return m_name; }
     const ScopeNode& body() const { return *m_body; }
-    const Vector<String>& parameters() const { return m_parameters; };
+    const Vector<FlyString>& parameters() const { return m_parameters; };
 
 protected:
-    FunctionNode(String name, NonnullRefPtr<ScopeNode> body, Vector<String> parameters = {})
-        : m_name(move(name))
+    FunctionNode(const FlyString& name, NonnullRefPtr<ScopeNode> body, Vector<FlyString> parameters = {})
+        : m_name(name)
         , m_body(move(body))
         , m_parameters(move(parameters))
     {
@@ -145,9 +146,9 @@ protected:
     void dump(int indent, const char* class_name) const;
 
 private:
-    String m_name;
+    FlyString m_name;
     NonnullRefPtr<ScopeNode> m_body;
-    const Vector<String> m_parameters;
+    const Vector<FlyString> m_parameters;
 };
 
 class FunctionDeclaration final
@@ -156,7 +157,7 @@ class FunctionDeclaration final
 public:
     static bool must_have_name() { return true; }
 
-    FunctionDeclaration(String name, NonnullRefPtr<ScopeNode> body, Vector<String> parameters = {})
+    FunctionDeclaration(String name, NonnullRefPtr<ScopeNode> body, Vector<FlyString> parameters = {})
         : FunctionNode(move(name), move(body), move(parameters))
     {
     }
@@ -173,8 +174,8 @@ class FunctionExpression final : public Expression
 public:
     static bool must_have_name() { return false; }
 
-    FunctionExpression(String name, NonnullRefPtr<ScopeNode> body, Vector<String> parameters = {})
-        : FunctionNode(move(name), move(body), move(parameters))
+    FunctionExpression(const FlyString& name, NonnullRefPtr<ScopeNode> body, Vector<FlyString> parameters = {})
+        : FunctionNode(name, move(body), move(parameters))
     {
     }
 
@@ -425,17 +426,13 @@ private:
 
 class NullLiteral final : public Literal {
 public:
-    explicit NullLiteral()
-    {
-    }
+    explicit NullLiteral() {}
 
     virtual Value execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
 
 private:
     virtual const char* class_name() const override { return "NullLiteral"; }
-
-    String m_value;
 };
 
 class UndefinedLiteral final : public Literal {
@@ -453,12 +450,12 @@ private:
 
 class Identifier final : public Expression {
 public:
-    explicit Identifier(String string)
-        : m_string(move(string))
+    explicit Identifier(const FlyString& string)
+        : m_string(string)
     {
     }
 
-    const String& string() const { return m_string; }
+    const FlyString& string() const { return m_string; }
 
     virtual Value execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
@@ -467,7 +464,7 @@ public:
 private:
     virtual const char* class_name() const override { return "Identifier"; }
 
-    String m_string;
+    FlyString m_string;
 };
 
 class CallExpression : public Expression {
@@ -573,7 +570,7 @@ private:
 
 class ObjectExpression : public Expression {
 public:
-    ObjectExpression(HashMap<String, NonnullRefPtr<Expression>> properties = {})
+    ObjectExpression(HashMap<FlyString, NonnullRefPtr<Expression>> properties = {})
         : m_properties(move(properties))
     {
     }
@@ -584,7 +581,7 @@ public:
 private:
     virtual const char* class_name() const override { return "ObjectExpression"; }
 
-    HashMap<String, NonnullRefPtr<Expression>> m_properties;
+    HashMap<FlyString, NonnullRefPtr<Expression>> m_properties;
 };
 
 class ArrayExpression : public Expression {
@@ -621,7 +618,7 @@ public:
     const Expression& object() const { return *m_object; }
     const Expression& property() const { return *m_property; }
 
-    String computed_property_name(Interpreter&) const;
+    FlyString computed_property_name(Interpreter&) const;
 
 private:
     virtual bool is_member_expression() const override { return true; }

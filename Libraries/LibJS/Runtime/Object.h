@@ -40,14 +40,14 @@ public:
     Object();
     virtual ~Object();
 
-    Value get(const String& property_name) const;
-    void put(const String& property_name, Value);
+    Value get(const FlyString& property_name) const;
+    void put(const FlyString& property_name, Value);
 
-    virtual Optional<Value> get_own_property(const String& property_name) const;
-    virtual bool put_own_property(const String& property_name, Value);
+    virtual Optional<Value> get_own_property(const FlyString& property_name) const;
+    virtual bool put_own_property(const FlyString& property_name, Value);
 
-    void put_native_function(String property_name, AK::Function<Value(Object*, Vector<Value>)>);
-    void put_native_property(String property_name, AK::Function<Value(Object*)> getter, AK::Function<void(Object*, Value)> setter);
+    void put_native_function(const FlyString& property_name, AK::Function<Value(Object*, Vector<Value>)>);
+    void put_native_property(const FlyString& property_name, AK::Function<Value(Object*)> getter, AK::Function<void(Object*, Value)> setter);
 
     virtual bool is_array() const { return false; }
     virtual bool is_function() const { return false; }
@@ -62,7 +62,7 @@ public:
     const Object* prototype() const { return m_prototype; }
     void set_prototype(Object* prototype) { m_prototype = prototype; }
 
-    bool has_own_property(const String& property_name) const;
+    bool has_own_property(const FlyString& property_name) const;
     enum class PreferredType {
         Default,
         String,
@@ -74,7 +74,7 @@ public:
     virtual Value to_string() const;
 
 private:
-    HashMap<String, Value> m_properties;
+    HashMap<FlyString, Value> m_properties;
     Object* m_prototype { nullptr };
 };
 
