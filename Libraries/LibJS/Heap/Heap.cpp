@@ -51,6 +51,7 @@ Heap::Heap(Interpreter& interpreter)
 
 Heap::~Heap()
 {
+    collect_garbage(CollectionType::CollectEverything);
 }
 
 Cell* Heap::allocate_cell(size_t size)
@@ -72,11 +73,13 @@ Cell* Heap::allocate_cell(size_t size)
     return cell;
 }
 
-void Heap::collect_garbage()
+void Heap::collect_garbage(CollectionType collection_type)
 {
-    HashTable<Cell*> roots;
-    gather_roots(roots);
-    mark_live_cells(roots);
+    if (collection_type == CollectionType::CollectGarbage) {
+        HashTable<Cell*> roots;
+        gather_roots(roots);
+        mark_live_cells(roots);
+    }
     sweep_dead_cells();
 }
 
