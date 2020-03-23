@@ -53,6 +53,7 @@ public:
     virtual bool is_identifier() const { return false; }
     virtual bool is_member_expression() const { return false; }
     virtual bool is_scope_node() const { return false; }
+    virtual bool is_variable_declaration() const { return false; }
 
 protected:
     ASTNode() {}
@@ -61,8 +62,6 @@ private:
 };
 
 class Statement : public ASTNode {
-public:
-    virtual bool is_variable_declaration() const { return false; }
 };
 
 class ErrorStatement final : public Statement {
@@ -259,7 +258,7 @@ private:
 
 class ForStatement : public Statement {
 public:
-    ForStatement(RefPtr<Statement> init, RefPtr<Expression> test, RefPtr<Expression> update, NonnullRefPtr<ScopeNode> body)
+    ForStatement(RefPtr<ASTNode> init, RefPtr<Expression> test, RefPtr<Expression> update, NonnullRefPtr<ScopeNode> body)
         : m_init(move(init))
         , m_test(move(test))
         , m_update(move(update))
@@ -267,7 +266,7 @@ public:
     {
     }
 
-    const Statement* init() const { return m_init; }
+    const ASTNode* init() const { return m_init; }
     const Expression* test() const { return m_test; }
     const Expression* update() const { return m_update; }
     const ScopeNode& body() const { return *m_body; }
@@ -278,7 +277,7 @@ public:
 private:
     virtual const char* class_name() const override { return "ForStatement"; }
 
-    RefPtr<Statement> m_init;
+    RefPtr<ASTNode> m_init;
     RefPtr<Expression> m_test;
     RefPtr<Expression> m_update;
     NonnullRefPtr<ScopeNode> m_body;
