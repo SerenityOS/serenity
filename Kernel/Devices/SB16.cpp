@@ -25,6 +25,7 @@
  */
 
 #include <AK/Memory.h>
+#include <AK/StringView.h>
 #include <Kernel/Devices/SB16.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/AnonymousVMObject.h>

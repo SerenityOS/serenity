@@ -30,7 +30,6 @@
 #include <AK/RefPtr.h>
 #include <AK/StringImpl.h>
 #include <AK/StringUtils.h>
-#include <AK/StringView.h>
 #include <AK/Traits.h>
 
 namespace AK {
@@ -62,14 +61,7 @@ public:
     ~String() {}
 
     String() {}
-
-    String(const StringView& view)
-    {
-        if (view.m_impl)
-            m_impl = *view.m_impl;
-        else
-            m_impl = StringImpl::create(view.characters_without_null_termination(), view.length());
-    }
+    String(const StringView&);
 
     String(const String& other)
         : m_impl(const_cast<String&>(other).m_impl)
@@ -166,19 +158,8 @@ public:
     bool operator<=(const String& other) const { return !(*this > other); }
     bool operator<=(const char* other) const { return !(*this > other); }
 
-    bool operator==(const char* cstring) const
-    {
-        if (is_null())
-            return !cstring;
-        if (!cstring)
-            return false;
-        return !__builtin_strcmp(characters(), cstring);
-    }
-
-    bool operator!=(const char* cstring) const
-    {
-        return !(*this == cstring);
-    }
+    bool operator==(const char* cstring) const;
+    bool operator!=(const char* cstring) const { return !(*this == cstring); }
 
     String isolated_copy() const;
 
@@ -228,27 +209,11 @@ public:
     static String number(long);
     static String number(long long);
 
-    StringView view() const
-    {
-        return { characters(), length() };
-    }
+    StringView view() const;
 
 private:
     RefPtr<StringImpl> m_impl;
 };
-
-inline bool StringView::operator==(const String& string) const
-{
-    if (string.is_null())
-        return !m_characters;
-    if (!m_characters)
-        return false;
-    if (m_length != string.length())
-        return false;
-    if (m_characters == string.characters())
-        return true;
-    return !__builtin_memcmp(m_characters, string.characters(), m_length);
-}
 
 template<>
 struct Traits<String> : public GenericTraits<String> {
@@ -260,37 +225,10 @@ struct CaseInsensitiveStringTraits : public AK::Traits<String> {
     static bool equals(const String& a, const String& b) { return a.to_lowercase() == b.to_lowercase(); }
 };
 
-inline bool operator<(const char* characters, const String& string)
-{
-    if (!characters)
-        return !string.is_null();
-
-    if (string.is_null())
-        return false;
-
-    return __builtin_strcmp(characters, string.characters()) < 0;
-}
-
-inline bool operator>=(const char* characters, const String& string)
-{
-    return !(characters < string);
-}
-
-inline bool operator>(const char* characters, const String& string)
-{
-    if (!characters)
-        return !string.is_null();
-
-    if (string.is_null())
-        return false;
-
-    return __builtin_strcmp(characters, string.characters()) > 0;
-}
-
-inline bool operator<=(const char* characters, const String& string)
-{
-    return !(characters > string);
-}
+bool operator<(const char*, const String&);
+bool operator>=(const char*, const String&);
+bool operator>(const char*, const String&);
+bool operator<=(const char*, const String&);
 
 String escape_html_entities(const StringView& html);
 

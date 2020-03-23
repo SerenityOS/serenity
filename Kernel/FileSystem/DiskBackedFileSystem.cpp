@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/StringView.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/DiskBackedFileSystem.h>

@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/StringView.h>
 #include <Kernel/ACPI/ACPIParser.h>
 #include <Kernel/Interrupts/InterruptManagement.h>
 #include <Kernel/Time/HPET.h>
