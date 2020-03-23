@@ -296,24 +296,52 @@ void LayoutBlock::compute_position()
 
     auto width = style.length_or_fallback(CSS::PropertyID::Width, auto_value);
 
+    if (style.position() == CSS::Position::Absolute) {
+        box_model().offset().top = style.length_or_fallback(CSS::PropertyID::Top, zero_value);
+        box_model().offset().right = style.length_or_fallback(CSS::PropertyID::Right, zero_value);
+        box_model().offset().bottom = style.length_or_fallback(CSS::PropertyID::Bottom, zero_value);
+        box_model().offset().left = style.length_or_fallback(CSS::PropertyID::Left, zero_value);
+    }
+
     box_model().margin().top = style.length_or_fallback(CSS::PropertyID::MarginTop, zero_value);
     box_model().margin().bottom = style.length_or_fallback(CSS::PropertyID::MarginBottom, zero_value);
     box_model().border().top = style.length_or_fallback(CSS::PropertyID::BorderTopWidth, zero_value);
     box_model().border().bottom = style.length_or_fallback(CSS::PropertyID::BorderBottomWidth, zero_value);
     box_model().padding().top = style.length_or_fallback(CSS::PropertyID::PaddingTop, zero_value);
     box_model().padding().bottom = style.length_or_fallback(CSS::PropertyID::PaddingBottom, zero_value);
-    rect().set_x(containing_block()->x() + box_model().margin().left.to_px() + box_model().border().left.to_px() + box_model().padding().left.to_px());
 
-    float top_border = -1;
-    if (previous_sibling() != nullptr) {
-        auto& previous_sibling_rect = previous_sibling()->rect();
-        auto& previous_sibling_style = previous_sibling()->box_model();
-        top_border = previous_sibling_rect.y() + previous_sibling_rect.height();
-        top_border += previous_sibling_style.full_margin().bottom;
-    } else {
-        top_border = containing_block()->y();
+    float position_x = box_model().margin().left.to_px()
+        + box_model().border().left.to_px()
+        + box_model().padding().left.to_px()
+        + box_model().offset().left.to_px();
+
+    if (style.position() != CSS::Position::Absolute || containing_block()->style().position() == CSS::Position::Absolute)
+        position_x += containing_block()->x();
+
+    rect().set_x(position_x);
+
+    float position_y = box_model().full_margin().top
+        + box_model().offset().top.to_px();
+
+    if (style.position() != CSS::Position::Absolute || containing_block()->style().position() == CSS::Position::Absolute) {
+        LayoutBlock* relevant_sibling = previous_sibling();
+        while (relevant_sibling != nullptr) {
+            if (relevant_sibling->style().position() != CSS::Position::Absolute)
+                break;
+            relevant_sibling = relevant_sibling->previous_sibling();
+        }
+
+        if (relevant_sibling == nullptr) {
+            position_y += containing_block()->y();
+        } else {
+            auto& previous_sibling_rect = relevant_sibling->rect();
+            auto& previous_sibling_style = relevant_sibling->box_model();
+            position_y += previous_sibling_rect.y() + previous_sibling_rect.height();
+            position_y += previous_sibling_style.full_margin().bottom;
+        }
     }
-    rect().set_y(top_border + box_model().full_margin().top);
+
+    rect().set_y(position_y);
 }
 
 void LayoutBlock::compute_height()

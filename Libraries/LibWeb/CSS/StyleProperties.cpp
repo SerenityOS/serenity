@@ -162,6 +162,22 @@ float StyleProperties::line_height() const
     return (float)font().glyph_height() * 1.4f;
 }
 
+CSS::Position StyleProperties::position() const
+{
+    if (property(CSS::PropertyID::Position).has_value()) {
+        String position_string = string_or_fallback(CSS::PropertyID::Position, "static");
+        if (position_string == "relative")
+            return CSS::Position::Relative;
+        if (position_string == "absolute")
+            return CSS::Position::Absolute;
+        if (position_string == "sticky")
+            return CSS::Position::Sticky;
+        if (position_string == "fixed")
+            return CSS::Position::Fixed;
+    }
+    return CSS::Position::Static;
+}
+
 bool StyleProperties::operator==(const StyleProperties& other) const
 {
     if (m_property_values.size() != other.m_property_values.size())
