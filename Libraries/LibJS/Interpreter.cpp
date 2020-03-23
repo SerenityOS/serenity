@@ -50,16 +50,20 @@ Interpreter::~Interpreter()
 {
 }
 
-Value Interpreter::run(const ScopeNode& scope_node, Vector<Argument> arguments, ScopeType scope_type)
+Value Interpreter::run(const Statement& statement, Vector<Argument> arguments, ScopeType scope_type)
 {
-    enter_scope(scope_node, move(arguments), scope_type);
+    if (!statement.is_scope_node())
+        return statement.execute(*this);
+
+    auto& block = static_cast<const BlockStatement&>(statement);
+    enter_scope(block, move(arguments), scope_type);
 
     Value last_value = js_undefined();
-    for (auto& node : scope_node.children()) {
+    for (auto& node : block.children()) {
         last_value = node.execute(*this);
     }
 
-    exit_scope(scope_node);
+    exit_scope(block);
     return last_value;
 }
 
