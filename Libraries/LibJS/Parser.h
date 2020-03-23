@@ -70,6 +70,7 @@ private:
     bool match_unary_prefixed_expression() const;
     bool match_secondary_expression() const;
     bool match_statement() const;
+    bool match_variable_declaration() const;
     bool match(TokenType type) const;
     bool done() const;
     void expected(const char* what);

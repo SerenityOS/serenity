@@ -181,6 +181,7 @@ NonnullRefPtr<Program> Parser::parse_program()
 
 NonnullRefPtr<Statement> Parser::parse_statement()
 {
+    auto statement = [this]() -> NonnullRefPtr<Statement> {
     switch (m_current_token.type()) {
     case TokenType::Function:
         return parse_function_node<FunctionDeclaration>();
@@ -197,17 +198,16 @@ NonnullRefPtr<Statement> Parser::parse_statement()
     case TokenType::If:
         return parse_if_statement();
     default:
-        if (match_expression()) {
-            auto statement = adopt(*new ExpressionStatement(parse_expression(0)));
-            if (match(TokenType::Semicolon))
-                consume();
-            return statement;
-        }
+        if (match_expression())
+            return adopt(*new ExpressionStatement(parse_expression(0)));
         m_has_errors = true;
         expected("statement (missing switch case)");
         consume();
         return create_ast_node<ErrorStatement>();
-    }
+    } }();
+    if (match(TokenType::Semicolon))
+        consume();
+    return statement;
 }
 
 NonnullRefPtr<Expression> Parser::parse_primary_expression()
@@ -394,7 +394,7 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
         return create_ast_node<MemberExpression>(move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::BracketOpen: {
         consume(TokenType::BracketOpen);
-        auto expression = create_ast_node<MemberExpression>(move(lhs), parse_expression(min_precedence, associativity), true);
+        auto expression = create_ast_node<MemberExpression>(move(lhs), parse_expression(0), true);
         consume(TokenType::BracketClose);
         return expression;
     }
@@ -539,12 +539,17 @@ NonnullRefPtr<ForStatement> Parser::parse_for_statement()
 
     consume(TokenType::ParenOpen);
 
-    RefPtr<Statement> init;
+    RefPtr<ASTNode> init;
     switch (m_current_token.type()) {
     case TokenType::Semicolon:
         break;
     default:
-        init = parse_statement();
+        if (match_expression())
+            init = parse_expression(0);
+        else if (match_variable_declaration())
+            init = parse_variable_declaration();
+        else
+            ASSERT_NOT_REACHED();
         break;
     }
 
@@ -580,6 +585,18 @@ NonnullRefPtr<ForStatement> Parser::parse_for_statement()
 bool Parser::match(TokenType type) const
 {
     return m_current_token.type() == type;
+}
+
+bool Parser::match_variable_declaration() const
+{
+    switch (m_current_token.type()) {
+    case TokenType::Var:
+    case TokenType::Let:
+    case TokenType::Const:
+        return true;
+    default:
+        return false;
+    }
 }
 
 bool Parser::match_expression() const
