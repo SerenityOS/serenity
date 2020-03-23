@@ -93,6 +93,8 @@ Lexer::Lexer(StringView source)
         s_two_char_tokens.set("??", TokenType::DoubleQuestionMark);
         s_two_char_tokens.set("**", TokenType::DoubleAsterisk);
         s_two_char_tokens.set("==", TokenType::EqualsEquals);
+        s_two_char_tokens.set("<=", TokenType::LessThanEquals);
+        s_two_char_tokens.set(">=", TokenType::GreaterThanEquals);
         s_two_char_tokens.set("!=", TokenType::ExclamationMarkEquals);
         s_two_char_tokens.set("--", TokenType::MinusMinus);
         s_two_char_tokens.set("++", TokenType::PlusPlus);
