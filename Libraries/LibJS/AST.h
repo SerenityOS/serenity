@@ -26,11 +26,11 @@
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
-#include <AK/FlyString.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/Value.h>
@@ -52,6 +52,7 @@ public:
     virtual void dump(int indent) const;
     virtual bool is_identifier() const { return false; }
     virtual bool is_member_expression() const { return false; }
+    virtual bool is_scope_node() const { return false; }
 
 protected:
     ASTNode() {}
@@ -107,6 +108,7 @@ protected:
     ScopeNode() {}
 
 private:
+    virtual bool is_scope_node() const final { return true; }
     NonnullRefPtrVector<Statement> m_children;
 };
 
@@ -212,7 +214,7 @@ private:
 
 class IfStatement : public Statement {
 public:
-    IfStatement(NonnullRefPtr<Expression> predicate, NonnullRefPtr<ScopeNode> consequent, RefPtr<ScopeNode> alternate)
+    IfStatement(NonnullRefPtr<Expression> predicate, NonnullRefPtr<Statement> consequent, RefPtr<Statement> alternate)
         : m_predicate(move(predicate))
         , m_consequent(move(consequent))
         , m_alternate(move(alternate))
@@ -220,8 +222,8 @@ public:
     }
 
     const Expression& predicate() const { return *m_predicate; }
-    const ScopeNode& consequent() const { return *m_consequent; }
-    const ScopeNode* alternate() const { return m_alternate; }
+    const Statement& consequent() const { return *m_consequent; }
+    const Statement* alternate() const { return m_alternate; }
 
     virtual Value execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
@@ -230,8 +232,8 @@ private:
     virtual const char* class_name() const override { return "IfStatement"; }
 
     NonnullRefPtr<Expression> m_predicate;
-    NonnullRefPtr<ScopeNode> m_consequent;
-    RefPtr<ScopeNode> m_alternate;
+    NonnullRefPtr<Statement> m_consequent;
+    RefPtr<Statement> m_alternate;
 };
 
 class WhileStatement : public Statement {
