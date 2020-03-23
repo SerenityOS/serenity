@@ -35,9 +35,9 @@
 #include <stdio.h>
 
 #ifdef __serenity__
-#include <serenity.h>
+#    include <serenity.h>
 #elif __linux__
-#include <pthread.h>
+#    include <pthread.h>
 #endif
 
 #define HEAP_DEBUG
@@ -229,13 +229,17 @@ void Heap::sweep_dead_cells()
     }
 
     for (auto* block : empty_blocks) {
+#ifdef HEAP_DEBUG
         dbg() << " - Reclaim HeapBlock @ " << block << ": cell_size=" << block->cell_size();
+#endif
         m_blocks.remove_first_matching([block](auto& entry) { return entry == block; });
     }
 
+#ifdef HEAP_DEBUG
     for (auto& block : m_blocks) {
         dbg() << " > Live HeapBlock @ " << block << ": cell_size=" << block->cell_size();
     }
+#endif
 }
 
 void Heap::did_create_handle(Badge<HandleImpl>, HandleImpl& impl)
