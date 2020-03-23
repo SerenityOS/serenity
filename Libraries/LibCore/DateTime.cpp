@@ -46,7 +46,15 @@ DateTime DateTime::create(unsigned year, unsigned month, unsigned day, unsigned 
     dt.m_minute = minute;
     dt.m_second = second;
 
-    struct tm tm = { (int)second, (int)minute, (int)hour, (int)day, (int)month, (int)year, (int)dt.weekday(), (int)dt.day_of_year(), -1 };
+    struct tm tm = {};
+    tm.tm_sec = (int)second;
+    tm.tm_min = (int)minute;
+    tm.tm_hour = (int)hour;
+    tm.tm_mday = (int)day;
+    tm.tm_mon = (int)month - 1;
+    tm.tm_year = (int)year - 1900;
+    tm.tm_wday = (int)dt.weekday();
+    tm.tm_yday = (int)dt.day_of_year();
     dt.m_timestamp = mktime(&tm);
 
     return dt;
@@ -112,7 +120,15 @@ void DateTime::set_time(unsigned year, unsigned month, unsigned day, unsigned ho
     m_minute = minute;
     m_second = second;
 
-    struct tm tm = { (int)second, (int)minute, (int)hour, (int)day, (int)month, (int)year, (int)weekday(), (int)day_of_year(), -1 };
+    struct tm tm = {};
+    tm.tm_sec = (int)second;
+    tm.tm_min = (int)minute;
+    tm.tm_hour = (int)hour;
+    tm.tm_mday = (int)day;
+    tm.tm_mon = (int)month - 1;
+    tm.tm_year = (int)year - 1900;
+    tm.tm_wday = (int)weekday();
+    tm.tm_yday = (int)day_of_year();
     m_timestamp = mktime(&tm);
 }
 
@@ -268,5 +284,4 @@ const LogStream& operator<<(const LogStream& stream, const DateTime& value)
 {
     return stream << value.to_string();
 }
-
 }
