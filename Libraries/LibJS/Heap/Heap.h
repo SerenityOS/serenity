@@ -53,7 +53,12 @@ public:
         return static_cast<T*>(memory);
     }
 
-    void collect_garbage();
+    enum class CollectionType {
+        CollectGarbage,
+        CollectEverything,
+    };
+
+    void collect_garbage(CollectionType = CollectionType::CollectGarbage);
 
     Interpreter& interpreter() { return m_interpreter; }
 

@@ -85,7 +85,5 @@ int main(int argc, char** argv)
     if (print_last_result)
         printf("%s\n", result.to_string().characters());
 
-    dbg() << "Collecting garbage on exit...";
-    interpreter.heap().collect_garbage();
     return 0;
 }
