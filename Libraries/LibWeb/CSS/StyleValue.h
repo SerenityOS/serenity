@@ -50,6 +50,14 @@ enum class ValueID {
     Right,
     Justify,
 };
+
+enum class Position {
+    Static,
+    Relative,
+    Absolute,
+    Fixed,
+    Sticky,
+};
 }
 
 class StyleValue : public RefCounted<StyleValue> {
@@ -65,6 +73,7 @@ public:
         Color,
         Identifier,
         Image,
+        Position,
     };
 
     Type type() const { return m_type; }
@@ -76,6 +85,7 @@ public:
     bool is_image() const { return type() == Type::Image; }
     bool is_string() const { return type() == Type::String; }
     bool is_length() const { return type() == Type::Length; }
+    bool is_position() const { return type() == Type::Position; }
 
     virtual String to_string() const = 0;
     virtual Length to_length() const { return {}; }
