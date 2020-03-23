@@ -81,7 +81,7 @@ Value CallExpression::execute(Interpreter& interpreter) const
 Value ReturnStatement::execute(Interpreter& interpreter) const
 {
     auto value = argument() ? argument()->execute(interpreter) : js_undefined();
-    interpreter.do_return();
+    interpreter.unwind(ScopeType::Function);
     return value;
 }
 

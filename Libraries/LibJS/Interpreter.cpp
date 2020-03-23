@@ -61,7 +61,12 @@ Value Interpreter::run(const Statement& statement, Vector<Argument> arguments, S
     Value last_value = js_undefined();
     for (auto& node : block.children()) {
         last_value = node.execute(*this);
+        if (m_unwind_until != ScopeType::None)
+            break;
     }
+
+    if (m_unwind_until == scope_type)
+        m_unwind_until = ScopeType::None;
 
     exit_scope(block);
     return last_value;
@@ -80,11 +85,10 @@ void Interpreter::exit_scope(const ScopeNode& scope_node)
 {
     while (m_scope_stack.last().scope_node.ptr() != &scope_node)
         m_scope_stack.take_last();
-}
 
-void Interpreter::do_return()
-{
-    dbg() << "FIXME: Implement Interpreter::do_return()";
+    // If we unwind all the way, just reset m_unwind_until so that future "return" doesn't break.
+    if (m_scope_stack.is_empty())
+        m_unwind_until = ScopeType::None;
 }
 
 void Interpreter::declare_variable(const FlyString& name, DeclarationType declaration_type)
