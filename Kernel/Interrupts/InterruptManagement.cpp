@@ -25,6 +25,7 @@
  */
 
 #include <AK/FixedArray.h>
+#include <AK/StringView.h>
 #include <Kernel/ACPI/MultiProcessorParser.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Interrupts/APIC.h>

@@ -29,6 +29,7 @@
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <AK/StringView.h>
 
 namespace AK {
 

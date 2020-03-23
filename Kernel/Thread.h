@@ -100,7 +100,7 @@ public:
     Vector<FlatPtr> raw_backtrace(FlatPtr ebp) const;
 
     const String& name() const { return m_name; }
-    void set_name(StringView s) { m_name = s; }
+    void set_name(const StringView& s) { m_name = s; }
 
     void finalize();
 

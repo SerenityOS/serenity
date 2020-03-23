@@ -28,6 +28,7 @@
 #include <AK/HashTable.h>
 #include <AK/String.h>
 #include <AK/StringUtils.h>
+#include <AK/StringView.h>
 
 namespace AK {
 
@@ -96,6 +97,11 @@ bool FlyString::equals_ignoring_case(const StringView& other) const
 FlyString FlyString::to_lowercase() const
 {
     return String(*m_impl).to_lowercase();
+}
+
+StringView FlyString::view() const
+{
+    return { characters(), length() };
 }
 
 }

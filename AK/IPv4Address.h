@@ -30,6 +30,7 @@
 #include <AK/NetworkOrdered.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
+#include <AK/StringView.h>
 #include <AK/Vector.h>
 
 typedef u32 in_addr_t;

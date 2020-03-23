@@ -26,6 +26,7 @@
 
 #include <AK/Memory.h>
 #include <AK/StringBuilder.h>
+#include <AK/StringView.h>
 #include <LibELF/ELFImage.h>
 
 ELFImage::ELFImage(const u8* buffer, size_t size)
