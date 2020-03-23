@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Function.h>
 #include <AK/FlyString.h>
+#include <AK/Function.h>
 #include <LibJS/Runtime/MathObject.h>
 
 namespace JS {
@@ -33,7 +33,11 @@ namespace JS {
 MathObject::MathObject()
 {
     put_native_function("random", [](Object*, const Vector<Value>&) {
+#ifdef __serenity__
         double r = (double)arc4random() / (double)UINT32_MAX;
+#else
+        double r = (double)rand() / (double)RAND_MAX;
+#endif
         return Value(r);
     });
 }
