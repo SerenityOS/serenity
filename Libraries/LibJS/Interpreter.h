@@ -37,6 +37,7 @@
 namespace JS {
 
 enum class ScopeType {
+    None,
     Function,
     Block,
 };
@@ -74,7 +75,7 @@ public:
 
     Heap& heap() { return m_heap; }
 
-    void do_return();
+    void unwind(ScopeType type) { m_unwind_until = type; }
 
     Value get_variable(const FlyString& name);
     void set_variable(const FlyString& name, Value, bool first_assignment = false);
@@ -114,6 +115,8 @@ private:
     Object* m_string_prototype { nullptr };
     Object* m_object_prototype { nullptr };
     Object* m_array_prototype { nullptr };
+
+    ScopeType m_unwind_until { ScopeType::None };
 };
 
 }
