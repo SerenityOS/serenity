@@ -99,7 +99,6 @@ void TaskbarWindow::create_quick_launch_bar()
         button.set_button_style(Gfx::ButtonStyle::CoolBar);
 
         button.set_icon(Gfx::Bitmap::load_from_file(app_icon_path));
-        // FIXME: the tooltip ends up outside the screen rect.
         button.set_tooltip(name);
         button.on_click = [app_executable] {
             pid_t pid = fork();
