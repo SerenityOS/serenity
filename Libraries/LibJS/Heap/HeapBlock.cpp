@@ -37,7 +37,11 @@ NonnullOwnPtr<HeapBlock> HeapBlock::create_with_cell_size(Heap& heap, size_t cel
 {
     char name[64];
     snprintf(name, sizeof(name), "LibJS: HeapBlock(%zu)", cell_size);
+#ifdef __serenity__
     auto* block = (HeapBlock*)serenity_mmap(nullptr, block_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, block_size, name);
+#else
+    auto* block = (HeapBlock*)aligned_alloc(block_size, block_size);
+#endif
     ASSERT(block != MAP_FAILED);
     new (block) HeapBlock(heap, cell_size);
     return NonnullOwnPtr<HeapBlock>(NonnullOwnPtr<HeapBlock>::Adopt, *block);
@@ -45,8 +49,12 @@ NonnullOwnPtr<HeapBlock> HeapBlock::create_with_cell_size(Heap& heap, size_t cel
 
 void HeapBlock::operator delete(void* ptr)
 {
+#ifdef __serenity__
     int rc = munmap(ptr, block_size);
     ASSERT(rc == 0);
+#else
+    free(ptr);
+#endif
 }
 
 HeapBlock::HeapBlock(Heap& heap, size_t cell_size)
