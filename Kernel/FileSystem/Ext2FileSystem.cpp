@@ -28,6 +28,7 @@
 #include <AK/BufferStream.h>
 #include <AK/HashMap.h>
 #include <AK/StdLibExtras.h>
+#include <AK/StringView.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
 #include <Kernel/FileSystem/FileDescription.h>

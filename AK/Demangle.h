@@ -27,9 +27,10 @@
 #pragma once
 
 #include <AK/String.h>
+#include <AK/StringView.h>
 
 #ifndef BUILDING_SERENITY_TOOLCHAIN
-#include <cxxabi.h>
+#    include <cxxabi.h>
 #endif
 
 namespace AK {

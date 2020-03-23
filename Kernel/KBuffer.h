@@ -40,6 +40,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/LogStream.h>
 #include <AK/Memory.h>
+#include <AK/StringView.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/Region.h>
 

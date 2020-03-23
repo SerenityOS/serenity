@@ -27,6 +27,7 @@
 #include <AK/Assertions.h>
 #include <AK/HashMap.h>
 #include <AK/StringBuilder.h>
+#include <AK/StringView.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Net/LocalSocket.h>

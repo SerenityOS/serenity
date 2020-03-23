@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/StringView.h>
 #include <Kernel/ACPI/ACPIStaticParser.h>
 #include <Kernel/PCI/Access.h>
 #include <Kernel/VM/MemoryManager.h>

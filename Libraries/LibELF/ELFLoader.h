@@ -29,6 +29,7 @@
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
+#include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <LibELF/ELFImage.h>
 

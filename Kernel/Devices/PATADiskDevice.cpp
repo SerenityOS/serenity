@@ -27,6 +27,7 @@
 //#define PATA_DEVICE_DEBUG
 
 #include <AK/Memory.h>
+#include <AK/StringView.h>
 #include <Kernel/Devices/PATAChannel.h>
 #include <Kernel/Devices/PATADiskDevice.h>
 #include <Kernel/FileSystem/FileDescription.h>

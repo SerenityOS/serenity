@@ -29,6 +29,7 @@
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <AK/StringView.h>
 #include <AK/Vector.h>
 
 #ifndef KERNEL
@@ -40,6 +41,14 @@ extern "C" char* strstr(const char* haystack, const char* needle);
 #endif
 
 namespace AK {
+
+String::String(const StringView& view)
+{
+    if (view.m_impl)
+        m_impl = *view.m_impl;
+    else
+        m_impl = StringImpl::create(view.characters_without_null_termination(), view.length());
+}
 
 bool String::operator==(const String& other) const
 {
@@ -339,6 +348,52 @@ String String::to_uppercase() const
     if (!m_impl)
         return {};
     return m_impl->to_uppercase();
+}
+
+bool operator<(const char* characters, const String& string)
+{
+    if (!characters)
+        return !string.is_null();
+
+    if (string.is_null())
+        return false;
+
+    return __builtin_strcmp(characters, string.characters()) < 0;
+}
+
+bool operator>=(const char* characters, const String& string)
+{
+    return !(characters < string);
+}
+
+bool operator>(const char* characters, const String& string)
+{
+    if (!characters)
+        return !string.is_null();
+
+    if (string.is_null())
+        return false;
+
+    return __builtin_strcmp(characters, string.characters()) > 0;
+}
+
+bool operator<=(const char* characters, const String& string)
+{
+    return !(characters > string);
+}
+
+bool String::operator==(const char* cstring) const
+{
+    if (is_null())
+        return !cstring;
+    if (!cstring)
+        return false;
+    return !__builtin_strcmp(characters(), cstring);
+}
+
+StringView String::view() const
+{
+    return { characters(), length() };
 }
 
 }

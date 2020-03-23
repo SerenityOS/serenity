@@ -24,9 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "PATADiskDevice.h"
 #include <AK/ByteBuffer.h>
+#include <AK/StringView.h>
 #include <Kernel/Devices/PATAChannel.h>
+#include <Kernel/Devices/PATADiskDevice.h>
 #include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/MemoryManager.h>

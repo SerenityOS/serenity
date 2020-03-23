@@ -200,4 +200,17 @@ unsigned StringView::hash() const
     return string_hash(characters_without_null_termination(), length());
 }
 
+bool StringView::operator==(const String& string) const
+{
+    if (string.is_null())
+        return !m_characters;
+    if (!m_characters)
+        return false;
+    if (m_length != string.length())
+        return false;
+    if (m_characters == string.characters())
+        return true;
+    return !__builtin_memcmp(m_characters, string.characters(), m_length);
+}
+
 }

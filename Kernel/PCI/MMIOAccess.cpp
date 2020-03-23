@@ -25,6 +25,7 @@
  */
 
 #include <AK/Optional.h>
+#include <AK/StringView.h>
 #include <Kernel/PCI/MMIOAccess.h>
 #include <Kernel/VM/MemoryManager.h>
 

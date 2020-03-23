@@ -24,9 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "FileSystemPath.h"
-#include "StringBuilder.h"
-#include "Vector.h"
+#include <AK/FileSystemPath.h>
+#include <AK/StringBuilder.h>
+#include <AK/StringView.h>
+#include <AK/Vector.h>
 
 namespace AK {
 

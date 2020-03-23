@@ -44,7 +44,7 @@ public:
     const char* characters() const { return m_impl ? m_impl->characters() : nullptr; }
     size_t length() const { return m_impl ? m_impl->length() : 0; }
 
-    StringView view() const { return { characters(), length() }; }
+    StringView view() const;
 
     FlyString to_lowercase() const;
 
