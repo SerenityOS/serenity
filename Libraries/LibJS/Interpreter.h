@@ -67,7 +67,7 @@ public:
     Interpreter();
     ~Interpreter();
 
-    Value run(const ScopeNode&, Vector<Argument> = {}, ScopeType = ScopeType::Block);
+    Value run(const Statement&, Vector<Argument> = {}, ScopeType = ScopeType::Block);
 
     Object& global_object() { return *m_global_object; }
     const Object& global_object() const { return *m_global_object; }

@@ -197,8 +197,12 @@ NonnullRefPtr<Statement> Parser::parse_statement()
     case TokenType::If:
         return parse_if_statement();
     default:
-        if (match_expression())
-            return adopt(*new ExpressionStatement(parse_expression(0)));
+        if (match_expression()) {
+            auto statement = adopt(*new ExpressionStatement(parse_expression(0)));
+            if (match(TokenType::Semicolon))
+                consume();
+            return statement;
+        }
         m_has_errors = true;
         expected("statement (missing switch case)");
         consume();
@@ -520,9 +524,13 @@ NonnullRefPtr<IfStatement> Parser::parse_if_statement()
     consume(TokenType::ParenOpen);
     auto predicate = parse_expression(0);
     consume(TokenType::ParenClose);
-    auto consequent = parse_block_statement();
-    // FIXME: Parse "else"
-    return create_ast_node<IfStatement>(move(predicate), move(consequent), nullptr);
+    auto consequent = parse_statement();
+    RefPtr<Statement> alternate;
+    if (match(TokenType::Else)) {
+        consume(TokenType::Else);
+        alternate = parse_statement();
+    }
+    return create_ast_node<IfStatement>(move(predicate), move(consequent), move(alternate));
 }
 
 NonnullRefPtr<ForStatement> Parser::parse_for_statement()
