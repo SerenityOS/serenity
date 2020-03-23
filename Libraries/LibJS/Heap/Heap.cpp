@@ -31,9 +31,14 @@
 #include <LibJS/Heap/HeapBlock.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Object.h>
-#include <serenity.h>
 #include <setjmp.h>
 #include <stdio.h>
+
+#ifdef __serenity__
+#include <serenity.h>
+#elif __linux__
+#include <pthread.h>
+#endif
 
 #define HEAP_DEBUG
 
@@ -105,15 +110,31 @@ void Heap::gather_conservative_roots(HashTable<Cell*>& roots)
 
     HashTable<FlatPtr> possible_pointers;
 
-    for (size_t i = 0; i < (sizeof(buf->regs) / sizeof(FlatPtr)); ++i)
-        possible_pointers.set(buf->regs[i]);
+    const FlatPtr* raw_jmp_buf = reinterpret_cast<const FlatPtr*>(buf);
+
+    for (size_t i = 0; i < sizeof(buf) / sizeof(FlatPtr); i += sizeof(FlatPtr))
+        possible_pointers.set(raw_jmp_buf[i]);
 
     FlatPtr stack_base;
     size_t stack_size;
+
+#ifdef __serenity__
     if (get_stack_bounds(&stack_base, &stack_size) < 0) {
         perror("get_stack_bounds");
         ASSERT_NOT_REACHED();
     }
+#elif __linux__
+    pthread_attr_t attr = {};
+    if (int rc = pthread_getattr_np(pthread_self(), &attr) != 0) {
+        fprintf(stderr, "pthread_getattr_np: %s\n", strerror(-rc));
+        ASSERT_NOT_REACHED();
+    }
+    if (int rc = pthread_attr_getstack(&attr, (void**)&stack_base, &stack_size) != 0) {
+        fprintf(stderr, "pthread_attr_getstack: %s\n", strerror(-rc));
+        ASSERT_NOT_REACHED();
+    }
+    pthread_attr_destroy(&attr);
+#endif
 
     FlatPtr stack_reference = reinterpret_cast<FlatPtr>(&dummy);
     FlatPtr stack_top = stack_base + stack_size;
