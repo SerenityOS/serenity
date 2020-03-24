@@ -24,28 +24,38 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <AK/Function.h>
+#include <LibJS/Heap/Heap.h>
+#include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/ErrorPrototype.h>
+#include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/Value.h>
 
 namespace JS {
 
-class ASTNode;
-class Argument;
-class Cell;
-class Error;
-class Expression;
-class Function;
-class HandleImpl;
-class Heap;
-class HeapBlock;
-class Interpreter;
-class Object;
-class PrimitiveString;
-class ScopeNode;
-class Statement;
-class Value;
-enum class DeclarationType;
+ErrorPrototype::ErrorPrototype()
+{
+    put_native_property(
+        "name", [](Object* this_object) {
+        dbg() << "Error.prototype.name on " << this_object;
+            ASSERT(this_object);
+            ASSERT(this_object->is_error());
+            return js_string(this_object->heap(), static_cast<const Error*>(this_object)->name());
+        },
+        nullptr);
 
-template<class T>
-class Handle;
+    put_native_property(
+        "message", [](Object* this_object) {
+            ASSERT(this_object);
+            ASSERT(this_object->is_error());
+            return js_string(this_object->heap(), static_cast<const Error*>(this_object)->message());
+        },
+        nullptr);
+}
+
+ErrorPrototype::~ErrorPrototype()
+{
+}
 
 }

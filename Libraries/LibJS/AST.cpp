@@ -30,6 +30,7 @@
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/ScriptFunction.h>
 #include <LibJS/Runtime/Value.h>
@@ -62,16 +63,29 @@ Value ExpressionStatement::execute(Interpreter& interpreter) const
 Value CallExpression::execute(Interpreter& interpreter) const
 {
     auto callee = m_callee->execute(interpreter);
+    if (interpreter.exception())
+        return {};
+
     ASSERT(callee.is_object());
     ASSERT(callee.as_object()->is_function());
     auto* function = static_cast<Function*>(callee.as_object());
 
     auto& call_frame = interpreter.push_call_frame();
-    for (size_t i = 0; i < m_arguments.size(); ++i)
+    for (size_t i = 0; i < m_arguments.size(); ++i) {
         call_frame.arguments.append(m_arguments[i].execute(interpreter));
+        if (interpreter.exception())
+            return {};
+    }
 
-    if (m_callee->is_member_expression())
-        call_frame.this_value = static_cast<const MemberExpression&>(*m_callee).object().execute(interpreter).to_object(interpreter.heap());
+    if (m_callee->is_member_expression()) {
+        auto object_value = static_cast<const MemberExpression&>(*m_callee).object().execute(interpreter);
+        if (interpreter.exception())
+            return {};
+        auto this_value = object_value.to_object(interpreter.heap());
+        if (interpreter.exception())
+            return {};
+        call_frame.this_value = this_value;
+    }
 
     auto result = function->call(interpreter, call_frame.arguments);
     interpreter.pop_call_frame();
@@ -464,7 +478,10 @@ void ForStatement::dump(int indent) const
 
 Value Identifier::execute(Interpreter& interpreter) const
 {
-    return interpreter.get_variable(string());
+    auto value = interpreter.get_variable(string());
+    if (value.is_undefined())
+        return interpreter.throw_exception(interpreter.heap().allocate<Error>("ReferenceError", String::format("'%s' not known", string().characters())));
+    return value;
 }
 
 void Identifier::dump(int indent) const
@@ -745,13 +762,27 @@ void CatchClause::dump(int indent) const
     body().dump(indent + 1);
 }
 
-Value TryStatement::execute(Interpreter&) const
+Value TryStatement::execute(Interpreter& interpreter) const
 {
+    interpreter.run(block(), {}, ScopeType::Try);
+    if (auto* exception = interpreter.exception()) {
+        if (m_handler) {
+            interpreter.clear_exception();
+            Vector<Argument> arguments { { m_handler->parameter(), Value(exception) } };
+            interpreter.run(m_handler->body(), move(arguments));
+        }
+    }
+
+    if (m_finalizer)
+        m_finalizer->execute(interpreter);
+
     return {};
 }
 
 Value CatchClause::execute(Interpreter&) const
 {
+    // NOTE: CatchClause execution is handled by TryStatement.
+    ASSERT_NOT_REACHED();
     return {};
 }
 

@@ -40,6 +40,7 @@ enum class ScopeType {
     None,
     Function,
     Block,
+    Try,
 };
 
 struct Variable {
@@ -104,6 +105,11 @@ public:
     Object* string_prototype() { return m_string_prototype; }
     Object* object_prototype() { return m_object_prototype; }
     Object* array_prototype() { return m_array_prototype; }
+    Object* error_prototype() { return m_error_prototype; }
+
+    Error* exception() { return m_exception; }
+    void clear_exception() { m_exception = nullptr; }
+    Value throw_exception(Error*);
 
 private:
     Heap m_heap;
@@ -115,6 +121,9 @@ private:
     Object* m_string_prototype { nullptr };
     Object* m_object_prototype { nullptr };
     Object* m_array_prototype { nullptr };
+    Object* m_error_prototype { nullptr };
+
+    Error* m_exception { nullptr };
 
     ScopeType m_unwind_until { ScopeType::None };
 };

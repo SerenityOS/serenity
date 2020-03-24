@@ -28,6 +28,8 @@
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/ArrayPrototype.h>
+#include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/ErrorPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/Object.h>
@@ -44,6 +46,7 @@ Interpreter::Interpreter()
     m_object_prototype = heap().allocate<ObjectPrototype>();
     m_string_prototype = heap().allocate<StringPrototype>();
     m_array_prototype = heap().allocate<ArrayPrototype>();
+    m_error_prototype = heap().allocate<ErrorPrototype>();
 }
 
 Interpreter::~Interpreter()
@@ -154,6 +157,9 @@ void Interpreter::gather_roots(Badge<Heap>, HashTable<Cell*>& roots)
     roots.set(m_string_prototype);
     roots.set(m_object_prototype);
     roots.set(m_array_prototype);
+    roots.set(m_error_prototype);
+
+    roots.set(m_exception);
 
     for (auto& scope : m_scope_stack) {
         for (auto& it : scope.variables) {
@@ -180,6 +186,13 @@ Value Interpreter::call(Function* function, Value this_value, const Vector<Value
     auto result = function->call(*this, call_frame.arguments);
     pop_call_frame();
     return result;
+}
+
+Value Interpreter::throw_exception(Error* exception)
+{
+    m_exception = exception;
+    unwind(ScopeType::Try);
+    return {};
 }
 
 }

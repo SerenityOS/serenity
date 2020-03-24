@@ -24,28 +24,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <AK/FlyString.h>
+#include <LibJS/Runtime/Object.h>
 
 namespace JS {
 
-class ASTNode;
-class Argument;
-class Cell;
-class Error;
-class Expression;
-class Function;
-class HandleImpl;
-class Heap;
-class HeapBlock;
-class Interpreter;
-class Object;
-class PrimitiveString;
-class ScopeNode;
-class Statement;
-class Value;
-enum class DeclarationType;
+class Error : public Object {
+public:
+    Error(const FlyString& name, const String& message);
+    virtual ~Error() override;
 
-template<class T>
-class Handle;
+    const FlyString& name() const { return m_name; }
+    const String& message() const { return m_message; }
+
+private:
+    virtual bool is_error() const final { return true; }
+    virtual const char* class_name() const override { return "Error"; }
+
+    FlyString m_name;
+    String m_message;
+};
 
 }

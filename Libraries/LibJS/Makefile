@@ -10,6 +10,8 @@ OBJS = \
     Runtime/ArrayPrototype.o \
     Runtime/Cell.o \
     Runtime/ConsoleObject.o \
+    Runtime/Error.o \
+    Runtime/ErrorPrototype.o \
     Runtime/Function.o \
     Runtime/GlobalObject.o \
     Runtime/MathObject.o \
