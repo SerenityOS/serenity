@@ -26,26 +26,17 @@
 
 #pragma once
 
+#include <LibJS/Runtime/Object.h>
+
 namespace JS {
 
-class ASTNode;
-class Argument;
-class Cell;
-class Error;
-class Expression;
-class Function;
-class HandleImpl;
-class Heap;
-class HeapBlock;
-class Interpreter;
-class Object;
-class PrimitiveString;
-class ScopeNode;
-class Statement;
-class Value;
-enum class DeclarationType;
+class ErrorPrototype final : public Object {
+public:
+    ErrorPrototype();
+    virtual ~ErrorPrototype() override;
 
-template<class T>
-class Handle;
+private:
+    virtual const char* class_name() const override { return "ErrorPrototype"; }
+};
 
 }
