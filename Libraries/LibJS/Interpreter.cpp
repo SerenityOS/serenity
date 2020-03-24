@@ -188,7 +188,7 @@ Value Interpreter::call(Function* function, Value this_value, const Vector<Value
     return result;
 }
 
-Value Interpreter::throw_exception(Error* exception)
+Value Interpreter::throw_exception(Exception* exception)
 {
     m_exception = exception;
     unwind(ScopeType::Try);

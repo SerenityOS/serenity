@@ -52,6 +52,7 @@ public:
     NonnullRefPtr<VariableDeclaration> parse_variable_declaration();
     NonnullRefPtr<ForStatement> parse_for_statement();
     NonnullRefPtr<IfStatement> parse_if_statement();
+    NonnullRefPtr<ThrowStatement> parse_throw_statement();
     NonnullRefPtr<TryStatement> parse_try_statement();
     NonnullRefPtr<CatchClause> parse_catch_clause();
 
