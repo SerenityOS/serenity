@@ -630,4 +630,49 @@ private:
     bool m_computed { false };
 };
 
+class CatchClause final : public ASTNode {
+public:
+    CatchClause(const FlyString& parameter, NonnullRefPtr<BlockStatement> body)
+        : m_parameter(parameter)
+        , m_body(move(body))
+    {
+    }
+
+    const FlyString& parameter() const { return m_parameter; }
+    const BlockStatement& body() const { return m_body; }
+
+    virtual void dump(int indent) const override;
+    virtual Value execute(Interpreter&) const override;
+
+private:
+    virtual const char* class_name() const override { return "CatchClause"; }
+
+    FlyString m_parameter;
+    NonnullRefPtr<BlockStatement> m_body;
+};
+
+class TryStatement final : public Statement {
+public:
+    TryStatement(NonnullRefPtr<BlockStatement> block, RefPtr<CatchClause> handler, RefPtr<BlockStatement> finalizer)
+        : m_block(move(block))
+        , m_handler(move(handler))
+        , m_finalizer(move(finalizer))
+    {
+    }
+
+    const BlockStatement& block() const { return m_block; }
+    const CatchClause* handler() const { return m_handler; }
+    const BlockStatement* finalizer() const { return m_finalizer; }
+
+    virtual void dump(int indent) const override;
+    virtual Value execute(Interpreter&) const override;
+
+private:
+    virtual const char* class_name() const override { return "TryStatement"; }
+
+    NonnullRefPtr<BlockStatement> m_block;
+    RefPtr<CatchClause> m_handler;
+    RefPtr<BlockStatement> m_finalizer;
+};
+
 }

@@ -197,6 +197,8 @@ NonnullRefPtr<Statement> Parser::parse_statement()
         return parse_for_statement();
     case TokenType::If:
         return parse_if_statement();
+    case TokenType::Try:
+        return parse_try_statement();
     default:
         if (match_expression())
             return adopt(*new ExpressionStatement(parse_expression(0)));
@@ -518,6 +520,40 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration()
     return create_ast_node<VariableDeclaration>(create_ast_node<Identifier>(name), move(initializer), declaration_type);
 }
 
+NonnullRefPtr<TryStatement> Parser::parse_try_statement()
+{
+    consume(TokenType::Try);
+
+    auto block = parse_block_statement();
+
+    RefPtr<CatchClause> handler;
+    if (match(TokenType::Catch))
+        handler = parse_catch_clause();
+
+    RefPtr<BlockStatement> finalizer;
+    if (match(TokenType::Finally)) {
+        consume();
+        finalizer = parse_block_statement();
+    }
+
+    return create_ast_node<TryStatement>(move(block), move(handler), move(finalizer));
+}
+
+NonnullRefPtr<CatchClause> Parser::parse_catch_clause()
+{
+    consume(TokenType::Catch);
+
+    String parameter;
+    if (match(TokenType::ParenOpen)) {
+        consume();
+        parameter = consume(TokenType::Identifier).value();
+        consume(TokenType::ParenClose);
+    }
+
+    auto body = parse_block_statement();
+    return create_ast_node<CatchClause>(parameter, move(body));
+}
+
 NonnullRefPtr<IfStatement> Parser::parse_if_statement()
 {
     consume(TokenType::If);
@@ -660,7 +696,6 @@ bool Parser::match_statement() const
         || type == TokenType::Function
         || type == TokenType::Return
         || type == TokenType::Let
-        || type == TokenType::Catch
         || type == TokenType::Class
         || type == TokenType::Delete
         || type == TokenType::Do
