@@ -38,7 +38,6 @@ ErrorPrototype::ErrorPrototype()
 {
     put_native_property(
         "name", [](Object* this_object) {
-        dbg() << "Error.prototype.name on " << this_object;
             ASSERT(this_object);
             ASSERT(this_object->is_error());
             return js_string(this_object->heap(), static_cast<const Error*>(this_object)->name());
