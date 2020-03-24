@@ -47,7 +47,7 @@ int main(int argc, char** argv)
 
     Core::ArgsParser args_parser;
     args_parser.add_option(dump_ast, "Dump the AST", "ast-dump", 'A');
-    args_parser.add_option(dump_ast, "Print last result", "print-last-result", 'l');
+    args_parser.add_option(print_last_result, "Print last result", "print-last-result", 'l');
     args_parser.add_option(gc_on_every_allocation, "GC on every allocation", "gc-on-every-allocation", 'g');
     args_parser.add_positional_argument(script_path, "Path to script file", "script");
     args_parser.parse(argc, argv);
