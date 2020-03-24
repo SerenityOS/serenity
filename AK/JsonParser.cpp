@@ -190,6 +190,8 @@ JsonValue JsonParser::parse_string()
 
 JsonValue JsonParser::parse_number()
 {
+    bool ok;
+    JsonValue value;
     Vector<char, 128> number_buffer;
     Vector<char, 128> fraction_buffer;
 
@@ -214,9 +216,8 @@ JsonValue JsonParser::parse_number()
 
     StringView number_string(number_buffer.data(), number_buffer.size());
     StringView fraction_string(fraction_buffer.data(), fraction_buffer.size());
-    bool ok;
-    JsonValue value;
 
+#ifndef KERNEL
     if (is_double) {
         int whole = number_string.to_uint(ok);
         if (!ok)
@@ -232,11 +233,14 @@ JsonValue JsonParser::parse_number()
         }
         value = JsonValue((double)whole + ((double)fraction / divider));
     } else {
+#endif
         value = JsonValue(number_string.to_uint(ok));
         if (!ok)
             value = JsonValue(number_string.to_int(ok));
         ASSERT(ok);
+#ifndef KERNEL
     }
+#endif
 
     return value;
 }
