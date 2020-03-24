@@ -24,28 +24,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Error.h>
 
 namespace JS {
 
-class ASTNode;
-class Argument;
-class Cell;
-class Error;
-class Expression;
-class Function;
-class HandleImpl;
-class Heap;
-class HeapBlock;
-class Interpreter;
-class Object;
-class PrimitiveString;
-class ScopeNode;
-class Statement;
-class Value;
-enum class DeclarationType;
+Error::Error(const FlyString& name, const String& message)
+    : m_name(name)
+    , m_message(message)
+{
+    set_prototype(interpreter().error_prototype());
+}
 
-template<class T>
-class Handle;
+Error::~Error()
+{
+}
 
 }
