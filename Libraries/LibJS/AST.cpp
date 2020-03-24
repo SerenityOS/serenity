@@ -715,4 +715,44 @@ Value ArrayExpression::execute(Interpreter& interpreter) const
     return array;
 }
 
+void TryStatement::dump(int indent) const
+{
+    ASTNode::dump(indent);
+    print_indent(indent);
+    printf("(Block)\n");
+    block().dump(indent + 1);
+
+    if (handler()) {
+        print_indent(indent);
+        printf("(Handler)\n");
+        handler()->dump(indent + 1);
+    }
+
+    if (finalizer()) {
+        print_indent(indent);
+        printf("(Finalizer)\n");
+        finalizer()->dump(indent + 1);
+    }
+}
+
+void CatchClause::dump(int indent) const
+{
+    print_indent(indent);
+    printf("CatchClause");
+    if (!m_parameter.is_null())
+        printf(" (%s)", m_parameter.characters());
+    printf("\n");
+    body().dump(indent + 1);
+}
+
+Value TryStatement::execute(Interpreter&) const
+{
+    return {};
+}
+
+Value CatchClause::execute(Interpreter&) const
+{
+    return {};
+}
+
 }
