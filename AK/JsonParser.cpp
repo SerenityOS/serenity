@@ -191,10 +191,21 @@ JsonValue JsonParser::parse_string()
 JsonValue JsonParser::parse_number()
 {
     Vector<char, 128> number_buffer;
+    Vector<char, 128> fraction_buffer;
+
+    bool is_double = false;
     for (;;) {
         char ch = peek();
+        if (ch == '.') {
+            is_double = true;
+            ++m_index;
+            continue;
+        }
         if (ch == '-' || (ch >= '0' && ch <= '9')) {
-            number_buffer.append(ch);
+            if (is_double)
+                fraction_buffer.append(ch);
+            else
+                number_buffer.append(ch);
             ++m_index;
             continue;
         }
@@ -202,11 +213,31 @@ JsonValue JsonParser::parse_number()
     }
 
     StringView number_string(number_buffer.data(), number_buffer.size());
+    StringView fraction_string(fraction_buffer.data(), fraction_buffer.size());
     bool ok;
-    auto value = JsonValue(number_string.to_uint(ok));
-    if (!ok)
-        value = JsonValue(number_string.to_int(ok));
-    ASSERT(ok);
+    JsonValue value;
+
+    if (is_double) {
+        int whole = number_string.to_uint(ok);
+        if (!ok)
+            whole = number_string.to_int(ok);
+        ASSERT(ok);
+
+        int fraction = fraction_string.to_uint(ok);
+        ASSERT(ok);
+
+        auto divider = 1;
+        for (size_t i = 0; i < fraction_buffer.size(); ++i) {
+            divider *= 10;
+        }
+        value = JsonValue((double)whole + ((double)fraction / divider));
+    } else {
+        value = JsonValue(number_string.to_uint(ok));
+        if (!ok)
+            value = JsonValue(number_string.to_int(ok));
+        ASSERT(ok);
+    }
+
     return value;
 }
 
