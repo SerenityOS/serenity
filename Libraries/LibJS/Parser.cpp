@@ -197,6 +197,8 @@ NonnullRefPtr<Statement> Parser::parse_statement()
         return parse_for_statement();
     case TokenType::If:
         return parse_if_statement();
+    case TokenType::Throw:
+        return parse_throw_statement();
     case TokenType::Try:
         return parse_try_statement();
     default:
@@ -520,6 +522,12 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration()
     return create_ast_node<VariableDeclaration>(create_ast_node<Identifier>(name), move(initializer), declaration_type);
 }
 
+NonnullRefPtr<ThrowStatement> Parser::parse_throw_statement()
+{
+    consume(TokenType::Throw);
+    return create_ast_node<ThrowStatement>(parse_expression(0));
+}
+
 NonnullRefPtr<TryStatement> Parser::parse_try_statement()
 {
     consume(TokenType::Try);
@@ -700,6 +708,7 @@ bool Parser::match_statement() const
         || type == TokenType::Delete
         || type == TokenType::Do
         || type == TokenType::If
+        || type == TokenType::Throw
         || type == TokenType::Try
         || type == TokenType::While
         || type == TokenType::For

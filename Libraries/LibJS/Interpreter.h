@@ -26,12 +26,13 @@
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <AK/HashMap.h>
 #include <AK/String.h>
-#include <AK/FlyString.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Heap.h>
+#include <LibJS/Runtime/Exception.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -107,9 +108,20 @@ public:
     Object* array_prototype() { return m_array_prototype; }
     Object* error_prototype() { return m_error_prototype; }
 
-    Error* exception() { return m_exception; }
+    Exception* exception() { return m_exception; }
     void clear_exception() { m_exception = nullptr; }
-    Value throw_exception(Error*);
+
+    template<typename T, typename... Args>
+    Value throw_exception(Args&&... args)
+    {
+        return throw_exception(heap().allocate<T>(forward<Args>(args)...));
+    }
+
+    Value throw_exception(Exception*);
+    Value throw_exception(Value value)
+    {
+        return throw_exception(heap().allocate<Exception>(value));
+    }
 
 private:
     Heap m_heap;
@@ -123,7 +135,7 @@ private:
     Object* m_array_prototype { nullptr };
     Object* m_error_prototype { nullptr };
 
-    Error* m_exception { nullptr };
+    Exception* m_exception { nullptr };
 
     ScopeType m_unwind_until { ScopeType::None };
 };

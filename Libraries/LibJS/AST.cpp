@@ -480,7 +480,7 @@ Value Identifier::execute(Interpreter& interpreter) const
 {
     auto value = interpreter.get_variable(string());
     if (value.is_undefined())
-        return interpreter.throw_exception(interpreter.heap().allocate<Error>("ReferenceError", String::format("'%s' not known", string().characters())));
+        return interpreter.throw_exception<Error>("ReferenceError", String::format("'%s' not known", string().characters()));
     return value;
 }
 
@@ -762,13 +762,19 @@ void CatchClause::dump(int indent) const
     body().dump(indent + 1);
 }
 
+void ThrowStatement::dump(int indent) const
+{
+    ASTNode::dump(indent);
+    argument().dump(indent + 1);
+}
+
 Value TryStatement::execute(Interpreter& interpreter) const
 {
     interpreter.run(block(), {}, ScopeType::Try);
     if (auto* exception = interpreter.exception()) {
         if (m_handler) {
             interpreter.clear_exception();
-            Vector<Argument> arguments { { m_handler->parameter(), Value(exception) } };
+            Vector<Argument> arguments { { m_handler->parameter(), exception->value() } };
             interpreter.run(m_handler->body(), move(arguments));
         }
     }
@@ -784,6 +790,12 @@ Value CatchClause::execute(Interpreter&) const
     // NOTE: CatchClause execution is handled by TryStatement.
     ASSERT_NOT_REACHED();
     return {};
+}
+
+Value ThrowStatement::execute(Interpreter& interrupt) const
+{
+    auto value = m_argument->execute(interrupt);
+    return interrupt.throw_exception(value);
 }
 
 }
