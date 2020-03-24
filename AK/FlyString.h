@@ -37,6 +37,8 @@ public:
     FlyString(const StringView&);
     FlyString(const char*);
 
+    bool is_null() const { return !m_impl; }
+
     bool operator==(const FlyString& other) const { return m_impl == other.m_impl; }
     bool operator!=(const FlyString& other) const { return m_impl != other.m_impl; }
 
