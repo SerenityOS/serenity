@@ -44,19 +44,19 @@ Object::~Object()
 {
 }
 
-Optional<Value> Object::get_own_property(const FlyString& property_name) const
+Optional<Value> Object::get_own_property(const Object& this_object, const FlyString& property_name) const
 {
     auto value_here = m_properties.get(property_name);
     if (value_here.has_value() && value_here.value().is_object() && value_here.value().as_object()->is_native_property())
-        return static_cast<NativeProperty*>(value_here.value().as_object())->get(const_cast<Object*>(this));
+        return static_cast<NativeProperty*>(value_here.value().as_object())->get(&const_cast<Object&>(this_object));
     return value_here;
 }
 
-bool Object::put_own_property(const FlyString& property_name, Value value)
+bool Object::put_own_property(Object& this_object, const FlyString& property_name, Value value)
 {
     auto value_here = m_properties.get(property_name);
     if (value_here.has_value() && value_here.value().is_object() && value_here.value().as_object()->is_native_property()) {
-        static_cast<NativeProperty*>(value_here.value().as_object())->set(const_cast<Object*>(this), value);
+        static_cast<NativeProperty*>(value_here.value().as_object())->set(&this_object, value);
     } else {
         m_properties.set(property_name, value);
     }
@@ -67,7 +67,7 @@ Value Object::get(const FlyString& property_name) const
 {
     const Object* object = this;
     while (object) {
-        auto value = object->get_own_property(property_name);
+        auto value = object->get_own_property(*this, property_name);
         if (value.has_value())
             return value.value();
         object = object->prototype();
@@ -85,12 +85,12 @@ void Object::put(const FlyString& property_name, Value value)
                 static_cast<NativeProperty*>(value_here.value().as_object())->set(const_cast<Object*>(this), value);
                 return;
             }
-            if (object->put_own_property(property_name, value))
+            if (object->put_own_property(*this, property_name, value))
                 return;
         }
         object = object->prototype();
     }
-    put_own_property(property_name, value);
+    put_own_property(*this, property_name, value);
 }
 
 void Object::put_native_function(const FlyString& property_name, AK::Function<Value(Object*, Vector<Value>)> native_function)
