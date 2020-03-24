@@ -24,29 +24,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <LibJS/Runtime/Cell.h>
+#include <LibJS/Runtime/Value.h>
 
 namespace JS {
 
-class ASTNode;
-class Argument;
-class Cell;
-class Error;
-class Exception;
-class Expression;
-class Function;
-class HandleImpl;
-class Heap;
-class HeapBlock;
-class Interpreter;
-class Object;
-class PrimitiveString;
-class ScopeNode;
-class Statement;
-class Value;
-enum class DeclarationType;
+class Exception : public Cell {
+public:
+    explicit Exception(Value);
+    virtual ~Exception() override;
 
-template<class T>
-class Handle;
+    Value value() const { return m_value; }
+
+private:
+    virtual const char* class_name() const override { return "Exception"; }
+    virtual void visit_children(Visitor&) override;
+
+    Value m_value;
+};
 
 }

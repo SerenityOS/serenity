@@ -675,4 +675,22 @@ private:
     RefPtr<BlockStatement> m_finalizer;
 };
 
+class ThrowStatement final : public Statement {
+public:
+    explicit ThrowStatement(NonnullRefPtr<Expression> argument)
+        : m_argument(move(argument))
+    {
+    }
+
+    const Expression& argument() const { return m_argument; }
+
+    virtual void dump(int indent) const override;
+    virtual Value execute(Interpreter&) const override;
+
+private:
+    virtual const char* class_name() const override { return "ThrowStatement"; }
+
+    NonnullRefPtr<Expression> m_argument;
+};
+
 }

@@ -24,29 +24,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <LibJS/Runtime/Exception.h>
 
 namespace JS {
 
-class ASTNode;
-class Argument;
-class Cell;
-class Error;
-class Exception;
-class Expression;
-class Function;
-class HandleImpl;
-class Heap;
-class HeapBlock;
-class Interpreter;
-class Object;
-class PrimitiveString;
-class ScopeNode;
-class Statement;
-class Value;
-enum class DeclarationType;
+Exception::Exception(Value value)
+    : m_value(value)
+{
+}
 
-template<class T>
-class Handle;
+Exception::~Exception()
+{
+}
+
+void Exception::visit_children(Visitor& visitor)
+{
+    Cell::visit_children(visitor);
+    visitor.visit(m_value);
+}
 
 }

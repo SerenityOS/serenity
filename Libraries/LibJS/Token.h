@@ -105,6 +105,7 @@ enum class TokenType {
     Slash,
     SlashEquals,
     StringLiteral,
+    Throw,
     Tilde,
     Try,
     Typeof,
