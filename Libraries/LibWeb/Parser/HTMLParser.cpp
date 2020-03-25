@@ -95,6 +95,12 @@ static bool parse_html_document(const StringView& html, Document& document, Pare
     bool is_slash_tag = false;
     bool is_exclamation_tag = false;
 
+    auto commit_text_node = [&] {
+        auto text_node = adopt(*new Text(document, text_buffer.to_string()));
+        node_stack.last().append_child(text_node, false);
+        text_buffer.clear();
+    };
+
     auto move_to_state = [&](State new_state) {
         if (new_state == State::BeforeTagName) {
             is_slash_tag = false;
@@ -106,9 +112,8 @@ static bool parse_html_document(const StringView& html, Document& document, Pare
             attribute_name_buffer.clear();
         if (new_state == State::BeforeAttributeValue)
             attribute_value_buffer.clear();
-        if (state == State::Free && !text_buffer.string_view().is_empty()) {
-            auto text_node = adopt(*new Text(document, text_buffer.to_string()));
-            node_stack.last().append_child(text_node, false);
+        if (state == State::Free && !text_buffer.is_empty()) {
+            commit_text_node();
         }
         state = new_state;
         text_buffer.clear();
@@ -347,6 +352,9 @@ static bool parse_html_document(const StringView& html, Document& document, Pare
             ASSERT_NOT_REACHED();
         }
     }
+
+    if (!text_buffer.is_empty())
+        commit_text_node();
 
     return true;
 }
