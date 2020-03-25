@@ -29,6 +29,7 @@
 #include <LibWeb/CSS/StyleSheet.h>
 #include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/DocumentFragment.h>
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/Text.h>
@@ -59,6 +60,8 @@ void dump_tree(const Node& node)
         dbgprintf("<!DOCTYPE>\n");
     } else if (is<Comment>(node)) {
         dbgprintf("<!--%s-->\n", to<Comment>(node).data().characters());
+    } else if (is<DocumentFragment>(node)) {
+        dbgprintf("#document-fragment\n");
     }
     ++indent;
     if (is<ParentNode>(node)) {
