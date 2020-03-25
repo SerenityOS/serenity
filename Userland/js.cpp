@@ -26,6 +26,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/NonnullOwnPtr.h>
+#include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibJS/AST.h>
@@ -36,11 +37,79 @@
 #include <LibJS/Runtime/Value.h>
 #include <stdio.h>
 
-#define PROGRAM 6
+bool dump_ast = false;
+
+String read_next_piece()
+{
+    StringBuilder piece;
+    int level = 0;
+
+    do {
+        if (level == 0)
+            fprintf(stderr, "> ");
+        else
+            fprintf(stderr, ".%*c", 4 * level + 1, ' ');
+
+        char* line = nullptr;
+        size_t allocated_size = 0;
+        ssize_t nread = getline(&line, &allocated_size, stdin);
+        if (nread < 0) {
+            if (errno == ESUCCESS) {
+                // Explicit EOF; stop reading. Print a newline though, to make
+                // the next prompt (or the shell prompt) appear on the next
+                // line.
+                printf(stderr, "\n");
+                break;
+            } else {
+                perror("getline");
+                exit(1);
+            }
+        }
+
+        piece.append(line);
+        auto lexer = JS::Lexer(line);
+
+        for (JS::Token token = lexer.next(); token.type() != JS::TokenType::Eof; token = lexer.next()) {
+            switch (token.type()) {
+            case JS::TokenType::BracketOpen:
+            case JS::TokenType::CurlyOpen:
+            case JS::TokenType::ParenOpen:
+                level++;
+                break;
+            case JS::TokenType::BracketClose:
+            case JS::TokenType::CurlyClose:
+            case JS::TokenType::ParenClose:
+                level--;
+                break;
+            default:
+                break;
+            }
+        }
+
+        free(line);
+    } while (level > 0);
+
+    return piece.to_string();
+}
+
+void repl(JS::Interpreter& interpreter)
+{
+    while (true) {
+        String piece = read_next_piece();
+        if (piece.is_empty())
+            break;
+
+        auto program = JS::Parser(JS::Lexer(piece)).parse_program();
+        if (dump_ast)
+            program->dump(0);
+
+        auto result = interpreter.run(*program);
+        printf("%s\n", result.to_string().characters());
+    }
+}
 
 int main(int argc, char** argv)
 {
-    bool dump_ast = false;
     bool gc_on_every_allocation = false;
     bool print_last_result = false;
     const char* script_path = nullptr;
@@ -49,40 +118,43 @@ int main(int argc, char** argv)
     args_parser.add_option(dump_ast, "Dump the AST", "ast-dump", 'A');
     args_parser.add_option(print_last_result, "Print last result", "print-last-result", 'l');
     args_parser.add_option(gc_on_every_allocation, "GC on every allocation", "gc-on-every-allocation", 'g');
-    args_parser.add_positional_argument(script_path, "Path to script file", "script");
+    args_parser.add_positional_argument(script_path, "Path to script file", "script", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
-
-    auto file = Core::File::construct(script_path);
-    if (!file->open(Core::IODevice::ReadOnly)) {
-        fprintf(stderr, "Failed to open %s: %s\n", script_path, file->error_string());
-        return 1;
-    }
-    auto file_contents = file->read_all();
-
-    StringView source;
-    if (file_contents.size() >= 2 && file_contents[0] == '#' && file_contents[1] == '!') {
-        size_t i = 0;
-        for (i = 2; i < file_contents.size(); ++i) {
-            if (file_contents[i] == '\n')
-                break;
-        }
-        source = StringView((const char*)file_contents.data() + i, file_contents.size() - i);
-    } else {
-        source = file_contents;
-    }
 
     JS::Interpreter interpreter;
     interpreter.heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
 
-    auto program = JS::Parser(JS::Lexer(source)).parse_program();
+    if (script_path == nullptr) {
+        repl(interpreter);
+    } else {
+        auto file = Core::File::construct(script_path);
+        if (!file->open(Core::IODevice::ReadOnly)) {
+            fprintf(stderr, "Failed to open %s: %s\n", script_path, file->error_string());
+            return 1;
+        }
+        auto file_contents = file->read_all();
 
-    if (dump_ast)
-        program->dump(0);
+        StringView source;
+        if (file_contents.size() >= 2 && file_contents[0] == '#' && file_contents[1] == '!') {
+            size_t i = 0;
+            for (i = 2; i < file_contents.size(); ++i) {
+                if (file_contents[i] == '\n')
+                    break;
+            }
+            source = StringView((const char*)file_contents.data() + i, file_contents.size() - i);
+        } else {
+            source = file_contents;
+        }
+        auto program = JS::Parser(JS::Lexer(source)).parse_program();
 
-    auto result = interpreter.run(*program);
+        if (dump_ast)
+            program->dump(0);
 
-    if (print_last_result)
-        printf("%s\n", result.to_string().characters());
+        auto result = interpreter.run(*program);
+
+        if (print_last_result)
+            printf("%s\n", result.to_string().characters());
+    }
 
     return 0;
 }
