@@ -153,6 +153,9 @@ func_defined build || build() {
 func_defined install || install() {
     run make DESTDIR="$SERENITY_ROOT"/Root $installopts install
 }
+func_defined post_install || post_install() {
+    echo
+}
 func_defined clean || clean() {
     rm -rf "$workdir" *.out
 }
@@ -252,6 +255,7 @@ do_build() {
 do_install() {
     echo "Installing $port!"
     install
+    post_install
     addtodb "${1:-}"
 }
 do_clean() {
