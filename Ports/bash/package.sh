@@ -14,3 +14,8 @@ build() {
     run_replace_in_file "s/define CAN_REDEFINE_GETENV 1/undef CAN_REDEFINE_GETENV/" config.h
     run make $makeopts
 }
+
+post_install() {
+    mkdir -p $SERENITY_ROOT/Root/bin
+    ln -s /usr/local/bin/bash $SERENITY_ROOT/Root/bin/bash
+}
