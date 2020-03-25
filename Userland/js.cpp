@@ -80,7 +80,6 @@ int main(int argc, char** argv)
         program->dump(0);
 
     auto result = interpreter.run(*program);
-    dbg() << "Interpreter returned " << result;
 
     if (print_last_result)
         printf("%s\n", result.to_string().characters());
