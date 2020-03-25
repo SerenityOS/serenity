@@ -11,16 +11,29 @@ fail_count=0
 count=0
 
 for f in *.js; do
-    echo -n $f: 
     result=`$js_program $f`
     if [ "$result" = "PASS" ]; then
         let pass_count++
-        echo -e "\033[32;1mPASS\033[0m"
+        echo -ne "( \033[32;1mPass\033[0m ) "
     else
-        echo -e "\033[31;1mFAIL\033[0m"
+        echo -ne "( \033[31;1mFail\033[0m ) "
         let fail_count++
     fi
+    echo $f
     let count++
 done
 
-echo -e "Ran $count tests, Passed: \033[32;1m$pass_count\033[0m, Failed: \033[31;1m$fail_count\033[0m"
+pass_color=""
+fail_color=""
+color_off="\033[0m"
+
+if [ $pass_count -gt 0 ]; then
+    pass_color="\033[32;1m"
+fi
+
+if [ $fail_count -gt 0 ]; then
+    fail_color="\033[31;1m"
+fi
+
+echo
+echo -e "Ran $count tests. Passed: ${pass_color}${pass_count}${color_off}, Failed: ${fail_color}${fail_count}${color_off}"
