@@ -40,7 +40,9 @@
 #    include <pthread.h>
 #endif
 
+#ifdef __serenity__
 #define HEAP_DEBUG
+#endif
 
 namespace JS {
 
