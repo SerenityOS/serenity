@@ -45,6 +45,7 @@ namespace Bindings {
 
 class CanvasRenderingContext2DWrapper;
 class DocumentWrapper;
+class ElementWrapper;
 class EventWrapper;
 class EventListenerWrapper;
 class EventTargetWrapper;
