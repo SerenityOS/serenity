@@ -196,14 +196,22 @@ URL Document::complete_url(const String& string) const
     return m_url.complete_url(string);
 }
 
-void Document::force_layout()
+void Document::invalidate_layout()
 {
     m_layout_root = nullptr;
+}
+
+void Document::force_layout()
+{
+    invalidate_layout();
     layout();
 }
 
 void Document::layout()
 {
+    if (!frame())
+        return;
+
     if (!m_layout_root) {
         LayoutTreeBuilder tree_builder;
         m_layout_root = tree_builder.build(*this);
