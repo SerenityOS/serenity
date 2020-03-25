@@ -1,0 +1,26 @@
+#!/bin/bash
+
+if [ "`uname`" = "SerenityOS" ]; then
+    js_program=/bin/js
+else
+    [ -z "$js_program" ] && js_program="$SERENITY_ROOT/Meta/Lagom/build/js"
+fi
+
+pass_count=0
+fail_count=0
+count=0
+
+for f in *.js; do
+    echo -n $f: 
+    result=`$js_program $f`
+    if [ "$result" = "PASS" ]; then
+        let pass_count++
+        echo -e "\033[32;1mPASS\033[0m"
+    else
+        echo -e "\033[31;1mFAIL\033[0m"
+        let fail_count++
+    fi
+    let count++
+done
+
+echo -e "Ran $count tests, Passed: \033[32;1m$pass_count\033[0m, Failed: \033[31;1m$fail_count\033[0m"
