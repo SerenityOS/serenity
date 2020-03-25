@@ -612,7 +612,7 @@ NonnullRefPtr<ForStatement> Parser::parse_for_statement()
 
     RefPtr<Expression> update;
     switch (m_current_token.type()) {
-    case TokenType::Semicolon:
+    case TokenType::ParenClose:
         break;
     default:
         update = parse_expression(0);
