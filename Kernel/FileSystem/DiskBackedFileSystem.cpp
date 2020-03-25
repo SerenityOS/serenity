@@ -150,7 +150,7 @@ bool DiskBackedFS::write_block(unsigned index, const u8* data, FileDescription* 
 bool DiskBackedFS::write_blocks(unsigned index, unsigned count, const u8* data, FileDescription* description)
 {
 #ifdef DBFS_DEBUG
-    klog() << "DiskBackedFileSystem::write_blocks " << index << " x%u" << count;
+    klog() << "DiskBackedFileSystem::write_blocks " << index << " x" << count;
 #endif
     for (unsigned i = 0; i < count; ++i)
         write_block(index + i, data + i * block_size(), description);
