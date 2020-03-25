@@ -26,3 +26,13 @@
 
 #include <LibWeb/DOM/ParentNode.h>
 
+namespace Web {
+
+void ParentNode::remove_all_children()
+{
+    while (RefPtr<Node> child = first_child()) {
+        remove_child(*child);
+    }
+}
+
+}
