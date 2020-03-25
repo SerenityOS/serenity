@@ -55,6 +55,8 @@ private:
 
 class Element : public ParentNode {
 public:
+    using WrapperType = Bindings::ElementWrapper;
+
     Element(Document&, const FlyString& tag_name);
     virtual ~Element() override;
 
@@ -87,6 +89,9 @@ public:
 
     const StyleProperties* resolved_style() const { return m_resolved_style.ptr(); }
     NonnullRefPtr<StyleProperties> computed_style();
+
+    String inner_html() const;
+    void set_inner_html(StringView);
 
 private:
     RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;

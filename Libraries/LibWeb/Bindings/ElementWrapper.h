@@ -24,49 +24,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/FlyString.h>
-#include <LibJS/Runtime/PrimitiveString.h>
-#include <LibJS/Runtime/Value.h>
-#include <LibWeb/Bindings/DocumentWrapper.h>
-#include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>
+#pragma once
+
 #include <LibWeb/Bindings/NodeWrapper.h>
-#include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/HTMLCanvasElement.h>
-#include <LibWeb/DOM/Node.h>
 
 namespace Web {
 namespace Bindings {
 
-NodeWrapper* wrap(JS::Heap& heap, Node& node)
-{
-    if (is<Document>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(heap, to<Document>(node)));
-    if (is<HTMLCanvasElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(heap, to<HTMLCanvasElement>(node)));
-    if (is<Element>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(heap, to<Element>(node)));
-    return static_cast<NodeWrapper*>(wrap_impl(heap, node));
-}
+class ElementWrapper : public NodeWrapper {
+public:
+    explicit ElementWrapper(Element&);
+    virtual ~ElementWrapper() override;
 
-NodeWrapper::NodeWrapper(Node& node)
-    : EventTargetWrapper(node)
-{
-    put("nodeName", JS::js_string(heap(), node.tag_name()));
-}
+    Element& node();
+    const Element& node() const;
 
-NodeWrapper::~NodeWrapper()
-{
-}
-
-Node& NodeWrapper::node()
-{
-    return static_cast<Node&>(EventTargetWrapper::impl());
-}
-
-const Node& NodeWrapper::node() const
-{
-    return static_cast<const Node&>(EventTargetWrapper::impl());
-}
+private:
+    virtual const char* class_name() const override { return "ElementWrapper"; }
+};
 
 }
 }

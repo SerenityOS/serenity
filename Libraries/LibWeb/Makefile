@@ -1,6 +1,7 @@
 LIBWEB_OBJS = \
     Bindings/CanvasRenderingContext2DWrapper.o \
     Bindings/DocumentWrapper.o \
+    Bindings/ElementWrapper.o \
     Bindings/EventWrapper.o \
     Bindings/EventListenerWrapper.o \
     Bindings/EventTargetWrapper.o \
