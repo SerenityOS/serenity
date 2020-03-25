@@ -387,10 +387,10 @@ template<typename PutChFunc>
                 ret += print_hex(putch, bufptr, va_arg(ap, int), false, alternate_form, false, true, 2);
                 break;
 
-            case 'c':
-                putch(bufptr, (char)va_arg(ap, int));
-                ++ret;
-                break;
+            case 'c': {
+                char s[2] { (char)va_arg(ap, int), 0 };
+                ret += print_string(putch, bufptr, s, left_pad, fieldWidth, dot);
+            } break;
 
             case '%':
                 putch(bufptr, '%');
