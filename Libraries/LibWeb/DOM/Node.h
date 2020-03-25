@@ -80,7 +80,7 @@ public:
     bool is_comment() const { return type() == NodeType::COMMENT_NODE; }
     bool is_character_data() const { return type() == NodeType::TEXT_NODE || type() == NodeType::COMMENT_NODE; }
     bool is_document_fragment() const { return type() == NodeType::DOCUMENT_FRAGMENT_NODE; }
-    bool is_parent_node() const { return is_element() || is_document(); }
+    bool is_parent_node() const { return is_element() || is_document() || is_document_fragment(); }
 
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const;
 
