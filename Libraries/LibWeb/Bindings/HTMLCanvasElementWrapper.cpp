@@ -41,9 +41,7 @@ HTMLCanvasElementWrapper::HTMLCanvasElementWrapper(HTMLCanvasElement& element)
 {
     put_native_function("getContext", [this](JS::Object*, const Vector<JS::Value>& arguments) -> JS::Value {
         if (arguments.size() >= 1) {
-            dbg() << "Calling getContext on " << node().tag_name();
             auto* context = node().get_context(arguments[0].to_string());
-            dbg() << "getContext got 2D context=" << context;
             return wrap(heap(), *context);
         }
         return JS::js_undefined();
