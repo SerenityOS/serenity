@@ -24,6 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/String.h>
+#include <AK/StringBuilder.h>
+#include <AK/Vector.h>
 #include <stdio.h>
 #include <sys/utsname.h>
 #include <unistd.h>
@@ -74,14 +77,17 @@ int main(int argc, char** argv)
     }
     if (!flag_s && !flag_n && !flag_r && !flag_m)
         flag_s = true;
+    Vector<String> parts;
     if (flag_s)
-        printf("%s ", uts.sysname);
+        parts.append(uts.sysname);
     if (flag_n)
-        printf("%s ", uts.nodename);
+        parts.append(uts.nodename);
     if (flag_r)
-        printf("%s ", uts.release);
+        parts.append(uts.release);
     if (flag_m)
-        printf("%s ", uts.machine);
-    printf("\n");
+        parts.append(uts.machine);
+    StringBuilder builder;
+    builder.join(' ', parts);
+    puts(builder.to_string().characters());
     return 0;
 }
