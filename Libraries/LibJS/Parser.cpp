@@ -216,6 +216,9 @@ NonnullRefPtr<Statement> Parser::parse_statement()
 
 NonnullRefPtr<Expression> Parser::parse_primary_expression()
 {
+    if (match_unary_prefixed_expression())
+        return parse_unary_prefixed_expression();
+
     switch (m_current_token.type()) {
     case TokenType::ParenOpen: {
         consume(TokenType::ParenOpen);
@@ -320,9 +323,6 @@ NonnullRefPtr<ArrayExpression> Parser::parse_array_expression()
 
 NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associativity associativity)
 {
-    if (match_unary_prefixed_expression())
-        return parse_unary_prefixed_expression();
-
     auto expression = parse_primary_expression();
     while (match_secondary_expression()) {
         int new_precedence = operator_precedence(m_current_token.type());
