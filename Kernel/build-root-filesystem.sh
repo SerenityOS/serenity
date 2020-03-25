@@ -95,7 +95,7 @@ printf "installing users... "
 mkdir -p mnt/home/anon
 mkdir -p mnt/home/nona
 cp ../ReadMe.md mnt/home/anon/
-cp -r ../Libraries/LibJS/Tests mnt/home/anon/LibJS-Tests
+cp -r ../Libraries/LibJS/Tests mnt/home/anon/js-tests
 chmod 700 mnt/home/anon
 chmod 700 mnt/home/nona
 chown -R 100:100 mnt/home/anon
