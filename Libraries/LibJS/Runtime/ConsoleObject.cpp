@@ -34,9 +34,12 @@ namespace JS {
 ConsoleObject::ConsoleObject()
 {
     put_native_function("log", [](Object*, const Vector<Value>& arguments) -> Value {
-        for (auto& argument : arguments)
-            printf("%s ", argument.to_string().characters());
-        printf("\n");
+        for (size_t i = 0; i < arguments.size(); ++i) {
+            printf("%s", arguments[i].to_string().characters());
+            if (i != arguments.size() - 1)
+                putchar(' ');
+        }
+        putchar('\n');
         return js_undefined();
     });
 }
