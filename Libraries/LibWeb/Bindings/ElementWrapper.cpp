@@ -25,47 +25,40 @@
  */
 
 #include <AK/FlyString.h>
+#include <AK/Function.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Value.h>
-#include <LibWeb/Bindings/DocumentWrapper.h>
-#include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>
-#include <LibWeb/Bindings/NodeWrapper.h>
-#include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/HTMLCanvasElement.h>
-#include <LibWeb/DOM/Node.h>
+#include <LibWeb/Bindings/ElementWrapper.h>
+#include <LibWeb/DOM/Element.h>
 
 namespace Web {
 namespace Bindings {
 
-NodeWrapper* wrap(JS::Heap& heap, Node& node)
+ElementWrapper::ElementWrapper(Element& element)
+    : NodeWrapper(element)
 {
-    if (is<Document>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(heap, to<Document>(node)));
-    if (is<HTMLCanvasElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(heap, to<HTMLCanvasElement>(node)));
-    if (is<Element>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(heap, to<Element>(node)));
-    return static_cast<NodeWrapper*>(wrap_impl(heap, node));
+    put_native_property(
+        "innerHTML",
+        [this](JS::Object*) {
+            return JS::js_string(heap(), node().inner_html());
+        },
+        [this](JS::Object*, JS::Value value) {
+            node().set_inner_html(value.to_string());
+        });
 }
 
-NodeWrapper::NodeWrapper(Node& node)
-    : EventTargetWrapper(node)
-{
-    put("nodeName", JS::js_string(heap(), node.tag_name()));
-}
-
-NodeWrapper::~NodeWrapper()
+ElementWrapper::~ElementWrapper()
 {
 }
 
-Node& NodeWrapper::node()
+Element& ElementWrapper::node()
 {
-    return static_cast<Node&>(EventTargetWrapper::impl());
+    return static_cast<Element&>(NodeWrapper::node());
 }
 
-const Node& NodeWrapper::node() const
+const Element& ElementWrapper::node() const
 {
-    return static_cast<const Node&>(EventTargetWrapper::impl());
+    return static_cast<const Element&>(NodeWrapper::node());
 }
 
 }

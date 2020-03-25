@@ -37,7 +37,7 @@ namespace Web {
 namespace Bindings {
 
 HTMLCanvasElementWrapper::HTMLCanvasElementWrapper(HTMLCanvasElement& element)
-    : NodeWrapper(element)
+    : ElementWrapper(element)
 {
     put_native_function("getContext", [this](JS::Object*, const Vector<JS::Value>& arguments) -> JS::Value {
         if (arguments.size() >= 1) {

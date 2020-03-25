@@ -24,11 +24,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibWeb/CSS/StyleResolver.h>
-#include <LibWeb/CSS/PropertyID.h>
+#include <AK/StringBuilder.h>
 #include <LibWeb/CSS/Length.h>
+#include <LibWeb/CSS/PropertyID.h>
+#include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/DocumentFragment.h>
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/DOM/Text.h>
+#include <LibWeb/Dump.h>
 #include <LibWeb/Layout/LayoutBlock.h>
 #include <LibWeb/Layout/LayoutInline.h>
 #include <LibWeb/Layout/LayoutListItem.h>
@@ -36,6 +40,7 @@
 #include <LibWeb/Layout/LayoutTableCell.h>
 #include <LibWeb/Layout/LayoutTableRow.h>
 #include <LibWeb/Layout/LayoutTreeBuilder.h>
+#include <LibWeb/Parser/HTMLParser.h>
 
 namespace Web {
 
@@ -216,6 +221,49 @@ NonnullRefPtr<StyleProperties> Element::computed_style()
         }
     }
     return properties;
+}
+
+void Element::set_inner_html(StringView markup)
+{
+    auto fragment = parse_html_fragment(document(), markup);
+    remove_all_children();
+    if (!fragment)
+        return;
+    while (RefPtr<Node> child = fragment->first_child()) {
+        fragment->remove_child(*child);
+        append_child(*child);
+    }
+
+    set_needs_style_update(true);
+    document().schedule_style_update();
+    document().invalidate_layout();
+}
+
+String Element::inner_html() const
+{
+    StringBuilder builder;
+
+    Function<void(const Node&)> recurse = [&](auto& node) {
+        for (auto* child = node.first_child(); child; child = child->next_sibling()) {
+            if (child->is_element()) {
+                builder.append('<');
+                builder.append(to<Element>(*child).tag_name());
+                builder.append('>');
+
+                recurse(*child);
+
+                builder.append("</");
+                builder.append(to<Element>(*child).tag_name());
+                builder.append('>');
+            }
+            if (child->is_text()) {
+                builder.append(to<Text>(*child).data());
+            }
+        }
+    };
+    recurse(*this);
+
+    return builder.to_string();
 }
 
 }

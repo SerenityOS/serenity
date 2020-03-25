@@ -26,12 +26,12 @@
 
 #pragma once
 
-#include <LibWeb/Bindings/NodeWrapper.h>
+#include <LibWeb/Bindings/ElementWrapper.h>
 
 namespace Web {
 namespace Bindings {
 
-class HTMLCanvasElementWrapper : public NodeWrapper {
+class HTMLCanvasElementWrapper : public ElementWrapper {
 public:
     explicit HTMLCanvasElementWrapper(HTMLCanvasElement&);
     virtual ~HTMLCanvasElementWrapper() override;
