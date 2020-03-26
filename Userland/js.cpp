@@ -33,6 +33,7 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Value.h>
@@ -120,6 +121,11 @@ static void print_object(const JS::Object* object, HashTable<JS::Object*>& seen_
     fputs(" }", stdout);
 }
 
+static void print_function(const JS::Object* function, HashTable<JS::Object*>&)
+{
+    printf("\033[34;1m[%s]\033[0m", function->class_name());
+}
+
 void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
 {
     if (value.is_object()) {
@@ -135,6 +141,9 @@ void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
     if (value.is_array())
         return print_array(static_cast<const JS::Array*>(value.as_object()), seen_objects);
 
+    if (value.is_object() && value.as_object()->is_function())
+        return print_function(value.as_object(), seen_objects);
+
     if (value.is_object())
         return print_object(value.as_object(), seen_objects);
 
@@ -144,7 +153,9 @@ void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
         printf("\033[35;1m");
     else if (value.is_boolean())
         printf("\033[32;1m");
-    else if (value.is_null() || value.is_undefined())
+    else if (value.is_null())
+        printf("\033[33;1m");
+    else if (value.is_undefined())
         printf("\033[34;1m");
     if (value.is_string())
         putchar('"');
