@@ -51,6 +51,7 @@ public:
     bool is_object() const { return m_type == Type::Object; }
     bool is_boolean() const { return m_type == Type::Boolean; }
     bool is_cell() const { return is_string() || is_object(); }
+    bool is_array() const;
 
     Value()
         : m_type(Type::Undefined)
