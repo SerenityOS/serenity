@@ -28,11 +28,14 @@
 #include "IRCChannel.h"
 #include "IRCChannelMemberListModel.h"
 #include "IRCClient.h"
+#include <AK/StringBuilder.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/Notification.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/TextEditor.h>
+#include <LibGUI/Window.h>
 #include <LibWeb/HtmlView.h>
 
 IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& name)
@@ -90,8 +93,26 @@ bool IRCWindow::is_active() const
     return m_client.current_window() == this;
 }
 
-void IRCWindow::did_add_message()
+void IRCWindow::did_add_message(const String& name, const String& message)
 {
+    if ((!is_active() || !window()->is_active()) && !name.is_null() && !message.is_null()) {
+        auto notification = GUI::Notification::construct();
+
+        if (type() == Type::Channel) {
+            StringBuilder builder;
+            builder.append(name);
+            builder.append(" in ");
+            builder.append(m_name);
+            notification->set_title(builder.to_string());
+        } else {
+            notification->set_title(name);
+        }
+
+        notification->set_title(name);
+        notification->set_text(message);
+        notification->show();
+    }
+
     if (!is_active()) {
         ++m_unread_count;
         m_client.aid_update_window_list();

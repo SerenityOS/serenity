@@ -57,7 +57,7 @@ public:
     int unread_count() const;
     void clear_unread_count();
 
-    void did_add_message();
+    void did_add_message(const String& name = {}, const String& message = {});
 
     IRCChannel& channel() { return *(IRCChannel*)m_owner; }
     const IRCChannel& channel() const { return *(const IRCChannel*)m_owner; }
