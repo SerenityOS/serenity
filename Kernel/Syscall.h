@@ -395,7 +395,7 @@ struct SC_rename_params {
 };
 
 struct SC_mount_params {
-    StringArgument source;
+    int source_fd;
     StringArgument target;
     StringArgument fs_type;
     int flags;
