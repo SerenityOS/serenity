@@ -74,6 +74,8 @@ public:
     virtual Value to_primitive(PreferredType preferred_type = PreferredType::Default) const;
     virtual Value to_string() const;
 
+    const HashMap<FlyString, Value>& own_properties() const { return m_properties; }
+
 private:
     HashMap<FlyString, Value> m_properties;
     Object* m_prototype { nullptr };
