@@ -74,6 +74,7 @@ protected:
     bool can_do_backspace() const;
     void do_backspace();
     void erase_word();
+    void erase_character();
     void kill_line();
     void flush_input();
 
