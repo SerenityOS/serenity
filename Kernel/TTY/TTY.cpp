@@ -221,7 +221,7 @@ void TTY::erase_word()
         if (ch != ' ')
             first_char = true;
         m_input_buffer.dequeue_end();
-        echo(m_termios.c_cc[VERASE]);
+        erase_character();
     }
 }
 
@@ -229,8 +229,15 @@ void TTY::kill_line()
 {
     while (can_do_backspace()) {
         m_input_buffer.dequeue_end();
-        echo(m_termios.c_cc[VERASE]);
+        erase_character();
     }
+}
+
+void TTY::erase_character()
+{
+    echo(m_termios.c_cc[VERASE]);
+    echo(' ');
+    echo(m_termios.c_cc[VERASE]);
 }
 
 void TTY::generate_signal(int signal)
