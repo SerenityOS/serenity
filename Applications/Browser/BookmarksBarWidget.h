@@ -41,6 +41,10 @@ public:
     Function<void(const String&, const String&)> on_bookmark_click;
     Function<void(const String&, const String&)> on_bookmark_hover;
 
+    bool contains_bookmark(const String& url);
+    bool remove_bookmark(const String& url);
+    bool add_bookmark(const String& url, const String& title);
+
 private:
     BookmarksBarWidget(const String&, bool enabled);
 
