@@ -35,7 +35,7 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Custody.h>
-#include <Kernel/FileSystem/DiskBackedFileSystem.h>
+#include <Kernel/FileSystem/FileBackedFileSystem.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Heap/kmalloc.h>
@@ -746,10 +746,10 @@ Optional<KBuffer> procfs$df(InodeIdentifier)
         fs_object.add("readonly", fs.is_readonly());
         fs_object.add("mount_flags", mount.flags());
 
-        if (fs.is_disk_backed())
-            fs_object.add("device", static_cast<const DiskBackedFS&>(fs).device().absolute_path());
+        if (fs.is_file_backed())
+            fs_object.add("source", static_cast<const FileBackedFS&>(fs).file_description().absolute_path());
         else
-            fs_object.add("device", fs.class_name());
+            fs_object.add("source", fs.class_name());
     });
     array.finish();
     return builder.build();
