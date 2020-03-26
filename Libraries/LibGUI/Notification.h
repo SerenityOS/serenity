@@ -16,6 +16,9 @@ public:
     const String& title() const { return m_title; }
     void set_title(const String& title) { m_title = title; }
 
+    const String& icon_path() const { return m_icon_path; }
+    void set_icon_path(const String& icon_path) { m_icon_path = icon_path; }
+
     void show();
 
 private:
@@ -23,6 +26,7 @@ private:
 
     String m_title;
     String m_text;
+    String m_icon_path;
 };
 
 }

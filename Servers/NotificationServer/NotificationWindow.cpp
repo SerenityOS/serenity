@@ -31,13 +31,14 @@
 #include <LibGUI/Desktop.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Widget.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>
 
 namespace NotificationServer {
 
 static HashTable<RefPtr<NotificationWindow>> s_windows;
 
-NotificationWindow::NotificationWindow(const String& text, const String& title)
+NotificationWindow::NotificationWindow(const String& text, const String& title, const String& icon_path)
 {
     s_windows.set(this);
 
@@ -50,7 +51,7 @@ NotificationWindow::NotificationWindow(const String& text, const String& title)
     }
 
     Gfx::Rect rect;
-    rect.set_width(200);
+    rect.set_width(240);
     rect.set_height(40);
     rect.set_location(GUI::Desktop::the().rect().top_right().translated(-rect.width() - 8, 26));
 
@@ -65,8 +66,15 @@ NotificationWindow::NotificationWindow(const String& text, const String& title)
     widget.set_fill_with_background_color(true);
 
     widget.set_layout<GUI::HorizontalBoxLayout>();
-    widget.layout()->set_margins({ 4, 4, 4, 4 });
-    widget.layout()->set_spacing(4);
+    widget.layout()->set_margins({ 8, 8, 8, 8 });
+    widget.layout()->set_spacing(6);
+
+    if (auto icon = Gfx::Bitmap::load_from_file(icon_path)) {
+        auto& icon_label = widget.add<GUI::Label>();
+        icon_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+        icon_label.set_preferred_size(32, 32);
+        icon_label.set_icon(icon);
+    }
 
     auto& left_container = widget.add<GUI::Widget>();
     left_container.set_layout<GUI::VerticalBoxLayout>();
@@ -79,7 +87,7 @@ NotificationWindow::NotificationWindow(const String& text, const String& title)
 
     auto& right_container = widget.add<GUI::Widget>();
     right_container.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    right_container.set_preferred_size(40, 0);
+    right_container.set_preferred_size(36, 0);
     right_container.set_layout<GUI::HorizontalBoxLayout>();
 
     auto& button = right_container.add<GUI::Button>("Okay");
