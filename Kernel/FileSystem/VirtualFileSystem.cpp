@@ -28,7 +28,7 @@
 #include <AK/StringBuilder.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Custody.h>
-#include <Kernel/FileSystem/DiskBackedFileSystem.h>
+#include <Kernel/FileSystem/FileBackedFileSystem.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
@@ -126,14 +126,7 @@ bool VFS::mount_root(FS& file_system)
     }
 
     m_root_inode = move(root_inode);
-    char device_name[32];
-    if (m_root_inode->fs().is_disk_backed()) {
-        auto& device = static_cast<DiskBackedFS&>(m_root_inode->fs()).device();
-        sprintf(device_name, "%d,%d", device.major(), device.minor());
-    } else {
-        sprintf(device_name, "not-a-disk");
-    }
-    klog() << "VFS: mounted root on " << m_root_inode->fs().class_name() << " (" << device_name << ")";
+    klog() << "VFS: mounted root from " << m_root_inode->fs().class_name() << " (" << static_cast<FileBackedFS&>(m_root_inode->fs()).file_description().absolute_path() << ")";
 
     m_mounts.append(move(mount));
     return true;
