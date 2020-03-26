@@ -76,6 +76,10 @@ public:
     const String& json_path() const { return m_json_path; }
     void set_json_path(const String& json_path);
 
+    bool add(const Vector<JsonValue>&& fields);
+    bool remove(int row);
+    bool store();
+
 private:
     JsonArrayModel(const String& json_path, Vector<FieldSpec>&& fields)
         : m_json_path(json_path)
