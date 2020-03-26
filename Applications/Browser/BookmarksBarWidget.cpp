@@ -162,3 +162,45 @@ void BookmarksBarWidget::update_content_size()
         }
     }
 }
+
+bool BookmarksBarWidget::contains_bookmark(const String& url)
+{
+    for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
+
+        auto item_title = model()->data(model()->index(item_index, 0)).to_string();
+        auto item_url = model()->data(model()->index(item_index, 1)).to_string();
+        if (item_url == url) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool BookmarksBarWidget::remove_bookmark(const String& url)
+{
+    for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
+
+        auto item_title = model()->data(model()->index(item_index, 0)).to_string();
+        auto item_url = model()->data(model()->index(item_index, 1)).to_string();
+        if (item_url == url) {
+            auto& json_model = *static_cast<GUI::JsonArrayModel*>(model());
+            json_model.remove(item_index);
+            return true;
+        }
+    }
+
+    return false;
+}
+bool BookmarksBarWidget::add_bookmark(const String& url, const String& title)
+{
+    Vector<JsonValue> values;
+    values.append(title);
+    values.append(url);
+
+    auto& json_model = *static_cast<GUI::JsonArrayModel*>(model());
+    if (json_model.add(move(values))) {
+        json_model.store();
+        return true;
+    }
+    return false;
+}

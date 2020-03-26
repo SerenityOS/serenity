@@ -32,6 +32,7 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/Button.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/StatusBar.h>
@@ -42,6 +43,7 @@
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOMTreeModel.h>
 #include <LibWeb/Dump.h>
+#include <LibWeb/Frame.h>
 #include <LibWeb/HtmlView.h>
 #include <LibWeb/Layout/LayoutBlock.h>
 #include <LibWeb/Layout/LayoutDocument.h>
@@ -56,9 +58,11 @@
 static const char* home_url = "file:///home/anon/www/welcome.html";
 static const char* bookmarks_filename = "/home/anon/bookmarks.json";
 
+static String s_title = "";
+
 int main(int argc, char** argv)
 {
-    if (pledge("stdio shared_buffer accept unix cpath rpath fattr", nullptr) < 0) {
+    if (pledge("stdio shared_buffer accept unix cpath rpath wpath fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -68,10 +72,22 @@ int main(int argc, char** argv)
     // Connect to the ProtocolServer immediately so we can drop the "unix" pledge.
     Web::ResourceLoader::the();
 
-    if (pledge("stdio shared_buffer accept rpath", nullptr) < 0) {
+    if (pledge("stdio shared_buffer accept cpath rpath wpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+
+    if (unveil("/home", "rwc") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    unveil(nullptr, nullptr);
 
     auto window = GUI::Window::construct();
     window->set_rect(100, 100, 640, 480);
@@ -135,11 +151,36 @@ int main(int argc, char** argv)
         html_widget.load(location_box.text());
     };
 
+    auto& bookmark_button = toolbar.add<GUI::Button>();
+    bookmark_button.set_button_style(Gfx::ButtonStyle::CoolBar);
+    bookmark_button.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/star-black.png"));
+    bookmark_button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    bookmark_button.set_preferred_size(22, 22);
+
+    auto update_bookmark_button = [&](const String& url) {
+        if (bookmarksbar.contains_bookmark(url)) {
+            bookmark_button.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/star-yellow.png"));
+        } else {
+            bookmark_button.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/star-contour.png"));
+        }
+    };
+
+    bookmark_button.on_click = [&] {
+        auto url = html_widget.main_frame().document()->url().to_string();
+        if (bookmarksbar.contains_bookmark(url)) {
+            bookmarksbar.remove_bookmark(url);
+        } else {
+            bookmarksbar.add_bookmark(url, s_title);
+        }
+        update_bookmark_button(url);
+    };
+
     html_widget.on_load_start = [&](auto& url) {
         location_box.set_text(url.to_string());
         if (should_push_loads_to_history)
             history.push(url);
         update_actions();
+        update_bookmark_button(url.to_string());
     };
 
     html_widget.on_link_click = [&](auto& url) {
@@ -151,6 +192,7 @@ int main(int argc, char** argv)
     };
 
     html_widget.on_title_change = [&](auto& title) {
+        s_title = title;
         window->set_title(String::format("%s - Browser", title.characters()));
     };
 
