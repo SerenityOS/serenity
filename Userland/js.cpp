@@ -32,6 +32,7 @@
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Value.h>
@@ -92,6 +93,74 @@ String read_next_piece()
     return piece.to_string();
 }
 
+static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects);
+
+static void print_array(const JS::Array* array, HashTable<JS::Object*>& seen_objects)
+{
+    fputs("[ ", stdout);
+    for (size_t i = 0; i < array->elements().size(); ++i) {
+        print_value(array->elements()[i], seen_objects);
+        if (i != array->elements().size() - 1)
+            fputs(", ", stdout);
+    }
+    fputs(" ]", stdout);
+}
+
+static void print_object(const JS::Object* object, HashTable<JS::Object*>& seen_objects)
+{
+    fputs("{ ", stdout);
+    size_t index = 0;
+    for (auto& it : object->own_properties()) {
+        printf("\"\033[33;1m%s\033[0m\": ", it.key.characters());
+        print_value(it.value, seen_objects);
+        if (index != object->own_properties().size() - 1)
+            fputs(", ", stdout);
+        ++index;
+    }
+    fputs(" }", stdout);
+}
+
+void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
+{
+    if (value.is_object()) {
+        if (seen_objects.contains(value.as_object())) {
+            // FIXME: Maybe we should only do this for circular references,
+            //        not for all reoccurring objects.
+            printf("<already printed Object %p>", value.as_object());
+            return;
+        }
+        seen_objects.set(value.as_object());
+    }
+
+    if (value.is_array())
+        return print_array(static_cast<const JS::Array*>(value.as_object()), seen_objects);
+
+    if (value.is_object())
+        return print_object(value.as_object(), seen_objects);
+
+    if (value.is_string())
+        printf("\033[31;1m");
+    else if (value.is_number())
+        printf("\033[35;1m");
+    else if (value.is_boolean())
+        printf("\033[32;1m");
+    else if (value.is_null() || value.is_undefined())
+        printf("\033[34;1m");
+    if (value.is_string())
+        putchar('"');
+    printf("%s", value.to_string().characters());
+    if (value.is_string())
+        putchar('"');
+    printf("\033[0m");
+}
+
+static void print(JS::Value value)
+{
+    HashTable<JS::Object*> seen_objects;
+    print_value(value, seen_objects);
+    putchar('\n');
+}
+
 void repl(JS::Interpreter& interpreter)
 {
     while (true) {
@@ -104,7 +173,7 @@ void repl(JS::Interpreter& interpreter)
             program->dump(0);
 
         auto result = interpreter.run(*program);
-        printf("%s\n", result.to_string().characters());
+        print(result);
     }
 }
 
