@@ -55,7 +55,7 @@ String read_next_piece()
         size_t allocated_size = 0;
         ssize_t nread = getline(&line, &allocated_size, stdin);
         if (nread < 0) {
-            if (errno == ESUCCESS) {
+            if (errno == 0) {
                 // Explicit EOF; stop reading. Print a newline though, to make
                 // the next prompt (or the shell prompt) appear on the next
                 // line.
