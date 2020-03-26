@@ -33,6 +33,11 @@
 
 namespace JS {
 
+bool Value::is_array() const
+{
+    return is_object() && as_object()->is_array();
+}
+
 String Value::to_string() const
 {
     if (is_boolean())
