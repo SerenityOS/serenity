@@ -98,13 +98,6 @@ off_t FileDescription::seek(off_t offset, int whence)
     if (!m_file->is_seekable())
         return -EINVAL;
 
-    auto metadata = this->metadata();
-    if (!metadata.is_valid())
-        return -EIO;
-
-    if (metadata.is_socket() || metadata.is_fifo())
-        return -ESPIPE;
-
     off_t new_offset;
 
     switch (whence) {
@@ -115,7 +108,9 @@ off_t FileDescription::seek(off_t offset, int whence)
         new_offset = m_current_offset + offset;
         break;
     case SEEK_END:
-        new_offset = metadata.size;
+        if (!metadata().is_valid())
+            return -EIO;
+        new_offset = metadata().size;
         break;
     default:
         return -EINVAL;
