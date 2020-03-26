@@ -56,7 +56,7 @@ void IRCQuery::dump() const
 void IRCQuery::add_message(char prefix, const String& name, const String& text, Color color)
 {
     log().add_message(prefix, name, text, color);
-    window().did_add_message();
+    window().did_add_message(name, text);
 }
 
 void IRCQuery::say(const String& text)
