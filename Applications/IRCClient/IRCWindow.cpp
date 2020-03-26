@@ -93,25 +93,36 @@ bool IRCWindow::is_active() const
     return m_client.current_window() == this;
 }
 
+void IRCWindow::post_notification_if_needed(const String& name, const String& message)
+{
+    if (name.is_null() || message.is_null())
+        return;
+    if (is_active() && window()->is_active())
+        return;
+
+    auto notification = GUI::Notification::construct();
+
+    if (type() == Type::Channel) {
+
+        if (!message.contains(m_client.nickname()))
+            return;
+
+        StringBuilder builder;
+        builder.append(name);
+        builder.append(" in ");
+        builder.append(m_name);
+        notification->set_title(builder.to_string());
+    } else {
+        notification->set_title(name);
+    }
+
+    notification->set_text(message);
+    notification->show();
+}
+
 void IRCWindow::did_add_message(const String& name, const String& message)
 {
-    if ((!is_active() || !window()->is_active()) && !name.is_null() && !message.is_null()) {
-        auto notification = GUI::Notification::construct();
-
-        if (type() == Type::Channel) {
-            StringBuilder builder;
-            builder.append(name);
-            builder.append(" in ");
-            builder.append(m_name);
-            notification->set_title(builder.to_string());
-        } else {
-            notification->set_title(name);
-        }
-
-        notification->set_title(name);
-        notification->set_text(message);
-        notification->show();
-    }
+    post_notification_if_needed(name, message);
 
     if (!is_active()) {
         ++m_unread_count;

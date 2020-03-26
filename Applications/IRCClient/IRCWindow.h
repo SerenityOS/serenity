@@ -68,6 +68,8 @@ public:
 private:
     IRCWindow(IRCClient&, void* owner, Type, const String& name);
 
+    void post_notification_if_needed(const String& name, const String& message);
+
     IRCClient& m_client;
     void* m_owner { nullptr };
     Type m_type;
