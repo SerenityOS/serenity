@@ -57,7 +57,7 @@ void dump_tree(const Node& node)
     } else if (is<Text>(node)) {
         dbgprintf("\"%s\"\n", static_cast<const Text&>(node).data().characters());
     } else if (is<DocumentType>(node)) {
-        dbgprintf("<!DOCTYPE>\n");
+        dbgprintf("<!DOCTYPE html>\n");
     } else if (is<Comment>(node)) {
         dbgprintf("<!--%s-->\n", to<Comment>(node).data().characters());
     } else if (is<DocumentFragment>(node)) {
