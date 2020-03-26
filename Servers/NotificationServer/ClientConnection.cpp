@@ -55,7 +55,7 @@ OwnPtr<Messages::NotificationServer::GreetResponse> ClientConnection::handle(con
 
 void ClientConnection::handle(const Messages::NotificationServer::ShowNotification& message)
 {
-    auto window = NotificationWindow::construct(message.text(), message.title());
+    auto window = NotificationWindow::construct(message.text(), message.title(), message.icon_path());
     window->show();
 }
 

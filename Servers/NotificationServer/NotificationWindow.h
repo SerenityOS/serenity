@@ -37,7 +37,7 @@ public:
     virtual ~NotificationWindow() override;
 
 private:
-    NotificationWindow(const String& text, const String& title);
+    NotificationWindow(const String& text, const String& title, const String& icon_path);
 
     Gfx::Rect m_original_rect;
 };
