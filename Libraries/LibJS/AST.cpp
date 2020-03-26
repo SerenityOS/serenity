@@ -47,7 +47,7 @@ Value FunctionDeclaration::execute(Interpreter& interpreter) const
 {
     auto* function = interpreter.heap().allocate<ScriptFunction>(body(), parameters());
     interpreter.set_variable(name(), function);
-    return function;
+    return {};
 }
 
 Value FunctionExpression::execute(Interpreter& interpreter) const
