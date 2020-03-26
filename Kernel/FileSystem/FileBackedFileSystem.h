@@ -26,38 +26,45 @@
 
 #pragma once
 
+#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/Forward.h>
 
 namespace Kernel {
 
-class DiskBackedFS : public FS {
+class FileBackedFS : public FS {
 public:
-    virtual ~DiskBackedFS() override;
+    virtual ~FileBackedFS() override;
 
-    virtual bool is_disk_backed() const override { return true; }
+    virtual bool is_file_backed() const override { return true; }
 
-    BlockDevice& device() { return *m_device; }
-    const BlockDevice& device() const { return *m_device; }
+    File& file() { return m_file_description->file(); }
+    FileDescription& file_description() { return *m_file_description; }
+    const File& file() const { return m_file_description->file(); }
+    const FileDescription& file_description() const { return *m_file_description; }
 
     virtual void flush_writes() override;
 
     void flush_writes_impl();
 
+    size_t logical_block_size() const { return m_logical_block_size; };
+
 protected:
-    explicit DiskBackedFS(BlockDevice&);
+    explicit FileBackedFS(FileDescription&);
 
-    bool read_block(unsigned index, u8* buffer, FileDescription* = nullptr) const;
-    bool read_blocks(unsigned index, unsigned count, u8* buffer, FileDescription* = nullptr) const;
+    bool read_block(unsigned index, u8* buffer, FileDescription* = nullptr, bool use_logical_block_size = false, bool cache_disabled = false) const;
+    bool read_blocks(unsigned index, unsigned count, u8* buffer, FileDescription* = nullptr, bool use_logical_block_size = false, bool cache_disabled = false) const;
 
-    bool write_block(unsigned index, const u8*, FileDescription* = nullptr);
-    bool write_blocks(unsigned index, unsigned count, const u8*, FileDescription* = nullptr);
+    bool write_block(unsigned index, const u8*, FileDescription* = nullptr, bool use_logical_block_size = false);
+    bool write_blocks(unsigned index, unsigned count, const u8*, FileDescription* = nullptr, bool use_logical_block_size = false);
+
+    size_t m_logical_block_size { 512 };
 
 private:
     DiskCache& cache() const;
     void flush_specific_block_if_needed(unsigned index);
 
-    NonnullRefPtr<BlockDevice> m_device;
+    NonnullRefPtr<FileDescription> m_file_description;
     mutable OwnPtr<DiskCache> m_cache;
 };
 

@@ -64,13 +64,13 @@ static u8 to_ext2_file_type(mode_t mode)
     return EXT2_FT_UNKNOWN;
 }
 
-NonnullRefPtr<Ext2FS> Ext2FS::create(BlockDevice& device)
+NonnullRefPtr<Ext2FS> Ext2FS::create(FileDescription& file_description)
 {
-    return adopt(*new Ext2FS(device));
+    return adopt(*new Ext2FS(file_description));
 }
 
-Ext2FS::Ext2FS(BlockDevice& device)
-    : DiskBackedFS(device)
+Ext2FS::Ext2FS(FileDescription& file_description)
+    : FileBackedFS(file_description)
 {
 }
 
@@ -81,7 +81,7 @@ Ext2FS::~Ext2FS()
 bool Ext2FS::flush_super_block()
 {
     LOCKER(m_lock);
-    bool success = device().write_blocks(2, 1, (const u8*)&m_super_block);
+    bool success = write_blocks(2, 1, (const u8*)&m_super_block, nullptr, true);
     ASSERT(success);
     return true;
 }
@@ -96,7 +96,7 @@ const ext2_group_desc& Ext2FS::group_descriptor(GroupIndex group_index) const
 bool Ext2FS::initialize()
 {
     LOCKER(m_lock);
-    bool success = const_cast<BlockDevice&>(device()).read_blocks(2, 1, (u8*)&m_super_block);
+    bool success = read_blocks(2, 1, (u8*)&m_super_block, nullptr, true, true);
     ASSERT(success);
 
     auto& super_block = this->super_block();
@@ -534,7 +534,7 @@ void Ext2FS::flush_writes()
         }
     }
 
-    DiskBackedFS::flush_writes();
+    FileBackedFS::flush_writes();
 
     // Uncache Inodes that are only kept alive by the index-to-inode lookup cache.
     // We don't uncache Inodes that are being watched by at least one InodeWatcher.
