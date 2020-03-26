@@ -48,6 +48,49 @@ void JsonArrayModel::update()
     did_update();
 }
 
+bool JsonArrayModel::store()
+{
+    auto file = Core::File::construct(m_json_path);
+    if (!file->open(Core::IODevice::WriteOnly)) {
+        dbg() << "Unable to open " << file->filename();
+        return false;
+    }
+
+    file->write(m_array.to_string());
+    file->close();
+    return true;
+}
+
+bool JsonArrayModel::add(const Vector<JsonValue>&& values)
+{
+    ASSERT(values.size() == m_fields.size());
+    JsonObject obj;
+    for (size_t i = 0; i < m_fields.size(); ++i) {
+        auto& field_spec = m_fields[i];
+        obj.set(field_spec.json_field_name, values.at(i));
+    }
+    m_array.append(move(obj));
+    did_update();
+    return true;
+}
+
+bool JsonArrayModel::remove(int row)
+{
+    if (row >= m_array.size())
+        return false;
+
+    JsonArray new_array;
+    for (int i = 0; i < m_array.size(); ++i)
+        if (i != row)
+            new_array.append(m_array.at(i));
+
+    m_array = new_array;
+
+    did_update();
+
+    return true;
+}
+
 Model::ColumnMetadata JsonArrayModel::column_metadata(int column) const
 {
     ASSERT(column < static_cast<int>(m_fields.size()));
