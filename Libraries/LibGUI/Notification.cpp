@@ -32,17 +32,10 @@ Notification::~Notification()
 {
 }
 
-static NotificationServerConnection& notification_server_connection()
-{
-    static NotificationServerConnection* connection;
-    if (!connection)
-        connection = &NotificationServerConnection::construct().leak_ref();
-    return *connection;
-}
-
 void Notification::show()
 {
-    notification_server_connection().post_message(Messages::NotificationServer::ShowNotification(m_text, m_title));
+    auto connection = NotificationServerConnection::construct();
+    connection->post_message(Messages::NotificationServer::ShowNotification(m_text, m_title));
 }
 
 }
