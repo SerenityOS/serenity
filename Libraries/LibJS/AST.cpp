@@ -109,7 +109,7 @@ Value IfStatement::execute(Interpreter& interpreter) const
     if (m_alternate)
         return interpreter.run(*m_alternate);
 
-    return js_undefined();
+    return {};
 }
 
 Value WhileStatement::execute(Interpreter& interpreter) const
@@ -616,7 +616,7 @@ Value VariableDeclaration::execute(Interpreter& interpreter) const
         interpreter.set_variable(name().string(), initalizer_result, true);
     }
 
-    return js_undefined();
+    return {};
 }
 
 void VariableDeclaration::dump(int indent) const
@@ -707,7 +707,7 @@ Value BooleanLiteral::execute(Interpreter&) const
 
 Value UndefinedLiteral::execute(Interpreter&) const
 {
-    return js_undefined();
+    return {};
 }
 
 Value NullLiteral::execute(Interpreter&) const
