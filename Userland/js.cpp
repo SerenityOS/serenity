@@ -204,6 +204,8 @@ int main(int argc, char** argv)
     JS::Interpreter interpreter;
     interpreter.heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
 
+    interpreter.global_object().put("global", &interpreter.global_object());
+
     if (script_path == nullptr) {
         repl(interpreter);
     } else {
