@@ -142,7 +142,7 @@ void Interpreter::set_variable(const FlyString& name, Value value, bool first_as
     global_object().put(move(name), move(value));
 }
 
-Value Interpreter::get_variable(const FlyString& name)
+Optional<Value> Interpreter::get_variable(const FlyString& name)
 {
     for (ssize_t i = m_scope_stack.size() - 1; i >= 0; --i) {
         auto& scope = m_scope_stack.at(i);

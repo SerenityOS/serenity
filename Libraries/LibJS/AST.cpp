@@ -478,10 +478,10 @@ void ForStatement::dump(int indent) const
 
 Value Identifier::execute(Interpreter& interpreter) const
 {
-    auto value = interpreter.get_variable(string());
-    if (value.is_undefined())
+    auto variable = interpreter.get_variable(string());
+    if (!variable.has_value())
         return interpreter.throw_exception<Error>("ReferenceError", String::format("'%s' not known", string().characters()));
-    return value;
+    return variable.value();
 }
 
 void Identifier::dump(int indent) const
@@ -536,7 +536,9 @@ Value UpdateExpression::execute(Interpreter& interpreter) const
     ASSERT(m_argument->is_identifier());
     auto name = static_cast<const Identifier&>(*m_argument).string();
 
-    auto previous_value = interpreter.get_variable(name);
+    auto previous_variable = interpreter.get_variable(name);
+    ASSERT(previous_variable.has_value());
+    auto previous_value = previous_variable.value();
     ASSERT(previous_value.is_number());
 
     int op_result = 0;
@@ -687,7 +689,8 @@ Value MemberExpression::execute(Interpreter& interpreter) const
 {
     auto object_result = m_object->execute(interpreter).to_object(interpreter.heap());
     ASSERT(object_result.is_object());
-    return object_result.as_object()->get(computed_property_name(interpreter));
+    auto result = object_result.as_object()->get(computed_property_name(interpreter));
+    return result.value_or({});
 }
 
 Value StringLiteral::execute(Interpreter& interpreter) const

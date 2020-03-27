@@ -63,7 +63,7 @@ bool Object::put_own_property(Object& this_object, const FlyString& property_nam
     return true;
 }
 
-Value Object::get(const FlyString& property_name) const
+Optional<Value> Object::get(const FlyString& property_name) const
 {
     const Object* object = this;
     while (object) {
@@ -72,7 +72,7 @@ Value Object::get(const FlyString& property_name) const
             return value.value();
         object = object->prototype();
     }
-    return js_undefined();
+    return {};
 }
 
 void Object::put(const FlyString& property_name, Value value)
