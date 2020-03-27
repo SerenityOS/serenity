@@ -5,7 +5,7 @@ try {
     assert(nan + "" == "NaN");
     assert(isNaN(nan) === true);
     assert(isNaN(0) === false);
-    assert(isNaN(undefined) === false);
+    assert(isNaN(undefined) === true);
     assert(isNaN(null) === false);
     console.log("PASS");
 } catch (e) {
