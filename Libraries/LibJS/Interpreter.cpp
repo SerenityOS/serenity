@@ -86,8 +86,11 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, Vector<Argument> argu
 
 void Interpreter::exit_scope(const ScopeNode& scope_node)
 {
-    while (m_scope_stack.last().scope_node.ptr() != &scope_node)
-        m_scope_stack.take_last();
+    while (!m_scope_stack.is_empty()) {
+        auto popped_scope = m_scope_stack.take_last();
+        if (popped_scope.scope_node.ptr() == &scope_node)
+            break;
+    }
 
     // If we unwind all the way, just reset m_unwind_until so that future "return" doesn't break.
     if (m_scope_stack.is_empty())
