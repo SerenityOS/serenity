@@ -72,7 +72,10 @@ Value CallExpression::execute(Interpreter& interpreter) const
 
     auto& call_frame = interpreter.push_call_frame();
     for (size_t i = 0; i < m_arguments.size(); ++i) {
-        call_frame.arguments.append(m_arguments[i].execute(interpreter));
+        auto value = m_arguments[i].execute(interpreter);
+        if (interpreter.exception())
+            return {};
+        call_frame.arguments.append(value);
         if (interpreter.exception())
             return {};
     }
@@ -95,6 +98,8 @@ Value CallExpression::execute(Interpreter& interpreter) const
 Value ReturnStatement::execute(Interpreter& interpreter) const
 {
     auto value = argument() ? argument()->execute(interpreter) : js_undefined();
+    if (interpreter.exception())
+        return {};
     interpreter.unwind(ScopeType::Function);
     return value;
 }
@@ -102,6 +107,8 @@ Value ReturnStatement::execute(Interpreter& interpreter) const
 Value IfStatement::execute(Interpreter& interpreter) const
 {
     auto predicate_result = m_predicate->execute(interpreter);
+    if (interpreter.exception())
+        return {};
 
     if (predicate_result.to_boolean())
         return interpreter.run(*m_consequent);
@@ -116,7 +123,11 @@ Value WhileStatement::execute(Interpreter& interpreter) const
 {
     Value last_value = js_undefined();
     while (m_predicate->execute(interpreter).to_boolean()) {
+        if (interpreter.exception())
+            return {};
         last_value = interpreter.run(*m_body);
+        if (interpreter.exception())
+            return {};
     }
 
     return last_value;
@@ -133,20 +144,35 @@ Value ForStatement::execute(Interpreter& interpreter) const
 
     Value last_value = js_undefined();
 
-    if (m_init)
+    if (m_init) {
         m_init->execute(interpreter);
+        if (interpreter.exception())
+            return {};
+    }
 
     if (m_test) {
         while (m_test->execute(interpreter).to_boolean()) {
+            if (interpreter.exception())
+                return {};
             last_value = interpreter.run(*m_body);
-            if (m_update)
+            if (interpreter.exception())
+                return {};
+            if (m_update) {
                 m_update->execute(interpreter);
+                if (interpreter.exception())
+                    return {};
+            }
         }
     } else {
         while (true) {
             last_value = interpreter.run(*m_body);
-            if (m_update)
+            if (interpreter.exception())
+                return {};
+            if (m_update) {
                 m_update->execute(interpreter);
+                if (interpreter.exception())
+                    return {};
+            }
         }
     }
 
@@ -159,7 +185,11 @@ Value ForStatement::execute(Interpreter& interpreter) const
 Value BinaryExpression::execute(Interpreter& interpreter) const
 {
     auto lhs_result = m_lhs->execute(interpreter);
+    if (interpreter.exception())
+        return {};
     auto rhs_result = m_rhs->execute(interpreter);
+    if (interpreter.exception())
+        return {};
 
     switch (m_op) {
     case BinaryOp::Plus:
@@ -204,7 +234,11 @@ Value BinaryExpression::execute(Interpreter& interpreter) const
 Value LogicalExpression::execute(Interpreter& interpreter) const
 {
     auto lhs_result = m_lhs->execute(interpreter).to_boolean();
+    if (interpreter.exception())
+        return {};
     auto rhs_result = m_rhs->execute(interpreter).to_boolean();
+    if (interpreter.exception())
+        return {};
     switch (m_op) {
     case LogicalOp::And:
         return Value(lhs_result && rhs_result);
@@ -510,6 +544,8 @@ Value AssignmentExpression::execute(Interpreter& interpreter) const
     }
 
     auto rhs_result = m_rhs->execute(interpreter);
+    if (interpreter.exception())
+        return {};
 
     switch (m_op) {
     case AssignmentOp::Assignment:
@@ -527,6 +563,8 @@ Value AssignmentExpression::execute(Interpreter& interpreter) const
         rhs_result = div(m_lhs->execute(interpreter), rhs_result);
         break;
     }
+    if (interpreter.exception())
+        return {};
     commit(rhs_result);
     return rhs_result;
 }
@@ -615,6 +653,8 @@ Value VariableDeclaration::execute(Interpreter& interpreter) const
     interpreter.declare_variable(name().string(), m_declaration_type);
     if (m_initializer) {
         auto initalizer_result = m_initializer->execute(interpreter);
+        if (interpreter.exception())
+            return {};
         interpreter.set_variable(name().string(), initalizer_result, true);
     }
 
@@ -663,8 +703,12 @@ void ExpressionStatement::dump(int indent) const
 Value ObjectExpression::execute(Interpreter& interpreter) const
 {
     auto object = interpreter.heap().allocate<Object>();
-    for (auto it : m_properties)
-        object->put(it.key, it.value->execute(interpreter));
+    for (auto it : m_properties) {
+        auto value = it.value->execute(interpreter);
+        if (interpreter.exception())
+            return {};
+        object->put(it.key, value);
+    }
     return object;
 }
 
@@ -688,6 +732,8 @@ FlyString MemberExpression::computed_property_name(Interpreter& interpreter) con
 Value MemberExpression::execute(Interpreter& interpreter) const
 {
     auto object_result = m_object->execute(interpreter).to_object(interpreter.heap());
+    if (interpreter.exception())
+        return {};
     ASSERT(object_result.is_object());
     auto result = object_result.as_object()->get(computed_property_name(interpreter));
     return result.value_or({});
@@ -730,7 +776,10 @@ Value ArrayExpression::execute(Interpreter& interpreter) const
 {
     auto* array = interpreter.heap().allocate<Array>();
     for (auto& element : m_elements) {
-        array->push(element.execute(interpreter));
+        auto value = element.execute(interpreter);
+        if (interpreter.exception())
+            return {};
+        array->push(value);
     }
     return array;
 }
@@ -795,10 +844,12 @@ Value CatchClause::execute(Interpreter&) const
     return {};
 }
 
-Value ThrowStatement::execute(Interpreter& interrupt) const
+Value ThrowStatement::execute(Interpreter& interpreter) const
 {
-    auto value = m_argument->execute(interrupt);
-    return interrupt.throw_exception(value);
+    auto value = m_argument->execute(interpreter);
+    if (interpreter.exception())
+        return {};
+    return interpreter.throw_exception(value);
 }
 
 }
