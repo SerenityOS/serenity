@@ -18,6 +18,11 @@ GlobalObject::GlobalObject()
         this_object->heap().collect_garbage();
         return js_undefined();
     });
+    put_native_function("isNaN", [](Object*, Vector<Value> arguments) -> Value {
+        if (arguments.size() < 1)
+            return js_undefined();
+        return Value(arguments[0].is_nan());
+    });
     put("Math", heap().allocate<MathObject>());
 }
 
