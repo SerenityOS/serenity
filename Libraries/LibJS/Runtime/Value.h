@@ -53,6 +53,8 @@ public:
     bool is_cell() const { return is_string() || is_object(); }
     bool is_array() const;
 
+    bool is_nan() const { return is_number() && __builtin_isnan( as_double()); }
+
     Value()
         : m_type(Type::Undefined)
     {
@@ -164,6 +166,11 @@ inline Value js_undefined()
 inline Value js_null()
 {
     return Value(Value::Type::Null);
+}
+
+inline Value js_nan()
+{
+    return Value(__builtin_nan(""));
 }
 
 Value greater_than(Value lhs, Value rhs);

@@ -49,9 +49,13 @@ String Value::to_string() const
     if (is_undefined())
         return "undefined";
 
-    if (is_number())
+    if (is_number()) {
+        if (is_nan())
+            return "NaN";
+
         // FIXME: This needs improvement.
         return String::number((i32)as_double());
+    }
 
     if (is_object())
         return as_object()->to_primitive(Object::PreferredType::String).to_string();
@@ -108,14 +112,10 @@ Value Value::to_number() const
         if (ok)
             return Value(parsed_int);
 
-        //FIXME: Implement 'NaN'
-        ASSERT_NOT_REACHED();
-
-        break;
+        return js_nan();
     }
     case Type::Undefined:
-        //FIXME: Implement 'NaN'
-        ASSERT_NOT_REACHED();
+        return js_nan();
     case Type::Object:
         return m_value.as_object->to_primitive(Object::PreferredType::Number).to_number();
     }
