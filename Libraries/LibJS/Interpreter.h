@@ -79,7 +79,7 @@ public:
 
     void unwind(ScopeType type) { m_unwind_until = type; }
 
-    Value get_variable(const FlyString& name);
+    Optional<Value> get_variable(const FlyString& name);
     void set_variable(const FlyString& name, Value, bool first_assignment = false);
     void declare_variable(const FlyString& name, DeclarationType);
 

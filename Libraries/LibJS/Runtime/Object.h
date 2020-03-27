@@ -40,7 +40,7 @@ public:
     Object();
     virtual ~Object();
 
-    Value get(const FlyString& property_name) const;
+    Optional<Value> get(const FlyString& property_name) const;
     void put(const FlyString& property_name, Value);
 
     virtual Optional<Value> get_own_property(const Object& this_object, const FlyString& property_name) const;
