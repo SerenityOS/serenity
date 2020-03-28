@@ -33,6 +33,7 @@
 #include <Kernel/Profiling.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Thread.h>
+#include <Kernel/ThreadTracer.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/ProcessPagingScope.h>
@@ -508,6 +509,29 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
         ASSERT(m_stop_state != State::Invalid);
         set_state(m_stop_state);
         m_stop_state = State::Invalid;
+        // make sure SemiPermanentBlocker is unblocked
+        if (m_state != Thread::Runnable && m_state != Thread::Running
+            && m_blocker && m_blocker->is_reason_signal())
+            unblock();
+    }
+
+    else {
+        auto* thread_tracer = tracer();
+        if (thread_tracer != nullptr) {
+            // when a thread is traced, it should be stopped whenever it receives a signal
+            // the tracer is notified of this by using waitpid()
+            // only "pending signals" from the tracer are sent to the tracee
+            if (!thread_tracer->has_pending_signal(signal)) {
+                m_stop_signal = signal;
+                // make sure SemiPermanentBlocker is unblocked
+                if (m_blocker && m_blocker->is_reason_signal())
+                    unblock();
+                m_stop_state = m_state;
+                set_state(Stopped);
+                return ShouldUnblockThread::No;
+            }
+            thread_tracer->unset_signal(signal);
+        }
     }
 
     auto handler_vaddr = action.handler_or_sigaction;
@@ -898,6 +922,23 @@ Thread* Thread::from_tid(int tid)
 void Thread::reset_fpu_state()
 {
     memcpy(m_fpu_state, &s_clean_fpu_state, sizeof(FPUState));
+}
+
+void Thread::start_tracing_from(pid_t tracer)
+{
+    m_tracer = ThreadTracer::create(tracer);
+}
+
+void Thread::stop_tracing()
+{
+    m_tracer = nullptr;
+}
+
+void Thread::tracer_trap(const RegisterState& regs)
+{
+    ASSERT(m_tracer.ptr());
+    m_tracer->set_regs(regs);
+    send_urgent_signal_to_self(SIGTRAP);
 }
 
 }

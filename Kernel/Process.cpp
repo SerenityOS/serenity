@@ -56,7 +56,6 @@
 #include <Kernel/Net/Socket.h>
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Process.h>
-#include <Kernel/ProcessTracer.h>
 #include <Kernel/Profiling.h>
 #include <Kernel/RTC.h>
 #include <Kernel/Random.h>
@@ -66,6 +65,7 @@
 #include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/TTY/TTY.h>
 #include <Kernel/Thread.h>
+#include <Kernel/ThreadTracer.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/PrivateInodeVMObject.h>
@@ -1234,6 +1234,9 @@ int Process::sys$execve(const Syscall::SC_execve_params* user_params)
 
     if (params.arguments.length > ARG_MAX || params.environment.length > ARG_MAX)
         return -E2BIG;
+
+    if (m_wait_for_tracer_at_next_execve)
+        Thread::current->send_urgent_signal_to_self(SIGSTOP);
 
     String path;
     {
@@ -3078,9 +3081,6 @@ void Process::die()
     // slave owner, we have to allow the PTY pair to be torn down.
     m_tty = nullptr;
 
-    if (m_tracer)
-        m_tracer->set_dead();
-
     kill_all_threads();
 }
 
@@ -3964,24 +3964,6 @@ int Process::sys$watch_file(const char* user_path, size_t path_length)
     return fd;
 }
 
-int Process::sys$systrace(pid_t pid)
-{
-    REQUIRE_PROMISE(proc);
-    InterruptDisabler disabler;
-    auto* peer = Process::from_pid(pid);
-    if (!peer)
-        return -ESRCH;
-    if (peer->uid() != m_euid)
-        return -EACCES;
-    int fd = alloc_fd();
-    if (fd < 0)
-        return fd;
-    auto description = FileDescription::create(peer->ensure_tracer());
-    description->set_readable(true);
-    m_fds[fd].set(move(description), 0);
-    return fd;
-}
-
 int Process::sys$halt()
 {
     if (!is_superuser())
@@ -4110,13 +4092,6 @@ int Process::sys$umount(const char* user_mountpoint, size_t mountpoint_length)
 
     auto guest_inode_id = metadata_or_error.value().inode;
     return VFS::the().unmount(guest_inode_id);
-}
-
-ProcessTracer& Process::ensure_tracer()
-{
-    if (!m_tracer)
-        m_tracer = ProcessTracer::create(m_pid);
-    return *m_tracer;
 }
 
 void Process::FileDescriptionAndFlags::clear()
@@ -4885,6 +4860,104 @@ int Process::sys$get_stack_bounds(FlatPtr* user_stack_base, size_t* user_stack_s
     copy_to_user(user_stack_base, &stack_base);
     copy_to_user(user_stack_size, &stack_size);
     return 0;
+}
+
+int Process::sys$ptrace(const Syscall::SC_ptrace_params* user_params)
+{
+    REQUIRE_PROMISE(proc);
+    Syscall::SC_ptrace_params params;
+    if (!validate_read_and_copy_typed(&params, user_params))
+        return -EFAULT;
+
+    if (params.request == PT_TRACE_ME) {
+        if (Thread::current->tracer())
+            return -EBUSY;
+
+        m_wait_for_tracer_at_next_execve = true;
+        return 0;
+    }
+
+    if (params.pid == m_pid)
+        return -EINVAL;
+
+    InterruptDisabler disabler;
+    auto* peer = Thread::from_tid(params.pid);
+    if (!peer)
+        return -ESRCH;
+
+    if (peer->process().uid() != m_euid)
+        return -EACCES;
+
+    if (params.request == PT_ATTACH) {
+        if (peer->tracer()) {
+            return -EBUSY;
+        }
+        peer->start_tracing_from(m_pid);
+        if (peer->state() != Thread::State::Stopped && !(peer->m_blocker && peer->m_blocker->is_reason_signal()))
+            peer->send_signal(SIGSTOP, this);
+        return 0;
+    }
+
+    auto* tracer = peer->tracer();
+
+    if (!tracer)
+        return -EPERM;
+
+    if (tracer->tracer_pid() != m_pid)
+        return -EBUSY;
+
+    if (peer->m_state == Thread::State::Running)
+        return -EBUSY;
+
+    switch (params.request) {
+    case PT_CONTINUE:
+        peer->send_signal(SIGCONT, this);
+        break;
+
+    case PT_DETACH:
+        peer->stop_tracing();
+        peer->send_signal(SIGCONT, this);
+        break;
+
+    case PT_SYSCALL:
+        tracer->set_trace_syscalls(true);
+        peer->send_signal(SIGCONT, this);
+        break;
+
+    case PT_GETREGS: {
+        if (!tracer->has_regs())
+            return -EINVAL;
+
+        PtraceRegisters* regs = reinterpret_cast<PtraceRegisters*>(params.addr);
+        if (!validate_write(regs, sizeof(PtraceRegisters)))
+            return -EFAULT;
+
+        {
+            SmapDisabler disabler;
+            *regs = tracer->regs();
+        }
+        break;
+    }
+
+    default:
+        return -EINVAL;
+    }
+
+    return 0;
+}
+
+bool Process::has_tracee_thread(int tracer_pid) const
+{
+    bool has_tracee = false;
+
+    for_each_thread([&](Thread& t) {
+        if (t.tracer() && t.tracer()->tracer_pid() == tracer_pid) {
+            has_tracee = true;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+    return has_tracee;
 }
 
 }
