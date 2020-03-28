@@ -88,7 +88,7 @@ public:
     void enter_scope(const ScopeNode&, Vector<Argument>, ScopeType);
     void exit_scope(const ScopeNode&);
 
-    Value call(Function*, Value this_value, const Vector<Value>& arguments);
+    Value call(Function*, Value this_value = {}, const Vector<Value>& arguments = {});
 
     CallFrame& push_call_frame()
     {
