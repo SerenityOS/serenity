@@ -58,7 +58,6 @@ int get_process_name(char* buffer, int buffer_size);
 void dump_backtrace();
 int fsync(int fd);
 void sysbeep();
-int systrace(pid_t);
 int gettid();
 int donate(int tid);
 int set_process_icon(int icon_id);
