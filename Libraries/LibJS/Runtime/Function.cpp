@@ -24,6 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/FlyString.h>
+#include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -31,6 +33,7 @@ namespace JS {
 
 Function::Function()
 {
+    put("prototype", heap().allocate<Object>());
 }
 
 Function::~Function()
