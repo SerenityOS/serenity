@@ -54,6 +54,7 @@ public:
     virtual bool is_member_expression() const { return false; }
     virtual bool is_scope_node() const { return false; }
     virtual bool is_variable_declaration() const { return false; }
+    virtual bool is_new_expression() const { return false; }
 
 protected:
     ASTNode() {}
@@ -470,7 +471,7 @@ private:
 
 class CallExpression : public Expression {
 public:
-    explicit CallExpression(NonnullRefPtr<Expression> callee, NonnullRefPtrVector<Expression> arguments = {})
+    CallExpression(NonnullRefPtr<Expression> callee, NonnullRefPtrVector<Expression> arguments = {})
         : m_callee(move(callee))
         , m_arguments(move(arguments))
     {
@@ -484,6 +485,18 @@ private:
 
     NonnullRefPtr<Expression> m_callee;
     const NonnullRefPtrVector<Expression> m_arguments;
+};
+
+class NewExpression final : public CallExpression {
+public:
+    NewExpression(NonnullRefPtr<Expression> callee, NonnullRefPtrVector<Expression> arguments = {})
+        : CallExpression(move(callee), move(arguments))
+    {
+    }
+
+private:
+    virtual const char * class_name() const override { return "NewExpression"; }
+    virtual bool is_new_expression() const override { return true; }
 };
 
 enum class AssignmentOp {
