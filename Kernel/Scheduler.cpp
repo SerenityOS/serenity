@@ -261,7 +261,12 @@ bool Thread::WaitBlocker::should_unblock(Thread& thread, time_t, long)
             return IterationDecision::Continue;
 
         bool child_exited = child.is_dead();
-        bool child_stopped = child.thread_count() && child.any_thread().state() == Thread::State::Stopped;
+        bool child_stopped = false;
+        if (child.thread_count()) {
+            auto& child_thread = child.any_thread();
+            if (child_thread.state() == Thread::State::Stopped && !child_thread.has_pending_signal(SIGCONT))
+                child_stopped = true;
+        }
 
         bool wait_finished = ((m_wait_options & WEXITED) && child_exited)
             || ((m_wait_options & WSTOPPED) && child_stopped);
