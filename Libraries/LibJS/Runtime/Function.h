@@ -35,7 +35,7 @@ class Function : public Object {
 public:
     virtual ~Function();
 
-    virtual Value call(Interpreter&, const Vector<Value>&) = 0;
+    virtual Value call(Interpreter&) = 0;
 
 protected:
     Function();

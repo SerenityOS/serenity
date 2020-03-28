@@ -41,8 +41,9 @@ ScriptFunction::~ScriptFunction()
 {
 }
 
-Value ScriptFunction::call(Interpreter& interpreter, const Vector<Value>& argument_values)
+Value ScriptFunction::call(Interpreter& interpreter)
 {
+    auto& argument_values = interpreter.call_frame().arguments;
     Vector<Argument> arguments;
     for (size_t i = 0; i < m_parameters.size(); ++i) {
         auto name = parameters()[i];

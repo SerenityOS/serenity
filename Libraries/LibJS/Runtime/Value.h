@@ -144,7 +144,7 @@ public:
     Value to_number() const;
     i32 to_i32() const;
 
-    Value to_object(Heap&) const;
+    Object* to_object(Heap&) const;
 
 private:
     Type m_type { Type::Undefined };

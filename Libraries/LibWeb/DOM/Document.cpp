@@ -338,14 +338,16 @@ JS::Interpreter& Document::interpreter()
     if (!m_interpreter) {
         m_interpreter = make<JS::Interpreter>();
 
-        m_interpreter->global_object().put_native_function("alert", [](JS::Object*, const Vector<JS::Value>& arguments) -> JS::Value {
+        m_interpreter->global_object().put_native_function("alert", [](JS::Interpreter& interpreter) -> JS::Value {
+            auto& arguments = interpreter.call_frame().arguments;
             if (arguments.size() < 1)
                 return JS::js_undefined();
             GUI::MessageBox::show(arguments[0].to_string(), "Alert", GUI::MessageBox::Type::Information);
             return JS::js_undefined();
         });
 
-        m_interpreter->global_object().put_native_function("setInterval", [this](JS::Object*, const Vector<JS::Value>& arguments) -> JS::Value {
+        m_interpreter->global_object().put_native_function("setInterval", [this](JS::Interpreter& interpreter) -> JS::Value {
+            auto& arguments = interpreter.call_frame().arguments;
             if (arguments.size() < 2)
                 return JS::js_undefined();
             ASSERT(arguments[0].is_object());
@@ -355,14 +357,16 @@ JS::Interpreter& Document::interpreter()
             // FIXME: This timer should not be leaked! It should also be removable with clearInterval()!
             (void)Core::Timer::construct(
                 arguments[1].to_i32(), [this, callback] {
-                    const_cast<JS::Function*>(static_cast<const JS::Function*>(callback.cell()))->call(*m_interpreter, {});
+                    // FIXME: Perform the call through Interpreter so it can set up a call frame!
+                    const_cast<JS::Function*>(static_cast<const JS::Function*>(callback.cell()))->call(*m_interpreter);
                 })
                 .leak_ref();
 
             return JS::js_undefined();
         });
 
-        m_interpreter->global_object().put_native_function("requestAnimationFrame", [this](JS::Object*, const Vector<JS::Value>& arguments) -> JS::Value {
+        m_interpreter->global_object().put_native_function("requestAnimationFrame", [this](JS::Interpreter& interpreter) -> JS::Value {
+            auto& arguments = interpreter.call_frame().arguments;
             if (arguments.size() < 1)
                 return JS::js_undefined();
             ASSERT(arguments[0].is_object());
@@ -370,13 +374,15 @@ JS::Interpreter& Document::interpreter()
             auto callback = make_handle(const_cast<JS::Object*>(arguments[0].as_object()));
             // FIXME: Don't hand out raw DisplayLink ID's to JavaScript!
             i32 link_id = GUI::DisplayLink::register_callback([this, callback](i32 link_id) {
-                const_cast<JS::Function*>(static_cast<const JS::Function*>(callback.cell()))->call(*m_interpreter, {});
+                // FIXME: Perform the call through Interpreter so it can set up a call frame!
+                const_cast<JS::Function*>(static_cast<const JS::Function*>(callback.cell()))->call(*m_interpreter);
                 GUI::DisplayLink::unregister_callback(link_id);
             });
             return JS::Value(link_id);
         });
 
-        m_interpreter->global_object().put_native_function("cancelAnimationFrame", [](JS::Object*, const Vector<JS::Value>& arguments) -> JS::Value {
+        m_interpreter->global_object().put_native_function("cancelAnimationFrame", [](JS::Interpreter& interpreter) -> JS::Value {
+            auto& arguments = interpreter.call_frame().arguments;
             if (arguments.size() < 1)
                 return JS::js_undefined();
             // FIXME: We should not be passing untrusted numbers to DisplayLink::unregistered_callback()!

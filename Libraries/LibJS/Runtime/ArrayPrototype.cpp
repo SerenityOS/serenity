@@ -35,24 +35,30 @@ namespace JS {
 
 ArrayPrototype::ArrayPrototype()
 {
-    put_native_function("shift", [](Object* this_object, const Vector<Value>&) -> Value {
-        ASSERT(this_object);
+    put_native_function("shift", [](Interpreter& interpreter) -> Value {
+        auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+        if (!this_object)
+            return {};
         ASSERT(this_object->is_array());
         return static_cast<Array*>(this_object)->shift();
     });
 
-    put_native_function("pop", [](Object* this_object, const Vector<Value>&) -> Value {
-        ASSERT(this_object);
+    put_native_function("pop", [](Interpreter& interpreter) -> Value {
+        auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+        if (!this_object)
+            return {};
         ASSERT(this_object->is_array());
         return static_cast<Array*>(this_object)->pop();
     });
 
-    put_native_function("push", [](Object* this_object, const Vector<Value>& arguments) -> Value {
-        if (arguments.is_empty())
-            return js_undefined();
-        ASSERT(this_object);
+    put_native_function("push", [](Interpreter& interpreter) -> Value {
+        auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+        if (!this_object)
+            return {};
         ASSERT(this_object->is_array());
-        static_cast<Array*>(this_object)->push(arguments[0]);
+        if (interpreter.call_frame().arguments.is_empty())
+            return js_undefined();
+        static_cast<Array*>(this_object)->push(interpreter.call_frame().arguments[0]);
         return Value(static_cast<const Array*>(this_object)->length());
     });
 }

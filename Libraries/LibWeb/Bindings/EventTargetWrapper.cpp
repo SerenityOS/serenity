@@ -24,8 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Function.h>
 #include <AK/FlyString.h>
+#include <AK/Function.h>
+#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibWeb/Bindings/EventListenerWrapper.h>
 #include <LibWeb/Bindings/EventTargetWrapper.h>
@@ -38,7 +39,12 @@ namespace Bindings {
 EventTargetWrapper::EventTargetWrapper(EventTarget& impl)
     : m_impl(impl)
 {
-    put_native_function("addEventListener", [](Object* this_object, const Vector<JS::Value>& arguments) {
+    put_native_function("addEventListener", [](JS::Interpreter& interpreter) -> JS::Value {
+        auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+        if (!this_object)
+            return {};
+
+        auto& arguments = interpreter.call_frame().arguments;
         if (arguments.size() < 2)
             return JS::js_undefined();
 

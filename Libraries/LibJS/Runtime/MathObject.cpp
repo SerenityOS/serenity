@@ -32,7 +32,7 @@ namespace JS {
 
 MathObject::MathObject()
 {
-    put_native_function("random", [](Object*, const Vector<Value>&) {
+    put_native_function("random", [](Interpreter&) {
 #ifdef __serenity__
         double r = (double)arc4random() / (double)UINT32_MAX;
 #else

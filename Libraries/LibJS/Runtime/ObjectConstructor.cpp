@@ -35,39 +35,40 @@ ObjectConstructor::ObjectConstructor()
 {
     put("prototype", interpreter().object_prototype());
 
-    put_native_function("getPrototypeOf", [this](Object*, const Vector<Value>& arguments) -> Value {
-        if (arguments.size() < 1)
-            return {};
-        auto object = arguments[0].to_object(heap());
-        if (interpreter().exception())
-            return {};
-        if (!object.is_object())
-            return {};
-        return object.as_object()->prototype();
-    });
-
-    put_native_function("setPrototypeOf", [this](Object*, const Vector<Value>& arguments) -> Value {
-        if (arguments.size() < 2)
-            return {};
-        auto object = arguments[0].to_object(heap());
-        if (interpreter().exception())
-            return {};
-        if (!object.is_object())
-            return {};
-        if (!arguments[1].is_object())
-            return {};
-        const_cast<Object*>(object.as_object())->set_prototype(const_cast<Object*>(arguments[1].as_object()));
-        return {};
-    });
+    put_native_function("getPrototypeOf", get_prototype_of);
+    put_native_function("setPrototypeOf", set_prototype_of);
 }
 
 ObjectConstructor::~ObjectConstructor()
 {
 }
 
-Value ObjectConstructor::call(Interpreter& interpreter, const Vector<Value>&)
+Value ObjectConstructor::call(Interpreter& interpreter)
 {
     return interpreter.heap().allocate<Object>();
+}
+
+Value ObjectConstructor::get_prototype_of(Interpreter& interpreter)
+{
+    if (interpreter.call_frame().arguments.size() < 1)
+        return {};
+    auto* object = interpreter.call_frame().arguments[0].to_object(interpreter.heap());
+    if (interpreter.exception())
+        return {};
+    return object->prototype();
+}
+
+Value ObjectConstructor::set_prototype_of(Interpreter& interpreter)
+{
+    if (interpreter.call_frame().arguments.size() < 2)
+        return {};
+    if (!interpreter.call_frame().arguments[1].is_object())
+        return {};
+    auto* object = interpreter.call_frame().arguments[0].to_object(interpreter.heap());
+    if (interpreter.exception())
+        return {};
+    object->set_prototype(const_cast<Object*>(interpreter.call_frame().arguments[1].as_object()));
+    return {};
 }
 
 }
