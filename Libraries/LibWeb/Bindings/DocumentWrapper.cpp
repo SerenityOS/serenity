@@ -38,16 +38,7 @@ namespace Bindings {
 DocumentWrapper::DocumentWrapper(Document& document)
     : NodeWrapper(document)
 {
-    put_native_function("getElementById", [this](JS::Interpreter& interpreter) -> JS::Value {
-        auto& arguments = interpreter.call_frame().arguments;
-        if (arguments.is_empty())
-            return JS::js_null();
-        auto id = arguments[0].to_string();
-        auto* element = node().get_element_by_id(id);
-        if (!element)
-            return JS::js_null();
-        return wrap(heap(), const_cast<Element&>(*element));
-    });
+    put_native_function("getElementById", get_element_by_id);
 }
 
 DocumentWrapper::~DocumentWrapper()
@@ -62,6 +53,23 @@ Document& DocumentWrapper::node()
 const Document& DocumentWrapper::node() const
 {
     return static_cast<const Document&>(NodeWrapper::node());
+}
+
+JS::Value DocumentWrapper::get_element_by_id(JS::Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return {};
+    // FIXME: Verify that it's a DocumentWrapper somehow!
+    auto& node = static_cast<DocumentWrapper*>(this_object)->node();
+    auto& arguments = interpreter.call_frame().arguments;
+    if (arguments.is_empty())
+        return JS::js_null();
+    auto id = arguments[0].to_string();
+    auto* element = node.get_element_by_id(id);
+    if (!element)
+        return JS::js_null();
+    return wrap(interpreter.heap(), const_cast<Element&>(*element));
 }
 
 }

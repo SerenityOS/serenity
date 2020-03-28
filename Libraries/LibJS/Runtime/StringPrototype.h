@@ -37,6 +37,9 @@ public:
 
 private:
     virtual const char* class_name() const override { return "StringPrototype"; }
+
+    static Value char_at(Interpreter&);
+    static Value repeat(Interpreter&);
 };
 
 }
