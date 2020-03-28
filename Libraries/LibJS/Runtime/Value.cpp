@@ -259,20 +259,11 @@ Value instance_of(Value lhs, Value rhs)
     if (!lhs.is_object() || !rhs.is_object())
         return Value(false);
 
-    auto* instance_prototype = lhs.as_object()->prototype();
-
-    if (!instance_prototype)
+    auto constructor_prototype_property = rhs.as_object()->get("prototype");
+    if (!constructor_prototype_property.has_value() || !constructor_prototype_property.value().is_object())
         return Value(false);
 
-    for (auto* constructor_object = rhs.as_object(); constructor_object; constructor_object = constructor_object->prototype()) {
-        auto prototype_property = constructor_object->get_own_property(*constructor_object, "prototype");
-        if (!prototype_property.has_value())
-            continue;
-        if (prototype_property.value().is_object() && prototype_property.value().as_object() == instance_prototype)
-            return Value(true);
-    }
-
-    return Value(false);
+    return Value(lhs.as_object()->has_prototype(constructor_prototype_property.value().as_object()));
 }
 
 const LogStream& operator<<(const LogStream& stream, const Value& value)
