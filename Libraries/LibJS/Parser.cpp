@@ -150,6 +150,7 @@ Associativity Parser::operator_associativity(TokenType type) const
     case TokenType::ExclamationMarkEquals:
     case TokenType::EqualsEqualsEquals:
     case TokenType::ExclamationMarkEqualsEquals:
+    case TokenType::Typeof:
     case TokenType::Ampersand:
     case TokenType::Caret:
     case TokenType::Pipe:
@@ -256,22 +257,24 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
 
 NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
 {
+    auto precedence = operator_precedence(m_current_token.type());
+    auto associativity = operator_associativity(m_current_token.type());
     switch (m_current_token.type()) {
     case TokenType::PlusPlus:
         consume();
-        return create_ast_node<UpdateExpression>(UpdateOp::Increment, parse_primary_expression(), true);
+        return create_ast_node<UpdateExpression>(UpdateOp::Increment, parse_expression(precedence, associativity), true);
     case TokenType::MinusMinus:
         consume();
-        return create_ast_node<UpdateExpression>(UpdateOp::Decrement, parse_primary_expression(), true);
+        return create_ast_node<UpdateExpression>(UpdateOp::Decrement, parse_expression(precedence, associativity), true);
     case TokenType::ExclamationMark:
         consume();
-        return create_ast_node<UnaryExpression>(UnaryOp::Not, parse_primary_expression());
+        return create_ast_node<UnaryExpression>(UnaryOp::Not, parse_expression(precedence, associativity));
     case TokenType::Tilde:
         consume();
-        return create_ast_node<UnaryExpression>(UnaryOp::BitwiseNot, parse_primary_expression());
+        return create_ast_node<UnaryExpression>(UnaryOp::BitwiseNot, parse_expression(precedence, associativity));
     case TokenType::Typeof:
         consume();
-        return create_ast_node<UnaryExpression>(UnaryOp::Typeof, parse_primary_expression());
+        return create_ast_node<UnaryExpression>(UnaryOp::Typeof, parse_expression(precedence, associativity));
     default:
         m_has_errors = true;
         expected("primary expression (missing switch case)");
