@@ -42,6 +42,15 @@ public:
     bool operator==(const FlyString& other) const { return m_impl == other.m_impl; }
     bool operator!=(const FlyString& other) const { return m_impl != other.m_impl; }
 
+    bool operator==(const String&) const;
+    bool operator!=(const String& string) const { return !(*this == string); }
+
+    bool operator==(const StringView&) const;
+    bool operator!=(const StringView& string) const { return !(*this == string); }
+
+    bool operator==(const char*) const;
+    bool operator!=(const char* string) const { return !(*this == string); }
+
     const StringImpl* impl() const { return m_impl; }
     const char* characters() const { return m_impl ? m_impl->characters() : nullptr; }
     size_t length() const { return m_impl ? m_impl->length() : 0; }

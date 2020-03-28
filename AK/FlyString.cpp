@@ -104,4 +104,21 @@ StringView FlyString::view() const
     return { characters(), length() };
 }
 
+bool FlyString::operator==(const String& string) const
+{
+    if (m_impl == string.impl())
+        return true;
+    return String(m_impl.ptr()) == string;
+}
+
+bool FlyString::operator==(const StringView& string) const
+{
+    return String(string) == String(m_impl.ptr());
+}
+
+bool FlyString::operator==(const char* string) const
+{
+    return String(string) == String(m_impl.ptr());
+}
+
 }
