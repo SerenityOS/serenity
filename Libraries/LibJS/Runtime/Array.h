@@ -39,6 +39,8 @@ public:
     const Vector<Value>& elements() const { return m_elements; }
     Vector<Value>& elements() { return m_elements; }
 
+    Value shift();
+    Value pop();
     void push(Value);
 
 private:
