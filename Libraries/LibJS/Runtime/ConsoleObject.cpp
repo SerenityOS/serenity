@@ -34,19 +34,22 @@ namespace JS {
 
 ConsoleObject::ConsoleObject()
 {
-    put_native_function("log", [](Interpreter& interpreter) -> Value {
-        for (size_t i = 0; i < interpreter.call_frame().arguments.size(); ++i) {
-            printf("%s", interpreter.call_frame().arguments[i].to_string().characters());
-            if (i != interpreter.call_frame().arguments.size() - 1)
-                putchar(' ');
-        }
-        putchar('\n');
-        return js_undefined();
-    });
+    put_native_function("log", log);
 }
 
 ConsoleObject::~ConsoleObject()
 {
+}
+
+Value ConsoleObject::log(Interpreter& interpreter)
+{
+    for (size_t i = 0; i < interpreter.call_frame().arguments.size(); ++i) {
+        printf("%s", interpreter.call_frame().arguments[i].to_string().characters());
+        if (i != interpreter.call_frame().arguments.size() - 1)
+            putchar(' ');
+    }
+    putchar('\n');
+    return js_undefined();
 }
 
 }

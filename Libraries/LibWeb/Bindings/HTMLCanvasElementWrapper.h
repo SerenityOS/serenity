@@ -41,6 +41,8 @@ public:
 
 private:
     virtual const char* class_name() const override { return "HTMLCanvasElementWrapper"; }
+
+    static JS::Value get_context(JS::Interpreter&);
 };
 
 }
