@@ -37,6 +37,9 @@ public:
 
 private:
     virtual const char* class_name() const override { return "ErrorPrototype"; }
+
+    static Value name_getter(Interpreter&);
+    static Value message_getter(Interpreter&);
 };
 
 }

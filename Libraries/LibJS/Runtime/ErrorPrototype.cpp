@@ -36,25 +36,32 @@ namespace JS {
 
 ErrorPrototype::ErrorPrototype()
 {
-    put_native_property(
-        "name", [](Object* this_object) {
-            ASSERT(this_object);
-            ASSERT(this_object->is_error());
-            return js_string(this_object->heap(), static_cast<const Error*>(this_object)->name());
-        },
-        nullptr);
-
-    put_native_property(
-        "message", [](Object* this_object) {
-            ASSERT(this_object);
-            ASSERT(this_object->is_error());
-            return js_string(this_object->heap(), static_cast<const Error*>(this_object)->message());
-        },
-        nullptr);
+    put_native_property("name", name_getter, nullptr);
+    put_native_property("message", message_getter, nullptr);
 }
 
 ErrorPrototype::~ErrorPrototype()
 {
+}
+
+Value ErrorPrototype::name_getter(Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return {};
+    if (!this_object->is_error())
+        return interpreter.throw_exception<Error>("TypeError", "Not an Error object");
+    return js_string(interpreter.heap(), static_cast<const Error*>(this_object)->name());
+}
+
+Value ErrorPrototype::message_getter(Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return {};
+    if (!this_object->is_error())
+        return interpreter.throw_exception<Error>("TypeError", "Not an Error object");
+    return js_string(interpreter.heap(), static_cast<const Error*>(this_object)->message());
 }
 
 }

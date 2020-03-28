@@ -392,7 +392,7 @@ JS::Interpreter& Document::interpreter()
 
         m_interpreter->global_object().put_native_property(
             "document",
-            [this](JS::Object*) {
+            [this](JS::Interpreter&) {
                 return wrap(m_interpreter->heap(), *this);
             },
             nullptr);
