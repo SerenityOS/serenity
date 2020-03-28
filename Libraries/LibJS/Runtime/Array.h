@@ -50,6 +50,9 @@ private:
     virtual Optional<Value> get_own_property(const Object& this_object, const FlyString& property_name) const override;
     virtual bool put_own_property(Object& this_object, const FlyString& property_name, Value) override;
 
+    static Value length_getter(Interpreter&);
+    static void length_setter(Interpreter&, Value);
+
     Vector<Value> m_elements;
 };
 

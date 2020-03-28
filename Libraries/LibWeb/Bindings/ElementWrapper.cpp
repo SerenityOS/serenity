@@ -26,6 +26,7 @@
 
 #include <AK/FlyString.h>
 #include <AK/Function.h>
+#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/ElementWrapper.h>
@@ -37,14 +38,7 @@ namespace Bindings {
 ElementWrapper::ElementWrapper(Element& element)
     : NodeWrapper(element)
 {
-    put_native_property(
-        "innerHTML",
-        [this](JS::Object*) {
-            return JS::js_string(heap(), node().inner_html());
-        },
-        [this](JS::Object*, JS::Value value) {
-            node().set_inner_html(value.to_string());
-        });
+    put_native_property("innerHTML", inner_html_getter, inner_html_setter);
 }
 
 ElementWrapper::~ElementWrapper()
@@ -59,6 +53,28 @@ Element& ElementWrapper::node()
 const Element& ElementWrapper::node() const
 {
     return static_cast<const Element&>(NodeWrapper::node());
+}
+
+static Element* impl_from(JS::Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return nullptr;
+    // FIXME: Verify that it's an ElementWrapper somehow!
+    return &static_cast<ElementWrapper*>(this_object)->node();
+}
+
+JS::Value ElementWrapper::inner_html_getter(JS::Interpreter& interpreter)
+{
+    if (auto* impl = impl_from(interpreter))
+        return JS::js_string(interpreter.heap(), impl->inner_html());
+    return {};
+}
+
+void ElementWrapper::inner_html_setter(JS::Interpreter& interpreter, JS::Value value)
+{
+    if (auto* impl = impl_from(interpreter))
+        impl->set_inner_html(value.to_string());
 }
 
 }

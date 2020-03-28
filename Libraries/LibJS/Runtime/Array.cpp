@@ -27,20 +27,14 @@
 #include <AK/Function.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/Error.h>
 
 namespace JS {
 
 Array::Array()
 {
     set_prototype(interpreter().array_prototype());
-    put_native_property(
-        "length",
-        [this](Object*) {
-            return Value(length());
-        },
-        [](Object*, Value) {
-            ASSERT_NOT_REACHED();
-        });
+    put_native_property("length", length_getter, length_setter);
 }
 
 Array::~Array()
@@ -96,4 +90,20 @@ bool Array::put_own_property(Object& this_object, const FlyString& property_name
     }
     return Object::put_own_property(this_object, property_name, value);
 }
+
+Value Array::length_getter(Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return {};
+    if (!this_object->is_array())
+        return interpreter.throw_exception<Error>("TypeError", "Not an array");
+    return Value(static_cast<const Array*>(this_object)->length());
+}
+
+void Array::length_setter(Interpreter&, Value)
+{
+    ASSERT_NOT_REACHED();
+}
+
 }

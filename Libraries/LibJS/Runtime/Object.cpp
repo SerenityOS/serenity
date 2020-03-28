@@ -56,8 +56,15 @@ bool Object::has_prototype(const Object* prototype) const
 Optional<Value> Object::get_own_property(const Object& this_object, const FlyString& property_name) const
 {
     auto value_here = m_properties.get(property_name);
-    if (value_here.has_value() && value_here.value().is_object() && value_here.value().as_object()->is_native_property())
-        return static_cast<NativeProperty*>(value_here.value().as_object())->get(&const_cast<Object&>(this_object));
+    if (value_here.has_value() && value_here.value().is_object() && value_here.value().as_object()->is_native_property()) {
+        auto& native_property = static_cast<const NativeProperty&>(*value_here.value().as_object());
+        auto& interpreter = const_cast<Object*>(this)->interpreter();
+        auto& call_frame = interpreter.push_call_frame();
+        call_frame.this_value = const_cast<Object*>(&this_object);
+        auto result = native_property.get(interpreter);
+        interpreter.pop_call_frame();
+        return result;
+    }
     return value_here;
 }
 
@@ -65,7 +72,13 @@ bool Object::put_own_property(Object& this_object, const FlyString& property_nam
 {
     auto value_here = m_properties.get(property_name);
     if (value_here.has_value() && value_here.value().is_object() && value_here.value().as_object()->is_native_property()) {
-        static_cast<NativeProperty*>(value_here.value().as_object())->set(&this_object, value);
+        auto& native_property = static_cast<NativeProperty&>(*value_here.value().as_object());
+        auto& interpreter = const_cast<Object*>(this)->interpreter();
+        auto& call_frame = interpreter.push_call_frame();
+        call_frame.this_value = &this_object;
+        dbg() << "put_own_property: " << &this_object << " . " << property_name << " = " << value;
+        native_property.set(interpreter, value);
+        interpreter.pop_call_frame();
     } else {
         m_properties.set(property_name, value);
     }
@@ -91,7 +104,12 @@ void Object::put(const FlyString& property_name, Value value)
         auto value_here = object->m_properties.get(property_name);
         if (value_here.has_value()) {
             if (value_here.value().is_object() && value_here.value().as_object()->is_native_property()) {
-                static_cast<NativeProperty*>(value_here.value().as_object())->set(const_cast<Object*>(this), value);
+                auto& native_property = static_cast<NativeProperty&>(*value_here.value().as_object());
+                auto& interpreter = const_cast<Object*>(this)->interpreter();
+                auto& call_frame = interpreter.push_call_frame();
+                call_frame.this_value = this;
+                native_property.set(interpreter, value);
+                interpreter.pop_call_frame();
                 return;
             }
             if (object->put_own_property(*this, property_name, value))
@@ -107,7 +125,7 @@ void Object::put_native_function(const FlyString& property_name, AK::Function<Va
     put(property_name, heap().allocate<NativeFunction>(move(native_function)));
 }
 
-void Object::put_native_property(const FlyString& property_name, AK::Function<Value(Object*)> getter, AK::Function<void(Object*, Value)> setter)
+void Object::put_native_property(const FlyString& property_name, AK::Function<Value(Interpreter&)> getter, AK::Function<void(Interpreter&, Value)> setter)
 {
     put(property_name, heap().allocate<NativeProperty>(move(getter), move(setter)));
 }

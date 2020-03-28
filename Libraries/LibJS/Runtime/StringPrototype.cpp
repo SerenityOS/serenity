@@ -28,6 +28,7 @@
 #include <AK/StringBuilder.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/StringPrototype.h>
@@ -37,13 +38,7 @@ namespace JS {
 
 StringPrototype::StringPrototype()
 {
-    put_native_property(
-        "length", [](Object* this_object) {
-            ASSERT(this_object);
-            ASSERT(this_object->is_string_object());
-            return Value((i32) static_cast<const StringObject*>(this_object)->primitive_string()->string().length());
-        },
-        nullptr);
+    put_native_property("length", length_getter, nullptr);
     put_native_function("charAt", char_at);
     put_native_function("repeat", repeat);
 }
@@ -86,6 +81,16 @@ Value StringPrototype::repeat(Interpreter& interpreter)
     for (i32 i = 0; i < count; ++i)
         builder.append(string_object->primitive_string()->string());
     return js_string(interpreter.heap(), builder.to_string());
+}
+
+Value StringPrototype::length_getter(Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return {};
+    if (!this_object->is_string_object())
+        return interpreter.throw_exception<Error>("TypeError", "Not a String object");
+    return Value((i32) static_cast<const StringObject*>(this_object)->primitive_string()->string().length());
 }
 
 }

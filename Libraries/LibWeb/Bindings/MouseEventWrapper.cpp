@@ -24,8 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Function.h>
 #include <AK/FlyString.h>
+#include <AK/Function.h>
+#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibWeb/Bindings/MouseEventWrapper.h>
 #include <LibWeb/DOM/MouseEvent.h>
@@ -36,18 +37,8 @@ namespace Bindings {
 MouseEventWrapper::MouseEventWrapper(MouseEvent& event)
     : EventWrapper(event)
 {
-    put_native_property(
-        "offsetX",
-        [this](JS::Object*) {
-            return JS::Value(this->event().offset_x());
-        },
-        nullptr);
-    put_native_property(
-        "offsetY",
-        [this](JS::Object*) {
-            return JS::Value(this->event().offset_y());
-        },
-        nullptr);
+    put_native_property("offsetX", offset_x_getter, nullptr);
+    put_native_property("offsetY", offset_y_getter, nullptr);
 }
 
 MouseEventWrapper::~MouseEventWrapper()
@@ -62,6 +53,29 @@ const MouseEvent& MouseEventWrapper::event() const
 MouseEvent& MouseEventWrapper::event()
 {
     return static_cast<MouseEvent&>(EventWrapper::event());
+}
+
+static MouseEvent* impl_from(JS::Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return nullptr;
+    // FIXME: Verify that it's a CanvasRenderingContext2DWrapper somehow!
+    return &static_cast<MouseEventWrapper*>(this_object)->event();
+}
+
+JS::Value MouseEventWrapper::offset_x_getter(JS::Interpreter& interpreter)
+{
+    if (auto* impl = impl_from(interpreter))
+        return JS::Value(impl->offset_x());
+    return {};
+}
+
+JS::Value MouseEventWrapper::offset_y_getter(JS::Interpreter& interpreter)
+{
+    if (auto* impl = impl_from(interpreter))
+        return JS::Value(impl->offset_y());
+    return {};
 }
 
 }
