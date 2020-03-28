@@ -133,7 +133,6 @@ namespace Kernel {
     __ENUMERATE_SYSCALL(donate)               \
     __ENUMERATE_SYSCALL(rename)               \
     __ENUMERATE_SYSCALL(ftruncate)            \
-    __ENUMERATE_SYSCALL(systrace)             \
     __ENUMERATE_SYSCALL(exit_thread)          \
     __ENUMERATE_SYSCALL(mknod)                \
     __ENUMERATE_SYSCALL(writev)               \
@@ -182,7 +181,8 @@ namespace Kernel {
     __ENUMERATE_SYSCALL(unveil)               \
     __ENUMERATE_SYSCALL(perf_event)           \
     __ENUMERATE_SYSCALL(shutdown)             \
-    __ENUMERATE_SYSCALL(get_stack_bounds)
+    __ENUMERATE_SYSCALL(get_stack_bounds)     \
+    __ENUMERATE_SYSCALL(ptrace)
 
 namespace Syscall {
 
@@ -422,6 +422,13 @@ struct SC_stat_params {
     StringArgument path;
     struct stat* statbuf;
     bool follow_symlinks;
+};
+
+struct SC_ptrace_params {
+    int request;
+    pid_t pid;
+    u8* addr;
+    int data;
 };
 
 void initialize();
