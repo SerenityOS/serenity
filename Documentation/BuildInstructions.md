@@ -3,8 +3,14 @@
 ### Linux prerequisites
 Make sure you have all the dependencies installed:
 
+**Debian / Ubuntu**
 ```bash
 sudo apt install build-essential curl libmpfr-dev libmpc-dev libgmp-dev e2fsprogs qemu-system-i386 qemu-utils
+```
+
+**Fedora**
+```bash
+sudo dnf install curl mpfr-devel libmpc-devel gmp-devel e2fsprogs @"C Development Tools and Libraries" @Virtualization
 ```
 
 Ensure your gcc version is >= 8 with `gcc --version`. Otherwise, install it (on Ubuntu) with:
