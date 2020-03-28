@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,28 +26,34 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
-#include <LibWeb/DOM/NonElementParentNode.h>
-#include <LibWeb/DOM/ParentNode.h>
+#include <AK/Forward.h>
+#include <LibWeb/Forward.h>
+#include <LibWeb/TreeNode.h>
 
 namespace Web {
 
-class DocumentFragment
-    : public ParentNode
-    , public NonElementParentNode<DocumentFragment> {
+template<typename NodeType>
+class NonElementParentNode {
 public:
-    DocumentFragment(Document& document)
-        : ParentNode(document, NodeType::DOCUMENT_FRAGMENT_NODE)
+    const Element* get_element_by_id(const FlyString& id) const
     {
+        const Element* found_element = nullptr;
+        static_cast<const NodeType*>(this)->template for_each_in_subtree_of_type<Element>([&](auto& element) {
+            if (element.attribute("id") == id) {
+                found_element = &element;
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        });
+        return found_element;
+    }
+    Element* get_element_by_id(const FlyString& id)
+    {
+        return const_cast<Element*>(const_cast<const NonElementParentNode*>(this)->get_element_by_id(id));
     }
 
-    virtual FlyString tag_name() const override { return "#document-fragment"; }
+protected:
+    NonElementParentNode() {}
 };
-
-template<>
-inline bool is<DocumentFragment>(const Node& node)
-{
-    return node.is_document_fragment();
-}
 
 }

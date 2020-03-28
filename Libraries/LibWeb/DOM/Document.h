@@ -37,6 +37,7 @@
 #include <LibJS/Forward.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/CSS/StyleSheet.h>
+#include <LibWeb/DOM/NonElementParentNode.h>
 #include <LibWeb/DOM/ParentNode.h>
 
 namespace Web {
@@ -50,7 +51,9 @@ class LayoutNode;
 class StyleResolver;
 class StyleSheet;
 
-class Document : public ParentNode {
+class Document
+    : public ParentNode
+    , public NonElementParentNode<Document> {
 public:
     using WrapperType = Bindings::DocumentWrapper;
 
@@ -119,7 +122,6 @@ public:
 
     void schedule_style_update();
 
-    const Element* get_element_by_id(const String&) const;
     Vector<const Element*> get_elements_by_name(const String&) const;
 
     const String& source() const { return m_source; }
