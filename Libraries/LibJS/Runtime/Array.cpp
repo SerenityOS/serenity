@@ -47,6 +47,20 @@ Array::~Array()
 {
 }
 
+Value Array::shift()
+{
+    if (m_elements.size() == 0)
+        return js_undefined();
+    return Value(m_elements.take_first());
+}
+
+Value Array::pop()
+{
+    if (m_elements.size() == 0)
+        return js_undefined();
+    return Value(m_elements.take_last());
+}
+
 void Array::push(Value value)
 {
     m_elements.append(value);
@@ -82,5 +96,4 @@ bool Array::put_own_property(Object& this_object, const FlyString& property_name
     }
     return Object::put_own_property(this_object, property_name, value);
 }
-
 }
