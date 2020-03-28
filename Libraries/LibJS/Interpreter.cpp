@@ -42,11 +42,12 @@ namespace JS {
 Interpreter::Interpreter()
     : m_heap(*this)
 {
-    m_global_object = heap().allocate<GlobalObject>();
     m_object_prototype = heap().allocate<ObjectPrototype>();
     m_string_prototype = heap().allocate<StringPrototype>();
     m_array_prototype = heap().allocate<ArrayPrototype>();
     m_error_prototype = heap().allocate<ErrorPrototype>();
+
+    m_global_object = heap().allocate<GlobalObject>();
 }
 
 Interpreter::~Interpreter()

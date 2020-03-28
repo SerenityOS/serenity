@@ -19,6 +19,7 @@ OBJS = \
     Runtime/NativeFunction.o \
     Runtime/NativeProperty.o \
     Runtime/Object.o \
+    Runtime/ObjectConstructor.o \
     Runtime/ObjectPrototype.o \
     Runtime/PrimitiveString.o \
     Runtime/ScriptFunction.o \

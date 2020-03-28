@@ -24,28 +24,36 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
 #include <AK/Function.h>
-#include <LibJS/Runtime/Function.h>
+#include <LibJS/Heap/Heap.h>
+#include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/ObjectConstructor.h>
 
 namespace JS {
 
-class NativeFunction : public Function {
-public:
-    explicit NativeFunction(AK::Function<Value(Object*, const Vector<Value>&)>);
-    virtual ~NativeFunction() override;
+ObjectConstructor::ObjectConstructor()
+{
+    put("prototype", interpreter().object_prototype());
 
-    virtual Value call(Interpreter&, const Vector<Value>&) override;
+    put_native_function("getPrototypeOf", [this](Object*, const Vector<Value>& arguments) -> Value {
+        if (arguments.size() < 1)
+            return {};
+        auto object = arguments[0].to_object(heap());
+        if (interpreter().exception())
+            return {};
+        if (!object.is_object())
+            return {};
+        return object.as_object()->prototype();
+    });
+}
 
-protected:
-    NativeFunction() {}
+ObjectConstructor::~ObjectConstructor()
+{
+}
 
-private:
-    virtual bool is_native_function() const override { return true; }
-    virtual const char* class_name() const override { return "NativeFunction"; }
-
-    AK::Function<Value(Object*, const Vector<Value>&)> m_native_function;
-};
+Value ObjectConstructor::call(Interpreter& interpreter, const Vector<Value>&)
+{
+    return interpreter.heap().allocate<Object>();
+}
 
 }
