@@ -79,7 +79,7 @@ public:
     }
 
     Value(Object* object)
-        : m_type(Type::Object)
+        : m_type(object ? Type::Object : Type::Null)
     {
         m_value.as_object = object;
     }

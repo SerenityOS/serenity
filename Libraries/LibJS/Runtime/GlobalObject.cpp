@@ -6,6 +6,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/MathObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
+#include <LibJS/Runtime/ObjectConstructor.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -24,6 +25,7 @@ GlobalObject::GlobalObject()
         return Value(arguments[0].to_number().is_nan());
     });
     put("Math", heap().allocate<MathObject>());
+    put("Object", heap().allocate<ObjectConstructor>());
 }
 
 GlobalObject::~GlobalObject()

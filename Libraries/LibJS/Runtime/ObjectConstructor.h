@@ -26,26 +26,19 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/NativeFunction.h>
 
 namespace JS {
 
-class NativeFunction : public Function {
+class ObjectConstructor final : public NativeFunction {
 public:
-    explicit NativeFunction(AK::Function<Value(Object*, const Vector<Value>&)>);
-    virtual ~NativeFunction() override;
+    ObjectConstructor();
+    virtual ~ObjectConstructor() override;
 
     virtual Value call(Interpreter&, const Vector<Value>&) override;
 
-protected:
-    NativeFunction() {}
-
 private:
-    virtual bool is_native_function() const override { return true; }
-    virtual const char* class_name() const override { return "NativeFunction"; }
-
-    AK::Function<Value(Object*, const Vector<Value>&)> m_native_function;
+    virtual const char* class_name() const override { return "ObjectConstructor"; }
 };
 
 }
