@@ -37,7 +37,6 @@ OBJS = \
     Devices/DebugLogDevice.o \
     Devices/Device.o \
     Devices/DiskPartition.o \
-    Devices/FloppyDiskDevice.o \
     Devices/FullDevice.o \
     Devices/GPTPartitionTable.o \
     Devices/EBRPartitionTable.o \
