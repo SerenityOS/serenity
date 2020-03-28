@@ -382,7 +382,7 @@ void HtmlView::scroll_to_anchor(const StringView& name)
     if (!document())
         return;
 
-    auto* element = document()->get_element_by_id(name);
+    const auto* element = document()->get_element_by_id(name);
     if (!element) {
         auto candidates = document()->get_elements_by_name(name);
         for (auto* candidate : candidates) {
