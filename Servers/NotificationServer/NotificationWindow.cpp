@@ -25,7 +25,7 @@
  */
 
 #include "NotificationWindow.h"
-#include <AK/HashTable.h>
+#include <AK/Vector.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Desktop.h>
@@ -36,11 +36,28 @@
 
 namespace NotificationServer {
 
-static HashTable<RefPtr<NotificationWindow>> s_windows;
+static Vector<RefPtr<NotificationWindow>> s_windows;
+
+void update_notification_window_locations()
+{
+    Gfx::Rect last_window_rect;
+    for (auto& window : s_windows) {
+        Gfx::Point new_window_location;
+        if (last_window_rect.is_null())
+            new_window_location = GUI::Desktop::the().rect().top_right().translated(-window->rect().width() - 8, 26);
+        else
+            new_window_location = last_window_rect.bottom_left().translated(0, 8);
+        if (window->rect().location() != new_window_location) {
+            window->move_to(new_window_location);
+            window->set_original_rect(window->rect());
+        }
+        last_window_rect = window->rect();
+    }
+}
 
 NotificationWindow::NotificationWindow(const String& text, const String& title, const String& icon_path)
 {
-    s_windows.set(this);
+    s_windows.append(this);
 
     set_window_type(GUI::WindowType::Tooltip);
 
@@ -92,8 +109,11 @@ NotificationWindow::NotificationWindow(const String& text, const String& title, 
 
     auto& button = right_container.add<GUI::Button>("Okay");
     button.on_click = [this] {
-        s_windows.remove(this);
+        auto this_window_index = s_windows.find_first_index(this);
+        if (this_window_index.has_value())
+            s_windows.remove(this_window_index.value());
         close();
+        update_notification_window_locations();
     };
 }
 

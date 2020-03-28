@@ -35,6 +35,7 @@ class NotificationWindow final : public GUI::Window {
 
 public:
     virtual ~NotificationWindow() override;
+    void set_original_rect(Gfx::Rect original_rect) { m_original_rect = original_rect; };
 
 private:
     NotificationWindow(const String& text, const String& title, const String& icon_path);
