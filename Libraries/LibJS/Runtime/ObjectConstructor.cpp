@@ -45,6 +45,20 @@ ObjectConstructor::ObjectConstructor()
             return {};
         return object.as_object()->prototype();
     });
+
+    put_native_function("setPrototypeOf", [this](Object*, const Vector<Value>& arguments) -> Value {
+        if (arguments.size() < 2)
+            return {};
+        auto object = arguments[0].to_object(heap());
+        if (interpreter().exception())
+            return {};
+        if (!object.is_object())
+            return {};
+        if (!arguments[1].is_object())
+            return {};
+        const_cast<Object*>(object.as_object())->set_prototype(const_cast<Object*>(arguments[1].as_object()));
+        return {};
+    });
 }
 
 ObjectConstructor::~ObjectConstructor()

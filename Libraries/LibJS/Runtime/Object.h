@@ -62,6 +62,7 @@ public:
     Object* prototype() { return m_prototype; }
     const Object* prototype() const { return m_prototype; }
     void set_prototype(Object* prototype) { m_prototype = prototype; }
+    bool has_prototype(const Object* prototype) const;
 
     bool has_own_property(const FlyString& property_name) const;
     enum class PreferredType {

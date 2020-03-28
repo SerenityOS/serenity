@@ -44,6 +44,15 @@ Object::~Object()
 {
 }
 
+bool Object::has_prototype(const Object* prototype) const
+{
+    for (auto* object = m_prototype; object; object = object->prototype()) {
+        if (object == prototype)
+            return true;
+    }
+    return false;
+}
+
 Optional<Value> Object::get_own_property(const Object& this_object, const FlyString& property_name) const
 {
     auto value_here = m_properties.get(property_name);
