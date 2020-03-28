@@ -40,7 +40,6 @@
 #include <Kernel/Devices/DebugLogDevice.h>
 #include <Kernel/Devices/DiskPartition.h>
 #include <Kernel/Devices/EBRPartitionTable.h>
-#include <Kernel/Devices/FloppyDiskDevice.h>
 #include <Kernel/Devices/FullDevice.h>
 #include <Kernel/Devices/GPTPartitionTable.h>
 #include <Kernel/Devices/KeyboardDevice.h>
@@ -309,24 +308,6 @@ void init_stage2()
     dbg() << "Load ksyms";
     load_ksyms();
     dbg() << "Loaded ksyms";
-
-    // Now, detect whether or not there are actually any floppy disks attached to the system
-    u8 detect = CMOS::read(0x10);
-    RefPtr<FloppyDiskDevice> fd0;
-    RefPtr<FloppyDiskDevice> fd1;
-    if ((detect >> 4) & 0x4) {
-        fd0 = FloppyDiskDevice::create(FloppyDiskDevice::DriveType::Master);
-        klog() << "fd0 is 1.44MB floppy drive";
-    } else {
-        klog() << "fd0 type unsupported! Type == 0x", String::format("%x", detect >> 4);
-    }
-
-    if (detect & 0x0f) {
-        fd1 = FloppyDiskDevice::create(FloppyDiskDevice::DriveType::Slave);
-        klog() << "fd1 is 1.44MB floppy drive";
-    } else {
-        klog() << "fd1 type unsupported! Type == 0x", String::format("%x", detect & 0x0f);
-    }
 
     int error;
 
