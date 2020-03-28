@@ -83,7 +83,7 @@ void DMIDecoder::set_32_bit_entry_initialization_values(PhysicalAddress entry)
 
     m_structure_table = PhysicalAddress(entry_ptr.legacy_structure.smbios_table_ptr);
     m_structures_count = entry_ptr.legacy_structure.smbios_tables_count;
-    m_table_length = entry_ptr.legacy_structure.smboios_table_length;
+    m_table_length = entry_ptr.legacy_structure.smbios_table_length;
 }
 
 void DMIDecoder::initialize_parser()
