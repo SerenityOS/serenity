@@ -357,8 +357,8 @@ JS::Interpreter& Document::interpreter()
             // FIXME: This timer should not be leaked! It should also be removable with clearInterval()!
             (void)Core::Timer::construct(
                 arguments[1].to_i32(), [this, callback] {
-                    // FIXME: Perform the call through Interpreter so it can set up a call frame!
-                    const_cast<JS::Function*>(static_cast<const JS::Function*>(callback.cell()))->call(*m_interpreter);
+                    auto* function = const_cast<JS::Function*>(static_cast<const JS::Function*>(callback.cell()));
+                    m_interpreter->call(function);
                 })
                 .leak_ref();
 
@@ -374,8 +374,8 @@ JS::Interpreter& Document::interpreter()
             auto callback = make_handle(const_cast<JS::Object*>(arguments[0].as_object()));
             // FIXME: Don't hand out raw DisplayLink ID's to JavaScript!
             i32 link_id = GUI::DisplayLink::register_callback([this, callback](i32 link_id) {
-                // FIXME: Perform the call through Interpreter so it can set up a call frame!
-                const_cast<JS::Function*>(static_cast<const JS::Function*>(callback.cell()))->call(*m_interpreter);
+                auto* function = const_cast<JS::Function*>(static_cast<const JS::Function*>(callback.cell()));
+                m_interpreter->call(function);
                 GUI::DisplayLink::unregister_callback(link_id);
             });
             return JS::Value(link_id);
