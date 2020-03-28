@@ -50,6 +50,11 @@ String::String(const StringView& view)
         m_impl = StringImpl::create(view.characters_without_null_termination(), view.length());
 }
 
+bool String::operator==(const FlyString& fly_string) const
+{
+    return *this == String(fly_string.impl());
+}
+
 bool String::operator==(const String& other) const
 {
     if (!m_impl)
