@@ -37,21 +37,26 @@ ObjectPrototype::ObjectPrototype()
 {
     set_prototype(nullptr);
 
-    put_native_function("hasOwnProperty", [](Object* this_object, const Vector<Value>& arguments) -> Value {
-        ASSERT(this_object);
-        if (arguments.is_empty())
+    put_native_function("hasOwnProperty", [](Interpreter& interpreter) -> Value {
+        auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+        if (!this_object)
+            return {};
+        if (interpreter.call_frame().arguments.is_empty())
             return js_undefined();
-        return Value(this_object->has_own_property(arguments[0].to_string()));
+        return Value(this_object->has_own_property(interpreter.call_frame().arguments[0].to_string()));
     });
 
-    put_native_function("toString", [](Object* this_object, Vector<Value>) -> Value {
-        ASSERT(this_object);
-
+    put_native_function("toString", [](Interpreter& interpreter) -> Value {
+        auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+        if (!this_object)
+            return {};
         return Value(this_object->to_string());
     });
 
-    put_native_function("valueOf", [](Object* this_object, Vector<Value>) -> Value {
-        ASSERT(this_object);
+    put_native_function("valueOf", [](Interpreter& interpreter) -> Value {
+        auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+        if (!this_object)
+            return {};
         return this_object->value_of();
     });
 }

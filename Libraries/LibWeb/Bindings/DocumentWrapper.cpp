@@ -25,6 +25,7 @@
  */
 
 #include <AK/FlyString.h>
+#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
@@ -37,7 +38,8 @@ namespace Bindings {
 DocumentWrapper::DocumentWrapper(Document& document)
     : NodeWrapper(document)
 {
-    put_native_function("getElementById", [this](JS::Object*, const Vector<JS::Value>& arguments) -> JS::Value {
+    put_native_function("getElementById", [this](JS::Interpreter& interpreter) -> JS::Value {
+        auto& arguments = interpreter.call_frame().arguments;
         if (arguments.is_empty())
             return JS::js_null();
         auto id = arguments[0].to_string();

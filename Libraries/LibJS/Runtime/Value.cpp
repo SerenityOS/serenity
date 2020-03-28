@@ -27,6 +27,8 @@
 #include <AK/FlyString.h>
 #include <AK/String.h>
 #include <LibJS/Heap/Heap.h>
+#include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/StringObject.h>
@@ -86,13 +88,18 @@ bool Value::to_boolean() const
     }
 }
 
-Value Value::to_object(Heap& heap) const
+Object* Value::to_object(Heap& heap) const
 {
     if (is_object())
         return const_cast<Object*>(as_object());
 
     if (is_string())
         return heap.allocate<StringObject>(m_value.as_string);
+
+    if (is_null() || is_undefined()) {
+        heap.interpreter().throw_exception<Error>("TypeError", "ToObject on null or undefined.");
+        return nullptr;
+    }
 
     ASSERT_NOT_REACHED();
 }
