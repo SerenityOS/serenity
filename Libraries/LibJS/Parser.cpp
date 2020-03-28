@@ -247,6 +247,8 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
         return parse_function_node<FunctionExpression>();
     case TokenType::BracketOpen:
         return parse_array_expression();
+    case TokenType::New:
+        return parse_new_expression();
     default:
         m_has_errors = true;
         expected("primary expression (missing switch case)");
@@ -441,6 +443,29 @@ NonnullRefPtr<CallExpression> Parser::parse_call_expression(NonnullRefPtr<Expres
     consume(TokenType::ParenClose);
 
     return create_ast_node<CallExpression>(move(lhs), move(arguments));
+}
+
+NonnullRefPtr<NewExpression> Parser::parse_new_expression()
+{
+    consume(TokenType::New);
+
+    // FIXME: Support full expressions as the callee as well.
+    auto callee = create_ast_node<Identifier>(consume(TokenType::Identifier).value());
+
+    NonnullRefPtrVector<Expression> arguments;
+
+    if (match(TokenType::ParenOpen)) {
+        consume(TokenType::ParenOpen);
+        while (match_expression()) {
+            arguments.append(parse_expression(0));
+            if (!match(TokenType::Comma))
+                break;
+            consume();
+        }
+        consume(TokenType::ParenClose);
+    }
+
+    return create_ast_node<NewExpression>(move(callee), move(arguments));
 }
 
 NonnullRefPtr<ReturnStatement> Parser::parse_return_statement()

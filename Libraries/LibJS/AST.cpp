@@ -80,18 +80,30 @@ Value CallExpression::execute(Interpreter& interpreter) const
             return {};
     }
 
-    if (m_callee->is_member_expression()) {
-        auto object_value = static_cast<const MemberExpression&>(*m_callee).object().execute(interpreter);
-        if (interpreter.exception())
-            return {};
-        auto this_value = object_value.to_object(interpreter.heap());
-        if (interpreter.exception())
-            return {};
-        call_frame.this_value = this_value;
+    Object* new_object = nullptr;
+    if (is_new_expression()) {
+        new_object = interpreter.heap().allocate<Object>();
+        call_frame.this_value = new_object;
+    } else {
+        if (m_callee->is_member_expression()) {
+            auto object_value = static_cast<const MemberExpression&>(*m_callee).object().execute(interpreter);
+            if (interpreter.exception())
+                return {};
+            auto this_value = object_value.to_object(interpreter.heap());
+            if (interpreter.exception())
+                return {};
+            call_frame.this_value = this_value;
+        }
     }
 
     auto result = function->call(interpreter, call_frame.arguments);
     interpreter.pop_call_frame();
+
+    if (is_new_expression()) {
+        if (result.is_object())
+            return result;
+        return new_object;
+    }
     return result;
 }
 
