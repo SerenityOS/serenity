@@ -295,19 +295,6 @@ void Document::set_hovered_node(Node* node)
     invalidate_style();
 }
 
-const Element* Document::get_element_by_id(const String& id) const
-{
-    const Element* found_element = nullptr;
-    for_each_in_subtree_of_type<Element>([&](auto& element) {
-        if (element.attribute("id") == id) {
-            found_element = &element;
-            return IterationDecision::Break;
-        }
-        return IterationDecision::Continue;
-    });
-    return found_element;
-}
-
 Vector<const Element*> Document::get_elements_by_name(const String& name) const
 {
     Vector<const Element*> elements;
