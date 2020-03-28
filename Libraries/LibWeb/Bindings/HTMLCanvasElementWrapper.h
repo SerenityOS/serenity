@@ -43,6 +43,9 @@ private:
     virtual const char* class_name() const override { return "HTMLCanvasElementWrapper"; }
 
     static JS::Value get_context(JS::Interpreter&);
+
+    static JS::Value width_getter(JS::Interpreter&);
+    static JS::Value height_getter(JS::Interpreter&);
 };
 
 }

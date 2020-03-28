@@ -43,14 +43,7 @@ CanvasRenderingContext2DWrapper* wrap(JS::Heap& heap, CanvasRenderingContext2D& 
 CanvasRenderingContext2DWrapper::CanvasRenderingContext2DWrapper(CanvasRenderingContext2D& impl)
     : m_impl(impl)
 {
-    put_native_property(
-        "fillStyle",
-        [this](JS::Object*) {
-            return JS::js_string(heap(), m_impl->fill_style());
-        },
-        [this](JS::Object*, JS::Value value) {
-            m_impl->set_fill_style(value.to_string());
-        });
+    put_native_property("fillStyle", fill_style_getter, fill_style_setter);
     put_native_function("fillRect", fill_rect);
 }
 
@@ -58,17 +51,38 @@ CanvasRenderingContext2DWrapper::~CanvasRenderingContext2DWrapper()
 {
 }
 
-JS::Value CanvasRenderingContext2DWrapper::fill_rect(JS::Interpreter& interpreter)
+static CanvasRenderingContext2D* impl_from(JS::Interpreter& interpreter)
 {
     auto* this_object = interpreter.this_value().to_object(interpreter.heap());
     if (!this_object)
-        return {};
+        return nullptr;
     // FIXME: Verify that it's a CanvasRenderingContext2DWrapper somehow!
-    auto& impl = static_cast<CanvasRenderingContext2DWrapper*>(this_object)->impl();
+    return &static_cast<CanvasRenderingContext2DWrapper*>(this_object)->impl();
+}
+
+JS::Value CanvasRenderingContext2DWrapper::fill_rect(JS::Interpreter& interpreter)
+{
+    auto* impl = impl_from(interpreter);
+    if (!impl)
+        return {};
     auto& arguments = interpreter.call_frame().arguments;
     if (arguments.size() >= 4)
-        impl.fill_rect(arguments[0].to_i32(), arguments[1].to_i32(), arguments[2].to_i32(), arguments[3].to_i32());
+        impl->fill_rect(arguments[0].to_i32(), arguments[1].to_i32(), arguments[2].to_i32(), arguments[3].to_i32());
     return JS::js_undefined();
+}
+
+JS::Value CanvasRenderingContext2DWrapper::fill_style_getter(JS::Interpreter& interpreter)
+{
+    auto* impl = impl_from(interpreter);
+    if (!impl)
+        return {};
+    return JS::js_string(interpreter.heap(), impl->fill_style());
+}
+
+void CanvasRenderingContext2DWrapper::fill_style_setter(JS::Interpreter& interpreter, JS::Value value)
+{
+    if (auto* impl = impl_from(interpreter))
+        impl->set_fill_style(value.to_string());
 }
 
 }
