@@ -272,7 +272,6 @@ public:
     int sys$set_thread_name(int tid, const char* buffer, size_t buffer_size);
     int sys$get_thread_name(int tid, char* buffer, size_t buffer_size);
     int sys$rename(const Syscall::SC_rename_params*);
-    int sys$systrace(pid_t);
     int sys$mknod(const Syscall::SC_mknod_params*);
     int sys$shbuf_create(int, void** buffer);
     int sys$shbuf_allow_pid(int, pid_t peer_pid);
@@ -300,6 +299,7 @@ public:
     int sys$unveil(const Syscall::SC_unveil_params*);
     int sys$perf_event(int type, FlatPtr arg1, FlatPtr arg2);
     int sys$get_stack_bounds(FlatPtr* stack_base, size_t* stack_size);
+    int sys$ptrace(const Syscall::SC_ptrace_params*);
 
     template<bool sockname, typename Params>
     int get_sock_or_peer_name(const Params&);
@@ -315,9 +315,6 @@ public:
     size_t region_count() const { return m_regions.size(); }
     const NonnullOwnPtrVector<Region>& regions() const { return m_regions; }
     void dump_regions();
-
-    ProcessTracer* tracer() { return m_tracer.ptr(); }
-    ProcessTracer& ensure_tracer();
 
     u32 m_ticks_in_user { 0 };
     u32 m_ticks_in_kernel { 0 };
@@ -442,6 +439,8 @@ private:
     KResultOr<String> get_syscall_path_argument(const char* user_path, size_t path_length) const;
     KResultOr<String> get_syscall_path_argument(const Syscall::StringArgument&) const;
 
+    bool has_tracee_thread(int tracer_pid) const;
+
     RefPtr<PageDirectory> m_page_directory;
 
     Process* m_prev { nullptr };
@@ -500,8 +499,6 @@ private:
 
     FixedArray<gid_t> m_extra_gids;
 
-    RefPtr<ProcessTracer> m_tracer;
-
     WeakPtr<Region> m_master_tls_region;
     size_t m_master_tls_size { 0 };
     size_t m_master_tls_alignment { 0 };
@@ -526,6 +523,11 @@ private:
     OwnPtr<PerformanceEventBuffer> m_perf_event_buffer;
 
     u32 m_inspector_count { 0 };
+
+    // This member is used in the implementation of ptrace's PT_TRACEME flag.
+    // If it is set to true, the process will stop at the next execve syscall
+    // and wait for a tracer to attach.
+    bool m_wait_for_tracer_at_next_execve { false };
 };
 
 class ProcessInspectionHandle {
@@ -585,7 +587,7 @@ inline void Process::for_each_child(Callback callback)
     pid_t my_pid = pid();
     for (auto* process = g_processes->head(); process;) {
         auto* next_process = process->next();
-        if (process->ppid() == my_pid) {
+        if (process->ppid() == my_pid || process->has_tracee_thread(m_pid)) {
             if (callback(*process) == IterationDecision::Break)
                 break;
         }
