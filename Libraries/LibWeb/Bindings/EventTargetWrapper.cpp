@@ -39,27 +39,28 @@ namespace Bindings {
 EventTargetWrapper::EventTargetWrapper(EventTarget& impl)
     : m_impl(impl)
 {
-    put_native_function("addEventListener", [](JS::Interpreter& interpreter) -> JS::Value {
-        auto* this_object = interpreter.this_value().to_object(interpreter.heap());
-        if (!this_object)
-            return {};
-
-        auto& arguments = interpreter.call_frame().arguments;
-        if (arguments.size() < 2)
-            return JS::js_undefined();
-
-        auto event_name = arguments[0].to_string();
-        ASSERT(arguments[1].is_object());
-        ASSERT(arguments[1].as_object()->is_function());
-        auto* function = static_cast<JS::Function*>(const_cast<Object*>(arguments[1].as_object()));
-        auto listener = adopt(*new EventListener(JS::make_handle(function)));
-        static_cast<EventTargetWrapper*>(this_object)->impl().add_event_listener(event_name, move(listener));
-        return JS::js_undefined();
-    });
+    put_native_function("addEventListener", add_event_listener);
 }
 
 EventTargetWrapper::~EventTargetWrapper()
 {
+}
+
+JS::Value EventTargetWrapper::add_event_listener(JS::Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return {};
+    auto& arguments = interpreter.call_frame().arguments;
+    if (arguments.size() < 2)
+        return JS::js_undefined();
+    auto event_name = arguments[0].to_string();
+    ASSERT(arguments[1].is_object());
+    ASSERT(arguments[1].as_object()->is_function());
+    auto* function = static_cast<JS::Function*>(const_cast<Object*>(arguments[1].as_object()));
+    auto listener = adopt(*new EventListener(JS::make_handle(function)));
+    static_cast<EventTargetWrapper*>(this_object)->impl().add_event_listener(event_name, move(listener));
+    return JS::js_undefined();
 }
 
 }

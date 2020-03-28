@@ -41,6 +41,8 @@ public:
 
 private:
     virtual const char* class_name() const override { return "DocumentWrapper"; }
+
+    static JS::Value get_element_by_id(JS::Interpreter&);
 };
 
 }

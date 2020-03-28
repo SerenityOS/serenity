@@ -37,32 +37,39 @@ ObjectPrototype::ObjectPrototype()
 {
     set_prototype(nullptr);
 
-    put_native_function("hasOwnProperty", [](Interpreter& interpreter) -> Value {
-        auto* this_object = interpreter.this_value().to_object(interpreter.heap());
-        if (!this_object)
-            return {};
-        if (interpreter.call_frame().arguments.is_empty())
-            return js_undefined();
-        return Value(this_object->has_own_property(interpreter.call_frame().arguments[0].to_string()));
-    });
-
-    put_native_function("toString", [](Interpreter& interpreter) -> Value {
-        auto* this_object = interpreter.this_value().to_object(interpreter.heap());
-        if (!this_object)
-            return {};
-        return Value(this_object->to_string());
-    });
-
-    put_native_function("valueOf", [](Interpreter& interpreter) -> Value {
-        auto* this_object = interpreter.this_value().to_object(interpreter.heap());
-        if (!this_object)
-            return {};
-        return this_object->value_of();
-    });
+    put_native_function("hasOwnProperty", has_own_property);
+    put_native_function("toString", to_string);
+    put_native_function("valueOf", value_of);
 }
 
 ObjectPrototype::~ObjectPrototype()
 {
+}
+
+Value ObjectPrototype::has_own_property(Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return {};
+    if (interpreter.call_frame().arguments.is_empty())
+        return js_undefined();
+    return Value(this_object->has_own_property(interpreter.call_frame().arguments[0].to_string()));
+}
+
+Value ObjectPrototype::to_string(Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return {};
+    return Value(this_object->to_string());
+}
+
+Value ObjectPrototype::value_of(Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return {};
+    return this_object->value_of();
 }
 
 }

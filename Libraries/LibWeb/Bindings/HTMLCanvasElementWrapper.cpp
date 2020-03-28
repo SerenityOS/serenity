@@ -40,14 +40,8 @@ namespace Bindings {
 HTMLCanvasElementWrapper::HTMLCanvasElementWrapper(HTMLCanvasElement& element)
     : ElementWrapper(element)
 {
-    put_native_function("getContext", [this](JS::Interpreter& interpreter) -> JS::Value {
-        auto& arguments = interpreter.call_frame().arguments;
-        if (arguments.size() >= 1) {
-            auto* context = node().get_context(arguments[0].to_string());
-            return wrap(heap(), *context);
-        }
-        return JS::js_undefined();
-    });
+    put_native_function("getContext", get_context);
+
     put_native_property(
         "width",
         [this](JS::Object*) {
@@ -74,6 +68,21 @@ HTMLCanvasElement& HTMLCanvasElementWrapper::node()
 const HTMLCanvasElement& HTMLCanvasElementWrapper::node() const
 {
     return static_cast<const HTMLCanvasElement&>(NodeWrapper::node());
+}
+
+JS::Value HTMLCanvasElementWrapper::get_context(JS::Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return {};
+    // FIXME: Verify that it's an HTMLCanvasElementWrapper somehow!
+    auto& node = static_cast<HTMLCanvasElementWrapper*>(this_object)->node();
+    auto& arguments = interpreter.call_frame().arguments;
+    if (arguments.size() >= 1) {
+        auto* context = node.get_context(arguments[0].to_string());
+        return wrap(interpreter.heap(), *context);
+    }
+    return JS::js_undefined();
 }
 
 }

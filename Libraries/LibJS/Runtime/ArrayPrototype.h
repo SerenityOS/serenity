@@ -37,6 +37,10 @@ public:
 
 private:
     virtual const char* class_name() const override { return "ArrayPrototype"; }
+
+    static Value push(Interpreter&);
+    static Value shift(Interpreter&);
+    static Value pop(Interpreter&);
 };
 
 }

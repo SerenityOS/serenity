@@ -37,6 +37,8 @@ public:
 
 private:
     virtual const char* class_name() const override { return "MathObject"; }
+
+    static Value random(Interpreter&);
 };
 
 }

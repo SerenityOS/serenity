@@ -11,6 +11,9 @@ public:
 
 private:
     virtual const char* class_name() const override { return "GlobalObject"; }
+
+    static Value gc(Interpreter&);
+    static Value is_nan(Interpreter&);
 };
 
 }

@@ -51,17 +51,24 @@ CanvasRenderingContext2DWrapper::CanvasRenderingContext2DWrapper(CanvasRendering
         [this](JS::Object*, JS::Value value) {
             m_impl->set_fill_style(value.to_string());
         });
-    put_native_function("fillRect", [this](JS::Interpreter& interpreter) {
-        auto& arguments = interpreter.call_frame().arguments;
-        if (arguments.size() >= 4) {
-            m_impl->fill_rect(arguments[0].to_i32(), arguments[1].to_i32(), arguments[2].to_i32(), arguments[3].to_i32());
-        }
-        return JS::js_undefined();
-    });
+    put_native_function("fillRect", fill_rect);
 }
 
 CanvasRenderingContext2DWrapper::~CanvasRenderingContext2DWrapper()
 {
+}
+
+JS::Value CanvasRenderingContext2DWrapper::fill_rect(JS::Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return {};
+    // FIXME: Verify that it's a CanvasRenderingContext2DWrapper somehow!
+    auto& impl = static_cast<CanvasRenderingContext2DWrapper*>(this_object)->impl();
+    auto& arguments = interpreter.call_frame().arguments;
+    if (arguments.size() >= 4)
+        impl.fill_rect(arguments[0].to_i32(), arguments[1].to_i32(), arguments[2].to_i32(), arguments[3].to_i32());
+    return JS::js_undefined();
 }
 
 }

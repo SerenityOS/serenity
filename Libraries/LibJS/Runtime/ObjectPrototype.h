@@ -37,6 +37,10 @@ public:
 
 private:
     virtual const char* class_name() const override { return "ObjectPrototype"; }
+
+    static Value has_own_property(Interpreter&);
+    static Value value_of(Interpreter&);
+    static Value to_string(Interpreter&);
 };
 
 }
