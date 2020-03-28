@@ -38,7 +38,7 @@ public:
     const ScopeNode& body() const { return m_body; }
     const Vector<FlyString>& parameters() const { return m_parameters; };
 
-    virtual Value call(Interpreter&, const Vector<Value>&) override;
+    virtual Value call(Interpreter&) override;
 
 private:
     virtual bool is_script_function() const final { return true; }

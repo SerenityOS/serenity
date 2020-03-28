@@ -190,7 +190,7 @@ Value Interpreter::call(Function* function, Value this_value, const Vector<Value
     auto& call_frame = push_call_frame();
     call_frame.this_value = this_value;
     call_frame.arguments = arguments;
-    auto result = function->call(*this, call_frame.arguments);
+    auto result = function->call(*this);
     pop_call_frame();
     return result;
 }

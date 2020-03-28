@@ -24,8 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Function.h>
 #include <AK/FlyString.h>
+#include <AK/Function.h>
+#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
@@ -50,7 +51,8 @@ CanvasRenderingContext2DWrapper::CanvasRenderingContext2DWrapper(CanvasRendering
         [this](JS::Object*, JS::Value value) {
             m_impl->set_fill_style(value.to_string());
         });
-    put_native_function("fillRect", [this](JS::Object*, const Vector<JS::Value>& arguments) {
+    put_native_function("fillRect", [this](JS::Interpreter& interpreter) {
+        auto& arguments = interpreter.call_frame().arguments;
         if (arguments.size() >= 4) {
             m_impl->fill_rect(arguments[0].to_i32(), arguments[1].to_i32(), arguments[2].to_i32(), arguments[3].to_i32());
         }

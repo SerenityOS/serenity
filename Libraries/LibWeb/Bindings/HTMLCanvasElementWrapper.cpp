@@ -24,8 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Function.h>
 #include <AK/FlyString.h>
+#include <AK/Function.h>
+#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
@@ -39,7 +40,8 @@ namespace Bindings {
 HTMLCanvasElementWrapper::HTMLCanvasElementWrapper(HTMLCanvasElement& element)
     : ElementWrapper(element)
 {
-    put_native_function("getContext", [this](JS::Object*, const Vector<JS::Value>& arguments) -> JS::Value {
+    put_native_function("getContext", [this](JS::Interpreter& interpreter) -> JS::Value {
+        auto& arguments = interpreter.call_frame().arguments;
         if (arguments.size() >= 1) {
             auto* context = node().get_context(arguments[0].to_string());
             return wrap(heap(), *context);
