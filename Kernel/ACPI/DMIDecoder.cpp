@@ -253,10 +253,7 @@ Vector<SMBIOS::PhysicalMemoryArray*>& DMIDecoder::get_physical_memory_areas()
     klog() << "DMIDecoder::get_physical_memory_areas() is not implemented.";
     ASSERT_NOT_REACHED();
 }
-bool DMIDecoder::is_reliable()
-{
-    return !m_untrusted;
-}
+
 u64 DMIDecoder::get_bios_characteristics()
 {
     // FIXME: Make sure we have some mapping here so we don't rely on existing identity mapping...

@@ -47,7 +47,7 @@ public:
     static void initialize();
     static void initialize_untrusted();
     Vector<SMBIOS::PhysicalMemoryArray*>& get_physical_memory_areas();
-    bool is_reliable();
+    bool is_reliable() const { return !m_untrusted; };
     u64 get_bios_characteristics();
 
 private:
