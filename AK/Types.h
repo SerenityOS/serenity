@@ -70,6 +70,8 @@ typedef i16 int16_t;
 typedef i32 int32_t;
 typedef i64 int64_t;
 
+typedef int pid_t;
+
 #else
 #    include <stdint.h>
 #    include <sys/types.h>
@@ -84,9 +86,9 @@ typedef int16_t i16;
 typedef int32_t i32;
 typedef int64_t i64;
 
-#ifdef __ptrdiff_t
+#    ifdef __ptrdiff_t
 typedef __PTRDIFF_TYPE__ __ptrdiff_t;
-#endif
+#    endif
 
 #endif
 
@@ -115,4 +117,6 @@ inline constexpr size_t align_up_to(const size_t value, const size_t alignment)
     return (value + (alignment - 1)) & ~(alignment - 1);
 }
 
-enum class TriState : u8 { False, True, Unknown };
+enum class TriState : u8 { False,
+    True,
+    Unknown };

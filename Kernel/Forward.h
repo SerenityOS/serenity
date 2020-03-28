@@ -50,7 +50,7 @@ class PhysicalPage;
 class PhysicalRegion;
 class Process;
 class ProcessInspectionHandle;
-class ProcessTracer;
+class ThreadTracer;
 class Range;
 class RangeAllocator;
 class Region;

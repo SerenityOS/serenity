@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,47 +25,25 @@
  */
 
 #pragma once
+#include <AK/kmalloc.h>
+#include <bits/stdint.h>
 
-#include <AK/CircularQueue.h>
-#include <Kernel/FileSystem/File.h>
-#include <Kernel/UnixTypes.h>
-
-namespace Kernel {
-
-class ProcessTracer : public File {
-public:
-    static NonnullRefPtr<ProcessTracer> create(pid_t pid) { return adopt(*new ProcessTracer(pid)); }
-    virtual ~ProcessTracer() override;
-
-    bool is_dead() const { return m_dead; }
-    void set_dead() { m_dead = true; }
-
-    virtual bool can_read(const FileDescription&) const override { return !m_calls.is_empty() || m_dead; }
-    virtual int read(FileDescription&, u8*, int) override;
-
-    virtual bool can_write(const FileDescription&) const override { return true; }
-    virtual int write(FileDescription&, const u8*, int) override { return -EIO; }
-
-    virtual String absolute_path(const FileDescription&) const override;
-
-    void did_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3, u32 result);
-    pid_t pid() const { return m_pid; }
-
-private:
-    virtual const char* class_name() const override { return "ProcessTracer"; }
-    explicit ProcessTracer(pid_t);
-
-    struct CallData {
-        u32 function;
-        u32 arg1;
-        u32 arg2;
-        u32 arg3;
-        u32 result;
-    };
-
-    pid_t m_pid;
-    bool m_dead { false };
-    CircularQueue<CallData, 200> m_calls;
+struct [[gnu::packed]] PtraceRegisters
+{
+    uint32_t eax;
+    uint32_t ecx;
+    uint32_t edx;
+    uint32_t ebx;
+    uint32_t esp;
+    uint32_t ebp;
+    uint32_t esi;
+    uint32_t edi;
+    uint32_t eip;
+    uint32_t eflags;
+    uint32_t cs;
+    uint32_t ss;
+    uint32_t ds;
+    uint32_t es;
+    uint32_t fs;
+    uint32_t gs;
 };
-
-}

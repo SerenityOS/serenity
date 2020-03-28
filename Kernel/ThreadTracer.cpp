@@ -25,39 +25,35 @@
  */
 
 #include <AK/Memory.h>
-#include <Kernel/ProcessTracer.h>
+#include <Kernel/ThreadTracer.h>
 
 namespace Kernel {
 
-ProcessTracer::ProcessTracer(pid_t pid)
-    : m_pid(pid)
+ThreadTracer::ThreadTracer(pid_t tracer_pid)
+    : m_tracer_pid(tracer_pid)
 {
 }
 
-ProcessTracer::~ProcessTracer()
+void ThreadTracer::set_regs(const RegisterState& regs)
 {
+    PtraceRegisters r = {
+        regs.eax,
+        regs.ecx,
+        regs.edx,
+        regs.ebx,
+        regs.esp,
+        regs.ebp,
+        regs.esi,
+        regs.edi,
+        regs.eip,
+        regs.eflags,
+        regs.cs,
+        regs.ss,
+        regs.ds,
+        regs.es,
+        regs.fs,
+        regs.gs,
+    };
+    m_regs = r;
 }
-
-void ProcessTracer::did_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3, u32 result)
-{
-    CallData data = { function, arg1, arg2, arg3, result };
-    m_calls.enqueue(data);
-}
-
-int ProcessTracer::read(FileDescription&, u8* buffer, int buffer_size)
-{
-    if (m_calls.is_empty())
-        return 0;
-    auto data = m_calls.dequeue();
-    // FIXME: This should not be an assertion.
-    ASSERT(buffer_size == sizeof(data));
-    memcpy(buffer, &data, sizeof(data));
-    return sizeof(data);
-}
-
-String ProcessTracer::absolute_path(const FileDescription&) const
-{
-    return String::format("tracer:%d", m_pid);
-}
-
 }
