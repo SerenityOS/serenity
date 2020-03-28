@@ -393,6 +393,9 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
     case TokenType::ExclamationMarkEquals:
         consume();
         return create_ast_node<BinaryExpression>(BinaryOp::AbstractInequals, move(lhs), parse_expression(min_precedence, associativity));
+    case TokenType::Instanceof:
+        consume();
+        return create_ast_node<BinaryExpression>(BinaryOp::InstanceOf, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::ParenOpen:
         return parse_call_expression(move(lhs));
     case TokenType::Equals:
@@ -722,7 +725,8 @@ bool Parser::match_secondary_expression() const
         || type == TokenType::Period
         || type == TokenType::BracketOpen
         || type == TokenType::PlusPlus
-        || type == TokenType::MinusMinus;
+        || type == TokenType::MinusMinus
+        || type == TokenType::Instanceof;
 }
 
 bool Parser::match_statement() const
