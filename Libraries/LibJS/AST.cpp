@@ -83,6 +83,9 @@ Value CallExpression::execute(Interpreter& interpreter) const
     Object* new_object = nullptr;
     if (is_new_expression()) {
         new_object = interpreter.heap().allocate<Object>();
+        auto prototype = function->get("prototype");
+        if (prototype.has_value() && prototype.value().is_object())
+            new_object->set_prototype(prototype.value().as_object());
         call_frame.this_value = new_object;
     } else {
         if (m_callee->is_member_expression()) {
