@@ -45,12 +45,6 @@
 
 extern "C" {
 
-int systrace(pid_t pid)
-{
-    int rc = syscall(SC_systrace, pid);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
 int chown(const char* pathname, uid_t uid, gid_t gid)
 {
     if (!pathname) {

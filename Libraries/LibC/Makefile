@@ -46,6 +46,7 @@ LIBC_OBJS = \
        sys/socket.o \
        sys/wait.o \
        sys/uio.o \
+       sys/ptrace.o \
        poll.o \
        locale.o \
        arpa/inet.o \
