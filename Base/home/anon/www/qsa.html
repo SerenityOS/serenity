@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+<div id="foo1" class="foo"></div>
+<div id="foo2" class="foo"></div>
+<div id="foo3" class="foo"></div>
+<pre id="out"></pre>
+<script>
+var elements = document.querySelectorAll(".foo");
+
+try {
+    if (elements.length !== 3)
+        throw 1;
+    if (elements[0].id !== "foo1")
+        throw 2;
+    if (elements[1].id !== "foo2")
+        throw 3;
+    if (elements[2].id !== "foo3")
+        throw 4;
+    document.getElementById('out').innerHTML = "Success!";
+} catch (e) {
+    document.getElementById('out').innerHTML = "Error number " + e;
+}
+
+</script>
+</body>
+</html>

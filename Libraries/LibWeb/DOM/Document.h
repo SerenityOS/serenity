@@ -123,6 +123,7 @@ public:
     void schedule_style_update();
 
     Vector<const Element*> get_elements_by_name(const String&) const;
+    NonnullRefPtrVector<Element> query_selector_all(const StringView&);
 
     const String& source() const { return m_source; }
     void set_source(const String& source) { m_source = source; }

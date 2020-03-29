@@ -35,11 +35,15 @@ class Event;
 class EventListener;
 class EventTarget;
 class Frame;
-class HTMLElement;
 class HTMLCanvasElement;
+class HTMLElement;
 class HtmlView;
+class LayoutNode;
 class MouseEvent;
 class Node;
+class Selector;
+class StyleRule;
+class StyleSheet;
 
 namespace Bindings {
 
