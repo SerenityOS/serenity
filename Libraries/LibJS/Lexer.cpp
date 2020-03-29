@@ -43,9 +43,12 @@ Lexer::Lexer(StringView source)
 {
     if (s_keywords.is_empty()) {
         s_keywords.set("await", TokenType::Await);
+        s_keywords.set("break", TokenType::Break);
+        s_keywords.set("case", TokenType::Case);
         s_keywords.set("catch", TokenType::Catch);
         s_keywords.set("class", TokenType::Class);
         s_keywords.set("const", TokenType::Const);
+        s_keywords.set("default", TokenType::Default);
         s_keywords.set("delete", TokenType::Delete);
         s_keywords.set("do", TokenType::Do);
         s_keywords.set("else", TokenType::Else);
@@ -60,12 +63,13 @@ Lexer::Lexer(StringView source)
         s_keywords.set("let", TokenType::Let);
         s_keywords.set("new", TokenType::New);
         s_keywords.set("null", TokenType::NullLiteral);
-        s_keywords.set("undefined", TokenType::UndefinedLiteral);
         s_keywords.set("return", TokenType::Return);
+        s_keywords.set("switch", TokenType::Switch);
         s_keywords.set("throw", TokenType::Throw);
         s_keywords.set("true", TokenType::BoolLiteral);
         s_keywords.set("try", TokenType::Try);
         s_keywords.set("typeof", TokenType::Typeof);
+        s_keywords.set("undefined", TokenType::UndefinedLiteral);
         s_keywords.set("var", TokenType::Var);
         s_keywords.set("void", TokenType::Void);
         s_keywords.set("while", TokenType::While);

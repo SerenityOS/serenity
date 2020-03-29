@@ -55,6 +55,9 @@ public:
     NonnullRefPtr<ThrowStatement> parse_throw_statement();
     NonnullRefPtr<TryStatement> parse_try_statement();
     NonnullRefPtr<CatchClause> parse_catch_clause();
+    NonnullRefPtr<SwitchStatement> parse_switch_statement();
+    NonnullRefPtr<SwitchCase> parse_switch_case();
+    NonnullRefPtr<BreakStatement> parse_break_statement();
 
     NonnullRefPtr<Expression> parse_expression(int min_precedence, Associativity associate = Associativity::Right);
     NonnullRefPtr<Expression> parse_primary_expression();

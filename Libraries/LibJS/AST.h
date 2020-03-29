@@ -496,7 +496,7 @@ public:
     }
 
 private:
-    virtual const char * class_name() const override { return "NewExpression"; }
+    virtual const char* class_name() const override { return "NewExpression"; }
     virtual bool is_new_expression() const override { return true; }
 };
 
@@ -705,6 +705,52 @@ private:
     virtual const char* class_name() const override { return "ThrowStatement"; }
 
     NonnullRefPtr<Expression> m_argument;
+};
+
+class SwitchCase final : public ASTNode {
+public:
+    SwitchCase(RefPtr<Expression> test, NonnullRefPtrVector<Statement> consequent)
+        : m_test(move(test))
+        , m_consequent(move(consequent))
+    {
+    }
+
+    virtual void dump(int indent) const override;
+    virtual Value execute(Interpreter&) const override;
+
+private:
+    virtual const char* class_name() const override { return "SwitchCase"; }
+
+    RefPtr<Expression> m_test;
+    NonnullRefPtrVector<Statement> m_consequent;
+};
+
+class SwitchStatement final : public Statement {
+public:
+    SwitchStatement(NonnullRefPtr<Expression> discriminant, NonnullRefPtrVector<SwitchCase> cases)
+        : m_discriminant(move(discriminant))
+        , m_cases(move(cases))
+    {
+    }
+
+    virtual void dump(int indent) const override;
+    virtual Value execute(Interpreter&) const override;
+
+private:
+    virtual const char* class_name() const override { return "SwitchStatement"; }
+
+    NonnullRefPtr<Expression> m_discriminant;
+    NonnullRefPtrVector<SwitchCase> m_cases;
+};
+
+class BreakStatement final : public Statement {
+public:
+    BreakStatement() {}
+
+    virtual Value execute(Interpreter&) const override;
+
+private:
+    virtual const char* class_name() const override { return "BreakStatement"; }
 };
 
 }

@@ -202,6 +202,10 @@ NonnullRefPtr<Statement> Parser::parse_statement()
         return parse_throw_statement();
     case TokenType::Try:
         return parse_try_statement();
+    case TokenType::Break:
+        return parse_break_statement();
+    case TokenType::Switch:
+        return parse_switch_statement();
     default:
         if (match_expression())
             return adopt(*new ExpressionStatement(parse_expression(0)));
@@ -559,6 +563,13 @@ NonnullRefPtr<ThrowStatement> Parser::parse_throw_statement()
     return create_ast_node<ThrowStatement>(parse_expression(0));
 }
 
+NonnullRefPtr<BreakStatement> Parser::parse_break_statement()
+{
+    consume(TokenType::Break);
+    // FIXME: Handle labels.
+    return create_ast_node<BreakStatement>();
+}
+
 NonnullRefPtr<TryStatement> Parser::parse_try_statement()
 {
     consume(TokenType::Try);
@@ -576,6 +587,43 @@ NonnullRefPtr<TryStatement> Parser::parse_try_statement()
     }
 
     return create_ast_node<TryStatement>(move(block), move(handler), move(finalizer));
+}
+
+NonnullRefPtr<SwitchStatement> Parser::parse_switch_statement()
+{
+    consume(TokenType::Switch);
+
+    consume(TokenType::ParenOpen);
+    auto determinant = parse_expression(0);
+    consume(TokenType::ParenClose);
+
+    consume(TokenType::CurlyOpen);
+
+    NonnullRefPtrVector<SwitchCase> cases;
+
+    while (match(TokenType::Case) || match(TokenType::Default))
+        cases.append(parse_switch_case());
+
+    consume(TokenType::CurlyClose);
+
+    return create_ast_node<SwitchStatement>(move(determinant), move(cases));
+}
+
+NonnullRefPtr<SwitchCase> Parser::parse_switch_case()
+{
+    RefPtr<Expression> test;
+
+    if (consume().type() == TokenType::Case) {
+        test = parse_expression(0);
+    }
+
+    consume(TokenType::Colon);
+
+    NonnullRefPtrVector<Statement> consequent;
+    while (match_statement())
+        consequent.append(parse_statement());
+
+    return create_ast_node<SwitchCase>(move(test), move(consequent));
 }
 
 NonnullRefPtr<CatchClause> Parser::parse_catch_clause()
@@ -746,6 +794,8 @@ bool Parser::match_statement() const
         || type == TokenType::For
         || type == TokenType::Const
         || type == TokenType::CurlyOpen
+        || type == TokenType::Switch
+        || type == TokenType::Break
         || type == TokenType::Var;
 }
 
