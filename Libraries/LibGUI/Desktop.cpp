@@ -54,6 +54,16 @@ void Desktop::did_receive_screen_rect(Badge<WindowServerConnection>, const Gfx::
         on_rect_change(rect);
 }
 
+void Desktop::set_background_color(const StringView& background_color)
+{
+    WindowServerConnection::the().post_message(Messages::WindowServer::SetBackgroundColor(background_color));
+}
+
+void Desktop::set_wallpaper_mode(const StringView& mode)
+{
+    WindowServerConnection::the().post_message(Messages::WindowServer::SetWallpaperMode(mode));
+}
+
 bool Desktop::set_wallpaper(const StringView& path)
 {
     WindowServerConnection::the().post_message(Messages::WindowServer::AsyncSetWallpaper(path));
