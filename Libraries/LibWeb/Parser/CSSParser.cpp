@@ -267,6 +267,9 @@ public:
 
     Optional<Selector::SimpleSelector> parse_simple_selector()
     {
+        if (!peek())
+            return {};
+
         if (consume_whitespace_or_comments())
             return {};
 
@@ -657,6 +660,16 @@ private:
 
     StringView css;
 };
+
+Optional<Selector> parse_selector(const StringView& selector_text)
+{
+    CSSParser parser(selector_text);
+    auto complex_selector = parser.parse_complex_selector();
+    if (!complex_selector.has_value())
+        return {};
+    complex_selector.value().relation = Selector::ComplexSelector::Relation::None;
+    return Selector({ complex_selector.value() });
+}
 
 RefPtr<StyleSheet> parse_css(const StringView& css)
 {
