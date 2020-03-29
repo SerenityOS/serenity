@@ -41,6 +41,7 @@ StringPrototype::StringPrototype()
     put_native_property("length", length_getter, nullptr);
     put_native_function("charAt", char_at);
     put_native_function("repeat", repeat);
+    put_native_function("startsWith", starts_with);
 }
 
 StringPrototype::~StringPrototype()
@@ -81,6 +82,32 @@ Value StringPrototype::repeat(Interpreter& interpreter)
     for (i32 i = 0; i < count; ++i)
         builder.append(string_object->primitive_string()->string());
     return js_string(interpreter.heap(), builder.to_string());
+}
+
+Value StringPrototype::starts_with(Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return {};
+    if (interpreter.call_frame().arguments.is_empty())
+        return Value(false);
+    auto search_string = interpreter.call_frame().arguments[0].to_string();
+    auto search_string_length = static_cast<i32>(search_string.length());
+    i32 position = 0;
+    if (interpreter.call_frame().arguments.size() > 1) {
+        auto number = interpreter.call_frame().arguments[1].to_number();
+        if (!number.is_nan())
+            position = number.to_i32();
+    }
+    ASSERT(this_object->is_string_object());
+    auto underlying_string = static_cast<const StringObject*>(this_object)->primitive_string()->string();
+    auto underlying_string_length = static_cast<i32>(underlying_string.length());
+    auto start = min(max(position, 0), underlying_string_length);
+    if (start + search_string_length > underlying_string_length)
+        return Value(false);
+    if (search_string_length == 0)
+        return Value(true);
+    return Value(underlying_string.substring(start, search_string_length) == search_string);
 }
 
 Value StringPrototype::length_getter(Interpreter& interpreter)
