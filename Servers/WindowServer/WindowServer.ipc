@@ -74,6 +74,10 @@ endpoint WindowServer = 2
     DismissMenu(i32 menu_id) => ()
 
     AsyncSetWallpaper(String path) =|
+    
+    SetBackgroundColor(String background_color)  => ()
+    SetWallpaperMode(String mode)  => ()
+
     SetResolution(Gfx::Size resolution) => (bool success, Gfx::Size resolution)
     SetWindowIconBitmap(i32 window_id, i32 icon_buffer_id, Gfx::Size icon_size) => ()
 

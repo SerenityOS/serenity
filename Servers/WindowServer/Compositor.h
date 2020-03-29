@@ -55,6 +55,10 @@ public:
 
     bool set_resolution(int desired_width, int desired_height);
 
+    bool set_backgound_color(const String& background_color);
+
+    bool set_wallpaper_mode(const String& mode);
+
     bool set_wallpaper(const String& path, Function<void(bool)>&& callback);
     String wallpaper_path() const { return m_wallpaper_path; }
 
