@@ -674,7 +674,7 @@ int main(int argc, char** argv)
         view_as_icons_action->set_checked(true);
     }
 
-    // Write window position to config file on close request.
+    // Write window position to config file on close request. 
     window->on_close_request = [&] {
         config->write_num_entry("Window", "Left", window->x());
         config->write_num_entry("Window", "Top", window->y());

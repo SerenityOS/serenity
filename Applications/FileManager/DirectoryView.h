@@ -38,6 +38,7 @@ class DirectoryView final : public GUI::StackWidget {
     C_OBJECT(DirectoryView)
 public:
     virtual ~DirectoryView() override;
+    virtual void keydown_event(GUI::KeyEvent&) override;
 
     void open(const StringView& path);
     String path() const { return model().root_path(); }

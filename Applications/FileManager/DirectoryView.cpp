@@ -24,12 +24,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibGUI/Window.h>
+#include <LibGUI/MessageBox.h>
+#include <Kernel/KeyCode.h>
 #include "DirectoryView.h"
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <stdio.h>
 #include <unistd.h>
+
 
 // FIXME: Remove this hackery once printf() supports floats.
 static String number_string_with_one_decimal(float number, const char* suffix)
@@ -48,6 +52,15 @@ static String human_readable_size(size_t size)
         return number_string_with_one_decimal((float)size / (float)MB, "MB");
     return number_string_with_one_decimal((float)size / (float)GB, "GB");
 }
+
+void DirectoryView::keydown_event(GUI::KeyEvent& event)
+{
+    printf("DirectoryView::keydown_event key=%d\n", event.key());
+
+    char c = (char) event.key();
+
+    GUI::MessageBox::show(String::format("%d", c), "File Manager", GUI::MessageBox::Type::Error);
+};
 
 void DirectoryView::handle_activation(const GUI::ModelIndex& index)
 {
