@@ -715,6 +715,9 @@ public:
     {
     }
 
+    const Expression* test() const { return m_test; }
+    const NonnullRefPtrVector<Statement>& consequent() const { return m_consequent; }
+
     virtual void dump(int indent) const override;
     virtual Value execute(Interpreter&) const override;
 
