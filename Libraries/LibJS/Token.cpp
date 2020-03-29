@@ -51,8 +51,12 @@ const char* Token::name(TokenType type)
         return "BracketOpen";
     case TokenType::BracketClose:
         return "BracketClose";
+    case TokenType::Break:
+        return "Break";
     case TokenType::Caret:
         return "Caret";
+    case TokenType::Case:
+        return "Case";
     case TokenType::Catch:
         return "Catch";
     case TokenType::Class:
@@ -67,6 +71,8 @@ const char* Token::name(TokenType type)
         return "CurlyClose";
     case TokenType::CurlyOpen:
         return "CurlyOpen";
+    case TokenType::Default:
+        return "Default";
     case TokenType::Delete:
         return "Delete";
     case TokenType::Do:
@@ -179,6 +185,8 @@ const char* Token::name(TokenType type)
         return "SlashEquals";
     case TokenType::StringLiteral:
         return "StringLiteral";
+    case TokenType::Switch:
+        return "Switch";
     case TokenType::Tilde:
         return "Tilde";
     case TokenType::Try:
