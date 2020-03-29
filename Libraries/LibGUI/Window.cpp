@@ -587,7 +587,7 @@ void Window::apply_icon()
     if (!has_set_process_icon)
         set_process_icon(m_icon->shbuf_id());
 
-    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowIconBitmap>(m_window_id, m_icon->shbuf_id(), m_icon->size());
+    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowIconBitmap>(m_window_id, m_icon->to_shareable_bitmap(WindowServerConnection::the().server_pid()));
 }
 
 void Window::start_wm_resize()
