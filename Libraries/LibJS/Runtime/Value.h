@@ -53,7 +53,7 @@ public:
     bool is_cell() const { return is_string() || is_object(); }
     bool is_array() const;
 
-    bool is_nan() const { return is_number() && __builtin_isnan( as_double()); }
+    bool is_nan() const { return is_number() && __builtin_isnan(as_double()); }
 
     Value()
         : m_type(Type::Undefined)

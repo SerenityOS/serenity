@@ -49,12 +49,13 @@ public:
     void put_native_function(const FlyString& property_name, AK::Function<Value(Interpreter&)>);
     void put_native_property(const FlyString& property_name, AK::Function<Value(Interpreter&)> getter, AK::Function<void(Interpreter&, Value)> setter);
 
-    virtual bool is_error() const { return false; }
     virtual bool is_array() const { return false; }
+    virtual bool is_date() const { return false; }
+    virtual bool is_error() const { return false; }
     virtual bool is_function() const { return false; }
     virtual bool is_native_function() const { return false; }
-    virtual bool is_string_object() const { return false; }
     virtual bool is_native_property() const { return false; }
+    virtual bool is_string_object() const { return false; }
 
     virtual const char* class_name() const override { return "Object"; }
     virtual void visit_children(Cell::Visitor&) override;
