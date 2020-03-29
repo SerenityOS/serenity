@@ -1,0 +1,11 @@
+function assert(x) { if (!x) throw 1; }
+
+try {
+    var d = new Date();
+    assert(!isNaN(d.getMonth()));
+    assert(0 <= d.getMonth() <= 11);
+    assert(d.getMonth() === d.getMonth());
+    console.log("PASS");
+} catch (e) {
+    console.log("FAIL: " + e);
+}

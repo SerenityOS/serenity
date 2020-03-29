@@ -58,7 +58,7 @@ String Value::to_string() const
             return "NaN";
 
         // FIXME: This needs improvement.
-        return String::number((i32)as_double());
+        return String::format("%f", as_double());
     }
 
     if (is_object())
