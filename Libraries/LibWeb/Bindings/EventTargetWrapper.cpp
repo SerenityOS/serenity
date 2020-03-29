@@ -24,8 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Function.h>
 #include <AK/FlyString.h>
+#include <AK/Function.h>
+#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibWeb/Bindings/EventListenerWrapper.h>
 #include <LibWeb/Bindings/EventTargetWrapper.h>
@@ -38,22 +39,28 @@ namespace Bindings {
 EventTargetWrapper::EventTargetWrapper(EventTarget& impl)
     : m_impl(impl)
 {
-    put_native_function("addEventListener", [](Object* this_object, const Vector<JS::Value>& arguments) {
-        if (arguments.size() < 2)
-            return JS::js_undefined();
-
-        auto event_name = arguments[0].to_string();
-        ASSERT(arguments[1].is_object());
-        ASSERT(arguments[1].as_object()->is_function());
-        auto* function = static_cast<JS::Function*>(const_cast<Object*>(arguments[1].as_object()));
-        auto listener = adopt(*new EventListener(JS::make_handle(function)));
-        static_cast<EventTargetWrapper*>(this_object)->impl().add_event_listener(event_name, move(listener));
-        return JS::js_undefined();
-    });
+    put_native_function("addEventListener", add_event_listener);
 }
 
 EventTargetWrapper::~EventTargetWrapper()
 {
+}
+
+JS::Value EventTargetWrapper::add_event_listener(JS::Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return {};
+    auto& arguments = interpreter.call_frame().arguments;
+    if (arguments.size() < 2)
+        return JS::js_undefined();
+    auto event_name = arguments[0].to_string();
+    ASSERT(arguments[1].is_object());
+    ASSERT(arguments[1].as_object()->is_function());
+    auto* function = static_cast<JS::Function*>(const_cast<Object*>(arguments[1].as_object()));
+    auto listener = adopt(*new EventListener(JS::make_handle(function)));
+    static_cast<EventTargetWrapper*>(this_object)->impl().add_event_listener(event_name, move(listener));
+    return JS::js_undefined();
 }
 
 }

@@ -24,8 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Function.h>
 #include <AK/FlyString.h>
+#include <AK/Function.h>
+#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <stdio.h>
 
@@ -33,19 +34,22 @@ namespace JS {
 
 ConsoleObject::ConsoleObject()
 {
-    put_native_function("log", [](Object*, const Vector<Value>& arguments) -> Value {
-        for (size_t i = 0; i < arguments.size(); ++i) {
-            printf("%s", arguments[i].to_string().characters());
-            if (i != arguments.size() - 1)
-                putchar(' ');
-        }
-        putchar('\n');
-        return js_undefined();
-    });
+    put_native_function("log", log);
 }
 
 ConsoleObject::~ConsoleObject()
 {
+}
+
+Value ConsoleObject::log(Interpreter& interpreter)
+{
+    for (size_t i = 0; i < interpreter.call_frame().arguments.size(); ++i) {
+        printf("%s", interpreter.call_frame().arguments[i].to_string().characters());
+        if (i != interpreter.call_frame().arguments.size() - 1)
+            putchar(' ');
+    }
+    putchar('\n');
+    return js_undefined();
 }
 
 }

@@ -41,6 +41,9 @@ public:
 
 private:
     virtual const char* class_name() const override { return "ElementWrapper"; }
+
+    static JS::Value inner_html_getter(JS::Interpreter&);
+    static void inner_html_setter(JS::Interpreter&, JS::Value);
 };
 
 }

@@ -32,18 +32,21 @@ namespace JS {
 
 MathObject::MathObject()
 {
-    put_native_function("random", [](Object*, const Vector<Value>&) {
-#ifdef __serenity__
-        double r = (double)arc4random() / (double)UINT32_MAX;
-#else
-        double r = (double)rand() / (double)RAND_MAX;
-#endif
-        return Value(r);
-    });
+    put_native_function("random", random);
 }
 
 MathObject::~MathObject()
 {
+}
+
+Value MathObject::random(Interpreter&)
+{
+#ifdef __serenity__
+    double r = (double)arc4random() / (double)UINT32_MAX;
+#else
+    double r = (double)rand() / (double)RAND_MAX;
+#endif
+    return Value(r);
 }
 
 }

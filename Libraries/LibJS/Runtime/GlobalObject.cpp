@@ -13,23 +13,30 @@ namespace JS {
 
 GlobalObject::GlobalObject()
 {
+    put_native_function("gc", gc);
+    put_native_function("isNaN", is_nan);
+
     put("console", heap().allocate<ConsoleObject>());
-    put_native_function("gc", [](Object* this_object, Vector<Value>) -> Value {
-        dbg() << "Forced garbage collection requested!";
-        this_object->heap().collect_garbage();
-        return js_undefined();
-    });
-    put_native_function("isNaN", [](Object*, Vector<Value> arguments) -> Value {
-        if (arguments.size() < 1)
-            return js_undefined();
-        return Value(arguments[0].to_number().is_nan());
-    });
     put("Math", heap().allocate<MathObject>());
     put("Object", heap().allocate<ObjectConstructor>());
 }
 
 GlobalObject::~GlobalObject()
 {
+}
+
+Value GlobalObject::gc(Interpreter& interpreter)
+{
+    dbg() << "Forced garbage collection requested!";
+    interpreter.heap().collect_garbage();
+    return js_undefined();
+}
+
+Value GlobalObject::is_nan(Interpreter& interpreter)
+{
+    if (interpreter.call_frame().arguments.size() < 1)
+        return js_undefined();
+    return Value(interpreter.call_frame().arguments[0].to_number().is_nan());
 }
 
 }

@@ -24,8 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Function.h>
 #include <AK/FlyString.h>
+#include <AK/Function.h>
+#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
@@ -39,25 +40,10 @@ namespace Bindings {
 HTMLCanvasElementWrapper::HTMLCanvasElementWrapper(HTMLCanvasElement& element)
     : ElementWrapper(element)
 {
-    put_native_function("getContext", [this](JS::Object*, const Vector<JS::Value>& arguments) -> JS::Value {
-        if (arguments.size() >= 1) {
-            auto* context = node().get_context(arguments[0].to_string());
-            return wrap(heap(), *context);
-        }
-        return JS::js_undefined();
-    });
-    put_native_property(
-        "width",
-        [this](JS::Object*) {
-            return JS::Value(node().preferred_width());
-        },
-        nullptr);
-    put_native_property(
-        "height",
-        [this](JS::Object*) {
-            return JS::Value(node().preferred_height());
-        },
-        nullptr);
+    put_native_function("getContext", get_context);
+
+    put_native_property("width", width_getter, nullptr);
+    put_native_property("height", height_getter, nullptr);
 }
 
 HTMLCanvasElementWrapper::~HTMLCanvasElementWrapper()
@@ -72,6 +58,42 @@ HTMLCanvasElement& HTMLCanvasElementWrapper::node()
 const HTMLCanvasElement& HTMLCanvasElementWrapper::node() const
 {
     return static_cast<const HTMLCanvasElement&>(NodeWrapper::node());
+}
+
+static HTMLCanvasElement* impl_from(JS::Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return nullptr;
+    // FIXME: Verify that it's a HTMLCanvasElementWrapper somehow!
+    return &static_cast<HTMLCanvasElementWrapper*>(this_object)->node();
+}
+
+JS::Value HTMLCanvasElementWrapper::get_context(JS::Interpreter& interpreter)
+{
+    auto* impl = impl_from(interpreter);
+    if (!impl)
+        return {};
+    auto& arguments = interpreter.call_frame().arguments;
+    if (arguments.size() >= 1) {
+        auto* context = impl->get_context(arguments[0].to_string());
+        return wrap(interpreter.heap(), *context);
+    }
+    return JS::js_undefined();
+}
+
+JS::Value HTMLCanvasElementWrapper::width_getter(JS::Interpreter& interpreter)
+{
+    if (auto* impl = impl_from(interpreter))
+        return JS::Value(impl->preferred_width());
+    return {};
+}
+
+JS::Value HTMLCanvasElementWrapper::height_getter(JS::Interpreter& interpreter)
+{
+    if (auto* impl = impl_from(interpreter))
+        return JS::Value(impl->preferred_height());
+    return {};
 }
 
 }

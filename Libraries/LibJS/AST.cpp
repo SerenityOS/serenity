@@ -99,7 +99,7 @@ Value CallExpression::execute(Interpreter& interpreter) const
         }
     }
 
-    auto result = function->call(interpreter, call_frame.arguments);
+    auto result = function->call(interpreter);
     interpreter.pop_call_frame();
 
     if (is_new_expression()) {
@@ -554,10 +554,10 @@ Value AssignmentExpression::execute(Interpreter& interpreter) const
         };
     } else if (m_lhs->is_member_expression()) {
         commit = [&](Value value) {
-            auto object = static_cast<const MemberExpression&>(*m_lhs).object().execute(interpreter).to_object(interpreter.heap());
-            ASSERT(object.is_object());
-            auto property_name = static_cast<const MemberExpression&>(*m_lhs).computed_property_name(interpreter);
-            object.as_object()->put(property_name, value);
+            if (auto* object = static_cast<const MemberExpression&>(*m_lhs).object().execute(interpreter).to_object(interpreter.heap())) {
+                auto property_name = static_cast<const MemberExpression&>(*m_lhs).computed_property_name(interpreter);
+                object->put(property_name, value);
+            }
         };
     } else {
         ASSERT_NOT_REACHED();
@@ -751,11 +751,10 @@ FlyString MemberExpression::computed_property_name(Interpreter& interpreter) con
 
 Value MemberExpression::execute(Interpreter& interpreter) const
 {
-    auto object_result = m_object->execute(interpreter).to_object(interpreter.heap());
+    auto* object_result = m_object->execute(interpreter).to_object(interpreter.heap());
     if (interpreter.exception())
         return {};
-    ASSERT(object_result.is_object());
-    auto result = object_result.as_object()->get(computed_property_name(interpreter));
+    auto result = object_result->get(computed_property_name(interpreter));
     return result.value_or({});
 }
 

@@ -35,10 +35,14 @@ public:
     ObjectConstructor();
     virtual ~ObjectConstructor() override;
 
-    virtual Value call(Interpreter&, const Vector<Value>&) override;
+    virtual Value call(Interpreter&) override;
 
 private:
     virtual const char* class_name() const override { return "ObjectConstructor"; }
+
+    static Value get_own_property_names(Interpreter&);
+    static Value get_prototype_of(Interpreter&);
+    static Value set_prototype_of(Interpreter&);
 };
 
 }

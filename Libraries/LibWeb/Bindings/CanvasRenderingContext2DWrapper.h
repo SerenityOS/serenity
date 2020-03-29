@@ -42,6 +42,10 @@ public:
 private:
     virtual const char* class_name() const override { return "CanvasRenderingContext2DWrapper"; }
 
+    static JS::Value fill_rect(JS::Interpreter&);
+    static JS::Value fill_style_getter(JS::Interpreter&);
+    static void fill_style_setter(JS::Interpreter&, JS::Value);
+
     NonnullRefPtr<CanvasRenderingContext2D> m_impl;
 };
 

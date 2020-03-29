@@ -46,8 +46,8 @@ public:
     virtual Optional<Value> get_own_property(const Object& this_object, const FlyString& property_name) const;
     virtual bool put_own_property(Object& this_object, const FlyString& property_name, Value);
 
-    void put_native_function(const FlyString& property_name, AK::Function<Value(Object*, Vector<Value>)>);
-    void put_native_property(const FlyString& property_name, AK::Function<Value(Object*)> getter, AK::Function<void(Object*, Value)> setter);
+    void put_native_function(const FlyString& property_name, AK::Function<Value(Interpreter&)>);
+    void put_native_property(const FlyString& property_name, AK::Function<Value(Interpreter&)> getter, AK::Function<void(Interpreter&, Value)> setter);
 
     virtual bool is_error() const { return false; }
     virtual bool is_array() const { return false; }

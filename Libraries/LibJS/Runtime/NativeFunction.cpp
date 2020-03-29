@@ -30,7 +30,7 @@
 
 namespace JS {
 
-NativeFunction::NativeFunction(AK::Function<Value(Object*, const Vector<Value>&)> native_function)
+NativeFunction::NativeFunction(AK::Function<Value(Interpreter&)> native_function)
     : m_native_function(move(native_function))
 {
 }
@@ -39,14 +39,9 @@ NativeFunction::~NativeFunction()
 {
 }
 
-Value NativeFunction::call(Interpreter& interpreter, const Vector<Value>& arguments)
+Value NativeFunction::call(Interpreter& interpreter)
 {
-    auto this_value = interpreter.this_value();
-    // FIXME: Why are we here with a non-object 'this'?
-    Object* this_object = nullptr;
-    if (this_value.is_object())
-        this_object = this_value.as_object();
-    return m_native_function(this_object, arguments);
+    return m_native_function(interpreter);
 }
 
 }
