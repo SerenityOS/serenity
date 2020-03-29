@@ -31,6 +31,7 @@
 #include <AK/Vector.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/SystemTheme.h>
+#include <LibIPC/Decoder.h>
 #include <ctype.h>
 #include <stdio.h>
 
@@ -386,11 +387,10 @@ const LogStream& operator<<(const LogStream& stream, Color value)
     return stream << value.to_string();
 }
 
-bool IPC::decode(BufferStream& stream, Color& color)
+bool IPC::decode(IPC::Decoder& decoder, Color& color)
 {
     u32 rgba = 0;
-    stream >> rgba;
-    if (stream.handle_read_failure())
+    if (!decoder.decode(rgba))
         return false;
     color = Color::from_rgba(rgba);
     return true;

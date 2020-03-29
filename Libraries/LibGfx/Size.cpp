@@ -27,6 +27,7 @@
 #include <AK/BufferStream.h>
 #include <AK/String.h>
 #include <LibGfx/Size.h>
+#include <LibIPC/Decoder.h>
 
 namespace Gfx {
 
@@ -44,13 +45,13 @@ const LogStream& operator<<(const LogStream& stream, const Size& value)
 
 namespace IPC {
 
-bool decode(BufferStream& stream, Gfx::Size& size)
+bool decode(Decoder& decoder, Gfx::Size& size)
 {
     int width = 0;
     int height = 0;
-    stream >> width;
-    stream >> height;
-    if (stream.handle_read_failure())
+    if (!decoder.decode(width))
+        return false;
+    if (!decoder.decode(height))
         return false;
     size = { width, height };
     return true;

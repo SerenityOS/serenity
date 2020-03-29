@@ -29,6 +29,7 @@
 #include <AK/Forward.h>
 #include <AK/StdLibExtras.h>
 #include <LibGfx/Orientation.h>
+#include <LibIPC/Forward.h>
 #include <stdlib.h>
 
 namespace Gfx {
@@ -162,5 +163,5 @@ const LogStream& operator<<(const LogStream&, const Point&);
 }
 
 namespace IPC {
-bool decode(BufferStream&, Gfx::Point&);
+bool decode(Decoder&, Gfx::Point&);
 }
