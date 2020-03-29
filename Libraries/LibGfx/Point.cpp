@@ -27,6 +27,7 @@
 #include <AK/BufferStream.h>
 #include <AK/String.h>
 #include <LibGfx/Point.h>
+#include <LibIPC/Decoder.h>
 
 namespace Gfx {
 
@@ -44,13 +45,13 @@ const LogStream& operator<<(const LogStream& stream, const Point& value)
 
 namespace IPC {
 
-bool decode(BufferStream& stream, Gfx::Point& point)
+bool decode(Decoder& decoder, Gfx::Point& point)
 {
     int x = 0;
     int y = 0;
-    stream >> x;
-    stream >> y;
-    if (stream.handle_read_failure())
+    if (!decoder.decode(x))
+        return false;
+    if (!decoder.decode(y))
         return false;
     point = { x, y };
     return true;

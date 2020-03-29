@@ -59,7 +59,7 @@ public:
     template<typename T>
     bool decode(T& value)
     {
-        return IPC::decode(m_stream, value);
+        return IPC::decode(*this, value);
     }
 
 private:
