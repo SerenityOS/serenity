@@ -361,12 +361,10 @@ OwnPtr<Messages::WindowServer::SetWindowIconBitmapResponse> ClientConnection::ha
     }
     auto& window = *(*it).value;
 
-    auto icon_buffer = SharedBuffer::create_from_shbuf_id(message.icon_buffer_id());
-
-    if (!icon_buffer) {
-        window.set_default_icon();
+    if (message.icon().is_valid()) {
+        window.set_icon(*message.icon().bitmap());
     } else {
-        window.set_icon(Gfx::Bitmap::create_with_shared_buffer(Gfx::BitmapFormat::RGBA32, *icon_buffer, message.icon_size()));
+        window.set_default_icon();
     }
 
     window.frame().invalidate_title_bar();
