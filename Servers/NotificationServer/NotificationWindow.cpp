@@ -33,6 +33,7 @@
 #include <LibGUI/Widget.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/ShareableBitmap.h>
 
 namespace NotificationServer {
 
@@ -55,7 +56,7 @@ void update_notification_window_locations()
     }
 }
 
-NotificationWindow::NotificationWindow(const String& text, const String& title, const String& icon_path)
+NotificationWindow::NotificationWindow(const String& text, const String& title, const Gfx::ShareableBitmap& icon)
 {
     s_windows.append(this);
 
@@ -86,11 +87,11 @@ NotificationWindow::NotificationWindow(const String& text, const String& title, 
     widget.layout()->set_margins({ 8, 8, 8, 8 });
     widget.layout()->set_spacing(6);
 
-    if (auto icon = Gfx::Bitmap::load_from_file(icon_path)) {
+    if (icon.is_valid()) {
         auto& icon_label = widget.add<GUI::Label>();
         icon_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
         icon_label.set_preferred_size(32, 32);
-        icon_label.set_icon(icon);
+        icon_label.set_icon(icon.bitmap());
     }
 
     auto& left_container = widget.add<GUI::Widget>();

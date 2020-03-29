@@ -1,6 +1,7 @@
 #pragma once
 
 #include <LibCore/Object.h>
+#include <LibGfx/Bitmap.h>
 
 namespace GUI {
 
@@ -16,8 +17,8 @@ public:
     const String& title() const { return m_title; }
     void set_title(const String& title) { m_title = title; }
 
-    const String& icon_path() const { return m_icon_path; }
-    void set_icon_path(const String& icon_path) { m_icon_path = icon_path; }
+    const Gfx::Bitmap* icon() const { return m_icon; }
+    void set_icon(const Gfx::Bitmap* icon) { m_icon = icon; }
 
     void show();
 
@@ -26,7 +27,7 @@ private:
 
     String m_title;
     String m_text;
-    String m_icon_path;
+    RefPtr<Gfx::Bitmap> m_icon;
 };
 
 }

@@ -53,10 +53,11 @@ OwnPtr<Messages::NotificationServer::GreetResponse> ClientConnection::handle(con
     return make<Messages::NotificationServer::GreetResponse>(client_id());
 }
 
-void ClientConnection::handle(const Messages::NotificationServer::ShowNotification& message)
+OwnPtr<Messages::NotificationServer::ShowNotificationResponse> ClientConnection::handle(const Messages::NotificationServer::ShowNotification& message)
 {
-    auto window = NotificationWindow::construct(message.text(), message.title(), message.icon_path());
+    auto window = NotificationWindow::construct(message.text(), message.title(), message.icon());
     window->show();
+    return make<Messages::NotificationServer::ShowNotificationResponse>();
 }
 
 }

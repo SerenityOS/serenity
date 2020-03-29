@@ -228,6 +228,7 @@ int main(int argc, char** argv)
     dbg() << "#include <AK/OwnPtr.h>";
     dbg() << "#include <LibGfx/Color.h>";
     dbg() << "#include <LibGfx/Rect.h>";
+    dbg() << "#include <LibGfx/ShareableBitmap.h>";
     dbg() << "#include <LibIPC/Decoder.h>";
     dbg() << "#include <LibIPC/Encoder.h>";
     dbg() << "#include <LibIPC/Endpoint.h>";
@@ -362,6 +363,10 @@ int main(int argc, char** argv)
                     dbg() << "            stream << rect.width();";
                     dbg() << "            stream << rect.height();";
                     dbg() << "        }";
+                } else if (parameter.type == "Gfx::ShareableBitmap") {
+                    dbg() << "        stream << m_" << parameter.name << ".shbuf_id();";
+                    dbg() << "        stream << m_" << parameter.name << ".width();";
+                    dbg() << "        stream << m_" << parameter.name << ".height();";
                 } else {
                     dbg() << "        stream << m_" << parameter.name << ";";
                 }
