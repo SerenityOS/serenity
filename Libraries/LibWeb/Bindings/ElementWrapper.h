@@ -44,6 +44,9 @@ private:
 
     static JS::Value inner_html_getter(JS::Interpreter&);
     static void inner_html_setter(JS::Interpreter&, JS::Value);
+
+    static JS::Value id_getter(JS::Interpreter&);
+    static void id_setter(JS::Interpreter&, JS::Value);
 };
 
 }

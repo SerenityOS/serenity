@@ -39,6 +39,7 @@ ElementWrapper::ElementWrapper(Element& element)
     : NodeWrapper(element)
 {
     put_native_property("innerHTML", inner_html_getter, inner_html_setter);
+    put_native_property("id", id_getter, id_setter);
 }
 
 ElementWrapper::~ElementWrapper()
@@ -75,6 +76,19 @@ void ElementWrapper::inner_html_setter(JS::Interpreter& interpreter, JS::Value v
 {
     if (auto* impl = impl_from(interpreter))
         impl->set_inner_html(value.to_string());
+}
+
+JS::Value ElementWrapper::id_getter(JS::Interpreter& interpreter)
+{
+    if (auto* impl = impl_from(interpreter))
+        return JS::js_string(interpreter.heap(), impl->attribute("id"));
+    return {};
+}
+
+void ElementWrapper::id_setter(JS::Interpreter& interpreter, JS::Value value)
+{
+    if (auto* impl = impl_from(interpreter))
+        impl->set_attribute("id", value.to_string());
 }
 
 }
