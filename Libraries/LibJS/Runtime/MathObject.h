@@ -38,6 +38,7 @@ public:
 private:
     virtual const char* class_name() const override { return "MathObject"; }
 
+    static Value abs(Interpreter&);
     static Value random(Interpreter&);
 };
 
