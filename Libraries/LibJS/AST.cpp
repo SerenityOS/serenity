@@ -873,7 +873,31 @@ Value ThrowStatement::execute(Interpreter& interpreter) const
 
 Value SwitchStatement::execute(Interpreter& interpreter) const
 {
-    (void)interpreter;
+    auto discriminant_result = m_discriminant->execute(interpreter);
+    if (interpreter.exception())
+        return {};
+
+    bool falling_through = false;
+
+    for (auto& switch_case : m_cases) {
+        if (!falling_through && switch_case.test()) {
+            auto test_result = switch_case.test()->execute(interpreter);
+            if (interpreter.exception())
+                return {};
+            if (!eq(discriminant_result, test_result).to_boolean())
+                continue;
+        }
+        falling_through = true;
+
+        for (auto& statement : switch_case.consequent()) {
+            statement.execute(interpreter);
+            if (interpreter.exception())
+                return {};
+            if (interpreter.should_unwind())
+                return {};
+        }
+    }
+
     return {};
 }
 
@@ -885,7 +909,7 @@ Value SwitchCase::execute(Interpreter& interpreter) const
 
 Value BreakStatement::execute(Interpreter& interpreter) const
 {
-    (void)interpreter;
+    interpreter.unwind(ScopeType::Breakable);
     return {};
 }
 
