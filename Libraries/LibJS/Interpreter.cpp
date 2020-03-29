@@ -28,6 +28,7 @@
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/ArrayPrototype.h>
+#include <LibJS/Runtime/DatePrototype.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/ErrorPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -46,6 +47,7 @@ Interpreter::Interpreter()
     m_string_prototype = heap().allocate<StringPrototype>();
     m_array_prototype = heap().allocate<ArrayPrototype>();
     m_error_prototype = heap().allocate<ErrorPrototype>();
+    m_date_prototype = heap().allocate<DatePrototype>();
 
     m_global_object = heap().allocate<GlobalObject>();
 }
@@ -165,6 +167,7 @@ void Interpreter::gather_roots(Badge<Heap>, HashTable<Cell*>& roots)
     roots.set(m_object_prototype);
     roots.set(m_array_prototype);
     roots.set(m_error_prototype);
+    roots.set(m_date_prototype);
 
     roots.set(m_exception);
 

@@ -10,6 +10,9 @@ OBJS = \
     Runtime/ArrayPrototype.o \
     Runtime/Cell.o \
     Runtime/ConsoleObject.o \
+    Runtime/Date.o \
+    Runtime/DateConstructor.o \
+    Runtime/DatePrototype.o \
     Runtime/Error.o \
     Runtime/ErrorPrototype.o \
     Runtime/Exception.o \
