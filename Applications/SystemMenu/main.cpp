@@ -119,6 +119,7 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
             g_apps.append({ app_executable, app_name, app_icon_path, app_category });
             seen_app_categories.set(app_category);
         }
+        quick_sort(g_apps, [](auto& a, auto& b) { return a.name < b.name; });
     }
 
     Vector<String> sorted_app_categories;
