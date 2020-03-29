@@ -67,7 +67,8 @@ ComboBox::ComboBox()
         ASSERT(model());
         auto new_value = model()->data(index).to_string();
         m_editor->set_text(new_value);
-        m_editor->select_all();
+        if (!m_only_allow_values_from_model)
+            m_editor->select_all();
         close();
         deferred_invoke([this, index](auto&) {
             if (on_change)
@@ -92,6 +93,15 @@ void ComboBox::resize_event(ResizeEvent& event)
 void ComboBox::set_model(NonnullRefPtr<Model> model)
 {
     m_list_view->set_model(move(model));
+}
+
+void ComboBox::set_selected_index(size_t index)
+{
+    auto model = this->m_list_view->model();
+
+    auto model_index = model->index(index, 0);
+    if (model->is_valid(model_index))
+        this->m_list_view->selection().set(model_index);
 }
 
 void ComboBox::select_all()
