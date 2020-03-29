@@ -32,6 +32,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonObjectSerializer.h>
 #include <AK/JsonValue.h>
+#include <Kernel/ACPI/DMIDecoder.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Custody.h>
@@ -84,6 +85,8 @@ enum ProcFileType {
     FI_Root_inodes,
     FI_Root_dmesg,
     FI_Root_interrupts,
+    FI_Root_smbios_data,
+    FI_Root_smbios_entry,
     FI_Root_pci,
     FI_Root_devices,
     FI_Root_uptime,
@@ -353,6 +356,20 @@ Optional<KBuffer> procfs$pci(InodeIdentifier)
         obj.add("subsystem_vendor_id", PCI::get_subsystem_vendor_id(address));
     });
     array.finish();
+    return builder.build();
+}
+
+Optional<KBuffer> procfs$smbios_data(InodeIdentifier)
+{
+    KBufferBuilder builder;
+    DMIDecoder::the().generate_data_raw_blob(builder);
+    return builder.build();
+}
+
+Optional<KBuffer> procfs$smbios_entry(InodeIdentifier)
+{
+    KBufferBuilder builder;
+    DMIDecoder::the().generate_entry_raw_blob(builder);
     return builder.build();
 }
 
@@ -1624,6 +1641,8 @@ ProcFS::ProcFS()
     m_entries[FI_Root_dmesg] = { "dmesg", FI_Root_dmesg, true, procfs$dmesg };
     m_entries[FI_Root_self] = { "self", FI_Root_self, false, procfs$self };
     m_entries[FI_Root_pci] = { "pci", FI_Root_pci, false, procfs$pci };
+    m_entries[FI_Root_smbios_data] = { "smbios_data", FI_Root_smbios_data, false, procfs$smbios_data };
+    m_entries[FI_Root_smbios_entry] = { "smbios_entry", FI_Root_smbios_entry, false, procfs$smbios_entry };
     m_entries[FI_Root_interrupts] = { "interrupts", FI_Root_interrupts, false, procfs$interrupts };
     m_entries[FI_Root_devices] = { "devices", FI_Root_devices, false, procfs$devices };
     m_entries[FI_Root_uptime] = { "uptime", FI_Root_uptime, false, procfs$uptime };
