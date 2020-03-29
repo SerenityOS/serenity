@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020, Jesse Buhagiar <jooster669@gmail.com>
+ * Copyright (c) 2020-2020, Hüseyin Aslıtürk <asliturk@hotmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,39 +26,36 @@
 
 #pragma once
 
-#include "MonitorWidget.h"
-#include <LibGUI/ComboBox.h>
-#include <LibGUI/TextBox.h>
+#include "LibGfx/Bitmap.h"
+#include <LibGUI/Widget.h>
 
-class DisplayPropertiesWidget : public GUI::Widget {
+class MonitorWidget final : public GUI::Widget {
     C_OBJECT(MonitorWidget);
 
 public:
-    enum class ButtonOperations {
-        Ok,
-        Apply,
-        Cancel,
-    };
+    MonitorWidget();
 
-    DisplayPropertiesWidget();
+    void set_wallpaper(String path);
+    String wallpaper();
 
-    GUI::Widget* root_widget() { return m_root_widget; }
+    void set_wallpaper_mode(String mode);
+    String wallpaper_mode();
+
+    void set_desktop_resolution(Gfx::Size resolution);
+    Gfx::Size desktop_resolution();
+
+    void set_background_color(Gfx::Color background_color);
+    Gfx::Color background_color();
 
 private:
-    void create_frame();
-    void create_wallpaper_list();
-    void create_resolution_list();
-    void load_current_settings();
-    void send_settings_to_window_server(); // Apply the settings to the Window Server
+    virtual void paint_event(GUI::PaintEvent& event) override;
 
-    Vector<String> m_wallpapers;
-    Vector<String> m_modes;
-    Vector<Gfx::Size> m_resolutions;
+    Gfx::Rect m_monitor_rect;
+    RefPtr<Gfx::Bitmap> m_monitor_bitmap;
 
-    RefPtr<GUI::Widget> m_root_widget;
-    RefPtr<MonitorWidget> m_monitor_widget;
-    RefPtr<GUI::ComboBox> m_wallpaper_combo;
-    RefPtr<GUI::ComboBox> m_mode_combo;
-    RefPtr<GUI::ComboBox> m_resolution_combo;
-    RefPtr<GUI::TextBox> m_color_textbox;
+    String m_desktop_wallpaper_path;
+    RefPtr<Gfx::Bitmap> m_desktop_wallpaper_bitmap;
+    String m_desktop_wallpaper_mode;
+    Gfx::Size m_desktop_resolution;
+    Gfx::Color m_desktop_color;
 };

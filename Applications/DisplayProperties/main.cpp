@@ -38,14 +38,14 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio shared_buffer rpath accept unix cpath wpath fattr", nullptr) < 0) {
+    if (pledge("stdio thread shared_buffer rpath accept cpath wpath unix fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     GUI::Application app(argc, argv);
 
-    if (pledge("stdio shared_buffer rpath accept cpath wpath", nullptr) < 0) {
+    if (pledge("stdio thread shared_buffer rpath accept cpath wpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -55,7 +55,7 @@ int main(int argc, char** argv)
     auto window = GUI::Window::construct();
     window->set_title("Display Properties");
     window->move_to(100, 100);
-    window->resize(400, 448);
+    window->resize(360, 390);
     window->set_resizable(false);
     window->set_main_widget(instance.root_widget());
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-display-properties.png"));
