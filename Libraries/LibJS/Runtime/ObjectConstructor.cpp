@@ -27,6 +27,7 @@
 #include <AK/Function.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ObjectConstructor.h>
 
 namespace JS {
@@ -35,6 +36,7 @@ ObjectConstructor::ObjectConstructor()
 {
     put("prototype", interpreter().object_prototype());
 
+    put_native_function("getOwnPropertyNames", get_own_property_names);
     put_native_function("getPrototypeOf", get_prototype_of);
     put_native_function("setPrototypeOf", set_prototype_of);
 }
@@ -46,6 +48,24 @@ ObjectConstructor::~ObjectConstructor()
 Value ObjectConstructor::call(Interpreter& interpreter)
 {
     return interpreter.heap().allocate<Object>();
+}
+
+Value ObjectConstructor::get_own_property_names(Interpreter& interpreter)
+{
+    if (interpreter.call_frame().arguments.size() < 1)
+        return {};
+    auto* object = interpreter.call_frame().arguments[0].to_object(interpreter.heap());
+    if (interpreter.exception())
+        return {};
+    auto* result = interpreter.heap().allocate<Array>();
+    if (object->is_array()) {
+        auto* array = static_cast<const Array*>(object);
+        for (i32 i = 0; i < array->length(); ++i)
+            result->push(js_string(interpreter.heap(), String::number(i)));
+    }
+    for (auto& it : object->own_properties())
+        result->push(js_string(interpreter.heap(), it.key));
+    return result;
 }
 
 Value ObjectConstructor::get_prototype_of(Interpreter& interpreter)
