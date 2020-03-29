@@ -26,17 +26,15 @@
 
 #pragma once
 
-namespace Web {
+#include <LibWeb/Forward.h>
 
-class Node;
-class LayoutNode;
-class StyleRule;
-class StyleSheet;
+namespace Web {
 
 void dump_tree(const Node&);
 void dump_tree(const LayoutNode&);
 void dump_sheet(const StyleSheet&);
 void dump_rule(const StyleRule&);
+void dump_selector(const Selector&);
 
 #undef HTML_DEBUG
 

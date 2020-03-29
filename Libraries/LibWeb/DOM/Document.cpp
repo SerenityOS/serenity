@@ -34,6 +34,7 @@
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
+#include <LibWeb/CSS/SelectorEngine.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentType.h>
@@ -43,10 +44,12 @@
 #include <LibWeb/DOM/HTMLHeadElement.h>
 #include <LibWeb/DOM/HTMLHtmlElement.h>
 #include <LibWeb/DOM/HTMLTitleElement.h>
+#include <LibWeb/Dump.h>
 #include <LibWeb/Frame.h>
 #include <LibWeb/HtmlView.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutTreeBuilder.h>
+#include <LibWeb/Parser/CSSParser.h>
 #include <stdio.h>
 
 namespace Web {
@@ -303,6 +306,23 @@ Vector<const Element*> Document::get_elements_by_name(const String& name) const
             elements.append(&element);
         return IterationDecision::Continue;
     });
+    return elements;
+}
+
+NonnullRefPtrVector<Element> Document::query_selector_all(const StringView& selector_text)
+{
+    auto selector = parse_selector(selector_text);
+    if (!selector.has_value())
+        return {};
+
+    NonnullRefPtrVector<Element> elements;
+    for_each_in_subtree_of_type<Element>([&](auto& element) {
+        if (SelectorEngine::matches(selector.value(), element)) {
+            elements.append(element);
+        }
+        return IterationDecision::Continue;
+    });
+
     return elements;
 }
 
