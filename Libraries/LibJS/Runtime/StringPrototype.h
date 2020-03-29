@@ -40,6 +40,7 @@ private:
 
     static Value char_at(Interpreter&);
     static Value repeat(Interpreter&);
+    static Value starts_with(Interpreter&);
 
     static Value length_getter(Interpreter&);
 };
