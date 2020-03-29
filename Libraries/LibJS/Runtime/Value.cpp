@@ -28,6 +28,7 @@
 #include <AK/String.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/PrimitiveString.h>
@@ -128,7 +129,16 @@ Value Value::to_number() const
     case Type::Undefined:
         return js_nan();
     case Type::Object:
-        return m_value.as_object->to_primitive(Object::PreferredType::Number).to_number();
+        if (m_value.as_object->is_array()) {
+            auto& array = *static_cast<Array*>(m_value.as_object);
+            if (array.length() == 0)
+                return Value(0);
+            if (array.length() > 1)
+                return js_nan();
+            return array.elements()[0].to_number();
+        } else {
+            return m_value.as_object->to_primitive(Object::PreferredType::Number).to_number();
+        }
     }
 
     ASSERT_NOT_REACHED();
