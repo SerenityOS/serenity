@@ -180,6 +180,7 @@ void dump_selector(const Selector& selector)
         const char* relation_description = "";
         switch (complex_selector.relation) {
         case Selector::ComplexSelector::Relation::None:
+            relation_description = "None";
             break;
         case Selector::ComplexSelector::Relation::ImmediateChild:
             relation_description = "ImmediateChild";
