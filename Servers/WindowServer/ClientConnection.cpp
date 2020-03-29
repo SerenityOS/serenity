@@ -309,6 +309,18 @@ void ClientConnection::handle(const Messages::WindowServer::AsyncSetWallpaper& m
     });
 }
 
+OwnPtr<Messages::WindowServer::SetBackgroundColorResponse> ClientConnection::handle(const Messages::WindowServer::SetBackgroundColor& message)
+{
+    Compositor::the().set_backgound_color(message.background_color());
+    return make<Messages::WindowServer::SetBackgroundColorResponse>();
+}
+
+OwnPtr<Messages::WindowServer::SetWallpaperModeResponse> ClientConnection::handle(const Messages::WindowServer::SetWallpaperMode& message)
+{
+    Compositor::the().set_wallpaper_mode(message.mode());
+    return make<Messages::WindowServer::SetWallpaperModeResponse>();
+}
+
 OwnPtr<Messages::WindowServer::GetWallpaperResponse> ClientConnection::handle(const Messages::WindowServer::GetWallpaper&)
 {
     return make<Messages::WindowServer::GetWallpaperResponse>(Compositor::the().wallpaper_path());
