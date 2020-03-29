@@ -114,9 +114,12 @@ Value Value::to_number() const
     case Type::Null:
         return Value(0);
     case Type::String: {
+        auto& string = as_string()->string();
+        if (string.is_empty())
+            return Value(0);
         bool ok;
         //FIXME: Parse in a better way
-        auto parsed_int = as_string()->string().to_int(ok);
+        auto parsed_int = string.to_int(ok);
         if (ok)
             return Value(parsed_int);
 

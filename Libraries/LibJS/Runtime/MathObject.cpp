@@ -26,17 +26,42 @@
 
 #include <AK/FlyString.h>
 #include <AK/Function.h>
+#include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/MathObject.h>
 
 namespace JS {
 
 MathObject::MathObject()
 {
+    put_native_function("abs", abs);
     put_native_function("random", random);
 }
 
 MathObject::~MathObject()
 {
+}
+
+Value MathObject::abs(Interpreter& interpreter)
+{
+    if (interpreter.call_frame().arguments.is_empty())
+        return js_nan();
+
+    auto argument = interpreter.call_frame().arguments[0];
+
+    if (argument.is_array()) {
+        auto& array = *static_cast<const Array*>(argument.as_object());
+        if (array.length() == 0)
+            return Value(0);
+        if (array.length() > 1)
+            return js_nan();
+        argument = array.elements()[0];
+    }
+
+    auto number = argument.to_number();
+    if (number.is_nan())
+        return js_nan();
+    return Value(number.as_double() >= 0 ? number.as_double() : -number.as_double());
 }
 
 Value MathObject::random(Interpreter&)
