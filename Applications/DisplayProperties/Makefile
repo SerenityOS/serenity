@@ -1,4 +1,5 @@
 OBJS = \
+	MonitorWidget.o \
 	DisplayProperties.o \
 	main.o \
 
