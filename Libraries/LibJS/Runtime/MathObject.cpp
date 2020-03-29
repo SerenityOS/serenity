@@ -28,6 +28,7 @@
 #include <AK/Function.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/MathObject.h>
+#include <LibM/math.h>
 
 namespace JS {
 
@@ -35,6 +36,15 @@ MathObject::MathObject()
 {
     put_native_function("abs", abs);
     put_native_function("random", random);
+
+    put("E", Value(M_E));
+    put("LN2", Value(M_LN2));
+    put("LN10", Value(M_LN10));
+    put("LOG2E", Value(log2(M_E)));
+    put("LOG10E", Value(log10(M_E)));
+    put("PI", Value(M_PI));
+    put("SQRT1_2", Value(sqrt(1 / 2)));
+    put("SQRT2", Value(sqrt(2)));
 }
 
 MathObject::~MathObject()
