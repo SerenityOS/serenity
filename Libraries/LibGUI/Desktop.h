@@ -38,6 +38,10 @@ public:
     static Desktop& the();
     Desktop();
 
+    void set_background_color(const StringView& background_color);
+
+    void set_wallpaper_mode(const StringView& mode);
+
     String wallpaper() const;
     bool set_wallpaper(const StringView& path);
 
