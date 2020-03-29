@@ -103,100 +103,22 @@ void DMIDecoder::initialize_parser()
         set_32_bit_entry_initialization_values(m_entry32bit_point);
     }
     klog() << "DMIDecoder: Data table @ " << m_structure_table;
-    enumerate_smbios_tables();
 }
 
-void DMIDecoder::enumerate_smbios_tables()
+void DMIDecoder::generate_data_raw_blob(KBufferBuilder& builder) const
 {
-
-    u32 table_length = m_table_length;
-    auto p_table = m_structure_table;
-
-    auto region = MM.allocate_kernel_region(p_table.page_base(), PAGE_ROUND_UP(table_length), "DMI Decoder Enumerating SMBIOS", Region::Access::Read, false, false);
-    volatile SMBIOS::TableHeader* v_table_ptr = (SMBIOS::TableHeader*)region->vaddr().offset(p_table.offset_in_page()).as_ptr();
-
-#ifdef SMBIOS_DEBUG
-    dbg() << "DMIDecoder: Total Table length " << m_table_length;
-#endif
-
-    u32 structures_count = 0;
-    while (table_length > 0) {
-#ifdef SMBIOS_DEBUG
-        dbg() << "DMIDecoder: Examining table @ P " << (void*)p_table.as_ptr() << " V " << const_cast<SMBIOS::TableHeader*>(v_table_ptr);
-#endif
-        structures_count++;
-        if (v_table_ptr->type == (u8)SMBIOS::TableType::EndOfTable) {
-            klog() << "DMIDecoder: Detected table with type 127, End of SMBIOS data.";
-            break;
-        }
-        klog() << "DMIDecoder: Detected table with type " << v_table_ptr->type;
-        m_smbios_tables.append(p_table);
-        table_length -= v_table_ptr->length;
-
-        size_t table_size = get_table_size(p_table);
-        p_table = p_table.offset(table_size);
-        v_table_ptr = (SMBIOS::TableHeader*)((FlatPtr)v_table_ptr + table_size);
-#ifdef SMBIOS_DEBUG
-        dbg() << "DMIDecoder: Next table @ P 0x" << p_table.get();
-#endif
-    }
-    m_structures_count = structures_count;
+    auto region = MM.allocate_kernel_region(m_structure_table.page_base(), PAGE_ROUND_UP(m_table_length), "DMI Decoder Enumerating SMBIOS", Region::Access::Read, false, false);
+    auto* v_table_ptr = (volatile u8*)region->vaddr().offset(m_structure_table.offset_in_page()).as_ptr();
+    for (size_t index = 0; index < m_table_length; index++)
+        builder.append(v_table_ptr[index]);
 }
 
-size_t DMIDecoder::get_table_size(PhysicalAddress table)
+void DMIDecoder::generate_entry_raw_blob(KBufferBuilder& builder) const
 {
-    auto region = MM.allocate_kernel_region(table.page_base(), PAGE_ROUND_UP(m_table_length), "DMI Decoder Determining table size", Region::Access::Read, false, false);
-    auto& table_v_ptr = (SMBIOS::TableHeader&)*region->vaddr().offset(table.offset_in_page()).as_ptr();
-#ifdef SMBIOS_DEBUG
-    dbg() << "DMIDecoder: table legnth - " << table_v_ptr.length;
-#endif
-    const char* strtab = (char*)&table_v_ptr + table_v_ptr.length;
-    size_t index = 1;
-    while (strtab[index - 1] != '\0' || strtab[index] != '\0') {
-        if (index > m_table_length) {
-            ASSERT_NOT_REACHED(); // FIXME: Instead of halting, find a better solution (Hint: use m_operable to disallow further use of DMIDecoder)
-        }
-        index++;
-    }
-#ifdef SMBIOS_DEBUG
-    dbg() << "DMIDecoder: table size - " << (table_v_ptr.length + index + 1);
-#endif
-    return table_v_ptr.length + index + 1;
-}
-
-PhysicalAddress DMIDecoder::get_next_physical_table(PhysicalAddress p_table)
-{
-    return p_table.offset(get_table_size(p_table));
-}
-
-PhysicalAddress DMIDecoder::get_smbios_physical_table_by_handle(u16 handle)
-{
-
-    for (auto table : m_smbios_tables) {
-        if (table.is_null())
-            continue;
-        auto region = MM.allocate_kernel_region(table.page_base(), PAGE_SIZE * 2, "DMI Decoder Finding Table", Region::Access::Read, false, false);
-        SMBIOS::TableHeader* table_v_ptr = (SMBIOS::TableHeader*)region->vaddr().offset(table.offset_in_page()).as_ptr();
-
-        if (table_v_ptr->handle == handle) {
-            return table;
-        }
-    }
-    return {};
-}
-PhysicalAddress DMIDecoder::get_smbios_physical_table_by_type(u8 table_type)
-{
-
-    for (auto table : m_smbios_tables) {
-        if (table.is_null())
-            continue;
-        auto region = MM.allocate_kernel_region(table.page_base(), PAGE_ROUND_UP(PAGE_SIZE * 2), "DMI Decoder Finding Table", Region::Access::Read, false, false);
-        SMBIOS::TableHeader* table_v_ptr = (SMBIOS::TableHeader*)region->vaddr().offset(table.offset_in_page()).as_ptr();
-        if (table_v_ptr->type == table_type) {
-            return table;
-        }
-    }
-    return {};
+    auto region = MM.allocate_kernel_region(m_entry32bit_point.page_base(), PAGE_ROUND_UP(sizeof(SMBIOS::EntryPoint32bit)), "DMI Decoder Enumerating SMBIOS", Region::Access::Read, false, false);
+    auto* v_table_ptr = (volatile u8*)region->vaddr().offset(m_entry32bit_point.offset_in_page()).as_ptr();
+    for (size_t index = 0; index < sizeof(SMBIOS::EntryPoint32bit); index++)
+        builder.append(v_table_ptr[index]);
 }
 
 DMIDecoder::DMIDecoder(bool trusted)
@@ -245,34 +167,6 @@ PhysicalAddress DMIDecoder::find_entry32bit_point()
         tested_physical_ptr += 16;
     }
     return {};
-}
-
-Vector<SMBIOS::PhysicalMemoryArray*>& DMIDecoder::get_physical_memory_areas()
-{
-    // FIXME: Implement it...
-    klog() << "DMIDecoder::get_physical_memory_areas() is not implemented.";
-    ASSERT_NOT_REACHED();
-}
-
-u64 DMIDecoder::get_bios_characteristics()
-{
-    // FIXME: Make sure we have some mapping here so we don't rely on existing identity mapping...
-    ASSERT_NOT_REACHED();
-    ASSERT(m_operable == true);
-    auto* bios_info = (SMBIOS::BIOSInfo*)get_smbios_physical_table_by_type(0).as_ptr();
-    ASSERT(bios_info != nullptr);
-
-    klog() << "DMIDecoder: BIOS info @ " << PhysicalAddress((FlatPtr)bios_info);
-    return bios_info->bios_characteristics;
-}
-
-char* DMIDecoder::get_smbios_string(PhysicalAddress, u8)
-{
-    // FIXME: Implement it...
-    // FIXME: Make sure we have some mapping here so we don't rely on existing identity mapping...
-    klog() << "DMIDecoder::get_smbios_string() is not implemented.";
-    ASSERT_NOT_REACHED();
-    return nullptr;
 }
 
 }

@@ -33,6 +33,7 @@
 #include <AK/SinglyLinkedList.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
+#include <Kernel/KBuffer.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/VM/Region.h>
 #include <LibBareMetal/Memory/PhysicalAddress.h>
@@ -46,18 +47,11 @@ public:
     static DMIDecoder& the();
     static void initialize();
     static void initialize_untrusted();
-    Vector<SMBIOS::PhysicalMemoryArray*>& get_physical_memory_areas();
     bool is_reliable() const { return !m_untrusted; };
-    u64 get_bios_characteristics();
+    void generate_data_raw_blob(KBufferBuilder&) const;
+    void generate_entry_raw_blob(KBufferBuilder&) const;
 
 private:
-    void enumerate_smbios_tables();
-    PhysicalAddress get_next_physical_table(PhysicalAddress p_table);
-    PhysicalAddress get_smbios_physical_table_by_handle(u16 handle);
-    PhysicalAddress get_smbios_physical_table_by_type(u8 table_type);
-    char* get_smbios_string(PhysicalAddress, u8 string_number);
-    size_t get_table_size(PhysicalAddress);
-
     explicit DMIDecoder(bool trusted);
     void initialize_parser();
 
@@ -72,11 +66,9 @@ private:
     PhysicalAddress m_structure_table;
     u32 m_structures_count;
     u32 m_table_length;
-    bool m_use_64bit_entry;
-    bool m_operable;
-    bool m_untrusted;
-
-    SinglyLinkedList<PhysicalAddress> m_smbios_tables;
+    bool m_use_64bit_entry : 1;
+    bool m_operable : 1;
+    bool m_untrusted : 1;
 };
 
 }
