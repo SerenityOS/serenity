@@ -44,7 +44,7 @@ Label::~Label()
 {
 }
 
-void Label::set_icon(Gfx::Bitmap* icon)
+void Label::set_icon(const Gfx::Bitmap* icon)
 {
     if (m_icon == icon)
         return;
