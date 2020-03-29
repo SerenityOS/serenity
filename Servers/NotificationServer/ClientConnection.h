@@ -43,7 +43,7 @@ private:
     explicit ClientConnection(Core::LocalSocket&, int client_id);
 
     virtual OwnPtr<Messages::NotificationServer::GreetResponse> handle(const Messages::NotificationServer::Greet&) override;
-    virtual void handle(const Messages::NotificationServer::ShowNotification&) override;
+    virtual OwnPtr<Messages::NotificationServer::ShowNotificationResponse> handle(const Messages::NotificationServer::ShowNotification&) override;
 };
 
 }

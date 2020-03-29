@@ -116,7 +116,7 @@ void IRCWindow::post_notification_if_needed(const String& name, const String& me
         notification->set_title(name);
     }
 
-    notification->set_icon_path("/res/icons/32x32/app-irc-client.png");
+    notification->set_icon(Gfx::Bitmap::load_from_file("/res/icons/32x32/app-irc-client.png"));
     notification->set_text(message);
     notification->show();
 }

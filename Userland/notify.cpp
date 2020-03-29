@@ -27,6 +27,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Notification.h>
+#include <LibGfx/Bitmap.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)
@@ -45,7 +46,7 @@ int main(int argc, char** argv)
     auto notification = GUI::Notification::construct();
     notification->set_text(message);
     notification->set_title(title);
-    notification->set_icon_path(icon_path);
+    notification->set_icon(Gfx::Bitmap::load_from_file(icon_path));
     notification->show();
 
     return 0;

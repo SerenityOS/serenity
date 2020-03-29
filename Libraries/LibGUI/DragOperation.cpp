@@ -53,7 +53,7 @@ DragOperation::Outcome DragOperation::exec()
     Gfx::Size bitmap_size;
     RefPtr<Gfx::Bitmap> shared_bitmap;
     if (m_bitmap) {
-        shared_bitmap = m_bitmap->to_shareable_bitmap();
+        shared_bitmap = m_bitmap->to_bitmap_backed_by_shared_buffer();
         shared_bitmap->shared_buffer()->share_with(WindowServerConnection::the().server_pid());
         bitmap_id = shared_bitmap->shbuf_id();
         bitmap_size = shared_bitmap->size();

@@ -30,6 +30,7 @@
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <LibGfx/Color.h>
+#include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
 
 namespace Gfx {
@@ -49,7 +50,9 @@ public:
     static RefPtr<Bitmap> load_from_file(const StringView& path);
     static NonnullRefPtr<Bitmap> create_with_shared_buffer(BitmapFormat, NonnullRefPtr<SharedBuffer>&&, const Size&);
 
-    NonnullRefPtr<Bitmap> to_shareable_bitmap() const;
+    NonnullRefPtr<Bitmap> to_bitmap_backed_by_shared_buffer() const;
+
+    ShareableBitmap to_shareable_bitmap(pid_t peer_pid = -1) const;
 
     ~Bitmap();
 

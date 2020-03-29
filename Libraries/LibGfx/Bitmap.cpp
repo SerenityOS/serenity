@@ -29,6 +29,7 @@
 #include <AK/String.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/PNGLoader.h>
+#include <LibGfx/ShareableBitmap.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -97,7 +98,7 @@ Bitmap::Bitmap(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer,
     ASSERT(format != BitmapFormat::Indexed8);
 }
 
-NonnullRefPtr<Bitmap> Bitmap::to_shareable_bitmap() const
+NonnullRefPtr<Bitmap> Bitmap::to_bitmap_backed_by_shared_buffer() const
 {
     if (m_shared_buffer)
         return *this;
@@ -162,6 +163,14 @@ void Bitmap::set_volatile()
 int Bitmap::shbuf_id() const
 {
     return m_shared_buffer ? m_shared_buffer->shbuf_id() : -1;
+}
+
+ShareableBitmap Bitmap::to_shareable_bitmap(pid_t peer_pid) const
+{
+    auto bitmap = to_bitmap_backed_by_shared_buffer();
+    if (peer_pid > 0)
+        bitmap->shared_buffer()->share_with(peer_pid);
+    return ShareableBitmap(*bitmap);
 }
 
 }

@@ -44,6 +44,7 @@ class Palette;
 class PaletteImpl;
 class Point;
 class Rect;
+class ShareableBitmap;
 class Size;
 class StylePainter;
 struct SystemTheme;

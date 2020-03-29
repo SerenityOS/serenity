@@ -38,7 +38,7 @@ public:
     void set_original_rect(Gfx::Rect original_rect) { m_original_rect = original_rect; };
 
 private:
-    NotificationWindow(const String& text, const String& title, const String& icon_path);
+    NotificationWindow(const String& text, const String& title, const Gfx::ShareableBitmap&);
 
     Gfx::Rect m_original_rect;
 };

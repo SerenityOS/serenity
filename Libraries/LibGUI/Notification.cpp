@@ -35,7 +35,7 @@ Notification::~Notification()
 void Notification::show()
 {
     auto connection = NotificationServerConnection::construct();
-    connection->post_message(Messages::NotificationServer::ShowNotification(m_text, m_title, m_icon_path));
+    connection->send_sync<Messages::NotificationServer::ShowNotification>(m_text, m_title, m_icon ? m_icon->to_shareable_bitmap(connection->server_pid()) : Gfx::ShareableBitmap());
 }
 
 }

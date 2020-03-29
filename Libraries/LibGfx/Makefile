@@ -12,6 +12,7 @@ OBJS = \
     Palette.o \
     Point.o \
     Rect.o \
+    ShareableBitmap.o \
     Size.o \
     StylePainter.o \
     SystemTheme.o \
