@@ -871,4 +871,51 @@ Value ThrowStatement::execute(Interpreter& interpreter) const
     return interpreter.throw_exception(value);
 }
 
+Value SwitchStatement::execute(Interpreter& interpreter) const
+{
+    (void)interpreter;
+    return {};
+}
+
+Value SwitchCase::execute(Interpreter& interpreter) const
+{
+    (void)interpreter;
+    return {};
+}
+
+Value BreakStatement::execute(Interpreter& interpreter) const
+{
+    (void)interpreter;
+    return {};
+}
+
+void SwitchStatement::dump(int indent) const
+{
+    ASTNode::dump(indent);
+    m_discriminant->dump(indent + 1);
+    for (auto& switch_case : m_cases) {
+        switch_case.dump(indent + 1);
+    }
+}
+
+void SwitchCase::dump(int indent) const
+{
+    ASTNode::dump(indent);
+    print_indent(indent);
+    if (m_test) {
+        printf("(Test)\n");
+        m_test->dump(indent + 1);
+    } else {
+        printf("(Default)\n");
+    }
+    print_indent(indent);
+    printf("(Consequent)\n");
+    int i = 0;
+    for (auto& statement : m_consequent) {
+        print_indent(indent);
+        printf("[%d]\n", i++);
+        statement.dump(indent + 1);
+    }
+}
+
 }
