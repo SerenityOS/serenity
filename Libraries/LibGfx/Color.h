@@ -28,6 +28,7 @@
 
 #include <AK/Forward.h>
 #include <AK/StdLibExtras.h>
+#include <LibIPC/Forward.h>
 
 namespace Gfx {
 
@@ -280,5 +281,5 @@ const LogStream& operator<<(const LogStream&, Color);
 using Gfx::Color;
 
 namespace IPC {
-bool decode(BufferStream&, Gfx::Color&);
+bool decode(Decoder&, Gfx::Color&);
 }

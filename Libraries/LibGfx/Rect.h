@@ -31,6 +31,7 @@
 #include <LibGfx/Point.h>
 #include <LibGfx/Size.h>
 #include <LibGfx/TextAlignment.h>
+#include <LibIPC/Forward.h>
 #include <stdlib.h>
 
 namespace Gfx {
@@ -337,5 +338,5 @@ const LogStream& operator<<(const LogStream&, const Rect&);
 }
 
 namespace IPC {
-bool decode(BufferStream&, Gfx::Rect&);
+bool decode(Decoder&, Gfx::Rect&);
 }

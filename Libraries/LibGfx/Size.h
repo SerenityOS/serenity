@@ -28,6 +28,7 @@
 
 #include <AK/Forward.h>
 #include <LibGfx/Orientation.h>
+#include <LibIPC/Forward.h>
 
 namespace Gfx {
 
@@ -113,5 +114,5 @@ const LogStream& operator<<(const LogStream&, const Size&);
 }
 
 namespace IPC {
-bool decode(BufferStream&, Gfx::Size&);
+bool decode(Decoder&, Gfx::Size&);
 }

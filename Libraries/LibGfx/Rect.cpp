@@ -28,6 +28,7 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibGfx/Rect.h>
+#include <LibIPC/Decoder.h>
 
 namespace Gfx {
 
@@ -145,13 +146,13 @@ const LogStream& operator<<(const LogStream& stream, const Rect& value)
 
 namespace IPC {
 
-bool decode(BufferStream& stream, Gfx::Rect& rect)
+bool decode(Decoder& decoder, Gfx::Rect& rect)
 {
     Gfx::Point point;
     Gfx::Size size;
-    if (!decode(stream, point))
+    if (!decoder.decode(point))
         return false;
-    if (!decode(stream, size))
+    if (!decoder.decode(size))
         return false;
     rect = { point, size };
     return true;
