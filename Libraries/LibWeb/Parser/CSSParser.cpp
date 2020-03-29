@@ -267,13 +267,10 @@ public:
 
     Optional<Selector::SimpleSelector> parse_simple_selector()
     {
-        if (!peek())
-            return {};
-
         if (consume_whitespace_or_comments())
             return {};
 
-        if (peek() == '{' || peek() == ',' || is_combinator(peek()))
+        if (!peek() || peek() == '{' || peek() == ',' || is_combinator(peek()))
             return {};
 
         Selector::SimpleSelector::Type type;
@@ -447,7 +444,7 @@ public:
             if (complex_selector.has_value())
                 complex_selectors.append(complex_selector.value());
             consume_whitespace_or_comments();
-            if (peek() == ',' || peek() == '{')
+            if (!peek() || peek() == ',' || peek() == '{')
                 break;
         }
 
@@ -456,7 +453,15 @@ public:
         complex_selectors.first().relation = Selector::ComplexSelector::Relation::None;
 
         current_rule.selectors.append(Selector(move(complex_selectors)));
-    };
+    }
+
+    Optional<Selector> parse_individual_selector()
+    {
+        parse_selector();
+        if (current_rule.selectors.is_empty())
+            return {};
+        return current_rule.selectors.last();
+    }
 
     void parse_selector_list()
     {
@@ -664,11 +669,7 @@ private:
 Optional<Selector> parse_selector(const StringView& selector_text)
 {
     CSSParser parser(selector_text);
-    auto complex_selector = parser.parse_complex_selector();
-    if (!complex_selector.has_value())
-        return {};
-    complex_selector.value().relation = Selector::ComplexSelector::Relation::None;
-    return Selector({ complex_selector.value() });
+    return parser.parse_individual_selector();
 }
 
 RefPtr<StyleSheet> parse_css(const StringView& css)

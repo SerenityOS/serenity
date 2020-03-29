@@ -315,6 +315,8 @@ NonnullRefPtrVector<Element> Document::query_selector_all(const StringView& sele
     if (!selector.has_value())
         return {};
 
+    dump_selector(selector.value());
+
     NonnullRefPtrVector<Element> elements;
     for_each_in_subtree_of_type<Element>([&](auto& element) {
         if (SelectorEngine::matches(selector.value(), element)) {
