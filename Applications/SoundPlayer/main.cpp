@@ -93,8 +93,8 @@ int main(int argc, char** argv)
     }));
 
     auto help_menu = GUI::Menu::construct("Help");
-    help_menu->add_action(GUI::Action::create("About", [](auto&) {
-        GUI::AboutDialog::show("SoundPlayer", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-sound-player.png"));
+    help_menu->add_action(GUI::Action::create("About", [&](auto&) {
+        GUI::AboutDialog::show("SoundPlayer", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-sound-player.png"), window);
     }));
 
     menubar->add_menu(move(app_menu));
