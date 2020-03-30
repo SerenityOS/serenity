@@ -66,8 +66,9 @@ Value CallExpression::execute(Interpreter& interpreter) const
     if (interpreter.exception())
         return {};
 
-    ASSERT(callee.is_object());
-    ASSERT(callee.as_object()->is_function());
+    if (!callee.is_object() || !callee.as_object()->is_function())
+        return interpreter.throw_exception<Error>("TypeError", String::format("%s is not a function", callee.to_string().characters()));
+
     auto* function = static_cast<Function*>(callee.as_object());
 
     auto& call_frame = interpreter.push_call_frame();
