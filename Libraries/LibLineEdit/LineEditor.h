@@ -50,13 +50,19 @@ struct KeyCallback {
 
 class LineEditor {
 public:
-    LineEditor(struct termios);
     LineEditor();
     ~LineEditor();
 
-    void initialize(struct termios termios)
+    void initialize()
     {
         ASSERT(!m_initialized);
+        struct termios termios;
+        tcgetattr(0, &termios);
+        m_default_termios = termios; // grab a copy to restore
+        // Because we use our own line discipline which includes echoing,
+        // we disable ICANON and ECHO.
+        termios.c_lflag &= ~(ECHO | ICANON);
+        tcsetattr(0, TCSANOW, &termios);
         m_termios = termios;
         m_initialized = true;
     }
@@ -85,6 +91,9 @@ public:
     void insert(const char);
     void cut_mismatching_chars(String& completion, const String& other, size_t start_compare);
 
+    const struct termios& termios() const { return m_termios; }
+    const struct termios& default_termios() const { return m_default_termios; }
+
 private:
     void vt_save_cursor();
     void vt_restore_cursor();
@@ -98,7 +107,7 @@ private:
     HashMap<char, NonnullOwnPtr<KeyCallback>> m_key_callbacks;
 
     // TODO: handle signals internally
-    struct termios m_termios;
+    struct termios m_termios, m_default_termios;
     bool m_was_interrupted = false;
     bool m_was_resized = false;
 
