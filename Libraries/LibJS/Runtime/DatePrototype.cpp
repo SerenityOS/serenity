@@ -58,6 +58,8 @@ DatePrototype::DatePrototype()
     put_native_function("getMonth", get_month);
     put_native_function("getSeconds", get_seconds);
     put_native_function("getTime", get_time);
+    put_native_function("toDateString", to_date_string);
+    put_native_function("toTimeString", to_time_string);
     put_native_function("toString", to_string);
 }
 
@@ -147,13 +149,33 @@ Value DatePrototype::get_time(Interpreter& interpreter)
     return Value(static_cast<double>(seconds * 1000 + milliseconds));
 }
 
+Value DatePrototype::to_date_string(Interpreter& interpreter)
+{
+    auto* this_object = this_date_from_interpreter(interpreter);
+    if (!this_object)
+        return {};
+    auto string = this_object->date_string();
+    return js_string(interpreter.heap(), move(string));
+}
+
+Value DatePrototype::to_time_string(Interpreter& interpreter)
+{
+    auto* this_object = this_date_from_interpreter(interpreter);
+    if (!this_object)
+        return {};
+    auto string = this_object->time_string();
+    return js_string(interpreter.heap(), move(string));
+}
+
 Value DatePrototype::to_string(Interpreter& interpreter)
 {
     auto* this_object = this_date_from_interpreter(interpreter);
     if (!this_object)
         return {};
-    // FIXME: Deal with timezones once SerenityOS has a working tzset(3)
-    auto string = this_object->datetime().to_string("%a %b %d %Y %T GMT+0000 (UTC)");
+    auto string = String::format(
+        "%s %s",
+        this_object->date_string().characters(),
+        this_object->time_string().characters());
     return js_string(interpreter.heap(), move(string));
 }
 
