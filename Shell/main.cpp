@@ -88,9 +88,16 @@ static String prompt()
             case 'h':
                 builder.append(g.hostname);
                 break;
-            case 'w':
-                builder.append(g.cwd);
+            case 'w': {
+                String home_path = getenv("HOME");
+                if (g.cwd.starts_with(home_path)) {
+                    builder.append('~');
+                    builder.append(g.cwd.substring_view(home_path.length(), g.cwd.length() - home_path.length()));
+                } else {
+                    builder.append(g.cwd);
+                }
                 break;
+            }
             case 'p':
                 builder.append(g.uid == 0 ? '#' : '$');
                 break;
