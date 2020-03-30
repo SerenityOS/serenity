@@ -30,9 +30,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-LineEditor::LineEditor(struct termios termios)
-    : m_termios(termios)
-    , m_initialized(true)
+LineEditor::LineEditor()
 {
     struct winsize ws;
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) < 0)
@@ -41,13 +39,9 @@ LineEditor::LineEditor(struct termios termios)
         m_num_columns = ws.ws_col;
 }
 
-LineEditor::LineEditor()
-    : LineEditor(termios {})
-{
-}
-
 LineEditor::~LineEditor()
 {
+    tcsetattr(0, TCSANOW, &m_default_termios);
 }
 
 void LineEditor::add_to_history(const String& line)
@@ -378,7 +372,7 @@ String LineEditor::get_line(const String& prompt)
                     do_backspace();
                 continue;
             }
-            if (ch == 0xc) {                    // ^L
+            if (ch == 0xc) { // ^L
                 printf("\033[3J\033[H\033[2J"); // Clear screen.
                 fputs(prompt.characters(), stdout);
                 for (size_t i = 0; i < m_buffer.size(); ++i)
