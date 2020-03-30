@@ -128,9 +128,14 @@ void ColumnsView::paint_event(PaintEvent& event)
             auto icon = model()->data(index, Model::Role::Icon);
             Gfx::Rect icon_rect = { column_x + icon_spacing(), 0, icon_size(), icon_size() };
             icon_rect.center_vertically_within(row_rect);
-            if (icon.is_icon())
-                if (auto* bitmap = icon.as_icon().bitmap_for_size(icon_size()))
-                    painter.blit(icon_rect.location(), *bitmap, bitmap->rect());
+            if (icon.is_icon()) {
+                if (auto* bitmap = icon.as_icon().bitmap_for_size(icon_size())) {
+                    if (m_hovered_index.is_valid() && m_hovered_index.parent() == index.parent() && m_hovered_index.row() == index.row())
+                        painter.blit_brightened(icon_rect.location(), *bitmap, bitmap->rect());
+                    else
+                        painter.blit(icon_rect.location(), *bitmap, bitmap->rect());
+                }
+            }
 
             Gfx::Rect text_rect = {
                 icon_rect.right() + 1 + icon_spacing(), row * item_height(),

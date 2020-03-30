@@ -299,8 +299,13 @@ void ItemView::paint_event(PaintEvent& event)
         get_item_rects(item_index, font, item_text, item_rect, icon_rect, text_rect);
 
         if (icon.is_icon()) {
-            if (auto bitmap = icon.as_icon().bitmap_for_size(icon_rect.width()))
-                painter.draw_scaled_bitmap(icon_rect, *bitmap, bitmap->rect());
+            if (auto bitmap = icon.as_icon().bitmap_for_size(icon_rect.width())) {
+                if (m_hovered_index.is_valid() && m_hovered_index == model_index) {
+                    painter.blit_brightened(icon_rect.location(), *bitmap, bitmap->rect());
+                } else {
+                    painter.blit(icon_rect.location(), *bitmap, bitmap->rect());
+                }
+            }
         }
 
         Color text_color;

@@ -193,7 +193,16 @@ void AbstractView::mousedown_event(MouseEvent& event)
 
 void AbstractView::mousemove_event(MouseEvent& event)
 {
-    if (!model() || !m_might_drag)
+    if (!model())
+        return ScrollableWidget::mousemove_event(event);
+
+    auto hovered_index = index_at_event_position(event.position());
+    if (m_hovered_index != hovered_index) {
+        m_hovered_index = hovered_index;
+        update();
+    }
+
+    if (!m_might_drag)
         return ScrollableWidget::mousemove_event(event);
 
     if (!(event.buttons() & MouseButton::Left) || m_selection.is_empty()) {
