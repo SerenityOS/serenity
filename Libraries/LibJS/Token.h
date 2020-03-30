@@ -31,96 +31,101 @@
 
 namespace JS {
 
+#define ENUMERATE_JS_TOKENS                           \
+    __ENUMERATE_JS_TOKEN(Ampersand)                   \
+    __ENUMERATE_JS_TOKEN(AmpersandEquals)             \
+    __ENUMERATE_JS_TOKEN(Asterisk)                    \
+    __ENUMERATE_JS_TOKEN(AsteriskAsteriskEquals)      \
+    __ENUMERATE_JS_TOKEN(AsteriskEquals)              \
+    __ENUMERATE_JS_TOKEN(Await)                       \
+    __ENUMERATE_JS_TOKEN(BoolLiteral)                 \
+    __ENUMERATE_JS_TOKEN(BracketClose)                \
+    __ENUMERATE_JS_TOKEN(BracketOpen)                 \
+    __ENUMERATE_JS_TOKEN(Break)                       \
+    __ENUMERATE_JS_TOKEN(Caret)                       \
+    __ENUMERATE_JS_TOKEN(Case)                        \
+    __ENUMERATE_JS_TOKEN(Catch)                       \
+    __ENUMERATE_JS_TOKEN(Class)                       \
+    __ENUMERATE_JS_TOKEN(Colon)                       \
+    __ENUMERATE_JS_TOKEN(Comma)                       \
+    __ENUMERATE_JS_TOKEN(Const)                       \
+    __ENUMERATE_JS_TOKEN(CurlyClose)                  \
+    __ENUMERATE_JS_TOKEN(CurlyOpen)                   \
+    __ENUMERATE_JS_TOKEN(Default)                     \
+    __ENUMERATE_JS_TOKEN(Delete)                      \
+    __ENUMERATE_JS_TOKEN(Do)                          \
+    __ENUMERATE_JS_TOKEN(DoubleAmpersand)             \
+    __ENUMERATE_JS_TOKEN(DoubleAsterisk)              \
+    __ENUMERATE_JS_TOKEN(DoublePipe)                  \
+    __ENUMERATE_JS_TOKEN(DoubleQuestionMark)          \
+    __ENUMERATE_JS_TOKEN(Else)                        \
+    __ENUMERATE_JS_TOKEN(Eof)                         \
+    __ENUMERATE_JS_TOKEN(Equals)                      \
+    __ENUMERATE_JS_TOKEN(EqualsEquals)                \
+    __ENUMERATE_JS_TOKEN(EqualsEqualsEquals)          \
+    __ENUMERATE_JS_TOKEN(ExclamationMark)             \
+    __ENUMERATE_JS_TOKEN(ExclamationMarkEquals)       \
+    __ENUMERATE_JS_TOKEN(ExclamationMarkEqualsEquals) \
+    __ENUMERATE_JS_TOKEN(Finally)                     \
+    __ENUMERATE_JS_TOKEN(For)                         \
+    __ENUMERATE_JS_TOKEN(Function)                    \
+    __ENUMERATE_JS_TOKEN(GreaterThan)                 \
+    __ENUMERATE_JS_TOKEN(GreaterThanEquals)           \
+    __ENUMERATE_JS_TOKEN(Identifier)                  \
+    __ENUMERATE_JS_TOKEN(If)                          \
+    __ENUMERATE_JS_TOKEN(In)                          \
+    __ENUMERATE_JS_TOKEN(Instanceof)                  \
+    __ENUMERATE_JS_TOKEN(Interface)                   \
+    __ENUMERATE_JS_TOKEN(Invalid)                     \
+    __ENUMERATE_JS_TOKEN(LessThan)                    \
+    __ENUMERATE_JS_TOKEN(LessThanEquals)              \
+    __ENUMERATE_JS_TOKEN(Let)                         \
+    __ENUMERATE_JS_TOKEN(Minus)                       \
+    __ENUMERATE_JS_TOKEN(MinusEquals)                 \
+    __ENUMERATE_JS_TOKEN(MinusMinus)                  \
+    __ENUMERATE_JS_TOKEN(New)                         \
+    __ENUMERATE_JS_TOKEN(NullLiteral)                 \
+    __ENUMERATE_JS_TOKEN(NumericLiteral)              \
+    __ENUMERATE_JS_TOKEN(ParenClose)                  \
+    __ENUMERATE_JS_TOKEN(ParenOpen)                   \
+    __ENUMERATE_JS_TOKEN(Percent)                     \
+    __ENUMERATE_JS_TOKEN(PercentEquals)               \
+    __ENUMERATE_JS_TOKEN(Period)                      \
+    __ENUMERATE_JS_TOKEN(Pipe)                        \
+    __ENUMERATE_JS_TOKEN(PipeEquals)                  \
+    __ENUMERATE_JS_TOKEN(Plus)                        \
+    __ENUMERATE_JS_TOKEN(PlusEquals)                  \
+    __ENUMERATE_JS_TOKEN(PlusPlus)                    \
+    __ENUMERATE_JS_TOKEN(QuestionMark)                \
+    __ENUMERATE_JS_TOKEN(QuestionMarkPeriod)          \
+    __ENUMERATE_JS_TOKEN(RegexLiteral)                \
+    __ENUMERATE_JS_TOKEN(Return)                      \
+    __ENUMERATE_JS_TOKEN(Semicolon)                   \
+    __ENUMERATE_JS_TOKEN(ShiftLeft)                   \
+    __ENUMERATE_JS_TOKEN(ShiftLeftEquals)             \
+    __ENUMERATE_JS_TOKEN(ShiftRight)                  \
+    __ENUMERATE_JS_TOKEN(ShiftRightEquals)            \
+    __ENUMERATE_JS_TOKEN(Slash)                       \
+    __ENUMERATE_JS_TOKEN(SlashEquals)                 \
+    __ENUMERATE_JS_TOKEN(StringLiteral)               \
+    __ENUMERATE_JS_TOKEN(Switch)                      \
+    __ENUMERATE_JS_TOKEN(Throw)                       \
+    __ENUMERATE_JS_TOKEN(Tilde)                       \
+    __ENUMERATE_JS_TOKEN(Try)                         \
+    __ENUMERATE_JS_TOKEN(Typeof)                      \
+    __ENUMERATE_JS_TOKEN(UndefinedLiteral)            \
+    __ENUMERATE_JS_TOKEN(UnsignedShiftRight)          \
+    __ENUMERATE_JS_TOKEN(UnsignedShiftRightEquals)    \
+    __ENUMERATE_JS_TOKEN(UnterminatedStringLiteral)   \
+    __ENUMERATE_JS_TOKEN(Var)                         \
+    __ENUMERATE_JS_TOKEN(Void)                        \
+    __ENUMERATE_JS_TOKEN(While)                       \
+    __ENUMERATE_JS_TOKEN(Yield)
+
 enum class TokenType {
-    Ampersand,
-    AmpersandEquals,
-    Asterisk,
-    AsteriskAsteriskEquals,
-    AsteriskEquals,
-    Await,
-    BoolLiteral,
-    BracketClose,
-    BracketOpen,
-    Break,
-    Caret,
-    Case,
-    Catch,
-    Class,
-    Colon,
-    Comma,
-    Const,
-    CurlyClose,
-    CurlyOpen,
-    Default,
-    Delete,
-    Do,
-    DoubleAmpersand,
-    DoubleAsterisk,
-    DoublePipe,
-    DoubleQuestionMark,
-    Else,
-    Eof,
-    Equals,
-    EqualsEquals,
-    EqualsEqualsEquals,
-    ExclamationMark,
-    ExclamationMarkEquals,
-    ExclamationMarkEqualsEquals,
-    Finally,
-    For,
-    Function,
-    GreaterThan,
-    GreaterThanEquals,
-    Identifier,
-    If,
-    In,
-    Instanceof,
-    Interface,
-    Invalid,
-    LessThan,
-    LessThanEquals,
-    Let,
-    Minus,
-    MinusEquals,
-    MinusMinus,
-    New,
-    NullLiteral,
-    NumericLiteral,
-    ParenClose,
-    ParenOpen,
-    Percent,
-    PercentEquals,
-    Period,
-    Pipe,
-    PipeEquals,
-    Plus,
-    PlusEquals,
-    PlusPlus,
-    QuestionMark,
-    QuestionMarkPeriod,
-    RegexLiteral,
-    Return,
-    Semicolon,
-    ShiftLeft,
-    ShiftLeftEquals,
-    ShiftRight,
-    ShiftRightEquals,
-    Slash,
-    SlashEquals,
-    StringLiteral,
-    Switch,
-    Throw,
-    Tilde,
-    Try,
-    Typeof,
-    UndefinedLiteral,
-    UnsignedShiftRight,
-    UnsignedShiftRightEquals,
-    UnterminatedStringLiteral,
-    Var,
-    Void,
-    While,
-    Yield,
+#define __ENUMERATE_JS_TOKEN(x) x,
+    ENUMERATE_JS_TOKENS
+#undef __ENUMERATE_JS_TOKEN
 };
 
 class Token {
