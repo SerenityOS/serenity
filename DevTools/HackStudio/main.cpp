@@ -396,8 +396,8 @@ int main(int argc, char** argv)
         update_actions();
     });
 
-    auto open_action = GUI::Action::create("Open Project", { Mod_Ctrl | Mod_Shift, Key_O }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"), [&](auto&) {
-        auto open_path = GUI::FilePicker::get_open_filepath();
+    auto open_action = GUI::Action::create("Open project...", { Mod_Ctrl | Mod_Shift, Key_O }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"), [&](auto&) {
+        auto open_path = GUI::FilePicker::get_open_filepath("Open project");
         if (!open_path.has_value())
             return;
         open_project(open_path.value());
