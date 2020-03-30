@@ -37,36 +37,25 @@
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibLineEdit/LineEditor.h>
 #include <stdio.h>
 
 bool dump_ast = false;
+static LineEditor editor {};
 
 String read_next_piece()
 {
     StringBuilder piece;
     int level = 0;
+    StringBuilder prompt_builder;
 
     do {
-        if (level == 0)
-            fprintf(stderr, "> ");
-        else
-            fprintf(stderr, ".%*c", 4 * level + 1, ' ');
+        prompt_builder.clear();
+        prompt_builder.append("> ");
+        for (auto i = 0; i < level; ++i)
+            prompt_builder.append("    ");
 
-        char* line = nullptr;
-        size_t allocated_size = 0;
-        ssize_t nread = getline(&line, &allocated_size, stdin);
-        if (nread < 0) {
-            if (errno == 0) {
-                // Explicit EOF; stop reading. Print a newline though, to make
-                // the next prompt (or the shell prompt) appear on the next
-                // line.
-                fprintf(stderr, "\n");
-                break;
-            } else {
-                perror("getline");
-                exit(1);
-            }
-        }
+        String line = editor.get_line(prompt_builder.build());
 
         piece.append(line);
         auto lexer = JS::Lexer(line);
@@ -87,8 +76,6 @@ String read_next_piece()
                 break;
             }
         }
-
-        free(line);
     } while (level > 0);
 
     return piece.to_string();
@@ -207,6 +194,7 @@ int main(int argc, char** argv)
     interpreter.global_object().put("global", &interpreter.global_object());
 
     if (script_path == nullptr) {
+        editor.initialize();
         repl(interpreter);
     } else {
         auto file = Core::File::construct(script_path);
