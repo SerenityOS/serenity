@@ -68,7 +68,7 @@ public:
     NonnullRefPtr<CallExpression> parse_call_expression(NonnullRefPtr<Expression>);
     NonnullRefPtr<NewExpression> parse_new_expression();
 
-    bool has_errors() const { return m_has_errors; }
+    bool has_errors() const { return m_parser_state.m_has_errors; }
 
 private:
     int operator_precedence(TokenType) const;
@@ -83,9 +83,18 @@ private:
     void expected(const char* what);
     Token consume();
     Token consume(TokenType type);
+    void save_state();
+    void load_state();
 
-    Lexer m_lexer;
-    Token m_current_token;
-    bool m_has_errors = false;
+    struct ParserState {
+        Lexer m_lexer;
+        Token m_current_token;
+        bool m_has_errors = false;
+
+        explicit ParserState(Lexer);
+    };
+
+    ParserState m_parser_state;
+    Optional<ParserState> m_saved_state;
 };
 }

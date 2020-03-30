@@ -32,10 +32,14 @@
 namespace JS {
 
 static HashMap<TokenType, int> g_operator_precedence;
-
-Parser::Parser(Lexer lexer)
+Parser::ParserState::ParserState(Lexer lexer)
     : m_lexer(move(lexer))
     , m_current_token(m_lexer.next())
+{
+}
+
+Parser::Parser(Lexer lexer)
+    : m_parser_state(move(lexer))
 {
     if (g_operator_precedence.is_empty()) {
         // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
@@ -183,7 +187,7 @@ NonnullRefPtr<Program> Parser::parse_program()
 NonnullRefPtr<Statement> Parser::parse_statement()
 {
     auto statement = [this]() -> NonnullRefPtr<Statement> {
-    switch (m_current_token.type()) {
+    switch (m_parser_state.m_current_token.type()) {
     case TokenType::Function:
         return parse_function_node<FunctionDeclaration>();
     case TokenType::CurlyOpen:
@@ -209,7 +213,7 @@ NonnullRefPtr<Statement> Parser::parse_statement()
     default:
         if (match_expression())
             return adopt(*new ExpressionStatement(parse_expression(0)));
-        m_has_errors = true;
+        m_parser_state.m_has_errors = true;
         expected("statement (missing switch case)");
         consume();
         return create_ast_node<ErrorStatement>();
@@ -224,7 +228,7 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
     if (match_unary_prefixed_expression())
         return parse_unary_prefixed_expression();
 
-    switch (m_current_token.type()) {
+    switch (m_parser_state.m_current_token.type()) {
     case TokenType::ParenOpen: {
         consume(TokenType::ParenOpen);
         auto expression = parse_expression(0);
@@ -254,7 +258,7 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
     case TokenType::New:
         return parse_new_expression();
     default:
-        m_has_errors = true;
+        m_parser_state.m_has_errors = true;
         expected("primary expression (missing switch case)");
         consume();
         return create_ast_node<ErrorExpression>();
@@ -263,9 +267,9 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
 
 NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
 {
-    auto precedence = operator_precedence(m_current_token.type());
-    auto associativity = operator_associativity(m_current_token.type());
-    switch (m_current_token.type()) {
+    auto precedence = operator_precedence(m_parser_state.m_current_token.type());
+    auto associativity = operator_associativity(m_parser_state.m_current_token.type());
+    switch (m_parser_state.m_current_token.type()) {
     case TokenType::PlusPlus:
         consume();
         return create_ast_node<UpdateExpression>(UpdateOp::Increment, parse_expression(precedence, associativity), true);
@@ -282,7 +286,7 @@ NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
         consume();
         return create_ast_node<UnaryExpression>(UnaryOp::Typeof, parse_expression(precedence, associativity));
     default:
-        m_has_errors = true;
+        m_parser_state.m_has_errors = true;
         expected("primary expression (missing switch case)");
         consume();
         return create_ast_node<ErrorExpression>();
@@ -334,13 +338,13 @@ NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associati
 {
     auto expression = parse_primary_expression();
     while (match_secondary_expression()) {
-        int new_precedence = operator_precedence(m_current_token.type());
+        int new_precedence = operator_precedence(m_parser_state.m_current_token.type());
         if (new_precedence < min_precedence)
             break;
         if (new_precedence == min_precedence && associativity == Associativity::Left)
             break;
 
-        Associativity new_associativity = operator_associativity(m_current_token.type());
+        Associativity new_associativity = operator_associativity(m_parser_state.m_current_token.type());
         expression = parse_secondary_expression(move(expression), new_precedence, new_associativity);
     }
     return expression;
@@ -348,7 +352,7 @@ NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associati
 
 NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expression> lhs, int min_precedence, Associativity associativity)
 {
-    switch (m_current_token.type()) {
+    switch (m_parser_state.m_current_token.type()) {
     case TokenType::Plus:
         consume();
         return create_ast_node<BinaryExpression>(BinaryOp::Plus, move(lhs), parse_expression(min_precedence, associativity));
@@ -427,7 +431,7 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
         consume();
         return create_ast_node<LogicalExpression>(LogicalOp::Or, move(lhs), parse_expression(min_precedence, associativity));
     default:
-        m_has_errors = true;
+        m_parser_state.m_has_errors = true;
         expected("secondary expression (missing switch case)");
         consume();
         return create_ast_node<ErrorExpression>();
@@ -532,7 +536,7 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration()
 {
     DeclarationType declaration_type;
 
-    switch (m_current_token.type()) {
+    switch (m_parser_state.m_current_token.type()) {
     case TokenType::Var:
         declaration_type = DeclarationType::Var;
         consume(TokenType::Var);
@@ -663,7 +667,7 @@ NonnullRefPtr<ForStatement> Parser::parse_for_statement()
     consume(TokenType::ParenOpen);
 
     RefPtr<ASTNode> init;
-    switch (m_current_token.type()) {
+    switch (m_parser_state.m_current_token.type()) {
     case TokenType::Semicolon:
         break;
     default:
@@ -679,7 +683,7 @@ NonnullRefPtr<ForStatement> Parser::parse_for_statement()
     consume(TokenType::Semicolon);
 
     RefPtr<Expression> test;
-    switch (m_current_token.type()) {
+    switch (m_parser_state.m_current_token.type()) {
     case TokenType::Semicolon:
         break;
     default:
@@ -690,7 +694,7 @@ NonnullRefPtr<ForStatement> Parser::parse_for_statement()
     consume(TokenType::Semicolon);
 
     RefPtr<Expression> update;
-    switch (m_current_token.type()) {
+    switch (m_parser_state.m_current_token.type()) {
     case TokenType::ParenClose:
         break;
     default:
@@ -707,12 +711,12 @@ NonnullRefPtr<ForStatement> Parser::parse_for_statement()
 
 bool Parser::match(TokenType type) const
 {
-    return m_current_token.type() == type;
+    return m_parser_state.m_current_token.type() == type;
 }
 
 bool Parser::match_variable_declaration() const
 {
-    switch (m_current_token.type()) {
+    switch (m_parser_state.m_current_token.type()) {
     case TokenType::Var:
     case TokenType::Let:
     case TokenType::Const:
@@ -724,7 +728,7 @@ bool Parser::match_variable_declaration() const
 
 bool Parser::match_expression() const
 {
-    auto type = m_current_token.type();
+    auto type = m_parser_state.m_current_token.type();
     return type == TokenType::BoolLiteral
         || type == TokenType::NumericLiteral
         || type == TokenType::StringLiteral
@@ -741,7 +745,7 @@ bool Parser::match_expression() const
 
 bool Parser::match_unary_prefixed_expression() const
 {
-    auto type = m_current_token.type();
+    auto type = m_parser_state.m_current_token.type();
     return type == TokenType::PlusPlus
         || type == TokenType::MinusMinus
         || type == TokenType::ExclamationMark
@@ -751,7 +755,7 @@ bool Parser::match_unary_prefixed_expression() const
 
 bool Parser::match_secondary_expression() const
 {
-    auto type = m_current_token.type();
+    auto type = m_parser_state.m_current_token.type();
     return type == TokenType::Plus
         || type == TokenType::PlusEquals
         || type == TokenType::Minus
@@ -779,7 +783,7 @@ bool Parser::match_secondary_expression() const
 
 bool Parser::match_statement() const
 {
-    auto type = m_current_token.type();
+    auto type = m_parser_state.m_current_token.type();
     return match_expression()
         || type == TokenType::Function
         || type == TokenType::Return
@@ -806,24 +810,35 @@ bool Parser::done() const
 
 Token Parser::consume()
 {
-    auto old_token = m_current_token;
-    m_current_token = m_lexer.next();
+    auto old_token = m_parser_state.m_current_token;
+    m_parser_state.m_current_token = m_parser_state.m_lexer.next();
     return old_token;
 }
 
 Token Parser::consume(TokenType type)
 {
-    if (m_current_token.type() != type) {
-        m_has_errors = true;
-        fprintf(stderr, "Error: Unexpected token %s. Expected %s\n", m_current_token.name(), Token::name(type));
+    if (m_parser_state.m_current_token.type() != type) {
+        m_parser_state.m_has_errors = true;
+        fprintf(stderr, "Error: Unexpected token %s. Expected %s\n", m_parser_state.m_current_token.name(), Token::name(type));
     }
     return consume();
 }
 
 void Parser::expected(const char* what)
 {
-    m_has_errors = true;
-    fprintf(stderr, "Error: Unexpected token %s. Expected %s\n", m_current_token.name(), what);
+    m_parser_state.m_has_errors = true;
+    fprintf(stderr, "Error: Unexpected token %s. Expected %s\n", m_parser_state.m_current_token.name(), what);
 }
 
+void Parser::save_state()
+{
+    m_saved_state = m_parser_state;
+}
+
+void Parser::load_state()
+{
+    ASSERT(m_saved_state.has_value());
+    m_parser_state = m_saved_state.value();
+    m_saved_state.clear();
+}
 }
