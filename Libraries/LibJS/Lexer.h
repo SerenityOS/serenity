@@ -39,6 +39,7 @@ public:
     explicit Lexer(StringView source);
     Token next();
     bool has_errors() const { return m_has_errors; }
+    void allow_errors() { m_errors_allowed = true; }
 
 private:
     void consume();
@@ -56,6 +57,7 @@ private:
     Token m_current_token;
     int m_current_char;
     bool m_has_errors = false;
+    bool m_errors_allowed = false;
 
     static HashMap<String, TokenType> s_keywords;
     static HashMap<String, TokenType> s_three_char_tokens;

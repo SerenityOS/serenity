@@ -181,6 +181,8 @@ bool Lexer::is_block_comment_end() const
 void Lexer::syntax_error(const char* msg)
 {
     m_has_errors = true;
+    if (m_errors_allowed)
+        return; // do not spam stderr
     fprintf(stderr, "Syntax Error: %s\n", msg);
 }
 
