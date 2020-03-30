@@ -47,6 +47,8 @@ private:
     static Value get_month(Interpreter&);
     static Value get_seconds(Interpreter&);
     static Value get_time(Interpreter&);
+    static Value to_date_string(Interpreter&);
+    static Value to_time_string(Interpreter&);
     static Value to_string(Interpreter&);
 };
 
