@@ -479,7 +479,7 @@ int main(int argc, char** argv)
     menubar->add_menu(move(project_menu));
 
     auto edit_menu = GUI::Menu::construct("Edit");
-    edit_menu->add_action(GUI::Action::create("Find in files...", { Mod_Ctrl | Mod_Shift, Key_F }, [&](auto&) {
+    edit_menu->add_action(GUI::Action::create("Find in files...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"), [&](auto&) {
         reveal_action_tab(find_in_files_widget);
         find_in_files_widget->focus_textbox_and_select_all();
     }));
