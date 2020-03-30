@@ -42,6 +42,9 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
     set_title(String::format("About %s", m_name.characters()));
     set_resizable(false);
 
+    if (parent_window)
+        set_icon(parent_window->icon());
+
     auto& widget = set_main_widget<Widget>();
     widget.set_fill_with_background_color(true);
     widget.set_layout<HorizontalBoxLayout>();
