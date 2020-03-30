@@ -26,7 +26,6 @@
 
 #include <AK/StringBuilder.h>
 #include <Kernel/KeyCode.h>
-#include <LibGfx/Palette.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Model.h>
@@ -35,6 +34,7 @@
 #include <LibGUI/TableView.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Palette.h>
 
 namespace GUI {
 
@@ -119,8 +119,12 @@ void TableView::paint_event(PaintEvent& event)
                 if (data.is_bitmap()) {
                     painter.blit(cell_rect.location(), data.as_bitmap(), data.as_bitmap().rect());
                 } else if (data.is_icon()) {
-                    if (auto bitmap = data.as_icon().bitmap_for_size(16))
-                        painter.blit(cell_rect.location(), *bitmap, bitmap->rect());
+                    if (auto bitmap = data.as_icon().bitmap_for_size(16)) {
+                        if (m_hovered_index.is_valid() && cell_index.row() == m_hovered_index.row())
+                            painter.blit_brightened(cell_rect.location(), *bitmap, bitmap->rect());
+                        else
+                            painter.blit(cell_rect.location(), *bitmap, bitmap->rect());
+                    }
                 } else {
                     Color text_color;
                     if (is_selected_row)

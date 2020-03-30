@@ -96,6 +96,8 @@ protected:
     Gfx::Point m_left_mousedown_position;
     bool m_might_drag { false };
 
+    ModelIndex m_hovered_index;
+
 private:
     RefPtr<Model> m_model;
     OwnPtr<ModelEditingDelegate> m_editing_delegate;
