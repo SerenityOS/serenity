@@ -271,7 +271,7 @@ void TerminalWidget::keydown_event(GUI::KeyEvent& event)
         write(m_ptm_fd, &ch, 1);
     }
 
-    if (event.key() != Key_Control && event.key() != Key_Alt && event.key() != Key_Shift)
+    if (event.key() != Key_Control && event.key() != Key_Alt && event.key() != Key_Shift && event.key() != Key_Logo)
         m_scrollbar->set_value(m_scrollbar->max());
 }
 
