@@ -58,6 +58,7 @@ DatePrototype::DatePrototype()
     put_native_function("getMonth", get_month);
     put_native_function("getSeconds", get_seconds);
     put_native_function("getTime", get_time);
+    put_native_function("toString", to_string);
 }
 
 DatePrototype::~DatePrototype()
@@ -144,6 +145,16 @@ Value DatePrototype::get_time(Interpreter& interpreter)
     auto seconds = this_object->datetime().timestamp();
     auto milliseconds = this_object->milliseconds();
     return Value(static_cast<double>(seconds * 1000 + milliseconds));
+}
+
+Value DatePrototype::to_string(Interpreter& interpreter)
+{
+    auto* this_object = this_date_from_interpreter(interpreter);
+    if (!this_object)
+        return {};
+    // FIXME: Deal with timezones once SerenityOS has a working tzset(3)
+    auto string = this_object->datetime().to_string("%a %b %d %Y %T GMT+0000 (UTC)");
+    return js_string(interpreter.heap(), move(string));
 }
 
 }
