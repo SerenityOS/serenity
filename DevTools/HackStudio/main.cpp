@@ -523,17 +523,15 @@ int main(int argc, char** argv)
     view_menu->add_action(remove_current_editor_action);
     menubar->add_menu(move(view_menu));
 
-    auto small_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/app-hack-studio.png");
-
     auto help_menu = GUI::Menu::construct("Help");
     help_menu->add_action(GUI::Action::create("About", [&](auto&) {
-        GUI::AboutDialog::show("HackStudio", small_icon, g_window);
+        GUI::AboutDialog::show("HackStudio", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-hack-studio.png"), g_window);
     }));
     menubar->add_menu(move(help_menu));
 
     app.set_menubar(move(menubar));
 
-    g_window->set_icon(small_icon);
+    g_window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-hack-studio.png"));
 
     g_window->show();
 
