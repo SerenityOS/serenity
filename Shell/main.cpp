@@ -978,8 +978,8 @@ void load_history()
 
 void save_history()
 {
-    auto history_file = Core::File::construct(get_history_path());
-    if (!history_file->open(Core::IODevice::WriteOnly))
+    auto history_file = Core::File::open(get_history_path(), Core::IODevice::WriteOnly, 0600);
+    if (!history_file)
         return;
     for (const auto& line : editor.history()) {
         history_file->write(line);
