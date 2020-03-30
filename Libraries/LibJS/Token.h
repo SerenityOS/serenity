@@ -34,6 +34,7 @@ namespace JS {
 #define ENUMERATE_JS_TOKENS                           \
     __ENUMERATE_JS_TOKEN(Ampersand)                   \
     __ENUMERATE_JS_TOKEN(AmpersandEquals)             \
+    __ENUMERATE_JS_TOKEN(Arrow)                       \
     __ENUMERATE_JS_TOKEN(Asterisk)                    \
     __ENUMERATE_JS_TOKEN(AsteriskAsteriskEquals)      \
     __ENUMERATE_JS_TOKEN(AsteriskEquals)              \
