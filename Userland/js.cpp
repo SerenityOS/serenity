@@ -159,19 +159,108 @@ static void print(JS::Value value)
     putchar('\n');
 }
 
+String sanitize_repl_inputs(String input)
+{
+    StringBuilder result;
+    for (char c : input) {
+        if (c != ' ' && c != '\n') {
+            result.append(c);
+        }
+    }
+    return result.to_string();
+}
+
+bool file_has_shebang(AK::ByteBuffer file_contents)
+{
+    if (file_contents.size() >= 2 && file_contents[0] == '#' && file_contents[1] == '!')
+        return true;
+    return false;
+}
+
+StringView strip_shebang(AK::ByteBuffer file_contents)
+{
+    size_t i = 0;
+    for (i = 2; i < file_contents.size(); ++i) {
+        if (file_contents[i] == '\n')
+            break;
+    }
+    return StringView((const char*)file_contents.data() + i, file_contents.size() - i);
+}
+
+void handle_repl_commands(String part, JS::Interpreter& interpreter)
+{
+    enum class ReplCommand {
+        Exit,
+        Load,
+        Help,
+        Unhandled
+    };
+
+    ReplCommand command = ReplCommand::Unhandled;
+
+    auto typed_command = sanitize_repl_inputs(part.split(' ').first());
+    if (typed_command == ".exit")
+        command = ReplCommand::Exit;
+    else if (typed_command == ".load")
+        command = ReplCommand::Load;
+    else if (typed_command == ".help")
+        command = ReplCommand::Help;
+
+    switch (command) {
+    case ReplCommand::Exit:
+        exit(0);
+        break;
+    case ReplCommand::Unhandled:
+        printf("Unhandled repl command. Type .help to see accepted commands\n");
+        break;
+    case ReplCommand::Help:
+        printf("REPL commands:\n");
+        printf("    .help: display this menu\n");
+        printf("    .exit: exit the REPL\n");
+        printf("    .load: load a javascript file(s) into the repl. Accepts a space seperated list. For example: .load js/one.js js/two.js\n");
+        break;
+    case ReplCommand::Load:
+        auto split = part.split(' ');
+        for (int i = 1; i < static_cast<int>(split.size()); i++) {
+            String file_name = sanitize_repl_inputs(split[i]);
+            auto file = Core::File::construct(file_name);
+            if (!file->open(Core::IODevice::ReadOnly)) {
+                printf("Failed to open %s: %s\n", file_name.characters(), file->error_string());
+            }
+            auto file_contents = file->read_all();
+
+            StringView source;
+            if (file_has_shebang(file_contents)) {
+                source = strip_shebang(file_contents);
+            } else {
+                source = file_contents;
+            }
+            auto program = JS::Parser(JS::Lexer(source)).parse_program();
+            if (dump_ast)
+                program->dump(0);
+            auto result = interpreter.run(*program);
+            print(result);
+        }
+        break;
+    }
+}
+
 void repl(JS::Interpreter& interpreter)
 {
     while (true) {
         String piece = read_next_piece();
         if (piece.is_empty())
             continue;
+        if (piece.starts_with('.')) {
+            handle_repl_commands(piece, interpreter);
+        } else {
+            auto program = JS::Parser(JS::Lexer(piece)).parse_program();
+            if (dump_ast)
+                program->dump(0);
 
-        auto program = JS::Parser(JS::Lexer(piece)).parse_program();
-        if (dump_ast)
-            program->dump(0);
-
-        auto result = interpreter.run(*program);
-        print(result);
+            auto result = interpreter.run(*program);
+            print(result);
+        }
     }
 }
 
@@ -205,13 +294,8 @@ int main(int argc, char** argv)
         auto file_contents = file->read_all();
 
         StringView source;
-        if (file_contents.size() >= 2 && file_contents[0] == '#' && file_contents[1] == '!') {
-            size_t i = 0;
-            for (i = 2; i < file_contents.size(); ++i) {
-                if (file_contents[i] == '\n')
-                    break;
-            }
-            source = StringView((const char*)file_contents.data() + i, file_contents.size() - i);
+        if (file_has_shebang(file_contents)) {
+            source = strip_shebang(file_contents);
         } else {
             source = file_contents;
         }
