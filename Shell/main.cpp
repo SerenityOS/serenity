@@ -1154,14 +1154,16 @@ int main(int argc, char** argv)
 
     signal(SIGINT, [](int) {
         g.was_interrupted = true;
-    });
-
-    signal(SIGHUP, [](int) {
-        save_history();
+        editor.interrupted();
     });
 
     signal(SIGWINCH, [](int) {
         g.was_resized = true;
+        editor.resized();
+    });
+
+    signal(SIGHUP, [](int) {
+        save_history();
     });
 
     int rc = gethostname(g.hostname, sizeof(g.hostname));

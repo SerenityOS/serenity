@@ -42,14 +42,8 @@ LineEditor::LineEditor(struct termios termios)
 }
 
 LineEditor::LineEditor()
-    : m_termios({})
-    , m_initialized(false)
+    : LineEditor(termios {})
 {
-    struct winsize ws;
-    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) < 0)
-        m_num_columns = 80;
-    else
-        m_num_columns = ws.ws_col;
 }
 
 LineEditor::~LineEditor()

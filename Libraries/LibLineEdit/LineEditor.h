@@ -70,7 +70,11 @@ public:
 
     Function<Vector<String>(const String&)> on_tab_complete_first_token = nullptr;
     Function<Vector<String>(const String&)> on_tab_complete_other_token = nullptr;
-    // FIXME: figure out signals
+
+    // FIXME: we will have to kindly ask our instantiators to set our signal handlers
+    // since we can not do this cleanly ourselves (signal() limitation: cannot give member functions)
+    void interrupted() { m_was_interrupted = true; }
+    void resized() { m_was_resized = true; }
 
     size_t cursor() const { return m_cursor; }
     const Vector<char, 1024>& buffer() const { return m_buffer; }
