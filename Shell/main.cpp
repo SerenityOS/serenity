@@ -25,13 +25,14 @@
  */
 
 #include "GlobalState.h"
-#include "LineEditor.h"
 #include "Parser.h"
 #include <AK/FileSystemPath.h>
+#include <AK/Function.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/File.h>
+#include <LibLineEdit/LineEditor.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <pwd.h>
@@ -49,9 +50,10 @@
 //#define SH_DEBUG
 
 GlobalState g;
-static LineEditor editor;
+static LineEditor editor {};
 
 static int run_command(const String&);
+void cache_path();
 
 static String prompt()
 {
@@ -138,7 +140,7 @@ static int sh_export(int argc, const char** argv)
     int setenv_return = setenv(parts[0].characters(), parts[1].characters(), 1);
 
     if (setenv_return == 0 && parts[0] == "PATH")
-        editor.cache_path();
+        cache_path();
 
     return setenv_return;
 }
@@ -994,6 +996,32 @@ void save_history()
     }
 }
 
+Vector<String, 256> cached_path;
+void cache_path()
+{
+    if (!cached_path.is_empty())
+        cached_path.clear_with_capacity();
+
+    String path = getenv("PATH");
+    if (path.is_empty())
+        return;
+
+    auto directories = path.split(':');
+    for (const auto& directory : directories) {
+        Core::DirIterator programs(directory.characters(), Core::DirIterator::SkipDots);
+        while (programs.has_next()) {
+            auto program = programs.next_path();
+            String program_path = String::format("%s/%s", directory.characters(), program.characters());
+            struct stat program_status;
+            int stat_error = stat(program_path.characters(), &program_status);
+            if (!stat_error && (program_status.st_mode & S_IXUSR))
+                cached_path.append(program.characters());
+        }
+    }
+
+    quick_sort(cached_path);
+}
+
 int main(int argc, char** argv)
 {
     if (pledge("stdio rpath wpath cpath proc exec tty", nullptr) < 0) {
@@ -1009,6 +1037,120 @@ int main(int argc, char** argv)
     // we disable ICANON and ECHO.
     g.termios.c_lflag &= ~(ECHO | ICANON);
     tcsetattr(0, TCSANOW, &g.termios);
+
+    editor.initialize(g.termios);
+    editor.on_tab_complete_first_token = [&](const String& token) -> Vector<String> {
+        auto match = binary_search(cached_path.data(), cached_path.size(), token, [](const String& token, const String& program) -> int {
+            return strncmp(token.characters(), program.characters(), token.length());
+        });
+        if (!match)
+            return Vector<String>();
+
+        String completion = *match;
+        Vector<String> suggestions;
+
+        // Now that we have a program name starting with our token, we look at
+        // other program names starting with our token and cut off any mismatching
+        // characters.
+
+        bool seen_others = false;
+        int index = match - cached_path.data();
+        for (int i = index - 1; i >= 0 && cached_path[i].starts_with(token); --i) {
+            suggestions.append(cached_path[i]);
+            editor.cut_mismatching_chars(completion, cached_path[i], token.length());
+            seen_others = true;
+        }
+        for (size_t i = index + 1; i < cached_path.size() && cached_path[i].starts_with(token); ++i) {
+            editor.cut_mismatching_chars(completion, cached_path[i], token.length());
+            suggestions.append(cached_path[i]);
+            seen_others = true;
+        }
+        suggestions.append(cached_path[index]);
+
+        // If we have characters to add, add them.
+        if (completion.length() > token.length())
+            editor.insert(completion.substring(token.length(), completion.length() - token.length()));
+        // If we have a single match, we add a space, unless we already have one.
+        if (!seen_others && (editor.cursor() == editor.buffer().size() || editor.buffer_at(editor.cursor()) != ' '))
+            editor.insert(' ');
+
+        return suggestions;
+    };
+    editor.on_tab_complete_other_token = [&](const String& vtoken) -> Vector<String> {
+        auto token = vtoken; // copy it :(
+        String path;
+        Vector<String> suggestions;
+
+        ssize_t last_slash = token.length() - 1;
+        while (last_slash >= 0 && token[last_slash] != '/')
+            --last_slash;
+
+        if (last_slash >= 0) {
+            // Split on the last slash. We'll use the first part as the directory
+            // to search and the second part as the token to complete.
+            path = token.substring(0, last_slash + 1);
+            if (path[0] != '/')
+                path = String::format("%s/%s", g.cwd.characters(), path.characters());
+            path = canonicalized_path(path);
+            token = token.substring(last_slash + 1, token.length() - last_slash - 1);
+        } else {
+            // We have no slashes, so the directory to search is the current
+            // directory and the token to complete is just the original token.
+            path = g.cwd;
+        }
+
+        // This is a bit naughty, but necessary without reordering the loop
+        // below. The loop terminates early, meaning that
+        // the suggestions list is incomplete.
+        // We only do this if the token is empty though.
+        if (token.is_empty()) {
+            Core::DirIterator suggested_files(path, Core::DirIterator::SkipDots);
+            while (suggested_files.has_next()) {
+                suggestions.append(suggested_files.next_path());
+            }
+        }
+
+        String completion;
+
+        bool seen_others = false;
+        Core::DirIterator files(path, Core::DirIterator::SkipDots);
+        while (files.has_next()) {
+            auto file = files.next_path();
+            if (file.starts_with(token)) {
+                if (!token.is_empty())
+                    suggestions.append(file);
+                if (completion.is_empty()) {
+                    completion = file; // Will only be set once.
+                } else {
+                    editor.cut_mismatching_chars(completion, file, token.length());
+                    if (completion.is_empty()) // We cut everything off!
+                        return suggestions;
+                    seen_others = true;
+                }
+            }
+        }
+        if (completion.is_empty())
+            return suggestions;
+
+        // If we have characters to add, add them.
+        if (completion.length() > token.length())
+            editor.insert(completion.substring(token.length(), completion.length() - token.length()));
+        // If we have a single match and it's a directory, we add a slash. If it's
+        // a regular file, we add a space, unless we already have one.
+        if (!seen_others) {
+            String file_path = String::format("%s/%s", path.characters(), completion.characters());
+            struct stat program_status;
+            int stat_error = stat(file_path.characters(), &program_status);
+            if (!stat_error) {
+                if (S_ISDIR(program_status.st_mode))
+                    editor.insert('/');
+                else if (editor.cursor() == editor.buffer().size() || editor.buffer_at(editor.cursor()) != ' ')
+                    editor.insert(' ');
+            }
+        }
+
+        return {}; // Return an empty vector
+    };
 
     signal(SIGINT, [](int) {
         g.was_interrupted = true;
@@ -1072,7 +1214,7 @@ int main(int argc, char** argv)
     load_history();
     atexit(save_history);
 
-    editor.cache_path();
+    cache_path();
 
     for (;;) {
         auto line = editor.get_line(prompt());
