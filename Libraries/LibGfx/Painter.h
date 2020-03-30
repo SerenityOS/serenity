@@ -56,6 +56,8 @@ public:
     void draw_scaled_bitmap(const Rect& dst_rect, const Gfx::Bitmap&, const Rect& src_rect);
     void blit(const Point&, const Gfx::Bitmap&, const Rect& src_rect, float opacity = 1.0f);
     void blit_dimmed(const Point&, const Gfx::Bitmap&, const Rect& src_rect);
+    void blit_brightened(const Point&, const Gfx::Bitmap&, const Rect& src_rect);
+    void blit_filtered(const Point&, const Gfx::Bitmap&, const Rect& src_rect, Function<Color(Color)>);
     void draw_tiled_bitmap(const Rect& dst_rect, const Gfx::Bitmap&);
     void blit_offset(const Point&, const Gfx::Bitmap&, const Rect& src_rect, const Point&);
     void blit_scaled(const Rect&, const Gfx::Bitmap&, const Rect&, float, float);
