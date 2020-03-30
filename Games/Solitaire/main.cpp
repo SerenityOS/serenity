@@ -60,7 +60,7 @@ int main(int argc, char** argv)
     app_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) { app.quit(); }));
 
     help_menu->add_action(GUI::Action::create("About", [&](auto&) {
-        GUI::AboutDialog::show("Solitaire", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-solitaire.png"));
+        GUI::AboutDialog::show("Solitaire", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-solitaire.png"), window);
     }));
 
     menu_bar->add_menu(move(app_menu));
