@@ -75,6 +75,7 @@ Window::Window(ClientConnection& client, WindowType window_type, int window_id, 
         m_wm_event_mask = WMEventMask::WindowStateChanges | WMEventMask::WindowRemovals | WMEventMask::WindowIconChanges;
         m_listens_to_wm_events = true;
     }
+
     WindowManager::the().add_window(*this);
 }
 

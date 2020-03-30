@@ -28,7 +28,7 @@
 
 namespace GUI {
 
-// Keep this in sync with WindowType.
+// Keep this in sync with WindowServer::WindowType.
 enum class WindowType {
     Invalid = 0,
     Normal,
@@ -38,6 +38,7 @@ enum class WindowType {
     Tooltip,
     Menubar,
     MenuApplet,
+    Notification,
 };
 
 }

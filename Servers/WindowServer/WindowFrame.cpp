@@ -152,6 +152,8 @@ void WindowFrame::did_set_maximized(Badge<Window>, bool maximized)
 
 Gfx::Rect WindowFrame::title_bar_rect() const
 {
+    if (m_window.type() == WindowType::Notification)
+        return { m_window.width() + 3, 3, window_titlebar_height, m_window.height() };
     return { 3, 3, m_window.width(), window_titlebar_height };
 }
 
@@ -178,54 +180,58 @@ Gfx::Rect WindowFrame::title_bar_text_rect() const
     };
 }
 
-void WindowFrame::paint(Gfx::Painter& painter)
+WindowFrame::FrameColors WindowFrame::compute_frame_colors() const
 {
-    Gfx::PainterStateSaver saver(painter);
-    painter.translate(rect().location());
+    auto& wm = WindowManager::the();
+    auto palette = wm.palette();
+    if (&m_window == wm.m_highlight_window)
+        return { palette.highlight_window_title(), palette.highlight_window_border1(), palette.highlight_window_border2() };
+    if (&m_window == wm.m_move_window)
+        return { palette.moving_window_title(), palette.moving_window_border1(), palette.moving_window_border2() };
+    if (&m_window == wm.m_active_window)
+        return { palette.active_window_title(), palette.active_window_border1(), palette.active_window_border2() };
+    return { palette.inactive_window_title(), palette.inactive_window_border1(), palette.inactive_window_border2() };
+}
 
-    if (m_window.type() != WindowType::Normal)
-        return;
-
+void WindowFrame::paint_notification_frame(Gfx::Painter& painter)
+{
     auto palette = WindowManager::the().palette();
-    auto& window = m_window;
-
-    auto titlebar_rect = title_bar_rect();
-    auto titlebar_icon_rect = title_bar_icon_rect();
-    auto titlebar_inner_rect = title_bar_text_rect();
     Gfx::Rect outer_rect = { {}, rect().size() };
 
-    auto titlebar_title_rect = titlebar_inner_rect;
-    titlebar_title_rect.set_width(Gfx::Font::default_bold_font().width(window.title()));
+    Gfx::StylePainter::paint_window_frame(painter, outer_rect, palette);
 
-    Color title_color;
-    Color border_color;
-    Color border_color2;
+    auto titlebar_rect = title_bar_rect();
+    painter.fill_rect_with_gradient(Gfx::Orientation::Vertical, titlebar_rect, palette.active_window_border1(), palette.active_window_border2());
 
-    auto& wm = WindowManager::the();
-
-    if (&window == wm.m_highlight_window) {
-        border_color = palette.highlight_window_border1();
-        border_color2 = palette.highlight_window_border2();
-        title_color = palette.highlight_window_title();
-    } else if (&window == wm.m_move_window) {
-        border_color = palette.moving_window_border1();
-        border_color2 = palette.moving_window_border2();
-        title_color = palette.moving_window_title();
-    } else if (&window == wm.m_active_window) {
-        border_color = palette.active_window_border1();
-        border_color2 = palette.active_window_border2();
-        title_color = palette.active_window_title();
-    } else {
-        border_color = palette.inactive_window_border1();
-        border_color2 = palette.inactive_window_border2();
-        title_color = palette.inactive_window_title();
+    int stripe_top = m_buttons.last().relative_rect().bottom() + 4;
+    int stripe_bottom = m_window.height() - 3;
+    if (stripe_top && stripe_bottom && stripe_top < stripe_bottom) {
+        for (int i = 2; i <= window_titlebar_height - 2; i += 2) {
+            painter.draw_line({ titlebar_rect.x() + i, stripe_top }, { titlebar_rect.x() + i, stripe_bottom }, palette.active_window_border1());
+        }
     }
+}
+
+void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
+{
+    auto palette = WindowManager::the().palette();
+    auto& window = m_window;
+    Gfx::Rect outer_rect = { {}, rect().size() };
 
     Gfx::StylePainter::paint_window_frame(painter, outer_rect, palette);
 
     if (!window.show_titlebar())
         return;
 
+    auto titlebar_rect = title_bar_rect();
+    auto titlebar_icon_rect = title_bar_icon_rect();
+    auto titlebar_inner_rect = title_bar_text_rect();
+    auto titlebar_title_rect = titlebar_inner_rect;
+    titlebar_title_rect.set_width(Gfx::Font::default_bold_font().width(window.title()));
+
+    auto [title_color, border_color, border_color2] = compute_frame_colors();
+
+    auto& wm = WindowManager::the();
     painter.draw_line(titlebar_rect.bottom_left().translated(0, 1), titlebar_rect.bottom_right().translated(0, 1), palette.button());
 
     auto leftmost_button_rect = m_buttons.is_empty() ? Gfx::Rect() : m_buttons.last().relative_rect();
@@ -249,6 +255,19 @@ void WindowFrame::paint(Gfx::Painter& painter)
     }
 
     painter.blit(titlebar_icon_rect.location(), window.icon(), window.icon().rect());
+}
+
+void WindowFrame::paint(Gfx::Painter& painter)
+{
+    Gfx::PainterStateSaver saver(painter);
+    painter.translate(rect().location());
+
+    if (m_window.type() == WindowType::Notification)
+        paint_notification_frame(painter);
+    else if (m_window.type() == WindowType::Normal)
+        paint_normal_frame(painter);
+    else
+        return;
 
     for (auto& button : m_buttons) {
         button.paint(painter);
@@ -262,10 +281,19 @@ static Gfx::Rect frame_rect_for_window(Window& window, const Gfx::Rect& rect)
 
     switch (type) {
     case WindowType::Normal:
-        return { rect.x() - 3,
+        return {
+            rect.x() - 3,
             rect.y() - window_titlebar_height - 4 + offset,
             rect.width() + 6,
-            rect.height() + 7 + window_titlebar_height - offset };
+            rect.height() + 7 + window_titlebar_height - offset
+        };
+    case WindowType::Notification:
+        return {
+            rect.x() - 3,
+            rect.y() - 3,
+            rect.width() + 6 + window_titlebar_height,
+            rect.height() + 6
+        };
     default:
         return rect;
     }
@@ -290,13 +318,24 @@ void WindowFrame::notify_window_rect_changed(const Gfx::Rect& old_rect, const Gf
 {
     int window_button_width = 15;
     int window_button_height = 15;
-    int x = title_bar_text_rect().right() + 1;
+    int pos;
+    if (m_window.type() == WindowType::Notification)
+        pos = title_bar_rect().top() + 2;
+    else
+        pos = title_bar_text_rect().right() + 1;
 
     for (auto& button : m_buttons) {
-        x -= window_button_width;
-        Gfx::Rect rect { x, 0, window_button_width, window_button_height };
-        rect.center_vertically_within(title_bar_text_rect());
-        button.set_relative_rect(rect);
+        if (m_window.type() == WindowType::Notification) {
+            Gfx::Rect rect { 0, pos, window_button_width, window_button_height };
+            rect.center_horizontally_within(title_bar_rect());
+            button.set_relative_rect(rect);
+            pos += window_button_width;
+        } else {
+            pos -= window_button_width;
+            Gfx::Rect rect { pos, 0, window_button_width, window_button_height };
+            rect.center_vertically_within(title_bar_text_rect());
+            button.set_relative_rect(rect);
+        }
     }
 
     auto& wm = WindowManager::the();
@@ -313,10 +352,10 @@ void WindowFrame::on_mouse_event(const MouseEvent& event)
         return;
 
     auto& wm = WindowManager::the();
-    if (m_window.type() != WindowType::Normal)
+    if (m_window.type() != WindowType::Normal && m_window.type() != WindowType::Notification)
         return;
 
-    if (event.type() == Event::MouseDown && (event.button() == MouseButton::Left || event.button() == MouseButton::Right) && title_bar_icon_rect().contains(event.position())) {
+    if (m_window.type() == WindowType::Normal && event.type() == Event::MouseDown && (event.button() == MouseButton::Left || event.button() == MouseButton::Right) && title_bar_icon_rect().contains(event.position())) {
         wm.move_to_front_and_make_active(m_window);
         m_window.popup_window_menu(event.position().translated(rect().location()));
         return;
@@ -339,11 +378,11 @@ void WindowFrame::on_mouse_event(const MouseEvent& event)
                 return button.on_mouse_event(event.translated(-button.relative_rect().location()));
         }
         if (event.type() == Event::MouseDown) {
-            if (event.button() == MouseButton::Right) {
+            if (m_window.type() == WindowType::Normal && event.button() == MouseButton::Right) {
                 m_window.popup_window_menu(event.position().translated(rect().location()));
                 return;
             }
-            if (event.button() == MouseButton::Left)
+            if (m_window.is_movable() && event.button() == MouseButton::Left)
                 wm.start_window_move(m_window, event.translated(rect().location()));
         }
         return;
@@ -369,5 +408,4 @@ void WindowFrame::on_mouse_event(const MouseEvent& event)
     if (m_window.is_resizable() && event.type() == Event::MouseDown && event.button() == MouseButton::Left)
         wm.start_window_resize(m_window, event.translated(rect().location()));
 }
-
 }
