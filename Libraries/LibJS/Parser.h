@@ -67,6 +67,7 @@ public:
     NonnullRefPtr<Expression> parse_secondary_expression(NonnullRefPtr<Expression>, int min_precedence, Associativity associate = Associativity::Right);
     NonnullRefPtr<CallExpression> parse_call_expression(NonnullRefPtr<Expression>);
     NonnullRefPtr<NewExpression> parse_new_expression();
+    RefPtr<FunctionExpression> try_parse_arrow_function_expression(bool expect_parens);
 
     bool has_errors() const { return m_parser_state.m_has_errors; }
 
