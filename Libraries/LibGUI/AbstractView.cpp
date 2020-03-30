@@ -60,8 +60,10 @@ void AbstractView::set_model(RefPtr<Model> model)
 
 void AbstractView::did_update_model()
 {
-    if (!model() || selection().first() != m_edit_index)
-        stop_editing();
+    stop_editing();
+    m_edit_index = {};
+    m_hovered_index = {};
+    selection().clear();
 }
 
 void AbstractView::did_update_selection()
