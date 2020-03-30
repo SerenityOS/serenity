@@ -36,4 +36,5 @@ enum class WindowType {
     Tooltip,
     Menubar,
     MenuApplet,
+    Notification,
 };
