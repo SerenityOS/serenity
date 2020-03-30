@@ -33,6 +33,14 @@
 
 namespace Core {
 
+RefPtr<File> File::open(const String& filename, IODevice::OpenMode mode, mode_t permissions)
+{
+    auto file = File::construct(filename);
+    if (!file->open_impl(mode, permissions))
+        return nullptr;
+    return file;
+}
+
 File::File(const StringView& filename, Object* parent)
     : IODevice(parent)
     , m_filename(filename)
@@ -55,6 +63,11 @@ bool File::open(int fd, IODevice::OpenMode mode, ShouldCloseFileDescription shou
 
 bool File::open(IODevice::OpenMode mode)
 {
+    return open_impl(mode, 0666);
+}
+
+bool File::open_impl(IODevice::OpenMode mode, mode_t permissions)
+{
     ASSERT(!m_filename.is_null());
     int flags = 0;
     if ((mode & IODevice::ReadWrite) == IODevice::ReadWrite) {
@@ -73,7 +86,7 @@ bool File::open(IODevice::OpenMode mode)
         flags |= O_TRUNC;
     if (mode & IODevice::MustBeNew)
         flags |= O_EXCL;
-    int fd = ::open(m_filename.characters(), flags, 0666);
+    int fd = ::open(m_filename.characters(), flags, permissions);
     if (fd < 0) {
         set_error(errno);
         return false;
