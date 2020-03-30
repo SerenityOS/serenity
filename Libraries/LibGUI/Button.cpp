@@ -64,10 +64,14 @@ void Button::paint_event(PaintEvent& event)
     if (is_being_pressed() || is_checked())
         painter.translate(1, 1);
     if (m_icon) {
-        if (is_enabled())
-            painter.blit(icon_location, *m_icon, m_icon->rect());
-        else
+        if (is_enabled()) {
+            if (is_hovered())
+                painter.blit_brightened(icon_location, *m_icon, m_icon->rect());
+            else
+                painter.blit(icon_location, *m_icon, m_icon->rect());
+        } else {
             painter.blit_dimmed(icon_location, *m_icon, m_icon->rect());
+        }
     }
     auto& font = is_checked() ? Gfx::Font::default_bold_font() : this->font();
     if (m_icon && !text().is_empty()) {
