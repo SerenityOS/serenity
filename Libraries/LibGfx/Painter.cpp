@@ -29,6 +29,7 @@
 #include "Emoji.h"
 #include "Font.h"
 #include <AK/Assertions.h>
+#include <AK/Function.h>
 #include <AK/Memory.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
@@ -377,7 +378,7 @@ void Painter::blit_with_opacity(const Point& position, const Gfx::Bitmap& source
     }
 }
 
-void Painter::blit_dimmed(const Point& position, const Gfx::Bitmap& source, const Rect& src_rect)
+void Painter::blit_filtered(const Point& position, const Gfx::Bitmap& source, const Rect& src_rect, Function<Color(Color)> filter)
 {
     Rect safe_src_rect = src_rect.intersected(source.rect());
     auto dst_rect = Rect(position, safe_src_rect.size()).translated(translation());
@@ -397,15 +398,29 @@ void Painter::blit_dimmed(const Point& position, const Gfx::Bitmap& source, cons
         for (int x = 0; x <= (last_column - first_column); ++x) {
             u8 alpha = Color::from_rgba(src[x]).alpha();
             if (alpha == 0xff)
-                dst[x] = Color::from_rgba(src[x]).to_grayscale().lightened().value();
+                dst[x] = filter(Color::from_rgba(src[x])).value();
             else if (!alpha)
                 continue;
             else
-                dst[x] = Color::from_rgba(dst[x]).blend(Color::from_rgba(src[x]).to_grayscale().lightened()).value();
+                dst[x] = Color::from_rgba(dst[x]).blend(filter(Color::from_rgba(src[x]))).value();
         }
         dst += dst_skip;
         src += src_skip;
     }
+}
+
+void Painter::blit_brightened(const Point& position, const Gfx::Bitmap& source, const Rect& src_rect)
+{
+    return blit_filtered(position, source, src_rect, [](Color src) {
+        return src.lightened();
+    });
+}
+
+void Painter::blit_dimmed(const Point& position, const Gfx::Bitmap& source, const Rect& src_rect)
+{
+    return blit_filtered(position, source, src_rect, [](Color src) {
+        return src.to_grayscale().lightened();
+    });
 }
 
 void Painter::draw_tiled_bitmap(const Rect& a_dst_rect, const Gfx::Bitmap& source)
