@@ -223,6 +223,78 @@ NonnullRefPtr<Statement> Parser::parse_statement()
     return statement;
 }
 
+RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expect_parens)
+{
+    save_state();
+
+    Vector<FlyString> parameters;
+    bool parse_failed = false;
+    while (true) {
+        if (match(TokenType::Comma)) {
+            consume(TokenType::Comma);
+        } else if (match(TokenType::Identifier)) {
+            auto token = consume(TokenType::Identifier);
+            parameters.append(token.value());
+        } else if (match(TokenType::ParenClose)) {
+            if (expect_parens) {
+                consume(TokenType::ParenClose);
+                if (match(TokenType::Arrow)) {
+                    consume(TokenType::Arrow);
+                } else {
+                    parse_failed = true;
+                }
+                break;
+            }
+            parse_failed = true;
+            break;
+        } else if (match(TokenType::Arrow)) {
+            if (!expect_parens) {
+                consume(TokenType::Arrow);
+                break;
+            }
+            parse_failed = true;
+            break;
+        } else {
+            parse_failed = true;
+            break;
+        }
+    }
+
+    if (parse_failed) {
+        load_state();
+        return nullptr;
+    }
+
+    auto function_body_result = [this]() -> RefPtr<BlockStatement> {
+        if (match(TokenType::CurlyOpen)) {
+            // Parse a function body with statements
+            return parse_block_statement();
+        }
+        if (match_expression()) {
+            // Parse a function body which returns a single expression
+
+            // FIXME: We synthesize a block with a return statement
+            // for arrow function bodies which are a single expression.
+            // Esprima generates a single "ArrowFunctionExpression"
+            // with a "body" property.
+            auto return_expression = parse_expression(0);
+            auto return_block = create_ast_node<BlockStatement>();
+            return_block->append<ReturnStatement>(move(return_expression));
+            return return_block;
+        }
+        // Invalid arrow function body
+        return nullptr;
+    }();
+
+    if (!function_body_result.is_null()) {
+        auto body = function_body_result.release_nonnull();
+        return create_ast_node<FunctionExpression>("", move(body), move(parameters));
+    }
+
+    load_state();
+    return nullptr;
+}
+
 NonnullRefPtr<Expression> Parser::parse_primary_expression()
 {
     if (match_unary_prefixed_expression())
@@ -231,12 +303,23 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
     switch (m_parser_state.m_current_token.type()) {
     case TokenType::ParenOpen: {
         consume(TokenType::ParenOpen);
+        if (match(TokenType::ParenClose) || match(TokenType::Identifier)) {
+            auto arrow_function_result = try_parse_arrow_function_expression(true);
+            if (!arrow_function_result.is_null()) {
+                return arrow_function_result.release_nonnull();
+            }
+        }
         auto expression = parse_expression(0);
         consume(TokenType::ParenClose);
         return expression;
     }
-    case TokenType::Identifier:
+    case TokenType::Identifier: {
+        auto arrow_function_result = try_parse_arrow_function_expression(false);
+        if (!arrow_function_result.is_null()) {
+            return arrow_function_result.release_nonnull();
+        }
         return create_ast_node<Identifier>(consume().value());
+    }
     case TokenType::NumericLiteral:
         return create_ast_node<NumericLiteral>(consume().double_value());
     case TokenType::BoolLiteral:

@@ -86,6 +86,7 @@ Lexer::Lexer(StringView source)
     }
 
     if (s_two_char_tokens.is_empty()) {
+        s_two_char_tokens.set("=>", TokenType::Arrow);
         s_two_char_tokens.set("+=", TokenType::PlusEquals);
         s_two_char_tokens.set("-=", TokenType::MinusEquals);
         s_two_char_tokens.set("*=", TokenType::AsteriskEquals);
