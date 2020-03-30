@@ -1031,14 +1031,11 @@ int main(int argc, char** argv)
 
     g.uid = getuid();
     tcsetpgrp(0, getpgrp());
-    tcgetattr(0, &g.default_termios);
-    g.termios = g.default_termios;
-    // Because we use our own line discipline which includes echoing,
-    // we disable ICANON and ECHO.
-    g.termios.c_lflag &= ~(ECHO | ICANON);
-    tcsetattr(0, TCSANOW, &g.termios);
 
-    editor.initialize(g.termios);
+    editor.initialize();
+    g.termios = editor.termios();
+    g.default_termios = editor.default_termios();
+
     editor.on_tab_complete_first_token = [&](const String& token) -> Vector<String> {
         auto match = binary_search(cached_path.data(), cached_path.size(), token, [](const String& token, const String& program) -> int {
             return strncmp(token.characters(), program.characters(), token.length());
