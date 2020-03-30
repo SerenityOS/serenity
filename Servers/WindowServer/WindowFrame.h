@@ -54,6 +54,17 @@ public:
     void did_set_maximized(Badge<Window>, bool);
 
 private:
+    void paint_notification_frame(Gfx::Painter&);
+    void paint_normal_frame(Gfx::Painter&);
+
+    struct FrameColors {
+        Color title_color;
+        Color border_color;
+        Color border_color2;
+    };
+
+    FrameColors compute_frame_colors() const;
+
     Window& m_window;
     NonnullOwnPtrVector<Button> m_buttons;
     Button* m_maximize_button { nullptr };

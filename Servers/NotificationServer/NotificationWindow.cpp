@@ -45,9 +45,9 @@ void update_notification_window_locations()
     for (auto& window : s_windows) {
         Gfx::Point new_window_location;
         if (last_window_rect.is_null())
-            new_window_location = GUI::Desktop::the().rect().top_right().translated(-window->rect().width() - 8, 26);
+            new_window_location = GUI::Desktop::the().rect().top_right().translated(-window->rect().width() - 24, 26);
         else
-            new_window_location = last_window_rect.bottom_left().translated(0, 8);
+            new_window_location = last_window_rect.bottom_left().translated(0, 10);
         if (window->rect().location() != new_window_location) {
             window->move_to(new_window_location);
             window->set_original_rect(window->rect());
@@ -60,7 +60,9 @@ NotificationWindow::NotificationWindow(const String& text, const String& title, 
 {
     s_windows.append(this);
 
-    set_window_type(GUI::WindowType::Tooltip);
+    set_window_type(GUI::WindowType::Notification);
+    set_resizable(false);
+    set_minimizable(false);
 
     Gfx::Rect lowest_notification_rect_on_screen;
     for (auto& window : s_windows) {
@@ -69,12 +71,12 @@ NotificationWindow::NotificationWindow(const String& text, const String& title, 
     }
 
     Gfx::Rect rect;
-    rect.set_width(240);
+    rect.set_width(220);
     rect.set_height(40);
-    rect.set_location(GUI::Desktop::the().rect().top_right().translated(-rect.width() - 8, 26));
+    rect.set_location(GUI::Desktop::the().rect().top_right().translated(-rect.width() - 24, 26));
 
     if (!lowest_notification_rect_on_screen.is_null())
-        rect.set_location(lowest_notification_rect_on_screen.bottom_left().translated(0, 8));
+        rect.set_location(lowest_notification_rect_on_screen.bottom_left().translated(0, 10));
 
     set_rect(rect);
 
@@ -108,13 +110,10 @@ NotificationWindow::NotificationWindow(const String& text, const String& title, 
     right_container.set_preferred_size(36, 0);
     right_container.set_layout<GUI::HorizontalBoxLayout>();
 
-    auto& button = right_container.add<GUI::Button>("Okay");
-    button.on_click = [this] {
-        auto this_window_index = s_windows.find_first_index(this);
-        if (this_window_index.has_value())
-            s_windows.remove(this_window_index.value());
-        close();
+    on_close_request = [this] {
+        s_windows.remove_first_matching([this](auto& entry) { return entry == this; });
         update_notification_window_locations();
+        return CloseRequestDecision::Close;
     };
 }
 
