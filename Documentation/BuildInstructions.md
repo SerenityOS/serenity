@@ -60,6 +60,9 @@ Once you've built the toolchain, go into the `Kernel/` directory, then run
 **./makeall.sh**, and if nothing breaks too much, take it for a spin by using
 **./run**.
 
+Note that the `anon` user is able to become `root` without password by default, as a development convenience.
+To prevent this, remove `anon` from the `wheel` group and he will no longer be able to run `/bin/su`.
+
 Bare curious users may even consider sourcing suitable hardware to [install Serenity on a physical PC.](https://github.com/SerenityOS/serenity/blob/master/INSTALL.md)
 
 Later on, when you `git pull` to get the latest changes, there's no need to rebuild the toolchain. You can simply rerun **./makeall.sh** in the `Kernel/` directory and you'll be good to **./run** again.
