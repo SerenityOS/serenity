@@ -178,6 +178,26 @@ template<typename PutChFunc>
 }
 
 template<typename PutChFunc>
+[[gnu::always_inline]] inline int print_double(PutChFunc putch, char*& bufptr, double number, bool leftPad, bool zeroPad, u32 fieldWidth)
+{
+    int length = 0;
+
+    if (number < 0) {
+        putch(bufptr, '-');
+        length++;
+        number = 0 - number;
+    }
+
+    length = print_u64(putch, bufptr, (i64)number, leftPad, zeroPad, fieldWidth);
+    putch(bufptr, '.');
+    length++;
+    double fraction = number - (i64)number;
+    // FIXME: Allow other fractions
+    fraction = fraction * 1000000;
+    return length + print_u64(putch, bufptr, (i64)fraction, leftPad, true, 6);
+}
+
+template<typename PutChFunc>
 [[gnu::always_inline]] inline int print_i64(PutChFunc putch, char*& bufptr, i64 number, bool leftPad, bool zeroPad, u32 fieldWidth)
 {
     if (number < 0) {
@@ -361,8 +381,7 @@ template<typename PutChFunc>
 #if !defined(BOOTSTRAPPER) && !defined(KERNEL)
             case 'g':
             case 'f':
-                // FIXME: Print as float!
-                ret += print_i64(putch, bufptr, (u64)va_arg(ap, double), left_pad, zeroPad, fieldWidth);
+                ret += print_double(putch, bufptr, va_arg(ap, double), left_pad, zeroPad, fieldWidth);
                 break;
 #endif
 
