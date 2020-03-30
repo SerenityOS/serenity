@@ -141,7 +141,7 @@ void Painter::fill_rect(const Rect& a_rect, Color color)
     }
 }
 
-void Painter::fill_rect_with_gradient(const Rect& a_rect, Color gradient_start, Color gradient_end)
+void Painter::fill_rect_with_gradient(Orientation orientation, const Rect& a_rect, Color gradient_start, Color gradient_end)
 {
 #ifdef NO_FPU
     return fill_rect(a_rect, gradient_start);
@@ -151,12 +151,12 @@ void Painter::fill_rect_with_gradient(const Rect& a_rect, Color gradient_start, 
     if (clipped_rect.is_empty())
         return;
 
-    int x_offset = clipped_rect.x() - rect.x();
+    int offset = clipped_rect.primary_offset_for_orientation(orientation) - rect.primary_offset_for_orientation(orientation);
 
     RGBA32* dst = m_target->scanline(clipped_rect.top()) + clipped_rect.left();
     const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
 
-    float increment = (1.0 / ((rect.width()) / 255.0));
+    float increment = (1.0 / ((rect.primary_size_for_orientation(orientation)) / 255.0));
 
     int r2 = gradient_start.red();
     int g2 = gradient_start.green();
@@ -165,18 +165,38 @@ void Painter::fill_rect_with_gradient(const Rect& a_rect, Color gradient_start, 
     int g1 = gradient_end.green();
     int b1 = gradient_end.blue();
 
-    for (int i = clipped_rect.height() - 1; i >= 0; --i) {
-        float c = x_offset * increment;
-        for (int j = 0; j < clipped_rect.width(); ++j) {
-            dst[j] = Color(
+    if (orientation == Orientation::Horizontal) {
+        for (int i = clipped_rect.height() - 1; i >= 0; --i) {
+            float c = offset * increment;
+            for (int j = 0; j < clipped_rect.width(); ++j) {
+                dst[j] = Color(
+                    r1 / 255.0 * c + r2 / 255.0 * (255 - c),
+                    g1 / 255.0 * c + g2 / 255.0 * (255 - c),
+                    b1 / 255.0 * c + b2 / 255.0 * (255 - c))
+                             .value();
+                c += increment;
+            }
+            dst += dst_skip;
+        }
+    } else {
+        float c = offset * increment;
+        for (int i = clipped_rect.height() - 1; i >= 0; --i) {
+            Color color(
                 r1 / 255.0 * c + r2 / 255.0 * (255 - c),
                 g1 / 255.0 * c + g2 / 255.0 * (255 - c),
-                b1 / 255.0 * c + b2 / 255.0 * (255 - c))
-                         .value();
+                b1 / 255.0 * c + b2 / 255.0 * (255 - c));
+            for (int j = 0; j < clipped_rect.width(); ++j) {
+                dst[j] = color.value();
+            }
             c += increment;
+            dst += dst_skip;
         }
-        dst += dst_skip;
     }
+}
+
+void Painter::fill_rect_with_gradient(const Rect& a_rect, Color gradient_start, Color gradient_end)
+{
+    return fill_rect_with_gradient(Orientation::Horizontal, a_rect, gradient_start, gradient_end);
 }
 
 void Painter::draw_ellipse_intersecting(const Rect& rect, Color color, int thickness)
