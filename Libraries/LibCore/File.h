@@ -36,6 +36,8 @@ class File final : public IODevice {
 public:
     virtual ~File() override;
 
+    static RefPtr<File> open(const String& filename, IODevice::OpenMode, mode_t = 0644);
+
     String filename() const { return m_filename; }
     void set_filename(const StringView& filename) { m_filename = filename; }
 
@@ -58,6 +60,8 @@ private:
     {
     }
     explicit File(const StringView&, Object* parent = nullptr);
+
+    bool open_impl(IODevice::OpenMode, mode_t);
 
     String m_filename;
     ShouldCloseFileDescription m_should_close_file_descriptor { ShouldCloseFileDescription::Yes };
