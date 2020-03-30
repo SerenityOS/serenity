@@ -42,4 +42,6 @@ private:
     NonnullRefPtr<GUI::Button> create_button(const WindowIdentifier&);
 
     virtual void wm_event(GUI::WMEvent&) override;
+
+    RefPtr<Gfx::Bitmap> m_default_icon;
 };

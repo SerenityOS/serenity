@@ -56,6 +56,8 @@ TaskbarWindow::TaskbarWindow()
     widget.set_frame_shape(Gfx::FrameShape::Panel);
     widget.set_frame_shadow(Gfx::FrameShadow::Raised);
 
+    m_default_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window.png");
+
     WindowList::the().aid_create_button = [this](auto& identifier) {
         return create_button(identifier);
     };
@@ -137,6 +139,7 @@ NonnullRefPtr<GUI::Button> TaskbarWindow::create_button(const WindowIdentifier& 
     button.set_preferred_size(140, 22);
     button.set_checkable(true);
     button.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    button.set_icon(*m_default_icon);
     return button;
 }
 
