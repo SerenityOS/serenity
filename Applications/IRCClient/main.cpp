@@ -27,12 +27,18 @@
 #include "IRCAppWindow.h"
 #include "IRCClient.h"
 #include <LibGUI/Application.h>
+#include <LibGUI/MessageBox.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)
 {
     if (pledge("stdio inet dns unix shared_buffer cpath rpath fattr", nullptr) < 0) {
         perror("pledge");
+        return 1;
+    }
+
+    if (getuid() == 0) {
+        fprintf(stderr, "Refusing to run as root\n");
         return 1;
     }
 
