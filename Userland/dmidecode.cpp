@@ -945,6 +945,1101 @@ void parse_table_type3(const SMBIOS::SysEnclosure& table)
     printf("\n");
 }
 
+void parse_table_type4(const SMBIOS::ProcessorInfo& table)
+{
+    ASSERT(table.h.type == (u8)SMBIOS::TableType::ProcessorInfo);
+    ASSERT(table.h.length >= 0x1A);
+
+    title() << "Processor Information";
+
+    auto socket_designation_string = SMBIOS::Parsing::try_to_acquire_smbios_string((const SMBIOS::TableHeader&)table, table.socket_designation_str_number);
+    tab() << "Socket Designation: " << (socket_designation_string.has_value() ? socket_designation_string.value() : "Unknown");
+
+    String processor_type;
+    switch (table.processor_type) {
+    case (u16)SMBIOS::ProcessorType::Unknown:
+        processor_type = "Unknown";
+        break;
+    case (u16)SMBIOS::ProcessorType::Other:
+        processor_type = "Other";
+        break;
+    case (u16)SMBIOS::ProcessorType::Video_Processor:
+        processor_type = "Video Processor";
+        break;
+    case (u16)SMBIOS::ProcessorType::Math_Processor:
+        processor_type = "Math Processor";
+        break;
+    case (u16)SMBIOS::ProcessorType::Central_Processor:
+        processor_type = "Central Processor";
+        break;
+    case (u16)SMBIOS::ProcessorType::DSP_Processor:
+        processor_type = "DSP Processor";
+        break;
+    default:
+        processor_type = "Unknown";
+        break;
+    }
+    tab() << "Processor Type: " << processor_type;
+
+    String processor_family;
+    switch (table.processor_family) {
+    case (u16)SMBIOS::ProcessorFamily::Other:
+        processor_family = "Other";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Unknown:
+        processor_family = "Unknown";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_8086:
+        processor_family = "Intel 8086";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_80826:
+        processor_family = "Intel 80826";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_386:
+        processor_family = "Intel 386";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_486:
+        processor_family = "Intel 486";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_8087:
+        processor_family = "Intel 8087";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_80287:
+        processor_family = "Intel 80287";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_80387:
+        processor_family = "Intel 80387";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_80487:
+        processor_family = "Intel 80487";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Pentium:
+        processor_family = "Intel Pentium";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Pentium_Pro:
+        processor_family = "Intel Pentium Pro";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Pentium_2:
+        processor_family = "Intel Pentium 2";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Pentium_MMX:
+        processor_family = "Intel Pentium MMX";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Celeron:
+        processor_family = "Intel Celeron";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Pentium_2_Xeon:
+        processor_family = "Intel Pentium 2 Xeon";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Pentium_3:
+        processor_family = "Intel Pentium 3";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::M1_Family:
+        processor_family = "M1 Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::M2_Family:
+        processor_family = "M2 Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Celeron_M:
+        processor_family = "Intel Celeron M";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Pentium_4HT:
+        processor_family = "Intel Pentium 4 HT";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Duron_Family:
+        processor_family = "AMD Duron Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::K5_Family:
+        processor_family = "K5 Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::K6_Family:
+        processor_family = "K6 Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::K6_2:
+        processor_family = "K6-2";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::K6_3:
+        processor_family = "K6-3";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Athlon_Family:
+        processor_family = "AMD Athlon Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_29000_Family:
+        processor_family = "AMD 29000 Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::K6_2_Plus:
+        processor_family = "K6-2 Plus";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::PowerPC:
+        processor_family = "PowerPC";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::PowerPC_601:
+        processor_family = "PowerPC 601";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::PowerPC_603:
+        processor_family = "PowerPC 603";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::PowerPC_603_Plus:
+        processor_family = "PowerPC 603 Plus";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::PowerPC_604:
+        processor_family = "PowerPC 604";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::PowerPC_620:
+        processor_family = "PowerPC 620";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::PowerPC_x704:
+        processor_family = "PowerPC x704";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::PowerPC_750:
+        processor_family = "PowerPC 750";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Core_Duo:
+        processor_family = "Intel Core Duo";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Core_Duo_Mobile:
+        processor_family = "Intel Core Duo Mobile";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Core_Solo_Mobile:
+        processor_family = "Intel Core Solo Mobile";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Atom:
+        processor_family = "Intel Atom";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Core_M:
+        processor_family = "Intel Core M";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Core_m3:
+        processor_family = "Intel Core m3";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Core_m5:
+        processor_family = "Intel Core m3";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Core_m7:
+        processor_family = "Intel Core m7";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Alpha_Family:
+        processor_family = "Alpha Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Alpha_21064:
+        processor_family = "Alpha 21064";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Alpha_21066:
+        processor_family = "Alpha 21066";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Alpha_21164:
+        processor_family = "Alpha 21164";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Alpha_21164PC:
+        processor_family = "Alpha 21164PC";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Alpha_21164a:
+        processor_family = "Alpha 21164a";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Alpha_21264:
+        processor_family = "Alpha 21264";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Alpha_21364:
+        processor_family = "Alpha 21364";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Turion_2_Ultra_DualCore_Mobile_M_Family:
+        processor_family = "AMD Turion 2 Ultra Dual-Core Mobile M Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Turion_2_DualCore_Mobile_M_Family:
+        processor_family = "AMD Turion 2 Dual-Core Mobile M Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Athlon_2_DualCore_M_Family:
+        processor_family = "AMD Athlon 2 Dual-Core M Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Opteron_6100_Series:
+        processor_family = "AMD Opteron 6100 Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Opteron_4100_Series:
+        processor_family = "AMD Opteron 4100 Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Opteron_6200_Series:
+        processor_family = "AMD Opteron 6200 Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Opteron_4200_Series:
+        processor_family = "AMD Opteron 4200 Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_FX_Series:
+        processor_family = "AMD FX Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::MIPS_Family:
+        processor_family = "MIPS Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::MIPS_R4000:
+        processor_family = "MIPS R4000";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::MIPS_R4200:
+        processor_family = "MIPS R4200";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::MIPS_R4400:
+        processor_family = "MIPS R4400";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::MIPS_R4600:
+        processor_family = "MIPS R4600";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::MIPS_R10000:
+        processor_family = "MIPS R10000";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_C_Series:
+        processor_family = "AMD C Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_E_Series:
+        processor_family = "AMD E Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_A_Series:
+        processor_family = "AMD A Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_G_Series:
+        processor_family = "AMD G Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Z_Series:
+        processor_family = "AMD Z Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_R_Series:
+        processor_family = "AMD R Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Opteron_4300_Series:
+        processor_family = "AMD Opteron 4300 Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Opteron_6300_Series:
+        processor_family = "AMD Opteron 6300 Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Opteron_3300_Series:
+        processor_family = "AMD Opteron 3300 Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_FirePro_Series:
+        processor_family = "AMD FirePro Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::SPARC_Family:
+        processor_family = "SPARC Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::SuperSPARC:
+        processor_family = "SuperSPARC";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::microSPARC_2:
+        processor_family = "microSPARC 2";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::microSPARC_2_ep:
+        processor_family = "microSPARC 2 ep";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::UltraSPARC:
+        processor_family = "UltraSPARC";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::UltraSPARC_2:
+        processor_family = "UltraSPARC 2";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::UltraSPARC_Iii:
+        processor_family = "UltraSPARC Iii";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::UltraSPARC_3:
+        processor_family = "UltraSPARC 3";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::UltraSPARC_3i:
+        processor_family = "UltraSPARC 3i";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Motorola_68040_Family:
+        processor_family = "Motorola 68040 Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Motorola_68xxx:
+        processor_family = "Motorola 68xxx";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Motorola_68000:
+        processor_family = "Motorola 68000";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Motorola_68010:
+        processor_family = "Motorola 68010";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Motorola_68020:
+        processor_family = "Motorola 68020";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Motorola_68030:
+        processor_family = "Motorola 68030";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Athlon_X4_QuadCore_Family:
+        processor_family = "AMD Athlon X4 Quad-Core Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Opteron_X1000_Series:
+        processor_family = "AMD Opteron X1000 Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Opteron_X2000_Series_APU:
+        processor_family = "AMD Opteron X2000 Series APU";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Opteron_A_Series:
+        processor_family = "AMD Opteron A Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Opteron_X3000_Series_APU:
+        processor_family = "AMD Opteron X3000 Series APU";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Zen_Family:
+        processor_family = "AMD Zen Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Hobbit_Family:
+        processor_family = "Hobbit Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Crusoe_TM5000_Family:
+        processor_family = "Crusoe TM5000 Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Crusoe_TM3000_Family:
+        processor_family = "Crusoe TM3000 Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Efficeon_TM8000_Family:
+        processor_family = "Efficeon TM8000 Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Weitek:
+        processor_family = "Weitek";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Itanium:
+        processor_family = "Itanium";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Athlon_64:
+        processor_family = "AMD Athlon 64";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Operton_Family:
+        processor_family = "AMD Operton Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Sempron_Family:
+        processor_family = "AMD Sempron Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Turion_64_Mobile:
+        processor_family = "AMD Turion 64 Mobile";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::DualCore_AMD_Opteron_Family:
+        processor_family = "Dual-Core AMD Opteron Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Athlon_64_X2_DualCore_Family:
+        processor_family = "AMD Athlon 64 X2 Dual-Core Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Turion_64_X2_Mobile_Technology:
+        processor_family = "AMD Turion 64 X2 Mobile Technology";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::QuadCore_AMD_Opteron_Family:
+        processor_family = "Quad-Core AMD Opteron Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Third_Generation_AMD_Opteron_Family:
+        processor_family = "Third Generation AMD Opteron Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Phenom_FX_QuadCore_Family:
+        processor_family = "AMD Phenom FX Quad-Core Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Phenom_X4_QuadCore_Family:
+        processor_family = "AMD Phenom X4 Quad-Core Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Phenom_X2_QuadCore_Family:
+        processor_family = "AMD Phenom X2 Quad-Core Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Athlon_X2_DualCore_Family:
+        processor_family = "AMD Athlon X2 Dual-Core Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::PA_RISC_Family:
+        processor_family = "PA RISC Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::PA_RISC_8500:
+        processor_family = "PA RISC 8500";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::PA_RISC_8000:
+        processor_family = "PA RISC 8000";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::PA_RISC_7300LC:
+        processor_family = "PA RISC 7300LC";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::PA_RISC_7200:
+        processor_family = "PA RISC 7200";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::PA_RISC_7100LC:
+        processor_family = "PA RISC 7100LC";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::PA_RISC_7100:
+        processor_family = "PA RISC 7100";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::V30_Family:
+        processor_family = "V30 Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::QuadCore_Intel_Xeon_3200_Series:
+        processor_family = "Quad-Core Intel Xeon 3200 Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::DualCore_Intel_Xeon_3000_Series:
+        processor_family = "Dual-Core Intel Xeon 3000 Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::QuadCore_Intel_Xeon_5300_Series:
+        processor_family = "Quad-Core Intel Xeon 5300 Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::DualCore_Intel_Xeon_5100_Series:
+        processor_family = "Dual-Core Intel Xeon 5100 Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::DualCore_Intel_Xeon_5000_Series:
+        processor_family = "Dual-Core Intel Xeon 5000 Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::DualCore_Intel_Xeon_LV:
+        processor_family = "Dual-Core Intel Xeon LV";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::DualCore_Intel_Xeon_ULV:
+        processor_family = "Dual-Core Intel Xeon ULV";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::DualCore_Intel_Xeon_7100_Series:
+        processor_family = "Dual-Core Intel Xeon 7100 Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::QuadCore_Intel_Xeon_5400_Series:
+        processor_family = "Quad-Core Intel Xeon 5400 Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::QuadCore_Intel_Xeon:
+        processor_family = "Quad-Core Intel Xeon";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::DualCore_Intel_Xeon_5200_Series:
+        processor_family = "Dual-Core Intel Xeon 5200 Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::DualCore_Intel_Xeon_7200_Series:
+        processor_family = "Dual-Core Intel Xeon 7200 Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::QuadCore_Intel_Xeon_7300_Series:
+        processor_family = "Quad-Core Intel Xeon 7300 Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::QuadCore_Intel_Xeon_7400_Series:
+        processor_family = "Quad-Core Intel Xeon 7400 Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::MultiCore_Intel_Xeon_7400_Series:
+        processor_family = "MultiCore Intel Xeon 7400 Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Pentium_3_Xeon:
+        processor_family = "Intel Pentium 3 Xeon";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Pentium_3_SpeedStep:
+        processor_family = "Intel Pentium 3 SpeedStep";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Pentium_4:
+        processor_family = "Intel Pentium 4";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Xeon:
+        processor_family = "Intel Xeon";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AS400_Family:
+        processor_family = "AS400 Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Xeon_MP:
+        processor_family = "Intel Xeon MP";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Athlon_XP_Family:
+        processor_family = "AMD Athlon XP Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Athlon_MP_Family:
+        processor_family = "AMD Athlon MP Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Itanium_2:
+        processor_family = "Intel Itanium 2";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Pentium_M:
+        processor_family = "Intel Pentium M";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Celeron_D:
+        processor_family = "Intel Celeron D";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Pentium_D:
+        processor_family = "Intel Pentium D";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Pentium_Extreme_Edition:
+        processor_family = "Intel Pentium Extreme Edition";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Core_Solo:
+        processor_family = "Intel Core Solo";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Reserved:
+        processor_family = "Reserved";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Core_2_Duo:
+        processor_family = "Intel Core 2 Duo";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Core_2_Solo:
+        processor_family = "Intel Core 2 Solo";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Core_2_Extreme:
+        processor_family = "Intel Core 2 Extreme";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Core_2_Quad:
+        processor_family = "Intel Core 2 Quad";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Core_2_Extreme_Mobile:
+        processor_family = "Intel Core 2 Extreme Mobile";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Core_2_Duo_Mobile:
+        processor_family = "Intel Core 2 Duo Mobile";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Core_2_Solo_Mobile:
+        processor_family = "Intel Core 2 Solo Mobile";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Core_i7:
+        processor_family = "Intel Core i7";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::DualCore_Intel_Celeron:
+        processor_family = "Dual-Core Intel Celeron";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::IBM390_Family:
+        processor_family = "IBM390 Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::G4:
+        processor_family = "G4";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::G5:
+        processor_family = "G5";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::ESA_390_G6:
+        processor_family = "ESA 390 G6";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::z_Architecture_base:
+        processor_family = "z/Architecture base";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Core_i5:
+        processor_family = "Intel Core i5";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Core_i3:
+        processor_family = "Intel Core i3";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Intel_Core_i9:
+        processor_family = "Intel Core i9";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::VIA_C7_M_Family:
+        processor_family = "VIA C7 M Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::VIA_C7_D_Family:
+        processor_family = "VIA C7 D Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::VIA_C7_Family:
+        processor_family = "VIA C7 Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::VIA_Eden_Family:
+        processor_family = "VIA Eden Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::MultiCore_Intel_Xeon:
+        processor_family = "MultiCore Intel Xeon";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::DualCore_Intel_Xeon_3xxx_Series:
+        processor_family = "Dual-Core Intel Xeon 3xxx Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::QuadCore_Intel_Xeon_3xxx_Series:
+        processor_family = "Quad-Core Intel Xeon 3xxx Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::VIA_Nano_Family:
+        processor_family = "VIA Nano Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::DualCore_Intel_Xeon_5xxx_Series:
+        processor_family = "Dual-Core Intel Xeon 5xxx Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::QuadCore_Intel_Xeon_5xxx_Series:
+        processor_family = "Quad-Core Intel Xeon 5xxx Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::DualCore_Intel_Xeon_7xxx_Series:
+        processor_family = "Dual-Core Intel Xeon 7xxx Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::QuadCore_Intel_Xeon_7xxx_Series:
+        processor_family = "Quad-Core Intel Xeon 7xxx Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::MultiCore_Intel_Xeon_7xxx_Series:
+        processor_family = "MultiCore Intel Xeon 7xxx Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::MultiCore_Intel_Xeon_3400_Series:
+        processor_family = "MultiCore Intel Xeon 3400 Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Opteron_3000_Series:
+        processor_family = "AMD Opteron 3000 Series";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Sempron_2:
+        processor_family = "AMD Sempron 2";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Embedded_AMD_Opteron_QuadCore_Family:
+        processor_family = "Embedded AMD Opteron Quad-Core Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Phenom_TripleCore_Family:
+        processor_family = "AMD Phenom Triple-Core Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Turion_Ultra_DualCore_Mobile_Family:
+        processor_family = "AMD Turion Ultra Dual-Core Mobile Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Turion_DualCore_Mobile_Family:
+        processor_family = "AMD Turion Dual-Core Mobile Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Athlon_DualCore_Family:
+        processor_family = "AMD Athlon Dual-Core Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Sempron_SI_Family:
+        processor_family = "AMD Sempron SI Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Phenom_2_Family:
+        processor_family = "AMD Phenom 2 Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Athlon_2_Family:
+        processor_family = "AMD Athlon 2 Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::SixCore_AMD_Opteron_Family:
+        processor_family = "SixCore AMD Opteron Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::AMD_Sempron_M_Family:
+        processor_family = "AMD Sempron M Family";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::i860:
+        processor_family = "i860";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::i960:
+        processor_family = "i960";
+        break;
+    case (u16)SMBIOS::ProcessorFamily::ProcessorFamily2Indicator: // Indicator to obtain the processor family from the Processor Family 2 field
+        switch (table.processor_family2) {
+        case (u16)SMBIOS::ProcessorFamily::ARMv7:
+            processor_family = "ARMv7";
+            break;
+        case (u16)SMBIOS::ProcessorFamily::ARMv8:
+            processor_family = "ARMv8";
+            break;
+        case (u16)SMBIOS::ProcessorFamily::SH_3:
+            processor_family = "SH-3";
+            break;
+        case (u16)SMBIOS::ProcessorFamily::SH_4:
+            processor_family = "SH-4";
+            break;
+        case (u16)SMBIOS::ProcessorFamily::ARM:
+            processor_family = "ARM";
+            break;
+        case (u16)SMBIOS::ProcessorFamily::StrongARM:
+            processor_family = "StrongARM";
+            break;
+        case (u16)SMBIOS::ProcessorFamily::Cyrix_6x86:
+            processor_family = "Cyrix 6x86";
+            break;
+        case (u16)SMBIOS::ProcessorFamily::MediaGX:
+            processor_family = "MediaGX";
+            break;
+        case (u16)SMBIOS::ProcessorFamily::MII:
+            processor_family = "MII";
+            break;
+        case (u16)SMBIOS::ProcessorFamily::WinChip:
+            processor_family = "WinChip";
+            break;
+        case (u16)SMBIOS::ProcessorFamily::DSP:
+            processor_family = "DSP";
+            break;
+        case (u16)SMBIOS::ProcessorFamily::VideoProcessor:
+            processor_family = "Video Processor";
+            break;
+        case (u16)SMBIOS::ProcessorFamily::RISC_V_RV32:
+            processor_family = "RISC-V RV32";
+            break;
+        case (u16)SMBIOS::ProcessorFamily::RISC_V_RV64:
+            processor_family = "RISC-V RV64";
+            break;
+        }
+        break;
+    case (u16)SMBIOS::ProcessorFamily::Reserved2:
+        processor_family = "Unknown";
+        break;
+    default:
+        processor_family = "Unknown";
+        break;
+    }
+    tab() << "Processor Family: " << processor_family;
+    auto processor_manufacturer_string = SMBIOS::Parsing::try_to_acquire_smbios_string((const SMBIOS::TableHeader&)table, table.processor_manufacturer_str_number);
+    tab() << "Processor Manufacturer: " << (processor_manufacturer_string.has_value() ? processor_manufacturer_string.value() : "Unknown");
+    tab() << "Processor ID: 0x" << String::format("%x", table.processor_id);
+    auto processor_version_string = SMBIOS::Parsing::try_to_acquire_smbios_string((const SMBIOS::TableHeader&)table, table.processor_version_str_number);
+    tab() << "Processor Version: " << (processor_version_string.has_value() ? processor_version_string.value() : "Unknown");
+
+    switch (table.voltage) {
+    case (1 << 0):
+        tab() << "Processor Voltage: 5V";
+        __attribute__((fallthrough));
+    case (1 << 1):
+        tab() << "Processor Voltage: 3.3V";
+        __attribute__((fallthrough));
+    case (1 << 2):
+        tab() << "Processor Voltage: 2.9V";
+        __attribute__((fallthrough));
+    default:
+        tab() << "Processor Voltage: Unknown";
+        break;
+    }
+    tab() << "External Clock Frequency: " << ((table.external_clock > 0) ? String::format("%d MHz", table.external_clock).characters() : "Unknown");
+    tab() << "Max Speed: " << ((table.max_speed > 0) ? String::format("%d MHz", table.max_speed).characters() : "Unknown");
+    tab() << "Current Speed: " << ((table.current_speed > 0) ? String::format("%d MHz", table.current_speed).characters() : "Unknown");
+    tab() << "Status:";
+    tab() << tab() << ((table.status & (1 << 6)) ? "CPU Socket Populated" : "CPU Socket Unpopulated");
+    String cpu_status;
+    switch (table.status & 0b111) {
+    case 0:
+        cpu_status = "Unknown";
+        break;
+    case 1:
+        cpu_status = "CPU Enabled";
+        break;
+    case 2:
+        cpu_status = "CPU Disabled by User through BIOS Setup";
+        break;
+    case 3:
+        cpu_status = "CPU Disabled By BIOS (POST Error)";
+        break;
+    case 4:
+        cpu_status = "CPU is Idle, waiting to be enabled";
+        break;
+    case 7:
+        cpu_status = "Other";
+        break;
+    default:
+        cpu_status = "Unknown";
+        break;
+    }
+    tab() << tab() << "CPU Status: " << cpu_status;
+
+    String processor_upgrade;
+    switch (table.processor_upgrade) {
+    case (u16)SMBIOS::ProcessorUpgrade::Other:
+        processor_upgrade = "Other";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Unknown:
+        processor_upgrade = "Unknown";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Daughter_Board:
+        processor_upgrade = "Daughter Board";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::ZIF_Socket:
+        processor_upgrade = "ZIF Socket";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Replaceable_Piggy_Back:
+        processor_upgrade = "Replaceable Piggy Back";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::None:
+        processor_upgrade = "None";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::LIF_Sokcet:
+        processor_upgrade = "LIF Sokcet";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Slot_1:
+        processor_upgrade = "Slot 1";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Slot_2:
+        processor_upgrade = "Slot 2";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_370_pin:
+        processor_upgrade = "Socket 370 pin";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Slot_A:
+        processor_upgrade = "Slot A";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Slot_M:
+        processor_upgrade = "Slot M";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_423:
+        processor_upgrade = "Socket 423";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_A_462:
+        processor_upgrade = "Socket A 462";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_478:
+        processor_upgrade = "Socket 478";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_754:
+        processor_upgrade = "Socket 754";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_940:
+        processor_upgrade = "Socket 940";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_939:
+        processor_upgrade = "Socket 939";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_mPGA604:
+        processor_upgrade = "Socket mPGA604";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_LGA771:
+        processor_upgrade = "Socket LGA771";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_LGA775:
+        processor_upgrade = "Socket LGA775";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_S1:
+        processor_upgrade = "Socket S1";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_AM2:
+        processor_upgrade = "Socket AM2";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_F_1207:
+        processor_upgrade = "Socket F 1207";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_LGA1366:
+        processor_upgrade = "Socket LGA1366";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_G34:
+        processor_upgrade = "Socket G34";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_AM3:
+        processor_upgrade = "Socket AM3";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_C32:
+        processor_upgrade = "Socket C32";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_LGA1156:
+        processor_upgrade = "Socket LGA1156";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_LGA1567:
+        processor_upgrade = "Socket LGA1567";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_PGA988A:
+        processor_upgrade = "Socket PGA988A";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_BGA1288:
+        processor_upgrade = "Socket BGA1288";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_rPGA988B:
+        processor_upgrade = "Socket rPGA988B";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_BGA1023:
+        processor_upgrade = "Socket BGA1023";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_BGA1224:
+        processor_upgrade = "Socket BGA1224";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_LGA1155:
+        processor_upgrade = "Socket LGA1155";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_LGA1356:
+        processor_upgrade = "Socket LGA1356";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_LGA2011:
+        processor_upgrade = "Socket LGA2011";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_FS1:
+        processor_upgrade = "Socket FS1";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_FS2:
+        processor_upgrade = "Socket FS2";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_FM1:
+        processor_upgrade = "Socket FM1";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_FM2:
+        processor_upgrade = "Socket FM2";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_LGA2011_3:
+        processor_upgrade = "Socket LGA2011 3";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_LGA1356_3:
+        processor_upgrade = "Socket LGA1356 3";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_LGA1150:
+        processor_upgrade = "Socket LGA1150";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_BGA1168:
+        processor_upgrade = "Socket BGA1168";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_BGA1234:
+        processor_upgrade = "Socket BGA1234";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_BGA1364:
+        processor_upgrade = "Socket BGA1364";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_AM4:
+        processor_upgrade = "Socket AM4";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_LGA1151:
+        processor_upgrade = "Socket LGA1151";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_BGA1356:
+        processor_upgrade = "Socket BGA1356";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_BGA1440:
+        processor_upgrade = "Socket BGA1440";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_BGA1515:
+        processor_upgrade = "Socket BGA1515";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_LGA3647_1:
+        processor_upgrade = "ocket LGA3647 1";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_SP3:
+        processor_upgrade = "Socket SP3";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_SP3r2:
+        processor_upgrade = "Socket SP3r2";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_LGA2066:
+        processor_upgrade = "Socket LGA2066";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_BGA1392:
+        processor_upgrade = "Socket BGA1392";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_BGA1510:
+        processor_upgrade = "Socket BGA1510";
+        break;
+    case (u16)SMBIOS::ProcessorUpgrade::Socket_BGA1528:
+        processor_upgrade = "Socket BGA1528";
+        break;
+    default:
+        processor_upgrade = "Unknown";
+        break;
+    }
+    tab() << "Processor Upgrade: " << processor_upgrade;
+
+    tab() << "L1 Cache Handle: 0x" << String::format("%x", table.l1_cache_handle);
+    if (table.h.length >= 0x1C) {
+        tab() << "L2 Cache Handle: 0x" << String::format("%x", table.l2_cache_handle);
+    } else {
+        printf("\n");
+        return;
+    }
+
+    if (table.h.length >= 0x1E) {
+        tab() << "L3 Cache Handle: 0x" << String::format("%x", table.l3_cache_handle);
+    } else {
+        printf("\n");
+        return;
+    }
+
+    if (table.h.length >= 0x20) {
+        auto serial_number_string = SMBIOS::Parsing::try_to_acquire_smbios_string((const SMBIOS::TableHeader&)table, table.serial_number_str_number);
+        tab() << "Serial Number: " << (serial_number_string.has_value() ? serial_number_string.value() : "Unknown");
+    } else {
+        printf("\n");
+        return;
+    }
+
+    if (table.h.length >= 0x21) {
+        auto asset_tag_number_string = SMBIOS::Parsing::try_to_acquire_smbios_string((const SMBIOS::TableHeader&)table, table.asset_tag_str_number);
+        tab() << "Asset Tag: " << (asset_tag_number_string.has_value() ? asset_tag_number_string.value() : "Unknown");
+    } else {
+        printf("\n");
+        return;
+    }
+
+    if (table.h.length >= 0x22) {
+        auto part_number_string = SMBIOS::Parsing::try_to_acquire_smbios_string((const SMBIOS::TableHeader&)table, table.part_number_str_number);
+        tab() << "Part Number: " << (part_number_string.has_value() ? part_number_string.value() : "Unknown");
+    } else {
+        printf("\n");
+        return;
+    }
+
+    if (table.h.length >= 0x23) {
+        String core_count;
+        switch (table.core_count) {
+        case 0:
+            core_count = "Unknown";
+            break;
+        case 0xFF: {
+            if (table.h.length >= 0x2A) {
+                switch (table.core_count2) {
+                case 0xFFFF:
+                case 0:
+                    core_count = "Unknown";
+                    break;
+                default:
+                    core_count = String::format("%u", table.core_count2);
+                }
+            } else {
+                core_count = "Unknown";
+            }
+            break;
+        }
+        default:
+            core_count = String::format("%u", table.core_count);
+            break;
+        }
+        tab() << "Core Count: " << core_count;
+    } else {
+        printf("\n");
+        return;
+    }
+
+    if (table.h.length >= 0x24) {
+        String core_enabled;
+        switch (table.core_enabled) {
+        case 0:
+            core_enabled = "Unknown";
+            break;
+        case 0xFF: {
+            if (table.h.length >= 0x2C) {
+                switch (table.core_enabled2) {
+                case 0xFFFF:
+                case 0:
+                    core_enabled = "Unknown";
+                    break;
+                default:
+                    core_enabled = String::format("%u", table.core_enabled2);
+                }
+            } else {
+                core_enabled = "Unknown";
+            }
+            break;
+        }
+        default:
+            core_enabled = String::format("%u", table.core_enabled);
+            break;
+        }
+        tab() << "Core Enabled Count: " << core_enabled;
+    } else {
+        printf("\n");
+        return;
+    }
+
+    if (table.h.length >= 0x25) {
+        String thread_count;
+        switch (table.thread_count) {
+        case 0:
+            thread_count = "Unknown";
+            break;
+        case 0xFF: {
+            if (table.h.length >= 0x2E) {
+                switch (table.thread_count2) {
+                case 0xFFFF:
+                case 0:
+                    thread_count = "Unknown";
+                    break;
+                default:
+                    thread_count = String::format("%u", table.thread_count2);
+                }
+            } else {
+                thread_count = "Unknown";
+            }
+            break;
+        }
+        default:
+            thread_count = String::format("%u", table.thread_count);
+            break;
+        }
+        tab() << "Thread Count: " << thread_count;
+    } else {
+        printf("\n");
+        return;
+    }
+    if (table.h.length >= 0x26) {
+        tab() << "Processor Characteristics:";
+        switch (table.processor_characteristics) {
+        case (u16)SMBIOS::ProcessorCharacteristics::Unknown:
+            tab() << tab() << "Unknown";
+            break;
+        case (u16)SMBIOS::ProcessorCharacteristics::Capable_64_Bit:
+            tab() << tab() << "64-bit Capable";
+            __attribute__((fallthrough));
+        case (u16)SMBIOS::ProcessorCharacteristics::Multi_Core:
+            tab() << tab() << "Multi-Core";
+            __attribute__((fallthrough));
+        case (u16)SMBIOS::ProcessorCharacteristics::Hardware_Thread:
+            tab() << tab() << "Hardware Thread";
+            __attribute__((fallthrough));
+        case (u16)SMBIOS::ProcessorCharacteristics::Enhanced_Virtualization:
+            tab() << tab() << "Enhanced Virtualization";
+            __attribute__((fallthrough));
+        case (u16)SMBIOS::ProcessorCharacteristics::Power_Performance_Control:
+            tab() << tab() << "Power/Performance Control";
+            __attribute__((fallthrough));
+        case (u16)SMBIOS::ProcessorCharacteristics::Capable_128_Bit:
+            tab() << tab() << "128-bit Capable";
+            __attribute__((fallthrough));
+        default:
+            tab() << tab() << "Unknown";
+            break;
+        }
+    }
+
+    printf("\n");
+}
+
 bool parse_data(ByteStream data)
 {
     size_t remaining_table_length = smbios_data_payload_size;
@@ -965,6 +2060,9 @@ bool parse_data(ByteStream data)
             break;
         case (u8)SMBIOS::TableType::SysEnclosure:
             parse_table_type3((SMBIOS::SysEnclosure&)table);
+            break;
+        case (u8)SMBIOS::TableType::ProcessorInfo:
+            parse_table_type4((SMBIOS::ProcessorInfo&)table);
             break;
         default:
             printf("\n");
