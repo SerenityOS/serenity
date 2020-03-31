@@ -28,6 +28,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
+#include <sys/uio.h>
 #include <unistd.h>
 
 namespace Line {
@@ -250,7 +251,7 @@ String Editor::get_line(const String& prompt)
                     m_state = InputState::ExpectTerminator;
                     continue;
                 default:
-                    dbgprintf("Shell: Unhandled final: %b (%c)\n", ch, ch);
+                    dbgprintf("Shell: Unhandled final: %02x (%c)\n", ch, ch);
                     m_state = InputState::Free;
                     continue;
                 }
@@ -323,11 +324,16 @@ String Editor::get_line(const String& prompt)
                     }
 
                     putchar('\n');
-                    write(STDOUT_FILENO, prompt.characters(), prompt.length());
-                    write(STDOUT_FILENO, m_buffer.data(), m_cursor);
-                    // Prevent not printing characters in case the user has moved the cursor and then pressed tab
-                    write(STDOUT_FILENO, m_buffer.data() + m_cursor, m_buffer.size() - m_cursor);
-                    m_cursor = m_buffer.size(); // bash doesn't do this, but it makes a little bit more sense
+                    struct iovec iov[] = {
+                        { const_cast<char*>(prompt.characters()), prompt.length() },
+                        { m_buffer.data(), m_cursor },
+                        { m_buffer.data() + m_cursor, m_buffer.size() - m_cursor }
+                    };
+                    if (writev(STDOUT_FILENO, iov, 3)) {
+                        perror("writev");
+                        ASSERT_NOT_REACHED();
+                    }
+                    m_cursor = m_buffer.size();
                 }
 
                 suggestions.clear_with_capacity();
