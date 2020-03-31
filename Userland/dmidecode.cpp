@@ -2040,6 +2040,229 @@ void parse_table_type4(const SMBIOS::ProcessorInfo& table)
     printf("\n");
 }
 
+String parse_sram_type(u8 sram_type_value)
+{
+    String sram_type;
+    switch (sram_type_value) {
+    case (u16)SMBIOS::SRAMType::Other:
+        sram_type = "Other";
+        break;
+    case (u16)SMBIOS::SRAMType::Unknown:
+        sram_type = "Unknown";
+        break;
+    case (u16)SMBIOS::SRAMType::Non_Burst:
+        sram_type = "Non-Burst";
+        break;
+    case (u16)SMBIOS::SRAMType::Burst:
+        sram_type = "Burst";
+        break;
+    case (u16)SMBIOS::SRAMType::Pipeline_Burst:
+        sram_type = "Pipeline Burst";
+        break;
+    case (u16)SMBIOS::SRAMType::Synchronous:
+        sram_type = "Synchronous";
+        break;
+    case (u16)SMBIOS::SRAMType::Asynchronous:
+        sram_type = "Asynchronous";
+        break;
+    default:
+        sram_type = "Unknown";
+        break;
+    }
+    return sram_type;
+}
+
+void parse_table_type7(const SMBIOS::CacheInfo& table)
+{
+    ASSERT(table.h.type == (u8)SMBIOS::TableType::CacheInfo);
+    ASSERT(table.h.length >= 0xF);
+    title() << "Cache Information";
+
+    auto socket_designation_string = SMBIOS::Parsing::try_to_acquire_smbios_string((const SMBIOS::TableHeader&)table, table.socket_designation_str_number);
+    tab() << "Socket Designation: " << (socket_designation_string.has_value() ? socket_designation_string.value() : "Unknown");
+
+    tab() << "Cache Configuration:";
+
+    String operational_mode;
+    switch ((table.cache_config >> 8) & 0b11) {
+    case 0:
+        operational_mode = "Write Through";
+        break;
+    case 1:
+        operational_mode = "Write Back";
+        break;
+    case 2:
+        operational_mode = "Varies with Memory Address";
+        break;
+    case 3:
+        operational_mode = "Unknown";
+        break;
+    default:
+        operational_mode = "Unknown";
+        break;
+    }
+    tab() << tab() << "Operational Mode: " << operational_mode;
+    tab() << tab() << ((table.cache_config & (1 << 7)) ? "Enabled" : "Disabled");
+    String location;
+    switch ((table.cache_config >> 8) & 0b11) {
+    case 0:
+        location = "Internal";
+        break;
+    case 1:
+        location = "External";
+        break;
+    case 2:
+        location = "Reserved";
+        break;
+    case 3:
+        location = "Unknown";
+        break;
+    default:
+        location = "Unknown";
+        break;
+    }
+    tab() << tab() << "Location, relative to the CPU module: " << location;
+    tab() << tab() << ((table.cache_config & (1 << 3)) ? "Socketed" : "Not Socketed");
+    tab() << tab() << "Cache Level: L" << ((table.cache_config & 0b111) + 1);
+
+    if ((((table.max_cache_size & 0x7fff) ^ 0x7fff) == 0) && table.h.length >= 0x13) {
+        tab() << "Maximum Cache Size: " << table.max_cache_size2 * ((table.max_cache_size2 & (1 << 31)) ? (64 * KB) : (1 * KB));
+    } else {
+        tab() << "Maximum Cache Size: " << table.max_cache_size * ((table.max_cache_size & (1 << 15)) ? (64 * KB) : (1 * KB));
+    }
+
+    if (table.installed_size == 0) {
+        tab() << "Installed Size: 0";
+    } else {
+        if ((((table.installed_size & 0x7fff) ^ 0x7fff) == 0) && table.h.length >= 0x17) {
+            tab() << "Installed Size: " << table.installed_size2 * ((table.installed_size2 & (1 << 31)) ? (64 * KB) : (1 * KB));
+        } else {
+            tab() << "Installed Size: " << table.installed_size * ((table.installed_size & (1 << 15)) ? (64 * KB) : (1 * KB));
+        }
+    }
+
+    tab() << "Supported SRAM Type: " << parse_sram_type(table.supported_sram_type);
+    tab() << "Current SRAM Type: " << parse_sram_type(table.current_sram_type);
+
+    if (table.cache_speed == 0) {
+        tab() << "Cache Speed: Unknown";
+    } else {
+        tab() << "Cache Speed: " << table.cache_speed << " nanoseconds";
+    }
+
+    if (table.h.length >= 0x10) {
+        String error_correction_type;
+        switch (table.error_correction_type) {
+        case (u16)SMBIOS::ErrorCorrectionType::Other:
+            error_correction_type = "Other";
+            break;
+        case (u16)SMBIOS::ErrorCorrectionType::Unknown:
+            error_correction_type = "Unknown";
+            break;
+        case (u16)SMBIOS::ErrorCorrectionType::None:
+            error_correction_type = "None";
+            break;
+        case (u16)SMBIOS::ErrorCorrectionType::Parity:
+            error_correction_type = "Parity";
+            break;
+        case (u16)SMBIOS::ErrorCorrectionType::Single_Bit_ECC:
+            error_correction_type = "Single-Bit ECC";
+            break;
+        case (u16)SMBIOS::ErrorCorrectionType::Multi_Bit_ECC:
+            error_correction_type = "Multi-Bit ECC";
+            break;
+        default:
+            error_correction_type = "Unknown";
+            break;
+        }
+        tab() << "Error Correction Type: " << error_correction_type;
+    } else {
+        printf("\n");
+        return;
+    }
+
+    if (table.h.length >= 0x11) {
+        String system_cache_type;
+        switch (table.system_cache_type) {
+        case (u16)SMBIOS::SystemCacheType::Other:
+            system_cache_type = "Other";
+            break;
+        case (u16)SMBIOS::SystemCacheType::Unknown:
+            system_cache_type = "Unknown";
+            break;
+        case (u16)SMBIOS::SystemCacheType::Instruction:
+            system_cache_type = "Instruction";
+            break;
+        case (u16)SMBIOS::SystemCacheType::Data:
+            system_cache_type = "Data";
+            break;
+        case (u16)SMBIOS::SystemCacheType::Unified:
+            system_cache_type = "Unified";
+            break;
+        default:
+            system_cache_type = "Unknown";
+            break;
+        }
+        tab() << "System Cache Type: " << system_cache_type;
+    } else {
+        printf("\n");
+        return;
+    }
+
+    String associativity;
+    switch (table.system_cache_type) {
+    case (u16)SMBIOS::Associativity::Other:
+        associativity = "Other";
+        break;
+    case (u16)SMBIOS::Associativity::Unknown:
+        associativity = "Unknown";
+        break;
+    case (u16)SMBIOS::Associativity::DirectMapped:
+        associativity = "Direct Mapped";
+        break;
+    case (u16)SMBIOS::Associativity::Set_Associative_2_way:
+        associativity = "2-way Set-Associative";
+        break;
+    case (u16)SMBIOS::Associativity::Set_Associative_4_way:
+        associativity = "4-way Set-Associative";
+        break;
+    case (u16)SMBIOS::Associativity::Fully_Associative:
+        associativity = "Fully Associative";
+        break;
+    case (u16)SMBIOS::Associativity::Set_Associative_8_way:
+        associativity = "8-way Set-Associative";
+        break;
+    case (u16)SMBIOS::Associativity::Set_Associative_16_way:
+        associativity = "16-way Set-Associative";
+        break;
+    case (u16)SMBIOS::Associativity::Set_Associative_12_way:
+        associativity = "12-way Set-Associative";
+        break;
+    case (u16)SMBIOS::Associativity::Set_Associative_24_way:
+        associativity = "24-way Set-Associative";
+        break;
+    case (u16)SMBIOS::Associativity::Set_Associative_32_way:
+        associativity = "32-way Set-Associative";
+        break;
+    case (u16)SMBIOS::Associativity::Set_Associative_48_way:
+        associativity = "48-way Set-Associative";
+        break;
+    case (u16)SMBIOS::Associativity::Set_Associative_64_way:
+        associativity = "64-way Set-Associative";
+        break;
+    case (u16)SMBIOS::Associativity::Set_Associative_20_way:
+        associativity = "20-way Set-Associative";
+        break;
+    default:
+        associativity = "Unknown";
+        break;
+    }
+    tab() << "Associativity: " << associativity;
+
+    printf("\n");
+    return;
+}
+
 bool parse_data(ByteStream data)
 {
     size_t remaining_table_length = smbios_data_payload_size;
@@ -2063,6 +2286,9 @@ bool parse_data(ByteStream data)
             break;
         case (u8)SMBIOS::TableType::ProcessorInfo:
             parse_table_type4((SMBIOS::ProcessorInfo&)table);
+            break;
+        case (u8)SMBIOS::TableType::CacheInfo:
+            parse_table_type7((SMBIOS::CacheInfo&)table);
             break;
         default:
             printf("\n");
