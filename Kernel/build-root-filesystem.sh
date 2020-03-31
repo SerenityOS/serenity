@@ -92,12 +92,15 @@ chown $window_uid:$window_gid mnt/etc/WindowServer/WindowServer.ini
 echo "done"
 
 printf "installing users... "
+mkdir -p mnt/root
 mkdir -p mnt/home/anon
 mkdir -p mnt/home/nona
 cp ../ReadMe.md mnt/home/anon/
 cp -r ../Libraries/LibJS/Tests mnt/home/anon/js-tests
+chmod 700 mnt/root
 chmod 700 mnt/home/anon
 chmod 700 mnt/home/nona
+chown -R 0:0 mnt/root
 chown -R 100:100 mnt/home/anon
 chown -R 200:200 mnt/home/nona
 echo "done"
