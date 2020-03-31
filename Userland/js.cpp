@@ -164,7 +164,7 @@ void repl(JS::Interpreter& interpreter)
     while (true) {
         String piece = read_next_piece();
         if (piece.is_empty())
-            break;
+            continue;
 
         auto program = JS::Parser(JS::Lexer(piece)).parse_program();
         if (dump_ast)
