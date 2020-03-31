@@ -32,7 +32,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/File.h>
-#include <LibLineEdit/LineEditor.h>
+#include <LibLine/LineEditor.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <pwd.h>
