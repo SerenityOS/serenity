@@ -464,6 +464,59 @@ void parse_table_type0(const SMBIOS::BIOSInfo& table)
     printf("\n");
 }
 
+void parse_table_type1(const SMBIOS::SysInfo& table)
+{
+    ASSERT(table.h.type == (u8)SMBIOS::TableType::SysInfo);
+
+    title() << "System Information";
+
+    auto manufacturer_string = SMBIOS::Parsing::try_to_acquire_smbios_string((const SMBIOS::TableHeader&)table, table.manufacturer_str_number);
+    tab() << "Manufacturer: " << (manufacturer_string.has_value() ? manufacturer_string.value() : "Unknown");
+    auto product_name_string = SMBIOS::Parsing::try_to_acquire_smbios_string((const SMBIOS::TableHeader&)table, table.product_name_str_number);
+    tab() << "Product Name: " << (product_name_string.has_value() ? product_name_string.value() : "Unknown");
+    auto version_string = SMBIOS::Parsing::try_to_acquire_smbios_string((const SMBIOS::TableHeader&)table, table.version_str_number);
+    tab() << "Version: " << (version_string.has_value() ? version_string.value() : "Unknown");
+    auto serial_number_string = SMBIOS::Parsing::try_to_acquire_smbios_string((const SMBIOS::TableHeader&)table, table.serial_number_str_number);
+    tab() << "Serial Number: " << (serial_number_string.has_value() ? serial_number_string.value() : "Unknown");
+    tab() << "UUID: " << SMBIOS::Parsing::create_uuid(table.uuid[0], table.uuid[1]);
+    String wake_type;
+    switch (table.wake_up_type) {
+    case (u8)SMBIOS::WakeUpType::Other:
+        wake_type = "Other";
+        break;
+    case (u8)SMBIOS::WakeUpType::Unknown:
+        wake_type = "Unknown";
+        break;
+    case (u8)SMBIOS::WakeUpType::APM_TIMER:
+        wake_type = "APM Timer";
+        break;
+    case (u8)SMBIOS::WakeUpType::MODEM_RING:
+        wake_type = "Modem Ring";
+        break;
+    case (u8)SMBIOS::WakeUpType::LAN_REMOTE:
+        wake_type = "LAN Remote";
+        break;
+    case (u8)SMBIOS::WakeUpType::POWER_SWITCH:
+        wake_type = "Power Switch";
+        break;
+    case (u8)SMBIOS::WakeUpType::PCI_PME:
+        wake_type = "PCI PME#";
+        break;
+    case (u8)SMBIOS::WakeUpType::AC_RESTORE:
+        wake_type = "AC Power Restored";
+        break;
+    default:
+        wake_type = "Unknown";
+        break;
+    }
+    tab() << "Wake-up Type: " << wake_type;
+    auto sku_number_string = SMBIOS::Parsing::try_to_acquire_smbios_string((const SMBIOS::TableHeader&)table, table.sku_str_number);
+    tab() << "SKU Number: " << (sku_number_string.has_value() ? sku_number_string.value() : "Unknown");
+    auto family_string = SMBIOS::Parsing::try_to_acquire_smbios_string((const SMBIOS::TableHeader&)table, table.family_str_number);
+    tab() << "Family: " << (family_string.has_value() ? family_string.value() : "Unknown");
+    printf("\n");
+}
+
 bool parse_data(ByteStream data)
 {
     size_t remaining_table_length = smbios_data_payload_size;
@@ -475,6 +528,9 @@ bool parse_data(ByteStream data)
         switch (table.type) {
         case (u8)SMBIOS::TableType::BIOSInfo:
             parse_table_type0((SMBIOS::BIOSInfo&)table);
+            break;
+        case (u8)SMBIOS::TableType::SysInfo:
+            parse_table_type1((SMBIOS::SysInfo&)table);
             break;
         default:
             printf("\n");
