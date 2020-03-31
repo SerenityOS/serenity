@@ -172,10 +172,7 @@ Value DatePrototype::to_string(Interpreter& interpreter)
     auto* this_object = this_date_from_interpreter(interpreter);
     if (!this_object)
         return {};
-    auto string = String::format(
-        "%s %s",
-        this_object->date_string().characters(),
-        this_object->time_string().characters());
+    auto string = this_object->string();
     return js_string(interpreter.heap(), move(string));
 }
 
