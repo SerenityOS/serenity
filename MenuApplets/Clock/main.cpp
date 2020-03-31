@@ -79,6 +79,21 @@ private:
         painter.draw_text(event.rect(), time_text, Gfx::Font::default_font(), Gfx::TextAlignment::Center, palette().window_text());
     }
 
+    virtual void mousedown_event(GUI::MouseEvent& event) override
+    {
+        if (event.button() != GUI::MouseButton::Left)
+            return;
+
+        pid_t pid = fork();
+        if (pid < 0) {
+            perror("fork");
+        } else if (pid == 0) {
+            execl("/bin/Calendar", "Calendar", nullptr);
+            perror("execl");
+            ASSERT_NOT_REACHED();
+        }
+    }
+
     void tick_clock()
     {
         update();
@@ -90,14 +105,14 @@ private:
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio shared_buffer accept rpath unix cpath fattr", nullptr) < 0) {
+    if (pledge("stdio shared_buffer accept rpath unix cpath fattr exec proc", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     GUI::Application app(argc, argv);
 
-    if (pledge("stdio shared_buffer accept rpath", nullptr) < 0) {
+    if (pledge("stdio shared_buffer accept rpath exec proc", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -111,6 +126,11 @@ int main(int argc, char** argv)
     window->show();
 
     if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/bin/Calendar", "x") < 0) {
         perror("unveil");
         return 1;
     }
