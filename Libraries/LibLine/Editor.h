@@ -74,7 +74,7 @@ public:
     void add_to_history(const String&);
     const Vector<String>& history() const { return m_history; }
 
-    void on_char_input(char ch, Function<bool(Editor&)> callback);
+    void register_character_input_callback(char ch, Function<bool(Editor&)> callback);
 
     Function<Vector<String>(const String&)> on_tab_complete_first_token = nullptr;
     Function<Vector<String>(const String&)> on_tab_complete_other_token = nullptr;

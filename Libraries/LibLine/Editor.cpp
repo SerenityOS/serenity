@@ -107,7 +107,7 @@ void Editor::insert(const char ch)
     ++m_cursor;
 }
 
-void Editor::on_char_input(char ch, Function<bool(Editor&)> callback)
+void Editor::register_character_input_callback(char ch, Function<bool(Editor&)> callback)
 {
     if (m_key_callbacks.contains(ch)) {
         dbg() << "Key callback registered twice for " << ch;
