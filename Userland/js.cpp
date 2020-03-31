@@ -33,6 +33,7 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/PrimitiveString.h>
@@ -113,6 +114,11 @@ static void print_function(const JS::Object* function, HashTable<JS::Object*>&)
     printf("\033[34;1m[%s]\033[0m", function->class_name());
 }
 
+static void print_date(const JS::Object* date, HashTable<JS::Object*>&)
+{
+    printf("\033[34;1mDate %s\033[0m", static_cast<const JS::Date*>(date)->string().characters());
+}
+
 void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
 {
     if (value.is_object()) {
@@ -127,12 +133,15 @@ void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
 
     if (value.is_array())
         return print_array(static_cast<const JS::Array*>(value.as_object()), seen_objects);
-
-    if (value.is_object() && value.as_object()->is_function())
-        return print_function(value.as_object(), seen_objects);
-
-    if (value.is_object())
-        return print_object(value.as_object(), seen_objects);
+    
+    if (value.is_object()) {
+        auto* object = value.as_object();
+        if (object->is_function())
+            return print_function(object, seen_objects);
+        if (object->is_date())
+            return print_date(object, seen_objects);
+        return print_object(object, seen_objects);
+    }
 
     if (value.is_string())
         printf("\033[31;1m");
