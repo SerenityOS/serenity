@@ -346,23 +346,51 @@ void HtmlView::load(const URL& url)
     if (on_load_start)
         on_load_start(url);
 
-    ResourceLoader::the().load(url, [this, url](auto data) {
-        if (data.is_null()) {
-            dbg() << "Load failed!";
-            ASSERT_NOT_REACHED();
-        }
+    ResourceLoader::the().load(
+        url,
+        [this, url](auto data) {
+            if (data.is_null()) {
+                load_error_page(url, "No data");
+                return;
+            }
 
-        RefPtr<Document> document;
-        if (url.path().ends_with(".png")) {
-            document = create_image_document(data, url);
-        } else {
-            document = parse_html_document(data, url);
-        }
-        ASSERT(document);
-        set_document(document);
-        if (on_title_change)
-            on_title_change(document->title());
-    });
+            RefPtr<Document> document;
+            if (url.path().ends_with(".png")) {
+                document = create_image_document(data, url);
+            } else {
+                document = parse_html_document(data, url);
+            }
+            ASSERT(document);
+            set_document(document);
+            if (on_title_change)
+                on_title_change(document->title());
+        },
+        [this, url](auto error) {
+            load_error_page(url, error);
+        });
+}
+
+void HtmlView::load_error_page(const URL& failed_url, const String& error)
+{
+    auto error_page_url = "file:///res/html/error.html";
+    ResourceLoader::the().load(
+        error_page_url,
+        [this, failed_url, error](auto data) {
+            ASSERT(!data.is_null());
+            auto html = String::format(
+                String::copy(data).characters(),
+                escape_html_entities(failed_url.to_string()).characters(),
+                escape_html_entities(error).characters());
+            auto document = parse_html_document(html, failed_url);
+            ASSERT(document);
+            set_document(document);
+            if (on_title_change)
+                on_title_change(document->title());
+        },
+        [](auto error) {
+            dbg() << "Failed to load error page: " << error;
+            ASSERT_NOT_REACHED();
+        });
 }
 
 const LayoutDocument* HtmlView::layout_root() const

@@ -41,7 +41,7 @@ class ResourceLoader : public Core::Object {
 public:
     static ResourceLoader& the();
 
-    void load(const URL&, Function<void(const ByteBuffer&)>);
+    void load(const URL&, Function<void(const ByteBuffer&)> success_callback, Function<void(const String&)> error_callback = nullptr);
 
     Function<void()> on_load_counter_change;
 
