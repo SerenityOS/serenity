@@ -517,6 +517,138 @@ void parse_table_type1(const SMBIOS::SysInfo& table)
     printf("\n");
 }
 
+void parse_table_type2(const SMBIOS::ModuleInfo& table)
+{
+    ASSERT(table.h.type == (u8)SMBIOS::TableType::ModuleInfo);
+    ASSERT(table.h.length >= 8); // According to the SMBIOS specification 3.3.0
+
+    title() << "Module Information";
+
+    auto manufacturer_string = SMBIOS::Parsing::try_to_acquire_smbios_string((const SMBIOS::TableHeader&)table, table.manufacturer_str_number);
+    tab() << "Manufacturer: " << (manufacturer_string.has_value() ? manufacturer_string.value() : "Unknown");
+    auto product_string = SMBIOS::Parsing::try_to_acquire_smbios_string((const SMBIOS::TableHeader&)table, table.product_name_str_number);
+    tab() << "Product Name: " << (product_string.has_value() ? product_string.value() : "Unknown");
+    auto version_string = SMBIOS::Parsing::try_to_acquire_smbios_string((const SMBIOS::TableHeader&)table, table.version_str_number);
+    tab() << "Version: " << (version_string.has_value() ? version_string.value() : "Unknown");
+    auto serial_number_string = SMBIOS::Parsing::try_to_acquire_smbios_string((const SMBIOS::TableHeader&)table, table.serial_number_str_number);
+    tab() << "Serial Number: " << (serial_number_string.has_value() ? serial_number_string.value() : "Unknown");
+    auto asset_tag_string = SMBIOS::Parsing::try_to_acquire_smbios_string((const SMBIOS::TableHeader&)table, table.asset_tag_str_number);
+    tab() << "Asset Tag: " << (asset_tag_string.has_value() ? asset_tag_string.value() : "Unknown");
+
+    if (table.h.length >= 9) {
+        if (table.feature_flags & (u8)SMBIOS::ModuleFeatures::HostingBoard) {
+            tab() << tab() << "Board is a hosting board";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "Board is not a hosting board";
+        }
+        if (table.feature_flags & (u8)SMBIOS::ModuleFeatures::RequiresDaughterBoard) {
+            tab() << tab() << "Board requires at least one daughter board or auxiliary card";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "Board does not require a daughter board or auxiliary card";
+        }
+        if (table.feature_flags & (u8)SMBIOS::ModuleFeatures::Removable) {
+            tab() << tab() << "Board is removable";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "Board is not removable";
+        }
+        if (table.feature_flags & (u8)SMBIOS::ModuleFeatures::Replaceable) {
+            tab() << tab() << "Board is replaceable";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "Board is not replaceable";
+        }
+        if (table.feature_flags & (u8)SMBIOS::ModuleFeatures::HotSwappable) {
+            tab() << tab() << "Board is hot swappable";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "Board is not hot swappable";
+        }
+    } else {
+        printf("\n");
+        return;
+    }
+
+    if (table.h.length >= 10) {
+        auto location_in_chassis_string = SMBIOS::Parsing::try_to_acquire_smbios_string((const SMBIOS::TableHeader&)table, table.chassis_location);
+        tab() << "Serial Number: " << (location_in_chassis_string.has_value() ? location_in_chassis_string.value() : "Unknown");
+    } else {
+        printf("\n");
+        return;
+    }
+
+    if (table.h.length >= 11) {
+        tab() << "Chassis Handle: " << table.chassis_handle;
+    } else {
+        printf("\n");
+        return;
+    }
+
+    if (table.h.length >= 12) {
+        String board_type;
+        switch (table.board_type) {
+        case (u16)SMBIOS::BoardType::Unknown:
+            board_type = "Unknown";
+            break;
+        case (u16)SMBIOS::BoardType::Other:
+            board_type = "Other";
+            break;
+        case (u16)SMBIOS::BoardType::Server_Blade:
+            board_type = "Server Blade";
+            break;
+        case (u16)SMBIOS::BoardType::Connectivity_Switch:
+            board_type = "Connectivity Switch";
+            break;
+        case (u16)SMBIOS::BoardType::System_Management_Module:
+            board_type = "System Management Module";
+            break;
+        case (u16)SMBIOS::BoardType::Processor_Module:
+            board_type = "Processor Module";
+            break;
+        case (u16)SMBIOS::BoardType::IO_Module:
+            board_type = "I/O Module";
+            break;
+        case (u16)SMBIOS::BoardType::Memory_Module:
+            board_type = "Memory Module";
+            break;
+        case (u16)SMBIOS::BoardType::Daughter_Board:
+            board_type = "Daughter Board";
+            break;
+        case (u16)SMBIOS::BoardType::Motherboard:
+            board_type = "Motherboard";
+            break;
+        case (u16)SMBIOS::BoardType::Processor_Memory_Module:
+            board_type = "Processor Memory Module";
+            break;
+        case (u16)SMBIOS::BoardType::Processor_IO_Module:
+            board_type = "Processor I/O Module";
+            break;
+        case (u16)SMBIOS::BoardType::Interconnect_Board:
+            board_type = "Interconnect Board";
+            break;
+        default:
+            board_type = "Unknown";
+            break;
+        }
+    } else {
+        printf("\n");
+        return;
+    }
+
+    if (table.h.length >= 13) {
+        tab() << "Contained Object Handles Count: " << table.contained_object_handles_count;
+        if (table.contained_object_handles_count > 0 && is_verbose()) {
+            tab() << "Contained Object Handles: ";
+            for (size_t index = 0; index < table.contained_object_handles_count; index++)
+                tab() << tab() << (index + 1) << ": " << table.contained_object_handles[index];
+        }
+    }
+
+    printf("\n");
+}
+
 bool parse_data(ByteStream data)
 {
     size_t remaining_table_length = smbios_data_payload_size;
@@ -531,6 +663,9 @@ bool parse_data(ByteStream data)
             break;
         case (u8)SMBIOS::TableType::SysInfo:
             parse_table_type1((SMBIOS::SysInfo&)table);
+            break;
+        case (u8)SMBIOS::TableType::ModuleInfo:
+            parse_table_type2((SMBIOS::ModuleInfo&)table);
             break;
         default:
             printf("\n");
