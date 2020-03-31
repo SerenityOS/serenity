@@ -35,11 +35,16 @@ public:
     virtual ~Date() override;
 
     Core::DateTime& datetime() { return m_datetime; }
+    const Core::DateTime& datetime() const { return m_datetime; }
     u16 milliseconds() { return m_milliseconds; }
 
-    String date_string() { return m_datetime.to_string("%a %b %d %Y"); }
+    String date_string() const { return m_datetime.to_string("%a %b %d %Y"); }
     // FIXME: Deal with timezones once SerenityOS has a working tzset(3)
-    String time_string() { return m_datetime.to_string("%T GMT+0000 (UTC)"); }
+    String time_string() const { return m_datetime.to_string("%T GMT+0000 (UTC)"); }
+    String string() const
+    {
+        return String::format("%s %s", date_string().characters(), time_string().characters());
+    }
 
     virtual Value value_of() const override
     {
