@@ -58,6 +58,8 @@ String Value::to_string() const
             return "NaN";
 
         // FIXME: This needs improvement.
+        if ((double)to_i32() == as_double())
+            return String::number(to_i32());
         return String::format("%f", as_double());
     }
 
