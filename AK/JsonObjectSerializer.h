@@ -109,6 +109,12 @@ public:
         m_builder.appendf("%llu", value);
     }
 
+    void add(const StringView& key, double value)
+    {
+        begin_item(key);
+        m_builder.appendf("%f", value);
+    }
+
     JsonArraySerializer<Builder> add_array(const StringView& key)
     {
         begin_item(key);
