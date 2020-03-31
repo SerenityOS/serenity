@@ -4,6 +4,6 @@ OBJS = \
 
 PROGRAM = Shell
 
-LIB_DEPS = Core LineEdit
+LIB_DEPS = Core Line
 
 include ../Makefile.common

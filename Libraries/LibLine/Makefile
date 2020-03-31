@@ -1,6 +1,6 @@
 OBJS = \
 	LineEditor.o
 
-LIBRARY = liblineedit.a
+LIBRARY = libline.a
 
 include ../../Makefile.common
