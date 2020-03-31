@@ -81,8 +81,11 @@ ClientConnection::~ClientConnection()
 {
     MenuManager::the().close_all_menus_from_client({}, *this);
     auto windows = move(m_windows);
-    for (auto& window : windows)
+    for (auto& window : windows) {
         window.value->detach_client({});
+        if (window.value->type() == WindowType::MenuApplet)
+            AppletManager::the().remove_applet(window.value);
+    }
 }
 
 void ClientConnection::die()
