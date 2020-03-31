@@ -37,7 +37,7 @@
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Value.h>
-#include <LibLine/LineEditor.h>
+#include <LibLine/Editor.h>
 #include <stdio.h>
 
 bool dump_ast = false;

@@ -1,5 +1,4 @@
-OBJS = \
-	LineEditor.o
+OBJS = Editor.o
 
 LIBRARY = libline.a
 

@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "LineEditor.h"
+#include "Editor.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
