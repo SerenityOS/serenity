@@ -38,20 +38,22 @@
 #include <sys/stat.h>
 #include <termios.h>
 
-class LineEditor;
+namespace Line {
+
+class Editor;
 
 struct KeyCallback {
-    KeyCallback(Function<bool(LineEditor&)> cb)
+    KeyCallback(Function<bool(Editor&)> cb)
         : callback(move(cb))
     {
     }
-    Function<bool(LineEditor&)> callback;
+    Function<bool(Editor&)> callback;
 };
 
-class LineEditor {
+class Editor {
 public:
-    LineEditor();
-    ~LineEditor();
+    Editor();
+    ~Editor();
 
     void initialize()
     {
@@ -72,7 +74,7 @@ public:
     void add_to_history(const String&);
     const Vector<String>& history() const { return m_history; }
 
-    void on_char_input(char ch, Function<bool(LineEditor&)> callback);
+    void on_char_input(char ch, Function<bool(Editor&)> callback);
 
     Function<Vector<String>(const String&)> on_tab_complete_first_token = nullptr;
     Function<Vector<String>(const String&)> on_tab_complete_other_token = nullptr;
@@ -126,3 +128,5 @@ private:
 
     bool m_initialized = false;
 };
+
+}
