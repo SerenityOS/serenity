@@ -133,6 +133,7 @@ private:
     void send_pong(const String& server);
     void send_privmsg(const String& target, const String&);
     void send_notice(const String& target, const String&);
+    void send_topic(const String& channel_name, const String&);
     void send_whois(const String&);
     void process_line(ByteBuffer&&);
     void handle_join(const Message&);

@@ -312,6 +312,11 @@ void IRCClient::add_server_message(const String& text, Color color)
     m_server_subwindow->did_add_message();
 }
 
+void IRCClient::send_topic(const String& channel_name, const String& text)
+{
+    send(String::format("TOPIC %s :%s\r\n", channel_name.characters(), text.characters()));
+}
+
 void IRCClient::send_privmsg(const String& target, const String& text)
 {
     send(String::format("PRIVMSG %s :%s\r\n", target.characters(), text.characters()));
@@ -674,6 +679,21 @@ void IRCClient::handle_user_command(const String& input)
     if (command == "/PART") {
         if (parts.size() >= 2)
             part_channel(parts[1]);
+        return;
+    }
+    if (command == "/HOP") {
+        if (parts.size() >= 2) {
+            part_channel(parts[1]);
+            join_channel(parts[1]);
+        }
+        return;
+    }
+    if (command == "/TOPIC") {
+        if (parts.size() < 3)
+            return;
+        auto channel = parts[1];
+        auto topic = input.view().substring_view_starting_after_substring(channel);
+        send_topic(channel, topic);
         return;
     }
     if (command == "/QUERY") {
