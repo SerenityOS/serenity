@@ -238,6 +238,8 @@ public:
         return default_value;
     }
 
+    bool equals(const JsonValue& other) const;
+
 private:
     void clear();
     void copy_from(const JsonValue&);
