@@ -649,6 +649,302 @@ void parse_table_type2(const SMBIOS::ModuleInfo& table)
     printf("\n");
 }
 
+void parse_table_type3(const SMBIOS::SysEnclosure& table)
+{
+    ASSERT(table.h.type == (u8)SMBIOS::TableType::SysEnclosure);
+    ASSERT(table.h.length >= 9);
+
+    title() << "System Enclosure";
+
+    auto manufacturer_string = SMBIOS::Parsing::try_to_acquire_smbios_string((const SMBIOS::TableHeader&)table, table.manufacturer_str_number);
+    tab() << "Manufacturer: " << (manufacturer_string.has_value() ? manufacturer_string.value() : "Unknown");
+    String system_enclosure_type;
+    switch (table.type & 0x7f) {
+    case (u16)SMBIOS::SysEnclosureType::Unknown:
+        system_enclosure_type = "Unknown";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Other:
+        system_enclosure_type = "Other";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Desktop:
+        system_enclosure_type = "Desktop";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Low_Profile_Desktop:
+        system_enclosure_type = "Low Profile Desktop";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Pizza_Box:
+        system_enclosure_type = "Pizza Box";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Mini_Tower:
+        system_enclosure_type = "Mini Tower";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Tower:
+        system_enclosure_type = "Tower";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Portable:
+        system_enclosure_type = "Portable";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Laptop:
+        system_enclosure_type = "Laptop";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Notebook:
+        system_enclosure_type = "Notebook";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Hand_Held:
+        system_enclosure_type = "Hand Held";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Docking_Station:
+        system_enclosure_type = "Docking Station";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::AIO:
+        system_enclosure_type = "All in One";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Sub_Notebook:
+        system_enclosure_type = "Sub Notebook";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Space_Saving:
+        system_enclosure_type = "Space-saving";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Lunch_Box:
+        system_enclosure_type = "Lunch Box";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Main_Server_Chassis:
+        system_enclosure_type = "Main Server Chassis";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Expansion_Chassis:
+        system_enclosure_type = "Expansion Chassis";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::SubChassis:
+        system_enclosure_type = "SubChassis";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Bus_Expansion_Chassis:
+        system_enclosure_type = "Bus Expansion Chassis";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Peripheral_Chassis:
+        system_enclosure_type = "Peripheral Chassis";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::RAID_Chassis:
+        system_enclosure_type = "RAID Chassis";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Rack_Mount_Chassis:
+        system_enclosure_type = "Rack Mount Chassis";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Sealed_case_PC:
+        system_enclosure_type = "Sealed-case PC";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Multi_System_Chasis:
+        system_enclosure_type = "Multi-system chassis";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Compact_PCI:
+        system_enclosure_type = "Compact PCI";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Advanced_TCA:
+        system_enclosure_type = "Advanced TCA";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Blade:
+        system_enclosure_type = "Blade";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Blade_Enclosure:
+        system_enclosure_type = "Blade Enclosure";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Tablet:
+        system_enclosure_type = "Tablet";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Convertible:
+        system_enclosure_type = "Convertible";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Detachable:
+        system_enclosure_type = "Detachable";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::IoT_Gateway:
+        system_enclosure_type = "IoT Gateway";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Embedded_PC:
+        system_enclosure_type = "Embedded PC";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Mini_PC:
+        system_enclosure_type = "Mini PC";
+        break;
+    case (u16)SMBIOS::SysEnclosureType::Stick_PC:
+        system_enclosure_type = "Stick PC";
+        break;
+    default:
+        system_enclosure_type = "Unknown";
+        break;
+    }
+    tab() << "Type: " << system_enclosure_type;
+    tab() << "Lock: " << ((table.type & 0x80) ? "Present" : "Not Present");
+    auto version_string = SMBIOS::Parsing::try_to_acquire_smbios_string((const SMBIOS::TableHeader&)table, table.version_str_number);
+    tab() << "Version: " << (version_string.has_value() ? version_string.value() : "Unknown");
+    auto serial_number_string = SMBIOS::Parsing::try_to_acquire_smbios_string((const SMBIOS::TableHeader&)table, table.serial_number_str_number);
+    tab() << "Serial Number: " << (serial_number_string.has_value() ? serial_number_string.value() : "Unknown");
+    auto asset_tag_string = SMBIOS::Parsing::try_to_acquire_smbios_string((const SMBIOS::TableHeader&)table, table.asset_tag_str_number);
+    tab() << "Asset Tag: " << (asset_tag_string.has_value() ? asset_tag_string.value() : "Unknown");
+
+    String bootup_state;
+    switch (table.boot_up_state) {
+    case (u16)SMBIOS::SysEnclosureState::Unknown:
+        bootup_state = "Unknown";
+        break;
+    case (u16)SMBIOS::SysEnclosureState::Other:
+        bootup_state = "Other";
+        break;
+    case (u16)SMBIOS::SysEnclosureState::Safe:
+        bootup_state = "Safe";
+        break;
+    case (u16)SMBIOS::SysEnclosureState::Warning:
+        bootup_state = "Warning";
+        break;
+    case (u16)SMBIOS::SysEnclosureState::Critical:
+        bootup_state = "Critical";
+        break;
+    case (u16)SMBIOS::SysEnclosureState::Non_Recoverable:
+        bootup_state = "Non Recoverable";
+        break;
+    default:
+        bootup_state = "Unknown";
+        break;
+    }
+    tab() << "Boot-up State: " << bootup_state;
+
+    if (table.h.length >= 10) {
+        String power_supply_state;
+        switch (table.thermal_state) {
+        case (u16)SMBIOS::SysEnclosureState::Unknown:
+            power_supply_state = "Unknown";
+            break;
+        case (u16)SMBIOS::SysEnclosureState::Other:
+            power_supply_state = "Other";
+            break;
+        case (u16)SMBIOS::SysEnclosureState::Safe:
+            power_supply_state = "Safe";
+            break;
+        case (u16)SMBIOS::SysEnclosureState::Warning:
+            power_supply_state = "Warning";
+            break;
+        case (u16)SMBIOS::SysEnclosureState::Critical:
+            power_supply_state = "Critical";
+            break;
+        case (u16)SMBIOS::SysEnclosureState::Non_Recoverable:
+            power_supply_state = "Non Recoverable";
+            break;
+        default:
+            power_supply_state = "Unknown";
+            break;
+        }
+        tab() << "Power Supply State: " << power_supply_state;
+    } else {
+        printf("\n");
+        return;
+    }
+
+    if (table.h.length >= 11) {
+        String thermal_state;
+        switch (table.thermal_state) {
+        case (u16)SMBIOS::SysEnclosureState::Unknown:
+            thermal_state = "Unknown";
+            break;
+        case (u16)SMBIOS::SysEnclosureState::Other:
+            thermal_state = "Other";
+            break;
+        case (u16)SMBIOS::SysEnclosureState::Safe:
+            thermal_state = "Safe";
+            break;
+        case (u16)SMBIOS::SysEnclosureState::Warning:
+            thermal_state = "Warning";
+            break;
+        case (u16)SMBIOS::SysEnclosureState::Critical:
+            thermal_state = "Critical";
+            break;
+        case (u16)SMBIOS::SysEnclosureState::Non_Recoverable:
+            thermal_state = "Non Recoverable";
+            break;
+        default:
+            thermal_state = "Unknown";
+            break;
+        }
+        tab() << "Thermal State: " << thermal_state;
+    } else {
+        printf("\n");
+        return;
+    }
+
+    if (table.h.length >= 12) {
+        String security_status;
+        switch (table.security_status) {
+        case (u16)SMBIOS::SysEnclosureSecurityStatus::Unknown:
+            security_status = "Unknown";
+            break;
+        case (u16)SMBIOS::SysEnclosureSecurityStatus::Other:
+            security_status = "Other";
+            break;
+        case (u16)SMBIOS::SysEnclosureSecurityStatus::None:
+            security_status = "None";
+            break;
+        case (u16)SMBIOS::SysEnclosureSecurityStatus::External_Interface_Locked_Out:
+            security_status = "External Interface Locked Out";
+            break;
+        case (u16)SMBIOS::SysEnclosureSecurityStatus::External_Interface_Enabled:
+            security_status = "External Interface Enabled";
+            break;
+        default:
+            security_status = "Unknown";
+            break;
+        }
+        tab() << "Security Status: " << security_status;
+    } else {
+        printf("\n");
+        return;
+    }
+    if (table.h.length >= 16) {
+        tab() << "OEM Information: 0x" << String::format("%x", table.vendor_specific_info);
+    } else {
+        printf("\n");
+        return;
+    }
+    if (table.h.length >= 17) {
+        tab() << "Height: " << table.height;
+    } else {
+        printf("\n");
+        return;
+    }
+
+    if (table.h.length >= 18) {
+        tab() << "Number of Power Cords: " << table.power_cords_number;
+    } else {
+        printf("\n");
+        return;
+    }
+    if (table.h.length >= 19) {
+        tab() << "Contained Elements: " << table.contained_element_count;
+    } else {
+        printf("\n");
+        return;
+    }
+
+    if (is_verbose()) {
+        if (table.h.length >= 20 && table.contained_element_count > 0) {
+            tab() << "Contained Elements Record Length: " << table.contained_element_record_length;
+            auto* contained_element = (SMBIOS::SysEnclosureContainedElement*)(const_cast<u8*>(table.contained_elements));
+
+            for (size_t index = 0; index < table.contained_element_count; index++) {
+                tab() << tab() << "Type: " << contained_element->type;
+                tab() << tab() << "Minimum Contained Element Count: " << contained_element->min_contained_element_count;
+                tab() << tab() << "Maximum Contained Element Count: " << contained_element->max_contained_element_count;
+                tab() << tab() << "";
+                contained_element = (SMBIOS::SysEnclosureContainedElement*)((u8*)contained_element + table.contained_element_record_length);
+            }
+        }
+    }
+
+    if (table.h.length >= 0x15 + (table.contained_element_count * table.contained_element_record_length)) {
+        auto& extended_structure = (SMBIOS::ExtSysEnclosure&)*((u8*)&const_cast<SMBIOS::SysEnclosure&>(table) + (table.contained_element_count * table.contained_element_record_length));
+        auto sku_number_string = SMBIOS::Parsing::try_to_acquire_smbios_string((const SMBIOS::TableHeader&)table, extended_structure.sku_str_number);
+        tab() << "SKU Number: " << (sku_number_string.has_value() ? sku_number_string.value() : "Unknown");
+    }
+    printf("\n");
+}
+
 bool parse_data(ByteStream data)
 {
     size_t remaining_table_length = smbios_data_payload_size;
@@ -666,6 +962,9 @@ bool parse_data(ByteStream data)
             break;
         case (u8)SMBIOS::TableType::ModuleInfo:
             parse_table_type2((SMBIOS::ModuleInfo&)table);
+            break;
+        case (u8)SMBIOS::TableType::SysEnclosure:
+            parse_table_type3((SMBIOS::SysEnclosure&)table);
             break;
         default:
             printf("\n");
