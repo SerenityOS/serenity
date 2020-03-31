@@ -41,7 +41,7 @@
 #include <stdio.h>
 
 bool dump_ast = false;
-static Line::Editor editor {};
+static OwnPtr<Line::Editor> editor;
 
 String read_next_piece()
 {
@@ -55,7 +55,7 @@ String read_next_piece()
         for (auto i = 0; i < level; ++i)
             prompt_builder.append("    ");
 
-        String line = editor.get_line(prompt_builder.build());
+        String line = editor->get_line(prompt_builder.build());
 
         piece.append(line);
         auto lexer = JS::Lexer(line);
@@ -194,7 +194,8 @@ int main(int argc, char** argv)
     interpreter.global_object().put("global", &interpreter.global_object());
 
     if (script_path == nullptr) {
-        editor.initialize();
+        editor = make<Line::Editor>();
+        editor->initialize();
         repl(interpreter);
     } else {
         auto file = Core::File::construct(script_path);
