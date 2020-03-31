@@ -28,11 +28,15 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/Vector.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <cstring>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+
+static bool flag_human_readable = false;
 
 struct FileSystem {
     String fs;
@@ -40,17 +44,46 @@ struct FileSystem {
     size_t free_block_count { 0 };
     size_t total_inode_count { 0 };
     size_t free_inode_count { 0 };
+    size_t block_size { 0 };
     String mount_point;
 };
 
-int main(int, char**)
+// FIXME: Remove this hackery once printf() supports floats.
+// FIXME: Also, we should probably round the sizes in df -h output.
+static String number_string_with_one_decimal(float number, const char* suffix)
 {
+    float decimals = number - (int)number;
+    return String::format("%d.%d%s", (int)number, (int)(decimals * 10), suffix);
+}
+
+static String human_readable_size(size_t size)
+{
+    if (size < 1 * KB)
+        return String::number(size);
+    if (size < 1 * MB)
+        return number_string_with_one_decimal((float)size / (float)KB, "K");
+    if (size < 1 * GB)
+        return number_string_with_one_decimal((float)size / (float)MB, "M");
+    return number_string_with_one_decimal((float)size / (float)GB, "G");
+}
+
+int main(int argc, char** argv)
+{
+    Core::ArgsParser args_parser;
+    args_parser.add_option(flag_human_readable, "Print human-readable sizes", "human-readable", 'h');
+    args_parser.parse(argc, argv);
+
     auto file = Core::File::construct("/proc/df");
     if (!file->open(Core::IODevice::ReadOnly)) {
         fprintf(stderr, "Failed to open /proc/df: %s\n", file->error_string());
         return 1;
     }
-    printf("Filesystem    Blocks        Used    Available   Mount point\n");
+
+    if (flag_human_readable) {
+        printf("Filesystem      Size        Used    Available   Mount point\n");
+    } else {
+        printf("Filesystem    Blocks        Used    Available   Mount point\n");
+    }
 
     auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents).as_array();
@@ -61,15 +94,24 @@ int main(int, char**)
         auto free_block_count = fs_object.get("free_block_count").to_u32();
         auto total_inode_count = fs_object.get("total_inode_count").to_u32();
         auto free_inode_count = fs_object.get("free_inode_count").to_u32();
+        auto block_size = fs_object.get("block_size").to_u32();
         auto mount_point = fs_object.get("mount_point").to_string();
 
         (void)total_inode_count;
         (void)free_inode_count;
 
         printf("%-10s", fs.characters());
-        printf("%10u  ", total_block_count);
-        printf("%10u   ", total_block_count - free_block_count);
-        printf("%10u   ", free_block_count);
+
+        if (flag_human_readable) {
+            printf("%10s  ", human_readable_size(total_block_count * block_size).characters());
+            printf("%10s   ", human_readable_size((total_block_count - free_block_count) * block_size).characters());
+            printf("%10s   ", human_readable_size(free_block_count * block_size).characters());
+        } else {
+            printf("%10u  ", total_block_count);
+            printf("%10u   ", total_block_count - free_block_count);
+            printf("%10u   ", free_block_count);
+        }
+
         printf("%s", mount_point.characters());
         printf("\n");
     });
