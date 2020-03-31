@@ -100,8 +100,10 @@ String JsonParser::consume_quoted_string()
         char escaped_ch = consume();
         switch (escaped_ch) {
         case 'n':
-        case 'r':
             buffer.append('\n');
+            break;
+        case 'r':
+            buffer.append('\r');
             break;
         case 't':
             buffer.append('\t');
@@ -225,6 +227,7 @@ JsonValue JsonParser::parse_number()
         ASSERT(ok);
 
         int fraction = fraction_string.to_uint(ok);
+        fraction *= (whole < 0) ? -1 : 1;
         ASSERT(ok);
 
         auto divider = 1;
