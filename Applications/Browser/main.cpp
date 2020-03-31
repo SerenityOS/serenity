@@ -62,6 +62,11 @@ static String s_title = "";
 
 int main(int argc, char** argv)
 {
+    if (getuid() == 0) {
+        fprintf(stderr, "Refusing to run as root\n");
+        return 1;
+    }
+
     if (pledge("stdio shared_buffer accept unix cpath rpath wpath fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
