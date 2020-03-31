@@ -181,6 +181,289 @@ void parse_table_header(const SMBIOS::TableHeader& header)
     }
 }
 
+void parse_table_type0(const SMBIOS::BIOSInfo& table)
+{
+    ASSERT(table.h.type == (u8)SMBIOS::TableType::BIOSInfo);
+
+    title() << "BIOS Information";
+
+    auto bios_vendor_string = SMBIOS::Parsing::try_to_acquire_smbios_string((const SMBIOS::TableHeader&)table, table.bios_vendor_str_number);
+    tab() << "Vendor: " << (bios_vendor_string.has_value() ? bios_vendor_string.value() : "Unknown");
+    auto bios_version_string = SMBIOS::Parsing::try_to_acquire_smbios_string((const SMBIOS::TableHeader&)table, table.bios_version_str_number);
+    tab() << "Version: " << (bios_version_string.has_value() ? bios_version_string.value() : "Unknown");
+    auto bios_release_date_string = SMBIOS::Parsing::try_to_acquire_smbios_string((const SMBIOS::TableHeader&)table, table.bios_release_date_str_number);
+    tab() << "Release Date: " << (bios_release_date_string.has_value() ? bios_release_date_string.value() : "Unknown");
+    tab() << "Address: " << PhysicalAddress(table.bios_segment << 4);
+    tab() << "BIOS ROM Size: " << ((table.bios_rom_size + 1) * 64 * KB) << " bytes";
+    tab() << "Characteristics:";
+    if (table.bios_characteristics & (u16)SMBIOS::BIOSCharacteristics::NotSupported) {
+        tab() << tab() << "Not supported";
+    } else {
+        if (table.bios_characteristics & (u16)SMBIOS::BIOSCharacteristics::ISA_support) {
+            tab() << tab() << "ISA is supported";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "ISA is not supported";
+        }
+        if (table.bios_characteristics & (u16)SMBIOS::BIOSCharacteristics::MCA_support) {
+            tab() << tab() << "MCA is supported";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "MCA is not supported";
+        }
+        if (table.bios_characteristics & (u16)SMBIOS::BIOSCharacteristics::EISA_support) {
+            tab() << tab() << "EISA is supported";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "EISA is not supported";
+        }
+        if (table.bios_characteristics & (u16)SMBIOS::BIOSCharacteristics::PCI_support) {
+            tab() << tab() << "PCI is supported";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "PCI is not supported";
+        }
+        if (table.bios_characteristics & (u16)SMBIOS::BIOSCharacteristics::PCMCIA_support) {
+            tab() << tab() << "PC card (PCMCIA) is supported";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "PC card (PCMCIA) is not supported";
+        }
+
+        if (table.bios_characteristics & (u16)SMBIOS::BIOSCharacteristics::PnP_support) {
+            tab() << tab() << "Plug & Play is supported";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "Plug & Play is not supported";
+        }
+        if (table.bios_characteristics & (u16)SMBIOS::BIOSCharacteristics::APM_support) {
+            tab() << tab() << "APM is supported";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "APM is not supported";
+        }
+        if (table.bios_characteristics & (u16)SMBIOS::BIOSCharacteristics::UpgradeableBIOS) {
+            tab() << tab() << "BIOS is upgradeable";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "BIOS is not upgradeable";
+        }
+        if (table.bios_characteristics & (u16)SMBIOS::BIOSCharacteristics::Shadowing_BIOS) {
+            tab() << tab() << "BIOS shadowing is allowed";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "BIOS shadowing is not allowed";
+        }
+        if (table.bios_characteristics & (u16)SMBIOS::BIOSCharacteristics::VL_VESA_support) {
+            tab() << tab() << "VL-VESA is supported";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "VL-VESA is not supported";
+        }
+        if (table.bios_characteristics & (u16)SMBIOS::BIOSCharacteristics::ESCD_support) {
+            tab() << tab() << "ESCD is supported";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "ESCD is not supported";
+        }
+        if (table.bios_characteristics & (u32)SMBIOS::BIOSCharacteristics::CD_boot_support) {
+            tab() << tab() << "Boot from CD is allowed";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "Boot from CD is not allowed";
+        }
+        if (table.bios_characteristics & (u32)SMBIOS::BIOSCharacteristics::select_boot_support) {
+            tab() << tab() << "Selectable boot is supported";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "Selectable boot is supported";
+        }
+        if (table.bios_characteristics & (u32)SMBIOS::BIOSCharacteristics::BIOS_ROM_socketed) {
+            tab() << tab() << "BIOS ROM is socketed";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "BIOS ROM is not socketed";
+        }
+        if (table.bios_characteristics & (u32)SMBIOS::BIOSCharacteristics::PCMCIA_boot_support) {
+            tab() << tab() << "Boot from PC card (PCMCIA) is supported";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "Boot from PC card (PCMCIA) is not supported";
+        }
+        if (table.bios_characteristics & (u32)SMBIOS::BIOSCharacteristics::EDD_spec_support) {
+            tab() << tab() << "EDD is supported";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "EDD is not supported";
+        }
+        if (table.bios_characteristics & (u32)SMBIOS::BIOSCharacteristics::floppy_nec98_1200k_support) {
+            tab() << tab() << "Japanese floppy for NEC 9800 1.2 MB (3.5”, 1K bytes/sector, 360 RPM) is supported (int 13h)";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "Japanese floppy for NEC 9800 1.2 MB (3.5”, 1K bytes/sector, 360 RPM) is not supported (int 13h)";
+        }
+        if (table.bios_characteristics & (u32)SMBIOS::BIOSCharacteristics::floppy_toshiba_1200k_support) {
+            tab() << tab() << "Japanese floppy for Toshiba 1.2 MB (3.5”, 360 RPM) is supported (int 13h)";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "Japanese floppy for Toshiba 1.2 MB (3.5”, 360 RPM) is not supported (int 13h)";
+        }
+        if (table.bios_characteristics & (u32)SMBIOS::BIOSCharacteristics::floppy_360k_support) {
+            tab() << tab() << "5.25” / 360 KB floppy services are supported (int 13h)";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "5.25” / 360 KB floppy services are not supported (int 13h)";
+        }
+        if (table.bios_characteristics & (u32)SMBIOS::BIOSCharacteristics::floppy_1200k_services_support) {
+            tab() << tab() << "5.25” /1.2 MB floppy services are supported (int 13h)";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "5.25” /1.2 MB floppy services are not supported (int 13h)";
+        }
+        if (table.bios_characteristics & (u32)SMBIOS::BIOSCharacteristics::floppy_720k_services_support) {
+            tab() << tab() << "3.5” / 720 KB floppy services are supported (int 13h)";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "3.5” / 720 KB floppy services are not supported (int 13h)";
+        }
+        if (table.bios_characteristics & (u32)SMBIOS::BIOSCharacteristics::floppy_2880k_services_support) {
+            tab() << tab() << "3.5” / 2.88 MB floppy services are supported (int 13h)";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "3.5” / 2.88 MB floppy services are supported (int 13h)";
+        }
+        if (table.bios_characteristics & (u32)SMBIOS::BIOSCharacteristics::int5_print_screen_support) {
+            tab() << tab() << "Print screen service is supported (int 5h)";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "Print screen service is not supported (int 5h)";
+        }
+        if (table.bios_characteristics & (u32)SMBIOS::BIOSCharacteristics::int9_8042_keyboard_support) {
+            tab() << tab() << "8042 keyboard services are supported (int 9h)";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "8042 keyboard services are not supported (int 9h)";
+        }
+        if (table.bios_characteristics & (u32)SMBIOS::BIOSCharacteristics::int14_serial_support) {
+            tab() << tab() << "Serial services are supported (int 14h)";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "Serial services are not supported (int 14h)";
+        }
+        if (table.bios_characteristics & (u32)SMBIOS::BIOSCharacteristics::int17_printer_support) {
+            tab() << tab() << "Printer services are supported (int 17h)";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "Printer services are not supported (int 17h)";
+        }
+        if (table.bios_characteristics & (u32)SMBIOS::BIOSCharacteristics::int10_video_support) {
+            tab() << tab() << "CGA/Mono Video Services are supported (int 10h)";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "CGA/Mono Video Services are supported (int 10h)";
+        }
+        if (table.bios_characteristics & (u32)SMBIOS::BIOSCharacteristics::nec_pc98) {
+            tab() << tab() << "NEC PC-98";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "Not a NEC PC-98";
+        }
+
+        if (table.ext_bios_characteristics[0] & (u32)SMBIOS::ExtendedBIOSCharacteristics::ACPI_support) {
+            tab() << tab() << "ACPI is supported";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "ACPI is not supported";
+        }
+        if (table.ext_bios_characteristics[0] & (u32)SMBIOS::ExtendedBIOSCharacteristics::USB_Legacy_support) {
+            tab() << tab() << "USB Legacy is supported";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "USB Legacy is not supported";
+        }
+        if (table.ext_bios_characteristics[0] & (u32)SMBIOS::ExtendedBIOSCharacteristics::AGP_support) {
+            tab() << tab() << "AGP is supported";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "AGP is not supported";
+        }
+        if (table.ext_bios_characteristics[0] & (u32)SMBIOS::ExtendedBIOSCharacteristics::I2O_boot_support) {
+            tab() << tab() << "I2O boot is supported";
+        } else {
+            if (is_verbose())
+                tab() << tab() << "I2O boot is not supported";
+        }
+        if (table.h.length >= 0x13) {
+            if (table.ext_bios_characteristics[0] & (u32)SMBIOS::ExtendedBIOSCharacteristics::LS120_SuperDisk_boot_support) {
+                tab() << tab() << "LS-120 SuperDisk boot is supported";
+            } else {
+                if (is_verbose())
+                    tab() << tab() << "LS-120 SuperDisk boot is not supported";
+            }
+            if (table.ext_bios_characteristics[0] & (u32)SMBIOS::ExtendedBIOSCharacteristics::ATAPI_ZIP_drive_boot_support) {
+                tab() << tab() << "ATAPI ZIP drive boot is supported";
+            } else {
+                if (is_verbose())
+                    tab() << tab() << "ATAPI ZIP drive boot is not supported";
+            }
+            if (table.ext_bios_characteristics[0] & (u32)SMBIOS::ExtendedBIOSCharacteristics::boot_1394_support) {
+                tab() << tab() << "1394 boot is supported";
+            } else {
+                if (is_verbose())
+                    tab() << tab() << "1394 boot is not supported";
+            }
+            if (table.ext_bios_characteristics[0] & (u32)SMBIOS::ExtendedBIOSCharacteristics::smary_battery_support) {
+                tab() << tab() << "Smart battery is supported";
+            } else {
+                if (is_verbose())
+                    tab() << tab() << "Smart battery is not supported";
+            }
+        }
+
+        if (table.h.length >= 0x14) {
+            if (table.ext_bios_characteristics[1] & (u32)SMBIOS::ExtendedBIOSCharacteristics2::BIOS_Boot_Specification_support) {
+                tab() << tab() << "BIOS Boot Specification is supported";
+            } else {
+                if (is_verbose())
+                    tab() << tab() << "BIOS Boot Specification is not supported";
+            }
+            if (table.ext_bios_characteristics[1] & (u32)SMBIOS::ExtendedBIOSCharacteristics2::Func_key_initiated_network_service_boot_support) {
+                tab() << tab() << "Function key-initiated network service boot is supported";
+            } else {
+                if (is_verbose())
+                    tab() << tab() << "Function key-initiated network service boot is not supported";
+            }
+            if (table.ext_bios_characteristics[1] & (u32)SMBIOS::ExtendedBIOSCharacteristics2::Targeted_content_distribution) {
+                tab() << tab() << "Enable targeted content distribution";
+            } else {
+                if (is_verbose())
+                    tab() << tab() << "Disable targeted content distribution";
+            }
+            if (table.ext_bios_characteristics[1] & (u32)SMBIOS::ExtendedBIOSCharacteristics2::UEFI_support) {
+                tab() << tab() << "UEFI Specification is supported";
+            } else {
+                if (is_verbose())
+                    tab() << tab() << "UEFI Specification is not supported";
+            }
+            if (table.ext_bios_characteristics[1] & (u32)SMBIOS::ExtendedBIOSCharacteristics2::SMBIOS_describes_Virtual_Machine) {
+                tab() << tab() << "SMBIOS table describes a virtual machine";
+            } else {
+                if (is_verbose())
+                    tab() << tab() << "SMBIOS table does not describe a virtual machine";
+            }
+        }
+    }
+    if (table.h.length >= 0x15)
+        tab() << "BIOS Revision: " << table.bios_major_release << "." << table.bios_minor_release;
+    if (table.h.length >= 0x17) {
+        if (table.embedded_controller_firmware_major_release == 0xFF && table.embedded_controller_firmware_minor_release == 0xFF)
+            tab() << "Embedded Controller is not upgradeable";
+        else
+            tab() << "Embedded Controller Revision: " << table.embedded_controller_firmware_major_release << "." << table.embedded_controller_firmware_minor_release;
+    }
+    printf("\n");
+}
+
 bool parse_data(ByteStream data)
 {
     size_t remaining_table_length = smbios_data_payload_size;
@@ -189,6 +472,14 @@ bool parse_data(ByteStream data)
         auto& table = *(SMBIOS::TableHeader*)(current_table);
         size_t table_size = SMBIOS::Parsing::calculate_full_table_size(table);
         parse_table_header(table);
+        switch (table.type) {
+        case (u8)SMBIOS::TableType::BIOSInfo:
+            parse_table_type0((SMBIOS::BIOSInfo&)table);
+            break;
+        default:
+            printf("\n");
+            break;
+        }
         current_table = (void*)((u8*)current_table + table_size);
         remaining_table_length -= table_size;
     }
