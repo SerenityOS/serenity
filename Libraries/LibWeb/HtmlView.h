@@ -50,6 +50,7 @@ public:
 
     void reload();
     void load(const URL&);
+    void load_error_page(const URL&, const String& error);
     void scroll_to_anchor(const StringView&);
 
     URL url() const;
