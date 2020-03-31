@@ -41,7 +41,7 @@
 #include <stdio.h>
 
 bool dump_ast = false;
-static LineEditor editor {};
+static Line::Editor editor {};
 
 String read_next_piece()
 {

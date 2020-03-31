@@ -50,7 +50,7 @@
 //#define SH_DEBUG
 
 GlobalState g;
-static LineEditor editor {};
+static Line::Editor editor {};
 
 static int run_command(const String&);
 void cache_path();

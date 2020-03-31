@@ -30,7 +30,9 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-LineEditor::LineEditor()
+namespace Line {
+
+Editor::Editor()
 {
     struct winsize ws;
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) < 0)
@@ -39,19 +41,19 @@ LineEditor::LineEditor()
         m_num_columns = ws.ws_col;
 }
 
-LineEditor::~LineEditor()
+Editor::~Editor()
 {
     tcsetattr(0, TCSANOW, &m_default_termios);
 }
 
-void LineEditor::add_to_history(const String& line)
+void Editor::add_to_history(const String& line)
 {
     if ((m_history.size() + 1) > m_history_capacity)
         m_history.take_first();
     m_history.append(line);
 }
 
-void LineEditor::clear_line()
+void Editor::clear_line()
 {
     for (size_t i = 0; i < m_cursor; ++i)
         fputc(0x8, stdout);
@@ -61,7 +63,7 @@ void LineEditor::clear_line()
     m_cursor = 0;
 }
 
-void LineEditor::insert(const String& string)
+void Editor::insert(const String& string)
 {
     fputs(string.characters(), stdout);
     fflush(stdout);
@@ -84,7 +86,7 @@ void LineEditor::insert(const String& string)
     m_cursor += string.length();
 }
 
-void LineEditor::insert(const char ch)
+void Editor::insert(const char ch)
 {
     putchar(ch);
     fflush(stdout);
@@ -105,7 +107,7 @@ void LineEditor::insert(const char ch)
     ++m_cursor;
 }
 
-void LineEditor::on_char_input(char ch, Function<bool(LineEditor&)> callback)
+void Editor::on_char_input(char ch, Function<bool(Editor&)> callback)
 {
     if (m_key_callbacks.contains(ch)) {
         dbg() << "Key callback registered twice for " << ch;
@@ -114,7 +116,7 @@ void LineEditor::on_char_input(char ch, Function<bool(LineEditor&)> callback)
     m_key_callbacks.set(ch, make<KeyCallback>(move(callback)));
 }
 
-void LineEditor::cut_mismatching_chars(String& completion, const String& other, size_t start_compare)
+void Editor::cut_mismatching_chars(String& completion, const String& other, size_t start_compare)
 {
     size_t i = start_compare;
     while (i < completion.length() && i < other.length() && completion[i] == other[i])
@@ -122,7 +124,7 @@ void LineEditor::cut_mismatching_chars(String& completion, const String& other, 
     completion = completion.substring(0, i);
 }
 
-String LineEditor::get_line(const String& prompt)
+String Editor::get_line(const String& prompt)
 {
     fputs(prompt.characters(), stdout);
     fflush(stdout);
@@ -372,7 +374,7 @@ String LineEditor::get_line(const String& prompt)
                     do_backspace();
                 continue;
             }
-            if (ch == 0xc) { // ^L
+            if (ch == 0xc) {                    // ^L
                 printf("\033[3J\033[H\033[2J"); // Clear screen.
                 fputs(prompt.characters(), stdout);
                 for (size_t i = 0; i < m_buffer.size(); ++i)
@@ -418,20 +420,22 @@ String LineEditor::get_line(const String& prompt)
     }
 }
 
-void LineEditor::vt_save_cursor()
+void Editor::vt_save_cursor()
 {
     fputs("\033[s", stdout);
     fflush(stdout);
 }
 
-void LineEditor::vt_restore_cursor()
+void Editor::vt_restore_cursor()
 {
     fputs("\033[u", stdout);
     fflush(stdout);
 }
 
-void LineEditor::vt_clear_to_end_of_line()
+void Editor::vt_clear_to_end_of_line()
 {
     fputs("\033[K", stdout);
     fflush(stdout);
+}
+
 }
