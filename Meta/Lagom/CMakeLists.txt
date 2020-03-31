@@ -12,10 +12,11 @@ endif()
 file(GLOB AK_SOURCES "../../AK/*.cpp")
 file(GLOB LIBCORE_SOURCES "../../Libraries/LibCore/*.cpp")
 file(GLOB LIBIPC_SOURCES "../../Libraries/LibIPC/*.cpp")
+file(GLOB LIBLINE_SOURCES "../../Libraries/LibLine/*.cpp")
 file(GLOB LIBJS_SOURCES "../../Libraries/LibJS/*.cpp")
 file(GLOB LIBJS_SUBDIR_SOURCES "../../Libraries/LibJS/*/*.cpp")
 
-set(SOURCES ${AK_SOURCES} ${LIBCORE_SOURCES} ${LIBIPC_SOURCES} ${LIBJS_SOURCES} ${LIBJS_SUBDIR_SOURCES})
+set(SOURCES ${AK_SOURCES} ${LIBCORE_SOURCES} ${LIBIPC_SOURCES} ${LIBLINE_SOURCES} ${LIBJS_SOURCES} ${LIBJS_SUBDIR_SOURCES})
 
 include_directories (../../)
 include_directories (../../Libraries/)
