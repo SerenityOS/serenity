@@ -2263,6 +2263,280 @@ void parse_table_type7(const SMBIOS::CacheInfo& table)
     return;
 }
 
+String parse_connector_type(u8 connector_type_value)
+{
+    String connector_type;
+    switch (connector_type_value) {
+    case (u16)SMBIOS::ConnectorType::None:
+        connector_type = "None";
+        break;
+    case (u16)SMBIOS::ConnectorType::Centronics:
+        connector_type = "Centronics";
+        break;
+    case (u16)SMBIOS::ConnectorType::Mini_Centronics:
+        connector_type = "Mini Centronics";
+        break;
+    case (u16)SMBIOS::ConnectorType::Proprietary:
+        connector_type = "Proprietary";
+        break;
+    case (u16)SMBIOS::ConnectorType::DB_25_pin_male:
+        connector_type = "DB-25 pin male";
+        break;
+    case (u16)SMBIOS::ConnectorType::DB_25_pin_female:
+        connector_type = "DB-25 pin female";
+        break;
+    case (u16)SMBIOS::ConnectorType::DB_15_pin_male:
+        connector_type = "DB-15 pin male";
+        break;
+    case (u16)SMBIOS::ConnectorType::DB_15_pin_female:
+        connector_type = "DB-15 pin female";
+        break;
+    case (u16)SMBIOS::ConnectorType::DB_9_pin_male:
+        connector_type = "DB-9 pin male";
+        break;
+    case (u16)SMBIOS::ConnectorType::DB_9_pin_female:
+        connector_type = "DB-9 pin female";
+        break;
+    case (u16)SMBIOS::ConnectorType::RJ_11:
+        connector_type = "RJ-11";
+        break;
+    case (u16)SMBIOS::ConnectorType::RJ_45:
+        connector_type = "RJ-45";
+        break;
+    case (u16)SMBIOS::ConnectorType::MiniSCSI_50_pin:
+        connector_type = "50-pin MiniSCSI";
+        break;
+    case (u16)SMBIOS::ConnectorType::MiniDIN:
+        connector_type = "Mini-DIN";
+        break;
+    case (u16)SMBIOS::ConnectorType::MicroDIN:
+        connector_type = "Micro-DIN";
+        break;
+    case (u16)SMBIOS::ConnectorType::PS2:
+        connector_type = "PS/2";
+        break;
+    case (u16)SMBIOS::ConnectorType::Infrared:
+        connector_type = "Infrared";
+        break;
+    case (u16)SMBIOS::ConnectorType::HP_HIL:
+        connector_type = "HP-HIL";
+        break;
+    case (u16)SMBIOS::ConnectorType::AccessBus_USB:
+        connector_type = "Access Bus (USB)";
+        break;
+    case (u16)SMBIOS::ConnectorType::SSA_SCSI:
+        connector_type = "SSA SCSI";
+        break;
+    case (u16)SMBIOS::ConnectorType::Circular_DIN8_male:
+        connector_type = "Circular DIN-8 male";
+        break;
+    case (u16)SMBIOS::ConnectorType::OnBoard_IDE:
+        connector_type = "On Board IDE";
+        break;
+    case (u16)SMBIOS::ConnectorType::OnBoard_Floppy:
+        connector_type = "On Board Floppy";
+        break;
+    case (u16)SMBIOS::ConnectorType::Dual_Inline_9pin:
+        connector_type = "9-pin Dual Inline (pin 10 cut)";
+        break;
+    case (u16)SMBIOS::ConnectorType::Dual_Inline_25pin:
+        connector_type = "25-pin Dual Inline (pin 26 cut)";
+        break;
+    case (u16)SMBIOS::ConnectorType::Dual_Inline_50pin:
+        connector_type = "50-pin Dual Inline";
+        break;
+    case (u16)SMBIOS::ConnectorType::Dual_Inline_68pin:
+        connector_type = "68-pin Dual Inline";
+        break;
+    case (u16)SMBIOS::ConnectorType::OnBoard_SoundInput_CDROM:
+        connector_type = "On Board Sound Input from CD-ROM";
+        break;
+    case (u16)SMBIOS::ConnectorType::Mini_Centronics_Type14:
+        connector_type = "Mini-Centronics Type-14";
+        break;
+    case (u16)SMBIOS::ConnectorType::Mini_Centronics_Type26:
+        connector_type = "Mini-Centronics Type-26";
+        break;
+    case (u16)SMBIOS::ConnectorType::Mini_Jack_Headphones:
+        connector_type = "Mini-jack (headphones)";
+        break;
+    case (u16)SMBIOS::ConnectorType::BNC:
+        connector_type = "BNC";
+        break;
+    case (u16)SMBIOS::ConnectorType::Connector_1394:
+        connector_type = "1394";
+        break;
+    case (u16)SMBIOS::ConnectorType::SAS_SATA_Plug_Receptacle:
+        connector_type = "SAS/SATA Plug Receptacle";
+        break;
+    case (u16)SMBIOS::ConnectorType::USB_TypeC_Receptacle:
+        connector_type = "USB Type-C Receptacle";
+        break;
+    case (u16)SMBIOS::ConnectorType::PC98:
+        connector_type = "PC-98";
+        break;
+    case (u16)SMBIOS::ConnectorType::PC98_Hireso:
+        connector_type = "PC-98Hireso";
+        break;
+    case (u16)SMBIOS::ConnectorType::PC_H98:
+        connector_type = "PC-H98";
+        break;
+    case (u16)SMBIOS::ConnectorType::PC98_Note:
+        connector_type = "PC-98Note";
+        break;
+    case (u16)SMBIOS::ConnectorType::PC98_Full:
+        connector_type = "PC-98Full";
+        break;
+    case (u16)SMBIOS::ConnectorType::Other:
+        connector_type = "Other";
+        break;
+    default:
+        connector_type = "Unknown";
+        break;
+    }
+    return connector_type;
+}
+
+void parse_table_type8(const SMBIOS::PortConnectorInfo& table)
+{
+    ASSERT(table.h.type == (u8)SMBIOS::TableType::PortConnectorInfo);
+    ASSERT(table.h.length >= 0x9);
+    title() << "Port Connector Information";
+
+    auto internal_reference_Designator_string = SMBIOS::Parsing::try_to_acquire_smbios_string((const SMBIOS::TableHeader&)table, table.internal_reference_designator_str_number);
+    tab() << "Internal Reference Designator: " << (internal_reference_Designator_string.has_value() ? internal_reference_Designator_string.value() : "Unknown");
+    tab() << "Internal Connector Type: " << parse_connector_type(table.internal_connector_type);
+
+    auto external_reference_Designator_string = SMBIOS::Parsing::try_to_acquire_smbios_string((const SMBIOS::TableHeader&)table, table.external_reference_designator_str_number);
+    tab() << "External Reference Designator: " << (external_reference_Designator_string.has_value() ? external_reference_Designator_string.value() : "Unknown");
+    tab() << "External Connector Type: " << parse_connector_type(table.external_connector_type);
+
+    String port_type;
+    switch (table.port_type) {
+    case (u8)SMBIOS::PortType::None:
+        port_type = "None";
+        break;
+    case (u8)SMBIOS::PortType::Parallel_Port_XT_AT_Compatible:
+        port_type = "Parallel Port XT/AT Compatible";
+        break;
+    case (u8)SMBIOS::PortType::Parallel_Port_PS2:
+        port_type = "Parallel Port PS/2";
+        break;
+    case (u8)SMBIOS::PortType::Parallel_Port_ECP:
+        port_type = "Parallel Port ECP";
+        break;
+    case (u8)SMBIOS::PortType::Parallel_Port_EPP:
+        port_type = "Parallel Port EPP";
+        break;
+    case (u8)SMBIOS::PortType::Parallel_Port_ECP_EPP:
+        port_type = "Parallel Port ECP/EPP";
+        break;
+    case (u8)SMBIOS::PortType::Serial_Port_XT_AT_Compatible:
+        port_type = "Serial Port XT/AT Compatible";
+        break;
+    case (u8)SMBIOS::PortType::Serial_Port_16450_Compatible:
+        port_type = "Serial Port 16450 Compatible";
+        break;
+    case (u8)SMBIOS::PortType::Serial_Port_16550_Compatible:
+        port_type = "Serial Port 16550 Compatible";
+        break;
+    case (u8)SMBIOS::PortType::Serial_Port_16550A_Compatible:
+        port_type = "Serial Port 16550A Compatible";
+        break;
+    case (u8)SMBIOS::PortType::SCSI_Port:
+        port_type = "SCSI Port";
+        break;
+    case (u8)SMBIOS::PortType::MIDI_Port:
+        port_type = "MIDI Port";
+        break;
+    case (u8)SMBIOS::PortType::Joy_Stick_Port:
+        port_type = "Joy Stick Port";
+        break;
+    case (u8)SMBIOS::PortType::Keyboard_Port:
+        port_type = "Keyboard Port";
+        break;
+    case (u8)SMBIOS::PortType::Mouse_Port:
+        port_type = "Mouse Port";
+        break;
+    case (u8)SMBIOS::PortType::SSA_SCSI:
+        port_type = "SSA SCSI";
+        break;
+    case (u8)SMBIOS::PortType::USB:
+        port_type = "USB";
+        break;
+    case (u8)SMBIOS::PortType::FireWire:
+        port_type = "FireWire (IEEE P1394)";
+        break;
+    case (u8)SMBIOS::PortType::PCMCIA_Type1:
+        port_type = "PCMCIA Type 1";
+        break;
+    case (u8)SMBIOS::PortType::PCMCIA_Type2:
+        port_type = "PCMCIA Type 2";
+        break;
+    case (u8)SMBIOS::PortType::PCMCIA_Type3:
+        port_type = "PCMCIA Type 3";
+        break;
+    case (u8)SMBIOS::PortType::Cardbus:
+        port_type = "Cardbus";
+        break;
+    case (u8)SMBIOS::PortType::AccessBus_Port:
+        port_type = "Access Bus Port";
+        break;
+    case (u8)SMBIOS::PortType::SCSI_2:
+        port_type = "SCSI II";
+        break;
+    case (u8)SMBIOS::PortType::SCSI_Wide:
+        port_type = "SCSI Wide";
+        break;
+    case (u8)SMBIOS::PortType::PC98:
+        port_type = "PC-98";
+        break;
+    case (u8)SMBIOS::PortType::PC98_Hireso:
+        port_type = "PC-98-Hireso";
+        break;
+    case (u8)SMBIOS::PortType::PC_H98:
+        port_type = "PC-H98";
+        break;
+    case (u8)SMBIOS::PortType::Video_Port:
+        port_type = "Video Port";
+        break;
+    case (u8)SMBIOS::PortType::Audio_Port:
+        port_type = "Audio Port";
+        break;
+    case (u8)SMBIOS::PortType::Modem_Port:
+        port_type = "Modem Port";
+        break;
+    case (u8)SMBIOS::PortType::Network_Port:
+        port_type = "Network Port";
+        break;
+    case (u8)SMBIOS::PortType::SATA:
+        port_type = "SATA";
+        break;
+    case (u8)SMBIOS::PortType::SAS:
+        port_type = "SAS";
+        break;
+    case (u8)SMBIOS::PortType::MFDP:
+        port_type = "MFDP (Multi-Function Display Port)";
+        break;
+    case (u8)SMBIOS::PortType::Thunderbolt:
+        port_type = "Thunderbolt";
+        break;
+    case (u8)SMBIOS::PortType::Intel_8251_Compatible:
+        port_type = "8251 Compatible";
+        break;
+    case (u8)SMBIOS::PortType::Intel_8251_FIFO_Compatible:
+        port_type = "8251 FIFO Compatible";
+        break;
+    case (u8)SMBIOS::PortType::Other:
+        port_type = "Other";
+        break;
+    default:
+        port_type = "Unknown";
+        break;
+    }
+    tab() << "Port Type: " << port_type;
+}
+
 bool parse_data(ByteStream data)
 {
     size_t remaining_table_length = smbios_data_payload_size;
@@ -2289,6 +2563,9 @@ bool parse_data(ByteStream data)
             break;
         case (u8)SMBIOS::TableType::CacheInfo:
             parse_table_type7((SMBIOS::CacheInfo&)table);
+            break;
+        case (u8)SMBIOS::TableType::PortConnectorInfo:
+            parse_table_type8((SMBIOS::PortConnectorInfo&)table);
             break;
         default:
             printf("\n");
