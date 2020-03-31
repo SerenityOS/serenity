@@ -71,6 +71,11 @@ void AppletManager::add_applet(Window& applet)
 {
     m_applets.append(applet.make_weak_ptr());
 
+    // Prune any dead weak pointers from the applet list.
+    m_applets.remove_all_matching([](auto& entry) {
+        return entry.is_null();
+    });
+
     quick_sort(m_applets, [](auto& a, auto& b) {
         auto index_a = order_vector.find_first_index(a->title());
         auto index_b = order_vector.find_first_index(b->title());
