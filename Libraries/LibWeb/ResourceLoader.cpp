@@ -26,9 +26,9 @@
 
 #include <AK/SharedBuffer.h>
 #include <LibCore/File.h>
-#include <LibWeb/ResourceLoader.h>
 #include <LibProtocol/Client.h>
 #include <LibProtocol/Download.h>
+#include <LibWeb/ResourceLoader.h>
 
 namespace Web {
 
@@ -45,36 +45,37 @@ ResourceLoader::ResourceLoader()
 {
 }
 
-void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&)> callback)
+void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&)> success_callback, Function<void(const String&)> error_callback)
 {
     if (url.protocol() == "file") {
         auto f = Core::File::construct();
         f->set_filename(url.path());
         if (!f->open(Core::IODevice::OpenMode::ReadOnly)) {
             dbg() << "ResourceLoader::load: Error: " << f->error_string();
-            callback({});
+            if (error_callback)
+                error_callback(f->error_string());
             return;
         }
 
         auto data = f->read_all();
-        deferred_invoke([data = move(data), callback = move(callback)](auto&) {
-            callback(data);
+        deferred_invoke([data = move(data), success_callback = move(success_callback)](auto&) {
+            success_callback(data);
         });
         return;
     }
 
     if (url.protocol() == "http") {
         auto download = protocol_client().start_download(url.to_string());
-        download->on_finish = [this, callback = move(callback)](bool success, const ByteBuffer& payload, auto) {
+        download->on_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback)](bool success, const ByteBuffer& payload, auto) {
             --m_pending_loads;
             if (on_load_counter_change)
                 on_load_counter_change();
             if (!success) {
-                dbg() << "HTTP load failed!";
-                callback({});
+                if (error_callback)
+                    error_callback("HTTP load failed");
                 return;
             }
-            callback(ByteBuffer::copy(payload.data(), payload.size()));
+            success_callback(ByteBuffer::copy(payload.data(), payload.size()));
         };
         ++m_pending_loads;
         if (on_load_counter_change)
@@ -82,8 +83,8 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&)> call
         return;
     }
 
-    dbg() << "Unimplemented protocol: " << url.protocol();
-    ASSERT_NOT_REACHED();
+    if (error_callback)
+        error_callback(String::format("Protocol not implemented: %s", url.protocol().characters()));
 }
 
 }
