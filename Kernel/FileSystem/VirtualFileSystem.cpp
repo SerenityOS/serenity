@@ -190,8 +190,8 @@ KResult VFS::utime(StringView path, Custody& base, time_t atime, time_t mtime)
     auto& inode = *descriptor_or_error.value()->inode();
     if (inode.fs().is_readonly())
         return KResult(-EROFS);
-    if (!Process::current->is_superuser() && inode.metadata().uid != Process::current->euid())
-        return KResult(-EACCES);
+    if (Process::current->gbps() < 20 && inode.metadata().uid != Process::current->euid())
+        return KResult(-ENOGBPS);
 
     int error = inode.set_atime(atime);
     if (error)
@@ -401,8 +401,8 @@ KResult VFS::chmod(Inode& inode, mode_t mode)
     if (inode.fs().is_readonly())
         return KResult(-EROFS);
 
-    if (Process::current->euid() != inode.metadata().uid && !Process::current->is_superuser())
-        return KResult(-EPERM);
+    if (Process::current->euid() != inode.metadata().uid && Process::current->gbps() < 20)
+        return KResult(-ENOGBPS);
 
     // Only change the permission bits.
     mode = (inode.mode() & ~04777u) | (mode & 04777u);
@@ -448,8 +448,8 @@ KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
         return KResult(-EACCES);
 
     if (old_parent_inode.metadata().is_sticky()) {
-        if (!Process::current->is_superuser() && old_inode.metadata().uid != Process::current->euid())
-            return KResult(-EACCES);
+        if (Process::current->gbps() < 20 && old_inode.metadata().uid != Process::current->euid())
+            return KResult(-ENOGBPS);
     }
 
     auto new_basename = FileSystemPath(new_path).basename();
@@ -461,8 +461,8 @@ KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
         if (&new_inode == &old_inode)
             return KSuccess;
         if (new_parent_inode.metadata().is_sticky()) {
-            if (!Process::current->is_superuser() && new_inode.metadata().uid != Process::current->euid())
-                return KResult(-EACCES);
+            if (Process::current->gbps() < 20 && new_inode.metadata().uid != Process::current->euid())
+                return KResult(-ENOGBPS);
         }
         if (new_inode.is_directory() && !old_inode.is_directory())
             return KResult(-EISDIR);
@@ -489,20 +489,20 @@ KResult VFS::chown(Inode& inode, uid_t a_uid, gid_t a_gid)
 
     auto metadata = inode.metadata();
 
-    if (Process::current->euid() != metadata.uid && !Process::current->is_superuser())
-        return KResult(-EPERM);
+    if (Process::current->euid() != metadata.uid && Process::current->gbps() < 20)
+        return KResult(-ENOGBPS);
 
     uid_t new_uid = metadata.uid;
     gid_t new_gid = metadata.gid;
 
     if (a_uid != (uid_t)-1) {
-        if (Process::current->euid() != a_uid && !Process::current->is_superuser())
-            return KResult(-EPERM);
+        if (Process::current->euid() != a_uid && Process::current->gbps() < 20)
+            return KResult(-ENOGBPS);
         new_uid = a_uid;
     }
     if (a_gid != (gid_t)-1) {
-        if (!Process::current->in_group(a_gid) && !Process::current->is_superuser())
-            return KResult(-EPERM);
+        if (!Process::current->in_group(a_gid) && Process::current->gbps() < 20)
+            return KResult(-ENOGBPS);
         new_gid = a_gid;
     }
 
@@ -570,8 +570,8 @@ KResult VFS::unlink(StringView path, Custody& base)
         return KResult(-EACCES);
 
     if (parent_inode.metadata().is_sticky()) {
-        if (!Process::current->is_superuser() && inode.metadata().uid != Process::current->euid())
-            return KResult(-EACCES);
+        if (Process::current->gbps() < 20 && inode.metadata().uid != Process::current->euid())
+            return KResult(-ENOGBPS);
     }
 
     auto result = parent_inode.remove_child(FileSystemPath(path).basename());

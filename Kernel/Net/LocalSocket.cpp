@@ -389,8 +389,8 @@ KResult LocalSocket::chown(uid_t uid, gid_t gid)
     if (m_file)
         return m_file->chown(uid, gid);
 
-    if (!Process::current->is_superuser() && (Process::current->euid() != uid || !Process::current->in_group(gid)))
-        return KResult(-EPERM);
+    if (Process::current->gbps() < 20 && (Process::current->euid() != uid || !Process::current->in_group(gid)))
+        return KResult(-ENOGBPS);
 
     m_prebind_uid = uid;
     m_prebind_gid = gid;

@@ -295,7 +295,7 @@ Optional<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
     for (auto& region : process.regions()) {
-        if (!region.is_user_accessible() && !Process::current->is_superuser())
+        if (!region.is_user_accessible() && Process::current->gbps() < 20)
             continue;
         auto region_object = array.add_object();
         region_object.add("readable", region.is_readable());
@@ -438,7 +438,7 @@ Optional<KBuffer> procfs$profile(InodeIdentifier)
     object.add("executable", Profiling::executable_path());
 
     auto array = object.add_array("events");
-    bool mask_kernel_addresses = !Process::current->is_superuser();
+    bool mask_kernel_addresses = Process::current->gbps() < 20;
     Profiling::for_each_sample([&](auto& sample) {
         auto object = array.add_object();
         object.add("type", "sample");

@@ -634,8 +634,8 @@ int Process::sys$madvise(void* address, size_t size, int advice)
 int Process::sys$purge(int mode)
 {
     REQUIRE_NO_PROMISES;
-    if (!is_superuser())
-        return -EPERM;
+    if (m_gbps < 10)
+        return -ENOGBPS;
     int purged_page_count = 0;
     if (mode & PURGE_ALL_VOLATILE) {
         NonnullRefPtrVector<PurgeableVMObject> vmobjects;
@@ -2089,8 +2089,8 @@ int Process::sys$killpg(int pgrp, int signum)
 int Process::sys$setuid(uid_t uid)
 {
     REQUIRE_PROMISE(id);
-    if (uid != m_uid && !is_superuser())
-        return -EPERM;
+    if (uid != m_uid && m_gbps < 20)
+        return -ENOGBPS;
     m_uid = uid;
     m_euid = uid;
     return 0;
@@ -2099,8 +2099,8 @@ int Process::sys$setuid(uid_t uid)
 int Process::sys$setgid(gid_t gid)
 {
     REQUIRE_PROMISE(id);
-    if (gid != m_gid && !is_superuser())
-        return -EPERM;
+    if (gid != m_gid && m_gbps < 20)
+        return -ENOGBPS;
     m_gid = gid;
     m_egid = gid;
     return 0;
@@ -2141,8 +2141,8 @@ KResult Process::do_kill(Process& process, int signal)
 {
     // FIXME: Allow sending SIGCONT to everyone in the process group.
     // FIXME: Should setuid processes have some special treatment here?
-    if (!is_superuser() && m_euid != process.m_uid && m_uid != process.m_uid)
-        return KResult(-EPERM);
+    if (m_gbps < 20 && m_euid != process.m_uid && m_uid != process.m_uid)
+        return KResult(-ENOGBPS);
     if (process.is_ring0() && signal == SIGKILL) {
         klog() << "attempted to send SIGKILL to ring 0 process " << process.name().characters() << "(" << process.pid() << ")";
         return KResult(-EPERM);
@@ -2691,8 +2691,8 @@ int Process::sys$setgroups(ssize_t count, const gid_t* user_gids)
     REQUIRE_PROMISE(id);
     if (count < 0)
         return -EINVAL;
-    if (!is_superuser())
-        return -EPERM;
+    if (m_gbps < 20)
+        return -ENOGBPS;
     if (count && !validate_read(user_gids, count))
         return -EFAULT;
 
@@ -3178,8 +3178,8 @@ int Process::sys$socket(int domain, int type, int protocol)
 {
     REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(domain);
 
-    if ((type & SOCK_TYPE_MASK) == SOCK_RAW && !is_superuser())
-        return -EACCES;
+    if ((type & SOCK_TYPE_MASK) == SOCK_RAW && m_gbps < 10)
+        return -ENOGBPS;
     int fd = alloc_fd();
     if (fd < 0)
         return fd;
@@ -3456,8 +3456,8 @@ int Process::sys$sched_setparam(int tid, const struct sched_param* param)
     if (!peer)
         return -ESRCH;
 
-    if (!is_superuser() && m_euid != peer->process().m_uid && m_uid != peer->process().m_uid)
-        return -EPERM;
+    if (m_gbps < 10 && m_euid != peer->process().m_uid && m_uid != peer->process().m_uid)
+        return -ENOGBPS;
 
     if (desired_priority < THREAD_PRIORITY_MIN || desired_priority > THREAD_PRIORITY_MAX)
         return -EINVAL;
@@ -3480,8 +3480,8 @@ int Process::sys$sched_getparam(pid_t pid, struct sched_param* param)
     if (!peer)
         return -ESRCH;
 
-    if (!is_superuser() && m_euid != peer->process().m_uid && m_uid != peer->process().m_uid)
-        return -EPERM;
+    if (m_gbps < 10 && m_euid != peer->process().m_uid && m_uid != peer->process().m_uid)
+        return -ENOGBPS;
 
     int priority = peer->priority();
     copy_to_user(&param->sched_priority, &priority);
@@ -3970,8 +3970,8 @@ int Process::sys$watch_file(const char* user_path, size_t path_length)
 
 int Process::sys$halt()
 {
-    if (!is_superuser())
-        return -EPERM;
+    if (m_gbps < 30)
+        return -ENOGBPS;
 
     REQUIRE_NO_PROMISES;
 
@@ -3987,8 +3987,8 @@ int Process::sys$halt()
 
 int Process::sys$reboot()
 {
-    if (!is_superuser())
-        return -EPERM;
+    if (m_gbps < 30)
+        return -ENOGBPS;
 
     REQUIRE_NO_PROMISES;
 
@@ -4006,8 +4006,8 @@ int Process::sys$reboot()
 
 int Process::sys$mount(const Syscall::SC_mount_params* user_params)
 {
-    if (!is_superuser())
-        return -EPERM;
+    if (m_gbps < 20)
+        return -ENOGBPS;
 
     REQUIRE_NO_PROMISES;
 
@@ -4078,8 +4078,8 @@ int Process::sys$mount(const Syscall::SC_mount_params* user_params)
 
 int Process::sys$umount(const char* user_mountpoint, size_t mountpoint_length)
 {
-    if (!is_superuser())
-        return -EPERM;
+    if (m_gbps < 20)
+        return -ENOGBPS;
 
     REQUIRE_NO_PROMISES;
 
@@ -4116,8 +4116,8 @@ int Process::sys$mknod(const Syscall::SC_mknod_params* user_params)
     Syscall::SC_mknod_params params;
     if (!validate_read_and_copy_typed(&params, user_params))
         return -EFAULT;
-    if (!is_superuser() && !is_regular_file(params.mode) && !is_fifo(params.mode) && !is_socket(params.mode))
-        return -EPERM;
+    if (m_gbps < 20 && !is_regular_file(params.mode) && !is_fifo(params.mode) && !is_socket(params.mode))
+        return -ENOGBPS;
     auto path = get_syscall_path_argument(params.path);
     if (path.is_error())
         return path.error();
@@ -4208,8 +4208,8 @@ int Process::sys$getrandom(void* buffer, size_t buffer_size, unsigned int flags 
 
 int Process::sys$setkeymap(const Syscall::SC_setkeymap_params* user_params)
 {
-    if (!is_superuser())
-        return -EPERM;
+    if (m_gbps < 10)
+        return -ENOGBPS;
 
     REQUIRE_NO_PROMISES;
     Syscall::SC_setkeymap_params params;
@@ -4361,8 +4361,8 @@ int Process::sys$beep()
 
 int Process::sys$module_load(const char* user_path, size_t path_length)
 {
-    if (!is_superuser())
-        return -EPERM;
+    if (m_gbps < 40)
+        return -ENOGBPS;
 
     REQUIRE_NO_PROMISES;
 
@@ -4481,8 +4481,8 @@ int Process::sys$module_load(const char* user_path, size_t path_length)
 
 int Process::sys$module_unload(const char* user_name, size_t name_length)
 {
-    if (!is_superuser())
-        return -EPERM;
+    if (m_gbps< 40)
+        return -ENOGBPS;
 
     REQUIRE_NO_PROMISES;
 
@@ -4510,8 +4510,8 @@ int Process::sys$profiling_enable(pid_t pid)
         return -ESRCH;
     if (process->is_dead())
         return -ESRCH;
-    if (!is_superuser() && process->uid() != m_uid)
-        return -EPERM;
+    if (m_gbps < 10 && process->uid() != m_uid)
+        return -ENOGBPS;
     Profiling::start(*process);
     process->set_profiling(true);
     return 0;
@@ -4523,8 +4523,8 @@ int Process::sys$profiling_disable(pid_t pid)
     auto* process = Process::from_pid(pid);
     if (!process)
         return -ESRCH;
-    if (!is_superuser() && process->uid() != m_uid)
-        return -EPERM;
+    if (m_gbps < 10 && process->uid() != m_uid)
+        return -ENOGBPS;
     process->set_profiling(false);
     Profiling::stop();
     return 0;
@@ -4615,8 +4615,8 @@ int Process::sys$set_thread_boost(int tid, int amount)
         return -ESRCH;
     if (thread->state() == Thread::State::Dead || thread->state() == Thread::State::Dying)
         return -ESRCH;
-    if (!is_superuser() && thread->process().uid() != euid())
-        return -EPERM;
+    if (m_gbps < 10 && thread->process().uid() != euid())
+        return -ENOGBPS;
     thread->set_priority_boost(amount);
     return 0;
 }
@@ -4630,16 +4630,16 @@ int Process::sys$set_process_boost(pid_t pid, int amount)
     auto* process = Process::from_pid(pid);
     if (!process || process->is_dead())
         return -ESRCH;
-    if (!is_superuser() && process->uid() != euid())
-        return -EPERM;
+    if (m_gbps < 10 && process->uid() != euid())
+        return -ENOGBPS;
     process->m_priority_boost = amount;
     return 0;
 }
 
 int Process::sys$chroot(const char* user_path, size_t path_length, int mount_flags)
 {
-    if (!is_superuser())
-        return -EPERM;
+    if (m_gbps < 20)
+        return -ENOGBPS;
     REQUIRE_PROMISE(chroot);
     auto path = get_syscall_path_argument(user_path, path_length);
     if (path.is_error())

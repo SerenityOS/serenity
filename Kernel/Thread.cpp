@@ -783,7 +783,7 @@ static bool symbolicate(const RecognizedSymbol& symbol, const Process& process, 
     if (!symbol.address)
         return false;
 
-    bool mask_kernel_addresses = !process.is_superuser();
+    bool mask_kernel_addresses = process.gbps() < 10;
     if (!symbol.ksym) {
         if (!is_user_address(VirtualAddress(symbol.address))) {
             builder.append("0xdeadc0de\n");

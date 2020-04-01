@@ -111,7 +111,7 @@ KResult IPv4Socket::bind(const sockaddr* user_address, socklen_t address_size)
         return KResult(-EINVAL);
 
     auto requested_local_port = ntohs(address.sin_port);
-    if (!Process::current->is_superuser()) {
+    if (Process::current->gbps() < 10) {
         if (requested_local_port < 1024) {
             dbg() << "UID " << Process::current->uid() << " attempted to bind " << class_name() << " to port " << requested_local_port;
             return KResult(-EACCES);
@@ -481,7 +481,7 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, unsigned arg)
 
         switch (request) {
         case SIOCADDRT:
-            if (!Process::current->is_superuser())
+            if (Process::current->gbps() < 10)
                 return -EPERM;
             if (route->rt_gateway.sa_family != AF_INET)
                 return -EAFNOSUPPORT;
@@ -513,16 +513,16 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, unsigned arg)
 
         switch (request) {
         case SIOCSIFADDR:
-            if (!Process::current->is_superuser())
-                return -EPERM;
+            if (Process::current->gbps() < 10)
+                return -ENOGBPS;
             if (ifr->ifr_addr.sa_family != AF_INET)
                 return -EAFNOSUPPORT;
             adapter->set_ipv4_address(IPv4Address(((sockaddr_in&)ifr->ifr_addr).sin_addr.s_addr));
             return 0;
 
         case SIOCSIFNETMASK:
-            if (!Process::current->is_superuser())
-                return -EPERM;
+            if (Process::current->gbps())
+                return -ENOGBPS;
             if (ifr->ifr_addr.sa_family != AF_INET)
                 return -EAFNOSUPPORT;
             adapter->set_ipv4_netmask(IPv4Address(((sockaddr_in&)ifr->ifr_netmask).sin_addr.s_addr));
