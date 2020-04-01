@@ -35,6 +35,7 @@ class Error;
 class Exception;
 class Expression;
 class Function;
+class GlobalObject;
 class HandleImpl;
 class Heap;
 class HeapBlock;
