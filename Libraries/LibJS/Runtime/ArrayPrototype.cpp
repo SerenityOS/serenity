@@ -50,9 +50,9 @@ Value ArrayPrototype::push(Interpreter& interpreter)
     if (!this_object)
         return {};
     ASSERT(this_object->is_array());
-    if (interpreter.call_frame().arguments.is_empty())
+    if (!interpreter.argument_count())
         return js_undefined();
-    static_cast<Array*>(this_object)->push(interpreter.call_frame().arguments[0]);
+    static_cast<Array*>(this_object)->push(interpreter.argument(0));
     return Value(static_cast<const Array*>(this_object)->length());
 }
 
