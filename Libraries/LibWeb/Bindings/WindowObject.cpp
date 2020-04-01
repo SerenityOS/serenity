@@ -55,13 +55,11 @@ static Window* impl_from(JS::Interpreter& interpreter)
 {
     auto* this_object = interpreter.this_value().to_object(interpreter.heap());
     if (!this_object) {
-        dbg() << "this_object is null";
         ASSERT_NOT_REACHED();
         return nullptr;
     }
     if (StringView("WindowObject") != this_object->class_name()) {
         interpreter.throw_exception<JS::Error>("TypeError", "That's not a WindowObject, bro.");
-        dbg() << "this_object class_name is '" << this_object->class_name() << "'";
         return nullptr;
     }
     return &static_cast<WindowObject*>(this_object)->impl();
@@ -69,11 +67,9 @@ static Window* impl_from(JS::Interpreter& interpreter)
 
 JS::Value WindowObject::alert(JS::Interpreter& interpreter)
 {
-    dbg() << "alert entry";
     auto* impl = impl_from(interpreter);
     if (!impl)
         return {};
-    dbg() << "alert2 entry";
     auto& arguments = interpreter.call_frame().arguments;
     if (arguments.size() < 1)
         return {};
