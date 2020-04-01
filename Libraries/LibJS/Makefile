@@ -14,6 +14,7 @@ OBJS = \
     Runtime/DateConstructor.o \
     Runtime/DatePrototype.o \
     Runtime/Error.o \
+    Runtime/ErrorConstructor.o \
     Runtime/ErrorPrototype.o \
     Runtime/Exception.o \
     Runtime/Function.o \

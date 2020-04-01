@@ -4,6 +4,7 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <LibJS/Runtime/DateConstructor.h>
+#include <LibJS/Runtime/ErrorConstructor.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/MathObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
@@ -19,6 +20,7 @@ GlobalObject::GlobalObject()
 
     put("console", heap().allocate<ConsoleObject>());
     put("Date", heap().allocate<DateConstructor>());
+    put("Error", heap().allocate<ErrorConstructor>());
     put("Math", heap().allocate<MathObject>());
     put("Object", heap().allocate<ObjectConstructor>());
 }
