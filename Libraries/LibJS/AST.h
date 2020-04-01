@@ -484,6 +484,12 @@ public:
 private:
     virtual const char* class_name() const override { return "CallExpression"; }
 
+    struct ThisAndCallee {
+        Value this_value;
+        Value callee;
+    };
+    ThisAndCallee compute_this_and_callee(Interpreter&) const;
+
     NonnullRefPtr<Expression> m_callee;
     const NonnullRefPtrVector<Expression> m_arguments;
 };

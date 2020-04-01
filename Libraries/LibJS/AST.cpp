@@ -60,9 +60,30 @@ Value ExpressionStatement::execute(Interpreter& interpreter) const
     return m_expression->execute(interpreter);
 }
 
+CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interpreter& interpreter) const
+{
+    if (is_new_expression()) {
+        // Computing |this| is irrelevant for "new" expression.
+        return { {}, m_callee->execute(interpreter) };
+    }
+
+    if (m_callee->is_member_expression()) {
+        auto& member_expression = static_cast<const MemberExpression&>(*m_callee);
+        auto object_value = member_expression.object().execute(interpreter);
+        if (interpreter.exception())
+            return {};
+        auto* this_value = object_value.to_object(interpreter.heap());
+        if (interpreter.exception())
+            return {};
+        auto callee = this_value->get(member_expression.computed_property_name(interpreter)).value_or({});
+        return { this_value, callee };
+    }
+    return { &interpreter.global_object(), m_callee->execute(interpreter) };
+}
+
 Value CallExpression::execute(Interpreter& interpreter) const
 {
-    auto callee = m_callee->execute(interpreter);
+    auto [this_value, callee] = compute_this_and_callee(interpreter);
     if (interpreter.exception())
         return {};
 
@@ -89,15 +110,7 @@ Value CallExpression::execute(Interpreter& interpreter) const
             new_object->set_prototype(prototype.value().as_object());
         call_frame.this_value = new_object;
     } else {
-        if (m_callee->is_member_expression()) {
-            auto object_value = static_cast<const MemberExpression&>(*m_callee).object().execute(interpreter);
-            if (interpreter.exception())
-                return {};
-            auto this_value = object_value.to_object(interpreter.heap());
-            if (interpreter.exception())
-                return {};
-            call_frame.this_value = this_value;
-        }
+        call_frame.this_value = this_value;
     }
 
     auto result = function->call(interpreter);
@@ -942,5 +955,4 @@ void SwitchCase::dump(int indent) const
         statement.dump(indent + 1);
     }
 }
-
 }
