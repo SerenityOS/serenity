@@ -47,6 +47,14 @@ DateConstructor::~DateConstructor()
 
 Value DateConstructor::call(Interpreter& interpreter)
 {
+    auto* date = static_cast<Date*>(construct(interpreter).as_object());
+    if (!date)
+        return {};
+    return js_string(interpreter.heap(), date->string());
+}
+
+Value DateConstructor::construct(Interpreter& interpreter)
+{
     // TODO: Support args
     struct timeval tv;
     gettimeofday(&tv, nullptr);

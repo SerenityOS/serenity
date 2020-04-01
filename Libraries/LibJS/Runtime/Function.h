@@ -36,6 +36,7 @@ public:
     virtual ~Function();
 
     virtual Value call(Interpreter&) = 0;
+    virtual Value construct(Interpreter&) = 0;
 
 protected:
     Function();

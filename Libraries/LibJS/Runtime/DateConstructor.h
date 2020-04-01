@@ -36,8 +36,10 @@ public:
     virtual ~DateConstructor() override;
 
     virtual Value call(Interpreter&) override;
+    virtual Value construct(Interpreter&) override;
 
 private:
+    virtual bool has_constructor() const override { return true; }
     virtual const char* class_name() const override { return "DateConstructor"; }
 
     static Value now(Interpreter&);

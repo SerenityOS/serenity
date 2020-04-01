@@ -25,6 +25,27 @@ try {
         assert(e.message === "undefined is not a function");
     }
 
+    try {
+        Math();
+    } catch(e) {
+        assert(e.name === "TypeError");
+        assert(e.message === "[object MathObject] is not a function");
+    }
+
+    try {
+        new Math();
+    } catch(e) {
+        assert(e.name === "TypeError");
+        assert(e.message === "[object MathObject] is not a constructor");
+    }
+
+    try {
+        new isNaN();
+    } catch(e) {
+        assert(e.name === "TypeError");
+        assert(e.message === "[object NativeFunction] is not a constructor");
+    }
+
     console.log("PASS");
 } catch(e) {
     console.log("FAIL: " + e);

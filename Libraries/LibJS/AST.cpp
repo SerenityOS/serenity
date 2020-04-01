@@ -31,6 +31,7 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/ScriptFunction.h>
 #include <LibJS/Runtime/Value.h>
@@ -87,6 +88,14 @@ Value CallExpression::execute(Interpreter& interpreter) const
     if (interpreter.exception())
         return {};
 
+    if (is_new_expression()) {
+        if (!callee.is_object()
+            || !callee.as_object()->is_function()
+            || (callee.as_object()->is_native_function()
+                && !static_cast<NativeFunction*>(callee.as_object())->has_constructor()))
+            return interpreter.throw_exception<Error>("TypeError", String::format("%s is not a constructor", callee.to_string().characters()));
+    }
+
     if (!callee.is_object() || !callee.as_object()->is_function())
         return interpreter.throw_exception<Error>("TypeError", String::format("%s is not a function", callee.to_string().characters()));
 
@@ -103,17 +112,19 @@ Value CallExpression::execute(Interpreter& interpreter) const
     }
 
     Object* new_object = nullptr;
+    Value result;
     if (is_new_expression()) {
         new_object = interpreter.heap().allocate<Object>();
         auto prototype = function->get("prototype");
         if (prototype.has_value() && prototype.value().is_object())
             new_object->set_prototype(prototype.value().as_object());
         call_frame.this_value = new_object;
+        result = function->construct(interpreter);
     } else {
         call_frame.this_value = this_value;
+        result = function->call(interpreter);
     }
 
-    auto result = function->call(interpreter);
     interpreter.pop_call_frame();
 
     if (is_new_expression()) {
@@ -955,4 +966,5 @@ void SwitchCase::dump(int indent) const
         statement.dump(indent + 1);
     }
 }
+
 }
