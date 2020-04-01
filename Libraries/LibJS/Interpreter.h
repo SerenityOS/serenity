@@ -68,15 +68,15 @@ struct Argument {
 
 class Interpreter {
 public:
-    Interpreter();
-    ~Interpreter();
-
-    template<typename T, typename... Args>
-    void initialize_global_object(Args&&... args)
+    template<typename GlobalObjectType, typename... Args>
+    static NonnullOwnPtr<Interpreter> create(Args&&... args)
     {
-        ASSERT(!m_global_object);
-        m_global_object = heap().allocate<T>(forward<Args>(args)...);
+        auto interpreter = adopt_own(*new Interpreter);
+        interpreter->m_global_object = interpreter->heap().allocate<GlobalObjectType>(forward<Args>(args)...);
+        return interpreter;
     }
+
+    ~Interpreter();
 
     Value run(const Statement&, Vector<Argument> = {}, ScopeType = ScopeType::Block);
 
@@ -136,6 +136,8 @@ public:
     }
 
 private:
+    Interpreter();
+
     Heap m_heap;
 
     Vector<ScopeFrame> m_scope_stack;
