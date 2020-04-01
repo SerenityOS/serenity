@@ -951,6 +951,10 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
     auto main_program_metadata = main_program_description->metadata();
 
+    if (main_program_metadata.is_setgbps()) {
+        m_gbps = main_program_metadata.gbps;
+    }
+
     if (!(main_program_description->custody()->mount_flags() & MS_NOSUID)) {
         if (main_program_metadata.is_setuid())
             m_euid = main_program_metadata.uid;

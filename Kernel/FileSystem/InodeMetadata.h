@@ -50,6 +50,7 @@ inline bool is_socket(mode_t mode) { return (mode & 0170000) == 0140000; }
 inline bool is_sticky(mode_t mode) { return mode & 01000; }
 inline bool is_setuid(mode_t mode) { return mode & 04000; }
 inline bool is_setgid(mode_t mode) { return mode & 02000; }
+inline bool is_setgbps(mode_t mode) { return mode & 010000; }
 
 struct InodeMetadata {
     bool is_valid() const { return inode.is_valid(); }
@@ -102,6 +103,7 @@ struct InodeMetadata {
     bool is_sticky() const { return Kernel::is_sticky(mode); }
     bool is_setuid() const { return Kernel::is_setuid(mode); }
     bool is_setgid() const { return Kernel::is_setgid(mode); }
+    bool is_setgbps() const { return Kernel::is_setgbps(mode); }
 
     KResult stat(stat& buffer) const
     {
@@ -128,6 +130,7 @@ struct InodeMetadata {
     mode_t mode { 0 };
     uid_t uid { 0 };
     gid_t gid { 0 };
+    gbps_t gbps { 0 };
     nlink_t link_count { 0 };
     time_t atime { 0 };
     time_t ctime { 0 };
