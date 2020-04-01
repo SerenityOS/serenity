@@ -167,6 +167,12 @@ private:
     T* m_ptr = nullptr;
 };
 
+template<typename T>
+inline NonnullOwnPtr<T> adopt_own(T& object)
+{
+    return NonnullOwnPtr<T>(NonnullOwnPtr<T>::Adopt, object);
+}
+
 template<class T, class... Args>
 inline NonnullOwnPtr<T>
 make(Args&&... args)
@@ -195,5 +201,6 @@ inline void swap(NonnullOwnPtr<T>& a, NonnullOwnPtr<U>& b)
 
 }
 
+using AK::adopt_own;
 using AK::make;
 using AK::NonnullOwnPtr;
