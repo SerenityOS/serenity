@@ -50,6 +50,11 @@ Value ObjectConstructor::call(Interpreter& interpreter)
     return interpreter.heap().allocate<Object>();
 }
 
+Value ObjectConstructor::construct(Interpreter& interpreter)
+{
+    return call(interpreter);
+}
+
 Value ObjectConstructor::get_own_property_names(Interpreter& interpreter)
 {
     if (interpreter.call_frame().arguments.size() < 1)

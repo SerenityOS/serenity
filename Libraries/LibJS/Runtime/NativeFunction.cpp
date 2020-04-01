@@ -44,4 +44,9 @@ Value NativeFunction::call(Interpreter& interpreter)
     return m_native_function(interpreter);
 }
 
+Value NativeFunction::construct(Interpreter&)
+{
+    return {};
+}
+
 }

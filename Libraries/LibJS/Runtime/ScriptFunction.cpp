@@ -55,4 +55,9 @@ Value ScriptFunction::call(Interpreter& interpreter)
     return interpreter.run(m_body, arguments, ScopeType::Function);
 }
 
+Value ScriptFunction::construct(Interpreter& interpreter)
+{
+    return call(interpreter);
+}
+
 }
