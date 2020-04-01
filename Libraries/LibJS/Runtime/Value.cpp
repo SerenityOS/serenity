@@ -39,7 +39,7 @@ namespace JS {
 
 bool Value::is_array() const
 {
-    return is_object() && as_object()->is_array();
+    return is_object() && as_object().is_array();
 }
 
 String Value::to_string() const
@@ -64,7 +64,7 @@ String Value::to_string() const
     }
 
     if (is_object())
-        return as_object()->to_primitive(Object::PreferredType::String).to_string();
+        return as_object().to_primitive(Object::PreferredType::String).to_string();
 
     if (is_string())
         return m_value.as_string->string();
@@ -94,7 +94,7 @@ bool Value::to_boolean() const
 Object* Value::to_object(Heap& heap) const
 {
     if (is_object())
-        return const_cast<Object*>(as_object());
+        return &const_cast<Object&>(as_object());
 
     if (is_string())
         return heap.allocate<StringObject>(m_value.as_string);
@@ -241,7 +241,7 @@ Value typed_eq(Value lhs, Value rhs)
     case Value::Type::Boolean:
         return Value(lhs.as_bool() == rhs.as_bool());
     case Value::Type::Object:
-        return Value(lhs.as_object() == rhs.as_object());
+        return Value(&lhs.as_object() == &rhs.as_object());
     }
 
     ASSERT_NOT_REACHED();
@@ -256,16 +256,16 @@ Value eq(Value lhs, Value rhs)
         return Value(true);
 
     if (lhs.is_object() && rhs.is_boolean())
-        return eq(lhs.as_object()->to_primitive(), rhs.to_number());
+        return eq(lhs.as_object().to_primitive(), rhs.to_number());
 
     if (lhs.is_boolean() && rhs.is_object())
-        return eq(lhs.to_number(), rhs.as_object()->to_primitive());
+        return eq(lhs.to_number(), rhs.as_object().to_primitive());
 
     if (lhs.is_object())
-        return eq(lhs.as_object()->to_primitive(), rhs);
+        return eq(lhs.as_object().to_primitive(), rhs);
 
     if (rhs.is_object())
-        return eq(lhs, rhs.as_object()->to_primitive());
+        return eq(lhs, rhs.as_object().to_primitive());
 
     if (lhs.is_number() || rhs.is_number())
         return Value(lhs.to_number().as_double() == rhs.to_number().as_double());
@@ -281,11 +281,11 @@ Value instance_of(Value lhs, Value rhs)
     if (!lhs.is_object() || !rhs.is_object())
         return Value(false);
 
-    auto constructor_prototype_property = rhs.as_object()->get("prototype");
+    auto constructor_prototype_property = rhs.as_object().get("prototype");
     if (!constructor_prototype_property.has_value() || !constructor_prototype_property.value().is_object())
         return Value(false);
 
-    return Value(lhs.as_object()->has_prototype(constructor_prototype_property.value().as_object()));
+    return Value(lhs.as_object().has_prototype(&constructor_prototype_property.value().as_object()));
 }
 
 const LogStream& operator<<(const LogStream& stream, const Value& value)

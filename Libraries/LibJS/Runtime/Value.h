@@ -109,16 +109,16 @@ public:
         return m_value.as_bool;
     }
 
-    Object* as_object()
+    Object& as_object()
     {
         ASSERT(type() == Type::Object);
-        return m_value.as_object;
+        return *m_value.as_object;
     }
 
-    const Object* as_object() const
+    const Object& as_object() const
     {
         ASSERT(type() == Type::Object);
-        return m_value.as_object;
+        return *m_value.as_object;
     }
 
     PrimitiveString* as_string()

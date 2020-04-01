@@ -97,61 +97,61 @@ String read_next_piece()
 
 static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects);
 
-static void print_array(const JS::Array* array, HashTable<JS::Object*>& seen_objects)
+static void print_array(const JS::Array& array, HashTable<JS::Object*>& seen_objects)
 {
     fputs("[ ", stdout);
-    for (size_t i = 0; i < array->elements().size(); ++i) {
-        print_value(array->elements()[i], seen_objects);
-        if (i != array->elements().size() - 1)
+    for (size_t i = 0; i < array.elements().size(); ++i) {
+        print_value(array.elements()[i], seen_objects);
+        if (i != array.elements().size() - 1)
             fputs(", ", stdout);
     }
     fputs(" ]", stdout);
 }
 
-static void print_object(const JS::Object* object, HashTable<JS::Object*>& seen_objects)
+static void print_object(const JS::Object& object, HashTable<JS::Object*>& seen_objects)
 {
     fputs("{ ", stdout);
     size_t index = 0;
-    for (auto& it : object->own_properties()) {
+    for (auto& it : object.own_properties()) {
         printf("\"\033[33;1m%s\033[0m\": ", it.key.characters());
         print_value(it.value, seen_objects);
-        if (index != object->own_properties().size() - 1)
+        if (index != object.own_properties().size() - 1)
             fputs(", ", stdout);
         ++index;
     }
     fputs(" }", stdout);
 }
 
-static void print_function(const JS::Object* function, HashTable<JS::Object*>&)
+static void print_function(const JS::Object& function, HashTable<JS::Object*>&)
 {
-    printf("\033[34;1m[%s]\033[0m", function->class_name());
+    printf("\033[34;1m[%s]\033[0m", function.class_name());
 }
 
-static void print_date(const JS::Object* date, HashTable<JS::Object*>&)
+static void print_date(const JS::Object& date, HashTable<JS::Object*>&)
 {
-    printf("\033[34;1mDate %s\033[0m", static_cast<const JS::Date*>(date)->string().characters());
+    printf("\033[34;1mDate %s\033[0m", static_cast<const JS::Date&>(date).string().characters());
 }
 
 void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
 {
     if (value.is_object()) {
-        if (seen_objects.contains(value.as_object())) {
+        if (seen_objects.contains(&value.as_object())) {
             // FIXME: Maybe we should only do this for circular references,
             //        not for all reoccurring objects.
-            printf("<already printed Object %p>", value.as_object());
+            printf("<already printed Object %p>", &value.as_object());
             return;
         }
-        seen_objects.set(value.as_object());
+        seen_objects.set(&value.as_object());
     }
 
     if (value.is_array())
-        return print_array(static_cast<const JS::Array*>(value.as_object()), seen_objects);
+        return print_array(static_cast<const JS::Array&>(value.as_object()), seen_objects);
 
     if (value.is_object()) {
-        auto* object = value.as_object();
-        if (object->is_function())
+        auto& object = value.as_object();
+        if (object.is_function())
             return print_function(object, seen_objects);
-        if (object->is_date())
+        if (object.is_date())
             return print_date(object, seen_objects);
         return print_object(object, seen_objects);
     }

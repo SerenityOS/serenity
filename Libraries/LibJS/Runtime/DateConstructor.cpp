@@ -47,10 +47,10 @@ DateConstructor::~DateConstructor()
 
 Value DateConstructor::call(Interpreter& interpreter)
 {
-    auto* date = static_cast<Date*>(construct(interpreter).as_object());
-    if (!date)
+    auto date = construct(interpreter);
+    if (!date.is_object())
         return {};
-    return js_string(interpreter.heap(), date->string());
+    return js_string(interpreter.heap(), static_cast<Date&>(date.as_object()).string());
 }
 
 Value DateConstructor::construct(Interpreter& interpreter)

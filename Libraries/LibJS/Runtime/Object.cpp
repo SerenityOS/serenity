@@ -56,8 +56,8 @@ bool Object::has_prototype(const Object* prototype) const
 Optional<Value> Object::get_own_property(const Object& this_object, const FlyString& property_name) const
 {
     auto value_here = m_properties.get(property_name);
-    if (value_here.has_value() && value_here.value().is_object() && value_here.value().as_object()->is_native_property()) {
-        auto& native_property = static_cast<const NativeProperty&>(*value_here.value().as_object());
+    if (value_here.has_value() && value_here.value().is_object() && value_here.value().as_object().is_native_property()) {
+        auto& native_property = static_cast<const NativeProperty&>(value_here.value().as_object());
         auto& interpreter = const_cast<Object*>(this)->interpreter();
         auto& call_frame = interpreter.push_call_frame();
         call_frame.this_value = const_cast<Object*>(&this_object);
@@ -71,8 +71,8 @@ Optional<Value> Object::get_own_property(const Object& this_object, const FlyStr
 bool Object::put_own_property(Object& this_object, const FlyString& property_name, Value value)
 {
     auto value_here = m_properties.get(property_name);
-    if (value_here.has_value() && value_here.value().is_object() && value_here.value().as_object()->is_native_property()) {
-        auto& native_property = static_cast<NativeProperty&>(*value_here.value().as_object());
+    if (value_here.has_value() && value_here.value().is_object() && value_here.value().as_object().is_native_property()) {
+        auto& native_property = static_cast<NativeProperty&>(value_here.value().as_object());
         auto& interpreter = const_cast<Object*>(this)->interpreter();
         auto& call_frame = interpreter.push_call_frame();
         call_frame.this_value = &this_object;
@@ -103,8 +103,8 @@ void Object::put(const FlyString& property_name, Value value)
     while (object) {
         auto value_here = object->m_properties.get(property_name);
         if (value_here.has_value()) {
-            if (value_here.value().is_object() && value_here.value().as_object()->is_native_property()) {
-                auto& native_property = static_cast<NativeProperty&>(*value_here.value().as_object());
+            if (value_here.value().is_object() && value_here.value().as_object().is_native_property()) {
+                auto& native_property = static_cast<NativeProperty&>(value_here.value().as_object());
                 auto& interpreter = const_cast<Object*>(this)->interpreter();
                 auto& call_frame = interpreter.push_call_frame();
                 call_frame.this_value = this;
