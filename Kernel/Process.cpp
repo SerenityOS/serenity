@@ -693,6 +693,7 @@ pid_t Process::sys$fork(RegisterState& regs)
     child->m_execpromises = m_execpromises;
     child->m_veil_state = m_veil_state;
     child->m_unveiled_paths = m_unveiled_paths;
+    child->m_gbps = m_gbps;
     child->m_fds = m_fds;
     child->m_sid = m_sid;
     child->m_pgid = m_pgid;
@@ -1305,6 +1306,9 @@ Process* Process::create_user_process(Thread*& first_thread, const String& path,
     process->m_fds[0].set(*description);
     process->m_fds[1].set(*description);
     process->m_fds[2].set(*description);
+
+    // Kernel-created processes start with 35 GBPs.
+    process->m_gbps = 35;
 
     error = process->exec(path, move(arguments), move(environment));
     if (error != 0) {

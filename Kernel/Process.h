@@ -324,6 +324,12 @@ public:
     u32 m_ticks_in_user_for_dead_children { 0 };
     u32 m_ticks_in_kernel_for_dead_children { 0 };
 
+    void decrement_gbps()
+    {
+        if (m_gbps > 0)
+            m_gbps--;
+    }
+
     bool validate_read_from_kernel(VirtualAddress, size_t) const;
 
     bool validate_read(const void*, size_t) const;
