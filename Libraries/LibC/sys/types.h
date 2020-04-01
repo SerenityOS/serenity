@@ -44,6 +44,7 @@ typedef int __pid_t;
 #define pid_t __pid_t
 
 typedef int id_t;
+typedef int gbps_t;
 
 typedef int __ssize_t;
 #define ssize_t __ssize_t

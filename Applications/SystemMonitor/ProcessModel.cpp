@@ -75,6 +75,8 @@ String ProcessModel::column_name(int column) const
         return "PID";
     case Column::TID:
         return "TID";
+    case Column::GBPs:
+        return "GBPs";
     case Column::State:
         return "State";
     case Column::User:
@@ -136,6 +138,8 @@ GUI::Model::ColumnMetadata ProcessModel::column_metadata(int column) const
     case Column::PID:
         return { 32, Gfx::TextAlignment::CenterRight };
     case Column::TID:
+        return { 32, Gfx::TextAlignment::CenterRight };
+    case Column::GBPs:
         return { 32, Gfx::TextAlignment::CenterRight };
     case Column::State:
         return { 75, Gfx::TextAlignment::CenterLeft };
@@ -210,6 +214,8 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, Role role) const
             return thread.current_state.pid;
         case Column::TID:
             return thread.current_state.tid;
+        case Column::GBPs:
+            return thread.current_state.gbps;
         case Column::State:
             return thread.current_state.state;
         case Column::User:
@@ -279,6 +285,8 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, Role role) const
             return thread.current_state.pid;
         case Column::TID:
             return thread.current_state.tid;
+        case Column::GBPs:
+            return thread.current_state.gbps;
         case Column::State:
             return thread.current_state.state;
         case Column::User:
@@ -350,6 +358,7 @@ void ProcessModel::update()
             state.user = it.value.username;
             state.pledge = it.value.pledge;
             state.veil = it.value.veil;
+            state.gbps = it.value.gbps;
             state.syscall_count = thread.syscall_count;
             state.inode_faults = thread.inode_faults;
             state.zero_faults = thread.zero_faults;

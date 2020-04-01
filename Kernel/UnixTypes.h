@@ -262,6 +262,7 @@ typedef u32 gid_t;
 typedef u32 clock_t;
 typedef u32 socklen_t;
 typedef int pid_t;
+typedef int gbps_t;
 
 struct tms {
     clock_t tms_utime;

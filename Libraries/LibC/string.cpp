@@ -422,6 +422,7 @@ const char* const sys_errlist[] = {
     "No such thread",
     "Protocol error",
     "Not supported",
+    "No tendies for you",
     "The highest errno +1 :^)",
 };
 

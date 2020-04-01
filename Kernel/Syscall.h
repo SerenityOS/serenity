@@ -182,7 +182,8 @@ namespace Kernel {
     __ENUMERATE_SYSCALL(perf_event)           \
     __ENUMERATE_SYSCALL(shutdown)             \
     __ENUMERATE_SYSCALL(get_stack_bounds)     \
-    __ENUMERATE_SYSCALL(ptrace)
+    __ENUMERATE_SYSCALL(ptrace)               \
+    __ENUMERATE_SYSCALL(getgbps)
 
 namespace Syscall {
 

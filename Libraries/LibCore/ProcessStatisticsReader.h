@@ -62,6 +62,7 @@ struct ProcessStatistics {
     uid_t uid;
     gid_t gid;
     pid_t ppid;
+    gbps_t gbps;
     unsigned nfds;
     String name;
     String tty;

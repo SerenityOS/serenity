@@ -4961,3 +4961,8 @@ bool Process::has_tracee_thread(int tracer_pid) const
 }
 
 }
+
+gbps_t Process::sys$getgbps()
+{
+    return m_gbps;
+}

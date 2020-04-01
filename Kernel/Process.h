@@ -140,6 +140,7 @@ public:
     uid_t euid() const { return m_euid; }
     gid_t egid() const { return m_egid; }
     pid_t ppid() const { return m_ppid; }
+    gbps_t gbps() const { return m_gbps; }
 
     pid_t exec_tid() const { return m_exec_tid; }
 
@@ -300,6 +301,7 @@ public:
     int sys$perf_event(int type, FlatPtr arg1, FlatPtr arg2);
     int sys$get_stack_bounds(FlatPtr* stack_base, size_t* stack_size);
     int sys$ptrace(const Syscall::SC_ptrace_params*);
+    gbps_t sys$getgbps();
 
     template<bool sockname, typename Params>
     int get_sock_or_peer_name(const Params&);
@@ -457,6 +459,8 @@ private:
     pid_t m_pgid { 0 };
 
     pid_t m_exec_tid { 0 };
+
+    int m_gbps { 0 };
 
     static const int m_max_open_file_descriptors { FD_SETSIZE };
 

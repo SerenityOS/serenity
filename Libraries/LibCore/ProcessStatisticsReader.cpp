@@ -60,6 +60,7 @@ HashMap<pid_t, Core::ProcessStatistics> ProcessStatisticsReader::get_all()
         process.uid = process_object.get("uid").to_u32();
         process.gid = process_object.get("gid").to_u32();
         process.ppid = process_object.get("ppid").to_u32();
+        process.gbps = process_object.get("gbps").to_u32();
         process.nfds = process_object.get("nfds").to_u32();
         process.name = process_object.get("name").to_string();
         process.tty = process_object.get("tty").to_string();

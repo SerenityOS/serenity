@@ -582,6 +582,12 @@ int reboot()
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+gbps_t getgbps()
+{
+    int rc = syscall(SC_getgbps);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 int mount(const char* source, const char* target, const char* fs_type, int flags)
 {
     if (!source || !target || !fs_type) {

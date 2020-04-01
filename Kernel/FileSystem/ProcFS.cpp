@@ -881,6 +881,7 @@ Optional<KBuffer> procfs$all(InodeIdentifier)
         process_object.add("uid", process.uid());
         process_object.add("gid", process.gid());
         process_object.add("ppid", process.ppid());
+        process_object.add("gbps", process.gbps());
         process_object.add("nfds", process.number_of_open_file_descriptors());
         process_object.add("name", process.name());
         process_object.add("tty", process.tty() ? process.tty()->tty_name() : "notty");

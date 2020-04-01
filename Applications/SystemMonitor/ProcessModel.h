@@ -55,6 +55,7 @@ public:
         User,
         PID,
         TID,
+        GBPs,
         Virtual,
         Physical,
         DirtyPrivate,
@@ -96,6 +97,7 @@ private:
     struct ThreadState {
         int tid;
         pid_t pid;
+        gbps_t gbps;
         unsigned times_scheduled;
         String name;
         String state;
