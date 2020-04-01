@@ -25,10 +25,10 @@
  */
 
 #include "Editor.h"
+#include <AK/StringBuilder.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
-#include <sys/uio.h>
 #include <unistd.h>
 
 namespace Line {
@@ -323,16 +323,14 @@ String Editor::get_line(const String& prompt)
                         num_printed += fprintf(stderr, "%-*s", static_cast<int>(longest_suggestion_length) + 2, suggestion.characters());
                     }
 
-                    putchar('\n');
-                    struct iovec iov[] = {
-                        { const_cast<char*>(prompt.characters()), prompt.length() },
-                        { m_buffer.data(), m_cursor },
-                        { m_buffer.data() + m_cursor, m_buffer.size() - m_cursor }
-                    };
-                    if (writev(STDOUT_FILENO, iov, 3)) {
-                        perror("writev");
-                        ASSERT_NOT_REACHED();
-                    }
+                    StringBuilder builder;
+                    builder.append('\n');
+                    builder.append(prompt);
+                    builder.append(m_buffer.data(), m_cursor);
+                    builder.append(m_buffer.data() + m_cursor, m_buffer.size() - m_cursor);
+                    fputs(builder.to_string().characters(), stdout);
+                    fflush(stdout);
+
                     m_cursor = m_buffer.size();
                 }
 
