@@ -90,16 +90,16 @@ Value CallExpression::execute(Interpreter& interpreter) const
 
     if (is_new_expression()) {
         if (!callee.is_object()
-            || !callee.as_object()->is_function()
-            || (callee.as_object()->is_native_function()
-                && !static_cast<NativeFunction*>(callee.as_object())->has_constructor()))
+            || !callee.as_object().is_function()
+            || (callee.as_object().is_native_function()
+                && !static_cast<NativeFunction&>(callee.as_object()).has_constructor()))
             return interpreter.throw_exception<Error>("TypeError", String::format("%s is not a constructor", callee.to_string().characters()));
     }
 
-    if (!callee.is_object() || !callee.as_object()->is_function())
+    if (!callee.is_object() || !callee.as_object().is_function())
         return interpreter.throw_exception<Error>("TypeError", String::format("%s is not a function", callee.to_string().characters()));
 
-    auto* function = static_cast<Function*>(callee.as_object());
+    auto& function = static_cast<Function&>(callee.as_object());
 
     auto& call_frame = interpreter.push_call_frame();
     for (size_t i = 0; i < m_arguments.size(); ++i) {
@@ -115,14 +115,14 @@ Value CallExpression::execute(Interpreter& interpreter) const
     Value result;
     if (is_new_expression()) {
         new_object = interpreter.heap().allocate<Object>();
-        auto prototype = function->get("prototype");
+        auto prototype = function.get("prototype");
         if (prototype.has_value() && prototype.value().is_object())
-            new_object->set_prototype(prototype.value().as_object());
+            new_object->set_prototype(&prototype.value().as_object());
         call_frame.this_value = new_object;
-        result = function->construct(interpreter);
+        result = function.construct(interpreter);
     } else {
         call_frame.this_value = this_value;
-        result = function->call(interpreter);
+        result = function.call(interpreter);
     }
 
     interpreter.pop_call_frame();

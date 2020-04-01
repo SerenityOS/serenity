@@ -92,7 +92,7 @@ Value ObjectConstructor::set_prototype_of(Interpreter& interpreter)
     auto* object = interpreter.call_frame().arguments[0].to_object(interpreter.heap());
     if (interpreter.exception())
         return {};
-    object->set_prototype(const_cast<Object*>(interpreter.call_frame().arguments[1].as_object()));
+    object->set_prototype(&const_cast<Object&>(interpreter.call_frame().arguments[1].as_object()));
     return {};
 }
 
