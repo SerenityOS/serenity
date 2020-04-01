@@ -57,9 +57,9 @@ Value ObjectConstructor::construct(Interpreter& interpreter)
 
 Value ObjectConstructor::get_own_property_names(Interpreter& interpreter)
 {
-    if (interpreter.call_frame().arguments.size() < 1)
+    if (!interpreter.argument_count())
         return {};
-    auto* object = interpreter.call_frame().arguments[0].to_object(interpreter.heap());
+    auto* object = interpreter.argument(0).to_object(interpreter.heap());
     if (interpreter.exception())
         return {};
     auto* result = interpreter.heap().allocate<Array>();
@@ -75,9 +75,9 @@ Value ObjectConstructor::get_own_property_names(Interpreter& interpreter)
 
 Value ObjectConstructor::get_prototype_of(Interpreter& interpreter)
 {
-    if (interpreter.call_frame().arguments.size() < 1)
+    if (!interpreter.argument_count())
         return {};
-    auto* object = interpreter.call_frame().arguments[0].to_object(interpreter.heap());
+    auto* object = interpreter.argument(0).to_object(interpreter.heap());
     if (interpreter.exception())
         return {};
     return object->prototype();
@@ -85,14 +85,14 @@ Value ObjectConstructor::get_prototype_of(Interpreter& interpreter)
 
 Value ObjectConstructor::set_prototype_of(Interpreter& interpreter)
 {
-    if (interpreter.call_frame().arguments.size() < 2)
+    if (interpreter.argument_count() < 2)
         return {};
-    if (!interpreter.call_frame().arguments[1].is_object())
+    if (!interpreter.argument(0).is_object())
         return {};
-    auto* object = interpreter.call_frame().arguments[0].to_object(interpreter.heap());
+    auto* object = interpreter.argument(0).to_object(interpreter.heap());
     if (interpreter.exception())
         return {};
-    object->set_prototype(&const_cast<Object&>(interpreter.call_frame().arguments[1].as_object()));
+    object->set_prototype(&const_cast<Object&>(interpreter.argument(1).as_object()));
     return {};
 }
 

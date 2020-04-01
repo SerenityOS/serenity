@@ -39,9 +39,9 @@ Value GlobalObject::gc(Interpreter& interpreter)
 
 Value GlobalObject::is_nan(Interpreter& interpreter)
 {
-    if (interpreter.call_frame().arguments.size() < 1)
+    if (interpreter.argument_count() < 1)
         return js_undefined();
-    return Value(interpreter.call_frame().arguments[0].to_number().is_nan());
+    return Value(interpreter.argument(0).to_number().is_nan());
 }
 
 }

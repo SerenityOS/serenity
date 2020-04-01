@@ -107,6 +107,21 @@ public:
     void pop_call_frame() { m_call_stack.take_last(); }
     const CallFrame& call_frame() { return m_call_stack.last(); }
 
+    size_t argument_count() const
+    {
+        if (m_call_stack.is_empty())
+            return 0;
+        return m_call_stack.last().arguments.size();
+    }
+
+    Value argument(size_t index) const
+    {
+        if (m_call_stack.is_empty())
+            return {};
+        auto& arguments = m_call_stack.last().arguments;
+        return index < arguments.size() ? arguments[index] : js_undefined();
+    }
+
     Value this_value() const
     {
         if (m_call_stack.is_empty())

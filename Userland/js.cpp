@@ -211,9 +211,9 @@ ReplObject::~ReplObject()
 
 JS::Value ReplObject::exit_interpreter(JS::Interpreter& interpreter)
 {
-    if (interpreter.call_frame().arguments.is_empty())
+    if (!interpreter.argument_count())
         exit(0);
-    int exit_code = interpreter.call_frame().arguments[0].to_number().as_double();
+    int exit_code = interpreter.argument(0).to_number().as_double();
     exit(exit_code);
     return JS::js_undefined();
 }
@@ -230,10 +230,10 @@ JS::Value ReplObject::repl_help(JS::Interpreter& interpreter)
 
 JS::Value ReplObject::load_file(JS::Interpreter& interpreter)
 {
-    if (interpreter.call_frame().arguments.is_empty())
+    if (!interpreter.argument_count())
         return JS::Value(false);
-    Vector<JS::Value> files = interpreter.call_frame().arguments;
-    for (JS::Value file : files) {
+
+    for (auto& file : interpreter.call_frame().arguments) {
         String file_name = file.as_string()->string();
         auto js_file = Core::File::construct(file_name);
         if (!js_file->open(Core::IODevice::ReadOnly)) {
