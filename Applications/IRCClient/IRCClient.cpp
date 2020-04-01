@@ -317,6 +317,16 @@ void IRCClient::send_topic(const String& channel_name, const String& text)
     send(String::format("TOPIC %s :%s\r\n", channel_name.characters(), text.characters()));
 }
 
+void IRCClient::send_kick(const String& channel_name, const String& nick, const String& comment)
+{
+    send(String::format("KICK %s %s :%s\r\n", channel_name.characters(), nick.characters(), comment.characters()));
+}
+
+void IRCClient::send_list()
+{
+    send("LIST\r\n");
+}
+
 void IRCClient::send_privmsg(const String& target, const String& text)
 {
     send(String::format("PRIVMSG %s :%s\r\n", target.characters(), text.characters()));
@@ -696,6 +706,19 @@ void IRCClient::handle_user_command(const String& input)
         send_topic(channel, topic);
         return;
     }
+    if (command == "/KICK") {
+        if (parts.size() < 3)
+            return;
+        auto channel = parts[1];
+        auto nick = parts[2];
+        auto reason = input.view().substring_view_starting_after_substring(nick);
+        send_kick(channel, nick, reason);
+        return;
+    }
+    if (command == "/LIST") {
+        send_list();
+        return;
+    }
     if (command == "/QUERY") {
         if (parts.size() >= 2) {
             auto& query = ensure_query(parts[1]);
@@ -724,6 +747,11 @@ void IRCClient::change_nick(const String& nick)
     send(String::format("NICK %s\r\n", nick.characters()));
 }
 
+void IRCClient::handle_list_channels_action()
+{
+    send_list();
+}
+
 void IRCClient::handle_whois_action(const String& nick)
 {
     send_whois(nick);
@@ -737,6 +765,16 @@ void IRCClient::handle_open_query_action(const String& nick)
 void IRCClient::handle_change_nick_action(const String& nick)
 {
     change_nick(nick);
+}
+
+void IRCClient::handle_change_topic_action(const String& channel, const String& topic)
+{
+    send_topic(channel, topic);
+}
+
+void IRCClient::handle_kick_user_action(const String& channel, const String& nick, const String& message)
+{
+    send_kick(channel, nick, message);
 }
 
 void IRCClient::handle_close_query_action(const String& nick)
