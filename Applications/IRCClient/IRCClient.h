@@ -99,12 +99,15 @@ public:
     void handle_user_input_in_query(const String& query_name, const String&);
     void handle_user_input_in_server(const String&);
 
+    void handle_list_channels_action();
     void handle_whois_action(const String&);
     void handle_open_query_action(const String&);
     void handle_close_query_action(const String&);
     void handle_join_action(const String&);
     void handle_part_action(const String&);
     void handle_change_nick_action(const String&);
+    void handle_change_topic_action(const String& channel_name, const String&);
+    void handle_kick_user_action(const String& channel_name, const String& nick, const String&);
 
     IRCQuery* query_with_name(const String&);
     IRCQuery& ensure_query(const String& name);
@@ -134,6 +137,8 @@ private:
     void send_privmsg(const String& target, const String&);
     void send_notice(const String& target, const String&);
     void send_topic(const String& channel_name, const String&);
+    void send_kick(const String& channel_name, const String& nick, const String&);
+    void send_list();
     void send_whois(const String&);
     void process_line(ByteBuffer&&);
     void handle_join(const Message&);

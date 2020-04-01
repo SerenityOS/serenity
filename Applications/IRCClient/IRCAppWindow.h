@@ -55,9 +55,12 @@ private:
     RefPtr<GUI::StackWidget> m_container;
     RefPtr<GUI::TableView> m_window_list;
     RefPtr<GUI::Action> m_join_action;
+    RefPtr<GUI::Action> m_list_channels_action;
     RefPtr<GUI::Action> m_part_action;
     RefPtr<GUI::Action> m_whois_action;
     RefPtr<GUI::Action> m_open_query_action;
     RefPtr<GUI::Action> m_close_query_action;
     RefPtr<GUI::Action> m_change_nick_action;
+    RefPtr<GUI::Action> m_change_topic_action;
+    RefPtr<GUI::Action> m_kick_user_action;
 };
