@@ -26,6 +26,7 @@ describing how to launch and manage this service.
 * `SocketPermissions` - (octal) file system permissions for the socket file. The default permissions are 0600.
 * `User` - a name of the user to run the service as. This impacts what UID, GID (and extra GIDs) the service processes have. By default, services are run as root.
 * `WorkingDirectory` - The working directory in which the service is spawned. By Default, services are spawned in the root (`"/"`) directory.
+* `GoodBoyPoints` - how many good boy points the service process should start with.
 
 ## Environment
 
