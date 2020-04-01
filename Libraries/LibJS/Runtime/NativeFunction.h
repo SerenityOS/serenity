@@ -37,6 +37,9 @@ public:
     virtual ~NativeFunction() override;
 
     virtual Value call(Interpreter&) override;
+    virtual Value construct(Interpreter&) override;
+
+    virtual bool has_constructor() const { return false; }
 
 protected:
     NativeFunction() {}
