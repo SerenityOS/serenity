@@ -246,6 +246,13 @@ void Service::spawn()
             }
         }
 
+        // Drop GBPs. We use an invalid syscall for this.
+        while (getgbps() > m_gbps) {
+            rc = read(0, nullptr, 1);
+            ASSERT(errno == EFAULT);
+            ASSERT(rc == -1);
+        }
+
         char* argv[m_extra_arguments.size() + 2];
         argv[0] = const_cast<char*>(m_executable_path.characters());
         for (size_t i = 0; i < m_extra_arguments.size(); i++)
@@ -329,6 +336,7 @@ Service::Service(const Core::ConfigFile& config, const StringView& name)
     }
 
     m_working_directory = config.read_entry(name, "WorkingDirectory");
+    m_gbps = config.read_num_entry(name, "GoodBoyPoints", 10);
 }
 
 void Service::save_to(JsonObject& json)
@@ -362,4 +370,5 @@ void Service::save_to(JsonObject& json)
 
     json.set("restart_attempts", m_restart_attempts);
     json.set("working_directory", m_working_directory);
+    json.set("gbps", m_gbps);
 }

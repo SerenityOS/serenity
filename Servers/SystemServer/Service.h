@@ -84,6 +84,9 @@ private:
     // The working directory in which to spawn the service
     String m_working_directory;
 
+    // How many GBPs the service should be started with.
+    gbps_t m_gbps;
+
     void resolve_user();
     void setup_socket();
     void setup_notifier();
