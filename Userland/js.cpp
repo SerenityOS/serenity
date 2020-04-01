@@ -198,16 +198,15 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(script_path, "Path to script file", "script", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
-    JS::Interpreter interpreter;
-    interpreter.initialize_global_object<JS::GlobalObject>();
-    interpreter.heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
+    auto interpreter = JS::Interpreter::create<JS::GlobalObject>();
+    interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
 
-    interpreter.global_object().put("global", &interpreter.global_object());
+    interpreter->global_object().put("global", &interpreter->global_object());
 
     if (script_path == nullptr) {
         editor = make<Line::Editor>();
         editor->initialize();
-        repl(interpreter);
+        repl(*interpreter);
     } else {
         auto file = Core::File::construct(script_path);
         if (!file->open(Core::IODevice::ReadOnly)) {
@@ -232,7 +231,7 @@ int main(int argc, char** argv)
         if (dump_ast)
             program->dump(0);
 
-        auto result = interpreter.run(*program);
+        auto result = interpreter->run(*program);
 
         if (print_last_result)
             printf("%s\n", result.to_string().characters());

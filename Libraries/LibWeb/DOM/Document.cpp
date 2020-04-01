@@ -360,10 +360,8 @@ Color Document::visited_link_color() const
 
 JS::Interpreter& Document::interpreter()
 {
-    if (!m_interpreter) {
-        m_interpreter = make<JS::Interpreter>();
-        m_interpreter->initialize_global_object<Bindings::WindowObject>(*m_window);
-    }
+    if (!m_interpreter)
+        m_interpreter = JS::Interpreter::create<Bindings::WindowObject>(*m_window);
     return *m_interpreter;
 }
 
