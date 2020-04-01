@@ -18,6 +18,7 @@ GlobalObject::GlobalObject()
     put_native_function("gc", gc);
     put_native_function("isNaN", is_nan);
 
+    put("NaN", js_nan());
     put("console", heap().allocate<ConsoleObject>());
     put("Date", heap().allocate<DateConstructor>());
     put("Error", heap().allocate<ErrorConstructor>());
