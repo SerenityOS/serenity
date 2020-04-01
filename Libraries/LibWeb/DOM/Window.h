@@ -26,47 +26,31 @@
 
 #pragma once
 
+#include <AK/Badge.h>
+#include <AK/RefCounted.h>
+#include <AK/RefPtr.h>
+#include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/Bindings/Wrappable.h>
+
 namespace Web {
 
-class CanvasRenderingContext2D;
-class Document;
-class Element;
-class Event;
-class EventListener;
-class EventTarget;
-class Frame;
-class HTMLBodyElement;
-class HTMLCanvasElement;
-class HTMLElement;
-class HTMLHeadElement;
-class HTMLHtmlElement;
-class HtmlView;
-class LayoutDocument;
-class LayoutNode;
-class MouseEvent;
-class Node;
-class Selector;
-class StyleResolver;
-class StyleRule;
-class StyleSheet;
-class Window;
+class Window : public RefCounted<Window> {
+public:
+    static NonnullRefPtr<Window> create_with_document(Document&);
+    ~Window();
 
-namespace Bindings {
+    const Document& document() const { return m_document; }
+    Document& document() { return m_document; }
 
-class CanvasRenderingContext2DWrapper;
-class DocumentWrapper;
-class ElementWrapper;
-class EventWrapper;
-class EventListenerWrapper;
-class EventTargetWrapper;
-class HTMLCanvasElementWrapper;
-class MouseEventWrapper;
-class NodeWrapper;
-class WindowObject;
-class Wrappable;
-class Wrapper;
+    void alert(const String&);
+    i32 request_animation_frame(JS::Function&);
+    void cancel_animation_frame(i32);
+    void set_interval(JS::Function&, i32);
 
-}
+private:
+    explicit Window(Document&);
 
+    Document& m_document;
+};
 
 }

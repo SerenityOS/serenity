@@ -8,6 +8,7 @@ LIBWEB_OBJS = \
     Bindings/HTMLCanvasElementWrapper.o \
     Bindings/MouseEventWrapper.o \
     Bindings/NodeWrapper.o \
+    Bindings/WindowObject.o \
     Bindings/Wrappable.o \
     CSS/DefaultStyleSheetSource.o \
     CSS/PropertyID.o \
@@ -51,6 +52,7 @@ LIBWEB_OBJS = \
     DOM/Node.o \
     DOM/ParentNode.o \
     DOM/Text.o \
+    DOM/Window.o \
     StylePropertiesModel.o \
     DOMTreeModel.o \
     Dump.o \

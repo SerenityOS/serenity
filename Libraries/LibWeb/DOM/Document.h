@@ -42,15 +42,6 @@
 
 namespace Web {
 
-class Frame;
-class HTMLBodyElement;
-class HTMLHtmlElement;
-class HTMLHeadElement;
-class LayoutDocument;
-class LayoutNode;
-class StyleResolver;
-class StyleSheet;
-
 class Document
     : public ParentNode
     , public NonElementParentNode<Document> {
@@ -139,6 +130,8 @@ private:
     RefPtr<Node> m_inspected_node;
     WeakPtr<Frame> m_frame;
     URL m_url;
+
+    RefPtr<Window> m_window;
 
     RefPtr<LayoutDocument> m_layout_root;
 

@@ -34,6 +34,7 @@
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
+#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/CSS/SelectorEngine.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/Document.h>
@@ -44,6 +45,7 @@
 #include <LibWeb/DOM/HTMLHeadElement.h>
 #include <LibWeb/DOM/HTMLHtmlElement.h>
 #include <LibWeb/DOM/HTMLTitleElement.h>
+#include <LibWeb/DOM/Window.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/Frame.h>
 #include <LibWeb/HtmlView.h>
@@ -57,6 +59,7 @@ namespace Web {
 Document::Document()
     : ParentNode(*this, NodeType::DOCUMENT_NODE)
     , m_style_resolver(make<StyleResolver>(*this))
+    , m_window(Window::create_with_document(*this))
 {
     m_style_update_timer = Core::Timer::construct();
     m_style_update_timer->set_single_shot(true);
@@ -359,65 +362,7 @@ JS::Interpreter& Document::interpreter()
 {
     if (!m_interpreter) {
         m_interpreter = make<JS::Interpreter>();
-
-        m_interpreter->global_object().put_native_function("alert", [](JS::Interpreter& interpreter) -> JS::Value {
-            auto& arguments = interpreter.call_frame().arguments;
-            if (arguments.size() < 1)
-                return JS::js_undefined();
-            GUI::MessageBox::show(arguments[0].to_string(), "Alert", GUI::MessageBox::Type::Information);
-            return JS::js_undefined();
-        });
-
-        m_interpreter->global_object().put_native_function("setInterval", [this](JS::Interpreter& interpreter) -> JS::Value {
-            auto& arguments = interpreter.call_frame().arguments;
-            if (arguments.size() < 2)
-                return JS::js_undefined();
-            ASSERT(arguments[0].is_object());
-            ASSERT(arguments[0].as_object()->is_function());
-            auto callback = make_handle(const_cast<JS::Object*>(arguments[0].as_object()));
-
-            // FIXME: This timer should not be leaked! It should also be removable with clearInterval()!
-            (void)Core::Timer::construct(
-                arguments[1].to_i32(), [this, callback] {
-                    auto* function = const_cast<JS::Function*>(static_cast<const JS::Function*>(callback.cell()));
-                    m_interpreter->call(function);
-                })
-                .leak_ref();
-
-            return JS::js_undefined();
-        });
-
-        m_interpreter->global_object().put_native_function("requestAnimationFrame", [this](JS::Interpreter& interpreter) -> JS::Value {
-            auto& arguments = interpreter.call_frame().arguments;
-            if (arguments.size() < 1)
-                return JS::js_undefined();
-            ASSERT(arguments[0].is_object());
-            ASSERT(arguments[0].as_object()->is_function());
-            auto callback = make_handle(const_cast<JS::Object*>(arguments[0].as_object()));
-            // FIXME: Don't hand out raw DisplayLink ID's to JavaScript!
-            i32 link_id = GUI::DisplayLink::register_callback([this, callback](i32 link_id) {
-                auto* function = const_cast<JS::Function*>(static_cast<const JS::Function*>(callback.cell()));
-                m_interpreter->call(function);
-                GUI::DisplayLink::unregister_callback(link_id);
-            });
-            return JS::Value(link_id);
-        });
-
-        m_interpreter->global_object().put_native_function("cancelAnimationFrame", [](JS::Interpreter& interpreter) -> JS::Value {
-            auto& arguments = interpreter.call_frame().arguments;
-            if (arguments.size() < 1)
-                return JS::js_undefined();
-            // FIXME: We should not be passing untrusted numbers to DisplayLink::unregistered_callback()!
-            GUI::DisplayLink::unregister_callback(arguments[0].to_i32());
-            return JS::js_undefined();
-        });
-
-        m_interpreter->global_object().put_native_property(
-            "document",
-            [this](JS::Interpreter&) {
-                return wrap(m_interpreter->heap(), *this);
-            },
-            nullptr);
+        m_interpreter->initialize_global_object<Bindings::WindowObject>(*m_window);
     }
     return *m_interpreter;
 }

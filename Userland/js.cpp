@@ -35,6 +35,7 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Value.h>
@@ -133,7 +134,7 @@ void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
 
     if (value.is_array())
         return print_array(static_cast<const JS::Array*>(value.as_object()), seen_objects);
-    
+
     if (value.is_object()) {
         auto* object = value.as_object();
         if (object->is_function())
@@ -198,6 +199,7 @@ int main(int argc, char** argv)
     args_parser.parse(argc, argv);
 
     JS::Interpreter interpreter;
+    interpreter.initialize_global_object<JS::GlobalObject>();
     interpreter.heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
 
     interpreter.global_object().put("global", &interpreter.global_object());

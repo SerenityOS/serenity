@@ -48,8 +48,6 @@ Interpreter::Interpreter()
     m_array_prototype = heap().allocate<ArrayPrototype>();
     m_error_prototype = heap().allocate<ErrorPrototype>();
     m_date_prototype = heap().allocate<DatePrototype>();
-
-    m_global_object = heap().allocate<GlobalObject>();
 }
 
 Interpreter::~Interpreter()

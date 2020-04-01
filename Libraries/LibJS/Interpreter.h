@@ -71,6 +71,13 @@ public:
     Interpreter();
     ~Interpreter();
 
+    template<typename T, typename... Args>
+    void initialize_global_object(Args&&... args)
+    {
+        ASSERT(!m_global_object);
+        m_global_object = heap().allocate<T>(forward<Args>(args)...);
+    }
+
     Value run(const Statement&, Vector<Argument> = {}, ScopeType = ScopeType::Block);
 
     Object& global_object() { return *m_global_object; }
