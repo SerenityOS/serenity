@@ -54,8 +54,8 @@ Value StringPrototype::char_at(Interpreter& interpreter)
     if (!this_object)
         return {};
     i32 index = 0;
-    if (!interpreter.call_frame().arguments.is_empty())
-        index = interpreter.call_frame().arguments[0].to_i32();
+    if (interpreter.argument_count())
+        index = interpreter.argument(0).to_i32();
     ASSERT(this_object->is_string_object());
     auto underlying_string = static_cast<const StringObject*>(this_object)->primitive_string()->string();
     if (index < 0 || index >= static_cast<i32>(underlying_string.length()))
@@ -69,13 +69,13 @@ Value StringPrototype::repeat(Interpreter& interpreter)
     if (!this_object)
         return {};
     ASSERT(this_object->is_string_object());
-    if (interpreter.call_frame().arguments.is_empty())
+    if (!interpreter.argument_count())
         return js_string(interpreter.heap(), String::empty());
     i32 count = 0;
-    count = interpreter.call_frame().arguments[0].to_i32();
+    count = interpreter.argument(0).to_i32();
     if (count < 0) {
         // FIXME: throw RangeError
-        return js_undefined();
+        return {};
     }
     auto* string_object = static_cast<StringObject*>(this_object);
     StringBuilder builder;
@@ -89,13 +89,13 @@ Value StringPrototype::starts_with(Interpreter& interpreter)
     auto* this_object = interpreter.this_value().to_object(interpreter.heap());
     if (!this_object)
         return {};
-    if (interpreter.call_frame().arguments.is_empty())
+    if (!interpreter.argument_count())
         return Value(false);
-    auto search_string = interpreter.call_frame().arguments[0].to_string();
+    auto search_string = interpreter.argument(0).to_string();
     auto search_string_length = static_cast<i32>(search_string.length());
     i32 position = 0;
-    if (interpreter.call_frame().arguments.size() > 1) {
-        auto number = interpreter.call_frame().arguments[1].to_number();
+    if (interpreter.argument_count() > 1) {
+        auto number = interpreter.argument(1).to_number();
         if (!number.is_nan())
             position = number.to_i32();
     }

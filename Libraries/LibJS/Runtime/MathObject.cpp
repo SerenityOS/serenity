@@ -53,10 +53,10 @@ MathObject::~MathObject()
 
 Value MathObject::abs(Interpreter& interpreter)
 {
-    if (interpreter.call_frame().arguments.is_empty())
+    if (!interpreter.argument_count())
         return js_nan();
 
-    auto number = interpreter.call_frame().arguments[0].to_number();
+    auto number = interpreter.argument(0).to_number();
     if (number.is_nan())
         return js_nan();
     return Value(number.as_double() >= 0 ? number.as_double() : -number.as_double());

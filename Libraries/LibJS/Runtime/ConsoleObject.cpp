@@ -43,9 +43,9 @@ ConsoleObject::~ConsoleObject()
 
 Value ConsoleObject::log(Interpreter& interpreter)
 {
-    for (size_t i = 0; i < interpreter.call_frame().arguments.size(); ++i) {
-        printf("%s", interpreter.call_frame().arguments[i].to_string().characters());
-        if (i != interpreter.call_frame().arguments.size() - 1)
+    for (size_t i = 0; i < interpreter.argument_count(); ++i) {
+        printf("%s", interpreter.argument(i).to_string().characters());
+        if (i != interpreter.argument_count() - 1)
             putchar(' ');
     }
     putchar('\n');
