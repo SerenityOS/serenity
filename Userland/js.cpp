@@ -42,6 +42,18 @@
 #include <LibLine/Editor.h>
 #include <stdio.h>
 
+class ReplObject : public JS::GlobalObject {
+public:
+    ReplObject();
+    virtual ~ReplObject() override;
+
+private:
+    virtual const char* class_name() const override { return "ReplObject"; }
+    static JS::Value exit_interpreter(JS::Interpreter&);
+    static JS::Value repl_help(JS::Interpreter&);
+    static JS::Value load_file(JS::Interpreter&);
+};
+
 bool dump_ast = false;
 static OwnPtr<Line::Editor> editor;
 
@@ -169,6 +181,81 @@ static void print(JS::Value value)
     putchar('\n');
 }
 
+bool file_has_shebang(AK::ByteBuffer file_contents)
+{
+    if (file_contents.size() >= 2 && file_contents[0] == '#' && file_contents[1] == '!')
+        return true;
+    return false;
+}
+
+StringView strip_shebang(AK::ByteBuffer file_contents)
+{
+    size_t i = 0;
+    for (i = 2; i < file_contents.size(); ++i) {
+        if (file_contents[i] == '\n')
+            break;
+    }
+    return StringView((const char*)file_contents.data() + i, file_contents.size() - i);
+}
+
+ReplObject::ReplObject()
+{
+    put_native_function("exit", exit_interpreter);
+    put_native_function("help", repl_help);
+    put_native_function("load", load_file);
+}
+
+ReplObject::~ReplObject()
+{
+}
+
+JS::Value ReplObject::exit_interpreter(JS::Interpreter& interpreter)
+{
+    if (interpreter.call_frame().arguments.is_empty())
+        exit(0);
+    int exit_code = interpreter.call_frame().arguments[0].to_number().as_double();
+    exit(exit_code);
+    return JS::js_undefined();
+}
+JS::Value ReplObject::repl_help(JS::Interpreter& interpreter)
+{
+    StringBuilder help_text;
+    help_text.append("REPL commands:\n");
+    help_text.append("    exit(code): exit the REPL with specified code. Defaults to 0.\n");
+    help_text.append("    help(): display this menu\n");
+    help_text.append("    load(files): Accepts file names as params to load into running session. For example repl.load(\"js/1.js\", \"js/2.js\", \"js/3.js\")\n");
+    String result = help_text.to_string();
+    return js_string(interpreter.heap(), result);
+}
+
+JS::Value ReplObject::load_file(JS::Interpreter& interpreter)
+{
+    if (interpreter.call_frame().arguments.is_empty())
+        return JS::Value(false);
+    Vector<JS::Value> files = interpreter.call_frame().arguments;
+    for (JS::Value file : files) {
+        String file_name = file.as_string()->string();
+        auto js_file = Core::File::construct(file_name);
+        if (!js_file->open(Core::IODevice::ReadOnly)) {
+            fprintf(stderr, "Failed to open %s: %s\n", file_name.characters(), js_file->error_string());
+        }
+        auto file_contents = js_file->read_all();
+
+        StringView source;
+        if (file_has_shebang(file_contents)) {
+            source = strip_shebang(file_contents);
+        } else {
+            source = file_contents;
+        }
+        auto program = JS::Parser(JS::Lexer(source)).parse_program();
+        if (dump_ast)
+            program->dump(0);
+        auto result = interpreter.run(*program);
+        print(result);
+    }
+    return JS::Value(true);
+}
+
 void repl(JS::Interpreter& interpreter)
 {
     while (true) {
@@ -198,16 +285,19 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(script_path, "Path to script file", "script", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
-    auto interpreter = JS::Interpreter::create<JS::GlobalObject>();
-    interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
-
-    interpreter->global_object().put("global", &interpreter->global_object());
-
     if (script_path == nullptr) {
+        auto interpreter = JS::Interpreter::create<ReplObject>();
+        interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
+        interpreter->global_object().put("global", &interpreter->global_object());
+
         editor = make<Line::Editor>();
         editor->initialize();
         repl(*interpreter);
     } else {
+        auto interpreter = JS::Interpreter::create<JS::GlobalObject>();
+        interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
+        interpreter->global_object().put("global", &interpreter->global_object());
+
         auto file = Core::File::construct(script_path);
         if (!file->open(Core::IODevice::ReadOnly)) {
             fprintf(stderr, "Failed to open %s: %s\n", script_path, file->error_string());
@@ -216,13 +306,8 @@ int main(int argc, char** argv)
         auto file_contents = file->read_all();
 
         StringView source;
-        if (file_contents.size() >= 2 && file_contents[0] == '#' && file_contents[1] == '!') {
-            size_t i = 0;
-            for (i = 2; i < file_contents.size(); ++i) {
-                if (file_contents[i] == '\n')
-                    break;
-            }
-            source = StringView((const char*)file_contents.data() + i, file_contents.size() - i);
+        if (file_has_shebang(file_contents)) {
+            source = strip_shebang(file_contents);
         } else {
             source = file_contents;
         }
