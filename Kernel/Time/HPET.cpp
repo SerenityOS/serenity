@@ -74,9 +74,7 @@ struct [[gnu::packed]] TimerStructure
 
 struct [[gnu::packed]] HPETCapabilityRegister
 {
-    u8 revision_id;
-    u8 attributes;
-    u16 vendor_id;
+    u32 attributes; // Note: We must do a 32 bit access to offsets 0x0, or 0x4 only, according to HPET spec.
     u32 main_counter_tick_period;
     u64 reserved;
 };
@@ -90,7 +88,7 @@ struct [[gnu::packed]] HPETRegister
 struct [[gnu::packed]] HPETRegistersBlock
 {
     union {
-        volatile HPETCapabilityRegister capabilities; // Note: We must do a 32 bit access to offsets 0x0, or 0x4 only, according to HPET spec.
+        volatile HPETCapabilityRegister capabilities;
         volatile HPETRegister raw_capabilites;
     };
     HPETRegister configuration;
@@ -155,8 +153,7 @@ bool HPET::check_for_exisiting_periodic_timers()
     auto block_region = MM.allocate_kernel_region(p_block, (PAGE_SIZE * 2), "HPET Initialization", Region::Access::Read);
     auto* registers = (volatile HPETRegistersBlock*)block_region->vaddr().offset(p_block.offset_in_page()).as_ptr();
 
-    auto* capabilities_register = (volatile HPETCapabilityRegister*)&registers->capabilities;
-    size_t timers_count = (capabilities_register->attributes & 0x1f) + 1;
+    size_t timers_count = ((registers->raw_capabilites.reg >> 8) & 0x1f) + 1;
     for (size_t index = 0; index < timers_count; index++) {
         if (registers->timers[index].configuration_and_capability & (u32)HPETFlags::TimerConfiguration::PeriodicInterruptCapable)
             return true;
