@@ -114,6 +114,10 @@ void IRCAppWindow::setup_actions()
             m_client->handle_join_action(input_box->text_value());
     });
 
+    m_list_channels_action = GUI::Action::create("List channels", [&](auto&) {
+        m_client->handle_list_channels_action();
+    });
+
     m_part_action = GUI::Action::create("Part from channel", { Mod_Ctrl, Key_P }, Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-part.png"), [this](auto&) {
         auto* window = m_client->current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
@@ -144,6 +148,30 @@ void IRCAppWindow::setup_actions()
         if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty())
             m_client->handle_change_nick_action(input_box->text_value());
     });
+
+    m_change_topic_action = GUI::Action::create("Change topic", [this](auto&) {
+        auto* window = m_client->current_window();
+        if (!window || window->type() != IRCWindow::Type::Channel) {
+            // FIXME: Perhaps this action should have been disabled instead of allowing us to activate it.
+            return;
+        }
+        auto input_box = GUI::InputBox::construct("Enter topic:", "Change topic", this);
+        if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty())
+            m_client->handle_change_topic_action(window->channel().name(), input_box->text_value());
+    });
+
+    m_kick_user_action = GUI::Action::create("Kick user", [this](auto&) {
+        auto* window = m_client->current_window();
+        if (!window || window->type() != IRCWindow::Type::Channel) {
+            // FIXME: Perhaps this action should have been disabled instead of allowing us to activate it.
+            return;
+        }
+        auto input_box = GUI::InputBox::construct("Enter nick:", "Kick user", this);
+        auto reason_box = GUI::InputBox::construct("Enter reason:", "Reason", this);
+        if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty())
+            if (reason_box->exec() == GUI::InputBox::ExecOK)
+                m_client->handle_kick_user_action(window->channel().name(), input_box->text_value(), reason_box->text_value().characters());
+    });
 }
 
 void IRCAppWindow::setup_menus()
@@ -161,12 +189,19 @@ void IRCAppWindow::setup_menus()
     server_menu->add_action(*m_change_nick_action);
     server_menu->add_separator();
     server_menu->add_action(*m_join_action);
-    server_menu->add_action(*m_part_action);
+    server_menu->add_action(*m_list_channels_action);
     server_menu->add_separator();
     server_menu->add_action(*m_whois_action);
     server_menu->add_action(*m_open_query_action);
     server_menu->add_action(*m_close_query_action);
     menubar->add_menu(move(server_menu));
+
+    auto channel_menu = GUI::Menu::construct("Channel");
+    channel_menu->add_action(*m_change_topic_action);
+    channel_menu->add_action(*m_kick_user_action);
+    channel_menu->add_separator();
+    channel_menu->add_action(*m_part_action);
+    menubar->add_menu(move(channel_menu));
 
     auto help_menu = GUI::Menu::construct("Help");
     help_menu->add_action(GUI::Action::create("About", [this](const GUI::Action&) {
