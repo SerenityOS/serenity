@@ -320,6 +320,41 @@ bool String::equals_ignoring_case(const StringView& other) const
     return StringUtils::equals_ignoring_case(view(), other);
 }
 
+int String::replace(const String& needle, const String& replacement, bool all_occurences)
+{
+    if (is_empty())
+        return 0;
+
+    Vector<size_t> positions;
+    size_t start = 0, pos;
+    for (;;) {
+        const char* ptr = strstr(characters() + start, needle.characters());
+        if (!ptr)
+            break;
+
+        pos = ptr - characters();
+        positions.append(pos);
+        if (!all_occurences)
+            break;
+
+        start = pos + 1;
+    }
+
+    if (!positions.size())
+        return 0;
+
+    StringBuilder b;
+    size_t lastpos = 0;
+    for (auto& pos : positions) {
+        b.append(substring_view(lastpos, pos - lastpos));
+        b.append(replacement);
+        lastpos = pos + needle.length();
+    }
+    b.append(substring_view(lastpos, length() - lastpos));
+    m_impl = StringImpl::create(b.build().characters());
+    return positions.size();
+}
+
 String escape_html_entities(const StringView& html)
 {
     StringBuilder builder;

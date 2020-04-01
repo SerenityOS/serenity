@@ -214,6 +214,8 @@ public:
 
     StringView view() const;
 
+    int replace(const String& needle, const String& replacement, bool all_occurences = false);
+
 private:
     RefPtr<StringImpl> m_impl;
 };
