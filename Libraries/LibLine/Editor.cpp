@@ -44,7 +44,8 @@ Editor::Editor()
 
 Editor::~Editor()
 {
-    tcsetattr(0, TCSANOW, &m_default_termios);
+    if (m_initialized)
+        tcsetattr(0, TCSANOW, &m_default_termios);
 }
 
 void Editor::add_to_history(const String& line)
