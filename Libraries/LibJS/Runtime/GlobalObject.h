@@ -4,7 +4,7 @@
 
 namespace JS {
 
-class GlobalObject final : public Object {
+class GlobalObject : public Object {
 public:
     explicit GlobalObject();
     virtual ~GlobalObject() override;

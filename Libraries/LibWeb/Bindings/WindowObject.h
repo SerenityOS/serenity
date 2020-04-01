@@ -26,47 +26,33 @@
 
 #pragma once
 
+#include <LibJS/Runtime/GlobalObject.h>
+#include <LibWeb/Forward.h>
+
 namespace Web {
-
-class CanvasRenderingContext2D;
-class Document;
-class Element;
-class Event;
-class EventListener;
-class EventTarget;
-class Frame;
-class HTMLBodyElement;
-class HTMLCanvasElement;
-class HTMLElement;
-class HTMLHeadElement;
-class HTMLHtmlElement;
-class HtmlView;
-class LayoutDocument;
-class LayoutNode;
-class MouseEvent;
-class Node;
-class Selector;
-class StyleResolver;
-class StyleRule;
-class StyleSheet;
-class Window;
-
 namespace Bindings {
 
-class CanvasRenderingContext2DWrapper;
-class DocumentWrapper;
-class ElementWrapper;
-class EventWrapper;
-class EventListenerWrapper;
-class EventTargetWrapper;
-class HTMLCanvasElementWrapper;
-class MouseEventWrapper;
-class NodeWrapper;
-class WindowObject;
-class Wrappable;
-class Wrapper;
+class WindowObject : public JS::GlobalObject {
+public:
+    explicit WindowObject(Window&);
+    virtual ~WindowObject() override;
+
+    Window& impl() { return *m_impl; }
+    const Window& impl() const { return *m_impl; }
+
+private:
+    virtual const char* class_name() const override { return "WindowObject"; }
+
+    static JS::Value document_getter(JS::Interpreter&);
+    static void document_setter(JS::Interpreter&, JS::Value);
+
+    static JS::Value alert(JS::Interpreter&);
+    static JS::Value set_interval(JS::Interpreter&);
+    static JS::Value request_animation_frame(JS::Interpreter&);
+    static JS::Value cancel_animation_frame(JS::Interpreter&);
+
+    NonnullRefPtr<Window> m_impl;
+};
 
 }
-
-
 }
