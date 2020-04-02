@@ -280,7 +280,7 @@ void repl(JS::Interpreter& interpreter)
 
         auto result = interpreter.run(*program);
         if (interpreter.exception()) {
-            printf("Exception caught: ");
+            printf("Uncaught exception: ");
             print(interpreter.exception()->value());
             interpreter.clear_exception();
         } else {
