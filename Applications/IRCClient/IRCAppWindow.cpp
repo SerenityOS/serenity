@@ -90,7 +90,7 @@ void IRCAppWindow::setup_client()
         update_title();
     };
     m_client->on_part_from_channel = [this](auto&) {
-        update_part_action();
+        update_gui_actions();
     };
 
     if (m_client->hostname().is_empty()) {
@@ -121,7 +121,6 @@ void IRCAppWindow::setup_actions()
     m_part_action = GUI::Action::create("Part from channel", { Mod_Ctrl, Key_P }, Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-part.png"), [this](auto&) {
         auto* window = m_client->current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
-            // FIXME: Perhaps this action should have been disabled instead of allowing us to activate it.
             return;
         }
         m_client->handle_part_action(window->channel().name());
@@ -152,7 +151,6 @@ void IRCAppWindow::setup_actions()
     m_change_topic_action = GUI::Action::create("Change topic", [this](auto&) {
         auto* window = m_client->current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
-            // FIXME: Perhaps this action should have been disabled instead of allowing us to activate it.
             return;
         }
         auto input_box = GUI::InputBox::construct("Enter topic:", "Change topic", this);
@@ -163,7 +161,6 @@ void IRCAppWindow::setup_actions()
     m_invite_user_action = GUI::Action::create("Invite user", [this](auto&) {
         auto* window = m_client->current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
-            // FIXME: Perhaps this action should have been disabled instead of allowing us to activate it.
             return;
         }
         auto input_box = GUI::InputBox::construct("Enter nick:", "Invite user", this);
@@ -174,7 +171,6 @@ void IRCAppWindow::setup_actions()
     m_voice_user_action = GUI::Action::create("Voice user", [this](auto&) {
         auto* window = m_client->current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
-            // FIXME: Perhaps this action should have been disabled instead of allowing us to activate it.
             return;
         }
         auto input_box = GUI::InputBox::construct("Enter nick:", "Voice user", this);
@@ -185,7 +181,6 @@ void IRCAppWindow::setup_actions()
     m_devoice_user_action = GUI::Action::create("DeVoice user", [this](auto&) {
         auto* window = m_client->current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
-            // FIXME: Perhaps this action should have been disabled instead of allowing us to activate it.
             return;
         }
         auto input_box = GUI::InputBox::construct("Enter nick:", "DeVoice user", this);
@@ -196,7 +191,6 @@ void IRCAppWindow::setup_actions()
     m_op_user_action = GUI::Action::create("Op user", [this](auto&) {
         auto* window = m_client->current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
-            // FIXME: Perhaps this action should have been disabled instead of allowing us to activate it.
             return;
         }
         auto input_box = GUI::InputBox::construct("Enter nick:", "Op user", this);
@@ -207,7 +201,6 @@ void IRCAppWindow::setup_actions()
     m_deop_user_action = GUI::Action::create("DeOp user", [this](auto&) {
         auto* window = m_client->current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
-            // FIXME: Perhaps this action should have been disabled instead of allowing us to activate it.
             return;
         }
         auto input_box = GUI::InputBox::construct("Enter nick:", "DeOp user", this);
@@ -218,7 +211,6 @@ void IRCAppWindow::setup_actions()
     m_kick_user_action = GUI::Action::create("Kick user", [this](auto&) {
         auto* window = m_client->current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
-            // FIXME: Perhaps this action should have been disabled instead of allowing us to activate it.
             return;
         }
         auto input_box = GUI::InputBox::construct("Enter nick:", "Kick user", this);
@@ -231,7 +223,6 @@ void IRCAppWindow::setup_actions()
     m_cycle_channel_action = GUI::Action::create("Cycle channel", [this](auto&) {
         auto* window = m_client->current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
-            // FIXME: Perhaps this action should have been disabled instead of allowing us to activate it.
             return;
         }
         m_client->handle_cycle_channel_action(window->channel().name());
@@ -322,7 +313,7 @@ void IRCAppWindow::setup_widgets()
 
     m_container = horizontal_container.add<GUI::StackWidget>();
     m_container->on_active_widget_change = [this](auto*) {
-        update_part_action();
+        update_gui_actions();
     };
 
     create_window(&m_client, IRCWindow::Server, "Server");
@@ -336,10 +327,18 @@ void IRCAppWindow::set_active_window(IRCWindow& window)
     m_window_list->selection().set(index);
 }
 
-void IRCAppWindow::update_part_action()
+void IRCAppWindow::update_gui_actions()
 {
     auto* window = static_cast<IRCWindow*>(m_container->active_widget());
     bool is_open_channel = window && window->type() == IRCWindow::Type::Channel && window->channel().is_open();
+    m_change_topic_action->set_enabled(is_open_channel);
+    m_invite_user_action->set_enabled(is_open_channel);
+    m_voice_user_action->set_enabled(is_open_channel);
+    m_devoice_user_action->set_enabled(is_open_channel);
+    m_op_user_action->set_enabled(is_open_channel);
+    m_deop_user_action->set_enabled(is_open_channel);
+    m_kick_user_action->set_enabled(is_open_channel);
+    m_cycle_channel_action->set_enabled(is_open_channel);
     m_part_action->set_enabled(is_open_channel);
 }
 

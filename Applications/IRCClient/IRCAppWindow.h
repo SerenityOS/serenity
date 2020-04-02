@@ -48,7 +48,7 @@ private:
     void setup_menus();
     void setup_widgets();
     void update_title();
-    void update_part_action();
+    void update_gui_actions();
 
     NonnullRefPtr<IRCWindow> create_window(void* owner, IRCWindow::Type, const String& name);
     NonnullRefPtr<IRCClient> m_client;
