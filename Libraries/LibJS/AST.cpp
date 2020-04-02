@@ -303,6 +303,10 @@ Value UnaryExpression::execute(Interpreter& interpreter) const
         return bitwise_not(lhs_result);
     case UnaryOp::Not:
         return Value(!lhs_result.to_boolean());
+    case UnaryOp::Plus:
+        return unary_plus(lhs_result);
+    case UnaryOp::Minus:
+        return unary_minus(lhs_result);
     case UnaryOp::Typeof:
         switch (lhs_result.type()) {
         case Value::Type::Undefined:
@@ -441,6 +445,12 @@ void UnaryExpression::dump(int indent) const
         break;
     case UnaryOp::Not:
         op_string = "!";
+        break;
+    case UnaryOp::Plus:
+        op_string = "+";
+        break;
+    case UnaryOp::Minus:
+        op_string = "-";
         break;
     case UnaryOp::Typeof:
         op_string = "typeof ";
