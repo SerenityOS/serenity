@@ -22,7 +22,7 @@ try {
     assert(s.startsWith("foo", false) === true);
     assert(s.startsWith("foo", true) === false);
     assert(s.startsWith("foo", "foo") === true);
-    assert(s.startsWith("foo", 0 - 1) === true);
+    assert(s.startsWith("foo", -1) === true);
     assert(s.startsWith("foo", 42) === false);
     assert(s.startsWith("bar", 3) === true);
     assert(s.startsWith("bar", "3") === true);
@@ -31,7 +31,7 @@ try {
     assert(s.startsWith("") === true);
     assert(s.startsWith("", 0) === true);
     assert(s.startsWith("", 1) === true);
-    assert(s.startsWith("", 0 - 1) === true);
+    assert(s.startsWith("", -1) === true);
     assert(s.startsWith("", 42) === true);
 
     console.log("PASS");
