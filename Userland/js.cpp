@@ -136,7 +136,9 @@ static void print_date(const JS::Object& date, HashTable<JS::Object*>&)
 static void print_error(const JS::Object& object, HashTable<JS::Object*>&)
 {
     auto& error = static_cast<const JS::Error&>(object);
-    printf("\033[34;1m[%s]\033[0m: %s", error.name().characters(), error.message().characters());
+    printf("\033[34;1m[%s]\033[0m", error.name().characters());
+    if (!error.message().is_empty())
+        printf(": %s", error.message().characters());
 }
 
 void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
