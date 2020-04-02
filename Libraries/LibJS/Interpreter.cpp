@@ -59,7 +59,7 @@ Value Interpreter::run(const Statement& statement, Vector<Argument> arguments, S
     if (!statement.is_scope_node())
         return statement.execute(*this);
 
-    auto& block = static_cast<const BlockStatement&>(statement);
+    auto& block = static_cast<const ScopeNode&>(statement);
     enter_scope(block, move(arguments), scope_type);
 
     Value last_value = js_undefined();
