@@ -34,6 +34,7 @@
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Date.h>
+#include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
@@ -132,6 +133,12 @@ static void print_date(const JS::Object& date, HashTable<JS::Object*>&)
     printf("\033[34;1mDate %s\033[0m", static_cast<const JS::Date&>(date).string().characters());
 }
 
+static void print_error(const JS::Object& object, HashTable<JS::Object*>&)
+{
+    auto& error = static_cast<const JS::Error&>(object);
+    printf("\033[34;1m[%s]\033[0m: %s", error.name().characters(), error.message().characters());
+}
+
 void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
 {
     if (value.is_object()) {
@@ -153,6 +160,8 @@ void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
             return print_function(object, seen_objects);
         if (object.is_date())
             return print_date(object, seen_objects);
+        if (object.is_error())
+            return print_error(object, seen_objects);
         return print_object(object, seen_objects);
     }
 
@@ -268,7 +277,13 @@ void repl(JS::Interpreter& interpreter)
             program->dump(0);
 
         auto result = interpreter.run(*program);
-        print(result);
+        if (interpreter.exception()) {
+            printf("Exception caught: ");
+            print(interpreter.exception()->value());
+            interpreter.clear_exception();
+        } else {
+            print(result);
+        }
     }
 }
 
