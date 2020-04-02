@@ -38,6 +38,7 @@ ErrorPrototype::ErrorPrototype()
 {
     put_native_property("name", name_getter, nullptr);
     put_native_property("message", message_getter, nullptr);
+    put_native_function("toString", to_string);
 }
 
 ErrorPrototype::~ErrorPrototype()
@@ -62,6 +63,29 @@ Value ErrorPrototype::message_getter(Interpreter& interpreter)
     if (!this_object->is_error())
         return interpreter.throw_exception<Error>("TypeError", "Not an Error object");
     return js_string(interpreter.heap(), static_cast<const Error*>(this_object)->message());
+}
+
+Value ErrorPrototype::to_string(Interpreter& interpreter)
+{
+    if (!interpreter.this_value().is_object())
+        return interpreter.throw_exception<Error>("TypeError", "Not an object");
+    auto& this_object = interpreter.this_value().as_object();
+
+    String name = "Error";
+    auto object_name_property = this_object.get("name");
+    if (object_name_property.has_value() && !object_name_property.value().is_undefined())
+        name = object_name_property.value().to_string();
+
+    String message = "";
+    auto object_message_property = this_object.get("message");
+    if (object_message_property.has_value() && !object_message_property.value().is_undefined())
+        message = object_message_property.value().to_string();
+    
+    if (name.length() == 0)
+        return js_string(interpreter.heap(), message);
+    if (message.length() == 0)
+        return js_string(interpreter.heap(), name);
+    return js_string(interpreter.heap(), String::format("%s: %s", name.characters(), message.characters()));
 }
 
 }
