@@ -317,6 +317,31 @@ void IRCClient::send_topic(const String& channel_name, const String& text)
     send(String::format("TOPIC %s :%s\r\n", channel_name.characters(), text.characters()));
 }
 
+void IRCClient::send_invite(const String& channel_name, const String& nick)
+{
+    send(String::format("INVITE %s %s\r\n", nick.characters(), channel_name.characters()));
+}
+
+void IRCClient::send_voice_user(const String& channel_name, const String& nick)
+{
+    send(String::format("MODE %s +v %s\r\n", channel_name.characters(), nick.characters()));
+}
+
+void IRCClient::send_devoice_user(const String& channel_name, const String& nick)
+{
+    send(String::format("MODE %s -v %s\r\n", channel_name.characters(), nick.characters()));
+}
+
+void IRCClient::send_op_user(const String& channel_name, const String& nick)
+{
+    send(String::format("MODE %s +o %s\r\n", channel_name.characters(), nick.characters()));
+}
+
+void IRCClient::send_deop_user(const String& channel_name, const String& nick)
+{
+    send(String::format("MODE %s -o %s\r\n", channel_name.characters(), nick.characters()));
+}
+
 void IRCClient::send_kick(const String& channel_name, const String& nick, const String& comment)
 {
     send(String::format("KICK %s %s :%s\r\n", channel_name.characters(), nick.characters(), comment.characters()));
@@ -815,6 +840,31 @@ void IRCClient::handle_change_topic_action(const String& channel, const String& 
     send_topic(channel, topic);
 }
 
+void IRCClient::handle_invite_user_action(const String& channel, const String& nick)
+{
+    send_invite(channel, nick);
+}
+
+void IRCClient::handle_voice_user_action(const String& channel, const String& nick)
+{
+    send_voice_user(channel, nick);
+}
+
+void IRCClient::handle_devoice_user_action(const String& channel, const String& nick)
+{
+    send_devoice_user(channel, nick);
+}
+
+void IRCClient::handle_op_user_action(const String& channel, const String& nick)
+{
+    send_op_user(channel, nick);
+}
+
+void IRCClient::handle_deop_user_action(const String& channel, const String& nick)
+{
+    send_deop_user(channel, nick);
+}
+
 void IRCClient::handle_kick_user_action(const String& channel, const String& nick, const String& message)
 {
     send_kick(channel, nick, message);
@@ -834,6 +884,12 @@ void IRCClient::handle_join_action(const String& channel)
 void IRCClient::handle_part_action(const String& channel)
 {
     part_channel(channel);
+}
+
+void IRCClient::handle_cycle_channel_action(const String& channel)
+{
+    part_channel(channel);
+    join_channel(channel);
 }
 
 void IRCClient::did_part_from_channel(Badge<IRCChannel>, IRCChannel& channel)
