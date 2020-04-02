@@ -94,8 +94,12 @@ void IRCChannel::say(const String& text)
 
 void IRCChannel::handle_join(const String& nick, const String& hostmask)
 {
-    if (nick == m_client.nickname())
+    if (nick == m_client.nickname()) {
         m_open = true;
+        return;
+    }
+    add_member(nick, (char)0);
+    m_member_model->update();
     add_message(String::format("*** %s [%s] has joined %s", nick.characters(), hostmask.characters(), m_name.characters()), Color::MidGreen);
 }
 
@@ -110,6 +114,19 @@ void IRCChannel::handle_part(const String& nick, const String& hostmask)
     }
     m_member_model->update();
     add_message(String::format("*** %s [%s] has parted from %s", nick.characters(), hostmask.characters(), m_name.characters()), Color::MidGreen);
+}
+
+void IRCChannel::handle_quit(const String& nick, const String& hostmask, const String& message)
+{
+    if (nick == m_client.nickname()) {
+        m_open = false;
+        m_members.clear();
+        m_client.did_part_from_channel({}, *this);
+    } else {
+        remove_member(nick);
+    }
+    m_member_model->update();
+    add_message(String::format("*** %s [%s] has quit (%s)", nick.characters(), hostmask.characters(), message.characters()), Color::MidGreen);
 }
 
 void IRCChannel::handle_topic(const String& nick, const String& topic)
