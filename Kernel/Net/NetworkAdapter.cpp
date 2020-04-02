@@ -32,6 +32,7 @@
 #include <Kernel/Net/EthernetFrameHeader.h>
 #include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/NetworkAdapter.h>
+#include <Kernel/Random.h>
 #include <LibBareMetal/StdLib.h>
 
 namespace Kernel {
@@ -103,8 +104,8 @@ void NetworkAdapter::send_ipv4(const MACAddress& destination_mac, const IPv4Addr
 {
     size_t ipv4_packet_size = sizeof(IPv4Packet) + payload_size;
     if (ipv4_packet_size > mtu()) {
-        // FIXME: Implement IP fragmentation.
-        ASSERT_NOT_REACHED();
+        send_ipv4_fragmented(destination_mac, destination_ipv4, protocol, payload, payload_size, ttl);
+        return;
     }
 
     size_t ethernet_frame_size = sizeof(EthernetFrameHeader) + sizeof(IPv4Packet) + payload_size;
@@ -127,6 +128,44 @@ void NetworkAdapter::send_ipv4(const MACAddress& destination_mac, const IPv4Addr
     m_bytes_out += ethernet_frame_size;
     memcpy(ipv4.payload(), payload, payload_size);
     send_raw((const u8*)&eth, ethernet_frame_size);
+}
+
+void NetworkAdapter::send_ipv4_fragmented(const MACAddress& destination_mac, const IPv4Address& destination_ipv4, IPv4Protocol protocol, const u8* payload, size_t payload_size, u8 ttl)
+{
+    // packets must be split on the 64-bit boundary
+    auto packet_boundary_size = (mtu() - sizeof(IPv4Packet) - sizeof(EthernetFrameHeader)) & 0xfffffff8;
+    auto fragment_block_count = (payload_size + packet_boundary_size) / packet_boundary_size;
+    auto last_block_size = payload_size - packet_boundary_size * (fragment_block_count - 1);
+    auto number_of_blocks_in_fragment = packet_boundary_size / 8;
+
+    auto identification = get_good_random<u16>();
+
+    size_t ethernet_frame_size = mtu();
+    for (size_t packet_index = 0; packet_index < fragment_block_count; ++packet_index) {
+        auto is_last_block = packet_index + 1 == fragment_block_count;
+        auto packet_payload_size = is_last_block ? last_block_size : packet_boundary_size;
+        auto buffer = ByteBuffer::create_zeroed(ethernet_frame_size);
+        auto& eth = *(EthernetFrameHeader*)buffer.data();
+        eth.set_source(mac_address());
+        eth.set_destination(destination_mac);
+        eth.set_ether_type(EtherType::IPv4);
+        auto& ipv4 = *(IPv4Packet*)eth.payload();
+        ipv4.set_version(4);
+        ipv4.set_internet_header_length(5);
+        ipv4.set_source(ipv4_address());
+        ipv4.set_destination(destination_ipv4);
+        ipv4.set_protocol((u8)protocol);
+        ipv4.set_length(sizeof(IPv4Packet) + packet_payload_size);
+        ipv4.set_has_more_fragments(!is_last_block);
+        ipv4.set_ident(identification);
+        ipv4.set_ttl(ttl);
+        ipv4.set_fragment_offset(packet_index * number_of_blocks_in_fragment);
+        ipv4.set_checksum(ipv4.compute_checksum());
+        m_packets_out++;
+        m_bytes_out += ethernet_frame_size;
+        memcpy(ipv4.payload(), payload + packet_index * packet_boundary_size, packet_payload_size);
+        send_raw((const u8*)&eth, ethernet_frame_size);
+    }
 }
 
 void NetworkAdapter::did_receive(const u8* data, size_t length)
