@@ -35,7 +35,7 @@
 
 TEST_CASE(load_form)
 {
-    FILE* fp = fopen("../../Base/home/anon/little/test.frm", "r");
+    FILE* fp = fopen("test.frm", "r");
     ASSERT(fp);
 
     StringBuilder builder;
