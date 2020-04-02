@@ -100,13 +100,19 @@ public:
     void handle_user_input_in_server(const String&);
 
     void handle_list_channels_action();
-    void handle_whois_action(const String&);
+    void handle_whois_action(const String& nick);
     void handle_open_query_action(const String&);
     void handle_close_query_action(const String&);
-    void handle_join_action(const String&);
-    void handle_part_action(const String&);
-    void handle_change_nick_action(const String&);
+    void handle_join_action(const String& channel_name);
+    void handle_part_action(const String& channel_name);
+    void handle_cycle_channel_action(const String& channel_name);
+    void handle_change_nick_action(const String& nick);
     void handle_change_topic_action(const String& channel_name, const String&);
+    void handle_invite_user_action(const String& channel_name, const String& nick);
+    void handle_voice_user_action(const String& channel_name, const String& nick);
+    void handle_devoice_user_action(const String& channel_name, const String& nick);
+    void handle_op_user_action(const String& channel_name, const String& nick);
+    void handle_deop_user_action(const String& channel_name, const String& nick);
     void handle_kick_user_action(const String& channel_name, const String& nick, const String&);
 
     IRCQuery* query_with_name(const String&);
@@ -137,6 +143,11 @@ private:
     void send_privmsg(const String& target, const String&);
     void send_notice(const String& target, const String&);
     void send_topic(const String& channel_name, const String&);
+    void send_invite(const String& channel_name, const String& nick);
+    void send_voice_user(const String& channel_name, const String& nick);
+    void send_devoice_user(const String& channel_name, const String& nick);
+    void send_op_user(const String& channel_name, const String& nick);
+    void send_deop_user(const String& channel_name, const String& nick);
     void send_kick(const String& channel_name, const String& nick, const String&);
     void send_list();
     void send_whois(const String&);
