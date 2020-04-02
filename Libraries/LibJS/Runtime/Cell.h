@@ -27,11 +27,15 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <AK/Noncopyable.h>
 #include <LibJS/Forward.h>
 
 namespace JS {
 
 class Cell {
+    AK_MAKE_NONCOPYABLE(Cell);
+    AK_MAKE_NONMOVABLE(Cell);
+
 public:
     virtual ~Cell() {}
 
@@ -53,6 +57,9 @@ public:
 
     Heap& heap() const;
     Interpreter& interpreter();
+
+protected:
+    Cell() {}
 
 private:
     bool m_mark { false };
