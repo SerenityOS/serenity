@@ -44,6 +44,8 @@
 #include <LibLine/Editor.h>
 #include <stdio.h>
 
+Vector<String> repl_statements;
+
 class ReplObject : public JS::GlobalObject {
 public:
     ReplObject();
@@ -54,6 +56,7 @@ private:
     static JS::Value exit_interpreter(JS::Interpreter&);
     static JS::Value repl_help(JS::Interpreter&);
     static JS::Value load_file(JS::Interpreter&);
+    static JS::Value save_to_file(JS::Interpreter&);
 };
 
 bool dump_ast = false;
@@ -210,17 +213,54 @@ StringView strip_shebang(AK::ByteBuffer file_contents)
     return StringView((const char*)file_contents.data() + i, file_contents.size() - i);
 }
 
+bool write_to_file(const StringView& path)
+{
+    int fd = open_with_path_length(path.characters_without_null_termination(), path.length(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    for (size_t i = 0; i < repl_statements.size(); i++) {
+        auto line = repl_statements[i];
+        if (line.length() && i != repl_statements.size() - 1) {
+            ssize_t nwritten = write(fd, line.characters(), line.length());
+            if (nwritten < 0) {
+                close(fd);
+                return false;
+            }
+        }
+        if (i != repl_statements.size() - 1) {
+            char ch = '\n';
+            ssize_t nwritten = write(fd, &ch, 1);
+            if (nwritten != 1) {
+                perror("write");
+                close(fd);
+                return false;
+            }
+        }
+    }
+    close(fd);
+    return true;
+}
+
 ReplObject::ReplObject()
 {
     put_native_function("exit", exit_interpreter);
     put_native_function("help", repl_help);
     put_native_function("load", load_file);
+    put_native_function("save", save_to_file);
 }
 
 ReplObject::~ReplObject()
 {
 }
-
+JS::Value ReplObject::save_to_file(JS::Interpreter& interpreter)
+{
+    if (!interpreter.argument_count())
+        return JS::Value(false);
+    String save_path = interpreter.argument(0).to_string();
+    StringView path = StringView(save_path.characters());
+    if (write_to_file(path)) {
+        return JS::Value(true);
+    }
+    return JS::Value(false);
+}
 JS::Value ReplObject::exit_interpreter(JS::Interpreter& interpreter)
 {
     if (!interpreter.argument_count())
@@ -274,7 +314,7 @@ void repl(JS::Interpreter& interpreter)
         String piece = read_next_piece();
         if (piece.is_empty())
             continue;
-
+        repl_statements.append(piece);
         auto program = JS::Parser(JS::Lexer(piece)).parse_program();
         if (dump_ast)
             program->dump(0);
