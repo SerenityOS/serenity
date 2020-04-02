@@ -133,6 +133,8 @@ Optional<Value> Object::get(const FlyString& property_name) const
 
 void Object::put(const FlyString& property_name, Value value)
 {
+    // If there's a setter in the prototype chain, we go to the setter.
+    // Otherwise, it goes in the own property storage.
     Object* object = this;
     while (object) {
         auto metadata = object->shape().lookup(property_name);
@@ -147,8 +149,6 @@ void Object::put(const FlyString& property_name, Value value)
                 interpreter.pop_call_frame();
                 return;
             }
-            if (object->put_own_property(*this, property_name, value))
-                return;
         }
         object = object->prototype();
     }
