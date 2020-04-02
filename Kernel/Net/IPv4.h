@@ -40,6 +40,11 @@ enum class IPv4Protocol : u16 {
     UDP = 17,
 };
 
+enum class IPv4PacketFlags : u16 {
+    DontFragment = 0x4000,
+    MoreFragments = 0x2000,
+};
+
 NetworkOrdered<u16> internet_checksum(const void*, size_t);
 
 class [[gnu::packed]] IPv4Packet
@@ -75,6 +80,28 @@ public:
     void* payload() { return this + 1; }
     const void* payload() const { return this + 1; }
 
+    u16 flags_and_fragment() const { return m_flags_and_fragment; }
+    u16 fragment_offset() const { return ((u16)m_flags_and_fragment & 0x2fff); }
+    u16 flags() const { return (((u16)m_flags_and_fragment) & (((u16)IPv4PacketFlags::MoreFragments) | ((u16)IPv4PacketFlags::DontFragment))); }
+
+    void set_has_more_fragments(bool more_fragments)
+    {
+        if (more_fragments)
+            m_flags_and_fragment = (u16)m_flags_and_fragment | ((u16)IPv4PacketFlags::MoreFragments);
+        else
+            m_flags_and_fragment = (u16)m_flags_and_fragment & ((u16)IPv4PacketFlags::MoreFragments);
+    }
+    void set_fragment_offset(u16 offset)
+    {
+        m_flags_and_fragment = flags() | (offset & 0x2fff);
+    }
+
+    bool is_a_fragment() const
+    {
+        // either has More-Fragments set, or has a fragment offset
+        return (((u16)m_flags_and_fragment) & ((u16)IPv4PacketFlags::MoreFragments)) || ((u16)m_flags_and_fragment & 0x2fff);
+    }
+
     u16 payload_size() const { return m_length - sizeof(IPv4Packet); }
 
     NetworkOrdered<u16> compute_checksum() const
@@ -97,6 +124,7 @@ private:
 };
 
 static_assert(sizeof(IPv4Packet) == 20);
+const LogStream& operator<<(const LogStream& stream, const IPv4Packet& packet);
 
 inline NetworkOrdered<u16> internet_checksum(const void* ptr, size_t count)
 {
