@@ -43,6 +43,7 @@ class Interpreter;
 class Object;
 class PrimitiveString;
 class ScopeNode;
+class Shape;
 class Statement;
 class Value;
 enum class DeclarationType;

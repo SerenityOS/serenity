@@ -35,6 +35,7 @@
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/ObjectPrototype.h>
+#include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/StringPrototype.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -43,6 +44,8 @@ namespace JS {
 Interpreter::Interpreter()
     : m_heap(*this)
 {
+    m_empty_object_shape = heap().allocate<Shape>();
+
     m_object_prototype = heap().allocate<ObjectPrototype>();
     m_string_prototype = heap().allocate<StringPrototype>();
     m_array_prototype = heap().allocate<ArrayPrototype>();
@@ -160,6 +163,8 @@ Optional<Value> Interpreter::get_variable(const FlyString& name)
 
 void Interpreter::gather_roots(Badge<Heap>, HashTable<Cell*>& roots)
 {
+    roots.set(m_empty_object_shape);
+
     roots.set(m_global_object);
     roots.set(m_string_prototype);
     roots.set(m_object_prototype);
