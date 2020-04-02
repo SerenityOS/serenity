@@ -68,6 +68,7 @@ public:
 
     void handle_join(const String& nick, const String& hostmask);
     void handle_part(const String& nick, const String& hostmask);
+    void handle_quit(const String& nick, const String& hostmask, const String& message);
     void handle_topic(const String& nick, const String& topic);
 
     IRCWindow& window() { return *m_window; }
