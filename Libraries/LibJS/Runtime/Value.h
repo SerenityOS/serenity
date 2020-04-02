@@ -54,6 +54,7 @@ public:
     bool is_array() const;
 
     bool is_nan() const { return is_number() && __builtin_isnan(as_double()); }
+    bool is_infinity() const { return is_number() && __builtin_isinf(as_double()); }
 
     Value()
         : m_type(Type::Undefined)
@@ -171,6 +172,11 @@ inline Value js_null()
 inline Value js_nan()
 {
     return Value(__builtin_nan(""));
+}
+
+inline Value js_infinity()
+{
+    return Value(__builtin_huge_val());
 }
 
 Value greater_than(Value lhs, Value rhs);
