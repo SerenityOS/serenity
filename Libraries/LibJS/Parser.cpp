@@ -329,9 +329,6 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
     case TokenType::NullLiteral:
         consume();
         return create_ast_node<NullLiteral>();
-    case TokenType::UndefinedLiteral:
-        consume();
-        return create_ast_node<UndefinedLiteral>();
     case TokenType::CurlyOpen:
         return parse_object_expression();
     case TokenType::Function:
@@ -821,7 +818,6 @@ bool Parser::match_expression() const
     return type == TokenType::BoolLiteral
         || type == TokenType::NumericLiteral
         || type == TokenType::StringLiteral
-        || type == TokenType::UndefinedLiteral
         || type == TokenType::NullLiteral
         || type == TokenType::Identifier
         || type == TokenType::New

@@ -69,7 +69,6 @@ Lexer::Lexer(StringView source)
         s_keywords.set("true", TokenType::BoolLiteral);
         s_keywords.set("try", TokenType::Try);
         s_keywords.set("typeof", TokenType::Typeof);
-        s_keywords.set("undefined", TokenType::UndefinedLiteral);
         s_keywords.set("var", TokenType::Var);
         s_keywords.set("void", TokenType::Void);
         s_keywords.set("while", TokenType::While);

@@ -490,12 +490,6 @@ void BooleanLiteral::dump(int indent) const
     printf("BooleanLiteral %s\n", m_value ? "true" : "false");
 }
 
-void UndefinedLiteral::dump(int indent) const
-{
-    print_indent(indent);
-    printf("undefined\n");
-}
-
 void NullLiteral::dump(int indent) const
 {
     print_indent(indent);
@@ -810,11 +804,6 @@ Value NumericLiteral::execute(Interpreter&) const
 Value BooleanLiteral::execute(Interpreter&) const
 {
     return Value(m_value);
-}
-
-Value UndefinedLiteral::execute(Interpreter&) const
-{
-    return {};
 }
 
 Value NullLiteral::execute(Interpreter&) const

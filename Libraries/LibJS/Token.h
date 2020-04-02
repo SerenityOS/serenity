@@ -114,7 +114,6 @@ namespace JS {
     __ENUMERATE_JS_TOKEN(Tilde)                       \
     __ENUMERATE_JS_TOKEN(Try)                         \
     __ENUMERATE_JS_TOKEN(Typeof)                      \
-    __ENUMERATE_JS_TOKEN(UndefinedLiteral)            \
     __ENUMERATE_JS_TOKEN(UnsignedShiftRight)          \
     __ENUMERATE_JS_TOKEN(UnsignedShiftRightEquals)    \
     __ENUMERATE_JS_TOKEN(UnterminatedStringLiteral)   \
