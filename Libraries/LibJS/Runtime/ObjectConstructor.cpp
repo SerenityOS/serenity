@@ -29,6 +29,7 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ObjectConstructor.h>
+#include <LibJS/Runtime/Shape.h>
 
 namespace JS {
 
@@ -68,7 +69,7 @@ Value ObjectConstructor::get_own_property_names(Interpreter& interpreter)
         for (i32 i = 0; i < array->length(); ++i)
             result->push(js_string(interpreter.heap(), String::number(i)));
     }
-    for (auto& it : object->own_properties())
+    for (auto& it : object->shape().property_table())
         result->push(js_string(interpreter.heap(), it.key));
     return result;
 }

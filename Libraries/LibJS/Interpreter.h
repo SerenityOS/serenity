@@ -129,6 +129,8 @@ public:
         return m_call_stack.last().this_value;
     }
 
+    Shape* empty_object_shape() { return m_empty_object_shape; }
+
     Object* string_prototype() { return m_string_prototype; }
     Object* object_prototype() { return m_object_prototype; }
     Object* array_prototype() { return m_array_prototype; }
@@ -157,6 +159,8 @@ private:
 
     Vector<ScopeFrame> m_scope_stack;
     Vector<CallFrame> m_call_stack;
+
+    Shape* m_empty_object_shape { nullptr };
 
     Object* m_global_object { nullptr };
     Object* m_string_prototype { nullptr };
