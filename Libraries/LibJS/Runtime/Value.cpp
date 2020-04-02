@@ -57,6 +57,9 @@ String Value::to_string() const
         if (is_nan())
             return "NaN";
 
+        if (is_infinity())
+            return as_double() < 0 ? "-Infinity" : "Infinity";
+
         // FIXME: This needs improvement.
         if ((double)to_i32() == as_double())
             return String::number(to_i32());
