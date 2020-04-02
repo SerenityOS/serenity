@@ -81,7 +81,7 @@ public:
     const void* payload() const { return this + 1; }
 
     u16 flags_and_fragment() const { return m_flags_and_fragment; }
-    u16 fragment_offset() const { return ((u16)m_flags_and_fragment & 0x2fff); }
+    u16 fragment_offset() const { return ((u16)m_flags_and_fragment) & ~(((u16)IPv4PacketFlags::MoreFragments) | ((u16)IPv4PacketFlags::DontFragment)); }
     u16 flags() const { return (((u16)m_flags_and_fragment) & (((u16)IPv4PacketFlags::MoreFragments) | ((u16)IPv4PacketFlags::DontFragment))); }
 
     void set_has_more_fragments(bool more_fragments)

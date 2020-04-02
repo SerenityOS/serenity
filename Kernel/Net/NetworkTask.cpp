@@ -24,12 +24,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/OwnPtr.h>
 #include <Kernel/Lock.h>
 #include <Kernel/Net/ARP.h>
 #include <Kernel/Net/EtherType.h>
 #include <Kernel/Net/EthernetFrameHeader.h>
 #include <Kernel/Net/ICMP.h>
 #include <Kernel/Net/IPv4.h>
+#include <Kernel/Net/IPv4FragmentReassembler.h>
 #include <Kernel/Net/IPv4Socket.h>
 #include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/NetworkTask.h>
@@ -50,12 +52,12 @@
 //#define TCP_DEBUG
 
 namespace Kernel {
-
 static void handle_arp(const EthernetFrameHeader&, size_t frame_size);
-static void handle_ipv4(const EthernetFrameHeader&, size_t frame_size);
+static void handle_ipv4(IPv4FragmentReassembler& reassembler, const EthernetFrameHeader&, size_t frame_size);
 static void handle_icmp(const EthernetFrameHeader&, const IPv4Packet&);
 static void handle_udp(const IPv4Packet&);
 static void handle_tcp(const IPv4Packet&);
+static void handle_ipv4_fragment(IPv4FragmentReassembler& reassembler, const EthernetFrameHeader&, const IPv4Packet&);
 
 [[noreturn]] static void NetworkTask_main();
 
@@ -67,6 +69,7 @@ void NetworkTask::spawn()
 
 void NetworkTask_main()
 {
+    IPv4FragmentReassembler reassembler { handle_ipv4 };
     WaitQueue packet_wait_queue;
     u8 octet = 15;
     int pending_packets = 0;
@@ -150,7 +153,7 @@ void NetworkTask_main()
             handle_arp(eth, packet_size);
             break;
         case EtherType::IPv4:
-            handle_ipv4(eth, packet_size);
+            handle_ipv4(reassembler, eth, packet_size);
             break;
         case EtherType::IPv6:
             // ignore
@@ -213,7 +216,12 @@ void handle_arp(const EthernetFrameHeader& eth, size_t frame_size)
     }
 }
 
-void handle_ipv4(const EthernetFrameHeader& eth, size_t frame_size)
+void handle_ipv4_fragment(IPv4FragmentReassembler& reassembler, const EthernetFrameHeader& eth, const IPv4Packet& packet)
+{
+    reassembler.register_fragment(eth, packet);
+}
+
+void handle_ipv4(IPv4FragmentReassembler& reassembler, const EthernetFrameHeader& eth, size_t frame_size)
 {
     constexpr size_t minimum_ipv4_frame_size = sizeof(EthernetFrameHeader) + sizeof(IPv4Packet);
     if (frame_size < minimum_ipv4_frame_size) {
@@ -235,8 +243,15 @@ void handle_ipv4(const EthernetFrameHeader& eth, size_t frame_size)
 
 #ifdef IPV4_DEBUG
     klog() << "handle_ipv4: source=" << packet.source().to_string().characters() << ", target=" << packet.destination().to_string().characters();
+    klog() << "handle_ipv4: flags=" << packet.flags() << ", fragment_offset=" << packet.fragment_offset() << ", payload_size=" << packet.payload_size() << ", blocks=" << packet.length() / 8;
 #endif
-
+    if (packet.is_a_fragment()) {
+#ifdef IPV4_DEBUG
+        klog() << "handle_ipv4: is a fragment";
+#endif
+        handle_ipv4_fragment(reassembler, eth, packet);
+        return;
+    }
     switch ((IPv4Protocol)packet.protocol()) {
     case IPv4Protocol::ICMP:
         return handle_icmp(eth, packet);
