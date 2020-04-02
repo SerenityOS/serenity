@@ -160,6 +160,61 @@ void IRCAppWindow::setup_actions()
             m_client->handle_change_topic_action(window->channel().name(), input_box->text_value());
     });
 
+    m_invite_user_action = GUI::Action::create("Invite user", [this](auto&) {
+        auto* window = m_client->current_window();
+        if (!window || window->type() != IRCWindow::Type::Channel) {
+            // FIXME: Perhaps this action should have been disabled instead of allowing us to activate it.
+            return;
+        }
+        auto input_box = GUI::InputBox::construct("Enter nick:", "Invite user", this);
+        if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty())
+            m_client->handle_invite_user_action(window->channel().name(), input_box->text_value());
+    });
+
+    m_voice_user_action = GUI::Action::create("Voice user", [this](auto&) {
+        auto* window = m_client->current_window();
+        if (!window || window->type() != IRCWindow::Type::Channel) {
+            // FIXME: Perhaps this action should have been disabled instead of allowing us to activate it.
+            return;
+        }
+        auto input_box = GUI::InputBox::construct("Enter nick:", "Voice user", this);
+        if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty())
+            m_client->handle_voice_user_action(window->channel().name(), input_box->text_value());
+    });
+
+    m_devoice_user_action = GUI::Action::create("DeVoice user", [this](auto&) {
+        auto* window = m_client->current_window();
+        if (!window || window->type() != IRCWindow::Type::Channel) {
+            // FIXME: Perhaps this action should have been disabled instead of allowing us to activate it.
+            return;
+        }
+        auto input_box = GUI::InputBox::construct("Enter nick:", "DeVoice user", this);
+        if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty())
+            m_client->handle_devoice_user_action(window->channel().name(), input_box->text_value());
+    });
+
+    m_op_user_action = GUI::Action::create("Op user", [this](auto&) {
+        auto* window = m_client->current_window();
+        if (!window || window->type() != IRCWindow::Type::Channel) {
+            // FIXME: Perhaps this action should have been disabled instead of allowing us to activate it.
+            return;
+        }
+        auto input_box = GUI::InputBox::construct("Enter nick:", "Op user", this);
+        if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty())
+            m_client->handle_op_user_action(window->channel().name(), input_box->text_value());
+    });
+
+    m_deop_user_action = GUI::Action::create("DeOp user", [this](auto&) {
+        auto* window = m_client->current_window();
+        if (!window || window->type() != IRCWindow::Type::Channel) {
+            // FIXME: Perhaps this action should have been disabled instead of allowing us to activate it.
+            return;
+        }
+        auto input_box = GUI::InputBox::construct("Enter nick:", "DeOp user", this);
+        if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty())
+            m_client->handle_deop_user_action(window->channel().name(), input_box->text_value());
+    });
+
     m_kick_user_action = GUI::Action::create("Kick user", [this](auto&) {
         auto* window = m_client->current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
@@ -171,6 +226,15 @@ void IRCAppWindow::setup_actions()
         if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty())
             if (reason_box->exec() == GUI::InputBox::ExecOK)
                 m_client->handle_kick_user_action(window->channel().name(), input_box->text_value(), reason_box->text_value().characters());
+    });
+
+    m_cycle_channel_action = GUI::Action::create("Cycle channel", [this](auto&) {
+        auto* window = m_client->current_window();
+        if (!window || window->type() != IRCWindow::Type::Channel) {
+            // FIXME: Perhaps this action should have been disabled instead of allowing us to activate it.
+            return;
+        }
+        m_client->handle_cycle_channel_action(window->channel().name());
     });
 }
 
@@ -198,8 +262,16 @@ void IRCAppWindow::setup_menus()
 
     auto channel_menu = GUI::Menu::construct("Channel");
     channel_menu->add_action(*m_change_topic_action);
+    channel_menu->add_action(*m_invite_user_action);
+    channel_menu->add_separator();
+    channel_menu->add_action(*m_voice_user_action);
+    channel_menu->add_action(*m_devoice_user_action);
+    channel_menu->add_action(*m_op_user_action);
+    channel_menu->add_action(*m_deop_user_action);
+    channel_menu->add_separator();
     channel_menu->add_action(*m_kick_user_action);
     channel_menu->add_separator();
+    channel_menu->add_action(*m_cycle_channel_action);
     channel_menu->add_action(*m_part_action);
     menubar->add_menu(move(channel_menu));
 
