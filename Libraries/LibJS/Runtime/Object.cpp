@@ -31,22 +31,39 @@
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/NativeProperty.h>
 #include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
 
 Object::Object()
 {
-    set_prototype(interpreter().object_prototype());
+    m_shape = interpreter().empty_object_shape();
+    m_shape->set_prototype_without_transition(interpreter().object_prototype());
 }
 
 Object::~Object()
 {
 }
 
+Object* Object::prototype()
+{
+    return shape().prototype();
+}
+
+const Object* Object::prototype() const
+{
+    return shape().prototype();
+}
+
+void Object::set_prototype(Object* new_prototype)
+{
+    m_shape = m_shape->create_prototype_transition(new_prototype);
+}
+
 bool Object::has_prototype(const Object* prototype) const
 {
-    for (auto* object = m_prototype; object; object = object->prototype()) {
+    for (auto* object = this->prototype(); object; object = object->prototype()) {
         if (object == prototype)
             return true;
     }
@@ -55,9 +72,13 @@ bool Object::has_prototype(const Object* prototype) const
 
 Optional<Value> Object::get_own_property(const Object& this_object, const FlyString& property_name) const
 {
-    auto value_here = m_properties.get(property_name);
-    if (value_here.has_value() && value_here.value().is_object() && value_here.value().as_object().is_native_property()) {
-        auto& native_property = static_cast<const NativeProperty&>(value_here.value().as_object());
+    auto metadata = shape().lookup(property_name);
+    if (!metadata.has_value())
+        return {};
+
+    auto value_here = m_storage[metadata.value().offset];
+    if (value_here.is_object() && value_here.as_object().is_native_property()) {
+        auto& native_property = static_cast<const NativeProperty&>(value_here.as_object());
         auto& interpreter = const_cast<Object*>(this)->interpreter();
         auto& call_frame = interpreter.push_call_frame();
         call_frame.this_value = const_cast<Object*>(&this_object);
@@ -68,19 +89,32 @@ Optional<Value> Object::get_own_property(const Object& this_object, const FlyStr
     return value_here;
 }
 
+void Object::set_shape(Shape& new_shape)
+{
+    m_storage.resize(new_shape.property_count());
+    m_shape = &new_shape;
+}
+
 bool Object::put_own_property(Object& this_object, const FlyString& property_name, Value value)
 {
-    auto value_here = m_properties.get(property_name);
-    if (value_here.has_value() && value_here.value().is_object() && value_here.value().as_object().is_native_property()) {
-        auto& native_property = static_cast<NativeProperty&>(value_here.value().as_object());
+    auto metadata = shape().lookup(property_name);
+    if (!metadata.has_value()) {
+        auto* new_shape = m_shape->create_put_transition(property_name, 0);
+        set_shape(*new_shape);
+        metadata = shape().lookup(property_name);
+        ASSERT(metadata.has_value());
+    }
+
+    auto value_here = m_storage[metadata.value().offset];
+    if (value_here.is_object() && value_here.as_object().is_native_property()) {
+        auto& native_property = static_cast<NativeProperty&>(value_here.as_object());
         auto& interpreter = const_cast<Object*>(this)->interpreter();
         auto& call_frame = interpreter.push_call_frame();
         call_frame.this_value = &this_object;
-        dbg() << "put_own_property: " << &this_object << " . " << property_name << " = " << value;
         native_property.set(interpreter, value);
         interpreter.pop_call_frame();
     } else {
-        m_properties.set(property_name, value);
+        m_storage[metadata.value().offset] = value;
     }
     return true;
 }
@@ -101,10 +135,11 @@ void Object::put(const FlyString& property_name, Value value)
 {
     Object* object = this;
     while (object) {
-        auto value_here = object->m_properties.get(property_name);
-        if (value_here.has_value()) {
-            if (value_here.value().is_object() && value_here.value().as_object().is_native_property()) {
-                auto& native_property = static_cast<NativeProperty&>(value_here.value().as_object());
+        auto metadata = object->shape().lookup(property_name);
+        if (metadata.has_value()) {
+            auto value_here = object->m_storage[metadata.value().offset];
+            if (value_here.is_object() && value_here.as_object().is_native_property()) {
+                auto& native_property = static_cast<NativeProperty&>(value_here.as_object());
                 auto& interpreter = const_cast<Object*>(this)->interpreter();
                 auto& call_frame = interpreter.push_call_frame();
                 call_frame.this_value = this;
@@ -133,15 +168,12 @@ void Object::put_native_property(const FlyString& property_name, AK::Function<Va
 void Object::visit_children(Cell::Visitor& visitor)
 {
     Cell::visit_children(visitor);
-    if (m_prototype)
-        visitor.visit(m_prototype);
-    for (auto& it : m_properties)
-        visitor.visit(it.value);
+    visitor.visit(m_shape);
 }
 
 bool Object::has_own_property(const FlyString& property_name) const
 {
-    return m_properties.get(property_name).has_value();
+    return shape().lookup(property_name).has_value();
 }
 
 Value Object::to_primitive(PreferredType preferred_type) const

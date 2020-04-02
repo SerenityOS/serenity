@@ -40,6 +40,9 @@ public:
     Object();
     virtual ~Object();
 
+    Shape& shape() { return *m_shape; }
+    const Shape& shape() const { return *m_shape; }
+
     Optional<Value> get(const FlyString& property_name) const;
     void put(const FlyString& property_name, Value);
 
@@ -60,9 +63,9 @@ public:
     virtual const char* class_name() const override { return "Object"; }
     virtual void visit_children(Cell::Visitor&) override;
 
-    Object* prototype() { return m_prototype; }
-    const Object* prototype() const { return m_prototype; }
-    void set_prototype(Object* prototype) { m_prototype = prototype; }
+    Object* prototype();
+    const Object* prototype() const;
+    void set_prototype(Object*);
     bool has_prototype(const Object* prototype) const;
 
     bool has_own_property(const FlyString& property_name) const;
@@ -76,11 +79,13 @@ public:
     virtual Value to_primitive(PreferredType preferred_type = PreferredType::Default) const;
     virtual Value to_string() const;
 
-    const HashMap<FlyString, Value>& own_properties() const { return m_properties; }
+    Value get_direct(size_t index) const { return m_storage[index]; }
 
 private:
-    HashMap<FlyString, Value> m_properties;
-    Object* m_prototype { nullptr };
+    void set_shape(Shape&);
+
+    Shape* m_shape { nullptr };
+    Vector<Value> m_storage;
 };
 
 }

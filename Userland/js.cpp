@@ -39,6 +39,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibLine/Editor.h>
 #include <stdio.h>
@@ -113,10 +114,10 @@ static void print_object(const JS::Object& object, HashTable<JS::Object*>& seen_
 {
     fputs("{ ", stdout);
     size_t index = 0;
-    for (auto& it : object.own_properties()) {
+    for (auto& it : object.shape().property_table()) {
         printf("\"\033[33;1m%s\033[0m\": ", it.key.characters());
-        print_value(it.value, seen_objects);
-        if (index != object.own_properties().size() - 1)
+        print_value(object.get_direct(it.value.offset), seen_objects);
+        if (index != object.shape().property_table().size() - 1)
             fputs(", ", stdout);
         ++index;
     }
