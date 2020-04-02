@@ -440,19 +440,6 @@ private:
     virtual const char* class_name() const override { return "NullLiteral"; }
 };
 
-class UndefinedLiteral final : public Literal {
-public:
-    explicit UndefinedLiteral()
-    {
-    }
-
-    virtual Value execute(Interpreter&) const override;
-    virtual void dump(int indent) const override;
-
-private:
-    virtual const char* class_name() const override { return "UndefinedLiteral"; }
-};
-
 class Identifier final : public Expression {
 public:
     explicit Identifier(const FlyString& string)
