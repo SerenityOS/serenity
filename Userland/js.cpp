@@ -335,8 +335,13 @@ int main(int argc, char** argv)
 
         auto result = interpreter->run(*program);
 
-        if (print_last_result)
+        if (interpreter->exception()) {
+            printf("Uncaught exception: ");
+            print(interpreter->exception()->value());
+            interpreter->clear_exception();
+        } else if (print_last_result) {
             printf("%s\n", result.to_string().characters());
+        }
     }
 
     return 0;
