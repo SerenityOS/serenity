@@ -101,15 +101,19 @@ Value CallExpression::execute(Interpreter& interpreter) const
 
     auto& function = static_cast<Function&>(callee.as_object());
 
-    auto& call_frame = interpreter.push_call_frame();
+    Vector<Value> arguments;
+    arguments.ensure_capacity(m_arguments.size());
     for (size_t i = 0; i < m_arguments.size(); ++i) {
         auto value = m_arguments[i].execute(interpreter);
         if (interpreter.exception())
             return {};
-        call_frame.arguments.append(value);
+        arguments.append(value);
         if (interpreter.exception())
             return {};
     }
+
+    auto& call_frame = interpreter.push_call_frame();
+    call_frame.arguments = move(arguments);
 
     Object* new_object = nullptr;
     Value result;
