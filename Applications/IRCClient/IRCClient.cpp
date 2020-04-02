@@ -687,32 +687,75 @@ void IRCClient::handle_user_command(const String& input)
         return;
     }
     if (command == "/PART") {
-        if (parts.size() >= 2)
-            part_channel(parts[1]);
+        if (parts.size() >= 2) {
+            auto channel = parts[1];
+            part_channel(channel);
+        } else {
+            auto* window = current_window();
+            if (!window || window->type() != IRCWindow::Type::Channel)
+                return;
+            auto channel = window->channel().name();
+            join_channel(channel);
+        }
         return;
     }
     if (command == "/HOP") {
         if (parts.size() >= 2) {
-            part_channel(parts[1]);
-            join_channel(parts[1]);
+            auto channel = parts[1];
+            part_channel(channel);
+            join_channel(channel);
+	} else {
+            auto* window = current_window();
+            if (!window || window->type() != IRCWindow::Type::Channel)
+                return;
+            auto channel = window->channel().name();
+            part_channel(channel);
+            join_channel(channel);
         }
         return;
     }
     if (command == "/TOPIC") {
-        if (parts.size() < 3)
+        if (parts.size() < 2)
             return;
-        auto channel = parts[1];
-        auto topic = input.view().substring_view_starting_after_substring(channel);
-        send_topic(channel, topic);
+
+        // FIXME: channel name validation should be abstracted away into a validation function
+        if (parts[1].starts_with("&") || parts[1].starts_with("#") || parts[1].starts_with("+") || parts[1].starts_with("!")) {
+            if (parts.size() < 3)
+                return;
+            auto channel = parts[1];
+            auto topic = input.view().substring_view_starting_after_substring(channel);
+            send_topic(channel, topic);
+	} else {
+            auto* window = current_window();
+            if (!window || window->type() != IRCWindow::Type::Channel)
+                return;
+            auto channel = window->channel().name();
+            auto topic = input.view().substring_view_starting_after_substring(parts[0]);
+            send_topic(channel, topic);
+	}
         return;
     }
     if (command == "/KICK") {
-        if (parts.size() < 3)
+        if (parts.size() < 2)
             return;
-        auto channel = parts[1];
-        auto nick = parts[2];
-        auto reason = input.view().substring_view_starting_after_substring(nick);
-        send_kick(channel, nick, reason);
+
+        // FIXME: channel name validation should be abstracted away into a validation function
+        if (parts[1].starts_with("&") || parts[1].starts_with("#") || parts[1].starts_with("+") || parts[1].starts_with("!")) {
+            if (parts.size() < 3)
+                return;
+            auto channel = parts[1];
+            auto nick = parts[2];
+            auto reason = input.view().substring_view_starting_after_substring(nick);
+            send_kick(channel, nick, reason);
+	} else {
+            auto* window = current_window();
+            if (!window || window->type() != IRCWindow::Type::Channel)
+                return;
+            auto channel = window->channel().name();
+            auto nick = parts[1];
+            auto reason = input.view().substring_view_starting_after_substring(nick);
+            send_kick(channel, nick, reason);
+	}
         return;
     }
     if (command == "/LIST") {
