@@ -181,6 +181,8 @@ Value bitwise_and(Value lhs, Value rhs);
 Value bitwise_or(Value lhs, Value rhs);
 Value bitwise_xor(Value lhs, Value rhs);
 Value bitwise_not(Value);
+Value unary_plus(Value);
+Value unary_minus(Value);
 Value left_shift(Value lhs, Value rhs);
 Value right_shift(Value lhs, Value rhs);
 Value add(Value lhs, Value rhs);

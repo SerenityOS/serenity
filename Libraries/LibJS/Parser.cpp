@@ -365,6 +365,12 @@ NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
     case TokenType::Tilde:
         consume();
         return create_ast_node<UnaryExpression>(UnaryOp::BitwiseNot, parse_expression(precedence, associativity));
+    case TokenType::Plus:
+        consume();
+        return create_ast_node<UnaryExpression>(UnaryOp::Plus, parse_expression(precedence, associativity));
+    case TokenType::Minus:
+        consume();
+        return create_ast_node<UnaryExpression>(UnaryOp::Minus, parse_expression(precedence, associativity));
     case TokenType::Typeof:
         consume();
         return create_ast_node<UnaryExpression>(UnaryOp::Typeof, parse_expression(precedence, associativity));
@@ -833,6 +839,8 @@ bool Parser::match_unary_prefixed_expression() const
         || type == TokenType::MinusMinus
         || type == TokenType::ExclamationMark
         || type == TokenType::Tilde
+        || type == TokenType::Plus
+        || type == TokenType::Minus
         || type == TokenType::Typeof;
 }
 

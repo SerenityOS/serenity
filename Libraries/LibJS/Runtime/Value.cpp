@@ -191,6 +191,18 @@ Value bitwise_not(Value lhs)
     return Value(~(i32)lhs.to_number().as_double());
 }
 
+Value unary_plus(Value lhs)
+{
+    return lhs.to_number();
+}
+
+Value unary_minus(Value lhs)
+{
+    if (lhs.to_number().is_nan())
+        return js_nan();
+    return Value(-lhs.to_number().as_double());
+}
+
 Value left_shift(Value lhs, Value rhs)
 {
     return Value((i32)lhs.to_number().as_double() << (i32)rhs.to_number().as_double());

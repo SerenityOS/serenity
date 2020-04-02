@@ -8,6 +8,8 @@ try {
     assert(!o.a === false);
     assert(!o.a === !(o.a));
     assert(~o.a === ~(o.a));
+    assert(+o.a === +(o.a));
+    assert(-o.a === -(o.a));
 
     assert((typeof "x" === "string") === true);
     assert(!(typeof "x" === "string") === false);

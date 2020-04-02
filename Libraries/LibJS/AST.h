@@ -353,6 +353,8 @@ private:
 enum class UnaryOp {
     BitwiseNot,
     Not,
+    Plus,
+    Minus,
     Typeof,
 };
 
