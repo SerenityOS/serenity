@@ -388,7 +388,7 @@ void IRCClient::handle_user_input_in_server(const String& input)
         return handle_user_command(input);
 }
 
-bool IRCClient::is_nick_prefix(char ch) const
+bool IRCClient::is_nick_prefix(char ch)
 {
     switch (ch) {
     case '@':
@@ -396,6 +396,18 @@ bool IRCClient::is_nick_prefix(char ch) const
     case '~':
     case '&':
     case '%':
+        return true;
+    }
+    return false;
+}
+
+bool IRCClient::is_channel_prefix(char ch)
+{
+    switch (ch) {
+    case '&':
+    case '#':
+    case '+':
+    case '!':
         return true;
     }
     return false;
@@ -742,9 +754,10 @@ void IRCClient::handle_user_command(const String& input)
     if (command == "/TOPIC") {
         if (parts.size() < 2)
             return;
+        if (parts[1].is_empty())
+            return;
 
-        // FIXME: channel name validation should be abstracted away into a validation function
-        if (parts[1].starts_with("&") || parts[1].starts_with("#") || parts[1].starts_with("+") || parts[1].starts_with("!")) {
+        if (is_channel_prefix(parts[1][0])) {
             if (parts.size() < 3)
                 return;
             auto channel = parts[1];
@@ -763,9 +776,10 @@ void IRCClient::handle_user_command(const String& input)
     if (command == "/KICK") {
         if (parts.size() < 2)
             return;
+        if (parts[1].is_empty())
+            return;
 
-        // FIXME: channel name validation should be abstracted away into a validation function
-        if (parts[1].starts_with("&") || parts[1].starts_with("#") || parts[1].starts_with("+") || parts[1].starts_with("!")) {
+        if (is_channel_prefix(parts[1][0])) {
             if (parts.size() < 3)
                 return;
             auto channel = parts[1];
