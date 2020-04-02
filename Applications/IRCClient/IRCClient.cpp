@@ -290,6 +290,9 @@ void IRCClient::handle(const Message& msg)
     if (msg.command == "PART")
         return handle_part(msg);
 
+    if (msg.command == "QUIT")
+        return handle_quit(msg);
+
     if (msg.command == "TOPIC")
         return handle_topic(msg);
 
@@ -543,6 +546,20 @@ void IRCClient::handle_part(const Message& msg)
     auto nick = prefix_parts[0];
     auto& channel_name = msg.arguments[0];
     ensure_channel(channel_name).handle_part(nick, msg.prefix);
+}
+
+void IRCClient::handle_quit(const Message& msg)
+{
+    if (msg.arguments.size() < 1)
+        return;
+    auto prefix_parts = msg.prefix.split('!');
+    if (prefix_parts.size() < 1)
+        return;
+    auto nick = prefix_parts[0];
+    auto& message = msg.arguments[0];
+    for (auto& it : m_channels) {
+        it.value->handle_quit(nick, msg.prefix, message);
+    }
 }
 
 void IRCClient::handle_nick(const Message& msg)

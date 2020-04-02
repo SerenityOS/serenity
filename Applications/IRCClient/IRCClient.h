@@ -155,6 +155,7 @@ private:
     void process_line(ByteBuffer&&);
     void handle_join(const Message&);
     void handle_part(const Message&);
+    void handle_quit(const Message&);
     void handle_ping(const Message&);
     void handle_topic(const Message&);
     void handle_rpl_topic(const Message&);
