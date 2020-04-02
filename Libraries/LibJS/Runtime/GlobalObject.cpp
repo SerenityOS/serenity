@@ -21,6 +21,7 @@ GlobalObject::GlobalObject()
     // FIXME: These are read-only in ES5
     put("NaN", js_nan());
     put("Infinity", js_infinity());
+    put("undefined", js_undefined());
 
     put("console", heap().allocate<ConsoleObject>());
     put("Date", heap().allocate<DateConstructor>());
