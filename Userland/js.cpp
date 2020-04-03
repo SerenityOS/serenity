@@ -380,9 +380,10 @@ int main(int argc, char** argv)
             printf("Uncaught exception: ");
             print(interpreter->exception()->value());
             interpreter->clear_exception();
-        } else if (print_last_result) {
-            printf("%s\n", result.to_string().characters());
+            return 1;
         }
+        if (print_last_result)
+            print(result);
     }
 
     return 0;
