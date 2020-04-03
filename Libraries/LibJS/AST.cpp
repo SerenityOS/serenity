@@ -970,4 +970,34 @@ void SwitchCase::dump(int indent) const
     }
 }
 
+Value ConditionalExpression::execute(Interpreter& interpreter) const
+{
+    auto test_result = m_test->execute(interpreter);
+    if (interpreter.exception())
+        return {};
+    Value result;
+    if (test_result.to_boolean()) {
+        result = m_consequent->execute(interpreter);
+    } else {
+        result = m_alternate->execute(interpreter);
+    }
+    if (interpreter.exception())
+        return {};
+    return result;
+}
+
+void ConditionalExpression::dump(int indent) const
+{
+    ASTNode::dump(indent);
+    print_indent(indent);
+    printf("(Test)\n");
+    m_test->dump(indent + 1);
+    print_indent(indent);
+    printf("(Consequent)\n");
+    m_test->dump(indent + 1);
+    print_indent(indent);
+    printf("(Alternate)\n");
+    m_test->dump(indent + 1);
+}
+
 }
