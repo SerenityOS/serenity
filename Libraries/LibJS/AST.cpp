@@ -282,17 +282,26 @@ Value LogicalExpression::execute(Interpreter& interpreter) const
     auto lhs_result = m_lhs->execute(interpreter);
     if (interpreter.exception())
         return {};
-    auto rhs_result = m_rhs->execute(interpreter);
-    if (interpreter.exception())
-        return {};
+
     switch (m_op) {
     case LogicalOp::And:
-        if (lhs_result.to_boolean())
+        if (lhs_result.to_boolean()) {
+            auto rhs_result = m_rhs->execute(interpreter);
+            if (interpreter.exception())
+                return {};
+
             return Value(rhs_result);
+        }
+
         return Value(lhs_result);
     case LogicalOp::Or:
         if (lhs_result.to_boolean())
             return Value(lhs_result);
+
+        auto rhs_result = m_rhs->execute(interpreter);
+        if (interpreter.exception())
+            return {};
+
         return Value(rhs_result);
     }
 
