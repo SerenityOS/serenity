@@ -490,6 +490,15 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
     case TokenType::Instanceof:
         consume();
         return create_ast_node<BinaryExpression>(BinaryOp::InstanceOf, move(lhs), parse_expression(min_precedence, associativity));
+    case TokenType::Ampersand:
+        consume();
+        return create_ast_node<BinaryExpression>(BinaryOp::BitwiseAnd, move(lhs), parse_expression(min_precedence, associativity));
+    case TokenType::Pipe:
+        consume();
+        return create_ast_node<BinaryExpression>(BinaryOp::BitwiseOr, move(lhs), parse_expression(min_precedence, associativity));
+    case TokenType::Caret:
+        consume();
+        return create_ast_node<BinaryExpression>(BinaryOp::BitwiseXor, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::ParenOpen:
         return parse_call_expression(move(lhs));
     case TokenType::Equals:
@@ -877,7 +886,10 @@ bool Parser::match_secondary_expression() const
         || type == TokenType::PlusPlus
         || type == TokenType::MinusMinus
         || type == TokenType::Instanceof
-        || type == TokenType::QuestionMark;
+        || type == TokenType::QuestionMark
+        || type == TokenType::Ampersand
+        || type == TokenType::Pipe
+        || type == TokenType::Caret;
 }
 
 bool Parser::match_statement() const
