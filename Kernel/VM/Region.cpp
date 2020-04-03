@@ -215,7 +215,7 @@ void Region::map_individual_page_impl(size_t page_index)
     auto page_vaddr = vaddr().offset(page_index * PAGE_SIZE);
     auto& pte = MM.ensure_pte(*m_page_directory, page_vaddr);
     auto& physical_page = vmobject().physical_pages()[first_page_index() + page_index];
-    if (!physical_page || !is_readable()) {
+    if (!physical_page || (!is_readable() && !is_writable())) {
         pte.clear();
     } else {
         pte.set_cache_disabled(!m_cacheable);
