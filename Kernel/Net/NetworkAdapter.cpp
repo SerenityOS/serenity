@@ -32,6 +32,7 @@
 #include <Kernel/Net/EthernetFrameHeader.h>
 #include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/NetworkAdapter.h>
+#include <Kernel/Net/UDP.h>
 #include <Kernel/Random.h>
 #include <LibBareMetal/StdLib.h>
 
@@ -97,6 +98,42 @@ void NetworkAdapter::send(const MACAddress& destination, const ARPPacket& packet
     m_packets_out++;
     m_bytes_out += size_in_bytes;
     memcpy(eth->payload(), &packet, sizeof(ARPPacket));
+    send_raw((const u8*)eth, size_in_bytes);
+}
+
+void NetworkAdapter::send(const MACAddress& destination, const DHCPv4Packet& packet)
+{
+    int size_in_bytes = sizeof(EthernetFrameHeader) + sizeof(IPv4Packet) + sizeof(UDPPacket) + sizeof(DHCPv4Packet);
+    auto buffer = ByteBuffer::create_zeroed(size_in_bytes);
+    auto* eth = (EthernetFrameHeader*)buffer.data();
+    eth->set_source(mac_address());
+    eth->set_destination(destination);
+    eth->set_ether_type(EtherType::IPv4);
+
+    klog() << "Built eth header";
+
+    auto& ip_packet = *(IPv4Packet*)eth->payload();
+    ip_packet.set_version(4);
+    ip_packet.set_ttl(64);
+    ip_packet.set_ident(123);
+    ip_packet.set_length(sizeof(IPv4Packet) + sizeof(UDPPacket) + sizeof(DHCPv4Packet));
+    ip_packet.set_destination({ 255, 255, 255, 255 });
+    ip_packet.set_protocol((u8)IPv4Protocol::UDP);
+    ip_packet.set_internet_header_length(5);
+    ip_packet.set_checksum(ip_packet.compute_checksum());
+
+    klog() << "Built ip header";
+
+    auto& udp_packet = *(UDPPacket*)ip_packet.payload();
+    udp_packet.set_source_port(68);
+    udp_packet.set_destination_port(67);
+    udp_packet.set_length(sizeof(DHCPv4Packet) + sizeof(UDPPacket));
+    __builtin_memcpy(udp_packet.payload(), &packet, sizeof(DHCPv4Packet));
+
+    klog() << "Built udp header";
+
+    m_packets_out++;
+    m_bytes_out += size_in_bytes;
     send_raw((const u8*)eth, size_in_bytes);
 }
 

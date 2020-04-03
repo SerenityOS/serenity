@@ -26,6 +26,7 @@
 
 #include <Kernel/Lock.h>
 #include <Kernel/Net/ARP.h>
+#include <Kernel/Net/DHCPv4Client.h>
 #include <Kernel/Net/EtherType.h>
 #include <Kernel/Net/EthernetFrameHeader.h>
 #include <Kernel/Net/ICMP.h>
@@ -59,7 +60,6 @@ static void handle_tcp(const IPv4Packet&);
 void NetworkTask_main()
 {
     WaitQueue packet_wait_queue;
-    u8 octet = 15;
     int pending_packets = 0;
     NetworkAdapter::for_each([&](auto& adapter) {
         if (String(adapter.class_name()) == "LoopbackAdapter") {
@@ -67,13 +67,11 @@ void NetworkTask_main()
             adapter.set_ipv4_netmask({ 255, 0, 0, 0 });
             adapter.set_ipv4_gateway({ 0, 0, 0, 0 });
         } else {
-            adapter.set_ipv4_address({ 10, 0, 2, octet++ });
-            adapter.set_ipv4_netmask({ 255, 255, 255, 0 });
-            adapter.set_ipv4_gateway({ 10, 0, 2, 2 });
+            klog() << "NetworkTask: Trying to lease IP from DHCP for " << adapter.mac_address().to_string();
+            DHCPv4Client::the().dhcp_discover(adapter);
         }
 
-        klog() << "NetworkTask: " << adapter.class_name() << " network adapter found: hw=" << adapter.mac_address().to_string().characters() << " address=" << adapter.ipv4_address().to_string().characters() << " netmask=" << adapter.ipv4_netmask().to_string().characters() << " gateway=" << adapter.ipv4_gateway().to_string().characters();
-
+        klog() << "NetworkTask: " << adapter.class_name() << " network adapter found: hw=" << adapter.mac_address().to_string().characters();
         adapter.on_receive = [&]() {
             pending_packets++;
             packet_wait_queue.wake_all();
@@ -287,17 +285,30 @@ void handle_udp(const IPv4Packet& ipv4_packet)
         return;
     }
 
+    // if this is the DHCP packet, we don't have an IP set *yet*
+    // so we will have to decode this packet before checking if it is ours
+    // sorry... :(
+    auto& udp_packet = *static_cast<const UDPPacket*>(ipv4_packet.payload());
+    if (udp_packet.destination_port() == 68) {
+        // This is a dhcp packet...probably
+        auto& dhcp_packet = *(const DHCPv4Packet*)udp_packet.payload();
+        if (dhcp_packet.op() == (u8)DHCPv4Ops::BootReply)
+            if (DHCPv4Client::the().id_is_registered(dhcp_packet.xid())) {
+                // This is most likely a response to us
+                DHCPv4Client::the().process_incoming(dhcp_packet);
+
+                return;
+            }
+    }
+
     auto adapter = NetworkAdapter::from_ipv4_address(ipv4_packet.destination());
     if (!adapter) {
         klog() << "handle_udp: this packet is not for me, it's for " << ipv4_packet.destination().to_string().characters();
         return;
     }
-
-    auto& udp_packet = *static_cast<const UDPPacket*>(ipv4_packet.payload());
 #ifdef UDP_DEBUG
     klog() << "handle_udp: source=" << ipv4_packet.source().to_string().characters() << ":" << udp_packet.source_port() << ", destination=" << ipv4_packet.destination().to_string().characters() << ":" << udp_packet.destination_port() << " length=" << udp_packet.length();
 #endif
-
     auto socket = UDPSocket::from_port(udp_packet.destination_port());
     if (!socket) {
         klog() << "handle_udp: No UDP socket for port " << udp_packet.destination_port();

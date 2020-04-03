@@ -74,6 +74,8 @@ OBJS = \
     KParams.o \
     KSyms.o \
     Lock.o \
+	Net/DHCPv4.o \
+	Net/DHCPv4Client.o \
     Net/E1000NetworkAdapter.o \
     Net/IPv4Socket.o \
     Net/LocalSocket.o \

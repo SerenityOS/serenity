@@ -34,6 +34,7 @@
 #include <AK/Weakable.h>
 #include <Kernel/KBuffer.h>
 #include <Kernel/Net/ARP.h>
+#include <Kernel/Net/DHCPv4.h>
 #include <Kernel/Net/ICMP.h>
 #include <Kernel/Net/IPv4.h>
 #include <Kernel/Net/MACAddress.h>
@@ -63,6 +64,7 @@ public:
     void set_ipv4_gateway(const IPv4Address&);
 
     void send(const MACAddress&, const ARPPacket&);
+    void send(const MACAddress&, const DHCPv4Packet&);
     void send_ipv4(const MACAddress&, const IPv4Address&, IPv4Protocol, const u8* payload, size_t payload_size, u8 ttl);
     void send_ipv4_fragmented(const MACAddress&, const IPv4Address&, IPv4Protocol, const u8* payload, size_t payload_size, u8 ttl);
 
