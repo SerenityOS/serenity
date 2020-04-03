@@ -297,6 +297,21 @@ void page_fault_handler(RegisterState regs)
     }
 }
 
+EH_ENTRY_NO_CODE(3, breakpoint);
+void breakpoint_handler(RegisterState regs)
+{
+    clac();
+    if (!Process::current || Process::current->is_ring0()) {
+        klog() << "Breakpoint Trap in Ring0";
+        hang();
+        return;
+    }
+    if (Thread::current->tracer()) {
+        Thread::current->tracer()->set_regs(regs);
+    }
+    Thread::current->send_urgent_signal_to_self(SIGTRAP);
+}
+
 #define EH(i, msg)                                                                                                                                                             \
     static void _exception##i()                                                                                                                                                \
     {                                                                                                                                                                          \
@@ -316,7 +331,6 @@ void page_fault_handler(RegisterState regs)
 
 EH(1, "Debug exception")
 EH(2, "Unknown error")
-EH(3, "Breakpoint")
 EH(4, "Overflow")
 EH(5, "Bounds check")
 EH(8, "Double fault")
@@ -486,7 +500,7 @@ void idt_init()
     register_interrupt_handler(0x00, divide_error_asm_entry);
     register_interrupt_handler(0x01, _exception1);
     register_interrupt_handler(0x02, _exception2);
-    register_interrupt_handler(0x03, _exception3);
+    register_user_callable_interrupt_handler(0x03, breakpoint_asm_entry);
     register_interrupt_handler(0x04, _exception4);
     register_interrupt_handler(0x05, _exception5);
     register_interrupt_handler(0x06, illegal_instruction_asm_entry);

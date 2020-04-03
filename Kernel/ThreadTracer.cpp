@@ -25,6 +25,7 @@
  */
 
 #include <AK/Memory.h>
+#include <AK/kmalloc.h>
 #include <Kernel/ThreadTracer.h>
 
 namespace Kernel {

@@ -36,6 +36,7 @@
 #include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
 #include <Kernel/Scheduler.h>
+#include <Kernel/ThreadTracer.h>
 #include <Kernel/UnixTypes.h>
 #include <LibC/fd_set.h>
 
