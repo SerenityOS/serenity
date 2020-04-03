@@ -25,6 +25,7 @@
  */
 
 #include <AK/SharedBuffer.h>
+#include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibProtocol/Client.h>
 #include <LibProtocol/Download.h>
@@ -43,6 +44,24 @@ ResourceLoader& ResourceLoader::the()
 ResourceLoader::ResourceLoader()
     : m_protocol_client(Protocol::Client::construct())
 {
+}
+
+void ResourceLoader::load_sync(const URL& url, Function<void(const ByteBuffer&)> success_callback, Function<void(const String&)> error_callback)
+{
+    Core::EventLoop loop;
+
+    load(
+        url,
+        [&](auto& data) {
+            success_callback(data);
+            loop.quit(0);
+        },
+        [&](auto& string) {
+            error_callback(string);
+            loop.quit(0);
+        });
+
+    loop.exec();
 }
 
 void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&)> success_callback, Function<void(const String&)> error_callback)
