@@ -639,6 +639,26 @@ private:
     bool m_computed { false };
 };
 
+class ConditionalExpression final : public Expression {
+public:
+    ConditionalExpression(NonnullRefPtr<Expression> test, NonnullRefPtr<Expression> consequent, NonnullRefPtr<Expression> alternate)
+        : m_test(move(test))
+        , m_consequent(move(consequent))
+        , m_alternate(move(alternate))
+    {
+    }
+
+    virtual void dump(int indent) const override;
+    virtual Value execute(Interpreter&) const override;
+
+private:
+    virtual const char* class_name() const override { return "ConditionalExpression"; }
+
+    NonnullRefPtr<Expression> m_test;
+    NonnullRefPtr<Expression> m_consequent;
+    NonnullRefPtr<Expression> m_alternate;
+};
+
 class CatchClause final : public ASTNode {
 public:
     CatchClause(const FlyString& parameter, NonnullRefPtr<BlockStatement> body)

@@ -516,6 +516,8 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
     case TokenType::DoublePipe:
         consume();
         return create_ast_node<LogicalExpression>(LogicalOp::Or, move(lhs), parse_expression(min_precedence, associativity));
+    case TokenType::QuestionMark:
+        return parse_conditional_expression(move(lhs));
     default:
         m_parser_state.m_has_errors = true;
         expected("secondary expression (missing switch case)");
@@ -658,6 +660,15 @@ NonnullRefPtr<BreakStatement> Parser::parse_break_statement()
     consume(TokenType::Break);
     // FIXME: Handle labels.
     return create_ast_node<BreakStatement>();
+}
+
+NonnullRefPtr<ConditionalExpression> Parser::parse_conditional_expression(NonnullRefPtr<Expression> test)
+{
+    consume(TokenType::QuestionMark);
+    auto consequent = parse_expression(0);
+    consume(TokenType::Colon);
+    auto alternate = parse_expression(0);
+    return create_ast_node<ConditionalExpression>(move(test), move(consequent), move(alternate));
 }
 
 NonnullRefPtr<TryStatement> Parser::parse_try_statement()
@@ -865,7 +876,8 @@ bool Parser::match_secondary_expression() const
         || type == TokenType::BracketOpen
         || type == TokenType::PlusPlus
         || type == TokenType::MinusMinus
-        || type == TokenType::Instanceof;
+        || type == TokenType::Instanceof
+        || type == TokenType::QuestionMark;
 }
 
 bool Parser::match_statement() const
