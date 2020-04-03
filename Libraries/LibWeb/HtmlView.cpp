@@ -340,6 +340,11 @@ void HtmlView::load(const URL& url)
 {
     dbg() << "HtmlView::load: " << url.to_string();
 
+    if (!url.is_valid()) {
+        load_error_page(url, "Invalid URL");
+        return;
+    }
+
     if (window())
         window()->set_override_cursor(GUI::StandardCursor::None);
 
