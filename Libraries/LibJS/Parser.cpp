@@ -889,7 +889,9 @@ bool Parser::match_secondary_expression() const
         || type == TokenType::QuestionMark
         || type == TokenType::Ampersand
         || type == TokenType::Pipe
-        || type == TokenType::Caret;
+        || type == TokenType::Caret
+        || type == TokenType::DoubleAmpersand
+        || type == TokenType::DoublePipe;
 }
 
 bool Parser::match_statement() const
