@@ -129,7 +129,7 @@ int fchown(int fd, uid_t, gid_t);
 int ftruncate(int fd, off_t length);
 int halt();
 int reboot();
-int mount(int source_fd, const char* target, const char* fs_type, int flags);
+int mount(const char* source, const char* target, const char* fs_type, int flags);
 int umount(const char* mountpoint);
 int pledge(const char* promises, const char* execpromises);
 int unveil(const char* path, const char* permissions);
