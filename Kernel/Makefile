@@ -56,8 +56,8 @@ OBJS = \
     DoubleBuffer.o \
     FileSystem/Custody.o \
     FileSystem/DevPtsFS.o \
+    FileSystem/DiskBackedFileSystem.o \
     FileSystem/Ext2FileSystem.o \
-    FileSystem/FileBackedFileSystem.o \
     FileSystem/FIFO.o \
     FileSystem/File.o \
     FileSystem/FileDescription.o \
