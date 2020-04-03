@@ -30,6 +30,7 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
+#include <LibWeb/Bindings/NavigatorObject.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Window.h>
@@ -45,6 +46,8 @@ WindowObject::WindowObject(Window& impl)
     put_native_function("setInterval", set_interval);
     put_native_function("requestAnimationFrame", request_animation_frame);
     put_native_function("cancelAnimationFrame", cancel_animation_frame);
+
+    put("navigator", heap().allocate<NavigatorObject>());
 }
 
 WindowObject::~WindowObject()
@@ -109,7 +112,6 @@ JS::Value WindowObject::request_animation_frame(JS::Interpreter& interpreter)
         return interpreter.throw_exception<JS::Error>("TypeError", "Not a function");
     return JS::Value(impl->request_animation_frame(*static_cast<JS::Function*>(callback_object)));
 }
-
 
 JS::Value WindowObject::cancel_animation_frame(JS::Interpreter& interpreter)
 {

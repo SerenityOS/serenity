@@ -16,11 +16,18 @@ body {
 h1 {
     color: #a00;
 }
+span#ua {
+    color: red;
+}
 </style>
+<script>
+document.getElementById("ua").innerHTML = navigator.userAgent;
+</script>
 </head>
 <body link="#44f" vlink="#c4c" background="90s-bg.png">
     <h1>Welcome to the Serenity Browser!</h1>
-    <p>This is a very simple browser built on the LibWeb engine.</p>
+    <p>This is a very simple browser built on the LibWeb and LibJS engines.</p>
+    <p>Your user agent is: <span id="ua"></span></p>
     <p>Some small test pages:</p>
     <ul>
         <li><a href="qsa.html">querySelectorAll test</a></li>
