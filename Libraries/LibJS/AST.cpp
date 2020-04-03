@@ -279,17 +279,21 @@ Value BinaryExpression::execute(Interpreter& interpreter) const
 
 Value LogicalExpression::execute(Interpreter& interpreter) const
 {
-    auto lhs_result = m_lhs->execute(interpreter).to_boolean();
+    auto lhs_result = m_lhs->execute(interpreter);
     if (interpreter.exception())
         return {};
-    auto rhs_result = m_rhs->execute(interpreter).to_boolean();
+    auto rhs_result = m_rhs->execute(interpreter);
     if (interpreter.exception())
         return {};
     switch (m_op) {
     case LogicalOp::And:
-        return Value(lhs_result && rhs_result);
+        if (lhs_result.to_boolean())
+            return Value(rhs_result);
+        return Value(lhs_result);
     case LogicalOp::Or:
-        return Value(lhs_result || rhs_result);
+        if (lhs_result.to_boolean())
+            return Value(lhs_result);
+        return Value(rhs_result);
     }
 
     ASSERT_NOT_REACHED();
