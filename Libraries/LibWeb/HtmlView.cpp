@@ -176,9 +176,9 @@ void HtmlView::mousemove_event(GUI::MouseEvent& event)
     auto result = layout_root()->hit_test(to_content_position(event.position()));
     const HTMLAnchorElement* hovered_link_element = nullptr;
     if (result.layout_node) {
-        auto* node = result.layout_node->node();
+        RefPtr<Node> node = result.layout_node->node();
         hovered_node_changed = node != document()->hovered_node();
-        document()->set_hovered_node(const_cast<Node*>(node));
+        document()->set_hovered_node(node);
         if (node) {
             hovered_link_element = node->enclosing_link_element();
             if (hovered_link_element) {
@@ -188,7 +188,7 @@ void HtmlView::mousemove_event(GUI::MouseEvent& event)
                 is_hovering_link = true;
             }
             auto offset = compute_mouse_event_offset(event.position(), *result.layout_node);
-            const_cast<Node*>(node)->dispatch_event(MouseEvent::create("mousemove", offset.x(), offset.y()));
+            node->dispatch_event(MouseEvent::create("mousemove", offset.x(), offset.y()));
         }
         if (m_in_mouse_selection) {
             layout_root()->selection().set_end({ result.layout_node, result.index_in_node });
@@ -200,7 +200,7 @@ void HtmlView::mousemove_event(GUI::MouseEvent& event)
         window()->set_override_cursor(is_hovering_link ? GUI::StandardCursor::Hand : GUI::StandardCursor::None);
     if (hovered_node_changed) {
         update();
-        auto* hovered_html_element = document()->hovered_node() ? document()->hovered_node()->enclosing_html_element() : nullptr;
+        RefPtr<HTMLElement> hovered_html_element = document()->hovered_node() ? document()->hovered_node()->enclosing_html_element() : nullptr;
         if (hovered_html_element && !hovered_html_element->title().is_null()) {
             auto screen_position = screen_relative_rect().location().translated(event.position());
             GUI::Application::the().show_tooltip(hovered_html_element->title(), screen_position.translated(4, 4));
@@ -224,11 +224,13 @@ void HtmlView::mousedown_event(GUI::MouseEvent& event)
     bool hovered_node_changed = false;
     auto result = layout_root()->hit_test(to_content_position(event.position()));
     if (result.layout_node) {
-        auto* node = result.layout_node->node();
+        RefPtr<Node> node = result.layout_node->node();
         hovered_node_changed = node != document()->hovered_node();
-        document()->set_hovered_node(const_cast<Node*>(node));
+        document()->set_hovered_node(node);
         if (node) {
-            if (auto* link = node->enclosing_link_element()) {
+            auto offset = compute_mouse_event_offset(event.position(), *result.layout_node);
+            node->dispatch_event(MouseEvent::create("mousedown", offset.x(), offset.y()));
+            if (RefPtr<HTMLAnchorElement> link = node->enclosing_link_element()) {
                 dbg() << "HtmlView: clicking on a link to " << link->href();
                 if (on_link_click)
                     on_link_click(link->href());
@@ -239,8 +241,6 @@ void HtmlView::mousedown_event(GUI::MouseEvent& event)
                     m_in_mouse_selection = true;
                 }
             }
-            auto offset = compute_mouse_event_offset(event.position(), *result.layout_node);
-            const_cast<Node*>(node)->dispatch_event(MouseEvent::create("mousedown", offset.x(), offset.y()));
         }
     }
     if (hovered_node_changed)
@@ -255,9 +255,9 @@ void HtmlView::mouseup_event(GUI::MouseEvent& event)
 
     auto result = layout_root()->hit_test(to_content_position(event.position()));
     if (result.layout_node) {
-        if (auto* node = result.layout_node->node()) {
+        if (RefPtr<Node> node = result.layout_node->node()) {
             auto offset = compute_mouse_event_offset(event.position(), *result.layout_node);
-            const_cast<Node*>(node)->dispatch_event(MouseEvent::create("mouseup", offset.x(), offset.y()));
+            node->dispatch_event(MouseEvent::create("mouseup", offset.x(), offset.y()));
         }
     }
 
