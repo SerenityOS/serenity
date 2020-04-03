@@ -28,7 +28,7 @@
 
 #include <AK/Bitmap.h>
 #include <AK/HashMap.h>
-#include <Kernel/FileSystem/FileBackedFileSystem.h>
+#include <Kernel/FileSystem/DiskBackedFileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/ext2_fs.h>
 #include <Kernel/KBuffer.h>
@@ -88,12 +88,11 @@ private:
     ext2_inode m_raw_inode;
 };
 
-class Ext2FS final : public FileBackedFS {
+class Ext2FS final : public DiskBackedFS {
     friend class Ext2FSInode;
 
 public:
-    static NonnullRefPtr<Ext2FS> create(FileDescription&);
-
+    static NonnullRefPtr<Ext2FS> create(BlockDevice&);
     virtual ~Ext2FS() override;
     virtual bool initialize() override;
 
@@ -110,7 +109,7 @@ private:
     typedef unsigned BlockIndex;
     typedef unsigned GroupIndex;
     typedef unsigned InodeIndex;
-    explicit Ext2FS(FileDescription&);
+    explicit Ext2FS(BlockDevice&);
 
     const ext2_super_block& super_block() const { return m_super_block; }
     const ext2_group_desc& group_descriptor(GroupIndex) const;

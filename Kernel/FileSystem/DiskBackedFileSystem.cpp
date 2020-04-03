@@ -27,12 +27,12 @@
 #include <AK/StringView.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Devices/BlockDevice.h>
-#include <Kernel/FileSystem/FileBackedFileSystem.h>
+#include <Kernel/FileSystem/DiskBackedFileSystem.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/KBuffer.h>
 #include <Kernel/Process.h>
 
-//#define FBFS_DEBUG
+//#define DBFS_DEBUG
 
 namespace Kernel {
 
@@ -46,7 +46,7 @@ struct CacheEntry {
 
 class DiskCache {
 public:
-    explicit DiskCache(FileBackedFS& fs)
+    explicit DiskCache(DiskBackedFS& fs)
         : m_fs(fs)
         , m_cached_block_data(KBuffer::create_with_size(m_entry_count * m_fs.block_size()))
         , m_entries(KBuffer::create_with_size(m_entry_count * sizeof(CacheEntry)))
@@ -81,8 +81,8 @@ public:
         }
         if (!oldest_clean_entry) {
             // Not a single clean entry! Flush writes and try again.
-            // NOTE: We want to make sure we only call FileBackedFS flush here,
-            //       not some FileBackedFS subclass flush!
+            // NOTE: We want to make sure we only call DiskBackedFS flush here,
+            //       not some DiskBackedFS subclass flush!
             m_fs.flush_writes_impl();
             return get(block_index);
         }
@@ -107,52 +107,39 @@ public:
     }
 
 private:
-    FileBackedFS& m_fs;
+    DiskBackedFS& m_fs;
     size_t m_entry_count { 10000 };
     KBuffer m_cached_block_data;
     KBuffer m_entries;
     bool m_dirty { false };
 };
 
-FileBackedFS::FileBackedFS(FileDescription& file_description)
-    : m_file_description(file_description)
-{
-    ASSERT(m_file_description->file().is_seekable());
-}
-
-FileBackedFS::~FileBackedFS()
+DiskBackedFS::DiskBackedFS(BlockDevice& device)
+    : m_device(device)
 {
 }
 
-bool FileBackedFS::write_block(unsigned index, const u8* data, FileDescription* description, bool use_logical_block_size)
+DiskBackedFS::~DiskBackedFS()
 {
-    ASSERT(m_logical_block_size);
-#ifdef FBFS_DEBUG
-    klog() << "FileBackedFileSystem::write_block " << index << ", size=" << data.size();
+}
+
+bool DiskBackedFS::write_block(unsigned index, const u8* data, FileDescription* description)
+{
+#ifdef DBFS_DEBUG
+    klog() << "DiskBackedFileSystem::write_block " << index << ", size=" << data.size();
 #endif
 
     bool allow_cache = !description || !description->is_direct();
 
-    /* We need to distinguish between "virtual disk reads" and "file system
-    reads". Previously, when we read the ext2 superblock for example, we called
-    device().read_raw() to fetch the superblock. Now we can't use that call
-    anymore because we are not backed by a BlockDevice, so the block size
-    (sector size) for reading the superblock is still 512 bytes like when we
-    used device().read_raw(), but we need to implement such functionality in the
-    FileBackedFileSystem layer instead. */
-    auto effective_block_size = use_logical_block_size ? m_logical_block_size : block_size();
-
     if (!allow_cache) {
         flush_specific_block_if_needed(index);
-        u32 base_offset = static_cast<u32>(index) * static_cast<u32>(effective_block_size);
-        m_file_description->seek(base_offset, SEEK_SET);
-        auto nwritten = m_file_description->write(data, effective_block_size);
-        ASSERT((size_t)nwritten == effective_block_size);
+        u32 base_offset = static_cast<u32>(index) * static_cast<u32>(block_size());
+        device().write_raw(base_offset, block_size(), data);
         return true;
     }
 
     auto& entry = cache().get(index);
-    memcpy(entry.data, data, effective_block_size);
+    memcpy(entry.data, data, block_size());
     entry.is_dirty = true;
     entry.has_data = true;
 
@@ -160,68 +147,53 @@ bool FileBackedFS::write_block(unsigned index, const u8* data, FileDescription* 
     return true;
 }
 
-bool FileBackedFS::write_blocks(unsigned index, unsigned count, const u8* data, FileDescription* description, bool use_logical_block_size)
+bool DiskBackedFS::write_blocks(unsigned index, unsigned count, const u8* data, FileDescription* description)
 {
-    ASSERT(m_logical_block_size);
-#ifdef FBFS_DEBUG
-    klog() << "FileBackedFileSystem::write_blocks " << index << " x" << count;
+#ifdef DBFS_DEBUG
+    klog() << "DiskBackedFileSystem::write_blocks " << index << " x" << count;
 #endif
     for (unsigned i = 0; i < count; ++i)
-        write_block(index + i, data + i * block_size(), description, use_logical_block_size);
+        write_block(index + i, data + i * block_size(), description);
     return true;
 }
 
-bool FileBackedFS::read_block(unsigned index, u8* buffer, FileDescription* description, bool use_logical_block_size, bool cache_disabled) const
+bool DiskBackedFS::read_block(unsigned index, u8* buffer, FileDescription* description) const
 {
-    ASSERT(m_logical_block_size);
-#ifdef FBFS_DEBUG
-    klog() << "FileBackedFileSystem::read_block " << index;
+#ifdef DBFS_DEBUG
+    klog() << "DiskBackedFileSystem::read_block " << index;
 #endif
 
     bool allow_cache = !description || !description->is_direct();
 
-    /* We need to distinguish between "virtual disk reads" and "file system
-    reads". Previously, when we read the ext2 superblock for example, we called
-    device().read_raw() to fetch the superblock. Now we can't use that call
-    anymore because we are not backed by a BlockDevice, so the block size
-    (sector size) for reading the superblock is still 512 bytes like when we
-    used device().read_raw(), but we need to implement such functionality in the
-    FileBackedFileSystem layer instead. */
-    auto effective_block_size = use_logical_block_size ? m_logical_block_size : block_size();
-
-    if (!allow_cache || cache_disabled) {
-        if (!cache_disabled)
-            const_cast<FileBackedFS*>(this)->flush_specific_block_if_needed(index);
-        u32 base_offset = static_cast<u32>(index) * static_cast<u32>(effective_block_size);
-        const_cast<FileDescription&>(*m_file_description).seek(base_offset, SEEK_SET);
-        auto nread = const_cast<FileDescription&>(*m_file_description).read(buffer, effective_block_size);
-        ASSERT((size_t)nread == effective_block_size);
+    if (!allow_cache) {
+        const_cast<DiskBackedFS*>(this)->flush_specific_block_if_needed(index);
+        u32 base_offset = static_cast<u32>(index) * static_cast<u32>(block_size());
+        bool success = device().read_raw(base_offset, block_size(), buffer);
+        ASSERT(success);
         return true;
     }
 
     auto& entry = cache().get(index);
     if (!entry.has_data) {
-        u32 base_offset = static_cast<u32>(index) * static_cast<u32>(effective_block_size);
-        const_cast<FileDescription&>(*m_file_description).seek(base_offset, SEEK_SET);
-        auto nread = const_cast<FileDescription&>(*m_file_description).read(entry.data, effective_block_size);
+        u32 base_offset = static_cast<u32>(index) * static_cast<u32>(block_size());
+        bool success = device().read_raw(base_offset, block_size(), entry.data);
         entry.has_data = true;
-        ASSERT((size_t)nread == effective_block_size);
+        ASSERT(success);
     }
-    memcpy(buffer, entry.data, effective_block_size);
+    memcpy(buffer, entry.data, block_size());
     return true;
 }
 
-bool FileBackedFS::read_blocks(unsigned index, unsigned count, u8* buffer, FileDescription* description, bool use_logical_block_size, bool cache_disabled) const
+bool DiskBackedFS::read_blocks(unsigned index, unsigned count, u8* buffer, FileDescription* description) const
 {
-    ASSERT(m_logical_block_size);
     if (!count)
         return false;
     if (count == 1)
-        return read_block(index, buffer, description, use_logical_block_size, cache_disabled);
+        return read_block(index, buffer, description);
     u8* out = buffer;
 
     for (unsigned i = 0; i < count; ++i) {
-        if (!read_block(index + i, out, description, use_logical_block_size, cache_disabled))
+        if (!read_block(index + i, out, description))
             return false;
         out += block_size();
     }
@@ -229,7 +201,7 @@ bool FileBackedFS::read_blocks(unsigned index, unsigned count, u8* buffer, FileD
     return true;
 }
 
-void FileBackedFS::flush_specific_block_if_needed(unsigned index)
+void DiskBackedFS::flush_specific_block_if_needed(unsigned index)
 {
     LOCKER(m_lock);
     if (!cache().is_dirty())
@@ -237,14 +209,13 @@ void FileBackedFS::flush_specific_block_if_needed(unsigned index)
     cache().for_each_entry([&](CacheEntry& entry) {
         if (entry.is_dirty && entry.block_index == index) {
             u32 base_offset = static_cast<u32>(entry.block_index) * static_cast<u32>(block_size());
-            m_file_description->seek(base_offset, SEEK_SET);
-            m_file_description->write(entry.data, block_size());
+            device().write_raw(base_offset, block_size(), entry.data);
             entry.is_dirty = false;
         }
     });
 }
 
-void FileBackedFS::flush_writes_impl()
+void DiskBackedFS::flush_writes_impl()
 {
     LOCKER(m_lock);
     if (!cache().is_dirty())
@@ -254,8 +225,7 @@ void FileBackedFS::flush_writes_impl()
         if (!entry.is_dirty)
             return;
         u32 base_offset = static_cast<u32>(entry.block_index) * static_cast<u32>(block_size());
-        m_file_description->seek(base_offset, SEEK_SET);
-        m_file_description->write(entry.data, block_size());
+        device().write_raw(base_offset, block_size(), entry.data);
         ++count;
         entry.is_dirty = false;
     });
@@ -263,15 +233,15 @@ void FileBackedFS::flush_writes_impl()
     dbg() << class_name() << ": Flushed " << count << " blocks to disk";
 }
 
-void FileBackedFS::flush_writes()
+void DiskBackedFS::flush_writes()
 {
     flush_writes_impl();
 }
 
-DiskCache& FileBackedFS::cache() const
+DiskCache& DiskBackedFS::cache() const
 {
     if (!m_cache)
-        m_cache = make<DiskCache>(const_cast<FileBackedFS&>(*this));
+        m_cache = make<DiskCache>(const_cast<DiskBackedFS&>(*this));
     return *m_cache;
 }
 
