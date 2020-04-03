@@ -534,8 +534,9 @@ void AbstractTableView::context_menu_event(ContextMenuEvent& event)
         on_context_menu_request(index, event);
 }
 
-void AbstractTableView::leave_event(Core::Event&)
+void AbstractTableView::leave_event(Core::Event& event)
 {
+    AbstractView::leave_event(event);
     window()->set_override_cursor(StandardCursor::None);
     set_hovered_header_index(-1);
 }
