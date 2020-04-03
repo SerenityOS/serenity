@@ -365,7 +365,7 @@ void EventLoop::pump(WaitMode mode)
 #endif
             decltype(m_queued_events) new_event_queue;
             new_event_queue.ensure_capacity(m_queued_events.size() + events.size());
-            for (; i < events.size(); ++i)
+            for (++i; i < events.size(); ++i)
                 new_event_queue.unchecked_append(move(events[i]));
             new_event_queue.append(move(m_queued_events));
             m_queued_events = move(new_event_queue);
