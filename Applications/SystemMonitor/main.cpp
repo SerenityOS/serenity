@@ -280,7 +280,7 @@ NonnullRefPtr<GUI::Widget> build_file_systems_tab()
         Vector<GUI::JsonArrayModel::FieldSpec> df_fields;
         df_fields.empend("mount_point", "Mount point", Gfx::TextAlignment::CenterLeft);
         df_fields.empend("class_name", "Class", Gfx::TextAlignment::CenterLeft);
-        df_fields.empend("source", "Source", Gfx::TextAlignment::CenterLeft);
+        df_fields.empend("device", "Device", Gfx::TextAlignment::CenterLeft);
         df_fields.empend(
             "Size", Gfx::TextAlignment::CenterRight,
             [](const JsonObject& object) {
