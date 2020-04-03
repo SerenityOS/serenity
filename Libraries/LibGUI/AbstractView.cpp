@@ -193,16 +193,27 @@ void AbstractView::mousedown_event(MouseEvent& event)
     update();
 }
 
+void AbstractView::set_hovered_index(const ModelIndex& index)
+{
+    if (m_hovered_index == index)
+        return;
+    m_hovered_index = index;
+    update();
+}
+
+void AbstractView::leave_event(Core::Event& event)
+{
+    ScrollableWidget::leave_event(event);
+    set_hovered_index({});
+}
+
 void AbstractView::mousemove_event(MouseEvent& event)
 {
     if (!model())
         return ScrollableWidget::mousemove_event(event);
 
     auto hovered_index = index_at_event_position(event.position());
-    if (m_hovered_index != hovered_index) {
-        m_hovered_index = hovered_index;
-        update();
-    }
+    set_hovered_index(hovered_index);
 
     if (!m_might_drag)
         return ScrollableWidget::mousemove_event(event);

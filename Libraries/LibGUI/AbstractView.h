@@ -82,8 +82,10 @@ protected:
     virtual void doubleclick_event(MouseEvent&) override;
     virtual void context_menu_event(ContextMenuEvent&) override;
     virtual void drop_event(DropEvent&) override;
+    virtual void leave_event(Core::Event&) override;
 
     virtual void did_scroll() override;
+    void set_hovered_index(const ModelIndex&);
     void activate(const ModelIndex&);
     void activate_selected();
     void update_edit_widget_position();
