@@ -7,6 +7,7 @@ LIBWEB_OBJS = \
     Bindings/EventTargetWrapper.o \
     Bindings/HTMLCanvasElementWrapper.o \
     Bindings/MouseEventWrapper.o \
+    Bindings/NavigatorObject.o \
     Bindings/NodeWrapper.o \
     Bindings/WindowObject.o \
     Bindings/Wrappable.o \
