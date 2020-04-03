@@ -97,7 +97,7 @@ static bool parse_html_document(const StringView& html, Document& document, Pare
 
     auto commit_text_node = [&] {
         auto text_node = adopt(*new Text(document, text_buffer.to_string()));
-        node_stack.last().append_child(text_node, false);
+        node_stack.last().append_child(text_node);
         text_buffer.clear();
     };
 
@@ -129,19 +129,20 @@ static bool parse_html_document(const StringView& html, Document& document, Pare
         tag_name_buffer.clear();
         new_element->set_attributes(move(attributes));
         node_stack.append(new_element);
-        if (node_stack.size() != 1)
-            node_stack[node_stack.size() - 2].append_child(new_element, false);
+        if (node_stack.size() != 1) {
+            node_stack[node_stack.size() - 2].append_child(new_element);
+        }
 
         if (is_self_closing_tag(new_element->tag_name()))
             close_tag();
     };
 
     auto commit_doctype = [&] {
-        node_stack.last().append_child(adopt(*new DocumentType(document)), false);
+        node_stack.last().append_child(adopt(*new DocumentType(document)));
     };
 
     auto commit_comment = [&] {
-        node_stack.last().append_child(adopt(*new Comment(document, text_buffer.to_string())), false);
+        node_stack.last().append_child(adopt(*new Comment(document, text_buffer.to_string())));
     };
 
     auto commit_tag = [&] {
@@ -378,6 +379,7 @@ RefPtr<Document> parse_html_document(const StringView& html, const URL& url)
 
     document->fixup();
 
+#if 0
     Function<void(Node&)> fire_insertion_callbacks = [&](Node& node) {
         for (auto* child = node.first_child(); child; child = child->next_sibling()) {
             fire_insertion_callbacks(*child);
@@ -386,6 +388,7 @@ RefPtr<Document> parse_html_document(const StringView& html, const URL& url)
             node.inserted_into(*node.parent());
     };
     fire_insertion_callbacks(document);
+#endif
 
     document->dispatch_event(Event::create("DOMContentLoaded"));
 

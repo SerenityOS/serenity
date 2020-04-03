@@ -111,6 +111,7 @@ public:
 
     void inserted_into(LayoutNode&) {}
     void removed_from(LayoutNode&) {}
+    void children_changed() {}
 
     virtual void split_into_lines(LayoutBlock& container);
 

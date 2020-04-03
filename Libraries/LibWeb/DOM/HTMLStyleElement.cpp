@@ -41,7 +41,7 @@ HTMLStyleElement::~HTMLStyleElement()
 {
 }
 
-void HTMLStyleElement::inserted_into(Node& new_parent)
+void HTMLStyleElement::children_changed()
 {
     StringBuilder builder;
     for_each_child([&](auto& child) {
@@ -51,7 +51,7 @@ void HTMLStyleElement::inserted_into(Node& new_parent)
     m_stylesheet = parse_css(builder.to_string());
     if (m_stylesheet)
         document().add_sheet(*m_stylesheet);
-    HTMLElement::inserted_into(new_parent);
+    HTMLElement::children_changed();
 }
 
 void HTMLStyleElement::removed_from(Node& old_parent)

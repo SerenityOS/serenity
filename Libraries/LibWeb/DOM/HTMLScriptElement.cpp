@@ -30,6 +30,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/HTMLScriptElement.h>
 #include <LibWeb/DOM/Text.h>
+#include <LibWeb/ResourceLoader.h>
 
 namespace Web {
 
@@ -42,17 +43,48 @@ HTMLScriptElement::~HTMLScriptElement()
 {
 }
 
-void HTMLScriptElement::inserted_into(Node& new_parent)
+void HTMLScriptElement::children_changed()
 {
-    HTMLElement::inserted_into(new_parent);
+    HTMLElement::children_changed();
+
+    if (has_attribute("src"))
+        return;
 
     StringBuilder builder;
     for_each_child([&](auto& child) {
         if (is<Text>(child))
             builder.append(to<Text>(child).text_content());
     });
-
     auto source = builder.to_string();
+    if (source.is_empty())
+        return;
+
+    auto program = JS::Parser(JS::Lexer(source)).parse_program();
+    document().interpreter().run(*program);
+}
+
+void HTMLScriptElement::inserted_into(Node& new_parent)
+{
+    HTMLElement::inserted_into(new_parent);
+
+    auto src = attribute("src");
+    if (src.is_null())
+        return;
+
+    String source;
+    URL src_url = document().complete_url(src);
+    ResourceLoader::the().load_sync(src_url, [&](auto& data) {
+        if (data.is_null()) {
+            dbg() << "HTMLScriptElement: Failed to load " << src;
+            return;
+        }
+        source = String::copy(data);
+    });
+    if (source.is_empty()) {
+        dbg() << "HTMLScriptElement: No source to parse :(";
+        return;
+    }
+
     auto program = JS::Parser(JS::Lexer(source)).parse_program();
     document().interpreter().run(*program);
 }

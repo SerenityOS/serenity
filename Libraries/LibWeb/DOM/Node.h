@@ -104,6 +104,7 @@ public:
 
     virtual void inserted_into(Node&) {}
     virtual void removed_from(Node&) {}
+    virtual void children_changed() {}
 
     const LayoutNode* layout_node() const { return m_layout_node; }
     LayoutNode* layout_node() { return m_layout_node; }
