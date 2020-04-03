@@ -108,9 +108,9 @@ public:
 
     bool is_ancestor_of(const TreeNode&) const;
 
-    void prepend_child(NonnullRefPtr<T> node, bool call_inserted_into = true);
-    void append_child(NonnullRefPtr<T> node, bool call_inserted_into = true);
-    NonnullRefPtr<T> remove_child(NonnullRefPtr<T> node, bool call_removed_from = true);
+    void prepend_child(NonnullRefPtr<T> node);
+    void append_child(NonnullRefPtr<T> node);
+    NonnullRefPtr<T> remove_child(NonnullRefPtr<T> node);
     void donate_all_children_to(T& node);
 
     bool is_child_allowed(const T&) const { return true; }
@@ -200,7 +200,7 @@ private:
 };
 
 template<typename T>
-inline NonnullRefPtr<T> TreeNode<T>::remove_child(NonnullRefPtr<T> node, bool call_removed_from)
+inline NonnullRefPtr<T> TreeNode<T>::remove_child(NonnullRefPtr<T> node)
 {
     ASSERT(node->m_parent == this);
 
@@ -220,16 +220,17 @@ inline NonnullRefPtr<T> TreeNode<T>::remove_child(NonnullRefPtr<T> node, bool ca
     node->m_previous_sibling = nullptr;
     node->m_parent = nullptr;
 
-    if (call_removed_from)
-        node->removed_from(static_cast<T&>(*this));
+    node->removed_from(static_cast<T&>(*this));
 
     node->unref();
+
+    static_cast<T*>(this)->children_changed();
 
     return node;
 }
 
 template<typename T>
-inline void TreeNode<T>::append_child(NonnullRefPtr<T> node, bool call_inserted_into)
+inline void TreeNode<T>::append_child(NonnullRefPtr<T> node)
 {
     ASSERT(!node->m_parent);
 
@@ -243,13 +244,14 @@ inline void TreeNode<T>::append_child(NonnullRefPtr<T> node, bool call_inserted_
     m_last_child = node.ptr();
     if (!m_first_child)
         m_first_child = m_last_child;
-    if (call_inserted_into)
-        node->inserted_into(static_cast<T&>(*this));
+    node->inserted_into(static_cast<T&>(*this));
     (void)node.leak_ref();
+
+    static_cast<T*>(this)->children_changed();
 }
 
 template<typename T>
-inline void TreeNode<T>::prepend_child(NonnullRefPtr<T> node, bool call_inserted_into)
+inline void TreeNode<T>::prepend_child(NonnullRefPtr<T> node)
 {
     ASSERT(!node->m_parent);
 
@@ -263,9 +265,10 @@ inline void TreeNode<T>::prepend_child(NonnullRefPtr<T> node, bool call_inserted
     m_first_child = node.ptr();
     if (!m_last_child)
         m_last_child = m_first_child;
-    if (call_inserted_into)
-        node->inserted_into(static_cast<T&>(*this));
+    node->inserted_into(static_cast<T&>(*this));
     (void)node.leak_ref();
+
+    static_cast<T*>(this)->children_changed();
 }
 
 template<typename T>

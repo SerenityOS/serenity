@@ -37,7 +37,7 @@ public:
     HTMLStyleElement(Document&, const FlyString& tag_name);
     virtual ~HTMLStyleElement() override;
 
-    virtual void inserted_into(Node&) override;
+    virtual void children_changed() override;
     virtual void removed_from(Node&) override;
 
 private:

@@ -36,6 +36,7 @@ public:
     virtual ~HTMLScriptElement() override;
 
     virtual void inserted_into(Node&) override;
+    virtual void children_changed() override;
 };
 
 }
