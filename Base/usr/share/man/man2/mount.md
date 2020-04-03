@@ -7,13 +7,12 @@ mount - mount a filesystem
 ```**c++
 #include <unistd.h>
 
-int mount(int source_fd, const char* target, const char* fs_type, int flags);
+int mount(const char* source, const char* target, const char* fs_type, int flags);
 ```
 
 ## Description
 
-`mount()` mounts a filesystem stored at `source_fd` by overlaying its contents
-over `target`.
+`mount()` mounts a filesystem stored at `source` by overlaying its contents over `target`.
 
 `fs_type` must be one of the following supported filesystems:
 
@@ -22,10 +21,9 @@ over `target`.
 * `DevPtsFS` (or `devpts`): The pseudoterminal pseudo-filesystem (normally mounted at `/dev/pts`).
 * `TmpFS` (or `tmp`): A non-persistent filesystem that stores all its data in RAM. An instance of this filesystem is normally mounted at `/tmp`.
 
-For Ext2FS, `source_fd` must refer to an open file descriptor to a file containing
-the filesystem image. This may be a device file or any other seekable file. All
-the other filesystems ignore the `source_fd` — you can even pass an invalid file
-descriptor such as -1.
+For Ext2FS, `source` must be a path to a block device storing the filesystem contents. All
+the other filesystems ignore the `source` argument (by convention, it should have the same
+value as `fs_type`).
 
 The following `flags` are supported:
 
@@ -39,22 +37,14 @@ mounted file system.
 
 ### Bind mounts
 
-If `MS_BIND` is specified in `flags`, `fs_type` is ignored and a bind mount is
-performed instead. In this case, the file or directory specified by `source_fd`
-is overlayed over `target` — the target appears to be replaced by a copy of the
-source. This can be used as an alternative to symlinks or hardlinks.
+If `MS_BIND` is specified in `flags`, `fs_type` is ignored and a bind mount is performed
+instead. In this case `source` is treated as a path to a file or directory whose contents
+are overlayed over `target`. This can be used  as an alternative to symlinks or hardlinks.
 
 ## Errors
 
-* `EFAULT`: The `fs_type` or `target` are invalid strings.
 * `EPERM`: The current process does not have superuser privileges.
-* `ENODEV`: The `fs_type` is unrecognized, or the file descriptor to source is
-  not found, or the source doesn't contain a valid filesystem image. Also, this
-  error occurs if `fs_type` is valid, but the file descriptor from `source_fd`
-  is not seekable.
-* `EBADF`: If the `source_fd` is not valid, and either `fs_type` specifies a
-  file-backed filesystem (and not a pseudo filesystem), or `MS_BIND` is
-  specified in flags.
+* `ENODEV`: The `fs_type` is unrecognized, or the device is not found, or the device doesn't contain a valid filesystem image.
 
 All of the usual path resolution errors may also occur.
 

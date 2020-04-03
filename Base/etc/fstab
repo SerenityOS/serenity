@@ -5,6 +5,6 @@
 /dev	/dev	bind	bind,nosuid
 /bin	/bin	bind	bind,nodev
 
-none	/proc	proc	nosuid
-none	/dev/pts	devpts	noexec,nosuid
-none	/tmp	tmp	nodev,nosuid
+proc	/proc	proc	nosuid
+devpts	/dev/pts	devpts	noexec,nosuid
+tmp	/tmp	tmp	nodev,nosuid
