@@ -288,7 +288,7 @@ void handle_udp(const IPv4Packet& ipv4_packet)
     }
 
     auto adapter = NetworkAdapter::from_ipv4_address(ipv4_packet.destination());
-    if (!adapter) {
+    if (!adapter && ipv4_packet.destination() != IPv4Address(255, 255, 255, 255)) {
         klog() << "handle_udp: this packet is not for me, it's for " << ipv4_packet.destination().to_string().characters();
         return;
     }
