@@ -302,8 +302,8 @@ JS::Value ReplObject::load_file(JS::Interpreter& interpreter)
         auto program = JS::Parser(JS::Lexer(source)).parse_program();
         if (dump_ast)
             program->dump(0);
-        auto result = interpreter.run(*program);
-        print(result);
+        interpreter.run(*program);
+        print(interpreter.last_value());
     }
     return JS::Value(true);
 }
@@ -319,13 +319,13 @@ void repl(JS::Interpreter& interpreter)
         if (dump_ast)
             program->dump(0);
 
-        auto result = interpreter.run(*program);
+        interpreter.run(*program);
         if (interpreter.exception()) {
             printf("Uncaught exception: ");
             print(interpreter.exception()->value());
             interpreter.clear_exception();
         } else {
-            print(result);
+            print(interpreter.last_value());
         }
     }
 }
