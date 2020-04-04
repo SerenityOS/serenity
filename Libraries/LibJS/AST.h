@@ -238,13 +238,13 @@ private:
 
 class WhileStatement : public Statement {
 public:
-    WhileStatement(NonnullRefPtr<Expression> predicate, NonnullRefPtr<ScopeNode> body)
-        : m_predicate(move(predicate))
+    WhileStatement(NonnullRefPtr<Expression> test, NonnullRefPtr<ScopeNode> body)
+        : m_test(move(test))
         , m_body(move(body))
     {
     }
 
-    const Expression& predicate() const { return *m_predicate; }
+    const Expression& test() const { return *m_test; }
     const ScopeNode& body() const { return *m_body; }
 
     virtual Value execute(Interpreter&) const override;
@@ -253,7 +253,7 @@ public:
 private:
     virtual const char* class_name() const override { return "WhileStatement"; }
 
-    NonnullRefPtr<Expression> m_predicate;
+    NonnullRefPtr<Expression> m_test;
     NonnullRefPtr<ScopeNode> m_body;
 };
 

@@ -166,7 +166,7 @@ Value IfStatement::execute(Interpreter& interpreter) const
 Value WhileStatement::execute(Interpreter& interpreter) const
 {
     Value last_value = js_undefined();
-    while (m_predicate->execute(interpreter).to_boolean()) {
+    while (m_test->execute(interpreter).to_boolean()) {
         if (interpreter.exception())
             return {};
         last_value = interpreter.run(*m_body);
@@ -564,7 +564,7 @@ void WhileStatement::dump(int indent) const
 
     print_indent(indent);
     printf("While\n");
-    predicate().dump(indent + 1);
+    test().dump(indent + 1);
     body().dump(indent + 1);
 }
 
