@@ -29,7 +29,6 @@
 namespace JS {
 
 class ASTNode;
-class Argument;
 class Cell;
 class Error;
 class Exception;
@@ -47,6 +46,8 @@ class Shape;
 class Statement;
 class Value;
 enum class DeclarationType;
+
+struct Argument;
 
 template<class T>
 class Handle;
