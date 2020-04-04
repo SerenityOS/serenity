@@ -174,10 +174,26 @@ static bool parse_html_document(const StringView& html, Document& document, Pare
         switch (state) {
         case State::Free:
             if (ch == '<') {
-                is_slash_tag = false;
-                move_to_state(State::BeforeTagName);
-                break;
+                bool should_treat_as_text = false;
+                if (node_stack.last().tag_name() == "script") {
+                    bool is_script_close_tag = peek(1) == '/'
+                        && tolower(peek(2)) == 's'
+                        && tolower(peek(3)) == 'c'
+                        && tolower(peek(4)) == 'r'
+                        && tolower(peek(5)) == 'i'
+                        && tolower(peek(6)) == 'p'
+                        && tolower(peek(7)) == 't'
+                        && tolower(peek(8)) == '>';
+                    if (!is_script_close_tag)
+                        should_treat_as_text = true;
+                }
+                if (!should_treat_as_text) {
+                    is_slash_tag = false;
+                    move_to_state(State::BeforeTagName);
+                    break;
+                }
             }
+
             if (ch != '&') {
                 text_buffer.append(ch);
             } else {
@@ -394,5 +410,4 @@ RefPtr<Document> parse_html_document(const StringView& html, const URL& url)
 
     return document;
 }
-
 }
