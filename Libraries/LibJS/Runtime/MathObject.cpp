@@ -28,7 +28,7 @@
 #include <AK/Function.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/MathObject.h>
-#include <LibM/math.h>
+#include <math.h>
 
 namespace JS {
 
@@ -36,6 +36,7 @@ MathObject::MathObject()
 {
     put_native_function("abs", abs, 1);
     put_native_function("random", random);
+    put_native_function("sqrt", sqrt);
 
     put("E", Value(M_E));
     put("LN2", Value(M_LN2));
@@ -43,8 +44,8 @@ MathObject::MathObject()
     put("LOG2E", Value(log2(M_E)));
     put("LOG10E", Value(log10(M_E)));
     put("PI", Value(M_PI));
-    put("SQRT1_2", Value(sqrt(1 / 2)));
-    put("SQRT2", Value(sqrt(2)));
+    put("SQRT1_2", Value(::sqrt(1 / 2)));
+    put("SQRT2", Value(::sqrt(2)));
 }
 
 MathObject::~MathObject()
@@ -70,6 +71,17 @@ Value MathObject::random(Interpreter&)
     double r = (double)rand() / (double)RAND_MAX;
 #endif
     return Value(r);
+}
+
+Value MathObject::sqrt(Interpreter& interpreter)
+{
+    if (!interpreter.argument_count())
+        return js_nan();
+
+    auto number = interpreter.argument(0).to_number();
+    if (number.is_nan())
+        return js_nan();
+    return Value(::sqrt(number.as_double()));
 }
 
 }
