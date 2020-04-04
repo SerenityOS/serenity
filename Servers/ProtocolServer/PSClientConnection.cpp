@@ -57,9 +57,11 @@ OwnPtr<Messages::ProtocolServer::IsSupportedProtocolResponse> PSClientConnection
 OwnPtr<Messages::ProtocolServer::StartDownloadResponse> PSClientConnection::handle(const Messages::ProtocolServer::StartDownload& message)
 {
     URL url(message.url());
-    ASSERT(url.is_valid());
+    if (!url.is_valid())
+        return make<Messages::ProtocolServer::StartDownloadResponse>(-1);
     auto* protocol = Protocol::find_by_name(url.protocol());
-    ASSERT(protocol);
+    if (!protocol)
+        return make<Messages::ProtocolServer::StartDownloadResponse>(-1);
     auto download = protocol->start_download(*this, url);
     return make<Messages::ProtocolServer::StartDownloadResponse>(download->id());
 }

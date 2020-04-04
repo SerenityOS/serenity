@@ -50,6 +50,8 @@ bool Client::is_supported_protocol(const String& protocol)
 RefPtr<Download> Client::start_download(const String& url)
 {
     i32 download_id = send_sync<Messages::ProtocolServer::StartDownload>(url)->download_id();
+    if (download_id < 0)
+        return nullptr;
     auto download = Download::create_from_id({}, *this, download_id);
     m_downloads.set(download_id, download);
     return download;
