@@ -24,55 +24,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Function.h>
-#include <LibJS/Heap/Heap.h>
-#include <LibJS/Interpreter.h>
-#include <LibJS/Runtime/Array.h>
-#include <LibJS/Runtime/ArrayPrototype.h>
-#include <LibJS/Runtime/Value.h>
+#pragma once
+
+#include <LibJS/Runtime/NativeFunction.h>
 
 namespace JS {
 
-ArrayPrototype::ArrayPrototype()
-{
-    put_native_function("shift", shift);
-    put_native_function("pop", pop);
-    put_native_function("push", push, 1);
-    put("length", Value(0));
-}
+class ArrayConstructor final : public NativeFunction {
+public:
+    ArrayConstructor();
+    virtual ~ArrayConstructor() override;
 
-ArrayPrototype::~ArrayPrototype()
-{
-}
+    virtual Value call(Interpreter&) override;
+    virtual Value construct(Interpreter&) override;
 
-Value ArrayPrototype::push(Interpreter& interpreter)
-{
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
-    if (!this_object)
-        return {};
-    ASSERT(this_object->is_array());
-    if (!interpreter.argument_count())
-        return js_undefined();
-    static_cast<Array*>(this_object)->push(interpreter.argument(0));
-    return Value(static_cast<const Array*>(this_object)->length());
-}
-
-Value ArrayPrototype::pop(Interpreter& interpreter)
-{
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
-    if (!this_object)
-        return {};
-    ASSERT(this_object->is_array());
-    return static_cast<Array*>(this_object)->pop();
-}
-
-Value ArrayPrototype::shift(Interpreter& interpreter)
-{
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
-    if (!this_object)
-        return {};
-    ASSERT(this_object->is_array());
-    return static_cast<Array*>(this_object)->shift();
-}
+private:
+    virtual bool has_constructor() const override { return true; }
+    virtual const char* class_name() const override { return "ArrayConstructor"; }
+};
 
 }

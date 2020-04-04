@@ -28,51 +28,39 @@
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
-#include <LibJS/Runtime/ArrayPrototype.h>
-#include <LibJS/Runtime/Value.h>
+#include <LibJS/Runtime/ArrayConstructor.h>
+#include <LibJS/Runtime/Shape.h>
 
 namespace JS {
 
-ArrayPrototype::ArrayPrototype()
+ArrayConstructor::ArrayConstructor()
 {
-    put_native_function("shift", shift);
-    put_native_function("pop", pop);
-    put_native_function("push", push, 1);
-    put("length", Value(0));
+    put("prototype", interpreter().array_prototype());
+    put("length", Value(1));
 }
 
-ArrayPrototype::~ArrayPrototype()
+ArrayConstructor::~ArrayConstructor()
 {
 }
 
-Value ArrayPrototype::push(Interpreter& interpreter)
+Value ArrayConstructor::call(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
-    if (!this_object)
-        return {};
-    ASSERT(this_object->is_array());
-    if (!interpreter.argument_count())
-        return js_undefined();
-    static_cast<Array*>(this_object)->push(interpreter.argument(0));
-    return Value(static_cast<const Array*>(this_object)->length());
+    if (interpreter.argument_count() == 0)
+        return interpreter.heap().allocate<Array>();
+
+    if (interpreter.argument_count() == 1) {
+        auto* array = interpreter.heap().allocate<Array>();
+        array->elements().resize(interpreter.argument(0).to_i32());
+        return array;
+    }
+
+    // FIXME: Handle "new Array(element0, element1, ...)"
+    ASSERT_NOT_REACHED();
 }
 
-Value ArrayPrototype::pop(Interpreter& interpreter)
+Value ArrayConstructor::construct(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
-    if (!this_object)
-        return {};
-    ASSERT(this_object->is_array());
-    return static_cast<Array*>(this_object)->pop();
-}
-
-Value ArrayPrototype::shift(Interpreter& interpreter)
-{
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
-    if (!this_object)
-        return {};
-    ASSERT(this_object->is_array());
-    return static_cast<Array*>(this_object)->shift();
+    return call(interpreter);
 }
 
 }
