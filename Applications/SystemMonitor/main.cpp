@@ -122,9 +122,9 @@ int main(int argc, char** argv)
 
     auto& tabwidget = keeper.add<GUI::TabWidget>();
 
-    auto process_container_splitter = tabwidget.add_tab<GUI::VerticalSplitter>("Processes");
+    auto& process_container_splitter = tabwidget.add_tab<GUI::VerticalSplitter>("Processes");
 
-    auto& process_table_container = process_container_splitter->add<GUI::Widget>();
+    auto& process_table_container = process_container_splitter.add<GUI::Widget>();
 
     tabwidget.add_widget("Graphs", build_graphs_tab());
 
@@ -228,18 +228,18 @@ int main(int argc, char** argv)
 
     app.set_menubar(move(menubar));
 
-    auto& process_tab_widget = process_container_splitter->add<GUI::TabWidget>();
+    auto& process_tab_widget = process_container_splitter.add<GUI::TabWidget>();
 
-    auto memory_map_widget = process_tab_widget.add_tab<ProcessMemoryMapWidget>("Memory map");
-    auto open_files_widget = process_tab_widget.add_tab<ProcessFileDescriptorMapWidget>("Open files");
-    auto unveiled_paths_widget = process_tab_widget.add_tab<ProcessUnveiledPathsWidget>("Unveiled paths");
-    auto stacks_widget = process_tab_widget.add_tab<ProcessStacksWidget>("Stacks");
+    auto& memory_map_widget = process_tab_widget.add_tab<ProcessMemoryMapWidget>("Memory map");
+    auto& open_files_widget = process_tab_widget.add_tab<ProcessFileDescriptorMapWidget>("Open files");
+    auto& unveiled_paths_widget = process_tab_widget.add_tab<ProcessUnveiledPathsWidget>("Unveiled paths");
+    auto& stacks_widget = process_tab_widget.add_tab<ProcessStacksWidget>("Stacks");
 
     process_table_view.on_process_selected = [&](pid_t pid) {
-        open_files_widget->set_pid(pid);
-        stacks_widget->set_pid(pid);
-        memory_map_widget->set_pid(pid);
-        unveiled_paths_widget->set_pid(pid);
+        open_files_widget.set_pid(pid);
+        stacks_widget.set_pid(pid);
+        memory_map_widget.set_pid(pid);
+        unveiled_paths_widget.set_pid(pid);
     };
 
     window->show();

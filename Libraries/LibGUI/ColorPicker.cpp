@@ -107,21 +107,21 @@ void ColorPicker::build_ui()
 
     auto& tab_widget = root_container.add<GUI::TabWidget>();
 
-    auto tab_palette = tab_widget.add_tab<Widget>("Palette");
-    tab_palette->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
-    tab_palette->set_layout<VerticalBoxLayout>();
-    tab_palette->layout()->set_margins({ 4, 4, 4, 4 });
-    tab_palette->layout()->set_spacing(4);
+    auto& tab_palette = tab_widget.add_tab<Widget>("Palette");
+    tab_palette.set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
+    tab_palette.set_layout<VerticalBoxLayout>();
+    tab_palette.layout()->set_margins({ 4, 4, 4, 4 });
+    tab_palette.layout()->set_spacing(4);
 
-    build_ui_palette(*tab_palette);
+    build_ui_palette(tab_palette);
 
-    auto tab_custom_color = tab_widget.add_tab<Widget>("Custom Color");
-    tab_custom_color->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
-    tab_custom_color->set_layout<VerticalBoxLayout>();
-    tab_custom_color->layout()->set_margins({ 4, 4, 4, 4 });
-    tab_custom_color->layout()->set_spacing(4);
+    auto& tab_custom_color = tab_widget.add_tab<Widget>("Custom Color");
+    tab_custom_color.set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
+    tab_custom_color.set_layout<VerticalBoxLayout>();
+    tab_custom_color.layout()->set_margins({ 4, 4, 4, 4 });
+    tab_custom_color.layout()->set_spacing(4);
 
-    build_ui_custom(*tab_custom_color);
+    build_ui_custom(tab_custom_color);
 
     auto& button_container = root_container.add<Widget>();
     button_container.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
