@@ -25,6 +25,8 @@ OBJS = \
     Runtime/MathObject.o \
     Runtime/NativeFunction.o \
     Runtime/NativeProperty.o \
+    Runtime/NumberObject.o \
+    Runtime/NumberPrototype.o \
     Runtime/Object.o \
     Runtime/ObjectConstructor.o \
     Runtime/ObjectPrototype.o \
