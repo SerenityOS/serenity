@@ -43,6 +43,7 @@ private:
     static Value sqrt(Interpreter&);
     static Value floor(Interpreter&);
     static Value round(Interpreter&);
+    static Value max(Interpreter&);
 };
 
 }
