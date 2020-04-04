@@ -363,16 +363,16 @@ Vector<CppToken> CppLexer::lex()
                 begin_token();
                 if (peek() == '<' || peek() == '"') {
                     char closing = consume() == '<' ? '>' : '"';
-                    while (peek() != closing && peek() != '\n')
+                    while (peek() && peek() != closing && peek() != '\n')
                         consume();
 
-                    if (consume() == '\n') {
+                    if (peek() && consume() == '\n') {
                         commit_token(CppToken::Type::IncludePath);
                         continue;
-                    } else {
-                        commit_token(CppToken::Type::IncludePath);
-                        begin_token();
                     }
+
+                    commit_token(CppToken::Type::IncludePath);
+                    begin_token();
                 }
             }
 
