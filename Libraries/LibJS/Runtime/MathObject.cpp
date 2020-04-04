@@ -36,7 +36,7 @@ MathObject::MathObject()
 {
     put_native_function("abs", abs, 1);
     put_native_function("random", random);
-    put_native_function("sqrt", sqrt);
+    put_native_function("sqrt", sqrt, 1);
 
     put("E", Value(M_E));
     put("LN2", Value(M_LN2));
