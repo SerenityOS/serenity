@@ -57,23 +57,23 @@ int main(int argc, char** argv)
     bool ok;
     new_uid = parts[0].to_uint(ok);
     if (!ok) {
-        new_uid = getpwnam(parts[0].characters())->pw_uid;
-
-        if (!new_uid) {
-            fprintf(stderr, "Invalid uid: '%s'\n", parts[0].characters());
+        auto* passwd = getpwnam(parts[0].characters());
+        if (!passwd) {
+            fprintf(stderr, "Unknown user '%s'\n", parts[0].characters());
             return 1;
         }
+        new_uid = passwd->pw_uid;
     }
 
     if (parts.size() == 2) {
         new_gid = parts[1].to_uint(ok);
         if (!ok) {
-            new_gid = getgrnam(parts[1].characters())->gr_gid;
-
+            auto* group = getgrnam(parts[1].characters());
             if (!new_gid) {
-                fprintf(stderr, "Invalid gid: '%s'\n", parts[1].characters());
+                fprintf(stderr, "Unknown group '%s'\n", parts[1].characters());
                 return 1;
             }
+            new_gid = group->gr_gid;
         }
     }
 
