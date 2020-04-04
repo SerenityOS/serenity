@@ -16,7 +16,7 @@ namespace JS {
 GlobalObject::GlobalObject()
 {
     put_native_function("gc", gc);
-    put_native_function("isNaN", is_nan);
+    put_native_function("isNaN", is_nan, 1);
 
     // FIXME: These are read-only in ES5
     put("NaN", js_nan());

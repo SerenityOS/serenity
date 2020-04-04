@@ -39,7 +39,7 @@ namespace Bindings {
 EventTargetWrapper::EventTargetWrapper(EventTarget& impl)
     : m_impl(impl)
 {
-    put_native_function("addEventListener", add_event_listener);
+    put_native_function("addEventListener", add_event_listener, 2);
 }
 
 EventTargetWrapper::~EventTargetWrapper()

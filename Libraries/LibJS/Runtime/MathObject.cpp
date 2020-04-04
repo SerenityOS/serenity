@@ -34,7 +34,7 @@ namespace JS {
 
 MathObject::MathObject()
 {
-    put_native_function("abs", abs);
+    put_native_function("abs", abs, 1);
     put_native_function("random", random);
 
     put("E", Value(M_E));
