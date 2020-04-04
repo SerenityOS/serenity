@@ -212,7 +212,7 @@ void TCPSocket::send_tcp_packet(u16 flags, const void* payload, size_t payload_s
         return;
     }
 
-    auto routing_decision = route_to(peer_address(), local_address());
+    auto routing_decision = route_to(peer_address(), local_address(), bound_interface());
     ASSERT(!routing_decision.is_zero());
 
     routing_decision.adapter->send_ipv4(
@@ -225,7 +225,7 @@ void TCPSocket::send_tcp_packet(u16 flags, const void* payload, size_t payload_s
 
 void TCPSocket::send_outgoing_packets()
 {
-    auto routing_decision = route_to(peer_address(), local_address());
+    auto routing_decision = route_to(peer_address(), local_address(), bound_interface());
     ASSERT(!routing_decision.is_zero());
 
     auto now = kgettimeofday();

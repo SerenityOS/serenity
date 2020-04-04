@@ -25,6 +25,7 @@
  */
 
 #include <AK/StringBuilder.h>
+#include <AK/StringView.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Net/IPv4Socket.h>
 #include <Kernel/Net/LocalSocket.h>
@@ -114,6 +115,16 @@ KResult Socket::setsockopt(int level, int option, const void* value, socklen_t v
             return KResult(-EINVAL);
         m_receive_timeout = *(const timeval*)value;
         return KSuccess;
+    case SO_BINDTODEVICE: {
+        if (value_size != IFNAMSIZ)
+            return KResult(-EINVAL);
+        StringView ifname { (const char*)value };
+        auto device = NetworkAdapter::lookup_by_name(ifname);
+        if (!device)
+            return KResult(-ENODEV);
+        m_bound_interface = device;
+        return KSuccess;
+    }
     default:
         dbg() << "setsockopt(" << option << ") at SOL_SOCKET not implemented.";
         return KResult(-ENOPROTOOPT);
@@ -143,6 +154,19 @@ KResult Socket::getsockopt(FileDescription&, int level, int option, void* value,
         *(int*)value = 0;
         *value_size = sizeof(int);
         return KSuccess;
+    case SO_BINDTODEVICE:
+        if (*value_size < IFNAMSIZ)
+            return KResult(-EINVAL);
+        if (m_bound_interface) {
+            const auto& name = m_bound_interface->name();
+            auto length = name.length() + 1;
+            memcpy(value, name.characters(), length);
+            *value_size = length;
+            return KSuccess;
+        } else {
+            *value_size = 0;
+            return KResult(-EFAULT);
+        }
     default:
         dbg() << "getsockopt(" << option << ") at SOL_SOCKET not implemented.";
         return KResult(-ENOPROTOOPT);
