@@ -1435,6 +1435,10 @@ void ProcFSInode::flush_metadata()
 
 ssize_t ProcFSInode::write_bytes(off_t offset, ssize_t size, const u8* buffer, FileDescription*)
 {
+    auto result = prepare_to_write_data();
+    if (result.is_error())
+        return result;
+
     auto* directory_entry = fs().get_directory_entry(identifier());
 
     Function<ssize_t(InodeIdentifier, const ByteBuffer&)> callback_tmp;

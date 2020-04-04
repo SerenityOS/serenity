@@ -511,6 +511,14 @@ KResult VFS::chown(Inode& inode, uid_t a_uid, gid_t a_gid)
     }
 
     dbg() << "VFS::chown(): inode " << inode.identifier() << " <- uid:" << new_uid << " gid:" << new_gid;
+
+    if (metadata.is_setuid() || metadata.is_setgid()) {
+        dbg() << "VFS::chown(): Stripping SUID/SGID bits from " << inode.identifier();
+        auto result = inode.chmod(metadata.mode & ~(04000 | 02000));
+        if (result.is_error())
+            return result;
+    }
+
     return inode.chown(new_uid, new_gid);
 }
 
