@@ -37,7 +37,8 @@ public:
     MenuBar();
     ~MenuBar();
 
-    void add_menu(NonnullRefPtr<Menu>);
+    Menu& add_menu(String name);
+    void append_menu(NonnullRefPtr<Menu>);
 
     void notify_added_to_application(Badge<Application>);
     void notify_removed_from_application(Badge<Application>);

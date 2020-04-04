@@ -66,12 +66,11 @@ int main(int argc, char** argv)
 
     auto menubar = make<GUI::MenuBar>();
 
-    auto app_menu = GUI::Menu::construct("Calendar");
-    app_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    auto& app_menu = menubar->add_menu("Calendar");
+    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the().quit(0);
         return;
     }));
-    menubar->add_menu(move(app_menu));
     app.set_menubar(move(menubar));
 
     app.exec();

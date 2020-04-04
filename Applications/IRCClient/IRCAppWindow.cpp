@@ -232,45 +232,41 @@ void IRCAppWindow::setup_actions()
 void IRCAppWindow::setup_menus()
 {
     auto menubar = make<GUI::MenuBar>();
-    auto app_menu = GUI::Menu::construct("IRC Client");
-    app_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    auto& app_menu = menubar->add_menu("IRC Client");
+    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         dbgprintf("Terminal: Quit menu activated!\n");
         GUI::Application::the().quit(0);
         return;
     }));
-    menubar->add_menu(move(app_menu));
 
-    auto server_menu = GUI::Menu::construct("Server");
-    server_menu->add_action(*m_change_nick_action);
-    server_menu->add_separator();
-    server_menu->add_action(*m_join_action);
-    server_menu->add_action(*m_list_channels_action);
-    server_menu->add_separator();
-    server_menu->add_action(*m_whois_action);
-    server_menu->add_action(*m_open_query_action);
-    server_menu->add_action(*m_close_query_action);
-    menubar->add_menu(move(server_menu));
+    auto& server_menu = menubar->add_menu("Server");
+    server_menu.add_action(*m_change_nick_action);
+    server_menu.add_separator();
+    server_menu.add_action(*m_join_action);
+    server_menu.add_action(*m_list_channels_action);
+    server_menu.add_separator();
+    server_menu.add_action(*m_whois_action);
+    server_menu.add_action(*m_open_query_action);
+    server_menu.add_action(*m_close_query_action);
 
-    auto channel_menu = GUI::Menu::construct("Channel");
-    channel_menu->add_action(*m_change_topic_action);
-    channel_menu->add_action(*m_invite_user_action);
-    channel_menu->add_separator();
-    channel_menu->add_action(*m_voice_user_action);
-    channel_menu->add_action(*m_devoice_user_action);
-    channel_menu->add_action(*m_op_user_action);
-    channel_menu->add_action(*m_deop_user_action);
-    channel_menu->add_separator();
-    channel_menu->add_action(*m_kick_user_action);
-    channel_menu->add_separator();
-    channel_menu->add_action(*m_cycle_channel_action);
-    channel_menu->add_action(*m_part_action);
-    menubar->add_menu(move(channel_menu));
+    auto& channel_menu = menubar->add_menu("Channel");
+    channel_menu.add_action(*m_change_topic_action);
+    channel_menu.add_action(*m_invite_user_action);
+    channel_menu.add_separator();
+    channel_menu.add_action(*m_voice_user_action);
+    channel_menu.add_action(*m_devoice_user_action);
+    channel_menu.add_action(*m_op_user_action);
+    channel_menu.add_action(*m_deop_user_action);
+    channel_menu.add_separator();
+    channel_menu.add_action(*m_kick_user_action);
+    channel_menu.add_separator();
+    channel_menu.add_action(*m_cycle_channel_action);
+    channel_menu.add_action(*m_part_action);
 
-    auto help_menu = GUI::Menu::construct("Help");
-    help_menu->add_action(GUI::Action::create("About", [this](const GUI::Action&) {
+    auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::Action::create("About", [this](auto&) {
         GUI::AboutDialog::show("IRC Client", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-irc-client.png"), this);
     }));
-    menubar->add_menu(move(help_menu));
 
     GUI::Application::the().set_menubar(move(menubar));
 }

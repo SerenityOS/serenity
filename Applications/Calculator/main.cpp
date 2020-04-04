@@ -67,18 +67,16 @@ int main(int argc, char** argv)
 
     auto menubar = make<GUI::MenuBar>();
 
-    auto app_menu = GUI::Menu::construct("Calculator");
-    app_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    auto& app_menu = menubar->add_menu("Calculator");
+    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the().quit(0);
         return;
     }));
-    menubar->add_menu(move(app_menu));
 
-    auto help_menu = GUI::Menu::construct("Help");
-    help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
+    auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::Action::create("About", [&](const GUI::Action&) {
         GUI::AboutDialog::show("Calculator", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-calculator.png"), window);
     }));
-    menubar->add_menu(move(help_menu));
 
     app.set_menubar(move(menubar));
 

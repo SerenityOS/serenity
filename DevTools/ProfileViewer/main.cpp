@@ -69,19 +69,16 @@ int main(int argc, char** argv)
     tree_view.set_model(profile->model());
 
     auto menubar = make<GUI::MenuBar>();
-    auto app_menu = GUI::Menu::construct("ProfileViewer");
-    app_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) { app.quit(); }));
+    auto& app_menu = menubar->add_menu("ProfileViewer");
+    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app.quit(); }));
 
-    menubar->add_menu(move(app_menu));
-
-    auto view_menu = GUI::Menu::construct("View");
+    auto& view_menu = menubar->add_menu("View");
     auto invert_action = GUI::Action::create("Invert tree", { Mod_Ctrl, Key_I }, [&](auto& action) {
         action.set_checked(!action.is_checked());
         profile->set_inverted(action.is_checked());
     });
     invert_action->set_checkable(true);
     invert_action->set_checked(false);
-    view_menu->add_action(invert_action);
 
     auto percent_action = GUI::Action::create("Show percentages", { Mod_Ctrl, Key_P }, [&](auto& action) {
         action.set_checked(!action.is_checked());
@@ -90,9 +87,7 @@ int main(int argc, char** argv)
     });
     percent_action->set_checkable(true);
     percent_action->set_checked(false);
-    view_menu->add_action(percent_action);
-
-    menubar->add_menu(move(view_menu));
+    view_menu.add_action(percent_action);
 
     app.set_menubar(move(menubar));
 

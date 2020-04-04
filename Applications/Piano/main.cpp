@@ -94,12 +94,12 @@ int main(int argc, char** argv)
 
     auto menubar = make<GUI::MenuBar>();
 
-    auto app_menu = GUI::Menu::construct("Piano");
-    app_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    auto& app_menu = menubar->add_menu("Piano");
+    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the().quit(0);
         return;
     }));
-    app_menu->add_action(GUI::Action::create("Export", { Mod_Ctrl, Key_E }, [&](const GUI::Action&) {
+    app_menu.add_action(GUI::Action::create("Export", { Mod_Ctrl, Key_E }, [&](const GUI::Action&) {
         save_path = GUI::FilePicker::get_save_filepath("Untitled", "wav");
         if (!save_path.has_value())
             return;
@@ -111,13 +111,11 @@ int main(int argc, char** argv)
         }
         need_to_write_wav = true;
     }));
-    menubar->add_menu(move(app_menu));
 
-    auto help_menu = GUI::Menu::construct("Help");
-    help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
+    auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::Action::create("About", [&](const GUI::Action&) {
         GUI::AboutDialog::show("Piano", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-piano.png"), window);
     }));
-    menubar->add_menu(move(help_menu));
 
     app.set_menubar(move(menubar));
 

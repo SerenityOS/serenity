@@ -51,22 +51,19 @@ int main(int argc, char** argv)
         window->set_title(String::format("Score: %u - Solitaire", score));
     });
 
-    auto menu_bar = make<GUI::MenuBar>();
-    auto app_menu = GUI::Menu::construct("Solitaire");
-    auto help_menu = GUI::Menu::construct("Help");
+    auto menubar = make<GUI::MenuBar>();
+    auto& app_menu = menubar->add_menu("Solitaire");
 
-    app_menu->add_action(GUI::Action::create("Restart game", [&](auto&) { widget->setup(); }));
-    app_menu->add_separator();
-    app_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) { app.quit(); }));
+    app_menu.add_action(GUI::Action::create("Restart game", [&](auto&) { widget->setup(); }));
+    app_menu.add_separator();
+    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app.quit(); }));
 
-    help_menu->add_action(GUI::Action::create("About", [&](auto&) {
+    auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::Action::create("About", [&](auto&) {
         GUI::AboutDialog::show("Solitaire", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-solitaire.png"), window);
     }));
 
-    menu_bar->add_menu(move(app_menu));
-    menu_bar->add_menu(move(help_menu));
-
-    app.set_menubar(move(menu_bar));
+    app.set_menubar(move(menubar));
     window->set_main_widget(widget);
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-solitaire.png"));
     window->show();

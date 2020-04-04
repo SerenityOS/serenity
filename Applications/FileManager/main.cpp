@@ -457,35 +457,31 @@ int main(int argc, char** argv)
 
     auto menubar = make<GUI::MenuBar>();
 
-    auto app_menu = GUI::Menu::construct("File Manager");
-    app_menu->add_action(mkdir_action);
-    app_menu->add_action(copy_action);
-    app_menu->add_action(paste_action);
-    app_menu->add_action(delete_action);
-    app_menu->add_separator();
-    app_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    auto& app_menu = menubar->add_menu("File Manager");
+    app_menu.add_action(mkdir_action);
+    app_menu.add_action(copy_action);
+    app_menu.add_action(paste_action);
+    app_menu.add_action(delete_action);
+    app_menu.add_separator();
+    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the().quit(0);
     }));
-    menubar->add_menu(move(app_menu));
 
-    auto view_menu = GUI::Menu::construct("View");
-    view_menu->add_action(*view_as_icons_action);
-    view_menu->add_action(*view_as_table_action);
-    view_menu->add_action(*view_as_columns_action);
-    menubar->add_menu(move(view_menu));
+    auto& view_menu = menubar->add_menu("View");
+    view_menu.add_action(*view_as_icons_action);
+    view_menu.add_action(*view_as_table_action);
+    view_menu.add_action(*view_as_columns_action);
 
-    auto go_menu = GUI::Menu::construct("Go");
-    go_menu->add_action(go_back_action);
-    go_menu->add_action(go_forward_action);
-    go_menu->add_action(open_parent_directory_action);
-    go_menu->add_action(go_home_action);
-    menubar->add_menu(move(go_menu));
+    auto& go_menu = menubar->add_menu("Go");
+    go_menu.add_action(go_back_action);
+    go_menu.add_action(go_forward_action);
+    go_menu.add_action(open_parent_directory_action);
+    go_menu.add_action(go_home_action);
 
-    auto help_menu = GUI::Menu::construct("Help");
-    help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
+    auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::Action::create("About", [&](auto&) {
         GUI::AboutDialog::show("File Manager", Gfx::Bitmap::load_from_file("/res/icons/32x32/filetype-folder.png"), window);
     }));
-    menubar->add_menu(move(help_menu));
 
     app.set_menubar(move(menubar));
 
