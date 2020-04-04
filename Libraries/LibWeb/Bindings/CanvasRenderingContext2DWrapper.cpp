@@ -44,7 +44,7 @@ CanvasRenderingContext2DWrapper::CanvasRenderingContext2DWrapper(CanvasRendering
     : m_impl(impl)
 {
     put_native_property("fillStyle", fill_style_getter, fill_style_setter);
-    put_native_function("fillRect", fill_rect);
+    put_native_function("fillRect", fill_rect, 4);
 }
 
 CanvasRenderingContext2DWrapper::~CanvasRenderingContext2DWrapper()

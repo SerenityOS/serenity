@@ -37,7 +37,7 @@ ArrayPrototype::ArrayPrototype()
 {
     put_native_function("shift", shift);
     put_native_function("pop", pop);
-    put_native_function("push", push);
+    put_native_function("push", push, 1);
 }
 
 ArrayPrototype::~ArrayPrototype()

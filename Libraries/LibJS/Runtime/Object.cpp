@@ -155,9 +155,11 @@ void Object::put(const FlyString& property_name, Value value)
     put_own_property(*this, property_name, value);
 }
 
-void Object::put_native_function(const FlyString& property_name, AK::Function<Value(Interpreter&)> native_function)
+void Object::put_native_function(const FlyString& property_name, AK::Function<Value(Interpreter&)> native_function, i32 length)
 {
-    put(property_name, heap().allocate<NativeFunction>(move(native_function)));
+    auto* function = heap().allocate<NativeFunction>(move(native_function));
+    function->put("length", Value(length));
+    put(property_name, function);
 }
 
 void Object::put_native_property(const FlyString& property_name, AK::Function<Value(Interpreter&)> getter, AK::Function<void(Interpreter&, Value)> setter)

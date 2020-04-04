@@ -40,7 +40,7 @@ namespace Bindings {
 HTMLCanvasElementWrapper::HTMLCanvasElementWrapper(HTMLCanvasElement& element)
     : ElementWrapper(element)
 {
-    put_native_function("getContext", get_context);
+    put_native_function("getContext", get_context, 1);
 
     put_native_property("width", width_getter, nullptr);
     put_native_property("height", height_getter, nullptr);
