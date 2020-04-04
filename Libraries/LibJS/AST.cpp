@@ -980,8 +980,13 @@ Value SwitchStatement::execute(Interpreter& interpreter) const
             statement.execute(interpreter);
             if (interpreter.exception())
                 return {};
-            if (interpreter.should_unwind())
+            if (interpreter.should_unwind()) {
+                if (interpreter.should_unwind_until(ScopeType::Breakable)) {
+                    interpreter.stop_unwind();
+                    return {};
+                }
                 return {};
+            }
         }
     }
 

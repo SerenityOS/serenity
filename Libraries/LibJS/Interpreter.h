@@ -86,6 +86,8 @@ public:
     Heap& heap() { return m_heap; }
 
     void unwind(ScopeType type) { m_unwind_until = type; }
+    void stop_unwind() { m_unwind_until = ScopeType::None; }
+    bool should_unwind_until(ScopeType type) const { return m_unwind_until == type; }
     bool should_unwind() const { return m_unwind_until != ScopeType::None; }
 
     Optional<Value> get_variable(const FlyString& name);
