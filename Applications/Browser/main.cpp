@@ -227,6 +227,11 @@ int main(int argc, char** argv)
     auto menubar = make<GUI::MenuBar>();
 
     auto app_menu = GUI::Menu::construct("Browser");
+    app_menu->add_action(GUI::Action::create("Reload", { Mod_None, Key_F5 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"), [&](auto&) {
+        TemporaryChange<bool> change(should_push_loads_to_history, false);
+        html_widget.reload();
+    }));
+    app_menu->add_separator();
     app_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app.quit();
     }));
