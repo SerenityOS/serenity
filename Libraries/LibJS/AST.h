@@ -257,6 +257,27 @@ private:
     NonnullRefPtr<ScopeNode> m_body;
 };
 
+class DoWhileStatement : public Statement {
+public:
+    DoWhileStatement(NonnullRefPtr<Expression> test, NonnullRefPtr<ScopeNode> body)
+        : m_test(move(test))
+        , m_body(move(body))
+    {
+    }
+
+    const Expression& test() const { return *m_test; }
+    const ScopeNode& body() const { return *m_body; }
+
+    virtual Value execute(Interpreter&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    virtual const char* class_name() const override { return "DoWhileStatement"; }
+
+    NonnullRefPtr<Expression> m_test;
+    NonnullRefPtr<ScopeNode> m_body;
+};
+
 class ForStatement : public Statement {
 public:
     ForStatement(RefPtr<ASTNode> init, RefPtr<Expression> test, RefPtr<Expression> update, NonnullRefPtr<ScopeNode> body)

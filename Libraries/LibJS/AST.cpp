@@ -177,6 +177,20 @@ Value WhileStatement::execute(Interpreter& interpreter) const
     return last_value;
 }
 
+Value DoWhileStatement::execute(Interpreter& interpreter) const
+{
+    Value last_value = js_undefined();
+    do {
+        if (interpreter.exception())
+            return {};
+        last_value = interpreter.run(*m_body);
+        if (interpreter.exception())
+            return {};
+    } while (m_test->execute(interpreter).to_boolean());
+
+    return last_value;
+}
+
 Value ForStatement::execute(Interpreter& interpreter) const
 {
     RefPtr<BlockStatement> wrapper;
@@ -564,6 +578,16 @@ void WhileStatement::dump(int indent) const
 
     print_indent(indent);
     printf("While\n");
+    test().dump(indent + 1);
+    body().dump(indent + 1);
+}
+
+void DoWhileStatement::dump(int indent) const
+{
+    ASTNode::dump(indent);
+
+    print_indent(indent);
+    printf("DoWhile\n");
     test().dump(indent + 1);
     body().dump(indent + 1);
 }

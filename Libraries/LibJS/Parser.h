@@ -58,6 +58,7 @@ public:
     NonnullRefPtr<SwitchStatement> parse_switch_statement();
     NonnullRefPtr<SwitchCase> parse_switch_case();
     NonnullRefPtr<BreakStatement> parse_break_statement();
+    NonnullRefPtr<DoWhileStatement> parse_do_while_statement();
     NonnullRefPtr<ConditionalExpression> parse_conditional_expression(NonnullRefPtr<Expression> test);
 
     NonnullRefPtr<Expression> parse_expression(int min_precedence, Associativity associate = Associativity::Right);
