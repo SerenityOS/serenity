@@ -243,8 +243,8 @@ ReplObject::ReplObject()
 {
     put_native_function("exit", exit_interpreter);
     put_native_function("help", repl_help);
-    put_native_function("load", load_file);
-    put_native_function("save", save_to_file);
+    put_native_function("load", load_file, 1);
+    put_native_function("save", save_to_file, 1);
 }
 
 ReplObject::~ReplObject()

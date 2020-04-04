@@ -39,9 +39,9 @@ namespace JS {
 StringPrototype::StringPrototype()
 {
     put_native_property("length", length_getter, nullptr);
-    put_native_function("charAt", char_at);
-    put_native_function("repeat", repeat);
-    put_native_function("startsWith", starts_with);
+    put_native_function("charAt", char_at, 1);
+    put_native_function("repeat", repeat, 1);
+    put_native_function("startsWith", starts_with, 1);
 }
 
 StringPrototype::~StringPrototype()

@@ -37,7 +37,7 @@ ObjectPrototype::ObjectPrototype()
 {
     set_prototype(nullptr);
 
-    put_native_function("hasOwnProperty", has_own_property);
+    put_native_function("hasOwnProperty", has_own_property, 1);
     put_native_function("toString", to_string);
     put_native_function("valueOf", value_of);
 }

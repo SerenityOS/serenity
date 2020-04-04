@@ -40,8 +40,8 @@ namespace Bindings {
 DocumentWrapper::DocumentWrapper(Document& document)
     : NodeWrapper(document)
 {
-    put_native_function("getElementById", get_element_by_id);
-    put_native_function("querySelectorAll", query_selector_all);
+    put_native_function("getElementById", get_element_by_id, 1);
+    put_native_function("querySelectorAll", query_selector_all, 1);
 }
 
 DocumentWrapper::~DocumentWrapper()
