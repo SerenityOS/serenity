@@ -35,6 +35,22 @@ void CanvasRenderingContext2D::fill_rect(int x, int y, int width, int height)
     did_draw(rect);
 }
 
+void CanvasRenderingContext2D::scale(double sx, double sy)
+{
+    // FIXME: Actually do something with the scale factor!
+    dbg() << "CanvasRenderingContext2D::scale(): " << String::format("%f", sx) << ", " << String::format("%f", sy);
+    m_scale_x = sx;
+    m_scale_y = sy;
+}
+
+void CanvasRenderingContext2D::translate(double x, double y)
+{
+    // FIXME: Actually do something with the translation!
+    dbg() << "CanvasRenderingContext2D::translate(): " << String::format("%f", x) << ", " << String::format("%f", y);
+    m_translate_x = x;
+    m_translate_y = y;
+}
+
 void CanvasRenderingContext2D::did_draw(const Gfx::Rect&)
 {
     // FIXME: Make use of the rect to reduce the invalidated area when possible.

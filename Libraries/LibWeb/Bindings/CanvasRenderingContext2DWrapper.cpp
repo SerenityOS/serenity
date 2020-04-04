@@ -45,6 +45,8 @@ CanvasRenderingContext2DWrapper::CanvasRenderingContext2DWrapper(CanvasRendering
 {
     put_native_property("fillStyle", fill_style_getter, fill_style_setter);
     put_native_function("fillRect", fill_rect, 4);
+    put_native_function("scale", scale, 2);
+    put_native_function("translate", translate, 2);
 }
 
 CanvasRenderingContext2DWrapper::~CanvasRenderingContext2DWrapper()
@@ -68,6 +70,28 @@ JS::Value CanvasRenderingContext2DWrapper::fill_rect(JS::Interpreter& interprete
     auto& arguments = interpreter.call_frame().arguments;
     if (arguments.size() >= 4)
         impl->fill_rect(arguments[0].to_i32(), arguments[1].to_i32(), arguments[2].to_i32(), arguments[3].to_i32());
+    return JS::js_undefined();
+}
+
+JS::Value CanvasRenderingContext2DWrapper::scale(JS::Interpreter& interpreter)
+{
+    auto* impl = impl_from(interpreter);
+    if (!impl)
+        return {};
+    auto& arguments = interpreter.call_frame().arguments;
+    if (arguments.size() >= 2)
+        impl->scale(arguments[0].to_number().as_double(), arguments[1].to_number().as_double());
+    return JS::js_undefined();
+}
+
+JS::Value CanvasRenderingContext2DWrapper::translate(JS::Interpreter& interpreter)
+{
+    auto* impl = impl_from(interpreter);
+    if (!impl)
+        return {};
+    auto& arguments = interpreter.call_frame().arguments;
+    if (arguments.size() >= 2)
+        impl->translate(arguments[0].to_number().as_double(), arguments[1].to_number().as_double());
     return JS::js_undefined();
 }
 

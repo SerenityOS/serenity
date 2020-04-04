@@ -24,6 +24,8 @@ public:
     String fill_style() const;
 
     void fill_rect(int x, int y, int width, int height);
+    void scale(double sx, double sy);
+    void translate(double x, double y);
 
 private:
     explicit CanvasRenderingContext2D(HTMLCanvasElement&);
@@ -34,6 +36,10 @@ private:
 
     WeakPtr<HTMLCanvasElement> m_element;
 
+    double m_scale_x { 1 };
+    double m_scale_y { 1 };
+    double m_translate_x { 0 };
+    double m_translate_y { 0 };
     Gfx::Color m_fill_style;
 };
 
