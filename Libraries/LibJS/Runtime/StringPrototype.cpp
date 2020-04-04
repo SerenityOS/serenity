@@ -33,6 +33,7 @@
 #include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/StringPrototype.h>
 #include <LibJS/Runtime/Value.h>
+#include <string.h>
 
 namespace JS {
 
@@ -42,6 +43,7 @@ StringPrototype::StringPrototype()
     put_native_function("charAt", char_at, 1);
     put_native_function("repeat", repeat, 1);
     put_native_function("startsWith", starts_with, 1);
+    put_native_function("indexOf", index_of, 1);
 }
 
 StringPrototype::~StringPrototype()
@@ -108,6 +110,27 @@ Value StringPrototype::starts_with(Interpreter& interpreter)
     if (search_string_length == 0)
         return Value(true);
     return Value(underlying_string.substring(start, search_string_length) == search_string);
+}
+
+Value StringPrototype::index_of(Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return {};
+    if (!this_object->is_string_object())
+        return interpreter.throw_exception<Error>("TypeError", "Not a String object");
+
+    Value needle_value = js_undefined();
+    if (interpreter.argument_count() >= 1)
+        needle_value = interpreter.argument(0);
+    auto needle = needle_value.to_string();
+    auto haystack = static_cast<const StringObject*>(this_object)->primitive_string()->string();
+
+    // FIXME: We should have a helper in AK::String for this.
+    auto* ptr = strstr(haystack.characters(), needle.characters());
+    if (!ptr)
+        return Value(-1);
+    return Value((i32)(ptr - haystack.characters()));
 }
 
 Value StringPrototype::length_getter(Interpreter& interpreter)
