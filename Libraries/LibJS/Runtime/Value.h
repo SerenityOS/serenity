@@ -195,6 +195,7 @@ Value add(Value lhs, Value rhs);
 Value sub(Value lhs, Value rhs);
 Value mul(Value lhs, Value rhs);
 Value div(Value lhs, Value rhs);
+Value mod(Value lhs, Value rhs);
 Value eq(Value lhs, Value rhs);
 Value typed_eq(Value lhs, Value rhs);
 Value instance_of(Value lhs, Value rhs);
