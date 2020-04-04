@@ -155,7 +155,7 @@ Value DatePrototype::to_date_string(Interpreter& interpreter)
     if (!this_object)
         return {};
     auto string = this_object->date_string();
-    return js_string(interpreter.heap(), move(string));
+    return js_string(interpreter, move(string));
 }
 
 Value DatePrototype::to_time_string(Interpreter& interpreter)
@@ -164,7 +164,7 @@ Value DatePrototype::to_time_string(Interpreter& interpreter)
     if (!this_object)
         return {};
     auto string = this_object->time_string();
-    return js_string(interpreter.heap(), move(string));
+    return js_string(interpreter, move(string));
 }
 
 Value DatePrototype::to_string(Interpreter& interpreter)
@@ -173,7 +173,7 @@ Value DatePrototype::to_string(Interpreter& interpreter)
     if (!this_object)
         return {};
     auto string = this_object->string();
-    return js_string(interpreter.heap(), move(string));
+    return js_string(interpreter, move(string));
 }
 
 }

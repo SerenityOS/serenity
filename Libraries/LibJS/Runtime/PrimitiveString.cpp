@@ -25,6 +25,7 @@
  */
 
 #include <LibJS/Heap/Heap.h>
+#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 
 namespace JS {
@@ -41,6 +42,11 @@ PrimitiveString::~PrimitiveString()
 PrimitiveString* js_string(Heap& heap, String string)
 {
     return heap.allocate<PrimitiveString>(move(string));
+}
+
+PrimitiveString* js_string(Interpreter& interpreter, String string)
+{
+    return js_string(interpreter.heap(), string);
 }
 
 }

@@ -52,7 +52,7 @@ Value ErrorPrototype::name_getter(Interpreter& interpreter)
         return {};
     if (!this_object->is_error())
         return interpreter.throw_exception<Error>("TypeError", "Not an Error object");
-    return js_string(interpreter.heap(), static_cast<const Error*>(this_object)->name());
+    return js_string(interpreter, static_cast<const Error*>(this_object)->name());
 }
 
 Value ErrorPrototype::message_getter(Interpreter& interpreter)
@@ -62,7 +62,7 @@ Value ErrorPrototype::message_getter(Interpreter& interpreter)
         return {};
     if (!this_object->is_error())
         return interpreter.throw_exception<Error>("TypeError", "Not an Error object");
-    return js_string(interpreter.heap(), static_cast<const Error*>(this_object)->message());
+    return js_string(interpreter, static_cast<const Error*>(this_object)->message());
 }
 
 Value ErrorPrototype::to_string(Interpreter& interpreter)
@@ -82,10 +82,10 @@ Value ErrorPrototype::to_string(Interpreter& interpreter)
         message = object_message_property.value().to_string();
     
     if (name.length() == 0)
-        return js_string(interpreter.heap(), message);
+        return js_string(interpreter, message);
     if (message.length() == 0)
-        return js_string(interpreter.heap(), name);
-    return js_string(interpreter.heap(), String::format("%s: %s", name.characters(), message.characters()));
+        return js_string(interpreter, name);
+    return js_string(interpreter, String::format("%s: %s", name.characters(), message.characters()));
 }
 
 }

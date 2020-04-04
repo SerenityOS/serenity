@@ -45,5 +45,6 @@ private:
 };
 
 PrimitiveString* js_string(Heap&, String);
+PrimitiveString* js_string(Interpreter&, String);
 
 }

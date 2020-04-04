@@ -76,7 +76,7 @@ JS::Value CanvasRenderingContext2DWrapper::fill_style_getter(JS::Interpreter& in
     auto* impl = impl_from(interpreter);
     if (!impl)
         return {};
-    return JS::js_string(interpreter.heap(), impl->fill_style());
+    return JS::js_string(interpreter, impl->fill_style());
 }
 
 void CanvasRenderingContext2DWrapper::fill_style_setter(JS::Interpreter& interpreter, JS::Value value)
