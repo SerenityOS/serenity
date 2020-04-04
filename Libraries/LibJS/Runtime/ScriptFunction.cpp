@@ -37,6 +37,7 @@ ScriptFunction::ScriptFunction(const ScopeNode& body, Vector<FlyString> paramete
     : m_body(body)
     , m_parameters(move(parameters))
 {
+    put("prototype", heap().allocate<Object>());
     put_native_property("length", length_getter, length_setter);
 }
 
