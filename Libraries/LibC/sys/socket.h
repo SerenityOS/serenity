@@ -80,6 +80,7 @@ struct ucred {
 #define SO_ERROR 4
 #define SO_PEERCRED 5
 #define SO_REUSEADDR 6
+#define SO_BINDTODEVICE 7
 
 int socket(int domain, int type, int protocol);
 int bind(int sockfd, const struct sockaddr* addr, socklen_t);

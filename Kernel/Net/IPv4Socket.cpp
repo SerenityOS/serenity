@@ -210,7 +210,7 @@ ssize_t IPv4Socket::sendto(FileDescription&, const void* data, size_t data_lengt
         m_peer_port = ntohs(ia.sin_port);
     }
 
-    auto routing_decision = route_to(m_peer_address, m_local_address);
+    auto routing_decision = route_to(m_peer_address, m_local_address, bound_interface());
     if (routing_decision.is_zero())
         return -EHOSTUNREACH;
 
