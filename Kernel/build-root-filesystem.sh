@@ -51,7 +51,7 @@ mknod mnt/dev/zero c 1 5
 mknod mnt/dev/full c 1 7
 mknod mnt/dev/debuglog c 1 18
 # random, is failing (randomly) on fuse-ext2 on macos :)
-chmod 666 mnt/dev/random || true 
+chmod 666 mnt/dev/random || true
 chmod 666 mnt/dev/null
 chmod 666 mnt/dev/zero
 chmod 666 mnt/dev/full
@@ -156,6 +156,7 @@ cp ../DevTools/Inspector/Inspector mnt/bin/Inspector
 cp ../DevTools/ProfileViewer/ProfileViewer mnt/bin/ProfileViewer
 cp ../Games/Minesweeper/Minesweeper mnt/bin/Minesweeper
 cp ../Games/Snake/Snake mnt/bin/Snake
+cp ../Servers/DHCPClient/DHCPClient mnt/bin/DHCPClient
 cp ../Servers/LookupServer/LookupServer mnt/bin/LookupServer
 cp ../Servers/SystemServer/SystemServer mnt/bin/SystemServer
 cp ../Servers/WindowServer/WindowServer mnt/bin/WindowServer
