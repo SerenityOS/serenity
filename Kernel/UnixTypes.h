@@ -554,3 +554,4 @@ struct rtentry {
 #define PT_SYSCALL 4
 #define PT_GETREGS 5
 #define PT_DETACH 6
+#define PT_PEEK 7

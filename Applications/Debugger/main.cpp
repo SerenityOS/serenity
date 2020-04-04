@@ -108,9 +108,17 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    printf("hit breakpoint\n");
+    PtraceRegisters regs;
+    if (ptrace(PT_GETREGS, g_pid, &regs, 0) == -1) {
+        perror("getregs");
+        return 1;
+    }
 
-    sleep(1);
+    printf("hit breakpoint\n");
+    printf("eip:0x%x\n", regs.eip);
+
+    uint32_t data = ptrace(PT_PEEK, g_pid, (void*)regs.eip, 0);
+    printf("data: 0x%x\n", data);
 
     if (ptrace(PT_CONTINUE, g_pid, 0, 0) == -1) {
         perror("continue");
