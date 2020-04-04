@@ -217,4 +217,19 @@ void Inode::set_metadata_dirty(bool metadata_dirty)
     }
 }
 
+KResult Inode::prepare_to_write_data()
+{
+    // FIXME: It's a poor design that filesystems are expected to call this before writing out data.
+    //        We should funnel everything through an interface at the VFS layer so this can happen from a single place.
+    LOCKER(m_lock);
+    if (fs().is_readonly())
+        return KResult(-EROFS);
+    auto metadata = this->metadata();
+    if (metadata.is_setuid() || metadata.is_setgid()) {
+        dbg() << "Inode::prepare_to_write_data(): Stripping SUID/SGID bits from " << identifier();
+        return chmod(metadata.mode & ~(04000 | 02000));
+    }
+    return KSuccess;
+}
+
 }

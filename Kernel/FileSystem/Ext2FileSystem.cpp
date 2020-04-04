@@ -760,6 +760,10 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const u8* data, Fi
     Locker inode_locker(m_lock);
     Locker fs_locker(fs().m_lock);
 
+    auto result = prepare_to_write_data();
+    if (result.is_error())
+        return result;
+
     if (is_symlink()) {
         ASSERT(offset == 0);
         if (max((size_t)(offset + count), (size_t)m_raw_inode.i_size) < max_inline_symlink_length) {
