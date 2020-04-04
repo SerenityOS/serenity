@@ -55,14 +55,14 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
 
     auto& tab_widget = main_widget.add<GUI::TabWidget>();
 
-    auto general_tab = tab_widget.add_tab<GUI::Widget>("General");
-    general_tab->set_layout<GUI::VerticalBoxLayout>();
-    general_tab->layout()->set_margins({ 12, 8, 12, 8 });
-    general_tab->layout()->set_spacing(10);
+    auto& general_tab = tab_widget.add_tab<GUI::Widget>("General");
+    general_tab.set_layout<GUI::VerticalBoxLayout>();
+    general_tab.layout()->set_margins({ 12, 8, 12, 8 });
+    general_tab.layout()->set_spacing(10);
 
-    general_tab->layout()->add_spacer();
+    general_tab.layout()->add_spacer();
 
-    auto& file_container = general_tab->add<GUI::Widget>();
+    auto& file_container = general_tab.add<GUI::Widget>();
     file_container.set_layout<GUI::HorizontalBoxLayout>();
     file_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     file_container.layout()->set_spacing(20);
@@ -129,7 +129,7 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
     make_permission_checkboxes(general_tab, { S_IRGRP, S_IWGRP, S_IXGRP }, "Group:", m_mode);
     make_permission_checkboxes(general_tab, { S_IROTH, S_IWOTH, S_IXOTH }, "Others:", m_mode);
 
-    general_tab->layout()->add_spacer();
+    general_tab.layout()->add_spacer();
 
     auto& button_widget = main_widget.add<GUI::Widget>();
     button_widget.set_layout<GUI::HorizontalBoxLayout>();
@@ -214,9 +214,9 @@ bool PropertiesDialog::apply_changes()
     return true;
 }
 
-void PropertiesDialog::make_permission_checkboxes(NonnullRefPtr<GUI::Widget>& parent, PermissionMasks masks, String label_string, mode_t mode)
+void PropertiesDialog::make_permission_checkboxes(GUI::Widget& parent, PermissionMasks masks, String label_string, mode_t mode)
 {
-    auto& widget = parent->add<GUI::Widget>();
+    auto& widget = parent.add<GUI::Widget>();
     widget.set_layout<GUI::HorizontalBoxLayout>();
     widget.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     widget.set_preferred_size(0, 16);

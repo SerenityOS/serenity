@@ -55,11 +55,11 @@ public:
     void add_widget(const StringView&, Widget&);
 
     template<class T, class... Args>
-    inline NonnullRefPtr<T> add_tab(const StringView& title, Args&&... args)
+    T& add_tab(const StringView& title, Args&&... args)
     {
         auto t = T::construct(forward<Args>(args)...);
         add_widget(title, *t);
-        return t;
+        return *t;
     }
 
 protected:
