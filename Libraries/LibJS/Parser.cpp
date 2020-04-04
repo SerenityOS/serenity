@@ -654,13 +654,23 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration()
     default:
         ASSERT_NOT_REACHED();
     }
-    auto name = consume(TokenType::Identifier).value();
-    RefPtr<Expression> initializer;
-    if (match(TokenType::Equals)) {
-        consume();
-        initializer = parse_expression(0);
+
+    NonnullRefPtrVector<VariableDeclarator> declarations;
+    for (;;) {
+        auto id = consume(TokenType::Identifier).value();
+        RefPtr<Expression> init;
+        if (match(TokenType::Equals)) {
+            consume();
+            init = parse_expression(0);
+        }
+        declarations.append(create_ast_node<VariableDeclarator>(create_ast_node<Identifier>(move(id)), move(init)));
+        if (match(TokenType::Comma)) {
+            consume();
+            continue;
+        }
+        break;
     }
-    return create_ast_node<VariableDeclaration>(create_ast_node<Identifier>(name), move(initializer), declaration_type);
+    return create_ast_node<VariableDeclaration>(declaration_type, move(declarations));
 }
 
 NonnullRefPtr<ThrowStatement> Parser::parse_throw_statement()

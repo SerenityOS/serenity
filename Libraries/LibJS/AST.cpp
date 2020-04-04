@@ -747,15 +747,22 @@ void UpdateExpression::dump(int indent) const
 
 Value VariableDeclaration::execute(Interpreter& interpreter) const
 {
-    interpreter.declare_variable(name().string(), m_declaration_type);
-    if (m_initializer) {
-        auto initalizer_result = m_initializer->execute(interpreter);
-        if (interpreter.exception())
-            return {};
-        interpreter.set_variable(name().string(), initalizer_result, true);
+    for (auto& declarator : m_declarations) {
+        interpreter.declare_variable(declarator.id().string(), m_declaration_type);
+        if (auto* init = declarator.init()) {
+            auto initalizer_result = init->execute(interpreter);
+            if (interpreter.exception())
+                return {};
+            interpreter.set_variable(declarator.id().string(), initalizer_result, true);
+        }
     }
-
     return {};
+}
+
+Value VariableDeclarator::execute(Interpreter &) const
+{
+    // NOTE: This node is handled by VariableDeclaration.
+    ASSERT_NOT_REACHED();
 }
 
 void VariableDeclaration::dump(int indent) const
@@ -776,9 +783,17 @@ void VariableDeclaration::dump(int indent) const
     ASTNode::dump(indent);
     print_indent(indent + 1);
     printf("%s\n", declaration_type_string);
-    m_name->dump(indent + 1);
-    if (m_initializer)
-        m_initializer->dump(indent + 1);
+
+    for (auto& declarator : m_declarations)
+        declarator.dump(indent + 1);
+}
+
+void VariableDeclarator::dump(int indent) const
+{
+    ASTNode::dump(indent);
+    m_id->dump(indent + 1);
+    if (m_init)
+        m_init->dump(indent + 1);
 }
 
 void ObjectExpression::dump(int indent) const
