@@ -333,6 +333,8 @@ Value UnaryExpression::execute(Interpreter& interpreter) const
         case Value::Type::String:
             return js_string(interpreter, "string");
         case Value::Type::Object:
+            if (lhs_result.as_object().is_function())
+                return js_string(interpreter, "function");
             return js_string(interpreter, "object");
         case Value::Type::Boolean:
             return js_string(interpreter, "boolean");
