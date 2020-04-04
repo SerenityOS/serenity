@@ -215,6 +215,16 @@ Value ForStatement::execute(Interpreter& interpreter) const
             last_value = interpreter.run(*m_body);
             if (interpreter.exception())
                 return {};
+            if (interpreter.should_unwind()) {
+                if (interpreter.should_unwind_until(ScopeType::Continuable)) {
+                    interpreter.stop_unwind();
+                } else if (interpreter.should_unwind_until(ScopeType::Breakable)) {
+                    interpreter.stop_unwind();
+                    break;
+                } else {
+                    return {};
+                }
+            }
             if (m_update) {
                 m_update->execute(interpreter);
                 if (interpreter.exception())
@@ -226,6 +236,16 @@ Value ForStatement::execute(Interpreter& interpreter) const
             last_value = interpreter.run(*m_body);
             if (interpreter.exception())
                 return {};
+            if (interpreter.should_unwind()) {
+                if (interpreter.should_unwind_until(ScopeType::Continuable)) {
+                    interpreter.stop_unwind();
+                } else if (interpreter.should_unwind_until(ScopeType::Breakable)) {
+                    interpreter.stop_unwind();
+                    break;
+                } else {
+                    return {};
+                }
+            }
             if (m_update) {
                 m_update->execute(interpreter);
                 if (interpreter.exception())
@@ -759,7 +779,7 @@ Value VariableDeclaration::execute(Interpreter& interpreter) const
     return {};
 }
 
-Value VariableDeclarator::execute(Interpreter &) const
+Value VariableDeclarator::execute(Interpreter&) const
 {
     // NOTE: This node is handled by VariableDeclaration.
     ASSERT_NOT_REACHED();
@@ -1002,6 +1022,12 @@ Value SwitchCase::execute(Interpreter& interpreter) const
 Value BreakStatement::execute(Interpreter& interpreter) const
 {
     interpreter.unwind(ScopeType::Breakable);
+    return {};
+}
+
+Value ContinueStatement::execute(Interpreter& interpreter) const
+{
+    interpreter.unwind(ScopeType::Continuable);
     return {};
 }
 

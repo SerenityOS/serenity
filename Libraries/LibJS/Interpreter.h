@@ -43,6 +43,7 @@ enum class ScopeType {
     Block,
     Try,
     Breakable,
+    Continuable,
 };
 
 struct Variable {
