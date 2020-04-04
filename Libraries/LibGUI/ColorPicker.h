@@ -31,52 +31,8 @@
 
 namespace GUI {
 
-
-class ColorButton : public AbstractButton {
-    C_OBJECT(ColorButton)
-
-public:
-    explicit ColorButton(Color color = {});
-    virtual ~ColorButton() override;
-
-    void set_selected(bool selected);
-    Color color() const { return m_color; }
-
-    Function<void(const Color)> on_click;
-
-protected:
-    virtual void click() override;
-    virtual void paint_event(PaintEvent&) override;
-
-private:
-    Color m_color;
-    bool m_selected;
-};
-
-
-class CustomColor final : public GUI::Widget {
-    C_OBJECT(CustomColor);
-
-public:
-    CustomColor();
-
-    Function<void(Color)> on_pick;
-    void clear_last_position();
-
-private:
-    RefPtr<Gfx::Bitmap> m_custom_colors;
-    bool m_status = false;
-    Gfx::Point m_last_position;
-
-    void fire_event(GUI::MouseEvent& event);
-
-    virtual void mousedown_event(GUI::MouseEvent&) override;
-    virtual void mouseup_event(GUI::MouseEvent&) override;
-    virtual void mousemove_event(GUI::MouseEvent&) override;
-    virtual void paint_event(GUI::PaintEvent&) override;
-    virtual void resize_event(ResizeEvent&) override;
-};
-
+class ColorButton;
+class CustomColorWidget;
 
 class ColorPicker final : public Dialog {
     C_OBJECT(ColorPicker)
@@ -98,8 +54,7 @@ private:
     Color m_color;
 
     Vector<ColorButton*> m_color_widgets;
-    RefPtr<Widget> m_manin_container;
-    RefPtr<CustomColor> m_custom_color;
+    RefPtr<CustomColorWidget> m_custom_color;
     RefPtr<Frame> m_preview_widget;
     RefPtr<TextBox> m_html_text;
     RefPtr<SpinBox> m_red_spinbox;

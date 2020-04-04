@@ -37,6 +37,51 @@
 
 namespace GUI {
 
+class ColorButton : public AbstractButton {
+    C_OBJECT(ColorButton)
+
+public:
+    virtual ~ColorButton() override;
+
+    void set_selected(bool selected);
+    Color color() const { return m_color; }
+
+    Function<void(const Color)> on_click;
+
+protected:
+    virtual void click() override;
+    virtual void paint_event(PaintEvent&) override;
+
+private:
+    explicit ColorButton(Color color = {});
+
+    Color m_color;
+    bool m_selected { false };
+};
+
+class CustomColorWidget final : public GUI::Widget {
+    C_OBJECT(CustomColorWidget);
+
+public:
+    Function<void(Color)> on_pick;
+    void clear_last_position();
+
+private:
+    CustomColorWidget();
+
+    RefPtr<Gfx::Bitmap> m_custom_colors;
+    bool m_status { false };
+    Gfx::Point m_last_position;
+
+    void fire_event(GUI::MouseEvent& event);
+
+    virtual void mousedown_event(GUI::MouseEvent&) override;
+    virtual void mouseup_event(GUI::MouseEvent&) override;
+    virtual void mousemove_event(GUI::MouseEvent&) override;
+    virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void resize_event(ResizeEvent&) override;
+};
+
 ColorPicker::ColorPicker(Color color, Window* parent_window, String title)
     : Dialog(parent_window)
     , m_color(color)
@@ -135,7 +180,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     horizontal_container.set_layout<HorizontalBoxLayout>();
 
     // Left Side
-    m_custom_color = horizontal_container.add<GUI::CustomColor>();
+    m_custom_color = horizontal_container.add<GUI::CustomColorWidget>();
     m_custom_color->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
     m_custom_color->on_pick = [this](Color color) {
         if (m_color == color)
@@ -283,7 +328,6 @@ void ColorPicker::create_color_button(Widget& container, unsigned rgb)
     m_color_widgets.append(&widget);
 }
 
-
 ColorButton::ColorButton(Color color)
 {
     m_color = color;
@@ -323,7 +367,7 @@ void ColorButton::click()
     m_selected = true;
 }
 
-CustomColor::CustomColor()
+CustomColorWidget::CustomColorWidget()
 {
     m_custom_colors = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, { 360, 512 });
     auto painter = Gfx::Painter(*m_custom_colors);
@@ -350,13 +394,13 @@ CustomColor::CustomColor()
     }
 }
 
-void CustomColor::clear_last_position()
+void CustomColorWidget::clear_last_position()
 {
     m_last_position = { -1, -1 };
     update();
 }
 
-void CustomColor::fire_event(GUI::MouseEvent& event)
+void CustomColorWidget::fire_event(GUI::MouseEvent& event)
 {
     if (!m_status)
         return;
@@ -376,7 +420,7 @@ void CustomColor::fire_event(GUI::MouseEvent& event)
     update();
 }
 
-void CustomColor::mousedown_event(GUI::MouseEvent& event)
+void CustomColorWidget::mousedown_event(GUI::MouseEvent& event)
 {
     if (event.button() == GUI::MouseButton::Left) {
         m_status = true;
@@ -385,18 +429,18 @@ void CustomColor::mousedown_event(GUI::MouseEvent& event)
     }
 }
 
-void CustomColor::mouseup_event(GUI::MouseEvent& event)
+void CustomColorWidget::mouseup_event(GUI::MouseEvent& event)
 {
     fire_event(event);
     m_status = false;
 }
 
-void CustomColor::mousemove_event(GUI::MouseEvent& event)
+void CustomColorWidget::mousemove_event(GUI::MouseEvent& event)
 {
     fire_event(event);
 }
 
-void CustomColor::paint_event(GUI::PaintEvent& event)
+void CustomColorWidget::paint_event(GUI::PaintEvent& event)
 {
     GUI::Painter painter(*this);
     Gfx::Rect rect = event.rect();
@@ -409,7 +453,7 @@ void CustomColor::paint_event(GUI::PaintEvent& event)
     painter.draw_line({ 0, m_last_position.y() }, { rect.width(), m_last_position.y() }, Color::Black);
 }
 
-void CustomColor::resize_event(ResizeEvent&)
+void CustomColorWidget::resize_event(ResizeEvent&)
 {
     clear_last_position();
 }
