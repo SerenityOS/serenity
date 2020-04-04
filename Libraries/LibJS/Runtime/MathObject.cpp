@@ -39,6 +39,7 @@ MathObject::MathObject()
     put_native_function("sqrt", sqrt, 1);
     put_native_function("floor", floor, 1);
     put_native_function("round", round, 1);
+    put_native_function("max", max, 2);
 
     put("E", Value(M_E));
     put("LN2", Value(M_LN2));
@@ -108,5 +109,27 @@ Value MathObject::round(Interpreter& interpreter)
     // FIXME: Use ::round() instead of ::roundf().
     return Value(::roundf(number.as_double()));
 }
+
+Value MathObject::max(Interpreter& interpreter)
+{
+    if (!interpreter.argument_count()) {
+        // FIXME: I think this should return *negative* infinity.
+        return js_infinity();
+    }
+
+    if (interpreter.argument_count() == 1)
+        return interpreter.argument(0).to_number();
+
+    if (interpreter.argument_count() == 2) {
+        auto a = interpreter.argument(0).to_number();
+        auto b = interpreter.argument(1).to_number();
+        return Value(a.as_double() > b.as_double() ? a : b);
+    }
+
+    // FIXME: Support Math.max() with more arguments.
+    ASSERT_NOT_REACHED();
+    return {};
+}
+
 
 }
