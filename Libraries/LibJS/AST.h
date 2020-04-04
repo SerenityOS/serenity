@@ -131,6 +131,9 @@ private:
 class Expression : public ASTNode {
 };
 
+class Declaration : public Statement {
+};
+
 class FunctionNode {
 public:
     const FlyString& name() const { return m_name; }
@@ -154,7 +157,7 @@ private:
 };
 
 class FunctionDeclaration final
-    : public Statement
+    : public Declaration
     , public FunctionNode {
 public:
     static bool must_have_name() { return true; }
@@ -576,7 +579,7 @@ enum class DeclarationType {
     Const,
 };
 
-class VariableDeclaration : public Statement {
+class VariableDeclaration : public Declaration {
 public:
     VariableDeclaration(NonnullRefPtr<Identifier> name, RefPtr<Expression> initializer, DeclarationType declaration_type)
         : m_declaration_type(declaration_type)
