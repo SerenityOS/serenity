@@ -30,6 +30,7 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/NumberObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/StringObject.h>
@@ -102,11 +103,15 @@ Object* Value::to_object(Heap& heap) const
     if (is_string())
         return heap.allocate<StringObject>(m_value.as_string);
 
+    if (is_number())
+        return heap.allocate<NumberObject>(m_value.as_double);
+
     if (is_null() || is_undefined()) {
         heap.interpreter().throw_exception<Error>("TypeError", "ToObject on null or undefined.");
         return nullptr;
     }
 
+    dbg() << "Dying because I can't to_object() on " << *this;
     ASSERT_NOT_REACHED();
 }
 
