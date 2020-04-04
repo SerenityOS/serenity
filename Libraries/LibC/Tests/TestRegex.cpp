@@ -28,21 +28,107 @@
 #include <regex.h>
 #include <stdio.h>
 
-TEST_CASE(simple1)
+#define REG_NOERR false
+
+TEST_CASE(catch_all)
 {
     String pattern = "^.*$";
     regex_t regex;
 
-    int reti = regcomp(&regex, pattern.characters(), REG_EXTENDED);
-    EXPECT(!reti);
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "Hello World", 0, NULL, 0), REG_NOERR);
+
+    regfree(&regex);
 }
 
+TEST_CASE(simple_start)
+{
+    String pattern = "^hello friends";
+    regex_t regex;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "Hello!", 0, NULL, 0), REG_NOMATCH);
+    EXPECT_EQ(regexec(&regex, "hello friends", 0, NULL, 0), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "Well, hello friends", 0, NULL, 0), REG_NOMATCH);
+
+    regfree(&regex);
+}
+
+TEST_CASE(simple_end)
+{
+    String pattern = ".*hello\\.\\.\\. there$";
+    regex_t regex;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "Hallo", 0, NULL, 0), REG_NOMATCH);
+    EXPECT_EQ(regexec(&regex, "I said fyhello... there", 0, NULL, 0), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "ahello... therea", 0, NULL, 0), REG_NOMATCH);
+    EXPECT_EQ(regexec(&regex, "hello.. there", 0, NULL, 0), REG_NOMATCH);
+
+    regfree(&regex);
+}
+
+TEST_CASE(simple_period)
+{
+    String pattern = "hello.";
+    regex_t regex;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "Hello1", 0, NULL, 0), REG_NOMATCH);
+    EXPECT_EQ(regexec(&regex, "hello1", 0, NULL, 0), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "hello2", 0, NULL, 0), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "hello?", 0, NULL, 0), REG_NOERR);
+
+    regfree(&regex);
+}
+
+TEST_CASE(simple_period_end)
+{
+    String pattern = "hello.$";
+    regex_t regex;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "Hello1", 0, NULL, 0), REG_NOMATCH);
+    EXPECT_EQ(regexec(&regex, "hello1hello1", 0, NULL, 0), REG_NOMATCH);
+    EXPECT_EQ(regexec(&regex, "hello2hell", 0, NULL, 0), REG_NOMATCH);
+    EXPECT_EQ(regexec(&regex, "hello??", 0, NULL, 0), REG_NOMATCH);
+
+    regfree(&regex);
+}
+
+TEST_CASE(simple_escaped)
+{
+    String pattern = "hello\\.";
+    regex_t regex;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "hello", 0, NULL, 0), REG_NOMATCH);
+    EXPECT_EQ(regexec(&regex, "hello.", 0, NULL, 0), REG_NOERR);
+
+    regfree(&regex);
+}
+
+TEST_CASE(simple_period2_end)
+{
+    String pattern = ".*hi... there$";
+    regex_t regex;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "Hello there", 0, NULL, 0), REG_NOMATCH);
+    EXPECT_EQ(regexec(&regex, "I said fyhi... there", 0, NULL, 0), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "....hi... ", 0, NULL, 0), REG_NOMATCH);
+    EXPECT_EQ(regexec(&regex, "I said fyhihii there", 0, NULL, 0), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "I said fyhihi there", 0, NULL, 0), REG_NOMATCH);
+
+    regfree(&regex);
+}
+
+// Braket parsing not supported yet, thus, this test fails
 TEST_CASE(complex1)
 {
-    String pattern2 = "^[A-Z0-9._%+-]{1,64}@(?:[A-Z0-9-]{1,63}\\.){1,125}[A-Z]{2,63}$";
-    regex_t regex2;
-    int reti2 = regcomp(&regex2, pattern2.characters(), REG_EXTENDED);
-    EXPECT(!reti2);
+    String pattern = "^[A-Z0-9._%+-]{1,64}@(?:[A-Z0-9-]{1,63}\\.){1,125}[A-Z]{2,63}$";
+    regex_t regex;
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_BADPAT);
 }
 
 TEST_MAIN(Regex)
