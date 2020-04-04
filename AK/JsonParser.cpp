@@ -90,6 +90,8 @@ String JsonParser::consume_quoted_string()
             m_index = peek_index;
         }
 
+        if (m_index == m_input.length())
+            break;
         if (ch == '"')
             break;
         if (ch != '\\') {
