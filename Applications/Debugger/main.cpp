@@ -25,7 +25,10 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/ByteBuffer.h>
 #include <LibC/sys/arch/i386/regs.h>
+#include <LibCore/File.h>
+#include <LibELF/ELFImage.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -70,11 +73,51 @@ void run_child_and_attach(char** argv)
         ASSERT_NOT_REACHED();
     }
 
+    g_pid = pid;
+
     if (waitpid(pid, nullptr, WSTOPPED) != pid) {
         perror("waitpid");
         exit(1);
     }
-    g_pid = pid;
+
+    if (ptrace(PT_ATTACH, g_pid, 0, 0) == -1) {
+        perror("attach");
+        exit(1);
+    }
+
+    if (waitpid(g_pid, nullptr, WSTOPPED) != g_pid) {
+        perror("waitpid");
+        exit(1);
+    }
+
+    // we want to continue until the exit from the 'execve' sycsall
+    // we do this to ensure that when we start debugging the process,
+    // it executes the target image, and not the forked image of the debugger
+    // NOTE: we only need to do this when we are debugging a new process (i.e not attaching to a process that's already running!)
+    if (ptrace(PT_SYSCALL, g_pid, 0, 0) == -1) {
+        perror("syscall");
+        exit(1);
+    }
+
+    if (waitpid(g_pid, nullptr, WSTOPPED) != g_pid) {
+        perror("wait_pid");
+        exit(1);
+    }
+}
+
+VirtualAddress get_entry_point(int pid)
+{
+    auto path = String::format("/proc/%d/exe", pid);
+    dbg() << "path: " << path;
+    auto file = Core::File::construct(path);
+    if (!file->open(Core::File::ReadOnly)) {
+        fprintf(stderr, "Failed to open Debugged executable");
+        exit(1);
+    }
+    auto data = file->read_all();
+    dbg() << "data size:" << data.size();
+    ELFImage elf(data.data(), data.size());
+    return elf.entry();
 }
 
 int main(int argc, char** argv)
@@ -82,21 +125,16 @@ int main(int argc, char** argv)
     if (argc == 1)
         return usage();
 
-    run_child_and_attach(argv);
-
     struct sigaction sa;
     memset(&sa, 0, sizeof(struct sigaction));
     sa.sa_handler = handle_sigint;
     sigaction(SIGINT, &sa, nullptr);
 
-    if (ptrace(PT_ATTACH, g_pid, 0, 0) == -1) {
-        perror("attach");
-        return 1;
-    }
-    if (waitpid(g_pid, nullptr, WSTOPPED) != g_pid) {
-        perror("waitpid");
-        return 1;
-    }
+    run_child_and_attach(argv);
+
+    dbg() << "pid:" << g_pid;
+    auto entry_point = get_entry_point(g_pid);
+    dbg() << "entry point:" << entry_point;
 
     if (ptrace(PT_CONTINUE, g_pid, 0, 0) == -1) {
         perror("continue");
@@ -108,13 +146,14 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    printf("hit breakpoint\n");
+
     PtraceRegisters regs;
     if (ptrace(PT_GETREGS, g_pid, &regs, 0) == -1) {
         perror("getregs");
         return 1;
     }
 
-    printf("hit breakpoint\n");
     printf("eip:0x%x\n", regs.eip);
 
     uint32_t data = ptrace(PT_PEEK, g_pid, (void*)regs.eip, 0);
