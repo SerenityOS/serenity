@@ -75,6 +75,7 @@ String read_next_piece()
             prompt_builder.append("    ");
 
         String line = editor->get_line(prompt_builder.build());
+        editor->add_to_history(line);
 
         piece.append(line);
         auto lexer = JS::Lexer(line);
