@@ -121,6 +121,8 @@ public:
 
     JS::Interpreter& interpreter();
 
+    JS::Value run_javascript(const StringView&);
+
 private:
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
 

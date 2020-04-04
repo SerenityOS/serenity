@@ -77,6 +77,7 @@ protected:
 private:
     virtual void did_scroll() override;
 
+    void run_javascript_url(const String& url);
     void layout_and_sync_size();
     void dump_selection(const char* event_name);
     Gfx::Point compute_mouse_event_offset(const Gfx::Point&, const LayoutNode&) const;
