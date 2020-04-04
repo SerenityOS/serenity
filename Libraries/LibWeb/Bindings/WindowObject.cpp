@@ -44,6 +44,7 @@ WindowObject::WindowObject(Window& impl)
     put_native_property("document", document_getter, document_setter);
     put_native_function("alert", alert);
     put_native_function("setInterval", set_interval, 1);
+    put_native_function("setTimeout", set_timeout, 1);
     put_native_function("requestAnimationFrame", request_animation_frame, 1);
     put_native_function("cancelAnimationFrame", cancel_animation_frame, 1);
 
@@ -94,6 +95,23 @@ JS::Value WindowObject::set_interval(JS::Interpreter& interpreter)
     if (!callback_object->is_function())
         return interpreter.throw_exception<JS::Error>("TypeError", "Not a function");
     impl->set_interval(*static_cast<JS::Function*>(callback_object), arguments[1].to_i32());
+    return {};
+}
+
+JS::Value WindowObject::set_timeout(JS::Interpreter& interpreter)
+{
+    auto* impl = impl_from(interpreter);
+    if (!impl)
+        return {};
+    auto& arguments = interpreter.call_frame().arguments;
+    if (arguments.size() < 2)
+        return {};
+    auto* callback_object = arguments[0].to_object(interpreter.heap());
+    if (!callback_object)
+        return {};
+    if (!callback_object->is_function())
+        return interpreter.throw_exception<JS::Error>("TypeError", "Not a function");
+    impl->set_timeout(*static_cast<JS::Function*>(callback_object), arguments[1].to_i32());
     return {};
 }
 
