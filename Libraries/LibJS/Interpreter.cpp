@@ -34,6 +34,7 @@
 #include <LibJS/Runtime/FunctionPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
+#include <LibJS/Runtime/NumberPrototype.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/ObjectPrototype.h>
 #include <LibJS/Runtime/Shape.h>
@@ -53,6 +54,7 @@ Interpreter::Interpreter()
     m_array_prototype = heap().allocate<ArrayPrototype>();
     m_error_prototype = heap().allocate<ErrorPrototype>();
     m_date_prototype = heap().allocate<DatePrototype>();
+    m_number_prototype = heap().allocate<NumberPrototype>();
 }
 
 Interpreter::~Interpreter()
@@ -174,6 +176,7 @@ void Interpreter::gather_roots(Badge<Heap>, HashTable<Cell*>& roots)
     roots.set(m_error_prototype);
     roots.set(m_date_prototype);
     roots.set(m_function_prototype);
+    roots.set(m_number_prototype);
 
     roots.set(m_exception);
 
