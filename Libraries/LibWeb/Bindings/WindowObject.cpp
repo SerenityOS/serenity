@@ -43,9 +43,9 @@ WindowObject::WindowObject(Window& impl)
 {
     put_native_property("document", document_getter, document_setter);
     put_native_function("alert", alert);
-    put_native_function("setInterval", set_interval);
-    put_native_function("requestAnimationFrame", request_animation_frame);
-    put_native_function("cancelAnimationFrame", cancel_animation_frame);
+    put_native_function("setInterval", set_interval, 1);
+    put_native_function("requestAnimationFrame", request_animation_frame, 1);
+    put_native_function("cancelAnimationFrame", cancel_animation_frame, 1);
 
     put("navigator", heap().allocate<NavigatorObject>());
 }

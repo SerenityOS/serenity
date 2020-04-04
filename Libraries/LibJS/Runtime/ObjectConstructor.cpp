@@ -37,9 +37,9 @@ ObjectConstructor::ObjectConstructor()
 {
     put("prototype", interpreter().object_prototype());
 
-    put_native_function("getOwnPropertyNames", get_own_property_names);
-    put_native_function("getPrototypeOf", get_prototype_of);
-    put_native_function("setPrototypeOf", set_prototype_of);
+    put_native_function("getOwnPropertyNames", get_own_property_names, 1);
+    put_native_function("getPrototypeOf", get_prototype_of, 1);
+    put_native_function("setPrototypeOf", set_prototype_of, 2);
 }
 
 ObjectConstructor::~ObjectConstructor()
