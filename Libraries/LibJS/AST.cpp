@@ -26,6 +26,7 @@
 
 #include <AK/Function.h>
 #include <AK/HashMap.h>
+#include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
@@ -200,6 +201,11 @@ Value ForStatement::execute(Interpreter& interpreter) const
         interpreter.enter_scope(*wrapper, {}, ScopeType::Block);
     }
 
+    auto wrapper_cleanup = ScopeGuard([&] {
+        if (wrapper)
+            interpreter.exit_scope(*wrapper);
+    });
+
     Value last_value = js_undefined();
 
     if (m_init) {
@@ -253,9 +259,6 @@ Value ForStatement::execute(Interpreter& interpreter) const
             }
         }
     }
-
-    if (wrapper)
-        interpreter.exit_scope(*wrapper);
 
     return last_value;
 }
