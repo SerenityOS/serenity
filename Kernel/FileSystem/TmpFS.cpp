@@ -207,6 +207,10 @@ ssize_t TmpFSInode::write_bytes(off_t offset, ssize_t size, const u8* buffer, Fi
     ASSERT(!is_directory());
     ASSERT(offset >= 0);
 
+    auto result = prepare_to_write_data();
+    if (result.is_error())
+        return result;
+
     off_t old_size = m_metadata.size;
     off_t new_size = m_metadata.size;
     if ((offset + size) > new_size)

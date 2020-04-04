@@ -119,6 +119,7 @@ protected:
     void set_metadata_dirty(bool);
     void inode_contents_changed(off_t, ssize_t, const u8*);
     void inode_size_changed(size_t old_size, size_t new_size);
+    KResult prepare_to_write_data();
 
     mutable Lock m_lock { "Inode" };
 
