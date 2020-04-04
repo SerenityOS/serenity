@@ -18,6 +18,8 @@ OBJS = \
     Runtime/ErrorPrototype.o \
     Runtime/Exception.o \
     Runtime/Function.o \
+    Runtime/FunctionConstructor.o \
+    Runtime/FunctionPrototype.o \
     Runtime/GlobalObject.o \
     Runtime/MathObject.o \
     Runtime/NativeFunction.o \

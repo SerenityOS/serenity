@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,18 +24,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibJS/Interpreter.h>
-#include <LibJS/Runtime/Function.h>
+#pragma once
+
+#include <LibJS/Runtime/NativeFunction.h>
 
 namespace JS {
 
-Function::Function()
-{
-    set_prototype(interpreter().function_prototype());
-}
+class FunctionConstructor final : public NativeFunction {
+public:
+    FunctionConstructor();
+    virtual ~FunctionConstructor() override;
 
-Function::~Function()
-{
-}
+    virtual Value call(Interpreter&) override;
+    virtual Value construct(Interpreter&) override;
+
+private:
+    virtual bool has_constructor() const override { return true; }
+    virtual const char* class_name() const override { return "FunctionConstructor"; }
+};
 
 }

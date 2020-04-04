@@ -136,6 +136,7 @@ public:
     Object* array_prototype() { return m_array_prototype; }
     Object* error_prototype() { return m_error_prototype; }
     Object* date_prototype() { return m_date_prototype; }
+    Object* function_prototype() { return m_function_prototype; }
 
     Exception* exception() { return m_exception; }
     void clear_exception() { m_exception = nullptr; }
@@ -168,6 +169,7 @@ private:
     Object* m_array_prototype { nullptr };
     Object* m_error_prototype { nullptr };
     Object* m_date_prototype { nullptr };
+    Object* m_function_prototype { nullptr };
 
     Exception* m_exception { nullptr };
 
