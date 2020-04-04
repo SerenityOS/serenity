@@ -50,6 +50,7 @@ namespace JS {
     __ENUMERATE_JS_TOKEN(Colon)                       \
     __ENUMERATE_JS_TOKEN(Comma)                       \
     __ENUMERATE_JS_TOKEN(Const)                       \
+    __ENUMERATE_JS_TOKEN(Continue)                    \
     __ENUMERATE_JS_TOKEN(CurlyClose)                  \
     __ENUMERATE_JS_TOKEN(CurlyOpen)                   \
     __ENUMERATE_JS_TOKEN(Default)                     \
