@@ -32,6 +32,7 @@
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/PNGLoader.h>
+#include <LibJS/Runtime/Value.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/HTMLAnchorElement.h>
@@ -232,8 +233,13 @@ void HtmlView::mousedown_event(GUI::MouseEvent& event)
             node->dispatch_event(MouseEvent::create("mousedown", offset.x(), offset.y()));
             if (RefPtr<HTMLAnchorElement> link = node->enclosing_link_element()) {
                 dbg() << "HtmlView: clicking on a link to " << link->href();
-                if (on_link_click)
-                    on_link_click(link->href());
+
+                if (link->href().starts_with("javascript:")) {
+                    run_javascript_url(link->href());
+                } else {
+                    if (on_link_click)
+                        on_link_click(link->href());
+                }
             } else {
                 if (event.button() == GUI::MouseButton::Left) {
                     layout_root()->selection().set({ result.layout_node, result.index_in_node }, {});
@@ -474,6 +480,17 @@ Gfx::Point HtmlView::compute_mouse_event_offset(const Gfx::Point& event_position
         content_event_position.x() - static_cast<int>(top_left_of_layout_node.x()),
         content_event_position.y() - static_cast<int>(top_left_of_layout_node.y())
     };
+}
+
+void HtmlView::run_javascript_url(const String& url)
+{
+    ASSERT(url.starts_with("javascript:"));
+    if (!document())
+        return;
+
+    auto source = url.substring_view(11, url.length() - 11);
+    dbg() << "running js from url: _" << source << "_";
+    document()->run_javascript(source);
 }
 
 }

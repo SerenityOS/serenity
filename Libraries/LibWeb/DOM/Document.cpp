@@ -31,6 +31,7 @@
 #include <LibGUI/DisplayLink.h>
 #include <LibGUI/MessageBox.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Parser.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
@@ -363,6 +364,14 @@ JS::Interpreter& Document::interpreter()
     if (!m_interpreter)
         m_interpreter = JS::Interpreter::create<Bindings::WindowObject>(*m_window);
     return *m_interpreter;
+}
+
+JS::Value Document::run_javascript(const StringView& source)
+{
+    auto program = JS::Parser(JS::Lexer(source)).parse_program();
+    dbg() << "Document::run_javascript('" << source << "') will run:";
+    program->dump(0);
+    return document().interpreter().run(*program);
 }
 
 }
