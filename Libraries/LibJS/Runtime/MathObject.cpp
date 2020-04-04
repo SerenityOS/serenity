@@ -37,6 +37,7 @@ MathObject::MathObject()
     put_native_function("abs", abs, 1);
     put_native_function("random", random);
     put_native_function("sqrt", sqrt, 1);
+    put_native_function("floor", floor, 1);
 
     put("E", Value(M_E));
     put("LN2", Value(M_LN2));
@@ -82,6 +83,17 @@ Value MathObject::sqrt(Interpreter& interpreter)
     if (number.is_nan())
         return js_nan();
     return Value(::sqrt(number.as_double()));
+}
+
+Value MathObject::floor(Interpreter& interpreter)
+{
+    if (!interpreter.argument_count())
+        return js_nan();
+
+    auto number = interpreter.argument(0).to_number();
+    if (number.is_nan())
+        return js_nan();
+    return Value(::floor(number.as_double()));
 }
 
 }
