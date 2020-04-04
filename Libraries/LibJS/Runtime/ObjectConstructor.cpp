@@ -67,10 +67,10 @@ Value ObjectConstructor::get_own_property_names(Interpreter& interpreter)
     if (object->is_array()) {
         auto* array = static_cast<const Array*>(object);
         for (i32 i = 0; i < array->length(); ++i)
-            result->push(js_string(interpreter.heap(), String::number(i)));
+            result->push(js_string(interpreter, String::number(i)));
     }
     for (auto& it : object->shape().property_table())
-        result->push(js_string(interpreter.heap(), it.key));
+        result->push(js_string(interpreter, it.key));
     return result;
 }
 

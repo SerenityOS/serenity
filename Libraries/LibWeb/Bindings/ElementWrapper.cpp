@@ -68,7 +68,7 @@ static Element* impl_from(JS::Interpreter& interpreter)
 JS::Value ElementWrapper::inner_html_getter(JS::Interpreter& interpreter)
 {
     if (auto* impl = impl_from(interpreter))
-        return JS::js_string(interpreter.heap(), impl->inner_html());
+        return JS::js_string(interpreter, impl->inner_html());
     return {};
 }
 
@@ -81,7 +81,7 @@ void ElementWrapper::inner_html_setter(JS::Interpreter& interpreter, JS::Value v
 JS::Value ElementWrapper::id_getter(JS::Interpreter& interpreter)
 {
     if (auto* impl = impl_from(interpreter))
-        return JS::js_string(interpreter.heap(), impl->attribute("id"));
+        return JS::js_string(interpreter, impl->attribute("id"));
     return {};
 }
 

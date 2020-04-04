@@ -50,7 +50,7 @@ Value DateConstructor::call(Interpreter& interpreter)
     auto date = construct(interpreter);
     if (!date.is_object())
         return {};
-    return js_string(interpreter.heap(), static_cast<Date&>(date.as_object()).string());
+    return js_string(interpreter, static_cast<Date&>(date.as_object()).string());
 }
 
 Value DateConstructor::construct(Interpreter& interpreter)

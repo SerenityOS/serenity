@@ -323,19 +323,19 @@ Value UnaryExpression::execute(Interpreter& interpreter) const
     case UnaryOp::Typeof:
         switch (lhs_result.type()) {
         case Value::Type::Undefined:
-            return js_string(interpreter.heap(), "undefined");
+            return js_string(interpreter, "undefined");
         case Value::Type::Null:
             // yes, this is on purpose. yes, this is how javascript works.
             // yes, it's silly.
-            return js_string(interpreter.heap(), "object");
+            return js_string(interpreter, "object");
         case Value::Type::Number:
-            return js_string(interpreter.heap(), "number");
+            return js_string(interpreter, "number");
         case Value::Type::String:
-            return js_string(interpreter.heap(), "string");
+            return js_string(interpreter, "string");
         case Value::Type::Object:
-            return js_string(interpreter.heap(), "object");
+            return js_string(interpreter, "object");
         case Value::Type::Boolean:
-            return js_string(interpreter.heap(), "boolean");
+            return js_string(interpreter, "boolean");
         }
     }
 
@@ -806,7 +806,7 @@ Value MemberExpression::execute(Interpreter& interpreter) const
 
 Value StringLiteral::execute(Interpreter& interpreter) const
 {
-    return js_string(interpreter.heap(), m_value);
+    return js_string(interpreter, m_value);
 }
 
 Value NumericLiteral::execute(Interpreter&) const
