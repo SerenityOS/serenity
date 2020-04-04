@@ -239,6 +239,12 @@ Value div(Value lhs, Value rhs)
     return Value(lhs.to_number().as_double() / rhs.to_number().as_double());
 }
 
+Value mod(Value lhs, Value rhs)
+{
+    // FIXME: It seems like JavaScript should allow modulo for doubles as well(?)
+    return Value(lhs.to_i32() % rhs.to_i32());
+}
+
 Value typed_eq(Value lhs, Value rhs)
 {
     if (rhs.type() != lhs.type())
