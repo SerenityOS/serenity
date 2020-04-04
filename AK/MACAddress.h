@@ -29,7 +29,6 @@
 #include <AK/Assertions.h>
 #include <AK/String.h>
 #include <AK/Types.h>
-#include <LibBareMetal/StdLib.h>
 
 class [[gnu::packed]] MACAddress
 {
@@ -37,7 +36,7 @@ public:
     MACAddress() {}
     MACAddress(const u8 data[6])
     {
-        memcpy(m_data, data, 6);
+        __builtin_memcpy(m_data, data, 6);
     }
     MACAddress(u8 a, u8 b, u8 c, u8 d, u8 e, u8 f)
     {
@@ -58,7 +57,7 @@ public:
 
     bool operator==(const MACAddress& other) const
     {
-        return !memcmp(m_data, other.m_data, sizeof(m_data));
+        return !__builtin_memcmp(m_data, other.m_data, sizeof(m_data));
     }
 
     String to_string() const
@@ -79,7 +78,7 @@ static_assert(sizeof(MACAddress) == 6);
 
 namespace AK {
 
-template<>
+template <>
 struct Traits<MACAddress> : public GenericTraits<MACAddress> {
     static unsigned hash(const MACAddress& address) { return string_hash((const char*)&address, sizeof(address)); }
 };
