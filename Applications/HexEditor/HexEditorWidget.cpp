@@ -133,18 +133,17 @@ HexEditorWidget::HexEditorWidget()
     });
 
     auto menubar = make<GUI::MenuBar>();
-    auto app_menu = GUI::Menu::construct("Hex Editor");
-    app_menu->add_action(*m_new_action);
-    app_menu->add_action(*m_open_action);
-    app_menu->add_action(*m_save_action);
-    app_menu->add_action(*m_save_as_action);
-    app_menu->add_separator();
-    app_menu->add_action(GUI::CommonActions::make_quit_action([this](auto&) {
+    auto& app_menu = menubar->add_menu("Hex Editor");
+    app_menu.add_action(*m_new_action);
+    app_menu.add_action(*m_open_action);
+    app_menu.add_action(*m_save_action);
+    app_menu.add_action(*m_save_as_action);
+    app_menu.add_separator();
+    app_menu.add_action(GUI::CommonActions::make_quit_action([this](auto&) {
         if (!request_close())
             return;
         GUI::Application::the().quit(0);
     }));
-    menubar->add_menu(move(app_menu));
 
     auto bytes_per_row_menu = GUI::Menu::construct("Bytes Per Row");
     for (int i = 8; i <= 32; i += 8) {
@@ -173,39 +172,36 @@ HexEditorWidget::HexEditorWidget()
         }
     });
 
-    auto edit_menu = GUI::Menu::construct("Edit");
-    edit_menu->add_action(GUI::Action::create("Fill selection...", { Mod_Ctrl, Key_B }, [&](const GUI::Action&) {
+    auto& edit_menu = menubar->add_menu("Edit");
+    edit_menu.add_action(GUI::Action::create("Fill selection...", { Mod_Ctrl, Key_B }, [&](const GUI::Action&) {
         auto input_box = GUI::InputBox::construct("Fill byte (hex):", "Fill Selection", window());
         if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty()) {
             auto fill_byte = strtol(input_box->text_value().characters(), nullptr, 16);
             m_editor->fill_selection(fill_byte);
         }
     }));
-    edit_menu->add_separator();
-    edit_menu->add_action(*m_goto_decimal_offset_action);
-    edit_menu->add_action(*m_goto_hex_offset_action);
-    edit_menu->add_separator();
-    edit_menu->add_action(GUI::Action::create("Copy Hex", { Mod_Ctrl, Key_C }, [&](const GUI::Action&) {
+    edit_menu.add_separator();
+    edit_menu.add_action(*m_goto_decimal_offset_action);
+    edit_menu.add_action(*m_goto_hex_offset_action);
+    edit_menu.add_separator();
+    edit_menu.add_action(GUI::Action::create("Copy Hex", { Mod_Ctrl, Key_C }, [&](const GUI::Action&) {
         m_editor->copy_selected_hex_to_clipboard();
     }));
-    edit_menu->add_action(GUI::Action::create("Copy Text", { Mod_Ctrl | Mod_Shift, Key_C }, [&](const GUI::Action&) {
+    edit_menu.add_action(GUI::Action::create("Copy Text", { Mod_Ctrl | Mod_Shift, Key_C }, [&](const GUI::Action&) {
         m_editor->copy_selected_text_to_clipboard();
     }));
-    edit_menu->add_separator();
-    edit_menu->add_action(GUI::Action::create("Copy As C Code", { Mod_Alt | Mod_Shift, Key_C }, [&](const GUI::Action&) {
+    edit_menu.add_separator();
+    edit_menu.add_action(GUI::Action::create("Copy As C Code", { Mod_Alt | Mod_Shift, Key_C }, [&](const GUI::Action&) {
         m_editor->copy_selected_hex_to_clipboard_as_c_code();
     }));
-    menubar->add_menu(move(edit_menu));
 
-    auto view_menu = GUI::Menu::construct("View");
-    view_menu->add_submenu(move(bytes_per_row_menu));
-    menubar->add_menu(move(view_menu));
+    auto& view_menu = menubar->add_menu("View");
+    view_menu.add_submenu(move(bytes_per_row_menu));
 
-    auto help_menu = GUI::Menu::construct("Help");
-    help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
+    auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::Action::create("About", [&](auto&) {
         GUI::AboutDialog::show("Hex Editor", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-hexeditor.png"), window());
     }));
-    menubar->add_menu(move(help_menu));
 
     GUI::Application::the().set_menubar(move(menubar));
 

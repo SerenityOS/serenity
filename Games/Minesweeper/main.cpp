@@ -82,13 +82,13 @@ int main(int argc, char** argv)
 
     auto menubar = make<GUI::MenuBar>();
 
-    auto app_menu = GUI::Menu::construct("Minesweeper");
+    auto& app_menu = menubar->add_menu("Minesweeper");
 
-    app_menu->add_action(GUI::Action::create("New game", { Mod_None, Key_F2 }, [&](const GUI::Action&) {
+    app_menu.add_action(GUI::Action::create("New game", { Mod_None, Key_F2 }, [&](auto&) {
         field.reset();
     }));
 
-    app_menu->add_separator();
+    app_menu.add_separator();
 
     NonnullRefPtr<GUI::Action> chord_toggler_action = GUI::Action::create("Single-click chording", [&](const GUI::Action&) {
         bool toggled = !field.is_single_chording();
@@ -98,35 +98,32 @@ int main(int argc, char** argv)
     chord_toggler_action->set_checkable(true);
     chord_toggler_action->set_checked(field.is_single_chording());
 
-    app_menu->add_action(*chord_toggler_action);
-    app_menu->add_separator();
+    app_menu.add_action(*chord_toggler_action);
+    app_menu.add_separator();
 
-    app_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the().quit(0);
         return;
     }));
-    menubar->add_menu(move(app_menu));
 
-    auto difficulty_menu = GUI::Menu::construct("Difficulty");
-    difficulty_menu->add_action(GUI::Action::create("Beginner", { Mod_Ctrl, Key_B }, [&](const GUI::Action&) {
+    auto& difficulty_menu = menubar->add_menu("Difficulty");
+    difficulty_menu.add_action(GUI::Action::create("Beginner", { Mod_Ctrl, Key_B }, [&](auto&) {
         field.set_field_size(9, 9, 10);
     }));
-    difficulty_menu->add_action(GUI::Action::create("Intermediate", { Mod_Ctrl, Key_I }, [&](const GUI::Action&) {
+    difficulty_menu.add_action(GUI::Action::create("Intermediate", { Mod_Ctrl, Key_I }, [&](auto&) {
         field.set_field_size(16, 16, 40);
     }));
-    difficulty_menu->add_action(GUI::Action::create("Expert", { Mod_Ctrl, Key_E }, [&](const GUI::Action&) {
+    difficulty_menu.add_action(GUI::Action::create("Expert", { Mod_Ctrl, Key_E }, [&](auto&) {
         field.set_field_size(16, 30, 99);
     }));
-    difficulty_menu->add_action(GUI::Action::create("Madwoman", { Mod_Ctrl, Key_M }, [&](const GUI::Action&) {
+    difficulty_menu.add_action(GUI::Action::create("Madwoman", { Mod_Ctrl, Key_M }, [&](auto&) {
         field.set_field_size(32, 60, 350);
     }));
-    menubar->add_menu(move(difficulty_menu));
 
-    auto help_menu = GUI::Menu::construct("Help");
-    help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
+    auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::Action::create("About", [&](auto&) {
         GUI::AboutDialog::show("Minesweeper", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-minesweeper.png"), window);
     }));
-    menubar->add_menu(move(help_menu));
 
     app.set_menubar(move(menubar));
 

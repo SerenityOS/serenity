@@ -175,18 +175,16 @@ int main(int argc, char** argv)
     toolbar.add_action(continue_action);
 
     auto menubar = make<GUI::MenuBar>();
-    auto app_menu = GUI::Menu::construct("System Monitor");
-    app_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    auto& app_menu = menubar->add_menu("System Monitor");
+    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the().quit(0);
         return;
     }));
-    menubar->add_menu(move(app_menu));
 
-    auto process_menu = GUI::Menu::construct("Process");
-    process_menu->add_action(kill_action);
-    process_menu->add_action(stop_action);
-    process_menu->add_action(continue_action);
-    menubar->add_menu(move(process_menu));
+    auto& process_menu = menubar->add_menu("Process");
+    process_menu.add_action(kill_action);
+    process_menu.add_action(stop_action);
+    process_menu.add_action(continue_action);
 
     auto process_context_menu = GUI::Menu::construct();
     process_context_menu->add_action(kill_action);
@@ -197,7 +195,7 @@ int main(int argc, char** argv)
         process_context_menu->popup(event.screen_position());
     };
 
-    auto frequency_menu = GUI::Menu::construct("Frequency");
+    auto& frequency_menu = menubar->add_menu("Frequency");
     GUI::ActionGroup frequency_action_group;
     frequency_action_group.set_exclusive(true);
 
@@ -209,7 +207,7 @@ int main(int argc, char** argv)
         action->set_checkable(true);
         action->set_checked(checked);
         frequency_action_group.add_action(*action);
-        frequency_menu->add_action(*action);
+        frequency_menu.add_action(*action);
     };
 
     make_frequency_action("0.25 sec", 250);
@@ -218,13 +216,10 @@ int main(int argc, char** argv)
     make_frequency_action("3 sec", 3000);
     make_frequency_action("5 sec", 5000);
 
-    menubar->add_menu(move(frequency_menu));
-
-    auto help_menu = GUI::Menu::construct("Help");
-    help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
+    auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::Action::create("About", [&](const GUI::Action&) {
         GUI::AboutDialog::show("System Monitor", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-system-monitor.png"), window);
     }));
-    menubar->add_menu(move(help_menu));
 
     app.set_menubar(move(menubar));
 

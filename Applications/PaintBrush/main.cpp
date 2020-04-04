@@ -75,9 +75,9 @@ int main(int argc, char** argv)
     window->show();
 
     auto menubar = make<GUI::MenuBar>();
-    auto app_menu = GUI::Menu::construct("PaintBrush");
+    auto& app_menu = menubar->add_menu("PaintBrush");
 
-    app_menu->add_action(GUI::CommonActions::make_open_action([&](auto&) {
+    app_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
         Optional<String> open_path = GUI::FilePicker::get_open_filepath();
 
         if (!open_path.has_value())
@@ -90,22 +90,18 @@ int main(int argc, char** argv)
         }
         paintable_widget.set_bitmap(*bitmap);
     }));
-    app_menu->add_separator();
-    app_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    app_menu.add_separator();
+    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the().quit(0);
         return;
     }));
 
-    menubar->add_menu(move(app_menu));
+    menubar->add_menu("Edit");
 
-    auto edit_menu = GUI::Menu::construct("Edit");
-    menubar->add_menu(move(edit_menu));
-
-    auto help_menu = GUI::Menu::construct("Help");
-    help_menu->add_action(GUI::Action::create("About", [&](auto&) {
+    auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::Action::create("About", [&](auto&) {
         GUI::AboutDialog::show("PaintBrush", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-paintbrush.png"), window);
     }));
-    menubar->add_menu(move(help_menu));
 
     app.set_menubar(move(menubar));
 

@@ -464,26 +464,23 @@ int main(int argc, char** argv)
     });
 
     auto menubar = make<GUI::MenuBar>();
-    auto app_menu = GUI::Menu::construct("HackStudio");
-    app_menu->add_action(open_action);
-    app_menu->add_action(save_action);
-    app_menu->add_separator();
-    app_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) {
+    auto& app_menu = menubar->add_menu("HackStudio");
+    app_menu.add_action(open_action);
+    app_menu.add_action(save_action);
+    app_menu.add_separator();
+    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app.quit();
     }));
-    menubar->add_menu(move(app_menu));
 
-    auto project_menu = GUI::Menu::construct("Project");
-    project_menu->add_action(new_action);
-    project_menu->add_action(add_existing_file_action);
-    menubar->add_menu(move(project_menu));
+    auto& project_menu = menubar->add_menu("Project");
+    project_menu.add_action(new_action);
+    project_menu.add_action(add_existing_file_action);
 
-    auto edit_menu = GUI::Menu::construct("Edit");
-    edit_menu->add_action(GUI::Action::create("Find in files...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"), [&](auto&) {
+    auto& edit_menu = menubar->add_menu("Edit");
+    edit_menu.add_action(GUI::Action::create("Find in files...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"), [&](auto&) {
         reveal_action_tab(find_in_files_widget);
         find_in_files_widget.focus_textbox_and_select_all();
     }));
-    menubar->add_menu(move(edit_menu));
 
     auto stop_action = GUI::Action::create("Stop", Gfx::Bitmap::load_from_file("/res/icons/16x16/stop.png"), [&](auto&) {
         terminal_wrapper.kill_running_command();
@@ -509,25 +506,22 @@ int main(int argc, char** argv)
     toolbar.add_action(run_action);
     toolbar.add_action(stop_action);
 
-    auto build_menu = GUI::Menu::construct("Build");
-    build_menu->add_action(build_action);
-    build_menu->add_action(run_action);
-    build_menu->add_action(stop_action);
-    menubar->add_menu(move(build_menu));
+    auto& build_menu = menubar->add_menu("Build");
+    build_menu.add_action(build_action);
+    build_menu.add_action(run_action);
+    build_menu.add_action(stop_action);
 
-    auto view_menu = GUI::Menu::construct("View");
-    view_menu->add_action(hide_action_tabs_action);
-    view_menu->add_action(open_locator_action);
-    view_menu->add_separator();
-    view_menu->add_action(add_editor_action);
-    view_menu->add_action(remove_current_editor_action);
-    menubar->add_menu(move(view_menu));
+    auto& view_menu = menubar->add_menu("View");
+    view_menu.add_action(hide_action_tabs_action);
+    view_menu.add_action(open_locator_action);
+    view_menu.add_separator();
+    view_menu.add_action(add_editor_action);
+    view_menu.add_action(remove_current_editor_action);
 
-    auto help_menu = GUI::Menu::construct("Help");
-    help_menu->add_action(GUI::Action::create("About", [&](auto&) {
+    auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::Action::create("About", [&](auto&) {
         GUI::AboutDialog::show("HackStudio", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-hack-studio.png"), g_window);
     }));
-    menubar->add_menu(move(help_menu));
 
     app.set_menubar(move(menubar));
 
