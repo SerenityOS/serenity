@@ -208,6 +208,8 @@ NonnullRefPtr<Statement> Parser::parse_statement()
         return parse_try_statement();
     case TokenType::Break:
         return parse_break_statement();
+    case TokenType::Continue:
+         return parse_continue_statement();
     case TokenType::Switch:
         return parse_switch_statement();
     case TokenType::Do:
@@ -686,6 +688,13 @@ NonnullRefPtr<BreakStatement> Parser::parse_break_statement()
     return create_ast_node<BreakStatement>();
 }
 
+NonnullRefPtr<ContinueStatement> Parser::parse_continue_statement()
+{
+    consume(TokenType::Continue);
+    // FIXME: Handle labels.
+    return create_ast_node<ContinueStatement>();
+}
+
 NonnullRefPtr<ConditionalExpression> Parser::parse_conditional_expression(NonnullRefPtr<Expression> test)
 {
     consume(TokenType::QuestionMark);
@@ -938,6 +947,7 @@ bool Parser::match_statement() const
         || type == TokenType::CurlyOpen
         || type == TokenType::Switch
         || type == TokenType::Break
+        || type == TokenType::Continue
         || type == TokenType::Var;
 }
 

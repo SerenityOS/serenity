@@ -814,4 +814,14 @@ private:
     virtual const char* class_name() const override { return "BreakStatement"; }
 };
 
+class ContinueStatement final : public Statement {
+public:
+    ContinueStatement() {}
+
+    virtual Value execute(Interpreter&) const override;
+
+private:
+    virtual const char* class_name() const override { return "ContinueStatement"; }
+};
+
 }
