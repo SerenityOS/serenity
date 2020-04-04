@@ -52,9 +52,7 @@ const char* Token::name() const
 double Token::double_value() const
 {
     ASSERT(type() == TokenType::NumericLiteral);
-    // FIXME: need to parse double instead of int
-    bool ok;
-    return m_value.to_int(ok);
+    return strtod(String(m_value).characters(), nullptr);
 }
 
 String Token::string_value() const
