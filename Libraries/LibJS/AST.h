@@ -579,17 +579,36 @@ enum class DeclarationType {
     Const,
 };
 
+class VariableDeclarator final : public ASTNode {
+public:
+    VariableDeclarator(NonnullRefPtr<Identifier> id, RefPtr<Expression> init)
+        : m_id(move(id))
+        , m_init(move(init))
+    {
+    }
+
+    const Identifier& id() const { return m_id; }
+    const Expression* init() const { return m_init; }
+
+    virtual Value execute(Interpreter&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    virtual const char* class_name() const override { return "VariableDeclarator"; }
+
+    NonnullRefPtr<Identifier> m_id;
+    RefPtr<Expression> m_init;
+};
+
 class VariableDeclaration : public Declaration {
 public:
-    VariableDeclaration(NonnullRefPtr<Identifier> name, RefPtr<Expression> initializer, DeclarationType declaration_type)
+    VariableDeclaration(DeclarationType declaration_type, NonnullRefPtrVector<VariableDeclarator> declarations)
         : m_declaration_type(declaration_type)
-        , m_name(move(name))
-        , m_initializer(move(initializer))
+        , m_declarations(move(declarations))
     {
     }
 
     virtual bool is_variable_declaration() const override { return true; }
-    const Identifier& name() const { return *m_name; }
     DeclarationType declaration_type() const { return m_declaration_type; }
 
     virtual Value execute(Interpreter&) const override;
@@ -599,8 +618,7 @@ private:
     virtual const char* class_name() const override { return "VariableDeclaration"; }
 
     DeclarationType m_declaration_type;
-    NonnullRefPtr<Identifier> m_name;
-    RefPtr<Expression> m_initializer;
+    NonnullRefPtrVector<VariableDeclarator> m_declarations;
 };
 
 class ObjectExpression : public Expression {
