@@ -810,7 +810,7 @@ NonnullRefPtr<ForStatement> Parser::parse_for_statement()
 
     consume(TokenType::ParenClose);
 
-    auto body = parse_block_statement();
+    auto body = parse_statement();
 
     return create_ast_node<ForStatement>(move(init), move(test), move(update), move(body));
 }
