@@ -154,10 +154,14 @@ public:
         return throw_exception(heap().allocate<Exception>(value));
     }
 
+    Value last_value() const { return m_last_value; }
+
 private:
     Interpreter();
 
     Heap m_heap;
+
+    Value m_last_value;
 
     Vector<ScopeFrame> m_scope_stack;
     Vector<CallFrame> m_call_stack;

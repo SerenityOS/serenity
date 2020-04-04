@@ -69,18 +69,21 @@ Value Interpreter::run(const Statement& statement, Vector<Argument> arguments, S
     auto& block = static_cast<const ScopeNode&>(statement);
     enter_scope(block, move(arguments), scope_type);
 
-    Value last_value = js_undefined();
+    m_last_value = {};
     for (auto& node : block.children()) {
-        last_value = node.execute(*this);
+        m_last_value = node.execute(*this);
         if (m_unwind_until != ScopeType::None)
             break;
     }
+
+    bool did_return = m_unwind_until == ScopeType::Function;
 
     if (m_unwind_until == scope_type)
         m_unwind_until = ScopeType::None;
 
     exit_scope(block);
-    return last_value;
+
+    return did_return ? m_last_value : js_undefined();
 }
 
 void Interpreter::enter_scope(const ScopeNode& scope_node, Vector<Argument> arguments, ScopeType scope_type)
@@ -179,6 +182,9 @@ void Interpreter::gather_roots(Badge<Heap>, HashTable<Cell*>& roots)
     roots.set(m_number_prototype);
 
     roots.set(m_exception);
+
+    if (m_last_value.is_cell())
+        roots.set(m_last_value.as_cell());
 
     for (auto& scope : m_scope_stack) {
         for (auto& it : scope.variables) {
