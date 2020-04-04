@@ -210,6 +210,8 @@ NonnullRefPtr<Statement> Parser::parse_statement()
         return parse_break_statement();
     case TokenType::Switch:
         return parse_switch_statement();
+    case TokenType::Do:
+        return parse_do_while_statement();
     default:
         if (match_expression())
             return adopt(*new ExpressionStatement(parse_expression(0)));
@@ -700,6 +702,15 @@ NonnullRefPtr<TryStatement> Parser::parse_try_statement()
     }
 
     return create_ast_node<TryStatement>(move(block), move(handler), move(finalizer));
+}
+
+NonnullRefPtr<DoWhileStatement> Parser::parse_do_while_statement()
+{
+    consume(TokenType::Do);
+    auto body = parse_statement();
+    consume(TokenType::While);
+    auto test = parse_expression(0);
+    return create_ast_node<DoWhileStatement>(move(test), move(body));
 }
 
 NonnullRefPtr<SwitchStatement> Parser::parse_switch_statement()
