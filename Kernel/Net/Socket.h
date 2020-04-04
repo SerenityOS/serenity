@@ -33,6 +33,7 @@
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/KResult.h>
 #include <Kernel/Lock.h>
+#include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {
@@ -57,9 +58,9 @@ public:
     bool is_shut_down_for_reading() const { return m_shut_down_for_reading; }
 
     enum class SetupState {
-        Unstarted,  // we haven't tried to set the socket up yet
+        Unstarted, // we haven't tried to set the socket up yet
         InProgress, // we're in the process of setting things up - for TCP maybe we've sent a SYN packet
-        Completed,  // the setup process is complete, but not necessarily successful
+        Completed, // the setup process is complete, but not necessarily successful
     };
 
     enum class Role : u8 {
@@ -118,6 +119,7 @@ public:
     pid_t acceptor_pid() const { return m_acceptor.pid; }
     uid_t acceptor_uid() const { return m_acceptor.uid; }
     gid_t acceptor_gid() const { return m_acceptor.gid; }
+    const RefPtr<NetworkAdapter> bound_interface() const { return m_bound_interface; }
 
     Lock& lock() { return m_lock; }
 
@@ -165,13 +167,15 @@ private:
     bool m_shut_down_for_reading { false };
     bool m_shut_down_for_writing { false };
 
+    RefPtr<NetworkAdapter> m_bound_interface { nullptr };
+
     timeval m_receive_timeout { 0, 0 };
     timeval m_send_timeout { 0, 0 };
 
     NonnullRefPtrVector<Socket> m_pending;
 };
 
-template<typename SocketType>
+template <typename SocketType>
 class SocketHandle {
 public:
     SocketHandle() {}

@@ -46,10 +46,22 @@ bool RoutingDecision::is_zero() const
     return adapter.is_null() || next_hop.is_zero();
 }
 
-RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source)
+RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, const RefPtr<NetworkAdapter> through)
 {
+    auto matches = [&](auto& adapter) {
+        if (!through)
+            return true;
+
+        return through == adapter;
+    };
+    auto if_matches = [&](auto& adapter, const auto& mac) -> RoutingDecision {
+        if (!matches(adapter))
+            return { nullptr, {} };
+        return { adapter, mac };
+    };
+
     if (target[0] == 127)
-        return { LoopbackAdapter::the(), LoopbackAdapter::the().mac_address() };
+        return if_matches(LoopbackAdapter::the(), LoopbackAdapter::the().mac_address());
 
     auto target_addr = target.to_u32();
     auto source_addr = source.to_u32();
@@ -57,17 +69,17 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source)
     RefPtr<NetworkAdapter> local_adapter = nullptr;
     RefPtr<NetworkAdapter> gateway_adapter = nullptr;
 
-    NetworkAdapter::for_each([source_addr, &target_addr, &local_adapter, &gateway_adapter](auto& adapter) {
+    NetworkAdapter::for_each([source_addr, &target_addr, &local_adapter, &gateway_adapter, &matches](auto& adapter) {
         auto adapter_addr = adapter.ipv4_address().to_u32();
         auto adapter_mask = adapter.ipv4_netmask().to_u32();
 
         if (source_addr != 0 && source_addr != adapter_addr)
             return;
 
-        if ((target_addr & adapter_mask) == (adapter_addr & adapter_mask))
+        if ((target_addr & adapter_mask) == (adapter_addr & adapter_mask) && matches(adapter))
             local_adapter = adapter;
 
-        if (adapter.ipv4_gateway().to_u32() != 0)
+        if (adapter.ipv4_gateway().to_u32() != 0 && matches(adapter))
             gateway_adapter = adapter;
     });
 
