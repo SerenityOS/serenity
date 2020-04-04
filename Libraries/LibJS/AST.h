@@ -289,6 +289,7 @@ enum class BinaryOp {
     Minus,
     Asterisk,
     Slash,
+    Modulo,
     TypedEquals,
     TypedInequals,
     AbstractEquals,

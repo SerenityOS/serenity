@@ -244,6 +244,8 @@ Value BinaryExpression::execute(Interpreter& interpreter) const
         return mul(lhs_result, rhs_result);
     case BinaryOp::Slash:
         return div(lhs_result, rhs_result);
+    case BinaryOp::Modulo:
+        return mod(lhs_result, rhs_result);
     case BinaryOp::TypedEquals:
         return typed_eq(lhs_result, rhs_result);
     case BinaryOp::TypedInequals:
@@ -378,6 +380,9 @@ void BinaryExpression::dump(int indent) const
         break;
     case BinaryOp::Slash:
         op_string = "/";
+        break;
+    case BinaryOp::Modulo:
+        op_string = "%";
         break;
     case BinaryOp::TypedEquals:
         op_string = "===";
