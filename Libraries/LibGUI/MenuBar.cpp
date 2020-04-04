@@ -41,7 +41,14 @@ MenuBar::~MenuBar()
     unrealize_menubar();
 }
 
-void MenuBar::add_menu(NonnullRefPtr<Menu> menu)
+Menu& MenuBar::add_menu(String name)
+{
+    auto menu = Menu::construct(move(name));
+    append_menu(menu);
+    return *menu;
+}
+
+void MenuBar::append_menu(NonnullRefPtr<Menu> menu)
 {
     m_menus.append(move(menu));
 }

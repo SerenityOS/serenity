@@ -57,21 +57,19 @@ int main(int argc, char** argv)
     };
 
     auto menubar = make<GUI::MenuBar>();
-    auto app_menu = GUI::Menu::construct("Visual Builder");
-    app_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    auto& app_menu = menubar->add_menu("Visual Builder");
+    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the().quit(0);
         return;
     }));
-    menubar->add_menu(move(app_menu));
 
-    auto file_menu = GUI::Menu::construct("File");
-    file_menu->add_action(GUI::Action::create("Dump Form", [&](auto&) {
+    auto& file_menu = menubar->add_menu("File");
+    file_menu.add_action(GUI::Action::create("Dump Form", [&](auto&) {
         form1->dump();
     }));
-    file_menu->add_action(GUI::Action::create("Save Form...", { Mod_Ctrl, Key_S }, [&](auto&) {
+    file_menu.add_action(GUI::Action::create("Save Form...", { Mod_Ctrl, Key_S }, [&](auto&) {
         form1->write_to_file("/tmp/form.frm");
     }));
-    menubar->add_menu(move(file_menu));
 
     auto window = GUI::Window::construct();
     window->set_title(form1->name());
@@ -80,11 +78,10 @@ int main(int argc, char** argv)
 
     window->show();
 
-    auto help_menu = GUI::Menu::construct("Help");
-    help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
+    auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::Action::create("About", [&](auto&) {
         GUI::AboutDialog::show("Visual Builder", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-visual-builder.png"), window);
     }));
-    menubar->add_menu(move(help_menu));
 
     app.set_menubar(move(menubar));
 

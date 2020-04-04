@@ -246,14 +246,14 @@ int main(int argc, char** argv)
 
     auto menubar = make<GUI::MenuBar>();
 
-    auto app_menu = GUI::Menu::construct("Terminal");
-    app_menu->add_action(GUI::Action::create("Open new terminal", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"), [&](auto&) {
+    auto& app_menu = menubar->add_menu("Terminal");
+    app_menu.add_action(GUI::Action::create("Open new terminal", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"), [&](auto&) {
         if (!fork()) {
             execl("/bin/Terminal", "Terminal", nullptr);
             exit(1);
         }
     }));
-    app_menu->add_action(GUI::Action::create("Settings...", Gfx::Bitmap::load_from_file("/res/icons/gear16.png"),
+    app_menu.add_action(GUI::Action::create("Settings...", Gfx::Bitmap::load_from_file("/res/icons/gear16.png"),
         [&](const GUI::Action&) {
             if (!settings_window) {
                 settings_window = create_settings_window(terminal);
@@ -265,21 +265,19 @@ int main(int argc, char** argv)
             settings_window->show();
             settings_window->move_to_front();
         }));
-    app_menu->add_separator();
-    app_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    app_menu.add_separator();
+    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         dbgprintf("Terminal: Quit menu activated!\n");
         GUI::Application::the().quit(0);
     }));
-    menubar->add_menu(move(app_menu));
 
-    auto edit_menu = GUI::Menu::construct("Edit");
-    edit_menu->add_action(terminal.copy_action());
-    edit_menu->add_action(terminal.paste_action());
-    menubar->add_menu(move(edit_menu));
+    auto& edit_menu = menubar->add_menu("Edit");
+    edit_menu.add_action(terminal.copy_action());
+    edit_menu.add_action(terminal.paste_action());
 
     GUI::ActionGroup font_action_group;
     font_action_group.set_exclusive(true);
-    auto font_menu = GUI::Menu::construct("Font");
+    auto& font_menu = menubar->add_menu("Font");
     GUI::FontDatabase::the().for_each_fixed_width_font([&](const StringView& font_name) {
         auto action = GUI::Action::create(font_name, [&](GUI::Action& action) {
             action.set_checked(true);
@@ -294,15 +292,13 @@ int main(int argc, char** argv)
         action->set_checkable(true);
         if (terminal.font().name() == font_name)
             action->set_checked(true);
-        font_menu->add_action(*action);
+        font_menu.add_action(*action);
     });
-    menubar->add_menu(move(font_menu));
 
-    auto help_menu = GUI::Menu::construct("Help");
-    help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
+    auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::Action::create("About", [&](auto&) {
         GUI::AboutDialog::show("Terminal", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-terminal.png"), window);
     }));
-    menubar->add_menu(move(help_menu));
 
     app.set_menubar(move(menubar));
 

@@ -226,21 +226,20 @@ int main(int argc, char** argv)
 
     auto menubar = make<GUI::MenuBar>();
 
-    auto app_menu = GUI::Menu::construct("Browser");
-    app_menu->add_action(GUI::Action::create("Reload", { Mod_None, Key_F5 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"), [&](auto&) {
+    auto& app_menu = menubar->add_menu("Browser");
+    app_menu.add_action(GUI::Action::create("Reload", { Mod_None, Key_F5 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"), [&](auto&) {
         TemporaryChange<bool> change(should_push_loads_to_history, false);
         html_widget.reload();
     }));
-    app_menu->add_separator();
-    app_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) {
+    app_menu.add_separator();
+    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app.quit();
     }));
-    menubar->add_menu(move(app_menu));
 
     RefPtr<GUI::Window> dom_inspector_window;
 
-    auto inspect_menu = GUI::Menu::construct("Inspect");
-    inspect_menu->add_action(GUI::Action::create("View source", { Mod_Ctrl, Key_U }, [&](auto&) {
+    auto& inspect_menu = menubar->add_menu("Inspect");
+    inspect_menu.add_action(GUI::Action::create("View source", { Mod_Ctrl, Key_U }, [&](auto&) {
         String filename_to_open;
         char tmp_filename[] = "/tmp/view-source.XXXXXX";
         ASSERT(html_widget.document());
@@ -259,7 +258,7 @@ int main(int argc, char** argv)
             ASSERT_NOT_REACHED();
         }
     }));
-    inspect_menu->add_action(GUI::Action::create("Inspect DOM tree", { Mod_None, Key_F12 }, [&](auto&) {
+    inspect_menu.add_action(GUI::Action::create("Inspect DOM tree", { Mod_None, Key_F12 }, [&](auto&) {
         if (!dom_inspector_window) {
             dom_inspector_window = GUI::Window::construct();
             dom_inspector_window->set_rect(100, 100, 300, 500);
@@ -271,21 +270,20 @@ int main(int argc, char** argv)
         dom_inspector_window->show();
         dom_inspector_window->move_to_front();
     }));
-    menubar->add_menu(move(inspect_menu));
 
-    auto debug_menu = GUI::Menu::construct("Debug");
-    debug_menu->add_action(GUI::Action::create("Dump DOM tree", [&](auto&) {
+    auto& debug_menu = menubar->add_menu("Debug");
+    debug_menu.add_action(GUI::Action::create("Dump DOM tree", [&](auto&) {
         dump_tree(*html_widget.document());
     }));
-    debug_menu->add_action(GUI::Action::create("Dump Layout tree", [&](auto&) {
+    debug_menu.add_action(GUI::Action::create("Dump Layout tree", [&](auto&) {
         dump_tree(*html_widget.document()->layout_node());
     }));
-    debug_menu->add_action(GUI::Action::create("Dump Style sheets", [&](auto&) {
+    debug_menu.add_action(GUI::Action::create("Dump Style sheets", [&](auto&) {
         for (auto& sheet : html_widget.document()->stylesheets()) {
             dump_sheet(sheet);
         }
     }));
-    debug_menu->add_separator();
+    debug_menu.add_separator();
     auto line_box_borders_action = GUI::Action::create("Line box borders", [&](auto& action) {
         action.set_checked(!action.is_checked());
         html_widget.set_should_show_line_box_borders(action.is_checked());
@@ -293,10 +291,9 @@ int main(int argc, char** argv)
     });
     line_box_borders_action->set_checkable(true);
     line_box_borders_action->set_checked(false);
-    debug_menu->add_action(line_box_borders_action);
-    menubar->add_menu(move(debug_menu));
+    debug_menu.add_action(line_box_borders_action);
 
-    auto bookmarks_menu = GUI::Menu::construct("Bookmarks");
+    auto& bookmarks_menu = menubar->add_menu("Bookmarks");
     auto show_bookmarksbar_action = GUI::Action::create("Show bookmarks bar", [&](auto& action) {
         action.set_checked(!action.is_checked());
         bookmarksbar.set_visible(action.is_checked());
@@ -304,14 +301,12 @@ int main(int argc, char** argv)
     });
     show_bookmarksbar_action->set_checkable(true);
     show_bookmarksbar_action->set_checked(bookmarksbar_enabled);
-    bookmarks_menu->add_action(show_bookmarksbar_action);
-    menubar->add_menu(move(bookmarks_menu));
+    bookmarks_menu.add_action(show_bookmarksbar_action);
 
-    auto help_menu = GUI::Menu::construct("Help");
-    help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
+    auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::Action::create("About", [&](const GUI::Action&) {
         GUI::AboutDialog::show("Browser", Gfx::Bitmap::load_from_file("/res/icons/32x32/filetype-html.png"), window);
     }));
-    menubar->add_menu(move(help_menu));
 
     app.set_menubar(move(menubar));
 

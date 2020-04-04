@@ -60,20 +60,17 @@ int main(int argc, char** argv)
     window->set_main_widget(instance.root_widget());
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-display-properties.png"));
 
-    // Let's create the menubar first
     auto menubar = make<GUI::MenuBar>();
 
-    auto app_menu = GUI::Menu::construct("Display Properties");
-    app_menu->add_action(GUI::CommonActions::make_quit_action([&](const GUI::Action&) {
+    auto& app_menu = menubar->add_menu("Display Properties");
+    app_menu.add_action(GUI::CommonActions::make_quit_action([&](const GUI::Action&) {
         app.quit();
     }));
-    menubar->add_menu(move(app_menu));
 
-    auto help_menu = GUI::Menu::construct("Help");
-    help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
+    auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::Action::create("About", [&](const GUI::Action&) {
         GUI::AboutDialog::show("Display Properties", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-display-properties.png"), window);
     }));
-    menubar->add_menu(move(help_menu));
 
     app.set_menubar(move(menubar));
     window->show();

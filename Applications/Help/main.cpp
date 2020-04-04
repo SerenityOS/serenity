@@ -179,20 +179,18 @@ int main(int argc, char* argv[])
 
     auto menubar = make<GUI::MenuBar>();
 
-    auto app_menu = GUI::Menu::construct("Help");
-    app_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
+    auto& app_menu = menubar->add_menu("Help");
+    app_menu.add_action(GUI::Action::create("About", [&](const GUI::Action&) {
         GUI::AboutDialog::show("Help", Gfx::Bitmap::load_from_file("/res/icons/16x16/book.png"), window);
     }));
-    app_menu->add_separator();
-    app_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    app_menu.add_separator();
+    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the().quit(0);
     }));
-    menubar->add_menu(move(app_menu));
 
-    auto go_menu = GUI::Menu::construct("Go");
-    go_menu->add_action(*go_back_action);
-    go_menu->add_action(*go_forward_action);
-    menubar->add_menu(move(go_menu));
+    auto& go_menu = menubar->add_menu("Go");
+    go_menu.add_action(*go_back_action);
+    go_menu.add_action(*go_forward_action);
 
     app.set_menubar(move(menubar));
 

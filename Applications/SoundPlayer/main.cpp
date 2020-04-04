@@ -65,7 +65,7 @@ int main(int argc, char** argv)
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-sound-player.png"));
 
     auto menubar = make<GUI::MenuBar>();
-    auto app_menu = GUI::Menu::construct("SoundPlayer");
+    auto& app_menu = menubar->add_menu("SoundPlayer");
     auto& player = window->set_main_widget<SoundPlayerWidget>(window, audio_client);
 
     if (argc > 1) {
@@ -80,25 +80,23 @@ int main(int argc, char** argv)
     });
     hide_scope->set_checkable(true);
 
-    app_menu->add_action(GUI::CommonActions::make_open_action([&](auto&) {
+    app_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
         Optional<String> path = GUI::FilePicker::get_open_filepath("Open wav file...");
         if (path.has_value()) {
             player.open_file(path.value());
         }
     }));
-    app_menu->add_action(move(hide_scope));
-    app_menu->add_separator();
-    app_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) {
+    app_menu.add_action(move(hide_scope));
+    app_menu.add_separator();
+    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app.quit();
     }));
 
-    auto help_menu = GUI::Menu::construct("Help");
-    help_menu->add_action(GUI::Action::create("About", [&](auto&) {
+    auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::Action::create("About", [&](auto&) {
         GUI::AboutDialog::show("SoundPlayer", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-sound-player.png"), window);
     }));
 
-    menubar->add_menu(move(app_menu));
-    menubar->add_menu(move(help_menu));
     app.set_menubar(move(menubar));
 
     window->show();

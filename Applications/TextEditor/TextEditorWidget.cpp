@@ -342,39 +342,37 @@ TextEditorWidget::TextEditorWidget()
     m_line_wrapping_setting_action->set_checked(m_editor->is_line_wrapping_enabled());
 
     auto menubar = make<GUI::MenuBar>();
-    auto app_menu = GUI::Menu::construct("Text Editor");
-    app_menu->add_action(*m_new_action);
-    app_menu->add_action(*m_open_action);
-    app_menu->add_action(*m_save_action);
-    app_menu->add_action(*m_save_as_action);
-    app_menu->add_separator();
-    app_menu->add_action(GUI::CommonActions::make_quit_action([this](auto&) {
+    auto& app_menu = menubar->add_menu("Text Editor");
+    app_menu.add_action(*m_new_action);
+    app_menu.add_action(*m_open_action);
+    app_menu.add_action(*m_save_action);
+    app_menu.add_action(*m_save_as_action);
+    app_menu.add_separator();
+    app_menu.add_action(GUI::CommonActions::make_quit_action([this](auto&) {
         if (!request_close())
             return;
         GUI::Application::the().quit(0);
     }));
-    menubar->add_menu(move(app_menu));
 
-    auto edit_menu = GUI::Menu::construct("Edit");
-    edit_menu->add_action(m_editor->undo_action());
-    edit_menu->add_action(m_editor->redo_action());
-    edit_menu->add_separator();
-    edit_menu->add_action(m_editor->cut_action());
-    edit_menu->add_action(m_editor->copy_action());
-    edit_menu->add_action(m_editor->paste_action());
-    edit_menu->add_action(m_editor->delete_action());
-    edit_menu->add_separator();
-    edit_menu->add_action(*m_find_replace_action);
-    edit_menu->add_action(*m_find_next_action);
-    edit_menu->add_action(*m_find_previous_action);
-    edit_menu->add_action(*m_replace_next_action);
-    edit_menu->add_action(*m_replace_previous_action);
-    edit_menu->add_action(*m_replace_all_action);
-    menubar->add_menu(move(edit_menu));
+    auto& edit_menu = menubar->add_menu("Edit");
+    edit_menu.add_action(m_editor->undo_action());
+    edit_menu.add_action(m_editor->redo_action());
+    edit_menu.add_separator();
+    edit_menu.add_action(m_editor->cut_action());
+    edit_menu.add_action(m_editor->copy_action());
+    edit_menu.add_action(m_editor->paste_action());
+    edit_menu.add_action(m_editor->delete_action());
+    edit_menu.add_separator();
+    edit_menu.add_action(*m_find_replace_action);
+    edit_menu.add_action(*m_find_next_action);
+    edit_menu.add_action(*m_find_previous_action);
+    edit_menu.add_action(*m_replace_next_action);
+    edit_menu.add_action(*m_replace_previous_action);
+    edit_menu.add_action(*m_replace_all_action);
 
-    auto font_menu = GUI::Menu::construct("Font");
+    auto& font_menu = menubar->add_menu("Font");
     GUI::FontDatabase::the().for_each_fixed_width_font([&](const StringView& font_name) {
-        font_menu->add_action(GUI::Action::create(font_name, [this](const GUI::Action& action) {
+        font_menu.add_action(GUI::Action::create(font_name, [this](const GUI::Action& action) {
             m_editor->set_font(GUI::FontDatabase::the().get_by_name(action.text()));
             m_editor->update();
         }));
@@ -383,7 +381,7 @@ TextEditorWidget::TextEditorWidget()
     syntax_actions = GUI::ActionGroup {};
     syntax_actions.set_exclusive(true);
 
-    auto syntax_menu = GUI::Menu::construct("Syntax");
+    auto& syntax_menu = menubar->add_menu("Syntax");
     m_plain_text_highlight = GUI::Action::create("Plain Text", [&](GUI::Action& action) {
         action.set_checked(true);
         m_editor->set_syntax_highlighter(nullptr);
@@ -392,7 +390,7 @@ TextEditorWidget::TextEditorWidget()
     m_plain_text_highlight->set_checkable(true);
     m_plain_text_highlight->set_checked(true);
     syntax_actions.add_action(*m_plain_text_highlight);
-    syntax_menu->add_action(*m_plain_text_highlight);
+    syntax_menu.add_action(*m_plain_text_highlight);
 
     m_cpp_highlight = GUI::Action::create("C++", [&](GUI::Action& action) {
         action.set_checked(true);
@@ -401,7 +399,7 @@ TextEditorWidget::TextEditorWidget()
     });
     m_cpp_highlight->set_checkable(true);
     syntax_actions.add_action(*m_cpp_highlight);
-    syntax_menu->add_action(*m_cpp_highlight);
+    syntax_menu.add_action(*m_cpp_highlight);
 
     m_js_highlight = GUI::Action::create("Javascript", [&](GUI::Action& action) {
         action.set_checked(true);
@@ -410,20 +408,18 @@ TextEditorWidget::TextEditorWidget()
     });
     m_js_highlight->set_checkable(true);
     syntax_actions.add_action(*m_js_highlight);
-    syntax_menu->add_action(*m_js_highlight);
+    syntax_menu.add_action(*m_js_highlight);
 
-    auto view_menu = GUI::Menu::construct("View");
-    view_menu->add_action(*m_line_wrapping_setting_action);
-    view_menu->add_separator();
-    view_menu->add_submenu(move(font_menu));
-    view_menu->add_submenu(move(syntax_menu));
-    menubar->add_menu(move(view_menu));
+    auto& view_menu = menubar->add_menu("View");
+    view_menu.add_action(*m_line_wrapping_setting_action);
+    view_menu.add_separator();
+    view_menu.add_submenu(move(font_menu));
+    view_menu.add_submenu(move(syntax_menu));
 
-    auto help_menu = GUI::Menu::construct("Help");
-    help_menu->add_action(GUI::Action::create("About", [&](const GUI::Action&) {
+    auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::Action::create("About", [&](auto&) {
         GUI::AboutDialog::show("Text Editor", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-texteditor.png"), window());
     }));
-    menubar->add_menu(move(help_menu));
 
     GUI::Application::the().set_menubar(move(menubar));
 
