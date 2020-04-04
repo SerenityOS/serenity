@@ -59,8 +59,8 @@ Value StringPrototype::char_at(Interpreter& interpreter)
     ASSERT(this_object->is_string_object());
     auto underlying_string = static_cast<const StringObject*>(this_object)->primitive_string()->string();
     if (index < 0 || index >= static_cast<i32>(underlying_string.length()))
-        return js_string(interpreter.heap(), String::empty());
-    return js_string(interpreter.heap(), underlying_string.substring(index, 1));
+        return js_string(interpreter, String::empty());
+    return js_string(interpreter, underlying_string.substring(index, 1));
 }
 
 Value StringPrototype::repeat(Interpreter& interpreter)
@@ -70,7 +70,7 @@ Value StringPrototype::repeat(Interpreter& interpreter)
         return {};
     ASSERT(this_object->is_string_object());
     if (!interpreter.argument_count())
-        return js_string(interpreter.heap(), String::empty());
+        return js_string(interpreter, String::empty());
     i32 count = 0;
     count = interpreter.argument(0).to_i32();
     if (count < 0) {
@@ -81,7 +81,7 @@ Value StringPrototype::repeat(Interpreter& interpreter)
     StringBuilder builder;
     for (i32 i = 0; i < count; ++i)
         builder.append(string_object->primitive_string()->string());
-    return js_string(interpreter.heap(), builder.to_string());
+    return js_string(interpreter, builder.to_string());
 }
 
 Value StringPrototype::starts_with(Interpreter& interpreter)

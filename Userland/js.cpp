@@ -277,7 +277,7 @@ JS::Value ReplObject::repl_help(JS::Interpreter& interpreter)
     help_text.append("    help(): display this menu\n");
     help_text.append("    load(files): Accepts file names as params to load into running session. For example repl.load(\"js/1.js\", \"js/2.js\", \"js/3.js\")\n");
     String result = help_text.to_string();
-    return js_string(interpreter.heap(), result);
+    return js_string(interpreter, result);
 }
 
 JS::Value ReplObject::load_file(JS::Interpreter& interpreter)
