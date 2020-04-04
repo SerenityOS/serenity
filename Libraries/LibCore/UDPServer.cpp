@@ -30,7 +30,6 @@
 #include <LibCore/UDPServer.h>
 #include <LibCore/UDPSocket.h>
 #include <stdio.h>
-#include <sys/socket.h>
 
 namespace Core {
 
@@ -45,41 +44,36 @@ UDPServer::~UDPServer()
 {
 }
 
-bool UDPServer::listen(const IPv4Address& address, u16 port)
+bool UDPServer::bind(const IPv4Address& address, u16 port)
 {
-    if (m_listening)
+    if (m_bound)
         return false;
 
     int rc;
-    auto socket_address = SocketAddress(address, port);
-    auto in = socket_address.to_sockaddr_in();
+    auto saddr = SocketAddress(address, port);
+    auto in = saddr.to_sockaddr_in();
+
     rc = ::bind(m_fd, (const sockaddr*)&in, sizeof(in));
     ASSERT(rc == 0);
 
-    rc = ::listen(m_fd, 5);
-    ASSERT(rc == 0);
-    m_listening = true;
-
     m_notifier = Notifier::construct(m_fd, Notifier::Event::Read, this);
     m_notifier->on_ready_to_read = [this] {
-        if (on_ready_to_accept)
-            on_ready_to_accept();
+        if (on_ready_to_receive)
+            on_ready_to_receive();
     };
     return true;
 }
 
-RefPtr<UDPSocket> UDPServer::accept()
+ByteBuffer UDPServer::receive(size_t size, sockaddr_in& in)
 {
-    ASSERT(m_listening);
-    sockaddr_in in;
-    socklen_t in_size = sizeof(in);
-    int accepted_fd = ::accept(m_fd, (sockaddr*)&in, &in_size);
-    if (accepted_fd < 0) {
-        perror("accept");
-        return nullptr;
+    auto buf = ByteBuffer::create_zeroed(size);
+    socklen_t in_len = sizeof(in);
+    ssize_t rlen = ::recvfrom(m_fd, buf.data(), size, 0, (sockaddr*)&in, &in_len);
+    if (rlen < 0) {
+        dbg() << "recvfrom: " << strerror(errno);
+        return {};
     }
-
-    return UDPSocket::construct(accepted_fd);
+    return buf;
 }
 
 Optional<IPv4Address> UDPServer::local_address() const
