@@ -26,8 +26,8 @@
 
 #pragma once
 
+#include <AK/MACAddress.h>
 #include <AK/NetworkOrdered.h>
-#include <Kernel/Net/MACAddress.h>
 
 #pragma GCC diagnostic ignored "-Warray-bounds"
 
