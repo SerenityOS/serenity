@@ -438,7 +438,7 @@ int main(int argc, char** argv)
     auto reveal_action_tab = [&](auto& widget) {
         if (s_action_tab_widget->preferred_size().height() < 200)
             s_action_tab_widget->set_preferred_size(0, 200);
-        s_action_tab_widget->set_active_widget(widget);
+        s_action_tab_widget->set_active_widget(&widget);
     };
 
     auto hide_action_tabs = [&] {
@@ -454,8 +454,8 @@ int main(int argc, char** argv)
         update_actions();
     });
 
-    auto find_in_files_widget = s_action_tab_widget->add_tab<FindInFilesWidget>("Find in files");
-    auto terminal_wrapper = s_action_tab_widget->add_tab<TerminalWrapper>("Console");
+    auto& find_in_files_widget = s_action_tab_widget->add_tab<FindInFilesWidget>("Find in files");
+    auto& terminal_wrapper = s_action_tab_widget->add_tab<TerminalWrapper>("Console");
 
     auto& locator = widget.add<Locator>();
 
@@ -481,16 +481,16 @@ int main(int argc, char** argv)
     auto edit_menu = GUI::Menu::construct("Edit");
     edit_menu->add_action(GUI::Action::create("Find in files...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"), [&](auto&) {
         reveal_action_tab(find_in_files_widget);
-        find_in_files_widget->focus_textbox_and_select_all();
+        find_in_files_widget.focus_textbox_and_select_all();
     }));
     menubar->add_menu(move(edit_menu));
 
     auto stop_action = GUI::Action::create("Stop", Gfx::Bitmap::load_from_file("/res/icons/16x16/stop.png"), [&](auto&) {
-        terminal_wrapper->kill_running_command();
+        terminal_wrapper.kill_running_command();
     });
 
     stop_action->set_enabled(false);
-    terminal_wrapper->on_command_exit = [&] {
+    terminal_wrapper.on_command_exit = [&] {
         stop_action->set_enabled(false);
     };
 
