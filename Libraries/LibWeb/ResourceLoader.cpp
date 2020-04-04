@@ -57,7 +57,8 @@ void ResourceLoader::load_sync(const URL& url, Function<void(const ByteBuffer&)>
             loop.quit(0);
         },
         [&](auto& string) {
-            error_callback(string);
+            if (error_callback)
+                error_callback(string);
             loop.quit(0);
         });
 
