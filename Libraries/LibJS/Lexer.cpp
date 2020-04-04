@@ -229,7 +229,7 @@ Token Lexer::next()
         }
     } else if (isdigit(m_current_char)) {
         consume();
-        while (isdigit(m_current_char)) {
+        while (m_current_char == '.' || isdigit(m_current_char)) {
             consume();
         }
         token_type = TokenType::NumericLiteral;
