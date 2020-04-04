@@ -305,6 +305,10 @@ KResult VFS::mknod(StringView path, mode_t mode, dev_t dev, Custody& base)
 
 KResultOr<NonnullRefPtr<FileDescription>> VFS::create(StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> owner)
 {
+    auto result = validate_path_against_process_veil(path, options);
+    if (result.is_error())
+        return result;
+
     if (!is_socket(mode) && !is_fifo(mode) && !is_block_device(mode) && !is_character_device(mode)) {
         // Turn it into a regular file. (This feels rather hackish.)
         mode |= 0100000;
