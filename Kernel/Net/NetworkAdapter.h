@@ -28,6 +28,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/Function.h>
+#include <AK/MACAddress.h>
 #include <AK/SinglyLinkedList.h>
 #include <AK/Types.h>
 #include <AK/WeakPtr.h>
@@ -36,7 +37,6 @@
 #include <Kernel/Net/ARP.h>
 #include <Kernel/Net/ICMP.h>
 #include <Kernel/Net/IPv4.h>
-#include <Kernel/Net/MACAddress.h>
 
 namespace Kernel {
 
