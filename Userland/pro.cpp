@@ -49,6 +49,10 @@ int main(int argc, char** argv)
     auto protocol_client = Protocol::Client::construct();
 
     auto download = protocol_client->start_download(url.to_string());
+    if (!download) {
+        fprintf(stderr, "Failed to start download for '%s'\n", url_string.characters());
+        return 1;
+    }
     download->on_progress = [](u32 total_size, u32 downloaded_size) {
         dbgprintf("download progress: %u / %u\n", downloaded_size, total_size);
     };
