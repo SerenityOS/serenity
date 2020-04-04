@@ -86,6 +86,11 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&)> succ
 
     if (url.protocol() == "http") {
         auto download = protocol_client().start_download(url.to_string());
+        if (!download) {
+            if (error_callback)
+                error_callback("Failed to initiate load");
+            return;
+        }
         download->on_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback)](bool success, const ByteBuffer& payload, auto) {
             --m_pending_loads;
             if (on_load_counter_change)
