@@ -24,8 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Function.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/ScriptFunction.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -35,6 +37,7 @@ ScriptFunction::ScriptFunction(const ScopeNode& body, Vector<FlyString> paramete
     : m_body(body)
     , m_parameters(move(parameters))
 {
+    put_native_property("length", length_getter, length_setter);
 }
 
 ScriptFunction::~ScriptFunction()
@@ -58,6 +61,20 @@ Value ScriptFunction::call(Interpreter& interpreter)
 Value ScriptFunction::construct(Interpreter& interpreter)
 {
     return call(interpreter);
+}
+
+Value ScriptFunction::length_getter(Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return {};
+    if (!this_object->is_function())
+        return interpreter.throw_exception<Error>("TypeError", "Not a function");
+    return Value(static_cast<i32>(static_cast<const ScriptFunction*>(this_object)->parameters().size()));
+}
+
+void ScriptFunction::length_setter(Interpreter&, Value)
+{
 }
 
 }

@@ -45,6 +45,9 @@ private:
     virtual bool is_script_function() const final { return true; }
     virtual const char* class_name() const override { return "ScriptFunction"; }
 
+    static Value length_getter(Interpreter&);
+    static void length_setter(Interpreter&, Value);
+
     NonnullRefPtr<ScopeNode> m_body;
     const Vector<FlyString> m_parameters;
 };
