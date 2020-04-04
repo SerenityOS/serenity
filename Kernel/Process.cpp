@@ -69,6 +69,7 @@
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/PrivateInodeVMObject.h>
+#include <Kernel/VM/ProcessPagingScope.h>
 #include <Kernel/VM/PurgeableVMObject.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
 #include <LibBareMetal/IO.h>
@@ -4945,6 +4946,21 @@ int Process::sys$ptrace(const Syscall::SC_ptrace_params* user_params)
             SmapDisabler disabler;
             *regs = tracer->regs();
         }
+        break;
+    }
+    case PT_PEEK: {
+        uint32_t* addr = reinterpret_cast<uint32_t*>(params.addr);
+        if (!MM.validate_user_read(peer->process(), VirtualAddress(addr), sizeof(uint32_t))) {
+            return -EFAULT;
+        }
+
+        uint32_t result;
+
+        SmapDisabler dis;
+        ProcessPagingScope scope(peer->process());
+        result = *addr;
+
+        return result;
         break;
     }
 
