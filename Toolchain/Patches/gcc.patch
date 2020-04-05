@@ -144,24 +144,24 @@ index 000000000..925c88dd6
 +/* Useful if you wish to make target-specific GCC changes. */
 +#undef TARGET_SERENITY
 +#define TARGET_SERENITY 1
-+ 
++
 +/* Default arguments you want when running your
 +   i686-serenity-gcc/x86_64-serenity-gcc toolchain */
 +#undef LIB_SPEC
 +#define LIB_SPEC "-lc" /* link against C standard library */
-+ 
++
 +/* Files that are linked before user code.
 +   The %s tells GCC to look for these files in the library directory. */
 +#undef STARTFILE_SPEC
 +#define STARTFILE_SPEC "%{!shared:crt0.o%s} crti.o%s %{shared:crtbeginS.o%s; :crtbegin.o%s}"
-+ 
++
 +/* Files that are linked after user code. */
 +#undef ENDFILE_SPEC
 +#define ENDFILE_SPEC "%{shared:crtendS.o%s; :crtend.o%s} crtn.o%s"
 +
 +#undef LINK_SPEC
 +#define LINK_SPEC "%{shared:-shared} %{static:-static} %{!shared: %{!static: %{rdynamic:-export-dynamic}}}"
-+ 
++
 +/* Additional predefined macros. */
 +#undef TARGET_OS_CPP_BUILTINS
 +#define TARGET_OS_CPP_BUILTINS()      \
