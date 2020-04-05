@@ -470,6 +470,9 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
     case TokenType::Percent:
         consume();
         return create_ast_node<BinaryExpression>(BinaryOp::Modulo, move(lhs), parse_expression(min_precedence, associativity));
+   case TokenType::DoubleAsterisk:
+        consume();
+        return create_ast_node<BinaryExpression>(BinaryOp::Exponentiation, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::GreaterThan:
         consume();
         return create_ast_node<BinaryExpression>(BinaryOp::GreaterThan, move(lhs), parse_expression(min_precedence, associativity));
@@ -905,6 +908,7 @@ bool Parser::match_secondary_expression() const
         || type == TokenType::Slash
         || type == TokenType::SlashEquals
         || type == TokenType::Percent
+        || type == TokenType::DoubleAsterisk
         || type == TokenType::Equals
         || type == TokenType::EqualsEqualsEquals
         || type == TokenType::ExclamationMarkEqualsEquals
