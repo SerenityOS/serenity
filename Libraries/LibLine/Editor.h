@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/BinarySearch.h>
+#include <AK/ByteBuffer.h>
 #include <AK/FileSystemPath.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
@@ -35,6 +36,8 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/DirIterator.h>
+#include <Libraries/LibLine/Span.h>
+#include <Libraries/LibLine/Style.h>
 #include <sys/stat.h>
 #include <termios.h>
 
@@ -76,8 +79,9 @@ public:
 
     void register_character_input_callback(char ch, Function<bool(Editor&)> callback);
 
-    Function<Vector<String>(const String&)> on_tab_complete_first_token = nullptr;
-    Function<Vector<String>(const String&)> on_tab_complete_other_token = nullptr;
+    Function<Vector<String>(const String&)> on_tab_complete_first_token;
+    Function<Vector<String>(const String&)> on_tab_complete_other_token;
+    Function<void(Editor&)> on_display_refresh;
 
     // FIXME: we will have to kindly ask our instantiators to set our signal handlers
     // since we can not do this cleanly ourselves (signal() limitation: cannot give member functions)
@@ -92,6 +96,13 @@ public:
     void insert(const String&);
     void insert(const char);
     void cut_mismatching_chars(String& completion, const String& other, size_t start_compare);
+    void stylize(const Span&, const Style&);
+    void strip_styles()
+    {
+        m_spans_starting.clear();
+        m_spans_ending.clear();
+        m_refresh_needed = true;
+    }
 
     const struct termios& termios() const { return m_termios; }
     const struct termios& default_termios() const { return m_default_termios; }
@@ -100,9 +111,37 @@ private:
     void vt_save_cursor();
     void vt_restore_cursor();
     void vt_clear_to_end_of_line();
+    void vt_clear_lines(size_t count_above, size_t count_below = 0);
+    void vt_move_relative(int x, int y);
+    void vt_apply_style(const Style&);
+
+    Style find_applicable_style(size_t offset) const;
+
+    void refresh_display();
+
+    // FIXME: These three will report the wrong value because they do not
+    //        take the length of the prompt into consideration, and it does not
+    //        appear that we can figure that out easily
+    size_t num_lines() const
+    {
+        return (m_buffer.size() + m_num_columns) / m_num_columns;
+    }
+
+    size_t cursor_line() const
+    {
+        return (m_cursor + m_num_columns) / m_num_columns;
+    }
+
+    size_t offset_in_line() const
+    {
+        auto offset = m_cursor % m_num_columns;
+        return offset;
+    }
 
     Vector<char, 1024> m_buffer;
+    ByteBuffer m_pending_chars;
     size_t m_cursor { 0 };
+    size_t m_chars_inserted_in_the_middle { 0 };
     size_t m_times_tab_pressed { 0 };
     size_t m_num_columns { 0 };
 
@@ -126,7 +165,11 @@ private:
     };
     InputState m_state { InputState::Free };
 
-    bool m_initialized = false;
+    HashMap<u32, HashMap<u32, Style>> m_spans_starting;
+    HashMap<u32, HashMap<u32, Style>> m_spans_ending;
+
+    bool m_initialized { false };
+    bool m_refresh_needed { false };
 };
 
 }

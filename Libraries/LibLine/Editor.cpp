@@ -35,6 +35,7 @@ namespace Line {
 
 Editor::Editor()
 {
+    m_pending_chars = ByteBuffer::create_uninitialized(0);
     struct winsize ws;
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) < 0)
         m_num_columns = 80;
@@ -67,22 +68,15 @@ void Editor::clear_line()
 
 void Editor::insert(const String& string)
 {
-    fputs(string.characters(), stdout);
-    fflush(stdout);
-
+    m_pending_chars.append(string.characters(), string.length());
     if (m_cursor == m_buffer.size()) {
         m_buffer.append(string.characters(), string.length());
         m_cursor = m_buffer.size();
         return;
     }
 
-    vt_save_cursor();
-    vt_clear_to_end_of_line();
-    for (size_t i = m_cursor; i < m_buffer.size(); ++i)
-        fputc(m_buffer[i], stdout);
-    vt_restore_cursor();
-
     m_buffer.ensure_capacity(m_buffer.size() + string.length());
+    m_chars_inserted_in_the_middle += string.length();
     for (size_t i = 0; i < string.length(); ++i)
         m_buffer.insert(m_cursor + i, string[i]);
     m_cursor += string.length();
@@ -90,22 +84,15 @@ void Editor::insert(const String& string)
 
 void Editor::insert(const char ch)
 {
-    putchar(ch);
-    fflush(stdout);
-
+    m_pending_chars.append(&ch, 1);
     if (m_cursor == m_buffer.size()) {
         m_buffer.append(ch);
         m_cursor = m_buffer.size();
         return;
     }
 
-    vt_save_cursor();
-    vt_clear_to_end_of_line();
-    for (size_t i = m_cursor; i < m_buffer.size(); ++i)
-        fputc(m_buffer[i], stdout);
-    vt_restore_cursor();
-
     m_buffer.insert(m_cursor, ch);
+    ++m_chars_inserted_in_the_middle;
     ++m_cursor;
 }
 
@@ -116,6 +103,26 @@ void Editor::register_character_input_callback(char ch, Function<bool(Editor&)> 
         ASSERT_NOT_REACHED();
     }
     m_key_callbacks.set(ch, make<KeyCallback>(move(callback)));
+}
+
+void Editor::stylize(const Span& span, const Style& style)
+{
+    auto starting_map = m_spans_starting.get(span.beginning()).value_or({});
+
+    if (!starting_map.contains(span.end()))
+        m_refresh_needed = true;
+
+    starting_map.set(span.end(), style);
+
+    m_spans_starting.set(span.beginning(), starting_map);
+
+    auto ending_map = m_spans_ending.get(span.end()).value_or({});
+
+    if (!ending_map.contains(span.beginning()))
+        m_refresh_needed = true;
+    ending_map.set(span.beginning(), style);
+
+    m_spans_ending.set(span.end(), ending_map);
 }
 
 void Editor::cut_mismatching_chars(String& completion, const String& other, size_t start_compare)
@@ -174,15 +181,7 @@ String Editor::get_line(const String& prompt)
                 return;
             }
             m_buffer.remove(m_cursor);
-            fputs("\033[3~", stdout);
-            fflush(stdout);
-            vt_save_cursor();
-            vt_clear_to_end_of_line();
-            for (size_t i = m_cursor; i < m_buffer.size(); ++i)
-                fputc(m_buffer[i], stdout);
-            vt_restore_cursor();
         };
-
         for (ssize_t i = 0; i < nread; ++i) {
             char ch = keybuf[i];
             if (ch == 0)
@@ -379,7 +378,7 @@ String Editor::get_line(const String& prompt)
                     do_backspace();
                 continue;
             }
-            if (ch == 0xc) {                    // ^L
+            if (ch == 0xc) { // ^L
                 printf("\033[3J\033[H\033[2J"); // Clear screen.
                 fputs(prompt.characters(), stdout);
                 for (size_t i = 0; i < m_buffer.size(); ++i)
@@ -422,7 +421,109 @@ String Editor::get_line(const String& prompt)
 
             insert(ch);
         }
+        refresh_display();
     }
+}
+
+void Editor::refresh_display()
+{
+    if (on_display_refresh)
+        on_display_refresh(*this);
+
+    if (!m_refresh_needed && m_cursor == m_buffer.size()) {
+        // just write the characters out and continue
+        // no need to refresh the entire line
+        char null = 0;
+        m_pending_chars.append(&null, 1);
+        fputs((char*)m_pending_chars.data(), stdout);
+        m_pending_chars.clear();
+        fflush(stdout);
+        return;
+    }
+
+    // ouch, reflow entire line
+    // FIXME: handle multiline stuff
+    vt_move_relative(0, m_pending_chars.size() - m_chars_inserted_in_the_middle);
+    vt_save_cursor();
+    auto current_line = cursor_line();
+    vt_clear_lines(current_line - 1, num_lines() - current_line);
+    vt_move_relative(-num_lines() + 1, -offset_in_line() + m_chars_inserted_in_the_middle);
+    vt_clear_to_end_of_line();
+    HashMap<u32, Style> empty_styles {};
+    for (size_t i = 0; i < m_buffer.size(); ++i) {
+        auto ends = m_spans_ending.get(i).value_or(empty_styles);
+        auto starts = m_spans_starting.get(i).value_or(empty_styles);
+        if (ends.size()) {
+            // go back to defaults
+            vt_apply_style(find_applicable_style(i));
+        }
+        if (starts.size()) {
+            // set new options
+            vt_apply_style(starts.begin()->value); // apply some random style that starts here
+        }
+        fputc(m_buffer[i], stdout);
+    }
+    vt_apply_style({}); // don't bleed to EOL
+    vt_restore_cursor();
+    vt_move_relative(0, m_chars_inserted_in_the_middle);
+    fflush(stdout);
+    m_pending_chars.clear();
+    m_refresh_needed = false;
+    m_chars_inserted_in_the_middle = 0;
+}
+
+void Editor::vt_move_relative(int x, int y)
+{
+    char x_op = 'A', y_op = 'D';
+    if (x > 0)
+        x_op = 'B';
+    else
+        x = -x;
+    if (y > 0)
+        y_op = 'C';
+    else
+        y = -y;
+
+    if (x > 0)
+        printf("\033[%d%c", x, x_op);
+    if (y > 0)
+        printf("\033[%d%c", y, y_op);
+}
+
+Style Editor::find_applicable_style(size_t offset) const
+{
+    // walk through our styles and find one that fits in the offset
+    for (auto& entry : m_spans_starting) {
+        if (entry.key > offset)
+            continue;
+        for (auto& style_value : entry.value) {
+            if (style_value.key <= offset)
+                continue;
+            return style_value.value;
+        }
+    }
+    return {};
+}
+
+void Editor::vt_apply_style(const Style& style)
+{
+    printf(
+        "\033[%d;%d;%d;%d;%dm",
+        style.bold() ? 1 : 22,
+        style.underline() ? 4 : 24,
+        style.italic() ? 3 : 23,
+        (int)style.foreground() + 30,
+        (int)style.background() + 40);
+}
+
+void Editor::vt_clear_lines(size_t count_above, size_t count_below)
+{
+    // go down count_below lines
+    if (count_below > 0)
+        printf("\033[%dB", (int)count_below);
+    // then clear lines going upwards
+    for (size_t i = 0; i < count_below + count_above; ++i)
+        fputs("\033[2K\033[A", stdout);
 }
 
 void Editor::vt_save_cursor()
@@ -442,5 +543,4 @@ void Editor::vt_clear_to_end_of_line()
     fputs("\033[K", stdout);
     fflush(stdout);
 }
-
 }
