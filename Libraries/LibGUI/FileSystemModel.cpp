@@ -207,6 +207,11 @@ FileSystemModel::FileSystemModel(const StringView& root_path, Mode mode)
     m_filetype_image_icon = Icon::default_icon("filetype-image");
     m_filetype_sound_icon = Icon::default_icon("filetype-sound");
     m_filetype_html_icon = Icon::default_icon("filetype-html");
+    m_filetype_cplusplus_icon = Icon::default_icon("filetype-cplusplus");
+    m_filetype_java_icon = Icon::default_icon("filetype-java");
+    m_filetype_javascript_icon = Icon::default_icon("filetype-javascript");
+    m_filetype_text_icon = Icon::default_icon("filetype-text");
+    m_filetype_pdf_icon = Icon::default_icon("filetype-pdf");
 
     setpwent();
     while (auto* passwd = getpwent())
@@ -425,6 +430,17 @@ Icon FileSystemModel::icon_for_file(const mode_t mode, const String& name) const
         return m_filetype_html_icon;
     if (name.to_lowercase().ends_with(".png"))
         return m_filetype_image_icon;
+    if (name.to_lowercase().ends_with(".cpp"))
+        return m_filetype_cplusplus_icon;
+    if (name.to_lowercase().ends_with(".java"))
+        return m_filetype_java_icon;
+    if (name.to_lowercase().ends_with(".js"))
+        return m_filetype_javascript_icon;
+    if (name.to_lowercase().ends_with(".txt"))
+        return m_filetype_text_icon;
+    if (name.to_lowercase().ends_with(".pdf"))
+        return m_filetype_pdf_icon;
+
     return m_file_icon;
 }
 
