@@ -55,6 +55,7 @@ enum IRCNumeric {
     RPL_TOPICWHOTIME = 333,
     RPL_NAMREPLY = 353,
     RPL_ENDOFNAMES = 366,
+    RPL_ERR_UNKNOWNCOMMAND = 421,
 };
 
 IRCClient::IRCClient()
@@ -278,6 +279,8 @@ void IRCClient::handle(const Message& msg)
             return handle_rpl_namreply(msg);
         case RPL_ENDOFNAMES:
             return handle_rpl_endofnames(msg);
+	case RPL_ERR_UNKNOWNCOMMAND:
+            return handle_rpl_unknowncommand(msg);
         }
     }
 
@@ -700,6 +703,14 @@ void IRCClient::handle_rpl_topicwhotime(const Message& msg)
     ensure_channel(channel_name).add_message(String::format("*** (set by %s at %s)", nick.characters(), setat.characters()), Color::Blue);
 }
 
+void IRCClient::handle_rpl_unknowncommand(const Message& msg)
+{
+    if (msg.arguments.size() < 2)
+        return;
+    auto& cmd = msg.arguments[1];
+    add_server_message(String::format("* Unknown command: %s", cmd.characters()));
+}
+
 void IRCClient::register_subwindow(IRCWindow& subwindow)
 {
     if (subwindow.type() == IRCWindow::Server) {
@@ -730,6 +741,14 @@ void IRCClient::handle_user_command(const String& input)
     if (parts.is_empty())
         return;
     auto command = String(parts[0]).to_uppercase();
+    if (command == "/RAW") {
+        if (parts.size() <= 1)
+            return;
+        int command_length = command.length() + 1;
+        StringView raw_message = input.view().substring_view(command_length, input.view().length() - command_length);
+        send(String::format("%s\r\n", String(raw_message).characters()));
+        return;
+    }
     if (command == "/NICK") {
         if (parts.size() >= 2)
             change_nick(parts[1]);
