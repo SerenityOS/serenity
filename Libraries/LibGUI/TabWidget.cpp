@@ -47,6 +47,12 @@ void TabWidget::add_widget(const StringView& title, Widget& widget)
     add_child(widget);
 }
 
+void TabWidget::remove_widget(Widget& widget)
+{
+    m_tabs.remove_first_matching([&widget](auto& entry) { return &widget == entry.widget; });
+    remove_child(widget);
+}
+
 void TabWidget::set_active_widget(Widget* widget)
 {
     if (widget == m_active_widget)
@@ -58,6 +64,10 @@ void TabWidget::set_active_widget(Widget* widget)
     if (m_active_widget) {
         m_active_widget->set_relative_rect(child_rect_for_size(size()));
         m_active_widget->set_visible(true);
+        deferred_invoke([this](auto&) {
+            if (on_change)
+                on_change(*m_active_widget);
+        });
     }
 
     update_bar();
