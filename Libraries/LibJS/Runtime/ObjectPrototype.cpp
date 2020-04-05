@@ -61,7 +61,7 @@ Value ObjectPrototype::to_string(Interpreter& interpreter)
     auto* this_object = interpreter.this_value().to_object(interpreter.heap());
     if (!this_object)
         return {};
-    return Value(this_object->to_string());
+    return js_string(interpreter, String::format("[object %s]", this_object->class_name()));
 }
 
 Value ObjectPrototype::value_of(Interpreter& interpreter)
