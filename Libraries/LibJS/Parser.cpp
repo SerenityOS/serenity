@@ -967,7 +967,12 @@ Token Parser::consume(TokenType type)
 {
     if (m_parser_state.m_current_token.type() != type) {
         m_parser_state.m_has_errors = true;
-        fprintf(stderr, "Error: Unexpected token %s. Expected %s\n", m_parser_state.m_current_token.name(), Token::name(type));
+        auto& current_token = m_parser_state.m_current_token;
+        fprintf(stderr, "Error: Unexpected token %s. Expected %s (line: %zu, column: %zu))\n",
+                current_token.name(),
+                Token::name(type),
+                current_token.line_number(),
+                current_token.line_column());
     }
     return consume();
 }
@@ -975,7 +980,12 @@ Token Parser::consume(TokenType type)
 void Parser::expected(const char* what)
 {
     m_parser_state.m_has_errors = true;
-    fprintf(stderr, "Error: Unexpected token %s. Expected %s\n", m_parser_state.m_current_token.name(), what);
+    auto& current_token = m_parser_state.m_current_token;
+    fprintf(stderr, "Error: Unexpected token %s. Expected %s (line: %zu, column: %zu)\n",
+            current_token.name(),
+            what,
+            current_token.line_number(),
+            current_token.line_column());
 }
 
 void Parser::save_state()

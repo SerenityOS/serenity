@@ -54,8 +54,10 @@ private:
     StringView m_source;
     size_t m_position = 0;
     Token m_current_token;
-    int m_current_char;
+    int m_current_char = 0;
     bool m_has_errors = false;
+    size_t m_line_number = 1;
+    size_t m_line_column = 1;
 
     static HashMap<String, TokenType> s_keywords;
     static HashMap<String, TokenType> s_three_char_tokens;
