@@ -168,6 +168,7 @@ private:
     void handle_rpl_topicwhotime(const Message&);
     void handle_rpl_endofnames(const Message&);
     void handle_rpl_namreply(const Message&);
+    void handle_rpl_unknowncommand(const Message&);
     void handle_privmsg_or_notice(const Message&, PrivmsgOrNotice);
     void handle_nick(const Message&);
     void handle(const Message&);
