@@ -26,6 +26,7 @@
 
 #include <assert.h>
 #include <ulimit.h>
+#include <sys/resource.h>
 
 extern "C" {
 
@@ -36,4 +37,13 @@ long ulimit(int cmd, long newlimit)
     ASSERT_NOT_REACHED();
     return -1;
 }
+
+int getrusage(int who, struct rusage *usage)
+{
+    (void)who;
+    (void)usage;
+    ASSERT_NOT_REACHED();
+    return -1;
+}
+
 }
