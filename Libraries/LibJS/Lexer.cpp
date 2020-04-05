@@ -327,7 +327,7 @@ Token Lexer::next()
         m_source.substring_view(trivia_start - 1, value_start - trivia_start),
         m_source.substring_view(value_start - 1, m_position - value_start),
         m_line_number,
-        m_line_column);
+        m_line_column - m_position + value_start);
 
     return m_current_token;
 }
