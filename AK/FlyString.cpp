@@ -118,7 +118,11 @@ bool FlyString::operator==(const StringView& string) const
 
 bool FlyString::operator==(const char* string) const
 {
-    return String(string) == String(m_impl.ptr());
+    if (is_null())
+        return !string;
+    if (!string)
+        return false;
+    return !__builtin_strcmp(m_impl->characters(), string);
 }
 
 }
