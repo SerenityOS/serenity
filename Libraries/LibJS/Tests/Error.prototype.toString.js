@@ -1,5 +1,3 @@
-function assert(x) { if (!x) throw 1; }
-
 try {
     assert(Error().toString() === "Error");
     assert(Error(undefined).toString() === "Error");

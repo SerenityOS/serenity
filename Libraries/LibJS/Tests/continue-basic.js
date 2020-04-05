@@ -1,5 +1,3 @@
-function assert(x) { if (!x) throw 1; }
-
 try {
     var j = 0;
     for (var i = 0; i < 9; ++i) {

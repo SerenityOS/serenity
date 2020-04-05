@@ -1,5 +1,3 @@
-function assert(x) { if (!x) throw 1; }
-
 try {
     assert(Math.max.length === 2);
     assert(Math.max(1) === 1);
