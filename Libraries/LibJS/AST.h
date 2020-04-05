@@ -314,6 +314,7 @@ enum class BinaryOp {
     Multiplication,
     Division,
     Modulo,
+    Exponentiation,
     TypedEquals,
     TypedInequals,
     AbstractEquals,

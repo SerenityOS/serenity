@@ -35,6 +35,7 @@
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/Value.h>
+#include <math.h>
 
 namespace JS {
 
@@ -266,6 +267,11 @@ Value mod(Value lhs, Value rhs)
     double trunc = (double)(i32) (index / period);
 
     return Value(index - trunc * period);
+}
+
+Value exp(Value lhs, Value rhs)
+{
+    return Value(pow(lhs.to_number().as_double(), rhs.to_number().as_double()));
 }
 
 Value typed_eq(Value lhs, Value rhs)

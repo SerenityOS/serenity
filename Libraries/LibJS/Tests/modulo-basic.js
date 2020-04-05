@@ -3,7 +3,7 @@ try {
     assert(10.5 % 2.5 === 0.5);
     assert(-0.99 % 0.99 === -0);
 
-    // Examples form MDN:
+    // Examples from MDN:
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Arithmetic_Operators
     assert(12 % 5 === 2);
     assert(-1 % 2 === -1);
