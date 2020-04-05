@@ -125,6 +125,9 @@ KResult Socket::setsockopt(int level, int option, const void* value, socklen_t v
         m_bound_interface = device;
         return KSuccess;
     }
+    case SO_KEEPALIVE:
+        // FIXME: Obviously, this is not a real keepalive.
+        return KSuccess;
     default:
         dbg() << "setsockopt(" << option << ") at SOL_SOCKET not implemented.";
         return KResult(-ENOPROTOOPT);
