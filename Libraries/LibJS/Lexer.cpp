@@ -204,7 +204,8 @@ bool Lexer::is_numeric_literal_start() const
 void Lexer::syntax_error(const char* msg)
 {
     m_has_errors = true;
-    fprintf(stderr, "Syntax Error: %s (line: %zu, column: %zu)\n", msg, m_line_number, m_line_column);
+    if (m_log_errors)
+        fprintf(stderr, "Syntax Error: %s (line: %zu, column: %zu)\n", msg, m_line_number, m_line_column);
 }
 
 Token Lexer::next()
