@@ -25,10 +25,12 @@
  */
 
 #include <AK/Function.h>
+#include <AK/StringBuilder.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ArrayPrototype.h>
+#include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -38,11 +40,24 @@ ArrayPrototype::ArrayPrototype()
     put_native_function("shift", shift);
     put_native_function("pop", pop);
     put_native_function("push", push, 1);
+    put_native_function("toString", to_string, 0);
     put("length", Value(0));
 }
 
 ArrayPrototype::~ArrayPrototype()
 {
+}
+
+static Array* array_from(Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return {};
+    if (!this_object->is_array()) {
+        interpreter.throw_exception<Error>("TypeError", "Not an Array");
+        return nullptr;
+    }
+    return static_cast<Array*>(this_object);
 }
 
 Value ArrayPrototype::push(Interpreter& interpreter)
@@ -73,6 +88,21 @@ Value ArrayPrototype::shift(Interpreter& interpreter)
         return {};
     ASSERT(this_object->is_array());
     return static_cast<Array*>(this_object)->shift();
+}
+
+Value ArrayPrototype::to_string(Interpreter& interpreter)
+{
+    auto* array = array_from(interpreter);
+    if (!array)
+        return {};
+
+    StringBuilder builder;
+    for (size_t i = 0; i < array->elements().size(); ++i) {
+        if (i != 0)
+            builder.append(',');
+        builder.append(array->elements()[i].to_string());
+    }
+    return js_string(interpreter, builder.to_string());
 }
 
 }
