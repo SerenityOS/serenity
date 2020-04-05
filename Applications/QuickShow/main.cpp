@@ -25,9 +25,13 @@
  */
 
 #include "QSWidget.h"
+#include <AK/URL.h>
+#include <LibCore/MimeData.h>
+#include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/FilePicker.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
@@ -37,34 +41,17 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio shared_buffer accept rpath unix cpath fattr", nullptr) < 0) {
+    if (pledge("stdio shared_buffer accept rpath unix cpath fattr proc exec thread", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     GUI::Application app(argc, argv);
 
-    if (pledge("stdio shared_buffer accept rpath", nullptr) < 0) {
+    if (pledge("stdio shared_buffer accept rpath proc exec thread", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
-
-    auto menubar = make<GUI::MenuBar>();
-
-    auto& app_menu = menubar->add_menu("QuickShow");
-    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
-        GUI::Application::the().quit(0);
-        return;
-    }));
-
-    menubar->add_menu("File");
-
-    auto& help_menu = menubar->add_menu("Help");
-    help_menu.add_action(GUI::Action::create("About", [](const GUI::Action&) {
-        dbgprintf("FIXME: Implement Help/About\n");
-    }));
-
-    app.set_menubar(move(menubar));
 
 #if 0
     if (argc != 2) {
@@ -73,35 +60,70 @@ int main(int argc, char** argv)
     }
 #endif
 
-    const char* path = "/res/wallpapers/sunset-retro.png";
-    if (argc > 1)
-        path = argv[1];
-
-    auto bitmap = Gfx::Bitmap::load_from_file(path);
-    if (!bitmap) {
-        fprintf(stderr, "Failed to load %s\n", path);
-        return 1;
-    }
-
     auto window = GUI::Window::construct();
+    window->set_double_buffering_enabled(true);
+    window->set_rect(200, 200, 300, 200);
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-image.png"));
+
     auto& widget = window->set_main_widget<QSWidget>();
-    widget.set_path(path);
-    widget.set_bitmap(*bitmap);
+    if (argc > 1)
+        widget.load_from_file(argv[1]);
 
     auto update_window_title = [&](int scale) {
-        window->set_title(String::format("%s %s %d%% - QuickShow", widget.path().characters(), widget.bitmap()->size().to_string().characters(), scale));
+        if (widget.bitmap())
+            window->set_title(String::format("%s %s %d%% - QuickShow", widget.path().characters(), widget.bitmap()->size().to_string().characters(), scale));
+        else
+            window->set_title("QuickShow");
     };
 
-    window->set_double_buffering_enabled(true);
     update_window_title(100);
-    window->set_rect(200, 200, bitmap->width(), bitmap->height());
 
     widget.on_scale_change = [&](int scale) {
         update_window_title(scale);
     };
 
+    widget.on_drop = [&](auto& event) {
+        window->move_to_front();
+
+        if (event.mime_data().has_urls()) {
+            auto urls = event.mime_data().urls();
+
+            if (!urls.is_empty()) {
+                auto url = urls.first();
+                widget.load_from_file(url.path());
+            }
+
+            for (size_t i = 1; i < urls.size(); ++i) {
+                if (fork() == 0) {
+                    execl("/bin/QuickShow", "/bin/QuickShow", urls[i].path().characters(), nullptr);
+                    ASSERT_NOT_REACHED();
+                }
+            }
+        }
+    };
+
+    auto menubar = make<GUI::MenuBar>();
+
+    auto& app_menu = menubar->add_menu("QuickShow");
+    app_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
+        Optional<String> path = GUI::FilePicker::get_open_filepath("Open image...");
+        if (path.has_value()) {
+            widget.load_from_file(path.value());
+        }
+    }));
+    app_menu.add_separator();
+    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
+        app.quit();
+    }));
+
+    auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::Action::create("About", [&](auto&) {
+        GUI::AboutDialog::show("QuickShow", Gfx::Bitmap::load_from_file("/res/icons/32x32/filetype-image.png"), window);
+    }));
+
+    app.set_menubar(move(menubar));
+
     window->show();
 
-    bitmap = nullptr;
     return app.exec();
 }
