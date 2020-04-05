@@ -1,5 +1,3 @@
-function assert(x) { if (!x) console.log("FAIL"); }
-
 try {
     throw 1;
 } catch (e) {

@@ -1,5 +1,3 @@
-function assert(x) { if (!x) throw 1; }
-
 try {
   assert(typeof this === "object");
   assert(this === global);

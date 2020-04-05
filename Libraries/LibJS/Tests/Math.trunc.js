@@ -1,5 +1,3 @@
-function assert(x) { if (!x) throw 1; }
-
 try {
     assert(Math.trunc(13.37) === 13);
     assert(Math.trunc(42.84) === 42);

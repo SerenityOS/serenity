@@ -1,5 +1,3 @@
-function assert(x) { if (!x) throw 1; }
-
 try {
     var a = [1, 2, 3];
     var value = a.shift();
