@@ -406,6 +406,14 @@ Vector<Ext2FS::BlockIndex> Ext2FS::block_list_for_inode_impl(const ext2_inode& e
 
     unsigned block_count = ceil_div(e2inode.i_size, block_size());
 
+    // If we are handling a symbolic link, the path is stored in the 60 bytes in
+    // the inode that are used for the 12 direct and 3 indirect block pointers,
+    // If the path is longer than 60 characters, a block is allocated, and the
+    // block contains the destination path. The file size corresponds to the
+    // path length of the destination.
+    if (is_symlink(e2inode.i_mode) && e2inode.i_blocks == 0)
+        block_count = 0;
+
 #ifdef EXT2_DEBUG
     dbg() << "Ext2FS::block_list_for_inode(): i_size=" << e2inode.i_size << ", i_blocks=" << e2inode.i_blocks << ", block_count=" << block_count;
 #endif
@@ -491,6 +499,7 @@ void Ext2FS::free_inode(Ext2FSInode& inode)
     auto block_list = block_list_for_inode(inode.m_raw_inode, true);
 
     for (auto block_index : block_list) {
+        ASSERT(block_index <= super_block().s_blocks_count);
         if (block_index)
             set_block_allocation_state(block_index, false);
     }
@@ -950,7 +959,7 @@ KResult Ext2FSInode::add_child(InodeIdentifier child_id, const StringView& name,
         return KResult(-ENAMETOOLONG);
 
 #ifdef EXT2_DEBUG
-    dbg() << "Ext2FSInode::add_child(): Adding inode " << child_id.index() << " with name '" << name << " and mode " << mode << " to directory " << index();
+    dbg() << "Ext2FSInode::add_child(): Adding inode " << child_id.index() << " with name '" << name << "' and mode " << mode << " to directory " << index();
 #endif
 
     Vector<FS::DirectoryEntry> entries;
