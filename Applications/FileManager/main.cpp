@@ -463,6 +463,8 @@ int main(int argc, char** argv)
     app_menu.add_action(paste_action);
     app_menu.add_action(delete_action);
     app_menu.add_separator();
+    app_menu.add_action(properties_action);
+    app_menu.add_separator();
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the().quit(0);
     }));
@@ -563,6 +565,8 @@ int main(int argc, char** argv)
 
     directory_view_context_menu->add_action(mkdir_action);
     directory_view_context_menu->add_action(open_terminal_action);
+    directory_view_context_menu->add_separator();
+    directory_view_context_menu->add_action(properties_action);
 
     tree_view_directory_context_menu->add_action(copy_action);
     tree_view_directory_context_menu->add_action(paste_action);
