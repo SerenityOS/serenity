@@ -651,23 +651,6 @@ void Identifier::dump(int indent) const
 
 Value AssignmentExpression::execute(Interpreter& interpreter) const
 {
-    AK::Function<void(Value)> commit;
-    if (m_lhs->is_identifier()) {
-        commit = [&](Value value) {
-            auto name = static_cast<const Identifier&>(*m_lhs).string();
-            interpreter.set_variable(name, value);
-        };
-    } else if (m_lhs->is_member_expression()) {
-        commit = [&](Value value) {
-            if (auto* object = static_cast<const MemberExpression&>(*m_lhs).object().execute(interpreter).to_object(interpreter.heap())) {
-                auto property_name = static_cast<const MemberExpression&>(*m_lhs).computed_property_name(interpreter);
-                object->put(property_name, value);
-            }
-        };
-    } else {
-        ASSERT_NOT_REACHED();
-    }
-
     auto rhs_result = m_rhs->execute(interpreter);
     if (interpreter.exception())
         return {};
@@ -690,7 +673,19 @@ Value AssignmentExpression::execute(Interpreter& interpreter) const
     }
     if (interpreter.exception())
         return {};
-    commit(rhs_result);
+
+    if (m_lhs->is_identifier()) {
+        auto name = static_cast<const Identifier&>(*m_lhs).string();
+        interpreter.set_variable(name, rhs_result);
+    } else if (m_lhs->is_member_expression()) {
+        if (auto* object = static_cast<const MemberExpression&>(*m_lhs).object().execute(interpreter).to_object(interpreter.heap())) {
+            auto property_name = static_cast<const MemberExpression&>(*m_lhs).computed_property_name(interpreter);
+            object->put(property_name, rhs_result);
+        }
+    } else {
+        ASSERT_NOT_REACHED();
+    }
+
     return rhs_result;
 }
 
