@@ -39,7 +39,7 @@ HashMap<char, TokenType> Lexer::s_single_char_tokens;
 
 Lexer::Lexer(StringView source)
     : m_source(source)
-    , m_current_token(TokenType::Eof, StringView(nullptr), StringView(nullptr))
+    , m_current_token(TokenType::Eof, StringView(nullptr), StringView(nullptr), 0, 0)
 {
     if (s_keywords.is_empty()) {
         s_keywords.set("await", TokenType::Await);
@@ -146,6 +146,13 @@ void Lexer::consume()
         return;
     }
 
+    if (m_current_char == '\n') {
+        m_line_number++;
+        m_line_column = 1;
+    } else {
+        m_line_column++;
+    }
+
     m_current_char = m_source[m_position++];
 }
 
@@ -182,7 +189,7 @@ bool Lexer::is_block_comment_end() const
 void Lexer::syntax_error(const char* msg)
 {
     m_has_errors = true;
-    fprintf(stderr, "Syntax Error: %s\n", msg);
+    fprintf(stderr, "Syntax Error: %s (line: %zu, column: %zu)\n", msg, m_line_number, m_line_column);
 }
 
 Token Lexer::next()
@@ -317,7 +324,9 @@ Token Lexer::next()
     m_current_token = Token(
         token_type,
         m_source.substring_view(trivia_start - 1, value_start - trivia_start),
-        m_source.substring_view(value_start - 1, m_position - value_start));
+        m_source.substring_view(value_start - 1, m_position - value_start),
+        m_line_number,
+        m_line_column);
 
     return m_current_token;
 }
