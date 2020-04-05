@@ -553,3 +553,4 @@ struct rtentry {
 #define PT_GETREGS 5
 #define PT_DETACH 6
 #define PT_PEEK 7
+#define PT_POKE 8

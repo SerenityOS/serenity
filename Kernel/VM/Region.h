@@ -31,6 +31,7 @@
 #include <AK/Weakable.h>
 #include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/VM/RangeAllocator.h>
+#include <Kernel/VM/VMObject.h>
 
 namespace Kernel {
 
@@ -74,6 +75,7 @@ public:
 
     const VMObject& vmobject() const { return *m_vmobject; }
     VMObject& vmobject() { return *m_vmobject; }
+    void set_vmobject(NonnullRefPtr<VMObject>&& obj) { m_vmobject = obj; }
 
     bool is_shared() const { return m_shared; }
     void set_shared(bool shared) { m_shared = shared; }

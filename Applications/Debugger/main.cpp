@@ -122,6 +122,8 @@ VirtualAddress get_entry_point(int pid)
 
 int main(int argc, char** argv)
 {
+    // TODO: pledge & unveil
+    // TOOD: check that we didn't somehow hurt performance. boot seems slower? (or it's just laptop battey)
     if (argc == 1)
         return usage();
 
@@ -157,7 +159,12 @@ int main(int argc, char** argv)
     printf("eip:0x%x\n", regs.eip);
 
     uint32_t data = ptrace(PT_PEEK, g_pid, (void*)regs.eip, 0);
-    printf("data: 0x%x\n", data);
+    printf("peeked data: 0x%x\n", data);
+
+    if (ptrace(PT_POKE, g_pid, (void*)regs.eip, data) < 0) {
+        perror("poke");
+        return 1;
+    }
 
     if (ptrace(PT_CONTINUE, g_pid, 0, 0) == -1) {
         perror("continue");

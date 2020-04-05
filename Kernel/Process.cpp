@@ -4890,8 +4890,11 @@ int Process::sys$ptrace(const Syscall::SC_ptrace_params* user_params)
     if (params.pid == m_pid)
         return -EINVAL;
 
-    InterruptDisabler disabler;
-    auto* peer = Thread::from_tid(params.pid);
+    Thread* peer = nullptr;
+    {
+        InterruptDisabler disabler;
+        peer = Thread::from_tid(params.pid);
+    }
     if (!peer)
         return -ESRCH;
 
@@ -4948,6 +4951,7 @@ int Process::sys$ptrace(const Syscall::SC_ptrace_params* user_params)
         }
         break;
     }
+
     case PT_PEEK: {
         uint32_t* addr = reinterpret_cast<uint32_t*>(params.addr);
         if (!MM.validate_user_read(peer->process(), VirtualAddress(addr), sizeof(uint32_t))) {
@@ -4961,6 +4965,40 @@ int Process::sys$ptrace(const Syscall::SC_ptrace_params* user_params)
         result = *addr;
 
         return result;
+    }
+
+    case PT_POKE: {
+        uint32_t* addr = reinterpret_cast<uint32_t*>(params.addr);
+        // We validate for "read" because PT_POKE can write to readonly pages,
+        // as long as they are user pages
+        if (!MM.validate_user_read(peer->process(), VirtualAddress(addr), sizeof(uint32_t))) {
+            return -EFAULT;
+        }
+        ProcessPagingScope scope(peer->process());
+        Range range = { VirtualAddress(addr), sizeof(uint32_t) };
+        auto* region = peer->process().region_containing(range);
+        ASSERT(region != nullptr);
+        if (region->is_shared()) {
+            // If the region is shared, we change its vmobject to a PrivateInodeVMObject
+            // to prevent the write operation from chaning any shared inode data
+            ASSERT(region->vmobject().is_shared_inode());
+            region->set_vmobject(PrivateInodeVMObject::create_with_inode(static_cast<SharedInodeVMObject&>(region->vmobject()).inode()));
+            region->set_shared(false);
+        }
+        const bool was_writable = region->is_writable();
+        if (!was_writable) //TODO refactor into scopeguard
+            region->set_writable(true);
+        region->remap();
+
+        {
+            SmapDisabler dis;
+            *addr = params.data;
+        }
+
+        if (!was_writable) {
+            region->set_writable(false);
+            region->remap();
+        }
         break;
     }
 
