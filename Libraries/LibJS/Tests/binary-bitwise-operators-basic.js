@@ -48,14 +48,14 @@ try {
     assert(("42" | 6) === 46);
     assert((x | y) === 7);
     assert((x | [[[[12]]]]) === 15);
-    // FIXME: These should all return 0
-    // assert((undefined | y) === 7);
-    // assert(("a" | "b") === 0);
-    // assert((null | null) === 0);
-    // assert((undefined | undefined) === 0);
-    // assert((NaN | NaN) === 0);
-    // assert((Infinity | Infinity) === 0);
-    // assert((-Infinity | Infinity) === 0);
+    assert((undefined | y) === 7);
+    assert(("a" | "b") === 0);
+    assert((null | null) === 0);
+    assert((undefined | undefined) === 0);
+    assert((NaN | NaN) === 0);
+    assert((NaN | 6) === 6);
+    assert((Infinity | Infinity) === 0);
+    assert((-Infinity | Infinity) === 0);
 
     console.log("PASS");
 } catch (e) {
