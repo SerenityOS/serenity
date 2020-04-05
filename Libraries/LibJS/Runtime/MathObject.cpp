@@ -126,8 +126,7 @@ Value MathObject::round(Interpreter& interpreter)
 Value MathObject::max(Interpreter& interpreter)
 {
     if (!interpreter.argument_count()) {
-        // FIXME: I think this should return *negative* infinity.
-        return js_infinity();
+        return Value(-js_infinity().as_double());
     } else if (interpreter.argument_count() == 1) {
         return interpreter.argument(0).to_number();
     } else {
