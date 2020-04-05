@@ -142,6 +142,25 @@ void Painter::fill_rect(const Rect& a_rect, Color color)
     }
 }
 
+void Painter::fill_rect_with_checkerboard(const Rect& a_rect, const Size& cell_size, Color color_dark, Color color_light)
+{
+    auto rect = a_rect.translated(translation()).intersected(clip_rect());
+    if (rect.is_empty())
+        return;
+
+    RGBA32* dst = m_target->scanline(rect.top()) + rect.left();
+    const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
+
+    for (int i = 0; i < rect.height(); ++i) {
+        for (int j = 0; j < rect.width(); ++j) {
+            int cell_row = i / cell_size.height();
+            int cell_col = j / cell_size.width();
+            dst[j] = ((cell_row % 2) ^ (cell_col % 2)) ? color_light.value() : color_dark.value();
+        }
+        dst += dst_skip;
+    }
+}
+
 void Painter::fill_rect_with_gradient(Orientation orientation, const Rect& a_rect, Color gradient_start, Color gradient_end)
 {
 #ifdef NO_FPU
