@@ -1,5 +1,3 @@
-function assert(x) { if (!x) throw 1; }
-
 try {
     assert((0 | 0) === 0);
     assert((0 | 1) === 1);

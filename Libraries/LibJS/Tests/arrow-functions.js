@@ -1,4 +1,3 @@
-function assert(x) { if (!x) throw 1; }
 try {
   let getNumber = () => 42;
   assert(getNumber() === 42);

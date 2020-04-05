@@ -1,5 +1,3 @@
-function assert(x) { if (!x) throw 1; }
-
 try {
     assert(Math.ceil(0.95) === 1);
     assert(Math.ceil(4) === 4);

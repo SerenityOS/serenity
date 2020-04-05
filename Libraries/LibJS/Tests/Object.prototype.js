@@ -1,5 +1,3 @@
-function assert(x) { if (!x) throw 1; }
-
 try {
     var o = new Object();
     Object.prototype.foo = 123;

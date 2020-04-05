@@ -1,5 +1,3 @@
-function assert(x) { if (!x) throw 1; }
-
 try {
     assert(Infinity + "" === "Infinity");
     assert(-Infinity + "" === "-Infinity");
