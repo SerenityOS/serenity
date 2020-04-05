@@ -1,5 +1,3 @@
-function assert(x) { if (!x) throw 1; }
-
 try {
     var d = new Date();
     assert(!isNaN(d.getDay()));

@@ -1,5 +1,3 @@
-function assert(x) { if (!x) throw 1; }
-
 try {
     let foo = 1;
     false && (foo = 2);

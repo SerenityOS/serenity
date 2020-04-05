@@ -1,5 +1,3 @@
-function assert(x) { if (!x) throw 1; }
-
 try {
     var s = "foobar"
     assert(typeof s === "string");

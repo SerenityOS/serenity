@@ -1,5 +1,3 @@
-function assert(x) { if (!x) throw 1; }
-
 function foo(a, b) { return a + b; }
 
 try {

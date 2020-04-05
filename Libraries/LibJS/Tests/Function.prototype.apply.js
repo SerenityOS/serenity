@@ -1,5 +1,3 @@
-function assert(x) { if (!x) throw 1; }
-
 try {
     function Foo(arg) {
         this.foo = arg;

@@ -1,5 +1,3 @@
-function assert(x) { if (!x) throw 1; }
-
 try {
     var names = Object.getOwnPropertyNames([1, 2, 3]);
 

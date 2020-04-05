@@ -1,5 +1,3 @@
-function assert(x) { if (!x) throw 1; }
-
 try {
     assert((true && true) === true);
     assert((false && false) === false);

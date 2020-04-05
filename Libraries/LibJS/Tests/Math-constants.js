@@ -1,5 +1,3 @@
-function assert(x) { if (!x) throw 1; }
-
 // FIXME: The parser seems to have issues with decimals,
 // so we multiply everything and compare with whole numbers.
 // I.e. 1233 < X * 1000 < 1235 instead of 1.233 < X < 1.235

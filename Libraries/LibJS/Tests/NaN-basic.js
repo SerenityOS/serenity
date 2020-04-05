@@ -1,5 +1,3 @@
-function assert(x) { if (!x) throw 1; }
-
 try {
     var nan = undefined + 1;
     assert(nan + "" == "NaN");

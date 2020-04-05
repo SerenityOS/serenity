@@ -14,7 +14,7 @@ fail_count=0
 count=0
 
 for f in *.js; do
-    result=`$js_program $f`
+    result=`$js_program -t $f`
     if [ "$result" = "PASS" ]; then
         let pass_count++
         echo -ne "( \033[32;1mPass\033[0m ) "

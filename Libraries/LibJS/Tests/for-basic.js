@@ -1,5 +1,3 @@
-function assert(x) { if (!x) throw 1; }
-
 try {
     var a = [];
     for (var i = 0; i < 3; ++i) {

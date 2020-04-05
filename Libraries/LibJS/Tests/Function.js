@@ -1,5 +1,3 @@
-function assert(x) { if (!x) throw 1; }
-
 try {
     assert(Function.length === 1);
     assert(Function.prototype.length === 0);

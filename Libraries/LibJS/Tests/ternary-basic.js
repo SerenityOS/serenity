@@ -1,10 +1,8 @@
-function assert(x) { if (!x) throw 1; }
-
 try {
     var x = 1;
 
     assert(x === 1 ? true : false);
-    assert(x ? x : 0);
+    assert((x ? x : 0) === x);
     assert(1 < 2 ? (true) : (false));
 
     var o = {};

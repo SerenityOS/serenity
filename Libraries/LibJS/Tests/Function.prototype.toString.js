@@ -1,5 +1,3 @@
-function assert(x) { if (!x) throw 1; }
-
 try {
     assert((function() {}).toString() === "function () {\n  ???\n}");
     assert((function(foo) {}).toString() === "function (foo) {\n  ???\n}");
