@@ -273,13 +273,13 @@ Value BinaryExpression::execute(Interpreter& interpreter) const
         return {};
 
     switch (m_op) {
-    case BinaryOp::Plus:
+    case BinaryOp::Addition:
         return add(lhs_result, rhs_result);
-    case BinaryOp::Minus:
+    case BinaryOp::Subtraction:
         return sub(lhs_result, rhs_result);
-    case BinaryOp::Asterisk:
+    case BinaryOp::Multiplication:
         return mul(lhs_result, rhs_result);
-    case BinaryOp::Slash:
+    case BinaryOp::Division:
         return div(lhs_result, rhs_result);
     case BinaryOp::Modulo:
         return mod(lhs_result, rhs_result);
@@ -406,16 +406,16 @@ void BinaryExpression::dump(int indent) const
 {
     const char* op_string = nullptr;
     switch (m_op) {
-    case BinaryOp::Plus:
+    case BinaryOp::Addition:
         op_string = "+";
         break;
-    case BinaryOp::Minus:
+    case BinaryOp::Subtraction:
         op_string = "-";
         break;
-    case BinaryOp::Asterisk:
+    case BinaryOp::Multiplication:
         op_string = "*";
         break;
-    case BinaryOp::Slash:
+    case BinaryOp::Division:
         op_string = "/";
         break;
     case BinaryOp::Modulo:

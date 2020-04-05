@@ -309,10 +309,10 @@ private:
 };
 
 enum class BinaryOp {
-    Plus,
-    Minus,
-    Asterisk,
-    Slash,
+    Addition,
+    Subtraction,
+    Multiplication,
+    Division,
     Modulo,
     TypedEquals,
     TypedInequals,
