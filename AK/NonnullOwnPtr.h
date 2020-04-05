@@ -62,7 +62,7 @@ public:
     template<typename U>
     RETURN_TYPESTATE(unconsumed)
     NonnullOwnPtr(NonnullOwnPtr<U>&& other)
-        : m_ptr(static_cast<T*>(other.leak_ptr()))
+        : m_ptr(other.leak_ptr())
     {
         ASSERT(m_ptr);
     }
