@@ -27,6 +27,7 @@
 #pragma once
 
 #include <LibGUI/Frame.h>
+#include <LibGfx/FloatPoint.h>
 
 class QSLabel;
 
@@ -35,13 +36,13 @@ class QSWidget final : public GUI::Frame {
 public:
     virtual ~QSWidget() override;
 
-    void set_bitmap(NonnullRefPtr<Gfx::Bitmap>);
     const Gfx::Bitmap* bitmap() const { return m_bitmap.ptr(); }
-
-    void set_path(const String&);
     const String& path() const { return m_path; }
 
+    void load_from_file(const String&);
+
     Function<void(int)> on_scale_change;
+    Function<void(const GUI::DropEvent&)> on_drop;
 
 private:
     QSWidget();
@@ -55,10 +56,13 @@ private:
 
     void relayout();
 
+    String m_path;
     RefPtr<Gfx::Bitmap> m_bitmap;
+
     Gfx::Rect m_bitmap_rect;
     int m_scale { 100 };
-    Gfx::Point m_pan_origin;
-    Gfx::Point m_pan_bitmap_origin;
-    String m_path;
+    Gfx::FloatPoint m_pan_origin;
+
+    Gfx::Point m_click_position;
+    Gfx::FloatPoint m_saved_pan_origin;
 };
