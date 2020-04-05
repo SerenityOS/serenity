@@ -60,9 +60,6 @@ MathObject::~MathObject()
 
 Value MathObject::abs(Interpreter& interpreter)
 {
-    if (!interpreter.argument_count())
-        return js_nan();
-
     auto number = interpreter.argument(0).to_number();
     if (number.is_nan())
         return js_nan();
@@ -81,9 +78,6 @@ Value MathObject::random(Interpreter&)
 
 Value MathObject::sqrt(Interpreter& interpreter)
 {
-    if (!interpreter.argument_count())
-        return js_nan();
-
     auto number = interpreter.argument(0).to_number();
     if (number.is_nan())
         return js_nan();
@@ -92,9 +86,6 @@ Value MathObject::sqrt(Interpreter& interpreter)
 
 Value MathObject::floor(Interpreter& interpreter)
 {
-    if (!interpreter.argument_count())
-        return js_nan();
-
     auto number = interpreter.argument(0).to_number();
     if (number.is_nan())
         return js_nan();
@@ -103,9 +94,6 @@ Value MathObject::floor(Interpreter& interpreter)
 
 Value MathObject::ceil(Interpreter& interpreter)
 {
-    if (!interpreter.argument_count())
-        return js_nan();
-
     auto number = interpreter.argument(0).to_number();
     if (number.is_nan())
         return js_nan();
@@ -114,9 +102,6 @@ Value MathObject::ceil(Interpreter& interpreter)
 
 Value MathObject::round(Interpreter& interpreter)
 {
-    if (!interpreter.argument_count())
-        return js_nan();
-
     auto number = interpreter.argument(0).to_number();
     if (number.is_nan())
         return js_nan();
@@ -158,9 +143,6 @@ Value MathObject::min(Interpreter& interpreter)
 
 Value MathObject::trunc(Interpreter& interpreter)
 {
-    if (!interpreter.argument_count())
-        return js_nan();
-
     auto number = interpreter.argument(0).to_number();
     if (number.is_nan())
         return js_nan();
