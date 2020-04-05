@@ -205,6 +205,14 @@ Value Object::to_primitive(PreferredType preferred_type) const
 
 Value Object::to_string() const
 {
+    auto to_string_property = get("toString");
+    if (to_string_property.has_value()
+        && to_string_property.value().is_object()
+        && to_string_property.value().as_object().is_function()) {
+        auto& to_string_function = static_cast<Function&>(to_string_property.value().as_object());
+        return const_cast<Object*>(this)->interpreter().call(&to_string_function, const_cast<Object*>(this));
+    }
     return js_string(heap(), String::format("[object %s]", class_name()));
 }
+
 }
