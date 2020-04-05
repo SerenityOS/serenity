@@ -41,6 +41,7 @@ MathObject::MathObject()
     put_native_function("ceil", ceil, 1);
     put_native_function("round", round, 1);
     put_native_function("max", max, 2);
+    put_native_function("min", min, 2);
     put_native_function("trunc", trunc, 1);
 
     put("E", Value(M_E));
@@ -137,6 +138,22 @@ Value MathObject::max(Interpreter& interpreter)
         }
         return max;
     }
+}
+
+Value MathObject::min(Interpreter& interpreter)
+{
+    if (!interpreter.argument_count())
+        return js_infinity();
+
+    if (interpreter.argument_count() == 1)
+        return interpreter.argument(0).to_number();
+
+    Value max = interpreter.argument(0).to_number();
+    for (size_t i = 1; i < interpreter.argument_count(); ++i) {
+        Value cur = interpreter.argument(i).to_number();
+        max = Value(cur.as_double() < max.as_double() ? cur : max);
+    }
+    return max;
 }
 
 Value MathObject::trunc(Interpreter& interpreter)
