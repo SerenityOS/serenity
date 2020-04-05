@@ -42,8 +42,10 @@ private:
     static Value random(Interpreter&);
     static Value sqrt(Interpreter&);
     static Value floor(Interpreter&);
+    static Value ceil(Interpreter&);
     static Value round(Interpreter&);
     static Value max(Interpreter&);
+    static Value trunc(Interpreter&);
 };
 
 }
