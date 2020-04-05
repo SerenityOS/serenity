@@ -729,9 +729,16 @@ NonnullRefPtr<TryStatement> Parser::parse_try_statement()
 NonnullRefPtr<DoWhileStatement> Parser::parse_do_while_statement()
 {
     consume(TokenType::Do);
+
     auto body = parse_statement();
+
     consume(TokenType::While);
+    consume(TokenType::ParenOpen);
+
     auto test = parse_expression(0);
+
+    consume(TokenType::ParenClose);
+
     return create_ast_node<DoWhileStatement>(move(test), move(body));
 }
 
