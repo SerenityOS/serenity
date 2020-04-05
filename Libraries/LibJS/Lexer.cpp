@@ -156,6 +156,16 @@ void Lexer::consume()
     m_current_char = m_source[m_position++];
 }
 
+void Lexer::consume_exponent()
+{
+    consume();
+    if (m_current_char == '-' || m_current_char == '+')
+        consume();
+    while (isdigit(m_current_char)) {
+        consume();
+    }
+}
+
 bool Lexer::is_eof() const
 {
     return m_current_char == EOF;
@@ -184,6 +194,11 @@ bool Lexer::is_block_comment_start() const
 bool Lexer::is_block_comment_end() const
 {
     return m_current_char == '*' && m_position < m_source.length() && m_source[m_position] == '/';
+}
+
+bool Lexer::is_numeric_literal_start() const
+{
+    return isdigit(m_current_char) || (m_current_char == '.' && m_position < m_source.length() && isdigit(m_source[m_position]));
 }
 
 void Lexer::syntax_error(const char* msg)
@@ -235,10 +250,59 @@ Token Lexer::next()
         } else {
             token_type = it->value;
         }
-    } else if (isdigit(m_current_char)) {
-        consume();
-        while (m_current_char == '.' || isdigit(m_current_char)) {
+    } else if (is_numeric_literal_start()) {
+        if (m_current_char == '0') {
             consume();
+            if (m_current_char == '.') {
+                // decimal
+                consume();
+                while (isdigit(m_current_char)) {
+                    consume();
+                }
+                if (m_current_char == 'e' || m_current_char == 'E') {
+                    consume_exponent();
+                }
+            } else if (m_current_char == 'e' || m_current_char == 'E') {
+                consume_exponent();
+            } else if (m_current_char == 'o' || m_current_char == 'O') {
+                // octal
+                consume();
+                while (m_current_char >= '0' && m_current_char <= '7') {
+                    consume();
+                }
+            } else if (m_current_char == 'b' || m_current_char == 'B') {
+                // binary
+                consume();
+                while (m_current_char == '0' || m_current_char == '1') {
+                    consume();
+                }
+            } else if (m_current_char == 'x' || m_current_char == 'X') {
+                // hexadecimal
+                consume();
+                while (isxdigit(m_current_char)) {
+                    consume();
+                }
+            } else if (isdigit(m_current_char)) {
+                // octal without 'O' prefix. Forbidden in 'strict mode'
+                // FIXME: We need to make sure this produces a syntax error when in strict mode
+                do {
+                    consume();
+                } while (isdigit(m_current_char));
+            }
+        } else {
+            // 1...9 or period
+            while (isdigit(m_current_char)) {
+                consume();
+            }
+            if (m_current_char == '.') {
+                consume();
+                while (isdigit(m_current_char)) {
+                    consume();
+                }
+            }
+            if (m_current_char == 'e' || m_current_char == 'E') {
+                consume_exponent();
+            }
         }
         token_type = TokenType::NumericLiteral;
     } else if (m_current_char == '"' || m_current_char == '\'') {
@@ -330,5 +394,4 @@ Token Lexer::next()
 
     return m_current_token;
 }
-
 }
