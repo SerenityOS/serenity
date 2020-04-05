@@ -51,5 +51,5 @@ private:
     BoardListModel();
 
     JsonArray m_boards;
-    RefPtr<Core::HttpJob> m_pending_job;
+    RefPtr<Core::NetworkJob> m_pending_job;
 };

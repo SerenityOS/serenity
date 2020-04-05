@@ -71,20 +71,20 @@ public:
     }
     template<typename U>
     RefPtr(const NonnullRefPtr<U>& other)
-        : m_ptr(static_cast<T*>(const_cast<U*>(other.ptr())))
+        : m_ptr(const_cast<U*>(other.ptr()))
     {
         ASSERT(m_ptr);
         m_ptr->ref();
     }
     template<typename U>
     RefPtr(NonnullRefPtr<U>&& other)
-        : m_ptr(static_cast<T*>(&other.leak_ref()))
+        : m_ptr(&other.leak_ref())
     {
         ASSERT(m_ptr);
     }
     template<typename U>
     RefPtr(RefPtr<U>&& other)
-        : m_ptr(static_cast<T*>(other.leak_ref()))
+        : m_ptr(other.leak_ref())
     {
     }
     RefPtr(const RefPtr& other)
@@ -94,7 +94,7 @@ public:
     }
     template<typename U>
     RefPtr(const RefPtr<U>& other)
-        : m_ptr(static_cast<T*>(const_cast<U*>(other.ptr())))
+        : m_ptr(const_cast<U*>(other.ptr()))
     {
         ref_if_not_null(m_ptr);
     }
@@ -282,6 +282,19 @@ struct Traits<RefPtr<T>> : public GenericTraits<RefPtr<T>> {
     static bool equals(const RefPtr<T>& a, const RefPtr<T>& b) { return a.ptr() == b.ptr(); }
 };
 
+template<typename T, typename U>
+inline NonnullRefPtr<T> static_ptr_cast(const NonnullRefPtr<U>& ptr)
+{
+    return NonnullRefPtr<T>(static_cast<const T&>(*ptr));
+}
+
+template<typename T, typename U>
+inline RefPtr<T> static_ptr_cast(const RefPtr<U>& ptr)
+{
+    return RefPtr<T>(static_cast<const T*>(ptr.ptr()));
+}
+
 }
 
 using AK::RefPtr;
+using AK::static_ptr_cast;

@@ -153,39 +153,40 @@ NonnullRefPtr<StyleValue> parse_css_value(const StringView& string)
     return StringStyleValue::create(string);
 }
 
-RefPtr<StyleValue> parse_line_width(const StringView& part)
+RefPtr<LengthStyleValue> parse_line_width(const StringView& part)
 {
     NonnullRefPtr<StyleValue> value = parse_css_value(part);
     if (value->is_length())
-        return value;
+        return static_ptr_cast<LengthStyleValue>(value);
     return nullptr;
 }
 
-RefPtr<StyleValue> parse_color(const StringView& part)
+RefPtr<ColorStyleValue> parse_color(const StringView& part)
 {
     NonnullRefPtr<StyleValue> value = parse_css_value(part);
     if (value->is_color())
-        return value;
+        return static_ptr_cast<ColorStyleValue>(value);
     return nullptr;
 }
 
-RefPtr<StyleValue> parse_line_style(const StringView& part)
+RefPtr<StringStyleValue> parse_line_style(const StringView& part)
 {
-    NonnullRefPtr<StyleValue> value = parse_css_value(part);
-    if (value->is_string()) {
-        if (value->to_string() == "dotted")
-            return value;
-        if (value->to_string() == "dashed")
-            return value;
-        if (value->to_string() == "solid")
-            return value;
-        if (value->to_string() == "double")
-            return value;
-        if (value->to_string() == "groove")
-            return value;
-        if (value->to_string() == "ridge")
-            return value;
-    }
+    NonnullRefPtr<StyleValue> parsed_value = parse_css_value(part);
+    if (!parsed_value->is_string())
+        return nullptr;
+    auto value = static_ptr_cast<StringStyleValue>(parsed_value);
+    if (value->to_string() == "dotted")
+        return value;
+    if (value->to_string() == "dashed")
+        return value;
+    if (value->to_string() == "solid")
+        return value;
+    if (value->to_string() == "double")
+        return value;
+    if (value->to_string() == "groove")
+        return value;
+    if (value->to_string() == "ridge")
+        return value;
     return nullptr;
 }
 

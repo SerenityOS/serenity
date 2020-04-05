@@ -307,8 +307,8 @@ KResult TmpFSInode::add_child(InodeIdentifier child_id, const StringView& name, 
 
     String owned_name = name;
     FS::DirectoryEntry entry = { owned_name.characters(), owned_name.length(), child_id, 0 };
-    RefPtr<Inode> child_tmp = fs().get_inode(child_id);
-    NonnullRefPtr<TmpFSInode> child = static_cast<NonnullRefPtr<TmpFSInode>>(child_tmp.release_nonnull());
+    auto child_tmp = fs().get_inode(child_id);
+    auto child = static_ptr_cast<TmpFSInode>(child_tmp.release_nonnull());
 
     m_children.set(owned_name, { entry, move(child) });
     set_metadata_dirty(true);
