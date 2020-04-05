@@ -331,16 +331,33 @@ void repl(JS::Interpreter& interpreter)
     }
 }
 
+JS::Value assert_impl(JS::Interpreter& interpreter)
+{
+    if (!interpreter.argument_count())
+        return interpreter.throw_exception<JS::Error>("TypeError", "No arguments specified");
+
+    auto assertion_value = interpreter.argument(0);
+    if (!assertion_value.is_boolean())
+        return interpreter.throw_exception<JS::Error>("TypeError", "The first argument is not a boolean");
+
+    if (!assertion_value.to_boolean())
+        return interpreter.throw_exception<JS::Error>("AssertionError", "The assertion failed!");
+
+    return assertion_value;
+}
+
 int main(int argc, char** argv)
 {
     bool gc_on_every_allocation = false;
     bool print_last_result = false;
+    bool test_mode = false;
     const char* script_path = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(dump_ast, "Dump the AST", "dump-ast", 'A');
     args_parser.add_option(print_last_result, "Print last result", "print-last-result", 'l');
     args_parser.add_option(gc_on_every_allocation, "GC on every allocation", "gc-on-every-allocation", 'g');
+    args_parser.add_option(test_mode, "Run the interpretter with added functionality for the test harness", "test-mode", 't');
     args_parser.add_positional_argument(script_path, "Path to script file", "script", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
@@ -348,6 +365,9 @@ int main(int argc, char** argv)
         auto interpreter = JS::Interpreter::create<ReplObject>();
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
         interpreter->global_object().put("global", &interpreter->global_object());
+        if (test_mode) {
+            interpreter->global_object().put_native_function("assert", assert_impl);
+        }
 
         editor = make<Line::Editor>();
         editor->initialize();
@@ -356,6 +376,9 @@ int main(int argc, char** argv)
         auto interpreter = JS::Interpreter::create<JS::GlobalObject>();
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
         interpreter->global_object().put("global", &interpreter->global_object());
+        if (test_mode) {
+            interpreter->global_object().put_native_function("assert", assert_impl);
+        }
 
         auto file = Core::File::construct(script_path);
         if (!file->open(Core::IODevice::ReadOnly)) {
