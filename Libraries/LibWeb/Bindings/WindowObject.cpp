@@ -104,14 +104,19 @@ JS::Value WindowObject::set_timeout(JS::Interpreter& interpreter)
     if (!impl)
         return {};
     auto& arguments = interpreter.call_frame().arguments;
-    if (arguments.size() < 2)
+    if (arguments.size() < 1)
         return {};
     auto* callback_object = arguments[0].to_object(interpreter.heap());
     if (!callback_object)
         return {};
     if (!callback_object->is_function())
         return interpreter.throw_exception<JS::Error>("TypeError", "Not a function");
-    impl->set_timeout(*static_cast<JS::Function*>(callback_object), arguments[1].to_i32());
+
+    i32 interval = 0;
+    if (interpreter.argument_count() >= 2)
+        interval = arguments[1].to_i32();
+
+    impl->set_timeout(*static_cast<JS::Function*>(callback_object), interval);
     return {};
 }
 
