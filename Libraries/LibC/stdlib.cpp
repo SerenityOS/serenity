@@ -335,7 +335,9 @@ double strtod(const char* str, char** endptr)
         }
 
         if (str[i] == 'e' || str[i] == 'E') {
-            if (str[i + 1] == '-' || str[i + 1] == '+')
+            if (str[i + 1] == '-')
+                exp_val = -atoi(str + i + 2);
+            else if (str[i + 1] == '+')
                 exp_val = atoi(str + i + 2);
             else
                 exp_val = atoi(str + i + 1);
