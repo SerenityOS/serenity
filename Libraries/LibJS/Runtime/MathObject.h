@@ -45,6 +45,7 @@ private:
     static Value ceil(Interpreter&);
     static Value round(Interpreter&);
     static Value max(Interpreter&);
+    static Value min(Interpreter&);
     static Value trunc(Interpreter&);
 };
 
