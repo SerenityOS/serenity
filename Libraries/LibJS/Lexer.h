@@ -37,6 +37,12 @@ namespace JS {
 class Lexer {
 public:
     explicit Lexer(StringView source);
+    Lexer(StringView source, bool log_errors)
+        : Lexer(source)
+    {
+        m_log_errors = log_errors;
+    }
+
     Token next();
     bool has_errors() const { return m_has_errors; }
 
@@ -60,6 +66,7 @@ private:
     bool m_has_errors = false;
     size_t m_line_number = 1;
     size_t m_line_column = 1;
+    bool m_log_errors = true;
 
     static HashMap<String, TokenType> s_keywords;
     static HashMap<String, TokenType> s_three_char_tokens;
