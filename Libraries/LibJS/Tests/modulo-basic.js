@@ -10,7 +10,7 @@ try {
     assert(12 % 5 === 2);
     assert(-1 % 2 === -1);
     assert(1 % -2 === 1);
-    assert(isNaN(NaN % 2);
+    assert(isNaN(NaN % 2));
     assert(1 % 2 === 1);
     assert(2 % 3 === 2);
     assert(-4 % 2 === -0);
