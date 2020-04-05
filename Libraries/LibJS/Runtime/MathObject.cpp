@@ -115,21 +115,16 @@ Value MathObject::max(Interpreter& interpreter)
     if (!interpreter.argument_count()) {
         // FIXME: I think this should return *negative* infinity.
         return js_infinity();
-    }
-
-    if (interpreter.argument_count() == 1)
+    } else if (interpreter.argument_count() == 1) {
         return interpreter.argument(0).to_number();
-
-    if (interpreter.argument_count() == 2) {
-        auto a = interpreter.argument(0).to_number();
-        auto b = interpreter.argument(1).to_number();
-        return Value(a.as_double() > b.as_double() ? a : b);
+    } else {
+        Value max = interpreter.argument(0).to_number();
+        for (size_t i = 1; i < interpreter.argument_count(); ++i) {
+            Value cur = interpreter.argument(i).to_number();
+            max = Value(cur.as_double() > max.as_double() ? cur : max);
+        }
+        return max;
     }
-
-    // FIXME: Support Math.max() with more arguments.
-    ASSERT_NOT_REACHED();
-    return {};
 }
-
 
 }
