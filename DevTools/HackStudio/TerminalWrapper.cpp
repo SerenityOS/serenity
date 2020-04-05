@@ -167,13 +167,17 @@ void TerminalWrapper::kill_running_command()
     (void)killpg(m_pid, SIGTERM);
 }
 
-TerminalWrapper::TerminalWrapper()
+TerminalWrapper::TerminalWrapper(bool user_spawned)
+    : m_user_spawned(user_spawned)
 {
     set_layout<GUI::VerticalBoxLayout>();
 
     RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("Terminal");
     m_terminal_widget = add<TerminalWidget>(-1, false, config);
     m_process_state_widget = add<ProcessStateWidget>();
+
+    if (user_spawned)
+        run_command("Shell");
 }
 
 TerminalWrapper::~TerminalWrapper()
