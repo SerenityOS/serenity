@@ -45,12 +45,12 @@ public:
 
     template<typename U>
     OwnPtr(NonnullOwnPtr<U>&& other)
-        : m_ptr(static_cast<T*>(other.leak_ptr()))
+        : m_ptr(other.leak_ptr())
     {
     }
     template<typename U>
     OwnPtr(OwnPtr<U>&& other)
-        : m_ptr(static_cast<T*>(other.leak_ptr()))
+        : m_ptr(other.leak_ptr())
     {
     }
     OwnPtr(std::nullptr_t) {};
@@ -146,6 +146,13 @@ public:
     {
         ASSERT(m_ptr);
         return NonnullOwnPtr<T>(NonnullOwnPtr<T>::Adopt, *leak_ptr());
+    }
+
+    template<typename U>
+    NonnullOwnPtr<U> release_nonnull()
+    {
+        ASSERT(m_ptr);
+        return NonnullOwnPtr<U>(NonnullOwnPtr<U>::Adopt, static_cast<U&>(*leak_ptr()));
     }
 
     T* ptr() { return m_ptr; }

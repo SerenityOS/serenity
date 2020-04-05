@@ -93,7 +93,7 @@ public:
             if (m_unprocessed_messages[i]->message_id() == MessageType::static_message_id()) {
                 auto message = move(m_unprocessed_messages[i]);
                 m_unprocessed_messages.remove(i);
-                return message;
+                return message.template release_nonnull<MessageType>();
             }
         }
         for (;;) {
@@ -112,7 +112,7 @@ public:
                 if (m_unprocessed_messages[i]->message_id() == MessageType::static_message_id()) {
                     auto message = move(m_unprocessed_messages[i]);
                     m_unprocessed_messages.remove(i);
-                    return message;
+                    return message.template release_nonnull<MessageType>();
                 }
             }
         }
