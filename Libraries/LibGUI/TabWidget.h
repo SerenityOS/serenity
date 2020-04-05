@@ -53,6 +53,7 @@ public:
     int container_padding() const { return 2; }
 
     void add_widget(const StringView&, Widget&);
+    void remove_widget(Widget&);
 
     template<class T, class... Args>
     T& add_tab(const StringView& title, Args&&... args)
@@ -61,6 +62,10 @@ public:
         add_widget(title, *t);
         return *t;
     }
+
+    void remove_tab(Widget& tab) { remove_widget(tab); }
+
+    Function<void(const Widget&)> on_change;
 
 protected:
     TabWidget();
