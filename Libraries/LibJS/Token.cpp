@@ -27,6 +27,7 @@
 #include "Token.h"
 #include <AK/Assertions.h>
 #include <AK/StringBuilder.h>
+#include <ctype.h>
 
 namespace JS {
 
@@ -52,7 +53,23 @@ const char* Token::name() const
 double Token::double_value() const
 {
     ASSERT(type() == TokenType::NumericLiteral);
-    return strtod(String(m_value).characters(), nullptr);
+    String value_string(m_value);
+    if (value_string[0] == '0' && value_string.length() >= 2) {
+        if (value_string[1] == 'x' || value_string[1] == 'X') {
+            // hexadecimal
+            return static_cast<double>(strtoul(value_string.characters() + 2, nullptr, 16));
+        } else if (value_string[1] == 'o' || value_string[1] == 'O') {
+            // octal
+            return static_cast<double>(strtoul(value_string.characters() + 2, nullptr, 8));
+        } else if (value_string[1] == 'b' || value_string[1] == 'B') {
+            // binary
+            return static_cast<double>(strtoul(value_string.characters() + 2, nullptr, 2));
+        } else if (isdigit(value_string[1])) {
+            // also octal, but syntax error in strict mode
+            return static_cast<double>(strtoul(value_string.characters() + 1, nullptr, 8));
+        }
+    }
+    return strtod(value_string.characters(), nullptr);
 }
 
 String Token::string_value() const
