@@ -61,6 +61,7 @@
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
+#include <LibVT/TerminalWidget.h>
 #include <stdio.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -435,6 +436,8 @@ int main(int argc, char** argv)
     s_action_tab_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     s_action_tab_widget->set_preferred_size(0, 24);
 
+    s_action_tab_widget->on_change = [&](auto&) { update_actions(); };
+
     auto reveal_action_tab = [&](auto& widget) {
         if (s_action_tab_widget->preferred_size().height() < 200)
             s_action_tab_widget->set_preferred_size(0, 200);
@@ -449,13 +452,38 @@ int main(int argc, char** argv)
         hide_action_tabs();
     });
 
-    auto add_editor_action = GUI::Action::create("Add new editor", { Mod_Ctrl | Mod_Alt, Key_E }, [&](auto&) {
-        add_new_editor(*g_text_inner_splitter);
+    auto add_editor_action = GUI::Action::create("Add new editor", { Mod_Ctrl | Mod_Alt, Key_E },
+        Gfx::Bitmap::load_from_file("/res/icons/TextEditor16.png"),
+        [&](auto&) {
+            add_new_editor(*g_text_inner_splitter);
+            update_actions();
+        });
+
+    auto add_terminal_action = GUI::Action::create("Add new Terminal", { Mod_Ctrl | Mod_Alt, Key_T },
+        Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"),
+        [&](auto&) {
+            auto& terminal = s_action_tab_widget->add_tab<TerminalWrapper>("Terminal");
+            reveal_action_tab(terminal);
+            update_actions();
+            terminal.terminal()->set_focus(true);
+        });
+
+    auto remove_current_terminal_action = GUI::Action::create("Remove current Terminal", { Mod_Alt | Mod_Shift, Key_T }, [&](auto&) {
+        auto widget = s_action_tab_widget->active_widget();
+        if (!widget)
+            return;
+        if (strcmp(widget->class_name(), "TerminalWrapper") != 0)
+            return;
+        auto terminal = reinterpret_cast<TerminalWrapper*>(widget);
+        if (!terminal->user_spawned())
+            return;
+
+        s_action_tab_widget->remove_tab(*terminal);
         update_actions();
     });
 
     auto& find_in_files_widget = s_action_tab_widget->add_tab<FindInFilesWidget>("Find in files");
-    auto& terminal_wrapper = s_action_tab_widget->add_tab<TerminalWrapper>("Console");
+    auto& terminal_wrapper = s_action_tab_widget->add_tab<TerminalWrapper>("Build", false);
 
     auto& locator = widget.add<Locator>();
 
@@ -517,6 +545,8 @@ int main(int argc, char** argv)
     view_menu.add_separator();
     view_menu.add_action(add_editor_action);
     view_menu.add_action(remove_current_editor_action);
+    view_menu.add_action(add_terminal_action);
+    view_menu.add_action(remove_current_terminal_action);
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {
@@ -530,7 +560,19 @@ int main(int argc, char** argv)
     g_window->show();
 
     update_actions = [&]() {
+        auto is_remove_terminal_enabled = []() {
+            auto widget = s_action_tab_widget->active_widget();
+            if (!widget)
+                return false;
+            if (strcmp(widget->class_name(), "TerminalWrapper") != 0)
+                return false;
+            if (!reinterpret_cast<TerminalWrapper*>(widget)->user_spawned())
+                return false;
+            return true;
+        };
+
         remove_current_editor_action->set_enabled(g_all_editor_wrappers.size() > 1);
+        remove_current_terminal_action->set_enabled(is_remove_terminal_enabled());
     };
 
     g_open_file = open_file;

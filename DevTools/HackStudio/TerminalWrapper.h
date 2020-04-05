@@ -39,12 +39,16 @@ public:
     void run_command(const String&);
     void kill_running_command();
 
+    bool user_spawned() const { return m_user_spawned; }
+    TerminalWidget* terminal() { return m_terminal_widget; }
+
     Function<void()> on_command_exit;
 
 private:
-    explicit TerminalWrapper();
+    explicit TerminalWrapper(bool user_spawned = true);
 
     RefPtr<ProcessStateWidget> m_process_state_widget;
     RefPtr<TerminalWidget> m_terminal_widget;
     pid_t m_pid { -1 };
+    bool m_user_spawned { true };
 };
