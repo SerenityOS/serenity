@@ -186,6 +186,18 @@ Value bitwise_and(Value lhs, Value rhs)
 
 Value bitwise_or(Value lhs, Value rhs)
 {
+    bool lhs_invalid = lhs.is_undefined() || lhs.is_null() || lhs.is_nan() || lhs.is_infinity();
+    bool rhs_invalid = rhs.is_undefined() || rhs.is_null() || rhs.is_nan() || rhs.is_infinity();
+
+    if (lhs_invalid && rhs_invalid)
+        return Value(0);
+
+    if (lhs_invalid || rhs_invalid)
+        return lhs_invalid ? rhs.to_number() : lhs.to_number();
+
+    if (!rhs.is_number() && !lhs.is_number())
+        return Value(0);
+
     return Value((i32)lhs.to_number().as_double() | (i32)rhs.to_number().as_double());
 }
 
