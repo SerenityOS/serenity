@@ -49,6 +49,9 @@ void QSWidget::set_bitmap(NonnullRefPtr<Gfx::Bitmap> bitmap)
 
 void QSWidget::relayout()
 {
+    if (m_bitmap.is_null())
+        return;
+
     Gfx::Size new_size;
     float scale_factor = (float)m_scale / 100.0f;
     new_size.set_width(m_bitmap->width() * scale_factor);
@@ -65,6 +68,9 @@ void QSWidget::resize_event(GUI::ResizeEvent& event)
 
 void QSWidget::paint_event(GUI::PaintEvent& event)
 {
+    if (m_bitmap.is_null())
+        return;
+
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
