@@ -1,5 +1,3 @@
-function assert(x) { if (!x) throw 1; }
-
 try {
     assert(2 ** 0 === 1);
     assert(2 ** 1 === 2);
