@@ -137,11 +137,11 @@ class Declaration : public Statement {
 class FunctionNode {
 public:
     const FlyString& name() const { return m_name; }
-    const ScopeNode& body() const { return *m_body; }
+    const Statement& body() const { return *m_body; }
     const Vector<FlyString>& parameters() const { return m_parameters; };
 
 protected:
-    FunctionNode(const FlyString& name, NonnullRefPtr<ScopeNode> body, Vector<FlyString> parameters = {})
+    FunctionNode(const FlyString& name, NonnullRefPtr<Statement> body, Vector<FlyString> parameters = {})
         : m_name(name)
         , m_body(move(body))
         , m_parameters(move(parameters))
@@ -152,7 +152,7 @@ protected:
 
 private:
     FlyString m_name;
-    NonnullRefPtr<ScopeNode> m_body;
+    NonnullRefPtr<Statement> m_body;
     const Vector<FlyString> m_parameters;
 };
 
@@ -162,7 +162,7 @@ class FunctionDeclaration final
 public:
     static bool must_have_name() { return true; }
 
-    FunctionDeclaration(String name, NonnullRefPtr<ScopeNode> body, Vector<FlyString> parameters = {})
+    FunctionDeclaration(String name, NonnullRefPtr<Statement> body, Vector<FlyString> parameters = {})
         : FunctionNode(move(name), move(body), move(parameters))
     {
     }
@@ -179,7 +179,7 @@ class FunctionExpression final : public Expression
 public:
     static bool must_have_name() { return false; }
 
-    FunctionExpression(const FlyString& name, NonnullRefPtr<ScopeNode> body, Vector<FlyString> parameters = {})
+    FunctionExpression(const FlyString& name, NonnullRefPtr<Statement> body, Vector<FlyString> parameters = {})
         : FunctionNode(name, move(body), move(parameters))
     {
     }
@@ -241,14 +241,14 @@ private:
 
 class WhileStatement : public Statement {
 public:
-    WhileStatement(NonnullRefPtr<Expression> test, NonnullRefPtr<ScopeNode> body)
+    WhileStatement(NonnullRefPtr<Expression> test, NonnullRefPtr<Statement> body)
         : m_test(move(test))
         , m_body(move(body))
     {
     }
 
     const Expression& test() const { return *m_test; }
-    const ScopeNode& body() const { return *m_body; }
+    const Statement& body() const { return *m_body; }
 
     virtual Value execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
@@ -257,19 +257,19 @@ private:
     virtual const char* class_name() const override { return "WhileStatement"; }
 
     NonnullRefPtr<Expression> m_test;
-    NonnullRefPtr<ScopeNode> m_body;
+    NonnullRefPtr<Statement> m_body;
 };
 
 class DoWhileStatement : public Statement {
 public:
-    DoWhileStatement(NonnullRefPtr<Expression> test, NonnullRefPtr<ScopeNode> body)
+    DoWhileStatement(NonnullRefPtr<Expression> test, NonnullRefPtr<Statement> body)
         : m_test(move(test))
         , m_body(move(body))
     {
     }
 
     const Expression& test() const { return *m_test; }
-    const ScopeNode& body() const { return *m_body; }
+    const Statement& body() const { return *m_body; }
 
     virtual Value execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
@@ -278,12 +278,12 @@ private:
     virtual const char* class_name() const override { return "DoWhileStatement"; }
 
     NonnullRefPtr<Expression> m_test;
-    NonnullRefPtr<ScopeNode> m_body;
+    NonnullRefPtr<Statement> m_body;
 };
 
 class ForStatement : public Statement {
 public:
-    ForStatement(RefPtr<ASTNode> init, RefPtr<Expression> test, RefPtr<Expression> update, NonnullRefPtr<ScopeNode> body)
+    ForStatement(RefPtr<ASTNode> init, RefPtr<Expression> test, RefPtr<Expression> update, NonnullRefPtr<Statement> body)
         : m_init(move(init))
         , m_test(move(test))
         , m_update(move(update))
@@ -294,7 +294,7 @@ public:
     const ASTNode* init() const { return m_init; }
     const Expression* test() const { return m_test; }
     const Expression* update() const { return m_update; }
-    const ScopeNode& body() const { return *m_body; }
+    const Statement& body() const { return *m_body; }
 
     virtual Value execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
@@ -305,7 +305,7 @@ private:
     RefPtr<ASTNode> m_init;
     RefPtr<Expression> m_test;
     RefPtr<Expression> m_update;
-    NonnullRefPtr<ScopeNode> m_body;
+    NonnullRefPtr<Statement> m_body;
 };
 
 enum class BinaryOp {
@@ -569,7 +569,7 @@ private:
     virtual const char* class_name() const override { return "UpdateExpression"; }
 
     UpdateOp m_op;
-    NonnullRefPtr<Identifier> m_argument;
+    NonnullRefPtr<Expression> m_argument;
     bool m_prefixed;
 };
 

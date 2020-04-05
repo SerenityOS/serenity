@@ -33,7 +33,7 @@
 
 namespace JS {
 
-ScriptFunction::ScriptFunction(const ScopeNode& body, Vector<FlyString> parameters)
+ScriptFunction::ScriptFunction(const Statement& body, Vector<FlyString> parameters)
     : m_body(body)
     , m_parameters(move(parameters))
 {

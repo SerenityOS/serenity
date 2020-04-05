@@ -32,10 +32,10 @@ namespace JS {
 
 class ScriptFunction final : public Function {
 public:
-    ScriptFunction(const ScopeNode& body, Vector<FlyString> parameters = {});
+    ScriptFunction(const Statement& body, Vector<FlyString> parameters = {});
     virtual ~ScriptFunction();
 
-    const ScopeNode& body() const { return m_body; }
+    const Statement& body() const { return m_body; }
     const Vector<FlyString>& parameters() const { return m_parameters; };
 
     virtual Value call(Interpreter&) override;
@@ -48,7 +48,7 @@ private:
     static Value length_getter(Interpreter&);
     static void length_setter(Interpreter&, Value);
 
-    NonnullRefPtr<ScopeNode> m_body;
+    NonnullRefPtr<Statement> m_body;
     const Vector<FlyString> m_parameters;
 };
 
