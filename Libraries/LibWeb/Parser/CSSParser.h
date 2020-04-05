@@ -36,8 +36,8 @@ RefPtr<StyleDeclaration> parse_css_declaration(const StringView&);
 NonnullRefPtr<StyleValue> parse_css_value(const StringView&);
 Optional<Selector> parse_selector(const StringView&);
 
-RefPtr<StyleValue> parse_line_width(const StringView&);
-RefPtr<StyleValue> parse_color(const StringView&);
-RefPtr<StyleValue> parse_line_style(const StringView&);
+RefPtr<LengthStyleValue> parse_line_width(const StringView&);
+RefPtr<ColorStyleValue> parse_color(const StringView&);
+RefPtr<StringStyleValue> parse_line_style(const StringView&);
 
 }
