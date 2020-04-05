@@ -41,6 +41,7 @@ private:
     static Value push(Interpreter&);
     static Value shift(Interpreter&);
     static Value pop(Interpreter&);
+    static Value to_string(Interpreter&);
 };
 
 }
