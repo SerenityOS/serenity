@@ -31,11 +31,11 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Palette.h>
 
 QSWidget::QSWidget()
 {
-    set_fill_with_background_color(true);
-    set_background_color(Color::Black);
+    set_fill_with_background_color(false);
 }
 
 QSWidget::~QSWidget()
@@ -74,6 +74,7 @@ void QSWidget::paint_event(GUI::PaintEvent& event)
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
+    painter.fill_rect_with_checkerboard(rect(), { 8, 8 }, palette().base().darkened(0.9), palette().base());
     painter.draw_scaled_bitmap(m_bitmap_rect, *m_bitmap, m_bitmap->rect());
 }
 
