@@ -42,12 +42,14 @@ public:
 
 private:
     void consume();
+    void consume_exponent();
     bool is_eof() const;
     bool is_identifier_start() const;
     bool is_identifier_middle() const;
     bool is_line_comment_start() const;
     bool is_block_comment_start() const;
     bool is_block_comment_end() const;
+    bool is_numeric_literal_start() const;
 
     void syntax_error(const char*);
 
