@@ -114,7 +114,7 @@ void IRCAppWindow::setup_actions()
             m_client->handle_join_action(input_box->text_value());
     });
 
-    m_list_channels_action = GUI::Action::create("List channels", [&](auto&) {
+    m_list_channels_action = GUI::Action::create("List channels", Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-list.png"), [&](auto&) {
         m_client->handle_list_channels_action();
     });
 
@@ -148,7 +148,7 @@ void IRCAppWindow::setup_actions()
             m_client->handle_change_nick_action(input_box->text_value());
     });
 
-    m_change_topic_action = GUI::Action::create("Change topic", [this](auto&) {
+    m_change_topic_action = GUI::Action::create("Change topic", Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-topic.png"), [this](auto&) {
         auto* window = m_client->current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
             return;
@@ -158,7 +158,7 @@ void IRCAppWindow::setup_actions()
             m_client->handle_change_topic_action(window->channel().name(), input_box->text_value());
     });
 
-    m_invite_user_action = GUI::Action::create("Invite user", [this](auto&) {
+    m_invite_user_action = GUI::Action::create("Invite user", Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-invite.png"), [this](auto&) {
         auto* window = m_client->current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
             return;
