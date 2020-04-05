@@ -4,6 +4,9 @@ if [ "`uname`" = "SerenityOS" ]; then
     js_program=/bin/js
 else
     [ -z "$js_program" ] && js_program="$SERENITY_ROOT/Meta/Lagom/build/js"
+
+    # Enable back traces if sanitizers are enabled
+    export UBSAN_OPTIONS=print_stacktrace=1
 fi
 
 pass_count=0
