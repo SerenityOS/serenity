@@ -64,6 +64,7 @@ private:
     RefPtr<GUI::Action> m_change_nick_action;
     RefPtr<GUI::Action> m_change_topic_action;
     RefPtr<GUI::Action> m_invite_user_action;
+    RefPtr<GUI::Action> m_banlist_action;
     RefPtr<GUI::Action> m_voice_user_action;
     RefPtr<GUI::Action> m_devoice_user_action;
     RefPtr<GUI::Action> m_op_user_action;

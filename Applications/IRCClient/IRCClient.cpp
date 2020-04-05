@@ -48,6 +48,7 @@ enum IRCNumeric {
     RPL_WHOISUSER = 311,
     RPL_WHOISSERVER = 312,
     RPL_WHOISOPERATOR = 313,
+    RPL_ENDOFWHO = 315,
     RPL_WHOISIDLE = 317,
     RPL_ENDOFWHOIS = 318,
     RPL_WHOISCHANNELS = 319,
@@ -55,7 +56,13 @@ enum IRCNumeric {
     RPL_TOPICWHOTIME = 333,
     RPL_NAMREPLY = 353,
     RPL_ENDOFNAMES = 366,
-    RPL_ERR_UNKNOWNCOMMAND = 421,
+    RPL_BANLIST = 367,
+    RPL_ENDOFBANLIST = 368,
+    RPL_ENDOFWHOWAS = 369,
+    RPL_ENDOFMOTD = 376,
+    ERR_NOSUCHNICK = 401,
+    ERR_UNKNOWNCOMMAND = 421,
+    ERR_NICKNAMEINUSE = 433,
 };
 
 IRCClient::IRCClient()
@@ -261,8 +268,14 @@ void IRCClient::handle(const Message& msg)
         switch (numeric) {
         case RPL_WHOISCHANNELS:
             return handle_rpl_whoischannels(msg);
+        case RPL_ENDOFWHO:
+            return handle_rpl_endofwho(msg);
         case RPL_ENDOFWHOIS:
             return handle_rpl_endofwhois(msg);
+        case RPL_ENDOFWHOWAS:
+            return handle_rpl_endofwhowas(msg);
+        case RPL_ENDOFMOTD:
+            return handle_rpl_endofmotd(msg);
         case RPL_WHOISOPERATOR:
             return handle_rpl_whoisoperator(msg);
         case RPL_WHOISSERVER:
@@ -279,8 +292,16 @@ void IRCClient::handle(const Message& msg)
             return handle_rpl_namreply(msg);
         case RPL_ENDOFNAMES:
             return handle_rpl_endofnames(msg);
-	case RPL_ERR_UNKNOWNCOMMAND:
-            return handle_rpl_unknowncommand(msg);
+	case RPL_BANLIST:
+            return handle_rpl_banlist(msg);
+	case RPL_ENDOFBANLIST:
+            return handle_rpl_endofbanlist(msg);
+	case ERR_NOSUCHNICK:
+            return handle_err_nosuchnick(msg);
+	case ERR_UNKNOWNCOMMAND:
+            return handle_err_unknowncommand(msg);
+	case ERR_NICKNAMEINUSE:
+            return handle_err_nicknameinuse(msg);
         }
     }
 
@@ -326,6 +347,11 @@ void IRCClient::send_topic(const String& channel_name, const String& text)
 void IRCClient::send_invite(const String& channel_name, const String& nick)
 {
     send(String::format("INVITE %s %s\r\n", nick.characters(), channel_name.characters()));
+}
+
+void IRCClient::send_banlist(const String& channel_name)
+{
+    send(String::format("MODE %s +b\r\n", channel_name.characters()));
 }
 
 void IRCClient::send_voice_user(const String& channel_name, const String& nick)
@@ -630,11 +656,43 @@ void IRCClient::handle_rpl_namreply(const Message& msg)
 
 void IRCClient::handle_rpl_endofnames(const Message&)
 {
+    add_server_message("// End of NAMES");
+}
+
+void IRCClient::handle_rpl_banlist(const Message& msg)
+{
+    if (msg.arguments.size() < 5)
+        return;
+    auto& channel = msg.arguments[1];
+    auto& mask = msg.arguments[2];
+    auto& user = msg.arguments[3];
+    auto& datestamp = msg.arguments[4];
+    add_server_message(String::format("* %s: %s on %s by %s", channel.characters(), mask.characters(), datestamp.characters(), user.characters()));
+}
+
+void IRCClient::handle_rpl_endofbanlist(const Message&)
+{
+    add_server_message("// End of BANLIST");
+}
+
+void IRCClient::handle_rpl_endofwho(const Message&)
+{
+    add_server_message("// End of WHO");
 }
 
 void IRCClient::handle_rpl_endofwhois(const Message&)
 {
     add_server_message("// End of WHOIS");
+}
+
+void IRCClient::handle_rpl_endofwhowas(const Message&)
+{
+    add_server_message("// End of WHOWAS");
+}
+
+void IRCClient::handle_rpl_endofmotd(const Message&)
+{
+    add_server_message("// End of MOTD");
 }
 
 void IRCClient::handle_rpl_whoisoperator(const Message& msg)
@@ -703,12 +761,29 @@ void IRCClient::handle_rpl_topicwhotime(const Message& msg)
     ensure_channel(channel_name).add_message(String::format("*** (set by %s at %s)", nick.characters(), setat.characters()), Color::Blue);
 }
 
-void IRCClient::handle_rpl_unknowncommand(const Message& msg)
+void IRCClient::handle_err_nosuchnick(const Message& msg)
+{
+    if (msg.arguments.size() < 3)
+        return;
+    auto& nick = msg.arguments[1];
+    auto& message = msg.arguments[2];
+    add_server_message(String::format("* %s :%s", nick.characters(), message.characters()));
+}
+
+void IRCClient::handle_err_unknowncommand(const Message& msg)
 {
     if (msg.arguments.size() < 2)
         return;
     auto& cmd = msg.arguments[1];
     add_server_message(String::format("* Unknown command: %s", cmd.characters()));
+}
+
+void IRCClient::handle_err_nicknameinuse(const Message& msg)
+{
+    if (msg.arguments.size() < 2)
+        return;
+    auto& nick = msg.arguments[1];
+    add_server_message(String::format("* %s :Nickname in use", nick.characters()));
 }
 
 void IRCClient::register_subwindow(IRCWindow& subwindow)
@@ -784,6 +859,19 @@ void IRCClient::handle_user_command(const String& input)
             auto channel = window->channel().name();
             part_channel(channel);
             join_channel(channel);
+        }
+        return;
+    }
+    if (command == "/BANLIST") {
+        if (parts.size() >= 2) {
+            auto channel = parts[1];
+            send_banlist(channel);
+	} else {
+            auto* window = current_window();
+            if (!window || window->type() != IRCWindow::Type::Channel)
+                return;
+            auto channel = window->channel().name();
+            send_banlist(channel);
         }
         return;
     }
@@ -893,6 +981,11 @@ void IRCClient::handle_change_topic_action(const String& channel, const String& 
 void IRCClient::handle_invite_user_action(const String& channel, const String& nick)
 {
     send_invite(channel, nick);
+}
+
+void IRCClient::handle_banlist_action(const String& channel)
+{
+    send_banlist(channel);
 }
 
 void IRCClient::handle_voice_user_action(const String& channel, const String& nick)

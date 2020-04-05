@@ -110,6 +110,7 @@ public:
     void handle_change_nick_action(const String& nick);
     void handle_change_topic_action(const String& channel_name, const String&);
     void handle_invite_user_action(const String& channel_name, const String& nick);
+    void handle_banlist_action(const String& channel_name);
     void handle_voice_user_action(const String& channel_name, const String& nick);
     void handle_devoice_user_action(const String& channel_name, const String& nick);
     void handle_op_user_action(const String& channel_name, const String& nick);
@@ -145,6 +146,7 @@ private:
     void send_notice(const String& target, const String&);
     void send_topic(const String& channel_name, const String&);
     void send_invite(const String& channel_name, const String& nick);
+    void send_banlist(const String& channel_name);
     void send_voice_user(const String& channel_name, const String& nick);
     void send_devoice_user(const String& channel_name, const String& nick);
     void send_op_user(const String& channel_name, const String& nick);
@@ -163,12 +165,19 @@ private:
     void handle_rpl_whoisserver(const Message&);
     void handle_rpl_whoisoperator(const Message&);
     void handle_rpl_whoisidle(const Message&);
+    void handle_rpl_endofwho(const Message&);
     void handle_rpl_endofwhois(const Message&);
+    void handle_rpl_endofwhowas(const Message&);
+    void handle_rpl_endofmotd(const Message&);
     void handle_rpl_whoischannels(const Message&);
     void handle_rpl_topicwhotime(const Message&);
     void handle_rpl_endofnames(const Message&);
+    void handle_rpl_endofbanlist(const Message&);
     void handle_rpl_namreply(const Message&);
-    void handle_rpl_unknowncommand(const Message&);
+    void handle_rpl_banlist(const Message&);
+    void handle_err_nosuchnick(const Message&);
+    void handle_err_unknowncommand(const Message&);
+    void handle_err_nicknameinuse(const Message&);
     void handle_privmsg_or_notice(const Message&, PrivmsgOrNotice);
     void handle_nick(const Message&);
     void handle(const Message&);
