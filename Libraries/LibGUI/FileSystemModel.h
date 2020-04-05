@@ -155,6 +155,12 @@ private:
     GUI::Icon m_filetype_image_icon;
     GUI::Icon m_filetype_sound_icon;
     GUI::Icon m_filetype_html_icon;
+    
+    GUI::Icon m_filetype_cplusplus_icon;
+    GUI::Icon m_filetype_java_icon;
+    GUI::Icon m_filetype_javascript_icon;
+    GUI::Icon m_filetype_text_icon;
+    GUI::Icon m_filetype_pdf_icon;
 
     unsigned m_thumbnail_progress { 0 };
     unsigned m_thumbnail_progress_total { 0 };
