@@ -17,12 +17,11 @@ try {
     assert(-"42" === -42);
     assert(+42 === 42);
     assert(-42 === -42);
+    assert(+1.23 === 1.23);
+    assert(-1.23 === -1.23);
     // FIXME: returns NaN
     // assert(+"1.23" === 1.23)
     // assert(-"1.23" === -1.23)
-    // FIXME: chokes on ASSERT
-    // assert(+1.23 === 1.23);
-    // assert(-1.23 === -1.23);
 
     assert(isNaN(+undefined));
     assert(isNaN(-undefined));
