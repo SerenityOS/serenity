@@ -56,6 +56,10 @@ public:
 
     String nickname() const { return m_nickname; }
 
+    String ctcp_version_reply() const { return m_ctcp_version_reply; }
+    String ctcp_userinfo_reply() const { return m_ctcp_userinfo_reply; }
+    String ctcp_finger_reply() const { return m_ctcp_finger_reply; }
+
     void join_channel(const String&);
     void part_channel(const String&);
     void change_nick(const String&);
@@ -197,6 +201,10 @@ private:
     RefPtr<Core::Notifier> m_notifier;
     HashMap<String, RefPtr<IRCChannel>, CaseInsensitiveStringTraits> m_channels;
     HashMap<String, RefPtr<IRCQuery>, CaseInsensitiveStringTraits> m_queries;
+
+    String m_ctcp_version_reply;
+    String m_ctcp_userinfo_reply;
+    String m_ctcp_finger_reply;
 
     Vector<IRCWindow*> m_windows;
 
