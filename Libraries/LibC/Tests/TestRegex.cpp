@@ -91,7 +91,7 @@ TEST_CASE(simple_period_end)
     EXPECT_EQ(regexec(&regex, "Hello1", 0, NULL, 0), REG_NOMATCH);
     EXPECT_EQ(regexec(&regex, "hello1hello1", 0, NULL, 0), REG_NOMATCH);
     EXPECT_EQ(regexec(&regex, "hello2hell", 0, NULL, 0), REG_NOMATCH);
-    EXPECT_EQ(regexec(&regex, "hello??", 0, NULL, 0), REG_NOMATCH);
+    EXPECT_EQ(regexec(&regex, "hello?", 0, NULL, 0), REG_NOERR);
 
     regfree(&regex);
 }
@@ -123,11 +123,57 @@ TEST_CASE(simple_period2_end)
     regfree(&regex);
 }
 
-// Braket parsing not supported yet, thus, this test fails
+TEST_CASE(simple_plus)
+{
+    String pattern = "a+";
+    regex_t regex;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "b", 0, NULL, 0), REG_NOMATCH);
+    EXPECT_EQ(regexec(&regex, "a", 0, NULL, 0), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "aaaaaabbbbb", 0, NULL, 0), REG_NOMATCH);
+    EXPECT_EQ(regexec(&regex, "aaaaaaaaaaa", 0, NULL, 0), REG_NOERR);
+
+    regfree(&regex);
+}
+
+TEST_CASE(simple_questionmark)
+{
+    String pattern = "da?d";
+    regex_t regex;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "a", 0, NULL, 0), REG_NOMATCH);
+    EXPECT_EQ(regexec(&regex, "daa", 0, NULL, 0), REG_NOMATCH);
+    EXPECT_EQ(regexec(&regex, "ddddd", 0, NULL, 0), REG_NOMATCH);
+    EXPECT_EQ(regexec(&regex, "dd", 0, NULL, 0), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "dad", 0, NULL, 0), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "dada", 0, NULL, 0), REG_NOMATCH);
+    EXPECT_EQ(regexec(&regex, "adadaa", 0, NULL, 0), REG_NOMATCH);
+
+    regfree(&regex);
+}
+
+TEST_CASE(escaped_char_questionmark)
+{
+    String pattern = "This\\.?And\\.?That";
+    regex_t regex;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "ThisAndThat", 0, NULL, 0), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "This.And.That", 0, NULL, 0), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "This And That", 0, NULL, 0), REG_NOMATCH);
+    EXPECT_EQ(regexec(&regex, "This..And..That", 0, NULL, 0), REG_NOMATCH);
+
+    regfree(&regex);
+}
+
 TEST_CASE(complex1)
 {
     String pattern = "^[A-Z0-9._%+-]{1,64}@(?:[A-Z0-9-]{1,63}\\.){1,125}[A-Z]{2,63}$";
     regex_t regex;
+
+    // Braket parsing not supported yet
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_BADPAT);
 }
 

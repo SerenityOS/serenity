@@ -88,15 +88,21 @@ __END_DECLS
 
 namespace regex {
 
-enum class OpCode : size_t {
-    Compare = 1,
-    ForkJump,
-    ForkStay,
-    SaveLeftGroup,
-    SaveRightGroup,
-    CheckBegin,
-    CheckEnd,
-    Exit,
+#define ENUMERATE_OPCODES              \
+    __ENUMERATE_OPCODE(Compare)        \
+    __ENUMERATE_OPCODE(Jump)           \
+    __ENUMERATE_OPCODE(ForkJump)       \
+    __ENUMERATE_OPCODE(ForkStay)       \
+    __ENUMERATE_OPCODE(SaveLeftGroup)  \
+    __ENUMERATE_OPCODE(SaveRightGroup) \
+    __ENUMERATE_OPCODE(CheckBegin)     \
+    __ENUMERATE_OPCODE(CheckEnd)       \
+    __ENUMERATE_OPCODE(Exit)
+
+enum class OpCode {
+#define __ENUMERATE_OPCODE(x) x,
+    ENUMERATE_OPCODES
+#undef __ENUMERATE_OPCODE
 };
 
 class StackValue {
@@ -106,10 +112,14 @@ public:
         char* string;
         int length;
     };
-    explicit StackValue(OpCode op_code_) { op_code = op_code_; }
-    explicit StackValue(char* string_) { string = string_; }
-    explicit StackValue(int length_) { length = length_; }
-    ~StackValue();
+
+    const char* name() const;
+    static const char* name(OpCode);
+
+    StackValue(OpCode op_code_) { op_code = op_code_; }
+    StackValue(char* string_) { string = string_; }
+    StackValue(int length_) { length = length_; }
+    ~StackValue() = default;
 };
 
 #define ENUMERATE_REGEX_TOKENS                 \
@@ -194,20 +204,15 @@ private:
     bool match_meta_chars();
     bool match_ere_quoted_chars();
     bool match_ere_dupl_symbol();
-    bool parse_ere_dupl_symbol();
+    bool parse_ere_dupl_symbol(Vector<StackValue>&);
     bool parse_ere_expression();
     bool parse_extended_reg_exp();
-    int label_offset(size_t label);
-    int last_label_offset();
-    size_t get_label();
     void reset();
 
     struct ParserState {
         Lexer m_lexer;
         Token m_current_token;
         bool m_has_errors = false;
-        size_t m_last_label = 0;
-
         explicit ParserState(Lexer);
     };
 
@@ -230,8 +235,8 @@ public:
 
 private:
     struct MatchState {
-        size_t m_stringp { 0 };
         size_t m_instructionp { 0 };
+        size_t m_stringp { 0 };
         StringView m_view;
         size_t m_ops { 0 };
         MatchState() = default;
@@ -239,8 +244,8 @@ private:
     };
 
     bool match_recurse(MatchState& state);
-    const StackValue current(MatchState& state) const;
-    const StackValue increment(MatchState& state) const;
+    const StackValue get(MatchState& state, size_t offset = 0) const;
+    const StackValue get_and_increment(MatchState& state, size_t value = 1) const;
 
     const Vector<StackValue> m_bytecode;
     const String& m_pattern;

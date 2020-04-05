@@ -32,6 +32,25 @@
 
 namespace regex {
 
+const char* StackValue::name(OpCode type)
+{
+    switch (type) {
+#define __ENUMERATE_OPCODE(x) \
+    case OpCode::x:           \
+        return #x;
+        ENUMERATE_OPCODES
+#undef __ENUMERATE_OPCODE
+    default:
+        ASSERT_NOT_REACHED();
+        return "<Unknown>";
+    }
+}
+
+const char* StackValue::name() const
+{
+    return name(op_code);
+}
+
 const char* Token::name(TokenType type)
 {
     switch (type) {
@@ -253,7 +272,7 @@ bool Parser::match_ere_dupl_symbol()
         || type == TokenType::LeftCurly);
 }
 
-bool Parser::parse_ere_dupl_symbol()
+bool Parser::parse_ere_dupl_symbol(Vector<StackValue>& operations)
 {
     if (match(TokenType::LeftCurly)) {
         consume();
@@ -288,128 +307,173 @@ bool Parser::parse_ere_dupl_symbol()
     } else if (match(TokenType::Plus)) {
         consume();
 
-        m_bytes.empend(OpCode::ForkJump);
-        m_bytes.empend(last_label_offset());
+        // LABEL _START
+        // REGEXP
+        // FORKJUMP _START  (FORKSTAY -> Greedy)
+
+        // LABEL _START = -operations.size()
+        if (match(TokenType::Questionmark)) { // Greedy
+            consume();
+            operations.empend(OpCode::ForkStay);
+        } else {
+            operations.empend(OpCode::ForkJump);
+        }
+        operations.empend(-operations.size() - 1); // Jump to the _START label
+
         return true;
 
     } else if (match(TokenType::Asterisk)) {
         consume();
 
-        m_bytes.empend(OpCode::ForkJump);
-        m_bytes.empend(last_label_offset());
+        // LABEL _START
+        // FORKSTAY _END  (FORKJUMP -> Greedy)
+        // REGEXP
+        // JUMP  _START
+        // LABEL _END
+
+        Vector<StackValue> new_operations;
+
+        // LABEL _START = 0
+        if (match(TokenType::Questionmark)) { // Greedy
+            consume();
+            new_operations.empend(OpCode::ForkJump);
+        } else {
+            new_operations.empend(OpCode::ForkStay);
+        }
+        new_operations.empend(operations.size() + 2); // Jump to the _END label
+
+        for (auto& op : operations)
+            new_operations.append(move(op));
+
+        new_operations.empend(OpCode::Jump);
+        new_operations.empend(-new_operations.size() - 1); // Jump to the _START label
+        // LABEL _END = new_operations.size()
+
+        operations = move(new_operations);
+
         return true;
 
     } else if (match(TokenType::Questionmark)) {
         consume();
 
-        m_bytes.empend(OpCode::ForkStay);
-        m_bytes.empend(last_label_offset());
+        // FORKSTAY _END (FORKJUMP -> Greedy)
+        // REGEXP
+        // LABEL _END
+
+        Vector<StackValue> new_operations;
+
+        if (match(TokenType::Questionmark)) { // Greedy
+            consume();
+            new_operations.empend(OpCode::ForkJump);
+        } else {
+            new_operations.empend(OpCode::ForkStay);
+        }
+        new_operations.empend(operations.size()); // Jump to the _END label
+
+        for (auto& op : operations)
+            new_operations.append(move(op));
+        // LABEL _END = new_operations.size()
+
+        operations = move(new_operations);
+
         return true;
     }
 
     return false;
 }
 
-int Parser::last_label_offset()
-{
-    return label_offset(m_parser_state.m_last_label);
-}
-
-int Parser::label_offset(size_t label)
-{
-    return label - m_bytes.size();
-}
-
-size_t Parser::get_label()
-{
-    return m_bytes.size();
-}
-
 bool Parser::parse_ere_expression()
 {
+    Vector<StackValue> operations;
     for (;;) {
-        bool matched = false;
         if (match(TokenType::OrdinaryCharacter)) {
-            m_parser_state.m_last_label = get_label();
             size_t length = 0;
             Token start_token = m_parser_state.m_current_token;
+            Token last_token = m_parser_state.m_current_token;
             for (;;) {
                 if (!match(TokenType::OrdinaryCharacter))
                     break;
                 ++length;
-                consume();
+                last_token = consume();
             }
-            m_bytes.empend(OpCode::Compare);
-            m_bytes.empend((char*)start_token.value().characters_without_null_termination());
-            m_bytes.empend(length);
-            matched = true;
+
+            if (length > 1) {
+                m_bytes.empend(OpCode::Compare);
+                m_bytes.empend((char*)start_token.value().characters_without_null_termination());
+                m_bytes.empend(length - ((match_ere_dupl_symbol() && length > 1) ? 1 : 0)); // last character is inserted into 'operations' for duplication symbol handling
+            }
+
+            if ((match_ere_dupl_symbol() && length > 1) || length == 1) { // Create own compare opcode for last character before duplication symbol
+                operations.empend(OpCode::Compare);
+                operations.empend((char*)last_token.value().characters_without_null_termination());
+                operations.empend(1);
+            }
+
+            break;
         }
 
         else if (match(TokenType::Period)) {
-            m_parser_state.m_last_label = get_label();
-            Token t = consume();
-            m_bytes.empend(OpCode::Compare);
-            m_bytes.empend((char*)t.value().characters_without_null_termination());
-            m_bytes.empend(1);
-            matched = true;
+            consume();
+            operations.empend(OpCode::Compare);
+            operations.empend(0);
+            operations.empend(0);
+            break;
         }
 
         else if (match(TokenType::EscapeSequence)) {
-            m_parser_state.m_last_label = get_label();
             Token t = consume();
-            m_bytes.empend(OpCode::Compare);
+            operations.empend(OpCode::Compare);
 #ifdef REGEX_DEBUG
             printf("[PARSER] EscapeSequence with substring %s\n", String(t.value()).characters());
 #endif
-            m_bytes.empend((char*)t.value().characters_without_null_termination() + 1);
-            m_bytes.empend(1);
-            matched = true;
+            operations.empend((char*)t.value().characters_without_null_termination() + 1);
+            operations.empend(1);
+            break;
         }
 
         // FIXME: Add bracket expression matching/parsing
 
         if (match(TokenType::Circumflex)) {
             consume(TokenType::Circumflex);
-            m_bytes.empend(OpCode::CheckBegin);
-            matched = true;
+            operations.empend(OpCode::CheckBegin);
+            break;
         }
 
         if (match(TokenType::Dollar)) {
             consume(TokenType::Dollar);
-            m_bytes.empend(OpCode::CheckEnd);
-            matched = true;
+            operations.empend(OpCode::CheckEnd);
+            break;
         }
 
         if (match(TokenType::LeftParen)) {
             consume(TokenType::LeftParen);
-            m_bytes.empend(OpCode::SaveLeftGroup);
+            operations.empend(OpCode::SaveLeftGroup);
             parse_extended_reg_exp();
             consume(TokenType::RightParen);
-            m_bytes.empend(OpCode::SaveRightGroup);
-            matched = true;
-        }
-
-        if (match_ere_dupl_symbol()) {
-            parse_ere_dupl_symbol();
-            matched = true;
-        }
-
-        if (!matched)
+            operations.empend(OpCode::SaveRightGroup);
             break;
+        }
+
+        return false;
     }
 
-    if (match(TokenType::Eof))
-        return true;
+    if (match_ere_dupl_symbol()) {
+        parse_ere_dupl_symbol(operations);
+    }
+
+    for (auto& op : operations) {
+        m_bytes.append(move(op));
+    }
 
     return true;
 }
 
 bool Parser::parse_extended_reg_exp()
 {
-    bool matched = false;
     bool errors = false;
     for (;;) {
-        errors &= !(parse_ere_expression());
+        if (!parse_ere_expression())
+            break;
 
         if (match(TokenType::Pipe)) {
             consume(TokenType::Pipe);
@@ -419,11 +483,7 @@ bool Parser::parse_extended_reg_exp()
 
             // FIXME: Add logical OR opcode with two parameters
             //        containing the jump offsets to both branches.
-            matched = true;
         }
-
-        if (!matched)
-            break;
     }
 
     m_parser_state.m_has_errors = errors;
@@ -458,14 +518,13 @@ Token Parser::consume(TokenType type)
     return consume();
 }
 
-Vector<ByteCode>& Parser::parse()
+Vector<StackValue>& Parser::parse()
 {
-    m_bytes.clear();
     parse_extended_reg_exp();
     consume(TokenType::Eof);
 
 #ifdef REGEX_DEBUG
-    printf("[PARSER] Produced bytecode stack with %lu entries\n", m_bytes.size());
+    printf("[PARSER] Produced stack with %lu entries\n", m_bytes.size());
 #endif
     return m_bytes;
 }
@@ -477,13 +536,9 @@ void Parser::reset()
     m_parser_state.m_current_token = m_parser_state.m_lexer.next();
 }
 
-ByteCode::~ByteCode()
-{
-}
-
-VM::MatchState::MatchState(size_t stringp, size_t instructionp, StringView view)
-    : m_stringp(stringp)
-    , m_instructionp(instructionp)
+VM::MatchState::MatchState(size_t instructionp, size_t stringp, StringView view)
+    : m_instructionp(instructionp)
+    , m_stringp(stringp)
     , m_view(view)
 {
 }
@@ -504,18 +559,19 @@ bool VM::match(StringView view, size_t& ops_count)
     return result;
 }
 
-const ByteCode VM::current(MatchState& state) const
+const StackValue VM::get(MatchState& state, size_t offset) const
 {
-    if (state.m_instructionp < m_bytecode.size())
-        return m_bytecode.at(state.m_instructionp);
+    if (state.m_instructionp + offset < m_bytecode.size())
+        return m_bytecode.at(state.m_instructionp + offset);
     else
-        return ByteCode(OpCode::Exit);
+        return StackValue(OpCode::Exit);
 }
 
-const ByteCode VM::increment(MatchState& state) const
+const StackValue VM::get_and_increment(MatchState& state, size_t value) const
 {
-    ++state.m_instructionp;
-    return current(state);
+    auto& current = get(state);
+    state.m_instructionp += value;
+    return current;
 }
 
 bool VM::match_recurse(MatchState& state)
@@ -526,43 +582,58 @@ bool VM::match_recurse(MatchState& state)
 
     for (;;) {
         ++state.m_ops;
-        auto stack_item = current(state);
+        auto current_ip = state.m_instructionp;
+        auto stack_item = get_and_increment(state);
 
 #ifdef REGEX_DEBUG
-        printf("[VM] OpCode: 0x%i - instructionp: %2lu, stringp: %2lu - [%20s]", stack_item.length, state.m_instructionp, state.m_stringp,
+        printf("[VM] OpCode: 0x%i (%8s) - instructionp: %2lu, stringp: %2lu - [%20s]", stack_item.length, stack_item.name(), current_ip, state.m_stringp,
             String(&state.m_view[state.m_stringp], state.m_view.length() - state.m_stringp).characters());
 #endif
 
         if (stack_item.op_code == OpCode::Compare) {
-            auto* str = increment(state).string;
-            auto& length = increment(state).length;
+            auto* str = get_and_increment(state).string;
+            auto& length = get_and_increment(state).length;
 
 #ifdef REGEX_DEBUG
-            printf(" > Comparing strings: '%s' == '%s' with length: %i\n", String(str, length).characters(), String(&state.m_view[state.m_stringp], length).characters(), length);
-#endif
+            String a;
+            String b;
+            if (state.m_stringp < state.m_view.length()) {
 
-            if (length == 1) {
-                if (str[0] == '.') {
-                    ++state.m_stringp;
-                } else if (str[0] == state.m_view[state.m_stringp])
+                if (!length) {
+                    a = "ANY";
+                    b = String(&state.m_view[state.m_stringp], 1);
+                } else {
+                    StringBuilder a_builder;
+                    a_builder.appendf("'%s'", String(str, length).characters());
+                    a = a_builder.build();
+                    b = String(&state.m_view[state.m_stringp], length);
+                }
+            }
+            printf(" > Comparing strings: %s == '%s' with length: %i\n", a.characters(), b.characters(), max(length, 1));
+            fflush(stdout);
+#endif
+            if ((size_t)length > state.m_view.length() - state.m_stringp)
+                return false; // ? ALso break? FIXME
+
+            if (state.m_stringp >= state.m_view.length())
+                break;
+
+            if (!length) { // Match any single character
+                ++state.m_stringp;
+            } else if (length == 1) {
+                if (str[0] == state.m_view[state.m_stringp])
                     ++state.m_stringp;
                 else
-                    return false;
+                    break;
             } else {
-                if ((size_t)length > state.m_view.length() - state.m_stringp)
-                    return false;
-
                 if (!strncmp(str, &state.m_view[state.m_stringp], length))
                     state.m_stringp += length;
                 else
-                    return false;
+                    break;
             }
 
-            if (state.m_stringp > state.m_view.length())
-                return false;
-
         } else if (stack_item.op_code == OpCode::ForkJump) {
-            auto& offset = increment(state).length;
+            auto& offset = get_and_increment(state).length;
             jump_state.m_stringp = state.m_stringp;
             jump_state.m_ops = state.m_ops;
             jump_state.m_instructionp = state.m_instructionp + offset;
@@ -570,31 +641,39 @@ bool VM::match_recurse(MatchState& state)
             printf(" > ForkJump to offset: %i, jump_state: instructionp: %lu, stringp: %lu\n", offset, jump_state.m_instructionp, jump_state.m_stringp);
 #endif
             // first do the recursion
-            if (match_recurse(jump_state)) {
-                // found a way out...
-                state.m_ops = jump_state.m_ops;
-                return true;
-            } else
-                state.m_ops = jump_state.m_ops;
-            // if not sucessful, continue in this function
+            bool result = match_recurse(jump_state);
+            state.m_ops = jump_state.m_ops;
+            if (result) // found a valid solution via forkjump...
+                state.m_stringp = jump_state.m_stringp;
+            //return true;
+            // no solution found, continue in this function
 
         } else if (stack_item.op_code == OpCode::ForkStay) {
-            auto& offset = increment(state).length;
+            auto& offset = get_and_increment(state).length;
             stay_states.empend(state.m_instructionp + offset, state.m_stringp, state.m_view);
 #ifdef REGEX_DEBUG
-            printf("\n");
+            printf(" > ForkStay to offset: %i, instructionp: %lu, stringp: %lu\n", offset, stay_states.last().m_instructionp, stay_states.last().m_stringp);
 #endif
+
+        } else if (stack_item.op_code == OpCode::Jump) {
+            auto& offset = get_and_increment(state).length;
+            state.m_instructionp += offset;
+#ifdef REGEX_DEBUG
+            printf(" > Jump to offset: %i: new instructionp: %lu\n", offset, state.m_instructionp);
+#endif
+            continue; // do not use exit condings below, directly jump!
 
         } else if (stack_item.op_code == OpCode::SaveLeftGroup) {
 #ifdef REGEX_DEBUG
             printf("\n");
 #endif
+            ASSERT_NOT_REACHED();
 
         } else if (stack_item.op_code == OpCode::SaveRightGroup) {
 #ifdef REGEX_DEBUG
             printf("\n");
 #endif
-
+            ASSERT_NOT_REACHED();
         } else if (stack_item.op_code == OpCode::CheckBegin) {
 #ifdef REGEX_DEBUG
             printf("\n");
@@ -604,16 +683,20 @@ bool VM::match_recurse(MatchState& state)
 
         } else if (stack_item.op_code == OpCode::CheckEnd) {
 #ifdef REGEX_DEBUG
-            printf("\n");
+            printf(" > Check end: %lu == %lu\n", state.m_stringp, state.m_view.length());
 #endif
             if (state.m_stringp != state.m_view.length())
-                return false;
+                break;
 
         } else if (stack_item.op_code == OpCode::Exit) {
+#ifdef REGEX_DEBUG
+            printf("\n");
+#endif
             break;
+        } else {
+            printf("\nInvalid opcode: %lu, stackpointer: %lu\n", (size_t)stack_item.op_code, current_ip);
+            exit(1);
         }
-
-        increment(state);
 
         if (state.m_instructionp >= m_bytecode.size()) {
 #ifdef REGEX_DEBUG
@@ -623,23 +706,21 @@ bool VM::match_recurse(MatchState& state)
         }
     }
 
+    for (auto& s_state : stay_states) {
+        s_state.m_ops = state.m_ops;
+        bool result = match_recurse(s_state);
+        state.m_ops = s_state.m_ops;
+        if (result)
+            return true;
+    }
+
 #ifdef REGEX_DEBUG
     printf("String: stringp: %lu, length: %lu\n", state.m_stringp, state.m_view.length());
     printf("Instruction: instructionp: %lu, size: %lu\n", state.m_instructionp, bytes().size());
 #endif
 
-    if (state.m_stringp == state.m_view.length()) {
-        if (state.m_instructionp == bytes().size()) // last instruction done with OpCode::Exit!
-            return true;
-    }
-    for (auto& s_state : stay_states) {
-        s_state.m_ops = state.m_ops;
-        if (match_recurse(s_state)) {
-            state.m_ops = s_state.m_ops;
-            return true;
-        } else
-            state.m_ops = s_state.m_ops;
-    }
+    if (state.m_stringp >= state.m_view.length() && state.m_instructionp >= bytes().size())
+        return true;
 
     return false;
 }
@@ -653,7 +734,7 @@ int regcomp(regex_t* preg, const char* pattern, int cflags)
     preg->cflags = cflags;
 
     String s(pattern);
-    regex::Lexer lexer(s);
+    regex::Lexer lexer(pattern);
 
 #ifdef REGEX_DEBUG
     printf("[LEXER] Tokens for pattern '%s':\n", pattern);
