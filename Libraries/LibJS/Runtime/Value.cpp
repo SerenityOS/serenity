@@ -246,8 +246,14 @@ Value div(Value lhs, Value rhs)
 
 Value mod(Value lhs, Value rhs)
 {
-    // FIXME: It seems like JavaScript should allow modulo for doubles as well(?)
-    return Value(lhs.to_i32() % rhs.to_i32());
+    if (lhs.to_number().is_nan() || rhs.to_number().is_nan())
+        return js_nan();
+
+    double index = lhs.to_number().as_double();
+    double period = rhs.to_number().as_double();
+    double trunc = (double)(i32) (index / period);
+
+    return Value(index - trunc * period);
 }
 
 Value typed_eq(Value lhs, Value rhs)
