@@ -168,6 +168,14 @@ void IRCAppWindow::setup_actions()
             m_client->handle_invite_user_action(window->channel().name(), input_box->text_value());
     });
 
+    m_banlist_action = GUI::Action::create("Ban list", [this](auto&) {
+        auto* window = m_client->current_window();
+        if (!window || window->type() != IRCWindow::Type::Channel) {
+            return;
+        }
+        m_client->handle_banlist_action(window->channel().name());
+    });
+
     m_voice_user_action = GUI::Action::create("Voice user", [this](auto&) {
         auto* window = m_client->current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
@@ -252,6 +260,7 @@ void IRCAppWindow::setup_menus()
     auto& channel_menu = menubar->add_menu("Channel");
     channel_menu.add_action(*m_change_topic_action);
     channel_menu.add_action(*m_invite_user_action);
+    channel_menu.add_action(*m_banlist_action);
     channel_menu.add_separator();
     channel_menu.add_action(*m_voice_user_action);
     channel_menu.add_action(*m_devoice_user_action);
@@ -329,6 +338,7 @@ void IRCAppWindow::update_gui_actions()
     bool is_open_channel = window && window->type() == IRCWindow::Type::Channel && window->channel().is_open();
     m_change_topic_action->set_enabled(is_open_channel);
     m_invite_user_action->set_enabled(is_open_channel);
+    m_banlist_action->set_enabled(is_open_channel);
     m_voice_user_action->set_enabled(is_open_channel);
     m_devoice_user_action->set_enabled(is_open_channel);
     m_op_user_action->set_enabled(is_open_channel);
