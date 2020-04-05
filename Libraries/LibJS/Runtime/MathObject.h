@@ -46,6 +46,9 @@ private:
     static Value round(Interpreter&);
     static Value max(Interpreter&);
     static Value trunc(Interpreter&);
+    static Value sin(Interpreter&);
+    static Value cos(Interpreter&);
+    static Value tan(Interpreter&);
 };
 
 }

@@ -42,6 +42,9 @@ MathObject::MathObject()
     put_native_function("round", round, 1);
     put_native_function("max", max, 2);
     put_native_function("trunc", trunc, 1);
+    put_native_function("sin", sin, 1);
+    put_native_function("cos", cos, 1);
+    put_native_function("tan", tan, 1);
 
     put("E", Value(M_E));
     put("LN2", Value(M_LN2));
@@ -133,6 +136,30 @@ Value MathObject::trunc(Interpreter& interpreter)
     if (number.as_double() < 0)
         return MathObject::ceil(interpreter);
     return MathObject::floor(interpreter);
+}
+
+Value MathObject::sin(Interpreter& interpreter)
+{
+    auto number = interpreter.argument(0).to_number();
+    if (number.is_nan())
+        return js_nan();
+    return Value(::sin(number.as_double()));
+}
+
+Value MathObject::cos(Interpreter& interpreter)
+{
+    auto number = interpreter.argument(0).to_number();
+    if (number.is_nan())
+        return js_nan();
+    return Value(::cos(number.as_double()));
+}
+
+Value MathObject::tan(Interpreter& interpreter)
+{
+    auto number = interpreter.argument(0).to_number();
+    if (number.is_nan())
+        return js_nan();
+    return Value(::tan(number.as_double()));
 }
 
 }
