@@ -75,6 +75,9 @@ IRCClient::IRCClient()
     m_nickname = m_config->read_entry("User", "Nickname", "seren1ty");
     m_hostname = m_config->read_entry("Connection", "Server", "");
     m_port = m_config->read_num_entry("Connection", "Port", 6667);
+    m_ctcp_version_reply = m_config->read_entry("CTCP", "VersionReply", "IRC Client [x86] / Serenity OS");
+    m_ctcp_userinfo_reply = m_config->read_entry("CTCP", "UserInfoReply", "anon");
+    m_ctcp_finger_reply = m_config->read_entry("CTCP", "FingerReply", "anon");
 }
 
 IRCClient::~IRCClient()
@@ -1056,7 +1059,26 @@ void IRCClient::handle_ctcp_request(const StringView& peer, const StringView& pa
     dbg() << "handle_ctcp_request: " << payload;
 
     if (payload == "VERSION") {
-        send_ctcp_response(peer, "VERSION IRC Client [x86] / Serenity OS");
+        auto version = ctcp_version_reply();
+        if (version.is_empty())
+            return;
+        send_ctcp_response(peer, String::format("VERSION %s", version.characters()));
+        return;
+    }
+
+    if (payload == "USERINFO") {
+        auto userinfo = ctcp_userinfo_reply();
+        if (userinfo.is_empty())
+            return;
+        send_ctcp_response(peer, String::format("USERINFO %s", userinfo.characters()));
+        return;
+    }
+
+    if (payload == "FINGER") {
+        auto finger = ctcp_finger_reply();
+        if (finger.is_empty())
+            return;
+        send_ctcp_response(peer, String::format("FINGER %s", finger.characters()));
         return;
     }
 
