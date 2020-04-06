@@ -47,14 +47,10 @@ void QSWidget::relayout()
 
     float scale_factor = (float)m_scale / 100.0f;
 
-    Gfx::Size new_size;
-    new_size.set_width(m_bitmap->width() * scale_factor);
-    new_size.set_height(m_bitmap->height() * scale_factor);
+    auto new_size = (Gfx::Size)((Gfx::FloatPoint)m_bitmap->size() * scale_factor);
     m_bitmap_rect.set_size(new_size);
 
-    Gfx::Point new_location;
-    new_location.set_x((width() / 2) - (new_size.width() / 2) - (m_pan_origin.x() * scale_factor));
-    new_location.set_y((height() / 2) - (new_size.height() / 2) - (m_pan_origin.y() * scale_factor));
+    auto new_location = (Gfx::Point)(size() / 2) - (Gfx::Point)(new_size / 2) - (Gfx::Point)(m_pan_origin * scale_factor);
     m_bitmap_rect.set_location(new_location);
 
     update();
@@ -95,11 +91,9 @@ void QSWidget::mousemove_event(GUI::MouseEvent& event)
     if (!(event.buttons() & GUI::MouseButton::Left))
         return;
 
-    auto delta = event.position() - m_click_position;
+    auto delta = (Gfx::FloatPoint)(event.position() - m_click_position);
     float scale_factor = (float)m_scale / 100.0f;
-    m_pan_origin = m_saved_pan_origin.translated(
-        -delta.x() / scale_factor,
-        -delta.y() / scale_factor);
+    m_pan_origin = m_saved_pan_origin.translated(-delta / scale_factor);
 
     relayout();
 }
@@ -117,13 +111,8 @@ void QSWidget::mousewheel_event(GUI::MouseEvent& event)
 
     auto new_scale_factor = (float)m_scale / 100.0f;
 
-    auto focus_point = Gfx::FloatPoint(
-        m_pan_origin.x() - ((float)event.x() - (float)width() / 2.0) / old_scale_factor,
-        m_pan_origin.y() - ((float)event.y() - (float)height() / 2.0) / old_scale_factor);
-
-    m_pan_origin = Gfx::FloatPoint(
-        focus_point.x() - new_scale_factor / old_scale_factor * (focus_point.x() - m_pan_origin.x()),
-        focus_point.y() - new_scale_factor / old_scale_factor * (focus_point.y() - m_pan_origin.y()));
+    auto focus_point = m_pan_origin - (Gfx::FloatPoint)(event.position() - (Gfx::Point)(size() / 2)) / old_scale_factor;
+    m_pan_origin = focus_point - (focus_point - m_pan_origin) * (new_scale_factor / old_scale_factor);
 
     relayout();
 
