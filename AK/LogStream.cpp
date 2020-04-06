@@ -34,6 +34,10 @@
 #    include <Kernel/Thread.h>
 #endif
 
+#if !defined(KERNEL) && !defined(BOOTSTRAPPER)
+#include <stdio.h>
+#endif
+
 namespace AK {
 
 const LogStream& operator<<(const LogStream& stream, const String& value)
@@ -162,5 +166,21 @@ DebugLogStream::~DebugLogStream()
     char newline = '\n';
     write(&newline, 1);
 }
+
+#if !defined(KERNEL) && !defined(BOOTSTRAPPER)
+StdLogStream::~StdLogStream()
+{
+    char newline = '\n';
+    write(&newline, 1);
+}
+
+void StdLogStream::write(const char* characters, int length) const
+{
+    if (::write(m_fd, characters, length) < 0) {
+        perror("StdLogStream::write");
+        ASSERT_NOT_REACHED();
+    }
+}
+#endif
 
 }

@@ -58,36 +58,36 @@ int main(int argc, char** argv)
     auto json = JsonValue::from_string(file->read_all());
     ASSERT(json.is_object());
 
-    dbg() << "#include <AK/Assertions.h>";
-    dbg() << "#include <LibWeb/CSS/PropertyID.h>";
-    dbg() << "namespace Web {";
-    dbg() << "namespace CSS {";
+    out() << "#include <AK/Assertions.h>";
+    out() << "#include <LibWeb/CSS/PropertyID.h>";
+    out() << "namespace Web {";
+    out() << "namespace CSS {";
 
-    dbg() << "PropertyID property_id_from_string(const StringView& string) {";
+    out() << "PropertyID property_id_from_string(const StringView& string) {";
 
     json.as_object().for_each_member([&](auto& name, auto& value) {
         ASSERT(value.is_object());
-        dbg() << "    if (string == \"" << name << "\")";
-        dbg() << "        return PropertyID::" << title_casify(name) << ";";
+        out() << "    if (string == \"" << name << "\")";
+        out() << "        return PropertyID::" << title_casify(name) << ";";
     });
 
-    dbg() << "    return PropertyID::Invalid;";
+    out() << "    return PropertyID::Invalid;";
 
-    dbg() << "}";
+    out() << "}";
 
-    dbg() << "const char* string_from_property_id(PropertyID property_id) {";
-    dbg() << "    switch (property_id) {";
+    out() << "const char* string_from_property_id(PropertyID property_id) {";
+    out() << "    switch (property_id) {";
     json.as_object().for_each_member([&](auto& name, auto& value) {
         ASSERT(value.is_object());
-        dbg() << "    case PropertyID::" << title_casify(name) << ":";
-        dbg() << "        return \"" << name << "\";";
+        out() << "    case PropertyID::" << title_casify(name) << ":";
+        out() << "        return \"" << name << "\";";
     });
-    dbg() << "    default:";
-    dbg() << "        return \"(invalid CSS::PropertyID)\";";
-    dbg() << "    }";
-    dbg() << "}";
-    dbg() << "}";
-    dbg() << "}";
+    out() << "    default:";
+    out() << "        return \"(invalid CSS::PropertyID)\";";
+    out() << "    }";
+    out() << "}";
+    out() << "}";
+    out() << "}";
 
     return 0;
 }

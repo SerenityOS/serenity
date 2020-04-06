@@ -100,7 +100,7 @@ int main(int argc, char** argv)
 
     auto consume_specific = [&](char ch) {
         if (peek() != ch) {
-            dbg() << "consume_specific: wanted '" << ch << "', but got '" << peek() << "' at index " << index;
+            warn() << "consume_specific: wanted '" << ch << "', but got '" << peek() << "' at index " << index;
         }
         ASSERT(peek() == ch);
         ++index;
@@ -223,36 +223,36 @@ int main(int argc, char** argv)
     while (index < file_contents.size())
         parse_endpoint();
 
-    dbg() << "#pragma once";
-    dbg() << "#include <AK/BufferStream.h>";
-    dbg() << "#include <AK/OwnPtr.h>";
-    dbg() << "#include <LibGfx/Color.h>";
-    dbg() << "#include <LibGfx/Rect.h>";
-    dbg() << "#include <LibGfx/ShareableBitmap.h>";
-    dbg() << "#include <LibIPC/Decoder.h>";
-    dbg() << "#include <LibIPC/Encoder.h>";
-    dbg() << "#include <LibIPC/Endpoint.h>";
-    dbg() << "#include <LibIPC/Message.h>";
-    dbg();
+    out() << "#pragma once";
+    out() << "#include <AK/BufferStream.h>";
+    out() << "#include <AK/OwnPtr.h>";
+    out() << "#include <LibGfx/Color.h>";
+    out() << "#include <LibGfx/Rect.h>";
+    out() << "#include <LibGfx/ShareableBitmap.h>";
+    out() << "#include <LibIPC/Decoder.h>";
+    out() << "#include <LibIPC/Encoder.h>";
+    out() << "#include <LibIPC/Endpoint.h>";
+    out() << "#include <LibIPC/Message.h>";
+    out();
 
     for (auto& endpoint : endpoints) {
-        dbg() << "namespace Messages {";
-        dbg() << "namespace " << endpoint.name << " {";
-        dbg();
+        out() << "namespace Messages {";
+        out() << "namespace " << endpoint.name << " {";
+        out();
 
         HashMap<String, int> message_ids;
 
-        dbg() << "enum class MessageID : i32 {";
+        out() << "enum class MessageID : i32 {";
         for (auto& message : endpoint.messages) {
             message_ids.set(message.name, message_ids.size() + 1);
-            dbg() << "    " << message.name << " = " << message_ids.size() << ",";
+            out() << "    " << message.name << " = " << message_ids.size() << ",";
             if (message.is_synchronous) {
                 message_ids.set(message.response_name(), message_ids.size() + 1);
-                dbg() << "    " << message.response_name() << " = " << message_ids.size() << ",";
+                out() << "    " << message.response_name() << " = " << message_ids.size() << ",";
             }
         }
-        dbg() << "};";
-        dbg();
+        out() << "};";
+        out();
 
         auto constructor_for_message = [&](const String& name, const Vector<Parameter>& parameters) {
             StringBuilder builder;
@@ -289,39 +289,39 @@ int main(int argc, char** argv)
         };
 
         auto do_message = [&](const String& name, const Vector<Parameter>& parameters, const String& response_type = {}) {
-            dbg() << "class " << name << " final : public IPC::Message {";
-            dbg() << "public:";
+            out() << "class " << name << " final : public IPC::Message {";
+            out() << "public:";
             if (!response_type.is_null())
-                dbg() << "    typedef class " << response_type << " ResponseType;";
-            dbg() << "    " << constructor_for_message(name, parameters);
-            dbg() << "    virtual ~" << name << "() override {}";
-            dbg() << "    virtual i32 endpoint_magic() const override { return " << endpoint.magic << "; }";
-            dbg() << "    virtual i32 message_id() const override { return (int)MessageID::" << name << "; }";
-            dbg() << "    static i32 static_message_id() { return (int)MessageID::" << name << "; }";
-            dbg() << "    virtual const char* message_name() const override { return \"" << endpoint.name << "::" << name << "\"; }";
-            dbg() << "    static OwnPtr<" << name << "> decode(BufferStream& stream, size_t& size_in_bytes)";
-            dbg() << "    {";
+                out() << "    typedef class " << response_type << " ResponseType;";
+            out() << "    " << constructor_for_message(name, parameters);
+            out() << "    virtual ~" << name << "() override {}";
+            out() << "    virtual i32 endpoint_magic() const override { return " << endpoint.magic << "; }";
+            out() << "    virtual i32 message_id() const override { return (int)MessageID::" << name << "; }";
+            out() << "    static i32 static_message_id() { return (int)MessageID::" << name << "; }";
+            out() << "    virtual const char* message_name() const override { return \"" << endpoint.name << "::" << name << "\"; }";
+            out() << "    static OwnPtr<" << name << "> decode(BufferStream& stream, size_t& size_in_bytes)";
+            out() << "    {";
 
-            dbg() << "        IPC::Decoder decoder(stream);";
+            out() << "        IPC::Decoder decoder(stream);";
 
             for (auto& parameter : parameters) {
                 String initial_value = "{}";
                 if (parameter.type == "bool")
                     initial_value = "false";
-                dbg() << "        " << parameter.type << " " << parameter.name << " = " << initial_value << ";";
+                out() << "        " << parameter.type << " " << parameter.name << " = " << initial_value << ";";
 
                 if (parameter.type == "Vector<Gfx::Rect>") {
-                    dbg() << "        u64 " << parameter.name << "_size = 0;";
-                    dbg() << "        stream >> " << parameter.name << "_size;";
-                    dbg() << "        for (size_t i = 0; i < " << parameter.name << "_size; ++i) {";
-                    dbg() << "            Gfx::Rect rect;";
-                    dbg() << "            if (!decoder.decode(rect))";
-                    dbg() << "                return nullptr;";
-                    dbg() << "            " << parameter.name << ".append(move(rect));";
-                    dbg() << "        }";
+                    out() << "        u64 " << parameter.name << "_size = 0;";
+                    out() << "        stream >> " << parameter.name << "_size;";
+                    out() << "        for (size_t i = 0; i < " << parameter.name << "_size; ++i) {";
+                    out() << "            Gfx::Rect rect;";
+                    out() << "            if (!decoder.decode(rect))";
+                    out() << "                return nullptr;";
+                    out() << "            " << parameter.name << ".append(move(rect));";
+                    out() << "        }";
                 } else {
-                    dbg() << "        if (!decoder.decode(" << parameter.name << "))";
-                    dbg() << "            return nullptr;";
+                    out() << "        if (!decoder.decode(" << parameter.name << "))";
+                    out() << "            return nullptr;";
                 }
             }
 
@@ -332,56 +332,56 @@ int main(int argc, char** argv)
                 if (i != parameters.size() - 1)
                     builder.append(", ");
             }
-            dbg() << "        size_in_bytes = stream.offset();";
-            dbg() << "        return make<" << name << ">(" << builder.to_string() << ");";
-            dbg() << "    }";
-            dbg() << "    virtual IPC::MessageBuffer encode() const override";
-            dbg() << "    {";
-            dbg() << "        IPC::MessageBuffer buffer;";
-            dbg() << "        IPC::Encoder stream(buffer);";
-            dbg() << "        stream << endpoint_magic();";
-            dbg() << "        stream << (int)MessageID::" << name << ";";
+            out() << "        size_in_bytes = stream.offset();";
+            out() << "        return make<" << name << ">(" << builder.to_string() << ");";
+            out() << "    }";
+            out() << "    virtual IPC::MessageBuffer encode() const override";
+            out() << "    {";
+            out() << "        IPC::MessageBuffer buffer;";
+            out() << "        IPC::Encoder stream(buffer);";
+            out() << "        stream << endpoint_magic();";
+            out() << "        stream << (int)MessageID::" << name << ";";
             for (auto& parameter : parameters) {
                 if (parameter.type == "Gfx::Color") {
-                    dbg() << "        stream << m_" << parameter.name << ".value();";
+                    out() << "        stream << m_" << parameter.name << ".value();";
                 } else if (parameter.type == "Gfx::Size") {
-                    dbg() << "        stream << m_" << parameter.name << ".width();";
-                    dbg() << "        stream << m_" << parameter.name << ".height();";
+                    out() << "        stream << m_" << parameter.name << ".width();";
+                    out() << "        stream << m_" << parameter.name << ".height();";
                 } else if (parameter.type == "Gfx::Point") {
-                    dbg() << "        stream << m_" << parameter.name << ".x();";
-                    dbg() << "        stream << m_" << parameter.name << ".y();";
+                    out() << "        stream << m_" << parameter.name << ".x();";
+                    out() << "        stream << m_" << parameter.name << ".y();";
                 } else if (parameter.type == "Gfx::Rect") {
-                    dbg() << "        stream << m_" << parameter.name << ".x();";
-                    dbg() << "        stream << m_" << parameter.name << ".y();";
-                    dbg() << "        stream << m_" << parameter.name << ".width();";
-                    dbg() << "        stream << m_" << parameter.name << ".height();";
+                    out() << "        stream << m_" << parameter.name << ".x();";
+                    out() << "        stream << m_" << parameter.name << ".y();";
+                    out() << "        stream << m_" << parameter.name << ".width();";
+                    out() << "        stream << m_" << parameter.name << ".height();";
                 } else if (parameter.type == "Vector<Gfx::Rect>") {
-                    dbg() << "        stream << (u64)m_" << parameter.name << ".size();";
-                    dbg() << "        for (auto& rect : m_" << parameter.name << ") {";
-                    dbg() << "            stream << rect.x();";
-                    dbg() << "            stream << rect.y();";
-                    dbg() << "            stream << rect.width();";
-                    dbg() << "            stream << rect.height();";
-                    dbg() << "        }";
+                    out() << "        stream << (u64)m_" << parameter.name << ".size();";
+                    out() << "        for (auto& rect : m_" << parameter.name << ") {";
+                    out() << "            stream << rect.x();";
+                    out() << "            stream << rect.y();";
+                    out() << "            stream << rect.width();";
+                    out() << "            stream << rect.height();";
+                    out() << "        }";
                 } else if (parameter.type == "Gfx::ShareableBitmap") {
-                    dbg() << "        stream << m_" << parameter.name << ".shbuf_id();";
-                    dbg() << "        stream << m_" << parameter.name << ".width();";
-                    dbg() << "        stream << m_" << parameter.name << ".height();";
+                    out() << "        stream << m_" << parameter.name << ".shbuf_id();";
+                    out() << "        stream << m_" << parameter.name << ".width();";
+                    out() << "        stream << m_" << parameter.name << ".height();";
                 } else {
-                    dbg() << "        stream << m_" << parameter.name << ";";
+                    out() << "        stream << m_" << parameter.name << ";";
                 }
             }
-            dbg() << "        return buffer;";
-            dbg() << "    }";
+            out() << "        return buffer;";
+            out() << "    }";
             for (auto& parameter : parameters) {
-                dbg() << "    const " << parameter.type << "& " << parameter.name << "() const { return m_" << parameter.name << "; }";
+                out() << "    const " << parameter.type << "& " << parameter.name << "() const { return m_" << parameter.name << "; }";
             }
-            dbg() << "private:";
+            out() << "private:";
             for (auto& parameter : parameters) {
-                dbg() << "    " << parameter.type << " m_" << parameter.name << ";";
+                out() << "    " << parameter.type << " m_" << parameter.name << ";";
             }
-            dbg() << "};";
-            dbg();
+            out() << "};";
+            out();
         };
         for (auto& message : endpoint.messages) {
             String response_name;
@@ -391,72 +391,72 @@ int main(int argc, char** argv)
             }
             do_message(message.name, message.inputs, response_name);
         }
-        dbg() << "} // namespace " << endpoint.name;
-        dbg() << "} // namespace Messages";
-        dbg();
+        out() << "} // namespace " << endpoint.name;
+        out() << "} // namespace Messages";
+        out();
 
-        dbg() << "class " << endpoint.name << "Endpoint : public IPC::Endpoint {";
-        dbg() << "public:";
-        dbg() << "    " << endpoint.name << "Endpoint() {}";
-        dbg() << "    virtual ~" << endpoint.name << "Endpoint() override {}";
-        dbg() << "    static int static_magic() { return " << endpoint.magic << "; }";
-        dbg() << "    virtual int magic() const override { return " << endpoint.magic << "; }";
-        dbg() << "    static String static_name() { return \"" << endpoint.name << "\"; };";
-        dbg() << "    virtual String name() const override { return \"" << endpoint.name << "\"; };";
-        dbg() << "    static OwnPtr<IPC::Message> decode_message(const ByteBuffer& buffer, size_t& size_in_bytes)";
-        dbg() << "    {";
-        dbg() << "        BufferStream stream(const_cast<ByteBuffer&>(buffer));";
-        dbg() << "        i32 message_endpoint_magic = 0;";
-        dbg() << "        stream >> message_endpoint_magic;";
-        dbg() << "        if (message_endpoint_magic != " << endpoint.magic << ") {";
+        out() << "class " << endpoint.name << "Endpoint : public IPC::Endpoint {";
+        out() << "public:";
+        out() << "    " << endpoint.name << "Endpoint() {}";
+        out() << "    virtual ~" << endpoint.name << "Endpoint() override {}";
+        out() << "    static int static_magic() { return " << endpoint.magic << "; }";
+        out() << "    virtual int magic() const override { return " << endpoint.magic << "; }";
+        out() << "    static String static_name() { return \"" << endpoint.name << "\"; };";
+        out() << "    virtual String name() const override { return \"" << endpoint.name << "\"; };";
+        out() << "    static OwnPtr<IPC::Message> decode_message(const ByteBuffer& buffer, size_t& size_in_bytes)";
+        out() << "    {";
+        out() << "        BufferStream stream(const_cast<ByteBuffer&>(buffer));";
+        out() << "        i32 message_endpoint_magic = 0;";
+        out() << "        stream >> message_endpoint_magic;";
+        out() << "        if (message_endpoint_magic != " << endpoint.magic << ") {";
 #ifdef GENERATE_DEBUG_CODE
-        dbg() << "            dbg() << \"endpoint magic \" << message_endpoint_magic << \" != " << endpoint.magic << "\";";
+        sout() << "            sout() << \"endpoint magic \" << message_endpoint_magic << \" != " << endpoint.magic << "\";";
 #endif
-        dbg() << "            return nullptr;";
-        dbg() << "        }";
-        dbg() << "        i32 message_id = 0;";
-        dbg() << "        stream >> message_id;";
-        dbg() << "        switch (message_id) {";
+        out() << "            return nullptr;";
+        out() << "        }";
+        out() << "        i32 message_id = 0;";
+        out() << "        stream >> message_id;";
+        out() << "        switch (message_id) {";
         for (auto& message : endpoint.messages) {
             auto do_decode_message = [&](const String& name) {
-                dbg() << "        case (int)Messages::" << endpoint.name << "::MessageID::" << name << ":";
-                dbg() << "            return Messages::" << endpoint.name << "::" << name << "::decode(stream, size_in_bytes);";
+                out() << "        case (int)Messages::" << endpoint.name << "::MessageID::" << name << ":";
+                out() << "            return Messages::" << endpoint.name << "::" << name << "::decode(stream, size_in_bytes);";
             };
             do_decode_message(message.name);
             if (message.is_synchronous)
                 do_decode_message(message.response_name());
         }
-        dbg() << "        default:";
+        out() << "        default:";
 #ifdef GENERATE_DEBUG_CODE
-        dbg() << "            dbg() << \"Failed to decode " << endpoint.name << ".(\" << message_id << \")\";";
+        sout() << "            sout() << \"Failed to decode " << endpoint.name << ".(\" << message_id << \")\";";
 #endif
-        dbg() << "            return nullptr;";
+        out() << "            return nullptr;";
 
-        dbg() << "        }";
-        dbg() << "    }";
-        dbg();
-        dbg() << "    virtual OwnPtr<IPC::Message> handle(const IPC::Message& message) override";
-        dbg() << "    {";
-        dbg() << "        switch (message.message_id()) {";
+        out() << "        }";
+        out() << "    }";
+        out();
+        out() << "    virtual OwnPtr<IPC::Message> handle(const IPC::Message& message) override";
+        out() << "    {";
+        out() << "        switch (message.message_id()) {";
         for (auto& message : endpoint.messages) {
             auto do_decode_message = [&](const String& name, bool returns_something) {
-                dbg() << "        case (int)Messages::" << endpoint.name << "::MessageID::" << name << ":";
+                out() << "        case (int)Messages::" << endpoint.name << "::MessageID::" << name << ":";
                 if (returns_something) {
-                    dbg() << "            return handle(static_cast<const Messages::" << endpoint.name << "::" << name << "&>(message));";
+                    out() << "            return handle(static_cast<const Messages::" << endpoint.name << "::" << name << "&>(message));";
                 } else {
-                    dbg() << "            handle(static_cast<const Messages::" << endpoint.name << "::" << name << "&>(message));";
-                    dbg() << "            return nullptr;";
+                    out() << "            handle(static_cast<const Messages::" << endpoint.name << "::" << name << "&>(message));";
+                    out() << "            return nullptr;";
                 }
             };
             do_decode_message(message.name, message.is_synchronous);
             if (message.is_synchronous)
                 do_decode_message(message.response_name(), false);
         }
-        dbg() << "        default:";
-        dbg() << "            return nullptr;";
+        out() << "        default:";
+        out() << "            return nullptr;";
 
-        dbg() << "        }";
-        dbg() << "    }";
+        out() << "        }";
+        out() << "    }";
 
         for (auto& message : endpoint.messages) {
             String return_type = "void";
@@ -470,30 +470,30 @@ int main(int argc, char** argv)
                 builder.append(">");
                 return_type = builder.to_string();
             }
-            dbg() << "    virtual " << return_type << " handle(const Messages::" << endpoint.name << "::" << message.name << "&) = 0;";
+            out() << "    virtual " << return_type << " handle(const Messages::" << endpoint.name << "::" << message.name << "&) = 0;";
         }
 
-        dbg() << "private:";
-        dbg() << "};";
+        out() << "private:";
+        out() << "};";
     }
 
 #ifdef DEBUG
     for (auto& endpoint : endpoints) {
-        dbg() << "Endpoint: '" << endpoint.name << "' (magic: " << endpoint.magic << ")";
+        warn() << "Endpoint: '" << endpoint.name << "' (magic: " << endpoint.magic << ")";
         for (auto& message : endpoint.messages) {
-            dbg() << "  Message: '" << message.name << "'";
-            dbg() << "    Sync: " << message.is_synchronous;
-            dbg() << "    Inputs:";
+            warn() << "  Message: '" << message.name << "'";
+            warn() << "    Sync: " << message.is_synchronous;
+            warn() << "    Inputs:";
             for (auto& parameter : message.inputs)
-                dbg() << "        Parameter: " << parameter.name << " (" << parameter.type << ")";
+                warn() << "        Parameter: " << parameter.name << " (" << parameter.type << ")";
             if (message.inputs.is_empty())
-                dbg() << "        (none)";
+                warn() << "        (none)";
             if (message.is_synchronous) {
-                dbg() << "    Outputs:";
+                warn() << "    Outputs:";
                 for (auto& parameter : message.outputs)
-                    dbg() << "        Parameter: " << parameter.name << " (" << parameter.type << ")";
+                    warn() << "        Parameter: " << parameter.name << " (" << parameter.type << ")";
                 if (message.outputs.is_empty())
-                    dbg() << "        (none)";
+                    warn() << "        (none)";
             }
         }
     }

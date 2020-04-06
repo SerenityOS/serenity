@@ -68,6 +68,24 @@ public:
     }
 };
 
+#if !defined(KERNEL) && !defined(BOOTSTRAPPER)
+class StdLogStream final : public LogStream {
+public:
+    StdLogStream(int fd)
+        : m_fd(fd)
+    {
+    }
+    virtual ~StdLogStream() override;
+    virtual void write(const char* characters, int length) const override;
+
+private:
+    int m_fd { -1 };
+};
+
+inline StdLogStream out() { return StdLogStream(STDOUT_FILENO); }
+inline StdLogStream warn() { return StdLogStream(STDERR_FILENO); }
+#endif
+
 #if !defined(BOOTSTRAPPER) && defined(KERNEL)
 class KernelLogStream final : public LogStream {
 public:
@@ -128,3 +146,8 @@ DebugLogStream klog();
 using AK::dbg;
 using AK::klog;
 using AK::LogStream;
+
+#if !defined(KERNEL) && !defined(BOOTSTRAPPER)
+using AK::out;
+using AK::warn;
+#endif

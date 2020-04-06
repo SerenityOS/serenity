@@ -58,21 +58,21 @@ int main(int argc, char** argv)
     auto json = JsonValue::from_string(file->read_all());
     ASSERT(json.is_object());
 
-    dbg() << "#pragma once";
-    dbg() << "#include <AK/StringView.h>";
-    dbg() << "#include <AK/Traits.h>";
+    out() << "#pragma once";
+    out() << "#include <AK/StringView.h>";
+    out() << "#include <AK/Traits.h>";
 
-    dbg() << "namespace Web {";
-    dbg() << "namespace CSS {";
-    dbg() << "enum class PropertyID {";
-    dbg() << "    Invalid,";
+    out() << "namespace Web {";
+    out() << "namespace CSS {";
+    out() << "enum class PropertyID {";
+    out() << "    Invalid,";
 
     json.as_object().for_each_member([&](auto& name, auto& value) {
         ASSERT(value.is_object());
-        dbg() << "    " << title_casify(name) << ",";
+        out() << "    " << title_casify(name) << ",";
     });
 
-    dbg() << "};\n\
+    out() << "};\n\
 PropertyID property_id_from_string(const StringView&);\n\
 const char* string_from_property_id(PropertyID);\n\
 }\n\
