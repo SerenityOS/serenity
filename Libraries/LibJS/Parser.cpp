@@ -389,13 +389,30 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
     consume(TokenType::CurlyOpen);
 
     while (!match(TokenType::CurlyClose)) {
-        auto identifier = create_ast_node<Identifier>(consume(TokenType::Identifier).value());
+        FlyString property_name;
+        if (match(TokenType::Identifier)) {
+            property_name = consume(TokenType::Identifier).value();
+        } else if (match(TokenType::StringLiteral)) {
+            property_name = consume(TokenType::StringLiteral).string_value();
+        } else if (match(TokenType::NumericLiteral)) {
+            property_name = consume(TokenType::NumericLiteral).value();
+        } else {
+            m_parser_state.m_has_errors = true;
+            auto& current_token = m_parser_state.m_current_token;
+            fprintf(stderr, "Error: Unexpected token %s as member in object initialization. Expected a numeric literal, string literal or identifier (line: %zu, column: %zu))\n",
+                    current_token.name(),
+                    current_token.line_number(),
+                    current_token.line_column());
+            consume();
+            continue;
+        }
+
 
         if (match(TokenType::Colon)) {
             consume(TokenType::Colon);
-            properties.set(identifier->string(), parse_expression(0));
+            properties.set(property_name, parse_expression(0));
         } else {
-            properties.set(identifier->string(), identifier);
+            properties.set(property_name, create_ast_node<Identifier>(property_name));
         }
 
         if (!match(TokenType::Comma))
