@@ -45,6 +45,7 @@ StringPrototype::StringPrototype()
     put_native_function("startsWith", starts_with, 1);
     put_native_function("indexOf", index_of, 1);
     put_native_function("toLowerCase", to_lowercase, 0);
+    put_native_function("toUpperCase", to_uppercase, 0);
 }
 
 StringPrototype::~StringPrototype()
@@ -152,6 +153,14 @@ Value StringPrototype::to_lowercase(Interpreter& interpreter)
     if (!string_object)
         return {};
     return js_string(interpreter, string_object->primitive_string()->string().to_lowercase());
+}
+
+Value StringPrototype::to_uppercase(Interpreter& interpreter)
+{
+    auto* string_object = string_object_from(interpreter);
+    if (!string_object)
+        return {};
+    return js_string(interpreter, string_object->primitive_string()->string().to_uppercase());
 }
 
 Value StringPrototype::length_getter(Interpreter& interpreter)
