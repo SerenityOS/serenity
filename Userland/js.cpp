@@ -117,11 +117,22 @@ static void print_array(const JS::Array& array, HashTable<JS::Object*>& seen_obj
 static void print_object(const JS::Object& object, HashTable<JS::Object*>& seen_objects)
 {
     fputs("{ ", stdout);
+
+    for (size_t i = 0; i < object.elements().size(); ++i) {
+        printf("\"\033[33;1m%zu\033[0m\": ", i);
+        print_value(object.elements()[i], seen_objects);
+        if (i != object.elements().size() - 1)
+            fputs(", ", stdout);
+    }
+
+    if (!object.elements().is_empty() && object.shape().property_count())
+        fputs(", ", stdout);
+
     size_t index = 0;
     for (auto& it : object.shape().property_table()) {
         printf("\"\033[33;1m%s\033[0m\": ", it.key.characters());
         print_value(object.get_direct(it.value.offset), seen_objects);
-        if (index != object.shape().property_table().size() - 1)
+        if (index != object.shape().property_count() - 1)
             fputs(", ", stdout);
         ++index;
     }

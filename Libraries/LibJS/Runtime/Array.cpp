@@ -43,52 +43,21 @@ Array::~Array()
 
 Value Array::shift()
 {
-    if (m_elements.size() == 0)
+    if (elements().size() == 0)
         return js_undefined();
-    return Value(m_elements.take_first());
+    return Value(elements().take_first());
 }
 
 Value Array::pop()
 {
-    if (m_elements.size() == 0)
+    if (elements().size() == 0)
         return js_undefined();
-    return Value(m_elements.take_last());
+    return Value(elements().take_last());
 }
 
 void Array::push(Value value)
 {
-    m_elements.append(value);
-}
-
-void Array::visit_children(Cell::Visitor& visitor)
-{
-    Object::visit_children(visitor);
-    for (auto& element : m_elements)
-        visitor.visit(element);
-}
-
-Optional<Value> Array::get_own_property(const Object& this_object, const FlyString& property_name) const
-{
-    bool ok;
-    i32 index = property_name.to_int(ok);
-    if (ok) {
-        if (index >= 0 && index < length())
-            return m_elements[index];
-    }
-    return Object::get_own_property(this_object, property_name);
-}
-
-bool Array::put_own_property(Object& this_object, const FlyString& property_name, Value value)
-{
-    bool ok;
-    i32 index = property_name.to_int(ok);
-    if (ok && index >= 0) {
-        if (index >= length())
-            m_elements.resize(index + 1);
-        m_elements[index] = value;
-        return true;
-    }
-    return Object::put_own_property(this_object, property_name, value);
+    elements().append(value);
 }
 
 Value Array::length_getter(Interpreter& interpreter)

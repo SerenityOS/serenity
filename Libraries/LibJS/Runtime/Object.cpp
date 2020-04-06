@@ -119,8 +119,27 @@ bool Object::put_own_property(Object& this_object, const FlyString& property_nam
     return true;
 }
 
+Optional<Value> Object::get_by_index(i32 property_index) const
+{
+    if (property_index < 0)
+        return get(String::number(property_index));
+
+    const Object* object = this;
+    while (object) {
+        if (static_cast<size_t>(property_index) < object->m_elements.size())
+            return object->m_elements[property_index];
+        object = object->prototype();
+    }
+    return {};
+}
+
 Optional<Value> Object::get(const FlyString& property_name) const
 {
+    bool ok;
+    i32 property_index = property_name.to_int(ok);
+    if (ok && property_index >= 0)
+        return get_by_index(property_index);
+
     const Object* object = this;
     while (object) {
         auto value = object->get_own_property(*this, property_name);
@@ -131,8 +150,23 @@ Optional<Value> Object::get(const FlyString& property_name) const
     return {};
 }
 
+void Object::put_by_index(i32 property_index, Value value)
+{
+    if (property_index < 0)
+        return put(String::number(property_index), value);
+    // FIXME: Implement some kind of sparse storage for arrays with huge indices.
+    if (static_cast<size_t>(property_index) >= m_elements.size())
+        m_elements.resize(property_index + 1);
+    m_elements[property_index] = value;
+}
+
 void Object::put(const FlyString& property_name, Value value)
 {
+    bool ok;
+    i32 property_index = property_name.to_int(ok);
+    if (ok && property_index >= 0)
+        return put_by_index(property_index, value);
+
     // If there's a setter in the prototype chain, we go to the setter.
     // Otherwise, it goes in the own property storage.
     Object* object = this;
@@ -174,10 +208,17 @@ void Object::visit_children(Cell::Visitor& visitor)
 
     for (auto& value : m_storage)
         visitor.visit(value);
+
+    for (auto& value : m_elements)
+        visitor.visit(value);
 }
 
 bool Object::has_own_property(const FlyString& property_name) const
 {
+    bool ok;
+    i32 property_index = property_name.to_int(ok);
+    if (ok && property_index >= 0)
+        return static_cast<size_t>(property_index) < m_elements.size();
     return shape().lookup(property_name).has_value();
 }
 

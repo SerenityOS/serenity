@@ -35,9 +35,7 @@ public:
     Array();
     virtual ~Array() override;
 
-    i32 length() const { return static_cast<i32>(m_elements.size()); }
-    const Vector<Value>& elements() const { return m_elements; }
-    Vector<Value>& elements() { return m_elements; }
+    i32 length() const { return static_cast<i32>(elements().size()); }
 
     Value shift();
     Value pop();
@@ -45,15 +43,10 @@ public:
 
 private:
     virtual const char* class_name() const override { return "Array"; }
-    virtual void visit_children(Cell::Visitor&) override;
     virtual bool is_array() const override { return true; }
-    virtual Optional<Value> get_own_property(const Object& this_object, const FlyString& property_name) const override;
-    virtual bool put_own_property(Object& this_object, const FlyString& property_name, Value) override;
 
     static Value length_getter(Interpreter&);
     static void length_setter(Interpreter&, Value);
-
-    Vector<Value> m_elements;
 };
 
 }
