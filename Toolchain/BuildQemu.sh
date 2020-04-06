@@ -52,11 +52,20 @@ if [ -z "$MAKEJOBS" ]; then
     MAKEJOBS=$(nproc)
 fi
 
+if [[ $(uname) == "Darwin" ]]
+then
+    UI_LIB=cocoa
+else
+    UI_LIB=gtk
+fi
+
+echo Using $UI_LIB based UI
+
 pushd "$DIR/Build/"
     pushd qemu
         "$DIR"/Tarballs/$QEMU_VERSION/configure --prefix="$PREFIX" \
                                                 --target-list=i386-softmmu \
-                                                --enable-gtk || exit 1
+                                                --enable-$UI_LIB || exit 1
         make -j "$MAKEJOBS" || exit 1
         make install || exit 1
     popd
