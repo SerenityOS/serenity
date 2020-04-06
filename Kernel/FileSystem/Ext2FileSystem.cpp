@@ -81,7 +81,8 @@ Ext2FS::~Ext2FS()
 bool Ext2FS::flush_super_block()
 {
     LOCKER(m_lock);
-    bool success = raw_write(2, (const u8*)&m_super_block);
+    ASSERT((sizeof(ext2_super_block) % logical_block_size()) == 0);
+    bool success = raw_write_blocks(2, (sizeof(ext2_super_block) / logical_block_size()), (const u8*)&m_super_block);
     ASSERT(success);
     return true;
 }
@@ -96,7 +97,8 @@ const ext2_group_desc& Ext2FS::group_descriptor(GroupIndex group_index) const
 bool Ext2FS::initialize()
 {
     LOCKER(m_lock);
-    bool success = raw_read(2, (u8*)&m_super_block);
+    ASSERT((sizeof(ext2_super_block) % logical_block_size()) == 0);
+    bool success = raw_read_blocks(2, (sizeof(ext2_super_block) / logical_block_size()), (u8*)&m_super_block);
     ASSERT(success);
 
     auto& super_block = this->super_block();
