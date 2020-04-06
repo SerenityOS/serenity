@@ -45,6 +45,6 @@ inline int dbgputstr(const char (&array)[N])
 #else
 #    include <stdio.h>
 #    define kprintf printf
-#    define dbgprintf printf
-#    define dbgputstr(characters, length) fwrite(characters, 1, length, stdout)
+#    define dbgprintf(...) fprintf(stderr, __VA_ARGS__)
+#    define dbgputstr(characters, length) fwrite(characters, 1, length, stderr)
 #endif
