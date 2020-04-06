@@ -182,7 +182,7 @@ ByteBuffer IODevice::read_line(size_t max_size)
         return {};
     if (m_eof) {
         if (m_buffered_data.size() > max_size) {
-            dbgprintf("IODevice::read_line: At EOF but there's more than max_size(%d) buffered\n", max_size);
+            dbgprintf("IODevice::read_line: At EOF but there's more than max_size(%zu) buffered\n", max_size);
             return {};
         }
         auto buffer = ByteBuffer::copy(m_buffered_data.data(), m_buffered_data.size());
