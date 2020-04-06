@@ -384,8 +384,12 @@ float ceilf(float value)
 {
     // FIXME: Please fix me. I am naive.
     int as_int = (int)value;
-    if (value == (float)as_int) {
-        return (float)as_int;
+    if (value == (float)as_int)
+        return as_int;
+    if (value < 0) {
+        if (as_int == 0)
+            return -0;
+        return as_int;
     }
     return as_int + 1;
 }
@@ -394,8 +398,12 @@ double ceil(double value)
 {
     // FIXME: Please fix me. I am naive.
     int as_int = (int)value;
-    if (value == (double)as_int) {
-        return (double)as_int;
+    if (value == (double)as_int)
+        return as_int;
+    if (value < 0) {
+        if (as_int == 0)
+            return -0;
+        return as_int;
     }
     return as_int + 1;
 }
