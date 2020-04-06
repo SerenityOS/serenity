@@ -33,6 +33,8 @@
 namespace Gfx {
 
 class FloatRect;
+class Point;
+class Size;
 
 class FloatPoint {
 public:
@@ -96,13 +98,32 @@ public:
         return *this;
     }
 
+    FloatPoint operator+(const FloatPoint& other) const { return { m_x + other.m_x, m_y + other.m_y }; }
     FloatPoint& operator+=(const FloatPoint& other)
     {
         m_x += other.m_x;
         m_y += other.m_y;
         return *this;
     }
-    FloatPoint operator+(const FloatPoint& other) const { return { m_x + other.m_x, m_y + other.m_y }; }
+
+    FloatPoint operator*(float other) const { return { m_x * other, m_y * other }; }
+    FloatPoint& operator*=(float other)
+    {
+        m_x *= other;
+        m_y *= other;
+        return *this;
+    }
+
+    FloatPoint operator/(float other) const { return { m_x / other, m_y / other }; }
+    FloatPoint& operator/=(float other)
+    {
+        m_x /= other;
+        m_y /= other;
+        return *this;
+    }
+
+    explicit operator Point() const;
+    explicit operator Size() const;
 
     String to_string() const { return String::format("[%g,%g]", x(), y()); }
 

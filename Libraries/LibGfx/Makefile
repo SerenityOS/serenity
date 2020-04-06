@@ -4,6 +4,7 @@ OBJS = \
     Color.o \
     DisjointRectSet.o \
     Emoji.o \
+    FloatPoint.o \
     Font.o \
     GIFLoader.o \
     ImageDecoder.o \
