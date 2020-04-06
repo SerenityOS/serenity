@@ -32,6 +32,9 @@
 
 namespace Gfx {
 
+class FloatPoint;
+class Point;
+
 class Size {
 public:
     Size() {}
@@ -75,6 +78,25 @@ public:
         m_height += other.m_height;
         return *this;
     }
+
+    Size operator*(int other) const { return { m_width * other, m_height * other }; }
+    Size& operator*=(int other)
+    {
+        m_width *= other;
+        m_height *= other;
+        return *this;
+    }
+
+    Size operator/(int other) const { return { m_width / other, m_height / other }; }
+    Size& operator/=(int other)
+    {
+        m_width /= other;
+        m_height /= other;
+        return *this;
+    }
+
+    explicit operator Point() const;
+    explicit operator FloatPoint() const;
 
     int primary_size_for_orientation(Orientation orientation) const
     {

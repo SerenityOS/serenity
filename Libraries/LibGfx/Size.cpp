@@ -26,10 +26,20 @@
 
 #include <AK/BufferStream.h>
 #include <AK/String.h>
+#include <LibGfx/FloatPoint.h>
+#include <LibGfx/Point.h>
 #include <LibGfx/Size.h>
 #include <LibIPC/Decoder.h>
 
 namespace Gfx {
+
+Size::operator FloatPoint() const {
+    return FloatPoint(width(), height());
+}
+
+Size::operator Point() const {
+    return Point(width(), height());
+}
 
 String Size::to_string() const
 {
