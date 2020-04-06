@@ -168,6 +168,25 @@ bool FileBackedFS::raw_write(unsigned index, const u8* buffer)
     return true;
 }
 
+bool FileBackedFS::raw_read_blocks(unsigned index, size_t count, u8* buffer)
+{
+    for (unsigned block = index; block < (index + count); block++) {
+        if (!raw_read(block, buffer))
+            return false;
+        buffer += logical_block_size();
+    }
+    return true;
+}
+bool FileBackedFS::raw_write_blocks(unsigned index, size_t count, const u8* buffer)
+{
+    for (unsigned block = index; block < (index + count); block++) {
+        if (!raw_write(block, buffer))
+            return false;
+        buffer += logical_block_size();
+    }
+    return true;
+}
+
 bool FileBackedFS::write_blocks(unsigned index, unsigned count, const u8* data, FileDescription* description)
 {
     ASSERT(m_logical_block_size);

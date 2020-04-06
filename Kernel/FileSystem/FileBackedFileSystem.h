@@ -58,6 +58,9 @@ protected:
     bool raw_read(unsigned index, u8* buffer);
     bool raw_write(unsigned index, const u8* buffer);
 
+    bool raw_read_blocks(unsigned index, size_t count, u8* buffer);
+    bool raw_write_blocks(unsigned index, size_t count, const u8* buffer);
+
     bool write_block(unsigned index, const u8*, FileDescription* = nullptr);
     bool write_blocks(unsigned index, unsigned count, const u8*, FileDescription* = nullptr);
 
