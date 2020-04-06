@@ -44,6 +44,7 @@ StringPrototype::StringPrototype()
     put_native_function("repeat", repeat, 1);
     put_native_function("startsWith", starts_with, 1);
     put_native_function("indexOf", index_of, 1);
+    put_native_function("toLowerCase", to_lowercase, 0);
 }
 
 StringPrototype::~StringPrototype()
@@ -131,6 +132,26 @@ Value StringPrototype::index_of(Interpreter& interpreter)
     if (!ptr)
         return Value(-1);
     return Value((i32)(ptr - haystack.characters()));
+}
+
+static StringObject* string_object_from(Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return nullptr;
+    if (!this_object->is_string_object()) {
+        interpreter.throw_exception<Error>("TypeError", "Not a String object");
+        return nullptr;
+    }
+    return static_cast<StringObject*>(this_object);
+}
+
+Value StringPrototype::to_lowercase(Interpreter& interpreter)
+{
+    auto* string_object = string_object_from(interpreter);
+    if (!string_object)
+        return {};
+    return js_string(interpreter, string_object->primitive_string()->string().to_lowercase());
 }
 
 Value StringPrototype::length_getter(Interpreter& interpreter)
