@@ -39,14 +39,6 @@
 
 namespace JS {
 
-Value::Value()
-    : m_type(Type::Empty)
-{
- //   dbg() << "Create empty value";
-   // dump_backtrace();
-}
-
-
 bool Value::is_array() const
 {
     return is_object() && as_object().is_array();
