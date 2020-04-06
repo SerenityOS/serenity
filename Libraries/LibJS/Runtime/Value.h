@@ -58,7 +58,10 @@ public:
     bool is_nan() const { return is_number() && __builtin_isnan(as_double()); }
     bool is_infinity() const { return is_number() && __builtin_isinf(as_double()); }
 
-    Value();
+    Value()
+        : m_type(Type::Empty)
+    {
+    }
 
     explicit Value(bool value)
         : m_type(Type::Boolean)
