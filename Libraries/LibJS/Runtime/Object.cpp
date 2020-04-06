@@ -171,6 +171,9 @@ void Object::visit_children(Cell::Visitor& visitor)
 {
     Cell::visit_children(visitor);
     visitor.visit(m_shape);
+
+    for (auto& value : m_storage)
+        visitor.visit(value);
 }
 
 bool Object::has_own_property(const FlyString& property_name) const
