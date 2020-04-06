@@ -136,12 +136,12 @@ Value MathObject::min(Interpreter& interpreter)
     if (interpreter.argument_count() == 1)
         return interpreter.argument(0).to_number();
 
-    Value max = interpreter.argument(0).to_number();
+    Value min = interpreter.argument(0).to_number();
     for (size_t i = 1; i < interpreter.argument_count(); ++i) {
         Value cur = interpreter.argument(i).to_number();
-        max = Value(cur.as_double() < max.as_double() ? cur : max);
+        min = Value(cur.as_double() < min.as_double() ? cur : min);
     }
-    return max;
+    return min;
 }
 
 Value MathObject::trunc(Interpreter& interpreter)
