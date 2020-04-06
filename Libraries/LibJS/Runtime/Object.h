@@ -31,6 +31,7 @@
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/Cell.h>
 #include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/PropertyName.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -45,9 +46,11 @@ public:
 
     Optional<Value> get_by_index(i32 property_index) const;
     Optional<Value> get(const FlyString& property_name) const;
+    Optional<Value> get(PropertyName) const;
 
     void put_by_index(i32 property_index, Value);
     void put(const FlyString& property_name, Value);
+    void put(PropertyName, Value);
 
     virtual Optional<Value> get_own_property(const Object& this_object, const FlyString& property_name) const;
     virtual bool put_own_property(Object& this_object, const FlyString& property_name, Value);

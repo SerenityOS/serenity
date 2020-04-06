@@ -855,13 +855,17 @@ void MemberExpression::dump(int indent) const
     m_property->dump(indent + 1);
 }
 
-FlyString MemberExpression::computed_property_name(Interpreter& interpreter) const
+PropertyName MemberExpression::computed_property_name(Interpreter& interpreter) const
 {
     if (!is_computed()) {
         ASSERT(m_property->is_identifier());
-        return static_cast<const Identifier&>(*m_property).string();
+        return PropertyName(static_cast<const Identifier&>(*m_property).string());
     }
-    return m_property->execute(interpreter).to_string();
+    auto index = m_property->execute(interpreter);
+    // FIXME: What about non-integer numbers tho.
+    if (index.is_number())
+        return PropertyName(index.to_i32());
+    return PropertyName(index.to_string());
 }
 
 Value MemberExpression::execute(Interpreter& interpreter) const

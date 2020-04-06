@@ -150,6 +150,13 @@ Optional<Value> Object::get(const FlyString& property_name) const
     return {};
 }
 
+Optional<Value> Object::get(PropertyName property_name) const
+{
+    if (property_name.is_number())
+        return get_by_index(property_name.as_number());
+    return get(property_name.as_string());
+}
+
 void Object::put_by_index(i32 property_index, Value value)
 {
     if (property_index < 0)
@@ -187,6 +194,13 @@ void Object::put(const FlyString& property_name, Value value)
         object = object->prototype();
     }
     put_own_property(*this, property_name, value);
+}
+
+void Object::put(PropertyName property_name, Value value)
+{
+    if (property_name.is_number())
+        return put_by_index(property_name.as_number(), value);
+    return put(property_name.as_string(), value);
 }
 
 void Object::put_native_function(const FlyString& property_name, AK::Function<Value(Interpreter&)> native_function, i32 length)

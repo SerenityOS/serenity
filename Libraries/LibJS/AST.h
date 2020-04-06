@@ -33,6 +33,7 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Runtime/PropertyName.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -672,7 +673,7 @@ public:
     const Expression& object() const { return *m_object; }
     const Expression& property() const { return *m_property; }
 
-    FlyString computed_property_name(Interpreter&) const;
+    PropertyName computed_property_name(Interpreter&) const;
 
 private:
     virtual bool is_member_expression() const override { return true; }
