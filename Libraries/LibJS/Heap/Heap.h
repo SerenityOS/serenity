@@ -78,6 +78,9 @@ private:
 
     Cell* cell_from_possible_pointer(FlatPtr);
 
+    size_t m_max_allocations_between_gc { 10000 };
+    size_t m_allocations_since_last_gc { false };
+
     bool m_should_collect_on_every_allocation { false };
 
     Interpreter& m_interpreter;
