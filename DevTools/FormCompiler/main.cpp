@@ -61,7 +61,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    dbg() << "#pragma once";
+    out() << "#pragma once";
 
     widgets.as_array().for_each([&](auto& value) {
         const JsonObject& widget_object = value.as_object();
@@ -69,36 +69,36 @@ int main(int argc, char** argv)
         StringBuilder builder;
         auto parts = class_name.split(':');
         builder.append(parts.last());
-        dbg() << "#include <LibGUI/" << builder.to_string() << ".h>";
+        out() << "#include <LibGUI/" << builder.to_string() << ".h>";
     });
 
-    dbg() << "struct UI_" << name << " {";
-    dbg() << "    RefPtr<GUI::Widget> main_widget;";
+    out() << "struct UI_" << name << " {";
+    out() << "    RefPtr<GUI::Widget> main_widget;";
 
     widgets.as_array().for_each([&](auto& value) {
         ASSERT(value.is_object());
         const JsonObject& widget_object = value.as_object();
         auto name = widget_object.get("name").to_string();
         auto class_name = widget_object.get("class").to_string();
-        dbg() << "    RefPtr<" << class_name << "> " << name << ";";
+        out() << "    RefPtr<" << class_name << "> " << name << ";";
     });
 
-    dbg() << "    UI_" << name << "();";
+    out() << "    UI_" << name << "();";
 
-    dbg() << "};";
+    out() << "};";
 
-    dbg() << "UI_" << name << "::UI_" << name << "()";
-    dbg() << "{";
+    out() << "UI_" << name << "::UI_" << name << "()";
+    out() << "{";
 
-    dbg() << "    main_widget = GUI::Widget::construct();";
-    dbg() << "    main_widget->set_fill_with_background_color(true);";
+    out() << "    main_widget = GUI::Widget::construct();";
+    out() << "    main_widget->set_fill_with_background_color(true);";
 
     widgets.as_array().for_each([&](auto& value) {
         ASSERT(value.is_object());
         const JsonObject& widget_object = value.as_object();
         auto name = widget_object.get("name").to_string();
         auto class_name = widget_object.get("class").to_string();
-        dbg() << "    " << name << " = main_widget->add<" << class_name << ">();";
+        out() << "    " << name << " = main_widget->add<" << class_name << ">();";
 
         widget_object.for_each_member([&](auto& property_name, const JsonValue& property_value) {
             if (property_name == "class")
@@ -111,12 +111,12 @@ int main(int argc, char** argv)
             else
                 value = property_value.serialized<StringBuilder>();
 
-            dbg() << "    " << name << "->set_" << property_name << "(" << value << ");";
+            out() << "    " << name << "->set_" << property_name << "(" << value << ");";
         });
 
-        dbg() << "";
+        out() << "";
     });
-    dbg() << "}";
+    out() << "}";
 
     return 0;
 }
