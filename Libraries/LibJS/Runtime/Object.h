@@ -43,7 +43,10 @@ public:
     Shape& shape() { return *m_shape; }
     const Shape& shape() const { return *m_shape; }
 
+    Optional<Value> get_by_index(i32 property_index) const;
     Optional<Value> get(const FlyString& property_name) const;
+
+    void put_by_index(i32 property_index, Value);
     void put(const FlyString& property_name, Value);
 
     virtual Optional<Value> get_own_property(const Object& this_object, const FlyString& property_name) const;
@@ -81,11 +84,15 @@ public:
 
     Value get_direct(size_t index) const { return m_storage[index]; }
 
+    const Vector<Value>& elements() const { return m_elements; }
+    Vector<Value>& elements() { return m_elements; }
+
 private:
     void set_shape(Shape&);
 
     Shape* m_shape { nullptr };
     Vector<Value> m_storage;
+    Vector<Value> m_elements;
 };
 
 }

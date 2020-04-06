@@ -64,11 +64,9 @@ Value ObjectConstructor::get_own_property_names(Interpreter& interpreter)
     if (interpreter.exception())
         return {};
     auto* result = interpreter.heap().allocate<Array>();
-    if (object->is_array()) {
-        auto* array = static_cast<const Array*>(object);
-        for (i32 i = 0; i < array->length(); ++i)
-            result->push(js_string(interpreter, String::number(i)));
-    }
+    for (size_t i = 0; i < object->elements().size(); ++i)
+        result->push(js_string(interpreter, String::number(i)));
+
     for (auto& it : object->shape().property_table())
         result->push(js_string(interpreter, it.key));
     return result;
