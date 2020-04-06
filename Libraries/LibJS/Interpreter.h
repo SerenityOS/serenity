@@ -67,6 +67,8 @@ struct Argument {
     Value value;
 };
 
+typedef Vector<Argument, 8> ArgumentVector;
+
 class Interpreter {
 public:
     template<typename GlobalObjectType, typename... Args>
@@ -79,7 +81,7 @@ public:
 
     ~Interpreter();
 
-    Value run(const Statement&, Vector<Argument> = {}, ScopeType = ScopeType::Block);
+    Value run(const Statement&, ArgumentVector = {}, ScopeType = ScopeType::Block);
 
     Object& global_object() { return *m_global_object; }
     const Object& global_object() const { return *m_global_object; }
@@ -97,7 +99,7 @@ public:
 
     void gather_roots(Badge<Heap>, HashTable<Cell*>&);
 
-    void enter_scope(const ScopeNode&, Vector<Argument>, ScopeType);
+    void enter_scope(const ScopeNode&, ArgumentVector, ScopeType);
     void exit_scope(const ScopeNode&);
 
     Value call(Function*, Value this_value = {}, const Vector<Value>& arguments = {});

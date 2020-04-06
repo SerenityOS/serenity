@@ -959,7 +959,7 @@ Value TryStatement::execute(Interpreter& interpreter) const
     if (auto* exception = interpreter.exception()) {
         if (m_handler) {
             interpreter.clear_exception();
-            Vector<Argument> arguments { { m_handler->parameter(), exception->value() } };
+            ArgumentVector arguments { { m_handler->parameter(), exception->value() } };
             interpreter.run(m_handler->body(), move(arguments));
         }
     }
