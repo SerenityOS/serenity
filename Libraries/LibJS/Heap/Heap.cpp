@@ -58,8 +58,14 @@ Heap::~Heap()
 
 Cell* Heap::allocate_cell(size_t size)
 {
-    if (should_collect_on_every_allocation())
+    if (should_collect_on_every_allocation()) {
         collect_garbage();
+    } else if (m_allocations_since_last_gc > m_max_allocations_between_gc) {
+        m_allocations_since_last_gc = 0;
+        collect_garbage();
+    } else {
+        ++m_allocations_since_last_gc;
+    }
 
     for (auto& block : m_blocks) {
         if (size > block->cell_size())
