@@ -163,6 +163,7 @@ Thread::~Thread()
 
 void Thread::unblock()
 {
+    m_blocker = nullptr;
     if (current == this) {
         if (m_should_die)
             set_state(Thread::Dying);
