@@ -893,7 +893,7 @@ PropertyName MemberExpression::computed_property_name(Interpreter& interpreter) 
         return {};
     ASSERT(!index.is_empty());
     // FIXME: What about non-integer numbers tho.
-    if (index.is_number())
+    if (index.is_number() && index.to_i32() >= 0)
         return PropertyName(index.to_i32());
     return PropertyName(index.to_string());
 }
