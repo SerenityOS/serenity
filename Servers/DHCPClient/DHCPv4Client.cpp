@@ -37,12 +37,12 @@ static void send(const InterfaceDescriptor& iface, const DHCPv4Packet& packet, C
 {
     int fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (fd < 0) {
-        dbg() << "ERROR: socket";
+        dbg() << "ERROR: socket :: " << strerror(errno);
         return;
     }
 
     if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, iface.m_ifname.characters(), IFNAMSIZ) < 0) {
-        dbg() << "ERROR from setsockopt(SO_BINDTODEVICE): " << strerror(errno);
+        dbg() << "ERROR: setsockopt(SO_BINDTODEVICE) :: " << strerror(errno);
         return;
     }
 
@@ -64,7 +64,7 @@ static void set_params(const InterfaceDescriptor& iface, const IPv4Address& ipv4
 {
     int fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
     if (fd < 0) {
-        dbg() << "ERROR: socket";
+        dbg() << "ERROR: socket :: " << strerror(errno);
         return;
     }
 
@@ -77,14 +77,14 @@ static void set_params(const InterfaceDescriptor& iface, const IPv4Address& ipv4
     ((sockaddr_in&)ifr.ifr_addr).sin_addr.s_addr = ipv4_addr.to_in_addr_t();
 
     if (ioctl(fd, SIOCSIFADDR, &ifr) < 0) {
-        dbg() << "ERROR: ioctl(SIOCSIFADDR)";
+        dbg() << "ERROR: ioctl(SIOCSIFADDR) :: " << strerror(errno);
     }
 
     // set the network mask
     ((sockaddr_in&)ifr.ifr_netmask).sin_addr.s_addr = netmask.to_in_addr_t();
 
     if (ioctl(fd, SIOCSIFNETMASK, &ifr) < 0) {
-        dbg() << "ERROR: ioctl(SIOCSIFADDR)";
+        dbg() << "ERROR: ioctl(SIOCSIFNETMASK) :: " << strerror(errno);
     }
 
     // set the default gateway
@@ -97,7 +97,7 @@ static void set_params(const InterfaceDescriptor& iface, const IPv4Address& ipv4
     rt.rt_flags = RTF_UP | RTF_GATEWAY;
 
     if (ioctl(fd, SIOCADDRT, &rt) < 0) {
-        dbg() << "Error: ioctl(SIOCADDRT)";
+        dbg() << "Error: ioctl(SIOCADDRT) :: " << strerror(errno);
     }
 }
 
@@ -277,7 +277,7 @@ void DHCPv4Client::dhcp_request(DHCPv4Transaction& transaction, const DHCPv4Pack
     builder.set_message_type(DHCPMessageType::DHCPRequest);
     auto& dhcp_packet = builder.build();
 
-    // broadcast the discover request
+    // broadcast the "request" request
     send(iface, dhcp_packet, this);
     transaction.accepted_offer = true;
 }
