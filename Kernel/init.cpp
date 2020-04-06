@@ -292,7 +292,7 @@ void init_stage2()
             }
         }
     }
-    auto e2fs = Ext2FS::create(root_dev);
+    auto e2fs = Ext2FS::create(*FileDescription::create(root_dev));
     if (!e2fs->initialize()) {
         klog() << "init_stage2: couldn't open root filesystem";
         hang();
