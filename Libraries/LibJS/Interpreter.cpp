@@ -61,7 +61,7 @@ Interpreter::~Interpreter()
 {
 }
 
-Value Interpreter::run(const Statement& statement, Vector<Argument> arguments, ScopeType scope_type)
+Value Interpreter::run(const Statement& statement, ArgumentVector arguments, ScopeType scope_type)
 {
     if (!statement.is_scope_node())
         return statement.execute(*this);
@@ -86,7 +86,7 @@ Value Interpreter::run(const Statement& statement, Vector<Argument> arguments, S
     return did_return ? m_last_value : js_undefined();
 }
 
-void Interpreter::enter_scope(const ScopeNode& scope_node, Vector<Argument> arguments, ScopeType scope_type)
+void Interpreter::enter_scope(const ScopeNode& scope_node, ArgumentVector arguments, ScopeType scope_type)
 {
     HashMap<FlyString, Variable> scope_variables_with_declaration_type;
     for (auto& argument : arguments) {
