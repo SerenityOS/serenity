@@ -107,18 +107,27 @@ enum class OpCode {
 
 class StackValue {
 public:
-    union {
-        OpCode op_code;
-        char* string;
-        int length;
+    const union {
+        const OpCode op_code;
+        const char* string;
+        const int length;
     };
 
     const char* name() const;
     static const char* name(OpCode);
 
-    StackValue(OpCode op_code_) { op_code = op_code_; }
-    StackValue(char* string_) { string = string_; }
-    StackValue(int length_) { length = length_; }
+    StackValue(const OpCode op_code_)
+        : op_code(op_code_)
+    {
+    }
+    StackValue(const char* string_)
+        : string(string_)
+    {
+    }
+    StackValue(const int length_)
+        : length(length_)
+    {
+    }
     ~StackValue() = default;
 };
 

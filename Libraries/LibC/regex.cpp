@@ -399,13 +399,13 @@ bool Parser::parse_ere_expression()
 
             if (length > 1) {
                 m_bytes.empend(OpCode::Compare);
-                m_bytes.empend((char*)start_token.value().characters_without_null_termination());
+                m_bytes.empend(start_token.value().characters_without_null_termination());
                 m_bytes.empend(length - ((match_ere_dupl_symbol() && length > 1) ? 1 : 0)); // last character is inserted into 'operations' for duplication symbol handling
             }
 
             if ((match_ere_dupl_symbol() && length > 1) || length == 1) { // Create own compare opcode for last character before duplication symbol
                 operations.empend(OpCode::Compare);
-                operations.empend((char*)last_token.value().characters_without_null_termination());
+                operations.empend(last_token.value().characters_without_null_termination());
                 operations.empend(1);
             }
 
@@ -426,7 +426,7 @@ bool Parser::parse_ere_expression()
 #ifdef REGEX_DEBUG
             printf("[PARSER] EscapeSequence with substring %s\n", String(t.value()).characters());
 #endif
-            operations.empend((char*)t.value().characters_without_null_termination() + 1);
+            operations.empend(t.value().characters_without_null_termination() + 1);
             operations.empend(1);
             break;
         }
