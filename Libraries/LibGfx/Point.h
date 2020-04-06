@@ -34,7 +34,9 @@
 
 namespace Gfx {
 
+class FloatPoint;
 class Rect;
+class Size;
 
 class Point {
 public:
@@ -99,13 +101,32 @@ public:
         return *this;
     }
 
+    Point operator+(const Point& other) const { return { m_x + other.m_x, m_y + other.m_y }; }
     Point& operator+=(const Point& other)
     {
         m_x += other.m_x;
         m_y += other.m_y;
         return *this;
     }
-    Point operator+(const Point& other) const { return { m_x + other.m_x, m_y + other.m_y }; }
+
+    Point operator*(int other) const { return { m_x * other, m_y * other }; }
+    Point& operator*=(int other)
+    {
+        m_x *= other;
+        m_y *= other;
+        return *this;
+    }
+
+    Point operator/(int other) const { return { m_x / other, m_y / other }; }
+    Point& operator/=(int other)
+    {
+        m_x /= other;
+        m_y /= other;
+        return *this;
+    }
+
+    explicit operator Size() const;
+    explicit operator FloatPoint() const;
 
     String to_string() const;
 
