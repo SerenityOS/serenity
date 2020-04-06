@@ -178,7 +178,7 @@ template<typename PutChFunc>
 }
 
 template<typename PutChFunc>
-[[gnu::always_inline]] inline int print_double(PutChFunc putch, char*& bufptr, double number, bool leftPad, bool zeroPad, u32 fieldWidth)
+[[gnu::always_inline]] inline int print_double(PutChFunc putch, char*& bufptr, double number, bool leftPad, bool zeroPad, u32 fieldWidth, u32 fraction_length = 6)
 {
     int length = 0;
 
@@ -192,9 +192,11 @@ template<typename PutChFunc>
     putch(bufptr, '.');
     length++;
     double fraction = number - (i64)number;
-    // FIXME: Allow other fractions
-    fraction = fraction * 1000000;
-    return length + print_u64(putch, bufptr, (i64)fraction, leftPad, true, 6);
+
+    for (u32 i = 0; i < fraction_length; ++i)
+        fraction = fraction * 10;
+
+    return length + print_u64(putch, bufptr, (i64)fraction, false, true, fraction_length);
 }
 
 template<typename PutChFunc>
@@ -295,6 +297,7 @@ template<typename PutChFunc>
         bool zeroPad = false;
         bool dot = false;
         unsigned fieldWidth = 0;
+        unsigned fraction_length = 0;
         unsigned long_qualifiers = 0;
         bool size_qualifier = false;
         (void)size_qualifier;
@@ -324,10 +327,17 @@ template<typename PutChFunc>
                     goto one_more;
             }
             if (*p >= '0' && *p <= '9') {
-                fieldWidth *= 10;
-                fieldWidth += *p - '0';
-                if (*(p + 1))
-                    goto one_more;
+                if (!dot) {
+                    fieldWidth *= 10;
+                    fieldWidth += *p - '0';
+                    if (*(p + 1))
+                        goto one_more;
+                } else {
+                    fraction_length *= 10;
+                    fraction_length += *p - '0';
+                    if (*(p + 1))
+                        goto one_more;
+                }
             }
             if (*p == '*') {
                 fieldWidth = va_arg(ap, int);
@@ -381,7 +391,7 @@ template<typename PutChFunc>
 #if !defined(BOOTSTRAPPER) && !defined(KERNEL)
             case 'g':
             case 'f':
-                ret += print_double(putch, bufptr, va_arg(ap, double), left_pad, zeroPad, fieldWidth);
+                ret += print_double(putch, bufptr, va_arg(ap, double), left_pad, zeroPad, fieldWidth, fraction_length);
                 break;
 #endif
 
