@@ -77,6 +77,7 @@ Optional<Value> Object::get_own_property(const Object& this_object, const FlyStr
         return {};
 
     auto value_here = m_storage[metadata.value().offset];
+    ASSERT(!value_here.is_empty());
     if (value_here.is_object() && value_here.as_object().is_native_property()) {
         auto& native_property = static_cast<const NativeProperty&>(value_here.as_object());
         auto& interpreter = const_cast<Object*>(this)->interpreter();
@@ -126,8 +127,12 @@ Optional<Value> Object::get_by_index(i32 property_index) const
 
     const Object* object = this;
     while (object) {
-        if (static_cast<size_t>(property_index) < object->m_elements.size())
-            return object->m_elements[property_index];
+        if (static_cast<size_t>(property_index) < object->m_elements.size()) {
+            auto value = object->m_elements[property_index];
+            if (value.is_empty())
+                return {};
+            return value;
+        }
         object = object->prototype();
     }
     return {};
@@ -159,6 +164,7 @@ Optional<Value> Object::get(PropertyName property_name) const
 
 void Object::put_by_index(i32 property_index, Value value)
 {
+    ASSERT(!value.is_empty());
     if (property_index < 0)
         return put(String::number(property_index), value);
     // FIXME: Implement some kind of sparse storage for arrays with huge indices.
@@ -169,6 +175,7 @@ void Object::put_by_index(i32 property_index, Value value)
 
 void Object::put(const FlyString& property_name, Value value)
 {
+    ASSERT(!value.is_empty());
     bool ok;
     i32 property_index = property_name.to_int(ok);
     if (ok && property_index >= 0)
@@ -231,8 +238,11 @@ bool Object::has_own_property(const FlyString& property_name) const
 {
     bool ok;
     i32 property_index = property_name.to_int(ok);
-    if (ok && property_index >= 0)
-        return static_cast<size_t>(property_index) < m_elements.size();
+    if (ok && property_index >= 0) {
+        if (static_cast<size_t>(property_index) >= m_elements.size())
+            return false;
+        return !m_elements[property_index].is_empty();
+    }
     return shape().lookup(property_name).has_value();
 }
 

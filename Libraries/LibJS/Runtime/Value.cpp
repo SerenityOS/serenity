@@ -39,6 +39,14 @@
 
 namespace JS {
 
+Value::Value()
+    : m_type(Type::Empty)
+{
+ //   dbg() << "Create empty value";
+   // dump_backtrace();
+}
+
+
 bool Value::is_array() const
 {
     return is_object() && as_object().is_array();
@@ -119,6 +127,9 @@ Object* Value::to_object(Heap& heap) const
 Value Value::to_number() const
 {
     switch (m_type) {
+    case Type::Empty:
+        ASSERT_NOT_REACHED();
+        return {};
     case Type::Boolean:
         return Value(m_value.as_bool ? 1 : 0);
     case Type::Number:
@@ -280,6 +291,9 @@ Value typed_eq(Value lhs, Value rhs)
         return Value(false);
 
     switch (lhs.type()) {
+    case Value::Type::Empty:
+        ASSERT_NOT_REACHED();
+        return {};
     case Value::Type::Undefined:
         return Value(true);
     case Value::Type::Null:

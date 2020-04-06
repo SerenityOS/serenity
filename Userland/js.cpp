@@ -119,6 +119,8 @@ static void print_object(const JS::Object& object, HashTable<JS::Object*>& seen_
     fputs("{ ", stdout);
 
     for (size_t i = 0; i < object.elements().size(); ++i) {
+        if (object.elements()[i].is_empty())
+            continue;
         printf("\"\033[33;1m%zu\033[0m\": ", i);
         print_value(object.elements()[i], seen_objects);
         if (i != object.elements().size() - 1)

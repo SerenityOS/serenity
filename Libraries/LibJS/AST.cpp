@@ -49,7 +49,7 @@ Value FunctionDeclaration::execute(Interpreter& interpreter) const
 {
     auto* function = interpreter.heap().allocate<ScriptFunction>(body(), parameters());
     interpreter.set_variable(name(), function);
-    return {};
+    return js_undefined();
 }
 
 Value FunctionExpression::execute(Interpreter& interpreter) const
@@ -66,7 +66,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
 {
     if (is_new_expression()) {
         // Computing |this| is irrelevant for "new" expression.
-        return { {}, m_callee->execute(interpreter) };
+        return { js_undefined(), m_callee->execute(interpreter) };
     }
 
     if (m_callee->is_member_expression()) {
@@ -77,7 +77,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
         auto* this_value = object_value.to_object(interpreter.heap());
         if (interpreter.exception())
             return {};
-        auto callee = this_value->get(member_expression.computed_property_name(interpreter)).value_or({});
+        auto callee = this_value->get(member_expression.computed_property_name(interpreter)).value_or(js_undefined());
         return { this_value, callee };
     }
     return { &interpreter.global_object(), m_callee->execute(interpreter) };
@@ -88,6 +88,8 @@ Value CallExpression::execute(Interpreter& interpreter) const
     auto [this_value, callee] = compute_this_and_callee(interpreter);
     if (interpreter.exception())
         return {};
+
+    ASSERT(!callee.is_empty());
 
     if (is_new_expression()) {
         if (!callee.is_object()
@@ -130,6 +132,9 @@ Value CallExpression::execute(Interpreter& interpreter) const
         result = function.call(interpreter);
     }
 
+    if (interpreter.exception())
+        return {};
+
     interpreter.pop_call_frame();
 
     if (is_new_expression()) {
@@ -161,7 +166,7 @@ Value IfStatement::execute(Interpreter& interpreter) const
     if (m_alternate)
         return interpreter.run(*m_alternate);
 
-    return {};
+    return js_undefined();
 }
 
 Value WhileStatement::execute(Interpreter& interpreter) const
@@ -228,7 +233,7 @@ Value ForStatement::execute(Interpreter& interpreter) const
                     interpreter.stop_unwind();
                     break;
                 } else {
-                    return {};
+                    return js_undefined();
                 }
             }
             if (m_update) {
@@ -249,7 +254,7 @@ Value ForStatement::execute(Interpreter& interpreter) const
                     interpreter.stop_unwind();
                     break;
                 } else {
-                    return {};
+                    return js_undefined();
                 }
             }
             if (m_update) {
@@ -352,6 +357,8 @@ Value LogicalExpression::execute(Interpreter& interpreter) const
 Value UnaryExpression::execute(Interpreter& interpreter) const
 {
     auto lhs_result = m_lhs->execute(interpreter);
+    if (interpreter.exception())
+        return {};
     switch (m_op) {
     case UnaryOp::BitwiseNot:
         return bitwise_not(lhs_result);
@@ -363,6 +370,9 @@ Value UnaryExpression::execute(Interpreter& interpreter) const
         return unary_minus(lhs_result);
     case UnaryOp::Typeof:
         switch (lhs_result.type()) {
+        case Value::Type::Empty:
+            ASSERT_NOT_REACHED();
+            return {};
         case Value::Type::Undefined:
             return js_string(interpreter, "undefined");
         case Value::Type::Null:
@@ -528,7 +538,8 @@ void UnaryExpression::dump(int indent) const
 
 void CallExpression::dump(int indent) const
 {
-    ASTNode::dump(indent);
+    print_indent(indent);
+    printf("CallExpression %s\n", is_new_expression() ? "[new]" : "");
     m_callee->dump(indent + 1);
     for (auto& argument : m_arguments)
         argument.dump(indent + 1);
@@ -655,20 +666,33 @@ Value AssignmentExpression::execute(Interpreter& interpreter) const
     if (interpreter.exception())
         return {};
 
+    Value lhs_result;
     switch (m_op) {
     case AssignmentOp::Assignment:
         break;
     case AssignmentOp::AdditionAssignment:
-        rhs_result = add(m_lhs->execute(interpreter), rhs_result);
+        lhs_result = m_lhs->execute(interpreter);
+        if (interpreter.exception())
+            return {};
+        rhs_result = add(lhs_result, rhs_result);
         break;
     case AssignmentOp::SubtractionAssignment:
-        rhs_result = sub(m_lhs->execute(interpreter), rhs_result);
+        lhs_result = m_lhs->execute(interpreter);
+        if (interpreter.exception())
+            return {};
+        rhs_result = sub(lhs_result, rhs_result);
         break;
     case AssignmentOp::MultiplicationAssignment:
-        rhs_result = mul(m_lhs->execute(interpreter), rhs_result);
+        lhs_result = m_lhs->execute(interpreter);
+        if (interpreter.exception())
+            return {};
+        rhs_result = mul(lhs_result, rhs_result);
         break;
     case AssignmentOp::DivisionAssignment:
-        rhs_result = div(m_lhs->execute(interpreter), rhs_result);
+        lhs_result = m_lhs->execute(interpreter);
+        if (interpreter.exception())
+            return {};
+        rhs_result = div(lhs_result, rhs_result);
         break;
     }
     if (interpreter.exception())
@@ -678,7 +702,10 @@ Value AssignmentExpression::execute(Interpreter& interpreter) const
         auto name = static_cast<const Identifier&>(*m_lhs).string();
         interpreter.set_variable(name, rhs_result);
     } else if (m_lhs->is_member_expression()) {
-        if (auto* object = static_cast<const MemberExpression&>(*m_lhs).object().execute(interpreter).to_object(interpreter.heap())) {
+        auto object_value = static_cast<const MemberExpression&>(*m_lhs).object().execute(interpreter);
+        if (interpreter.exception())
+            return {};
+        if (auto* object = object_value.to_object(interpreter.heap())) {
             auto property_name = static_cast<const MemberExpression&>(*m_lhs).computed_property_name(interpreter);
             object->put(property_name, rhs_result);
         }
@@ -779,7 +806,7 @@ Value VariableDeclaration::execute(Interpreter& interpreter) const
             interpreter.set_variable(declarator.id().string(), initalizer_result, true);
         }
     }
-    return {};
+    return js_undefined();
 }
 
 Value VariableDeclarator::execute(Interpreter&) const
@@ -862,6 +889,9 @@ PropertyName MemberExpression::computed_property_name(Interpreter& interpreter) 
         return PropertyName(static_cast<const Identifier&>(*m_property).string());
     }
     auto index = m_property->execute(interpreter);
+    if (interpreter.exception())
+        return {};
+    ASSERT(!index.is_empty());
     // FIXME: What about non-integer numbers tho.
     if (index.is_number())
         return PropertyName(index.to_i32());
@@ -870,11 +900,17 @@ PropertyName MemberExpression::computed_property_name(Interpreter& interpreter) 
 
 Value MemberExpression::execute(Interpreter& interpreter) const
 {
-    auto* object_result = m_object->execute(interpreter).to_object(interpreter.heap());
+    auto object_value = m_object->execute(interpreter);
+    if (interpreter.exception())
+        return {};
+    auto* object_result = object_value.to_object(interpreter.heap());
     if (interpreter.exception())
         return {};
     auto result = object_result->get(computed_property_name(interpreter));
-    return result.value_or({});
+    if (result.has_value()) {
+        ASSERT(!result.value().is_empty());
+    }
+    return result.value_or(js_undefined());
 }
 
 Value StringLiteral::execute(Interpreter& interpreter) const
@@ -967,7 +1003,7 @@ Value TryStatement::execute(Interpreter& interpreter) const
     if (m_finalizer)
         m_finalizer->execute(interpreter);
 
-    return {};
+    return js_undefined();
 }
 
 Value CatchClause::execute(Interpreter&) const
@@ -1017,7 +1053,7 @@ Value SwitchStatement::execute(Interpreter& interpreter) const
         }
     }
 
-    return {};
+    return js_undefined();
 }
 
 Value SwitchCase::execute(Interpreter& interpreter) const
@@ -1029,13 +1065,13 @@ Value SwitchCase::execute(Interpreter& interpreter) const
 Value BreakStatement::execute(Interpreter& interpreter) const
 {
     interpreter.unwind(ScopeType::Breakable);
-    return {};
+    return js_undefined();
 }
 
 Value ContinueStatement::execute(Interpreter& interpreter) const
 {
     interpreter.unwind(ScopeType::Continuable);
-    return {};
+    return js_undefined();
 }
 
 void SwitchStatement::dump(int indent) const

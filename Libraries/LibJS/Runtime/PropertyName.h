@@ -33,9 +33,12 @@ namespace JS {
 class PropertyName {
 public:
     enum class Type {
+        Invalid,
         Number,
         String,
     };
+
+    PropertyName() {}
 
     explicit PropertyName(i32 index)
         : m_type(Type::Number)
@@ -50,6 +53,7 @@ public:
     {
     }
 
+    bool is_valid() const { return m_type != Type::Invalid; }
     bool is_number() const { return m_type == Type::Number; }
     bool is_string() const { return m_type == Type::String; }
 
@@ -57,7 +61,7 @@ public:
     const FlyString& as_string() const { return m_string; }
 
 private:
-    Type m_type;
+    Type m_type { Type::Invalid };
     FlyString m_string;
     i32 m_number { 0 };
 };

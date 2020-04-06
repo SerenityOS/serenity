@@ -36,6 +36,7 @@ namespace JS {
 class Value {
 public:
     enum class Type {
+        Empty,
         Undefined,
         Null,
         Number,
@@ -44,6 +45,7 @@ public:
         Boolean,
     };
 
+    bool is_empty() const { return m_type == Type::Empty; }
     bool is_undefined() const { return m_type == Type::Undefined; }
     bool is_null() const { return m_type == Type::Null; }
     bool is_number() const { return m_type == Type::Number; }
@@ -56,10 +58,7 @@ public:
     bool is_nan() const { return is_number() && __builtin_isnan(as_double()); }
     bool is_infinity() const { return is_number() && __builtin_isinf(as_double()); }
 
-    Value()
-        : m_type(Type::Undefined)
-    {
-    }
+    Value();
 
     explicit Value(bool value)
         : m_type(Type::Boolean)
