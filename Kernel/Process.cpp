@@ -1217,6 +1217,13 @@ int Process::exec(String path, Vector<String> arguments, Vector<String> environm
     if (rc < 0)
         return rc;
 
+    if (m_wait_for_tracer_at_next_execve) {
+        ASSERT(Thread::current->state() == Thread::State::Skip1SchedulerPass);
+        // State::Skip1SchedulerPass is irrelevant since we block the thread
+        Thread::current->set_state(Thread::State::Running);
+        Thread::current->send_urgent_signal_to_self(SIGSTOP);
+    }
+
     if (Process::current == this) {
         Scheduler::yield();
         ASSERT_NOT_REACHED();
