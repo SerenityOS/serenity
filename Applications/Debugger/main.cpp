@@ -90,19 +90,42 @@ void run_child_and_attach(char** argv)
         exit(1);
     }
 
+    dbg() << "debugee should continue until before execve exit";
+    if (ptrace(PT_CONTINUE, g_pid, 0, 0) == -1) {
+        perror("continue");
+    }
+
     // we want to continue until the exit from the 'execve' sycsall
     // we do this to ensure that when we start debugging the process,
     // it executes the target image, and not the forked image of the debugger
     // NOTE: we only need to do this when we are debugging a new process (i.e not attaching to a process that's already running!)
-    if (ptrace(PT_SYSCALL, g_pid, 0, 0) == -1) {
-        perror("syscall");
-        exit(1);
-    }
+    // if (ptrace(PT_SYSCALL, g_pid, 0, 0) == -1) {
+    //     perror("syscall");
+    //     exit(1);
+    // }
 
     if (waitpid(g_pid, nullptr, WSTOPPED) != g_pid) {
         perror("wait_pid");
         exit(1);
     }
+    // dbg() << "debugee should continue until after execve exit";
+    // sleep(3);
+
+    // if (ptrace(PT_CONTINUE, g_pid, 0, 0) == -1) {
+    //     perror("continue");
+    // }
+
+    // sleep(10);
+
+    // if (waitpid(g_pid, nullptr, WSTOPPED) != g_pid) {
+    //     perror("wait_pid");
+    //     exit(1);
+    // }
+
+    // dbg() << "debugee should already be running";
+    // if (ptrace(PT_CONTINUE, g_pid, 0, 0) == -1) {
+    //     perror("continue");
+    // }
 }
 
 VirtualAddress get_entry_point(int pid)
@@ -138,9 +161,23 @@ int main(int argc, char** argv)
     auto entry_point = get_entry_point(g_pid);
     dbg() << "entry point:" << entry_point;
 
+    uint32_t data = ptrace(PT_PEEK, g_pid, (void*)entry_point.as_ptr(), 0);
+
+    // u8* as_bytes = reinterpret_cast<u8*>(&data);
+    // as_bytes[0] = 0xcc;
+    dbg() << "peeked data:" << (void*)data;
+    data = (data & ~(uint32_t)0xff) | 0xcc;
+    data = 0xccccccc;
+
+    if (ptrace(PT_POKE, g_pid, (void*)entry_point.as_ptr(), data) < 0) {
+        perror("poke");
+        return 1;
+    }
+    dbg() << "continuting";
     if (ptrace(PT_CONTINUE, g_pid, 0, 0) == -1) {
         perror("continue");
     }
+    dbg() << "continued";
 
     // wait for breakpoint
     if (waitpid(g_pid, nullptr, WSTOPPED) != g_pid) {
@@ -156,19 +193,13 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    printf("eip:0x%x\n", regs.eip);
-
-    uint32_t data = ptrace(PT_PEEK, g_pid, (void*)regs.eip, 0);
-    printf("peeked data: 0x%x\n", data);
-
-    if (ptrace(PT_POKE, g_pid, (void*)regs.eip, data) < 0) {
-        perror("poke");
-        return 1;
-    }
+    dbg() << "eip after breakpoint: " << (void*)regs.eip;
 
     if (ptrace(PT_CONTINUE, g_pid, 0, 0) == -1) {
         perror("continue");
     }
+
+    // wait for end
 
     if (waitpid(g_pid, nullptr, WSTOPPED) != g_pid) {
         perror("waitpid");
