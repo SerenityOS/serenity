@@ -27,8 +27,10 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <AK/Optional.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -52,6 +54,27 @@ int parse_options(const StringView& options)
             fprintf(stderr, "Ignoring invalid option: %s\n", String(part).characters());
     }
     return flags;
+}
+
+bool is_source_none(const char* source)
+{
+    return !strcmp("none", source);
+}
+
+int get_source_fd(const char* source)
+{
+    if (is_source_none(source))
+        return -1;
+    int fd = open(source, O_RDWR);
+    if (fd < 0)
+        fd = open(source, O_RDONLY);
+    if (fd < 0) {
+        int saved_errno = errno;
+        auto message = String::format("Failed to open: %s\n", source);
+        errno = saved_errno;
+        perror(message.characters());
+    }
+    return fd;
 }
 
 bool mount_all()
@@ -86,7 +109,6 @@ bool mount_all()
             continue;
         }
 
-        const char* devname = parts[0].characters();
         const char* mountpoint = parts[1].characters();
         const char* fstype = parts[2].characters();
         int flags = parts.size() >= 4 ? parse_options(parts[3]) : 0;
@@ -96,11 +118,15 @@ bool mount_all()
             continue;
         }
 
-        dbg() << "Mounting " << devname << "(" << fstype << ")"
+        const char* filename = parts[0].characters();
+
+        int fd = get_source_fd(filename);
+
+        dbg() << "Mounting " << filename << "(" << fstype << ")"
               << " on " << mountpoint;
-        int rc = mount(devname, mountpoint, fstype, flags);
+        int rc = mount(fd, mountpoint, fstype, flags);
         if (rc != 0) {
-            fprintf(stderr, "Failed to mount %s (%s) on %s: %s\n", devname, fstype, mountpoint, strerror(errno));
+            fprintf(stderr, "Failed to mount %s (FD: %d) (%s) on %s: %s\n", filename, fd, fstype, mountpoint, strerror(errno));
             all_ok = false;
             continue;
         }
@@ -179,7 +205,9 @@ int main(int argc, char** argv)
             fs_type = "ext2";
         int flags = options ? parse_options(options) : 0;
 
-        if (mount(source, mountpoint, fs_type, flags) < 0) {
+        int fd = get_source_fd(source);
+
+        if (mount(fd, mountpoint, fs_type, flags) < 0) {
             perror("mount");
             return 1;
         }

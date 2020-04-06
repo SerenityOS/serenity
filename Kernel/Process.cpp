@@ -4011,14 +4011,18 @@ int Process::sys$mount(const Syscall::SC_mount_params* user_params)
     if (!validate_read_and_copy_typed(&params, user_params))
         return -EFAULT;
 
-    auto source = validate_and_copy_string_from_user(params.source);
+    auto source_fd = params.source_fd;
     auto target = validate_and_copy_string_from_user(params.target);
     auto fs_type = validate_and_copy_string_from_user(params.fs_type);
 
-    if (source.is_null() || target.is_null() || fs_type.is_null())
+    if (target.is_null() || fs_type.is_null())
         return -EFAULT;
 
-    dbg() << "mount " << fs_type << ": source " << source << " @ " << target;
+    auto description = file_description(source_fd);
+    if (!description.is_null())
+        dbg() << "mount " << fs_type << ": source fd " << source_fd << " @ " << target;
+    else
+        dbg() << "mount " << fs_type << " @ " << target;
 
     auto custody_or_error = VFS::the().resolve_path(target, current_directory());
     if (custody_or_error.is_error())
@@ -4030,28 +4034,24 @@ int Process::sys$mount(const Syscall::SC_mount_params* user_params)
 
     if (params.flags & MS_BIND) {
         // We're doing a bind mount.
-        auto source_or_error = VFS::the().resolve_path(source, current_directory());
-        if (source_or_error.is_error())
-            return source_or_error.error();
-        auto& source_custody = source_or_error.value();
-        return VFS::the().bind_mount(source_custody, target_custody, params.flags);
+        if (description.is_null())
+            return -EBADF;
+        ASSERT(description->custody());
+        return VFS::the().bind_mount(*description->custody(), target_custody, params.flags);
     }
 
     if (fs_type == "ext2" || fs_type == "Ext2FS") {
-        auto source_or_error = VFS::the().open(source, O_RDWR, 0, current_directory());
-        if (source_or_error.is_error())
-            return source_or_error.error();
-
-        auto* device = source_or_error.value()->device();
-        if (!device || !device->is_block_device()) {
-            dbg() << "mount: this is not a BlockDevice";
+        if (description.is_null())
+            return -EBADF;
+        ASSERT(description->custody());
+        if (!description->file().is_seekable()) {
+            dbg() << "mount: this is not a seekable file";
             return -ENODEV;
         }
-        auto& block_device = static_cast<BlockDevice&>(*device);
 
-        dbg() << "mount: attempting to mount " << block_device.absolute_path() << " on " << target;
+        dbg() << "mount: attempting to mount " << description->absolute_path() << " on " << target;
 
-        fs = Ext2FS::create(block_device);
+        fs = Ext2FS::create(*description);
     } else if (fs_type == "proc" || fs_type == "ProcFS") {
         fs = ProcFS::create();
     } else if (fs_type == "devpts" || fs_type == "DevPtsFS") {
@@ -4063,12 +4063,15 @@ int Process::sys$mount(const Syscall::SC_mount_params* user_params)
     }
 
     if (!fs->initialize()) {
-        dbg() << "mount: failed to initialize " << fs_type << " filesystem on " << source;
+        dbg() << "mount: failed to initialize " << fs_type << " filesystem, fd - " << source_fd;
         return -ENODEV;
     }
 
     auto result = VFS::the().mount(fs.release_nonnull(), target_custody, params.flags);
-    dbg() << "mount: successfully mounted " << source << " on " << target;
+    if (!description.is_null())
+        dbg() << "mount: successfully mounted " << description->absolute_path() << " on " << target;
+    else
+        dbg() << "mount: successfully mounted " << target;
     return result;
 }
 
