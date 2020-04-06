@@ -43,6 +43,7 @@ private:
     static Value starts_with(Interpreter&);
     static Value index_of(Interpreter&);
     static Value to_lowercase(Interpreter&);
+    static Value to_uppercase(Interpreter&);
 
     static Value length_getter(Interpreter&);
 };
