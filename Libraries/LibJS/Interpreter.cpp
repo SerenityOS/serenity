@@ -69,7 +69,7 @@ Value Interpreter::run(const Statement& statement, ArgumentVector arguments, Sco
     auto& block = static_cast<const ScopeNode&>(statement);
     enter_scope(block, move(arguments), scope_type);
 
-    m_last_value = {};
+    m_last_value = js_undefined();
     for (auto& node : block.children()) {
         m_last_value = node.execute(*this);
         if (m_unwind_until != ScopeType::None)
