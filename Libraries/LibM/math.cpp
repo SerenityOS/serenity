@@ -101,12 +101,39 @@ float sinf(float angle)
 
 double pow(double x, double y)
 {
-    //FIXME: Extremely unlikely to be standards compliant.
+    // FIXME: Please fix me. I am naive.
+    if (y == 0)
+        return 1;
+    if (y == 1)
+        return x;
+    int y_as_int = (int)y;
+    if (y == (double)y_as_int) {
+        double result = x;
+        for (int i = 0; i < abs(y) - 1; ++i)
+            result *= x;
+        if (y < 0)
+            result = 1.0 / result;
+        return result;
+    }
     return exp(y * log(x));
 }
 
 float powf(float x, float y)
 {
+    // FIXME: Please fix me. I am naive.
+    if (y == 0)
+        return 1;
+    if (y == 1)
+        return x;
+    int y_as_int = (int)y;
+    if (y == (float)y_as_int) {
+        float result = x;
+        for (int i = 0; i < abs(y) - 1; ++i)
+            result *= x;
+        if (y < 0)
+            result = 1.0 / result;
+        return result;
+    }
     return (float)exp((double)y * log((double)x));
 }
 
