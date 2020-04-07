@@ -266,6 +266,9 @@ public:
 
     bool is_stopped() const { return m_state == Stopped; }
     bool is_blocked() const { return m_state == Blocked; }
+    bool has_blocker() const { return m_blocker != nullptr; }
+    const Blocker& blocker() const;
+
     bool in_kernel() const { return (m_tss.cs & 0x03) == 0; }
 
     u32 frame_ptr() const { return m_tss.ebp; }

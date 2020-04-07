@@ -944,4 +944,10 @@ void Thread::tracer_trap(const RegisterState& regs)
     send_urgent_signal_to_self(SIGTRAP);
 }
 
+const Thread::Blocker& Thread::blocker() const
+{
+    ASSERT(m_blocker);
+    return *m_blocker;
+}
+
 }
