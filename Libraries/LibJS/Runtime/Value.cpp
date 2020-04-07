@@ -29,6 +29,7 @@
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/BooleanObject.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/NumberObject.h>
 #include <LibJS/Runtime/Object.h>
@@ -109,6 +110,9 @@ Object* Value::to_object(Heap& heap) const
 
     if (is_number())
         return heap.allocate<NumberObject>(m_value.as_double);
+
+    if (is_boolean())
+        return heap.allocate<BooleanObject>(m_value.as_bool);
 
     if (is_null() || is_undefined()) {
         heap.interpreter().throw_exception<Error>("TypeError", "ToObject on null or undefined.");

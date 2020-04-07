@@ -143,6 +143,7 @@ public:
     Object* date_prototype() { return m_date_prototype; }
     Object* function_prototype() { return m_function_prototype; }
     Object* number_prototype() { return m_number_prototype; }
+    Object* boolean_prototype() { return m_boolean_prototype; }
 
     Exception* exception() { return m_exception; }
     void clear_exception() { m_exception = nullptr; }
@@ -181,6 +182,7 @@ private:
     Object* m_date_prototype { nullptr };
     Object* m_function_prototype { nullptr };
     Object* m_number_prototype { nullptr };
+    Object* m_boolean_prototype { nullptr };
 
     Exception* m_exception { nullptr };
 

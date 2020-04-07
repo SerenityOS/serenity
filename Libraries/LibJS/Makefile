@@ -9,6 +9,9 @@ OBJS = \
     Runtime/Array.o \
     Runtime/ArrayConstructor.o \
     Runtime/ArrayPrototype.o \
+    Runtime/BooleanConstructor.o \
+    Runtime/BooleanObject.o \
+    Runtime/BooleanPrototype.o \
     Runtime/Cell.o \
     Runtime/ConsoleObject.o \
     Runtime/Date.o \
