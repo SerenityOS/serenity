@@ -29,6 +29,7 @@
 #include <LibJS/Runtime/NativeFunction.h>
 
 namespace JS {
+
 class BooleanConstructor final : public NativeFunction {
 public:
     BooleanConstructor();
@@ -41,4 +42,5 @@ private:
     virtual bool has_constructor() const override { return true; }
     virtual const char* class_name() const override { return "BooleanConstructor"; }
 };
+
 }

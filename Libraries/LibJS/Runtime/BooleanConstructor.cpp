@@ -31,13 +31,16 @@
 #include <LibJS/Runtime/BooleanPrototype.h>
 
 namespace JS {
+
 BooleanConstructor::BooleanConstructor()
 {
     put("prototype", Value(interpreter().boolean_prototype()));
     put("length", Value(1));
 }
 
-BooleanConstructor::~BooleanConstructor() {}
+BooleanConstructor::~BooleanConstructor()
+{
+}
 
 Value BooleanConstructor::call(Interpreter& interpreter)
 {
@@ -46,7 +49,8 @@ Value BooleanConstructor::call(Interpreter& interpreter)
 
 Value BooleanConstructor::construct(Interpreter& interpreter)
 {
-    auto bool_object = interpreter.heap().allocate<BooleanObject>(interpreter.argument(0).to_boolean());
+    auto* bool_object = interpreter.heap().allocate<BooleanObject>(interpreter.argument(0).to_boolean());
     return Value(bool_object);
 }
+
 }
