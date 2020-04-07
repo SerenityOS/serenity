@@ -403,6 +403,22 @@ private:
     NonnullRefPtr<Expression> m_lhs;
 };
 
+class SequenceExpression final : public Expression {
+public:
+    SequenceExpression(NonnullRefPtrVector<Expression> expressions)
+        : m_expressions(move(expressions))
+    {
+    }
+
+    virtual void dump(int indent) const override;
+    virtual Value execute(Interpreter&) const override;
+
+private:
+    virtual const char* class_name() const override { return "SequenceExpression"; }
+
+    NonnullRefPtrVector<Expression> m_expressions;
+};
+
 class Literal : public Expression {
 protected:
     explicit Literal() {}
