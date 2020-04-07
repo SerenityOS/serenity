@@ -28,6 +28,7 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/NumberConstructor.h>
 #include <LibJS/Runtime/NumberObject.h>
+#include <math.h>
 
 namespace JS {
 
@@ -35,6 +36,12 @@ NumberConstructor::NumberConstructor()
 {
     put("prototype", interpreter().number_prototype());
     put("length", Value(1));
+    put("EPSILON", Value(pow(2, -52)));
+    put("MAX_SAFE_INTEGER", Value(pow(2, 53) - 1));
+    put("MIN_SAFE_INTEGER", Value(-(pow(2, 53) - 1)));
+    put("NEGATIVE_INFINITY", Value(-js_infinity().as_double()));
+    put("POSITIVE_INFINITY", js_infinity());
+    put("NaN", js_nan());
 }
 
 NumberConstructor::~NumberConstructor()
