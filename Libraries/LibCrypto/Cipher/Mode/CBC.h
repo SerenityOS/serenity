@@ -29,86 +29,89 @@
 #include <LibCrypto/Cipher/Mode/Mode.h>
 
 namespace Crypto {
+namespace Cipher {
 
-template <typename T>
-class CBC : public Mode<T> {
-public:
-    template <typename... Args>
-    explicit constexpr CBC<T>(Args... args)
-        : Mode<T>(args...)
-    {
-    }
-
-    virtual Optional<ByteBuffer> encrypt(const ByteBuffer& in, ByteBuffer& out, Optional<ByteBuffer> ivec = {}) override
-    {
-        auto length = in.size();
-        if (length == 0)
-            return {};
-
-        auto& cipher = this->cipher();
-
-        // FIXME: We should have two of these encrypt/decrypt functions that
-        //        we SFINAE out based on whether the Cipher mode needs an ivec
-        ASSERT(ivec.has_value());
-        const auto* iv = ivec.value().data();
-
-        typename T::BlockType block { cipher.padding_mode() };
-        size_t offset { 0 };
-        auto block_size = cipher.block_size();
-
-        while (length >= block_size) {
-            block.overwrite(in.slice_view(offset, block_size));
-            block.apply_initialization_vector(iv);
-            cipher.encrypt_block(block, block);
-            out.overwrite(offset, block.get().data(), block_size);
-            iv = out.offset_pointer(offset);
-            length -= block_size;
-            offset += block_size;
+    template <typename T>
+    class CBC : public Mode<T> {
+    public:
+        template <typename... Args>
+        explicit constexpr CBC<T>(Args... args)
+            : Mode<T>(args...)
+        {
         }
 
-        if (length > 0) {
-            block.overwrite(in.slice_view(offset, length));
-            block.apply_initialization_vector(iv);
-            cipher.encrypt_block(block, block);
-            out.overwrite(offset, block.get().data(), block_size);
-            iv = out.offset_pointer(offset);
+        virtual Optional<ByteBuffer> encrypt(const ByteBuffer& in, ByteBuffer& out, Optional<ByteBuffer> ivec = {}) override
+        {
+            auto length = in.size();
+            if (length == 0)
+                return {};
+
+            auto& cipher = this->cipher();
+
+            // FIXME: We should have two of these encrypt/decrypt functions that
+            //        we SFINAE out based on whether the Cipher mode needs an ivec
+            ASSERT(ivec.has_value());
+            const auto* iv = ivec.value().data();
+
+            typename T::BlockType block { cipher.padding_mode() };
+            size_t offset { 0 };
+            auto block_size = cipher.block_size();
+
+            while (length >= block_size) {
+                block.overwrite(in.slice_view(offset, block_size));
+                block.apply_initialization_vector(iv);
+                cipher.encrypt_block(block, block);
+                out.overwrite(offset, block.get().data(), block_size);
+                iv = out.offset_pointer(offset);
+                length -= block_size;
+                offset += block_size;
+            }
+
+            if (length > 0) {
+                block.overwrite(in.slice_view(offset, length));
+                block.apply_initialization_vector(iv);
+                cipher.encrypt_block(block, block);
+                out.overwrite(offset, block.get().data(), block_size);
+                iv = out.offset_pointer(offset);
+            }
+
+            return ByteBuffer::copy(iv, block_size);
         }
+        virtual void decrypt(const ByteBuffer& in, ByteBuffer& out, Optional<ByteBuffer> ivec = {}) override
+        {
+            auto length = in.size();
+            if (length == 0)
+                return;
 
-        return ByteBuffer::copy(iv, block_size);
-    }
-    virtual void decrypt(const ByteBuffer& in, ByteBuffer& out, Optional<ByteBuffer> ivec = {}) override
-    {
-        auto length = in.size();
-        if (length == 0)
-            return;
+            auto& cipher = this->cipher();
 
-        auto& cipher = this->cipher();
+            ASSERT(ivec.has_value());
+            const auto* iv = ivec.value().data();
 
-        ASSERT(ivec.has_value());
-        const auto* iv = ivec.value().data();
+            auto block_size = cipher.block_size();
 
-        auto block_size = cipher.block_size();
+            // if the data is not aligned, it's not correct encrypted data
+            // FIXME (ponder): Should we simply decrypt as much as we can?
+            ASSERT(length % block_size == 0);
 
-        // if the data is not aligned, it's not correct encrypted data
-        // FIXME (ponder): Should we simply decrypt as much as we can?
-        ASSERT(length % block_size == 0);
+            typename T::BlockType block { cipher.padding_mode() };
+            size_t offset { 0 };
 
-        typename T::BlockType block { cipher.padding_mode() };
-        size_t offset { 0 };
-
-        while (length > 0) {
-            auto* slice = in.offset_pointer(offset);
-            block.overwrite(slice, block_size);
-            cipher.decrypt_block(block, block);
-            block.apply_initialization_vector(iv);
-            auto decrypted = block.get();
-            out.overwrite(offset, decrypted.data(), decrypted.size());
-            iv = slice;
-            length -= block_size;
-            offset += block_size;
+            while (length > 0) {
+                auto* slice = in.offset_pointer(offset);
+                block.overwrite(slice, block_size);
+                cipher.decrypt_block(block, block);
+                block.apply_initialization_vector(iv);
+                auto decrypted = block.get();
+                out.overwrite(offset, decrypted.data(), decrypted.size());
+                iv = slice;
+                length -= block_size;
+                offset += block_size;
+            }
+            this->prune_padding(out);
         }
-        this->prune_padding(out);
-    }
-};
+    };
+
+}
 
 }
