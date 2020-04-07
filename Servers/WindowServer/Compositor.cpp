@@ -37,8 +37,6 @@
 #include <LibGfx/Painter.h>
 #include <LibThread/BackgroundAction.h>
 
-// #define COMPOSITOR_DEBUG
-
 namespace WindowServer {
 
 Compositor& Compositor::the()
@@ -88,14 +86,11 @@ void Compositor::init_bitmaps()
 
     m_front_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::RGB32, size, screen.pitch(), screen.scanline(0));
 
-    if (m_screen_can_set_buffer) {
+    if (m_screen_can_set_buffer)
         m_back_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::RGB32, size, screen.pitch(), screen.scanline(size.height()));
-#if defined(COMPOSITOR_DEBUG)
-        dbg() << "Gfx::Bitmap::create_wrapper(" << (u8)Gfx::BitmapFormat::RGB32 << ", " << size << ", " << screen.pitch() << ", " << screen.scanline(size.height()) << ");";
-#endif
-    } else {
+    else
         m_back_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, size);
-    }
+
     m_front_painter = make<Gfx::Painter>(*m_front_bitmap);
     m_back_painter = make<Gfx::Painter>(*m_back_bitmap);
 
@@ -312,15 +307,8 @@ void Compositor::invalidate(const Gfx::Rect& a_rect)
     // much, if a pending compose is not already scheduled, we also schedule an
     // immediate compose the next spin of the event loop.
     if (!m_compose_timer->is_active()) {
-#if defined(COMPOSITOR_DEBUG)
-        dbgprintf("Invalidated (starting immediate frame): %dx%d %dx%d\n", a_rect.x(), a_rect.y(), a_rect.width(), a_rect.height());
-#endif
         m_compose_timer->start();
         m_immediate_compose_timer->start();
-    } else {
-#if defined(COMPOSITOR_DEBUG)
-        dbgprintf("Invalidated (frame callback pending): %dx%d %dx%d\n", a_rect.x(), a_rect.y(), a_rect.width(), a_rect.height());
-#endif
     }
 }
 
