@@ -1,31 +1,67 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCrypto/Cipher/AES.h>
+#include <LibCrypto/Hash/MD5.h>
 #include <LibLine/Editor.h>
 #include <stdio.h>
 
 static const char* secret_key = "WellHelloFreinds";
-static const char* cipher = "AES_CBC";
+static const char* suite = nullptr;
 static const char* filename = nullptr;
 static int key_bits = 128;
-static bool encrypting = false;
 static bool binary = false;
 static bool interactive = false;
 static bool run_tests = false;
 
+static bool encrypting = true;
+
+constexpr const char* DEFAULT_HASH_SUITE { "MD5" };
+constexpr const char* DEFAULT_CIPHER_SUITE { "AES_CBC" };
+
 // listAllTests
+// Cipher
 int aes_cbc_tests();
+
+// Hash
+int md5_tests();
 
 // stop listing tests
 
-void print_buffer(const ByteBuffer& buffer, size_t split)
+void print_buffer(const ByteBuffer& buffer, int split)
 {
     for (size_t i = 0; i < buffer.size(); ++i) {
-        if (i % split == 0 && i)
-            puts("");
+        if (split > 0) {
+            if (i % split == 0 && i)
+                puts("");
+        }
         printf("%02x", buffer[i]);
     }
     puts("");
+}
+
+int run(Function<void(const char*, size_t)> fn)
+{
+    if (interactive) {
+        Line::Editor editor;
+        editor.initialize();
+        for (;;) {
+            auto line = editor.get_line("> ");
+            fn(line.characters(), line.length());
+        }
+    } else {
+        if (filename == nullptr) {
+            puts("must specify a file name");
+            return 1;
+        }
+        if (!Core::File::exists(filename)) {
+            puts("File does not exist");
+            return 1;
+        }
+        auto file = Core::File::open(filename, Core::IODevice::OpenMode::ReadOnly);
+        auto buffer = file->read_all();
+        fn((const char*)buffer.data(), buffer.size());
+    }
+    return 0;
 }
 
 void aes_cbc(const char* message, size_t len)
@@ -52,57 +88,78 @@ void aes_cbc(const char* message, size_t len)
     }
 }
 
+void md5(const char* message, size_t len)
+{
+    auto digest = Crypto::MD5::hash((const u8*)message, len);
+    if (binary)
+        printf("%.*s", (int)Crypto::MD5::block_size(), digest.data);
+    else
+        print_buffer(ByteBuffer::wrap(digest.data, Crypto::MD5::block_size()), Crypto::MD5::block_size());
+}
+
 auto main(int argc, char** argv) -> int
 {
+    const char* mode = nullptr;
     Core::ArgsParser parser;
+    parser.add_positional_argument(mode, "mode to operate in ('list' to see modes and descriptions)", "mode");
+
     parser.add_option(secret_key, "Set the secret key (must be key-bits bits)", "secret-key", 'k', "secret key");
     parser.add_option(key_bits, "Size of the key", "key-bits", 'b', "key-bits");
     parser.add_option(filename, "Read from file", "file", 'f', "from file");
-    parser.add_option(encrypting, "Encrypt the message", "encrypt", 'e');
     parser.add_option(binary, "Force binary output", "force-binary", 0);
-    parser.add_option(interactive, "Force binary output", "interactive", 'i');
+    parser.add_option(interactive, "REPL mode", "interactive", 'i');
     parser.add_option(run_tests, "Run tests for the specified suite", "tests", 't');
-    parser.add_option(cipher, "Set the Cipher used", "cipher", 'c', "cipher name");
+    parser.add_option(suite, "Set the suite used", "suite-name", 'n', "suite name");
     parser.parse(argc, argv);
 
-    if (StringView(cipher) == "AES_CBC") {
-        if (run_tests)
-            return aes_cbc_tests();
+    StringView mode_sv { mode };
+    if (mode_sv == "list") {
+        puts("Crypt modes");
+        puts("\thash - Access hash functions");
+        puts("\tencrypt -- Access encryption functions");
+        puts("\tdecrypt -- Access decryption functions");
+        puts("\tlist -- List all known modes");
+        return 0;
+    }
+    if (mode_sv == "hash") {
+        if (suite == nullptr)
+            suite = DEFAULT_HASH_SUITE;
 
-        if (!Crypto::AESCipher::KeyType::is_valid_key_size(key_bits)) {
-            printf("Invalid key size for AES: %d\n", key_bits);
-            return 1;
-        }
-        if (strlen(secret_key) != (size_t)key_bits / 8) {
-            printf("Key must be exactly %d bytes long\n", key_bits / 8);
-            return 1;
-        }
-        if (interactive) {
-            Line::Editor editor;
-            editor.initialize();
-            for (;;) {
-                auto line = editor.get_line("> ");
-                aes_cbc(line.characters(), line.length());
-            }
+        if (StringView(suite) == "MD5") {
+            if (run_tests)
+                return md5_tests();
+            return run(md5);
         } else {
-            if (filename == nullptr) {
-                puts("must specify a file name");
-                return 1;
-            }
-            if (!Core::File::exists(filename)) {
-                puts("File does not exist");
-                return 1;
-            }
-            auto file = Core::File::open(filename, Core::IODevice::OpenMode::ReadOnly);
-            auto buffer = file->read_all();
-            aes_cbc((const char*)buffer.data(), buffer.size());
+            printf("unknown hash function '%s'\n", suite);
+            return 1;
         }
-    } else {
-        printf("Unknown cipher suite '%s'", cipher);
-        return 1;
+    }
+    encrypting = mode_sv == "encrypt";
+    if (encrypting || mode_sv == "decrypt") {
+        if (suite == nullptr)
+            suite = DEFAULT_CIPHER_SUITE;
+
+        if (StringView(suite) == "AES_CBC") {
+            if (run_tests)
+                return aes_cbc_tests();
+
+            if (!Crypto::AESCipher::KeyType::is_valid_key_size(key_bits)) {
+                printf("Invalid key size for AES: %d\n", key_bits);
+                return 1;
+            }
+            if (strlen(secret_key) != (size_t)key_bits / 8) {
+                printf("Key must be exactly %d bytes long\n", key_bits / 8);
+                return 1;
+            }
+            return run(aes_cbc);
+        } else {
+            printf("Unknown cipher suite '%s'\n", suite);
+            return 1;
+        }
     }
 
-    return 0;
+    printf("Unknown mode '%s', check out the list of modes\n", mode);
+    return 1;
 }
 
 #define I_TEST(thing)                     \
@@ -123,10 +180,17 @@ ByteBuffer operator""_b(const char* string, size_t length)
 void aes_cbc_test_encrypt();
 void aes_cbc_test_decrypt();
 
+void md5_test_hash();
+void md5_test_consecutive_updates();
+
 int aes_cbc_tests()
 {
-    aes_cbc_test_encrypt();
-    aes_cbc_test_decrypt();
+    if (encrypting) {
+        aes_cbc_test_encrypt();
+    } else {
+        aes_cbc_test_decrypt();
+    }
+
     return 0;
 }
 
@@ -231,4 +295,126 @@ void aes_cbc_test_decrypt()
         test_it(cipher, result, 48);
     }
     // TODO: Test non-CMS padding options
+}
+
+int md5_tests()
+{
+    md5_test_hash();
+    md5_test_consecutive_updates();
+    return 0;
+}
+
+void md5_test_hash()
+{
+    {
+        I_TEST((MD5 Hashing | "Well hello friends"));
+        u8 result[] {
+            0xaf, 0x04, 0x3a, 0x08, 0x94, 0x38, 0x6e, 0x7f, 0xbf, 0x73, 0xe4, 0xaa, 0xf0, 0x8e, 0xee, 0x4c
+        };
+        auto digest = Crypto::MD5::hash("Well hello friends");
+
+        if (memcmp(result, digest.data, Crypto::MD5::block_size()) != 0) {
+            FAIL(Invalid hash);
+            print_buffer(ByteBuffer::wrap(digest.data, Crypto::MD5::block_size()), -1);
+        } else {
+            PASS;
+        }
+    }
+    // RFC tests
+    {
+        I_TEST((MD5 Hashing | ""));
+        u8 result[] {
+            0xd4, 0x1d, 0x8c, 0xd9, 0x8f, 0x00, 0xb2, 0x04, 0xe9, 0x80, 0x09, 0x98, 0xec, 0xf8, 0x42, 0x7e
+        };
+        auto digest = Crypto::MD5::hash("");
+
+        if (memcmp(result, digest.data, Crypto::MD5::block_size()) != 0) {
+            FAIL(Invalid hash);
+            print_buffer(ByteBuffer::wrap(digest.data, Crypto::MD5::block_size()), -1);
+        } else {
+            PASS;
+        }
+    }
+    {
+        I_TEST((MD5 Hashing | "a"));
+        u8 result[] {
+            0x0c, 0xc1, 0x75, 0xb9, 0xc0, 0xf1, 0xb6, 0xa8, 0x31, 0xc3, 0x99, 0xe2, 0x69, 0x77, 0x26, 0x61
+        };
+        auto digest = Crypto::MD5::hash("a");
+
+        if (memcmp(result, digest.data, Crypto::MD5::block_size()) != 0) {
+            FAIL(Invalid hash);
+            print_buffer(ByteBuffer::wrap(digest.data, Crypto::MD5::block_size()), -1);
+        } else {
+            PASS;
+        }
+    }
+    {
+        I_TEST((MD5 Hashing | "abcdefghijklmnopqrstuvwxyz"));
+        u8 result[] {
+            0xc3, 0xfc, 0xd3, 0xd7, 0x61, 0x92, 0xe4, 0x00, 0x7d, 0xfb, 0x49, 0x6c, 0xca, 0x67, 0xe1, 0x3b
+        };
+        auto digest = Crypto::MD5::hash("abcdefghijklmnopqrstuvwxyz");
+
+        if (memcmp(result, digest.data, Crypto::MD5::block_size()) != 0) {
+            FAIL(Invalid hash);
+            print_buffer(ByteBuffer::wrap(digest.data, Crypto::MD5::block_size()), -1);
+        } else {
+            PASS;
+        }
+    }
+    {
+        I_TEST((MD5 Hashing | Long Sequence));
+        u8 result[] {
+            0x57, 0xed, 0xf4, 0xa2, 0x2b, 0xe3, 0xc9, 0x55, 0xac, 0x49, 0xda, 0x2e, 0x21, 0x07, 0xb6, 0x7a
+        };
+        auto digest = Crypto::MD5::hash("12345678901234567890123456789012345678901234567890123456789012345678901234567890");
+
+        if (memcmp(result, digest.data, Crypto::MD5::block_size()) != 0) {
+            FAIL(Invalid hash);
+            print_buffer(ByteBuffer::wrap(digest.data, Crypto::MD5::block_size()), -1);
+        } else {
+            PASS;
+        }
+    }
+}
+
+void md5_test_consecutive_updates()
+{
+    {
+        I_TEST((MD5 Hashing | Multiple Updates));
+        u8 result[] {
+            0xaf, 0x04, 0x3a, 0x08, 0x94, 0x38, 0x6e, 0x7f, 0xbf, 0x73, 0xe4, 0xaa, 0xf0, 0x8e, 0xee, 0x4c
+        };
+        Crypto::MD5 md5;
+
+        md5.update("Well");
+        md5.update(" hello ");
+        md5.update("friends");
+        auto digest = md5.digest();
+
+        if (memcmp(result, digest.data, Crypto::MD5::block_size()) != 0)
+            FAIL(Invalid hash);
+        else
+            PASS;
+    }
+    {
+        I_TEST((MD5 Hashing | Reuse));
+        Crypto::MD5 md5;
+
+        md5.update("Well");
+        md5.update(" hello ");
+        md5.update("friends");
+        auto digest0 = md5.digest();
+
+        md5.update("Well");
+        md5.update(" hello ");
+        md5.update("friends");
+        auto digest1 = md5.digest();
+
+        if (memcmp(digest0.data, digest1.data, Crypto::MD5::block_size()) != 0)
+            FAIL(Cannot reuse);
+        else
+            PASS;
+    }
 }
