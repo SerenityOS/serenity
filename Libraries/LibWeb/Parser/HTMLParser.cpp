@@ -386,8 +386,7 @@ RefPtr<DocumentFragment> parse_html_fragment(Document& document, const StringVie
 
 RefPtr<Document> parse_html_document(const StringView& html, const URL& url)
 {
-    auto document = adopt(*new Document);
-    document->set_url(url);
+    auto document = adopt(*new Document(url));
     document->set_source(html);
 
     if (!parse_html_document(html, *document, *document))

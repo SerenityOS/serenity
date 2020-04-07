@@ -48,11 +48,13 @@ class Document
 public:
     using WrapperType = Bindings::DocumentWrapper;
 
-    Document();
+    explicit Document(const URL& = {});
     virtual ~Document() override;
 
     void set_url(const URL& url) { m_url = url; }
     const URL& url() const { return m_url; }
+
+    Origin origin() const;
 
     URL complete_url(const String&) const;
 
