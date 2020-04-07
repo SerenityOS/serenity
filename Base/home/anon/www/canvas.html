@@ -16,8 +16,20 @@ canvas {
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         ctx = document.getElementById("foo").getContext("2d");
-        ctx.fillStyle = 'red';
-        ctx.fillRect(10, 10, 200, 100);
+
+        var width = 200;
+        var height = 100;
+        for (var i = 0; i < 2; i++)
+        {
+            ctx.fillStyle = 'red';
+            ctx.fillRect(10, 10, width, height);
+
+            ctx.strokeStyle = 'blue';
+            ctx.strokeRect(10, 10, width, height);
+
+            ctx.scale(0.5, 0.5);
+            ctx.translate(10 + width * 2, 10 + height * 2);
+        }
     });
 </script>
 </head>

@@ -43,10 +43,13 @@ private:
     virtual const char* class_name() const override { return "CanvasRenderingContext2DWrapper"; }
 
     static JS::Value fill_rect(JS::Interpreter&);
+    static JS::Value stroke_rect(JS::Interpreter&);
     static JS::Value scale(JS::Interpreter&);
     static JS::Value translate(JS::Interpreter&);
     static JS::Value fill_style_getter(JS::Interpreter&);
     static void fill_style_setter(JS::Interpreter&, JS::Value);
+    static JS::Value stroke_style_getter(JS::Interpreter&);
+    static void stroke_style_setter(JS::Interpreter&, JS::Value);
 
     NonnullRefPtr<CanvasRenderingContext2D> m_impl;
 };
