@@ -212,6 +212,8 @@ FileSystemModel::FileSystemModel(const StringView& root_path, Mode mode)
     m_filetype_javascript_icon = Icon::default_icon("filetype-javascript");
     m_filetype_text_icon = Icon::default_icon("filetype-text");
     m_filetype_pdf_icon = Icon::default_icon("filetype-pdf");
+    m_filetype_library_icon = Icon::default_icon("filetype-library");
+    m_filetype_object_icon = Icon::default_icon("filetype-object");
 
     setpwent();
     while (auto* passwd = getpwent())
@@ -440,6 +442,10 @@ Icon FileSystemModel::icon_for_file(const mode_t mode, const String& name) const
         return m_filetype_text_icon;
     if (name.to_lowercase().ends_with(".pdf"))
         return m_filetype_pdf_icon;
+    if (name.to_lowercase().ends_with(".o") || name.to_lowercase().ends_with(".obj"))
+        return m_filetype_object_icon;
+    if (name.to_lowercase().ends_with(".so") || name.to_lowercase().ends_with(".a"))
+        return m_filetype_library_icon;
 
     return m_file_icon;
 }
