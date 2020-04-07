@@ -165,14 +165,14 @@ void DHCPv4Client::handle_ack(const DHCPv4Packet& packet, const ParsedDHCPv4Opti
     auto new_ip = packet.yiaddr();
     auto lease_time = convert_between_host_and_network(options.get<u32>(DHCPOption::IPAddressLeaseTime).value_or(transaction->offered_lease_time));
     // set a timer for the duration of the lease, we shall renew if needed
-    Core::Timer::construct(
-        lease_time * 1000, [this, transaction, interface = InterfaceDescriptor { interface }, new_ip] {
+    Core::Timer::create_single_shot(
+        lease_time * 1000,
+        [this, transaction, interface = InterfaceDescriptor { interface }, new_ip] {
             transaction->accepted_offer = false;
             transaction->has_ip = false;
             dhcp_discover(interface, new_ip);
         },
-        this)
-        ->set_single_shot(true);
+        this);
     set_params(transaction->interface, new_ip, options.get<IPv4Address>(DHCPOption::SubnetMask).value(), options.get_many<IPv4Address>(DHCPOption::Router, 1).first());
 }
 
@@ -189,12 +189,12 @@ void DHCPv4Client::handle_nak(const DHCPv4Packet& packet, const ParsedDHCPv4Opti
     transaction->accepted_offer = false;
     transaction->has_ip = false;
     auto& iface = transaction->interface;
-    Core::Timer::construct(
-        10000, [this, iface = InterfaceDescriptor { iface }] {
+    Core::Timer::create_single_shot(
+        10000,
+        [this, iface = InterfaceDescriptor { iface }] {
             dhcp_discover(iface);
         },
-        this)
-        ->set_single_shot(true);
+        this);
 }
 
 void DHCPv4Client::process_incoming(const DHCPv4Packet& packet)

@@ -62,30 +62,23 @@ WallpaperMode mode_to_enum(const String& name)
 
 Compositor::Compositor()
 {
-    m_compose_timer = add<Core::Timer>();
-    m_immediate_compose_timer = add<Core::Timer>();
+    m_compose_timer = Core::Timer::create_single_shot(
+        1000 / 60,
+        [this] {
+            notify_display_links();
+            compose();
+        },
+        this);
+
+    m_immediate_compose_timer = Core::Timer::create_single_shot(
+        0,
+        [this] {
+            compose();
+        },
+        this);
 
     m_screen_can_set_buffer = Screen::the().can_set_buffer();
-
     init_bitmaps();
-
-    m_compose_timer->on_timeout = [&]() {
-        notify_display_links();
-#if defined(COMPOSITOR_DEBUG)
-        dbgprintf("Compositor: delayed frame callback: %d rects\n", m_dirty_rects.size());
-#endif
-        compose();
-    };
-    m_compose_timer->set_single_shot(true);
-    m_compose_timer->set_interval(1000 / 60);
-    m_immediate_compose_timer->on_timeout = [this]() {
-#if defined(COMPOSITOR_DEBUG)
-        dbgprintf("Compositor: immediate frame callback: %d rects\n", m_dirty_rects.size());
-#endif
-        compose();
-    };
-    m_immediate_compose_timer->set_single_shot(true);
-    m_immediate_compose_timer->set_interval(0);
 }
 
 void Compositor::init_bitmaps()

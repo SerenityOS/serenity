@@ -32,8 +32,16 @@
 namespace Core {
 
 class Timer final : public Object {
-    C_OBJECT(Timer)
+    C_OBJECT(Timer);
+
 public:
+    static NonnullRefPtr<Timer> create_single_shot(int interval, Function<void()>&& timeout_handler, Object* parent = nullptr)
+    {
+        auto timer = adopt(*new Timer(interval, move(timeout_handler), parent));
+        timer->set_single_shot(true);
+        return timer;
+    }
+
     virtual ~Timer() override;
 
     void start();
