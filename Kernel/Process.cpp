@@ -57,6 +57,7 @@
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Process.h>
 #include <Kernel/Profiling.h>
+#include <Kernel/Ptrace.h>
 #include <Kernel/RTC.h>
 #include <Kernel/Random.h>
 #include <Kernel/Scheduler.h>
@@ -1513,7 +1514,6 @@ void Process::crash(int signal, u32 eip)
         dbg() << "\033[31;1m" << String::format("%p", eip) << "  (?)\033[0m\n";
     }
     dump_backtrace();
-
     m_termination_signal = signal;
     dump_regions();
     ASSERT(is_ring3());
@@ -4849,6 +4849,9 @@ OwnPtr<Process::ELFBundle> Process::elf_bundle() const
     if (!m_executable)
         return nullptr;
     auto bundle = make<ELFBundle>();
+    if (!m_executable->inode().shared_vmobject()) {
+        return nullptr;
+    }
     ASSERT(m_executable->inode().shared_vmobject());
     auto& vmobject = *m_executable->inode().shared_vmobject();
     bundle->region = MM.allocate_kernel_region_with_vmobject(const_cast<SharedInodeVMObject&>(vmobject), vmobject.size(), "ELF bundle", Region::Access::Read);
@@ -4885,135 +4888,8 @@ int Process::sys$ptrace(const Syscall::SC_ptrace_params* user_params)
     Syscall::SC_ptrace_params params;
     if (!validate_read_and_copy_typed(&params, user_params))
         return -EFAULT;
-
-    if (params.request == PT_TRACE_ME) {
-        if (Thread::current->tracer())
-            return -EBUSY;
-
-        m_wait_for_tracer_at_next_execve = true;
-        return 0;
-    }
-
-    if (params.pid == m_pid)
-        return -EINVAL;
-
-    Thread* peer = nullptr;
-    {
-        InterruptDisabler disabler;
-        peer = Thread::from_tid(params.pid);
-    }
-    if (!peer)
-        return -ESRCH;
-
-    if (peer->process().uid() != m_euid)
-        return -EACCES;
-
-    if (params.request == PT_ATTACH) {
-        if (peer->tracer()) {
-            return -EBUSY;
-        }
-        peer->start_tracing_from(m_pid);
-        if (peer->state() != Thread::State::Stopped && !(peer->m_blocker && peer->m_blocker->is_reason_signal()))
-            peer->send_signal(SIGSTOP, this);
-        return 0;
-    }
-
-    auto* tracer = peer->tracer();
-
-    if (!tracer)
-        return -EPERM;
-
-    if (tracer->tracer_pid() != m_pid)
-        return -EBUSY;
-
-    if (peer->m_state == Thread::State::Running)
-        return -EBUSY;
-
-    switch (params.request) {
-    case PT_CONTINUE:
-        peer->send_signal(SIGCONT, this);
-        break;
-
-    case PT_DETACH:
-        peer->stop_tracing();
-        peer->send_signal(SIGCONT, this);
-        break;
-
-    case PT_SYSCALL:
-        tracer->set_trace_syscalls(true);
-        peer->send_signal(SIGCONT, this);
-        break;
-
-    case PT_GETREGS: {
-        if (!tracer->has_regs())
-            return -EINVAL;
-
-        PtraceRegisters* regs = reinterpret_cast<PtraceRegisters*>(params.addr);
-        if (!validate_write(regs, sizeof(PtraceRegisters)))
-            return -EFAULT;
-
-        {
-            SmapDisabler disabler;
-            *regs = tracer->regs();
-        }
-        break;
-    }
-
-    case PT_PEEK: {
-        uint32_t* addr = reinterpret_cast<uint32_t*>(params.addr);
-        if (!MM.validate_user_read(peer->process(), VirtualAddress(addr), sizeof(uint32_t))) {
-            return -EFAULT;
-        }
-
-        uint32_t result;
-
-        SmapDisabler dis;
-        ProcessPagingScope scope(peer->process());
-        result = *addr;
-
-        return result;
-    }
-
-    case PT_POKE: {
-        uint32_t* addr = reinterpret_cast<uint32_t*>(params.addr);
-        // We validate for "read" because PT_POKE can write to readonly pages,
-        // as long as they are user pages
-        if (!MM.validate_user_read(peer->process(), VirtualAddress(addr), sizeof(uint32_t))) {
-            return -EFAULT;
-        }
-        ProcessPagingScope scope(peer->process());
-        Range range = { VirtualAddress(addr), sizeof(uint32_t) };
-        auto* region = peer->process().region_containing(range);
-        ASSERT(region != nullptr);
-        if (region->is_shared()) {
-            // If the region is shared, we change its vmobject to a PrivateInodeVMObject
-            // to prevent the write operation from chaning any shared inode data
-            ASSERT(region->vmobject().is_shared_inode());
-            region->set_vmobject(PrivateInodeVMObject::create_with_inode(static_cast<SharedInodeVMObject&>(region->vmobject()).inode()));
-            region->set_shared(false);
-        }
-        const bool was_writable = region->is_writable();
-        if (!was_writable) //TODO refactor into scopeguard
-            region->set_writable(true);
-        region->remap();
-
-        {
-            SmapDisabler dis;
-            *addr = params.data;
-        }
-
-        if (!was_writable) {
-            region->set_writable(false);
-            region->remap();
-        }
-        break;
-    }
-
-    default:
-        return -EINVAL;
-    }
-
-    return 0;
+    auto result = Ptrace::handle_syscall(params, *this);
+    return result.is_error() ? result.error() : result.value();
 }
 
 bool Process::has_tracee_thread(int tracer_pid) const
@@ -5028,6 +4904,59 @@ bool Process::has_tracee_thread(int tracer_pid) const
         return IterationDecision::Continue;
     });
     return has_tracee;
+}
+
+KResultOr<u32> Process::peek_user_data(u32* address)
+{
+    if (!MM.validate_user_read(*this, VirtualAddress(address), sizeof(u32))) {
+        return KResult(-EFAULT);
+    }
+    uint32_t result;
+
+    SmapDisabler dis;
+    // This function can be called from the context of another
+    // process that called PT_PEEK
+    ProcessPagingScope scope(*this);
+    result = *address;
+
+    return result;
+}
+
+KResult Process::poke_user_data(u32* address, u32 data)
+{
+    // We validate for read (rather than write) because PT_POKE can write to readonly pages.
+    // So we wffectively only care that the poke operation only writes to user pages
+    if (!MM.validate_user_read(*this, VirtualAddress(address), sizeof(u32))) {
+        return KResult(-EFAULT);
+    }
+    ProcessPagingScope scope(*this);
+    Range range = { VirtualAddress(address), sizeof(u32) };
+    auto* region = region_containing(range);
+    ASSERT(region != nullptr);
+    if (region->is_shared()) {
+        // If the region is shared, we change its vmobject to a PrivateInodeVMObject
+        // to prevent the write operation from chaning any shared inode data
+        ASSERT(region->vmobject().is_shared_inode());
+        region->set_vmobject(PrivateInodeVMObject::create_with_inode(static_cast<SharedInodeVMObject&>(region->vmobject()).inode()));
+        region->set_shared(false);
+    }
+    const bool was_writable = region->is_writable();
+    if (!was_writable) //TODO refactor into scopeguard
+    {
+        region->set_writable(true);
+        region->remap();
+    }
+
+    {
+        SmapDisabler dis;
+        *address = data;
+    }
+
+    if (!was_writable) {
+        region->set_writable(false);
+        region->remap();
+    }
+    return KResult(KSuccess);
 }
 
 }
