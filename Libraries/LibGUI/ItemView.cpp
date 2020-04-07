@@ -26,12 +26,12 @@
 
 #include <AK/StringBuilder.h>
 #include <Kernel/KeyCode.h>
-#include <LibGfx/Palette.h>
 #include <LibGUI/DragOperation.h>
 #include <LibGUI/ItemView.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
+#include <LibGfx/Palette.h>
 
 //#define DRAGDROP_DEBUG
 
@@ -300,10 +300,13 @@ void ItemView::paint_event(PaintEvent& event)
 
         if (icon.is_icon()) {
             if (auto bitmap = icon.as_icon().bitmap_for_size(icon_rect.width())) {
+                Gfx::Rect destination = bitmap->rect();
+                destination.center_within(icon_rect);
+
                 if (m_hovered_index.is_valid() && m_hovered_index == model_index) {
-                    painter.blit_brightened(icon_rect.location(), *bitmap, bitmap->rect());
+                    painter.blit_brightened(destination.location(), *bitmap, bitmap->rect());
                 } else {
-                    painter.blit(icon_rect.location(), *bitmap, bitmap->rect());
+                    painter.blit(destination.location(), *bitmap, bitmap->rect());
                 }
             }
         }
