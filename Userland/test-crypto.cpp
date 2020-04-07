@@ -1,6 +1,8 @@
+#include <LibC/limits.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCrypto/Authentication/HMAC.h>
+#include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibCrypto/Cipher/AES.h>
 #include <LibCrypto/Hash/MD5.h>
 #include <LibCrypto/Hash/SHA2.h>
@@ -34,6 +36,9 @@ int sha512_tests();
 int hmac_md5_tests();
 int hmac_sha256_tests();
 int hmac_sha512_tests();
+
+// Big Integer
+int bigint_tests();
 
 // stop listing tests
 
@@ -227,6 +232,9 @@ auto main(int argc, char** argv) -> int
         printf("unknown hash function '%s'\n", suite);
         return 1;
     }
+    if (mode_sv == "bigint") {
+        return bigint_tests();
+    }
     encrypting = mode_sv == "encrypt";
     if (encrypting || mode_sv == "decrypt") {
         if (suite == nullptr)
@@ -293,6 +301,9 @@ void hmac_sha256_test_process();
 
 void hmac_sha512_test_name();
 void hmac_sha512_test_process();
+
+void bigint_test_fibo500();
+void bigint_addition_edgecases();
 
 int aes_cbc_tests()
 {
@@ -779,5 +790,51 @@ void hmac_sha512_test_process()
             FAIL(Cannot reuse);
         } else
             PASS;
+    }
+}
+
+int bigint_tests()
+{
+    bigint_test_fibo500();
+    bigint_addition_edgecases();
+    return 0;
+}
+
+void bigint_test_fibo500()
+{
+    {
+        I_TEST((BigInteger | Fibonacci500));
+        Crypto::UnsignedBigInteger num1(0);
+        Crypto::UnsignedBigInteger num2(1);
+        for (int i = 0; i < 500; ++i) {
+            Crypto::UnsignedBigInteger t = num1.add(num2);
+            num2 = num1;
+            num1 = t;
+        }
+        bool pass = (num1.words() == AK::Vector<u32> { 315178285, 505575602, 1883328078, 125027121, 3649625763, 347570207, 74535262, 3832543808, 2472133297, 1600064941, 65273441 });
+
+        if (pass)
+            PASS;
+        else {
+            FAIL(Incorrect Result);
+        }
+    }
+}
+
+void bigint_addition_edgecases()
+{
+    {
+        I_TEST((BigInteger | Edge Cases));
+        Crypto::UnsignedBigInteger num1;
+        Crypto::UnsignedBigInteger num2(70);
+        Crypto::UnsignedBigInteger num3 = num1.add(num2);
+        bool pass = (num3 == num2);
+        pass &= (num1 == Crypto::UnsignedBigInteger(0));
+
+        if (pass) {
+            PASS;
+        } else {
+            FAIL(Incorrect Result);
+        }
     }
 }
