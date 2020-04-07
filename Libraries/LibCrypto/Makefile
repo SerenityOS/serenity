@@ -1,7 +1,8 @@
 LIBCRYPTO_OBJS = \
 	   	Cipher/AES.o \
 		Hash/MD5.o \
-		Hash/SHA2.o
+		Hash/SHA2.o \
+		BigInt/UnsignedBigInteger.o
 
 OBJS = $(LIBCRYPTO_OBJS)
 
