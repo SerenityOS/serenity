@@ -49,6 +49,7 @@ namespace Hash {
         virtual void update(const StringView& string) = 0;
 
         virtual DigestType digest() = 0;
+        virtual String class_name() const = 0;
     };
 }
 }
