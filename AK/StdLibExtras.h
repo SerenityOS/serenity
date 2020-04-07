@@ -81,17 +81,6 @@ inline T&& move(T& arg)
 #    pragma clang diagnostic pop
 #endif
 
-template<typename T>
-struct Identity {
-    typedef T Type;
-};
-
-template<class T>
-inline constexpr T&& forward(typename Identity<T>::Type& param)
-{
-    return static_cast<T&&>(param);
-}
-
 template<typename T, typename U>
 inline T exchange(T& a, U&& b)
 {
@@ -149,6 +138,14 @@ struct IntegralConstant {
 
 typedef IntegralConstant<bool, false> FalseType;
 typedef IntegralConstant<bool, true> TrueType;
+
+template<class T>
+struct IsLvalueReference : FalseType {
+};
+
+template<class T>
+struct IsLvalueReference<T&> : TrueType {
+};
 
 template<class T>
 struct __IsPointerHelper : FalseType {
@@ -293,11 +290,37 @@ struct Conditional<false, TrueType, FalseType> {
     typedef FalseType Type;
 };
 
+template<typename T>
+struct RemoveReference {
+    typedef T Type;
+};
+template<class T>
+struct RemoveReference<T&> {
+    typedef T Type;
+};
+template<class T>
+struct RemoveReference<T&&> {
+    typedef T Type;
+};
+
+template<class T>
+inline constexpr T&& forward(typename RemoveReference<T>::Type& param)
+{
+    return static_cast<T&&>(param);
 }
 
-using AK::Conditional;
+template<class T>
+inline constexpr T&& forward(typename RemoveReference<T>::Type&& param) noexcept
+{
+    static_assert(!IsLvalueReference<T>::value, "Can't forward an rvalue as an lvalue.");
+    return static_cast<T&&>(param);
+}
+
+}
+
 using AK::ceil_div;
 using AK::clamp;
+using AK::Conditional;
 using AK::exchange;
 using AK::forward;
 using AK::IsSame;
