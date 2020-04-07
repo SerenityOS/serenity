@@ -10,6 +10,9 @@ try {
     assert(isNaN(undefined) === true);
     assert(isNaN(null) === false);
     assert(isNaN(Infinity) === false);
+    assert(!!NaN === false);
+    assert(!!nan === false);
+  
     console.log("PASS");
 } catch (e) {
     console.log("FAIL: " + e);
