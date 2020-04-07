@@ -37,6 +37,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/MathObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
+#include <LibJS/Runtime/NumberConstructor.h>
 #include <LibJS/Runtime/ObjectConstructor.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -60,6 +61,7 @@ GlobalObject::GlobalObject()
     put("Object", heap().allocate<ObjectConstructor>());
     put("Array", heap().allocate<ArrayConstructor>());
     put("Boolean", heap().allocate<BooleanConstructor>());
+    put("Number", heap().allocate<NumberConstructor>());
 }
 
 GlobalObject::~GlobalObject()
