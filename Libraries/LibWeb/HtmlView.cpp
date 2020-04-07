@@ -315,8 +315,7 @@ void HtmlView::reload()
 
 static RefPtr<Document> create_image_document(const ByteBuffer& data, const URL& url)
 {
-    auto document = adopt(*new Document);
-    document->set_url(url);
+    auto document = adopt(*new Document(url));
 
     auto bitmap = Gfx::load_png_from_memory(data.data(), data.size());
     ASSERT(bitmap);

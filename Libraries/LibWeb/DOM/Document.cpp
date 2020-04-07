@@ -52,14 +52,16 @@
 #include <LibWeb/HtmlView.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutTreeBuilder.h>
+#include <LibWeb/Origin.h>
 #include <LibWeb/Parser/CSSParser.h>
 #include <stdio.h>
 
 namespace Web {
 
-Document::Document()
+Document::Document(const URL& url)
     : ParentNode(*this, NodeType::DOCUMENT_NODE)
     , m_style_resolver(make<StyleResolver>(*this))
+    , m_url(url)
     , m_window(Window::create_with_document(*this))
 {
     m_style_update_timer = Core::Timer::create_single_shot(0, [this] {
@@ -69,6 +71,13 @@ Document::Document()
 
 Document::~Document()
 {
+}
+
+Origin Document::origin() const
+{
+    if (!m_url.is_valid())
+        return {};
+    return { m_url.protocol(), m_url.host(), m_url.port() };
 }
 
 void Document::schedule_style_update()

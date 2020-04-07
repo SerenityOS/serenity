@@ -26,48 +26,30 @@
 
 #pragma once
 
+#include <AK/String.h>
+
 namespace Web {
 
-class CanvasRenderingContext2D;
-class Document;
-class Element;
-class Event;
-class EventListener;
-class EventTarget;
-class Frame;
-class HTMLBodyElement;
-class HTMLCanvasElement;
-class HTMLElement;
-class HTMLHeadElement;
-class HTMLHtmlElement;
-class HtmlView;
-class LayoutDocument;
-class LayoutNode;
-class MouseEvent;
-class Node;
-class Origin;
-class Selector;
-class StyleResolver;
-class StyleRule;
-class StyleSheet;
-class Window;
+class Origin {
+public:
+    Origin() {}
+    Origin(const String& protocol, const String& host, u16 port)
+        : m_protocol(protocol)
+        , m_host(host)
+        , m_port(port)
+    {
+    }
 
-namespace Bindings {
+    bool is_null() const { return m_protocol.is_null() && m_host.is_null() && !m_port; }
 
-class CanvasRenderingContext2DWrapper;
-class DocumentWrapper;
-class ElementWrapper;
-class EventWrapper;
-class EventListenerWrapper;
-class EventTargetWrapper;
-class HTMLCanvasElementWrapper;
-class MouseEventWrapper;
-class NodeWrapper;
-class WindowObject;
-class Wrappable;
-class Wrapper;
+    const String& protocol() const { return m_protocol; }
+    const String& host() const { return m_host; }
+    u16 port() const { return m_port; }
 
-}
-
+private:
+    String m_protocol;
+    String m_host;
+    u16 m_port { 0 };
+};
 
 }
