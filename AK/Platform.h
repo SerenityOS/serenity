@@ -36,7 +36,8 @@
 
 #define ARCH(arch) (defined(AK_ARCH_##arch) && AK_ARCH_##arch)
 
-#ifdef __clang__
+// FIXME: Re-enable this when we can figure out why Clang gets confused about "unknown"
+#if 0
 #    define CONSUMABLE(initial_state) __attribute__((consumable(initial_state)))
 #    define CALLABLE_WHEN(...) __attribute__((callable_when(__VA_ARGS__)))
 #    define SET_TYPESTATE(state) __attribute__((set_typestate(state)))
