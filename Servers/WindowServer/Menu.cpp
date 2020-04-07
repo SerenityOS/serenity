@@ -519,7 +519,10 @@ void Menu::redraw_if_theme_changed()
 
 void Menu::popup(const Gfx::Point& position, bool is_submenu)
 {
-    ASSERT(!is_empty());
+    if (is_empty()) {
+        dbg() << "Menu: Empty menu popup";
+        return;
+    }
 
     auto& window = ensure_menu_window();
     redraw_if_theme_changed();
