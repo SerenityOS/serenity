@@ -49,13 +49,18 @@ public:
     void set_fill_style(String);
     String fill_style() const;
 
+    void set_stroke_style(String);
+    String stroke_style() const;
+
     void fill_rect(int x, int y, int width, int height);
+    void stroke_rect(int x, int y, int width, int height);
     void scale(double sx, double sy);
     void translate(double x, double y);
 
 private:
     explicit CanvasRenderingContext2D(HTMLCanvasElement&);
 
+    Gfx::Rect compute_rect(int x, int y, int width, int height);
     void did_draw(const Gfx::Rect&);
 
     OwnPtr<Gfx::Painter> painter();
@@ -67,6 +72,7 @@ private:
     double m_translate_x { 0 };
     double m_translate_y { 0 };
     Gfx::Color m_fill_style;
+    Gfx::Color m_stroke_style;
 };
 
 }

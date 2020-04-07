@@ -47,6 +47,8 @@ CanvasRenderingContext2DWrapper::CanvasRenderingContext2DWrapper(CanvasRendering
     put_native_function("fillRect", fill_rect, 4);
     put_native_function("scale", scale, 2);
     put_native_function("translate", translate, 2);
+    put_native_property("strokeStyle", stroke_style_getter, stroke_style_setter);
+    put_native_function("strokeRect", stroke_rect, 4);
 }
 
 CanvasRenderingContext2DWrapper::~CanvasRenderingContext2DWrapper()
@@ -70,6 +72,17 @@ JS::Value CanvasRenderingContext2DWrapper::fill_rect(JS::Interpreter& interprete
     auto& arguments = interpreter.call_frame().arguments;
     if (arguments.size() >= 4)
         impl->fill_rect(arguments[0].to_i32(), arguments[1].to_i32(), arguments[2].to_i32(), arguments[3].to_i32());
+    return JS::js_undefined();
+}
+
+JS::Value CanvasRenderingContext2DWrapper::stroke_rect(JS::Interpreter& interpreter)
+{
+    auto* impl = impl_from(interpreter);
+    if (!impl)
+        return {};
+    auto& arguments = interpreter.call_frame().arguments;
+    if (arguments.size() >= 4)
+        impl->stroke_rect(arguments[0].to_i32(), arguments[1].to_i32(), arguments[2].to_i32(), arguments[3].to_i32());
     return JS::js_undefined();
 }
 
@@ -107,6 +120,20 @@ void CanvasRenderingContext2DWrapper::fill_style_setter(JS::Interpreter& interpr
 {
     if (auto* impl = impl_from(interpreter))
         impl->set_fill_style(value.to_string());
+}
+
+JS::Value CanvasRenderingContext2DWrapper::stroke_style_getter(JS::Interpreter& interpreter)
+{
+    auto* impl = impl_from(interpreter);
+    if (!impl)
+        return {};
+    return JS::js_string(interpreter, impl->stroke_style());
+}
+
+void CanvasRenderingContext2DWrapper::stroke_style_setter(JS::Interpreter& interpreter, JS::Value value)
+{
+    if (auto* impl = impl_from(interpreter))
+        impl->set_stroke_style(value.to_string());
 }
 
 }
