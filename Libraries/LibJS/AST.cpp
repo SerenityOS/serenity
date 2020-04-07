@@ -1133,4 +1133,22 @@ void ConditionalExpression::dump(int indent) const
     m_test->dump(indent + 1);
 }
 
+void SequenceExpression::dump(int indent) const
+{
+    ASTNode::dump(indent);
+    for (auto& expression : m_expressions)
+        expression.dump(indent + 1);
+}
+
+Value SequenceExpression::execute(Interpreter& interpreter) const
+{
+    Value last_value;
+    for (auto& expression : m_expressions) {
+        last_value = expression.execute(interpreter);
+        if (interpreter.exception())
+            return {};
+    }
+    return last_value;
+}
+
 }
