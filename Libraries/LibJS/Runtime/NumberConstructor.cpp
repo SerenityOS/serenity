@@ -30,15 +30,21 @@
 #include <LibJS/Runtime/NumberObject.h>
 #include <math.h>
 
+#define EPSILON pow(2, -52)
+#define MAX_SAFE_INTEGER pow(2, 53) - 1
+#define MIN_SAFE_INTEGER -(pow(2, 53) - 1)
+
 namespace JS {
 
 NumberConstructor::NumberConstructor()
 {
+    put_native_function("isSafeInteger", is_safe_integer, 1);
+
     put("prototype", interpreter().number_prototype());
     put("length", Value(1));
-    put("EPSILON", Value(pow(2, -52)));
-    put("MAX_SAFE_INTEGER", Value(pow(2, 53) - 1));
-    put("MIN_SAFE_INTEGER", Value(-(pow(2, 53) - 1)));
+    put("EPSILON", Value(EPSILON));
+    put("MAX_SAFE_INTEGER", Value(MAX_SAFE_INTEGER));
+    put("MIN_SAFE_INTEGER", Value(MIN_SAFE_INTEGER));
     put("NEGATIVE_INFINITY", Value(-js_infinity().as_double()));
     put("POSITIVE_INFINITY", js_infinity());
     put("NaN", js_nan());
@@ -63,6 +69,14 @@ Value NumberConstructor::construct(Interpreter& interpreter)
     else
         number = interpreter.argument(0).to_number().as_double();
     return Value(interpreter.heap().allocate<NumberObject>(number));
+}
+
+Value NumberConstructor::is_safe_integer(Interpreter& interpreter)
+{
+    if (!interpreter.argument(0).is_number())
+        return Value(false);
+    auto value = interpreter.argument(0).to_number().as_double();
+    return Value((int64_t)value == value && value >= MIN_SAFE_INTEGER && value <= MAX_SAFE_INTEGER);
 }
 
 }
