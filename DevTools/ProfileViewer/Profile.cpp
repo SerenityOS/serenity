@@ -231,7 +231,7 @@ OwnPtr<Profile> Profile::load_from_perfcore_file(const StringView& path)
             }
 
             if (symbol == "??")
-                symbol = String::format("??", ptr);
+                symbol = "??";
 
             event.frames.append({ symbol, ptr, offset });
         }
