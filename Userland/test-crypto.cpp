@@ -3,6 +3,7 @@
 #include <LibCrypto/Authentication/HMAC.h>
 #include <LibCrypto/Cipher/AES.h>
 #include <LibCrypto/Hash/MD5.h>
+#include <LibCrypto/Hash/SHA2.h>
 #include <LibLine/Editor.h>
 #include <stdio.h>
 
@@ -16,8 +17,8 @@ static bool run_tests = false;
 
 static bool encrypting = true;
 
-constexpr const char* DEFAULT_DIGEST_SUITE { "HMAC-MD5" };
-constexpr const char* DEFAULT_HASH_SUITE { "MD5" };
+constexpr const char* DEFAULT_DIGEST_SUITE { "HMAC-SHA256" };
+constexpr const char* DEFAULT_HASH_SUITE { "SHA256" };
 constexpr const char* DEFAULT_CIPHER_SUITE { "AES_CBC" };
 
 // listAllTests
@@ -26,9 +27,11 @@ int aes_cbc_tests();
 
 // Hash
 int md5_tests();
+int sha256_tests();
 
 // Authentication
 int hmac_md5_tests();
+int hmac_sha256_tests();
 
 // stop listing tests
 
@@ -112,6 +115,25 @@ void hmac_md5(const char* message, size_t len)
         print_buffer(ByteBuffer::wrap(mac.data, hmac.DigestSize), -1);
 }
 
+void sha256(const char* message, size_t len)
+{
+    auto digest = Crypto::Hash::SHA256::hash((const u8*)message, len);
+    if (binary)
+        printf("%.*s", (int)Crypto::Hash::SHA256::digest_size(), digest.data);
+    else
+        print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::SHA256::digest_size()), -1);
+}
+
+void hmac_sha256(const char* message, size_t len)
+{
+    Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac(secret_key);
+    auto mac = hmac.process((const u8*)message, len);
+    if (binary)
+        printf("%.*s", (int)hmac.DigestSize, mac.data);
+    else
+        print_buffer(ByteBuffer::wrap(mac.data, hmac.DigestSize), -1);
+}
+
 auto main(int argc, char** argv) -> int
 {
     const char* mode = nullptr;
@@ -137,36 +159,48 @@ auto main(int argc, char** argv) -> int
         puts("\tlist -- List all known modes");
         return 0;
     }
+
     if (mode_sv == "hash") {
         if (suite == nullptr)
             suite = DEFAULT_HASH_SUITE;
+        StringView suite_sv { suite };
 
-        if (StringView(suite) == "MD5") {
+        if (suite_sv == "MD5") {
             if (run_tests)
                 return md5_tests();
             return run(md5);
-        } else {
-            printf("unknown hash function '%s'\n", suite);
-            return 1;
         }
+        if (suite_sv == "SHA256") {
+            if (run_tests)
+                return sha256_tests();
+            return run(sha256);
+        }
+        printf("unknown hash function '%s'\n", suite);
+        return 1;
     }
     if (mode_sv == "digest") {
         if (suite == nullptr)
             suite = DEFAULT_DIGEST_SUITE;
+        StringView suite_sv { suite };
 
-        if (StringView(suite) == "HMAC-MD5") {
+        if (suite_sv == "HMAC-MD5") {
             if (run_tests)
                 return hmac_md5_tests();
             return run(hmac_md5);
-        } else {
-            printf("unknown hash function '%s'\n", suite);
-            return 1;
         }
+        if (suite_sv == "HMAC-SHA256") {
+            if (run_tests)
+                return hmac_sha256_tests();
+            return run(hmac_sha256);
+        }
+        printf("unknown hash function '%s'\n", suite);
+        return 1;
     }
     encrypting = mode_sv == "encrypt";
     if (encrypting || mode_sv == "decrypt") {
         if (suite == nullptr)
             suite = DEFAULT_CIPHER_SUITE;
+        StringView suite_sv { suite };
 
         if (StringView(suite) == "AES_CBC") {
             if (run_tests)
@@ -214,8 +248,14 @@ void md5_test_name();
 void md5_test_hash();
 void md5_test_consecutive_updates();
 
+void sha256_test_name();
+void sha256_test_hash();
+
 void hmac_md5_test_name();
 void hmac_md5_test_process();
+
+void hmac_sha256_test_name();
+void hmac_sha256_test_process();
 
 int aes_cbc_tests()
 {
@@ -482,6 +522,13 @@ int hmac_md5_tests()
     return 0;
 }
 
+int hmac_sha256_tests()
+{
+    hmac_sha256_test_name();
+    hmac_sha256_test_process();
+    return 0;
+}
+
 void hmac_md5_test_name()
 {
     I_TEST((HMAC - MD5 | Class name));
@@ -510,6 +557,91 @@ void hmac_md5_test_process()
     {
         I_TEST((HMAC - MD5 | Reuse));
         Crypto::Authentication::HMAC<Crypto::Hash::MD5> hmac("Well Hello Friends");
+
+        auto mac_0 = hmac.process("Some bogus data");
+        auto mac_1 = hmac.process("Some bogus data");
+
+        if (memcmp(mac_0.data, mac_1.data, hmac.DigestSize) != 0) {
+            FAIL(Cannot reuse);
+        } else
+            PASS;
+    }
+}
+
+int sha256_tests()
+{
+    sha256_test_name();
+    sha256_test_hash();
+    return 0;
+}
+
+void sha256_test_name()
+{
+    I_TEST((SHA256 class name));
+    Crypto::Hash::SHA256 sha;
+    if (sha.class_name() != "SHA256") {
+        FAIL(Invalid class name);
+        printf("%s\n", sha.class_name().characters());
+    } else
+        PASS;
+}
+
+void sha256_test_hash()
+{
+    {
+        I_TEST((SHA256 Hashing | "Well hello friends"));
+        u8 result[] {
+            0x9a, 0xcd, 0x50, 0xf9, 0xa2, 0xaf, 0x37, 0xe4, 0x71, 0xf7, 0x61, 0xc3, 0xfe, 0x7b, 0x8d, 0xea, 0x56, 0x17, 0xe5, 0x1d, 0xac, 0x80, 0x2f, 0xe6, 0xc1, 0x77, 0xb7, 0x4a, 0xbf, 0x0a, 0xbb, 0x5a
+        };
+        auto digest = Crypto::Hash::SHA256::hash("Well hello friends");
+        if (memcmp(result, digest.data, Crypto::Hash::SHA256::digest_size()) != 0) {
+            FAIL(Invalid hash);
+            print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::SHA256::digest_size()), -1);
+        } else
+            PASS;
+    }
+    {
+        I_TEST((SHA256 Hashing | ""));
+        u8 result[] {
+            0xe3, 0xb0, 0xc4, 0x42, 0x98, 0xfc, 0x1c, 0x14, 0x9a, 0xfb, 0xf4, 0xc8, 0x99, 0x6f, 0xb9, 0x24, 0x27, 0xae, 0x41, 0xe4, 0x64, 0x9b, 0x93, 0x4c, 0xa4, 0x95, 0x99, 0x1b, 0x78, 0x52, 0xb8, 0x55
+        };
+        auto digest = Crypto::Hash::SHA256::hash("");
+        if (memcmp(result, digest.data, Crypto::Hash::SHA256::digest_size()) != 0) {
+            FAIL(Invalid hash);
+            print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::SHA256::digest_size()), -1);
+        } else
+            PASS;
+    }
+}
+
+void hmac_sha256_test_name()
+{
+    I_TEST((HMAC - SHA256 | Class name));
+    Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac("Well Hello Friends");
+    if (hmac.class_name() != "HMAC-SHA256")
+        FAIL(Invalid class name);
+    else
+        PASS;
+}
+
+void hmac_sha256_test_process()
+{
+    {
+        I_TEST((HMAC - SHA256 | Basic));
+        Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac("Well Hello Friends");
+        u8 result[] {
+            0x1a, 0xf2, 0x20, 0x62, 0xde, 0x3b, 0x84, 0x65, 0xc1, 0x25, 0x23, 0x99, 0x76, 0x15, 0x1b, 0xec, 0x15, 0x21, 0x82, 0x1f, 0x23, 0xca, 0x11, 0x66, 0xdd, 0x8c, 0x6e, 0xf1, 0x81, 0x3b, 0x7f, 0x1b
+        };
+        auto mac = hmac.process("Some bogus data");
+        if (memcmp(result, mac.data, hmac.DigestSize) != 0) {
+            FAIL(Invalid mac);
+            print_buffer(ByteBuffer::wrap(mac.data, hmac.DigestSize), -1);
+        } else
+            PASS;
+    }
+    {
+        I_TEST((HMAC - SHA256 | Reuse));
+        Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac("Well Hello Friends");
 
         auto mac_0 = hmac.process("Some bogus data");
         auto mac_1 = hmac.process("Some bogus data");
