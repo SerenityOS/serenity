@@ -48,6 +48,7 @@ typedef size_t regoff_t;
 struct regmatch_t {
     regoff_t rm_so; // byte offset from start of string to start of substring
     regoff_t rm_eo; // byte offset from start of string of the first character after the end of substring
+    size_t match_count; // number of matches, normally 1, could be greater if REG_NEWLINE or REG_MATCHALL set.
 };
 
 // Values for the cflags parameter to the regcomp() function:
@@ -58,7 +59,8 @@ struct regmatch_t {
 
 // Values for the eflags parameter to the regexec() function:
 #define REG_NOTBOL 1 // The circumflex character (^), when taken as a special character, will not match the beginning of string.
-#define REG_NOTEOL (REG_NOTBOL << 1) // The dollar sign ($), when taken as a special character, will not match the end of string.
+#define REG_NOTEOL (REG_NOTBOL << 1)   // The dollar sign ($), when taken as a special character, will not match the end of string.
+#define REG_MATCHALL (REG_NOTBOL << 2) // Match all occurences of the character - not posix compliant!
 
 // The following constants are defined as error return values:
 enum ReError {
@@ -234,25 +236,41 @@ class VM {
 public:
     explicit VM(const Vector<StackValue>& bytecode, const String&& pattern)
         : m_bytecode(bytecode)
-        , m_pattern(move(pattern))
-    {
-    }
+        , m_pattern(move(pattern)) {};
 
-    bool match(const StringView view);
-    bool match(const StringView view, size_t& ops_count);
+    struct MatchResult {
+        size_t m_match_count { 0 };
+        Vector<StringView> m_match_views {};
+        size_t m_ops { 0 };
+    };
+
+    MatchResult match(const StringView view);
+    MatchResult match_all(const StringView view);
     const Vector<StackValue>& bytes() const { return m_bytecode; }
 
 private:
     struct MatchState {
+        StringView m_view;
         size_t m_instructionp { 0 };
         size_t m_stringp { 0 };
-        StringView m_view;
         size_t m_ops { 0 };
+        bool m_match_any { false };
+
         MatchState() = default;
-        MatchState(size_t stringp, size_t instructionp, StringView view);
+        MatchState(StringView view)
+            : m_view(view) {};
+        MatchState(size_t instructionp, size_t stringp, StringView view, bool match_any);
+        MatchState(const MatchState& other)
+            : m_view(other.m_view)
+            , m_instructionp(other.m_instructionp)
+            , m_stringp(other.m_stringp)
+            , m_ops(other.m_ops)
+            , m_match_any(other.m_match_any)
+        {
+        }
     };
 
-    bool match_recurse(MatchState& state);
+    size_t match_recurse(MatchState& state);
     const StackValue get(MatchState& state, size_t offset = 0) const;
     const StackValue get_and_increment(MatchState& state, size_t value = 1) const;
 

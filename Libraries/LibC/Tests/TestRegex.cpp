@@ -25,10 +25,8 @@
  */
 
 #include <AK/TestSuite.h>
-#include <regex.h>
+#include <LibC/regex.h>
 #include <stdio.h>
-
-#define REG_NOERR false
 
 TEST_CASE(catch_all)
 {
@@ -150,6 +148,33 @@ TEST_CASE(simple_questionmark)
     EXPECT_EQ(regexec(&regex, "dad", 0, NULL, 0), REG_NOERR);
     EXPECT_EQ(regexec(&regex, "dada", 0, NULL, 0), REG_NOMATCH);
     EXPECT_EQ(regexec(&regex, "adadaa", 0, NULL, 0), REG_NOMATCH);
+
+    regfree(&regex);
+}
+
+TEST_CASE(simple_questionmark_matchall)
+{
+    static constexpr int num_matches { 1 };
+    String pattern = "da?d";
+    regex_t regex;
+    regmatch_t matches[num_matches];
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "a", num_matches, matches, REG_MATCHALL), REG_NOMATCH);
+    EXPECT_EQ(matches[0].match_count, (size_t)0);
+    EXPECT_EQ(regexec(&regex, "daa", num_matches, matches, REG_MATCHALL), REG_NOMATCH);
+    EXPECT_EQ(matches[0].match_count, (size_t)0);
+
+    EXPECT_EQ(regexec(&regex, "ddddd", num_matches, matches, REG_MATCHALL), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, (size_t)2);
+    EXPECT_EQ(regexec(&regex, "dd", num_matches, matches, REG_MATCHALL), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, (size_t)1);
+    EXPECT_EQ(regexec(&regex, "dad", num_matches, matches, REG_MATCHALL), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, (size_t)1);
+    EXPECT_EQ(regexec(&regex, "dada", num_matches, matches, REG_MATCHALL), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, (size_t)1);
+    EXPECT_EQ(regexec(&regex, "adadaa", num_matches, matches, REG_MATCHALL), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, (size_t)1);
 
     regfree(&regex);
 }
