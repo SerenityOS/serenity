@@ -83,6 +83,9 @@ bool Value::to_boolean() const
     case Type::Boolean:
         return m_value.as_bool;
     case Type::Number:
+        if (is_nan()) {
+            return false;
+        }
         return !(m_value.as_double == 0 || m_value.as_double == -0);
     case Type::Null:
     case Type::Undefined:
