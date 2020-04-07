@@ -30,68 +30,71 @@
 #include <LibCrypto/Cipher/Cipher.h>
 
 namespace Crypto {
+namespace Cipher {
 
-template <typename T>
-class Mode {
-public:
-    // FIXME: Somehow communicate that encrypt returns the last initialization vector (if the mode supports it)
-    virtual Optional<ByteBuffer> encrypt(const ByteBuffer& in, ByteBuffer& out, Optional<ByteBuffer> ivec = {}) = 0;
-    virtual void decrypt(const ByteBuffer& in, ByteBuffer& out, Optional<ByteBuffer> ivec = {}) = 0;
+    template <typename T>
+    class Mode {
+    public:
+        // FIXME: Somehow communicate that encrypt returns the last initialization vector (if the mode supports it)
+        virtual Optional<ByteBuffer> encrypt(const ByteBuffer& in, ByteBuffer& out, Optional<ByteBuffer> ivec = {}) = 0;
+        virtual void decrypt(const ByteBuffer& in, ByteBuffer& out, Optional<ByteBuffer> ivec = {}) = 0;
 
-    const T& cipher() const { return m_cipher; }
+        const T& cipher() const { return m_cipher; }
 
-    ByteBuffer create_aligned_buffer(size_t input_size) const
-    {
-        size_t remainder = (input_size + T::block_size()) % T::block_size();
-        if (remainder == 0)
-            return ByteBuffer::create_uninitialized(input_size);
-        else
-            return ByteBuffer::create_uninitialized(input_size + T::block_size() - remainder);
-    }
+        ByteBuffer create_aligned_buffer(size_t input_size) const
+        {
+            size_t remainder = (input_size + T::block_size()) % T::block_size();
+            if (remainder == 0)
+                return ByteBuffer::create_uninitialized(input_size);
+            else
+                return ByteBuffer::create_uninitialized(input_size + T::block_size() - remainder);
+        }
 
-protected:
-    T& cipher() { return m_cipher; }
+    protected:
+        T& cipher() { return m_cipher; }
 
-    virtual void prune_padding(ByteBuffer& data)
-    {
-        auto size = data.size();
-        switch (m_cipher.padding_mode()) {
-        case PaddingMode::CMS: {
-            auto maybe_padding_length = data[size - 1];
-            if (maybe_padding_length >= T::block_size()) {
-                // cannot be padding (the entire block cannot be padding)
-                return;
-            }
-            for (auto i = maybe_padding_length; i > 0; --i) {
-                if (data[size - i] != maybe_padding_length) {
-                    // not padding, part of data
+        virtual void prune_padding(ByteBuffer& data)
+        {
+            auto size = data.size();
+            switch (m_cipher.padding_mode()) {
+            case PaddingMode::CMS: {
+                auto maybe_padding_length = data[size - 1];
+                if (maybe_padding_length >= T::block_size()) {
+                    // cannot be padding (the entire block cannot be padding)
                     return;
                 }
+                for (auto i = maybe_padding_length; i > 0; --i) {
+                    if (data[size - i] != maybe_padding_length) {
+                        // not padding, part of data
+                        return;
+                    }
+                }
+                data.trim(size - maybe_padding_length);
+                break;
             }
-            data.trim(size - maybe_padding_length);
-            break;
+            case PaddingMode::Null: {
+                while (data[size - 1] == 0)
+                    --size;
+                data.trim(size);
+                break;
+            }
+            default:
+                // FIXME: support other padding modes
+                ASSERT_NOT_REACHED();
+                break;
+            }
         }
-        case PaddingMode::Null: {
-            while (data[size - 1] == 0)
-                --size;
-            data.trim(size);
-            break;
-        }
-        default:
-            // FIXME: support other padding modes
-            ASSERT_NOT_REACHED();
-            break;
-        }
-    }
 
-    // FIXME: Somehow add a reference version of this
-    template <typename... Args>
-    Mode(Args... args)
-        : m_cipher(args...)
-    {
-    }
+        // FIXME: Somehow add a reference version of this
+        template <typename... Args>
+        Mode(Args... args)
+            : m_cipher(args...)
+        {
+        }
 
-private:
-    T m_cipher;
-};
+    private:
+        T m_cipher;
+    };
+}
+
 }

@@ -68,10 +68,10 @@ void aes_cbc(const char* message, size_t len)
 {
     auto buffer = ByteBuffer::wrap(message, len);
     // FIXME: Take iv as an optional parameter
-    auto iv = ByteBuffer::create_zeroed(Crypto::AESCipher::block_size());
+    auto iv = ByteBuffer::create_zeroed(Crypto::Cipher::AESCipher::block_size());
 
     if (encrypting) {
-        Crypto::AESCipher::CBCMode cipher(secret_key, key_bits, Crypto::Intent::Encryption);
+        Crypto::Cipher::AESCipher::CBCMode cipher(secret_key, key_bits, Crypto::Cipher::Intent::Encryption);
 
         auto enc = cipher.create_aligned_buffer(buffer.size());
         cipher.encrypt(buffer, enc, iv);
@@ -79,9 +79,9 @@ void aes_cbc(const char* message, size_t len)
         if (binary)
             printf("%.*s", (int)enc.size(), enc.data());
         else
-            print_buffer(enc, Crypto::AESCipher::block_size());
+            print_buffer(enc, Crypto::Cipher::AESCipher::block_size());
     } else {
-        Crypto::AESCipher::CBCMode cipher(secret_key, key_bits, Crypto::Intent::Decryption);
+        Crypto::Cipher::AESCipher::CBCMode cipher(secret_key, key_bits, Crypto::Cipher::Intent::Decryption);
         auto dec = cipher.create_aligned_buffer(buffer.size());
         cipher.decrypt(buffer, dec, iv);
         printf("%.*s\n", (int)dec.size(), dec.data());
@@ -90,11 +90,21 @@ void aes_cbc(const char* message, size_t len)
 
 void md5(const char* message, size_t len)
 {
-    auto digest = Crypto::MD5::hash((const u8*)message, len);
+    auto digest = Crypto::Hash::MD5::hash((const u8*)message, len);
     if (binary)
-        printf("%.*s", (int)Crypto::MD5::block_size(), digest.data);
+        printf("%.*s", (int)Crypto::Hash::MD5::digest_size(), digest.data);
     else
-        print_buffer(ByteBuffer::wrap(digest.data, Crypto::MD5::block_size()), Crypto::MD5::block_size());
+        print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::MD5::digest_size()), -1);
+}
+
+void hmac_md5(const char* message, size_t len)
+{
+    Crypto::Authentication::HMAC<Crypto::Hash::MD5> hmac(secret_key);
+    auto mac = hmac.process((const u8*)message, len);
+    if (binary)
+        printf("%.*s", (int)hmac.DigestSize, mac.data);
+    else
+        print_buffer(ByteBuffer::wrap(mac.data, hmac.DigestSize), -1);
 }
 
 auto main(int argc, char** argv) -> int
@@ -103,7 +113,7 @@ auto main(int argc, char** argv) -> int
     Core::ArgsParser parser;
     parser.add_positional_argument(mode, "mode to operate in ('list' to see modes and descriptions)", "mode");
 
-    parser.add_option(secret_key, "Set the secret key (must be key-bits bits)", "secret-key", 'k', "secret key");
+    parser.add_option(secret_key, "Set the secret key", "secret-key", 'k', "secret key");
     parser.add_option(key_bits, "Size of the key", "key-bits", 'b', "key-bits");
     parser.add_option(filename, "Read from file", "file", 'f', "from file");
     parser.add_option(binary, "Force binary output", "force-binary", 0);
@@ -143,7 +153,7 @@ auto main(int argc, char** argv) -> int
             if (run_tests)
                 return aes_cbc_tests();
 
-            if (!Crypto::AESCipher::KeyType::is_valid_key_size(key_bits)) {
+            if (!Crypto::Cipher::AESCipher::KeyType::is_valid_key_size(key_bits)) {
                 printf("Invalid key size for AES: %d\n", key_bits);
                 return 1;
             }
@@ -199,13 +209,13 @@ void aes_cbc_test_encrypt()
     auto test_it = [](auto& cipher, auto& result) {
         auto in = "This is a test! This is another test!"_b;
         auto out = cipher.create_aligned_buffer(in.size());
-        auto iv = ByteBuffer::create_zeroed(Crypto::AESCipher::block_size());
+        auto iv = ByteBuffer::create_zeroed(Crypto::Cipher::AESCipher::block_size());
         cipher.encrypt(in, out, iv);
         if (out.size() != sizeof(result))
             FAIL(size mismatch);
         else if (memcmp(out.data(), result, out.size()) != 0) {
             FAIL(invalid data);
-            print_buffer(out, Crypto::AESCipher::block_size());
+            print_buffer(out, Crypto::Cipher::AESCipher::block_size());
         } else
             PASS;
     };
@@ -217,7 +227,7 @@ void aes_cbc_test_encrypt()
             0x8b, 0xd3, 0x70, 0x45, 0xf0, 0x79, 0x65, 0xca, 0xb9, 0x03, 0x88, 0x72, 0x1c, 0xdd, 0xab,
             0x45, 0x6b, 0x1c
         };
-        Crypto::AESCipher::CBCMode cipher("WellHelloFriends", 128, Crypto::Intent::Encryption);
+        Crypto::Cipher::AESCipher::CBCMode cipher("WellHelloFriends", 128, Crypto::Cipher::Intent::Encryption);
         test_it(cipher, result);
     }
     {
@@ -228,7 +238,7 @@ void aes_cbc_test_encrypt()
             0x68, 0x51, 0x09, 0xd7, 0x3b, 0x48, 0x1b, 0x8a, 0xd3, 0x50, 0x09, 0xba, 0xfc, 0xde, 0x11,
             0xe0, 0x3f, 0xcb
         };
-        Crypto::AESCipher::CBCMode cipher("Well Hello Friends! whf!", 192, Crypto::Intent::Encryption);
+        Crypto::Cipher::AESCipher::CBCMode cipher("Well Hello Friends! whf!", 192, Crypto::Cipher::Intent::Encryption);
         test_it(cipher, result);
     }
     {
@@ -239,7 +249,7 @@ void aes_cbc_test_encrypt()
             0x47, 0x9f, 0xc2, 0x21, 0xe6, 0x19, 0x62, 0xc3, 0x75, 0xca, 0xab, 0x2d, 0x18, 0xa1, 0x54,
             0xd1, 0x41, 0xe6
         };
-        Crypto::AESCipher::CBCMode cipher("WellHelloFriendsWellHelloFriends", 256, Crypto::Intent::Encryption);
+        Crypto::Cipher::AESCipher::CBCMode cipher("WellHelloFriendsWellHelloFriends", 256, Crypto::Cipher::Intent::Encryption);
         test_it(cipher, result);
     }
     // TODO: Test non-CMS padding options
@@ -250,14 +260,14 @@ void aes_cbc_test_decrypt()
         auto true_value = "This is a test! This is another test!";
         auto in = ByteBuffer::copy(result, result_len);
         auto out = cipher.create_aligned_buffer(in.size());
-        auto iv = ByteBuffer::create_zeroed(Crypto::AESCipher::block_size());
+        auto iv = ByteBuffer::create_zeroed(Crypto::Cipher::AESCipher::block_size());
         cipher.decrypt(in, out, iv);
         if (out.size() != strlen(true_value)) {
             FAIL(size mismatch);
             printf("Expected %zu bytes but got %zu\n", strlen(true_value), out.size());
         } else if (memcmp(out.data(), true_value, strlen(true_value)) != 0) {
             FAIL(invalid data);
-            print_buffer(out, Crypto::AESCipher::block_size());
+            print_buffer(out, Crypto::Cipher::AESCipher::block_size());
         } else
             PASS;
     };
@@ -269,7 +279,7 @@ void aes_cbc_test_decrypt()
             0x8b, 0xd3, 0x70, 0x45, 0xf0, 0x79, 0x65, 0xca, 0xb9, 0x03, 0x88, 0x72, 0x1c, 0xdd, 0xab,
             0x45, 0x6b, 0x1c
         };
-        Crypto::AESCipher::CBCMode cipher("WellHelloFriends", 128, Crypto::Intent::Decryption);
+        Crypto::Cipher::AESCipher::CBCMode cipher("WellHelloFriends", 128, Crypto::Cipher::Intent::Decryption);
         test_it(cipher, result, 48);
     }
     {
@@ -280,7 +290,7 @@ void aes_cbc_test_decrypt()
             0x68, 0x51, 0x09, 0xd7, 0x3b, 0x48, 0x1b, 0x8a, 0xd3, 0x50, 0x09, 0xba, 0xfc, 0xde, 0x11,
             0xe0, 0x3f, 0xcb
         };
-        Crypto::AESCipher::CBCMode cipher("Well Hello Friends! whf!", 192, Crypto::Intent::Decryption);
+        Crypto::Cipher::AESCipher::CBCMode cipher("Well Hello Friends! whf!", 192, Crypto::Cipher::Intent::Decryption);
         test_it(cipher, result, 48);
     }
     {
@@ -291,7 +301,7 @@ void aes_cbc_test_decrypt()
             0x47, 0x9f, 0xc2, 0x21, 0xe6, 0x19, 0x62, 0xc3, 0x75, 0xca, 0xab, 0x2d, 0x18, 0xa1, 0x54,
             0xd1, 0x41, 0xe6
         };
-        Crypto::AESCipher::CBCMode cipher("WellHelloFriendsWellHelloFriends", 256, Crypto::Intent::Decryption);
+        Crypto::Cipher::AESCipher::CBCMode cipher("WellHelloFriendsWellHelloFriends", 256, Crypto::Cipher::Intent::Decryption);
         test_it(cipher, result, 48);
     }
     // TODO: Test non-CMS padding options
@@ -311,11 +321,11 @@ void md5_test_hash()
         u8 result[] {
             0xaf, 0x04, 0x3a, 0x08, 0x94, 0x38, 0x6e, 0x7f, 0xbf, 0x73, 0xe4, 0xaa, 0xf0, 0x8e, 0xee, 0x4c
         };
-        auto digest = Crypto::MD5::hash("Well hello friends");
+        auto digest = Crypto::Hash::MD5::hash("Well hello friends");
 
-        if (memcmp(result, digest.data, Crypto::MD5::block_size()) != 0) {
+        if (memcmp(result, digest.data, Crypto::Hash::MD5::digest_size()) != 0) {
             FAIL(Invalid hash);
-            print_buffer(ByteBuffer::wrap(digest.data, Crypto::MD5::block_size()), -1);
+            print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::MD5::digest_size()), -1);
         } else {
             PASS;
         }
@@ -326,11 +336,11 @@ void md5_test_hash()
         u8 result[] {
             0xd4, 0x1d, 0x8c, 0xd9, 0x8f, 0x00, 0xb2, 0x04, 0xe9, 0x80, 0x09, 0x98, 0xec, 0xf8, 0x42, 0x7e
         };
-        auto digest = Crypto::MD5::hash("");
+        auto digest = Crypto::Hash::MD5::hash("");
 
-        if (memcmp(result, digest.data, Crypto::MD5::block_size()) != 0) {
+        if (memcmp(result, digest.data, Crypto::Hash::MD5::digest_size()) != 0) {
             FAIL(Invalid hash);
-            print_buffer(ByteBuffer::wrap(digest.data, Crypto::MD5::block_size()), -1);
+            print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::MD5::digest_size()), -1);
         } else {
             PASS;
         }
@@ -340,11 +350,11 @@ void md5_test_hash()
         u8 result[] {
             0x0c, 0xc1, 0x75, 0xb9, 0xc0, 0xf1, 0xb6, 0xa8, 0x31, 0xc3, 0x99, 0xe2, 0x69, 0x77, 0x26, 0x61
         };
-        auto digest = Crypto::MD5::hash("a");
+        auto digest = Crypto::Hash::MD5::hash("a");
 
-        if (memcmp(result, digest.data, Crypto::MD5::block_size()) != 0) {
+        if (memcmp(result, digest.data, Crypto::Hash::MD5::digest_size()) != 0) {
             FAIL(Invalid hash);
-            print_buffer(ByteBuffer::wrap(digest.data, Crypto::MD5::block_size()), -1);
+            print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::MD5::digest_size()), -1);
         } else {
             PASS;
         }
@@ -354,11 +364,11 @@ void md5_test_hash()
         u8 result[] {
             0xc3, 0xfc, 0xd3, 0xd7, 0x61, 0x92, 0xe4, 0x00, 0x7d, 0xfb, 0x49, 0x6c, 0xca, 0x67, 0xe1, 0x3b
         };
-        auto digest = Crypto::MD5::hash("abcdefghijklmnopqrstuvwxyz");
+        auto digest = Crypto::Hash::MD5::hash("abcdefghijklmnopqrstuvwxyz");
 
-        if (memcmp(result, digest.data, Crypto::MD5::block_size()) != 0) {
+        if (memcmp(result, digest.data, Crypto::Hash::MD5::digest_size()) != 0) {
             FAIL(Invalid hash);
-            print_buffer(ByteBuffer::wrap(digest.data, Crypto::MD5::block_size()), -1);
+            print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::MD5::digest_size()), -1);
         } else {
             PASS;
         }
@@ -368,11 +378,11 @@ void md5_test_hash()
         u8 result[] {
             0x57, 0xed, 0xf4, 0xa2, 0x2b, 0xe3, 0xc9, 0x55, 0xac, 0x49, 0xda, 0x2e, 0x21, 0x07, 0xb6, 0x7a
         };
-        auto digest = Crypto::MD5::hash("12345678901234567890123456789012345678901234567890123456789012345678901234567890");
+        auto digest = Crypto::Hash::MD5::hash("12345678901234567890123456789012345678901234567890123456789012345678901234567890");
 
-        if (memcmp(result, digest.data, Crypto::MD5::block_size()) != 0) {
+        if (memcmp(result, digest.data, Crypto::Hash::MD5::digest_size()) != 0) {
             FAIL(Invalid hash);
-            print_buffer(ByteBuffer::wrap(digest.data, Crypto::MD5::block_size()), -1);
+            print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::MD5::digest_size()), -1);
         } else {
             PASS;
         }
@@ -386,21 +396,21 @@ void md5_test_consecutive_updates()
         u8 result[] {
             0xaf, 0x04, 0x3a, 0x08, 0x94, 0x38, 0x6e, 0x7f, 0xbf, 0x73, 0xe4, 0xaa, 0xf0, 0x8e, 0xee, 0x4c
         };
-        Crypto::MD5 md5;
+        Crypto::Hash::MD5 md5;
 
         md5.update("Well");
         md5.update(" hello ");
         md5.update("friends");
         auto digest = md5.digest();
 
-        if (memcmp(result, digest.data, Crypto::MD5::block_size()) != 0)
+        if (memcmp(result, digest.data, Crypto::Hash::MD5::digest_size()) != 0)
             FAIL(Invalid hash);
         else
             PASS;
     }
     {
         I_TEST((MD5 Hashing | Reuse));
-        Crypto::MD5 md5;
+        Crypto::Hash::MD5 md5;
 
         md5.update("Well");
         md5.update(" hello ");
@@ -412,7 +422,7 @@ void md5_test_consecutive_updates()
         md5.update("friends");
         auto digest1 = md5.digest();
 
-        if (memcmp(digest0.data, digest1.data, Crypto::MD5::block_size()) != 0)
+        if (memcmp(digest0.data, digest1.data, Crypto::Hash::MD5::block_size()) != 0)
             FAIL(Cannot reuse);
         else
             PASS;
