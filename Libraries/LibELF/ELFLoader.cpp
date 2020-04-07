@@ -41,6 +41,7 @@
 ELFLoader::ELFLoader(const u8* buffer, size_t size)
     : m_image(buffer, size)
 {
+    m_symbol_count = m_image.symbol_count();
 }
 
 ELFLoader::~ELFLoader()
@@ -152,7 +153,7 @@ char* ELFLoader::symbol_ptr(const char* name)
 
 String ELFLoader::symbolicate(u32 address, u32* out_offset) const
 {
-    if (!m_image.symbol_count()) {
+    if (!m_symbol_count) {
         if (out_offset)
             *out_offset = 0;
         return "??";
@@ -160,14 +161,14 @@ String ELFLoader::symbolicate(u32 address, u32* out_offset) const
     SortedSymbol* sorted_symbols = nullptr;
 #ifdef KERNEL
     if (!m_sorted_symbols_region) {
-        m_sorted_symbols_region = MM.allocate_kernel_region(PAGE_ROUND_UP(m_image.symbol_count() * sizeof(SortedSymbol)), "Sorted symbols", Kernel::Region::Access::Read | Kernel::Region::Access::Write);
+        m_sorted_symbols_region = MM.allocate_kernel_region(PAGE_ROUND_UP(m_symbol_count * sizeof(SortedSymbol)), "Sorted symbols", Kernel::Region::Access::Read | Kernel::Region::Access::Write);
         sorted_symbols = (SortedSymbol*)m_sorted_symbols_region->vaddr().as_ptr();
         size_t index = 0;
         m_image.for_each_symbol([&](auto& symbol) {
             sorted_symbols[index++] = { symbol.value(), symbol.name() };
             return IterationDecision::Continue;
         });
-        quick_sort(sorted_symbols, sorted_symbols + m_image.symbol_count(), [](auto& a, auto& b) {
+        quick_sort(sorted_symbols, sorted_symbols + m_symbol_count, [](auto& a, auto& b) {
             return a.address < b.address;
         });
     } else {
@@ -175,9 +176,9 @@ String ELFLoader::symbolicate(u32 address, u32* out_offset) const
     }
 #else
     if (m_sorted_symbols.is_empty()) {
-        m_sorted_symbols.ensure_capacity(m_image.symbol_count());
+        m_sorted_symbols.ensure_capacity(m_symbol_count);
         m_image.for_each_symbol([this](auto& symbol) {
-            m_sorted_symbols.append({ symbol.value(), symbol.name() });
+            m_sorted_symbols.append({ symbol.value(), symbol.name(), {} });
             return IterationDecision::Continue;
         });
         quick_sort(m_sorted_symbols, [](auto& a, auto& b) {
@@ -187,7 +188,7 @@ String ELFLoader::symbolicate(u32 address, u32* out_offset) const
     sorted_symbols = m_sorted_symbols.data();
 #endif
 
-    for (size_t i = 0; i < m_image.symbol_count(); ++i) {
+    for (size_t i = 0; i < m_symbol_count; ++i) {
         if (sorted_symbols[i].address > address) {
             if (i == 0) {
                 if (out_offset)
@@ -195,11 +196,20 @@ String ELFLoader::symbolicate(u32 address, u32* out_offset) const
                 return "!!";
             }
             auto& symbol = sorted_symbols[i - 1];
+
+#ifdef KERNEL
+            auto demangled_name = demangle(symbol.name);
+#else
+            auto& demangled_name = symbol.demangled_name;
+            if (demangled_name.is_null())
+                demangled_name = demangle(symbol.name);
+#endif
+
             if (out_offset) {
                 *out_offset = address - symbol.address;
-                return demangle(symbol.name);
+                return demangled_name;
             }
-            return String::format("%s +%u", demangle(symbol.name).characters(), address - symbol.address);
+            return String::format("%s +%u", demangled_name.characters(), address - symbol.address);
         }
     }
     if (out_offset)
