@@ -54,7 +54,7 @@ public:
 #endif
     char* symbol_ptr(const char* name);
 
-    bool has_symbols() const { return m_image.symbol_count(); }
+    bool has_symbols() const { return m_symbol_count; }
 
     String symbolicate(u32 address, u32* offset = nullptr) const;
 
@@ -78,9 +78,14 @@ private:
     };
     ELFImage m_image;
 
+    size_t m_symbol_count { 0 };
+
     struct SortedSymbol {
         u32 address;
         StringView name;
+#ifndef KERNEL
+        String demangled_name;
+#endif
     };
 #ifdef KERNEL
     mutable OwnPtr<Kernel::Region> m_sorted_symbols_region;
