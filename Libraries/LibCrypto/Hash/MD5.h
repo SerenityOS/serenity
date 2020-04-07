@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <LibCrypto/Hash/HashFunction.h>
 
@@ -78,6 +79,8 @@ namespace Hash {
         virtual void update(const ByteBuffer& buffer) override { update(buffer.data(), buffer.size()); };
         virtual void update(const StringView& string) override { update((const u8*)string.characters_without_null_termination(), string.length()); };
         virtual DigestType digest() override;
+
+        virtual String class_name() const override { return "MD5"; }
 
         inline static DigestType hash(const u8* data, size_t length)
         {

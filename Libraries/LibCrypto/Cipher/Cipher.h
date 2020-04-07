@@ -129,6 +129,8 @@ namespace Cipher {
         virtual void encrypt_block(const BlockType& in, BlockType& out) = 0;
         virtual void decrypt_block(const BlockType& in, BlockType& out) = 0;
 
+        virtual String class_name() const = 0;
+
     private:
         PaddingMode m_padding_mode;
     };

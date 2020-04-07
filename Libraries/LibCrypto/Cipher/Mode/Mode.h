@@ -50,6 +50,8 @@ namespace Cipher {
                 return ByteBuffer::create_uninitialized(input_size + T::block_size() - remainder);
         }
 
+        virtual String class_name() const = 0;
+
     protected:
         T& cipher() { return m_cipher; }
 
