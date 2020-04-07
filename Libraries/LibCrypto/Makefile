@@ -1,12 +1,13 @@
 LIBCRYPTO_OBJS = \
-	   	Cipher/AES.o
+	   	Cipher/AES.o \
+		Hash/MD5.o
 
 OBJS = $(LIBCRYPTO_OBJS)
 
 LIBRARY = libcrypto.a
 
 install:
-	for dir in . Cipher Cipher/Mode; do \
+	for dir in . Cipher Cipher/Mode Hash; do \
 	    mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/LibCrypto/$$dir; \
 	    cp $$dir/*.h $(SERENITY_BASE_DIR)/Root/usr/include/LibCrypto/$$dir/; \
 	done
