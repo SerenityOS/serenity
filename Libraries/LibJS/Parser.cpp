@@ -388,7 +388,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
     HashMap<FlyString, NonnullRefPtr<Expression>> properties;
     consume(TokenType::CurlyOpen);
 
-    while (!match(TokenType::CurlyClose)) {
+    while (!done() && !match(TokenType::CurlyClose)) {
         FlyString property_name;
         if (match(TokenType::Identifier)) {
             property_name = consume(TokenType::Identifier).value();
