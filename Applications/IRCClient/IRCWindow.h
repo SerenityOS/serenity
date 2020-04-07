@@ -77,5 +77,6 @@ private:
     RefPtr<Web::HtmlView> m_html_view;
     RefPtr<GUI::TextEditor> m_text_editor;
     RefPtr<IRCLogBuffer> m_log_buffer;
+    RefPtr<GUI::Menu> m_context_menu;
     int m_unread_count { 0 };
 };
