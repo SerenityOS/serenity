@@ -242,7 +242,8 @@ void HtmlView::mousedown_event(GUI::MouseEvent& event)
                 }
             } else {
                 if (event.button() == GUI::MouseButton::Left) {
-                    layout_root()->selection().set({ result.layout_node, result.index_in_node }, {});
+                    if (layout_root())
+                        layout_root()->selection().set({ result.layout_node, result.index_in_node }, {});
                     dump_selection("MouseDown");
                     m_in_mouse_selection = true;
                 }
