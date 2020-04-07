@@ -161,19 +161,17 @@ int main(int argc, char** argv)
     auto entry_point = get_entry_point(g_pid);
     dbg() << "entry point:" << entry_point;
 
-    uint32_t data = ptrace(PT_PEEK, g_pid, (void*)entry_point.as_ptr(), 0);
+    const uint32_t original_instruction_data = ptrace(PT_PEEK, g_pid, (void*)entry_point.as_ptr(), 0);
 
-    // u8* as_bytes = reinterpret_cast<u8*>(&data);
-    // as_bytes[0] = 0xcc;
-    dbg() << "peeked data:" << (void*)data;
-    data = (data & ~(uint32_t)0xff) | 0xcc;
-    data = 0xccccccc;
+    dbg() << "peeked data:" << (void*)original_instruction_data;
 
-    if (ptrace(PT_POKE, g_pid, (void*)entry_point.as_ptr(), data) < 0) {
+    if (ptrace(PT_POKE, g_pid, (void*)entry_point.as_ptr(), (original_instruction_data & ~(uint32_t)0xff) | 0xcc) < 0) {
         perror("poke");
         return 1;
     }
+
     dbg() << "continuting";
+
     if (ptrace(PT_CONTINUE, g_pid, 0, 0) == -1) {
         perror("continue");
     }
@@ -187,13 +185,27 @@ int main(int argc, char** argv)
 
     printf("hit breakpoint\n");
 
+    if (ptrace(PT_POKE, g_pid, (void*)entry_point.as_ptr(), original_instruction_data) < 0) {
+        perror("poke");
+        return 1;
+    }
+
     PtraceRegisters regs;
-    if (ptrace(PT_GETREGS, g_pid, &regs, 0) == -1) {
+    if (ptrace(PT_GETREGS, g_pid, &regs, 0) < 0) {
         perror("getregs");
         return 1;
     }
 
     dbg() << "eip after breakpoint: " << (void*)regs.eip;
+
+    regs.eip = reinterpret_cast<u32>(entry_point.as_ptr());
+    dbg() << "settings eip back to:" << (void*)regs.eip;
+    if (ptrace(PT_SETREGS, g_pid, &regs, 0) < 0) {
+        perror("setregs");
+        return 1;
+    }
+
+    dbg() << "continuig";
 
     if (ptrace(PT_CONTINUE, g_pid, 0, 0) == -1) {
         perror("continue");

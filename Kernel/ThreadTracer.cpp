@@ -26,6 +26,8 @@
 
 #include <AK/Memory.h>
 #include <AK/kmalloc.h>
+#include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Ptrace.h>
 #include <Kernel/ThreadTracer.h>
 
 namespace Kernel {
@@ -37,24 +39,9 @@ ThreadTracer::ThreadTracer(pid_t tracer_pid)
 
 void ThreadTracer::set_regs(const RegisterState& regs)
 {
-    PtraceRegisters r = {
-        regs.eax,
-        regs.ecx,
-        regs.edx,
-        regs.ebx,
-        regs.esp,
-        regs.ebp,
-        regs.esi,
-        regs.edi,
-        regs.eip,
-        regs.eflags,
-        regs.cs,
-        regs.ss,
-        regs.ds,
-        regs.es,
-        regs.fs,
-        regs.gs,
-    };
+    PtraceRegisters r;
+    Ptrace::copy_kernel_registers_into_ptrace_registers(r, regs);
     m_regs = r;
 }
+
 }

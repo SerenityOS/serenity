@@ -411,6 +411,11 @@ public:
     void increment_inspector_count(Badge<ProcessInspectionHandle>) { ++m_inspector_count; }
     void decrement_inspector_count(Badge<ProcessInspectionHandle>) { --m_inspector_count; }
 
+    void set_wait_for_tracer_at_next_execve(bool val) { m_wait_for_tracer_at_next_execve = val; }
+
+    KResultOr<u32> peek_user_data(u32* address);
+    KResult poke_user_data(u32* address, u32 data);
+
 private:
     friend class MemoryManager;
     friend class Scheduler;

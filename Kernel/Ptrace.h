@@ -25,21 +25,16 @@
  */
 
 #pragma once
+#include <Kernel/KResult.h>
+#include <Kernel/Process.h>
+#include <Kernel/Syscall.h>
+#include <LibC/sys/arch/i386/regs.h>
 
-#include <sys/types.h>
+namespace Ptrace {
 
-__BEGIN_DECLS
+KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, Process& caller);
 
-#define PT_TRACE_ME 1
-#define PT_ATTACH 2
-#define PT_CONTINUE 3
-#define PT_SYSCALL 4
-#define PT_GETREGS 5
-#define PT_DETACH 6
-#define PT_PEEK 7
-#define PT_POKE 8
-#define PT_SETREGS 9
+void copy_kernel_registers_into_ptrace_registers(PtraceRegisters&, const RegisterState&);
+void copy_ptrace_registers_into_kernel_registers(RegisterState&, const PtraceRegisters&);
 
-int ptrace(int request, pid_t pid, void* addr, int data);
-
-__END_DECLS
+}
