@@ -1,6 +1,7 @@
 LIBCRYPTO_OBJS = \
 	   	Cipher/AES.o \
-		Hash/MD5.o
+		Hash/MD5.o \
+		Hash/SHA2.o
 
 OBJS = $(LIBCRYPTO_OBJS)
 
