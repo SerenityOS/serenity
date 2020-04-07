@@ -127,14 +127,14 @@ bool make_is_available();
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio tty accept rpath cpath wpath shared_buffer proc exec unix fattr", nullptr) < 0) {
+    if (pledge("stdio tty accept rpath cpath wpath shared_buffer proc exec unix fattr thread", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     GUI::Application app(argc, argv);
 
-    if (pledge("stdio tty accept rpath cpath wpath shared_buffer proc exec fattr", nullptr) < 0) {
+    if (pledge("stdio tty accept rpath cpath wpath shared_buffer proc exec fattr thread", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
