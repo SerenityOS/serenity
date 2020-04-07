@@ -1,5 +1,6 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCrypto/Authentication/HMAC.h>
 #include <LibCrypto/Cipher/AES.h>
 #include <LibCrypto/Hash/MD5.h>
 #include <LibLine/Editor.h>
@@ -15,6 +16,7 @@ static bool run_tests = false;
 
 static bool encrypting = true;
 
+constexpr const char* DEFAULT_DIGEST_SUITE { "HMAC-MD5" };
 constexpr const char* DEFAULT_HASH_SUITE { "MD5" };
 constexpr const char* DEFAULT_CIPHER_SUITE { "AES_CBC" };
 
@@ -24,6 +26,9 @@ int aes_cbc_tests();
 
 // Hash
 int md5_tests();
+
+// Authentication
+int hmac_md5_tests();
 
 // stop listing tests
 
@@ -113,7 +118,7 @@ auto main(int argc, char** argv) -> int
     Core::ArgsParser parser;
     parser.add_positional_argument(mode, "mode to operate in ('list' to see modes and descriptions)", "mode");
 
-    parser.add_option(secret_key, "Set the secret key", "secret-key", 'k', "secret key");
+    parser.add_option(secret_key, "Set the secret key (default key is 'WellHelloFriends')", "secret-key", 'k', "secret key");
     parser.add_option(key_bits, "Size of the key", "key-bits", 'b', "key-bits");
     parser.add_option(filename, "Read from file", "file", 'f', "from file");
     parser.add_option(binary, "Force binary output", "force-binary", 0);
@@ -124,7 +129,8 @@ auto main(int argc, char** argv) -> int
 
     StringView mode_sv { mode };
     if (mode_sv == "list") {
-        puts("Crypt modes");
+        puts("test-crypto modes");
+        puts("\tdigest - Access digest (authentication) functions");
         puts("\thash - Access hash functions");
         puts("\tencrypt -- Access encryption functions");
         puts("\tdecrypt -- Access decryption functions");
@@ -139,6 +145,19 @@ auto main(int argc, char** argv) -> int
             if (run_tests)
                 return md5_tests();
             return run(md5);
+        } else {
+            printf("unknown hash function '%s'\n", suite);
+            return 1;
+        }
+    }
+    if (mode_sv == "digest") {
+        if (suite == nullptr)
+            suite = DEFAULT_DIGEST_SUITE;
+
+        if (StringView(suite) == "HMAC-MD5") {
+            if (run_tests)
+                return hmac_md5_tests();
+            return run(hmac_md5);
         } else {
             printf("unknown hash function '%s'\n", suite);
             return 1;
@@ -187,14 +206,20 @@ ByteBuffer operator""_b(const char* string, size_t length)
 
 // tests go after here
 // please be reasonable with orders kthx
+void aes_cbc_test_name();
 void aes_cbc_test_encrypt();
 void aes_cbc_test_decrypt();
 
+void md5_test_name();
 void md5_test_hash();
 void md5_test_consecutive_updates();
 
+void hmac_md5_test_name();
+void hmac_md5_test_process();
+
 int aes_cbc_tests()
 {
+    aes_cbc_test_name();
     if (encrypting) {
         aes_cbc_test_encrypt();
     } else {
@@ -202,6 +227,16 @@ int aes_cbc_tests()
     }
 
     return 0;
+}
+
+void aes_cbc_test_name()
+{
+    I_TEST((AES CBC class name));
+    Crypto::Cipher::AESCipher::CBCMode cipher("WellHelloFriends", 128, Crypto::Cipher::Intent::Encryption);
+    if (cipher.class_name() != "AES_CBC")
+        FAIL(Invalid class name);
+    else
+        PASS;
 }
 
 void aes_cbc_test_encrypt()
@@ -309,9 +344,20 @@ void aes_cbc_test_decrypt()
 
 int md5_tests()
 {
+    md5_test_name();
     md5_test_hash();
     md5_test_consecutive_updates();
     return 0;
+}
+
+void md5_test_name()
+{
+    I_TEST((MD5 class name));
+    Crypto::Hash::MD5 md5;
+    if (md5.class_name() != "MD5")
+        FAIL(Invalid class name);
+    else
+        PASS;
 }
 
 void md5_test_hash()
@@ -422,9 +468,55 @@ void md5_test_consecutive_updates()
         md5.update("friends");
         auto digest1 = md5.digest();
 
-        if (memcmp(digest0.data, digest1.data, Crypto::Hash::MD5::block_size()) != 0)
+        if (memcmp(digest0.data, digest1.data, Crypto::Hash::MD5::digest_size()) != 0)
             FAIL(Cannot reuse);
         else
+            PASS;
+    }
+}
+
+int hmac_md5_tests()
+{
+    hmac_md5_test_name();
+    hmac_md5_test_process();
+    return 0;
+}
+
+void hmac_md5_test_name()
+{
+    I_TEST((HMAC - MD5 | Class name));
+    Crypto::Authentication::HMAC<Crypto::Hash::MD5> hmac("Well Hello Friends");
+    if (hmac.class_name() != "HMAC-MD5")
+        FAIL(Invalid class name);
+    else
+        PASS;
+}
+
+void hmac_md5_test_process()
+{
+    {
+        I_TEST((HMAC - MD5 | Basic));
+        Crypto::Authentication::HMAC<Crypto::Hash::MD5> hmac("Well Hello Friends");
+        u8 result[] {
+            0x3b, 0x5b, 0xde, 0x30, 0x3a, 0x54, 0x7b, 0xbb, 0x09, 0xfe, 0x78, 0x89, 0xbc, 0x9f, 0x22, 0xa3
+        };
+        auto mac = hmac.process("Some bogus data");
+        if (memcmp(result, mac.data, hmac.DigestSize) != 0) {
+            FAIL(Invalid mac);
+            print_buffer(ByteBuffer::wrap(mac.data, hmac.DigestSize), -1);
+        } else
+            PASS;
+    }
+    {
+        I_TEST((HMAC - MD5 | Reuse));
+        Crypto::Authentication::HMAC<Crypto::Hash::MD5> hmac("Well Hello Friends");
+
+        auto mac_0 = hmac.process("Some bogus data");
+        auto mac_1 = hmac.process("Some bogus data");
+
+        if (memcmp(mac_0.data, mac_1.data, hmac.DigestSize) != 0) {
+            FAIL(Cannot reuse);
+        } else
             PASS;
     }
 }

@@ -120,6 +120,8 @@ namespace Cipher {
         virtual void encrypt_block(const BlockType& in, BlockType& out) override;
         virtual void decrypt_block(const BlockType& in, BlockType& out) override;
 
+        virtual String class_name() const override { return "AES"; }
+
     protected:
         AESCipherKey m_key;
     };

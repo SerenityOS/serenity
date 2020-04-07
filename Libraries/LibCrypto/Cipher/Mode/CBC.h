@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <AK/String.h>
+#include <AK/StringBuilder.h>
 #include <LibCrypto/Cipher/Mode/Mode.h>
 
 namespace Crypto {
@@ -38,6 +40,14 @@ namespace Cipher {
         explicit constexpr CBC<T>(Args... args)
             : Mode<T>(args...)
         {
+        }
+
+        virtual String class_name() const override
+        {
+            StringBuilder builder;
+            builder.append(this->cipher().class_name());
+            builder.append("_CBC");
+            return builder.build();
         }
 
         virtual Optional<ByteBuffer> encrypt(const ByteBuffer& in, ByteBuffer& out, Optional<ByteBuffer> ivec = {}) override
