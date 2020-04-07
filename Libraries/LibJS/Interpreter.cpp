@@ -28,6 +28,7 @@
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/ArrayPrototype.h>
+#include <LibJS/Runtime/BooleanPrototype.h>
 #include <LibJS/Runtime/DatePrototype.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/ErrorPrototype.h>
@@ -55,6 +56,7 @@ Interpreter::Interpreter()
     m_error_prototype = heap().allocate<ErrorPrototype>();
     m_date_prototype = heap().allocate<DatePrototype>();
     m_number_prototype = heap().allocate<NumberPrototype>();
+    m_boolean_prototype = heap().allocate<BooleanPrototype>();
 }
 
 Interpreter::~Interpreter()
@@ -180,6 +182,7 @@ void Interpreter::gather_roots(Badge<Heap>, HashTable<Cell*>& roots)
     roots.set(m_date_prototype);
     roots.set(m_function_prototype);
     roots.set(m_number_prototype);
+    roots.set(m_boolean_prototype);
 
     roots.set(m_exception);
 

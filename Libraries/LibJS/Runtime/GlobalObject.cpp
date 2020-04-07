@@ -29,6 +29,7 @@
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/ArrayConstructor.h>
+#include <LibJS/Runtime/BooleanConstructor.h>
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <LibJS/Runtime/DateConstructor.h>
 #include <LibJS/Runtime/ErrorConstructor.h>
@@ -58,6 +59,7 @@ GlobalObject::GlobalObject()
     put("Math", heap().allocate<MathObject>());
     put("Object", heap().allocate<ObjectConstructor>());
     put("Array", heap().allocate<ArrayConstructor>());
+    put("Boolean", heap().allocate<BooleanConstructor>());
 }
 
 GlobalObject::~GlobalObject()
