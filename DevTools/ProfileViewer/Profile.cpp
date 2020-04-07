@@ -230,9 +230,6 @@ OwnPtr<Profile> Profile::load_from_perfcore_file(const StringView& path)
                 symbol = elf_loader->symbolicate(ptr, &offset);
             }
 
-            if (symbol == "??")
-                symbol = "??";
-
             event.frames.append({ symbol, ptr, offset });
         }
 
