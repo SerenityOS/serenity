@@ -41,6 +41,7 @@ namespace Bindings {
 WindowObject::WindowObject(Window& impl)
     : m_impl(impl)
 {
+    put("window", this);
     put_native_property("document", document_getter, document_setter);
     put_native_function("alert", alert);
     put_native_function("setInterval", set_interval, 1);
