@@ -33,14 +33,23 @@ namespace Crypto {
 class UnsignedBigInteger {
 public:
     UnsignedBigInteger(u32 x) { m_words.append(x); }
+
+    UnsignedBigInteger(AK::Vector<u32>&& words)
+        : m_words(words)
+    {
+    }
+
     UnsignedBigInteger() {}
 
     static UnsignedBigInteger create_invalid();
 
     const AK::Vector<u32>& words() const { return m_words; }
 
-    UnsignedBigInteger add(const UnsignedBigInteger& other);
-    UnsignedBigInteger sub(const UnsignedBigInteger& other);
+    UnsignedBigInteger add(const UnsignedBigInteger& other) const;
+    UnsignedBigInteger sub(const UnsignedBigInteger& other) const;
+    UnsignedBigInteger multiply(const UnsignedBigInteger& other) const;
+    UnsignedBigInteger shift_left(size_t num_bits) const;
+    UnsignedBigInteger shift_left_by_n_words(const size_t number_of_words) const;
 
     size_t length() const { return m_words.size(); }
 
@@ -54,6 +63,9 @@ public:
     bool is_invalid() const { return m_is_invalid; }
 
 private:
+    u32 shift_left_get_one_word(const size_t num_bits, const size_t result_word_index) const;
+
+    static constexpr size_t BITS_IN_WORD = 32;
     AK::Vector<u32> m_words;
 
     // Used to indicate a negative result, or a result of an invalid operation

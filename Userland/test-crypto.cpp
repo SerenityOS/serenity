@@ -305,6 +305,7 @@ void hmac_sha512_test_process();
 void bigint_test_fibo500();
 void bigint_addition_edgecases();
 void bigint_subtraction();
+void bigint_multiplication();
 
 int aes_cbc_tests()
 {
@@ -799,6 +800,7 @@ int bigint_tests()
     bigint_test_fibo500();
     bigint_addition_edgecases();
     bigint_subtraction();
+    bigint_multiplication();
     return 0;
 }
 
@@ -851,6 +853,8 @@ void bigint_addition_edgecases()
             PASS;
         } else {
             FAIL(Incorrect Result);
+        }
+    }
 }
 
 void bigint_subtraction()
@@ -896,6 +900,44 @@ void bigint_subtraction()
         Crypto::UnsignedBigInteger result = num1.sub(num2);
         if ((result.add(num2) == num1)
             && (result.words() == Vector<u32> { 811430588, 2958904896, 1130908877, 2830569969, 3243275482, 3047460725, 774025231, 7990 })) {
+            PASS;
+        } else {
+            FAIL(Incorrect Result);
+        }
+    }
+}
+
+void bigint_multiplication()
+{
+    {
+        I_TEST((BigInteger | Simple Multipliction));
+        Crypto::UnsignedBigInteger num1(8);
+        Crypto::UnsignedBigInteger num2(251);
+        Crypto::UnsignedBigInteger result = num1.multiply(num2);
+        dbg() << "result: " << result;
+        if (result.words() == Vector<u32> { 2008 }) {
+            PASS;
+        } else {
+            FAIL(Incorrect Result);
+        }
+    }
+    {
+        I_TEST((BigInteger | Multiplications with big numbers 1));
+        Crypto::UnsignedBigInteger num1 = bigint_fibonacci(200);
+        Crypto::UnsignedBigInteger num2(12345678);
+        Crypto::UnsignedBigInteger result = num1.multiply(num2);
+        if (result.words() == Vector<u32> { 669961318, 143970113, 4028714974, 3164551305, 1589380278, 2 }) {
+            PASS;
+        } else {
+            FAIL(Incorrect Result);
+        }
+    }
+    {
+        I_TEST((BigInteger | Multiplications with big numbers 2));
+        Crypto::UnsignedBigInteger num1 = bigint_fibonacci(200);
+        Crypto::UnsignedBigInteger num2 = bigint_fibonacci(341);
+        Crypto::UnsignedBigInteger result = num1.multiply(num2);
+        if (result.words() == Vector<u32> { 3017415433, 2741793511, 1957755698, 3731653885, 3154681877, 785762127, 3200178098, 4260616581, 529754471, 3632684436, 1073347813, 2516430 }) {
             PASS;
         } else {
             FAIL(Incorrect Result);
