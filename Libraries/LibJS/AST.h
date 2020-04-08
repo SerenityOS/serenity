@@ -632,6 +632,8 @@ public:
     virtual Value execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
 
+    const NonnullRefPtrVector<VariableDeclarator>& declarations() const { return m_declarations; }
+
 private:
     virtual const char* class_name() const override { return "VariableDeclaration"; }
 

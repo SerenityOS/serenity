@@ -94,6 +94,20 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ArgumentVector argume
     for (auto& argument : arguments) {
         scope_variables_with_declaration_kind.set(argument.name, { argument.value, DeclarationKind::Var });
     }
+    auto children = scope_node.children();
+    for (auto& child : children) {
+        if (child.is_variable_declaration()) {
+            auto& vd = static_cast<const VariableDeclaration&>(child);
+            if (vd.declaration_kind() == DeclarationKind::Var) {
+                auto decls = vd.declarations();
+                for (auto& decl : decls) {
+                    scope_variables_with_declaration_kind.set(decl.id().string(),
+                        { js_undefined(), DeclarationKind::Var });
+                }
+            }
+        }
+    }
+
     m_scope_stack.append({ scope_type, scope_node, move(scope_variables_with_declaration_kind) });
 }
 
