@@ -843,6 +843,14 @@ void bigint_addition_edgecases()
             FAIL(Incorrect Result);
         }
     }
+    {
+        I_TEST((BigInteger | Borrow with zero));
+        Crypto::UnsignedBigInteger num1({ UINT32_MAX - 3, UINT32_MAX });
+        Crypto::UnsignedBigInteger num2({ UINT32_MAX - 2, 0 });
+        if (num1.add(num2).words() == Vector<u32> { 4294967289, 0, 1 }) {
+            PASS;
+        } else {
+            FAIL(Incorrect Result);
 }
 
 void bigint_subtraction()

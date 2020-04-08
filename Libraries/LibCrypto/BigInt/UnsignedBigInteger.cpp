@@ -39,7 +39,7 @@ UnsignedBigInteger UnsignedBigInteger::add(const UnsignedBigInteger& other)
         u32 word_addition_result = shorter->m_words[i] + longer->m_words[i];
         u8 carry_out = 0;
         // if there was a carry, the result will be smaller than any of the operands
-        if (word_addition_result < shorter->m_words[i]) {
+        if (word_addition_result + carry < shorter->m_words[i]) {
             carry_out = 1;
         }
         if (carry) {
