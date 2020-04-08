@@ -54,6 +54,8 @@ pkg_add bash gmp gcc git flock gmake sudo
 When building with `make`, `gmake` must be used.  The `makeall.sh` script will do this automatically when building on OpenBSD.
 
 ### Build
+> Before starting, make sure that you have configured your global identity for git, or the first script will fail after running for a bit.
+
 Go into the `Toolchain/` directory and run the **BuildIt.sh** script.
 
 Once you've built the toolchain, go into the `Kernel/` directory, then run
