@@ -86,7 +86,6 @@ namespace Kernel {
 [[noreturn]] static void init_stage2();
 static void setup_serial_debug();
 static void setup_acpi();
-static void setup_pci();
 static void setup_interrupts();
 static void setup_time_management();
 
@@ -171,7 +170,7 @@ void init_stage2()
     // Sample test to see if the ACPI parser is working...
     klog() << "ACPI: HPET table @ " << ACPI::Parser::the().find_table("HPET");
 
-    setup_pci();
+    PCI::initialize();
 
     if (kernel_command_line().contains("text_debug")) {
         dbg() << "Text mode enabled";
@@ -387,25 +386,6 @@ void setup_acpi()
     }
     klog() << "acpi boot argmuent has an invalid value.";
     hang();
-}
-
-void setup_pci()
-{
-    if (!kernel_command_line().contains("pci_mmio")) {
-        PCI::Initializer::the().test_and_initialize(false);
-        PCI::Initializer::the().dismiss();
-        return;
-    }
-    auto pci_mmio = kernel_command_line().get("pci_mmio");
-    if (pci_mmio == "on") {
-        PCI::Initializer::the().test_and_initialize(false);
-    } else if (pci_mmio == "off") {
-        PCI::Initializer::the().test_and_initialize(true);
-    } else {
-        klog() << "pci_mmio boot argmuent has an invalid value.";
-        hang();
-    }
-    PCI::Initializer::the().dismiss();
 }
 
 void setup_interrupts()
