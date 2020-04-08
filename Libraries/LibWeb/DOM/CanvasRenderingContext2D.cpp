@@ -50,14 +50,14 @@ String CanvasRenderingContext2D::fill_style() const
     return m_fill_style.to_string();
 }
 
-void CanvasRenderingContext2D::fill_rect(int x, int y, int width, int height)
+void CanvasRenderingContext2D::fill_rect(float x, float y, float width, float height)
 {
     auto painter = this->painter();
     if (!painter)
         return;
 
-    Gfx::Rect rect = compute_rect(x, y, width, height);
-    painter->fill_rect(rect, m_fill_style);
+    Gfx::FloatRect rect = compute_rect(x, y, width, height);
+    painter->fill_rect(enclosing_int_rect(rect), m_fill_style);
     did_draw(rect);
 }
 
@@ -71,18 +71,18 @@ String CanvasRenderingContext2D::stroke_style() const
     return m_fill_style.to_string();
 }
 
-void CanvasRenderingContext2D::stroke_rect(int x, int y, int width, int height)
+void CanvasRenderingContext2D::stroke_rect(float x, float y, float width, float height)
 {
     auto painter = this->painter();
     if (!painter)
         return;
 
-    Gfx::Rect rect = compute_rect(x, y, width, height);
-    painter->draw_rect(rect, m_stroke_style);
+    Gfx::FloatRect rect = compute_rect(x, y, width, height);
+    painter->draw_rect(enclosing_int_rect(rect), m_stroke_style);
     did_draw(rect);
 }
 
-void CanvasRenderingContext2D::scale(double sx, double sy)
+void CanvasRenderingContext2D::scale(float sx, float sy)
 {
     // FIXME: Actually do something with the scale factor!
     dbg() << "CanvasRenderingContext2D::scale(): " << String::format("%f", sx) << ", " << String::format("%f", sy);
@@ -90,7 +90,7 @@ void CanvasRenderingContext2D::scale(double sx, double sy)
     m_scale_y = sy;
 }
 
-void CanvasRenderingContext2D::translate(double x, double y)
+void CanvasRenderingContext2D::translate(float x, float y)
 {
     // FIXME: Actually do something with the translation!
     dbg() << "CanvasRenderingContext2D::translate(): " << String::format("%f", x) << ", " << String::format("%f", y);
@@ -98,15 +98,17 @@ void CanvasRenderingContext2D::translate(double x, double y)
     m_translate_y = y;
 }
 
-Gfx::Rect CanvasRenderingContext2D::compute_rect(int x, int y, int width, int height)
+Gfx::FloatRect CanvasRenderingContext2D::compute_rect(float x, float y, float width, float height)
 {
-    return Gfx::Rect((x + m_translate_x) * m_scale_x,
-                     (y + m_translate_y) * m_scale_y,
-                     width * m_scale_x,
-                     height * m_scale_y);
+    return {
+        (x + m_translate_x) * m_scale_x,
+        (y + m_translate_y) * m_scale_y,
+        width * m_scale_x,
+        height * m_scale_y
+    };
 }
 
-void CanvasRenderingContext2D::did_draw(const Gfx::Rect&)
+void CanvasRenderingContext2D::did_draw(const Gfx::FloatRect&)
 {
     // FIXME: Make use of the rect to reduce the invalidated area when possible.
     if (!m_element)

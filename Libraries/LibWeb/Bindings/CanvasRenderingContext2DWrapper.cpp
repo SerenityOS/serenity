@@ -71,7 +71,7 @@ JS::Value CanvasRenderingContext2DWrapper::fill_rect(JS::Interpreter& interprete
         return {};
     auto& arguments = interpreter.call_frame().arguments;
     if (arguments.size() >= 4)
-        impl->fill_rect(arguments[0].to_i32(), arguments[1].to_i32(), arguments[2].to_i32(), arguments[3].to_i32());
+        impl->fill_rect(arguments[0].to_double(), arguments[1].to_double(), arguments[2].to_double(), arguments[3].to_double());
     return JS::js_undefined();
 }
 
@@ -82,7 +82,7 @@ JS::Value CanvasRenderingContext2DWrapper::stroke_rect(JS::Interpreter& interpre
         return {};
     auto& arguments = interpreter.call_frame().arguments;
     if (arguments.size() >= 4)
-        impl->stroke_rect(arguments[0].to_i32(), arguments[1].to_i32(), arguments[2].to_i32(), arguments[3].to_i32());
+        impl->stroke_rect(arguments[0].to_double(), arguments[1].to_double(), arguments[2].to_double(), arguments[3].to_double());
     return JS::js_undefined();
 }
 
@@ -93,7 +93,7 @@ JS::Value CanvasRenderingContext2DWrapper::scale(JS::Interpreter& interpreter)
         return {};
     auto& arguments = interpreter.call_frame().arguments;
     if (arguments.size() >= 2)
-        impl->scale(arguments[0].to_number().as_double(), arguments[1].to_number().as_double());
+        impl->scale(arguments[0].to_double(), arguments[1].to_double());
     return JS::js_undefined();
 }
 
@@ -104,7 +104,7 @@ JS::Value CanvasRenderingContext2DWrapper::translate(JS::Interpreter& interprete
         return {};
     auto& arguments = interpreter.call_frame().arguments;
     if (arguments.size() >= 2)
-        impl->translate(arguments[0].to_number().as_double(), arguments[1].to_number().as_double());
+        impl->translate(arguments[0].to_double(), arguments[1].to_double());
     return JS::js_undefined();
 }
 
