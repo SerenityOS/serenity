@@ -58,8 +58,8 @@ LIBC_OBJS = \
        serenity.o \
        syslog.o \
        cxxabi.o \
-       libcinit.o \
-       regex.o
+       regex.o \
+       libcinit.o
 
 ELF_OBJS = \
         ../LibELF/DynamicObject.o \
@@ -79,10 +79,10 @@ EXTRA_OBJS = \
 crt0.o: crt0.cpp
 
 crtio.o: crti.ao
-        $(QUIET) cp crti.ao crti.o
+	$(QUIET) cp crti.ao crti.o
 
 crtn.o: crtin.ao
-        $(QUIET) cp crtn.ao crtn.o
+	$(QUIET) cp crtn.ao crtn.o
 
 EXTRA_CLEAN = crt0.d crt0.o
 
@@ -95,21 +95,21 @@ POST_LIBRARY_BUILD = $(QUIET) $(MAKE) install
 all: crt0.o $(EXTRA_OBJS) $(LIBRARY)
 
 install:
-        mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/sys/
-        mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/bits/
-        mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/netinet/
-        mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/net/
-        mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/arpa/
-        mkdir -p $(SERENITY_BASE_DIR)/Root/usr/lib/
-        cp *.h $(SERENITY_BASE_DIR)/Root/usr/include/
-        cp sys/*.h $(SERENITY_BASE_DIR)/Root/usr/include/sys/
-        cp bits/*.h $(SERENITY_BASE_DIR)/Root/usr/include/bits/
-        cp arpa/*.h $(SERENITY_BASE_DIR)/Root/usr/include/arpa/
-        cp net/*.h $(SERENITY_BASE_DIR)/Root/usr/include/net/
-        cp netinet/*.h $(SERENITY_BASE_DIR)/Root/usr/include/netinet/
-        cp libc.a $(SERENITY_BASE_DIR)/Root/usr/lib/
-        cp crt0.o $(SERENITY_BASE_DIR)/Root/usr/lib/
-        cp crti.ao $(SERENITY_BASE_DIR)/Root/usr/lib/crti.o
-        cp crtn.ao $(SERENITY_BASE_DIR)/Root/usr/lib/crtn.o
+	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/sys/
+	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/bits/
+	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/netinet/
+	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/net/
+	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/arpa/
+	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/lib/
+	cp *.h $(SERENITY_BASE_DIR)/Root/usr/include/
+	cp sys/*.h $(SERENITY_BASE_DIR)/Root/usr/include/sys/
+	cp bits/*.h $(SERENITY_BASE_DIR)/Root/usr/include/bits/
+	cp arpa/*.h $(SERENITY_BASE_DIR)/Root/usr/include/arpa/
+	cp net/*.h $(SERENITY_BASE_DIR)/Root/usr/include/net/
+	cp netinet/*.h $(SERENITY_BASE_DIR)/Root/usr/include/netinet/
+	cp libc.a $(SERENITY_BASE_DIR)/Root/usr/lib/
+	cp crt0.o $(SERENITY_BASE_DIR)/Root/usr/lib/
+	cp crti.ao $(SERENITY_BASE_DIR)/Root/usr/lib/crti.o
+	cp crtn.ao $(SERENITY_BASE_DIR)/Root/usr/lib/crtn.o
 
 include ../../Makefile.common
