@@ -28,17 +28,18 @@
 #include <Kernel/PCI/IOAccess.h>
 
 namespace Kernel {
+namespace PCI {
 
-static PCI::Access* s_access;
+static Access* s_access;
 
-inline void write8(PCI::Address address, u32 field, u8 value) { PCI::Access::the().write8_field(address, field, value); }
-inline void write16(PCI::Address address, u32 field, u16 value) { PCI::Access::the().write16_field(address, field, value); }
-inline void write32(PCI::Address address, u32 field, u32 value) { PCI::Access::the().write32_field(address, field, value); }
-inline u8 read8(PCI::Address address, u32 field) { return PCI::Access::the().read8_field(address, field); }
-inline u16 read16(PCI::Address address, u32 field) { return PCI::Access::the().read16_field(address, field); }
-inline u32 read32(PCI::Address address, u32 field) { return PCI::Access::the().read32_field(address, field); }
+inline void write8(Address address, u32 field, u8 value) { Access::the().write8_field(address, field, value); }
+inline void write16(Address address, u32 field, u16 value) { Access::the().write16_field(address, field, value); }
+inline void write32(Address address, u32 field, u32 value) { Access::the().write32_field(address, field, value); }
+inline u8 read8(Address address, u32 field) { return Access::the().read8_field(address, field); }
+inline u16 read16(Address address, u32 field) { return Access::the().read16_field(address, field); }
+inline u32 read32(Address address, u32 field) { return Access::the().read32_field(address, field); }
 
-PCI::Access& PCI::Access::the()
+Access& Access::the()
 {
     if (s_access == nullptr) {
         ASSERT_NOT_REACHED(); // We failed to initialize the PCI subsystem, so stop here!
@@ -46,22 +47,22 @@ PCI::Access& PCI::Access::the()
     return *s_access;
 }
 
-bool PCI::Access::is_initialized()
+bool Access::is_initialized()
 {
     return (s_access != nullptr);
 }
 
-PCI::Access::Access()
+Access::Access()
 {
     s_access = this;
 }
 
-static u16 read_type(PCI::Address address)
+static u16 read_type(Address address)
 {
     return (read8(address, PCI_CLASS) << 8u) | read8(address, PCI_SUBCLASS);
 }
 
-void PCI::Access::enumerate_functions(int type, u8 bus, u8 slot, u8 function, Function<void(Address, ID)>& callback)
+void Access::enumerate_functions(int type, u8 bus, u8 slot, u8 function, Function<void(Address, ID)>& callback)
 {
     Address address(0, bus, slot, function);
     if (type == -1 || type == read_type(address))
@@ -76,7 +77,7 @@ void PCI::Access::enumerate_functions(int type, u8 bus, u8 slot, u8 function, Fu
     }
 }
 
-void PCI::Access::enumerate_slot(int type, u8 bus, u8 slot, Function<void(Address, ID)>& callback)
+void Access::enumerate_slot(int type, u8 bus, u8 slot, Function<void(Address, ID)>& callback)
 {
     Address address(0, bus, slot, 0);
     if (read16_field(address, PCI_VENDOR_ID) == PCI_NONE)
@@ -91,17 +92,15 @@ void PCI::Access::enumerate_slot(int type, u8 bus, u8 slot, Function<void(Addres
     }
 }
 
-void PCI::Access::enumerate_bus(int type, u8 bus, Function<void(Address, ID)>& callback)
+void Access::enumerate_bus(int type, u8 bus, Function<void(Address, ID)>& callback)
 {
     for (u8 slot = 0; slot < 32; ++slot)
         enumerate_slot(type, bus, slot, callback);
 }
 
-namespace PCI {
-
 void enumerate_all(Function<void(Address, ID)> callback)
 {
-    PCI::Access::the().enumerate_all(callback);
+    Access::the().enumerate_all(callback);
 }
 
 void raw_access(Address address, u32 field, size_t access_size, u32 value)
@@ -226,6 +225,6 @@ size_t get_BAR_space_size(Address address, u8 bar_number)
     space_size = (~space_size) + 1;
     return space_size;
 }
-}
 
+}
 }

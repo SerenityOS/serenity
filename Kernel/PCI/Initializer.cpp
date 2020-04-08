@@ -34,37 +34,38 @@
 #include <LibBareMetal/IO.h>
 
 namespace Kernel {
+namespace PCI {
 
-static PCI::Initializer* s_pci_initializer;
+static Initializer* s_pci_initializer;
 
-PCI::Initializer& PCI::Initializer::the()
+Initializer& Initializer::the()
 {
     if (s_pci_initializer == nullptr) {
-        s_pci_initializer = new PCI::Initializer();
+        s_pci_initializer = new Initializer();
     }
     return *s_pci_initializer;
 }
-void PCI::Initializer::initialize_pci_mmio_access(PhysicalAddress mcfg)
+void Initializer::initialize_pci_mmio_access(PhysicalAddress mcfg)
 {
-    PCI::MMIOAccess::initialize(mcfg);
+    MMIOAccess::initialize(mcfg);
     detect_devices();
 }
-void PCI::Initializer::initialize_pci_io_access()
+void Initializer::initialize_pci_io_access()
 {
-    PCI::IOAccess::initialize();
+    IOAccess::initialize();
     detect_devices();
 }
 
-void PCI::Initializer::detect_devices()
+void Initializer::detect_devices()
 {
-    PCI::enumerate_all([&](const PCI::Address& address, PCI::ID id) {
+    enumerate_all([&](const Address& address, ID id) {
         klog() << "PCI: device @ " << String::format("%w", address.seg()) << ":" << String::format("%b", address.bus()) << ":" << String::format("%b", address.slot()) << "." << String::format("%d", address.function()) << " [" << String::format("%w", id.vendor_id) << ":" << String::format("%w", id.device_id) << "]";
         E1000NetworkAdapter::detect(address);
         RTL8139NetworkAdapter::detect(address);
     });
 }
 
-void PCI::Initializer::test_and_initialize(bool disable_pci_mmio)
+void Initializer::test_and_initialize(bool disable_pci_mmio)
 {
     if (disable_pci_mmio) {
         if (test_pci_io()) {
@@ -95,10 +96,10 @@ void PCI::Initializer::test_and_initialize(bool disable_pci_mmio)
         }
     }
 }
-PCI::Initializer::Initializer()
+Initializer::Initializer()
 {
 }
-bool PCI::Initializer::test_acpi()
+bool Initializer::test_acpi()
 {
     if ((kernel_command_line().contains("noacpi")) || !ACPI::Parser::the().is_operable())
         return false;
@@ -106,7 +107,7 @@ bool PCI::Initializer::test_acpi()
         return true;
 }
 
-bool PCI::Initializer::test_pci_io()
+bool Initializer::test_pci_io()
 {
     klog() << "Testing PCI via manual probing... ";
     u32 tmp = 0x80000000;
@@ -121,17 +122,17 @@ bool PCI::Initializer::test_pci_io()
     return false;
 }
 
-bool PCI::Initializer::test_pci_mmio()
+bool Initializer::test_pci_mmio()
 {
     return !ACPI::Parser::the().find_table("MCFG").is_null();
 }
 
-void PCI::Initializer::initialize_pci_mmio_access_after_test()
+void Initializer::initialize_pci_mmio_access_after_test()
 {
     initialize_pci_mmio_access(ACPI::Parser::the().find_table("MCFG"));
 }
 
-void PCI::Initializer::dismiss()
+void Initializer::dismiss()
 {
     if (s_pci_initializer == nullptr)
         return;
@@ -140,8 +141,9 @@ void PCI::Initializer::dismiss()
     s_pci_initializer = nullptr;
 }
 
-PCI::Initializer::~Initializer()
+Initializer::~Initializer()
 {
 }
 
+}
 }
