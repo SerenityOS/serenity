@@ -41,22 +41,20 @@ namespace PCI {
 class MMIOAccess final : public Access {
 public:
     static void initialize(PhysicalAddress mcfg);
-    virtual void enumerate_all(Function<void(Address, ID)>&) override final;
-
-    virtual const char* access_type() const override { return "MMIO-Access"; };
-    virtual u32 segment_count() const override;
-
-    virtual void write8_field(Address address, u32, u8) override final;
-    virtual void write16_field(Address address, u32, u16) override final;
-    virtual void write32_field(Address address, u32, u32) override final;
 
 protected:
     explicit MMIOAccess(PhysicalAddress mcfg);
 
 private:
-    virtual u8 read8_field(Address address, u32) override final;
-    virtual u16 read16_field(Address address, u32) override final;
-    virtual u32 read32_field(Address address, u32) override final;
+    virtual const char* access_type() const override { return "MMIO-Access"; };
+    virtual u32 segment_count() const override;
+    virtual void enumerate_all(Function<void(Address, ID)>&) override;
+    virtual void write8_field(Address address, u32, u8) override;
+    virtual void write16_field(Address address, u32, u16) override;
+    virtual void write32_field(Address address, u32, u32) override;
+    virtual u8 read8_field(Address address, u32) override;
+    virtual u16 read16_field(Address address, u32) override;
+    virtual u32 read32_field(Address address, u32) override;
 
     void map_device(Address address);
     virtual u8 segment_start_bus(u32) const override;
