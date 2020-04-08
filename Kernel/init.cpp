@@ -119,6 +119,11 @@ extern "C" [[noreturn]] void init()
     gdt_init();
     idt_init();
 
+    // Invoke all static global constructors in the kernel.
+    // Note that we want to do this as early as possible.
+    for (ctor_func_t* ctor = &start_ctors; ctor < &end_ctors; ctor++)
+        (*ctor)();
+
     setup_interrupts();
     setup_acpi();
 
@@ -133,10 +138,6 @@ extern "C" [[noreturn]] void init()
     __stack_chk_guard = get_good_random<u32>();
 
     setup_time_management();
-
-    // call global constructors after gtd and itd init
-    for (ctor_func_t* ctor = &start_ctors; ctor < &end_ctors; ctor++)
-        (*ctor)();
 
     new NullDevice;
     if (!get_serial_debug())
