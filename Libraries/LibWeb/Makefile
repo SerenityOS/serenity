@@ -11,6 +11,9 @@ LIBWEB_OBJS = \
     Bindings/NodeWrapper.o \
     Bindings/WindowObject.o \
     Bindings/Wrappable.o \
+    Bindings/XMLHttpRequestConstructor.o \
+    Bindings/XMLHttpRequestPrototype.o \
+    Bindings/XMLHttpRequestWrapper.o \
     CSS/DefaultStyleSheetSource.o \
     CSS/PropertyID.o \
     CSS/Selector.o \
@@ -54,6 +57,7 @@ LIBWEB_OBJS = \
     DOM/ParentNode.o \
     DOM/Text.o \
     DOM/Window.o \
+    DOM/XMLHttpRequest.o \
     StylePropertiesModel.o \
     DOMTreeModel.o \
     Dump.o \

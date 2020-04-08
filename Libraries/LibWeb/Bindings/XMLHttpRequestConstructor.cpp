@@ -24,53 +24,34 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <LibJS/Heap/Heap.h>
+#include <LibJS/Interpreter.h>
+#include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/Bindings/XMLHttpRequestConstructor.h>
+#include <LibWeb/Bindings/XMLHttpRequestWrapper.h>
+#include <LibWeb/DOM/XMLHttpRequest.h>
 
 namespace Web {
-
-class CanvasRenderingContext2D;
-class Document;
-class Element;
-class Event;
-class EventListener;
-class EventTarget;
-class Frame;
-class HTMLBodyElement;
-class HTMLCanvasElement;
-class HTMLElement;
-class HTMLHeadElement;
-class HTMLHtmlElement;
-class HtmlView;
-class LayoutDocument;
-class LayoutNode;
-class MouseEvent;
-class Node;
-class Origin;
-class Selector;
-class StyleResolver;
-class StyleRule;
-class StyleSheet;
-class Window;
-class XMLHttpRequest;
-
 namespace Bindings {
 
-class CanvasRenderingContext2DWrapper;
-class DocumentWrapper;
-class ElementWrapper;
-class EventWrapper;
-class EventListenerWrapper;
-class EventTargetWrapper;
-class HTMLCanvasElementWrapper;
-class MouseEventWrapper;
-class NodeWrapper;
-class WindowObject;
-class Wrappable;
-class Wrapper;
-class XMLHttpRequestConstructor;
-class XMLHttpRequestPrototype;
-class XMLHttpRequestWrapper;
-
+XMLHttpRequestConstructor::XMLHttpRequestConstructor()
+{
+    put("length", JS::Value(1));
 }
 
+XMLHttpRequestConstructor::~XMLHttpRequestConstructor()
+{
+}
+
+JS::Value XMLHttpRequestConstructor::call(JS::Interpreter& interpreter)
+{
+    return construct(interpreter);
+}
+
+JS::Value XMLHttpRequestConstructor::construct(JS::Interpreter& interpreter)
+{
+    return interpreter.heap().allocate<XMLHttpRequestWrapper>(XMLHttpRequest::create());
+}
+
+}
 }

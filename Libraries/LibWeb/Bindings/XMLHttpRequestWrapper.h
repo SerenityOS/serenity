@@ -26,51 +26,24 @@
 
 #pragma once
 
+#include <LibWeb/Bindings/EventTargetWrapper.h>
+
 namespace Web {
-
-class CanvasRenderingContext2D;
-class Document;
-class Element;
-class Event;
-class EventListener;
-class EventTarget;
-class Frame;
-class HTMLBodyElement;
-class HTMLCanvasElement;
-class HTMLElement;
-class HTMLHeadElement;
-class HTMLHtmlElement;
-class HtmlView;
-class LayoutDocument;
-class LayoutNode;
-class MouseEvent;
-class Node;
-class Origin;
-class Selector;
-class StyleResolver;
-class StyleRule;
-class StyleSheet;
-class Window;
-class XMLHttpRequest;
-
 namespace Bindings {
 
-class CanvasRenderingContext2DWrapper;
-class DocumentWrapper;
-class ElementWrapper;
-class EventWrapper;
-class EventListenerWrapper;
-class EventTargetWrapper;
-class HTMLCanvasElementWrapper;
-class MouseEventWrapper;
-class NodeWrapper;
-class WindowObject;
-class Wrappable;
-class Wrapper;
-class XMLHttpRequestConstructor;
-class XMLHttpRequestPrototype;
-class XMLHttpRequestWrapper;
+class XMLHttpRequestWrapper final : public EventTargetWrapper {
+public:
+    explicit XMLHttpRequestWrapper(XMLHttpRequest&);
+    virtual ~XMLHttpRequestWrapper() override;
+
+    XMLHttpRequest& impl();
+    const XMLHttpRequest& impl() const;
+
+private:
+    virtual const char* class_name() const override { return "XMLHttpRequestWrapper"; }
+};
+
+XMLHttpRequestWrapper* wrap(JS::Heap&, XMLHttpRequest&);
 
 }
-
 }

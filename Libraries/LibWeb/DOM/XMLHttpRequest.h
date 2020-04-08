@@ -26,51 +26,44 @@
 
 #pragma once
 
+#include <AK/ByteBuffer.h>
+#include <AK/RefCounted.h>
+#include <AK/Weakable.h>
+#include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/DOM/EventTarget.h>
+
 namespace Web {
 
-class CanvasRenderingContext2D;
-class Document;
-class Element;
-class Event;
-class EventListener;
-class EventTarget;
-class Frame;
-class HTMLBodyElement;
-class HTMLCanvasElement;
-class HTMLElement;
-class HTMLHeadElement;
-class HTMLHtmlElement;
-class HtmlView;
-class LayoutDocument;
-class LayoutNode;
-class MouseEvent;
-class Node;
-class Origin;
-class Selector;
-class StyleResolver;
-class StyleRule;
-class StyleSheet;
-class Window;
-class XMLHttpRequest;
+class XMLHttpRequest final
+    : public RefCounted<XMLHttpRequest>
+    , public Weakable<XMLHttpRequest>
+    , public EventTarget
+    , public Bindings::Wrappable {
+public:
+    using WrapperType = Bindings::XMLHttpRequestWrapper;
 
-namespace Bindings {
+    static NonnullRefPtr<XMLHttpRequest> create() { return adopt(*new XMLHttpRequest); }
 
-class CanvasRenderingContext2DWrapper;
-class DocumentWrapper;
-class ElementWrapper;
-class EventWrapper;
-class EventListenerWrapper;
-class EventTargetWrapper;
-class HTMLCanvasElementWrapper;
-class MouseEventWrapper;
-class NodeWrapper;
-class WindowObject;
-class Wrappable;
-class Wrapper;
-class XMLHttpRequestConstructor;
-class XMLHttpRequestPrototype;
-class XMLHttpRequestWrapper;
+    virtual ~XMLHttpRequest() override;
 
-}
+    using RefCounted::ref;
+    using RefCounted::unref;
+
+    String response_text() const;
+    void open(const String& method, const String& url);
+    void send();
+
+private:
+    virtual void ref_event_target() override { ref(); }
+    virtual void unref_event_target() override { unref(); }
+    virtual void dispatch_event(NonnullRefPtr<Event>) override;
+
+    XMLHttpRequest();
+
+    String m_method;
+    String m_url;
+
+    ByteBuffer m_response;
+};
 
 }

@@ -1,0 +1,89 @@
+/*
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Function.h>
+#include <LibWeb/Bindings/EventWrapper.h>
+#include <LibWeb/Bindings/XMLHttpRequestWrapper.h>
+#include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/EventListener.h>
+#include <LibWeb/DOM/XMLHttpRequest.h>
+#include <LibWeb/ResourceLoader.h>
+
+namespace Web {
+
+XMLHttpRequest::XMLHttpRequest()
+{
+}
+
+XMLHttpRequest::~XMLHttpRequest()
+{
+}
+
+String XMLHttpRequest::response_text() const
+{
+    if (m_response.is_null())
+        return {};
+    return String::copy(m_response);
+}
+
+void XMLHttpRequest::open(const String& method, const String& url)
+{
+    m_method = method;
+    m_url = url;
+}
+
+void XMLHttpRequest::send()
+{
+    ResourceLoader::the().load(
+        URL(m_url),
+        [weak_this = make_weak_ptr()](auto& data) {
+            if (!weak_this)
+                return;
+            const_cast<XMLHttpRequest&>(*weak_this).m_response = data;
+            const_cast<XMLHttpRequest&>(*weak_this).dispatch_event(Event::create("load"));
+        },
+        [weak_this = make_weak_ptr()](auto& error) {
+            if (!weak_this)
+                return;
+            dbg() << "XHR failed to load: " << error;
+            const_cast<XMLHttpRequest&>(*weak_this).dispatch_event(Event::create("error"));
+        });
+}
+
+void XMLHttpRequest::dispatch_event(NonnullRefPtr<Event> event)
+{
+    for (auto& listener : listeners()) {
+        if (listener.event_name == event->name()) {
+            auto* function = const_cast<EventListener&>(*listener.listener).function();
+            auto* this_value = wrap(function->heap(), *this);
+            auto* event_wrapper = wrap(function->heap(), *event);
+            function->interpreter().call(function, this_value, { event_wrapper });
+        }
+    }
+}
+
+}

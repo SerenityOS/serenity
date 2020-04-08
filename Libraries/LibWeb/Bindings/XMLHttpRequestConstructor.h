@@ -26,51 +26,23 @@
 
 #pragma once
 
+#include <LibJS/Runtime/NativeFunction.h>
+
 namespace Web {
-
-class CanvasRenderingContext2D;
-class Document;
-class Element;
-class Event;
-class EventListener;
-class EventTarget;
-class Frame;
-class HTMLBodyElement;
-class HTMLCanvasElement;
-class HTMLElement;
-class HTMLHeadElement;
-class HTMLHtmlElement;
-class HtmlView;
-class LayoutDocument;
-class LayoutNode;
-class MouseEvent;
-class Node;
-class Origin;
-class Selector;
-class StyleResolver;
-class StyleRule;
-class StyleSheet;
-class Window;
-class XMLHttpRequest;
-
 namespace Bindings {
 
-class CanvasRenderingContext2DWrapper;
-class DocumentWrapper;
-class ElementWrapper;
-class EventWrapper;
-class EventListenerWrapper;
-class EventTargetWrapper;
-class HTMLCanvasElementWrapper;
-class MouseEventWrapper;
-class NodeWrapper;
-class WindowObject;
-class Wrappable;
-class Wrapper;
-class XMLHttpRequestConstructor;
-class XMLHttpRequestPrototype;
-class XMLHttpRequestWrapper;
+class XMLHttpRequestConstructor final : public JS::NativeFunction {
+public:
+    XMLHttpRequestConstructor();
+    virtual ~XMLHttpRequestConstructor() override;
+
+    virtual JS::Value call(JS::Interpreter&) override;
+    virtual JS::Value construct(JS::Interpreter&) override;
+
+private:
+    virtual bool has_constructor() const override { return true; }
+    virtual const char* class_name() const override { return "XMLHttpRequestConstructor"; }
+};
 
 }
-
 }
