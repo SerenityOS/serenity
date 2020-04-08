@@ -67,6 +67,8 @@ private:
     RefPtr<GUI::Action> m_banlist_action;
     RefPtr<GUI::Action> m_voice_user_action;
     RefPtr<GUI::Action> m_devoice_user_action;
+    RefPtr<GUI::Action> m_hop_user_action;
+    RefPtr<GUI::Action> m_dehop_user_action;
     RefPtr<GUI::Action> m_op_user_action;
     RefPtr<GUI::Action> m_deop_user_action;
     RefPtr<GUI::Action> m_kick_user_action;
