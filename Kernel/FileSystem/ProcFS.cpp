@@ -33,6 +33,7 @@
 #include <AK/JsonObjectSerializer.h>
 #include <AK/JsonValue.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/CommandLine.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileBackedFileSystem.h>
@@ -42,7 +43,6 @@
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Interrupts/InterruptManagement.h>
 #include <Kernel/KBufferBuilder.h>
-#include <Kernel/KParams.h>
 #include <Kernel/Module.h>
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Net/NetworkAdapter.h>
@@ -404,7 +404,8 @@ Optional<KBuffer> procfs$uptime(InodeIdentifier)
 Optional<KBuffer> procfs$cmdline(InodeIdentifier)
 {
     KBufferBuilder builder;
-    builder.appendf("%s\n", KParams::the().cmdline().characters());
+    builder.append(kernel_command_line().string());
+    builder.append('\n');
     return builder.build();
 }
 

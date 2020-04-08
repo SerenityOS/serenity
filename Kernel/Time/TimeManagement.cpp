@@ -25,7 +25,7 @@
  */
 
 #include <Kernel/ACPI/ACPIParser.h>
-#include <Kernel/KParams.h>
+#include <Kernel/CommandLine.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Time/HPET.h>
 #include <Kernel/Time/HPETComparator.h>
@@ -148,10 +148,10 @@ Vector<size_t> TimeManagement::scan_for_non_periodic_timers()
 
 bool TimeManagement::is_hpet_periodic_mode_allowed()
 {
-    if (!KParams::the().has("hpet")) {
+    if (!kernel_command_line().contains("hpet"))
         return true;
-    }
-    auto hpet_mode = KParams::the().get("hpet");
+
+    auto hpet_mode = kernel_command_line().get("hpet");
     if (hpet_mode == "periodic")
         return true;
     if (hpet_mode == "nonperiodic")

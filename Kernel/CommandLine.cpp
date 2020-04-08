@@ -24,21 +24,29 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/KParams.h>
+#include <Kernel/CommandLine.h>
 
-static KParams* s_the;
+namespace Kernel {
 
-KParams& KParams::the()
+static CommandLine* s_the;
+
+const CommandLine& kernel_command_line()
 {
+    ASSERT(s_the);
     return *s_the;
 }
 
-KParams::KParams(const String& cmdline)
-    : m_cmdline(cmdline)
+void CommandLine::initialize(const String& string)
+{
+    s_the = new CommandLine(string);
+}
+
+CommandLine::CommandLine(const String& string)
+    : m_string(string)
 {
     s_the = this;
 
-    for (auto str : m_cmdline.split(' ')) {
+    for (auto str : m_string.split(' ')) {
         if (str == "") {
             continue;
         }
@@ -53,12 +61,14 @@ KParams::KParams(const String& cmdline)
     }
 }
 
-String KParams::get(const String& key) const
+String CommandLine::get(const String& key) const
 {
     return m_params.get(key).value_or({});
 }
 
-bool KParams::has(const String& key) const
+bool CommandLine::contains(const String& key) const
 {
     return m_params.contains(key);
+}
+
 }

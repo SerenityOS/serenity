@@ -29,18 +29,24 @@
 #include <AK/HashMap.h>
 #include <AK/String.h>
 
-class KParams {
-    AK_MAKE_ETERNAL
+namespace Kernel {
+
+class CommandLine {
+    AK_MAKE_ETERNAL;
 public:
-    static KParams& the();
+    static void initialize(const String&);
 
-    KParams(const String& cmdline);
-
-    const String& cmdline() const { return m_cmdline; }
+    const String& string() const { return m_string; }
     String get(const String& key) const;
-    bool has(const String& key) const;
+    bool contains(const String& key) const;
 
 private:
-    String m_cmdline;
+    CommandLine(const String&);
+
+    String m_string;
     HashMap<String, String> m_params;
 };
+
+const CommandLine& kernel_command_line();
+
+}
