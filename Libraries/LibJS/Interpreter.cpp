@@ -227,4 +227,14 @@ Value Interpreter::throw_exception(Exception* exception)
     return {};
 }
 
+GlobalObject& Interpreter::global_object()
+{
+    return static_cast<GlobalObject&>(*m_global_object);
+}
+
+const GlobalObject& Interpreter::global_object() const
+{
+    return static_cast<const GlobalObject&>(*m_global_object);
+}
+
 }
