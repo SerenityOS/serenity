@@ -100,7 +100,8 @@ Value ArrayPrototype::to_string(Interpreter& interpreter)
     for (size_t i = 0; i < array->elements().size(); ++i) {
         if (i != 0)
             builder.append(',');
-        builder.append(array->elements()[i].to_string());
+        if (!array->elements()[i].is_empty())
+            builder.append(array->elements()[i].to_string());
     }
     return js_string(interpreter, builder.to_string());
 }
