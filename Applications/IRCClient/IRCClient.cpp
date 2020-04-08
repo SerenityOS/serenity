@@ -632,7 +632,6 @@ void IRCClient::handle_rpl_topic(const Message& msg)
     auto& channel_name = msg.arguments[1];
     auto& topic = msg.arguments[2];
     ensure_channel(channel_name).handle_topic({}, topic);
-    // FIXME: Handle RPL_TOPICWHOTIME so we can know who set it and when.
 }
 
 void IRCClient::handle_rpl_namreply(const Message& msg)
