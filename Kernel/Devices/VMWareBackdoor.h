@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <AK/kmalloc.h>
 
 namespace Kernel {
 
@@ -57,6 +58,8 @@ struct VMWareCommand {
 };
 
 class VMWareBackdoor {
+    AK_MAKE_ETERNAL;
+
 public:
     static void initialize();
     static VMWareBackdoor& the();
