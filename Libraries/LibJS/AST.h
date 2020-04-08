@@ -591,7 +591,7 @@ private:
     bool m_prefixed;
 };
 
-enum class DeclarationType {
+enum class DeclarationKind {
     Var,
     Let,
     Const,
@@ -620,14 +620,14 @@ private:
 
 class VariableDeclaration : public Declaration {
 public:
-    VariableDeclaration(DeclarationType declaration_type, NonnullRefPtrVector<VariableDeclarator> declarations)
-        : m_declaration_type(declaration_type)
+    VariableDeclaration(DeclarationKind declaration_kind, NonnullRefPtrVector<VariableDeclarator> declarations)
+        : m_declaration_kind(declaration_kind)
         , m_declarations(move(declarations))
     {
     }
 
     virtual bool is_variable_declaration() const override { return true; }
-    DeclarationType declaration_type() const { return m_declaration_type; }
+    DeclarationKind declaration_kind() const { return m_declaration_kind; }
 
     virtual Value execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
@@ -635,7 +635,7 @@ public:
 private:
     virtual const char* class_name() const override { return "VariableDeclaration"; }
 
-    DeclarationType m_declaration_type;
+    DeclarationKind m_declaration_kind;
     NonnullRefPtrVector<VariableDeclarator> m_declarations;
 };
 

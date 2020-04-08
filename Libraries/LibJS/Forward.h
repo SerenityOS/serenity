@@ -52,7 +52,7 @@ class ScopeNode;
 class Shape;
 class Statement;
 class Value;
-enum class DeclarationType;
+enum class DeclarationKind;
 
 struct Argument;
 

@@ -202,7 +202,7 @@ Value ForStatement::execute(Interpreter& interpreter) const
 {
     RefPtr<BlockStatement> wrapper;
 
-    if (m_init && m_init->is_variable_declaration() && static_cast<const VariableDeclaration*>(m_init.ptr())->declaration_type() != DeclarationType::Var) {
+    if (m_init && m_init->is_variable_declaration() && static_cast<const VariableDeclaration*>(m_init.ptr())->declaration_kind() != DeclarationKind::Var) {
         wrapper = create_ast_node<BlockStatement>();
         interpreter.enter_scope(*wrapper, {}, ScopeType::Block);
     }
@@ -799,7 +799,7 @@ void UpdateExpression::dump(int indent) const
 Value VariableDeclaration::execute(Interpreter& interpreter) const
 {
     for (auto& declarator : m_declarations) {
-        interpreter.declare_variable(declarator.id().string(), m_declaration_type);
+        interpreter.declare_variable(declarator.id().string(), m_declaration_kind);
         if (auto* init = declarator.init()) {
             auto initalizer_result = init->execute(interpreter);
             if (interpreter.exception())
@@ -818,22 +818,22 @@ Value VariableDeclarator::execute(Interpreter&) const
 
 void VariableDeclaration::dump(int indent) const
 {
-    const char* declaration_type_string = nullptr;
-    switch (m_declaration_type) {
-    case DeclarationType::Let:
-        declaration_type_string = "Let";
+    const char* declaration_kind_string = nullptr;
+    switch (m_declaration_kind) {
+    case DeclarationKind::Let:
+        declaration_kind_string = "Let";
         break;
-    case DeclarationType::Var:
-        declaration_type_string = "Var";
+    case DeclarationKind::Var:
+        declaration_kind_string = "Var";
         break;
-    case DeclarationType::Const:
-        declaration_type_string = "Const";
+    case DeclarationKind::Const:
+        declaration_kind_string = "Const";
         break;
     }
 
     ASTNode::dump(indent);
     print_indent(indent + 1);
-    printf("%s\n", declaration_type_string);
+    printf("%s\n", declaration_kind_string);
 
     for (auto& declarator : m_declarations)
         declarator.dump(indent + 1);
