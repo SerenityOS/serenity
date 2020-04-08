@@ -26,8 +26,10 @@
 
 #pragma once
 
+#include <AK/Optional.h>
 #include <AK/Types.h>
 #include <AK/kmalloc.h>
+#include <Kernel/MousePacket.h>
 
 namespace Kernel {
 
@@ -61,21 +63,21 @@ class VMWareBackdoor {
     AK_MAKE_ETERNAL;
 
 public:
-    static void initialize();
-    static VMWareBackdoor& the();
-    bool supported();
-    bool vmmouse_is_absolute();
+    static VMWareBackdoor* the();
+
+    static VMWareBackdoor* initialize();
+    bool vmmouse_is_absolute() const;
     void enable_absolute_vmmouse();
     void disable_absolute_vmmouse();
     void send(VMWareCommand& command);
+
+    Optional<MousePacket> receive_mouse_packet();
 
 private:
     void send_high_bandwidth(VMWareCommand& command);
     void get_high_bandwidth(VMWareCommand& command);
     VMWareBackdoor();
-    bool detect_presence();
     bool detect_vmmouse();
-    bool m_supported;
     bool m_vmmouse_absolute { false };
 };
 

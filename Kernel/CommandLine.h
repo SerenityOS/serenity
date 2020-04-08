@@ -27,17 +27,20 @@
 #pragma once
 
 #include <AK/HashMap.h>
+#include <AK/Optional.h>
 #include <AK/String.h>
 
 namespace Kernel {
 
 class CommandLine {
     AK_MAKE_ETERNAL;
+
 public:
     static void initialize(const String&);
 
     const String& string() const { return m_string; }
     String get(const String& key) const;
+    Optional<String> lookup(const String& key) const;
     bool contains(const String& key) const;
 
 private:

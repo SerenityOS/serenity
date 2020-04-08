@@ -32,6 +32,13 @@ struct MousePacket {
     int x { 0 };
     int y { 0 };
     int z { 0 };
+
+    enum Button {
+        LeftButton = 0x01,
+        RightButton = 0x02,
+        MiddleButton = 0x04,
+    };
+
     unsigned char buttons { 0 };
     bool is_relative { true };
 };

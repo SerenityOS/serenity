@@ -51,14 +51,6 @@ namespace Kernel {
 #define PS2MOUSE_RESEND 0xFE
 #define PS2MOUSE_RESET 0xFF
 
-#define PS2MOUSE_LEFT_CLICK 0x01
-#define PS2MOUSE_RIGHT_CLICK 0x02
-#define PS2MOUSE_MIDDLE_CLICK 0x04
-
-#define VMMOUSE_LEFT_CLICK 0x20
-#define VMMOUSE_RIGHT_CLICK 0x10
-#define VMMOUSE_MIDDLE_CLICK 0x08
-
 #define PS2MOUSE_INTELLIMOUSE_ID 0x03
 
 //#define PS2MOUSE_DEBUG
@@ -82,68 +74,17 @@ PS2MouseDevice& PS2MouseDevice::the()
     return *s_the;
 }
 
-void PS2MouseDevice::handle_vmmouse_absolute_pointer()
-{
-    VMWareCommand command;
-    command.bx = 0;
-    command.command = VMMOUSE_STATUS;
-    VMWareBackdoor::the().send(command);
-    if (command.ax == 0xFFFF0000) {
-#ifdef PS2MOUSE_DEBUG
-        dbg() << "Reset vmmouse.";
-#endif
-        VMWareBackdoor::the().disable_absolute_vmmouse();
-        VMWareBackdoor::the().enable_absolute_vmmouse();
-        return;
-    }
-    int words = command.ax & 0xFFFF;
-
-    if (!words || words % 4)
-        return;
-    command.size = 4;
-    command.command = VMMOUSE_DATA;
-    VMWareBackdoor::the().send(command);
-
-    int buttons = (command.ax & 0xFFFF);
-    int x = (command.bx);
-    int y = (command.cx);
-    int z = (command.dx);
-
-#ifdef PS2MOUSE_DEBUG
-    dbg() << "Absolute Mouse: Buttons " << String::format("%x", buttons);
-    dbg() << "Mouse: X " << x << ", Y " << y << ", Z " << z;
-#endif
-    MousePacket packet;
-    packet.x = x;
-    packet.y = y;
-    packet.z = z;
-    if (buttons & VMMOUSE_LEFT_CLICK) {
-        packet.buttons |= PS2MOUSE_LEFT_CLICK;
-    }
-    if (buttons & VMMOUSE_RIGHT_CLICK) {
-        packet.buttons |= PS2MOUSE_RIGHT_CLICK;
-    }
-    if (buttons & VMMOUSE_MIDDLE_CLICK) {
-        packet.buttons |= PS2MOUSE_MIDDLE_CLICK;
-    }
-    packet.is_relative = false;
-    m_queue.enqueue(packet);
-}
-
 void PS2MouseDevice::handle_irq(const RegisterState&)
 {
-
-    if (VMWareBackdoor::the().vmmouse_is_absolute()) {
-#ifdef PS2MOUSE_DEBUG
-        dbg() << "Handling PS2 vmmouse.";
-#endif
-        IO::in8(I8042_BUFFER);
-        handle_vmmouse_absolute_pointer();
-        return;
+    if (auto* backdoor = VMWareBackdoor::the()) {
+        if (backdoor->vmmouse_is_absolute()) {
+            IO::in8(I8042_BUFFER);
+            auto packet = backdoor->receive_mouse_packet();
+            if (packet.has_value())
+                m_queue.enqueue(packet.value());
+            return;
+        }
     }
-#ifdef PS2MOUSE_DEBUG
-    dbg() << "Handling classical PS2 mouse.";
-#endif
     for (;;) {
         u8 status = IO::in8(I8042_STATUS);
         if (!(((status & I8042_WHICH_BUFFER) == I8042_MOUSE_BUFFER) && (status & I8042_BUFFER_FULL)))
