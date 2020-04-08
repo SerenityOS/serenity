@@ -61,6 +61,11 @@ CommandLine::CommandLine(const String& string)
     }
 }
 
+Optional<String> CommandLine::lookup(const String& key) const
+{
+    return m_params.get(key);
+}
+
 String CommandLine::get(const String& key) const
 {
     return m_params.get(key).value_or({});

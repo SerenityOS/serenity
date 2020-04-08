@@ -66,10 +66,10 @@
 #include <Kernel/RTC.h>
 #include <Kernel/Random.h>
 #include <Kernel/Scheduler.h>
-#include <Kernel/Tasks/FinalizerTask.h>
-#include <Kernel/Tasks/SyncTask.h>
 #include <Kernel/TTY/PTYMultiplexer.h>
 #include <Kernel/TTY/VirtualConsole.h>
+#include <Kernel/Tasks/FinalizerTask.h>
+#include <Kernel/Tasks/SyncTask.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/VM/MemoryManager.h>
 
@@ -86,7 +86,6 @@ namespace Kernel {
 [[noreturn]] static void init_stage2();
 static void setup_serial_debug();
 static void setup_acpi();
-static void setup_vmmouse();
 static void setup_pci();
 static void setup_interrupts();
 static void setup_time_management();
@@ -130,7 +129,6 @@ extern "C" [[noreturn]] void init()
     new VFS;
     new KeyboardDevice;
     new PS2MouseDevice;
-    setup_vmmouse();
     new Console;
 
     klog() << "Starting SerenityOS...";
@@ -198,6 +196,7 @@ void init_stage2()
     new RandomDevice;
     new PTYMultiplexer;
     new SB16;
+    VMWareBackdoor::initialize();
 
     bool dmi_unreliable = kernel_command_line().contains("dmi_unreliable");
     if (dmi_unreliable) {
@@ -387,24 +386,6 @@ void setup_acpi()
         return;
     }
     klog() << "acpi boot argmuent has an invalid value.";
-    hang();
-}
-
-void setup_vmmouse()
-{
-    VMWareBackdoor::initialize();
-    if (!kernel_command_line().contains("vmmouse")) {
-        VMWareBackdoor::the().enable_absolute_vmmouse();
-        return;
-    }
-    auto vmmouse = kernel_command_line().get("vmmouse");
-    if (vmmouse == "off")
-        return;
-    if (vmmouse == "on") {
-        VMWareBackdoor::the().enable_absolute_vmmouse();
-        return;
-    }
-    klog() << "vmmouse boot argmuent has an invalid value.";
     hang();
 }
 

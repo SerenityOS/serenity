@@ -27,7 +27,9 @@
 #include <AK/Assertions.h>
 #include <AK/String.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/CommandLine.h>
 #include <Kernel/Devices/VMWareBackdoor.h>
+#include <Kernel/MousePacket.h>
 #include <LibBareMetal/IO.h>
 
 namespace Kernel {
@@ -40,6 +42,9 @@ namespace Kernel {
 #define VMMOUSE_REQUEST_ABSOLUTE 0x53424152
 
 #define VMMOUSE_QEMU_VERSION 0x3442554a
+#define VMMOUSE_LEFT_CLICK 0x20
+#define VMMOUSE_RIGHT_CLICK 0x10
+#define VMMOUSE_MIDDLE_CLICK 0x08
 
 #define VMWARE_MAGIC 0x564D5868
 #define VMWARE_PORT 0x5658
@@ -77,34 +82,7 @@ inline void vmware_high_bandwidth_get(VMWareCommand& command)
 
 static VMWareBackdoor* s_vmware_backdoor;
 
-static bool is_initialized()
-{
-    return s_vmware_backdoor != nullptr;
-}
-
-void VMWareBackdoor::initialize()
-{
-    if (!is_initialized())
-        s_vmware_backdoor = new VMWareBackdoor;
-}
-
-VMWareBackdoor& VMWareBackdoor::the()
-{
-    ASSERT(s_vmware_backdoor != nullptr);
-    return *s_vmware_backdoor;
-}
-
-VMWareBackdoor::VMWareBackdoor()
-{
-    if (!detect_presence()) {
-        klog() << "VMWare Backdoor: Not supported!";
-        m_supported = false;
-        return;
-    }
-    klog() << "VMWare Backdoor: Supported.";
-    m_supported = true;
-}
-bool VMWareBackdoor::detect_presence()
+static bool detect_presence()
 {
     VMWareCommand command;
     command.bx = ~VMWARE_MAGIC;
@@ -115,15 +93,29 @@ bool VMWareBackdoor::detect_presence()
     return true;
 }
 
-bool VMWareBackdoor::supported()
+VMWareBackdoor* VMWareBackdoor::initialize()
 {
-    return m_supported;
+    if (!detect_presence())
+        return nullptr;
+
+    s_vmware_backdoor = new VMWareBackdoor;
+    klog() << "VMWare backdoor opened.";
+    return s_vmware_backdoor;
+}
+
+VMWareBackdoor* VMWareBackdoor::the()
+{
+    return s_vmware_backdoor;
+}
+
+VMWareBackdoor::VMWareBackdoor()
+{
+    if (kernel_command_line().lookup("vmmouse").value_or("on") == "on")
+        enable_absolute_vmmouse();
 }
 
 bool VMWareBackdoor::detect_vmmouse()
 {
-    if (!supported())
-        return false;
     VMWareCommand command;
     command.bx = VMMOUSE_READ_ID;
     command.command = VMMOUSE_COMMAND;
@@ -135,7 +127,7 @@ bool VMWareBackdoor::detect_vmmouse()
         return false;
     return true;
 }
-bool VMWareBackdoor::vmmouse_is_absolute()
+bool VMWareBackdoor::vmmouse_is_absolute() const
 {
     return m_vmmouse_absolute;
 }
@@ -143,9 +135,9 @@ bool VMWareBackdoor::vmmouse_is_absolute()
 void VMWareBackdoor::enable_absolute_vmmouse()
 {
     InterruptDisabler disabler;
-    if (!supported() || !detect_vmmouse())
+    if (!detect_vmmouse())
         return;
-    dbg() << "Enabling vmmouse, absolute mode";
+    klog() << "VMWareBackdoor: Enabling absolute mouse mode";
 
     VMWareCommand command;
 
@@ -153,7 +145,7 @@ void VMWareBackdoor::enable_absolute_vmmouse()
     command.command = VMMOUSE_STATUS;
     send(command);
     if (command.ax == 0xFFFF0000) {
-        klog() << "VMMouse retuned bad status.";
+        klog() << "VMWareBackdoor: VMMOUSE_STATUS got bad status";
         return;
     }
 
@@ -166,8 +158,6 @@ void VMWareBackdoor::enable_absolute_vmmouse()
 void VMWareBackdoor::disable_absolute_vmmouse()
 {
     InterruptDisabler disabler;
-    if (!supported())
-        return;
     VMWareCommand command;
     command.bx = VMMOUSE_REQUEST_RELATIVE;
     command.command = VMMOUSE_COMMAND;
@@ -177,32 +167,72 @@ void VMWareBackdoor::disable_absolute_vmmouse()
 
 void VMWareBackdoor::send_high_bandwidth(VMWareCommand& command)
 {
-    if (supported()) {
-        vmware_high_bandwidth_send(command);
+    vmware_high_bandwidth_send(command);
 #ifdef VMWAREBACKDOOR_DEBUG
-        dbg() << "VMWareBackdoor Command High bandwidth Send Results: EAX " << String::format("%x", command.ax) << " EBX " << String::format("%x", command.bx) << " ECX " << String::format("%x", command.cx) << " EDX " << String::format("%x", command.dx);
+    dbg() << "VMWareBackdoor Command High bandwidth Send Results: EAX " << String::format("%x", command.ax) << " EBX " << String::format("%x", command.bx) << " ECX " << String::format("%x", command.cx) << " EDX " << String::format("%x", command.dx);
 #endif
-    }
 }
 
 void VMWareBackdoor::get_high_bandwidth(VMWareCommand& command)
 {
-    if (supported()) {
-        vmware_high_bandwidth_get(command);
+    vmware_high_bandwidth_get(command);
 #ifdef VMWAREBACKDOOR_DEBUG
-        dbg() << "VMWareBackdoor Command High bandwidth Get Results: EAX " << String::format("%x", command.ax) << " EBX " << String::format("%x", command.bx) << " ECX " << String::format("%x", command.cx) << " EDX " << String::format("%x", command.dx);
+    dbg() << "VMWareBackdoor Command High bandwidth Get Results: EAX " << String::format("%x", command.ax) << " EBX " << String::format("%x", command.bx) << " ECX " << String::format("%x", command.cx) << " EDX " << String::format("%x", command.dx);
 #endif
-    }
 }
 
 void VMWareBackdoor::send(VMWareCommand& command)
 {
-    if (supported()) {
-        vmware_out(command);
+    vmware_out(command);
 #ifdef VMWAREBACKDOOR_DEBUG
-        dbg() << "VMWareBackdoor Command Send Results: EAX " << String::format("%x", command.ax) << " EBX " << String::format("%x", command.bx) << " ECX " << String::format("%x", command.cx) << " EDX " << String::format("%x", command.dx);
+    dbg() << "VMWareBackdoor Command Send Results: EAX " << String::format("%x", command.ax) << " EBX " << String::format("%x", command.bx) << " ECX " << String::format("%x", command.cx) << " EDX " << String::format("%x", command.dx);
 #endif
+}
+
+Optional<MousePacket> VMWareBackdoor::receive_mouse_packet()
+{
+    VMWareCommand command;
+    command.bx = 0;
+    command.command = VMMOUSE_STATUS;
+    send(command);
+    if (command.ax == 0xFFFF0000) {
+#ifdef PS2MOUSE_DEBUG
+        klog() << "PS2MouseDevice: Resetting VMWare mouse";
+#endif
+        disable_absolute_vmmouse();
+        enable_absolute_vmmouse();
+        return {};
     }
+    int words = command.ax & 0xFFFF;
+
+    if (!words || words % 4)
+        return {};
+    command.size = 4;
+    command.command = VMMOUSE_DATA;
+    send(command);
+
+    int buttons = (command.ax & 0xFFFF);
+    int x = (command.bx);
+    int y = (command.cx);
+    int z = (command.dx);
+
+#ifdef PS2MOUSE_DEBUG
+    dbg() << "Absolute Mouse: Buttons " << String::format("%x", buttons);
+    dbg() << "Mouse: X " << x << ", Y " << y << ", Z " << z;
+#endif
+    MousePacket packet;
+    packet.x = x;
+    packet.y = y;
+    packet.z = z;
+    if (buttons & VMMOUSE_LEFT_CLICK)
+        packet.buttons |= MousePacket::LeftButton;
+    if (buttons & VMMOUSE_RIGHT_CLICK)
+        packet.buttons |= MousePacket::RightButton;
+    if (buttons & VMMOUSE_MIDDLE_CLICK)
+        packet.buttons |= MousePacket::MiddleButton;
+
+    packet.is_relative = false;
+    return packet;
 }
 
 }
