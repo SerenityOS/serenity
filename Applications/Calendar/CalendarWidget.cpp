@@ -33,6 +33,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/Palette.h>
 
 CalendarWidget::CalendarWidget()
 {
@@ -206,7 +207,8 @@ void CalendarWidget::CalendarTile::paint_event(GUI::PaintEvent& event)
     GUI::Frame::paint_event(event);
 
     GUI::Painter painter(*this);
-    painter.fill_rect(frame_inner_rect(), Color::NamedColor::White);
+    painter.add_clip_rect(frame_inner_rect());
+    painter.fill_rect(frame_inner_rect(), palette().base());
 
     painter.draw_line(frame_inner_rect().top_right(), frame_inner_rect().bottom_right(), Color::NamedColor::Black);
     if (m_index == 0 || m_index % 7 == 0)
@@ -221,7 +223,7 @@ void CalendarWidget::CalendarTile::paint_event(GUI::PaintEvent& event)
     if (m_display_weekday_name) {
         auto weekday_rect = Gfx::Rect(frame_inner_rect().x(), frame_inner_rect().y(), frame_inner_rect().width(), font().glyph_height() + 4);
         weekday_rect.set_top(frame_inner_rect().y() + 2);
-        painter.draw_text(weekday_rect, m_weekday_name, Gfx::Font::default_bold_font(), Gfx::TextAlignment::Center, Color::Black);
+        painter.draw_text(weekday_rect, m_weekday_name, Gfx::Font::default_bold_font(), Gfx::TextAlignment::Center, palette().base_text());
 
         day_rect.set_y(frame_inner_rect().y() + 15);
     } else {
@@ -232,8 +234,8 @@ void CalendarWidget::CalendarTile::paint_event(GUI::PaintEvent& event)
     if (m_calendar.is_today(m_date_time)) {
         int highlight_rect_width = (font().glyph_width('0') * (m_display_date.length() + 1)) + 2;
         auto highlight_rect = Gfx::Rect(day_rect.width() / 2 - (highlight_rect_width / 2), day_rect.y(), highlight_rect_width, font().glyph_height() + 4);
-        painter.draw_rect(highlight_rect, Color::NamedColor::Blue);
-        painter.draw_text(day_rect, m_display_date, Gfx::Font::default_bold_font(), Gfx::TextAlignment::Center, Color::Black);
+        painter.draw_rect(highlight_rect, palette().base_text());
+        painter.draw_text(day_rect, m_display_date, Gfx::Font::default_bold_font(), Gfx::TextAlignment::Center, palette().base_text());
     } else
-        painter.draw_text(day_rect, m_display_date, Gfx::TextAlignment::Center, Color::Black);
+        painter.draw_text(day_rect, m_display_date, Gfx::TextAlignment::Center, palette().base_text());
 }
