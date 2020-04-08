@@ -42,8 +42,8 @@ public:
     static void initialize(PhysicalAddress mcfg);
     virtual void enumerate_all(Function<void(Address, ID)>&) override final;
 
-    virtual String get_access_type() override final { return "MMIO-Access"; };
-    virtual u32 get_segments_count();
+    virtual const char* access_type() const override { return "MMIO-Access"; };
+    virtual u32 segment_count() const override;
 
     virtual void write8_field(Address address, u32, u8) override final;
     virtual void write16_field(Address address, u32, u16) override final;
@@ -58,8 +58,8 @@ private:
     virtual u32 read32_field(Address address, u32) override final;
 
     void map_device(Address address);
-    virtual u8 get_segment_start_bus(u32);
-    virtual u8 get_segment_end_bus(u32);
+    virtual u8 segment_start_bus(u32) const override;
+    virtual u8 segment_end_bus(u32) const override;
 
     PhysicalAddress m_mcfg;
     HashMap<u16, MMIOSegment*>& m_segments;

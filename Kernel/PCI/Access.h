@@ -41,10 +41,10 @@ public:
 
     static Access& the();
     static bool is_initialized();
-    virtual uint32_t get_segments_count() = 0;
-    virtual uint8_t get_segment_start_bus(u32 segment) = 0;
-    virtual uint8_t get_segment_end_bus(u32 segment) = 0;
-    virtual String get_access_type() = 0;
+    virtual uint32_t segment_count() const = 0;
+    virtual uint8_t segment_start_bus(u32 segment) const = 0;
+    virtual uint8_t segment_end_bus(u32 segment) const = 0;
+    virtual const char* access_type() const = 0;
 
     virtual void write8_field(Address address, u32 field, u8 value) = 0;
     virtual void write16_field(Address address, u32 field, u16 value) = 0;
