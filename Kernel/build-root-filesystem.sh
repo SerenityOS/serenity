@@ -49,13 +49,11 @@ mknod mnt/dev/random c 1 8
 mknod mnt/dev/null c 1 3
 mknod mnt/dev/zero c 1 5
 mknod mnt/dev/full c 1 7
-mknod mnt/dev/debuglog c 1 18
 # random, is failing (randomly) on fuse-ext2 on macos :)
 chmod 666 mnt/dev/random || true
 chmod 666 mnt/dev/null
 chmod 666 mnt/dev/zero
 chmod 666 mnt/dev/full
-chmod 666 mnt/dev/debuglog
 mknod mnt/dev/keyboard c 85 1
 chmod 440 mnt/dev/keyboard
 chown 0:$phys_gid mnt/dev/keyboard
