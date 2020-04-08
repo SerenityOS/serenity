@@ -196,6 +196,26 @@ void IRCAppWindow::setup_actions()
             m_client->handle_devoice_user_action(window->channel().name(), input_box->text_value());
     });
 
+    m_hop_user_action = GUI::Action::create("Hop user", [this](auto&) {
+        auto* window = m_client->current_window();
+        if (!window || window->type() != IRCWindow::Type::Channel) {
+            return;
+        }
+        auto input_box = GUI::InputBox::construct("Enter nick:", "Hop user", this);
+        if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty())
+            m_client->handle_hop_user_action(window->channel().name(), input_box->text_value());
+    });
+
+    m_dehop_user_action = GUI::Action::create("DeHop user", [this](auto&) {
+        auto* window = m_client->current_window();
+        if (!window || window->type() != IRCWindow::Type::Channel) {
+            return;
+        }
+        auto input_box = GUI::InputBox::construct("Enter nick:", "DeHop user", this);
+        if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty())
+            m_client->handle_dehop_user_action(window->channel().name(), input_box->text_value());
+    });
+
     m_op_user_action = GUI::Action::create("Op user", [this](auto&) {
         auto* window = m_client->current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
@@ -264,6 +284,8 @@ void IRCAppWindow::setup_menus()
     channel_menu.add_separator();
     channel_menu.add_action(*m_voice_user_action);
     channel_menu.add_action(*m_devoice_user_action);
+    channel_menu.add_action(*m_hop_user_action);
+    channel_menu.add_action(*m_dehop_user_action);
     channel_menu.add_action(*m_op_user_action);
     channel_menu.add_action(*m_deop_user_action);
     channel_menu.add_separator();
@@ -341,6 +363,8 @@ void IRCAppWindow::update_gui_actions()
     m_banlist_action->set_enabled(is_open_channel);
     m_voice_user_action->set_enabled(is_open_channel);
     m_devoice_user_action->set_enabled(is_open_channel);
+    m_hop_user_action->set_enabled(is_open_channel);
+    m_dehop_user_action->set_enabled(is_open_channel);
     m_op_user_action->set_enabled(is_open_channel);
     m_deop_user_action->set_enabled(is_open_channel);
     m_kick_user_action->set_enabled(is_open_channel);
