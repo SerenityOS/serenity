@@ -35,7 +35,6 @@ OBJS = \
     Devices/BXVGADevice.o \
     Devices/BlockDevice.o \
     Devices/CharacterDevice.o \
-    Devices/DebugLogDevice.o \
     Devices/Device.o \
     Devices/DiskPartition.o \
     Devices/FullDevice.o \

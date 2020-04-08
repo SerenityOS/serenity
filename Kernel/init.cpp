@@ -33,7 +33,6 @@
 #include <Kernel/CMOS.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Devices/BXVGADevice.h>
-#include <Kernel/Devices/DebugLogDevice.h>
 #include <Kernel/Devices/DiskPartition.h>
 #include <Kernel/Devices/EBRPartitionTable.h>
 #include <Kernel/Devices/FullDevice.h>
@@ -125,7 +124,6 @@ extern "C" [[noreturn]] void init()
     new KeyboardDevice;
     new PS2MouseDevice;
     setup_vmmouse();
-    new DebugLogDevice;
     new Console;
 
     klog() << "Starting SerenityOS...";
