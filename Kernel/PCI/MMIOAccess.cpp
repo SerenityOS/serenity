@@ -55,14 +55,16 @@ uint32_t MMIOAccess::segment_count() const
 
 uint8_t MMIOAccess::segment_start_bus(u32 seg) const
 {
-    ASSERT(m_segments.contains(seg));
-    return m_segments.get(seg).value()->get_start_bus();
+    auto segment = m_segments.get(seg);
+    ASSERT(segment.has_value());
+    return segment.value().get_start_bus();
 }
 
 uint8_t MMIOAccess::segment_end_bus(u32 seg) const
 {
-    ASSERT(m_segments.contains(seg));
-    return m_segments.get(seg).value()->get_end_bus();
+    auto segment = m_segments.get(seg);
+    ASSERT(segment.has_value());
+    return segment.value().get_end_bus();
 }
 
 void MMIOAccess::initialize(PhysicalAddress mcfg)
@@ -73,7 +75,6 @@ void MMIOAccess::initialize(PhysicalAddress mcfg)
 
 MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
     : m_mcfg(p_mcfg)
-    , m_segments(*new HashMap<u16, MMIOSegment*>())
     , m_mapped_address(ChangeableAddress(0xFFFF, 0xFF, 0xFF, 0xFF))
 {
     klog() << "PCI: Using MMIO Mechanism for PCI Configuartion Space Access";
@@ -103,7 +104,7 @@ MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
         u8 end_bus = mcfg.descriptors[index].end_pci_bus;
         u32 lower_addr = mcfg.descriptors[index].base_addr;
 
-        m_segments.set(index, new MMIOSegment(PhysicalAddress(lower_addr), start_bus, end_bus));
+        m_segments.set(index, { PhysicalAddress(lower_addr), start_bus, end_bus });
         klog() << "PCI: New PCI segment @ " << PhysicalAddress(lower_addr) << ", PCI buses (" << start_bus << "-" << end_bus << ")";
     }
     mcfg_region->unmap();
@@ -124,11 +125,11 @@ void MMIOAccess::map_device(Address address)
         return;
     // FIXME: Map and put some lock!
     ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(m_segments.contains(address.seg()));
     auto segment = m_segments.get(address.seg());
-    PhysicalAddress segment_lower_addr = segment.value()->get_paddr();
+    ASSERT(segment.has_value());
+    PhysicalAddress segment_lower_addr = segment.value().get_paddr();
     PhysicalAddress device_physical_mmio_space = segment_lower_addr.offset(
-        PCI_MMIO_CONFIG_SPACE_SIZE * address.function() + (PCI_MMIO_CONFIG_SPACE_SIZE * PCI_MAX_FUNCTIONS_PER_DEVICE) * address.slot() + (PCI_MMIO_CONFIG_SPACE_SIZE * PCI_MAX_FUNCTIONS_PER_DEVICE * PCI_MAX_DEVICES_PER_BUS) * (address.bus() - segment.value()->get_start_bus()));
+        PCI_MMIO_CONFIG_SPACE_SIZE * address.function() + (PCI_MMIO_CONFIG_SPACE_SIZE * PCI_MAX_FUNCTIONS_PER_DEVICE) * address.slot() + (PCI_MMIO_CONFIG_SPACE_SIZE * PCI_MAX_FUNCTIONS_PER_DEVICE * PCI_MAX_DEVICES_PER_BUS) * (address.bus() - segment.value().get_start_bus()));
 
 #ifdef PCI_DEBUG
     dbg() << "PCI: Mapping device @ pci (" << String::format("%w", address.seg()) << ":" << String::format("%b", address.bus()) << ":" << String::format("%b", address.slot()) << "." << String::format("%b", address.function()) << ")"
