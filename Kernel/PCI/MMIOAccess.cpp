@@ -33,16 +33,18 @@ namespace Kernel {
 
 #define PCI_MMIO_CONFIG_SPACE_SIZE 4096
 
-uint32_t PCI::MMIOAccess::get_segments_count()
+uint32_t PCI::MMIOAccess::segment_count() const
 {
     return m_segments.size();
 }
-uint8_t PCI::MMIOAccess::get_segment_start_bus(u32 seg)
+
+uint8_t PCI::MMIOAccess::segment_start_bus(u32 seg) const
 {
     ASSERT(m_segments.contains(seg));
     return m_segments.get(seg).value()->get_start_bus();
 }
-uint8_t PCI::MMIOAccess::get_segment_end_bus(u32 seg)
+
+uint8_t PCI::MMIOAccess::segment_end_bus(u32 seg) const
 {
     ASSERT(m_segments.contains(seg));
     return m_segments.get(seg).value()->get_end_bus();
@@ -213,10 +215,12 @@ PCI::MMIOSegment::MMIOSegment(PhysicalAddress segment_base_addr, u8 start_bus, u
     , m_end_bus(end_bus)
 {
 }
+
 u8 PCI::MMIOSegment::get_start_bus()
 {
     return m_start_bus;
 }
+
 u8 PCI::MMIOSegment::get_end_bus()
 {
     return m_end_bus;
