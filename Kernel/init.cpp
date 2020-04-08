@@ -66,6 +66,8 @@
 #include <Kernel/RTC.h>
 #include <Kernel/Random.h>
 #include <Kernel/Scheduler.h>
+#include <Kernel/Tasks/FinalizerTask.h>
+#include <Kernel/Tasks/SyncTask.h>
 #include <Kernel/TTY/PTYMultiplexer.h>
 #include <Kernel/TTY/VirtualConsole.h>
 #include <Kernel/Time/TimeManagement.h>
@@ -164,27 +166,8 @@ extern "C" [[noreturn]] void init()
 
 void init_stage2()
 {
-    Thread* syncd_thread = nullptr;
-    Process::create_kernel_process(syncd_thread, "syncd", [] {
-        for (;;) {
-            VFS::the().sync();
-            Thread::current->sleep(1 * TimeManagement::the().ticks_per_second());
-        }
-    });
-
-    Process::create_kernel_process(g_finalizer, "Finalizer", [] {
-        Thread::current->set_priority(THREAD_PRIORITY_LOW);
-        for (;;) {
-            {
-                InterruptDisabler disabler;
-                if (!g_finalizer_has_work)
-                    Thread::current->wait_on(*g_finalizer_wait_queue);
-                ASSERT(g_finalizer_has_work);
-                g_finalizer_has_work = false;
-            }
-            Thread::finalize_dying_threads();
-        }
-    });
+    SyncTask::spawn();
+    FinalizerTask::spawn();
 
     // Sample test to see if the ACPI parser is working...
     klog() << "ACPI: HPET table @ " << ACPI::Parser::the().find_table("HPET");
