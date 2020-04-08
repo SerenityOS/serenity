@@ -29,17 +29,24 @@
 namespace JS {
 
 class ASTNode;
+class ArrayConstructor;
+class BooleanConstructor;
 class Cell;
+class DateConstructor;
 class Error;
+class ErrorConstructor;
 class Exception;
 class Expression;
 class Function;
+class FunctionConstructor;
 class GlobalObject;
 class HandleImpl;
 class Heap;
 class HeapBlock;
 class Interpreter;
+class NumberConstructor;
 class Object;
+class ObjectConstructor;
 class PrimitiveString;
 class ScopeNode;
 class Shape;

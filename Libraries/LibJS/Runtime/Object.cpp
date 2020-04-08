@@ -28,6 +28,7 @@
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/NativeProperty.h>
 #include <LibJS/Runtime/Object.h>

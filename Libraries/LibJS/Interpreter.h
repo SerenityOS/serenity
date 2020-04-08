@@ -83,8 +83,8 @@ public:
 
     Value run(const Statement&, ArgumentVector = {}, ScopeType = ScopeType::Block);
 
-    Object& global_object() { return *m_global_object; }
-    const Object& global_object() const { return *m_global_object; }
+    GlobalObject& global_object();
+    const GlobalObject& global_object() const;
 
     Heap& heap() { return m_heap; }
 
