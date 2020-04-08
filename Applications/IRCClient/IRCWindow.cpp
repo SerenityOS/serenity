@@ -69,80 +69,61 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
             m_context_menu = GUI::Menu::construct();
 
             m_context_menu->add_action(GUI::Action::create("Open query", Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-open-query.png"), [&](const GUI::Action&) {
-                GUI::ModelIndex new_index = member_view.selection().first();
-                auto nick = member_view.model()->data(new_index, IRCChannelMemberListModel::Role::Display).to_string();
+                auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
-                if (IRCClient::is_nick_prefix(nick[0]))
-                    nick = nick.substring(1, nick.length() - 1);
-                m_client.handle_open_query_action(nick.characters());
+                m_client.handle_open_query_action(m_client.nick_without_prefix(nick.characters()));
             }));
 
             m_context_menu->add_action(GUI::Action::create("Whois", Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-whois.png"), [&](const GUI::Action&) {
-                GUI::ModelIndex new_index = member_view.selection().first();
-                auto nick = member_view.model()->data(new_index, IRCChannelMemberListModel::Role::Display).to_string();
+                auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
-                if (IRCClient::is_nick_prefix(nick[0]))
-                    nick = nick.substring(1, nick.length() - 1);
-                m_client.handle_whois_action(nick.characters());
+                m_client.handle_whois_action(m_client.nick_without_prefix(nick.characters()));
             }));
 
             m_context_menu->add_separator();
 
             m_context_menu->add_action(GUI::Action::create("Voice", [&](const GUI::Action&) {
-                GUI::ModelIndex new_index = member_view.selection().first();
-                auto nick = member_view.model()->data(new_index, IRCChannelMemberListModel::Role::Display).to_string();
+                auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
-                if (IRCClient::is_nick_prefix(nick[0]))
-                    nick = nick.substring(1, nick.length() - 1);
                 auto input_box = GUI::InputBox::construct("Enter reason:", "Reason");
-                m_client.handle_voice_user_action(m_name.characters(), nick.characters());
+                m_client.handle_voice_user_action(m_name.characters(), m_client.nick_without_prefix(nick.characters()));
             }));
 
             m_context_menu->add_action(GUI::Action::create("DeVoice", [&](const GUI::Action&) {
-                GUI::ModelIndex new_index = member_view.selection().first();
-                auto nick = member_view.model()->data(new_index, IRCChannelMemberListModel::Role::Display).to_string();
+                auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
-                if (IRCClient::is_nick_prefix(nick[0]))
-                    nick = nick.substring(1, nick.length() - 1);
-                m_client.handle_devoice_user_action(m_name.characters(), nick.characters());
+                m_client.handle_devoice_user_action(m_name.characters(), m_client.nick_without_prefix(nick.characters()));
             }));
 
             m_context_menu->add_action(GUI::Action::create("Op", [&](const GUI::Action&) {
-                GUI::ModelIndex new_index = member_view.selection().first();
-                auto nick = member_view.model()->data(new_index, IRCChannelMemberListModel::Role::Display).to_string();
+                auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
-                if (IRCClient::is_nick_prefix(nick[0]))
-                    nick = nick.substring(1, nick.length() - 1);
-                m_client.handle_op_user_action(m_name.characters(), nick.characters());
+                m_client.handle_op_user_action(m_name.characters(), m_client.nick_without_prefix(nick.characters()));
             }));
 
             m_context_menu->add_action(GUI::Action::create("DeOp", [&](const GUI::Action&) {
-                GUI::ModelIndex new_index = member_view.selection().first();
-                auto nick = member_view.model()->data(new_index, IRCChannelMemberListModel::Role::Display).to_string();
+                auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
-                if (IRCClient::is_nick_prefix(nick[0]))
-                    nick = nick.substring(1, nick.length() - 1);
-                m_client.handle_deop_user_action(m_name.characters(), nick.characters());
+                m_client.handle_deop_user_action(m_name.characters(), m_client.nick_without_prefix(nick.characters()));
             }));
 
             m_context_menu->add_separator();
 
             m_context_menu->add_action(GUI::Action::create("Kick", [&](const GUI::Action&) {
-                GUI::ModelIndex new_index = member_view.selection().first();
-                auto nick = member_view.model()->data(new_index, IRCChannelMemberListModel::Role::Display).to_string();
+                auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
                 if (IRCClient::is_nick_prefix(nick[0]))
                     nick = nick.substring(1, nick.length() - 1);
                 auto input_box = GUI::InputBox::construct("Enter reason:", "Reason");
                 if (input_box->exec() == GUI::InputBox::ExecOK)
-                    m_client.handle_kick_user_action(m_name.characters(), nick.characters(), input_box->text_value());
+                    m_client.handle_kick_user_action(m_name.characters(), m_client.nick_without_prefix(nick.characters()), input_box->text_value());
             }));
 
             m_context_menu->popup(event.screen_position());

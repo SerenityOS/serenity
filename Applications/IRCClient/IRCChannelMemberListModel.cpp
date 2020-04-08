@@ -81,3 +81,8 @@ void IRCChannelMemberListModel::update()
 {
     did_update();
 }
+
+String IRCChannelMemberListModel::nick_at(const GUI::ModelIndex& index) const
+{
+    return data(index, IRCChannelMemberListModel::Role::Display).to_string();
+}
