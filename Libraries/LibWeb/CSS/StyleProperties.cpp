@@ -36,7 +36,7 @@ StyleProperties::StyleProperties()
 }
 
 StyleProperties::StyleProperties(const StyleProperties& other)
-    : m_property_values(*new HashMap(other.m_property_values))
+    : m_property_values(other.m_property_values)
 {
     if (other.m_font) {
         m_font = other.m_font->clone();
