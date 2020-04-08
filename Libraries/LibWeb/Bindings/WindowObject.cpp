@@ -32,6 +32,8 @@
 #include <LibWeb/Bindings/DocumentWrapper.h>
 #include <LibWeb/Bindings/NavigatorObject.h>
 #include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/Bindings/XMLHttpRequestConstructor.h>
+#include <LibWeb/Bindings/XMLHttpRequestPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Window.h>
 
@@ -50,10 +52,22 @@ WindowObject::WindowObject(Window& impl)
     put_native_function("cancelAnimationFrame", cancel_animation_frame, 1);
 
     put("navigator", heap().allocate<NavigatorObject>());
+
+    m_xhr_prototype = heap().allocate<XMLHttpRequestPrototype>();
+    m_xhr_constructor = heap().allocate<XMLHttpRequestConstructor>();
+    m_xhr_constructor->put("prototype", m_xhr_prototype);
+    put("XMLHttpRequest", m_xhr_constructor);
 }
 
 WindowObject::~WindowObject()
 {
+}
+
+void WindowObject::visit_children(Visitor& visitor)
+{
+    GlobalObject::visit_children(visitor);
+    visitor.visit(m_xhr_constructor);
+    visitor.visit(m_xhr_prototype);
 }
 
 static Window* impl_from(JS::Interpreter& interpreter)
