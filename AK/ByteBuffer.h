@@ -211,6 +211,9 @@ public:
 
     void append(const void* data, size_t data_size)
     {
+        if (data_size == 0)
+            return;
+        ASSERT(data != nullptr);
         int old_size = size();
         grow(size() + data_size);
         __builtin_memcpy(this->data() + old_size, data, data_size);
