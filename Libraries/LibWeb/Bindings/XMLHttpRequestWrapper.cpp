@@ -24,53 +24,42 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <AK/FlyString.h>
+#include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Value.h>
+#include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/Bindings/XMLHttpRequestPrototype.h>
+#include <LibWeb/Bindings/XMLHttpRequestWrapper.h>
+#include <LibWeb/DOM/XMLHttpRequest.h>
 
 namespace Web {
-
-class CanvasRenderingContext2D;
-class Document;
-class Element;
-class Event;
-class EventListener;
-class EventTarget;
-class Frame;
-class HTMLBodyElement;
-class HTMLCanvasElement;
-class HTMLElement;
-class HTMLHeadElement;
-class HTMLHtmlElement;
-class HtmlView;
-class LayoutDocument;
-class LayoutNode;
-class MouseEvent;
-class Node;
-class Origin;
-class Selector;
-class StyleResolver;
-class StyleRule;
-class StyleSheet;
-class Window;
-class XMLHttpRequest;
-
 namespace Bindings {
 
-class CanvasRenderingContext2DWrapper;
-class DocumentWrapper;
-class ElementWrapper;
-class EventWrapper;
-class EventListenerWrapper;
-class EventTargetWrapper;
-class HTMLCanvasElementWrapper;
-class MouseEventWrapper;
-class NodeWrapper;
-class WindowObject;
-class Wrappable;
-class Wrapper;
-class XMLHttpRequestConstructor;
-class XMLHttpRequestPrototype;
-class XMLHttpRequestWrapper;
-
+XMLHttpRequestWrapper* wrap(JS::Heap& heap, XMLHttpRequest& impl)
+{
+    return static_cast<XMLHttpRequestWrapper*>(wrap_impl(heap, impl));
 }
 
+XMLHttpRequestWrapper::XMLHttpRequestWrapper(XMLHttpRequest& impl)
+    : EventTargetWrapper(impl)
+{
+    set_prototype(static_cast<WindowObject&>(interpreter().global_object()).xhr_prototype());
+}
+
+XMLHttpRequestWrapper::~XMLHttpRequestWrapper()
+{
+}
+
+XMLHttpRequest& XMLHttpRequestWrapper::impl()
+{
+    return static_cast<XMLHttpRequest&>(EventTargetWrapper::impl());
+}
+
+const XMLHttpRequest& XMLHttpRequestWrapper::impl() const
+{
+    return static_cast<const XMLHttpRequest&>(EventTargetWrapper::impl());
+}
+
+}
 }

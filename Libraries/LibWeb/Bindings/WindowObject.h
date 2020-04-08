@@ -32,7 +32,7 @@
 namespace Web {
 namespace Bindings {
 
-class WindowObject : public JS::GlobalObject {
+class WindowObject final : public JS::GlobalObject {
 public:
     explicit WindowObject(Window&);
     virtual ~WindowObject() override;
@@ -40,8 +40,12 @@ public:
     Window& impl() { return *m_impl; }
     const Window& impl() const { return *m_impl; }
 
+    XMLHttpRequestPrototype* xhr_prototype() { return m_xhr_prototype; }
+    XMLHttpRequestConstructor* xhr_constructor() { return m_xhr_constructor; }
+
 private:
     virtual const char* class_name() const override { return "WindowObject"; }
+    virtual void visit_children(Visitor&) override;
 
     static JS::Value document_getter(JS::Interpreter&);
     static void document_setter(JS::Interpreter&, JS::Value);
@@ -53,6 +57,9 @@ private:
     static JS::Value cancel_animation_frame(JS::Interpreter&);
 
     NonnullRefPtr<Window> m_impl;
+
+    XMLHttpRequestConstructor* m_xhr_constructor { nullptr };
+    XMLHttpRequestPrototype* m_xhr_prototype { nullptr };
 };
 
 }
