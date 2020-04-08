@@ -190,7 +190,6 @@ size_t get_BAR_space_size(Address, u8);
 void enable_bus_mastering(Address);
 void disable_bus_mastering(Address);
 
-class Initializer;
 class Access;
 class MMIOAccess;
 class IOAccess;
