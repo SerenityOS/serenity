@@ -305,9 +305,7 @@ void init_stage2()
 
     Process::current->set_root_directory(VFS::the().root_custody());
 
-    dbg() << "Load ksyms";
-    load_ksyms();
-    dbg() << "Loaded ksyms";
+    load_kernel_symbol_table();
 
     int error;
 

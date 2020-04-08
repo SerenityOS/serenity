@@ -26,23 +26,22 @@
 
 #pragma once
 
-#include <AK/String.h>
-#include <AK/Vector.h>
+#include <AK/Forward.h>
 
 namespace Kernel {
 
-struct KSym {
+struct KernelSymbol {
     u32 address;
     const char* name;
 };
 
 u32 address_for_kernel_symbol(const StringView& name);
-const KSym* ksymbolicate(u32 address);
-void load_ksyms();
+const KernelSymbol* symbolicate_kernel_address(u32 address);
+void load_kernel_symbol_table();
 
-extern bool ksyms_ready;
-extern u32 ksym_lowest_address;
-extern u32 ksym_highest_address;
+extern bool g_kernel_symbols_available;
+extern FlatPtr g_lowest_kernel_symbol_address;
+extern FlatPtr g_highest_kernel_symbol_address;
 
 void dump_backtrace();
 

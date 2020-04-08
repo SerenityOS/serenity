@@ -34,11 +34,12 @@
 
 namespace Kernel {
 
-static KSym* s_ksyms;
-u32 ksym_lowest_address = 0xffffffff;
-u32 ksym_highest_address = 0;
-u32 ksym_count = 0;
-bool ksyms_ready = false;
+FlatPtr g_lowest_kernel_symbol_address = 0xffffffff;
+FlatPtr g_highest_kernel_symbol_address = 0;
+bool g_kernel_symbols_available = false;
+
+static KernelSymbol* s_symbols;
+static size_t s_symbol_count = 0;
 
 static u8 parse_hex_digit(char nibble)
 {
@@ -50,43 +51,44 @@ static u8 parse_hex_digit(char nibble)
 
 u32 address_for_kernel_symbol(const StringView& name)
 {
-    for (unsigned i = 0; i < ksym_count; ++i) {
-        if (!strncmp(name.characters_without_null_termination(), s_ksyms[i].name, name.length()))
-            return s_ksyms[i].address;
+    for (size_t i = 0; i < s_symbol_count; ++i) {
+        if (!strncmp(name.characters_without_null_termination(), s_symbols[i].name, name.length()))
+            return s_symbols[i].address;
     }
     return 0;
 }
 
-const KSym* ksymbolicate(u32 address)
+const KernelSymbol* symbolicate_kernel_address(u32 address)
 {
-    if (address < ksym_lowest_address || address > ksym_highest_address)
+    if (address < g_lowest_kernel_symbol_address || address > g_highest_kernel_symbol_address)
         return nullptr;
-    for (unsigned i = 0; i < ksym_count; ++i) {
-        if (address < s_ksyms[i + 1].address)
-            return &s_ksyms[i];
+    for (unsigned i = 0; i < s_symbol_count; ++i) {
+        if (address < s_symbols[i + 1].address)
+            return &s_symbols[i];
     }
     return nullptr;
 }
 
-static void load_ksyms_from_data(const ByteBuffer& buffer)
+static void load_kernel_sybols_from_data(const ByteBuffer& buffer)
 {
-    ksym_lowest_address = 0xffffffff;
-    ksym_highest_address = 0;
+    g_lowest_kernel_symbol_address = 0xffffffff;
+    g_highest_kernel_symbol_address = 0;
+
     auto* bufptr = (const char*)buffer.data();
     auto* start_of_name = bufptr;
-    u32 address = 0;
+    FlatPtr address = 0;
 
-    for (unsigned i = 0; i < 8; ++i)
-        ksym_count = (ksym_count << 4) | parse_hex_digit(*(bufptr++));
-    s_ksyms = static_cast<KSym*>(kmalloc_eternal(sizeof(KSym) * ksym_count));
+    for (size_t i = 0; i < 8; ++i)
+        s_symbol_count = (s_symbol_count << 4) | parse_hex_digit(*(bufptr++));
+    s_symbols = static_cast<KernelSymbol*>(kmalloc_eternal(sizeof(KernelSymbol) * s_symbol_count));
     ++bufptr; // skip newline
 
-    klog() << "Loading ksyms...";
+    klog() << "Loading kernel symbol table...";
 
-    unsigned current_ksym_index = 0;
+    size_t current_symbol_index = 0;
 
     while (bufptr < buffer.end_pointer()) {
-        for (unsigned i = 0; i < 8; ++i)
+        for (size_t i = 0; i < 8; ++i)
             address = (address << 4) | parse_hex_digit(*(bufptr++));
         bufptr += 3;
         start_of_name = bufptr;
@@ -95,23 +97,22 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
                 break;
             }
         }
-        auto& ksym = s_ksyms[current_ksym_index];
+        auto& ksym = s_symbols[current_symbol_index];
         ksym.address = address;
         char* name = static_cast<char*>(kmalloc_eternal((bufptr - start_of_name) + 1));
         memcpy(name, start_of_name, bufptr - start_of_name);
         name[bufptr - start_of_name] = '\0';
         ksym.name = name;
 
-        if (ksym.address < ksym_lowest_address)
-            ksym_lowest_address = ksym.address;
-        if (ksym.address > ksym_highest_address)
-            ksym_highest_address = ksym.address;
+        if (ksym.address < g_lowest_kernel_symbol_address)
+            g_lowest_kernel_symbol_address = ksym.address;
+        if (ksym.address > g_highest_kernel_symbol_address)
+            g_highest_kernel_symbol_address = ksym.address;
 
         ++bufptr;
-        ++current_ksym_index;
+        ++current_symbol_index;
     }
-    klog() << "ok";
-    ksyms_ready = true;
+    g_kernel_symbols_available = true;
 }
 
 [[gnu::noinline]] void dump_backtrace_impl(u32 ebp, bool use_ksyms)
@@ -123,7 +124,7 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
         return;
     }
 #endif
-    if (use_ksyms && !ksyms_ready) {
+    if (use_ksyms && !g_kernel_symbols_available) {
         hang();
         return;
     }
@@ -133,32 +134,32 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
         elf_bundle = Process::current->elf_bundle();
 
     struct RecognizedSymbol {
-        u32 address;
-        const KSym* ksym;
+        FlatPtr address;
+        const KernelSymbol* symbol { nullptr };
     };
-    int max_recognized_symbol_count = 256;
+    size_t max_recognized_symbol_count = 256;
     RecognizedSymbol recognized_symbols[max_recognized_symbol_count];
-    int recognized_symbol_count = 0;
+    size_t recognized_symbol_count = 0;
     if (use_ksyms) {
-        for (u32* stack_ptr = (u32*)ebp;
+        for (FlatPtr* stack_ptr = (FlatPtr*)ebp;
              (Process::current ? Process::current->validate_read_from_kernel(VirtualAddress(stack_ptr), sizeof(void*) * 2) : 1) && recognized_symbol_count < max_recognized_symbol_count; stack_ptr = (u32*)*stack_ptr) {
-            u32 retaddr = stack_ptr[1];
-            recognized_symbols[recognized_symbol_count++] = { retaddr, ksymbolicate(retaddr) };
+            FlatPtr retaddr = stack_ptr[1];
+            recognized_symbols[recognized_symbol_count++] = { retaddr, symbolicate_kernel_address(retaddr) };
         }
     } else {
-        for (u32* stack_ptr = (u32*)ebp;
+        for (FlatPtr* stack_ptr = (FlatPtr*)ebp;
              (Process::current ? Process::current->validate_read_from_kernel(VirtualAddress(stack_ptr), sizeof(void*) * 2) : 1); stack_ptr = (u32*)*stack_ptr) {
-            u32 retaddr = stack_ptr[1];
+            FlatPtr retaddr = stack_ptr[1];
             dbg() << String::format("%x", retaddr) << " (next: " << String::format("%x", (stack_ptr ? (u32*)*stack_ptr : 0)) << ")";
         }
         return;
     }
     ASSERT(recognized_symbol_count <= max_recognized_symbol_count);
-    for (int i = 0; i < recognized_symbol_count; ++i) {
+    for (size_t i = 0; i < recognized_symbol_count; ++i) {
         auto& symbol = recognized_symbols[i];
         if (!symbol.address)
             break;
-        if (!symbol.ksym) {
+        if (!symbol.symbol) {
             if (elf_bundle && elf_bundle->elf_loader->has_symbols()) {
                 dbg() << String::format("%p", symbol.address) << "  " << elf_bundle->elf_loader->symbolicate(symbol.address);
             } else {
@@ -166,11 +167,11 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
             }
             continue;
         }
-        unsigned offset = symbol.address - symbol.ksym->address;
-        if (symbol.ksym->address == ksym_highest_address && offset > 4096)
+        size_t offset = symbol.address - symbol.symbol->address;
+        if (symbol.symbol->address == g_highest_kernel_symbol_address && offset > 4096)
             dbg() << String::format("%p", symbol.address);
         else
-            dbg() << String::format("%p", symbol.address) << "  " << demangle(symbol.ksym->name) << " +" << offset;
+            dbg() << String::format("%p", symbol.address) << "  " << demangle(symbol.symbol->name) << " +" << offset;
     }
 }
 
@@ -181,20 +182,20 @@ void dump_backtrace()
         return;
     TemporaryChange change(in_dump_backtrace, true);
     TemporaryChange disable_kmalloc_stacks(g_dump_kmalloc_stacks, false);
-    u32 ebp;
+    FlatPtr ebp;
     asm volatile("movl %%ebp, %%eax"
                  : "=a"(ebp));
-    dump_backtrace_impl(ebp, ksyms_ready);
+    dump_backtrace_impl(ebp, g_kernel_symbols_available);
 }
 
-void load_ksyms()
+void load_kernel_symbol_table()
 {
     auto result = VFS::the().open("/res/kernel.map", O_RDONLY, 0, VFS::the().root_custody());
     ASSERT(!result.is_error());
     auto description = result.value();
     auto buffer = description->read_entire_file();
     ASSERT(buffer);
-    load_ksyms_from_data(buffer);
+    load_kernel_sybols_from_data(buffer);
 }
 
 }
