@@ -36,8 +36,9 @@
 #include <Kernel/VM/VMObject.h>
 
 namespace Kernel {
+namespace PCI {
 
-class PCI::MMIOAccess final : public PCI::Access {
+class MMIOAccess final : public Access {
 public:
     static void initialize(PhysicalAddress mcfg);
     virtual void enumerate_all(Function<void(Address, ID)>&) override final;
@@ -64,21 +65,8 @@ private:
     PhysicalAddress m_mcfg;
     HashMap<u16, MMIOSegment*>& m_segments;
     OwnPtr<Region> m_mmio_window_region;
-    PCI::ChangeableAddress m_mapped_address;
+    ChangeableAddress m_mapped_address;
 };
 
-class PCI::MMIOSegment {
-public:
-    MMIOSegment(PhysicalAddress, u8, u8);
-    u8 get_start_bus();
-    u8 get_end_bus();
-    size_t get_size();
-    PhysicalAddress get_paddr();
-
-private:
-    PhysicalAddress m_base_addr;
-    u8 m_start_bus;
-    u8 m_end_bus;
-};
-
+}
 }
