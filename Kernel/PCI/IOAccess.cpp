@@ -28,53 +28,54 @@
 #include <LibBareMetal/IO.h>
 
 namespace Kernel {
+namespace PCI {
 
-void PCI::IOAccess::initialize()
+void IOAccess::initialize()
 {
-    if (!PCI::Access::is_initialized())
-        new PCI::IOAccess();
+    if (!Access::is_initialized())
+        new IOAccess();
 }
 
-PCI::IOAccess::IOAccess()
+IOAccess::IOAccess()
 {
     klog() << "PCI: Using IO Mechanism for PCI Configuartion Space Access";
 }
 
-u8 PCI::IOAccess::read8_field(Address address, u32 field)
+u8 IOAccess::read8_field(Address address, u32 field)
 {
     IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
     return IO::in8(PCI_VALUE_PORT + (field & 3));
 }
 
-u16 PCI::IOAccess::read16_field(Address address, u32 field)
+u16 IOAccess::read16_field(Address address, u32 field)
 {
     IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
     return IO::in16(PCI_VALUE_PORT + (field & 2));
 }
 
-u32 PCI::IOAccess::read32_field(Address address, u32 field)
+u32 IOAccess::read32_field(Address address, u32 field)
 {
     IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
     return IO::in32(PCI_VALUE_PORT);
 }
 
-void PCI::IOAccess::write8_field(Address address, u32 field, u8 value)
+void IOAccess::write8_field(Address address, u32 field, u8 value)
 {
     IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
     IO::out8(PCI_VALUE_PORT + (field & 3), value);
 }
-void PCI::IOAccess::write16_field(Address address, u32 field, u16 value)
+void IOAccess::write16_field(Address address, u32 field, u16 value)
 {
     IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
     IO::out16(PCI_VALUE_PORT + (field & 2), value);
 }
-void PCI::IOAccess::write32_field(Address address, u32 field, u32 value)
+void IOAccess::write32_field(Address address, u32 field, u32 value)
 {
     IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
     IO::out32(PCI_VALUE_PORT, value);
 }
 
-void PCI::IOAccess::enumerate_all(Function<void(Address, ID)>& callback)
+void IOAccess::enumerate_all(Function<void(Address, ID)>& callback)
 {
     // Single PCI host controller.
     if ((read8_field(Address(), PCI_HEADER_TYPE) & 0x80) == 0) {
@@ -90,4 +91,5 @@ void PCI::IOAccess::enumerate_all(Function<void(Address, ID)>& callback)
     }
 }
 
+}
 }
