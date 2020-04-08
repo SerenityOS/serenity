@@ -64,16 +64,69 @@ UnsignedBigInteger UnsignedBigInteger::add(const UnsignedBigInteger& other)
     return result;
 }
 
+UnsignedBigInteger UnsignedBigInteger::sub(const UnsignedBigInteger& other)
+{
+    UnsignedBigInteger result;
+
+    if (*this < other) {
+        dbg() << "WARNING: bigint subtraction creates a negative number!";
+        return UnsignedBigInteger::create_invalid();
+    }
+
+    u8 borrow = 0;
+    for (size_t i = 0; i < other.length(); ++i) {
+        ASSERT(!(borrow == 1 && m_words[i] == 0));
+
+        if (m_words[i] - borrow < other.m_words[i]) {
+            u64 after_borrow = static_cast<u64>(m_words[i] - borrow) + (UINT32_MAX + 1);
+            result.m_words.append(static_cast<u32>(after_borrow - static_cast<u64>(other.m_words[i])));
+            borrow = 1;
+        } else {
+            result.m_words.append(m_words[i] - borrow - other.m_words[i]);
+            borrow = 0;
+        }
+    }
+
+    for (size_t i = other.length(); i < length(); ++i) {
+        ASSERT(!(borrow == 1 && m_words[i] == 0));
+        result.m_words.append(m_words[i] - borrow);
+        borrow = 0;
+    }
+
+    return result;
+}
+
 bool UnsignedBigInteger::operator==(const UnsignedBigInteger& other) const
 {
     if (trimmed_length() != other.trimmed_length()) {
         return false;
     }
+    if (is_invalid() != other.is_invalid()) {
+        return false;
+    }
+
     for (size_t i = 0; i < trimmed_length(); ++i) {
         if (m_words[i] != other.words()[i])
             return false;
     }
     return true;
+}
+
+bool UnsignedBigInteger::operator<(const UnsignedBigInteger& other) const
+{
+    if (trimmed_length() < other.trimmed_length()) {
+        return true;
+    }
+    if (trimmed_length() > other.trimmed_length()) {
+        return false;
+    }
+
+    size_t length = trimmed_length();
+    if (length == 0) {
+        return false;
+    }
+
+    return m_words[length - 1] < other.m_words[length - 1];
 }
 
 size_t UnsignedBigInteger::trimmed_length() const
@@ -84,6 +137,13 @@ size_t UnsignedBigInteger::trimmed_length() const
             break;
     }
     return length() - num_leading_zeroes;
+}
+
+UnsignedBigInteger UnsignedBigInteger::create_invalid()
+{
+    UnsignedBigInteger invalid(0);
+    invalid.invalidate();
+    return invalid;
 }
 
 }

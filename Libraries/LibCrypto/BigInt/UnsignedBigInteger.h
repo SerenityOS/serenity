@@ -35,9 +35,12 @@ public:
     UnsignedBigInteger(u32 x) { m_words.append(x); }
     UnsignedBigInteger() {}
 
+    static UnsignedBigInteger create_invalid();
+
     const AK::Vector<u32>& words() const { return m_words; }
 
     UnsignedBigInteger add(const UnsignedBigInteger& other);
+    UnsignedBigInteger sub(const UnsignedBigInteger& other);
 
     size_t length() const { return m_words.size(); }
 
@@ -45,15 +48,26 @@ public:
     size_t trimmed_length() const;
 
     bool operator==(const UnsignedBigInteger& other) const;
+    bool operator<(const UnsignedBigInteger& other) const;
+
+    void invalidate() { m_is_invalid = true; }
+    bool is_invalid() const { return m_is_invalid; }
 
 private:
     AK::Vector<u32> m_words;
+
+    // Used to indicate a negative result, or a result of an invalid operation
+    bool m_is_invalid { false };
 };
 
 }
 
 inline const LogStream& operator<<(const LogStream& stream, const Crypto::UnsignedBigInteger value)
 {
+    if (value.is_invalid()) {
+        stream << "Invalid BigInt";
+        return stream;
+    }
     for (int i = value.length() - 1; i >= 0; --i) {
         stream << value.words()[i] << "|";
     }

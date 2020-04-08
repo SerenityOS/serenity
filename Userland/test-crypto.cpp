@@ -304,6 +304,7 @@ void hmac_sha512_test_process();
 
 void bigint_test_fibo500();
 void bigint_addition_edgecases();
+void bigint_subtraction();
 
 int aes_cbc_tests()
 {
@@ -797,21 +798,26 @@ int bigint_tests()
 {
     bigint_test_fibo500();
     bigint_addition_edgecases();
+    bigint_subtraction();
     return 0;
 }
 
+Crypto::UnsignedBigInteger bigint_fibonacci(size_t n)
+{
+    Crypto::UnsignedBigInteger num1(0);
+    Crypto::UnsignedBigInteger num2(1);
+    for (size_t i = 0; i < n; ++i) {
+        Crypto::UnsignedBigInteger t = num1.add(num2);
+        num2 = num1;
+        num1 = t;
+    }
+    return num1;
+}
 void bigint_test_fibo500()
 {
     {
         I_TEST((BigInteger | Fibonacci500));
-        Crypto::UnsignedBigInteger num1(0);
-        Crypto::UnsignedBigInteger num2(1);
-        for (int i = 0; i < 500; ++i) {
-            Crypto::UnsignedBigInteger t = num1.add(num2);
-            num2 = num1;
-            num1 = t;
-        }
-        bool pass = (num1.words() == AK::Vector<u32> { 315178285, 505575602, 1883328078, 125027121, 3649625763, 347570207, 74535262, 3832543808, 2472133297, 1600064941, 65273441 });
+        bool pass = (bigint_fibonacci(500).words() == AK::Vector<u32> { 315178285, 505575602, 1883328078, 125027121, 3649625763, 347570207, 74535262, 3832543808, 2472133297, 1600064941, 65273441 });
 
         if (pass)
             PASS;
@@ -832,6 +838,56 @@ void bigint_addition_edgecases()
         pass &= (num1 == Crypto::UnsignedBigInteger(0));
 
         if (pass) {
+            PASS;
+        } else {
+            FAIL(Incorrect Result);
+        }
+    }
+}
+
+void bigint_subtraction()
+{
+    {
+        I_TEST((BigInteger | Simple Subtraction 1));
+        Crypto::UnsignedBigInteger num1(80);
+        Crypto::UnsignedBigInteger num2(70);
+
+        if (num1.sub(num2) == Crypto::UnsignedBigInteger(10)) {
+            PASS;
+        } else {
+            FAIL(Incorrect Result);
+        }
+    }
+    {
+        I_TEST((BigInteger | Simple Subtraction 2));
+        Crypto::UnsignedBigInteger num1(50);
+        Crypto::UnsignedBigInteger num2(70);
+
+        if (num1.sub(num2).is_invalid()) {
+            PASS;
+        } else {
+            FAIL(Incorrect Result);
+        }
+    }
+    {
+        I_TEST((BigInteger | Subtraction with borrow));
+        Crypto::UnsignedBigInteger num1(UINT32_MAX);
+        Crypto::UnsignedBigInteger num2(1);
+        Crypto::UnsignedBigInteger num3 = num1.add(num2);
+        Crypto::UnsignedBigInteger result = num3.sub(num2);
+        if (result == num1) {
+            PASS;
+        } else {
+            FAIL(Incorrect Result);
+        }
+    }
+    {
+        I_TEST((BigInteger | Subtraction with large numbers));
+        Crypto::UnsignedBigInteger num1 = bigint_fibonacci(343);
+        Crypto::UnsignedBigInteger num2 = bigint_fibonacci(218);
+        Crypto::UnsignedBigInteger result = num1.sub(num2);
+        if ((result.add(num2) == num1)
+            && (result.words() == Vector<u32> { 811430588, 2958904896, 1130908877, 2830569969, 3243275482, 3047460725, 774025231, 7990 })) {
             PASS;
         } else {
             FAIL(Incorrect Result);
