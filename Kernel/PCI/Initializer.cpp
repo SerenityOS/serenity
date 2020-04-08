@@ -25,7 +25,7 @@
  */
 
 #include <Kernel/ACPI/ACPIParser.h>
-#include <Kernel/KParams.h>
+#include <Kernel/CommandLine.h>
 #include <Kernel/Net/E1000NetworkAdapter.h>
 #include <Kernel/Net/RTL8139NetworkAdapter.h>
 #include <Kernel/PCI/IOAccess.h>
@@ -100,7 +100,7 @@ PCI::Initializer::Initializer()
 }
 bool PCI::Initializer::test_acpi()
 {
-    if ((KParams::the().has("noacpi")) || !ACPI::Parser::the().is_operable())
+    if ((kernel_command_line().contains("noacpi")) || !ACPI::Parser::the().is_operable())
         return false;
     else
         return true;

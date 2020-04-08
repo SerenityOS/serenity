@@ -15,6 +15,7 @@ OBJS = \
     ../Libraries/LibBareMetal/Output/kprintf.o \
     ../Libraries/LibBareMetal/StdLib.o \
     Arch/i386/CPU.o \
+    CommandLine.o \
     Interrupts/InterruptManagement.o \
     Interrupts/APIC.o \
     Interrupts/IOAPIC.o \
@@ -71,7 +72,6 @@ OBJS = \
     Heap/SlabAllocator.o \
     Heap/kmalloc.o \
     KBufferBuilder.o \
-    KParams.o \
     KSyms.o \
     Lock.o \
     Net/E1000NetworkAdapter.o \
