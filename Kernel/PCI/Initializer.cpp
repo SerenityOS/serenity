@@ -38,17 +38,31 @@ namespace PCI {
 
 static void initialize_pci_mmio_access(PhysicalAddress mcfg);
 static void initialize_pci_io_access();
-static void test_and_initialize(bool disable_pci_mmio);
 static void detect_devices();
 static bool test_acpi();
 static bool test_pci_io();
 static bool test_pci_mmio();
-static void initialize_pci_mmio_access_after_test();
+
+static Access::Type detect_optimal_access_type(bool mmio_allowed)
+{
+    if (mmio_allowed && test_acpi() && test_pci_mmio())
+        return Access::Type::MMIO;
+
+    if (test_pci_io())
+        return Access::Type::IO;
+
+    klog() << "No PCI bus access method detected!";
+    hang();
+}
 
 void initialize()
 {
-    bool pci_mmio = kernel_command_line().lookup("pci_mmio").value_or("off") == "on";
-    test_and_initialize(!pci_mmio);
+    bool mmio_allowed = kernel_command_line().lookup("pci_mmio").value_or("off") == "on";
+
+    if (detect_optimal_access_type(mmio_allowed) == Access::Type::MMIO)
+        initialize_pci_mmio_access(ACPI::Parser::the().find_table("MCFG"));
+    else
+        initialize_pci_io_access();
 }
 
 void initialize_pci_mmio_access(PhysicalAddress mcfg)
@@ -70,38 +84,6 @@ void detect_devices()
         E1000NetworkAdapter::detect(address);
         RTL8139NetworkAdapter::detect(address);
     });
-}
-
-void test_and_initialize(bool disable_pci_mmio)
-{
-    if (disable_pci_mmio) {
-        if (test_pci_io()) {
-            initialize_pci_io_access();
-        } else {
-            klog() << "No PCI Bus Access Method Detected, Halt!";
-            ASSERT_NOT_REACHED(); // NO PCI Access ?!
-        }
-        return;
-    }
-    if (test_acpi()) {
-        if (test_pci_mmio()) {
-            initialize_pci_mmio_access_after_test();
-        } else {
-            if (test_pci_io()) {
-                initialize_pci_io_access();
-            } else {
-                klog() << "No PCI Bus Access Method Detected, Halt!";
-                ASSERT_NOT_REACHED(); // NO PCI Access ?!
-            }
-        }
-    } else {
-        if (test_pci_io()) {
-            initialize_pci_io_access();
-        } else {
-            klog() << "No PCI Bus Access Method Detected, Halt!";
-            ASSERT_NOT_REACHED(); // NO PCI Access ?!
-        }
-    }
 }
 
 bool test_acpi()
@@ -129,11 +111,6 @@ bool test_pci_io()
 bool test_pci_mmio()
 {
     return !ACPI::Parser::the().find_table("MCFG").is_null();
-}
-
-void initialize_pci_mmio_access_after_test()
-{
-    initialize_pci_mmio_access(ACPI::Parser::the().find_table("MCFG"));
 }
 
 }
