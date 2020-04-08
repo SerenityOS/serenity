@@ -367,6 +367,16 @@ void IRCClient::send_devoice_user(const String& channel_name, const String& nick
     send(String::format("MODE %s -v %s\r\n", channel_name.characters(), nick.characters()));
 }
 
+void IRCClient::send_hop_user(const String& channel_name, const String& nick)
+{
+    send(String::format("MODE %s +h %s\r\n", channel_name.characters(), nick.characters()));
+}
+
+void IRCClient::send_dehop_user(const String& channel_name, const String& nick)
+{
+    send(String::format("MODE %s -h %s\r\n", channel_name.characters(), nick.characters()));
+}
+
 void IRCClient::send_op_user(const String& channel_name, const String& nick)
 {
     send(String::format("MODE %s +o %s\r\n", channel_name.characters(), nick.characters()));
@@ -850,7 +860,7 @@ void IRCClient::handle_user_command(const String& input)
         }
         return;
     }
-    if (command == "/HOP") {
+    if (command == "/CYCLE") {
         if (parts.size() >= 2) {
             auto channel = parts[1];
             part_channel(channel);
@@ -999,6 +1009,16 @@ void IRCClient::handle_voice_user_action(const String& channel, const String& ni
 void IRCClient::handle_devoice_user_action(const String& channel, const String& nick)
 {
     send_devoice_user(channel, nick);
+}
+
+void IRCClient::handle_hop_user_action(const String& channel, const String& nick)
+{
+    send_hop_user(channel, nick);
+}
+
+void IRCClient::handle_dehop_user_action(const String& channel, const String& nick)
+{
+    send_dehop_user(channel, nick);
 }
 
 void IRCClient::handle_op_user_action(const String& channel, const String& nick)

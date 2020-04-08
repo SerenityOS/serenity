@@ -117,6 +117,8 @@ public:
     void handle_banlist_action(const String& channel_name);
     void handle_voice_user_action(const String& channel_name, const String& nick);
     void handle_devoice_user_action(const String& channel_name, const String& nick);
+    void handle_hop_user_action(const String& channel_name, const String& nick);
+    void handle_dehop_user_action(const String& channel_name, const String& nick);
     void handle_op_user_action(const String& channel_name, const String& nick);
     void handle_deop_user_action(const String& channel_name, const String& nick);
     void handle_kick_user_action(const String& channel_name, const String& nick, const String&);
@@ -153,6 +155,8 @@ private:
     void send_banlist(const String& channel_name);
     void send_voice_user(const String& channel_name, const String& nick);
     void send_devoice_user(const String& channel_name, const String& nick);
+    void send_hop_user(const String& channel_name, const String& nick);
+    void send_dehop_user(const String& channel_name, const String& nick);
     void send_op_user(const String& channel_name, const String& nick);
     void send_deop_user(const String& channel_name, const String& nick);
     void send_kick(const String& channel_name, const String& nick, const String&);

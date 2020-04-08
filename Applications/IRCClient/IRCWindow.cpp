@@ -111,6 +111,26 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
                 m_client.handle_devoice_user_action(m_name.characters(), nick.characters());
             }));
 
+            m_context_menu->add_action(GUI::Action::create("Hop", [&](const GUI::Action&) {
+                GUI::ModelIndex new_index = member_view.selection().first();
+                auto nick = member_view.model()->data(new_index, IRCChannelMemberListModel::Role::Display).to_string();
+                if (nick.is_empty())
+                    return;
+                if (IRCClient::is_nick_prefix(nick[0]))
+                    nick = nick.substring(1, nick.length() - 1);
+                m_client.handle_hop_user_action(m_name.characters(), nick.characters());
+            }));
+
+            m_context_menu->add_action(GUI::Action::create("DeHop", [&](const GUI::Action&) {
+                GUI::ModelIndex new_index = member_view.selection().first();
+                auto nick = member_view.model()->data(new_index, IRCChannelMemberListModel::Role::Display).to_string();
+                if (nick.is_empty())
+                    return;
+                if (IRCClient::is_nick_prefix(nick[0]))
+                    nick = nick.substring(1, nick.length() - 1);
+                m_client.handle_dehop_user_action(m_name.characters(), nick.characters());
+            }));
+
             m_context_menu->add_action(GUI::Action::create("Op", [&](const GUI::Action&) {
                 GUI::ModelIndex new_index = member_view.selection().first();
                 auto nick = member_view.model()->data(new_index, IRCChannelMemberListModel::Role::Display).to_string();
