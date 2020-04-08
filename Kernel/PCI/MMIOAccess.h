@@ -63,7 +63,7 @@ private:
     virtual u8 segment_end_bus(u32) const override;
 
     PhysicalAddress m_mcfg;
-    HashMap<u16, MMIOSegment*>& m_segments;
+    HashMap<u16, MMIOSegment> m_segments;
     OwnPtr<Region> m_mmio_window_region;
     ChangeableAddress m_mapped_address;
 };
