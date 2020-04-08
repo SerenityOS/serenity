@@ -775,7 +775,7 @@ String Thread::backtrace(ProcessInspectionHandle&) const
 
 struct RecognizedSymbol {
     u32 address;
-    const KSym* ksym;
+    const KernelSymbol* symbol { nullptr };
 };
 
 static bool symbolicate(const RecognizedSymbol& symbol, const Process& process, StringBuilder& builder, Process::ELFBundle* elf_bundle)
@@ -784,7 +784,7 @@ static bool symbolicate(const RecognizedSymbol& symbol, const Process& process, 
         return false;
 
     bool mask_kernel_addresses = !process.is_superuser();
-    if (!symbol.ksym) {
+    if (!symbol.symbol) {
         if (!is_user_address(VirtualAddress(symbol.address))) {
             builder.append("0xdeadc0de\n");
         } else {
@@ -795,11 +795,11 @@ static bool symbolicate(const RecognizedSymbol& symbol, const Process& process, 
         }
         return true;
     }
-    unsigned offset = symbol.address - symbol.ksym->address;
-    if (symbol.ksym->address == ksym_highest_address && offset > 4096) {
+    unsigned offset = symbol.address - symbol.symbol->address;
+    if (symbol.symbol->address == g_highest_kernel_symbol_address && offset > 4096) {
         builder.appendf("%p\n", mask_kernel_addresses ? 0xdeadc0de : symbol.address);
     } else {
-        builder.appendf("%p  %s +%u\n", mask_kernel_addresses ? 0xdeadc0de : symbol.address, demangle(symbol.ksym->name).characters(), offset);
+        builder.appendf("%p  %s +%u\n", mask_kernel_addresses ? 0xdeadc0de : symbol.address, demangle(symbol.symbol->name).characters(), offset);
     }
     return true;
 }
@@ -814,7 +814,7 @@ String Thread::backtrace_impl() const
                      : "=a"(start_frame));
     } else {
         start_frame = frame_ptr();
-        recognized_symbols.append({ tss().eip, ksymbolicate(tss().eip) });
+        recognized_symbols.append({ tss().eip, symbolicate_kernel_address(tss().eip) });
     }
 
     auto& process = const_cast<Process&>(this->process());
@@ -829,11 +829,11 @@ String Thread::backtrace_impl() const
 
         if (is_user_range(VirtualAddress(stack_ptr), sizeof(FlatPtr) * 2)) {
             copy_from_user(&retaddr, &((FlatPtr*)stack_ptr)[1]);
-            recognized_symbols.append({ retaddr, ksymbolicate(retaddr) });
+            recognized_symbols.append({ retaddr, symbolicate_kernel_address(retaddr) });
             copy_from_user(&stack_ptr, (FlatPtr*)stack_ptr);
         } else {
             memcpy(&retaddr, &((FlatPtr*)stack_ptr)[1], sizeof(FlatPtr));
-            recognized_symbols.append({ retaddr, ksymbolicate(retaddr) });
+            recognized_symbols.append({ retaddr, symbolicate_kernel_address(retaddr) });
             memcpy(&stack_ptr, (FlatPtr*)stack_ptr, sizeof(FlatPtr));
         }
     }
