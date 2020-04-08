@@ -146,6 +146,7 @@ public:
     bool to_boolean() const;
     Value to_number() const;
     i32 to_i32() const;
+    double to_double() const;
 
     Object* to_object(Heap&) const;
 

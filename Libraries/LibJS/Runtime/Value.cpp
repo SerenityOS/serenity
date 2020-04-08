@@ -170,6 +170,11 @@ i32 Value::to_i32() const
     return static_cast<i32>(to_number().as_double());
 }
 
+double Value::to_double() const
+{
+    return to_number().as_double();
+}
+
 Value greater_than(Value lhs, Value rhs)
 {
     return Value(lhs.to_number().as_double() > rhs.to_number().as_double());
