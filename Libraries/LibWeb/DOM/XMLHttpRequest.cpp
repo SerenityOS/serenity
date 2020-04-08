@@ -28,14 +28,17 @@
 #include <LibJS/Runtime/Function.h>
 #include <LibWeb/Bindings/EventWrapper.h>
 #include <LibWeb/Bindings/XMLHttpRequestWrapper.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventListener.h>
+#include <LibWeb/DOM/Window.h>
 #include <LibWeb/DOM/XMLHttpRequest.h>
 #include <LibWeb/ResourceLoader.h>
 
 namespace Web {
 
-XMLHttpRequest::XMLHttpRequest()
+XMLHttpRequest::XMLHttpRequest(Window& window)
+    : m_window(window)
 {
 }
 
@@ -59,7 +62,7 @@ void XMLHttpRequest::open(const String& method, const String& url)
 void XMLHttpRequest::send()
 {
     ResourceLoader::the().load(
-        URL(m_url),
+        m_window->document().complete_url(m_url),
         [weak_this = make_weak_ptr()](auto& data) {
             if (!weak_this)
                 return;
