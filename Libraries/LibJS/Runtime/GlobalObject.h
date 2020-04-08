@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #pragma once
 
 #include <LibJS/Runtime/Object.h>
@@ -36,11 +35,31 @@ public:
     explicit GlobalObject();
     virtual ~GlobalObject() override;
 
+    ArrayConstructor* array_constructor() { return m_array_constructor; }
+    BooleanConstructor* boolean_constructor() { return m_boolean_constructor; }
+    DateConstructor* date_constructor() { return m_date_constructor; }
+    ErrorConstructor* error_constructor() { return m_error_constructor; }
+    FunctionConstructor* function_constructor() { return m_function_constructor; }
+    NumberConstructor* number_constructor() { return m_number_constructor; };
+    ObjectConstructor* object_constructor() { return m_object_constructor; }
+
 private:
     virtual const char* class_name() const override { return "GlobalObject"; }
+    virtual void visit_children(Visitor&) override;
 
     static Value gc(Interpreter&);
     static Value is_nan(Interpreter&);
+
+    template<typename ConstructorType>
+    void add_constructor(const FlyString& property_name, ConstructorType*&, Object& prototype);
+
+    ArrayConstructor* m_array_constructor { nullptr };
+    BooleanConstructor* m_boolean_constructor { nullptr };
+    DateConstructor* m_date_constructor { nullptr };
+    ErrorConstructor* m_error_constructor { nullptr };
+    FunctionConstructor* m_function_constructor { nullptr };
+    NumberConstructor* m_number_constructor { nullptr };
+    ObjectConstructor* m_object_constructor { nullptr };
 };
 
 }

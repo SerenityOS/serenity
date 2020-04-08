@@ -32,6 +32,7 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/ScriptFunction.h>

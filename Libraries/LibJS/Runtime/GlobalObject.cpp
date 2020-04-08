@@ -43,6 +43,14 @@
 
 namespace JS {
 
+template<typename ConstructorType>
+void GlobalObject::add_constructor(const FlyString& property_name, ConstructorType*& constructor, Object& prototype)
+{
+    constructor = heap().allocate<ConstructorType>();
+    prototype.put("constructor", constructor);
+    put(property_name, constructor);
+}
+
 GlobalObject::GlobalObject()
 {
     put_native_function("gc", gc);
@@ -54,18 +62,32 @@ GlobalObject::GlobalObject()
     put("undefined", js_undefined());
 
     put("console", heap().allocate<ConsoleObject>());
-    put("Date", heap().allocate<DateConstructor>());
-    put("Error", heap().allocate<ErrorConstructor>());
-    put("Function", heap().allocate<FunctionConstructor>());
     put("Math", heap().allocate<MathObject>());
-    put("Object", heap().allocate<ObjectConstructor>());
-    put("Array", heap().allocate<ArrayConstructor>());
-    put("Boolean", heap().allocate<BooleanConstructor>());
-    put("Number", heap().allocate<NumberConstructor>());
+
+    add_constructor("Array", m_array_constructor, *interpreter().array_prototype());
+    add_constructor("Boolean", m_boolean_constructor, *interpreter().boolean_prototype());
+    add_constructor("Date", m_date_constructor, *interpreter().date_prototype());
+    add_constructor("Error", m_error_constructor, *interpreter().error_prototype());
+    add_constructor("Function", m_function_constructor, *interpreter().function_prototype());
+    add_constructor("Number", m_number_constructor, *interpreter().number_prototype());
+    add_constructor("Object", m_object_constructor, *interpreter().object_prototype());
 }
 
 GlobalObject::~GlobalObject()
 {
+}
+
+void GlobalObject::visit_children(Visitor& visitor)
+{
+    Object::visit_children(visitor);
+
+    visitor.visit(m_array_constructor);
+    visitor.visit(m_boolean_constructor);
+    visitor.visit(m_date_constructor);
+    visitor.visit(m_error_constructor);
+    visitor.visit(m_function_constructor);
+    visitor.visit(m_number_constructor);
+    visitor.visit(m_object_constructor);
 }
 
 Value GlobalObject::gc(Interpreter& interpreter)
