@@ -28,10 +28,12 @@ int aes_cbc_tests();
 // Hash
 int md5_tests();
 int sha256_tests();
+int sha512_tests();
 
 // Authentication
 int hmac_md5_tests();
 int hmac_sha256_tests();
+int hmac_sha512_tests();
 
 // stop listing tests
 
@@ -134,6 +136,25 @@ void hmac_sha256(const char* message, size_t len)
         print_buffer(ByteBuffer::wrap(mac.data, hmac.DigestSize), -1);
 }
 
+void sha512(const char* message, size_t len)
+{
+    auto digest = Crypto::Hash::SHA512::hash((const u8*)message, len);
+    if (binary)
+        printf("%.*s", (int)Crypto::Hash::SHA512::digest_size(), digest.data);
+    else
+        print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::SHA512::digest_size()), -1);
+}
+
+void hmac_sha512(const char* message, size_t len)
+{
+    Crypto::Authentication::HMAC<Crypto::Hash::SHA512> hmac(secret_key);
+    auto mac = hmac.process((const u8*)message, len);
+    if (binary)
+        printf("%.*s", (int)hmac.DigestSize, mac.data);
+    else
+        print_buffer(ByteBuffer::wrap(mac.data, hmac.DigestSize), -1);
+}
+
 auto main(int argc, char** argv) -> int
 {
     const char* mode = nullptr;
@@ -175,6 +196,11 @@ auto main(int argc, char** argv) -> int
                 return sha256_tests();
             return run(sha256);
         }
+        if (suite_sv == "SHA512") {
+            if (run_tests)
+                return sha512_tests();
+            return run(sha512);
+        }
         printf("unknown hash function '%s'\n", suite);
         return 1;
     }
@@ -192,6 +218,11 @@ auto main(int argc, char** argv) -> int
             if (run_tests)
                 return hmac_sha256_tests();
             return run(hmac_sha256);
+        }
+        if (suite_sv == "HMAC-SHA512") {
+            if (run_tests)
+                return hmac_sha512_tests();
+            return run(hmac_sha512);
         }
         printf("unknown hash function '%s'\n", suite);
         return 1;
@@ -251,11 +282,17 @@ void md5_test_consecutive_updates();
 void sha256_test_name();
 void sha256_test_hash();
 
+void sha512_test_name();
+void sha512_test_hash();
+
 void hmac_md5_test_name();
 void hmac_md5_test_process();
 
 void hmac_sha256_test_name();
 void hmac_sha256_test_process();
+
+void hmac_sha512_test_name();
+void hmac_sha512_test_process();
 
 int aes_cbc_tests()
 {
@@ -529,6 +566,13 @@ int hmac_sha256_tests()
     return 0;
 }
 
+int hmac_sha512_tests()
+{
+    hmac_sha512_test_name();
+    hmac_sha512_test_process();
+    return 0;
+}
+
 void hmac_md5_test_name()
 {
     I_TEST((HMAC - MD5 | Class name));
@@ -642,6 +686,91 @@ void hmac_sha256_test_process()
     {
         I_TEST((HMAC - SHA256 | Reuse));
         Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac("Well Hello Friends");
+
+        auto mac_0 = hmac.process("Some bogus data");
+        auto mac_1 = hmac.process("Some bogus data");
+
+        if (memcmp(mac_0.data, mac_1.data, hmac.DigestSize) != 0) {
+            FAIL(Cannot reuse);
+        } else
+            PASS;
+    }
+}
+
+int sha512_tests()
+{
+    sha512_test_name();
+    sha512_test_hash();
+    return 0;
+}
+
+void sha512_test_name()
+{
+    I_TEST((SHA512 class name));
+    Crypto::Hash::SHA512 sha;
+    if (sha.class_name() != "SHA512") {
+        FAIL(Invalid class name);
+        printf("%s\n", sha.class_name().characters());
+    } else
+        PASS;
+}
+
+void sha512_test_hash()
+{
+    {
+        I_TEST((SHA512 Hashing | "Well hello friends"));
+        u8 result[] {
+            0x00, 0xfe, 0x68, 0x09, 0x71, 0x0e, 0xcb, 0x2b, 0xe9, 0x58, 0x00, 0x13, 0x69, 0x6a, 0x9e, 0x9e, 0xbd, 0x09, 0x1b, 0xfe, 0x14, 0xc9, 0x13, 0x82, 0xc7, 0x40, 0x34, 0xfe, 0xca, 0xe6, 0x87, 0xcb, 0x26, 0x36, 0x92, 0xe6, 0x34, 0x94, 0x3a, 0x11, 0xe5, 0xbb, 0xb5, 0xeb, 0x8e, 0x70, 0xef, 0x64, 0xca, 0xf7, 0x21, 0xb1, 0xde, 0xf2, 0x34, 0x85, 0x6f, 0xa8, 0x56, 0xd8, 0x23, 0xa1, 0x3b, 0x29
+        };
+        auto digest = Crypto::Hash::SHA512::hash("Well hello friends");
+        if (memcmp(result, digest.data, Crypto::Hash::SHA512::digest_size()) != 0) {
+            FAIL(Invalid hash);
+            print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::SHA512::digest_size()), -1);
+        } else
+            PASS;
+    }
+    {
+        I_TEST((SHA512 Hashing | ""));
+        u8 result[] {
+            0xcf, 0x83, 0xe1, 0x35, 0x7e, 0xef, 0xb8, 0xbd, 0xf1, 0x54, 0x28, 0x50, 0xd6, 0x6d, 0x80, 0x07, 0xd6, 0x20, 0xe4, 0x05, 0x0b, 0x57, 0x15, 0xdc, 0x83, 0xf4, 0xa9, 0x21, 0xd3, 0x6c, 0xe9, 0xce, 0x47, 0xd0, 0xd1, 0x3c, 0x5d, 0x85, 0xf2, 0xb0, 0xff, 0x83, 0x18, 0xd2, 0x87, 0x7e, 0xec, 0x2f, 0x63, 0xb9, 0x31, 0xbd, 0x47, 0x41, 0x7a, 0x81, 0xa5, 0x38, 0x32, 0x7a, 0xf9, 0x27, 0xda, 0x3e
+        };
+        auto digest = Crypto::Hash::SHA512::hash("");
+        if (memcmp(result, digest.data, Crypto::Hash::SHA512::digest_size()) != 0) {
+            FAIL(Invalid hash);
+            print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::SHA512::digest_size()), -1);
+        } else
+            PASS;
+    }
+}
+
+void hmac_sha512_test_name()
+{
+    I_TEST((HMAC - SHA512 | Class name));
+    Crypto::Authentication::HMAC<Crypto::Hash::SHA512> hmac("Well Hello Friends");
+    if (hmac.class_name() != "HMAC-SHA512")
+        FAIL(Invalid class name);
+    else
+        PASS;
+}
+
+void hmac_sha512_test_process()
+{
+    {
+        I_TEST((HMAC - SHA512 | Basic));
+        Crypto::Authentication::HMAC<Crypto::Hash::SHA512> hmac("Well Hello Friends");
+        u8 result[] {
+            0xeb, 0xa8, 0x34, 0x11, 0xfd, 0x5b, 0x46, 0x5b, 0xef, 0xbb, 0x67, 0x5e, 0x7d, 0xc2, 0x7c, 0x2c, 0x6b, 0xe1, 0xcf, 0xe6, 0xc7, 0xe4, 0x7d, 0xeb, 0xca, 0x97, 0xb7, 0x4c, 0xd3, 0x4d, 0x6f, 0x08, 0x9f, 0x0d, 0x3a, 0xf1, 0xcb, 0x00, 0x79, 0x78, 0x2f, 0x05, 0x8e, 0xeb, 0x94, 0x48, 0x0d, 0x50, 0x64, 0x3b, 0xca, 0x70, 0xe2, 0x69, 0x38, 0x4f, 0xe4, 0xb0, 0x49, 0x0f, 0xc5, 0x4c, 0x7a, 0xa7
+        };
+        auto mac = hmac.process("Some bogus data");
+        if (memcmp(result, mac.data, hmac.DigestSize) != 0) {
+            FAIL(Invalid mac);
+            print_buffer(ByteBuffer::wrap(mac.data, hmac.DigestSize), -1);
+        } else
+            PASS;
+    }
+    {
+        I_TEST((HMAC - SHA512 | Reuse));
+        Crypto::Authentication::HMAC<Crypto::Hash::SHA512> hmac("Well Hello Friends");
 
         auto mac_0 = hmac.process("Some bogus data");
         auto mac_1 = hmac.process("Some bogus data");

@@ -92,6 +92,13 @@ namespace Hash {
     }
     MD5::DigestType MD5::digest()
     {
+        auto digest = peek();
+        reset();
+        return digest;
+    }
+
+    MD5::DigestType MD5::peek()
+    {
         DigestType digest;
         u8 bits[8];
 
@@ -107,8 +114,6 @@ namespace Hash {
 
         // store state (4 registers ABCD)
         encode(&m_A, digest.data, 4 * sizeof(m_A));
-
-        reset();
 
         return digest;
     }
