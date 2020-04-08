@@ -850,7 +850,7 @@ void IRCClient::handle_user_command(const String& input)
         }
         return;
     }
-    if (command == "/HOP") {
+    if (command == "/CYCLE") {
         if (parts.size() >= 2) {
             auto channel = parts[1];
             part_channel(channel);
