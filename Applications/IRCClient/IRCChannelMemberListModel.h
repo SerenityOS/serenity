@@ -45,6 +45,7 @@ public:
     virtual ColumnMetadata column_metadata(int column) const override;
     virtual GUI::Variant data(const GUI::ModelIndex&, Role = Role::Display) const override;
     virtual void update() override;
+    virtual String nick_at(const GUI::ModelIndex& index) const;
 
 private:
     explicit IRCChannelMemberListModel(IRCChannel&);

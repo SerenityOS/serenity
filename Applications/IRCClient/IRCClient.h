@@ -66,6 +66,7 @@ public:
 
     static bool is_nick_prefix(char);
     static bool is_channel_prefix(char);
+    String nick_without_prefix(const String& nick);
 
     IRCWindow* current_window() { return aid_get_active_window(); }
     const IRCWindow* current_window() const { return aid_get_active_window(); }
