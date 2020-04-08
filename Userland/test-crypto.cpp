@@ -6,6 +6,7 @@
 #include <LibCrypto/Cipher/AES.h>
 #include <LibCrypto/Hash/MD5.h>
 #include <LibCrypto/Hash/SHA2.h>
+#include <LibCrypto/PK/RSA.h>
 #include <LibLine/Editor.h>
 #include <stdio.h>
 
@@ -36,6 +37,9 @@ int sha512_tests();
 int hmac_md5_tests();
 int hmac_sha256_tests();
 int hmac_sha512_tests();
+
+// Public-Key
+int rsa_tests();
 
 // Big Integer
 int bigint_tests();
@@ -235,6 +239,9 @@ auto main(int argc, char** argv) -> int
         printf("unknown hash function '%s'\n", suite);
         return 1;
     }
+    if (mode_sv == "pk") {
+        return rsa_tests();
+    }
     if (mode_sv == "bigint") {
         return bigint_tests();
     }
@@ -304,6 +311,12 @@ void hmac_sha256_test_process();
 
 void hmac_sha512_test_name();
 void hmac_sha512_test_process();
+
+void rsa_test_encrypt();
+void rsa_test_der_parse();
+void rsa_test_encrypt_decrypt();
+void rsa_emsa_pss_test_create();
+void bigint_test_number_theory(); // FIXME: we should really move these num theory stuff out
 
 void bigint_test_fibo500();
 void bigint_addition_edgecases();
@@ -801,6 +814,142 @@ void hmac_sha512_test_process()
     }
 }
 
+int rsa_tests()
+{
+    rsa_test_encrypt();
+    rsa_test_der_parse();
+    bigint_test_number_theory();
+    rsa_test_encrypt_decrypt();
+    rsa_emsa_pss_test_create();
+    return 0;
+}
+
+void rsa_test_encrypt()
+{
+    {
+        I_TEST((RSA RAW | Encryption));
+        ByteBuffer data { "hellohellohellohellohellohellohellohellohellohellohellohello123-"_b };
+        u8 result[] { 0x6f, 0x7b, 0xe2, 0xd3, 0x95, 0xf8, 0x8d, 0x87, 0x6d, 0x10, 0x5e, 0xc3, 0xcd, 0xf7, 0xbb, 0xa6, 0x62, 0x8e, 0x45, 0xa0, 0xf1, 0xe5, 0x0f, 0xdf, 0x69, 0xcb, 0xb6, 0xd5, 0x42, 0x06, 0x7d, 0x72, 0xa9, 0x5e, 0xae, 0xbf, 0xbf, 0x0f, 0xe0, 0xeb, 0x31, 0x31, 0xca, 0x8a, 0x81, 0x1e, 0xb9, 0xec, 0x6d, 0xcc, 0xb8, 0xa4, 0xac, 0xa3, 0x31, 0x05, 0xa9, 0xac, 0xc9, 0xd3, 0xe6, 0x2a, 0x18, 0xfe };
+        Crypto::PK::RSA rsa(
+            "8126832723025844890518845777858816391166654950553329127845898924164623511718747856014227624997335860970996746552094406240834082304784428582653994490504519"_bigint,
+            "4234603516465654167360850580101327813936403862038934287300450163438938741499875303761385527882335478349599685406941909381269804396099893549838642251053393"_bigint,
+            "65537"_bigint);
+        u8 buffer[rsa.output_size()];
+        auto buf = ByteBuffer::wrap(buffer, sizeof(buffer));
+        rsa.encrypt(data, buf);
+        if (memcmp(result, buf.data(), buf.size())) {
+            FAIL(Invalid encryption result);
+            print_buffer(buf, 16);
+        } else {
+            PASS;
+        }
+    }
+    {
+        I_TEST((RSA PKCS #1 1.5 | Encryption));
+        ByteBuffer data { "hellohellohellohellohellohellohellohellohello123-"_b };
+        Crypto::PK::RSA_PKCS1_EME rsa(
+            "8126832723025844890518845777858816391166654950553329127845898924164623511718747856014227624997335860970996746552094406240834082304784428582653994490504519"_bigint,
+            "4234603516465654167360850580101327813936403862038934287300450163438938741499875303761385527882335478349599685406941909381269804396099893549838642251053393"_bigint,
+            "65537"_bigint);
+        u8 buffer[rsa.output_size()];
+        auto buf = ByteBuffer::wrap(buffer, sizeof(buffer));
+        rsa.encrypt(data, buf);
+        rsa.decrypt(buf, buf);
+
+        if (memcmp(buf.data(), "hellohellohellohellohellohellohellohellohello123-", 49))
+            FAIL(Invalid encryption);
+        else {
+            dbg() << "out size " << buf.size() << " values: " << StringView { (char*)buf.data(), buf.size() };
+
+            PASS;
+        }
+    }
+}
+
+void bigint_test_number_theory()
+{
+    {
+        I_TEST((Number Theory | Modular Inverse));
+        if (Crypto::NumberTheory::ModularInverse(7, 87) == 25)
+            PASS;
+        else
+            FAIL(Invalid result);
+    }
+    {
+        I_TEST((Number Theory | Modular Power));
+        auto exp = Crypto::NumberTheory::ModularPower(
+            Crypto::UnsignedBigInteger::from_base10("2988348162058574136915891421498819466320163312926952423791023078876139"),
+            Crypto::UnsignedBigInteger::from_base10("2351399303373464486466122544523690094744975233415544072992656881240319"),
+            10000);
+
+        if (exp == 3059) {
+            PASS;
+        } else {
+            FAIL(Invalid result);
+            puts(exp.to_base10().characters());
+        }
+    }
+}
+
+void rsa_emsa_pss_test_create()
+{
+    {
+        // This is a template validity test
+        I_TEST((RSA EMSA_PSS | Construction));
+        Crypto::PK::RSA rsa;
+        Crypto::PK::RSA_EMSA_PSS<Crypto::Hash::SHA256> rsa_esma_pss(rsa);
+        PASS;
+    }
+}
+
+void rsa_test_der_parse()
+{
+    I_TEST((RSA | ASN1 DER / PEM encoded Key import));
+    auto privkey = R"(-----BEGIN RSA PRIVATE KEY-----
+MIIBOgIBAAJBAJsrIYHxs1YL9tpfodaWs1lJoMdF4kgFisUFSj6nvBhJUlmBh607AlgTaX0E
+DGPYycXYGZ2n6rqmms5lpDXBpUcCAwEAAQJAUNpPkmtEHDENxsoQBUXvXDYeXdePSiIBJhpU
+joNOYoR5R9z5oX2cpcyykQ58FC2vKKg+x8N6xczG7qO95tw5UQIhAN354CP/FA+uTeJ6KJ+i
+zCBCl58CjNCzO0s5HTc56el5AiEAsvPKXo5/9gS/S4UzDRP6abq7GreixTfjR8LXidk3FL8C
+IQCTjYI861Y+hjMnlORkGSdvWlTHUj6gjEOh4TlWeJzQoQIgAxMZOQKtxCZUuxFwzRq4xLRG
+nrDlBQpuxz7bwSyQO7UCIHrYMnDohgNbwtA5ZpW3H1cKKQQvueWm6sxW9P5sUrZ3
+-----END RSA PRIVATE KEY-----)";
+
+    Crypto::PK::RSA rsa(privkey);
+    if (rsa.public_key().public_exponent() == 65537) {
+        if (rsa.private_key().private_exponent() == "4234603516465654167360850580101327813936403862038934287300450163438938741499875303761385527882335478349599685406941909381269804396099893549838642251053393"_bigint) {
+            PASS;
+        } else
+            FAIL(Invalid private exponent);
+    } else {
+        FAIL(Invalid public exponent);
+    }
+}
+
+void rsa_test_encrypt_decrypt()
+{
+    I_TEST((RSA | Encrypt));
+    dbg() << " creating rsa object";
+    Crypto::PK::RSA rsa(
+        "9527497237087650398000977129550904920919162360737979403539302312977329868395261515707123424679295515888026193056908173564681660256268221509339074678416049"_bigint,
+        "39542231845947188736992321577701849924317746648774438832456325878966594812143638244746284968851807975097653255909707366086606867657273809465195392910913"_bigint,
+        "65537"_bigint);
+    dbg() << "Output size: " << rsa.output_size();
+    auto dec = ByteBuffer::create_zeroed(rsa.output_size());
+    auto enc = ByteBuffer::create_zeroed(rsa.output_size());
+    enc.overwrite(0, "WellHelloFriendsWellHelloFriendsWellHelloFriendsWellHelloFriends", 64);
+
+    rsa.encrypt(enc, dec);
+    rsa.decrypt(dec, enc);
+
+    dbg() << "enc size " << enc.size() << " dec size " << dec.size();
+
+    if (memcmp(enc.data(), "WellHelloFriendsWellHelloFriendsWellHelloFriendsWellHelloFriends", 64) != 0) {
+        FAIL(Could not encrypt then decrypt);
+    } else {
+        PASS;
+    }
+}
+
 int bigint_tests()
 {
     bigint_test_fibo500();
@@ -1046,5 +1195,37 @@ void bigint_import_export()
             FAIL(Could not roundtrip);
         else
             PASS;
+    }
+    {
+        I_TEST((BigInteger | BigEndian Encode / Decode roundtrip));
+        u8 target_buffer[128];
+        auto encoded = "12345678901234567890"_bigint;
+        auto size = encoded.export_data(target_buffer, 128);
+        auto decoded = Crypto::UnsignedBigInteger::import_data(target_buffer, size);
+        if (encoded != decoded)
+            FAIL(Could not roundtrip);
+        else
+            PASS;
+    }
+    {
+        I_TEST((BigInteger | BigEndian Import));
+        auto number = Crypto::UnsignedBigInteger::import_data("hello");
+        if (number == "448378203247"_bigint) {
+            PASS;
+        } else {
+            FAIL(Invalid value);
+        }
+    }
+    {
+        I_TEST((BigInteger | BigEndian Export));
+        auto number = "448378203247"_bigint;
+        char exported[8] { 0 };
+        auto exported_length = number.export_data((u8*)exported, 8);
+        if (exported_length == 5 && memcmp(exported + 3, "hello", 5) == 0) {
+            PASS;
+        } else {
+            FAIL(Invalid value);
+            print_buffer(ByteBuffer::wrap(exported - exported_length + 8, exported_length), -1);
+        }
     }
 }
