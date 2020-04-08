@@ -658,19 +658,19 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node()
 
 NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration()
 {
-    DeclarationType declaration_type;
+    DeclarationKind declaration_kind;
 
     switch (m_parser_state.m_current_token.type()) {
     case TokenType::Var:
-        declaration_type = DeclarationType::Var;
+        declaration_kind = DeclarationKind::Var;
         consume(TokenType::Var);
         break;
     case TokenType::Let:
-        declaration_type = DeclarationType::Let;
+        declaration_kind = DeclarationKind::Let;
         consume(TokenType::Let);
         break;
     case TokenType::Const:
-        declaration_type = DeclarationType::Const;
+        declaration_kind = DeclarationKind::Const;
         consume(TokenType::Const);
         break;
     default:
@@ -692,7 +692,7 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration()
         }
         break;
     }
-    return create_ast_node<VariableDeclaration>(declaration_type, move(declarations));
+    return create_ast_node<VariableDeclaration>(declaration_kind, move(declarations));
 }
 
 NonnullRefPtr<ThrowStatement> Parser::parse_throw_statement()
