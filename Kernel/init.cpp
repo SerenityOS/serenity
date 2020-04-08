@@ -36,6 +36,7 @@
 #include <Kernel/ACPI/MultiProcessorParser.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/CMOS.h>
+#include <Kernel/CommandLine.h>
 #include <Kernel/Devices/BXVGADevice.h>
 #include <Kernel/Devices/DebugLogDevice.h>
 #include <Kernel/Devices/DiskPartition.h>
@@ -60,7 +61,6 @@
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Interrupts/InterruptManagement.h>
 #include <Kernel/Interrupts/PIC.h>
-#include <Kernel/KParams.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/NetworkTask.h>
@@ -101,11 +101,11 @@ extern "C" [[noreturn]] void init()
     kmalloc_init();
     slab_alloc_init();
 
-    new KParams(String(reinterpret_cast<const char*>(low_physical_to_virtual(multiboot_info_ptr->cmdline))));
+    CommandLine::initialize(reinterpret_cast<const char*>(low_physical_to_virtual(multiboot_info_ptr->cmdline)));
 
     MemoryManager::initialize();
 
-    bool text_debug = KParams::the().has("text_debug");
+    bool text_debug = kernel_command_line().contains("text_debug");
     gdt_init();
     idt_init();
 
@@ -210,17 +210,17 @@ void init_stage2()
     new RandomDevice;
     new PTYMultiplexer;
 
-    bool dmi_unreliable = KParams::the().has("dmi_unreliable");
+    bool dmi_unreliable = kernel_command_line().contains("dmi_unreliable");
     if (dmi_unreliable) {
         DMIDecoder::initialize_untrusted();
     } else {
         DMIDecoder::initialize();
     }
 
-    bool text_debug = KParams::the().has("text_debug");
-    bool force_pio = KParams::the().has("force_pio");
+    bool text_debug = kernel_command_line().contains("text_debug");
+    bool force_pio = kernel_command_line().contains("force_pio");
 
-    auto root = KParams::the().get("root");
+    auto root = kernel_command_line().get("root");
     if (root.is_empty()) {
         root = "/dev/hda";
     }
@@ -379,12 +379,12 @@ extern "C" int __cxa_atexit(void (*)(void*), void*, void*)
 
 void setup_acpi()
 {
-    if (!KParams::the().has("acpi")) {
+    if (!kernel_command_line().contains("acpi")) {
         ACPI::DynamicParser::initialize_without_rsdp();
         return;
     }
 
-    auto acpi = KParams::the().get("acpi");
+    auto acpi = kernel_command_line().get("acpi");
     if (acpi == "off") {
         ACPI::Parser::initialize_limited();
         return;
@@ -404,11 +404,11 @@ void setup_acpi()
 void setup_vmmouse()
 {
     VMWareBackdoor::initialize();
-    if (!KParams::the().has("vmmouse")) {
+    if (!kernel_command_line().contains("vmmouse")) {
         VMWareBackdoor::the().enable_absolute_vmmouse();
         return;
     }
-    auto vmmouse = KParams::the().get("vmmouse");
+    auto vmmouse = kernel_command_line().get("vmmouse");
     if (vmmouse == "off")
         return;
     if (vmmouse == "on") {
@@ -421,12 +421,12 @@ void setup_vmmouse()
 
 void setup_pci()
 {
-    if (!KParams::the().has("pci_mmio")) {
+    if (!kernel_command_line().contains("pci_mmio")) {
         PCI::Initializer::the().test_and_initialize(false);
         PCI::Initializer::the().dismiss();
         return;
     }
-    auto pci_mmio = KParams::the().get("pci_mmio");
+    auto pci_mmio = kernel_command_line().get("pci_mmio");
     if (pci_mmio == "on") {
         PCI::Initializer::the().test_and_initialize(false);
     } else if (pci_mmio == "off") {
@@ -442,11 +442,11 @@ void setup_interrupts()
 {
     InterruptManagement::initialize();
 
-    if (!KParams::the().has("smp")) {
+    if (!kernel_command_line().contains("smp")) {
         InterruptManagement::the().switch_to_pic_mode();
         return;
     }
-    auto smp = KParams::the().get("smp");
+    auto smp = kernel_command_line().get("smp");
     if (smp == "off") {
         InterruptManagement::the().switch_to_pic_mode();
         return;
@@ -462,11 +462,11 @@ void setup_interrupts()
 
 void setup_time_management()
 {
-    if (!KParams::the().has("time")) {
+    if (!kernel_command_line().contains("time")) {
         TimeManagement::initialize(true);
         return;
     }
-    auto time = KParams::the().get("time");
+    auto time = kernel_command_line().get("time");
     if (time == "legacy") {
         TimeManagement::initialize(false);
         return;
