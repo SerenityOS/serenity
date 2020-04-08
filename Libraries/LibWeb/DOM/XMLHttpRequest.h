@@ -42,7 +42,7 @@ class XMLHttpRequest final
 public:
     using WrapperType = Bindings::XMLHttpRequestWrapper;
 
-    static NonnullRefPtr<XMLHttpRequest> create() { return adopt(*new XMLHttpRequest); }
+    static NonnullRefPtr<XMLHttpRequest> create(Window& window) { return adopt(*new XMLHttpRequest(window)); }
 
     virtual ~XMLHttpRequest() override;
 
@@ -58,7 +58,9 @@ private:
     virtual void unref_event_target() override { unref(); }
     virtual void dispatch_event(NonnullRefPtr<Event>) override;
 
-    XMLHttpRequest();
+    explicit XMLHttpRequest(Window&);
+
+    NonnullRefPtr<Window> m_window;
 
     String m_method;
     String m_url;

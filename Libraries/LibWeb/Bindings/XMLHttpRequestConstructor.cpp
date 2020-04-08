@@ -50,7 +50,8 @@ JS::Value XMLHttpRequestConstructor::call(JS::Interpreter& interpreter)
 
 JS::Value XMLHttpRequestConstructor::construct(JS::Interpreter& interpreter)
 {
-    return interpreter.heap().allocate<XMLHttpRequestWrapper>(XMLHttpRequest::create());
+    auto& window = static_cast<WindowObject&>(interpreter.global_object());
+    return interpreter.heap().allocate<XMLHttpRequestWrapper>(XMLHttpRequest::create(window.impl()));
 }
 
 }
