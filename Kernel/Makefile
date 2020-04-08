@@ -98,6 +98,8 @@ OBJS = \
     Scheduler.o \
     SharedBuffer.o \
     Syscall.o \
+    Tasks/FinalizerTask.o \
+    Tasks/SyncTask.o \
     TimerQueue.o \
     TTY/MasterPTY.o \
     TTY/PTYMultiplexer.o \
