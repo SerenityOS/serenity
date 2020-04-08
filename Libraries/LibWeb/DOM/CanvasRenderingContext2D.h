@@ -52,25 +52,25 @@ public:
     void set_stroke_style(String);
     String stroke_style() const;
 
-    void fill_rect(int x, int y, int width, int height);
-    void stroke_rect(int x, int y, int width, int height);
-    void scale(double sx, double sy);
-    void translate(double x, double y);
+    void fill_rect(float x, float y, float width, float height);
+    void stroke_rect(float x, float y, float width, float height);
+    void scale(float sx, float sy);
+    void translate(float x, float y);
 
 private:
     explicit CanvasRenderingContext2D(HTMLCanvasElement&);
 
-    Gfx::Rect compute_rect(int x, int y, int width, int height);
-    void did_draw(const Gfx::Rect&);
+    Gfx::FloatRect compute_rect(float x, float y, float width, float height);
+    void did_draw(const Gfx::FloatRect&);
 
     OwnPtr<Gfx::Painter> painter();
 
     WeakPtr<HTMLCanvasElement> m_element;
 
-    double m_scale_x { 1 };
-    double m_scale_y { 1 };
-    double m_translate_x { 0 };
-    double m_translate_y { 0 };
+    float m_scale_x { 1 };
+    float m_scale_y { 1 };
+    float m_translate_x { 0 };
+    float m_translate_y { 0 };
     Gfx::Color m_fill_style;
     Gfx::Color m_stroke_style;
 };
