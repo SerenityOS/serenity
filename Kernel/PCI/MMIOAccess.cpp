@@ -77,7 +77,7 @@ MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
     : m_mcfg(p_mcfg)
     , m_mapped_address(ChangeableAddress(0xFFFF, 0xFF, 0xFF, 0xFF))
 {
-    klog() << "PCI: Using MMIO Mechanism for PCI Configuartion Space Access";
+    klog() << "PCI: Using MMIO for PCI configuration space access";
     m_mmio_window_region = MM.allocate_kernel_region(PAGE_ROUND_UP(PCI_MMIO_CONFIG_SPACE_SIZE), "PCI MMIO", Region::Access::Read | Region::Access::Write);
 
     auto checkup_region = MM.allocate_kernel_region(p_mcfg.page_base(), (PAGE_SIZE * 2), "PCI MCFG Checkup", Region::Access::Read | Region::Access::Write);
