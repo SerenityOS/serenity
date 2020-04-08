@@ -161,6 +161,11 @@ static void print_error(const JS::Object& object, HashTable<JS::Object*>&)
 
 void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
 {
+    if (value.is_empty()) {
+        printf("\033[34;1m<empty>\033[0m");
+        return;
+    }
+        
     if (value.is_object()) {
         if (seen_objects.contains(&value.as_object())) {
             // FIXME: Maybe we should only do this for circular references,
