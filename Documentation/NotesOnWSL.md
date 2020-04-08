@@ -4,7 +4,12 @@ SerenityOS can also be built and run under WSL Version 2. WSL Version 1 is not s
 
 WSL Version 2 is currently only available for Insider Builds of Windows which are more unstable and prone to crashes. Therefore, running SerenityOS on WSL Version 2 and running Insider Builds, in general, is not recommended on production systems.
 
-Nevertheless, here is a guide on how to [get an Insider Build](https://insider.windows.com/en-us/how-to-pc/) and how to [get WSL2](https://docs.microsoft.com/en-us/windows/wsl/wsl2-install). The installation then proceeds as usual.
+Nevertheless, here is a guide on how to [get an Insider Build](https://insider.windows.com/en-us/how-to-pc/) and how to [get WSL2](https://docs.microsoft.com/en-us/windows/wsl/wsl2-install). Once installed, you will need to make sure the distribution you want to use (and the new default) is using Version 2:
+- `wsl -l -v` will list distros and versions,<br/>
+- `wsl --set-version <distro> <version` is used to convert a distro to another version, and<br/>
+- `wsl --set-default-version 2` will set the default version for all new distros (if desired.)<br/>
+
+The installation then proceeds as usual.
 
 WSL2 does not natively support graphical applications. This means that to actually **./run** SerenityOS, you need an X Server for windows. [Vcxsrv](https://sourceforge.net/projects/vcxsrv/) is a good option. When you start up Vcxsrv, make sure to set the Display number to 0, and to Disable access control. Before actually doing **./run**, you need to set the DISPLAY environmental variable as such:
 
