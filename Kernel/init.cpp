@@ -24,11 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Devices/PATADiskDevice.h"
-#include "KSyms.h"
-#include "Process.h"
-#include "RTC.h"
-#include "Scheduler.h"
 #include <AK/Types.h>
 #include <Kernel/ACPI/ACPIDynamicParser.h>
 #include <Kernel/ACPI/ACPIStaticParser.h>
@@ -48,6 +43,7 @@
 #include <Kernel/Devices/MBVGADevice.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/Devices/PATAChannel.h>
+#include <Kernel/Devices/PATADiskDevice.h>
 #include <Kernel/Devices/PS2MouseDevice.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Devices/SB16.h>
@@ -61,12 +57,16 @@
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Interrupts/InterruptManagement.h>
 #include <Kernel/Interrupts/PIC.h>
+#include <Kernel/KSyms.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/NetworkTask.h>
 #include <Kernel/PCI/Access.h>
 #include <Kernel/PCI/Initializer.h>
+#include <Kernel/Process.h>
+#include <Kernel/RTC.h>
 #include <Kernel/Random.h>
+#include <Kernel/Scheduler.h>
 #include <Kernel/TTY/PTYMultiplexer.h>
 #include <Kernel/TTY/VirtualConsole.h>
 #include <Kernel/Time/TimeManagement.h>
@@ -92,6 +92,16 @@ static void setup_time_management();
 
 VirtualConsole* tty0;
 
+// SerenityOS Kernel C++ entry point :^)
+//
+// This is where C++ execution begins, after boot.S transfers control here.
+//
+// The purpose of init() is to start multi-tasking. It does the bare minimum
+// amount of work needed to start the scheduler.
+//
+// Once multi-tasking is ready, we spawn a new thread that starts in the
+// init_stage2() function. Initialization continues there.
+
 extern "C" [[noreturn]] void init()
 {
     setup_serial_debug();
@@ -105,7 +115,6 @@ extern "C" [[noreturn]] void init()
 
     MemoryManager::initialize();
 
-    bool text_debug = kernel_command_line().contains("text_debug");
     gdt_init();
     idt_init();
 
@@ -113,8 +122,10 @@ extern "C" [[noreturn]] void init()
     setup_acpi();
 
     new VFS;
+    new KeyboardDevice;
+    new PS2MouseDevice;
+    setup_vmmouse();
     new DebugLogDevice;
-
     new Console;
 
     klog() << "Starting SerenityOS...";
@@ -127,11 +138,6 @@ extern "C" [[noreturn]] void init()
     for (ctor_func_t* ctor = &start_ctors; ctor < &end_ctors; ctor++)
         (*ctor)();
 
-    new KeyboardDevice;
-    new PS2MouseDevice;
-    setup_vmmouse();
-
-    new SB16;
     new NullDevice;
     if (!get_serial_debug())
         new SerialDevice(SERIAL_COM1_ADDR, 64);
@@ -144,33 +150,22 @@ extern "C" [[noreturn]] void init()
     new VirtualConsole(1);
     VirtualConsole::switch_to(0);
 
-    // Sample test to see if the ACPI parser is working...
-    klog() << "ACPI: HPET table @ " << ACPI::Parser::the().find_table("HPET");
-
-    setup_pci();
-
-    if (text_debug) {
-        dbg() << "Text mode enabled";
-    } else {
-        if (multiboot_info_ptr->framebuffer_type == 1 || multiboot_info_ptr->framebuffer_type == 2) {
-            new MBVGADevice(
-                PhysicalAddress((u32)(multiboot_info_ptr->framebuffer_addr)),
-                multiboot_info_ptr->framebuffer_pitch,
-                multiboot_info_ptr->framebuffer_width,
-                multiboot_info_ptr->framebuffer_height);
-        } else {
-            new BXVGADevice;
-        }
-    }
-
-    LoopbackAdapter::the();
-
     Process::initialize();
     Thread::initialize();
 
     Thread* init_stage2_thread = nullptr;
     Process::create_kernel_process(init_stage2_thread, "init_stage2", init_stage2);
 
+    Scheduler::pick_next();
+
+    sti();
+
+    Scheduler::idle_loop();
+    ASSERT_NOT_REACHED();
+}
+
+void init_stage2()
+{
     Thread* syncd_thread = nullptr;
     Process::create_kernel_process(syncd_thread, "syncd", [] {
         for (;;) {
@@ -193,22 +188,34 @@ extern "C" [[noreturn]] void init()
         }
     });
 
-    Scheduler::pick_next();
+    // Sample test to see if the ACPI parser is working...
+    klog() << "ACPI: HPET table @ " << ACPI::Parser::the().find_table("HPET");
 
-    sti();
+    setup_pci();
 
-    Scheduler::idle_loop();
-    ASSERT_NOT_REACHED();
-}
+    if (kernel_command_line().contains("text_debug")) {
+        dbg() << "Text mode enabled";
+    } else {
+        if (multiboot_info_ptr->framebuffer_type == 1 || multiboot_info_ptr->framebuffer_type == 2) {
+            new MBVGADevice(
+                PhysicalAddress((u32)(multiboot_info_ptr->framebuffer_addr)),
+                multiboot_info_ptr->framebuffer_pitch,
+                multiboot_info_ptr->framebuffer_width,
+                multiboot_info_ptr->framebuffer_height);
+        } else {
+            new BXVGADevice;
+        }
+    }
 
-void init_stage2()
-{
+    LoopbackAdapter::the();
+
     Syscall::initialize();
 
     new ZeroDevice;
     new FullDevice;
     new RandomDevice;
     new PTYMultiplexer;
+    new SB16;
 
     bool dmi_unreliable = kernel_command_line().contains("dmi_unreliable");
     if (dmi_unreliable) {
