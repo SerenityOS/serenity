@@ -62,6 +62,14 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
         member_view.set_alternating_row_colors(false);
         member_view.set_model(channel().member_model());
         member_view.set_activates_on_selection(true);
+        member_view.on_activation = [&](auto& index) {
+            if (!index.is_valid())
+                return;
+            auto nick = channel().member_model()->nick_at(member_view.selection().first());
+            if (nick.is_empty())
+                return;
+            m_client.handle_open_query_action(m_client.nick_without_prefix(nick.characters()));
+        };
         member_view.on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
             if (!index.is_valid())
                 return;
