@@ -47,8 +47,8 @@
 #include <WindowServer/Cursor.h>
 #include <WindowServer/WindowClientEndpoint.h>
 #include <errno.h>
-#include <stdio.h>
 #include <serenity.h>
+#include <stdio.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -806,8 +806,12 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
     } else {
         for_each_visible_window_from_front_to_back([&](Window& window) {
             auto window_frame_rect = window.frame().rect();
-            if (!window_frame_rect.contains(event.position()))
+            if (!window_frame_rect.contains(event.position())) {
+                if (window.type() == WindowType::DropDown && event.type() == Event::MouseDown) {
+                    window.request_close();
+                }
                 return IterationDecision::Continue;
+            }
 
             if (&window != m_resize_candidate.ptr())
                 clear_resize_candidate();

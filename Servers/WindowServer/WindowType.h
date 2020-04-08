@@ -37,4 +37,5 @@ enum class WindowType {
     Menubar,
     MenuApplet,
     Notification,
+    DropDown,
 };

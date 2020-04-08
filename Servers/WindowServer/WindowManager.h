@@ -321,6 +321,8 @@ IterationDecision WindowManager::for_each_visible_window_from_back_to_front(Call
         return IterationDecision::Break;
     if (for_each_visible_window_of_type_from_back_to_front(WindowType::Menu, callback) == IterationDecision::Break)
         return IterationDecision::Break;
+    if (for_each_visible_window_of_type_from_back_to_front(WindowType::DropDown, callback) == IterationDecision::Break)
+        return IterationDecision::Break;
     return for_each_visible_window_of_type_from_back_to_front(WindowType::WindowSwitcher, callback);
 }
 
@@ -351,6 +353,8 @@ template<typename Callback>
 IterationDecision WindowManager::for_each_visible_window_from_front_to_back(Callback callback)
 {
     if (for_each_visible_window_of_type_from_front_to_back(WindowType::WindowSwitcher, callback) == IterationDecision::Break)
+        return IterationDecision::Break;
+    if (for_each_visible_window_of_type_from_back_to_front(WindowType::DropDown, callback) == IterationDecision::Break)
         return IterationDecision::Break;
     if (for_each_visible_window_of_type_from_front_to_back(WindowType::Menu, callback) == IterationDecision::Break)
         return IterationDecision::Break;
