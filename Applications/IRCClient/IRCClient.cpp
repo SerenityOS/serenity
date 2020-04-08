@@ -423,6 +423,14 @@ void IRCClient::handle_user_input_in_server(const String& input)
         return handle_user_command(input);
 }
 
+String IRCClient::nick_without_prefix(const String& nick)
+{
+    assert(!nick.is_empty());
+    if (IRCClient::is_nick_prefix(nick[0]))
+        return nick.substring(1, nick.length() - 1);
+    return nick;
+}
+
 bool IRCClient::is_nick_prefix(char ch)
 {
     switch (ch) {
