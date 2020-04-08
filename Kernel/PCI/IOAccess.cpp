@@ -38,7 +38,7 @@ void IOAccess::initialize()
 
 IOAccess::IOAccess()
 {
-    klog() << "PCI: Using IO Mechanism for PCI Configuartion Space Access";
+    klog() << "PCI: Using I/O instructions for PCI configuration space access";
 }
 
 u8 IOAccess::read8_field(Address address, u32 field)
