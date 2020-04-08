@@ -107,6 +107,20 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
                 m_client.handle_devoice_user_action(m_name.characters(), m_client.nick_without_prefix(nick.characters()));
             }));
 
+            m_context_menu->add_action(GUI::Action::create("Hop", [&](const GUI::Action&) {
+                auto nick = channel().member_model()->nick_at(member_view.selection().first());
+                if (nick.is_empty())
+                    return;
+                m_client.handle_hop_user_action(m_name.characters(), m_client.nick_without_prefix(nick.characters()));
+            }));
+
+            m_context_menu->add_action(GUI::Action::create("DeHop", [&](const GUI::Action&) {
+                auto nick = channel().member_model()->nick_at(member_view.selection().first());
+                if (nick.is_empty())
+                    return;
+                m_client.handle_dehop_user_action(m_name.characters(), m_client.nick_without_prefix(nick.characters()));
+            }));
+
             m_context_menu->add_action(GUI::Action::create("Op", [&](const GUI::Action&) {
                 auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
