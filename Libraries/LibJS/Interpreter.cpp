@@ -90,11 +90,11 @@ Value Interpreter::run(const Statement& statement, ArgumentVector arguments, Sco
 
 void Interpreter::enter_scope(const ScopeNode& scope_node, ArgumentVector arguments, ScopeType scope_type)
 {
-    HashMap<FlyString, Variable> scope_variables_with_declaration_type;
+    HashMap<FlyString, Variable> scope_variables_with_declaration_kind;
     for (auto& argument : arguments) {
-        scope_variables_with_declaration_type.set(argument.name, { argument.value, DeclarationType::Var });
+        scope_variables_with_declaration_kind.set(argument.name, { argument.value, DeclarationKind::Var });
     }
-    m_scope_stack.append({ scope_type, scope_node, move(scope_variables_with_declaration_type) });
+    m_scope_stack.append({ scope_type, scope_node, move(scope_variables_with_declaration_kind) });
 }
 
 void Interpreter::exit_scope(const ScopeNode& scope_node)
@@ -110,29 +110,29 @@ void Interpreter::exit_scope(const ScopeNode& scope_node)
         m_unwind_until = ScopeType::None;
 }
 
-void Interpreter::declare_variable(const FlyString& name, DeclarationType declaration_type)
+void Interpreter::declare_variable(const FlyString& name, DeclarationKind declaration_kind)
 {
-    switch (declaration_type) {
-    case DeclarationType::Var:
+    switch (declaration_kind) {
+    case DeclarationKind::Var:
         for (ssize_t i = m_scope_stack.size() - 1; i >= 0; --i) {
             auto& scope = m_scope_stack.at(i);
             if (scope.type == ScopeType::Function) {
-                if (scope.variables.get(name).has_value() && scope.variables.get(name).value().declaration_type != DeclarationType::Var)
+                if (scope.variables.get(name).has_value() && scope.variables.get(name).value().declaration_kind != DeclarationKind::Var)
                     ASSERT_NOT_REACHED();
 
-                scope.variables.set(move(name), { js_undefined(), declaration_type });
+                scope.variables.set(move(name), { js_undefined(), declaration_kind });
                 return;
             }
         }
 
         global_object().put(move(name), js_undefined());
         break;
-    case DeclarationType::Let:
-    case DeclarationType::Const:
+    case DeclarationKind::Let:
+    case DeclarationKind::Const:
         if (m_scope_stack.last().variables.get(name).has_value())
             ASSERT_NOT_REACHED();
 
-        m_scope_stack.last().variables.set(move(name), { js_undefined(), declaration_type });
+        m_scope_stack.last().variables.set(move(name), { js_undefined(), declaration_kind });
         break;
     }
 }
@@ -144,10 +144,10 @@ void Interpreter::set_variable(const FlyString& name, Value value, bool first_as
 
         auto possible_match = scope.variables.get(name);
         if (possible_match.has_value()) {
-            if (!first_assignment && possible_match.value().declaration_type == DeclarationType::Const)
+            if (!first_assignment && possible_match.value().declaration_kind == DeclarationKind::Const)
                 ASSERT_NOT_REACHED();
 
-            scope.variables.set(move(name), { move(value), possible_match.value().declaration_type });
+            scope.variables.set(move(name), { move(value), possible_match.value().declaration_kind });
             return;
         }
     }
