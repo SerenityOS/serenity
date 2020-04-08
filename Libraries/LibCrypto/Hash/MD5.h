@@ -79,6 +79,7 @@ namespace Hash {
         virtual void update(const ByteBuffer& buffer) override { update(buffer.data(), buffer.size()); };
         virtual void update(const StringView& string) override { update((const u8*)string.characters_without_null_termination(), string.length()); };
         virtual DigestType digest() override;
+        virtual DigestType peek() override;
 
         virtual String class_name() const override { return "MD5"; }
 
