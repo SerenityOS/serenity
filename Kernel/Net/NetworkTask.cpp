@@ -32,6 +32,7 @@
 #include <Kernel/Net/IPv4.h>
 #include <Kernel/Net/IPv4Socket.h>
 #include <Kernel/Net/LoopbackAdapter.h>
+#include <Kernel/Net/NetworkTask.h>
 #include <Kernel/Net/Routing.h>
 #include <Kernel/Net/TCP.h>
 #include <Kernel/Net/TCPSocket.h>
@@ -55,6 +56,14 @@ static void handle_ipv4(const EthernetFrameHeader&, size_t frame_size);
 static void handle_icmp(const EthernetFrameHeader&, const IPv4Packet&);
 static void handle_udp(const IPv4Packet&);
 static void handle_tcp(const IPv4Packet&);
+
+[[noreturn]] static void NetworkTask_main();
+
+void NetworkTask::spawn()
+{
+    Thread* thread = nullptr;
+    Process::create_kernel_process(thread, "NetworkTask", NetworkTask_main);
+}
 
 void NetworkTask_main()
 {

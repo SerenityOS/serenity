@@ -27,7 +27,8 @@
 #pragma once
 
 namespace Kernel {
-
-void NetworkTask_main();
-
+class NetworkTask {
+public:
+    static void spawn();
+};
 }
