@@ -169,14 +169,24 @@ void init_stage2()
     if (kernel_command_line().contains("text_debug")) {
         dbg() << "Text mode enabled";
     } else {
-        if (multiboot_info_ptr->framebuffer_type == 1 || multiboot_info_ptr->framebuffer_type == 2) {
-            new MBVGADevice(
-                PhysicalAddress((u32)(multiboot_info_ptr->framebuffer_addr)),
-                multiboot_info_ptr->framebuffer_pitch,
-                multiboot_info_ptr->framebuffer_width,
-                multiboot_info_ptr->framebuffer_height);
-        } else {
+        bool bxvga_found = false;
+        PCI::enumerate_all([&](const PCI::Address&, PCI::ID id) {
+            if (id.vendor_id == 0x1234 && id.device_id == 0x1111)
+                bxvga_found = true;
+        });
+
+        if (bxvga_found) {
             new BXVGADevice;
+        } else {
+            if (multiboot_info_ptr->framebuffer_type == 1 || multiboot_info_ptr->framebuffer_type == 2) {
+                new MBVGADevice(
+                    PhysicalAddress((u32)(multiboot_info_ptr->framebuffer_addr)),
+                    multiboot_info_ptr->framebuffer_pitch,
+                    multiboot_info_ptr->framebuffer_width,
+                    multiboot_info_ptr->framebuffer_height);
+            } else {
+                new BXVGADevice;
+            }
         }
     }
 
