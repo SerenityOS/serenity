@@ -89,6 +89,8 @@ public:
         return *m_indexes.begin();
     }
 
+    void remove_matching(Function<bool(const ModelIndex&)>);
+
 private:
     AbstractView& m_view;
     HashTable<ModelIndex> m_indexes;
