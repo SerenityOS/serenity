@@ -915,6 +915,15 @@ void bigint_subtraction()
         // this test only verifies that we don't crash on an assertion
         PASS;
     }
+    {
+        I_TEST((BigInteger | Subtraction Regerssion 1));
+        auto num = Crypto::UnsignedBigInteger { 1 }.shift_left(256);
+        if (num.sub(1).words() == Vector<u32> { 4294967295, 4294967295, 4294967295, 4294967295, 4294967295, 4294967295, 4294967295, 4294967295, 0 }) {
+            PASS;
+        } else {
+            FAIL(Incorrect Result);
+        }
+    }
 }
 
 void bigint_multiplication()
