@@ -127,7 +127,7 @@ Value ObjectConstructor::define_property(Interpreter& interpreter)
     auto& object = interpreter.argument(0).as_object();
     auto& descriptor = interpreter.argument(2).as_object();
 
-    Value value = descriptor.get("value").value_or(js_undefined());
+    Value value = descriptor.get("value").value_or(Value());
     u8 configurable = descriptor.get("configurable").value_or(Value(false)).to_boolean() * Attribute::Configurable;
     u8 enumerable = descriptor.get("enumerable").value_or(Value(false)).to_boolean() * Attribute::Enumerable;
     u8 writable = descriptor.get("writable").value_or(Value(false)).to_boolean() * Attribute::Writable;

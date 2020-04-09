@@ -33,6 +33,14 @@ try {
         assert(e.name === "TypeError");
     }
 
+    Object.defineProperty(o, "baz", { value: 9, configurable: true, writable: false });
+    Object.defineProperty(o, "baz", { configurable: true, writable: true });
+
+    d = Object.getOwnPropertyDescriptor(o, "baz");
+    assert(d.configurable === true);
+    assert(d.writable === true);
+    assert(d.value === 9);
+
     console.log("PASS");
 } catch (e) {
     console.log(e)
