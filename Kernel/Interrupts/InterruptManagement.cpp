@@ -127,7 +127,7 @@ RefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(u8 int
 PhysicalAddress InterruptManagement::search_for_madt()
 {
     dbg() << "Early access to ACPI tables for interrupt setup";
-    auto rsdp = ACPI::StaticParsing::search_rsdp();
+    auto rsdp = ACPI::StaticParsing::find_rsdp();
     if (rsdp.is_null())
         return {};
     return ACPI::StaticParsing::search_table(rsdp, "APIC");
