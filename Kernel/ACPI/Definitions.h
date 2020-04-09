@@ -336,14 +336,12 @@ class DynamicParser;
 class Parser;
 
 namespace StaticParsing {
-PhysicalAddress search_rsdp_in_ebda(u16 ebda_segment);
-PhysicalAddress search_rsdp_in_bios_area();
-PhysicalAddress search_rsdp();
+PhysicalAddress find_rsdp();
 bool match_table_signature(PhysicalAddress table_header, const char*);
 PhysicalAddress search_table(PhysicalAddress rsdp, const char*);
 PhysicalAddress search_table_in_xsdt(PhysicalAddress xsdt, const char*);
 PhysicalAddress search_table_in_rsdt(PhysicalAddress rsdt, const char*);
-inline bool validate_table(Structures::SDTHeader&, size_t length);
+bool validate_table(const Structures::SDTHeader&, size_t length);
 };
 }
 }
