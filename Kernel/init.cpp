@@ -28,6 +28,7 @@
 #include <Kernel/ACPI/ACPIDynamicParser.h>
 #include <Kernel/ACPI/ACPIStaticParser.h>
 #include <Kernel/ACPI/DMIDecoder.h>
+#include <Kernel/ACPI/Initialize.h>
 #include <Kernel/ACPI/MultiProcessorParser.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/CMOS.h>
@@ -85,7 +86,6 @@ namespace Kernel {
 
 [[noreturn]] static void init_stage2();
 static void setup_serial_debug();
-static void setup_acpi();
 static void setup_interrupts();
 static void setup_time_management();
 
@@ -123,7 +123,7 @@ extern "C" [[noreturn]] void init()
         (*ctor)();
 
     setup_interrupts();
-    setup_acpi();
+    ACPI::initialize();
 
     new VFS;
     new KeyboardDevice;
@@ -360,30 +360,6 @@ extern "C" int __cxa_atexit(void (*)(void*), void*, void*)
 {
     ASSERT_NOT_REACHED();
     return 0;
-}
-
-void setup_acpi()
-{
-    if (!kernel_command_line().contains("acpi")) {
-        ACPI::DynamicParser::initialize_without_rsdp();
-        return;
-    }
-
-    auto acpi = kernel_command_line().get("acpi");
-    if (acpi == "off") {
-        ACPI::Parser::initialize_limited();
-        return;
-    }
-    if (acpi == "on") {
-        ACPI::DynamicParser::initialize_without_rsdp();
-        return;
-    }
-    if (acpi == "limited") {
-        ACPI::StaticParser::initialize_without_rsdp();
-        return;
-    }
-    klog() << "acpi boot argmuent has an invalid value.";
-    hang();
 }
 
 void setup_interrupts()
