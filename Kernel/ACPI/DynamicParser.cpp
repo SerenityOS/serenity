@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/ACPI/ACPIDynamicParser.h>
-#include <Kernel/ACPI/ACPIParser.h>
+#include <Kernel/ACPI/DynamicParser.h>
+#include <Kernel/ACPI/Parser.h>
 
 namespace Kernel {
 namespace ACPI {

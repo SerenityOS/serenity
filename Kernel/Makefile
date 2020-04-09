@@ -121,11 +121,11 @@ OBJS = \
     VM/Region.o \
     VM/SharedInodeVMObject.o \
     VM/VMObject.o \
-    ACPI/ACPIParser.o \
-    ACPI/ACPIDynamicParser.o \
     ACPI/DMIDecoder.o \
+    ACPI/DynamicParser.o \
     ACPI/Initialize.o \
     ACPI/MultiProcessorParser.o \
+    ACPI/Parser.o \
     WaitQueue.o \
     init.o
 

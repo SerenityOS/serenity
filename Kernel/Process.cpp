@@ -31,7 +31,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
 #include <AK/Types.h>
-#include <Kernel/ACPI/ACPIParser.h>
+#include <Kernel/ACPI/Parser.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Devices/KeyboardDevice.h>
