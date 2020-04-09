@@ -47,7 +47,7 @@ public:
         set_the(*new ParserType(rsdp));
     }
 
-    virtual PhysicalAddress find_table(const char* sig) = 0;
+    virtual PhysicalAddress find_table(const StringView& signature) = 0;
 
     virtual void try_acpi_reboot() = 0;
     virtual bool can_reboot() = 0;
