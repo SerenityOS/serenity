@@ -40,8 +40,8 @@ bool MultiProcessorParser::is_initialized()
 
 void MultiProcessorParser::initialize()
 {
-    if (!MultiProcessorParser::is_initialized())
-        s_parser = new MultiProcessorParser;
+    ASSERT(!is_initialized());
+    s_parser = new MultiProcessorParser;
 }
 
 MultiProcessorParser::MultiProcessorParser()
@@ -181,7 +181,7 @@ Vector<unsigned> MultiProcessorParser::get_pci_bus_ids()
 
 MultiProcessorParser& MultiProcessorParser::the()
 {
-    ASSERT(!MultiProcessorParser::is_initialized());
+    ASSERT(is_initialized());
     return *s_parser;
 }
 
