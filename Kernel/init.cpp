@@ -85,7 +85,6 @@ namespace Kernel {
 
 [[noreturn]] static void init_stage2();
 static void setup_serial_debug();
-static void setup_interrupts();
 static void setup_time_management();
 
 VirtualConsole* tty0;
@@ -121,7 +120,7 @@ extern "C" [[noreturn]] void init()
     for (ctor_func_t* ctor = &start_ctors; ctor < &end_ctors; ctor++)
         (*ctor)();
 
-    setup_interrupts();
+    InterruptManagement::initialize();
     ACPI::initialize();
 
     new VFS;
@@ -356,28 +355,6 @@ extern "C" int __cxa_atexit(void (*)(void*), void*, void*)
 {
     ASSERT_NOT_REACHED();
     return 0;
-}
-
-void setup_interrupts()
-{
-    InterruptManagement::initialize();
-
-    if (!kernel_command_line().contains("smp")) {
-        InterruptManagement::the().switch_to_pic_mode();
-        return;
-    }
-    auto smp = kernel_command_line().get("smp");
-    if (smp == "off") {
-        InterruptManagement::the().switch_to_pic_mode();
-        return;
-    }
-    if (smp == "on") {
-        InterruptManagement::the().switch_to_ioapic_mode();
-        return;
-    }
-
-    klog() << "smp boot argmuent has an invalid value.";
-    hang();
 }
 
 void setup_time_management()

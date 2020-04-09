@@ -28,6 +28,7 @@
 #include <AK/StringView.h>
 #include <Kernel/ACPI/MultiProcessorParser.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/CommandLine.h>
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Interrupts/IOAPIC.h>
 #include <Kernel/Interrupts/InterruptManagement.h>
@@ -59,6 +60,11 @@ void InterruptManagement::initialize()
 {
     ASSERT(!InterruptManagement::initialized());
     s_interrupt_management = new InterruptManagement();
+
+    if (kernel_command_line().lookup("smp").value_or("off") == "on")
+        InterruptManagement::the().switch_to_ioapic_mode();
+    else
+        InterruptManagement::the().switch_to_pic_mode();
 }
 
 void InterruptManagement::enumerate_interrupt_handlers(Function<void(GenericInterruptHandler&)> callback)
