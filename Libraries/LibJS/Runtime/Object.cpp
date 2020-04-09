@@ -106,15 +106,29 @@ void Object::put_own_property(Object& this_object, const FlyString& property_nam
         set_shape(*new_shape);
         metadata = shape().lookup(property_name);
         ASSERT(metadata.has_value());
-    } else if (!(metadata.value().attributes & Attribute::Writable)) {
-        dbg() << "Disallow write to non-writable property";
-        return;
     }
+
     if (mode == PutOwnPropertyMode::DefineProperty && !(metadata.value().attributes & Attribute::Configurable) && attributes != metadata.value().attributes) {
         dbg() << "Disallow reconfig of non-configurable property";
         interpreter().throw_exception<Error>("TypeError", String::format("Cannot redefine property '%s'", property_name.characters()));
         return;
     }
+
+    if (mode == PutOwnPropertyMode::DefineProperty && attributes != metadata.value().attributes) {
+        auto* new_shape = m_shape->create_configure_transition(property_name, attributes);
+        set_shape(*new_shape);
+        metadata = shape().lookup(property_name);
+
+        dbg() << "Reconfigured property " << property_name << ", new shape says offset is " << metadata.value().offset << " and my storage capacity is " << m_storage.size();
+    }
+
+    if (mode == PutOwnPropertyMode::Put && !(metadata.value().attributes & Attribute::Writable)) {
+        dbg() << "Disallow write to non-writable property";
+        return;
+    }
+
+    if (value.is_empty())
+        return;
 
     auto value_here = m_storage[metadata.value().offset];
     if (value_here.is_object() && value_here.as_object().is_native_property()) {

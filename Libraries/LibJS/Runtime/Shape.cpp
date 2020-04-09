@@ -34,7 +34,17 @@ Shape* Shape::create_put_transition(const FlyString& property_name, u8 attribute
     auto* new_shape = m_forward_transitions.get(property_name).value_or(nullptr);
     if (new_shape && new_shape->m_attributes == attributes)
         return new_shape;
-    new_shape = heap().allocate<Shape>(this, property_name, attributes);
+    new_shape = heap().allocate<Shape>(this, property_name, attributes, TransitionType::Put);
+    m_forward_transitions.set(property_name, new_shape);
+    return new_shape;
+}
+
+Shape* Shape::create_configure_transition(const FlyString& property_name, u8 attributes)
+{
+    auto* new_shape = m_forward_transitions.get(property_name).value_or(nullptr);
+    if (new_shape && new_shape->m_attributes == attributes)
+        return new_shape;
+    new_shape = heap().allocate<Shape>(this, property_name, attributes, TransitionType::Configure);
     m_forward_transitions.set(property_name, new_shape);
     return new_shape;
 }
@@ -48,17 +58,19 @@ Shape::Shape()
 {
 }
 
-Shape::Shape(Shape* previous_shape, const FlyString& property_name, u8 attributes)
+Shape::Shape(Shape* previous_shape, const FlyString& property_name, u8 attributes, TransitionType transition_type)
     : m_previous(previous_shape)
     , m_property_name(property_name)
     , m_attributes(attributes)
     , m_prototype(previous_shape->m_prototype)
+    , m_transition_type(transition_type)
 {
 }
 
 Shape::Shape(Shape* previous_shape, Object* new_prototype)
     : m_previous(previous_shape)
     , m_prototype(new_prototype)
+    , m_transition_type(TransitionType::Prototype)
 {
 }
 
@@ -114,7 +126,13 @@ void Shape::ensure_property_table() const
             // Ignore prototype transitions as they don't affect the key map.
             continue;
         }
-        m_property_table->set(shape->m_property_name, { next_offset++, shape->m_attributes });
+        if (shape->m_transition_type == TransitionType::Put) {
+            m_property_table->set(shape->m_property_name, { next_offset++, shape->m_attributes });
+        } else if (shape->m_transition_type == TransitionType::Configure) {
+            auto it = m_property_table->find(shape->m_property_name);
+            ASSERT(it != m_property_table->end());
+            it->value.attributes = shape->m_attributes;
+        }
     }
 }
 

@@ -52,11 +52,19 @@ class Shape final : public Cell {
 public:
     virtual ~Shape() override;
 
+    enum class TransitionType {
+        Invalid,
+        Put,
+        Configure,
+        Prototype,
+    };
+
     Shape();
-    Shape(Shape* previous_shape, const FlyString& property_name, u8 attributes);
+    Shape(Shape* previous_shape, const FlyString& property_name, u8 attributes, TransitionType);
     Shape(Shape* previous_shape, Object* new_prototype);
 
     Shape* create_put_transition(const FlyString& name, u8 attributes);
+    Shape* create_configure_transition(const FlyString& name, u8 attributes);
     Shape* create_prototype_transition(Object* new_prototype);
 
     Object* prototype() { return m_prototype; }
@@ -81,6 +89,7 @@ private:
     FlyString m_property_name;
     u8 m_attributes { 0 };
     Object* m_prototype { nullptr };
+    TransitionType m_transition_type { TransitionType::Invalid };
 };
 
 }
