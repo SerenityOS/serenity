@@ -51,13 +51,13 @@ void initialize()
 {
     switch (determine_feature_level()) {
     case FeatureLevel::Enabled:
-        ACPI::DynamicParser::initialize_without_rsdp();
+        Parser::initialize<DynamicParser>();
         break;
     case FeatureLevel::Limited:
-        ACPI::StaticParser::initialize_without_rsdp();
+        Parser::initialize<StaticParser>();
         break;
     case FeatureLevel::Disabled:
-        ACPI::Parser::initialize_limited();
+        Parser::initialize<Parser>();
         break;
     }
 }

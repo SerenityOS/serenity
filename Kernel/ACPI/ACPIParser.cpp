@@ -29,24 +29,19 @@
 
 namespace Kernel {
 namespace ACPI {
+
 static Parser* s_acpi_parser;
 
 Parser& Parser::the()
 {
-    ASSERT(s_acpi_parser != nullptr);
+    ASSERT(s_acpi_parser);
     return *s_acpi_parser;
 }
 
-void Parser::initialize_limited()
+void Parser::set_the(Parser& parser)
 {
-    if (!Parser::is_initialized()) {
-        s_acpi_parser = new Parser(false);
-    }
-}
-
-bool Parser::is_initialized()
-{
-    return (s_acpi_parser != nullptr);
+    ASSERT(!s_acpi_parser);
+    s_acpi_parser = &parser;
 }
 
 Parser::Parser(bool usable)
@@ -56,7 +51,6 @@ Parser::Parser(bool usable)
     } else {
         klog() << "ACPI: Limited Initialization. Vital functions are disabled by a request";
     }
-    s_acpi_parser = this;
 }
 
 PhysicalAddress Parser::find_table(const char*)
