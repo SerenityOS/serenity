@@ -29,6 +29,8 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <LibBareMetal/StdLib.h>
 
+//#define MULTIPROCESSOR_DEBUG
+
 namespace Kernel {
 
 static MultiProcessorParser* s_parser;
@@ -83,7 +85,9 @@ void MultiProcessorParser::parse_configuration_table()
     auto* entry = config_table->entries;
     auto* p_entry = reinterpret_cast<MultiProcessor::ConfigurationTableHeader*>(m_configuration_table)->entries;
     while (entry_count > 0) {
+#ifdef MULTIPROCESSOR_DEBUG
         dbg() << "MultiProcessor: Entry Type " << entry->entry_type << " detected.";
+#endif
         switch (entry->entry_type) {
         case ((u8)MultiProcessor::ConfigurationTableEntryType::Processor):
             entry = (MultiProcessor::EntryHeader*)(u32)entry + (u8)MultiProcessor::ConfigurationTableEntryLength::Processor;
@@ -143,7 +147,7 @@ FlatPtr MultiProcessorParser::search_floating_pointer_in_ebda(u16 ebda_segment)
     auto floating_pointer_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)(ebda_segment << 4))), PAGE_ROUND_UP(1024), "MultiProcessor Parser floating_pointer Finding #1", Region::Access::Read, false, true);
     char* p_floating_pointer_str = (char*)(PhysicalAddress(ebda_segment << 4).as_ptr());
     for (char* floating_pointer_str = (char*)floating_pointer_region->vaddr().offset(offset_in_page((u32)(ebda_segment << 4))).as_ptr(); floating_pointer_str < (char*)(floating_pointer_region->vaddr().offset(offset_in_page((u32)(ebda_segment << 4))).get() + 1024); floating_pointer_str += 16) {
-#ifdef MUTLIPROCESSOR_DEBUG
+#ifdef MULTIPROCESSOR_DEBUG
         dbg() << "MultiProcessor: Looking for floating pointer structure in EBDA @ V0x " << String::format("%x", floating_pointer_str) << ", P0x" << String::format("%x", p_floating_pointer_str);
 #endif
         if (!strncmp("_MP_", floating_pointer_str, strlen("_MP_")))
@@ -157,7 +161,7 @@ FlatPtr MultiProcessorParser::search_floating_pointer_in_bios_area()
     auto floating_pointer_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)0xE0000)), PAGE_ROUND_UP(0xFFFFF - 0xE0000), "MultiProcessor Parser floating_pointer Finding #2", Region::Access::Read, false, true);
     char* p_floating_pointer_str = (char*)(PhysicalAddress(0xE0000).as_ptr());
     for (char* floating_pointer_str = (char*)floating_pointer_region->vaddr().offset(offset_in_page((u32)(0xE0000))).as_ptr(); floating_pointer_str < (char*)(floating_pointer_region->vaddr().offset(offset_in_page((u32)(0xE0000))).get() + (0xFFFFF - 0xE0000)); floating_pointer_str += 16) {
-#ifdef MUTLIPROCESSOR_DEBUG
+#ifdef MULTIPROCESSOR_DEBUG
         dbg() << "MultiProcessor: Looking for floating pointer structure in BIOS area @ V0x " << String::format("%x", floating_pointer_str) << ", P0x" << String::format("%x", p_floating_pointer_str);
 #endif
         if (!strncmp("_MP_", floating_pointer_str, strlen("_MP_")))
@@ -193,7 +197,9 @@ Vector<RefPtr<PCIInterruptOverrideMetadata>> MultiProcessorParser::get_pci_inter
     for (auto entry : m_io_interrupt_redirection_entries) {
         auto entry_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)entry)), PAGE_ROUND_UP(m_configuration_table_length), "MultiProcessor Parser Parsing Bus Entry", Region::Access::Read, false, true);
         auto* v_entry_ptr = (MultiProcessor::IOInterruptAssignmentEntry*)entry_region->vaddr().offset(offset_in_page((u32)entry)).as_ptr();
+#ifdef MULTIPROCESSOR_DEBUG        
         dbg() << "MultiProcessor: Parsing Entry P 0x" << String::format("%x", entry) << ", V " << v_entry_ptr;
+#endif
         for (auto id : pci_bus_ids) {
             if (id == v_entry_ptr->source_bus_id) {
 
