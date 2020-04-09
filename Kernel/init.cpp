@@ -167,9 +167,6 @@ void init_stage2()
     SyncTask::spawn();
     FinalizerTask::spawn();
 
-    // Sample test to see if the ACPI parser is working...
-    klog() << "ACPI: HPET table @ " << ACPI::Parser::the().find_table("HPET");
-
     PCI::initialize();
 
     if (kernel_command_line().contains("text_debug")) {

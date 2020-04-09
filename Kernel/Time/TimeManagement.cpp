@@ -92,8 +92,8 @@ void TimeManagement::stale_function(const RegisterState&)
 
 TimeManagement::TimeManagement(bool probe_non_legacy_hardware_timers)
 {
-    if (ACPI::Parser::the().is_operable()) {
-        if (!ACPI::Parser::the().x86_specific_flags().cmos_rtc_not_present) {
+    if (ACPI::is_enabled()) {
+        if (!ACPI::Parser::the()->x86_specific_flags().cmos_rtc_not_present) {
             RTC::initialize();
             m_epoch_time += boot_time();
         } else {
@@ -161,7 +161,7 @@ bool TimeManagement::is_hpet_periodic_mode_allowed()
 
 bool TimeManagement::probe_and_set_non_legacy_hardware_timers()
 {
-    if (!ACPI::Parser::the().is_operable())
+    if (!ACPI::is_enabled())
         return false;
     if (!HPET::test_and_initialize())
         return false;
@@ -211,8 +211,8 @@ bool TimeManagement::probe_and_set_non_legacy_hardware_timers()
 
 bool TimeManagement::probe_and_set_legacy_hardware_timers()
 {
-    if (ACPI::Parser::the().is_operable()) {
-        if (ACPI::Parser::the().x86_specific_flags().cmos_rtc_not_present) {
+    if (ACPI::is_enabled()) {
+        if (ACPI::Parser::the()->x86_specific_flags().cmos_rtc_not_present) {
             dbg() << "ACPI: CMOS RTC Not Present";
             return false;
         } else {

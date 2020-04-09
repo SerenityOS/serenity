@@ -28,6 +28,7 @@
 
 #include <AK/Types.h>
 #include <Kernel/ACPI/Definitions.h>
+#include <Kernel/ACPI/Initialize.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/VM/Region.h>
 #include <LibBareMetal/Memory/PhysicalAddress.h>
@@ -38,33 +39,31 @@ namespace ACPI {
 
 class Parser {
 public:
-    static Parser& the();
+    static Parser* the();
 
     template<typename ParserType>
-    static void initialize()
+    static void initialize(PhysicalAddress rsdp)
     {
-        set_the(*new ParserType);
+        set_the(*new ParserType(rsdp));
     }
 
-    virtual PhysicalAddress find_table(const char* sig);
+    virtual PhysicalAddress find_table(const char* sig) = 0;
 
-    virtual void try_acpi_reboot();
-    virtual bool can_reboot() { return false; }
-    virtual void try_acpi_shutdown();
-    virtual bool can_shutdown() { return false; }
+    virtual void try_acpi_reboot() = 0;
+    virtual bool can_reboot() = 0;
+    virtual void try_acpi_shutdown() = 0;
+    virtual bool can_shutdown() = 0;
 
-    virtual const FADTFlags::HardwareFeatures& hardware_features() const;
-    virtual const FADTFlags::x86_Specific_Flags& x86_specific_flags() const;
+    virtual const FADTFlags::HardwareFeatures& hardware_features() const = 0;
+    virtual const FADTFlags::x86_Specific_Flags& x86_specific_flags() const = 0;
 
     virtual void enable_aml_interpretation();
     virtual void enable_aml_interpretation(File&);
     virtual void enable_aml_interpretation(u8*, u32);
     virtual void disable_aml_interpretation();
-    virtual bool is_operable();
 
 protected:
-    explicit Parser(bool usable = false);
-    bool m_operable;
+    Parser() {}
 
 private:
     static void set_the(Parser&);

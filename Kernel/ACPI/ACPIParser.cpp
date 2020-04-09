@@ -32,41 +32,15 @@ namespace ACPI {
 
 static Parser* s_acpi_parser;
 
-Parser& Parser::the()
+Parser* Parser::the()
 {
-    ASSERT(s_acpi_parser);
-    return *s_acpi_parser;
+    return s_acpi_parser;
 }
 
 void Parser::set_the(Parser& parser)
 {
     ASSERT(!s_acpi_parser);
     s_acpi_parser = &parser;
-}
-
-Parser::Parser(bool usable)
-{
-    if (usable) {
-        klog() << "ACPI: Setting up a functional parser";
-    } else {
-        klog() << "ACPI: Limited Initialization. Vital functions are disabled by a request";
-    }
-}
-
-PhysicalAddress Parser::find_table(const char*)
-{
-    klog() << "ACPI: Requested to search for a table, Abort!";
-    return {};
-}
-
-void Parser::try_acpi_reboot()
-{
-    klog() << "ACPI: Cannot invoke reboot!";
-}
-
-void Parser::try_acpi_shutdown()
-{
-    klog() << "ACPI: Cannot invoke shutdown!";
 }
 
 void Parser::enable_aml_interpretation()
@@ -98,10 +72,6 @@ const FADTFlags::x86_Specific_Flags& Parser::x86_specific_flags() const
 {
     klog() << "ACPI Limited: x86 specific features cannot be obtained";
     ASSERT_NOT_REACHED();
-}
-bool Parser::is_operable()
-{
-    return false;
 }
 }
 }

@@ -324,26 +324,10 @@ void StaticParser::locate_main_system_description_table()
     }
 }
 
-StaticParser::StaticParser()
-    : Parser(true)
-    , m_rsdp(StaticParsing::search_rsdp())
-{
-    if (!m_rsdp.is_null()) {
-        klog() << "ACPI: Using RSDP @ " << m_rsdp;
-        m_operable = true;
-        locate_static_data();
-    } else {
-        m_operable = false;
-        klog() << "ACPI: Disabled, due to RSDP being absent";
-    }
-}
-
 StaticParser::StaticParser(PhysicalAddress rsdp)
-    : Parser(true)
-    , m_rsdp(rsdp)
+    : m_rsdp(rsdp)
 {
     klog() << "ACPI: Using RSDP @ " << rsdp;
-    m_operable = true;
     locate_static_data();
 }
 

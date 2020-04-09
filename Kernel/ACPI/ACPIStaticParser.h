@@ -41,14 +41,12 @@ public:
     virtual bool can_reboot() override;
     virtual bool can_shutdown() override { return false; }
     virtual void try_acpi_shutdown() override;
-    virtual bool is_operable() override { return m_operable; }
 
     virtual const FADTFlags::HardwareFeatures& hardware_features() const override;
     virtual const FADTFlags::x86_Specific_Flags& x86_specific_flags() const override;
 
 protected:
-    StaticParser();
-    explicit StaticParser(PhysicalAddress);
+    explicit StaticParser(PhysicalAddress rsdp);
 
 private:
     void locate_static_data();
