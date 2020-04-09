@@ -75,12 +75,12 @@ UnsignedBigInteger UnsignedBigInteger::sub(const UnsignedBigInteger& other) cons
     UnsignedBigInteger result;
 
     if (*this < other) {
-        dbg() << "WARNING: bigint subtraction creates a negative number!";
         return UnsignedBigInteger::create_invalid();
     }
 
     u8 borrow = 0;
     for (size_t i = 0; i < other.length(); ++i) {
+        // This assertion should not fail, because we verified that *this>other at the beginning of the function
         ASSERT(!(borrow == 1 && m_words[i] == 0));
 
         if (m_words[i] - borrow < other.m_words[i]) {
@@ -126,6 +126,47 @@ UnsignedBigInteger UnsignedBigInteger::multiply(const UnsignedBigInteger& other)
         }
     }
     return result;
+}
+
+/**
+ * Complexity: O(N^2) where N is the number of words in the larger number
+ * Division method:
+ * We loop over the bits of the divisor, attempting to subtract divisor<<i from the dividend.
+ * If the result is non-negative, it means that divisor*2^i "fits" in the dividend,
+ * so we set the ith bit in the quotient and reduce divisor<<i from the dividend.
+ * When we're done, what's left from the dividend is the remainder.
+ */
+UnsignedDivisionResult UnsignedBigInteger::divide(const UnsignedBigInteger& divisor) const
+{
+    UnsignedBigInteger leftover_dividend(*this);
+    UnsignedBigInteger quotient;
+
+    // iterate all bits
+    for (int word_index = trimmed_length() - 1; word_index >= 0; --word_index) {
+        for (int bit_index = UnsignedBigInteger::BITS_IN_WORD - 1; bit_index >= 0; --bit_index) {
+
+            const size_t shift_amount = word_index * UnsignedBigInteger::BITS_IN_WORD + bit_index;
+            UnsignedBigInteger divisor_shifted = divisor.shift_left(shift_amount);
+
+            UnsignedBigInteger temp_subtraction_result = leftover_dividend.sub(divisor_shifted);
+            if (!temp_subtraction_result.is_invalid()) {
+                leftover_dividend = temp_subtraction_result;
+                quotient.set_bit_inplace(shift_amount);
+            }
+        }
+    }
+    return UnsignedDivisionResult { quotient, leftover_dividend };
+}
+
+void UnsignedBigInteger::set_bit_inplace(size_t bit_index)
+{
+    const size_t word_index = bit_index / UnsignedBigInteger::BITS_IN_WORD;
+    const size_t inner_word_index = bit_index % UnsignedBigInteger::BITS_IN_WORD;
+
+    for (size_t i = length(); i <= word_index; ++i) {
+        m_words.append(0);
+    }
+    m_words[word_index] |= (1 << inner_word_index);
 }
 
 UnsignedBigInteger UnsignedBigInteger::shift_left(size_t num_bits) const
@@ -213,12 +254,16 @@ bool UnsignedBigInteger::operator<(const UnsignedBigInteger& other) const
         return false;
     }
 
-    size_t length = trimmed_length();
+    int length = trimmed_length();
     if (length == 0) {
         return false;
     }
-
-    return m_words[length - 1] < other.m_words[length - 1];
+    for (int i = length - 1; i >= 0; --i) {
+        if (m_words[i] == other.m_words[i])
+            continue;
+        return m_words[i] < other.m_words[i];
+    }
+    return false;
 }
 
 size_t UnsignedBigInteger::trimmed_length() const
@@ -237,5 +282,4 @@ UnsignedBigInteger UnsignedBigInteger::create_invalid()
     invalid.invalidate();
     return invalid;
 }
-
 }
