@@ -125,6 +125,7 @@ OBJS = \
     ACPI/ACPIStaticParser.o \
     ACPI/ACPIDynamicParser.o \
     ACPI/DMIDecoder.o \
+    ACPI/Initialize.o \
     ACPI/MultiProcessorParser.o \
     WaitQueue.o \
     init.o
