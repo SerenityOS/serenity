@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/ACPI/ACPIParser.h>
+#include <Kernel/ACPI/Parser.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Net/E1000NetworkAdapter.h>
 #include <Kernel/Net/RTL8139NetworkAdapter.h>

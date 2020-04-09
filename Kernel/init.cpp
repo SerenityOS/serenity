@@ -25,7 +25,7 @@
  */
 
 #include <AK/Types.h>
-#include <Kernel/ACPI/ACPIDynamicParser.h>
+#include <Kernel/ACPI/DynamicParser.h>
 #include <Kernel/ACPI/DMIDecoder.h>
 #include <Kernel/ACPI/Initialize.h>
 #include <Kernel/ACPI/MultiProcessorParser.h>
