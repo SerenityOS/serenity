@@ -60,17 +60,25 @@ int main(int argc, char** argv)
     window->set_title("Calendar");
     window->set_rect(20, 200, 596, 475);
 
-    window->set_main_widget<CalendarWidget>();
+    auto calendar_widget = make<CalendarWidget>();
+    window->set_main_widget(calendar_widget);
     window->show();
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-calendar.png"));
 
     auto menubar = make<GUI::MenuBar>();
-
     auto& app_menu = menubar->add_menu("Calendar");
+
+    app_menu.add_action(GUI::Action::create("Add Event", { Mod_Ctrl | Mod_Shift, Key_E },
+        [&](const GUI::Action&) {
+            calendar_widget->show_add_event_window();
+            return;
+        }));
+
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the().quit(0);
         return;
     }));
+
     app.set_menubar(move(menubar));
 
     app.exec();
