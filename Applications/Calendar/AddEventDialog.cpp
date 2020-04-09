@@ -28,43 +28,78 @@
 #include <LibCore/DateTime.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/ComboBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Layout.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/SpinBox.h>
+#include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Font.h>
 
-AddEventDialog::AddEventDialog(Calendar* calendar, Window* parent_window)
+AddEventDialog::AddEventDialog(RefPtr<Calendar> calendar, Core::DateTime date_time, Window* parent_window)
     : Dialog(parent_window)
     , m_calendar(calendar)
+    , m_date_time(date_time)
 {
-    resize(230, 120);
+    resize(158, 100);
     set_title("Add Event");
     set_resizable(false);
 
     auto& widget = set_main_widget<GUI::Widget>();
     widget.set_fill_with_background_color(true);
-    widget.set_layout<GUI::HorizontalBoxLayout>();
+    widget.set_layout<GUI::VerticalBoxLayout>();
 
-    auto& main_container = widget.add<GUI::Widget>();
-    main_container.set_layout<GUI::VerticalBoxLayout>();
-    main_container.layout()->set_margins({ 4, 4, 4, 4 });
+    auto& top_container = widget.add<GUI::Widget>();
+    top_container.set_layout<GUI::VerticalBoxLayout>();
+    top_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    top_container.set_preferred_size(0, 45);
+    top_container.layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto make_label = [&](const StringView& text, bool bold = false) {
-        auto& label = main_container.add<GUI::Label>(text);
+    auto make_label = [&](const StringView& text, GUI::Widget& widget, bool bold = false) {
+        auto& label = widget.add<GUI::Label>(text);
         label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         label.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
         label.set_preferred_size(0, 14);
         if (bold)
             label.set_font(Gfx::Font::default_bold_font());
     };
-    make_label("TODO: Implement add event dialog", true);
+    make_label("Add title & date:", top_container, true);
 
-    main_container.layout()->add_spacer();
+    auto& event_title_textbox = top_container.add<GUI::TextBox>();
+    event_title_textbox.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    event_title_textbox.set_preferred_size(0, 20);
 
-    auto& button_container = main_container.add<GUI::Widget>();
+    auto& middle_container = widget.add<GUI::Widget>();
+    middle_container.set_layout<GUI::HorizontalBoxLayout>();
+    middle_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    middle_container.set_preferred_size(0, 25);
+    middle_container.layout()->set_margins({ 4, 4, 4, 4 });
+
+    auto& starting_month_combo = middle_container.add<GUI::ComboBox>();
+    starting_month_combo.set_only_allow_values_from_model(true);
+    starting_month_combo.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    starting_month_combo.set_preferred_size(50, 20);
+    starting_month_combo.set_model(MonthListModel::create());
+    starting_month_combo.set_selected_index(m_date_time.month() - 1);
+
+    auto& starting_day_combo = middle_container.add<GUI::SpinBox>();
+    starting_day_combo.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    starting_day_combo.set_preferred_size(40, 20);
+    starting_day_combo.set_value(m_date_time.day());
+    starting_day_combo.set_min(1);
+
+    auto& starting_year_combo = middle_container.add<GUI::SpinBox>();
+    starting_year_combo.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    starting_year_combo.set_preferred_size(55, 20);
+    starting_year_combo.set_range(0, 9999);
+    starting_year_combo.set_value(m_date_time.year());
+
+    widget.layout()->add_spacer();
+
+    auto& button_container = widget.add<GUI::Widget>();
     button_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     button_container.set_preferred_size(0, 20);
     button_container.set_layout<GUI::HorizontalBoxLayout>();
@@ -73,10 +108,59 @@ AddEventDialog::AddEventDialog(Calendar* calendar, Window* parent_window)
     ok_button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     ok_button.set_preferred_size(80, 20);
     ok_button.on_click = [this] {
+        dbg() << "TODO: Add event icon on specific tile";
         done(Dialog::ExecOK);
     };
+
+    event_title_textbox.set_focus(true);
 }
 
 AddEventDialog::~AddEventDialog()
 {
+}
+
+AddEventDialog::MonthListModel::MonthListModel()
+{
+}
+
+AddEventDialog::MonthListModel::~MonthListModel()
+{
+}
+
+void AddEventDialog::MonthListModel::update()
+{
+}
+
+int AddEventDialog::MonthListModel::row_count(const GUI::ModelIndex&) const
+{
+    return 12;
+}
+
+String AddEventDialog::MonthListModel::column_name(int column) const
+{
+    switch (column) {
+    case Column::Month:
+        return "Month";
+    default:
+        ASSERT_NOT_REACHED();
+    }
+}
+
+GUI::Model::ColumnMetadata AddEventDialog::MonthListModel::column_metadata([[maybe_unused]] int column) const
+{
+    return {};
+}
+
+GUI::Variant AddEventDialog::MonthListModel::data(const GUI::ModelIndex& index, Role role) const
+{
+    auto& month = Calendar::name_of_month(index.row() + 1);
+    if (role == Role::Display) {
+        switch (index.column()) {
+        case Column::Month:
+            return month;
+        default:
+            ASSERT_NOT_REACHED();
+        }
+    }
+    return {};
 }

@@ -38,11 +38,12 @@ public:
     CalendarWidget();
     virtual ~CalendarWidget() override;
 
+    void show_add_event_window();
+
 private:
     virtual void resize_event(GUI::ResizeEvent&) override;
 
     void update_calendar_tiles(int target_year, int target_month);
-    void show_add_event_window(Calendar* calendar);
 
     OwnPtr<Calendar> m_calendar;
     RefPtr<GUI::Widget> m_top_container;
@@ -60,6 +61,7 @@ private:
         virtual ~CalendarTile() override;
 
     private:
+        virtual void doubleclick_event(GUI::MouseEvent&) override;
         virtual void paint_event(GUI::PaintEvent&) override;
 
         int m_index { 0 };

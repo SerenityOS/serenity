@@ -31,8 +31,10 @@
 
 const String name_of_month(int month);
 
-class Calendar final {
+class Calendar final : public RefCounted<Calendar> {
 public:
+    static const String name_of_month(int month);
+
     Calendar(Core::DateTime date_time);
     ~Calendar();
 
@@ -41,6 +43,7 @@ public:
     int selected_year() const { return m_selected_year; }
     int selected_month() const { return m_selected_month; }
     bool is_today(Core::DateTime date_time) const;
+    void add_event(Core::DateTime date_time);
 
 private:
     Core::DateTime m_date_time;

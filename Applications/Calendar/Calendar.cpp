@@ -26,7 +26,7 @@
 
 #include "Calendar.h"
 
-const String name_of_month(int month)
+const String Calendar::name_of_month(int month)
 {
     static const String month_names[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
     return month_names[month - 1];

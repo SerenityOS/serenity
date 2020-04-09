@@ -101,7 +101,7 @@ CalendarWidget::CalendarWidget()
     m_add_event_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     m_add_event_button->set_preferred_size(100, 25);
     m_add_event_button->on_click = [this] {
-        AddEventDialog::show(m_calendar, window());
+        show_add_event_window();
     };
 
     update_calendar_tiles(m_calendar->selected_year(), m_calendar->selected_month());
@@ -110,6 +110,7 @@ CalendarWidget::CalendarWidget()
 CalendarWidget::~CalendarWidget()
 {
 }
+
 void CalendarWidget::resize_event(GUI::ResizeEvent& event)
 {
     if (event.size().width() < 350) {
@@ -193,6 +194,11 @@ void CalendarWidget::update_calendar_tiles(int target_year, int target_month)
     m_selected_date_label->set_text(m_calendar->selected_date_text());
 }
 
+void CalendarWidget::show_add_event_window()
+{
+    AddEventDialog::show(*move(m_calendar), Core::DateTime::now(), window());
+}
+
 CalendarWidget::CalendarTile::CalendarTile(Calendar& calendar, int index, Core::DateTime date_time)
     : m_index(index)
     , m_date_time(date_time)
@@ -213,11 +219,18 @@ void CalendarWidget::CalendarTile::update_values(Calendar& calendar, int index, 
         m_weekday_name = m_day_names[index];
     }
 
-    m_display_date = (m_date_time.day() == 1) ? String::format("%s %d", name_of_month(m_date_time.month()).characters(), m_date_time.day()) : String::number(m_date_time.day());
+    m_display_date = (m_date_time.day() == 1) ? String::format("%s %d", Calendar::name_of_month(m_date_time.month()).characters(), m_date_time.day()) : String::number(m_date_time.day());
 }
 
 CalendarWidget::CalendarTile::~CalendarTile()
 {
+}
+
+void CalendarWidget::CalendarTile::doubleclick_event(GUI::MouseEvent& event)
+{
+    GUI::Widget::doubleclick_event(event);
+    //TOOD: Should be calling show_add_event_window. Would we just replace m_calender /w m_calender_widget?
+    AddEventDialog::show(&m_calendar, m_date_time, window());
 }
 
 void CalendarWidget::CalendarTile::paint_event(GUI::PaintEvent& event)
