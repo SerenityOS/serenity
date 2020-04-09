@@ -226,7 +226,7 @@ PCIInterruptOverrideMetadata::PCIInterruptOverrideMetadata(u8 bus_id, u8 polarit
     , m_polarity(polarity)
     , m_trigger_mode(trigger_mode)
     , m_pci_interrupt_pin(source_irq & 0b11)
-    , m_pci_device_number((source_irq & 0b11111) >> 2)
+    , m_pci_device_number((source_irq >> 2) & 0b11111)
     , m_ioapic_id(ioapic_id)
     , m_ioapic_interrupt_pin(ioapic_int_pin)
 {
