@@ -60,10 +60,15 @@ void AbstractView::set_model(RefPtr<Model> model)
 
 void AbstractView::did_update_model()
 {
+    // FIXME: It's unfortunate that we lose so much view state when the model updates in any way.
     stop_editing();
     m_edit_index = {};
     m_hovered_index = {};
-    selection().clear();
+    if (model()) {
+        selection().remove_matching([this](auto& index) { return !model()->is_valid(index); });
+    } else {
+        selection().clear();
+    }
 }
 
 void AbstractView::did_update_selection()
