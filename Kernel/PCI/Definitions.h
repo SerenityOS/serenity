@@ -83,7 +83,10 @@ struct ID {
         return vendor_id != other.vendor_id || device_id != other.device_id;
     }
 };
-
+inline const LogStream& operator<<(const LogStream& stream, const ID value)
+{
+    return stream << "(" << String::format("%w", value.vendor_id) << ":" << String::format("%w", value.device_id) << ")";
+}
 struct Address {
 public:
     Address() {}
