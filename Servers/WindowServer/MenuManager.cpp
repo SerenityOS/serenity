@@ -172,7 +172,10 @@ void MenuManager::handle_mouse_event(MouseEvent& mouse_event)
         auto* topmost_menu = m_open_menu_stack.last().ptr();
         ASSERT(topmost_menu);
         auto* window = topmost_menu->menu_window();
-        ASSERT(window);
+        if (!window) {
+            dbg() << "MenuManager::handle_mouse_event: No menu window";
+            return;
+        }
         ASSERT(window->is_visible());
 
         bool event_is_inside_current_menu = window->rect().contains(mouse_event.position());
