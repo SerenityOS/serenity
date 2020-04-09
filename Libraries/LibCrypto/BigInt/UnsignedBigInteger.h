@@ -38,12 +38,12 @@ class UnsignedBigInteger {
 public:
     UnsignedBigInteger(u32 x) { m_words.append(x); }
 
-    UnsignedBigInteger(AK::Vector<u32>&& words)
-        : m_words(words)
+    explicit UnsignedBigInteger(AK::Vector<u32, STARTING_WORD_SIZE>&& words)
+        : m_words(move(words))
     {
     }
 
-    UnsignedBigInteger() {}
+    UnsignedBigInteger() { }
 
     static UnsignedBigInteger from_base10(const String& str);
     static UnsignedBigInteger create_invalid();
