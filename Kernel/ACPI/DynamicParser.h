@@ -27,7 +27,7 @@
 #pragma once
 
 #include <AK/RefPtr.h>
-#include <Kernel/ACPI/ACPIParser.h>
+#include <Kernel/ACPI/Parser.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Lock.h>
 #include <Kernel/VM/PhysicalPage.h>

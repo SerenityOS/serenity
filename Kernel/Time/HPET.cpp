@@ -25,7 +25,7 @@
  */
 
 #include <AK/StringView.h>
-#include <Kernel/ACPI/ACPIParser.h>
+#include <Kernel/ACPI/Parser.h>
 #include <Kernel/Interrupts/InterruptManagement.h>
 #include <Kernel/Time/HPET.h>
 #include <Kernel/Time/HPETComparator.h>
