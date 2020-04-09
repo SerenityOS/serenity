@@ -36,9 +36,6 @@
 namespace Kernel {
 namespace PCI {
 
-static void initialize_pci_mmio_access(PhysicalAddress mcfg);
-static void initialize_pci_io_access();
-static void detect_devices();
 static bool test_acpi();
 static bool test_pci_io();
 static bool test_pci_mmio();
@@ -60,25 +57,10 @@ void initialize()
     bool mmio_allowed = kernel_command_line().lookup("pci_mmio").value_or("off") == "on";
 
     if (detect_optimal_access_type(mmio_allowed) == Access::Type::MMIO)
-        initialize_pci_mmio_access(ACPI::Parser::the().find_table("MCFG"));
+        MMIOAccess::initialize(ACPI::Parser::the().find_table("MCFG"));
     else
-        initialize_pci_io_access();
-}
+        IOAccess::initialize();
 
-void initialize_pci_mmio_access(PhysicalAddress mcfg)
-{
-    MMIOAccess::initialize(mcfg);
-    detect_devices();
-}
-
-void initialize_pci_io_access()
-{
-    IOAccess::initialize();
-    detect_devices();
-}
-
-void detect_devices()
-{
     enumerate_all([&](const Address& address, ID id) {
         klog() << "PCI: Device @ " << String::format("%w", address.seg()) << ":" << String::format("%b", address.bus()) << ":" << String::format("%b", address.slot()) << "." << String::format("%d", address.function()) << " [" << String::format("%w", id.vendor_id) << ":" << String::format("%w", id.device_id) << "]";
         E1000NetworkAdapter::detect(address);
