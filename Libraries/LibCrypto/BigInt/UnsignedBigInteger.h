@@ -30,6 +30,9 @@
 #include <AK/Vector.h>
 
 namespace Crypto {
+
+struct UnsignedDivisionResult;
+
 class UnsignedBigInteger {
 public:
     UnsignedBigInteger(u32 x) { m_words.append(x); }
@@ -49,7 +52,10 @@ public:
     UnsignedBigInteger sub(const UnsignedBigInteger& other) const;
     UnsignedBigInteger multiply(const UnsignedBigInteger& other) const;
     UnsignedBigInteger shift_left(size_t num_bits) const;
-    UnsignedBigInteger shift_left_by_n_words(const size_t number_of_words) const;
+
+    UnsignedDivisionResult divide(const UnsignedBigInteger& divisor) const;
+
+    void set_bit_inplace(size_t bit_index);
 
     size_t length() const { return m_words.size(); }
 
@@ -63,6 +69,7 @@ public:
     bool is_invalid() const { return m_is_invalid; }
 
 private:
+    UnsignedBigInteger shift_left_by_n_words(const size_t number_of_words) const;
     u32 shift_left_get_one_word(const size_t num_bits, const size_t result_word_index) const;
 
     static constexpr size_t BITS_IN_WORD = 32;
@@ -70,6 +77,11 @@ private:
 
     // Used to indicate a negative result, or a result of an invalid operation
     bool m_is_invalid { false };
+};
+
+struct UnsignedDivisionResult {
+    Crypto::UnsignedBigInteger quotient;
+    Crypto::UnsignedBigInteger remainder;
 };
 
 }
