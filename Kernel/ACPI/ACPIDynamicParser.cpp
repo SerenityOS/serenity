@@ -32,7 +32,7 @@ namespace ACPI {
 
 DynamicParser::DynamicParser(PhysicalAddress rsdp)
     : IRQHandler(9)
-    , StaticParser(rsdp)
+    , Parser(rsdp)
 {
     klog() << "ACPI: Dynamic Parsing Enabled, Can parse AML";
 }

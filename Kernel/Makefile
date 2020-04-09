@@ -122,7 +122,6 @@ OBJS = \
     VM/SharedInodeVMObject.o \
     VM/VMObject.o \
     ACPI/ACPIParser.o \
-    ACPI/ACPIStaticParser.o \
     ACPI/ACPIDynamicParser.o \
     ACPI/DMIDecoder.o \
     ACPI/Initialize.o \
