@@ -85,7 +85,6 @@ namespace Kernel {
 
 [[noreturn]] static void init_stage2();
 static void setup_serial_debug();
-static void setup_time_management();
 
 VirtualConsole* tty0;
 
@@ -132,7 +131,7 @@ extern "C" [[noreturn]] void init()
 
     __stack_chk_guard = get_good_random<u32>();
 
-    setup_time_management();
+    TimeManagement::initialize();
 
     new NullDevice;
     if (!get_serial_debug())
@@ -355,25 +354,5 @@ extern "C" int __cxa_atexit(void (*)(void*), void*, void*)
 {
     ASSERT_NOT_REACHED();
     return 0;
-}
-
-void setup_time_management()
-{
-    if (!kernel_command_line().contains("time")) {
-        TimeManagement::initialize(true);
-        return;
-    }
-    auto time = kernel_command_line().get("time");
-    if (time == "legacy") {
-        TimeManagement::initialize(false);
-        return;
-    }
-    if (time == "modern") {
-        TimeManagement::initialize(true);
-        return;
-    }
-
-    kprintf("time boot argmuent has an invalid value.\n");
-    hang();
 }
 }

@@ -41,7 +41,7 @@ class HardwareTimer;
 class TimeManagement {
 public:
     static bool initialized();
-    static void initialize(bool probe_non_legacy_hardware_timers);
+    static void initialize();
     static TimeManagement& the();
 
     time_t epoch_time() const;

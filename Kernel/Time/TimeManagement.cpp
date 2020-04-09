@@ -62,10 +62,13 @@ time_t TimeManagement::epoch_time() const
     return m_epoch_time;
 }
 
-void TimeManagement::initialize(bool probe_non_legacy_hardware_timers)
+void TimeManagement::initialize()
 {
     ASSERT(!TimeManagement::initialized());
-    s_time_management = new TimeManagement(probe_non_legacy_hardware_timers);
+    if (kernel_command_line().lookup("time").value_or("modern") == "legacy")
+        s_time_management = new TimeManagement(false);
+    else
+        s_time_management = new TimeManagement(true);
 }
 time_t TimeManagement::seconds_since_boot() const
 {
