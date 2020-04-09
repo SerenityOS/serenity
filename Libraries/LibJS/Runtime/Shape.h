@@ -35,6 +35,14 @@
 
 namespace JS {
 
+struct Attribute {
+    enum {
+        Configurable = 1 << 0,
+        Enumerable = 1 << 1,
+        Writable = 1 << 2,
+    };
+};
+
 struct PropertyMetadata {
     size_t offset { 0 };
     u8 attributes { 0 };
@@ -45,7 +53,7 @@ public:
     virtual ~Shape() override;
 
     Shape();
-    Shape(Shape* previous_shape, const FlyString& property_name, u8 property_attributes);
+    Shape(Shape* previous_shape, const FlyString& property_name, u8 attributes);
     Shape(Shape* previous_shape, Object* new_prototype);
 
     Shape* create_put_transition(const FlyString& name, u8 attributes);
@@ -71,7 +79,7 @@ private:
     HashMap<FlyString, Shape*> m_forward_transitions;
     Shape* m_previous { nullptr };
     FlyString m_property_name;
-    u8 m_property_attributes { 0 };
+    u8 m_attributes { 0 };
     Object* m_prototype { nullptr };
 };
 

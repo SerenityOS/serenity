@@ -28,6 +28,7 @@
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/ObjectConstructor.h>
 #include <LibJS/Runtime/Shape.h>
 
@@ -37,6 +38,8 @@ ObjectConstructor::ObjectConstructor()
 {
     put("prototype", interpreter().object_prototype());
 
+    put_native_function("defineProperty", define_property, 3);
+    put_native_function("getOwnPropertyDescriptor", get_own_property_descriptor, 2);
     put_native_function("getOwnPropertyNames", get_own_property_names, 1);
     put_native_function("getPrototypeOf", get_prototype_of, 1);
     put_native_function("setPrototypeOf", set_prototype_of, 2);
@@ -88,13 +91,52 @@ Value ObjectConstructor::set_prototype_of(Interpreter& interpreter)
 {
     if (interpreter.argument_count() < 2)
         return {};
-    if (!interpreter.argument(0).is_object())
-        return {};
     auto* object = interpreter.argument(0).to_object(interpreter.heap());
     if (interpreter.exception())
         return {};
     object->set_prototype(&const_cast<Object&>(interpreter.argument(1).as_object()));
     return {};
+}
+
+Value ObjectConstructor::get_own_property_descriptor(Interpreter& interpreter)
+{
+    if (interpreter.argument_count() < 2)
+        return interpreter.throw_exception<Error>("TypeError", "Object.getOwnPropertyDescriptor() needs 2 arguments");
+    if (!interpreter.argument(0).is_object())
+        return interpreter.throw_exception<Error>("TypeError", "Object argument is not an object");
+    auto& object = interpreter.argument(0).as_object();
+    auto metadata = object.shape().lookup(interpreter.argument(1).to_string());
+    if (!metadata.has_value())
+        return js_undefined();
+    auto* descriptor = interpreter.heap().allocate<Object>();
+    descriptor->put("configurable", Value(!!(metadata.value().attributes & Attribute::Configurable)));
+    descriptor->put("enumerable", Value(!!(metadata.value().attributes & Attribute::Enumerable)));
+    descriptor->put("writable", Value(!!(metadata.value().attributes & Attribute::Writable)));
+    descriptor->put("value", object.get(interpreter.argument(1).to_string()).value_or(js_undefined()));
+    return descriptor;
+}
+
+Value ObjectConstructor::define_property(Interpreter& interpreter)
+{
+    if (interpreter.argument_count() < 3)
+        return interpreter.throw_exception<Error>("TypeError", "Object.defineProperty() needs 3 arguments");
+    if (!interpreter.argument(0).is_object())
+        return interpreter.throw_exception<Error>("TypeError", "Object argument is not an object");
+    if (!interpreter.argument(2).is_object())
+        return interpreter.throw_exception<Error>("TypeError", "Descriptor argument is not an object");
+    auto& object = interpreter.argument(0).as_object();
+    auto& descriptor = interpreter.argument(2).as_object();
+
+    Value value = descriptor.get("value").value_or(js_undefined());
+    u8 configurable = descriptor.get("configurable").value_or(Value(false)).to_boolean() * Attribute::Configurable;
+    u8 enumerable = descriptor.get("enumerable").value_or(Value(false)).to_boolean() * Attribute::Enumerable;
+    u8 writable = descriptor.get("writable").value_or(Value(false)).to_boolean() * Attribute::Writable;
+    u8 attributes = configurable | enumerable | writable;
+
+    dbg() << "Defining new property " << interpreter.argument(1).to_string() << " with descriptor { " << configurable << ", " << enumerable << ", " << writable << ", attributes=" << attributes << " }";
+
+    object.put_own_property(object, interpreter.argument(1).to_string(), attributes, value, PutOwnPropertyMode::DefineProperty);
+    return &object;
 }
 
 }

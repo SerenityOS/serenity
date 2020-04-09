@@ -28,6 +28,7 @@
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/NativeProperty.h>
@@ -97,14 +98,22 @@ void Object::set_shape(Shape& new_shape)
     m_shape = &new_shape;
 }
 
-bool Object::put_own_property(Object& this_object, const FlyString& property_name, Value value)
+void Object::put_own_property(Object& this_object, const FlyString& property_name, u8 attributes, Value value, PutOwnPropertyMode mode)
 {
     auto metadata = shape().lookup(property_name);
     if (!metadata.has_value()) {
-        auto* new_shape = m_shape->create_put_transition(property_name, 0);
+        auto* new_shape = m_shape->create_put_transition(property_name, attributes);
         set_shape(*new_shape);
         metadata = shape().lookup(property_name);
         ASSERT(metadata.has_value());
+    } else if (!(metadata.value().attributes & Attribute::Writable)) {
+        dbg() << "Disallow write to non-writable property";
+        return;
+    }
+    if (mode == PutOwnPropertyMode::DefineProperty && !(metadata.value().attributes & Attribute::Configurable) && attributes != metadata.value().attributes) {
+        dbg() << "Disallow reconfig of non-configurable property";
+        interpreter().throw_exception<Error>("TypeError", String::format("Cannot redefine property '%s'", property_name.characters()));
+        return;
     }
 
     auto value_here = m_storage[metadata.value().offset];
@@ -118,7 +127,6 @@ bool Object::put_own_property(Object& this_object, const FlyString& property_nam
     } else {
         m_storage[metadata.value().offset] = value;
     }
-    return true;
 }
 
 Optional<Value> Object::get_by_index(i32 property_index) const
@@ -201,7 +209,7 @@ void Object::put(const FlyString& property_name, Value value)
         }
         object = object->prototype();
     }
-    put_own_property(*this, property_name, value);
+    put_own_property(*this, property_name, Attribute::Configurable | Attribute::Enumerable | Attribute::Writable, value, PutOwnPropertyMode::Put);
 }
 
 void Object::put(PropertyName property_name, Value value)
