@@ -307,6 +307,7 @@ void bigint_addition_edgecases();
 void bigint_subtraction();
 void bigint_multiplication();
 void bigint_division();
+void bigint_base10();
 
 int aes_cbc_tests()
 {
@@ -803,6 +804,7 @@ int bigint_tests()
     bigint_subtraction();
     bigint_multiplication();
     bigint_division();
+    bigint_base10();
     return 0;
 }
 
@@ -933,7 +935,6 @@ void bigint_multiplication()
         Crypto::UnsignedBigInteger num1(8);
         Crypto::UnsignedBigInteger num2(251);
         Crypto::UnsignedBigInteger result = num1.multiply(num2);
-        dbg() << "result: " << result;
         if (result.words() == Vector<u32> { 2008 }) {
             PASS;
         } else {
@@ -998,6 +999,28 @@ void bigint_division()
         auto num2 = bigint_fibonacci(238);
         auto div_result = num1.divide(num2);
         if (div_result.quotient.multiply(num2).add(div_result.remainder) == num1) {
+            PASS;
+        } else {
+            FAIL(Incorrect Result);
+        }
+    }
+}
+
+void bigint_base10()
+{
+    {
+        I_TEST((BigInteger | From String));
+        auto result = Crypto::UnsignedBigInteger::from_base10("57195071295721390579057195715793");
+        if (result.words() == Vector<u32> { 3806301393, 954919431, 3879607298, 721 }) {
+            PASS;
+        } else {
+            FAIL(Incorrect Result);
+        }
+    }
+    {
+        I_TEST((BigInteger | To String));
+        auto result = Crypto::UnsignedBigInteger { Vector<u32> { 3806301393, 954919431, 3879607298, 721 } }.to_base10();
+        if (result == "57195071295721390579057195715793") {
             PASS;
         } else {
             FAIL(Incorrect Result);
