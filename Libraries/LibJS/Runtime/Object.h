@@ -52,8 +52,14 @@ public:
     void put(const FlyString& property_name, Value);
     void put(PropertyName, Value);
 
-    virtual Optional<Value> get_own_property(const Object& this_object, const FlyString& property_name) const;
-    virtual bool put_own_property(Object& this_object, const FlyString& property_name, Value);
+    Optional<Value> get_own_property(const Object& this_object, const FlyString& property_name) const;
+
+    enum class PutOwnPropertyMode {
+        Put,
+        DefineProperty,
+    };
+
+    void put_own_property(Object& this_object, const FlyString& property_name, u8 attributes, Value, PutOwnPropertyMode);
 
     void put_native_function(const FlyString& property_name, AK::Function<Value(Interpreter&)>, i32 length = 0);
     void put_native_property(const FlyString& property_name, AK::Function<Value(Interpreter&)> getter, AK::Function<void(Interpreter&, Value)> setter);
