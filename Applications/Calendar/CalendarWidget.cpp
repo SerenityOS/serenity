@@ -42,17 +42,16 @@ CalendarWidget::CalendarWidget()
     set_fill_with_background_color(true);
     set_layout<GUI::VerticalBoxLayout>();
 
-    auto& top_container = add<Widget>();
-    top_container.set_layout<GUI::HorizontalBoxLayout>();
-    top_container.layout()->set_margins({ 4, 4, 4, 4 });
-    top_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    top_container.set_preferred_size(0, 45);
+    m_top_container = add<Widget>();
+    m_top_container->set_layout<GUI::HorizontalBoxLayout>();
+    m_top_container->layout()->set_margins({ 4, 4, 4, 4 });
+    m_top_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    m_top_container->set_preferred_size(0, 45);
 
-    auto& top_left_container = top_container.add<Widget>();
+    auto& top_left_container = m_top_container->add<Widget>();
     top_left_container.set_layout<GUI::HorizontalBoxLayout>();
     top_left_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     top_left_container.set_preferred_size(0, 45);
-
     m_selected_date_label = top_left_container.add<GUI::Label>(m_calendar->selected_date_text());
     m_selected_date_label->set_font(Gfx::Font::default_bold_font());
     m_selected_date_label->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
@@ -91,7 +90,7 @@ CalendarWidget::CalendarWidget()
         update_calendar_tiles(m_target_year, m_target_month);
     };
 
-    auto& top_right_container = top_container.add<Widget>();
+    auto& top_right_container = m_top_container->add<Widget>();
     top_right_container.set_layout<GUI::HorizontalBoxLayout>();
     top_right_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     top_right_container.set_preferred_size(0, 45);
@@ -113,8 +112,27 @@ CalendarWidget::~CalendarWidget()
 }
 void CalendarWidget::resize_event(GUI::ResizeEvent& event)
 {
+    if (event.size().width() < 350) {
+        if (m_next_month_button->size_policy(Orientation::Horizontal) == GUI::SizePolicy::Fixed)
+            m_next_month_button->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+        if (m_prev_month_button->size_policy(Orientation::Horizontal) == GUI::SizePolicy::Fixed)
+            m_prev_month_button->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    } else {
+        if (m_next_month_button->size_policy(Orientation::Horizontal) == GUI::SizePolicy::Fill)
+            m_next_month_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+        if (m_prev_month_button->size_policy(Orientation::Horizontal) == GUI::SizePolicy::Fill)
+            m_prev_month_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    }
+
+    if (m_top_container->height() > event.size().height() / 3) {
+        if (m_top_container->is_visible())
+            m_top_container->set_visible(false);
+    } else if (!m_top_container->is_visible())
+        m_top_container->set_visible(true);
+
+    int top_container_height = (m_top_container->is_visible()) ? 47 : 0;
     m_tile_width = event.size().width() / 7;
-    m_tile_height = (event.size().height() - 47) / 5;
+    m_tile_height = (event.size().height() - top_container_height) / 5;
 
     int i = 0;
     for (int y = 0; y < 5; y++)
@@ -220,22 +238,24 @@ void CalendarWidget::CalendarTile::paint_event(GUI::PaintEvent& event)
 
     Gfx::Rect day_rect = Gfx::Rect(frame_inner_rect().x(), frame_inner_rect().y(), frame_inner_rect().width(), font().glyph_height() + 4);
 
-    if (m_display_weekday_name) {
+    int weekday_characters_width = (font().glyph_width('0') * (m_weekday_name.length() + 1)) + 4;
+    if (m_display_weekday_name && (frame_inner_rect().height() > (font().glyph_height() + 4) * 2) && (frame_inner_rect().width() > weekday_characters_width)) {
         auto weekday_rect = Gfx::Rect(frame_inner_rect().x(), frame_inner_rect().y(), frame_inner_rect().width(), font().glyph_height() + 4);
         weekday_rect.set_top(frame_inner_rect().y() + 2);
         painter.draw_text(weekday_rect, m_weekday_name, Gfx::Font::default_bold_font(), Gfx::TextAlignment::Center, palette().base_text());
-
         day_rect.set_y(frame_inner_rect().y() + 15);
     } else {
         day_rect = Gfx::Rect(frame_inner_rect().x(), frame_inner_rect().y(), frame_inner_rect().width(), font().glyph_height() + 4);
         day_rect.set_y(frame_inner_rect().y() + 4);
     }
 
+    int highlight_rect_width = (font().glyph_width('0') * (m_display_date.length() + 1)) + 2;
+    auto display_date = (m_date_time.day() == 1 && frame_inner_rect().width() > highlight_rect_width) ? m_display_date : String::number(m_date_time.day());
+
     if (m_calendar.is_today(m_date_time)) {
-        int highlight_rect_width = (font().glyph_width('0') * (m_display_date.length() + 1)) + 2;
         auto highlight_rect = Gfx::Rect(day_rect.width() / 2 - (highlight_rect_width / 2), day_rect.y(), highlight_rect_width, font().glyph_height() + 4);
         painter.draw_rect(highlight_rect, palette().base_text());
-        painter.draw_text(day_rect, m_display_date, Gfx::Font::default_bold_font(), Gfx::TextAlignment::Center, palette().base_text());
+        painter.draw_text(day_rect, display_date, Gfx::Font::default_bold_font(), Gfx::TextAlignment::Center, palette().base_text());
     } else
-        painter.draw_text(day_rect, m_display_date, Gfx::TextAlignment::Center, palette().base_text());
+        painter.draw_text(day_rect, display_date, Gfx::TextAlignment::Center, palette().base_text());
 }
