@@ -25,6 +25,7 @@
  */
 
 #include <Kernel/Devices/DiskPartition.h>
+#include <Kernel/FileSystem/FileDescription.h>
 
 // #define OFFD_DEBUG
 
@@ -45,6 +46,34 @@ DiskPartition::DiskPartition(BlockDevice& device, unsigned block_offset, unsigne
 
 DiskPartition::~DiskPartition()
 {
+}
+
+ssize_t DiskPartition::read(FileDescription& file_description, u8* buffer, ssize_t length)
+{
+    // FIXME: This is a hacky solution, but works fine for now...
+    off_t current_offset = file_description.seek(0, SEEK_CUR);
+    auto new_offset = current_offset + (m_block_offset * m_device->block_size());
+    if ((new_offset / m_device->block_size()) > m_block_limit || ((new_offset + length) / m_device->block_size()) > m_block_limit) {
+        return 0;
+    }
+    file_description.seek(new_offset, SEEK_SET);
+    auto result = m_device->read(file_description, buffer, length);
+    file_description.seek(current_offset, SEEK_SET);
+    return result;
+}
+
+ssize_t DiskPartition::write(FileDescription& file_description, const u8* buffer, ssize_t length)
+{
+    // FIXME: This is a hacky solution, but works fine for now...
+    off_t current_offset = file_description.seek(0, SEEK_CUR);
+    auto new_offset = current_offset + (m_block_offset * m_device->block_size());
+    if ((new_offset / m_device->block_size()) > m_block_limit || ((new_offset + length) / m_device->block_size()) > m_block_limit) {
+        return 0;
+    }
+    file_description.seek(new_offset, SEEK_SET);
+    auto result = m_device->write(file_description, buffer, length);
+    file_description.seek(current_offset, SEEK_SET);
+    return result;
 }
 
 bool DiskPartition::read_blocks(unsigned index, u16 count, u8* out)
