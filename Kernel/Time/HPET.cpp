@@ -118,7 +118,7 @@ bool HPET::test_and_initialize()
 {
     ASSERT(!HPET::initialized());
     hpet_initialized = true;
-    auto hpet = ACPI::Parser::the().find_table("HPET");
+    auto hpet = ACPI::Parser::the()->find_table("HPET");
     if (hpet.is_null())
         return false;
     klog() << "HPET @ " << hpet;
@@ -141,7 +141,7 @@ bool HPET::test_and_initialize()
 
 bool HPET::check_for_exisiting_periodic_timers()
 {
-    auto hpet = ACPI::Parser::the().find_table("HPET");
+    auto hpet = ACPI::Parser::the()->find_table("HPET");
     if (hpet.is_null())
         return false;
     auto region = MM.allocate_kernel_region(hpet.page_base(), (PAGE_SIZE * 2), "HPET Initialization", Region::Access::Read);

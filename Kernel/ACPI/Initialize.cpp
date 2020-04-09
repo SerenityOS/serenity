@@ -49,17 +49,23 @@ static FeatureLevel determine_feature_level()
 
 void initialize()
 {
-    switch (determine_feature_level()) {
-    case FeatureLevel::Enabled:
-        Parser::initialize<DynamicParser>();
-        break;
-    case FeatureLevel::Limited:
-        Parser::initialize<StaticParser>();
-        break;
-    case FeatureLevel::Disabled:
-        Parser::initialize<Parser>();
-        break;
-    }
+    auto feature_level = determine_feature_level();
+    if (feature_level == FeatureLevel::Disabled)
+        return;
+
+    auto rsdp = StaticParsing::search_rsdp();
+    if (rsdp.is_null())
+        return;
+
+    if (feature_level == FeatureLevel::Enabled)
+        Parser::initialize<DynamicParser>(rsdp);
+    else
+        Parser::initialize<StaticParser>(rsdp);
+}
+
+bool is_enabled()
+{
+    return Parser::the();
 }
 
 }

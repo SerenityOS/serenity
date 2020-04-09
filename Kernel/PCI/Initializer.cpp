@@ -36,13 +36,11 @@
 namespace Kernel {
 namespace PCI {
 
-static bool test_acpi();
 static bool test_pci_io();
-static bool test_pci_mmio();
 
 static Access::Type detect_optimal_access_type(bool mmio_allowed)
 {
-    if (mmio_allowed && test_acpi() && test_pci_mmio())
+    if (mmio_allowed && ACPI::is_enabled() && !ACPI::Parser::the()->find_table("MCFG").is_null())
         return Access::Type::MMIO;
 
     if (test_pci_io())
@@ -57,7 +55,7 @@ void initialize()
     bool mmio_allowed = kernel_command_line().lookup("pci_mmio").value_or("off") == "on";
 
     if (detect_optimal_access_type(mmio_allowed) == Access::Type::MMIO)
-        MMIOAccess::initialize(ACPI::Parser::the().find_table("MCFG"));
+        MMIOAccess::initialize(ACPI::Parser::the()->find_table("MCFG"));
     else
         IOAccess::initialize();
 
@@ -66,13 +64,6 @@ void initialize()
         E1000NetworkAdapter::detect(address);
         RTL8139NetworkAdapter::detect(address);
     });
-}
-
-bool test_acpi()
-{
-    if ((kernel_command_line().contains("noacpi")) || !ACPI::Parser::the().is_operable())
-        return false;
-    return true;
 }
 
 bool test_pci_io()
@@ -88,11 +79,6 @@ bool test_pci_io()
 
     klog() << "PCI IO Not Supported!";
     return false;
-}
-
-bool test_pci_mmio()
-{
-    return !ACPI::Parser::the().find_table("MCFG").is_null();
 }
 
 }

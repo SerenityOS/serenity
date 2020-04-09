@@ -51,8 +51,7 @@ public:
     virtual const char* purpose() const override { return "ACPI Parser"; }
 
 protected:
-    DynamicParser();
-    explicit DynamicParser(PhysicalAddress);
+    explicit DynamicParser(PhysicalAddress rsdp);
 
 private:
     void build_namespace();
