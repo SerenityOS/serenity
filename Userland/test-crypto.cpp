@@ -183,6 +183,9 @@ auto main(int argc, char** argv) -> int
         puts("\tencrypt -- Access encryption functions");
         puts("\tdecrypt -- Access decryption functions");
         puts("\tlist -- List all known modes");
+        puts("these modes only contain tests");
+        puts("\tbigint -- Run big integer test suite");
+        puts("\tpk -- Run Public-key system tests");
         return 0;
     }
 
@@ -308,6 +311,7 @@ void bigint_subtraction();
 void bigint_multiplication();
 void bigint_division();
 void bigint_base10();
+void bigint_import_export();
 
 int aes_cbc_tests()
 {
@@ -805,6 +809,7 @@ int bigint_tests()
     bigint_multiplication();
     bigint_division();
     bigint_base10();
+    bigint_import_export();
     return 0;
 }
 
@@ -1025,5 +1030,21 @@ void bigint_base10()
         } else {
             FAIL(Incorrect Result);
         }
+    }
+}
+
+void bigint_import_export()
+{
+    {
+        I_TEST((BigInteger | BigEndian Decode / Encode roundtrip));
+        u8 random_bytes[128];
+        u8 target_buffer[128];
+        arc4random_buf(random_bytes, 128);
+        auto encoded = Crypto::UnsignedBigInteger::import_data(random_bytes, 128);
+        encoded.export_data(target_buffer, 128);
+        if (memcmp(target_buffer, random_bytes, 128) != 0)
+            FAIL(Could not roundtrip);
+        else
+            PASS;
     }
 }

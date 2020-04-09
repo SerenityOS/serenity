@@ -25,6 +25,7 @@
  */
 
 #pragma once
+#include <AK/ByteBuffer.h>
 #include <AK/LogStream.h>
 #include <AK/String.h>
 #include <AK/Types.h>
@@ -47,6 +48,16 @@ public:
 
     static UnsignedBigInteger from_base10(const String& str);
     static UnsignedBigInteger create_invalid();
+
+    static UnsignedBigInteger import_data(const AK::StringView& data) { return import_data((const u8*)data.characters_without_null_termination(), data.length()); }
+    static UnsignedBigInteger import_data(const u8* ptr, size_t length);
+
+    size_t export_data(AK::ByteBuffer& data);
+    size_t export_data(const u8* ptr, size_t length)
+    {
+        auto buffer = ByteBuffer::wrap(ptr, length);
+        return export_data(buffer);
+    }
 
     const AK::Vector<u32>& words() const { return m_words; }
 
@@ -102,4 +113,10 @@ operator<<(const LogStream& stream, const Crypto::UnsignedBigInteger value)
         stream << value.words()[i] << "|";
     }
     return stream;
+}
+
+inline Crypto::UnsignedBigInteger
+operator""_bigint(const char* string, size_t length)
+{
+    return Crypto::UnsignedBigInteger::from_base10({ string, length });
 }
