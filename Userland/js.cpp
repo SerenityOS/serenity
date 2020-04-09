@@ -61,20 +61,27 @@ private:
 
 bool dump_ast = false;
 static OwnPtr<Line::Editor> editor;
+static int repl_line_level = 0;
+
+static String prompt_for_level(int level)
+{
+    static StringBuilder prompt_builder;
+    prompt_builder.clear();
+    prompt_builder.append("> ");
+
+    for (auto i = 0; i < level; ++i)
+        prompt_builder.append("    ");
+
+    return prompt_builder.build();
+}
 
 String read_next_piece()
 {
     StringBuilder piece;
-    int level = 0;
-    StringBuilder prompt_builder;
 
     do {
-        prompt_builder.clear();
-        prompt_builder.append("> ");
-        for (auto i = 0; i < level; ++i)
-            prompt_builder.append("    ");
 
-        String line = editor->get_line(prompt_builder.build());
+        String line = editor->get_line(prompt_for_level(repl_line_level));
         editor->add_to_history(line);
 
         piece.append(line);
@@ -85,18 +92,18 @@ String read_next_piece()
             case JS::TokenType::BracketOpen:
             case JS::TokenType::CurlyOpen:
             case JS::TokenType::ParenOpen:
-                level++;
+                repl_line_level++;
                 break;
             case JS::TokenType::BracketClose:
             case JS::TokenType::CurlyClose:
             case JS::TokenType::ParenClose:
-                level--;
+                repl_line_level--;
                 break;
             default:
                 break;
             }
         }
-    } while (level > 0);
+    } while (repl_line_level > 0);
 
     return piece.to_string();
 }
@@ -165,7 +172,7 @@ void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
         printf("\033[34;1m<empty>\033[0m");
         return;
     }
-        
+
     if (value.is_object()) {
         if (seen_objects.contains(&value.as_object())) {
             // FIXME: Maybe we should only do this for circular references,
@@ -391,126 +398,141 @@ int main(int argc, char** argv)
 
         editor = make<Line::Editor>();
         editor->initialize();
-        if (syntax_highlight)
-            editor->on_display_refresh = [](Line::Editor& editor) {
-                editor.strip_styles();
-                StringBuilder builder;
-                builder.append({ editor.buffer().data(), editor.buffer().size() });
-                // FIXME: The lexer returns weird position information without this
-                builder.append(" ");
-                String str = builder.build();
+        editor->on_display_refresh = [syntax_highlight](Line::Editor& editor) {
+            auto stylize = [&](Line::Span span, Line::Style styles) {
+                if (syntax_highlight)
+                    editor.stylize(span, styles);
+            };
+            editor.strip_styles();
+            StringBuilder builder;
+            builder.append({ editor.buffer().data(), editor.buffer().size() });
+            // FIXME: The lexer returns weird position information without this
+            builder.append(" ");
+            String str = builder.build();
 
-                JS::Lexer lexer(str, false);
-                for (JS::Token token = lexer.next(); token.type() != JS::TokenType::Eof; token = lexer.next()) {
-                    auto length = token.value().length();
-                    auto start = token.line_column() - 2;
-                    auto end = start + length;
+            size_t open_indents = repl_line_level;
 
-                    switch (token.type()) {
-                    case JS::TokenType::Invalid:
-                    case JS::TokenType::Eof:
-                        editor.stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Red), Line::Style::Underline });
-                        break;
-                    case JS::TokenType::NumericLiteral:
-                        editor.stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Magenta) });
-                        break;
-                    case JS::TokenType::StringLiteral:
-                    case JS::TokenType::RegexLiteral:
-                    case JS::TokenType::UnterminatedStringLiteral:
-                        editor.stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Red) });
-                        break;
-                    case JS::TokenType::BracketClose:
-                    case JS::TokenType::BracketOpen:
-                    case JS::TokenType::Caret:
-                    case JS::TokenType::Comma:
-                    case JS::TokenType::CurlyClose:
-                    case JS::TokenType::CurlyOpen:
-                    case JS::TokenType::ParenClose:
-                    case JS::TokenType::ParenOpen:
-                    case JS::TokenType::Semicolon:
-                    case JS::TokenType::Period:
-                        break;
-                    case JS::TokenType::Ampersand:
-                    case JS::TokenType::AmpersandEquals:
-                    case JS::TokenType::Asterisk:
-                    case JS::TokenType::AsteriskAsteriskEquals:
-                    case JS::TokenType::AsteriskEquals:
-                    case JS::TokenType::DoubleAmpersand:
-                    case JS::TokenType::DoubleAsterisk:
-                    case JS::TokenType::DoublePipe:
-                    case JS::TokenType::DoubleQuestionMark:
-                    case JS::TokenType::Equals:
-                    case JS::TokenType::EqualsEquals:
-                    case JS::TokenType::EqualsEqualsEquals:
-                    case JS::TokenType::ExclamationMark:
-                    case JS::TokenType::ExclamationMarkEquals:
-                    case JS::TokenType::ExclamationMarkEqualsEquals:
-                    case JS::TokenType::GreaterThan:
-                    case JS::TokenType::GreaterThanEquals:
-                    case JS::TokenType::LessThan:
-                    case JS::TokenType::LessThanEquals:
-                    case JS::TokenType::Minus:
-                    case JS::TokenType::MinusEquals:
-                    case JS::TokenType::MinusMinus:
-                    case JS::TokenType::Percent:
-                    case JS::TokenType::PercentEquals:
-                    case JS::TokenType::Pipe:
-                    case JS::TokenType::PipeEquals:
-                    case JS::TokenType::Plus:
-                    case JS::TokenType::PlusEquals:
-                    case JS::TokenType::PlusPlus:
-                    case JS::TokenType::QuestionMark:
-                    case JS::TokenType::QuestionMarkPeriod:
-                    case JS::TokenType::ShiftLeft:
-                    case JS::TokenType::ShiftLeftEquals:
-                    case JS::TokenType::ShiftRight:
-                    case JS::TokenType::ShiftRightEquals:
-                    case JS::TokenType::Slash:
-                    case JS::TokenType::SlashEquals:
-                    case JS::TokenType::Tilde:
-                    case JS::TokenType::UnsignedShiftRight:
-                    case JS::TokenType::UnsignedShiftRightEquals:
-                        editor.stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Magenta) });
-                        break;
-                    case JS::TokenType::NullLiteral:
-                        editor.stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Yellow), Line::Style::Bold });
-                        break;
-                    case JS::TokenType::BoolLiteral:
-                        editor.stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Green), Line::Style::Bold });
-                        break;
-                    case JS::TokenType::Class:
-                    case JS::TokenType::Const:
-                    case JS::TokenType::Delete:
-                    case JS::TokenType::Function:
-                    case JS::TokenType::In:
-                    case JS::TokenType::Instanceof:
-                    case JS::TokenType::Interface:
-                    case JS::TokenType::Let:
-                    case JS::TokenType::New:
-                    case JS::TokenType::Typeof:
-                    case JS::TokenType::Var:
-                    case JS::TokenType::Void:
-                        editor.stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Blue), Line::Style::Bold });
-                        break;
-                    case JS::TokenType::Await:
-                    case JS::TokenType::Catch:
-                    case JS::TokenType::Do:
-                    case JS::TokenType::Else:
-                    case JS::TokenType::Finally:
-                    case JS::TokenType::For:
-                    case JS::TokenType::If:
-                    case JS::TokenType::Return:
-                    case JS::TokenType::Try:
-                    case JS::TokenType::While:
-                    case JS::TokenType::Yield:
-                        editor.stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Cyan), Line::Style::Italic });
-                        break;
-                    case JS::TokenType::Identifier:
-                    default:
-                        break;
+            JS::Lexer lexer(str, false);
+            bool indenters_starting_line = true;
+            for (JS::Token token = lexer.next(); token.type() != JS::TokenType::Eof; token = lexer.next()) {
+                auto length = token.value().length();
+                auto start = token.line_column() - 2;
+                auto end = start + length;
+                if (indenters_starting_line) {
+                    if (token.type() != JS::TokenType::ParenClose && token.type() != JS::TokenType::BracketClose && token.type() != JS::TokenType::CurlyClose) {
+                        indenters_starting_line = false;
+                    } else {
+                        --open_indents;
                     }
                 }
-            };
+
+                switch (token.type()) {
+                case JS::TokenType::Invalid:
+                case JS::TokenType::Eof:
+                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Red), Line::Style::Underline });
+                    break;
+                case JS::TokenType::NumericLiteral:
+                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Magenta) });
+                    break;
+                case JS::TokenType::StringLiteral:
+                case JS::TokenType::RegexLiteral:
+                case JS::TokenType::UnterminatedStringLiteral:
+                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Red) });
+                    break;
+                case JS::TokenType::BracketClose:
+                case JS::TokenType::BracketOpen:
+                case JS::TokenType::Caret:
+                case JS::TokenType::Comma:
+                case JS::TokenType::CurlyClose:
+                case JS::TokenType::CurlyOpen:
+                case JS::TokenType::ParenClose:
+                case JS::TokenType::ParenOpen:
+                case JS::TokenType::Semicolon:
+                case JS::TokenType::Period:
+                    break;
+                case JS::TokenType::Ampersand:
+                case JS::TokenType::AmpersandEquals:
+                case JS::TokenType::Asterisk:
+                case JS::TokenType::AsteriskAsteriskEquals:
+                case JS::TokenType::AsteriskEquals:
+                case JS::TokenType::DoubleAmpersand:
+                case JS::TokenType::DoubleAsterisk:
+                case JS::TokenType::DoublePipe:
+                case JS::TokenType::DoubleQuestionMark:
+                case JS::TokenType::Equals:
+                case JS::TokenType::EqualsEquals:
+                case JS::TokenType::EqualsEqualsEquals:
+                case JS::TokenType::ExclamationMark:
+                case JS::TokenType::ExclamationMarkEquals:
+                case JS::TokenType::ExclamationMarkEqualsEquals:
+                case JS::TokenType::GreaterThan:
+                case JS::TokenType::GreaterThanEquals:
+                case JS::TokenType::LessThan:
+                case JS::TokenType::LessThanEquals:
+                case JS::TokenType::Minus:
+                case JS::TokenType::MinusEquals:
+                case JS::TokenType::MinusMinus:
+                case JS::TokenType::Percent:
+                case JS::TokenType::PercentEquals:
+                case JS::TokenType::Pipe:
+                case JS::TokenType::PipeEquals:
+                case JS::TokenType::Plus:
+                case JS::TokenType::PlusEquals:
+                case JS::TokenType::PlusPlus:
+                case JS::TokenType::QuestionMark:
+                case JS::TokenType::QuestionMarkPeriod:
+                case JS::TokenType::ShiftLeft:
+                case JS::TokenType::ShiftLeftEquals:
+                case JS::TokenType::ShiftRight:
+                case JS::TokenType::ShiftRightEquals:
+                case JS::TokenType::Slash:
+                case JS::TokenType::SlashEquals:
+                case JS::TokenType::Tilde:
+                case JS::TokenType::UnsignedShiftRight:
+                case JS::TokenType::UnsignedShiftRightEquals:
+                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Magenta) });
+                    break;
+                case JS::TokenType::NullLiteral:
+                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Yellow), Line::Style::Bold });
+                    break;
+                case JS::TokenType::BoolLiteral:
+                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Green), Line::Style::Bold });
+                    break;
+                case JS::TokenType::Class:
+                case JS::TokenType::Const:
+                case JS::TokenType::Delete:
+                case JS::TokenType::Function:
+                case JS::TokenType::In:
+                case JS::TokenType::Instanceof:
+                case JS::TokenType::Interface:
+                case JS::TokenType::Let:
+                case JS::TokenType::New:
+                case JS::TokenType::Typeof:
+                case JS::TokenType::Var:
+                case JS::TokenType::Void:
+                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Blue), Line::Style::Bold });
+                    break;
+                case JS::TokenType::Await:
+                case JS::TokenType::Catch:
+                case JS::TokenType::Do:
+                case JS::TokenType::Else:
+                case JS::TokenType::Finally:
+                case JS::TokenType::For:
+                case JS::TokenType::If:
+                case JS::TokenType::Return:
+                case JS::TokenType::Try:
+                case JS::TokenType::While:
+                case JS::TokenType::Yield:
+                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Cyan), Line::Style::Italic });
+                    break;
+                case JS::TokenType::Identifier:
+                default:
+                    break;
+                }
+            }
+
+            editor.set_prompt(prompt_for_level(open_indents));
+        };
         repl(*interpreter);
     } else {
         auto interpreter = JS::Interpreter::create<JS::GlobalObject>();
