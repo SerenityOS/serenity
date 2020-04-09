@@ -142,13 +142,6 @@ PhysicalAddress InterruptManagement::search_for_madt()
 InterruptManagement::InterruptManagement()
     : m_madt(search_for_madt())
 {
-    if (m_madt.is_null()) {
-        m_interrupt_controllers[0] = adopt(*new PIC());
-        return;
-    }
-
-    dbg() << "Interrupts: MADT @ P " << m_madt.as_ptr();
-    locate_apic_data();
 }
 
 void InterruptManagement::switch_to_pic_mode()
@@ -156,6 +149,7 @@ void InterruptManagement::switch_to_pic_mode()
     klog() << "Interrupts: Switch to Legacy PIC mode";
     InterruptDisabler disabler;
     m_smp_enabled = false;
+    m_interrupt_controllers[0] = adopt(*new PIC());
     SpuriousInterruptHandler::initialize(7);
     SpuriousInterruptHandler::initialize(15);
     for (auto& irq_controller : m_interrupt_controllers) {
@@ -173,6 +167,15 @@ void InterruptManagement::switch_to_ioapic_mode()
 {
     klog() << "Interrupts: Switch to IOAPIC mode";
     InterruptDisabler disabler;
+
+    if (m_madt.is_null()) {
+        dbg() << "Interrupts: ACPI MADT is not available, reverting to PIC mode";
+        switch_to_pic_mode();
+        return;
+    }
+
+    dbg() << "Interrupts: MADT @ P " << m_madt.as_ptr();
+    locate_apic_data();
     m_smp_enabled = true;
     if (m_interrupt_controllers.size() == 1) {
         if (get_interrupt_controller(0).type() == IRQControllerType::i8259) {
