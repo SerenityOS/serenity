@@ -169,6 +169,7 @@ private:
     void handle_quit(const Message&);
     void handle_ping(const Message&);
     void handle_topic(const Message&);
+    void handle_rpl_welcome(const Message&);
     void handle_rpl_topic(const Message&);
     void handle_rpl_whoisuser(const Message&);
     void handle_rpl_whoisserver(const Message&);
