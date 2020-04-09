@@ -60,7 +60,7 @@ void initialize()
         IOAccess::initialize();
 
     enumerate_all([&](const Address& address, ID id) {
-        klog() << "PCI: Device @ " << String::format("%w", address.seg()) << ":" << String::format("%b", address.bus()) << ":" << String::format("%b", address.slot()) << "." << String::format("%d", address.function()) << " [" << String::format("%w", id.vendor_id) << ":" << String::format("%w", id.device_id) << "]";
+        klog() << address << " " << id;
         E1000NetworkAdapter::detect(address);
         RTL8139NetworkAdapter::detect(address);
     });
