@@ -318,10 +318,8 @@ void init_stage2()
         }
         thread->set_priority(THREAD_PRIORITY_HIGH);
     }
-    {
-        Thread* thread = nullptr;
-        Process::create_kernel_process(thread, "NetworkTask", NetworkTask_main);
-    }
+
+    NetworkTask::spawn();
 
     Process::current->sys$exit(0);
     ASSERT_NOT_REACHED();
