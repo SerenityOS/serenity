@@ -711,7 +711,7 @@ Value AssignmentExpression::execute(Interpreter& interpreter) const
             object->put(property_name, rhs_result);
         }
     } else {
-        ASSERT_NOT_REACHED();
+        return interpreter.throw_exception<Error>("ReferenceError", "Invalid left-hand side in assignment");
     }
 
     return rhs_result;
