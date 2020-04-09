@@ -29,26 +29,13 @@
 
 namespace Kernel {
 namespace ACPI {
-void DynamicParser::initialize(PhysicalAddress rsdp)
-{
-    if (!StaticParser::is_initialized()) {
-        new DynamicParser(rsdp);
-    }
-}
-void DynamicParser::initialize_without_rsdp()
-{
-    if (!StaticParser::is_initialized()) {
-        new DynamicParser();
-    }
-}
 
 DynamicParser::DynamicParser()
     : IRQHandler(9)
-    , StaticParser()
-
 {
     klog() << "ACPI: Dynamic Parsing Enabled, Can parse AML";
 }
+
 DynamicParser::DynamicParser(PhysicalAddress rsdp)
     : IRQHandler(9)
     , StaticParser(rsdp)

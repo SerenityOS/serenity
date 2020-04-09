@@ -36,24 +36,6 @@
 namespace Kernel {
 namespace ACPI {
 
-void StaticParser::initialize(PhysicalAddress rsdp)
-{
-    if (!Parser::is_initialized()) {
-        new StaticParser(rsdp);
-    }
-}
-void StaticParser::initialize_without_rsdp()
-{
-    if (!Parser::is_initialized()) {
-        new StaticParser();
-    }
-}
-
-bool StaticParser::is_initialized()
-{
-    return Parser::is_initialized();
-}
-
 void StaticParser::locate_static_data()
 {
     locate_main_system_description_table();

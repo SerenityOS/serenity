@@ -35,12 +35,13 @@
 
 namespace Kernel {
 namespace ACPI {
-class DynamicParser final : public IRQHandler
-    , StaticParser {
-public:
-    static void initialize(PhysicalAddress rsdp);
-    static void initialize_without_rsdp();
 
+class DynamicParser final
+    : public IRQHandler
+    , public StaticParser {
+    friend class Parser;
+
+public:
     virtual void enable_aml_interpretation() override;
     virtual void enable_aml_interpretation(File& dsdt_file) override;
     virtual void enable_aml_interpretation(u8* physical_dsdt, u32 dsdt_payload_legnth) override;

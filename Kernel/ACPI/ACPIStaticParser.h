@@ -32,12 +32,10 @@
 namespace Kernel {
 namespace ACPI {
 
-class StaticParser : Parser {
-public:
-    static void initialize(PhysicalAddress rsdp);
-    static void initialize_without_rsdp();
-    static bool is_initialized();
+class StaticParser : public Parser {
+    friend class Parser;
 
+public:
     virtual PhysicalAddress find_table(const char* sig) override;
     virtual void try_acpi_reboot() override;
     virtual bool can_reboot() override;
