@@ -35,12 +35,17 @@
 
 namespace Kernel {
 namespace ACPI {
+
 class Parser {
 public:
     static Parser& the();
 
-    static bool is_initialized();
-    static void initialize_limited();
+    template<typename ParserType>
+    static void initialize()
+    {
+        set_the(*new ParserType);
+    }
+
     virtual PhysicalAddress find_table(const char* sig);
 
     virtual void try_acpi_reboot();
@@ -58,8 +63,12 @@ public:
     virtual bool is_operable();
 
 protected:
-    explicit Parser(bool usable);
+    explicit Parser(bool usable = false);
     bool m_operable;
+
+private:
+    static void set_the(Parser&);
 };
+
 }
 }
