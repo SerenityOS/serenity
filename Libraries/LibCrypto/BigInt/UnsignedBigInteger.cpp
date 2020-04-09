@@ -79,25 +79,19 @@ UnsignedBigInteger UnsignedBigInteger::sub(const UnsignedBigInteger& other) cons
     }
 
     u8 borrow = 0;
-    for (size_t i = 0; i < other.length(); ++i) {
-        // This assertion should not fail, because we verified that *this>other at the beginning of the function
-        ASSERT(!(borrow == 1 && m_words[i] == 0));
-
-        if (m_words[i] - borrow < other.m_words[i]) {
-            u64 after_borrow = static_cast<u64>(m_words[i] - borrow) + (UINT32_MAX + 1);
-            result.m_words.append(static_cast<u32>(after_borrow - static_cast<u64>(other.m_words[i])));
-            borrow = 1;
-        } else {
-            result.m_words.append(m_words[i] - borrow - other.m_words[i]);
-            borrow = 0;
+    for (size_t i = 0; i < length(); ++i) {
+        u32 other_word = (i < other.length()) ? other.m_words[i] : 0;
+        i64 temp = static_cast<i64>(m_words[i]) - static_cast<i64>(other_word) - static_cast<i64>(borrow);
+        // If temp < 0, we had an underflow
+        borrow = (temp >= 0) ? 0 : 1;
+        if (temp < 0) {
+            temp += (UINT32_MAX + 1);
         }
+        result.m_words.append(temp);
     }
 
-    for (size_t i = other.length(); i < length(); ++i) {
-        ASSERT(!(borrow == 1 && m_words[i] == 0));
-        result.m_words.append(m_words[i] - borrow);
-        borrow = 0;
-    }
+    // This assertion should not fail, because we verified that *this>=other at the beginning of the function
+    ASSERT(borrow == 0);
 
     return result;
 }
