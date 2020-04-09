@@ -147,7 +147,6 @@ InterruptManagement::InterruptManagement()
         return;
     }
 
-    // FIXME: Check what is the actual data size then map accordingly
     dbg() << "Interrupts: MADT @ P " << m_madt.as_ptr();
     locate_apic_data();
 }
