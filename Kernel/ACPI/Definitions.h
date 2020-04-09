@@ -337,11 +337,7 @@ class Parser;
 
 namespace StaticParsing {
 PhysicalAddress find_rsdp();
-bool match_table_signature(PhysicalAddress table_header, const char*);
-PhysicalAddress search_table(PhysicalAddress rsdp, const char*);
-PhysicalAddress search_table_in_xsdt(PhysicalAddress xsdt, const char*);
-PhysicalAddress search_table_in_rsdt(PhysicalAddress rsdt, const char*);
-bool validate_table(const Structures::SDTHeader&, size_t length);
+PhysicalAddress find_table(PhysicalAddress rsdp, const StringView& signature);
 };
 }
 }

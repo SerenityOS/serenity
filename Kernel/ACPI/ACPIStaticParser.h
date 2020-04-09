@@ -36,7 +36,7 @@ class StaticParser : public Parser {
     friend class Parser;
 
 public:
-    virtual PhysicalAddress find_table(const char* sig) override;
+    virtual PhysicalAddress find_table(const StringView& signature) override;
     virtual void try_acpi_reboot() override;
     virtual bool can_reboot() override;
     virtual bool can_shutdown() override { return false; }

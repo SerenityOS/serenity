@@ -130,7 +130,7 @@ PhysicalAddress InterruptManagement::search_for_madt()
     auto rsdp = ACPI::StaticParsing::find_rsdp();
     if (rsdp.is_null())
         return {};
-    return ACPI::StaticParsing::search_table(rsdp, "APIC");
+    return ACPI::StaticParsing::find_table(rsdp, "APIC");
 }
 
 InterruptManagement::InterruptManagement()
