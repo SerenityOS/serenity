@@ -312,4 +312,32 @@ UnsignedBigInteger UnsignedBigInteger::create_invalid()
     invalid.invalidate();
     return invalid;
 }
+
+// FIXME: in great need of optimisation
+UnsignedBigInteger UnsignedBigInteger::import_data(const u8* ptr, size_t length)
+{
+    UnsignedBigInteger integer { 0 };
+
+    for (size_t i = 0; i < length; ++i) {
+        auto part = UnsignedBigInteger { ptr[length - i - 1] }.shift_left(8 * i);
+        integer = integer.add(part);
+    }
+
+    return integer;
+}
+
+size_t UnsignedBigInteger::export_data(AK::ByteBuffer& data)
+{
+    UnsignedBigInteger copy { *this };
+
+    size_t size = trimmed_length() * sizeof(u32);
+    size_t i = 0;
+    for (; i < size; ++i) {
+        if (copy.length() == 0)
+            break;
+        data[size - i - 1] = copy.m_words[0] & 0xff;
+        copy = copy.divide(256).quotient;
+    }
+    return i;
+}
 }
