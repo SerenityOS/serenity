@@ -39,6 +39,7 @@
 #include <netinet/in.h>
 #include <stdio.h>
 #include <sys/socket.h>
+#include <pwd.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -71,13 +72,14 @@ IRCClient::IRCClient()
     , m_log(IRCLogBuffer::create())
     , m_config(Core::ConfigFile::get_for_app("IRCClient"))
 {
+    struct passwd* user_pw = getpwuid(getuid());
     m_socket = Core::TCPSocket::construct(this);
-    m_nickname = m_config->read_entry("User", "Nickname", "seren1ty");
+    m_nickname = m_config->read_entry("User", "Nickname", String::format("%s_seren1ty", user_pw->pw_name));
     m_hostname = m_config->read_entry("Connection", "Server", "");
     m_port = m_config->read_num_entry("Connection", "Port", 6667);
     m_ctcp_version_reply = m_config->read_entry("CTCP", "VersionReply", "IRC Client [x86] / Serenity OS");
-    m_ctcp_userinfo_reply = m_config->read_entry("CTCP", "UserInfoReply", "anon");
-    m_ctcp_finger_reply = m_config->read_entry("CTCP", "FingerReply", "anon");
+    m_ctcp_userinfo_reply = m_config->read_entry("CTCP", "UserInfoReply", user_pw->pw_name);
+    m_ctcp_finger_reply = m_config->read_entry("CTCP", "FingerReply", user_pw->pw_name);
 }
 
 IRCClient::~IRCClient()
