@@ -3993,7 +3993,8 @@ int Process::sys$reboot()
     dbg() << "syncing mounted filesystems...";
     FS::sync();
     dbg() << "attempting reboot via ACPI";
-    ACPI::Parser::the().try_acpi_reboot();
+    if (ACPI::is_enabled())
+        ACPI::Parser::the()->try_acpi_reboot();
     dbg() << "attempting reboot via KB Controller...";
     IO::out8(0x64, 0xFE);
 
