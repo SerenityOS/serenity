@@ -28,6 +28,7 @@
 #include <Kernel/ACPI/ACPIStaticParser.h>
 #include <Kernel/PCI/Access.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <Kernel/VM/TypedMapping.h>
 #include <LibBareMetal/IO.h>
 #include <LibBareMetal/StdLib.h>
 
@@ -50,8 +51,7 @@ PhysicalAddress StaticParser::find_table(const char* sig)
     dbg() << "ACPI: Calling Find Table method!";
 #endif
     for (auto p_sdt : m_sdt_pointers) {
-        auto region = MM.allocate_kernel_region(p_sdt.page_base(), (PAGE_SIZE * 2), "ACPI Static Parser Tables Finding", Region::Access::Read);
-        auto* sdt = (const Structures::SDTHeader*)region->vaddr().offset(p_sdt.offset_in_page()).as_ptr();
+        auto sdt = map_typed<Structures::SDTHeader>(p_sdt);
 #ifdef ACPI_DEBUG
         dbg() << "ACPI: Examining Table @ P " << p_sdt;
 #endif
@@ -87,8 +87,8 @@ void StaticParser::init_fadt()
     m_fadt = find_table("FACP");
     ASSERT(!m_fadt.is_null());
 
-    auto checkup_region = MM.allocate_kernel_region(m_fadt.page_base(), (PAGE_SIZE * 2), "ACPI Static Parser", Region::Access::Read);
-    auto* sdt = (const Structures::FADT*)checkup_region->vaddr().offset(m_fadt.offset_in_page()).as_ptr();
+    auto sdt = map_typed<Structures::FADT>(m_fadt);
+
 #ifdef ACPI_DEBUG
     dbg() << "ACPI: FADT @ V " << sdt << ", P " << (void*)m_fadt.as_ptr();
 #endif
@@ -126,8 +126,7 @@ void StaticParser::init_fadt()
 
 bool StaticParser::can_reboot()
 {
-    auto region = MM.allocate_kernel_region(m_fadt.page_base(), (PAGE_SIZE * 2), "ACPI Static Parser", Region::Access::Read);
-    auto* fadt = (const Structures::FADT*)region->vaddr().offset(m_fadt.offset_in_page()).as_ptr();
+    auto fadt = map_typed<Structures::FADT>(m_fadt);
     if (fadt->h.revision < 2)
         return false;
     return m_hardware_flags.reset_register_supported;
@@ -135,8 +134,8 @@ bool StaticParser::can_reboot()
 
 void StaticParser::access_generic_address(const Structures::GenericAddressStructure& structure, u32 value)
 {
-    switch (structure.address_space) {
-    case (u8)GenericAddressStructure::AddressSpace::SystemIO: {
+    switch ((GenericAddressStructure::AddressSpace)structure.address_space) {
+    case GenericAddressStructure::AddressSpace::SystemIO: {
         IOAddress address(structure.address);
         dbg() << "ACPI: Sending value 0x" << String::format("%x", value) << " to " << address;
         switch (structure.access_size) {
@@ -159,29 +158,20 @@ void StaticParser::access_generic_address(const Structures::GenericAddressStruct
         }
         return;
     }
-    case (u8)GenericAddressStructure::AddressSpace::SystemMemory: {
-        auto p_reg = PhysicalAddress(structure.address);
-        auto p_region = MM.allocate_kernel_region(p_reg.page_base(), (PAGE_SIZE * 2), "ACPI Static Parser", Region::Access::Read);
-        dbg() << "ACPI: Sending value 0x" << String::format("%x", value) << " to " << p_reg;
-        switch (structure.access_size) {
-        case (u8)GenericAddressStructure::AccessSize::Byte: {
-            auto* reg = (volatile u8*)p_region->vaddr().offset(p_reg.offset_in_page()).as_ptr();
-            (*reg) = value;
+    case GenericAddressStructure::AddressSpace::SystemMemory: {
+        dbg() << "ACPI: Sending value 0x" << String::format("%x", value) << " to " << PhysicalAddress(structure.address);
+        switch ((GenericAddressStructure::AccessSize)structure.access_size) {
+        case GenericAddressStructure::AccessSize::Byte:
+            *map_typed<u8>(PhysicalAddress(structure.address)) = value;
             break;
-        }
-        case (u8)GenericAddressStructure::AccessSize::Word: {
-            auto* reg = (volatile u16*)p_region->vaddr().offset(p_reg.offset_in_page()).as_ptr();
-            (*reg) = value;
+        case GenericAddressStructure::AccessSize::Word:
+            *map_typed<u16>(PhysicalAddress(structure.address)) = value;
             break;
-        }
-        case (u8)GenericAddressStructure::AccessSize::DWord: {
-            auto* reg = (volatile u32*)p_region->vaddr().offset(p_reg.offset_in_page()).as_ptr();
-            (*reg) = value;
+        case GenericAddressStructure::AccessSize::DWord:
+            *map_typed<u32>(PhysicalAddress(structure.address)) = value;
             break;
-        }
-        case (u8)GenericAddressStructure::AccessSize::QWord: {
-            auto* reg = (volatile u64*)p_region->vaddr().offset(p_reg.offset_in_page()).as_ptr();
-            (*reg) = value;
+        case GenericAddressStructure::AccessSize::QWord: {
+            *map_typed<u64>(PhysicalAddress(structure.address)) = value;
             break;
         }
         default:
@@ -189,7 +179,7 @@ void StaticParser::access_generic_address(const Structures::GenericAddressStruct
         }
         return;
     }
-    case (u8)GenericAddressStructure::AddressSpace::PCIConfigurationSpace: {
+    case GenericAddressStructure::AddressSpace::PCIConfigurationSpace: {
         // According to the ACPI specification 6.2, page 168, PCI addresses must be confined to devices on Segment group 0, bus 0.
         auto pci_address = PCI::Address(0, 0, ((structure.address >> 24) & 0xFF), ((structure.address >> 16) & 0xFF));
         dbg() << "ACPI: Sending value 0x" << String::format("%x", value) << " to " << pci_address;
@@ -211,8 +201,7 @@ void StaticParser::access_generic_address(const Structures::GenericAddressStruct
 bool StaticParser::validate_reset_register()
 {
     // According to the ACPI spec 6.2, page 152, The reset register can only be located in I/O bus, PCI bus or memory-mapped.
-    auto region = MM.allocate_kernel_region(m_fadt.page_base(), (PAGE_SIZE * 2), "ACPI Static Parser", Region::Access::Read);
-    auto* fadt = (const Structures::FADT*)region->vaddr().offset(m_fadt.offset_in_page()).as_ptr();
+    auto fadt = map_typed<Structures::FADT>(m_fadt);
     return (fadt->reset_reg.address_space == (u8)GenericAddressStructure::AddressSpace::PCIConfigurationSpace || fadt->reset_reg.address_space == (u8)GenericAddressStructure::AddressSpace::SystemMemory || fadt->reset_reg.address_space == (u8)GenericAddressStructure::AddressSpace::SystemIO);
 }
 
@@ -227,12 +216,10 @@ void StaticParser::try_acpi_reboot()
     dbg() << "ACPI: Rebooting, Probing FADT (" << m_fadt << ")";
 #endif
 
-    auto region = MM.allocate_kernel_region(m_fadt.page_base(), (PAGE_SIZE * 2), "ACPI Static Parser", Region::Access::Read);
-    auto* fadt = (const Structures::FADT*)region->vaddr().offset(m_fadt.offset_in_page()).as_ptr();
+    auto fadt = map_typed<Structures::FADT>(m_fadt);
     ASSERT(validate_reset_register());
     access_generic_address(fadt->reset_reg, fadt->reset_value);
-    for (;;)
-        ;
+    hang();
 }
 
 void StaticParser::try_acpi_shutdown()
@@ -246,9 +233,7 @@ size_t StaticParser::get_table_size(PhysicalAddress table_header)
 #ifdef ACPI_DEBUG
     dbg() << "ACPI: Checking SDT Length";
 #endif
-    auto region = MM.allocate_kernel_region(table_header.page_base(), (PAGE_SIZE * 2), "ACPI get_table_size()", Region::Access::Read);
-    auto* sdt = (volatile Structures::SDTHeader*)region->vaddr().offset(table_header.offset_in_page()).as_ptr();
-    return sdt->length;
+    return map_typed<Structures::SDTHeader>(table_header)->length;
 }
 
 u8 StaticParser::get_table_revision(PhysicalAddress table_header)
@@ -257,9 +242,7 @@ u8 StaticParser::get_table_revision(PhysicalAddress table_header)
 #ifdef ACPI_DEBUG
     dbg() << "ACPI: Checking SDT Revision";
 #endif
-    auto region = MM.allocate_kernel_region(table_header.page_base(), (PAGE_SIZE * 2), "ACPI get_table_revision()", Region::Access::Read);
-    auto* sdt = (volatile Structures::SDTHeader*)region->vaddr().offset(table_header.offset_in_page()).as_ptr();
-    return sdt->revision;
+    return map_typed<Structures::SDTHeader>(table_header)->revision;
 }
 
 void StaticParser::initialize_main_system_description_table()
@@ -271,12 +254,12 @@ void StaticParser::initialize_main_system_description_table()
     auto length = get_table_size(m_main_system_description_table);
     auto revision = get_table_revision(m_main_system_description_table);
 
-    auto main_sdt_region = MM.allocate_kernel_region(m_main_system_description_table.page_base(), PAGE_ROUND_UP(length) + PAGE_SIZE, "ACPI Static Parser Initialization", Region::Access::Read, false, true);
-    auto* sdt = (volatile Structures::SDTHeader*)main_sdt_region->vaddr().offset(m_main_system_description_table.offset_in_page()).as_ptr();
-    klog() << "ACPI: Main Description Table valid? " << StaticParsing::validate_table(const_cast<Structures::SDTHeader&>(*sdt), length);
+    auto sdt = map_typed<Structures::SDTHeader>(m_main_system_description_table, length);
+
+    klog() << "ACPI: Main Description Table valid? " << StaticParsing::validate_table(*sdt, length);
 
     if (m_xsdt_supported) {
-        volatile auto* xsdt = (volatile Structures::XSDT*)sdt;
+        auto& xsdt = (const Structures::XSDT&)*sdt;
         klog() << "ACPI: Using XSDT, Enumerating tables @ " << m_main_system_description_table;
         klog() << "ACPI: XSDT Revision " << revision << ", Total length - " << length;
 #ifdef ACPI_DEBUG
@@ -284,12 +267,12 @@ void StaticParser::initialize_main_system_description_table()
 #endif
         for (u32 i = 0; i < ((length - sizeof(Structures::SDTHeader)) / sizeof(u64)); i++) {
 #ifdef ACPI_DEBUG
-            dbg() << "ACPI: Found new table [" << i << "], @ V 0x" << String::format("%x", &xsdt->table_ptrs[i]) << " - P 0x" << String::format("%x", xsdt->table_ptrs[i]);
+            dbg() << "ACPI: Found new table [" << i << "], @ V 0x" << String::format("%x", &xsdt.table_ptrs[i]) << " - P 0x" << String::format("%x", xsdt.table_ptrs[i]);
 #endif
-            m_sdt_pointers.append(PhysicalAddress(xsdt->table_ptrs[i]));
+            m_sdt_pointers.append(PhysicalAddress(xsdt.table_ptrs[i]));
         }
     } else {
-        volatile auto* rsdt = (volatile Structures::RSDT*)sdt;
+        auto& rsdt = (const Structures::RSDT&)*sdt;
         klog() << "ACPI: Using RSDT, Enumerating tables @ " << m_main_system_description_table;
         klog() << "ACPI: RSDT Revision " << revision << ", Total length - " << length;
 #ifdef ACPI_DEBUG
@@ -297,17 +280,16 @@ void StaticParser::initialize_main_system_description_table()
 #endif
         for (u32 i = 0; i < ((length - sizeof(Structures::SDTHeader)) / sizeof(u32)); i++) {
 #ifdef ACPI_DEBUG
-            dbg() << "ACPI: Found new table [" << i << "], @ V 0x" << String::format("%x", &rsdt->table_ptrs[i]) << " - P 0x" << String::format("%x", rsdt->table_ptrs[i]);
+            dbg() << "ACPI: Found new table [" << i << "], @ V 0x" << String::format("%x", &rsdt.table_ptrs[i]) << " - P 0x" << String::format("%x", rsdt.table_ptrs[i]);
 #endif
-            m_sdt_pointers.append(PhysicalAddress(rsdt->table_ptrs[i]));
+            m_sdt_pointers.append(PhysicalAddress(rsdt.table_ptrs[i]));
         }
     }
 }
 
 void StaticParser::locate_main_system_description_table()
 {
-    auto rsdp_region = MM.allocate_kernel_region(m_rsdp.page_base(), (PAGE_SIZE * 2), "ACPI Static Parser Initialization", Region::Access::Read, false, true);
-    volatile auto* rsdp = (Structures::RSDPDescriptor20*)rsdp_region->vaddr().offset(m_rsdp.offset_in_page()).as_ptr();
+    auto rsdp = map_typed<Structures::RSDPDescriptor20>(m_rsdp);
     if (rsdp->base.revision == 0) {
         m_xsdt_supported = false;
     } else if (rsdp->base.revision >= 2) {
@@ -331,7 +313,7 @@ StaticParser::StaticParser(PhysicalAddress rsdp)
     locate_static_data();
 }
 
-PhysicalAddress StaticParsing::search_rsdp_in_ebda(u16 ebda_segment)
+static PhysicalAddress find_rsdp_in_ebda(u16 ebda_segment)
 {
     auto rsdp_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)(ebda_segment << 4))), PAGE_ROUND_UP(1024), "ACPI Static Parser RSDP Finding #1", Region::Access::Read, false, true);
     char* p_rsdp_str = (char*)(PhysicalAddress(ebda_segment << 4).as_ptr());
@@ -346,7 +328,7 @@ PhysicalAddress StaticParsing::search_rsdp_in_ebda(u16 ebda_segment)
     return {};
 }
 
-PhysicalAddress StaticParsing::search_rsdp_in_bios_area()
+static PhysicalAddress find_rsdp_in_bios_area()
 {
     auto rsdp_region = MM.allocate_kernel_region(PhysicalAddress(0xE0000), PAGE_ROUND_UP(0xFFFFF - 0xE0000), "ACPI Static Parser RSDP Finding #2", Region::Access::Read, false, true);
     char* p_rsdp_str = (char*)(PhysicalAddress(0xE0000).as_ptr());
@@ -361,10 +343,10 @@ PhysicalAddress StaticParsing::search_rsdp_in_bios_area()
     return {};
 }
 
-inline bool StaticParsing::validate_table(Structures::SDTHeader& v_header, size_t length)
+inline bool StaticParsing::validate_table(const Structures::SDTHeader& v_header, size_t length)
 {
     u8 checksum = 0;
-    auto* sdt = (u8*)&v_header;
+    auto* sdt = (const u8*)&v_header;
     for (size_t i = 0; i < length; i++)
         checksum += sdt[i];
     if (checksum == 0)
@@ -372,49 +354,46 @@ inline bool StaticParsing::validate_table(Structures::SDTHeader& v_header, size_
     return false;
 }
 
-PhysicalAddress StaticParsing::search_rsdp()
+PhysicalAddress StaticParsing::find_rsdp()
 {
-    PhysicalAddress rsdp;
-    auto region = MM.allocate_kernel_region(PhysicalAddress(0), PAGE_SIZE, "ACPI RSDP Searching", Region::Access::Read);
-    u16 ebda_seg = (u16) * ((uint16_t*)((region->vaddr().get() & PAGE_MASK) + 0x40e));
-    klog() << "ACPI: Probing EBDA, Segment 0x" << String::format("%x", ebda_seg);
-
-    rsdp = search_rsdp_in_ebda(ebda_seg);
+    auto ebda_seg_ptr = map_typed<u16>(PhysicalAddress(0x40e));
+    klog() << "ACPI: Probing EBDA, Segment 0x" << String::format("%x", *ebda_seg_ptr);
+    auto rsdp = find_rsdp_in_ebda(*ebda_seg_ptr);
     if (!rsdp.is_null())
         return rsdp;
-    return search_rsdp_in_bios_area();
+    return find_rsdp_in_bios_area();
 }
 
-PhysicalAddress StaticParsing::search_table(PhysicalAddress rsdp, const char* signature)
+PhysicalAddress StaticParsing::search_table(PhysicalAddress rsdp_address, const char* signature)
 {
     // FIXME: There's no validation of ACPI tables here. Use the checksum to validate the tables.
     // FIXME: Don't blindly use PAGE_SIZE here, but probe the actual length.
-
     ASSERT(strlen(signature) == 4);
-    auto rsdp_region = MM.allocate_kernel_region(rsdp.page_base(), (PAGE_SIZE * 2), "ACPI Static Parsing search_table()", Region::Access::Read, false, true);
-    volatile auto* rsdp_ptr = (Structures::RSDPDescriptor20*)rsdp_region->vaddr().offset(rsdp.offset_in_page()).as_ptr();
-    if (rsdp_ptr->base.revision == 0) {
-        return search_table_in_rsdt(PhysicalAddress(rsdp_ptr->base.rsdt_ptr), signature);
-    }
-    if (rsdp_ptr->base.revision >= 2) {
-        if (rsdp_ptr->xsdt_ptr != (u64) nullptr)
-            return search_table_in_xsdt(PhysicalAddress(rsdp_ptr->xsdt_ptr), signature);
-        return search_table_in_rsdt(PhysicalAddress(rsdp_ptr->base.rsdt_ptr), signature);
+
+    auto rsdp = map_typed<Structures::RSDPDescriptor20>(rsdp_address);
+
+    if (rsdp->base.revision == 0)
+        return search_table_in_rsdt(PhysicalAddress(rsdp->base.rsdt_ptr), signature);
+
+    if (rsdp->base.revision >= 2) {
+        if (rsdp->xsdt_ptr)
+            return search_table_in_xsdt(PhysicalAddress(rsdp->xsdt_ptr), signature);
+        return search_table_in_rsdt(PhysicalAddress(rsdp->base.rsdt_ptr), signature);
     }
     ASSERT_NOT_REACHED();
 }
 
-PhysicalAddress StaticParsing::search_table_in_xsdt(PhysicalAddress xsdt, const char* signature)
+PhysicalAddress StaticParsing::search_table_in_xsdt(PhysicalAddress xsdt_address, const char* signature)
 {
     // FIXME: There's no validation of ACPI tables here. Use the checksum to validate the tables.
     // FIXME: Don't blindly use PAGE_SIZE here, but probe the actual length.
-
     ASSERT(strlen(signature) == 4);
-    auto main_sdt_region = MM.allocate_kernel_region(xsdt.page_base(), PAGE_SIZE, "ACPI Static Parsing search_table_in_xsdt()", Region::Access::Read, false, true);
-    auto* xsdt_ptr = (volatile Structures::XSDT*)main_sdt_region->vaddr().offset(xsdt.offset_in_page()).as_ptr();
-    for (u32 i = 0; i < ((xsdt_ptr->h.length - sizeof(Structures::SDTHeader)) / sizeof(u64)); i++) {
-        if (match_table_signature(PhysicalAddress((FlatPtr)xsdt_ptr->table_ptrs[i]), signature))
-            return PhysicalAddress((FlatPtr)xsdt_ptr->table_ptrs[i]);
+
+    auto xsdt = map_typed<Structures::XSDT>(xsdt_address);
+
+    for (size_t i = 0; i < ((xsdt->h.length - sizeof(Structures::SDTHeader)) / sizeof(u64)); ++i) {
+        if (match_table_signature(PhysicalAddress((FlatPtr)xsdt->table_ptrs[i]), signature))
+            return PhysicalAddress((FlatPtr)xsdt->table_ptrs[i]);
     }
     return {};
 }
@@ -423,27 +402,26 @@ bool StaticParsing::match_table_signature(PhysicalAddress table_header, const ch
 {
     // FIXME: There's no validation of ACPI tables here. Use the checksum to validate the tables.
     // FIXME: Don't blindly use PAGE_SIZE here, but probe the actual length.
-
     ASSERT(strlen(signature) == 4);
-    auto main_sdt_region = MM.allocate_kernel_region(table_header.page_base(), PAGE_SIZE, "ACPI Static Parsing match_table_signature()", Region::Access::Read, false, true);
-    auto* table_ptr = (volatile Structures::RSDT*)main_sdt_region->vaddr().offset(table_header.offset_in_page()).as_ptr();
-    return !strncmp(const_cast<const char*>(table_ptr->h.sig), signature, 4);
+
+    auto table = map_typed<Structures::RSDT>(table_header);
+    return !strncmp(table->h.sig, signature, 4);
 }
 
-PhysicalAddress StaticParsing::search_table_in_rsdt(PhysicalAddress rsdt, const char* signature)
+PhysicalAddress StaticParsing::search_table_in_rsdt(PhysicalAddress rsdt_address, const char* signature)
 {
     // FIXME: There's no validation of ACPI tables here. Use the checksum to validate the tables.
     // FIXME: Don't blindly use PAGE_SIZE here, but probe the actual length.
     ASSERT(strlen(signature) == 4);
 
-    auto main_sdt_region = MM.allocate_kernel_region(rsdt.page_base(), PAGE_SIZE, "ACPI Static Parsing search_table_in_rsdt()", Region::Access::Read, false, true);
-    auto* rsdt_ptr = (volatile Structures::RSDT*)main_sdt_region->vaddr().offset(rsdt.offset_in_page()).as_ptr();
+    auto rsdt = map_typed<Structures::RSDT>(rsdt_address);
 
-    for (u32 i = 0; i < ((rsdt_ptr->h.length - sizeof(Structures::SDTHeader)) / sizeof(u32)); i++) {
-        if (match_table_signature(PhysicalAddress((FlatPtr)rsdt_ptr->table_ptrs[i]), signature))
-            return PhysicalAddress((FlatPtr)rsdt_ptr->table_ptrs[i]);
+    for (u32 i = 0; i < ((rsdt->h.length - sizeof(Structures::SDTHeader)) / sizeof(u32)); i++) {
+        if (match_table_signature(PhysicalAddress((FlatPtr)rsdt->table_ptrs[i]), signature))
+            return PhysicalAddress((FlatPtr)rsdt->table_ptrs[i]);
     }
     return {};
 }
+
 }
 }

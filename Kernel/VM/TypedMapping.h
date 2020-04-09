@@ -1,5 +1,4 @@
 /*
- * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
@@ -25,48 +24,43 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/ACPI/ACPIDynamicParser.h>
-#include <Kernel/CommandLine.h>
+#pragma once
+
+#include <AK/StringView.h>
+#include <Kernel/VM/MemoryManager.h>
 
 namespace Kernel {
-namespace ACPI {
 
-enum class FeatureLevel {
-    Enabled,
-    Limited,
-    Disabled,
+template<typename T>
+struct TypedMapping {
+    const T* ptr() const { return reinterpret_cast<const T*>(region->vaddr().offset(offset).as_ptr()); }
+    T* ptr() { return reinterpret_cast<T*>(region->vaddr().offset(offset).as_ptr()); }
+    const T* operator->() const { return ptr(); }
+    const T& operator*() const { return *ptr(); }
+    T& operator*() { return *ptr(); }
+    OwnPtr<Region> region;
+    size_t offset { 0 };
 };
 
-static FeatureLevel determine_feature_level()
+template<typename T>
+static TypedMapping<T> map_typed(PhysicalAddress paddr, size_t length, u8 access = Region::Access::Read)
 {
-    auto value = kernel_command_line().lookup("acpi").value_or("on");
-    if (value == "limited")
-        return FeatureLevel::Limited;
-    if (value == "off")
-        return FeatureLevel::Disabled;
-    return FeatureLevel::Enabled;
+    TypedMapping<T> table;
+    table.region = MM.allocate_kernel_region(paddr.page_base(), PAGE_ROUND_UP(length), {}, access);
+    table.offset = paddr.offset_in_page();
+    return table;
 }
 
-void initialize()
+template<typename T>
+static TypedMapping<T> map_typed(PhysicalAddress paddr)
 {
-    auto feature_level = determine_feature_level();
-    if (feature_level == FeatureLevel::Disabled)
-        return;
-
-    auto rsdp = StaticParsing::find_rsdp();
-    if (rsdp.is_null())
-        return;
-
-    if (feature_level == FeatureLevel::Enabled)
-        Parser::initialize<DynamicParser>(rsdp);
-    else
-        Parser::initialize<StaticParser>(rsdp);
+    return map_typed<T>(paddr, sizeof(T));
 }
 
-bool is_enabled()
+template<typename T>
+static TypedMapping<T> map_typed_writable(PhysicalAddress paddr)
 {
-    return Parser::the();
+    return map_typed<T>(paddr, sizeof(T), Region::Access::Read | Region::Access::Write);
 }
 
-}
 }
