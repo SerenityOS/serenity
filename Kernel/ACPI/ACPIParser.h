@@ -47,15 +47,15 @@ public:
         set_the(*new ParserType(rsdp));
     }
 
-    virtual PhysicalAddress find_table(const StringView& signature) = 0;
+    virtual PhysicalAddress find_table(const StringView& signature);
 
-    virtual void try_acpi_reboot() = 0;
-    virtual bool can_reboot() = 0;
-    virtual void try_acpi_shutdown() = 0;
-    virtual bool can_shutdown() = 0;
+    virtual void try_acpi_reboot();
+    virtual bool can_reboot();
+    virtual void try_acpi_shutdown();
+    virtual bool can_shutdown() { return false; }
 
-    virtual const FADTFlags::HardwareFeatures& hardware_features() const = 0;
-    virtual const FADTFlags::x86_Specific_Flags& x86_specific_flags() const = 0;
+    const FADTFlags::HardwareFeatures& hardware_features() const { return m_hardware_flags; }
+    const FADTFlags::x86_Specific_Flags& x86_specific_flags() const { return m_x86_specific_flags; }
 
     virtual void enable_aml_interpretation();
     virtual void enable_aml_interpretation(File&);
@@ -63,10 +63,32 @@ public:
     virtual void disable_aml_interpretation();
 
 protected:
-    Parser() {}
+    explicit Parser(PhysicalAddress rsdp);
 
 private:
     static void set_the(Parser&);
+
+    void locate_static_data();
+    void locate_main_system_description_table();
+    void initialize_main_system_description_table();
+    size_t get_table_size(PhysicalAddress);
+    u8 get_table_revision(PhysicalAddress);
+    void init_fadt();
+    void init_facs();
+
+    bool validate_reset_register();
+    void access_generic_address(const Structures::GenericAddressStructure&, u32 value);
+
+    PhysicalAddress m_rsdp;
+    PhysicalAddress m_main_system_description_table;
+
+    Vector<PhysicalAddress> m_sdt_pointers;
+    PhysicalAddress m_fadt;
+    PhysicalAddress m_facs;
+
+    bool m_xsdt_supported { false };
+    FADTFlags::HardwareFeatures m_hardware_flags;
+    FADTFlags::x86_Specific_Flags m_x86_specific_flags;
 };
 
 }
