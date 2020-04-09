@@ -704,6 +704,12 @@ void Terminal::execute_escape_sequence(u8 final)
     case 'f':
         HVP(params);
         break;
+    case 'n':
+        if (params.size() == 1 && params[0] == 6)
+            DSR();
+        else
+            dbg() << "Unknown CSIxn command";
+        break;
     default:
         dbgprintf("Terminal::execute_escape_sequence: Unhandled final '%c'\n", final);
         break;
@@ -804,6 +810,12 @@ void Terminal::RI()
 {
     // RI - Reverse Index (move up)
     CUU({});
+}
+
+void Terminal::DSR()
+{
+    // Device Status Report (cursor position query)
+    emit_string(String::format("\033[%d;%dR", m_cursor_row + 1, m_cursor_column + 1));
 }
 
 void Terminal::on_char(u8 ch)
