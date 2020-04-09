@@ -45,6 +45,7 @@ private:
     void show_add_event_window(Calendar* calendar);
 
     OwnPtr<Calendar> m_calendar;
+    RefPtr<GUI::Widget> m_top_container;
     RefPtr<GUI::Widget> m_bottom_container;
     RefPtr<GUI::Label> m_selected_date_label;
     RefPtr<GUI::Button> m_prev_month_button;
