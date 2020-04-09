@@ -135,12 +135,14 @@ void Editor::cut_mismatching_chars(String& completion, const String& other, size
 
 String Editor::get_line(const String& prompt)
 {
-    fputs(prompt.characters(), stdout);
-    fflush(stdout);
+    set_prompt(prompt);
+    reset();
+    refresh_display();
 
     m_history_cursor = m_history.size();
     m_cursor = 0;
     for (;;) {
+        refresh_display();
         char keybuf[16];
         ssize_t nread = read(0, keybuf, sizeof(keybuf));
         // FIXME: exit()ing here is a bit off. Should communicate failure to caller somehow instead.
@@ -217,33 +219,21 @@ String Editor::get_line(const String& prompt)
                 case 'D': // left
                     if (m_cursor > 0) {
                         --m_cursor;
-                        fputs("\033[D", stdout);
-                        fflush(stdout);
                     }
                     m_state = InputState::Free;
                     continue;
                 case 'C': // right
                     if (m_cursor < m_buffer.size()) {
                         ++m_cursor;
-                        fputs("\033[C", stdout);
-                        fflush(stdout);
                     }
                     m_state = InputState::Free;
                     continue;
                 case 'H':
-                    if (m_cursor > 0) {
-                        fprintf(stdout, "\033[%zuD", m_cursor);
-                        fflush(stdout);
-                        m_cursor = 0;
-                    }
+                    m_cursor = 0;
                     m_state = InputState::Free;
                     continue;
                 case 'F':
-                    if (m_cursor < m_buffer.size()) {
-                        fprintf(stdout, "\033[%zuC", m_buffer.size() - m_cursor);
-                        fflush(stdout);
-                        m_cursor = m_buffer.size();
-                    }
+                    m_cursor = m_buffer.size();
                     m_state = InputState::Free;
                     continue;
                 case '3':
@@ -348,12 +338,8 @@ String Editor::get_line(const String& prompt)
                 }
                 m_buffer.remove(m_cursor - 1);
                 --m_cursor;
-                putchar(8);
-                vt_save_cursor();
-                vt_clear_to_end_of_line();
-                for (size_t i = m_cursor; i < m_buffer.size(); ++i)
-                    fputc(m_buffer[i], stdout);
-                vt_restore_cursor();
+                // we will have to redraw :(
+                m_refresh_needed = true;
             };
 
             if (ch == 8 || ch == m_termios.c_cc[VERASE]) {
@@ -374,26 +360,21 @@ String Editor::get_line(const String& prompt)
                 continue;
             }
             if (ch == m_termios.c_cc[VKILL]) {
-                while (m_cursor > 0)
-                    do_backspace();
+                for (size_t i = 0; i < m_cursor; ++i)
+                    m_buffer.remove(0);
+                m_cursor = 0;
+                m_refresh_needed = true;
                 continue;
             }
             if (ch == 0xc) { // ^L
                 printf("\033[3J\033[H\033[2J"); // Clear screen.
-                fputs(prompt.characters(), stdout);
-                for (size_t i = 0; i < m_buffer.size(); ++i)
-                    fputc(m_buffer[i], stdout);
-                if (m_cursor < m_buffer.size())
-                    printf("\033[%zuD", m_buffer.size() - m_cursor); // Move cursor N steps left.
-                fflush(stdout);
+                vt_move_absolute(1, 1);
+                set_origin();
+                m_refresh_needed = true;
                 continue;
             }
             if (ch == 0x01) { // ^A
-                if (m_cursor > 0) {
-                    printf("\033[%zuD", m_cursor);
-                    fflush(stdout);
-                    m_cursor = 0;
-                }
+                m_cursor = 0;
                 continue;
             }
             if (ch == m_termios.c_cc[VEOF]) { // Normally ^D
@@ -404,11 +385,8 @@ String Editor::get_line(const String& prompt)
                 continue;
             }
             if (ch == 0x05) { // ^E
-                if (m_cursor < m_buffer.size()) {
-                    printf("\033[%zuC", m_buffer.size() - m_cursor);
-                    fflush(stdout);
-                    m_cursor = m_buffer.size();
-                }
+
+                m_cursor = m_buffer.size();
                 continue;
             }
             if (ch == '\n') {
@@ -421,33 +399,49 @@ String Editor::get_line(const String& prompt)
 
             insert(ch);
         }
-        refresh_display();
     }
 }
 
 void Editor::refresh_display()
 {
+    // do not call hook on pure cursor movement
+    if (m_cached_prompt_valid && !m_refresh_needed && m_pending_chars.size() == 0) {
+        // probably just moving around
+        reposition_cursor();
+        m_cached_buffer_size = m_buffer.size();
+        return;
+    }
+
     if (on_display_refresh)
         on_display_refresh(*this);
 
-    if (!m_refresh_needed && m_cursor == m_buffer.size()) {
-        // just write the characters out and continue
-        // no need to refresh the entire line
-        char null = 0;
-        m_pending_chars.append(&null, 1);
-        fputs((char*)m_pending_chars.data(), stdout);
-        m_pending_chars.clear();
-        fflush(stdout);
-        return;
+    if (m_cached_prompt_valid) {
+        if (!m_refresh_needed && m_cursor == m_buffer.size()) {
+            // just write the characters out and continue
+            // no need to refresh the entire line
+            char null = 0;
+            m_pending_chars.append(&null, 1);
+            fputs((char*)m_pending_chars.data(), stdout);
+            m_pending_chars.clear();
+            m_drawn_cursor = m_cursor;
+            m_cached_buffer_size = m_buffer.size();
+            fflush(stdout);
+            return;
+        }
     }
 
     // ouch, reflow entire line
     // FIXME: handle multiline stuff
     vt_move_relative(0, m_pending_chars.size() - m_chars_inserted_in_the_middle);
-    vt_save_cursor();
     auto current_line = cursor_line();
+
     vt_clear_lines(current_line - 1, num_lines() - current_line);
-    vt_move_relative(-num_lines() + 1, -offset_in_line() + m_chars_inserted_in_the_middle);
+    vt_move_relative(-num_lines() + 1, -offset_in_line() - m_old_prompt_length + m_chars_inserted_in_the_middle);
+
+    set_origin();
+
+    fputs(m_new_prompt.characters(), stdout);
+
     vt_clear_to_end_of_line();
     HashMap<u32, Style> empty_styles {};
     for (size_t i = 0; i < m_buffer.size(); ++i) {
@@ -464,17 +458,38 @@ void Editor::refresh_display()
         fputc(m_buffer[i], stdout);
     }
     vt_apply_style({}); // don't bleed to EOL
-    vt_restore_cursor();
-    vt_move_relative(0, m_chars_inserted_in_the_middle);
-    fflush(stdout);
     m_pending_chars.clear();
     m_refresh_needed = false;
+    m_cached_buffer_size = m_buffer.size();
     m_chars_inserted_in_the_middle = 0;
+    if (!m_cached_prompt_valid) {
+        m_cached_prompt_valid = true;
+    }
+
+    reposition_cursor();
+    fflush(stdout);
+}
+
+void Editor::reposition_cursor()
+{
+    m_drawn_cursor = m_cursor;
+
+    auto line = cursor_line() - 1;
+    auto column = offset_in_line();
+
+    vt_move_absolute(line + m_origin_x, column + m_origin_y);
+}
+
+void Editor::vt_move_absolute(u32 x, u32 y)
+{
+    printf("\033[%d;%dH", x, y);
+    fflush(stdout);
 }
 
 void Editor::vt_move_relative(int x, int y)
 {
     char x_op = 'A', y_op = 'D';
+
     if (x > 0)
         x_op = 'B';
     else
@@ -522,8 +537,8 @@ void Editor::vt_clear_lines(size_t count_above, size_t count_below)
     if (count_below > 0)
         printf("\033[%dB", (int)count_below);
     // then clear lines going upwards
-    for (size_t i = 0; i < count_below + count_above; ++i)
-        fputs("\033[2K\033[A", stdout);
+    for (size_t i = count_below + count_above; i > 0; --i)
+        fputs(i == 1 ? "\033[2K" : "\033[2K\033[A", stdout);
 }
 
 void Editor::vt_save_cursor()
@@ -542,5 +557,98 @@ void Editor::vt_clear_to_end_of_line()
 {
     fputs("\033[K", stdout);
     fflush(stdout);
+}
+
+size_t Editor::actual_rendered_string_length(const StringView& string) const
+{
+    size_t length { 0 };
+    enum VTState {
+        Free = 1,
+        Escape = 3,
+        Bracket = 5,
+        BracketArgsSemi = 7,
+        Title = 9,
+    } state { Free };
+    for (size_t i = 0; i < string.length(); ++i) {
+        auto c = string[i];
+        switch (state) {
+        case Free:
+            if (c == '\x1b') {
+                // escape
+                state = Escape;
+                continue;
+            }
+            // FIXME: This will not support anything sophisticated
+            ++length;
+            break;
+        case Escape:
+            if (c == ']') {
+                if (string.length() > i && string[i + 1] == '0')
+                    state = Title;
+                continue;
+            }
+            if (c == '[') {
+                state = Bracket;
+                continue;
+            }
+            // FIXME: This does not support non-VT (aside from set-title) escapes
+            break;
+        case Bracket:
+            if (isdigit(c)) {
+                state = BracketArgsSemi;
+                continue;
+            }
+            break;
+        case BracketArgsSemi:
+            if (c == ';') {
+                state = Bracket;
+                continue;
+            }
+            if (!isdigit(c))
+                state = Free;
+            break;
+        case Title:
+            if (c == 7)
+                state = Free;
+            break;
+        }
+    }
+    return length;
+}
+
+Vector<size_t, 2> Editor::vt_dsr()
+{
+    fputs("\033[6n", stdout);
+    fflush(stdout);
+
+    char buf[16];
+    u32 length { 0 };
+    do {
+        auto nread = read(0, buf + length, 16 - length);
+        if (nread < 0) {
+            dbg() << "Error while reading DSR: " << strerror(errno);
+            return { 0, 0 };
+        }
+        if (nread == 0) {
+            dbg() << "Terminal DSR issue; received no response";
+            return { 0, 0 };
+        }
+        length += nread;
+    } while (buf[length - 1] != 'R' && length < 16);
+    size_t x { 0 }, y { 0 };
+
+    if (buf[0] == '\033' && buf[1] == '[') {
+        auto parts = StringView(buf + 2, length - 3).split_view(';');
+        bool ok;
+        x = parts[0].to_int(ok);
+        if (!ok) {
+            dbg() << "Terminal DSR issue; received garbage x";
+        }
+        y = parts[1].to_int(ok);
+        if (!ok) {
+            dbg() << "Terminal DSR issue; received garbage y";
+        }
+    }
+    return { x, y };
 }
 }

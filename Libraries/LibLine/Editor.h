@@ -92,6 +92,16 @@ public:
     const Vector<char, 1024>& buffer() const { return m_buffer; }
     char buffer_at(size_t pos) const { return m_buffer.at(pos); }
 
+    // only makes sense inside a char_input callback or on_* callback
+    void set_prompt(const String& prompt)
+    {
+        if (m_cached_prompt_valid)
+            m_old_prompt_length = m_cached_prompt_length;
+        m_cached_prompt_valid = false;
+        m_cached_prompt_length = actual_rendered_string_length(prompt);
+        m_new_prompt = prompt;
+    }
+
     void clear_line();
     void insert(const String&);
     void insert(const char);
@@ -113,37 +123,70 @@ private:
     void vt_clear_to_end_of_line();
     void vt_clear_lines(size_t count_above, size_t count_below = 0);
     void vt_move_relative(int x, int y);
+    void vt_move_absolute(u32 x, u32 y);
     void vt_apply_style(const Style&);
+    Vector<size_t, 2> vt_dsr();
 
     Style find_applicable_style(size_t offset) const;
 
+    void reset()
+    {
+        m_origin_x = 0;
+        m_origin_y = 0;
+        m_old_prompt_length = m_cached_prompt_length;
+        m_refresh_needed = true;
+        m_cursor = 0;
+    }
+
     void refresh_display();
 
-    // FIXME: These three will report the wrong value because they do not
-    //        take the length of the prompt into consideration, and it does not
-    //        appear that we can figure that out easily
+    size_t current_prompt_length() const
+    {
+        return m_cached_prompt_valid ? m_cached_prompt_length : m_old_prompt_length;
+    }
+
     size_t num_lines() const
     {
-        return (m_buffer.size() + m_num_columns) / m_num_columns;
+        return (m_cached_buffer_size + m_num_columns + current_prompt_length()) / m_num_columns;
     }
 
     size_t cursor_line() const
     {
-        return (m_cursor + m_num_columns) / m_num_columns;
+        return (m_drawn_cursor + m_num_columns + current_prompt_length()) / m_num_columns;
     }
 
     size_t offset_in_line() const
     {
-        auto offset = m_cursor % m_num_columns;
-        return offset;
+        return (m_drawn_cursor + current_prompt_length()) % m_num_columns;
     }
+
+    size_t actual_rendered_string_length(const StringView& string) const;
+
+    void set_origin()
+    {
+        auto position = vt_dsr();
+        m_origin_x = position[0];
+        m_origin_y = position[1];
+    }
+    void reposition_cursor();
 
     Vector<char, 1024> m_buffer;
     ByteBuffer m_pending_chars;
     size_t m_cursor { 0 };
+    size_t m_drawn_cursor { 0 };
     size_t m_chars_inserted_in_the_middle { 0 };
     size_t m_times_tab_pressed { 0 };
     size_t m_num_columns { 0 };
+    size_t m_cached_prompt_length { 0 };
+    size_t m_old_prompt_length { 0 };
+    size_t m_cached_buffer_size { 0 };
+    bool m_cached_prompt_valid { false };
+
+    // exact position before our prompt in the terminal
+    size_t m_origin_x { 0 };
+    size_t m_origin_y { 0 };
+
+    String m_new_prompt;
 
     HashMap<char, NonnullOwnPtr<KeyCallback>> m_key_callbacks;
 
