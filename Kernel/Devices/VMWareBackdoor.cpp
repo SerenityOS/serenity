@@ -95,6 +95,7 @@ static bool detect_presence()
 
 VMWareBackdoor* VMWareBackdoor::initialize()
 {
+    ASSERT(s_vmware_backdoor == nullptr);
     if (!detect_presence())
         return nullptr;
 
