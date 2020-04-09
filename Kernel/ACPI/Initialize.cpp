@@ -60,7 +60,7 @@ void initialize()
     if (feature_level == FeatureLevel::Enabled)
         Parser::initialize<DynamicParser>(rsdp);
     else
-        Parser::initialize<StaticParser>(rsdp);
+        Parser::initialize<Parser>(rsdp);
 }
 
 bool is_enabled()

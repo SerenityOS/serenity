@@ -27,7 +27,7 @@
 #pragma once
 
 #include <AK/RefPtr.h>
-#include <Kernel/ACPI/ACPIStaticParser.h>
+#include <Kernel/ACPI/ACPIParser.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Lock.h>
 #include <Kernel/VM/PhysicalPage.h>
@@ -38,7 +38,7 @@ namespace ACPI {
 
 class DynamicParser final
     : public IRQHandler
-    , public StaticParser {
+    , public Parser {
     friend class Parser;
 
 public:
