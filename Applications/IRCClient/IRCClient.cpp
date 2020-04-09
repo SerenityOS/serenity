@@ -46,6 +46,7 @@
 #define IRC_DEBUG
 
 enum IRCNumeric {
+    RPL_WELCOME = 1,
     RPL_WHOISUSER = 311,
     RPL_WHOISSERVER = 312,
     RPL_WHOISOPERATOR = 313,
@@ -102,14 +103,6 @@ void IRCClient::on_socket_connected()
 
     send_user();
     send_nick();
-
-    auto channel_str = m_config->read_entry("Connection", "AutoJoinChannels", "#test");
-    dbgprintf("IRCClient: Channels to autojoin: %s\n", channel_str.characters());
-    auto channels = channel_str.split(',');
-    for (auto& channel : channels) {
-        join_channel(channel);
-        dbgprintf("IRCClient: Auto joining channel: %s\n", channel.characters());
-    }
 }
 
 bool IRCClient::connect()
@@ -271,6 +264,8 @@ void IRCClient::handle(const Message& msg)
 
     if (is_numeric) {
         switch (numeric) {
+        case RPL_WELCOME:
+            return handle_rpl_welcome(msg);
         case RPL_WHOISCHANNELS:
             return handle_rpl_whoischannels(msg);
         case RPL_ENDOFWHO:
@@ -643,6 +638,24 @@ void IRCClient::handle_topic(const Message& msg)
     auto nick = prefix_parts[0];
     auto& channel_name = msg.arguments[0];
     ensure_channel(channel_name).handle_topic(nick, msg.arguments[1]);
+}
+
+void IRCClient::handle_rpl_welcome(const Message& msg)
+{
+    if (msg.arguments.size() < 2)
+        return;
+    auto& welcome_message = msg.arguments[1];
+    add_server_message(String::format("%s", welcome_message.characters()));
+
+    auto channel_str = m_config->read_entry("Connection", "AutoJoinChannels", "");
+    if (channel_str.is_empty())
+        return;
+    dbgprintf("IRCClient: Channels to autojoin: %s\n", channel_str.characters());
+    auto channels = channel_str.split(',');
+    for (auto& channel : channels) {
+        join_channel(channel);
+        dbgprintf("IRCClient: Auto joining channel: %s\n", channel.characters());
+    }
 }
 
 void IRCClient::handle_rpl_topic(const Message& msg)
