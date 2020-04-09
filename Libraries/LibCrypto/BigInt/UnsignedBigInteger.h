@@ -26,6 +26,7 @@
 
 #pragma once
 #include <AK/LogStream.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 
@@ -44,6 +45,7 @@ public:
 
     UnsignedBigInteger() {}
 
+    static UnsignedBigInteger from_base10(const String& str);
     static UnsignedBigInteger create_invalid();
 
     const AK::Vector<u32>& words() const { return m_words; }
@@ -63,10 +65,13 @@ public:
     size_t trimmed_length() const;
 
     bool operator==(const UnsignedBigInteger& other) const;
+    bool operator!=(const UnsignedBigInteger& other) const;
     bool operator<(const UnsignedBigInteger& other) const;
 
     void invalidate() { m_is_invalid = true; }
     bool is_invalid() const { return m_is_invalid; }
+
+    String to_base10() const;
 
 private:
     UnsignedBigInteger shift_left_by_n_words(const size_t number_of_words) const;
@@ -86,7 +91,8 @@ struct UnsignedDivisionResult {
 
 }
 
-inline const LogStream& operator<<(const LogStream& stream, const Crypto::UnsignedBigInteger value)
+inline const LogStream&
+operator<<(const LogStream& stream, const Crypto::UnsignedBigInteger value)
 {
     if (value.is_invalid()) {
         stream << "Invalid BigInt";

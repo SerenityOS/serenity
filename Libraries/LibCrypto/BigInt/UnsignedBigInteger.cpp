@@ -25,8 +25,44 @@
  */
 
 #include "UnsignedBigInteger.h"
+#include <AK/StringBuilder.h>
 
 namespace Crypto {
+
+UnsignedBigInteger UnsignedBigInteger::from_base10(const String& str)
+{
+    UnsignedBigInteger result;
+    for (auto& c : str) {
+        result = result.multiply({ 10 }).add(c - '0');
+    }
+    return result;
+}
+
+String UnsignedBigInteger::to_base10() const
+{
+    StringBuilder builder;
+    UnsignedBigInteger temp(*this);
+
+    while (temp != UnsignedBigInteger { 0 }) {
+        auto div_result = temp.divide({ 10 });
+        ASSERT(div_result.remainder.words()[0] < 10);
+        builder.append(static_cast<char>(div_result.remainder.words()[0] + '0'));
+        temp = div_result.quotient;
+    }
+
+    auto reversed_string = builder.to_string();
+    builder.clear();
+    for (int i = reversed_string.length() - 1; i >= 0; --i) {
+        builder.append(reversed_string[i]);
+    }
+
+    return builder.to_string();
+}
+
+bool UnsignedBigInteger::operator!=(const UnsignedBigInteger& other) const
+{
+    return !(*this == other);
+}
 
 /**
  * Complexity: O(N) where N is the number of words in the larger number
