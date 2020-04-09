@@ -193,6 +193,7 @@ void InterruptManagement::switch_to_ioapic_mode()
     APIC::init();
     APIC::enable_bsp();
     MultiProcessorParser::initialize();
+    locate_pci_interrupt_overrides();
 }
 
 void InterruptManagement::locate_apic_data()
@@ -234,8 +235,6 @@ void InterruptManagement::locate_apic_data()
 }
 void InterruptManagement::locate_pci_interrupt_overrides()
 {
-    // FIXME: calling the MultiProcessorParser causes a pagefault.
-    ASSERT_NOT_REACHED();
     m_pci_interrupt_overrides = MultiProcessorParser::the().get_pci_interrupt_redirections();
 }
 
