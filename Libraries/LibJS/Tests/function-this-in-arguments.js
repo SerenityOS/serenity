@@ -1,6 +1,6 @@
 try {
   assert(typeof this === "object");
-  assert(this === global);
+  assert(this === globalThis);
 
   function Foo() {
     this.x = 5;

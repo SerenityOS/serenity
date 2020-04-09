@@ -61,6 +61,7 @@ GlobalObject::GlobalObject()
     put("Infinity", js_infinity());
     put("undefined", js_undefined());
 
+    put("globalThis", this);
     put("console", heap().allocate<ConsoleObject>());
     put("Math", heap().allocate<MathObject>());
 

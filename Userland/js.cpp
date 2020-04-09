@@ -384,7 +384,6 @@ int main(int argc, char** argv)
     if (script_path == nullptr) {
         auto interpreter = JS::Interpreter::create<ReplObject>();
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
-        interpreter->global_object().put("global", &interpreter->global_object());
         if (test_mode) {
             interpreter->global_object().put_native_function("assert", assert_impl);
         }
@@ -515,7 +514,6 @@ int main(int argc, char** argv)
     } else {
         auto interpreter = JS::Interpreter::create<JS::GlobalObject>();
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
-        interpreter->global_object().put("global", &interpreter->global_object());
         if (test_mode) {
             interpreter->global_object().put_native_function("assert", assert_impl);
         }
