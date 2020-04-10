@@ -49,19 +49,15 @@ Interpreter::Interpreter()
 {
     m_empty_object_shape = heap().allocate<Shape>();
 
+    // These are done first since other prototypes depend on their presence.
     m_object_prototype = heap().allocate<ObjectPrototype>();
     m_function_prototype = heap().allocate<FunctionPrototype>();
-    m_string_prototype = heap().allocate<StringPrototype>();
-    m_array_prototype = heap().allocate<ArrayPrototype>();
-    m_error_prototype = heap().allocate<ErrorPrototype>();
-    m_date_prototype = heap().allocate<DatePrototype>();
-    m_number_prototype = heap().allocate<NumberPrototype>();
-    m_boolean_prototype = heap().allocate<BooleanPrototype>();
 
-#define __JS_ENUMERATE_ERROR_SUBCLASS(TitleCase, snake_case) \
-    m_##snake_case##_prototype = heap().allocate<TitleCase##Prototype>();
-    JS_ENUMERATE_ERROR_SUBCLASSES
-#undef __JS_ENUMERATE_ERROR_SUBCLASS
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
+    if (!m_##snake_name##_prototype)                                          \
+        m_##snake_name##_prototype = heap().allocate<PrototypeName>();
+    JS_ENUMERATE_BUILTIN_TYPES
+#undef __JS_ENUMERATE
 }
 
 Interpreter::~Interpreter()
@@ -178,24 +174,13 @@ Optional<Value> Interpreter::get_variable(const FlyString& name)
 void Interpreter::gather_roots(Badge<Heap>, HashTable<Cell*>& roots)
 {
     roots.set(m_empty_object_shape);
-
     roots.set(m_global_object);
-    roots.set(m_string_prototype);
-    roots.set(m_object_prototype);
-    roots.set(m_array_prototype);
-    roots.set(m_date_prototype);
-    roots.set(m_function_prototype);
-    roots.set(m_number_prototype);
-    roots.set(m_boolean_prototype);
-
-    roots.set(m_error_prototype);
-
-#define __JS_ENUMERATE_ERROR_SUBCLASS(TitleCase, snake_case) \
-    roots.set(m_##snake_case##_prototype);
-    JS_ENUMERATE_ERROR_SUBCLASSES
-#undef __JS_ENUMERATE_ERROR_SUBCLASS
-
     roots.set(m_exception);
+
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
+    roots.set(m_##snake_name##_prototype);
+    JS_ENUMERATE_BUILTIN_TYPES
+#undef __JS_ENUMERATE
 
     if (m_last_value.is_cell())
         roots.set(m_last_value.as_cell());

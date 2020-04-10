@@ -26,36 +26,41 @@
 
 #pragma once
 
-#define JS_ENUMERATE_ERROR_SUBCLASSES                              \
-    __JS_ENUMERATE_ERROR_SUBCLASS(EvalError, eval_error)           \
-    __JS_ENUMERATE_ERROR_SUBCLASS(InternalError, internal_error)   \
-    __JS_ENUMERATE_ERROR_SUBCLASS(RangeError, range_error)         \
-    __JS_ENUMERATE_ERROR_SUBCLASS(ReferenceError, reference_error) \
-    __JS_ENUMERATE_ERROR_SUBCLASS(SyntaxError, syntax_error)       \
-    __JS_ENUMERATE_ERROR_SUBCLASS(TypeError, type_error)           \
-    __JS_ENUMERATE_ERROR_SUBCLASS(URIError, uri_error)
+#define JS_ENUMERATE_NATIVE_OBJECTS                                              \
+    __JS_ENUMERATE(Array, array, ArrayPrototype, ArrayConstructor)               \
+    __JS_ENUMERATE(BooleanObject, boolean, BooleanPrototype, BooleanConstructor) \
+    __JS_ENUMERATE(Date, date, DatePrototype, DateConstructor)                   \
+    __JS_ENUMERATE(Error, error, ErrorPrototype, ErrorConstructor)               \
+    __JS_ENUMERATE(Function, function, FunctionPrototype, FunctionConstructor)   \
+    __JS_ENUMERATE(NumberObject, number, NumberPrototype, NumberConstructor)     \
+    __JS_ENUMERATE(Object, object, ObjectPrototype, ObjectConstructor)           \
+    __JS_ENUMERATE(StringObject, string, StringPrototype, StringConstructor)
+
+#define JS_ENUMERATE_ERROR_SUBCLASSES                                                                   \
+    __JS_ENUMERATE(EvalError, eval_error, EvalErrorPrototype, EvalErrorConstructor)                     \
+    __JS_ENUMERATE(InternalError, internal_error, InternalErrorPrototype, InternalErrorConstructor)     \
+    __JS_ENUMERATE(RangeError, range_error, RangeErrorPrototype, RangeErrorConstructor)                 \
+    __JS_ENUMERATE(ReferenceError, reference_error, ReferenceErrorPrototype, ReferenceErrorConstructor) \
+    __JS_ENUMERATE(SyntaxError, syntax_error, SyntaxErrorPrototype, SyntaxErrorConstructor)             \
+    __JS_ENUMERATE(TypeError, type_error, TypeErrorPrototype, TypeErrorConstructor)                     \
+    __JS_ENUMERATE(URIError, uri_error, URIErrorPrototype, URIErrorConstructor)
+
+#define JS_ENUMERATE_BUILTIN_TYPES \
+    JS_ENUMERATE_NATIVE_OBJECTS    \
+    JS_ENUMERATE_ERROR_SUBCLASSES
 
 namespace JS {
 
 class ASTNode;
-class ArrayConstructor;
-class BooleanConstructor;
 class Cell;
-class DateConstructor;
 class Error;
-class ErrorConstructor;
 class Exception;
 class Expression;
-class Function;
-class FunctionConstructor;
 class GlobalObject;
 class HandleImpl;
 class Heap;
 class HeapBlock;
 class Interpreter;
-class NumberConstructor;
-class Object;
-class ObjectConstructor;
 class PrimitiveString;
 class ScopeNode;
 class Shape;
@@ -63,12 +68,12 @@ class Statement;
 class Value;
 enum class DeclarationKind;
 
-#define __JS_ENUMERATE_ERROR_SUBCLASS(TitleCase, snake_case) \
-    class TitleCase;                                         \
-    class TitleCase##Constructor;                            \
-    class TitleCase##Prototype;
-JS_ENUMERATE_ERROR_SUBCLASSES
-#undef __JS_ENUMERATE_ERROR_SUBCLASS
+#define __JS_ENUMERATE(ClassName, snake_name, ConstructorName, PrototypeName) \
+    class ClassName;                                                          \
+    class ConstructorName;                                                    \
+    class PrototypeName;
+JS_ENUMERATE_BUILTIN_TYPES
+#undef __JS_ENUMERATE
 
 struct Argument;
 

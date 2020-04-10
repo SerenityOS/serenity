@@ -47,18 +47,18 @@ private:
     String m_message;
 };
 
-#define DECLARE_ERROR_SUBCLASS(TitleCase, snake_case)    \
-    class TitleCase final : public Error {               \
-    public:                                              \
-        TitleCase(const String& message);                \
-        virtual ~TitleCase() override;                   \
-                                                         \
-    private:                                             \
-        virtual const char* class_name() const override; \
+#define DECLARE_ERROR_SUBCLASS(ClassName, snake_name, PrototypeName, ConstructorName) \
+    class ClassName final : public Error {                                            \
+    public:                                                                           \
+        ClassName(const String& message);                                             \
+        virtual ~ClassName() override;                                                \
+                                                                                      \
+    private:                                                                          \
+        virtual const char* class_name() const override;                              \
     };
 
-#define __JS_ENUMERATE_ERROR_SUBCLASS(TitleCase, snake_case) \
-    DECLARE_ERROR_SUBCLASS(TitleCase, snake_case)
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
+    DECLARE_ERROR_SUBCLASS(ClassName, snake_name, PrototypeName, ConstructorName)
 JS_ENUMERATE_ERROR_SUBCLASSES
-#undef __JS_ENUMERATE_ERROR_SUBCLASS
+#undef __JS_ENUMERATE
 }
