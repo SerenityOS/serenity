@@ -170,7 +170,7 @@ void init_stage2()
         dbg() << "Text mode enabled";
     } else {
         bool bxvga_found = false;
-        PCI::enumerate_all([&](const PCI::Address&, PCI::ID id) {
+        PCI::enumerate([&](const PCI::Address&, PCI::ID id) {
             if (id.vendor_id == 0x1234 && id.device_id == 0x1111)
                 bxvga_found = true;
         });
