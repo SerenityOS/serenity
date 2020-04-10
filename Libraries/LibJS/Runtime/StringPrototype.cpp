@@ -38,7 +38,9 @@
 namespace JS {
 
 StringPrototype::StringPrototype()
+    : StringObject(js_string(interpreter(), String::empty()))
 {
+    set_prototype(interpreter().object_prototype());
     put_native_property("length", length_getter, nullptr);
     put_native_function("charAt", char_at, 1);
     put_native_function("repeat", repeat, 1);

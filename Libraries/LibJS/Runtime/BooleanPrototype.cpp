@@ -26,14 +26,15 @@
 
 #include <AK/Function.h>
 #include <LibJS/Interpreter.h>
-#include <LibJS/Runtime/BooleanObject.h>
 #include <LibJS/Runtime/BooleanPrototype.h>
 #include <LibJS/Runtime/Error.h>
 
 namespace JS {
 
 BooleanPrototype::BooleanPrototype()
+    : BooleanObject(false)
 {
+    set_prototype(interpreter().object_prototype());
     put_native_function("toString", to_string);
     put_native_function("valueOf", value_of);
 }
