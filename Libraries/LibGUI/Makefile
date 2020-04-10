@@ -10,6 +10,7 @@ OBJS = \
     Button.o \
     CheckBox.o \
     Clipboard.o \
+    ColorInput.o \
     ColorPicker.o \
     ColumnsView.o \
     ComboBox.o \
