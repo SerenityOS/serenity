@@ -39,6 +39,7 @@
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/NumberConstructor.h>
 #include <LibJS/Runtime/ObjectConstructor.h>
+#include <LibJS/Runtime/StringConstructor.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -72,6 +73,7 @@ GlobalObject::GlobalObject()
     add_constructor("Function", m_function_constructor, *interpreter().function_prototype());
     add_constructor("Number", m_number_constructor, *interpreter().number_prototype());
     add_constructor("Object", m_object_constructor, *interpreter().object_prototype());
+    add_constructor("String", m_string_constructor, *interpreter().string_prototype());
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
     add_constructor(#ClassName, m_##snake_name##_constructor, *interpreter().snake_name##_prototype());
