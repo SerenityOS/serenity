@@ -52,7 +52,7 @@ void TTY::set_default_termios()
     memcpy(m_termios.c_cc, default_cc, sizeof(default_cc));
 }
 
-ssize_t TTY::read(FileDescription&, u8* buffer, ssize_t size)
+ssize_t TTY::read(FileDescription&, size_t, u8* buffer, ssize_t size)
 {
     ASSERT(size >= 0);
 
@@ -85,7 +85,7 @@ ssize_t TTY::read(FileDescription&, u8* buffer, ssize_t size)
     return size;
 }
 
-ssize_t TTY::write(FileDescription&, const u8* buffer, ssize_t size)
+ssize_t TTY::write(FileDescription&, size_t, const u8* buffer, ssize_t size)
 {
 #ifdef TTY_DEBUG
     dbg() << "TTY::write {" << String::format("%u", size) << "} ";
@@ -98,7 +98,7 @@ ssize_t TTY::write(FileDescription&, const u8* buffer, ssize_t size)
     return size;
 }
 
-bool TTY::can_read(const FileDescription&) const
+bool TTY::can_read(const FileDescription&, size_t) const
 {
     if (in_canonical_mode()) {
         return m_available_lines > 0;
@@ -106,7 +106,7 @@ bool TTY::can_read(const FileDescription&) const
     return !m_input_buffer.is_empty();
 }
 
-bool TTY::can_write(const FileDescription&) const
+bool TTY::can_write(const FileDescription&, size_t) const
 {
     return true;
 }

@@ -59,14 +59,14 @@ String MasterPTY::pts_name() const
     return m_pts_name;
 }
 
-ssize_t MasterPTY::read(FileDescription&, u8* buffer, ssize_t size)
+ssize_t MasterPTY::read(FileDescription&, size_t, u8* buffer, ssize_t size)
 {
     if (!m_slave && m_buffer.is_empty())
         return 0;
     return m_buffer.read(buffer, size);
 }
 
-ssize_t MasterPTY::write(FileDescription&, const u8* buffer, ssize_t size)
+ssize_t MasterPTY::write(FileDescription&, size_t, const u8* buffer, ssize_t size)
 {
     if (!m_slave)
         return -EIO;
@@ -74,14 +74,14 @@ ssize_t MasterPTY::write(FileDescription&, const u8* buffer, ssize_t size)
     return size;
 }
 
-bool MasterPTY::can_read(const FileDescription&) const
+bool MasterPTY::can_read(const FileDescription&, size_t) const
 {
     if (!m_slave)
         return true;
     return !m_buffer.is_empty();
 }
 
-bool MasterPTY::can_write(const FileDescription&) const
+bool MasterPTY::can_write(const FileDescription&, size_t) const
 {
     return true;
 }

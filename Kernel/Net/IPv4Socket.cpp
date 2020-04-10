@@ -168,7 +168,7 @@ void IPv4Socket::detach(FileDescription&)
 {
 }
 
-bool IPv4Socket::can_read(const FileDescription&) const
+bool IPv4Socket::can_read(const FileDescription&, size_t) const
 {
     if (m_role == Role::Listener)
         return can_accept();
@@ -177,7 +177,7 @@ bool IPv4Socket::can_read(const FileDescription&) const
     return m_can_read;
 }
 
-bool IPv4Socket::can_write(const FileDescription&) const
+bool IPv4Socket::can_write(const FileDescription&, size_t) const
 {
     return is_connected();
 }

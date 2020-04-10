@@ -293,12 +293,12 @@ u8 PS2MouseDevice::mouse_read()
     return IO::in8(I8042_BUFFER);
 }
 
-bool PS2MouseDevice::can_read(const FileDescription&) const
+bool PS2MouseDevice::can_read(const FileDescription&, size_t) const
 {
     return !m_queue.is_empty();
 }
 
-ssize_t PS2MouseDevice::read(FileDescription&, u8* buffer, ssize_t size)
+ssize_t PS2MouseDevice::read(FileDescription&, size_t, u8* buffer, ssize_t size)
 {
     ASSERT(size > 0);
     size_t nread = 0;
@@ -318,7 +318,7 @@ ssize_t PS2MouseDevice::read(FileDescription&, u8* buffer, ssize_t size)
     return nread;
 }
 
-ssize_t PS2MouseDevice::write(FileDescription&, const u8*, ssize_t)
+ssize_t PS2MouseDevice::write(FileDescription&, size_t, const u8*, ssize_t)
 {
     return 0;
 }
