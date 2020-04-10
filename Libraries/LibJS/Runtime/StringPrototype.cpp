@@ -49,6 +49,8 @@ StringPrototype::StringPrototype()
     put_native_function("toLowerCase", to_lowercase, 0);
     put_native_function("toUpperCase", to_uppercase, 0);
     put_native_function("toString", to_string, 0);
+    put_native_function("padStart", pad_start, 1);
+    put_native_function("padEnd", pad_end, 1);
 }
 
 StringPrototype::~StringPrototype()
@@ -171,7 +173,7 @@ Value StringPrototype::length_getter(Interpreter& interpreter)
     auto* string_object = string_object_from(interpreter);
     if (!string_object)
         return {};
-    return Value((i32) string_object->primitive_string()->string().length());
+    return Value((i32)string_object->primitive_string()->string().length());
 }
 
 Value StringPrototype::to_string(Interpreter& interpreter)
@@ -180,6 +182,57 @@ Value StringPrototype::to_string(Interpreter& interpreter)
     if (!string_object)
         return {};
     return js_string(interpreter, string_object->primitive_string()->string());
+}
+
+enum class PadPlacement {
+    Start,
+    End,
+};
+
+static Value pad_string(Interpreter& interpreter, Object* object, PadPlacement placement)
+{
+    auto string = object->to_string().as_string()->string();
+    if (interpreter.argument(0).to_number().is_nan()
+        || interpreter.argument(0).to_number().is_undefined()
+        || interpreter.argument(0).to_number().to_i32() < 0) {
+        return js_string(interpreter, string);
+    }
+    auto max_length = static_cast<size_t>(interpreter.argument(0).to_i32());
+    if (max_length <= string.length())
+        return js_string(interpreter, string);
+
+    String fill_string = " ";
+    if (!interpreter.argument(1).is_undefined())
+        fill_string = interpreter.argument(1).to_string();
+    if (fill_string.is_empty())
+        return js_string(interpreter, string);
+
+    auto fill_length = max_length - string.length();
+
+    StringBuilder filler_builder;
+    while (filler_builder.length() < fill_length)
+        filler_builder.append(fill_string);
+    auto filler = filler_builder.build().substring(0, fill_length);
+
+    if (placement == PadPlacement::Start)
+        return js_string(interpreter, String::format("%s%s", filler.characters(), string.characters()));
+    return js_string(interpreter, String::format("%s%s", string.characters(), filler.characters()));
+}
+
+Value StringPrototype::pad_start(Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return {};
+    return pad_string(interpreter, this_object, PadPlacement::Start);
+}
+
+Value StringPrototype::pad_end(Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return {};
+    return pad_string(interpreter, this_object, PadPlacement::End);
 }
 
 }
