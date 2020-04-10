@@ -40,16 +40,16 @@ Error::~Error()
 {
 }
 
-#define __JS_ENUMERATE_ERROR_SUBCLASS(TitleCase, snake_case)      \
-    TitleCase::TitleCase(const String& message)                \
-        : Error(#TitleCase, message)                           \
-    {                                                          \
-        set_prototype(interpreter().snake_case##_prototype()); \
-    }                                                          \
-    TitleCase::~TitleCase() {}                                 \
-    const char* TitleCase::class_name() const { return #TitleCase; }
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
+    ClassName::ClassName(const String& message)                               \
+        : Error(#ClassName, message)                                          \
+    {                                                                         \
+        set_prototype(interpreter().snake_name##_prototype());                \
+    }                                                                         \
+    ClassName::~ClassName() {}                                                \
+    const char* ClassName::class_name() const { return #ClassName; }
 
 JS_ENUMERATE_ERROR_SUBCLASSES
-#undef __JS_ENUMERATE_ERROR_SUBCLASS
+#undef __JS_ENUMERATE
 
 }

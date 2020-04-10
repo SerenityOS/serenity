@@ -44,19 +44,19 @@ private:
     static Value message_getter(Interpreter&);
 };
 
-#define DECLARE_ERROR_SUBCLASS_PROTOTYPE(TitleCase, snake_case) \
-    class TitleCase final : public Object {                     \
-    public:                                                     \
-        TitleCase();                                            \
-        virtual ~TitleCase() override;                          \
-                                                                \
-    private:                                                    \
-        virtual const char* class_name() const override;        \
+#define DECLARE_ERROR_SUBCLASS_PROTOTYPE(ClassName, snake_name, PrototypeName, ConstructorName) \
+    class PrototypeName final : public Object {                                                 \
+    public:                                                                                     \
+        PrototypeName();                                                                        \
+        virtual ~PrototypeName() override;                                                      \
+                                                                                                \
+    private:                                                                                    \
+        virtual const char* class_name() const override;                                        \
     };
 
-#define __JS_ENUMERATE_ERROR_SUBCLASS(TitleCase, snake_case) \
-    DECLARE_ERROR_SUBCLASS_PROTOTYPE(TitleCase##Prototype, snake_case##_prototype)
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
+    DECLARE_ERROR_SUBCLASS_PROTOTYPE(ClassName, snake_name, PrototypeName, ConstructorName)
 JS_ENUMERATE_ERROR_SUBCLASSES
-#undef __JS_ENUMERATE_ERROR_SUBCLASS
+#undef __JS_ENUMERATE
 
 }
