@@ -27,19 +27,13 @@
 #pragma once
 
 #include "MonitorWidget.h"
+#include <LibGUI/ColorInput.h>
 #include <LibGUI/ComboBox.h>
-#include <LibGUI/TextBox.h>
 
 class DisplayPropertiesWidget : public GUI::Widget {
     C_OBJECT(MonitorWidget);
 
 public:
-    enum class ButtonOperations {
-        Ok,
-        Apply,
-        Cancel,
-    };
-
     DisplayPropertiesWidget();
 
     GUI::Widget* root_widget() { return m_root_widget; }
@@ -60,5 +54,5 @@ private:
     RefPtr<GUI::ComboBox> m_wallpaper_combo;
     RefPtr<GUI::ComboBox> m_mode_combo;
     RefPtr<GUI::ComboBox> m_resolution_combo;
-    RefPtr<GUI::TextBox> m_color_textbox;
+    RefPtr<GUI::ColorInput> m_color_input;
 };
