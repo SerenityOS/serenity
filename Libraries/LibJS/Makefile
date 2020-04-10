@@ -37,6 +37,7 @@ OBJS = \
     Runtime/PrimitiveString.o \
     Runtime/ScriptFunction.o \
     Runtime/Shape.o \
+    Runtime/StringConstructor.o \
     Runtime/StringObject.o \
     Runtime/StringPrototype.o \
     Runtime/Value.o \

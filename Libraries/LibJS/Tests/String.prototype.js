@@ -1,8 +1,11 @@
 try {
-  assert(typeof Object.getPrototypeOf("") === "object");
-  assert(Object.getPrototypeOf("").valueOf() === '');
+    assert(typeof Object.getPrototypeOf("") === "object");
+    assert(Object.getPrototypeOf("").valueOf() === '');
 
-  console.log("PASS");
+    assert(typeof String.prototype === "object");
+    assert(String.prototype.valueOf() === '');
+
+    console.log("PASS");
 } catch (err) {
-  console.log("FAIL: " + err);
+    console.log("FAIL: " + err);
 }
