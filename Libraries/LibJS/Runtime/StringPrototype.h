@@ -45,6 +45,8 @@ private:
     static Value to_lowercase(Interpreter&);
     static Value to_uppercase(Interpreter&);
     static Value to_string(Interpreter&);
+    static Value pad_start(Interpreter&);
+    static Value pad_end(Interpreter&);
 
     static Value length_getter(Interpreter&);
 };
