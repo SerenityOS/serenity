@@ -139,11 +139,17 @@ public:
     Object* string_prototype() { return m_string_prototype; }
     Object* object_prototype() { return m_object_prototype; }
     Object* array_prototype() { return m_array_prototype; }
-    Object* error_prototype() { return m_error_prototype; }
     Object* date_prototype() { return m_date_prototype; }
     Object* function_prototype() { return m_function_prototype; }
     Object* number_prototype() { return m_number_prototype; }
     Object* boolean_prototype() { return m_boolean_prototype; }
+
+    Object* error_prototype() { return m_error_prototype; }
+
+#define __JS_ENUMERATE_ERROR_SUBCLASS(TitleCase, snake_case) \
+    Object* snake_case##_prototype() { return m_##snake_case##_prototype; }
+    JS_ENUMERATE_ERROR_SUBCLASSES
+#undef __JS_ENUMERATE_ERROR_SUBCLASS
 
     Exception* exception() { return m_exception; }
     void clear_exception() { m_exception = nullptr; }
@@ -178,11 +184,17 @@ private:
     Object* m_string_prototype { nullptr };
     Object* m_object_prototype { nullptr };
     Object* m_array_prototype { nullptr };
-    Object* m_error_prototype { nullptr };
     Object* m_date_prototype { nullptr };
     Object* m_function_prototype { nullptr };
     Object* m_number_prototype { nullptr };
     Object* m_boolean_prototype { nullptr };
+
+    Object* m_error_prototype { nullptr };
+
+#define __JS_ENUMERATE_ERROR_SUBCLASS(TitleCase, snake_case) \
+    Object* m_##snake_case##_prototype;
+    JS_ENUMERATE_ERROR_SUBCLASSES
+#undef __JS_ENUMERATE_ERROR_SUBCLASS
 
     Exception* m_exception { nullptr };
 
