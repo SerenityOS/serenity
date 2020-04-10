@@ -47,17 +47,17 @@ InodeWatcher::~InodeWatcher()
         safe_inode->unregister_watcher({}, *this);
 }
 
-bool InodeWatcher::can_read(const FileDescription&) const
+bool InodeWatcher::can_read(const FileDescription&, size_t) const
 {
     return !m_queue.is_empty() || !m_inode;
 }
 
-bool InodeWatcher::can_write(const FileDescription&) const
+bool InodeWatcher::can_write(const FileDescription&, size_t) const
 {
     return true;
 }
 
-ssize_t InodeWatcher::read(FileDescription&, u8* buffer, ssize_t buffer_size)
+ssize_t InodeWatcher::read(FileDescription&, size_t, u8* buffer, ssize_t buffer_size)
 {
     ASSERT(!m_queue.is_empty() || !m_inode);
 
@@ -71,7 +71,7 @@ ssize_t InodeWatcher::read(FileDescription&, u8* buffer, ssize_t buffer_size)
     return sizeof(event);
 }
 
-ssize_t InodeWatcher::write(FileDescription&, const u8*, ssize_t)
+ssize_t InodeWatcher::write(FileDescription&, size_t, const u8*, ssize_t)
 {
     return -EIO;
 }

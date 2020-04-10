@@ -40,12 +40,12 @@ SerialDevice::~SerialDevice()
 {
 }
 
-bool SerialDevice::can_read(const FileDescription&) const
+bool SerialDevice::can_read(const FileDescription&, size_t) const
 {
     return (get_line_status() & DataReady) != 0;
 }
 
-ssize_t SerialDevice::read(FileDescription&, u8* buffer, ssize_t size)
+ssize_t SerialDevice::read(FileDescription&, size_t, u8* buffer, ssize_t size)
 {
     if (!size)
         return 0;
@@ -58,12 +58,12 @@ ssize_t SerialDevice::read(FileDescription&, u8* buffer, ssize_t size)
     return 1;
 }
 
-bool SerialDevice::can_write(const FileDescription&) const
+bool SerialDevice::can_write(const FileDescription&, size_t) const
 {
     return (get_line_status() & EmptyTransmitterHoldingRegister) != 0;
 }
 
-ssize_t SerialDevice::write(FileDescription&, const u8* buffer, ssize_t size)
+ssize_t SerialDevice::write(FileDescription&, size_t, const u8* buffer, ssize_t size)
 {
     if (!size)
         return 0;

@@ -45,10 +45,10 @@ public:
 
 private:
     virtual const char* class_name() const override { return "BXVGA"; }
-    virtual bool can_read(const FileDescription&) const override { return true; }
-    virtual bool can_write(const FileDescription&) const override { return true; }
-    virtual ssize_t read(FileDescription&, u8*, ssize_t) override { return -EINVAL; }
-    virtual ssize_t write(FileDescription&, const u8*, ssize_t) override { return -EINVAL; }
+    virtual bool can_read(const FileDescription&, size_t) const override { return true; }
+    virtual bool can_write(const FileDescription&, size_t) const override { return true; }
+    virtual ssize_t read(FileDescription&, size_t, u8*, ssize_t) override { return -EINVAL; }
+    virtual ssize_t write(FileDescription&, size_t, const u8*, ssize_t) override { return -EINVAL; }
     virtual bool read_blocks(unsigned, u16, u8*) override { return false; }
     virtual bool write_blocks(unsigned, u16, const u8*) override { return false; }
 
