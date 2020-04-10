@@ -48,6 +48,7 @@ StringPrototype::StringPrototype()
     put_native_function("indexOf", index_of, 1);
     put_native_function("toLowerCase", to_lowercase, 0);
     put_native_function("toUpperCase", to_uppercase, 0);
+    put_native_function("toString", to_string, 0);
 }
 
 StringPrototype::~StringPrototype()
@@ -167,12 +168,18 @@ Value StringPrototype::to_uppercase(Interpreter& interpreter)
 
 Value StringPrototype::length_getter(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
-    if (!this_object)
+    auto* string_object = string_object_from(interpreter);
+    if (!string_object)
         return {};
-    if (!this_object->is_string_object())
-        return interpreter.throw_exception<TypeError>("Not a String object");
-    return Value((i32) static_cast<const StringObject*>(this_object)->primitive_string()->string().length());
+    return Value((i32) string_object->primitive_string()->string().length());
+}
+
+Value StringPrototype::to_string(Interpreter& interpreter)
+{
+    auto* string_object = string_object_from(interpreter);
+    if (!string_object)
+        return {};
+    return js_string(interpreter, string_object->primitive_string()->string());
 }
 
 }
