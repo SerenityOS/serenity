@@ -431,6 +431,11 @@ struct SC_ptrace_params {
     int data;
 };
 
+struct SC_ptrace_peek_params {
+    u32* address;
+    u32* out_data;
+};
+
 void initialize();
 int sync();
 
