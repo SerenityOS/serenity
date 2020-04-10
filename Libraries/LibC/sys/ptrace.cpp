@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/LogStream.h>
 #include <Kernel/Syscall.h>
 #include <errno.h>
 #include <sys/ptrace.h>
@@ -32,6 +33,20 @@ extern "C" {
 
 int ptrace(int request, pid_t pid, void* addr, int data)
 {
+
+    // PT_PEEK needs special handling since the syscall wrapper
+    // returns the peeked value as an int, which can be negative because of the cast.
+    // When using PT_PEEK, the user can check if an error occured
+    // by looking at errno rather than the return value.
+
+    u32 out_data;
+    Syscall::SC_ptrace_peek_params peek_params;
+    if (request == PT_PEEK) {
+        peek_params.address = reinterpret_cast<u32*>(addr);
+        peek_params.out_data = &out_data;
+        addr = &peek_params;
+    }
+
     Syscall::SC_ptrace_params params {
         request,
         pid,
@@ -39,6 +54,16 @@ int ptrace(int request, pid_t pid, void* addr, int data)
         data
     };
     int rc = syscall(SC_ptrace, &params);
+
+    if (request == PT_PEEK) {
+        if (rc < 0) {
+            errno = -rc;
+            return -1;
+        }
+        errno = 0;
+        return static_cast<int>(out_data);
+    }
+
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 }
