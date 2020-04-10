@@ -48,6 +48,19 @@ static hostent __gethostbyaddr_buffer;
 static char __gethostbyaddr_name_buffer[512];
 static in_addr_t* __gethostbyaddr_address_list_buffer[2];
 
+static FILE* services_file = nullptr;
+static const char* services_path = "/etc/services";
+
+static bool fill_getserv_buffers(char* line, ssize_t read);
+static servent __getserv_buffer;
+static char __getserv_name_buffer[512];
+static char __getserv_protocol_buffer[10];
+static int __getserv_port_buffer;
+static Vector<String> __getserv_alias_list_buffer = Vector<String>();
+static Vector<char*> __getserv_alias_list = Vector<char*>();
+static int keep_service_file_open = 0;
+static ssize_t service_file_offset = 0;
+
 static int connect_to_lookup_server()
 {
     int fd = socket(AF_LOCAL, SOCK_STREAM | SOCK_CLOEXEC, 0);
@@ -199,10 +212,218 @@ hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
     return &__gethostbyaddr_buffer;
 }
 
+struct servent* getservent()
+{
+    //If the services file is not open, attempt to open it and return null if it fails.
+    if (!services_file) {
+        services_file = fopen(services_path, "r");
+
+        if (!services_file) {
+            perror("error opening services file");
+            return nullptr;
+        }
+    }
+
+    if (fseek(services_file, service_file_offset, SEEK_SET) != 0) {
+        perror("error seeking file");
+        return nullptr;
+    }
+    char* line = nullptr;
+    size_t len = 0;
+    ssize_t read;
+
+    auto free_line_on_exit = ScopeGuard([line] {
+        if (line) {
+            free(line);
+        }
+    });
+
+    //Read lines from services file until an actual service name is found.
+    do {
+        read = getline(&line, &len, services_file);
+        service_file_offset += read;
+        if (read > 0 && (line[0] >= 65 && line[0] <= 122)) {
+            break;
+        }
+    } while (read != -1);
+    if (read == -1) {
+        fclose(services_file);
+        services_file = nullptr;
+        service_file_offset = 0;
+        return nullptr;
+    }
+
+    servent* service_entry = nullptr;
+    if (fill_getserv_buffers(line, read)) {
+        __getserv_buffer.s_name = __getserv_name_buffer;
+        __getserv_buffer.s_port = __getserv_port_buffer;
+        __getserv_buffer.s_proto = __getserv_protocol_buffer;
+
+        //freeing any previous alias data
+        for (size_t i = 0; i < __getserv_alias_list.size(); i++) {
+            free(__getserv_alias_list[i]);
+        }
+        __getserv_alias_list.clear();
+        size_t alias_list_size = __getserv_alias_list_buffer.size();
+
+        if (alias_list_size > 0) {
+            for (size_t i = 0; i < alias_list_size; i++) {
+
+                //Can't get non-const access to underlying String data, must duplicate to conform with servent member requirements
+                char* alias = strdup(__getserv_alias_list_buffer[i].characters());
+                if (alias == nullptr) {
+                    perror("error allocating space for alias");
+                    return nullptr;
+                }
+                __getserv_alias_list.append(alias);
+            }
+        }
+        __getserv_buffer.s_aliases = __getserv_alias_list.data();
+        service_entry = &__getserv_buffer;
+    }
+
+    if (!keep_service_file_open) {
+        endservent();
+    }
+    return service_entry;
+}
 struct servent* getservbyname(const char* name, const char* protocol)
 {
-    dbg() << "FIXME: getservbyname(\"" << name << "\", \"" << protocol << "\")";
-    ASSERT_NOT_REACHED();
+    int previous_file_open_setting = keep_service_file_open;
+    setservent(1);
+    struct servent* current_service = nullptr;
+    auto service_file_handler = ScopeGuard([previous_file_open_setting] {
+        if (!previous_file_open_setting) {
+            endservent();
+        }
+    });
+
+    if (!protocol) {
+        do {
+            current_service = getservent();
+            if (!current_service) {
+                return nullptr;
+            }
+        } while (strcmp(current_service->s_name, name) != 0);
+    } else {
+        do {
+            current_service = getservent();
+            if (!current_service) {
+                return nullptr;
+            }
+        } while (!(strcmp(current_service->s_name, name) == 0 && strcmp(current_service->s_proto, protocol) == 0));
+    }
+
+    return current_service;
+}
+struct servent* getservbyport(int port, const char* protocol)
+{
+    int previous_file_open_setting = keep_service_file_open;
+    setservent(1);
+    struct servent* current_service = nullptr;
+    auto service_file_handler = ScopeGuard([previous_file_open_setting] {
+        if (!previous_file_open_setting) {
+            endservent();
+        }
+    });
+    if (!protocol) {
+        do {
+            current_service = getservent();
+            if (!current_service) {
+                return nullptr;
+            }
+        } while (current_service->s_port != port);
+    } else {
+        do {
+            current_service = getservent();
+            if (!current_service) {
+                return nullptr;
+            }
+        } while (!(current_service->s_port == port && (strcmp(current_service->s_proto, protocol) == 0)));
+    }
+
+    return current_service;
+}
+void setservent(int stay_open)
+{
+    if (!services_file) {
+        services_file = fopen(services_path, "r");
+
+        if (!services_file) {
+            perror("error opening services file");
+            return;
+        }
+    }
+    rewind(services_file);
+    keep_service_file_open = stay_open;
+    service_file_offset = 0;
+}
+void endservent()
+{
+    if (!services_file) {
+        return;
+    }
+    fclose(services_file);
+    services_file = nullptr;
 }
 
+//Fill the service entry buffer with the information contained in the currently read line, returns true if successfull, false if failure occurs.
+static bool fill_getserv_buffers(char* line, ssize_t read)
+{
+    //Splitting the line by tab delimiter and filling the servent buffers name, port, and protocol members.
+    String string_line = String(line, read);
+    string_line.replace(" ", "\t", true);
+    auto split_line = string_line.split('\t');
+
+    //This indicates an incorrect file format. Services file entries should always at least contain name and port/protocol, seperated by tabs.
+    if (split_line.size() < 2) {
+        perror("malformed services file: entry");
+        return false;
+    }
+    if (sizeof(__getserv_name_buffer) >= split_line[0].length() + 1) {
+        strncpy(__getserv_name_buffer, split_line[0].characters(), split_line[0].length() + 1);
+    } else {
+        perror("invalid buffer length: service name");
+        return false;
+    }
+
+    auto port_protocol_split = String(split_line[1]).split('/');
+    if (port_protocol_split.size() < 2) {
+        perror("malformed services file: port/protocol");
+        return false;
+    }
+    bool conversion_checker;
+    __getserv_port_buffer = port_protocol_split[0].to_int(conversion_checker);
+
+    if (!conversion_checker) {
+        return false;
+    }
+
+    //Removing any annoying whitespace at the end of the protocol.
+    port_protocol_split[1].replace(" ", "", true);
+    port_protocol_split[1].replace("\t", "", true);
+    port_protocol_split[1].replace("\n", "", true);
+
+    if (sizeof(__getserv_protocol_buffer) >= port_protocol_split[1].length()) {
+        strncpy(__getserv_protocol_buffer, port_protocol_split[1].characters(), port_protocol_split[1].length() + 1);
+    } else {
+        perror("malformed services file: protocol");
+        return false;
+    }
+
+    __getserv_alias_list_buffer.clear();
+
+    //If there are aliases for the service, we will fill the alias list buffer.
+    if (split_line.size() > 2 && !split_line[2].starts_with('#')) {
+
+        for (size_t i = 2; i < split_line.size(); i++) {
+            if (split_line[i].starts_with('#')) {
+                break;
+            }
+            __getserv_alias_list_buffer.append(split_line[i]);
+        }
+    }
+
+    return true;
+}
 }
