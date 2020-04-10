@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,17 +24,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "DebugSession.h"
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
+#include <AK/LogStream.h>
+#include <AK/StringBuilder.h>
+#include <AK/kmalloc.h>
 #include <LibC/sys/arch/i386/regs.h>
 #include <LibCore/File.h>
-#include <LibELF/ELFImage.h>
+#include <LibX86/Disassembler.h>
+#include <LibX86/Instruction.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/ptrace.h>
-#include <sys/wait.h>
 #include <unistd.h>
 
 static int usage()
@@ -43,178 +46,176 @@ static int usage()
     return 1;
 }
 
-static int g_pid = -1;
+OwnPtr<DebugSession> g_debug_session;
 
 static void handle_sigint(int)
 {
-    if (g_pid == -1)
-        return;
+    printf("Debugger: SIGINT\n");
 
-    if (ptrace(PT_DETACH, g_pid, 0, 0) == -1) {
-        perror("detach");
-    }
+    // The destructor of DebugSession takes care of detaching
+    g_debug_session = nullptr;
 }
 
-void run_child_and_attach(char** argv)
+String get_command()
 {
-    int pid = fork();
-
-    if (!pid) {
-        if (ptrace(PT_TRACE_ME, 0, 0, 0) == -1) {
-            perror("traceme");
-            return exit(1);
-        }
-
-        int rc = execvp(argv[1], &argv[1]);
-        if (rc < 0) {
-            perror("execvp");
+    printf("(sdb) ");
+    fflush(stdout);
+    char* line = nullptr;
+    size_t allocated_size = 0;
+    ssize_t nread = getline(&line, &allocated_size, stdin);
+    if (nread < 0) {
+        if (errno == 0) {
+            fprintf(stderr, "\n");
+        } else {
+            perror("getline");
             exit(1);
         }
-        ASSERT_NOT_REACHED();
     }
-
-    g_pid = pid;
-
-    if (waitpid(pid, nullptr, WSTOPPED) != pid) {
-        perror("waitpid");
-        exit(1);
-    }
-
-    if (ptrace(PT_ATTACH, g_pid, 0, 0) == -1) {
-        perror("attach");
-        exit(1);
-    }
-
-    if (waitpid(g_pid, nullptr, WSTOPPED) != g_pid) {
-        perror("waitpid");
-        exit(1);
-    }
-
-    dbg() << "debugee should continue until before execve exit";
-    if (ptrace(PT_CONTINUE, g_pid, 0, 0) == -1) {
-        perror("continue");
-    }
-
-    // we want to continue until the exit from the 'execve' sycsall
-    // we do this to ensure that when we start debugging the process,
-    // it executes the target image, and not the forked image of the debugger
-    // NOTE: we only need to do this when we are debugging a new process (i.e not attaching to a process that's already running!)
-    // if (ptrace(PT_SYSCALL, g_pid, 0, 0) == -1) {
-    //     perror("syscall");
-    //     exit(1);
-    // }
-
-    if (waitpid(g_pid, nullptr, WSTOPPED) != g_pid) {
-        perror("wait_pid");
-        exit(1);
-    }
-    // dbg() << "debugee should continue until after execve exit";
-    // sleep(3);
-
-    // if (ptrace(PT_CONTINUE, g_pid, 0, 0) == -1) {
-    //     perror("continue");
-    // }
-
-    // sleep(10);
-
-    // if (waitpid(g_pid, nullptr, WSTOPPED) != g_pid) {
-    //     perror("wait_pid");
-    //     exit(1);
-    // }
-
-    // dbg() << "debugee should already be running";
-    // if (ptrace(PT_CONTINUE, g_pid, 0, 0) == -1) {
-    //     perror("continue");
-    // }
+    String command(line);
+    free(line);
+    if (command.ends_with('\n'))
+        command = command.substring(0, command.length() - 1);
+    return command;
 }
 
-VirtualAddress get_entry_point(int pid)
+void handle_print_registers(const PtraceRegisters& regs)
 {
-    auto path = String::format("/proc/%d/exe", pid);
-    dbg() << "path: " << path;
-    auto file = Core::File::construct(path);
-    if (!file->open(Core::File::ReadOnly)) {
-        fprintf(stderr, "Failed to open Debugged executable");
-        exit(1);
+    printf("eax: 0x%x\n", regs.eax);
+    printf("ecx: 0x%x\n", regs.ecx);
+    printf("edx: 0x%x\n", regs.edx);
+    printf("ebx: 0x%x\n", regs.ebx);
+    printf("esp: 0x%x\n", regs.esp);
+    printf("ebp: 0x%x\n", regs.ebp);
+    printf("esi: 0x%x\n", regs.esi);
+    printf("edi: 0x%x\n", regs.edi);
+    printf("eip: 0x%x\n", regs.eip);
+    printf("eflags: 0x%x\n", regs.eflags);
+}
+
+bool handle_disassemble_command(const String& command, void* first_instruction)
+{
+    auto parts = command.split(' ');
+    size_t number_of_instructions_to_disassemble = 5;
+    if (parts.size() == 2) {
+        bool ok;
+        number_of_instructions_to_disassemble = parts[1].to_uint(ok);
+        if (!ok)
+            return false;
     }
-    auto data = file->read_all();
-    dbg() << "data size:" << data.size();
-    ELFImage elf(data.data(), data.size());
-    return elf.entry();
+
+    // FIXME: Instead of using a fixed "dump_size",
+    //        we can feed instructions to the disassembler one by one
+    constexpr size_t dump_size = 0x100;
+    ByteBuffer code;
+    for (size_t i = 0; i < dump_size / sizeof(u32); ++i) {
+        auto value = g_debug_session->peek(reinterpret_cast<u32*>(first_instruction) + i);
+        if (!value.has_value())
+            break;
+        code.append(&value, sizeof(u32));
+    }
+
+    X86::SimpleInstructionStream stream(code.data(), code.size());
+    X86::Disassembler disassembler(stream);
+
+    for (size_t i = 0; i < number_of_instructions_to_disassemble; ++i) {
+        auto offset = stream.offset();
+        auto insn = disassembler.next();
+        if (!insn.has_value())
+            break;
+
+        printf(String::format("   %08x ", offset + reinterpret_cast<size_t>(first_instruction)).characters());
+        printf("<+%lu>:\t", reinterpret_cast<size_t>(offset));
+        printf("%s\n", insn.value().to_string(offset).characters());
+    }
+
+    return true;
+}
+
+bool handle_breakpoint_command(const String& command)
+{
+    auto parts = command.split(' ');
+    if (parts.size() != 2)
+        return false;
+
+    u32 breakpoint_address = strtoul(parts[1].characters(), nullptr, 16);
+    if (errno != 0)
+        return false;
+    bool success = g_debug_session->insert_breakpoint(reinterpret_cast<void*>(breakpoint_address));
+    if (!success) {
+        fprintf(stderr, "coult not insert breakpoint at: 0x%x\n", breakpoint_address);
+        return false;
+    }
+    return true;
+}
+
+void print_help()
+{
+    printf("Options:\n"
+           "cont - Continue execution\n"
+           "regs - Print registers\n"
+           "dis <number of instructions> - Print disassembly\n"
+           "bp <address> - Insert a breakpoint\n");
 }
 
 int main(int argc, char** argv)
 {
     // TODO: pledge & unveil
-    // TOOD: check that we didn't somehow hurt performance. boot seems slower? (or it's just laptop battey)
+    // TODO: check that strace still works
     if (argc == 1)
         return usage();
+
+    StringBuilder command;
+    command.append(argv[1]);
+    for (int i = 2; i < argc; ++i) {
+        command.appendf("%s ", argv[i]);
+    }
+
+    auto result = DebugSession::exec_and_attach(command.to_string());
+    if (!result) {
+        fprintf(stderr, "Failed to start debugging session for: \"%s\"\n", command.to_string().characters());
+        exit(1);
+    }
+    g_debug_session = result.release_nonnull();
 
     struct sigaction sa;
     memset(&sa, 0, sizeof(struct sigaction));
     sa.sa_handler = handle_sigint;
     sigaction(SIGINT, &sa, nullptr);
 
-    run_child_and_attach(argv);
+    bool rc = g_debug_session->insert_breakpoint(g_debug_session->get_entry_point().as_ptr());
+    ASSERT(rc);
 
-    dbg() << "pid:" << g_pid;
-    auto entry_point = get_entry_point(g_pid);
-    dbg() << "entry point:" << entry_point;
+    g_debug_session->run([&](DebugSession::DebugBreakReason reason, Optional<PtraceRegisters> optional_regs) {
+        if (reason == DebugSession::DebugBreakReason::Exited) {
+            printf("Program exited.\n");
+            return DebugSession::DebugDecision::Detach;
+        }
 
-    const uint32_t original_instruction_data = ptrace(PT_PEEK, g_pid, (void*)entry_point.as_ptr(), 0);
+        ASSERT(optional_regs.has_value());
+        const PtraceRegisters& regs = optional_regs.value();
 
-    dbg() << "peeked data:" << (void*)original_instruction_data;
+        printf("Program is stopped at: 0x%x\n", regs.eip);
+        for (;;) {
+            auto command = get_command();
+            bool success = false;
 
-    if (ptrace(PT_POKE, g_pid, (void*)entry_point.as_ptr(), (original_instruction_data & ~(uint32_t)0xff) | 0xcc) < 0) {
-        perror("poke");
-        return 1;
-    }
+            if (command == "cont") {
+                return DebugSession::DebugDecision::Continue;
+            }
 
-    dbg() << "continuting";
+            if (command == "regs") {
+                handle_print_registers(regs);
+                success = true;
 
-    if (ptrace(PT_CONTINUE, g_pid, 0, 0) == -1) {
-        perror("continue");
-    }
-    dbg() << "continued";
+            } else if (command.starts_with("dis")) {
+                success = handle_disassemble_command(command, reinterpret_cast<void*>(regs.eip));
 
-    // wait for breakpoint
-    if (waitpid(g_pid, nullptr, WSTOPPED) != g_pid) {
-        perror("waitpid");
-        return 1;
-    }
+            } else if (command.starts_with("bp")) {
+                success = handle_breakpoint_command(command);
+            }
 
-    printf("hit breakpoint\n");
-
-    if (ptrace(PT_POKE, g_pid, (void*)entry_point.as_ptr(), original_instruction_data) < 0) {
-        perror("poke");
-        return 1;
-    }
-
-    PtraceRegisters regs;
-    if (ptrace(PT_GETREGS, g_pid, &regs, 0) < 0) {
-        perror("getregs");
-        return 1;
-    }
-
-    dbg() << "eip after breakpoint: " << (void*)regs.eip;
-
-    regs.eip = reinterpret_cast<u32>(entry_point.as_ptr());
-    dbg() << "settings eip back to:" << (void*)regs.eip;
-    if (ptrace(PT_SETREGS, g_pid, &regs, 0) < 0) {
-        perror("setregs");
-        return 1;
-    }
-
-    dbg() << "continuig";
-
-    if (ptrace(PT_CONTINUE, g_pid, 0, 0) == -1) {
-        perror("continue");
-    }
-
-    // wait for end
-
-    if (waitpid(g_pid, nullptr, WSTOPPED) != g_pid) {
-        perror("waitpid");
-        return 1;
-    }
+            if (!success)
+                print_help();
+        }
+    });
 }
