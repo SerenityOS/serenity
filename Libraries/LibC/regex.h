@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <AK/HashMap.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <stddef.h>
@@ -43,7 +44,7 @@ struct regex_t {
     regex::VM* vm { nullptr };
 };
 
-typedef size_t regoff_t;
+typedef ptrdiff_t regoff_t;
 
 struct regmatch_t {
     regoff_t rm_so; // byte offset from start of string to start of substring
@@ -201,7 +202,13 @@ private:
 class Parser {
 public:
     explicit Parser(Lexer lexer);
-    Vector<StackValue>& parse();
+
+    struct ParserResult {
+        Vector<StackValue> m_bytes;
+        size_t match_groups;
+    };
+
+    ParserResult parse();
     bool has_errors() const { return m_parser_state.m_has_errors; }
 
 private:
@@ -216,8 +223,8 @@ private:
     bool match_ere_quoted_chars();
     bool match_ere_dupl_symbol();
     bool parse_ere_dupl_symbol(Vector<StackValue>&);
-    bool parse_ere_expression();
-    bool parse_extended_reg_exp();
+    bool parse_ere_expression(Vector<StackValue>&);
+    bool parse_extended_reg_exp(Vector<StackValue>&);
     void reset();
 
     struct ParserState {
@@ -225,11 +232,12 @@ private:
         Token m_current_token;
         bool m_has_errors = false;
         explicit ParserState(Lexer);
+        Vector<StackValue> m_bytes;
+        size_t match_groups { 0 };
     };
 
     ParserState m_parser_state;
     Optional<ParserState> m_saved_state;
-    Vector<StackValue> m_bytes;
 };
 
 class VM {
@@ -240,12 +248,12 @@ public:
 
     struct MatchResult {
         size_t m_match_count { 0 };
-        Vector<StringView> m_match_views {};
+        Vector<regmatch_t> m_matches {};
         size_t m_ops { 0 };
     };
 
-    MatchResult match(const StringView view);
-    MatchResult match_all(const StringView view);
+    MatchResult match(const StringView view, size_t max_matches_result, size_t match_groups);
+    MatchResult match_all(const StringView view, size_t max_matches_result, size_t match_groups);
     const Vector<StackValue>& bytes() const { return m_bytecode; }
 
 private:
@@ -255,6 +263,8 @@ private:
         size_t m_stringp { 0 };
         size_t m_ops { 0 };
         bool m_match_any { false };
+        Vector<regmatch_t> m_matches;
+        Vector<regoff_t> m_left;
 
         MatchState() = default;
         MatchState(StringView view)
@@ -266,6 +276,8 @@ private:
             , m_stringp(other.m_stringp)
             , m_ops(other.m_ops)
             , m_match_any(other.m_match_any)
+            , m_matches(other.m_matches)
+            , m_left(other.m_left)
         {
         }
     };

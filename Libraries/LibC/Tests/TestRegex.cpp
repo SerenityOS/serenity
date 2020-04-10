@@ -154,27 +154,37 @@ TEST_CASE(simple_questionmark)
 
 TEST_CASE(simple_questionmark_matchall)
 {
-    static constexpr int num_matches { 1 };
     String pattern = "da?d";
     regex_t regex;
+    static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
     EXPECT_EQ(regexec(&regex, "a", num_matches, matches, REG_MATCHALL), REG_NOMATCH);
-    EXPECT_EQ(matches[0].match_count, (size_t)0);
+    EXPECT_EQ(matches[0].match_count, 0u);
     EXPECT_EQ(regexec(&regex, "daa", num_matches, matches, REG_MATCHALL), REG_NOMATCH);
-    EXPECT_EQ(matches[0].match_count, (size_t)0);
+    EXPECT_EQ(matches[0].match_count, 0u);
 
     EXPECT_EQ(regexec(&regex, "ddddd", num_matches, matches, REG_MATCHALL), REG_NOERR);
-    EXPECT_EQ(matches[0].match_count, (size_t)2);
+    EXPECT_EQ(matches[0].match_count, 2u);
+
+    //    for (int i = 0; i < num_matches; ++i) {
+    //        printf("Matches[%i].rm_so: %li, .rm_eo: %li\n", i, matches[i].rm_so, matches[i].rm_eo);
+    //    }
+
+    EXPECT_EQ(matches[0].rm_so, 0u);
+    EXPECT_EQ(matches[0].rm_eo, 2u);
+    EXPECT_EQ(matches[1].rm_so, 2u);
+    EXPECT_EQ(matches[1].rm_eo, 4u);
+
     EXPECT_EQ(regexec(&regex, "dd", num_matches, matches, REG_MATCHALL), REG_NOERR);
-    EXPECT_EQ(matches[0].match_count, (size_t)1);
+    EXPECT_EQ(matches[0].match_count, 1u);
     EXPECT_EQ(regexec(&regex, "dad", num_matches, matches, REG_MATCHALL), REG_NOERR);
-    EXPECT_EQ(matches[0].match_count, (size_t)1);
+    EXPECT_EQ(matches[0].match_count, 1u);
     EXPECT_EQ(regexec(&regex, "dada", num_matches, matches, REG_MATCHALL), REG_NOERR);
-    EXPECT_EQ(matches[0].match_count, (size_t)1);
+    EXPECT_EQ(matches[0].match_count, 1u);
     EXPECT_EQ(regexec(&regex, "adadaa", num_matches, matches, REG_MATCHALL), REG_NOERR);
-    EXPECT_EQ(matches[0].match_count, (size_t)1);
+    EXPECT_EQ(matches[0].match_count, 1u);
 
     regfree(&regex);
 }
@@ -200,6 +210,282 @@ TEST_CASE(complex1)
 
     // Braket parsing not supported yet
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_BADPAT);
+}
+
+TEST_CASE(parens)
+{
+    String pattern = "test(hello)test";
+    regex_t regex;
+    static constexpr int num_matches { 5 };
+    regmatch_t matches[num_matches];
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+
+    EXPECT_EQ(regexec(&regex, "testhellotest", num_matches, matches, 0), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, 1u);
+
+    EXPECT_EQ(matches[0].rm_so, 0u);
+    EXPECT_EQ(matches[0].rm_eo, 13u);
+    EXPECT_EQ(matches[1].rm_so, 4u);
+    EXPECT_EQ(matches[1].rm_eo, 9u);
+
+    regfree(&regex);
+}
+
+TEST_CASE(parens_qualifier_questionmark)
+{
+    String pattern = "test(hello)?test";
+    regex_t regex;
+    static constexpr int num_matches { 5 };
+    regmatch_t matches[num_matches];
+    const char* match_str;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+
+    match_str = "testtest";
+    EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, 1u);
+    EXPECT_EQ(matches[0].rm_so, 0u);
+    EXPECT_EQ(matches[0].rm_eo, 8u);
+    EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testtest");
+
+    match_str = "testhellotest";
+    EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, 1u);
+    EXPECT_EQ(matches[0].rm_so, 0u);
+    EXPECT_EQ(matches[0].rm_eo, 13u);
+    EXPECT_EQ(matches[1].rm_so, 4u);
+    EXPECT_EQ(matches[1].rm_eo, 9u);
+    EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testhellotest");
+    EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
+
+    regfree(&regex);
+}
+
+TEST_CASE(parens_qualifier_asterisk)
+{
+    String pattern = "test(hello)*test";
+    regex_t regex;
+    static constexpr int num_matches { 6 };
+    regmatch_t matches[num_matches];
+    const char* match_str;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+
+    match_str = "testtest";
+    EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, 1u);
+    EXPECT_EQ(matches[0].rm_so, 0u);
+    EXPECT_EQ(matches[0].rm_eo, 8u);
+    EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testtest");
+
+    match_str = "testhellohellotest";
+    EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, 1u);
+    EXPECT_EQ(matches[0].rm_so, 0u);
+    EXPECT_EQ(matches[0].rm_eo, 18u);
+    EXPECT_EQ(matches[1].rm_so, 9u);
+    EXPECT_EQ(matches[1].rm_eo, 14u);
+    EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testhellohellotest");
+    EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
+
+    match_str = "testhellohellotest, testhellotest";
+    EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, REG_MATCHALL), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, 2u);
+    EXPECT_EQ(matches[0].rm_so, 0u);
+    EXPECT_EQ(matches[0].rm_eo, 18u);
+    EXPECT_EQ(matches[1].rm_so, 9u);
+    EXPECT_EQ(matches[1].rm_eo, 14u);
+    EXPECT_EQ(matches[2].rm_so, 20u);
+    EXPECT_EQ(matches[2].rm_eo, 33u);
+    EXPECT_EQ(matches[3].rm_so, 24u);
+    EXPECT_EQ(matches[3].rm_eo, 29u);
+    EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testhellohellotest");
+    EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
+    EXPECT_EQ(StringView(&match_str[matches[2].rm_so], matches[2].rm_eo - matches[2].rm_so), "testhellotest");
+    EXPECT_EQ(StringView(&match_str[matches[3].rm_so], matches[3].rm_eo - matches[3].rm_so), "hello");
+
+    regfree(&regex);
+}
+
+TEST_CASE(parens_qualifier_asterisk_2)
+{
+    String pattern = "test(.*)test";
+    regex_t regex;
+    static constexpr int num_matches { 6 };
+    regmatch_t matches[num_matches];
+    const char* match_str;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+
+    match_str = "testasdftest";
+    EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, 1u);
+    EXPECT_EQ(matches[0].rm_so, 0u);
+    EXPECT_EQ(matches[0].rm_eo, 12u);
+    EXPECT_EQ(matches[1].rm_so, 4u);
+    EXPECT_EQ(matches[1].rm_eo, 8u);
+    EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testasdftest");
+    EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "asdf");
+
+    match_str = "testasdfasdftest";
+    EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, 1u);
+    EXPECT_EQ(matches[0].rm_so, 0u);
+    EXPECT_EQ(matches[0].rm_eo, 16u);
+    EXPECT_EQ(matches[1].rm_so, 4u);
+    EXPECT_EQ(matches[1].rm_eo, 12u);
+    EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testasdfasdftest");
+    EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "asdfasdf");
+
+    match_str = "testaaaatest, testbbbtest, testtest";
+    EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, REG_MATCHALL), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, 1u);
+    EXPECT_EQ(matches[0].rm_so, 0u);
+    EXPECT_EQ(matches[0].rm_eo, 35u);
+    EXPECT_EQ(matches[1].rm_so, 4u);
+    EXPECT_EQ(matches[1].rm_eo, 31u);
+
+    EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testaaaatest, testbbbtest, testtest");
+    EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "aaaatest, testbbbtest, test");
+
+    //    for (int i = 0; i < num_matches; ++i) {
+    //        printf("Matches[%i].rm_so: %li, .rm_eo: %li\n", i, matches[i].rm_so, matches[i].rm_eo);
+    //    }
+
+    regfree(&regex);
+}
+
+TEST_CASE(mulit_parens_qualifier_too_less_result_values)
+{
+    String pattern = "test(a)?(b)?(c)?test";
+    regex_t regex;
+    static constexpr int num_matches { 4 };
+    regmatch_t matches[num_matches];
+    const char* match_str;
+
+    matches[3] = { -2, -2, 100 };
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+
+    match_str = "testabtest";
+    EXPECT_EQ(regexec(&regex, match_str, num_matches - 1, matches, 0), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, 1u);
+    EXPECT_EQ(matches[0].rm_so, 0u);
+    EXPECT_EQ(matches[0].rm_eo, 10u);
+    EXPECT_EQ(matches[1].rm_so, 4u);
+    EXPECT_EQ(matches[1].rm_eo, 5u);
+    EXPECT_EQ(matches[2].rm_so, 5u);
+    EXPECT_EQ(matches[2].rm_eo, 6u);
+    EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testabtest");
+    EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "a");
+    EXPECT_EQ(StringView(&match_str[matches[2].rm_so], matches[2].rm_eo - matches[2].rm_so), "b");
+    EXPECT_EQ(matches[3].rm_so, -2);
+    EXPECT_EQ(matches[3].rm_eo, -2);
+    EXPECT_EQ(matches[3].match_count, 100u);
+
+    match_str = "testabctest";
+    EXPECT_EQ(regexec(&regex, match_str, num_matches - 1, matches, 0), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, 1u);
+    EXPECT_EQ(matches[0].rm_so, 0u);
+    EXPECT_EQ(matches[0].rm_eo, 11u);
+    EXPECT_EQ(matches[1].rm_so, 4u);
+    EXPECT_EQ(matches[1].rm_eo, 5u);
+    EXPECT_EQ(matches[2].rm_so, 5u);
+    EXPECT_EQ(matches[2].rm_eo, 6u);
+    EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testabctest");
+    EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "a");
+    EXPECT_EQ(StringView(&match_str[matches[2].rm_so], matches[2].rm_eo - matches[2].rm_so), "b");
+    EXPECT_EQ(matches[3].rm_so, -2);
+    EXPECT_EQ(matches[3].rm_eo, -2);
+    EXPECT_EQ(matches[3].match_count, 100u);
+
+    match_str = "testabctest, testabctest";
+
+    EXPECT_EQ(regexec(&regex, match_str, num_matches - 1, matches, REG_MATCHALL), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, 2u);
+    EXPECT_EQ(matches[0].rm_so, 0u);
+    EXPECT_EQ(matches[0].rm_eo, 11u);
+    EXPECT_EQ(matches[1].rm_so, 4u);
+    EXPECT_EQ(matches[1].rm_eo, 5u);
+    EXPECT_EQ(matches[2].rm_so, 5u);
+    EXPECT_EQ(matches[2].rm_eo, 6u);
+    EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testabctest");
+    EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "a");
+    EXPECT_EQ(StringView(&match_str[matches[2].rm_so], matches[2].rm_eo - matches[2].rm_so), "b");
+    EXPECT_EQ(matches[3].rm_so, -2);
+    EXPECT_EQ(matches[3].rm_eo, -2);
+    EXPECT_EQ(matches[3].match_count, 100u);
+
+    regfree(&regex);
+}
+
+TEST_CASE(multi_parens_qualifier_questionmark)
+{
+    String pattern = "test(a)?(b)?(c)?test";
+    regex_t regex;
+    static constexpr int num_matches { 8 };
+    regmatch_t matches[num_matches];
+    const char* match_str;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+
+    match_str = "testtest";
+    EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, 1u);
+    EXPECT_EQ(matches[0].rm_so, 0u);
+    EXPECT_EQ(matches[0].rm_eo, 8u);
+    EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testtest");
+
+    match_str = "testabctest";
+    EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, 1u);
+    EXPECT_EQ(matches[0].rm_so, 0u);
+    EXPECT_EQ(matches[0].rm_eo, 11u);
+    EXPECT_EQ(matches[1].rm_so, 4u);
+    EXPECT_EQ(matches[1].rm_eo, 5u);
+    EXPECT_EQ(matches[2].rm_so, 5u);
+    EXPECT_EQ(matches[2].rm_eo, 6u);
+    EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testabctest");
+    EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "a");
+    EXPECT_EQ(StringView(&match_str[matches[2].rm_so], matches[2].rm_eo - matches[2].rm_so), "b");
+
+    match_str = "testabctest, testactest";
+
+    EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, REG_MATCHALL), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, 2u);
+    EXPECT_EQ(matches[0].rm_so, 0u);
+    EXPECT_EQ(matches[0].rm_eo, 11u);
+    EXPECT_EQ(matches[1].rm_so, 4u);
+    EXPECT_EQ(matches[1].rm_eo, 5u);
+    EXPECT_EQ(matches[2].rm_so, 5u);
+    EXPECT_EQ(matches[2].rm_eo, 6u);
+    EXPECT_EQ(matches[3].rm_so, 6u);
+    EXPECT_EQ(matches[3].rm_eo, 7u);
+
+    EXPECT_EQ(matches[4].rm_so, 13u);
+    EXPECT_EQ(matches[4].rm_eo, 23u);
+    EXPECT_EQ(matches[5].rm_so, 17u);
+    EXPECT_EQ(matches[5].rm_eo, 18u);
+    EXPECT_EQ(matches[6].rm_so, -1);
+    EXPECT_EQ(matches[6].rm_eo, -1);
+    EXPECT_EQ(matches[7].rm_so, 18u);
+    EXPECT_EQ(matches[7].rm_eo, 19u);
+
+    EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testabctest");
+    EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "a");
+    EXPECT_EQ(StringView(&match_str[matches[2].rm_so], matches[2].rm_eo - matches[2].rm_so), "b");
+    EXPECT_EQ(StringView(&match_str[matches[3].rm_so], matches[3].rm_eo - matches[3].rm_so), "c");
+    EXPECT_EQ(StringView(&match_str[matches[4].rm_so], matches[4].rm_eo - matches[4].rm_so), "testactest");
+    EXPECT_EQ(StringView(&match_str[matches[5].rm_so], matches[5].rm_eo - matches[5].rm_so), "a");
+    EXPECT_EQ(StringView(&match_str[matches[6].rm_so], matches[6].rm_eo - matches[6].rm_so), "");
+    EXPECT_EQ(StringView(&match_str[matches[7].rm_so], matches[7].rm_eo - matches[7].rm_so), "c");
+
+    //    for (int i = 0; i < num_matches; ++i) {
+    //        printf("Matches[%i].rm_so: %li, .rm_eo: %li\n", i, matches[i].rm_so, matches[i].rm_eo);
+    //    }
+
+    regfree(&regex);
 }
 
 TEST_MAIN(Regex)

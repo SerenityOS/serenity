@@ -382,7 +382,7 @@ bool Parser::parse_ere_dupl_symbol(Vector<StackValue>& operations)
     return false;
 }
 
-bool Parser::parse_ere_expression()
+bool Parser::parse_ere_expression(Vector<StackValue>& stack)
 {
     Vector<StackValue> operations;
     for (;;) {
@@ -398,9 +398,9 @@ bool Parser::parse_ere_expression()
             }
 
             if (length > 1) {
-                m_bytes.empend(OpCode::Compare);
-                m_bytes.empend(start_token.value().characters_without_null_termination());
-                m_bytes.empend(length - ((match_ere_dupl_symbol() && length > 1) ? 1 : 0)); // last character is inserted into 'operations' for duplication symbol handling
+                stack.empend(OpCode::Compare);
+                stack.empend(start_token.value().characters_without_null_termination());
+                stack.empend(length - ((match_ere_dupl_symbol() && length > 1) ? 1 : 0)); // last character is inserted into 'operations' for duplication symbol handling
             }
 
             if ((match_ere_dupl_symbol() && length > 1) || length == 1) { // Create own compare opcode for last character before duplication symbol
@@ -447,10 +447,21 @@ bool Parser::parse_ere_expression()
 
         if (match(TokenType::LeftParen)) {
             consume(TokenType::LeftParen);
+
             operations.empend(OpCode::SaveLeftGroup);
-            parse_extended_reg_exp();
+            operations.empend(m_parser_state.match_groups);
+
+            Vector<StackValue> sub_ops;
+            parse_extended_reg_exp(sub_ops);
+
+            operations.append(move(sub_ops));
+
             consume(TokenType::RightParen);
             operations.empend(OpCode::SaveRightGroup);
+            operations.empend(m_parser_state.match_groups);
+
+            ++m_parser_state.match_groups;
+
             break;
         }
 
@@ -461,25 +472,26 @@ bool Parser::parse_ere_expression()
         parse_ere_dupl_symbol(operations);
     }
 
-    for (auto& op : operations) {
-        m_bytes.append(move(op));
-    }
+    stack.append(move(operations));
 
     return true;
 }
 
-bool Parser::parse_extended_reg_exp()
+bool Parser::parse_extended_reg_exp(Vector<StackValue>& stack)
 {
     bool errors = false;
+    Vector<StackValue> operations;
     for (;;) {
-        if (!parse_ere_expression())
+        if (!parse_ere_expression(operations))
             break;
+
+        stack.append(move(operations));
 
         if (match(TokenType::Pipe)) {
             consume(TokenType::Pipe);
             ASSERT_NOT_REACHED();
 
-            errors &= !(parse_extended_reg_exp());
+            //errors &= !(parse_extended_reg_exp(stack));
 
             // FIXME: Add logical OR opcode with two parameters
             //        containing the jump offsets to both branches.
@@ -518,20 +530,20 @@ Token Parser::consume(TokenType type)
     return consume();
 }
 
-Vector<StackValue>& Parser::parse()
+Parser::ParserResult Parser::parse()
 {
-    parse_extended_reg_exp();
+    parse_extended_reg_exp(m_parser_state.m_bytes);
     consume(TokenType::Eof);
 
 #ifdef REGEX_DEBUG
     printf("[PARSER] Produced stack with %lu entries\n", m_bytes.size());
 #endif
-    return m_bytes;
+    return { m_parser_state.m_bytes, m_parser_state.match_groups };
 }
 
 void Parser::reset()
 {
-    m_bytes.clear();
+    m_parser_state.m_bytes.clear();
     m_parser_state.m_lexer.reset();
     m_parser_state.m_current_token = m_parser_state.m_lexer.next();
 }
@@ -544,45 +556,83 @@ VM::MatchState::MatchState(size_t instructionp, size_t stringp, StringView view,
 {
 }
 
-size_t s_ops { 0 };
-
-VM::MatchResult VM::match(StringView view)
+VM::MatchResult VM::match(StringView view, size_t max_matches_result, size_t match_groups)
 {
     MatchState state { view };
-    s_ops = 0;
+    state.m_matches.ensure_capacity(max_matches_result);
+    state.m_left.ensure_capacity(match_groups);
+
+    for (size_t i = 0; i < max_matches_result; ++i)
+        state.m_matches.append({ -1, -1, 0 });
+
+    for (size_t i = 0; i < match_groups; ++i)
+        state.m_left.append(-1);
+
     auto match_length = match_recurse(state);
-    ASSERT(state.m_ops == s_ops);
+
+    if (max_matches_result)
+        state.m_matches.at(0) = { 0, (regoff_t)match_length, 0 };
+
     if (match_length)
-        return { 1, { view.substring_view(0, match_length) }, state.m_ops };
-    return { 0, { nullptr }, state.m_ops };
+        return { 1, move(state.m_matches), state.m_ops };
+
+    return { 0, {}, state.m_ops };
 }
 
-VM::MatchResult VM::match_all(StringView view)
+VM::MatchResult VM::match_all(StringView view, size_t max_matches_result, size_t match_groups)
 {
     size_t match_length;
     size_t match_count { 0 };
     size_t ops { 0 };
-    s_ops = 0;
-    Vector<StringView> matches;
+
+    Vector<regmatch_t> matches;
+    matches.ensure_capacity(max_matches_result);
+
     for (size_t i = 0; i < view.length(); ++i) {
+        auto groups_size = min(match_groups, matches.capacity() - matches.size());
+        auto matches_size = max(groups_size + 1, 1ul);
+
         MatchState state { view.substring_view(i, view.length() - i) };
+        state.m_matches.ensure_capacity(matches_size);
+        state.m_left.ensure_capacity(groups_size);
         state.m_match_any = true;
+
+        for (size_t j = 0; j < matches_size; ++j)
+            state.m_matches.append({ -1, -1, 0 });
+
+        for (size_t j = 0; j < groups_size; ++j)
+            state.m_left.append(-1);
+
         match_length = match_recurse(state);
+
         if (match_length) {
             ++match_count;
+
+            for (auto& match : state.m_matches) {
+                if (match.match_count) {
+                    match.rm_so += i;
+                    match.rm_eo += i;
+                }
+            }
+
 #ifdef REGEX_DEBUG
             printf("Matched... from %lu to %lu: %s\n", i, i + match_length, String(view.substring_view(i, match_length)).characters());
 #endif
-            matches.append(view.substring_view(i, match_length));
-            i += match_length;
+
+            if (matches_size)
+                state.m_matches.at(0) = { (regoff_t)i, (regoff_t)(i + match_length), 0 };
+
+            // FIXME: Somehow, this changes capacity and is therefore not working correctly with fixed capacity...
+            //matches.append(move(state.m_matches));
+            for (auto& match : state.m_matches)
+                matches.append(move(match));
+
+            i += match_length - 1;
         }
 
         ops += state.m_ops;
     }
-#ifdef REGEX_DEBUG
-    printf("Matches: %lu\n", match_count);
-#endif
-    ASSERT(ops == s_ops);
+
     return { match_count, move(matches), ops };
 }
 
@@ -601,32 +651,45 @@ const StackValue VM::get_and_increment(MatchState& state, size_t value) const
     return current;
 }
 
+//#define REGEX_DEBUG
+
 size_t VM::match_recurse(MatchState& state)
 {
-    MatchState jump_state(state);
-    jump_state.m_view = state.m_view;
     Vector<MatchState> stay_states;
 
     auto do_forkstay = [&](MatchState& state) -> size_t {
         size_t result;
-        for (auto& s_state : stay_states) {
+        for (size_t i = stay_states.size(); i > 0;) {
+            --i;
+            auto& s_state = stay_states.at(i);
+#ifdef REGEX_DEBUG
+            printf("[VM] Execute ForkStay - instructionp: %2lu, stringp: %2lu - ", s_state.m_instructionp, s_state.m_stringp);
+            printf("[%20s]\n", String(&s_state.m_view[s_state.m_stringp], s_state.m_view.length() - s_state.m_stringp).characters());
+#endif
+
             s_state.m_ops = state.m_ops;
+            s_state.m_matches = move(state.m_matches);
+            s_state.m_left = move(state.m_left);
+
             result = match_recurse(s_state);
+
             state.m_ops = s_state.m_ops;
+            state.m_matches = move(s_state.m_matches);
+            state.m_left = move(s_state.m_left);
             if (result)
-                return s_state.m_stringp;
+                return result;
         }
+
         return 0;
     };
 
     for (;;) {
-        ++s_ops;
         ++state.m_ops;
         auto current_ip = state.m_instructionp;
         auto stack_item = get_and_increment(state);
 
 #ifdef REGEX_DEBUG
-        printf("[VM] OpCode: 0x%i (%8s) - instructionp: %2lu, stringp: %2lu - ", stack_item.length, stack_item.name(), current_ip, state.m_stringp);
+        printf("[VM] OpCode: 0x%i (%14s) - instructionp: %2lu, stringp: %2lu - ", stack_item.length, stack_item.name(), current_ip, state.m_stringp);
         printf("[%20s]", String(&state.m_view[state.m_stringp], state.m_view.length() - state.m_stringp).characters());
 #endif
 
@@ -653,7 +716,7 @@ size_t VM::match_recurse(MatchState& state)
             fflush(stdout);
 #endif
             if ((size_t)length > state.m_view.length() - state.m_stringp)
-                return 0;
+                return do_forkstay(state);
 
             if (state.m_stringp >= state.m_view.length())
                 break;
@@ -674,19 +737,19 @@ size_t VM::match_recurse(MatchState& state)
 
         } else if (stack_item.op_code == OpCode::ForkJump) {
             auto& offset = get_and_increment(state).length;
-            jump_state.m_stringp = state.m_stringp;
-            jump_state.m_ops = state.m_ops;
-            jump_state.m_instructionp = state.m_instructionp + offset;
 #ifdef REGEX_DEBUG
-            printf(" > ForkJump to offset: %i, jump_state: instructionp: %lu, stringp: %lu\n", offset, jump_state.m_instructionp, jump_state.m_stringp);
+            printf(" > ForkJump to offset: %i, instructionp: %lu, stringp: %lu\n", offset, state.m_instructionp + offset, state.m_stringp);
 #endif
-            // first do the recursion
-            size_t result = match_recurse(jump_state);
-            state.m_ops = jump_state.m_ops;
-            if (result) // found a valid solution via forkjump... continue here at string position with next opcode
-                state.m_stringp = jump_state.m_stringp;
+            //save instructionp and stringp
+            auto saved_instructionp = state.m_instructionp;
+            auto saved_stringp = state.m_stringp;
+            state.m_instructionp = state.m_instructionp + offset;
 
-            // no solution found, continue in this function
+            size_t result = match_recurse(state);
+
+            state.m_instructionp = saved_instructionp;
+            if (!result) // no valid solution via forkjump found... continue here at old string position
+                state.m_stringp = saved_stringp;
 
         } else if (stack_item.op_code == OpCode::ForkStay) {
             auto& offset = get_and_increment(state).length;
@@ -705,16 +768,32 @@ size_t VM::match_recurse(MatchState& state)
             continue; // do not use exit conditions below (state.m_instructionp >= m_bytecode.size()), directly jump to next instruction!
 
         } else if (stack_item.op_code == OpCode::SaveLeftGroup) {
+            auto& id = get_and_increment(state).length;
 #ifdef REGEX_DEBUG
-            printf("\n");
+            printf(" > Left parens for group match %i at stringp = %lu\n", id, state.m_stringp);
 #endif
-            ASSERT_NOT_REACHED();
+            if ((size_t)id < state.m_left.size())
+                state.m_left.at(id) = state.m_stringp;
 
         } else if (stack_item.op_code == OpCode::SaveRightGroup) {
+            auto& id = get_and_increment(state).length;
 #ifdef REGEX_DEBUG
-            printf("\n");
+            printf(" > Right parens for group match %i at stringp = %lu\n", id, state.m_stringp);
 #endif
-            ASSERT_NOT_REACHED();
+            if ((size_t)id < state.m_left.size()) {
+                if (state.m_left.at(id) != -1) {
+                    auto left = state.m_left.at(id);
+#ifdef REGEX_DEBUG
+                    printf("Match result group id %i: from %lu to %lu\n", id, left, state.m_stringp);
+#endif
+                    if ((size_t)id + 1 < state.m_matches.size()) {
+                        state.m_matches.at(id + 1) = { left, (regoff_t)state.m_stringp, 1 };
+                    }
+                } else {
+                    fprintf(stderr, "No left parens found for id %i\n", id);
+                }
+            }
+
         } else if (stack_item.op_code == OpCode::CheckBegin) {
 #ifdef REGEX_DEBUG
             printf("\n");
@@ -788,22 +867,23 @@ int regcomp(regex_t* preg, const char* pattern, int cflags)
 #endif
 
     regex::Parser parser(move(lexer));
-    auto& bytes = parser.parse();
+    auto result = parser.parse();
 
 #ifdef REGEX_DEBUG
     int i = 0;
-    for (auto& item : bytes) {
+    for (auto& item : result.m_bytes) {
         printf("[PARSER] [%i]: %i\n", i, item.length);
         i++;
     }
 #endif
 
+    // FIXME: there are several return values for different error scenarios, make use of them
     if (parser.has_errors())
         return REG_BADPAT;
 
-    //FIXME: Fill in preg->re_nsub
+    preg->re_nsub = result.match_groups;
 
-    preg->vm = new regex::VM(bytes, move(s));
+    preg->vm = new regex::VM(result.m_bytes, move(s));
     return REG_NOERR;
 }
 
@@ -811,19 +891,26 @@ extern "C" {
 
 int regexec(const regex_t* preg, const char* string, size_t nmatch, regmatch_t pmatch[], int eflags)
 {
-    UNUSED_PARAM(nmatch);
-    UNUSED_PARAM(pmatch);
-
     if (!preg->vm)
         return REG_BADPAT;
 
     auto& vm = *preg->vm;
 
     if (eflags & REG_MATCHALL) {
-        auto result = vm.match_all(StringView { string });
-        if (nmatch) {
-            pmatch[0].match_count = result.m_match_count;
+        auto result = vm.match_all(StringView { string }, nmatch, preg->re_nsub);
+        if (result.m_match_count) {
+            auto size = result.m_matches.size();
+            for (size_t i = 0; i < nmatch; ++i) {
+                if (i < size)
+                    pmatch[i] = result.m_matches.at(i);
+                else
+                    pmatch[i] = { -1, -1, 0 };
+            }
         }
+
+        if (nmatch && pmatch)
+            pmatch[0].match_count = result.m_match_count;
+
         if (result.m_match_count) {
             printf("[regexec] match_all successful, found %lu occurences, took %lu operations.\n", result.m_match_count, result.m_ops);
             return REG_NOERR;
@@ -832,7 +919,20 @@ int regexec(const regex_t* preg, const char* string, size_t nmatch, regmatch_t p
         }
 
     } else {
-        auto result = vm.match(StringView { string });
+        auto result = vm.match(StringView { string }, nmatch, preg->re_nsub);
+        if (result.m_match_count) {
+            auto size = result.m_matches.size();
+            for (size_t i = 0; i < nmatch; ++i) {
+                if (i < size)
+                    pmatch[i] = result.m_matches.at(i);
+                else
+                    pmatch[i] = { -1, -1, 0 };
+            }
+        }
+
+        if (nmatch && pmatch)
+            pmatch[0].match_count = result.m_match_count;
+
         if (result.m_match_count) {
             printf("[regexec] match successful, took %lu operations.\n", result.m_ops);
             return REG_NOERR;
