@@ -1,7 +1,4 @@
-function assert(x) { if (!x) throw 1; }
-
 try {
-
     var o = {};
     Object.defineProperty(o, "foo", { value: 1, writable: false, enumerable: false });
 
