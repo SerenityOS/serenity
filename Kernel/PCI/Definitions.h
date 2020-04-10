@@ -172,8 +172,24 @@ struct ChangeableAddress : public Address {
     }
 };
 
+class PhysicalID {
+public:
+    PhysicalID(Address address, ID id)
+        : m_address(address)
+        , m_id(id)
+    {
+    }
+
+    const ID& id() const { return m_id; }
+    const Address& address() const { return m_address; }
+
+private:
+    Address m_address;
+    ID m_id;
+};
+
 ID get_id(PCI::Address);
-void enumerate_all(Function<void(Address, ID)> callback);
+void enumerate(Function<void(Address, ID)> callback);
 void enable_interrupt_line(Address);
 void disable_interrupt_line(Address);
 u8 get_interrupt_line(Address);
