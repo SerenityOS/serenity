@@ -257,6 +257,11 @@ public:
     const Vector<StackValue>& bytes() const { return m_bytecode; }
 
 private:
+    struct ForkStayTuple {
+        size_t m_instructionp { 0 };
+        size_t m_stringp { 0 };
+    };
+
     struct MatchState {
         StringView m_view;
         size_t m_instructionp { 0 };

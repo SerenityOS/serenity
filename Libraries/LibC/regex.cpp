@@ -655,27 +655,29 @@ const StackValue VM::get_and_increment(MatchState& state, size_t value) const
 
 size_t VM::match_recurse(MatchState& state)
 {
-    Vector<MatchState> stay_states;
+
+    Vector<ForkStayTuple> fork_stay_tuples;
 
     auto do_forkstay = [&](MatchState& state) -> size_t {
-        size_t result;
-        for (size_t i = stay_states.size(); i > 0;) {
+        for (auto i = fork_stay_tuples.size(); i > 0;) {
             --i;
-            auto& s_state = stay_states.at(i);
+            auto& fork_stay_tuple = fork_stay_tuples.at(i);
 #ifdef REGEX_DEBUG
             printf("[VM] Execute ForkStay - instructionp: %2lu, stringp: %2lu - ", s_state.m_instructionp, s_state.m_stringp);
             printf("[%20s]\n", String(&s_state.m_view[s_state.m_stringp], s_state.m_view.length() - s_state.m_stringp).characters());
 #endif
 
-            s_state.m_ops = state.m_ops;
-            s_state.m_matches = move(state.m_matches);
-            s_state.m_left = move(state.m_left);
+            auto instructionp = state.m_instructionp;
+            auto stringp = state.m_stringp;
 
-            result = match_recurse(s_state);
+            state.m_instructionp = fork_stay_tuple.m_instructionp;
+            state.m_stringp = fork_stay_tuple.m_stringp;
 
-            state.m_ops = s_state.m_ops;
-            state.m_matches = move(s_state.m_matches);
-            state.m_left = move(s_state.m_left);
+            auto result = match_recurse(state);
+
+            state.m_instructionp = instructionp;
+            state.m_stringp = stringp;
+
             if (result)
                 return result;
         }
@@ -753,7 +755,7 @@ size_t VM::match_recurse(MatchState& state)
 
         } else if (stack_item.op_code == OpCode::ForkStay) {
             auto& offset = get_and_increment(state).length;
-            stay_states.empend(state.m_instructionp + offset, state.m_stringp, state.m_view, state.m_match_any);
+            fork_stay_tuples.append({ state.m_instructionp + offset, state.m_stringp });
 
 #ifdef REGEX_DEBUG
             printf(" > ForkStay to offset: %i, instructionp: %lu, stringp: %lu\n", offset, stay_states.last().m_instructionp, stay_states.last().m_stringp);
