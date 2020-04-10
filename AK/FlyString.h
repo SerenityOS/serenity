@@ -55,6 +55,8 @@ public:
     const char* characters() const { return m_impl ? m_impl->characters() : nullptr; }
     size_t length() const { return m_impl ? m_impl->length() : 0; }
 
+    u32 hash() const { return m_impl ? m_impl->hash() : 0; }
+
     StringView view() const;
 
     FlyString to_lowercase() const;
