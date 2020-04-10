@@ -4935,6 +4935,7 @@ bool Process::has_tracee_thread(int tracer_pid) const
 KResultOr<u32> Process::peek_user_data(u32* address)
 {
     if (!MM.validate_user_read(*this, VirtualAddress(address), sizeof(u32))) {
+        dbg() << "Invalid address for peek_user_data: " << address;
         return KResult(-EFAULT);
     }
     uint32_t result;
@@ -4951,8 +4952,9 @@ KResultOr<u32> Process::peek_user_data(u32* address)
 KResult Process::poke_user_data(u32* address, u32 data)
 {
     // We validate for read (rather than write) because PT_POKE can write to readonly pages.
-    // So we wffectively only care that the poke operation only writes to user pages
+    // So we effectively only care that the poke operation is trying to write to user pages.
     if (!MM.validate_user_read(*this, VirtualAddress(address), sizeof(u32))) {
+        dbg() << "Invalid address for poke_user_data: " << address;
         return KResult(-EFAULT);
     }
     ProcessPagingScope scope(*this);

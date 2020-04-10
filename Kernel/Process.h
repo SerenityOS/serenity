@@ -39,6 +39,7 @@
 #include <Kernel/Thread.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/VM/RangeAllocator.h>
+#include <LibBareMetal/StdLib.h>
 #include <LibC/signal_numbers.h>
 
 namespace ELF {
