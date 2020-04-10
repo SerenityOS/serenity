@@ -48,6 +48,17 @@ struct PropertyMetadata {
     u8 attributes { 0 };
 };
 
+struct TransitionKey {
+    FlyString property_name;
+    u8 attributes { 0 };
+
+    bool operator==(const TransitionKey& other) const
+    {
+        return property_name == other.property_name
+            && attributes == other.attributes;
+    }
+};
+
 class Shape final : public Cell {
 public:
     virtual ~Shape() override;
@@ -84,7 +95,7 @@ private:
 
     mutable OwnPtr<HashMap<FlyString, PropertyMetadata>> m_property_table;
 
-    HashMap<FlyString, Shape*> m_forward_transitions;
+    HashMap<TransitionKey, Shape*> m_forward_transitions;
     Shape* m_previous { nullptr };
     FlyString m_property_name;
     u8 m_attributes { 0 };
@@ -93,3 +104,11 @@ private:
 };
 
 }
+
+template<>
+struct AK::Traits<JS::TransitionKey> : public GenericTraits<JS::TransitionKey> {
+    static unsigned hash(const JS::TransitionKey& key)
+    {
+        return pair_int_hash(int_hash(key.attributes), key.property_name.hash());
+    }
+};
