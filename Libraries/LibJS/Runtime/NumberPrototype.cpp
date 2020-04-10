@@ -24,12 +24,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/NumberPrototype.h>
 
 namespace JS {
 
 NumberPrototype::NumberPrototype()
+    : NumberObject(0)
 {
+    set_prototype(interpreter().object_prototype());
 }
 
 NumberPrototype::~NumberPrototype()
