@@ -124,7 +124,7 @@ int main(int argc, char** argv)
     }
 
     auto window = GUI::Window::construct();
-    window->set_title("CPUGraph");
+    window->set_title("ResourceGraph");
     window->set_window_type(GUI::WindowType::MenuApplet);
     window->resize(30, 16);
 
