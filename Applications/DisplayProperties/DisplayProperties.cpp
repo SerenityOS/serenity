@@ -32,20 +32,14 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
-#include <LibGUI/ColorPicker.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
-#include <LibGUI/TextBox.h>
-#include <LibGUI/ToolBar.h>
-#include <LibGUI/Widget.h>
-#include <LibGUI/Window.h>
 #include <LibGUI/WindowServerConnection.h>
-#include <Servers/WindowServer/WindowManager.h>
-
-//#define DEBUG_MODE
+#include <LibGfx/Palette.h>
+#include <LibGfx/SystemTheme.h>
 
 DisplayPropertiesWidget::DisplayPropertiesWidget()
 {
@@ -99,7 +93,7 @@ void DisplayPropertiesWidget::create_frame()
     settings_content.set_layout<GUI::VerticalBoxLayout>();
     settings_content.set_backcolor("red");
     settings_content.set_background_color(Color::Blue);
-    settings_content.set_background_role(ColorRole::Window);
+    settings_content.set_background_role(Gfx::ColorRole::Window);
     settings_content.layout()->set_margins({ 4, 4, 4, 4 });
 
     /// Wallpaper Preview /////////////////////////////////////////////////////////////////////////
@@ -110,19 +104,19 @@ void DisplayPropertiesWidget::create_frame()
 
     /// Wallpaper Row /////////////////////////////////////////////////////////////////////////////
 
-    auto& m_wallpaper_selection_container = settings_content.add<GUI::Widget>();
-    m_wallpaper_selection_container.set_layout<GUI::HorizontalBoxLayout>();
-    m_wallpaper_selection_container.layout()->set_margins({ 0, 4, 0, 0 });
-    m_wallpaper_selection_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    m_wallpaper_selection_container.set_preferred_size(0, 22);
+    auto& wallpaper_selection_container = settings_content.add<GUI::Widget>();
+    wallpaper_selection_container.set_layout<GUI::HorizontalBoxLayout>();
+    wallpaper_selection_container.layout()->set_margins({ 0, 4, 0, 0 });
+    wallpaper_selection_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    wallpaper_selection_container.set_preferred_size(0, 22);
 
-    auto& m_wallpaper_label = m_wallpaper_selection_container.add<GUI::Label>();
-    m_wallpaper_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    m_wallpaper_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    m_wallpaper_label.set_preferred_size({ 70, 0 });
-    m_wallpaper_label.set_text("Wallpaper:");
+    auto& wallpaper_label = wallpaper_selection_container.add<GUI::Label>();
+    wallpaper_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    wallpaper_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
+    wallpaper_label.set_preferred_size({ 70, 0 });
+    wallpaper_label.set_text("Wallpaper:");
 
-    m_wallpaper_combo = m_wallpaper_selection_container.add<GUI::ComboBox>();
+    m_wallpaper_combo = wallpaper_selection_container.add<GUI::ComboBox>();
     m_wallpaper_combo->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_wallpaper_combo->set_preferred_size(0, 22);
     m_wallpaper_combo->set_only_allow_values_from_model(true);
@@ -130,36 +124,27 @@ void DisplayPropertiesWidget::create_frame()
     m_wallpaper_combo->on_change = [this](auto& text, const GUI::ModelIndex& index) {
         String path = text;
         if (index.is_valid()) {
-
             StringBuilder builder;
             builder.append("/res/wallpapers/");
             builder.append(path);
             path = builder.to_string();
         }
 
-#ifdef DEBUG_MODE
-        dbg() << "New wallpaper path:" << path;
-#endif
-
         this->m_monitor_widget->set_wallpaper(path);
         this->m_monitor_widget->update();
     };
 
-    auto& button = m_wallpaper_selection_container.add<GUI::Button>();
+    auto& button = wallpaper_selection_container.add<GUI::Button>();
     button.set_tooltip("Select Wallpaper from file system.");
     button.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"));
     button.set_button_style(Gfx::ButtonStyle::CoolBar);
     button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     button.set_preferred_size(22, 22);
     button.on_click = [this]() {
-        Optional<String> open_path = GUI::FilePicker::get_open_filepath("Select wallpaper from file system");
+        Optional<String> open_path = GUI::FilePicker::get_open_filepath("Select wallpaper from file system.");
 
         if (!open_path.has_value())
             return;
-
-#ifdef DEBUG_MODE
-        dbg() << "Selected file : " << open_path.value();
-#endif
 
         m_wallpaper_combo->set_only_allow_values_from_model(false);
         this->m_wallpaper_combo->set_text(open_path.value());
@@ -168,19 +153,19 @@ void DisplayPropertiesWidget::create_frame()
 
     /// Mode //////////////////////////////////////////////////////////////////////////////////////
 
-    auto& m_mode_selection_container = settings_content.add<GUI::Widget>();
-    m_mode_selection_container.set_layout<GUI::HorizontalBoxLayout>();
-    m_mode_selection_container.layout()->set_margins({ 0, 4, 0, 0 });
-    m_mode_selection_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    m_mode_selection_container.set_preferred_size(0, 22);
+    auto& mode_selection_container = settings_content.add<GUI::Widget>();
+    mode_selection_container.set_layout<GUI::HorizontalBoxLayout>();
+    mode_selection_container.layout()->set_margins({ 0, 4, 0, 0 });
+    mode_selection_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    mode_selection_container.set_preferred_size(0, 22);
 
-    auto& m_mode_label = m_mode_selection_container.add<GUI::Label>();
-    m_mode_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    m_mode_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    m_mode_label.set_preferred_size({ 70, 0 });
-    m_mode_label.set_text("Mode:");
+    auto& mode_label = mode_selection_container.add<GUI::Label>();
+    mode_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    mode_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
+    mode_label.set_preferred_size({ 70, 0 });
+    mode_label.set_text("Mode:");
 
-    m_mode_combo = m_mode_selection_container.add<GUI::ComboBox>();
+    m_mode_combo = mode_selection_container.add<GUI::ComboBox>();
     m_mode_combo->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_mode_combo->set_preferred_size(0, 22);
     m_mode_combo->set_only_allow_values_from_model(true);
@@ -192,18 +177,18 @@ void DisplayPropertiesWidget::create_frame()
 
     /// Resulation Row ////////////////////////////////////////////////////////////////////////////
 
-    auto& m_resolution_selection_container = settings_content.add<GUI::Widget>();
-    m_resolution_selection_container.set_layout<GUI::HorizontalBoxLayout>();
-    m_resolution_selection_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    m_resolution_selection_container.set_preferred_size(0, 22);
+    auto& resolution_selection_container = settings_content.add<GUI::Widget>();
+    resolution_selection_container.set_layout<GUI::HorizontalBoxLayout>();
+    resolution_selection_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    resolution_selection_container.set_preferred_size(0, 22);
 
-    auto& m_resolution_label = m_resolution_selection_container.add<GUI::Label>();
+    auto& m_resolution_label = resolution_selection_container.add<GUI::Label>();
     m_resolution_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     m_resolution_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     m_resolution_label.set_preferred_size({ 70, 0 });
     m_resolution_label.set_text("Resolution:");
 
-    m_resolution_combo = m_resolution_selection_container.add<GUI::ComboBox>();
+    m_resolution_combo = resolution_selection_container.add<GUI::ComboBox>();
     m_resolution_combo->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_resolution_combo->set_preferred_size(0, 22);
     m_resolution_combo->set_only_allow_values_from_model(true);
@@ -215,46 +200,24 @@ void DisplayPropertiesWidget::create_frame()
 
     /// Background Color Row //////////////////////////////////////////////////////////////////////
 
-    auto& m_color_selection_container = settings_content.add<GUI::Widget>();
-    m_color_selection_container.set_layout<GUI::HorizontalBoxLayout>();
-    m_color_selection_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    m_color_selection_container.set_preferred_size(0, 22);
+    auto& color_selection_container = settings_content.add<GUI::Widget>();
+    color_selection_container.set_layout<GUI::HorizontalBoxLayout>();
+    color_selection_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    color_selection_container.set_preferred_size(0, 22);
 
-    auto& m_color_label = m_color_selection_container.add<GUI::Label>();
-    m_color_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    m_color_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    m_color_label.set_preferred_size({ 70, 0 });
-    m_color_label.set_text("Color Name:");
+    auto& color_label = color_selection_container.add<GUI::Label>();
+    color_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    color_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
+    color_label.set_preferred_size({ 70, 0 });
+    color_label.set_text("Color Name:");
 
-    m_color_textbox = m_color_selection_container.add<GUI::TextBox>();
-    m_color_textbox->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
-    m_color_textbox->set_preferred_size({ 0, 0 });
-    m_color_textbox->on_change = [this] {
-        auto optional = Color::from_string(this->m_color_textbox->text());
-        if (!optional.has_value())
-            return;
-
-        this->m_monitor_widget->set_background_color(optional.value());
+    m_color_input = color_selection_container.add<GUI::ColorInput>();
+    m_color_input->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
+    m_color_input->set_preferred_size(90, 0);
+    m_color_input->set_color_picker_title("Select color for desktop");
+    m_color_input->on_change = [this] {
+        this->m_monitor_widget->set_background_color(m_color_input->color());
         this->m_monitor_widget->update();
-    };
-
-    auto& color_button = m_color_selection_container.add<GUI::Button>();
-    color_button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    color_button.set_preferred_size(22, 0);
-    color_button.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/color-chooser.png"));
-    color_button.set_tooltip("Color Chooser");
-    color_button.on_click = [this]() {
-        auto optional = Color::from_string(this->m_color_textbox->text());
-
-        Color default_color = this->palette().desktop_background();
-        if (optional.has_value())
-            default_color = optional.value();
-
-        auto dialog = GUI::ColorPicker::construct(default_color, window());
-        if (dialog->exec() == GUI::Dialog::ExecOK) {
-            auto tmp = dialog->color();
-            m_color_textbox->set_text(tmp.to_string());
-        }
     };
 
     /// Add the apply and cancel buttons //////////////////////////////////////////////////////////
@@ -294,18 +257,18 @@ void DisplayPropertiesWidget::create_frame()
 
 void DisplayPropertiesWidget::load_current_settings()
 {
-    auto m_ws_config(Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini"));
+    auto ws_config(Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini"));
     auto wm_config = Core::ConfigFile::get_for_app("WindowManager");
 
     /// Wallpaper path ////////////////////////////////////////////////////////////////////////////
     /// Read wallpaper path from config file and set value to monitor widget and combo box.
-    auto m_selected_wallpaper = wm_config->read_entry("Background", "Wallpaper", "");
-    if (!m_selected_wallpaper.is_empty()) {
-        m_monitor_widget->set_wallpaper(m_selected_wallpaper);
+    auto selected_wallpaper = wm_config->read_entry("Background", "Wallpaper", "");
+    if (!selected_wallpaper.is_empty()) {
+        m_monitor_widget->set_wallpaper(selected_wallpaper);
 
         Optional<size_t> optional_index;
-        if (m_selected_wallpaper.starts_with("/res/wallpapers/")) {
-            auto name_parts = m_selected_wallpaper.split('/');
+        if (selected_wallpaper.starts_with("/res/wallpapers/")) {
+            auto name_parts = selected_wallpaper.split('/');
             optional_index = m_wallpapers.find_first_index(name_parts[2]);
 
             if (optional_index.has_value()) {
@@ -315,13 +278,13 @@ void DisplayPropertiesWidget::load_current_settings()
 
         if (!optional_index.has_value()) {
             m_wallpaper_combo->set_only_allow_values_from_model(false);
-            m_wallpaper_combo->set_text(m_selected_wallpaper);
+            m_wallpaper_combo->set_text(selected_wallpaper);
             m_wallpaper_combo->set_only_allow_values_from_model(true);
         }
     }
 
     /// Mode //////////////////////////////////////////////////////////////////////////////////////
-    auto mode = m_ws_config->read_entry("Background", "Mode");
+    auto mode = ws_config->read_entry("Background", "Mode");
     if (!mode.is_empty()) {
         this->m_monitor_widget->set_wallpaper_mode(mode);
         auto index = m_modes.find_first_index(mode).value();
@@ -333,13 +296,13 @@ void DisplayPropertiesWidget::load_current_settings()
 
     bool okay = false;
     // Let's attempt to find the current resolution and select it!
-    find_size.set_width(m_ws_config->read_entry("Screen", "Width", "1024").to_int(okay));
+    find_size.set_width(ws_config->read_entry("Screen", "Width", "1024").to_int(okay));
     if (!okay) {
         fprintf(stderr, "DisplayProperties: failed to convert width to int!");
         ASSERT_NOT_REACHED();
     }
 
-    find_size.set_height(m_ws_config->read_entry("Screen", "Height", "768").to_int(okay));
+    find_size.set_height(ws_config->read_entry("Screen", "Height", "768").to_int(okay));
     if (!okay) {
         fprintf(stderr, "DisplayProperties: failed to convert height to int!");
         ASSERT_NOT_REACHED();
@@ -352,14 +315,17 @@ void DisplayPropertiesWidget::load_current_settings()
 
     /// Color /////////////////////////////////////////////////////////////////////////////////////
     /// If presend read from config file. If not paint with palet color.
-    auto background_color = m_ws_config->read_entry("Background", "Color", "");
+    Color palette_desktop_color = this->palette().desktop_background();
+
+    auto background_color = ws_config->read_entry("Background", "Color", "");
     if (!background_color.is_empty()) {
-        m_color_textbox->set_text(background_color);
-        m_monitor_widget->set_background_color(Color::from_string(background_color).value());
-    } else {
-        Color palette_desktop_color = this->palette().desktop_background();
-        m_monitor_widget->set_background_color(palette_desktop_color);
+        auto opt_color = Color::from_string(background_color);
+        if (opt_color.has_value())
+            palette_desktop_color = opt_color.value();
     }
+
+    m_color_input->set_color(palette_desktop_color);
+    m_monitor_widget->set_background_color(palette_desktop_color);
 
     m_monitor_widget->update();
 }
@@ -369,7 +335,7 @@ void DisplayPropertiesWidget::send_settings_to_window_server()
     auto result = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetResolution>(m_monitor_widget->desktop_resolution());
     if (!result->success()) {
         GUI::MessageBox::show(String::format("Reverting to resolution %dx%d", result->resolution().width(), result->resolution().height()),
-            String::format("Unable to set resolution"), GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK);
+            "Unable to set resolution", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK);
     }
 
     if (!m_monitor_widget->wallpaper().is_empty()) {
@@ -378,7 +344,7 @@ void DisplayPropertiesWidget::send_settings_to_window_server()
 
     GUI::Desktop::the().set_wallpaper_mode(m_monitor_widget->wallpaper_mode());
 
-    if (!m_color_textbox->text().is_empty()) {
-        GUI::Desktop::the().set_background_color(m_color_textbox->text());
+    if (m_color_input->color() != this->palette().desktop_background()) {
+        GUI::Desktop::the().set_background_color(m_color_input->text());
     }
 }
