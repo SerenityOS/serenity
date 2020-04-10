@@ -30,7 +30,7 @@
 
 namespace JS {
 
-class StringObject final : public Object {
+class StringObject : public Object {
 public:
     explicit StringObject(PrimitiveString*);
     virtual ~StringObject() override;

@@ -26,11 +26,11 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/StringObject.h>
 
 namespace JS {
 
-class StringPrototype final : public Object {
+class StringPrototype final : public StringObject {
 public:
     StringPrototype();
     virtual ~StringPrototype() override;

@@ -26,11 +26,11 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/NumberObject.h>
 
 namespace JS {
 
-class NumberPrototype final : public Object {
+class NumberPrototype final : public NumberObject {
 public:
     NumberPrototype();
     virtual ~NumberPrototype() override;

@@ -28,6 +28,7 @@
 #include <LibJS/Runtime/BooleanObject.h>
 
 namespace JS {
+
 BooleanObject::BooleanObject(bool value)
     : m_value(value)
 {
@@ -37,4 +38,5 @@ BooleanObject::BooleanObject(bool value)
 BooleanObject::~BooleanObject()
 {
 }
+
 }

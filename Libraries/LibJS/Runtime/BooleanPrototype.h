@@ -26,11 +26,11 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/BooleanObject.h>
 
 namespace JS {
 
-class BooleanPrototype final : public Object {
+class BooleanPrototype final : public BooleanObject {
 public:
     BooleanPrototype();
     virtual ~BooleanPrototype() override;

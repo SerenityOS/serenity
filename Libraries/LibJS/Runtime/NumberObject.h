@@ -30,7 +30,7 @@
 
 namespace JS {
 
-class NumberObject final : public Object {
+class NumberObject : public Object {
 public:
     explicit NumberObject(double);
     virtual ~NumberObject() override;
