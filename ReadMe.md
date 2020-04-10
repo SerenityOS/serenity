@@ -95,6 +95,7 @@ Come hang out with us in `#serenityos` on the Freenode IRC network.
 * **Robin Burchell** - [rburchell](https://github.com/rburchell)
 * **Conrad Pankoff** - [deoxxa](https://github.com/deoxxa)
 * **Sergey Bugaev** - [bugaevc](https://github.com/bugaevc)
+* **Liav A** - [supercomputer7](https://github.com/supercomputer7)
 
 (And many more!) Feel free to append yourself here if you've made some sweet contributions. :)
 
