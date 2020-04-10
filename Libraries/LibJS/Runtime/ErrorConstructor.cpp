@@ -53,28 +53,26 @@ Value ErrorConstructor::construct(Interpreter& interpreter)
     return interpreter.heap().allocate<Error>("Error", message);
 }
 
-#define DEFINE_ERROR_SUBCLASS_CONSTRUCTOR(TitleCase, snake_case)                                                     \
-    TitleCase##Constructor::TitleCase##Constructor()                                                                 \
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName)                                        \
+    ConstructorName::ConstructorName()                                                                               \
     {                                                                                                                \
-        put("prototype", interpreter().snake_case##_prototype());                                                    \
+        put("prototype", interpreter().snake_name##_prototype());                                                    \
         put("length", Value(1));                                                                                     \
     }                                                                                                                \
-    TitleCase##Constructor::~TitleCase##Constructor() {}                                                             \
-    Value TitleCase##Constructor::call(Interpreter& interpreter)                                                     \
+    ConstructorName::~ConstructorName() {}                                                                           \
+    Value ConstructorName::call(Interpreter& interpreter)                                                            \
     {                                                                                                                \
         return construct(interpreter);                                                                               \
     }                                                                                                                \
-    Value TitleCase##Constructor::construct(Interpreter& interpreter)                                                \
+    Value ConstructorName::construct(Interpreter& interpreter)                                                       \
     {                                                                                                                \
         String message = "";                                                                                         \
         if (!interpreter.call_frame().arguments.is_empty() && !interpreter.call_frame().arguments[0].is_undefined()) \
             message = interpreter.call_frame().arguments[0].to_string();                                             \
-        return interpreter.heap().allocate<TitleCase>(message);                                                      \
+        return interpreter.heap().allocate<ClassName>(message);                                                      \
     }
 
-#define __JS_ENUMERATE_ERROR_SUBCLASS(TitleCase, snake_case) \
-    DEFINE_ERROR_SUBCLASS_CONSTRUCTOR(TitleCase, snake_case)
 JS_ENUMERATE_ERROR_SUBCLASSES
-#undef __JS_ENUMERATE_ERROR_SUBCLASS
+#undef __JS_ENUMERATE
 
 }

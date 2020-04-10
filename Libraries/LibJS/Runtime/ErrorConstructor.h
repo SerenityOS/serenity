@@ -44,22 +44,22 @@ private:
     virtual const char* class_name() const override { return "ErrorConstructor"; }
 };
 
-#define DECLARE_ERROR_SUBCLASS_CONSTRUCTOR(TitleCase, snake_case)                            \
-    class TitleCase##Constructor final : public NativeFunction {                             \
-    public:                                                                                  \
-        TitleCase##Constructor();                                                            \
-        virtual ~TitleCase##Constructor() override;                                          \
-        virtual Value call(Interpreter&) override;                                           \
-        virtual Value construct(Interpreter&) override;                                      \
-                                                                                             \
-    private:                                                                                 \
-        virtual bool has_constructor() const override { return true; }                       \
-        virtual const char* class_name() const override { return #TitleCase "Constructor"; } \
+#define DECLARE_ERROR_SUBCLASS_CONSTRUCTOR(ClassName, snake_name, PrototypeName, ConstructorName) \
+    class ConstructorName final : public NativeFunction {                                         \
+    public:                                                                                       \
+        ConstructorName();                                                                        \
+        virtual ~ConstructorName() override;                                                      \
+        virtual Value call(Interpreter&) override;                                                \
+        virtual Value construct(Interpreter&) override;                                           \
+                                                                                                  \
+    private:                                                                                      \
+        virtual bool has_constructor() const override { return true; }                            \
+        virtual const char* class_name() const override { return #ClassName "Constructor"; }      \
     };
 
-#define __JS_ENUMERATE_ERROR_SUBCLASS(TitleCase, snake_case) \
-    DECLARE_ERROR_SUBCLASS_CONSTRUCTOR(TitleCase, snake_case)
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
+    DECLARE_ERROR_SUBCLASS_CONSTRUCTOR(ClassName, snake_name, PrototypeName, ConstructorName)
 JS_ENUMERATE_ERROR_SUBCLASSES
-#undef __JS_ENUMERATE_ERROR_SUBCLASS
+#undef __JS_ENUMERATE
 
 }
