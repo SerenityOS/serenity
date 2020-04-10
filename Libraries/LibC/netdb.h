@@ -50,8 +50,11 @@ struct servent {
     char* s_proto;
 };
 
+struct servent* getservent();
 struct servent* getservbyname(const char* name, const char* protocol);
-
+struct servent* getservbyport(int port, const char* protocol);
+void setservent(int stay_open);
+void endservent();
 extern int h_errno;
 
 #define HOST_NOT_FOUND 101
