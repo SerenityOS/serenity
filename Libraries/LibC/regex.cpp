@@ -914,10 +914,14 @@ int regexec(const regex_t* preg, const char* string, size_t nmatch, regmatch_t p
             pmatch[0].match_count = result.m_match_count;
 
         if (result.m_match_count) {
+#ifdef REGEX_DEBUG
             printf("[regexec] match_all successful, found %lu occurences, took %lu operations.\n", result.m_match_count, result.m_ops);
+#endif
             return REG_NOERR;
         } else {
+#ifdef REGEX_DEBUG
             printf("[regexec] match_all not successful, found %lu occurences, took %lu operations.\n", result.m_match_count, result.m_ops);
+#endif
         }
 
     } else {
@@ -936,10 +940,14 @@ int regexec(const regex_t* preg, const char* string, size_t nmatch, regmatch_t p
             pmatch[0].match_count = result.m_match_count;
 
         if (result.m_match_count) {
+#ifdef REGEX_DEBUG
             printf("[regexec] match successful, took %lu operations.\n", result.m_ops);
+#endif
             return REG_NOERR;
         } else {
+#ifdef REGEX_DEBUG
             printf("[regexec] match not successful, took %lu operations.\n", result.m_ops);
+#endif
         }
     }
 

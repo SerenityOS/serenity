@@ -488,4 +488,22 @@ TEST_CASE(multi_parens_qualifier_questionmark)
     regfree(&regex);
 }
 
+BENCHMARK_CASE(parens_qualifier_asterisk_2_benchmark)
+{
+    String pattern = "test(.*)test";
+    regex_t regex;
+    static constexpr int num_matches { 6 };
+    regmatch_t matches[num_matches];
+    const char* match_str;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+
+    match_str = "testaaaatest, testbbbtest, testtest";
+    for (size_t i = 0; i < 10000; ++i) {
+        EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, REG_MATCHALL), REG_NOERR);
+    }
+
+    regfree(&regex);
+}
+
 TEST_MAIN(Regex)
