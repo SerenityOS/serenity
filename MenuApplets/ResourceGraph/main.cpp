@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,6 +26,9 @@
  */
 
 #include <AK/CircularQueue.h>
+#include <AK/JsonObject.h>
+#include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Painter.h>
@@ -33,11 +37,18 @@
 #include <LibGfx/Palette.h>
 #include <stdio.h>
 
+enum class GraphType {
+    CPU,
+    Memory,
+};
+
 class GraphWidget final : public GUI::Widget {
     C_OBJECT(GraphWidget)
 public:
-    GraphWidget()
+    GraphWidget(GraphType graph_type, Optional<Gfx::Color> graph_color)
+        : m_graph_type(graph_type)
     {
+        m_graph_color = graph_color.value_or(palette().menu_selection());
         start_timer(1000);
     }
 
@@ -46,15 +57,30 @@ public:
 private:
     virtual void timer_event(Core::TimerEvent&) override
     {
-        unsigned busy;
-        unsigned idle;
-        get_cpu_usage(busy, idle);
-        unsigned busy_diff = busy - m_last_busy;
-        unsigned idle_diff = idle - m_last_idle;
-        m_last_busy = busy;
-        m_last_idle = idle;
-        float cpu = (float)busy_diff / (float)(busy_diff + idle_diff);
-        m_cpu_history.enqueue(cpu);
+        switch (m_graph_type) {
+        case GraphType::CPU: {
+            unsigned busy;
+            unsigned idle;
+            get_cpu_usage(busy, idle);
+            unsigned busy_diff = busy - m_last_cpu_busy;
+            unsigned idle_diff = idle - m_last_cpu_idle;
+            m_last_cpu_busy = busy;
+            m_last_cpu_idle = idle;
+            float cpu = (float)busy_diff / (float)(busy_diff + idle_diff);
+            m_history.enqueue(cpu);
+            break;
+        }
+        case GraphType::Memory: {
+            unsigned allocated;
+            unsigned available;
+            get_memory_usage(allocated, available);
+            float memory = (float)allocated / (float)(allocated + available);
+            m_history.enqueue(memory);
+            break;
+        }
+        default:
+            ASSERT_NOT_REACHED();
+        }
         update();
     }
 
@@ -63,12 +89,12 @@ private:
         GUI::Painter painter(*this);
         painter.add_clip_rect(event.rect());
         painter.fill_rect(event.rect(), Color::Black);
-        int i = m_cpu_history.capacity() - m_cpu_history.size();
-        for (auto cpu_usage : m_cpu_history) {
+        int i = m_history.capacity() - m_history.size();
+        for (auto value : m_history) {
             painter.draw_line(
                 { i, rect().bottom() },
-                { i, (int)(height() - (cpu_usage * (float)height())) },
-                palette().menu_selection());
+                { i, (int)(height() - (value * (float)height())) },
+                m_graph_color);
             ++i;
         }
     }
@@ -104,9 +130,25 @@ private:
         }
     }
 
-    CircularQueue<float, 30> m_cpu_history;
-    unsigned m_last_busy { 0 };
-    unsigned m_last_idle { 0 };
+    static void get_memory_usage(unsigned& allocated, unsigned& available)
+    {
+        auto proc_memstat = Core::File::construct("/proc/memstat");
+        if (!proc_memstat->open(Core::IODevice::OpenMode::ReadOnly))
+            ASSERT_NOT_REACHED();
+
+        auto file_contents = proc_memstat->read_all();
+        auto json = JsonValue::from_string(file_contents).as_object();
+        unsigned user_physical_allocated = json.get("user_physical_allocated").to_u32();
+        unsigned user_physical_available = json.get("user_physical_available").to_u32();
+        allocated = (user_physical_allocated * 4096) / 1024;
+        available = (user_physical_available * 4096) / 1024;
+    }
+
+    GraphType m_graph_type;
+    Gfx::Color m_graph_color;
+    CircularQueue<float, 30> m_history;
+    unsigned m_last_cpu_busy { 0 };
+    unsigned m_last_cpu_idle { 0 };
 };
 
 int main(int argc, char** argv)
@@ -123,12 +165,44 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    bool cpu = false;
+    bool memory = false;
+    const char* name = nullptr;
+    const char* color = nullptr;
+    Core::ArgsParser args_parser;
+    args_parser.add_option(cpu, "Show CPU usage", "cpu", 'C');
+    args_parser.add_option(memory, "Show memory usage", "memory", 'M');
+    args_parser.add_option(name, "Applet name used by WindowServer.ini to set the applet order", "name", 'n', "name");
+    args_parser.add_option(color, "Graph color", "color", 'c', "color");
+    args_parser.parse(argc, argv);
+
+    if (!cpu && !memory) {
+        printf("Either --cpu or --memory option must be used");
+        return 1;
+    }
+    if (cpu && memory) {
+        printf("--cpu and --memory options must not be used together");
+        return 1;
+    }
+    GraphType graph_type;
+    if (cpu)
+        graph_type = GraphType::CPU;
+    if (memory)
+        graph_type = GraphType::Memory;
+
+    if (name == nullptr)
+        name = "ResourceGraph";
+
+    Optional<Gfx::Color> graph_color;
+    if (color != nullptr)
+        graph_color = Gfx::Color::from_string(color);
+
     auto window = GUI::Window::construct();
-    window->set_title("ResourceGraph");
+    window->set_title(name);
     window->set_window_type(GUI::WindowType::MenuApplet);
     window->resize(30, 16);
 
-    window->set_main_widget<GraphWidget>();
+    window->set_main_widget<GraphWidget>(graph_type, graph_color);
     window->show();
 
     if (unveil("/res", "r") < 0) {
@@ -144,6 +218,11 @@ int main(int argc, char** argv)
     }
 
     if (unveil("/proc/all", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/proc/memstat", "r") < 0) {
         perror("unveil");
         return 1;
     }
