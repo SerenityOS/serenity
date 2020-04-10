@@ -573,12 +573,12 @@ KeyboardDevice::~KeyboardDevice()
 {
 }
 
-bool KeyboardDevice::can_read(const FileDescription&) const
+bool KeyboardDevice::can_read(const FileDescription&, size_t) const
 {
     return !m_queue.is_empty();
 }
 
-ssize_t KeyboardDevice::read(FileDescription&, u8* buffer, ssize_t size)
+ssize_t KeyboardDevice::read(FileDescription&, size_t, u8* buffer, ssize_t size)
 {
     ssize_t nread = 0;
     while (nread < size) {
@@ -594,7 +594,7 @@ ssize_t KeyboardDevice::read(FileDescription&, u8* buffer, ssize_t size)
     return nread;
 }
 
-ssize_t KeyboardDevice::write(FileDescription&, const u8*, ssize_t)
+ssize_t KeyboardDevice::write(FileDescription&, size_t, const u8*, ssize_t)
 {
     return 0;
 }
