@@ -124,8 +124,8 @@ public:
     Lock& lock() { return m_lock; }
 
     // ^File
-    virtual ssize_t read(FileDescription&, u8*, ssize_t) override final;
-    virtual ssize_t write(FileDescription&, const u8*, ssize_t) override final;
+    virtual ssize_t read(FileDescription&, size_t, u8*, ssize_t) override final;
+    virtual ssize_t write(FileDescription&, size_t, const u8*, ssize_t) override final;
     virtual String absolute_path(const FileDescription&) const override = 0;
 
     bool has_receive_timeout() const { return m_receive_timeout.tv_sec || m_receive_timeout.tv_usec; }

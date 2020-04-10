@@ -106,17 +106,17 @@ void FIFO::detach(Direction direction)
     }
 }
 
-bool FIFO::can_read(const FileDescription&) const
+bool FIFO::can_read(const FileDescription&, size_t) const
 {
     return !m_buffer.is_empty() || !m_writers;
 }
 
-bool FIFO::can_write(const FileDescription&) const
+bool FIFO::can_write(const FileDescription&, size_t) const
 {
     return m_buffer.space_for_writing() || !m_readers;
 }
 
-ssize_t FIFO::read(FileDescription&, u8* buffer, ssize_t size)
+ssize_t FIFO::read(FileDescription&, size_t, u8* buffer, ssize_t size)
 {
     if (!m_writers && m_buffer.is_empty())
         return 0;
@@ -130,7 +130,7 @@ ssize_t FIFO::read(FileDescription&, u8* buffer, ssize_t size)
     return nread;
 }
 
-ssize_t FIFO::write(FileDescription&, const u8* buffer, ssize_t size)
+ssize_t FIFO::write(FileDescription&, size_t, const u8* buffer, ssize_t size)
 {
     if (!m_readers) {
         Thread::current->send_signal(SIGPIPE, Process::current);

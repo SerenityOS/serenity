@@ -130,7 +130,7 @@ ssize_t FileDescription::read(u8* buffer, ssize_t count)
     if ((m_current_offset + count) < 0)
         return -EOVERFLOW;
     SmapDisabler disabler;
-    int nread = m_file->read(*this, buffer, count);
+    int nread = m_file->read(*this, offset(), buffer, count);
     if (nread > 0 && m_file->is_seekable())
         m_current_offset += nread;
     return nread;
@@ -142,7 +142,7 @@ ssize_t FileDescription::write(const u8* data, ssize_t size)
     if ((m_current_offset + size) < 0)
         return -EOVERFLOW;
     SmapDisabler disabler;
-    int nwritten = m_file->write(*this, data, size);
+    int nwritten = m_file->write(*this, offset(), data, size);
     if (nwritten > 0 && m_file->is_seekable())
         m_current_offset += nwritten;
     return nwritten;
@@ -150,12 +150,12 @@ ssize_t FileDescription::write(const u8* data, ssize_t size)
 
 bool FileDescription::can_write() const
 {
-    return m_file->can_write(*this);
+    return m_file->can_write(*this, offset());
 }
 
 bool FileDescription::can_read() const
 {
-    return m_file->can_read(*this);
+    return m_file->can_read(*this, offset());
 }
 
 ByteBuffer FileDescription::read_entire_file()

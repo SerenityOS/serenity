@@ -227,7 +227,7 @@ void LocalSocket::detach(FileDescription& description)
     }
 }
 
-bool LocalSocket::can_read(const FileDescription& description) const
+bool LocalSocket::can_read(const FileDescription& description, size_t) const
 {
     auto role = this->role(description);
     if (role == Role::Listener)
@@ -249,7 +249,7 @@ bool LocalSocket::has_attached_peer(const FileDescription& description) const
     ASSERT_NOT_REACHED();
 }
 
-bool LocalSocket::can_write(const FileDescription& description) const
+bool LocalSocket::can_write(const FileDescription& description, size_t) const
 {
     auto role = this->role(description);
     if (role == Role::Accepted)
@@ -298,7 +298,7 @@ ssize_t LocalSocket::recvfrom(FileDescription& description, void* buffer, size_t
                 return 0;
             return -EAGAIN;
         }
-    } else if (!can_read(description)) {
+    } else if (!can_read(description, 0)) {
         auto result = Thread::current->block<Thread::ReadBlocker>(description);
         if (result != Thread::BlockResult::WokeNormally)
             return -EINTR;

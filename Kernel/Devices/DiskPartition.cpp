@@ -48,32 +48,48 @@ DiskPartition::~DiskPartition()
 {
 }
 
-ssize_t DiskPartition::read(FileDescription& file_description, u8* buffer, ssize_t length)
+ssize_t DiskPartition::read(FileDescription& fd, size_t offset, u8* outbuf, ssize_t len)
 {
-    // FIXME: This is a hacky solution, but works fine for now...
-    off_t current_offset = file_description.seek(0, SEEK_CUR);
-    auto new_offset = current_offset + (m_block_offset * m_device->block_size());
-    if ((new_offset / m_device->block_size()) > m_block_limit || ((new_offset + length) / m_device->block_size()) > m_block_limit) {
-        return 0;
-    }
-    file_description.seek(new_offset, SEEK_SET);
-    auto result = m_device->read(file_description, buffer, length);
-    file_description.seek(current_offset, SEEK_SET);
-    return result;
+    unsigned adjust = m_block_offset * block_size();
+
+#ifdef OFFD_DEBUG
+    klog() << "DiskPartition::read offset=" << fd.offset() << " adjust=" << adjust << " len=" << len;
+#endif
+
+    return m_device->read(fd, offset + adjust, outbuf, len);
 }
 
-ssize_t DiskPartition::write(FileDescription& file_description, const u8* buffer, ssize_t length)
+bool DiskPartition::can_read(const FileDescription& fd, size_t offset) const
 {
-    // FIXME: This is a hacky solution, but works fine for now...
-    off_t current_offset = file_description.seek(0, SEEK_CUR);
-    auto new_offset = current_offset + (m_block_offset * m_device->block_size());
-    if ((new_offset / m_device->block_size()) > m_block_limit || ((new_offset + length) / m_device->block_size()) > m_block_limit) {
-        return 0;
-    }
-    file_description.seek(new_offset, SEEK_SET);
-    auto result = m_device->write(file_description, buffer, length);
-    file_description.seek(current_offset, SEEK_SET);
-    return result;
+    unsigned adjust = m_block_offset * block_size();
+
+#ifdef OFFD_DEBUG
+    klog() << "DiskPartition::can_read offset=" << offset << " adjust=" << adjust;
+#endif
+
+    return m_device->can_read(fd, offset + adjust);
+}
+
+ssize_t DiskPartition::write(FileDescription& fd, size_t offset, const u8* inbuf, ssize_t len)
+{
+    unsigned adjust = m_block_offset * block_size();
+
+#ifdef OFFD_DEBUG
+    klog() << "DiskPartition::write offset=" << offset << " adjust=" << adjust << " len=" << len;
+#endif
+
+    return m_device->write(fd, offset + adjust, inbuf, len);
+}
+
+bool DiskPartition::can_write(const FileDescription& fd, size_t offset) const
+{
+    unsigned adjust = m_block_offset * block_size();
+
+#ifdef OFFD_DEBUG
+    klog() << "DiskPartition::can_write offset=" << offset << " adjust=" << adjust;
+#endif
+
+    return m_device->can_write(fd, offset + adjust);
 }
 
 bool DiskPartition::read_blocks(unsigned index, u16 count, u8* out)

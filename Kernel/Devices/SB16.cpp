@@ -167,12 +167,12 @@ void SB16::set_irq_line(u8 irq_number)
     change_irq_number(irq_number);
 }
 
-bool SB16::can_read(const FileDescription&) const
+bool SB16::can_read(const FileDescription&, size_t) const
 {
     return false;
 }
 
-ssize_t SB16::read(FileDescription&, u8*, ssize_t)
+ssize_t SB16::read(FileDescription&, size_t, u8*, ssize_t)
 {
     return 0;
 }
@@ -226,7 +226,7 @@ void SB16::wait_for_irq()
     disable_irq();
 }
 
-ssize_t SB16::write(FileDescription&, const u8* data, ssize_t length)
+ssize_t SB16::write(FileDescription&, size_t, const u8* data, ssize_t length)
 {
     if (!m_dma_region) {
         auto page = MM.allocate_supervisor_physical_page();

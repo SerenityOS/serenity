@@ -47,17 +47,17 @@ NullDevice::~NullDevice()
 {
 }
 
-bool NullDevice::can_read(const FileDescription&) const
+bool NullDevice::can_read(const FileDescription&, size_t) const
 {
     return true;
 }
 
-ssize_t NullDevice::read(FileDescription&, u8*, ssize_t)
+ssize_t NullDevice::read(FileDescription&, size_t, u8*, ssize_t)
 {
     return 0;
 }
 
-ssize_t NullDevice::write(FileDescription&, const u8*, ssize_t buffer_size)
+ssize_t NullDevice::write(FileDescription&, size_t, const u8*, ssize_t buffer_size)
 {
     return min(PAGE_SIZE, buffer_size);
 }

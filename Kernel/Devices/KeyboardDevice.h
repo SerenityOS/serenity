@@ -52,10 +52,10 @@ public:
     void set_maps(const char* n_map, const char* n_shift_map, const char* n_alt_map, const char* n_altgr_map);
 
     // ^CharacterDevice
-    virtual ssize_t read(FileDescription&, u8* buffer, ssize_t) override;
-    virtual bool can_read(const FileDescription&) const override;
-    virtual ssize_t write(FileDescription&, const u8* buffer, ssize_t) override;
-    virtual bool can_write(const FileDescription&) const override { return true; }
+    virtual ssize_t read(FileDescription&, size_t, u8* buffer, ssize_t) override;
+    virtual bool can_read(const FileDescription&, size_t) const override;
+    virtual ssize_t write(FileDescription&, size_t, const u8* buffer, ssize_t) override;
+    virtual bool can_write(const FileDescription&, size_t) const override { return true; }
 
     virtual const char* purpose() const override { return class_name(); }
 
