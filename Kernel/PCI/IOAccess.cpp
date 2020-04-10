@@ -39,6 +39,9 @@ void IOAccess::initialize()
 IOAccess::IOAccess()
 {
     klog() << "PCI: Using I/O instructions for PCI configuration space access";
+    enumerate_hardware([&](const Address& address, ID id) {
+        m_physical_ids.append({ address, id });
+    });
 }
 
 u8 IOAccess::read8_field(Address address, u32 field)
@@ -75,7 +78,7 @@ void IOAccess::write32_field(Address address, u32 field, u32 value)
     IO::out32(PCI_VALUE_PORT, value);
 }
 
-void IOAccess::enumerate_all(Function<void(Address, ID)>& callback)
+void IOAccess::enumerate_hardware(Function<void(Address, ID)> callback)
 {
     // Single PCI host controller.
     if ((read8_field(Address(), PCI_HEADER_TYPE) & 0x80) == 0) {

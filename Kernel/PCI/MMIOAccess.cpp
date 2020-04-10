@@ -109,7 +109,9 @@ MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
     }
     mcfg_region->unmap();
     klog() << "PCI: MMIO segments - " << m_segments.size();
+
     InterruptDisabler disabler;
+
 #ifdef PCI_DEBUG
     dbg() << "PCI: mapped address (" << String::format("%w", m_mapped_address.seg()) << ":" << String::format("%b", m_mapped_address.bus()) << ":" << String::format("%b", m_mapped_address.slot()) << "." << String::format("%b", m_mapped_address.function()) << ")";
 #endif
@@ -117,6 +119,10 @@ MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
 #ifdef PCI_DEBUG
     dbg() << "PCI: Default mapped address (" << String::format("%w", m_mapped_address.seg()) << ":" << String::format("%b", m_mapped_address.bus()) << ":" << String::format("%b", m_mapped_address.slot()) << "." << String::format("%b", m_mapped_address.function()) << ")";
 #endif
+
+    enumerate_hardware([&](const Address& address, ID id) {
+        m_physical_ids.append({ address, id });
+    });
 }
 
 void MMIOAccess::map_device(Address address)
@@ -204,7 +210,7 @@ void MMIOAccess::write32_field(Address address, u32 field, u32 value)
     *((u32*)(m_mmio_window_region->vaddr().get() + (field & 0xfff))) = value;
 }
 
-void MMIOAccess::enumerate_all(Function<void(Address, ID)>& callback)
+void MMIOAccess::enumerate_hardware(Function<void(Address, ID)> callback)
 {
     for (u16 seg = 0; seg < m_segments.size(); seg++) {
 #ifdef PCI_DEBUG

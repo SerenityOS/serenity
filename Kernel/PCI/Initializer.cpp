@@ -59,7 +59,7 @@ void initialize()
     else
         IOAccess::initialize();
 
-    enumerate_all([&](const Address& address, ID id) {
+    enumerate([&](const Address& address, ID id) {
         klog() << address << " " << id;
         E1000NetworkAdapter::detect(address);
         RTL8139NetworkAdapter::detect(address);

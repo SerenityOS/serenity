@@ -157,7 +157,7 @@ u32 BXVGADevice::find_framebuffer_address()
     static const PCI::ID bochs_vga_id = { 0x1234, 0x1111 };
     static const PCI::ID virtualbox_vga_id = { 0x80ee, 0xbeef };
     u32 framebuffer_address = 0;
-    PCI::enumerate_all([&framebuffer_address](const PCI::Address& address, PCI::ID id) {
+    PCI::enumerate([&framebuffer_address](const PCI::Address& address, PCI::ID id) {
         if (id == bochs_vga_id || id == virtualbox_vga_id) {
             framebuffer_address = PCI::get_BAR0(address) & 0xfffffff0;
             klog() << "BXVGA: framebuffer @ " << PhysicalAddress(framebuffer_address);

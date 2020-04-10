@@ -118,7 +118,7 @@ static Lock& s_lock()
 OwnPtr<PATAChannel> PATAChannel::create(ChannelType type, bool force_pio)
 {
     PCI::Address pci_address;
-    PCI::enumerate_all([&](const PCI::Address& address, PCI::ID id) {
+    PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
         if (PCI::get_class(address) == PCI_Mass_Storage_Class && PCI::get_subclass(address) == PCI_IDE_Controller_Subclass) {
             pci_address = address;
             klog() << "PATAChannel: PATA Controller found, ID " << id;

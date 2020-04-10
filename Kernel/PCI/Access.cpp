@@ -98,9 +98,16 @@ void Access::enumerate_bus(int type, u8 bus, Function<void(Address, ID)>& callba
         enumerate_slot(type, bus, slot, callback);
 }
 
-void enumerate_all(Function<void(Address, ID)> callback)
+void Access::enumerate(Function<void(Address, ID)>& callback) const
 {
-    Access::the().enumerate_all(callback);
+    for (auto& physical_id : m_physical_ids) {
+        callback(physical_id.address(), physical_id.id());
+    }
+}
+
+void enumerate(Function<void(Address, ID)> callback)
+{
+    Access::the().enumerate(callback);
 }
 
 void raw_access(Address address, u32 field, size_t access_size, u32 value)

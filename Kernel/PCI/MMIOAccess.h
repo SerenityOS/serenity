@@ -48,7 +48,7 @@ protected:
 private:
     virtual const char* access_type() const override { return "MMIO-Access"; };
     virtual u32 segment_count() const override;
-    virtual void enumerate_all(Function<void(Address, ID)>&) override;
+    virtual void enumerate_hardware(Function<void(Address, ID)>) override;
     virtual void write8_field(Address address, u32, u8) override;
     virtual void write16_field(Address address, u32, u16) override;
     virtual void write32_field(Address address, u32, u32) override;

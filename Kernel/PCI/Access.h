@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/String.h>
+#include <AK/Vector.h>
 #include <Kernel/PCI/Definitions.h>
 
 namespace Kernel {
@@ -38,7 +39,7 @@ public:
         MMIO,
     };
 
-    virtual void enumerate_all(Function<void(Address, ID)>&) = 0;
+    void enumerate(Function<void(Address, ID)>&) const;
 
     void enumerate_bus(int type, u8 bus, Function<void(Address, ID)>&);
     void enumerate_functions(int type, u8 bus, u8 slot, u8 function, Function<void(Address, ID)>& callback);
@@ -60,7 +61,10 @@ public:
     virtual u32 read32_field(Address address, u32 field) = 0;
 
 protected:
+    virtual void enumerate_hardware(Function<void(Address, ID)>) = 0;
+
     Access();
+    Vector<PhysicalID> m_physical_ids;
 };
 
 }
