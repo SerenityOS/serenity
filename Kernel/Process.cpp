@@ -3978,7 +3978,7 @@ int Process::sys$halt()
     dbg() << "attempting system shutdown...";
     IO::out16(0x604, 0x2000);
 
-    return ESUCCESS;
+    return 0;
 }
 
 int Process::sys$reboot()
@@ -3998,7 +3998,7 @@ int Process::sys$reboot()
     dbg() << "attempting reboot via KB Controller...";
     IO::out8(0x64, 0xFE);
 
-    return ESUCCESS;
+    return 0;
 }
 
 int Process::sys$mount(const Syscall::SC_mount_params* user_params)
