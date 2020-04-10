@@ -24,11 +24,14 @@ try {
     assert(d.writable === true);
     assert(d.value === "ho");
 
+    var exceptionThrown = false;
     try {
         Object.defineProperty(o, "bar", { value: "xx", enumerable: false });
     } catch (e) {
         assert(e.name === "TypeError");
+        exceptionThrown = true;
     }
+    assert(exceptionThrown);
 
     Object.defineProperty(o, "baz", { value: 9, configurable: true, writable: false });
     Object.defineProperty(o, "baz", { configurable: true, writable: true });
