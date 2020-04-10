@@ -121,7 +121,7 @@ OwnPtr<PATAChannel> PATAChannel::create(ChannelType type, bool force_pio)
     PCI::enumerate_all([&](const PCI::Address& address, PCI::ID id) {
         if (PCI::get_class(address) == PCI_Mass_Storage_Class && PCI::get_subclass(address) == PCI_IDE_Controller_Subclass) {
             pci_address = address;
-            klog() << "PATAChannel: PATA Controller found! id=" << String::format("%w", id.vendor_id) << ":" << String::format("%w", id.device_id);
+            klog() << "PATAChannel: PATA Controller found, ID " << id;
         }
     });
     return make<PATAChannel>(pci_address, type, force_pio);
