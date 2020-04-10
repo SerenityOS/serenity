@@ -2418,8 +2418,8 @@ KResultOr<siginfo_t> Process::do_waitid(idtype_t idtype, int id, int options)
         siginfo.si_signo = SIGCHLD;
         siginfo.si_pid = waitee_process->pid();
         siginfo.si_uid = waitee_process->uid();
-        siginfo.si_status = CLD_STOPPED;
-        siginfo.si_code = waitee_thread->m_stop_signal;
+        siginfo.si_code = CLD_STOPPED;
+        siginfo.si_status = waitee_thread->m_stop_signal;
         return siginfo;
     }
 }
