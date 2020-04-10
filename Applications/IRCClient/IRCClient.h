@@ -63,6 +63,9 @@ public:
     bool show_join_part_messages() const { return m_show_join_part_messages; }
     bool show_nick_change_messages() const { return m_show_nick_change_messages; }
 
+    bool notify_on_message() const { return m_notify_on_message; }
+    bool notify_on_mention() const { return m_notify_on_mention; }
+
     void join_channel(const String&);
     void part_channel(const String&);
     void change_nick(const String&);
@@ -213,6 +216,9 @@ private:
 
     bool m_show_join_part_messages { 1 };
     bool m_show_nick_change_messages { 1 };
+
+    bool m_notify_on_message { 1 };
+    bool m_notify_on_mention { 1 };
 
     String m_ctcp_version_reply;
     String m_ctcp_userinfo_reply;
