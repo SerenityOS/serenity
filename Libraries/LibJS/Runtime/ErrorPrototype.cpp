@@ -51,7 +51,7 @@ Value ErrorPrototype::name_getter(Interpreter& interpreter)
     if (!this_object)
         return {};
     if (!this_object->is_error())
-        return interpreter.throw_exception<Error>("TypeError", "Not an Error object");
+        return interpreter.throw_exception<TypeError>("Not an Error object");
     return js_string(interpreter, static_cast<const Error*>(this_object)->name());
 }
 
@@ -61,14 +61,14 @@ Value ErrorPrototype::message_getter(Interpreter& interpreter)
     if (!this_object)
         return {};
     if (!this_object->is_error())
-        return interpreter.throw_exception<Error>("TypeError", "Not an Error object");
+        return interpreter.throw_exception<TypeError>("Not an Error object");
     return js_string(interpreter, static_cast<const Error*>(this_object)->message());
 }
 
 Value ErrorPrototype::to_string(Interpreter& interpreter)
 {
     if (!interpreter.this_value().is_object())
-        return interpreter.throw_exception<Error>("TypeError", "Not an object");
+        return interpreter.throw_exception<TypeError>("Not an object");
     auto& this_object = interpreter.this_value().as_object();
 
     String name = "Error";
@@ -89,7 +89,10 @@ Value ErrorPrototype::to_string(Interpreter& interpreter)
 }
 
 #define DEFINE_ERROR_SUBCLASS_PROTOTYPE(TitleCase, snake_case) \
-    TitleCase::TitleCase() {}                                  \
+    TitleCase::TitleCase()                                     \
+    {                                                          \
+        set_prototype(interpreter().error_prototype());        \
+    }                                                          \
     TitleCase::~TitleCase() {}                                 \
     const char* TitleCase::class_name() const { return #TitleCase; }
 
