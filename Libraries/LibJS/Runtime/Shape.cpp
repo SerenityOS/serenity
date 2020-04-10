@@ -31,21 +31,21 @@ namespace JS {
 
 Shape* Shape::create_put_transition(const FlyString& property_name, u8 attributes)
 {
-    auto* new_shape = m_forward_transitions.get(property_name).value_or(nullptr);
-    if (new_shape && new_shape->m_attributes == attributes)
-        return new_shape;
-    new_shape = heap().allocate<Shape>(this, property_name, attributes, TransitionType::Put);
-    m_forward_transitions.set(property_name, new_shape);
+    TransitionKey key { property_name, attributes };
+    if (auto* existing_shape = m_forward_transitions.get(key).value_or(nullptr))
+        return existing_shape;
+    auto* new_shape = heap().allocate<Shape>(this, property_name, attributes, TransitionType::Put);
+    m_forward_transitions.set(key, new_shape);
     return new_shape;
 }
 
 Shape* Shape::create_configure_transition(const FlyString& property_name, u8 attributes)
 {
-    auto* new_shape = m_forward_transitions.get(property_name).value_or(nullptr);
-    if (new_shape && new_shape->m_attributes == attributes)
-        return new_shape;
-    new_shape = heap().allocate<Shape>(this, property_name, attributes, TransitionType::Configure);
-    m_forward_transitions.set(property_name, new_shape);
+    TransitionKey key { property_name, attributes };
+    if (auto* existing_shape = m_forward_transitions.get(key).value_or(nullptr))
+        return existing_shape;
+    auto* new_shape = heap().allocate<Shape>(this, property_name, attributes, TransitionType::Configure);
+    m_forward_transitions.set(key, new_shape);
     return new_shape;
 }
 
