@@ -4387,6 +4387,8 @@ int Process::sys$module_load(const char* user_path, size_t path_length)
     auto module = make<Module>();
 
     elf_image->for_each_section_of_type(SHT_PROGBITS, [&](const ELFImage::Section& section) {
+        if (!section.size())
+            return IterationDecision::Continue;
         auto section_storage = KBuffer::copy(section.raw_data(), section.size(), Region::Access::Read | Region::Access::Write | Region::Access::Execute);
         section_storage_by_name.set(section.name(), section_storage.data());
         module->sections.append(move(section_storage));
@@ -4396,6 +4398,8 @@ int Process::sys$module_load(const char* user_path, size_t path_length)
     bool missing_symbols = false;
 
     elf_image->for_each_section_of_type(SHT_PROGBITS, [&](const ELFImage::Section& section) {
+        if (!section.size())
+            return IterationDecision::Continue;
         auto* section_storage = section_storage_by_name.get(section.name()).value_or(nullptr);
         ASSERT(section_storage);
         section.relocations().for_each_relocation([&](const ELFImage::Relocation& relocation) {
