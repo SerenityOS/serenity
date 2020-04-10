@@ -125,16 +125,17 @@ namespace Kernel {
 #define RX_BUFFER_SIZE 32768
 #define TX_BUFFER_SIZE PACKET_SIZE_MAX
 
-void RTL8139NetworkAdapter::detect(const PCI::Address& address)
+void RTL8139NetworkAdapter::detect()
 {
-    if (address.is_null())
-        return;
     static const PCI::ID rtl8139_id = { 0x10EC, 0x8139 };
-    PCI::ID id = PCI::get_id(address);
-    if (id != rtl8139_id)
-        return;
-    u8 irq = PCI::get_interrupt_line(address);
-    (void)adopt(*new RTL8139NetworkAdapter(address, irq)).leak_ref();
+    PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
+        if (address.is_null())
+            return;
+        if (id != rtl8139_id)
+            return;
+        u8 irq = PCI::get_interrupt_line(address);
+        (void)adopt(*new RTL8139NetworkAdapter(address, irq)).leak_ref();
+    });
 }
 
 RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address address, u8 irq)

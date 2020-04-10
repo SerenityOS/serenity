@@ -38,7 +38,7 @@ namespace Kernel {
 class E1000NetworkAdapter final : public NetworkAdapter
     , public PCI::Device {
 public:
-    static void detect(const PCI::Address&);
+    static void detect();
 
     E1000NetworkAdapter(PCI::Address, u8 irq);
     virtual ~E1000NetworkAdapter() override;
