@@ -66,7 +66,7 @@ Value Array::length_getter(Interpreter& interpreter)
     if (!this_object)
         return {};
     if (!this_object->is_array())
-        return interpreter.throw_exception<Error>("TypeError", "Not an array");
+        return interpreter.throw_exception<TypeError>("Not an array");
     return Value(static_cast<const Array*>(this_object)->length());
 }
 

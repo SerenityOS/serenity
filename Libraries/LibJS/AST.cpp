@@ -97,11 +97,11 @@ Value CallExpression::execute(Interpreter& interpreter) const
             || !callee.as_object().is_function()
             || (callee.as_object().is_native_function()
                 && !static_cast<NativeFunction&>(callee.as_object()).has_constructor()))
-            return interpreter.throw_exception<Error>("TypeError", String::format("%s is not a constructor", callee.to_string().characters()));
+            return interpreter.throw_exception<TypeError>(String::format("%s is not a constructor", callee.to_string().characters()));
     }
 
     if (!callee.is_object() || !callee.as_object().is_function())
-        return interpreter.throw_exception<Error>("TypeError", String::format("%s is not a function", callee.to_string().characters()));
+        return interpreter.throw_exception<TypeError>(String::format("%s is not a function", callee.to_string().characters()));
 
     auto& function = static_cast<Function&>(callee.as_object());
 
@@ -651,7 +651,7 @@ Value Identifier::execute(Interpreter& interpreter) const
 {
     auto variable = interpreter.get_variable(string());
     if (!variable.has_value())
-        return interpreter.throw_exception<Error>("ReferenceError", String::format("'%s' not known", string().characters()));
+        return interpreter.throw_exception<ReferenceError>(String::format("'%s' not known", string().characters()));
     return variable.value();
 }
 
@@ -711,7 +711,7 @@ Value AssignmentExpression::execute(Interpreter& interpreter) const
             object->put(property_name, rhs_result);
         }
     } else {
-        return interpreter.throw_exception<Error>("ReferenceError", "Invalid left-hand side in assignment");
+        return interpreter.throw_exception<ReferenceError>("Invalid left-hand side in assignment");
     }
 
     return rhs_result;

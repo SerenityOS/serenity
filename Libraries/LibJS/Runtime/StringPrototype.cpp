@@ -120,7 +120,7 @@ Value StringPrototype::index_of(Interpreter& interpreter)
     if (!this_object)
         return {};
     if (!this_object->is_string_object())
-        return interpreter.throw_exception<Error>("TypeError", "Not a String object");
+        return interpreter.throw_exception<TypeError>("Not a String object");
 
     Value needle_value = js_undefined();
     if (interpreter.argument_count() >= 1)
@@ -141,7 +141,7 @@ static StringObject* string_object_from(Interpreter& interpreter)
     if (!this_object)
         return nullptr;
     if (!this_object->is_string_object()) {
-        interpreter.throw_exception<Error>("TypeError", "Not a String object");
+        interpreter.throw_exception<TypeError>("Not a String object");
         return nullptr;
     }
     return static_cast<StringObject*>(this_object);
@@ -169,7 +169,7 @@ Value StringPrototype::length_getter(Interpreter& interpreter)
     if (!this_object)
         return {};
     if (!this_object->is_string_object())
-        return interpreter.throw_exception<Error>("TypeError", "Not a String object");
+        return interpreter.throw_exception<TypeError>("Not a String object");
     return Value((i32) static_cast<const StringObject*>(this_object)->primitive_string()->string().length());
 }
 

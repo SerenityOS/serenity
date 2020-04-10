@@ -115,7 +115,7 @@ Object* Value::to_object(Heap& heap) const
         return heap.allocate<BooleanObject>(m_value.as_bool);
 
     if (is_null() || is_undefined()) {
-        heap.interpreter().throw_exception<Error>("TypeError", "ToObject on null or undefined.");
+        heap.interpreter().throw_exception<TypeError>("ToObject on null or undefined.");
         return nullptr;
     }
 

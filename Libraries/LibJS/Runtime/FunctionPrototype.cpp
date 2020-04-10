@@ -54,14 +54,14 @@ Value FunctionPrototype::apply(Interpreter& interpreter)
     if (!this_object)
         return {};
     if (!this_object->is_function())
-        return interpreter.throw_exception<Error>("TypeError", "Not a Function object");
+        return interpreter.throw_exception<TypeError>("Not a Function object");
     auto function = static_cast<Function*>(this_object);
     auto this_arg = interpreter.argument(0);
     auto arg_array = interpreter.argument(1);
     if (arg_array.is_null() || arg_array.is_undefined())
         return interpreter.call(function, this_arg);
     if (!arg_array.is_object())
-        return interpreter.throw_exception<Error>("TypeError", "argument array must be an object");
+        return interpreter.throw_exception<TypeError>("argument array must be an object");
     size_t length = 0;
     auto length_property = arg_array.as_object().get("length");
     if (length_property.has_value())
@@ -87,7 +87,7 @@ Value FunctionPrototype::call(Interpreter& interpreter)
     if (!this_object)
         return {};
     if (!this_object->is_function())
-        return interpreter.throw_exception<Error>("TypeError", "Not a Function object");
+        return interpreter.throw_exception<TypeError>("Not a Function object");
     auto function = static_cast<Function*>(this_object);
     auto this_arg = interpreter.argument(0);
     Vector<Value> arguments;
@@ -104,7 +104,7 @@ Value FunctionPrototype::to_string(Interpreter& interpreter)
     if (!this_object)
         return {};
     if (!this_object->is_function())
-        return interpreter.throw_exception<Error>("TypeError", "Not a Function object");
+        return interpreter.throw_exception<TypeError>("Not a Function object");
     // FIXME: Functions should be able to know their name, if any
     if (this_object->is_native_function()) {
         auto function_source = String::format("function () {\n  [%s]\n}", this_object->class_name());
