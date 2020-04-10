@@ -1,6 +1,6 @@
 OBJS = main.o
 
-PROGRAM = CPUGraph.MenuApplet
+PROGRAM = ResourceGraph.MenuApplet
 
 LIB_DEPS = GUI IPC Gfx Thread Pthread Core
 
