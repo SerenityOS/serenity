@@ -139,16 +139,18 @@ namespace Kernel {
 #define INTERRUPT_TXD_LOW (1 << 15)
 #define INTERRUPT_SRPD (1 << 16)
 
-void E1000NetworkAdapter::detect(const PCI::Address& address)
+void E1000NetworkAdapter::detect()
 {
-    if (address.is_null())
-        return;
     static const PCI::ID qemu_bochs_vbox_id = { 0x8086, 0x100e };
-    const PCI::ID id = PCI::get_id(address);
-    if (id != qemu_bochs_vbox_id)
-        return;
-    u8 irq = PCI::get_interrupt_line(address);
-    (void)adopt(*new E1000NetworkAdapter(address, irq)).leak_ref();
+
+    PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
+        if (address.is_null())
+            return;
+        if (id != qemu_bochs_vbox_id)
+            return;
+        u8 irq = PCI::get_interrupt_line(address);
+        (void)adopt(*new E1000NetworkAdapter(address, irq)).leak_ref();
+    });
 }
 
 E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, u8 irq)

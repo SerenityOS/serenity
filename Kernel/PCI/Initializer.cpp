@@ -58,11 +58,8 @@ void initialize()
         MMIOAccess::initialize(ACPI::Parser::the()->find_table("MCFG"));
     else
         IOAccess::initialize();
-
-    enumerate([&](const Address& address, ID id) {
+    PCI::enumerate([&](const Address& address, ID id) {
         klog() << address << " " << id;
-        E1000NetworkAdapter::detect(address);
-        RTL8139NetworkAdapter::detect(address);
     });
 }
 

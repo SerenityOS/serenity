@@ -39,7 +39,7 @@ namespace Kernel {
 class RTL8139NetworkAdapter final : public NetworkAdapter
     , public PCI::Device {
 public:
-    static void detect(const PCI::Address&);
+    static void detect();
 
     RTL8139NetworkAdapter(PCI::Address, u8 irq);
     virtual ~RTL8139NetworkAdapter() override;
