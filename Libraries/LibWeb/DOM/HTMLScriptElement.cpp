@@ -71,8 +71,13 @@ void HTMLScriptElement::inserted_into(Node& new_parent)
     if (src.is_null())
         return;
 
-    String source;
     URL src_url = document().complete_url(src);
+    if (src_url.protocol() == "file" && document().url().protocol() != src_url.protocol()) {
+        dbg() << "HTMLScriptElement: Forbidden to load " << src_url.to_string() << " from " << document().url().to_string();
+        return;
+    }
+
+    String source;
     ResourceLoader::the().load_sync(src_url, [&](auto& data) {
         if (data.is_null()) {
             dbg() << "HTMLScriptElement: Failed to load " << src;
