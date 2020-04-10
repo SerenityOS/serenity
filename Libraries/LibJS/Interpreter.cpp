@@ -57,6 +57,11 @@ Interpreter::Interpreter()
     m_date_prototype = heap().allocate<DatePrototype>();
     m_number_prototype = heap().allocate<NumberPrototype>();
     m_boolean_prototype = heap().allocate<BooleanPrototype>();
+
+#define __JS_ENUMERATE_ERROR_SUBCLASS(TitleCase, snake_case) \
+    m_##snake_case##_prototype = heap().allocate<TitleCase##Prototype>();
+    JS_ENUMERATE_ERROR_SUBCLASSES
+#undef __JS_ENUMERATE_ERROR_SUBCLASS
 }
 
 Interpreter::~Interpreter()
@@ -178,11 +183,17 @@ void Interpreter::gather_roots(Badge<Heap>, HashTable<Cell*>& roots)
     roots.set(m_string_prototype);
     roots.set(m_object_prototype);
     roots.set(m_array_prototype);
-    roots.set(m_error_prototype);
     roots.set(m_date_prototype);
     roots.set(m_function_prototype);
     roots.set(m_number_prototype);
     roots.set(m_boolean_prototype);
+
+    roots.set(m_error_prototype);
+
+#define __JS_ENUMERATE_ERROR_SUBCLASS(TitleCase, snake_case) \
+    roots.set(m_##snake_case##_prototype);
+    JS_ENUMERATE_ERROR_SUBCLASSES
+#undef __JS_ENUMERATE_ERROR_SUBCLASS
 
     roots.set(m_exception);
 

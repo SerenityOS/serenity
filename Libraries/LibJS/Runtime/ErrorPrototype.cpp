@@ -80,12 +80,22 @@ Value ErrorPrototype::to_string(Interpreter& interpreter)
     auto object_message_property = this_object.get("message");
     if (object_message_property.has_value() && !object_message_property.value().is_undefined())
         message = object_message_property.value().to_string();
-    
+
     if (name.length() == 0)
         return js_string(interpreter, message);
     if (message.length() == 0)
         return js_string(interpreter, name);
     return js_string(interpreter, String::format("%s: %s", name.characters(), message.characters()));
 }
+
+#define DEFINE_ERROR_SUBCLASS_PROTOTYPE(TitleCase, snake_case) \
+    TitleCase::TitleCase() {}                                  \
+    TitleCase::~TitleCase() {}                                 \
+    const char* TitleCase::class_name() const { return #TitleCase; }
+
+#define __JS_ENUMERATE_ERROR_SUBCLASS(TitleCase, snake_case) \
+    DEFINE_ERROR_SUBCLASS_PROTOTYPE(TitleCase##Prototype, snake_case##_prototype)
+JS_ENUMERATE_ERROR_SUBCLASSES
+#undef __JS_ENUMERATE_ERROR_SUBCLASS
 
 }

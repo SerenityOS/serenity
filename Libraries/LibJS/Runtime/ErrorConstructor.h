@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/NativeFunction.h>
 
 namespace JS {
@@ -42,5 +43,23 @@ private:
     virtual bool has_constructor() const override { return true; }
     virtual const char* class_name() const override { return "ErrorConstructor"; }
 };
+
+#define DECLARE_ERROR_SUBCLASS_CONSTRUCTOR(TitleCase, snake_case)                            \
+    class TitleCase##Constructor final : public NativeFunction {                             \
+    public:                                                                                  \
+        TitleCase##Constructor();                                                            \
+        virtual ~TitleCase##Constructor() override;                                          \
+        virtual Value call(Interpreter&) override;                                           \
+        virtual Value construct(Interpreter&) override;                                      \
+                                                                                             \
+    private:                                                                                 \
+        virtual bool has_constructor() const override { return true; }                       \
+        virtual const char* class_name() const override { return #TitleCase "Constructor"; } \
+    };
+
+#define __JS_ENUMERATE_ERROR_SUBCLASS(TitleCase, snake_case) \
+    DECLARE_ERROR_SUBCLASS_CONSTRUCTOR(TitleCase, snake_case)
+JS_ENUMERATE_ERROR_SUBCLASSES
+#undef __JS_ENUMERATE_ERROR_SUBCLASS
 
 }
