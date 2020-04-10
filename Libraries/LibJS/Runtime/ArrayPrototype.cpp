@@ -54,7 +54,7 @@ static Array* array_from(Interpreter& interpreter)
     if (!this_object)
         return {};
     if (!this_object->is_array()) {
-        interpreter.throw_exception<Error>("TypeError", "Not an Array");
+        interpreter.throw_exception<TypeError>("Not an Array");
         return nullptr;
     }
     return static_cast<Array*>(this_object);

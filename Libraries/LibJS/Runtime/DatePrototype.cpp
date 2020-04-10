@@ -41,7 +41,7 @@ static Date* this_date_from_interpreter(Interpreter& interpreter)
     if (!this_object)
         return nullptr;
     if (!this_object->is_date()) {
-        interpreter.throw_exception<Error>("TypeError", "object must be of type Date");
+        interpreter.throw_exception<TypeError>("object must be of type Date");
         return nullptr;
     }
     return static_cast<Date*>(this_object);

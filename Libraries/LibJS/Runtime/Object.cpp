@@ -110,7 +110,7 @@ void Object::put_own_property(Object& this_object, const FlyString& property_nam
 
     if (mode == PutOwnPropertyMode::DefineProperty && !(metadata.value().attributes & Attribute::Configurable) && attributes != metadata.value().attributes) {
         dbg() << "Disallow reconfig of non-configurable property";
-        interpreter().throw_exception<Error>("TypeError", String::format("Cannot redefine property '%s'", property_name.characters()));
+        interpreter().throw_exception<TypeError>(String::format("Cannot redefine property '%s'", property_name.characters()));
         return;
     }
 

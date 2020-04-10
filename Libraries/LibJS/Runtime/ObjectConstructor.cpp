@@ -101,9 +101,9 @@ Value ObjectConstructor::set_prototype_of(Interpreter& interpreter)
 Value ObjectConstructor::get_own_property_descriptor(Interpreter& interpreter)
 {
     if (interpreter.argument_count() < 2)
-        return interpreter.throw_exception<Error>("TypeError", "Object.getOwnPropertyDescriptor() needs 2 arguments");
+        return interpreter.throw_exception<TypeError>("Object.getOwnPropertyDescriptor() needs 2 arguments");
     if (!interpreter.argument(0).is_object())
-        return interpreter.throw_exception<Error>("TypeError", "Object argument is not an object");
+        return interpreter.throw_exception<TypeError>("Object argument is not an object");
     auto& object = interpreter.argument(0).as_object();
     auto metadata = object.shape().lookup(interpreter.argument(1).to_string());
     if (!metadata.has_value())
@@ -119,11 +119,11 @@ Value ObjectConstructor::get_own_property_descriptor(Interpreter& interpreter)
 Value ObjectConstructor::define_property(Interpreter& interpreter)
 {
     if (interpreter.argument_count() < 3)
-        return interpreter.throw_exception<Error>("TypeError", "Object.defineProperty() needs 3 arguments");
+        return interpreter.throw_exception<TypeError>("Object.defineProperty() needs 3 arguments");
     if (!interpreter.argument(0).is_object())
-        return interpreter.throw_exception<Error>("TypeError", "Object argument is not an object");
+        return interpreter.throw_exception<TypeError>("Object argument is not an object");
     if (!interpreter.argument(2).is_object())
-        return interpreter.throw_exception<Error>("TypeError", "Descriptor argument is not an object");
+        return interpreter.throw_exception<TypeError>("Descriptor argument is not an object");
     auto& object = interpreter.argument(0).as_object();
     auto& descriptor = interpreter.argument(2).as_object();
 

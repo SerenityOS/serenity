@@ -70,7 +70,7 @@ Value ScriptFunction::length_getter(Interpreter& interpreter)
     if (!this_object)
         return {};
     if (!this_object->is_function())
-        return interpreter.throw_exception<Error>("TypeError", "Not a function");
+        return interpreter.throw_exception<TypeError>("Not a function");
     return Value(static_cast<i32>(static_cast<const ScriptFunction*>(this_object)->parameters().size()));
 }
 
