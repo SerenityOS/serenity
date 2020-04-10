@@ -60,6 +60,9 @@ public:
     String ctcp_userinfo_reply() const { return m_ctcp_userinfo_reply; }
     String ctcp_finger_reply() const { return m_ctcp_finger_reply; }
 
+    bool show_join_part_messages() const { return m_show_join_part_messages; }
+    bool show_nick_change_messages() const { return m_show_nick_change_messages; }
+
     void join_channel(const String&);
     void part_channel(const String&);
     void change_nick(const String&);
@@ -207,6 +210,9 @@ private:
     RefPtr<Core::Notifier> m_notifier;
     HashMap<String, RefPtr<IRCChannel>, CaseInsensitiveStringTraits> m_channels;
     HashMap<String, RefPtr<IRCQuery>, CaseInsensitiveStringTraits> m_queries;
+
+    bool m_show_join_part_messages { 1 };
+    bool m_show_nick_change_messages { 1 };
 
     String m_ctcp_version_reply;
     String m_ctcp_userinfo_reply;

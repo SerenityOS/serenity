@@ -100,7 +100,8 @@ void IRCChannel::handle_join(const String& nick, const String& hostmask)
     }
     add_member(nick, (char)0);
     m_member_model->update();
-    add_message(String::format("*** %s [%s] has joined %s", nick.characters(), hostmask.characters(), m_name.characters()), Color::MidGreen);
+    if (m_client.show_join_part_messages())
+        add_message(String::format("*** %s [%s] has joined %s", nick.characters(), hostmask.characters(), m_name.characters()), Color::MidGreen);
 }
 
 void IRCChannel::handle_part(const String& nick, const String& hostmask)
@@ -113,7 +114,8 @@ void IRCChannel::handle_part(const String& nick, const String& hostmask)
         remove_member(nick);
     }
     m_member_model->update();
-    add_message(String::format("*** %s [%s] has parted from %s", nick.characters(), hostmask.characters(), m_name.characters()), Color::MidGreen);
+    if (m_client.show_join_part_messages())
+        add_message(String::format("*** %s [%s] has parted from %s", nick.characters(), hostmask.characters(), m_name.characters()), Color::MidGreen);
 }
 
 void IRCChannel::handle_quit(const String& nick, const String& hostmask, const String& message)
@@ -142,8 +144,9 @@ void IRCChannel::notify_nick_changed(const String& old_nick, const String& new_n
     for (auto& member : m_members) {
         if (member.name == old_nick) {
             member.name = new_nick;
-            add_message(String::format("~ %s changed nickname to %s", old_nick.characters(), new_nick.characters()), Color::MidMagenta);
             m_member_model->update();
+            if (m_client.show_nick_change_messages())
+                add_message(String::format("~ %s changed nickname to %s", old_nick.characters(), new_nick.characters()), Color::MidMagenta);
             return;
         }
     }
