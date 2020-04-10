@@ -26,6 +26,7 @@ try {
 
     try {
         Object.defineProperty(o, "bar", { value: "xx", enumerable: false });
+        assert(false);
     } catch (e) {
         assert(e.name === "TypeError");
     }
