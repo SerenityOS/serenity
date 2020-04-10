@@ -26,6 +26,15 @@
 
 #pragma once
 
+#define JS_ENUMERATE_ERROR_SUBCLASSES                              \
+    __JS_ENUMERATE_ERROR_SUBCLASS(EvalError, eval_error)           \
+    __JS_ENUMERATE_ERROR_SUBCLASS(InternalError, internal_error)   \
+    __JS_ENUMERATE_ERROR_SUBCLASS(RangeError, range_error)         \
+    __JS_ENUMERATE_ERROR_SUBCLASS(ReferenceError, reference_error) \
+    __JS_ENUMERATE_ERROR_SUBCLASS(SyntaxError, syntax_error)       \
+    __JS_ENUMERATE_ERROR_SUBCLASS(TypeError, type_error)           \
+    __JS_ENUMERATE_ERROR_SUBCLASS(URIError, uri_error)
+
 namespace JS {
 
 class ASTNode;
@@ -53,6 +62,13 @@ class Shape;
 class Statement;
 class Value;
 enum class DeclarationKind;
+
+#define __JS_ENUMERATE_ERROR_SUBCLASS(TitleCase, snake_case) \
+    class TitleCase;                                         \
+    class TitleCase##Constructor;                            \
+    class TitleCase##Prototype;
+JS_ENUMERATE_ERROR_SUBCLASSES
+#undef __JS_ENUMERATE_ERROR_SUBCLASS
 
 struct Argument;
 

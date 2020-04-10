@@ -72,6 +72,11 @@ GlobalObject::GlobalObject()
     add_constructor("Function", m_function_constructor, *interpreter().function_prototype());
     add_constructor("Number", m_number_constructor, *interpreter().number_prototype());
     add_constructor("Object", m_object_constructor, *interpreter().object_prototype());
+
+#define __JS_ENUMERATE_ERROR_SUBCLASS(TitleCase, snake_case) \
+    add_constructor(#TitleCase, m_##snake_case##_constructor, *interpreter().snake_case##_prototype());
+    JS_ENUMERATE_ERROR_SUBCLASSES
+#undef __JS_ENUMERATE_ERROR_SUBCLASS
 }
 
 GlobalObject::~GlobalObject()

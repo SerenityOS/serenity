@@ -38,10 +38,15 @@ public:
     ArrayConstructor* array_constructor() { return m_array_constructor; }
     BooleanConstructor* boolean_constructor() { return m_boolean_constructor; }
     DateConstructor* date_constructor() { return m_date_constructor; }
-    ErrorConstructor* error_constructor() { return m_error_constructor; }
     FunctionConstructor* function_constructor() { return m_function_constructor; }
     NumberConstructor* number_constructor() { return m_number_constructor; };
     ObjectConstructor* object_constructor() { return m_object_constructor; }
+    ErrorConstructor* error_constructor() { return m_error_constructor; }
+
+#define __JS_ENUMERATE_ERROR_SUBCLASS(TitleCase, snake_case) \
+    TitleCase##Constructor* snake_case##_constructor() { return m_##snake_case##_constructor; }
+    JS_ENUMERATE_ERROR_SUBCLASSES
+#undef __JS_ENUMERATE_ERROR_SUBCLASS
 
 protected:
     virtual void visit_children(Visitor&) override;
@@ -58,10 +63,15 @@ private:
     ArrayConstructor* m_array_constructor { nullptr };
     BooleanConstructor* m_boolean_constructor { nullptr };
     DateConstructor* m_date_constructor { nullptr };
-    ErrorConstructor* m_error_constructor { nullptr };
     FunctionConstructor* m_function_constructor { nullptr };
     NumberConstructor* m_number_constructor { nullptr };
     ObjectConstructor* m_object_constructor { nullptr };
+    ErrorConstructor* m_error_constructor { nullptr };
+
+#define __JS_ENUMERATE_ERROR_SUBCLASS(TitleCase, snake_case) \
+    TitleCase##Constructor* m_##snake_case##_constructor;
+    JS_ENUMERATE_ERROR_SUBCLASSES
+#undef __JS_ENUMERATE_ERROR_SUBCLASS
 };
 
 }

@@ -24,6 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#pragma once
+
 #include <AK/FlyString.h>
 #include <LibJS/Runtime/Object.h>
 
@@ -45,4 +47,18 @@ private:
     String m_message;
 };
 
+#define DECLARE_ERROR_SUBCLASS(TitleCase, snake_case)    \
+    class TitleCase final : public Error {               \
+    public:                                              \
+        TitleCase(const String& message);                \
+        virtual ~TitleCase() override;                   \
+                                                         \
+    private:                                             \
+        virtual const char* class_name() const override; \
+    };
+
+#define __JS_ENUMERATE_ERROR_SUBCLASS(TitleCase, snake_case) \
+    DECLARE_ERROR_SUBCLASS(TitleCase, snake_case)
+JS_ENUMERATE_ERROR_SUBCLASSES
+#undef __JS_ENUMERATE_ERROR_SUBCLASS
 }
