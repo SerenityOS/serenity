@@ -338,7 +338,7 @@ Optional<KBuffer> procfs$pci(InodeIdentifier)
 {
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
-    PCI::enumerate_all([&array](PCI::Address address, PCI::ID id) {
+    PCI::enumerate([&array](PCI::Address address, PCI::ID id) {
         auto obj = array.add_object();
         obj.add("seg", address.seg());
         obj.add("bus", address.bus());
