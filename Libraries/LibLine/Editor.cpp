@@ -203,17 +203,27 @@ String Editor::get_line(const String& prompt)
                 case 'A': // up
                     if (m_history_cursor > 0)
                         --m_history_cursor;
-                    clear_line();
-                    if (m_history_cursor < m_history.size())
-                        insert(m_history[m_history_cursor]);
+                    if (m_history_cursor < m_history.size()) {
+                        auto& line = m_history[m_history_cursor];
+                        m_buffer.clear();
+                        for (auto& c : line)
+                            m_buffer.append(c);
+                        m_cursor = m_buffer.size();
+                        m_refresh_needed = true;
+                    }
                     m_state = InputState::Free;
                     continue;
                 case 'B': // down
                     if (m_history_cursor < m_history.size())
                         ++m_history_cursor;
-                    clear_line();
-                    if (m_history_cursor < m_history.size())
-                        insert(m_history[m_history_cursor]);
+                    if (m_history_cursor < m_history.size()) {
+                        auto& line = m_history[m_history_cursor];
+                        m_buffer.clear();
+                        for (auto& c : line)
+                            m_buffer.append(c);
+                        m_cursor = m_buffer.size();
+                        m_refresh_needed = true;
+                    }
                     m_state = InputState::Free;
                     continue;
                 case 'D': // left
