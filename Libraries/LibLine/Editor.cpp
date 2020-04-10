@@ -155,18 +155,9 @@ String Editor::get_line(const String& prompt)
                     if (!m_buffer.is_empty())
                         printf("^C");
                 }
-                if (m_was_resized) {
-                    m_was_resized = false;
-                    printf("\033[2K\r");
-                    m_buffer.clear();
+                if (m_was_resized)
+                    continue;
 
-                    struct winsize ws;
-                    int rc = ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
-                    ASSERT(rc == 0);
-                    m_num_columns = ws.ws_col;
-
-                    return String::empty();
-                }
                 m_buffer.clear();
                 putchar('\n');
                 return String::empty();
@@ -414,6 +405,36 @@ String Editor::get_line(const String& prompt)
 
 void Editor::refresh_display()
 {
+    auto cleanup = [&] {
+        vt_move_relative(0, m_pending_chars.size() - m_chars_inserted_in_the_middle);
+        auto current_line = cursor_line();
+
+        vt_clear_lines(current_line - 1, num_lines() - current_line);
+        vt_move_relative(-num_lines() + 1, -offset_in_line() - m_old_prompt_length + m_chars_inserted_in_the_middle);
+    };
+    auto has_cleaned_up = false;
+    // someone changed the window size, figure it out
+    // and react to it, we might need to redraw
+    if (m_was_resized) {
+        auto previous_num_columns = m_num_columns;
+
+        struct winsize ws;
+        if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) < 0)
+            m_num_columns = 80;
+        else
+            m_num_columns = ws.ws_col;
+
+        if (previous_num_columns != m_num_columns) {
+            // we need to cleanup and redo everything
+            m_cached_prompt_valid = false;
+            m_refresh_needed = true;
+            swap(previous_num_columns, m_num_columns);
+            cleanup();
+            set_origin();
+            swap(previous_num_columns, m_num_columns);
+            has_cleaned_up = true;
+        }
+    }
     // do not call hook on pure cursor movement
     if (m_cached_prompt_valid && !m_refresh_needed && m_pending_chars.size() == 0) {
         // probably just moving around
@@ -442,13 +463,10 @@ void Editor::refresh_display()
 
     // ouch, reflow entire line
     // FIXME: handle multiline stuff
-    vt_move_relative(0, m_pending_chars.size() - m_chars_inserted_in_the_middle);
-    auto current_line = cursor_line();
-
-    vt_clear_lines(current_line - 1, num_lines() - current_line);
-    vt_move_relative(-num_lines() + 1, -offset_in_line() - m_old_prompt_length + m_chars_inserted_in_the_middle);
-
-    set_origin();
+    if (!has_cleaned_up) {
+        cleanup();
+        set_origin();
+    }
 
     fputs(m_new_prompt.characters(), stdout);
 
@@ -636,16 +654,20 @@ Vector<size_t, 2> Editor::vt_dsr()
     do {
         auto nread = read(0, buf + length, 16 - length);
         if (nread < 0) {
+            if (errno == ESUCCESS) {
+                // ????
+                continue;
+            }
             dbg() << "Error while reading DSR: " << strerror(errno);
-            return { 0, 0 };
+            return { 1, 1 };
         }
         if (nread == 0) {
             dbg() << "Terminal DSR issue; received no response";
-            return { 0, 0 };
+            return { 1, 1 };
         }
         length += nread;
     } while (buf[length - 1] != 'R' && length < 16);
-    size_t x { 0 }, y { 0 };
+    size_t x { 1 }, y { 1 };
 
     if (buf[0] == '\033' && buf[1] == '[') {
         auto parts = StringView(buf + 2, length - 3).split_view(';');
