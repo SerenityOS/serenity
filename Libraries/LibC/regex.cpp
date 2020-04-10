@@ -485,18 +485,47 @@ bool Parser::parse_extended_reg_exp(Vector<StackValue>& stack)
         if (!parse_ere_expression(operations))
             break;
 
-        stack.append(move(operations));
-
         if (match(TokenType::Pipe)) {
             consume(TokenType::Pipe);
-            ASSERT_NOT_REACHED();
 
-            //errors &= !(parse_extended_reg_exp(stack));
+            Vector<StackValue> operations_alternative;
 
-            // FIXME: Add logical OR opcode with two parameters
-            //        containing the jump offsets to both branches.
+            if (parse_extended_reg_exp(operations_alternative)) {
+
+                // FORKSTAY _ALT
+                // REGEXP ALT1
+                // JUMP  _END
+                // LABEL _ALT
+                // REGEXP ALT2
+                // LABEL _END
+
+                Vector<StackValue> new_operations;
+
+                new_operations.empend(OpCode::ForkJump);
+                new_operations.empend(operations.size() + 2); // Jump to the _ALT label
+
+                for (auto& op : operations)
+                    new_operations.append(move(op));
+
+                new_operations.empend(OpCode::Jump);
+                new_operations.empend(operations_alternative.size()); // Jump to the _END label
+
+                // LABEL _ALT = operations.size() + 2
+
+                for (auto& op : operations_alternative)
+                    new_operations.append(move(op));
+
+                // LABEL _END = operations_alternative.size
+
+                operations = move(new_operations);
+
+            } else {
+                m_parser_state.m_has_errors = true;
+            }
         }
     }
+
+    stack.append(move(operations));
 
     m_parser_state.m_has_errors = errors;
     return !errors;
@@ -651,8 +680,6 @@ const StackValue VM::get_and_increment(MatchState& state, size_t value) const
     return current;
 }
 
-//#define REGEX_DEBUG
-
 size_t VM::match_recurse(MatchState& state)
 {
 
@@ -662,24 +689,24 @@ size_t VM::match_recurse(MatchState& state)
         for (auto i = fork_stay_tuples.size(); i > 0;) {
             --i;
             auto& fork_stay_tuple = fork_stay_tuples.at(i);
-#ifdef REGEX_DEBUG
-            printf("[VM] Execute ForkStay - instructionp: %2lu, stringp: %2lu - ", s_state.m_instructionp, s_state.m_stringp);
-            printf("[%20s]\n", String(&s_state.m_view[s_state.m_stringp], s_state.m_view.length() - s_state.m_stringp).characters());
-#endif
-
             auto instructionp = state.m_instructionp;
             auto stringp = state.m_stringp;
 
             state.m_instructionp = fork_stay_tuple.m_instructionp;
             state.m_stringp = fork_stay_tuple.m_stringp;
 
+#ifdef REGEX_DEBUG
+            printf("[VM] Execute ForkStay - instructionp: %2lu, stringp: %2lu - ", state.m_instructionp, state.m_stringp);
+            printf("[%20s]\n", String(&state.m_view[state.m_stringp], state.m_view.length() - state.m_stringp).characters());
+#endif
             auto result = match_recurse(state);
-
-            state.m_instructionp = instructionp;
-            state.m_stringp = stringp;
 
             if (result)
                 return result;
+            else {
+                state.m_instructionp = instructionp;
+                state.m_stringp = stringp;
+            }
         }
 
         return 0;
@@ -749,16 +776,17 @@ size_t VM::match_recurse(MatchState& state)
 
             size_t result = match_recurse(state);
 
-            state.m_instructionp = saved_instructionp;
-            if (!result) // no valid solution via forkjump found... continue here at old string position
+            if (!result) { // no valid solution via forkjump found... continue here at old string position
                 state.m_stringp = saved_stringp;
+                state.m_instructionp = saved_instructionp;
+            }
 
         } else if (stack_item.op_code == OpCode::ForkStay) {
             auto& offset = get_and_increment(state).length;
             fork_stay_tuples.append({ state.m_instructionp + offset, state.m_stringp });
 
 #ifdef REGEX_DEBUG
-            printf(" > ForkStay to offset: %i, instructionp: %lu, stringp: %lu\n", offset, stay_states.last().m_instructionp, stay_states.last().m_stringp);
+            printf(" > ForkStay to offset: %i, instructionp: %lu, stringp: %lu\n", offset, fork_stay_tuples.last().m_instructionp, fork_stay_tuples.last().m_stringp);
 #endif
 
         } else if (stack_item.op_code == OpCode::Jump) {
@@ -814,7 +842,12 @@ size_t VM::match_recurse(MatchState& state)
 #ifdef REGEX_DEBUG
             printf("\n");
 #endif
-            break;
+            if ((state.m_stringp >= state.m_view.length() && state.m_instructionp >= bytes().size())
+                || (state.m_instructionp >= bytes().size() && state.m_match_any))
+                return state.m_stringp;
+            else
+                return 0;
+
         } else {
             printf("\nInvalid opcode: %lu, stackpointer: %lu\n", (size_t)stack_item.op_code, current_ip);
             exit(1);
@@ -919,6 +952,9 @@ int regexec(const regex_t* preg, const char* string, size_t nmatch, regmatch_t p
 #endif
             return REG_NOERR;
         } else {
+            for (size_t i = 0; i < nmatch; ++i)
+                pmatch[i] = { -1, -1, 0 };
+
 #ifdef REGEX_DEBUG
             printf("[regexec] match_all not successful, found %lu occurences, took %lu operations.\n", result.m_match_count, result.m_ops);
 #endif
@@ -945,6 +981,9 @@ int regexec(const regex_t* preg, const char* string, size_t nmatch, regmatch_t p
 #endif
             return REG_NOERR;
         } else {
+            for (size_t i = 0; i < nmatch; ++i)
+                pmatch[i] = { -1, -1, 0 };
+
 #ifdef REGEX_DEBUG
             printf("[regexec] match not successful, took %lu operations.\n", result.m_ops);
 #endif
