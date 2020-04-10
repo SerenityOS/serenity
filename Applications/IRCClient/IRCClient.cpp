@@ -78,6 +78,10 @@ IRCClient::IRCClient()
     m_nickname = m_config->read_entry("User", "Nickname", String::format("%s_seren1ty", user_pw->pw_name));
     m_hostname = m_config->read_entry("Connection", "Server", "");
     m_port = m_config->read_num_entry("Connection", "Port", 6667);
+
+    m_show_join_part_messages = m_config->read_bool_entry("Messaging", "ShowJoinPartMessages", 1);
+    m_show_nick_change_messages = m_config->read_bool_entry("Messaging", "ShowNickChangeMessages", 1);
+
     m_ctcp_version_reply = m_config->read_entry("CTCP", "VersionReply", "IRC Client [x86] / Serenity OS");
     m_ctcp_userinfo_reply = m_config->read_entry("CTCP", "UserInfoReply", user_pw->pw_name);
     m_ctcp_finger_reply = m_config->read_entry("CTCP", "FingerReply", user_pw->pw_name);
@@ -620,7 +624,8 @@ void IRCClient::handle_nick(const Message& msg)
     auto& new_nick = msg.arguments[0];
     if (old_nick == m_nickname)
         m_nickname = new_nick;
-    add_server_message(String::format("~ %s changed nickname to %s", old_nick.characters(), new_nick.characters()));
+    if (m_show_nick_change_messages)
+        add_server_message(String::format("~ %s changed nickname to %s", old_nick.characters(), new_nick.characters()));
     if (on_nickname_changed)
         on_nickname_changed(new_nick);
     for (auto& it : m_channels) {
