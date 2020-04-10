@@ -194,7 +194,8 @@ void IRCWindow::post_notification_if_needed(const String& name, const String& me
     auto notification = GUI::Notification::construct();
 
     if (type() == Type::Channel) {
-
+        if (!m_client.notify_on_mention())
+            return;
         if (!message.contains(m_client.nickname()))
             return;
 
@@ -204,6 +205,8 @@ void IRCWindow::post_notification_if_needed(const String& name, const String& me
         builder.append(m_name);
         notification->set_title(builder.to_string());
     } else {
+        if (!m_client.notify_on_message())
+            return;
         notification->set_title(name);
     }
 
