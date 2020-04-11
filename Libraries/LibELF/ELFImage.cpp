@@ -407,9 +407,8 @@ bool ELFImage::validate_program_headers(const Elf32_Ehdr& elf_header, size_t fil
             break;
         default:
             // Not handling other program header types in other code so... let's not surprise them
-            dbgprintf("Found program header (%d) of unrecognized type %d!\n", header_index, program_header.p_type);
-            ASSERT_NOT_REACHED();
-            break;
+            dbgprintf("Found program header (%d) of unrecognized type %x!\n", header_index, program_header.p_type);
+            return false;
         }
     }
     return true;
