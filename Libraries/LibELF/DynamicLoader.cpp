@@ -25,7 +25,7 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <LibELF/ELFDynamicLoader.h>
+#include <LibELF/DynamicLoader.h>
 
 #include <assert.h>
 #include <dlfcn.h>
@@ -45,14 +45,16 @@
         } while (0)
 #endif
 
+namespace ELF {
+
 static bool s_always_bind_now = false;
 
-NonnullRefPtr<ELFDynamicLoader> ELFDynamicLoader::construct(const char* filename, int fd, size_t size)
+NonnullRefPtr<DynamicLoader> DynamicLoader::construct(const char* filename, int fd, size_t size)
 {
-    return adopt(*new ELFDynamicLoader(filename, fd, size));
+    return adopt(*new DynamicLoader(filename, fd, size));
 }
 
-ELFDynamicLoader::ELFDynamicLoader(const char* filename, int fd, size_t size)
+DynamicLoader::DynamicLoader(const char* filename, int fd, size_t size)
     : m_filename(filename)
     , m_file_size(size)
     , m_image_fd(fd)
@@ -65,13 +67,13 @@ ELFDynamicLoader::ELFDynamicLoader(const char* filename, int fd, size_t size)
     }
 }
 
-ELFDynamicLoader::~ELFDynamicLoader()
+DynamicLoader::~DynamicLoader()
 {
     if (MAP_FAILED != m_file_mapping)
         munmap(m_file_mapping, m_file_size);
 }
 
-void* ELFDynamicLoader::symbol_for_name(const char* name)
+void* DynamicLoader::symbol_for_name(const char* name)
 {
     auto symbol = m_dynamic_object->hash_section().lookup_symbol(name);
 
@@ -81,9 +83,9 @@ void* ELFDynamicLoader::symbol_for_name(const char* name)
     return m_dynamic_object->base_address().offset(symbol.value()).as_ptr();
 }
 
-bool ELFDynamicLoader::load_from_image(unsigned flags)
+bool DynamicLoader::load_from_image(unsigned flags)
 {
-    ELFImage elf_image((u8*)m_file_mapping, m_file_size);
+    Image elf_image((u8*)m_file_mapping, m_file_size);
 
     m_valid = elf_image.is_valid() && elf_image.is_dynamic();
 
@@ -101,12 +103,12 @@ bool ELFDynamicLoader::load_from_image(unsigned flags)
     munmap(m_file_mapping, m_file_size);
     m_file_mapping = MAP_FAILED;
 
-    m_dynamic_object = AK::make<ELFDynamicObject>(m_text_segment_load_address, m_dynamic_section_address);
+    m_dynamic_object = AK::make<DynamicObject>(m_text_segment_load_address, m_dynamic_section_address);
 
     return load_stage_2(flags);
 }
 
-bool ELFDynamicLoader::load_stage_2(unsigned flags)
+bool DynamicLoader::load_stage_2(unsigned flags)
 {
     ASSERT(flags & RTLD_GLOBAL);
     ASSERT(flags & RTLD_LAZY);
@@ -143,7 +145,7 @@ bool ELFDynamicLoader::load_stage_2(unsigned flags)
     return true;
 }
 
-void ELFDynamicLoader::load_program_headers(const ELFImage& elf_image)
+void DynamicLoader::load_program_headers(const Image& elf_image)
 {
     Vector<ProgramHeaderRegion> program_headers;
 
@@ -152,7 +154,7 @@ void ELFDynamicLoader::load_program_headers(const ELFImage& elf_image)
     ProgramHeaderRegion* tls_region_ptr = nullptr;
     VirtualAddress dynamic_region_desired_vaddr;
 
-    elf_image.for_each_program_header([&](const ELFImage::ProgramHeader& program_header) {
+    elf_image.for_each_program_header([&](const Image::ProgramHeader& program_header) {
         ProgramHeaderRegion new_region;
         new_region.set_program_header(program_header.raw_header());
         program_headers.append(move(new_region));
@@ -200,7 +202,7 @@ void ELFDynamicLoader::load_program_headers(const ELFImage& elf_image)
     }
 }
 
-void ELFDynamicLoader::do_relocations()
+void DynamicLoader::do_relocations()
 {
     u32 load_base_address = m_dynamic_object->base_address().get();
 
@@ -208,7 +210,7 @@ void ELFDynamicLoader::do_relocations()
 
     auto main_relocation_section = m_dynamic_object->relocation_section();
 
-    main_relocation_section.for_each_relocation([&](const ELFDynamicObject::Relocation& relocation) {
+    main_relocation_section.for_each_relocation([&](const DynamicObject::Relocation& relocation) {
         VERBOSE("====== RELOCATION %d: offset 0x%08X, type %d, symidx %08X\n", relocation.offset_in_section() / main_relocation_section.entry_size(), relocation.offset(), relocation.type(), relocation.symbol_index());
         u32* patch_ptr = (u32*)(load_base_address + relocation.offset());
         switch (relocation.type()) {
@@ -260,7 +262,7 @@ void ELFDynamicLoader::do_relocations()
         default:
             // Raise the alarm! Someone needs to implement this relocation type
             dbgprintf("Found a new exciting relocation type %d\n", relocation.type());
-            printf("ELFDynamicLoader: Found unknown relocation type %d\n", relocation.type());
+            printf("DynamicLoader: Found unknown relocation type %d\n", relocation.type());
             ASSERT_NOT_REACHED();
             break;
         }
@@ -268,7 +270,7 @@ void ELFDynamicLoader::do_relocations()
     });
 
     // Handle PLT Global offset table relocations.
-    m_dynamic_object->plt_relocation_section().for_each_relocation([&](const ELFDynamicObject::Relocation& relocation) {
+    m_dynamic_object->plt_relocation_section().for_each_relocation([&](const DynamicObject::Relocation& relocation) {
         // FIXME: Or BIND_NOW flag passed in?
         if (m_dynamic_object->must_bind_now() || s_always_bind_now) {
             // Eagerly BIND_NOW the PLT entries, doing all the symbol looking goodness
@@ -294,7 +296,7 @@ void ELFDynamicLoader::do_relocations()
 // Defined in <arch>/plt_trampoline.S
 extern "C" void _plt_trampoline(void) __attribute__((visibility("hidden")));
 
-void ELFDynamicLoader::setup_plt_trampoline()
+void DynamicLoader::setup_plt_trampoline()
 {
     VirtualAddress got_address = m_dynamic_object->plt_got_base_address();
 
@@ -308,13 +310,13 @@ void ELFDynamicLoader::setup_plt_trampoline()
 }
 
 // Called from our ASM routine _plt_trampoline
-extern "C" Elf32_Addr _fixup_plt_entry(ELFDynamicLoader* object, u32 relocation_offset)
+extern "C" Elf32_Addr _fixup_plt_entry(DynamicLoader* object, u32 relocation_offset)
 {
     return object->patch_plt_entry(relocation_offset);
 }
 
 // offset is in PLT relocation table
-Elf32_Addr ELFDynamicLoader::patch_plt_entry(u32 relocation_offset)
+Elf32_Addr DynamicLoader::patch_plt_entry(u32 relocation_offset)
 {
     auto relocation = m_dynamic_object->plt_relocation_section().relocation_at_offset(relocation_offset);
 
@@ -325,14 +327,14 @@ Elf32_Addr ELFDynamicLoader::patch_plt_entry(u32 relocation_offset)
     u8* relocation_address = relocation.address().as_ptr();
     u32 symbol_location = sym.address().get();
 
-    VERBOSE("ELFDynamicLoader: Jump slot relocation: putting %s (%p) into PLT at %p\n", sym.name(), symbol_location, relocation_address);
+    VERBOSE("DynamicLoader: Jump slot relocation: putting %s (%p) into PLT at %p\n", sym.name(), symbol_location, relocation_address);
 
     *(u32*)relocation_address = symbol_location;
 
     return symbol_location;
 }
 
-void ELFDynamicLoader::call_object_init_functions()
+void DynamicLoader::call_object_init_functions()
 {
     typedef void (*InitFunc)();
     auto init_function = (InitFunc)(m_dynamic_object->init_section().address().as_ptr());
@@ -359,7 +361,7 @@ void ELFDynamicLoader::call_object_init_functions()
     }
 }
 
-u32 ELFDynamicLoader::ProgramHeaderRegion::mmap_prot() const
+u32 DynamicLoader::ProgramHeaderRegion::mmap_prot() const
 {
     int prot = 0;
     prot |= is_executable() ? PROT_EXEC : 0;
@@ -367,3 +369,5 @@ u32 ELFDynamicLoader::ProgramHeaderRegion::mmap_prot() const
     prot |= is_writable() ? PROT_WRITE : 0;
     return prot;
 }
+
+} // end namespace ELF

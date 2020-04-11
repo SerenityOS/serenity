@@ -38,7 +38,7 @@
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/ProcessPagingScope.h>
 #include <LibC/signal_numbers.h>
-#include <LibELF/ELFLoader.h>
+#include <LibELF/Loader.h>
 
 //#define SIGNAL_DEBUG
 //#define THREAD_DEBUG

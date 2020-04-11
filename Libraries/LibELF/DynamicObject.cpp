@@ -26,31 +26,33 @@
 
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
-#include <LibELF/ELFDynamicObject.h>
+#include <LibELF/DynamicObject.h>
 #include <LibELF/exec_elf.h>
 #include <stdio.h>
 #include <string.h>
 
+namespace ELF {
+
 static const char* name_for_dtag(Elf32_Sword d_tag);
 
-ELFDynamicObject::ELFDynamicObject(VirtualAddress base_address, VirtualAddress dynamic_section_addresss)
+DynamicObject::DynamicObject(VirtualAddress base_address, VirtualAddress dynamic_section_addresss)
     : m_base_address(base_address)
     , m_dynamic_address(dynamic_section_addresss)
 {
     parse();
 }
 
-ELFDynamicObject::~ELFDynamicObject()
+DynamicObject::~DynamicObject()
 {
 }
 
-void ELFDynamicObject::dump() const
+void DynamicObject::dump() const
 {
     StringBuilder builder;
     builder.append("\nd_tag      tag_name         value\n");
     size_t num_dynamic_sections = 0;
 
-    for_each_dynamic_entry([&](const ELFDynamicObject::DynamicEntry& entry) {
+    for_each_dynamic_entry([&](const DynamicObject::DynamicEntry& entry) {
         String name_field = String::format("(%s)", name_for_dtag(entry.tag()));
         builder.appendf("0x%08X %-17s0x%X\n", entry.tag(), name_field.characters(), entry.val());
         num_dynamic_sections++;
@@ -61,7 +63,7 @@ void ELFDynamicObject::dump() const
     dbgprintf(builder.to_string().characters());
 }
 
-void ELFDynamicObject::parse()
+void DynamicObject::parse()
 {
     for_each_dynamic_entry([&](const DynamicEntry& entry) {
         switch (entry.tag()) {
@@ -134,8 +136,8 @@ void ELFDynamicObject::parse()
             m_dt_flags |= DF_TEXTREL; // This tag seems to exist for legacy reasons only?
             break;
         default:
-            dbgprintf("ELFDynamicObject: DYNAMIC tag handling not implemented for DT_%s\n", name_for_dtag(entry.tag()));
-            printf("ELFDynamicObject: DYNAMIC tag handling not implemented for DT_%s\n", name_for_dtag(entry.tag()));
+            dbgprintf("DynamicObject: DYNAMIC tag handling not implemented for DT_%s\n", name_for_dtag(entry.tag()));
+            printf("DynamicObject: DYNAMIC tag handling not implemented for DT_%s\n", name_for_dtag(entry.tag()));
             ASSERT_NOT_REACHED(); // FIXME: Maybe just break out here and return false?
             break;
         }
@@ -147,7 +149,7 @@ void ELFDynamicObject::parse()
     m_symbol_count = num_hash_chains;
 }
 
-const ELFDynamicObject::Relocation ELFDynamicObject::RelocationSection::relocation(unsigned index) const
+const DynamicObject::Relocation DynamicObject::RelocationSection::relocation(unsigned index) const
 {
     ASSERT(index < entry_count());
     unsigned offset_in_section = index * entry_size();
@@ -155,56 +157,56 @@ const ELFDynamicObject::Relocation ELFDynamicObject::RelocationSection::relocati
     return Relocation(m_dynamic, *relocation_address, offset_in_section);
 }
 
-const ELFDynamicObject::Relocation ELFDynamicObject::RelocationSection::relocation_at_offset(unsigned offset) const
+const DynamicObject::Relocation DynamicObject::RelocationSection::relocation_at_offset(unsigned offset) const
 {
     ASSERT(offset <= (m_section_size_bytes - m_entry_size));
     auto relocation_address = (Elf32_Rel*)address().offset(offset).as_ptr();
     return Relocation(m_dynamic, *relocation_address, offset);
 }
 
-const ELFDynamicObject::Symbol ELFDynamicObject::symbol(unsigned index) const
+const DynamicObject::Symbol DynamicObject::symbol(unsigned index) const
 {
     auto symbol_section = Section(*this, m_symbol_table_offset, (m_symbol_count * m_size_of_symbol_table_entry), m_size_of_symbol_table_entry, "DT_SYMTAB");
     auto symbol_entry = (Elf32_Sym*)symbol_section.address().offset(index * symbol_section.entry_size()).as_ptr();
     return Symbol(*this, index, *symbol_entry);
 }
 
-const ELFDynamicObject::Section ELFDynamicObject::init_section() const
+const DynamicObject::Section DynamicObject::init_section() const
 {
     return Section(*this, m_init_offset, sizeof(void (*)()), sizeof(void (*)()), "DT_INIT");
 }
 
-const ELFDynamicObject::Section ELFDynamicObject::fini_section() const
+const DynamicObject::Section DynamicObject::fini_section() const
 {
     return Section(*this, m_fini_offset, sizeof(void (*)()), sizeof(void (*)()), "DT_FINI");
 }
 
-const ELFDynamicObject::Section ELFDynamicObject::init_array_section() const
+const DynamicObject::Section DynamicObject::init_array_section() const
 {
     return Section(*this, m_init_array_offset, m_init_array_size, sizeof(void (*)()), "DT_INIT_ARRAY");
 }
 
-const ELFDynamicObject::Section ELFDynamicObject::fini_array_section() const
+const DynamicObject::Section DynamicObject::fini_array_section() const
 {
     return Section(*this, m_fini_array_offset, m_fini_array_size, sizeof(void (*)()), "DT_FINI_ARRAY");
 }
 
-const ELFDynamicObject::HashSection ELFDynamicObject::hash_section() const
+const DynamicObject::HashSection DynamicObject::hash_section() const
 {
     return HashSection(Section(*this, m_hash_table_offset, 0, 0, "DT_HASH"), HashType::SYSV);
 }
 
-const ELFDynamicObject::RelocationSection ELFDynamicObject::relocation_section() const
+const DynamicObject::RelocationSection DynamicObject::relocation_section() const
 {
     return RelocationSection(Section(*this, m_relocation_table_offset, m_size_of_relocation_table, m_size_of_relocation_entry, "DT_REL"));
 }
 
-const ELFDynamicObject::RelocationSection ELFDynamicObject::plt_relocation_section() const
+const DynamicObject::RelocationSection DynamicObject::plt_relocation_section() const
 {
     return RelocationSection(Section(*this, m_plt_relocation_offset_location, m_size_of_plt_relocation_entry_list, m_size_of_relocation_entry, "DT_JMPREL"));
 }
 
-u32 ELFDynamicObject::HashSection::calculate_elf_hash(const char* name) const
+u32 DynamicObject::HashSection::calculate_elf_hash(const char* name) const
 {
     // SYSV ELF hash algorithm
     // Note that the GNU HASH algorithm has less collisions
@@ -226,13 +228,13 @@ u32 ELFDynamicObject::HashSection::calculate_elf_hash(const char* name) const
     return hash;
 }
 
-u32 ELFDynamicObject::HashSection::calculate_gnu_hash(const char*) const
+u32 DynamicObject::HashSection::calculate_gnu_hash(const char*) const
 {
     // FIXME: Implement the GNU hash algorithm
     ASSERT_NOT_REACHED();
 }
 
-const ELFDynamicObject::Symbol ELFDynamicObject::HashSection::lookup_symbol(const char* name) const
+const DynamicObject::Symbol DynamicObject::HashSection::lookup_symbol(const char* name) const
 {
     // FIXME: If we enable gnu hash in the compiler, we should use that here instead
     //     The algo is way better with less collisions
@@ -262,7 +264,7 @@ const ELFDynamicObject::Symbol ELFDynamicObject::HashSection::lookup_symbol(cons
     return m_dynamic.the_undefined_symbol();
 }
 
-const char* ELFDynamicObject::symbol_string_table_string(Elf32_Word index) const
+const char* DynamicObject::symbol_string_table_string(Elf32_Word index) const
 {
     return (const char*)base_address().offset(m_string_table_offset + index).as_ptr();
 }
@@ -358,3 +360,5 @@ static const char* name_for_dtag(Elf32_Sword d_tag)
         return "??";
     }
 }
+
+} // end namespace ELF

@@ -30,7 +30,7 @@
 #include <Kernel/KSyms.h>
 #include <Kernel/Process.h>
 #include <Kernel/Scheduler.h>
-#include <LibELF/ELFLoader.h>
+#include <LibELF/Loader.h>
 
 namespace Kernel {
 

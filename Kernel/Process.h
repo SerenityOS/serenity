@@ -41,7 +41,9 @@
 #include <Kernel/VM/RangeAllocator.h>
 #include <LibC/signal_numbers.h>
 
-class ELFLoader;
+namespace ELF {
+class Loader;
+}
 
 namespace Kernel {
 
@@ -387,7 +389,7 @@ public:
 
     struct ELFBundle {
         OwnPtr<Region> region;
-        OwnPtr<ELFLoader> elf_loader;
+        OwnPtr<ELF::Loader> elf_loader;
     };
     OwnPtr<ELFBundle> elf_bundle() const;
 

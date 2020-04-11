@@ -30,22 +30,24 @@
 #include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/String.h>
-#include <LibELF/ELFDynamicObject.h>
-#include <LibELF/ELFImage.h>
+#include <LibELF/DynamicObject.h>
+#include <LibELF/Image.h>
 #include <LibELF/exec_elf.h>
 #include <sys/mman.h>
 
+namespace ELF {
+
 #define ALIGN_ROUND_UP(x, align) ((((size_t)(x)) + align - 1) & (~(align - 1)))
 
-class ELFDynamicLoader : public RefCounted<ELFDynamicLoader> {
+class DynamicLoader : public RefCounted<DynamicLoader> {
 public:
-    static NonnullRefPtr<ELFDynamicLoader> construct(const char* filename, int fd, size_t file_size);
+    static NonnullRefPtr<DynamicLoader> construct(const char* filename, int fd, size_t file_size);
 
-    ~ELFDynamicLoader();
+    ~DynamicLoader();
 
     bool is_valid() const { return m_valid; }
 
-    // Load a full ELF image from file into the current process and create an ELFDynamicObject
+    // Load a full ELF image from file into the current process and create an DynamicObject
     // from the SHT_DYNAMIC in the file.
     bool load_from_image(unsigned flags);
 
@@ -89,11 +91,11 @@ private:
         Elf32_Phdr m_program_header; // Explictly a copy of the PHDR in the image
     };
 
-    explicit ELFDynamicLoader(const char* filename, int fd, size_t file_size);
-    explicit ELFDynamicLoader(Elf32_Dyn* dynamic_location, Elf32_Addr load_address);
+    explicit DynamicLoader(const char* filename, int fd, size_t file_size);
+    explicit DynamicLoader(Elf32_Dyn* dynamic_location, Elf32_Addr load_address);
 
     // Stage 1
-    void load_program_headers(const ELFImage& elf_image);
+    void load_program_headers(const Image& elf_image);
 
     // Stage 2
     void do_relocations();
@@ -106,7 +108,7 @@ private:
     void* m_file_mapping { nullptr };
     bool m_valid { true };
 
-    OwnPtr<ELFDynamicObject> m_dynamic_object;
+    OwnPtr<DynamicObject> m_dynamic_object;
 
     VirtualAddress m_text_segment_load_address;
     size_t m_text_segment_size;
@@ -114,3 +116,5 @@ private:
     VirtualAddress m_tls_segment_address;
     VirtualAddress m_dynamic_section_address;
 };
+
+} // end namespace ELF

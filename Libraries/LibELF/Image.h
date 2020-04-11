@@ -32,10 +32,12 @@
 #include <LibBareMetal/Memory/VirtualAddress.h>
 #include <LibELF/exec_elf.h>
 
-class ELFImage {
+namespace ELF {
+
+class Image {
 public:
-    explicit ELFImage(const u8*, size_t);
-    ~ELFImage();
+    explicit Image(const u8*, size_t);
+    ~Image();
     void dump() const;
     bool is_valid() const { return m_valid; }
     bool parse();
@@ -56,7 +58,7 @@ public:
 
     class Symbol {
     public:
-        Symbol(const ELFImage& image, unsigned index, const Elf32_Sym& sym)
+        Symbol(const Image& image, unsigned index, const Elf32_Sym& sym)
             : m_image(image)
             , m_sym(sym)
             , m_index(index)
@@ -76,14 +78,14 @@ public:
         StringView raw_data() const;
 
     private:
-        const ELFImage& m_image;
+        const Image& m_image;
         const Elf32_Sym& m_sym;
         const unsigned m_index;
     };
 
     class ProgramHeader {
     public:
-        ProgramHeader(const ELFImage& image, unsigned program_header_index)
+        ProgramHeader(const Image& image, unsigned program_header_index)
             : m_image(image)
             , m_program_header(image.program_header_internal(program_header_index))
             , m_program_header_index(program_header_index)
@@ -106,14 +108,14 @@ public:
         Elf32_Phdr raw_header() const { return m_program_header; }
 
     private:
-        const ELFImage& m_image;
+        const Image& m_image;
         const Elf32_Phdr& m_program_header;
         unsigned m_program_header_index { 0 };
     };
 
     class Section {
     public:
-        Section(const ELFImage& image, unsigned sectionIndex)
+        Section(const Image& image, unsigned sectionIndex)
             : m_image(image)
             , m_section_header(image.section_header(sectionIndex))
             , m_section_index(sectionIndex)
@@ -137,7 +139,7 @@ public:
 
     protected:
         friend class RelocationSection;
-        const ELFImage& m_image;
+        const Image& m_image;
         const Elf32_Shdr& m_section_header;
         unsigned m_section_index;
     };
@@ -156,7 +158,7 @@ public:
 
     class Relocation {
     public:
-        Relocation(const ELFImage& image, const Elf32_Rel& rel)
+        Relocation(const Image& image, const Elf32_Rel& rel)
             : m_image(image)
             , m_rel(rel)
         {
@@ -170,7 +172,7 @@ public:
         const Symbol symbol() const { return m_image.symbol(symbol_index()); }
 
     private:
-        const ELFImage& m_image;
+        const Image& m_image;
         const Elf32_Rel& m_rel;
     };
 
@@ -224,7 +226,7 @@ private:
 };
 
 template<typename F>
-inline void ELFImage::for_each_section(F func) const
+inline void Image::for_each_section(F func) const
 {
     auto section_count = this->section_count();
     for (unsigned i = 0; i < section_count; ++i)
@@ -232,7 +234,7 @@ inline void ELFImage::for_each_section(F func) const
 }
 
 template<typename F>
-inline void ELFImage::for_each_section_of_type(unsigned type, F func) const
+inline void Image::for_each_section_of_type(unsigned type, F func) const
 {
     auto section_count = this->section_count();
     for (unsigned i = 0; i < section_count; ++i) {
@@ -245,7 +247,7 @@ inline void ELFImage::for_each_section_of_type(unsigned type, F func) const
 }
 
 template<typename F>
-inline void ELFImage::RelocationSection::for_each_relocation(F func) const
+inline void Image::RelocationSection::for_each_relocation(F func) const
 {
     auto relocation_count = this->relocation_count();
     for (unsigned i = 0; i < relocation_count; ++i) {
@@ -255,7 +257,7 @@ inline void ELFImage::RelocationSection::for_each_relocation(F func) const
 }
 
 template<typename F>
-inline void ELFImage::for_each_symbol(F func) const
+inline void Image::for_each_symbol(F func) const
 {
     auto symbol_count = this->symbol_count();
     for (unsigned i = 0; i < symbol_count; ++i) {
@@ -265,9 +267,11 @@ inline void ELFImage::for_each_symbol(F func) const
 }
 
 template<typename F>
-inline void ELFImage::for_each_program_header(F func) const
+inline void Image::for_each_program_header(F func) const
 {
     auto program_header_count = this->program_header_count();
     for (unsigned i = 0; i < program_header_count; ++i)
         func(program_header(i));
 }
+
+} // end namespace ELF

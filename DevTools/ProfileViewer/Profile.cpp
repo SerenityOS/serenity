@@ -31,7 +31,7 @@
 #include <AK/MappedFile.h>
 #include <AK/QuickSort.h>
 #include <LibCore/File.h>
-#include <LibELF/ELFLoader.h>
+#include <LibELF/Loader.h>
 #include <stdio.h>
 
 static void sort_profile_nodes(Vector<NonnullRefPtr<ProfileNode>>& nodes)
@@ -185,12 +185,12 @@ OwnPtr<Profile> Profile::load_from_perfcore_file(const StringView& path)
         return nullptr;
     }
 
-    auto elf_loader = make<ELFLoader>(static_cast<const u8*>(elf_file.data()), elf_file.size());
+    auto elf_loader = make<ELF::Loader>(static_cast<const u8*>(elf_file.data()), elf_file.size());
 
     MappedFile kernel_elf_file("/boot/kernel");
-    OwnPtr<ELFLoader> kernel_elf_loader;
+    OwnPtr<ELF::Loader> kernel_elf_loader;
     if (kernel_elf_file.is_valid())
-        kernel_elf_loader = make<ELFLoader>(static_cast<const u8*>(kernel_elf_file.data()), kernel_elf_file.size());
+        kernel_elf_loader = make<ELF::Loader>(static_cast<const u8*>(kernel_elf_file.data()), kernel_elf_file.size());
 
     auto events_value = object.get("events");
     if (!events_value.is_array())

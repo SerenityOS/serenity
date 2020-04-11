@@ -31,7 +31,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
-#include <LibELF/ELFImage.h>
+#include <LibELF/Image.h>
 
 #ifdef KERNEL
 #    include <LibBareMetal/Memory/VirtualAddress.h>
@@ -40,10 +40,12 @@ class Region;
 }
 #endif
 
-class ELFLoader {
+namespace ELF {
+
+class Loader {
 public:
-    explicit ELFLoader(const u8*, size_t);
-    ~ELFLoader();
+    explicit Loader(const u8*, size_t);
+    ~Loader();
 
     bool load();
 #if defined(KERNEL)
@@ -57,13 +59,13 @@ public:
     bool has_symbols() const { return m_symbol_count; }
 
     String symbolicate(u32 address, u32* offset = nullptr) const;
-    Optional<ELFImage::Symbol> find_symbol(u32 address, u32* offset = nullptr) const;
+    Optional<Image::Symbol> find_symbol(u32 address, u32* offset = nullptr) const;
 
 private:
     bool layout();
     bool perform_relocations();
-    void* lookup(const ELFImage::Symbol&);
-    char* area_for_section(const ELFImage::Section&);
+    void* lookup(const ELF::Image::Symbol&);
+    char* area_for_section(const ELF::Image::Section&);
     char* area_for_section_name(const char*);
 
     struct PtrAndSize {
@@ -77,7 +79,7 @@ private:
         char* ptr { nullptr };
         unsigned size { 0 };
     };
-    ELFImage m_image;
+    Image m_image;
 
     size_t m_symbol_count { 0 };
 
@@ -86,7 +88,7 @@ private:
         StringView name;
 #ifndef KERNEL
         String demangled_name;
-        Optional<ELFImage::Symbol> symbol;
+        Optional<Image::Symbol> symbol;
 #endif
     };
 #ifdef KERNEL
@@ -95,3 +97,5 @@ private:
     mutable Vector<SortedSymbol> m_sorted_symbols;
 #endif
 };
+
+} // end namespace ELF
