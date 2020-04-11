@@ -140,11 +140,11 @@ KERNEL = 1
 PROGRAM = kernel
 
 SUBPROJECT_CXXFLAGS += -pie -fPIE -ffreestanding -fbuiltin -mno-80387 -mno-mmx -mno-sse -mno-sse2 -fno-asynchronous-unwind-tables
-SUBPROJECT_CXXFLAGS += -nostdlib -nostdinc -nostdinc++
+SUBPROJECT_CXXFLAGS += -nostdlib -nostdinc -nostdinc++ $(SERENITY_KERNEL_CUSTOM_CXXFLAGS)
 SUBPROJECT_CXXFLAGS += -I../Toolchain/Local/i686-pc-serenity/include/c++/9.3.0/
 SUBPROJECT_CXXFLAGS += -I../Toolchain/Local/i686-pc-serenity/include/c++/9.3.0/i686-pc-serenity/
 
-LDFLAGS += -Wl,-T linker.ld -nostdlib -lgcc -lstdc++
+LDFLAGS += -Wl,-T linker.ld -nostdlib -lgcc -lstdc++ $(SERENITY_KERNEL_CUSTOM_LDFLAGS)
 
 all: $(PROGRAM) $(MODULE_OBJS) kernel.map
 
