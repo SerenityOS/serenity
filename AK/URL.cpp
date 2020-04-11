@@ -52,6 +52,8 @@ bool URL::parse(const StringView& string)
         InHostname,
         InPort,
         InPath,
+        InQuery,
+        InFragment,
     };
 
     Vector<char, 256> buffer;
@@ -136,6 +138,26 @@ bool URL::parse(const StringView& string)
             }
             return false;
         case State::InPath:
+            if (peek() == '?' || peek() == '#') {
+                m_path = String::copy(buffer);
+                buffer.clear();
+                state = peek() == '?' ? State::InQuery : State::InFragment;
+                consume();
+                continue;
+            }
+            buffer.append(consume());
+            continue;
+        case State::InQuery:
+            if (peek() == '#') {
+                m_query = String::copy(buffer);
+                buffer.clear();
+                consume();
+                state = State::InFragment;
+                continue;
+            }
+            buffer.append(consume());
+            continue;
+        case State::InFragment:
             buffer.append(consume());
             continue;
         }
@@ -146,9 +168,17 @@ bool URL::parse(const StringView& string)
             return false;
         m_host = String::copy(buffer);
         m_path = "/";
-        return true;
     }
-    m_path = String::copy(buffer);
+    if (state == State::InPath)
+        m_path = String::copy(buffer);
+    if (state == State::InQuery)
+        m_query = String::copy(buffer);
+    if (state == State::InFragment)
+        m_fragment = String::copy(buffer);
+    if (m_query.is_null())
+        m_query = "";
+    if (m_fragment.is_null())
+        m_fragment = "";
     return true;
 }
 
