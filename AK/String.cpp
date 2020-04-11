@@ -312,6 +312,8 @@ bool String::matches(const StringView& mask, CaseSensitivity case_sensitivity) c
 
 bool String::contains(const String& needle) const
 {
+    if (is_null() || needle.is_null())
+        return false;
     return strstr(characters(), needle.characters());
 }
 
