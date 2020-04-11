@@ -105,18 +105,24 @@ Value FunctionPrototype::to_string(Interpreter& interpreter)
         return {};
     if (!this_object->is_function())
         return interpreter.throw_exception<TypeError>("Not a Function object");
-    // FIXME: Functions should be able to know their name, if any
+
+    String function_name = static_cast<Function*>(this_object)->name();
+    String function_parameters = "";
+    String function_body;
+
     if (this_object->is_native_function()) {
-        auto function_source = String::format("function () {\n  [%s]\n}", this_object->class_name());
-        return js_string(interpreter, function_source);
+        function_body = String::format("  [%s]", this_object->class_name());
+    } else {
+        auto& parameters = static_cast<ScriptFunction*>(this_object)->parameters();
+        StringBuilder parameters_builder;
+        parameters_builder.join(", ", parameters);
+        function_parameters = parameters_builder.build();
+        // FIXME: ASTNodes should be able to dump themselves to source strings - something like this:
+        // auto& body = static_cast<ScriptFunction*>(this_object)->body();
+        // function_body = body.to_source();
+        function_body = "  ???";
     }
-    auto parameters = static_cast<ScriptFunction*>(this_object)->parameters();
-    StringBuilder parameters_builder;
-    parameters_builder.join(", ", parameters);
-    // FIXME: ASTNodes should be able to dump themselves to source strings - something like this:
-    // auto& body = static_cast<ScriptFunction*>(this_object)->body();
-    // auto body_source = body.to_source();
-    auto function_source = String::format("function (%s) {\n  %s\n}", parameters_builder.build().characters(), "???");
+    auto function_source = String::format("function %s(%s) {\n%s\n}", function_name.characters(), function_parameters.characters(), function_body.characters());
     return js_string(interpreter, function_source);
 }
 

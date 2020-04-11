@@ -32,7 +32,7 @@ namespace JS {
 
 class ScriptFunction final : public Function {
 public:
-    ScriptFunction(const Statement& body, Vector<FlyString> parameters = {});
+    ScriptFunction(const FlyString& name, const Statement& body, Vector<FlyString> parameters = {});
     virtual ~ScriptFunction();
 
     const Statement& body() const { return m_body; }
@@ -41,6 +41,8 @@ public:
     virtual Value call(Interpreter&) override;
     virtual Value construct(Interpreter&) override;
 
+    virtual const FlyString& name() const override { return m_name; };
+
 private:
     virtual bool is_script_function() const final { return true; }
     virtual const char* class_name() const override { return "ScriptFunction"; }
@@ -48,6 +50,7 @@ private:
     static Value length_getter(Interpreter&);
     static void length_setter(Interpreter&, Value);
 
+    FlyString m_name;
     NonnullRefPtr<Statement> m_body;
     const Vector<FlyString> m_parameters;
 };

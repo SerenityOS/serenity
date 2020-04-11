@@ -30,8 +30,9 @@
 
 namespace JS {
 
-NativeFunction::NativeFunction(AK::Function<Value(Interpreter&)> native_function)
-    : m_native_function(move(native_function))
+NativeFunction::NativeFunction(const FlyString& name, AK::Function<Value(Interpreter&)> native_function)
+    : m_name(name)
+    , m_native_function(move(native_function))
 {
 }
 
