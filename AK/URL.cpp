@@ -174,6 +174,10 @@ String URL::to_string() const
         builder.append('?');
         builder.append(m_query);
     }
+    if (!m_fragment.is_empty()) {
+        builder.append('#');
+        builder.append(m_fragment);
+    }
     return builder.to_string();
 }
 
@@ -231,6 +235,11 @@ void URL::set_path(const String& path)
 void URL::set_query(const String& query)
 {
     m_query = query;
+}
+
+void URL::set_fragment(const String& fragment)
+{
+    m_fragment = fragment;
 }
 
 bool URL::compute_validity() const
