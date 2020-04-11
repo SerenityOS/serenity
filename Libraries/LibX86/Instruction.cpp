@@ -734,6 +734,8 @@ void build_opcode_tables_if_needed()
     build0FSlash(0xBA, 6, "BTR", OP_RM16_imm8, OP_RM32_imm8, LockPrefixAllowed);
     build0FSlash(0xBA, 7, "BTC", OP_RM16_imm8, OP_RM32_imm8, LockPrefixAllowed);
 
+    build0FSlash(0xC7, 6, "RDRAND", OP_RM16, OP_RM32);
+
     build0F(0x02, "LAR", OP_reg16_RM16, OP_reg32_RM32);
     build0F(0x03, "LSL", OP_reg16_RM16, OP_reg32_RM32);
     build0F(0x06, "CLTS", OP);
