@@ -134,7 +134,7 @@ enum InstructionFormat {
 
     OP_reg32,
     OP_imm32,
-    OP_imm8_imm16,
+    OP_imm16_imm8,
 
     OP_NEAR_imm,
 };
@@ -231,9 +231,9 @@ static void build(InstructionDescriptor* table, u8 op, const char* mnemonic, Ins
     case OP_relimm32:
         d.imm1_bytes = 4;
         break;
-    case OP_imm8_imm16:
-        d.imm1_bytes = 1;
-        d.imm2_bytes = 2;
+    case OP_imm16_imm8:
+        d.imm1_bytes = 2;
+        d.imm2_bytes = 1;
         break;
     case OP_imm16_imm16:
         d.imm1_bytes = 2;
@@ -554,7 +554,7 @@ void build_opcode_tables_if_needed()
     build(0xC5, "LDS", OP_reg16_mem16, OP_reg32_mem32);
     build(0xC6, "MOV", OP_RM8_imm8);
     build(0xC7, "MOV", OP_RM16_imm16, OP_RM32_imm32);
-    build(0xC8, "ENTER", OP_imm8_imm16, OP_imm8_imm16);
+    build(0xC8, "ENTER", OP_imm16_imm8);
     build(0xC9, "LEAVE", OP, OP);
     build(0xCA, "RETF", OP_imm16);
     build(0xCB, "RETF", OP);
@@ -1293,6 +1293,7 @@ String Instruction::to_string_internal(u32 origin, bool x32) const
     auto append_rm16 = [&] { builder.append(m_modrm.to_string_o16()); };
     auto append_rm32 = [&] { builder.append(m_modrm.to_string_o32()); };
     auto append_imm8 = [&] { builder.appendf("%#02x", imm8()); };
+    auto append_imm8_2 = [&] { builder.appendf("%#02x", imm8_2()); };
     auto append_imm16 = [&] { builder.appendf("%#04x", imm16()); };
     auto append_imm16_1 = [&] { builder.appendf("%#04x", imm16_1()); };
     auto append_imm16_2 = [&] { builder.appendf("%#04x", imm16_2()); };
@@ -1441,10 +1442,10 @@ String Instruction::to_string_internal(u32 origin, bool x32) const
     case OP_reg32:
         append_reg32();
         break;
-    case OP_imm8_imm16:
-        append_imm8();
+    case OP_imm16_imm8:
+        append_imm16_1();
         append(", ");
-        append_imm16();
+        append_imm8_2();
         break;
     case OP_moff8_AL:
         append_moff();
