@@ -64,6 +64,9 @@ public:
     // Will be called from _fixup_plt_entry, as part of the PLT trampoline
     Elf32_Addr patch_plt_entry(u32 relocation_offset);
 
+    // Requested program interpreter from program headers. May be empty string
+    StringView program_interpreter() const { return m_program_interpreter; }
+
 private:
     class ProgramHeaderRegion {
     public:
@@ -103,9 +106,10 @@ private:
     void call_object_init_functions();
 
     String m_filename;
+    String m_program_interpreter;
     size_t m_file_size { 0 };
     int m_image_fd { -1 };
-    void* m_file_mapping { nullptr };
+    void* m_file_mapping { MAP_FAILED };
     bool m_valid { true };
 
     OwnPtr<DynamicObject> m_dynamic_object;
