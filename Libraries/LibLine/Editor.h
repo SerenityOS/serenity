@@ -168,6 +168,7 @@ private:
         m_origin_x = position[0];
         m_origin_y = position[1];
     }
+    void recalculate_origin();
     void reposition_cursor();
 
     Vector<char, 1024> m_buffer;
