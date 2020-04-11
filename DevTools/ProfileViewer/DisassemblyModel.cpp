@@ -55,9 +55,15 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
     , m_node(node)
 {
     m_file = make<MappedFile>(profile.executable_path());
+
+    if (!m_file->is_valid())
+        return;
+
     auto elf_loader = make<ELF::Loader>((const u8*)m_file->data(), m_file->size());
 
     auto symbol = elf_loader->find_symbol(node.address());
+    if (!symbol.has_value())
+        return;
     ASSERT(symbol.has_value());
 
     auto view = symbol.value().raw_data();
