@@ -1760,6 +1760,10 @@ const char* register_name(SegmentRegister index)
         return "fs";
     case SegmentRegister::GS:
         return "gs";
+    case SegmentRegister::SegR6:
+        return "segr6";
+    case SegmentRegister::SegR7:
+        return "segr7";
     default:
         ASSERT_NOT_REACHED();
         return nullptr;
