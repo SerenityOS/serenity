@@ -25,6 +25,7 @@
  */
 
 #include "Profile.h"
+#include "DisassemblyModel.h"
 #include "ProfileModel.h"
 #include <AK/HashTable.h>
 #include <AK/MappedFile.h>
@@ -43,8 +44,9 @@ static void sort_profile_nodes(Vector<NonnullRefPtr<ProfileNode>>& nodes)
         child->sort_children();
 }
 
-Profile::Profile(Vector<Event> events)
-    : m_events(move(events))
+Profile::Profile(String executable_path, Vector<Event> events)
+    : m_executable_path(move(executable_path))
+    , m_events(move(events))
 {
     m_first_timestamp = m_events.first().timestamp;
     m_last_timestamp = m_events.last().timestamp;
@@ -142,6 +144,7 @@ void Profile::rebuild_tree()
             else
                 node = &node->find_or_create_child(symbol, address, offset, event.timestamp);
 
+            node->add_event_address(address);
             node->increment_event_count();
             if (is_innermost_frame)
                 node->increment_self_count();
@@ -242,7 +245,7 @@ OwnPtr<Profile> Profile::load_from_perfcore_file(const StringView& path)
         events.append(move(event));
     }
 
-    return NonnullOwnPtr<Profile>(NonnullOwnPtr<Profile>::Adopt, *new Profile(move(events)));
+    return NonnullOwnPtr<Profile>(NonnullOwnPtr<Profile>::Adopt, *new Profile(executable_path, move(events)));
 }
 
 void ProfileNode::sort_children()
@@ -283,4 +286,18 @@ void Profile::set_show_percentages(bool show_percentages)
     if (m_show_percentages == show_percentages)
         return;
     m_show_percentages = show_percentages;
+}
+
+void Profile::set_disassembly_index(const GUI::ModelIndex& index)
+{
+    if (m_disassembly_index == index)
+        return;
+    m_disassembly_index = index;
+    auto* node = static_cast<ProfileNode*>(index.internal_data());
+    m_disassembly_model = DisassemblyModel::create(*this, *node);
+}
+
+GUI::Model* Profile::disassembly_model()
+{
+    return m_disassembly_model;
 }
