@@ -267,20 +267,20 @@ private:
         size_t m_instructionp { 0 };
         size_t m_stringp { 0 };
         size_t m_ops { 0 };
-        bool m_match_any { false };
+        size_t m_matches_offset { 0 };
         Vector<regmatch_t> m_matches;
         Vector<regoff_t> m_left;
 
         MatchState() = default;
         MatchState(StringView view)
             : m_view(view) {};
-        MatchState(size_t instructionp, size_t stringp, StringView view, bool match_any);
+        MatchState(size_t instructionp, size_t stringp, StringView view);
         MatchState(const MatchState& other)
             : m_view(other.m_view)
             , m_instructionp(other.m_instructionp)
             , m_stringp(other.m_stringp)
             , m_ops(other.m_ops)
-            , m_match_any(other.m_match_any)
+            , m_matches_offset(other.m_matches_offset)
             , m_matches(other.m_matches)
             , m_left(other.m_left)
         {
