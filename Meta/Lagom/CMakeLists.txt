@@ -42,10 +42,11 @@ file(GLOB AK_SOURCES "../../AK/*.cpp")
 file(GLOB LIBCORE_SOURCES "../../Libraries/LibCore/*.cpp")
 file(GLOB LIBIPC_SOURCES "../../Libraries/LibIPC/*.cpp")
 file(GLOB LIBLINE_SOURCES "../../Libraries/LibLine/*.cpp")
+file(GLOB LIBX86_SOURCES "../../Libraries/LibX86/*.cpp")
 file(GLOB LIBJS_SOURCES "../../Libraries/LibJS/*.cpp")
 file(GLOB LIBJS_SUBDIR_SOURCES "../../Libraries/LibJS/*/*.cpp")
 
-set(SOURCES ${AK_SOURCES} ${LIBCORE_SOURCES} ${LIBIPC_SOURCES} ${LIBLINE_SOURCES} ${LIBJS_SOURCES} ${LIBJS_SUBDIR_SOURCES})
+set(SOURCES ${AK_SOURCES} ${LIBCORE_SOURCES} ${LIBIPC_SOURCES} ${LIBLINE_SOURCES} ${LIBJS_SOURCES} ${LIBJS_SUBDIR_SOURCES} ${LIBX86_SOURCES})
 
 include_directories (../../)
 include_directories (../../Libraries/)
@@ -63,6 +64,10 @@ add_executable(js ../../Userland/js.cpp)
 target_link_libraries(js lagom)
 target_link_libraries(js stdc++)
 target_link_libraries(js pthread)
+
+add_executable(disasm ../../Userland/disasm.cpp)
+target_link_libraries(disasm lagom)
+target_link_libraries(disasm stdc++)
 
 if (ENABLE_FUZZER_SANITIZER)
     add_subdirectory(Fuzzers)
