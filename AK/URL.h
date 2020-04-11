@@ -51,12 +51,14 @@ public:
     String host() const { return m_host; }
     String path() const { return m_path; }
     String query() const { return m_query; }
+    String fragment() const { return m_fragment; }
     u16 port() const { return m_port; }
 
     void set_protocol(const String& protocol);
     void set_host(const String& host);
     void set_path(const String& path);
     void set_query(const String& query);
+    void set_fragment(const String& fragment);
     void set_port(u16 port) { m_port = port; }
 
     String to_string() const;
@@ -73,6 +75,7 @@ private:
     String m_host;
     String m_path;
     String m_query;
+    String m_fragment;
 };
 
 }
