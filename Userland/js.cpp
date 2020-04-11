@@ -542,6 +542,71 @@ int main(int argc, char** argv)
 
             editor.set_prompt(prompt_for_level(open_indents));
         };
+
+        auto complete = [&interpreter, &editor = *editor](const String& token) -> Vector<String> {
+            StringView line { editor.buffer().data(), editor.cursor() };
+            // we're only going to complete either
+            //    - <N>
+            //        where N is part of the name of a variable
+            //    - <N>.<P>
+            //        where N is the complete name of a variable and
+            //        P is part of the name of one of its properties
+            Vector<String> results;
+
+            Function<void(const JS::Shape&, const StringView&)> list_all_properties = [&results, &list_all_properties](const JS::Shape& shape, auto& property_pattern) {
+                for (const auto& descriptor : shape.property_table()) {
+                    if (descriptor.value.attributes & JS::Attribute::Enumerable) {
+                        if (descriptor.key.view().starts_with(property_pattern))
+                            if (!results.contains_slow(descriptor.key)) // hide duplicates
+                                results.append(descriptor.key);
+                    }
+                }
+                if (const auto* prototype = shape.prototype()) {
+                    list_all_properties(prototype->shape(), property_pattern);
+                }
+            };
+            auto complete = [&results, &editor](auto& property_pattern) {
+                if (results.size()) {
+                    auto completion = results.first().view();
+                    completion = completion.substring_view(property_pattern.length(), completion.length() - property_pattern.length());
+                    if (completion.length())
+                        editor.insert(completion);
+                }
+            };
+
+            if (token.contains(".")) {
+                auto parts = token.split('.', true);
+                // refuse either `.` or `a.b.c`
+                if (parts.size() > 2 || parts.size() == 0)
+                    return {};
+
+                auto name = parts[0];
+                auto property_pattern = parts[1];
+
+                auto maybe_variable = interpreter->get_variable(name);
+                if (!maybe_variable.has_value()) {
+                    maybe_variable = interpreter->global_object().get(name);
+                    if (!maybe_variable.has_value())
+                        return {};
+                }
+
+                const auto& variable = maybe_variable.value();
+                if (!variable.is_object())
+                    return {};
+
+                const auto* object = variable.to_object(interpreter->heap());
+                const auto& shape = object->shape();
+                list_all_properties(shape, property_pattern);
+                complete(property_pattern);
+                return results;
+            }
+            const auto& variable = interpreter->global_object();
+            list_all_properties(variable.shape(), token);
+            complete(token);
+            return results;
+        };
+        editor->on_tab_complete_first_token = [complete](auto& value) { return complete(value); };
+        editor->on_tab_complete_other_token = [complete](auto& value) { return complete(value); };
         repl(*interpreter);
     } else {
         auto interpreter = JS::Interpreter::create<JS::GlobalObject>();
