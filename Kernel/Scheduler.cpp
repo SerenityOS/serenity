@@ -603,7 +603,7 @@ void Scheduler::timer_tick(const RegisterState& regs)
 
     if (Process::current->is_profiling()) {
         SmapDisabler disabler;
-        auto backtrace = Thread::current->raw_backtrace(regs.ebp);
+        auto backtrace = Thread::current->raw_backtrace(regs.ebp, regs.eip);
         auto& sample = Profiling::next_sample_slot();
         sample.pid = Process::current->pid();
         sample.tid = Thread::current->tid();
