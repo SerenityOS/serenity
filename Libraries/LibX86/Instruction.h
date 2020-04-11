@@ -124,6 +124,17 @@ enum RegisterIndex32 {
     RegisterEDI
 };
 
+enum MMXRegisterIndex {
+    RegisterMM0 = 0,
+    RegisterMM1,
+    RegisterMM2,
+    RegisterMM3,
+    RegisterMM4,
+    RegisterMM5,
+    RegisterMM6,
+    RegisterMM7
+};
+
 class LogicalAddress {
 public:
     LogicalAddress() {}
@@ -197,6 +208,7 @@ public:
     String to_string_o8() const;
     String to_string_o16() const;
     String to_string_o32() const;
+    String to_string_mm() const;
 
     bool is_register() const { return m_register_index != 0xffffffff; }
     SegmentRegister segment() const
