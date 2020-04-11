@@ -113,6 +113,7 @@ public:
 
     void handle_list_channels_action();
     void handle_whois_action(const String& nick);
+    void handle_ctcp_user_action(const String& nick, const String& message);
     void handle_open_query_action(const String&);
     void handle_close_query_action(const String&);
     void handle_join_action(const String& channel_name);
@@ -200,6 +201,7 @@ private:
     void handle_user_command(const String&);
     void handle_ctcp_request(const StringView& peer, const StringView& payload);
     void handle_ctcp_response(const StringView& peer, const StringView& payload);
+    void send_ctcp_request(const StringView& peer, const StringView& payload);
     void send_ctcp_response(const StringView& peer, const StringView& payload);
 
     void on_socket_connected();
