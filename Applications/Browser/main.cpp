@@ -318,9 +318,13 @@ int main(int argc, char** argv)
     URL url_to_load = home_url;
 
     if (app.args().size() >= 1) {
-        url_to_load = URL();
-        url_to_load.set_protocol("file");
-        url_to_load.set_path(app.args()[0]);
+        if (app.args()[0].starts_with("file://")) {
+            url_to_load = URL(app.args()[0]);
+        } else {
+            url_to_load = URL();
+            url_to_load.set_protocol("file");
+            url_to_load.set_path(app.args()[0]);
+        }
     }
 
     html_widget.load(url_to_load);
