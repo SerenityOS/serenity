@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibX86/Instruction.h>
 #include <AK/StringBuilder.h>
+#include <LibX86/Instruction.h>
 #include <stdio.h>
 
 namespace X86 {
@@ -85,6 +85,8 @@ enum InstructionFormat {
     OP_RM32_reg32_imm8,
     OP_RM16_reg16_CL,
     OP_RM32_reg32_CL,
+    OP_mm1_mm2m64,
+    OP_mm1m64_mm2,
     __EndFormatsWithRMByte,
 
     OP_reg32_imm32,
@@ -283,6 +285,8 @@ static void build(InstructionDescriptor* table, u8 op, const char* mnemonic, Ins
     case OP_CR_reg32:
     case OP_reg16_RM8:
     case OP_reg32_RM8:
+    case OP_mm1_mm2m64:
+    case OP_mm1m64_mm2:
     case __EndFormatsWithRMByte:
     case OP_CS:
     case OP_DS:
@@ -760,6 +764,10 @@ void build_opcode_tables_if_needed()
     build0F(0x4E, "CMOVNG", OP_reg16_RM16, OP_reg32_RM32);
     build0F(0x4F, "CMOVG", OP_reg16_RM16, OP_reg32_RM32);
 
+    build0F(0x6F, "MOVQ", OP_mm1_mm2m64);
+    build0F(0x77, "EMMS", OP);
+    build0F(0x7F, "MOVQ", OP_mm1m64_mm2);
+
     build0F(0x80, "JO", OP_NEAR_imm);
     build0F(0x81, "JNO", OP_NEAR_imm);
     build0F(0x82, "JC", OP_NEAR_imm);
@@ -975,6 +983,7 @@ static const char* register_name(RegisterIndex8);
 static const char* register_name(RegisterIndex16);
 static const char* register_name(RegisterIndex32);
 static const char* register_name(SegmentRegister);
+static const char* register_name(MMXRegisterIndex);
 
 const char* Instruction::reg8_name() const
 {
@@ -1009,6 +1018,13 @@ String MemoryOrRegisterReference::to_string_o32() const
 {
     if (is_register())
         return register_name(static_cast<RegisterIndex32>(m_register_index));
+    return String::format("[%s]", to_string().characters());
+}
+
+String MemoryOrRegisterReference::to_string_mm() const
+{
+    if (is_register())
+        return register_name(static_cast<MMXRegisterIndex>(m_register_index));
     return String::format("[%s]", to_string().characters());
 }
 
@@ -1291,6 +1307,10 @@ String Instruction::to_string_internal(u32 origin, bool x32) const
     auto append_relative_imm8 = [&] { builder.append(relative_address(origin + 2, x32, i8(imm8()))); };
     auto append_relative_imm16 = [&] { builder.append(relative_address(origin + 3, x32, i16(imm16()))); };
     auto append_relative_imm32 = [&] { builder.append(relative_address(origin + 5, x32, i32(imm32()))); };
+
+    auto append_mm = [&] { builder.appendf("mm%u", register_index()); };
+    auto append_mmrm64 = [&] { builder.append(m_modrm.to_string_mm()); };
+
     auto append = [&](auto& content) { builder.append(content); };
     auto append_moff = [&] {
         builder.append('[');
@@ -1686,6 +1706,16 @@ String Instruction::to_string_internal(u32 origin, bool x32) const
         append_reg32();
         append(", cl");
         break;
+    case OP_mm1_mm2m64:
+        append_mm();
+        append(", ");
+        append_mmrm64();
+        break;
+    case OP_mm1m64_mm2:
+        append_mm();
+        append(", ");
+        append_mmrm64();
+        break;
     case InstructionPrefix:
         return mnemonic;
     case InvalidFormat:
@@ -1794,6 +1824,30 @@ const char* register_name(RegisterIndex32 register_index)
         return "esi";
     case RegisterEDI:
         return "edi";
+    }
+    ASSERT_NOT_REACHED();
+    return nullptr;
+}
+
+const char* register_name(MMXRegisterIndex register_index)
+{
+    switch (register_index) {
+    case RegisterMM0:
+        return "mm0";
+    case RegisterMM1:
+        return "mm1";
+    case RegisterMM2:
+        return "mm2";
+    case RegisterMM3:
+        return "mm3";
+    case RegisterMM4:
+        return "mm4";
+    case RegisterMM5:
+        return "mm5";
+    case RegisterMM6:
+        return "mm6";
+    case RegisterMM7:
+        return "mm7";
     }
     ASSERT_NOT_REACHED();
     return nullptr;
