@@ -31,7 +31,7 @@
 #include <Kernel/KSyms.h>
 #include <Kernel/Process.h>
 #include <Kernel/Profiling.h>
-#include <LibELF/ELFLoader.h>
+#include <LibELF/Loader.h>
 
 namespace Kernel {
 

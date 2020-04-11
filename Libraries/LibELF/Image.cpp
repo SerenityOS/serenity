@@ -27,16 +27,18 @@
 #include <AK/Memory.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
-#include <LibELF/ELFImage.h>
+#include <LibELF/Image.h>
 
-ELFImage::ELFImage(const u8* buffer, size_t size)
+namespace ELF {
+
+Image::Image(const u8* buffer, size_t size)
     : m_buffer(buffer)
     , m_size(size)
 {
     m_valid = parse();
 }
 
-ELFImage::~ELFImage()
+Image::~Image()
 {
 }
 
@@ -58,7 +60,7 @@ static const char* object_file_type_to_string(Elf32_Half type)
     }
 }
 
-StringView ELFImage::section_index_to_string(unsigned index) const
+StringView Image::section_index_to_string(unsigned index) const
 {
     if (index == SHN_UNDEF)
         return "Undefined";
@@ -67,14 +69,14 @@ StringView ELFImage::section_index_to_string(unsigned index) const
     return section(index).name();
 }
 
-unsigned ELFImage::symbol_count() const
+unsigned Image::symbol_count() const
 {
     return section(m_symbol_table_section_index).entry_count();
 }
 
-void ELFImage::dump() const
+void Image::dump() const
 {
-    dbgprintf("ELFImage{%p} {\n", this);
+    dbgprintf("Image{%p} {\n", this);
     dbgprintf("    is_valid: %u\n", is_valid());
 
     if (!is_valid()) {
@@ -124,20 +126,20 @@ void ELFImage::dump() const
     dbgprintf("}\n");
 }
 
-unsigned ELFImage::section_count() const
+unsigned Image::section_count() const
 {
     return header().e_shnum;
 }
 
-unsigned ELFImage::program_header_count() const
+unsigned Image::program_header_count() const
 {
     return header().e_phnum;
 }
 
-bool ELFImage::parse()
+bool Image::parse()
 {
     if (!validate_elf_header(header(), m_size)) {
-        dbgputstr("ELFImage::parse(): ELF Header not valid\n");
+        dbgputstr("Image::parse(): ELF Header not valid\n");
         return false;
     }
 
@@ -163,14 +165,14 @@ bool ELFImage::parse()
     return true;
 }
 
-StringView ELFImage::table_string(unsigned table_index, unsigned offset) const
+StringView Image::table_string(unsigned table_index, unsigned offset) const
 {
     auto& sh = section_header(table_index);
     if (sh.sh_type != SHT_STRTAB)
         return nullptr;
     size_t computed_offset = sh.sh_offset + offset;
     if (computed_offset >= m_size) {
-        dbgprintf("SHENANIGANS! ELFImage::table_string() computed offset outside image.\n");
+        dbgprintf("SHENANIGANS! Image::table_string() computed offset outside image.\n");
         return {};
     }
     size_t max_length = m_size - computed_offset;
@@ -178,65 +180,65 @@ StringView ELFImage::table_string(unsigned table_index, unsigned offset) const
     return { raw_data(sh.sh_offset + offset), length };
 }
 
-StringView ELFImage::section_header_table_string(unsigned offset) const
+StringView Image::section_header_table_string(unsigned offset) const
 {
     return table_string(header().e_shstrndx, offset);
 }
 
-StringView ELFImage::table_string(unsigned offset) const
+StringView Image::table_string(unsigned offset) const
 {
     return table_string(m_string_table_section_index, offset);
 }
 
-const char* ELFImage::raw_data(unsigned offset) const
+const char* Image::raw_data(unsigned offset) const
 {
     return reinterpret_cast<const char*>(m_buffer) + offset;
 }
 
-const Elf32_Ehdr& ELFImage::header() const
+const Elf32_Ehdr& Image::header() const
 {
     return *reinterpret_cast<const Elf32_Ehdr*>(raw_data(0));
 }
 
-const Elf32_Phdr& ELFImage::program_header_internal(unsigned index) const
+const Elf32_Phdr& Image::program_header_internal(unsigned index) const
 {
     ASSERT(index < header().e_phnum);
     return *reinterpret_cast<const Elf32_Phdr*>(raw_data(header().e_phoff + (index * sizeof(Elf32_Phdr))));
 }
 
-const Elf32_Shdr& ELFImage::section_header(unsigned index) const
+const Elf32_Shdr& Image::section_header(unsigned index) const
 {
     ASSERT(index < header().e_shnum);
     return *reinterpret_cast<const Elf32_Shdr*>(raw_data(header().e_shoff + (index * header().e_shentsize)));
 }
 
-const ELFImage::Symbol ELFImage::symbol(unsigned index) const
+const Image::Symbol Image::symbol(unsigned index) const
 {
     ASSERT(index < symbol_count());
     auto* raw_syms = reinterpret_cast<const Elf32_Sym*>(raw_data(section(m_symbol_table_section_index).offset()));
     return Symbol(*this, index, raw_syms[index]);
 }
 
-const ELFImage::Section ELFImage::section(unsigned index) const
+const Image::Section Image::section(unsigned index) const
 {
     ASSERT(index < section_count());
     return Section(*this, index);
 }
 
-const ELFImage::ProgramHeader ELFImage::program_header(unsigned index) const
+const Image::ProgramHeader Image::program_header(unsigned index) const
 {
     ASSERT(index < program_header_count());
     return ProgramHeader(*this, index);
 }
 
-const ELFImage::Relocation ELFImage::RelocationSection::relocation(unsigned index) const
+const Image::Relocation Image::RelocationSection::relocation(unsigned index) const
 {
     ASSERT(index < relocation_count());
     auto* rels = reinterpret_cast<const Elf32_Rel*>(m_image.raw_data(offset()));
     return Relocation(m_image, rels[index]);
 }
 
-const ELFImage::RelocationSection ELFImage::Section::relocations() const
+const Image::RelocationSection Image::Section::relocations() const
 {
     StringBuilder builder;
     builder.append(".rel");
@@ -246,20 +248,20 @@ const ELFImage::RelocationSection ELFImage::Section::relocations() const
     if (relocation_section.type() != SHT_REL)
         return static_cast<const RelocationSection>(m_image.section(0));
 
-#ifdef ELFIMAGE_DEBUG
+#ifdef Image_DEBUG
     dbgprintf("Found relocations for %s in %s\n", name(), relocation_section.name());
 #endif
     return static_cast<const RelocationSection>(relocation_section);
 }
 
-const ELFImage::Section ELFImage::lookup_section(const String& name) const
+const Image::Section Image::lookup_section(const String& name) const
 {
     if (auto it = m_sections.find(name); it != m_sections.end())
         return section((*it).value);
     return section(0);
 }
 
-bool ELFImage::validate_elf_header(const Elf32_Ehdr& elf_header, size_t file_size)
+bool Image::validate_elf_header(const Elf32_Ehdr& elf_header, size_t file_size)
 {
     if (!IS_ELF(elf_header)) {
         dbgputstr("File is not an ELF file.\n");
@@ -358,7 +360,7 @@ bool ELFImage::validate_elf_header(const Elf32_Ehdr& elf_header, size_t file_siz
     return true;
 }
 
-bool ELFImage::validate_program_headers(const Elf32_Ehdr& elf_header, size_t file_size, u8* buffer, size_t buffer_size, String& interpreter_path)
+bool Image::validate_program_headers(const Elf32_Ehdr& elf_header, size_t file_size, u8* buffer, size_t buffer_size, String& interpreter_path)
 {
     // Can we actually parse all the program headers in the given buffer?
     size_t end_of_last_program_header = elf_header.e_phoff + (elf_header.e_phnum * elf_header.e_phentsize);
@@ -414,8 +416,10 @@ bool ELFImage::validate_program_headers(const Elf32_Ehdr& elf_header, size_t fil
     return true;
 }
 
-StringView ELFImage::Symbol::raw_data() const
+StringView Image::Symbol::raw_data() const
 {
     auto& section = this->section();
     return { section.raw_data() + (value() - section.address()), size() };
 }
+
+} // end namespace ELF
