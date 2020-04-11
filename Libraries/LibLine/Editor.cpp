@@ -159,6 +159,7 @@ String Editor::get_line(const String& prompt)
             exit(2);
         }
 
+        auto reverse_tab = false;
         auto do_delete = [&] {
             if (m_cursor == m_buffer.size()) {
                 fputc('\a', stdout);
@@ -166,6 +167,14 @@ String Editor::get_line(const String& prompt)
                 return;
             }
             m_buffer.remove(m_cursor);
+        };
+        auto increment_suggestion_index = [&] {
+            m_next_suggestion_index = (m_next_suggestion_index + 1) % m_suggestions.size();
+        };
+        auto decrement_suggestion_index = [&] {
+            if (m_next_suggestion_index == 0)
+                m_next_suggestion_index = m_suggestions.size();
+            m_next_suggestion_index--;
         };
         for (ssize_t i = 0; i < nread; ++i) {
             char ch = keybuf[i];
@@ -229,6 +238,10 @@ String Editor::get_line(const String& prompt)
                     m_cursor = m_buffer.size();
                     m_state = InputState::Free;
                     continue;
+                case 'Z': // shift+tab
+                    reverse_tab = true;
+                    m_state = InputState::Free;
+                    break;
                 case '3':
                     do_delete();
                     m_state = InputState::ExpectTerminator;
@@ -257,11 +270,13 @@ String Editor::get_line(const String& prompt)
                 }
             }
 
-            if (ch == '\t') {
+            if (ch == '\t' || reverse_tab) {
                 if (!on_tab_complete_first_token || !on_tab_complete_other_token)
                     continue;
 
                 bool is_empty_token = m_cursor == 0 || m_buffer[m_cursor - 1] == ' ';
+
+                // reverse tab can count as regular tab here
                 m_times_tab_pressed++;
 
                 int token_start = m_cursor - 1;
@@ -290,6 +305,19 @@ String Editor::get_line(const String& prompt)
                         m_suggestions = on_tab_complete_other_token(token);
                 }
 
+                // Adjust already incremented / decremented index when switching tab direction
+                if (reverse_tab && m_tab_direction != TabDirection::Backward) {
+                    decrement_suggestion_index();
+                    decrement_suggestion_index();
+                    m_tab_direction = TabDirection::Backward;
+                }
+                if (!reverse_tab && m_tab_direction != TabDirection::Forward) {
+                    increment_suggestion_index();
+                    increment_suggestion_index();
+                    m_tab_direction = TabDirection::Forward;
+                }
+                reverse_tab = false;
+
                 auto current_suggestion_index = m_next_suggestion_index;
                 if (m_next_suggestion_index < m_suggestions.size()) {
                     if (!m_last_shown_suggestion.is_null()) {
@@ -301,7 +329,10 @@ String Editor::get_line(const String& prompt)
                     }
                     m_last_shown_suggestion = m_suggestions[m_next_suggestion_index];
                     insert(m_last_shown_suggestion.substring_view(m_next_suggestion_invariant_offset, m_last_shown_suggestion.length() - m_next_suggestion_invariant_offset));
-                    m_next_suggestion_index = (m_next_suggestion_index + 1) % m_suggestions.size();
+                    if (m_tab_direction == TabDirection::Forward)
+                        increment_suggestion_index();
+                    else
+                        decrement_suggestion_index();
                 } else {
                     m_next_suggestion_index = 0;
                 }
@@ -406,7 +437,7 @@ String Editor::get_line(const String& prompt)
                 m_refresh_needed = true;
                 continue;
             }
-            if (ch == 0xc) { // ^L
+            if (ch == 0xc) {                    // ^L
                 printf("\033[3J\033[H\033[2J"); // Clear screen.
                 vt_move_absolute(1, 1);
                 m_origin_x = 1;
