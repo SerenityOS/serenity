@@ -20,7 +20,7 @@ int main(int argc, char** argv)
         auto insn = disassembler.next();
         if (!insn.has_value())
             break;
-        out() << String::format("%08x", offset) << "  " << insn.value().to_string(offset, true);
+        out() << String::format("%08x", offset) << "  " << insn.value().to_string(offset);
     }
 
     return 0;
