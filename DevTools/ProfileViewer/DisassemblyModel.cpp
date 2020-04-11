@@ -103,6 +103,13 @@ GUI::Model::ColumnMetadata DisassemblyModel::column_metadata(int column) const
 GUI::Variant DisassemblyModel::data(const GUI::ModelIndex& index, Role role) const
 {
     auto& insn = m_instructions[index.row()];
+
+    if (role == Role::BackgroundColor) {
+        if (insn.event_count > 0)
+            return Color(Color::Yellow);
+        return {};
+    }
+
     if (role == Role::Display) {
         if (index.column() == Column::SampleCount) {
             if (m_profile.show_percentages())
