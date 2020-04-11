@@ -280,25 +280,43 @@ String Editor::get_line(const String& prompt)
                 }
 
                 String token = is_empty_token ? String() : String(&m_buffer[token_start], m_cursor - token_start);
-                Vector<String> suggestions;
 
-                if (is_first_token)
-                    suggestions = on_tab_complete_first_token(token);
-                else
-                    suggestions = on_tab_complete_other_token(token);
+                // ask for completions only on the first tab
+                // further tabs simply show the cached completions
+                if (m_times_tab_pressed == 1) {
+                    if (is_first_token)
+                        m_suggestions = on_tab_complete_first_token(token);
+                    else
+                        m_suggestions = on_tab_complete_other_token(token);
+                }
 
-                if (m_times_tab_pressed > 1 && !suggestions.is_empty()) {
+                auto current_suggestion_index = m_next_suggestion_index;
+                if (m_next_suggestion_index < m_suggestions.size()) {
+                    if (!m_last_shown_suggestion.is_null()) {
+                        auto actual_offset = m_times_tab_pressed == 1 ? m_cursor : m_cursor - m_last_shown_suggestion.length() + m_next_suggestion_invariant_offset;
+                        for (size_t i = m_next_suggestion_invariant_offset; i < m_last_shown_suggestion.length(); ++i)
+                            m_buffer.remove(actual_offset);
+                        m_cursor = actual_offset;
+                        m_refresh_needed = true;
+                    }
+                    m_last_shown_suggestion = m_suggestions[m_next_suggestion_index];
+                    insert(m_last_shown_suggestion.substring_view(m_next_suggestion_invariant_offset, m_last_shown_suggestion.length() - m_next_suggestion_invariant_offset));
+                    m_next_suggestion_index = (m_next_suggestion_index + 1) % m_suggestions.size();
+                } else {
+                    m_next_suggestion_index = 0;
+                }
+
+                if (m_times_tab_pressed > 1 && !m_suggestions.is_empty()) {
                     size_t longest_suggestion_length = 0;
 
-                    for (auto& suggestion : suggestions)
+                    for (auto& suggestion : m_suggestions)
                         longest_suggestion_length = max(longest_suggestion_length, suggestion.length());
 
                     size_t num_printed = 0;
                     size_t lines_used { 1 };
+                    size_t index { 0 };
                     putchar('\n');
-                    // FIXME: what if we use more lines than the terminal has?
-                    //        this would put the actual prompt out of view
-                    for (auto& suggestion : suggestions) {
+                    for (auto& suggestion : m_suggestions) {
                         size_t next_column = num_printed + suggestion.length() + longest_suggestion_length + 2;
 
                         if (next_column > m_num_columns) {
@@ -307,9 +325,25 @@ String Editor::get_line(const String& prompt)
                             num_printed = 0;
                         }
 
+                        // show just enough suggestions to fill up the screen
+                        // without moving the prompt out of view
+                        if (lines_used + num_lines() >= m_num_lines)
+                            break;
+
+                        if (index == current_suggestion_index) {
+                            vt_apply_style({ Style::Foreground(Style::Color::Blue) });
+                            fflush(stdout);
+                        }
+
                         num_printed += fprintf(stderr, "%-*s", static_cast<int>(longest_suggestion_length) + 2, suggestion.characters());
-                        m_lines_used_for_last_suggestions = lines_used;
+
+                        if (index == current_suggestion_index) {
+                            vt_apply_style({});
+                            fflush(stdout);
+                        }
+                        ++index;
                     }
+                    m_lines_used_for_last_suggestions = lines_used;
 
                     // adjust for the case that we scroll up after writing the suggestions
                     if (m_origin_x + lines_used >= m_num_lines) {
@@ -318,7 +352,6 @@ String Editor::get_line(const String& prompt)
                     reposition_cursor();
                 }
 
-                suggestions.clear_with_capacity();
                 continue;
             }
 
@@ -327,10 +360,13 @@ String Editor::get_line(const String& prompt)
                 // let's clean them up
                 if (m_lines_used_for_last_suggestions) {
                     vt_clear_lines(0, m_lines_used_for_last_suggestions);
-                    vt_move_relative(-m_lines_used_for_last_suggestions, 0);
+                    reposition_cursor();
                     m_refresh_needed = true;
                     m_lines_used_for_last_suggestions = 0;
                 }
+                m_last_shown_suggestion = String::empty();
+                m_suggestions.clear();
+                suggest(0, 0);
             }
             m_times_tab_pressed = 0; // Safe to say if we get here, the user didn't press TAB
 

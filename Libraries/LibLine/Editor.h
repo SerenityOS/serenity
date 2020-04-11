@@ -113,6 +113,11 @@ public:
         m_spans_ending.clear();
         m_refresh_needed = true;
     }
+    void suggest(size_t invariant_offset = 0, size_t index = 0)
+    {
+        m_next_suggestion_index = index;
+        m_next_suggestion_invariant_offset = invariant_offset;
+    }
 
     const struct termios& termios() const { return m_termios; }
     const struct termios& default_termios() const { return m_default_termios; }
@@ -190,6 +195,10 @@ private:
     size_t m_origin_y { 0 };
 
     String m_new_prompt;
+    Vector<String> m_suggestions;
+    String m_last_shown_suggestion;
+    size_t m_next_suggestion_index { 0 };
+    size_t m_next_suggestion_invariant_offset { 0 };
 
     HashMap<char, NonnullOwnPtr<KeyCallback>> m_key_callbacks;
 
