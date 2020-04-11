@@ -58,6 +58,7 @@ struct ScopeFrame {
 };
 
 struct CallFrame {
+    FlyString function_name;
     Value this_value;
     Vector<Value> arguments;
 };
@@ -106,7 +107,7 @@ public:
 
     CallFrame& push_call_frame()
     {
-        m_call_stack.append({ js_undefined(), {} });
+        m_call_stack.append({ {}, js_undefined(), {} });
         return m_call_stack.last();
     }
     void pop_call_frame() { m_call_stack.take_last(); }

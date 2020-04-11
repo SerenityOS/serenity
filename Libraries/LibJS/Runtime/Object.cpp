@@ -235,7 +235,7 @@ void Object::put(PropertyName property_name, Value value)
 
 void Object::put_native_function(const FlyString& property_name, AK::Function<Value(Interpreter&)> native_function, i32 length)
 {
-    auto* function = heap().allocate<NativeFunction>(move(native_function));
+    auto* function = heap().allocate<NativeFunction>(property_name, move(native_function));
     function->put("length", Value(length));
     put(property_name, function);
 }
