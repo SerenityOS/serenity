@@ -97,7 +97,7 @@ public:
     const Process& process() const { return m_process; }
 
     String backtrace(ProcessInspectionHandle&) const;
-    Vector<FlatPtr> raw_backtrace(FlatPtr ebp) const;
+    Vector<FlatPtr> raw_backtrace(FlatPtr ebp, FlatPtr eip) const;
 
     const String& name() const { return m_name; }
     void set_name(const StringView& s) { m_name = s; }

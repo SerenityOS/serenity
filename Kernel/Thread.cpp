@@ -846,13 +846,13 @@ String Thread::backtrace_impl() const
     return builder.to_string();
 }
 
-Vector<FlatPtr> Thread::raw_backtrace(FlatPtr ebp) const
+Vector<FlatPtr> Thread::raw_backtrace(FlatPtr ebp, FlatPtr eip) const
 {
     InterruptDisabler disabler;
     auto& process = const_cast<Process&>(this->process());
     ProcessPagingScope paging_scope(process);
     Vector<FlatPtr, Profiling::max_stack_frame_count> backtrace;
-    backtrace.append(ebp);
+    backtrace.append(eip);
     for (FlatPtr* stack_ptr = (FlatPtr*)ebp; process.validate_read_from_kernel(VirtualAddress(stack_ptr), sizeof(FlatPtr) * 2) && MM.can_read_without_faulting(process, VirtualAddress(stack_ptr), sizeof(FlatPtr) * 2); stack_ptr = (FlatPtr*)*stack_ptr) {
         FlatPtr retaddr = stack_ptr[1];
         backtrace.append(retaddr);
