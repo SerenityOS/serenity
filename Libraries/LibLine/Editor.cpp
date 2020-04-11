@@ -37,10 +37,14 @@ Editor::Editor()
 {
     m_pending_chars = ByteBuffer::create_uninitialized(0);
     struct winsize ws;
-    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) < 0)
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) < 0) {
         m_num_columns = 80;
-    else
+        m_num_lines = 25;
+    } else {
         m_num_columns = ws.ws_col;
+        m_num_lines = ws.ws_row;
+        dbg() << m_num_lines;
+    }
 }
 
 Editor::~Editor()
@@ -68,18 +72,8 @@ void Editor::clear_line()
 
 void Editor::insert(const String& string)
 {
-    m_pending_chars.append(string.characters(), string.length());
-    if (m_cursor == m_buffer.size()) {
-        m_buffer.append(string.characters(), string.length());
-        m_cursor = m_buffer.size();
-        return;
-    }
-
-    m_buffer.ensure_capacity(m_buffer.size() + string.length());
-    m_chars_inserted_in_the_middle += string.length();
-    for (size_t i = 0; i < string.length(); ++i)
-        m_buffer.insert(m_cursor + i, string[i]);
-    m_cursor += string.length();
+    for (auto ch : string)
+        insert(ch);
 }
 
 void Editor::insert(const char ch)
@@ -302,33 +296,43 @@ String Editor::get_line(const String& prompt)
                         longest_suggestion_length = max(longest_suggestion_length, suggestion.length());
 
                     size_t num_printed = 0;
+                    size_t lines_used { 1 };
                     putchar('\n');
+                    // FIXME: what if we use more lines than the terminal has?
+                    //        this would put the actual prompt out of view
                     for (auto& suggestion : suggestions) {
                         size_t next_column = num_printed + suggestion.length() + longest_suggestion_length + 2;
 
                         if (next_column > m_num_columns) {
+                            ++lines_used;
                             putchar('\n');
                             num_printed = 0;
                         }
 
                         num_printed += fprintf(stderr, "%-*s", static_cast<int>(longest_suggestion_length) + 2, suggestion.characters());
+                        m_lines_used_for_last_suggestions = lines_used;
                     }
 
-                    StringBuilder builder;
-                    builder.append('\n');
-                    builder.append(prompt);
-                    builder.append(m_buffer.data(), m_cursor);
-                    builder.append(m_buffer.data() + m_cursor, m_buffer.size() - m_cursor);
-                    fputs(builder.to_string().characters(), stdout);
-                    fflush(stdout);
-
-                    m_cursor = m_buffer.size();
+                    // adjust for the case that we scroll up after writing the suggestions
+                    if (m_origin_x + lines_used >= m_num_lines) {
+                        m_origin_x = m_num_lines - lines_used;
+                    }
+                    reposition_cursor();
                 }
 
                 suggestions.clear_with_capacity();
                 continue;
             }
 
+            if (m_times_tab_pressed) {
+                // we probably have some suggestions drawn
+                // let's clean them up
+                if (m_lines_used_for_last_suggestions) {
+                    vt_clear_lines(1, m_lines_used_for_last_suggestions);
+                    m_refresh_needed = true;
+                    m_lines_used_for_last_suggestions = 0;
+                }
+            }
             m_times_tab_pressed = 0; // Safe to say if we get here, the user didn't press TAB
 
             auto do_backspace = [&] {
@@ -410,7 +414,7 @@ void Editor::refresh_display()
         auto current_line = cursor_line();
 
         vt_clear_lines(current_line - 1, num_lines() - current_line);
-        vt_move_relative(-num_lines() + 1, -offset_in_line() - m_old_prompt_length + m_chars_inserted_in_the_middle);
+        vt_move_relative(-num_lines() + 1, -offset_in_line() - m_old_prompt_length - m_pending_chars.size() + m_chars_inserted_in_the_middle);
     };
     auto has_cleaned_up = false;
     // someone changed the window size, figure it out
@@ -419,10 +423,13 @@ void Editor::refresh_display()
         auto previous_num_columns = m_num_columns;
 
         struct winsize ws;
-        if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) < 0)
+        if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) < 0) {
             m_num_columns = 80;
-        else
+            m_num_lines = 25;
+        } else {
             m_num_columns = ws.ws_col;
+            m_num_lines = ws.ws_row;
+        }
 
         if (previous_num_columns != m_num_columns) {
             // we need to cleanup and redo everything
