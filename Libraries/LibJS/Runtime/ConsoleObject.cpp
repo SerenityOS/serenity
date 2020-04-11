@@ -35,6 +35,7 @@ namespace JS {
 ConsoleObject::ConsoleObject()
 {
     put_native_function("log", log);
+    put_native_function("trace", trace);
 }
 
 ConsoleObject::~ConsoleObject()
@@ -49,6 +50,20 @@ Value ConsoleObject::log(Interpreter& interpreter)
             putchar(' ');
     }
     putchar('\n');
+    return js_undefined();
+}
+
+Value ConsoleObject::trace(Interpreter& interpreter)
+{
+    log(interpreter);
+    auto call_stack = interpreter.call_stack();
+    // -2 to skip the console.trace() call frame
+    for (ssize_t i = call_stack.size() - 2; i >= 0; --i) {
+        auto function_name = call_stack[i].function_name;
+        if (String(function_name).is_empty())
+            function_name = "<anonymous>";
+        printf("%s\n", function_name.characters());
+    }
     return js_undefined();
 }
 
