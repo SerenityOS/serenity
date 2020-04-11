@@ -1286,6 +1286,9 @@ String Instruction::to_string(u32 origin, bool x32) const
 
 String Instruction::to_string_internal(u32 origin, bool x32) const
 {
+    if (!m_descriptor)
+        return String::format("db %#02x", m_op);
+
     StringBuilder builder;
 
     String mnemonic = String(m_descriptor->mnemonic).to_lowercase();
