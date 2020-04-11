@@ -516,12 +516,14 @@ int main(int argc, char** argv)
                 case JS::TokenType::Interface:
                 case JS::TokenType::Let:
                 case JS::TokenType::New:
+                case JS::TokenType::Throw:
                 case JS::TokenType::Typeof:
                 case JS::TokenType::Var:
                 case JS::TokenType::Void:
                     stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Blue), Line::Style::Bold });
                     break;
                 case JS::TokenType::Await:
+                case JS::TokenType::Case:
                 case JS::TokenType::Catch:
                 case JS::TokenType::Do:
                 case JS::TokenType::Else:
@@ -529,6 +531,7 @@ int main(int argc, char** argv)
                 case JS::TokenType::For:
                 case JS::TokenType::If:
                 case JS::TokenType::Return:
+                case JS::TokenType::Switch:
                 case JS::TokenType::Try:
                 case JS::TokenType::While:
                 case JS::TokenType::Yield:
