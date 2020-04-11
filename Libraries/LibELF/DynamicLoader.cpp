@@ -26,6 +26,7 @@
 
 #include <AK/StringBuilder.h>
 #include <LibELF/DynamicLoader.h>
+#include <LibELF/Validation.h>
 
 #include <assert.h>
 #include <dlfcn.h>
@@ -59,10 +60,23 @@ DynamicLoader::DynamicLoader(const char* filename, int fd, size_t size)
     , m_file_size(size)
     , m_image_fd(fd)
 {
+    if (m_file_size < sizeof(Elf32_Ehdr)) {
+        m_valid = false;
+        return;
+    }
+
     String file_mmap_name = String::format("ELF_DYN: %s", m_filename.characters());
 
-    m_file_mapping = mmap_with_name(nullptr, size, PROT_READ, MAP_PRIVATE, m_image_fd, 0, file_mmap_name.characters());
+    m_file_mapping = mmap_with_name(nullptr, m_file_size, PROT_READ, MAP_PRIVATE, m_image_fd, 0, file_mmap_name.characters());
     if (MAP_FAILED == m_file_mapping) {
+        m_valid = false;
+        return;
+    }
+
+    auto* elf_header = (Elf32_Ehdr*)m_file_mapping;
+
+    if (!validate_elf_header(*elf_header, m_file_size) ||
+        !validate_program_headers(*elf_header, m_file_size, (u8*)m_file_mapping, m_file_size, m_program_interpreter)) {
         m_valid = false;
     }
 }
