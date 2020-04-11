@@ -60,11 +60,14 @@ int main(int argc, char** argv)
     if (argc == 1)
         return usage();
 
+    bool spawned_new_process = false;
+
     if (!strcmp(argv[1], "-p")) {
         if (argc != 3)
             return usage();
         g_pid = atoi(argv[2]);
     } else {
+        spawned_new_process = true;
         int pid = fork();
         if (!pid) {
             if (ptrace(PT_TRACE_ME, 0, 0, 0) == -1) {
@@ -98,6 +101,18 @@ int main(int argc, char** argv)
     if (waitpid(g_pid, nullptr, WSTOPPED) != g_pid) {
         perror("waitpid");
         return 1;
+    }
+
+    if (spawned_new_process) {
+
+        if (ptrace(PT_CONTINUE, g_pid, 0, 0) < 0) {
+            perror("continue");
+            return 1;
+        }
+        if (waitpid(g_pid, nullptr, WSTOPPED) != g_pid) {
+            perror("wait_pid");
+            return 1;
+        }
     }
 
     for (;;) {
