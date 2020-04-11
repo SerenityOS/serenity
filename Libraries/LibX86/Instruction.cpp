@@ -950,12 +950,6 @@ Instruction::Instruction(InstructionStream& stream, bool o32, bool a32)
         return;
     }
 
-    if (m_has_lock_prefix && !m_descriptor->lock_prefix_allowed) {
-        fprintf(stderr, "Instruction not allowed with LOCK prefix, this will raise #UD\n");
-        m_descriptor = nullptr;
-        return;
-    }
-
     m_imm1_bytes = m_descriptor->imm1_bytes_for_address_size(m_a32);
     m_imm2_bytes = m_descriptor->imm2_bytes_for_address_size(m_a32);
 
@@ -964,6 +958,13 @@ Instruction::Instruction(InstructionStream& stream, bool o32, bool a32)
         m_imm2 = stream.read(m_imm2_bytes);
     if (m_imm1_bytes)
         m_imm1 = stream.read(m_imm1_bytes);
+
+#ifdef DISALLOW_INVALID_LOCK_PREFIX
+    if (m_has_lock_prefix && !m_descriptor->lock_prefix_allowed) {
+        fprintf(stderr, "Instruction not allowed with LOCK prefix, this will raise #UD\n");
+        m_descriptor = nullptr;
+    }
+#endif
 }
 
 u32 InstructionStream::read(unsigned count)
