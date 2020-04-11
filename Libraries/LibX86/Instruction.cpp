@@ -814,7 +814,8 @@ void build_opcode_tables_if_needed()
     build0F(0xAC, "SHRD", OP_RM16_reg16_imm8, OP_RM32_reg32_imm8);
     build0F(0xAD, "SHRD", OP_RM16_reg16_CL, OP_RM32_reg32_CL);
     build0F(0xAF, "IMUL", OP_reg16_RM16, OP_reg32_RM32);
-    build0F(0xB1, "CMPXCHG", OP_RM16_reg16, OP_RM32_reg32);
+    build0F(0xB0, "CMPXCHG", OP_RM8_reg8, LockPrefixAllowed);
+    build0F(0xB1, "CMPXCHG", OP_RM16_reg16, OP_RM32_reg32, LockPrefixAllowed);
     build0F(0xB2, "LSS", OP_reg16_mem16, OP_reg32_mem32);
     build0F(0xB3, "BTR", OP_RM16_reg16, OP_RM32_reg32);
     build0F(0xB4, "LFS", OP_reg16_mem16, OP_reg32_mem32);
