@@ -151,6 +151,56 @@ char* ELFLoader::symbol_ptr(const char* name)
     return found_ptr;
 }
 
+#ifndef KERNEL
+Optional<ELFImage::Symbol> ELFLoader::find_symbol(u32 address, u32* out_offset) const
+{
+    if (!m_symbol_count)
+        return {};
+
+    SortedSymbol* sorted_symbols = nullptr;
+#ifdef KERNEL
+    if (!m_sorted_symbols_region) {
+        m_sorted_symbols_region = MM.allocate_kernel_region(PAGE_ROUND_UP(m_symbol_count * sizeof(SortedSymbol)), "Sorted symbols", Kernel::Region::Access::Read | Kernel::Region::Access::Write);
+        sorted_symbols = (SortedSymbol*)m_sorted_symbols_region->vaddr().as_ptr();
+        size_t index = 0;
+        m_image.for_each_symbol([&](auto& symbol) {
+            sorted_symbols[index++] = { symbol.value(), symbol.name() };
+            return IterationDecision::Continue;
+        });
+        quick_sort(sorted_symbols, sorted_symbols + m_symbol_count, [](auto& a, auto& b) {
+            return a.address < b.address;
+        });
+    } else {
+        sorted_symbols = (SortedSymbol*)m_sorted_symbols_region->vaddr().as_ptr();
+    }
+#else
+    if (m_sorted_symbols.is_empty()) {
+        m_sorted_symbols.ensure_capacity(m_symbol_count);
+        m_image.for_each_symbol([this](auto& symbol) {
+            m_sorted_symbols.append({ symbol.value(), symbol.name(), {}, symbol });
+            return IterationDecision::Continue;
+        });
+        quick_sort(m_sorted_symbols, [](auto& a, auto& b) {
+            return a.address < b.address;
+        });
+    }
+    sorted_symbols = m_sorted_symbols.data();
+#endif
+
+    for (size_t i = 0; i < m_symbol_count; ++i) {
+        if (sorted_symbols[i].address > address) {
+            if (i == 0)
+                return {};
+            auto& symbol = sorted_symbols[i - 1];
+            if (out_offset)
+                *out_offset = address - symbol.address;
+            return symbol.symbol;
+        }
+    }
+    return {};
+}
+#endif
+
 String ELFLoader::symbolicate(u32 address, u32* out_offset) const
 {
     if (!m_symbol_count) {
@@ -178,7 +228,7 @@ String ELFLoader::symbolicate(u32 address, u32* out_offset) const
     if (m_sorted_symbols.is_empty()) {
         m_sorted_symbols.ensure_capacity(m_symbol_count);
         m_image.for_each_symbol([this](auto& symbol) {
-            m_sorted_symbols.append({ symbol.value(), symbol.name(), {} });
+            m_sorted_symbols.append({ symbol.value(), symbol.name(), {}, {} });
             return IterationDecision::Continue;
         });
         quick_sort(m_sorted_symbols, [](auto& a, auto& b) {
