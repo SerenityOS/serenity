@@ -200,6 +200,12 @@ private:
     size_t m_next_suggestion_index { 0 };
     size_t m_next_suggestion_invariant_offset { 0 };
 
+    enum class TabDirection {
+        Forward,
+        Backward,
+    };
+    TabDirection m_tab_direction { TabDirection::Forward };
+
     HashMap<char, NonnullOwnPtr<KeyCallback>> m_key_callbacks;
 
     // TODO: handle signals internally
