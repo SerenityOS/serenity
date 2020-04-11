@@ -242,6 +242,11 @@ void TerminalWidget::keydown_event(GUI::KeyEvent& event)
         break;
     }
 
+    if (event.shift() && event.key() == KeyCode::Key_Tab) {
+        write(m_ptm_fd, "\033[Z", 3);
+        return;
+    }
+
     // Key event was not one of the above special cases,
     // attempt to treat it as a character...
     char ch = !event.text().is_empty() ? event.text()[0] : 0;
