@@ -499,7 +499,6 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
     if (signal == SIGSTOP) {
         if (!is_stopped()) {
             m_stop_signal = SIGSTOP;
-            m_stop_state = m_state;
             set_state(State::Stopped);
         }
         return ShouldUnblockThread::No;
@@ -526,7 +525,6 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
                 // make sure SemiPermanentBlocker is unblocked
                 if (m_blocker && m_blocker->is_reason_signal())
                     unblock();
-                m_stop_state = m_state;
                 set_state(Stopped);
                 return ShouldUnblockThread::No;
             }
@@ -755,6 +753,10 @@ void Thread::set_state(State new_state)
     if (new_state == Blocked) {
         // we should always have a Blocker while blocked
         ASSERT(m_blocker != nullptr);
+    }
+
+    if (new_state == Stopped) {
+        m_stop_state = m_state;
     }
 
     m_state = new_state;
