@@ -436,13 +436,17 @@ bool Parser::parse_ere_expression(Vector<StackValue>& stack)
         if (match(TokenType::Circumflex)) {
             consume(TokenType::Circumflex);
             operations.empend(OpCode::CheckBegin);
-            break;
+
+            stack.append(move(operations));
+            return true;
         }
 
         if (match(TokenType::Dollar)) {
             consume(TokenType::Dollar);
             operations.empend(OpCode::CheckEnd);
-            break;
+
+            stack.append(move(operations));
+            return true;
         }
 
         if (match(TokenType::LeftParen)) {
@@ -482,7 +486,6 @@ bool Parser::parse_ere_expression(Vector<StackValue>& stack)
 
 bool Parser::parse_extended_reg_exp(Vector<StackValue>& stack)
 {
-    bool errors = false;
     Vector<StackValue> operations;
     for (;;) {
         if (!parse_ere_expression(operations))
@@ -493,7 +496,7 @@ bool Parser::parse_extended_reg_exp(Vector<StackValue>& stack)
 
             Vector<StackValue> operations_alternative;
 
-            if (parse_extended_reg_exp(operations_alternative)) {
+            if (parse_extended_reg_exp(operations_alternative) && operations_alternative.size()) {
 
                 // FORKSTAY _ALT
                 // REGEXP ALT1
@@ -524,14 +527,13 @@ bool Parser::parse_extended_reg_exp(Vector<StackValue>& stack)
 
             } else {
                 m_parser_state.m_has_errors = true;
+                return false;
             }
         }
     }
 
     stack.append(move(operations));
-
-    m_parser_state.m_has_errors = errors;
-    return !errors;
+    return true;
 }
 
 bool Parser::done() const

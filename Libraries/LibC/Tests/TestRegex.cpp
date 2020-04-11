@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/StringBuilder.h>
 #include <AK/TestSuite.h>
 #include <LibC/regex.h>
 #include <stdio.h>
@@ -232,7 +233,7 @@ TEST_CASE(parens)
     regfree(&regex);
 }
 
-TEST_CASE(parens_error)
+TEST_CASE(parser_error_parens)
 {
     String pattern = "test()test";
     regex_t regex;
@@ -242,6 +243,91 @@ TEST_CASE(parens_error)
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_BADPAT);
     EXPECT_EQ(regexec(&regex, "testhellotest", num_matches, matches, 0), REG_BADPAT);
     EXPECT_EQ(matches[0].match_count, 0u);
+
+    regfree(&regex);
+}
+
+TEST_CASE(parser_error_special_characters_used_at_wrong_place)
+{
+    String pattern;
+    regex_t regex;
+    static constexpr int num_matches { 5 };
+    regmatch_t matches[num_matches];
+
+    Vector<char, 4> chars = { '*', '+', '?', '}' };
+    StringBuilder b;
+
+    for (auto& ch : chars) {
+        // First in ere
+        b.clear();
+        b.append(ch);
+        pattern = b.build();
+        EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_BADPAT);
+        EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), REG_BADPAT);
+
+        // After vertical line
+        b.clear();
+        b.append("a|");
+        b.append(ch);
+        pattern = b.build();
+        EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_BADPAT);
+        EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), REG_BADPAT);
+
+        // After circumflex
+        b.clear();
+        b.append("^");
+        b.append(ch);
+        pattern = b.build();
+        EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_BADPAT);
+        EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), REG_BADPAT);
+
+        // After dollar
+        b.clear();
+        b.append("$");
+        b.append(ch);
+        pattern = b.build();
+        EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_BADPAT);
+        EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), REG_BADPAT);
+
+        // After left parens
+        b.clear();
+        b.append("(");
+        b.append(ch);
+        b.append(")");
+        pattern = b.build();
+        EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_BADPAT);
+        EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), REG_BADPAT);
+    }
+
+    regfree(&regex);
+}
+
+TEST_CASE(parser_error_vertical_line_used_at_wrong_place)
+{
+    String pattern;
+    regex_t regex;
+    static constexpr int num_matches { 5 };
+    regmatch_t matches[num_matches];
+
+    // First in ere
+    pattern = "|asdf";
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_BADPAT);
+    EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), REG_BADPAT);
+
+    // Last in ere
+    pattern = "asdf|";
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_BADPAT);
+    EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), REG_BADPAT);
+
+    // After left parens
+    pattern = "(|asdf)";
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_BADPAT);
+    EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), REG_BADPAT);
+
+    // Proceed right parens
+    pattern = "(asdf)|";
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_BADPAT);
+    EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), REG_BADPAT);
 
     regfree(&regex);
 }
