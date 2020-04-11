@@ -36,18 +36,74 @@ TEST_CASE(construct)
 TEST_CASE(basic)
 {
     {
-        URL url("http://www.serenityos.org/index.html");
+        URL url("http://www.serenityos.org");
         EXPECT_EQ(url.is_valid(), true);
         EXPECT_EQ(url.protocol(), "http");
+        EXPECT_EQ(url.host(), "www.serenityos.org");
         EXPECT_EQ(url.port(), 80);
+        EXPECT_EQ(url.path(), "/");
+        EXPECT_EQ(url.query(), "");
+        EXPECT_EQ(url.fragment(), "");
+    }
+    {
+        URL url("https://www.serenityos.org/index.html");
+        EXPECT_EQ(url.is_valid(), true);
+        EXPECT_EQ(url.protocol(), "https");
+        EXPECT_EQ(url.host(), "www.serenityos.org");
+        EXPECT_EQ(url.port(), 443);
         EXPECT_EQ(url.path(), "/index.html");
+        EXPECT_EQ(url.query(), "");
+        EXPECT_EQ(url.fragment(), "");
     }
     {
         URL url("https://localhost:1234/~anon/test/page.html");
         EXPECT_EQ(url.is_valid(), true);
         EXPECT_EQ(url.protocol(), "https");
+        EXPECT_EQ(url.host(), "localhost");
         EXPECT_EQ(url.port(), 1234);
         EXPECT_EQ(url.path(), "/~anon/test/page.html");
+        EXPECT_EQ(url.query(), "");
+        EXPECT_EQ(url.fragment(), "");
+    }
+    {
+        URL url("http://www.serenityos.org/index.html?#");
+        EXPECT_EQ(url.is_valid(), true);
+        EXPECT_EQ(url.protocol(), "http");
+        EXPECT_EQ(url.host(), "www.serenityos.org");
+        EXPECT_EQ(url.port(), 80);
+        EXPECT_EQ(url.path(), "/index.html");
+        EXPECT_EQ(url.query(), "");
+        EXPECT_EQ(url.fragment(), "");
+    }
+    {
+        URL url("http://www.serenityos.org/index.html?foo=1&bar=2");
+        EXPECT_EQ(url.is_valid(), true);
+        EXPECT_EQ(url.protocol(), "http");
+        EXPECT_EQ(url.host(), "www.serenityos.org");
+        EXPECT_EQ(url.port(), 80);
+        EXPECT_EQ(url.path(), "/index.html");
+        EXPECT_EQ(url.query(), "foo=1&bar=2");
+        EXPECT_EQ(url.fragment(), "");
+    }
+    {
+        URL url("http://www.serenityos.org/index.html#fragment");
+        EXPECT_EQ(url.is_valid(), true);
+        EXPECT_EQ(url.protocol(), "http");
+        EXPECT_EQ(url.host(), "www.serenityos.org");
+        EXPECT_EQ(url.port(), 80);
+        EXPECT_EQ(url.path(), "/index.html");
+        EXPECT_EQ(url.query(), "");
+        EXPECT_EQ(url.fragment(), "fragment");
+    }
+    {
+        URL url("http://www.serenityos.org/index.html?foo=1&bar=2&baz=/?#frag/ment?test#");
+        EXPECT_EQ(url.is_valid(), true);
+        EXPECT_EQ(url.protocol(), "http");
+        EXPECT_EQ(url.host(), "www.serenityos.org");
+        EXPECT_EQ(url.port(), 80);
+        EXPECT_EQ(url.path(), "/index.html");
+        EXPECT_EQ(url.query(), "foo=1&bar=2&baz=/?");
+        EXPECT_EQ(url.fragment(), "frag/ment?test#");
     }
 }
 
@@ -71,6 +127,7 @@ TEST_CASE(serialization)
 {
     EXPECT_EQ(URL("http://www.serenityos.org/").to_string(), "http://www.serenityos.org/");
     EXPECT_EQ(URL("http://www.serenityos.org:81/").to_string(), "http://www.serenityos.org:81/");
+    EXPECT_EQ(URL("https://www.serenityos.org:443/foo/bar.html?query#fragment").to_string(), "https://www.serenityos.org/foo/bar.html?query#fragment");
 }
 
 TEST_MAIN(URL)
