@@ -64,7 +64,8 @@ ELF_OBJS = \
         ../LibELF/DynamicObject.o \
         ../LibELF/DynamicLoader.o \
         ../LibELF/Loader.o \
-        ../LibELF/Image.o
+        ../LibELF/Image.o \
+        ../LibELF/Validation.o
 
 OBJS = $(AK_OBJS) $(LIBC_OBJS) $(ELF_OBJS)
 

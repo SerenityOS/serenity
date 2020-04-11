@@ -78,6 +78,7 @@
 #include <LibC/limits.h>
 #include <LibC/signal_numbers.h>
 #include <LibELF/Loader.h>
+#include <LibELF/Validation.h>
 
 //#define PROCESS_DEBUG
 //#define DEBUG_POLL_SELECT
@@ -1084,14 +1085,14 @@ KResultOr<NonnullRefPtr<FileDescription>> Process::find_elf_interpreter_for_exec
         return KResult(-ENOEXEC);
 
     auto elf_header = (Elf32_Ehdr*)first_page;
-    if (!ELF::Image::validate_elf_header(*elf_header, file_size)) {
+    if (!ELF::validate_elf_header(*elf_header, file_size)) {
         dbg() << "exec(" << path << "): File has invalid ELF header";
         return KResult(-ENOEXEC);
     }
 
     // Not using KResultOr here because we'll want to do the same thing in userspace in the RTLD
     String interpreter_path;
-    if (!ELF::Image::validate_program_headers(*elf_header, file_size, (u8*)first_page, nread, interpreter_path)) {
+    if (!ELF::validate_program_headers(*elf_header, file_size, (u8*)first_page, nread, interpreter_path)) {
         dbg() << "exec(" << path << "): File has invalid ELF Program headers";
         return KResult(-ENOEXEC);
     }
@@ -1124,14 +1125,14 @@ KResultOr<NonnullRefPtr<FileDescription>> Process::find_elf_interpreter_for_exec
             return KResult(-ENOEXEC);
 
         elf_header = (Elf32_Ehdr*)first_page;
-        if (!ELF::Image::validate_elf_header(*elf_header, interp_metadata.size)) {
+        if (!ELF::validate_elf_header(*elf_header, interp_metadata.size)) {
             dbg() << "exec(" << path << "): Interpreter (" << interpreter_description->absolute_path() << ") has invalid ELF header";
             return KResult(-ENOEXEC);
         }
 
         // Not using KResultOr here because we'll want to do the same thing in userspace in the RTLD
         String interpreter_interpreter_path;
-        if (!ELF::Image::validate_program_headers(*elf_header, interp_metadata.size, (u8*)first_page, nread, interpreter_interpreter_path)) {
+        if (!ELF::validate_program_headers(*elf_header, interp_metadata.size, (u8*)first_page, nread, interpreter_interpreter_path)) {
             dbg() << "exec(" << path << "): Interpreter (" << interpreter_description->absolute_path() << ") has invalid ELF Program headers";
             return KResult(-ENOEXEC);
         }
