@@ -112,6 +112,7 @@ public:
     }
     void pop_call_frame() { m_call_stack.take_last(); }
     const CallFrame& call_frame() { return m_call_stack.last(); }
+    const Vector<CallFrame> call_stack() { return m_call_stack; }
 
     size_t argument_count() const
     {
