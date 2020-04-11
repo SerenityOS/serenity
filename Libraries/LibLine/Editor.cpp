@@ -43,7 +43,6 @@ Editor::Editor()
     } else {
         m_num_columns = ws.ws_col;
         m_num_lines = ws.ws_row;
-        dbg() << m_num_lines;
     }
 }
 
@@ -131,10 +130,9 @@ String Editor::get_line(const String& prompt)
 {
     set_prompt(prompt);
     reset();
-    refresh_display();
+    set_origin();
 
     m_history_cursor = m_history.size();
-    m_cursor = 0;
     for (;;) {
         refresh_display();
         char keybuf[16];
@@ -328,7 +326,8 @@ String Editor::get_line(const String& prompt)
                 // we probably have some suggestions drawn
                 // let's clean them up
                 if (m_lines_used_for_last_suggestions) {
-                    vt_clear_lines(1, m_lines_used_for_last_suggestions);
+                    vt_clear_lines(0, m_lines_used_for_last_suggestions);
+                    vt_move_relative(-m_lines_used_for_last_suggestions, 0);
                     m_refresh_needed = true;
                     m_lines_used_for_last_suggestions = 0;
                 }
@@ -374,7 +373,8 @@ String Editor::get_line(const String& prompt)
             if (ch == 0xc) { // ^L
                 printf("\033[3J\033[H\033[2J"); // Clear screen.
                 vt_move_absolute(1, 1);
-                set_origin();
+                m_origin_x = 1;
+                m_origin_y = 1;
                 m_refresh_needed = true;
                 continue;
             }
@@ -415,7 +415,6 @@ void Editor::recalculate_origin()
     // compensate for that
     if (m_cached_prompt_length >= m_num_columns) {
         auto added_lines = (m_cached_prompt_length + 1) / m_num_columns - 1;
-        dbg() << "added lines: " << added_lines;
         m_origin_x += added_lines;
     }
 
@@ -488,8 +487,8 @@ void Editor::refresh_display()
     // FIXME: handle multiline stuff
     if (!has_cleaned_up) {
         cleanup();
-        set_origin();
     }
+    vt_move_absolute(m_origin_x, m_origin_y);
 
     fputs(m_new_prompt.characters(), stdout);
 
