@@ -32,8 +32,10 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <LibGUI/Forward.h>
+#include <LibGUI/ModelIndex.h>
 
 class ProfileModel;
+class DisassemblyModel;
 
 class ProfileNode : public RefCounted<ProfileNode> {
 public:
@@ -83,6 +85,16 @@ public:
 
     void sort_children();
 
+    const HashMap<FlatPtr, size_t>& events_per_address() const { return m_events_per_address; }
+    void add_event_address(FlatPtr address)
+    {
+        auto it = m_events_per_address.find(address);
+        if (it == m_events_per_address.end())
+            m_events_per_address.set(address, 1);
+        else
+            m_events_per_address.set(address, it->value + 1);
+    }
+
 private:
     explicit ProfileNode(const String& symbol, u32 address, u32 offset, u64 timestamp)
         : m_symbol(symbol)
@@ -100,6 +112,7 @@ private:
     u32 m_self_count { 0 };
     u64 m_timestamp { 0 };
     Vector<NonnullRefPtr<ProfileNode>> m_children;
+    HashMap<FlatPtr, size_t> m_events_per_address;
 };
 
 class Profile {
@@ -108,6 +121,9 @@ public:
     ~Profile();
 
     GUI::Model& model();
+    GUI::Model* disassembly_model();
+
+    void set_disassembly_index(const GUI::ModelIndex&);
 
     const Vector<NonnullRefPtr<ProfileNode>>& roots() const { return m_roots; }
 
@@ -145,12 +161,20 @@ public:
     bool show_percentages() const { return m_show_percentages; }
     void set_show_percentages(bool);
 
+    const String& executable_path() const { return m_executable_path; }
+
 private:
-    explicit Profile(Vector<Event>);
+    Profile(String executable_path, Vector<Event>);
 
     void rebuild_tree();
 
+    String m_executable_path;
+
     RefPtr<ProfileModel> m_model;
+    RefPtr<DisassemblyModel> m_disassembly_model;
+
+    GUI::ModelIndex m_disassembly_index;
+
     Vector<NonnullRefPtr<ProfileNode>> m_roots;
     u32 m_filtered_event_count { 0 };
     u64 m_first_timestamp { 0 };

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,41 +27,49 @@
 #pragma once
 
 #include <LibGUI/Model.h>
-
+#include <LibX86/Instruction.h>
 
 class Profile;
+class ProfileNode;
 
-class ProfileModel final : public GUI::Model {
+struct InstructionData {
+     X86::Instruction insn;
+     String disassembly;
+     StringView bytes;
+     FlatPtr address { 0 };
+     u32 event_count { 0 };
+};
+
+class DisassemblyModel final : public GUI::Model {
 public:
-    static NonnullRefPtr<ProfileModel> create(Profile& profile)
+    static NonnullRefPtr<DisassemblyModel> create(Profile& profile, ProfileNode& node)
     {
-        return adopt(*new ProfileModel(profile));
+        return adopt(*new DisassemblyModel(profile, node));
     }
 
     enum Column {
+        Address,
         SampleCount,
-        SelfCount,
-        StackFrame,
+        InstructionBytes,
+        Disassembly,
         __Count
     };
 
-    virtual ~ProfileModel() override;
+    virtual ~DisassemblyModel() override;
 
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
-    virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
+    virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return Column::__Count; }
     virtual String column_name(int) const override;
     virtual ColumnMetadata column_metadata(int) const override;
     virtual GUI::Variant data(const GUI::ModelIndex&, Role = Role::Display) const override;
-    virtual GUI::ModelIndex index(int row, int column, const GUI::ModelIndex& parent = GUI::ModelIndex()) const override;
-    virtual GUI::ModelIndex parent_index(const GUI::ModelIndex&) const override;
     virtual void update() override;
-    virtual int tree_column() const override { return Column::StackFrame; }
 
 private:
-    explicit ProfileModel(Profile&);
+    DisassemblyModel(Profile&, ProfileNode&);
 
     Profile& m_profile;
+    ProfileNode& m_node;
+    OwnPtr<MappedFile> m_file;
 
-    GUI::Icon m_user_frame_icon;
-    GUI::Icon m_kernel_frame_icon;
+    Vector<InstructionData> m_instructions;
 };
