@@ -144,10 +144,11 @@ void Profile::rebuild_tree()
             else
                 node = &node->find_or_create_child(symbol, address, offset, event.timestamp);
 
-            node->add_event_address(address);
             node->increment_event_count();
-            if (is_innermost_frame)
+            if (is_innermost_frame) {
+                node->add_event_address(address);
                 node->increment_self_count();
+            }
             return IterationDecision::Continue;
         });
 
@@ -217,7 +218,7 @@ OwnPtr<Profile> Profile::load_from_perfcore_file(const StringView& path)
         }
 
         auto stack_array = perf_event.get("stack").as_array();
-        for (ssize_t i = stack_array.values().size() - 1; i >= 1; --i) {
+        for (ssize_t i = stack_array.values().size() - 1; i >= 0; --i) {
             auto& frame = stack_array.at(i);
             auto ptr = frame.to_number<u32>();
             u32 offset = 0;
