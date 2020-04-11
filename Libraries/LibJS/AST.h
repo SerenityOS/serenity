@@ -163,8 +163,8 @@ class FunctionDeclaration final
 public:
     static bool must_have_name() { return true; }
 
-    FunctionDeclaration(String name, NonnullRefPtr<Statement> body, Vector<FlyString> parameters = {})
-        : FunctionNode(move(name), move(body), move(parameters))
+    FunctionDeclaration(const FlyString& name, NonnullRefPtr<Statement> body, Vector<FlyString> parameters = {})
+        : FunctionNode(name, move(body), move(parameters))
     {
     }
 

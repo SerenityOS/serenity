@@ -205,6 +205,7 @@ void Interpreter::gather_roots(Badge<Heap>, HashTable<Cell*>& roots)
 Value Interpreter::call(Function* function, Value this_value, const Vector<Value>& arguments)
 {
     auto& call_frame = push_call_frame();
+    call_frame.function_name = function->name();
     call_frame.this_value = this_value;
     call_frame.arguments = arguments;
     auto result = function->call(*this);

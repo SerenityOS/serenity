@@ -33,12 +33,13 @@ namespace JS {
 
 class NativeFunction : public Function {
 public:
-    explicit NativeFunction(AK::Function<Value(Interpreter&)>);
+    explicit NativeFunction(const FlyString& name, AK::Function<Value(Interpreter&)>);
     virtual ~NativeFunction() override;
 
     virtual Value call(Interpreter&) override;
     virtual Value construct(Interpreter&) override;
 
+    virtual const FlyString& name() const override { return m_name; };
     virtual bool has_constructor() const { return false; }
 
 protected:
@@ -48,6 +49,7 @@ private:
     virtual bool is_native_function() const override { return true; }
     virtual const char* class_name() const override { return "NativeFunction"; }
 
+    FlyString m_name;
     AK::Function<Value(Interpreter&)> m_native_function;
 };
 

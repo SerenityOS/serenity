@@ -48,14 +48,14 @@ Value ScopeNode::execute(Interpreter& interpreter) const
 
 Value FunctionDeclaration::execute(Interpreter& interpreter) const
 {
-    auto* function = interpreter.heap().allocate<ScriptFunction>(body(), parameters());
+    auto* function = interpreter.heap().allocate<ScriptFunction>(name(), body(), parameters());
     interpreter.set_variable(name(), function);
     return js_undefined();
 }
 
 Value FunctionExpression::execute(Interpreter& interpreter) const
 {
-    return interpreter.heap().allocate<ScriptFunction>(body(), parameters());
+    return interpreter.heap().allocate<ScriptFunction>(name(), body(), parameters());
 }
 
 Value ExpressionStatement::execute(Interpreter& interpreter) const
@@ -117,6 +117,7 @@ Value CallExpression::execute(Interpreter& interpreter) const
     }
 
     auto& call_frame = interpreter.push_call_frame();
+    call_frame.function_name = function.name();
     call_frame.arguments = move(arguments);
 
     Object* new_object = nullptr;

@@ -33,8 +33,9 @@
 
 namespace JS {
 
-ScriptFunction::ScriptFunction(const Statement& body, Vector<FlyString> parameters)
-    : m_body(body)
+ScriptFunction::ScriptFunction(const FlyString& name, const Statement& body, Vector<FlyString> parameters)
+    : m_name(name)
+    , m_body(body)
     , m_parameters(move(parameters))
 {
     put("prototype", heap().allocate<Object>());
