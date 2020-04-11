@@ -30,10 +30,12 @@
 #include <LibBareMetal/Memory/VirtualAddress.h>
 #include <LibELF/exec_elf.h>
 
-class ELFDynamicObject {
+namespace ELF {
+
+class DynamicObject {
 public:
-    explicit ELFDynamicObject(VirtualAddress base_address, VirtualAddress dynamic_section_address);
-    ~ELFDynamicObject();
+    explicit DynamicObject(VirtualAddress base_address, VirtualAddress dynamic_section_address);
+    ~DynamicObject();
     void dump() const;
 
     class DynamicEntry;
@@ -62,7 +64,7 @@ public:
 
     class Symbol {
     public:
-        Symbol(const ELFDynamicObject& dynamic, unsigned index, const Elf32_Sym& sym)
+        Symbol(const DynamicObject& dynamic, unsigned index, const Elf32_Sym& sym)
             : m_dynamic(dynamic)
             , m_sym(sym)
             , m_index(index)
@@ -82,14 +84,14 @@ public:
         VirtualAddress address() const { return m_dynamic.base_address().offset(value()); }
 
     private:
-        const ELFDynamicObject& m_dynamic;
+        const DynamicObject& m_dynamic;
         const Elf32_Sym& m_sym;
         const unsigned m_index;
     };
 
     class Section {
     public:
-        Section(const ELFDynamicObject& dynamic, unsigned section_offset, unsigned section_size_bytes, unsigned entry_size, const char* name)
+        Section(const DynamicObject& dynamic, unsigned section_offset, unsigned section_size_bytes, unsigned entry_size, const char* name)
             : m_dynamic(dynamic)
             , m_section_offset(section_offset)
             , m_section_size_bytes(section_size_bytes)
@@ -109,7 +111,7 @@ public:
     protected:
         friend class RelocationSection;
         friend class HashSection;
-        const ELFDynamicObject& m_dynamic;
+        const DynamicObject& m_dynamic;
         unsigned m_section_offset;
         unsigned m_section_size_bytes;
         unsigned m_entry_size;
@@ -131,7 +133,7 @@ public:
 
     class Relocation {
     public:
-        Relocation(const ELFDynamicObject& dynamic, const Elf32_Rel& rel, unsigned offset_in_section)
+        Relocation(const DynamicObject& dynamic, const Elf32_Rel& rel, unsigned offset_in_section)
             : m_dynamic(dynamic)
             , m_rel(rel)
             , m_offset_in_section(offset_in_section)
@@ -148,7 +150,7 @@ public:
         VirtualAddress address() const { return m_dynamic.base_address().offset(offset()); }
 
     private:
-        const ELFDynamicObject& m_dynamic;
+        const DynamicObject& m_dynamic;
         const Elf32_Rel& m_rel;
         const unsigned m_offset_in_section;
     };
@@ -261,7 +263,7 @@ private:
 };
 
 template<typename F>
-inline void ELFDynamicObject::RelocationSection::for_each_relocation(F func) const
+inline void DynamicObject::RelocationSection::for_each_relocation(F func) const
 {
     for (unsigned i = 0; i < relocation_count(); ++i) {
         if (func(relocation(i)) == IterationDecision::Break)
@@ -270,7 +272,7 @@ inline void ELFDynamicObject::RelocationSection::for_each_relocation(F func) con
 }
 
 template<typename F>
-inline void ELFDynamicObject::for_each_symbol(F func) const
+inline void DynamicObject::for_each_symbol(F func) const
 {
     for (unsigned i = 0; i < symbol_count(); ++i) {
         if (func(symbol(i)) == IterationDecision::Break)
@@ -279,7 +281,7 @@ inline void ELFDynamicObject::for_each_symbol(F func) const
 }
 
 template<typename F>
-inline void ELFDynamicObject::for_each_dynamic_entry(F func) const
+inline void DynamicObject::for_each_dynamic_entry(F func) const
 {
     auto* dyns = reinterpret_cast<const Elf32_Dyn*>(m_dynamic_address.as_ptr());
     for (unsigned i = 0;; ++i) {
@@ -290,3 +292,5 @@ inline void ELFDynamicObject::for_each_dynamic_entry(F func) const
             break;
     }
 }
+
+} // end namespace ELF

@@ -77,7 +77,7 @@
 #include <LibC/errno_numbers.h>
 #include <LibC/limits.h>
 #include <LibC/signal_numbers.h>
-#include <LibELF/ELFLoader.h>
+#include <LibELF/Loader.h>
 
 //#define PROCESS_DEBUG
 //#define DEBUG_POLL_SELECT
@@ -856,7 +856,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     u32 entry_eip = 0;
 
     MM.enter_process_paging_scope(*this);
-    OwnPtr<ELFLoader> loader;
+    OwnPtr<ELF::Loader> loader;
     {
         ArmedScopeGuard rollback_regions_guard([&]() {
             ASSERT(Process::current == this);
@@ -864,7 +864,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
             m_regions = move(old_regions);
             MM.enter_process_paging_scope(*this);
         });
-        loader = make<ELFLoader>(region->vaddr().as_ptr(), loader_metadata.size);
+        loader = make<ELF::Loader>(region->vaddr().as_ptr(), loader_metadata.size);
         // Load the correct executable -- either interp or main program.
         // FIXME: Once we actually load both interp and main, we'll need to be more clever about this.
         //     In that case, both will be ET_DYN objects, so they'll both be completely relocatable.
@@ -1084,14 +1084,14 @@ KResultOr<NonnullRefPtr<FileDescription>> Process::find_elf_interpreter_for_exec
         return KResult(-ENOEXEC);
 
     auto elf_header = (Elf32_Ehdr*)first_page;
-    if (!ELFImage::validate_elf_header(*elf_header, file_size)) {
+    if (!ELF::Image::validate_elf_header(*elf_header, file_size)) {
         dbg() << "exec(" << path << "): File has invalid ELF header";
         return KResult(-ENOEXEC);
     }
 
     // Not using KResultOr here because we'll want to do the same thing in userspace in the RTLD
     String interpreter_path;
-    if (!ELFImage::validate_program_headers(*elf_header, file_size, (u8*)first_page, nread, interpreter_path)) {
+    if (!ELF::Image::validate_program_headers(*elf_header, file_size, (u8*)first_page, nread, interpreter_path)) {
         dbg() << "exec(" << path << "): File has invalid ELF Program headers";
         return KResult(-ENOEXEC);
     }
@@ -1124,14 +1124,14 @@ KResultOr<NonnullRefPtr<FileDescription>> Process::find_elf_interpreter_for_exec
             return KResult(-ENOEXEC);
 
         elf_header = (Elf32_Ehdr*)first_page;
-        if (!ELFImage::validate_elf_header(*elf_header, interp_metadata.size)) {
+        if (!ELF::Image::validate_elf_header(*elf_header, interp_metadata.size)) {
             dbg() << "exec(" << path << "): Interpreter (" << interpreter_description->absolute_path() << ") has invalid ELF header";
             return KResult(-ENOEXEC);
         }
 
         // Not using KResultOr here because we'll want to do the same thing in userspace in the RTLD
         String interpreter_interpreter_path;
-        if (!ELFImage::validate_program_headers(*elf_header, interp_metadata.size, (u8*)first_page, nread, interpreter_interpreter_path)) {
+        if (!ELF::Image::validate_program_headers(*elf_header, interp_metadata.size, (u8*)first_page, nread, interpreter_interpreter_path)) {
             dbg() << "exec(" << path << "): Interpreter (" << interpreter_description->absolute_path() << ") has invalid ELF Program headers";
             return KResult(-ENOEXEC);
         }
@@ -4378,7 +4378,7 @@ int Process::sys$module_load(const char* user_path, size_t path_length)
     memcpy(storage.data(), payload.data(), payload.size());
     payload.clear();
 
-    auto elf_image = make<ELFImage>(storage.data(), storage.size());
+    auto elf_image = make<ELF::Image>(storage.data(), storage.size());
     if (!elf_image->parse())
         return -ENOEXEC;
 
@@ -4386,7 +4386,7 @@ int Process::sys$module_load(const char* user_path, size_t path_length)
 
     auto module = make<Module>();
 
-    elf_image->for_each_section_of_type(SHT_PROGBITS, [&](const ELFImage::Section& section) {
+    elf_image->for_each_section_of_type(SHT_PROGBITS, [&](const ELF::Image::Section& section) {
         if (!section.size())
             return IterationDecision::Continue;
         auto section_storage = KBuffer::copy(section.raw_data(), section.size(), Region::Access::Read | Region::Access::Write | Region::Access::Execute);
@@ -4397,12 +4397,12 @@ int Process::sys$module_load(const char* user_path, size_t path_length)
 
     bool missing_symbols = false;
 
-    elf_image->for_each_section_of_type(SHT_PROGBITS, [&](const ELFImage::Section& section) {
+    elf_image->for_each_section_of_type(SHT_PROGBITS, [&](const ELF::Image::Section& section) {
         if (!section.size())
             return IterationDecision::Continue;
         auto* section_storage = section_storage_by_name.get(section.name()).value_or(nullptr);
         ASSERT(section_storage);
-        section.relocations().for_each_relocation([&](const ELFImage::Relocation& relocation) {
+        section.relocations().for_each_relocation([&](const ELF::Image::Relocation& relocation) {
             auto& patch_ptr = *reinterpret_cast<ptrdiff_t*>(section_storage + relocation.offset());
             switch (relocation.type()) {
             case R_386_PC32: {
@@ -4453,7 +4453,7 @@ int Process::sys$module_load(const char* user_path, size_t path_length)
         return -EINVAL;
     }
 
-    elf_image->for_each_symbol([&](const ELFImage::Symbol& symbol) {
+    elf_image->for_each_symbol([&](const ELF::Image::Symbol& symbol) {
         dbg() << " - " << symbol.type() << " '" << symbol.name() << "' @ " << (void*)symbol.value() << ", size=" << symbol.size();
         if (symbol.name() == "module_init") {
             module->module_init = (ModuleInitPtr)(text_base + symbol.value());
@@ -4845,7 +4845,7 @@ OwnPtr<Process::ELFBundle> Process::elf_bundle() const
     bundle->region = MM.allocate_kernel_region_with_vmobject(const_cast<SharedInodeVMObject&>(vmobject), vmobject.size(), "ELF bundle", Region::Access::Read);
     if (!bundle->region)
         return nullptr;
-    bundle->elf_loader = make<ELFLoader>(bundle->region->vaddr().as_ptr(), bundle->region->size());
+    bundle->elf_loader = make<ELF::Loader>(bundle->region->vaddr().as_ptr(), bundle->region->size());
     return bundle;
 }
 
