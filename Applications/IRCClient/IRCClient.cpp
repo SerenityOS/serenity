@@ -1006,6 +1006,11 @@ void IRCClient::handle_whois_action(const String& nick)
     send_whois(nick);
 }
 
+void IRCClient::handle_ctcp_user_action(const String& nick, const String& message)
+{
+    send_ctcp_request(nick, message);
+}
+
 void IRCClient::handle_open_query_action(const String& nick)
 {
     ensure_query(nick);
@@ -1102,6 +1107,16 @@ void IRCClient::send_ctcp_response(const StringView& peer, const StringView& pay
     builder.append(0x01);
     auto message = builder.to_string();
     send_notice(peer, message);
+}
+
+void IRCClient::send_ctcp_request(const StringView& peer, const StringView& payload)
+{
+    StringBuilder builder;
+    builder.append(0x01);
+    builder.append(payload);
+    builder.append(0x01);
+    auto message = builder.to_string();
+    send_privmsg(peer, message);
 }
 
 void IRCClient::handle_ctcp_request(const StringView& peer, const StringView& payload)
