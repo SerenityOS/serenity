@@ -1041,7 +1041,7 @@ int main(int argc, char** argv)
             return strncmp(token.characters(), program.characters(), token.length());
         });
         if (!match)
-            return Vector<String>();
+            return {};
 
         String completion = *match;
         Vector<String> suggestions;
@@ -1054,22 +1054,24 @@ int main(int argc, char** argv)
         int index = match - cached_path.data();
         for (int i = index - 1; i >= 0 && cached_path[i].starts_with(token); --i) {
             suggestions.append(cached_path[i]);
-            editor.cut_mismatching_chars(completion, cached_path[i], token.length());
             seen_others = true;
         }
         for (size_t i = index + 1; i < cached_path.size() && cached_path[i].starts_with(token); ++i) {
-            editor.cut_mismatching_chars(completion, cached_path[i], token.length());
             suggestions.append(cached_path[i]);
             seen_others = true;
         }
         suggestions.append(cached_path[index]);
 
-        // If we have characters to add, add them.
-        if (completion.length() > token.length())
-            editor.insert(completion.substring(token.length(), completion.length() - token.length()));
         // If we have a single match, we add a space, unless we already have one.
-        if (!seen_others && (editor.cursor() == editor.buffer().size() || editor.buffer_at(editor.cursor()) != ' '))
-            editor.insert(' ');
+        if (!seen_others && (editor.cursor() == editor.buffer().size() || editor.buffer_at(editor.cursor()) != ' ')) {
+            suggestions[0] = String::format("%s ", suggestions[0].characters());
+        }
+
+        dbg() << "found " << suggestions.size() << " elements";
+        for (auto& el : suggestions)
+            dbg() << ">>> '" << el << "'";
+
+        editor.suggest(token.length(), 0);
 
         return suggestions;
     };
@@ -1078,6 +1080,7 @@ int main(int argc, char** argv)
         String path;
         Vector<String> suggestions;
 
+        editor.suggest(token.length(), 0);
         ssize_t last_slash = token.length() - 1;
         while (last_slash >= 0 && token[last_slash] != '/')
             --last_slash;
