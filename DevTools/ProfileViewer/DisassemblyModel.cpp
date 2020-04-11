@@ -46,8 +46,6 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
     X86::SimpleInstructionStream stream((const u8*)view.characters_without_null_termination(), view.length());
     X86::Disassembler disassembler(stream);
 
-    dbg() << "Disassembly for " << node.symbol() << " @ " << (const void*)node.address();
-
     size_t offset_into_symbol = 0;
     for (;;) {
         auto insn = disassembler.next();
@@ -56,7 +54,6 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
         FlatPtr address_in_profiled_program = symbol.value().value() + offset_into_symbol;
 
         auto disassembly = insn.value().to_string(address_in_profiled_program);
-        dbg() << disassembly;
 
         StringView instruction_bytes = view.substring_view(offset_into_symbol, insn.value().length());
         size_t samples_at_this_instruction = m_node.events_per_address().get(address_in_profiled_program).value_or(0);
