@@ -159,8 +159,11 @@ void print_help()
 
 int main(int argc, char** argv)
 {
-    // TODO: pledge & unveil
-    // TODO: check that strace still works
+    if (pledge("stdio proc exec rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     if (argc == 1)
         return usage();
 

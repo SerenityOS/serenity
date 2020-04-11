@@ -77,7 +77,6 @@ OwnPtr<DebugSession> DebugSession::exec_and_attach(const String& command)
         return nullptr;
     }
 
-    // TOOD: do we actually need this waitpid?
     if (waitpid(pid, nullptr, WSTOPPED) != pid) {
         perror("waitpid");
         return nullptr;
