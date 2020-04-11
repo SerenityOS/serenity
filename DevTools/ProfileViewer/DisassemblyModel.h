@@ -38,6 +38,7 @@ struct InstructionData {
      StringView bytes;
      FlatPtr address { 0 };
      u32 event_count { 0 };
+     float percent { 0 };
 };
 
 class DisassemblyModel final : public GUI::Model {
