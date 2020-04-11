@@ -210,4 +210,42 @@ URL URL::complete_url(const String& string) const
     return url;
 }
 
+void URL::set_protocol(const String& protocol)
+{
+    m_protocol = protocol;
+    m_valid = compute_validity();
+}
+
+void URL::set_host(const String& host)
+{
+    m_host = host;
+    m_valid = compute_validity();
+}
+
+void URL::set_path(const String& path)
+{
+    m_path = path;
+    m_valid = compute_validity();
+}
+
+void URL::set_query(const String& query)
+{
+    m_query = query;
+}
+
+bool URL::compute_validity() const
+{
+    // FIXME: This is by no means complete.
+    if (m_protocol.is_empty())
+        return false;
+    if (m_protocol == "http" || m_protocol == "https") {
+        if (m_host.is_empty())
+            return false;
+    } else if (m_protocol == "file") {
+        if (m_path.is_empty())
+            return false;
+    }
+    return true;
+}
+
 }
