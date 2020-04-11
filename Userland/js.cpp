@@ -42,6 +42,7 @@
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibLine/Editor.h>
+#include <signal.h>
 #include <stdio.h>
 
 Vector<String> repl_statements;
@@ -396,6 +397,15 @@ int main(int argc, char** argv)
         }
 
         editor = make<Line::Editor>();
+
+        signal(SIGINT, [](int) {
+            editor->interrupted();
+        });
+
+        signal(SIGWINCH, [](int) {
+            editor->resized();
+        });
+
         editor->initialize();
         editor->on_display_refresh = [syntax_highlight](Line::Editor& editor) {
             auto stylize = [&](Line::Span span, Line::Style styles) {
