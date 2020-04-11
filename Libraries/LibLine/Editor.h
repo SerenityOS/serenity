@@ -177,9 +177,11 @@ private:
     size_t m_chars_inserted_in_the_middle { 0 };
     size_t m_times_tab_pressed { 0 };
     size_t m_num_columns { 0 };
+    size_t m_num_lines { 1 };
     size_t m_cached_prompt_length { 0 };
     size_t m_old_prompt_length { 0 };
     size_t m_cached_buffer_size { 0 };
+    size_t m_lines_used_for_last_suggestions { 0 };
     bool m_cached_prompt_valid { false };
 
     // exact position before our prompt in the terminal
