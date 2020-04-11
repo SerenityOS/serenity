@@ -11,6 +11,7 @@ OBJS = \
     ../AK/StringView.o \
     ../Libraries/LibELF/Image.o \
     ../Libraries/LibELF/Loader.o \
+    ../Libraries/LibELF/Validation.o \
     ../Libraries/LibBareMetal/Output/Console.o \
     ../Libraries/LibBareMetal/Output/kprintf.o \
     ../Libraries/LibBareMetal/StdLib.o \
