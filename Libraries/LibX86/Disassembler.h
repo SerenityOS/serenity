@@ -27,12 +27,9 @@
 #pragma once
 
 #include <AK/Optional.h>
-#include <AK/Types.h>
 #include <LibX86/Instruction.h>
 
 namespace X86 {
-
-class InstructionMetadata;
 
 class Disassembler {
 public:
