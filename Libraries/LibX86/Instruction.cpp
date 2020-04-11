@@ -1170,7 +1170,8 @@ static String sib_to_string(u8 rm, u8 sib)
         builder.append(scale);
     } else {
         builder.append(base);
-        builder.append('+');
+        if (!base.is_empty() && !index.is_empty())
+            builder.append('+');
         builder.append(index);
         builder.append(scale);
     }
