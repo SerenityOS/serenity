@@ -88,6 +88,8 @@ enum class SegmentRegister {
     DS,
     FS,
     GS,
+    SegR6,
+    SegR7,
     None = 0xFF,
 };
 
