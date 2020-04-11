@@ -828,6 +828,9 @@ void build_opcode_tables_if_needed()
     build0F(0xBD, "BSR", OP_reg16_RM16, OP_reg32_RM32);
     build0F(0xBE, "MOVSX", OP_reg16_RM8, OP_reg32_RM8);
     build0F(0xBF, "0xBF", OP, "MOVSX", OP_reg32_RM16);
+    build0F(0xFC, "PADDB", OP_mm1_mm2m64);
+    build0F(0xFD, "PADDW", OP_mm1_mm2m64);
+    build0F(0xFE, "PADDD", OP_mm1_mm2m64);
     build0F(0xFF, "UD0", OP);
 
     has_built_tables = true;
