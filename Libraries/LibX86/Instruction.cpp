@@ -896,8 +896,6 @@ Instruction::Instruction(InstructionStream& stream, bool o32, bool a32)
             continue;
         }
         if (opbyte == Prefix::REPZ || opbyte == Prefix::REPNZ) {
-            // FIXME: What should we do here? Respect the first or last prefix?
-            ASSERT(!m_rep_prefix);
             m_rep_prefix = opbyte;
             continue;
         }
