@@ -277,31 +277,62 @@ bool Parser::parse_ere_dupl_symbol(Vector<StackValue>& operations)
     if (match(TokenType::LeftCurly)) {
         consume();
 
+        bool is_minimum { false };
         StringBuilder number1_builder;
         while (match(TokenType::OrdinaryCharacter)) {
             number1_builder.append(consume().value());
         }
         bool ok;
-        u64 number1 = number1_builder.build().to_uint(ok);
-        ASSERT(ok);
-        UNUSED_PARAM(number1);
+        size_t number1 = number1_builder.build().to_uint(ok);
+        if (!ok) {
+            m_parser_state.m_has_errors = true;
+            return false;
+        }
 
         if (match(TokenType::Comma)) {
             consume();
+            is_minimum = true;
         }
 
-        StringBuilder number2_builder;
-        while (match(TokenType::OrdinaryCharacter)) {
-            number2_builder.append(consume().value());
+        size_t number2 { 0 };
+        if (is_minimum) {
+            StringBuilder number2_builder;
+            while (match(TokenType::OrdinaryCharacter)) {
+                number2_builder.append(consume().value());
+            }
+            if (!number2_builder.is_empty()) {
+                bool ok2;
+                number2 = number2_builder.build().to_uint(ok2);
+                if (!ok || number2 < number1) {
+                    m_parser_state.m_has_errors = true;
+                    return false;
+                }
+            }
         }
-        bool ok2;
-        u64 number2 = number2_builder.build().to_uint(ok2);
-        ASSERT(ok2);
-        UNUSED_PARAM(number2);
+
+        // match number1-times (minmum or exactly)
+        Vector<StackValue> new_operations;
+        for (size_t i = 0; i < number1; ++i)
+            new_operations.append(operations);
+
+        if (number2 && number2 > number1) {
+            auto maximum = number2 - number1;
+            new_operations.empend(OpCode::ForkStay);
+            new_operations.empend(maximum * operations.size()); // Jump to the _END label
+
+            for (size_t i = 0; i < maximum; ++i)
+                new_operations.append(operations);
+        } else if (is_minimum) {
+            new_operations.empend(OpCode::ForkJump);
+            new_operations.empend(-operations.size() - 2); // Jump to the last iteration
+        }
+
+        operations = move(new_operations);
 
         consume(TokenType::RightCurly);
 
         // FIXME: Add OpCode for range based duplication
+
         return true;
 
     } else if (match(TokenType::Plus)) {
@@ -570,7 +601,7 @@ Parser::ParserResult Parser::parse()
     consume(TokenType::Eof);
 
 #ifdef REGEX_DEBUG
-    printf("[PARSER] Produced stack with %lu entries\n", m_bytes.size());
+    printf("[PARSER] Produced stack with %lu entries\n", m_parser_state.m_bytes.size());
 #endif
     return { m_parser_state.m_bytes, m_parser_state.match_groups };
 }

@@ -739,4 +739,179 @@ TEST_CASE(alternative_match_groups)
     regfree(&regex);
 }
 
+TEST_CASE(parens_qualifier_exact)
+{
+    String pattern = "(hello){3}";
+    regex_t regex;
+    static constexpr int num_matches { 5 };
+    regmatch_t matches[num_matches];
+    const char* match_str;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+
+    match_str = "hello";
+    EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOMATCH);
+    EXPECT_EQ(matches[0].match_count, 0u);
+
+    match_str = "hellohellohello";
+    EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, 1u);
+    EXPECT_EQ(matches[0].rm_so, 0u);
+    EXPECT_EQ(matches[0].rm_eo, 15u);
+    EXPECT_EQ(matches[1].rm_so, 10u);
+    EXPECT_EQ(matches[1].rm_eo, 15u);
+    EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "hellohellohello");
+    EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
+
+    match_str = "hellohellohellohello";
+    EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, 1u);
+    EXPECT_EQ(matches[0].rm_so, 0u);
+    EXPECT_EQ(matches[0].rm_eo, 15u);
+    EXPECT_EQ(matches[1].rm_so, 10u);
+    EXPECT_EQ(matches[1].rm_eo, 15u);
+    EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "hellohellohello");
+    EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
+
+    match_str = "test hellohellohello";
+    EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, 1u);
+    EXPECT_EQ(matches[0].rm_so, 5u);
+    EXPECT_EQ(matches[0].rm_eo, 20u);
+    EXPECT_EQ(matches[1].rm_so, 15u);
+    EXPECT_EQ(matches[1].rm_eo, 20u);
+    EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "hellohellohello");
+    EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
+
+    //    for (int i = 0; i < num_matches; ++i)
+    //        printf("Matches[%i].rm_so: %li, .rm_eo: %li\n", i, matches[i].rm_so, matches[i].rm_eo);
+
+    regfree(&regex);
+}
+
+TEST_CASE(parens_qualifier_minimum)
+{
+    String pattern = "(hello){3,}";
+    regex_t regex;
+    static constexpr int num_matches { 5 };
+    regmatch_t matches[num_matches];
+    const char* match_str;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+
+    match_str = "hello";
+    EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOMATCH);
+    EXPECT_EQ(matches[0].match_count, 0u);
+    for (int i = 0; i < num_matches; ++i)
+        printf("Matches[%i].rm_so: %li, .rm_eo: %li\n", i, matches[i].rm_so, matches[i].rm_eo);
+
+    match_str = "hellohellohello";
+    EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, 1u);
+    EXPECT_EQ(matches[0].rm_so, 0u);
+    EXPECT_EQ(matches[0].rm_eo, 15u);
+    EXPECT_EQ(matches[1].rm_so, 10u);
+    EXPECT_EQ(matches[1].rm_eo, 15u);
+    EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "hellohellohello");
+    EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
+
+    match_str = "hellohellohellohello";
+    EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, 1u);
+    EXPECT_EQ(matches[0].rm_so, 0u);
+    EXPECT_EQ(matches[0].rm_eo, 20u);
+    EXPECT_EQ(matches[1].rm_so, 15u);
+    EXPECT_EQ(matches[1].rm_eo, 20u);
+    EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "hellohellohellohello");
+    EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
+
+    match_str = "test hellohellohello";
+    EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, 1u);
+    EXPECT_EQ(matches[0].rm_so, 5u);
+    EXPECT_EQ(matches[0].rm_eo, 20u);
+    EXPECT_EQ(matches[1].rm_so, 15u);
+    EXPECT_EQ(matches[1].rm_eo, 20u);
+    EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "hellohellohello");
+    EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
+
+    for (int i = 0; i < num_matches; ++i)
+        printf("Matches[%i].rm_so: %li, .rm_eo: %li\n", i, matches[i].rm_so, matches[i].rm_eo);
+
+    match_str = "test hellohellohellohello";
+    EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, 1u);
+    EXPECT_EQ(matches[0].rm_so, 5u);
+    EXPECT_EQ(matches[0].rm_eo, 25u);
+    EXPECT_EQ(matches[1].rm_so, 20u);
+    EXPECT_EQ(matches[1].rm_eo, 25u);
+    EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "hellohellohellohello");
+    EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
+
+    for (int i = 0; i < num_matches; ++i)
+        printf("Matches[%i].rm_so: %li, .rm_eo: %li\n", i, matches[i].rm_so, matches[i].rm_eo);
+
+    regfree(&regex);
+}
+
+TEST_CASE(parens_qualifier_maximum)
+{
+    String pattern = "(hello){2,3}";
+    regex_t regex;
+    static constexpr int num_matches { 5 };
+    regmatch_t matches[num_matches];
+    const char* match_str;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+
+    match_str = "hello";
+    EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOMATCH);
+    EXPECT_EQ(matches[0].match_count, 0u);
+
+    match_str = "hellohellohello";
+    EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, 1u);
+    EXPECT_EQ(matches[0].rm_so, 0u);
+    EXPECT_EQ(matches[0].rm_eo, 15u);
+    EXPECT_EQ(matches[1].rm_so, 10u);
+    EXPECT_EQ(matches[1].rm_eo, 15u);
+    EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "hellohellohello");
+    EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
+
+    match_str = "hellohellohellohello";
+    EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, 1u);
+    EXPECT_EQ(matches[0].rm_so, 0u);
+    EXPECT_EQ(matches[0].rm_eo, 15u);
+    EXPECT_EQ(matches[1].rm_so, 10u);
+    EXPECT_EQ(matches[1].rm_eo, 15u);
+    EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "hellohellohello");
+    EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
+
+    match_str = "test hellohellohello";
+    EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, 1u);
+    EXPECT_EQ(matches[0].rm_so, 5u);
+    EXPECT_EQ(matches[0].rm_eo, 20u);
+    EXPECT_EQ(matches[1].rm_so, 15u);
+    EXPECT_EQ(matches[1].rm_eo, 20u);
+    EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "hellohellohello");
+    EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
+
+    match_str = "test hellohellohellohello";
+    EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, 1u);
+    EXPECT_EQ(matches[0].rm_so, 5u);
+    EXPECT_EQ(matches[0].rm_eo, 20u);
+    EXPECT_EQ(matches[1].rm_so, 15u);
+    EXPECT_EQ(matches[1].rm_eo, 20u);
+    EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "hellohellohello");
+    EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
+
+    //    for (int i = 0; i < num_matches; ++i)
+    //        printf("Matches[%i].rm_so: %li, .rm_eo: %li\n", i, matches[i].rm_so, matches[i].rm_eo);
+
+    regfree(&regex);
+}
+
 TEST_MAIN(Regex)
