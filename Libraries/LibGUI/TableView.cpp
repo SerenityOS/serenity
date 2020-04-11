@@ -106,10 +106,9 @@ void TableView::paint_event(PaintEvent& event)
             const Gfx::Font& font = column_metadata.font ? *column_metadata.font : this->font();
             bool is_key_column = model()->key_column() == column_index;
             Gfx::Rect cell_rect(horizontal_padding() + x_offset, y, column_width, item_height());
-            if (is_key_column) {
-                auto cell_rect_for_fill = cell_rect.inflated(horizontal_padding() * 2, 0);
+            auto cell_rect_for_fill = cell_rect.inflated(horizontal_padding() * 2, 0);
+            if (is_key_column)
                 painter.fill_rect(cell_rect_for_fill, key_column_background_color);
-            }
             auto cell_index = model()->index(row_index, column_index);
 
             if (auto* delegate = column_data(column_index).cell_painting_delegate.ptr()) {
@@ -134,7 +133,7 @@ void TableView::paint_event(PaintEvent& event)
                     auto cell_background_color = model()->data(cell_index, Model::Role::BackgroundColor);
                     if (cell_background_color.is_valid()) {
                         // FIXME: If all cells on a row provide a color, we should really fill the whole row!
-                        painter.fill_rect(cell_rect, cell_background_color.to_color(background_color));
+                        painter.fill_rect(cell_rect_for_fill, cell_background_color.to_color(background_color));
                     }
                     painter.draw_text(cell_rect, data.to_string(), font, column_metadata.text_alignment, text_color, Gfx::TextElision::Right);
                 }
