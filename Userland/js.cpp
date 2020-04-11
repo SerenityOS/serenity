@@ -544,6 +544,9 @@ int main(int argc, char** argv)
         };
 
         auto complete = [&interpreter, &editor = *editor](const String& token) -> Vector<String> {
+            if (token.length() == 0)
+                return {}; // nyeh
+
             StringView line { editor.buffer().data(), editor.cursor() };
             // we're only going to complete either
             //    - <N>
@@ -556,21 +559,16 @@ int main(int argc, char** argv)
             Function<void(const JS::Shape&, const StringView&)> list_all_properties = [&results, &list_all_properties](const JS::Shape& shape, auto& property_pattern) {
                 for (const auto& descriptor : shape.property_table()) {
                     if (descriptor.value.attributes & JS::Attribute::Enumerable) {
-                        if (descriptor.key.view().starts_with(property_pattern))
-                            if (!results.contains_slow(descriptor.key)) // hide duplicates
-                                results.append(descriptor.key);
+                        if (descriptor.key.view().starts_with(property_pattern)) {
+                            auto completion = descriptor.key;
+                            if (!results.contains_slow(completion)) { // hide duplicates
+                                results.append(completion);
+                            }
+                        }
                     }
                 }
                 if (const auto* prototype = shape.prototype()) {
                     list_all_properties(prototype->shape(), property_pattern);
-                }
-            };
-            auto complete = [&results, &editor](auto& property_pattern) {
-                if (results.size()) {
-                    auto completion = results.first().view();
-                    completion = completion.substring_view(property_pattern.length(), completion.length() - property_pattern.length());
-                    if (completion.length())
-                        editor.insert(completion);
                 }
             };
 
@@ -597,12 +595,14 @@ int main(int argc, char** argv)
                 const auto* object = variable.to_object(interpreter->heap());
                 const auto& shape = object->shape();
                 list_all_properties(shape, property_pattern);
-                complete(property_pattern);
+                if (results.size())
+                    editor.suggest(property_pattern.length());
                 return results;
             }
             const auto& variable = interpreter->global_object();
             list_all_properties(variable.shape(), token);
-            complete(token);
+            if (results.size())
+                editor.suggest(token.length());
             return results;
         };
         editor->on_tab_complete_first_token = [complete](auto& value) { return complete(value); };
