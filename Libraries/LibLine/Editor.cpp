@@ -407,6 +407,22 @@ String Editor::get_line(const String& prompt)
     }
 }
 
+void Editor::recalculate_origin()
+{
+    // changing the columns can affect our origin if
+    // the new size is smaller than our prompt, which would
+    // cause said prompt to take up more space, so we should
+    // compensate for that
+    if (m_cached_prompt_length >= m_num_columns) {
+        auto added_lines = (m_cached_prompt_length + 1) / m_num_columns - 1;
+        dbg() << "added lines: " << added_lines;
+        m_origin_x += added_lines;
+    }
+
+    // we also need to recalculate our cursor position
+    // but that will be calculated and applied at the next
+    // refresh cycle
+}
 void Editor::refresh_display()
 {
     auto cleanup = [&] {
@@ -436,8 +452,8 @@ void Editor::refresh_display()
             m_cached_prompt_valid = false;
             m_refresh_needed = true;
             swap(previous_num_columns, m_num_columns);
+            recalculate_origin();
             cleanup();
-            set_origin();
             swap(previous_num_columns, m_num_columns);
             has_cleaned_up = true;
         }
