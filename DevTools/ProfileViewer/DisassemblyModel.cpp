@@ -28,9 +28,27 @@
 #include "Profile.h"
 #include <AK/MappedFile.h>
 #include <LibELF/ELFLoader.h>
+#include <LibGUI/Painter.h>
 #include <LibX86/Disassembler.h>
 #include <ctype.h>
 #include <stdio.h>
+
+static const Gfx::Bitmap& heat_gradient()
+{
+    static RefPtr<Gfx::Bitmap> bitmap;
+    if (!bitmap) {
+        bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, { 100, 1 });
+        GUI::Painter painter(*bitmap);
+        painter.fill_rect_with_gradient(Orientation::Horizontal, bitmap->rect(), Color::from_rgb(0xffc080), Color::from_rgb(0xff3000));
+    }
+    return *bitmap;
+}
+
+static Color color_for_percent(int percent)
+{
+    ASSERT(percent >= 0 && percent <= 100);
+    return heat_gradient().get_pixel(percent, 0);
+}
 
 DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
     : m_profile(profile)
@@ -57,8 +75,9 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
 
         StringView instruction_bytes = view.substring_view(offset_into_symbol, insn.value().length());
         size_t samples_at_this_instruction = m_node.events_per_address().get(address_in_profiled_program).value_or(0);
+        float percent = ((float)samples_at_this_instruction / (float)m_node.event_count()) * 100.0f;
 
-        m_instructions.append({ insn.value(), disassembly, instruction_bytes, address_in_profiled_program, samples_at_this_instruction });
+        m_instructions.append({ insn.value(), disassembly, instruction_bytes, address_in_profiled_program, samples_at_this_instruction, percent });
 
         offset_into_symbol += insn.value().length();
     }
@@ -97,20 +116,47 @@ GUI::Model::ColumnMetadata DisassemblyModel::column_metadata(int column) const
     return {};
 }
 
+struct ColorPair {
+    Color background;
+    Color foreground;
+};
+
+static Optional<ColorPair> color_pair_for(const InstructionData& insn)
+{
+    if (insn.percent == 0)
+        return {};
+
+    Color background = color_for_percent(insn.percent);
+    Color foreground;
+    if (insn.percent > 50)
+        foreground = Color::White;
+    else
+        foreground = Color::Black;
+    return ColorPair { background, foreground };
+}
+
 GUI::Variant DisassemblyModel::data(const GUI::ModelIndex& index, Role role) const
 {
     auto& insn = m_instructions[index.row()];
 
     if (role == Role::BackgroundColor) {
-        if (insn.event_count > 0)
-            return Color(Color::Yellow);
-        return {};
+        auto colors = color_pair_for(insn);
+        if (!colors.has_value())
+            return {};
+        return colors.value().background;
+    }
+
+    if (role == Role::ForegroundColor) {
+        auto colors = color_pair_for(insn);
+        if (!colors.has_value())
+            return {};
+        return colors.value().foreground;
     }
 
     if (role == Role::Display) {
         if (index.column() == Column::SampleCount) {
             if (m_profile.show_percentages())
-                return ((float)insn.event_count / (float)m_profile.filtered_event_count()) * 100.0f;
+                return ((float)insn.event_count / (float)m_node.event_count()) * 100.0f;
             return insn.event_count;
         }
         if (index.column() == Column::Address)
