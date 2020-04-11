@@ -452,7 +452,10 @@ bool Parser::parse_ere_expression(Vector<StackValue>& stack)
             operations.empend(m_parser_state.match_groups);
 
             Vector<StackValue> sub_ops;
-            parse_extended_reg_exp(sub_ops);
+            if (!parse_extended_reg_exp(sub_ops) || !sub_ops.size()) {
+                m_parser_state.m_has_errors = true;
+                return false;
+            }
 
             operations.append(move(sub_ops));
 

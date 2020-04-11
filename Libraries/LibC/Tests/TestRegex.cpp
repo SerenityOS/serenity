@@ -232,6 +232,20 @@ TEST_CASE(parens)
     regfree(&regex);
 }
 
+TEST_CASE(parens_error)
+{
+    String pattern = "test()test";
+    regex_t regex;
+    static constexpr int num_matches { 5 };
+    regmatch_t matches[num_matches];
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_BADPAT);
+    EXPECT_EQ(regexec(&regex, "testhellotest", num_matches, matches, 0), REG_BADPAT);
+    EXPECT_EQ(matches[0].match_count, 0u);
+
+    regfree(&regex);
+}
+
 TEST_CASE(parens_qualifier_questionmark)
 {
     String pattern = "test(hello)?test";
