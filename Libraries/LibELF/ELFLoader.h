@@ -57,6 +57,7 @@ public:
     bool has_symbols() const { return m_symbol_count; }
 
     String symbolicate(u32 address, u32* offset = nullptr) const;
+    Optional<ELFImage::Symbol> find_symbol(u32 address, u32* offset = nullptr) const;
 
 private:
     bool layout();
@@ -85,6 +86,7 @@ private:
         StringView name;
 #ifndef KERNEL
         String demangled_name;
+        Optional<ELFImage::Symbol> symbol;
 #endif
     };
 #ifdef KERNEL

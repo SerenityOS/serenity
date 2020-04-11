@@ -414,3 +414,9 @@ bool ELFImage::validate_program_headers(const Elf32_Ehdr& elf_header, size_t fil
     }
     return true;
 }
+
+StringView ELFImage::Symbol::raw_data() const
+{
+    auto& section = this->section();
+    return { section.raw_data() + (value() - section.address()), size() };
+}
