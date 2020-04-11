@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "ELFLoader.h"
+#include "Loader.h"
 #include <AK/Demangle.h>
 #include <AK/Memory.h>
 #include <AK/QuickSort.h>
@@ -36,21 +36,23 @@
 #    define do_memcpy memcpy
 #endif
 
-//#define ELFLOADER_DEBUG
+//#define Loader_DEBUG
 
-ELFLoader::ELFLoader(const u8* buffer, size_t size)
+namespace ELF {
+
+Loader::Loader(const u8* buffer, size_t size)
     : m_image(buffer, size)
 {
     m_symbol_count = m_image.symbol_count();
 }
 
-ELFLoader::~ELFLoader()
+Loader::~Loader()
 {
 }
 
-bool ELFLoader::load()
+bool Loader::load()
 {
-#ifdef ELFLOADER_DEBUG
+#ifdef Loader_DEBUG
     m_image.dump();
 #endif
     if (!m_image.is_valid())
@@ -62,10 +64,10 @@ bool ELFLoader::load()
     return true;
 }
 
-bool ELFLoader::layout()
+bool Loader::layout()
 {
     bool failed = false;
-    m_image.for_each_program_header([&](const ELFImage::ProgramHeader& program_header) {
+    m_image.for_each_program_header([&](const Image::ProgramHeader& program_header) {
         if (program_header.type() == PT_TLS) {
 #ifdef KERNEL
             auto* tls_image = tls_section_hook(program_header.size_in_memory(), program_header.alignment());
@@ -84,7 +86,7 @@ bool ELFLoader::layout()
         }
         if (program_header.type() != PT_LOAD)
             return;
-#ifdef ELFLOADER_DEBUG
+#ifdef Loader_DEBUG
         kprintf("PH: V%p %u r:%u w:%u\n", program_header.vaddr().get(), program_header.size_in_memory(), program_header.is_readable(), program_header.is_writable());
 #endif
 #ifdef KERNEL
@@ -134,10 +136,10 @@ bool ELFLoader::layout()
     return !failed;
 }
 
-char* ELFLoader::symbol_ptr(const char* name)
+char* Loader::symbol_ptr(const char* name)
 {
     char* found_ptr = nullptr;
-    m_image.for_each_symbol([&](const ELFImage::Symbol symbol) {
+    m_image.for_each_symbol([&](const Image::Symbol symbol) {
         if (symbol.type() != STT_FUNC)
             return IterationDecision::Continue;
         if (symbol.name() == name)
@@ -152,7 +154,7 @@ char* ELFLoader::symbol_ptr(const char* name)
 }
 
 #ifndef KERNEL
-Optional<ELFImage::Symbol> ELFLoader::find_symbol(u32 address, u32* out_offset) const
+Optional<Image::Symbol> Loader::find_symbol(u32 address, u32* out_offset) const
 {
     if (!m_symbol_count)
         return {};
@@ -201,7 +203,7 @@ Optional<ELFImage::Symbol> ELFLoader::find_symbol(u32 address, u32* out_offset) 
 }
 #endif
 
-String ELFLoader::symbolicate(u32 address, u32* out_offset) const
+String Loader::symbolicate(u32 address, u32* out_offset) const
 {
     if (!m_symbol_count) {
         if (out_offset)
@@ -266,3 +268,5 @@ String ELFLoader::symbolicate(u32 address, u32* out_offset) const
         *out_offset = 0;
     return "??";
 }
+
+} // end namespace ELF

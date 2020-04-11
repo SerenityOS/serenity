@@ -61,10 +61,10 @@ LIBC_OBJS = \
        libcinit.o
 
 ELF_OBJS = \
-        ../LibELF/ELFDynamicObject.o \
-        ../LibELF/ELFDynamicLoader.o \
-        ../LibELF/ELFLoader.o \
-        ../LibELF/ELFImage.o
+        ../LibELF/DynamicObject.o \
+        ../LibELF/DynamicLoader.o \
+        ../LibELF/Loader.o \
+        ../LibELF/Image.o
 
 OBJS = $(AK_OBJS) $(LIBC_OBJS) $(ELF_OBJS)
 
