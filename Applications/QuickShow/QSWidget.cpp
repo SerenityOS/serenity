@@ -31,6 +31,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Orientation.h>
 #include <LibGfx/Palette.h>
 
 QSWidget::QSWidget()
@@ -147,6 +148,9 @@ void QSWidget::relayout()
     new_location.set_y((height() / 2) - (new_size.height() / 2) - (m_pan_origin.y() * scale_factor));
     m_bitmap_rect.set_location(new_location);
 
+    if (on_scale_change)
+        on_scale_change(m_scale);
+
     update();
 }
 
@@ -215,11 +219,8 @@ void QSWidget::mousewheel_event(GUI::MouseEvent& event)
         focus_point.x() - new_scale_factor / old_scale_factor * (focus_point.x() - m_pan_origin.x()),
         focus_point.y() - new_scale_factor / old_scale_factor * (focus_point.y() - m_pan_origin.y()));
 
-    relayout();
-
     if (old_scale != m_scale) {
-        if (on_scale_change)
-            on_scale_change(m_scale);
+        relayout();
     }
 }
 
@@ -265,6 +266,6 @@ void QSWidget::resize_window()
     if (new_size.height() < 200)
         new_size.set_height(200);
 
-    new_size.set_height(new_size.height());
+    new_size.set_height(new_size.height() + m_toolbar_height);
     window()->resize(new_size);
 }
