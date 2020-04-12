@@ -36,7 +36,7 @@ class Process;
 
 namespace Profiling {
 
-constexpr size_t max_stack_frame_count = 30;
+constexpr size_t max_stack_frame_count = 50;
 
 struct Sample {
     i32 pid;
