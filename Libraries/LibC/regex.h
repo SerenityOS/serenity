@@ -41,6 +41,7 @@ struct regex_t {
     size_t re_nsub;
     u8 cflags;
     u8 eflags;
+    size_t re_minlength;
     regex::VM* vm { nullptr };
 };
 
@@ -61,7 +62,8 @@ struct regmatch_t {
 // Values for the eflags parameter to the regexec() function:
 #define REG_NOTBOL 1 // The circumflex character (^), when taken as a special character, will not match the beginning of string.
 #define REG_NOTEOL (REG_NOTBOL << 1)   // The dollar sign ($), when taken as a special character, will not match the end of string.
-#define REG_MATCHALL (REG_NOTBOL << 2) // Match all occurences of the character - not posix compliant!
+#define REG_MATCHALL (REG_NOTBOL << 2) // Match all occurences of the character - extension to posix
+#define REG_STATS (REG_NOTBOL << 3)    // Print stats for a match to stdout
 
 #define REG_MAX_RECURSE 5000
 
@@ -207,7 +209,8 @@ public:
 
     struct ParserResult {
         Vector<StackValue> m_bytes;
-        size_t match_groups;
+        size_t m_match_groups;
+        size_t m_min_match_length;
     };
 
     ParserResult parse();
@@ -224,18 +227,19 @@ private:
     bool match_meta_chars();
     bool match_ere_quoted_chars();
     bool match_ere_dupl_symbol();
-    bool parse_ere_dupl_symbol(Vector<StackValue>&);
-    bool parse_ere_expression(Vector<StackValue>&);
-    bool parse_extended_reg_exp(Vector<StackValue>&);
+    bool parse_ere_dupl_symbol(Vector<StackValue>&, size_t& min_length);
+    bool parse_ere_expression(Vector<StackValue>&, size_t& min_length);
+    bool parse_extended_reg_exp(Vector<StackValue>&, size_t& min_length);
     void reset();
 
     struct ParserState {
         Lexer m_lexer;
         Token m_current_token;
         bool m_has_errors = false;
-        explicit ParserState(Lexer);
         Vector<StackValue> m_bytes;
-        size_t match_groups { 0 };
+        size_t m_match_groups { 0 };
+        size_t m_min_match_length { 0 };
+        explicit ParserState(Lexer);
     };
 
     ParserState m_parser_state;
@@ -254,8 +258,8 @@ public:
         size_t m_ops { 0 };
     };
 
-    MatchResult match(const StringView view, size_t max_matches_result, size_t match_groups);
-    MatchResult match_all(const StringView view, size_t max_matches_result, size_t match_groups);
+    MatchResult match(const StringView view, size_t max_matches_result, size_t match_groups, size_t min_length);
+    MatchResult match_all(const StringView view, size_t max_matches_result, size_t match_groups, size_t min_length);
     const Vector<StackValue>& bytes() const { return m_bytecode; }
 
 private:

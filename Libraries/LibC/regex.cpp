@@ -272,7 +272,7 @@ bool Parser::match_ere_dupl_symbol()
         || type == TokenType::LeftCurly);
 }
 
-bool Parser::parse_ere_dupl_symbol(Vector<StackValue>& operations)
+bool Parser::parse_ere_dupl_symbol(Vector<StackValue>& operations, size_t& min_length)
 {
     if (match(TokenType::LeftCurly)) {
         consume();
@@ -309,6 +309,7 @@ bool Parser::parse_ere_dupl_symbol(Vector<StackValue>& operations)
                 }
             }
         }
+        min_length *= number1;
 
         // match number1-times (minmum or exactly)
         Vector<StackValue> new_operations;
@@ -355,6 +356,7 @@ bool Parser::parse_ere_dupl_symbol(Vector<StackValue>& operations)
 
     } else if (match(TokenType::Asterisk)) {
         consume();
+        min_length = 0;
 
         // LABEL _START
         // FORKSTAY _END  (FORKJUMP -> Greedy)
@@ -386,6 +388,7 @@ bool Parser::parse_ere_dupl_symbol(Vector<StackValue>& operations)
 
     } else if (match(TokenType::Questionmark)) {
         consume();
+        min_length = 0;
 
         // FORKSTAY _END (FORKJUMP -> Greedy)
         // REGEXP
@@ -413,12 +416,13 @@ bool Parser::parse_ere_dupl_symbol(Vector<StackValue>& operations)
     return false;
 }
 
-bool Parser::parse_ere_expression(Vector<StackValue>& stack)
+bool Parser::parse_ere_expression(Vector<StackValue>& stack, size_t& min_length)
 {
     Vector<StackValue> operations;
+    size_t length = 0;
+
     for (;;) {
         if (match(TokenType::OrdinaryCharacter)) {
-            size_t length = 0;
             Token start_token = m_parser_state.m_current_token;
             Token last_token = m_parser_state.m_current_token;
             for (;;) {
@@ -444,6 +448,7 @@ bool Parser::parse_ere_expression(Vector<StackValue>& stack)
         }
 
         else if (match(TokenType::Period)) {
+            length = 1;
             consume();
             operations.empend(OpCode::Compare);
             operations.empend(0);
@@ -452,6 +457,7 @@ bool Parser::parse_ere_expression(Vector<StackValue>& stack)
         }
 
         else if (match(TokenType::EscapeSequence)) {
+            length = 1;
             Token t = consume();
             operations.empend(OpCode::Compare);
 #ifdef REGEX_DEBUG
@@ -484,10 +490,10 @@ bool Parser::parse_ere_expression(Vector<StackValue>& stack)
             consume(TokenType::LeftParen);
 
             operations.empend(OpCode::SaveLeftGroup);
-            operations.empend(m_parser_state.match_groups);
+            operations.empend(m_parser_state.m_match_groups);
 
             Vector<StackValue> sub_ops;
-            if (!parse_extended_reg_exp(sub_ops) || !sub_ops.size()) {
+            if (!parse_extended_reg_exp(sub_ops, length) || !sub_ops.size()) {
                 m_parser_state.m_has_errors = true;
                 return false;
             }
@@ -496,9 +502,9 @@ bool Parser::parse_ere_expression(Vector<StackValue>& stack)
 
             consume(TokenType::RightParen);
             operations.empend(OpCode::SaveRightGroup);
-            operations.empend(m_parser_state.match_groups);
+            operations.empend(m_parser_state.m_match_groups);
 
-            ++m_parser_state.match_groups;
+            ++m_parser_state.m_match_groups;
 
             break;
         }
@@ -507,27 +513,31 @@ bool Parser::parse_ere_expression(Vector<StackValue>& stack)
     }
 
     if (match_ere_dupl_symbol()) {
-        parse_ere_dupl_symbol(operations);
+        parse_ere_dupl_symbol(operations, length);
     }
 
     stack.append(move(operations));
+    min_length = length;
 
     return true;
 }
 
-bool Parser::parse_extended_reg_exp(Vector<StackValue>& stack)
+bool Parser::parse_extended_reg_exp(Vector<StackValue>& stack, size_t& min_length)
 {
     Vector<StackValue> operations;
+    size_t length { 0 };
+
     for (;;) {
-        if (!parse_ere_expression(operations))
+        if (!parse_ere_expression(operations, length))
             break;
 
         if (match(TokenType::Pipe)) {
             consume(TokenType::Pipe);
 
             Vector<StackValue> operations_alternative;
+            size_t alt_length { 0 };
 
-            if (parse_extended_reg_exp(operations_alternative) && operations_alternative.size()) {
+            if (parse_extended_reg_exp(operations_alternative, alt_length) && operations_alternative.size()) {
 
                 // FORKSTAY _ALT
                 // REGEXP ALT1
@@ -555,6 +565,7 @@ bool Parser::parse_extended_reg_exp(Vector<StackValue>& stack)
                 // LABEL _END = operations_alternative.size
 
                 operations = move(new_operations);
+                length = min(alt_length, length);
 
             } else {
                 m_parser_state.m_has_errors = true;
@@ -564,6 +575,7 @@ bool Parser::parse_extended_reg_exp(Vector<StackValue>& stack)
     }
 
     stack.append(move(operations));
+    min_length = length;
     return true;
 }
 
@@ -597,13 +609,13 @@ Token Parser::consume(TokenType type)
 
 Parser::ParserResult Parser::parse()
 {
-    parse_extended_reg_exp(m_parser_state.m_bytes);
+    parse_extended_reg_exp(m_parser_state.m_bytes, m_parser_state.m_min_match_length);
     consume(TokenType::Eof);
 
 #ifdef REGEX_DEBUG
     printf("[PARSER] Produced stack with %lu entries\n", m_parser_state.m_bytes.size());
 #endif
-    return { m_parser_state.m_bytes, m_parser_state.match_groups };
+    return { m_parser_state.m_bytes, m_parser_state.m_match_groups, m_parser_state.m_min_match_length };
 }
 
 void Parser::reset()
@@ -620,7 +632,7 @@ VM::MatchState::MatchState(size_t instructionp, size_t stringp, StringView view)
 {
 }
 
-VM::MatchResult VM::match(StringView view, size_t max_matches_result, size_t match_groups)
+VM::MatchResult VM::match(StringView view, size_t max_matches_result, size_t match_groups, size_t min_length)
 {
     regoff_t match_start;
     bool match;
@@ -634,6 +646,9 @@ VM::MatchResult VM::match(StringView view, size_t max_matches_result, size_t mat
     for (size_t j = 0; j < match_groups; ++j)
         state.m_left.append(-1);
     for (size_t i = 0; i < view.length(); ++i) {
+        if (min_length && min_length > view.length() - i)
+            break;
+
         state.m_stringp = i;
         state.m_instructionp = 0;
         match_start = i;
@@ -652,7 +667,7 @@ VM::MatchResult VM::match(StringView view, size_t max_matches_result, size_t mat
     return { 1, move(state.m_matches), state.m_ops };
 }
 
-VM::MatchResult VM::match_all(StringView view, size_t max_matches_result, size_t match_groups)
+VM::MatchResult VM::match_all(StringView view, size_t max_matches_result, size_t match_groups, size_t min_length)
 {
     regoff_t match_start;
     size_t match_count { 0 };
@@ -666,6 +681,8 @@ VM::MatchResult VM::match_all(StringView view, size_t max_matches_result, size_t
     for (size_t j = 0; j < match_groups; ++j)
         state.m_left.append(-1);
     for (size_t i = 0; i < view.length(); ++i) {
+        if (min_length && min_length > view.length() - i)
+            break;
         for (size_t j = 0; j < match_groups; ++j)
             state.m_left.at(j) = -1;
 
@@ -913,6 +930,8 @@ bool VM::match_recurse(MatchState& state, size_t recursion_level)
 
 int regcomp(regex_t* preg, const char* pattern, int cflags)
 {
+    *preg = { 0, 0, 0, 0, nullptr };
+
     if (!(cflags & REG_EXTENDED))
         return REG_ENOSYS;
 
@@ -950,7 +969,12 @@ int regcomp(regex_t* preg, const char* pattern, int cflags)
     if (parser.has_errors())
         return REG_BADPAT;
 
-    preg->re_nsub = result.match_groups;
+    preg->re_nsub = result.m_match_groups;
+    preg->re_minlength = result.m_min_match_length;
+
+#ifdef REGEX_DEBUG
+    printf("Minlength for pattern '%s' = %lu\n", pattern, preg->re_minlength);
+#endif
 
     preg->vm = new regex::VM(result.m_bytes, move(s));
     return REG_NOERR;
@@ -968,9 +992,9 @@ int regexec(const regex_t* preg, const char* string, size_t nmatch, regmatch_t p
     regex::VM::MatchResult result;
 
     if (eflags & REG_MATCHALL) {
-        result = vm.match_all(string, nmatch, preg->re_nsub);
+        result = vm.match_all(string, nmatch, preg->re_nsub, preg->re_minlength);
     } else {
-        result = vm.match(string, nmatch, preg->re_nsub);
+        result = vm.match(string, nmatch, preg->re_nsub, preg->re_minlength);
     }
 
     if (result.m_match_count) {
@@ -987,26 +1011,25 @@ int regexec(const regex_t* preg, const char* string, size_t nmatch, regmatch_t p
         pmatch[0].match_count = result.m_match_count;
 
     if (result.m_match_count) {
-#if defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS)
-        if (eflags & REG_MATCHALL)
-            printf("[regexec] match_all successful, found %lu occurences, took %lu operations.\n", result.m_match_count, result.m_ops);
-        else
-            printf("[regexec] match successful, took %lu operations.\n", result.m_ops);
+        if (eflags & REG_STATS) {
+            if (eflags & REG_MATCHALL)
+                printf("[regexec] match_all successful, found %lu occurences, took %lu operations.\n", result.m_match_count, result.m_ops);
+            else
+                printf("[regexec] match successful, took %lu operations.\n", result.m_ops);
+        }
 
-#endif
         return REG_NOERR;
     }
 
     for (size_t i = 0; i < nmatch; ++i)
         pmatch[i] = { -1, -1, 0 };
 
-#if defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS)
-    if (eflags & REG_MATCHALL)
-        printf("[regexec] match_all not successful, found %lu occurences, took %lu operations.\n", result.m_match_count, result.m_ops);
-    else
-        printf("[regexec] match not successful, took %lu operations.\n", result.m_ops);
-
-#endif
+    if (eflags & REG_STATS) {
+        if (eflags & REG_MATCHALL)
+            printf("[regexec] match_all not successful, found %lu occurences, took %lu operations.\n", result.m_match_count, result.m_ops);
+        else
+            printf("[regexec] match not successful, took %lu operations.\n", result.m_ops);
+    }
 
     return REG_NOMATCH;
 }
