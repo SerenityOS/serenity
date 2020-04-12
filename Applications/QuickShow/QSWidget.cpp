@@ -109,6 +109,18 @@ void QSWidget::navigate(Directions direction)
     this->load_from_file(m_files_in_same_dir.at(index));
 }
 
+void QSWidget::set_scale(int scale)
+{
+
+    if (scale < 10)
+        scale = 10;
+    if (scale > 1000)
+        scale = 1000;
+
+    m_scale = scale;
+    relayout();
+}
+
 void QSWidget::relayout()
 {
     if (m_bitmap.is_null())
@@ -210,12 +222,13 @@ void QSWidget::load_from_file(const String& path)
         return;
     }
 
-    window()->resize(bitmap->size());
-
     m_path = path;
     m_bitmap = bitmap;
     m_scale = 100;
     m_pan_origin = { 0, 0 };
+
+    resize_window();
+
     if (on_scale_change)
         on_scale_change(m_scale);
     relayout();
