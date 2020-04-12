@@ -32,6 +32,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/Model.h>
+#include <LibGUI/Splitter.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Window.h>
@@ -64,15 +65,14 @@ int main(int argc, char** argv)
 
     main_widget.add<ProfileTimelineWidget>(*profile);
 
-    auto& bottom_container = main_widget.add<GUI::Widget>();
-    bottom_container.set_layout<GUI::VerticalBoxLayout>();
+    auto& bottom_splitter = main_widget.add<GUI::VerticalSplitter>();
 
-    auto& tree_view = bottom_container.add<GUI::TreeView>();
+    auto& tree_view = bottom_splitter.add<GUI::TreeView>();
     tree_view.set_headers_visible(true);
     tree_view.set_size_columns_to_fit_content(true);
     tree_view.set_model(profile->model());
 
-    auto& disassembly_view = bottom_container.add<GUI::TableView>();
+    auto& disassembly_view = bottom_splitter.add<GUI::TableView>();
     disassembly_view.set_size_columns_to_fit_content(true);
 
     tree_view.on_selection = [&](auto& index) {
