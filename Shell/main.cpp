@@ -1067,10 +1067,6 @@ int main(int argc, char** argv)
             suggestions[0] = String::format("%s ", suggestions[0].characters());
         }
 
-        dbg() << "found " << suggestions.size() << " elements";
-        for (auto& el : suggestions)
-            dbg() << ">>> '" << el << "'";
-
         editor.suggest(token.length(), 0);
 
         return suggestions;
