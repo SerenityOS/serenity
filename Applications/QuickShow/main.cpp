@@ -102,6 +102,27 @@ int main(int argc, char** argv)
         }
     };
 
+    // Actions
+    auto go_first_action = GUI::Action::create("First", { Mod_None, Key_Home }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-first.png"),
+        [&](auto&) {
+            widget.navigate(QSWidget::Directions::First);
+        });
+
+    auto go_back_action = GUI::Action::create("Back", { Mod_None, Key_Left }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"),
+        [&](auto&) {
+            widget.navigate(QSWidget::Directions::Back);
+        });
+
+    auto go_forward_action = GUI::Action::create("Forward", { Mod_None, Key_Right }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"),
+        [&](auto&) {
+            widget.navigate(QSWidget::Directions::Forward);
+        });
+
+    auto go_last_action = GUI::Action::create("Last", { Mod_None, Key_End }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-last.png"),
+        [&](auto&) {
+            widget.navigate(QSWidget::Directions::Last);
+        });
+
     auto menubar = make<GUI::MenuBar>();
 
     auto& app_menu = menubar->add_menu("QuickShow");
@@ -115,6 +136,12 @@ int main(int argc, char** argv)
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app.quit();
     }));
+
+    auto& navigate_menu = menubar->add_menu("Navigate");
+    navigate_menu.add_action(go_first_action);
+    navigate_menu.add_action(go_back_action);
+    navigate_menu.add_action(go_forward_action);
+    navigate_menu.add_action(go_last_action);
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {

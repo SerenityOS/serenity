@@ -34,11 +34,19 @@ class QSLabel;
 class QSWidget final : public GUI::Frame {
     C_OBJECT(QSWidget)
 public:
+    enum Directions {
+        First,
+        Back,
+        Forward,
+        Last
+    };
+
     virtual ~QSWidget() override;
 
     const Gfx::Bitmap* bitmap() const { return m_bitmap.ptr(); }
     const String& path() const { return m_path; }
 
+    void navigate(Directions);
     void load_from_file(const String&);
 
     Function<void(int)> on_scale_change;
@@ -65,4 +73,5 @@ private:
 
     Gfx::Point m_click_position;
     Gfx::FloatPoint m_saved_pan_origin;
+    Vector<String> m_files_in_same_dir;
 };
