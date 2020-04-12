@@ -27,6 +27,7 @@
 #include "WindowList.h"
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
+#include <LibGUI/HorizontalStackView.h>
 
 class TaskbarWindow final : public GUI::Window {
     C_OBJECT(TaskbarWindow)
@@ -37,11 +38,15 @@ public:
     int taskbar_height() const { return 28; }
 
 private:
+    Gfx::Size get_button_size() const { return Gfx::Size(140, 22); }
     void create_quick_launch_bar();
+    void create_open_apps_bar();
     void on_screen_rect_change(const Gfx::Rect&);
     NonnullRefPtr<GUI::Button> create_button(const WindowIdentifier&);
+    void remove_button(const WindowIdentifier&);
 
     virtual void wm_event(GUI::WMEvent&) override;
 
     RefPtr<Gfx::Bitmap> m_default_icon;
+    RefPtr<GUI::HorizontalStackView> m_open_apps_widget;
 };

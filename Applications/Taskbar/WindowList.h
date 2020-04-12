@@ -90,6 +90,7 @@ public:
     void remove_window(const WindowIdentifier&);
 
     Function<NonnullRefPtr<GUI::Button>(const WindowIdentifier&)> aid_create_button;
+    Function<void(const WindowIdentifier&)> aid_remove_button;
 
 private:
     HashMap<WindowIdentifier, NonnullOwnPtr<Window>> m_windows;

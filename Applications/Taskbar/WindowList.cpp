@@ -64,5 +64,8 @@ Window& WindowList::ensure_window(const WindowIdentifier& identifier)
 
 void WindowList::remove_window(const WindowIdentifier& identifier)
 {
+    auto it = m_windows.find(identifier);
+    if (it != m_windows.end())
+        aid_remove_button(identifier);
     m_windows.remove(identifier);
 }

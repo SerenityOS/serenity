@@ -34,6 +34,7 @@
 #include <LibGUI/Desktop.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/Window.h>
+#include <LibGUI/HorizontalStackView.h>
 #include <stdio.h>
 
 //#define EVENT_DEBUG
@@ -62,7 +63,12 @@ TaskbarWindow::TaskbarWindow()
         return create_button(identifier);
     };
 
+    WindowList::the().aid_remove_button = [this](auto& identifier) {
+        remove_button(identifier);
+    };
+
     create_quick_launch_bar();
+    create_open_apps_bar();
 }
 
 TaskbarWindow::~TaskbarWindow()
@@ -126,6 +132,17 @@ void TaskbarWindow::create_quick_launch_bar()
     quick_launch_bar.set_preferred_size(total_width, 22);
 }
 
+void TaskbarWindow::create_open_apps_bar() 
+{
+    m_open_apps_widget = main_widget()->add<GUI::HorizontalStackView>();
+    m_open_apps_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    m_open_apps_widget->layout()->set_spacing(3);
+    m_open_apps_widget->layout()->set_margins({ 3, 0, 3, 0 });
+    m_open_apps_widget->set_frame_thickness(0);
+    m_open_apps_widget->set_preferred_size(0, 22);
+    m_open_apps_widget->force_scrollbars_invisible(true);
+} 
+
 void TaskbarWindow::on_screen_rect_change(const Gfx::Rect& rect)
 {
     Gfx::Rect new_rect { rect.x(), rect.bottom() - taskbar_height() + 1, rect.width(), taskbar_height() };
@@ -134,13 +151,19 @@ void TaskbarWindow::on_screen_rect_change(const Gfx::Rect& rect)
 
 NonnullRefPtr<GUI::Button> TaskbarWindow::create_button(const WindowIdentifier& identifier)
 {
-    auto& button = main_widget()->add<TaskbarButton>(identifier);
+    auto& button = m_open_apps_widget->add<TaskbarButton>(identifier);
     button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    button.set_preferred_size(140, 22);
+    button.set_preferred_size(get_button_size().width(), get_button_size().height());
     button.set_checkable(true);
     button.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     button.set_icon(*m_default_icon);
+    m_open_apps_widget->add_to_scrollbar_range(get_button_size());
     return button;
+}
+
+void TaskbarWindow::remove_button(const WindowIdentifier&)
+{
+    m_open_apps_widget->rem_from_scrollbar_range(get_button_size());
 }
 
 static bool should_include_window(GUI::WindowType window_type)
@@ -211,9 +234,11 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
         if (window.is_minimized()) {
             window.button()->set_foreground_color(Color::DarkGray);
             window.button()->set_text(String::format("[%s]", changed_event.title().characters()));
+            m_open_apps_widget->scroll_into_view(window.button()->relative_rect(), Orientation::Horizontal);
         } else {
             window.button()->set_foreground_color(Color::Black);
             window.button()->set_text(changed_event.title());
+            m_open_apps_widget->scroll_into_view(window.button()->relative_rect(), Orientation::Horizontal);
         }
         window.button()->set_checked(changed_event.is_active());
         break;
