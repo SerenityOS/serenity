@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "DebugSession.h"
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
 #include <AK/Demangle.h>
@@ -33,6 +32,7 @@
 #include <AK/kmalloc.h>
 #include <LibC/sys/arch/i386/regs.h>
 #include <LibCore/File.h>
+#include <LibDebug/DebugSession.h>
 #include <LibX86/Disassembler.h>
 #include <LibX86/Instruction.h>
 #include <signal.h>
