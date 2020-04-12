@@ -1,6 +1,7 @@
 OBJS = \
     AboutDialog.o \
     AbstractButton.o \
+    AbstractStackView.o \
     AbstractTableView.o \
     AbstractView.o \
     Action.o \
@@ -27,6 +28,7 @@ OBJS = \
     FontDatabase.o \
     Frame.o \
     GroupBox.o \
+    HorizontalStackView.o \
     Icon.o \
     InputBox.o \
     ItemView.o \
@@ -68,6 +70,7 @@ OBJS = \
     TreeView.o \
     UndoStack.o \
     Variant.o \
+    VerticalStackView.o \
     Widget.o \
     Window.o \
     WindowServerConnection.o
