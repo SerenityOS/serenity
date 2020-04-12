@@ -143,6 +143,26 @@ int main(int argc, char** argv)
             widget.navigate(QSWidget::Directions::Last);
         });
 
+    auto full_sceen_action = GUI::CommonActions::make_fullscreen_action(
+        [&](auto&) {
+            window->set_fullscreen(!window->is_fullscreen());
+        });
+
+    auto zoom_in_action = GUI::Action::create("Zoom In", { Mod_None, Key_Plus }, Gfx::Bitmap::load_from_file("/res/icons/16x16/zoom-in.png"),
+        [&](auto&) {
+            widget.set_scale(widget.scale() + 10);
+        });
+
+    auto zoom_reset_action = GUI::Action::create("Zoom 100%", { Mod_None, Key_0 },
+        [&](auto&) {
+            widget.set_scale(100);
+        });
+
+    auto zoom_out_action = GUI::Action::create("Zoom Out", { Mod_None, Key_Minus }, Gfx::Bitmap::load_from_file("/res/icons/16x16/zoom-out.png"),
+        [&](auto&) {
+            widget.set_scale(widget.scale() - 10);
+        });
+
     auto menubar = make<GUI::MenuBar>();
 
     auto& app_menu = menubar->add_menu("QuickShow");
@@ -168,6 +188,13 @@ int main(int argc, char** argv)
     navigate_menu.add_action(go_back_action);
     navigate_menu.add_action(go_forward_action);
     navigate_menu.add_action(go_last_action);
+
+    auto& view_menu = menubar->add_menu("View");
+    view_menu.add_action(full_sceen_action);
+    view_menu.add_separator();
+    view_menu.add_action(zoom_in_action);
+    view_menu.add_action(zoom_reset_action);
+    view_menu.add_action(zoom_out_action);
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {
