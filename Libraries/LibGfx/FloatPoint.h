@@ -29,6 +29,7 @@
 #include <AK/LogStream.h>
 #include <AK/String.h>
 #include <LibGfx/Orientation.h>
+#include <LibGfx/Point.h>
 
 namespace Gfx {
 
@@ -42,6 +43,13 @@ public:
         , m_y(y)
     {
     }
+
+    explicit FloatPoint(const Point& other)
+        : m_x(other.x())
+        , m_y(other.y())
+    {
+    }
+
     float x() const { return m_x; }
     float y() const { return m_y; }
 

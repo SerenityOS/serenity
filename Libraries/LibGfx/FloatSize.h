@@ -29,6 +29,7 @@
 #include <AK/LogStream.h>
 #include <AK/String.h>
 #include <LibGfx/Orientation.h>
+#include <LibGfx/Size.h>
 
 namespace Gfx {
 
@@ -38,6 +39,11 @@ public:
     FloatSize(float w, float h)
         : m_width(w)
         , m_height(h)
+    {
+    }
+    explicit FloatSize(const Size& other)
+        : m_width(other.width())
+        , m_height(other.height())
     {
     }
 
