@@ -158,7 +158,8 @@ void Interpreter::set_variable(const FlyString& name, Value value, bool first_as
 
 Optional<Value> Interpreter::get_variable(const FlyString& name)
 {
-    if (name == "this")
+    static FlyString this_name = "this";
+    if (name == this_name)
         return this_value();
 
     for (ssize_t i = m_scope_stack.size() - 1; i >= 0; --i) {
