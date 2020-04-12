@@ -64,7 +64,7 @@ static Document* document_from(JS::Interpreter& interpreter)
     if (!this_object)
         return {};
     if (StringView("DocumentWrapper") != this_object->class_name()) {
-        interpreter.throw_exception<JS::Error>("TypeError", "That's not a DocumentWrapper, bro.");
+        interpreter.throw_exception<JS::TypeError>("That's not a DocumentWrapper, bro.");
         return {};
     }
     return &static_cast<DocumentWrapper*>(this_object)->node();
