@@ -130,10 +130,10 @@ void TableView::paint_event(PaintEvent& event)
                         text_color = is_focused() ? palette().selection_text() : palette().inactive_selection_text();
                     else
                         text_color = model()->data(cell_index, Model::Role::ForegroundColor).to_color(palette().color(foreground_role()));
-                    auto cell_background_color = model()->data(cell_index, Model::Role::BackgroundColor);
-                    if (cell_background_color.is_valid()) {
-                        // FIXME: If all cells on a row provide a color, we should really fill the whole row!
-                        painter.fill_rect(cell_rect_for_fill, cell_background_color.to_color(background_color));
+                    if (!is_selected_row) {
+                        auto cell_background_color = model()->data(cell_index, Model::Role::BackgroundColor);
+                        if (cell_background_color.is_valid())
+                            painter.fill_rect(cell_rect_for_fill, cell_background_color.to_color(background_color));
                     }
                     painter.draw_text(cell_rect, data.to_string(), font, column_metadata.text_alignment, text_color, Gfx::TextElision::Right);
                 }
