@@ -37,6 +37,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/ToolBar.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <stdio.h>
@@ -66,8 +67,13 @@ int main(int argc, char** argv)
     window->set_rect(200, 200, 300, 200);
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-image.png"));
 
-    auto& widget = window->set_main_widget<QSWidget>();
+    auto& root_widget = window->set_main_widget<GUI::Widget>();
+    root_widget.set_layout<GUI::VerticalBoxLayout>();
+    root_widget.layout()->set_spacing(0);
 
+    auto& main_toolbar = root_widget.add<GUI::ToolBar>();
+
+    auto& widget = root_widget.add<QSWidget>();
     auto update_window_title = [&](int scale) {
         if (widget.bitmap())
             window->set_title(String::format("%s %s %d%% - QuickShow", widget.path().characters(), widget.bitmap()->size().to_string().characters(), scale));
@@ -113,7 +119,7 @@ int main(int argc, char** argv)
     auto delete_action = GUI::CommonActions::make_delete_action(
         [&](auto&) {
             auto path = widget.path();
-            if(path.is_empty())
+            if (path.is_empty())
                 return;
 
             auto msgbox_result = GUI::MessageBox::show(String::format("Really delete %s?", path.characters()),
@@ -190,6 +196,7 @@ int main(int argc, char** argv)
     auto full_sceen_action = GUI::CommonActions::make_fullscreen_action(
         [&](auto&) {
             window->set_fullscreen(!window->is_fullscreen());
+            main_toolbar.set_visible(!window->is_fullscreen());
         });
 
     auto zoom_in_action = GUI::Action::create("Zoom In", { Mod_None, Key_Plus }, Gfx::Bitmap::load_from_file("/res/icons/16x16/zoom-in.png"),
@@ -206,6 +213,27 @@ int main(int argc, char** argv)
         [&](auto&) {
             widget.set_scale(widget.scale() - 10);
         });
+    auto hide_show_toolbar_action = GUI::Action::create("Hide/Show Toolbar", { Mod_Ctrl, Key_T },
+        [&](auto&) {
+            main_toolbar.set_visible(!main_toolbar.is_visible());
+
+            if (main_toolbar.is_visible()) {
+                widget.set_toolbar_height(main_toolbar.height());
+            } else {
+                widget.set_toolbar_height(0);
+            }
+        });
+
+    main_toolbar.add_action(open_action);
+    main_toolbar.add_action(delete_action);
+    main_toolbar.add_separator();
+    main_toolbar.add_action(go_first_action);
+    main_toolbar.add_action(go_back_action);
+    main_toolbar.add_action(go_forward_action);
+    main_toolbar.add_action(go_last_action);
+    main_toolbar.add_separator();
+    main_toolbar.add_action(zoom_in_action);
+    main_toolbar.add_action(zoom_out_action);
 
     auto menubar = make<GUI::MenuBar>();
 
@@ -233,6 +261,8 @@ int main(int argc, char** argv)
     view_menu.add_action(zoom_in_action);
     view_menu.add_action(zoom_reset_action);
     view_menu.add_action(zoom_out_action);
+    view_menu.add_separator();
+    view_menu.add_action(hide_show_toolbar_action);
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {

@@ -48,6 +48,7 @@ public:
     const String& path() const { return m_path; }
     void set_scale(int);
     int scale() { return m_scale; }
+    void set_toolbar_height(int height) { m_toolbar_height = height; }
 
     void clear();
     void flip(Gfx::Orientation);
@@ -73,6 +74,7 @@ private:
 
     String m_path;
     RefPtr<Gfx::Bitmap> m_bitmap;
+    int m_toolbar_height { 28 };
 
     Gfx::Rect m_bitmap_rect;
     int m_scale { 100 };
