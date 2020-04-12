@@ -67,6 +67,11 @@ void ResourceLoader::load_sync(const URL& url, Function<void(const ByteBuffer&)>
 
 void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&)> success_callback, Function<void(const String&)> error_callback)
 {
+    if (is_port_blocked(url.port())) {
+	dbg() << "ResourceLoader::load: Error: blocked port " << url.port() << " for URL: " << url;
+	return;
+    }
+
     if (url.protocol() == "file") {
         auto f = Core::File::construct();
         f->set_filename(url.path());
@@ -110,6 +115,18 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&)> succ
 
     if (error_callback)
         error_callback(String::format("Protocol not implemented: %s", url.protocol().characters()));
+}
+
+bool ResourceLoader::is_port_blocked(int port) {
+    int ports[] { 1, 7, 9, 11, 13, 15, 17, 19, 20, 21, 22, 23, 25, 37, 42,
+        43, 53, 77, 79, 87, 95, 101, 102, 103, 104, 109, 110, 111, 113,
+        115, 117, 119, 123, 135, 139, 143, 179, 389, 465, 512, 513, 514,
+        515, 526, 530, 531, 532, 540, 556, 563, 587, 601, 636, 993, 995,
+        2049, 3659, 4045, 6000, 6379, 6665, 6666, 6667, 6668, 6669, 9000 };
+    for (auto blocked_port : ports)
+        if (port == blocked_port)
+            return true;
+    return false;
 }
 
 }
