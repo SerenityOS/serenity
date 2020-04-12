@@ -118,14 +118,6 @@ void Editor::stylize(const Span& span, const Style& style)
     m_spans_ending.set(span.end(), ending_map);
 }
 
-void Editor::cut_mismatching_chars(String& completion, const String& other, size_t start_compare)
-{
-    size_t i = start_compare;
-    while (i < completion.length() && i < other.length() && completion[i] == other[i])
-        ++i;
-    completion = completion.substring(0, i);
-}
-
 String Editor::get_line(const String& prompt)
 {
     set_prompt(prompt);

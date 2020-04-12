@@ -105,7 +105,6 @@ public:
     void clear_line();
     void insert(const String&);
     void insert(const char);
-    void cut_mismatching_chars(String& completion, const String& other, size_t start_compare);
     void stylize(const Span&, const Style&);
     void strip_styles()
     {
