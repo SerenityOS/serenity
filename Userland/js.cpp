@@ -360,16 +360,13 @@ void repl(JS::Interpreter& interpreter)
 JS::Value assert_impl(JS::Interpreter& interpreter)
 {
     if (!interpreter.argument_count())
-        return interpreter.throw_exception<JS::Error>("TypeError", "No arguments specified");
+        return interpreter.throw_exception<JS::TypeError>("No arguments specified");
 
-    auto assertion_value = interpreter.argument(0);
-    if (!assertion_value.is_boolean())
-        return interpreter.throw_exception<JS::Error>("TypeError", "The first argument is not a boolean");
-
-    if (!assertion_value.to_boolean())
+    auto assertion_value = interpreter.argument(0).to_boolean();
+    if (!assertion_value)
         return interpreter.throw_exception<JS::Error>("AssertionError", "The assertion failed!");
 
-    return assertion_value;
+    return JS::Value(assertion_value);
 }
 
 int main(int argc, char** argv)
