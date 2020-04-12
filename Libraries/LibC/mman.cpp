@@ -81,4 +81,10 @@ int madvise(void* address, size_t size, int advice)
     int rc = syscall(SC_madvise, address, size, advice);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
+
+int minherit(void* address, size_t size, int inherit)
+{
+    int rc = syscall(SC_minherit, address, size, inherit);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
 }

@@ -55,6 +55,11 @@ public:
         Execute = 4,
     };
 
+    enum class InheritMode {
+        Default,
+        ZeroedOnFork,
+    };
+
     static NonnullOwnPtr<Region> create_user_accessible(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable = true);
     static NonnullOwnPtr<Region> create_kernel_only(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable = true);
 
@@ -160,6 +165,8 @@ public:
     // NOTE: These are public so we can make<> them.
     Region(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const String&, u8 access, bool cacheable);
 
+    void set_inherit_mode(InheritMode inherit_mode) { m_inherit_mode = inherit_mode; }
+
 private:
     Bitmap& ensure_cow_map() const;
 
@@ -183,6 +190,7 @@ private:
     NonnullRefPtr<VMObject> m_vmobject;
     String m_name;
     u8 m_access { 0 };
+    InheritMode m_inherit_mode : 3 { InheritMode::Default };
     bool m_shared : 1 { false };
     bool m_user_accessible : 1 { false };
     bool m_cacheable : 1 { false };
