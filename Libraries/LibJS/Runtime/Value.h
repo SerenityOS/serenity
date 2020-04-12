@@ -182,6 +182,11 @@ inline Value js_infinity()
     return Value(__builtin_huge_val());
 }
 
+inline Value js_negative_infinity()
+{
+    return Value(-__builtin_huge_val());
+}
+
 Value greater_than(Value lhs, Value rhs);
 Value greater_than_equals(Value lhs, Value rhs);
 Value less_than(Value lhs, Value rhs);
