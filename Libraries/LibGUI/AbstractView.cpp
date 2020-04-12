@@ -64,9 +64,6 @@ void AbstractView::did_update_model(unsigned flags)
     stop_editing();
     m_edit_index = {};
     m_hovered_index = {};
-
-    dbg() << "did_update_model, flags=" << flags;
-    dump_backtrace();
     if (!model() || (flags & GUI::Model::InvalidateAllIndexes)) {
         selection().clear();
     } else {
