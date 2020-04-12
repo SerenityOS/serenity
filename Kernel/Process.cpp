@@ -632,6 +632,32 @@ int Process::sys$madvise(void* address, size_t size, int advice)
     return -EINVAL;
 }
 
+int Process::sys$minherit(void* address, size_t size, int inherit)
+{
+    REQUIRE_PROMISE(stdio);
+
+    auto* region = region_from_range({ VirtualAddress(address), size });
+    if (!region)
+        return -EINVAL;
+
+    if (!region->is_mmap())
+        return -EINVAL;
+
+    if (region->is_shared())
+        return -EINVAL;
+
+    if (!region->vmobject().is_anonymous())
+        return -EINVAL;
+
+    switch (inherit) {
+    case MAP_INHERIT_ZERO:
+        region->set_inherit_mode(Region::InheritMode::ZeroedOnFork);
+        return 0;
+    }
+
+    return -EINVAL;
+}
+
 int Process::sys$purge(int mode)
 {
     REQUIRE_NO_PROMISES;

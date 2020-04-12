@@ -68,6 +68,16 @@ NonnullOwnPtr<Region> Region::clone()
 {
     ASSERT(Process::current);
 
+    if (m_inherit_mode == InheritMode::ZeroedOnFork) {
+        ASSERT(m_mmap);
+        ASSERT(!m_shared);
+        ASSERT(vmobject().is_anonymous());
+        auto zeroed_region = Region::create_user_accessible(m_range, AnonymousVMObject::create_with_size(size()), 0, m_name, m_access);
+        zeroed_region->set_mmap(m_mmap);
+        zeroed_region->set_inherit_mode(m_inherit_mode);
+        return zeroed_region;
+    }
+
     if (m_shared) {
         ASSERT(!m_stack);
 #ifdef MM_DEBUG
