@@ -623,7 +623,7 @@ VM::MatchState::MatchState(size_t instructionp, size_t stringp, StringView view)
 VM::MatchResult VM::match(StringView view, size_t max_matches_result, size_t match_groups)
 {
     regoff_t match_start;
-    regoff_t match_end;
+    bool match;
 
     MatchState state { view };
     state.m_matches.ensure_capacity(max_matches_result);
@@ -637,17 +637,17 @@ VM::MatchResult VM::match(StringView view, size_t max_matches_result, size_t mat
         state.m_stringp = i;
         state.m_instructionp = 0;
         match_start = i;
-        match_end = match_recurse(state);
+        match = match_recurse(state);
 
-        if (match_end)
+        if (match)
             break;
     }
 
-    if (!match_end)
+    if (!match)
         return { 0, {}, state.m_ops };
 
     if (state.m_matches.size())
-        state.m_matches.at(0) = { match_start, match_end, 0 };
+        state.m_matches.at(0) = { match_start, (regoff_t)state.m_stringp, 0 };
 
     return { 1, move(state.m_matches), state.m_ops };
 }
@@ -655,7 +655,6 @@ VM::MatchResult VM::match(StringView view, size_t max_matches_result, size_t mat
 VM::MatchResult VM::match_all(StringView view, size_t max_matches_result, size_t match_groups)
 {
     regoff_t match_start;
-    regoff_t match_end;
     size_t match_count { 0 };
 
     MatchState state { view };
@@ -673,19 +672,19 @@ VM::MatchResult VM::match_all(StringView view, size_t max_matches_result, size_t
         state.m_stringp = i;
         state.m_instructionp = 0;
         match_start = i;
-        match_end = match_recurse(state);
+        auto match = match_recurse(state);
 
-        if (match_end) {
+        if (match) {
             ++match_count;
 
             if (state.m_matches_offset < state.m_matches.size())
-                state.m_matches.at(state.m_matches_offset) = { match_start, match_end, 1 };
+                state.m_matches.at(state.m_matches_offset) = { match_start, (regoff_t)state.m_stringp, 1 };
 
-            i = match_end - 1;
+            i = state.m_stringp - 1;
             state.m_matches_offset += match_groups + 1;
 
 #ifdef REGEX_DEBUG
-            printf("Matched... from %lu to %lu: %s\n", match_start, match_end, String(view.substring_view(match_start, match_end - match_start)).characters());
+            printf("[VM] match_all: Matched... from %lu to %lu: %s\n", match_start, state.m_stringp, String(view.substring_view(match_start, state.m_stringp - match_start)).characters());
 #endif
         }
     }
@@ -708,15 +707,17 @@ const StackValue VM::get_and_increment(MatchState& state, size_t value) const
     return current;
 }
 
-size_t VM::match_recurse(MatchState& state)
+bool VM::match_recurse(MatchState& state, size_t recursion_level)
 {
+    if (recursion_level > REG_MAX_RECURSE)
+        return false;
 
     Vector<ForkStayTuple> fork_stay_tuples;
 
-    auto do_forkstay = [&](MatchState& state) -> size_t {
-        for (auto i = fork_stay_tuples.size(); i > 0;) {
-            --i;
-            auto& fork_stay_tuple = fork_stay_tuples.at(i);
+    auto run_forkstay = [&]() -> bool {
+        auto tuples_size = fork_stay_tuples.size();
+        for (size_t i = 0; i < tuples_size; ++i) {
+            auto& fork_stay_tuple = fork_stay_tuples.at(tuples_size - i - 1);
             auto instructionp = state.m_instructionp;
             auto stringp = state.m_stringp;
 
@@ -724,20 +725,48 @@ size_t VM::match_recurse(MatchState& state)
             state.m_stringp = fork_stay_tuple.m_stringp;
 
 #ifdef REGEX_DEBUG
-            printf("[VM] Execute ForkStay - instructionp: %2lu, stringp: %2lu - ", state.m_instructionp, state.m_stringp);
+            printf("[VM][r=%lu] Execute ForkStay - instructionp: %2lu, stringp: %2lu - ", recursion_level, state.m_instructionp, state.m_stringp);
             printf("[%20s]\n", String(&state.m_view[state.m_stringp], state.m_view.length() - state.m_stringp).characters());
 #endif
-            auto result = match_recurse(state);
 
-            if (result)
-                return result;
-            else {
-                state.m_instructionp = instructionp;
-                state.m_stringp = stringp;
-            }
+            if (match_recurse(state, recursion_level + 1))
+                return true;
+
+            state.m_instructionp = instructionp;
+            state.m_stringp = stringp;
         }
+        return false;
+    };
 
-        return 0;
+    auto run_forkstay_or_false = [&]() -> bool {
+        if (run_forkstay())
+            return true;
+
+        state.m_stringp = 0;
+        return false;
+    };
+
+    auto check_exit_conditions = [&]() -> bool {
+#ifdef REGEX_DEBUG
+        bool verbose = false;
+        if (verbose) {
+            printf("[VM][r=%lu] Checking exit conditions: ", recursion_level);
+            printf("String: stringp: %lu, length: %lu; ", state.m_stringp, state.m_view.length());
+            printf("Instruction: instructionp: %lu, size: %lu; ", state.m_instructionp, bytes().size());
+            printf("Condition: %s\n", state.m_stringp > state.m_view.length() || state.m_instructionp >= bytes().size() ? "true" : "false");
+        } else {
+            if (state.m_instructionp >= m_bytecode.size())
+                printf("[VM][r=%lu] Reached end of OpCodes with stringp = %lu!\n", recursion_level, state.m_stringp);
+
+            if (state.m_stringp > state.m_view.length())
+                printf("[VM][r=%lu] Reached end of string with instructionp = %lu!\n", recursion_level, state.m_instructionp);
+        }
+#endif
+
+        if (state.m_stringp > state.m_view.length() || state.m_instructionp >= bytes().size())
+            return true;
+
+        return false;
     };
 
     for (;;) {
@@ -746,7 +775,7 @@ size_t VM::match_recurse(MatchState& state)
         auto stack_item = get_and_increment(state);
 
 #ifdef REGEX_DEBUG
-        printf("[VM] OpCode: 0x%i (%14s) - instructionp: %2lu, stringp: %2lu - ", stack_item.length, stack_item.name(), current_ip, state.m_stringp);
+        printf("[VM][r=%lu]  OpCode: 0x%i (%14s) - instructionp: %2lu, stringp: %2lu - ", recursion_level, stack_item.length, stack_item.name(), current_ip, state.m_stringp);
         printf("[%20s]", String(&state.m_view[state.m_stringp], state.m_view.length() - state.m_stringp).characters());
 #endif
 
@@ -758,7 +787,6 @@ size_t VM::match_recurse(MatchState& state)
             String a;
             String b;
             if (state.m_stringp < state.m_view.length()) {
-
                 if (!length) {
                     a = "ANY";
                     b = String(&state.m_view[state.m_stringp], 1);
@@ -772,11 +800,10 @@ size_t VM::match_recurse(MatchState& state)
             printf(" > Comparing strings: %s == '%s' with length: %i\n", a.characters(), b.characters(), max(length, 1));
             fflush(stdout);
 #endif
-            if ((size_t)length > state.m_view.length() - state.m_stringp)
-                return do_forkstay(state);
 
-            if (state.m_stringp >= state.m_view.length())
-                break;
+            // We want to compare a string that is definitely longer than the available string
+            if ((size_t)length > state.m_view.length() - state.m_stringp)
+                return run_forkstay_or_false();
 
             if (!length) { // Match any single character
                 ++state.m_stringp;
@@ -784,13 +811,16 @@ size_t VM::match_recurse(MatchState& state)
                 if (str[0] == state.m_view[state.m_stringp])
                     ++state.m_stringp;
                 else
-                    return do_forkstay(state); // don't forget to do the work that has to be done
+                    return run_forkstay_or_false();
             } else {
                 if (!strncmp(str, &state.m_view[state.m_stringp], length))
                     state.m_stringp += length;
                 else
-                    return do_forkstay(state); // don't forget to do the work that has to be done
+                    return run_forkstay_or_false();
             }
+
+            if (state.m_stringp > state.m_view.length())
+                return run_forkstay_or_false();
 
         } else if (stack_item.op_code == OpCode::ForkJump) {
             auto& offset = get_and_increment(state).length;
@@ -802,9 +832,8 @@ size_t VM::match_recurse(MatchState& state)
             auto saved_stringp = state.m_stringp;
             state.m_instructionp = state.m_instructionp + offset;
 
-            size_t result = match_recurse(state);
-
-            if (!result) { // no valid solution via forkjump found... continue here at old string position
+            if (!match_recurse(state, recursion_level + 1)) {
+                // no valid solution via forkjump found... continue here at old string position and instruction
                 state.m_stringp = saved_stringp;
                 state.m_instructionp = saved_instructionp;
             }
@@ -823,34 +852,29 @@ size_t VM::match_recurse(MatchState& state)
 #ifdef REGEX_DEBUG
             printf(" > Jump to offset: %i: new instructionp: %lu\n", offset, state.m_instructionp);
 #endif
-            continue; // do not use exit conditions below (state.m_instructionp >= m_bytecode.size()), directly jump to next instruction!
+            continue; // directly jump to next instruction!
 
         } else if (stack_item.op_code == OpCode::SaveLeftGroup) {
             auto& id = get_and_increment(state).length;
 #ifdef REGEX_DEBUG
             printf(" > Left parens for group match %i at stringp = %lu\n", id, state.m_stringp);
 #endif
-            if ((size_t)id < state.m_left.size())
+            if ((size_t)id < state.m_left.size() && state.m_stringp < state.m_view.length())
                 state.m_left.at(id) = state.m_stringp;
 
         } else if (stack_item.op_code == OpCode::SaveRightGroup) {
             auto& id = get_and_increment(state).length;
+            auto index = id + 1 + state.m_matches_offset;
+
 #ifdef REGEX_DEBUG
             printf(" > Right parens for group match %i at stringp = %lu\n", id, state.m_stringp);
 #endif
-            if ((size_t)id < state.m_left.size()) {
-                if (state.m_left.at(id) != -1) {
-                    auto left = state.m_left.at(id);
+            if ((size_t)id < state.m_left.size() && state.m_left.at(id) != -1 && index < state.m_matches.size()) {
+                auto left = state.m_left.at(id);
+                state.m_matches.at(index) = { left, (regoff_t)state.m_stringp, 1 };
 #ifdef REGEX_DEBUG
-                    printf("Match result group id %i: from %lu to %lu\n", id, left, state.m_stringp);
+                printf("Match result group id %i: from %lu to %lu\n", id, left, state.m_stringp);
 #endif
-                    auto index = id + 1 + state.m_matches_offset;
-                    if (index < state.m_matches.size()) {
-                        state.m_matches.at(index) = { left, (regoff_t)state.m_stringp, 1 };
-                    }
-                } else {
-                    fprintf(stderr, "No left parens found for id %i\n", id);
-                }
             }
 
         } else if (stack_item.op_code == OpCode::CheckBegin) {
@@ -858,50 +882,33 @@ size_t VM::match_recurse(MatchState& state)
             printf("\n");
 #endif
             if (state.m_stringp != 0)
-                return 0;
+                return false;
 
         } else if (stack_item.op_code == OpCode::CheckEnd) {
 #ifdef REGEX_DEBUG
             printf(" > Check end: %lu == %lu\n", state.m_stringp, state.m_view.length());
 #endif
             if (state.m_stringp != state.m_view.length())
-                break;
+                return false;
 
         } else if (stack_item.op_code == OpCode::Exit) {
 #ifdef REGEX_DEBUG
-            printf("\n");
+            printf(" > Condition %s\n", state.m_stringp >= state.m_view.length() ? "true" : "false");
 #endif
-            if (state.m_stringp >= state.m_view.length() && state.m_instructionp >= bytes().size())
-                return state.m_stringp;
-            else
-                return 0;
+            return state.m_stringp >= state.m_view.length();
 
         } else {
-            printf("\nInvalid opcode: %lu, stackpointer: %lu\n", (size_t)stack_item.op_code, current_ip);
+            printf("\n[VM][r=%lu] Invalid opcode: %lu, stackpointer: %lu\n", recursion_level, (size_t)stack_item.op_code, current_ip);
             exit(1);
         }
 
-        if (state.m_instructionp >= m_bytecode.size()) {
-#ifdef REGEX_DEBUG
-            printf("Reached end of OpCodes!\n");
-#endif
-            return state.m_stringp;
-        }
+        if (check_exit_conditions())
+            return true;
     }
 
-    if (size_t result = do_forkstay(state))
-        return result;
-
-#ifdef REGEX_DEBUG
-    printf("String: stringp: %lu, length: %lu\n", state.m_stringp, state.m_view.length());
-    printf("Instruction: instructionp: %lu, size: %lu\n", state.m_instructionp, bytes().size());
-#endif
-
-    if (state.m_stringp >= state.m_view.length() && state.m_instructionp >= bytes().size())
-        return state.m_stringp;
-
-    return 0;
+    ASSERT_NOT_REACHED();
 }
+
 }
 
 int regcomp(regex_t* preg, const char* pattern, int cflags)

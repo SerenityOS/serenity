@@ -449,10 +449,6 @@ TEST_CASE(parens_qualifier_asterisk_2)
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testaaaatest, testbbbtest, testtest");
     EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "aaaatest, testbbbtest, test");
 
-    //    for (int i = 0; i < num_matches; ++i) {
-    //        printf("Matches[%i].rm_so: %li, .rm_eo: %li\n", i, matches[i].rm_so, matches[i].rm_eo);
-    //    }
-
     regfree(&regex);
 }
 
@@ -588,6 +584,7 @@ TEST_CASE(multi_parens_qualifier_questionmark)
     regfree(&regex);
 }
 
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
 BENCHMARK_CASE(parens_qualifier_asterisk_2_benchmark)
 {
     String pattern = "test(.*)test";
@@ -605,6 +602,7 @@ BENCHMARK_CASE(parens_qualifier_asterisk_2_benchmark)
 
     regfree(&regex);
 }
+#endif
 
 TEST_CASE(simple_alternative)
 {
@@ -802,8 +800,6 @@ TEST_CASE(parens_qualifier_minimum)
     match_str = "hello";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOMATCH);
     EXPECT_EQ(matches[0].match_count, 0u);
-    for (int i = 0; i < num_matches; ++i)
-        printf("Matches[%i].rm_so: %li, .rm_eo: %li\n", i, matches[i].rm_so, matches[i].rm_eo);
 
     match_str = "hellohellohello";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
@@ -835,9 +831,6 @@ TEST_CASE(parens_qualifier_minimum)
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "hellohellohello");
     EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
 
-    for (int i = 0; i < num_matches; ++i)
-        printf("Matches[%i].rm_so: %li, .rm_eo: %li\n", i, matches[i].rm_so, matches[i].rm_eo);
-
     match_str = "test hellohellohellohello";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
     EXPECT_EQ(matches[0].match_count, 1u);
@@ -848,8 +841,8 @@ TEST_CASE(parens_qualifier_minimum)
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "hellohellohellohello");
     EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
 
-    for (int i = 0; i < num_matches; ++i)
-        printf("Matches[%i].rm_so: %li, .rm_eo: %li\n", i, matches[i].rm_so, matches[i].rm_eo);
+    //    for (int i = 0; i < num_matches; ++i)
+    //        printf("Matches[%i].rm_so: %li, .rm_eo: %li\n", i, matches[i].rm_so, matches[i].rm_eo);
 
     regfree(&regex);
 }

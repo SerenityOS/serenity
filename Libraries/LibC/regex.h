@@ -63,6 +63,8 @@ struct regmatch_t {
 #define REG_NOTEOL (REG_NOTBOL << 1)   // The dollar sign ($), when taken as a special character, will not match the end of string.
 #define REG_MATCHALL (REG_NOTBOL << 2) // Match all occurences of the character - not posix compliant!
 
+#define REG_MAX_RECURSE 5000
+
 // The following constants are defined as error return values:
 enum ReError {
     REG_NOERR = 0,
@@ -287,7 +289,7 @@ private:
         }
     };
 
-    size_t match_recurse(MatchState& state);
+    bool match_recurse(MatchState& state, size_t recursion_level = 0);
     const StackValue get(MatchState& state, size_t offset = 0) const;
     const StackValue get_and_increment(MatchState& state, size_t value = 1) const;
 
