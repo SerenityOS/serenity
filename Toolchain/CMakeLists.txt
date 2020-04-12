@@ -8,8 +8,10 @@ ProcessorCount(MAKE_JOBS)
 
 find_program(MAKE_EXE NAMES gmake make)
 
+set(ARCH i686 CACHE STRING "Toolchain architecture (i686 or x86_64)")
+set(TARGET ${ARCH}-pc-serenity)
+
 set(PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/Local)
-set(TARGET i686-pc-serenity)
 set(SYSROOT ${CMAKE_CURRENT_SOURCE_DIR}/../Root)
 set(PATCHES ${CMAKE_CURRENT_SOURCE_DIR}/Patches)
 
