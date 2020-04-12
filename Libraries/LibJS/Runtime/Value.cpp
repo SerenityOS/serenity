@@ -143,7 +143,7 @@ Value Value::to_number() const
         if (string == "Infinity" || string == "+Infinity")
             return js_infinity();
         if (string == "-Infinity")
-            return Value(-js_infinity().as_double());
+            return js_negative_infinity();
         bool ok;
         //FIXME: Parse in a better way
         auto parsed_int = string.to_int(ok);

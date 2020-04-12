@@ -45,7 +45,7 @@ NumberConstructor::NumberConstructor()
     put("EPSILON", Value(EPSILON));
     put("MAX_SAFE_INTEGER", Value(MAX_SAFE_INTEGER));
     put("MIN_SAFE_INTEGER", Value(MIN_SAFE_INTEGER));
-    put("NEGATIVE_INFINITY", Value(-js_infinity().as_double()));
+    put("NEGATIVE_INFINITY", js_negative_infinity());
     put("POSITIVE_INFINITY", js_infinity());
     put("NaN", js_nan());
 }

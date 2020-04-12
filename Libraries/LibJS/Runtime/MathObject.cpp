@@ -114,18 +114,18 @@ Value MathObject::round(Interpreter& interpreter)
 
 Value MathObject::max(Interpreter& interpreter)
 {
-    if (!interpreter.argument_count()) {
-        return Value(-js_infinity().as_double());
-    } else if (interpreter.argument_count() == 1) {
+    if (!interpreter.argument_count())
+        return js_negative_infinity();
+
+    if (interpreter.argument_count() == 1)
         return interpreter.argument(0).to_number();
-    } else {
-        Value max = interpreter.argument(0).to_number();
-        for (size_t i = 1; i < interpreter.argument_count(); ++i) {
-            Value cur = interpreter.argument(i).to_number();
-            max = Value(cur.as_double() > max.as_double() ? cur : max);
-        }
-        return max;
+
+    Value max = interpreter.argument(0).to_number();
+    for (size_t i = 1; i < interpreter.argument_count(); ++i) {
+        Value cur = interpreter.argument(i).to_number();
+        max = Value(cur.as_double() > max.as_double() ? cur : max);
     }
+    return max;
 }
 
 Value MathObject::min(Interpreter& interpreter)
