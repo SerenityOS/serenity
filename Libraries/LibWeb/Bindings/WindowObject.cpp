@@ -78,7 +78,7 @@ static Window* impl_from(JS::Interpreter& interpreter)
         return nullptr;
     }
     if (StringView("WindowObject") != this_object->class_name()) {
-        interpreter.throw_exception<JS::Error>("TypeError", "That's not a WindowObject, bro.");
+        interpreter.throw_exception<JS::TypeError>("That's not a WindowObject, bro.");
         return nullptr;
     }
     return &static_cast<WindowObject*>(this_object)->impl();
@@ -108,7 +108,7 @@ JS::Value WindowObject::set_interval(JS::Interpreter& interpreter)
     if (!callback_object)
         return {};
     if (!callback_object->is_function())
-        return interpreter.throw_exception<JS::Error>("TypeError", "Not a function");
+        return interpreter.throw_exception<JS::TypeError>("Not a function");
     impl->set_interval(*static_cast<JS::Function*>(callback_object), arguments[1].to_i32());
     return JS::js_undefined();
 }
@@ -125,7 +125,7 @@ JS::Value WindowObject::set_timeout(JS::Interpreter& interpreter)
     if (!callback_object)
         return {};
     if (!callback_object->is_function())
-        return interpreter.throw_exception<JS::Error>("TypeError", "Not a function");
+        return interpreter.throw_exception<JS::TypeError>("Not a function");
 
     i32 interval = 0;
     if (interpreter.argument_count() >= 2)
@@ -147,7 +147,7 @@ JS::Value WindowObject::request_animation_frame(JS::Interpreter& interpreter)
     if (!callback_object)
         return {};
     if (!callback_object->is_function())
-        return interpreter.throw_exception<JS::Error>("TypeError", "Not a function");
+        return interpreter.throw_exception<JS::TypeError>("Not a function");
     return JS::Value(impl->request_animation_frame(*static_cast<JS::Function*>(callback_object)));
 }
 
