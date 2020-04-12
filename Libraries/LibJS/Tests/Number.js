@@ -10,6 +10,12 @@ try {
     assert(new Number(null).valueOf() === 0);
     assert(Number(true) === 1);
     assert(new Number(true).valueOf() === 1);
+    assert(Number("Infinity") === Infinity);
+    assert(new Number("Infinity").valueOf() === Infinity);
+    assert(Number("+Infinity") === Infinity);
+    assert(new Number("+Infinity").valueOf() === Infinity);
+    assert(Number("-Infinity") === -Infinity);
+    assert(new Number("-Infinity").valueOf() === -Infinity);
     assert(isNaN(Number(undefined)));
     assert(isNaN(new Number(undefined).valueOf()));
     assert(isNaN(Number({})));
