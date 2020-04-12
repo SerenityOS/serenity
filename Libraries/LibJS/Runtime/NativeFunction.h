@@ -43,6 +43,7 @@ public:
     virtual bool has_constructor() const { return false; }
 
 protected:
+    NativeFunction(const FlyString& name);
     NativeFunction() {}
 
 private:

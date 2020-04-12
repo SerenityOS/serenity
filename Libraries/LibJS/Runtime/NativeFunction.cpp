@@ -36,6 +36,11 @@ NativeFunction::NativeFunction(const FlyString& name, AK::Function<Value(Interpr
 {
 }
 
+NativeFunction::NativeFunction(const FlyString& name)
+    : m_name(name)
+{
+}
+
 NativeFunction::~NativeFunction()
 {
 }
