@@ -49,7 +49,7 @@ public:
     void set_editable(bool editable) { m_editable = editable; }
 
     virtual bool accepts_focus() const override { return true; }
-    virtual void did_update_model();
+    virtual void did_update_model(unsigned flags);
     virtual void did_update_selection();
 
     virtual Gfx::Rect content_rect(const ModelIndex&) const { return {}; }

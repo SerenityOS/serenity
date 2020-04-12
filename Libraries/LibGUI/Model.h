@@ -57,6 +57,11 @@ public:
         Sortable sortable { Sortable::True };
     };
 
+    enum UpdateFlag {
+        DontInvalidateIndexes = 0,
+        InvalidateAllIndexes = 1 << 0,
+    };
+
     enum class Role {
         Display,
         Sort,
@@ -106,7 +111,7 @@ protected:
     Model();
 
     void for_each_view(Function<void(AbstractView&)>);
-    void did_update();
+    void did_update(unsigned flags = UpdateFlag::InvalidateAllIndexes);
 
     ModelIndex create_index(int row, int column, const void* data = nullptr) const;
 

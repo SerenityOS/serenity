@@ -56,7 +56,7 @@ public:
 private:
     ListView();
 
-    virtual void did_update_model() override;
+    virtual void did_update_model(unsigned flags) override;
     virtual void paint_event(PaintEvent&) override;
     virtual void doubleclick_event(MouseEvent&) override;
     virtual void keydown_event(KeyEvent&) override;

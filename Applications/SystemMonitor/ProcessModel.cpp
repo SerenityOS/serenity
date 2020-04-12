@@ -412,5 +412,5 @@ void ProcessModel::update()
     if (on_new_cpu_data_point)
         on_new_cpu_data_point(total_cpu_percent);
 
-    did_update();
+    did_update(GUI::Model::UpdateFlag::DontInvalidateIndexes);
 }

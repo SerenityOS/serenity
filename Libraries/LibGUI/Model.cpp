@@ -53,12 +53,12 @@ void Model::for_each_view(Function<void(AbstractView&)> callback)
         callback(*view);
 }
 
-void Model::did_update()
+void Model::did_update(unsigned flags)
 {
     if (on_update)
         on_update();
-    for_each_view([](auto& view) {
-        view.did_update_model();
+    for_each_view([&](auto& view) {
+        view.did_update_model(flags);
     });
 }
 
