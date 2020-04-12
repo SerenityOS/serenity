@@ -66,6 +66,7 @@ Lexer::Lexer(StringView source)
         s_keywords.set("null", TokenType::NullLiteral);
         s_keywords.set("return", TokenType::Return);
         s_keywords.set("switch", TokenType::Switch);
+        s_keywords.set("this", TokenType::This);
         s_keywords.set("throw", TokenType::Throw);
         s_keywords.set("true", TokenType::BoolLiteral);
         s_keywords.set("try", TokenType::Try);

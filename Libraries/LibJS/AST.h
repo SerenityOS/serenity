@@ -502,6 +502,15 @@ private:
     FlyString m_string;
 };
 
+class ThisExpression final : public Expression {
+public:
+    virtual Value execute(Interpreter&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    virtual const char* class_name() const override { return "ThisExpression"; }
+};
+
 class CallExpression : public Expression {
 public:
     CallExpression(NonnullRefPtr<Expression> callee, NonnullRefPtrVector<Expression> arguments = {})
