@@ -155,6 +155,8 @@ kernel.map: kernel
 
 EXTRA_CLEAN += kernel.map
 
+DEFINES = -D SERENITY_LIBC_BUILD -D BUILDING_SERENITY_TOOLCHAIN
+
 install:
 	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/Kernel/
 	cp *.h $(SERENITY_BASE_DIR)/Root/usr/include/Kernel/
