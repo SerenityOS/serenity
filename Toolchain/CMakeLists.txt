@@ -17,7 +17,7 @@ set(LIBC ${CMAKE_CURRENT_SOURCE_DIR}/../Libraries/LibC)
 set(LIBM ${CMAKE_CURRENT_SOURCE_DIR}/../Libraries/LibM)
 
 ExternalProject_Add(binutils
-    URL      "http://ftp.gnu.org/gnu/binutils/binutils-2.33.1.tar.gz"
+    URL      "https://ftp.gnu.org/gnu/binutils/binutils-2.33.1.tar.gz"
     URL_HASH MD5=1a6b16bcc926e312633fcc3fae14ba0a
 
     PATCH_COMMAND patch -p1 -t -N < ${PATCHES}/binutils.patch
@@ -35,7 +35,7 @@ ExternalProject_Add(binutils
 ExternalProject_Add(gcc
     DEPENDS binutils
 
-    URL      "http://ftp.gnu.org/gnu/gcc/gcc-9.3.0/gcc-9.3.0.tar.gz"
+    URL      "https://ftp.gnu.org/gnu/gcc/gcc-9.3.0/gcc-9.3.0.tar.gz"
     URL_HASH MD5=9b7e8f6cfad96114e726c752935af58a
 
     PATCH_COMMAND patch -p1 -t -N < ${PATCHES}/gcc.patch
