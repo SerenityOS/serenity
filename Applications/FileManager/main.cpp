@@ -138,8 +138,6 @@ int main(int argc, char** argv)
     };
 
     auto refresh_tree_view = [&] {
-        directories_model->update();
-
         auto current_path = directory_view.path();
 
         struct stat st;
@@ -151,6 +149,8 @@ int main(int argc, char** argv)
                 break;
             }
         }
+
+        directories_model->update();
 
         // Reselect the existing folder in the tree.
         auto new_index = directories_model->index(current_path, GUI::FileSystemModel::Column::Name);
