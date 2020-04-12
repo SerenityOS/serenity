@@ -36,8 +36,10 @@ namespace GUI {
 int MessageBox::show(const StringView& text, const StringView& title, Type type, InputType input_type, Window* parent_window)
 {
     auto box = MessageBox::construct(text, title, type, input_type);
-    if (parent_window)
+    if (parent_window) {
         parent_window->add_child(box);
+        box->set_icon(parent_window->icon());
+    }
     return box->exec();
 }
 
