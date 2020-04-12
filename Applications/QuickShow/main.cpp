@@ -36,20 +36,22 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <stdio.h>
+#include <string.h>
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio shared_buffer accept rpath unix cpath fattr proc exec thread", nullptr) < 0) {
+    if (pledge("stdio shared_buffer accept cpath rpath unix cpath fattr proc exec thread", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     GUI::Application app(argc, argv);
 
-    if (pledge("stdio shared_buffer accept rpath proc exec thread", nullptr) < 0) {
+    if (pledge("stdio shared_buffer accept cpath rpath proc exec thread", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -100,6 +102,51 @@ int main(int argc, char** argv)
     };
 
     // Actions
+    auto open_action = GUI::CommonActions::make_open_action(
+        [&](auto&) {
+            Optional<String> path = GUI::FilePicker::get_open_filepath("Open image...");
+            if (path.has_value()) {
+                widget.load_from_file(path.value());
+            }
+        });
+
+    auto delete_action = GUI::CommonActions::make_delete_action(
+        [&](auto&) {
+            auto path = widget.path();
+            if(path.is_empty())
+                return;
+
+            auto msgbox_result = GUI::MessageBox::show(String::format("Really delete %s?", path.characters()),
+                "Confirm deletion",
+                GUI::MessageBox::Type::Warning,
+                GUI::MessageBox::InputType::OKCancel,
+                window);
+
+            if (msgbox_result == GUI::MessageBox::ExecCancel)
+                return;
+
+            auto unlink_result = unlink(widget.path().characters());
+            dbg() << "unlink_result::" << unlink_result;
+
+            if (unlink_result < 0) {
+                int saved_errno = errno;
+                GUI::MessageBox::show(String::format("unlink(%s) failed: %s", path.characters(), strerror(saved_errno)),
+                    "Delete failed",
+                    GUI::MessageBox::Type::Error,
+                    GUI::MessageBox::InputType::OK,
+                    window);
+
+                return;
+            }
+
+            widget.clear();
+        });
+
+    auto quit_action = GUI::CommonActions::make_quit_action(
+        [&](auto&) {
+            app.quit();
+        });
+
     auto rotate_left_action = GUI::Action::create("Rotate Left", { Mod_None, Key_L },
         [&](auto&) {
             widget.rotate(Gfx::RotationDirection::Left);
@@ -163,16 +210,10 @@ int main(int argc, char** argv)
     auto menubar = make<GUI::MenuBar>();
 
     auto& app_menu = menubar->add_menu("QuickShow");
-    app_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
-        Optional<String> path = GUI::FilePicker::get_open_filepath("Open image...");
-        if (path.has_value()) {
-            widget.load_from_file(path.value());
-        }
-    }));
+    app_menu.add_action(open_action);
+    app_menu.add_action(delete_action);
     app_menu.add_separator();
-    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
-        app.quit();
-    }));
+    app_menu.add_action(quit_action);
 
     auto& image_menu = menubar->add_menu("Image");
     image_menu.add_action(rotate_left_action);
