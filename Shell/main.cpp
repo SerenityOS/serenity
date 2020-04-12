@@ -1100,9 +1100,15 @@ int main(int argc, char** argv)
         //      `/foo/', but rather just `bar...'
         editor.suggest(token.length(), 0);
 
-        Core::DirIterator files(path, Core::DirIterator::SkipDots);
+        // only suggest dot-files if path starts with a dot
+        Core::DirIterator files(path,
+            token.starts_with('.') ? Core::DirIterator::NoFlags : Core::DirIterator::SkipDots);
+
         while (files.has_next()) {
             auto file = files.next_path();
+            // manually skip `.' and `..'
+            if (file == "." || file == "..")
+                continue;
             if (file.starts_with(token)) {
                 suggestions.append(file);
             }
