@@ -1080,7 +1080,6 @@ int main(int argc, char** argv)
         String path;
         Vector<String> suggestions;
 
-        editor.suggest(token.length(), 0);
         ssize_t last_slash = token.length() - 1;
         while (last_slash >= 0 && token[last_slash] != '/')
             --last_slash;
@@ -1099,57 +1098,36 @@ int main(int argc, char** argv)
             path = g.cwd;
         }
 
-        // This is a bit naughty, but necessary without reordering the loop
-        // below. The loop terminates early, meaning that
-        // the suggestions list is incomplete.
-        // We only do this if the token is empty though.
-        if (token.is_empty()) {
-            Core::DirIterator suggested_files(path, Core::DirIterator::SkipDots);
-            while (suggested_files.has_next()) {
-                suggestions.append(suggested_files.next_path());
-            }
-        }
+        // the invariant part of the token is actually just the last segment
+        // e.g. in `cd /foo/bar', 'bar' is the invariant
+        //      since we are not suggesting anything starting with
+        //      `/foo/', but rather just `bar...'
+        editor.suggest(token.length(), 0);
 
-        String completion;
-
-        bool seen_others = false;
         Core::DirIterator files(path, Core::DirIterator::SkipDots);
         while (files.has_next()) {
             auto file = files.next_path();
             if (file.starts_with(token)) {
-                if (!token.is_empty())
-                    suggestions.append(file);
-                if (completion.is_empty()) {
-                    completion = file; // Will only be set once.
-                } else {
-                    editor.cut_mismatching_chars(completion, file, token.length());
-                    if (completion.is_empty()) // We cut everything off!
-                        return suggestions;
-                    seen_others = true;
-                }
+                suggestions.append(file);
             }
         }
-        if (completion.is_empty())
-            return suggestions;
 
-        // If we have characters to add, add them.
-        if (completion.length() > token.length())
-            editor.insert(completion.substring(token.length(), completion.length() - token.length()));
         // If we have a single match and it's a directory, we add a slash. If it's
         // a regular file, we add a space, unless we already have one.
-        if (!seen_others) {
+        if (suggestions.size() == 1) {
+            auto& completion = suggestions[0];
             String file_path = String::format("%s/%s", path.characters(), completion.characters());
             struct stat program_status;
             int stat_error = stat(file_path.characters(), &program_status);
             if (!stat_error) {
                 if (S_ISDIR(program_status.st_mode))
-                    editor.insert('/');
+                    completion = String::format("%s/", suggestions[0].characters());
                 else if (editor.cursor() == editor.buffer().size() || editor.buffer_at(editor.cursor()) != ' ')
-                    editor.insert(' ');
+                    completion = String::format("%s ", suggestions[0].characters());
             }
         }
 
-        return {}; // Return an empty vector
+        return suggestions;
     };
 
     signal(SIGINT, [](int) {
