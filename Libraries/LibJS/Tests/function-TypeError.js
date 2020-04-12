@@ -41,7 +41,7 @@ try {
         new isNaN();
     } catch(e) {
         assert(e.name === "TypeError");
-        assert(e.message === "function () {\n  [NativeFunction]\n} is not a constructor");
+        assert(e.message === "function isNaN() {\n  [NativeFunction]\n} is not a constructor");
     }
 
     console.log("PASS");

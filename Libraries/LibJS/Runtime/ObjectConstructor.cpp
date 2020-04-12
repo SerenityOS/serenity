@@ -35,6 +35,7 @@
 namespace JS {
 
 ObjectConstructor::ObjectConstructor()
+    : NativeFunction("Object")
 {
     put("prototype", interpreter().object_prototype());
 
