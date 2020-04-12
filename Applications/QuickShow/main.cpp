@@ -103,6 +103,26 @@ int main(int argc, char** argv)
     };
 
     // Actions
+    auto rotate_left_action = GUI::Action::create("Rotate Left", { Mod_None, Key_L },
+        [&](auto&) {
+            widget.rotate(Gfx::RotationDirection::Left);
+        });
+
+    auto rotate_right_action = GUI::Action::create("Rotate Right", { Mod_None, Key_R },
+        [&](auto&) {
+            widget.rotate(Gfx::RotationDirection::Right);
+        });
+
+    auto vertical_flip_action = GUI::Action::create("Vertical Flip", { Mod_None, Key_V },
+        [&](auto&) {
+            widget.flip(Gfx::Orientation::Vertical);
+        });
+
+    auto horizontal_flip_action = GUI::Action::create("Horizontal Flip", { Mod_None, Key_H },
+        [&](auto&) {
+            widget.flip(Gfx::Orientation::Horizontal);
+        });
+
     auto go_first_action = GUI::Action::create("First", { Mod_None, Key_Home }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-first.png"),
         [&](auto&) {
             widget.navigate(QSWidget::Directions::First);
@@ -136,6 +156,12 @@ int main(int argc, char** argv)
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app.quit();
     }));
+
+    auto& image_menu = menubar->add_menu("Image");
+    image_menu.add_action(rotate_left_action);
+    image_menu.add_action(rotate_right_action);
+    image_menu.add_action(vertical_flip_action);
+    image_menu.add_action(horizontal_flip_action);
 
     auto& navigate_menu = menubar->add_menu("Navigate");
     navigate_menu.add_action(go_first_action);
