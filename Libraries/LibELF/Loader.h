@@ -57,6 +57,7 @@ public:
     {
         return m_image.entry();
     }
+    const Image& image() const { return m_image; }
     char* symbol_ptr(const char* name) const;
     Optional<Image::Symbol> find_demangled_function(const String& name) const;
 

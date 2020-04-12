@@ -78,6 +78,7 @@ public:
     void run(Callback callback);
 
     const ELF::Loader& elf() const { return m_elf; }
+    const MappedFile& executable() const { return m_executable; }
 
     enum DebugDecision {
         Continue,
