@@ -39,6 +39,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <sys/mman.h>
 #include <sys/types.h>
 #include <termios.h>
 #include <unistd.h>
@@ -547,9 +548,27 @@ int ftruncate(int fd, off_t length)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+struct ThreadInfoCache {
+    int tid { 0 };
+};
+
+__thread ThreadInfoCache* thread_info_cache;
+
 int gettid()
 {
-    return syscall(SC_gettid);
+    if (!thread_info_cache) {
+        thread_info_cache = (ThreadInfoCache*)mmap(nullptr, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
+        ASSERT(thread_info_cache != MAP_FAILED);
+        if (minherit(thread_info_cache, PAGE_SIZE, MAP_INHERIT_ZERO) < 0) {
+            perror("minherit(MAP_INHERIT_ZERO)");
+            ASSERT_NOT_REACHED();
+        }
+    }
+
+    if (thread_info_cache->tid == 0)
+        thread_info_cache->tid = syscall(SC_gettid);
+
+    return thread_info_cache->tid;
 }
 
 int donate(int tid)
