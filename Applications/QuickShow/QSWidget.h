@@ -46,6 +46,8 @@ public:
 
     const Gfx::Bitmap* bitmap() const { return m_bitmap.ptr(); }
     const String& path() const { return m_path; }
+    void set_scale(int);
+    int scale() { return m_scale; }
 
     void flip(Gfx::Orientation);
     void rotate(Gfx::RotationDirection);
