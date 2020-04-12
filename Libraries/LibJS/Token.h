@@ -111,6 +111,7 @@ namespace JS {
     __ENUMERATE_JS_TOKEN(SlashEquals)                 \
     __ENUMERATE_JS_TOKEN(StringLiteral)               \
     __ENUMERATE_JS_TOKEN(Switch)                      \
+    __ENUMERATE_JS_TOKEN(This)                        \
     __ENUMERATE_JS_TOKEN(Throw)                       \
     __ENUMERATE_JS_TOKEN(Tilde)                       \
     __ENUMERATE_JS_TOKEN(Try)                         \

@@ -662,6 +662,16 @@ void Identifier::dump(int indent) const
     printf("Identifier \"%s\"\n", m_string.characters());
 }
 
+Value ThisExpression::execute(Interpreter& interpreter) const
+{
+    return interpreter.this_value();
+}
+
+void ThisExpression::dump(int indent) const
+{
+    ASTNode::dump(indent);
+}
+
 Value AssignmentExpression::execute(Interpreter& interpreter) const
 {
     auto rhs_result = m_rhs->execute(interpreter);
