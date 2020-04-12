@@ -50,6 +50,22 @@ static Color color_for_percent(int percent)
     return heat_gradient().get_pixel(percent, 0);
 }
 
+class ELFSymbolProvider final : public X86::SymbolProvider {
+public:
+    ELFSymbolProvider(ELF::Loader& loader)
+        : m_loader(loader)
+    {
+    }
+
+    virtual String symbolicate(FlatPtr address, u32* offset = nullptr) const
+    {
+        return m_loader.symbolicate(address, offset);
+    }
+
+private:
+    ELF::Loader& m_loader;
+};
+
 DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
     : m_profile(profile)
     , m_node(node)
@@ -72,6 +88,8 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
     ASSERT(symbol.has_value());
 
     auto view = symbol.value().raw_data();
+
+    ELFSymbolProvider symbol_provider(*elf_loader);
     X86::SimpleInstructionStream stream((const u8*)view.characters_without_null_termination(), view.length());
     X86::Disassembler disassembler(stream);
 
@@ -82,7 +100,7 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
             break;
         FlatPtr address_in_profiled_program = symbol.value().value() + offset_into_symbol;
 
-        auto disassembly = insn.value().to_string(address_in_profiled_program);
+        auto disassembly = insn.value().to_string(address_in_profiled_program, &symbol_provider);
 
         StringView instruction_bytes = view.substring_view(offset_into_symbol, insn.value().length());
         size_t samples_at_this_instruction = m_node.events_per_address().get(address_in_profiled_program).value_or(0);
