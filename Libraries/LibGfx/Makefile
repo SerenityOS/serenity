@@ -1,4 +1,5 @@
 OBJS = \
+    AffineTransform.o \
     Bitmap.o \
     CharacterBitmap.o \
     Color.o \
