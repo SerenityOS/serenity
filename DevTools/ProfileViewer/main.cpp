@@ -96,6 +96,7 @@ int main(int argc, char** argv)
         action.set_checked(!action.is_checked());
         profile->set_show_percentages(action.is_checked());
         tree_view.update();
+        disassembly_view.update();
     });
     percent_action->set_checkable(true);
     percent_action->set_checked(false);
