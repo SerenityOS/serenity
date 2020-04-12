@@ -26,6 +26,7 @@
 
 #include "QSWidget.h"
 #include <AK/URL.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/MimeData.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
@@ -53,12 +54,10 @@ int main(int argc, char** argv)
         return 1;
     }
 
-#if 0
-    if (argc != 2) {
-        printf("usage: qs <image-file>\n");
-        return 0;
-    }
-#endif
+    const char* path = nullptr;
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(path, "The image file to be displayed.", "file", Core::ArgsParser::Required::No);
+    args_parser.parse(argc, argv);
 
     auto window = GUI::Window::construct();
     window->set_double_buffering_enabled(true);
@@ -66,8 +65,6 @@ int main(int argc, char** argv)
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-image.png"));
 
     auto& widget = window->set_main_widget<QSWidget>();
-    if (argc > 1)
-        widget.load_from_file(argv[1]);
 
     auto update_window_title = [&](int scale) {
         if (widget.bitmap())
@@ -202,6 +199,10 @@ int main(int argc, char** argv)
     }));
 
     app.set_menubar(move(menubar));
+
+    if (path != nullptr) {
+        widget.load_from_file(path);
+    }
 
     window->show();
 
