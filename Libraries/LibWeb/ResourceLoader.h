@@ -55,6 +55,7 @@ private:
 
     Protocol::Client& protocol_client() { return *m_protocol_client; }
     RefPtr<Protocol::Client> m_protocol_client;
+    bool is_port_blocked(int port);
 };
 
 }
