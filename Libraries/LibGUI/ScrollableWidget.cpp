@@ -109,13 +109,14 @@ void ScrollableWidget::update_scrollbar_ranges()
     int excess_height = max(0, m_content_size.height() - available_size.height());
     m_vertical_scrollbar->set_range(0, excess_height);
 
-    if (should_hide_unnecessary_scrollbars())
+    if (should_hide_unnecessary_scrollbars() && m_scrollbars_enabled && !m_scrollbars_forced_invisible)
         m_vertical_scrollbar->set_visible(excess_height > 0);
 
+    dbg() << m_content_size.width() << " - " << available_size.width();
     int excess_width = max(0, m_content_size.width() - available_size.width());
     m_horizontal_scrollbar->set_range(0, excess_width);
 
-    if (should_hide_unnecessary_scrollbars())
+    if (should_hide_unnecessary_scrollbars() && m_scrollbars_enabled && !m_scrollbars_forced_invisible)
         m_horizontal_scrollbar->set_visible(excess_width > 0);
 
     m_vertical_scrollbar->set_big_step(visible_content_rect().height() - m_vertical_scrollbar->step());
@@ -184,14 +185,24 @@ void ScrollableWidget::scroll_into_view(const Gfx::Rect& rect, bool scroll_horiz
     }
 }
 
+void ScrollableWidget::force_scrollbars_invisible(bool scrollbars_invisible)
+{
+    if (m_scrollbars_forced_invisible == scrollbars_invisible)
+        return;
+    m_scrollbars_forced_invisible = scrollbars_invisible;
+    m_vertical_scrollbar->set_visible(m_scrollbars_enabled && !m_scrollbars_forced_invisible);
+    m_horizontal_scrollbar->set_visible(m_scrollbars_enabled && !m_scrollbars_forced_invisible);
+    m_corner_widget->set_visible(m_scrollbars_enabled && !m_scrollbars_forced_invisible);
+}
+
 void ScrollableWidget::set_scrollbars_enabled(bool scrollbars_enabled)
 {
     if (m_scrollbars_enabled == scrollbars_enabled)
         return;
     m_scrollbars_enabled = scrollbars_enabled;
-    m_vertical_scrollbar->set_visible(m_scrollbars_enabled);
-    m_horizontal_scrollbar->set_visible(m_scrollbars_enabled);
-    m_corner_widget->set_visible(m_scrollbars_enabled);
+    m_vertical_scrollbar->set_visible(m_scrollbars_enabled && !m_scrollbars_forced_invisible);
+    m_horizontal_scrollbar->set_visible(m_scrollbars_enabled && !m_scrollbars_forced_invisible);
+    m_corner_widget->set_visible(m_scrollbars_enabled && !m_scrollbars_forced_invisible);
 }
 
 void ScrollableWidget::scroll_to_top()

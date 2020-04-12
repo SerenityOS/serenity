@@ -46,6 +46,7 @@ public:
     void scroll_into_view(const Gfx::Rect&, Orientation);
     void scroll_into_view(const Gfx::Rect&, bool scroll_horizontally, bool scroll_vertically);
 
+    void force_scrollbars_invisible(bool);
     void set_scrollbars_enabled(bool);
     bool is_scrollbars_enabled() const { return m_scrollbars_enabled; }
 
@@ -88,6 +89,7 @@ private:
     Gfx::Size m_content_size;
     Gfx::Size m_size_occupied_by_fixed_elements;
     bool m_scrollbars_enabled { true };
+    bool m_scrollbars_forced_invisible { false };
     bool m_should_hide_unnecessary_scrollbars { false };
 };
 
