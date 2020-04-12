@@ -1,6 +1,6 @@
 #!/bin/bash ../.port_include.sh
 port=git
-version=2.25.1
+version=2.26.0
 useconfigure="true"
 files="https://mirrors.edge.kernel.org/pub/software/scm/git/git-${version}.tar.xz git-${version}.tar.xz"
 configopts="--target=i686-pc-serenity"
