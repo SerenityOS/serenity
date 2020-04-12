@@ -317,6 +317,9 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
         consume(TokenType::ParenClose);
         return expression;
     }
+    case TokenType::This:
+        consume();
+        return create_ast_node<ThisExpression>();
     case TokenType::Identifier: {
         auto arrow_function_result = try_parse_arrow_function_expression(false);
         if (!arrow_function_result.is_null()) {
@@ -400,13 +403,12 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
             m_parser_state.m_has_errors = true;
             auto& current_token = m_parser_state.m_current_token;
             fprintf(stderr, "Error: Unexpected token %s as member in object initialization. Expected a numeric literal, string literal or identifier (line: %zu, column: %zu))\n",
-                    current_token.name(),
-                    current_token.line_number(),
-                    current_token.line_column());
+                current_token.name(),
+                current_token.line_number(),
+                current_token.line_column());
             consume();
             continue;
         }
-
 
         if (match(TokenType::Colon)) {
             consume(TokenType::Colon);
@@ -487,7 +489,7 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
     case TokenType::Percent:
         consume();
         return create_ast_node<BinaryExpression>(BinaryOp::Modulo, move(lhs), parse_expression(min_precedence, associativity));
-   case TokenType::DoubleAsterisk:
+    case TokenType::DoubleAsterisk:
         consume();
         return create_ast_node<BinaryExpression>(BinaryOp::Exponentiation, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::GreaterThan:
@@ -905,6 +907,7 @@ bool Parser::match_expression() const
         || type == TokenType::BracketOpen
         || type == TokenType::ParenOpen
         || type == TokenType::Function
+        || type == TokenType::This
         || match_unary_prefixed_expression();
 }
 
@@ -997,10 +1000,10 @@ Token Parser::consume(TokenType type)
         m_parser_state.m_has_errors = true;
         auto& current_token = m_parser_state.m_current_token;
         fprintf(stderr, "Error: Unexpected token %s. Expected %s (line: %zu, column: %zu))\n",
-                current_token.name(),
-                Token::name(type),
-                current_token.line_number(),
-                current_token.line_column());
+            current_token.name(),
+            Token::name(type),
+            current_token.line_number(),
+            current_token.line_column());
     }
     return consume();
 }
@@ -1010,10 +1013,10 @@ void Parser::expected(const char* what)
     m_parser_state.m_has_errors = true;
     auto& current_token = m_parser_state.m_current_token;
     fprintf(stderr, "Error: Unexpected token %s. Expected %s (line: %zu, column: %zu)\n",
-            current_token.name(),
-            what,
-            current_token.line_number(),
-            current_token.line_column());
+        current_token.name(),
+        what,
+        current_token.line_number(),
+        current_token.line_column());
 }
 
 void Parser::save_state()
