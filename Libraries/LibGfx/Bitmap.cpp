@@ -98,6 +98,48 @@ Bitmap::Bitmap(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer,
     ASSERT(format != BitmapFormat::Indexed8);
 }
 
+NonnullRefPtr<Gfx::Bitmap> Bitmap::rotated(Gfx::RotationDirection rotation_direction) const
+{
+    auto w = this->width();
+    auto h = this->height();
+
+    auto new_bitmap = Gfx::Bitmap::create(this->format(), { h, w });
+
+    for (int i = 0; i < w; i++) {
+        for (int j = 0; j < h; j++) {
+            Color color;
+            if (rotation_direction == Gfx::RotationDirection::Left)
+                color = this->get_pixel(w - i - 1, j);
+            else
+                color = this->get_pixel(i, h - j - 1);
+
+            new_bitmap->set_pixel(j, i, color);
+        }
+    }
+
+    return new_bitmap;
+}
+
+NonnullRefPtr<Gfx::Bitmap> Bitmap::flipped(Gfx::Orientation orientation) const
+{
+    auto w = this->width();
+    auto h = this->height();
+
+    auto new_bitmap = Gfx::Bitmap::create(this->format(), { w, h });
+
+    for (int i = 0; i < w; i++) {
+        for (int j = 0; j < h; j++) {
+            Color color = this->get_pixel(i, j);
+            if (orientation == Orientation::Vertical)
+                new_bitmap->set_pixel(i, h - j - 1, color);
+            else
+                new_bitmap->set_pixel(w - i - 1, j, color);
+        }
+    }
+
+    return new_bitmap;
+}
+
 NonnullRefPtr<Bitmap> Bitmap::to_bitmap_backed_by_shared_buffer() const
 {
     if (m_shared_buffer)

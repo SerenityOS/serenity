@@ -42,6 +42,11 @@ enum class BitmapFormat {
     Indexed8
 };
 
+enum RotationDirection {
+    Left,
+    Right
+};
+
 class Bitmap : public RefCounted<Bitmap> {
 public:
     static NonnullRefPtr<Bitmap> create(BitmapFormat, const Size&);
@@ -50,6 +55,8 @@ public:
     static RefPtr<Bitmap> load_from_file(const StringView& path);
     static NonnullRefPtr<Bitmap> create_with_shared_buffer(BitmapFormat, NonnullRefPtr<SharedBuffer>&&, const Size&);
 
+    NonnullRefPtr<Gfx::Bitmap> rotated(Gfx::RotationDirection) const;
+    NonnullRefPtr<Gfx::Bitmap> flipped(Gfx::Orientation) const;
     NonnullRefPtr<Bitmap> to_bitmap_backed_by_shared_buffer() const;
 
     ShareableBitmap to_shareable_bitmap(pid_t peer_pid = -1) const;
