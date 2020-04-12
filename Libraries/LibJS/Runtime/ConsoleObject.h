@@ -39,6 +39,10 @@ private:
     virtual const char* class_name() const override { return "ConsoleObject"; }
 
     static Value log(Interpreter&);
+    static Value debug(Interpreter&);
+    static Value info(Interpreter&);
+    static Value warn(Interpreter&);
+    static Value error(Interpreter&);
     static Value trace(Interpreter&);
 };
 
