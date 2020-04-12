@@ -42,6 +42,22 @@ QSWidget::~QSWidget()
 {
 }
 
+void QSWidget::flip(Gfx::Orientation orientation)
+{
+    m_bitmap = m_bitmap->flipped(orientation);
+    set_scale(m_scale);
+
+    resize_window();
+}
+
+void QSWidget::rotate(Gfx::RotationDirection rotation_direction)
+{
+    m_bitmap = m_bitmap->rotated(rotation_direction);
+    set_scale(m_scale);
+
+    resize_window();
+}
+
 void QSWidget::navigate(Directions direction)
 {
     if (m_path == nullptr)
@@ -210,4 +226,23 @@ void QSWidget::drop_event(GUI::DropEvent& event)
     event.accept();
     if (on_drop)
         on_drop(event);
+}
+
+void QSWidget::resize_window()
+{
+    if (window()->is_fullscreen())
+        return;
+
+    if (!m_bitmap)
+        return;
+
+    auto new_size = m_bitmap->size();
+
+    if (new_size.width() < 300)
+        new_size.set_width(300);
+    if (new_size.height() < 200)
+        new_size.set_height(200);
+
+    new_size.set_height(new_size.height());
+    window()->resize(new_size);
 }

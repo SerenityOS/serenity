@@ -27,6 +27,7 @@
 #pragma once
 
 #include <LibGUI/Frame.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/FloatPoint.h>
 
 class QSLabel;
@@ -46,6 +47,8 @@ public:
     const Gfx::Bitmap* bitmap() const { return m_bitmap.ptr(); }
     const String& path() const { return m_path; }
 
+    void flip(Gfx::Orientation);
+    void rotate(Gfx::RotationDirection);
     void navigate(Directions);
     void load_from_file(const String&);
 
@@ -63,6 +66,7 @@ private:
     virtual void drop_event(GUI::DropEvent&) override;
 
     void relayout();
+    void resize_window();
 
     String m_path;
     RefPtr<Gfx::Bitmap> m_bitmap;
