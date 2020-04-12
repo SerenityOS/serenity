@@ -566,9 +566,9 @@ Gfx::Point AbstractTableView::adjusted_position(const Gfx::Point& position) cons
     return position.translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
 }
 
-void AbstractTableView::did_update_model()
+void AbstractTableView::did_update_model(unsigned flags)
 {
-    AbstractView::did_update_model();
+    AbstractView::did_update_model(flags);
     update_column_sizes();
     update_content_size();
     update();

@@ -75,7 +75,7 @@ protected:
     virtual ~AbstractTableView() override;
     AbstractTableView();
 
-    virtual void did_update_model() override;
+    virtual void did_update_model(unsigned flags) override;
     virtual void mouseup_event(MouseEvent&) override;
     virtual void mousedown_event(MouseEvent&) override;
     virtual void mousemove_event(MouseEvent&) override;

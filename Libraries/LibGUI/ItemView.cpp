@@ -68,9 +68,9 @@ void ItemView::resize_event(ResizeEvent& event)
     update_content_size();
 }
 
-void ItemView::did_update_model()
+void ItemView::did_update_model(unsigned flags)
 {
-    AbstractView::did_update_model();
+    AbstractView::did_update_model(flags);
     update_content_size();
     update();
 }

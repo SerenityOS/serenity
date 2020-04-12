@@ -118,7 +118,7 @@ void SortingProxyModel::resort()
     for (int i = 0; i < row_count; ++i)
         m_row_mappings[i] = i;
     if (m_key_column == -1) {
-        did_update();
+        did_update(Model::UpdateFlag::DontInvalidateIndexes);
         return;
     }
     quick_sort(m_row_mappings, [&](auto row1, auto row2) -> bool {
@@ -133,7 +133,7 @@ void SortingProxyModel::resort()
             is_less_than = data1 < data2;
         return m_sort_order == SortOrder::Ascending ? is_less_than : !is_less_than;
     });
-    did_update();
+    did_update(Model::UpdateFlag::DontInvalidateIndexes);
     for_each_view([&](AbstractView& view) {
         auto& selection = view.selection();
         Vector<ModelIndex> selected_indexes_in_target;

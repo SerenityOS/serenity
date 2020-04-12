@@ -326,10 +326,10 @@ void TreeView::scroll_into_view(const ModelIndex& a_index, Orientation orientati
     ScrollableWidget::scroll_into_view(found_rect, orientation);
 }
 
-void TreeView::did_update_model()
+void TreeView::did_update_model(unsigned flags)
 {
     m_view_metadata.clear();
-    AbstractTableView::did_update_model();
+    AbstractTableView::did_update_model(flags);
 }
 
 void TreeView::did_update_selection()

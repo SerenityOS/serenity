@@ -259,9 +259,9 @@ void ColumnsView::mousedown_event(MouseEvent& event)
     }
 }
 
-void ColumnsView::did_update_model()
+void ColumnsView::did_update_model(unsigned flags)
 {
-    AbstractView::did_update_model();
+    AbstractView::did_update_model(flags);
 
     // FIXME: Don't drop the columns on minor updates.
     dbg() << "Model was updated; dropping columns :(";

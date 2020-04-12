@@ -48,7 +48,7 @@ protected:
     virtual void doubleclick_event(MouseEvent&) override;
     virtual void keydown_event(KeyEvent&) override;
     virtual void did_update_selection() override;
-    virtual void did_update_model() override;
+    virtual void did_update_model(unsigned flags) override;
 
 private:
     virtual ModelIndex index_at_event_position(const Gfx::Point&, bool& is_toggle) const override;

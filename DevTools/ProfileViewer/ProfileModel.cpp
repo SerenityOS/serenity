@@ -146,5 +146,5 @@ GUI::Variant ProfileModel::data(const GUI::ModelIndex& index, Role role) const
 
 void ProfileModel::update()
 {
-    did_update();
+    did_update(Model::InvalidateAllIndexes);
 }

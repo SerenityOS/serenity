@@ -55,19 +55,22 @@ void AbstractView::set_model(RefPtr<Model> model)
     m_model = move(model);
     if (m_model)
         m_model->register_view({}, *this);
-    did_update_model();
+    did_update_model(GUI::Model::InvalidateAllIndexes);
 }
 
-void AbstractView::did_update_model()
+void AbstractView::did_update_model(unsigned flags)
 {
     // FIXME: It's unfortunate that we lose so much view state when the model updates in any way.
     stop_editing();
     m_edit_index = {};
     m_hovered_index = {};
-    if (model()) {
-        selection().remove_matching([this](auto& index) { return !model()->is_valid(index); });
-    } else {
+
+    dbg() << "did_update_model, flags=" << flags;
+    dump_backtrace();
+    if (!model() || (flags & GUI::Model::InvalidateAllIndexes)) {
         selection().clear();
+    } else {
+        selection().remove_matching([this](auto& index) { return !model()->is_valid(index); });
     }
 }
 
