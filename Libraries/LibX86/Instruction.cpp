@@ -1253,7 +1253,7 @@ static String relative_address(u32 origin, bool x32, i32 imm)
     return String::format("%#04x", w + si);
 }
 
-String Instruction::to_string(u32 origin, bool x32) const
+String Instruction::to_string(u32 origin, const SymbolProvider* symbol_provider, bool x32) const
 {
     String segment_prefix;
     String asize_prefix;
@@ -1281,11 +1281,11 @@ String Instruction::to_string(u32 origin, bool x32) const
     builder.append(osize_prefix);
     builder.append(lock_prefix);
     builder.append(rep_prefix);
-    builder.append(to_string_internal(origin, x32));
+    builder.append(to_string_internal(origin, symbol_provider, x32));
     return builder.to_string();
 }
 
-String Instruction::to_string_internal(u32 origin, bool x32) const
+String Instruction::to_string_internal(u32 origin, const SymbolProvider* symbol_provider, bool x32) const
 {
     if (!m_descriptor)
         return String::format("db %#02x", m_op);
@@ -1296,6 +1296,21 @@ String Instruction::to_string_internal(u32 origin, bool x32) const
 
     builder.append(mnemonic);
     builder.append(' ');
+
+    auto formatted_address = [&](FlatPtr origin, bool x32, auto offset) {
+        StringBuilder builder;
+        builder.append(relative_address(origin, x32, offset));
+        if (symbol_provider) {
+            u32 symbol_offset = 0;
+            auto symbol = symbol_provider->symbolicate(origin + offset, &symbol_offset);
+            builder.append(" <");
+            builder.append(symbol);
+            if (symbol_offset)
+                builder.appendf("+%u", symbol_offset);
+            builder.append('>');
+        }
+        return builder.to_string();
+    };
 
     auto append_rm8 = [&] { builder.append(m_modrm.to_string_o8()); };
     auto append_rm16 = [&] { builder.append(m_modrm.to_string_o16()); };
@@ -1313,10 +1328,10 @@ String Instruction::to_string_internal(u32 origin, bool x32) const
     auto append_seg = [&] { builder.append(register_name(segment_register())); };
     auto append_creg = [&] { builder.appendf("cr%u", register_index()); };
     auto append_dreg = [&] { builder.appendf("dr%u", register_index()); };
-    auto append_relative_addr = [&] { builder.append(relative_address(origin + (m_a32 ? 6 : 4), x32, i32(m_a32 ? imm32() : imm16()))); };
-    auto append_relative_imm8 = [&] { builder.append(relative_address(origin + 2, x32, i8(imm8()))); };
-    auto append_relative_imm16 = [&] { builder.append(relative_address(origin + 3, x32, i16(imm16()))); };
-    auto append_relative_imm32 = [&] { builder.append(relative_address(origin + 5, x32, i32(imm32()))); };
+    auto append_relative_addr = [&] { builder.append(formatted_address(origin + (m_a32 ? 6 : 4), x32, i32(m_a32 ? imm32() : imm16()))); };
+    auto append_relative_imm8 = [&] { builder.append(formatted_address(origin + 2, x32, i8(imm8()))); };
+    auto append_relative_imm16 = [&] { builder.append(formatted_address(origin + 3, x32, i16(imm16()))); };
+    auto append_relative_imm32 = [&] { builder.append(formatted_address(origin + 5, x32, i32(imm32()))); };
 
     auto append_mm = [&] { builder.appendf("mm%u", register_index()); };
     auto append_mmrm64 = [&] { builder.append(m_modrm.to_string_mm()); };
