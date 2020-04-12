@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/RefCounted.h>
+#include <LibGfx/AffineTransform.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Forward.h>
 #include <LibWeb/Bindings/Wrappable.h>
@@ -60,17 +61,13 @@ public:
 private:
     explicit CanvasRenderingContext2D(HTMLCanvasElement&);
 
-    Gfx::FloatRect compute_rect(float x, float y, float width, float height);
     void did_draw(const Gfx::FloatRect&);
 
     OwnPtr<Gfx::Painter> painter();
 
     WeakPtr<HTMLCanvasElement> m_element;
 
-    float m_scale_x { 1 };
-    float m_scale_y { 1 };
-    float m_translate_x { 0 };
-    float m_translate_y { 0 };
+    Gfx::AffineTransform m_transform;
     Gfx::Color m_fill_style;
     Gfx::Color m_stroke_style;
 };
