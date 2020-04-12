@@ -56,6 +56,11 @@ public:
     {
     }
 
+    explicit FloatRect(const Rect& other)
+        : FloatRect((FloatPoint)other.location(), (FloatSize)other.size())
+    {
+    }
+
     bool is_null() const
     {
         return width() == 0 && height() == 0;
