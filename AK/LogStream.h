@@ -120,6 +120,11 @@ const LogStream& operator<<(const LogStream&, long long);
 const LogStream& operator<<(const LogStream&, unsigned long);
 const LogStream& operator<<(const LogStream&, unsigned long long);
 
+#if !defined(KERNEL) && !defined(BOOTSTRAPPER)
+const LogStream& operator<<(const LogStream&, double);
+const LogStream& operator<<(const LogStream&, float);
+#endif
+
 const LogStream& operator<<(const LogStream&, const void*);
 
 inline const LogStream& operator<<(const LogStream& stream, char value)

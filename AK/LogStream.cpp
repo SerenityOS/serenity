@@ -181,6 +181,17 @@ void StdLogStream::write(const char* characters, int length) const
         ASSERT_NOT_REACHED();
     }
 }
+
+const LogStream& operator<<(const LogStream& stream, double value)
+{
+    return stream << String::format("%.4f", value);
+}
+
+const LogStream& operator<<(const LogStream& stream, float value)
+{
+    return stream << String::format("%.4f", value);
+}
+
 #endif
 
 }
