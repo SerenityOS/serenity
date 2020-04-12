@@ -34,6 +34,11 @@ namespace X86 {
 class Instruction;
 struct InstructionDescriptor;
 
+class SymbolProvider {
+public:
+    virtual String symbolicate(FlatPtr, u32* offset = nullptr) const = 0;
+};
+
 template<typename T>
 struct MakeUnsigned {
     typedef T type;
@@ -333,12 +338,12 @@ public:
 
     u8 cc() const { return m_has_sub_op ? m_sub_op & 0xf : m_op & 0xf; }
 
-    String to_string(u32 origin, bool x32 = true) const;
+    String to_string(u32 origin, const SymbolProvider* = nullptr, bool x32 = true) const;
 
 private:
     Instruction(InstructionStream&, bool o32, bool a32);
 
-    String to_string_internal(u32 origin, bool x32) const;
+    String to_string_internal(u32 origin, const SymbolProvider*, bool x32) const;
 
     const char* reg8_name() const;
     const char* reg16_name() const;
