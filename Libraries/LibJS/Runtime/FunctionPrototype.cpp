@@ -122,7 +122,11 @@ Value FunctionPrototype::to_string(Interpreter& interpreter)
         // function_body = body.to_source();
         function_body = "  ???";
     }
-    auto function_source = String::format("function %s(%s) {\n%s\n}", function_name.characters(), function_parameters.characters(), function_body.characters());
+
+    auto function_source = String::format("function %s(%s) {\n%s\n}",
+        function_name.is_null() ? "" : function_name.characters(),
+        function_parameters.characters(),
+        function_body.characters());
     return js_string(interpreter, function_source);
 }
 

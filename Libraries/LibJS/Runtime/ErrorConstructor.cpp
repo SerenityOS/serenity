@@ -31,6 +31,7 @@
 namespace JS {
 
 ErrorConstructor::ErrorConstructor()
+    : NativeFunction("Error")
 {
     put("prototype", interpreter().error_prototype());
     put("length", Value(1));

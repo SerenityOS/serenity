@@ -33,6 +33,7 @@
 namespace JS {
 
 BooleanConstructor::BooleanConstructor()
+    : NativeFunction("Boolean")
 {
     put("prototype", Value(interpreter().boolean_prototype()));
     put("length", Value(1));
