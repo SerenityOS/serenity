@@ -382,7 +382,15 @@ String Editor::get_line(const String& prompt)
                     }
                     reposition_cursor();
                 }
-
+                if (m_suggestions.size() < 2) {
+                    // we have none, or just one suggestion
+                    // we should just commit that and continue
+                    // after it, as if it were auto-completed
+                    suggest(0, 0);
+                    m_last_shown_suggestion = String::empty();
+                    m_suggestions.clear();
+                    m_times_tab_pressed = 0;
+                }
                 continue;
             }
 
