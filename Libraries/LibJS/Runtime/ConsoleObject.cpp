@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,9 +33,23 @@
 
 namespace JS {
 
+static void print_args(Interpreter& interpreter)
+{
+    for (size_t i = 0; i < interpreter.argument_count(); ++i) {
+        printf("%s", interpreter.argument(i).to_string().characters());
+        if (i != interpreter.argument_count() - 1)
+            putchar(' ');
+    }
+    putchar('\n');
+}
+
 ConsoleObject::ConsoleObject()
 {
     put_native_function("log", log);
+    put_native_function("debug", debug);
+    put_native_function("info", info);
+    put_native_function("warn", warn);
+    put_native_function("error", error);
     put_native_function("trace", trace);
 }
 
@@ -44,18 +59,43 @@ ConsoleObject::~ConsoleObject()
 
 Value ConsoleObject::log(Interpreter& interpreter)
 {
-    for (size_t i = 0; i < interpreter.argument_count(); ++i) {
-        printf("%s", interpreter.argument(i).to_string().characters());
-        if (i != interpreter.argument_count() - 1)
-            putchar(' ');
-    }
-    putchar('\n');
+    print_args(interpreter);
+    return js_undefined();
+}
+
+Value ConsoleObject::debug(Interpreter& interpreter)
+{
+    printf("\033[36;1m");
+    print_args(interpreter);
+    printf("\033[0m");
+    return js_undefined();
+}
+
+Value ConsoleObject::info(Interpreter& interpreter)
+{
+    print_args(interpreter);
+    return js_undefined();
+}
+
+Value ConsoleObject::warn(Interpreter& interpreter)
+{
+    printf("\033[33;1m");
+    print_args(interpreter);
+    printf("\033[0m");
+    return js_undefined();
+}
+
+Value ConsoleObject::error(Interpreter& interpreter)
+{
+    printf("\033[31;1m");
+    print_args(interpreter);
+    printf("\033[0m");
     return js_undefined();
 }
 
 Value ConsoleObject::trace(Interpreter& interpreter)
 {
-    log(interpreter);
+    print_args(interpreter);
     auto call_stack = interpreter.call_stack();
     // -2 to skip the console.trace() call frame
     for (ssize_t i = call_stack.size() - 2; i >= 0; --i) {
