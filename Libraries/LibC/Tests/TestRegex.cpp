@@ -27,7 +27,10 @@
 #include <AK/StringBuilder.h>
 #include <AK/TestSuite.h>
 #include <LibC/regex.h>
+#include <regex>
 #include <stdio.h>
+
+#define BENCHMARK_LOOP_ITERATIONS 100000
 
 TEST_CASE(catch_all)
 {
@@ -39,6 +42,30 @@ TEST_CASE(catch_all)
 
     regfree(&regex);
 }
+
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+BENCHMARK_CASE(catch_all_benchmark)
+{
+    String pattern = "^.*$";
+    regex_t regex;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(regexec(&regex, "Hello World", 0, NULL, 0), REG_NOERR);
+    }
+
+    regfree(&regex);
+}
+
+BENCHMARK_CASE(catch_all_benchmark_reference_stdcpp_regex_match)
+{
+    std::regex re("^.*$");
+    std::cmatch m;
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(std::regex_match("Hello World", m, re), true);
+    }
+}
+#endif
 
 TEST_CASE(simple_start)
 {
@@ -52,6 +79,35 @@ TEST_CASE(simple_start)
 
     regfree(&regex);
 }
+
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+BENCHMARK_CASE(simple_start_benchmark)
+{
+    String pattern = "^hello friends";
+    regex_t regex;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(regexec(&regex, "Hello!", 0, NULL, 0), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "hello friends", 0, NULL, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "Well, hello friends", 0, NULL, 0), REG_NOMATCH);
+    }
+
+    regfree(&regex);
+}
+
+BENCHMARK_CASE(simple_start_benchmark_reference_stdcpp_regex_match)
+{
+    std::regex re("^hello friends");
+    std::cmatch m;
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(std::regex_match("Hello", m, re), false);
+        EXPECT_EQ(std::regex_match("hello friends", m, re), true);
+        EXPECT_EQ(std::regex_match("Well, hello friends", m, re), false);
+    }
+}
+#endif
 
 TEST_CASE(simple_end)
 {
@@ -67,6 +123,37 @@ TEST_CASE(simple_end)
     regfree(&regex);
 }
 
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+BENCHMARK_CASE(simple_end_benchmark)
+{
+    String pattern = ".*hello\\.\\.\\. there$";
+    regex_t regex;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(regexec(&regex, "Hallo", 0, NULL, 0), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "I said fyhello... there", 0, NULL, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "ahello... therea", 0, NULL, 0), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "hello.. there", 0, NULL, 0), REG_NOMATCH);
+    }
+
+    regfree(&regex);
+}
+
+BENCHMARK_CASE(simple_end_benchmark_reference_stdcpp_regex_search)
+{
+    std::regex re(".*hello\\.\\.\\. there$");
+    std::cmatch m;
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(std::regex_search("Hallo", m, re), false);
+        EXPECT_EQ(std::regex_search("I said fyhello... there", m, re), true);
+        EXPECT_EQ(std::regex_search("ahello... therea", m, re), false);
+        EXPECT_EQ(std::regex_search("hello.. there", m, re), false);
+    }
+}
+#endif
+
 TEST_CASE(simple_period)
 {
     String pattern = "hello.";
@@ -80,6 +167,37 @@ TEST_CASE(simple_period)
 
     regfree(&regex);
 }
+
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+BENCHMARK_CASE(simple_period_benchmark)
+{
+    String pattern = "hello.";
+    regex_t regex;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(regexec(&regex, "Hello1", 0, NULL, 0), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "hello1", 0, NULL, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "hello2", 0, NULL, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "hello?", 0, NULL, 0), REG_NOERR);
+    }
+
+    regfree(&regex);
+}
+
+BENCHMARK_CASE(simple_period_benchmark_reference_stdcpp_regex_match)
+{
+    std::regex re("hello.");
+    std::cmatch m;
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(std::regex_match("Hello1", m, re), false);
+        EXPECT_EQ(std::regex_match("hello1", m, re), true);
+        EXPECT_EQ(std::regex_match("hello2", m, re), true);
+        EXPECT_EQ(std::regex_match("hello?", m, re), true);
+    }
+}
+#endif
 
 TEST_CASE(simple_period_end)
 {
@@ -95,6 +213,37 @@ TEST_CASE(simple_period_end)
     regfree(&regex);
 }
 
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+BENCHMARK_CASE(simple_period_end_benchmark)
+{
+    String pattern = "hello.$";
+    regex_t regex;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(regexec(&regex, "Hello1", 0, NULL, 0), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "hello1hello1", 0, NULL, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "hello2hell", 0, NULL, 0), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "hello?", 0, NULL, 0), REG_NOERR);
+    }
+
+    regfree(&regex);
+}
+
+BENCHMARK_CASE(simple_period_end_benchmark_reference_stdcpp_regex_search)
+{
+    std::regex re("hello.$");
+    std::cmatch m;
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(std::regex_search("Hello1", m, re), false);
+        EXPECT_EQ(std::regex_search("hello1hello1", m, re), true); // this is not matching with std::regex_match
+        EXPECT_EQ(std::regex_search("hello2hell", m, re), false);
+        EXPECT_EQ(std::regex_search("hello?", m, re), true);
+    }
+}
+#endif
+
 TEST_CASE(simple_escaped)
 {
     String pattern = "hello\\.";
@@ -106,6 +255,33 @@ TEST_CASE(simple_escaped)
 
     regfree(&regex);
 }
+
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+BENCHMARK_CASE(simple_escaped_benchmark)
+{
+    String pattern = "hello\\.";
+    regex_t regex;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(regexec(&regex, "hello", 0, NULL, 0), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "hello.", 0, NULL, 0), REG_NOERR);
+    }
+
+    regfree(&regex);
+}
+
+BENCHMARK_CASE(simple_escaped_benchmark_reference_stdcpp_regex_match)
+{
+    std::regex re("hello\\.");
+    std::cmatch m;
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(std::regex_match("hello", m, re), false);
+        EXPECT_EQ(std::regex_match("hello.", m, re), true);
+    }
+}
+#endif
 
 TEST_CASE(simple_period2_end)
 {
@@ -122,6 +298,39 @@ TEST_CASE(simple_period2_end)
     regfree(&regex);
 }
 
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+BENCHMARK_CASE(simple_period2_end_benchmark)
+{
+    String pattern = ".*hi... there$";
+    regex_t regex;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(regexec(&regex, "Hello there", 0, NULL, 0), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "I said fyhi... there", 0, NULL, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "....hi... ", 0, NULL, 0), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "I said fyhihii there", 0, NULL, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "I said fyhihi there", 0, NULL, 0), REG_NOMATCH);
+    }
+
+    regfree(&regex);
+}
+
+BENCHMARK_CASE(simple_period2_end_benchmark_reference_stdcpp_regex_search)
+{
+    std::regex re(".*hi... there$");
+    std::cmatch m;
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(std::regex_search("Hello there", m, re), false);
+        EXPECT_EQ(std::regex_search("I said fyhi... there", m, re), true);
+        EXPECT_EQ(std::regex_search("....hi... ", m, re), false);
+        EXPECT_EQ(std::regex_search("I said fyhihii there", m, re), true);
+        EXPECT_EQ(std::regex_search("I said fyhihi there", m, re), false);
+    }
+}
+#endif
+
 TEST_CASE(simple_plus)
 {
     String pattern = "a+";
@@ -135,6 +344,37 @@ TEST_CASE(simple_plus)
 
     regfree(&regex);
 }
+
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+BENCHMARK_CASE(simple_plus_benchmark)
+{
+    String pattern = "a+";
+    regex_t regex;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(regexec(&regex, "b", 0, NULL, 0), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "a", 0, NULL, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "aaaaaabbbbb", 0, NULL, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "aaaaaaaaaaa", 0, NULL, 0), REG_NOERR);
+    }
+
+    regfree(&regex);
+}
+
+BENCHMARK_CASE(simple_plus_benchmark_reference_stdcpp_regex_search)
+{
+    std::regex re("a+");
+    std::cmatch m;
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(std::regex_search("b", m, re), false);
+        EXPECT_EQ(std::regex_search("a", m, re), true);
+        EXPECT_EQ(std::regex_search("aaaaaabbbbb", m, re), true);
+        EXPECT_EQ(std::regex_search("aaaaaaaaaaa", m, re), true);
+    }
+}
+#endif
 
 TEST_CASE(simple_questionmark)
 {
@@ -153,6 +393,43 @@ TEST_CASE(simple_questionmark)
     regfree(&regex);
 }
 
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+BENCHMARK_CASE(simple_questionmark_benchmark)
+{
+    String pattern = "da?d";
+    regex_t regex;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(regexec(&regex, "a", 0, NULL, 0), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "daa", 0, NULL, 0), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "ddddd", 0, NULL, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "dd", 0, NULL, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "dad", 0, NULL, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "dada", 0, NULL, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "adadaa", 0, NULL, 0), REG_NOERR);
+    }
+
+    regfree(&regex);
+}
+
+BENCHMARK_CASE(simple_questionmark_benchmark_reference_stdcpp_regex_search)
+{
+    std::regex re("da?d");
+    std::cmatch m;
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(std::regex_search("a", m, re), false);
+        EXPECT_EQ(std::regex_search("daa", m, re), false);
+        EXPECT_EQ(std::regex_search("ddddd", m, re), true);
+        EXPECT_EQ(std::regex_search("dd", m, re), true);
+        EXPECT_EQ(std::regex_search("dad", m, re), true);
+        EXPECT_EQ(std::regex_search("dada", m, re), true);
+        EXPECT_EQ(std::regex_search("adadaa", m, re), true);
+    }
+}
+#endif
+
 TEST_CASE(simple_questionmark_matchall)
 {
     String pattern = "da?d";
@@ -168,10 +445,6 @@ TEST_CASE(simple_questionmark_matchall)
 
     EXPECT_EQ(regexec(&regex, "ddddd", num_matches, matches, REG_MATCHALL), REG_NOERR);
     EXPECT_EQ(matches[0].match_count, 2u);
-
-    //    for (int i = 0; i < num_matches; ++i) {
-    //        printf("Matches[%i].rm_so: %li, .rm_eo: %li\n", i, matches[i].rm_so, matches[i].rm_eo);
-    //    }
 
     EXPECT_EQ(matches[0].rm_so, 0u);
     EXPECT_EQ(matches[0].rm_eo, 2u);
@@ -190,6 +463,45 @@ TEST_CASE(simple_questionmark_matchall)
     regfree(&regex);
 }
 
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+BENCHMARK_CASE(simple_questionmark_matchall_benchmark)
+{
+    String pattern = "da?d";
+    regex_t regex;
+    static constexpr int num_matches { 5 };
+    regmatch_t matches[num_matches];
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(regexec(&regex, "a", num_matches, matches, REG_MATCHALL), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "daa", num_matches, matches, REG_MATCHALL), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "ddddd", num_matches, matches, REG_MATCHALL), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "dd", num_matches, matches, REG_MATCHALL), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "dad", num_matches, matches, REG_MATCHALL), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "dada", num_matches, matches, REG_MATCHALL), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "adadaa", num_matches, matches, REG_MATCHALL), REG_NOERR);
+    }
+
+    regfree(&regex);
+}
+
+BENCHMARK_CASE(simple_questionmark_matchall_benchmark_reference_stdcpp_regex_search)
+{
+    std::regex re("da?d");
+    std::cmatch m;
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(std::regex_search("a", m, re, std::regex_constants::match_any), false);
+        EXPECT_EQ(std::regex_search("daa", m, re, std::regex_constants::match_any), false);
+        EXPECT_EQ(std::regex_search("ddddd", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_search("dd", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_search("dad", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_search("dada", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_search("adadaa", m, re, std::regex_constants::match_any), true);
+    }
+}
+#endif
+
 TEST_CASE(escaped_char_questionmark)
 {
     String pattern = "This\\.?And\\.?That";
@@ -203,6 +515,37 @@ TEST_CASE(escaped_char_questionmark)
 
     regfree(&regex);
 }
+
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+BENCHMARK_CASE(escaped_char_questionmark_benchmark)
+{
+    String pattern = "This\\.?And\\.?That";
+    regex_t regex;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(regexec(&regex, "ThisAndThat", 0, NULL, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "This.And.That", 0, NULL, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "This And That", 0, NULL, 0), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "This..And..That", 0, NULL, 0), REG_NOMATCH);
+    }
+
+    regfree(&regex);
+}
+
+BENCHMARK_CASE(escaped_char_questionmark_benchmark_reference_stdcpp_regex_match)
+{
+    std::regex re("This\\.?And\\.?That");
+    std::cmatch m;
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(std::regex_match("ThisAndThat", m, re), true);
+        EXPECT_EQ(std::regex_match("This.And.That", m, re), true);
+        EXPECT_EQ(std::regex_match("This And That", m, re), false);
+        EXPECT_EQ(std::regex_match("This..And..That", m, re), false);
+    }
+}
+#endif
 
 TEST_CASE(complex1)
 {
@@ -362,6 +705,37 @@ TEST_CASE(parens_qualifier_questionmark)
     regfree(&regex);
 }
 
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+BENCHMARK_CASE(parens_qualifier_questionmark_benchmark)
+{
+    String pattern = "test(hello)?test";
+    regex_t regex;
+    static constexpr int num_matches { 5 };
+    regmatch_t matches[num_matches];
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(regexec(&regex, "testtest", num_matches, matches, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "testhellotest", num_matches, matches, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "testasfdtest", num_matches, matches, 0), REG_NOMATCH);
+    }
+
+    regfree(&regex);
+}
+
+BENCHMARK_CASE(parens_qualifier_questionmark_benchmark_reference_stdcpp_regex_match)
+{
+    std::regex re("test(hello)?test");
+    std::cmatch m;
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(std::regex_match("testtest", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_match("testhellotest", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_match("testasfdtest", m, re, std::regex_constants::match_any), false);
+    }
+}
+#endif
+
 TEST_CASE(parens_qualifier_asterisk)
 {
     String pattern = "test(hello)*test";
@@ -408,6 +782,39 @@ TEST_CASE(parens_qualifier_asterisk)
     regfree(&regex);
 }
 
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+BENCHMARK_CASE(parens_qualifier_asterisk_benchmark)
+{
+    String pattern = "test(hello)*test";
+    regex_t regex;
+    static constexpr int num_matches { 6 };
+    regmatch_t matches[num_matches];
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(regexec(&regex, "testtest", num_matches, matches, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "testhellohellotest", num_matches, matches, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "testhellohellotest, testhellotest", num_matches, matches, REG_MATCHALL), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbb", num_matches, matches, 0), REG_NOMATCH);
+    }
+
+    regfree(&regex);
+}
+
+BENCHMARK_CASE(parens_qualifier_asterisk_benchmark_reference_stdcpp_regex_match)
+{
+    std::regex re("test(hello)*test");
+    std::cmatch m;
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(std::regex_match("testtest", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_match("testhellohellotest", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_search("testhellohellotest, testhellotest", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_match("aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbb", m, re, std::regex_constants::match_any), false);
+    }
+}
+#endif
+
 TEST_CASE(parens_qualifier_asterisk_2)
 {
     String pattern = "test(.*)test";
@@ -451,6 +858,39 @@ TEST_CASE(parens_qualifier_asterisk_2)
 
     regfree(&regex);
 }
+
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+BENCHMARK_CASE(parens_qualifier_asterisk_2_benchmark)
+{
+    String pattern = "test(.*)test";
+    regex_t regex;
+    static constexpr int num_matches { 6 };
+    regmatch_t matches[num_matches];
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(regexec(&regex, "testasdftest", num_matches, matches, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "testasdfasdftest", num_matches, matches, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "testaaaatest, testbbbtest, testtest", num_matches, matches, REG_MATCHALL), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbb", num_matches, matches, 0), REG_NOMATCH);
+    }
+
+    regfree(&regex);
+}
+
+BENCHMARK_CASE(parens_qualifier_asterisk_2_benchmark_reference_stdcpp_regex_match)
+{
+    std::regex re("test(.*)test");
+    std::cmatch m;
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(std::regex_match("testasdftest", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_match("testasdfasdftest", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_search("testaaaatest, testbbbtest, testtest", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_match("aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbb", m, re, std::regex_constants::match_any), false);
+    }
+}
+#endif
 
 TEST_CASE(mulit_parens_qualifier_too_less_result_values)
 {
@@ -577,30 +1017,43 @@ TEST_CASE(multi_parens_qualifier_questionmark)
     EXPECT_EQ(StringView(&match_str[matches[6].rm_so], matches[6].rm_eo - matches[6].rm_so), "");
     EXPECT_EQ(StringView(&match_str[matches[7].rm_so], matches[7].rm_eo - matches[7].rm_so), "c");
 
-    //    for (int i = 0; i < num_matches; ++i) {
-    //        printf("Matches[%i].rm_so: %li, .rm_eo: %li\n", i, matches[i].rm_so, matches[i].rm_eo);
-    //    }
-
     regfree(&regex);
 }
 
 #if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
-BENCHMARK_CASE(parens_qualifier_asterisk_2_benchmark)
+BENCHMARK_CASE(multi_parens_qualifier_questionmark_benchmark)
 {
-    String pattern = "test(.*)test";
+    String pattern = "test(a)?(b)?(c)?test";
     regex_t regex;
-    static constexpr int num_matches { 6 };
+    static constexpr int num_matches { 8 };
     regmatch_t matches[num_matches];
-    const char* match_str;
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
 
-    match_str = "testaaaatest, testbbbtest, testtest";
-    for (size_t i = 0; i < 10000; ++i) {
-        EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, REG_MATCHALL), REG_NOERR);
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(regexec(&regex, "testtest", num_matches, matches, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "testabctest", num_matches, matches, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "testabctest, testactest", num_matches, matches, REG_MATCHALL), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbb", num_matches, matches, 0), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "whaaaaat", num_matches, matches, 0), REG_NOMATCH);
     }
 
     regfree(&regex);
+}
+
+BENCHMARK_CASE(multi_parens_qualifier_questionmark_benchmark_reference_stdcpp_regex_match)
+{
+    std::regex re("test(a)?(b)?(c)?test");
+    std::cmatch m;
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(std::regex_match("testtest", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_match("testabctest", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_search("testabctest, testactest", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_match("aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbb", m, re, std::regex_constants::match_any), false);
+        EXPECT_EQ(std::regex_match("test", m, re, std::regex_constants::match_any), false);
+        EXPECT_EQ(std::regex_match("whaaaaat", m, re, std::regex_constants::match_any), false);
+    }
 }
 #endif
 
@@ -630,6 +1083,39 @@ TEST_CASE(simple_alternative)
 
     regfree(&regex);
 }
+
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+BENCHMARK_CASE(simple_alternative_benchmark)
+{
+    String pattern = "test|hello|friends";
+    regex_t regex;
+    static constexpr int num_matches { 8 };
+    regmatch_t matches[num_matches];
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "hello", num_matches, matches, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "friends", num_matches, matches, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "whaaaaat", num_matches, matches, 0), REG_NOMATCH);
+    }
+
+    regfree(&regex);
+}
+
+BENCHMARK_CASE(simple_alternative_benchmark_reference_stdcpp_regex_match)
+{
+    std::regex re("test|hello|friends");
+    std::cmatch m;
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(std::regex_match("test", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_match("hello", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_match("friends", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_match("whaaaaat", m, re, std::regex_constants::match_any), false);
+    }
+}
+#endif
 
 TEST_CASE(alternative_match_groups)
 {
@@ -737,6 +1223,47 @@ TEST_CASE(alternative_match_groups)
     regfree(&regex);
 }
 
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+BENCHMARK_CASE(alternative_match_groups_benchmark)
+{
+    String pattern = "test(a)?(b)?|hello ?(dear|my)? friends";
+    regex_t regex;
+    static constexpr int num_matches { 8 };
+    regmatch_t matches[num_matches];
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "testa", num_matches, matches, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "testb", num_matches, matches, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "hello friends", num_matches, matches, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "hello dear friends", num_matches, matches, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "hello my friends", num_matches, matches, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "testabc", num_matches, matches, 0), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "hello test friends", num_matches, matches, 0), REG_NOMATCH);
+    }
+
+    regfree(&regex);
+}
+
+BENCHMARK_CASE(alternative_match_groups_benchmark_reference_stdcpp_regex_match)
+{
+    std::regex re("test(a)?(b)?|hello ?(dear|my)? friends");
+    std::cmatch m;
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(std::regex_match("test", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_match("testa", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_match("testb", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_match("hello friends", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_match("hello dear friends", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_match("hello my friends", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_match("testabc", m, re, std::regex_constants::match_any), false);
+        EXPECT_EQ(std::regex_match("hello test friends", m, re, std::regex_constants::match_any), false);
+    }
+}
+#endif
+
 TEST_CASE(parens_qualifier_exact)
 {
     String pattern = "(hello){3}";
@@ -781,11 +1308,41 @@ TEST_CASE(parens_qualifier_exact)
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "hellohellohello");
     EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
 
-    //    for (int i = 0; i < num_matches; ++i)
-    //        printf("Matches[%i].rm_so: %li, .rm_eo: %li\n", i, matches[i].rm_so, matches[i].rm_eo);
+    regfree(&regex);
+}
+
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+BENCHMARK_CASE(parens_qualifier_exact_benchmark)
+{
+    String pattern = "(hello){3}";
+    regex_t regex;
+    static constexpr int num_matches { 5 };
+    regmatch_t matches[num_matches];
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(regexec(&regex, "hello", num_matches, matches, 0), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "hellohellohello", num_matches, matches, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "hellohellohellohello", num_matches, matches, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "test hellohellohello", num_matches, matches, 0), REG_NOERR);
+    }
 
     regfree(&regex);
 }
+
+BENCHMARK_CASE(parens_qualifier_exact_benchmark_reference_stdcpp_regex_match)
+{
+    std::regex re("(hello){3}");
+    std::cmatch m;
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(std::regex_match("hello", m, re, std::regex_constants::match_any), false);
+        EXPECT_EQ(std::regex_match("hellohellohello", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_search("hellohellohellohello", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_search("test hellohellohello", m, re, std::regex_constants::match_any), true);
+    }
+}
+#endif
 
 TEST_CASE(parens_qualifier_minimum)
 {
@@ -841,11 +1398,43 @@ TEST_CASE(parens_qualifier_minimum)
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "hellohellohellohello");
     EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
 
-    //    for (int i = 0; i < num_matches; ++i)
-    //        printf("Matches[%i].rm_so: %li, .rm_eo: %li\n", i, matches[i].rm_so, matches[i].rm_eo);
+    regfree(&regex);
+}
+
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+BENCHMARK_CASE(parens_qualifier_minimum_benchmark)
+{
+    String pattern = "(hello){3,}";
+    regex_t regex;
+    static constexpr int num_matches { 5 };
+    regmatch_t matches[num_matches];
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(regexec(&regex, "hello", num_matches, matches, 0), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "hellohellohello", num_matches, matches, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "hellohellohellohello", num_matches, matches, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "test hellohellohello", num_matches, matches, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "test hellohellohellohello", num_matches, matches, 0), REG_NOERR);
+    }
 
     regfree(&regex);
 }
+
+BENCHMARK_CASE(parens_qualifier_minimum_benchmark_reference_stdcpp_regex_match)
+{
+    std::regex re("(hello){3,}");
+    std::cmatch m;
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(std::regex_match("hello", m, re, std::regex_constants::match_any), false);
+        EXPECT_EQ(std::regex_match("hellohellohello", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_search("hellohellohellohello", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_search("test hellohellohello", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_search("test hellohellohellohello", m, re, std::regex_constants::match_any), true);
+    }
+}
+#endif
 
 TEST_CASE(parens_qualifier_maximum)
 {
@@ -906,5 +1495,40 @@ TEST_CASE(parens_qualifier_maximum)
 
     regfree(&regex);
 }
+
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+BENCHMARK_CASE(parens_qualifier_maximum_benchmark)
+{
+    String pattern = "(hello){2,3}";
+    regex_t regex;
+    static constexpr int num_matches { 5 };
+    regmatch_t matches[num_matches];
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(regexec(&regex, "hello", num_matches, matches, 0), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "hellohellohello", num_matches, matches, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "hellohellohellohello", num_matches, matches, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "test hellohellohello", num_matches, matches, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "test hellohellohellohello", num_matches, matches, 0), REG_NOERR);
+    }
+
+    regfree(&regex);
+}
+
+BENCHMARK_CASE(parens_qualifier_maximum_benchmark_reference_stdcpp_regex_match)
+{
+    std::regex re("(hello){2,3}");
+    std::cmatch m;
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(std::regex_match("hello", m, re, std::regex_constants::match_any), false);
+        EXPECT_EQ(std::regex_match("hellohellohello", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_search("hellohellohellohello", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_search("test hellohellohello", m, re, std::regex_constants::match_any), true);
+        EXPECT_EQ(std::regex_search("test hellohellohellohello", m, re, std::regex_constants::match_any), true);
+    }
+}
+#endif
 
 TEST_MAIN(Regex)
