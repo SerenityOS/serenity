@@ -42,6 +42,15 @@ QSWidget::~QSWidget()
 {
 }
 
+void QSWidget::clear()
+{
+    m_bitmap = nullptr;
+    m_path = {};
+
+    on_scale_change(100);
+    update();
+}
+
 void QSWidget::flip(Gfx::Orientation orientation)
 {
     m_bitmap = m_bitmap->flipped(orientation);

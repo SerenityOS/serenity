@@ -49,6 +49,7 @@ public:
     void set_scale(int);
     int scale() { return m_scale; }
 
+    void clear();
     void flip(Gfx::Orientation);
     void rotate(Gfx::RotationDirection);
     void navigate(Directions);
