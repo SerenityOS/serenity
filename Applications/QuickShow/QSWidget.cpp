@@ -25,6 +25,8 @@
  */
 
 #include "QSWidget.h"
+#include <AK/StringBuilder.h>
+#include <LibCore/DirIterator.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
@@ -38,6 +40,57 @@ QSWidget::QSWidget()
 
 QSWidget::~QSWidget()
 {
+}
+
+void QSWidget::navigate(Directions direction)
+{
+    if (m_path == nullptr)
+        return;
+
+    auto parts = m_path.split('/');
+    parts.remove(parts.size() - 1);
+    StringBuilder sb;
+    sb.append("/");
+    sb.join("/", parts);
+    AK::String current_dir = sb.to_string();
+
+    if (m_files_in_same_dir.is_empty()) {
+        Core::DirIterator iterator(current_dir, Core::DirIterator::Flags::SkipDots);
+        while (iterator.has_next()) {
+            String file = iterator.next_full_path();
+            if (!file.ends_with(".png")) // TODO: Find a batter way to filter supported images.
+                continue;
+            m_files_in_same_dir.append(file);
+        }
+    }
+
+    auto current_index = m_files_in_same_dir.find_first_index(m_path);
+    if (!current_index.has_value()) {
+        return;
+    }
+
+    size_t index = current_index.value();
+    if (direction == Directions::Back) {
+        if (index == 0) {
+            GUI::MessageBox::show(String::format("This is the first file.", index), "Cannot open image", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
+            return;
+        }
+
+        index--;
+    } else if (direction == Directions::Forward) {
+        if (index == m_files_in_same_dir.size() - 1) {
+            GUI::MessageBox::show(String::format("This is the last file.", index), "Cannot open image", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
+            return;
+        }
+
+        index++;
+    } else if (direction == Directions::First) {
+        index = 0;
+    } else if (direction == Directions::Last) {
+        index = m_files_in_same_dir.size() - 1;
+    }
+
+    this->load_from_file(m_files_in_same_dir.at(index));
 }
 
 void QSWidget::relayout()
