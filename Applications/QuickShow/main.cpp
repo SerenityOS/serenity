@@ -74,19 +74,12 @@ int main(int argc, char** argv)
     auto& main_toolbar = root_widget.add<GUI::ToolBar>();
 
     auto& widget = root_widget.add<QSWidget>();
-    auto update_window_title = [&](int scale) {
+    widget.on_scale_change = [&](int scale) {
         if (widget.bitmap())
             window->set_title(String::format("%s %s %d%% - QuickShow", widget.path().characters(), widget.bitmap()->size().to_string().characters(), scale));
         else
             window->set_title("QuickShow");
     };
-
-    update_window_title(100);
-
-    widget.on_scale_change = [&](int scale) {
-        update_window_title(scale);
-    };
-
     widget.on_drop = [&](auto& event) {
         window->move_to_front();
 
@@ -213,6 +206,7 @@ int main(int argc, char** argv)
         [&](auto&) {
             widget.set_scale(widget.scale() - 10);
         });
+
     auto hide_show_toolbar_action = GUI::Action::create("Hide/Show Toolbar", { Mod_Ctrl, Key_T },
         [&](auto&) {
             main_toolbar.set_visible(!main_toolbar.is_visible());
@@ -222,6 +216,11 @@ int main(int argc, char** argv)
             } else {
                 widget.set_toolbar_height(0);
             }
+        });
+
+    auto about_action = GUI::Action::create("About",
+        [&](auto&) {
+            GUI::AboutDialog::show("QuickShow", Gfx::Bitmap::load_from_file("/res/icons/32x32/filetype-image.png"), window);
         });
 
     main_toolbar.add_action(open_action);
@@ -265,15 +264,14 @@ int main(int argc, char** argv)
     view_menu.add_action(hide_show_toolbar_action);
 
     auto& help_menu = menubar->add_menu("Help");
-    help_menu.add_action(GUI::Action::create("About", [&](auto&) {
-        GUI::AboutDialog::show("QuickShow", Gfx::Bitmap::load_from_file("/res/icons/32x32/filetype-image.png"), window);
-    }));
+    help_menu.add_action(about_action);
 
     app.set_menubar(move(menubar));
 
     if (path != nullptr) {
         widget.load_from_file(path);
     }
+    widget.on_scale_change(100);
 
     window->show();
 
