@@ -56,7 +56,7 @@ void CanvasRenderingContext2D::fill_rect(float x, float y, float width, float he
     if (!painter)
         return;
 
-    Gfx::FloatRect rect = compute_rect(x, y, width, height);
+    auto rect = m_transform.map(Gfx::FloatRect(x, y, width, height));
     painter->fill_rect(enclosing_int_rect(rect), m_fill_style);
     did_draw(rect);
 }
@@ -77,35 +77,21 @@ void CanvasRenderingContext2D::stroke_rect(float x, float y, float width, float 
     if (!painter)
         return;
 
-    Gfx::FloatRect rect = compute_rect(x, y, width, height);
+    auto rect = m_transform.map(Gfx::FloatRect(x, y, width, height));
     painter->draw_rect(enclosing_int_rect(rect), m_stroke_style);
     did_draw(rect);
 }
 
 void CanvasRenderingContext2D::scale(float sx, float sy)
 {
-    // FIXME: Actually do something with the scale factor!
-    dbg() << "CanvasRenderingContext2D::scale(): " << String::format("%f", sx) << ", " << String::format("%f", sy);
-    m_scale_x = sx;
-    m_scale_y = sy;
+    dbg() << "CanvasRenderingContext2D::scale(): " << sx << ", " << sy;
+    m_transform.scale(sx, sy);
 }
 
-void CanvasRenderingContext2D::translate(float x, float y)
+void CanvasRenderingContext2D::translate(float tx, float ty)
 {
-    // FIXME: Actually do something with the translation!
-    dbg() << "CanvasRenderingContext2D::translate(): " << String::format("%f", x) << ", " << String::format("%f", y);
-    m_translate_x = x;
-    m_translate_y = y;
-}
-
-Gfx::FloatRect CanvasRenderingContext2D::compute_rect(float x, float y, float width, float height)
-{
-    return {
-        (x + m_translate_x) * m_scale_x,
-        (y + m_translate_y) * m_scale_y,
-        width * m_scale_x,
-        height * m_scale_y
-    };
+    dbg() << "CanvasRenderingContext2D::translate(): " << tx << ", " << ty;
+    m_transform.translate(tx, ty);
 }
 
 void CanvasRenderingContext2D::did_draw(const Gfx::FloatRect&)
