@@ -145,8 +145,10 @@ void Interpreter::set_variable(const FlyString& name, Value value, bool first_as
 
         auto possible_match = scope.variables.get(name);
         if (possible_match.has_value()) {
-            if (!first_assignment && possible_match.value().declaration_kind == DeclarationKind::Const)
-                ASSERT_NOT_REACHED();
+            if (!first_assignment && possible_match.value().declaration_kind == DeclarationKind::Const) {
+                throw_exception<TypeError>("Assignment to constant variable");
+                return;
+            }
 
             scope.variables.set(move(name), { move(value), possible_match.value().declaration_kind });
             return;
