@@ -136,9 +136,14 @@ Value Value::to_number() const
     case Type::Null:
         return Value(0);
     case Type::String: {
+        // FIXME: Trim whitespace beforehand
         auto& string = as_string()->string();
         if (string.is_empty())
             return Value(0);
+        if (string == "Infinity" || string == "+Infinity")
+            return js_infinity();
+        if (string == "-Infinity")
+            return Value(-js_infinity().as_double());
         bool ok;
         //FIXME: Parse in a better way
         auto parsed_int = string.to_int(ok);

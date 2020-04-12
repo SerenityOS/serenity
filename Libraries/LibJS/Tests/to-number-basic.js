@@ -22,6 +22,12 @@ try {
     // FIXME: returns NaN
     // assert(+"1.23" === 1.23)
     // assert(-"1.23" === -1.23)
+    assert(+"Infinity" === Infinity);
+    assert(+"+Infinity" === Infinity);
+    assert(+"-Infinity" === -Infinity);
+    assert(-"Infinity" === -Infinity);
+    assert(-"+Infinity" === -Infinity);
+    assert(-"-Infinity" === Infinity);
 
     assert(isNaN(+undefined));
     assert(isNaN(-undefined));
