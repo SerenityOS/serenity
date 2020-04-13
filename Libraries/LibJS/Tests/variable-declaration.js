@@ -1,23 +1,22 @@
 try {
 
-    const ConstantValue = 1;
+    const constantValue = 1;
     try {
-        ConstantValue = 2;
-    } catch (e) { 
+        constantValue = 2;
+        assertNotReached();
+    } catch (e) {
         assert(e.name === "TypeError");
         assert(e.message === "Assignment to constant variable");
-        assert(ConstantValue === 1);
+        assert(constantValue === 1);
     }
 
     // Make sure we can define new constants in inner scopes.
-    //
-    const ConstantValue2 = 1;
-
-    do 
-    {
-        const ConstantValue2 = 2;
-    }
-    while (false)
+    const constantValue2 = 1;
+    do {
+        const constantValue2 = 2;
+        assert(constantValue2 === 2);
+    } while (false);
+    assert(constantValue2 === 1);
 
     console.log("PASS");
 } catch (e) {
