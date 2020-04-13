@@ -27,6 +27,7 @@
 #include "DebugSession.h"
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
+#include <AK/Demangle.h>
 #include <AK/LogStream.h>
 #include <AK/StringBuilder.h>
 #include <AK/kmalloc.h>
@@ -137,14 +138,28 @@ bool handle_breakpoint_command(const String& command)
     if (parts.size() != 2)
         return false;
 
-    u32 breakpoint_address = strtoul(parts[1].characters(), nullptr, 16);
-    if (errno != 0)
+    auto argument = parts[1];
+    if (argument.is_empty())
         return false;
+
+    u32 breakpoint_address = 0;
+
+    if ((argument[0] >= '0' && argument[0] <= '9')) {
+        breakpoint_address = strtoul(argument.characters(), nullptr, 16);
+    } else {
+        auto symbol = g_debug_session->elf().find_demangled_function(argument);
+        if (!symbol.has_value()) {
+            printf("symbol %s not found\n", parts[1].characters());
+            return false;
+        }
+        breakpoint_address = reinterpret_cast<u32>(symbol.value().value());
+    }
     bool success = g_debug_session->insert_breakpoint(reinterpret_cast<void*>(breakpoint_address));
     if (!success) {
-        fprintf(stderr, "coult not insert breakpoint at: 0x%x\n", breakpoint_address);
+        fprintf(stderr, "coult not insert breakpoint at: %08x\n", breakpoint_address);
         return false;
     }
+    printf("breakpoint insterted at: %08x\n", breakpoint_address);
     return true;
 }
 
@@ -153,8 +168,8 @@ void print_help()
     printf("Options:\n"
            "cont - Continue execution\n"
            "regs - Print registers\n"
-           "dis <number of instructions> - Print disassembly\n"
-           "bp <address> - Insert a breakpoint\n");
+           "dis [number of instructions] - Print disassembly\n"
+           "bp <address/symbol> - Insert a breakpoint\n");
 }
 
 int main(int argc, char** argv)
@@ -185,7 +200,7 @@ int main(int argc, char** argv)
     sa.sa_handler = handle_sigint;
     sigaction(SIGINT, &sa, nullptr);
 
-    bool rc = g_debug_session->insert_breakpoint(g_debug_session->get_entry_point().as_ptr());
+    bool rc = g_debug_session->insert_breakpoint(g_debug_session->elf().entry().as_ptr());
     ASSERT(rc);
 
     g_debug_session->run([&](DebugSession::DebugBreakReason reason, Optional<PtraceRegisters> optional_regs) {
