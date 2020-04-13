@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     var names = Object.getOwnPropertyNames([1, 2, 3]);
 

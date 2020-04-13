@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     var a = [1, 2, 3];
 

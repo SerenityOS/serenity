@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     var s = "hello friends"
 

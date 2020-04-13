@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     assert(0xff === 255);
     assert(0XFF === 255);

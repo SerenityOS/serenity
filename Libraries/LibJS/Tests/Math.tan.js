@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     assert(Math.tan(0) === 0);
     assert(Math.tan(null) === 0);

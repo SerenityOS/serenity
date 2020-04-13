@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     throw 1;
     assertNotReached();

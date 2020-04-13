@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     assert(Function.length === 1);
     assert(Function.prototype.length === 0);

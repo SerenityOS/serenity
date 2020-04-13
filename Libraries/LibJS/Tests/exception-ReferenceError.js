@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     i < 3;
 } catch (e) {

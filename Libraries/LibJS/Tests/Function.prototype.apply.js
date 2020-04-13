@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     function Foo(arg) {
         this.foo = arg;

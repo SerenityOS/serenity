@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
 
     const constantValue = 1;

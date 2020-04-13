@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
   assert(typeof this === "object");
   assert(this === globalThis);

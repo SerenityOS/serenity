@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     var d = new Date();
     assert(!isNaN(d.getDate()));

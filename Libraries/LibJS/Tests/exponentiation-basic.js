@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     assert(2 ** 0 === 1);
     assert(2 ** 1 === 2);

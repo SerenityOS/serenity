@@ -1,3 +1,5 @@
+load("test-common.js");
+
 function foo(a) {
     return a;
 }

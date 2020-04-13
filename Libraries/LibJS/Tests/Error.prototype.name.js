@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     var changedInstance = new Error("");
     changedInstance.name = 'NewCustomError';

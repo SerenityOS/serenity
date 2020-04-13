@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     assert(Array.prototype.constructor === Array)
     assert(Boolean.prototype.constructor === Boolean)

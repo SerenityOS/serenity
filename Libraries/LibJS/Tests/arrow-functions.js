@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     let getNumber = () => 42;
     assert(getNumber() === 42);

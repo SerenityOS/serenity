@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     assert(10 % 3 === 1);
     assert(10.5 % 2.5 === 0.5);

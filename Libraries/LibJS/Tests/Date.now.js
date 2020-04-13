@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     var last = 0;
     for (var i = 0; i < 100; ++i) {

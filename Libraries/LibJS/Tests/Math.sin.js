@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     assert(Math.sin(0) === 0);
     assert(Math.sin(null) === 0);

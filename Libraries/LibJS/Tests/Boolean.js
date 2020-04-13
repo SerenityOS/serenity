@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     assert(Boolean.length === 1);
     assert(typeof new Boolean() === "object");

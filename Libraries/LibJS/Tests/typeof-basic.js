@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     assert(typeof "foo" === "string");
     assert(!(typeof "foo" !== "string"));

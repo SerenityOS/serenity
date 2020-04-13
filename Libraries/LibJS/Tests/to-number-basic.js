@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     assert(+false === 0);
     assert(-false === 0);

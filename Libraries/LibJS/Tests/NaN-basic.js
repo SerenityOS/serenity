@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     var nan = undefined + 1;
     assert(nan + "" == "NaN");

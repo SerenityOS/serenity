@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     var i = 0;
     var three;

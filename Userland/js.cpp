@@ -372,28 +372,9 @@ void repl(JS::Interpreter& interpreter)
     }
 }
 
-JS::Value assert_impl(JS::Interpreter& interpreter)
-{
-    if (!interpreter.argument_count())
-        return interpreter.throw_exception<JS::TypeError>("No arguments specified");
-
-    auto assertion_value = interpreter.argument(0).to_boolean();
-    if (!assertion_value)
-        return interpreter.throw_exception<JS::Error>("AssertionError", "The assertion failed!");
-
-    return JS::Value(assertion_value);
-}
-
-JS::Value assert_not_reached(JS::Interpreter& interpreter)
-{
-    return interpreter.throw_exception<JS::Error>("AssertionError", "assertNotReached() was reached!");
-}
-
 void enable_test_mode(JS::Interpreter& interpreter)
 {
     interpreter.global_object().put_native_function("load", ReplObject::load_file);
-    interpreter.global_object().put_native_function("assert", assert_impl);
-    interpreter.global_object().put_native_function("assertNotReached", assert_not_reached);
 }
 
 int main(int argc, char** argv)

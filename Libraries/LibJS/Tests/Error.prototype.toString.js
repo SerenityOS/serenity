@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     assert(Error().toString() === "Error");
     assert(Error(undefined).toString() === "Error");

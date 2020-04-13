@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     assert(String.prototype.padStart.length === 1);
 

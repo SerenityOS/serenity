@@ -1,3 +1,5 @@
+load("test-common.js");
+
 // Borrowed from LibM/TestMath.cpp :^)
 function expectClose(a, b) { assert(Math.abs(a - b) < 0.000001); }
 

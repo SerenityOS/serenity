@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     var s = "foobar";
     assert(s.startsWith("f") === true);

@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     assert(Math.ceil(0.95) === 1);
     assert(Math.ceil(4) === 4);

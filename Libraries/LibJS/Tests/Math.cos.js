@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     assert(Math.cos(0) === 1);
     assert(Math.cos(null) === 1);

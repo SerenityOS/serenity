@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     assert(Number.length === 1);
     assert(typeof Number() === "number");

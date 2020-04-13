@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     let foo = 1;
     false && (foo = 2);

@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     assert(Math.max.length === 2);
     assert(Math.max() === -Infinity);
