@@ -33,7 +33,7 @@ ifneq ($(USE_HOST_CXX),)
         CXX_WARNING_FLAGS += -Wno-unknown-warning-option
     endif
     ifeq ($(HOST_CXX),)
-        CXX = $(PRE_CXX) g++
+        CXX = $(PRE_CXX) c++
     else
         CXX = $(HOST_CXX)
     endif
