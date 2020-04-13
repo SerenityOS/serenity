@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     assert(Number.EPSILON === 2 ** -52);
     assert(Number.EPSILON > 0);

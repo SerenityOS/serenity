@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
   assert(typeof Number.prototype === "object");
   assert(Number.prototype.valueOf() === 0);

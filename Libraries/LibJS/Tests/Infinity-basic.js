@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     assert(Infinity + "" === "Infinity");
     assert(-Infinity + "" === "-Infinity");

@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     var foo = true;
     assert(foo.toString() === "true");

@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     try {
         var b = true;

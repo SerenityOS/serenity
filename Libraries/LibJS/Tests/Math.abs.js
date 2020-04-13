@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     assert(Math.abs('-1') === 1);
     assert(Math.abs(-2) === 2);

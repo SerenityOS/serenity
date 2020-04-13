@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     assert(String.prototype.toString.length === 0)
     assert("".toString() === "");

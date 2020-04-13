@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     assert(typeof Object.getPrototypeOf("") === "object");
     assert(Object.getPrototypeOf("").valueOf() === '');

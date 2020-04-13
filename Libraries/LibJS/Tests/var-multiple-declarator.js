@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     var a = 1, b = 2, c = a + b;
     assert(a === 1);

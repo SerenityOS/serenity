@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     var number = 0;
     do {

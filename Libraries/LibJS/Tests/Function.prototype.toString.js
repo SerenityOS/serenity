@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     assert((function() {}).toString() === "function () {\n  ???\n}");
     assert((function(foo) {}).toString() === "function (foo) {\n  ???\n}");
