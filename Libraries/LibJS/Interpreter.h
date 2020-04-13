@@ -96,7 +96,6 @@ public:
 
     Optional<Value> get_variable(const FlyString& name);
     void set_variable(const FlyString& name, Value, bool first_assignment = false);
-    void declare_variable(const FlyString& name, DeclarationKind);
 
     void gather_roots(Badge<Heap>, HashTable<Cell*>&);
 

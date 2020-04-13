@@ -122,27 +122,6 @@ void Interpreter::exit_scope(const ScopeNode& scope_node)
         m_unwind_until = ScopeType::None;
 }
 
-void Interpreter::declare_variable(const FlyString& name, DeclarationKind declaration_kind)
-{
-    switch (declaration_kind) {
-    case DeclarationKind::Var:
-        for (ssize_t i = m_scope_stack.size() - 1; i >= 0; --i) {
-            auto& scope = m_scope_stack.at(i);
-            if (scope.type == ScopeType::Function) {
-                scope.variables.set(move(name), { js_undefined(), declaration_kind });
-                return;
-            }
-        }
-
-        global_object().put(move(name), js_undefined());
-        break;
-    case DeclarationKind::Let:
-    case DeclarationKind::Const:
-        m_scope_stack.last().variables.set(move(name), { js_undefined(), declaration_kind });
-        break;
-    }
-}
-
 void Interpreter::set_variable(const FlyString& name, Value value, bool first_assignment)
 {
     for (ssize_t i = m_scope_stack.size() - 1; i >= 0; --i) {
