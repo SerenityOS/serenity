@@ -1,4 +1,4 @@
-#!/bin/bash ../.port_include.sh
+#!/usr/bin/env -S bash ../.port_include.sh
 port=ed
 version=1.15
 files="https://ftp.gnu.org/gnu/ed/ed-1.15.tar.lz ed-1.15.tar.lz"

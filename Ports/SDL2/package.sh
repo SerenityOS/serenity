@@ -1,4 +1,4 @@
-#!/bin/bash ../.port_include.sh
+#!/usr/bin/env -S bash ../.port_include.sh
 port=SDL2
 version=serenity-git
 workdir=SDL-master-serenity
