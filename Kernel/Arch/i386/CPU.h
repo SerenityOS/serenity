@@ -480,6 +480,8 @@ inline FlatPtr offset_in_page(const void* address)
 u32 read_cr3();
 void write_cr3(u32);
 
+u32 read_dr6();
+
 class CPUID {
 public:
     CPUID(u32 function) { asm volatile("cpuid"
