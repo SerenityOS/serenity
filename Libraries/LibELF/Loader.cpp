@@ -136,13 +136,13 @@ bool Loader::layout()
     return !failed;
 }
 
-char* Loader::symbol_ptr(const char* name)
+char* Loader::symbol_ptr(const char* name) const
 {
     char* found_ptr = nullptr;
     m_image.for_each_symbol([&](const Image::Symbol symbol) {
         if (symbol.type() != STT_FUNC)
             return IterationDecision::Continue;
-        if (symbol.name() == name)
+        if (symbol.name() != name)
             return IterationDecision::Continue;
         if (m_image.is_executable())
             found_ptr = (char*)(size_t)symbol.value();
@@ -153,6 +153,25 @@ char* Loader::symbol_ptr(const char* name)
     return found_ptr;
 }
 
+Optional<Image::Symbol> Loader::find_demangled_function(const String& name) const
+{
+    Optional<Image::Symbol> found;
+    m_image.for_each_symbol([&](const Image::Symbol symbol) {
+        if (symbol.type() != STT_FUNC)
+            return IterationDecision::Continue;
+        auto demangled = demangle(symbol.name());
+        auto index_of_paren = demangled.index_of("(");
+        if (index_of_paren.has_value()) {
+            demangled = demangled.substring(0, index_of_paren.value());
+        }
+        if (demangled != name)
+            return IterationDecision::Continue;
+        found = symbol;
+        return IterationDecision::Break;
+    });
+    return found;
+}
+
 #ifndef KERNEL
 Optional<Image::Symbol> Loader::find_symbol(u32 address, u32* out_offset) const
 {
@@ -160,7 +179,7 @@ Optional<Image::Symbol> Loader::find_symbol(u32 address, u32* out_offset) const
         return {};
 
     SortedSymbol* sorted_symbols = nullptr;
-#ifdef KERNEL
+#    ifdef KERNEL
     if (!m_sorted_symbols_region) {
         m_sorted_symbols_region = MM.allocate_kernel_region(PAGE_ROUND_UP(m_symbol_count * sizeof(SortedSymbol)), "Sorted symbols", Kernel::Region::Access::Read | Kernel::Region::Access::Write);
         sorted_symbols = (SortedSymbol*)m_sorted_symbols_region->vaddr().as_ptr();
@@ -175,7 +194,7 @@ Optional<Image::Symbol> Loader::find_symbol(u32 address, u32* out_offset) const
     } else {
         sorted_symbols = (SortedSymbol*)m_sorted_symbols_region->vaddr().as_ptr();
     }
-#else
+#    else
     if (m_sorted_symbols.is_empty()) {
         m_sorted_symbols.ensure_capacity(m_symbol_count);
         m_image.for_each_symbol([this](auto& symbol) {
@@ -187,7 +206,7 @@ Optional<Image::Symbol> Loader::find_symbol(u32 address, u32* out_offset) const
         });
     }
     sorted_symbols = m_sorted_symbols.data();
-#endif
+#    endif
 
     for (size_t i = 0; i < m_symbol_count; ++i) {
         if (sorted_symbols[i].address > address) {

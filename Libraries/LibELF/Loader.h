@@ -52,9 +52,13 @@ public:
     Function<void*(VirtualAddress, size_t, size_t, bool, bool, const String&)> alloc_section_hook;
     Function<void*(size_t, size_t)> tls_section_hook;
     Function<void*(VirtualAddress, size_t, size_t, size_t, bool r, bool w, bool x, const String&)> map_section_hook;
-    VirtualAddress entry() const { return m_image.entry(); }
 #endif
-    char* symbol_ptr(const char* name);
+    VirtualAddress entry() const
+    {
+        return m_image.entry();
+    }
+    char* symbol_ptr(const char* name) const;
+    Optional<Image::Symbol> find_demangled_function(const String& name) const;
 
     bool has_symbols() const { return m_symbol_count; }
 

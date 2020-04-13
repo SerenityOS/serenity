@@ -26,13 +26,14 @@
 
 #pragma once
 
+#include <AK/Demangle.h>
 #include <AK/HashMap.h>
 #include <AK/MappedFile.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
 #include <LibC/sys/arch/i386/regs.h>
-#include <LibELF/Image.h>
+#include <LibELF/Loader.h>
 #include <signal.h>
 #include <stdio.h>
 #include <sys/ptrace.h>
@@ -69,7 +70,7 @@ public:
     template<typename Callback>
     void run(Callback callback);
 
-    VirtualAddress get_entry_point() const;
+    const ELF::Loader& elf() const { return m_elf; }
 
     enum DebugDecision {
         Continue,
@@ -90,8 +91,8 @@ private:
     int m_debugee_pid { -1 };
     bool m_is_debugee_dead { false };
 
-    NonnullOwnPtr<MappedFile> m_executable;
-    NonnullOwnPtr<ELF::Image> m_elf_image;
+    MappedFile m_executable;
+    ELF::Loader m_elf;
 
     HashMap<void*, BreakPoint> m_breakpoints;
 };

@@ -30,8 +30,8 @@
 
 DebugSession::DebugSession(int pid)
     : m_debugee_pid(pid)
-    , m_executable(make<MappedFile>(String::format("/proc/%d/exe", pid)))
-    , m_elf_image(make<ELF::Image>(reinterpret_cast<u8*>(m_executable->data()), m_executable->size()))
+    , m_executable(String::format("/proc/%d/exe", pid))
+    , m_elf(reinterpret_cast<u8*>(m_executable.data()), m_executable.size())
 {
 }
 
@@ -175,9 +175,4 @@ void DebugSession::continue_debugee()
         perror("continue");
         ASSERT_NOT_REACHED();
     }
-}
-
-VirtualAddress DebugSession::get_entry_point() const
-{
-    return m_elf_image->entry();
 }
