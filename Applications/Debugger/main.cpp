@@ -205,6 +205,8 @@ int main(int argc, char** argv)
     bool rc = g_debug_session->insert_breakpoint(g_debug_session->elf().entry().as_ptr());
     ASSERT(rc);
 
+    String previous_command;
+
     g_debug_session->run([&](DebugSession::DebugBreakReason reason, Optional<PtraceRegisters> optional_regs) {
         if (reason == DebugSession::DebugBreakReason::Exited) {
             printf("Program exited.\n");
@@ -219,12 +221,18 @@ int main(int argc, char** argv)
         for (;;) {
             auto command = get_command();
             bool success = false;
+            Optional<DebugSession::DebugDecision> decision;
 
+            if (command.is_empty() && !previous_command.is_empty()) {
+                command = previous_command;
+            }
             if (command == "cont") {
-                return DebugSession::DebugDecision::Continue;
+                decision = DebugSession::DebugDecision::Continue;
+                success = true;
             }
             if (command == "s") {
-                return DebugSession::DebugDecision::SingleStep;
+                decision = DebugSession::DebugDecision::SingleStep;
+                success = true;
             }
 
             if (command == "regs") {
@@ -238,8 +246,14 @@ int main(int argc, char** argv)
                 success = handle_breakpoint_command(command);
             }
 
-            if (!success)
+            if (success && !command.is_empty()) {
+                previous_command = command;
+            }
+            if (!success) {
                 print_help();
+            }
+            if (decision.has_value())
+                return decision.value();
         }
     });
 }
