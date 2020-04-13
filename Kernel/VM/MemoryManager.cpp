@@ -63,6 +63,7 @@ MemoryManager::MemoryManager()
     parse_memory_map();
     write_cr3(kernel_page_directory().cr3());
     setup_low_identity_mapping();
+    setup_low_pseudo_identity_mapping();
     protect_kernel_image();
 
     m_shared_zero_page = allocate_user_physical_page();
@@ -70,6 +71,36 @@ MemoryManager::MemoryManager()
 
 MemoryManager::~MemoryManager()
 {
+}
+
+void MemoryManager::setup_low_pseudo_identity_mapping()
+{
+    // This code switches the pseudo-identity mapping (8 first MB above 3G mark) from 2MB pages to 4KB pages.
+    // The boot code sets it up as 2MB huge pages for convenience. But we need 4KB pages to be able to protect
+    // the kernel soon!
+
+    for (size_t i = 0; i < 4; ++i) {
+        m_low_pseudo_identity_mapping_pages[i] = allocate_supervisor_physical_page();
+        FlatPtr base = i * (2 * MB);
+        auto* page_table = (PageTableEntry*)quickmap_page(*m_low_pseudo_identity_mapping_pages[i]);
+        for (size_t j = 0; j < 512; ++j) {
+            auto& pte = page_table[j];
+            pte.set_physical_page_base(base + j * PAGE_SIZE);
+            pte.set_writable(true);
+            pte.set_present(true);
+            pte.set_execute_disabled(false);
+            pte.set_user_allowed(false);
+        }
+        unquickmap_page();
+    }
+
+    auto* pd = quickmap_pd(*m_kernel_page_directory, 3);
+    for (size_t i = 0; i < 4; ++i) {
+        pd[i].set_huge(false);
+        pd[i].set_page_table_base(m_low_pseudo_identity_mapping_pages[i]->paddr().get());
+    }
+
+    flush_entire_tlb();
 }
 
 void MemoryManager::protect_kernel_image()
