@@ -32,10 +32,10 @@
 extern "C" {
 
 #ifdef DEBUG
-void __assertion_failed(const char* msg, const char* file, unsigned line, const char* func)
+void __assertion_failed(const char* msg)
 {
-    dbgprintf("USERSPACE(%d) ASSERTION FAILED: %s\n%s:%u in %s\n", getpid(), msg, file, line, func);
-    fprintf(stderr, "ASSERTION FAILED: %s\n%s:%u in %s\n", msg, file, line, func);
+    dbgprintf("USERSPACE(%d) ASSERTION FAILED: %s\n", getpid(), msg);
+    fprintf(stderr, "ASSERTION FAILED: %s\n", msg);
     abort();
     for (;;)
         ;
