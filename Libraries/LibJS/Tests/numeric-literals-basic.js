@@ -8,11 +8,18 @@ try {
     assert(1e3 === 1000);
     assert(1e+3 === 1000);
     assert(1e-3 === 0.001);
+    assert(1. === 1);
+    assert(1.e1 === 10);
     assert(.1 === 0.1);
     assert(.1e1 === 1);
     assert(0.1e1 === 1);
     assert(.1e+1 === 1);
     assert(0.1e+1 === 1);
+
+    Number.prototype.foo = 'LOL';
+    assert(1..foo === 'LOL');
+    assert(1.1.foo === 'LOL');
+    assert(.1.foo === 'LOL');
 
     console.log("PASS");
 } catch (e) {
