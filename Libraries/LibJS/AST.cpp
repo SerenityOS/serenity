@@ -828,7 +828,6 @@ void UpdateExpression::dump(int indent) const
 Value VariableDeclaration::execute(Interpreter& interpreter) const
 {
     for (auto& declarator : m_declarations) {
-        interpreter.declare_variable(declarator.id().string(), m_declaration_kind);
         if (auto* init = declarator.init()) {
             auto initalizer_result = init->execute(interpreter);
             if (interpreter.exception())
