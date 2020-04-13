@@ -152,14 +152,6 @@ String Editor::get_line(const String& prompt)
         }
 
         auto reverse_tab = false;
-        auto do_delete = [&] {
-            if (m_cursor == m_buffer.size()) {
-                fputc('\a', stdout);
-                fflush(stdout);
-                return;
-            }
-            m_buffer.remove(m_cursor);
-        };
         auto increment_suggestion_index = [&] {
             m_next_suggestion_index = (m_next_suggestion_index + 1) % m_suggestions.size();
         };
@@ -235,7 +227,13 @@ String Editor::get_line(const String& prompt)
                     m_state = InputState::Free;
                     break;
                 case '3':
-                    do_delete();
+                    if (m_cursor == m_buffer.size()) {
+                        fputc('\a', stdout);
+                        fflush(stdout);
+                        continue;
+                    }
+                    m_buffer.remove(m_cursor);
+                    m_refresh_needed = true;
                     m_state = InputState::ExpectTerminator;
                     continue;
                 default:
