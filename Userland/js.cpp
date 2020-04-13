@@ -301,15 +301,13 @@ JS::Value ReplObject::exit_interpreter(JS::Interpreter& interpreter)
     return JS::js_undefined();
 }
 
-JS::Value ReplObject::repl_help(JS::Interpreter& interpreter)
+JS::Value ReplObject::repl_help(JS::Interpreter&)
 {
-    StringBuilder help_text;
-    help_text.append("REPL commands:\n");
-    help_text.append("    exit(code): exit the REPL with specified code. Defaults to 0.\n");
-    help_text.append("    help(): display this menu\n");
-    help_text.append("    load(files): Accepts file names as params to load into running session. For example repl.load(\"js/1.js\", \"js/2.js\", \"js/3.js\")\n");
-    String result = help_text.to_string();
-    return js_string(interpreter, result);
+    printf("REPL commands:\n");
+    printf("    exit(code): exit the REPL with specified code. Defaults to 0.\n");
+    printf("    help(): display this menu\n");
+    printf("    load(files): Accepts file names as params to load into running session. For example load(\"js/1.js\", \"js/2.js\", \"js/3.js\")\n");
+    return JS::js_undefined();
 }
 
 JS::Value ReplObject::load_file(JS::Interpreter& interpreter)
