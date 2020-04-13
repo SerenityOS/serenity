@@ -168,6 +168,7 @@ void print_help()
 {
     printf("Options:\n"
            "cont - Continue execution\n"
+           "s - step over the current instruction\n"
            "regs - Print registers\n"
            "dis [number of instructions] - Print disassembly\n"
            "bp <address/symbol> - Insert a breakpoint\n");
@@ -221,6 +222,9 @@ int main(int argc, char** argv)
 
             if (command == "cont") {
                 return DebugSession::DebugDecision::Continue;
+            }
+            if (command == "s") {
+                return DebugSession::DebugDecision::SingleStep;
             }
 
             if (command == "regs") {
