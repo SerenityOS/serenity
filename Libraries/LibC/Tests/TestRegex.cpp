@@ -27,10 +27,14 @@
 #include <AK/StringBuilder.h>
 #include <AK/TestSuite.h>
 #include <LibC/regex.h>
-#include <regex>
 #include <stdio.h>
 
 #define BENCHMARK_LOOP_ITERATIONS 100000
+#define DISABLE_REGEX_BENCHMARK
+
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
+#    include <regex>
+#endif
 
 TEST_CASE(catch_all)
 {
@@ -43,7 +47,7 @@ TEST_CASE(catch_all)
     regfree(&regex);
 }
 
-#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
 BENCHMARK_CASE(catch_all_benchmark)
 {
     String pattern = "^.*$";
@@ -80,7 +84,7 @@ TEST_CASE(simple_start)
     regfree(&regex);
 }
 
-#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
 BENCHMARK_CASE(simple_start_benchmark)
 {
     String pattern = "^hello friends";
@@ -123,7 +127,7 @@ TEST_CASE(simple_end)
     regfree(&regex);
 }
 
-#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
 BENCHMARK_CASE(simple_end_benchmark)
 {
     String pattern = ".*hello\\.\\.\\. there$";
@@ -168,7 +172,7 @@ TEST_CASE(simple_period)
     regfree(&regex);
 }
 
-#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
 BENCHMARK_CASE(simple_period_benchmark)
 {
     String pattern = "hello.";
@@ -213,7 +217,7 @@ TEST_CASE(simple_period_end)
     regfree(&regex);
 }
 
-#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
 BENCHMARK_CASE(simple_period_end_benchmark)
 {
     String pattern = "hello.$";
@@ -256,7 +260,7 @@ TEST_CASE(simple_escaped)
     regfree(&regex);
 }
 
-#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
 BENCHMARK_CASE(simple_escaped_benchmark)
 {
     String pattern = "hello\\.";
@@ -298,7 +302,7 @@ TEST_CASE(simple_period2_end)
     regfree(&regex);
 }
 
-#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
 BENCHMARK_CASE(simple_period2_end_benchmark)
 {
     String pattern = ".*hi... there$";
@@ -345,7 +349,7 @@ TEST_CASE(simple_plus)
     regfree(&regex);
 }
 
-#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
 BENCHMARK_CASE(simple_plus_benchmark)
 {
     String pattern = "a+";
@@ -393,7 +397,7 @@ TEST_CASE(simple_questionmark)
     regfree(&regex);
 }
 
-#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
 BENCHMARK_CASE(simple_questionmark_benchmark)
 {
     String pattern = "da?d";
@@ -463,7 +467,7 @@ TEST_CASE(simple_questionmark_matchall)
     regfree(&regex);
 }
 
-#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
 BENCHMARK_CASE(simple_questionmark_matchall_benchmark)
 {
     String pattern = "da?d";
@@ -516,7 +520,7 @@ TEST_CASE(escaped_char_questionmark)
     regfree(&regex);
 }
 
-#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
 BENCHMARK_CASE(escaped_char_questionmark_benchmark)
 {
     String pattern = "This\\.?And\\.?That";
@@ -705,7 +709,7 @@ TEST_CASE(parens_qualifier_questionmark)
     regfree(&regex);
 }
 
-#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
 BENCHMARK_CASE(parens_qualifier_questionmark_benchmark)
 {
     String pattern = "test(hello)?test";
@@ -782,7 +786,7 @@ TEST_CASE(parens_qualifier_asterisk)
     regfree(&regex);
 }
 
-#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
 BENCHMARK_CASE(parens_qualifier_asterisk_benchmark)
 {
     String pattern = "test(hello)*test";
@@ -859,7 +863,7 @@ TEST_CASE(parens_qualifier_asterisk_2)
     regfree(&regex);
 }
 
-#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
 BENCHMARK_CASE(parens_qualifier_asterisk_2_benchmark)
 {
     String pattern = "test(.*)test";
@@ -1020,7 +1024,7 @@ TEST_CASE(multi_parens_qualifier_questionmark)
     regfree(&regex);
 }
 
-#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
 BENCHMARK_CASE(multi_parens_qualifier_questionmark_benchmark)
 {
     String pattern = "test(a)?(b)?(c)?test";
@@ -1084,7 +1088,7 @@ TEST_CASE(simple_alternative)
     regfree(&regex);
 }
 
-#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
 BENCHMARK_CASE(simple_alternative_benchmark)
 {
     String pattern = "test|hello|friends";
@@ -1223,7 +1227,7 @@ TEST_CASE(alternative_match_groups)
     regfree(&regex);
 }
 
-#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
 BENCHMARK_CASE(alternative_match_groups_benchmark)
 {
     String pattern = "test(a)?(b)?|hello ?(dear|my)? friends";
@@ -1311,7 +1315,7 @@ TEST_CASE(parens_qualifier_exact)
     regfree(&regex);
 }
 
-#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
 BENCHMARK_CASE(parens_qualifier_exact_benchmark)
 {
     String pattern = "(hello){3}";
@@ -1401,7 +1405,7 @@ TEST_CASE(parens_qualifier_minimum)
     regfree(&regex);
 }
 
-#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
 BENCHMARK_CASE(parens_qualifier_minimum_benchmark)
 {
     String pattern = "(hello){3,}";
@@ -1496,7 +1500,7 @@ TEST_CASE(parens_qualifier_maximum)
     regfree(&regex);
 }
 
-#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS))
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
 BENCHMARK_CASE(parens_qualifier_maximum_benchmark)
 {
     String pattern = "(hello){2,3}";
