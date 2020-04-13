@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     assert(Number.isSafeInteger.length === 1);
     assert(Number.isSafeInteger(0) === true);

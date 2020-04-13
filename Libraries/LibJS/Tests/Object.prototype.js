@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     var o = new Object();
     Object.prototype.foo = 123;

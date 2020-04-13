@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     var o1 = new Object();
     var o2 = {};

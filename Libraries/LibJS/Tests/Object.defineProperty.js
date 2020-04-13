@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     var o = {};
     Object.defineProperty(o, "foo", { value: 1, writable: false, enumerable: false });

@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     try {
         Math.abs(-20) = 40;

@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     var o = { 1: 23, foo: "bar", "hello": "friends" };
     assert(o[1] === 23);

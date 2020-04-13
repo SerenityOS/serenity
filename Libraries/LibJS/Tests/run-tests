@@ -13,6 +13,7 @@ pass_count=0
 fail_count=0
 count=0
 
+GLOBIGNORE=test-common.js
 for f in *.js; do
     result=`$js_program -t $f`
     if [ "$result" = "PASS" ]; then
