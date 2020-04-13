@@ -1040,8 +1040,82 @@ int main(int argc, char** argv)
         auto match = binary_search(cached_path.data(), cached_path.size(), token, [](const String& token, const String& program) -> int {
             return strncmp(token.characters(), program.characters(), token.length());
         });
-        if (!match)
-            return {};
+
+        if (!match) {
+            // There is no executable in the $PATH starting with $token
+            // Suggest local executables and directories
+            auto mut_token = token; // copy it :(
+            String path;
+            Vector<String> local_suggestions;
+            bool suggest_executables = true;
+
+            ssize_t last_slash = token.length() - 1;
+            while (last_slash >= 0 && token[last_slash] != '/')
+                --last_slash;
+
+            if (last_slash >= 0) {
+                // Split on the last slash. We'll use the first part as the directory
+                // to search and the second part as the token to complete.
+                path = mut_token.substring(0, last_slash + 1);
+                if (path[0] != '/')
+                    path = String::format("%s/%s", g.cwd.characters(), path.characters());
+                path = canonicalized_path(path);
+                mut_token = mut_token.substring(last_slash + 1, mut_token.length() - last_slash - 1);
+            } else {
+                // We have no slashes, so the directory to search is the current
+                // directory and the token to complete is just the original token.
+                // In this case, do not suggest executables but directories only.
+                path = g.cwd;
+                suggest_executables = false;
+            }
+
+            // the invariant part of the token is actually just the last segment
+            // e.g. in `cd /foo/bar', 'bar' is the invariant
+            //      since we are not suggesting anything starting with
+            //      `/foo/', but rather just `bar...'
+            editor.suggest(mut_token.length(), 0);
+
+            // only suggest dot-files if path starts with a dot
+            Core::DirIterator files(path,
+                mut_token.starts_with('.') ? Core::DirIterator::NoFlags : Core::DirIterator::SkipDots);
+
+            while (files.has_next()) {
+                auto file = files.next_path();
+                // manually skip `.' and `..'
+                if (file == "." || file == "..")
+                    continue;
+                if (file.starts_with(mut_token)) {
+                    String file_path = String::format("%s/%s", path.characters(), file.characters());
+                    struct stat program_status;
+                    int stat_error = stat(file_path.characters(), &program_status);
+                    if (stat_error)
+                        continue;
+                    if (!(program_status.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)))
+                        continue;
+                    if (!S_ISDIR(program_status.st_mode) && !suggest_executables)
+                        continue;
+
+                    local_suggestions.append(file);
+                }
+            }
+
+            // If we have a single match and it's a directory, we add a slash. If it's
+            // a regular file, we add a space, unless we already have one.
+            if (local_suggestions.size() == 1) {
+                auto& completion = local_suggestions[0];
+                String file_path = String::format("%s/%s", path.characters(), completion.characters());
+                struct stat program_status;
+                int stat_error = stat(file_path.characters(), &program_status);
+                if (!stat_error) {
+                    if (S_ISDIR(program_status.st_mode))
+                        completion = String::format("%s/", local_suggestions[0].characters());
+                    else if (editor.cursor() == editor.buffer().size() || editor.buffer_at(editor.cursor()) != ' ')
+                        completion = String::format("%s ", local_suggestions[0].characters());
+                }
+            }
+
+            return local_suggestions;
+        }
 
         String completion = *match;
         Vector<String> suggestions;
