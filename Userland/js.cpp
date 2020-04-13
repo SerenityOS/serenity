@@ -52,15 +52,17 @@ public:
     ReplObject();
     virtual ~ReplObject() override;
 
+    static JS::Value load_file(JS::Interpreter&);
+
 private:
     virtual const char* class_name() const override { return "ReplObject"; }
     static JS::Value exit_interpreter(JS::Interpreter&);
     static JS::Value repl_help(JS::Interpreter&);
-    static JS::Value load_file(JS::Interpreter&);
     static JS::Value save_to_file(JS::Interpreter&);
 };
 
 bool dump_ast = false;
+bool print_last_result = false;
 static OwnPtr<Line::Editor> editor;
 static int repl_line_level = 0;
 
@@ -330,7 +332,8 @@ JS::Value ReplObject::load_file(JS::Interpreter& interpreter)
         if (dump_ast)
             program->dump(0);
         interpreter.run(*program);
-        print(interpreter.last_value());
+        if (print_last_result)
+            print(interpreter.last_value());
     }
     return JS::Value(true);
 }
@@ -369,10 +372,15 @@ JS::Value assert_impl(JS::Interpreter& interpreter)
     return JS::Value(assertion_value);
 }
 
+void enable_test_mode(JS::Interpreter& interpreter)
+{
+    interpreter.global_object().put_native_function("load", ReplObject::load_file);
+    interpreter.global_object().put_native_function("assert", assert_impl);
+}
+
 int main(int argc, char** argv)
 {
     bool gc_on_every_allocation = false;
-    bool print_last_result = false;
     bool syntax_highlight = false;
     bool test_mode = false;
     const char* script_path = nullptr;
@@ -382,16 +390,15 @@ int main(int argc, char** argv)
     args_parser.add_option(print_last_result, "Print last result", "print-last-result", 'l');
     args_parser.add_option(gc_on_every_allocation, "GC on every allocation", "gc-on-every-allocation", 'g');
     args_parser.add_option(syntax_highlight, "Enable live syntax highlighting", "syntax-highlight", 's');
-    args_parser.add_option(test_mode, "Run the interpretter with added functionality for the test harness", "test-mode", 't');
+    args_parser.add_option(test_mode, "Run the interpreter with added functionality for the test harness", "test-mode", 't');
     args_parser.add_positional_argument(script_path, "Path to script file", "script", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
     if (script_path == nullptr) {
         auto interpreter = JS::Interpreter::create<ReplObject>();
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
-        if (test_mode) {
-            interpreter->global_object().put_native_function("assert", assert_impl);
-        }
+        if (test_mode)
+            enable_test_mode(*interpreter);
 
         editor = make<Line::Editor>();
 
@@ -611,9 +618,8 @@ int main(int argc, char** argv)
     } else {
         auto interpreter = JS::Interpreter::create<JS::GlobalObject>();
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
-        if (test_mode) {
-            interpreter->global_object().put_native_function("assert", assert_impl);
-        }
+        if (test_mode)
+            enable_test_mode(*interpreter);
 
         auto file = Core::File::construct(script_path);
         if (!file->open(Core::IODevice::ReadOnly)) {
