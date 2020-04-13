@@ -2,9 +2,9 @@ var a = "foo";
 
 switch (a + "bar") {
 case 1:
-	break;
+    break;
 case "foobar":
 case 2:
-        console.log("PASS");
-	break;
+    console.log("PASS");
+    break;
 }
