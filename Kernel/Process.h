@@ -326,14 +326,14 @@ public:
     u32 m_ticks_in_user_for_dead_children { 0 };
     u32 m_ticks_in_kernel_for_dead_children { 0 };
 
-    bool validate_read_from_kernel(VirtualAddress, size_t) const;
+    [[nodiscard]] bool validate_read_from_kernel(VirtualAddress, size_t) const;
 
-    bool validate_read(const void*, size_t) const;
-    bool validate_write(void*, size_t) const;
+    [[nodiscard]] bool validate_read(const void*, size_t) const;
+    [[nodiscard]] bool validate_write(void*, size_t) const;
     template<typename T>
-    bool validate_read_typed(T* value, size_t count = 1) { return validate_read(value, sizeof(T) * count); }
+    [[nodiscard]] bool validate_read_typed(T* value, size_t count = 1) { return validate_read(value, sizeof(T) * count); }
     template<typename T>
-    bool validate_read_and_copy_typed(T* dest, const T* src)
+    [[nodiscard]] bool validate_read_and_copy_typed(T* dest, const T* src)
     {
         bool validated = validate_read_typed(src);
         if (validated) {
@@ -342,14 +342,14 @@ public:
         return validated;
     }
     template<typename T>
-    bool validate_write_typed(T* value, size_t count = 1) { return validate_write(value, sizeof(T) * count); }
+    [[nodiscard]] bool validate_write_typed(T* value, size_t count = 1) { return validate_write(value, sizeof(T) * count); }
     template<typename DataType, typename SizeType>
-    bool validate(const Syscall::MutableBufferArgument<DataType, SizeType>&);
+    [[nodiscard]] bool validate(const Syscall::MutableBufferArgument<DataType, SizeType>&);
     template<typename DataType, typename SizeType>
-    bool validate(const Syscall::ImmutableBufferArgument<DataType, SizeType>&);
+    [[nodiscard]] bool validate(const Syscall::ImmutableBufferArgument<DataType, SizeType>&);
 
-    String validate_and_copy_string_from_user(const char*, size_t) const;
-    String validate_and_copy_string_from_user(const Syscall::StringArgument&) const;
+    [[nodiscard]] String validate_and_copy_string_from_user(const char*, size_t) const;
+    [[nodiscard]] String validate_and_copy_string_from_user(const Syscall::StringArgument&) const;
 
     Custody& current_directory();
     Custody* executable() { return m_executable.ptr(); }
