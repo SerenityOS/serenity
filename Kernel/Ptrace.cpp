@@ -113,7 +113,8 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
         auto result = peer->process().peek_user_data(peek_params.address);
         if (result.is_error())
             return -EFAULT;
-        peer->process().validate_write(peek_params.out_data, sizeof(u32));
+        if (!peer->process().validate_write(peek_params.out_data, sizeof(u32)))
+            return -EFAULT;
         copy_from_user(peek_params.out_data, &result.value());
         break;
     }
