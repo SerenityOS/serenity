@@ -326,9 +326,14 @@ JS::Value ReplObject::load_file(JS::Interpreter& interpreter)
         } else {
             source = file_contents;
         }
-        auto program = JS::Parser(JS::Lexer(source)).parse_program();
+        auto parser = JS::Parser(JS::Lexer(source));
+        auto program = parser.parse_program();
         if (dump_ast)
             program->dump(0);
+
+        if (parser.has_errors())
+            continue;
+
         interpreter.run(*program);
         print(interpreter.last_value());
     }
@@ -342,9 +347,15 @@ void repl(JS::Interpreter& interpreter)
         if (piece.is_empty())
             continue;
         repl_statements.append(piece);
-        auto program = JS::Parser(JS::Lexer(piece)).parse_program();
+        auto parser = JS::Parser(JS::Lexer(piece));
+        auto program = parser.parse_program();
         if (dump_ast)
             program->dump(0);
+
+        if (parser.has_errors()) {
+            printf("Parse error\n");
+            continue;
+        }
 
         interpreter.run(*program);
         if (interpreter.exception()) {
@@ -628,10 +639,16 @@ int main(int argc, char** argv)
         } else {
             source = file_contents;
         }
-        auto program = JS::Parser(JS::Lexer(source)).parse_program();
+        auto parser = JS::Parser(JS::Lexer(source));
+        auto program = parser.parse_program();
 
         if (dump_ast)
             program->dump(0);
+
+        if (parser.has_errors()) {
+            printf("Parse Error\n");
+            return 1;
+        }
 
         auto result = interpreter->run(*program);
 
