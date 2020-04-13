@@ -279,6 +279,7 @@ ReplObject::ReplObject()
 ReplObject::~ReplObject()
 {
 }
+
 JS::Value ReplObject::save_to_file(JS::Interpreter& interpreter)
 {
     if (!interpreter.argument_count())
@@ -290,6 +291,7 @@ JS::Value ReplObject::save_to_file(JS::Interpreter& interpreter)
     }
     return JS::Value(false);
 }
+
 JS::Value ReplObject::exit_interpreter(JS::Interpreter& interpreter)
 {
     if (!interpreter.argument_count())
@@ -298,6 +300,7 @@ JS::Value ReplObject::exit_interpreter(JS::Interpreter& interpreter)
     exit(exit_code);
     return JS::js_undefined();
 }
+
 JS::Value ReplObject::repl_help(JS::Interpreter& interpreter)
 {
     StringBuilder help_text;
@@ -383,10 +386,16 @@ JS::Value assert_impl(JS::Interpreter& interpreter)
     return JS::Value(assertion_value);
 }
 
+JS::Value assert_not_reached(JS::Interpreter& interpreter)
+{
+    return interpreter.throw_exception<JS::Error>("AssertionError", "assertNotReached() was reached!");
+}
+
 void enable_test_mode(JS::Interpreter& interpreter)
 {
     interpreter.global_object().put_native_function("load", ReplObject::load_file);
     interpreter.global_object().put_native_function("assert", assert_impl);
+    interpreter.global_object().put_native_function("assertNotReached", assert_not_reached);
 }
 
 int main(int argc, char** argv)
