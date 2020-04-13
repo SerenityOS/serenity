@@ -71,6 +71,11 @@ public:
         return m_hash;
     }
 
+    unsigned existing_hash() const
+    {
+        return m_hash;
+    }
+
     bool is_fly() const { return m_fly; }
     void set_fly(Badge<FlyString>, bool fly) const { m_fly = fly; }
 
