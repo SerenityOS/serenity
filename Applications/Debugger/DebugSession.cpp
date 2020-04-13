@@ -132,18 +132,38 @@ bool DebugSession::insert_breakpoint(void* address)
     if (!original_bytes.has_value())
         return false;
 
-    if (!poke(reinterpret_cast<u32*>(address), (original_bytes.value() & ~(uint32_t)0xff) | BREAKPOINT_INSTRUCTION))
-        return false;
+    BreakPoint breakpoint { address, original_bytes.value(), BreakPointState::Disabled };
 
-    m_breakpoints.set(address, { address, original_bytes.value() });
+    m_breakpoints.set(address, breakpoint);
+
+    enable_breakpoint(breakpoint);
+
     return true;
 }
 
-void DebugSession::remove_breakpoint(const BreakPoint& breakpoint)
+bool DebugSession::disable_breakpoint(const BreakPoint& breakpoint)
 {
     ASSERT(m_breakpoints.contains(breakpoint.address));
-    poke(reinterpret_cast<u32*>(reinterpret_cast<char*>(breakpoint.address)), breakpoint.original_first_word);
-    m_breakpoints.remove(breakpoint.address);
+    if (!poke(reinterpret_cast<u32*>(reinterpret_cast<char*>(breakpoint.address)), breakpoint.original_first_word))
+        return false;
+
+    auto bp = m_breakpoints.get(breakpoint.address).value();
+    bp.state = BreakPointState::Disabled;
+    m_breakpoints.set(bp.address, bp);
+    return true;
+}
+
+bool DebugSession::enable_breakpoint(const BreakPoint& breakpoint)
+{
+    ASSERT(m_breakpoints.contains(breakpoint.address));
+
+    if (!poke(reinterpret_cast<u32*>(breakpoint.address), (breakpoint.original_first_word & ~(uint32_t)0xff) | BREAKPOINT_INSTRUCTION))
+        return false;
+
+    auto bp = m_breakpoints.get(breakpoint.address).value();
+    bp.state = BreakPointState::Enabled;
+    m_breakpoints.set(bp.address, bp);
+    return true;
 }
 
 PtraceRegisters DebugSession::get_registers() const
@@ -164,15 +184,30 @@ void DebugSession::set_registers(const PtraceRegisters& regs)
     }
 }
 
-Optional<DebugSession::BreakPoint> DebugSession::get_matching_breakpoint(const PtraceRegisters& regs) const
-{
-    return m_breakpoints.get(reinterpret_cast<void*>(regs.eip - 1));
-}
-
 void DebugSession::continue_debugee()
 {
     if (ptrace(PT_CONTINUE, m_debugee_pid, 0, 0) < 0) {
         perror("continue");
         ASSERT_NOT_REACHED();
     }
+}
+
+void* DebugSession::single_step()
+{
+    auto regs = get_registers();
+    constexpr u32 TRAP_FLAG = 0x100;
+    regs.eflags |= TRAP_FLAG;
+    set_registers(regs);
+
+    continue_debugee();
+
+    if (waitpid(m_debugee_pid, 0, WSTOPPED) != m_debugee_pid) {
+        perror("waitpid");
+        ASSERT_NOT_REACHED();
+    }
+
+    regs = get_registers();
+    regs.eflags &= ~(TRAP_FLAG);
+    set_registers(regs);
+    return (void*)regs.eip;
 }

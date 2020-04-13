@@ -53,19 +53,26 @@ public:
     bool poke(u32* address, u32 data);
     Optional<u32> peek(u32* address) const;
 
+    enum class BreakPointState {
+        Enabled,
+        Disabled,
+    };
+
     struct BreakPoint {
         void* address;
         u32 original_first_word;
+        BreakPointState state;
     };
 
     bool insert_breakpoint(void* address);
-    void remove_breakpoint(const BreakPoint&);
-    Optional<BreakPoint> get_matching_breakpoint(const PtraceRegisters&) const;
+    bool disable_breakpoint(const BreakPoint&);
+    bool enable_breakpoint(const BreakPoint&);
 
     PtraceRegisters get_registers() const;
     void set_registers(const PtraceRegisters&);
 
     void continue_debugee();
+    void* single_step();
 
     template<typename Callback>
     void run(Callback callback);
@@ -100,40 +107,57 @@ private:
 template<typename Callback>
 void DebugSession::run(Callback callback)
 {
+    bool in_consecutive_breakpoint = false;
     for (;;) {
-        continue_debugee();
+        if (!in_consecutive_breakpoint) {
+            continue_debugee();
 
-        int wstatus = 0;
-        if (waitpid(m_debugee_pid, &wstatus, WSTOPPED | WEXITED) != m_debugee_pid) {
-            perror("waitpid");
-            ASSERT_NOT_REACHED();
-        }
+            int wstatus = 0;
+            if (waitpid(m_debugee_pid, &wstatus, WSTOPPED | WEXITED) != m_debugee_pid) {
+                perror("waitpid");
+                ASSERT_NOT_REACHED();
+            }
 
-        // FIXME: This check actually only checks whether the debugee
-        // Is stopped because it hit a breakpoint or not
-        if (WSTOPSIG(wstatus) != SIGTRAP) {
-            callback(DebugBreakReason::Exited, Optional<PtraceRegisters>());
-            m_is_debugee_dead = true;
-            break;
+            // FIXME: This check actually only checks whether the debugee
+            // Is stopped because it hit a breakpoint or not
+            if (WSTOPSIG(wstatus) != SIGTRAP) {
+                callback(DebugBreakReason::Exited, Optional<PtraceRegisters>());
+                m_is_debugee_dead = true;
+                break;
+            }
         }
 
         auto regs = get_registers();
+        Optional<BreakPoint> current_breakpoint;
 
-        auto current_breakpoint = get_matching_breakpoint(regs);
-        if (current_breakpoint.has_value()) {
-            // FIXME: The current implementation removes a breakpoint
-            // after the first time it has been triggered.
-            remove_breakpoint(current_breakpoint.value());
-
-            // We need to re-execute the instruction we patched for the breakpoint,
-            // so we rollback the instruction pointer to the breakpoint's address
-            regs.eip = reinterpret_cast<u32>(current_breakpoint.value().address);
-            set_registers(regs);
-            DebugDecision decision = callback(DebugBreakReason::Breakpoint, regs);
-            if (decision != DebugDecision::Continue) {
-                // FIXME: implement detach & kill
-                ASSERT_NOT_REACHED();
-            }
+        if (in_consecutive_breakpoint) {
+            current_breakpoint = m_breakpoints.get((void*)regs.eip);
+        } else {
+            current_breakpoint = m_breakpoints.get((void*)((u32)regs.eip - 1));
         }
+
+        ASSERT(current_breakpoint.has_value());
+
+        // We want to make the breakpoint transparrent to the user of the debugger
+
+        regs.eip = reinterpret_cast<u32>(current_breakpoint.value().address);
+        set_registers(regs);
+        disable_breakpoint(current_breakpoint.value());
+
+        DebugDecision decision = callback(DebugBreakReason::Breakpoint, regs);
+        if (decision != DebugDecision::Continue) {
+            // FIXME: implement detach & kill
+            ASSERT_NOT_REACHED();
+        }
+
+        // Re-enable the breakpoint
+        auto stopped_address = single_step();
+        enable_breakpoint(current_breakpoint.value());
+
+        // If there is another breakpoint after the current one,
+        // Then we are already on it (because of single_step)
+        auto breakpoint_at_next_instruction = m_breakpoints.get(stopped_address);
+        in_consecutive_breakpoint = breakpoint_at_next_instruction.has_value()
+            && breakpoint_at_next_instruction.value().state == BreakPointState::Enabled;
     }
 }
