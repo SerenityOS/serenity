@@ -297,11 +297,31 @@ void page_fault_handler(RegisterState regs)
     }
 }
 
+EH_ENTRY_NO_CODE(1, debug);
+void debug_handler(RegisterState regs)
+{
+    clac();
+    if (!Process::current || (regs.cs & 3) == 0) {
+        klog() << "Debug Exception in Ring0";
+        hang();
+        return;
+    }
+    constexpr u8 REASON_SINGLESTEP = 14;
+    bool is_reason_singlestep = (read_dr6() & (1 << REASON_SINGLESTEP));
+    if (!is_reason_singlestep)
+        return;
+
+    if (Thread::current->tracer()) {
+        Thread::current->tracer()->set_regs(regs);
+    }
+    Thread::current->send_urgent_signal_to_self(SIGTRAP);
+}
+
 EH_ENTRY_NO_CODE(3, breakpoint);
 void breakpoint_handler(RegisterState regs)
 {
     clac();
-    if (!Process::current || Process::current->is_ring0()) {
+    if (!Process::current || (regs.cs & 3) == 0) {
         klog() << "Breakpoint Trap in Ring0";
         hang();
         return;
@@ -329,7 +349,6 @@ void breakpoint_handler(RegisterState regs)
         hang();                                                                                                                                                                \
     }
 
-EH(1, "Debug exception")
 EH(2, "Unknown error")
 EH(4, "Overflow")
 EH(5, "Bounds check")
@@ -498,7 +517,7 @@ void idt_init()
         register_interrupt_handler(i, unimp_trap);
 
     register_interrupt_handler(0x00, divide_error_asm_entry);
-    register_interrupt_handler(0x01, _exception1);
+    register_user_callable_interrupt_handler(0x01, debug_asm_entry);
     register_interrupt_handler(0x02, _exception2);
     register_user_callable_interrupt_handler(0x03, breakpoint_asm_entry);
     register_interrupt_handler(0x04, _exception4);
@@ -826,6 +845,14 @@ void write_cr3(u32 cr3)
 {
     asm volatile("movl %%eax, %%cr3" ::"a"(cr3)
                  : "memory");
+}
+
+u32 read_dr6()
+{
+    u32 dr6;
+    asm("movl %%dr6, %%eax"
+        : "=a"(dr6));
+    return dr6;
 }
 
 }
