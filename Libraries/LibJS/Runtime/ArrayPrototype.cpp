@@ -37,9 +37,9 @@ namespace JS {
 
 ArrayPrototype::ArrayPrototype()
 {
-    put_native_function("shift", shift);
-    put_native_function("pop", pop);
+    put_native_function("pop", pop, 0);
     put_native_function("push", push, 1);
+    put_native_function("shift", shift, 0);
     put_native_function("toString", to_string, 0);
     put("length", Value(0));
 }
@@ -65,9 +65,8 @@ Value ArrayPrototype::push(Interpreter& interpreter)
     auto* array = array_from(interpreter);
     if (!array)
         return {};
-    if (!interpreter.argument_count())
-        return js_undefined();
-    array->elements().append(interpreter.argument(0));
+    for (size_t i = 0; i < interpreter.argument_count(); ++i)
+        array->elements().append(interpreter.argument(i));
     return Value(array->length());
 }
 
