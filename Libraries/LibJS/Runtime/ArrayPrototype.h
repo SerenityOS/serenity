@@ -41,6 +41,7 @@ private:
 
     static Value filter(Interpreter&);
     static Value for_each(Interpreter&);
+    static Value map(Interpreter&);
     static Value pop(Interpreter&);
     static Value push(Interpreter&);
     static Value shift(Interpreter&);
