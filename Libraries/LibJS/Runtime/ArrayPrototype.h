@@ -38,9 +38,9 @@ public:
 private:
     virtual const char* class_name() const override { return "ArrayPrototype"; }
 
+    static Value pop(Interpreter&);
     static Value push(Interpreter&);
     static Value shift(Interpreter&);
-    static Value pop(Interpreter&);
     static Value to_string(Interpreter&);
 };
 
