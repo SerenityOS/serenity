@@ -55,7 +55,7 @@ public:
     const char* characters() const { return m_impl ? m_impl->characters() : nullptr; }
     size_t length() const { return m_impl ? m_impl->length() : 0; }
 
-    u32 hash() const { return m_impl ? m_impl->hash() : 0; }
+    [[gnu::always_inline]] inline u32 hash() const { return m_impl ? m_impl->existing_hash() : 0; }
 
     StringView view() const;
 
@@ -73,7 +73,7 @@ private:
 
 template<>
 struct Traits<FlyString> : public GenericTraits<FlyString> {
-    static unsigned hash(const FlyString& s) { return s.impl() ? s.impl()->hash() : 0; }
+    static unsigned hash(const FlyString& s) { return s.hash(); }
 };
 
 }
