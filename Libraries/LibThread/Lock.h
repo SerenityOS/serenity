@@ -44,9 +44,8 @@ public:
     void unlock();
 
 private:
-    AK::Atomic<bool> m_lock { false };
+    Atomic<int> m_holder { 0 };
     u32 m_level { 0 };
-    int m_holder { -1 };
 };
 
 class Locker {
@@ -67,16 +66,16 @@ private:
 [[gnu::always_inline]] inline void Lock::lock()
 {
     int tid = gettid();
+    if (m_holder == tid) {
+        ++m_level;
+        return;
+    }
     for (;;) {
-        bool expected = false;
-        if (m_lock.compare_exchange_strong(expected, true, AK::memory_order_acq_rel)) {
-            if (m_holder == -1 || m_holder == tid) {
-                m_holder = tid;
-                ++m_level;
-                m_lock.store(false, AK::memory_order_release);
-                return;
-            }
-            m_lock.store(false, AK::memory_order_release);
+        int expected = 0;
+        if (m_holder.compare_exchange_strong(expected, tid, AK::memory_order_acq_rel)) {
+            m_holder = tid;
+            m_level = 1;
+            return;
         }
         donate(m_holder);
     }
@@ -84,22 +83,11 @@ private:
 
 inline void Lock::unlock()
 {
-    for (;;) {
-        bool expected = false;
-        if (m_lock.compare_exchange_strong(expected, true, AK::memory_order_acq_rel)) {
-            ASSERT(m_holder == gettid());
-            ASSERT(m_level);
-            --m_level;
-            if (m_level) {
-                m_lock.store(false, AK::memory_order_release);
-                return;
-            }
-            m_holder = -1;
-            m_lock.store(false, AK::memory_order_release);
-            return;
-        }
-        donate(m_holder);
-    }
+    ASSERT(m_holder == gettid());
+    ASSERT(m_level);
+    --m_level;
+    if (!m_level)
+        m_holder.store(0, AK::memory_order_release);
 }
 
 #define LOCKER(lock) LibThread::Locker locker(lock)
