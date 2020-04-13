@@ -39,6 +39,8 @@ public:
     const FlyString& name() const { return m_name; }
     const String& message() const { return m_message; }
 
+    void set_name(const FlyString& name) { m_name = name; }
+
 private:
     virtual bool is_error() const final { return true; }
     virtual const char* class_name() const override { return "Error"; }

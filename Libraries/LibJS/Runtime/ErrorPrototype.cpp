@@ -36,7 +36,7 @@ namespace JS {
 
 ErrorPrototype::ErrorPrototype()
 {
-    put_native_property("name", name_getter, nullptr);
+    put_native_property("name", name_getter, name_setter);
     put_native_property("message", message_getter, nullptr);
     put_native_function("toString", to_string);
 }
@@ -53,6 +53,19 @@ Value ErrorPrototype::name_getter(Interpreter& interpreter)
     if (!this_object->is_error())
         return interpreter.throw_exception<TypeError>("Not an Error object");
     return js_string(interpreter, static_cast<const Error*>(this_object)->name());
+}
+
+void ErrorPrototype::name_setter(Interpreter& interpreter, Value value)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return;
+    if (!this_object->is_error()) {
+        interpreter.throw_exception<TypeError>("Not an Error object");
+        return;
+    }
+    auto name = FlyString(value.to_string());
+    static_cast<Error*>(this_object)->set_name(name);
 }
 
 Value ErrorPrototype::message_getter(Interpreter& interpreter)
