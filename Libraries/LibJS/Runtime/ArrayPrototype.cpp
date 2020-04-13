@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,12 +32,14 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ArrayPrototype.h>
 #include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
 
 ArrayPrototype::ArrayPrototype()
 {
+    put_native_function("forEach", for_each, 1);
     put_native_function("pop", pop, 0);
     put_native_function("push", push, 1);
     put_native_function("shift", shift, 0);
@@ -59,6 +62,43 @@ static Array* array_from(Interpreter& interpreter)
         return nullptr;
     }
     return static_cast<Array*>(this_object);
+}
+
+static Function* callback_from_args(Interpreter& interpreter, const String& name)
+{
+    if (interpreter.argument_count() < 1) {
+        interpreter.throw_exception<TypeError>(String::format("Array.prototype.%s() requires at least one argument", name.characters()));
+        return nullptr;
+    }
+    auto callback = interpreter.argument(0);
+    if (!callback.is_object() || !callback.as_object().is_function()) {
+        interpreter.throw_exception<TypeError>(String::format("%s is not a function", callback.to_string().characters()));
+        return nullptr;
+    }
+    return static_cast<Function*>(&callback.as_object());
+}
+
+Value ArrayPrototype::for_each(Interpreter& interpreter)
+{
+    auto* array = array_from(interpreter);
+    if (!array)
+        return {};
+    auto* callback = callback_from_args(interpreter, "forEach");
+    if (!callback)
+        return {};
+    auto this_value = interpreter.argument(1);
+    auto initial_array_size = array->elements().size();
+    for (size_t i = 0; i < initial_array_size; ++i) {
+        if (i >= array->elements().size())
+            break;
+        auto value = array->elements()[i];
+        if (value.is_empty())
+            continue;
+        interpreter.call(callback, this_value, { value, Value((i32)i), array });
+        if (interpreter.exception())
+            return {};
+    }
+    return js_undefined();
 }
 
 Value ArrayPrototype::push(Interpreter& interpreter)

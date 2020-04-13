@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,6 +39,7 @@ public:
 private:
     virtual const char* class_name() const override { return "ArrayPrototype"; }
 
+    static Value for_each(Interpreter&);
     static Value pop(Interpreter&);
     static Value push(Interpreter&);
     static Value shift(Interpreter&);
