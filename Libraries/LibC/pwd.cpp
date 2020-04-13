@@ -146,11 +146,11 @@ next_entry:
     __pwdb_entry->pw_gecos = __pwdb_entry->gecos_buffer;
     __pwdb_entry->pw_dir = __pwdb_entry->dir_buffer;
     __pwdb_entry->pw_shell = __pwdb_entry->shell_buffer;
-    strncpy(__pwdb_entry->name_buffer, e_name.characters(), PWDB_STR_MAX_LEN);
-    strncpy(__pwdb_entry->passwd_buffer, e_passwd.characters(), PWDB_STR_MAX_LEN);
-    strncpy(__pwdb_entry->gecos_buffer, e_gecos.characters(), PWDB_STR_MAX_LEN);
-    strncpy(__pwdb_entry->dir_buffer, e_dir.characters(), PWDB_STR_MAX_LEN);
-    strncpy(__pwdb_entry->shell_buffer, e_shell.characters(), PWDB_STR_MAX_LEN);
+    strncpy(__pwdb_entry->name_buffer, e_name.characters(), PWDB_STR_MAX_LEN - 1);
+    strncpy(__pwdb_entry->passwd_buffer, e_passwd.characters(), PWDB_STR_MAX_LEN - 1);
+    strncpy(__pwdb_entry->gecos_buffer, e_gecos.characters(), PWDB_STR_MAX_LEN - 1);
+    strncpy(__pwdb_entry->dir_buffer, e_dir.characters(), PWDB_STR_MAX_LEN - 1);
+    strncpy(__pwdb_entry->shell_buffer, e_shell.characters(), PWDB_STR_MAX_LEN - 1);
     return __pwdb_entry;
 }
 
