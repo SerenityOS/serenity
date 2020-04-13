@@ -72,7 +72,7 @@ public:
     NonnullRefPtr<NewExpression> parse_new_expression();
     RefPtr<FunctionExpression> try_parse_arrow_function_expression(bool expect_parens);
 
-    bool has_errors() const { return m_parser_state.m_has_errors; }
+    bool has_errors() const { return m_parser_state.m_lexer.has_errors() || m_parser_state.m_has_errors; }
 
 private:
     int operator_precedence(TokenType) const;
