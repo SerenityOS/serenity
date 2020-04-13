@@ -81,6 +81,7 @@ public:
 
     enum DebugDecision {
         Continue,
+        SingleStep,
         Detach,
         Kill,
     };
@@ -107,9 +108,17 @@ private:
 template<typename Callback>
 void DebugSession::run(Callback callback)
 {
-    bool in_consecutive_breakpoint = false;
+
+    enum class State {
+        FreeRun,
+        ConsecutiveBreakpoint,
+        SingleStep,
+    };
+
+    State state { State::FreeRun };
+
     for (;;) {
-        if (!in_consecutive_breakpoint) {
+        if (state == State::FreeRun) {
             continue_debugee();
 
             int wstatus = 0;
@@ -119,7 +128,7 @@ void DebugSession::run(Callback callback)
             }
 
             // FIXME: This check actually only checks whether the debugee
-            // Is stopped because it hit a breakpoint or not
+            // stopped because it hit a breakpoint/is in single stepping mode or not
             if (WSTOPSIG(wstatus) != SIGTRAP) {
                 callback(DebugBreakReason::Exited, Optional<PtraceRegisters>());
                 m_is_debugee_dead = true;
@@ -130,34 +139,47 @@ void DebugSession::run(Callback callback)
         auto regs = get_registers();
         Optional<BreakPoint> current_breakpoint;
 
-        if (in_consecutive_breakpoint) {
-            current_breakpoint = m_breakpoints.get((void*)regs.eip);
-        } else {
+        if (state == State::FreeRun) {
             current_breakpoint = m_breakpoints.get((void*)((u32)regs.eip - 1));
+        } else {
+            current_breakpoint = m_breakpoints.get((void*)regs.eip);
         }
 
-        ASSERT(current_breakpoint.has_value());
-
-        // We want to make the breakpoint transparrent to the user of the debugger
-
-        regs.eip = reinterpret_cast<u32>(current_breakpoint.value().address);
-        set_registers(regs);
-        disable_breakpoint(current_breakpoint.value());
+        if (current_breakpoint.has_value()) {
+            // We want to make the breakpoint transparrent to the user of the debugger
+            regs.eip = reinterpret_cast<u32>(current_breakpoint.value().address);
+            set_registers(regs);
+            disable_breakpoint(current_breakpoint.value());
+        }
 
         DebugDecision decision = callback(DebugBreakReason::Breakpoint, regs);
-        if (decision != DebugDecision::Continue) {
-            // FIXME: implement detach & kill
-            ASSERT_NOT_REACHED();
+
+        if (decision == DebugDecision::Continue) {
+            state = State::FreeRun;
         }
 
-        // Re-enable the breakpoint
-        auto stopped_address = single_step();
-        enable_breakpoint(current_breakpoint.value());
+        if (current_breakpoint.has_value()) {
+            // Re-enable the breakpoint
+            auto stopped_address = single_step();
+            enable_breakpoint(current_breakpoint.value());
+            // If there is another breakpoint after the current one,
+            // Then we are already on it (because of single_step)
+            auto breakpoint_at_next_instruction = m_breakpoints.get(stopped_address);
+            if (breakpoint_at_next_instruction.has_value()
+                && breakpoint_at_next_instruction.value().state == BreakPointState::Enabled) {
+                state = State::ConsecutiveBreakpoint;
+            }
+        }
 
-        // If there is another breakpoint after the current one,
-        // Then we are already on it (because of single_step)
-        auto breakpoint_at_next_instruction = m_breakpoints.get(stopped_address);
-        in_consecutive_breakpoint = breakpoint_at_next_instruction.has_value()
-            && breakpoint_at_next_instruction.value().state == BreakPointState::Enabled;
+        if (decision == DebugDecision::SingleStep) {
+            state = State::SingleStep;
+        } else {
+            // TODO: implement DebugDecision:: Kill, Detach
+            ASSERT(decision == DebugDecision::Continue);
+        }
+
+        if (state == State::SingleStep) {
+            single_step();
+        }
     }
 }
