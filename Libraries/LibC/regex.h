@@ -32,6 +32,8 @@
 #include <AK/Vector.h>
 #include <stddef.h>
 
+//#define REGEX_DEBUG
+
 namespace regex {
 class VM;
 }
@@ -63,7 +65,8 @@ struct regmatch_t {
 #define REG_NOTBOL 1 // The circumflex character (^), when taken as a special character, will not match the beginning of string.
 #define REG_NOTEOL (REG_NOTBOL << 1)   // The dollar sign ($), when taken as a special character, will not match the end of string.
 #define REG_MATCHALL (REG_NOTBOL << 2) // Match all occurences of the character - extension to posix
-#define REG_STATS (REG_NOTBOL << 3)    // Print stats for a match to stdout
+#define REG_SEARCH (REG_NOTBOL << 3)   // Do try to match the pattern anyhwere in the string
+#define REG_STATS (REG_NOTBOL << 4)    // Print stats for a match to stdout
 
 #define REG_MAX_RECURSE 5000
 
@@ -112,30 +115,102 @@ enum class OpCode {
 #undef __ENUMERATE_OPCODE
 };
 
+enum class CompareType {
+    Undefined,
+    Inverse,
+    AnySingleCharacter,
+    OrdinaryCharacter,
+    OrdinaryCharacters,
+    CharacterClass,
+    RangeExpression,
+    RangeExpressionDummy,
+};
+
+enum class CharacterClass {
+    Alnum,
+    Cntrl,
+    Lower,
+    Space,
+    Alpha,
+    Digit,
+    Print,
+    Upper,
+    Blank,
+    Graph,
+    Punct,
+    Xdigit,
+};
+
 class StackValue {
 public:
-    const union {
+    union CompareValue {
+        CompareValue(const CharacterClass value)
+            : character_class(value)
+        {
+        }
+        CompareValue(const char value1, const char value2)
+            : range_values { value1, value2 }
+        {
+        }
+        const CharacterClass character_class;
+        const struct {
+            const char from;
+            const char to;
+        } range_values;
+    };
+
+    union {
         const OpCode op_code;
         const char* string;
-        const int length;
+        const char ch;
+        const int number;
+        const size_t positive_number;
+        const CompareValue compare_value;
+        const CompareType compare_type;
     };
 
     const char* name() const;
     static const char* name(OpCode);
 
-    StackValue(const OpCode op_code_)
-        : op_code(op_code_)
+    StackValue(const OpCode value)
+        : op_code(value)
     {
     }
-    StackValue(const char* string_)
-        : string(string_)
+    StackValue(const char* value)
+        : string(value)
     {
     }
-    StackValue(const int length_)
-        : length(length_)
+    StackValue(const char value)
+        : ch(value)
     {
     }
+    StackValue(const int value)
+        : number(value)
+    {
+    }
+    StackValue(const size_t value)
+        : positive_number(value)
+    {
+    }
+    StackValue(const CharacterClass value)
+        : compare_value(value)
+    {
+    }
+    StackValue(const char value1, const char value2)
+        : compare_value(value1, value2)
+    {
+    }
+    StackValue(const CompareType value)
+        : compare_type(value)
+    {
+    }
+
     ~StackValue() = default;
+};
+
+struct CompareTypeAndValue {
+    CompareType type;
+    StackValue value;
 };
 
 #define ENUMERATE_REGEX_TOKENS                 \
@@ -154,7 +229,6 @@ public:
     __ENUMERATE_REGEX_TOKEN(Dollar)            \
     __ENUMERATE_REGEX_TOKEN(Pipe)              \
     __ENUMERATE_REGEX_TOKEN(Plus)              \
-    __ENUMERATE_REGEX_TOKEN(Minus)             \
     __ENUMERATE_REGEX_TOKEN(Comma)             \
     __ENUMERATE_REGEX_TOKEN(Questionmark)
 
@@ -190,6 +264,7 @@ public:
     Token next();
     bool has_errors() const { return m_has_errors; }
     void reset();
+    void back(size_t offset);
 
 private:
     char peek(size_t offset = 0) const;
@@ -222,6 +297,8 @@ private:
     void expected(const char* what);
     Token consume();
     Token consume(TokenType type);
+    bool consume(StringView view);
+
     void save_state();
     void load_state();
     bool match_meta_chars();
@@ -230,6 +307,7 @@ private:
     bool parse_ere_dupl_symbol(Vector<StackValue>&, size_t& min_length);
     bool parse_ere_expression(Vector<StackValue>&, size_t& min_length);
     bool parse_extended_reg_exp(Vector<StackValue>&, size_t& min_length);
+    bool parse_bracket_expression(Vector<StackValue>&, size_t& min_length);
     void reset();
 
     struct ParserState {
@@ -258,7 +336,7 @@ public:
         size_t m_ops { 0 };
     };
 
-    MatchResult match(const StringView view, size_t max_matches_result, size_t match_groups, size_t min_length);
+    MatchResult match(const StringView view, size_t max_matches_result, size_t match_groups, size_t min_length, bool search);
     MatchResult match_all(const StringView view, size_t max_matches_result, size_t match_groups, size_t min_length);
     const Vector<StackValue>& bytes() const { return m_bytecode; }
 

@@ -83,6 +83,13 @@ char Lexer::peek(size_t offset) const
     return m_source[m_position + offset];
 }
 
+void Lexer::back(size_t offset)
+{
+    m_position -= offset;
+    m_previous_position = m_position - 1;
+    m_current_char = m_source[m_position];
+}
+
 void Lexer::consume()
 {
     m_previous_position = m_position;
@@ -202,10 +209,6 @@ Token Lexer::next()
             emit_token(TokenType::Comma);
             return m_current_token;
         }
-        if (ch == '-') {
-            emit_token(TokenType::Minus);
-            return m_current_token;
-        }
         if (ch == '\\') {
             size_t escape = match_escape_sequence();
             if (escape > 0) {
@@ -236,14 +239,6 @@ Parser::ParserState::ParserState(Lexer lexer)
 Parser::Parser(Lexer lexer)
     : m_parser_state(move(lexer))
 {
-}
-
-bool Parser::match_meta_chars()
-{
-    auto type = m_parser_state.m_current_token.type();
-    return type == TokenType::Circumflex
-        || type == TokenType::Minus
-        || type == TokenType::RightBracket;
 }
 
 bool Parser::match_ere_quoted_chars()
@@ -319,10 +314,14 @@ bool Parser::parse_ere_dupl_symbol(Vector<StackValue>& operations, size_t& min_l
         if (number2 && number2 > number1) {
             auto maximum = number2 - number1;
             new_operations.empend(OpCode::ForkStay);
-            new_operations.empend(maximum * operations.size()); // Jump to the _END label
+            new_operations.empend(maximum * (operations.size() + 2)); // Jump to the _END label
 
-            for (size_t i = 0; i < maximum; ++i)
+            for (size_t i = 0; i < maximum; ++i) {
                 new_operations.append(operations);
+                new_operations.empend(OpCode::ForkStay);
+                new_operations.empend((maximum - i - 1) * (operations.size() + 2)); // Jump to the _END label
+            }
+
         } else if (is_minimum) {
             new_operations.empend(OpCode::ForkJump);
             new_operations.empend(-operations.size() - 2); // Jump to the last iteration
@@ -418,37 +417,42 @@ bool Parser::parse_ere_dupl_symbol(Vector<StackValue>& operations, size_t& min_l
 
 bool Parser::parse_bracket_expression(Vector<StackValue>& stack, size_t& min_length)
 {
-    Vector<StackValue> operations;
-    size_t position = 0;
-    bool negation { false };
+    Vector<CompareTypeAndValue> values;
 
     for (;;) {
 
-        if (match(TokenType::OrdinaryCharacter)) {
-            auto t = consume(TokenType::OrdinaryCharacter);
+        if (consume("-")) {
 
-        } else if (match(TokenType::Period)) {
-            auto t = consume(TokenType::Period);
+            if (values.is_empty() || (values.size() == 1 && values.last().type == CompareType::Inverse)) {
+                // first in the bracket expression
+                values.append({ CompareType::OrdinaryCharacter, { '-' } });
 
-        } else if (match(TokenType::Asterisk)) {
-            auto t = consume(TokenType::Period);
+            } else if (match(TokenType::RightBracket)) {
+                // Last in the bracket expression
+                values.append({ CompareType::OrdinaryCharacter, { '-' } });
 
-        } else if (match(TokenType::EscapeSequence)) {
-            auto t = consume(TokenType::EscapeSequence);
+            } else if (values.last().type == CompareType::OrdinaryCharacter) {
+
+                values.append({ CompareType::RangeExpressionDummy, 0 });
+
+                if (consume("-")) {
+                    // Valid range, add ordinary character
+                    values.append({ CompareType::OrdinaryCharacter, { '-' } });
+                }
+            } else {
+                m_parser_state.m_has_errors = true;
+                return false;
+            }
+
+        } else if (match(TokenType::OrdinaryCharacter) || match(TokenType::Period) || match(TokenType::Asterisk) || match(TokenType::EscapeSequence) || match(TokenType::Plus)) {
+            values.append({ CompareType::OrdinaryCharacter, { *consume().value().characters_without_null_termination() } });
 
         } else if (match(TokenType::Circumflex)) {
             auto t = consume(TokenType::Circumflex);
-            if (!position)
-                negation = true;
-
-        } else if (match(TokenType::RightBracket)) {
-            auto t = consume(TokenType::Period);
-            if (!position || (negation && position == 1)) {
-                // handle bracket as ordinary character
-            } else {
-                // closing bracket expression
-                break;
-            }
+            if (values.is_empty())
+                values.append({ CompareType::Inverse, 0 });
+            else
+                values.append({ CompareType::OrdinaryCharacter, { *t.value().characters_without_null_termination() } });
 
         } else if (match(TokenType::LeftBracket)) {
 
@@ -457,60 +461,120 @@ bool Parser::parse_bracket_expression(Vector<StackValue>& stack, size_t& min_len
                 consume(TokenType::Period);
 
                 // FIXME: Parse collating element, this is needed when we have locale support
+                //        This could have impact on length parameter, I guess.
+                ASSERT_NOT_REACHED();
 
                 consume(TokenType::Period);
-                consume(TokenType::LeftBracket);
+                consume(TokenType::RightBracket);
 
-            } else if (match(TokenType::Colon)) {
-                consume(TokenType::Colon);
+            } else if (match(TokenType::OrdinaryCharacter)) {
+                if (consume("=")) {
+                    // FIXME: Parse collating element, this is needed when we have locale support
+                    //        This could have impact on length parameter, I guess.
+                    ASSERT_NOT_REACHED();
 
-                // parse character class
-                if (match(TokenType::OrdinaryCharacter)) {
-                    if (consume("alnum")) {
-                    } else if (consume("alpha")) {
-                    } else if (consume("blank")) {
-                    } else if (consume("cntrl")) {
-                    } else if (consume("digit")) {
-                    } else if (consume("graph")) {
-                    } else if (consume("lower")) {
-                    } else if (consume("print")) {
-                    } else if (consume("punct")) {
-                    } else if (consume("space")) {
-                    } else if (consume("upper")) {
-                    } else if (consume("xdigit")) {
+                    if (!consume("="))
+                        m_parser_state.m_has_errors = true;
+                    consume(TokenType::RightBracket);
+
+                } else if (consume(":")) {
+                    CharacterClass ch_class;
+                    // parse character class
+                    if (match(TokenType::OrdinaryCharacter)) {
+                        if (consume("alnum"))
+                            ch_class = CharacterClass::Alnum;
+                        else if (consume("alpha"))
+                            ch_class = CharacterClass::Alpha;
+                        else if (consume("blank"))
+                            ch_class = CharacterClass::Blank;
+                        else if (consume("cntrl"))
+                            ch_class = CharacterClass::Cntrl;
+                        else if (consume("digit"))
+                            ch_class = CharacterClass::Digit;
+                        else if (consume("graph"))
+                            ch_class = CharacterClass::Graph;
+                        else if (consume("lower"))
+                            ch_class = CharacterClass::Lower;
+                        else if (consume("print"))
+                            ch_class = CharacterClass::Print;
+                        else if (consume("punct"))
+                            ch_class = CharacterClass::Punct;
+                        else if (consume("space"))
+                            ch_class = CharacterClass::Space;
+                        else if (consume("upper"))
+                            ch_class = CharacterClass::Upper;
+                        else if (consume("xdigit"))
+                            ch_class = CharacterClass::Xdigit;
+                        else {
+                            m_parser_state.m_has_errors = true;
+                            return false;
+                        }
+
+                        values.append({ CompareType::CharacterClass, ch_class });
+
+                    } else {
+                        m_parser_state.m_has_errors = true;
+                        return false;
                     }
 
-                } else {
-                    m_parser_state.m_has_errors = true;
-                    return false;
+                    // FIXME: we do not support locale specific character classes until locales are implemented
+
+                    if (!consume(":"))
+                        m_parser_state.m_has_errors = true;
+                    consume(TokenType::RightBracket);
                 }
-
-                // FIXME: we do not support locale specific character classes until locales are implemented
-
-                consume(TokenType::Colon);
-                consume(TokenType::LeftBracket);
             }
 
-        } else if (match(TokenType::Period)) {
-            auto t = consume(TokenType::Period);
+        } else if (match(TokenType::RightBracket)) {
 
-        } else if (match(TokenType::Period)) {
-            auto t = consume(TokenType::Period);
+            if (values.is_empty() || (values.size() == 1 && values.last().type == CompareType::Inverse)) {
+                // handle bracket as ordinary character
+                values.append({ CompareType::OrdinaryCharacter, { *consume().value().characters_without_null_termination() } });
+            } else {
+                // closing bracket expression
+                break;
+            }
 
-        } else if (match(TokenType::Period)) {
-            auto t = consume(TokenType::Period);
-
-        } else if (match(TokenType::Period)) {
-            auto t = consume(TokenType::Period);
-
-        } else if (match(TokenType::Period)) {
-            auto t = consume(TokenType::Period);
+        } else {
+            // nothing matched, this is a failure, as at least the closing bracket must match...
+            m_parser_state.m_has_errors = true;
+            return false;
         }
 
-        ++position;
+        // check if range expression has to be completed...
+        if (values.size() >= 3 && values.at(values.size() - 2).type == CompareType::RangeExpressionDummy) {
+            if (values.last().type != CompareType::OrdinaryCharacter) {
+                m_parser_state.m_has_errors = true;
+                return false;
+            }
+            auto value2 = values.take_last();
+            values.take_last(); // RangeExpressionDummy
+            auto value1 = values.take_last();
+
+            values.append({ CompareType::RangeExpression, StackValue { value1.value.ch, value2.value.ch } });
+        }
     }
 
-    // Add compare statement
+    if (values.size())
+        min_length = 1;
+
+    if (values.first().type == CompareType::Inverse)
+        min_length = 0;
+
+    Vector<StackValue> operations;
+
+    operations.empend(OpCode::Compare);
+    operations.empend(values.size()); // number of arguments
+
+    for (auto& value : values) {
+        ASSERT(value.type != CompareType::RangeExpressionDummy);
+        ASSERT(value.type != CompareType::OrdinaryCharacters);
+        ASSERT(value.type != CompareType::Undefined);
+
+        operations.append(move(value.type));
+        if (value.type != CompareType::Inverse)
+            operations.append(move(value.value));
+    }
 
     stack.append(move(operations));
 
@@ -536,14 +600,17 @@ bool Parser::parse_ere_expression(Vector<StackValue>& stack, size_t& min_length)
 
             if (length > 1) {
                 stack.empend(OpCode::Compare);
+                stack.empend(1ul); // number of arguments
+                stack.empend(CompareType::OrdinaryCharacters);
                 stack.empend(start_token.value().characters_without_null_termination());
                 stack.empend(length - ((match_ere_dupl_symbol() && length > 1) ? 1 : 0)); // last character is inserted into 'operations' for duplication symbol handling
             }
 
             if ((match_ere_dupl_symbol() && length > 1) || length == 1) { // Create own compare opcode for last character before duplication symbol
                 operations.empend(OpCode::Compare);
-                operations.empend(last_token.value().characters_without_null_termination());
-                operations.empend(1);
+                operations.empend(1ul); // number of arguments
+                operations.empend(CompareType::OrdinaryCharacter);
+                operations.empend(last_token.value().characters_without_null_termination()[0]);
             }
 
             can_match_dupl_symbol = true;
@@ -554,8 +621,8 @@ bool Parser::parse_ere_expression(Vector<StackValue>& stack, size_t& min_length)
             length = 1;
             consume();
             operations.empend(OpCode::Compare);
-            operations.empend(0);
-            operations.empend(0);
+            operations.empend(1ul); // number of arguments
+            operations.empend(CompareType::AnySingleCharacter);
 
             can_match_dupl_symbol = true;
             break;
@@ -565,15 +632,32 @@ bool Parser::parse_ere_expression(Vector<StackValue>& stack, size_t& min_length)
             length = 1;
             Token t = consume();
             operations.empend(OpCode::Compare);
+            operations.empend(1ul); // number of arguments
+
 #ifdef REGEX_DEBUG
             printf("[PARSER] EscapeSequence with substring %s\n", String(t.value()).characters());
 #endif
-            operations.empend(t.value().characters_without_null_termination() + 1);
-            operations.empend(1);
+            operations.empend(CompareType::OrdinaryCharacter);
+            operations.empend((char)t.value().characters_without_null_termination()[1]);
+            can_match_dupl_symbol = true;
             break;
         }
 
-        // FIXME: Add bracket expression matching/parsing
+        if (match(TokenType::LeftBracket)) {
+            consume(TokenType::LeftBracket);
+
+            Vector<StackValue> sub_ops;
+            if (!parse_bracket_expression(sub_ops, length) || !sub_ops.size()) {
+                m_parser_state.m_has_errors = true;
+                return false;
+            }
+
+            operations.append(move(sub_ops));
+
+            consume(TokenType::RightBracket);
+            can_match_dupl_symbol = true;
+            break;
+        }
 
         if (match(TokenType::Circumflex)) {
             consume(TokenType::Circumflex);
@@ -622,7 +706,7 @@ bool Parser::parse_ere_expression(Vector<StackValue>& stack, size_t& min_length)
     }
 
     stack.append(move(operations));
-    min_length = length;
+    min_length += length;
 
     return true;
 }
@@ -712,10 +796,35 @@ Token Parser::consume(TokenType type)
     return consume();
 }
 
+bool Parser::consume(StringView view)
+{
+    size_t length { 0 };
+
+    for (auto ch : view) {
+        if (match(TokenType::OrdinaryCharacter)) {
+            if (*m_parser_state.m_current_token.value().characters_without_null_termination() != ch) {
+                m_parser_state.m_lexer.back(length);
+                return false;
+            }
+        } else {
+            m_parser_state.m_lexer.back(length);
+            return false;
+        }
+        consume(TokenType::OrdinaryCharacter);
+        ++length;
+    }
+
+    return true;
+}
+
 Parser::ParserResult Parser::parse()
 {
-    parse_extended_reg_exp(m_parser_state.m_bytes, m_parser_state.m_min_match_length);
-    consume(TokenType::Eof);
+    if (parse_extended_reg_exp(m_parser_state.m_bytes, m_parser_state.m_min_match_length))
+        consume(TokenType::Eof);
+#ifdef REGEX_DEBUG
+    else
+        printf("[PARSER] Error during parsing!\n");
+#endif
 
 #ifdef REGEX_DEBUG
     printf("[PARSER] Produced stack with %lu entries\n", m_parser_state.m_bytes.size());
@@ -737,7 +846,7 @@ VM::MatchState::MatchState(size_t instructionp, size_t stringp, StringView view)
 {
 }
 
-VM::MatchResult VM::match(StringView view, size_t max_matches_result, size_t match_groups, size_t min_length)
+VM::MatchResult VM::match(StringView view, size_t max_matches_result, size_t match_groups, size_t min_length, bool search)
 {
     regoff_t match_start;
     bool match;
@@ -759,11 +868,11 @@ VM::MatchResult VM::match(StringView view, size_t max_matches_result, size_t mat
         match_start = i;
         match = match_recurse(state);
 
-        if (match)
+        if (match || !search)
             break;
     }
 
-    if (!match)
+    if (!match || (!search && state.m_stringp < view.length()))
         return { 0, {}, state.m_ops };
 
     if (state.m_matches.size())
@@ -897,55 +1006,220 @@ bool VM::match_recurse(MatchState& state, size_t recursion_level)
         auto stack_item = get_and_increment(state);
 
 #ifdef REGEX_DEBUG
-        printf("[VM][r=%lu]  OpCode: 0x%i (%14s) - instructionp: %2lu, stringp: %2lu - ", recursion_level, stack_item.length, stack_item.name(), current_ip, state.m_stringp);
-        printf("[%20s]", String(&state.m_view[state.m_stringp], state.m_view.length() - state.m_stringp).characters());
+        fflush(stdout);
+        printf("[VM][r=%lu]  OpCode: 0x%i (%14s) - instructionp: %2lu, stringp: %2lu - ", recursion_level, stack_item.number, stack_item.name(), current_ip, state.m_stringp);
+        printf("[%20s]\n", String(&state.m_view[state.m_stringp], state.m_view.length() - state.m_stringp).characters());
 #endif
 
         if (stack_item.op_code == OpCode::Compare) {
-            auto* str = get_and_increment(state).string;
-            auto& length = get_and_increment(state).length;
+            bool inverse { false };
+            auto& arguments = get_and_increment(state).positive_number;
+            size_t fetched_arguments = 0;
+            size_t stringp = state.m_stringp;
+            bool inverse_matched { false };
 
-#ifdef REGEX_DEBUG
-            String a;
-            String b;
-            if (state.m_stringp < state.m_view.length()) {
-                if (!length) {
-                    a = "ANY";
-                    b = String(&state.m_view[state.m_stringp], 1);
+            for (; fetched_arguments < arguments; ++fetched_arguments) {
+                if (state.m_stringp > stringp)
+                    break;
+
+                auto& compare_type = get_and_increment(state).compare_type;
+
+                if (compare_type == CompareType::Inverse)
+                    inverse = true;
+
+                else if (compare_type == CompareType::OrdinaryCharacter) {
+                    auto ch = get_and_increment(state).ch;
+
+                    // We want to compare a string that is definitely longer than the available string
+                    if (state.m_view.length() - state.m_stringp < 1)
+                        return run_forkstay_or_false();
+
+                    if (ch == state.m_view[state.m_stringp]) {
+                        if (inverse)
+                            inverse_matched = true;
+                        else
+                            ++state.m_stringp;
+                    }
+
+                } else if (compare_type == CompareType::AnySingleCharacter) {
+                    // We want to compare a string that is definitely longer than the available string
+                    if (state.m_view.length() - state.m_stringp < 1)
+                        return run_forkstay_or_false();
+
+                    ASSERT(!inverse);
+                    ++state.m_stringp;
+
+                } else if (compare_type == CompareType::OrdinaryCharacters) {
+                    // We want to compare a string that is definitely longer than the available string
+                    ASSERT(!inverse);
+
+                    auto* str = get_and_increment(state).string;
+                    auto& length = get_and_increment(state).positive_number;
+
+                    // We want to compare a string that is definitely longer than the available string
+                    if (state.m_view.length() - state.m_stringp < length)
+                        return run_forkstay_or_false();
+
+                    if (!strncmp(str, &state.m_view[state.m_stringp], length))
+                        state.m_stringp += length;
+                    else
+                        return run_forkstay_or_false();
+                } else if (compare_type == CompareType::CharacterClass) {
+
+                    if (state.m_view.length() - state.m_stringp < 1)
+                        return run_forkstay_or_false();
+
+                    auto& character_class = get_and_increment(state).compare_value.character_class;
+                    auto& ch = state.m_view[state.m_stringp];
+
+                    switch (character_class) {
+                    case CharacterClass::Alnum:
+                        if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')) {
+                            if (inverse)
+                                inverse_matched = true;
+                            else
+                                ++state.m_stringp;
+                        }
+                        break;
+                    case CharacterClass::Alpha:
+                        if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'))
+                            ++state.m_stringp;
+                        break;
+                    case CharacterClass::Blank:
+                        if (ch == ' ' || ch == '\t') {
+                            if (inverse)
+                                inverse_matched = true;
+                            else
+                                ++state.m_stringp;
+                        }
+                        break;
+                    case CharacterClass::Cntrl:
+                        if ((ch >= '\0' && ch <= ' ') || ch == 127) {
+                            if (inverse)
+                                inverse_matched = true;
+                            else
+                                ++state.m_stringp;
+                        }
+                        break;
+                    case CharacterClass::Digit:
+                        if (ch >= '0' && ch <= '9') {
+                            if (inverse)
+                                inverse_matched = true;
+                            else
+                                ++state.m_stringp;
+                        }
+                        break;
+                    case CharacterClass::Graph:
+                        if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || (ch >= '!' && ch <= '/') || (ch >= ':' && ch <= '@') || (ch >= '[' && ch <= '`') || (ch >= '{' && ch <= '~')) {
+                            if (inverse)
+                                inverse_matched = true;
+                            else
+                                ++state.m_stringp;
+                        }
+                        break;
+                    case CharacterClass::Lower:
+                        if (ch >= 'a' && ch <= 'z') {
+                            if (inverse)
+                                inverse_matched = true;
+                            else
+                                ++state.m_stringp;
+                        }
+                        break;
+                    case CharacterClass::Print:
+                        if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || (ch >= '\t' && ch <= '\r') || ch == ' ' || (ch >= '!' && ch <= '/') || (ch >= ':' && ch <= '@') || (ch >= '[' && ch <= '`') || (ch >= '{' && ch <= '~')) {
+                            if (inverse)
+                                inverse_matched = true;
+                            else
+                                ++state.m_stringp;
+                        }
+                        break;
+                    case CharacterClass::Punct:
+                        if ((ch >= '!' && ch <= '/') || (ch >= ':' && ch <= '@') || (ch >= '[' && ch <= '`') || (ch >= '{' && ch <= '~')) {
+                            if (inverse)
+                                inverse_matched = true;
+                            else
+                                ++state.m_stringp;
+                        }
+                        break;
+                    case CharacterClass::Space:
+                        if ((ch >= '\t' && ch <= '\r') || ch == ' ') {
+                            if (inverse)
+                                inverse_matched = true;
+                            else
+                                ++state.m_stringp;
+                        }
+                        break;
+                    case CharacterClass::Upper:
+                        if (ch >= 'A' && ch <= 'Z') {
+                            if (inverse)
+                                inverse_matched = true;
+                            else
+                                ++state.m_stringp;
+                        }
+                        break;
+                    case CharacterClass::Xdigit:
+                        if ((ch >= 'A' && ch <= 'F') || (ch >= 'a' && ch <= 'f') || (ch >= '0' && ch <= '9')) {
+                            if (inverse)
+                                inverse_matched = true;
+                            else
+                                ++state.m_stringp;
+                        }
+                        break;
+                    }
+
+                } else if (compare_type == CompareType::RangeExpression) {
+                    auto& value = get_and_increment(state).compare_value;
+                    auto& from = value.range_values.from;
+                    auto& to = value.range_values.to;
+                    auto& ch = state.m_view[state.m_stringp];
+
+                    if (ch >= from && ch <= to) {
+                        if (inverse)
+                            inverse_matched = true;
+                        else
+                            ++state.m_stringp;
+                    }
                 } else {
-                    StringBuilder a_builder;
-                    a_builder.appendf("'%s'", String(str, length).characters());
-                    a = a_builder.build();
-                    b = String(&state.m_view[state.m_stringp], length);
+                    fprintf(stderr, "Undefined comparison: %i\n", compare_type);
+                    fflush(stdout);
+                    ASSERT_NOT_REACHED();
+                    break;
                 }
             }
-            printf(" > Comparing strings: %s == '%s' with length: %i\n", a.characters(), b.characters(), max(length, 1));
-            fflush(stdout);
-#endif
 
-            // We want to compare a string that is definitely longer than the available string
-            if ((size_t)length > state.m_view.length() - state.m_stringp)
-                return run_forkstay_or_false();
-
-            if (!length) { // Match any single character
+            if (inverse && !inverse_matched)
                 ++state.m_stringp;
-            } else if (length == 1) {
-                if (str[0] == state.m_view[state.m_stringp])
-                    ++state.m_stringp;
-                else
-                    return run_forkstay_or_false();
-            } else {
-                if (!strncmp(str, &state.m_view[state.m_stringp], length))
-                    state.m_stringp += length;
-                else
-                    return run_forkstay_or_false();
+
+            // fetch missing arguments from stack
+            for (; fetched_arguments < arguments; ++fetched_arguments) {
+                auto& compare_type = get_and_increment(state).compare_type;
+                switch (compare_type) {
+                case CompareType::OrdinaryCharacter:
+                    get_and_increment(state);
+                    break;
+                case CompareType::OrdinaryCharacters:
+                    get_and_increment(state);
+                    get_and_increment(state);
+                    break;
+                case CompareType::CharacterClass:
+                    get_and_increment(state);
+                    break;
+                case CompareType::RangeExpression:
+                    get_and_increment(state);
+                    break;
+                default: {
+                }
+                }
             }
+
+            if (stringp == state.m_stringp)
+                return run_forkstay_or_false();
 
             if (state.m_stringp > state.m_view.length())
                 return run_forkstay_or_false();
 
         } else if (stack_item.op_code == OpCode::ForkJump) {
-            auto& offset = get_and_increment(state).length;
+            auto& offset = get_and_increment(state).number;
 #ifdef REGEX_DEBUG
             printf(" > ForkJump to offset: %i, instructionp: %lu, stringp: %lu\n", offset, state.m_instructionp + offset, state.m_stringp);
 #endif
@@ -959,33 +1233,29 @@ bool VM::match_recurse(MatchState& state, size_t recursion_level)
                 state.m_stringp = saved_stringp;
                 state.m_instructionp = saved_instructionp;
             }
-
         } else if (stack_item.op_code == OpCode::ForkStay) {
-            auto& offset = get_and_increment(state).length;
+            auto& offset = get_and_increment(state).number;
             fork_stay_tuples.append({ state.m_instructionp + offset, state.m_stringp });
 
 #ifdef REGEX_DEBUG
             printf(" > ForkStay to offset: %i, instructionp: %lu, stringp: %lu\n", offset, fork_stay_tuples.last().m_instructionp, fork_stay_tuples.last().m_stringp);
 #endif
-
         } else if (stack_item.op_code == OpCode::Jump) {
-            auto& offset = get_and_increment(state).length;
+            auto& offset = get_and_increment(state).number;
             state.m_instructionp += offset;
 #ifdef REGEX_DEBUG
             printf(" > Jump to offset: %i: new instructionp: %lu\n", offset, state.m_instructionp);
 #endif
             continue; // directly jump to next instruction!
-
         } else if (stack_item.op_code == OpCode::SaveLeftGroup) {
-            auto& id = get_and_increment(state).length;
+            auto& id = get_and_increment(state).positive_number;
 #ifdef REGEX_DEBUG
             printf(" > Left parens for group match %i at stringp = %lu\n", id, state.m_stringp);
 #endif
             if ((size_t)id < state.m_left.size() && state.m_stringp < state.m_view.length())
                 state.m_left.at(id) = state.m_stringp;
-
         } else if (stack_item.op_code == OpCode::SaveRightGroup) {
-            auto& id = get_and_increment(state).length;
+            auto& id = get_and_increment(state).positive_number;
             auto index = id + 1 + state.m_matches_offset;
 
 #ifdef REGEX_DEBUG
@@ -998,27 +1268,23 @@ bool VM::match_recurse(MatchState& state, size_t recursion_level)
                 printf("Match result group id %i: from %lu to %lu\n", id, left, state.m_stringp);
 #endif
             }
-
         } else if (stack_item.op_code == OpCode::CheckBegin) {
 #ifdef REGEX_DEBUG
             printf("\n");
 #endif
             if (state.m_stringp != 0)
                 return false;
-
         } else if (stack_item.op_code == OpCode::CheckEnd) {
 #ifdef REGEX_DEBUG
             printf(" > Check end: %lu == %lu\n", state.m_stringp, state.m_view.length());
 #endif
             if (state.m_stringp != state.m_view.length())
                 return false;
-
         } else if (stack_item.op_code == OpCode::Exit) {
 #ifdef REGEX_DEBUG
-            printf(" > Condition %s\n", state.m_stringp >= state.m_view.length() ? "true" : "false");
+            printf(" > Condition %s (%lu >= %lu)\n", state.m_stringp >= state.m_view.length() ? "true" : "false", state.m_stringp, state.m_view.length());
 #endif
             return state.m_stringp >= state.m_view.length();
-
         } else {
             printf("\n[VM][r=%lu] Invalid opcode: %lu, stackpointer: %lu\n", recursion_level, (size_t)stack_item.op_code, current_ip);
             exit(1);
@@ -1030,7 +1296,6 @@ bool VM::match_recurse(MatchState& state, size_t recursion_level)
 
     ASSERT_NOT_REACHED();
 }
-
 }
 
 int regcomp(regex_t* preg, const char* pattern, int cflags)
@@ -1065,7 +1330,7 @@ int regcomp(regex_t* preg, const char* pattern, int cflags)
 #ifdef REGEX_DEBUG
     int i = 0;
     for (auto& item : result.m_bytes) {
-        printf("[PARSER] [%i]: %i\n", i, item.length);
+        printf("[PARSER] [%i]: %i\n", i, item.number);
         i++;
     }
 #endif
@@ -1099,7 +1364,7 @@ int regexec(const regex_t* preg, const char* string, size_t nmatch, regmatch_t p
     if (eflags & REG_MATCHALL) {
         result = vm.match_all(string, nmatch, preg->re_nsub, preg->re_minlength);
     } else {
-        result = vm.match(string, nmatch, preg->re_nsub, preg->re_minlength);
+        result = vm.match(string, nmatch, preg->re_nsub, preg->re_minlength, eflags & REG_SEARCH);
     }
 
     if (result.m_match_count) {
