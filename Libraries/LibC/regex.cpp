@@ -416,10 +416,112 @@ bool Parser::parse_ere_dupl_symbol(Vector<StackValue>& operations, size_t& min_l
     return false;
 }
 
+bool Parser::parse_bracket_expression(Vector<StackValue>& stack, size_t& min_length)
+{
+    Vector<StackValue> operations;
+    size_t position = 0;
+    bool negation { false };
+
+    for (;;) {
+
+        if (match(TokenType::OrdinaryCharacter)) {
+            auto t = consume(TokenType::OrdinaryCharacter);
+
+        } else if (match(TokenType::Period)) {
+            auto t = consume(TokenType::Period);
+
+        } else if (match(TokenType::Asterisk)) {
+            auto t = consume(TokenType::Period);
+
+        } else if (match(TokenType::EscapeSequence)) {
+            auto t = consume(TokenType::EscapeSequence);
+
+        } else if (match(TokenType::Circumflex)) {
+            auto t = consume(TokenType::Circumflex);
+            if (!position)
+                negation = true;
+
+        } else if (match(TokenType::RightBracket)) {
+            auto t = consume(TokenType::Period);
+            if (!position || (negation && position == 1)) {
+                // handle bracket as ordinary character
+            } else {
+                // closing bracket expression
+                break;
+            }
+
+        } else if (match(TokenType::LeftBracket)) {
+
+            consume(TokenType::LeftBracket);
+            if (match(TokenType::Period)) {
+                consume(TokenType::Period);
+
+                // FIXME: Parse collating element, this is needed when we have locale support
+
+                consume(TokenType::Period);
+                consume(TokenType::LeftBracket);
+
+            } else if (match(TokenType::Colon)) {
+                consume(TokenType::Colon);
+
+                // parse character class
+                if (match(TokenType::OrdinaryCharacter)) {
+                    if (consume("alnum")) {
+                    } else if (consume("alpha")) {
+                    } else if (consume("blank")) {
+                    } else if (consume("cntrl")) {
+                    } else if (consume("digit")) {
+                    } else if (consume("graph")) {
+                    } else if (consume("lower")) {
+                    } else if (consume("print")) {
+                    } else if (consume("punct")) {
+                    } else if (consume("space")) {
+                    } else if (consume("upper")) {
+                    } else if (consume("xdigit")) {
+                    }
+
+                } else {
+                    m_parser_state.m_has_errors = true;
+                    return false;
+                }
+
+                // FIXME: we do not support locale specific character classes until locales are implemented
+
+                consume(TokenType::Colon);
+                consume(TokenType::LeftBracket);
+            }
+
+        } else if (match(TokenType::Period)) {
+            auto t = consume(TokenType::Period);
+
+        } else if (match(TokenType::Period)) {
+            auto t = consume(TokenType::Period);
+
+        } else if (match(TokenType::Period)) {
+            auto t = consume(TokenType::Period);
+
+        } else if (match(TokenType::Period)) {
+            auto t = consume(TokenType::Period);
+
+        } else if (match(TokenType::Period)) {
+            auto t = consume(TokenType::Period);
+        }
+
+        ++position;
+    }
+
+    // Add compare statement
+
+    stack.append(move(operations));
+
+    return true;
+}
+
 bool Parser::parse_ere_expression(Vector<StackValue>& stack, size_t& min_length)
 {
     Vector<StackValue> operations;
     size_t length = 0;
+    bool can_match_dupl_symbol { false };
 
     for (;;) {
         if (match(TokenType::OrdinaryCharacter)) {
@@ -444,6 +546,7 @@ bool Parser::parse_ere_expression(Vector<StackValue>& stack, size_t& min_length)
                 operations.empend(1);
             }
 
+            can_match_dupl_symbol = true;
             break;
         }
 
@@ -453,6 +556,8 @@ bool Parser::parse_ere_expression(Vector<StackValue>& stack, size_t& min_length)
             operations.empend(OpCode::Compare);
             operations.empend(0);
             operations.empend(0);
+
+            can_match_dupl_symbol = true;
             break;
         }
 
@@ -505,14 +610,14 @@ bool Parser::parse_ere_expression(Vector<StackValue>& stack, size_t& min_length)
             operations.empend(m_parser_state.m_match_groups);
 
             ++m_parser_state.m_match_groups;
-
+            can_match_dupl_symbol = true;
             break;
         }
 
         return false;
     }
 
-    if (match_ere_dupl_symbol()) {
+    if (can_match_dupl_symbol && match_ere_dupl_symbol()) {
         parse_ere_dupl_symbol(operations, length);
     }
 
