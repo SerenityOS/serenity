@@ -41,6 +41,7 @@ ArrayPrototype::ArrayPrototype()
     put_native_function("push", push, 1);
     put_native_function("shift", shift, 0);
     put_native_function("toString", to_string, 0);
+    put_native_function("unshift", unshift, 1);
     put("length", Value(0));
 }
 
@@ -67,6 +68,16 @@ Value ArrayPrototype::push(Interpreter& interpreter)
         return {};
     for (size_t i = 0; i < interpreter.argument_count(); ++i)
         array->elements().append(interpreter.argument(i));
+    return Value(array->length());
+}
+
+Value ArrayPrototype::unshift(Interpreter& interpreter)
+{
+    auto* array = array_from(interpreter);
+    if (!array)
+        return {};
+    for (size_t i = 0; i < interpreter.argument_count(); ++i)
+        array->elements().insert(i, interpreter.argument(i));
     return Value(array->length());
 }
 
