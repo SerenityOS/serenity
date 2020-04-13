@@ -41,25 +41,6 @@ Array::~Array()
 {
 }
 
-Value Array::shift()
-{
-    if (elements().size() == 0)
-        return js_undefined();
-    return Value(elements().take_first());
-}
-
-Value Array::pop()
-{
-    if (elements().size() == 0)
-        return js_undefined();
-    return Value(elements().take_last());
-}
-
-void Array::push(Value value)
-{
-    elements().append(value);
-}
-
 Value Array::length_getter(Interpreter& interpreter)
 {
     auto* this_object = interpreter.this_value().to_object(interpreter.heap());

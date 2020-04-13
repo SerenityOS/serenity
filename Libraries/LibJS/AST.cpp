@@ -977,7 +977,7 @@ Value ArrayExpression::execute(Interpreter& interpreter) const
         auto value = element.execute(interpreter);
         if (interpreter.exception())
             return {};
-        array->push(value);
+        array->elements().append(value);
     }
     return array;
 }
