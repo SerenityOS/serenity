@@ -56,6 +56,9 @@ private:
     bool is_block_comment_start() const;
     bool is_block_comment_end() const;
     bool is_numeric_literal_start() const;
+    bool match(char, char) const;
+    bool match(char, char, char) const;
+    bool match(char, char, char, char) const;
 
     void syntax_error(const char*);
 
