@@ -140,8 +140,8 @@ next_entry:
     }
     __grdb_entry->members[members.size()] = nullptr;
     __grdb_entry->gr_mem = __grdb_entry->members;
-    strncpy(__grdb_entry->name_buffer, e_name.characters(), GRDB_STR_MAX_LEN);
-    strncpy(__grdb_entry->passwd_buffer, e_passwd.characters(), GRDB_STR_MAX_LEN);
+    strncpy(__grdb_entry->name_buffer, e_name.characters(), GRDB_STR_MAX_LEN - 1);
+    strncpy(__grdb_entry->passwd_buffer, e_passwd.characters(), GRDB_STR_MAX_LEN - 1);
     return __grdb_entry;
 }
 
