@@ -62,32 +62,33 @@ static Array* array_from(Interpreter& interpreter)
 
 Value ArrayPrototype::push(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
-    if (!this_object)
+    auto* array = array_from(interpreter);
+    if (!array)
         return {};
-    ASSERT(this_object->is_array());
     if (!interpreter.argument_count())
         return js_undefined();
-    static_cast<Array*>(this_object)->push(interpreter.argument(0));
-    return Value(static_cast<const Array*>(this_object)->length());
+    array->elements().append(interpreter.argument(0));
+    return Value(array->length());
 }
 
 Value ArrayPrototype::pop(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
-    if (!this_object)
+    auto* array = array_from(interpreter);
+    if (!array)
         return {};
-    ASSERT(this_object->is_array());
-    return static_cast<Array*>(this_object)->pop();
+    if (array->elements().is_empty())
+        return js_undefined();
+    return array->elements().take_last();
 }
 
 Value ArrayPrototype::shift(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
-    if (!this_object)
+    auto* array = array_from(interpreter);
+    if (!array)
         return {};
-    ASSERT(this_object->is_array());
-    return static_cast<Array*>(this_object)->shift();
+    if (array->elements().is_empty())
+        return js_undefined();
+    return array->elements().take_first();
 }
 
 Value ArrayPrototype::to_string(Interpreter& interpreter)
