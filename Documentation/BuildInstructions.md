@@ -13,6 +13,11 @@ sudo apt install build-essential curl libmpfr-dev libmpc-dev libgmp-dev e2fsprog
 sudo dnf install curl mpfr-devel libmpc-devel gmp-devel e2fsprogs @"C Development Tools and Libraries" @Virtualization
 ```
 
+**Arch Linux / Manjaro**
+```bash
+sudo pacman -S base-devel curl mpfr libmpc gmp e2fsprogs qemu qemu-arch-extra
+```
+
 Ensure your gcc version is >= 8 with `gcc --version`. Otherwise, install it (on Ubuntu) with:
 ```bash
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test
