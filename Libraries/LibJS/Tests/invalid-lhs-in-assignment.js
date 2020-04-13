@@ -1,6 +1,7 @@
 try {
     try {
         Math.abs(-20) = 40;
+        assertNotReached();
     } catch (e) {
         assert(e.name === "ReferenceError");
         assert(e.message === "Invalid left-hand side in assignment");
@@ -8,6 +9,7 @@ try {
 
     try {
         512 = 256;
+        assertNotReached();
     } catch (e) {
         assert(e.name === "ReferenceError");
         assert(e.message === "Invalid left-hand side in assignment");
@@ -15,6 +17,7 @@ try {
 
     try {
         "hello world" = "another thing?";
+        assertNotReached();
     } catch (e) {
         assert(e.name === "ReferenceError");
         assert(e.message === "Invalid left-hand side in assignment");
