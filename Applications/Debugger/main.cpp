@@ -95,6 +95,7 @@ void handle_print_registers(const PtraceRegisters& regs)
 
 bool handle_disassemble_command(const String& command, void* first_instruction)
 {
+    (void)demangle("foo");
     auto parts = command.split(' ');
     size_t number_of_instructions_to_disassemble = 5;
     if (parts.size() == 2) {
@@ -212,7 +213,8 @@ int main(int argc, char** argv)
         ASSERT(optional_regs.has_value());
         const PtraceRegisters& regs = optional_regs.value();
 
-        printf("Program is stopped at: 0x%x\n", regs.eip);
+        auto symbol_at_ip = g_debug_session->elf().symbolicate(regs.eip);
+        printf("Program is stopped at: 0x%x (%s)\n", regs.eip, symbol_at_ip.characters());
         for (;;) {
             auto command = get_command();
             bool success = false;
