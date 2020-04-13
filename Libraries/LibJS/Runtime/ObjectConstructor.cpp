@@ -70,11 +70,11 @@ Value ObjectConstructor::get_own_property_names(Interpreter& interpreter)
     auto* result = interpreter.heap().allocate<Array>();
     for (size_t i = 0; i < object->elements().size(); ++i) {
         if (!object->elements()[i].is_empty())
-            result->push(js_string(interpreter, String::number(i)));
+            result->elements().append(js_string(interpreter, String::number(i)));
     }
 
     for (auto& it : object->shape().property_table())
-        result->push(js_string(interpreter, it.key));
+        result->elements().append(js_string(interpreter, it.key));
     return result;
 }
 
