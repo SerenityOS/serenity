@@ -26,10 +26,40 @@
 
 #include "Parser.h"
 #include <AK/HashMap.h>
+#include <AK/ScopeGuard.h>
 #include <AK/StdLibExtras.h>
 #include <stdio.h>
 
 namespace JS {
+
+class ScopePusher {
+public:
+    enum Type {
+        Var = 1,
+        Let = 2,
+    };
+
+    ScopePusher(Parser& parser, unsigned mask)
+        : m_parser(parser)
+        , m_mask(mask)
+    {
+        if (m_mask & Var)
+            m_parser.m_parser_state.m_var_scopes.append(NonnullRefPtrVector<VariableDeclaration>());
+        if (m_mask & Let)
+            m_parser.m_parser_state.m_let_scopes.append(NonnullRefPtrVector<VariableDeclaration>());
+    }
+
+    ~ScopePusher()
+    {
+        if (m_mask & Var)
+            m_parser.m_parser_state.m_var_scopes.take_last();
+        if (m_mask & Let)
+            m_parser.m_parser_state.m_let_scopes.take_last();
+    }
+
+    Parser& m_parser;
+    unsigned m_mask { 0 };
+};
 
 static HashMap<TokenType, int> g_operator_precedence;
 Parser::ParserState::ParserState(Lexer lexer)
@@ -170,6 +200,7 @@ Associativity Parser::operator_associativity(TokenType type) const
 
 NonnullRefPtr<Program> Parser::parse_program()
 {
+    ScopePusher scope(*this, ScopePusher::Var | ScopePusher::Let);
     auto program = adopt(*new Program);
     while (!done()) {
         if (match(TokenType::Semicolon)) {
@@ -181,6 +212,9 @@ NonnullRefPtr<Program> Parser::parse_program()
             consume();
         }
     }
+    ASSERT(m_parser_state.m_var_scopes.size() == 1);
+    program->add_variables(m_parser_state.m_var_scopes.last());
+    program->add_variables(m_parser_state.m_let_scopes.last());
     return program;
 }
 
@@ -230,6 +264,12 @@ NonnullRefPtr<Statement> Parser::parse_statement()
 RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expect_parens)
 {
     save_state();
+    m_parser_state.m_var_scopes.append(NonnullRefPtrVector<VariableDeclaration>());
+
+    ArmedScopeGuard state_rollback_guard = [&] {
+        m_parser_state.m_var_scopes.take_last();
+        load_state();
+    };
 
     Vector<FlyString> parameters;
     bool parse_failed = false;
@@ -264,10 +304,8 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
         }
     }
 
-    if (parse_failed) {
-        load_state();
+    if (parse_failed)
         return nullptr;
-    }
 
     auto function_body_result = [this]() -> RefPtr<BlockStatement> {
         if (match(TokenType::CurlyOpen)) {
@@ -291,11 +329,11 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
     }();
 
     if (!function_body_result.is_null()) {
+        state_rollback_guard.disarm();
         auto body = function_body_result.release_nonnull();
-        return create_ast_node<FunctionExpression>("", move(body), move(parameters));
+        return create_ast_node<FunctionExpression>("", move(body), move(parameters), m_parser_state.m_var_scopes.take_last());
     }
 
-    load_state();
     return nullptr;
 }
 
@@ -616,6 +654,7 @@ NonnullRefPtr<ReturnStatement> Parser::parse_return_statement()
 
 NonnullRefPtr<BlockStatement> Parser::parse_block_statement()
 {
+    ScopePusher scope(*this, ScopePusher::Let);
     auto block = create_ast_node<BlockStatement>();
     consume(TokenType::CurlyOpen);
     while (!done() && !match(TokenType::CurlyClose)) {
@@ -629,12 +668,15 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement()
         }
     }
     consume(TokenType::CurlyClose);
+    block->add_variables(m_parser_state.m_let_scopes.last());
     return block;
 }
 
 template<typename FunctionNodeType>
 NonnullRefPtr<FunctionNodeType> Parser::parse_function_node()
 {
+    ScopePusher scope(*this, ScopePusher::Var);
+
     consume(TokenType::Function);
     String name;
     if (FunctionNodeType::must_have_name()) {
@@ -655,7 +697,8 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node()
     }
     consume(TokenType::ParenClose);
     auto body = parse_block_statement();
-    return create_ast_node<FunctionNodeType>(name, move(body), move(parameters));
+    body->add_variables(m_parser_state.m_var_scopes.last());
+    return create_ast_node<FunctionNodeType>(name, move(body), move(parameters), NonnullRefPtrVector<VariableDeclaration>());
 }
 
 NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration()
@@ -694,7 +737,12 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration()
         }
         break;
     }
-    return create_ast_node<VariableDeclaration>(declaration_kind, move(declarations));
+    auto declaration = create_ast_node<VariableDeclaration>(declaration_kind, move(declarations));
+    if (declaration->declaration_kind() == DeclarationKind::Var)
+        m_parser_state.m_var_scopes.last().append(declaration);
+    else
+        m_parser_state.m_let_scopes.last().append(declaration);
+    return declaration;
 }
 
 NonnullRefPtr<ThrowStatement> Parser::parse_throw_statement()

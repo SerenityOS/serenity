@@ -38,6 +38,8 @@
 
 namespace JS {
 
+class VariableDeclaration;
+
 template<class T, class... Args>
 static inline NonnullRefPtr<T>
 create_ast_node(Args&&... args)
@@ -54,6 +56,7 @@ public:
     virtual bool is_identifier() const { return false; }
     virtual bool is_member_expression() const { return false; }
     virtual bool is_scope_node() const { return false; }
+    virtual bool is_program() const { return false; }
     virtual bool is_variable_declaration() const { return false; }
     virtual bool is_new_expression() const { return false; }
 
@@ -105,12 +108,16 @@ public:
     virtual Value execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
 
+    void add_variables(NonnullRefPtrVector<VariableDeclaration>);
+    const NonnullRefPtrVector<VariableDeclaration>& variables() const { return m_variables; }
+
 protected:
     ScopeNode() {}
 
 private:
     virtual bool is_scope_node() const final { return true; }
     NonnullRefPtrVector<Statement> m_children;
+    NonnullRefPtrVector<VariableDeclaration> m_variables;
 };
 
 class Program : public ScopeNode {
@@ -118,6 +125,7 @@ public:
     Program() {}
 
 private:
+    virtual bool is_program() const override { return true; }
     virtual const char* class_name() const override { return "Program"; }
 };
 
@@ -142,19 +150,23 @@ public:
     const Vector<FlyString>& parameters() const { return m_parameters; };
 
 protected:
-    FunctionNode(const FlyString& name, NonnullRefPtr<Statement> body, Vector<FlyString> parameters = {})
+    FunctionNode(const FlyString& name, NonnullRefPtr<Statement> body, Vector<FlyString> parameters, NonnullRefPtrVector<VariableDeclaration> variables)
         : m_name(name)
         , m_body(move(body))
         , m_parameters(move(parameters))
+        , m_variables(move(variables))
     {
     }
 
     void dump(int indent, const char* class_name) const;
 
+    const NonnullRefPtrVector<VariableDeclaration>& variables() const { return m_variables; }
+
 private:
     FlyString m_name;
     NonnullRefPtr<Statement> m_body;
     const Vector<FlyString> m_parameters;
+    NonnullRefPtrVector<VariableDeclaration> m_variables;
 };
 
 class FunctionDeclaration final
@@ -163,8 +175,8 @@ class FunctionDeclaration final
 public:
     static bool must_have_name() { return true; }
 
-    FunctionDeclaration(const FlyString& name, NonnullRefPtr<Statement> body, Vector<FlyString> parameters = {})
-        : FunctionNode(name, move(body), move(parameters))
+    FunctionDeclaration(const FlyString& name, NonnullRefPtr<Statement> body, Vector<FlyString> parameters, NonnullRefPtrVector<VariableDeclaration> variables)
+        : FunctionNode(name, move(body), move(parameters), move(variables))
     {
     }
 
@@ -180,8 +192,8 @@ class FunctionExpression final : public Expression
 public:
     static bool must_have_name() { return false; }
 
-    FunctionExpression(const FlyString& name, NonnullRefPtr<Statement> body, Vector<FlyString> parameters = {})
-        : FunctionNode(name, move(body), move(parameters))
+    FunctionExpression(const FlyString& name, NonnullRefPtr<Statement> body, Vector<FlyString> parameters, NonnullRefPtrVector<VariableDeclaration> variables)
+        : FunctionNode(name, move(body), move(parameters), move(variables))
     {
     }
 
@@ -640,6 +652,8 @@ public:
 
     virtual Value execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
+
+    const NonnullRefPtrVector<VariableDeclarator>& declarations() const { return m_declarations; }
 
 private:
     virtual const char* class_name() const override { return "VariableDeclaration"; }
