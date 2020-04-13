@@ -114,10 +114,7 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
         if (result.is_error())
             return -EFAULT;
         peer->process().validate_write(peek_params.out_data, sizeof(u32));
-        {
-            SmapDisabler disabler;
-            *(peek_params.out_data) = result.value();
-        }
+        copy_from_user(peek_params.out_data, &result.value());
         break;
     }
 
