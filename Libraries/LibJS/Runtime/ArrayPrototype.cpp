@@ -39,6 +39,7 @@ namespace JS {
 
 ArrayPrototype::ArrayPrototype()
 {
+    put_native_function("filter", filter, 1);
     put_native_function("forEach", for_each, 1);
     put_native_function("pop", pop, 0);
     put_native_function("push", push, 1);
@@ -76,6 +77,32 @@ static Function* callback_from_args(Interpreter& interpreter, const String& name
         return nullptr;
     }
     return static_cast<Function*>(&callback.as_object());
+}
+
+Value ArrayPrototype::filter(Interpreter& interpreter)
+{
+    auto* array = array_from(interpreter);
+    if (!array)
+        return {};
+    auto* callback = callback_from_args(interpreter, "filter");
+    if (!callback)
+        return {};
+    auto this_value = interpreter.argument(1);
+    auto initial_array_size = array->elements().size();
+    auto* new_array = interpreter.heap().allocate<Array>();
+    for (size_t i = 0; i < initial_array_size; ++i) {
+        if (i >= array->elements().size())
+            break;
+        auto value = array->elements()[i];
+        if (value.is_empty())
+            continue;
+        auto result = interpreter.call(callback, this_value, { value, Value((i32)i), array });
+        if (interpreter.exception())
+            return {};
+        if (result.to_boolean())
+            new_array->elements().append(value);
+    }
+    return Value(new_array);
 }
 
 Value ArrayPrototype::for_each(Interpreter& interpreter)
