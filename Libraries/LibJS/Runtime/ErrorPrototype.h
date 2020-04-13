@@ -41,6 +41,8 @@ private:
     static Value to_string(Interpreter&);
 
     static Value name_getter(Interpreter&);
+    static void name_setter(Interpreter&, Value);
+
     static Value message_getter(Interpreter&);
 };
 
