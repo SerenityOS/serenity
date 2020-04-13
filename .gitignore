@@ -21,6 +21,7 @@
 *.cflags
 *.cxxflags
 *.autosave
+Meta/Lagom/build
 Root
 Toolchain/Tarballs
 Toolchain/Build
