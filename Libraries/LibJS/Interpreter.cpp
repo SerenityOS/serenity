@@ -92,9 +92,20 @@ Value Interpreter::run(const Statement& statement, ArgumentVector arguments, Sco
 void Interpreter::enter_scope(const ScopeNode& scope_node, ArgumentVector arguments, ScopeType scope_type)
 {
     HashMap<FlyString, Variable> scope_variables_with_declaration_kind;
+
+    for (auto& declaration : scope_node.variables()) {
+        for (auto& declarator : declaration.declarations()) {
+            if (scope_node.is_program())
+                global_object().put(declarator.id().string(), js_undefined());
+            else
+                scope_variables_with_declaration_kind.set(declarator.id().string(), { js_undefined(), declaration.declaration_kind() });
+        }
+    }
+
     for (auto& argument : arguments) {
         scope_variables_with_declaration_kind.set(argument.name, { argument.value, DeclarationKind::Var });
     }
+
     m_scope_stack.append({ scope_type, scope_node, move(scope_variables_with_declaration_kind) });
 }
 
@@ -118,9 +129,6 @@ void Interpreter::declare_variable(const FlyString& name, DeclarationKind declar
         for (ssize_t i = m_scope_stack.size() - 1; i >= 0; --i) {
             auto& scope = m_scope_stack.at(i);
             if (scope.type == ScopeType::Function) {
-                if (scope.variables.get(name).has_value() && scope.variables.get(name).value().declaration_kind != DeclarationKind::Var)
-                    ASSERT_NOT_REACHED();
-
                 scope.variables.set(move(name), { js_undefined(), declaration_kind });
                 return;
             }
@@ -130,9 +138,6 @@ void Interpreter::declare_variable(const FlyString& name, DeclarationKind declar
         break;
     case DeclarationKind::Let:
     case DeclarationKind::Const:
-        if (m_scope_stack.last().variables.get(name).has_value())
-            ASSERT_NOT_REACHED();
-
         m_scope_stack.last().variables.set(move(name), { js_undefined(), declaration_kind });
         break;
     }

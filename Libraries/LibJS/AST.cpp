@@ -412,8 +412,18 @@ void ASTNode::dump(int indent) const
 void ScopeNode::dump(int indent) const
 {
     ASTNode::dump(indent);
-    for (auto& child : children())
-        child.dump(indent + 1);
+    if (!m_variables.is_empty()) {
+        print_indent(indent + 1);
+        printf("(Variables)\n");
+        for (auto& variable : m_variables)
+            variable.dump(indent + 2);
+    }
+    if (!m_children.is_empty()) {
+        print_indent(indent + 1);
+        printf("(Children)\n");
+        for (auto& child : children())
+            child.dump(indent + 2);
+    }
 }
 
 void BinaryExpression::dump(int indent) const
@@ -578,7 +588,15 @@ void FunctionNode::dump(int indent, const char* class_name) const
 
     print_indent(indent);
     printf("%s '%s(%s)'\n", class_name, name().characters(), parameters_builder.build().characters());
-    body().dump(indent + 1);
+    if (!m_variables.is_empty()) {
+        print_indent(indent + 1);
+        printf("(Variables)\n");
+    }
+    for (auto& variable : m_variables)
+        variable.dump(indent + 2);
+    print_indent(indent + 1);
+    printf("(Body)\n");
+    body().dump(indent + 2);
 }
 
 void FunctionDeclaration::dump(int indent) const
@@ -1161,6 +1179,11 @@ Value SequenceExpression::execute(Interpreter& interpreter) const
             return {};
     }
     return last_value;
+}
+
+void ScopeNode::add_variables(NonnullRefPtrVector<VariableDeclaration> variables)
+{
+    m_variables.append(move(variables));
 }
 
 }

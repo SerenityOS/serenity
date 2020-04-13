@@ -75,6 +75,8 @@ public:
     bool has_errors() const { return m_parser_state.m_lexer.has_errors() || m_parser_state.m_has_errors; }
 
 private:
+    friend class ScopePusher;
+
     int operator_precedence(TokenType) const;
     Associativity operator_associativity(TokenType) const;
     bool match_expression() const;
@@ -94,11 +96,14 @@ private:
         Lexer m_lexer;
         Token m_current_token;
         bool m_has_errors = false;
+        Vector<NonnullRefPtrVector<VariableDeclaration>> m_var_scopes;
+        Vector<NonnullRefPtrVector<VariableDeclaration>> m_let_scopes;
 
         explicit ParserState(Lexer);
     };
 
     ParserState m_parser_state;
     Optional<ParserState> m_saved_state;
+
 };
 }
