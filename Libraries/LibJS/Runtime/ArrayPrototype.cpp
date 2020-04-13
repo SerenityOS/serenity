@@ -41,6 +41,7 @@ ArrayPrototype::ArrayPrototype()
 {
     put_native_function("filter", filter, 1);
     put_native_function("forEach", for_each, 1);
+    put_native_function("map", map, 1);
     put_native_function("pop", pop, 0);
     put_native_function("push", push, 1);
     put_native_function("shift", shift, 0);
@@ -126,6 +127,31 @@ Value ArrayPrototype::for_each(Interpreter& interpreter)
             return {};
     }
     return js_undefined();
+}
+
+Value ArrayPrototype::map(Interpreter& interpreter)
+{
+    auto* array = array_from(interpreter);
+    if (!array)
+        return {};
+    auto* callback = callback_from_args(interpreter, "map");
+    if (!callback)
+        return {};
+    auto this_value = interpreter.argument(1);
+    auto initial_array_size = array->elements().size();
+    auto* new_array = interpreter.heap().allocate<Array>();
+    for (size_t i = 0; i < initial_array_size; ++i) {
+        if (i >= array->elements().size())
+            break;
+        auto value = array->elements()[i];
+        if (value.is_empty())
+            continue;
+        auto result = interpreter.call(callback, this_value, { value, Value((i32)i), array });
+        if (interpreter.exception())
+            return {};
+        new_array->elements().append(result);
+    }
+    return Value(new_array);
 }
 
 Value ArrayPrototype::push(Interpreter& interpreter)
