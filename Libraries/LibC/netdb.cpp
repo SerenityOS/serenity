@@ -122,7 +122,7 @@ hostent* gethostbyname(const char* name)
     if (rc <= 0)
         return nullptr;
 
-    strncpy(__gethostbyname_name_buffer, name, strlen(name));
+    strncpy(__gethostbyname_name_buffer, name, sizeof(__gethostbyaddr_name_buffer) - 1);
 
     __gethostbyname_buffer.h_name = __gethostbyname_name_buffer;
     __gethostbyname_buffer.h_aliases = nullptr;
