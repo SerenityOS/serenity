@@ -151,12 +151,12 @@ private:
 
     size_t num_lines() const
     {
-        return (m_cached_buffer_size + m_num_columns + current_prompt_length()) / m_num_columns;
+        return (m_cached_buffer_size + m_num_columns + current_prompt_length() - 1) / m_num_columns;
     }
 
     size_t cursor_line() const
     {
-        return (m_drawn_cursor + m_num_columns + current_prompt_length()) / m_num_columns;
+        return (m_drawn_cursor + m_num_columns + current_prompt_length() - 1) / m_num_columns;
     }
 
     size_t offset_in_line() const
@@ -187,6 +187,7 @@ private:
     size_t m_old_prompt_length { 0 };
     size_t m_cached_buffer_size { 0 };
     size_t m_lines_used_for_last_suggestions { 0 };
+    size_t m_prompt_lines_at_suggestion_initiation { 0 };
     bool m_cached_prompt_valid { false };
 
     // exact position before our prompt in the terminal
