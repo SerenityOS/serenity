@@ -50,6 +50,7 @@ extern "C" {
 void copy_to_user(void* dest_ptr, const void* src_ptr, size_t n)
 {
     ASSERT(Kernel::is_user_range(VirtualAddress(dest_ptr), n));
+    ASSERT(!Kernel::is_user_range(VirtualAddress(src_ptr), n));
     Kernel::SmapDisabler disabler;
     memcpy(dest_ptr, src_ptr, n);
 }
@@ -57,6 +58,7 @@ void copy_to_user(void* dest_ptr, const void* src_ptr, size_t n)
 void copy_from_user(void* dest_ptr, const void* src_ptr, size_t n)
 {
     ASSERT(Kernel::is_user_range(VirtualAddress(src_ptr), n));
+    ASSERT(!Kernel::is_user_range(VirtualAddress(dest_ptr), n));
     Kernel::SmapDisabler disabler;
     memcpy(dest_ptr, src_ptr, n);
 }
