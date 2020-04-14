@@ -24,53 +24,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/FlyString.h>
-#include <LibJS/Runtime/PrimitiveString.h>
-#include <LibJS/Runtime/Value.h>
-#include <LibWeb/Bindings/DocumentWrapper.h>
-#include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>
-#include <LibWeb/Bindings/HTMLImageElementWrapper.h>
-#include <LibWeb/Bindings/NodeWrapper.h>
-#include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/HTMLCanvasElement.h>
-#include <LibWeb/DOM/HTMLImageElement.h>
-#include <LibWeb/DOM/Node.h>
+#pragma once
+
+#include <LibWeb/Bindings/ElementWrapper.h>
 
 namespace Web {
 namespace Bindings {
 
-NodeWrapper* wrap(JS::Heap& heap, Node& node)
-{
-    if (is<Document>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(heap, to<Document>(node)));
-    if (is<HTMLCanvasElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(heap, to<HTMLCanvasElement>(node)));
-    if (is<HTMLImageElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(heap, to<HTMLImageElement>(node)));
-    if (is<Element>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(heap, to<Element>(node)));
-    return static_cast<NodeWrapper*>(wrap_impl(heap, node));
-}
+class HTMLImageElementWrapper : public ElementWrapper {
+public:
+    explicit HTMLImageElementWrapper(HTMLImageElement&);
+    virtual ~HTMLImageElementWrapper() override;
 
-NodeWrapper::NodeWrapper(Node& node)
-    : EventTargetWrapper(node)
-{
-    put("nodeName", JS::js_string(heap(), node.tag_name()));
-}
+    HTMLImageElement& node();
+    const HTMLImageElement& node() const;
 
-NodeWrapper::~NodeWrapper()
-{
-}
-
-Node& NodeWrapper::node()
-{
-    return static_cast<Node&>(EventTargetWrapper::impl());
-}
-
-const Node& NodeWrapper::node() const
-{
-    return static_cast<const Node&>(EventTargetWrapper::impl());
-}
+private:
+    virtual const char* class_name() const override { return "HTMLImageElementWrapper"; }
+};
 
 }
 }
