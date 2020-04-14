@@ -176,11 +176,13 @@ size_t print_name(const struct stat& st, const String& name, const char* path_fo
     if (S_ISLNK(st.st_mode)) {
         if (path_for_link_resolution) {
             char linkbuf[PATH_MAX];
-            ssize_t nread = readlink(path_for_link_resolution, linkbuf, sizeof(linkbuf));
-            if (nread < 0)
+            ssize_t nread = readlink(path_for_link_resolution, linkbuf, sizeof(linkbuf) - 1);
+            if (nread < 0) {
                 perror("readlink failed");
-            else
+            } else {
+                linkbuf[nread] = '\0';
                 nprinted += printf(" -> ") + print_escaped(linkbuf);
+            }
         } else {
             nprinted += printf("@");
         }

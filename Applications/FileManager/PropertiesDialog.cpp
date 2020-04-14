@@ -108,10 +108,11 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
 
     if (S_ISLNK(m_mode)) {
         char link_destination[PATH_MAX];
-        if (readlink(path.characters(), link_destination, sizeof(link_destination)) < 0) {
+        ssize_t len = readlink(path.characters(), link_destination, sizeof(link_destination));
+        if (len < 0) {
             perror("readlink");
         } else {
-            properties.append({ "Link target:", link_destination });
+            properties.append({ "Link target:", String(link_destination, len) });
         }
     }
 
