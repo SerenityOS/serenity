@@ -36,6 +36,8 @@ class LayoutDocument;
 
 class HTMLImageElement : public HTMLElement {
 public:
+    using WrapperType = Bindings::HTMLImageElementWrapper;
+
     HTMLImageElement(Document&, const FlyString& tag_name);
     virtual ~HTMLImageElement() override;
 

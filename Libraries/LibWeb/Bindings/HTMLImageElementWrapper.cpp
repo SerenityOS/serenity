@@ -25,51 +25,33 @@
  */
 
 #include <AK/FlyString.h>
+#include <AK/Function.h>
+#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Value.h>
-#include <LibWeb/Bindings/DocumentWrapper.h>
-#include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>
 #include <LibWeb/Bindings/HTMLImageElementWrapper.h>
-#include <LibWeb/Bindings/NodeWrapper.h>
-#include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/HTMLCanvasElement.h>
 #include <LibWeb/DOM/HTMLImageElement.h>
-#include <LibWeb/DOM/Node.h>
 
 namespace Web {
 namespace Bindings {
 
-NodeWrapper* wrap(JS::Heap& heap, Node& node)
-{
-    if (is<Document>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(heap, to<Document>(node)));
-    if (is<HTMLCanvasElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(heap, to<HTMLCanvasElement>(node)));
-    if (is<HTMLImageElement>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(heap, to<HTMLImageElement>(node)));
-    if (is<Element>(node))
-        return static_cast<NodeWrapper*>(wrap_impl(heap, to<Element>(node)));
-    return static_cast<NodeWrapper*>(wrap_impl(heap, node));
-}
-
-NodeWrapper::NodeWrapper(Node& node)
-    : EventTargetWrapper(node)
-{
-    put("nodeName", JS::js_string(heap(), node.tag_name()));
-}
-
-NodeWrapper::~NodeWrapper()
+HTMLImageElementWrapper::HTMLImageElementWrapper(HTMLImageElement& element)
+    : ElementWrapper(element)
 {
 }
 
-Node& NodeWrapper::node()
+HTMLImageElementWrapper::~HTMLImageElementWrapper()
 {
-    return static_cast<Node&>(EventTargetWrapper::impl());
 }
 
-const Node& NodeWrapper::node() const
+HTMLImageElement& HTMLImageElementWrapper::node()
 {
-    return static_cast<const Node&>(EventTargetWrapper::impl());
+    return static_cast<HTMLImageElement&>(NodeWrapper::node());
+}
+
+const HTMLImageElement& HTMLImageElementWrapper::node() const
+{
+    return static_cast<const HTMLImageElement&>(NodeWrapper::node());
 }
 
 }
