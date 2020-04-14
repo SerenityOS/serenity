@@ -239,7 +239,6 @@ Value StringPrototype::pad_end(Interpreter& interpreter)
     return pad_string(interpreter, this_object, PadPlacement::End);
 }
 
-
 enum class TrimMode {
     Left,
     Right,
@@ -253,12 +252,13 @@ static Value trim_string(Interpreter& interpreter, Object* object, TrimMode mode
     size_t substring_start = 0;
     size_t substring_length = string.length();
 
-    if((mode == TrimMode::Left || mode == TrimMode::Both) && string.starts_with(' '))
-    {
-        for(size_t i = 0; i < string.length(); ++i)
-        {
-            if(string.characters()[i] != ' ')
-            {   
+    auto is_white_space_character = [](char character) -> bool {
+        return character == 0x9 || character == 0xa || character == 0xb || character == 0xc || character == 0xd || character == 0x20;
+    };
+
+    if (mode == TrimMode::Left || mode == TrimMode::Both) {
+        for (size_t i = 0; i < string.length(); ++i) {
+            if (!is_white_space_character(string.characters()[i])) {
                 substring_start = i;
                 substring_length -= substring_start;
                 break;
@@ -266,13 +266,13 @@ static Value trim_string(Interpreter& interpreter, Object* object, TrimMode mode
         }
     }
 
-    if((mode == TrimMode::Right || mode == TrimMode::Both) && string.ends_with(' '))
-    {
+    if (substring_length == 0)
+        return js_string(interpreter, String());
+
+    if (mode == TrimMode::Right || mode == TrimMode::Both) {
         size_t count = 0;
-        for(size_t i = string.length() -1; i > 0; --i)
-        {
-            if(string.characters()[i] != ' ')
-            {   
+        for (size_t i = string.length() - 1; i > 0; --i) {
+            if (!is_white_space_character(string.characters()[i])) {
                 substring_length -= count;
                 break;
             }
