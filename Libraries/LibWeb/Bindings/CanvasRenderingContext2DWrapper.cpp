@@ -27,10 +27,13 @@
 #include <AK/FlyString.h>
 #include <AK/Function.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
+#include <LibWeb/Bindings/HTMLImageElementWrapper.h>
 #include <LibWeb/DOM/CanvasRenderingContext2D.h>
+#include <LibWeb/DOM/HTMLImageElement.h>
 
 namespace Web {
 namespace Bindings {
@@ -49,6 +52,7 @@ CanvasRenderingContext2DWrapper::CanvasRenderingContext2DWrapper(CanvasRendering
     put_native_function("translate", translate, 2);
     put_native_property("strokeStyle", stroke_style_getter, stroke_style_setter);
     put_native_function("strokeRect", stroke_rect, 4);
+    put_native_function("drawImage", draw_image, 3);
 }
 
 CanvasRenderingContext2DWrapper::~CanvasRenderingContext2DWrapper()
@@ -83,6 +87,28 @@ JS::Value CanvasRenderingContext2DWrapper::stroke_rect(JS::Interpreter& interpre
     auto& arguments = interpreter.call_frame().arguments;
     if (arguments.size() >= 4)
         impl->stroke_rect(arguments[0].to_double(), arguments[1].to_double(), arguments[2].to_double(), arguments[3].to_double());
+    return JS::js_undefined();
+}
+
+JS::Value CanvasRenderingContext2DWrapper::draw_image(JS::Interpreter& interpreter)
+{
+    auto* impl = impl_from(interpreter);
+    if (!impl)
+        return {};
+    auto& arguments = interpreter.call_frame().arguments;
+    if (arguments.size() < 3)
+        return interpreter.throw_exception<JS::TypeError>("drawImage() needs more arguments");
+
+    auto* image_argument = arguments[0].to_object(interpreter.heap());
+    if (!image_argument)
+        return {};
+    if (StringView(image_argument->class_name()) != "HTMLImageElementWrapper")
+        return interpreter.throw_exception<JS::TypeError>(String::format("Image is not an HTMLImageElement, it's an %s", image_argument->class_name()));
+
+    auto x = arguments[1].to_double();
+    auto y = arguments[2].to_double();
+
+    impl->draw_image(static_cast<const HTMLImageElementWrapper&>(*image_argument).node(), x, y);
     return JS::js_undefined();
 }
 
