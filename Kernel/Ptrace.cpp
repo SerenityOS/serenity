@@ -72,14 +72,10 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
         if (!tracer->has_regs())
             return KResult(-EINVAL);
 
-        PtraceRegisters* regs = reinterpret_cast<PtraceRegisters*>(params.addr);
-        if (!caller.validate_write(regs, sizeof(PtraceRegisters)))
+        auto* regs = reinterpret_cast<PtraceRegisters*>(params.addr);
+        if (!caller.validate_write_typed(regs))
             return KResult(-EFAULT);
-
-        {
-            SmapDisabler disabler;
-            *regs = tracer->regs();
-        }
+        copy_to_user(regs, &tracer->regs());
         break;
     }
 
@@ -87,22 +83,18 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
         if (!tracer->has_regs())
             return KResult(-EINVAL);
 
-        if (!caller.validate_read(params.addr, sizeof(PtraceRegisters)))
+        PtraceRegisters regs;
+        if (!caller.validate_read_and_copy_typed(&regs, (const PtraceRegisters*)params.addr))
             return KResult(-EFAULT);
 
         auto& peer_saved_registers = peer->get_register_dump_from_stack();
         // Verify that the saved registers are in usermode context
-        if ((peer_saved_registers.cs & 0x03) != 3) {
-            return -EFAULT;
-        }
+        if ((peer_saved_registers.cs & 0x03) != 3)
+            return KResult(-EFAULT);
 
-        {
-            SmapDisabler disabler;
-            PtraceRegisters* regs = reinterpret_cast<PtraceRegisters*>(params.addr);
-            tracer->set_regs(*regs);
-            copy_ptrace_registers_into_kernel_registers(peer_saved_registers, *regs);
-            break;
-        }
+        tracer->set_regs(regs);
+        copy_ptrace_registers_into_kernel_registers(peer_saved_registers, regs);
+        break;
     }
 
     case PT_PEEK: {
