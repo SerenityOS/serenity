@@ -2727,6 +2727,11 @@ int Process::sys$setgroups(ssize_t count, const gid_t* user_gids)
     if (count && !validate_read(user_gids, count))
         return -EFAULT;
 
+    if (!count) {
+        m_extra_gids.clear();
+        return 0;
+    }
+
     Vector<gid_t> gids;
     gids.resize(count);
     copy_from_user(gids.data(), user_gids, sizeof(gid_t) * count);
