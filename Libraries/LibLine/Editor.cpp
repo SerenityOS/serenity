@@ -293,6 +293,7 @@ String Editor::get_line(const String& prompt)
                         m_suggestions = on_tab_complete_first_token(token);
                     else
                         m_suggestions = on_tab_complete_other_token(token);
+                    m_prompt_lines_at_suggestion_initiation = num_lines();
                 }
 
                 // Adjust already incremented / decremented index when switching tab direction
@@ -330,25 +331,43 @@ String Editor::get_line(const String& prompt)
                 if (m_times_tab_pressed > 1 && !m_suggestions.is_empty()) {
                     size_t longest_suggestion_length = 0;
 
-                    for (auto& suggestion : m_suggestions)
+                    for (auto& suggestion : m_suggestions) {
                         longest_suggestion_length = max(longest_suggestion_length, suggestion.length());
+                    }
 
                     size_t num_printed = 0;
                     size_t lines_used { 1 };
                     size_t index { 0 };
-                    putchar('\n');
+                    vt_save_cursor();
+                    vt_clear_lines(0, m_lines_used_for_last_suggestions);
+                    vt_restore_cursor();
+                    auto spans_entire_line { false };
+                    auto max_line_count = (m_cached_prompt_length + longest_suggestion_length + m_num_columns - 1) / m_num_columns;
+                    if (longest_suggestion_length >= m_num_columns - 2) {
+                        spans_entire_line = true;
+                        // we should make enough space for the biggest entry in
+                        // the suggestion list to fit in the prompt line
+                        auto start = max_line_count - m_prompt_lines_at_suggestion_initiation;
+                        for (size_t i = start; i < max_line_count; ++i) {
+                            putchar('\n');
+                        }
+                        lines_used += max_line_count;
+                        longest_suggestion_length = 0;
+                    }
+                    vt_move_absolute(max_line_count + m_origin_x, 1);
                     for (auto& suggestion : m_suggestions) {
                         size_t next_column = num_printed + suggestion.length() + longest_suggestion_length + 2;
 
                         if (next_column > m_num_columns) {
-                            ++lines_used;
+                            auto lines = (suggestion.length() + m_num_columns - 1) / m_num_columns;
+                            lines_used += lines;
                             putchar('\n');
                             num_printed = 0;
                         }
 
                         // show just enough suggestions to fill up the screen
                         // without moving the prompt out of view
-                        if (lines_used + num_lines() >= m_num_lines)
+                        if (lines_used + m_prompt_lines_at_suggestion_initiation >= m_num_lines)
                             break;
 
                         if (index == current_suggestion_index) {
@@ -356,7 +375,12 @@ String Editor::get_line(const String& prompt)
                             fflush(stdout);
                         }
 
-                        num_printed += fprintf(stderr, "%-*s", static_cast<int>(longest_suggestion_length) + 2, suggestion.characters());
+                        if (spans_entire_line) {
+                            num_printed += m_num_columns;
+                            fprintf(stderr, "%s", suggestion.characters());
+                        } else {
+                            num_printed += fprintf(stderr, "%-*s", static_cast<int>(longest_suggestion_length) + 2, suggestion.characters());
+                        }
 
                         if (index == current_suggestion_index) {
                             vt_apply_style({});
