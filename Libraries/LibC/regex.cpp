@@ -1180,7 +1180,7 @@ bool VM::match_recurse(MatchState& state, size_t recursion_level)
                             ++state.m_stringp;
                     }
                 } else {
-                    fprintf(stderr, "Undefined comparison: %i\n", compare_type);
+                    fprintf(stderr, "Undefined comparison: %i\n", (int)compare_type);
                     fflush(stdout);
                     ASSERT_NOT_REACHED();
                     break;
