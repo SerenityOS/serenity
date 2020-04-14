@@ -12,16 +12,3 @@ index c3005d2..e071fc9 100644
 +	install sl ${DESTDIR}/usr/bin/sl
 +	mkdir -p ${DESTDIR}/usr/share/man/man1
 +	gzip -9 -c < sl.1 > ${DESTDIR}/usr/share/man/man1/sl.1.gz
-diff --git a/sl.c b/sl.c
-index e549ac8..9a3eb5a 100644
---- a/sl.c
-+++ b/sl.c
-@@ -38,7 +38,7 @@
- /* sl version 1.00 : SL runs vomiting out smoke.                             */
- /*                                              by Toyoda Masashi 1992/12/11 */
- 
--#include <curses.h>
-+#include <ncurses.h>
- #include <signal.h>
- #include <unistd.h>
- #include "sl.h"
