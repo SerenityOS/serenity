@@ -56,6 +56,7 @@ void AbstractView::set_model(RefPtr<Model> model)
     if (m_model)
         m_model->register_view({}, *this);
     did_update_model(GUI::Model::InvalidateAllIndexes);
+    scroll_to_top();
 }
 
 void AbstractView::did_update_model(unsigned flags)
