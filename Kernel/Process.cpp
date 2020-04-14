@@ -1950,10 +1950,10 @@ int Process::sys$readlink(const Syscall::SC_readlink_params* user_params)
         return -EIO; // FIXME: Get a more detailed error from VFS.
 
     auto link_target = String::copy(contents);
-    if (link_target.length() + 1 > params.buffer.size)
+    if (link_target.length() > params.buffer.size)
         return -ENAMETOOLONG;
-    copy_to_user(params.buffer.data, link_target.characters(), link_target.length() + 1);
-    return link_target.length() + 1;
+    copy_to_user(params.buffer.data, link_target.characters(), link_target.length());
+    return link_target.length();
 }
 
 int Process::sys$chdir(const char* user_path, size_t path_length)
