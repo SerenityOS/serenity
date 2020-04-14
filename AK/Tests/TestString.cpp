@@ -184,4 +184,18 @@ TEST_CASE(replace)
     EXPECT(test_string == "111._.|||._.|||");
 }
 
+TEST_CASE(split)
+{
+    String test = "foo bar baz";
+    auto parts = test.split(' ');
+    EXPECT_EQ(parts.size(), 3u);
+    EXPECT_EQ(parts[0], "foo");
+    EXPECT_EQ(parts[1], "bar");
+    EXPECT_EQ(parts[2], "baz");
+
+    EXPECT_EQ(parts[0].characters()[3], '\0');
+    EXPECT_EQ(parts[1].characters()[3], '\0');
+    EXPECT_EQ(parts[2].characters()[3], '\0');
+}
+
 TEST_MAIN(String)
