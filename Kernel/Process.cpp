@@ -4940,11 +4940,10 @@ KResultOr<u32> Process::peek_user_data(u32* address)
     }
     uint32_t result;
 
-    SmapDisabler dis;
     // This function can be called from the context of another
     // process that called PT_PEEK
     ProcessPagingScope scope(*this);
-    result = *address;
+    copy_from_user(&result, address);
 
     return result;
 }
@@ -4975,10 +4974,7 @@ KResult Process::poke_user_data(u32* address, u32 data)
         region->remap();
     }
 
-    {
-        SmapDisabler dis;
-        *address = data;
-    }
+    copy_to_user(address, &data);
 
     if (!was_writable) {
         region->set_writable(false);
