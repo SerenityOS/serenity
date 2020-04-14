@@ -26,36 +26,22 @@
 
 #pragma once
 
-#include <LibWeb/Bindings/Wrapper.h>
+#include <LibWeb/Bindings/ElementWrapper.h>
 
 namespace Web {
 namespace Bindings {
 
-class CanvasRenderingContext2DWrapper : public Wrapper {
+class HTMLImageElementWrapper : public ElementWrapper {
 public:
-    explicit CanvasRenderingContext2DWrapper(CanvasRenderingContext2D&);
-    virtual ~CanvasRenderingContext2DWrapper() override;
+    explicit HTMLImageElementWrapper(HTMLImageElement&);
+    virtual ~HTMLImageElementWrapper() override;
 
-    CanvasRenderingContext2D& impl() { return m_impl; }
-    const CanvasRenderingContext2D& impl() const { return m_impl; }
+    HTMLImageElement& node();
+    const HTMLImageElement& node() const;
 
 private:
-    virtual const char* class_name() const override { return "CanvasRenderingContext2DWrapper"; }
-
-    static JS::Value fill_rect(JS::Interpreter&);
-    static JS::Value stroke_rect(JS::Interpreter&);
-    static JS::Value draw_image(JS::Interpreter&);
-    static JS::Value scale(JS::Interpreter&);
-    static JS::Value translate(JS::Interpreter&);
-    static JS::Value fill_style_getter(JS::Interpreter&);
-    static void fill_style_setter(JS::Interpreter&, JS::Value);
-    static JS::Value stroke_style_getter(JS::Interpreter&);
-    static void stroke_style_setter(JS::Interpreter&, JS::Value);
-
-    NonnullRefPtr<CanvasRenderingContext2D> m_impl;
+    virtual const char* class_name() const override { return "HTMLImageElementWrapper"; }
 };
-
-CanvasRenderingContext2DWrapper* wrap(JS::Heap&, CanvasRenderingContext2D&);
 
 }
 }

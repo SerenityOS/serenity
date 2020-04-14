@@ -28,6 +28,7 @@
 #include <LibGfx/Painter.h>
 #include <LibWeb/DOM/CanvasRenderingContext2D.h>
 #include <LibWeb/DOM/HTMLCanvasElement.h>
+#include <LibWeb/DOM/HTMLImageElement.h>
 
 namespace Web {
 
@@ -80,6 +81,22 @@ void CanvasRenderingContext2D::stroke_rect(float x, float y, float width, float 
     auto rect = m_transform.map(Gfx::FloatRect(x, y, width, height));
     painter->draw_rect(enclosing_int_rect(rect), m_stroke_style);
     did_draw(rect);
+}
+
+void CanvasRenderingContext2D::draw_image(const HTMLImageElement& image_element, float x, float y)
+{
+    if (!image_element.bitmap())
+        return;
+
+    auto painter = this->painter();
+    if (!painter)
+        return;
+
+    auto src_rect = image_element.bitmap()->rect();
+    Gfx::FloatRect dst_rect = { x, y, (float)image_element.bitmap()->width(), (float)image_element.bitmap()->height() };
+    auto rect = m_transform.map(dst_rect);
+
+    painter->draw_scaled_bitmap(enclosing_int_rect(rect), *image_element.bitmap(), src_rect);
 }
 
 void CanvasRenderingContext2D::scale(float sx, float sy)

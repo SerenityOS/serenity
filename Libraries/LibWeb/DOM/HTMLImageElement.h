@@ -36,6 +36,8 @@ class LayoutDocument;
 
 class HTMLImageElement : public HTMLElement {
 public:
+    using WrapperType = Bindings::HTMLImageElementWrapper;
+
     HTMLImageElement(Document&, const FlyString& tag_name);
     virtual ~HTMLImageElement() override;
 
@@ -59,5 +61,11 @@ private:
     RefPtr<Gfx::ImageDecoder> m_image_decoder;
     ByteBuffer m_encoded_data;
 };
+
+template<>
+inline bool is<HTMLImageElement>(const Node& node)
+{
+    return is<Element>(node) && to<Element>(node).tag_name().equals_ignoring_case("img");
+}
 
 }

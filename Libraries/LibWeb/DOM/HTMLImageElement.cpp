@@ -28,6 +28,7 @@
 #include <LibGfx/ImageDecoder.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/HTMLImageElement.h>
 #include <LibWeb/Layout/LayoutImage.h>
 #include <LibWeb/ResourceLoader.h>
@@ -64,7 +65,10 @@ void HTMLImageElement::load_image(const String& src)
 
         m_encoded_data = data;
         m_image_decoder = Gfx::ImageDecoder::create(m_encoded_data.data(), m_encoded_data.size());
+
         document().update_layout();
+
+        dispatch_event(Event::create("load"));
     });
 }
 

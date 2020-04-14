@@ -24,38 +24,35 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <LibWeb/Bindings/Wrapper.h>
+#include <AK/FlyString.h>
+#include <AK/Function.h>
+#include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/Value.h>
+#include <LibWeb/Bindings/HTMLImageElementWrapper.h>
+#include <LibWeb/DOM/HTMLImageElement.h>
 
 namespace Web {
 namespace Bindings {
 
-class CanvasRenderingContext2DWrapper : public Wrapper {
-public:
-    explicit CanvasRenderingContext2DWrapper(CanvasRenderingContext2D&);
-    virtual ~CanvasRenderingContext2DWrapper() override;
+HTMLImageElementWrapper::HTMLImageElementWrapper(HTMLImageElement& element)
+    : ElementWrapper(element)
+{
+}
 
-    CanvasRenderingContext2D& impl() { return m_impl; }
-    const CanvasRenderingContext2D& impl() const { return m_impl; }
+HTMLImageElementWrapper::~HTMLImageElementWrapper()
+{
+}
 
-private:
-    virtual const char* class_name() const override { return "CanvasRenderingContext2DWrapper"; }
+HTMLImageElement& HTMLImageElementWrapper::node()
+{
+    return static_cast<HTMLImageElement&>(NodeWrapper::node());
+}
 
-    static JS::Value fill_rect(JS::Interpreter&);
-    static JS::Value stroke_rect(JS::Interpreter&);
-    static JS::Value draw_image(JS::Interpreter&);
-    static JS::Value scale(JS::Interpreter&);
-    static JS::Value translate(JS::Interpreter&);
-    static JS::Value fill_style_getter(JS::Interpreter&);
-    static void fill_style_setter(JS::Interpreter&, JS::Value);
-    static JS::Value stroke_style_getter(JS::Interpreter&);
-    static void stroke_style_setter(JS::Interpreter&, JS::Value);
-
-    NonnullRefPtr<CanvasRenderingContext2D> m_impl;
-};
-
-CanvasRenderingContext2DWrapper* wrap(JS::Heap&, CanvasRenderingContext2D&);
+const HTMLImageElement& HTMLImageElementWrapper::node() const
+{
+    return static_cast<const HTMLImageElement&>(NodeWrapper::node());
+}
 
 }
 }
