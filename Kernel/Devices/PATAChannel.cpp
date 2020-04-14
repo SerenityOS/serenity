@@ -136,10 +136,9 @@ PATAChannel::PATAChannel(PCI::Address address, ChannelType type, bool force_pio)
 {
     disable_irq();
 
-    m_dma_enabled.resource() = true;
+    m_dma_enabled.resource() = !force_pio;
     ProcFS::add_sys_bool("ide_dma", m_dma_enabled);
 
-    m_prdt_page = MM.allocate_supervisor_physical_page();
     initialize(force_pio);
     detect_disks();
     disable_irq();
@@ -157,14 +156,15 @@ void PATAChannel::prepare_for_irq()
 
 void PATAChannel::initialize(bool force_pio)
 {
-
+    PCI::enable_interrupt_line(pci_address());
     if (force_pio) {
         klog() << "PATAChannel: Requested to force PIO mode; not setting up DMA";
         return;
     }
+
     // Let's try to set up DMA transfers.
     PCI::enable_bus_mastering(pci_address());
-    PCI::enable_interrupt_line(pci_address());
+    m_prdt_page = MM.allocate_supervisor_physical_page();
     prdt().end_of_table = 0x8000;
     m_dma_buffer_page = MM.allocate_supervisor_physical_page();
     klog() << "PATAChannel: Bus master IDE: " << m_bus_master_base;
@@ -402,57 +402,66 @@ bool PATAChannel::ata_write_sectors_with_dma(u32 lba, u16 count, const u8* inbuf
     return true;
 }
 
-bool PATAChannel::ata_read_sectors(u32 start_sector, u16 count, u8* outbuf, bool slave_request)
+bool PATAChannel::ata_read_sectors(u32 lba, u16 count, u8* outbuf, bool slave_request)
 {
     ASSERT(count <= 256);
     LOCKER(s_lock());
 #ifdef PATA_DEBUG
-    dbg() << "PATAChannel::ata_read_sectors request (" << count << " sector(s) @ " << start_sector << " into " << outbuf << ")";
+    dbg() << "PATAChannel::ata_read_sectors request (" << count << " sector(s) @ " << lba << " into " << outbuf << ")";
 #endif
 
     while (m_io_base.offset(ATA_REG_STATUS).in<u8>() & ATA_SR_BSY)
         ;
 
 #ifdef PATA_DEBUG
-    klog() << "PATAChannel: Reading " << count << " sector(s) @ LBA " << start_sector;
+    klog() << "PATAChannel: Reading " << count << " sector(s) @ LBA " << lba;
 #endif
 
     u8 devsel = 0xe0;
     if (slave_request)
         devsel |= 0x10;
 
-    m_io_base.offset(ATA_REG_SECCOUNT0).out<u8>(count == 256 ? 0 : LSB(count));
-    m_io_base.offset(ATA_REG_LBA0).out<u8>(start_sector & 0xff);
-    m_io_base.offset(ATA_REG_LBA1).out<u8>((start_sector >> 8) & 0xff);
-    m_io_base.offset(ATA_REG_LBA2).out<u8>((start_sector >> 16) & 0xff);
-    m_io_base.offset(ATA_REG_HDDEVSEL).out<u8>(devsel | ((start_sector >> 24) & 0xf));
+    m_control_base.offset(ATA_CTL_CONTROL).out<u8>(0);
+    m_io_base.offset(ATA_REG_HDDEVSEL).out<u8>(devsel | (static_cast<u8>(slave_request) << 4) | 0x40);
+    io_delay();
 
-    IO::out8(0x3F6, 0x08);
-    while (!(m_io_base.offset(ATA_REG_STATUS).in<u8>() & ATA_SR_DRDY))
-        ;
+    m_io_base.offset(ATA_REG_FEATURES).out<u8>(0);
 
-    prepare_for_irq();
-    m_io_base.offset(ATA_REG_COMMAND).out<u8>(ATA_CMD_READ_PIO);
-    wait_for_irq();
+    m_io_base.offset(ATA_REG_SECCOUNT0).out<u8>(0);
+    m_io_base.offset(ATA_REG_LBA0).out<u8>(0);
+    m_io_base.offset(ATA_REG_LBA1).out<u8>(0);
+    m_io_base.offset(ATA_REG_LBA2).out<u8>(0);
 
-    if (m_device_error)
-        return false;
+    m_io_base.offset(ATA_REG_SECCOUNT0).out<u8>(count);
+    m_io_base.offset(ATA_REG_LBA0).out<u8>((lba & 0x000000ff) >> 0);
+    m_io_base.offset(ATA_REG_LBA1).out<u8>((lba & 0x0000ff00) >> 8);
+    m_io_base.offset(ATA_REG_LBA2).out<u8>((lba & 0x00ff0000) >> 16);
 
-    for (int i = 0; i < count; i++) {
-        io_delay();
-
-        while (m_io_base.offset(ATA_REG_STATUS).in<u8>() & ATA_SR_BSY)
-            ;
-
-        u8 status = m_io_base.offset(ATA_REG_STATUS).in<u8>();
-        ASSERT(status & ATA_SR_DRQ);
-#ifdef PATA_DEBUG
-        dbg() << "PATAChannel: Retrieving 512 bytes (part " << i << ") (status=" << String::format("%b", status) << "), outbuf=(" << (outbuf + (512 * i)) << ")...";
-#endif
-
-        IO::repeated_in16(m_io_base.offset(ATA_REG_DATA).get(), outbuf + (512 * i), 256);
+    for (;;) {
+        auto status = m_io_base.offset(ATA_REG_STATUS).in<u8>();
+        if (!(status & ATA_SR_BSY) && (status & ATA_SR_DRDY))
+            break;
     }
 
+    m_io_base.offset(ATA_REG_COMMAND).out<u8>(ATA_CMD_READ_PIO);
+
+    for (int i = 0; i < count; i++) {
+        prepare_for_irq();
+        wait_for_irq();
+        if (m_device_error)
+            return false;
+
+        u8 status = m_control_base.offset(ATA_CTL_ALTSTATUS).in<u8>();
+        ASSERT(!(status & ATA_SR_BSY));
+
+        auto* buffer = (u16*)(outbuf + i * 512);
+#ifdef PATA_DEBUG
+        dbg() << "PATAChannel: Retrieving 512 bytes (part " << i << ") (status=" << String::format("%b", status) << "), outbuf=(" << buffer << ")...";
+#endif
+        for (int i = 0; i < 256; i++) {
+            buffer[i] = IO::in16(m_io_base.offset(ATA_REG_DATA).get());
+        }
+    }
     return true;
 }
 
@@ -489,7 +498,7 @@ bool PATAChannel::ata_write_sectors(u32 start_sector, u16 count, const u8* inbuf
 
     for (int i = 0; i < count; i++) {
         io_delay();
-        while (m_io_base.offset(ATA_REG_STATUS).in<u8>() & ATA_SR_BSY)
+        while ((m_io_base.offset(ATA_REG_STATUS).in<u8>() & ATA_SR_BSY) || !(m_io_base.offset(ATA_REG_STATUS).in<u8>() & ATA_SR_DRQ))
             ;
 
         u8 status = m_io_base.offset(ATA_REG_STATUS).in<u8>();
@@ -499,7 +508,10 @@ bool PATAChannel::ata_write_sectors(u32 start_sector, u16 count, const u8* inbuf
         dbg() << "PATAChannel: Writing 512 bytes (part " << i << ") (status=" << String::format("%b", status) << "), inbuf=(" << (inbuf + (512 * i)) << ")...";
 #endif
 
-        IO::repeated_out16(m_io_base.offset(ATA_REG_DATA).get(), inbuf + (512 * i), 256);
+        auto* buffer = (u16*)(const_cast<u8*>(inbuf) + i * 512);
+        for (int i = 0; i < 256; i++) {
+            IO::out16(m_io_base.offset(ATA_REG_DATA).get(), buffer[i]);
+        }
         prepare_for_irq();
         wait_for_irq();
         status = m_io_base.offset(ATA_REG_STATUS).in<u8>();
