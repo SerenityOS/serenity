@@ -1,3 +1,5 @@
+load("test-common.js");
+
 try {
     assert(String.prototype.trim.length === 0);
     assert(String.prototype.trimStart.length === 0);
