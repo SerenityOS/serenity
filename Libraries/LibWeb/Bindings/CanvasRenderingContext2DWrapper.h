@@ -44,6 +44,7 @@ private:
 
     static JS::Value fill_rect(JS::Interpreter&);
     static JS::Value stroke_rect(JS::Interpreter&);
+    static JS::Value draw_image(JS::Interpreter&);
     static JS::Value scale(JS::Interpreter&);
     static JS::Value translate(JS::Interpreter&);
     static JS::Value fill_style_getter(JS::Interpreter&);
