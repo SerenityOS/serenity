@@ -27,8 +27,6 @@
 #include "MonitorWidget.h"
 #include <LibGUI/Painter.h>
 
-//#define DEBUG_MODE
-
 MonitorWidget::MonitorWidget()
 {
     m_monitor_bitmap = Gfx::Bitmap::load_from_file("/res/monitor.png");
@@ -78,33 +76,31 @@ Gfx::Color MonitorWidget::background_color()
 
 void MonitorWidget::paint_event(GUI::PaintEvent& event)
 {
-#ifdef DEBUG_MODE
-    dbg() << "Paint event fired."
-          << " Color:" << m_desktop_color.to_string() << "."
-          << " Resolution:" << m_desktop_resolution.to_string() << "."
-          << " Wallpaper:" << m_desktop_wallpaper_path << ".";
-#endif
+    Gfx::Rect screen_rect = { 0, 0, m_desktop_resolution.width(), m_desktop_resolution.height() };
+    auto screen_bitmap = Gfx::Bitmap::create(m_monitor_bitmap->format(), m_desktop_resolution);
+    GUI::Painter screen_painter(*screen_bitmap);
+    screen_painter.fill_rect(screen_rect, m_desktop_color);
+
+    if (!m_desktop_wallpaper_bitmap.is_null()) {
+        if (m_desktop_wallpaper_mode == "simple") {
+            screen_painter.blit({ 0, 0 }, *m_desktop_wallpaper_bitmap, m_desktop_wallpaper_bitmap->rect());
+        } else if (m_desktop_wallpaper_mode == "center") {
+            Gfx::Point offset { screen_rect.width() / 2 - m_desktop_wallpaper_bitmap->size().width() / 2, screen_rect.height() / 2 - m_desktop_wallpaper_bitmap->size().height() / 2 };
+            screen_painter.blit_offset(screen_rect.location(), *m_desktop_wallpaper_bitmap, screen_rect, offset);
+        } else if (m_desktop_wallpaper_mode == "tile") {
+            screen_painter.draw_tiled_bitmap(screen_bitmap->rect(), *m_desktop_wallpaper_bitmap);
+        } else if (m_desktop_wallpaper_mode == "scaled") {
+            screen_painter.draw_scaled_bitmap(screen_bitmap->rect(), *m_desktop_wallpaper_bitmap, m_desktop_wallpaper_bitmap->rect());
+        } else {
+            ASSERT_NOT_REACHED();
+        }
+    }
 
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
     painter.blit({ 0, 0 }, *m_monitor_bitmap, m_monitor_bitmap->rect());
-
-    painter.fill_rect(m_monitor_rect, m_desktop_color);
-
-    if (!m_desktop_wallpaper_bitmap.is_null()) {
-        if (m_desktop_wallpaper_mode == "simple") {
-            painter.blit({ 8, 9 }, *m_desktop_wallpaper_bitmap, { 88, 51, 200, 150 });
-        } else if (m_desktop_wallpaper_mode == "center") {
-            painter.draw_scaled_bitmap({ 88, 51, 160, 90 }, *m_desktop_wallpaper_bitmap, m_desktop_wallpaper_bitmap->rect());
-        } else if (m_desktop_wallpaper_mode == "tile") {
-            painter.draw_tiled_bitmap(m_monitor_rect, *m_desktop_wallpaper_bitmap);
-        } else if (m_desktop_wallpaper_mode == "scaled") {
-            painter.draw_scaled_bitmap(m_monitor_rect, *m_desktop_wallpaper_bitmap, m_desktop_wallpaper_bitmap->rect());
-        } else {
-            ASSERT_NOT_REACHED();
-        }
-    }
+    painter.draw_scaled_bitmap(m_monitor_rect, *screen_bitmap, screen_bitmap->rect());
 
     if (!m_desktop_resolution.is_null())
         painter.draw_text(m_monitor_rect, m_desktop_resolution.to_string(), Gfx::TextAlignment::Center);
