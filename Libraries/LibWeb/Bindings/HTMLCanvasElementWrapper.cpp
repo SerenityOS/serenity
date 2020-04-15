@@ -85,14 +85,14 @@ JS::Value HTMLCanvasElementWrapper::get_context(JS::Interpreter& interpreter)
 JS::Value HTMLCanvasElementWrapper::width_getter(JS::Interpreter& interpreter)
 {
     if (auto* impl = impl_from(interpreter))
-        return JS::Value(impl->preferred_width());
+        return JS::Value(impl->requested_width());
     return {};
 }
 
 JS::Value HTMLCanvasElementWrapper::height_getter(JS::Interpreter& interpreter)
 {
     if (auto* impl = impl_from(interpreter))
-        return JS::Value(impl->preferred_height());
+        return JS::Value(impl->requested_height());
     return {};
 }
 

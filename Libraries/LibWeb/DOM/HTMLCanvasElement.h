@@ -41,13 +41,14 @@ public:
     HTMLCanvasElement(Document&, const FlyString& tag_name);
     virtual ~HTMLCanvasElement() override;
 
-    int preferred_width() const;
-    int preferred_height() const;
-
     const Gfx::Bitmap* bitmap() const { return m_bitmap; }
-    Gfx::Bitmap& ensure_bitmap();
+    Gfx::Bitmap* bitmap() { return m_bitmap; }
+    bool create_bitmap();
 
     CanvasRenderingContext2D* get_context(String type);
+
+    int requested_width() const;
+    int requested_height() const;
 
 private:
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
@@ -61,6 +62,5 @@ inline bool is<HTMLCanvasElement>(const Node& node)
 {
     return is<Element>(node) && to<Element>(node).tag_name().equals_ignoring_case("canvas");
 }
-
 
 }

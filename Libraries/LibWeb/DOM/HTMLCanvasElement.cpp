@@ -33,6 +33,8 @@
 
 namespace Web {
 
+static constexpr auto max_canvas_area = 16384 * 16384;
+
 HTMLCanvasElement::HTMLCanvasElement(Document& document, const FlyString& tag_name)
     : HTMLElement(document, tag_name)
 {
@@ -42,20 +44,20 @@ HTMLCanvasElement::~HTMLCanvasElement()
 {
 }
 
-int HTMLCanvasElement::preferred_width() const
+int HTMLCanvasElement::requested_width() const
 {
     bool ok = false;
-    int width = attribute("width").to_int(ok);
+    unsigned width = attribute("width").to_int(ok);
     if (ok)
         return width;
 
     return 300;
 }
 
-int HTMLCanvasElement::preferred_height() const
+int HTMLCanvasElement::requested_height() const
 {
     bool ok = false;
-    int height = attribute("height").to_int(ok);
+    unsigned height = attribute("height").to_int(ok);
     if (ok)
         return height;
 
@@ -79,12 +81,36 @@ CanvasRenderingContext2D* HTMLCanvasElement::get_context(String type)
     return m_context;
 }
 
-Gfx::Bitmap& HTMLCanvasElement::ensure_bitmap()
+static Gfx::Size bitmap_size_for_canvas(const HTMLCanvasElement& canvas)
 {
-    if (!m_bitmap || m_bitmap->size() != Gfx::Size(preferred_width(), preferred_height())) {
-        m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, { preferred_width(), preferred_height() });
+    int width = canvas.requested_width();
+    int height = canvas.requested_height();
+    if (width < 0 || height < 0) {
+        dbg() << "Refusing to create canvas with negative size";
+        return {};
     }
-    return *m_bitmap;
+    int area = 0;
+    if (__builtin_mul_overflow(width, height, &area)) {
+        dbg() << "Refusing to create " << width << "x" << height << " canvas (overflow)";
+        return {};
+    }
+    if (area > max_canvas_area) {
+        dbg() << "Refusing to create " << width << "x" << height << " canvas (exceeds maximum size)";
+        return {};
+    }
+    return { width, height };
+}
+
+bool HTMLCanvasElement::create_bitmap()
+{
+    auto size = bitmap_size_for_canvas(*this);
+    if (size.is_empty()) {
+        m_bitmap = nullptr;
+        return false;
+    }
+    if (!m_bitmap || m_bitmap->size() != size)
+        m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, size);
+    return true;
 }
 
 }

@@ -126,7 +126,12 @@ OwnPtr<Gfx::Painter> CanvasRenderingContext2D::painter()
     if (!m_element)
         return nullptr;
 
-    return make<Gfx::Painter>(m_element->ensure_bitmap());
+    if (!m_element->bitmap()) {
+        if (!m_element->create_bitmap())
+            return nullptr;
+    }
+
+    return make<Gfx::Painter>(*m_element->bitmap());
 }
 
 }

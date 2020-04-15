@@ -42,8 +42,8 @@ LayoutCanvas::~LayoutCanvas()
 
 void LayoutCanvas::layout()
 {
-    rect().set_width(node().preferred_width());
-    rect().set_height(node().preferred_height());
+    rect().set_width(node().requested_width());
+    rect().set_height(node().requested_height());
     LayoutReplaced::layout();
 }
 
