@@ -189,8 +189,8 @@ protected:
 private:
     virtual bool is_window() const override final { return true; }
 
-    NonnullRefPtr<Gfx::Bitmap> create_backing_bitmap(const Gfx::Size&);
-    NonnullRefPtr<Gfx::Bitmap> create_shared_bitmap(Gfx::BitmapFormat, const Gfx::Size&);
+    RefPtr<Gfx::Bitmap> create_backing_bitmap(const Gfx::Size&);
+    RefPtr<Gfx::Bitmap> create_shared_bitmap(Gfx::BitmapFormat, const Gfx::Size&);
     void set_current_backing_bitmap(Gfx::Bitmap&, bool flush_immediately = false);
     void flip(const Vector<Gfx::Rect, 32>& dirty_rects);
     void force_update();

@@ -80,7 +80,7 @@ static RefPtr<Gfx::Bitmap> s_background;
 
 Card::Card(Type type, uint8_t value)
     : m_rect(Gfx::Rect({}, { width, height }))
-    , m_front(Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, { width, height }))
+    , m_front(*Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, { width, height }))
     , m_type(type)
     , m_value(value)
 {

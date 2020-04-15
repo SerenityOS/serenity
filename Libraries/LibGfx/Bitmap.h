@@ -49,15 +49,15 @@ enum RotationDirection {
 
 class Bitmap : public RefCounted<Bitmap> {
 public:
-    static NonnullRefPtr<Bitmap> create(BitmapFormat, const Size&);
-    static NonnullRefPtr<Bitmap> create_purgeable(BitmapFormat, const Size&);
-    static NonnullRefPtr<Bitmap> create_wrapper(BitmapFormat, const Size&, size_t pitch, RGBA32*);
+    static RefPtr<Bitmap> create(BitmapFormat, const Size&);
+    static RefPtr<Bitmap> create_purgeable(BitmapFormat, const Size&);
+    static RefPtr<Bitmap> create_wrapper(BitmapFormat, const Size&, size_t pitch, RGBA32*);
     static RefPtr<Bitmap> load_from_file(const StringView& path);
-    static NonnullRefPtr<Bitmap> create_with_shared_buffer(BitmapFormat, NonnullRefPtr<SharedBuffer>&&, const Size&);
+    static RefPtr<Bitmap> create_with_shared_buffer(BitmapFormat, NonnullRefPtr<SharedBuffer>&&, const Size&);
 
-    NonnullRefPtr<Gfx::Bitmap> rotated(Gfx::RotationDirection) const;
-    NonnullRefPtr<Gfx::Bitmap> flipped(Gfx::Orientation) const;
-    NonnullRefPtr<Bitmap> to_bitmap_backed_by_shared_buffer() const;
+    RefPtr<Gfx::Bitmap> rotated(Gfx::RotationDirection) const;
+    RefPtr<Gfx::Bitmap> flipped(Gfx::Orientation) const;
+    RefPtr<Bitmap> to_bitmap_backed_by_shared_buffer() const;
 
     ShareableBitmap to_shareable_bitmap(pid_t peer_pid = -1) const;
 
@@ -79,9 +79,9 @@ public:
     SharedBuffer* shared_buffer() { return m_shared_buffer.ptr(); }
     const SharedBuffer* shared_buffer() const { return m_shared_buffer.ptr(); }
 
-    unsigned bpp() const
+    static unsigned bpp_for_format(BitmapFormat format)
     {
-        switch (m_format) {
+        switch (format) {
         case BitmapFormat::Indexed8:
             return 8;
         case BitmapFormat::RGB32:
@@ -92,6 +92,11 @@ public:
         case BitmapFormat::Invalid:
             return 0;
         }
+    }
+
+    unsigned bpp() const
+    {
+        return bpp_for_format(m_format);
     }
 
     void fill(Color);

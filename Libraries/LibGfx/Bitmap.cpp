@@ -38,13 +38,30 @@
 
 namespace Gfx {
 
-NonnullRefPtr<Bitmap> Bitmap::create(BitmapFormat format, const Size& size)
+static bool size_would_overflow(BitmapFormat format, const Size& size)
 {
+    if (size.width() < 0 || size.height() < 0)
+        return true;
+    size_t bpp = Bitmap::bpp_for_format(format);
+    size_t result = 0;
+    if (__builtin_mul_overflow((size_t)size.width(), (size_t)size.height(), &result))
+        return true;
+    if (__builtin_mul_overflow(result, bpp, &result))
+        return true;
+    return false;
+}
+
+RefPtr<Bitmap> Bitmap::create(BitmapFormat format, const Size& size)
+{
+    if (size_would_overflow(format, size))
+        return nullptr;
     return adopt(*new Bitmap(format, size, Purgeable::No));
 }
 
-NonnullRefPtr<Bitmap> Bitmap::create_purgeable(BitmapFormat format, const Size& size)
+RefPtr<Bitmap> Bitmap::create_purgeable(BitmapFormat format, const Size& size)
 {
+    if (size_would_overflow(format, size))
+        return nullptr;
     return adopt(*new Bitmap(format, size, Purgeable::Yes));
 }
 
@@ -55,6 +72,7 @@ Bitmap::Bitmap(BitmapFormat format, const Size& size, Purgeable purgeable)
     , m_purgeable(purgeable == Purgeable::Yes)
 {
     ASSERT(!m_size.is_empty());
+    ASSERT(!size_would_overflow(format, size));
     if (format == BitmapFormat::Indexed8)
         m_palette = new RGBA32[256];
     int map_flags = purgeable == Purgeable::Yes ? (MAP_PURGEABLE | MAP_PRIVATE) : (MAP_ANONYMOUS | MAP_PRIVATE);
@@ -63,8 +81,10 @@ Bitmap::Bitmap(BitmapFormat format, const Size& size, Purgeable purgeable)
     m_needs_munmap = true;
 }
 
-NonnullRefPtr<Bitmap> Bitmap::create_wrapper(BitmapFormat format, const Size& size, size_t pitch, RGBA32* data)
+RefPtr<Bitmap> Bitmap::create_wrapper(BitmapFormat format, const Size& size, size_t pitch, RGBA32* data)
 {
+    if (size_would_overflow(format, size))
+        return nullptr;
     return adopt(*new Bitmap(format, size, pitch, data));
 }
 
@@ -79,12 +99,15 @@ Bitmap::Bitmap(BitmapFormat format, const Size& size, size_t pitch, RGBA32* data
     , m_pitch(pitch)
     , m_format(format)
 {
+    ASSERT(!size_would_overflow(format, size));
     if (format == BitmapFormat::Indexed8)
         m_palette = new RGBA32[256];
 }
 
-NonnullRefPtr<Bitmap> Bitmap::create_with_shared_buffer(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer, const Size& size)
+RefPtr<Bitmap> Bitmap::create_with_shared_buffer(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer, const Size& size)
 {
+    if (size_would_overflow(format, size))
+        return nullptr;
     return adopt(*new Bitmap(format, move(shared_buffer), size));
 }
 
@@ -96,14 +119,17 @@ Bitmap::Bitmap(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer,
     , m_shared_buffer(move(shared_buffer))
 {
     ASSERT(format != BitmapFormat::Indexed8);
+    ASSERT(!size_would_overflow(format, size));
 }
 
-NonnullRefPtr<Gfx::Bitmap> Bitmap::rotated(Gfx::RotationDirection rotation_direction) const
+RefPtr<Gfx::Bitmap> Bitmap::rotated(Gfx::RotationDirection rotation_direction) const
 {
     auto w = this->width();
     auto h = this->height();
 
     auto new_bitmap = Gfx::Bitmap::create(this->format(), { h, w });
+    if (!new_bitmap)
+        return nullptr;
 
     for (int i = 0; i < w; i++) {
         for (int j = 0; j < h; j++) {
@@ -120,12 +146,14 @@ NonnullRefPtr<Gfx::Bitmap> Bitmap::rotated(Gfx::RotationDirection rotation_direc
     return new_bitmap;
 }
 
-NonnullRefPtr<Gfx::Bitmap> Bitmap::flipped(Gfx::Orientation orientation) const
+RefPtr<Gfx::Bitmap> Bitmap::flipped(Gfx::Orientation orientation) const
 {
     auto w = this->width();
     auto h = this->height();
 
     auto new_bitmap = Gfx::Bitmap::create(this->format(), { w, h });
+    if (!new_bitmap)
+        return nullptr;
 
     for (int i = 0; i < w; i++) {
         for (int j = 0; j < h; j++) {
@@ -140,12 +168,14 @@ NonnullRefPtr<Gfx::Bitmap> Bitmap::flipped(Gfx::Orientation orientation) const
     return new_bitmap;
 }
 
-NonnullRefPtr<Bitmap> Bitmap::to_bitmap_backed_by_shared_buffer() const
+RefPtr<Bitmap> Bitmap::to_bitmap_backed_by_shared_buffer() const
 {
     if (m_shared_buffer)
         return *this;
     auto buffer = SharedBuffer::create_with_size(size_in_bytes());
     auto bitmap = Bitmap::create_with_shared_buffer(m_format, *buffer, m_size);
+    if (!bitmap)
+        return nullptr;
     memcpy(buffer->data(), scanline(0), size_in_bytes());
     return bitmap;
 }
@@ -210,6 +240,8 @@ int Bitmap::shbuf_id() const
 ShareableBitmap Bitmap::to_shareable_bitmap(pid_t peer_pid) const
 {
     auto bitmap = to_bitmap_backed_by_shared_buffer();
+    if (!bitmap)
+        return {};
     if (peer_pid > 0)
         bitmap->shared_buffer()->share_with(peer_pid);
     return ShareableBitmap(*bitmap);
