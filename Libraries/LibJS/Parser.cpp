@@ -473,9 +473,12 @@ NonnullRefPtr<ArrayExpression> Parser::parse_array_expression()
 {
     consume(TokenType::BracketOpen);
 
-    NonnullRefPtrVector<Expression> elements;
-    while (match_expression()) {
-        elements.append(parse_expression(0));
+    Vector<RefPtr<Expression>> elements;
+    while (match_expression() || match(TokenType::Comma)) {
+        RefPtr<Expression> expression;
+        if (match_expression())
+            expression = parse_expression(0);
+        elements.append(expression);
         if (!match(TokenType::Comma))
             break;
         consume(TokenType::Comma);
