@@ -1,0 +1,14 @@
+--- gnuplot-5.2.8/Makefile.am.orig	2020-04-15 12:56:22.001000000 +0100
++++ gnuplot-5.2.8/Makefile.am	2020-04-15 12:58:18.603091197 +0100
+@@ -1,7 +1,10 @@
+ ## Process this file with automake to produce Makefile.in -*-Makefile-*-
+ AUTOMAKE_OPTIONS = foreign
+ 
+-SUBDIRS = config m4 term src docs man demo tutorial share
++# Note: For the SerenityOS port of gnuplot, the following have been removed:
++# docs - segfault during make :/
++# demo - i686-pc-serenity-gcc: error: unrecognized command line option '-rdynamic'
++SUBDIRS = config m4 term src man tutorial share
+ 
+ EXTRA_DIST = BUGS Copyright FAQ.pdf GNUmakefile INSTALL INSTALL.gnu \
+ Makefile.maint PATCHLEVEL PGPKEYS README RELEASE_NOTES \
