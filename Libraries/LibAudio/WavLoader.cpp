@@ -25,11 +25,11 @@
  */
 
 #include <AK/BufferStream.h>
+#include <AK/NumericLimits.h>
 #include <AK/OwnPtr.h>
 #include <LibAudio/WavLoader.h>
 #include <LibCore/File.h>
 #include <LibCore/IODeviceStreamReader.h>
-#include <limits>
 
 namespace Audio {
 
@@ -260,21 +260,21 @@ static double read_norm_sample_24(BufferStream& stream)
     value = sample1 << 8;
     value |= (sample2 << 16);
     value |= (sample3 << 24);
-    return double(value) / std::numeric_limits<i32>::max();
+    return double(value) / NumericLimits<i32>::max();
 }
 
 static double read_norm_sample_16(BufferStream& stream)
 {
     i16 sample = 0;
     stream >> sample;
-    return double(sample) / std::numeric_limits<i16>::max();
+    return double(sample) / NumericLimits<i16>::max();
 }
 
 static double read_norm_sample_8(BufferStream& stream)
 {
     u8 sample = 0;
     stream >> sample;
-    return double(sample) / std::numeric_limits<u8>::max();
+    return double(sample) / NumericLimits<u8>::max();
 }
 
 // ### can't const this because BufferStream is non-const
