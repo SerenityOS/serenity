@@ -201,11 +201,11 @@ void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
     }
 
     if (value.is_string())
-        printf("\033[31;1m");
+        printf("\033[32;1m");
     else if (value.is_number())
         printf("\033[35;1m");
     else if (value.is_boolean())
-        printf("\033[32;1m");
+        printf("\033[33;1m");
     else if (value.is_null())
         printf("\033[33;1m");
     else if (value.is_undefined())
