@@ -183,6 +183,8 @@ void PATAChannel::wait_for_irq()
 
 void PATAChannel::handle_irq(const RegisterState&)
 {
+    // FIXME: We might get random interrupts due to malfunctioning hardware, so we should check that we actually requested something to happen.
+
     u8 status = m_io_base.offset(ATA_REG_STATUS).in<u8>();
     if (status & ATA_SR_ERR) {
         print_ide_status(status);
@@ -443,6 +445,7 @@ bool PATAChannel::ata_read_sectors(u32 lba, u16 count, u8* outbuf, bool slave_re
             break;
     }
 
+    prepare_for_irq();
     m_io_base.offset(ATA_REG_COMMAND).out<u8>(ATA_CMD_READ_PIO);
 
     for (int i = 0; i < count; i++) {
@@ -458,10 +461,15 @@ bool PATAChannel::ata_read_sectors(u32 lba, u16 count, u8* outbuf, bool slave_re
 #ifdef PATA_DEBUG
         dbg() << "PATAChannel: Retrieving 512 bytes (part " << i << ") (status=" << String::format("%b", status) << "), outbuf=(" << buffer << ")...";
 #endif
+        prepare_for_irq();
+
         for (int i = 0; i < 256; i++) {
             buffer[i] = IO::in16(m_io_base.offset(ATA_REG_DATA).get());
         }
     }
+
+    sti();
+    disable_irq();
     return true;
 }
 
@@ -507,12 +515,11 @@ bool PATAChannel::ata_write_sectors(u32 start_sector, u16 count, const u8* inbuf
 #ifdef PATA_DEBUG
         dbg() << "PATAChannel: Writing 512 bytes (part " << i << ") (status=" << String::format("%b", status) << "), inbuf=(" << (inbuf + (512 * i)) << ")...";
 #endif
-
+        prepare_for_irq();
         auto* buffer = (u16*)(const_cast<u8*>(inbuf) + i * 512);
         for (int i = 0; i < 256; i++) {
             IO::out16(m_io_base.offset(ATA_REG_DATA).get(), buffer[i]);
         }
-        prepare_for_irq();
         wait_for_irq();
         status = m_io_base.offset(ATA_REG_STATUS).in<u8>();
         ASSERT(!(status & ATA_SR_BSY));
