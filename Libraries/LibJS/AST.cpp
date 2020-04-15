@@ -391,7 +391,11 @@ Value UnaryExpression::execute(Interpreter& interpreter) const
             return js_string(interpreter, "object");
         case Value::Type::Boolean:
             return js_string(interpreter, "boolean");
+        default:
+            ASSERT_NOT_REACHED();
         }
+    case UnaryOp::Void:
+        return js_undefined();
     }
 
     ASSERT_NOT_REACHED();
@@ -538,6 +542,9 @@ void UnaryExpression::dump(int indent) const
         break;
     case UnaryOp::Typeof:
         op_string = "typeof ";
+        break;
+    case UnaryOp::Void:
+        op_string = "void ";
         break;
     }
 
