@@ -49,6 +49,10 @@ private:
     static Value pad_end(Interpreter&);
 
     static Value length_getter(Interpreter&);
+
+    static Value trim(Interpreter&);
+    static Value trimStart(Interpreter&);
+    static Value trimEnd(Interpreter&);
 };
 
 }
