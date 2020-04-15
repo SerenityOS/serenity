@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/Types.h>
 
@@ -37,27 +38,6 @@ struct InstructionDescriptor;
 class SymbolProvider {
 public:
     virtual String symbolicate(FlatPtr, u32* offset = nullptr) const = 0;
-};
-
-template<typename T>
-struct MakeUnsigned {
-    typedef T type;
-};
-template<>
-struct MakeUnsigned<i8> {
-    typedef u8 type;
-};
-template<>
-struct MakeUnsigned<i16> {
-    typedef u32 type;
-};
-template<>
-struct MakeUnsigned<i32> {
-    typedef u32 type;
-};
-template<>
-struct MakeUnsigned<i64> {
-    typedef u64 type;
 };
 
 template<typename T>
