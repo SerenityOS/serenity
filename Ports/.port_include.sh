@@ -144,6 +144,9 @@ func_defined patch_internal || patch_internal() {
         done
     fi
 }
+func_defined pre_configure || pre_configure() {
+    :
+}
 func_defined configure || configure() {
     run ./"$configscript" --host=i686-pc-serenity $configopts
 }
@@ -242,6 +245,7 @@ do_patch() {
 do_configure() {
     if [ "$useconfigure" = "true" ]; then
         echo "Configuring $port!"
+        pre_configure
         chmod +x "${workdir}"/"$configscript"
         configure
     else
