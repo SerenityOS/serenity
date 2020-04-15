@@ -316,6 +316,60 @@ inline constexpr T&& forward(typename RemoveReference<T>::Type&& param) noexcept
     return static_cast<T&&>(param);
 }
 
+template<typename T>
+struct MakeUnsigned {
+};
+
+template<>
+struct MakeUnsigned<char> {
+    typedef unsigned char type;
+};
+
+template<>
+struct MakeUnsigned<short> {
+    typedef unsigned short type;
+};
+
+template<>
+struct MakeUnsigned<int> {
+    typedef unsigned type;
+};
+
+template<>
+struct MakeUnsigned<long> {
+    typedef unsigned long type;
+};
+
+template<>
+struct MakeUnsigned<long long> {
+    typedef unsigned long long type;
+};
+
+template<>
+struct MakeUnsigned<unsigned char> {
+    typedef unsigned char type;
+};
+
+template<>
+struct MakeUnsigned<unsigned short> {
+    typedef unsigned short type;
+};
+
+template<>
+struct MakeUnsigned<unsigned int> {
+    typedef unsigned type;
+};
+
+template<>
+struct MakeUnsigned<unsigned long> {
+    typedef unsigned long type;
+};
+
+template<>
+struct MakeUnsigned<unsigned long long> {
+    typedef unsigned long long type;
+};
+
 }
 
 using AK::ceil_div;
@@ -324,6 +378,7 @@ using AK::Conditional;
 using AK::exchange;
 using AK::forward;
 using AK::IsSame;
+using AK::MakeUnsigned;
 using AK::max;
 using AK::min;
 using AK::move;
