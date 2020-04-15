@@ -47,6 +47,7 @@ ArrayPrototype::ArrayPrototype()
     put_native_function("shift", shift, 0);
     put_native_function("toString", to_string, 0);
     put_native_function("unshift", unshift, 1);
+    put_native_function("join", join, 1);
     put("length", Value(0));
 }
 
@@ -194,20 +195,38 @@ Value ArrayPrototype::shift(Interpreter& interpreter)
     return array->elements().take_first();
 }
 
+static Value join_array_with_separator(Interpreter& interpreter, const Array& array, StringView separator)
+{
+    StringBuilder builder;
+    for (size_t i = 0; i < array.elements().size(); ++i) {
+        if (i != 0)
+            builder.append(separator);
+        if (!array.elements()[i].is_empty())
+            builder.append(array.elements()[i].to_string());
+    }
+    return js_string(interpreter, builder.to_string());
+}
+
 Value ArrayPrototype::to_string(Interpreter& interpreter)
 {
     auto* array = array_from(interpreter);
     if (!array)
         return {};
 
-    StringBuilder builder;
-    for (size_t i = 0; i < array->elements().size(); ++i) {
-        if (i != 0)
-            builder.append(',');
-        if (!array->elements()[i].is_empty())
-            builder.append(array->elements()[i].to_string());
-    }
-    return js_string(interpreter, builder.to_string());
+    return join_array_with_separator(interpreter, *array, ",");
+}
+
+Value ArrayPrototype::join(Interpreter& interpreter)
+{
+    auto* array = array_from(interpreter);
+    if (!array)
+        return {};
+
+    String separator = ",";
+    if (interpreter.argument_count() == 1)
+        separator = interpreter.argument(0).to_string();
+
+    return join_array_with_separator(interpreter, *array, separator);
 }
 
 }

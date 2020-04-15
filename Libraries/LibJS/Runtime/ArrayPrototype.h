@@ -47,6 +47,7 @@ private:
     static Value shift(Interpreter&);
     static Value to_string(Interpreter&);
     static Value unshift(Interpreter&);
+    static Value join(Interpreter&);
 };
 
 }
