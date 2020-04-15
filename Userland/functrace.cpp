@@ -32,6 +32,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/StringBuilder.h>
 #include <AK/kmalloc.h>
+#include <Kernel/Syscall.h>
 #include <LibC/sys/arch/i386/regs.h>
 #include <LibCore/File.h>
 #include <LibDebug/DebugSession.h>
@@ -67,6 +68,23 @@ void print_function_call(String function_name, size_t depth)
         printf("  ");
     }
     printf("=> %s\n", function_name.characters());
+}
+
+void print_syscall(PtraceRegisters& regs, size_t depth)
+{
+    for (size_t i = 0; i < depth; ++i) {
+        printf("  ");
+    }
+    const char* begin_color = "\033[34;1m";
+    const char* end_color = "\033[0m";
+    printf("=> %sSC_%s(0x%x, 0x%x, 0x%x)%s\n",
+        begin_color,
+        Syscall::to_string(
+            (Syscall::Function)regs.eax),
+        regs.edx,
+        regs.ecx,
+        regs.ebx,
+        end_color);
 }
 
 NonnullOwnPtr<HashMap<void*, X86::Instruction>> instrument_code()
@@ -134,18 +152,23 @@ int main(int argc, char** argv)
             return DebugSession::DebugDecision::Detach;
         }
 
+        if (reason == DebugSession::DebugBreakReason::Syscall) {
+            print_syscall(regs.value(), depth + 1);
+            return DebugSession::DebugDecision::ContinueBreakAtSyscall;
+        }
+
         if (new_function) {
             auto function_name = g_debug_session->elf().symbolicate(regs.value().eip);
             print_function_call(function_name, depth);
             new_function = false;
-            return DebugSession::Continue;
+            return DebugSession::ContinueBreakAtSyscall;
         }
         auto instruction = instrumented->get((void*)regs.value().eip).value();
 
         if (instruction.mnemonic() == "RET") {
             if (depth != 0)
                 --depth;
-            return DebugSession::Continue;
+            return DebugSession::ContinueBreakAtSyscall;
         }
 
         // FIXME: we could miss some leaf functions that were called with a jump
