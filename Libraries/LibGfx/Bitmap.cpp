@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Checked.h>
 #include <AK/Memory.h>
 #include <AK/SharedBuffer.h>
 #include <AK/String.h>
@@ -42,13 +43,10 @@ static bool size_would_overflow(BitmapFormat format, const Size& size)
 {
     if (size.width() < 0 || size.height() < 0)
         return true;
-    size_t bpp = Bitmap::bpp_for_format(format);
-    size_t result = 0;
-    if (__builtin_mul_overflow((size_t)size.width(), (size_t)size.height(), &result))
-        return true;
-    if (__builtin_mul_overflow(result, bpp, &result))
-        return true;
-    return false;
+    Checked<size_t> size_in_bytes = static_cast<size_t>(size.width());
+    size_in_bytes *= size.height();
+    size_in_bytes *= Bitmap::bpp_for_format(format);
+    return size_in_bytes.has_overflow();
 }
 
 RefPtr<Bitmap> Bitmap::create(BitmapFormat format, const Size& size)
