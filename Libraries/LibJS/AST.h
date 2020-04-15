@@ -395,6 +395,7 @@ enum class UnaryOp {
     Plus,
     Minus,
     Typeof,
+    Void,
 };
 
 class UnaryExpression : public Expression {
