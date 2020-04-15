@@ -108,8 +108,7 @@ Value MathObject::round(Interpreter& interpreter)
     auto number = interpreter.argument(0).to_number();
     if (number.is_nan())
         return js_nan();
-    // FIXME: Use ::round() instead of ::roundf().
-    return Value(::roundf(number.as_double()));
+    return Value(::round(number.as_double()));
 }
 
 Value MathObject::max(Interpreter& interpreter)
