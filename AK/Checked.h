@@ -234,6 +234,25 @@ public:
         return *this;
     }
 
+    template<typename U, typename V, typename X>
+    static bool multiplication_would_overflow(U u, V v)
+    {
+        Checked checked;
+        checked = u;
+        checked *= v;
+        return checked.has_overflow();
+    }
+
+    template<typename U, typename V, typename X>
+    static bool multiplication_would_overflow(U u, V v, X x)
+    {
+        Checked checked;
+        checked = u;
+        checked *= v;
+        checked *= x;
+        return checked.has_overflow();
+    }
+
 private:
     T m_value;
     bool m_overflow { false };
