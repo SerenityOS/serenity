@@ -100,6 +100,13 @@ bool Value::to_boolean() const
     }
 }
 
+Value Value::to_primitive(Interpreter&) const
+{
+    if (is_object())
+        return as_object().to_primitive();
+    return *this;
+}
+
 Object* Value::to_object(Heap& heap) const
 {
     if (is_object())
@@ -256,10 +263,13 @@ Value right_shift(Interpreter&, Value lhs, Value rhs)
 
 Value add(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    if (lhs.is_string() || rhs.is_string())
-        return js_string(interpreter.heap(), String::format("%s%s", lhs.to_string().characters(), rhs.to_string().characters()));
+    auto lhs_primitive = lhs.to_primitive(interpreter);
+    auto rhs_primitive = rhs.to_primitive(interpreter);
 
-    return Value(lhs.to_number().as_double() + rhs.to_number().as_double());
+    if (lhs_primitive.is_string() || rhs_primitive.is_string())
+        return js_string(interpreter.heap(), String::format("%s%s", lhs_primitive.to_string().characters(), rhs_primitive.to_string().characters()));
+
+    return Value(lhs_primitive.to_number().as_double() + rhs_primitive.to_number().as_double());
 }
 
 Value sub(Interpreter&, Value lhs, Value rhs)
