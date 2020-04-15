@@ -72,7 +72,8 @@ LexicalEnvironment* ScriptFunction::create_environment()
             }
         }
     }
-
+    if (variables.is_empty())
+        return m_parent_environment;
     return heap().allocate<LexicalEnvironment>(move(variables), m_parent_environment);
 }
 
