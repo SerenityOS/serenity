@@ -25,9 +25,9 @@
  */
 
 #include <AK/BufferStream.h>
+#include <AK/NumericLimits.h>
 #include <AudioServer/ASClientConnection.h>
 #include <AudioServer/ASMixer.h>
-#include <limits>
 #include <pthread.h>
 
 ASMixer::ASMixer()
@@ -114,11 +114,11 @@ void ASMixer::mix()
                 mixed_sample.clip();
 
                 i16 out_sample;
-                out_sample = mixed_sample.left * std::numeric_limits<i16>::max();
+                out_sample = mixed_sample.left * NumericLimits<i16>::max();
                 stream << out_sample;
 
                 ASSERT(!stream.at_end()); // we should have enough space for both channels in one buffer!
-                out_sample = mixed_sample.right * std::numeric_limits<i16>::max();
+                out_sample = mixed_sample.right * NumericLimits<i16>::max();
                 stream << out_sample;
             }
         }
