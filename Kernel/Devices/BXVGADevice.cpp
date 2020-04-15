@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Checked.h>
 #include <Kernel/Devices/BXVGADevice.h>
 #include <Kernel/PCI/Access.h>
 #include <Kernel/Process.h>
@@ -124,6 +125,9 @@ bool BXVGADevice::test_resolution(int width, int height)
 }
 bool BXVGADevice::set_resolution(int width, int height)
 {
+    if (Checked<int>::multiplication_would_overflow(width, height, sizeof(u32)))
+        return false;
+
     if (!test_resolution(width, height))
         return false;
 
