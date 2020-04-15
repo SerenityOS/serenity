@@ -51,6 +51,10 @@ StringPrototype::StringPrototype()
     put_native_function("toString", to_string, 0);
     put_native_function("padStart", pad_start, 1);
     put_native_function("padEnd", pad_end, 1);
+
+    put_native_function("trim", trim, 0);
+    put_native_function("trimStart", trimStart, 0);
+    put_native_function("trimEnd", trimEnd, 0);
 }
 
 StringPrototype::~StringPrototype()
@@ -233,6 +237,72 @@ Value StringPrototype::pad_end(Interpreter& interpreter)
     if (!this_object)
         return {};
     return pad_string(interpreter, this_object, PadPlacement::End);
+}
+
+enum class TrimMode {
+    Left,
+    Right,
+    Both
+};
+
+static Value trim_string(Interpreter& interpreter, Object* object, TrimMode mode)
+{
+    auto& string = object->to_string().as_string()->string();
+
+    size_t substring_start = 0;
+    size_t substring_length = string.length();
+
+    auto is_white_space_character = [](char character) -> bool {
+        return character == 0x9 || character == 0xa || character == 0xb || character == 0xc || character == 0xd || character == 0x20;
+    };
+
+    if (mode == TrimMode::Left || mode == TrimMode::Both) {
+        for (size_t i = 0; i < string.length(); ++i) {
+            if (!is_white_space_character(string.characters()[i])) {
+                substring_start = i;
+                substring_length -= substring_start;
+                break;
+            }
+        }
+    }
+
+    if (substring_length == 0)
+        return js_string(interpreter, String());
+
+    if (mode == TrimMode::Right || mode == TrimMode::Both) {
+        size_t count = 0;
+        for (size_t i = string.length() - 1; i > 0; --i) {
+            if (!is_white_space_character(string.characters()[i])) {
+                substring_length -= count;
+                break;
+            }
+            count++;
+        }
+    }
+
+    auto substring = string.substring(substring_start, substring_length);
+    return js_string(interpreter, substring);
+}
+
+Value StringPrototype::trim(Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+
+    return trim_string(interpreter, this_object, TrimMode::Both);
+}
+
+Value StringPrototype::trimStart(Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+
+    return trim_string(interpreter, this_object, TrimMode::Left);
+}
+
+Value StringPrototype::trimEnd(Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+
+    return trim_string(interpreter, this_object, TrimMode::Right);
 }
 
 }
