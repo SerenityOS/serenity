@@ -27,8 +27,8 @@
 
 #include "WaveWidget.h"
 #include "AudioEngine.h"
+#include <AK/NumericLimits.h>
 #include <LibGUI/Painter.h>
-#include <limits>
 
 WaveWidget::WaveWidget(AudioEngine& audio_engine)
     : m_audio_engine(audio_engine)
@@ -43,7 +43,7 @@ int WaveWidget::sample_to_y(int sample) const
 {
     constexpr int nice_scale_factor = 4;
     sample *= nice_scale_factor;
-    constexpr double sample_max = std::numeric_limits<i16>::max();
+    constexpr double sample_max = NumericLimits<i16>::max();
     double percentage = sample / sample_max;
     double portion_of_half_height = percentage * ((frame_inner_rect().height() - 1) / 2.0);
     double y = (frame_inner_rect().height() / 2.0) + portion_of_half_height;
