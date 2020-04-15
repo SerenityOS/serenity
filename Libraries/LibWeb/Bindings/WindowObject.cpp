@@ -89,10 +89,10 @@ JS::Value WindowObject::alert(JS::Interpreter& interpreter)
     auto* impl = impl_from(interpreter);
     if (!impl)
         return {};
-    auto& arguments = interpreter.call_frame().arguments;
-    if (arguments.size() < 1)
-        return {};
-    impl->alert(arguments[0].to_string());
+    String message = "";
+    if (interpreter.argument_count())
+        message = interpreter.argument(0).to_string();
+    impl->alert(message);
     return JS::js_undefined();
 }
 
