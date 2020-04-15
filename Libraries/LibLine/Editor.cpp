@@ -153,7 +153,10 @@ String Editor::get_line(const String& prompt)
 
         auto reverse_tab = false;
         auto increment_suggestion_index = [&] {
-            m_next_suggestion_index = (m_next_suggestion_index + 1) % m_suggestions.size();
+            if (m_suggestions.size())
+                m_next_suggestion_index = (m_next_suggestion_index + 1) % m_suggestions.size();
+            else
+                m_next_suggestion_index = 0;
         };
         auto decrement_suggestion_index = [&] {
             if (m_next_suggestion_index == 0)
