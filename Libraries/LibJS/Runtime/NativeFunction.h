@@ -49,6 +49,7 @@ protected:
 private:
     virtual bool is_native_function() const override { return true; }
     virtual const char* class_name() const override { return "NativeFunction"; }
+    virtual LexicalEnvironment* create_environment() override final { return nullptr; }
 
     FlyString m_name;
     AK::Function<Value(Interpreter&)> m_native_function;

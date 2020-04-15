@@ -33,17 +33,47 @@
 
 namespace JS {
 
-ScriptFunction::ScriptFunction(const FlyString& name, const Statement& body, Vector<FlyString> parameters)
+ScriptFunction::ScriptFunction(const FlyString& name, const Statement& body, Vector<FlyString> parameters, LexicalEnvironment* parent_environment)
     : m_name(name)
     , m_body(body)
     , m_parameters(move(parameters))
+    , m_parent_environment(parent_environment)
 {
+    HashMap<FlyString, Variable> variables;
+    for (auto& parameter : parameters) {
+        variables.set(parameter, {});
+    }
+
     put("prototype", heap().allocate<Object>());
     put_native_property("length", length_getter, length_setter);
 }
 
 ScriptFunction::~ScriptFunction()
 {
+}
+
+void ScriptFunction::visit_children(Visitor& visitor)
+{
+    Function::visit_children(visitor);
+    visitor.visit(m_parent_environment);
+}
+
+LexicalEnvironment* ScriptFunction::create_environment()
+{
+    HashMap<FlyString, Variable> variables;
+    for (auto& parameter : m_parameters) {
+        variables.set(parameter, { js_undefined(), DeclarationKind::Var });
+    }
+
+    if (body().is_scope_node()) {
+        for (auto& declaration : static_cast<const ScopeNode&>(body()).variables()) {
+            for (auto& declarator : declaration.declarations()) {
+                variables.set(declarator.id().string(), { js_undefined(), DeclarationKind::Var });
+            }
+        }
+    }
+
+    return heap().allocate<LexicalEnvironment>(move(variables), m_parent_environment);
 }
 
 Value ScriptFunction::call(Interpreter& interpreter)
@@ -55,7 +85,8 @@ Value ScriptFunction::call(Interpreter& interpreter)
         auto value = js_undefined();
         if (i < argument_values.size())
             value = argument_values[i];
-        arguments.append({ move(name), move(value) });
+        arguments.append({ name, value });
+        interpreter.current_environment()->set(name, { value, DeclarationKind::Var });
     }
     return interpreter.run(m_body, arguments, ScopeType::Function);
 }

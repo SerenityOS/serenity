@@ -24,38 +24,41 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/LexicalEnvironment.h>
 
 namespace JS {
 
-class ScriptFunction final : public Function {
-public:
-    ScriptFunction(const FlyString& name, const Statement& body, Vector<FlyString> parameters, LexicalEnvironment* parent_environment);
-    virtual ~ScriptFunction();
+LexicalEnvironment::LexicalEnvironment()
+{
+}
 
-    const Statement& body() const { return m_body; }
-    const Vector<FlyString>& parameters() const { return m_parameters; };
+LexicalEnvironment::LexicalEnvironment(HashMap<FlyString, Variable> variables, LexicalEnvironment* parent)
+    : m_parent(parent)
+    , m_variables(move(variables))
+{
+}
 
-    virtual Value call(Interpreter&) override;
-    virtual Value construct(Interpreter&) override;
+LexicalEnvironment::~LexicalEnvironment()
+{
+}
 
-    virtual const FlyString& name() const override { return m_name; };
+void LexicalEnvironment::visit_children(Visitor& visitor)
+{
+    Cell::visit_children(visitor);
+    if (m_parent)
+        visitor.visit(m_parent);
+    for (auto& it : m_variables)
+        visitor.visit(it.value.value);
+}
 
-private:
-    virtual bool is_script_function() const final { return true; }
-    virtual const char* class_name() const override { return "ScriptFunction"; }
-    virtual LexicalEnvironment* create_environment() override;
-    virtual void visit_children(Visitor&) override;
+Optional<Variable> LexicalEnvironment::get(const FlyString& name) const
+{
+    return m_variables.get(name);
+}
 
-    static Value length_getter(Interpreter&);
-    static void length_setter(Interpreter&, Value);
-
-    FlyString m_name;
-    NonnullRefPtr<Statement> m_body;
-    const Vector<FlyString> m_parameters;
-    LexicalEnvironment* m_parent_environment { nullptr };
-};
+void LexicalEnvironment::set(const FlyString& name, Variable variable)
+{
+    m_variables.set(name, variable);
+}
 
 }
