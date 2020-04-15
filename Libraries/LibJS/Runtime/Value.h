@@ -187,27 +187,27 @@ inline Value js_negative_infinity()
     return Value(-__builtin_huge_val());
 }
 
-Value greater_than(Value lhs, Value rhs);
-Value greater_than_equals(Value lhs, Value rhs);
-Value less_than(Value lhs, Value rhs);
-Value less_than_equals(Value lhs, Value rhs);
-Value bitwise_and(Value lhs, Value rhs);
-Value bitwise_or(Value lhs, Value rhs);
-Value bitwise_xor(Value lhs, Value rhs);
-Value bitwise_not(Value);
-Value unary_plus(Value);
-Value unary_minus(Value);
-Value left_shift(Value lhs, Value rhs);
-Value right_shift(Value lhs, Value rhs);
-Value add(Value lhs, Value rhs);
-Value sub(Value lhs, Value rhs);
-Value mul(Value lhs, Value rhs);
-Value div(Value lhs, Value rhs);
-Value mod(Value lhs, Value rhs);
-Value exp(Value lhs, Value rhs);
-Value eq(Value lhs, Value rhs);
-Value typed_eq(Value lhs, Value rhs);
-Value instance_of(Value lhs, Value rhs);
+Value greater_than(Interpreter&, Value lhs, Value rhs);
+Value greater_than_equals(Interpreter&, Value lhs, Value rhs);
+Value less_than(Interpreter&, Value lhs, Value rhs);
+Value less_than_equals(Interpreter&, Value lhs, Value rhs);
+Value bitwise_and(Interpreter&, Value lhs, Value rhs);
+Value bitwise_or(Interpreter&, Value lhs, Value rhs);
+Value bitwise_xor(Interpreter&, Value lhs, Value rhs);
+Value bitwise_not(Interpreter&, Value);
+Value unary_plus(Interpreter&, Value);
+Value unary_minus(Interpreter&, Value);
+Value left_shift(Interpreter&, Value lhs, Value rhs);
+Value right_shift(Interpreter&, Value lhs, Value rhs);
+Value add(Interpreter&, Value lhs, Value rhs);
+Value sub(Interpreter&, Value lhs, Value rhs);
+Value mul(Interpreter&, Value lhs, Value rhs);
+Value div(Interpreter&, Value lhs, Value rhs);
+Value mod(Interpreter&, Value lhs, Value rhs);
+Value exp(Interpreter&, Value lhs, Value rhs);
+Value eq(Interpreter&, Value lhs, Value rhs);
+Value typed_eq(Interpreter&, Value lhs, Value rhs);
+Value instance_of(Interpreter&, Value lhs, Value rhs);
 
 const LogStream& operator<<(const LogStream&, const Value&);
 

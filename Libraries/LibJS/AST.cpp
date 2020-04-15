@@ -281,45 +281,45 @@ Value BinaryExpression::execute(Interpreter& interpreter) const
 
     switch (m_op) {
     case BinaryOp::Addition:
-        return add(lhs_result, rhs_result);
+        return add(interpreter, lhs_result, rhs_result);
     case BinaryOp::Subtraction:
-        return sub(lhs_result, rhs_result);
+        return sub(interpreter, lhs_result, rhs_result);
     case BinaryOp::Multiplication:
-        return mul(lhs_result, rhs_result);
+        return mul(interpreter, lhs_result, rhs_result);
     case BinaryOp::Division:
-        return div(lhs_result, rhs_result);
+        return div(interpreter, lhs_result, rhs_result);
     case BinaryOp::Modulo:
-        return mod(lhs_result, rhs_result);
+        return mod(interpreter, lhs_result, rhs_result);
     case BinaryOp::Exponentiation:
-        return exp(lhs_result, rhs_result);
+        return exp(interpreter, lhs_result, rhs_result);
     case BinaryOp::TypedEquals:
-        return typed_eq(lhs_result, rhs_result);
+        return typed_eq(interpreter, lhs_result, rhs_result);
     case BinaryOp::TypedInequals:
-        return Value(!typed_eq(lhs_result, rhs_result).as_bool());
+        return Value(!typed_eq(interpreter, lhs_result, rhs_result).as_bool());
     case BinaryOp::AbstractEquals:
-        return eq(lhs_result, rhs_result);
+        return eq(interpreter, lhs_result, rhs_result);
     case BinaryOp::AbstractInequals:
-        return Value(!eq(lhs_result, rhs_result).as_bool());
+        return Value(!eq(interpreter, lhs_result, rhs_result).as_bool());
     case BinaryOp::GreaterThan:
-        return greater_than(lhs_result, rhs_result);
+        return greater_than(interpreter, lhs_result, rhs_result);
     case BinaryOp::GreaterThanEquals:
-        return greater_than_equals(lhs_result, rhs_result);
+        return greater_than_equals(interpreter, lhs_result, rhs_result);
     case BinaryOp::LessThan:
-        return less_than(lhs_result, rhs_result);
+        return less_than(interpreter, lhs_result, rhs_result);
     case BinaryOp::LessThanEquals:
-        return less_than_equals(lhs_result, rhs_result);
+        return less_than_equals(interpreter, lhs_result, rhs_result);
     case BinaryOp::BitwiseAnd:
-        return bitwise_and(lhs_result, rhs_result);
+        return bitwise_and(interpreter, lhs_result, rhs_result);
     case BinaryOp::BitwiseOr:
-        return bitwise_or(lhs_result, rhs_result);
+        return bitwise_or(interpreter, lhs_result, rhs_result);
     case BinaryOp::BitwiseXor:
-        return bitwise_xor(lhs_result, rhs_result);
+        return bitwise_xor(interpreter, lhs_result, rhs_result);
     case BinaryOp::LeftShift:
-        return left_shift(lhs_result, rhs_result);
+        return left_shift(interpreter, lhs_result, rhs_result);
     case BinaryOp::RightShift:
-        return right_shift(lhs_result, rhs_result);
+        return right_shift(interpreter, lhs_result, rhs_result);
     case BinaryOp::InstanceOf:
-        return instance_of(lhs_result, rhs_result);
+        return instance_of(interpreter, lhs_result, rhs_result);
     }
 
     ASSERT_NOT_REACHED();
@@ -363,13 +363,13 @@ Value UnaryExpression::execute(Interpreter& interpreter) const
         return {};
     switch (m_op) {
     case UnaryOp::BitwiseNot:
-        return bitwise_not(lhs_result);
+        return bitwise_not(interpreter, lhs_result);
     case UnaryOp::Not:
         return Value(!lhs_result.to_boolean());
     case UnaryOp::Plus:
-        return unary_plus(lhs_result);
+        return unary_plus(interpreter, lhs_result);
     case UnaryOp::Minus:
-        return unary_minus(lhs_result);
+        return unary_minus(interpreter, lhs_result);
     case UnaryOp::Typeof:
         switch (lhs_result.type()) {
         case Value::Type::Empty:
@@ -704,25 +704,25 @@ Value AssignmentExpression::execute(Interpreter& interpreter) const
         lhs_result = m_lhs->execute(interpreter);
         if (interpreter.exception())
             return {};
-        rhs_result = add(lhs_result, rhs_result);
+        rhs_result = add(interpreter, lhs_result, rhs_result);
         break;
     case AssignmentOp::SubtractionAssignment:
         lhs_result = m_lhs->execute(interpreter);
         if (interpreter.exception())
             return {};
-        rhs_result = sub(lhs_result, rhs_result);
+        rhs_result = sub(interpreter, lhs_result, rhs_result);
         break;
     case AssignmentOp::MultiplicationAssignment:
         lhs_result = m_lhs->execute(interpreter);
         if (interpreter.exception())
             return {};
-        rhs_result = mul(lhs_result, rhs_result);
+        rhs_result = mul(interpreter, lhs_result, rhs_result);
         break;
     case AssignmentOp::DivisionAssignment:
         lhs_result = m_lhs->execute(interpreter);
         if (interpreter.exception())
             return {};
-        rhs_result = div(lhs_result, rhs_result);
+        rhs_result = div(interpreter, lhs_result, rhs_result);
         break;
     }
     if (interpreter.exception())
@@ -1063,7 +1063,7 @@ Value SwitchStatement::execute(Interpreter& interpreter) const
             auto test_result = switch_case.test()->execute(interpreter);
             if (interpreter.exception())
                 return {};
-            if (!eq(discriminant_result, test_result).to_boolean())
+            if (!eq(interpreter, discriminant_result, test_result).to_boolean())
                 continue;
         }
         falling_through = true;
