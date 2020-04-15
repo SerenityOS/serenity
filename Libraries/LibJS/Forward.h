@@ -61,6 +61,7 @@ class HandleImpl;
 class Heap;
 class HeapBlock;
 class Interpreter;
+class LexicalEnvironment;
 class PrimitiveString;
 class ScopeNode;
 class Shape;

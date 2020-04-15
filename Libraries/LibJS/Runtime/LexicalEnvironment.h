@@ -26,36 +26,39 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Function.h>
+#include <AK/FlyString.h>
+#include <AK/HashMap.h>
+#include <LibJS/Runtime/Cell.h>
+#include <LibJS/Runtime/Value.h>
 
 namespace JS {
 
-class ScriptFunction final : public Function {
+struct Variable {
+    Value value;
+    DeclarationKind declaration_kind;
+};
+
+class LexicalEnvironment final : public Cell {
 public:
-    ScriptFunction(const FlyString& name, const Statement& body, Vector<FlyString> parameters, LexicalEnvironment* parent_environment);
-    virtual ~ScriptFunction();
+    LexicalEnvironment();
+    LexicalEnvironment(HashMap<FlyString, Variable> variables, LexicalEnvironment* parent);
+    virtual ~LexicalEnvironment() override;
 
-    const Statement& body() const { return m_body; }
-    const Vector<FlyString>& parameters() const { return m_parameters; };
+    LexicalEnvironment* parent() { return m_parent; }
 
-    virtual Value call(Interpreter&) override;
-    virtual Value construct(Interpreter&) override;
+    Optional<Variable> get(const FlyString&) const;
+    void set(const FlyString&, Variable);
 
-    virtual const FlyString& name() const override { return m_name; };
+    void clear();
+
+    const HashMap<FlyString, Variable>& variables() const { return m_variables; }
 
 private:
-    virtual bool is_script_function() const final { return true; }
-    virtual const char* class_name() const override { return "ScriptFunction"; }
-    virtual LexicalEnvironment* create_environment() override;
+    virtual const char* class_name() const override { return "LexicalEnvironment"; }
     virtual void visit_children(Visitor&) override;
 
-    static Value length_getter(Interpreter&);
-    static void length_setter(Interpreter&, Value);
-
-    FlyString m_name;
-    NonnullRefPtr<Statement> m_body;
-    const Vector<FlyString> m_parameters;
-    LexicalEnvironment* m_parent_environment { nullptr };
+    LexicalEnvironment* m_parent { nullptr };
+    HashMap<FlyString, Variable> m_variables;
 };
 
 }

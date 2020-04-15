@@ -34,6 +34,7 @@
 #include <LibJS/Runtime/ErrorPrototype.h>
 #include <LibJS/Runtime/FunctionPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/LexicalEnvironment.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/NumberPrototype.h>
 #include <LibJS/Runtime/Object.h>
@@ -66,6 +67,16 @@ Interpreter::~Interpreter()
 
 Value Interpreter::run(const Statement& statement, ArgumentVector arguments, ScopeType scope_type)
 {
+    if (statement.is_program()) {
+        if (m_call_stack.is_empty()) {
+            CallFrame global_call_fram;
+            global_call_fram.this_value = m_global_object;
+            global_call_fram.function_name = "(global execution context)";
+            global_call_fram.environment = heap().allocate<LexicalEnvironment>();
+            m_call_stack.append(move(global_call_fram));
+        }
+    }
+
     if (!statement.is_scope_node())
         return statement.execute(*this);
 
@@ -91,6 +102,11 @@ Value Interpreter::run(const Statement& statement, ArgumentVector arguments, Sco
 
 void Interpreter::enter_scope(const ScopeNode& scope_node, ArgumentVector arguments, ScopeType scope_type)
 {
+    if (scope_type == ScopeType::Function) {
+        m_scope_stack.append({ scope_type, scope_node, false });
+        return;
+    }
+
     HashMap<FlyString, Variable> scope_variables_with_declaration_kind;
     scope_variables_with_declaration_kind.ensure_capacity(16);
 
@@ -107,13 +123,30 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ArgumentVector argume
         scope_variables_with_declaration_kind.set(argument.name, { argument.value, DeclarationKind::Var });
     }
 
-    m_scope_stack.append({ scope_type, scope_node, move(scope_variables_with_declaration_kind) });
+    bool pushed_lexical_environment = false;
+
+    if (scope_type != ScopeType::Function) {
+        // only a block, but maybe it has block-scoped variables!
+        if (!scope_variables_with_declaration_kind.is_empty()) {
+            auto* block_lexical_environment = heap().allocate<LexicalEnvironment>(move(scope_variables_with_declaration_kind), current_environment());
+            m_call_stack.last().environment = block_lexical_environment;
+            pushed_lexical_environment = true;
+        }
+    } else if (scope_type == ScopeType::Function) {
+        for (auto& it : scope_variables_with_declaration_kind) {
+            current_environment()->set(it.key, it.value);
+        }
+    }
+
+    m_scope_stack.append({ scope_type, scope_node, pushed_lexical_environment });
 }
 
 void Interpreter::exit_scope(const ScopeNode& scope_node)
 {
     while (!m_scope_stack.is_empty()) {
         auto popped_scope = m_scope_stack.take_last();
+        if (popped_scope.pushed_environment)
+            m_call_stack.last().environment = m_call_stack.last().environment->parent();
         if (popped_scope.scope_node.ptr() == &scope_node)
             break;
     }
@@ -125,17 +158,15 @@ void Interpreter::exit_scope(const ScopeNode& scope_node)
 
 void Interpreter::set_variable(const FlyString& name, Value value, bool first_assignment)
 {
-    for (ssize_t i = m_scope_stack.size() - 1; i >= 0; --i) {
-        auto& scope = m_scope_stack.at(i);
-
-        auto possible_match = scope.variables.get(name);
+    for (auto* environment = current_environment(); environment; environment = environment->parent()) {
+        auto possible_match = environment->get(name);
         if (possible_match.has_value()) {
             if (!first_assignment && possible_match.value().declaration_kind == DeclarationKind::Const) {
                 throw_exception<TypeError>("Assignment to constant variable");
                 return;
             }
 
-            scope.variables.set(move(name), { move(value), possible_match.value().declaration_kind });
+            environment->set(name, { value, possible_match.value().declaration_kind });
             return;
         }
     }
@@ -145,13 +176,11 @@ void Interpreter::set_variable(const FlyString& name, Value value, bool first_as
 
 Optional<Value> Interpreter::get_variable(const FlyString& name)
 {
-    for (ssize_t i = m_scope_stack.size() - 1; i >= 0; --i) {
-        auto& scope = m_scope_stack.at(i);
-        auto value = scope.variables.get(name);
-        if (value.has_value())
-            return value.value().value;
+    for (auto* environment = current_environment(); environment; environment = environment->parent()) {
+        auto possible_match = environment->get(name);
+        if (possible_match.has_value())
+            return possible_match.value().value;
     }
-
     return global_object().get(name);
 }
 
@@ -169,13 +198,6 @@ void Interpreter::gather_roots(Badge<Heap>, HashTable<Cell*>& roots)
     if (m_last_value.is_cell())
         roots.set(m_last_value.as_cell());
 
-    for (auto& scope : m_scope_stack) {
-        for (auto& it : scope.variables) {
-            if (it.value.value.is_cell())
-                roots.set(it.value.value.as_cell());
-        }
-    }
-
     for (auto& call_frame : m_call_stack) {
         if (call_frame.this_value.is_cell())
             roots.set(call_frame.this_value.as_cell());
@@ -183,6 +205,7 @@ void Interpreter::gather_roots(Badge<Heap>, HashTable<Cell*>& roots)
             if (argument.is_cell())
                 roots.set(argument.as_cell());
         }
+        roots.set(call_frame.environment);
     }
 }
 
@@ -192,6 +215,7 @@ Value Interpreter::call(Function* function, Value this_value, const Vector<Value
     call_frame.function_name = function->name();
     call_frame.this_value = this_value;
     call_frame.arguments = arguments;
+    call_frame.environment = function->create_environment();
     auto result = function->call(*this);
     pop_call_frame();
     return result;

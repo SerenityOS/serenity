@@ -33,6 +33,7 @@
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/Exception.h>
+#include <LibJS/Runtime/LexicalEnvironment.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -46,21 +47,17 @@ enum class ScopeType {
     Continuable,
 };
 
-struct Variable {
-    Value value;
-    DeclarationKind declaration_kind;
-};
-
 struct ScopeFrame {
     ScopeType type;
     NonnullRefPtr<ScopeNode> scope_node;
-    HashMap<FlyString, Variable> variables;
+    bool pushed_environment { false };
 };
 
 struct CallFrame {
     FlyString function_name;
     Value this_value;
     Vector<Value> arguments;
+    LexicalEnvironment* environment { nullptr };
 };
 
 struct Argument {
@@ -106,12 +103,18 @@ public:
 
     CallFrame& push_call_frame()
     {
-        m_call_stack.append({ {}, js_undefined(), {} });
+        m_call_stack.append({ {}, js_undefined(), {}, nullptr });
         return m_call_stack.last();
     }
     void pop_call_frame() { m_call_stack.take_last(); }
     const CallFrame& call_frame() { return m_call_stack.last(); }
-    const Vector<CallFrame> call_stack() { return m_call_stack; }
+    const Vector<CallFrame>& call_stack() { return m_call_stack; }
+
+    void push_environment(LexicalEnvironment*);
+    void pop_environment();
+
+    const LexicalEnvironment* current_environment() const { return m_call_stack.last().environment; }
+    LexicalEnvironment* current_environment() { return m_call_stack.last().environment; }
 
     size_t argument_count() const
     {

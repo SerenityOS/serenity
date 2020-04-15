@@ -25,6 +25,7 @@ OBJS = \
     Runtime/FunctionConstructor.o \
     Runtime/FunctionPrototype.o \
     Runtime/GlobalObject.o \
+    Runtime/LexicalEnvironment.o \
     Runtime/MathObject.o \
     Runtime/NativeFunction.o \
     Runtime/NativeProperty.o \
