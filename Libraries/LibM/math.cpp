@@ -389,6 +389,14 @@ long double frexpl(long double, int*)
     return 0;
 }
 
+double round(double value)
+{
+    // FIXME: Please fix me. I am naive.
+    if (value >= 0.0)
+        return (double)(int)(value + 0.5);
+    return (double)(int)(value - 0.5);
+}
+
 float roundf(float value)
 {
     // FIXME: Please fix me. I am naive.
