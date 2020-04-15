@@ -184,12 +184,24 @@ void DebugSession::set_registers(const PtraceRegisters& regs)
     }
 }
 
-void DebugSession::continue_debugee()
+void DebugSession::continue_debugee(ContinueType type)
 {
-    if (ptrace(PT_CONTINUE, m_debugee_pid, 0, 0) < 0) {
+    int command = (type == ContinueType::FreeRun) ? PT_CONTINUE : PT_SYSCALL;
+    if (ptrace(command, m_debugee_pid, 0, 0) < 0) {
         perror("continue");
         ASSERT_NOT_REACHED();
     }
+}
+
+int DebugSession::continue_debugee_and_wait(ContinueType type)
+{
+    continue_debugee(type);
+    int wstatus = 0;
+    if (waitpid(m_debugee_pid, &wstatus, WSTOPPED | WEXITED) != m_debugee_pid) {
+        perror("waitpid");
+        ASSERT_NOT_REACHED();
+    }
+    return wstatus;
 }
 
 void* DebugSession::single_step()

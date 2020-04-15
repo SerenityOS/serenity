@@ -71,7 +71,15 @@ public:
     PtraceRegisters get_registers() const;
     void set_registers(const PtraceRegisters&);
 
-    void continue_debugee();
+    enum class ContinueType {
+        FreeRun,
+        Syscall,
+    };
+    void continue_debugee(ContinueType type = ContinueType::FreeRun);
+
+    //returns the wstatus result of waitpid()
+    int continue_debugee_and_wait(ContinueType type = ContinueType::FreeRun);
+
     void* single_step();
 
     template<typename Callback>
@@ -83,12 +91,14 @@ public:
     enum DebugDecision {
         Continue,
         SingleStep,
+        ContinueBreakAtSyscall,
         Detach,
         Kill,
     };
 
     enum DebugBreakReason {
         Breakpoint,
+        Syscall,
         Exited,
     };
 
@@ -112,36 +122,39 @@ void DebugSession::run(Callback callback)
 
     enum class State {
         FreeRun,
+        Syscall,
         ConsecutiveBreakpoint,
         SingleStep,
     };
 
     State state { State::FreeRun };
 
+    auto do_continue_and_wait = [&]() {
+        int wstatus = continue_debugee_and_wait((state == State::FreeRun) ? ContinueType::FreeRun : ContinueType::Syscall);
+
+        // FIXME: This check actually only checks whether the debugee
+        // stopped because it hit a breakpoint/syscall/is in single stepping mode or not
+        if (WSTOPSIG(wstatus) != SIGTRAP) {
+            callback(DebugBreakReason::Exited, Optional<PtraceRegisters>());
+            m_is_debugee_dead = true;
+            return true;
+        }
+        return false;
+    };
+
     for (;;) {
-        if (state == State::FreeRun) {
-            continue_debugee();
-
-            int wstatus = 0;
-            if (waitpid(m_debugee_pid, &wstatus, WSTOPPED | WEXITED) != m_debugee_pid) {
-                perror("waitpid");
-                ASSERT_NOT_REACHED();
-            }
-
-            // FIXME: This check actually only checks whether the debugee
-            // stopped because it hit a breakpoint/is in single stepping mode or not
-            if (WSTOPSIG(wstatus) != SIGTRAP) {
-                callback(DebugBreakReason::Exited, Optional<PtraceRegisters>());
-                m_is_debugee_dead = true;
+        if (state == State::FreeRun || state == State::Syscall) {
+            if (do_continue_and_wait())
                 break;
-            }
         }
 
         auto regs = get_registers();
         Optional<BreakPoint> current_breakpoint;
 
-        if (state == State::FreeRun) {
+        if (state == State::FreeRun || state == State::Syscall) {
             current_breakpoint = m_breakpoints.get((void*)((u32)regs.eip - 1));
+            if (current_breakpoint.has_value())
+                state = State::FreeRun;
         } else {
             current_breakpoint = m_breakpoints.get((void*)regs.eip);
         }
@@ -153,10 +166,19 @@ void DebugSession::run(Callback callback)
             disable_breakpoint(current_breakpoint.value());
         }
 
-        DebugDecision decision = callback(DebugBreakReason::Breakpoint, regs);
+        DebugBreakReason reason = (state == State::Syscall && !current_breakpoint.has_value()) ? DebugBreakReason::Syscall : DebugBreakReason::Breakpoint;
+        DebugDecision decision = callback(reason, regs);
+
+        if (reason == DebugBreakReason::Syscall) {
+            // skip the exit from the syscall
+            if (do_continue_and_wait())
+                break;
+        }
 
         if (decision == DebugDecision::Continue) {
             state = State::FreeRun;
+        } else if (decision == DebugDecision::ContinueBreakAtSyscall) {
+            state = State::Syscall;
         }
 
         if (current_breakpoint.has_value()) {
@@ -174,9 +196,10 @@ void DebugSession::run(Callback callback)
 
         if (decision == DebugDecision::SingleStep) {
             state = State::SingleStep;
-        } else {
-            // TODO: implement DebugDecision:: Kill, Detach
-            ASSERT(decision == DebugDecision::Continue);
+        }
+
+        if (decision == DebugDecision::Kill || decision == DebugDecision::Detach) {
+            ASSERT_NOT_REACHED(); // TODO: implement
         }
 
         if (state == State::SingleStep) {
