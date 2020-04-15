@@ -1,7 +1,7 @@
 load("test-common.js");
 
 try {
-    assert(Array.prototype.push.length === 1);
+    assert(Array.prototype.join.length === 1);
 
     assert(["hello", "friends"].join() === "hello,friends");
     assert(["hello", "friends"].join(" ") === "hello friends");
