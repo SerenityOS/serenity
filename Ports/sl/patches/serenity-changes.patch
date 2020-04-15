@@ -1,0 +1,14 @@
+diff --git a/Makefile b/Makefile
+index c3005d2..e071fc9 100644
+--- a/Makefile
++++ b/Makefile
+@@ -18,3 +18,9 @@ clean:
+ 	rm -f sl
+ 
+ distclean: clean
++
++install: all
++	mkdir -p ${DESTDIR}/usr/bin
++	install sl ${DESTDIR}/usr/bin/sl
++	mkdir -p ${DESTDIR}/usr/share/man/man1
++	gzip -9 -c < sl.1 > ${DESTDIR}/usr/share/man/man1/sl.1.gz
