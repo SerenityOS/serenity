@@ -197,8 +197,13 @@ int main(int argc, char** argv)
     };
 
     html_widget.on_title_change = [&](auto& title) {
-        s_title = title;
-        window->set_title(String::format("%s - Browser", title.characters()));
+        if (title.is_null()) {
+            s_title = html_widget.main_frame().document()->url().to_string();
+        }
+        else {
+            s_title = title;
+        }
+        window->set_title(String::format("%s - Browser", s_title.characters()));
     };
 
     auto focus_location_box_action = GUI::Action::create("Focus location box", { Mod_Ctrl, Key_L }, [&](auto&) {
