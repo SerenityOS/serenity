@@ -26,8 +26,8 @@
  */
 
 #include "AudioEngine.h"
+#include <AK/NumericLimits.h>
 #include <LibAudio/WavLoader.h>
-#include <limits>
 #include <math.h>
 
 AudioEngine::AudioEngine()
@@ -274,7 +274,7 @@ void AudioEngine::set_note(int note, Switch switch_note)
         }
     }
 
-    ASSERT(m_note_on[note] != std::numeric_limits<u8>::max());
+    ASSERT(m_note_on[note] != NumericLimits<u8>::max());
     ASSERT(m_power[note] >= 0);
 }
 
