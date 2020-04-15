@@ -973,7 +973,12 @@ void ArrayExpression::dump(int indent) const
 {
     ASTNode::dump(indent);
     for (auto& element : m_elements) {
-        element.dump(indent + 1);
+        if (element) {
+            element->dump(indent + 1);
+        } else {
+            print_indent(indent + 1);
+            printf("<empty>\n");
+        }
     }
 }
 
@@ -981,9 +986,12 @@ Value ArrayExpression::execute(Interpreter& interpreter) const
 {
     auto* array = interpreter.heap().allocate<Array>();
     for (auto& element : m_elements) {
-        auto value = element.execute(interpreter);
-        if (interpreter.exception())
-            return {};
+        auto value = Value();
+        if (element) {
+            value = element->execute(interpreter);
+            if (interpreter.exception())
+                return {};
+        }
         array->elements().append(value);
     }
     return array;
