@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Checked.h>
 #include <LibGfx/Bitmap.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/CanvasRenderingContext2D.h>
@@ -89,12 +90,15 @@ static Gfx::Size bitmap_size_for_canvas(const HTMLCanvasElement& canvas)
         dbg() << "Refusing to create canvas with negative size";
         return {};
     }
-    int area = 0;
-    if (__builtin_mul_overflow(width, height, &area)) {
+
+    Checked<size_t> area = width;
+    area *= height;
+
+    if (area.has_overflow()) {
         dbg() << "Refusing to create " << width << "x" << height << " canvas (overflow)";
         return {};
     }
-    if (area > max_canvas_area) {
+    if (area.value() > max_canvas_area) {
         dbg() << "Refusing to create " << width << "x" << height << " canvas (exceeds maximum size)";
         return {};
     }
@@ -110,7 +114,7 @@ bool HTMLCanvasElement::create_bitmap()
     }
     if (!m_bitmap || m_bitmap->size() != size)
         m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, size);
-    return true;
+    return m_bitmap;
 }
 
 }
