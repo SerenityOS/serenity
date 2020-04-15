@@ -43,10 +43,7 @@ static bool size_would_overflow(BitmapFormat format, const Size& size)
 {
     if (size.width() < 0 || size.height() < 0)
         return true;
-    Checked<size_t> size_in_bytes = static_cast<size_t>(size.width());
-    size_in_bytes *= size.height();
-    size_in_bytes *= Bitmap::bpp_for_format(format);
-    return size_in_bytes.has_overflow();
+    return Checked<size_t>::multiplication_would_overflow(size.width(), size.height(), Bitmap::bpp_for_format(format));
 }
 
 RefPtr<Bitmap> Bitmap::create(BitmapFormat format, const Size& size)
