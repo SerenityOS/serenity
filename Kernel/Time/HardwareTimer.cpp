@@ -48,7 +48,7 @@ const char* HardwareTimer::purpose() const
     return model();
 }
 
-void HardwareTimer::change_function(Function<void(const RegisterState&)> callback)
+void HardwareTimer::set_callback(Function<void(const RegisterState&)> callback)
 {
     disable_irq();
     m_callback = move(callback);
