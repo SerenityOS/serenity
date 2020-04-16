@@ -26,35 +26,50 @@
 
 #pragma once
 
+#include <AK/Vector.h>
+#include <LibGfx/FloatPoint.h>
+#include <LibGfx/Forward.h>
+
 namespace Gfx {
 
-class Bitmap;
-class CharacterBitmap;
-class Color;
-class DisjointRectSet;
-class Emoji;
-class FloatPoint;
-class FloatRect;
-class FloatSize;
-class Font;
-class GlyphBitmap;
-class ImageDecoder;
-class Painter;
-class Palette;
-class PaletteImpl;
-class Path;
-class Point;
-class Rect;
-class ShareableBitmap;
-class Size;
-class StylePainter;
-struct SystemTheme;
-class Triangle;
+class Path {
+public:
+    struct Segment {
+        enum class Type {
+            Invalid,
+            MoveTo,
+            LineTo,
+        };
 
-enum class BitmapFormat;
-enum class ColorRole;
-enum class TextAlignment;
+        Type type { Type::Invalid };
+        FloatPoint point;
+    };
 
+    Path() {}
+
+    void move_to(const FloatPoint& point)
+    {
+        m_segments.append({ Segment::Type::MoveTo, point });
+    }
+
+    void line_to(const FloatPoint& point)
+    {
+        m_segments.append({ Segment::Type::LineTo, point });
+    }
+
+    void close();
+
+    const Vector<Segment>& segments() const { return m_segments; }
+
+    String to_string() const;
+
+private:
+    Vector<Segment> m_segments;
+};
+
+inline const LogStream& operator<<(const LogStream& stream, const Path& path)
+{
+    return stream << path.to_string();
 }
 
-using Gfx::Color;
+}
