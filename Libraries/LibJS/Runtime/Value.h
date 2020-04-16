@@ -152,7 +152,7 @@ public:
     Object* to_object(Heap&) const;
 
 private:
-    Type m_type { Type::Undefined };
+    Type m_type { Type::Empty };
 
     union {
         bool as_bool;
