@@ -79,7 +79,17 @@ void CanvasRenderingContext2D::stroke_rect(float x, float y, float width, float 
         return;
 
     auto rect = m_transform.map(Gfx::FloatRect(x, y, width, height));
-    painter->draw_rect(enclosing_int_rect(rect), m_stroke_style);
+
+    auto top_left = m_transform.map(Gfx::FloatPoint(x, y)).to_int_point();
+    auto top_right = m_transform.map(Gfx::FloatPoint(x + width - 1, y)).to_int_point();
+    auto bottom_left = m_transform.map(Gfx::FloatPoint(x, y + height - 1)).to_int_point();
+    auto bottom_right = m_transform.map(Gfx::FloatPoint(x + width - 1, y + height - 1)).to_int_point();
+
+    painter->draw_line(top_left, top_right, m_stroke_style, m_line_width);
+    painter->draw_line(top_right, bottom_right, m_stroke_style, m_line_width);
+    painter->draw_line(bottom_right, bottom_left, m_stroke_style, m_line_width);
+    painter->draw_line(bottom_left, top_left, m_stroke_style, m_line_width);
+
     did_draw(rect);
 }
 
