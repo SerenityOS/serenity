@@ -58,7 +58,7 @@ public:
 private:
     void set_new_countdown();
     virtual void handle_irq(const RegisterState&) override;
-    HPETComparator(u8 number, u8 irq, bool periodic_capable, Function<void(const RegisterState&)> callback);
+    HPETComparator(u8 number, u8 irq, bool periodic_capable);
     bool m_periodic : 1;
     bool m_periodic_capable : 1;
     bool m_edge_triggered : 1;

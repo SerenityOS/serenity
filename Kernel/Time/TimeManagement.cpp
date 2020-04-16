@@ -90,10 +90,6 @@ time_t TimeManagement::boot_time() const
     return RTC::boot_time();
 }
 
-void TimeManagement::stale_function(const RegisterState&)
-{
-}
-
 TimeManagement::TimeManagement(bool probe_non_legacy_hardware_timers)
 {
     if (ACPI::is_enabled()) {
