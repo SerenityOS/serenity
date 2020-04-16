@@ -3,6 +3,6 @@ OBJS = \
 
 PROGRAM = Debugger
 
-LIB_DEPS = Core X86 Debug
+LIB_DEPS = Core X86 Debug Line
 
 include ../../Makefile.common

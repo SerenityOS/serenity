@@ -33,6 +33,7 @@
 #include <LibC/sys/arch/i386/regs.h>
 #include <LibCore/File.h>
 #include <LibDebug/DebugSession.h>
+#include <LibLine/Editor.h>
 #include <LibX86/Disassembler.h>
 #include <LibX86/Instruction.h>
 #include <signal.h>
@@ -40,6 +41,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+static Line::Editor editor {};
 
 static int usage()
 {
@@ -55,28 +58,6 @@ static void handle_sigint(int)
 
     // The destructor of DebugSession takes care of detaching
     g_debug_session = nullptr;
-}
-
-String get_command()
-{
-    printf("(sdb) ");
-    fflush(stdout);
-    char* line = nullptr;
-    size_t allocated_size = 0;
-    ssize_t nread = getline(&line, &allocated_size, stdin);
-    if (nread < 0) {
-        if (errno == 0) {
-            fprintf(stderr, "\n");
-        } else {
-            perror("getline");
-            exit(1);
-        }
-    }
-    String command(line);
-    free(line);
-    if (command.ends_with('\n'))
-        command = command.substring(0, command.length() - 1);
-    return command;
 }
 
 void handle_print_registers(const PtraceRegisters& regs)
@@ -176,13 +157,15 @@ void print_help()
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio proc exec rpath", nullptr) < 0) {
+    if (pledge("stdio proc exec rpath tty", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     if (argc == 1)
         return usage();
+
+    editor.initialize();
 
     StringBuilder command;
     command.append(argv[1]);
@@ -205,8 +188,6 @@ int main(int argc, char** argv)
     bool rc = g_debug_session->insert_breakpoint(g_debug_session->elf().entry().as_ptr());
     ASSERT(rc);
 
-    String previous_command;
-
     g_debug_session->run([&](DebugSession::DebugBreakReason reason, Optional<PtraceRegisters> optional_regs) {
         if (reason == DebugSession::DebugBreakReason::Exited) {
             printf("Program exited.\n");
@@ -219,12 +200,12 @@ int main(int argc, char** argv)
         auto symbol_at_ip = g_debug_session->elf().symbolicate(regs.eip);
         printf("Program is stopped at: 0x%x (%s)\n", regs.eip, symbol_at_ip.characters());
         for (;;) {
-            auto command = get_command();
+            auto command = editor.get_line("(sdb) ");
             bool success = false;
             Optional<DebugSession::DebugDecision> decision;
 
-            if (command.is_empty() && !previous_command.is_empty()) {
-                command = previous_command;
+            if (command.is_empty() && !editor.history().is_empty()) {
+                command = editor.history().last();
             }
             if (command == "cont") {
                 decision = DebugSession::DebugDecision::Continue;
@@ -247,7 +228,9 @@ int main(int argc, char** argv)
             }
 
             if (success && !command.is_empty()) {
-                previous_command = command;
+                // Don't add repeated commands to history
+                if (editor.history().is_empty() || editor.history().last() != command)
+                    editor.add_to_history(command);
             }
             if (!success) {
                 print_help();
