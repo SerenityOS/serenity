@@ -41,9 +41,10 @@ namespace Kernel {
 
 static TimeManagement* s_time_management;
 
-bool TimeManagement::initialized()
+TimeManagement& TimeManagement::the()
 {
-    return s_time_management != nullptr;
+    ASSERT(s_time_management);
+    return *s_time_management;
 }
 
 bool TimeManagement::is_system_timer(const HardwareTimer& timer) const
@@ -64,7 +65,7 @@ time_t TimeManagement::epoch_time() const
 
 void TimeManagement::initialize()
 {
-    ASSERT(!TimeManagement::initialized());
+    ASSERT(!s_time_management);
     if (kernel_command_line().lookup("time").value_or("modern") == "legacy")
         s_time_management = new TimeManagement(false);
     else
@@ -118,35 +119,30 @@ TimeManagement::TimeManagement(bool probe_non_legacy_hardware_timers)
     ASSERT_NOT_REACHED();
 }
 
-Vector<size_t> TimeManagement::scan_and_initialize_periodic_timers()
+Vector<HardwareTimer*> TimeManagement::scan_and_initialize_periodic_timers()
 {
-    bool enable_periodic_mode = is_hpet_periodic_mode_allowed();
-    dbg() << "Scanning for Periodic timers";
-    Vector<size_t> periodic_timers_indexes;
-    periodic_timers_indexes.ensure_capacity(m_hardware_timers.size());
-    for (size_t index = 0; index < m_hardware_timers.size(); index++) {
-        if (!m_hardware_timers[index].is_null()) {
-            if (m_hardware_timers[index]->is_periodic_capable()) {
-                periodic_timers_indexes.append(index);
-                if (enable_periodic_mode)
-                    m_hardware_timers[index]->set_periodic();
-            }
+    bool should_enable = is_hpet_periodic_mode_allowed();
+    dbg() << "Time: Scanning for periodic timers";
+    Vector<HardwareTimer*> timers;
+    for (auto& hardware_timer : m_hardware_timers) {
+        if (hardware_timer && hardware_timer->is_periodic_capable()) {
+            timers.append(hardware_timer);
+            if (should_enable)
+                hardware_timer->set_periodic();
         }
     }
-    return periodic_timers_indexes;
+    return timers;
 }
 
-Vector<size_t> TimeManagement::scan_for_non_periodic_timers()
+Vector<HardwareTimer*> TimeManagement::scan_for_non_periodic_timers()
 {
-    dbg() << "Scanning for Non-Periodic timers";
-    Vector<size_t> non_periodic_timers_indexes;
-    non_periodic_timers_indexes.ensure_capacity(m_hardware_timers.size());
-    for (size_t index = 0; index < m_hardware_timers.size(); index++) {
-        if (!m_hardware_timers[index].is_null())
-            if (!m_hardware_timers[index]->is_periodic_capable())
-                non_periodic_timers_indexes.append(index);
+    dbg() << "Time: Scanning for non-periodic timers";
+    Vector<HardwareTimer*> timers;
+    for (auto& hardware_timer : m_hardware_timers) {
+        if (hardware_timer && !hardware_timer->is_periodic_capable())
+            timers.append(hardware_timer);
     }
-    return non_periodic_timers_indexes;
+    return timers;
 }
 
 bool TimeManagement::is_hpet_periodic_mode_allowed()
@@ -174,32 +170,27 @@ bool TimeManagement::probe_and_set_non_legacy_hardware_timers()
     }
     dbg() << "HPET: Setting appropriate functions to timers.";
 
-    m_hardware_timers.resize(HPET::the().comparators().size());
-    for (size_t index = 0; index < m_hardware_timers.size(); index++) {
-        m_hardware_timers[index] = HPET::the().comparators()[index];
-#ifdef TIME_DEBUG
-        dbg() << m_hardware_timers[index].ptr() << " <- " << HPET::the().comparators()[index].ptr();
-#endif
-    }
+    for (auto& hpet_comparator : HPET::the().comparators())
+        m_hardware_timers.append(hpet_comparator);
 
-    auto periodic_timer_indexes = scan_and_initialize_periodic_timers();
-    auto non_periodic_timer_indexes = scan_for_non_periodic_timers();
+    auto periodic_timers = scan_and_initialize_periodic_timers();
+    auto non_periodic_timers = scan_for_non_periodic_timers();
 
     if (is_hpet_periodic_mode_allowed())
-        ASSERT(!periodic_timer_indexes.is_empty());
+        ASSERT(!periodic_timers.is_empty());
 
-    ASSERT(periodic_timer_indexes.size() + non_periodic_timer_indexes.size() >= 2);
+    ASSERT(periodic_timers.size() + non_periodic_timers.size() >= 2);
 
-    if (periodic_timer_indexes.size() >= 2) {
-        m_time_keeper_timer = m_hardware_timers[periodic_timer_indexes[1]];
-        m_system_timer = m_hardware_timers[periodic_timer_indexes[0]];
+    if (periodic_timers.size() >= 2) {
+        m_time_keeper_timer = periodic_timers[1];
+        m_system_timer = periodic_timers[0];
     } else {
-        if (periodic_timer_indexes.size() == 1) {
-            m_time_keeper_timer = m_hardware_timers[periodic_timer_indexes[0]];
-            m_system_timer = m_hardware_timers[non_periodic_timer_indexes[0]];
+        if (periodic_timers.size() == 1) {
+            m_time_keeper_timer = periodic_timers[0];
+            m_system_timer = non_periodic_timers[0];
         } else {
-            m_time_keeper_timer = m_hardware_timers[non_periodic_timer_indexes[1]];
-            m_system_timer = m_hardware_timers[non_periodic_timer_indexes[0]];
+            m_time_keeper_timer = non_periodic_timers[1];
+            m_system_timer = non_periodic_timers[0];
         }
     }
 
@@ -223,17 +214,11 @@ bool TimeManagement::probe_and_set_legacy_hardware_timers()
         }
     }
 
-    m_hardware_timers[0] = PIT::initialize([](const RegisterState& regs) { update_time(regs); });
-    m_hardware_timers[1] = RealTimeClock::create([](const RegisterState& regs) { update_scheduler_ticks(regs); });
+    m_hardware_timers.append(PIT::initialize([](const RegisterState& regs) { update_time(regs); }));
+    m_hardware_timers.append(RealTimeClock::create([](const RegisterState& regs) { update_scheduler_ticks(regs); }));
     m_time_keeper_timer = m_hardware_timers[0];
     m_system_timer = m_hardware_timers[1];
     return true;
-}
-
-TimeManagement& TimeManagement::the()
-{
-    ASSERT(TimeManagement::initialized());
-    return *s_time_management;
 }
 
 void TimeManagement::update_time(const RegisterState& regs)
