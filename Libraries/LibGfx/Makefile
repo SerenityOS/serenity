@@ -11,6 +11,7 @@ OBJS = \
     PNGLoader.o \
     Painter.o \
     Palette.o \
+    Path.o \
     Point.o \
     Rect.o \
     ShareableBitmap.o \

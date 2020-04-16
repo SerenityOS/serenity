@@ -35,6 +35,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
 #include <LibGfx/CharacterBitmap.h>
+#include <LibGfx/Path.h>
 #include <math.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -1008,6 +1009,26 @@ PainterStateSaver::PainterStateSaver(Painter& painter)
 PainterStateSaver::~PainterStateSaver()
 {
     m_painter.restore();
+}
+
+void Painter::stroke_path(const Path& path, Color color, int thickness)
+{
+    FloatPoint cursor;
+
+    for (auto& segment : path.segments()) {
+        switch (segment.type) {
+        case Path::Segment::Type::Invalid:
+            ASSERT_NOT_REACHED();
+            break;
+        case Path::Segment::Type::MoveTo:
+            cursor = segment.point;
+            break;
+        case Path::Segment::Type::LineTo:
+            draw_line(Point(cursor.x(), cursor.y()), Point(segment.point.x(), segment.point.y()), color, thickness);
+            cursor = segment.point;
+            break;
+        }
+    }
 }
 
 }

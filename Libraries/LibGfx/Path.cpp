@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,37 +24,53 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <AK/StringBuilder.h>
+#include <LibGfx/Path.h>
 
 namespace Gfx {
 
-class Bitmap;
-class CharacterBitmap;
-class Color;
-class DisjointRectSet;
-class Emoji;
-class FloatPoint;
-class FloatRect;
-class FloatSize;
-class Font;
-class GlyphBitmap;
-class ImageDecoder;
-class Painter;
-class Palette;
-class PaletteImpl;
-class Path;
-class Point;
-class Rect;
-class ShareableBitmap;
-class Size;
-class StylePainter;
-struct SystemTheme;
-class Triangle;
+void Path::close()
+{
+    if (m_segments.size() <= 1)
+        return;
 
-enum class BitmapFormat;
-enum class ColorRole;
-enum class TextAlignment;
+    auto& last_point = m_segments.last().point;
 
+    for (ssize_t i = m_segments.size() - 1; i >= 0; --i) {
+        auto& segment = m_segments[i];
+        if (segment.type == Segment::Type::MoveTo) {
+            if (last_point == segment.point)
+                return;
+            m_segments.append({ Segment::Type::LineTo, segment.point });
+            return;
+        }
+    }
 }
 
-using Gfx::Color;
+String Path::to_string() const
+{
+    StringBuilder builder;
+    builder.append("Path { ");
+    for (auto& segment : m_segments) {
+        switch (segment.type) {
+        case Segment::Type::MoveTo:
+            builder.append("MoveTo");
+            break;
+        case Segment::Type::LineTo:
+            builder.append("LineTo");
+            break;
+        case Segment::Type::Invalid:
+            builder.append("Invalid");
+            break;
+        }
+        builder.append('(');
+        builder.append(segment.point.to_string());
+        builder.append(')');
+
+        builder.append(' ');
+    }
+    builder.append("}");
+    return builder.to_string();
+}
+
+}

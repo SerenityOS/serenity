@@ -69,6 +69,8 @@ public:
     void draw_emoji(const Point&, const Gfx::Bitmap&, const Font&);
     void draw_glyph_or_emoji(const Point&, u32 codepoint, const Font&, Color);
 
+    void stroke_path(const Path&, Color, int thickness);
+
     const Font& font() const { return *state().font; }
     void set_font(const Font& font) { state().font = &font; }
 
