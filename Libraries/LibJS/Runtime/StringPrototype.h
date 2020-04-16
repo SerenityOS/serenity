@@ -51,8 +51,8 @@ private:
     static Value length_getter(Interpreter&);
 
     static Value trim(Interpreter&);
-    static Value trimStart(Interpreter&);
-    static Value trimEnd(Interpreter&);
+    static Value trim_start(Interpreter&);
+    static Value trim_end(Interpreter&);
 };
 
 }
