@@ -125,17 +125,10 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ArgumentVector argume
 
     bool pushed_lexical_environment = false;
 
-    if (scope_type != ScopeType::Function) {
-        // only a block, but maybe it has block-scoped variables!
-        if (!scope_variables_with_declaration_kind.is_empty()) {
-            auto* block_lexical_environment = heap().allocate<LexicalEnvironment>(move(scope_variables_with_declaration_kind), current_environment());
-            m_call_stack.last().environment = block_lexical_environment;
-            pushed_lexical_environment = true;
-        }
-    } else if (scope_type == ScopeType::Function) {
-        for (auto& it : scope_variables_with_declaration_kind) {
-            current_environment()->set(it.key, it.value);
-        }
+    if (!scope_variables_with_declaration_kind.is_empty()) {
+        auto* block_lexical_environment = heap().allocate<LexicalEnvironment>(move(scope_variables_with_declaration_kind), current_environment());
+        m_call_stack.last().environment = block_lexical_environment;
+        pushed_lexical_environment = true;
     }
 
     m_scope_stack.append({ scope_type, scope_node, pushed_lexical_environment });
