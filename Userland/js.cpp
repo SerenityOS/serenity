@@ -449,7 +449,7 @@ int main(int argc, char** argv)
                 case JS::TokenType::StringLiteral:
                 case JS::TokenType::RegexLiteral:
                 case JS::TokenType::UnterminatedStringLiteral:
-                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Red) });
+                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Green), Line::Style::Bold });
                     break;
                 case JS::TokenType::BracketClose:
                 case JS::TokenType::BracketOpen:
@@ -502,13 +502,10 @@ int main(int argc, char** argv)
                 case JS::TokenType::Tilde:
                 case JS::TokenType::UnsignedShiftRight:
                 case JS::TokenType::UnsignedShiftRightEquals:
-                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Magenta) });
-                    break;
-                case JS::TokenType::NullLiteral:
-                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Yellow), Line::Style::Bold });
                     break;
                 case JS::TokenType::BoolLiteral:
-                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Green), Line::Style::Bold });
+                case JS::TokenType::NullLiteral:
+                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Yellow), Line::Style::Bold });
                     break;
                 case JS::TokenType::Class:
                 case JS::TokenType::Const:
@@ -541,6 +538,7 @@ int main(int argc, char** argv)
                     stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Cyan), Line::Style::Italic });
                     break;
                 case JS::TokenType::Identifier:
+                    stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::White), Line::Style::Bold });
                 default:
                     break;
                 }
