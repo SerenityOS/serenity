@@ -123,6 +123,8 @@ int main(int argc, char** argv)
             return true;
         }
 
+        file->seek(0, Core::IODevice::SeekMode::SetPosition);
+
         while (file->can_read_line()) {
             auto line = file->read_line(1024);
             auto str = String { reinterpret_cast<const char*>(line.data()), line.size() };
