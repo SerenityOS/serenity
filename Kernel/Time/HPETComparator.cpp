@@ -34,11 +34,11 @@ namespace Kernel {
 
 NonnullRefPtr<HPETComparator> HPETComparator::create(u8 number, u8 irq, bool periodic_capable)
 {
-    return adopt(*new HPETComparator(number, irq, periodic_capable, [](const RegisterState& regs) { TimeManagement::stale_function(regs); }));
+    return adopt(*new HPETComparator(number, irq, periodic_capable));
 }
 
-HPETComparator::HPETComparator(u8 number, u8 irq, bool periodic_capable, Function<void(const RegisterState&)> callback)
-    : HardwareTimer(irq, move(callback))
+HPETComparator::HPETComparator(u8 number, u8 irq, bool periodic_capable)
+    : HardwareTimer(irq)
     , m_periodic(false)
     , m_periodic_capable(periodic_capable)
     , m_comparator_number(number)

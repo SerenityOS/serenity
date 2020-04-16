@@ -37,7 +37,8 @@ HardwareTimer::HardwareTimer(u8 irq_number, Function<void(const RegisterState&)>
 
 void HardwareTimer::handle_irq(const RegisterState& regs)
 {
-    m_callback(regs);
+    if (!m_callback)
+        m_callback(regs);
 }
 
 const char* HardwareTimer::purpose() const

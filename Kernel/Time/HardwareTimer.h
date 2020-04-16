@@ -62,7 +62,7 @@ public:
     virtual size_t calculate_nearest_possible_frequency(size_t frequency) const = 0;
 
 protected:
-    HardwareTimer(u8 irq_number, Function<void(const RegisterState&)>);
+    HardwareTimer(u8 irq_number, Function<void(const RegisterState&)> = nullptr);
     //^IRQHandler
     virtual void handle_irq(const RegisterState&) override;
     u64 m_frequency { OPTIMAL_TICKS_PER_SECOND_RATE };

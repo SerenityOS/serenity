@@ -57,7 +57,6 @@ public:
     static void update_time(const RegisterState&);
     void increment_time_since_boot(const RegisterState&);
 
-    static void stale_function(const RegisterState&);
     static bool is_hpet_periodic_mode_allowed();
 
 private:
