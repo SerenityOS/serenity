@@ -53,6 +53,7 @@ private:
     static Value trim(Interpreter&);
     static Value trim_start(Interpreter&);
     static Value trim_end(Interpreter&);
+    static Value concat(Interpreter&);
 };
 
 }
