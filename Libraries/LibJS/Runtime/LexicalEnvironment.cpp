@@ -45,8 +45,7 @@ LexicalEnvironment::~LexicalEnvironment()
 void LexicalEnvironment::visit_children(Visitor& visitor)
 {
     Cell::visit_children(visitor);
-    if (m_parent)
-        visitor.visit(m_parent);
+    visitor.visit(m_parent);
     for (auto& it : m_variables)
         visitor.visit(it.value.value);
 }

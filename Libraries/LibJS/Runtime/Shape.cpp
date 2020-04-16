@@ -81,10 +81,8 @@ Shape::~Shape()
 void Shape::visit_children(Cell::Visitor& visitor)
 {
     Cell::visit_children(visitor);
-    if (m_prototype)
-        visitor.visit(m_prototype);
-    if (m_previous)
-        visitor.visit(m_previous);
+    visitor.visit(m_prototype);
+    visitor.visit(m_previous);
     for (auto& it : m_forward_transitions)
         visitor.visit(it.value);
 }

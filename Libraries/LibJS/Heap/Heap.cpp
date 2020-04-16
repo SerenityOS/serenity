@@ -188,7 +188,7 @@ class MarkingVisitor final : public Cell::Visitor {
 public:
     MarkingVisitor() {}
 
-    virtual void visit(Cell* cell)
+    virtual void visit_impl(Cell* cell)
     {
         if (cell->is_marked())
             return;
@@ -206,11 +206,8 @@ void Heap::mark_live_cells(const HashTable<Cell*>& roots)
     dbg() << "mark_live_cells:";
 #endif
     MarkingVisitor visitor;
-    for (auto* root : roots) {
-        if (!root)
-            continue;
+    for (auto* root : roots)
         visitor.visit(root);
-    }
 }
 
 void Heap::sweep_dead_cells()
