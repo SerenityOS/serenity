@@ -51,6 +51,13 @@ private:
     static void fill_style_setter(JS::Interpreter&, JS::Value);
     static JS::Value stroke_style_getter(JS::Interpreter&);
     static void stroke_style_setter(JS::Interpreter&, JS::Value);
+    static JS::Value line_width_getter(JS::Interpreter&);
+    static void line_width_setter(JS::Interpreter&, JS::Value);
+    static JS::Value begin_path(JS::Interpreter&);
+    static JS::Value close_path(JS::Interpreter&);
+    static JS::Value stroke(JS::Interpreter&);
+    static JS::Value move_to(JS::Interpreter&);
+    static JS::Value line_to(JS::Interpreter&);
 
     NonnullRefPtr<CanvasRenderingContext2D> m_impl;
 };
