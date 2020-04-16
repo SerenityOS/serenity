@@ -55,6 +55,7 @@ StringPrototype::StringPrototype()
     put_native_function("trim", trim, 0);
     put_native_function("trimStart", trim_start, 0);
     put_native_function("trimEnd", trim_end, 0);
+    put_native_function("concat", concat, 1);
 }
 
 StringPrototype::~StringPrototype()
@@ -305,6 +306,24 @@ Value StringPrototype::trim_end(Interpreter& interpreter)
     if (!this_object)
         return {};
     return trim_string(interpreter, *this_object, TrimMode::Right);
+}
+
+Value StringPrototype::concat(Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return {};
+    auto& string = this_object->to_string().as_string()->string();
+
+    StringBuilder builder;
+    builder.append(string);
+
+    for (size_t i = 0; i < interpreter.argument_count(); ++i) {
+        auto string_argument = interpreter.argument(i).to_string();
+        builder.append(string_argument);
+    }
+
+    return js_string(interpreter, builder.to_string());
 }
 
 }
