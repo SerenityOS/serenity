@@ -39,11 +39,6 @@ ScriptFunction::ScriptFunction(const FlyString& name, const Statement& body, Vec
     , m_parameters(move(parameters))
     , m_parent_environment(parent_environment)
 {
-    HashMap<FlyString, Variable> variables;
-    for (auto& parameter : parameters) {
-        variables.set(parameter, {});
-    }
-
     put("prototype", heap().allocate<Object>());
     put_native_property("length", length_getter, length_setter);
 }
