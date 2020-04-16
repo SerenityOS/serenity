@@ -379,6 +379,7 @@ void HtmlView::load(const URL& url)
         [this, url](auto error) {
             load_error_page(url, error);
         });
+    this->scroll_to_top();
 }
 
 void HtmlView::load_error_page(const URL& failed_url, const String& error)
