@@ -1250,7 +1250,7 @@ bool VM::match_recurse(MatchState& state, size_t recursion_level)
         } else if (stack_item.op_code == OpCode::SaveLeftGroup) {
             auto& id = get_and_increment(state).positive_number;
 #ifdef REGEX_DEBUG
-            printf(" > Left parens for group match %i at stringp = %lu\n", id, state.m_stringp);
+            printf(" > Left parens for group match %lu at stringp = %lu\n", id, state.m_stringp);
 #endif
             if ((size_t)id < state.m_left.size() && state.m_stringp < state.m_view.length())
                 state.m_left.at(id) = state.m_stringp;
@@ -1259,13 +1259,13 @@ bool VM::match_recurse(MatchState& state, size_t recursion_level)
             auto index = id + 1 + state.m_matches_offset;
 
 #ifdef REGEX_DEBUG
-            printf(" > Right parens for group match %i at stringp = %lu\n", id, state.m_stringp);
+            printf(" > Right parens for group match %lu at stringp = %lu\n", id, state.m_stringp);
 #endif
             if ((size_t)id < state.m_left.size() && state.m_left.at(id) != -1 && index < state.m_matches.size()) {
                 auto left = state.m_left.at(id);
                 state.m_matches.at(index) = { left, (regoff_t)state.m_stringp, 1 };
 #ifdef REGEX_DEBUG
-                printf("Match result group id %i: from %lu to %lu\n", id, left, state.m_stringp);
+                printf("Match result group id %lu: from %lu to %lu\n", id, left, state.m_stringp);
 #endif
             }
         } else if (stack_item.op_code == OpCode::CheckBegin) {
@@ -1281,10 +1281,14 @@ bool VM::match_recurse(MatchState& state, size_t recursion_level)
             if (state.m_stringp != state.m_view.length())
                 return false;
         } else if (stack_item.op_code == OpCode::Exit) {
+            bool cond = check_exit_conditions();
 #ifdef REGEX_DEBUG
-            printf(" > Condition %s (%lu >= %lu)\n", state.m_stringp >= state.m_view.length() ? "true" : "false", state.m_stringp, state.m_view.length());
+            printf(" > Condition %s\n", cond ? "true" : "false");
 #endif
-            return state.m_stringp >= state.m_view.length();
+            if (cond)
+                return true;
+            return false;
+
         } else {
             printf("\n[VM][r=%lu] Invalid opcode: %lu, stackpointer: %lu\n", recursion_level, (size_t)stack_item.op_code, current_ip);
             exit(1);

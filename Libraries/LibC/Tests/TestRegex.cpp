@@ -551,6 +551,47 @@ BENCHMARK_CASE(escaped_char_questionmark_benchmark_reference_stdcpp_regex_match)
 }
 #endif
 
+TEST_CASE(char_qualifier_asterisk)
+{
+    String pattern = "regex*";
+    regex_t regex;
+    static constexpr int num_matches { 5 };
+    regmatch_t matches[num_matches];
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "#include <regex.h>", num_matches, matches, REG_SEARCH), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, 1u);
+
+    regfree(&regex);
+}
+
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
+BENCHMARK_CASE(char_qualifier_asterisk_benchmark)
+{
+    String pattern = "regex*";
+    regex_t regex;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(regexec(&regex, "#include <regex.h>", 0, NULL, REG_SEARCH), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "#include <stdio.h>", 0, NULL, REG_SEARCH), REG_NOMATCH);
+    }
+
+    regfree(&regex);
+}
+
+BENCHMARK_CASE(char_qualifier_asterisk_benchmark_reference_stdcpp_regex_match)
+{
+    std::regex re("regex*");
+    std::cmatch m;
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(std::regex_search("#include <regex.h>", m, re), true);
+        EXPECT_EQ(std::regex_search("#include <stdio.h>", m, re), false);
+    }
+}
+#endif
+
 TEST_CASE(parens)
 {
     String pattern = "test(hello)test";
