@@ -53,8 +53,8 @@ StringPrototype::StringPrototype()
     put_native_function("padEnd", pad_end, 1);
 
     put_native_function("trim", trim, 0);
-    put_native_function("trimStart", trimStart, 0);
-    put_native_function("trimEnd", trimEnd, 0);
+    put_native_function("trimStart", trim_start, 0);
+    put_native_function("trimEnd", trim_end, 0);
 }
 
 StringPrototype::~StringPrototype()
