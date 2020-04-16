@@ -56,6 +56,7 @@ StringPrototype::StringPrototype()
     put_native_function("trimStart", trim_start, 0);
     put_native_function("trimEnd", trim_end, 0);
     put_native_function("concat", concat, 1);
+    put_native_function("substring", substring, 2);
 }
 
 StringPrototype::~StringPrototype()
@@ -324,6 +325,53 @@ Value StringPrototype::concat(Interpreter& interpreter)
     }
 
     return js_string(interpreter, builder.to_string());
+}
+
+Value StringPrototype::substring(Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return {};
+
+    auto& string = this_object->to_string().as_string()->string();
+
+    if (interpreter.argument_count() == 0)
+        return js_string(interpreter, string);
+
+    i32 string_length = static_cast<i32>(string.length());
+    i32 index_start = interpreter.argument(0).to_number().to_i32();
+    i32 index_end = string_length;
+
+    if (index_start > string_length)
+        index_start = string_length;
+    else if (index_start < 0)
+        index_start = 0;
+
+    if (interpreter.argument_count() >= 2) {
+        index_end = interpreter.argument(1).to_number().to_i32();
+
+        if (index_end > string_length)
+            index_end = string_length;
+        else if (index_end < 0)
+            index_end = 0;
+    }
+
+    if (index_start == index_end)
+        return js_string(interpreter, String(""));
+
+    if (index_start > index_end) {
+        if (interpreter.argument_count() == 1) {
+            return js_string(interpreter, String(""));
+        } else {
+            i32 temp_index_start = index_start;
+            index_start = index_end;
+            index_end = temp_index_start;
+        }
+    }
+
+    auto part_length = index_end - index_start;
+    auto string_part = string.substring(index_start, part_length);
+    return js_string(interpreter, string_part);
 }
 
 }
