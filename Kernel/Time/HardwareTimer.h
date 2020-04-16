@@ -48,7 +48,8 @@ public:
     virtual const char* model() const = 0;
     virtual const char* purpose() const override;
 
-    virtual void change_function(Function<void(const RegisterState&)>);
+    void set_callback(Function<void(const RegisterState&)>);
+
     virtual size_t ticks_per_second() const = 0;
 
     virtual bool is_periodic() const = 0;
