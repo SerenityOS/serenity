@@ -194,10 +194,10 @@ bool TimeManagement::probe_and_set_non_legacy_hardware_timers()
         }
     }
 
-    m_system_timer->change_function([](const RegisterState& regs) { update_scheduler_ticks(regs); });
+    m_system_timer->change_function(Scheduler::timer_tick);
     dbg() << "Reset timers";
     m_system_timer->try_to_set_frequency(m_system_timer->calculate_nearest_possible_frequency(1024));
-    m_time_keeper_timer->change_function([](const RegisterState& regs) { update_time(regs); });
+    m_time_keeper_timer->change_function(TimeManagement::update_time);
     m_time_keeper_timer->try_to_set_frequency(OPTIMAL_TICKS_PER_SECOND_RATE);
 
     return true;
@@ -214,8 +214,8 @@ bool TimeManagement::probe_and_set_legacy_hardware_timers()
         }
     }
 
-    m_hardware_timers.append(PIT::initialize([](const RegisterState& regs) { update_time(regs); }));
-    m_hardware_timers.append(RealTimeClock::create([](const RegisterState& regs) { update_scheduler_ticks(regs); }));
+    m_hardware_timers.append(PIT::initialize(TimeManagement::update_time));
+    m_hardware_timers.append(RealTimeClock::create(Scheduler::timer_tick));
     m_time_keeper_timer = m_hardware_timers[0];
     m_system_timer = m_hardware_timers[1];
     return true;
@@ -237,13 +237,4 @@ void TimeManagement::increment_time_since_boot(const RegisterState&)
     }
 }
 
-void TimeManagement::update_scheduler_ticks(const RegisterState& regs)
-{
-    TimeManagement::the().update_ticks(regs);
-}
-
-void TimeManagement::update_ticks(const RegisterState& regs)
-{
-    Scheduler::timer_tick(regs);
-}
 }

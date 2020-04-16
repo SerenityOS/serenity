@@ -57,9 +57,6 @@ public:
     static void update_time(const RegisterState&);
     void increment_time_since_boot(const RegisterState&);
 
-    static void update_scheduler_ticks(const RegisterState& regs);
-    void update_ticks(const RegisterState&);
-
     static void stale_function(const RegisterState&);
     static bool is_hpet_periodic_mode_allowed();
 
@@ -76,8 +73,6 @@ private:
     time_t m_epoch_time { 0 };
     RefPtr<HardwareTimer> m_system_timer;
     RefPtr<HardwareTimer> m_time_keeper_timer;
-    Function<void(RegisterState&)> m_scheduler_ticking { update_time };
-    Function<void(RegisterState&)> m_stale_method { stale_function };
 };
 
 }
