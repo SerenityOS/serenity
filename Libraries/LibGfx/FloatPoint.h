@@ -142,6 +142,8 @@ public:
             set_y(value);
     }
 
+    Point to_int_point() const { return Point(x(), y()); }
+
 private:
     float m_x { 0 };
     float m_y { 0 };
