@@ -134,4 +134,35 @@ OwnPtr<Gfx::Painter> CanvasRenderingContext2D::painter()
     return make<Gfx::Painter>(*m_element->bitmap());
 }
 
+void CanvasRenderingContext2D::begin_path()
+{
+    m_path = Gfx::Path();
+}
+
+void CanvasRenderingContext2D::close_path()
+{
+    m_path.close();
+}
+
+void CanvasRenderingContext2D::move_to(float x, float y)
+{
+    m_path.move_to({ x, y });
+}
+
+void CanvasRenderingContext2D::line_to(float x, float y)
+{
+    m_path.line_to({ x, y });
+}
+
+void CanvasRenderingContext2D::stroke()
+{
+    dbg() << "stroke path " << m_path;
+
+    auto painter = this->painter();
+    if (!painter)
+        return;
+
+    painter->stroke_path(m_path, m_stroke_style, m_line_width);
+}
+
 }

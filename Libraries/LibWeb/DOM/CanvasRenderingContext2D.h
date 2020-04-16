@@ -30,6 +30,7 @@
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Forward.h>
+#include <LibGfx/Path.h>
 #include <LibWeb/Bindings/Wrappable.h>
 
 namespace Web {
@@ -61,6 +62,15 @@ public:
     void scale(float sx, float sy);
     void translate(float x, float y);
 
+    void set_line_width(float line_width) { m_line_width = line_width; }
+    float line_width() const { return m_line_width; }
+
+    void begin_path();
+    void close_path();
+    void move_to(float x, float y);
+    void line_to(float x, float y);
+    void stroke();
+
 private:
     explicit CanvasRenderingContext2D(HTMLCanvasElement&);
 
@@ -73,6 +83,9 @@ private:
     Gfx::AffineTransform m_transform;
     Gfx::Color m_fill_style;
     Gfx::Color m_stroke_style;
+    float m_line_width { 1 };
+
+    Gfx::Path m_path;
 };
 
 }
