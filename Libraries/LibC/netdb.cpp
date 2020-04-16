@@ -25,6 +25,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/ByteBuffer.h>
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <Kernel/Net/IPv4.h>
@@ -56,9 +57,9 @@ static servent __getserv_buffer;
 static char __getserv_name_buffer[512];
 static char __getserv_protocol_buffer[10];
 static int __getserv_port_buffer;
-static Vector<String> __getserv_alias_list_buffer = Vector<String>();
-static Vector<char*> __getserv_alias_list = Vector<char*>();
-static int keep_service_file_open = 0;
+static Vector<ByteBuffer> __getserv_alias_list_buffer;
+static Vector<char*> __getserv_alias_list;
+static bool keep_service_file_open = false;
 static ssize_t service_file_offset = 0;
 
 static int connect_to_lookup_server()
@@ -226,6 +227,7 @@ struct servent* getservent()
 
     if (fseek(services_file, service_file_offset, SEEK_SET) != 0) {
         perror("error seeking file");
+        fclose(services_file);
         return nullptr;
     }
     char* line = nullptr;
@@ -254,33 +256,18 @@ struct servent* getservent()
     }
 
     servent* service_entry = nullptr;
-    if (fill_getserv_buffers(line, read)) {
-        __getserv_buffer.s_name = __getserv_name_buffer;
-        __getserv_buffer.s_port = __getserv_port_buffer;
-        __getserv_buffer.s_proto = __getserv_protocol_buffer;
+    if (!fill_getserv_buffers(line, read))
+        return nullptr;
 
-        //freeing any previous alias data
-        for (size_t i = 0; i < __getserv_alias_list.size(); i++) {
-            free(__getserv_alias_list[i]);
-        }
-        __getserv_alias_list.clear();
-        size_t alias_list_size = __getserv_alias_list_buffer.size();
+    __getserv_buffer.s_name = __getserv_name_buffer;
+    __getserv_buffer.s_port = __getserv_port_buffer;
+    __getserv_buffer.s_proto = __getserv_protocol_buffer;
 
-        if (alias_list_size > 0) {
-            for (size_t i = 0; i < alias_list_size; i++) {
-
-                //Can't get non-const access to underlying String data, must duplicate to conform with servent member requirements
-                char* alias = strdup(__getserv_alias_list_buffer[i].characters());
-                if (alias == nullptr) {
-                    perror("error allocating space for alias");
-                    return nullptr;
-                }
-                __getserv_alias_list.append(alias);
-            }
-        }
-        __getserv_buffer.s_aliases = __getserv_alias_list.data();
-        service_entry = &__getserv_buffer;
+    for (auto& alias : __getserv_alias_list_buffer) {
+        __getserv_alias_list.append((char*)alias.data());
     }
+    __getserv_buffer.s_aliases = __getserv_alias_list.data();
+    service_entry = &__getserv_buffer;
 
     if (!keep_service_file_open) {
         endservent();
@@ -289,7 +276,7 @@ struct servent* getservent()
 }
 struct servent* getservbyname(const char* name, const char* protocol)
 {
-    int previous_file_open_setting = keep_service_file_open;
+    bool previous_file_open_setting = keep_service_file_open;
     setservent(1);
     struct servent* current_service = nullptr;
     auto service_file_handler = ScopeGuard([previous_file_open_setting] {
@@ -298,27 +285,21 @@ struct servent* getservbyname(const char* name, const char* protocol)
         }
     });
 
-    if (!protocol) {
-        do {
-            current_service = getservent();
-            if (!current_service) {
-                return nullptr;
-            }
-        } while (strcmp(current_service->s_name, name) != 0);
-    } else {
-        do {
-            current_service = getservent();
-            if (!current_service) {
-                return nullptr;
-            }
-        } while (!(strcmp(current_service->s_name, name) == 0 && strcmp(current_service->s_proto, protocol) == 0));
+    while (true) {
+        current_service = getservent();
+        if (current_service == nullptr)
+            break;
+        else if (!protocol && strcmp(current_service->s_name, name) == 0)
+            break;
+        else if (strcmp(current_service->s_name, name) == 0 && strcmp(current_service->s_proto, protocol) == 0)
+            break;
     }
 
     return current_service;
 }
 struct servent* getservbyport(int port, const char* protocol)
 {
-    int previous_file_open_setting = keep_service_file_open;
+    bool previous_file_open_setting = keep_service_file_open;
     setservent(1);
     struct servent* current_service = nullptr;
     auto service_file_handler = ScopeGuard([previous_file_open_setting] {
@@ -326,20 +307,14 @@ struct servent* getservbyport(int port, const char* protocol)
             endservent();
         }
     });
-    if (!protocol) {
-        do {
-            current_service = getservent();
-            if (!current_service) {
-                return nullptr;
-            }
-        } while (current_service->s_port != port);
-    } else {
-        do {
-            current_service = getservent();
-            if (!current_service) {
-                return nullptr;
-            }
-        } while (!(current_service->s_port == port && (strcmp(current_service->s_proto, protocol) == 0)));
+    while (true) {
+        current_service = getservent();
+        if (current_service == nullptr)
+            break;
+        else if (!protocol && current_service->s_port == port)
+            break;
+        else if (current_service->s_port == port && (strcmp(current_service->s_proto, protocol) == 0))
+            break;
     }
 
     return current_service;
@@ -420,7 +395,7 @@ static bool fill_getserv_buffers(char* line, ssize_t read)
             if (split_line[i].starts_with('#')) {
                 break;
             }
-            __getserv_alias_list_buffer.append(split_line[i]);
+            __getserv_alias_list_buffer.append(split_line[i].to_byte_buffer());
         }
     }
 
