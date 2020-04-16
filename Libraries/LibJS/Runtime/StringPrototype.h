@@ -47,6 +47,7 @@ private:
     static Value to_string(Interpreter&);
     static Value pad_start(Interpreter&);
     static Value pad_end(Interpreter&);
+    static Value substring(Interpreter&);
 
     static Value length_getter(Interpreter&);
 
