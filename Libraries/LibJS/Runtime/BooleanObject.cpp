@@ -26,13 +26,20 @@
 
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/BooleanObject.h>
+#include <LibJS/Runtime/GlobalObject.h>
 
 namespace JS {
 
-BooleanObject::BooleanObject(bool value)
+BooleanObject* BooleanObject::create(GlobalObject& global_object, bool value)
+{
+    auto& interpreter = global_object.interpreter();
+    return interpreter.heap().allocate<BooleanObject>(value, *interpreter.boolean_prototype());
+}
+
+BooleanObject::BooleanObject(bool value, Object& prototype)
     : m_value(value)
 {
-    set_prototype(interpreter().boolean_prototype());
+    set_prototype(&prototype);
 }
 
 BooleanObject::~BooleanObject()

@@ -50,8 +50,7 @@ Value BooleanConstructor::call(Interpreter& interpreter)
 
 Value BooleanConstructor::construct(Interpreter& interpreter)
 {
-    auto* bool_object = interpreter.heap().allocate<BooleanObject>(interpreter.argument(0).to_boolean());
-    return Value(bool_object);
+    return BooleanObject::create(interpreter.global_object(), interpreter.argument(0).to_boolean());
 }
 
 }

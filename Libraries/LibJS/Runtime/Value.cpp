@@ -119,7 +119,7 @@ Object* Value::to_object(Heap& heap) const
         return NumberObject::create(heap.interpreter().global_object(), m_value.as_double);
 
     if (is_boolean())
-        return heap.allocate<BooleanObject>(m_value.as_bool);
+        return BooleanObject::create(heap.interpreter().global_object(), m_value.as_bool);
 
     if (is_null() || is_undefined()) {
         heap.interpreter().throw_exception<TypeError>("ToObject on null or undefined.");
