@@ -31,7 +31,9 @@ namespace JS {
 
 class Date final : public Object {
 public:
-    Date(Core::DateTime datetime, u16 milliseconds);
+    static Date* create(GlobalObject&, Core::DateTime, u16 milliseconds);
+
+    Date(Core::DateTime datetime, u16 milliseconds, Object& prototype);
     virtual ~Date() override;
 
     Core::DateTime& datetime() { return m_datetime; }
