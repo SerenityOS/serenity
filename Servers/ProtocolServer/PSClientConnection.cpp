@@ -79,7 +79,7 @@ OwnPtr<Messages::ProtocolServer::StopDownloadResponse> PSClientConnection::handl
 void PSClientConnection::did_finish_download(Badge<Download>, Download& download, bool success)
 {
     RefPtr<SharedBuffer> buffer;
-    if (success && !download.payload().is_null()) {
+    if (success && download.payload().size() > 0 && !download.payload().is_null()) {
         buffer = SharedBuffer::create_with_size(download.payload().size());
         memcpy(buffer->data(), download.payload().data(), download.payload().size());
         buffer->seal();
