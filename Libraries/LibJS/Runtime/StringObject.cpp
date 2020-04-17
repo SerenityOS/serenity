@@ -26,6 +26,7 @@
 
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/StringPrototype.h>
@@ -33,10 +34,16 @@
 
 namespace JS {
 
-StringObject::StringObject(PrimitiveString* string)
+StringObject* StringObject::create(GlobalObject& global_object, PrimitiveString& primitive_string)
+{
+    auto& interpreter = global_object.interpreter();
+    return interpreter.heap().allocate<StringObject>(primitive_string, *interpreter.string_prototype());
+}
+
+StringObject::StringObject(PrimitiveString& string, Object& prototype)
     : m_string(string)
 {
-    set_prototype(interpreter().string_prototype());
+    set_prototype(&prototype);
 }
 
 StringObject::~StringObject()
@@ -46,7 +53,7 @@ StringObject::~StringObject()
 void StringObject::visit_children(Cell::Visitor& visitor)
 {
     Object::visit_children(visitor);
-    visitor.visit(m_string);
+    visitor.visit(&m_string);
 }
 
 }
