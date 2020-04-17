@@ -35,7 +35,7 @@
 namespace JS {
 
 FunctionConstructor::FunctionConstructor()
-    : NativeFunction("Function")
+    : NativeFunction("Function", *interpreter().function_prototype())
 {
     put("prototype", interpreter().function_prototype());
     put("length", Value(1));

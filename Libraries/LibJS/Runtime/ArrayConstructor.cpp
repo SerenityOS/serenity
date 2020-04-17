@@ -34,7 +34,7 @@
 namespace JS {
 
 ArrayConstructor::ArrayConstructor()
-    : NativeFunction("Array")
+    : NativeFunction("Array", *interpreter().function_prototype())
 {
     put("prototype", interpreter().array_prototype());
     put("length", Value(1));

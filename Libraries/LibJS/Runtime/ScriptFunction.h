@@ -32,7 +32,9 @@ namespace JS {
 
 class ScriptFunction final : public Function {
 public:
-    ScriptFunction(const FlyString& name, const Statement& body, Vector<FlyString> parameters, LexicalEnvironment* parent_environment);
+    static ScriptFunction* create(GlobalObject&, const FlyString& name, const Statement& body, Vector<FlyString> parameters, LexicalEnvironment* parent_environment);
+
+    ScriptFunction(const FlyString& name, const Statement& body, Vector<FlyString> parameters, LexicalEnvironment* parent_environment, Object& prototype);
     virtual ~ScriptFunction();
 
     const Statement& body() const { return m_body; }

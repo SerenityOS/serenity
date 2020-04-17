@@ -37,6 +37,10 @@ namespace JS {
 
 FunctionPrototype::FunctionPrototype()
 {
+}
+
+void FunctionPrototype::initialize()
+{
     put_native_function("apply", apply, 2);
     put_native_function("bind", bind, 1);
     put_native_function("call", call, 1);

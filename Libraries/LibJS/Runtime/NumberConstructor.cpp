@@ -37,7 +37,7 @@
 namespace JS {
 
 NumberConstructor::NumberConstructor()
-    : NativeFunction("Number")
+    : NativeFunction("Number", *interpreter().function_prototype())
 {
     put_native_function("isSafeInteger", is_safe_integer, 1);
 

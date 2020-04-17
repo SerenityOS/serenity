@@ -33,7 +33,7 @@
 namespace JS {
 
 StringConstructor::StringConstructor()
-    : NativeFunction("String")
+    : NativeFunction("String", *interpreter().function_prototype())
 {
     put("prototype", interpreter().string_prototype());
     put("length", Value(1));
