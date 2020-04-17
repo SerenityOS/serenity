@@ -151,7 +151,7 @@ int Parser::operator_precedence(TokenType type) const
 {
     auto it = g_operator_precedence.find(type);
     if (it == g_operator_precedence.end()) {
-        fprintf(stderr, "No precedence for operator %s\n", Token::name(type));
+        fprintf(stderr, "Internal Error: No precedence for operator %s\n", Token::name(type));
         ASSERT_NOT_REACHED();
         return -1;
     }
@@ -250,15 +250,17 @@ NonnullRefPtr<Statement> Parser::parse_statement()
     case TokenType::Do:
         return parse_do_while_statement();
     default:
-        if (match_expression())
-            return adopt(*new ExpressionStatement(parse_expression(0)));
+        if (match_expression()) {
+            auto expr = parse_expression(0);
+            consume_or_insert_semicolon();
+            return create_ast_node<ExpressionStatement>(move(expr));
+        }
         m_parser_state.m_has_errors = true;
         expected("statement (missing switch case)");
         consume();
         return create_ast_node<ErrorStatement>();
     } }();
-    if (match(TokenType::Semicolon))
-        consume();
+
     return statement;
 }
 
@@ -444,7 +446,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
         } else {
             m_parser_state.m_has_errors = true;
             auto& current_token = m_parser_state.m_current_token;
-            fprintf(stderr, "Error: Unexpected token %s as member in object initialization. Expected a numeric literal, string literal or identifier (line: %zu, column: %zu))\n",
+            fprintf(stderr, "Syntax Error: Unexpected token %s as member in object initialization. Expected a numeric literal, string literal or identifier (line: %zu, column: %zu))\n",
                 current_token.name(),
                 current_token.line_number(),
                 current_token.line_column());
@@ -653,9 +655,15 @@ NonnullRefPtr<NewExpression> Parser::parse_new_expression()
 NonnullRefPtr<ReturnStatement> Parser::parse_return_statement()
 {
     consume(TokenType::Return);
+
+    // Automatic semicolon insertion: terminate statement when return is followed by newline
+    if (m_parser_state.m_current_token.trivia().contains('\n'))
+        return create_ast_node<ReturnStatement>(nullptr);
+
     if (match_expression()) {
         return create_ast_node<ReturnStatement>(parse_expression(0));
     }
+    consume_or_insert_semicolon();
     return create_ast_node<ReturnStatement>(nullptr);
 }
 
@@ -744,6 +752,8 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration()
         }
         break;
     }
+    consume_or_insert_semicolon();
+
     auto declaration = create_ast_node<VariableDeclaration>(declaration_kind, move(declarations));
     if (declaration->declaration_kind() == DeclarationKind::Var)
         m_parser_state.m_var_scopes.last().append(declaration);
@@ -755,20 +765,32 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration()
 NonnullRefPtr<ThrowStatement> Parser::parse_throw_statement()
 {
     consume(TokenType::Throw);
-    return create_ast_node<ThrowStatement>(parse_expression(0));
+
+    // Automatic semicolon insertion: terminate statement when throw is followed by newline
+    if (m_parser_state.m_current_token.trivia().contains('\n')) {
+        m_parser_state.m_has_errors = true;
+        fprintf(stderr, "Syntax Error: no line break is allowed between 'throw' and its expression\n");
+        return create_ast_node<ThrowStatement>(create_ast_node<ErrorExpression>());
+    }
+
+    auto expression = parse_expression(0);
+    consume_or_insert_semicolon();
+    return create_ast_node<ThrowStatement>(move(expression));
 }
 
 NonnullRefPtr<BreakStatement> Parser::parse_break_statement()
 {
     consume(TokenType::Break);
-    // FIXME: Handle labels.
+    consume_or_insert_semicolon();
+    // FIXME: Handle labels. When fixing this, take care to correctly implement semicolon insertion
     return create_ast_node<BreakStatement>();
 }
 
 NonnullRefPtr<ContinueStatement> Parser::parse_continue_statement()
 {
     consume(TokenType::Continue);
-    // FIXME: Handle labels.
+    consume_or_insert_semicolon();
+    // FIXME: Handle labels. When fixing this, take care to correctly implement semicolon insertion
     return create_ast_node<ContinueStatement>();
 }
 
@@ -812,6 +834,7 @@ NonnullRefPtr<DoWhileStatement> Parser::parse_do_while_statement()
     auto test = parse_expression(0);
 
     consume(TokenType::ParenClose);
+    consume_or_insert_semicolon();
 
     return create_ast_node<DoWhileStatement>(move(test), move(body));
 }
@@ -889,21 +912,25 @@ NonnullRefPtr<ForStatement> Parser::parse_for_statement()
 
     consume(TokenType::ParenOpen);
 
+    bool first_semicolon_consumed = false;
     RefPtr<ASTNode> init;
     switch (m_parser_state.m_current_token.type()) {
     case TokenType::Semicolon:
         break;
     default:
-        if (match_expression())
+        if (match_expression()) {
             init = parse_expression(0);
-        else if (match_variable_declaration())
+        } else if (match_variable_declaration()) {
             init = parse_variable_declaration();
-        else
+            first_semicolon_consumed = true;
+        } else {
             ASSERT_NOT_REACHED();
+        }
         break;
     }
 
-    consume(TokenType::Semicolon);
+    if (!first_semicolon_consumed)
+        consume(TokenType::Semicolon);
 
     RefPtr<Expression> test;
     switch (m_parser_state.m_current_token.type()) {
@@ -1050,16 +1077,32 @@ Token Parser::consume()
     return old_token;
 }
 
-Token Parser::consume(TokenType type)
+void Parser::consume_or_insert_semicolon()
 {
-    if (m_parser_state.m_current_token.type() != type) {
-        m_parser_state.m_has_errors = true;
-        auto& current_token = m_parser_state.m_current_token;
-        fprintf(stderr, "Error: Unexpected token %s. Expected %s (line: %zu, column: %zu))\n",
-            current_token.name(),
-            Token::name(type),
-            current_token.line_number(),
-            current_token.line_column());
+    // Semicolon was found and will be consumed
+    if (match(TokenType::Semicolon)) {
+        consume();
+        return;
+    }
+    // Insert semicolon if...
+    // ...token is preceeded by one or more newlines
+    if (m_parser_state.m_current_token.trivia().contains('\n'))
+        return;
+    // ...token is a closing paren
+    if (match(TokenType::ParenClose))
+        return;
+    // ...token is eof
+    if (match(TokenType::Eof))
+        return;
+
+    // No rule for semicolon insertion applies -> syntax error
+    expected("Semicolon");
+}
+
+Token Parser::consume(TokenType expected_type)
+{
+    if (m_parser_state.m_current_token.type() != expected_type) {
+        expected(Token::name(expected_type));
     }
     return consume();
 }
@@ -1068,7 +1111,7 @@ void Parser::expected(const char* what)
 {
     m_parser_state.m_has_errors = true;
     auto& current_token = m_parser_state.m_current_token;
-    fprintf(stderr, "Error: Unexpected token %s. Expected %s (line: %zu, column: %zu)\n",
+    fprintf(stderr, "Syntax Error: Unexpected token %s. Expected %s (line: %zu, column: %zu)\n",
         current_token.name(),
         what,
         current_token.line_number(),
