@@ -51,6 +51,7 @@ private:
     static void document_setter(JS::Interpreter&, JS::Value);
 
     static JS::Value alert(JS::Interpreter&);
+    static JS::Value confirm(JS::Interpreter&);
     static JS::Value set_interval(JS::Interpreter&);
     static JS::Value set_timeout(JS::Interpreter&);
     static JS::Value request_animation_frame(JS::Interpreter&);

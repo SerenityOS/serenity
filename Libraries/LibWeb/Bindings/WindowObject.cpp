@@ -46,6 +46,7 @@ WindowObject::WindowObject(Window& impl)
     put("window", this);
     put_native_property("document", document_getter, document_setter);
     put_native_function("alert", alert);
+    put_native_function("confirm", confirm);
     put_native_function("setInterval", set_interval, 1);
     put_native_function("setTimeout", set_timeout, 1);
     put_native_function("requestAnimationFrame", request_animation_frame, 1);
@@ -94,6 +95,17 @@ JS::Value WindowObject::alert(JS::Interpreter& interpreter)
         message = interpreter.argument(0).to_string();
     impl->alert(message);
     return JS::js_undefined();
+}
+
+JS::Value WindowObject::confirm(JS::Interpreter& interpreter)
+{
+    auto* impl = impl_from(interpreter);
+    if (!impl)
+        return {};
+    auto& arguments = interpreter.call_frame().arguments;
+    if (arguments.size() < 1)
+        return {};
+    return JS::Value(impl->confirm(arguments[0].to_string()));
 }
 
 JS::Value WindowObject::set_interval(JS::Interpreter& interpreter)
