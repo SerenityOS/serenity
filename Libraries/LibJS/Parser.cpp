@@ -601,6 +601,9 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
     case TokenType::DoublePipe:
         consume();
         return create_ast_node<LogicalExpression>(LogicalOp::Or, move(lhs), parse_expression(min_precedence, associativity));
+    case TokenType::DoubleQuestionMark:
+        consume();
+        return create_ast_node<LogicalExpression>(LogicalOp::NullishCoalescing, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::QuestionMark:
         return parse_conditional_expression(move(lhs));
     default:
@@ -1039,7 +1042,8 @@ bool Parser::match_secondary_expression() const
         || type == TokenType::Pipe
         || type == TokenType::Caret
         || type == TokenType::DoubleAmpersand
-        || type == TokenType::DoublePipe;
+        || type == TokenType::DoublePipe
+        || type == TokenType::DoubleQuestionMark;
 }
 
 bool Parser::match_statement() const

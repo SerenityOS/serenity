@@ -338,20 +338,25 @@ Value LogicalExpression::execute(Interpreter& interpreter) const
             auto rhs_result = m_rhs->execute(interpreter);
             if (interpreter.exception())
                 return {};
-
-            return Value(rhs_result);
+            return rhs_result;
         }
-
-        return Value(lhs_result);
-    case LogicalOp::Or:
+        return lhs_result;
+    case LogicalOp::Or: {
         if (lhs_result.to_boolean())
-            return Value(lhs_result);
-
+            return lhs_result;
         auto rhs_result = m_rhs->execute(interpreter);
         if (interpreter.exception())
             return {};
-
-        return Value(rhs_result);
+        return rhs_result;
+    }
+    case LogicalOp::NullishCoalescing:
+        if (lhs_result.is_null() || lhs_result.is_undefined()) {
+            auto rhs_result = m_rhs->execute(interpreter);
+            if (interpreter.exception())
+                return {};
+            return rhs_result;
+        }
+        return lhs_result;
     }
 
     ASSERT_NOT_REACHED();
@@ -514,6 +519,9 @@ void LogicalExpression::dump(int indent) const
         break;
     case LogicalOp::Or:
         op_string = "||";
+        break;
+    case LogicalOp::NullishCoalescing:
+        op_string = "??";
         break;
     }
 
