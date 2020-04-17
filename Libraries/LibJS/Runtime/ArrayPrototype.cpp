@@ -92,7 +92,7 @@ Value ArrayPrototype::filter(Interpreter& interpreter)
         return {};
     auto this_value = interpreter.argument(1);
     auto initial_array_size = array->elements().size();
-    auto* new_array = interpreter.heap().allocate<Array>();
+    auto* new_array = Array::create(interpreter.global_object());
     for (size_t i = 0; i < initial_array_size; ++i) {
         if (i >= array->elements().size())
             break;
@@ -141,7 +141,7 @@ Value ArrayPrototype::map(Interpreter& interpreter)
         return {};
     auto this_value = interpreter.argument(1);
     auto initial_array_size = array->elements().size();
-    auto* new_array = interpreter.heap().allocate<Array>();
+    auto* new_array = Array::create(interpreter.global_object());
     for (size_t i = 0; i < initial_array_size; ++i) {
         if (i >= array->elements().size())
             break;
@@ -236,7 +236,7 @@ Value ArrayPrototype::concat(Interpreter& interpreter)
     if (!array)
         return {};
 
-    auto* new_array = interpreter.heap().allocate<Array>();
+    auto* new_array = Array::create(interpreter.global_object());
     new_array->elements().append(array->elements());
 
     for (size_t i = 0; i < interpreter.argument_count(); ++i) {

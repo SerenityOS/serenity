@@ -985,7 +985,7 @@ void ArrayExpression::dump(int indent) const
 
 Value ArrayExpression::execute(Interpreter& interpreter) const
 {
-    auto* array = interpreter.heap().allocate<Array>();
+    auto* array = Array::create(interpreter.global_object());
     for (auto& element : m_elements) {
         auto value = Value();
         if (element) {

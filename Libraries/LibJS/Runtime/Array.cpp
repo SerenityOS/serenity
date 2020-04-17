@@ -27,13 +27,21 @@
 #include <AK/Function.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/ArrayPrototype.h>
 #include <LibJS/Runtime/Error.h>
 
 namespace JS {
 
-Array::Array()
+Array* Array::create(GlobalObject& global_object)
 {
-    set_prototype(interpreter().array_prototype());
+    auto& interpreter = global_object.interpreter();
+    return interpreter.heap().allocate<Array>(*interpreter.array_prototype());
+}
+
+Array::Array(Object& prototype)
+{
+    set_prototype(&prototype);
     put_native_property("length", length_getter, length_setter);
 }
 
