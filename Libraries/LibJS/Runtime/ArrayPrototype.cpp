@@ -48,6 +48,7 @@ ArrayPrototype::ArrayPrototype()
     put_native_function("toString", to_string, 0);
     put_native_function("unshift", unshift, 1);
     put_native_function("join", join, 1);
+    put_native_function("concat", concat, 1);
     put("length", Value(0));
 }
 
@@ -227,6 +228,28 @@ Value ArrayPrototype::join(Interpreter& interpreter)
         separator = interpreter.argument(0).to_string();
 
     return join_array_with_separator(interpreter, *array, separator);
+}
+
+Value ArrayPrototype::concat(Interpreter& interpreter)
+{
+    auto* array = array_from(interpreter);
+    if (!array)
+        return {};
+
+    auto* new_array = interpreter.heap().allocate<Array>();
+    new_array->elements().append(array->elements());
+
+    for (size_t i = 0; i < interpreter.argument_count(); ++i) {
+        auto argument = interpreter.argument(i);
+        if (argument.is_array()) {
+            auto& argument_object = argument.as_object();
+            new_array->elements().append(argument_object.elements());
+        } else {
+            new_array->elements().append(argument);
+        }
+    }
+
+    return Value(new_array);
 }
 
 }
