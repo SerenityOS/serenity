@@ -67,7 +67,7 @@ Value ObjectConstructor::get_own_property_names(Interpreter& interpreter)
     auto* object = interpreter.argument(0).to_object(interpreter.heap());
     if (interpreter.exception())
         return {};
-    auto* result = interpreter.heap().allocate<Array>();
+    auto* result = Array::create(interpreter.global_object());
     for (size_t i = 0; i < object->elements().size(); ++i) {
         if (!object->elements()[i].is_empty())
             result->elements().append(js_string(interpreter, String::number(i)));

@@ -32,7 +32,9 @@ namespace JS {
 
 class Array final : public Object {
 public:
-    Array();
+    static Array* create(GlobalObject&);
+
+    explicit Array(Object& prototype);
     virtual ~Array() override;
 
     i32 length() const { return static_cast<i32>(elements().size()); }
@@ -44,5 +46,6 @@ private:
     static Value length_getter(Interpreter&);
     static void length_setter(Interpreter&, Value);
 };
+
 
 }

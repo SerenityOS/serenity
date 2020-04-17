@@ -96,7 +96,7 @@ JS::Value DocumentWrapper::query_selector_all(JS::Interpreter& interpreter)
     auto selector = arguments[0].to_string();
     auto elements = document->query_selector_all(selector);
     // FIXME: This should be a static NodeList, not a plain JS::Array.
-    auto* node_list = interpreter.heap().allocate<JS::Array>();
+    auto* node_list = JS::Array::create(interpreter.global_object());
     for (auto& element : elements) {
         node_list->elements().append(wrap(interpreter.heap(), element));
     }

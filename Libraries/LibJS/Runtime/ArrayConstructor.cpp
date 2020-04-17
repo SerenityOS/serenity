@@ -46,11 +46,11 @@ ArrayConstructor::~ArrayConstructor()
 
 Value ArrayConstructor::call(Interpreter& interpreter)
 {
-    if (interpreter.argument_count() == 0)
-        return interpreter.heap().allocate<Array>();
+    if (interpreter.argument_count() <= 0)
+        return Array::create(interpreter.global_object());
 
     if (interpreter.argument_count() == 1) {
-        auto* array = interpreter.heap().allocate<Array>();
+        auto* array = Array::create(interpreter.global_object());
         array->elements().resize(interpreter.argument(0).to_i32());
         return array;
     }
