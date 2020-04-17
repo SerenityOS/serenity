@@ -61,7 +61,7 @@ Value DateConstructor::construct(Interpreter& interpreter)
     gettimeofday(&tv, nullptr);
     auto datetime = Core::DateTime::now();
     auto milliseconds = static_cast<u16>(tv.tv_usec / 1000);
-    return interpreter.heap().allocate<Date>(datetime, milliseconds);
+    return Date::create(interpreter.global_object(), datetime, milliseconds);
 }
 
 Value DateConstructor::now(Interpreter&)

@@ -25,16 +25,23 @@
  */
 
 #include <LibCore/DateTime.h>
+#include <LibJS/Heap/Heap.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Date.h>
+#include <LibJS/Runtime/GlobalObject.h>
 
 namespace JS {
 
-Date::Date(Core::DateTime datetime, u16 milliseconds)
+Date* Date::create(GlobalObject& global_object, Core::DateTime datetime, u16 milliseconds)
+{
+    return global_object.heap().allocate<Date>(datetime, milliseconds, *global_object.interpreter().date_prototype());
+}
+
+Date::Date(Core::DateTime datetime, u16 milliseconds, Object& prototype)
     : m_datetime(datetime)
     , m_milliseconds(milliseconds)
 {
-    set_prototype(interpreter().date_prototype());
+    set_prototype(&prototype);
 }
 
 Date::~Date()
