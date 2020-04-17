@@ -367,6 +367,7 @@ private:
 enum class LogicalOp {
     And,
     Or,
+    NullishCoalescing,
 };
 
 class LogicalExpression : public Expression {

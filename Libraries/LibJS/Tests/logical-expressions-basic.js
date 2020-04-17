@@ -17,7 +17,6 @@ try {
     assert(("foo" && true) === true);
     assert((false && "bar") === false);
     assert((true && "bar") === "bar");
-    assert((null && true) === null);
     assert((0 && false) === 0);
     assert((0 && true) === 0);
     assert((42 && false) === false);
@@ -55,7 +54,6 @@ try {
     assert(("foo" || true) === "foo");
     assert((false || "bar") === "bar");
     assert((true || "bar") === true);
-    assert((null || true) === true);
     assert((0 || false) === false);
     assert((0 || true) === true);
     assert((42 || false) === 42);
@@ -76,6 +74,43 @@ try {
     assert((undefined || true) === true);
     assert((false || undefined) === undefined);
     assert((true || undefined) === true);
+
+    assert((true ?? true) === true);
+    assert((false ?? false) === false);
+    assert((true ?? false) === true);
+    assert((false ?? true) === false);
+    assert((false ?? (1 === 2)) === false);
+    assert((true ?? (1 === 2)) === true);
+    assert(("" ?? "") === "");
+    assert(("" ?? false) === "");
+    assert(("" ?? true) === "");
+    assert((false ?? "") === false);
+    assert((true ?? "") === true);
+    assert(("foo" ?? "bar") === "foo");
+    assert(("foo" ?? false) === "foo");
+    assert(("foo" ?? true) === "foo");
+    assert((false ?? "bar") === false);
+    assert((true ?? "bar") === true);
+    assert((0 ?? false) === 0);
+    assert((0 ?? true) === 0);
+    assert((42 ?? false) === 42);
+    assert((42 ?? true) === 42);
+    assert((false ?? 0) === false);
+    assert((true ?? 0) === true);
+    assert((false ?? 42) === false);
+    assert((true ?? 42) === true);
+    assert(([] ?? false).length === 0);
+    assert(([] ?? true).length === 0);
+    assert((false ?? []) === false);
+    assert((true ?? []) === true);
+    assert((null ?? false) === false);
+    assert((null ?? true) === true);
+    assert((false ?? null) === false);
+    assert((true ?? null) === true);
+    assert((undefined ?? false) === false);
+    assert((undefined ?? true) === true);
+    assert((false ?? undefined) === false);
+    assert((true ?? undefined) === true);
 
     console.log("PASS");
 } catch (e) {
