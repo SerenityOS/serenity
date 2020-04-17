@@ -1088,8 +1088,8 @@ void Parser::consume_or_insert_semicolon()
     // ...token is preceeded by one or more newlines
     if (m_parser_state.m_current_token.trivia().contains('\n'))
         return;
-    // ...token is a closing paren
-    if (match(TokenType::ParenClose))
+    // ...token is a closing curly brace
+    if (match(TokenType::CurlyClose))
         return;
     // ...token is eof
     if (match(TokenType::Eof))
