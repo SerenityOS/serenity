@@ -29,9 +29,9 @@
 
 namespace JS {
 
-Function::Function()
+Function::Function(Object& prototype)
 {
-    set_prototype(interpreter().function_prototype());
+    set_prototype(&prototype);
 }
 
 Function::~Function()

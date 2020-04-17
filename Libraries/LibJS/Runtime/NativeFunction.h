@@ -33,7 +33,9 @@ namespace JS {
 
 class NativeFunction : public Function {
 public:
-    explicit NativeFunction(const FlyString& name, AK::Function<Value(Interpreter&)>);
+    static NativeFunction* create(Interpreter&, GlobalObject&, const FlyString& name, AK::Function<Value(Interpreter&)>);
+
+    explicit NativeFunction(const FlyString& name, AK::Function<Value(Interpreter&)>, Object& prototype);
     virtual ~NativeFunction() override;
 
     virtual Value call(Interpreter&) override;
@@ -43,8 +45,8 @@ public:
     virtual bool has_constructor() const { return false; }
 
 protected:
-    NativeFunction(const FlyString& name);
-    NativeFunction() {}
+    NativeFunction(const FlyString& name, Object& prototype);
+    explicit NativeFunction(Object& prototype);
 
 private:
     virtual bool is_native_function() const override { return true; }

@@ -31,7 +31,7 @@
 namespace JS {
 
 ErrorConstructor::ErrorConstructor()
-    : NativeFunction("Error")
+    : NativeFunction("Error", *interpreter().function_prototype())
 {
     put("prototype", interpreter().error_prototype());
     put("length", Value(1));
@@ -56,6 +56,7 @@ Value ErrorConstructor::construct(Interpreter& interpreter)
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName)                                        \
     ConstructorName::ConstructorName()                                                                               \
+        : NativeFunction(*interpreter().function_prototype())                                                        \
     {                                                                                                                \
         put("prototype", interpreter().snake_name##_prototype());                                                    \
         put("length", Value(1));                                                                                     \

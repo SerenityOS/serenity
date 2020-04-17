@@ -34,7 +34,7 @@
 namespace JS {
 
 DateConstructor::DateConstructor()
-    : NativeFunction("Date")
+    : NativeFunction("Date", *interpreter().function_prototype())
 {
     put("prototype", interpreter().date_prototype());
     put("length", Value(7));

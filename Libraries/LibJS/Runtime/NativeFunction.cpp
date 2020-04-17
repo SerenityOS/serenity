@@ -25,19 +25,32 @@
  */
 
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
 
-NativeFunction::NativeFunction(const FlyString& name, AK::Function<Value(Interpreter&)> native_function)
-    : m_name(name)
+NativeFunction* NativeFunction::create(Interpreter& interpreter, GlobalObject&, const FlyString& name, AK::Function<Value(Interpreter&)> function)
+{
+    return interpreter.heap().allocate<NativeFunction>(name, move(function), *interpreter.function_prototype());
+}
+
+NativeFunction::NativeFunction(Object& prototype)
+    : Function(prototype)
+{
+}
+
+NativeFunction::NativeFunction(const FlyString& name, AK::Function<Value(Interpreter&)> native_function, Object& prototype)
+    : Function(prototype)
+    , m_name(name)
     , m_native_function(move(native_function))
 {
 }
 
-NativeFunction::NativeFunction(const FlyString& name)
-    : m_name(name)
+NativeFunction::NativeFunction(const FlyString& name, Object& prototype)
+    : Function(prototype)
+    , m_name(name)
 {
 }
 

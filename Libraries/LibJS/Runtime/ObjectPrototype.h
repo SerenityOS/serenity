@@ -33,6 +33,8 @@ namespace JS {
 class ObjectPrototype final : public Object {
 public:
     ObjectPrototype();
+    void initialize();
+
     virtual ~ObjectPrototype() override;
 
 private:

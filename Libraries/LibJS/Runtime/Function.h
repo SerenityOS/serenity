@@ -41,7 +41,7 @@ public:
     virtual LexicalEnvironment* create_environment() = 0;
 
 protected:
-    Function();
+    explicit Function(Object& prototype);
     virtual const char* class_name() const override { return "Function"; }
 
 private:

@@ -54,6 +54,9 @@ Interpreter::Interpreter()
     m_object_prototype = heap().allocate<ObjectPrototype>();
     m_function_prototype = heap().allocate<FunctionPrototype>();
 
+    static_cast<FunctionPrototype*>(m_function_prototype)->initialize();
+    static_cast<ObjectPrototype*>(m_object_prototype)->initialize();
+
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
     if (!m_##snake_name##_prototype)                                          \
         m_##snake_name##_prototype = heap().allocate<PrototypeName>();

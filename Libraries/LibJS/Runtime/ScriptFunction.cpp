@@ -28,13 +28,21 @@
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/ScriptFunction.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
 
-ScriptFunction::ScriptFunction(const FlyString& name, const Statement& body, Vector<FlyString> parameters, LexicalEnvironment* parent_environment)
-    : m_name(name)
+ScriptFunction* ScriptFunction::create(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FlyString> parameters, LexicalEnvironment* parent_environment)
+{
+    auto& interpreter = global_object.interpreter();
+    return interpreter.heap().allocate<ScriptFunction>(name, body, move(parameters), parent_environment, *interpreter.function_prototype());
+}
+
+ScriptFunction::ScriptFunction(const FlyString& name, const Statement& body, Vector<FlyString> parameters, LexicalEnvironment* parent_environment, Object& prototype)
+    : Function(prototype)
+    , m_name(name)
     , m_body(body)
     , m_parameters(move(parameters))
     , m_parent_environment(parent_environment)
