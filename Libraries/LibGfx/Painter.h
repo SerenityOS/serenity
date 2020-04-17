@@ -51,6 +51,7 @@ public:
     void draw_rect(const Rect&, Color, bool rough = false);
     void draw_bitmap(const Point&, const CharacterBitmap&, Color = Color());
     void draw_bitmap(const Point&, const GlyphBitmap&, Color = Color());
+    void draw_triangle(const Point&, const Point&, const Point&, Color);
     void draw_ellipse_intersecting(const Rect&, Color, int thickness = 1);
     void set_pixel(const Point&, Color);
     void draw_line(const Point&, const Point&, Color, int thickness = 1, bool dotted = false);

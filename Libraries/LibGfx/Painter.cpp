@@ -330,6 +330,74 @@ void Painter::draw_bitmap(const Point& p, const GlyphBitmap& bitmap, Color color
     }
 }
 
+void Painter::draw_triangle(const Point& a, const Point& b, const Point& c, Color color)
+{
+    RGBA32 rgba = color.value();
+
+    Point p0(a);
+    Point p1(b);
+    Point p2(c);
+
+    if (p0.y() > p1.y())
+        swap(p0, p1);
+    if (p0.y() > p2.y())
+        swap(p0, p2);
+    if (p1.y() > p2.y())
+        swap(p1, p2);
+
+    auto clip = clip_rect();
+    if (p0.y() >= clip.bottom())
+        return;
+    if (p2.y() < clip.top())
+        return;
+
+    float dx01 = (float)(p1.x() - p0.x()) / (p1.y() - p0.y());
+    float dx02 = (float)(p2.x() - p0.x()) / (p2.y() - p0.y());
+    float dx12 = (float)(p2.x() - p1.x()) / (p2.y() - p1.y());
+
+    float x01 = p0.x();
+    float x02 = p0.x();
+
+    int top = p0.y();
+    if (top < clip.top()) {
+        x01 += dx01 * clip.top() - top;
+        x02 += dx02 * clip.top() - top;
+        top = clip.top();
+    }
+
+    for (int y = top; y < p1.y() && y < clip.bottom(); ++y) {
+        int start = x01 > x02 ? max((int)x02, clip.left()) : max((int)x01, clip.left());
+        int end = x01 > x02 ? min((int)x01, clip.right()) : min((int)x02, clip.right());
+        auto* scanline = m_target->scanline(y);
+        for (int x = start; x < end; x++) {
+            scanline[x] = rgba;
+        }
+        x01 += dx01;
+        x02 += dx02;
+    }
+
+    x02 = p0.x() + dx02 * (p1.y() - p0.y());
+    float x12 = p1.x();
+
+    top = p1.y();
+    if (top < clip.top()) {
+        x02 += dx02 * clip.top() - top;
+        x12 += dx12 * clip.top() - top;
+        top = clip.top();
+    }
+
+    for (int y = top; y < p2.y() && y < clip.bottom(); ++y) {
+        int start = x12 > x02 ? max((int)x02, clip.left()) : max((int)x12, clip.left());
+        int end = x12 > x02 ? min((int)x12, clip.right()) : min((int)x02, clip.right());
+        auto* scanline = m_target->scanline(y);
+        for (int x = start; x < end; x++) {
+            scanline[x] = rgba;
+        }
+        x02 += dx02;
+        x12 += dx12;
+    }
+}
+
 void Painter::blit_scaled(const Rect& dst_rect_raw, const Gfx::Bitmap& source, const Rect& src_rect, float hscale, float vscale)
 {
     auto dst_rect = Rect(dst_rect_raw.location(), dst_rect_raw.size()).translated(translation());
