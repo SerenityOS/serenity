@@ -116,7 +116,7 @@ Object* Value::to_object(Heap& heap) const
         return heap.allocate<StringObject>(m_value.as_string);
 
     if (is_number())
-        return heap.allocate<NumberObject>(m_value.as_double);
+        return NumberObject::create(heap.interpreter().global_object(), m_value.as_double);
 
     if (is_boolean())
         return heap.allocate<BooleanObject>(m_value.as_bool);

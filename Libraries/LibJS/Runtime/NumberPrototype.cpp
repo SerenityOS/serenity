@@ -30,9 +30,8 @@
 namespace JS {
 
 NumberPrototype::NumberPrototype()
-    : NumberObject(0)
+    : NumberObject(0, *interpreter().object_prototype())
 {
-    set_prototype(interpreter().object_prototype());
 }
 
 NumberPrototype::~NumberPrototype()

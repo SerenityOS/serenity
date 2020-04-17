@@ -69,7 +69,7 @@ Value NumberConstructor::construct(Interpreter& interpreter)
         number = 0;
     else
         number = interpreter.argument(0).to_number().as_double();
-    return Value(interpreter.heap().allocate<NumberObject>(number));
+    return NumberObject::create(interpreter.global_object(), number);
 }
 
 Value NumberConstructor::is_safe_integer(Interpreter& interpreter)
