@@ -31,7 +31,9 @@
 namespace JS {
 class BooleanObject : public Object {
 public:
-    explicit BooleanObject(bool);
+    static BooleanObject* create(GlobalObject&, bool);
+
+    BooleanObject(bool, Object& prototype);
     virtual ~BooleanObject() override;
 
     virtual Value value_of() const override
