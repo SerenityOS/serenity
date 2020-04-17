@@ -154,7 +154,7 @@ public:
     template<typename T, typename... Args>
     Value throw_exception(Args&&... args)
     {
-        return throw_exception(heap().allocate<T>(forward<Args>(args)...));
+        return throw_exception(T::create(global_object(), forward<Args>(args)...));
     }
 
     Value throw_exception(Exception*);

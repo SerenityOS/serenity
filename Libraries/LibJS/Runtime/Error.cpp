@@ -26,27 +26,38 @@
 
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/GlobalObject.h>
 
 namespace JS {
 
-Error::Error(const FlyString& name, const String& message)
+Error* Error::create(GlobalObject& global_object, const FlyString& name, const String& message)
+{
+    auto& interpreter = global_object.interpreter();
+    return interpreter.heap().allocate<Error>(name, message, *interpreter.error_prototype());
+}
+
+Error::Error(const FlyString& name, const String& message, Object& prototype)
     : m_name(name)
     , m_message(message)
 {
-    set_prototype(interpreter().error_prototype());
+    set_prototype(&prototype);
 }
 
 Error::~Error()
 {
 }
 
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
-    ClassName::ClassName(const String& message)                               \
-        : Error(#ClassName, message)                                          \
-    {                                                                         \
-        set_prototype(interpreter().snake_name##_prototype());                \
-    }                                                                         \
-    ClassName::~ClassName() {}                                                \
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName)                          \
+    ClassName* ClassName::create(GlobalObject& global_object, const String& message)                   \
+    {                                                                                                  \
+        auto& interpreter = global_object.interpreter();                                               \
+        return interpreter.heap().allocate<ClassName>(message, *interpreter.snake_name##_prototype()); \
+    }                                                                                                  \
+    ClassName::ClassName(const String& message, Object& prototype)                                     \
+        : Error(#ClassName, message, prototype)                                                        \
+    {                                                                                                  \
+    }                                                                                                  \
+    ClassName::~ClassName() {}                                                                         \
     const char* ClassName::class_name() const { return #ClassName; }
 
 JS_ENUMERATE_ERROR_SUBCLASSES
