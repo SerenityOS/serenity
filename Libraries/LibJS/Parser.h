@@ -89,6 +89,7 @@ private:
     void expected(const char* what);
     Token consume();
     Token consume(TokenType type);
+    void consume_or_insert_semicolon();
     void save_state();
     void load_state();
 
@@ -104,6 +105,5 @@ private:
 
     ParserState m_parser_state;
     Optional<ParserState> m_saved_state;
-
 };
 }
