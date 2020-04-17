@@ -28,6 +28,7 @@
 
 #include <AK/Function.h>
 #include <AK/HashMap.h>
+#include <AK/NonnullRefPtr.h>
 #include <AK/OwnPtr.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
@@ -42,9 +43,9 @@ class Region;
 
 namespace ELF {
 
-class Loader {
+class Loader : public RefCounted<Loader> {
 public:
-    explicit Loader(const u8*, size_t);
+    static NonnullRefPtr<Loader> create(const u8* data, size_t size) { return adopt(*new Loader(data, size)); }
     ~Loader();
 
     bool load();
@@ -67,6 +68,8 @@ public:
     Optional<Image::Symbol> find_symbol(u32 address, u32* offset = nullptr) const;
 
 private:
+    explicit Loader(const u8*, size_t);
+
     bool layout();
     bool perform_relocations();
     void* lookup(const ELF::Image::Symbol&);

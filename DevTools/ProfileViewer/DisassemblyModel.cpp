@@ -80,7 +80,7 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
     if (!m_file->is_valid())
         return;
 
-    auto elf_loader = make<ELF::Loader>((const u8*)m_file->data(), m_file->size());
+    auto elf_loader = ELF::Loader::create((const u8*)m_file->data(), m_file->size());
 
     auto symbol = elf_loader->find_symbol(node.address());
     if (!symbol.has_value())
