@@ -52,6 +52,12 @@ void Window::alert(const String& message)
     GUI::MessageBox::show(message, "Alert", GUI::MessageBox::Type::Information);
 }
 
+bool Window::confirm(const String& message)
+{
+    auto confirm_result = GUI::MessageBox::show(message, "Confirm", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel);
+    return confirm_result == GUI::Dialog::ExecResult::ExecOK;
+}
+
 void Window::set_interval(JS::Function& callback, i32 interval)
 {
     // FIXME: This leaks the interval timer and makes it unstoppable.

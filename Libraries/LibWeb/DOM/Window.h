@@ -43,6 +43,7 @@ public:
     Document& document() { return m_document; }
 
     void alert(const String&);
+    bool confirm(const String&);
     i32 request_animation_frame(JS::Function&);
     void cancel_animation_frame(i32);
     void set_interval(JS::Function&, i32);
