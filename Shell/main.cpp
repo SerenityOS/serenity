@@ -885,6 +885,12 @@ static int run_command(const String& cmd)
             if (handle_builtin(argv.size() - 1, argv.data(), retval))
                 return retval;
 
+            struct stat st;
+            if (stat(argv[0], &st) == 0 && S_ISDIR(st.st_mode)) {
+                fprintf(stderr, "Shell: %s: Is a directory\n", argv[0]);
+                return 126;
+            }
+
             pid_t child = fork();
             if (!child) {
                 setpgid(0, 0);
