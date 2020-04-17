@@ -25,10 +25,10 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/FlyString.h>
 #include <AK/Memory.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
-#include <AK/FlyString.h>
 #include <AK/Vector.h>
 
 namespace AK {
@@ -155,6 +155,15 @@ bool StringView::ends_with(const StringView& str) const
 bool StringView::matches(const StringView& mask, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::matches(*this, mask, case_sensitivity);
+}
+
+bool StringView::contains(char needle) const
+{
+    for (char current : *this) {
+        if (current == needle)
+            return true;
+    }
+    return false;
 }
 
 StringView StringView::substring_view(size_t start, size_t length) const
