@@ -32,9 +32,9 @@
 namespace AK {
 
 template<class T>
-constexpr auto call_will_be_destroyed_if_present(T* object) -> decltype(object->will_be_destroyed(), TrueType {})
+constexpr auto call_will_be_destroyed_if_present(const T* object) -> decltype(object->will_be_destroyed(), TrueType {})
 {
-    object->will_be_destroyed();
+    const_cast<T*>(object)->will_be_destroyed();
     return {};
 }
 
@@ -44,9 +44,9 @@ constexpr auto call_will_be_destroyed_if_present(...) -> FalseType
 }
 
 template<class T>
-constexpr auto call_one_ref_left_if_present(T* object) -> decltype(object->one_ref_left(), TrueType {})
+constexpr auto call_one_ref_left_if_present(const T* object) -> decltype(object->one_ref_left(), TrueType {})
 {
-    object->one_ref_left();
+    const_cast<T*>(object)->one_ref_left();
     return {};
 }
 
@@ -57,7 +57,7 @@ constexpr auto call_one_ref_left_if_present(...) -> FalseType
 
 class RefCountedBase {
 public:
-    void ref()
+    void ref() const
     {
         ASSERT(m_ref_count);
         ++m_ref_count;
@@ -75,26 +75,26 @@ protected:
         ASSERT(!m_ref_count);
     }
 
-    void deref_base()
+    void deref_base() const
     {
         ASSERT(m_ref_count);
         --m_ref_count;
     }
 
-    int m_ref_count { 1 };
+    mutable int m_ref_count { 1 };
 };
 
 template<typename T>
 class RefCounted : public RefCountedBase {
 public:
-    void unref()
+    void unref() const
     {
         deref_base();
         if (m_ref_count == 0) {
-            call_will_be_destroyed_if_present(static_cast<T*>(this));
-            delete static_cast<T*>(this);
+            call_will_be_destroyed_if_present(static_cast<const T*>(this));
+            delete static_cast<const T*>(this);
         } else if (m_ref_count == 1) {
-            call_one_ref_left_if_present(static_cast<T*>(this));
+            call_one_ref_left_if_present(static_cast<const T*>(this));
         }
     }
 };
