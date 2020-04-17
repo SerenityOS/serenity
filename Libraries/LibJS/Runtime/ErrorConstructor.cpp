@@ -51,7 +51,7 @@ Value ErrorConstructor::construct(Interpreter& interpreter)
     String message = "";
     if (!interpreter.call_frame().arguments.is_empty() && !interpreter.call_frame().arguments[0].is_undefined())
         message = interpreter.call_frame().arguments[0].to_string();
-    return interpreter.heap().allocate<Error>("Error", message);
+    return Error::create(interpreter.global_object(), "Error", message);
 }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName)                                        \
@@ -70,7 +70,7 @@ Value ErrorConstructor::construct(Interpreter& interpreter)
         String message = "";                                                                                         \
         if (!interpreter.call_frame().arguments.is_empty() && !interpreter.call_frame().arguments[0].is_undefined()) \
             message = interpreter.call_frame().arguments[0].to_string();                                             \
-        return interpreter.heap().allocate<ClassName>(message);                                                      \
+        return ClassName::create(interpreter.global_object(), message);                                              \
     }
 
 JS_ENUMERATE_ERROR_SUBCLASSES

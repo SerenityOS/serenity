@@ -70,7 +70,7 @@ Value FunctionConstructor::construct(Interpreter& interpreter)
     auto function_expression = parser.parse_function_node<FunctionExpression>();
     if (parser.has_errors()) {
         // FIXME: The parser should expose parsing error strings rather than just fprintf()'ing them
-        return interpreter.heap().allocate<Error>("SyntaxError", "");
+        return Error::create(interpreter.global_object(), "SyntaxError", "");
     }
     return function_expression->execute(interpreter);
 }
