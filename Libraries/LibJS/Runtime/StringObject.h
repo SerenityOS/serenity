@@ -32,21 +32,24 @@ namespace JS {
 
 class StringObject : public Object {
 public:
-    explicit StringObject(PrimitiveString*);
+    static StringObject* create(GlobalObject&, PrimitiveString&);
+
+    StringObject(PrimitiveString&, Object& prototype);
     virtual ~StringObject() override;
 
-    virtual void visit_children(Visitor&) override;
-    const PrimitiveString* primitive_string() const { return m_string; }
+    // FIXME: Return const PrimitiveString&
+    const PrimitiveString* primitive_string() const { return &m_string; }
     virtual Value value_of() const override
     {
-        return Value(m_string);
+        return Value(&m_string);
     }
 
 private:
+    virtual void visit_children(Visitor&) override;
     virtual const char* class_name() const override { return "StringObject"; }
     virtual bool is_string_object() const override { return true; }
 
-    PrimitiveString* m_string { nullptr };
+    PrimitiveString& m_string;
 };
 
 }

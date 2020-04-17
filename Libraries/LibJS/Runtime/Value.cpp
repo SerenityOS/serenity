@@ -113,7 +113,7 @@ Object* Value::to_object(Heap& heap) const
         return &const_cast<Object&>(as_object());
 
     if (is_string())
-        return heap.allocate<StringObject>(m_value.as_string);
+        return StringObject::create(heap.interpreter().global_object(), *m_value.as_string);
 
     if (is_number())
         return NumberObject::create(heap.interpreter().global_object(), m_value.as_double);
