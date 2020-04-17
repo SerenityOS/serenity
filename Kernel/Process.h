@@ -391,7 +391,7 @@ public:
 
     struct ELFBundle {
         OwnPtr<Region> region;
-        OwnPtr<ELF::Loader> elf_loader;
+        RefPtr<ELF::Loader> elf_loader;
     };
     OwnPtr<ELFBundle> elf_bundle() const;
 

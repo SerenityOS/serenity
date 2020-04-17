@@ -26,6 +26,7 @@
 
 #include <AK/Demangle.h>
 #include <AK/FileSystemPath.h>
+#include <AK/RefPtr.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
@@ -885,7 +886,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     u32 entry_eip = 0;
 
     MM.enter_process_paging_scope(*this);
-    OwnPtr<ELF::Loader> loader;
+    RefPtr<ELF::Loader> loader;
     {
         ArmedScopeGuard rollback_regions_guard([&]() {
             ASSERT(Process::current == this);
@@ -893,7 +894,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
             m_regions = move(old_regions);
             MM.enter_process_paging_scope(*this);
         });
-        loader = make<ELF::Loader>(region->vaddr().as_ptr(), loader_metadata.size);
+        loader = ELF::Loader::create(region->vaddr().as_ptr(), loader_metadata.size);
         // Load the correct executable -- either interp or main program.
         // FIXME: Once we actually load both interp and main, we'll need to be more clever about this.
         //     In that case, both will be ET_DYN objects, so they'll both be completely relocatable.
@@ -4888,7 +4889,7 @@ OwnPtr<Process::ELFBundle> Process::elf_bundle() const
     bundle->region = MM.allocate_kernel_region_with_vmobject(const_cast<SharedInodeVMObject&>(vmobject), vmobject.size(), "ELF bundle", Region::Access::Read);
     if (!bundle->region)
         return nullptr;
-    bundle->elf_loader = make<ELF::Loader>(bundle->region->vaddr().as_ptr(), bundle->region->size());
+    bundle->elf_loader = ELF::Loader::create(bundle->region->vaddr().as_ptr(), bundle->region->size());
     return bundle;
 }
 
