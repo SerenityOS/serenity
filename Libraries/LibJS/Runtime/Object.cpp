@@ -45,8 +45,12 @@ Object* Object::create_empty(Interpreter&, GlobalObject& global_object)
 
 Object::Object(Object* prototype)
 {
-    m_shape = interpreter().empty_object_shape();
-    set_prototype(prototype);
+    if (prototype) {
+        m_shape = interpreter().global_object().empty_object_shape();
+        set_prototype(prototype);
+    } else {
+        m_shape = interpreter().heap().allocate<Shape>();
+    }
 }
 
 Object::~Object()
