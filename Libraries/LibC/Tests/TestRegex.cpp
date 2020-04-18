@@ -2029,4 +2029,62 @@ BENCHMARK_CASE(simple_ignorecase_benchmark_reference_stdcpp_regex_match)
 }
 #endif
 
+TEST_CASE(simple_notbol_noteol)
+{
+    String pattern = "^hello friends$";
+    regex_t regex;
+
+    std::regex re(pattern.characters(), std::regex_constants::match_not_bol);
+    std::regex re2(pattern.characters(), std::regex_constants::match_not_eol);
+    std::cmatch m;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED | REG_NOSUB | REG_ICASE), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "a hello friends b", 0, NULL, REG_NOTBOL), REG_NOMATCH);
+    EXPECT_EQ(regexec(&regex, "hello friends", 0, NULL, REG_NOTBOL), REG_NOMATCH);
+    EXPECT_EQ(regexec(&regex, "hello friends", 0, NULL, REG_SEARCH | REG_NOTBOL), REG_NOERR);
+
+    EXPECT_EQ(regexec(&regex, "a hello friends b", 0, NULL, REG_NOTEOL), REG_NOMATCH);
+    EXPECT_EQ(regexec(&regex, "hello friends", 0, NULL, REG_NOTEOL), REG_NOMATCH);
+    EXPECT_EQ(regexec(&regex, "hello friends", 0, NULL, REG_SEARCH | REG_NOTEOL), REG_NOERR);
+
+    regfree(&regex);
+}
+
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
+BENCHMARK_CASE(simple_notbol_noteol_benchmark)
+{
+    String pattern = "^hello friends$";
+    regex_t regex;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED | REG_NOSUB | REG_ICASE), REG_NOERR);
+
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(regexec(&regex, "a hello friends b", 0, NULL, REG_NOTBOL), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "hello friends", 0, NULL, REG_NOTBOL), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "hello friends", 0, NULL, REG_SEARCH | REG_NOTBOL), REG_NOERR);
+
+        EXPECT_EQ(regexec(&regex, "a hello friends b", 0, NULL, REG_NOTEOL), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "hello friends", 0, NULL, REG_NOTEOL), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "hello friends", 0, NULL, REG_SEARCH | REG_NOTEOL), REG_NOERR);
+    }
+
+    regfree(&regex);
+}
+
+BENCHMARK_CASE(simple_notbol_noteol_benchmark_reference_stdcpp_regex_match)
+{
+    std::regex re("^hello friends$", std::regex_constants::match_not_bol);
+    std::regex re2("^hello friends$", std::regex_constants::match_not_eol);
+    std::cmatch m;
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(std::regex_match("a hello friends b", m, re), false);
+        EXPECT_EQ(std::regex_match("hello friends", m, re), false);
+        EXPECT_EQ(std::regex_search("hello friends", m, re), true);
+        EXPECT_EQ(std::regex_match("a hello friends b", m, re2), false);
+        EXPECT_EQ(std::regex_match("hello friends", m, re2), false);
+        EXPECT_EQ(std::regex_search("hello friends", m, re2), true);
+    }
+}
+#endif
+
 TEST_MAIN(Regex)

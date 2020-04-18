@@ -1291,14 +1291,17 @@ bool VM::match_recurse(MatchState& state, size_t recursion_level) const
 #ifdef REGEX_DEBUG
             printf("\n");
 #endif
-            if (state.m_stringp != 0)
+
+            if (state.m_stringp != 0 || ((state.m_eflags & REG_NOTBOL) && !((state.m_eflags & REG_SEARCH) || (state.m_eflags & REG_MATCHALL))))
                 return false;
+
         } else if (stack_item.op_code == OpCode::CheckEnd) {
 #ifdef REGEX_DEBUG
             printf(" > Check end: %lu == %lu\n", state.m_stringp, state.m_view.length());
 #endif
-            if (state.m_stringp != state.m_view.length())
+            if (state.m_stringp != state.m_view.length() || ((state.m_eflags & REG_NOTEOL) && !((state.m_eflags & REG_SEARCH) || (state.m_eflags & REG_MATCHALL))))
                 return false;
+
         } else if (stack_item.op_code == OpCode::Exit) {
             bool cond = check_exit_conditions();
 #ifdef REGEX_DEBUG
