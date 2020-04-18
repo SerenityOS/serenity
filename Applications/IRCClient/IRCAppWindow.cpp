@@ -226,12 +226,12 @@ void IRCAppWindow::setup_actions()
             m_client->handle_op_user_action(window->channel().name(), input_box->text_value());
     });
 
-    m_deop_user_action = GUI::Action::create("DeOp user", [this](auto&) {
+    m_deop_user_action = GUI::Action::create("Deop user", [this](auto&) {
         auto* window = m_client->current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
             return;
         }
-        auto input_box = GUI::InputBox::construct("Enter nick:", "DeOp user", this);
+        auto input_box = GUI::InputBox::construct("Enter nick:", "Deop user", this);
         if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty())
             m_client->handle_deop_user_action(window->channel().name(), input_box->text_value());
     });

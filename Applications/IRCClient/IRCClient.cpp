@@ -662,7 +662,7 @@ void IRCClient::handle_rpl_welcome(const Message& msg)
     auto channels = channel_str.split(',');
     for (auto& channel : channels) {
         join_channel(channel);
-        dbgprintf("IRCClient: Auto joining channel: %s\n", channel.characters());
+        dbgprintf("IRCClient: Autojoining channel: %s\n", channel.characters());
     }
 }
 

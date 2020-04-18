@@ -18,7 +18,7 @@ symbols. Any symbols it refers to will be resolved when it is loaded.
 This should be a string like `const char module_name[]` containing the name of
 the module. This is used to give the module a name in any informational
 contexts, but also to ensure that the module is not loaded twice by accident,
-and also used as a reference to unload the module later.
+and is also used as a reference to unload the module later.
 
 ### `module_init`
 

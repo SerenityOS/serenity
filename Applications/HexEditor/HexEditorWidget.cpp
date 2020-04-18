@@ -191,7 +191,7 @@ HexEditorWidget::HexEditorWidget()
         m_editor->copy_selected_text_to_clipboard();
     }));
     edit_menu.add_separator();
-    edit_menu.add_action(GUI::Action::create("Copy As C Code", { Mod_Alt | Mod_Shift, Key_C }, [&](const GUI::Action&) {
+    edit_menu.add_action(GUI::Action::create("Copy as C Code", { Mod_Alt | Mod_Shift, Key_C }, [&](const GUI::Action&) {
         m_editor->copy_selected_hex_to_clipboard_as_c_code();
     }));
 
@@ -234,7 +234,7 @@ void HexEditorWidget::open_file(const String& path)
 {
     auto file = Core::File::construct(path);
     if (!file->open(Core::IODevice::ReadOnly)) {
-        GUI::MessageBox::show(String::format("Opening \"%s\" failed: %s", path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
+        GUI::MessageBox::show(String::format("Failed to open \"%s\": %s", path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window());
         return;
     }
 

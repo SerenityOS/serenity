@@ -1,6 +1,6 @@
 # SerenityOS
 
-Graphical Unix-like operating system for x86 computers.
+A graphical, Unix-like operating system for x86 computers.
 
 ![Travis CI status](https://api.travis-ci.com/SerenityOS/serenity.svg?branch=master)
 

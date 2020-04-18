@@ -20,14 +20,14 @@ If invoked as `mount -a`, `mount` mounts all the filesystems configured in
 [`SystemServer`(7)](../man7/SystemServer.md).
 
 Otherwise, `mount` performs a single filesystem mount. Source should be a path
-to a file containing the filesystem image. Target, and fstype have the same
+to a file containing the filesystem image. Target and fstype have the same
 meaning as in the [`mount`(2)](../man2/mount.md) syscall (if not specified,
 fstype defaults to `ext2`).
 
 A special source value "none" is recognized, in which case
 [`mount`(8)](mount.md) will not attempt to open the source as a file, and will
 pass an invalid file descriptor to [`mount`(2)](../man2/mount.md). This is
-useful for mounting  pseudo filesystems.
+useful for mounting pseudo filesystems.
 
 Options correspond to the mount flags, and should be specified as a
 comma-separated list of flag names (lowercase and without the `MS_` prefix).

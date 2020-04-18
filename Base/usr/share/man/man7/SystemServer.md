@@ -38,8 +38,8 @@ If a service is configured as *lazy*, SystemServer will actually listen on the
 socket it sets up for the service, and only spawn the service once a client
 tries to connect to the socket. The service should then start up and accept the
 connection. This all happens transparently to the client. If a lazy service is
-configured to be *kept alive*, it can even exit after some period of inactivity;
-in this case SystemServer will respawn it again once there is a new connection
+configured to be *kept alive*, it can even exit after some period of inactivity.
+In this case, SystemServer will respawn it again once there is a new connection
 to its socket.
 
 ## See also

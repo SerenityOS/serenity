@@ -85,7 +85,7 @@ int main(int argc, char** argv)
 
         auto bitmap = Gfx::Bitmap::load_from_file(open_path.value());
         if (!bitmap) {
-            GUI::MessageBox::show(String::format("Failed to load '%s'", open_path.value().characters()), "Open failed", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window);
+            GUI::MessageBox::show(String::format("Failed to load \"%s\"", open_path.value().characters()), "Open failed", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window);
             return;
         }
         paintable_widget.set_bitmap(*bitmap);

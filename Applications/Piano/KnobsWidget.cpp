@@ -71,7 +71,7 @@ KnobsWidget::KnobsWidget(AudioEngine& audio_engine, MainWidget& main_widget)
     // FIXME: Implement vertical flipping in GUI::Slider, not here.
 
     m_octave_knob = m_knobs_container->add<GUI::VerticalSlider>();
-    m_octave_knob->set_tooltip("Z: octave down, X: octave up");
+    m_octave_knob->set_tooltip("Z: One octave down, X: One octave up");
     m_octave_knob->set_range(octave_min - 1, octave_max - 1);
     m_octave_knob->set_value((octave_max - 1) - (m_audio_engine.octave() - 1));
     m_octave_knob->on_value_changed = [this](int value) {
@@ -83,7 +83,7 @@ KnobsWidget::KnobsWidget(AudioEngine& audio_engine, MainWidget& main_widget)
     };
 
     m_wave_knob = m_knobs_container->add<GUI::VerticalSlider>();
-    m_wave_knob->set_tooltip("C: cycle through waveforms");
+    m_wave_knob->set_tooltip("C: Cycle through waveforms");
     m_wave_knob->set_range(0, last_wave);
     m_wave_knob->set_value(last_wave - m_audio_engine.wave());
     m_wave_knob->on_value_changed = [this](int value) {

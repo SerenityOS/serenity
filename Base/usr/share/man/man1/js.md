@@ -11,7 +11,7 @@ $ js [options...] [script.js]
 ## Description
 
 `js` evaluates JavaScript programs using the LibJS engine. If you pass it a path
-to a script file, it will execute that script. Otherwise, it enters the
+to a valid JavaScript file, it will execute that script. Otherwise, it enters the
 Read-Eval-Print-Loop (REPL) mode, where it interactively reads pieces (usually,
 single lines) of code from standard input, evaluates them in one shared
 interpreter context, and prints back their results. This mode is useful for

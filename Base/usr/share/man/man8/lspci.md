@@ -11,7 +11,7 @@ $ lspci
 ## Description
 
 lspci is a utility for displaying information about PCI buses in the system
-and devices connected to them. It shows a brief list of devices.
+and devices connected to them. It also shows a brief list of devices.
 
 ## Files
 

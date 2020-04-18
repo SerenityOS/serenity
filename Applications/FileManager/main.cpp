@@ -308,7 +308,7 @@ int main(int argc, char** argv)
                     current_directory.characters(),
                     FileSystemPath(current_path).basename().characters());
                 if (!FileUtils::copy_file_or_directory(current_path, new_path)) {
-                    auto error_message = String::format("Could not paste %s.",
+                    auto error_message = String::format("Could not paste \"%s\".",
                         current_path.characters());
                     GUI::MessageBox::show(error_message, "File Manager", GUI::MessageBox::Type::Error);
                 } else {
@@ -365,7 +365,7 @@ int main(int argc, char** argv)
         {
             String message;
             if (paths.size() == 1) {
-                message = String::format("Really delete %s?", FileSystemPath(paths[0]).basename().characters());
+                message = String::format("Really delete \"%s\"?", FileSystemPath(paths[0]).basename().characters());
             } else {
                 message = String::format("Really delete %d files?", paths.size());
             }
@@ -414,7 +414,7 @@ int main(int argc, char** argv)
             } else if (unlink(path.characters()) < 0) {
                 int saved_errno = errno;
                 GUI::MessageBox::show(
-                    String::format("unlink(%s) failed: %s", path.characters(), strerror(saved_errno)),
+                    String::format("unlink(\"%s\") failed: %s", path.characters(), strerror(saved_errno)),
                     "Delete failed",
                     GUI::MessageBox::Type::Error,
                     GUI::MessageBox::InputType::OK,

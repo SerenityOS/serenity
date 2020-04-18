@@ -17,8 +17,7 @@ int chroot_with_mount_flags(const char* path, int mount_flags);
 
 `chroot_with_mount_flags()` additionally applies the given `mount_flags` to the new root directory
 of the current process as if it was a separate mount. All the same flags as for [`mount`(2)](mount.md)
-are accepted, except `MS_BIND` doesn't make sense for chroots. Additionally, the value -1 is accepted,
-and makes `chroot_with_mount_flags()` behave like regular `chroot()`.
+are accepted, except `MS_BIND`, since it doesn't make sense for chroots. Additionally, the value -1 is accepted, and makes `chroot_with_mount_flags()` behave like regular `chroot()`.
 
 ## Errors
 

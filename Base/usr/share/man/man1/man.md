@@ -17,7 +17,7 @@ the manual page for `man` program itself right now.
 
 ## Sections
 
-The SerenityOS manual is split into the following *sections*, or *chapters*:
+The SerenityOS manual is split into the following *sections* (or *chapters*):
 
 1. Command-line programs
 2. System calls
@@ -41,7 +41,8 @@ To open the documentation for the `mkdir` command:
 ```sh
 $ man 1 mkdir
 ```
-Conversely, to open the documentation about the `mkdir()` syscall:
+
+Conversely, to open the documentation for the `mkdir()` syscall:
 ```sh
 $ man 2 mkdir
 ```

@@ -120,7 +120,7 @@ void SoundPlayerWidget::hide_scope(bool hide)
 void SoundPlayerWidget::open_file(String path)
 {
     if (!path.ends_with(".wav")) {
-        GUI::MessageBox::show("Selected file is not a \".wav\" file!", "Filetype error", GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show("Selected file is not a valid WAV file!", "Filetype error", GUI::MessageBox::Type::Error);
         return;
     }
 
@@ -128,7 +128,7 @@ void SoundPlayerWidget::open_file(String path)
     if (loader->has_error()) {
         GUI::MessageBox::show(
             String::format(
-                "Failed to load WAV file: %s (%s)",
+                "Failed to load WAV file \"%s\": %s",
                 path.characters(),
                 loader->error_string()),
             "Filetype error", GUI::MessageBox::Type::Error);

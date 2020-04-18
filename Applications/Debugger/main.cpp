@@ -149,7 +149,7 @@ void print_help()
 {
     printf("Options:\n"
            "cont - Continue execution\n"
-           "s - step over the current instruction\n"
+           "s - Step over the current instruction\n"
            "regs - Print registers\n"
            "dis [number of instructions] - Print disassembly\n"
            "bp <address/symbol> - Insert a breakpoint\n");

@@ -48,7 +48,7 @@ source. This can be used as an alternative to symlinks or hardlinks.
 
 * `EFAULT`: The `fs_type` or `target` are invalid strings.
 * `EPERM`: The current process does not have superuser privileges.
-* `ENODEV`: The `fs_type` is unrecognized, or the file descriptor to source is not found, or the source doesn't contain a valid filesystem image. Also, this error occurs if `fs_type` is valid, but the file descriptor from `source_fd` is not seekable.
+* `ENODEV`: The `fs_type` is unrecognized, the file descriptor to source is not found, or the source doesn't contain a valid filesystem image. Also, this error occurs if `fs_type` is valid, but the file descriptor from `source_fd` is not seekable.
 * `EBADF`: If the `source_fd` is not valid, and either `fs_type` specifies a file-backed filesystem (and not a pseudo filesystem), or `MS_BIND` is specified in flags.
 
 All of the usual path resolution errors may also occur.

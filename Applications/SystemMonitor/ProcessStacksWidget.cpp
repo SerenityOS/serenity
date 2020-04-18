@@ -56,7 +56,7 @@ void ProcessStacksWidget::refresh()
 {
     auto file = Core::File::construct(String::format("/proc/%d/stack", m_pid));
     if (!file->open(Core::IODevice::ReadOnly)) {
-        m_stacks_editor->set_text(String::format("Unable to open %s", file->filename().characters()));
+        m_stacks_editor->set_text(String::format("Unable to open \"%s\"", file->filename().characters()));
         return;
     }
 

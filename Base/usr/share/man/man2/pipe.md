@@ -13,7 +13,7 @@ int pipe2(int pipefd[2], int flags);
 
 ## Description
 
-`pipe()` creates a new pipe, an anonymous FIFO channel. It returns two new file descriptors in `pipefd`.
+`pipe()` creates a new pipe (an anonymous FIFO channel). It returns two new file descriptors in `pipefd`.
 Any data written to the `pipefd[1]` can then be read from `pipefd[0]`. When `pipefd[1]` is closed, reads
 from `pipefd[0]` will return EOF.
 
@@ -23,8 +23,8 @@ from `pipefd[0]` will return EOF.
 
 ## Examples
 
-The following program creates a pipe, then forks, the child then
-writes some data to the pipe which the parent reads:
+The following program creates a pipe, forks, and then the child
+writes some data to the pipe (which the parent reads):
 
 ```c++
 #include <AK/Assertions.h>

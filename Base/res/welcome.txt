@@ -14,7 +14,7 @@ If you want to explore an option, just click it.
 $ /res/icons/16x16/book.png
 > Register now!
 Registering your copy of Serenity opens the doors to full integration of
-Serenity into your life, your being, and your soul.
+Serenity into your life, being, and soul.
 
 By registering Serenity, you enter into the draw to win a lifetime supply of
 milk, delivered fresh each day by a mystical horse wearing a full tuxedo.
@@ -26,11 +26,11 @@ up to your monitor.
 $ /res/icons/16x16/filetype-html.png
 > Connect to the Internet!
 On the Internet, you can correspond through electronic mail (e-mail), get the
-latest news and financial information, and visit Web sites around the world,
+latest news and financial information, and visit websites around the world,
 most of which will make you really angry.
 
 Serenity includes several internet applications, such as an IRC (Internet relay
-chat) client, 4chan browser, telnet server, and basic utilities like ping.
+chat) client, 4chan browser, telnet server, and basic utilities, such as ping.
 
 Come chat with us today! How bad can it be?
 
