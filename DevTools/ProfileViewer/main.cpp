@@ -91,6 +91,7 @@ int main(int argc, char** argv)
     });
     invert_action->set_checkable(true);
     invert_action->set_checked(false);
+    view_menu.add_action(invert_action);
 
     auto percent_action = GUI::Action::create("Show percentages", { Mod_Ctrl, Key_P }, [&](auto& action) {
         action.set_checked(!action.is_checked());
