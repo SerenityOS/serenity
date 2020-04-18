@@ -143,10 +143,7 @@ Vector<HardwareTimer*> TimeManagement::scan_for_non_periodic_timers()
 
 bool TimeManagement::is_hpet_periodic_mode_allowed()
 {
-    if (!kernel_command_line().contains("hpet"))
-        return true;
-
-    auto hpet_mode = kernel_command_line().get("hpet");
+    auto hpet_mode = kernel_command_line().lookup("hpet").value_or("periodic");
     if (hpet_mode == "periodic")
         return true;
     if (hpet_mode == "nonperiodic")
