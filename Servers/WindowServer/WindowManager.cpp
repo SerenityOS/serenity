@@ -843,8 +843,12 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
 
             // Well okay, let's see if we're hitting the frame or the window inside the frame.
             if (window.rect().contains(event.position())) {
-                if (window.type() == WindowType::Normal && event.type() == Event::MouseDown)
-                    move_to_front_and_make_active(window);
+                if (event.type() == Event::MouseDown) {
+                    if (window.type() == WindowType::Normal)
+                        move_to_front_and_make_active(window);
+                    else if (window.type() == WindowType::Desktop)
+                        set_active_window(&window);
+                }
 
                 hovered_window = &window;
                 if (!window.global_cursor_tracking() && !windows_who_received_mouse_event_due_to_cursor_tracking.contains(&window)) {
@@ -1052,12 +1056,21 @@ void WindowManager::set_highlight_window(Window* window)
         invalidate(*m_highlight_window);
 }
 
+static bool window_type_can_become_active(WindowType type)
+{
+    return type == WindowType::Normal || type == WindowType::Desktop;
+}
+
 void WindowManager::set_active_window(Window* window)
 {
+    if (window) {
+        dbg() << "set_active_window: " << window->title();
+    }
+
     if (window && window->is_blocked_by_modal_window())
         return;
 
-    if (window && window->type() != WindowType::Normal)
+    if (window && !window_type_can_become_active(window->type()))
         return;
 
     if (window == m_active_window)
