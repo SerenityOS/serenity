@@ -90,9 +90,10 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
                 m_client.handle_whois_action(m_client.nick_without_prefix(nick.characters()));
             }));
 
-            m_context_menu->add_separator();
+            RefPtr<GUI::Menu> m_context_control_menu = GUI::Menu::construct("Control");
+            m_context_menu->add_submenu(*m_context_control_menu);
 
-            m_context_menu->add_action(GUI::Action::create("Voice", [&](const GUI::Action&) {
+            m_context_control_menu->add_action(GUI::Action::create("Voice", [&](const GUI::Action&) {
                 auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
@@ -100,81 +101,44 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
                 m_client.handle_voice_user_action(m_name.characters(), m_client.nick_without_prefix(nick.characters()));
             }));
 
-            m_context_menu->add_action(GUI::Action::create("DeVoice", [&](const GUI::Action&) {
+            m_context_control_menu->add_action(GUI::Action::create("DeVoice", [&](const GUI::Action&) {
                 auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
                 m_client.handle_devoice_user_action(m_name.characters(), m_client.nick_without_prefix(nick.characters()));
             }));
 
-            m_context_menu->add_action(GUI::Action::create("Hop", [&](const GUI::Action&) {
+            m_context_control_menu->add_action(GUI::Action::create("Hop", [&](const GUI::Action&) {
                 auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
                 m_client.handle_hop_user_action(m_name.characters(), m_client.nick_without_prefix(nick.characters()));
             }));
 
-            m_context_menu->add_action(GUI::Action::create("DeHop", [&](const GUI::Action&) {
+            m_context_control_menu->add_action(GUI::Action::create("DeHop", [&](const GUI::Action&) {
                 auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
                 m_client.handle_dehop_user_action(m_name.characters(), m_client.nick_without_prefix(nick.characters()));
             }));
 
-            m_context_menu->add_action(GUI::Action::create("Op", [&](const GUI::Action&) {
+            m_context_control_menu->add_action(GUI::Action::create("Op", [&](const GUI::Action&) {
                 auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
                 m_client.handle_op_user_action(m_name.characters(), m_client.nick_without_prefix(nick.characters()));
             }));
 
-            m_context_menu->add_action(GUI::Action::create("DeOp", [&](const GUI::Action&) {
+            m_context_control_menu->add_action(GUI::Action::create("DeOp", [&](const GUI::Action&) {
                 auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
                 m_client.handle_deop_user_action(m_name.characters(), m_client.nick_without_prefix(nick.characters()));
             }));
 
-            m_context_menu->add_separator();
+            m_context_control_menu->add_separator();
 
-            m_context_menu->add_action(GUI::Action::create("User info", [&](const GUI::Action&) {
-                auto nick = channel().member_model()->nick_at(member_view.selection().first());
-                if (nick.is_empty())
-                    return;
-                m_client.handle_ctcp_user_action(m_client.nick_without_prefix(nick.characters()), "USERINFO");
-            }));
-
-            m_context_menu->add_action(GUI::Action::create("Finger", [&](const GUI::Action&) {
-                auto nick = channel().member_model()->nick_at(member_view.selection().first());
-                if (nick.is_empty())
-                    return;
-                m_client.handle_ctcp_user_action(m_client.nick_without_prefix(nick.characters()), "FINGER");
-            }));
-
-            m_context_menu->add_action(GUI::Action::create("Time", [&](const GUI::Action&) {
-                auto nick = channel().member_model()->nick_at(member_view.selection().first());
-                if (nick.is_empty())
-                    return;
-                m_client.handle_ctcp_user_action(m_client.nick_without_prefix(nick.characters()), "TIME");
-            }));
-
-            m_context_menu->add_action(GUI::Action::create("Version", [&](const GUI::Action&) {
-                auto nick = channel().member_model()->nick_at(member_view.selection().first());
-                if (nick.is_empty())
-                    return;
-                m_client.handle_ctcp_user_action(m_client.nick_without_prefix(nick.characters()), "VERSION");
-            }));
-
-            m_context_menu->add_action(GUI::Action::create("Client info", [&](const GUI::Action&) {
-                auto nick = channel().member_model()->nick_at(member_view.selection().first());
-                if (nick.is_empty())
-                    return;
-                m_client.handle_ctcp_user_action(m_client.nick_without_prefix(nick.characters()), "CLIENTINFO");
-            }));
-
-            m_context_menu->add_separator();
-
-            m_context_menu->add_action(GUI::Action::create("Kick", [&](const GUI::Action&) {
+            m_context_control_menu->add_action(GUI::Action::create("Kick", [&](const GUI::Action&) {
                 auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
@@ -183,6 +147,44 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
                 auto input_box = GUI::InputBox::construct("Enter reason:", "Reason");
                 if (input_box->exec() == GUI::InputBox::ExecOK)
                     m_client.handle_kick_user_action(m_name.characters(), m_client.nick_without_prefix(nick.characters()), input_box->text_value());
+            }));
+
+            RefPtr<GUI::Menu> m_context_ctcp_menu = GUI::Menu::construct("CTCP");
+            m_context_menu->add_submenu(*m_context_ctcp_menu);
+
+            m_context_ctcp_menu->add_action(GUI::Action::create("User info", [&](const GUI::Action&) {
+                auto nick = channel().member_model()->nick_at(member_view.selection().first());
+                if (nick.is_empty())
+                    return;
+                m_client.handle_ctcp_user_action(m_client.nick_without_prefix(nick.characters()), "USERINFO");
+            }));
+
+            m_context_ctcp_menu->add_action(GUI::Action::create("Finger", [&](const GUI::Action&) {
+                auto nick = channel().member_model()->nick_at(member_view.selection().first());
+                if (nick.is_empty())
+                    return;
+                m_client.handle_ctcp_user_action(m_client.nick_without_prefix(nick.characters()), "FINGER");
+            }));
+
+            m_context_ctcp_menu->add_action(GUI::Action::create("Time", [&](const GUI::Action&) {
+                auto nick = channel().member_model()->nick_at(member_view.selection().first());
+                if (nick.is_empty())
+                    return;
+                m_client.handle_ctcp_user_action(m_client.nick_without_prefix(nick.characters()), "TIME");
+            }));
+
+            m_context_ctcp_menu->add_action(GUI::Action::create("Version", [&](const GUI::Action&) {
+                auto nick = channel().member_model()->nick_at(member_view.selection().first());
+                if (nick.is_empty())
+                    return;
+                m_client.handle_ctcp_user_action(m_client.nick_without_prefix(nick.characters()), "VERSION");
+            }));
+
+            m_context_ctcp_menu->add_action(GUI::Action::create("Client info", [&](const GUI::Action&) {
+                auto nick = channel().member_model()->nick_at(member_view.selection().first());
+                if (nick.is_empty())
+                    return;
+                m_client.handle_ctcp_user_action(m_client.nick_without_prefix(nick.characters()), "CLIENTINFO");
             }));
 
             m_context_menu->popup(event.screen_position());
