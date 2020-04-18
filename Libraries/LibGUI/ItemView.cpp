@@ -261,8 +261,8 @@ void ItemView::second_paint_event(PaintEvent& event)
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
     auto rubber_band_rect = Gfx::Rect::from_two_points(m_rubber_band_origin, m_rubber_band_current);
-    painter.fill_rect(rubber_band_rect, parent_widget()->palette().rubber_band_fill());
-    painter.draw_rect(rubber_band_rect, parent_widget()->palette().rubber_band_border());
+    painter.fill_rect(rubber_band_rect, palette().rubber_band_fill());
+    painter.draw_rect(rubber_band_rect, palette().rubber_band_border());
 }
 
 void ItemView::paint_event(PaintEvent& event)
