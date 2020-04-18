@@ -35,6 +35,7 @@ namespace Bindings {
 class WindowObject final : public JS::GlobalObject {
 public:
     explicit WindowObject(Window&);
+    virtual void initialize() override;
     virtual ~WindowObject() override;
 
     Window& impl() { return *m_impl; }

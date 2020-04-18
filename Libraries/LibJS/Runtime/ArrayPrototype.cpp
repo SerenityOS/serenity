@@ -33,12 +33,13 @@
 #include <LibJS/Runtime/ArrayPrototype.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
 
 ArrayPrototype::ArrayPrototype()
-    : Object(interpreter().object_prototype())
+    : Object(interpreter().global_object().object_prototype())
 {
     put_native_function("filter", filter, 1);
     put_native_function("forEach", for_each, 1);

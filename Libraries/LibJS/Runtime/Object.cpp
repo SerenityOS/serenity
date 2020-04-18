@@ -38,9 +38,9 @@
 
 namespace JS {
 
-Object* Object::create_empty(Interpreter& interpreter, GlobalObject&)
+Object* Object::create_empty(Interpreter&, GlobalObject& global_object)
 {
-    return interpreter.heap().allocate<Object>(interpreter.object_prototype());
+    return global_object.heap().allocate<Object>(global_object.object_prototype());
 }
 
 Object::Object(Object* prototype)

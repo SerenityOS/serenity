@@ -28,6 +28,7 @@
 #include <AK/Function.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
@@ -44,7 +45,7 @@ CanvasRenderingContext2DWrapper* wrap(JS::Heap& heap, CanvasRenderingContext2D& 
 }
 
 CanvasRenderingContext2DWrapper::CanvasRenderingContext2DWrapper(CanvasRenderingContext2D& impl)
-    : Wrapper(*interpreter().object_prototype())
+    : Wrapper(*interpreter().global_object().object_prototype())
     , m_impl(impl)
 {
     put_native_property("fillStyle", fill_style_getter, fill_style_setter);

@@ -36,7 +36,7 @@ namespace JS {
 Array* Array::create(GlobalObject& global_object)
 {
     auto& interpreter = global_object.interpreter();
-    return interpreter.heap().allocate<Array>(*interpreter.array_prototype());
+    return interpreter.heap().allocate<Array>(*global_object.array_prototype());
 }
 
 Array::Array(Object& prototype)

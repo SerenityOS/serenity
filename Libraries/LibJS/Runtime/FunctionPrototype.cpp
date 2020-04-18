@@ -31,12 +31,13 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/FunctionPrototype.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/ScriptFunction.h>
 
 namespace JS {
 
 FunctionPrototype::FunctionPrototype()
-    : Object(interpreter().object_prototype())
+    : Object(interpreter().global_object().object_prototype())
 {
 }
 

@@ -27,13 +27,14 @@
 #include <AK/FlyString.h>
 #include <AK/Function.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/MathObject.h>
 #include <math.h>
 
 namespace JS {
 
 MathObject::MathObject()
-    : Object(interpreter().object_prototype())
+    : Object(interpreter().global_object().object_prototype())
 {
     put_native_function("abs", abs, 1);
     put_native_function("random", random);

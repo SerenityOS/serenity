@@ -31,6 +31,7 @@
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/DatePrototype.h>
 #include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -48,7 +49,7 @@ static Date* this_date_from_interpreter(Interpreter& interpreter)
 }
 
 DatePrototype::DatePrototype()
-    : Object(interpreter().object_prototype())
+    : Object(interpreter().global_object().object_prototype())
 {
     put_native_function("getDate", get_date);
     put_native_function("getDay", get_day);

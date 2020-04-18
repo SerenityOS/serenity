@@ -29,14 +29,15 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ArrayConstructor.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Shape.h>
 
 namespace JS {
 
 ArrayConstructor::ArrayConstructor()
-    : NativeFunction("Array", *interpreter().function_prototype())
+    : NativeFunction("Array", *interpreter().global_object().function_prototype())
 {
-    put("prototype", interpreter().array_prototype());
+    put("prototype", interpreter().global_object().array_prototype());
     put("length", Value(1));
 }
 

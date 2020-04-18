@@ -31,9 +31,9 @@
 
 namespace JS {
 
-NativeFunction* NativeFunction::create(Interpreter& interpreter, GlobalObject&, const FlyString& name, AK::Function<Value(Interpreter&)> function)
+NativeFunction* NativeFunction::create(Interpreter&, GlobalObject& global_object, const FlyString& name, AK::Function<Value(Interpreter&)> function)
 {
-    return interpreter.heap().allocate<NativeFunction>(name, move(function), *interpreter.function_prototype());
+    return global_object.heap().allocate<NativeFunction>(name, move(function), *global_object.function_prototype());
 }
 
 NativeFunction::NativeFunction(Object& prototype)

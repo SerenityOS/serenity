@@ -25,6 +25,7 @@
  */
 
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Bindings/EventWrapper.h>
 #include <LibWeb/Bindings/MouseEventWrapper.h>
 #include <LibWeb/DOM/MouseEvent.h>
@@ -40,7 +41,7 @@ EventWrapper* wrap(JS::Heap& heap, Event& event)
 }
 
 EventWrapper::EventWrapper(Event& event)
-    : Wrapper(*interpreter().object_prototype())
+    : Wrapper(*interpreter().global_object().object_prototype())
     , m_event(event)
 {
 }

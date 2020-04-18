@@ -26,6 +26,7 @@
 
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Bindings/XMLHttpRequestConstructor.h>
 #include <LibWeb/Bindings/XMLHttpRequestWrapper.h>
@@ -35,7 +36,7 @@ namespace Web {
 namespace Bindings {
 
 XMLHttpRequestConstructor::XMLHttpRequestConstructor()
-    : NativeFunction(*interpreter().function_prototype())
+    : NativeFunction(*interpreter().global_object().function_prototype())
 {
     put("length", JS::Value(1));
 }

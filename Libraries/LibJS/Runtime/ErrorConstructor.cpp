@@ -27,13 +27,14 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/ErrorConstructor.h>
+#include <LibJS/Runtime/GlobalObject.h>
 
 namespace JS {
 
 ErrorConstructor::ErrorConstructor()
-    : NativeFunction("Error", *interpreter().function_prototype())
+    : NativeFunction("Error", *interpreter().global_object().function_prototype())
 {
-    put("prototype", interpreter().error_prototype());
+    put("prototype", interpreter().global_object().error_prototype());
     put("length", Value(1));
 }
 
@@ -56,9 +57,9 @@ Value ErrorConstructor::construct(Interpreter& interpreter)
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName)                                        \
     ConstructorName::ConstructorName()                                                                               \
-        : NativeFunction(*interpreter().function_prototype())                                                        \
+        : NativeFunction(*interpreter().global_object().function_prototype())                                        \
     {                                                                                                                \
-        put("prototype", interpreter().snake_name##_prototype());                                                    \
+        put("prototype", interpreter().global_object().snake_name##_prototype());                                    \
         put("length", Value(1));                                                                                     \
     }                                                                                                                \
     ConstructorName::~ConstructorName() {}                                                                           \

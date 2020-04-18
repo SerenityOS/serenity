@@ -26,6 +26,7 @@
 
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/StringConstructor.h>
 #include <LibJS/Runtime/StringObject.h>
 #include <math.h>
@@ -33,9 +34,9 @@
 namespace JS {
 
 StringConstructor::StringConstructor()
-    : NativeFunction("String", *interpreter().function_prototype())
+    : NativeFunction("String", *interpreter().global_object().function_prototype())
 {
-    put("prototype", interpreter().string_prototype());
+    put("prototype", interpreter().global_object().string_prototype());
     put("length", Value(1));
 }
 
