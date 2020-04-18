@@ -864,9 +864,10 @@ VM::MatchState::MatchState(size_t instructionp, size_t stringp, StringView view)
 {
 }
 
-VM::MatchResult VM::match(StringView view, size_t max_matches_result, size_t match_groups, size_t min_length, bool search) const
+VM::MatchResult VM::match(StringView view, size_t max_matches_result, size_t match_groups, size_t min_length, int flags) const
 {
     regoff_t match_start;
+    size_t match_count { 0 };
     bool match;
 
     MatchState state { view };
@@ -877,41 +878,7 @@ VM::MatchResult VM::match(StringView view, size_t max_matches_result, size_t mat
         state.m_matches.append({ -1, -1, 0 });
     for (size_t j = 0; j < match_groups; ++j)
         state.m_left.append(-1);
-    for (size_t i = 0; i < view.length(); ++i) {
-        if (min_length && min_length > view.length() - i)
-            break;
 
-        state.m_stringp = i;
-        state.m_instructionp = 0;
-        match_start = i;
-        match = match_recurse(state);
-
-        if (match || !search)
-            break;
-    }
-
-    if (!match || (!search && state.m_stringp < view.length()))
-        return { 0, {}, state.m_ops };
-
-    if (state.m_matches.size())
-        state.m_matches.at(0) = { match_start, (regoff_t)state.m_stringp, 0 };
-
-    return { 1, move(state.m_matches), state.m_ops };
-}
-
-VM::MatchResult VM::match_all(StringView view, size_t max_matches_result, size_t match_groups, size_t min_length) const
-{
-    regoff_t match_start;
-    size_t match_count { 0 };
-
-    MatchState state { view };
-    state.m_matches.ensure_capacity(match_groups + 1);
-    state.m_left.ensure_capacity(match_groups);
-
-    for (size_t j = 0; j < max_matches_result; ++j)
-        state.m_matches.append({ -1, -1, 0 });
-    for (size_t j = 0; j < match_groups; ++j)
-        state.m_left.append(-1);
     for (size_t i = 0; i < view.length(); ++i) {
         if (min_length && min_length > view.length() - i)
             break;
@@ -921,21 +888,31 @@ VM::MatchResult VM::match_all(StringView view, size_t max_matches_result, size_t
         state.m_stringp = i;
         state.m_instructionp = 0;
         match_start = i;
-        auto match = match_recurse(state);
+        match = match_recurse(state);
 
         if (match) {
             ++match_count;
 
-            if (state.m_matches_offset < state.m_matches.size())
-                state.m_matches.at(state.m_matches_offset) = { match_start, (regoff_t)state.m_stringp, 1 };
+            if (flags & REG_MATCHALL) {
+                if (state.m_matches_offset < state.m_matches.size())
+                    state.m_matches.at(state.m_matches_offset) = { match_start, (regoff_t)state.m_stringp, 1 };
 
-            i = state.m_stringp - 1;
-            state.m_matches_offset += match_groups + 1;
+                i = state.m_stringp - 1;
+                state.m_matches_offset += match_groups + 1;
 
-#ifdef REGEX_DEBUG
-            printf("[VM] match_all: Matched... from %lu to %lu: %s\n", match_start, state.m_stringp, String(view.substring_view(match_start, state.m_stringp - match_start)).characters());
-#endif
+                continue;
+
+            } else if (!(flags & REG_SEARCH) && state.m_stringp < view.length())
+                return { 0, {}, state.m_ops };
+
+            if (state.m_matches.size()) {
+                state.m_matches.at(0) = { match_start, (regoff_t)state.m_stringp, 0 };
+            }
+
+            break;
         }
+        if (!((flags & REG_SEARCH) || (flags & REG_MATCHALL)))
+            break;
     }
 
     return { match_count, move(state.m_matches), state.m_ops };
@@ -1388,11 +1365,7 @@ int regexec(const regex_t* preg, const char* string, size_t nmatch, regmatch_t p
 
     regex::VM::MatchResult result;
 
-    if (eflags & REG_MATCHALL) {
-        result = vm->match_all(string, nmatch, preg->re_nsub, preg->re_minlength);
-    } else {
-        result = vm->match(string, nmatch, preg->re_nsub, preg->re_minlength, eflags & REG_SEARCH);
-    }
+    result = vm->match(string, nmatch, preg->re_nsub, preg->re_minlength, eflags);
 
     if (result.m_match_count) {
         auto size = result.m_matches.size();

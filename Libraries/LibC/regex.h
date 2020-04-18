@@ -348,8 +348,7 @@ public:
         size_t m_ops { 0 };
     };
 
-    MatchResult match(const StringView view, size_t max_matches_result, size_t match_groups, size_t min_length, bool search) const;
-    MatchResult match_all(const StringView view, size_t max_matches_result, size_t match_groups, size_t min_length) const;
+    MatchResult match(const StringView view, size_t max_matches_result, size_t match_groups, size_t min_length, int flags) const;
     const Vector<StackValue>& bytes() const { return m_bytecode; }
 
 private:
