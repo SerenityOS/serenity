@@ -664,8 +664,11 @@ NonnullRefPtr<ReturnStatement> Parser::parse_return_statement()
         return create_ast_node<ReturnStatement>(nullptr);
 
     if (match_expression()) {
-        return create_ast_node<ReturnStatement>(parse_expression(0));
+        auto expression = parse_expression(0);
+        consume_or_insert_semicolon();
+        return create_ast_node<ReturnStatement>(move(expression));
     }
+
     consume_or_insert_semicolon();
     return create_ast_node<ReturnStatement>(nullptr);
 }

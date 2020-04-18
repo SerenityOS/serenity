@@ -5,6 +5,25 @@ load("test-common.js");
  * If this file produces syntax errors, something is wrong.
  */
 
+function bar() {
+    // https://github.com/SerenityOS/serenity/issues/1829
+    if (1)
+        return 1;
+    else
+        return 0;
+
+    if (1)
+        return 1
+    else
+        return 0
+
+    if (1)
+        return 1
+    else
+        return 0;
+    
+}
+
 function foo() {
     for (var i = 0; i < 4; i++) {
         break // semicolon inserted here
