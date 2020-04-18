@@ -865,7 +865,7 @@ void Parser::reset()
     m_parser_state.m_compilation_flags = 0;
 }
 
-VM::MatchResult VM::match(const StringView view, const size_t max_matches_result, const size_t match_groups, const size_t min_length, const u8 match_flags) const
+MatchResult Matcher::match(const StringView view, const size_t max_matches_result, const size_t match_groups, const size_t min_length, const u8 match_flags) const
 {
     ptrdiff_t match_start;
     size_t match_count { 0 };
@@ -920,7 +920,7 @@ VM::MatchResult VM::match(const StringView view, const size_t max_matches_result
     return { match_count, move(state.m_matches), state.m_ops };
 }
 
-const StackValue VM::get(MatchState& state, size_t offset) const
+const StackValue Matcher::get(MatchState& state, size_t offset) const
 {
     if (state.m_instructionp + offset < m_bytecode.size())
         return m_bytecode.at(state.m_instructionp + offset);
@@ -928,14 +928,14 @@ const StackValue VM::get(MatchState& state, size_t offset) const
         return StackValue(OpCode::Exit);
 }
 
-const StackValue VM::get_and_increment(MatchState& state, size_t value) const
+const StackValue Matcher::get_and_increment(MatchState& state, size_t value) const
 {
     auto& current = get(state);
     state.m_instructionp += value;
     return current;
 }
 
-bool VM::match_recurse(MatchState& state, size_t recursion_level) const
+bool Matcher::match_recurse(MatchState& state, size_t recursion_level) const
 {
     if (recursion_level > REG_MAX_RECURSE)
         return false;

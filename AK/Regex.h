@@ -302,25 +302,25 @@ private:
     Optional<ParserState> m_saved_state;
 };
 
-class VM {
+struct Match {
+    ptrdiff_t rm_so;    // byte offset from start of string to start of substring
+    ptrdiff_t rm_eo;    // byte offset from start of string of the first character after the end of substring
+    size_t match_count; // number of matches, normally 1, could be greater if REG_NEWLINE or REG_MATCHALL set.
+    StringView view;    // view of the match into the string
+};
+
+struct MatchResult {
+    size_t m_match_count { 0 };
+    Vector<Match> m_matches {};
+    size_t m_ops { 0 };
+};
+
+class Matcher {
 public:
-    explicit VM(const Vector<StackValue>& bytecode, const String&& pattern, const u8 compilation_flags)
+    explicit Matcher(const Vector<StackValue>& bytecode, const String&& pattern, const u8 compilation_flags)
         : m_bytecode(bytecode)
         , m_pattern(move(pattern))
         , m_compilation_flags(compilation_flags) {};
-
-    struct Match {
-        ptrdiff_t rm_so;    // byte offset from start of string to start of substring
-        ptrdiff_t rm_eo;    // byte offset from start of string of the first character after the end of substring
-        size_t match_count; // number of matches, normally 1, could be greater if REG_NEWLINE or REG_MATCHALL set.
-        StringView view;    // view of the match into the string
-    };
-
-    struct MatchResult {
-        size_t m_match_count { 0 };
-        Vector<Match> m_matches {};
-        size_t m_ops { 0 };
-    };
 
     MatchResult match(const StringView view, const size_t max_matches_result, const size_t match_groups, const size_t min_length, const u8 match_flags) const;
     const Vector<StackValue>& bytes() const { return m_bytecode; }

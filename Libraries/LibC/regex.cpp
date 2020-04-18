@@ -84,24 +84,22 @@ int regcomp(regex_t* preg, const char* pattern, int cflags)
     printf("Minlength for pattern '%s' = %lu\n", pattern, preg->re_minlength);
 #endif
 
-    preg->vm = make<AK::regex::VM>(result.m_bytes, move(pattern_str), (u8)cflags);
+    preg->matcher = make<AK::regex::Matcher>(result.m_bytes, move(pattern_str), (u8)cflags);
     return REG_NOERR;
 }
 
 
 int regexec(const regex_t* preg, const char* string, size_t nmatch, regmatch_t pmatch[], int eflags)
 {
-    if (!preg->vm || preg->re_pat_err) {
+    if (!preg->matcher || preg->re_pat_err) {
         if (preg->re_pat_err)
             return preg->re_pat_err;
         return REG_BADPAT;
     }
 
-    auto& vm = preg->vm;
-
-    AK::regex::VM::MatchResult result;
-
-    result = vm->match(string, nmatch, preg->re_nsub, preg->re_minlength, eflags);
+    AK::regex::MatchResult result;
+    auto& matcher = preg->matcher;
+    result = matcher->match(string, nmatch, preg->re_nsub, preg->re_minlength, eflags);
 
     if (result.m_match_count) {
         auto size = result.m_matches.size();
@@ -226,6 +224,6 @@ void regfree(regex_t* preg)
     preg->re_nsub = 0;
     preg->cflags = 0;
     preg->eflags = 0;
-    preg->vm.clear();
+    preg->matcher.clear();
 }
 }

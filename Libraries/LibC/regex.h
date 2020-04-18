@@ -32,7 +32,7 @@
 
 namespace AK {
 namespace regex {
-class VM;
+class Matcher;
 class Token;
 }
 }
@@ -63,7 +63,7 @@ struct regex_t {
     u8 cflags;
     u8 eflags;
     size_t re_minlength;
-    OwnPtr<AK::regex::VM> vm;
+    OwnPtr<AK::regex::Matcher> matcher;
     size_t re_pat_errpos { 0 };
     ReError re_pat_err;
     String re_pat;
