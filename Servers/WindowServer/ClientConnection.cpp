@@ -446,6 +446,10 @@ OwnPtr<Messages::WindowServer::CreateWindowResponse> ClientConnection::handle(co
     window->set_title(message.title());
     if (!message.fullscreen())
         window->set_rect(message.rect());
+    if (window->type() == WindowType::Desktop) {
+        window->set_rect(Screen::the().rect());
+        window->recalculate_rect();
+    }
     window->set_show_titlebar(message.show_titlebar());
     window->set_opacity(message.opacity());
     window->set_size_increment(message.size_increment());
