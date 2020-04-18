@@ -53,6 +53,7 @@ void GlobalObject::add_constructor(const FlyString& property_name, ConstructorTy
 }
 
 GlobalObject::GlobalObject()
+    : Object(interpreter().object_prototype())
 {
     put_native_function("gc", gc);
     put_native_function("isNaN", is_nan, 1);

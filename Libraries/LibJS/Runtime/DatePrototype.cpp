@@ -48,6 +48,7 @@ static Date* this_date_from_interpreter(Interpreter& interpreter)
 }
 
 DatePrototype::DatePrototype()
+    : Object(interpreter().object_prototype())
 {
     put_native_function("getDate", get_date);
     put_native_function("getDay", get_day);

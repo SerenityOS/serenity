@@ -31,7 +31,7 @@
 namespace Web {
 namespace Bindings {
 
-class CanvasRenderingContext2DWrapper : public Wrapper {
+class CanvasRenderingContext2DWrapper final : public Wrapper {
 public:
     explicit CanvasRenderingContext2DWrapper(CanvasRenderingContext2D&);
     virtual ~CanvasRenderingContext2DWrapper() override;

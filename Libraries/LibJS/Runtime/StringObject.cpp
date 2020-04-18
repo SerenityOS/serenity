@@ -41,9 +41,9 @@ StringObject* StringObject::create(GlobalObject& global_object, PrimitiveString&
 }
 
 StringObject::StringObject(PrimitiveString& string, Object& prototype)
-    : m_string(string)
+    : Object(&prototype)
+    , m_string(string)
 {
-    set_prototype(&prototype);
 }
 
 StringObject::~StringObject()

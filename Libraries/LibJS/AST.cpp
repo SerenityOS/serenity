@@ -124,7 +124,7 @@ Value CallExpression::execute(Interpreter& interpreter) const
     Object* new_object = nullptr;
     Value result;
     if (is_new_expression()) {
-        new_object = interpreter.heap().allocate<Object>();
+        new_object = Object::create_empty(interpreter, interpreter.global_object());
         auto prototype = function.get("prototype");
         if (prototype.has_value() && prototype.value().is_object())
             new_object->set_prototype(&prototype.value().as_object());
@@ -901,7 +901,7 @@ void ExpressionStatement::dump(int indent) const
 
 Value ObjectExpression::execute(Interpreter& interpreter) const
 {
-    auto object = interpreter.heap().allocate<Object>();
+    auto* object = Object::create_empty(interpreter, interpreter.global_object());
     for (auto it : m_properties) {
         auto value = it.value->execute(interpreter);
         if (interpreter.exception())

@@ -30,7 +30,8 @@
 namespace JS {
 
 NativeProperty::NativeProperty(AK::Function<Value(Interpreter&)> getter, AK::Function<void(Interpreter&, Value)> setter)
-    : m_getter(move(getter))
+    : Object(nullptr)
+    , m_getter(move(getter))
     , m_setter(move(setter))
 {
 }

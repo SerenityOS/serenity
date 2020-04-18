@@ -38,6 +38,7 @@
 namespace JS {
 
 ArrayPrototype::ArrayPrototype()
+    : Object(interpreter().object_prototype())
 {
     put_native_function("filter", filter, 1);
     put_native_function("forEach", for_each, 1);

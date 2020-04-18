@@ -38,10 +38,15 @@
 
 namespace JS {
 
-Object::Object()
+Object* Object::create_empty(Interpreter& interpreter, GlobalObject&)
+{
+    return interpreter.heap().allocate<Object>(interpreter.object_prototype());
+}
+
+Object::Object(Object* prototype)
 {
     m_shape = interpreter().empty_object_shape();
-    m_shape->set_prototype_without_transition(interpreter().object_prototype());
+    set_prototype(prototype);
 }
 
 Object::~Object()
@@ -60,6 +65,8 @@ const Object* Object::prototype() const
 
 void Object::set_prototype(Object* new_prototype)
 {
+    if (prototype() == new_prototype)
+        return;
     m_shape = m_shape->create_prototype_transition(new_prototype);
 }
 

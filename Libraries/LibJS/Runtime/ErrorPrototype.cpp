@@ -35,6 +35,7 @@
 namespace JS {
 
 ErrorPrototype::ErrorPrototype()
+    : Object(interpreter().object_prototype())
 {
     put_native_property("name", name_getter, name_setter);
     put_native_property("message", message_getter, nullptr);
@@ -103,8 +104,8 @@ Value ErrorPrototype::to_string(Interpreter& interpreter)
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
     PrototypeName::PrototypeName()                                            \
+        : Object(interpreter().error_prototype())                             \
     {                                                                         \
-        set_prototype(interpreter().error_prototype());                       \
     }                                                                         \
     PrototypeName::~PrototypeName() {}                                        \
     const char* PrototypeName::class_name() const { return #PrototypeName; }

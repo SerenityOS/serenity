@@ -38,7 +38,9 @@ namespace JS {
 
 class Object : public Cell {
 public:
-    Object();
+    static Object* create_empty(Interpreter&, GlobalObject&);
+
+    explicit Object(Object* prototype);
     virtual ~Object();
 
     Shape& shape() { return *m_shape; }

@@ -35,6 +35,7 @@ namespace Web {
 namespace Bindings {
 
 XMLHttpRequestPrototype::XMLHttpRequestPrototype()
+    : Object(interpreter().object_prototype())
 {
     put_native_function("open", open, 2);
     put_native_function("send", send, 0);

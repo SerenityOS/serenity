@@ -44,7 +44,8 @@ CanvasRenderingContext2DWrapper* wrap(JS::Heap& heap, CanvasRenderingContext2D& 
 }
 
 CanvasRenderingContext2DWrapper::CanvasRenderingContext2DWrapper(CanvasRenderingContext2D& impl)
-    : m_impl(impl)
+    : Wrapper(*interpreter().object_prototype())
+    , m_impl(impl)
 {
     put_native_property("fillStyle", fill_style_getter, fill_style_setter);
     put_native_function("fillRect", fill_rect, 4);
