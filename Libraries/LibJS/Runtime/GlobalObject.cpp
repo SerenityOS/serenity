@@ -72,6 +72,7 @@ GlobalObject::GlobalObject()
 void GlobalObject::initialize()
 {
     // These are done first since other prototypes depend on their presence.
+    m_empty_object_shape = heap().allocate<Shape>();
     m_object_prototype = heap().allocate<ObjectPrototype>();
     m_function_prototype = heap().allocate<FunctionPrototype>();
 
@@ -118,6 +119,8 @@ GlobalObject::~GlobalObject()
 void GlobalObject::visit_children(Visitor& visitor)
 {
     Object::visit_children(visitor);
+
+    visitor.visit(m_empty_object_shape);
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
     visitor.visit(m_##snake_name##_constructor);

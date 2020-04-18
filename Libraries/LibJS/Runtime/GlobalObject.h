@@ -37,6 +37,8 @@ public:
 
     virtual ~GlobalObject() override;
 
+    Shape* empty_object_shape() { return m_empty_object_shape; }
+
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName)            \
     ConstructorName* snake_name##_constructor() { return m_##snake_name##_constructor; } \
     Object* snake_name##_prototype() { return m_##snake_name##_prototype; }
@@ -54,6 +56,8 @@ private:
 
     template<typename ConstructorType>
     void add_constructor(const FlyString& property_name, ConstructorType*&, Object& prototype);
+
+    Shape* m_empty_object_shape { nullptr };
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
     ConstructorName* m_##snake_name##_constructor { nullptr };                \

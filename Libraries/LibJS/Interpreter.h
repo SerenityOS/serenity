@@ -139,8 +139,6 @@ public:
         return m_call_stack.last().this_value;
     }
 
-    Shape* empty_object_shape() { return m_empty_object_shape; }
-
     Exception* exception()
     {
         return m_exception;
@@ -171,7 +169,6 @@ private:
     Vector<ScopeFrame> m_scope_stack;
     Vector<CallFrame> m_call_stack;
 
-    Shape* m_empty_object_shape { nullptr };
     Object* m_global_object { nullptr };
 
     Exception* m_exception { nullptr };

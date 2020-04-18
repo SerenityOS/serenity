@@ -40,7 +40,6 @@ namespace JS {
 Interpreter::Interpreter()
     : m_heap(*this)
 {
-    m_empty_object_shape = heap().allocate<Shape>();
 }
 
 Interpreter::~Interpreter()
@@ -161,7 +160,6 @@ Optional<Value> Interpreter::get_variable(const FlyString& name)
 
 void Interpreter::gather_roots(Badge<Heap>, HashTable<Cell*>& roots)
 {
-    roots.set(m_empty_object_shape);
     roots.set(m_global_object);
     roots.set(m_exception);
 
