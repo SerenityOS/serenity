@@ -70,11 +70,7 @@ void DirectoryView::handle_activation(const GUI::ModelIndex& index)
         return;
     }
 
-    URL url;
-    url.set_protocol("file");
-    url.set_path(path);
-
-    GUI::DesktopServices::open(url);
+    GUI::DesktopServices::open(URL::create_with_file_protocol(path));
 }
 
 DirectoryView::DirectoryView()
