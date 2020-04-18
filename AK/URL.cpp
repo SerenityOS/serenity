@@ -287,4 +287,12 @@ bool URL::compute_validity() const
     return true;
 }
 
+URL URL::create_with_file_protocol(const String& path)
+{
+    URL url;
+    url.set_protocol("file");
+    url.set_path(path);
+    return url;
+}
+
 }

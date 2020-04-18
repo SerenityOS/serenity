@@ -65,6 +65,8 @@ public:
 
     URL complete_url(const String&) const;
 
+    static URL create_with_file_protocol(const String& path);
+
 private:
     bool parse(const StringView&);
     bool compute_validity() const;
