@@ -381,6 +381,55 @@ signed int c; // Doesn't omit "signed".
 
 ### Classes
 
+[](#structs-vs-classes) For types with methods, prefer `class` over `struct`.
+
+* For classes, make public getters and setters, keep members private with `m_` prefix.
+* For structs, let everything be public and skip the `m_` prefix.
+
+###### Right:
+
+```cpp
+struct Thingy {
+    String name;
+    int frob_count { 0 };
+};
+
+class Doohickey {
+public:
+    const String& name() const { return m_name; }
+    int frob_count() const { return m_frob_count; }
+
+    void jam();
+
+private;
+    String m_name;
+    int m_frob_count { 0 };
+}
+```
+
+###### Wrong:
+
+```cpp
+struct Thingy {
+public:
+    String m_name;
+    int frob_count() const { return m_frob_count; }
+
+private:
+    int m_frob_count { 0 };
+}
+
+class Doohickey {
+public:
+    const String& name() const { return this->name; }
+
+    void jam();
+
+    String name;
+    int frob_count { 0 };
+};
+```
+
 [](#classes-explicit) Use a constructor to do an implicit conversion when the argument is reasonably thought of as a type conversion and the type conversion is fast. Otherwise, use the explicit keyword or a function returning the type. This only applies to single argument constructors.
 
 ###### Right:
