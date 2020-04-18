@@ -75,8 +75,8 @@ struct regex_t {
 typedef ptrdiff_t regoff_t;
 
 struct regmatch_t {
-    regoff_t rm_so; // byte offset from start of string to start of substring
-    regoff_t rm_eo; // byte offset from start of string of the first character after the end of substring
+    regoff_t rm_so;     // byte offset from start of string to start of substring
+    regoff_t rm_eo;     // byte offset from start of string of the first character after the end of substring
     size_t match_count; // number of matches, normally 1, could be greater if REG_NEWLINE or REG_MATCHALL set.
 };
 
@@ -94,7 +94,6 @@ struct regmatch_t {
 #define REG_STATS (REG_NOTBOL << 4)    // Print stats for a match to stdout
 
 #define REG_MAX_RECURSE 5000
-
 
 int regcomp(regex_t*, const char*, int);
 int regexec(const regex_t*, const char*, size_t, regmatch_t[], int);
@@ -339,10 +338,10 @@ private:
 
 class VM {
 public:
-    explicit VM(const Vector<StackValue>& bytecode, const String&& pattern, const int flags)
+    explicit VM(const Vector<StackValue>& bytecode, const String&& pattern, const int cflags)
         : m_bytecode(bytecode)
         , m_pattern(move(pattern))
-        , m_flags(flags) {};
+        , m_cflags(cflags) {};
 
     struct MatchResult {
         size_t m_match_count { 0 };
@@ -367,21 +366,9 @@ private:
         size_t m_matches_offset { 0 };
         Vector<regmatch_t> m_matches;
         Vector<regoff_t> m_left;
+        int m_eflags;
 
         MatchState() = default;
-        MatchState(StringView view)
-            : m_view(view) {};
-        MatchState(size_t instructionp, size_t stringp, StringView view);
-        MatchState(const MatchState& other)
-            : m_view(other.m_view)
-            , m_instructionp(other.m_instructionp)
-            , m_stringp(other.m_stringp)
-            , m_ops(other.m_ops)
-            , m_matches_offset(other.m_matches_offset)
-            , m_matches(other.m_matches)
-            , m_left(other.m_left)
-        {
-        }
     };
 
     bool match_recurse(MatchState& state, size_t recursion_level = 0) const;
@@ -390,6 +377,6 @@ private:
 
     const Vector<StackValue> m_bytecode;
     const String& m_pattern;
-    const int m_flags { 0 };
+    const int m_cflags { 0 };
 };
 }

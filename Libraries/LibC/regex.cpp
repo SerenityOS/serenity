@@ -864,22 +864,17 @@ void Parser::reset()
     m_parser_state.m_cflags = 0;
 }
 
-VM::MatchState::MatchState(size_t instructionp, size_t stringp, StringView view)
-    : m_view(view)
-    , m_instructionp(instructionp)
-    , m_stringp(stringp)
-{
-}
-
-VM::MatchResult VM::match(StringView view, size_t max_matches_result, size_t match_groups, size_t min_length, int flags) const
+VM::MatchResult VM::match(StringView view, size_t max_matches_result, size_t match_groups, size_t min_length, int eflags) const
 {
     regoff_t match_start;
     size_t match_count { 0 };
     bool match;
 
-    MatchState state { view };
+    MatchState state;
+    state.m_view = view;
     state.m_matches.ensure_capacity(max_matches_result);
     state.m_left.ensure_capacity(match_groups);
+    state.m_eflags = eflags;
 
     for (size_t j = 0; j < max_matches_result; ++j)
         state.m_matches.append({ -1, -1, 0 });
@@ -900,7 +895,7 @@ VM::MatchResult VM::match(StringView view, size_t max_matches_result, size_t mat
         if (match) {
             ++match_count;
 
-            if (flags & REG_MATCHALL) {
+            if (eflags & REG_MATCHALL) {
                 if (state.m_matches_offset < state.m_matches.size())
                     state.m_matches.at(state.m_matches_offset) = { match_start, (regoff_t)state.m_stringp, 1 };
 
@@ -909,7 +904,7 @@ VM::MatchResult VM::match(StringView view, size_t max_matches_result, size_t mat
 
                 continue;
 
-            } else if (!(flags & REG_SEARCH) && state.m_stringp < view.length())
+            } else if (!(eflags & REG_SEARCH) && state.m_stringp < view.length())
                 return { 0, {}, state.m_ops };
 
             if (state.m_matches.size()) {
@@ -918,7 +913,7 @@ VM::MatchResult VM::match(StringView view, size_t max_matches_result, size_t mat
 
             break;
         }
-        if (!((flags & REG_SEARCH) || (flags & REG_MATCHALL)))
+        if (!((eflags & REG_SEARCH) || (eflags & REG_MATCHALL)))
             break;
     }
 
@@ -1038,7 +1033,7 @@ bool VM::match_recurse(MatchState& state, size_t recursion_level) const
                     auto ch1 = ch;
                     auto ch2 = state.m_view[state.m_stringp];
 
-                    if (m_flags & REG_ICASE) {
+                    if (m_cflags & REG_ICASE) {
                         ch1 = tolower(ch1);
                         ch2 = tolower(ch2);
                     }
@@ -1072,7 +1067,7 @@ bool VM::match_recurse(MatchState& state, size_t recursion_level) const
                     auto str_view1 = StringView(str, length);
                     auto str_view2 = StringView(&state.m_view[state.m_stringp], length);
 
-                    if (m_flags & REG_ICASE) {
+                    if (m_cflags & REG_ICASE) {
                         str_view1 = String(str_view1).to_lowercase().view();
                         str_view2 = String(str_view2).to_lowercase().view();
                     }
@@ -1136,7 +1131,7 @@ bool VM::match_recurse(MatchState& state, size_t recursion_level) const
                         }
                         break;
                     case CharacterClass::Lower:
-                        if ((ch >= 'a' && ch <= 'z') || ((m_flags & REG_ICASE) && (ch >= 'A' && ch <= 'Z'))) {
+                        if ((ch >= 'a' && ch <= 'z') || ((m_cflags & REG_ICASE) && (ch >= 'A' && ch <= 'Z'))) {
                             if (inverse)
                                 inverse_matched = true;
                             else
@@ -1168,7 +1163,7 @@ bool VM::match_recurse(MatchState& state, size_t recursion_level) const
                         }
                         break;
                     case CharacterClass::Upper:
-                        if ((ch >= 'A' && ch <= 'Z') || ((m_flags & REG_ICASE) && (ch >= 'a' && ch <= 'z'))) {
+                        if ((ch >= 'A' && ch <= 'Z') || ((m_cflags & REG_ICASE) && (ch >= 'a' && ch <= 'z'))) {
                             if (inverse)
                                 inverse_matched = true;
                             else
@@ -1191,7 +1186,7 @@ bool VM::match_recurse(MatchState& state, size_t recursion_level) const
                     auto to = value.range_values.to;
                     auto ch = state.m_view[state.m_stringp];
 
-                    if (m_flags & REG_ICASE) {
+                    if (m_cflags & REG_ICASE) {
                         from = tolower(from);
                         to = tolower(to);
                         ch = tolower(ch);
