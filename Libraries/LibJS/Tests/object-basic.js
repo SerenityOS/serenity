@@ -23,6 +23,14 @@ try {
     // Note : this test doesn't pass yet due to floating-point literals being coerced to i32 on access
     // assert(math[3.14] === "pi");
 
+    // This is also allowed! Watch out for syntax errors.
+    var o2 = { return: 1, yield: 1, for: 1, catch: 1, break: 1 };
+    assert(o2.return === 1);
+    assert(o2.yield === 1);
+    assert(o2.for === 1);
+    assert(o2.catch === 1);
+    assert(o2.break === 1);
+
     console.log("PASS");
 } catch (e) {
     console.log("FAIL: " + e);
