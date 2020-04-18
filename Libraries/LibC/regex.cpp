@@ -1024,7 +1024,6 @@ bool VM::match_recurse(MatchState& state, size_t recursion_level) const
         auto stack_item = get_and_increment(state);
 
 #ifdef REGEX_DEBUG
-        fflush(stdout);
         printf("[VM][r=%lu]  OpCode: 0x%i (%14s) - instructionp: %2lu, stringp: %2lu - ", recursion_level, stack_item.number, stack_item.name(), current_ip, state.m_stringp);
         printf("[%20s]\n", String(&state.m_view[state.m_stringp], state.m_view.length() - state.m_stringp).characters());
 #endif
@@ -1199,7 +1198,6 @@ bool VM::match_recurse(MatchState& state, size_t recursion_level) const
                     }
                 } else {
                     fprintf(stderr, "Undefined comparison: %i\n", (int)compare_type);
-                    fflush(stdout);
                     ASSERT_NOT_REACHED();
                     break;
                 }
@@ -1343,7 +1341,6 @@ int regcomp(regex_t* preg, const char* pattern, int cflags)
 
         String a(token.value());
         printf("[LEXER] %s -> %s\n", token.name(), a.characters());
-        fflush(stdout);
     }
     lexer.reset();
 #endif
