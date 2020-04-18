@@ -167,13 +167,13 @@ void Window::set_rect(const Gfx::Rect& a_rect)
             m_main_widget->resize(m_rect_when_windowless.size());
         return;
     }
-    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowRect>(m_window_id, a_rect);
-    if (m_back_bitmap && m_back_bitmap->size() != a_rect.size())
+    auto window_rect = WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowRect>(m_window_id, a_rect)->rect();
+    if (m_back_bitmap && m_back_bitmap->size() != window_rect.size())
         m_back_bitmap = nullptr;
-    if (m_front_bitmap && m_front_bitmap->size() != a_rect.size())
+    if (m_front_bitmap && m_front_bitmap->size() != window_rect.size())
         m_front_bitmap = nullptr;
     if (m_main_widget)
-        m_main_widget->resize(a_rect.size());
+        m_main_widget->resize(window_rect.size());
 }
 
 void Window::set_window_type(WindowType window_type)
