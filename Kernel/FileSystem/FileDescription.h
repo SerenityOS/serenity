@@ -153,12 +153,12 @@ private:
 
     u32 m_file_flags { 0 };
 
-    bool m_readable { false };
-    bool m_writable { false };
-    bool m_is_blocking { true };
-    bool m_is_directory { false };
-    bool m_should_append { false };
-    bool m_direct { false };
+    bool m_readable : 1 { false };
+    bool m_writable : 1 { false };
+    bool m_is_blocking : 1 { true };
+    bool m_is_directory : 1 { false };
+    bool m_should_append : 1 { false };
+    bool m_direct : 1 { false };
     FIFO::Direction m_fifo_direction { FIFO::Direction::Neither };
 
     Lock m_lock { "FileDescription" };
