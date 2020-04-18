@@ -39,7 +39,7 @@ Lockable<HashMap<int, NonnullOwnPtr<SharedBuffer>>>& shared_buffers()
 
 void SharedBuffer::sanity_check(const char* what)
 {
-    LOCKER(shared_buffers().lock());
+    LOCKER(shared_buffers().lock(), Lock::Mode::Shared);
 
     unsigned found_refs = 0;
     for (const auto& ref : m_refs)
@@ -56,7 +56,7 @@ void SharedBuffer::sanity_check(const char* what)
 
 bool SharedBuffer::is_shared_with(pid_t peer_pid)
 {
-    LOCKER(shared_buffers().lock());
+    LOCKER(shared_buffers().lock(), Lock::Mode::Shared);
     if (m_global)
         return true;
     for (auto& ref : m_refs) {

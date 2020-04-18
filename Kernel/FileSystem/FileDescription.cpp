@@ -168,7 +168,7 @@ ByteBuffer FileDescription::read_entire_file()
 
 ssize_t FileDescription::get_dir_entries(u8* buffer, ssize_t size)
 {
-    LOCKER(m_lock);
+    LOCKER(m_lock, Lock::Mode::Shared);
     if (!is_directory())
         return -ENOTDIR;
 

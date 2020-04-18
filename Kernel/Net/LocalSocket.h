@@ -42,7 +42,7 @@ public:
     static KResultOr<NonnullRefPtr<Socket>> create(int type);
     virtual ~LocalSocket() override;
 
-    static void for_each(Function<void(LocalSocket&)>);
+    static void for_each(Function<void(const LocalSocket&)>);
 
     StringView socket_path() const;
     String absolute_path(const FileDescription& description) const override;
