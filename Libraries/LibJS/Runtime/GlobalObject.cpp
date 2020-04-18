@@ -90,13 +90,10 @@ void GlobalObject::visit_children(Visitor& visitor)
 {
     Object::visit_children(visitor);
 
-    visitor.visit(m_array_constructor);
-    visitor.visit(m_boolean_constructor);
-    visitor.visit(m_date_constructor);
-    visitor.visit(m_error_constructor);
-    visitor.visit(m_function_constructor);
-    visitor.visit(m_number_constructor);
-    visitor.visit(m_object_constructor);
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
+    visitor.visit(m_##snake_name##_constructor);
+    JS_ENUMERATE_ERROR_SUBCLASSES
+#undef __JS_ENUMERATE
 }
 
 Value GlobalObject::gc(Interpreter& interpreter)
