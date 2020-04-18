@@ -41,9 +41,15 @@ public:
         : m_name(name)
     {
     }
-    ~Lock() {}
+    ~Lock() { }
 
-    void lock();
+    enum class Mode {
+        Unlocked,
+        Shared,
+        Exclusive
+    };
+
+    void lock(Mode = Mode::Exclusive);
     void unlock();
     bool force_unlock_if_locked();
     bool is_locked() const { return m_holder; }
@@ -53,33 +59,43 @@ public:
 
 private:
     Atomic<bool> m_lock { false };
-    u32 m_level { 0 };
-    Thread* m_holder { nullptr };
     const char* m_name { nullptr };
     WaitQueue m_queue;
+    Mode m_mode { Mode::Unlocked };
+
+    // When locked exclusively, only the thread already holding the lock can
+    // lock it again. When locked in shared mode, any thread can do that.
+    u32 m_times_locked { 0 };
+
+    // One of the threads that hold this lock, or nullptr. When locked in shared
+    // mode, this is stored on best effort basis: nullptr value does *not* mean
+    // the lock is unlocked, it just means we don't know which threads hold it.
+    // When locked exclusively, this is always the one thread that holds the
+    // lock.
+    Thread* m_holder { nullptr };
 };
 
 class Locker {
 public:
-    [[gnu::always_inline]] inline explicit Locker(Lock& l)
+    [[gnu::always_inline]] inline explicit Locker(Lock& l, Lock::Mode mode = Lock::Mode::Exclusive)
         : m_lock(l)
     {
-        lock();
+        m_lock.lock(mode);
     }
     [[gnu::always_inline]] inline ~Locker() { unlock(); }
     [[gnu::always_inline]] inline void unlock() { m_lock.unlock(); }
-    [[gnu::always_inline]] inline void lock() { m_lock.lock(); }
+    [[gnu::always_inline]] inline void lock(Lock::Mode mode = Lock::Mode::Exclusive) { m_lock.lock(mode); }
 
 private:
     Lock& m_lock;
 };
 
-#define LOCKER(lock) Locker locker(lock)
+#define LOCKER(...) Locker locker(__VA_ARGS__)
 
 template<typename T>
 class Lockable {
 public:
-    Lockable() {}
+    Lockable() { }
     Lockable(T&& resource)
         : m_resource(move(resource))
     {

@@ -30,8 +30,20 @@
 
 namespace Kernel {
 
-void Lock::lock()
+static bool modes_conflict(Lock::Mode mode1, Lock::Mode mode2)
 {
+    if (mode1 == Lock::Mode::Unlocked || mode2 == Lock::Mode::Unlocked)
+        return false;
+
+    if (mode1 == Lock::Mode::Shared && mode2 == Lock::Mode::Shared)
+        return false;
+
+    return true;
+}
+
+void Lock::lock(Mode mode)
+{
+    ASSERT(mode != Mode::Unlocked);
     ASSERT(!Scheduler::is_active());
     if (!are_interrupts_enabled()) {
         klog() << "Interrupts disabled when trying to take Lock{" << m_name << "}";
@@ -41,9 +53,15 @@ void Lock::lock()
     for (;;) {
         bool expected = false;
         if (m_lock.compare_exchange_strong(expected, true, AK::memory_order_acq_rel)) {
-            if (!m_holder || m_holder == Thread::current) {
+            // FIXME: Do not add new readers if writers are queued.
+            bool modes_dont_conflict = !modes_conflict(m_mode, mode);
+            bool already_hold_exclusive_lock = m_mode == Mode::Exclusive && m_holder == Thread::current;
+            if (modes_dont_conflict || already_hold_exclusive_lock) {
+                // We got the lock!
+                if (!already_hold_exclusive_lock)
+                    m_mode = mode;
                 m_holder = Thread::current;
-                ++m_level;
+                m_times_locked++;
                 m_lock.store(false, AK::memory_order_release);
                 return;
             }
@@ -57,14 +75,20 @@ void Lock::unlock()
     for (;;) {
         bool expected = false;
         if (m_lock.compare_exchange_strong(expected, true, AK::memory_order_acq_rel)) {
-            ASSERT(m_holder == Thread::current);
-            ASSERT(m_level);
-            --m_level;
-            if (m_level) {
+            ASSERT(m_times_locked);
+            --m_times_locked;
+
+            ASSERT(m_mode != Mode::Unlocked);
+            if (m_mode == Mode::Exclusive)
+                ASSERT(m_holder == Thread::current);
+            if (m_holder == Thread::current && (m_mode == Mode::Shared || m_times_locked == 0))
+                m_holder = nullptr;
+
+            if (m_times_locked > 0) {
                 m_lock.store(false, AK::memory_order_release);
                 return;
             }
-            m_holder = nullptr;
+            m_mode = Mode::Unlocked;
             m_queue.wake_one(&m_lock);
             return;
         }
@@ -75,19 +99,21 @@ void Lock::unlock()
 
 bool Lock::force_unlock_if_locked()
 {
+    ASSERT(m_mode != Mode::Shared);
     InterruptDisabler disabler;
     if (m_holder != Thread::current)
         return false;
-    ASSERT(m_level == 1);
-    ASSERT(m_holder == Thread::current);
+    ASSERT(m_times_locked == 1);
     m_holder = nullptr;
-    --m_level;
+    m_mode = Mode::Unlocked;
+    m_times_locked = 0;
     m_queue.wake_one();
     return true;
 }
 
 void Lock::clear_waiters()
 {
+    ASSERT(m_mode != Mode::Shared);
     InterruptDisabler disabler;
     m_queue.clear();
 }
