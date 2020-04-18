@@ -5,6 +5,7 @@ AK_OBJS = \
     ../../AK/JsonValue.o \
     ../../AK/LogStream.o \
     ../../AK/MappedFile.o \
+    ../../AK/Regex.o \
     ../../AK/SharedBuffer.o \
     ../../AK/String.o \
     ../../AK/StringBuilder.o \
