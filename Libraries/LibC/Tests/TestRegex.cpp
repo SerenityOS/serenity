@@ -619,8 +619,8 @@ TEST_CASE(parser_error_parens)
     static constexpr int num_matches { 5 };
     regmatch_t matches[num_matches];
 
-    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_BADPAT);
-    EXPECT_EQ(regexec(&regex, "testhellotest", num_matches, matches, 0), REG_BADPAT);
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_EPAREN);
+    EXPECT_EQ(regexec(&regex, "testhellotest", num_matches, matches, 0), REG_EPAREN);
     EXPECT_EQ(matches[0].match_count, 0u);
 
     regfree(&regex);
@@ -674,8 +674,8 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         b.append(ch);
         b.append(")");
         pattern = b.build();
-        EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_BADPAT);
-        EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), REG_BADPAT);
+        EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_EPAREN);
+        EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), REG_EPAREN);
     }
 
     regfree(&regex);
@@ -700,8 +700,8 @@ TEST_CASE(parser_error_vertical_line_used_at_wrong_place)
 
     // After left parens
     pattern = "(|asdf)";
-    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_BADPAT);
-    EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), REG_BADPAT);
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_EPAREN);
+    EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), REG_EPAREN);
 
     // Proceed right parens
     pattern = "(asdf)|";
@@ -1936,5 +1936,23 @@ BENCHMARK_CASE(email_address_benchmark_reference_stdcpp_regex_match)
     }
 }
 #endif
+
+TEST_CASE(error_message)
+{
+    String pattern = "^[A-Z0-9[a-z._%+-]{1,64}@[A-Za-z0-9-]{1,63}\\.{1,125}[A-Za-z]{2,63}$";
+    regex_t regex;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_EBRACK);
+    EXPECT_EQ(regexec(&regex, "asdf@asdf.com", 0, NULL, 0), REG_EBRACK);
+    char buf[1024];
+    size_t buflen = 1024;
+    auto len = regerror(0, &regex, buf, buflen);
+    String expected = "Error in Regular Expression:\n    ^[A-Z0-9[a-z._%+-]{1,64}@[A-Za-z0-9-]{1,63}\\.{1,125}[A-Za-z]{2,63}$\n            ^---- [ ] imbalance.\n";
+    for (size_t i = 0; i < len; ++i) {
+        EXPECT_EQ(buf[i], expected[i]);
+    }
+
+    regfree(&regex);
+}
 
 TEST_MAIN(Regex)

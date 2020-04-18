@@ -107,7 +107,6 @@ void Lexer::reset()
 {
     m_position = 0;
     m_current_token = { TokenType::Eof, 0, StringView(nullptr) };
-    m_has_errors = false;
     m_current_char = 0;
     m_previous_position = 0;
 }
@@ -279,10 +278,8 @@ bool Parser::parse_ere_dupl_symbol(Vector<StackValue>& operations, size_t& min_l
         }
         bool ok;
         size_t number1 = number1_builder.build().to_uint(ok);
-        if (!ok) {
-            m_parser_state.m_has_errors = true;
-            return false;
-        }
+        if (!ok)
+            return set_error(REG_BADBR);
 
         if (match(TokenType::Comma)) {
             consume();
@@ -298,10 +295,8 @@ bool Parser::parse_ere_dupl_symbol(Vector<StackValue>& operations, size_t& min_l
             if (!number2_builder.is_empty()) {
                 bool ok2;
                 number2 = number2_builder.build().to_uint(ok2);
-                if (!ok || number2 < number1) {
-                    m_parser_state.m_has_errors = true;
-                    return false;
-                }
+                if (!ok || number1 > number2)
+                    return set_error(REG_BADBR);
             }
         }
         min_length *= number1;
@@ -333,7 +328,7 @@ bool Parser::parse_ere_dupl_symbol(Vector<StackValue>& operations, size_t& min_l
 
         // FIXME: Add OpCode for range based duplication
 
-        return true;
+        return !has_error();
 
     } else if (match(TokenType::Plus)) {
         consume();
@@ -351,7 +346,7 @@ bool Parser::parse_ere_dupl_symbol(Vector<StackValue>& operations, size_t& min_l
         }
         operations.empend(-operations.size() - 1); // Jump to the _START label
 
-        return true;
+        return !has_error();
 
     } else if (match(TokenType::Asterisk)) {
         consume();
@@ -383,7 +378,7 @@ bool Parser::parse_ere_dupl_symbol(Vector<StackValue>& operations, size_t& min_l
 
         operations = move(new_operations);
 
-        return true;
+        return !has_error();
 
     } else if (match(TokenType::Questionmark)) {
         consume();
@@ -409,10 +404,19 @@ bool Parser::parse_ere_dupl_symbol(Vector<StackValue>& operations, size_t& min_l
 
         operations = move(new_operations);
 
-        return true;
+        return !has_error();
     }
 
     return false;
+}
+
+bool Parser::set_error(ReError error)
+{
+    if (m_parser_state.m_error == REG_NOERR) {
+        m_parser_state.m_error = error;
+        m_parser_state.m_error_token = m_parser_state.m_current_token;
+    }
+    return false; // always return false :^)
 }
 
 bool Parser::parse_bracket_expression(Vector<StackValue>& stack, size_t& min_length)
@@ -440,25 +444,25 @@ bool Parser::parse_bracket_expression(Vector<StackValue>& stack, size_t& min_len
                     values.append({ CompareType::OrdinaryCharacter, { '-' } });
                 }
             } else {
-                m_parser_state.m_has_errors = true;
-                return false;
+                return set_error(REG_ERANGE);
             }
 
         } else if (match(TokenType::OrdinaryCharacter) || match(TokenType::Period) || match(TokenType::Asterisk) || match(TokenType::EscapeSequence) || match(TokenType::Plus)) {
             values.append({ CompareType::OrdinaryCharacter, { *consume().value().characters_without_null_termination() } });
 
         } else if (match(TokenType::Circumflex)) {
-            auto t = consume(TokenType::Circumflex);
+            auto t = consume();
+
             if (values.is_empty())
                 values.append({ CompareType::Inverse, 0 });
             else
                 values.append({ CompareType::OrdinaryCharacter, { *t.value().characters_without_null_termination() } });
 
         } else if (match(TokenType::LeftBracket)) {
+            consume();
 
-            consume(TokenType::LeftBracket);
             if (match(TokenType::Period)) {
-                consume(TokenType::Period);
+                consume();
 
                 // FIXME: Parse collating element, this is needed when we have locale support
                 //        This could have impact on length parameter, I guess.
@@ -468,16 +472,22 @@ bool Parser::parse_bracket_expression(Vector<StackValue>& stack, size_t& min_len
                 consume(TokenType::RightBracket);
 
             } else if (match(TokenType::OrdinaryCharacter)) {
-                if (consume("=")) {
+                if (match('=')) {
+                    consume();
                     // FIXME: Parse collating element, this is needed when we have locale support
                     //        This could have impact on length parameter, I guess.
                     ASSERT_NOT_REACHED();
 
-                    if (!consume("="))
-                        m_parser_state.m_has_errors = true;
+                    if (match('='))
+                        consume();
+                    else
+                        return set_error(REG_ECOLLATE);
+
                     consume(TokenType::RightBracket);
 
-                } else if (consume(":")) {
+                } else if (match(':')) {
+                    consume();
+
                     CharacterClass ch_class;
                     // parse character class
                     if (match(TokenType::OrdinaryCharacter)) {
@@ -506,23 +516,24 @@ bool Parser::parse_bracket_expression(Vector<StackValue>& stack, size_t& min_len
                         else if (consume("xdigit"))
                             ch_class = CharacterClass::Xdigit;
                         else {
-                            m_parser_state.m_has_errors = true;
-                            return false;
+                            return set_error(REG_ECTYPE);
                         }
 
                         values.append({ CompareType::CharacterClass, ch_class });
 
-                    } else {
-                        m_parser_state.m_has_errors = true;
-                        return false;
-                    }
+                    } else
+                        return set_error(REG_ECTYPE);
 
                     // FIXME: we do not support locale specific character classes until locales are implemented
 
-                    if (!consume(":"))
-                        m_parser_state.m_has_errors = true;
+                    if (match(':'))
+                        consume();
+                    else
+                        return set_error(REG_ECTYPE);
+
                     consume(TokenType::RightBracket);
-                }
+                } else
+                    return set_error(REG_EBRACK);
             }
 
         } else if (match(TokenType::RightBracket)) {
@@ -535,18 +546,15 @@ bool Parser::parse_bracket_expression(Vector<StackValue>& stack, size_t& min_len
                 break;
             }
 
-        } else {
+        } else
             // nothing matched, this is a failure, as at least the closing bracket must match...
-            m_parser_state.m_has_errors = true;
-            return false;
-        }
+            return set_error(REG_EBRACK);
 
         // check if range expression has to be completed...
         if (values.size() >= 3 && values.at(values.size() - 2).type == CompareType::RangeExpressionDummy) {
-            if (values.last().type != CompareType::OrdinaryCharacter) {
-                m_parser_state.m_has_errors = true;
-                return false;
-            }
+            if (values.last().type != CompareType::OrdinaryCharacter)
+                return set_error(REG_ERANGE);
+
             auto value2 = values.take_last();
             values.take_last(); // RangeExpressionDummy
             auto value1 = values.take_last();
@@ -578,7 +586,7 @@ bool Parser::parse_bracket_expression(Vector<StackValue>& stack, size_t& min_len
 
     stack.append(move(operations));
 
-    return true;
+    return !has_error();
 }
 
 bool Parser::parse_ere_expression(Vector<StackValue>& stack, size_t& min_length)
@@ -644,13 +652,11 @@ bool Parser::parse_ere_expression(Vector<StackValue>& stack, size_t& min_length)
         }
 
         if (match(TokenType::LeftBracket)) {
-            consume(TokenType::LeftBracket);
+            consume();
 
             Vector<StackValue> sub_ops;
-            if (!parse_bracket_expression(sub_ops, length) || !sub_ops.size()) {
-                m_parser_state.m_has_errors = true;
-                return false;
-            }
+            if (!parse_bracket_expression(sub_ops, length) || !sub_ops.size())
+                return set_error(REG_EBRACK);
 
             operations.append(move(sub_ops));
 
@@ -660,7 +666,7 @@ bool Parser::parse_ere_expression(Vector<StackValue>& stack, size_t& min_length)
         }
 
         if (match(TokenType::Circumflex)) {
-            consume(TokenType::Circumflex);
+            consume();
             operations.empend(OpCode::CheckBegin);
 
             stack.append(move(operations));
@@ -668,7 +674,7 @@ bool Parser::parse_ere_expression(Vector<StackValue>& stack, size_t& min_length)
         }
 
         if (match(TokenType::Dollar)) {
-            consume(TokenType::Dollar);
+            consume();
             operations.empend(OpCode::CheckEnd);
 
             stack.append(move(operations));
@@ -676,16 +682,14 @@ bool Parser::parse_ere_expression(Vector<StackValue>& stack, size_t& min_length)
         }
 
         if (match(TokenType::LeftParen)) {
-            consume(TokenType::LeftParen);
+            consume();
 
             operations.empend(OpCode::SaveLeftGroup);
             operations.empend(m_parser_state.m_match_groups);
 
             Vector<StackValue> sub_ops;
-            if (!parse_extended_reg_exp(sub_ops, length) || !sub_ops.size()) {
-                m_parser_state.m_has_errors = true;
-                return false;
-            }
+            if (!parse_extended_reg_exp(sub_ops, length) || !sub_ops.size())
+                return set_error(REG_EPAREN);
 
             operations.append(move(sub_ops));
 
@@ -701,8 +705,11 @@ bool Parser::parse_ere_expression(Vector<StackValue>& stack, size_t& min_length)
         return false;
     }
 
-    if (can_match_dupl_symbol && match_ere_dupl_symbol()) {
-        parse_ere_dupl_symbol(operations, length);
+    if (match_ere_dupl_symbol()) {
+        if (can_match_dupl_symbol)
+            parse_ere_dupl_symbol(operations, length);
+        else
+            return set_error(REG_BADRPT);
     }
 
     stack.append(move(operations));
@@ -721,51 +728,47 @@ bool Parser::parse_extended_reg_exp(Vector<StackValue>& stack, size_t& min_lengt
             break;
 
         if (match(TokenType::Pipe)) {
-            consume(TokenType::Pipe);
+            consume();
 
             Vector<StackValue> operations_alternative;
             size_t alt_length { 0 };
 
-            if (parse_extended_reg_exp(operations_alternative, alt_length) && operations_alternative.size()) {
+            if (!(parse_extended_reg_exp(operations_alternative, alt_length) && operations_alternative.size()))
+                return set_error(REG_BADPAT);
 
-                // FORKSTAY _ALT
-                // REGEXP ALT1
-                // JUMP  _END
-                // LABEL _ALT
-                // REGEXP ALT2
-                // LABEL _END
+            // FORKSTAY _ALT
+            // REGEXP ALT1
+            // JUMP  _END
+            // LABEL _ALT
+            // REGEXP ALT2
+            // LABEL _END
 
-                Vector<StackValue> new_operations;
+            Vector<StackValue> new_operations;
 
-                new_operations.empend(OpCode::ForkJump);
-                new_operations.empend(operations.size() + 2); // Jump to the _ALT label
+            new_operations.empend(OpCode::ForkJump);
+            new_operations.empend(operations.size() + 2); // Jump to the _ALT label
 
-                for (auto& op : operations)
-                    new_operations.append(move(op));
+            for (auto& op : operations)
+                new_operations.append(move(op));
 
-                new_operations.empend(OpCode::Jump);
-                new_operations.empend(operations_alternative.size()); // Jump to the _END label
+            new_operations.empend(OpCode::Jump);
+            new_operations.empend(operations_alternative.size()); // Jump to the _END label
 
-                // LABEL _ALT = operations.size() + 2
+            // LABEL _ALT = operations.size() + 2
 
-                for (auto& op : operations_alternative)
-                    new_operations.append(move(op));
+            for (auto& op : operations_alternative)
+                new_operations.append(move(op));
 
-                // LABEL _END = operations_alternative.size
+            // LABEL _END = operations_alternative.size
 
-                operations = move(new_operations);
-                length = min(alt_length, length);
-
-            } else {
-                m_parser_state.m_has_errors = true;
-                return false;
-            }
+            operations = move(new_operations);
+            length = min(alt_length, length);
         }
     }
 
     stack.append(move(operations));
     min_length = length;
-    return true;
+    return !has_error();
 }
 
 bool Parser::done() const
@@ -778,6 +781,13 @@ bool Parser::match(TokenType type) const
     return m_parser_state.m_current_token.type() == type;
 }
 
+bool Parser::match(char ch) const
+{
+    return m_parser_state.m_current_token.type() == TokenType::OrdinaryCharacter
+        && m_parser_state.m_current_token.value().length() == 1
+        && m_parser_state.m_current_token.value().characters_without_null_termination()[0] == ch;
+}
+
 Token Parser::consume()
 {
     auto old_token = m_parser_state.m_current_token;
@@ -788,7 +798,7 @@ Token Parser::consume()
 Token Parser::consume(TokenType type)
 {
     if (m_parser_state.m_current_token.type() != type) {
-        m_parser_state.m_has_errors = true;
+        set_error(REG_BADPAT);
 #ifdef REGEX_DEBUG
         fprintf(stderr, "[PARSER] Error: Unexpected token %s. Expected %s\n", m_parser_state.m_current_token.name(), Token::name(type));
 #endif
@@ -829,7 +839,13 @@ Parser::ParserResult Parser::parse()
 #ifdef REGEX_DEBUG
     printf("[PARSER] Produced stack with %lu entries\n", m_parser_state.m_bytes.size());
 #endif
-    return { m_parser_state.m_bytes, m_parser_state.m_match_groups, m_parser_state.m_min_match_length };
+    return {
+        move(m_parser_state.m_bytes),
+        move(m_parser_state.m_match_groups),
+        move(m_parser_state.m_min_match_length),
+        move(m_parser_state.m_error),
+        move(m_parser_state.m_error_token)
+    };
 }
 
 void Parser::reset()
@@ -837,6 +853,8 @@ void Parser::reset()
     m_parser_state.m_bytes.clear();
     m_parser_state.m_lexer.reset();
     m_parser_state.m_current_token = m_parser_state.m_lexer.next();
+    m_parser_state.m_error = REG_NOERR;
+    m_parser_state.m_error_token = { TokenType::Eof, 0, StringView(nullptr) };
 }
 
 VM::MatchState::MatchState(size_t instructionp, size_t stringp, StringView view)
@@ -1304,7 +1322,7 @@ bool VM::match_recurse(MatchState& state, size_t recursion_level)
 
 int regcomp(regex_t* preg, const char* pattern, int cflags)
 {
-    *preg = { 0, 0, 0, 0, nullptr };
+    *preg = { 0, 0, 0, 0, nullptr, 0, REG_NOERR, "" };
 
     if (!(cflags & REG_EXTENDED))
         return REG_ENOSYS;
@@ -1339,9 +1357,13 @@ int regcomp(regex_t* preg, const char* pattern, int cflags)
     }
 #endif
 
-    // FIXME: there are several return values for different error scenarios, make use of them
-    if (parser.has_errors())
-        return REG_BADPAT;
+    if (result.m_error != REG_NOERR) {
+        preg->re_pat_errpos = result.m_error_token.position();
+        preg->re_pat_err = result.m_error;
+        preg->re_pat = pattern;
+
+        return result.m_error;
+    }
 
     preg->re_nsub = result.m_match_groups;
     preg->re_minlength = result.m_min_match_length;
@@ -1358,8 +1380,11 @@ extern "C" {
 
 int regexec(const regex_t* preg, const char* string, size_t nmatch, regmatch_t pmatch[], int eflags)
 {
-    if (!preg->vm)
+    if (!preg->vm || preg->re_pat_err) {
+        if (preg->re_pat_err)
+            return preg->re_pat_err;
         return REG_BADPAT;
+    }
 
     auto& vm = *preg->vm;
 
@@ -1408,10 +1433,8 @@ int regexec(const regex_t* preg, const char* string, size_t nmatch, regmatch_t p
     return REG_NOMATCH;
 }
 
-size_t regerror(int errcode, const regex_t* preg, char* errbuf, size_t errbuf_size)
+inline static String get_error(ReError errcode)
 {
-    UNUSED_PARAM(preg);
-
     String error;
     switch ((ReError)errcode) {
     case REG_NOERR:
@@ -1460,6 +1483,23 @@ size_t regerror(int errcode, const regex_t* preg, char* errbuf, size_t errbuf_si
         error = "The implementation does not support the function.";
         break;
     }
+    return error;
+}
+
+size_t regerror(int errcode, const regex_t* preg, char* errbuf, size_t errbuf_size)
+{
+    String error;
+
+    if (preg && preg->re_pat != nullptr && preg->re_pat_err != REG_NOERR && preg->re_pat_errpos) {
+        StringBuilder eb;
+        eb.appendf("Error in Regular Expression:\n");
+        eb.appendf("    %s\n    ", preg->re_pat.characters());
+        for (size_t i = 0; i < preg->re_pat_errpos - 1; ++i)
+            eb.append(" ");
+        eb.appendf("^---- %s\n", get_error(preg->re_pat_err).characters());
+        error = eb.build();
+    } else
+        error = get_error((ReError)errcode);
 
     if (!errbuf_size)
         return error.length();
@@ -1479,5 +1519,8 @@ void regfree(regex_t* preg)
     preg->eflags = 0;
     if (preg->vm)
         delete preg->vm;
+
+    if (preg->re_pat)
+        delete[] preg->re_pat;
 }
 }

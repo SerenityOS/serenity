@@ -36,15 +36,39 @@
 
 namespace regex {
 class VM;
+class Token;
 }
 
 __BEGIN_DECLS
+
+// The following constants are defined as error return values:
+enum ReError {
+    REG_NOERR = 0,
+    REG_NOMATCH,  // regexec() failed to match.
+    REG_BADPAT,   // Invalid regular expression.
+    REG_ECOLLATE, // Invalid collating element referenced.
+    REG_ECTYPE,   // Invalid character class type referenced.
+    REG_EESCAPE,  // Trailing \ in pattern.
+    REG_ESUBREG,  // Number in \digit invalid or in error.
+    REG_EBRACK,   // [ ] imbalance.
+    REG_EPAREN,   // \( \) or ( ) imbalance.
+    REG_EBRACE,   // \{ \} imbalance.
+    REG_BADBR,    // Content of \{ \} invalid: not a number, number too large, more than two numbers, first larger than second.
+    REG_ERANGE,   // Invalid endpoint in range expression.
+    REG_ESPACE,   // Out of memory.
+    REG_BADRPT,   // ?, * or + not preceded by valid regular expression.
+    REG_ENOSYS,   // The implementation does not support the function.
+};
+
 struct regex_t {
     size_t re_nsub;
     u8 cflags;
     u8 eflags;
     size_t re_minlength;
     regex::VM* vm { nullptr };
+    size_t re_pat_errpos { 0 };
+    ReError re_pat_err;
+    String re_pat;
 };
 
 typedef ptrdiff_t regoff_t;
@@ -70,24 +94,6 @@ struct regmatch_t {
 
 #define REG_MAX_RECURSE 5000
 
-// The following constants are defined as error return values:
-enum ReError {
-    REG_NOERR = 0,
-    REG_NOMATCH,  // regexec() failed to match.
-    REG_BADPAT,   // Invalid regular expression.
-    REG_ECOLLATE, // Invalid collating element referenced.
-    REG_ECTYPE,   // Invalid character class type referenced.
-    REG_EESCAPE,  // Trailing \ in pattern.
-    REG_ESUBREG,  // Number in \digit invalid or in error.
-    REG_EBRACK,   // [ ] imbalance.
-    REG_EPAREN,   // \( \) or ( ) imbalance.
-    REG_EBRACE,   // \{ \} imbalance.
-    REG_BADBR,    // Content of \{ \} invalid: not a number, number too large, more than two numbers, first larger than second.
-    REG_ERANGE,   // Invalid endpoint in range expression.
-    REG_ESPACE,   // Out of memory.
-    REG_BADRPT,   // ?, * or + not preceded by valid regular expression.
-    REG_ENOSYS,   // The implementation does not support the function.
-};
 
 int regcomp(regex_t*, const char*, int);
 int regexec(const regex_t*, const char*, size_t, regmatch_t[], int);
@@ -251,6 +257,7 @@ public:
     const char* name() const;
     static const char* name(TokenType);
     const StringView& value() const { return m_value; }
+    size_t position() const { return m_position; }
 
 private:
     TokenType m_type;
@@ -262,7 +269,6 @@ class Lexer {
 public:
     explicit Lexer(StringView source);
     Token next();
-    bool has_errors() const { return m_has_errors; }
     void reset();
     void back(size_t offset);
 
@@ -275,7 +281,6 @@ private:
     size_t m_previous_position = 0;
     Token m_current_token;
     int m_current_char;
-    bool m_has_errors = false;
 };
 
 class Parser {
@@ -286,13 +291,16 @@ public:
         Vector<StackValue> m_bytes;
         size_t m_match_groups;
         size_t m_min_match_length;
+        ReError m_error;
+        Token m_error_token;
     };
 
     ParserResult parse();
-    bool has_errors() const { return m_parser_state.m_has_errors; }
+    bool has_error() const { return m_parser_state.m_error != REG_NOERR; }
 
 private:
     bool match(TokenType type) const;
+    bool match(char ch) const;
     bool done() const;
     void expected(const char* what);
     Token consume();
@@ -310,10 +318,13 @@ private:
     bool parse_bracket_expression(Vector<StackValue>&, size_t& min_length);
     void reset();
 
+    bool set_error(ReError error);
+
     struct ParserState {
         Lexer m_lexer;
         Token m_current_token;
-        bool m_has_errors = false;
+        ReError m_error = REG_NOERR;
+        Token m_error_token { TokenType::Eof, 0, StringView(nullptr) };
         Vector<StackValue> m_bytes;
         size_t m_match_groups { 0 };
         size_t m_min_match_length { 0 };
