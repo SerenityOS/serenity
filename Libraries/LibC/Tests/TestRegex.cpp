@@ -621,7 +621,6 @@ TEST_CASE(parser_error_parens)
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_EPAREN);
     EXPECT_EQ(regexec(&regex, "testhellotest", num_matches, matches, 0), REG_EPAREN);
-    EXPECT_EQ(matches[0].match_count, 0u);
 
     regfree(&regex);
 }
@@ -1823,6 +1822,8 @@ TEST_CASE(bracket_character_class_uuid)
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
     EXPECT_EQ(regexec(&regex, "fb9b62a2-1579-4e3a-afba-76239ccb6583", 0, NULL, 0), REG_NOERR);
     EXPECT_EQ(regexec(&regex, "fb9b62a2", 0, NULL, 0), REG_NOMATCH);
+
+    regfree(&regex);
 }
 
 #if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
@@ -1908,6 +1909,8 @@ TEST_CASE(email_address)
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
     EXPECT_EQ(regexec(&regex, "emanuel.sprung@gmail.com", 0, NULL, 0), REG_NOERR);
     EXPECT_EQ(regexec(&regex, "kling@serenityos.org", 0, NULL, 0), REG_NOERR);
+
+    regfree(&regex);
 }
 
 #if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
