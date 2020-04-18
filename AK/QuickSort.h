@@ -30,6 +30,61 @@
 
 namespace AK {
 
+/* This is a dual pivot quick sort. It is quite a bit faster than the single
+ * pivot quick_sort below. The other quick_sort below should only be used when
+ * you are stuck with simple iterators to a container and you don't have access
+ * to the container itself.
+ */
+template<typename Collection, typename LessThan>
+void dual_pivot_quick_sort(Collection& col, int start, int end, LessThan less_than)
+{
+    if (start >= end) {
+        return;
+    }
+
+    int left_pointer, right_pointer;
+    if (!less_than(col[start], col[end])) {
+        swap(col[start], col[end]);
+    }
+
+    int j = start + 1;
+    int k = start + 1;
+    int g = end - 1;
+
+    auto left_pivot = col[start];
+    auto right_pivot = col[end];
+
+    while (k <= g) {
+        if (less_than(col[k], left_pivot)) {
+            swap(col[k], col[j]);
+            j++;
+        } else if (!less_than(col[k], right_pivot)) {
+            while (!less_than(col[g], right_pivot) && k < g) {
+                g--;
+            }
+            swap(col[k], col[g]);
+            g--;
+            if (less_than(col[k], left_pivot)) {
+                swap(col[k], col[j]);
+                j++;
+            }
+        }
+        k++;
+    }
+    j--;
+    g++;
+
+    swap(col[start], col[j]);
+    swap(col[end], col[g]);
+
+    left_pointer = j;
+    right_pointer = g;
+
+    dual_pivot_quick_sort(col, start, left_pointer - 1, less_than);
+    dual_pivot_quick_sort(col, left_pointer + 1, right_pointer - 1, less_than);
+    dual_pivot_quick_sort(col, right_pointer + 1, end, less_than);
+}
+
 template<typename Iterator, typename LessThan>
 void quick_sort(Iterator start, Iterator end, LessThan less_than)
 {
@@ -65,13 +120,14 @@ void quick_sort(Iterator start, Iterator end)
 template<typename Collection, typename LessThan>
 void quick_sort(Collection& collection, LessThan less_than)
 {
-    quick_sort(collection.begin(), collection.end(), move(less_than));
+    dual_pivot_quick_sort(collection, 0, collection.size() - 1, move(less_than));
 }
 
 template<typename Collection>
 void quick_sort(Collection& collection)
 {
-    quick_sort(collection.begin(), collection.end());
+    dual_pivot_quick_sort(collection, 0, collection.size() - 1,
+        [](auto& a, auto& b) { return a < b; });
 }
 
 }
