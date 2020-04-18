@@ -62,7 +62,7 @@ private:
 
 Cube::Cube()
 {
-    m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, { WIDTH, HEIGHT });
+    m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, { WIDTH, HEIGHT });
 
     m_accumulated_time = 0;
     m_cycles = 0;
@@ -142,7 +142,7 @@ void Cube::timer_event(Core::TimerEvent&)
     }
 
     GUI::Painter painter(*m_bitmap);
-    painter.fill_rect_with_gradient(Gfx::Orientation::Vertical, painter.clip_rect(), Gfx::Color::White, Gfx::Color::Blue);
+    painter.fill_rect_with_gradient(Gfx::Orientation::Vertical, m_bitmap->rect(), Gfx::Color::White, Gfx::Color::Blue);
 
     auto to_point = [](const FloatVector3& v) {
         return Gfx::Point(v.x(), v.y());
