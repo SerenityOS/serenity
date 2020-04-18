@@ -18,6 +18,7 @@ OBJS = \
     CppLexer.o \
     CppSyntaxHighlighter.o \
     Desktop.o \
+    DesktopServices.o \
     Dialog.o \
     DisplayLink.o \
     DragOperation.o \
