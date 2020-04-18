@@ -360,8 +360,8 @@ void Painter::draw_triangle(const Point& a, const Point& b, const Point& c, Colo
 
     int top = p0.y();
     if (top < clip.top()) {
-        x01 += dx01 * clip.top() - top;
-        x02 += dx02 * clip.top() - top;
+        x01 += dx01 * (clip.top() - top);
+        x02 += dx02 * (clip.top() - top);
         top = clip.top();
     }
 
@@ -381,8 +381,8 @@ void Painter::draw_triangle(const Point& a, const Point& b, const Point& c, Colo
 
     top = p1.y();
     if (top < clip.top()) {
-        x02 += dx02 * clip.top() - top;
-        x12 += dx12 * clip.top() - top;
+        x02 += dx02 * (clip.top() - top);
+        x12 += dx12 * (clip.top() - top);
         top = clip.top();
     }
 
