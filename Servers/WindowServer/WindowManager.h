@@ -309,6 +309,8 @@ IterationDecision WindowManager::for_each_visible_window_of_type_from_back_to_fr
 template<typename Callback>
 IterationDecision WindowManager::for_each_visible_window_from_back_to_front(Callback callback)
 {
+    if (for_each_visible_window_of_type_from_back_to_front(WindowType::Desktop, callback) == IterationDecision::Break)
+        return IterationDecision::Break;
     if (for_each_visible_window_of_type_from_back_to_front(WindowType::Normal, callback) == IterationDecision::Break)
         return IterationDecision::Break;
     if (for_each_visible_window_of_type_from_back_to_front(WindowType::Taskbar, callback) == IterationDecision::Break)
@@ -356,13 +358,15 @@ IterationDecision WindowManager::for_each_visible_window_from_front_to_back(Call
         return IterationDecision::Break;
     if (for_each_visible_window_of_type_from_front_to_back(WindowType::Menubar, callback) == IterationDecision::Break)
         return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_back_to_front(WindowType::Notification, callback) == IterationDecision::Break)
+    if (for_each_visible_window_of_type_from_front_to_back(WindowType::Notification, callback) == IterationDecision::Break)
         return IterationDecision::Break;
     if (for_each_visible_window_of_type_from_front_to_back(WindowType::Tooltip, callback) == IterationDecision::Break)
         return IterationDecision::Break;
     if (for_each_visible_window_of_type_from_front_to_back(WindowType::Taskbar, callback) == IterationDecision::Break)
         return IterationDecision::Break;
-    return for_each_visible_window_of_type_from_front_to_back(WindowType::Normal, callback);
+    if (for_each_visible_window_of_type_from_front_to_back(WindowType::Normal, callback) == IterationDecision::Break)
+        return IterationDecision::Break;
+    return for_each_visible_window_of_type_from_front_to_back(WindowType::Desktop, callback);
 }
 
 template<typename Callback>
