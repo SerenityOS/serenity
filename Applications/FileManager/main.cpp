@@ -39,12 +39,14 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Clipboard.h>
+#include <LibGUI/DesktopServices.h>
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/Painter.h>
 #include <LibGUI/ProgressBar.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/StatusBar.h>
@@ -53,10 +55,14 @@
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Palette.h>
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+
+static int run_in_desktop_mode(RefPtr<Core::ConfigFile>, String initial_location);
+static int run_in_windowed_mode(RefPtr<Core::ConfigFile>, String initial_location);
 
 int main(int argc, char** argv)
 {
@@ -84,6 +90,79 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (app.args().contains_slow("--desktop") || app.args().contains_slow("-d"))
+        return run_in_desktop_mode(move(config), String::format("%s/Desktop", get_current_user_home_path().characters()));
+
+    // our initial location is defined as, in order of precedence:
+    // 1. the first command-line argument (e.g. FileManager /bin)
+    // 2. the user's home directory
+    // 3. the root directory
+    String initial_location;
+
+    if (argc >= 2)
+        initial_location = argv[1];
+
+    if (initial_location.is_empty())
+        initial_location = get_current_user_home_path();
+
+    if (initial_location.is_empty())
+        initial_location = "/";
+
+    return run_in_windowed_mode(move(config), initial_location);
+}
+
+class DesktopWidget final : public GUI::Widget {
+    C_OBJECT(DesktopWidget);
+
+public:
+private:
+    virtual void paint_event(GUI::PaintEvent& event) override
+    {
+        GUI::Painter painter(*this);
+        painter.add_clip_rect(event.rect());
+        painter.clear_rect(event.rect(), Color(0, 0, 0, 0));
+    }
+
+    DesktopWidget()
+    {
+    }
+};
+
+int run_in_desktop_mode(RefPtr<Core::ConfigFile> config, String initial_location)
+{
+    (void)config;
+    (void)initial_location;
+    auto window = GUI::Window::construct();
+    window->set_title("Desktop Manager");
+    window->set_window_type(GUI::WindowType::Desktop);
+    window->set_has_alpha_channel(true);
+
+    auto& desktop_widget = window->set_main_widget<DesktopWidget>();
+    desktop_widget.set_layout<GUI::VerticalBoxLayout>();
+
+    auto& item_view = desktop_widget.add<GUI::ItemView>();
+    item_view.set_frame_thickness(0);
+    item_view.set_scrollbars_enabled(false);
+    item_view.set_fill_with_background_color(false);
+
+    auto model = GUI::FileSystemModel::create(initial_location);
+    item_view.set_model(model);
+    item_view.set_model_column(GUI::FileSystemModel::Column::Name);
+
+    item_view.on_activation = [&](auto& index) {
+        if (!index.is_valid())
+            return;
+        auto& node = model->node(index);
+        auto path = node.full_path(model);
+        GUI::DesktopServices::open(URL::create_with_file_protocol(path));
+    };
+
+    window->show();
+    return GUI::Application::the().exec();
+}
+
+int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_location)
+{
     auto window = GUI::Window::construct();
     window->set_title("File Manager");
 
@@ -485,7 +564,7 @@ int main(int argc, char** argv)
         GUI::AboutDialog::show("File Manager", Gfx::Bitmap::load_from_file("/res/icons/32x32/filetype-folder.png"), window);
     }));
 
-    app.set_menubar(move(menubar));
+    GUI::Application::the().set_menubar(move(menubar));
 
     main_toolbar.add_action(go_back_action);
     main_toolbar.add_action(go_forward_action);
@@ -637,22 +716,6 @@ int main(int argc, char** argv)
         }
     };
 
-    // our initial location is defined as, in order of precedence:
-    // 1. the first command-line argument (e.g. FileManager /bin)
-    // 2. the user's home directory
-    // 3. the root directory
-
-    String initial_location;
-
-    if (argc >= 2)
-        initial_location = argv[1];
-
-    if (initial_location.is_empty())
-        initial_location = get_current_user_home_path();
-
-    if (initial_location.is_empty())
-        initial_location = "/";
-
     directory_view.open(initial_location);
     directory_view.set_focus(true);
 
@@ -685,5 +748,5 @@ int main(int argc, char** argv)
         return GUI::Window::CloseRequestDecision::Close;
     };
 
-    return app.exec();
+    return GUI::Application::the().exec();
 }
