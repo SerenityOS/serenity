@@ -81,13 +81,13 @@ struct regmatch_t {
 };
 
 // Values for the cflags parameter to the regcomp() function:
-#define REG_EXTENDED 1 // Use Extended Regular Expressions.
+#define REG_EXTENDED 1                  // Use Extended Regular Expressions.
 #define REG_ICASE (REG_EXTENDED << 1)   // Ignore case in match.
 #define REG_NOSUB (REG_EXTENDED << 2)   // Report only success or fail in regexec().
 #define REG_NEWLINE (REG_EXTENDED << 3) // Change the handling of newline.
 
 // Values for the eflags parameter to the regexec() function:
-#define REG_NOTBOL 1 // The circumflex character (^), when taken as a special character, will not match the beginning of string.
+#define REG_NOTBOL 1                   // The circumflex character (^), when taken as a special character, will not match the beginning of string.
 #define REG_NOTEOL (REG_NOTBOL << 1)   // The dollar sign ($), when taken as a special character, will not match the end of string.
 #define REG_MATCHALL (REG_NOTBOL << 2) // Match all occurences of the character - extension to posix
 #define REG_SEARCH (REG_NOTBOL << 3)   // Do try to match the pattern anyhwere in the string
@@ -296,7 +296,7 @@ public:
         Token m_error_token;
     };
 
-    ParserResult parse();
+    ParserResult parse(int cflags);
     bool has_error() const { return m_parser_state.m_error != REG_NOERR; }
 
 private:
@@ -329,6 +329,7 @@ private:
         Vector<StackValue> m_bytes;
         size_t m_match_groups { 0 };
         size_t m_min_match_length { 0 };
+        int m_cflags { 0 };
         explicit ParserState(Lexer);
     };
 

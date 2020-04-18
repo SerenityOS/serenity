@@ -684,8 +684,10 @@ bool Parser::parse_ere_expression(Vector<StackValue>& stack, size_t& min_length)
         if (match(TokenType::LeftParen)) {
             consume();
 
-            operations.empend(OpCode::SaveLeftGroup);
-            operations.empend(m_parser_state.m_match_groups);
+            if (!(m_parser_state.m_cflags & REG_NOSUB)) {
+                operations.empend(OpCode::SaveLeftGroup);
+                operations.empend(m_parser_state.m_match_groups);
+            }
 
             Vector<StackValue> sub_ops;
             if (!parse_extended_reg_exp(sub_ops, length) || !sub_ops.size())
@@ -694,8 +696,11 @@ bool Parser::parse_ere_expression(Vector<StackValue>& stack, size_t& min_length)
             operations.append(move(sub_ops));
 
             consume(TokenType::RightParen);
-            operations.empend(OpCode::SaveRightGroup);
-            operations.empend(m_parser_state.m_match_groups);
+
+            if (!(m_parser_state.m_cflags & REG_NOSUB)) {
+                operations.empend(OpCode::SaveRightGroup);
+                operations.empend(m_parser_state.m_match_groups);
+            }
 
             ++m_parser_state.m_match_groups;
             can_match_dupl_symbol = true;
@@ -827,8 +832,9 @@ bool Parser::consume(StringView view)
     return true;
 }
 
-Parser::ParserResult Parser::parse()
+Parser::ParserResult Parser::parse(int cflags)
 {
+    m_parser_state.m_cflags = cflags;
     if (parse_extended_reg_exp(m_parser_state.m_bytes, m_parser_state.m_min_match_length))
         consume(TokenType::Eof);
 #ifdef REGEX_DEBUG
@@ -855,6 +861,7 @@ void Parser::reset()
     m_parser_state.m_current_token = m_parser_state.m_lexer.next();
     m_parser_state.m_error = REG_NOERR;
     m_parser_state.m_error_token = { TokenType::Eof, 0, StringView(nullptr) };
+    m_parser_state.m_cflags = 0;
 }
 
 VM::MatchState::MatchState(size_t instructionp, size_t stringp, StringView view)
@@ -1323,7 +1330,7 @@ int regcomp(regex_t* preg, const char* pattern, int cflags)
 #endif
 
     regex::Parser parser(move(lexer));
-    auto result = parser.parse();
+    auto result = parser.parse(cflags);
 
 #ifdef REGEX_DEBUG
     int i = 0;
