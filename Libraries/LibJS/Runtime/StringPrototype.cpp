@@ -138,12 +138,7 @@ Value StringPrototype::index_of(Interpreter& interpreter)
         needle_value = interpreter.argument(0);
     auto needle = needle_value.to_string();
     auto haystack = static_cast<const StringObject*>(this_object)->primitive_string()->string();
-
-    // FIXME: We should have a helper in AK::String for this.
-    auto* ptr = strstr(haystack.characters(), needle.characters());
-    if (!ptr)
-        return Value(-1);
-    return Value((i32)(ptr - haystack.characters()));
+    return Value((i32)haystack.index_of(needle).value_or(-1));
 }
 
 static StringObject* string_object_from(Interpreter& interpreter)
