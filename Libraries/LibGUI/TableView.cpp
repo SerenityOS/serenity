@@ -40,6 +40,7 @@ namespace GUI {
 
 TableView::TableView()
 {
+    set_fill_with_background_color(true);
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
 }
@@ -56,7 +57,8 @@ void TableView::paint_event(PaintEvent& event)
     Painter painter(*this);
     painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
-    painter.fill_rect(event.rect(), widget_background_color);
+    if (fill_with_background_color())
+        painter.fill_rect(event.rect(), widget_background_color);
     painter.translate(frame_thickness(), frame_thickness());
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
@@ -144,7 +146,8 @@ void TableView::paint_event(PaintEvent& event)
     };
 
     Gfx::Rect unpainted_rect(0, header_height() + painted_item_index * item_height(), exposed_width, height());
-    painter.fill_rect(unpainted_rect, widget_background_color);
+    if (fill_with_background_color())
+        painter.fill_rect(unpainted_rect, widget_background_color);
 
     // Untranslate the painter vertically and do the column headers.
     painter.translate(0, vertical_scrollbar().value());
