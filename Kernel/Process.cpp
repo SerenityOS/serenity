@@ -704,7 +704,7 @@ int Process::sys$gethostname(char* buffer, ssize_t size)
         return -EINVAL;
     if (!validate_write(buffer, size))
         return -EFAULT;
-    LOCKER(*s_hostname_lock);
+    LOCKER(*s_hostname_lock, Lock::Mode::Shared);
     if ((size_t)size < (s_hostname->length() + 1))
         return -ENAMETOOLONG;
     copy_to_user(buffer, s_hostname->characters(), s_hostname->length() + 1);
@@ -2157,7 +2157,7 @@ int Process::sys$uname(utsname* buf)
     REQUIRE_PROMISE(stdio);
     if (!validate_write_typed(buf))
         return -EFAULT;
-    LOCKER(*s_hostname_lock);
+    LOCKER(*s_hostname_lock, Lock::Mode::Shared);
     if (s_hostname->length() + 1 > sizeof(utsname::nodename))
         return -ENAMETOOLONG;
     copy_to_user(buf->sysname, "SerenityOS", 11);

@@ -81,7 +81,7 @@ unsigned TmpFS::next_inode_index()
 
 RefPtr<Inode> TmpFS::get_inode(InodeIdentifier identifier) const
 {
-    LOCKER(m_lock);
+    LOCKER(m_lock, Lock::Mode::Shared);
     ASSERT(identifier.fsid() == fsid());
 
     auto it = m_inodes.find(identifier.index());
@@ -161,14 +161,14 @@ NonnullRefPtr<TmpFSInode> TmpFSInode::create_root(TmpFS& fs)
 
 InodeMetadata TmpFSInode::metadata() const
 {
-    LOCKER(m_lock);
+    LOCKER(m_lock, Lock::Mode::Shared);
 
     return m_metadata;
 }
 
 bool TmpFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)> callback) const
 {
-    LOCKER(m_lock);
+    LOCKER(m_lock, Lock::Mode::Shared);
 
     if (!is_directory())
         return false;
@@ -183,7 +183,7 @@ bool TmpFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>
 
 ssize_t TmpFSInode::read_bytes(off_t offset, ssize_t size, u8* buffer, FileDescription*) const
 {
-    LOCKER(m_lock);
+    LOCKER(m_lock, Lock::Mode::Shared);
     ASSERT(!is_directory());
     ASSERT(size >= 0);
     ASSERT(offset >= 0);
@@ -247,7 +247,7 @@ ssize_t TmpFSInode::write_bytes(off_t offset, ssize_t size, const u8* buffer, Fi
 
 RefPtr<Inode> TmpFSInode::lookup(StringView name)
 {
-    LOCKER(m_lock);
+    LOCKER(m_lock, Lock::Mode::Shared);
     ASSERT(is_directory());
 
     if (name == ".")
@@ -263,7 +263,7 @@ RefPtr<Inode> TmpFSInode::lookup(StringView name)
 
 size_t TmpFSInode::directory_entry_count() const
 {
-    LOCKER(m_lock);
+    LOCKER(m_lock, Lock::Mode::Shared);
     ASSERT(is_directory());
     return 2 + m_children.size();
 }

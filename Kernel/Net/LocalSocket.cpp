@@ -45,9 +45,9 @@ Lockable<InlineLinkedList<LocalSocket>>& LocalSocket::all_sockets()
     return *s_list;
 }
 
-void LocalSocket::for_each(Function<void(LocalSocket&)> callback)
+void LocalSocket::for_each(Function<void(const LocalSocket&)> callback)
 {
-    LOCKER(all_sockets().lock());
+    LOCKER(all_sockets().lock(), Lock::Mode::Shared);
     for (auto& socket : all_sockets().resource())
         callback(socket);
 }

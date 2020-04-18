@@ -37,7 +37,7 @@ namespace Kernel {
 class TCPSocket final : public IPv4Socket
     , public Weakable<TCPSocket> {
 public:
-    static void for_each(Function<void(TCPSocket&)>);
+    static void for_each(Function<void(const TCPSocket&)>);
     static NonnullRefPtr<TCPSocket> create(int protocol);
     virtual ~TCPSocket() override;
 

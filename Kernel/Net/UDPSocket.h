@@ -36,7 +36,7 @@ public:
     virtual ~UDPSocket() override;
 
     static SocketHandle<UDPSocket> from_port(u16);
-    static void for_each(Function<void(UDPSocket&)>);
+    static void for_each(Function<void(const UDPSocket&)>);
 
 private:
     explicit UDPSocket(int protocol);
