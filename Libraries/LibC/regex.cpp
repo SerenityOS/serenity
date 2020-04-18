@@ -1035,7 +1035,15 @@ bool VM::match_recurse(MatchState& state, size_t recursion_level) const
                     if (state.m_view.length() - state.m_stringp < 1)
                         return run_forkstay_or_false();
 
-                    if (ch == state.m_view[state.m_stringp]) {
+                    auto ch1 = ch;
+                    auto ch2 = state.m_view[state.m_stringp];
+
+                    if (m_flags & REG_ICASE) {
+                        ch1 = tolower(ch1);
+                        ch2 = tolower(ch2);
+                    }
+
+                    if (ch1 == ch2) {
                         if (inverse)
                             inverse_matched = true;
                         else
@@ -1061,7 +1069,16 @@ bool VM::match_recurse(MatchState& state, size_t recursion_level) const
                     if (state.m_view.length() - state.m_stringp < length)
                         return run_forkstay_or_false();
 
-                    if (!strncmp(str, &state.m_view[state.m_stringp], length))
+                    auto str_view1 = StringView(str, length);
+                    auto str_view2 = StringView(&state.m_view[state.m_stringp], length);
+
+                    if (m_flags & REG_ICASE) {
+                        str_view1 = String(str_view1).to_lowercase().view();
+                        str_view2 = String(str_view2).to_lowercase().view();
+                    }
+
+                    if (!strncmp(str_view1.characters_without_null_termination(),
+                            str_view2.characters_without_null_termination(), length))
                         state.m_stringp += length;
                     else
                         return run_forkstay_or_false();
@@ -1119,7 +1136,7 @@ bool VM::match_recurse(MatchState& state, size_t recursion_level) const
                         }
                         break;
                     case CharacterClass::Lower:
-                        if (ch >= 'a' && ch <= 'z') {
+                        if ((ch >= 'a' && ch <= 'z') || ((m_flags & REG_ICASE) && (ch >= 'A' && ch <= 'Z'))) {
                             if (inverse)
                                 inverse_matched = true;
                             else
@@ -1151,7 +1168,7 @@ bool VM::match_recurse(MatchState& state, size_t recursion_level) const
                         }
                         break;
                     case CharacterClass::Upper:
-                        if (ch >= 'A' && ch <= 'Z') {
+                        if ((ch >= 'A' && ch <= 'Z') || ((m_flags & REG_ICASE) && (ch >= 'a' && ch <= 'z'))) {
                             if (inverse)
                                 inverse_matched = true;
                             else
@@ -1170,9 +1187,15 @@ bool VM::match_recurse(MatchState& state, size_t recursion_level) const
 
                 } else if (compare_type == CompareType::RangeExpression) {
                     auto& value = get_and_increment(state).compare_value;
-                    auto& from = value.range_values.from;
-                    auto& to = value.range_values.to;
-                    auto& ch = state.m_view[state.m_stringp];
+                    auto from = value.range_values.from;
+                    auto to = value.range_values.to;
+                    auto ch = state.m_view[state.m_stringp];
+
+                    if (m_flags & REG_ICASE) {
+                        from = tolower(from);
+                        to = tolower(to);
+                        ch = tolower(ch);
+                    }
 
                     if (ch >= from && ch <= to) {
                         if (inverse)
@@ -1180,6 +1203,7 @@ bool VM::match_recurse(MatchState& state, size_t recursion_level) const
                         else
                             ++state.m_stringp;
                     }
+
                 } else {
                     fprintf(stderr, "Undefined comparison: %i\n", (int)compare_type);
                     ASSERT_NOT_REACHED();
@@ -1313,7 +1337,7 @@ int regcomp(regex_t* preg, const char* pattern, int cflags)
 
     preg->cflags = cflags;
 
-    String s(pattern);
+    String pattern_str(pattern);
     regex::Lexer lexer(pattern);
 
 #ifdef REGEX_DEBUG
@@ -1355,7 +1379,7 @@ int regcomp(regex_t* preg, const char* pattern, int cflags)
     printf("Minlength for pattern '%s' = %lu\n", pattern, preg->re_minlength);
 #endif
 
-    preg->vm = make<regex::VM>(result.m_bytes, move(s));
+    preg->vm = make<regex::VM>(result.m_bytes, move(pattern_str), cflags);
     return REG_NOERR;
 }
 

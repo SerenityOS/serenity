@@ -1972,4 +1972,61 @@ TEST_CASE(error_message)
     regfree(&regex);
 }
 
+TEST_CASE(simple_ignorecase)
+{
+    String pattern = "^hello friends";
+    regex_t regex;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED | REG_NOSUB | REG_ICASE), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "Hello Friends", 0, NULL, 0), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "hello Friends", 0, NULL, 0), REG_NOERR);
+
+    EXPECT_EQ(regexec(&regex, "hello Friends!", 0, NULL, 0), REG_NOMATCH);
+    EXPECT_EQ(regexec(&regex, "hello Friends!", 0, NULL, REG_SEARCH), REG_NOERR);
+
+    EXPECT_EQ(regexec(&regex, "hell Friends", 0, NULL, 0), REG_NOMATCH);
+    EXPECT_EQ(regexec(&regex, "hell Friends", 0, NULL, REG_SEARCH), REG_NOMATCH);
+
+    regfree(&regex);
+}
+
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
+BENCHMARK_CASE(simple_ignorecase_benchmark)
+{
+    String pattern = "^hello friends";
+    regex_t regex;
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED | REG_NOSUB | REG_ICASE), REG_NOERR);
+
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(regexec(&regex, "Hello Friends", 0, NULL, 0), REG_NOERR);
+        EXPECT_EQ(regexec(&regex, "hello Friends", 0, NULL, 0), REG_NOERR);
+
+        EXPECT_EQ(regexec(&regex, "hello Friends!", 0, NULL, 0), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "hello Friends!", 0, NULL, REG_SEARCH), REG_NOERR);
+
+        EXPECT_EQ(regexec(&regex, "hell Friends", 0, NULL, 0), REG_NOMATCH);
+        EXPECT_EQ(regexec(&regex, "hell Friends", 0, NULL, REG_SEARCH), REG_NOMATCH);
+    }
+
+    regfree(&regex);
+}
+
+BENCHMARK_CASE(simple_ignorecase_benchmark_reference_stdcpp_regex_match)
+{
+    std::regex re("^hello friends", std::regex_constants::icase);
+    std::cmatch m;
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(std::regex_match("Hello Friends", m, re), true);
+        EXPECT_EQ(std::regex_match("hello Friends", m, re), true);
+
+        EXPECT_EQ(std::regex_match("hello Friends!", m, re), false);
+        EXPECT_EQ(std::regex_search("hello Friends", m, re), true);
+
+        EXPECT_EQ(std::regex_match("hell Friends", m, re), false);
+        EXPECT_EQ(std::regex_search("hell Friends", m, re), false);
+    }
+}
+#endif
+
 TEST_MAIN(Regex)

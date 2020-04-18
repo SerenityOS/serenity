@@ -339,9 +339,10 @@ private:
 
 class VM {
 public:
-    explicit VM(const Vector<StackValue>& bytecode, const String&& pattern)
+    explicit VM(const Vector<StackValue>& bytecode, const String&& pattern, const int flags)
         : m_bytecode(bytecode)
-        , m_pattern(move(pattern)) {};
+        , m_pattern(move(pattern))
+        , m_flags(flags) {};
 
     struct MatchResult {
         size_t m_match_count { 0 };
@@ -389,5 +390,6 @@ private:
 
     const Vector<StackValue> m_bytecode;
     const String& m_pattern;
+    const int m_flags { 0 };
 };
 }
