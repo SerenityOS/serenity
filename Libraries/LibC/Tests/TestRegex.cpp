@@ -2034,10 +2034,6 @@ TEST_CASE(simple_notbol_noteol)
     String pattern = "^hello friends$";
     regex_t regex;
 
-    std::regex re(pattern.characters(), std::regex_constants::match_not_bol);
-    std::regex re2(pattern.characters(), std::regex_constants::match_not_eol);
-    std::cmatch m;
-
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED | REG_NOSUB | REG_ICASE), REG_NOERR);
     EXPECT_EQ(regexec(&regex, "a hello friends b", 0, NULL, REG_NOTBOL), REG_NOMATCH);
     EXPECT_EQ(regexec(&regex, "hello friends", 0, NULL, REG_NOTBOL), REG_NOMATCH);
