@@ -38,9 +38,9 @@
 
 namespace Kernel {
 
-void TCPSocket::for_each(Function<void(TCPSocket&)> callback)
+void TCPSocket::for_each(Function<void(const TCPSocket&)> callback)
 {
-    LOCKER(sockets_by_tuple().lock());
+    LOCKER(sockets_by_tuple().lock(), Lock::Mode::Shared);
     for (auto& it : sockets_by_tuple().resource())
         callback(*it.value);
 }
@@ -80,7 +80,7 @@ Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>& TCPSocket::sockets_by_tuple()
 
 RefPtr<TCPSocket> TCPSocket::from_tuple(const IPv4SocketTuple& tuple)
 {
-    LOCKER(sockets_by_tuple().lock());
+    LOCKER(sockets_by_tuple().lock(), Lock::Mode::Shared);
 
     auto exact_match = sockets_by_tuple().resource().get(tuple);
     if (exact_match.has_value())
@@ -230,7 +230,7 @@ void TCPSocket::send_outgoing_packets()
 
     auto now = kgettimeofday();
 
-    LOCKER(m_not_acked_lock);
+    LOCKER(m_not_acked_lock, Lock::Mode::Shared);
     for (auto& packet : m_not_acked) {
         timeval diff;
         timeval_sub(packet.tx_time, now, diff);

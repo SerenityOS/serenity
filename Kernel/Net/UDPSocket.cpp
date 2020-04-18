@@ -34,9 +34,9 @@
 
 namespace Kernel {
 
-void UDPSocket::for_each(Function<void(UDPSocket&)> callback)
+void UDPSocket::for_each(Function<void(const UDPSocket&)> callback)
 {
-    LOCKER(sockets_by_port().lock());
+    LOCKER(sockets_by_port().lock(), Lock::Mode::Shared);
     for (auto it : sockets_by_port().resource())
         callback(*it.value);
 }
@@ -53,7 +53,7 @@ SocketHandle<UDPSocket> UDPSocket::from_port(u16 port)
 {
     RefPtr<UDPSocket> socket;
     {
-        LOCKER(sockets_by_port().lock());
+        LOCKER(sockets_by_port().lock(), Lock::Mode::Shared);
         auto it = sockets_by_port().resource().find(port);
         if (it == sockets_by_port().resource().end())
             return {};
