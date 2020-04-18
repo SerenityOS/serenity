@@ -27,6 +27,8 @@
 #include "DirectoryView.h"
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
+#include <AK/URL.h>
+#include <LibGUI/DesktopServices.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -68,55 +70,12 @@ void DirectoryView::handle_activation(const GUI::ModelIndex& index)
         return;
     }
 
-    ASSERT(!S_ISLNK(st.st_mode));
+    URL url;
+    url.set_protocol("file");
+    url.set_path(path);
 
-    if (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
-        if (fork() == 0) {
-            int rc = execl(path.characters(), path.characters(), nullptr);
-            if (rc < 0)
-                perror("exec");
-            ASSERT_NOT_REACHED();
-        }
-        return;
-    }
-
-    if (path.to_lowercase().ends_with(".png")) {
-        if (fork() == 0) {
-            int rc = execl("/bin/qs", "/bin/qs", path.characters(), nullptr);
-            if (rc < 0)
-                perror("exec");
-            ASSERT_NOT_REACHED();
-        }
-        return;
-    }
-
-    if (path.to_lowercase().ends_with(".html")) {
-        if (fork() == 0) {
-            int rc = execl("/bin/Browser", "/bin/Browser", path.characters(), nullptr);
-            if (rc < 0)
-                perror("exec");
-            ASSERT_NOT_REACHED();
-        }
-        return;
-    }
-
-    if (path.to_lowercase().ends_with(".wav")) {
-        if (fork() == 0) {
-            int rc = execl("/bin/SoundPlayer", "/bin/SoundPlayer", path.characters(), nullptr);
-            if (rc < 0)
-                perror("exec");
-            ASSERT_NOT_REACHED();
-        }
-        return;
-    }
-
-    if (fork() == 0) {
-        int rc = execl("/bin/TextEditor", "/bin/TextEditor", path.characters(), nullptr);
-        if (rc < 0)
-            perror("exec");
-        ASSERT_NOT_REACHED();
-    }
-};
+    GUI::DesktopServices::open(url);
+}
 
 DirectoryView::DirectoryView()
     : m_model(GUI::FileSystemModel::create())
