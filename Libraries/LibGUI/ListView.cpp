@@ -35,6 +35,7 @@ namespace GUI {
 
 ListView::ListView()
 {
+    set_fill_with_background_color(true);
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
 }
@@ -170,7 +171,8 @@ void ListView::paint_event(PaintEvent& event)
     };
 
     Gfx::Rect unpainted_rect(0, painted_item_index * item_height(), exposed_width, height());
-    painter.fill_rect(unpainted_rect, palette().color(background_role()));
+    if (fill_with_background_color())
+        painter.fill_rect(unpainted_rect, palette().color(background_role()));
 }
 
 int ListView::item_count() const

@@ -53,6 +53,7 @@ TreeView::MetadataForIndex& TreeView::ensure_metadata_for_index(const ModelIndex
 
 TreeView::TreeView()
 {
+    set_fill_with_background_color(true);
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
     set_size_columns_to_fit_content(true);
@@ -173,7 +174,8 @@ void TreeView::paint_event(PaintEvent& event)
     Painter painter(*this);
     painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
-    painter.fill_rect(event.rect(), palette().color(background_role()));
+    if (fill_with_background_color())
+        painter.fill_rect(event.rect(), palette().color(background_role()));
 
     if (!model())
         return;
