@@ -437,8 +437,8 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
 
     while (!done() && !match(TokenType::CurlyClose)) {
         FlyString property_name;
-        if (match(TokenType::Identifier)) {
-            property_name = consume(TokenType::Identifier).value();
+        if (match_identifier_name()) {
+            property_name = consume().value();
         } else if (match(TokenType::StringLiteral)) {
             property_name = consume(TokenType::StringLiteral).string_value();
         } else if (match(TokenType::NumericLiteral)) {
@@ -582,7 +582,9 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
         return create_ast_node<AssignmentExpression>(AssignmentOp::Assignment, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::Period:
         consume();
-        return create_ast_node<MemberExpression>(move(lhs), parse_expression(min_precedence, associativity));
+        if (!match_identifier_name())
+            expected("IdentifierName");
+        return create_ast_node<MemberExpression>(move(lhs), create_ast_node<Identifier>(consume().value()));
     case TokenType::BracketOpen: {
         consume(TokenType::BracketOpen);
         auto expression = create_ast_node<MemberExpression>(move(lhs), parse_expression(0), true);
@@ -1070,6 +1072,11 @@ bool Parser::match_statement() const
         || type == TokenType::Break
         || type == TokenType::Continue
         || type == TokenType::Var;
+}
+
+bool Parser::match_identifier_name() const
+{
+    return m_parser_state.m_current_token.is_identifier_name();
 }
 
 bool Parser::done() const
