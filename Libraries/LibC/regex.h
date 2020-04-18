@@ -28,6 +28,7 @@
 
 #include <AK/Forward.h>
 #include <AK/HashMap.h>
+#include <AK/OwnPtr.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <stddef.h>
@@ -65,7 +66,7 @@ struct regex_t {
     u8 cflags;
     u8 eflags;
     size_t re_minlength;
-    regex::VM* vm { nullptr };
+    OwnPtr<regex::VM> vm;
     size_t re_pat_errpos { 0 };
     ReError re_pat_err;
     String re_pat;
@@ -347,8 +348,8 @@ public:
         size_t m_ops { 0 };
     };
 
-    MatchResult match(const StringView view, size_t max_matches_result, size_t match_groups, size_t min_length, bool search);
-    MatchResult match_all(const StringView view, size_t max_matches_result, size_t match_groups, size_t min_length);
+    MatchResult match(const StringView view, size_t max_matches_result, size_t match_groups, size_t min_length, bool search) const;
+    MatchResult match_all(const StringView view, size_t max_matches_result, size_t match_groups, size_t min_length) const;
     const Vector<StackValue>& bytes() const { return m_bytecode; }
 
 private:
@@ -382,7 +383,7 @@ private:
         }
     };
 
-    bool match_recurse(MatchState& state, size_t recursion_level = 0);
+    bool match_recurse(MatchState& state, size_t recursion_level = 0) const;
     const StackValue get(MatchState& state, size_t offset = 0) const;
     const StackValue get_and_increment(MatchState& state, size_t value = 1) const;
 

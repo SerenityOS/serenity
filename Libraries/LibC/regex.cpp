@@ -864,7 +864,7 @@ VM::MatchState::MatchState(size_t instructionp, size_t stringp, StringView view)
 {
 }
 
-VM::MatchResult VM::match(StringView view, size_t max_matches_result, size_t match_groups, size_t min_length, bool search)
+VM::MatchResult VM::match(StringView view, size_t max_matches_result, size_t match_groups, size_t min_length, bool search) const
 {
     regoff_t match_start;
     bool match;
@@ -899,7 +899,7 @@ VM::MatchResult VM::match(StringView view, size_t max_matches_result, size_t mat
     return { 1, move(state.m_matches), state.m_ops };
 }
 
-VM::MatchResult VM::match_all(StringView view, size_t max_matches_result, size_t match_groups, size_t min_length)
+VM::MatchResult VM::match_all(StringView view, size_t max_matches_result, size_t match_groups, size_t min_length) const
 {
     regoff_t match_start;
     size_t match_count { 0 };
@@ -956,7 +956,7 @@ const StackValue VM::get_and_increment(MatchState& state, size_t value) const
     return current;
 }
 
-bool VM::match_recurse(MatchState& state, size_t recursion_level)
+bool VM::match_recurse(MatchState& state, size_t recursion_level) const
 {
     if (recursion_level > REG_MAX_RECURSE)
         return false;
@@ -1372,7 +1372,7 @@ int regcomp(regex_t* preg, const char* pattern, int cflags)
     printf("Minlength for pattern '%s' = %lu\n", pattern, preg->re_minlength);
 #endif
 
-    preg->vm = new regex::VM(result.m_bytes, move(s));
+    preg->vm = make<regex::VM>(result.m_bytes, move(s));
     return REG_NOERR;
 }
 
@@ -1386,14 +1386,14 @@ int regexec(const regex_t* preg, const char* string, size_t nmatch, regmatch_t p
         return REG_BADPAT;
     }
 
-    auto& vm = *preg->vm;
+    auto& vm = preg->vm;
 
     regex::VM::MatchResult result;
 
     if (eflags & REG_MATCHALL) {
-        result = vm.match_all(string, nmatch, preg->re_nsub, preg->re_minlength);
+        result = vm->match_all(string, nmatch, preg->re_nsub, preg->re_minlength);
     } else {
-        result = vm.match(string, nmatch, preg->re_nsub, preg->re_minlength, eflags & REG_SEARCH);
+        result = vm->match(string, nmatch, preg->re_nsub, preg->re_minlength, eflags & REG_SEARCH);
     }
 
     if (result.m_match_count) {
@@ -1517,10 +1517,6 @@ void regfree(regex_t* preg)
     preg->re_nsub = 0;
     preg->cflags = 0;
     preg->eflags = 0;
-    if (preg->vm)
-        delete preg->vm;
-
-    if (preg->re_pat)
-        delete[] preg->re_pat;
+    preg->vm.clear();
 }
 }
