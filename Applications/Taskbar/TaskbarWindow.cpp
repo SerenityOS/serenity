@@ -76,9 +76,7 @@ void TaskbarWindow::create_quick_launch_bar()
     quick_launch_bar.set_layout<GUI::HorizontalBoxLayout>();
     quick_launch_bar.layout()->set_spacing(3);
     quick_launch_bar.layout()->set_margins({ 3, 0, 3, 0 });
-    quick_launch_bar.set_frame_thickness(1);
-    quick_launch_bar.set_frame_shape(Gfx::FrameShape::Container);
-    quick_launch_bar.set_frame_shadow(Gfx::FrameShadow::Raised);
+    quick_launch_bar.set_frame_thickness(0);
 
     int total_width = 6;
     bool first = true;
