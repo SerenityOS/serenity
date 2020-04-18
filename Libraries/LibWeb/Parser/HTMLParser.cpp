@@ -45,7 +45,7 @@ static bool is_valid_in_attribute_name(char ch)
     return isalnum(ch) || ch == '_' || ch == '-';
 }
 
-static bool is_self_closing_tag(const StringView& tag_name)
+static bool is_void_element(const StringView& tag_name)
 {
     return tag_name == "area"
         || tag_name == "base"
@@ -133,7 +133,7 @@ static bool parse_html_document(const StringView& html, Document& document, Pare
             node_stack[node_stack.size() - 2].append_child(new_element);
         }
 
-        if (is_self_closing_tag(new_element->tag_name()))
+        if (is_void_element(new_element->tag_name()))
             close_tag();
     };
 
@@ -256,6 +256,13 @@ static bool parse_html_document(const StringView& html, Document& document, Pare
         case State::InTagName:
             if (isspace(ch)) {
                 move_to_state(State::InAttributeList);
+                break;
+            }
+            if (ch == '/' && peek(1) == '>') {
+                open_tag();
+                close_tag();
+                i += 1;
+                move_to_state(State::Free);
                 break;
             }
             if (ch == '>') {
