@@ -1,22 +1,38 @@
---- lua/src/Makefile	2018-06-25 13:46:36.000000000 -0400
-+++ /home/mustafa/src/lua/src/Makefile	2019-05-28 15:26:12.575719307 -0400
-@@ -4,15 +4,15 @@
- # == CHANGE THE SETTINGS BELOW TO SUIT YOUR ENVIRONMENT =======================
+diff -Naur lua-5.3.5/Makefile lua-5.3.5.serenity/Makefile
+--- lua-5.3.5/Makefile	2016-12-20 11:26:08.000000000 -0500
++++ lua-5.3.5.serenity/Makefile	2020-04-18 03:41:23.000000000 -0400
+@@ -36,7 +36,7 @@
+ # == END OF USER SETTINGS -- NO NEED TO CHANGE ANYTHING BELOW THIS LINE =======
  
- # Your platform. See PLATS for possible values.
--PLAT= none
-+PLAT= generic
+ # Convenience platforms targets.
+-PLATS= aix bsd c89 freebsd generic linux macosx mingw posix solaris
++PLATS= aix bsd c89 freebsd generic linux macosx mingw posix solaris serenity
  
--CC= gcc -std=gnu99
-+CC= i686-pc-serenity-gcc -std=gnu99
- CFLAGS= -O2 -Wall -Wextra -DLUA_COMPAT_5_2 $(SYSCFLAGS) $(MYCFLAGS)
- LDFLAGS= $(SYSLDFLAGS) $(MYLDFLAGS)
- LIBS= -lm $(SYSLIBS) $(MYLIBS)
+ # What to install.
+ TO_BIN= lua luac
+diff -Naur lua-5.3.5/src/Makefile lua-5.3.5.serenity/src/Makefile
+--- lua-5.3.5/src/Makefile	2018-06-25 13:46:36.000000000 -0400
++++ lua-5.3.5.serenity/src/Makefile	2020-04-18 03:51:15.000000000 -0400
+@@ -26,7 +26,7 @@
  
--AR= ar rcu
--RANLIB= ranlib
-+AR= i686-pc-serenity-ar rcu
-+RANLIB= i686-pc-serenity-ranlib
- RM= rm -f
+ # == END OF USER SETTINGS -- NO NEED TO CHANGE ANYTHING BELOW THIS LINE =======
  
- SYSCFLAGS=
+-PLATS= aix bsd c89 freebsd generic linux macosx mingw posix solaris
++PLATS= aix bsd c89 freebsd generic linux macosx mingw posix solaris serenity
+ 
+ LUA_A=	liblua.a
+ CORE_O=	lapi.o lcode.o lctype.o ldebug.o ldo.o ldump.o lfunc.o lgc.o llex.o \
+@@ -124,6 +124,13 @@
+ solaris:
+ 	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_POSIX -DLUA_USE_DLOPEN -D_REENTRANT" SYSLIBS="-ldl"
+ 
++serenity:
++	$(MAKE) $(ALL) \
++		CC="i686-pc-serenity-gcc -std=gnu99" \
++		AR="i686-pc-serenity-ar rcu" \
++		RANLIB="i686-pc-serenity-ranlib" \
++		SYSCFLAGS="-DLUA_USE_DLOPEN"
++
+ # list targets that do not create files (but not all makes understand .PHONY)
+ .PHONY: all $(PLATS) default o a clean depend echo none
+ 
