@@ -216,10 +216,7 @@ void init_stage2()
     bool text_debug = kernel_command_line().contains("text_debug");
     bool force_pio = kernel_command_line().contains("force_pio");
 
-    auto root = kernel_command_line().get("root");
-    if (root.is_empty()) {
-        root = "/dev/hda";
-    }
+    auto root = kernel_command_line().lookup("root").value_or("/dev/hda");
 
     if (!root.starts_with("/dev/hda")) {
         klog() << "init_stage2: root filesystem must be on the first IDE hard drive (/dev/hda)";
