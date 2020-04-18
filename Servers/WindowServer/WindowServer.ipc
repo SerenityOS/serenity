@@ -48,7 +48,7 @@ endpoint WindowServer = 2
     SetWindowTitle(i32 window_id, String title) => ()
     GetWindowTitle(i32 window_id) => (String title)
 
-    SetWindowRect(i32 window_id, Gfx::Rect rect) => ()
+    SetWindowRect(i32 window_id, Gfx::Rect rect) => (Gfx::Rect rect)
     GetWindowRect(i32 window_id) => (Gfx::Rect rect)
 
     InvalidateRect(i32 window_id, Vector<Gfx::Rect> rects, bool ignore_occlusion) =|
