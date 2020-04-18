@@ -1066,10 +1066,12 @@ bool VM::match_recurse(MatchState& state, size_t recursion_level) const
 
                     auto str_view1 = StringView(str, length);
                     auto str_view2 = StringView(&state.m_view[state.m_stringp], length);
-
+                    String str1, str2;
                     if (m_compilation_flags & (u8)CompilationFlags::IgnoreCase) {
-                        str_view1 = String(str_view1).to_lowercase().view();
-                        str_view2 = String(str_view2).to_lowercase().view();
+                        str1 = String { str_view1 }.to_lowercase();
+                        str2 = String { str_view2 }.to_lowercase();
+                        str_view1 = str1.view();
+                        str_view2 = str2.view();
                     }
 
                     if (!strncmp(str_view1.characters_without_null_termination(),
