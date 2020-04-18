@@ -153,6 +153,8 @@ public:
     String string_value() const;
     bool bool_value() const;
 
+    bool is_identifier_name() const;
+
 private:
     TokenType m_type;
     StringView m_trivia;
