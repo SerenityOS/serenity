@@ -326,9 +326,7 @@ int main(int argc, char** argv)
         if (app.args()[0].starts_with("file://")) {
             url_to_load = URL(app.args()[0]);
         } else {
-            url_to_load = URL();
-            url_to_load.set_protocol("file");
-            url_to_load.set_path(app.args()[0]);
+            url_to_load = URL::create_with_file_protocol(app.args()[0]);
         }
     }
 
