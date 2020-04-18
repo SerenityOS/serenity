@@ -281,15 +281,18 @@ void IRCAppWindow::setup_menus()
     channel_menu.add_action(*m_change_topic_action);
     channel_menu.add_action(*m_invite_user_action);
     channel_menu.add_action(*m_banlist_action);
-    channel_menu.add_separator();
-    channel_menu.add_action(*m_voice_user_action);
-    channel_menu.add_action(*m_devoice_user_action);
-    channel_menu.add_action(*m_hop_user_action);
-    channel_menu.add_action(*m_dehop_user_action);
-    channel_menu.add_action(*m_op_user_action);
-    channel_menu.add_action(*m_deop_user_action);
-    channel_menu.add_separator();
-    channel_menu.add_action(*m_kick_user_action);
+
+    RefPtr<GUI::Menu> channel_control_menu = GUI::Menu::construct("Control");
+    channel_menu.add_submenu(*channel_control_menu);
+    channel_control_menu->add_action(*m_voice_user_action);
+    channel_control_menu->add_action(*m_devoice_user_action);
+    channel_control_menu->add_action(*m_hop_user_action);
+    channel_control_menu->add_action(*m_dehop_user_action);
+    channel_control_menu->add_action(*m_op_user_action);
+    channel_control_menu->add_action(*m_deop_user_action);
+    channel_control_menu->add_separator();
+    channel_control_menu->add_action(*m_kick_user_action);
+
     channel_menu.add_separator();
     channel_menu.add_action(*m_cycle_channel_action);
     channel_menu.add_action(*m_part_action);
