@@ -30,8 +30,8 @@
 namespace JS {
 
 Function::Function(Object& prototype)
+    : Object(&prototype)
 {
-    set_prototype(&prototype);
 }
 
 Function::~Function()

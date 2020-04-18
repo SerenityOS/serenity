@@ -38,7 +38,10 @@ class Wrapper
     : public JS::Object
     , public Weakable<Wrapper> {
 protected:
-    explicit Wrapper() {}
+    explicit Wrapper(Object& prototype)
+        : Object(&prototype)
+    {
+    }
 };
 
 }

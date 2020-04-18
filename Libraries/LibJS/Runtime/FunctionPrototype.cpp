@@ -36,6 +36,7 @@
 namespace JS {
 
 FunctionPrototype::FunctionPrototype()
+    : Object(interpreter().object_prototype())
 {
 }
 

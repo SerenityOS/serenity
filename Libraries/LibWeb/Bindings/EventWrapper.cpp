@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibJS/Interpreter.h>
 #include <LibWeb/Bindings/EventWrapper.h>
 #include <LibWeb/Bindings/MouseEventWrapper.h>
 #include <LibWeb/DOM/MouseEvent.h>
@@ -39,7 +40,8 @@ EventWrapper* wrap(JS::Heap& heap, Event& event)
 }
 
 EventWrapper::EventWrapper(Event& event)
-    : m_event(event)
+    : Wrapper(*interpreter().object_prototype())
+    , m_event(event)
 {
 }
 

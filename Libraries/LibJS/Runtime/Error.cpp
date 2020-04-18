@@ -37,7 +37,8 @@ Error* Error::create(GlobalObject& global_object, const FlyString& name, const S
 }
 
 Error::Error(const FlyString& name, const String& message, Object& prototype)
-    : m_name(name)
+    : Object(&prototype)
+    , m_name(name)
     , m_message(message)
 {
     set_prototype(&prototype);

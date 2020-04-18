@@ -34,8 +34,8 @@
 namespace JS {
 
 ObjectPrototype::ObjectPrototype()
+    : Object(nullptr)
 {
-    set_prototype(nullptr);
 }
 
 void ObjectPrototype::initialize()

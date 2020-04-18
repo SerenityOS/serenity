@@ -35,6 +35,7 @@ namespace Web {
 namespace Bindings {
 
 XMLHttpRequestConstructor::XMLHttpRequestConstructor()
+    : NativeFunction(*interpreter().function_prototype())
 {
     put("length", JS::Value(1));
 }

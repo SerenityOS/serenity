@@ -52,7 +52,7 @@ ObjectConstructor::~ObjectConstructor()
 
 Value ObjectConstructor::call(Interpreter& interpreter)
 {
-    return interpreter.heap().allocate<Object>();
+    return Object::create_empty(interpreter, interpreter.global_object());
 }
 
 Value ObjectConstructor::construct(Interpreter& interpreter)
@@ -109,7 +109,7 @@ Value ObjectConstructor::get_own_property_descriptor(Interpreter& interpreter)
     auto metadata = object.shape().lookup(interpreter.argument(1).to_string());
     if (!metadata.has_value())
         return js_undefined();
-    auto* descriptor = interpreter.heap().allocate<Object>();
+    auto* descriptor = Object::create_empty(interpreter, interpreter.global_object());
     descriptor->put("configurable", Value(!!(metadata.value().attributes & Attribute::Configurable)));
     descriptor->put("enumerable", Value(!!(metadata.value().attributes & Attribute::Enumerable)));
     descriptor->put("writable", Value(!!(metadata.value().attributes & Attribute::Writable)));

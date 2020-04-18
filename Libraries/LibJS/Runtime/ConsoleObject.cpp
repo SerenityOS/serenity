@@ -44,6 +44,7 @@ static void print_args(Interpreter& interpreter)
 }
 
 ConsoleObject::ConsoleObject()
+    : Object(interpreter().object_prototype())
 {
     put_native_function("log", log);
     put_native_function("debug", debug);

@@ -37,7 +37,8 @@ namespace Web {
 namespace Bindings {
 
 EventTargetWrapper::EventTargetWrapper(EventTarget& impl)
-    : m_impl(impl)
+    : Wrapper(*interpreter().object_prototype())
+    , m_impl(impl)
 {
     put_native_function("addEventListener", add_event_listener, 2);
 }

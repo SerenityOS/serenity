@@ -33,6 +33,7 @@
 namespace JS {
 
 MathObject::MathObject()
+    : Object(interpreter().object_prototype())
 {
     put_native_function("abs", abs, 1);
     put_native_function("random", random);
