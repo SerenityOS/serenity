@@ -119,6 +119,7 @@ public:
     void move_to_front_and_make_active(Window&);
 
     Gfx::Rect menubar_rect() const;
+    Gfx::Rect desktop_rect() const;
 
     const Cursor& active_cursor() const;
     const Cursor& arrow_cursor() const { return *m_arrow_cursor; }

@@ -936,6 +936,18 @@ Gfx::Rect WindowManager::menubar_rect() const
     return MenuManager::the().menubar_rect();
 }
 
+Gfx::Rect WindowManager::desktop_rect() const
+{
+    if (active_fullscreen_window())
+        return {};
+    return {
+        0,
+        menubar_rect().bottom() + 1,
+        Screen::the().width(),
+        Screen::the().height() - menubar_rect().height() - 28
+    };
+}
+
 void WindowManager::event(Core::Event& event)
 {
     if (static_cast<Event&>(event).is_mouse_event()) {
