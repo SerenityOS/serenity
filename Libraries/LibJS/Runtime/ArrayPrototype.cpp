@@ -51,6 +51,7 @@ ArrayPrototype::ArrayPrototype()
     put_native_function("unshift", unshift, 1);
     put_native_function("join", join, 1);
     put_native_function("concat", concat, 1);
+    put_native_function("slice", slice, 2);
     put("length", Value(0));
 }
 
@@ -252,6 +253,46 @@ Value ArrayPrototype::concat(Interpreter& interpreter)
     }
 
     return Value(new_array);
+}
+
+Value ArrayPrototype::slice(Interpreter& interpreter)
+{
+    auto* array = array_from(interpreter);
+    if (!array)
+        return {};
+
+    auto* new_array = Array::create(interpreter.global_object());
+    if (interpreter.argument_count() == 0) {
+        new_array->elements().append(array->elements());
+        return new_array;
+    }
+
+    ssize_t array_size = static_cast<ssize_t>(array->elements().size());
+    auto start_slice = interpreter.argument(0).to_i32();
+    auto end_slice = array_size;
+
+    if (start_slice > array_size)
+        return new_array;
+
+    if (start_slice < 0)
+        start_slice = end_slice + start_slice;
+
+    if (interpreter.argument_count() >= 2) {
+        end_slice = interpreter.argument(1).to_i32();
+
+        if (end_slice < 0)
+            end_slice = array_size + end_slice;
+        else if (end_slice > array_size)
+            end_slice = array_size;
+    }
+
+    size_t array_capacity = start_slice + array_size - end_slice;
+    new_array->elements().ensure_capacity(array_capacity);
+    for (ssize_t i = start_slice; i < end_slice; ++i) {
+        new_array->elements().append(array->elements().at(i));
+    }
+
+    return new_array;
 }
 
 }
