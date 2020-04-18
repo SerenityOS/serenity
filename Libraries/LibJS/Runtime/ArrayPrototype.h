@@ -49,6 +49,7 @@ private:
     static Value unshift(Interpreter&);
     static Value join(Interpreter&);
     static Value concat(Interpreter&);
+    static Value slice(Interpreter&);
 };
 
 }
