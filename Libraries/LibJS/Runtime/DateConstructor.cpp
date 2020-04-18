@@ -28,15 +28,16 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/DateConstructor.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <sys/time.h>
 #include <time.h>
 
 namespace JS {
 
 DateConstructor::DateConstructor()
-    : NativeFunction("Date", *interpreter().function_prototype())
+    : NativeFunction("Date", *interpreter().global_object().function_prototype())
 {
-    put("prototype", interpreter().date_prototype());
+    put("prototype", interpreter().global_object().date_prototype());
     put("length", Value(7));
 
     put_native_function("now", now);

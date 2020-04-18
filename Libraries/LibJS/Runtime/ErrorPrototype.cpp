@@ -29,13 +29,14 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/ErrorPrototype.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
 
 ErrorPrototype::ErrorPrototype()
-    : Object(interpreter().object_prototype())
+    : Object(interpreter().global_object().object_prototype())
 {
     put_native_property("name", name_getter, name_setter);
     put_native_property("message", message_getter, nullptr);
@@ -104,7 +105,7 @@ Value ErrorPrototype::to_string(Interpreter& interpreter)
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
     PrototypeName::PrototypeName()                                            \
-        : Object(interpreter().error_prototype())                             \
+        : Object(interpreter().global_object().error_prototype())             \
     {                                                                         \
     }                                                                         \
     PrototypeName::~PrototypeName() {}                                        \

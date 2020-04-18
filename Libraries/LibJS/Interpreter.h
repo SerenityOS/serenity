@@ -74,6 +74,7 @@ public:
     {
         auto interpreter = adopt_own(*new Interpreter);
         interpreter->m_global_object = interpreter->heap().allocate<GlobalObjectType>(forward<Args>(args)...);
+        static_cast<GlobalObjectType*>(interpreter->m_global_object)->initialize();
         return interpreter;
     }
 
@@ -140,11 +141,6 @@ public:
 
     Shape* empty_object_shape() { return m_empty_object_shape; }
 
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
-    Object* snake_name##_prototype() { return m_##snake_name##_prototype; }
-    JS_ENUMERATE_BUILTIN_TYPES
-#undef __JS_ENUMERATE
-
     Exception* exception()
     {
         return m_exception;
@@ -176,12 +172,6 @@ private:
     Vector<CallFrame> m_call_stack;
 
     Shape* m_empty_object_shape { nullptr };
-
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
-    Object* m_##snake_name##_prototype { nullptr };
-    JS_ENUMERATE_BUILTIN_TYPES
-#undef __JS_ENUMERATE
-
     Object* m_global_object { nullptr };
 
     Exception* m_exception { nullptr };

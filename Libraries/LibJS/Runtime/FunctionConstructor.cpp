@@ -30,14 +30,15 @@
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionConstructor.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/ScriptFunction.h>
 
 namespace JS {
 
 FunctionConstructor::FunctionConstructor()
-    : NativeFunction("Function", *interpreter().function_prototype())
+    : NativeFunction("Function", *interpreter().global_object().function_prototype())
 {
-    put("prototype", interpreter().function_prototype());
+    put("prototype", interpreter().global_object().function_prototype());
     put("length", Value(1));
 }
 

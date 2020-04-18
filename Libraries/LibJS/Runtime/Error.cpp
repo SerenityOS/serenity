@@ -33,7 +33,7 @@ namespace JS {
 Error* Error::create(GlobalObject& global_object, const FlyString& name, const String& message)
 {
     auto& interpreter = global_object.interpreter();
-    return interpreter.heap().allocate<Error>(name, message, *interpreter.error_prototype());
+    return interpreter.heap().allocate<Error>(name, message, *global_object.error_prototype());
 }
 
 Error::Error(const FlyString& name, const String& message, Object& prototype)
@@ -51,8 +51,7 @@ Error::~Error()
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName)                          \
     ClassName* ClassName::create(GlobalObject& global_object, const String& message)                   \
     {                                                                                                  \
-        auto& interpreter = global_object.interpreter();                                               \
-        return interpreter.heap().allocate<ClassName>(message, *interpreter.snake_name##_prototype()); \
+        return global_object.heap().allocate<ClassName>(message, *global_object.snake_name##_prototype()); \
     }                                                                                                  \
     ClassName::ClassName(const String& message, Object& prototype)                                     \
         : Error(#ClassName, message, prototype)                                                        \

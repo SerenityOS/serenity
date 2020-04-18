@@ -26,6 +26,7 @@
 
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Bindings/EventListenerWrapper.h>
 #include <LibWeb/DOM/EventListener.h>
 
@@ -33,7 +34,7 @@ namespace Web {
 namespace Bindings {
 
 EventListenerWrapper::EventListenerWrapper(EventListener& impl)
-    : Wrapper(*interpreter().object_prototype())
+    : Wrapper(*interpreter().global_object().object_prototype())
     , m_impl(impl)
 {
 }

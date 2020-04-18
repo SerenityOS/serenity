@@ -27,20 +27,12 @@
 #include <AK/Badge.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
-#include <LibJS/Runtime/ArrayPrototype.h>
-#include <LibJS/Runtime/BooleanPrototype.h>
-#include <LibJS/Runtime/DatePrototype.h>
 #include <LibJS/Runtime/Error.h>
-#include <LibJS/Runtime/ErrorPrototype.h>
-#include <LibJS/Runtime/FunctionPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/LexicalEnvironment.h>
 #include <LibJS/Runtime/NativeFunction.h>
-#include <LibJS/Runtime/NumberPrototype.h>
 #include <LibJS/Runtime/Object.h>
-#include <LibJS/Runtime/ObjectPrototype.h>
 #include <LibJS/Runtime/Shape.h>
-#include <LibJS/Runtime/StringPrototype.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -49,19 +41,6 @@ Interpreter::Interpreter()
     : m_heap(*this)
 {
     m_empty_object_shape = heap().allocate<Shape>();
-
-    // These are done first since other prototypes depend on their presence.
-    m_object_prototype = heap().allocate<ObjectPrototype>();
-    m_function_prototype = heap().allocate<FunctionPrototype>();
-
-    static_cast<FunctionPrototype*>(m_function_prototype)->initialize();
-    static_cast<ObjectPrototype*>(m_object_prototype)->initialize();
-
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
-    if (!m_##snake_name##_prototype)                                          \
-        m_##snake_name##_prototype = heap().allocate<PrototypeName>();
-    JS_ENUMERATE_BUILTIN_TYPES
-#undef __JS_ENUMERATE
 }
 
 Interpreter::~Interpreter()
@@ -185,11 +164,6 @@ void Interpreter::gather_roots(Badge<Heap>, HashTable<Cell*>& roots)
     roots.set(m_empty_object_shape);
     roots.set(m_global_object);
     roots.set(m_exception);
-
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
-    roots.set(m_##snake_name##_prototype);
-    JS_ENUMERATE_BUILTIN_TYPES
-#undef __JS_ENUMERATE
 
     if (m_last_value.is_cell())
         roots.set(m_last_value.as_cell());

@@ -50,6 +50,7 @@ Vector<String> repl_statements;
 class ReplObject : public JS::GlobalObject {
 public:
     ReplObject();
+    virtual void initialize() override;
     virtual ~ReplObject() override;
 
     static JS::Value load_file(JS::Interpreter&);
@@ -270,6 +271,11 @@ bool write_to_file(const StringView& path)
 
 ReplObject::ReplObject()
 {
+}
+
+void ReplObject::initialize()
+{
+    GlobalObject::initialize();
     put_native_function("exit", exit_interpreter);
     put_native_function("help", repl_help);
     put_native_function("load", load_file, 1);

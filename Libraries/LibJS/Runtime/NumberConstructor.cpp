@@ -26,6 +26,7 @@
 
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NumberConstructor.h>
 #include <LibJS/Runtime/NumberObject.h>
 #include <math.h>
@@ -37,11 +38,11 @@
 namespace JS {
 
 NumberConstructor::NumberConstructor()
-    : NativeFunction("Number", *interpreter().function_prototype())
+    : NativeFunction("Number", *interpreter().global_object().function_prototype())
 {
     put_native_function("isSafeInteger", is_safe_integer, 1);
 
-    put("prototype", interpreter().number_prototype());
+    put("prototype", interpreter().global_object().number_prototype());
     put("length", Value(1));
     put("EPSILON", Value(EPSILON));
     put("MAX_SAFE_INTEGER", Value(MAX_SAFE_INTEGER));

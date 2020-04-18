@@ -29,6 +29,7 @@
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/StringPrototype.h>
@@ -38,7 +39,7 @@
 namespace JS {
 
 StringPrototype::StringPrototype()
-    : StringObject(*js_string(interpreter(), String::empty()), *interpreter().object_prototype())
+    : StringObject(*js_string(interpreter(), String::empty()), *interpreter().global_object().object_prototype())
 {
     put_native_property("length", length_getter, nullptr);
     put_native_function("charAt", char_at, 1);

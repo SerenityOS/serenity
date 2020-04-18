@@ -27,6 +27,7 @@
 #include <AK/Function.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Bindings/XMLHttpRequestPrototype.h>
 #include <LibWeb/Bindings/XMLHttpRequestWrapper.h>
 #include <LibWeb/DOM/XMLHttpRequest.h>
@@ -35,7 +36,7 @@ namespace Web {
 namespace Bindings {
 
 XMLHttpRequestPrototype::XMLHttpRequestPrototype()
-    : Object(interpreter().object_prototype())
+    : Object(interpreter().global_object().object_prototype())
 {
     put_native_function("open", open, 2);
     put_native_function("send", send, 0);

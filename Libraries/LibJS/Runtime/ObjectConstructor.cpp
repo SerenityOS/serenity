@@ -29,15 +29,16 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/ObjectConstructor.h>
 #include <LibJS/Runtime/Shape.h>
 
 namespace JS {
 
 ObjectConstructor::ObjectConstructor()
-    : NativeFunction("Object", *interpreter().function_prototype())
+    : NativeFunction("Object", *interpreter().global_object().function_prototype())
 {
-    put("prototype", interpreter().object_prototype());
+    put("prototype", interpreter().global_object().object_prototype());
 
     put_native_function("defineProperty", define_property, 3);
     put_native_function("getOwnPropertyDescriptor", get_own_property_descriptor, 2);

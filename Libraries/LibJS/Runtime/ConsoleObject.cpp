@@ -29,6 +29,7 @@
 #include <AK/Function.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/ConsoleObject.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <stdio.h>
 
 namespace JS {
@@ -44,7 +45,7 @@ static void print_args(Interpreter& interpreter)
 }
 
 ConsoleObject::ConsoleObject()
-    : Object(interpreter().object_prototype())
+    : Object(interpreter().global_object().object_prototype())
 {
     put_native_function("log", log);
     put_native_function("debug", debug);

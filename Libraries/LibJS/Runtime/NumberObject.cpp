@@ -35,8 +35,7 @@ namespace JS {
 
 NumberObject* NumberObject::create(GlobalObject& global_object, double value)
 {
-    auto& interpreter = global_object.interpreter();
-    return interpreter.heap().allocate<NumberObject>(value, *interpreter.number_prototype());
+    return global_object.heap().allocate<NumberObject>(value, *global_object.number_prototype());
 }
 
 NumberObject::NumberObject(double value, Object& prototype)

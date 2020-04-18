@@ -36,8 +36,7 @@ namespace JS {
 
 ScriptFunction* ScriptFunction::create(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FlyString> parameters, LexicalEnvironment* parent_environment)
 {
-    auto& interpreter = global_object.interpreter();
-    return interpreter.heap().allocate<ScriptFunction>(name, body, move(parameters), parent_environment, *interpreter.function_prototype());
+    return global_object.heap().allocate<ScriptFunction>(name, body, move(parameters), parent_environment, *global_object.function_prototype());
 }
 
 ScriptFunction::ScriptFunction(const FlyString& name, const Statement& body, Vector<FlyString> parameters, LexicalEnvironment* parent_environment, Object& prototype)

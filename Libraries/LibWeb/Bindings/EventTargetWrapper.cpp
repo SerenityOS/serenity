@@ -28,6 +28,7 @@
 #include <AK/Function.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Bindings/EventListenerWrapper.h>
 #include <LibWeb/Bindings/EventTargetWrapper.h>
 #include <LibWeb/DOM/EventListener.h>
@@ -37,7 +38,7 @@ namespace Web {
 namespace Bindings {
 
 EventTargetWrapper::EventTargetWrapper(EventTarget& impl)
-    : Wrapper(*interpreter().object_prototype())
+    : Wrapper(*interpreter().global_object().object_prototype())
     , m_impl(impl)
 {
     put_native_function("addEventListener", add_event_listener, 2);
