@@ -1320,6 +1320,8 @@ bool VM::match_recurse(MatchState& state, size_t recursion_level) const
 }
 }
 
+extern "C" {
+
 int regcomp(regex_t* preg, const char* pattern, int cflags)
 {
     *preg = { 0, 0, 0, 0, nullptr, 0, REG_NOERR, "" };
@@ -1376,7 +1378,6 @@ int regcomp(regex_t* preg, const char* pattern, int cflags)
     return REG_NOERR;
 }
 
-extern "C" {
 
 int regexec(const regex_t* preg, const char* string, size_t nmatch, regmatch_t pmatch[], int eflags)
 {
