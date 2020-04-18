@@ -565,6 +565,20 @@ TEST_CASE(char_qualifier_asterisk)
     regfree(&regex);
 }
 
+TEST_CASE(char_utf8)
+{
+    String pattern = "😀";
+    regex_t regex;
+    static constexpr int num_matches { 5 };
+    regmatch_t matches[num_matches];
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "Привет, мир! 😀 γειά σου κόσμος 😀 こんにちは世界", num_matches, matches, REG_MATCHALL), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, 2u);
+
+    regfree(&regex);
+}
+
 #if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
 BENCHMARK_CASE(char_qualifier_asterisk_benchmark)
 {
