@@ -120,6 +120,19 @@ bool Socket::connect(const SocketAddress& address)
 
 bool Socket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
 {
+    auto connected = [this] {
+#ifdef CSOCKET_DEBUG
+        dbg() << *this << " connected!";
+#endif
+        if (!m_connected) {
+            m_connected = true;
+            ensure_read_notifier();
+            if (on_connected)
+                on_connected();
+        }
+        if (on_ready_to_write)
+            on_ready_to_write();
+    };
     int rc = ::connect(fd(), addr, addrlen);
     if (rc < 0) {
         if (errno == EINPROGRESS) {
@@ -127,16 +140,7 @@ bool Socket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
             dbg() << *this << " connection in progress (EINPROGRESS)";
 #endif
             m_notifier = Notifier::construct(fd(), Notifier::Event::Write, this);
-            m_notifier->on_ready_to_write = [this] {
-#ifdef CSOCKET_DEBUG
-                dbg() << *this << " connected!";
-#endif
-                m_connected = true;
-                ensure_read_notifier();
-                m_notifier->set_event_mask(Notifier::Event::None);
-                if (on_connected)
-                    on_connected();
-            };
+            m_notifier->on_ready_to_write = move(connected);
             return true;
         }
         int saved_errno = errno;
@@ -147,10 +151,7 @@ bool Socket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
 #ifdef CSOCKET_DEBUG
     dbg() << *this << " connected ok!";
 #endif
-    m_connected = true;
-    ensure_read_notifier();
-    if (on_connected)
-        on_connected();
+    connected();
     return true;
 }
 

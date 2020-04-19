@@ -45,7 +45,7 @@ public:
 
     Type type() const { return m_type; }
 
-    bool connect(const String& hostname, int port);
+    virtual bool connect(const String& hostname, int port);
     bool connect(const SocketAddress&, int port);
     bool connect(const SocketAddress&);
 
@@ -63,6 +63,7 @@ public:
 
     Function<void()> on_connected;
     Function<void()> on_ready_to_read;
+    Function<void()> on_ready_to_write;
 
 protected:
     Socket(Type, Object* parent);
@@ -74,10 +75,10 @@ protected:
     bool m_connected { false };
 
     virtual void did_update_fd(int) override;
+    virtual bool common_connect(const struct sockaddr*, socklen_t);
 
 private:
     virtual bool open(IODevice::OpenMode) override { ASSERT_NOT_REACHED(); }
-    bool common_connect(const struct sockaddr*, socklen_t);
     void ensure_read_notifier();
 
     Type m_type { Type::Invalid };
