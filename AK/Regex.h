@@ -352,7 +352,43 @@ private:
     const String& m_pattern;
     const u8 m_compilation_flags;
 };
+
+struct Pattern {
+    size_t re_nsub { 0 };
+    size_t re_minlength { 0 };
+    OwnPtr<Matcher> matcher { nullptr };
+    size_t re_pat_errpos { 0 };
+    RegexError re_pat_err { 0 };
+    String re_pat;
+
+    Pattern(String pattern, u8 compilation_flags = (u8)CompilationFlags::Extended)
+        : re_pat(pattern)
+    {
+        AK::regex::Lexer lexer(pattern);
+        AK::regex::Parser parser(move(lexer));
+        auto result = parser.parse(compilation_flags);
+        if (result.m_error != AK::regex::RegexError::NoError) {
+            re_pat_errpos = result.m_error_token.position();
+            re_pat_err = result.m_error;
+            re_pat = pattern;
+        }
+
+        re_nsub = result.m_match_groups;
+        re_minlength = result.m_min_match_length;
+        matcher = make<AK::regex::Matcher>(result.m_bytes, pattern, compilation_flags);
+    }
+};
+
+bool match(const StringView view, Pattern& pattern, const u8 match_flags = 0);
+bool match(const StringView view, Pattern& pattern, MatchResult& match_result, const u8 match_flags = 0);
+
 }
 }
 
-//using AK::regex::;
+using AK::regex::CompilationFlags;
+using AK::regex::match;
+using AK::regex::Match;
+using AK::regex::MatchFlags;
+using AK::regex::MatchResult;
+using AK::regex::Pattern;
+using AK::regex::RegexError;

@@ -865,6 +865,20 @@ void Parser::reset()
     m_parser_state.m_compilation_flags = 0;
 }
 
+bool match(const StringView view, Pattern& pattern, const u8 match_flags)
+{
+    MatchResult result = pattern.matcher->match(view, 10, pattern.re_nsub, pattern.re_minlength, match_flags); // FIXME: Add flag to set max matches (instead of 10)... otherwise fill up as needed...
+    return result.error == RegexError::NoError;
+}
+
+bool match(const StringView view, Pattern& pattern, MatchResult& match_result, const u8 match_flags)
+{
+    MatchResult result = pattern.matcher->match(view, 10, pattern.re_nsub, pattern.re_minlength, match_flags); // FIXME: Add flag to set max matches (instead of 10)... otherwise fill up as needed...
+    bool ret = result.error == RegexError::NoError;
+    match_result = move(result);
+    return ret;
+}
+
 MatchResult Matcher::match(const StringView view, const size_t max_matches_result, const size_t match_groups, const size_t min_length, const u8 match_flags) const
 {
     ptrdiff_t match_start;
