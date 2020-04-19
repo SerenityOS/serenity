@@ -53,6 +53,28 @@ struct KeyCallback {
     Function<bool(Editor&)> callback;
 };
 
+struct CompletionSuggestion {
+    // intentionally not explicit (allows suggesting bare strings)
+    CompletionSuggestion(const String& completion)
+        : text(completion)
+        , trailing_trivia("")
+    {
+    }
+    CompletionSuggestion(const StringView& completion, const StringView& trailing_trivia)
+        : text(completion)
+        , trailing_trivia(trailing_trivia)
+    {
+    }
+
+    bool operator==(const CompletionSuggestion& suggestion) const
+    {
+        return suggestion.text == text;
+    }
+
+    String text;
+    String trailing_trivia;
+};
+
 class Editor {
 public:
     Editor();
@@ -79,8 +101,8 @@ public:
 
     void register_character_input_callback(char ch, Function<bool(Editor&)> callback);
 
-    Function<Vector<String>(const String&)> on_tab_complete_first_token;
-    Function<Vector<String>(const String&)> on_tab_complete_other_token;
+    Function<Vector<CompletionSuggestion>(const String&)> on_tab_complete_first_token;
+    Function<Vector<CompletionSuggestion>(const String&)> on_tab_complete_other_token;
     Function<void(Editor&)> on_display_refresh;
 
     // FIXME: we will have to kindly ask our instantiators to set our signal handlers
@@ -195,8 +217,8 @@ private:
     size_t m_origin_y { 0 };
 
     String m_new_prompt;
-    Vector<String> m_suggestions;
-    String m_last_shown_suggestion { String::empty() };
+    Vector<CompletionSuggestion> m_suggestions;
+    CompletionSuggestion m_last_shown_suggestion { String::empty() };
     size_t m_last_shown_suggestion_display_length { 0 };
     bool m_last_shown_suggestion_was_complete { false };
     size_t m_next_suggestion_index { 0 };

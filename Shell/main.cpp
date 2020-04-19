@@ -1042,7 +1042,7 @@ int main(int argc, char** argv)
     g.termios = editor.termios();
     g.default_termios = editor.default_termios();
 
-    editor.on_tab_complete_first_token = [&](const String& token) -> Vector<String> {
+    editor.on_tab_complete_first_token = [&](const String& token) -> Vector<Line::CompletionSuggestion> {
         auto match = binary_search(cached_path.data(), cached_path.size(), token, [](const String& token, const String& program) -> int {
             return strncmp(token.characters(), program.characters(), token.length());
         });
@@ -1052,7 +1052,7 @@ int main(int argc, char** argv)
             // Suggest local executables and directories
             auto mut_token = token; // copy it :(
             String path;
-            Vector<String> local_suggestions;
+            Vector<Line::CompletionSuggestion> local_suggestions;
             bool suggest_executables = true;
 
             ssize_t last_slash = token.length() - 1;
@@ -1090,6 +1090,7 @@ int main(int argc, char** argv)
                 // manually skip `.' and `..'
                 if (file == "." || file == "..")
                     continue;
+                auto trivia = " ";
                 if (file.starts_with(mut_token)) {
                     String file_path = String::format("%s/%s", path.characters(), file.characters());
                     struct stat program_status;
@@ -1098,25 +1099,14 @@ int main(int argc, char** argv)
                         continue;
                     if (!(program_status.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)))
                         continue;
-                    if (!S_ISDIR(program_status.st_mode) && !suggest_executables)
-                        continue;
+                    if (S_ISDIR(program_status.st_mode)) {
+                        if (suggest_executables)
+                            continue;
+                        else
+                            trivia = "/";
+                    }
 
-                    local_suggestions.append(file);
-                }
-            }
-
-            // If we have a single match and it's a directory, we add a slash. If it's
-            // a regular file, we add a space, unless we already have one.
-            if (local_suggestions.size() == 1) {
-                auto& completion = local_suggestions[0];
-                String file_path = String::format("%s/%s", path.characters(), completion.characters());
-                struct stat program_status;
-                int stat_error = stat(file_path.characters(), &program_status);
-                if (!stat_error) {
-                    if (S_ISDIR(program_status.st_mode))
-                        completion = String::format("%s/", local_suggestions[0].characters());
-                    else if (editor.cursor() == editor.buffer().size() || editor.buffer_at(editor.cursor()) != ' ')
-                        completion = String::format("%s ", local_suggestions[0].characters());
+                    local_suggestions.append({ file, trivia });
                 }
             }
 
@@ -1124,37 +1114,29 @@ int main(int argc, char** argv)
         }
 
         String completion = *match;
-        Vector<String> suggestions;
+        Vector<Line::CompletionSuggestion> suggestions;
 
         // Now that we have a program name starting with our token, we look at
         // other program names starting with our token and cut off any mismatching
         // characters.
 
-        bool seen_others = false;
         int index = match - cached_path.data();
         for (int i = index - 1; i >= 0 && cached_path[i].starts_with(token); --i) {
-            suggestions.append(cached_path[i]);
-            seen_others = true;
+            suggestions.append({ cached_path[i], " " });
         }
         for (size_t i = index + 1; i < cached_path.size() && cached_path[i].starts_with(token); ++i) {
-            suggestions.append(cached_path[i]);
-            seen_others = true;
+            suggestions.append({ cached_path[i], " " });
         }
-        suggestions.append(cached_path[index]);
-
-        // If we have a single match, we add a space, unless we already have one.
-        if (!seen_others && (editor.cursor() == editor.buffer().size() || editor.buffer_at(editor.cursor()) != ' ')) {
-            suggestions[0] = String::format("%s ", suggestions[0].characters());
-        }
+        suggestions.append({ cached_path[index], " " });
 
         editor.suggest(token.length(), 0);
 
         return suggestions;
     };
-    editor.on_tab_complete_other_token = [&](const String& vtoken) -> Vector<String> {
+    editor.on_tab_complete_other_token = [&](const String& vtoken) -> Vector<Line::CompletionSuggestion> {
         auto token = vtoken; // copy it :(
         String path;
-        Vector<String> suggestions;
+        Vector<Line::CompletionSuggestion> suggestions;
 
         ssize_t last_slash = token.length() - 1;
         while (last_slash >= 0 && token[last_slash] != '/')
@@ -1190,22 +1172,15 @@ int main(int argc, char** argv)
             if (file == "." || file == "..")
                 continue;
             if (file.starts_with(token)) {
-                suggestions.append(file);
-            }
-        }
-
-        // If we have a single match and it's a directory, we add a slash. If it's
-        // a regular file, we add a space, unless we already have one.
-        if (suggestions.size() == 1) {
-            auto& completion = suggestions[0];
-            String file_path = String::format("%s/%s", path.characters(), completion.characters());
-            struct stat program_status;
-            int stat_error = stat(file_path.characters(), &program_status);
-            if (!stat_error) {
-                if (S_ISDIR(program_status.st_mode))
-                    completion = String::format("%s/", suggestions[0].characters());
-                else if (editor.cursor() == editor.buffer().size() || editor.buffer_at(editor.cursor()) != ' ')
-                    completion = String::format("%s ", suggestions[0].characters());
+                struct stat program_status;
+                String file_path = String::format("%s/%s", path.characters(), file.characters());
+                int stat_error = stat(file_path.characters(), &program_status);
+                if (!stat_error) {
+                    if (S_ISDIR(program_status.st_mode))
+                        suggestions.append({ file, "/" });
+                    else
+                        suggestions.append({ file, " " });
+                }
             }
         }
 

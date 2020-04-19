@@ -553,7 +553,7 @@ int main(int argc, char** argv)
             editor.set_prompt(prompt_for_level(open_indents));
         };
 
-        auto complete = [&interpreter, &editor = *editor](const String& token) -> Vector<String> {
+        auto complete = [&interpreter, &editor = *editor](const String& token) -> Vector<Line::CompletionSuggestion> {
             if (token.length() == 0)
                 return {}; // nyeh
 
@@ -564,13 +564,13 @@ int main(int argc, char** argv)
             //    - <N>.<P>
             //        where N is the complete name of a variable and
             //        P is part of the name of one of its properties
-            Vector<String> results;
+            Vector<Line::CompletionSuggestion> results;
 
             Function<void(const JS::Shape&, const StringView&)> list_all_properties = [&results, &list_all_properties](const JS::Shape& shape, auto& property_pattern) {
                 for (const auto& descriptor : shape.property_table()) {
                     if (descriptor.value.attributes & JS::Attribute::Enumerable) {
                         if (descriptor.key.view().starts_with(property_pattern)) {
-                            auto completion = descriptor.key;
+                            Line::CompletionSuggestion completion { descriptor.key };
                             if (!results.contains_slow(completion)) { // hide duplicates
                                 results.append(completion);
                             }
