@@ -317,6 +317,95 @@ public:
         return *this;
     }
 
+    BufferStream& read_raw(u8* raw_data, size_t size)
+    {
+        if (m_offset + size > m_buffer.size()) {
+            m_read_failure = true;
+            return *this;
+        }
+        __builtin_memcpy(raw_data, m_buffer.data() + m_offset, size);
+        m_offset += size;
+        return *this;
+    };
+
+    u8 peek()
+    {
+        if (m_offset >= m_buffer.size()) {
+            m_read_failure = true;
+            return 0;
+        }
+        return m_buffer[m_offset];
+    }
+
+    BufferStream& operator>>(String& str)
+    {
+        if (m_offset >= m_buffer.size()) {
+            m_read_failure = true;
+            return *this;
+        }
+        size_t string_size = 0;
+        while (m_offset + string_size < m_buffer.size() && m_buffer[m_offset + string_size]) {
+            ++string_size;
+        }
+        str = String(reinterpret_cast<const char*>(&m_buffer[m_offset]), string_size);
+        m_offset += string_size + 1;
+        return *this;
+    }
+
+    // LEB128 is a variable-length encoding for integers
+    BufferStream& read_LEB128_unsigned(size_t& result)
+    {
+        result = 0;
+        size_t num_bytes = 0;
+        while (true) {
+            if (m_offset > m_buffer.size()) {
+                m_read_failure = true;
+                break;
+            }
+            const u8 byte = m_buffer[m_offset];
+            result = (result) | (static_cast<size_t>(byte & ~(1 << 7)) << (num_bytes * 7));
+            ++m_offset;
+            if (!(byte & (1 << 7)))
+                break;
+            ++num_bytes;
+        }
+
+        return *this;
+    }
+
+    // LEB128 is a variable-length encoding for integers
+    BufferStream& read_LEB128_signed(ssize_t& result)
+    {
+        result = 0;
+        size_t num_bytes = 0;
+        u8 byte = 0;
+        do {
+            if (m_offset > m_buffer.size()) {
+                m_read_failure = true;
+                break;
+            }
+            byte = m_buffer[m_offset];
+            result = (result) | (static_cast<size_t>(byte & ~(1 << 7)) << (num_bytes * 7));
+            ++m_offset;
+            ++num_bytes;
+        } while (byte & (1 << 7));
+        if (num_bytes * 7 < sizeof(size_t) * 4 && (byte & 0x40)) {
+            // sign extend
+            result |= ((size_t)(-1) << (num_bytes * 7));
+        }
+        return *this;
+    }
+
+    BufferStream& advance(size_t amount)
+    {
+        if (m_offset + amount > m_buffer.size()) {
+            m_read_failure = true;
+        } else {
+            m_offset += amount;
+        }
+        return *this;
+    }
+
     bool at_end() const
     {
         return m_offset == m_buffer.size();
