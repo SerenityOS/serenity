@@ -169,6 +169,8 @@ bool URL::parse(const StringView& string)
         m_host = String::copy(buffer);
         m_path = "/";
     }
+    if (state == State::InProtocol)
+        return false;
     if (state == State::InPath)
         m_path = String::copy(buffer);
     if (state == State::InQuery)
@@ -277,11 +279,11 @@ bool URL::compute_validity() const
     // FIXME: This is by no means complete.
     if (m_protocol.is_empty())
         return false;
-    if (m_protocol == "http" || m_protocol == "https") {
-        if (m_host.is_empty())
-            return false;
-    } else if (m_protocol == "file") {
+    if (m_protocol == "file") {
         if (m_path.is_empty())
+            return false;
+    } else {
+        if (m_host.is_empty())
             return false;
     }
     return true;
