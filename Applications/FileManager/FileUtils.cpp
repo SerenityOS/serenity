@@ -93,12 +93,12 @@ bool copy_file_or_directory(const String& src_path, const String& dst_path)
     }
 
     if (S_ISDIR(src_stat.st_mode)) {
-        return copy_directory(src_path, dst_path);
+        return copy_directory(src_path, dst_path, src_stat);
     }
     return copy_file(src_path, dst_path, src_stat, src_fd);
 }
 
-bool copy_directory(const String& src_path, const String& dst_path)
+bool copy_directory(const String& src_path, const String& dst_path, const struct stat& src_stat)
 {
     int rc = mkdir(dst_path.characters(), 0755);
     if (rc < 0) {
@@ -116,6 +116,13 @@ bool copy_directory(const String& src_path, const String& dst_path)
         if (!is_copied) {
             return false;
         }
+    }
+
+    auto my_umask = umask(0);
+    umask(my_umask);
+    rc = chmod(dst_path.characters(), src_stat.st_mode & ~my_umask);
+    if (rc < 0) {
+        return false;
     }
     return true;
 }
