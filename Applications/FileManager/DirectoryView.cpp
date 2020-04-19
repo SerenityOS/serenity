@@ -206,6 +206,10 @@ void DirectoryView::add_path_to_history(const StringView& path)
 
 void DirectoryView::open(const StringView& path)
 {
+    if (model().root_path() == path) {
+        model().update();
+        return;
+    }
     add_path_to_history(path);
     model().set_root_path(path);
 }
