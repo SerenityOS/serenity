@@ -67,6 +67,7 @@ enum class MatchFlags {
     Search = 8,
     Stats = 16,
     HandleNewLine = 32,
+    NoStringCopyForResult = 64,
 };
 
 #define REG_MAX_RECURSE 5000
@@ -307,6 +308,7 @@ struct Match {
     ptrdiff_t rm_so;    // byte offset from start of string to start of substring
     ptrdiff_t rm_eo;    // byte offset from start of string of the first character after the end of substring
     size_t match_count; // number of matches, normally 1, could be greater if REG_NEWLINE or REG_MATCHALL set.
+    String string;      // in case we cannot use the view (match flag ResultAsStringView) we need a copy
     StringView view;    // view of the match into the string
 };
 

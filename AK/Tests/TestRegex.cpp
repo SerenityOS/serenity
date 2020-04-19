@@ -58,6 +58,19 @@ TEST_CASE(catch_all_newline)
     EXPECT_EQ(m.matches.at(2).view, "1234");
 }
 
+TEST_CASE(catch_all_newline_view)
+{
+    Pattern regex("^.*$", (u8)CompilationFlags::Extended | (u8)CompilationFlags::HandleNewLine);
+    MatchResult m;
+
+    String aaa = "Hello World\nTest\n1234\n";
+    EXPECT_EQ(match(aaa, regex, m, (u8)MatchFlags::NoStringCopyForResult), true);
+    EXPECT_EQ(m.match_count, 3u);
+    EXPECT_EQ(m.matches.at(0).view, "Hello World");
+    EXPECT_EQ(m.matches.at(1).view, "Test");
+    EXPECT_EQ(m.matches.at(2).view, "1234");
+}
+
 TEST_CASE(catch_all_newline_2)
 {
     Pattern regex("^.*$", (u8)CompilationFlags::Extended);

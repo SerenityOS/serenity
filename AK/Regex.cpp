@@ -891,7 +891,7 @@ MatchResult Matcher::match(const StringView view, const size_t max_matches_resul
     state.m_match_flags = match_flags;
 
     for (size_t j = 0; j < max_matches_result; ++j)
-        state.m_matches.append({ -1, -1, 0, nullptr });
+        state.m_matches.append({ -1, -1, 0, {}, {} });
     for (size_t j = 0; j < match_groups; ++j)
         state.m_left.append(-1);
 
@@ -928,8 +928,17 @@ MatchResult Matcher::match(const StringView view, const size_t max_matches_resul
                 ++match_count;
 
                 if (state.m_match_flags & (u8)MatchFlags::MatchAll) {
-                    if (state.m_matches_offset < state.m_matches.size())
-                        state.m_matches.at(state.m_matches_offset) = { match_start, (ptrdiff_t)state.m_stringp, 1, view.substring_view(match_start, state.m_stringp - match_start) };
+                    if (state.m_matches_offset < state.m_matches.size()) {
+                        state.m_matches.at(state.m_matches_offset) = {
+                            match_start,
+                            (ptrdiff_t)state.m_stringp,
+                            1,
+                            state.m_match_flags & (u8)MatchFlags::NoStringCopyForResult ? "" : String { view.substring_view(match_start, state.m_stringp - match_start) },
+                            view.substring_view(match_start, state.m_stringp - match_start)
+                        };
+                        if (!(state.m_match_flags & (u8)MatchFlags::NoStringCopyForResult)) // let the view point to the string copy...
+                            state.m_matches.at(state.m_matches_offset).view = StringView(state.m_matches.at(state.m_matches_offset).string);
+                    }
 
                     i = state.m_stringp - 1;
                     state.m_matches_offset += match_groups + 1;
@@ -939,8 +948,15 @@ MatchResult Matcher::match(const StringView view, const size_t max_matches_resul
                 } else if (!(state.m_match_flags & (u8)MatchFlags::Search) && state.m_stringp < view.length())
                     return { 0, {}, state.m_ops, RegexError::NoMatch };
 
-                if (state.m_matches_offset < state.m_matches.size())
-                    state.m_matches.at(state.m_matches_offset) = { match_start, (ptrdiff_t)state.m_stringp, 0, view.substring_view(match_start, state.m_stringp - match_start) };
+                if (state.m_matches_offset < state.m_matches.size()) {
+                    state.m_matches.at(state.m_matches_offset) = {
+                        match_start, (ptrdiff_t)state.m_stringp, 1,
+                        state.m_match_flags & (u8)MatchFlags::NoStringCopyForResult ? "" : String { view.substring_view(match_start, state.m_stringp - match_start) },
+                        view.substring_view(match_start, state.m_stringp - match_start)
+                    };
+                    if (!(state.m_match_flags & (u8)MatchFlags::NoStringCopyForResult)) // let the view point to the string copy...
+                        state.m_matches.at(state.m_matches_offset).view = StringView(state.m_matches.at(state.m_matches_offset).string);
+                }
 
                 state.m_matches_offset += match_groups + 1;
 
@@ -1318,7 +1334,15 @@ bool Matcher::match_recurse(MatchState& state, size_t recursion_level) const
 #endif
             if ((size_t)id < state.m_left.size() && state.m_left.at(id) != -1 && index < state.m_matches.size()) {
                 auto left = state.m_left.at(id);
-                state.m_matches.at(index) = { left, (ptrdiff_t)state.m_stringp, 1, state.m_view.substring_view(left, state.m_stringp - left - 1) };
+
+                state.m_matches.at(index) = {
+                    left, (ptrdiff_t)state.m_stringp, 1,
+                    state.m_match_flags & (u8)MatchFlags::NoStringCopyForResult ? "" : String { state.m_view.substring_view(left, state.m_stringp - left - 1) },
+                    state.m_view.substring_view(left, state.m_stringp - left - 1)
+                };
+                if (!(state.m_match_flags & (u8)MatchFlags::NoStringCopyForResult)) // let the view point to the string copy...
+                    state.m_matches.at(state.m_matches_offset).view = StringView(state.m_matches.at(state.m_matches_offset).string);
+
 #ifdef REGEX_DEBUG
                 printf("Match result group id %lu: from %lu to %lu\n", id, left, state.m_stringp);
 #endif
