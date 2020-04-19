@@ -169,6 +169,8 @@ Gfx::Size WindowManager::resolution() const
 
 void WindowManager::add_window(Window& window)
 {
+    bool is_first_window = m_windows_in_order.is_empty();
+
     m_windows_in_order.append(&window);
 
     if (window.is_fullscreen()) {
@@ -176,7 +178,9 @@ void WindowManager::add_window(Window& window)
         window.set_rect(Screen::the().rect());
     }
 
-    set_active_window(&window);
+    if (window.type() != WindowType::Desktop || is_first_window)
+        set_active_window(&window);
+
     if (m_switcher.is_visible() && window.type() != WindowType::WindowSwitcher)
         m_switcher.refresh();
 
