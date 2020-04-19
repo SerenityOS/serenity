@@ -28,6 +28,7 @@
 #include <AK/StringBuilder.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/BoundFunction.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/FunctionPrototype.h>
@@ -84,8 +85,19 @@ Value FunctionPrototype::bind(Interpreter& interpreter)
     auto* this_object = interpreter.this_value().to_object(interpreter.heap());
     if (!this_object)
         return {};
-    // FIXME: Implement me :^)
-    ASSERT_NOT_REACHED();
+    if (!this_object->is_function())
+        return interpreter.throw_exception<TypeError>("Not a Function object");
+
+    auto& this_function = static_cast<Function&>(*this_object);
+    auto bound_this_arg = interpreter.argument(0);
+
+    Vector<Value> arguments;
+    if (interpreter.argument_count() > 1) {
+        arguments = interpreter.call_frame().arguments;
+        arguments.remove(0);
+    }
+
+    return this_function.bind(bound_this_arg, move(arguments));
 }
 
 Value FunctionPrototype::call(Interpreter& interpreter)
@@ -117,7 +129,7 @@ Value FunctionPrototype::to_string(Interpreter& interpreter)
     String function_parameters = "";
     String function_body;
 
-    if (this_object->is_native_function()) {
+    if (this_object->is_native_function() || this_object->is_bound_function()) {
         function_body = String::format("  [%s]", this_object->class_name());
     } else {
         auto& parameters = static_cast<ScriptFunction*>(this_object)->parameters();
