@@ -47,6 +47,9 @@ static void flood_fill(Gfx::Bitmap& bitmap, const Gfx::Point& start_position, Co
     if (target_color == fill_color)
         return;
 
+    if (!bitmap.rect().contains(start_position))
+        return;
+
     Queue<Gfx::Point> queue;
     queue.enqueue(start_position);
     while (!queue.is_empty()) {
