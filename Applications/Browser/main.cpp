@@ -199,8 +199,7 @@ int main(int argc, char** argv)
     html_widget.on_title_change = [&](auto& title) {
         if (title.is_null()) {
             s_title = html_widget.main_frame().document()->url().to_string();
-        }
-        else {
+        } else {
             s_title = title;
         }
         window->set_title(String::format("%s - Browser", s_title.characters()));
@@ -323,11 +322,7 @@ int main(int argc, char** argv)
     URL url_to_load = home_url;
 
     if (app.args().size() >= 1) {
-        if (app.args()[0].starts_with("file://")) {
-            url_to_load = URL(app.args()[0]);
-        } else {
-            url_to_load = URL::create_with_file_protocol(app.args()[0]);
-        }
+        url_to_load = URL::create_with_url_or_path(app.args()[0]);
     }
 
     html_widget.load(url_to_load);
