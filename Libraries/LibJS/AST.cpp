@@ -114,6 +114,9 @@ Value CallExpression::execute(Interpreter& interpreter) const
     auto& function = static_cast<Function&>(callee.as_object());
 
     MarkedValueList arguments(interpreter.heap());
+    for (auto bound_argument : function.bound_arguments()) {
+        arguments.append(bound_argument);
+    }
     for (size_t i = 0; i < m_arguments.size(); ++i) {
         auto value = m_arguments[i].execute(interpreter);
         if (interpreter.exception())
@@ -138,7 +141,7 @@ Value CallExpression::execute(Interpreter& interpreter) const
         call_frame.this_value = new_object;
         result = function.construct(interpreter);
     } else {
-        call_frame.this_value = this_value;
+        call_frame.this_value = function.bound_this().value_or(this_value);
         result = function.call(interpreter);
     }
 
