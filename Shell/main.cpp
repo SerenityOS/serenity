@@ -1100,7 +1100,7 @@ int main(int argc, char** argv)
                     if (!(program_status.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)))
                         continue;
                     if (S_ISDIR(program_status.st_mode)) {
-                        if (suggest_executables)
+                        if (!suggest_executables)
                             continue;
                         else
                             trivia = "/";
