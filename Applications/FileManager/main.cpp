@@ -702,6 +702,8 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     };
 
     tree_view.on_selection_change = [&] {
+        if (tree_view.selection().is_empty())
+            return;
         auto path = directories_model->full_path(tree_view.selection().first());
         if (directory_view.path() == path)
             return;
