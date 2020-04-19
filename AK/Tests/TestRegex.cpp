@@ -47,8 +47,11 @@ TEST_CASE(catch_all_newline)
 {
     Pattern regex("^.*$", (u8)CompilationFlags::Extended | (u8)CompilationFlags::HandleNewLine);
     MatchResult m;
-
-    EXPECT_EQ(match("Hello World\nTest\n1234\n", regex, m), true);
+    auto lambda = [&m, &regex]() {
+        String aaa = "Hello World\nTest\n1234\n";
+        EXPECT_EQ(match(aaa, regex, m), true);
+    };
+    lambda();
     EXPECT_EQ(m.match_count, 3u);
     EXPECT_EQ(m.matches.at(0).view, "Hello World");
     EXPECT_EQ(m.matches.at(1).view, "Test");
