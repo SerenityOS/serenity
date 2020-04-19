@@ -83,8 +83,9 @@ void XMLHttpRequest::dispatch_event(NonnullRefPtr<Event> event)
         if (listener.event_name == event->name()) {
             auto* function = const_cast<EventListener&>(*listener.listener).function();
             auto* this_value = wrap(function->heap(), *this);
-            auto* event_wrapper = wrap(function->heap(), *event);
-            function->interpreter().call(function, this_value, { event_wrapper });
+            JS::MarkedValueList arguments(function->heap());
+            arguments.append(wrap(function->heap(), *event));
+            function->interpreter().call(function, this_value, move(arguments));
         }
     }
 }

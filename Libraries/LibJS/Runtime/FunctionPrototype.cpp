@@ -32,6 +32,7 @@
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/FunctionPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/ScriptFunction.h>
 
 namespace JS {
@@ -72,10 +73,10 @@ Value FunctionPrototype::apply(Interpreter& interpreter)
     auto length_property = arg_array.as_object().get("length");
     if (length_property.has_value())
         length = length_property.value().to_number().to_i32();
-    Vector<Value> arguments;
+    MarkedValueList arguments(interpreter.heap());
     for (size_t i = 0; i < length; ++i)
         arguments.append(arg_array.as_object().get(String::number(i)).value_or(js_undefined()));
-    return interpreter.call(function, this_arg, arguments);
+    return interpreter.call(function, this_arg, move(arguments));
 }
 
 Value FunctionPrototype::bind(Interpreter& interpreter)
@@ -96,12 +97,12 @@ Value FunctionPrototype::call(Interpreter& interpreter)
         return interpreter.throw_exception<TypeError>("Not a Function object");
     auto function = static_cast<Function*>(this_object);
     auto this_arg = interpreter.argument(0);
-    Vector<Value> arguments;
+    MarkedValueList arguments(interpreter.heap());
     if (interpreter.argument_count() > 1) {
         for (size_t i = 1; i < interpreter.argument_count(); ++i)
             arguments.append(interpreter.argument(i));
     }
-    return interpreter.call(function, this_arg, arguments);
+    return interpreter.call(function, this_arg, move(arguments));
 }
 
 Value FunctionPrototype::to_string(Interpreter& interpreter)

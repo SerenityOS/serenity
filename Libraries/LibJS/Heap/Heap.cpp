@@ -30,6 +30,7 @@
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Heap/HeapBlock.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/Object.h>
 #include <setjmp.h>
 #include <stdio.h>
@@ -103,6 +104,13 @@ void Heap::gather_roots(HashTable<Cell*>& roots)
 
     for (auto* handle : m_handles)
         roots.set(handle->cell());
+
+    for (auto* list : m_marked_value_lists) {
+        for (auto& value : list->values()) {
+            if (value.is_cell())
+                roots.set(value.as_cell());
+        }
+    }
 
 #ifdef HEAP_DEBUG
     dbg() << "gather_roots:";
@@ -264,6 +272,18 @@ void Heap::did_destroy_handle(Badge<HandleImpl>, HandleImpl& impl)
 {
     ASSERT(m_handles.contains(&impl));
     m_handles.remove(&impl);
+}
+
+void Heap::did_create_marked_value_list(Badge<MarkedValueList>, MarkedValueList& list)
+{
+    ASSERT(!m_marked_value_lists.contains(&list));
+    m_marked_value_lists.set(&list);
+}
+
+void Heap::did_destroy_marked_value_list(Badge<MarkedValueList>, MarkedValueList& list)
+{
+    ASSERT(m_marked_value_lists.contains(&list));
+    m_marked_value_lists.remove(&list);
 }
 
 void Heap::defer_gc(Badge<DeferGC>)

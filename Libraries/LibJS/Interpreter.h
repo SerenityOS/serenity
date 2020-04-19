@@ -34,6 +34,7 @@
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/Exception.h>
 #include <LibJS/Runtime/LexicalEnvironment.h>
+#include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -100,7 +101,7 @@ public:
     void enter_scope(const ScopeNode&, ArgumentVector, ScopeType);
     void exit_scope(const ScopeNode&);
 
-    Value call(Function*, Value this_value = {}, const Vector<Value>& arguments = {});
+    Value call(Function*, Value this_value = {}, Optional<MarkedValueList> arguments = {});
 
     CallFrame& push_call_frame()
     {

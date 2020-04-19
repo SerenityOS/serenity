@@ -63,6 +63,7 @@ class Heap;
 class HeapBlock;
 class Interpreter;
 class LexicalEnvironment;
+class MarkedValueList;
 class PrimitiveString;
 class ScopeNode;
 class Shape;

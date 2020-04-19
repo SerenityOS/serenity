@@ -34,6 +34,7 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -96,13 +97,18 @@ Value ArrayPrototype::filter(Interpreter& interpreter)
     auto this_value = interpreter.argument(1);
     auto initial_array_size = array->elements().size();
     auto* new_array = Array::create(interpreter.global_object());
+
     for (size_t i = 0; i < initial_array_size; ++i) {
         if (i >= array->elements().size())
             break;
         auto value = array->elements()[i];
         if (value.is_empty())
             continue;
-        auto result = interpreter.call(callback, this_value, { value, Value((i32)i), array });
+        MarkedValueList arguments(interpreter.heap());
+        arguments.append(value);
+        arguments.append(Value((i32)i));
+        arguments.append(array);
+        auto result = interpreter.call(callback, this_value, move(arguments));
         if (interpreter.exception())
             return {};
         if (result.to_boolean())
@@ -127,7 +133,11 @@ Value ArrayPrototype::for_each(Interpreter& interpreter)
         auto value = array->elements()[i];
         if (value.is_empty())
             continue;
-        interpreter.call(callback, this_value, { value, Value((i32)i), array });
+        MarkedValueList arguments(interpreter.heap());
+        arguments.append(value);
+        arguments.append(Value((i32)i));
+        arguments.append(array);
+        interpreter.call(callback, this_value, move(arguments));
         if (interpreter.exception())
             return {};
     }
@@ -151,7 +161,11 @@ Value ArrayPrototype::map(Interpreter& interpreter)
         auto value = array->elements()[i];
         if (value.is_empty())
             continue;
-        auto result = interpreter.call(callback, this_value, { value, Value((i32)i), array });
+        MarkedValueList arguments(interpreter.heap());
+        arguments.append(value);
+        arguments.append(Value((i32)i));
+        arguments.append(array);
+        auto result = interpreter.call(callback, this_value, move(arguments));
         if (interpreter.exception())
             return {};
         new_array->elements().append(result);

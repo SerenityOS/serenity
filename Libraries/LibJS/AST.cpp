@@ -33,6 +33,7 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/ScriptFunction.h>
@@ -112,8 +113,7 @@ Value CallExpression::execute(Interpreter& interpreter) const
 
     auto& function = static_cast<Function&>(callee.as_object());
 
-    Vector<Value> arguments;
-    arguments.ensure_capacity(m_arguments.size());
+    MarkedValueList arguments(interpreter.heap());
     for (size_t i = 0; i < m_arguments.size(); ++i) {
         auto value = m_arguments[i].execute(interpreter);
         if (interpreter.exception())
@@ -125,7 +125,7 @@ Value CallExpression::execute(Interpreter& interpreter) const
 
     auto& call_frame = interpreter.push_call_frame();
     call_frame.function_name = function.name();
-    call_frame.arguments = move(arguments);
+    call_frame.arguments = arguments.values();
     call_frame.environment = function.create_environment();
 
     Object* new_object = nullptr;

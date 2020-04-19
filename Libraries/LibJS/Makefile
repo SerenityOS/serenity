@@ -27,6 +27,7 @@ OBJS = \
     Runtime/GlobalObject.o \
     Runtime/LexicalEnvironment.o \
     Runtime/MathObject.o \
+    Runtime/MarkedValueList.o \
     Runtime/NativeFunction.o \
     Runtime/NativeProperty.o \
     Runtime/NumberConstructor.o \
