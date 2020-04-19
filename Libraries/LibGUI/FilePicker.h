@@ -26,7 +26,7 @@
 
 #include <AK/FileSystemPath.h>
 #include <AK/Optional.h>
-#include <LibCore/UserInfo.h>
+#include <LibCore/StandardPaths.h>
 #include <LibGUI/Dialog.h>
 
 namespace GUI {
@@ -52,7 +52,7 @@ private:
     void clear_preview();
     void on_file_return();
 
-    FilePicker(Mode type = Mode::Open, const StringView& file_name = "Untitled", const StringView& path = String(get_current_user_home_path()), Window* parent_window = nullptr);
+    FilePicker(Mode type = Mode::Open, const StringView& file_name = "Untitled", const StringView& path = Core::StandardPaths::home_directory(), Window* parent_window = nullptr);
 
     static String ok_button_name(Mode mode)
     {

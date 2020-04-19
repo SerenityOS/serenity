@@ -28,7 +28,7 @@
 #include <AK/QuickSort.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/UserInfo.h>
+#include <LibCore/StandardPaths.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Desktop.h>
@@ -81,7 +81,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (chdir(get_current_user_home_path().characters()) < 0) {
+    if (chdir(Core::StandardPaths::home_directory().characters()) < 0) {
         perror("chdir");
         return 1;
     }

@@ -128,7 +128,7 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
     toolbar.add_action(*open_parent_directory_action);
 
     auto go_home_action = CommonActions::make_go_home_action([this](auto&) {
-        m_model->set_root_path(get_current_user_home_path());
+        m_model->set_root_path(Core::StandardPaths::home_directory());
     });
     toolbar.add_action(go_home_action);
     toolbar.add_separator();

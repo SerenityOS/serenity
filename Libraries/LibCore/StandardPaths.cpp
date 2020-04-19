@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,8 +24,38 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
+#include <AK/FileSystemPath.h>
 #include <AK/String.h>
+#include <AK/StringBuilder.h>
+#include <LibCore/StandardPaths.h>
+#include <pwd.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-String get_current_user_home_path();
+namespace Core {
+
+String StandardPaths::home_directory()
+{
+    if (auto* home_env = getenv("HOME"))
+        return canonicalized_path(home_env);
+
+    auto* pwd = getpwuid(getuid());
+    String path = pwd ? pwd->pw_dir : "/";
+    endpwent();
+    return canonicalized_path(path);
+}
+
+String StandardPaths::desktop_directory()
+{
+    StringBuilder builder;
+    builder.append(home_directory());
+    builder.append("/Desktop");
+    return canonicalized_path(builder.to_string());
+}
+
+String StandardPaths::tempfile_directory()
+{
+    return "/tmp";
+}
+
+}
