@@ -26,12 +26,11 @@ try {
     assert(d.writable === true);
     assert(d.value === "ho");
 
-    try {
+    assertThrowsError(() => {
         Object.defineProperty(o, "bar", { value: "xx", enumerable: false });
-        assertNotReached();
-    } catch (e) {
-        assert(e.name === "TypeError");
-    }
+    }, {
+        error: TypeError
+    });
 
     Object.defineProperty(o, "baz", { value: 9, configurable: true, writable: false });
     Object.defineProperty(o, "baz", { configurable: true, writable: true });

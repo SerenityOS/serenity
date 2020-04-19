@@ -3,21 +3,19 @@ load("test-common.js");
 try {
     assert(Array.prototype.forEach.length === 1);
 
-    try {
+    assertThrowsError(() => {
         [].forEach();
-        assertNotReached();
-    } catch (e) {
-        assert(e.name === "TypeError");
-        assert(e.message === "Array.prototype.forEach() requires at least one argument");
-    }
+    }, {
+        error: TypeError,
+        message: "Array.prototype.forEach() requires at least one argument"
+    });
 
-    try {
+    assertThrowsError(() => {
         [].forEach(undefined);
-        assertNotReached();
-    } catch (e) {
-        assert(e.name === "TypeError");
-        assert(e.message === "undefined is not a function");
-    }
+    }, {
+        error: TypeError,
+        message: "undefined is not a function"
+    });
 
     var a = [1, 2, 3];
     var o = {};

@@ -3,21 +3,19 @@ load("test-common.js");
 try {
     assert(Array.prototype.filter.length === 1);
 
-    try {
+    assertThrowsError(() => {
         [].filter();
-        assertNotReached();
-    } catch (e) {
-        assert(e.name === "TypeError");
-        assert(e.message === "Array.prototype.filter() requires at least one argument");
-    }
+    }, {
+        error: TypeError,
+        message: "Array.prototype.filter() requires at least one argument"
+    });
 
-    try {
+    assertThrowsError(() => {
         [].filter(undefined);
-        assertNotReached();
-    } catch (e) {
-        assert(e.name === "TypeError");
-        assert(e.message === "undefined is not a function");
-    }
+    }, {
+        error: TypeError,
+        message: "undefined is not a function"
+    });
 
     var callbackCalled = 0;
     var callback = () => { callbackCalled++; };

@@ -1,56 +1,50 @@
 load("test-common.js");
 
 try {
-    try {
+    assertThrowsError(() => {
         var b = true;
         b();
-        assertNotReached();
-    } catch(e) {
-        assert(e.name === "TypeError");
-        assert(e.message === "true is not a function (evaluated from 'b')");
-    }
+    }, {
+        error: TypeError,
+        message: "true is not a function (evaluated from 'b')"
+    });
 
-    try {
+    assertThrowsError(() => {
         var n = 100 + 20 + 3;
         n();
-        assertNotReached();
-    } catch(e) {
-        assert(e.name === "TypeError");
-        assert(e.message === "123 is not a function (evaluated from 'n')");
-    }
+    }, {
+        error: TypeError,
+        message: "123 is not a function (evaluated from 'n')"
+    });
 
-    try {
+    assertThrowsError(() => {
         var o = {};
         o.a();
-        assertNotReached();
-    } catch(e) {
-        assert(e.name === "TypeError");
-        assert(e.message === "undefined is not a function (evaluated from 'o.a')");
-    }
+    }, {
+        error: TypeError,
+        message: "undefined is not a function (evaluated from 'o.a')"
+    });
 
-    try {
+    assertThrowsError(() => {
         Math();
-        assertNotReached();
-    } catch(e) {
-        assert(e.name === "TypeError");
-        assert(e.message === "[object MathObject] is not a function (evaluated from 'Math')");
-    }
+    }, {
+        error: TypeError,
+        message: "[object MathObject] is not a function (evaluated from 'Math')"
+    });
 
-    try {
+    assertThrowsError(() => {
         new Math();
-        assertNotReached();
-    } catch(e) {
-        assert(e.name === "TypeError");
-        assert(e.message === "[object MathObject] is not a constructor (evaluated from 'Math')");
-    }
+    }, {
+        error: TypeError,
+        message: "[object MathObject] is not a constructor (evaluated from 'Math')"
+    });
 
-    try {
+    assertThrowsError(() => {
         new isNaN();
-        assertNotReached();
-    } catch(e) {
-        assert(e.name === "TypeError");
-        assert(e.message === "function isNaN() {\n  [NativeFunction]\n} is not a constructor (evaluated from 'isNaN')");
-    }
+    }, {
+        error: TypeError,
+        message: "function isNaN() {\n  [NativeFunction]\n} is not a constructor (evaluated from 'isNaN')"
+    });
 
     console.log("PASS");
 } catch(e) {

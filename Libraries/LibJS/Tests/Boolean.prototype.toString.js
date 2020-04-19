@@ -8,14 +8,12 @@ try {
     assert(Boolean.prototype.toString.call(true) === "true");
     assert(Boolean.prototype.toString.call(false) === "false");
 
-    try {
+    assertThrowsError(() => {
         Boolean.prototype.toString.call("foo");
-        assertNotReached();
-    } catch (e) {
-        assert(e instanceof Error);
-        assert(e.name === "TypeError");
-        assert(e.message === "Not a Boolean");
-    }
+    }, {
+        error: TypeError,
+        message: "Not a Boolean"
+    });
 
     console.log("PASS");
 } catch (err) {
