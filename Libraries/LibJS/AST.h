@@ -716,6 +716,8 @@ public:
 
     PropertyName computed_property_name(Interpreter&) const;
 
+    String to_string_approximation() const;
+
 private:
     virtual bool is_member_expression() const override { return true; }
     virtual const char* class_name() const override { return "MemberExpression"; }

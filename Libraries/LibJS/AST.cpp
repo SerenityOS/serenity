@@ -92,16 +92,23 @@ Value CallExpression::execute(Interpreter& interpreter) const
 
     ASSERT(!callee.is_empty());
 
-    if (is_new_expression()) {
-        if (!callee.is_object()
-            || !callee.as_object().is_function()
-            || (callee.as_object().is_native_function()
-                && !static_cast<NativeFunction&>(callee.as_object()).has_constructor()))
-            return interpreter.throw_exception<TypeError>(String::format("%s is not a constructor", callee.to_string().characters()));
+    if (!callee.is_object()
+        || !callee.as_object().is_function()
+        || (callee.as_object().is_native_function() && !static_cast<NativeFunction&>(callee.as_object()).has_constructor())) {
+        String error_message;
+        auto call_type = is_new_expression() ? "constructor" : "function";
+        if (m_callee->is_identifier() || m_callee->is_member_expression()) {
+            String expression_string;
+            if (m_callee->is_identifier())
+                expression_string = static_cast<const Identifier&>(*m_callee).string();
+            else
+                expression_string = static_cast<const MemberExpression&>(*m_callee).to_string_approximation();
+            error_message = String::format("%s is not a %s (evaluated from '%s')", callee.to_string().characters(), call_type, expression_string.characters());
+        } else {
+            error_message = String::format("%s is not a %s", callee.to_string().characters(), call_type);
+        }
+        return interpreter.throw_exception<TypeError>(error_message);
     }
-
-    if (!callee.is_object() || !callee.as_object().is_function())
-        return interpreter.throw_exception<TypeError>(String::format("%s is not a function", callee.to_string().characters()));
 
     auto& function = static_cast<Function&>(callee.as_object());
 
@@ -941,6 +948,17 @@ PropertyName MemberExpression::computed_property_name(Interpreter& interpreter) 
     if (index.is_number() && index.to_i32() >= 0)
         return PropertyName(index.to_i32());
     return PropertyName(index.to_string());
+}
+
+String MemberExpression::to_string_approximation() const
+{
+    String object_string = "<object>";
+    if (m_object->is_identifier())
+        object_string = static_cast<const Identifier&>(*m_object).string();
+    if (is_computed())
+        return String::format("%s[<computed>]", object_string.characters());
+    ASSERT(m_property->is_identifier());
+    return String::format("%s.%s", object_string.characters(), static_cast<const Identifier&>(*m_property).string().characters());
 }
 
 Value MemberExpression::execute(Interpreter& interpreter) const
