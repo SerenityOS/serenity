@@ -351,7 +351,7 @@ String Editor::get_line(const String& prompt)
                         case 2:
                             actual_offset = m_cursor - m_largest_common_suggestion_prefix_length + m_next_suggestion_invariant_offset;
                             if (can_complete)
-                                shown_length = m_largest_common_suggestion_prefix_length;
+                                shown_length = m_largest_common_suggestion_prefix_length + m_last_shown_suggestion.trailing_trivia.length();
                             break;
                         default:
                             if (m_last_shown_suggestion_display_length == 0)
@@ -391,6 +391,7 @@ String Editor::get_line(const String& prompt)
                         insert(m_last_shown_suggestion.text.substring_view(m_next_suggestion_invariant_offset, m_last_shown_suggestion.text.length() - m_next_suggestion_invariant_offset));
                         // add in the trivia of the last selected suggestion
                         insert(m_last_shown_suggestion.trailing_trivia);
+                        m_last_shown_suggestion_display_length += m_last_shown_suggestion.trailing_trivia.length();
                         if (m_tab_direction == TabDirection::Forward)
                             increment_suggestion_index();
                         else
