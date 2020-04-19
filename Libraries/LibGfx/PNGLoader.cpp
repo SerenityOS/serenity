@@ -419,6 +419,12 @@ static bool decode_png_header(PNGLoadingContext& context)
     if (context.state >= PNGLoadingContext::HeaderDecoded)
         return true;
 
+    if (!context.data || context.data_size < sizeof(png_header)) {
+        dbg() << "Missing PNG header";
+        context.state = PNGLoadingContext::State::Error;
+        return false;
+    }
+
     if (memcmp(context.data, png_header, sizeof(png_header)) != 0) {
         dbg() << "Invalid PNG header";
         context.state = PNGLoadingContext::State::Error;
