@@ -114,9 +114,8 @@ Value CallExpression::execute(Interpreter& interpreter) const
     auto& function = static_cast<Function&>(callee.as_object());
 
     MarkedValueList arguments(interpreter.heap());
-    for (auto bound_argument : function.bound_arguments()) {
-        arguments.append(bound_argument);
-    }
+    arguments.values().append(function.bound_arguments());
+
     for (size_t i = 0; i < m_arguments.size(); ++i) {
         auto value = m_arguments[i].execute(interpreter);
         if (interpreter.exception())

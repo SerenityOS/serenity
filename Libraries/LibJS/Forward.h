@@ -52,6 +52,7 @@
 namespace JS {
 
 class ASTNode;
+class BoundFunction;
 class Cell;
 class DeferGC;
 class Error;
