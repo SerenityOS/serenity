@@ -94,7 +94,7 @@ Value CallExpression::execute(Interpreter& interpreter) const
 
     if (!callee.is_object()
         || !callee.as_object().is_function()
-        || (callee.as_object().is_native_function() && !static_cast<NativeFunction&>(callee.as_object()).has_constructor())) {
+        || (is_new_expression() && (callee.as_object().is_native_function() && !static_cast<NativeFunction&>(callee.as_object()).has_constructor()))) {
         String error_message;
         auto call_type = is_new_expression() ? "constructor" : "function";
         if (m_callee->is_identifier() || m_callee->is_member_expression()) {
