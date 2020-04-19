@@ -3,14 +3,13 @@ load("test-common.js");
 try {
 
     const constantValue = 1;
-    try {
+    assertThrowsError(() => {
         constantValue = 2;
-        assertNotReached();
-    } catch (e) {
-        assert(e.name === "TypeError");
-        assert(e.message === "Assignment to constant variable");
-        assert(constantValue === 1);
-    }
+    }, {
+        error: TypeError,
+        message: "Assignment to constant variable"
+    });
+    assert(constantValue === 1);
 
     // Make sure we can define new constants in inner scopes.
     const constantValue2 = 1;
