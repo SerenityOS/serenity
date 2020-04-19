@@ -32,6 +32,7 @@
 #include <AK/kmalloc.h>
 #include <LibC/sys/arch/i386/regs.h>
 #include <LibCore/File.h>
+#include <LibDebug/DebugInfo.h>
 #include <LibDebug/DebugSession.h>
 #include <LibLine/Editor.h>
 #include <LibX86/Disassembler.h>
@@ -126,7 +127,24 @@ bool handle_breakpoint_command(const String& command)
 
     u32 breakpoint_address = 0;
 
-    if ((argument[0] >= '0' && argument[0] <= '9')) {
+    if (argument.contains(":")) {
+        auto source_arguments = argument.split(':');
+        if (source_arguments.size() != 2)
+            return false;
+        bool ok = false;
+        size_t line = source_arguments[1].to_uint(ok);
+        if (!ok)
+            return false;
+        auto file = source_arguments[0];
+        if (!file.contains("/"))
+            file = String::format("./%s", file.characters());
+        auto result = g_debug_session->debug_info().get_instruction_from_source(file, line);
+        if (!result.has_value()) {
+            printf("No matching instruction found\n");
+            return false;
+        }
+        breakpoint_address = result.value();
+    } else if ((argument[0] >= '0' && argument[0] <= '9')) {
         breakpoint_address = strtoul(argument.characters(), nullptr, 16);
     } else {
         auto symbol = g_debug_session->elf().find_demangled_function(argument);
@@ -136,6 +154,7 @@ bool handle_breakpoint_command(const String& command)
         }
         breakpoint_address = reinterpret_cast<u32>(symbol.value().value());
     }
+
     bool success = g_debug_session->insert_breakpoint(reinterpret_cast<void*>(breakpoint_address));
     if (!success) {
         fprintf(stderr, "coult not insert breakpoint at: %08x\n", breakpoint_address);
@@ -149,10 +168,12 @@ void print_help()
 {
     printf("Options:\n"
            "cont - Continue execution\n"
-           "s - step over the current instruction\n"
+           "si - step to the next instruction\n"
+           "sl - step to the next source line\n"
+           "line - show the position of the current instruction in the source code"
            "regs - Print registers\n"
            "dis [number of instructions] - Print disassembly\n"
-           "bp <address/symbol> - Insert a breakpoint\n");
+           "bp <address/symbol/file:line> - Insert a breakpoint\n");
 }
 
 int main(int argc, char** argv)
@@ -188,6 +209,9 @@ int main(int argc, char** argv)
     bool rc = g_debug_session->insert_breakpoint(g_debug_session->elf().entry().as_ptr());
     ASSERT(rc);
 
+    DebugInfo::SourcePosition previous_source_position;
+    bool in_step_line = false;
+
     g_debug_session->run([&](DebugSession::DebugBreakReason reason, Optional<PtraceRegisters> optional_regs) {
         if (reason == DebugSession::DebugBreakReason::Exited) {
             printf("Program exited.\n");
@@ -198,7 +222,28 @@ int main(int argc, char** argv)
         const PtraceRegisters& regs = optional_regs.value();
 
         auto symbol_at_ip = g_debug_session->elf().symbolicate(regs.eip);
+        auto source_position = g_debug_session->debug_info().get_source_position(regs.eip);
+
+        if (in_step_line) {
+            bool no_source_info = !source_position.has_value();
+            if (no_source_info || source_position.value() != previous_source_position) {
+                if (no_source_info)
+                    printf("No source information for current instruction! stoppoing.\n");
+                in_step_line = false;
+            } else {
+                return DebugSession::DebugDecision::SingleStep;
+            }
+        }
+
         printf("Program is stopped at: 0x%x (%s)\n", regs.eip, symbol_at_ip.characters());
+
+        if (source_position.has_value()) {
+            previous_source_position = source_position.value();
+            printf("Source location: %s:%lu\n", source_position.value().file_path.characters(), source_position.value().line_number);
+        } else {
+            printf("(No source location information for the current instruction)\n");
+        }
+
         for (;;) {
             auto command = editor.get_line("(sdb) ");
             bool success = false;
@@ -210,13 +255,18 @@ int main(int argc, char** argv)
             if (command == "cont") {
                 decision = DebugSession::DebugDecision::Continue;
                 success = true;
-            }
-            if (command == "s") {
+            } else if (command == "si") {
                 decision = DebugSession::DebugDecision::SingleStep;
                 success = true;
-            }
-
-            if (command == "regs") {
+            } else if (command == "sl") {
+                if (source_position.has_value()) {
+                    decision = DebugSession::DebugDecision::SingleStep;
+                    in_step_line = true;
+                    success = true;
+                } else {
+                    printf("No source location information for the current instruction\n");
+                }
+            } else if (command == "regs") {
                 handle_print_registers(regs);
                 success = true;
 

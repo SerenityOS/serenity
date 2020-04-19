@@ -1,5 +1,8 @@
 OBJS = \
-    DebugSession.o
+    DebugSession.o \
+	DebugInfo.o \
+	Dwarf/LineProgram.o \
+
 
 LIBRARY = libdebug.a
 
