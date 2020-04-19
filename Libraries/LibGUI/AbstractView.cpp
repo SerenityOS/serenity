@@ -350,9 +350,6 @@ void AbstractView::drop_event(DropEvent& event)
         return;
 
     auto index = index_at_event_position(event.position());
-    if (!index.is_valid())
-        return;
-
     if (on_drop)
         on_drop(index, event);
 }

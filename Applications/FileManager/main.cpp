@@ -669,8 +669,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     };
 
     directory_view.on_drop = [&](const GUI::AbstractView&, const GUI::ModelIndex& index, const GUI::DropEvent& event) {
-        if (!index.is_valid())
-            return;
         if (!event.mime_data().has_urls())
             return;
         auto urls = event.mime_data().urls();
@@ -689,6 +687,9 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             auto new_path = String::format("%s/%s",
                 target_node.full_path(directory_view.model()).characters(),
                 FileSystemPath(url_to_copy.path()).basename().characters());
+
+            if (url_to_copy.path() == new_path)
+                continue;
 
             if (!FileUtils::copy_file_or_directory(url_to_copy.path(), new_path)) {
                 auto error_message = String::format("Could not copy %s into %s.",
