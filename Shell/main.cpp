@@ -885,12 +885,6 @@ static int run_command(const String& cmd)
             if (handle_builtin(argv.size() - 1, argv.data(), retval))
                 return retval;
 
-            struct stat st;
-            if (stat(argv[0], &st) == 0 && S_ISDIR(st.st_mode)) {
-                fprintf(stderr, "Shell: %s: Is a directory\n", argv[0]);
-                return 126;
-            }
-
             pid_t child = fork();
             if (!child) {
                 setpgid(0, 0);
@@ -911,10 +905,16 @@ static int run_command(const String& cmd)
 
                 int rc = execvp(argv[0], const_cast<char* const*>(argv.data()));
                 if (rc < 0) {
-                    if (errno == ENOENT)
+                    if (errno == ENOENT) {
                         fprintf(stderr, "%s: Command not found.\n", argv[0]);
-                    else
+                    } else {
+                        struct stat st;
+                        if (stat(argv[0], &st) == 0 && S_ISDIR(st.st_mode)) {
+                            fprintf(stderr, "Shell: %s: Is a directory\n", argv[0]);
+                            _exit(126);
+                        }
                         fprintf(stderr, "execvp(%s): %s\n", argv[0], strerror(errno));
+                    }
                     _exit(1);
                 }
                 ASSERT_NOT_REACHED();
