@@ -33,8 +33,9 @@
 
 namespace Line {
 
-Editor::Editor()
+Editor::Editor(bool always_refresh)
 {
+    m_always_refresh = always_refresh;
     m_pending_chars = ByteBuffer::create_uninitialized(0);
     struct winsize ws;
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) < 0) {
@@ -126,7 +127,17 @@ String Editor::get_line(const String& prompt)
 
     m_history_cursor = m_history.size();
     for (;;) {
+        if (m_always_refresh)
+            m_refresh_needed = true;
         refresh_display();
+        if (m_finish) {
+            m_finish = false;
+            printf("\n");
+            fflush(stdout);
+            auto string = String::copy(m_buffer);
+            m_buffer.clear();
+            return string;
+        }
         char keybuf[16];
         ssize_t nread = read(0, keybuf, sizeof(keybuf));
         // FIXME: exit()ing here is a bit off. Should communicate failure to caller somehow instead.
@@ -138,13 +149,17 @@ String Editor::get_line(const String& prompt)
                     m_was_interrupted = false;
                     if (!m_buffer.is_empty())
                         printf("^C");
+
+                    if (m_is_searching) {
+                        end_search();
+                        continue;
+                    }
                 }
                 if (m_was_resized)
                     continue;
 
-                m_buffer.clear();
-                putchar('\n');
-                return String::empty();
+                finish();
+                continue;
             }
             perror("read failed");
             // FIXME: exit()ing here is a bit off. Should communicate failure to caller somehow instead.
@@ -500,6 +515,9 @@ String Editor::get_line(const String& prompt)
             m_times_tab_pressed = 0; // Safe to say if we get here, the user didn't press TAB
 
             auto do_backspace = [&] {
+                if (m_is_searching) {
+                    return;
+                }
                 if (m_cursor == 0) {
                     fputc('\a', stdout);
                     fflush(stdout);
@@ -549,11 +567,111 @@ String Editor::get_line(const String& prompt)
                 m_cursor = 0;
                 continue;
             }
+            // ^R
+            if (ch == 0x12) {
+                if (m_is_searching) {
+                    // how did we get here?
+                    ASSERT_NOT_REACHED();
+                } else {
+                    m_is_searching = true;
+                    m_search_offset = 0;
+                    m_pre_search_buffer = m_buffer;
+                    m_pre_search_cursor = m_cursor;
+                    m_search_editor = make<Editor>(true); // Has anyone seen 'Inception'?
+                    m_search_editor->initialize();
+                    m_search_editor->on_display_refresh = [this](Editor& search_editor) {
+                        int last_matching_offset = -1;
+
+                        // do not search for empty strings
+                        if (search_editor.buffer().size() > 0) {
+                            size_t search_offset = m_search_offset;
+                            StringView search_term { search_editor.buffer().data(), search_editor.buffer().size() };
+                            for (size_t i = m_history_cursor; i > 0; --i) {
+                                if (m_history[i - 1].contains(search_term)) {
+                                    last_matching_offset = i - 1;
+                                    if (search_offset == 0)
+                                        break;
+                                    --search_offset;
+                                }
+                            }
+
+                            if (last_matching_offset == -1) {
+                                fputc('\a', stdout);
+                                fflush(stdout);
+                                return;
+                            }
+                        }
+
+                        m_buffer.clear();
+                        m_cursor = 0;
+                        if (last_matching_offset >= 0)
+                            insert(m_history[last_matching_offset]);
+                        // always needed
+                        m_refresh_needed = true;
+                        refresh_display();
+                        return;
+                    };
+
+                    // whenever the search editor gets a ^R, cycle between history entries
+                    m_search_editor->register_character_input_callback(0x12, [this](Editor& search_editor) {
+                        ++m_search_offset;
+                        search_editor.m_refresh_needed = true;
+                        return false; // Do not process this key event
+                    });
+
+                    // whenever the search editor gets a backspace, cycle back between history entries
+                    // unless we're at the zeroth entry, in which case, allow the deletion
+                    m_search_editor->register_character_input_callback(m_termios.c_cc[VERASE], [this](Editor& search_editor) {
+                        if (m_search_offset > 0) {
+                            --m_search_offset;
+                            search_editor.m_refresh_needed = true;
+                            return false; // Do not process this key event
+                        }
+                        return true;
+                    });
+
+                    // quit without clearing the current buffer
+                    m_search_editor->register_character_input_callback('\t', [this](Editor& search_editor) {
+                        search_editor.finish();
+                        m_reset_buffer_on_search_end = false;
+                        return false;
+                    });
+
+                    printf("\n");
+                    fflush(stdout);
+
+                    auto search_prompt = "\x1b[32msearch:\x1b[0m ";
+                    auto search_string = m_search_editor->get_line(search_prompt);
+                    m_search_editor = nullptr;
+                    m_is_searching = false;
+                    m_search_offset = 0;
+
+                    // manually cleanup the search line
+                    reposition_cursor();
+                    vt_clear_lines(0, (search_string.length() + actual_rendered_string_length(search_prompt) + m_num_columns - 1) / m_num_columns);
+
+                    reposition_cursor();
+
+                    if (!m_reset_buffer_on_search_end || search_string.length() == 0) {
+                        // if the entry was empty, or we purposely quit without a newline,
+                        // do not return anything
+                        // instead, just end the search
+                        end_search();
+                        continue;
+                    }
+
+                    // return the string
+                    finish();
+                    continue;
+                }
+                continue;
+            }
             // Normally ^D
             if (ch == m_termios.c_cc[VEOF]) {
                 if (m_buffer.is_empty()) {
                     printf("<EOF>\n");
-                    exit(0);
+                    if (!m_always_refresh) // this is a little off, but it'll do for now
+                        exit(0);
                 }
                 continue;
             }
@@ -564,11 +682,8 @@ String Editor::get_line(const String& prompt)
                 continue;
             }
             if (ch == '\n') {
-                putchar('\n');
-                fflush(stdout);
-                auto string = String::copy(m_buffer);
-                m_buffer.clear();
-                return string;
+                finish();
+                continue;
             }
 
             insert(ch);
@@ -591,15 +706,17 @@ void Editor::recalculate_origin()
     // but that will be calculated and applied at the next
     // refresh cycle
 }
+void Editor::cleanup()
+{
+    vt_move_relative(0, m_pending_chars.size() - m_chars_inserted_in_the_middle);
+    auto current_line = cursor_line();
+
+    vt_clear_lines(current_line - 1, num_lines() - current_line);
+    vt_move_relative(-num_lines() + 1, -offset_in_line() - m_old_prompt_length - m_pending_chars.size() + m_chars_inserted_in_the_middle);
+};
+
 void Editor::refresh_display()
 {
-    auto cleanup = [&] {
-        vt_move_relative(0, m_pending_chars.size() - m_chars_inserted_in_the_middle);
-        auto current_line = cursor_line();
-
-        vt_clear_lines(current_line - 1, num_lines() - current_line);
-        vt_move_relative(-num_lines() + 1, -offset_in_line() - m_old_prompt_length - m_pending_chars.size() + m_chars_inserted_in_the_middle);
-    };
     auto has_cleaned_up = false;
     // someone changed the window size, figure it out
     // and react to it, we might need to redraw

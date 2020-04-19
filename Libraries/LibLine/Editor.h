@@ -77,7 +77,7 @@ struct CompletionSuggestion {
 
 class Editor {
 public:
-    Editor();
+    explicit Editor(bool always_refresh = false);
     ~Editor();
 
     void initialize()
@@ -143,6 +143,11 @@ public:
     const struct termios& termios() const { return m_termios; }
     const struct termios& default_termios() const { return m_default_termios; }
 
+    void finish()
+    {
+        m_finish = true;
+    }
+
 private:
     void vt_save_cursor();
     void vt_restore_cursor();
@@ -155,6 +160,19 @@ private:
 
     Style find_applicable_style(size_t offset) const;
 
+    inline void end_search()
+    {
+        m_is_searching = false;
+        m_refresh_needed = true;
+        m_search_offset = 0;
+        if (m_reset_buffer_on_search_end) {
+            m_buffer = m_pre_search_buffer;
+            m_cursor = m_pre_search_cursor;
+        }
+        m_reset_buffer_on_search_end = false;
+        m_search_editor = nullptr;
+    }
+
     void reset()
     {
         m_origin_x = 0;
@@ -165,6 +183,7 @@ private:
     }
 
     void refresh_display();
+    void cleanup();
 
     size_t current_prompt_length() const
     {
@@ -197,6 +216,15 @@ private:
     void recalculate_origin();
     void reposition_cursor();
 
+    bool m_finish { false };
+
+    OwnPtr<Editor> m_search_editor;
+    bool m_is_searching { false };
+    bool m_reset_buffer_on_search_end { true };
+    size_t m_search_offset { 0 };
+    size_t m_pre_search_cursor { 0 };
+    Vector<char, 1024> m_pre_search_buffer;
+
     Vector<char, 1024> m_buffer;
     ByteBuffer m_pending_chars;
     size_t m_cursor { 0 };
@@ -225,6 +253,8 @@ private:
     size_t m_next_suggestion_invariant_offset { 0 };
     size_t m_largest_common_suggestion_prefix_length { 0 };
 
+    bool m_always_refresh { false };
+
     enum class TabDirection {
         Forward,
         Backward,
@@ -235,8 +265,8 @@ private:
 
     // TODO: handle signals internally
     struct termios m_termios, m_default_termios;
-    bool m_was_interrupted = false;
-    bool m_was_resized = false;
+    bool m_was_interrupted { false };
+    bool m_was_resized { false };
 
     // FIXME: This should be something more take_first()-friendly.
     Vector<String> m_history;
