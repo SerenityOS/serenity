@@ -28,6 +28,7 @@
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/ScriptFunction.h>
 #include <LibWeb/Bindings/EventWrapper.h>
 #include <LibWeb/Bindings/NodeWrapper.h>
@@ -142,7 +143,9 @@ void Node::dispatch_event(NonnullRefPtr<Event> event)
             dbg() << "calling event listener with this=" << this_value;
 #endif
             auto* event_wrapper = wrap(function->heap(), *event);
-            document().interpreter().call(function, this_value, { event_wrapper });
+            JS::MarkedValueList arguments(function->heap());
+            arguments.append(event_wrapper);
+            document().interpreter().call(function, this_value, move(arguments));
         }
     }
 

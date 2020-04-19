@@ -68,6 +68,9 @@ public:
     void did_create_handle(Badge<HandleImpl>, HandleImpl&);
     void did_destroy_handle(Badge<HandleImpl>, HandleImpl&);
 
+    void did_create_marked_value_list(Badge<MarkedValueList>, MarkedValueList&);
+    void did_destroy_marked_value_list(Badge<MarkedValueList>, MarkedValueList&);
+
     void defer_gc(Badge<DeferGC>);
     void undefer_gc(Badge<DeferGC>);
 
@@ -89,6 +92,8 @@ private:
     Interpreter& m_interpreter;
     Vector<NonnullOwnPtr<HeapBlock>> m_blocks;
     HashTable<HandleImpl*> m_handles;
+
+    HashTable<MarkedValueList*> m_marked_value_lists;
 
     size_t m_gc_deferrals { 0 };
     bool m_should_gc_when_deferral_ends { false };
