@@ -30,6 +30,9 @@ elif [ "$(uname -s)" = "FreeBSD" ]; then
     MAKE=gmake
     MD5SUM="md5 -q"
     NPROC="sysctl -n hw.ncpu"
+elif [ "$(uname -s)" = "Darwin" ]; then
+    MD5SUM="md5 -q"
+    NPROC="sysctl -n hw.ncpu"
 fi
 
 echo PREFIX is "$PREFIX"
