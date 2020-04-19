@@ -133,16 +133,18 @@ void Interpreter::exit_scope(const ScopeNode& scope_node)
 
 void Interpreter::set_variable(const FlyString& name, Value value, bool first_assignment)
 {
-    for (auto* environment = current_environment(); environment; environment = environment->parent()) {
-        auto possible_match = environment->get(name);
-        if (possible_match.has_value()) {
-            if (!first_assignment && possible_match.value().declaration_kind == DeclarationKind::Const) {
-                throw_exception<TypeError>("Assignment to constant variable");
+    if (m_call_stack.size()) {
+        for (auto* environment = current_environment(); environment; environment = environment->parent()) {
+            auto possible_match = environment->get(name);
+            if (possible_match.has_value()) {
+                if (!first_assignment && possible_match.value().declaration_kind == DeclarationKind::Const) {
+                    throw_exception<TypeError>("Assignment to constant variable");
+                    return;
+                }
+
+                environment->set(name, { value, possible_match.value().declaration_kind });
                 return;
             }
-
-            environment->set(name, { value, possible_match.value().declaration_kind });
-            return;
         }
     }
 
@@ -151,10 +153,12 @@ void Interpreter::set_variable(const FlyString& name, Value value, bool first_as
 
 Optional<Value> Interpreter::get_variable(const FlyString& name)
 {
-    for (auto* environment = current_environment(); environment; environment = environment->parent()) {
-        auto possible_match = environment->get(name);
-        if (possible_match.has_value())
-            return possible_match.value().value;
+    if (m_call_stack.size()) {
+        for (auto* environment = current_environment(); environment; environment = environment->parent()) {
+            auto possible_match = environment->get(name);
+            if (possible_match.has_value())
+                return possible_match.value().value;
+        }
     }
     return global_object().get(name);
 }
