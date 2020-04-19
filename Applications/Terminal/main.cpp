@@ -26,7 +26,6 @@
 
 #include <Kernel/KeyCode.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/UserInfo.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>

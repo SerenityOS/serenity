@@ -33,7 +33,7 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DesktopServices.h>
 #include <LibCore/MimeData.h>
-#include <LibCore/UserInfo.h>
+#include <LibCore/StandardPaths.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
@@ -91,7 +91,7 @@ int main(int argc, char** argv)
     }
 
     if (app.args().contains_slow("--desktop") || app.args().contains_slow("-d"))
-        return run_in_desktop_mode(move(config), String::format("%s/Desktop", get_current_user_home_path().characters()));
+        return run_in_desktop_mode(move(config), Core::StandardPaths::desktop_directory());
 
     // our initial location is defined as, in order of precedence:
     // 1. the first command-line argument (e.g. FileManager /bin)
@@ -103,7 +103,7 @@ int main(int argc, char** argv)
         initial_location = argv[1];
 
     if (initial_location.is_empty())
-        initial_location = get_current_user_home_path();
+        initial_location = Core::StandardPaths::home_directory();
 
     if (initial_location.is_empty())
         initial_location = "/";
@@ -530,7 +530,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     auto go_home_action = GUI::CommonActions::make_go_home_action(
         [&](auto&) {
-            directory_view.open(get_current_user_home_path());
+            directory_view.open(Core::StandardPaths::home_directory());
         },
         window);
 
