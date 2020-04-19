@@ -1,0 +1,16 @@
+diff -Naur frotz-master/Makefile frotz-master.serenity/Makefile
+--- frotz-master/Makefile	2020-04-09 00:48:12.000000000 -0400
++++ frotz-master.serenity/Makefile	2020-04-18 15:58:39.000000000 -0400
+@@ -235,9 +235,9 @@
+ GIT_HASH_SHORT = $(shell git rev-parse --short HEAD)
+ GIT_DATE = $(shell git show -s --format=%ci)
+ else
+-GIT_HASH = "$16e70d08f8a1aa1a4ebca1117ab84ba180809708$"
+-GIT_HASH_SHORT = "$16e70d0$"
+-GIT_DATE = "$2020-04-08 21:48:12 -0700$"
++GIT_HASH = 16e70d08f8a1aa1a4ebca1117ab84ba180809708
++GIT_HASH_SHORT = 16e70d0
++GIT_DATE = 2020-04-08 21:48:12 -0700
+ endif
+ export CFLAGS
+ 
