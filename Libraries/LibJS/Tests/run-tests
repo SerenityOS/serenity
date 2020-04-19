@@ -9,13 +9,15 @@ else
     export UBSAN_OPTIONS=print_stacktrace=1
 fi
 
+extra_args="$*"
+
 pass_count=0
 fail_count=0
 count=0
 
 GLOBIGNORE=test-common.js
 for f in *.js; do
-    result=`$js_program -t $f 2>/dev/null`
+    result=`$js_program $extra_args -t $f 2>/dev/null`
     if [ "$result" = "PASS" ]; then
         let pass_count++
         echo -ne "( \033[32;1mPass\033[0m ) "
