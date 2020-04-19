@@ -65,6 +65,7 @@ public:
 
     URL complete_url(const String&) const;
 
+    static URL create_with_url_or_path(const String& url_or_path);
     static URL create_with_file_protocol(const String& path);
 
 private:
