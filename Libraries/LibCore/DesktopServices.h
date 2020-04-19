@@ -24,60 +24,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/URL.h>
-#include <LibGUI/DesktopServices.h>
-#include <stdio.h>
-#include <sys/stat.h>
+#pragma once
 
-namespace GUI {
+#include <AK/Forward.h>
 
-static bool open_file_url(const URL&);
-static bool spawn(String executable, String argument);
+namespace Core {
 
-bool DesktopServices::open(const URL& url)
-{
-    if (url.protocol() == "file")
-        return open_file_url(url);
-
-    return spawn("/bin/Browser", url.to_string());
-}
-
-bool spawn(String executable, String argument)
-{
-    if (fork() == 0) {
-        if (execl(executable.characters(), executable.characters(), argument.characters(), nullptr) < 0) {
-            perror("execl");
-            return false;
-        }
-        ASSERT_NOT_REACHED();
-    }
-    return true;
-}
-
-bool open_file_url(const URL& url)
-{
-    struct stat st;
-    if (stat(url.path().characters(), &st) < 0) {
-        perror("stat");
-        return false;
-    }
-
-    if (S_ISDIR(st.st_mode))
-        return spawn("/bin/FileManager", url.path());
-
-    if (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH))
-        return spawn(url.path(), {});
-
-    if (url.path().to_lowercase().ends_with(".png"))
-        return spawn("/bin/QuickShow", url.path());
-
-    if (url.path().to_lowercase().ends_with(".html"))
-        return spawn("/bin/Browser", url.path());
-
-    if (url.path().to_lowercase().ends_with(".wav"))
-        return spawn("/bin/SoundPlayer", url.path());
-
-    return spawn("/bin/TextEditor", url.path());
-}
+class DesktopServices {
+public:
+    static bool open(const URL&);
+};
 
 }
