@@ -280,7 +280,7 @@ bool Parser::parse_ere_dupl_symbol(Vector<StackValue>& operations, size_t& min_l
         bool ok;
         size_t number1 = number1_builder.build().to_uint(ok);
         if (!ok)
-            return set_error(RegexError::REG_BADBR);
+            return set_error(RegexError::InvalidBraceContent);
 
         if (match(TokenType::Comma)) {
             consume();
@@ -297,7 +297,7 @@ bool Parser::parse_ere_dupl_symbol(Vector<StackValue>& operations, size_t& min_l
                 bool ok2;
                 number2 = number2_builder.build().to_uint(ok2);
                 if (!ok || number1 > number2)
-                    return set_error(RegexError::REG_BADBR);
+                    return set_error(RegexError::InvalidBraceContent);
             }
         }
         min_length *= number1;
@@ -413,7 +413,7 @@ bool Parser::parse_ere_dupl_symbol(Vector<StackValue>& operations, size_t& min_l
 
 bool Parser::set_error(RegexError error)
 {
-    if (m_parser_state.m_error == RegexError::REG_NOERR) {
+    if (m_parser_state.m_error == RegexError::NoError) {
         m_parser_state.m_error = error;
         m_parser_state.m_error_token = m_parser_state.m_current_token;
     }
@@ -445,7 +445,7 @@ bool Parser::parse_bracket_expression(Vector<StackValue>& stack, size_t& min_len
                     values.append({ CompareType::OrdinaryCharacter, { '-' } });
                 }
             } else {
-                return set_error(RegexError::REG_ERANGE);
+                return set_error(RegexError::InvalidRange);
             }
 
         } else if (match(TokenType::OrdinaryCharacter) || match(TokenType::Period) || match(TokenType::Asterisk) || match(TokenType::EscapeSequence) || match(TokenType::Plus)) {
@@ -482,7 +482,7 @@ bool Parser::parse_bracket_expression(Vector<StackValue>& stack, size_t& min_len
                     if (match('='))
                         consume();
                     else
-                        return set_error(RegexError::REG_ECOLLATE);
+                        return set_error(RegexError::InvalidCollationElement);
 
                     consume(TokenType::RightBracket);
 
@@ -517,24 +517,24 @@ bool Parser::parse_bracket_expression(Vector<StackValue>& stack, size_t& min_len
                         else if (consume("xdigit"))
                             ch_class = CharacterClass::Xdigit;
                         else {
-                            return set_error(RegexError::REG_ECTYPE);
+                            return set_error(RegexError::InvalidCharacterClass);
                         }
 
                         values.append({ CompareType::CharacterClass, ch_class });
 
                     } else
-                        return set_error(RegexError::REG_ECTYPE);
+                        return set_error(RegexError::InvalidCharacterClass);
 
                     // FIXME: we do not support locale specific character classes until locales are implemented
 
                     if (match(':'))
                         consume();
                     else
-                        return set_error(RegexError::REG_ECTYPE);
+                        return set_error(RegexError::InvalidCharacterClass);
 
                     consume(TokenType::RightBracket);
                 } else
-                    return set_error(RegexError::REG_EBRACK);
+                    return set_error(RegexError::BracketMismatch);
             }
 
         } else if (match(TokenType::RightBracket)) {
@@ -549,12 +549,12 @@ bool Parser::parse_bracket_expression(Vector<StackValue>& stack, size_t& min_len
 
         } else
             // nothing matched, this is a failure, as at least the closing bracket must match...
-            return set_error(RegexError::REG_EBRACK);
+            return set_error(RegexError::BracketMismatch);
 
         // check if range expression has to be completed...
         if (values.size() >= 3 && values.at(values.size() - 2).type == CompareType::RangeExpressionDummy) {
             if (values.last().type != CompareType::OrdinaryCharacter)
-                return set_error(RegexError::REG_ERANGE);
+                return set_error(RegexError::InvalidRange);
 
             auto value2 = values.take_last();
             values.take_last(); // RangeExpressionDummy
@@ -657,7 +657,7 @@ bool Parser::parse_ere_expression(Vector<StackValue>& stack, size_t& min_length)
 
             Vector<StackValue> sub_ops;
             if (!parse_bracket_expression(sub_ops, length) || !sub_ops.size())
-                return set_error(RegexError::REG_EBRACK);
+                return set_error(RegexError::BracketMismatch);
 
             operations.append(move(sub_ops));
 
@@ -692,7 +692,7 @@ bool Parser::parse_ere_expression(Vector<StackValue>& stack, size_t& min_length)
 
             Vector<StackValue> sub_ops;
             if (!parse_extended_reg_exp(sub_ops, length) || !sub_ops.size())
-                return set_error(RegexError::REG_EPAREN);
+                return set_error(RegexError::ParenMismatch);
 
             operations.append(move(sub_ops));
 
@@ -715,7 +715,7 @@ bool Parser::parse_ere_expression(Vector<StackValue>& stack, size_t& min_length)
         if (can_match_dupl_symbol)
             parse_ere_dupl_symbol(operations, length);
         else
-            return set_error(RegexError::REG_BADRPT);
+            return set_error(RegexError::InvalidRepetitionMarker);
     }
 
     stack.append(move(operations));
@@ -740,7 +740,7 @@ bool Parser::parse_extended_reg_exp(Vector<StackValue>& stack, size_t& min_lengt
             size_t alt_length { 0 };
 
             if (!(parse_extended_reg_exp(operations_alternative, alt_length) && operations_alternative.size()))
-                return set_error(RegexError::REG_BADPAT);
+                return set_error(RegexError::InvalidPattern);
 
             // FORKSTAY _ALT
             // REGEXP ALT1
@@ -804,7 +804,7 @@ Token Parser::consume()
 Token Parser::consume(TokenType type)
 {
     if (m_parser_state.m_current_token.type() != type) {
-        set_error(RegexError::REG_BADPAT);
+        set_error(RegexError::InvalidPattern);
 #ifdef REGEX_DEBUG
         fprintf(stderr, "[PARSER] Error: Unexpected token %s. Expected %s\n", m_parser_state.m_current_token.name(), Token::name(type));
 #endif
@@ -860,7 +860,7 @@ void Parser::reset()
     m_parser_state.m_bytes.clear();
     m_parser_state.m_lexer.reset();
     m_parser_state.m_current_token = m_parser_state.m_lexer.next();
-    m_parser_state.m_error = RegexError::REG_NOERR;
+    m_parser_state.m_error = RegexError::NoError;
     m_parser_state.m_error_token = { TokenType::Eof, 0, StringView(nullptr) };
     m_parser_state.m_compilation_flags = 0;
 }

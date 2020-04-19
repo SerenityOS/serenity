@@ -36,21 +36,21 @@ namespace AK {
 namespace regex {
 
 enum class RegexError : u8 {
-    REG_NOERR = 0,
-    REG_NOMATCH,  // regexec() failed to match.
-    REG_BADPAT,   // Invalid regular expression.
-    REG_ECOLLATE, // Invalid collating element referenced.
-    REG_ECTYPE,   // Invalid character class type referenced.
-    REG_EESCAPE,  // Trailing \ in pattern.
-    REG_ESUBREG,  // Number in \digit invalid or in error.
-    REG_EBRACK,   // [ ] imbalance.
-    REG_EPAREN,   // \( \) or ( ) imbalance.
-    REG_EBRACE,   // \{ \} imbalance.
-    REG_BADBR,    // Content of \{ \} invalid: not a number, number too large, more than two numbers, first larger than second.
-    REG_ERANGE,   // Invalid endpoint in range expression.
-    REG_ESPACE,   // Out of memory.
-    REG_BADRPT,   // ?, * or + not preceded by valid regular expression.
-    REG_ENOSYS,   // The implementation does not support the function.
+    NoError = 0,
+    NoMatch,                 // regexec() failed to match.
+    InvalidPattern,          // Invalid regular expression.
+    InvalidCollationElement, // Invalid collating element referenced.
+    InvalidCharacterClass,   // Invalid character class type referenced.
+    InvalidTrailingEscape,   // Trailing \ in pattern.
+    InvalidNumber,           // Number in \digit invalid or in error.
+    BracketMismatch,         // [ ] imbalance.
+    ParenMismatch,           // \( \) or ( ) imbalance.
+    BraceMismatch,           // \{ \} imbalance.
+    InvalidBraceContent,     // Content of \{ \} invalid: not a number, number too large, more than two numbers, first larger than second.
+    InvalidRange,            // Invalid endpoint in range expression.
+    OutOfMemory,             // Out of memory.
+    InvalidRepetitionMarker, // ?, * or + not preceded by valid regular expression.
+    NotImplemented,          // The implementation does not support the function.
 };
 
 enum class CompilationFlags {
@@ -262,7 +262,7 @@ public:
     };
 
     ParserResult parse(u8 compilation_flags);
-    bool has_error() const { return m_parser_state.m_error != RegexError::REG_NOERR; }
+    bool has_error() const { return m_parser_state.m_error != RegexError::NoError; }
 
 private:
     bool match(TokenType type) const;
@@ -289,7 +289,7 @@ private:
     struct ParserState {
         Lexer m_lexer;
         Token m_current_token;
-        RegexError m_error = RegexError::REG_NOERR;
+        RegexError m_error = RegexError::NoError;
         Token m_error_token { TokenType::Eof, 0, StringView(nullptr) };
         Vector<StackValue> m_bytes;
         size_t m_match_groups { 0 };

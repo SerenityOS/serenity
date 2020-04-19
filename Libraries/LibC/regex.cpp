@@ -69,7 +69,7 @@ int regcomp(regex_t* preg, const char* pattern, int cflags)
     }
 #endif
 
-    if (result.m_error != AK::regex::RegexError::REG_NOERR) {
+    if (result.m_error != AK::regex::RegexError::NoError) {
         preg->re_pat_errpos = result.m_error_token.position();
         preg->re_pat_err = (ReError)result.m_error;
         preg->re_pat = pattern;

@@ -41,21 +41,21 @@ __BEGIN_DECLS
 
 // The following constants are defined as error return values:
 enum ReError {
-    REG_NOERR = 0,
-    REG_NOMATCH,  // regexec() failed to match.
-    REG_BADPAT,   // Invalid regular expression.
-    REG_ECOLLATE, // Invalid collating element referenced.
-    REG_ECTYPE,   // Invalid character class type referenced.
-    REG_EESCAPE,  // Trailing \ in pattern.
-    REG_ESUBREG,  // Number in \digit invalid or in error.
-    REG_EBRACK,   // [ ] imbalance.
-    REG_EPAREN,   // \( \) or ( ) imbalance.
-    REG_EBRACE,   // \{ \} imbalance.
-    REG_BADBR,    // Content of \{ \} invalid: not a number, number too large, more than two numbers, first larger than second.
-    REG_ERANGE,   // Invalid endpoint in range expression.
-    REG_ESPACE,   // Out of memory.
-    REG_BADRPT,   // ?, * or + not preceded by valid regular expression.
-    REG_ENOSYS,   // The implementation does not support the function.
+    REG_NOERR = (u8)RegexError::NoError,
+    REG_NOMATCH = (u8)RegexError::NoMatch,                  // regexec() failed to match.
+    REG_BADPAT = (u8)RegexError::InvalidPattern,            // Invalid regular expression.
+    REG_ECOLLATE = (u8)RegexError::InvalidCollationElement, // Invalid collating element referenced.
+    REG_ECTYPE = (u8)RegexError::InvalidCharacterClass,     // Invalid character class type referenced.
+    REG_EESCAPE = (u8)RegexError::InvalidTrailingEscape,    // Trailing \ in pattern.
+    REG_ESUBREG = (u8)RegexError::InvalidNumber,            // Number in \digit invalid or in error.
+    REG_EBRACK = (u8)RegexError::BracketMismatch,           // [ ] imbalance.
+    REG_EPAREN = (u8)RegexError::ParenMismatch,             // \( \) or ( ) imbalance.
+    REG_EBRACE = (u8)RegexError::BraceMismatch,             // \{ \} imbalance.
+    REG_BADBR = (u8)RegexError::InvalidBraceContent,        // Content of \{ \} invalid: not a number, number too large, more than two numbers, first larger than second.
+    REG_ERANGE = (u8)RegexError::InvalidRange,              // Invalid endpoint in range expression.
+    REG_ESPACE = (u8)RegexError::OutOfMemory,               // Out of memory.
+    REG_BADRPT = (u8)RegexError::InvalidRepetitionMarker,   // ?, * or + not preceded by valid regular expression.
+    REG_ENOSYS = (u8)RegexError::NotImplemented,            // The implementation does not support the function.
 };
 
 struct regex_t {
