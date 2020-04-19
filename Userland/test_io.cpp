@@ -25,6 +25,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/LogStream.h>
 #include <AK/Types.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -293,6 +294,15 @@ void test_writev()
     close(pipefds[1]);
 }
 
+void test_rmdir_root()
+{
+    int rc = rmdir("/");
+    if (rc != -1 || errno != EBUSY) {
+        warn() << "rmdir(/) didn't fail with EBUSY";
+        ASSERT_NOT_REACHED();
+    }
+}
+
 int main(int, char**)
 {
     int rc;
@@ -319,6 +329,7 @@ int main(int, char**)
     test_eoverflow();
     test_rmdir_while_inside_dir();
     test_writev();
+    test_rmdir_root();
 
     EXPECT_ERROR_2(EPERM, link, "/", "/home/anon/lolroot");
 
