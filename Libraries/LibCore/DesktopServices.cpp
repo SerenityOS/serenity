@@ -44,7 +44,12 @@ bool DesktopServices::open(const URL& url)
 
 bool spawn(String executable, String argument)
 {
-    if (fork() == 0) {
+    pid_t child_pid = fork();
+    if (child_pid < 0) {
+        perror("fork");
+        return false;
+    }
+    if (child_pid == 0) {
         if (execl(executable.characters(), executable.characters(), argument.characters(), nullptr) < 0) {
             perror("execl");
             return false;
