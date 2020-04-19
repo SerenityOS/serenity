@@ -31,6 +31,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/DesktopServices.h>
 #include <LibCore/MimeData.h>
 #include <LibCore/UserInfo.h>
 #include <LibGUI/AboutDialog.h>
@@ -39,7 +40,6 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Clipboard.h>
-#include <LibGUI/DesktopServices.h>
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
@@ -154,7 +154,7 @@ int run_in_desktop_mode(RefPtr<Core::ConfigFile> config, String initial_location
             return;
         auto& node = model->node(index);
         auto path = node.full_path(model);
-        GUI::DesktopServices::open(URL::create_with_file_protocol(path));
+        Core::DesktopServices::open(URL::create_with_file_protocol(path));
     };
 
     window->show();

@@ -28,7 +28,7 @@
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
-#include <LibGUI/DesktopServices.h>
+#include <LibCore/DesktopServices.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -70,7 +70,7 @@ void DirectoryView::handle_activation(const GUI::ModelIndex& index)
         return;
     }
 
-    GUI::DesktopServices::open(URL::create_with_file_protocol(path));
+    Core::DesktopServices::open(URL::create_with_file_protocol(path));
 }
 
 DirectoryView::DirectoryView()
