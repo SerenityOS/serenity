@@ -630,6 +630,9 @@ KResult VFS::rmdir(StringView path, Custody& base)
     if (!inode.is_directory())
         return KResult(-ENOTDIR);
 
+    if (!parent_custody)
+        return KResult(-EBUSY);
+
     auto& parent_inode = parent_custody->inode();
 
     if (!parent_inode.metadata().may_write(*Process::current))
