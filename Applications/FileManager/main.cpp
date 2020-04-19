@@ -684,7 +684,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             return;
 
         for (auto& url_to_copy : urls) {
-            if (!url_to_copy.is_valid())
+            if (!url_to_copy.is_valid() || url_to_copy.path() == target_node.full_path(directory_view.model()))
                 continue;
             auto new_path = String::format("%s/%s",
                 target_node.full_path(directory_view.model()).characters(),
