@@ -26,9 +26,9 @@
 
 #include "PaintableWidget.h"
 #include "Tool.h"
+#include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Palette.h>
-#include <LibGUI/Painter.h>
 
 static PaintableWidget* s_the;
 
@@ -46,8 +46,8 @@ PaintableWidget::PaintableWidget()
     pal.set_color(ColorRole::Window, Color::MidGray);
     set_palette(pal);
     set_background_color(Color::MidGray);
-    m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, { 600, 400 });
-    m_bitmap->fill(Color::White);
+    m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, { 600, 400 });
+    m_bitmap->fill(Color(255, 255, 255, 0));
 }
 
 PaintableWidget::~PaintableWidget()
@@ -57,7 +57,9 @@ PaintableWidget::~PaintableWidget()
 void PaintableWidget::paint_event(GUI::PaintEvent& event)
 {
     GUI::Painter painter(*this);
+
     painter.add_clip_rect(event.rect());
+    painter.fill_rect_with_checkerboard(m_bitmap->rect(), { 8, 8 }, palette().base().darkened(0.9), palette().base());
     painter.blit({ 0, 0 }, *m_bitmap, m_bitmap->rect());
 }
 
