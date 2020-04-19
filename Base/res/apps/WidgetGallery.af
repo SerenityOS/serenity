@@ -1,0 +1,4 @@
+[App]
+Name=WidgetGallery
+Executable=/bin/WidgetGallery
+Category=Demos
