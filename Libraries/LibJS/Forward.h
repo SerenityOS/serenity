@@ -53,6 +53,7 @@ namespace JS {
 
 class ASTNode;
 class Cell;
+class DeferGC;
 class Error;
 class Exception;
 class Expression;
