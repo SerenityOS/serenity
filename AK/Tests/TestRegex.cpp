@@ -43,4 +43,31 @@ TEST_CASE(char_utf8)
     EXPECT_EQ(m.match_count, 2u);
 }
 
+TEST_CASE(catch_all_newline)
+{
+    Pattern regex("^.*$", (u8)CompilationFlags::Extended | (u8)CompilationFlags::HandleNewLine);
+    MatchResult m;
+
+    EXPECT_EQ(match("Hello World\nTest\n1234\n", regex, m), true);
+    EXPECT_EQ(m.match_count, 3u);
+    EXPECT_EQ(m.matches.at(0).view, "Hello World");
+    EXPECT_EQ(m.matches.at(1).view, "Test");
+    EXPECT_EQ(m.matches.at(2).view, "1234");
+}
+
+TEST_CASE(catch_all_newline_2)
+{
+    Pattern regex("^.*$", (u8)CompilationFlags::Extended);
+    MatchResult m;
+    EXPECT_EQ(match("Hello World\nTest\n1234\n", regex, m, (u8)MatchFlags::HandleNewLine), true);
+    EXPECT_EQ(m.match_count, 3u);
+    EXPECT_EQ(m.matches.at(0).view, "Hello World");
+    EXPECT_EQ(m.matches.at(1).view, "Test");
+    EXPECT_EQ(m.matches.at(2).view, "1234");
+
+    EXPECT_EQ(match("Hello World\nTest\n1234\n", regex, m), true);
+    EXPECT_EQ(m.match_count, 1u);
+    EXPECT_EQ(m.matches.at(0).view, "Hello World\nTest\n1234\n");
+}
+
 TEST_MAIN(Regex)

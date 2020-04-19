@@ -886,7 +886,6 @@ MatchResult Matcher::match(const StringView view, const size_t max_matches_resul
     bool match;
 
     MatchState state;
-    state.m_view = view;
     state.m_matches.ensure_capacity(max_matches_result);
     state.m_left.ensure_capacity(match_groups);
     state.m_match_flags = match_flags;
@@ -896,42 +895,63 @@ MatchResult Matcher::match(const StringView view, const size_t max_matches_resul
     for (size_t j = 0; j < match_groups; ++j)
         state.m_left.append(-1);
 
-    for (size_t i = 0; i < view.length(); ++i) {
-        if (min_length && min_length > view.length() - i)
-            break;
-        for (size_t j = 0; j < match_groups; ++j)
-            state.m_left.at(j) = -1;
-        state.m_stringp = i;
-        state.m_instructionp = 0;
-        match_start = i;
-        match = match_recurse(state);
-
-        if (match) {
-            ++match_count;
-
-            if (state.m_match_flags & (u8)MatchFlags::MatchAll) {
-                if (state.m_matches_offset < state.m_matches.size())
-                    state.m_matches.at(state.m_matches_offset) = { match_start, (ptrdiff_t)state.m_stringp, 1, view.substring_view(match_start, state.m_stringp - match_start - 1) };
-
-                i = state.m_stringp - 1;
-                state.m_matches_offset += match_groups + 1;
-
-                continue;
-
-            } else if (!(state.m_match_flags & (u8)MatchFlags::Search) && state.m_stringp < view.length())
-                return { 0, {}, state.m_ops };
-
-            if (state.m_matches.size()) {
-                state.m_matches.at(0) = { match_start, (ptrdiff_t)state.m_stringp, 0, view.substring_view(match_start, state.m_stringp - match_start - 1) };
+    Vector<StringView> views;
+    if (m_compilation_flags & (u8)CompilationFlags::HandleNewLine || state.m_match_flags & (u8)MatchFlags::HandleNewLine) {
+        StringView subview = view;
+        for (size_t i = 0; i < subview.length(); ++i) {
+            if (subview.characters_without_null_termination()[i] == '\n') {
+                views.append(subview.substring_view(0, i));
+                subview = subview.substring_view_starting_after_substring(subview.substring_view(0, i + 1));
+                i = 0;
             }
-
-            break;
         }
-        if (!((state.m_match_flags & (u8)MatchFlags::Search) || (state.m_match_flags & (u8)MatchFlags::MatchAll)))
-            break;
+        if (subview.length())
+            views.append(subview);
+    } else {
+        views.append(view);
     }
 
-    return { match_count, move(state.m_matches), state.m_ops };
+    for (auto& view : views) {
+        state.m_view = view;
+        for (size_t i = 0; i < view.length(); ++i) {
+            if (min_length && min_length > view.length() - i)
+                break;
+            for (size_t j = 0; j < match_groups; ++j)
+                state.m_left.at(j) = -1;
+
+            state.m_stringp = i;
+            state.m_instructionp = 0;
+            match_start = i;
+            match = match_recurse(state);
+
+            if (match) {
+                ++match_count;
+
+                if (state.m_match_flags & (u8)MatchFlags::MatchAll) {
+                    if (state.m_matches_offset < state.m_matches.size())
+                        state.m_matches.at(state.m_matches_offset) = { match_start, (ptrdiff_t)state.m_stringp, 1, view.substring_view(match_start, state.m_stringp - match_start) };
+
+                    i = state.m_stringp - 1;
+                    state.m_matches_offset += match_groups + 1;
+
+                    continue;
+
+                } else if (!(state.m_match_flags & (u8)MatchFlags::Search) && state.m_stringp < view.length())
+                    return { 0, {}, state.m_ops, RegexError::NoMatch };
+
+                if (state.m_matches_offset < state.m_matches.size())
+                    state.m_matches.at(state.m_matches_offset) = { match_start, (ptrdiff_t)state.m_stringp, 0, view.substring_view(match_start, state.m_stringp - match_start) };
+
+                state.m_matches_offset += match_groups + 1;
+
+                break;
+            }
+            if (!((state.m_match_flags & (u8)MatchFlags::Search) || (state.m_match_flags & (u8)MatchFlags::MatchAll)))
+                break;
+        }
+    }
+
+    return { match_count, move(state.m_matches), state.m_ops, match_count ? RegexError::NoError : RegexError::NoMatch };
 }
 
 const StackValue Matcher::get(MatchState& state, size_t offset) const

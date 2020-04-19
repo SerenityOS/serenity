@@ -101,27 +101,27 @@ int regexec(const regex_t* preg, const char* string, size_t nmatch, regmatch_t p
     auto& matcher = preg->matcher;
     result = matcher->match(string, nmatch, preg->re_nsub, preg->re_minlength, eflags);
 
-    if (result.m_match_count) {
-        auto size = result.m_matches.size();
+    if (result.match_count) {
+        auto size = result.matches.size();
         for (size_t i = 0; i < nmatch; ++i) {
             if (i < size) {
-                pmatch[i].rm_eo = result.m_matches.at(i).rm_eo;
-                pmatch[i].rm_so = result.m_matches.at(i).rm_so;
-                pmatch[i].match_count = result.m_matches.at(i).match_count;
+                pmatch[i].rm_eo = result.matches.at(i).rm_eo;
+                pmatch[i].rm_so = result.matches.at(i).rm_so;
+                pmatch[i].match_count = result.matches.at(i).match_count;
             } else
                 pmatch[i] = { -1, -1, 0 };
         }
     }
 
     if (nmatch && pmatch)
-        pmatch[0].match_count = result.m_match_count;
+        pmatch[0].match_count = result.match_count;
 
-    if (result.m_match_count) {
+    if (result.match_count) {
         if (eflags & REG_STATS) {
             if (eflags & REG_MATCHALL)
-                printf("[regexec] match_all successful, found %lu occurences, took %lu operations.\n", result.m_match_count, result.m_ops);
+                printf("[regexec] match_all successful, found %lu occurences, took %lu operations.\n", result.match_count, result.ops);
             else
-                printf("[regexec] match successful, took %lu operations.\n", result.m_ops);
+                printf("[regexec] match successful, took %lu operations.\n", result.ops);
         }
 
         return REG_NOERR;
@@ -132,9 +132,9 @@ int regexec(const regex_t* preg, const char* string, size_t nmatch, regmatch_t p
 
     if (eflags & REG_STATS) {
         if (eflags & REG_MATCHALL)
-            printf("[regexec] match_all not successful, found %lu occurences, took %lu operations.\n", result.m_match_count, result.m_ops);
+            printf("[regexec] match_all not successful, found %lu occurences, took %lu operations.\n", result.match_count, result.ops);
         else
-            printf("[regexec] match not successful, took %lu operations.\n", result.m_ops);
+            printf("[regexec] match not successful, took %lu operations.\n", result.ops);
     }
 
     return REG_NOMATCH;

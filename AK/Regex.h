@@ -65,7 +65,8 @@ enum class MatchFlags {
     NoEndOfLine = 2,
     MatchAll = 4,
     Search = 8,
-    Stats = 16
+    Stats = 16,
+    HandleNewLine = 32,
 };
 
 #define REG_MAX_RECURSE 5000
@@ -310,16 +311,17 @@ struct Match {
 };
 
 struct MatchResult {
-    size_t m_match_count { 0 };
-    Vector<Match> m_matches {};
-    size_t m_ops { 0 };
+    size_t match_count { 0 };
+    Vector<Match> matches {};
+    size_t ops { 0 };
+    RegexError error;
 };
 
 class Matcher {
 public:
-    explicit Matcher(const Vector<StackValue>& bytecode, const String&& pattern, const u8 compilation_flags)
+    explicit Matcher(const Vector<StackValue>& bytecode, const String pattern, const u8 compilation_flags)
         : m_bytecode(bytecode)
-        , m_pattern(move(pattern))
+        , m_pattern(pattern)
         , m_compilation_flags(compilation_flags) {};
 
     MatchResult match(const StringView view, const size_t max_matches_result, const size_t match_groups, const size_t min_length, const u8 match_flags) const;
@@ -349,7 +351,7 @@ private:
     const StackValue get_and_increment(MatchState& state, size_t value = 1) const;
 
     const Vector<StackValue> m_bytecode;
-    const String& m_pattern;
+    const String m_pattern;
     const u8 m_compilation_flags;
 };
 
