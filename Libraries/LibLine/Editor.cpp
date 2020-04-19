@@ -290,12 +290,38 @@ String Editor::get_line(const String& prompt)
                 String token = is_empty_token ? String() : String(&m_buffer[token_start], m_cursor - token_start);
 
                 // ask for completions only on the first tab
+                // and scan for the largest common prefix to display
                 // further tabs simply show the cached completions
                 if (m_times_tab_pressed == 1) {
                     if (is_first_token)
                         m_suggestions = on_tab_complete_first_token(token);
                     else
                         m_suggestions = on_tab_complete_other_token(token);
+                    size_t common_suggestion_prefix { 0 };
+                    if (m_suggestions.size() == 1) {
+                        m_largest_common_suggestion_prefix_length = m_suggestions[0].length();
+                    } else if (m_suggestions.size()) {
+                        char last_valid_suggestion_char;
+                        for (;; ++common_suggestion_prefix) {
+                            if (m_suggestions[0].length() <= common_suggestion_prefix)
+                                goto no_more_commons;
+
+                            last_valid_suggestion_char = m_suggestions[0][common_suggestion_prefix];
+
+                            for (const auto& suggestion : m_suggestions) {
+                                if (suggestion.length() < common_suggestion_prefix || suggestion[common_suggestion_prefix] != last_valid_suggestion_char) {
+                                    goto no_more_commons;
+                                }
+                            }
+                        }
+                    no_more_commons:;
+                        m_largest_common_suggestion_prefix_length = common_suggestion_prefix;
+                    } else {
+                        m_largest_common_suggestion_prefix_length = 0;
+                        // there are no suggestions, beep~
+                        putchar('\a');
+                        fflush(stdout);
+                    }
                     m_prompt_lines_at_suggestion_initiation = num_lines();
                 }
 
@@ -314,19 +340,57 @@ String Editor::get_line(const String& prompt)
 
                 auto current_suggestion_index = m_next_suggestion_index;
                 if (m_next_suggestion_index < m_suggestions.size()) {
+                    auto can_complete = m_next_suggestion_invariant_offset < m_largest_common_suggestion_prefix_length;
                     if (!m_last_shown_suggestion.is_null()) {
-                        auto actual_offset = m_times_tab_pressed == 1 ? m_cursor : m_cursor - m_last_shown_suggestion.length() + m_next_suggestion_invariant_offset;
-                        for (size_t i = m_next_suggestion_invariant_offset; i < m_last_shown_suggestion.length(); ++i)
+                        size_t actual_offset;
+                        size_t shown_length = m_last_shown_suggestion_display_length;
+                        switch (m_times_tab_pressed) {
+                        case 1:
+                            actual_offset = m_cursor;
+                            break;
+                        case 2:
+                            actual_offset = m_cursor - m_largest_common_suggestion_prefix_length + m_next_suggestion_invariant_offset;
+                            if (can_complete)
+                                shown_length = m_largest_common_suggestion_prefix_length;
+                            break;
+                        default:
+                            if (m_last_shown_suggestion_display_length == 0)
+                                actual_offset = m_cursor;
+                            else
+                                actual_offset = m_cursor - m_last_shown_suggestion_display_length + m_next_suggestion_invariant_offset;
+                            break;
+                        }
+
+                        for (size_t i = m_next_suggestion_invariant_offset; i < shown_length; ++i)
                             m_buffer.remove(actual_offset);
                         m_cursor = actual_offset;
                         m_refresh_needed = true;
                     }
                     m_last_shown_suggestion = m_suggestions[m_next_suggestion_index];
-                    insert(m_last_shown_suggestion.substring_view(m_next_suggestion_invariant_offset, m_last_shown_suggestion.length() - m_next_suggestion_invariant_offset));
-                    if (m_tab_direction == TabDirection::Forward)
-                        increment_suggestion_index();
-                    else
-                        decrement_suggestion_index();
+                    m_last_shown_suggestion_display_length = m_last_shown_suggestion.length();
+                    m_last_shown_suggestion_was_complete = true;
+                    if (m_times_tab_pressed == 1) {
+                        // This is the first time, so only auto-complete *if possible*
+                        if (can_complete) {
+                            insert(m_last_shown_suggestion.substring_view(m_next_suggestion_invariant_offset, m_largest_common_suggestion_prefix_length - m_next_suggestion_invariant_offset));
+                            m_last_shown_suggestion_display_length = m_largest_common_suggestion_prefix_length;
+                            // do not increment the suggestion index, as the first tab should only be a *peek*
+                            if (m_suggestions.size() == 1) {
+                                // if there's one suggestion, commit and forget
+                                m_times_tab_pressed = 0;
+                            }
+                        } else {
+                            m_last_shown_suggestion_display_length = 0;
+                        }
+                        ++m_times_tab_pressed;
+                        m_last_shown_suggestion_was_complete = false;
+                    } else {
+                        insert(m_last_shown_suggestion.substring_view(m_next_suggestion_invariant_offset, m_last_shown_suggestion.length() - m_next_suggestion_invariant_offset));
+                        if (m_tab_direction == TabDirection::Forward)
+                            increment_suggestion_index();
+                        else
+                            decrement_suggestion_index();
+                    }
                 } else {
                     m_next_suggestion_index = 0;
                 }
@@ -373,7 +437,8 @@ String Editor::get_line(const String& prompt)
                         if (lines_used + m_prompt_lines_at_suggestion_initiation >= m_num_lines)
                             break;
 
-                        if (index == current_suggestion_index) {
+                        // only apply colour to the selection if something is *actually* added to the buffer
+                        if (m_last_shown_suggestion_was_complete && index == current_suggestion_index) {
                             vt_apply_style({ Style::Foreground(Style::Color::Blue) });
                             fflush(stdout);
                         }
@@ -385,7 +450,7 @@ String Editor::get_line(const String& prompt)
                             num_printed += fprintf(stderr, "%-*s", static_cast<int>(longest_suggestion_length) + 2, suggestion.characters());
                         }
 
-                        if (index == current_suggestion_index) {
+                        if (m_last_shown_suggestion_was_complete && index == current_suggestion_index) {
                             vt_apply_style({});
                             fflush(stdout);
                         }
@@ -405,6 +470,7 @@ String Editor::get_line(const String& prompt)
                     // after it, as if it were auto-completed
                     suggest(0, 0);
                     m_last_shown_suggestion = String::empty();
+                    m_last_shown_suggestion_display_length = 0;
                     m_suggestions.clear();
                     m_times_tab_pressed = 0;
                 }
@@ -420,6 +486,7 @@ String Editor::get_line(const String& prompt)
                     m_refresh_needed = true;
                     m_lines_used_for_last_suggestions = 0;
                 }
+                m_last_shown_suggestion_display_length = 0;
                 m_last_shown_suggestion = String::empty();
                 m_suggestions.clear();
                 suggest(0, 0);
@@ -462,7 +529,8 @@ String Editor::get_line(const String& prompt)
                 m_refresh_needed = true;
                 continue;
             }
-            if (ch == 0xc) {                    // ^L
+            // ^L
+            if (ch == 0xc) {
                 printf("\033[3J\033[H\033[2J"); // Clear screen.
                 vt_move_absolute(1, 1);
                 m_origin_x = 1;
@@ -470,18 +538,21 @@ String Editor::get_line(const String& prompt)
                 m_refresh_needed = true;
                 continue;
             }
-            if (ch == 0x01) { // ^A
+            // ^A
+            if (ch == 0x01) {
                 m_cursor = 0;
                 continue;
             }
-            if (ch == m_termios.c_cc[VEOF]) { // Normally ^D
+            // Normally ^D
+            if (ch == m_termios.c_cc[VEOF]) {
                 if (m_buffer.is_empty()) {
                     printf("<EOF>\n");
                     exit(0);
                 }
                 continue;
             }
-            if (ch == 0x05) { // ^E
+            // ^E
+            if (ch == 0x05) {
 
                 m_cursor = m_buffer.size();
                 continue;
