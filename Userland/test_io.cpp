@@ -213,7 +213,7 @@ void test_unlink_symlink()
 
     char buffer[PATH_MAX];
     rc = readlink("/tmp/linky", buffer, sizeof(buffer));
-    ASSERT(rc == strlen("/proc/2/foo") + 1);
+    ASSERT(rc == strlen("/proc/2/foo"));
 
     rc = unlink("/tmp/linky");
     if (rc < 0) {
