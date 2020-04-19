@@ -79,9 +79,7 @@ void AppletManager::add_applet(Window& applet)
     quick_sort(m_applets, [](auto& a, auto& b) {
         auto index_a = order_vector.find_first_index(a->title());
         auto index_b = order_vector.find_first_index(b->title());
-        ASSERT(index_a.has_value());
-        ASSERT(index_b.has_value());
-        return index_a.value() > index_b.value();
+        return index_a.value_or("") > index_b.value_or("");
     });
 
     calculate_applet_rects(MenuManager::the().window());
