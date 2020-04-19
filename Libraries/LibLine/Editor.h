@@ -196,9 +196,12 @@ private:
 
     String m_new_prompt;
     Vector<String> m_suggestions;
-    String m_last_shown_suggestion;
+    String m_last_shown_suggestion { String::empty() };
+    size_t m_last_shown_suggestion_display_length { 0 };
+    bool m_last_shown_suggestion_was_complete { false };
     size_t m_next_suggestion_index { 0 };
     size_t m_next_suggestion_invariant_offset { 0 };
+    size_t m_largest_common_suggestion_prefix_length { 0 };
 
     enum class TabDirection {
         Forward,
