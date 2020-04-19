@@ -30,8 +30,28 @@
 namespace JS {
 
 Function::Function(Object& prototype)
-    : Object(&prototype)
+    : Function(prototype, {}, {})
 {
+}
+
+Function::Function(Object& prototype, Optional<Value> bound_this, Vector<Value> bound_arguments)
+    : Object(&prototype)
+    , m_bound_this(bound_this)
+    , m_bound_arguments(move(bound_arguments))
+{
+}
+
+void Function::visit_children(Visitor& visitor)
+{
+    Object::visit_children(visitor);
+
+    if (m_bound_this.has_value()) {
+        visitor.visit(m_bound_this.value());
+    }
+
+    for (auto argument : m_bound_arguments) {
+        visitor.visit(argument);
+    }
 }
 
 Function::~Function()
