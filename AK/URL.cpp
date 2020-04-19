@@ -297,4 +297,14 @@ URL URL::create_with_file_protocol(const String& path)
     return url;
 }
 
+URL URL::create_with_url_or_path(const String& url_or_path)
+{
+    URL url = url_or_path;
+    if (url.is_valid())
+        return url;
+
+    String path = canonicalized_path(url_or_path);
+    return URL::create_with_file_protocol(path);
+}
+
 }
