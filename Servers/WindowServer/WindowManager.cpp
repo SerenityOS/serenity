@@ -1067,10 +1067,6 @@ static bool window_type_can_become_active(WindowType type)
 
 void WindowManager::set_active_window(Window* window)
 {
-    if (window) {
-        dbg() << "set_active_window: " << window->title();
-    }
-
     if (window && window->is_blocked_by_modal_window())
         return;
 
