@@ -184,7 +184,10 @@ bool BookmarksBarWidget::remove_bookmark(const String& url)
         auto item_url = model()->data(model()->index(item_index, 1)).to_string();
         if (item_url == url) {
             auto& json_model = *static_cast<GUI::JsonArrayModel*>(model());
-            json_model.remove(item_index);
+
+            if (json_model.remove(item_index))
+                json_model.store();
+
             return true;
         }
     }
