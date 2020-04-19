@@ -84,6 +84,10 @@ Cell* Heap::allocate_cell(size_t size)
 void Heap::collect_garbage(CollectionType collection_type)
 {
     if (collection_type == CollectionType::CollectGarbage) {
+        if (m_gc_deferrals) {
+            m_should_gc_when_deferral_ends = true;
+            return;
+        }
         HashTable<Cell*> roots;
         gather_roots(roots);
         mark_live_cells(roots);
@@ -260,6 +264,23 @@ void Heap::did_destroy_handle(Badge<HandleImpl>, HandleImpl& impl)
 {
     ASSERT(m_handles.contains(&impl));
     m_handles.remove(&impl);
+}
+
+void Heap::defer_gc(Badge<DeferGC>)
+{
+    ++m_gc_deferrals;
+}
+
+void Heap::undefer_gc(Badge<DeferGC>)
+{
+    ASSERT(m_gc_deferrals > 0);
+    --m_gc_deferrals;
+
+    if (!m_gc_deferrals) {
+        if (m_should_gc_when_deferral_ends)
+            collect_garbage();
+        m_should_gc_when_deferral_ends = false;
+    }
 }
 
 }

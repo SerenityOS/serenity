@@ -68,6 +68,9 @@ public:
     void did_create_handle(Badge<HandleImpl>, HandleImpl&);
     void did_destroy_handle(Badge<HandleImpl>, HandleImpl&);
 
+    void defer_gc(Badge<DeferGC>);
+    void undefer_gc(Badge<DeferGC>);
+
 private:
     Cell* allocate_cell(size_t);
 
@@ -86,6 +89,9 @@ private:
     Interpreter& m_interpreter;
     Vector<NonnullOwnPtr<HeapBlock>> m_blocks;
     HashTable<HandleImpl*> m_handles;
+
+    size_t m_gc_deferrals { 0 };
+    bool m_should_gc_when_deferral_ends { false };
 };
 
 }
