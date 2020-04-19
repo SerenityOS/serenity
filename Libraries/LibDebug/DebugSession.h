@@ -29,10 +29,12 @@
 #include <AK/Demangle.h>
 #include <AK/HashMap.h>
 #include <AK/MappedFile.h>
+#include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
 #include <LibC/sys/arch/i386/regs.h>
+#include <LibDebug/DebugInfo.h>
 #include <LibELF/Loader.h>
 #include <signal.h>
 #include <stdio.h>
@@ -85,8 +87,10 @@ public:
     template<typename Callback>
     void run(Callback callback);
 
-    const ELF::Loader& elf() const { return m_elf; }
+    const ELF::Loader& elf() const { return *m_elf; }
+    NonnullRefPtr<const ELF::Loader> elf_ref() const { return m_elf; }
     const MappedFile& executable() const { return m_executable; }
+    const DebugInfo& debug_info() const { return m_debug_info; }
 
     enum DebugDecision {
         Continue,
@@ -104,14 +108,14 @@ public:
 
 private:
     // x86 breakpoint instruction "int3"
-    static constexpr u8 BREAKPOINT_INSTRUCTION
-        = 0xcc;
+    static constexpr u8 BREAKPOINT_INSTRUCTION = 0xcc;
 
     int m_debugee_pid { -1 };
     bool m_is_debugee_dead { false };
 
     MappedFile m_executable;
-    ELF::Loader m_elf;
+    NonnullRefPtr<const ELF::Loader> m_elf;
+    DebugInfo m_debug_info;
 
     HashMap<void*, BreakPoint> m_breakpoints;
 };

@@ -31,7 +31,8 @@
 DebugSession::DebugSession(int pid)
     : m_debugee_pid(pid)
     , m_executable(String::format("/proc/%d/exe", pid))
-    , m_elf(reinterpret_cast<u8*>(m_executable.data()), m_executable.size())
+    , m_elf(ELF::Loader::create(reinterpret_cast<u8*>(m_executable.data()), m_executable.size()))
+    , m_debug_info(m_elf)
 {
 }
 
