@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Jack Karamanian <karamanian.jack@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,43 +26,41 @@
 
 #pragma once
 
-#include <AK/String.h>
-#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/Function.h>
 
 namespace JS {
 
-class Function : public Object {
+class BoundFunction final : public Function {
 public:
-    virtual ~Function();
+    BoundFunction(Function& target_function, Value bound_this, Vector<Value> arguments, i32 length, Object* constructor_prototype);
 
-    virtual Value call(Interpreter&) = 0;
-    virtual Value construct(Interpreter&) = 0;
-    virtual const FlyString& name() const = 0;
-    virtual LexicalEnvironment* create_environment() = 0;
+    virtual ~BoundFunction();
+
+    virtual Value call(Interpreter& interpreter) override;
+
+    virtual Value construct(Interpreter& interpreter) override;
+
+    virtual LexicalEnvironment* create_environment() override;
 
     virtual void visit_children(Visitor&) override;
 
-    BoundFunction* bind(Value bound_this_value, Vector<Value> arguments);
-
-    Optional<Value> bound_this() const
+    virtual const FlyString& name() const override
     {
-        return m_bound_this;
+        return m_name;
     }
 
-    const Vector<Value>& bound_arguments() const
+    Function& target_function() const
     {
-        return m_bound_arguments;
+        return *m_target_function;
     }
-
-protected:
-    explicit Function(Object& prototype);
-    explicit Function(Object& prototype, Optional<Value> bound_this, Vector<Value> bound_arguments);
-    virtual const char* class_name() const override { return "Function"; }
 
 private:
-    virtual bool is_function() const final { return true; }
-    Optional<Value> m_bound_this;
-    Vector<Value> m_bound_arguments;
+    virtual bool is_bound_function() const override { return true; }
+    virtual const char* class_name() const override { return "BoundFunction"; }
+
+    Function* m_target_function = nullptr;
+    Object* m_constructor_prototype = nullptr;
+    FlyString m_name;
 };
 
 }

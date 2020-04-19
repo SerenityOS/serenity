@@ -12,6 +12,7 @@ OBJS = \
     Runtime/BooleanConstructor.o \
     Runtime/BooleanObject.o \
     Runtime/BooleanPrototype.o \
+    Runtime/BoundFunction.o \
     Runtime/Cell.o \
     Runtime/ConsoleObject.o \
     Runtime/Date.o \
