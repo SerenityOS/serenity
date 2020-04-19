@@ -299,17 +299,17 @@ String Editor::get_line(const String& prompt)
                         m_suggestions = on_tab_complete_other_token(token);
                     size_t common_suggestion_prefix { 0 };
                     if (m_suggestions.size() == 1) {
-                        m_largest_common_suggestion_prefix_length = m_suggestions[0].length();
+                        m_largest_common_suggestion_prefix_length = m_suggestions[0].text.length();
                     } else if (m_suggestions.size()) {
                         char last_valid_suggestion_char;
                         for (;; ++common_suggestion_prefix) {
-                            if (m_suggestions[0].length() <= common_suggestion_prefix)
+                            if (m_suggestions[0].text.length() <= common_suggestion_prefix)
                                 goto no_more_commons;
 
-                            last_valid_suggestion_char = m_suggestions[0][common_suggestion_prefix];
+                            last_valid_suggestion_char = m_suggestions[0].text[common_suggestion_prefix];
 
                             for (const auto& suggestion : m_suggestions) {
-                                if (suggestion.length() < common_suggestion_prefix || suggestion[common_suggestion_prefix] != last_valid_suggestion_char) {
+                                if (suggestion.text.length() < common_suggestion_prefix || suggestion.text[common_suggestion_prefix] != last_valid_suggestion_char) {
                                     goto no_more_commons;
                                 }
                             }
@@ -341,7 +341,7 @@ String Editor::get_line(const String& prompt)
                 auto current_suggestion_index = m_next_suggestion_index;
                 if (m_next_suggestion_index < m_suggestions.size()) {
                     auto can_complete = m_next_suggestion_invariant_offset < m_largest_common_suggestion_prefix_length;
-                    if (!m_last_shown_suggestion.is_null()) {
+                    if (!m_last_shown_suggestion.text.is_null()) {
                         size_t actual_offset;
                         size_t shown_length = m_last_shown_suggestion_display_length;
                         switch (m_times_tab_pressed) {
@@ -367,17 +367,20 @@ String Editor::get_line(const String& prompt)
                         m_refresh_needed = true;
                     }
                     m_last_shown_suggestion = m_suggestions[m_next_suggestion_index];
-                    m_last_shown_suggestion_display_length = m_last_shown_suggestion.length();
+                    m_last_shown_suggestion_display_length = m_last_shown_suggestion.text.length();
                     m_last_shown_suggestion_was_complete = true;
                     if (m_times_tab_pressed == 1) {
                         // This is the first time, so only auto-complete *if possible*
                         if (can_complete) {
-                            insert(m_last_shown_suggestion.substring_view(m_next_suggestion_invariant_offset, m_largest_common_suggestion_prefix_length - m_next_suggestion_invariant_offset));
+                            insert(m_last_shown_suggestion.text.substring_view(m_next_suggestion_invariant_offset, m_largest_common_suggestion_prefix_length - m_next_suggestion_invariant_offset));
                             m_last_shown_suggestion_display_length = m_largest_common_suggestion_prefix_length;
                             // do not increment the suggestion index, as the first tab should only be a *peek*
                             if (m_suggestions.size() == 1) {
                                 // if there's one suggestion, commit and forget
                                 m_times_tab_pressed = 0;
+                                // add in the trivia of the last selected suggestion
+                                insert(m_last_shown_suggestion.trailing_trivia);
+                                m_last_shown_suggestion_display_length += m_last_shown_suggestion.trailing_trivia.length();
                             }
                         } else {
                             m_last_shown_suggestion_display_length = 0;
@@ -385,7 +388,9 @@ String Editor::get_line(const String& prompt)
                         ++m_times_tab_pressed;
                         m_last_shown_suggestion_was_complete = false;
                     } else {
-                        insert(m_last_shown_suggestion.substring_view(m_next_suggestion_invariant_offset, m_last_shown_suggestion.length() - m_next_suggestion_invariant_offset));
+                        insert(m_last_shown_suggestion.text.substring_view(m_next_suggestion_invariant_offset, m_last_shown_suggestion.text.length() - m_next_suggestion_invariant_offset));
+                        // add in the trivia of the last selected suggestion
+                        insert(m_last_shown_suggestion.trailing_trivia);
                         if (m_tab_direction == TabDirection::Forward)
                             increment_suggestion_index();
                         else
@@ -399,7 +404,7 @@ String Editor::get_line(const String& prompt)
                     size_t longest_suggestion_length = 0;
 
                     for (auto& suggestion : m_suggestions) {
-                        longest_suggestion_length = max(longest_suggestion_length, suggestion.length());
+                        longest_suggestion_length = max(longest_suggestion_length, suggestion.text.length());
                     }
 
                     size_t num_printed = 0;
@@ -423,10 +428,10 @@ String Editor::get_line(const String& prompt)
                     }
                     vt_move_absolute(max_line_count + m_origin_x, 1);
                     for (auto& suggestion : m_suggestions) {
-                        size_t next_column = num_printed + suggestion.length() + longest_suggestion_length + 2;
+                        size_t next_column = num_printed + suggestion.text.length() + longest_suggestion_length + 2;
 
                         if (next_column > m_num_columns) {
-                            auto lines = (suggestion.length() + m_num_columns - 1) / m_num_columns;
+                            auto lines = (suggestion.text.length() + m_num_columns - 1) / m_num_columns;
                             lines_used += lines;
                             putchar('\n');
                             num_printed = 0;
@@ -445,9 +450,9 @@ String Editor::get_line(const String& prompt)
 
                         if (spans_entire_line) {
                             num_printed += m_num_columns;
-                            fprintf(stderr, "%s", suggestion.characters());
+                            fprintf(stderr, "%s", suggestion.text.characters());
                         } else {
-                            num_printed += fprintf(stderr, "%-*s", static_cast<int>(longest_suggestion_length) + 2, suggestion.characters());
+                            num_printed += fprintf(stderr, "%-*s", static_cast<int>(longest_suggestion_length) + 2, suggestion.text.characters());
                         }
 
                         if (m_last_shown_suggestion_was_complete && index == current_suggestion_index) {
