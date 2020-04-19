@@ -86,12 +86,11 @@ Value StringPrototype::repeat(Interpreter& interpreter)
     ASSERT(this_object->is_string_object());
     if (!interpreter.argument_count())
         return js_string(interpreter, String::empty());
-    i32 count = 0;
-    count = interpreter.argument(0).to_i32();
-    if (count < 0) {
-        // FIXME: throw RangeError
-        return {};
-    }
+    if (interpreter.argument(0).to_double() < 0)
+        return interpreter.throw_exception<RangeError>("repeat count must be a positive number");
+    if (interpreter.argument(0).to_number().is_infinity())
+        return interpreter.throw_exception<RangeError>("repeat count must be a finite number");
+    auto count = interpreter.argument(0).to_i32();
     auto* string_object = static_cast<StringObject*>(this_object);
     StringBuilder builder;
     for (i32 i = 0; i < count; ++i)
