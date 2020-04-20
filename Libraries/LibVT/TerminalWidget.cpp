@@ -195,19 +195,20 @@ void TerminalWidget::keydown_event(GUI::KeyEvent& event)
     m_cursor_blink_timer->stop();
     m_cursor_blink_state = true;
     m_cursor_blink_timer->start();
+    auto ctrl_held = !!(event.modifiers() & Mod_Ctrl);
 
     switch (event.key()) {
     case KeyCode::Key_Up:
-        write(m_ptm_fd, "\033[A", 3);
+        write(m_ptm_fd, ctrl_held ? "\033[OA" : "\033[A", 3 + ctrl_held);
         return;
     case KeyCode::Key_Down:
-        write(m_ptm_fd, "\033[B", 3);
+        write(m_ptm_fd, ctrl_held ? "\033[OB" : "\033[B", 3 + ctrl_held);
         return;
     case KeyCode::Key_Right:
-        write(m_ptm_fd, "\033[C", 3);
+        write(m_ptm_fd, ctrl_held ? "\033[OC" : "\033[C", 3 + ctrl_held);
         return;
     case KeyCode::Key_Left:
-        write(m_ptm_fd, "\033[D", 3);
+        write(m_ptm_fd, ctrl_held ? "\033[OD" : "\033[D", 3 + ctrl_held);
         return;
     case KeyCode::Key_Insert:
         write(m_ptm_fd, "\033[2~", 4);
