@@ -148,18 +148,18 @@ String Editor::get_line(const String& prompt)
             exit(0);
         if (nread < 0) {
             if (errno == EINTR) {
-                if (m_was_interrupted) {
+                if (!m_was_interrupted) {
+                    if (m_was_resized)
+                        continue;
+
                     m_was_interrupted = false;
+
                     if (!m_buffer.is_empty())
                         printf("^C");
 
-                    if (m_is_searching) {
-                        end_search();
-                        continue;
-                    }
+                    m_buffer.clear();
+                    m_cursor = 0;
                 }
-                if (m_was_resized)
-                    continue;
 
                 finish();
                 continue;
@@ -600,7 +600,9 @@ String Editor::get_line(const String& prompt)
                 } else {
                     m_is_searching = true;
                     m_search_offset = 0;
-                    m_pre_search_buffer = m_buffer;
+                    m_pre_search_buffer.clear();
+                    for (auto ch : m_buffer)
+                        m_pre_search_buffer.append(ch);
                     m_pre_search_cursor = m_cursor;
                     m_search_editor = make<Editor>(true); // Has anyone seen 'Inception'?
                     m_search_editor->initialize();
@@ -640,6 +642,7 @@ String Editor::get_line(const String& prompt)
 
                     auto search_prompt = "\x1b[32msearch:\x1b[0m ";
                     auto search_string = m_search_editor->get_line(search_prompt);
+
                     m_search_editor = nullptr;
                     m_is_searching = false;
                     m_search_offset = 0;
