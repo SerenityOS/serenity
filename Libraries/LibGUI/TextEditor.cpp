@@ -27,6 +27,7 @@
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/KeyCode.h>
+#include <LibCore/Timer.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/FontDatabase.h>
@@ -60,6 +61,10 @@ TextEditor::TextEditor(Type type)
     // FIXME: Recompute vertical scrollbar step size on font change.
     vertical_scrollbar().set_step(line_height());
     m_cursor = { 0, 0 };
+    m_automatic_selection_scroll_timer = add<Core::Timer>(100, [this] {
+        automatic_selection_scroll_timer_fired();
+    });
+    m_automatic_selection_scroll_timer->stop();
     create_actions();
 }
 
@@ -261,6 +266,7 @@ void TextEditor::mousedown_event(MouseEvent& event)
     }
 
     m_in_drag_select = true;
+    m_automatic_selection_scroll_timer->start();
 
     set_cursor(text_position_at(event.position()));
 
@@ -289,6 +295,7 @@ void TextEditor::mouseup_event(MouseEvent& event)
 
 void TextEditor::mousemove_event(MouseEvent& event)
 {
+    m_last_mousemove_position = event.position();
     if (m_in_drag_select) {
         set_cursor(text_position_at(event.position()));
         m_selection.set_end(m_cursor);
@@ -296,6 +303,18 @@ void TextEditor::mousemove_event(MouseEvent& event)
         update();
         return;
     }
+}
+
+void TextEditor::automatic_selection_scroll_timer_fired()
+{
+    if (!m_in_drag_select) {
+        m_automatic_selection_scroll_timer->stop();
+        return;
+    }
+    set_cursor(text_position_at(m_last_mousemove_position));
+    m_selection.set_end(m_cursor);
+    did_update_selection();
+    update();
 }
 
 int TextEditor::ruler_width() const
@@ -1189,12 +1208,17 @@ void TextEditor::enter_event(Core::Event&)
 {
     ASSERT(window());
     window()->set_override_cursor(StandardCursor::IBeam);
+
+    m_automatic_selection_scroll_timer->stop();
 }
 
 void TextEditor::leave_event(Core::Event&)
 {
     ASSERT(window());
     window()->set_override_cursor(StandardCursor::None);
+
+    if (m_in_drag_select)
+        m_automatic_selection_scroll_timer->start();
 }
 
 void TextEditor::did_change()

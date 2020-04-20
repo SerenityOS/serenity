@@ -200,6 +200,8 @@ private:
     size_t visual_line_containing(size_t line_index, size_t column) const;
     void recompute_visual_lines(size_t line_index);
 
+    void automatic_selection_scroll_timer_fired();
+
     template<class T, class... Args>
     inline void execute(Args&&... args)
     {
@@ -247,6 +249,9 @@ private:
     NonnullOwnPtrVector<LineVisualData> m_line_visual_data;
 
     OwnPtr<SyntaxHighlighter> m_highlighter;
+
+    RefPtr<Core::Timer> m_automatic_selection_scroll_timer;
+    Gfx::Point m_last_mousemove_position;
 };
 
 }
