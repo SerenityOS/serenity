@@ -98,7 +98,7 @@ TextEditorWidget::TextEditorWidget()
     m_find_textbox = m_find_widget->add<GUI::TextBox>();
     m_replace_textbox = m_replace_widget->add<GUI::TextBox>();
 
-    m_find_next_action = GUI::Action::create("Find next", { Mod_Ctrl, Key_G }, [&](auto&) {
+    m_find_next_action = GUI::Action::create("Find next", { Mod_Ctrl, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find-next.png"), [&](auto&) {
         auto needle = m_find_textbox->text();
         if (needle.is_empty()) {
             dbg() << "find_next(\"\")";
