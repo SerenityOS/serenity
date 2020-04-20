@@ -506,6 +506,61 @@ BENCHMARK_CASE(simple_questionmark_matchall_benchmark_reference_stdcpp_regex_sea
 }
 #endif
 
+TEST_CASE(character_class)
+{
+    String pattern = "[[:alpha:]]";
+    regex_t regex;
+    static constexpr int num_matches { 5 };
+    regmatch_t matches[num_matches];
+
+    String haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, haystack.characters(), num_matches, matches, 0), REG_NOMATCH);
+    EXPECT_EQ(matches[0].match_count, 0u);
+    EXPECT_EQ(regexec(&regex, haystack.characters(), num_matches, matches, REG_MATCHALL), REG_NOERR);
+    EXPECT_EQ(matches[0].match_count, 24u);
+    EXPECT_EQ(haystack.substring_view(matches[0].rm_so, matches[0].rm_eo - matches[0].rm_so), "W");
+    EXPECT_EQ(haystack.substring_view(matches[1].rm_so, matches[1].rm_eo - matches[1].rm_so), "i");
+
+    regfree(&regex);
+}
+
+#if not(defined(REGEX_DEBUG) || defined(REGEX_MATCH_STATUS) || defined(DISABLE_REGEX_BENCHMARK))
+BENCHMARK_CASE(character_class_benchmark)
+{
+    String pattern = "[[:alpha:]]";
+    regex_t regex;
+    static constexpr int num_matches { 5 };
+    regmatch_t matches[num_matches];
+
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
+    String haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
+
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(regexec(&regex, haystack.characters(), num_matches, matches, 0), REG_NOMATCH);
+        EXPECT_EQ(matches[0].match_count, 0u);
+        EXPECT_EQ(regexec(&regex, haystack.characters(), num_matches, matches, REG_MATCHALL), REG_NOERR);
+        EXPECT_EQ(matches[0].match_count, 24u);
+        EXPECT_EQ(haystack.substring_view(matches[0].rm_so, matches[0].rm_eo - matches[0].rm_so), "W");
+        EXPECT_EQ(haystack.substring_view(matches[1].rm_so, matches[1].rm_eo - matches[1].rm_so), "i");
+    }
+
+    regfree(&regex);
+}
+
+BENCHMARK_CASE(character_class_benchmark_reference_stdcpp_regex_search)
+{
+    std::regex re("[[:alpha:]]");
+    std::cmatch m;
+    String haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
+
+    for (size_t i = 0; i < BENCHMARK_LOOP_ITERATIONS; ++i) {
+        EXPECT_EQ(std::regex_match(haystack.characters(), m, re), false);
+        EXPECT_EQ(std::regex_search(haystack.characters(), m, re, std::regex_constants::match_any), true);
+    }
+}
+#endif
+
 TEST_CASE(escaped_char_questionmark)
 {
     String pattern = "This\\.?And\\.?That";

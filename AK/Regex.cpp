@@ -516,9 +516,8 @@ bool Parser::parse_bracket_expression(Vector<StackValue>& stack, size_t& min_len
                             ch_class = CharacterClass::Upper;
                         else if (consume("xdigit"))
                             ch_class = CharacterClass::Xdigit;
-                        else {
+                        else
                             return set_error(RegexError::InvalidCharacterClass);
-                        }
 
                         values.append({ CompareType::CharacterClass, ch_class });
 
@@ -814,22 +813,22 @@ Token Parser::consume(TokenType type)
 
 bool Parser::consume(StringView view)
 {
-    size_t length { 0 };
-
+    size_t potentially_go_back { 1 };
     for (auto ch : view) {
         if (match(TokenType::OrdinaryCharacter)) {
-            if (*m_parser_state.m_current_token.value().characters_without_null_termination() != ch) {
-                m_parser_state.m_lexer.back(length);
+            if (m_parser_state.m_current_token.value()[0] != ch) {
+                m_parser_state.m_lexer.back(potentially_go_back);
+                m_parser_state.m_current_token = m_parser_state.m_lexer.next();
                 return false;
             }
         } else {
-            m_parser_state.m_lexer.back(length);
+            m_parser_state.m_lexer.back(potentially_go_back);
+            m_parser_state.m_current_token = m_parser_state.m_lexer.next();
             return false;
         }
         consume(TokenType::OrdinaryCharacter);
-        ++length;
+        ++potentially_go_back;
     }
-
     return true;
 }
 
@@ -838,13 +837,11 @@ Parser::ParserResult Parser::parse(u8 compilation_flags)
     m_parser_state.m_compilation_flags = compilation_flags;
     if (parse_extended_reg_exp(m_parser_state.m_bytes, m_parser_state.m_min_match_length))
         consume(TokenType::Eof);
-#ifdef REGEX_DEBUG
     else
-        printf("[PARSER] Error during parsing!\n");
-#endif
+        set_error(RegexError::InvalidPattern);
 
 #ifdef REGEX_DEBUG
-    printf("[PARSER] Produced stack with %lu entries\n", m_parser_state.m_bytes.size());
+    printf("[PARSER] Produced bytecode with %lu entries (opcodes + arguments)\n", m_parser_state.m_bytes.size());
 #endif
     return {
         move(m_parser_state.m_bytes),

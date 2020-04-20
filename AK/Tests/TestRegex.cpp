@@ -86,4 +86,15 @@ TEST_CASE(catch_all_newline_2)
     EXPECT_EQ(m.matches.at(0).view, "Hello World\nTest\n1234\n");
 }
 
+TEST_CASE(match_all_character_class)
+{
+    Pattern regex("[[:alpha:]]", (u8)CompilationFlags::Extended);
+    MatchResult m;
+    EXPECT_EQ(match("[Window]\nOpacity=255\nAudibleBeep=0\n", regex, m, (u8)MatchFlags::MatchAll | (u8)MatchFlags::NoStringCopyForResult), true);
+    EXPECT_EQ(m.match_count, 24u);
+    EXPECT_EQ(m.matches.at(0).view, "W");
+    EXPECT_EQ(m.matches.at(1).view, "i");
+    EXPECT_EQ(m.matches.at(2).view, "n");
+}
+
 TEST_MAIN(Regex)
