@@ -28,6 +28,7 @@
 
 #include <LibGUI/Frame.h>
 #include <LibGUI/ToolBar.h>
+#include <LibHTTP/HttpJob.h>
 
 namespace GUI {
 

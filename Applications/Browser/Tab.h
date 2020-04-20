@@ -30,6 +30,7 @@
 #include <AK/URL.h>
 #include <LibGUI/Widget.h>
 #include <LibWeb/Forward.h>
+#include <LibHTTP/HttpJob.h>
 
 namespace Browser {
 
