@@ -163,7 +163,10 @@ TextPosition TextEditor::text_position_at(const Gfx::Point& a_position) const
     size_t column_index;
     switch (m_text_alignment) {
     case Gfx::TextAlignment::CenterLeft:
-        column_index = (position.x() + glyph_width() / 2) / glyph_width();
+        if (position.x() <= 0)
+            column_index = 0;
+        else
+            column_index = (position.x() + glyph_width() / 2) / glyph_width();
         if (is_line_wrapping_enabled()) {
             for_each_visual_line(line_index, [&](const Gfx::Rect& rect, const StringView&, size_t start_of_line) {
                 if (rect.contains_vertically(position.y())) {
