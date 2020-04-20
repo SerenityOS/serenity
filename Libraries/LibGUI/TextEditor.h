@@ -121,6 +121,7 @@ public:
     Action& paste_action() { return *m_paste_action; }
     Action& delete_action() { return *m_delete_action; }
     Action& go_to_line_action() { return *m_go_to_line_action; }
+    Action& select_all_action() { return *m_select_all_action; }
 
     void add_custom_context_menu_action(Action&);
 
@@ -233,6 +234,7 @@ private:
     RefPtr<Action> m_paste_action;
     RefPtr<Action> m_delete_action;
     RefPtr<Action> m_go_to_line_action;
+    RefPtr<Action> m_select_all_action;
     Core::ElapsedTimer m_triple_click_timer;
     NonnullRefPtrVector<Action> m_custom_context_menu_actions;
 
