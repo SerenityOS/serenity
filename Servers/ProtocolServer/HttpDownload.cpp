@@ -24,11 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibCore/HttpJob.h>
-#include <LibCore/HttpResponse.h>
+#include <LibHTTP/HttpJob.h>
+#include <LibHTTP/HttpResponse.h>
 #include <ProtocolServer/HttpDownload.h>
 
-HttpDownload::HttpDownload(PSClientConnection& client, NonnullRefPtr<Core::HttpJob>&& job)
+HttpDownload::HttpDownload(PSClientConnection& client, NonnullRefPtr<HTTP::HttpJob>&& job)
     : Download(client)
     , m_job(job)
 {
@@ -43,7 +43,7 @@ HttpDownload::~HttpDownload()
 {
 }
 
-NonnullRefPtr<HttpDownload> HttpDownload::create_with_job(Badge<HttpProtocol>, PSClientConnection& client, NonnullRefPtr<Core::HttpJob>&& job)
+NonnullRefPtr<HttpDownload> HttpDownload::create_with_job(Badge<HttpProtocol>, PSClientConnection& client, NonnullRefPtr<HTTP::HttpJob>&& job)
 {
     return adopt(*new HttpDownload(client, move(job)));
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2020, The SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,30 +24,26 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <LibHTTP/HttpRequest.h>
+#include <LibHTTP/HttpsJob.h>
+#include <ProtocolServer/HttpsDownload.h>
+#include <ProtocolServer/HttpsProtocol.h>
 
-#include <AK/HashMap.h>
-#include <AK/String.h>
-#include <LibCore/NetworkResponse.h>
+HttpsProtocol::HttpsProtocol()
+    : Protocol("https")
+{
+}
 
-namespace Core {
+HttpsProtocol::~HttpsProtocol()
+{
+}
 
-class HttpResponse : public NetworkResponse {
-public:
-    virtual ~HttpResponse() override;
-    static NonnullRefPtr<HttpResponse> create(int code, HashMap<String, String>&& headers, ByteBuffer&& payload)
-    {
-        return adopt(*new HttpResponse(code, move(headers), move(payload)));
-    }
-
-    int code() const { return m_code; }
-    const HashMap<String, String>& headers() const { return m_headers; }
-
-private:
-    HttpResponse(int code, HashMap<String, String>&&, ByteBuffer&&);
-
-    int m_code { 0 };
-    HashMap<String, String> m_headers;
-};
-
+RefPtr<Download> HttpsProtocol::start_download(PSClientConnection& client, const URL& url)
+{
+    HTTP::HttpRequest request;
+    request.set_method(HTTP::HttpRequest::Method::GET);
+    request.set_url(url);
+    auto job = HTTP::HttpsJob::construct(request);
+    job->start();
+    return HttpsDownload::create_with_job({}, client, (HTTP::HttpsJob&)*job);
 }

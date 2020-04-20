@@ -30,7 +30,7 @@
 #include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
-#include <LibCore/HttpRequest.h>
+#include <LibHTTP/HttpRequest.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -67,7 +67,7 @@ void Client::start()
 
 void Client::handle_request(ByteBuffer raw_request)
 {
-    auto request_or_error = Core::HttpRequest::from_raw_request(raw_request);
+    auto request_or_error = HTTP::HttpRequest::from_raw_request(raw_request);
     if (!request_or_error.has_value())
         return;
     auto& request = request_or_error.value();
@@ -77,7 +77,7 @@ void Client::handle_request(ByteBuffer raw_request)
         dbg() << "    " << header.name << " => " << header.value;
     }
 
-    if (request.method() != Core::HttpRequest::Method::GET) {
+    if (request.method() != HTTP::HttpRequest::Method::GET) {
         send_error_response(403, "Forbidden, bro!", request);
         return;
     }
@@ -122,7 +122,7 @@ void Client::handle_request(ByteBuffer raw_request)
     send_response(file->read_all(), request);
 }
 
-void Client::send_response(StringView response, const Core::HttpRequest& request)
+void Client::send_response(StringView response, const HTTP::HttpRequest& request)
 {
     StringBuilder builder;
     builder.append("HTTP/1.0 200 OK\r\n");
@@ -136,7 +136,7 @@ void Client::send_response(StringView response, const Core::HttpRequest& request
     log_response(200, request);
 }
 
-void Client::send_redirect(StringView redirect_path, const Core::HttpRequest& request)
+void Client::send_redirect(StringView redirect_path, const HTTP::HttpRequest& request)
 {
     StringBuilder builder;
     builder.append("HTTP/1.0 301 Moved Permanently\r\n");
@@ -150,7 +150,7 @@ void Client::send_redirect(StringView redirect_path, const Core::HttpRequest& re
     log_response(301, request);
 }
 
-void Client::handle_directory_listing(const String& requested_path, const String& real_path, const Core::HttpRequest& request)
+void Client::handle_directory_listing(const String& requested_path, const String& real_path, const HTTP::HttpRequest& request)
 {
     StringBuilder builder;
 
@@ -203,7 +203,7 @@ void Client::handle_directory_listing(const String& requested_path, const String
     send_response(builder.to_string(), request);
 }
 
-void Client::send_error_response(unsigned code, const StringView& message, const Core::HttpRequest& request)
+void Client::send_error_response(unsigned code, const StringView& message, const HTTP::HttpRequest& request)
 {
     StringBuilder builder;
     builder.appendf("HTTP/1.0 %u ", code);
@@ -218,7 +218,7 @@ void Client::send_error_response(unsigned code, const StringView& message, const
     log_response(code, request);
 }
 
-void Client::log_response(unsigned code, const Core::HttpRequest& request)
+void Client::log_response(unsigned code, const HTTP::HttpRequest& request)
 {
     printf("%s :: %03u :: %s %s\n",
         Core::DateTime::now().to_string().characters(),

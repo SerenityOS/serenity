@@ -4,6 +4,6 @@ OBJS = \
 
 PROGRAM = WebServer
 
-LIB_DEPS = Core
+LIB_DEPS = HTTP Core
 
 include ../../Makefile.common

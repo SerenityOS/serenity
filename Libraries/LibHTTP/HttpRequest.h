@@ -24,19 +24,54 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibCore/HttpResponse.h>
+#pragma once
 
-namespace Core {
+#include <AK/Optional.h>
+#include <AK/String.h>
+#include <AK/URL.h>
+#include <AK/Vector.h>
+#include <LibCore/Forward.h>
 
-HttpResponse::HttpResponse(int code, HashMap<String, String>&& headers, ByteBuffer&& payload)
-    : NetworkResponse(move(payload))
-    , m_code(code)
-    , m_headers(move(headers))
-{
-}
+namespace HTTP {
 
-HttpResponse::~HttpResponse()
-{
-}
+class HttpRequest {
+public:
+    enum Method {
+        Invalid,
+        HEAD,
+        GET,
+        POST
+    };
+
+    struct Header {
+        String name;
+        String value;
+    };
+
+    HttpRequest();
+    ~HttpRequest();
+
+    const String& resource() const { return m_resource; }
+    const Vector<Header>& headers() const { return m_headers; }
+
+    const URL& url() const { return m_url; }
+    void set_url(const URL& url) { m_url = url; }
+
+    Method method() const { return m_method; }
+    void set_method(Method method) { m_method = method; }
+
+    String method_name() const;
+    ByteBuffer to_raw_request() const;
+
+    RefPtr<Core::NetworkJob> schedule();
+
+    static Optional<HttpRequest> from_raw_request(const ByteBuffer&);
+
+private:
+    URL m_url;
+    String m_resource;
+    Method m_method { GET };
+    Vector<Header> m_headers;
+};
 
 }

@@ -28,6 +28,7 @@
 
 #include <LibCore/Object.h>
 #include <LibCore/TCPSocket.h>
+#include <LibHTTP/Forward.h>
 
 namespace WebServer {
 
@@ -40,12 +41,12 @@ private:
     Client(NonnullRefPtr<Core::TCPSocket>, Core::Object* parent);
 
     void handle_request(ByteBuffer);
-    void send_response(StringView, const Core::HttpRequest&);
-    void send_redirect(StringView redirect, const Core::HttpRequest& request);
-    void send_error_response(unsigned code, const StringView& message, const Core::HttpRequest&);
+    void send_response(StringView, const HTTP::HttpRequest&);
+    void send_redirect(StringView redirect, const HTTP::HttpRequest& request);
+    void send_error_response(unsigned code, const StringView& message, const HTTP::HttpRequest&);
     void die();
-    void log_response(unsigned code, const Core::HttpRequest&);
-    void handle_directory_listing(const String& requested_path, const String& real_path, const Core::HttpRequest&);
+    void log_response(unsigned code, const HTTP::HttpRequest&);
+    void handle_directory_listing(const String& requested_path, const String& real_path, const HTTP::HttpRequest&);
 
     NonnullRefPtr<Core::TCPSocket> m_socket;
 };
