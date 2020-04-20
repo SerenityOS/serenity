@@ -34,13 +34,14 @@
 namespace Crypto {
 
 struct UnsignedDivisionResult;
+constexpr size_t STARTING_WORD_SIZE = 128;
 
 class UnsignedBigInteger {
 public:
     UnsignedBigInteger(u32 x) { m_words.append(x); }
 
     explicit UnsignedBigInteger(AK::Vector<u32, STARTING_WORD_SIZE>&& words)
-        : m_words(move(words))
+        : m_words(words)
     {
     }
 
@@ -59,7 +60,7 @@ public:
         return export_data(buffer);
     }
 
-    const AK::Vector<u32>& words() const { return m_words; }
+    const AK::Vector<u32, STARTING_WORD_SIZE>& words() const { return m_words; }
 
     UnsignedBigInteger add(const UnsignedBigInteger& other) const;
     UnsignedBigInteger sub(const UnsignedBigInteger& other) const;
@@ -89,7 +90,7 @@ private:
     u32 shift_left_get_one_word(const size_t num_bits, const size_t result_word_index) const;
 
     static constexpr size_t BITS_IN_WORD = 32;
-    AK::Vector<u32> m_words;
+    AK::Vector<u32, STARTING_WORD_SIZE> m_words;
 
     // Used to indicate a negative result, or a result of an invalid operation
     bool m_is_invalid { false };
