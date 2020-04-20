@@ -36,7 +36,7 @@ function assertNotReached() {
  * @param {string} [options.name] Expected error name
  * @param {string} [options.message] Expected error message
  */
-function assertThrowsError(testFunction, options = {}) {
+function assertThrowsError(testFunction, options) {
     try {
         testFunction();
         assertNotReached();
