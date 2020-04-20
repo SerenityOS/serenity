@@ -1,4 +1,9 @@
-
+/**
+ * Custom error for failed assertions.
+ * @constructor
+ * @param {string} message Error message
+ * @returns Error
+ */
 function AssertionError(message) {
     var instance = new Error(message);
     instance.name = 'AssertionError';
@@ -6,16 +11,32 @@ function AssertionError(message) {
     return instance;
 }
 
+/**
+ * Throws an `AssertionError` if `value` is not truthy.
+ * @param {*} value Value to be tested
+ */
 function assert(value) {
     if (!value)
         throw new AssertionError("The assertion failed!");
 }
 
+/**
+ * Throws an `AssertionError` when called.
+ * @throws {AssertionError}
+ */
 function assertNotReached() {
     throw new AssertionError("assertNotReached() was reached!");
 }
 
-function assertThrowsError(testFunction, options) {
+/**
+ * Ensures the provided functions throws a specific error.
+ * @param {Function} testFunction Function executing the throwing code
+ * @param {object} [options]
+ * @param {Error} [options.error] Expected error type
+ * @param {string} [options.name] Expected error name
+ * @param {string} [options.message] Expected error message
+ */
+function assertThrowsError(testFunction, options = {}) {
     try {
         testFunction();
         assertNotReached();
