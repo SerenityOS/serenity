@@ -54,6 +54,7 @@ ArrayPrototype::ArrayPrototype()
     put_native_function("concat", concat, 1);
     put_native_function("slice", slice, 2);
     put_native_function("indexOf", index_of, 1);
+    put_native_function("reverse", reverse, 0);
     put("length", Value(0));
 }
 
@@ -343,4 +344,25 @@ Value ArrayPrototype::index_of(Interpreter& interpreter)
 
     return Value(-1);
 }
+
+Value ArrayPrototype::reverse(Interpreter& interpreter)
+{
+    auto* array = array_from(interpreter);
+    if (!array)
+        return {};
+
+    if (array->elements().size() == 0)
+        return array;
+
+    Vector<Value> array_reverse;
+    array_reverse.ensure_capacity(array->elements().size());
+
+    for (ssize_t i = array->elements().size() - 1; i >= 0; --i)
+        array_reverse.append(array->elements().at(i));
+
+    array->elements() = move(array_reverse);
+
+    return array;
+}
+
 }
