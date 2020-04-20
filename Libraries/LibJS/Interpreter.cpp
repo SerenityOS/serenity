@@ -51,11 +51,11 @@ Value Interpreter::run(const Statement& statement, ArgumentVector arguments, Sco
 {
     if (statement.is_program()) {
         if (m_call_stack.is_empty()) {
-            CallFrame global_call_fram;
-            global_call_fram.this_value = m_global_object;
-            global_call_fram.function_name = "(global execution context)";
-            global_call_fram.environment = heap().allocate<LexicalEnvironment>();
-            m_call_stack.append(move(global_call_fram));
+            CallFrame global_call_frame;
+            global_call_frame.this_value = m_global_object;
+            global_call_frame.function_name = "(global execution context)";
+            global_call_frame.environment = heap().allocate<LexicalEnvironment>();
+            m_call_stack.append(move(global_call_frame));
         }
     }
 
