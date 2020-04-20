@@ -92,7 +92,7 @@ Card::Card(Type type, uint8_t value)
         Gfx::Painter bg_painter(*s_background);
 
         s_background->fill(Color::White);
-        auto image = Gfx::Bitmap::load_from_file("/res/icons/buggie.png");
+        auto image = Gfx::Bitmap::load_from_file("/res/icons/buggie-deck.png");
         ASSERT(!image.is_null());
 
         float aspect_ratio = image->width() / static_cast<float>(image->height());
