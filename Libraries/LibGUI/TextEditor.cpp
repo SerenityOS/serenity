@@ -93,6 +93,8 @@ void TextEditor::create_actions()
             },
             this);
     }
+    m_select_all_action = Action::create(
+        "Select all", { Mod_Ctrl, Key_A },Gfx::Bitmap::load_from_file("/res/icons/16x16/select-all.png"), [this](auto&) { select_all(); }, this);
 }
 
 void TextEditor::set_text(const StringView& text)
@@ -790,10 +792,6 @@ void TextEditor::keydown_event(KeyEvent& event)
         }
         return;
     }
-    if (event.modifiers() == Mod_Ctrl && event.key() == KeyCode::Key_A) {
-        select_all();
-        return;
-    }
     if (event.alt() && event.shift() && event.key() == KeyCode::Key_S) {
         sort_selected_lines();
         return;
@@ -1250,6 +1248,8 @@ void TextEditor::context_menu_event(ContextMenuEvent& event)
         m_context_menu->add_action(copy_action());
         m_context_menu->add_action(paste_action());
         m_context_menu->add_action(delete_action());
+        m_context_menu->add_separator();
+        m_context_menu->add_action(select_all_action());
         if (is_multi_line()) {
             m_context_menu->add_separator();
             m_context_menu->add_action(go_to_line_action());
