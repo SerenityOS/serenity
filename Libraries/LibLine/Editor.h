@@ -167,10 +167,12 @@ private:
         m_refresh_needed = true;
         m_search_offset = 0;
         if (m_reset_buffer_on_search_end) {
-            m_buffer = m_pre_search_buffer;
+            m_buffer.clear();
+            for (auto ch : m_pre_search_buffer)
+                m_buffer.append(ch);
             m_cursor = m_pre_search_cursor;
         }
-        m_reset_buffer_on_search_end = false;
+        m_reset_buffer_on_search_end = true;
         m_search_editor = nullptr;
     }
 
