@@ -68,6 +68,7 @@ void Editor::clear_line()
     fflush(stdout);
     m_buffer.clear();
     m_cursor = 0;
+    m_inline_search_cursor = m_cursor;
 }
 
 void Editor::insert(const String& string)
@@ -82,12 +83,14 @@ void Editor::insert(const char ch)
     if (m_cursor == m_buffer.size()) {
         m_buffer.append(ch);
         m_cursor = m_buffer.size();
+        m_inline_search_cursor = m_cursor;
         return;
     }
 
     m_buffer.insert(m_cursor, ch);
     ++m_chars_inserted_in_the_middle;
     ++m_cursor;
+    m_inline_search_cursor = m_cursor;
 }
 
 void Editor::register_character_input_callback(char ch, Function<bool(Editor&)> callback)
@@ -195,50 +198,67 @@ String Editor::get_line(const String& prompt)
             case InputState::ExpectFinal:
                 switch (ch) {
                 case 'A': // up
-                    if (m_history_cursor > 0)
-                        --m_history_cursor;
-                    if (m_history_cursor < m_history.size()) {
-                        auto& line = m_history[m_history_cursor];
-                        m_buffer.clear();
-                        for (auto& c : line)
-                            m_buffer.append(c);
-                        m_cursor = m_buffer.size();
-                        m_refresh_needed = true;
+                {
+                    m_searching_backwards = true;
+                    auto inline_search_cursor = m_inline_search_cursor;
+                    String search_phrase { m_buffer.data(), inline_search_cursor };
+                    if (search(search_phrase, true, true)) {
+                        ++m_search_offset;
+                    } else {
+                        insert(search_phrase);
                     }
+                    m_inline_search_cursor = inline_search_cursor;
                     m_state = InputState::Free;
                     continue;
+                }
                 case 'B': // down
-                    if (m_history_cursor < m_history.size())
-                        ++m_history_cursor;
-                    if (m_history_cursor < m_history.size()) {
-                        auto& line = m_history[m_history_cursor];
+                {
+                    auto inline_search_cursor = m_inline_search_cursor;
+                    String search_phrase { m_buffer.data(), inline_search_cursor };
+                    auto search_changed_directions = m_searching_backwards;
+                    m_searching_backwards = false;
+                    if (m_search_offset > 0) {
+                        m_search_offset -= 1 + search_changed_directions;
+                        if (!search(search_phrase, true, true)) {
+                            insert(search_phrase);
+                        }
+                    } else {
+                        m_search_offset = 0;
+                        m_cursor = 0;
                         m_buffer.clear();
-                        for (auto& c : line)
-                            m_buffer.append(c);
-                        m_cursor = m_buffer.size();
+                        insert(search_phrase);
                         m_refresh_needed = true;
                     }
+                    m_inline_search_cursor = inline_search_cursor;
                     m_state = InputState::Free;
                     continue;
+                }
                 case 'D': // left
                     if (m_cursor > 0) {
                         --m_cursor;
                     }
+                    m_inline_search_cursor = m_cursor;
                     m_state = InputState::Free;
                     continue;
                 case 'C': // right
                     if (m_cursor < m_buffer.size()) {
                         ++m_cursor;
                     }
+                    m_inline_search_cursor = m_cursor;
+                    m_search_offset = 0;
                     m_state = InputState::Free;
                     continue;
                 case 'H':
                     m_cursor = 0;
+                    m_inline_search_cursor = m_cursor;
+                    m_search_offset = 0;
                     m_state = InputState::Free;
                     continue;
                 case 'F':
                     m_cursor = m_buffer.size();
                     m_state = InputState::Free;
+                    m_inline_search_cursor = m_cursor;
+                    m_search_offset = 0;
                     continue;
                 case 'Z': // shift+tab
                     reverse_tab = true;
@@ -252,6 +272,7 @@ String Editor::get_line(const String& prompt)
                     }
                     m_buffer.remove(m_cursor);
                     m_refresh_needed = true;
+                    m_search_offset = 0;
                     m_state = InputState::ExpectTerminator;
                     continue;
                 default:
@@ -277,6 +298,8 @@ String Editor::get_line(const String& prompt)
                     continue;
                 }
             }
+
+            m_search_offset = 0; // reset search offset on any key
 
             if (ch == '\t' || reverse_tab) {
                 if (!on_tab_complete_first_token || !on_tab_complete_other_token)
@@ -379,6 +402,7 @@ String Editor::get_line(const String& prompt)
                         for (size_t i = m_next_suggestion_invariant_offset; i < shown_length; ++i)
                             m_buffer.remove(actual_offset);
                         m_cursor = actual_offset;
+                        m_inline_search_cursor = m_cursor;
                         m_refresh_needed = true;
                     }
                     m_last_shown_suggestion = m_suggestions[m_next_suggestion_index];
@@ -525,6 +549,7 @@ String Editor::get_line(const String& prompt)
                 }
                 m_buffer.remove(m_cursor - 1);
                 --m_cursor;
+                m_inline_search_cursor = m_cursor;
                 // we will have to redraw :(
                 m_refresh_needed = true;
             };
@@ -580,34 +605,7 @@ String Editor::get_line(const String& prompt)
                     m_search_editor = make<Editor>(true); // Has anyone seen 'Inception'?
                     m_search_editor->initialize();
                     m_search_editor->on_display_refresh = [this](Editor& search_editor) {
-                        int last_matching_offset = -1;
-
-                        // do not search for empty strings
-                        if (search_editor.buffer().size() > 0) {
-                            size_t search_offset = m_search_offset;
-                            StringView search_term { search_editor.buffer().data(), search_editor.buffer().size() };
-                            for (size_t i = m_history_cursor; i > 0; --i) {
-                                if (m_history[i - 1].contains(search_term)) {
-                                    last_matching_offset = i - 1;
-                                    if (search_offset == 0)
-                                        break;
-                                    --search_offset;
-                                }
-                            }
-
-                            if (last_matching_offset == -1) {
-                                fputc('\a', stdout);
-                                fflush(stdout);
-                                return;
-                            }
-                        }
-
-                        m_buffer.clear();
-                        m_cursor = 0;
-                        if (last_matching_offset >= 0)
-                            insert(m_history[last_matching_offset]);
-                        // always needed
-                        m_refresh_needed = true;
+                        search(StringView { search_editor.buffer().data(), search_editor.buffer().size() });
                         refresh_display();
                         return;
                     };
@@ -689,6 +687,40 @@ String Editor::get_line(const String& prompt)
             insert(ch);
         }
     }
+}
+
+bool Editor::search(const StringView& phrase, bool allow_empty, bool from_beginning)
+{
+
+    int last_matching_offset = -1;
+
+    // do not search for empty strings
+    if (allow_empty || phrase.length() > 0) {
+        size_t search_offset = m_search_offset;
+        for (size_t i = m_history_cursor; i > 0; --i) {
+            auto contains = from_beginning ? m_history[i - 1].starts_with(phrase) : m_history[i - 1].contains(phrase);
+            if (contains) {
+                last_matching_offset = i - 1;
+                if (search_offset == 0)
+                    break;
+                --search_offset;
+            }
+        }
+
+        if (last_matching_offset == -1) {
+            fputc('\a', stdout);
+            fflush(stdout);
+        }
+    }
+
+    m_buffer.clear();
+    m_cursor = 0;
+    if (last_matching_offset >= 0) {
+        insert(m_history[last_matching_offset]);
+    }
+    // always needed
+    m_refresh_needed = true;
+    return last_matching_offset >= 0;
 }
 
 void Editor::recalculate_origin()
