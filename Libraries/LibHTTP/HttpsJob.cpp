@@ -211,8 +211,20 @@ void HttpsJob::start()
 #endif
         on_socket_connected();
     };
-    m_socket->on_tls_error = [&](auto) {
-        finish_up();
+    m_socket->on_tls_error = [&](TLS::AlertDescription error) {
+        if (error == TLS::AlertDescription::HandshakeFailure) {
+            deferred_invoke([this](auto&) {
+                return did_fail(Core::NetworkJob::Error::ProtocolFailed);
+            });
+        } else if (error == TLS::AlertDescription::DecryptError) {
+            deferred_invoke([this](auto&) {
+                return did_fail(Core::NetworkJob::Error::ConnectionFailed);
+            });
+        } else {
+            deferred_invoke([this](auto&) {
+                return did_fail(Core::NetworkJob::Error::TransmissionFailed);
+            });
+        }
     };
     m_socket->on_tls_finished = [&] {
         finish_up();
