@@ -22,8 +22,9 @@ INCLUDE_FLAGS += \
 
 VERBOSE = 0
 
+UNAME_S := $(shell uname -s)
+
 ifneq ($(USE_HOST_CXX),)
-    UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),OpenBSD)
         HOST_CXX ?= clang++
     endif
@@ -42,13 +43,19 @@ ifneq ($(USE_HOST_CXX),)
     OBJ_SUFFIX ?= .host
     ARCH = $(shell arch -s)
 else
-    TOOLCHAIN_PATH = $(SERENITY_BASE_DIR)/Toolchain/Local/bin
-    CXX = $(PRE_CXX) $(TOOLCHAIN_PATH)/i686-pc-serenity-g++
-    CC = $(PRE_CC) $(TOOLCHAIN_PATH)/i686-pc-serenity-gcc
-    AS = $(TOOLCHAIN_PATH)/i686-pc-serenity-as
-    LINK = $(TOOLCHAIN_PATH)/i686-pc-serenity-ld
-    RANLIB = $(TOOLCHAIN_PATH)/i686-pc-serenity-ranlib
-    AR = $(TOOLCHAIN_PATH)/i686-pc-serenity-ar
+    ifeq ($(UNAME_S),SerenityOS)
+        TOOLCHAIN_PREFIX =
+    else
+        TOOLCHAIN_PATH = $(SERENITY_BASE_DIR)/Toolchain/Local/bin
+        TOOLCHAIN_PREFIX = $(TOOLCHAIN_PATH)/i686-pc-serenity-
+    endif
+
+    CXX = $(PRE_CXX) $(TOOLCHAIN_PREFIX)g++
+    CC = $(PRE_CC) $(TOOLCHAIN_PREFIX)gcc
+    AS = $(TOOLCHAIN_PREFIX)as
+    LINK = $(TOOLCHAIN_PREFIX)ld
+    RANLIB = $(TOOLCHAIN_PREFIX)ranlib
+    AR = $(TOOLCHAIN_PREFIX)ar
     ARCH = i386
 
     DEFINES += -DDEBUG
