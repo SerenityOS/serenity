@@ -416,7 +416,7 @@ String Editor::get_line(const String& prompt)
 
                 auto current_suggestion_index = m_next_suggestion_index;
                 if (m_next_suggestion_index < m_suggestions.size()) {
-                    auto can_complete = m_next_suggestion_invariant_offset < m_largest_common_suggestion_prefix_length;
+                    auto can_complete = m_next_suggestion_invariant_offset <= m_largest_common_suggestion_prefix_length;
                     if (!m_last_shown_suggestion.text.is_null()) {
                         size_t actual_offset;
                         size_t shown_length = m_last_shown_suggestion_display_length;
