@@ -1,0 +1,8 @@
+[App]
+Name=QuickShow
+Executable=/bin/QuickShow
+Category=Graphics
+
+[Icons]
+16x16=/res/icons/16x16/filetype-image.png
+32x32=/res/icons/32x32/filetype-image.png
