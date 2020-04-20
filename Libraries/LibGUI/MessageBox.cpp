@@ -147,7 +147,7 @@ void MessageBox::build()
     if (should_include_cancel_button())
         add_button("Cancel", Dialog::ExecCancel);
 
-    set_rect(x(), y(), text_width + icon_width + 80, 100);
+    set_rect(x(), y(), text_width + icon_width + 80, 115);
     set_resizable(false);
 }
 
