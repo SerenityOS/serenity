@@ -181,6 +181,7 @@ String Editor::get_line(const String& prompt)
                 m_next_suggestion_index = m_suggestions.size();
             m_next_suggestion_index--;
         };
+        auto ctrl_held = false;
         for (ssize_t i = 0; i < nread; ++i) {
             char ch = keybuf[i];
             if (ch == 0)
@@ -197,6 +198,9 @@ String Editor::get_line(const String& prompt)
                 }
             case InputState::ExpectFinal:
                 switch (ch) {
+                case 'O': // mod_ctrl
+                    ctrl_held = true;
+                    continue;
                 case 'A': // up
                 {
                     m_searching_backwards = true;
@@ -209,6 +213,7 @@ String Editor::get_line(const String& prompt)
                     }
                     m_inline_search_cursor = inline_search_cursor;
                     m_state = InputState::Free;
+                    ctrl_held = false;
                     continue;
                 }
                 case 'B': // down
@@ -231,38 +236,69 @@ String Editor::get_line(const String& prompt)
                     }
                     m_inline_search_cursor = inline_search_cursor;
                     m_state = InputState::Free;
+                    ctrl_held = false;
                     continue;
                 }
                 case 'D': // left
                     if (m_cursor > 0) {
-                        --m_cursor;
+                        if (ctrl_held) {
+                            auto skipped_at_least_one_character = false;
+                            for (;;) {
+                                if (m_cursor == 0)
+                                    break;
+                                if (skipped_at_least_one_character && isspace(m_buffer[m_cursor - 1])) // stop *after* a space, but only if it changes the position
+                                    break;
+                                skipped_at_least_one_character = true;
+                                --m_cursor;
+                            }
+                        } else {
+                            --m_cursor;
+                        }
                     }
                     m_inline_search_cursor = m_cursor;
                     m_state = InputState::Free;
+                    ctrl_held = false;
                     continue;
                 case 'C': // right
                     if (m_cursor < m_buffer.size()) {
-                        ++m_cursor;
+                        if (ctrl_held) {
+                            // temporarily put a space at the end of our buffer
+                            // this greatly simplifies the logic below
+                            m_buffer.append(' ');
+                            for (;;) {
+                                if (m_cursor >= m_buffer.size())
+                                    break;
+                                if (isspace(m_buffer[++m_cursor]))
+                                    break;
+                            }
+                            m_buffer.take_last();
+                        } else {
+                            ++m_cursor;
+                        }
                     }
                     m_inline_search_cursor = m_cursor;
                     m_search_offset = 0;
                     m_state = InputState::Free;
+                    ctrl_held = false;
                     continue;
                 case 'H':
                     m_cursor = 0;
                     m_inline_search_cursor = m_cursor;
                     m_search_offset = 0;
                     m_state = InputState::Free;
+                    ctrl_held = false;
                     continue;
                 case 'F':
                     m_cursor = m_buffer.size();
                     m_state = InputState::Free;
                     m_inline_search_cursor = m_cursor;
                     m_search_offset = 0;
+                    ctrl_held = false;
                     continue;
                 case 'Z': // shift+tab
                     reverse_tab = true;
                     m_state = InputState::Free;
+                    ctrl_held = false;
                     break;
                 case '3':
                     if (m_cursor == m_buffer.size()) {
@@ -274,10 +310,12 @@ String Editor::get_line(const String& prompt)
                     m_refresh_needed = true;
                     m_search_offset = 0;
                     m_state = InputState::ExpectTerminator;
+                    ctrl_held = false;
                     continue;
                 default:
-                    dbgprintf("Shell: Unhandled final: %02x (%c)\n", ch, ch);
+                    dbgprintf("Shell: Unhandled final: %02x (%c)\r\n", ch, ch);
                     m_state = InputState::Free;
+                    ctrl_held = false;
                     continue;
                 }
                 break;
