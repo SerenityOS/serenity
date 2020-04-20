@@ -105,7 +105,7 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&)> succ
         return;
     }
 
-    if (url.protocol() == "http") {
+    if (url.protocol() == "http" || url.protocol() == "https") {
         auto download = protocol_client().start_download(url.to_string());
         if (!download) {
             if (error_callback)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, The SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,39 +24,48 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibCore/EventLoop.h>
-#include <LibCore/LocalServer.h>
-#include <LibIPC/ClientConnection.h>
-#include <ProtocolServer/HttpProtocol.h>
-#include <ProtocolServer/HttpsProtocol.h>
-#include <ProtocolServer/PSClientConnection.h>
+#pragma once
 
-int main(int, char**)
-{
-    if (pledge("stdio inet shared_buffer accept unix rpath cpath fattr", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-    Core::EventLoop event_loop;
-    // FIXME: Establish a connection to LookupServer and then drop "unix"?
-    if (pledge("stdio inet shared_buffer accept unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-    (void)*new HttpProtocol;
-    (void)*new HttpsProtocol;
-    auto server = Core::LocalServer::construct();
-    bool ok = server->take_over_from_system_server();
-    ASSERT(ok);
-    server->on_ready_to_accept = [&] {
-        auto client_socket = server->accept();
-        if (!client_socket) {
-            dbg() << "ProtocolServer: accept failed.";
-            return;
-        }
-        static int s_next_client_id = 0;
-        int client_id = ++s_next_client_id;
-        IPC::new_client_connection<PSClientConnection>(*client_socket, client_id);
+#include <AK/HashMap.h>
+#include <LibCore/NetworkJob.h>
+#include <LibHTTP/HttpRequest.h>
+#include <LibHTTP/HttpResponse.h>
+#include <LibTLS/TLSv12.h>
+
+namespace HTTP {
+
+class HttpsJob final : public Core::NetworkJob {
+    C_OBJECT(HttpsJob)
+public:
+    explicit HttpsJob(const HttpRequest&);
+    virtual ~HttpsJob() override;
+
+    virtual void start() override;
+    virtual void shutdown() override;
+
+    HttpResponse* response() { return static_cast<HttpResponse*>(Core::NetworkJob::response()); }
+    const HttpResponse* response() const { return static_cast<const HttpResponse*>(Core::NetworkJob::response()); }
+
+private:
+    RefPtr<TLS::TLSv12> construct_socket() { return TLS::TLSv12::construct(this); }
+    void on_socket_connected();
+    void finish_up();
+
+    enum class State {
+        InStatus,
+        InHeaders,
+        InBody,
+        Finished,
     };
-    return event_loop.exec();
+
+    HttpRequest m_request;
+    RefPtr<TLS::TLSv12> m_socket;
+    State m_state { State::InStatus };
+    int m_code { -1 };
+    HashMap<String, String> m_headers;
+    Vector<ByteBuffer> m_received_buffers;
+    size_t m_received_size { 0 };
+    bool m_sent_data { false };
+};
+
 }

@@ -25,10 +25,10 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <LibCore/HttpJob.h>
-#include <LibCore/HttpRequest.h>
+#include <LibHTTP/HttpJob.h>
+#include <LibHTTP/HttpRequest.h>
 
-namespace Core {
+namespace HTTP {
 
 HttpRequest::HttpRequest()
 {
@@ -38,7 +38,7 @@ HttpRequest::~HttpRequest()
 {
 }
 
-RefPtr<NetworkJob> HttpRequest::schedule()
+RefPtr<Core::NetworkJob> HttpRequest::schedule()
 {
     auto job = HttpJob::construct(*this);
     job->start();
@@ -65,9 +65,9 @@ ByteBuffer HttpRequest::to_raw_request() const
     builder.append(method_name());
     builder.append(' ');
     builder.append(m_url.path());
-    builder.append(" HTTP/1.0\r\nHost: ");
+    builder.append(" HTTP/1.1\r\nHost: ");
     builder.append(m_url.host());
-    builder.append("\r\n\r\n");
+    builder.append("\r\nConnection: close\r\n\r\n");
     return builder.to_byte_buffer();
 }
 

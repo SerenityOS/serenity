@@ -26,52 +26,28 @@
 
 #pragma once
 
-#include <AK/Optional.h>
+#include <AK/HashMap.h>
 #include <AK/String.h>
-#include <AK/URL.h>
-#include <AK/Vector.h>
-#include <LibCore/Forward.h>
+#include <LibCore/NetworkResponse.h>
 
-namespace Core {
+namespace HTTP {
 
-class HttpRequest {
+class HttpResponse : public Core::NetworkResponse {
 public:
-    enum Method {
-        Invalid,
-        HEAD,
-        GET,
-        POST
-    };
+    virtual ~HttpResponse() override;
+    static NonnullRefPtr<HttpResponse> create(int code, HashMap<String, String>&& headers, ByteBuffer&& payload)
+    {
+        return adopt(*new HttpResponse(code, move(headers), move(payload)));
+    }
 
-    struct Header {
-        String name;
-        String value;
-    };
-
-    HttpRequest();
-    ~HttpRequest();
-
-    const String& resource() const { return m_resource; }
-    const Vector<Header>& headers() const { return m_headers; }
-
-    const URL& url() const { return m_url; }
-    void set_url(const URL& url) { m_url = url; }
-
-    Method method() const { return m_method; }
-    void set_method(Method method) { m_method = method; }
-
-    String method_name() const;
-    ByteBuffer to_raw_request() const;
-
-    RefPtr<NetworkJob> schedule();
-
-    static Optional<HttpRequest> from_raw_request(const ByteBuffer&);
+    int code() const { return m_code; }
+    const HashMap<String, String>& headers() const { return m_headers; }
 
 private:
-    URL m_url;
-    String m_resource;
-    Method m_method { GET };
-    Vector<Header> m_headers;
+    HttpResponse(int code, HashMap<String, String>&&, ByteBuffer&&);
+
+    int m_code { 0 };
+    HashMap<String, String> m_headers;
 };
 
 }

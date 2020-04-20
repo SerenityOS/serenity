@@ -27,13 +27,14 @@
 #pragma once
 
 #include <AK/HashMap.h>
-#include <LibCore/HttpRequest.h>
-#include <LibCore/HttpResponse.h>
 #include <LibCore/NetworkJob.h>
+#include <LibCore/TCPSocket.h>
+#include <LibHTTP/HttpRequest.h>
+#include <LibHTTP/HttpResponse.h>
 
-namespace Core {
+namespace HTTP {
 
-class HttpJob final : public NetworkJob {
+class HttpJob final : public Core::NetworkJob {
     C_OBJECT(HttpJob)
 public:
     explicit HttpJob(const HttpRequest&);
@@ -42,8 +43,8 @@ public:
     virtual void start() override;
     virtual void shutdown() override;
 
-    HttpResponse* response() { return static_cast<HttpResponse*>(NetworkJob::response()); }
-    const HttpResponse* response() const { return static_cast<const HttpResponse*>(NetworkJob::response()); }
+    HttpResponse* response() { return static_cast<HttpResponse*>(Core::NetworkJob::response()); }
+    const HttpResponse* response() const { return static_cast<const HttpResponse*>(Core::NetworkJob::response()); }
 
 private:
     void on_socket_connected();
@@ -57,7 +58,7 @@ private:
     };
 
     HttpRequest m_request;
-    RefPtr<TCPSocket> m_socket;
+    RefPtr<Core::Socket> m_socket;
     State m_state { State::InStatus };
     int m_code { -1 };
     HashMap<String, String> m_headers;

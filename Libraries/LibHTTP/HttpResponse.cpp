@@ -24,39 +24,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibCore/EventLoop.h>
-#include <LibCore/LocalServer.h>
-#include <LibIPC/ClientConnection.h>
-#include <ProtocolServer/HttpProtocol.h>
-#include <ProtocolServer/HttpsProtocol.h>
-#include <ProtocolServer/PSClientConnection.h>
+#include <LibHTTP/HttpResponse.h>
 
-int main(int, char**)
+namespace HTTP {
+
+HttpResponse::HttpResponse(int code, HashMap<String, String>&& headers, ByteBuffer&& payload)
+    : Core::NetworkResponse(move(payload))
+    , m_code(code)
+    , m_headers(move(headers))
 {
-    if (pledge("stdio inet shared_buffer accept unix rpath cpath fattr", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-    Core::EventLoop event_loop;
-    // FIXME: Establish a connection to LookupServer and then drop "unix"?
-    if (pledge("stdio inet shared_buffer accept unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-    (void)*new HttpProtocol;
-    (void)*new HttpsProtocol;
-    auto server = Core::LocalServer::construct();
-    bool ok = server->take_over_from_system_server();
-    ASSERT(ok);
-    server->on_ready_to_accept = [&] {
-        auto client_socket = server->accept();
-        if (!client_socket) {
-            dbg() << "ProtocolServer: accept failed.";
-            return;
-        }
-        static int s_next_client_id = 0;
-        int client_id = ++s_next_client_id;
-        IPC::new_client_connection<PSClientConnection>(*client_socket, client_id);
-    };
-    return event_loop.exec();
+}
+
+HttpResponse::~HttpResponse()
+{
+}
+
 }
