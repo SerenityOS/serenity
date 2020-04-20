@@ -160,6 +160,7 @@ private:
 
     Style find_applicable_style(size_t offset) const;
 
+    bool search(const StringView&, bool allow_empty = false, bool from_beginning = false);
     inline void end_search()
     {
         m_is_searching = false;
@@ -222,6 +223,7 @@ private:
     bool m_is_searching { false };
     bool m_reset_buffer_on_search_end { true };
     size_t m_search_offset { 0 };
+    bool m_searching_backwards { true };
     size_t m_pre_search_cursor { 0 };
     Vector<char, 1024> m_pre_search_buffer;
 
@@ -229,6 +231,7 @@ private:
     ByteBuffer m_pending_chars;
     size_t m_cursor { 0 };
     size_t m_drawn_cursor { 0 };
+    size_t m_inline_search_cursor { 0 };
     size_t m_chars_inserted_in_the_middle { 0 };
     size_t m_times_tab_pressed { 0 };
     size_t m_num_columns { 0 };
