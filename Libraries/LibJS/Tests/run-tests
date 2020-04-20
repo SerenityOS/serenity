@@ -33,13 +33,18 @@ pass_color=""
 fail_color=""
 color_off="\033[0m"
 
+exit_code=0
+
 if [ $pass_count -gt 0 ]; then
     pass_color="\033[32;1m"
 fi
 
 if [ $fail_count -gt 0 ]; then
     fail_color="\033[31;1m"
+    exit_code=1
 fi
 
 echo
 echo -e "Ran $count tests. Passed: ${pass_color}${pass_count}${color_off}, Failed: ${fail_color}${fail_count}${color_off}"
+
+exit $exit_code
