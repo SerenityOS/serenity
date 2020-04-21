@@ -775,11 +775,10 @@ Value UpdateExpression::execute(Interpreter& interpreter) const
 {
     ASSERT(m_argument->is_identifier());
     auto name = static_cast<const Identifier&>(*m_argument).string();
-
-    auto previous_variable = interpreter.get_variable(name);
-    ASSERT(previous_variable.has_value());
-    auto previous_value = previous_variable.value();
-    ASSERT(previous_value.is_number());
+    auto old_value = m_argument->execute(interpreter);
+    if (interpreter.exception())
+        return {};
+    old_value = old_value.to_number();
 
     int op_result = 0;
     switch (m_op) {
@@ -789,14 +788,13 @@ Value UpdateExpression::execute(Interpreter& interpreter) const
     case UpdateOp::Decrement:
         op_result = -1;
         break;
+    default:
+        ASSERT_NOT_REACHED();
     }
 
-    interpreter.set_variable(name, Value(previous_value.as_double() + op_result));
-
-    if (m_prefixed)
-        return JS::Value(previous_value.as_double() + op_result);
-
-    return previous_value;
+    auto new_value = Value(old_value.as_double() + op_result);
+    interpreter.set_variable(name, new_value);
+    return m_prefixed ? new_value : old_value;
 }
 
 void AssignmentExpression::dump(int indent) const
