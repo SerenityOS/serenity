@@ -91,9 +91,23 @@ DirectoryView::DirectoryView()
     m_item_view->set_model_column(GUI::FileSystemModel::Column::Name);
     m_columns_view->set_model_column(GUI::FileSystemModel::Column::Name);
 
-    m_model->on_root_path_change = [this] {
+    m_model->on_error = [this](int error, const char* error_string) {
+        bool quit = false;
+        if (m_path_history.size())
+            open(m_path_history.at(m_path_history_position));
+        else
+            quit = true;
+        
+        if (on_error)
+            on_error(error, error_string, quit);        
+    };
+
+    m_model->on_complete = [this] {
         m_table_view->selection().clear();
         m_item_view->selection().clear();
+
+        add_path_to_history(model().root_path());
+
         if (on_path_change)
             on_path_change(model().root_path());
     };
@@ -197,6 +211,9 @@ void DirectoryView::set_view_mode(ViewMode mode)
 
 void DirectoryView::add_path_to_history(const StringView& path)
 {
+    if (m_path_history.size() && m_path_history.at(m_path_history_position) == path)
+        return;
+
     if (m_path_history_position < m_path_history.size())
         m_path_history.resize(m_path_history_position + 1);
 
@@ -210,7 +227,6 @@ void DirectoryView::open(const StringView& path)
         model().update();
         return;
     }
-    add_path_to_history(path);
     model().set_root_path(path);
 }
 
@@ -223,7 +239,6 @@ void DirectoryView::set_status_message(const StringView& message)
 void DirectoryView::open_parent_directory()
 {
     auto path = String::format("%s/..", model().root_path().characters());
-    add_path_to_history(path);
     model().set_root_path(path);
 }
 
