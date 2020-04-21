@@ -50,8 +50,9 @@ public:
     NonnullRefPtr<Statement> parse_statement();
     NonnullRefPtr<BlockStatement> parse_block_statement();
     NonnullRefPtr<ReturnStatement> parse_return_statement();
-    NonnullRefPtr<VariableDeclaration> parse_variable_declaration();
-    NonnullRefPtr<ForStatement> parse_for_statement();
+    NonnullRefPtr<VariableDeclaration> parse_variable_declaration(bool with_semicolon = true);
+    NonnullRefPtr<Statement> parse_for_statement();
+    NonnullRefPtr<Statement> parse_for_in_of_statement(NonnullRefPtr<ASTNode> lhs);
     NonnullRefPtr<IfStatement> parse_if_statement();
     NonnullRefPtr<ThrowStatement> parse_throw_statement();
     NonnullRefPtr<TryStatement> parse_try_statement();
@@ -65,7 +66,7 @@ public:
     NonnullRefPtr<DebuggerStatement> parse_debugger_statement();
     NonnullRefPtr<ConditionalExpression> parse_conditional_expression(NonnullRefPtr<Expression> test);
 
-    NonnullRefPtr<Expression> parse_expression(int min_precedence, Associativity associate = Associativity::Right);
+    NonnullRefPtr<Expression> parse_expression(int min_precedence, Associativity associate = Associativity::Right, Vector<TokenType> forbidden = {});
     NonnullRefPtr<Expression> parse_primary_expression();
     NonnullRefPtr<Expression> parse_unary_prefixed_expression();
     NonnullRefPtr<ObjectExpression> parse_object_expression();
@@ -105,7 +106,7 @@ private:
     Associativity operator_associativity(TokenType) const;
     bool match_expression() const;
     bool match_unary_prefixed_expression() const;
-    bool match_secondary_expression() const;
+    bool match_secondary_expression(Vector<TokenType> forbidden = {}) const;
     bool match_statement() const;
     bool match_variable_declaration() const;
     bool match_identifier_name() const;

@@ -322,6 +322,128 @@ Value ForStatement::execute(Interpreter& interpreter) const
     return last_value;
 }
 
+static FlyString variable_from_for_declaration(Interpreter& interpreter, NonnullRefPtr<ASTNode> node, RefPtr<BlockStatement> wrapper)
+{
+    FlyString variable_name;
+    if (node->is_variable_declaration()) {
+        auto* variable_declaration = static_cast<const VariableDeclaration*>(node.ptr());
+        ASSERT(!variable_declaration->declarations().is_empty());
+        if (variable_declaration->declaration_kind() != DeclarationKind::Var) {
+            wrapper = create_ast_node<BlockStatement>();
+            interpreter.enter_scope(*wrapper, {}, ScopeType::Block);
+        }
+        variable_declaration->execute(interpreter);
+        variable_name = variable_declaration->declarations().first().id().string();
+    } else if (node->is_identifier()) {
+        variable_name = static_cast<const Identifier&>(*node).string();
+    } else {
+        ASSERT_NOT_REACHED();
+    }
+    return variable_name;
+}
+
+Value ForInStatement::execute(Interpreter& interpreter) const
+{
+    if (!m_lhs->is_variable_declaration() && !m_lhs->is_identifier()) {
+        // FIXME: Implement "for (foo.bar in baz)", "for (foo[0] in bar)"
+        ASSERT_NOT_REACHED();
+    }
+    RefPtr<BlockStatement> wrapper;
+    auto variable_name = variable_from_for_declaration(interpreter, m_lhs, wrapper);
+    auto wrapper_cleanup = ScopeGuard([&] {
+        if (wrapper)
+            interpreter.exit_scope(*wrapper);
+    });
+    auto last_value = js_undefined();
+    auto rhs_result = m_rhs->execute(interpreter);
+    if (interpreter.exception())
+        return {};
+    auto* object = rhs_result.to_object(interpreter);
+    while (object) {
+        auto property_names = object->get_own_properties(*object, Object::GetOwnPropertyMode::Key, Attribute::Enumerable);
+        for (auto& property_name : static_cast<Array&>(property_names.as_object()).elements()) {
+            interpreter.set_variable(variable_name, property_name);
+            last_value = interpreter.run(*m_body);
+            if (interpreter.exception())
+                return {};
+            if (interpreter.should_unwind()) {
+                if (interpreter.should_unwind_until(ScopeType::Continuable)) {
+                    interpreter.stop_unwind();
+                } else if (interpreter.should_unwind_until(ScopeType::Breakable)) {
+                    interpreter.stop_unwind();
+                    break;
+                } else {
+                    return js_undefined();
+                }
+            }
+        }
+        object = object->prototype();
+    }
+    return last_value;
+}
+
+Value ForOfStatement::execute(Interpreter& interpreter) const
+{
+    if (!m_lhs->is_variable_declaration() && !m_lhs->is_identifier()) {
+        // FIXME: Implement "for (foo.bar of baz)", "for (foo[0] of bar)"
+        ASSERT_NOT_REACHED();
+    }
+    RefPtr<BlockStatement> wrapper;
+    auto variable_name = variable_from_for_declaration(interpreter, m_lhs, wrapper);
+    auto wrapper_cleanup = ScopeGuard([&] {
+        if (wrapper)
+            interpreter.exit_scope(*wrapper);
+    });
+    auto last_value = js_undefined();
+    auto rhs_result = m_rhs->execute(interpreter);
+    if (interpreter.exception())
+        return {};
+    // FIXME: We need to properly implement the iterator protocol
+    auto is_iterable = rhs_result.is_array() || rhs_result.is_string() || (rhs_result.is_object() && rhs_result.as_object().is_string_object());
+    if (!is_iterable)
+        return interpreter.throw_exception<TypeError>("for..of right-hand side must be iterable");
+
+    size_t index = 0;
+    auto next = [&]() -> Optional<Value> {
+        if (rhs_result.is_array()) {
+            auto array_elements = static_cast<Array*>(&rhs_result.as_object())->elements();
+            if (index < array_elements.size())
+                return Value(array_elements.at(index));
+        } else if (rhs_result.is_string()) {
+            auto string = rhs_result.as_string().string();
+            if (index < string.length())
+                return js_string(interpreter, string.substring(index, 1));
+        } else if (rhs_result.is_object() && rhs_result.as_object().is_string_object()) {
+            auto string = static_cast<StringObject*>(&rhs_result.as_object())->primitive_string().string();
+            if (index < string.length())
+                return js_string(interpreter, string.substring(index, 1));
+        }
+        return {};
+    };
+
+    for (;;) {
+        auto next_item = next();
+        if (!next_item.has_value())
+            break;
+        interpreter.set_variable(variable_name, next_item.value());
+        last_value = interpreter.run(*m_body);
+        if (interpreter.exception())
+            return {};
+        if (interpreter.should_unwind()) {
+            if (interpreter.should_unwind_until(ScopeType::Continuable)) {
+                interpreter.stop_unwind();
+            } else if (interpreter.should_unwind_until(ScopeType::Breakable)) {
+                interpreter.stop_unwind();
+                break;
+            } else {
+                return js_undefined();
+            }
+        }
+        ++index;
+    }
+    return last_value;
+}
+
 Value BinaryExpression::execute(Interpreter& interpreter) const
 {
     auto lhs_result = m_lhs->execute(interpreter);
@@ -798,6 +920,28 @@ void ForStatement::dump(int indent) const
         test()->dump(indent + 1);
     if (update())
         update()->dump(indent + 1);
+    body().dump(indent + 1);
+}
+
+void ForInStatement::dump(int indent) const
+{
+    ASTNode::dump(indent);
+
+    print_indent(indent);
+    printf("ForIn\n");
+    lhs().dump(indent + 1);
+    rhs().dump(indent + 1);
+    body().dump(indent + 1);
+}
+
+void ForOfStatement::dump(int indent) const
+{
+    ASTNode::dump(indent);
+
+    print_indent(indent);
+    printf("ForOf\n");
+    lhs().dump(indent + 1);
+    rhs().dump(indent + 1);
     body().dump(indent + 1);
 }
 
