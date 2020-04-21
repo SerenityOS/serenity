@@ -69,6 +69,7 @@ class PrimitiveString;
 class ScopeNode;
 class Shape;
 class Statement;
+class Uint8ClampedArray;
 class Value;
 enum class DeclarationKind;
 

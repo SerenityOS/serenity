@@ -46,11 +46,11 @@ public:
     Shape& shape() { return *m_shape; }
     const Shape& shape() const { return *m_shape; }
 
-    Optional<Value> get_by_index(i32 property_index) const;
+    virtual Optional<Value> get_by_index(i32 property_index) const;
     Optional<Value> get(const FlyString& property_name) const;
     Optional<Value> get(PropertyName) const;
 
-    void put_by_index(i32 property_index, Value);
+    virtual void put_by_index(i32 property_index, Value);
     void put(const FlyString& property_name, Value);
     void put(PropertyName, Value);
 
