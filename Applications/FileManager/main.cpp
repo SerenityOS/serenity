@@ -588,6 +588,14 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         go_back_action->set_enabled(directory_view.path_history_position() > 0);
     };
 
+    directory_view.on_error = [&](int, const char* error_string, bool quit) {
+        auto error_message = String::format("Could not read directory: %s", error_string);
+        GUI::MessageBox::show(error_message, "File Manager", GUI::MessageBox::Type::Error);
+
+        if (quit)
+            exit(1);
+    };
+
     directory_view.on_status_message = [&](const StringView& message) {
         statusbar.set_text(message);
     };

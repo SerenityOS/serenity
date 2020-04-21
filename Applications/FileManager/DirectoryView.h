@@ -55,6 +55,7 @@ public:
     Function<void(const GUI::AbstractView&, const GUI::ModelIndex&, const GUI::DropEvent&)> on_drop;
     Function<void(const StringView&)> on_status_message;
     Function<void(int done, int total)> on_thumbnail_progress;
+    Function<void(int error, const char* error_string, bool quit)> on_error;
 
     enum ViewMode {
         Invalid,
