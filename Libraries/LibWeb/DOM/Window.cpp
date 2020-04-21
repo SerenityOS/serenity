@@ -29,6 +29,7 @@
 #include <LibGUI/MessageBox.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/MarkedValueList.h>
 #include <LibWeb/DOM/Window.h>
 
 namespace Web {
@@ -81,10 +82,16 @@ void Window::set_timeout(JS::Function& callback, i32 interval)
 
 i32 Window::request_animation_frame(JS::Function& callback)
 {
+    // FIXME: This is extremely fake!
+    static double fake_timestamp = 0;
+
     i32 link_id = GUI::DisplayLink::register_callback([handle = make_handle(&callback)](i32 link_id) {
         auto* function = const_cast<JS::Function*>(static_cast<const JS::Function*>(handle.cell()));
         auto& interpreter = function->interpreter();
-        interpreter.call(function);
+        JS::MarkedValueList arguments(interpreter.heap());
+        arguments.append(JS::Value(fake_timestamp));
+        fake_timestamp += 10;
+        interpreter.call(function, {}, move(arguments));
         GUI::DisplayLink::unregister_callback(link_id);
     });
 
