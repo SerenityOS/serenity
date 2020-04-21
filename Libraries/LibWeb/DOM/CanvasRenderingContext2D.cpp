@@ -29,6 +29,7 @@
 #include <LibWeb/DOM/CanvasRenderingContext2D.h>
 #include <LibWeb/DOM/HTMLCanvasElement.h>
 #include <LibWeb/DOM/HTMLImageElement.h>
+#include <LibWeb/DOM/ImageData.h>
 
 namespace Web {
 
@@ -173,6 +174,20 @@ void CanvasRenderingContext2D::stroke()
         return;
 
     painter->stroke_path(m_path, m_stroke_style, m_line_width);
+}
+
+RefPtr<ImageData> CanvasRenderingContext2D::create_image_data(JS::GlobalObject& global_object, int width, int height) const
+{
+    return ImageData::create_with_size(global_object, width, height);
+}
+
+void CanvasRenderingContext2D::put_image_data(const ImageData& image_data, float x, float y)
+{
+    auto painter = this->painter();
+    if (!painter)
+        return;
+
+    painter->blit(Gfx::Point(x, y), image_data.bitmap(), image_data.bitmap().rect());
 }
 
 }

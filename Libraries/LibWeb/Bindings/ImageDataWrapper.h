@@ -26,55 +26,30 @@
 
 #pragma once
 
+#include <LibWeb/Bindings/Wrapper.h>
+
 namespace Web {
-
-class CanvasRenderingContext2D;
-class Document;
-class Element;
-class Event;
-class EventListener;
-class EventTarget;
-class Frame;
-class HTMLBodyElement;
-class HTMLCanvasElement;
-class HTMLElement;
-class HTMLHeadElement;
-class HTMLHtmlElement;
-class HTMLImageElement;
-class HtmlView;
-class ImageData;
-class LayoutDocument;
-class LayoutNode;
-class MouseEvent;
-class Node;
-class Origin;
-class Selector;
-class StyleResolver;
-class StyleRule;
-class StyleSheet;
-class Window;
-class XMLHttpRequest;
-
 namespace Bindings {
 
-class CanvasRenderingContext2DWrapper;
-class DocumentWrapper;
-class ElementWrapper;
-class EventWrapper;
-class EventListenerWrapper;
-class EventTargetWrapper;
-class HTMLCanvasElementWrapper;
-class HTMLImageElementWrapper;
-class ImageDataWrapper;
-class MouseEventWrapper;
-class NodeWrapper;
-class WindowObject;
-class Wrappable;
-class Wrapper;
-class XMLHttpRequestConstructor;
-class XMLHttpRequestPrototype;
-class XMLHttpRequestWrapper;
+class ImageDataWrapper : public Wrapper {
+public:
+    explicit ImageDataWrapper(ImageData&);
+    virtual ~ImageDataWrapper() override;
+
+    ImageData& impl() { return m_impl; }
+    const ImageData& impl() const { return m_impl; }
+
+private:
+    virtual const char* class_name() const override { return "ImageDataWrapper"; }
+
+    static JS::Value width_getter(JS::Interpreter&);
+    static JS::Value height_getter(JS::Interpreter&);
+    static JS::Value data_getter(JS::Interpreter&);
+
+    NonnullRefPtr<ImageData> m_impl;
+};
+
+ImageDataWrapper* wrap(JS::Heap&, ImageData&);
 
 }
-
 }

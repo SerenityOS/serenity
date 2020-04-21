@@ -33,8 +33,10 @@
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
 #include <LibWeb/Bindings/HTMLImageElementWrapper.h>
+#include <LibWeb/Bindings/ImageDataWrapper.h>
 #include <LibWeb/DOM/CanvasRenderingContext2D.h>
 #include <LibWeb/DOM/HTMLImageElement.h>
+#include <LibWeb/DOM/ImageData.h>
 
 namespace Web {
 namespace Bindings {
@@ -61,6 +63,9 @@ CanvasRenderingContext2DWrapper::CanvasRenderingContext2DWrapper(CanvasRendering
     put_native_function("stroke", stroke, 0);
     put_native_function("moveTo", move_to, 0);
     put_native_function("lineTo", line_to, 0);
+
+    put_native_function("createImageData", create_image_data, 2);
+    put_native_function("putImageData", put_image_data, 3);
 
     put_native_property("lineWidth", line_width_getter, line_width_setter);
 }
@@ -232,6 +237,38 @@ JS::Value CanvasRenderingContext2DWrapper::line_to(JS::Interpreter& interpreter)
     double x = interpreter.argument(0).to_double();
     double y = interpreter.argument(1).to_double();
     impl->line_to(x, y);
+    return JS::js_undefined();
+}
+
+JS::Value CanvasRenderingContext2DWrapper::create_image_data(JS::Interpreter& interpreter)
+{
+    auto* impl = impl_from(interpreter);
+    if (!impl)
+        return {};
+    i32 width = interpreter.argument(0).to_i32();
+    i32 height = interpreter.argument(1).to_i32();
+    auto image_data = impl->create_image_data(interpreter.global_object(), width, height);
+    return wrap(interpreter.heap(), *image_data);
+}
+
+JS::Value CanvasRenderingContext2DWrapper::put_image_data(JS::Interpreter& interpreter)
+{
+    auto* impl = impl_from(interpreter);
+    if (!impl)
+        return {};
+
+    auto* image_data_object = interpreter.argument(0).to_object(interpreter.heap());
+    if (!image_data_object)
+        return {};
+
+    if (StringView(image_data_object->class_name()) != "ImageDataWrapper") {
+        return interpreter.throw_exception<JS::TypeError>("putImageData called with non-ImageData");
+    }
+
+    auto& image_data = static_cast<ImageDataWrapper*>(image_data_object)->impl();
+    auto x = interpreter.argument(1).to_double();
+    auto y = interpreter.argument(2).to_double();
+    impl->put_image_data(image_data, x, y);
     return JS::js_undefined();
 }
 

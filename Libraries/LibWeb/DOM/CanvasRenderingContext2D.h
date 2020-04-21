@@ -71,6 +71,9 @@ public:
     void line_to(float x, float y);
     void stroke();
 
+    RefPtr<ImageData> create_image_data(JS::GlobalObject&, int width, int height) const;
+    void put_image_data(const ImageData&, float x, float y);
+
 private:
     explicit CanvasRenderingContext2D(HTMLCanvasElement&);
 
