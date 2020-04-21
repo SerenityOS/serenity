@@ -120,15 +120,6 @@ void MenuManager::refresh()
 
 void MenuManager::event(Core::Event& event)
 {
-    auto* active_window = WindowManager::the().active_window();
-    if (active_window && active_window->is_modal() && has_open_menu()) {
-        auto* topmost_menu = m_open_menu_stack.last().ptr();
-        ASSERT(topmost_menu);
-        // Always allow window menu interaction, even while a modal window is active.
-        if (!topmost_menu->window_menu_of())
-            return Core::Object::event(event);
-    }
-
     if (static_cast<Event&>(event).is_mouse_event()) {
         handle_mouse_event(static_cast<MouseEvent&>(event));
         return;
