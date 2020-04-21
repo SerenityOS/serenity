@@ -56,7 +56,7 @@ int main(int argc, char** argv)
         propbox->table_view().set_model(widget ? &widget->property_model() : nullptr);
     };
 
-    auto menubar = make<GUI::MenuBar>();
+    auto menubar = GUI::MenuBar::construct();
     auto& app_menu = menubar->add_menu("Visual Builder");
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the().quit(0);

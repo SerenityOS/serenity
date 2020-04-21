@@ -28,22 +28,25 @@
 
 #include <AK/Forward.h>
 #include <AK/NonnullRefPtrVector.h>
+#include <LibCore/Object.h>
 #include <LibGUI/Forward.h>
 
 namespace GUI {
 
-class MenuBar {
+class MenuBar : public Core::Object {
+    C_OBJECT(MenuBar);
+
 public:
-    MenuBar();
     ~MenuBar();
 
     Menu& add_menu(String name);
-    void append_menu(NonnullRefPtr<Menu>);
 
     void notify_added_to_application(Badge<Application>);
     void notify_removed_from_application(Badge<Application>);
 
 private:
+    MenuBar();
+
     int realize_menubar();
     void unrealize_menubar();
 

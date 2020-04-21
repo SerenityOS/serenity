@@ -341,7 +341,7 @@ TextEditorWidget::TextEditorWidget()
     m_line_wrapping_setting_action->set_checkable(true);
     m_line_wrapping_setting_action->set_checked(m_editor->is_line_wrapping_enabled());
 
-    auto menubar = make<GUI::MenuBar>();
+    auto menubar = GUI::MenuBar::construct();
     auto& app_menu = menubar->add_menu("Text Editor");
     app_menu.add_action(*m_new_action);
     app_menu.add_action(*m_open_action);

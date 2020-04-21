@@ -228,7 +228,7 @@ int main(int argc, char** argv)
         statusbar.set_text(String::format("Loading (%d pending resources...)", Web::ResourceLoader::the().pending_loads()));
     };
 
-    auto menubar = make<GUI::MenuBar>();
+    auto menubar = GUI::MenuBar::construct();
 
     auto& app_menu = menubar->add_menu("Browser");
     app_menu.add_action(GUI::Action::create("Reload", { Mod_None, Key_F5 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"), [&](auto&) {

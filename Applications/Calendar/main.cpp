@@ -65,7 +65,7 @@ int main(int argc, char** argv)
     window->show();
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-calendar.png"));
 
-    auto menubar = make<GUI::MenuBar>();
+    auto menubar = GUI::MenuBar::construct();
     auto& app_menu = menubar->add_menu("Calendar");
 
     app_menu.add_action(GUI::Action::create("Add Event", { Mod_Ctrl | Mod_Shift, Key_E },

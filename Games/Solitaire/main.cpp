@@ -51,7 +51,7 @@ int main(int argc, char** argv)
         window->set_title(String::format("Score: %u - Solitaire", score));
     });
 
-    auto menubar = make<GUI::MenuBar>();
+    auto menubar = GUI::MenuBar::construct();
     auto& app_menu = menubar->add_menu("Solitaire");
 
     app_menu.add_action(GUI::Action::create("Restart game", [&](auto&) { widget->setup(); }));

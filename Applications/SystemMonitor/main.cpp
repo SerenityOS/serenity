@@ -174,7 +174,7 @@ int main(int argc, char** argv)
     toolbar.add_action(stop_action);
     toolbar.add_action(continue_action);
 
-    auto menubar = make<GUI::MenuBar>();
+    auto menubar = GUI::MenuBar::construct();
     auto& app_menu = menubar->add_menu("System Monitor");
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the().quit(0);

@@ -177,7 +177,7 @@ int main(int argc, char* argv[])
     toolbar.add_action(*go_back_action);
     toolbar.add_action(*go_forward_action);
 
-    auto menubar = make<GUI::MenuBar>();
+    auto menubar = GUI::MenuBar::construct();
 
     auto& app_menu = menubar->add_menu("Help");
     app_menu.add_action(GUI::Action::create("About", [&](const GUI::Action&) {

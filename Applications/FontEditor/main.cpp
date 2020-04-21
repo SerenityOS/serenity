@@ -74,7 +74,7 @@ int main(int argc, char** argv)
     window->show();
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-font-editor.png"));
 
-    auto menubar = make<GUI::MenuBar>();
+    auto menubar = GUI::MenuBar::construct();
 
     auto& app_menu = menubar->add_menu("Font Editor");
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {

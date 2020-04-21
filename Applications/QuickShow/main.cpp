@@ -234,7 +234,7 @@ int main(int argc, char** argv)
     main_toolbar.add_action(zoom_in_action);
     main_toolbar.add_action(zoom_out_action);
 
-    auto menubar = make<GUI::MenuBar>();
+    auto menubar = GUI::MenuBar::construct();
 
     auto& app_menu = menubar->add_menu("QuickShow");
     app_menu.add_action(open_action);
