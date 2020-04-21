@@ -55,7 +55,7 @@ void EraseTool::on_mousedown(GUI::MouseEvent& event)
         return;
     Gfx::Rect r = build_rect(event.position(), m_widget->bitmap().rect());
     GUI::Painter painter(m_widget->bitmap());
-    painter.fill_rect(r, get_color());
+    painter.clear_rect(r, get_color());
     m_widget->update();
 }
 
@@ -67,7 +67,7 @@ void EraseTool::on_mousemove(GUI::MouseEvent& event)
     if (event.buttons() & GUI::MouseButton::Left || event.buttons() & GUI::MouseButton::Right) {
         Gfx::Rect r = build_rect(event.position(), m_widget->bitmap().rect());
         GUI::Painter painter(m_widget->bitmap());
-        painter.fill_rect(r, get_color());
+        painter.clear_rect(r, get_color());
         m_widget->update();
     }
 }
@@ -112,5 +112,5 @@ Color EraseTool::get_color() const
 {
     if (m_use_secondary_color)
         return m_widget->secondary_color();
-    return Color(Color::White);
+    return Color(255, 255, 255, 0);
 }
