@@ -60,10 +60,15 @@ WallpaperMode mode_to_enum(const String& name)
 
 Compositor::Compositor()
 {
+    m_display_link_notify_timer = add<Core::Timer>(
+        1000 / 60, [this] {
+            notify_display_links();
+        });
+    m_display_link_notify_timer->stop();
+
     m_compose_timer = Core::Timer::create_single_shot(
         1000 / 60,
         [this] {
-            notify_display_links();
             compose();
         },
         this);
@@ -486,6 +491,21 @@ void Compositor::notify_display_links()
     ClientConnection::for_each_client([](auto& client) {
         client.notify_display_link({});
     });
+}
+
+void Compositor::increment_display_link_count(Badge<ClientConnection>)
+{
+    ++m_display_link_count;
+    if (m_display_link_count == 1)
+        m_display_link_notify_timer->start();
+}
+
+void Compositor::decrement_display_link_count(Badge<ClientConnection>)
+{
+    ASSERT(m_display_link_count);
+    --m_display_link_count;
+    if (!m_display_link_count)
+        m_display_link_notify_timer->stop();
 }
 
 }

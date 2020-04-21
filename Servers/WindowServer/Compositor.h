@@ -34,6 +34,7 @@
 
 namespace WindowServer {
 
+class ClientConnection;
 class Cursor;
 
 enum class WallpaperMode {
@@ -64,6 +65,9 @@ public:
 
     void invalidate_cursor();
     Gfx::Rect current_cursor_rect() const;
+
+    void increment_display_link_count(Badge<ClientConnection>);
+    void decrement_display_link_count(Badge<ClientConnection>);
 
 private:
     Compositor();
@@ -96,6 +100,9 @@ private:
     String m_wallpaper_path;
     WallpaperMode m_wallpaper_mode { WallpaperMode::Unchecked };
     RefPtr<Gfx::Bitmap> m_wallpaper;
+
+    RefPtr<Core::Timer> m_display_link_notify_timer;
+    size_t m_display_link_count { 0 };
 };
 
 }

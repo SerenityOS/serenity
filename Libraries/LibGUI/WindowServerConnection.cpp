@@ -342,7 +342,14 @@ void WindowServerConnection::handle(const Messages::WindowClient::WindowStateCha
 
 void WindowServerConnection::handle(const Messages::WindowClient::DisplayLinkNotification&)
 {
-    DisplayLink::notify({});
+    if (m_display_link_notification_pending)
+        return;
+
+    m_display_link_notification_pending = true;
+    deferred_invoke([this](auto&) {
+        DisplayLink::notify({});
+        m_display_link_notification_pending = false;
+    });
 }
 
 }
