@@ -188,6 +188,8 @@ void CanvasRenderingContext2D::put_image_data(const ImageData& image_data, float
         return;
 
     painter->blit(Gfx::Point(x, y), image_data.bitmap(), image_data.bitmap().rect());
+
+    did_draw(Gfx::FloatRect(x, y, image_data.width(), image_data.height()));
 }
 
 }
