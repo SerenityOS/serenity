@@ -75,6 +75,8 @@ private:
     virtual void handle(const Messages::WindowClient::UpdateSystemTheme&) override;
     virtual void handle(const Messages::WindowClient::WindowStateChanged&) override;
     virtual void handle(const Messages::WindowClient::DisplayLinkNotification&) override;
+
+    bool m_display_link_notification_pending { false };
 };
 
 }

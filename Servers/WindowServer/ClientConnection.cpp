@@ -88,6 +88,9 @@ ClientConnection::ClientConnection(Core::LocalSocket& client_socket, int client_
 
 ClientConnection::~ClientConnection()
 {
+    if (m_has_display_link)
+        Compositor::the().decrement_display_link_count({});
+
     MenuManager::the().close_all_menus_from_client({}, *this);
     auto windows = move(m_windows);
     for (auto& window : windows) {
@@ -772,12 +775,18 @@ OwnPtr<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrementResponse> Client
 
 void ClientConnection::handle(const Messages::WindowServer::EnableDisplayLink&)
 {
+    if (m_has_display_link)
+        return;
     m_has_display_link = true;
+    Compositor::the().increment_display_link_count({});
 }
 
 void ClientConnection::handle(const Messages::WindowServer::DisableDisplayLink&)
 {
+    if (!m_has_display_link)
+        return;
     m_has_display_link = false;
+    Compositor::the().decrement_display_link_count({});
 }
 
 void ClientConnection::notify_display_link(Badge<Compositor>)
