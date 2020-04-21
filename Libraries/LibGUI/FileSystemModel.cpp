@@ -60,6 +60,7 @@ bool FileSystemModel::Node::fetch_data(const String& full_path, bool is_root)
     else
         rc = lstat(full_path.characters(), &st);
     if (rc < 0) {
+        m_error = errno;
         perror("stat/lstat");
         return false;
     }
@@ -95,6 +96,7 @@ void FileSystemModel::Node::traverse_if_needed(const FileSystemModel& model)
     auto full_path = this->full_path(model);
     Core::DirIterator di(full_path, Core::DirIterator::SkipDots);
     if (di.has_error()) {
+        m_error = di.error();
         fprintf(stderr, "DirIterator: %s\n", di.error_string());
         return;
     }
@@ -288,11 +290,14 @@ static String permission_string(mode_t mode)
 void FileSystemModel::set_root_path(const StringView& root_path)
 {
     m_root_path = canonicalized_path(root_path);
-
-    if (on_root_path_change)
-        on_root_path_change();
-
     update();
+
+    if (m_root->has_error()) {
+        if (on_error)
+            on_error(m_root->error(), m_root->error_string());
+    } else if (on_complete) {
+        on_complete();
+    }
 }
 
 void FileSystemModel::update()
