@@ -477,6 +477,8 @@ void KeyboardDevice::key_state_changed(u8 raw, bool pressed)
     event.key = key;
     event.character = static_cast<u8>(character);
     event.flags = m_modifiers;
+    event.e0_prefix = m_has_e0_prefix;
+    event.scan_code = raw;
     if (pressed)
         event.flags |= Is_Press;
     if (m_client)
