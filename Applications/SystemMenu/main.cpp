@@ -185,6 +185,8 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
         quick_sort(g_themes, [](auto& a, auto& b) { return a.name < b.name; });
     }
 
+    auto current_theme_name = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::GetSystemTheme>()->theme_name();
+
     {
         int theme_identifier = 0;
         for (auto& theme : g_themes) {
@@ -194,6 +196,8 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
                 auto response = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetSystemTheme>(theme.path, theme.name);
                 ASSERT(response->success());
             });
+            if (theme.name == current_theme_name)
+                action->set_checked(true);
             g_themes_group.add_action(action);
             g_themes_menu->add_action(action);
             ++theme_identifier;

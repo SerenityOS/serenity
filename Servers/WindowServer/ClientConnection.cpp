@@ -730,6 +730,13 @@ OwnPtr<Messages::WindowServer::SetSystemThemeResponse> ClientConnection::handle(
     return make<Messages::WindowServer::SetSystemThemeResponse>(success);
 }
 
+OwnPtr<Messages::WindowServer::GetSystemThemeResponse> ClientConnection::handle(const Messages::WindowServer::GetSystemTheme&)
+{
+    auto wm_config = Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini");
+    auto name = wm_config->read_entry("Theme", "Name");
+    return make<Messages::WindowServer::GetSystemThemeResponse>(name);
+}
+
 void ClientConnection::boost()
 {
     // FIXME: Re-enable this when we have a solution for boosting.
