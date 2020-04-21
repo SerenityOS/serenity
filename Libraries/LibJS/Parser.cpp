@@ -249,6 +249,8 @@ NonnullRefPtr<Statement> Parser::parse_statement()
         return parse_switch_statement();
     case TokenType::Do:
         return parse_do_while_statement();
+    case TokenType::While:
+        return parse_while_statement();
     default:
         if (match_expression()) {
             auto expr = parse_expression(0);
@@ -845,6 +847,20 @@ NonnullRefPtr<DoWhileStatement> Parser::parse_do_while_statement()
     consume_or_insert_semicolon();
 
     return create_ast_node<DoWhileStatement>(move(test), move(body));
+}
+
+NonnullRefPtr<WhileStatement> Parser::parse_while_statement()
+{
+    consume(TokenType::While);
+    consume(TokenType::ParenOpen);
+
+    auto test = parse_expression(0);
+
+    consume(TokenType::ParenClose);
+
+    auto body = parse_statement();
+
+    return create_ast_node<WhileStatement>(move(test), move(body));
 }
 
 NonnullRefPtr<SwitchStatement> Parser::parse_switch_statement()
