@@ -108,10 +108,10 @@ JS::Value WindowObject::confirm(JS::Interpreter& interpreter)
     auto* impl = impl_from(interpreter);
     if (!impl)
         return {};
-    auto& arguments = interpreter.call_frame().arguments;
-    if (arguments.size() < 1)
-        return {};
-    return JS::Value(impl->confirm(arguments[0].to_string()));
+    String message = "";
+    if (interpreter.argument_count())
+        message = interpreter.argument(0).to_string();
+    return JS::Value(impl->confirm(message));
 }
 
 JS::Value WindowObject::set_interval(JS::Interpreter& interpreter)
