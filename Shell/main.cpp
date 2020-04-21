@@ -993,12 +993,13 @@ void load_history()
 
 void save_history()
 {
-    auto history_file = Core::File::open(get_history_path(), Core::IODevice::WriteOnly, 0600);
-    if (!history_file)
+    auto file_or_error = Core::File::open(get_history_path(), Core::IODevice::WriteOnly, 0600);
+    if (file_or_error.is_error())
         return;
+    auto& file = *file_or_error.value();
     for (const auto& line : editor.history()) {
-        history_file->write(line);
-        history_file->write("\n");
+        file.write(line);
+        file.write("\n");
     }
 }
 

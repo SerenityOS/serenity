@@ -33,11 +33,11 @@
 
 namespace Core {
 
-RefPtr<File> File::open(const String& filename, IODevice::OpenMode mode, mode_t permissions)
+Result<NonnullRefPtr<File>, String> File::open(const String& filename, IODevice::OpenMode mode, mode_t permissions)
 {
     auto file = File::construct(filename);
     if (!file->open_impl(mode, permissions))
-        return nullptr;
+        return String(file->error_string());
     return file;
 }
 

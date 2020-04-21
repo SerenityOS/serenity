@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Result.h>
 #include <AK/String.h>
 #include <LibCore/IODevice.h>
 
@@ -36,7 +37,7 @@ class File final : public IODevice {
 public:
     virtual ~File() override;
 
-    static RefPtr<File> open(const String& filename, IODevice::OpenMode, mode_t = 0644);
+    static Result<NonnullRefPtr<File>, String> open(const String& filename, IODevice::OpenMode, mode_t = 0644);
 
     String filename() const { return m_filename; }
     void set_filename(const StringView& filename) { m_filename = filename; }
