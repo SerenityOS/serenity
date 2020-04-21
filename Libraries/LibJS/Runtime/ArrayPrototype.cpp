@@ -55,6 +55,7 @@ ArrayPrototype::ArrayPrototype()
     put_native_function("slice", slice, 2);
     put_native_function("indexOf", index_of, 1);
     put_native_function("reverse", reverse, 0);
+    put_native_function("lastIndexOf", last_index_of, 1);
     put("length", Value(0));
 }
 
@@ -363,6 +364,40 @@ Value ArrayPrototype::reverse(Interpreter& interpreter)
     array->elements() = move(array_reverse);
 
     return array;
+}
+
+Value ArrayPrototype::last_index_of(Interpreter& interpreter)
+{
+    auto* array = array_from(interpreter);
+    if (!array)
+        return {};
+
+    i32 array_size = static_cast<i32>(array->elements().size());
+    if (interpreter.argument_count() == 0 || array_size == 0)
+        return Value(-1);
+
+    i32 from_index = 0;
+    if (interpreter.argument_count() >= 2) {
+        from_index = interpreter.argument(1).to_number().to_i32();
+
+        if (from_index >= array_size)
+            return Value(-1);
+
+        auto negative_min_index = ((array_size - 1) * -1);
+        if (from_index < negative_min_index)
+            from_index = 0;
+        else if (from_index < 0)
+            from_index = array_size + from_index;
+    }
+
+    auto search_element = interpreter.argument(0);
+    for (i32 i = array_size - 1; i >= from_index; --i) {
+        auto& element = array->elements().at(i);
+        if (typed_eq(interpreter, element, search_element).as_bool())
+            return Value(i);
+    }
+
+    return Value(-1);
 }
 
 }
