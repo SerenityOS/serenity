@@ -30,6 +30,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Action.h>
+#include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/Menu.h>
@@ -64,6 +65,7 @@ Color g_menu_selection_color;
 
 Vector<ThemeMetadata> g_themes;
 RefPtr<GUI::Menu> g_themes_menu;
+GUI::ActionGroup g_themes_group;
 
 static NonnullRefPtr<GUI::Menu> build_system_menu();
 
@@ -167,6 +169,8 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
 
     system_menu->add_separator();
 
+    g_themes_group.set_exclusive(true);
+    g_themes_group.set_unchecking_allowed(false);
     g_themes_menu = GUI::Menu::construct("Themes");
 
     system_menu->add_submenu(*g_themes_menu);
@@ -184,12 +188,14 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
     {
         int theme_identifier = 0;
         for (auto& theme : g_themes) {
-            g_themes_menu->add_action(GUI::Action::create(theme.name, [theme_identifier](auto&) {
+            auto action = GUI::Action::create_checkable(theme.name, [theme_identifier](auto&) {
                 auto& theme = g_themes[theme_identifier];
                 dbg() << "Theme switched to " << theme.name << " at path " << theme.path;
                 auto response = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetSystemTheme>(theme.path, theme.name);
                 ASSERT(response->success());
-            }));
+            });
+            g_themes_group.add_action(action);
+            g_themes_menu->add_action(action);
             ++theme_identifier;
         }
     }
