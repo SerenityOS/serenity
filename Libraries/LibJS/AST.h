@@ -341,6 +341,54 @@ private:
     NonnullRefPtr<Statement> m_body;
 };
 
+class ForInStatement : public Statement {
+public:
+    ForInStatement(NonnullRefPtr<ASTNode> lhs, NonnullRefPtr<Expression> rhs, NonnullRefPtr<Statement> body)
+        : m_lhs(move(lhs))
+        , m_rhs(move(rhs))
+        , m_body(move(body))
+    {
+    }
+
+    const ASTNode& lhs() const { return *m_lhs; }
+    const Expression& rhs() const { return *m_rhs; }
+    const Statement& body() const { return *m_body; }
+
+    virtual Value execute(Interpreter&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    virtual const char* class_name() const override { return "ForInStatement"; }
+
+    NonnullRefPtr<ASTNode> m_lhs;
+    NonnullRefPtr<Expression> m_rhs;
+    NonnullRefPtr<Statement> m_body;
+};
+
+class ForOfStatement : public Statement {
+public:
+    ForOfStatement(NonnullRefPtr<ASTNode> lhs, NonnullRefPtr<Expression> rhs, NonnullRefPtr<Statement> body)
+        : m_lhs(move(lhs))
+        , m_rhs(move(rhs))
+        , m_body(move(body))
+    {
+    }
+
+    const ASTNode& lhs() const { return *m_lhs; }
+    const Expression& rhs() const { return *m_rhs; }
+    const Statement& body() const { return *m_body; }
+
+    virtual Value execute(Interpreter&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    virtual const char* class_name() const override { return "ForOfStatement"; }
+
+    NonnullRefPtr<ASTNode> m_lhs;
+    NonnullRefPtr<Expression> m_rhs;
+    NonnullRefPtr<Statement> m_body;
+};
+
 enum class BinaryOp {
     Addition,
     Subtraction,
@@ -678,6 +726,11 @@ enum class DeclarationKind {
 
 class VariableDeclarator final : public ASTNode {
 public:
+    VariableDeclarator(NonnullRefPtr<Identifier> id)
+        : m_id(move(id))
+    {
+    }
+
     VariableDeclarator(NonnullRefPtr<Identifier> id, RefPtr<Expression> init)
         : m_id(move(id))
         , m_init(move(init))

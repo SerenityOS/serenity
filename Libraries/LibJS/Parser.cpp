@@ -592,8 +592,7 @@ NonnullRefPtr<StringLiteral> Parser::parse_string_literal(Token token)
         syntax_error(
             message,
             m_parser_state.m_current_token.line_number(),
-            m_parser_state.m_current_token.line_column()
-        );
+            m_parser_state.m_current_token.line_column());
     }
     return create_ast_node<StringLiteral>(string);
 }
@@ -651,14 +650,14 @@ NonnullRefPtr<TemplateLiteral> Parser::parse_template_literal(bool is_tagged)
     return create_ast_node<TemplateLiteral>(expressions);
 }
 
-NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associativity associativity)
+NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associativity associativity, Vector<TokenType> forbidden)
 {
     auto expression = parse_primary_expression();
     while (match(TokenType::TemplateLiteralStart)) {
         auto template_literal = parse_template_literal(true);
         expression = create_ast_node<TaggedTemplateLiteral>(move(expression), move(template_literal));
     }
-    while (match_secondary_expression()) {
+    while (match_secondary_expression(forbidden)) {
         int new_precedence = operator_precedence(m_parser_state.m_current_token.type());
         if (new_precedence < min_precedence)
             break;
@@ -974,7 +973,7 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(bool needs_function_
     return create_ast_node<FunctionNodeType>(name, move(body), move(parameters), function_length, NonnullRefPtrVector<VariableDeclaration>());
 }
 
-NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration()
+NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool with_semicolon)
 {
     DeclarationKind declaration_kind;
 
@@ -1010,10 +1009,11 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration()
         }
         break;
     }
-    consume_or_insert_semicolon();
+    if (with_semicolon)
+        consume_or_insert_semicolon();
 
     auto declaration = create_ast_node<VariableDeclaration>(declaration_kind, move(declarations));
-    if (declaration->declaration_kind() == DeclarationKind::Var)
+    if (declaration_kind == DeclarationKind::Var)
         m_parser_state.m_var_scopes.last().append(declaration);
     else
         m_parser_state.m_let_scopes.last().append(declaration);
@@ -1177,57 +1177,46 @@ NonnullRefPtr<IfStatement> Parser::parse_if_statement()
     return create_ast_node<IfStatement>(move(predicate), move(consequent), move(alternate));
 }
 
-NonnullRefPtr<ForStatement> Parser::parse_for_statement()
+NonnullRefPtr<Statement> Parser::parse_for_statement()
 {
+    auto match_for_in_of = [&]() {
+        return match(TokenType::In) || (match(TokenType::Identifier) && m_parser_state.m_current_token.value() == "of");
+    };
+
     consume(TokenType::For);
 
     consume(TokenType::ParenOpen);
 
-    bool first_semicolon_consumed = false;
     bool in_scope = false;
     RefPtr<ASTNode> init;
-    switch (m_parser_state.m_current_token.type()) {
-    case TokenType::Semicolon:
-        break;
-    default:
+    if (!match(TokenType::Semicolon)) {
         if (match_expression()) {
-            init = parse_expression(0);
+            init = parse_expression(0, Associativity::Right, { TokenType::In });
+            if (match_for_in_of())
+                return parse_for_in_of_statement(*init);
         } else if (match_variable_declaration()) {
-            if (m_parser_state.m_current_token.type() != TokenType::Var) {
+            if (!match(TokenType::Var)) {
                 m_parser_state.m_let_scopes.append(NonnullRefPtrVector<VariableDeclaration>());
                 in_scope = true;
             }
-
-            init = parse_variable_declaration();
-            first_semicolon_consumed = true;
+            init = parse_variable_declaration(false);
+            if (match_for_in_of())
+                return parse_for_in_of_statement(*init);
         } else {
             ASSERT_NOT_REACHED();
         }
-        break;
     }
-
-    if (!first_semicolon_consumed)
-        consume(TokenType::Semicolon);
+    consume(TokenType::Semicolon);
 
     RefPtr<Expression> test;
-    switch (m_parser_state.m_current_token.type()) {
-    case TokenType::Semicolon:
-        break;
-    default:
+    if (!match(TokenType::Semicolon))
         test = parse_expression(0);
-        break;
-    }
 
     consume(TokenType::Semicolon);
 
     RefPtr<Expression> update;
-    switch (m_parser_state.m_current_token.type()) {
-    case TokenType::ParenClose:
-        break;
-    default:
+    if (!match(TokenType::ParenClose))
         update = parse_expression(0);
-        break;
-    }
 
     consume(TokenType::ParenClose);
 
@@ -1238,6 +1227,28 @@ NonnullRefPtr<ForStatement> Parser::parse_for_statement()
     }
 
     return create_ast_node<ForStatement>(move(init), move(test), move(update), move(body));
+}
+
+NonnullRefPtr<Statement> Parser::parse_for_in_of_statement(NonnullRefPtr<ASTNode> lhs)
+{
+    if (lhs->is_variable_declaration()) {
+        auto declarations = static_cast<VariableDeclaration*>(lhs.ptr())->declarations();
+        if (declarations.size() > 1) {
+            syntax_error("multiple declarations not allowed in for..in/of");
+            lhs = create_ast_node<ErrorExpression>();
+        }
+        if (declarations.first().init() != nullptr) {
+            syntax_error("variable initializer not allowed in for..in/of");
+            lhs = create_ast_node<ErrorExpression>();
+        }
+    }
+    auto in_or_of = consume();
+    auto rhs = parse_expression(0);
+    consume(TokenType::ParenClose);
+    auto body = parse_statement();
+    if (in_or_of.type() == TokenType::In)
+        return create_ast_node<ForInStatement>(move(lhs), move(rhs), move(body));
+    return create_ast_node<ForOfStatement>(move(lhs), move(rhs), move(body));
 }
 
 NonnullRefPtr<DebuggerStatement> Parser::parse_debugger_statement()
@@ -1296,9 +1307,11 @@ bool Parser::match_unary_prefixed_expression() const
         || type == TokenType::Delete;
 }
 
-bool Parser::match_secondary_expression() const
+bool Parser::match_secondary_expression(Vector<TokenType> forbidden) const
 {
     auto type = m_parser_state.m_current_token.type();
+    if (forbidden.contains_slow(type))
+        return false;
     return type == TokenType::Plus
         || type == TokenType::PlusEquals
         || type == TokenType::Minus
@@ -1410,7 +1423,7 @@ void Parser::consume_or_insert_semicolon()
 
 Token Parser::consume(TokenType expected_type)
 {
-    if (m_parser_state.m_current_token.type() != expected_type) {
+    if (!match(expected_type)) {
         expected(Token::name(expected_type));
     }
     return consume();

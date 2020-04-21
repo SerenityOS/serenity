@@ -50,6 +50,13 @@ function assertThrowsError(testFunction, options) {
     }
 }
 
+const assertVisitsAll = (testFunction, expectedOutput) => {
+    const visited = [];
+    testFunction(value => visited.push(value));
+    assert(visited.length === expectedOutput.length);
+    expectedOutput.forEach((value, i) => assert(visited[i] === value));
+};
+
 /**
  * Check whether the difference between two numbers is less than 0.000001.
  * @param {Number} a First number
