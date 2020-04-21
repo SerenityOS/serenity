@@ -26,55 +26,36 @@
 
 #pragma once
 
+#include <LibGfx/Forward.h>
+#include <LibJS/Heap/Handle.h>
+#include <LibWeb/Bindings/Wrappable.h>
+
 namespace Web {
 
-class CanvasRenderingContext2D;
-class Document;
-class Element;
-class Event;
-class EventListener;
-class EventTarget;
-class Frame;
-class HTMLBodyElement;
-class HTMLCanvasElement;
-class HTMLElement;
-class HTMLHeadElement;
-class HTMLHtmlElement;
-class HTMLImageElement;
-class HtmlView;
-class ImageData;
-class LayoutDocument;
-class LayoutNode;
-class MouseEvent;
-class Node;
-class Origin;
-class Selector;
-class StyleResolver;
-class StyleRule;
-class StyleSheet;
-class Window;
-class XMLHttpRequest;
+class ImageData
+    : public RefCounted<ImageData>
+    , public Bindings::Wrappable {
+public:
+    using WrapperType = Bindings::ImageDataWrapper;
 
-namespace Bindings {
+    static RefPtr<ImageData> create_with_size(JS::GlobalObject&, int width, int height);
 
-class CanvasRenderingContext2DWrapper;
-class DocumentWrapper;
-class ElementWrapper;
-class EventWrapper;
-class EventListenerWrapper;
-class EventTargetWrapper;
-class HTMLCanvasElementWrapper;
-class HTMLImageElementWrapper;
-class ImageDataWrapper;
-class MouseEventWrapper;
-class NodeWrapper;
-class WindowObject;
-class Wrappable;
-class Wrapper;
-class XMLHttpRequestConstructor;
-class XMLHttpRequestPrototype;
-class XMLHttpRequestWrapper;
+    ~ImageData();
 
-}
+    int width() const;
+    int height() const;
+
+    Gfx::Bitmap& bitmap() { return m_bitmap; }
+    const Gfx::Bitmap& bitmap() const { return m_bitmap; }
+
+    JS::Uint8ClampedArray* data();
+    const JS::Uint8ClampedArray* data() const;
+
+private:
+    explicit ImageData(NonnullRefPtr<Gfx::Bitmap>, JS::Handle<JS::Uint8ClampedArray>);
+
+    NonnullRefPtr<Gfx::Bitmap> m_bitmap;
+    JS::Handle<JS::Uint8ClampedArray> m_data;
+};
 
 }

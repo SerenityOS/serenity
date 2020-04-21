@@ -59,6 +59,9 @@ private:
     static JS::Value move_to(JS::Interpreter&);
     static JS::Value line_to(JS::Interpreter&);
 
+    static JS::Value create_image_data(JS::Interpreter&);
+    static JS::Value put_image_data(JS::Interpreter&);
+
     NonnullRefPtr<CanvasRenderingContext2D> m_impl;
 };
 

@@ -24,57 +24,63 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <LibGfx/Bitmap.h>
+#include <LibJS/Runtime/Uint8ClampedArray.h>
+#include <LibWeb/DOM/ImageData.h>
 
 namespace Web {
 
-class CanvasRenderingContext2D;
-class Document;
-class Element;
-class Event;
-class EventListener;
-class EventTarget;
-class Frame;
-class HTMLBodyElement;
-class HTMLCanvasElement;
-class HTMLElement;
-class HTMLHeadElement;
-class HTMLHtmlElement;
-class HTMLImageElement;
-class HtmlView;
-class ImageData;
-class LayoutDocument;
-class LayoutNode;
-class MouseEvent;
-class Node;
-class Origin;
-class Selector;
-class StyleResolver;
-class StyleRule;
-class StyleSheet;
-class Window;
-class XMLHttpRequest;
+RefPtr<ImageData> ImageData::create_with_size(JS::GlobalObject& global_object, int width, int height)
+{
+    if (width <= 0 || height <= 0)
+        return nullptr;
 
-namespace Bindings {
+    if (width > 16384 || height > 16384)
+        return nullptr;
 
-class CanvasRenderingContext2DWrapper;
-class DocumentWrapper;
-class ElementWrapper;
-class EventWrapper;
-class EventListenerWrapper;
-class EventTargetWrapper;
-class HTMLCanvasElementWrapper;
-class HTMLImageElementWrapper;
-class ImageDataWrapper;
-class MouseEventWrapper;
-class NodeWrapper;
-class WindowObject;
-class Wrappable;
-class Wrapper;
-class XMLHttpRequestConstructor;
-class XMLHttpRequestPrototype;
-class XMLHttpRequestWrapper;
 
+    dbg() << "Creating ImageData with " << width << "x" << height;
+
+    auto* data = JS::Uint8ClampedArray::create(global_object, width * height * 4);
+    if (!data)
+        return nullptr;
+
+    auto data_handle = JS::make_handle(data);
+
+    auto bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::RGBA32, Gfx::Size(width, height), width * sizeof(u32), (u32*)data->data());
+    if (!bitmap)
+        return nullptr;
+    return adopt(*new ImageData(bitmap.release_nonnull(), move(data_handle)));
+}
+
+ImageData::ImageData(NonnullRefPtr<Gfx::Bitmap> bitmap, JS::Handle<JS::Uint8ClampedArray> data)
+    : m_bitmap(move(bitmap))
+    , m_data(move(data))
+{
+}
+
+ImageData::~ImageData()
+{
+}
+
+int ImageData::width() const
+{
+    return m_bitmap->width();
+}
+
+int ImageData::height() const
+{
+    return m_bitmap->height();
+}
+
+JS::Uint8ClampedArray* ImageData::data()
+{
+    return m_data.cell();
+}
+
+const JS::Uint8ClampedArray* ImageData::data() const
+{
+    return m_data.cell();
 }
 
 }
