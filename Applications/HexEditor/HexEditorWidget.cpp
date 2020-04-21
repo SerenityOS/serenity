@@ -132,7 +132,7 @@ HexEditorWidget::HexEditorWidget()
         dbg() << "Wrote document to " << save_path.value();
     });
 
-    auto menubar = make<GUI::MenuBar>();
+    auto menubar = GUI::MenuBar::construct();
     auto& app_menu = menubar->add_menu("Hex Editor");
     app_menu.add_action(*m_new_action);
     app_menu.add_action(*m_open_action);

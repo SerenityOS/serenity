@@ -64,7 +64,7 @@ int main(int argc, char** argv)
     window->set_rect(300, 300, 350, 140);
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-sound-player.png"));
 
-    auto menubar = make<GUI::MenuBar>();
+    auto menubar = GUI::MenuBar::construct();
     auto& app_menu = menubar->add_menu("SoundPlayer");
     auto& player = window->set_main_widget<SoundPlayerWidget>(window, audio_client);
 

@@ -80,7 +80,7 @@ int main(int argc, char** argv)
         window->resize(size);
     });
 
-    auto menubar = make<GUI::MenuBar>();
+    auto menubar = GUI::MenuBar::construct();
 
     auto& app_menu = menubar->add_menu("Minesweeper");
 

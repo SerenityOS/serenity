@@ -92,7 +92,7 @@ int main(int argc, char** argv)
 
     window->show();
 
-    auto menubar = make<GUI::MenuBar>();
+    auto menubar = GUI::MenuBar::construct();
 
     auto& app_menu = menubar->add_menu("ChanViewer");
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {

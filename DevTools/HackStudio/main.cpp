@@ -491,7 +491,7 @@ int main(int argc, char** argv)
         locator.open();
     });
 
-    auto menubar = make<GUI::MenuBar>();
+    auto menubar = GUI::MenuBar::construct();
     auto& app_menu = menubar->add_menu("HackStudio");
     app_menu.add_action(open_action);
     app_menu.add_action(save_action);

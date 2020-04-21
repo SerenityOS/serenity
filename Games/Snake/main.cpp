@@ -57,7 +57,7 @@ int main(int argc, char** argv)
 
     auto& game = window->set_main_widget<SnakeGame>();
 
-    auto menubar = make<GUI::MenuBar>();
+    auto menubar = GUI::MenuBar::construct();
 
     auto& app_menu = menubar->add_menu("Snake");
 

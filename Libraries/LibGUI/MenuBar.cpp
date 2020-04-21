@@ -43,14 +43,9 @@ MenuBar::~MenuBar()
 
 Menu& MenuBar::add_menu(String name)
 {
-    auto menu = Menu::construct(move(name));
-    append_menu(menu);
-    return *menu;
-}
-
-void MenuBar::append_menu(NonnullRefPtr<Menu> menu)
-{
-    m_menus.append(move(menu));
+    auto& menu = add<Menu>(move(name));
+    m_menus.append(menu);
+    return menu;
 }
 
 int MenuBar::realize_menubar()

@@ -80,7 +80,7 @@ int main(int argc, char** argv)
         disassembly_view.set_model(profile->disassembly_model());
     };
 
-    auto menubar = make<GUI::MenuBar>();
+    auto menubar = GUI::MenuBar::construct();
     auto& app_menu = menubar->add_menu("ProfileViewer");
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app.quit(); }));
 

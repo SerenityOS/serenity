@@ -79,7 +79,7 @@ void Application::quit(int exit_code)
     m_event_loop->quit(exit_code);
 }
 
-void Application::set_menubar(OwnPtr<MenuBar>&& menubar)
+void Application::set_menubar(RefPtr<MenuBar> menubar)
 {
     if (m_menubar)
         m_menubar->notify_removed_from_application({});
