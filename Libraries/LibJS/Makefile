@@ -43,6 +43,7 @@ OBJS = \
     Runtime/StringConstructor.o \
     Runtime/StringObject.o \
     Runtime/StringPrototype.o \
+    Runtime/Uint8ClampedArray.o \
     Runtime/Value.o \
     Token.o
 
