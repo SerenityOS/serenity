@@ -32,10 +32,23 @@
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Heap.h>
+#include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Exception.h>
 #include <LibJS/Runtime/LexicalEnvironment.h>
 #include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/Value.h>
+
+#define STOP_EXECUTION_IF_NEEDED(interpreter, value_if_yield) \
+    if (interpreter.should_stop_execution()) {                \
+        switch (interpreter.stop_reason()) {                  \
+        case ExecutionStopReason::Yield:                      \
+            return value_if_yield;                            \
+        case ExecutionStopReason::Exception:                  \
+            return {};                                        \
+        default:                                              \
+            ASSERT_NOT_REACHED();                             \
+        }                                                     \
+    }
 
 namespace JS {
 
@@ -46,6 +59,12 @@ enum class ScopeType {
     Try,
     Breakable,
     Continuable,
+};
+
+enum class ExecutionStopReason {
+    None,
+    Exception,
+    Yield,
 };
 
 struct ScopeFrame {
@@ -82,6 +101,7 @@ public:
     ~Interpreter();
 
     Value run(const Statement&, ArgumentVector = {}, ScopeType = ScopeType::Block);
+    Value destructive_run(Statement&, ArgumentVector = {}, ScopeType = ScopeType::Block);
 
     GlobalObject& global_object();
     const GlobalObject& global_object() const;
@@ -93,6 +113,8 @@ public:
     bool should_unwind_until(ScopeType type) const { return m_unwind_until == type; }
     bool should_unwind() const { return m_unwind_until != ScopeType::None; }
 
+    ScopeType scope_type() const { return m_scope_stack.size() ? m_scope_stack.last().type : ScopeType::None; }
+
     Optional<Value> get_variable(const FlyString& name);
     void set_variable(const FlyString& name, Value, bool first_assignment = false);
 
@@ -102,6 +124,8 @@ public:
     void exit_scope(const ScopeNode&);
 
     Value call(Function*, Value this_value = {}, Optional<MarkedValueList> arguments = {});
+    bool has_returned() const { return m_returned; }
+    void did_return() { m_returned = true; }
 
     CallFrame& push_call_frame()
     {
@@ -140,6 +164,10 @@ public:
         return m_call_stack.last().this_value;
     }
 
+    ExecutionStopReason stop_reason() const { return m_execution_stop_reason; }
+    bool should_stop_execution() const { return m_execution_stop_reason != ExecutionStopReason::None; }
+    void stop_execution(ExecutionStopReason reason) { m_execution_stop_reason = reason; }
+
     Exception* exception()
     {
         return m_exception;
@@ -175,6 +203,9 @@ private:
     Exception* m_exception { nullptr };
 
     ScopeType m_unwind_until { ScopeType::None };
+
+    ExecutionStopReason m_execution_stop_reason { ExecutionStopReason::None };
+    bool m_returned { false };
 };
 
 }

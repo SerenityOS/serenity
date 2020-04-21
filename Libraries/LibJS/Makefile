@@ -26,6 +26,8 @@ OBJS = \
     Runtime/FunctionConstructor.o \
     Runtime/FunctionPrototype.o \
     Runtime/GlobalObject.o \
+    Runtime/GeneratorFunction.o \
+    Runtime/Iterator.o \
     Runtime/LexicalEnvironment.o \
     Runtime/MathObject.o \
     Runtime/MarkedValueList.o \

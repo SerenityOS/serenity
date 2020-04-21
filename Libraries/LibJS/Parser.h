@@ -72,6 +72,7 @@ public:
     NonnullRefPtr<CallExpression> parse_call_expression(NonnullRefPtr<Expression>);
     NonnullRefPtr<NewExpression> parse_new_expression();
     RefPtr<FunctionExpression> try_parse_arrow_function_expression(bool expect_parens);
+    NonnullRefPtr<YieldExpression> parse_yield_expression();
 
     bool has_errors() const { return m_parser_state.m_lexer.has_errors() || m_parser_state.m_has_errors; }
 

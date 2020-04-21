@@ -40,6 +40,35 @@ namespace JS {
 
 class VariableDeclaration;
 
+template<class T>
+class DestructiveIterator {
+public:
+    DestructiveIterator(T& it)
+        : m_iterator(it)
+    {
+    }
+
+    static constexpr struct EndType {
+    } End {};
+
+    DestructiveIterator& begin() { return *this; }
+    auto end() const { return End; }
+
+    bool operator==(EndType) const { return m_iterator.size() == 0; }
+    bool operator!=(EndType) const { return m_iterator.size() != 0; }
+
+    DestructiveIterator& operator++()
+    {
+        m_iterator.take_first();
+        return *this;
+    }
+
+    auto& operator*() const { return m_iterator.first(); }
+
+private:
+    T& m_iterator;
+};
+
 template<class T, class... Args>
 static inline NonnullRefPtr<T>
 create_ast_node(Args&&... args)
@@ -105,6 +134,7 @@ public:
     }
 
     const NonnullRefPtrVector<Statement>& children() const { return m_children; }
+    DestructiveIterator<NonnullRefPtrVector<Statement>> destructive_children() { return DestructiveIterator(m_children); }
     virtual Value execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
 
@@ -150,23 +180,26 @@ public:
     const Vector<FlyString>& parameters() const { return m_parameters; };
 
 protected:
-    FunctionNode(const FlyString& name, NonnullRefPtr<Statement> body, Vector<FlyString> parameters, NonnullRefPtrVector<VariableDeclaration> variables)
+    FunctionNode(const FlyString& name, NonnullRefPtr<Statement> body, Vector<FlyString> parameters, NonnullRefPtrVector<VariableDeclaration> variables, bool generator = false)
         : m_name(name)
         , m_body(move(body))
         , m_parameters(move(parameters))
         , m_variables(move(variables))
+        , m_generator(generator)
     {
     }
 
     void dump(int indent, const char* class_name) const;
 
     const NonnullRefPtrVector<VariableDeclaration>& variables() const { return m_variables; }
+    bool generator() const { return m_generator; }
 
 private:
     FlyString m_name;
     NonnullRefPtr<Statement> m_body;
     const Vector<FlyString> m_parameters;
     NonnullRefPtrVector<VariableDeclaration> m_variables;
+    bool m_generator { false };
 };
 
 class FunctionDeclaration final
@@ -175,8 +208,8 @@ class FunctionDeclaration final
 public:
     static bool must_have_name() { return true; }
 
-    FunctionDeclaration(const FlyString& name, NonnullRefPtr<Statement> body, Vector<FlyString> parameters, NonnullRefPtrVector<VariableDeclaration> variables)
-        : FunctionNode(name, move(body), move(parameters), move(variables))
+    FunctionDeclaration(const FlyString& name, NonnullRefPtr<Statement> body, Vector<FlyString> parameters, NonnullRefPtrVector<VariableDeclaration> variables, bool generator = false)
+        : FunctionNode(name, move(body), move(parameters), move(variables), generator)
     {
     }
 
@@ -192,8 +225,8 @@ class FunctionExpression final : public Expression
 public:
     static bool must_have_name() { return false; }
 
-    FunctionExpression(const FlyString& name, NonnullRefPtr<Statement> body, Vector<FlyString> parameters, NonnullRefPtrVector<VariableDeclaration> variables)
-        : FunctionNode(name, move(body), move(parameters), move(variables))
+    FunctionExpression(const FlyString& name, NonnullRefPtr<Statement> body, Vector<FlyString> parameters, NonnullRefPtrVector<VariableDeclaration> variables, bool generator = false)
+        : FunctionNode(name, move(body), move(parameters), move(variables), generator)
     {
     }
 
@@ -202,6 +235,24 @@ public:
 
 private:
     virtual const char* class_name() const override { return "FunctionExpression"; }
+};
+
+class YieldExpression final : public Expression {
+public:
+    YieldExpression(bool delegate, RefPtr<Expression> argument)
+        : m_delegate(delegate)
+        , m_argument(move(argument))
+    {
+    }
+
+    virtual Value execute(Interpreter&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    virtual const char* class_name() const override { return "YieldExpression"; }
+    bool m_delegate { false };
+    RefPtr<Expression> m_argument;
+    size_t m_executed_count { 0 };
 };
 
 class ErrorExpression final : public Expression {

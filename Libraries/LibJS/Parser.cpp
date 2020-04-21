@@ -387,6 +387,8 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
         return parse_array_expression();
     case TokenType::New:
         return parse_new_expression();
+    case TokenType::Yield:
+        return parse_yield_expression();
     default:
         m_parser_state.m_has_errors = true;
         expected("primary expression (missing switch case)");
@@ -659,6 +661,36 @@ NonnullRefPtr<NewExpression> Parser::parse_new_expression()
     return create_ast_node<NewExpression>(move(callee), move(arguments));
 }
 
+NonnullRefPtr<YieldExpression> Parser::parse_yield_expression()
+{
+    consume(TokenType::Yield);
+    auto yield_from { false };
+
+    if (match(TokenType::Asterisk)) {
+        yield_from = true;
+        consume();
+    }
+
+    if (m_parser_state.m_current_token.trivia().contains('\n')) {
+        if (yield_from) {
+            // This is invalid
+            expected("Delegate generator");
+        }
+        return create_ast_node<YieldExpression>(yield_from, nullptr);
+    }
+
+    if (match_expression()) {
+        auto expression = parse_expression(0);
+        return create_ast_node<YieldExpression>(yield_from, move(expression));
+    }
+
+    if (yield_from) {
+        // This is invalid
+        expected("Delegate generator");
+    }
+    return create_ast_node<YieldExpression>(yield_from, nullptr);
+}
+
 NonnullRefPtr<ReturnStatement> Parser::parse_return_statement()
 {
     consume(TokenType::Return);
@@ -703,6 +735,13 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node()
     ScopePusher scope(*this, ScopePusher::Var);
 
     consume(TokenType::Function);
+    bool generator { false };
+
+    if (match(TokenType::Asterisk)) {
+        generator = true;
+        consume();
+    }
+
     String name;
     if (FunctionNodeType::must_have_name()) {
         name = consume(TokenType::Identifier).value();
@@ -723,7 +762,7 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node()
     consume(TokenType::ParenClose);
     auto body = parse_block_statement();
     body->add_variables(m_parser_state.m_var_scopes.last());
-    return create_ast_node<FunctionNodeType>(name, move(body), move(parameters), NonnullRefPtrVector<VariableDeclaration>());
+    return create_ast_node<FunctionNodeType>(name, move(body), move(parameters), NonnullRefPtrVector<VariableDeclaration>(), generator);
 }
 
 NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration()
@@ -1013,6 +1052,7 @@ bool Parser::match_expression() const
         || type == TokenType::BracketOpen
         || type == TokenType::ParenOpen
         || type == TokenType::Function
+        || type == TokenType::Yield
         || type == TokenType::This
         || match_unary_prefixed_expression();
 }

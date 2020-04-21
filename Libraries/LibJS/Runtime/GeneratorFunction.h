@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, The SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,38 +26,31 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/ScriptFunction.h>
 
 namespace JS {
 
-class ScriptFunction : public Function {
+class GeneratorFunction final : public ScriptFunction {
 public:
-    static ScriptFunction* create(GlobalObject&, const FlyString& name, const Statement& body, Vector<FlyString> parameters, LexicalEnvironment* parent_environment);
+    static GeneratorFunction* create(GlobalObject&, const FlyString& name, const Statement& body, Vector<FlyString> parameters, LexicalEnvironment* parent_environment, LexicalEnvironment* own_environment = nullptr);
 
-    ScriptFunction(const FlyString& name, const Statement& body, Vector<FlyString> parameters, LexicalEnvironment* parent_environment, Object& prototype);
-    virtual ~ScriptFunction();
-
-    const Statement& body() const { return m_body; }
-    const Vector<FlyString>& parameters() const { return m_parameters; };
+    GeneratorFunction(const FlyString& name, const Statement& body, Vector<FlyString> parameters, LexicalEnvironment* parent_environment, Object& prototype, LexicalEnvironment* own_environment);
+    virtual ~GeneratorFunction();
 
     virtual Value call(Interpreter&) override;
     virtual Value construct(Interpreter&) override;
 
-    virtual const FlyString& name() const override { return m_name; };
-
-protected:
-    virtual bool is_script_function() const final { return true; }
-    virtual const char* class_name() const override { return "ScriptFunction"; }
+private:
+    virtual bool is_generator_function() const final { return true; }
+    virtual const char* class_name() const override { return "GeneratorFunction"; }
     virtual LexicalEnvironment* create_environment() override;
     virtual void visit_children(Visitor&) override;
 
-    static Value length_getter(Interpreter&);
-    static void length_setter(Interpreter&, Value);
+    static Value iterator_method(Interpreter&);
+    static Value next(Interpreter&);
 
-    FlyString m_name;
-    NonnullRefPtr<Statement> m_body;
-    const Vector<FlyString> m_parameters;
-    LexicalEnvironment* m_parent_environment { nullptr };
+    bool m_done { false };
+    LexicalEnvironment* m_own_environment { nullptr };
 };
 
 }

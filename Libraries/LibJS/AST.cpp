@@ -32,6 +32,7 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/GeneratorFunction.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/NativeFunction.h>
@@ -49,14 +50,14 @@ Value ScopeNode::execute(Interpreter& interpreter) const
 
 Value FunctionDeclaration::execute(Interpreter& interpreter) const
 {
-    auto* function = ScriptFunction::create(interpreter.global_object(), name(), body(), parameters(), interpreter.current_environment());
+    auto* function = generator() ? GeneratorFunction::create(interpreter.global_object(), name(), body(), parameters(), interpreter.current_environment()) : ScriptFunction::create(interpreter.global_object(), name(), body(), parameters(), interpreter.current_environment());
     interpreter.set_variable(name(), function);
     return js_undefined();
 }
 
 Value FunctionExpression::execute(Interpreter& interpreter) const
 {
-    return ScriptFunction::create(interpreter.global_object(), name(), body(), parameters(), interpreter.current_environment());
+    return generator() ? GeneratorFunction::create(interpreter.global_object(), name(), body(), parameters(), interpreter.current_environment()) : ScriptFunction::create(interpreter.global_object(), name(), body(), parameters(), interpreter.current_environment());
 }
 
 Value ExpressionStatement::execute(Interpreter& interpreter) const
@@ -74,11 +75,13 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
     if (m_callee->is_member_expression()) {
         auto& member_expression = static_cast<const MemberExpression&>(*m_callee);
         auto object_value = member_expression.object().execute(interpreter);
-        if (interpreter.exception())
-            return {};
+
+        STOP_EXECUTION_IF_NEEDED(interpreter, (ThisAndCallee { js_undefined(), object_value }));
+
         auto* this_value = object_value.to_object(interpreter.heap());
-        if (interpreter.exception())
-            return {};
+
+        STOP_EXECUTION_IF_NEEDED(interpreter, (ThisAndCallee { js_undefined(), this_value }));
+
         auto callee = this_value->get(member_expression.computed_property_name(interpreter)).value_or(js_undefined());
         return { this_value, callee };
     }
@@ -88,8 +91,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
 Value CallExpression::execute(Interpreter& interpreter) const
 {
     auto [this_value, callee] = compute_this_and_callee(interpreter);
-    if (interpreter.exception())
-        return {};
+    STOP_EXECUTION_IF_NEEDED(interpreter, callee);
 
     ASSERT(!callee.is_empty());
 
@@ -118,11 +120,12 @@ Value CallExpression::execute(Interpreter& interpreter) const
 
     for (size_t i = 0; i < m_arguments.size(); ++i) {
         auto value = m_arguments[i].execute(interpreter);
-        if (interpreter.exception())
-            return {};
+
+        STOP_EXECUTION_IF_NEEDED(interpreter, value);
+
         arguments.append(value);
-        if (interpreter.exception())
-            return {};
+
+        STOP_EXECUTION_IF_NEEDED(interpreter, {});
     }
 
     auto& call_frame = interpreter.push_call_frame();
@@ -146,8 +149,7 @@ Value CallExpression::execute(Interpreter& interpreter) const
 
     interpreter.pop_call_frame();
 
-    if (interpreter.exception())
-        return {};
+    STOP_EXECUTION_IF_NEEDED(interpreter, {});
 
     if (is_new_expression()) {
         if (result.is_object())
@@ -157,20 +159,48 @@ Value CallExpression::execute(Interpreter& interpreter) const
     return result;
 }
 
+Value YieldExpression::execute(Interpreter& interpreter) const
+{
+    if (m_delegate) {
+        dbg() << "fixme: delegate";
+        ASSERT_NOT_REACHED();
+    }
+
+    // I'm SORRY
+    ++const_cast<YieldExpression*>(this)->m_executed_count;
+
+    if (m_executed_count % 2 == 0) {
+        // Have the expression evaluate to the argument
+        const auto& arguments = interpreter.call_frame().arguments;
+        if (arguments.size())
+            return arguments.first();
+
+        return js_undefined();
+    }
+
+    auto value = m_argument ? m_argument->execute(interpreter) : js_undefined();
+    interpreter.stop_execution(ExecutionStopReason::Yield);
+    // act like a "return"
+    interpreter.unwind(ScopeType::Function);
+    return value;
+}
+
 Value ReturnStatement::execute(Interpreter& interpreter) const
 {
     auto value = argument() ? argument()->execute(interpreter) : js_undefined();
-    if (interpreter.exception())
-        return {};
+
+    STOP_EXECUTION_IF_NEEDED(interpreter, value);
+
     interpreter.unwind(ScopeType::Function);
+    interpreter.did_return();
     return value;
 }
 
 Value IfStatement::execute(Interpreter& interpreter) const
 {
     auto predicate_result = m_predicate->execute(interpreter);
-    if (interpreter.exception())
-        return {};
+
+    STOP_EXECUTION_IF_NEEDED(interpreter, predicate_result);
 
     if (predicate_result.to_boolean())
         return interpreter.run(*m_consequent);
@@ -184,12 +214,13 @@ Value IfStatement::execute(Interpreter& interpreter) const
 Value WhileStatement::execute(Interpreter& interpreter) const
 {
     Value last_value = js_undefined();
-    while (m_test->execute(interpreter).to_boolean()) {
-        if (interpreter.exception())
-            return {};
+    while (auto test_value = m_test->execute(interpreter).to_boolean()) {
+
+        STOP_EXECUTION_IF_NEEDED(interpreter, Value(test_value));
+
         last_value = interpreter.run(*m_body);
-        if (interpreter.exception())
-            return {};
+
+        STOP_EXECUTION_IF_NEEDED(interpreter, last_value);
     }
 
     return last_value;
@@ -198,13 +229,15 @@ Value WhileStatement::execute(Interpreter& interpreter) const
 Value DoWhileStatement::execute(Interpreter& interpreter) const
 {
     Value last_value = js_undefined();
+    bool test_value { false };
     do {
-        if (interpreter.exception())
-            return {};
+        STOP_EXECUTION_IF_NEEDED(interpreter, Value(test_value));
+
         last_value = interpreter.run(*m_body);
-        if (interpreter.exception())
-            return {};
-    } while (m_test->execute(interpreter).to_boolean());
+
+        STOP_EXECUTION_IF_NEEDED(interpreter, last_value);
+
+    } while ((test_value = m_test->execute(interpreter).to_boolean()));
 
     return last_value;
 }
@@ -226,18 +259,18 @@ Value ForStatement::execute(Interpreter& interpreter) const
     Value last_value = js_undefined();
 
     if (m_init) {
-        m_init->execute(interpreter);
-        if (interpreter.exception())
-            return {};
+        auto value = m_init->execute(interpreter);
+        STOP_EXECUTION_IF_NEEDED(interpreter, value);
     }
 
     if (m_test) {
-        while (m_test->execute(interpreter).to_boolean()) {
-            if (interpreter.exception())
-                return {};
+        while (auto test_value = m_test->execute(interpreter).to_boolean()) {
+            STOP_EXECUTION_IF_NEEDED(interpreter, Value(test_value));
+
             last_value = interpreter.run(*m_body);
-            if (interpreter.exception())
-                return {};
+
+            STOP_EXECUTION_IF_NEEDED(interpreter, last_value);
+
             if (interpreter.should_unwind()) {
                 if (interpreter.should_unwind_until(ScopeType::Continuable)) {
                     interpreter.stop_unwind();
@@ -249,16 +282,17 @@ Value ForStatement::execute(Interpreter& interpreter) const
                 }
             }
             if (m_update) {
-                m_update->execute(interpreter);
-                if (interpreter.exception())
-                    return {};
+                auto value = m_update->execute(interpreter);
+
+                STOP_EXECUTION_IF_NEEDED(interpreter, value);
             }
         }
     } else {
         while (true) {
             last_value = interpreter.run(*m_body);
-            if (interpreter.exception())
-                return {};
+
+            STOP_EXECUTION_IF_NEEDED(interpreter, last_value);
+
             if (interpreter.should_unwind()) {
                 if (interpreter.should_unwind_until(ScopeType::Continuable)) {
                     interpreter.stop_unwind();
@@ -270,9 +304,9 @@ Value ForStatement::execute(Interpreter& interpreter) const
                 }
             }
             if (m_update) {
-                m_update->execute(interpreter);
-                if (interpreter.exception())
-                    return {};
+                auto value = m_update->execute(interpreter);
+
+                STOP_EXECUTION_IF_NEEDED(interpreter, value);
             }
         }
     }
@@ -283,11 +317,12 @@ Value ForStatement::execute(Interpreter& interpreter) const
 Value BinaryExpression::execute(Interpreter& interpreter) const
 {
     auto lhs_result = m_lhs->execute(interpreter);
-    if (interpreter.exception())
-        return {};
+
+    STOP_EXECUTION_IF_NEEDED(interpreter, lhs_result);
+
     auto rhs_result = m_rhs->execute(interpreter);
-    if (interpreter.exception())
-        return {};
+
+    STOP_EXECUTION_IF_NEEDED(interpreter, rhs_result);
 
     switch (m_op) {
     case BinaryOp::Addition:
@@ -338,15 +373,14 @@ Value BinaryExpression::execute(Interpreter& interpreter) const
 Value LogicalExpression::execute(Interpreter& interpreter) const
 {
     auto lhs_result = m_lhs->execute(interpreter);
-    if (interpreter.exception())
-        return {};
+
+    STOP_EXECUTION_IF_NEEDED(interpreter, lhs_result);
 
     switch (m_op) {
     case LogicalOp::And:
         if (lhs_result.to_boolean()) {
             auto rhs_result = m_rhs->execute(interpreter);
-            if (interpreter.exception())
-                return {};
+            STOP_EXECUTION_IF_NEEDED(interpreter, rhs_result);
             return rhs_result;
         }
         return lhs_result;
@@ -354,15 +388,13 @@ Value LogicalExpression::execute(Interpreter& interpreter) const
         if (lhs_result.to_boolean())
             return lhs_result;
         auto rhs_result = m_rhs->execute(interpreter);
-        if (interpreter.exception())
-            return {};
+        STOP_EXECUTION_IF_NEEDED(interpreter, rhs_result);
         return rhs_result;
     }
     case LogicalOp::NullishCoalescing:
         if (lhs_result.is_null() || lhs_result.is_undefined()) {
             auto rhs_result = m_rhs->execute(interpreter);
-            if (interpreter.exception())
-                return {};
+            STOP_EXECUTION_IF_NEEDED(interpreter, rhs_result);
             return rhs_result;
         }
         return lhs_result;
@@ -374,8 +406,7 @@ Value LogicalExpression::execute(Interpreter& interpreter) const
 Value UnaryExpression::execute(Interpreter& interpreter) const
 {
     auto lhs_result = m_lhs->execute(interpreter);
-    if (interpreter.exception())
-        return {};
+    STOP_EXECUTION_IF_NEEDED(interpreter, lhs_result);
     switch (m_op) {
     case UnaryOp::BitwiseNot:
         return bitwise_not(interpreter, lhs_result);
@@ -582,6 +613,13 @@ void CallExpression::dump(int indent) const
         argument.dump(indent + 1);
 }
 
+void YieldExpression::dump(int indent) const
+{
+    print_indent(indent);
+    printf("YieldExpression %s\n", m_delegate ? "[delegated]" : "");
+    m_argument->dump(indent + 1);
+}
+
 void StringLiteral::dump(int indent) const
 {
     print_indent(indent);
@@ -612,7 +650,7 @@ void FunctionNode::dump(int indent, const char* class_name) const
     parameters_builder.join(',', parameters());
 
     print_indent(indent);
-    printf("%s '%s(%s)'\n", class_name, name().characters(), parameters_builder.build().characters());
+    printf("%s %s'%s(%s)'\n", class_name, m_generator ? "[generator] " : "", name().characters(), parameters_builder.build().characters());
     if (!m_variables.is_empty()) {
         print_indent(indent + 1);
         printf("(Variables)\n");
@@ -718,8 +756,8 @@ void ThisExpression::dump(int indent) const
 Value AssignmentExpression::execute(Interpreter& interpreter) const
 {
     auto rhs_result = m_rhs->execute(interpreter);
-    if (interpreter.exception())
-        return {};
+
+    STOP_EXECUTION_IF_NEEDED(interpreter, rhs_result);
 
     Value lhs_result;
     switch (m_op) {
@@ -727,39 +765,35 @@ Value AssignmentExpression::execute(Interpreter& interpreter) const
         break;
     case AssignmentOp::AdditionAssignment:
         lhs_result = m_lhs->execute(interpreter);
-        if (interpreter.exception())
-            return {};
+        STOP_EXECUTION_IF_NEEDED(interpreter, lhs_result);
         rhs_result = add(interpreter, lhs_result, rhs_result);
         break;
     case AssignmentOp::SubtractionAssignment:
         lhs_result = m_lhs->execute(interpreter);
-        if (interpreter.exception())
-            return {};
+        STOP_EXECUTION_IF_NEEDED(interpreter, lhs_result);
         rhs_result = sub(interpreter, lhs_result, rhs_result);
         break;
     case AssignmentOp::MultiplicationAssignment:
         lhs_result = m_lhs->execute(interpreter);
-        if (interpreter.exception())
-            return {};
+        STOP_EXECUTION_IF_NEEDED(interpreter, lhs_result);
         rhs_result = mul(interpreter, lhs_result, rhs_result);
         break;
     case AssignmentOp::DivisionAssignment:
         lhs_result = m_lhs->execute(interpreter);
-        if (interpreter.exception())
-            return {};
+        STOP_EXECUTION_IF_NEEDED(interpreter, lhs_result);
         rhs_result = div(interpreter, lhs_result, rhs_result);
         break;
     }
-    if (interpreter.exception())
-        return {};
+    STOP_EXECUTION_IF_NEEDED(interpreter, rhs_result);
 
     if (m_lhs->is_identifier()) {
         auto name = static_cast<const Identifier&>(*m_lhs).string();
         interpreter.set_variable(name, rhs_result);
     } else if (m_lhs->is_member_expression()) {
         auto object_value = static_cast<const MemberExpression&>(*m_lhs).object().execute(interpreter);
-        if (interpreter.exception())
-            return {};
+
+        STOP_EXECUTION_IF_NEEDED(interpreter, object_value);
+
         if (auto* object = object_value.to_object(interpreter.heap())) {
             auto property_name = static_cast<const MemberExpression&>(*m_lhs).computed_property_name(interpreter);
             object->put(property_name, rhs_result);
@@ -776,8 +810,9 @@ Value UpdateExpression::execute(Interpreter& interpreter) const
     ASSERT(m_argument->is_identifier());
     auto name = static_cast<const Identifier&>(*m_argument).string();
     auto old_value = m_argument->execute(interpreter);
-    if (interpreter.exception())
-        return {};
+
+    STOP_EXECUTION_IF_NEEDED(interpreter, old_value);
+
     old_value = old_value.to_number();
 
     int op_result = 0;
@@ -853,8 +888,7 @@ Value VariableDeclaration::execute(Interpreter& interpreter) const
     for (auto& declarator : m_declarations) {
         if (auto* init = declarator.init()) {
             auto initalizer_result = init->execute(interpreter);
-            if (interpreter.exception())
-                return {};
+            STOP_EXECUTION_IF_NEEDED(interpreter, initalizer_result);
             interpreter.set_variable(declarator.id().string(), initalizer_result, true);
         }
     }
@@ -919,8 +953,7 @@ Value ObjectExpression::execute(Interpreter& interpreter) const
     auto* object = Object::create_empty(interpreter, interpreter.global_object());
     for (auto it : m_properties) {
         auto value = it.value->execute(interpreter);
-        if (interpreter.exception())
-            return {};
+        STOP_EXECUTION_IF_NEEDED(interpreter, value);
         object->put(it.key, value);
     }
     return object;
@@ -941,8 +974,9 @@ PropertyName MemberExpression::computed_property_name(Interpreter& interpreter) 
         return PropertyName(static_cast<const Identifier&>(*m_property).string());
     }
     auto index = m_property->execute(interpreter);
-    if (interpreter.exception())
-        return {};
+
+    STOP_EXECUTION_IF_NEEDED(interpreter, {});
+
     ASSERT(!index.is_empty());
     // FIXME: What about non-integer numbers tho.
     if (index.is_number() && index.to_i32() >= 0)
@@ -964,11 +998,13 @@ String MemberExpression::to_string_approximation() const
 Value MemberExpression::execute(Interpreter& interpreter) const
 {
     auto object_value = m_object->execute(interpreter);
-    if (interpreter.exception())
-        return {};
+
+    STOP_EXECUTION_IF_NEEDED(interpreter, object_value);
+
     auto* object_result = object_value.to_object(interpreter.heap());
-    if (interpreter.exception())
-        return {};
+
+    STOP_EXECUTION_IF_NEEDED(interpreter, object_result);
+
     auto result = object_result->get(computed_property_name(interpreter));
     if (result.has_value()) {
         ASSERT(!result.value().is_empty());
@@ -1016,8 +1052,7 @@ Value ArrayExpression::execute(Interpreter& interpreter) const
         auto value = Value();
         if (element) {
             value = element->execute(interpreter);
-            if (interpreter.exception())
-                return {};
+            STOP_EXECUTION_IF_NEEDED(interpreter, value);
         }
         array->elements().append(value);
     }
@@ -1062,13 +1097,19 @@ void ThrowStatement::dump(int indent) const
 
 Value TryStatement::execute(Interpreter& interpreter) const
 {
-    interpreter.run(block(), {}, ScopeType::Try);
+    auto result = interpreter.run(block(), {}, ScopeType::Try);
     if (auto* exception = interpreter.exception()) {
         if (m_handler) {
             interpreter.clear_exception();
             ArgumentVector arguments { { m_handler->parameter(), exception->value() } };
             interpreter.run(m_handler->body(), move(arguments));
         }
+    }
+
+    if (interpreter.should_stop_execution() && interpreter.stop_reason() == ExecutionStopReason::Yield) {
+        // we should actually *keep* the finalizer for after the yield
+        // FIXME: we don't do this yes
+        return result;
     }
 
     if (m_finalizer)
@@ -1087,33 +1128,32 @@ Value CatchClause::execute(Interpreter&) const
 Value ThrowStatement::execute(Interpreter& interpreter) const
 {
     auto value = m_argument->execute(interpreter);
-    if (interpreter.exception())
-        return {};
+
+    STOP_EXECUTION_IF_NEEDED(interpreter, value);
+
     return interpreter.throw_exception(value);
 }
 
 Value SwitchStatement::execute(Interpreter& interpreter) const
 {
     auto discriminant_result = m_discriminant->execute(interpreter);
-    if (interpreter.exception())
-        return {};
+
+    STOP_EXECUTION_IF_NEEDED(interpreter, discriminant_result);
 
     bool falling_through = false;
 
     for (auto& switch_case : m_cases) {
         if (!falling_through && switch_case.test()) {
             auto test_result = switch_case.test()->execute(interpreter);
-            if (interpreter.exception())
-                return {};
+            STOP_EXECUTION_IF_NEEDED(interpreter, test_result);
             if (!eq(interpreter, discriminant_result, test_result).to_boolean())
                 continue;
         }
         falling_through = true;
 
         for (auto& statement : switch_case.consequent()) {
-            statement.execute(interpreter);
-            if (interpreter.exception())
-                return {};
+            auto value = statement.execute(interpreter);
+            STOP_EXECUTION_IF_NEEDED(interpreter, value);
             if (interpreter.should_unwind()) {
                 if (interpreter.should_unwind_until(ScopeType::Breakable)) {
                     interpreter.stop_unwind();
@@ -1177,16 +1217,14 @@ void SwitchCase::dump(int indent) const
 Value ConditionalExpression::execute(Interpreter& interpreter) const
 {
     auto test_result = m_test->execute(interpreter);
-    if (interpreter.exception())
-        return {};
+    STOP_EXECUTION_IF_NEEDED(interpreter, test_result);
     Value result;
     if (test_result.to_boolean()) {
         result = m_consequent->execute(interpreter);
     } else {
         result = m_alternate->execute(interpreter);
     }
-    if (interpreter.exception())
-        return {};
+    STOP_EXECUTION_IF_NEEDED(interpreter, result);
     return result;
 }
 
@@ -1216,8 +1254,7 @@ Value SequenceExpression::execute(Interpreter& interpreter) const
     Value last_value;
     for (auto& expression : m_expressions) {
         last_value = expression.execute(interpreter);
-        if (interpreter.exception())
-            return {};
+        STOP_EXECUTION_IF_NEEDED(interpreter, last_value);
     }
     return last_value;
 }

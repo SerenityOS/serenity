@@ -112,8 +112,7 @@ Value ArrayPrototype::filter(Interpreter& interpreter)
         arguments.append(Value((i32)i));
         arguments.append(array);
         auto result = interpreter.call(callback, this_value, move(arguments));
-        if (interpreter.exception())
-            return {};
+        STOP_EXECUTION_IF_NEEDED(interpreter, result);
         if (result.to_boolean())
             new_array->elements().append(value);
     }
@@ -140,9 +139,8 @@ Value ArrayPrototype::for_each(Interpreter& interpreter)
         arguments.append(value);
         arguments.append(Value((i32)i));
         arguments.append(array);
-        interpreter.call(callback, this_value, move(arguments));
-        if (interpreter.exception())
-            return {};
+        auto result = interpreter.call(callback, this_value, move(arguments));
+        STOP_EXECUTION_IF_NEEDED(interpreter, result);
     }
     return js_undefined();
 }
@@ -169,8 +167,7 @@ Value ArrayPrototype::map(Interpreter& interpreter)
         arguments.append(Value((i32)i));
         arguments.append(array);
         auto result = interpreter.call(callback, this_value, move(arguments));
-        if (interpreter.exception())
-            return {};
+        STOP_EXECUTION_IF_NEEDED(interpreter, result);
         new_array->elements().append(result);
     }
     return Value(new_array);

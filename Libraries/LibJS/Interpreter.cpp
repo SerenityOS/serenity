@@ -47,8 +47,47 @@ Interpreter::~Interpreter()
 {
 }
 
+Value Interpreter::destructive_run(Statement& statement, ArgumentVector arguments, ScopeType scope_type)
+{
+    m_returned = false;
+    if (statement.is_program()) {
+        if (m_call_stack.is_empty()) {
+            CallFrame global_call_frame;
+            global_call_frame.this_value = m_global_object;
+            global_call_frame.function_name = "(global execution context)";
+            global_call_frame.environment = heap().allocate<LexicalEnvironment>();
+            m_call_stack.append(move(global_call_frame));
+        }
+    }
+
+    if (!statement.is_scope_node())
+        return statement.execute(*this);
+
+    auto& block = static_cast<ScopeNode&>(statement);
+    enter_scope(block, move(arguments), scope_type);
+
+    m_last_value = js_undefined();
+    for (auto& node : block.destructive_children()) {
+        m_last_value = node.execute(*this);
+        if (m_unwind_until != ScopeType::None)
+            break;
+    }
+
+    bool did_return = m_unwind_until == ScopeType::Function;
+
+    if (m_unwind_until == scope_type) {
+        m_unwind_until = ScopeType::None;
+        m_execution_stop_reason = ExecutionStopReason::None;
+    }
+
+    exit_scope(block);
+
+    return did_return ? m_last_value : js_undefined();
+}
+
 Value Interpreter::run(const Statement& statement, ArgumentVector arguments, ScopeType scope_type)
 {
+    m_returned = false;
     if (statement.is_program()) {
         if (m_call_stack.is_empty()) {
             CallFrame global_call_frame;
@@ -74,8 +113,10 @@ Value Interpreter::run(const Statement& statement, ArgumentVector arguments, Sco
 
     bool did_return = m_unwind_until == ScopeType::Function;
 
-    if (m_unwind_until == scope_type)
+    if (m_unwind_until == scope_type) {
         m_unwind_until = ScopeType::None;
+        m_execution_stop_reason = ExecutionStopReason::None;
+    }
 
     exit_scope(block);
 
@@ -209,6 +250,7 @@ Value Interpreter::throw_exception(Exception* exception)
         }
     }
     m_exception = exception;
+    stop_execution(ExecutionStopReason::Exception);
     unwind(ScopeType::Try);
     return {};
 }

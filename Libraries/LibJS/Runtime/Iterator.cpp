@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, The SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,40 +24,53 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <LibJS/Runtime/Function.h>
+#include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Iterator.h>
 
 namespace JS {
 
-class ScriptFunction : public Function {
-public:
-    static ScriptFunction* create(GlobalObject&, const FlyString& name, const Statement& body, Vector<FlyString> parameters, LexicalEnvironment* parent_environment);
+Iterator::Iterator(Object& iterable, AK::Function<IteratorResult(Object&, const Vector<Value>&)>&& next_function)
 
-    ScriptFunction(const FlyString& name, const Statement& body, Vector<FlyString> parameters, LexicalEnvironment* parent_environment, Object& prototype);
-    virtual ~ScriptFunction();
+    : Object(nullptr)
+    , m_iterable(iterable)
+    , m_next_function(move(next_function))
+{
+    put_native_function("next", next);
+}
 
-    const Statement& body() const { return m_body; }
-    const Vector<FlyString>& parameters() const { return m_parameters; };
+Iterator::~Iterator()
+{
+}
 
-    virtual Value call(Interpreter&) override;
-    virtual Value construct(Interpreter&) override;
+Value Iterator::next(Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return {};
+    if (!this_object->is_iterator())
+        return interpreter.throw_exception<TypeError>("Not an iterator");
 
-    virtual const FlyString& name() const override { return m_name; };
+    auto* iterator = static_cast<Iterator*>(this_object);
+    auto return_value = Object::create_empty(interpreter, interpreter.global_object());
 
-protected:
-    virtual bool is_script_function() const final { return true; }
-    virtual const char* class_name() const override { return "ScriptFunction"; }
-    virtual LexicalEnvironment* create_environment() override;
-    virtual void visit_children(Visitor&) override;
+    if (iterator->done()) {
+        return_value->put("done", Value(true));
+        return_value->put("value", js_undefined());
+        return return_value;
+    }
 
-    static Value length_getter(Interpreter&);
-    static void length_setter(Interpreter&, Value);
+    auto next_value = iterator->next_function()(iterator->iterable(), interpreter.call_frame().arguments);
 
-    FlyString m_name;
-    NonnullRefPtr<Statement> m_body;
-    const Vector<FlyString> m_parameters;
-    LexicalEnvironment* m_parent_environment { nullptr };
-};
+    return_value->put("done", Value(next_value.finished));
+    return_value->put("value", next_value.value);
+
+    return return_value;
+}
+
+void Iterator::visit_children(Visitor& visitor)
+{
+    Object::visit_children(visitor);
+    visitor.visit(&m_iterable);
+}
 
 }
