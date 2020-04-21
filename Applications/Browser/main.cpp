@@ -288,22 +288,18 @@ int main(int argc, char** argv)
         }
     }));
     debug_menu.add_separator();
-    auto line_box_borders_action = GUI::Action::create("Line box borders", [&](auto& action) {
-        action.set_checked(!action.is_checked());
+    auto line_box_borders_action = GUI::Action::create_checkable("Line box borders", [&](auto& action) {
         html_widget.set_should_show_line_box_borders(action.is_checked());
         html_widget.update();
     });
-    line_box_borders_action->set_checkable(true);
     line_box_borders_action->set_checked(false);
     debug_menu.add_action(line_box_borders_action);
 
     auto& bookmarks_menu = menubar->add_menu("Bookmarks");
-    auto show_bookmarksbar_action = GUI::Action::create("Show bookmarks bar", [&](auto& action) {
-        action.set_checked(!action.is_checked());
+    auto show_bookmarksbar_action = GUI::Action::create_checkable("Show bookmarks bar", [&](auto& action) {
         bookmarksbar.set_visible(action.is_checked());
         bookmarksbar.update();
     });
-    show_bookmarksbar_action->set_checkable(true);
     show_bookmarksbar_action->set_checked(bookmarksbar_enabled);
     bookmarks_menu.add_action(show_bookmarksbar_action);
 

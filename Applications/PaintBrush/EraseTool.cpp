@@ -77,12 +77,9 @@ void EraseTool::on_contextmenu(GUI::ContextMenuEvent& event)
     if (!m_context_menu) {
         m_context_menu = GUI::Menu::construct();
 
-        NonnullRefPtr<GUI::Action> eraser_color_toggler = GUI::Action::create("Use secondary color", [&](GUI::Action& action) {
-            bool toggled = !m_use_secondary_color;
-            m_use_secondary_color = toggled;
-            action.set_checked(toggled);
+        auto eraser_color_toggler = GUI::Action::create_checkable("Use secondary color", [&](auto& action) {
+            m_use_secondary_color = action.is_checked();
         });
-        eraser_color_toggler->set_checkable(true);
         eraser_color_toggler->set_checked(m_use_secondary_color);
 
         m_context_menu->add_action(eraser_color_toggler);
@@ -90,11 +87,9 @@ void EraseTool::on_contextmenu(GUI::ContextMenuEvent& event)
 
         m_thickness_actions.set_exclusive(true);
         auto insert_action = [&](int size, bool checked = false) {
-            auto action = GUI::Action::create(String::number(size), [this, size](auto& action) {
+            auto action = GUI::Action::create_checkable(String::number(size), [this, size](auto&) {
                 m_thickness = size;
-                action.set_checked(true);
             });
-            action->set_checkable(true);
             action->set_checked(checked);
             m_thickness_actions.add_action(*action);
             m_context_menu->add_action(move(action));

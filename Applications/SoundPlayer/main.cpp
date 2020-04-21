@@ -74,11 +74,9 @@ int main(int argc, char** argv)
         player.manager().play();
     }
 
-    auto hide_scope = GUI::Action::create("Hide scope", { Mod_Ctrl, Key_H }, [&](GUI::Action& action) {
-        action.set_checked(!action.is_checked());
+    auto hide_scope = GUI::Action::create_checkable("Hide scope", { Mod_Ctrl, Key_H }, [&](auto& action) {
         player.hide_scope(action.is_checked());
     });
-    hide_scope->set_checkable(true);
 
     app_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
         Optional<String> path = GUI::FilePicker::get_open_filepath("Open wav file...");

@@ -165,27 +165,21 @@ void MultiView::set_column_hidden(int column_index, bool hidden)
 
 void MultiView::build_actions()
 {
-    m_view_as_table_action = Action::create(
+    m_view_as_table_action = Action::create_checkable(
         "Table view", Gfx::Bitmap::load_from_file("/res/icons/16x16/table-view.png"), [this](auto&) {
             set_view_mode(ViewMode::List);
-            m_view_as_table_action->set_checked(true);
         });
-    m_view_as_table_action->set_checkable(true);
 
-    m_view_as_icons_action = Action::create(
+    m_view_as_icons_action = Action::create_checkable(
         "Icon view", Gfx::Bitmap::load_from_file("/res/icons/16x16/icon-view.png"), [this](auto&) {
             set_view_mode(ViewMode::Icon);
-            m_view_as_icons_action->set_checked(true);
         });
-    m_view_as_icons_action->set_checkable(true);
 
 #ifdef MULTIVIEW_WITH_COLUMNSVIEW
-    m_view_as_columns_action = Action::create(
+    m_view_as_columns_action = Action::create_checkable(
         "Columns view", Gfx::Bitmap::load_from_file("/res/icons/16x16/columns-view.png"), [this](auto&) {
             set_view_mode(ViewMode::Columns);
-            m_view_as_columns_action->set_checked(true);
         });
-    m_view_as_columns_action->set_checkable(true);
 #endif
 
     m_view_type_action_group = make<ActionGroup>();

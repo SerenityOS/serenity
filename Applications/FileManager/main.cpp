@@ -283,38 +283,29 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     RefPtr<GUI::Action> view_as_icons_action;
     RefPtr<GUI::Action> view_as_columns_action;
 
-    view_as_table_action = GUI::Action::create(
+    view_as_table_action = GUI::Action::create_checkable(
         "Table view", { Mod_Ctrl, KeyCode::Key_L }, Gfx::Bitmap::load_from_file("/res/icons/16x16/table-view.png"), [&](const GUI::Action&) {
             directory_view.set_view_mode(DirectoryView::ViewMode::List);
-            view_as_table_action->set_checked(true);
-
             config->write_entry("DirectoryView", "ViewMode", "List");
             config->sync();
         },
         window);
-    view_as_table_action->set_checkable(true);
 
-    view_as_icons_action = GUI::Action::create(
+    view_as_icons_action = GUI::Action::create_checkable(
         "Icon view", { Mod_Ctrl, KeyCode::Key_I }, Gfx::Bitmap::load_from_file("/res/icons/16x16/icon-view.png"), [&](const GUI::Action&) {
             directory_view.set_view_mode(DirectoryView::ViewMode::Icon);
-            view_as_icons_action->set_checked(true);
-
             config->write_entry("DirectoryView", "ViewMode", "Icon");
             config->sync();
         },
         window);
-    view_as_icons_action->set_checkable(true);
 
-    view_as_columns_action = GUI::Action::create(
+    view_as_columns_action = GUI::Action::create_checkable(
         "Columns view", Gfx::Bitmap::load_from_file("/res/icons/16x16/columns-view.png"), [&](const GUI::Action&) {
             directory_view.set_view_mode(DirectoryView::ViewMode::Columns);
-            view_as_columns_action->set_checked(true);
-
             config->write_entry("DirectoryView", "ViewMode", "Columns");
             config->sync();
         },
         window);
-    view_as_columns_action->set_checkable(true);
 
     auto view_type_action_group = make<GUI::ActionGroup>();
     view_type_action_group->set_exclusive(true);

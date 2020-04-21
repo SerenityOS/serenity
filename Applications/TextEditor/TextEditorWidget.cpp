@@ -334,11 +334,9 @@ TextEditorWidget::TextEditorWidget()
         m_save_as_action->activate();
     });
 
-    m_line_wrapping_setting_action = GUI::Action::create("Line wrapping", [&](GUI::Action& action) {
-        action.set_checked(!action.is_checked());
+    m_line_wrapping_setting_action = GUI::Action::create_checkable("Line wrapping", [&](auto& action) {
         m_editor->set_line_wrapping_enabled(action.is_checked());
     });
-    m_line_wrapping_setting_action->set_checkable(true);
     m_line_wrapping_setting_action->set_checked(m_editor->is_line_wrapping_enabled());
 
     auto menubar = GUI::MenuBar::construct();
@@ -382,31 +380,25 @@ TextEditorWidget::TextEditorWidget()
     syntax_actions.set_exclusive(true);
 
     auto& syntax_menu = menubar->add_menu("Syntax");
-    m_plain_text_highlight = GUI::Action::create("Plain Text", [&](GUI::Action& action) {
-        action.set_checked(true);
+    m_plain_text_highlight = GUI::Action::create_checkable("Plain text", [&](auto&) {
         m_editor->set_syntax_highlighter(nullptr);
         m_editor->update();
     });
-    m_plain_text_highlight->set_checkable(true);
     m_plain_text_highlight->set_checked(true);
     syntax_actions.add_action(*m_plain_text_highlight);
     syntax_menu.add_action(*m_plain_text_highlight);
 
-    m_cpp_highlight = GUI::Action::create("C++", [&](GUI::Action& action) {
-        action.set_checked(true);
+    m_cpp_highlight = GUI::Action::create_checkable("C++", [&](auto&) {
         m_editor->set_syntax_highlighter(make<GUI::CppSyntaxHighlighter>());
         m_editor->update();
     });
-    m_cpp_highlight->set_checkable(true);
     syntax_actions.add_action(*m_cpp_highlight);
     syntax_menu.add_action(*m_cpp_highlight);
 
-    m_js_highlight = GUI::Action::create("Javascript", [&](GUI::Action& action) {
-        action.set_checked(true);
+    m_js_highlight = GUI::Action::create_checkable("JavaScript", [&](auto&) {
         m_editor->set_syntax_highlighter(make<GUI::JSSyntaxHighlighter>());
         m_editor->update();
     });
-    m_js_highlight->set_checkable(true);
     syntax_actions.add_action(*m_js_highlight);
     syntax_menu.add_action(*m_js_highlight);
 
