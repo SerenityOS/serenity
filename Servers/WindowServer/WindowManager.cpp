@@ -1086,6 +1086,7 @@ void WindowManager::set_active_window(Window* window)
         Core::EventLoop::current().post_event(*previously_active_window, make<Event>(Event::WindowDeactivated));
         invalidate(*previously_active_window);
         m_active_window = nullptr;
+        m_active_input_window = nullptr;
         tell_wm_listeners_window_state_changed(*previously_active_window);
     }
 
