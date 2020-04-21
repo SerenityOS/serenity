@@ -274,10 +274,9 @@ int main(int argc, char** argv)
     GUI::ActionGroup tool_actions;
     tool_actions.set_exclusive(true);
 
-    auto cursor_tool_action = GUI::Action::create("Cursor", Gfx::Bitmap::load_from_file("/res/icons/widgets/Cursor.png"), [&](auto&) {
+    auto cursor_tool_action = GUI::Action::create_checkable("Cursor", Gfx::Bitmap::load_from_file("/res/icons/widgets/Cursor.png"), [&](auto&) {
         g_form_editor_widget->set_tool(make<CursorTool>(*g_form_editor_widget));
     });
-    cursor_tool_action->set_checkable(true);
     cursor_tool_action->set_checked(true);
     tool_actions.add_action(cursor_tool_action);
 
@@ -285,14 +284,13 @@ int main(int argc, char** argv)
 
     GUI::WidgetClassRegistration::for_each([&](const GUI::WidgetClassRegistration& reg) {
         auto icon_path = String::format("/res/icons/widgets/G%s.png", reg.class_name().characters());
-        auto action = GUI::Action::create(reg.class_name(), Gfx::Bitmap::load_from_file(icon_path), [&reg](auto&) {
+        auto action = GUI::Action::create_checkable(reg.class_name(), Gfx::Bitmap::load_from_file(icon_path), [&reg](auto&) {
             g_form_editor_widget->set_tool(make<WidgetTool>(*g_form_editor_widget, reg));
             auto widget = reg.construct();
             g_form_editor_widget->form_widget().add_child(widget);
             widget->set_relative_rect(30, 30, 30, 30);
             g_form_editor_widget->model().update();
         });
-        action->set_checkable(true);
         action->set_checked(false);
         tool_actions.add_action(action);
         form_widgets_toolbar.add_action(move(action));

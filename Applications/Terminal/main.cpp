@@ -278,8 +278,7 @@ int main(int argc, char** argv)
     font_action_group.set_exclusive(true);
     auto& font_menu = menubar->add_menu("Font");
     GUI::FontDatabase::the().for_each_fixed_width_font([&](const StringView& font_name) {
-        auto action = GUI::Action::create(font_name, [&](GUI::Action& action) {
-            action.set_checked(true);
+        auto action = GUI::Action::create_checkable(font_name, [&](auto& action) {
             terminal.set_font(GUI::FontDatabase::the().get_by_name(action.text()));
             auto metadata = GUI::FontDatabase::the().get_metadata_by_name(action.text());
             ASSERT(metadata.has_value());
@@ -288,7 +287,6 @@ int main(int argc, char** argv)
             terminal.force_repaint();
         });
         font_action_group.add_action(*action);
-        action->set_checkable(true);
         if (terminal.font().name() == font_name)
             action->set_checked(true);
         font_menu.add_action(*action);

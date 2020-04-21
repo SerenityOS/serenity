@@ -26,10 +26,10 @@
 
 #include "EllipseTool.h"
 #include "PaintableWidget.h"
-#include <LibGfx/Rect.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/Rect.h>
 #include <LibM/math.h>
 
 EllipseTool::EllipseTool()
@@ -117,11 +117,9 @@ void EllipseTool::on_contextmenu(GUI::ContextMenuEvent& event)
         m_context_menu->add_separator();
         m_thickness_actions.set_exclusive(true);
         auto insert_action = [&](int size, bool checked = false) {
-            auto action = GUI::Action::create(String::number(size), [this, size](auto& action) {
+            auto action = GUI::Action::create_checkable(String::number(size), [this, size](auto&) {
                 m_thickness = size;
-                action.set_checked(true);
             });
-            action->set_checkable(true);
             action->set_checked(checked);
             m_thickness_actions.add_action(*action);
             m_context_menu->add_action(move(action));

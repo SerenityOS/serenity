@@ -199,11 +199,9 @@ Menu& AbstractTableView::ensure_header_context_menu()
         for (int column = 0; column < model()->column_count(); ++column) {
             auto& column_data = this->column_data(column);
             auto name = model()->column_name(column);
-            column_data.visibility_action = Action::create(name, [this, column](Action& action) {
-                action.set_checked(!action.is_checked());
+            column_data.visibility_action = Action::create_checkable(name, [this, column](auto& action) {
                 set_column_hidden(column, !action.is_checked());
             });
-            column_data.visibility_action->set_checkable(true);
             column_data.visibility_action->set_checked(true);
 
             m_header_context_menu->add_action(*column_data.visibility_action);

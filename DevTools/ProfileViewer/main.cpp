@@ -85,21 +85,17 @@ int main(int argc, char** argv)
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app.quit(); }));
 
     auto& view_menu = menubar->add_menu("View");
-    auto invert_action = GUI::Action::create("Invert tree", { Mod_Ctrl, Key_I }, [&](auto& action) {
-        action.set_checked(!action.is_checked());
+    auto invert_action = GUI::Action::create_checkable("Invert tree", { Mod_Ctrl, Key_I }, [&](auto& action) {
         profile->set_inverted(action.is_checked());
     });
-    invert_action->set_checkable(true);
     invert_action->set_checked(false);
     view_menu.add_action(invert_action);
 
-    auto percent_action = GUI::Action::create("Show percentages", { Mod_Ctrl, Key_P }, [&](auto& action) {
-        action.set_checked(!action.is_checked());
+    auto percent_action = GUI::Action::create_checkable("Show percentages", { Mod_Ctrl, Key_P }, [&](auto& action) {
         profile->set_show_percentages(action.is_checked());
         tree_view.update();
         disassembly_view.update();
     });
-    percent_action->set_checkable(true);
     percent_action->set_checked(false);
     view_menu.add_action(percent_action);
 
