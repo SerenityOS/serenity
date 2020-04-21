@@ -27,8 +27,8 @@
 #pragma once
 
 #include "Tool.h"
-#include <LibGfx/Point.h>
 #include <LibGUI/ActionGroup.h>
+#include <LibGfx/Point.h>
 
 class EraseTool final : public Tool {
 public:
@@ -45,7 +45,7 @@ private:
     Gfx::Rect build_rect(const Gfx::Point& pos, const Gfx::Rect& widget_rect);
     RefPtr<GUI::Menu> m_context_menu;
 
-    bool m_use_secondary_color { true };
+    bool m_use_secondary_color { false };
     int m_thickness { 1 };
     GUI::ActionGroup m_thickness_actions;
 };
