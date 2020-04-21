@@ -31,6 +31,7 @@
 #include <LibCore/DateTime.h>
 #include <LibCore/Notifier.h>
 #include <LibGUI/Model.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <time.h>
 
@@ -79,6 +80,10 @@ public:
         bool is_directory() const { return S_ISDIR(mode); }
         bool is_executable() const { return mode & (S_IXUSR | S_IXGRP | S_IXOTH); }
 
+        bool has_error() const { return m_error != 0; }
+        int error() const { return m_error; }
+        const char* error_string() const { return strerror(m_error); }
+
         String full_path(const FileSystemModel&) const;
 
     private:
@@ -90,6 +95,8 @@ public:
 
         int m_watch_fd { -1 };
         RefPtr<Core::Notifier> m_notifier;
+
+        int m_error { 0 };
 
         ModelIndex index(const FileSystemModel&, int column) const;
         void traverse_if_needed(const FileSystemModel&);
@@ -112,7 +119,8 @@ public:
     GUI::Icon icon_for_file(const mode_t mode, const String& name) const;
 
     Function<void(int done, int total)> on_thumbnail_progress;
-    Function<void()> on_root_path_change;
+    Function<void()> on_complete;
+    Function<void(int error, const char* error_string)> on_error;
 
     virtual int tree_column() const override { return Column::Name; }
     virtual int row_count(const ModelIndex& = ModelIndex()) const override;
