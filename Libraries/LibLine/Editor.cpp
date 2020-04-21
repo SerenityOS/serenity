@@ -385,7 +385,7 @@ String Editor::get_line(const String& prompt)
                             last_valid_suggestion_char = m_suggestions[0].text[common_suggestion_prefix];
 
                             for (const auto& suggestion : m_suggestions) {
-                                if (suggestion.text.length() < common_suggestion_prefix || suggestion.text[common_suggestion_prefix] != last_valid_suggestion_char) {
+                                if (suggestion.text.length() <= common_suggestion_prefix || suggestion.text[common_suggestion_prefix] != last_valid_suggestion_char) {
                                     goto no_more_commons;
                                 }
                             }
