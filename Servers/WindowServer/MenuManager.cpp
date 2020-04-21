@@ -147,11 +147,12 @@ void MenuManager::event(Core::Event& event)
 
 void MenuManager::handle_mouse_event(MouseEvent& mouse_event)
 {
+    auto* active_window = WindowManager::the().active_window();
     bool handled_menubar_event = false;
     for_each_active_menubar_menu([&](Menu& menu) {
         if (menu.rect_in_menubar().contains(mouse_event.position())) {
             handle_menu_mouse_event(menu, mouse_event);
-            handled_menubar_event = true;
+            handled_menubar_event = !active_window || !active_window->is_modal();
             return IterationDecision::Break;
         }
         return IterationDecision::Continue;
