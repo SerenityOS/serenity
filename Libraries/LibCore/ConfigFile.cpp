@@ -138,7 +138,10 @@ int ConfigFile::read_num_entry(const String& group, const String& key, int defau
 
 bool ConfigFile::read_bool_entry(const String& group, const String& key, bool default_value) const
 {
-    return read_entry(group, key, default_value ? "1" : "0") == "1";
+    auto value = read_entry(group, key, default_value ? "1" : "0");
+    if (value == "1" || value.to_lowercase() == "true")
+        return 1;
+    return 0;
 }
 
 void ConfigFile::write_entry(const String& group, const String& key, const String& value)
