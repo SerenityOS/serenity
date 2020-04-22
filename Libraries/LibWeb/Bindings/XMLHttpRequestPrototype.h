@@ -42,6 +42,7 @@ private:
     static JS::Value open(JS::Interpreter&);
     static JS::Value send(JS::Interpreter&);
 
+    static JS::Value ready_state_getter(JS::Interpreter&);
     static JS::Value response_text_getter(JS::Interpreter&);
 };
 

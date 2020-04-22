@@ -40,6 +40,14 @@ class XMLHttpRequest final
     , public EventTarget
     , public Bindings::Wrappable {
 public:
+    enum class ReadyState {
+        Unsent,
+        Opened,
+        HeadersReceived,
+        Loading,
+        Done,
+    };
+
     using WrapperType = Bindings::XMLHttpRequestWrapper;
 
     static NonnullRefPtr<XMLHttpRequest> create(Window& window) { return adopt(*new XMLHttpRequest(window)); }
@@ -49,6 +57,7 @@ public:
     using RefCounted::ref;
     using RefCounted::unref;
 
+    ReadyState ready_state() const { return m_ready_state; };
     String response_text() const;
     void open(const String& method, const String& url);
     void send();
@@ -58,9 +67,13 @@ private:
     virtual void unref_event_target() override { unref(); }
     virtual void dispatch_event(NonnullRefPtr<Event>) override;
 
+    void set_ready_state(ReadyState);
+
     explicit XMLHttpRequest(Window&);
 
     NonnullRefPtr<Window> m_window;
+
+    ReadyState m_ready_state { ReadyState::Unsent };
 
     String m_method;
     String m_url;
