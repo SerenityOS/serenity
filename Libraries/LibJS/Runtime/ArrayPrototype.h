@@ -53,5 +53,6 @@ private:
     static Value index_of(Interpreter&);
     static Value reverse(Interpreter&);
     static Value last_index_of(Interpreter&);
+    static Value fill(Interpreter&);
 };
 }

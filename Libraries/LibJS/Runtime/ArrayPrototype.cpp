@@ -56,6 +56,7 @@ ArrayPrototype::ArrayPrototype()
     put_native_function("indexOf", index_of, 1);
     put_native_function("reverse", reverse, 0);
     put_native_function("lastIndexOf", last_index_of, 1);
+    put_native_function("fill", fill, 3);
     put("length", Value(0));
 }
 
@@ -398,6 +399,48 @@ Value ArrayPrototype::last_index_of(Interpreter& interpreter)
     }
 
     return Value(-1);
+}
+
+Value ArrayPrototype::fill(Interpreter& interpreter)
+{
+    auto* array = array_from(interpreter);
+    if (!array)
+        return {};
+
+    if (array->elements().size() == 0)
+        return array;
+
+    Value value;
+    if (interpreter.argument_count() >= 1)
+        value = interpreter.argument(0);
+    else
+        value = js_undefined();
+
+    auto array_size = static_cast<ssize_t>(array->elements().size());
+    ssize_t start = 0;
+    ssize_t end = array_size;
+
+    if (interpreter.argument_count() >= 2)
+        start = interpreter.argument(1).to_i32();
+    if (interpreter.argument_count() >= 3)
+        end = interpreter.argument(2).to_i32();
+
+    if (start < 0)
+        start = array_size + start;
+    if (end < 0)
+        end = array_size + end;
+
+    auto* new_array = Array::create(interpreter.global_object());
+    new_array->elements().ensure_capacity(array_size);
+
+    for (ssize_t i = 0; i < array_size; i++) {
+        if (i >= start && i < end)
+            new_array->elements().append(value);
+        else
+            new_array->elements().append(array->elements().at(i));
+    }
+
+    return new_array;
 }
 
 }
