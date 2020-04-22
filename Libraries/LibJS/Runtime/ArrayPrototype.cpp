@@ -321,7 +321,7 @@ Value ArrayPrototype::index_of(Interpreter& interpreter)
         if (from_index < negative_min_index)
             from_index = 0;
         else if (from_index < 0)
-            from_index = (array_size - 1) + from_index;
+            from_index = array_size + from_index;
     }
 
     auto search_element = interpreter.argument(0);
