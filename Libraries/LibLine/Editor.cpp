@@ -152,16 +152,18 @@ String Editor::get_line(const String& prompt)
                     if (m_was_resized)
                         continue;
 
-                    m_was_interrupted = false;
-
-                    if (!m_buffer.is_empty())
-                        printf("^C");
-
-                    m_buffer.clear();
-                    m_cursor = 0;
+                    finish();
+                    continue;
                 }
 
-                finish();
+                m_was_interrupted = false;
+
+                if (!m_buffer.is_empty())
+                    printf("^C");
+
+                m_buffer.clear();
+                m_cursor = 0;
+                m_refresh_needed = true;
                 continue;
             }
             perror("read failed");
