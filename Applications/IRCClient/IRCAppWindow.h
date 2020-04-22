@@ -41,7 +41,7 @@ public:
     void set_active_window(IRCWindow&);
 
 private:
-    IRCAppWindow();
+    IRCAppWindow(String server, int port);
 
     void setup_client();
     void setup_actions();

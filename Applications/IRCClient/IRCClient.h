@@ -138,7 +138,7 @@ public:
     void add_server_message(const String&, Color = Color::Black);
 
 private:
-    IRCClient();
+    IRCClient(String server, int port);
 
     struct Message {
         String prefix;
