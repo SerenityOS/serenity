@@ -38,97 +38,99 @@ constexpr static auto OPAD = 0x5c;
 
 namespace Crypto {
 namespace Authentication {
-    template <typename HashT>
-    class HMAC {
-    public:
-        using HashType = HashT;
-        using TagType = typename HashType::DigestType;
-        static constexpr size_t BlockSize = HashType::BlockSize;
-        static constexpr size_t DigestSize = HashType::DigestSize;
 
-        template <typename KeyBufferType, typename... Args>
-        HMAC(KeyBufferType key, Args... args)
-            : m_inner_hasher(args...)
-            , m_outer_hasher(args...)
-        {
-            derive_key(key);
-            reset();
+template<typename HashT>
+class HMAC {
+public:
+    using HashType = HashT;
+    using TagType = typename HashType::DigestType;
+    static constexpr size_t BlockSize = HashType::BlockSize;
+    static constexpr size_t DigestSize = HashType::DigestSize;
+
+    template<typename KeyBufferType, typename... Args>
+    HMAC(KeyBufferType key, Args... args)
+        : m_inner_hasher(args...)
+        , m_outer_hasher(args...)
+    {
+        derive_key(key);
+        reset();
+    }
+
+    TagType process(const u8* message, size_t length)
+    {
+        reset();
+        update(message, length);
+        return digest();
+    }
+
+    void update(const u8* message, size_t length)
+    {
+        m_inner_hasher.update(message, length);
+    }
+
+    TagType process(const ByteBuffer& buffer) { return process(buffer.data(), buffer.size()); }
+    TagType process(const StringView& string) { return process((const u8*)string.characters_without_null_termination(), string.length()); }
+    void update(const ByteBuffer& buffer) { return update(buffer.data(), buffer.size()); }
+    void update(const StringView& string) { return update((const u8*)string.characters_without_null_termination(), string.length()); }
+
+    TagType digest()
+    {
+        m_outer_hasher.update(m_inner_hasher.digest().data, m_inner_hasher.DigestSize);
+        auto result = m_outer_hasher.digest();
+        reset();
+        return result;
+    }
+
+    void reset()
+    {
+        m_inner_hasher.reset();
+        m_outer_hasher.reset();
+        m_inner_hasher.update(m_key_data, BlockSize);
+        m_outer_hasher.update(m_key_data + BlockSize, BlockSize);
+    }
+
+    String class_name() const
+    {
+        StringBuilder builder;
+        builder.append("HMAC-");
+        builder.append(m_inner_hasher.class_name());
+        return builder.build();
+    }
+
+private:
+    void derive_key(const u8* key, size_t length)
+    {
+        u8 v_key[BlockSize];
+        __builtin_memset(v_key, 0, BlockSize);
+        ByteBuffer key_buffer = ByteBuffer::wrap(v_key, BlockSize);
+        // m_key_data is zero'd, so copying the data in
+        // the first few bytes leaves the rest zero, which
+        // is exactly what we want (zero padding)
+        if (length > BlockSize) {
+            m_inner_hasher.update(key, length);
+            auto digest = m_inner_hasher.digest();
+            // FIXME: should we check if the hash function creates more data than its block size?
+            key_buffer.overwrite(0, digest.data, sizeof(TagType));
+        } else {
+            key_buffer.overwrite(0, key, length);
         }
 
-        TagType process(const u8* message, size_t length)
-        {
-            reset();
-            update(message, length);
-            return digest();
+        // fill out the inner and outer padded keys
+        auto* i_key = m_key_data;
+        auto* o_key = m_key_data + BlockSize;
+        for (size_t i = 0; i < BlockSize; ++i) {
+            auto key_byte = key_buffer[i];
+            i_key[i] = key_byte ^ IPAD;
+            o_key[i] = key_byte ^ OPAD;
         }
+    }
 
-        void update(const u8* message, size_t length)
-        {
-            m_inner_hasher.update(message, length);
-        }
+    void derive_key(const ByteBuffer& key) { derive_key(key.data(), key.size()); }
+    void derive_key(const StringView& key) { derive_key((const u8*)key.characters_without_null_termination(), key.length()); }
 
-        TagType process(const ByteBuffer& buffer) { return process(buffer.data(), buffer.size()); }
-        TagType process(const StringView& string) { return process((const u8*)string.characters_without_null_termination(), string.length()); }
-        void update(const ByteBuffer& buffer) { return update(buffer.data(), buffer.size()); }
-        void update(const StringView& string) { return update((const u8*)string.characters_without_null_termination(), string.length()); }
+    HashType m_inner_hasher, m_outer_hasher;
+    u8 m_key_data[BlockSize * 2];
+};
 
-        TagType digest()
-        {
-            m_outer_hasher.update(m_inner_hasher.digest().data, m_inner_hasher.DigestSize);
-            auto result = m_outer_hasher.digest();
-            reset();
-            return result;
-        }
-
-        void reset()
-        {
-            m_inner_hasher.reset();
-            m_outer_hasher.reset();
-            m_inner_hasher.update(m_key_data, BlockSize);
-            m_outer_hasher.update(m_key_data + BlockSize, BlockSize);
-        }
-
-        String class_name() const
-        {
-            StringBuilder builder;
-            builder.append("HMAC-");
-            builder.append(m_inner_hasher.class_name());
-            return builder.build();
-        }
-
-    private:
-        void derive_key(const u8* key, size_t length)
-        {
-            u8 v_key[BlockSize];
-            __builtin_memset(v_key, 0, BlockSize);
-            ByteBuffer key_buffer = ByteBuffer::wrap(v_key, BlockSize);
-            // m_key_data is zero'd, so copying the data in
-            // the first few bytes leaves the rest zero, which
-            // is exactly what we want (zero padding)
-            if (length > BlockSize) {
-                m_inner_hasher.update(key, length);
-                auto digest = m_inner_hasher.digest();
-                // FIXME: should we check if the hash function creates more data than its block size?
-                key_buffer.overwrite(0, digest.data, sizeof(TagType));
-            } else {
-                key_buffer.overwrite(0, key, length);
-            }
-
-            // fill out the inner and outer padded keys
-            auto* i_key = m_key_data;
-            auto* o_key = m_key_data + BlockSize;
-            for (size_t i = 0; i < BlockSize; ++i) {
-                auto key_byte = key_buffer[i];
-                i_key[i] = key_byte ^ IPAD;
-                o_key[i] = key_byte ^ OPAD;
-            }
-        }
-
-        void derive_key(const ByteBuffer& key) { derive_key(key.data(), key.size()); }
-        void derive_key(const StringView& key) { derive_key((const u8*)key.characters_without_null_termination(), key.length()); }
-
-        HashType m_inner_hasher, m_outer_hasher;
-        u8 m_key_data[BlockSize * 2];
-    };
 }
 }
