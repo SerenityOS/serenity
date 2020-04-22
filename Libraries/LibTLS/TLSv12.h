@@ -92,8 +92,11 @@ enum class CipherSuite {
 
     RSA_WITH_AES_128_CBC_SHA = 0x002F,
     RSA_WITH_AES_256_CBC_SHA = 0x0035,
-    RSA_WITH_AES_128_CBC_SHA256 = 0x003C, // we support this
-    RSA_WITH_AES_256_CBC_SHA256 = 0x003D, //<- this is our guy
+
+    // We support these
+    RSA_WITH_AES_128_CBC_SHA256 = 0x003C,
+    RSA_WITH_AES_256_CBC_SHA256 = 0x003D,
+    // TODO
     RSA_WITH_AES_128_GCM_SHA256 = 0x009C,
     RSA_WITH_AES_256_GCM_SHA384 = 0x009D,
 };
@@ -360,8 +363,48 @@ private:
 
     void pseudorandom_function(ByteBuffer& output, const ByteBuffer& secret, const u8* label, size_t label_length, const ByteBuffer& seed, const ByteBuffer& seed_b);
 
-    size_t key_length() const { return m_aes_local ? m_aes_local->cipher().key().length() : 16; } // FIXME: generalize
-    size_t mac_length() const { return Crypto::Authentication::HMAC<Crypto::Hash::SHA256>::DigestSize; } // FIXME: generalize
+    size_t key_length() const
+    {
+        switch (m_context.cipher) {
+        case CipherSuite::AES_128_CCM_8_SHA256:
+        case CipherSuite::AES_128_CCM_SHA256:
+        case CipherSuite::AES_128_GCM_SHA256:
+        case CipherSuite::Invalid:
+        case CipherSuite::RSA_WITH_AES_128_CBC_SHA256:
+        case CipherSuite::RSA_WITH_AES_128_CBC_SHA:
+        case CipherSuite::RSA_WITH_AES_128_GCM_SHA256:
+        default:
+            return 128 / 8;
+        case CipherSuite::AES_256_GCM_SHA384:
+        case CipherSuite::RSA_WITH_AES_256_CBC_SHA:
+        case CipherSuite::RSA_WITH_AES_256_CBC_SHA256:
+        case CipherSuite::RSA_WITH_AES_256_GCM_SHA384:
+            return 256 / 8;
+        }
+    }
+    size_t mac_length() const
+    {
+        return Crypto::Authentication::HMAC<Crypto::Hash::SHA256>::DigestSize;
+    } // FIXME: generalize
+    size_t iv_length() const
+    {
+        switch (m_context.cipher) {
+        case CipherSuite::AES_128_CCM_8_SHA256:
+        case CipherSuite::AES_128_CCM_SHA256:
+        case CipherSuite::Invalid:
+        case CipherSuite::RSA_WITH_AES_128_CBC_SHA256:
+        case CipherSuite::RSA_WITH_AES_128_CBC_SHA:
+        case CipherSuite::RSA_WITH_AES_256_CBC_SHA256:
+        case CipherSuite::RSA_WITH_AES_256_CBC_SHA:
+        default:
+            return 16;
+        case CipherSuite::AES_128_GCM_SHA256:
+        case CipherSuite::AES_256_GCM_SHA384:
+        case CipherSuite::RSA_WITH_AES_128_GCM_SHA256:
+        case CipherSuite::RSA_WITH_AES_256_GCM_SHA384:
+            return 12;
+        }
+    }
 
     bool expand_key();
 
@@ -375,27 +418,27 @@ private:
 };
 
 namespace Constants {
-    constexpr static const u32 version_id[] { 1, 1, 1, 0 };
-    constexpr static const u32 pk_id[] { 1, 1, 7, 0 };
-    constexpr static const u32 serial_id[] { 1, 1, 2, 1, 0 };
-    constexpr static const u32 issurer_id[] { 1, 1, 4, 0 };
-    constexpr static const u32 owner_id[] { 1, 1, 6, 0 };
-    constexpr static const u32 validity_id[] { 1, 1, 5, 0 };
-    constexpr static const u32 algorithm_id[] { 1, 1, 3, 0 };
-    constexpr static const u32 sign_id[] { 1, 3, 2, 1, 0 };
-    constexpr static const u32 priv_id[] { 1, 4, 0 };
-    constexpr static const u32 priv_der_id[] { 1, 3, 1, 0 };
-    constexpr static const u32 ecc_priv_id[] { 1, 2, 0 };
+constexpr static const u32 version_id[] { 1, 1, 1, 0 };
+constexpr static const u32 pk_id[] { 1, 1, 7, 0 };
+constexpr static const u32 serial_id[] { 1, 1, 2, 1, 0 };
+constexpr static const u32 issurer_id[] { 1, 1, 4, 0 };
+constexpr static const u32 owner_id[] { 1, 1, 6, 0 };
+constexpr static const u32 validity_id[] { 1, 1, 5, 0 };
+constexpr static const u32 algorithm_id[] { 1, 1, 3, 0 };
+constexpr static const u32 sign_id[] { 1, 3, 2, 1, 0 };
+constexpr static const u32 priv_id[] { 1, 4, 0 };
+constexpr static const u32 priv_der_id[] { 1, 3, 1, 0 };
+constexpr static const u32 ecc_priv_id[] { 1, 2, 0 };
 
-    constexpr static const u8 country_oid[] { 0x55, 0x04, 0x06, 0x00 };
-    constexpr static const u8 state_oid[] { 0x55, 0x04, 0x08, 0x00 };
-    constexpr static const u8 location_oid[] { 0x55, 0x04, 0x07, 0x00 };
-    constexpr static const u8 entity_oid[] { 0x55, 0x04, 0x0A, 0x00 };
-    constexpr static const u8 subject_oid[] { 0x55, 0x04, 0x03, 0x00 };
-    constexpr static const u8 san_oid[] { 0x55, 0x1D, 0x11, 0x00 };
-    constexpr static const u8 ocsp_oid[] { 0x2B, 0x06, 0x01, 0x05, 0x05, 0x07, 0x30, 0x01, 0x00 };
+constexpr static const u8 country_oid[] { 0x55, 0x04, 0x06, 0x00 };
+constexpr static const u8 state_oid[] { 0x55, 0x04, 0x08, 0x00 };
+constexpr static const u8 location_oid[] { 0x55, 0x04, 0x07, 0x00 };
+constexpr static const u8 entity_oid[] { 0x55, 0x04, 0x0A, 0x00 };
+constexpr static const u8 subject_oid[] { 0x55, 0x04, 0x03, 0x00 };
+constexpr static const u8 san_oid[] { 0x55, 0x1D, 0x11, 0x00 };
+constexpr static const u8 ocsp_oid[] { 0x2B, 0x06, 0x01, 0x05, 0x05, 0x07, 0x30, 0x01, 0x00 };
 
-    constexpr static const u8 TLS_RSA_SIGN_SHA256_OID[] { 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x0b, 0x00 };
+constexpr static const u8 TLS_RSA_SIGN_SHA256_OID[] { 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x0b, 0x00 };
 
 }
 

@@ -36,6 +36,8 @@ namespace Cipher {
     template <typename T>
     class CBC : public Mode<T> {
     public:
+        constexpr static size_t IVSizeInBits = 128;
+
         virtual ~CBC() {}
         template <typename... Args>
         explicit constexpr CBC<T>(Args... args)
@@ -50,6 +52,8 @@ namespace Cipher {
             builder.append("_CBC");
             return builder.build();
         }
+
+        virtual size_t IV_length() const { return IVSizeInBits / 8; }
 
         virtual Optional<ByteBuffer> encrypt(const ByteBuffer& in, ByteBuffer& out, Optional<ByteBuffer> ivec = {}) override
         {
