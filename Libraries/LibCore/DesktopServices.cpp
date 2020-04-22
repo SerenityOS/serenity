@@ -39,6 +39,9 @@ bool DesktopServices::open(const URL& url)
     if (url.protocol() == "file")
         return open_file_url(url);
 
+    if (url.protocol() == "irc")
+        return spawn("/bin/IRCClient", url.to_string());
+
     return spawn("/bin/Browser", url.to_string());
 }
 
