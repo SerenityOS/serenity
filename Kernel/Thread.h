@@ -64,6 +64,9 @@ struct ThreadSpecificData {
 #define THREAD_PRIORITY_MAX 99
 
 class Thread {
+    AK_MAKE_NONCOPYABLE(Thread);
+    AK_MAKE_NONMOVABLE(Thread);
+
     friend class Process;
     friend class Scheduler;
 

@@ -98,6 +98,9 @@ struct UnveiledPath {
 };
 
 class Process : public InlineLinkedListNode<Process> {
+    AK_MAKE_NONCOPYABLE(Process);
+    AK_MAKE_NONMOVABLE(Process);
+
     friend class InlineLinkedListNode<Process>;
     friend class Thread;
 
