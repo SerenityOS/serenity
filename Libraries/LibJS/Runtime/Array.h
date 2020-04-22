@@ -30,6 +30,8 @@
 
 namespace JS {
 
+Array* array_from(Interpreter&);
+
 class Array final : public Object {
 public:
     static Array* create(GlobalObject&);
@@ -46,6 +48,5 @@ private:
     static Value length_getter(Interpreter&);
     static void length_setter(Interpreter&, Value);
 };
-
 
 }
