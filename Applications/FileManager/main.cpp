@@ -173,7 +173,35 @@ int run_in_desktop_mode(RefPtr<Core::ConfigFile> config, String initial_location
         }
     });
 
+    auto touch_action = GUI::Action::create("New file...", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GUI::Action&) {
+        auto input_box = GUI::InputBox::construct("Enter name:", "New file", window);
+        if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty()) {
+            auto new_file_path = canonicalized_path(
+                String::format("%s/%s",
+                    model->root_path().characters(),
+                    input_box->text_value().characters()));
+            struct stat st;
+            int rc = stat(new_file_path.characters(), &st);
+            if ((rc < 0 && errno != ENOENT)) {
+                GUI::MessageBox::show(String::format("stat(\"%s\") failed: %s", new_file_path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window);
+                return;
+            }
+            if (rc == 0) {
+                GUI::MessageBox::show(String::format("%s: Already exists", new_file_path.characters()), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window);
+                return;
+            }
+            int fd = creat(new_file_path.characters(), 0666);
+            if (fd < 0) {
+                GUI::MessageBox::show(String::format("creat(\"%s\") failed: %s", new_file_path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window);
+                return;
+            }
+            rc = close(fd);
+            assert(rc >= 0);
+        }
+    });
+
     desktop_view_context_menu->add_action(mkdir_action);
+    desktop_view_context_menu->add_action(touch_action);
 
     item_view.on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
         if (!index.is_valid())
