@@ -33,108 +33,108 @@
 namespace Crypto {
 namespace Cipher {
 
-    enum class Intent {
-        Encryption,
-        Decryption,
-    };
+enum class Intent {
+    Encryption,
+    Decryption,
+};
 
-    enum class PaddingMode {
-        CMS, // RFC 1423
-        RFC5246, // very similar to CMS, but filled with |length - 1|, instead of |length|
-        Null,
-        // FIXME: We do not implement these yet
-        Bit,
-        Random,
-        Space,
-        ZeroLength,
-    };
+enum class PaddingMode {
+    CMS, // RFC 1423
+    RFC5246, // very similar to CMS, but filled with |length - 1|, instead of |length|
+    Null,
+    // FIXME: We do not implement these yet
+    Bit,
+    Random,
+    Space,
+    ZeroLength,
+};
 
-    template <typename B, typename T>
-    class Cipher;
+template<typename B, typename T>
+class Cipher;
 
-    struct CipherBlock {
-    public:
-        explicit CipherBlock(PaddingMode mode)
-            : m_padding_mode(mode)
-        {
-        }
+struct CipherBlock {
+public:
+    explicit CipherBlock(PaddingMode mode)
+        : m_padding_mode(mode)
+    {
+    }
 
-        static size_t block_size() { ASSERT_NOT_REACHED(); }
+    static size_t block_size() { ASSERT_NOT_REACHED(); }
 
-        virtual ByteBuffer get() const = 0;
-        virtual const ByteBuffer& data() const = 0;
+    virtual ByteBuffer get() const = 0;
+    virtual const ByteBuffer& data() const = 0;
 
-        virtual void overwrite(const ByteBuffer&) = 0;
-        virtual void overwrite(const u8*, size_t) = 0;
+    virtual void overwrite(const ByteBuffer&) = 0;
+    virtual void overwrite(const u8*, size_t) = 0;
 
-        virtual void apply_initialization_vector(const u8* ivec) = 0;
+    virtual void apply_initialization_vector(const u8* ivec) = 0;
 
-        PaddingMode padding_mode() const { return m_padding_mode; }
+    PaddingMode padding_mode() const { return m_padding_mode; }
 
-        template <typename T>
-        void put(size_t offset, T value)
-        {
-            ASSERT(offset + sizeof(T) <= data().size());
-            auto* ptr = data().data() + offset;
-            auto index { 0 };
+    template<typename T>
+    void put(size_t offset, T value)
+    {
+        ASSERT(offset + sizeof(T) <= data().size());
+        auto* ptr = data().data() + offset;
+        auto index { 0 };
 
-            ASSERT(sizeof(T) <= 4);
+        ASSERT(sizeof(T) <= 4);
 
-            if constexpr (sizeof(T) > 3)
-                ptr[index++] = (u8)(value >> 24);
+        if constexpr (sizeof(T) > 3)
+            ptr[index++] = (u8)(value >> 24);
 
-            if constexpr (sizeof(T) > 2)
-                ptr[index++] = (u8)(value >> 16);
+        if constexpr (sizeof(T) > 2)
+            ptr[index++] = (u8)(value >> 16);
 
-            if constexpr (sizeof(T) > 1)
-                ptr[index++] = (u8)(value >> 8);
+        if constexpr (sizeof(T) > 1)
+            ptr[index++] = (u8)(value >> 8);
 
-            ptr[index] = (u8)value;
-        }
+        ptr[index] = (u8)value;
+    }
 
-    private:
-        virtual ByteBuffer& data() = 0;
-        PaddingMode m_padding_mode;
-    };
+private:
+    virtual ByteBuffer& data() = 0;
+    PaddingMode m_padding_mode;
+};
 
-    struct CipherKey {
-        virtual ByteBuffer data() const = 0;
-        static bool is_valid_key_size(size_t) { return false; };
+struct CipherKey {
+    virtual ByteBuffer data() const = 0;
+    static bool is_valid_key_size(size_t) { return false; };
 
-        virtual ~CipherKey() { }
+    virtual ~CipherKey() { }
 
-    protected:
-        virtual void expand_encrypt_key(const ByteBuffer& user_key, size_t bits) = 0;
-        virtual void expand_decrypt_key(const ByteBuffer& user_key, size_t bits) = 0;
-        size_t bits { 0 };
-    };
+protected:
+    virtual void expand_encrypt_key(const ByteBuffer& user_key, size_t bits) = 0;
+    virtual void expand_decrypt_key(const ByteBuffer& user_key, size_t bits) = 0;
+    size_t bits { 0 };
+};
 
-    template <typename KeyT = CipherKey, typename BlockT = CipherBlock>
-    class Cipher {
-    public:
-        using KeyType = KeyT;
-        using BlockType = BlockT;
+template<typename KeyT = CipherKey, typename BlockT = CipherBlock>
+class Cipher {
+public:
+    using KeyType = KeyT;
+    using BlockType = BlockT;
 
-        explicit Cipher<KeyT, BlockT>(PaddingMode mode)
-            : m_padding_mode(mode)
-        {
-        }
+    explicit Cipher<KeyT, BlockT>(PaddingMode mode)
+        : m_padding_mode(mode)
+    {
+    }
 
-        virtual const KeyType& key() const = 0;
-        virtual KeyType& key() = 0;
+    virtual const KeyType& key() const = 0;
+    virtual KeyType& key() = 0;
 
-        static size_t block_size() { return BlockType::block_size(); }
+    static size_t block_size() { return BlockType::block_size(); }
 
-        PaddingMode padding_mode() const { return m_padding_mode; }
+    PaddingMode padding_mode() const { return m_padding_mode; }
 
-        virtual void encrypt_block(const BlockType& in, BlockType& out) = 0;
-        virtual void decrypt_block(const BlockType& in, BlockType& out) = 0;
+    virtual void encrypt_block(const BlockType& in, BlockType& out) = 0;
+    virtual void decrypt_block(const BlockType& in, BlockType& out) = 0;
 
-        virtual String class_name() const = 0;
+    virtual String class_name() const = 0;
 
-    private:
-        PaddingMode m_padding_mode;
-    };
+private:
+    PaddingMode m_padding_mode;
+};
 }
 }
 

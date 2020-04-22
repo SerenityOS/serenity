@@ -60,137 +60,121 @@ namespace TLS {
 // "for now" q&d implementation of ASN1
 namespace {
 
-    static bool _asn1_is_field_present(const u32* fields, const u32* prefix)
-    {
-        size_t i = 0;
-        while (prefix[i]) {
-            if (fields[i] != prefix[i])
-                return false;
-            ++i;
-        }
-        return true;
+static bool _asn1_is_field_present(const u32* fields, const u32* prefix)
+{
+    size_t i = 0;
+    while (prefix[i]) {
+        if (fields[i] != prefix[i])
+            return false;
+        ++i;
+    }
+    return true;
+}
+
+static bool _asn1_is_oid(const u8* oid, const u8* compare, size_t length = 3)
+{
+    size_t i = 0;
+    while (oid[i] && i < length) {
+        if (oid[i] != compare[i])
+            return false;
+        ++i;
+    }
+    return true;
+}
+
+static void _set_algorithm(u32&, const u8* value, size_t length)
+{
+    if (length != 9) {
+        dbg() << "unsupported algorithm " << value;
     }
 
-    static bool _asn1_is_oid(const u8* oid, const u8* compare, size_t length = 3)
-    {
-        size_t i = 0;
-        while (oid[i] && i < length) {
-            if (oid[i] != compare[i])
-                return false;
-            ++i;
-        }
-        return true;
-    }
+    dbg() << "FIXME: Set algorithm";
+}
 
-    static void _set_algorithm(u32&, const u8* value, size_t length)
-    {
-        if (length != 9) {
-            dbg() << "unsupported algorithm " << value;
-        }
+static size_t _get_asn1_length(const u8* buffer, size_t length, size_t& octets)
+{
+    octets = 0;
+    if (length < 1)
+        return 0;
 
-        dbg() << "FIXME: Set algorithm";
-    }
-
-    static size_t _get_asn1_length(const u8* buffer, size_t length, size_t& octets)
-    {
-        octets = 0;
-        if (length < 1)
+    u8 size = buffer[0];
+    if (size & 0x80) {
+        octets = size & 0x7f;
+        if (octets > length - 1) {
             return 0;
-
-        u8 size = buffer[0];
-        if (size & 0x80) {
-            octets = size & 0x7f;
-            if (octets > length - 1) {
-                return 0;
-            }
-            auto reference_octets = octets;
-            if (octets > 4)
-                reference_octets = 4;
-            size_t long_size = 0, coeff = 1;
-            for (auto i = reference_octets; i > 0; --i) {
-                long_size += buffer[i] * coeff;
-                coeff *= 0x100;
-            }
-            ++octets;
-            return long_size;
+        }
+        auto reference_octets = octets;
+        if (octets > 4)
+            reference_octets = 4;
+        size_t long_size = 0, coeff = 1;
+        for (auto i = reference_octets; i > 0; --i) {
+            long_size += buffer[i] * coeff;
+            coeff *= 0x100;
         }
         ++octets;
-        return size;
+        return long_size;
     }
+    ++octets;
+    return size;
+}
 
-    static ssize_t _parse_asn1(Context& context, Certificate& cert, const u8* buffer, size_t size, int level, u32* fields, u8* has_key, int client_cert, u8* root_oid, OIDChain* chain)
-    {
-        OIDChain local_chain;
-        local_chain.root = chain;
-        size_t position = 0;
+static ssize_t _parse_asn1(Context& context, Certificate& cert, const u8* buffer, size_t size, int level, u32* fields, u8* has_key, int client_cert, u8* root_oid, OIDChain* chain)
+{
+    OIDChain local_chain;
+    local_chain.root = chain;
+    size_t position = 0;
 
-        // parse DER...again
-        size_t index = 0;
-        u8 oid[16] { 0 };
+    // parse DER...again
+    size_t index = 0;
+    u8 oid[16] { 0 };
 
-        local_chain.oid = oid;
-        if (has_key)
-            *has_key = 0;
+    local_chain.oid = oid;
+    if (has_key)
+        *has_key = 0;
 
-        u8 local_has_key = 0;
-        const u8* cert_data = nullptr;
-        size_t cert_length = 0;
-        while (position < size) {
-            size_t start_position = position;
-            if (size - position < 2) {
-                dbg() << "not enough data for certificate size";
-                return (i8)Error::NeedMoreData;
-            }
-            u8 first = buffer[position++];
-            u8 type = first & 0x1f;
-            u8 constructed = first & 0x20;
-            size_t octets = 0;
-            u32 temp;
-            index++;
+    u8 local_has_key = 0;
+    const u8* cert_data = nullptr;
+    size_t cert_length = 0;
+    while (position < size) {
+        size_t start_position = position;
+        if (size - position < 2) {
+            dbg() << "not enough data for certificate size";
+            return (i8)Error::NeedMoreData;
+        }
+        u8 first = buffer[position++];
+        u8 type = first & 0x1f;
+        u8 constructed = first & 0x20;
+        size_t octets = 0;
+        u32 temp;
+        index++;
 
-            if (level <= 0xff)
-                fields[level - 1] = index;
+        if (level <= 0xff)
+            fields[level - 1] = index;
 
-            size_t length = _get_asn1_length((const u8*)&buffer[position], size - position, octets);
+        size_t length = _get_asn1_length((const u8*)&buffer[position], size - position, octets);
 
-            if (octets > 4 || octets > size - position) {
-                dbg() << "could not read the certificate";
-                return position;
-            }
+        if (octets > 4 || octets > size - position) {
+            dbg() << "could not read the certificate";
+            return position;
+        }
 
-            position += octets;
-            if (size - position < length) {
-                dbg() << "not enough data for sequence";
-                return (i8)Error::NeedMoreData;
-            }
+        position += octets;
+        if (size - position < length) {
+            dbg() << "not enough data for sequence";
+            return (i8)Error::NeedMoreData;
+        }
 
-            if (length && constructed) {
-                switch (type) {
-                case 0x03:
-                    break;
-                case 0x10:
-                    if (level == 2 && index == 1) {
-                        cert_length = length + position - start_position;
-                        cert_data = buffer + start_position;
-                    }
-                    // public key data
-                    if (!cert.version && _asn1_is_field_present(fields, Constants::priv_der_id)) {
-                        temp = length + position - start_position;
-                        if (cert.der.size() < temp) {
-                            cert.der.grow(temp);
-                        } else {
-                            cert.der.trim(temp);
-                        }
-                        cert.der.overwrite(0, buffer + start_position, temp);
-                    }
-                    break;
-
-                default:
-                    break;
+        if (length && constructed) {
+            switch (type) {
+            case 0x03:
+                break;
+            case 0x10:
+                if (level == 2 && index == 1) {
+                    cert_length = length + position - start_position;
+                    cert_data = buffer + start_position;
                 }
-                local_has_key = false;
-                _parse_asn1(context, cert, buffer + position, length, level + 1, fields, &local_has_key, client_cert, root_oid, &local_chain);
-                if ((local_has_key && (!context.is_server || client_cert)) || (client_cert || _asn1_is_field_present(fields, Constants::pk_id))) {
+                // public key data
+                if (!cert.version && _asn1_is_field_present(fields, Constants::priv_der_id)) {
                     temp = length + position - start_position;
                     if (cert.der.size() < temp) {
                         cert.der.grow(temp);
@@ -199,134 +183,150 @@ namespace {
                     }
                     cert.der.overwrite(0, buffer + start_position, temp);
                 }
-            } else {
-                switch (type) {
-                case 0x00:
-                    return position;
-                    break;
-                case 0x01:
-                    temp = buffer[position];
-                    break;
-                case 0x02:
-                    if (_asn1_is_field_present(fields, Constants::pk_id)) {
-                        if (has_key)
-                            *has_key = true;
+                break;
 
-                        if (index == 1)
-                            cert.public_key.set(
-                                Crypto::UnsignedBigInteger::import_data(buffer + position, length),
-                                cert.public_key.public_exponent());
-                        else if (index == 2)
-                            cert.public_key.set(
-                                cert.public_key.modulus(),
-                                Crypto::UnsignedBigInteger::import_data(buffer + position, length));
-                    } else if (_asn1_is_field_present(fields, Constants::serial_id)) {
-                        cert.serial_number = Crypto::UnsignedBigInteger::import_data(buffer + position, length);
-                    }
-                    if (_asn1_is_field_present(fields, Constants::version_id)) {
-                        if (length == 1)
-                            cert.version = buffer[position];
-                    }
-                    // print_buffer(ByteBuffer::wrap(buffer + position, length));
-                    break;
-                case 0x03:
-                    if (_asn1_is_field_present(fields, Constants::pk_id)) {
-                        if (has_key)
-                            *has_key = true;
-                    }
-                    if (_asn1_is_field_present(fields, Constants::sign_id)) {
-                        auto* value = buffer + position;
-                        auto len = length;
-                        if (!value[0] && len % 2) {
-                            ++value;
-                            --len;
-                        }
-                        cert.sign_key = ByteBuffer::copy(value, len);
-                    } else {
-                        if (buffer[position] == 0 && length > 256) {
-                            _parse_asn1(context, cert, buffer + position + 1, length - 1, level + 1, fields, &local_has_key, client_cert, root_oid, &local_chain);
-                        } else {
-                            _parse_asn1(context, cert, buffer + position, length, level + 1, fields, &local_has_key, client_cert, root_oid, &local_chain);
-                        }
-                    }
-                    break;
-                case 0x04:
-                    _parse_asn1(context, cert, buffer + position, length, level + 1, fields, &local_has_key, client_cert, root_oid, &local_chain);
-                    break;
-                case 0x05:
-                    break;
-                case 0x06:
-                    if (_asn1_is_field_present(fields, Constants::pk_id)) {
-                        _set_algorithm(cert.key_algorithm, buffer + position, length);
-                    }
-                    if (_asn1_is_field_present(fields, Constants::algorithm_id)) {
-                        _set_algorithm(cert.algorithm, buffer + position, length);
-                    }
-
-                    if (length < 16)
-                        memcpy(oid, buffer + position, length);
-                    else
-                        memcpy(oid, buffer + position, 16);
-                    if (root_oid)
-                        memcpy(root_oid, oid, 16);
-                    break;
-                case 0x09:
-                    break;
-                case 0x17:
-                case 0x018:
-                    // time
-                    // ignore
-                    break;
-                case 0x013:
-                case 0x0c:
-                case 0x14:
-                case 0x15:
-                case 0x16:
-                case 0x19:
-                case 0x1a:
-                case 0x1b:
-                case 0x1c:
-                case 0x1d:
-                case 0x1e:
-                    // printable string and such
-                    if (_asn1_is_field_present(fields, Constants::issurer_id)) {
-                        if (_asn1_is_oid(oid, Constants::country_oid)) {
-                            cert.issuer_country = String { (const char*)buffer + position, length };
-                        } else if (_asn1_is_oid(oid, Constants::state_oid)) {
-                            cert.issuer_state = String { (const char*)buffer + position, length };
-                        } else if (_asn1_is_oid(oid, Constants::location_oid)) {
-                            cert.issuer_location = String { (const char*)buffer + position, length };
-                        } else if (_asn1_is_oid(oid, Constants::entity_oid)) {
-                            cert.issuer_entity = String { (const char*)buffer + position, length };
-                        } else if (_asn1_is_oid(oid, Constants::subject_oid)) {
-                            cert.issuer_subject = String { (const char*)buffer + position, length };
-                        }
-                    } else if (_asn1_is_field_present(fields, Constants::owner_id)) {
-                        if (_asn1_is_oid(oid, Constants::country_oid)) {
-                            cert.country = String { (const char*)buffer + position, length };
-                        } else if (_asn1_is_oid(oid, Constants::state_oid)) {
-                            cert.state = String { (const char*)buffer + position, length };
-                        } else if (_asn1_is_oid(oid, Constants::location_oid)) {
-                            cert.location = String { (const char*)buffer + position, length };
-                        } else if (_asn1_is_oid(oid, Constants::entity_oid)) {
-                            cert.entity = String { (const char*)buffer + position, length };
-                        } else if (_asn1_is_oid(oid, Constants::subject_oid)) {
-                            cert.subject = String { (const char*)buffer + position, length };
-                        }
-                    }
-                    break;
-                default:
-                    // dbg() << "unused field " << type;
-                    break;
-                }
+            default:
+                break;
             }
-            position += length;
+            local_has_key = false;
+            _parse_asn1(context, cert, buffer + position, length, level + 1, fields, &local_has_key, client_cert, root_oid, &local_chain);
+            if ((local_has_key && (!context.is_server || client_cert)) || (client_cert || _asn1_is_field_present(fields, Constants::pk_id))) {
+                temp = length + position - start_position;
+                if (cert.der.size() < temp) {
+                    cert.der.grow(temp);
+                } else {
+                    cert.der.trim(temp);
+                }
+                cert.der.overwrite(0, buffer + start_position, temp);
+            }
+        } else {
+            switch (type) {
+            case 0x00:
+                return position;
+                break;
+            case 0x01:
+                temp = buffer[position];
+                break;
+            case 0x02:
+                if (_asn1_is_field_present(fields, Constants::pk_id)) {
+                    if (has_key)
+                        *has_key = true;
+
+                    if (index == 1)
+                        cert.public_key.set(
+                            Crypto::UnsignedBigInteger::import_data(buffer + position, length),
+                            cert.public_key.public_exponent());
+                    else if (index == 2)
+                        cert.public_key.set(
+                            cert.public_key.modulus(),
+                            Crypto::UnsignedBigInteger::import_data(buffer + position, length));
+                } else if (_asn1_is_field_present(fields, Constants::serial_id)) {
+                    cert.serial_number = Crypto::UnsignedBigInteger::import_data(buffer + position, length);
+                }
+                if (_asn1_is_field_present(fields, Constants::version_id)) {
+                    if (length == 1)
+                        cert.version = buffer[position];
+                }
+                // print_buffer(ByteBuffer::wrap(buffer + position, length));
+                break;
+            case 0x03:
+                if (_asn1_is_field_present(fields, Constants::pk_id)) {
+                    if (has_key)
+                        *has_key = true;
+                }
+                if (_asn1_is_field_present(fields, Constants::sign_id)) {
+                    auto* value = buffer + position;
+                    auto len = length;
+                    if (!value[0] && len % 2) {
+                        ++value;
+                        --len;
+                    }
+                    cert.sign_key = ByteBuffer::copy(value, len);
+                } else {
+                    if (buffer[position] == 0 && length > 256) {
+                        _parse_asn1(context, cert, buffer + position + 1, length - 1, level + 1, fields, &local_has_key, client_cert, root_oid, &local_chain);
+                    } else {
+                        _parse_asn1(context, cert, buffer + position, length, level + 1, fields, &local_has_key, client_cert, root_oid, &local_chain);
+                    }
+                }
+                break;
+            case 0x04:
+                _parse_asn1(context, cert, buffer + position, length, level + 1, fields, &local_has_key, client_cert, root_oid, &local_chain);
+                break;
+            case 0x05:
+                break;
+            case 0x06:
+                if (_asn1_is_field_present(fields, Constants::pk_id)) {
+                    _set_algorithm(cert.key_algorithm, buffer + position, length);
+                }
+                if (_asn1_is_field_present(fields, Constants::algorithm_id)) {
+                    _set_algorithm(cert.algorithm, buffer + position, length);
+                }
+
+                if (length < 16)
+                    memcpy(oid, buffer + position, length);
+                else
+                    memcpy(oid, buffer + position, 16);
+                if (root_oid)
+                    memcpy(root_oid, oid, 16);
+                break;
+            case 0x09:
+                break;
+            case 0x17:
+            case 0x018:
+                // time
+                // ignore
+                break;
+            case 0x013:
+            case 0x0c:
+            case 0x14:
+            case 0x15:
+            case 0x16:
+            case 0x19:
+            case 0x1a:
+            case 0x1b:
+            case 0x1c:
+            case 0x1d:
+            case 0x1e:
+                // printable string and such
+                if (_asn1_is_field_present(fields, Constants::issurer_id)) {
+                    if (_asn1_is_oid(oid, Constants::country_oid)) {
+                        cert.issuer_country = String { (const char*)buffer + position, length };
+                    } else if (_asn1_is_oid(oid, Constants::state_oid)) {
+                        cert.issuer_state = String { (const char*)buffer + position, length };
+                    } else if (_asn1_is_oid(oid, Constants::location_oid)) {
+                        cert.issuer_location = String { (const char*)buffer + position, length };
+                    } else if (_asn1_is_oid(oid, Constants::entity_oid)) {
+                        cert.issuer_entity = String { (const char*)buffer + position, length };
+                    } else if (_asn1_is_oid(oid, Constants::subject_oid)) {
+                        cert.issuer_subject = String { (const char*)buffer + position, length };
+                    }
+                } else if (_asn1_is_field_present(fields, Constants::owner_id)) {
+                    if (_asn1_is_oid(oid, Constants::country_oid)) {
+                        cert.country = String { (const char*)buffer + position, length };
+                    } else if (_asn1_is_oid(oid, Constants::state_oid)) {
+                        cert.state = String { (const char*)buffer + position, length };
+                    } else if (_asn1_is_oid(oid, Constants::location_oid)) {
+                        cert.location = String { (const char*)buffer + position, length };
+                    } else if (_asn1_is_oid(oid, Constants::entity_oid)) {
+                        cert.entity = String { (const char*)buffer + position, length };
+                    } else if (_asn1_is_oid(oid, Constants::subject_oid)) {
+                        cert.subject = String { (const char*)buffer + position, length };
+                    }
+                }
+                break;
+            default:
+                // dbg() << "unused field " << type;
+                break;
+            }
         }
-        if (level == 2 && cert.sign_key.size() && cert_length && cert_data) {
-            dbg() << "FIXME: Cert.fingerprint";
-        }
-        return position;
+        position += length;
     }
+    if (level == 2 && cert.sign_key.size() && cert_length && cert_data) {
+        dbg() << "FIXME: Cert.fingerprint";
+    }
+    return position;
+}
 }
 
 Optional<Certificate> TLSv12::parse_asn1(const ByteBuffer& buffer, bool)
@@ -520,7 +520,7 @@ bool TLSv12::expand_key()
 
     auto key_size = key_length();
     auto mac_size = mac_length();
-    auto iv_size = 16;
+    auto iv_size = iv_length();
 
     pseudorandom_function(
         key_buffer,
@@ -769,9 +769,10 @@ void TLSv12::update_packet(ByteBuffer& packet)
                 auto buffer = ByteBuffer::create_zeroed(length);
                 size_t buffer_position = 0;
                 u16 aligned_length = length + block_size - length % block_size;
+                auto iv_size = iv_length();
 
-                // we need enough space for a header, 16 bytes of IV and whatever the packet contains
-                auto ct = ByteBuffer::create_zeroed(aligned_length + header_size + 16);
+                // we need enough space for a header, iv_length bytes of IV and whatever the packet contains
+                auto ct = ByteBuffer::create_zeroed(aligned_length + header_size + iv_size);
 
                 // copy the header over
                 ct.overwrite(0, packet.data(), header_size - 2);
@@ -798,18 +799,15 @@ void TLSv12::update_packet(ByteBuffer& packet)
                 // throws a wrench into our plans
                 buffer.trim(buffer_position);
 
-                // make a random seed IV for this message
-                u8 record_iv[16] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-                // arc4random_buf(record_iv, 16);
-
-                auto iv = ByteBuffer::wrap(record_iv, 16);
+                // FIXME: REALLY Should be filled with random bytes
+                auto iv = ByteBuffer::create_zeroed(iv_size);
 
                 // write it into the ciphertext portion of the message
-                ct.overwrite(header_size, record_iv, 16);
+                ct.overwrite(header_size, iv.data(), iv.size());
                 ct.trim(length + block_size - length % block_size + header_size + block_size - padding);
 
                 // get a block to encrypt into
-                auto view = ct.slice_view(header_size + 16, length + block_size - length % block_size + block_size - padding - 16);
+                auto view = ct.slice_view(header_size + iv_size, length + block_size - length % block_size + block_size - padding - iv_size);
 
                 // encrypt the message
                 m_aes_local->encrypt(buffer, view, iv);
@@ -1346,11 +1344,12 @@ ssize_t TLSv12::handle_message(const ByteBuffer& buffer)
 #endif
 
         ASSERT(m_aes_remote);
+        auto iv_size = iv_length();
 
-        auto decrypted = m_aes_remote->create_aligned_buffer(length - 16);
-        auto iv = buffer.slice_view(header_size, 16);
+        auto decrypted = m_aes_remote->create_aligned_buffer(length - iv_size);
+        auto iv = buffer.slice_view(header_size, iv_size);
 
-        m_aes_remote->decrypt(buffer.slice_view(header_size + 16, length - 16), decrypted, iv);
+        m_aes_remote->decrypt(buffer.slice_view(header_size + iv_size, length - iv_size), decrypted, iv);
 
         length = decrypted.size();
 
