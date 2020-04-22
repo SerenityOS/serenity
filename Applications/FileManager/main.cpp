@@ -593,7 +593,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         GUI::MessageBox::show(error_message, "File Manager", GUI::MessageBox::Type::Error);
 
         if (quit)
-            app.quit(1);
+            exit(1);
     };
 
     directory_view.on_status_message = [&](const StringView& message) {
