@@ -376,7 +376,7 @@ static bool der_decode_sequence(const u8* in, size_t in_length, ASN1::List* list
     return true;
 }
 
-template <size_t element_count>
+template<size_t element_count>
 struct der_decode_sequence_many_base {
     constexpr void set(size_t index, ASN1::Kind kind, size_t size, void* data)
     {
@@ -399,10 +399,10 @@ protected:
     size_t m_in_length;
 };
 
-template <size_t element_count>
+template<size_t element_count>
 struct der_decode_sequence_many : public der_decode_sequence_many_base<element_count> {
 
-    template <typename ElementType, typename... Args>
+    template<typename ElementType, typename... Args>
     constexpr void construct(size_t index, ASN1::Kind kind, size_t size, ElementType data, Args... args)
     {
         der_decode_sequence_many_base<element_count>::set(index, kind, size, (void*)data);
@@ -414,7 +414,7 @@ struct der_decode_sequence_many : public der_decode_sequence_many_base<element_c
         ASSERT(index == element_count);
     }
 
-    template <typename... Args>
+    template<typename... Args>
     constexpr der_decode_sequence_many(const u8* in, size_t in_length, Args... args)
         : der_decode_sequence_many_base<element_count>(in, in_length)
     {

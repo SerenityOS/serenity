@@ -32,80 +32,81 @@
 namespace Crypto {
 
 namespace ASN1 {
-    enum class Kind {
-        Eol,
-        Boolean,
-        Integer,
-        ShortInteger,
-        BitString,
-        OctetString,
-        Null,
-        ObjectIdentifier,
-        IA5String,
-        PrintableString,
-        Utf8String,
-        UTCTime,
-        Choice,
-        Sequence,
-        Set,
-        SetOf
-    };
 
-    static StringView kind_name(Kind kind)
-    {
-        switch (kind) {
-        case Kind::Eol:
-            return "EndOfList";
-        case Kind::Boolean:
-            return "Boolean";
-        case Kind::Integer:
-            return "Integer";
-        case Kind::ShortInteger:
-            return "ShortInteger";
-        case Kind::BitString:
-            return "BitString";
-        case Kind::OctetString:
-            return "OctetString";
-        case Kind::Null:
-            return "Null";
-        case Kind::ObjectIdentifier:
-            return "ObjectIdentifier";
-        case Kind::IA5String:
-            return "IA5String";
-        case Kind::PrintableString:
-            return "PrintableString";
-        case Kind::Utf8String:
-            return "UTF8String";
-        case Kind::UTCTime:
-            return "UTCTime";
-        case Kind::Choice:
-            return "Choice";
-        case Kind::Sequence:
-            return "Sequence";
-        case Kind::Set:
-            return "Set";
-        case Kind::SetOf:
-            return "SetOf";
-        }
+enum class Kind {
+    Eol,
+    Boolean,
+    Integer,
+    ShortInteger,
+    BitString,
+    OctetString,
+    Null,
+    ObjectIdentifier,
+    IA5String,
+    PrintableString,
+    Utf8String,
+    UTCTime,
+    Choice,
+    Sequence,
+    Set,
+    SetOf
+};
 
-        return "InvalidKind";
+static StringView kind_name(Kind kind)
+{
+    switch (kind) {
+    case Kind::Eol:
+        return "EndOfList";
+    case Kind::Boolean:
+        return "Boolean";
+    case Kind::Integer:
+        return "Integer";
+    case Kind::ShortInteger:
+        return "ShortInteger";
+    case Kind::BitString:
+        return "BitString";
+    case Kind::OctetString:
+        return "OctetString";
+    case Kind::Null:
+        return "Null";
+    case Kind::ObjectIdentifier:
+        return "ObjectIdentifier";
+    case Kind::IA5String:
+        return "IA5String";
+    case Kind::PrintableString:
+        return "PrintableString";
+    case Kind::Utf8String:
+        return "UTF8String";
+    case Kind::UTCTime:
+        return "UTCTime";
+    case Kind::Choice:
+        return "Choice";
+    case Kind::Sequence:
+        return "Sequence";
+    case Kind::Set:
+        return "Set";
+    case Kind::SetOf:
+        return "SetOf";
     }
 
-    struct List {
-        Kind kind;
-        void* data;
-        size_t size;
-        bool used;
-        List *prev, *next, *child, *parent;
-    };
+    return "InvalidKind";
+}
 
-    static constexpr void set(List& list, Kind type, void* data, size_t size)
-    {
-        list.kind = type;
-        list.data = data;
-        list.size = size;
-        list.used = false;
-    }
+struct List {
+    Kind kind;
+    void* data;
+    size_t size;
+    bool used;
+    List *prev, *next, *child, *parent;
+};
+
+static constexpr void set(List& list, Kind type, void* data, size_t size)
+{
+    list.kind = type;
+    list.data = data;
+    list.size = size;
+    list.used = false;
+}
 }
 
 }

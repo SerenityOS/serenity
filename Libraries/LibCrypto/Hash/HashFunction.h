@@ -33,27 +33,27 @@
 namespace Crypto {
 namespace Hash {
 
-    template <size_t BlockS, typename DigestT>
-    class HashFunction {
-    public:
-        static constexpr auto BlockSize = BlockS / 8;
-        static constexpr auto DigestSize = sizeof(DigestT);
+template<size_t BlockS, typename DigestT>
+class HashFunction {
+public:
+    static constexpr auto BlockSize = BlockS / 8;
+    static constexpr auto DigestSize = sizeof(DigestT);
 
-        using DigestType = DigestT;
+    using DigestType = DigestT;
 
-        static size_t block_size() { return BlockSize; };
-        static size_t digest_size() { return DigestSize; };
+    static size_t block_size() { return BlockSize; };
+    static size_t digest_size() { return DigestSize; };
 
-        virtual void update(const u8*, size_t) = 0;
-        virtual void update(const ByteBuffer& buffer) = 0;
-        virtual void update(const StringView& string) = 0;
+    virtual void update(const u8*, size_t) = 0;
+    virtual void update(const ByteBuffer& buffer) = 0;
+    virtual void update(const StringView& string) = 0;
 
-        virtual DigestType peek() = 0;
-        virtual DigestType digest() = 0;
+    virtual DigestType peek() = 0;
+    virtual DigestType digest() = 0;
 
-        virtual void reset() = 0;
+    virtual void reset() = 0;
 
-        virtual String class_name() const = 0;
-    };
+    virtual String class_name() const = 0;
+};
 }
 }
