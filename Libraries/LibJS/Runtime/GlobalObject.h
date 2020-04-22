@@ -53,6 +53,7 @@ private:
 
     static Value gc(Interpreter&);
     static Value is_nan(Interpreter&);
+    static Value is_finite(Interpreter&);
 
     template<typename ConstructorType>
     void add_constructor(const FlyString& property_name, ConstructorType*&, Object& prototype);
