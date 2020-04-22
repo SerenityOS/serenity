@@ -32,7 +32,7 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio inet dns unix shared_buffer cpath rpath fattr", nullptr) < 0) {
+    if (pledge("stdio inet dns unix shared_buffer cpath rpath fattr wpath cpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -44,12 +44,35 @@ int main(int argc, char** argv)
 
     GUI::Application app(argc, argv);
 
-    if (pledge("stdio inet dns unix shared_buffer rpath", nullptr) < 0) {
+    if (pledge("stdio inet dns unix shared_buffer rpath wpath cpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
-    auto app_window = IRCAppWindow::construct();
+    URL url = "";
+    if (app.args().size() >= 1) {
+        url = URL::create_with_url_or_path(app.args()[0]);
+
+        if (url.protocol().to_lowercase() == "ircs") {
+            fprintf(stderr, "Secure IRC over SSL/TLS (ircs) is not supported\n");
+            return 1;
+        }
+
+        if (url.protocol().to_lowercase() != "irc") {
+            fprintf(stderr, "Unsupported protocol\n");
+            return 1;
+        }
+
+        if (url.host().is_empty()) {
+            fprintf(stderr, "Invalid URL\n");
+            return 1;
+        }
+
+        if (!url.port() || url.port() == 80)
+            url.set_port(6667);
+    }
+
+    auto app_window = IRCAppWindow::construct(url.host(), url.port());
     app_window->show();
     return app.exec();
 }

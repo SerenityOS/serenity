@@ -49,8 +49,8 @@ IRCAppWindow& IRCAppWindow::the()
     return *s_the;
 }
 
-IRCAppWindow::IRCAppWindow()
-    : m_client(IRCClient::construct())
+IRCAppWindow::IRCAppWindow(String server, int port)
+    : m_client(IRCClient::construct(server, port))
 {
     ASSERT(!s_the);
     s_the = this;
