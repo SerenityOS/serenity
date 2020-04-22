@@ -87,6 +87,7 @@ void GlobalObject::initialize()
 
     put_native_function("gc", gc);
     put_native_function("isNaN", is_nan, 1);
+    put_native_function("isFinite", is_finite, 1);
 
     // FIXME: These are read-only in ES5
     put("NaN", js_nan());
@@ -139,6 +140,12 @@ Value GlobalObject::is_nan(Interpreter& interpreter)
 {
     auto value = interpreter.argument(0).to_number();
     return Value(value.is_nan());
+}
+
+Value GlobalObject::is_finite(Interpreter& interpreter)
+{
+    auto value = interpreter.argument(0).to_number();
+    return Value(!value.is_infinity() && !value.is_nan());
 }
 
 }
