@@ -39,6 +39,12 @@ XMLHttpRequestConstructor::XMLHttpRequestConstructor()
     : NativeFunction(*interpreter().global_object().function_prototype())
 {
     put("length", JS::Value(1));
+
+    put("UNSENT", JS::Value((i32)XMLHttpRequest::ReadyState::Unsent));
+    put("OPENED", JS::Value((i32)XMLHttpRequest::ReadyState::Opened));
+    put("HEADERS_RECEIVED", JS::Value((i32)XMLHttpRequest::ReadyState::HeadersReceived));
+    put("LOADING", JS::Value((i32)XMLHttpRequest::ReadyState::Loading));
+    put("DONE", JS::Value((i32)XMLHttpRequest::ReadyState::Done));
 }
 
 XMLHttpRequestConstructor::~XMLHttpRequestConstructor()

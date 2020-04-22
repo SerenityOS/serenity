@@ -46,6 +46,12 @@ XMLHttpRequest::~XMLHttpRequest()
 {
 }
 
+void XMLHttpRequest::set_ready_state(ReadyState ready_state)
+{
+    // FIXME: call onreadystatechange once we have that
+    m_ready_state = ready_state;
+}
+
 String XMLHttpRequest::response_text() const
 {
     if (m_response.is_null())
@@ -57,22 +63,27 @@ void XMLHttpRequest::open(const String& method, const String& url)
 {
     m_method = method;
     m_url = url;
+    set_ready_state(ReadyState::Opened);
 }
 
 void XMLHttpRequest::send()
 {
+    // FIXME: in order to properly set ReadyState::HeadersReceived and ReadyState::Loading,
+    // we need to make ResourceLoader give us more detailed updates than just "done" and "error".
     ResourceLoader::the().load(
         m_window->document().complete_url(m_url),
         [weak_this = make_weak_ptr()](auto& data) {
             if (!weak_this)
                 return;
             const_cast<XMLHttpRequest&>(*weak_this).m_response = data;
+            const_cast<XMLHttpRequest&>(*weak_this).set_ready_state(ReadyState::Done);
             const_cast<XMLHttpRequest&>(*weak_this).dispatch_event(Event::create("load"));
         },
         [weak_this = make_weak_ptr()](auto& error) {
             if (!weak_this)
                 return;
             dbg() << "XHR failed to load: " << error;
+            const_cast<XMLHttpRequest&>(*weak_this).set_ready_state(ReadyState::Done);
             const_cast<XMLHttpRequest&>(*weak_this).dispatch_event(Event::create("error"));
         });
 }
