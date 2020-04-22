@@ -157,6 +157,29 @@ int run_in_desktop_mode(RefPtr<Core::ConfigFile> config, String initial_location
         Core::DesktopServices::open(URL::create_with_file_protocol(path));
     };
 
+    auto desktop_view_context_menu = GUI::Menu::construct("Directory View");
+
+    auto mkdir_action = GUI::Action::create("New directory...", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&](const GUI::Action&) {
+        auto input_box = GUI::InputBox::construct("Enter name:", "New directory", window);
+        if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty()) {
+            auto new_dir_path = canonicalized_path(
+                String::format("%s/%s",
+                    model->root_path().characters(),
+                    input_box->text_value().characters()));
+            int rc = mkdir(new_dir_path.characters(), 0777);
+            if (rc < 0) {
+                GUI::MessageBox::show(String::format("mkdir(\"%s\") failed: %s", new_dir_path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, window);
+            }
+        }
+    });
+
+    desktop_view_context_menu->add_action(mkdir_action);
+
+    item_view.on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
+        if (!index.is_valid())
+            desktop_view_context_menu->popup(event.screen_position());
+    };
+
     window->show();
     return GUI::Application::the().exec();
 }
