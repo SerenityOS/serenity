@@ -88,7 +88,11 @@ int run(Function<void(const char*, size_t)> fn)
             return 1;
         }
         auto file = Core::File::open(filename, Core::IODevice::OpenMode::ReadOnly);
-        auto buffer = file->read_all();
+        if (file.is_error()) {
+            printf("That's a weird file man...\n");
+            return 1;
+        }
+        auto buffer = file.value()->read_all();
         fn((const char*)buffer.data(), buffer.size());
     }
     return 0;
@@ -1014,8 +1018,13 @@ void tls_test_client_hello()
     tls->on_tls_finished = [&] {
         PASS;
         auto file = Core::File::open("foo.response", Core::IODevice::WriteOnly);
-        file->write(contents);
-        file->close();
+        if (file.is_error()) {
+            printf("Can't write there, %s\n", file.error().characters());
+            loop.quit(2);
+            return;
+        }
+        file.value()->write(contents);
+        file.value()->close();
         loop.quit(0);
     };
     tls->on_tls_error = [&](TLS::AlertDescription) {
