@@ -63,18 +63,6 @@ ArrayPrototype::~ArrayPrototype()
 {
 }
 
-static Array* array_from(Interpreter& interpreter)
-{
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
-    if (!this_object)
-        return {};
-    if (!this_object->is_array()) {
-        interpreter.throw_exception<TypeError>("Not an Array");
-        return nullptr;
-    }
-    return static_cast<Array*>(this_object);
-}
-
 static Function* callback_from_args(Interpreter& interpreter, const String& name)
 {
     if (interpreter.argument_count() < 1) {

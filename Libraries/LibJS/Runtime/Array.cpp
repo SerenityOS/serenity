@@ -49,19 +49,37 @@ Array::~Array()
 {
 }
 
-Value Array::length_getter(Interpreter& interpreter)
+Array* array_from(Interpreter& interpreter)
 {
     auto* this_object = interpreter.this_value().to_object(interpreter.heap());
     if (!this_object)
         return {};
-    if (!this_object->is_array())
-        return interpreter.throw_exception<TypeError>("Not an array");
-    return Value(static_cast<const Array*>(this_object)->length());
+    if (!this_object->is_array()) {
+        interpreter.throw_exception<TypeError>("Not an Array");
+        return nullptr;
+    }
+    return static_cast<Array*>(this_object);
 }
 
-void Array::length_setter(Interpreter&, Value)
+Value Array::length_getter(Interpreter& interpreter)
 {
-    ASSERT_NOT_REACHED();
+    auto* array = array_from(interpreter);
+    if (!array)
+        return {};
+    return Value(array->length());
+}
+
+void Array::length_setter(Interpreter& interpreter, Value value)
+{
+    auto* array = array_from(interpreter);
+    if (!array)
+        return;
+    auto length = value.to_number();
+    if (length.is_nan() || length.is_infinity() || length.as_double() < 0) {
+        interpreter.throw_exception<RangeError>("Invalid array length");
+        return;
+    }
+    array->elements().resize(length.as_double());
 }
 
 }
