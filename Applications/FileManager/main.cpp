@@ -200,8 +200,14 @@ int run_in_desktop_mode(RefPtr<Core::ConfigFile> config, String initial_location
         }
     });
 
+    auto display_properties_action = GUI::Action::create("Display properties...", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-display-properties.png"), [&](const GUI::Action&) {
+        Core::DesktopServices::open(URL::create_with_file_protocol("/bin/DisplayProperties"));
+    });
+
     desktop_view_context_menu->add_action(mkdir_action);
     desktop_view_context_menu->add_action(touch_action);
+    desktop_view_context_menu->add_separator();
+    desktop_view_context_menu->add_action(display_properties_action);
 
     item_view.on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
         if (!index.is_valid())
