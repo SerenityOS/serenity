@@ -200,12 +200,18 @@ int run_in_desktop_mode(RefPtr<Core::ConfigFile> config, String initial_location
         }
     });
 
+    auto file_manager_action = GUI::Action::create("Show in FileManager...", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-folder.png"), [&](const GUI::Action&) {
+        Core::DesktopServices::open(URL::create_with_file_protocol(model->root_path()));
+    });
+
     auto display_properties_action = GUI::Action::create("Display properties...", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-display-properties.png"), [&](const GUI::Action&) {
         Core::DesktopServices::open(URL::create_with_file_protocol("/bin/DisplayProperties"));
     });
 
     desktop_view_context_menu->add_action(mkdir_action);
     desktop_view_context_menu->add_action(touch_action);
+    desktop_view_context_menu->add_separator();
+    desktop_view_context_menu->add_action(file_manager_action);
     desktop_view_context_menu->add_separator();
     desktop_view_context_menu->add_action(display_properties_action);
 
