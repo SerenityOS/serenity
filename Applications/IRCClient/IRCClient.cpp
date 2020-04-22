@@ -67,7 +67,7 @@ enum IRCNumeric {
     ERR_NICKNAMEINUSE = 433,
 };
 
-IRCClient::IRCClient()
+IRCClient::IRCClient(String server, int port)
     : m_nickname("seren1ty")
     , m_client_window_list_model(IRCWindowListModel::create(*this))
     , m_log(IRCLogBuffer::create())
@@ -76,8 +76,14 @@ IRCClient::IRCClient()
     struct passwd* user_pw = getpwuid(getuid());
     m_socket = Core::TCPSocket::construct(this);
     m_nickname = m_config->read_entry("User", "Nickname", String::format("%s_seren1ty", user_pw->pw_name));
-    m_hostname = m_config->read_entry("Connection", "Server", "");
-    m_port = m_config->read_num_entry("Connection", "Port", 6667);
+
+    if (server.is_empty()) {
+        m_hostname = m_config->read_entry("Connection", "Server", "");
+        m_port = m_config->read_num_entry("Connection", "Port", 6667);
+    } else {
+        m_hostname = server;
+        m_port = port ? port : 6667;
+    }
 
     m_show_join_part_messages = m_config->read_bool_entry("Messaging", "ShowJoinPartMessages", 1);
     m_show_nick_change_messages = m_config->read_bool_entry("Messaging", "ShowNickChangeMessages", 1);
