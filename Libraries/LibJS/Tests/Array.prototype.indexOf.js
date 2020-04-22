@@ -14,6 +14,9 @@ try {
     assert(array.indexOf(1, 1000) === -1);
     assert(array.indexOf(1, -1000) === 2);
     assert(array.indexOf('serenity') === -1);
+    assert(array.indexOf(false, -1) === 4);
+    assert(array.indexOf(2, -1) === -1);
+    assert(array.indexOf(2, -2) === 3);
     assert([].indexOf('serenity') === -1);
     assert([].indexOf('serenity', 10) === -1);
     assert([].indexOf('serenity', -10) === -1);
