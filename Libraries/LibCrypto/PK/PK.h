@@ -32,37 +32,37 @@
 namespace Crypto {
 namespace PK {
 
-    // FIXME: Fixing name up for grabs
-    template <typename PrivKeyT, typename PubKeyT>
-    class PKSystem {
-    public:
-        using PublicKeyType = PubKeyT;
-        using PrivateKeyType = PrivKeyT;
+// FIXME: Fixing name up for grabs
+template<typename PrivKeyT, typename PubKeyT>
+class PKSystem {
+public:
+    using PublicKeyType = PubKeyT;
+    using PrivateKeyType = PrivKeyT;
 
-        PKSystem(PublicKeyType& pubkey, PrivateKeyType& privkey)
-            : m_public_key(pubkey)
-            , m_private_key(privkey)
-        {
-        }
+    PKSystem(PublicKeyType& pubkey, PrivateKeyType& privkey)
+        : m_public_key(pubkey)
+        , m_private_key(privkey)
+    {
+    }
 
-        PKSystem()
-        {
-        }
+    PKSystem()
+    {
+    }
 
-        virtual void encrypt(const ByteBuffer& in, ByteBuffer& out) = 0;
-        virtual void decrypt(const ByteBuffer& in, ByteBuffer& out) = 0;
+    virtual void encrypt(const ByteBuffer& in, ByteBuffer& out) = 0;
+    virtual void decrypt(const ByteBuffer& in, ByteBuffer& out) = 0;
 
-        virtual void sign(const ByteBuffer& in, ByteBuffer& out) = 0;
-        virtual void verify(const ByteBuffer& in, ByteBuffer& out) = 0;
+    virtual void sign(const ByteBuffer& in, ByteBuffer& out) = 0;
+    virtual void verify(const ByteBuffer& in, ByteBuffer& out) = 0;
 
-        virtual String class_name() const = 0;
+    virtual String class_name() const = 0;
 
-        virtual size_t output_size() const = 0;
+    virtual size_t output_size() const = 0;
 
-    protected:
-        PublicKeyType m_public_key;
-        PrivateKeyType m_private_key;
-    };
+protected:
+    PublicKeyType m_public_key;
+    PrivateKeyType m_private_key;
+};
 
 }
 }

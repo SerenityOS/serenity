@@ -33,90 +33,91 @@
 namespace Crypto {
 namespace Hash {
 
-    struct MD5Digest {
-        u8 data[16];
-    };
+struct MD5Digest {
+    u8 data[16];
+};
 
-    namespace MD5Constants {
+namespace MD5Constants {
 
-        constexpr u32 init_A = 0x67452301;
-        constexpr u32 init_B = 0xefcdab89;
-        constexpr u32 init_C = 0x98badcfe;
-        constexpr u32 init_D = 0x10325476;
-        constexpr u32 S11 = 7;
-        constexpr u32 S12 = 12;
-        constexpr u32 S13 = 17;
-        constexpr u32 S14 = 22;
-        constexpr u32 S21 = 5;
-        constexpr u32 S22 = 9;
-        constexpr u32 S23 = 14;
-        constexpr u32 S24 = 20;
-        constexpr u32 S31 = 4;
-        constexpr u32 S32 = 11;
-        constexpr u32 S33 = 16;
-        constexpr u32 S34 = 23;
-        constexpr u32 S41 = 6;
-        constexpr u32 S42 = 10;
-        constexpr u32 S43 = 15;
-        constexpr u32 S44 = 21;
-        constexpr u8 PADDING[] = {
-            0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0
-        };
+constexpr u32 init_A = 0x67452301;
+constexpr u32 init_B = 0xefcdab89;
+constexpr u32 init_C = 0x98badcfe;
+constexpr u32 init_D = 0x10325476;
+constexpr u32 S11 = 7;
+constexpr u32 S12 = 12;
+constexpr u32 S13 = 17;
+constexpr u32 S14 = 22;
+constexpr u32 S21 = 5;
+constexpr u32 S22 = 9;
+constexpr u32 S23 = 14;
+constexpr u32 S24 = 20;
+constexpr u32 S31 = 4;
+constexpr u32 S32 = 11;
+constexpr u32 S33 = 16;
+constexpr u32 S34 = 23;
+constexpr u32 S41 = 6;
+constexpr u32 S42 = 10;
+constexpr u32 S43 = 15;
+constexpr u32 S44 = 21;
+constexpr u8 PADDING[] = {
+    0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0
+};
+
+}
+
+class MD5 final : public HashFunction<512, MD5Digest> {
+public:
+    MD5()
+    {
+        m_buffer = ByteBuffer::wrap(m_data_buffer, sizeof(m_data_buffer));
     }
 
-    class MD5 final : public HashFunction<512, MD5Digest> {
-    public:
-        MD5()
-        {
-            m_buffer = ByteBuffer::wrap(m_data_buffer, sizeof(m_data_buffer));
-        }
+    virtual void update(const u8*, size_t) override;
+    virtual void update(const ByteBuffer& buffer) override { update(buffer.data(), buffer.size()); };
+    virtual void update(const StringView& string) override { update((const u8*)string.characters_without_null_termination(), string.length()); };
+    virtual DigestType digest() override;
+    virtual DigestType peek() override;
 
-        virtual void update(const u8*, size_t) override;
-        virtual void update(const ByteBuffer& buffer) override { update(buffer.data(), buffer.size()); };
-        virtual void update(const StringView& string) override { update((const u8*)string.characters_without_null_termination(), string.length()); };
-        virtual DigestType digest() override;
-        virtual DigestType peek() override;
+    virtual String class_name() const override { return "MD5"; }
 
-        virtual String class_name() const override { return "MD5"; }
+    inline static DigestType hash(const u8* data, size_t length)
+    {
+        MD5 md5;
+        md5.update(data, length);
+        return md5.digest();
+    }
 
-        inline static DigestType hash(const u8* data, size_t length)
-        {
-            MD5 md5;
-            md5.update(data, length);
-            return md5.digest();
-        }
+    inline static DigestType hash(const ByteBuffer& buffer) { return hash(buffer.data(), buffer.size()); }
+    inline static DigestType hash(const StringView& buffer) { return hash((const u8*)buffer.characters_without_null_termination(), buffer.length()); }
+    inline virtual void reset() override
+    {
+        m_A = MD5Constants::init_A;
+        m_B = MD5Constants::init_B;
+        m_C = MD5Constants::init_C;
+        m_D = MD5Constants::init_D;
 
-        inline static DigestType hash(const ByteBuffer& buffer) { return hash(buffer.data(), buffer.size()); }
-        inline static DigestType hash(const StringView& buffer) { return hash((const u8*)buffer.characters_without_null_termination(), buffer.length()); }
-        inline virtual void reset() override
-        {
-            m_A = MD5Constants::init_A;
-            m_B = MD5Constants::init_B;
-            m_C = MD5Constants::init_C;
-            m_D = MD5Constants::init_D;
+        m_count[0] = 0;
+        m_count[1] = 0;
 
-            m_count[0] = 0;
-            m_count[1] = 0;
+        __builtin_memset(m_data_buffer, 0, sizeof(m_data_buffer));
+    }
 
-            __builtin_memset(m_data_buffer, 0, sizeof(m_data_buffer));
-        }
+private:
+    inline void transform(const u8*);
 
-    private:
-        inline void transform(const u8*);
+    static void encode(const u32* from, u8* to, size_t length);
+    static void decode(const u8* from, u32* to, size_t length);
 
-        static void encode(const u32* from, u8* to, size_t length);
-        static void decode(const u8* from, u32* to, size_t length);
+    u32 m_A { MD5Constants::init_A }, m_B { MD5Constants::init_B }, m_C { MD5Constants::init_C }, m_D { MD5Constants::init_D };
+    u32 m_count[2] { 0, 0 };
+    ByteBuffer m_buffer;
 
-        u32 m_A { MD5Constants::init_A }, m_B { MD5Constants::init_B }, m_C { MD5Constants::init_C }, m_D { MD5Constants::init_D };
-        u32 m_count[2] { 0, 0 };
-        ByteBuffer m_buffer;
-
-        u8 m_data_buffer[64];
-    };
+    u8 m_data_buffer[64];
+};
 
 }
 
