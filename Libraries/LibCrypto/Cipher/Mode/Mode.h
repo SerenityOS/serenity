@@ -32,88 +32,90 @@
 namespace Crypto {
 namespace Cipher {
 
-    template <typename T>
-    class Mode {
-    public:
-        virtual ~Mode() {}
+template<typename T>
+class Mode {
+public:
+    virtual ~Mode() { }
 
-        // FIXME: Somehow communicate that encrypt returns the last initialization vector (if the mode supports it)
-        virtual Optional<ByteBuffer> encrypt(const ByteBuffer& in, ByteBuffer& out, Optional<ByteBuffer> ivec = {}) = 0;
-        virtual void decrypt(const ByteBuffer& in, ByteBuffer& out, Optional<ByteBuffer> ivec = {}) = 0;
+    // FIXME: Somehow communicate that encrypt returns the last initialization vector (if the mode supports it)
+    virtual Optional<ByteBuffer> encrypt(const ByteBuffer& in, ByteBuffer& out, Optional<ByteBuffer> ivec = {}) = 0;
+    virtual void decrypt(const ByteBuffer& in, ByteBuffer& out, Optional<ByteBuffer> ivec = {}) = 0;
 
-        const T& cipher() const { return m_cipher; }
+    virtual size_t IV_length() const = 0;
 
-        ByteBuffer create_aligned_buffer(size_t input_size) const
-        {
-            size_t remainder = (input_size + T::block_size()) % T::block_size();
-            if (remainder == 0)
-                return ByteBuffer::create_uninitialized(input_size);
-            else
-                return ByteBuffer::create_uninitialized(input_size + T::block_size() - remainder);
-        }
+    const T& cipher() const { return m_cipher; }
 
-        virtual String class_name() const = 0;
-        T& cipher() { return m_cipher; }
+    ByteBuffer create_aligned_buffer(size_t input_size) const
+    {
+        size_t remainder = (input_size + T::block_size()) % T::block_size();
+        if (remainder == 0)
+            return ByteBuffer::create_uninitialized(input_size);
+        else
+            return ByteBuffer::create_uninitialized(input_size + T::block_size() - remainder);
+    }
 
-    protected:
-        virtual void prune_padding(ByteBuffer& data)
-        {
-            auto size = data.size();
-            switch (m_cipher.padding_mode()) {
-            case PaddingMode::CMS: {
-                auto maybe_padding_length = data[size - 1];
-                if (maybe_padding_length >= T::block_size()) {
-                    // cannot be padding (the entire block cannot be padding)
+    virtual String class_name() const = 0;
+    T& cipher() { return m_cipher; }
+
+protected:
+    virtual void prune_padding(ByteBuffer& data)
+    {
+        auto size = data.size();
+        switch (m_cipher.padding_mode()) {
+        case PaddingMode::CMS: {
+            auto maybe_padding_length = data[size - 1];
+            if (maybe_padding_length >= T::block_size()) {
+                // cannot be padding (the entire block cannot be padding)
+                return;
+            }
+            for (auto i = maybe_padding_length; i > 0; --i) {
+                if (data[size - i] != maybe_padding_length) {
+                    // not padding, part of data
                     return;
                 }
-                for (auto i = maybe_padding_length; i > 0; --i) {
-                    if (data[size - i] != maybe_padding_length) {
-                        // not padding, part of data
-                        return;
-                    }
-                }
-                data.trim(size - maybe_padding_length);
-                break;
             }
-            case PaddingMode::RFC5246: {
-                auto maybe_padding_length = data[size - 1];
-                if (maybe_padding_length >= T::block_size() - 1) {
-                    // cannot be padding (the entire block cannot be padding)
+            data.trim(size - maybe_padding_length);
+            break;
+        }
+        case PaddingMode::RFC5246: {
+            auto maybe_padding_length = data[size - 1];
+            if (maybe_padding_length >= T::block_size() - 1) {
+                // cannot be padding (the entire block cannot be padding)
+                return;
+            }
+            // FIXME: If we want to constant-time operations, this loop should not stop
+            for (auto i = maybe_padding_length; i > 0; --i) {
+                if (data[size - i - 1] != maybe_padding_length) {
+                    // note that this is likely invalid padding
                     return;
                 }
-                // FIXME: If we want to constant-time operations, this loop should not stop
-                for (auto i = maybe_padding_length; i > 0; --i) {
-                    if (data[size - i - 1] != maybe_padding_length) {
-                        // note that this is likely invalid padding
-                        return;
-                    }
-                }
-                data.trim(size - maybe_padding_length - 1);
-                break;
             }
-            case PaddingMode::Null: {
-                while (data[size - 1] == 0)
-                    --size;
-                data.trim(size);
-                break;
-            }
-            default:
-                // FIXME: support other padding modes
-                ASSERT_NOT_REACHED();
-                break;
-            }
+            data.trim(size - maybe_padding_length - 1);
+            break;
         }
-
-        // FIXME: Somehow add a reference version of this
-        template <typename... Args>
-        Mode(Args... args)
-            : m_cipher(args...)
-        {
+        case PaddingMode::Null: {
+            while (data[size - 1] == 0)
+                --size;
+            data.trim(size);
+            break;
         }
+        default:
+            // FIXME: support other padding modes
+            ASSERT_NOT_REACHED();
+            break;
+        }
+    }
 
-    private:
-        T m_cipher;
-    };
+    // FIXME: Somehow add a reference version of this
+    template<typename... Args>
+    Mode(Args... args)
+        : m_cipher(args...)
+    {
+    }
+
+private:
+    T m_cipher;
+};
 }
 
 }
