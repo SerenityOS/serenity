@@ -61,10 +61,10 @@ CanvasRenderingContext2DWrapper::CanvasRenderingContext2DWrapper(CanvasRendering
     put_native_function("beginPath", begin_path, 0);
     put_native_function("closePath", close_path, 0);
     put_native_function("stroke", stroke, 0);
-    put_native_function("moveTo", move_to, 0);
-    put_native_function("lineTo", line_to, 0);
+    put_native_function("moveTo", move_to, 2);
+    put_native_function("lineTo", line_to, 2);
 
-    put_native_function("createImageData", create_image_data, 2);
+    put_native_function("createImageData", create_image_data, 1);
     put_native_function("putImageData", put_image_data, 3);
 
     put_native_property("lineWidth", line_width_getter, line_width_setter);
