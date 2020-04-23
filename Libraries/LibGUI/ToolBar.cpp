@@ -39,10 +39,10 @@ ToolBar::ToolBar(Orientation orientation, int button_size)
 {
     if (orientation == Orientation::Horizontal) {
         set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-        set_preferred_size(0, button_size + 12);
+        set_preferred_size(0, button_size + 10);
     } else {
         set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-        set_preferred_size(button_size + 12, 0);
+        set_preferred_size(button_size + 10, 0);
     }
     set_layout<BoxLayout>(orientation);
     layout()->set_spacing(0);
@@ -84,7 +84,7 @@ public:
     SeparatorWidget()
     {
         set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-        set_preferred_size(8, 22);
+        set_preferred_size(8, 18);
     }
     virtual ~SeparatorWidget() override {}
 
