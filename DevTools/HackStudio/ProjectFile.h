@@ -43,7 +43,7 @@ public:
 
     const String& name() const { return m_name; }
 
-    const GUI::TextDocument& document() const;
+    GUI::TextDocument& document() const;
 
     int vertical_scroll_value() const;
     void vertical_scroll_value(int);
