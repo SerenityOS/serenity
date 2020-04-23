@@ -331,6 +331,8 @@ Value BinaryExpression::execute(Interpreter& interpreter) const
         return right_shift(interpreter, lhs_result, rhs_result);
     case BinaryOp::UnsignedRightShift:
         return unsigned_right_shift(interpreter, lhs_result, rhs_result);
+    case BinaryOp::In:
+        return in(interpreter, lhs_result, rhs_result);
     case BinaryOp::InstanceOf:
         return instance_of(interpreter, lhs_result, rhs_result);
     }
@@ -511,6 +513,9 @@ void BinaryExpression::dump(int indent) const
         break;
     case BinaryOp::UnsignedRightShift:
         op_string = ">>>";
+        break;
+    case BinaryOp::In:
+        op_string = "in";
         break;
     case BinaryOp::InstanceOf:
         op_string = "instanceof";
