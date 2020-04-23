@@ -65,7 +65,9 @@ public:
 
     void remove_tab(Widget& tab) { remove_widget(tab); }
 
-    Function<void(const Widget&)> on_change;
+    void set_tab_title(Widget& tab, const StringView& title);
+
+    Function<void(Widget&)> on_change;
 
 protected:
     TabWidget();

@@ -259,4 +259,18 @@ int TabWidget::active_tab_index() const
     }
     return -1;
 }
+
+void TabWidget::set_tab_title(Widget& tab, const StringView& title)
+{
+    for (auto& t : m_tabs) {
+        if (t.widget == &tab) {
+            if (t.title != title) {
+                t.title = title;
+                update();
+            }
+            return;
+        }
+    }
+}
+
 }
