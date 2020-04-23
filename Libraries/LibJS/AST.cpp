@@ -936,13 +936,18 @@ void VariableDeclarator::dump(int indent) const
         m_init->dump(indent + 1);
 }
 
+void ObjectProperty::dump(int indent) const
+{
+    ASTNode::dump(indent);
+    m_key->dump(indent + 1);
+    m_value->dump(indent + 1);
+}
+
 void ObjectExpression::dump(int indent) const
 {
     ASTNode::dump(indent);
-    for (auto it : m_properties) {
-        print_indent(indent + 1);
-        printf("%s: ", it.key.characters());
-        it.value->dump(0);
+    for (auto& property : m_properties) {
+        property.dump(indent + 1);
     }
 }
 
@@ -952,14 +957,24 @@ void ExpressionStatement::dump(int indent) const
     m_expression->dump(indent + 1);
 }
 
+Value ObjectProperty::execute(Interpreter&) const
+{
+    // NOTE: ObjectProperty execution is handled by ObjectExpression.
+    ASSERT_NOT_REACHED();
+}
+
 Value ObjectExpression::execute(Interpreter& interpreter) const
 {
     auto* object = Object::create_empty(interpreter, interpreter.global_object());
-    for (auto it : m_properties) {
-        auto value = it.value->execute(interpreter);
+    for (auto& property : m_properties) {
+        auto key_result = property.key()->execute(interpreter);
         if (interpreter.exception())
             return {};
-        object->put(it.key, value);
+        auto key = key_result.to_string();
+        auto value = property.value()->execute(interpreter);
+        if (interpreter.exception())
+            return {};
+        object->put(key, value);
     }
     return object;
 }

@@ -670,9 +670,30 @@ private:
     NonnullRefPtrVector<VariableDeclarator> m_declarations;
 };
 
+class ObjectProperty final : public ASTNode {
+public:
+    ObjectProperty(NonnullRefPtr<Expression> key, NonnullRefPtr<Expression> value)
+        : m_key(move(key))
+        , m_value(move(value))
+    {
+    }
+
+    const Expression& key() const { return m_key; }
+    const Expression& value() const { return m_value; }
+
+    virtual void dump(int indent) const override;
+    virtual Value execute(Interpreter&) const override;
+
+private:
+    virtual const char* class_name() const override { return "ObjectProperty"; }
+
+    NonnullRefPtr<Expression> m_key;
+    NonnullRefPtr<Expression> m_value;
+};
+
 class ObjectExpression : public Expression {
 public:
-    ObjectExpression(HashMap<FlyString, NonnullRefPtr<Expression>> properties = {})
+    ObjectExpression(NonnullRefPtrVector<ObjectProperty> properties = {})
         : m_properties(move(properties))
     {
     }
@@ -683,7 +704,7 @@ public:
 private:
     virtual const char* class_name() const override { return "ObjectExpression"; }
 
-    HashMap<FlyString, NonnullRefPtr<Expression>> m_properties;
+    NonnullRefPtrVector<ObjectProperty> m_properties;
 };
 
 class ArrayExpression : public Expression {

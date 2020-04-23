@@ -435,19 +435,26 @@ NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
 
 NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
 {
-    HashMap<FlyString, NonnullRefPtr<Expression>> properties;
+    NonnullRefPtrVector<ObjectProperty> properties;
     consume(TokenType::CurlyOpen);
 
     while (!done() && !match(TokenType::CurlyClose)) {
-        FlyString property_name;
+        RefPtr<Expression> property_key;
+        RefPtr<Expression> property_value;
         auto need_colon = true;
         if (match_identifier_name()) {
-            property_name = consume().value();
+            auto identifier = consume().value();
+            property_key = create_ast_node<StringLiteral>(identifier);
+            property_value = create_ast_node<Identifier>(identifier);
             need_colon = false;
         } else if (match(TokenType::StringLiteral)) {
-            property_name = consume(TokenType::StringLiteral).string_value();
+            property_key = create_ast_node<StringLiteral>(consume(TokenType::StringLiteral).string_value());
         } else if (match(TokenType::NumericLiteral)) {
-            property_name = consume(TokenType::NumericLiteral).value();
+            property_key = create_ast_node<StringLiteral>(consume(TokenType::NumericLiteral).value());
+        } else if (match(TokenType::BracketOpen)) {
+            consume(TokenType::BracketOpen);
+            property_key = parse_expression(0);
+            consume(TokenType::BracketClose);
         } else {
             m_parser_state.m_has_errors = true;
             auto& current_token = m_parser_state.m_current_token;
@@ -461,10 +468,10 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
 
         if (need_colon || match(TokenType::Colon)) {
             consume(TokenType::Colon);
-            properties.set(property_name, parse_expression(0));
-        } else {
-            properties.set(property_name, create_ast_node<Identifier>(property_name));
+            property_value = parse_expression(0);
         }
+        auto property = create_ast_node<ObjectProperty>(*property_key, *property_value);
+        properties.append(property);
 
         if (!match(TokenType::Comma))
             break;
