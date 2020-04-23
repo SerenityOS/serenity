@@ -47,6 +47,7 @@
 
 HexEditorWidget::HexEditorWidget()
 {
+    set_fill_with_background_color(true);
     set_layout<GUI::VerticalBoxLayout>();
     layout()->set_spacing(2);
 
