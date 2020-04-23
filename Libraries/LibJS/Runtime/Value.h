@@ -222,6 +222,7 @@ Value mod(Interpreter&, Value lhs, Value rhs);
 Value exp(Interpreter&, Value lhs, Value rhs);
 Value eq(Interpreter&, Value lhs, Value rhs);
 Value typed_eq(Interpreter&, Value lhs, Value rhs);
+Value in(Interpreter&, Value lhs, Value rhs);
 Value instance_of(Interpreter&, Value lhs, Value rhs);
 
 const LogStream& operator<<(const LogStream&, const Value&);

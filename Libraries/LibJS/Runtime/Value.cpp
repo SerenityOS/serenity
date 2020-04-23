@@ -382,6 +382,14 @@ Value eq(Interpreter& interpreter, Value lhs, Value rhs)
     return Value(false);
 }
 
+Value in(Interpreter& interpreter, Value lhs, Value rhs)
+{
+    if (!rhs.is_object())
+        return interpreter.throw_exception<TypeError>("'in' operator must be used on object");
+
+    return Value(rhs.as_object().get(lhs.to_string()).has_value());
+}
+
 Value instance_of(Interpreter&, Value lhs, Value rhs)
 {
     if (!lhs.is_object() || !rhs.is_object())
