@@ -583,6 +583,12 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
     case TokenType::ShiftLeftEquals:
         consume();
         return create_ast_node<AssignmentExpression>(AssignmentOp::LeftShiftAssignment, move(lhs), parse_expression(min_precedence, associativity));
+    case TokenType::ShiftRight:
+        consume();
+        return create_ast_node<BinaryExpression>(BinaryOp::RightShift, move(lhs), parse_expression(min_precedence, associativity));
+    case TokenType::ShiftRightEquals:
+        consume();
+        return create_ast_node<AssignmentExpression>(AssignmentOp::RightShiftAssignment, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::ParenOpen:
         return parse_call_expression(move(lhs));
     case TokenType::Equals:
@@ -1070,6 +1076,8 @@ bool Parser::match_secondary_expression() const
         || type == TokenType::Caret
         || type == TokenType::ShiftLeft
         || type == TokenType::ShiftLeftEquals
+        || type == TokenType::ShiftRight
+        || type == TokenType::ShiftRightEquals
         || type == TokenType::DoubleAmpersand
         || type == TokenType::DoublePipe
         || type == TokenType::DoubleQuestionMark;
