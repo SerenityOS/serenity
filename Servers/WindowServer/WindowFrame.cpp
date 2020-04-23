@@ -285,7 +285,7 @@ static Gfx::Rect frame_rect_for_window(Window& window, const Gfx::Rect& rect)
             rect.x() - 4,
             rect.y() - window_titlebar_height - 5 + offset,
             rect.width() + 8,
-            rect.height() + 8 + window_titlebar_height - offset
+            rect.height() + 9 + window_titlebar_height - offset
         };
     case WindowType::Notification:
         return {
