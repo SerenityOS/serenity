@@ -39,6 +39,7 @@
 #include <LibGUI/UndoStack.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Forward.h>
+#include <LibRegex/Regex.h>
 
 namespace GUI {
 
@@ -108,10 +109,11 @@ public:
     String text() const;
     String text_in_range(const TextRange&) const;
 
-    Vector<TextRange> find_all(const StringView& needle) const;
+    Vector<TextRange> find_all(const StringView& needle, bool regmatch = false);
 
-    TextRange find_next(const StringView&, const TextPosition& start = {}, SearchShouldWrap = SearchShouldWrap::Yes) const;
-    TextRange find_previous(const StringView&, const TextPosition& start = {}, SearchShouldWrap = SearchShouldWrap::Yes) const;
+    void update_regex_matches(const StringView&);
+    TextRange find_next(const StringView&, const TextPosition& start = {}, SearchShouldWrap = SearchShouldWrap::Yes, bool regmatch = false);
+    TextRange find_previous(const StringView&, const TextPosition& start = {}, SearchShouldWrap = SearchShouldWrap::Yes, bool regmatch = false);
 
     TextPosition next_position_after(const TextPosition&, SearchShouldWrap = SearchShouldWrap::Yes) const;
     TextPosition previous_position_before(const TextPosition&, SearchShouldWrap = SearchShouldWrap::Yes) const;
@@ -158,6 +160,13 @@ private:
 
     UndoStack m_undo_stack;
     RefPtr<Core::Timer> m_undo_timer;
+
+    RegexResult m_regex_result;
+    size_t m_regex_result_match_index { 0 };
+    size_t m_regex_result_match_capture_group_index { 0 };
+
+    bool m_regex_needs_update { true };
+    String m_regex_needle;
 };
 
 class TextDocumentLine {

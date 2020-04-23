@@ -35,7 +35,7 @@ ProjectFile::ProjectFile(const String& name)
 {
 }
 
-const GUI::TextDocument& ProjectFile::document() const
+GUI::TextDocument& ProjectFile::document() const
 {
     if (!m_document) {
         m_document = CodeDocument::create(LexicalPath(m_name));

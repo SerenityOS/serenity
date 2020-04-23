@@ -117,8 +117,12 @@ TextEditorWidget::TextEditorWidget()
             dbgln("find_next(\"\")");
             return;
         }
-        auto found_range = m_editor->document().find_next(needle, m_editor->normalized_selection().end());
-        dbgln("find_next(\"{}\") returned {}", needle, found_range);
+
+        if (m_find_use_regex)
+            m_editor->document().update_regex_matches(needle);
+
+        auto found_range = m_editor->document().find_next(needle, m_editor->normalized_selection().end(), GUI::TextDocument::SearchShouldWrap::Yes, m_find_use_regex);
+        dbg() << "find_next(\"" << needle << "\") returned " << found_range;
         if (found_range.is_valid()) {
             m_editor->set_selection(found_range);
         } else {
@@ -129,7 +133,12 @@ TextEditorWidget::TextEditorWidget()
         }
     });
 
-    m_find_previous_action = GUI::Action::create("Find previous", { Mod_Ctrl | Mod_Shift, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find-previous.png"), [&](auto&) {
+    m_find_regex_action = GUI::Action::create("Find regex", { Mod_Ctrl, Key_R }, [&](auto&) {
+        m_find_regex_button->set_checked(!m_find_regex_button->is_checked());
+        m_find_use_regex = m_find_regex_button->is_checked();
+    });
+
+    m_find_previous_action = GUI::Action::create("Find previous", { Mod_Ctrl | Mod_Shift, Key_G }, [&](auto&) {
         auto needle = m_find_textbox->text();
         if (needle.is_empty()) {
             dbgln("find_prev(\"\")");
@@ -140,7 +149,10 @@ TextEditorWidget::TextEditorWidget()
         if (!selection_start.is_valid())
             selection_start = m_editor->normalized_selection().end();
 
-        auto found_range = m_editor->document().find_previous(needle, selection_start);
+        if (m_find_use_regex)
+            m_editor->document().update_regex_matches(needle);
+
+        auto found_range = m_editor->document().find_previous(needle, selection_start, GUI::TextDocument::SearchShouldWrap::Yes, m_find_use_regex);
 
         dbgln("find_prev(\"{}\") returned {}", needle, found_range);
         if (found_range.is_valid()) {
@@ -164,7 +176,10 @@ TextEditorWidget::TextEditorWidget()
         if (!selection_start.is_valid())
             selection_start = m_editor->normalized_selection().start();
 
-        auto found_range = m_editor->document().find_next(needle, selection_start);
+        if (m_find_use_regex)
+            m_editor->document().update_regex_matches(needle);
+
+        auto found_range = m_editor->document().find_next(needle, selection_start, GUI::TextDocument::SearchShouldWrap::Yes, m_find_use_regex);
 
         if (found_range.is_valid()) {
             m_editor->set_selection(found_range);
@@ -187,6 +202,9 @@ TextEditorWidget::TextEditorWidget()
         if (!selection_start.is_valid())
             selection_start = m_editor->normalized_selection().start();
 
+        if (m_find_use_regex)
+            m_editor->document().update_regex_matches(needle);
+
         auto found_range = m_editor->document().find_previous(needle, selection_start);
 
         if (found_range.is_valid()) {
@@ -205,12 +223,14 @@ TextEditorWidget::TextEditorWidget()
         auto substitute = m_replace_textbox->text();
         if (needle.is_empty())
             return;
+        if (m_find_use_regex)
+            m_editor->document().update_regex_matches(needle);
 
-        auto found_range = m_editor->document().find_next(needle);
+        auto found_range = m_editor->document().find_next(needle, {}, GUI::TextDocument::SearchShouldWrap::Yes, m_find_use_regex);
         while (found_range.is_valid()) {
             m_editor->set_selection(found_range);
             m_editor->insert_at_cursor_or_replace_selection(substitute);
-            found_range = m_editor->document().find_next(needle);
+            found_range = m_editor->document().find_next(needle, {}, GUI::TextDocument::SearchShouldWrap::Yes, m_find_use_regex);
         }
     });
 
@@ -223,6 +243,11 @@ TextEditorWidget::TextEditorWidget()
     m_find_textbox->on_return_pressed = [this] {
         m_find_next_button->click();
     };
+
+    m_find_regex_button = m_find_widget->add<GUI::Button>(".*");
+    m_find_regex_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
+    m_find_regex_button->set_preferred_size(20, 0);
+    m_find_regex_button->set_action(*m_find_regex_action);
 
     m_find_textbox->on_escape_pressed = [this] {
         m_find_replace_widget->set_visible(false);
@@ -358,6 +383,7 @@ TextEditorWidget::TextEditorWidget()
     edit_menu.add_separator();
     edit_menu.add_action(*m_find_replace_action);
     edit_menu.add_action(*m_find_next_action);
+    edit_menu.add_action(*m_find_regex_action);
     edit_menu.add_action(*m_find_previous_action);
     edit_menu.add_action(*m_replace_next_action);
     edit_menu.add_action(*m_replace_previous_action);

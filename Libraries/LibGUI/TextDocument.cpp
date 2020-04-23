@@ -30,6 +30,7 @@
 #include <LibCore/Timer.h>
 #include <LibGUI/TextDocument.h>
 #include <LibGUI/TextEditor.h>
+#include <LibRegex/Regex.h>
 #include <ctype.h>
 
 namespace GUI {
@@ -272,6 +273,8 @@ void TextDocument::notify_did_change()
         for (auto* client : m_clients)
             client->document_did_change();
     }
+
+    m_regex_needs_update = true;
 }
 
 void TextDocument::set_all_cursors(const TextPosition& position)
@@ -350,10 +353,77 @@ TextPosition TextDocument::previous_position_before(const TextPosition& position
     return { position.line(), position.column() - 1 };
 }
 
-TextRange TextDocument::find_next(const StringView& needle, const TextPosition& start, SearchShouldWrap should_wrap) const
+void TextDocument::update_regex_matches(const StringView& needle)
+{
+    if (m_regex_needs_update || needle != m_regex_needle) {
+        Regex<PosixExtended> re(needle);
+
+        Vector<RegexStringView> views;
+
+        for (size_t line = 0; line < m_lines.size(); ++line) {
+            views.append(m_lines.at(line).view());
+        }
+        re.search(views, m_regex_result);
+        m_regex_needs_update = false;
+        m_regex_needle = String { needle };
+        m_regex_result_match_index = -1;
+        m_regex_result_match_capture_group_index = -1;
+    }
+}
+
+TextRange TextDocument::find_next(const StringView& needle, const TextPosition& start, SearchShouldWrap should_wrap, bool regmatch)
 {
     if (needle.is_empty())
         return {};
+
+    if (regmatch) {
+        if (!m_regex_result.matches.size())
+            return {};
+
+        regex::Match match;
+        bool use_whole_match { false };
+
+        auto next_match = [&] {
+            m_regex_result_match_capture_group_index = 0;
+            if (m_regex_result_match_index == m_regex_result.matches.size() - 1) {
+                if (should_wrap == SearchShouldWrap::Yes)
+                    m_regex_result_match_index = 0;
+                else
+                    ++m_regex_result_match_index;
+            } else
+                ++m_regex_result_match_index;
+        };
+
+        if (m_regex_result.n_capture_groups) {
+            if (m_regex_result_match_index >= m_regex_result.capture_group_matches.size())
+                next_match();
+            else {
+                // check if last capture group has been reached
+                if (m_regex_result_match_capture_group_index >= m_regex_result.capture_group_matches.at(m_regex_result_match_index).size()) {
+                    next_match();
+                } else {
+                    // get to the next capture group item
+                    ++m_regex_result_match_capture_group_index;
+                }
+            }
+
+            // use whole match, if there is no capture group for current index
+            if (m_regex_result_match_index >= m_regex_result.capture_group_matches.size())
+                use_whole_match = true;
+            else if (m_regex_result_match_capture_group_index >= m_regex_result.capture_group_matches.at(m_regex_result_match_index).size())
+                next_match();
+
+        } else {
+            next_match();
+        }
+
+        if (use_whole_match || !m_regex_result.capture_group_matches.at(m_regex_result_match_index).size())
+            match = m_regex_result.matches.at(m_regex_result_match_index);
+        else
+            match = m_regex_result.capture_group_matches.at(m_regex_result_match_index).at(m_regex_result_match_capture_group_index);
+
+        return TextRange { { match.line, match.column }, { match.line, match.column + match.view.length() } };
+    }
 
     TextPosition position = start.is_valid() ? start : TextPosition(0, 0);
     TextPosition original_position = position;
@@ -381,10 +451,60 @@ TextRange TextDocument::find_next(const StringView& needle, const TextPosition& 
     return {};
 }
 
-TextRange TextDocument::find_previous(const StringView& needle, const TextPosition& start, SearchShouldWrap should_wrap) const
+TextRange TextDocument::find_previous(const StringView& needle, const TextPosition& start, SearchShouldWrap should_wrap, bool regmatch)
 {
     if (needle.is_empty())
         return {};
+
+    if (regmatch) {
+        if (!m_regex_result.matches.size())
+            return {};
+
+        regex::Match match;
+        bool use_whole_match { false };
+
+        auto next_match = [&] {
+            if (m_regex_result_match_index == 0) {
+                if (should_wrap == SearchShouldWrap::Yes)
+                    m_regex_result_match_index = m_regex_result.matches.size() - 1;
+                else
+                    --m_regex_result_match_index;
+            } else
+                --m_regex_result_match_index;
+
+            m_regex_result_match_capture_group_index = m_regex_result.capture_group_matches.at(m_regex_result_match_index).size() - 1;
+        };
+
+        if (m_regex_result.n_capture_groups) {
+            if (m_regex_result_match_index >= m_regex_result.capture_group_matches.size())
+                next_match();
+            else {
+                // check if last capture group has been reached
+                if (m_regex_result_match_capture_group_index >= m_regex_result.capture_group_matches.at(m_regex_result_match_index).size()) {
+                    next_match();
+                } else {
+                    // get to the next capture group item
+                    --m_regex_result_match_capture_group_index;
+                }
+            }
+
+            // use whole match, if there is no capture group for current index
+            if (m_regex_result_match_index >= m_regex_result.capture_group_matches.size())
+                use_whole_match = true;
+            else if (m_regex_result_match_capture_group_index >= m_regex_result.capture_group_matches.at(m_regex_result_match_index).size())
+                next_match();
+
+        } else {
+            next_match();
+        }
+
+        if (use_whole_match || !m_regex_result.capture_group_matches.at(m_regex_result_match_index).size())
+            match = m_regex_result.matches.at(m_regex_result_match_index);
+        else
+            match = m_regex_result.capture_group_matches.at(m_regex_result_match_index).at(m_regex_result_match_capture_group_index);
+
+        return TextRange { { match.line, match.column }, { match.line, match.column + match.view.length() } };
+    }
 
     TextPosition position = start.is_valid() ? start : TextPosition(0, 0);
     position = previous_position_before(position, should_wrap);
@@ -413,13 +533,13 @@ TextRange TextDocument::find_previous(const StringView& needle, const TextPositi
     return {};
 }
 
-Vector<TextRange> TextDocument::find_all(const StringView& needle) const
+Vector<TextRange> TextDocument::find_all(const StringView& needle, bool regmatch)
 {
     Vector<TextRange> ranges;
 
     TextPosition position;
     for (;;) {
-        auto range = find_next(needle, position, SearchShouldWrap::No);
+        auto range = find_next(needle, position, SearchShouldWrap::No, regmatch);
         if (!range.is_valid())
             break;
         ranges.append(range);
