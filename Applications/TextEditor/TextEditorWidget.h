@@ -66,6 +66,7 @@ private:
     RefPtr<GUI::Action> m_line_wrapping_setting_action;
     RefPtr<GUI::Action> m_markdown_preview_action;
     RefPtr<GUI::Action> m_find_next_action;
+    RefPtr<GUI::Action> m_find_regex_action;
     RefPtr<GUI::Action> m_find_previous_action;
     RefPtr<GUI::Action> m_replace_next_action;
     RefPtr<GUI::Action> m_replace_previous_action;
@@ -77,6 +78,7 @@ private:
     RefPtr<GUI::TextBox> m_replace_textbox;
     RefPtr<GUI::Button> m_find_previous_button;
     RefPtr<GUI::Button> m_find_next_button;
+    RefPtr<GUI::Button> m_find_regex_button;
     RefPtr<GUI::Button> m_replace_previous_button;
     RefPtr<GUI::Button> m_replace_next_button;
     RefPtr<GUI::Button> m_replace_all_button;
@@ -95,4 +97,5 @@ private:
     bool m_document_dirty { false };
     bool m_document_opening { false };
     bool m_markdown_preview_enabled { false };
+    bool m_find_use_regex { false };
 };

@@ -41,7 +41,7 @@ public:
 
     const String& name() const { return m_name; }
 
-    const GUI::TextDocument& document() const;
+    GUI::TextDocument& document() const;
 
 private:
     explicit ProjectFile(const String& name);
