@@ -44,6 +44,7 @@ public:
     void did_become_active();
 
     Function<void(String)> on_title_change;
+    Function<void(Tab&)> on_tab_close_request;
 
     const String& title() const { return m_title; }
 

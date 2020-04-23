@@ -100,6 +100,14 @@ int main(int argc, char** argv)
                 window->set_title(String::format("%s - Browser", title.characters()));
         };
 
+        new_tab.on_tab_close_request = [&](auto& tab) {
+            tab_widget.deferred_invoke([&](auto&) {
+                tab_widget.remove_tab(tab);
+                if (tab_widget.children().is_empty())
+                    app.quit();
+            });
+        };
+
         window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png"));
 
         window->set_title("Browser");
