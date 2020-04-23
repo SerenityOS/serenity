@@ -220,7 +220,7 @@ void ScrollBar::paint_event(PaintEvent& event)
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    painter.fill_rect(rect(), palette().button().lightened());
+    painter.fill_rect(rect(), palette().button().lightened(1.1f));
 
     bool decrement_pressed = m_automatic_scrolling_direction == AutomaticScrollingDirection::Decrement;
     bool increment_pressed = m_automatic_scrolling_direction == AutomaticScrollingDirection::Increment;
