@@ -143,6 +143,7 @@ cp ../Applications/SoundPlayer/SoundPlayer mnt/bin/SoundPlayer
 cp ../Applications/DisplayProperties/DisplayProperties mnt/bin/DisplayProperties
 cp ../Applications/Welcome/Welcome mnt/bin/Welcome
 cp ../Applications/Help/Help mnt/bin/Help
+cp ../Applications/Keyboard/Keyboard mnt/bin/Keyboard
 cp ../Applications/Browser/Browser mnt/bin/Browser
 cp ../Applications/Debugger/Debugger mnt/bin/sdb
 cp ../Games/Solitaire/Solitaire mnt/bin/Solitaire
