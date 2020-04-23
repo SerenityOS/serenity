@@ -136,7 +136,6 @@ cp ../Applications/PaintBrush/PaintBrush mnt/bin/PaintBrush
 cp ../Applications/QuickShow/QuickShow mnt/bin/QuickShow
 cp ../Applications/Piano/Piano mnt/bin/Piano
 cp ../Applications/SystemMenu/SystemMenu mnt/bin/SystemMenu
-cp ../Applications/ChanViewer/ChanViewer mnt/bin/ChanViewer
 cp ../Applications/Calculator/Calculator mnt/bin/Calculator
 cp ../Applications/Calendar/Calendar mnt/bin/Calendar
 cp ../Applications/SoundPlayer/SoundPlayer mnt/bin/SoundPlayer
@@ -195,7 +194,6 @@ ln -s PaintBrush mnt/bin/pb
 ln -s QuickShow mnt/bin/qs
 ln -s Piano mnt/bin/pi
 ln -s SystemDialog mnt/bin/sd
-ln -s ChanViewer mnt/bin/cv
 ln -s Calculator mnt/bin/calc
 ln -s Calendar mnt/bin/calendar
 ln -s Inspector mnt/bin/ins
