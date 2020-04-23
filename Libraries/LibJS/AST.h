@@ -343,6 +343,7 @@ enum class BinaryOp {
     LeftShift,
     RightShift,
     UnsignedRightShift,
+    In,
     InstanceOf,
 };
 
