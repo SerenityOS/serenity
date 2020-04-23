@@ -39,6 +39,7 @@
 #include <LibGUI/StackWidget.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/ToolBar.h>
+#include <LibGUI/ToolBarContainer.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -312,7 +313,8 @@ void IRCAppWindow::setup_widgets()
     widget.set_layout<GUI::VerticalBoxLayout>();
     widget.layout()->set_spacing(0);
 
-    auto& toolbar = widget.add<GUI::ToolBar>();
+    auto& toolbar_container = widget.add<GUI::ToolBarContainer>();
+    auto& toolbar = toolbar_container.add<GUI::ToolBar>();
     toolbar.set_has_frame(false);
     toolbar.add_action(*m_change_nick_action);
     toolbar.add_separator();

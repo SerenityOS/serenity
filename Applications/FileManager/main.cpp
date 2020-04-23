@@ -52,6 +52,7 @@
 #include <LibGUI/StatusBar.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/ToolBar.h>
+#include <LibGUI/ToolBarContainer.h>
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
@@ -237,12 +238,14 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     auto& widget = window->set_main_widget<GUI::Widget>();
     widget.set_layout<GUI::VerticalBoxLayout>();
-    widget.layout()->set_spacing(0);
+    widget.set_fill_with_background_color(true);
+    widget.layout()->set_spacing(2);
 
-    auto& main_toolbar = widget.add<GUI::ToolBar>();
-    auto& location_toolbar = widget.add<GUI::ToolBar>();
+    auto& toolbar_container = widget.add<GUI::ToolBarContainer>();
+
+    auto& main_toolbar = toolbar_container.add<GUI::ToolBar>();
+    auto& location_toolbar = toolbar_container.add<GUI::ToolBar>();
     location_toolbar.layout()->set_margins({ 6, 3, 6, 3 });
-    location_toolbar.set_preferred_size(0, 25);
 
     auto& location_label = location_toolbar.add<GUI::Label>("Location: ");
     location_label.size_to_fit();

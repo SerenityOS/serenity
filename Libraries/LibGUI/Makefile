@@ -65,6 +65,7 @@ OBJS = \
     TextDocument.o \
     TextEditor.o \
     ToolBar.o \
+    ToolBarContainer.o \
     TreeView.o \
     UndoStack.o \
     Variant.o \

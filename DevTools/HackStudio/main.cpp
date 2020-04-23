@@ -58,6 +58,7 @@
 #include <LibGUI/TextBox.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/ToolBar.h>
+#include <LibGUI/ToolBarContainer.h>
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
@@ -163,7 +164,8 @@ int main(int argc, char** argv)
 
     open_project("/home/anon/js/javascript.files");
 
-    auto& toolbar = widget.add<GUI::ToolBar>();
+    auto& toolbar_container = widget.add<GUI::ToolBarContainer>();
+    auto& toolbar = toolbar_container.add<GUI::ToolBar>();
 
     auto selected_file_names = [&] {
         Vector<String> files;

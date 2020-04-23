@@ -38,6 +38,7 @@
 #include <LibGUI/Splitter.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/ToolBar.h>
+#include <LibGUI/ToolBarContainer.h>
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Window.h>
 #include <LibMarkdown/MDDocument.h>
@@ -83,7 +84,8 @@ int main(int argc, char* argv[])
     widget.set_layout<GUI::VerticalBoxLayout>();
     widget.layout()->set_spacing(0);
 
-    auto& toolbar = widget.add<GUI::ToolBar>();
+    auto& toolbar_container = widget.add<GUI::ToolBarContainer>();
+    auto& toolbar = toolbar_container.add<GUI::ToolBar>();
 
     auto& splitter = widget.add<GUI::HorizontalSplitter>();
 
