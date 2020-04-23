@@ -7,4 +7,4 @@ set(SOURCES
 )
 
 serenity_bin(TextEditor)
-target_link_libraries(TextEditor LibWeb LibMarkdown LibGUI LibShell LibDesktop)
+target_link_libraries(TextEditor LibWeb LibMarkdown LibGUI LibShell LibRegex LibDesktop)
