@@ -440,8 +440,10 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
 
     while (!done() && !match(TokenType::CurlyClose)) {
         FlyString property_name;
+        auto need_colon = true;
         if (match_identifier_name()) {
             property_name = consume().value();
+            need_colon = false;
         } else if (match(TokenType::StringLiteral)) {
             property_name = consume(TokenType::StringLiteral).string_value();
         } else if (match(TokenType::NumericLiteral)) {
@@ -457,7 +459,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
             continue;
         }
 
-        if (match(TokenType::Colon)) {
+        if (need_colon || match(TokenType::Colon)) {
             consume(TokenType::Colon);
             properties.set(property_name, parse_expression(0));
         } else {
