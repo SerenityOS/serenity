@@ -561,6 +561,27 @@ BENCHMARK_CASE(character_class_benchmark_reference_stdcpp_regex_search)
 }
 #endif
 
+// FIXME: Diese regex hat nicht funktioniert...  test dazu erstellen...
+
+TEST_CASE(character_class2)
+{
+    String pattern = "[[:alpha:]]*=[[:digit:]]*|(\\[.*\\])";
+    regex_t regex;
+    static constexpr int num_matches { 5 };
+    regmatch_t matches[num_matches];
+
+    String haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
+    EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED | REG_NEWLINE), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, haystack.characters(), num_matches, matches, 0), REG_NOMATCH);
+    EXPECT_EQ(matches[0].match_count, 2u);
+    EXPECT_EQ(haystack.substring_view(matches[0].rm_so, matches[0].rm_eo - matches[0].rm_so), "Opacity=255");
+    EXPECT_EQ(haystack.substring_view(matches[1].rm_so, matches[1].rm_eo - matches[1].rm_so), "255");
+    EXPECT_EQ(haystack.substring_view(matches[2].rm_so, matches[2].rm_eo - matches[2].rm_so), "AudibleBeep=0");
+    EXPECT_EQ(haystack.substring_view(matches[3].rm_so, matches[3].rm_eo - matches[3].rm_so), "0");
+
+    regfree(&regex);
+}
+
 TEST_CASE(escaped_char_questionmark)
 {
     String pattern = "This\\.?And\\.?That";
