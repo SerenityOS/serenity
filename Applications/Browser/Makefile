@@ -1,7 +1,8 @@
 OBJS = \
-    main.o \
+    BookmarksBarWidget.o \
     InspectorWidget.o \
-	BookmarksBarWidget.o
+    Tab.o \
+    main.o
 
 PROGRAM = Browser
 
