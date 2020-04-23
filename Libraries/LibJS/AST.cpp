@@ -967,11 +967,11 @@ Value ObjectExpression::execute(Interpreter& interpreter) const
 {
     auto* object = Object::create_empty(interpreter, interpreter.global_object());
     for (auto& property : m_properties) {
-        auto key_result = property.key()->execute(interpreter);
+        auto key_result = property.key().execute(interpreter);
         if (interpreter.exception())
             return {};
         auto key = key_result.to_string();
-        auto value = property.value()->execute(interpreter);
+        auto value = property.value().execute(interpreter);
         if (interpreter.exception())
             return {};
         object->put(key, value);
