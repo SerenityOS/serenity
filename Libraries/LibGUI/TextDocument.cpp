@@ -25,6 +25,7 @@
  */
 
 #include <AK/Badge.h>
+#include <AK/Regex.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/TextDocument.h>
@@ -232,6 +233,8 @@ void TextDocument::notify_did_change()
         for (auto* client : m_clients)
             client->document_did_change();
     }
+
+    m_regex_needs_update = true;
 }
 
 void TextDocument::set_all_cursors(const TextPosition& position)
@@ -298,13 +301,48 @@ TextPosition TextDocument::previous_position_before(const TextPosition& position
     return { position.line(), position.column() - 1 };
 }
 
-TextRange TextDocument::find_next(const StringView& needle, const TextPosition& start, SearchShouldWrap should_wrap) const
+void TextDocument::update_regex_matches(const StringView& needle)
+{
+    if (m_regex_needs_update || needle != m_regex_needle) {
+        Pattern p(needle, (u8)CompilationFlags::Extended);
+        Vector<Match> matches;
+        m_regex_matches.clear();
+        for (size_t line = 0; line < m_lines.size(); ++line) {
+            MatchResult res;
+            if (match(m_lines.at(line).view(), p, res, (u8)MatchFlags::MatchAll)) {
+                dbg() << "match_count: " << res.match_count << " size: " << res.matches.size();
+                for (size_t i = 0; i < res.match_count; ++i) {
+                    res.matches.at(i).match_count = line;
+                    m_regex_matches.append(res.matches.at(i));
+                    i += p.re_nsub;
+                }
+            }
+        }
+        m_regex_needs_update = false;
+        m_regex_needle = String { needle };
+    }
+}
+
+TextRange TextDocument::find_next(const StringView& needle, const TextPosition& start, SearchShouldWrap should_wrap, bool regmatch) const
 {
     if (needle.is_empty())
         return {};
 
     TextPosition position = start.is_valid() ? start : TextPosition(0, 0);
     TextPosition original_position = position;
+
+    if (regmatch) {
+        for (auto& match : m_regex_matches)
+            if ((match.match_count == position.line() && (size_t)match.rm_so >= position.column()) || match.match_count > position.line())
+                return TextRange { { match.match_count, (size_t)match.rm_so }, { match.match_count, (size_t)match.rm_eo } };
+
+        if (should_wrap == SearchShouldWrap::Yes)
+            for (auto& match : m_regex_matches)
+                if (match.match_count < position.line())
+                    return TextRange { { match.match_count, (size_t)match.rm_so }, { match.match_count, (size_t)match.rm_eo } };
+
+        return {};
+    }
 
     TextPosition start_of_potential_match;
     size_t needle_index = 0;
@@ -328,8 +366,9 @@ TextRange TextDocument::find_next(const StringView& needle, const TextPosition& 
     return {};
 }
 
-TextRange TextDocument::find_previous(const StringView& needle, const TextPosition& start, SearchShouldWrap should_wrap) const
+TextRange TextDocument::find_previous(const StringView& needle, const TextPosition& start, SearchShouldWrap should_wrap, bool regmatch) const
 {
+    UNUSED_PARAM(regmatch);
     if (needle.is_empty())
         return {};
 
@@ -359,13 +398,13 @@ TextRange TextDocument::find_previous(const StringView& needle, const TextPositi
     return {};
 }
 
-Vector<TextRange> TextDocument::find_all(const StringView& needle) const
+Vector<TextRange> TextDocument::find_all(const StringView& needle, bool regmatch) const
 {
     Vector<TextRange> ranges;
 
     TextPosition position;
     for (;;) {
-        auto range = find_next(needle, position, SearchShouldWrap::No);
+        auto range = find_next(needle, position, SearchShouldWrap::No, regmatch);
         if (!range.is_valid())
             break;
         ranges.append(range);

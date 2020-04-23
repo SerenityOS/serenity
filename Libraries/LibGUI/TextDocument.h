@@ -31,6 +31,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
 #include <AK/RefCounted.h>
+#include <AK/Regex.h>
 #include <LibCore/Forward.h>
 #include <LibGUI/Command.h>
 #include <LibGUI/Forward.h>
@@ -104,10 +105,11 @@ public:
 
     String text_in_range(const TextRange&) const;
 
-    Vector<TextRange> find_all(const StringView& needle) const;
+    Vector<TextRange> find_all(const StringView& needle, bool regmatch = false) const;
 
-    TextRange find_next(const StringView&, const TextPosition& start = {}, SearchShouldWrap = SearchShouldWrap::Yes) const;
-    TextRange find_previous(const StringView&, const TextPosition& start = {}, SearchShouldWrap = SearchShouldWrap::Yes) const;
+    void update_regex_matches(const StringView&);
+    TextRange find_next(const StringView&, const TextPosition& start = {}, SearchShouldWrap = SearchShouldWrap::Yes, bool regmatch = false) const;
+    TextRange find_previous(const StringView&, const TextPosition& start = {}, SearchShouldWrap = SearchShouldWrap::Yes, bool regmatch = false) const;
 
     TextPosition next_position_after(const TextPosition&, SearchShouldWrap = SearchShouldWrap::Yes) const;
     TextPosition previous_position_before(const TextPosition&, SearchShouldWrap = SearchShouldWrap::Yes) const;
@@ -146,6 +148,10 @@ private:
 
     UndoStack m_undo_stack;
     RefPtr<Core::Timer> m_undo_timer;
+
+    Vector<Match> m_regex_matches;
+    bool m_regex_needs_update { true };
+    String m_regex_needle;
 };
 
 class TextDocumentLine {
