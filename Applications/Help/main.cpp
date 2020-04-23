@@ -82,7 +82,8 @@ int main(int argc, char* argv[])
 
     auto& widget = window->set_main_widget<GUI::Widget>();
     widget.set_layout<GUI::VerticalBoxLayout>();
-    widget.layout()->set_spacing(0);
+    widget.set_fill_with_background_color(true);
+    widget.layout()->set_spacing(2);
 
     auto& toolbar_container = widget.add<GUI::ToolBarContainer>();
     auto& toolbar = toolbar_container.add<GUI::ToolBar>();

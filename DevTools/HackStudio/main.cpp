@@ -150,7 +150,7 @@ int main(int argc, char** argv)
 
     widget.set_fill_with_background_color(true);
     widget.set_layout<GUI::VerticalBoxLayout>();
-    widget.layout()->set_spacing(0);
+    widget.layout()->set_spacing(2);
 
     StringBuilder path;
     path.append(getenv("PATH"));
