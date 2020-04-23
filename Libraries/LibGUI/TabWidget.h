@@ -67,6 +67,9 @@ public:
 
     void set_tab_title(Widget& tab, const StringView& title);
 
+    void activate_next_tab();
+    void activate_previous_tab();
+
     Function<void(Widget&)> on_change;
 
 protected:

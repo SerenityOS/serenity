@@ -273,4 +273,26 @@ void TabWidget::set_tab_title(Widget& tab, const StringView& title)
     }
 }
 
+void TabWidget::activate_next_tab()
+{
+    if (m_tabs.size() <= 1)
+        return;
+    int index = active_tab_index();
+    ++index;
+    if (index >= (int)m_tabs.size())
+        index = 0;
+    set_active_widget(m_tabs.at(index).widget);
+}
+
+void TabWidget::activate_previous_tab()
+{
+    if (m_tabs.size() <= 1)
+        return;
+    int index = active_tab_index();
+    --index;
+    if (index < 0)
+        index = m_tabs.size() - 1;
+    set_active_widget(m_tabs.at(index).widget);
+}
+
 }
