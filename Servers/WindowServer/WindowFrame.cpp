@@ -154,7 +154,7 @@ Gfx::Rect WindowFrame::title_bar_rect() const
 {
     if (m_window.type() == WindowType::Notification)
         return { m_window.width() + 3, 3, window_titlebar_height, m_window.height() };
-    return { 3, 3, m_window.width(), window_titlebar_height };
+    return { 4, 4, m_window.width(), window_titlebar_height };
 }
 
 Gfx::Rect WindowFrame::title_bar_icon_rect() const
@@ -282,10 +282,10 @@ static Gfx::Rect frame_rect_for_window(Window& window, const Gfx::Rect& rect)
     switch (type) {
     case WindowType::Normal:
         return {
-            rect.x() - 3,
-            rect.y() - window_titlebar_height - 4 + offset,
-            rect.width() + 6,
-            rect.height() + 7 + window_titlebar_height - offset
+            rect.x() - 4,
+            rect.y() - window_titlebar_height - 5 + offset,
+            rect.width() + 8,
+            rect.height() + 8 + window_titlebar_height - offset
         };
     case WindowType::Notification:
         return {

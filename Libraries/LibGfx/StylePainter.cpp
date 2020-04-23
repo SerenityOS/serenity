@@ -248,13 +248,17 @@ void StylePainter::paint_window_frame(Painter& painter, const Rect& rect, const 
     painter.draw_line(rect.top_left().translated(1, 1), rect.bottom_left().translated(1, -1), light_shade);
     painter.draw_line(rect.top_left().translated(2, 2), rect.top_right().translated(-2, 2), base_color);
     painter.draw_line(rect.top_left().translated(2, 2), rect.bottom_left().translated(2, -2), base_color);
+    painter.draw_line(rect.top_left().translated(3, 3), rect.top_right().translated(-3, 3), base_color);
+    painter.draw_line(rect.top_left().translated(3, 3), rect.bottom_left().translated(3, -3), base_color);
 
     painter.draw_line(rect.top_right(), rect.bottom_right(), dark_shade);
     painter.draw_line(rect.top_right().translated(-1, 1), rect.bottom_right().translated(-1, -1), mid_shade);
     painter.draw_line(rect.top_right().translated(-2, 2), rect.bottom_right().translated(-2, -2), base_color);
+    painter.draw_line(rect.top_right().translated(-3, 3), rect.bottom_right().translated(-3, -3), base_color);
     painter.draw_line(rect.bottom_left(), rect.bottom_right(), dark_shade);
     painter.draw_line(rect.bottom_left().translated(1, -1), rect.bottom_right().translated(-1, -1), mid_shade);
     painter.draw_line(rect.bottom_left().translated(2, -2), rect.bottom_right().translated(-2, -2), base_color);
+    painter.draw_line(rect.bottom_left().translated(3, -3), rect.bottom_right().translated(-3, -3), base_color);
 }
 
 void StylePainter::paint_progress_bar(Painter& painter, const Rect& rect, const Palette& palette, int min, int max, int value, const StringView& text)
