@@ -27,6 +27,7 @@
 #include "ManualSectionNode.h"
 #include "ManualPageNode.h"
 #include <AK/FileSystemPath.h>
+#include <AK/QuickSort.h>
 #include <AK/String.h>
 #include <LibCore/DirIterator.h>
 
@@ -43,12 +44,16 @@ void ManualSectionNode::reify_if_needed() const
 
     Core::DirIterator dir_iter { path(), Core::DirIterator::Flags::SkipDots };
 
+    Vector<String> page_names;
     while (dir_iter.has_next()) {
         FileSystemPath file_path(dir_iter.next_path());
         if (file_path.extension() != "md")
             continue;
-        String page_name = file_path.title();
-        NonnullOwnPtr<ManualNode> child = make<ManualPageNode>(*this, move(page_name));
-        m_children.append(move(child));
+        page_names.append(file_path.title());
     }
+
+    quick_sort(page_names);
+
+    for (auto& page_name : page_names)
+        m_children.append(make<ManualPageNode>(*this, move(page_name)));
 }
