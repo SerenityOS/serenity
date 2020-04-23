@@ -79,7 +79,7 @@ ResizeCorner::ResizeCorner()
 {
     set_background_role(ColorRole::Button);
     set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-    set_preferred_size(16, 16);
+    set_preferred_size(16, 18);
 }
 
 ResizeCorner::~ResizeCorner()
@@ -94,11 +94,11 @@ void ResizeCorner::paint_event(PaintEvent& event)
 
     if (!s_resize_corner_shadows_bitmap)
         s_resize_corner_shadows_bitmap = &Gfx::CharacterBitmap::create_from_ascii(s_resize_corner_shadows_data, s_resize_corner_bitmap_width, s_resize_corner_bitmap_height).leak_ref();
-    painter.draw_bitmap({ 0, 0 }, *s_resize_corner_shadows_bitmap, palette().threed_shadow1());
+    painter.draw_bitmap({ 0, 2 }, *s_resize_corner_shadows_bitmap, palette().threed_shadow1());
 
     if (!s_resize_corner_highlights_bitmap)
         s_resize_corner_highlights_bitmap = &Gfx::CharacterBitmap::create_from_ascii(s_resize_corner_highlights_data, s_resize_corner_bitmap_width, s_resize_corner_bitmap_height).leak_ref();
-    painter.draw_bitmap({ 0, 0 }, *s_resize_corner_highlights_bitmap, palette().threed_highlight());
+    painter.draw_bitmap({ 0, 2 }, *s_resize_corner_highlights_bitmap, palette().threed_highlight());
 
     Widget::paint_event(event);
 }
