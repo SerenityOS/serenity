@@ -131,6 +131,14 @@ int main(int argc, char** argv)
         create_new_tab();
     };
 
+    window_actions.on_next_tab = [&] {
+        tab_widget.activate_next_tab();
+    };
+
+    window_actions.on_previous_tab = [&] {
+        tab_widget.activate_previous_tab();
+    };
+
     create_new_tab();
 
     return app.exec();
