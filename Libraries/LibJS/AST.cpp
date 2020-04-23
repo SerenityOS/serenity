@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -328,6 +329,8 @@ Value BinaryExpression::execute(Interpreter& interpreter) const
         return left_shift(interpreter, lhs_result, rhs_result);
     case BinaryOp::RightShift:
         return right_shift(interpreter, lhs_result, rhs_result);
+    case BinaryOp::UnsignedRightShift:
+        return unsigned_right_shift(interpreter, lhs_result, rhs_result);
     case BinaryOp::InstanceOf:
         return instance_of(interpreter, lhs_result, rhs_result);
     }
@@ -505,6 +508,9 @@ void BinaryExpression::dump(int indent) const
         break;
     case BinaryOp::RightShift:
         op_string = ">>";
+        break;
+    case BinaryOp::UnsignedRightShift:
+        op_string = ">>>";
         break;
     case BinaryOp::InstanceOf:
         op_string = "instanceof";
@@ -761,6 +767,12 @@ Value AssignmentExpression::execute(Interpreter& interpreter) const
             return {};
         rhs_result = right_shift(interpreter, lhs_result, rhs_result);
         break;
+    case AssignmentOp::UnsignedRightShiftAssignment:
+        lhs_result = m_lhs->execute(interpreter);
+        if (interpreter.exception())
+            return {};
+        rhs_result = unsigned_right_shift(interpreter, lhs_result, rhs_result);
+        break;
     }
     if (interpreter.exception())
         return {};
@@ -833,6 +845,9 @@ void AssignmentExpression::dump(int indent) const
         break;
     case AssignmentOp::RightShiftAssignment:
         op_string = ">>=";
+        break;
+    case AssignmentOp::UnsignedRightShiftAssignment:
+        op_string = ">>>=";
         break;
     }
 

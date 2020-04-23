@@ -82,6 +82,12 @@ public:
         m_value.as_double = value;
     }
 
+    explicit Value(unsigned value)
+        : m_type(Type::Number)
+    {
+        m_value.as_double = static_cast<double>(value);
+    }
+
     explicit Value(i32 value)
         : m_type(Type::Number)
     {
@@ -207,6 +213,7 @@ Value unary_plus(Interpreter&, Value);
 Value unary_minus(Interpreter&, Value);
 Value left_shift(Interpreter&, Value lhs, Value rhs);
 Value right_shift(Interpreter&, Value lhs, Value rhs);
+Value unsigned_right_shift(Interpreter&, Value lhs, Value rhs);
 Value add(Interpreter&, Value lhs, Value rhs);
 Value sub(Interpreter&, Value lhs, Value rhs);
 Value mul(Interpreter&, Value lhs, Value rhs);

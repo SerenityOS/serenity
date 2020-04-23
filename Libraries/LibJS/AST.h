@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -341,6 +342,7 @@ enum class BinaryOp {
     BitwiseXor,
     LeftShift,
     RightShift,
+    UnsignedRightShift,
     InstanceOf,
 };
 
@@ -569,6 +571,7 @@ enum class AssignmentOp {
     DivisionAssignment,
     LeftShiftAssignment,
     RightShiftAssignment,
+    UnsignedRightShiftAssignment,
 };
 
 class AssignmentExpression : public Expression {
