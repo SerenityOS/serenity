@@ -337,7 +337,7 @@ Token Lexer::next()
             }
         }
         token_type = TokenType::NumericLiteral;
-    } else if (m_current_char == '"' || m_current_char == '\'') {
+    } else if (m_current_char == '"' || m_current_char == '\'' || m_current_char == '`') {
         char stop_char = m_current_char;
         consume();
         while (m_current_char != stop_char && m_current_char != '\n' && !is_eof()) {
@@ -351,7 +351,10 @@ Token Lexer::next()
             token_type = TokenType::UnterminatedStringLiteral;
         } else {
             consume();
-            token_type = TokenType::StringLiteral;
+            if (stop_char == '`')
+                token_type = TokenType::TemplateLiteral;
+            else
+                token_type = TokenType::StringLiteral;
         }
     } else if (m_current_char == EOF) {
         token_type = TokenType::Eof;

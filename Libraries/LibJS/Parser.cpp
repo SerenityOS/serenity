@@ -1037,6 +1037,7 @@ bool Parser::match_expression() const
     return type == TokenType::BoolLiteral
         || type == TokenType::NumericLiteral
         || type == TokenType::StringLiteral
+        || type == TokenType::TemplateLiteral
         || type == TokenType::NullLiteral
         || type == TokenType::Identifier
         || type == TokenType::New

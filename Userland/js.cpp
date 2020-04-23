@@ -453,6 +453,7 @@ int main(int argc, char** argv)
                     stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Magenta) });
                     break;
                 case JS::TokenType::StringLiteral:
+                case JS::TokenType::TemplateLiteral:
                 case JS::TokenType::RegexLiteral:
                 case JS::TokenType::UnterminatedStringLiteral:
                     stylize({ start, end }, { Line::Style::Foreground(Line::Style::Color::Green), Line::Style::Bold });
