@@ -749,6 +749,12 @@ Value AssignmentExpression::execute(Interpreter& interpreter) const
             return {};
         rhs_result = div(interpreter, lhs_result, rhs_result);
         break;
+    case AssignmentOp::LeftShiftAssignment:
+        lhs_result = m_lhs->execute(interpreter);
+        if (interpreter.exception())
+            return {};
+        rhs_result = left_shift(interpreter, lhs_result, rhs_result);
+        break;
     }
     if (interpreter.exception())
         return {};
@@ -815,6 +821,9 @@ void AssignmentExpression::dump(int indent) const
         break;
     case AssignmentOp::DivisionAssignment:
         op_string = "/=";
+        break;
+    case AssignmentOp::LeftShiftAssignment:
+        op_string = "<<=";
         break;
     }
 

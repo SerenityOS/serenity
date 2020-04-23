@@ -57,6 +57,13 @@ public:
 
     bool is_nan() const { return is_number() && __builtin_isnan(as_double()); }
     bool is_infinity() const { return is_number() && __builtin_isinf(as_double()); }
+    bool is_finite_number() const
+    {
+        if (!is_number())
+            return false;
+        auto number = as_double();
+        return !__builtin_isnan(number) && !__builtin_isinf(number);
+    }
 
     Value()
         : m_type(Type::Empty)

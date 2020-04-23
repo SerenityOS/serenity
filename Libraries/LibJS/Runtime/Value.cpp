@@ -253,7 +253,13 @@ Value unary_minus(Interpreter&, Value lhs)
 
 Value left_shift(Interpreter&, Value lhs, Value rhs)
 {
-    return Value((i32)lhs.to_number().as_double() << (i32)rhs.to_number().as_double());
+    auto lhs_number = lhs.to_number();
+    if (!lhs_number.is_finite_number())
+        return Value(0);
+    auto rhs_number = rhs.to_number();
+    if (!rhs_number.is_finite_number())
+        return lhs_number;
+    return Value((i32)lhs_number.as_double() << (i32)lhs_number.as_double());
 }
 
 Value right_shift(Interpreter&, Value lhs, Value rhs)
