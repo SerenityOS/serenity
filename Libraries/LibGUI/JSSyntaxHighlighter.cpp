@@ -42,6 +42,7 @@ static TextStyle style_for_token_type(Gfx::Palette palette, JS::TokenType type)
     case JS::TokenType::NumericLiteral:
         return { palette.syntax_number() };
     case JS::TokenType::StringLiteral:
+    case JS::TokenType::TemplateLiteral:
     case JS::TokenType::RegexLiteral:
     case JS::TokenType::UnterminatedStringLiteral:
         return { palette.syntax_string() };

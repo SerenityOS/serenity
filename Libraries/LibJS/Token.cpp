@@ -74,7 +74,7 @@ double Token::double_value() const
 
 String Token::string_value() const
 {
-    ASSERT(type() == TokenType::StringLiteral);
+    ASSERT(type() == TokenType::StringLiteral || type() == TokenType::TemplateLiteral);
     StringBuilder builder;
     for (size_t i = 1; i < m_value.length() - 1; ++i) {
         if (m_value[i] == '\\' && i + 1 < m_value.length() - 1) {
@@ -106,6 +106,9 @@ String Token::string_value() const
                 break;
             case '"':
                 builder.append('"');
+                break;
+            case '`':
+                builder.append('`');
                 break;
             case '\\':
                 builder.append('\\');
