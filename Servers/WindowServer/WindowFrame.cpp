@@ -362,11 +362,11 @@ void WindowFrame::on_mouse_event(const MouseEvent& event)
         return;
     }
 
-    // This is slightly hackish, but expand the title bar rect by one pixel downwards,
+    // This is slightly hackish, but expand the title bar rect by two pixels downwards,
     // so that mouse events between the title bar and window contents don't act like
     // mouse events on the border.
     auto adjusted_title_bar_rect = title_bar_rect();
-    adjusted_title_bar_rect.set_height(adjusted_title_bar_rect.height() + 1);
+    adjusted_title_bar_rect.set_height(adjusted_title_bar_rect.height() + 2);
 
     if (adjusted_title_bar_rect.contains(event.position())) {
         wm.clear_resize_candidate();
