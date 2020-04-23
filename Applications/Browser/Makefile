@@ -2,6 +2,7 @@ OBJS = \
     BookmarksBarWidget.o \
     InspectorWidget.o \
     Tab.o \
+    WindowActions.o \
     main.o
 
 PROGRAM = Browser

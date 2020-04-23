@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "WindowActions.h"
 #include "InspectorWidget.h"
 #include "Tab.h"
 #include <LibCore/File.h>
@@ -88,7 +89,9 @@ int main(int argc, char** argv)
         tab.did_become_active();
     };
 
-    auto create_new_tab = [&] {
+    Browser::WindowActions window_actions(*window);
+
+    auto create_new_tab = [&](bool activate = true) {
         auto& new_tab = tab_widget.add_tab<Browser::Tab>("New tab");
 
         new_tab.on_title_change = [&](auto title) {
@@ -111,6 +114,13 @@ int main(int argc, char** argv)
         new_tab.load(url_to_load);
 
         dbg() << "Added new tab " << &new_tab << ", loading " << url_to_load;
+
+        if (activate)
+            tab_widget.set_active_widget(&new_tab);
+    };
+
+    window_actions.on_create_new_tab = [&] {
+        create_new_tab();
     };
 
     create_new_tab();
