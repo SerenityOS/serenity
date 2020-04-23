@@ -101,43 +101,45 @@ void MessageBox::build()
     widget.set_layout<VerticalBoxLayout>();
     widget.set_fill_with_background_color(true);
 
-    widget.layout()->set_margins({ 0, 15, 0, 15 });
-    widget.layout()->set_spacing(15);
+    widget.layout()->set_margins({ 8, 8, 8, 8 });
+    widget.layout()->set_spacing(8);
 
-    RefPtr<Widget> message_container = widget;
+    auto& message_container = widget.add<Widget>();
+    message_container.set_layout<HorizontalBoxLayout>();
+    message_container.layout()->set_margins({ 8, 0, 0, 0 });
+    message_container.layout()->set_spacing(8);
+
     if (m_type != Type::None) {
-        message_container = widget.add<Widget>();
-        message_container->set_layout<HorizontalBoxLayout>();
-        message_container->layout()->set_margins({ 8, 0, 8, 0 });
-        message_container->layout()->set_spacing(8);
-
-        auto& icon_label = message_container->add<Label>();
+        auto& icon_label = message_container.add<Label>();
         icon_label.set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
         icon_label.set_preferred_size(32, 32);
         icon_label.set_icon(icon());
         icon_width = icon_label.icon()->width();
     }
 
-    auto& label = message_container->add<Label>(m_text);
+    auto& label = message_container.add<Label>(m_text);
     label.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     label.set_preferred_size(text_width, 16);
+    if (m_type != Type::None)
+        label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
     auto& button_container = widget.add<Widget>();
     button_container.set_layout<HorizontalBoxLayout>();
-    button_container.layout()->set_spacing(5);
-    button_container.layout()->set_margins({ 15, 0, 15, 0 });
+    button_container.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    button_container.set_preferred_size(0, 24);
+    button_container.layout()->set_spacing(8);
 
     auto add_button = [&](String label, Dialog::ExecResult result) {
         auto& button = button_container.add<Button>();
-        button.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-        button.set_preferred_size(0, 20);
+        button.set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+        button.set_preferred_size(96, 0);
         button.set_text(label);
         button.on_click = [this, label, result] {
-            dbg() << "GUI::MessageBox: '" << label << "' button clicked";
             done(result);
         };
     };
 
+    button_container.layout()->add_spacer();
     if (should_include_ok_button())
         add_button("OK", Dialog::ExecOK);
     if (should_include_yes_button())
@@ -146,8 +148,13 @@ void MessageBox::build()
         add_button("No", Dialog::ExecNo);
     if (should_include_cancel_button())
         add_button("Cancel", Dialog::ExecCancel);
+    button_container.layout()->add_spacer();
 
-    set_rect(x(), y(), text_width + icon_width + 80, 115);
+    int width = button_container.child_widgets().size() * 96 + 32;
+    if (width < text_width + icon_width + 56)
+        width = text_width + icon_width + 56;
+
+    set_rect(x(), y(), width, 96);
     set_resizable(false);
 }
 
