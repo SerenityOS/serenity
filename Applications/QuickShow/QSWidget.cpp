@@ -162,10 +162,13 @@ void QSWidget::resize_event(GUI::ResizeEvent& event)
 
 void QSWidget::paint_event(GUI::PaintEvent& event)
 {
+    Frame::paint_event(event);
+
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
+    painter.add_clip_rect(frame_inner_rect());
 
-    painter.fill_rect_with_checkerboard(rect(), { 8, 8 }, palette().base().darkened(0.9), palette().base());
+    painter.fill_rect_with_checkerboard(frame_inner_rect(), { 8, 8 }, palette().base().darkened(0.9), palette().base());
 
     if (!m_bitmap.is_null())
         painter.draw_scaled_bitmap(m_bitmap_rect, *m_bitmap, m_bitmap->rect());
