@@ -89,7 +89,7 @@ void StatusBar::paint_event(PaintEvent& event)
 {
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
-    Gfx::StylePainter::paint_surface(painter, rect(), palette(), !spans_entire_window_horizontally());
+    painter.fill_rect(rect(), palette().button());
 }
 
 }
