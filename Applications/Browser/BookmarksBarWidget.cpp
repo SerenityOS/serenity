@@ -92,7 +92,6 @@ void BookmarksBarWidget::did_update_model()
     for (auto* child : child_widgets()) {
         child->remove_from_parent();
     }
-    child_widgets().clear();
 
     m_bookmarks.clear();
 
