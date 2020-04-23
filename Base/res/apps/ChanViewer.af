@@ -1,8 +1,0 @@
-[App]
-Name=ChanViewer
-Executable=/bin/ChanViewer
-Category=Internet
-
-[Icons]
-16x16=/res/icons/16x16/app-chanviewer.png
-32x32=/res/icons/32x32/app-chanviewer.png
