@@ -178,6 +178,9 @@ Tab::Tab()
 
     auto& app_menu = m_menubar->add_menu("Browser");
     app_menu.add_action(WindowActions::the().create_new_tab_action());
+    app_menu.add_action(GUI::Action::create("Close tab", { Mod_Ctrl, Key_W }, [this](auto&) {
+        on_tab_close_request(*this);
+    }));
 
     app_menu.add_action(GUI::Action::create("Reload", { Mod_None, Key_F5 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"), [this](auto&) {
         TemporaryChange<bool> change(m_should_push_loads_to_history, false);
