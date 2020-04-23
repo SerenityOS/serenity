@@ -90,7 +90,9 @@ int main(int, char**)
     }
 
     WindowServer::Screen screen(wm_config->read_num_entry("Screen", "Width", 1024),
-        wm_config->read_num_entry("Screen", "Height", 768));
+        wm_config->read_num_entry("Screen", "Height", 768),
+        wm_config->read_entry("Input", "CharacterMap", "en"));
+
     WindowServer::Compositor::the();
     auto wm = WindowServer::WindowManager::construct(*palette);
     auto am = WindowServer::AppletManager::construct();

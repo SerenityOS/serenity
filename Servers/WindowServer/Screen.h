@@ -27,6 +27,7 @@
 #pragma once
 
 #include <Kernel/KeyCode.h>
+#include <LibKeyboard/CharacterMap.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
@@ -37,7 +38,7 @@ namespace WindowServer {
 
 class Screen {
 public:
-    Screen(unsigned width, unsigned height);
+    Screen(unsigned width, unsigned height, String keymap_file_name);
     ~Screen();
 
     bool set_resolution(int width, int height);
@@ -60,6 +61,8 @@ public:
     void on_receive_mouse_data(const MousePacket&);
     void on_receive_keyboard_data(::KeyEvent);
 
+    void set_character_map(String);
+
 private:
     void on_change_resolution(int pitch, int width, int height);
 
@@ -76,6 +79,8 @@ private:
     Gfx::Point m_cursor_location;
     unsigned m_mouse_button_state { 0 };
     unsigned m_modifiers { 0 };
+
+    LibKeyboard::CharacterMap m_character_map;
 };
 
 inline Gfx::RGBA32* Screen::scanline(int y)

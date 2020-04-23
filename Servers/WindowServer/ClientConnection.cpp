@@ -336,6 +336,16 @@ OwnPtr<Messages::WindowServer::SetWallpaperModeResponse> ClientConnection::handl
     return make<Messages::WindowServer::SetWallpaperModeResponse>();
 }
 
+OwnPtr<Messages::WindowServer::SetCharacterMapResponse> ClientConnection::handle(const Messages::WindowServer::SetCharacterMap& message)
+{
+    auto file_name = message.file_name();
+    if (file_name.is_empty())
+        return make<Messages::WindowServer::SetCharacterMapResponse>(false);
+
+    Screen::the().set_character_map(file_name);
+    return make<Messages::WindowServer::SetCharacterMapResponse>(true);
+}
+
 OwnPtr<Messages::WindowServer::GetWallpaperResponse> ClientConnection::handle(const Messages::WindowServer::GetWallpaper&)
 {
     return make<Messages::WindowServer::GetWallpaperResponse>(Compositor::the().wallpaper_path());

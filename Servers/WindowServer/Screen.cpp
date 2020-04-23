@@ -46,7 +46,8 @@ Screen& Screen::the()
     return *s_the;
 }
 
-Screen::Screen(unsigned desired_width, unsigned desired_height)
+Screen::Screen(unsigned desired_width, unsigned desired_height, String keymap_file_name)
+    : m_character_map(keymap_file_name)
 {
     ASSERT(!s_the);
     s_the = this;
@@ -162,8 +163,20 @@ void Screen::on_receive_mouse_data(const MousePacket& packet)
 void Screen::on_receive_keyboard_data(::KeyEvent kernel_event)
 {
     m_modifiers = kernel_event.modifiers();
-    auto message = make<KeyEvent>(kernel_event.is_press() ? Event::KeyDown : Event::KeyUp, kernel_event.key, kernel_event.character, kernel_event.modifiers());
+
+    auto character = m_character_map.get_char(kernel_event);
+
+    auto message = make<KeyEvent>(kernel_event.is_press() ? Event::KeyDown : Event::KeyUp, kernel_event.key, character, kernel_event.modifiers());
     Core::EventLoop::current().post_event(WindowManager::the(), move(message));
+}
+
+void Screen::set_character_map(String file_name)
+{
+    m_character_map = LibKeyboard::CharacterMap(file_name);
+
+    auto& wm = WindowManager::the();
+    wm.wm_config()->write_entry("Input", "CharacterMap", file_name);
+    wm.wm_config()->sync();
 }
 
 }

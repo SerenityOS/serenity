@@ -19,7 +19,7 @@ OBJS = \
 
 PROGRAM = WindowServer
 
-LIB_DEPS = Gfx Core Thread Pthread IPC
+LIB_DEPS = Gfx Core Thread Pthread IPC Keyboard
 
 *.cpp: WindowServerEndpoint.h WindowClientEndpoint.h
 

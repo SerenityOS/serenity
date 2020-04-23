@@ -78,6 +78,8 @@ endpoint WindowServer = 2
     SetBackgroundColor(String background_color)  => ()
     SetWallpaperMode(String mode)  => ()
 
+    SetCharacterMap(String file_name)  => (bool success)
+
     SetResolution(Gfx::Size resolution) => (bool success, Gfx::Size resolution)
     SetWindowIconBitmap(i32 window_id, Gfx::ShareableBitmap icon) => ()
 
