@@ -48,6 +48,7 @@ MathObject::MathObject()
     put_native_function("sin", sin, 1);
     put_native_function("cos", cos, 1);
     put_native_function("tan", tan, 1);
+    put_native_function("pow", pow, 2);
 
     put("E", Value(M_E));
     put("LN2", Value(M_LN2));
@@ -178,6 +179,11 @@ Value MathObject::tan(Interpreter& interpreter)
     if (number.is_nan())
         return js_nan();
     return Value(::tan(number.as_double()));
+}
+
+Value MathObject::pow(Interpreter& interpreter)
+{
+    return exp(interpreter, interpreter.argument(0), interpreter.argument(1));
 }
 
 }
