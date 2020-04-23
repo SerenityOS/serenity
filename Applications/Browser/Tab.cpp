@@ -26,6 +26,7 @@
 
 #include "Tab.h"
 #include "BookmarksBarWidget.h"
+#include "WindowActions.h"
 #include "History.h"
 #include "InspectorWidget.h"
 #include <LibGUI/AboutDialog.h>
@@ -176,6 +177,8 @@ Tab::Tab()
     m_menubar = GUI::MenuBar::construct();
 
     auto& app_menu = m_menubar->add_menu("Browser");
+    app_menu.add_action(WindowActions::the().create_new_tab_action());
+
     app_menu.add_action(GUI::Action::create("Reload", { Mod_None, Key_F5 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"), [this](auto&) {
         TemporaryChange<bool> change(m_should_push_loads_to_history, false);
         m_html_widget->reload();
