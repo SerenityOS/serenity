@@ -233,6 +233,7 @@ void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
 
     auto& wm = WindowManager::the();
     painter.draw_line(titlebar_rect.bottom_left().translated(0, 1), titlebar_rect.bottom_right().translated(0, 1), palette.button());
+    painter.draw_line(titlebar_rect.bottom_left().translated(0, 2), titlebar_rect.bottom_right().translated(0, 2), palette.button());
 
     auto leftmost_button_rect = m_buttons.is_empty() ? Gfx::Rect() : m_buttons.last().relative_rect();
 
@@ -283,9 +284,9 @@ static Gfx::Rect frame_rect_for_window(Window& window, const Gfx::Rect& rect)
     case WindowType::Normal:
         return {
             rect.x() - 4,
-            rect.y() - window_titlebar_height - 5 + offset,
+            rect.y() - window_titlebar_height - 6 + offset,
             rect.width() + 8,
-            rect.height() + 9 + window_titlebar_height - offset
+            rect.height() + 10 + window_titlebar_height - offset
         };
     case WindowType::Notification:
         return {
