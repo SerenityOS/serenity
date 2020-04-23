@@ -101,7 +101,7 @@ int main(int argc, char** argv)
     auto& widget = window->set_main_widget<GUI::Widget>();
     widget.set_fill_with_background_color(true);
     widget.set_layout<GUI::VerticalBoxLayout>();
-    widget.layout()->set_spacing(0);
+    widget.layout()->set_spacing(2);
 
     bool bookmarksbar_enabled = true;
 

@@ -41,6 +41,7 @@
 #include <LibGUI/ToolBarContainer.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Palette.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -69,8 +70,9 @@ int main(int argc, char** argv)
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-image.png"));
 
     auto& root_widget = window->set_main_widget<GUI::Widget>();
+    root_widget.set_fill_with_background_color(true);
     root_widget.set_layout<GUI::VerticalBoxLayout>();
-    root_widget.layout()->set_spacing(0);
+    root_widget.layout()->set_spacing(2);
 
     auto& toolbar_container = root_widget.add<GUI::ToolBarContainer>();
     auto& main_toolbar = toolbar_container.add<GUI::ToolBar>();
