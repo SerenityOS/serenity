@@ -273,6 +273,17 @@ Value right_shift(Interpreter&, Value lhs, Value rhs)
     return Value((i32)lhs_number.as_double() >> (i32)rhs_number.as_double());
 }
 
+Value unsigned_right_shift(Interpreter&, Value lhs, Value rhs)
+{
+    auto lhs_number = lhs.to_number();
+    if (!lhs_number.is_finite_number())
+        return Value(0);
+    auto rhs_number = rhs.to_number();
+    if (!rhs_number.is_finite_number())
+        return lhs_number;
+    return Value((unsigned)lhs_number.as_double() >> (i32)rhs_number.as_double());
+}
+
 Value add(Interpreter& interpreter, Value lhs, Value rhs)
 {
     auto lhs_primitive = lhs.to_primitive(interpreter);

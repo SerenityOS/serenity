@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@gmx.de>
+ * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -589,6 +590,12 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
     case TokenType::ShiftRightEquals:
         consume();
         return create_ast_node<AssignmentExpression>(AssignmentOp::RightShiftAssignment, move(lhs), parse_expression(min_precedence, associativity));
+    case TokenType::UnsignedShiftRight:
+        consume();
+        return create_ast_node<BinaryExpression>(BinaryOp::UnsignedRightShift, move(lhs), parse_expression(min_precedence, associativity));
+    case TokenType::UnsignedShiftRightEquals:
+        consume();
+        return create_ast_node<AssignmentExpression>(AssignmentOp::UnsignedRightShiftAssignment, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::ParenOpen:
         return parse_call_expression(move(lhs));
     case TokenType::Equals:
@@ -1078,6 +1085,8 @@ bool Parser::match_secondary_expression() const
         || type == TokenType::ShiftLeftEquals
         || type == TokenType::ShiftRight
         || type == TokenType::ShiftRightEquals
+        || type == TokenType::UnsignedShiftRight
+        || type == TokenType::UnsignedShiftRightEquals
         || type == TokenType::DoubleAmpersand
         || type == TokenType::DoublePipe
         || type == TokenType::DoubleQuestionMark;
