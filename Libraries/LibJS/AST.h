@@ -568,6 +568,7 @@ enum class AssignmentOp {
     MultiplicationAssignment,
     DivisionAssignment,
     LeftShiftAssignment,
+    RightShiftAssignment,
 };
 
 class AssignmentExpression : public Expression {
