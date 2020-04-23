@@ -118,7 +118,7 @@ int main(int argc, char** argv)
     auto& keeper = window->set_main_widget<GUI::Widget>();
     keeper.set_layout<GUI::VerticalBoxLayout>();
     keeper.set_fill_with_background_color(true);
-    keeper.layout()->set_margins({ 4, 4, 4, 4 });
+    keeper.layout()->set_margins({ 2, 2, 2, 2 });
 
     auto& tabwidget = keeper.add<GUI::TabWidget>();
 
