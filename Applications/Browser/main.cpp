@@ -38,6 +38,7 @@
 #include <LibGUI/StatusBar.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/ToolBar.h>
+#include <LibGUI/ToolBarContainer.h>
 #include <LibGUI/Window.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/Element.h>
@@ -104,8 +105,9 @@ int main(int argc, char** argv)
 
     bool bookmarksbar_enabled = true;
 
-    auto& toolbar = widget.add<GUI::ToolBar>();
-    auto& bookmarksbar = widget.add<BookmarksBarWidget>(bookmarks_filename, bookmarksbar_enabled);
+    auto& toolbar_container = widget.add<GUI::ToolBarContainer>();
+    auto& toolbar = toolbar_container.add<GUI::ToolBar>();
+    auto& bookmarksbar = toolbar_container.add<BookmarksBarWidget>(bookmarks_filename, bookmarksbar_enabled);
     auto& html_widget = widget.add<Web::HtmlView>();
 
     bookmarksbar.on_bookmark_click = [&](auto&, auto& url) {

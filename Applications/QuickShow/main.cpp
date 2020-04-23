@@ -38,6 +38,7 @@
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/ToolBar.h>
+#include <LibGUI/ToolBarContainer.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <stdio.h>
@@ -71,7 +72,8 @@ int main(int argc, char** argv)
     root_widget.set_layout<GUI::VerticalBoxLayout>();
     root_widget.layout()->set_spacing(0);
 
-    auto& main_toolbar = root_widget.add<GUI::ToolBar>();
+    auto& toolbar_container = root_widget.add<GUI::ToolBarContainer>();
+    auto& main_toolbar = toolbar_container.add<GUI::ToolBar>();
 
     auto& widget = root_widget.add<QSWidget>();
     widget.on_scale_change = [&](int scale) {

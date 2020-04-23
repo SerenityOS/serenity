@@ -46,15 +46,18 @@
 #include <LibGUI/TextBox.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/ToolBar.h>
+#include <LibGUI/ToolBarContainer.h>
 #include <LibGfx/Font.h>
 #include <string.h>
 
 TextEditorWidget::TextEditorWidget()
 {
+    set_fill_with_background_color(true);
     set_layout<GUI::VerticalBoxLayout>();
-    layout()->set_spacing(0);
+    layout()->set_spacing(2);
 
-    auto& toolbar = add<GUI::ToolBar>();
+    auto& toolbar_container = add<GUI::ToolBarContainer>();
+    auto& toolbar = toolbar_container.add<GUI::ToolBar>();
     m_editor = add<GUI::TextEditor>();
     m_editor->set_ruler_visible(true);
     m_editor->set_automatic_indentation_enabled(true);
