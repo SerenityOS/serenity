@@ -39,7 +39,7 @@ StatusBar::StatusBar(int label_count)
     set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     set_preferred_size(0, 20);
     set_layout<HorizontalBoxLayout>();
-    layout()->set_margins({ 0, 2, 0, 1 });
+    layout()->set_margins({ 0, 3, 0, 0 });
     layout()->set_spacing(2);
 
     if (label_count < 1)
