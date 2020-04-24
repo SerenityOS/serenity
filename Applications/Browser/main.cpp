@@ -85,6 +85,7 @@ int main(int argc, char** argv)
     widget.layout()->set_spacing(2);
 
     auto& tab_widget = widget.add<GUI::TabWidget>();
+    tab_widget.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     tab_widget.set_container_padding(0);
 
     tab_widget.on_change = [&](auto& active_widget) {
@@ -95,14 +96,23 @@ int main(int argc, char** argv)
 
     Browser::WindowActions window_actions(*window);
 
+    auto default_favicon = Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png");
+    ASSERT(default_favicon);
+
     Function<void(URL url, bool activate)> create_new_tab;
     create_new_tab = [&](auto url, auto activate) {
         auto& new_tab = tab_widget.add_tab<Browser::Tab>("New tab");
+
+        tab_widget.set_tab_icon(new_tab, default_favicon);
 
         new_tab.on_title_change = [&](auto title) {
             tab_widget.set_tab_title(new_tab, title);
             if (tab_widget.active_widget() == &new_tab)
                 window->set_title(String::format("%s - Browser", title.characters()));
+        };
+
+        new_tab.on_favicon_change = [&](auto& bitmap) {
+            tab_widget.set_tab_icon(new_tab, &bitmap);
         };
 
         new_tab.on_tab_open_request = [&](auto& url) {
