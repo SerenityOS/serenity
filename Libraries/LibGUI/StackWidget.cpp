@@ -47,6 +47,7 @@ void StackWidget::set_active_widget(Widget* widget)
     m_active_widget = widget;
     if (m_active_widget) {
         m_active_widget->set_relative_rect(rect());
+        m_active_widget->set_focus(true);
         m_active_widget->set_visible(true);
     }
     if (on_active_widget_change)
