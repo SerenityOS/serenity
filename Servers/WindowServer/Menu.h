@@ -132,7 +132,7 @@ private:
     void did_activate(MenuItem&);
     void open_hovered_item();
     void update_for_new_hovered_item();
-    void decend_into_submenu_at_hovered_item();
+    void descend_into_submenu_at_hovered_item();
 
     ClientConnection* m_client { nullptr };
     int m_menu_id { 0 };
