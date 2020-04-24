@@ -383,6 +383,12 @@ void enable_test_mode(JS::Interpreter& interpreter)
     interpreter.global_object().put_native_function("load", ReplObject::load_file);
 }
 
+static Function<void()> interrupt_interpreter;
+void sigint_handler()
+{
+    interrupt_interpreter();
+}
+
 int main(int argc, char** argv)
 {
     bool gc_on_every_allocation = false;
@@ -399,8 +405,15 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(script_path, "Path to script file", "script", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
+    OwnPtr<JS::Interpreter> interpreter;
+
+    interrupt_interpreter = [&] {
+        auto error = JS::Error::create(interpreter->global_object(), "Error", "Received SIGINT");
+        interpreter->throw_exception(error);
+    };
+
     if (script_path == nullptr) {
-        auto interpreter = JS::Interpreter::create<ReplObject>();
+        interpreter = JS::Interpreter::create<ReplObject>();
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
         if (test_mode)
             enable_test_mode(*interpreter);
@@ -408,6 +421,7 @@ int main(int argc, char** argv)
         editor = make<Line::Editor>();
 
         signal(SIGINT, [](int) {
+            sigint_handler();
             editor->interrupted();
         });
 
@@ -620,10 +634,14 @@ int main(int argc, char** argv)
         editor->on_tab_complete_other_token = [complete](auto& value) { return complete(value); };
         repl(*interpreter);
     } else {
-        auto interpreter = JS::Interpreter::create<JS::GlobalObject>();
+        interpreter = JS::Interpreter::create<JS::GlobalObject>();
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
         if (test_mode)
             enable_test_mode(*interpreter);
+
+        signal(SIGINT, [](int) {
+            sigint_handler();
+        });
 
         auto file = Core::File::construct(script_path);
         if (!file->open(Core::IODevice::ReadOnly)) {
