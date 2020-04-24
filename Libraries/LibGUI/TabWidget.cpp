@@ -63,6 +63,7 @@ void TabWidget::set_active_widget(Widget* widget)
     m_active_widget = widget;
     if (m_active_widget) {
         m_active_widget->set_relative_rect(child_rect_for_size(size()));
+        m_active_widget->set_focus(true);
         m_active_widget->set_visible(true);
         deferred_invoke([this](auto&) {
             if (on_change)
