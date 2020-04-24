@@ -13,10 +13,11 @@ OBJS = \
     CursorTool.o \
     WidgetTool.o \
     WidgetTreeModel.o \
+    Debugger.o \
     main.o
 
 PROGRAM = HackStudio
 
-LIB_DEPS = GUI Web VT Protocol Markdown Gfx IPC Thread Pthread Core JS
+LIB_DEPS = GUI Web VT Protocol Markdown Gfx IPC Thread Pthread Core JS Debug
 
 include ../../Makefile.common
