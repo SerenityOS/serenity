@@ -133,13 +133,13 @@ Tab::Tab()
         update_bookmark_button(url.to_string());
     };
 
-    m_html_widget->on_link_click = [this](auto& href, auto& target) {
+    m_html_widget->on_link_click = [this](auto& href, auto& target, unsigned modifiers) {
         if (href.starts_with("#")) {
             auto anchor = href.substring_view(1, href.length() - 1);
             m_html_widget->scroll_to_anchor(anchor);
         } else {
             auto url = m_html_widget->document()->complete_url(href);
-            if (target == "_blank")
+            if (target == "_blank" || modifiers == Mod_Ctrl)
                 on_tab_open_request(url);
             else
                 m_html_widget->load(url);
