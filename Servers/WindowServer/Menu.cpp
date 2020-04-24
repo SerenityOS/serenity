@@ -393,6 +393,8 @@ void Menu::event(Core::Event& event)
         }
 
         if (key == Key_Return) {
+            if (!hovered_item()->is_enabled())
+                return;
             if (hovered_item()->is_submenu())
                 descend_into_submenu_at_hovered_item();
             else
@@ -461,7 +463,7 @@ void Menu::event(Core::Event& event)
         }
 
         if (key == Key_Right) {
-            if (hovered_item()->is_submenu())
+            if (hovered_item()->is_enabled() && hovered_item()->is_submenu())
                 descend_into_submenu_at_hovered_item();
             return;
         }
