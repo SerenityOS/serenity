@@ -24,9 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "WindowActions.h"
 #include "InspectorWidget.h"
 #include "Tab.h"
+#include "WindowActions.h"
 #include <LibCore/File.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -75,6 +75,8 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->set_rect(100, 100, 640, 480);
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png"));
+    window->set_title("Browser");
 
     auto& widget = window->set_main_widget<GUI::Widget>();
     widget.set_fill_with_background_color(true);
@@ -91,13 +93,18 @@ int main(int argc, char** argv)
 
     Browser::WindowActions window_actions(*window);
 
-    auto create_new_tab = [&](bool activate = true) {
+    Function<void(URL url, bool activate)> create_new_tab;
+    create_new_tab = [&](auto url, auto activate) {
         auto& new_tab = tab_widget.add_tab<Browser::Tab>("New tab");
 
         new_tab.on_title_change = [&](auto title) {
             tab_widget.set_tab_title(new_tab, title);
             if (tab_widget.active_widget() == &new_tab)
                 window->set_title(String::format("%s - Browser", title.characters()));
+        };
+
+        new_tab.on_tab_open_request = [&](auto& url) {
+            create_new_tab(url, true);
         };
 
         new_tab.on_tab_close_request = [&](auto& tab) {
@@ -108,27 +115,20 @@ int main(int argc, char** argv)
             });
         };
 
-        window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png"));
+        new_tab.load(url);
 
-        window->set_title("Browser");
-        window->show();
-
-        URL url_to_load = home_url;
-
-        if (app.args().size() >= 1) {
-            url_to_load = URL::create_with_url_or_path(app.args()[0]);
-        }
-
-        new_tab.load(url_to_load);
-
-        dbg() << "Added new tab " << &new_tab << ", loading " << url_to_load;
+        dbg() << "Added new tab " << &new_tab << ", loading " << url;
 
         if (activate)
             tab_widget.set_active_widget(&new_tab);
     };
 
+    URL default_url = home_url;
+    if (app.args().size() >= 1)
+        default_url = URL::create_with_url_or_path(app.args()[0]);
+
     window_actions.on_create_new_tab = [&] {
-        create_new_tab();
+        create_new_tab(default_url, true);
     };
 
     window_actions.on_next_tab = [&] {
@@ -139,7 +139,8 @@ int main(int argc, char** argv)
         tab_widget.activate_previous_tab();
     };
 
-    create_new_tab();
+    create_new_tab(default_url, true);
+    window->show();
 
     return app.exec();
 }
