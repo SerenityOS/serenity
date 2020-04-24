@@ -84,6 +84,7 @@ int main(int argc, char** argv)
     widget.layout()->set_spacing(2);
 
     auto& tab_widget = widget.add<GUI::TabWidget>();
+    tab_widget.set_container_padding(0);
 
     tab_widget.on_change = [&](auto& active_widget) {
         auto& tab = static_cast<Browser::Tab&>(active_widget);

@@ -63,8 +63,7 @@ static const char* bookmarks_filename = "/home/anon/bookmarks.json";
 Tab::Tab()
 {
     auto& widget = *this;
-    auto& layout = set_layout<GUI::VerticalBoxLayout>();
-    layout.set_margins({ 1, 1, 1, 1 });
+    set_layout<GUI::VerticalBoxLayout>();
 
     bool bookmarksbar_enabled = true;
 
