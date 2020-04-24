@@ -67,8 +67,17 @@ public:
     };
 
     bool insert_breakpoint(void* address);
-    bool disable_breakpoint(const BreakPoint&);
-    bool enable_breakpoint(const BreakPoint&);
+    bool disable_breakpoint(void* address);
+    bool enable_breakpoint(void* address);
+    bool remove_breakpoint(void* address);
+    bool breakpoint_exists(void* address) const;
+
+    void dump_breakpoints()
+    {
+        for (auto addr : m_breakpoints.keys()) {
+            dbg() << addr;
+        }
+    }
 
     PtraceRegisters get_registers() const;
     void set_registers(const PtraceRegisters&);
@@ -167,7 +176,7 @@ void DebugSession::run(Callback callback)
             // We want to make the breakpoint transparrent to the user of the debugger
             regs.eip = reinterpret_cast<u32>(current_breakpoint.value().address);
             set_registers(regs);
-            disable_breakpoint(current_breakpoint.value());
+            disable_breakpoint(current_breakpoint.value().address);
         }
 
         DebugBreakReason reason = (state == State::Syscall && !current_breakpoint.has_value()) ? DebugBreakReason::Syscall : DebugBreakReason::Breakpoint;
@@ -185,10 +194,10 @@ void DebugSession::run(Callback callback)
             state = State::Syscall;
         }
 
-        if (current_breakpoint.has_value()) {
-            // Re-enable the breakpoint
+        // Re-enable the breakpoint if it wasn't removed by the user
+        if (current_breakpoint.has_value() && m_breakpoints.contains(current_breakpoint.value().address)) {
             auto stopped_address = single_step();
-            enable_breakpoint(current_breakpoint.value());
+            enable_breakpoint(current_breakpoint.value().address);
             // If there is another breakpoint after the current one,
             // Then we are already on it (because of single_step)
             auto breakpoint_at_next_instruction = m_breakpoints.get(stopped_address);
