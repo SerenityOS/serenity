@@ -185,12 +185,12 @@ Tab::Tab()
     app_menu.add_action(WindowActions::the().create_new_tab_action());
     app_menu.add_action(GUI::Action::create("Close tab", { Mod_Ctrl, Key_W }, [this](auto&) {
         on_tab_close_request(*this);
-    }));
+    }, this));
 
     app_menu.add_action(GUI::Action::create("Reload", { Mod_None, Key_F5 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"), [this](auto&) {
         TemporaryChange<bool> change(m_should_push_loads_to_history, false);
         m_html_widget->reload();
-    }));
+    }, this));
     app_menu.add_separator();
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the().quit();
@@ -232,20 +232,20 @@ Tab::Tab()
     auto& debug_menu = m_menubar->add_menu("Debug");
     debug_menu.add_action(GUI::Action::create("Dump DOM tree", [this](auto&) {
         Web::dump_tree(*m_html_widget->document());
-    }));
+    }, this));
     debug_menu.add_action(GUI::Action::create("Dump Layout tree", [this](auto&) {
         Web::dump_tree(*m_html_widget->document()->layout_node());
-    }));
+    }, this));
     debug_menu.add_action(GUI::Action::create("Dump Style sheets", [this](auto&) {
         for (auto& sheet : m_html_widget->document()->stylesheets()) {
             dump_sheet(sheet);
         }
-    }));
+    }, this));
     debug_menu.add_separator();
     auto line_box_borders_action = GUI::Action::create_checkable("Line box borders", [this](auto& action) {
         m_html_widget->set_should_show_line_box_borders(action.is_checked());
         m_html_widget->update();
-    });
+    }, this);
     line_box_borders_action->set_checked(false);
     debug_menu.add_action(line_box_borders_action);
 
@@ -253,7 +253,7 @@ Tab::Tab()
     auto show_bookmarksbar_action = GUI::Action::create_checkable("Show bookmarks bar", [this](auto& action) {
         m_bookmarks_bar->set_visible(action.is_checked());
         m_bookmarks_bar->update();
-    });
+    }, this);
     show_bookmarksbar_action->set_checked(bookmarksbar_enabled);
     bookmarks_menu.add_action(show_bookmarksbar_action);
 
