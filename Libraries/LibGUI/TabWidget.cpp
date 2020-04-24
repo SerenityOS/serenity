@@ -27,6 +27,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/TabWidget.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
@@ -43,7 +44,7 @@ TabWidget::~TabWidget()
 
 void TabWidget::add_widget(const StringView& title, Widget& widget)
 {
-    m_tabs.append({ title, &widget });
+    m_tabs.append({ title, nullptr, &widget });
     add_child(widget);
 }
 
@@ -159,13 +160,25 @@ void TabWidget::paint_event(PaintEvent& event)
     if (container_padding() > 0)
         Gfx::StylePainter::paint_frame(painter, container_rect, palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Raised, 2);
 
+    auto paint_tab_icon_if_needed = [&](auto& icon, auto& button_rect, auto& text_rect) {
+        if (!icon)
+            return;
+        Gfx::Rect icon_rect { button_rect.x(), button_rect.y(), 16, 16 };
+        icon_rect.move_by(3, 3);
+        painter.draw_scaled_bitmap(icon_rect, *icon, icon->rect());
+        text_rect.set_x(icon_rect.right() + 1 + 4);
+        text_rect.intersect(button_rect);
+    };
+
     for (size_t i = 0; i < m_tabs.size(); ++i) {
         if (m_tabs[i].widget == m_active_widget)
             continue;
         bool hovered = static_cast<int>(i) == m_hovered_tab_index;
         auto button_rect = this->button_rect(i);
         Gfx::StylePainter::paint_tab_button(painter, button_rect, palette(), false, hovered, m_tabs[i].widget->is_enabled());
-        painter.draw_text(button_rect.translated(0, 1), m_tabs[i].title, Gfx::TextAlignment::Center, palette().button_text());
+        auto text_rect = button_rect.translated(0, 1);
+        paint_tab_icon_if_needed(m_tabs[i].icon, button_rect, text_rect);
+        painter.draw_text(text_rect, m_tabs[i].title, m_text_alignment, palette().button_text());
     }
 
     for (size_t i = 0; i < m_tabs.size(); ++i) {
@@ -174,7 +187,9 @@ void TabWidget::paint_event(PaintEvent& event)
         bool hovered = static_cast<int>(i) == m_hovered_tab_index;
         auto button_rect = this->button_rect(i);
         Gfx::StylePainter::paint_tab_button(painter, button_rect, palette(), true, hovered, m_tabs[i].widget->is_enabled());
-        painter.draw_text(button_rect.translated(0, 1), m_tabs[i].title, Gfx::TextAlignment::Center, palette().button_text());
+        auto text_rect = button_rect.translated(0, 1);
+        paint_tab_icon_if_needed(m_tabs[i].icon, button_rect, text_rect);
+        painter.draw_text(text_rect, m_tabs[i].title, m_text_alignment, palette().button_text());
         painter.draw_line(button_rect.bottom_left().translated(1, 1), button_rect.bottom_right().translated(-1, 1), palette().button());
         break;
     }
@@ -199,7 +214,7 @@ Gfx::Rect TabWidget::button_rect(int index) const
 
 int TabWidget::TabData::width(const Gfx::Font& font) const
 {
-    return 16 + font.width(title);
+    return 16 + font.width(title) + (icon ? (16 + 4) : 0);
 }
 
 void TabWidget::mousedown_event(MouseEvent& event)
@@ -272,6 +287,17 @@ void TabWidget::set_tab_title(Widget& tab, const StringView& title)
                 t.title = title;
                 update();
             }
+            return;
+        }
+    }
+}
+
+void TabWidget::set_tab_icon(Widget& tab, const Gfx::Bitmap* icon)
+{
+    for (auto& t : m_tabs) {
+        if (t.widget == &tab) {
+            t.icon = icon;
+            update();
             return;
         }
     }

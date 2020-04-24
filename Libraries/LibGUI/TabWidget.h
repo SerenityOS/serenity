@@ -68,9 +68,13 @@ public:
     void remove_tab(Widget& tab) { remove_widget(tab); }
 
     void set_tab_title(Widget& tab, const StringView& title);
+    void set_tab_icon(Widget& tab, const Gfx::Bitmap*);
 
     void activate_next_tab();
     void activate_previous_tab();
+
+    void set_text_alignment(Gfx::TextAlignment alignment) { m_text_alignment = alignment; }
+    Gfx::TextAlignment text_alignment() const { return m_text_alignment; }
 
     Function<void(Widget&)> on_change;
 
@@ -94,15 +98,16 @@ private:
     RefPtr<Widget> m_active_widget;
 
     struct TabData {
-        Gfx::Rect rect(const Gfx::Font&) const;
         int width(const Gfx::Font&) const;
         String title;
+        RefPtr<Gfx::Bitmap> icon;
         Widget* widget { nullptr };
     };
     Vector<TabData> m_tabs;
     TabPosition m_tab_position { TabPosition::Top };
     int m_hovered_tab_index { -1 };
     int m_container_padding { 2 };
+    Gfx::TextAlignment m_text_alignment { Gfx::TextAlignment::Center };
 };
 
 }
