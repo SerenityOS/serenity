@@ -77,6 +77,7 @@ DirectoryView::DirectoryView()
     : m_model(GUI::FileSystemModel::create())
 {
     set_active_widget(nullptr);
+    set_content_margins({ 2, 2, 2, 2 });
     m_item_view = add<GUI::ItemView>();
     m_item_view->set_model(model());
 
