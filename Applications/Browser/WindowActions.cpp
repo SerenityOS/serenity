@@ -36,6 +36,13 @@ WindowActions::WindowActions(GUI::Window& window)
                 on_previous_tab();
         },
         &window);
+
+    m_about_action = GUI::Action::create(
+        "About", [this](const GUI::Action&) {
+            if (on_about)
+                on_about();
+        },
+        &window);
 }
 
 }

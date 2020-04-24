@@ -29,7 +29,6 @@
 #include "WindowActions.h"
 #include "History.h"
 #include "InspectorWidget.h"
-#include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -257,9 +256,7 @@ Tab::Tab()
     bookmarks_menu.add_action(show_bookmarksbar_action);
 
     auto& help_menu = m_menubar->add_menu("Help");
-    help_menu.add_action(GUI::Action::create("About", [this](const GUI::Action&) {
-        GUI::AboutDialog::show("Browser", Gfx::Bitmap::load_from_file("/res/icons/32x32/filetype-html.png"), window());
-    }));
+    help_menu.add_action(WindowActions::the().about_action());
 }
 
 Tab::~Tab()
