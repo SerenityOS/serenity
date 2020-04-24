@@ -87,6 +87,7 @@ int main(int argc, char** argv)
     auto& tab_widget = widget.add<GUI::TabWidget>();
     tab_widget.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     tab_widget.set_container_padding(0);
+    tab_widget.set_uniform_tabs(true);
 
     tab_widget.on_change = [&](auto& active_widget) {
         auto& tab = static_cast<Browser::Tab&>(active_widget);

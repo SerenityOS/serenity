@@ -76,6 +76,9 @@ public:
     void set_text_alignment(Gfx::TextAlignment alignment) { m_text_alignment = alignment; }
     Gfx::TextAlignment text_alignment() const { return m_text_alignment; }
 
+    void set_uniform_tabs(bool uniform_tabs) { m_uniform_tabs = uniform_tabs; }
+    int uniform_tab_width() const;
+
     Function<void(Widget&)> on_change;
 
 protected:
@@ -108,6 +111,7 @@ private:
     int m_hovered_tab_index { -1 };
     int m_container_padding { 2 };
     Gfx::TextAlignment m_text_alignment { Gfx::TextAlignment::Center };
+    bool m_uniform_tabs { false };
 };
 
 }
