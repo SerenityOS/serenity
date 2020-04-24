@@ -36,6 +36,7 @@ public:
     virtual ~HTMLAnchorElement() override;
 
     String href() const { return attribute("href"); }
+    String target() const { return attribute("target"); }
 };
 
 template<>

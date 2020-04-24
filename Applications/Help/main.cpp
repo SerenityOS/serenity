@@ -151,7 +151,7 @@ int main(int argc, char* argv[])
         open_page(path);
     };
 
-    html_view.on_link_click = [&](const String& href) {
+    html_view.on_link_click = [&](const String& href, auto&) {
         char* current_path = strdup(history.current().characters());
         char* dir_path = dirname(current_path);
         char* path = realpath(String::format("%s/%s", dir_path, href.characters()).characters(), nullptr);

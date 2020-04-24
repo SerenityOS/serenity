@@ -133,7 +133,7 @@ Tab::Tab()
         update_bookmark_button(url.to_string());
     };
 
-    m_html_widget->on_link_click = [this](auto& url) {
+    m_html_widget->on_link_click = [this](auto& url, auto&) {
         if (url.starts_with("#")) {
             m_html_widget->scroll_to_anchor(url.substring_view(1, url.length() - 1));
         } else {
