@@ -99,7 +99,7 @@ void TextEditor::create_actions()
             this);
     }
     m_select_all_action = Action::create(
-        "Select all", { Mod_Ctrl, Key_A },Gfx::Bitmap::load_from_file("/res/icons/16x16/select-all.png"), [this](auto&) { select_all(); }, this);
+        "Select all", { Mod_Ctrl, Key_A }, Gfx::Bitmap::load_from_file("/res/icons/16x16/select-all.png"), [this](auto&) { select_all(); }, this);
 }
 
 void TextEditor::set_text(const StringView& text)
@@ -473,9 +473,12 @@ void TextEditor::paint_event(PaintEvent& event)
             }
             bool physical_line_has_selection = has_selection && line_index >= selection.start().line() && line_index <= selection.end().line();
             if (physical_line_has_selection) {
+                size_t start_of_selection_within_visual_line = (size_t)max(0, (int)selection_start_column_within_line - (int)start_of_visual_line);
+                size_t end_of_selection_within_visual_line = selection_end_column_within_line - start_of_visual_line;
 
-                bool current_visual_line_has_selection = (line_index != selection.start().line() && line_index != selection.end().line())
-                    || (visual_line_index >= first_visual_line_with_selection && visual_line_index <= last_visual_line_with_selection);
+                bool current_visual_line_has_selection = start_of_selection_within_visual_line != end_of_selection_within_visual_line
+                    && ((line_index != selection.start().line() && line_index != selection.end().line())
+                        || (visual_line_index >= first_visual_line_with_selection && visual_line_index <= last_visual_line_with_selection));
                 if (current_visual_line_has_selection) {
                     bool selection_begins_on_current_visual_line = visual_line_index == first_visual_line_with_selection;
                     bool selection_ends_on_current_visual_line = visual_line_index == last_visual_line_with_selection;
@@ -499,9 +502,6 @@ void TextEditor::paint_event(PaintEvent& event)
                     Color text_color = is_focused() ? palette().selection_text() : palette().inactive_selection_text();
 
                     painter.fill_rect(selection_rect, background_color);
-
-                    size_t start_of_selection_within_visual_line = (size_t)max(0, (int)selection_start_column_within_line - (int)start_of_visual_line);
-                    size_t end_of_selection_within_visual_line = selection_end_column_within_line - start_of_visual_line;
 
                     StringView visual_selected_text {
                         visual_line_text.characters_without_null_termination() + start_of_selection_within_visual_line,
