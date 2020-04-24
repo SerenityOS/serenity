@@ -213,13 +213,7 @@ int main(int argc, char** argv)
 
     auto hide_show_toolbar_action = GUI::Action::create("Hide/Show Toolbar", { Mod_Ctrl, Key_T },
         [&](auto&) {
-            main_toolbar.set_visible(!main_toolbar.is_visible());
-
-            if (main_toolbar.is_visible()) {
-                widget.set_toolbar_height(main_toolbar.height());
-            } else {
-                widget.set_toolbar_height(0);
-            }
+            toolbar_container.set_visible(!toolbar_container.is_visible());
         });
 
     auto about_action = GUI::Action::create("About",
