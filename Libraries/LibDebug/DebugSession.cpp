@@ -133,38 +133,56 @@ bool DebugSession::insert_breakpoint(void* address)
     if (!original_bytes.has_value())
         return false;
 
+    ASSERT((original_bytes.value() & 0xff) != BREAKPOINT_INSTRUCTION);
+
     BreakPoint breakpoint { address, original_bytes.value(), BreakPointState::Disabled };
 
     m_breakpoints.set(address, breakpoint);
 
-    enable_breakpoint(breakpoint);
+    enable_breakpoint(breakpoint.address);
 
     return true;
 }
 
-bool DebugSession::disable_breakpoint(const BreakPoint& breakpoint)
+bool DebugSession::disable_breakpoint(void* address)
 {
-    ASSERT(m_breakpoints.contains(breakpoint.address));
-    if (!poke(reinterpret_cast<u32*>(reinterpret_cast<char*>(breakpoint.address)), breakpoint.original_first_word))
+    auto breakpoint = m_breakpoints.get(address);
+    ASSERT(breakpoint.has_value());
+    if (!poke(reinterpret_cast<u32*>(reinterpret_cast<char*>(breakpoint.value().address)), breakpoint.value().original_first_word))
         return false;
 
-    auto bp = m_breakpoints.get(breakpoint.address).value();
+    auto bp = m_breakpoints.get(breakpoint.value().address).value();
     bp.state = BreakPointState::Disabled;
     m_breakpoints.set(bp.address, bp);
     return true;
 }
 
-bool DebugSession::enable_breakpoint(const BreakPoint& breakpoint)
+bool DebugSession::enable_breakpoint(void* address)
 {
-    ASSERT(m_breakpoints.contains(breakpoint.address));
+    auto breakpoint = m_breakpoints.get(address);
+    ASSERT(breakpoint.has_value());
 
-    if (!poke(reinterpret_cast<u32*>(breakpoint.address), (breakpoint.original_first_word & ~(uint32_t)0xff) | BREAKPOINT_INSTRUCTION))
+    if (!poke(reinterpret_cast<u32*>(breakpoint.value().address), (breakpoint.value().original_first_word & ~(uint32_t)0xff) | BREAKPOINT_INSTRUCTION))
         return false;
 
-    auto bp = m_breakpoints.get(breakpoint.address).value();
+    auto bp = m_breakpoints.get(breakpoint.value().address).value();
     bp.state = BreakPointState::Enabled;
     m_breakpoints.set(bp.address, bp);
     return true;
+}
+
+bool DebugSession::remove_breakpoint(void* address)
+{
+    if (!disable_breakpoint(address))
+        return false;
+
+    m_breakpoints.remove(address);
+    return true;
+}
+
+bool DebugSession::breakpoint_exists(void* address) const
+{
+    return m_breakpoints.contains(address);
 }
 
 PtraceRegisters DebugSession::get_registers() const

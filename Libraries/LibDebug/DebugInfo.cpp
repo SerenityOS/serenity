@@ -50,7 +50,7 @@ void DebugInfo::prepare_lines()
 
     for (auto& line_info : all_lines) {
         String file_path = line_info.file;
-        if (file_path.contains("Toolchain/"))
+        if (file_path.contains("Toolchain/") || file_path.contains("libgcc"))
             continue;
         if (file_path.contains("serenity/")) {
             auto start_index = file_path.index_of("serenity/").value() + String("serenity/").length();
@@ -74,7 +74,7 @@ Optional<DebugInfo::SourcePosition> DebugInfo::get_source_position(u32 target_ad
     // TODO: We can do a binray search here
     for (size_t i = 0; i < m_sorted_lines.size() - 1; ++i) {
         if (m_sorted_lines[i + 1].address > target_address) {
-            return Optional<SourcePosition>({ m_sorted_lines[i].file, m_sorted_lines[i].line });
+            return Optional<SourcePosition>({ m_sorted_lines[i].file, m_sorted_lines[i].line, m_sorted_lines[i].address });
         }
     }
     return {};
@@ -83,7 +83,6 @@ Optional<DebugInfo::SourcePosition> DebugInfo::get_source_position(u32 target_ad
 Optional<u32> DebugInfo::get_instruction_from_source(const String& file, size_t line) const
 {
     for (const auto& line_entry : m_sorted_lines) {
-        dbg() << line_entry.file;
         if (line_entry.file == file && line_entry.line == line)
             return Optional<u32>(line_entry.address);
     }
