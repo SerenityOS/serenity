@@ -66,7 +66,7 @@ NonnullRefPtr<Action> make_delete_action(Function<void(Action&)> callback, Core:
 
 NonnullRefPtr<Action> make_cut_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Cut", { Mod_Ctrl, Key_X }, Gfx::Bitmap::load_from_file("/res/icons/cut16.png"), move(callback), parent);
+    return Action::create("Cut", { Mod_Ctrl, Key_X }, Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-cut.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_copy_action(Function<void(Action&)> callback, Core::Object* parent)
