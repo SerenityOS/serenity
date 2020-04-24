@@ -238,7 +238,7 @@ void HtmlView::mousedown_event(GUI::MouseEvent& event)
                     run_javascript_url(link->href());
                 } else {
                     if (on_link_click)
-                        on_link_click(link->href(), link->target());
+                        on_link_click(link->href(), link->target(), event.modifiers());
                 }
             } else {
                 if (event.button() == GUI::MouseButton::Left) {
