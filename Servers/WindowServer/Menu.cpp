@@ -303,7 +303,7 @@ void Menu::open_hovered_item()
     clear_hovered_item();
 }
 
-void Menu::decend_into_submenu_at_hovered_item()
+void Menu::descend_into_submenu_at_hovered_item()
 {
     ASSERT(hovered_item());
     ASSERT(hovered_item()->is_submenu());
@@ -394,7 +394,7 @@ void Menu::event(Core::Event& event)
 
         if (key == Key_Return) {
             if (hovered_item()->is_submenu())
-                decend_into_submenu_at_hovered_item();
+                descend_into_submenu_at_hovered_item();
             else
                 open_hovered_item();
             return;
@@ -462,7 +462,7 @@ void Menu::event(Core::Event& event)
 
         if (key == Key_Right) {
             if (hovered_item()->is_submenu())
-                decend_into_submenu_at_hovered_item();
+                descend_into_submenu_at_hovered_item();
             return;
         }
     }
