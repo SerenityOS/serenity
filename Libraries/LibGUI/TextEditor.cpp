@@ -301,7 +301,7 @@ void TextEditor::mouseup_event(MouseEvent& event)
 void TextEditor::mousemove_event(MouseEvent& event)
 {
     m_last_mousemove_position = event.position();
-    if (m_in_drag_select && !m_automatic_selection_scroll_timer->is_active()) {
+    if (m_in_drag_select && (rect().contains(event.position()) || !m_automatic_selection_scroll_timer->is_active())) {
         set_cursor(text_position_at(event.position()));
         m_selection.set_end(m_cursor);
         did_update_selection();
