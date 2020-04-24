@@ -31,6 +31,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/SyntaxHighlighter.h>
@@ -79,12 +80,20 @@ void Editor::focusout_event(Core::Event& event)
     GUI::TextEditor::focusout_event(event);
 }
 
+Gfx::Rect Editor::breakpoint_icon_rect(size_t line_number) const
+{
+    auto ruler_line_rect = ruler_content_rect(line_number);
+    auto center = ruler_line_rect.center().translated({ ruler_line_rect.width() - 10, -line_spacing() - 3 });
+    constexpr int size = 32;
+    return { center.x() - size / 2, center.y() - size / 2, size, size };
+}
+
 void Editor::paint_event(GUI::PaintEvent& event)
 {
     GUI::TextEditor::paint_event(event);
 
+    GUI::Painter painter(*this);
     if (is_focused()) {
-        GUI::Painter painter(*this);
         painter.add_clip_rect(event.rect());
 
         auto rect = frame_inner_rect();
@@ -95,8 +104,26 @@ void Editor::paint_event(GUI::PaintEvent& event)
         painter.draw_rect(rect, palette().selection());
     }
 
-    if (m_hovering_editor)
+    if (m_hovering_lines_ruler)
+        window()->set_override_cursor(GUI::StandardCursor::Arrow);
+    else if (m_hovering_editor)
         window()->set_override_cursor(m_hovering_link && m_holding_ctrl ? GUI::StandardCursor::Hand : GUI::StandardCursor::IBeam);
+
+    if (ruler_visible()) {
+        size_t first_visible_line = text_position_at(event.rect().top_left()).line();
+        size_t last_visible_line = text_position_at(event.rect().bottom_right()).line();
+        for (size_t line : m_breakpoint_lines) {
+            if (line < first_visible_line || line > last_visible_line) {
+                continue;
+            }
+            const auto& icon = breakpoint_icon_bitmap();
+            painter.blit(breakpoint_icon_rect(line).center(), icon, icon.rect());
+        }
+        if (m_execution_position.has_value()) {
+            const auto& icon = current_position_icon_bitmap();
+            painter.blit(breakpoint_icon_rect(m_execution_position.value()).center(), icon, icon.rect());
+        }
+    }
 }
 
 static HashMap<String, String>& man_paths()
@@ -188,6 +215,9 @@ void Editor::mousemove_event(GUI::MouseEvent& event)
     if (!highlighter)
         return;
 
+    auto ruler_line_rect = ruler_content_rect(text_position.line());
+    m_hovering_lines_ruler = (event.position().x() < ruler_line_rect.width());
+
     bool hide_tooltip = true;
     bool is_over_link = false;
 
@@ -237,12 +267,23 @@ void Editor::mousedown_event(GUI::MouseEvent& event)
         return;
     }
 
+    auto text_position = text_position_at(event.position());
+    auto ruler_line_rect = ruler_content_rect(text_position.line());
+    if (event.position().x() < ruler_line_rect.width()) {
+        if (!m_breakpoint_lines.contains_slow(text_position.line())) {
+            m_breakpoint_lines.append(text_position.line());
+            on_breakpoint_change(wrapper().filename_label().text(), text_position.line(), BreakpointChange::Added);
+        } else {
+            m_breakpoint_lines.remove_first_matching([&](size_t line) { return line == text_position.line(); });
+            on_breakpoint_change(wrapper().filename_label().text(), text_position.line(), BreakpointChange::Removed);
+        }
+    }
+
     if (!(event.modifiers() & Mod_Ctrl)) {
         GUI::TextEditor::mousedown_event(event);
         return;
     }
 
-    auto text_position = text_position_at(event.position());
     if (!text_position.is_valid()) {
         GUI::TextEditor::mousedown_event(event);
         return;
@@ -337,4 +378,32 @@ void Editor::navigate_to_include_if_available(String path)
     }
 
     on_open(it->value);
+}
+
+void Editor::set_execution_position(size_t line_number)
+{
+    m_execution_position = line_number;
+    update(breakpoint_icon_rect(line_number));
+}
+
+void Editor::clear_execution_position()
+{
+    if (!m_execution_position.has_value()) {
+        return;
+    }
+    size_t previous_position = m_execution_position.value();
+    m_execution_position = {};
+    update(breakpoint_icon_rect(previous_position));
+}
+
+const Gfx::Bitmap& Editor::breakpoint_icon_bitmap()
+{
+    static auto bitmap = Gfx::Bitmap::load_from_file("/res/icons/breakpoint.png");
+    return *bitmap;
+}
+
+const Gfx::Bitmap& Editor::current_position_icon_bitmap()
+{
+    static auto bitmap = Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png");
+    return *bitmap;
 }
