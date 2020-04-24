@@ -156,7 +156,8 @@ void TabWidget::paint_event(PaintEvent& event)
         padding_rect.shrink(2, 2);
     }
 
-    Gfx::StylePainter::paint_frame(painter, container_rect, palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Raised, 2);
+    if (container_padding() > 0)
+        Gfx::StylePainter::paint_frame(painter, container_rect, palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Raised, 2);
 
     for (size_t i = 0; i < m_tabs.size(); ++i) {
         if (m_tabs[i].widget == m_active_widget)

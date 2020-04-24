@@ -50,7 +50,9 @@ public:
     void set_active_widget(Widget*);
 
     int bar_height() const { return 21; }
-    int container_padding() const { return 2; }
+
+    int container_padding() const { return m_container_padding; }
+    void set_container_padding(int padding) { m_container_padding = padding; }
 
     void add_widget(const StringView&, Widget&);
     void remove_widget(Widget&);
@@ -100,6 +102,7 @@ private:
     Vector<TabData> m_tabs;
     TabPosition m_tab_position { TabPosition::Top };
     int m_hovered_tab_index { -1 };
+    int m_container_padding { 2 };
 };
 
 }
