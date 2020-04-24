@@ -49,6 +49,8 @@ void TabWidget::add_widget(const StringView& title, Widget& widget)
 
 void TabWidget::remove_widget(Widget& widget)
 {
+    if (active_widget() == &widget)
+        activate_next_tab();
     m_tabs.remove_first_matching([&widget](auto& entry) { return &widget == entry.widget; });
     remove_child(widget);
 }
