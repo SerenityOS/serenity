@@ -1,5 +1,6 @@
 #include "WindowActions.h"
 #include <LibGUI/Window.h>
+#include <LibGfx/Bitmap.h>
 
 namespace Browser {
 
@@ -16,7 +17,7 @@ WindowActions::WindowActions(GUI::Window& window)
     ASSERT(!s_the);
     s_the = this;
     m_create_new_tab_action = GUI::Action::create(
-        "New tab", { Mod_Ctrl, Key_T }, [this](auto&) {
+        "New tab", { Mod_Ctrl, Key_T }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new-tab.png"), [this](auto&) {
             if (on_create_new_tab)
                 on_create_new_tab();
         },
