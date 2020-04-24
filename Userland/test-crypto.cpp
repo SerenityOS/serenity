@@ -6,6 +6,7 @@
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibCrypto/Cipher/AES.h>
 #include <LibCrypto/Hash/MD5.h>
+#include <LibCrypto/Hash/SHA1.h>
 #include <LibCrypto/Hash/SHA2.h>
 #include <LibCrypto/PK/RSA.h>
 #include <LibLine/Editor.h>
@@ -32,6 +33,7 @@ int aes_cbc_tests();
 
 // Hash
 int md5_tests();
+int sha1_tests();
 int sha256_tests();
 int sha512_tests();
 
@@ -141,6 +143,15 @@ void hmac_md5(const char* message, size_t len)
         print_buffer(ByteBuffer::wrap(mac.data, hmac.DigestSize), -1);
 }
 
+void sha1(const char* message, size_t len)
+{
+    auto digest = Crypto::Hash::SHA1::hash((const u8*)message, len);
+    if (binary)
+        printf("%.*s", (int)Crypto::Hash::SHA1::digest_size(), digest.data);
+    else
+        print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::SHA1::digest_size()), -1);
+}
+
 void sha256(const char* message, size_t len)
 {
     auto digest = Crypto::Hash::SHA256::hash((const u8*)message, len);
@@ -218,6 +229,11 @@ auto main(int argc, char** argv) -> int
             if (run_tests)
                 return md5_tests();
             return run(md5);
+        }
+        if (suite_sv == "SHA1") {
+            if (run_tests)
+                return sha1_tests();
+            return run(sha1);
         }
         if (suite_sv == "SHA256") {
             if (run_tests)
@@ -315,6 +331,9 @@ void aes_cbc_test_decrypt();
 void md5_test_name();
 void md5_test_hash();
 void md5_test_consecutive_updates();
+
+void sha1_test_name();
+void sha1_test_hash();
 
 void sha256_test_name();
 void sha256_test_hash();
@@ -672,6 +691,40 @@ void hmac_md5_test_process()
 
         if (memcmp(mac_0.data, mac_1.data, hmac.DigestSize) != 0) {
             FAIL(Cannot reuse);
+        } else
+            PASS;
+    }
+}
+
+int sha1_tests()
+{
+    sha1_test_name();
+    sha1_test_hash();
+    return 0;
+}
+
+void sha1_test_name()
+{
+    I_TEST((SHA1 class name));
+    Crypto::Hash::SHA1 sha;
+    if (sha.class_name() != "SHA1") {
+        FAIL(Invalid class name);
+        printf("%s\n", sha.class_name().characters());
+    } else
+        PASS;
+}
+
+void sha1_test_hash()
+{
+    {
+        I_TEST((SHA256 Hashing | ""));
+        u8 result[] {
+            0xda, 0x39, 0xa3, 0xee, 0x5e, 0x6b, 0x4b, 0x0d, 0x32, 0x55, 0xbf, 0xef, 0x95, 0x60, 0x18, 0x90, 0xaf, 0xd8, 0x07, 0x09
+        };
+        auto digest = Crypto::Hash::SHA1::hash("");
+        if (memcmp(result, digest.data, Crypto::Hash::SHA1::digest_size()) != 0) {
+            FAIL(Invalid hash);
+            print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::SHA1::digest_size()), -1);
         } else
             PASS;
     }
