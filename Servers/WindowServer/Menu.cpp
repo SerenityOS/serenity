@@ -406,12 +406,15 @@ void Menu::event(Core::Event& event)
             if (is_scrollable() && m_hovered_item_index == 0)
                 return;
 
+            auto original_index = m_hovered_item_index;
             do {
                 if (m_hovered_item_index == 0)
                     m_hovered_item_index = m_items.size() - 1;
                 else
                     --m_hovered_item_index;
-            } while (hovered_item()->type() == MenuItem::Separator);
+                if (m_hovered_item_index == original_index)
+                    return;
+            } while (hovered_item()->type() == MenuItem::Separator || !hovered_item()->is_enabled());
 
             ASSERT(m_hovered_item_index >= 0 && m_hovered_item_index <= static_cast<int>(m_items.size()) - 1);
 
@@ -428,12 +431,15 @@ void Menu::event(Core::Event& event)
             if (is_scrollable() && m_hovered_item_index == static_cast<int>(m_items.size()) - 1)
                 return;
 
+            auto original_index = m_hovered_item_index;
             do {
                 if (m_hovered_item_index == static_cast<int>(m_items.size()) - 1)
                     m_hovered_item_index = 0;
                 else
                     ++m_hovered_item_index;
-            } while (hovered_item()->type() == MenuItem::Separator);
+                if (m_hovered_item_index == original_index)
+                    return;
+            } while (hovered_item()->type() == MenuItem::Separator || !hovered_item()->is_enabled());
 
             ASSERT(m_hovered_item_index >= 0 && m_hovered_item_index <= static_cast<int>(m_items.size()) - 1);
 
