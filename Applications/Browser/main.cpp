@@ -89,16 +89,17 @@ int main(int argc, char** argv)
     tab_widget.set_container_padding(0);
     tab_widget.set_uniform_tabs(true);
 
+    auto default_favicon = Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png");
+    ASSERT(default_favicon);
+
     tab_widget.on_change = [&](auto& active_widget) {
         auto& tab = static_cast<Browser::Tab&>(active_widget);
         window->set_title(String::format("%s - Browser", tab.title().characters()));
+        window->set_icon(tab.icon() ? tab.icon() : default_favicon.ptr());
         tab.did_become_active();
     };
 
     Browser::WindowActions window_actions(*window);
-
-    auto default_favicon = Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png");
-    ASSERT(default_favicon);
 
     Function<void(URL url, bool activate)> create_new_tab;
     create_new_tab = [&](auto url, auto activate) {
@@ -114,6 +115,8 @@ int main(int argc, char** argv)
 
         new_tab.on_favicon_change = [&](auto& bitmap) {
             tab_widget.set_tab_icon(new_tab, &bitmap);
+            if (tab_widget.active_widget() == &new_tab)
+                window->set_icon(&bitmap);
         };
 
         new_tab.on_tab_open_request = [&](auto& url) {

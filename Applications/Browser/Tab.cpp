@@ -154,9 +154,10 @@ Tab::Tab()
             on_title_change(m_title);
     };
 
-    m_html_widget->on_favicon_change = [this](auto& bitmap) {
+    m_html_widget->on_favicon_change = [this](auto& icon) {
+        m_icon = icon;
         if (on_favicon_change)
-            on_favicon_change(bitmap);
+            on_favicon_change(icon);
     };
 
     auto focus_location_box_action = GUI::Action::create("Focus location box", { Mod_Ctrl, Key_L }, [this](auto&) {

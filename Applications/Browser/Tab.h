@@ -49,6 +49,7 @@ public:
     Function<void(const Gfx::Bitmap&)> on_favicon_change;
 
     const String& title() const { return m_title; }
+    const Gfx::Bitmap* icon() const { return m_icon; }
 
 private:
     Tab();
@@ -68,6 +69,8 @@ private:
     RefPtr<GUI::MenuBar> m_menubar;
 
     String m_title;
+    RefPtr<const Gfx::Bitmap> m_icon;
+
     bool m_should_push_loads_to_history { true };
 };
 
