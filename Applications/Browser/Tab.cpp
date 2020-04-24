@@ -133,11 +133,16 @@ Tab::Tab()
         update_bookmark_button(url.to_string());
     };
 
-    m_html_widget->on_link_click = [this](auto& url, auto&) {
-        if (url.starts_with("#")) {
-            m_html_widget->scroll_to_anchor(url.substring_view(1, url.length() - 1));
+    m_html_widget->on_link_click = [this](auto& href, auto& target) {
+        if (href.starts_with("#")) {
+            auto anchor = href.substring_view(1, href.length() - 1);
+            m_html_widget->scroll_to_anchor(anchor);
         } else {
-            m_html_widget->load(m_html_widget->document()->complete_url(url));
+            auto url = m_html_widget->document()->complete_url(href);
+            if (target == "_blank")
+                on_tab_open_request(url);
+            else
+                m_html_widget->load(url);
         }
     };
 
