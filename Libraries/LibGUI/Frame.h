@@ -37,7 +37,7 @@ public:
     virtual ~Frame() override;
 
     int frame_thickness() const { return m_thickness; }
-    void set_frame_thickness(int thickness) { m_thickness = thickness; }
+    void set_frame_thickness(int thickness);
 
     Gfx::FrameShadow frame_shadow() const { return m_shadow; }
     void set_frame_shadow(Gfx::FrameShadow shadow) { m_shadow = shadow; }

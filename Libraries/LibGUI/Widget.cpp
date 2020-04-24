@@ -472,7 +472,7 @@ Widget* Widget::child_at(const Gfx::Point& point) const
         auto& child = Core::to<Widget>(children()[i]);
         if (!child.is_visible())
             continue;
-        if (child.relative_rect().contains(point))
+        if (child.content_rect().contains(point))
             return const_cast<Widget*>(&child);
     }
     return nullptr;
@@ -809,6 +809,23 @@ void Widget::did_begin_inspection()
 void Widget::did_end_inspection()
 {
     update();
+}
+
+void Widget::set_content_margins(const Margins& margins)
+{
+    if (m_content_margins == margins)
+        return;
+    m_content_margins = margins;
+    invalidate_layout();
+}
+
+Gfx::Rect Widget::content_rect() const
+{
+    auto rect = relative_rect();
+    rect.move_by(m_content_margins.left(), m_content_margins.top());
+    rect.set_width(rect.width() - (m_content_margins.left() + m_content_margins.right()));
+    rect.set_height(rect.height() - (m_content_margins.top() + m_content_margins.bottom()));
+    return rect;
 }
 
 }

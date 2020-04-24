@@ -30,6 +30,7 @@
 #include <LibCore/Object.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Forward.h>
+#include <LibGUI/Margins.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Orientation.h>
@@ -266,6 +267,11 @@ public:
     Gfx::Palette palette() const;
     void set_palette(const Gfx::Palette&);
 
+    const Margins& content_margins() const { return m_content_margins; }
+    void set_content_margins(const Margins&);
+
+    Gfx::Rect content_rect() const;
+
 protected:
     Widget();
 
@@ -324,6 +330,7 @@ private:
     SizePolicy m_horizontal_size_policy { SizePolicy::Fill };
     SizePolicy m_vertical_size_policy { SizePolicy::Fill };
     Gfx::Size m_preferred_size;
+    Margins m_content_margins;
 
     bool m_fill_with_background_color { false };
     bool m_visible { true };

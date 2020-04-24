@@ -76,17 +76,23 @@ void Splitter::leave_event(Core::Event&)
 bool Splitter::get_resize_candidates_at(const Gfx::Point& position, Widget*& first, Widget*& second)
 {
     int x_or_y = position.primary_offset_for_orientation(m_orientation);
-    int fudge = layout()->spacing();
-    for_each_child_widget([&](auto& child) {
-        int child_start = child.relative_rect().first_edge_for_orientation(m_orientation);
-        int child_end = child.relative_rect().last_edge_for_orientation(m_orientation);
-        if (x_or_y > child_end && (x_or_y - fudge) <= child_end)
-            first = &child;
-        if (x_or_y < child_start && (x_or_y + fudge) >= child_start)
-            second = &child;
-        return IterationDecision::Continue;
-    });
-    return first && second;
+
+    auto child_widgets = this->child_widgets();
+    if (child_widgets.size() < 2)
+        return false;
+
+    for (size_t i = 0; i < child_widgets.size() - 1; ++i) {
+        auto* first_candidate = child_widgets[i];
+        auto* second_candidate = child_widgets[i + 1];
+
+        if (x_or_y > first_candidate->content_rect().last_edge_for_orientation(m_orientation)
+            && x_or_y <= second_candidate->content_rect().first_edge_for_orientation(m_orientation)) {
+            first = first_candidate;
+            second = second_candidate;
+            return true;
+        }
+    }
+    return false;
 }
 
 void Splitter::mousedown_event(MouseEvent& event)
@@ -109,13 +115,14 @@ void Splitter::mousedown_event(MouseEvent& event)
 
 void Splitter::recompute_grabbable_rect(const Widget& first, const Widget& second)
 {
-    auto first_edge = first.relative_rect().primary_offset_for_orientation(m_orientation) + first.relative_rect().primary_size_for_orientation(m_orientation);
-    auto second_edge = second.relative_rect().primary_offset_for_orientation(m_orientation);
+    auto first_edge = first.content_rect().primary_offset_for_orientation(m_orientation) + first.content_rect().primary_size_for_orientation(m_orientation);
+    auto second_edge = second.content_rect().primary_offset_for_orientation(m_orientation);
     Gfx::Rect rect;
     rect.set_primary_offset_for_orientation(m_orientation, first_edge);
     rect.set_primary_size_for_orientation(m_orientation, second_edge - first_edge);
-    rect.set_secondary_offset_for_orientation(m_orientation, first.relative_rect().secondary_offset_for_orientation(m_orientation));
-    rect.set_secondary_size_for_orientation(m_orientation, first.relative_rect().secondary_size_for_orientation(m_orientation));
+    rect.set_secondary_offset_for_orientation(m_orientation, first.content_rect().secondary_offset_for_orientation(m_orientation));
+    rect.set_secondary_size_for_orientation(m_orientation, first.content_rect().secondary_size_for_orientation(m_orientation));
+
     if (m_grabbable_rect != rect) {
         m_grabbable_rect = rect;
         update();
