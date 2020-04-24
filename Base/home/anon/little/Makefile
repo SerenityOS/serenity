@@ -1,5 +1,6 @@
 PROGRAM = little
 OBJS = main.o
+CXXFLAGS = -g
 
 all: $(PROGRAM)
 

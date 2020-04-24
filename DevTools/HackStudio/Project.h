@@ -56,6 +56,8 @@ public:
     ProjectType type() const { return m_type; }
     GUI::Model& model() { return *m_model; }
     String default_file() const;
+    String name() const { return m_name; }
+    String path() const { return m_path; }
 
     template<typename Callback>
     void for_each_text_file(Callback callback) const
