@@ -151,8 +151,10 @@ protected:
     virtual void resize_event(ResizeEvent&) override;
     virtual void theme_change_event(ThemeChangeEvent&) override;
     virtual void cursor_did_change() {}
+    Gfx::Rect ruler_content_rect(size_t line) const;
 
     TextPosition text_position_at(const Gfx::Point&) const;
+    bool ruler_visible() const { return m_ruler_visible; }
 
 private:
     friend class TextDocumentLine;
@@ -183,7 +185,6 @@ private:
     TextDocumentLine& current_line() { return line(m_cursor.line()); }
     const TextDocumentLine& current_line() const { return line(m_cursor.line()); }
     int ruler_width() const;
-    Gfx::Rect ruler_content_rect(size_t line) const;
     void toggle_selection_if_needed_for_event(const KeyEvent&);
     void delete_selection();
     void did_update_selection();

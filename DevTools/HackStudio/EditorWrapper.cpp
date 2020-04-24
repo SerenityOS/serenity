@@ -35,7 +35,7 @@
 extern RefPtr<EditorWrapper> g_current_editor_wrapper;
 extern Function<void(String)> g_open_file;
 
-EditorWrapper::EditorWrapper()
+EditorWrapper::EditorWrapper(BreakpointChangeCallback breakpoint_change_callback)
 {
     set_layout<GUI::VerticalBoxLayout>();
 
@@ -72,6 +72,8 @@ EditorWrapper::EditorWrapper()
     m_editor->on_open = [this](String path) {
         g_open_file(path);
     };
+
+    m_editor->on_breakpoint_change = move(breakpoint_change_callback);
 }
 
 EditorWrapper::~EditorWrapper()

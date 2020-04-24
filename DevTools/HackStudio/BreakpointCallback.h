@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,38 +25,13 @@
  */
 
 #pragma once
-
-#include "BreakpointCallback.h"
 #include <AK/Function.h>
-#include <AK/Vector.h>
-#include <LibGUI/Widget.h>
-#include <string.h>
+#include <AK/String.h>
+#include <AK/Types.h>
 
-class Editor;
-
-class EditorWrapper : public GUI::Widget {
-    C_OBJECT(EditorWrapper)
-public:
-    virtual ~EditorWrapper() override;
-
-    Editor& editor() { return *m_editor; }
-    const Editor& editor() const { return *m_editor; }
-
-    GUI::Label& filename_label() { return *m_filename_label; }
-    const GUI::Label& filename_label() const { return *m_filename_label; }
-
-    void set_editor_has_focus(Badge<Editor>, bool);
-
-private:
-    explicit EditorWrapper(BreakpointChangeCallback);
-
-    RefPtr<GUI::Label> m_filename_label;
-    RefPtr<GUI::Label> m_cursor_label;
-    RefPtr<Editor> m_editor;
+enum class BreakpointChange {
+    Added,
+    Removed,
 };
 
-template<>
-inline bool Core::is<EditorWrapper>(const Core::Object& object)
-{
-    return !strcmp(object.class_name(), "EditorWrapper");
-}
+typedef Function<void(const String& file, size_t line, BreakpointChange)> BreakpointChangeCallback;

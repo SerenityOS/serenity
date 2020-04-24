@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include "BreakpointCallback.h"
+#include <AK/Optional.h>
 #include <LibGUI/TextEditor.h>
 #include <LibWeb/Forward.h>
 
@@ -42,6 +44,12 @@ public:
     EditorWrapper& wrapper();
     const EditorWrapper& wrapper() const;
 
+    const Vector<size_t>& breakpoint_lines() const { return m_breakpoint_lines; }
+    void set_execution_position(size_t line_number);
+    void clear_execution_position();
+
+    BreakpointChangeCallback on_breakpoint_change;
+
 private:
     virtual void focusin_event(Core::Event&) override;
     virtual void focusout_event(Core::Event&) override;
@@ -56,6 +64,10 @@ private:
     void show_documentation_tooltip_if_available(const String&, const Gfx::Point& screen_location);
     void navigate_to_include_if_available(String);
 
+    Gfx::Rect breakpoint_icon_rect(size_t line_number) const;
+    static const Gfx::Bitmap& breakpoint_icon_bitmap();
+    static const Gfx::Bitmap& current_position_icon_bitmap();
+
     explicit Editor();
 
     RefPtr<GUI::Window> m_documentation_tooltip_window;
@@ -65,4 +77,8 @@ private:
     bool m_hovering_editor { false };
     bool m_hovering_link { false };
     bool m_holding_ctrl { false };
+    bool m_hovering_lines_ruler { false };
+
+    Vector<size_t> m_breakpoint_lines;
+    Optional<size_t> m_execution_position;
 };
