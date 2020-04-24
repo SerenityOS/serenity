@@ -18,7 +18,7 @@ I'm also on [Patreon](https://www.patreon.com/serenityos) and [GitHub Sponsors](
 
 ## Screenshot
 
-![Screenshot as of 1133aca](https://raw.githubusercontent.com/SerenityOS/serenity/master/Meta/screenshot-1133aca.png)
+![Screenshot as of 3fcfab4](https://raw.githubusercontent.com/SerenityOS/serenity/master/Meta/screenshot-3fcfab4.png)
 
 ## Kernel features
 
