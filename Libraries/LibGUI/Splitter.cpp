@@ -38,7 +38,7 @@ Splitter::Splitter(Orientation orientation)
     set_background_role(ColorRole::Button);
     set_layout<BoxLayout>(orientation);
     set_fill_with_background_color(true);
-    layout()->set_spacing(4);
+    layout()->set_spacing(3);
 }
 
 Splitter::~Splitter()
