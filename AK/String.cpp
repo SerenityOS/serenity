@@ -137,7 +137,7 @@ StringView String::substring_view(size_t start, size_t length) const
     ASSERT(m_impl);
     ASSERT(start + length <= m_impl->length());
     // FIXME: This needs some input bounds checking.
-    return { characters() + start, length };
+    return { characters() + start, length, m_impl };
 }
 
 Vector<String> String::split(char separator, bool keep_empty) const

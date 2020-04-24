@@ -111,4 +111,21 @@ TEST_CASE(lines)
     EXPECT_EQ(test_string_vector.at(2).is_empty(), true);
 }
 
+TEST_CASE(impl_scope_unref)
+{
+    StringView test_string_view;
+    {
+        String test_string = "ABCDEF";
+        test_string_view = test_string.substring_view(0, test_string.length());
+
+        EXPECT(test_string.impl() != nullptr);
+        EXPECT(test_string_view.impl() != nullptr);
+    }
+
+    EXPECT(test_string_view.impl() == nullptr);
+
+    EXPECT_EQ(test_string_view.starts_with('A'), false);
+    EXPECT_EQ(test_string_view.is_null(), true);
+}
+
 TEST_MAIN(StringView)

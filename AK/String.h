@@ -30,6 +30,7 @@
 #include <AK/RefPtr.h>
 #include <AK/StringImpl.h>
 #include <AK/StringUtils.h>
+#include <AK/StringView.h>
 #include <AK/Traits.h>
 
 namespace AK {

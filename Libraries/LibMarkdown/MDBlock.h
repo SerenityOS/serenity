@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/StringView.h>
 #include <AK/Vector.h>
 
 class MDBlock {

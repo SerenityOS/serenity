@@ -34,14 +34,16 @@
 namespace AK {
 
 StringView::StringView(const String& string)
-    : m_impl(string.impl())
+    : m_impl(const_cast<StringImpl*>(string.impl())->make_weak_ptr())
+    , m_has_impl(true)
     , m_characters(string.characters())
     , m_length(string.length())
 {
 }
 
 StringView::StringView(const FlyString& string)
-    : m_impl(string.impl())
+    : m_impl(const_cast<StringImpl*>(string.impl())->make_weak_ptr())
+    , m_has_impl(true)
     , m_characters(string.characters())
     , m_length(string.length())
 {
@@ -55,7 +57,7 @@ StringView::StringView(const ByteBuffer& buffer)
 
 Vector<StringView> StringView::split_view(const char separator, bool keep_empty) const
 {
-    if (is_empty())
+    if (is_null() || is_empty())
         return {};
 
     Vector<StringView> v;
@@ -77,7 +79,7 @@ Vector<StringView> StringView::split_view(const char separator, bool keep_empty)
 
 Vector<StringView> StringView::lines(bool consider_cr) const
 {
-    if (is_empty())
+    if (is_null() || is_empty())
         return {};
 
     if (!consider_cr)
@@ -116,7 +118,7 @@ Vector<StringView> StringView::lines(bool consider_cr) const
 
 bool StringView::starts_with(char ch) const
 {
-    if (is_empty())
+    if (is_null() || is_empty())
         return false;
     return ch == characters_without_null_termination()[0];
 }
@@ -125,6 +127,8 @@ bool StringView::starts_with(const StringView& str) const
 {
     if (str.is_empty())
         return true;
+    if (is_null())
+        return false;
     if (is_empty())
         return false;
     if (str.length() > length())
@@ -136,7 +140,7 @@ bool StringView::starts_with(const StringView& str) const
 
 bool StringView::ends_with(char ch) const
 {
-    if (is_empty())
+    if (is_null() || is_empty())
         return false;
     return ch == characters_without_null_termination()[length() - 1];
 }
@@ -145,7 +149,7 @@ bool StringView::ends_with(const StringView& str) const
 {
     if (str.is_empty())
         return true;
-    if (is_empty())
+    if (is_null() || is_empty())
         return false;
     if (str.length() > length())
         return false;
@@ -159,6 +163,8 @@ bool StringView::matches(const StringView& mask, CaseSensitivity case_sensitivit
 
 bool StringView::contains(char needle) const
 {
+    if (is_null() || is_empty())
+        return false;
     for (char current : *this) {
         if (current == needle)
             return true;
@@ -169,7 +175,7 @@ bool StringView::contains(char needle) const
 StringView StringView::substring_view(size_t start, size_t length) const
 {
     ASSERT(start + length <= m_length);
-    return { m_characters + start, length };
+    return { m_characters + start, length, m_impl };
 }
 
 StringView StringView::substring_view_starting_from_substring(const StringView& substring) const
@@ -178,7 +184,7 @@ StringView StringView::substring_view_starting_from_substring(const StringView& 
     ASSERT(remaining_characters >= m_characters);
     ASSERT(remaining_characters <= m_characters + m_length);
     size_t remaining_length = m_length - (remaining_characters - m_characters);
-    return { remaining_characters, remaining_length };
+    return { remaining_characters, remaining_length, m_impl };
 }
 
 StringView StringView::substring_view_starting_after_substring(const StringView& substring) const
@@ -187,7 +193,7 @@ StringView StringView::substring_view_starting_after_substring(const StringView&
     ASSERT(remaining_characters >= m_characters);
     ASSERT(remaining_characters <= m_characters + m_length);
     size_t remaining_length = m_length - (remaining_characters - m_characters);
-    return { remaining_characters, remaining_length };
+    return { remaining_characters, remaining_length, m_impl };
 }
 
 int StringView::to_int(bool& ok) const
@@ -202,7 +208,7 @@ unsigned StringView::to_uint(bool& ok) const
 
 unsigned StringView::hash() const
 {
-    if (is_empty())
+    if (is_null() || is_empty())
         return 0;
     if (m_impl)
         return m_impl->hash();
@@ -213,7 +219,7 @@ bool StringView::operator==(const String& string) const
 {
     if (string.is_null())
         return !m_characters;
-    if (!m_characters)
+    if (is_null() || !m_characters)
         return false;
     if (m_length != string.length())
         return false;

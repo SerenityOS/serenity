@@ -32,7 +32,6 @@
 
 #if !defined(KERNEL) && !defined(BOOTSTRAPPER)
 #    include <AK/ScopedValueRollback.h>
-#    include <AK/StringView.h>
 #    include <errno.h>
 #    include <unistd.h>
 #endif

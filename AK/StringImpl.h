@@ -30,6 +30,7 @@
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
+#include <AK/Weakable.h>
 #include <AK/kmalloc.h>
 
 namespace AK {
@@ -39,7 +40,8 @@ enum ShouldChomp {
     Chomp
 };
 
-class StringImpl : public RefCounted<StringImpl> {
+class StringImpl : public RefCounted<StringImpl>
+    , public Weakable<StringImpl> {
 public:
     static NonnullRefPtr<StringImpl> create_uninitialized(size_t length, char*& buffer);
     static RefPtr<StringImpl> create(const char* cstring, ShouldChomp = NoChomp);
