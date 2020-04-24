@@ -183,7 +183,7 @@ Tab::Tab()
 
     auto& app_menu = m_menubar->add_menu("Browser");
     app_menu.add_action(WindowActions::the().create_new_tab_action());
-    app_menu.add_action(GUI::Action::create("Close tab", { Mod_Ctrl, Key_W }, [this](auto&) {
+    app_menu.add_action(GUI::Action::create("Close tab", { Mod_Ctrl, Key_W }, Gfx::Bitmap::load_from_file("/res/icons/16x16/close-tab.png"), [this](auto&) {
         on_tab_close_request(*this);
     }, this));
 
