@@ -164,7 +164,7 @@ void TabWidget::paint_event(PaintEvent& event)
         if (!icon)
             return;
         Gfx::Rect icon_rect { button_rect.x(), button_rect.y(), 16, 16 };
-        icon_rect.move_by(3, 3);
+        icon_rect.move_by(4, 3);
         painter.draw_scaled_bitmap(icon_rect, *icon, icon->rect());
         text_rect.set_x(icon_rect.right() + 1 + 4);
         text_rect.intersect(button_rect);
