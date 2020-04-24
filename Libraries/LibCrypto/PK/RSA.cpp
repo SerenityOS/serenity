@@ -233,6 +233,12 @@ void RSA_PKCS1_EME::encrypt(const ByteBuffer& in, ByteBuffer& out)
     u8 ps[ps_length];
 
     arc4random_buf(ps, ps_length);
+    // since arc4random can create zeros (shocking!)
+    // we have to go through and un-zero the zeros
+    for (size_t i = 0; i < ps_length; ++i)
+        if (!ps[i])
+            ps[i] = 0xfe;
+
     u8 paddings[] { 0x00, 0x02 };
 
     out.overwrite(0, paddings, 2);
