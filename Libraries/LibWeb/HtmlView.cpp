@@ -379,6 +379,30 @@ void HtmlView::load(const URL& url)
         [this, url](auto error) {
             load_error_page(url, error);
         });
+
+    if (url.protocol() != "file") {
+        URL favicon_url;
+        favicon_url.set_protocol(url.protocol());
+        favicon_url.set_host(url.host());
+        favicon_url.set_port(url.port());
+        favicon_url.set_path("/favicon.ico");
+
+        ResourceLoader::the().load(
+            favicon_url,
+            [this, favicon_url](auto data) {
+                dbg() << "Favicon downloaded, " << data.size() << " bytes from " << favicon_url.to_string();
+                auto decoder = Gfx::ImageDecoder::create(data.data(), data.size());
+                auto bitmap = decoder->bitmap();
+                if (!bitmap) {
+                    dbg() << "Could not decode favicon " << favicon_url.to_string();
+                    return;
+                }
+                dbg() << "Decoded favicon, " << bitmap->size();
+                if (on_favicon_change)
+                    on_favicon_change(*bitmap);
+            });
+    }
+
     this->scroll_to_top();
 }
 

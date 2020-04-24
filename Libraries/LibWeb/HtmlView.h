@@ -61,6 +61,7 @@ public:
     Function<void(const String&)> on_link_hover;
     Function<void(const String&)> on_title_change;
     Function<void(const URL&)> on_load_start;
+    Function<void(const Gfx::Bitmap&)> on_favicon_change;
 
     virtual bool accepts_focus() const override { return true; }
 
