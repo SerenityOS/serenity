@@ -28,6 +28,7 @@
 #include "Tab.h"
 #include "WindowActions.h"
 #include <LibCore/File.h>
+#include <LibGUI/AboutDialog.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/TabWidget.h>
@@ -138,6 +139,10 @@ int main(int argc, char** argv)
 
     window_actions.on_previous_tab = [&] {
         tab_widget.activate_previous_tab();
+    };
+
+    window_actions.on_about = [&] {
+        GUI::AboutDialog::show("Browser", Gfx::Bitmap::load_from_file("/res/icons/32x32/filetype-html.png"), window);
     };
 
     create_new_tab(default_url, true);
