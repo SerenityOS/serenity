@@ -148,8 +148,10 @@ void WindowServerConnection::handle(const Messages::WindowClient::KeyDown& messa
 
     Action* action = nullptr;
 
-    if (auto* focused_widget = window->focused_widget())
-        action = focused_widget->action_for_key_event(*key_event);
+    if (auto* focused_widget = window->focused_widget()) {
+        for (auto* widget = focused_widget; widget && !action; widget = widget->parent_widget())
+            action = focused_widget->action_for_key_event(*key_event);
+    }
 
     if (!action)
         action = window->action_for_key_event(*key_event);
