@@ -189,7 +189,7 @@ void TabWidget::paint_event(PaintEvent& event)
         Gfx::StylePainter::paint_tab_button(painter, button_rect, palette(), true, hovered, m_tabs[i].widget->is_enabled());
         auto text_rect = button_rect.translated(0, 1);
         paint_tab_icon_if_needed(m_tabs[i].icon, button_rect, text_rect);
-        painter.draw_text(text_rect, m_tabs[i].title, m_text_alignment, palette().button_text(), Gfx::TextElision::Right);
+        painter.draw_text(text_rect, m_tabs[i].title, Gfx::Font::default_bold_font(), m_text_alignment, palette().button_text(), Gfx::TextElision::Right);
         painter.draw_line(button_rect.bottom_left().translated(1, 1), button_rect.bottom_right().translated(-1, 1), palette().button());
         break;
     }
@@ -204,10 +204,13 @@ Gfx::Rect TabWidget::button_rect(int index) const
 {
     int x_offset = 2;
     for (int i = 0; i < index; ++i) {
-        auto tab_width = m_uniform_tabs ? uniform_tab_width() : m_tabs[i].width(font());
+        bool is_active_tab = m_tabs[i].widget == active_widget();
+        auto& font = is_active_tab ? Gfx::Font::default_bold_font() : Gfx::Font::default_font();
+        auto tab_width = m_uniform_tabs ? uniform_tab_width() : m_tabs[i].width(font);
         x_offset += tab_width;
     }
-    Gfx::Rect rect { x_offset, 0, m_uniform_tabs ? uniform_tab_width() : m_tabs[index].width(font()), bar_height() };
+    auto& font = m_tabs[index].widget == active_widget() ? Gfx::Font::default_bold_font() : Gfx::Font::default_font();
+    Gfx::Rect rect { x_offset, 0, m_uniform_tabs ? uniform_tab_width() : m_tabs[index].width(font), bar_height() };
     if (m_tabs[index].widget != m_active_widget) {
         rect.move_by(0, 2);
         rect.set_height(rect.height() - 2);
