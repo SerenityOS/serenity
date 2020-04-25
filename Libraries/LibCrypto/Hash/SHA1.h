@@ -85,6 +85,8 @@ public:
     };
     inline virtual void reset() override
     {
+        m_data_length = 0;
+        m_bit_length = 0;
         for (auto i = 0; i < 5; ++i)
             m_state[i] = SHA1Constants::InitializationHashes[i];
     }

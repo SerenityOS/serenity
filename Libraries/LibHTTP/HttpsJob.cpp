@@ -162,13 +162,11 @@ void HttpsJob::on_socket_connected()
                 return finish_up();
             return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
         }
-        dbg() << "Read payload, " << payload.size() << " bytes";
         m_received_buffers.append(payload);
         m_received_size += payload.size();
 
         auto content_length_header = m_headers.get("Content-Length");
         if (content_length_header.has_value()) {
-            dbg() << "content length is " << content_length_header.value() << ", we have " << m_received_size;
             bool ok;
             if (m_received_size >= content_length_header.value().to_uint(ok) && ok)
                 finish_up();
