@@ -79,6 +79,9 @@ bool open_file_url(const URL& url)
     if (url.path().to_lowercase().ends_with(".png"))
         return spawn("/bin/QuickShow", url.path());
 
+    if (url.path().to_lowercase().ends_with(".gif"))
+        return spawn("/bin/QuickShow", url.path());
+
     if (url.path().to_lowercase().ends_with(".html"))
         return spawn("/bin/Browser", url.path());
 
