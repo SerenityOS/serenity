@@ -111,6 +111,9 @@ Optional<GIFFormat> decode_gif_header(BufferStream& stream)
     for (int i = 0; i < 6; ++i)
         stream >> header[i];
 
+    if (stream.handle_read_failure())
+        return {};
+
     if (!memcmp(header, valid_header_87, sizeof(header)))
         return GIFFormat::GIF87a;
     else if (!memcmp(header, valid_header_89, sizeof(header)))
