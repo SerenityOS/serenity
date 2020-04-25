@@ -139,7 +139,7 @@ public:
         const u16 control_code = m_code_table.size();
         m_code_table.append({ {}, control_code });
         m_original_code_table.append({ {}, control_code });
-        if ((int)m_code_table.size() >= pow(2, m_code_size) && m_code_size < 12) {
+        if (m_code_table.size() >= pow(2, m_code_size) && m_code_size < 12) {
             ++m_code_size;
             ++m_original_code_size;
         }
@@ -220,7 +220,7 @@ private:
     {
         if (entry.size() > 1 && m_code_table.size() < 4096) {
             m_code_table.append({ entry, (u16)m_code_table.size() });
-            if ((int)m_code_table.size() >= pow(2, m_code_size) && m_code_size < 12) {
+            if (m_code_table.size() >= pow(2, m_code_size) && m_code_size < 12) {
                 ++m_code_size;
             }
         }
