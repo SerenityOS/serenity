@@ -37,7 +37,7 @@ template<size_t BlockS, typename DigestT>
 class HashFunction {
 public:
     static constexpr auto BlockSize = BlockS / 8;
-    static constexpr auto DigestSize = sizeof(DigestT);
+    static constexpr auto DigestSize = DigestT::Size;
 
     using DigestType = DigestT;
 
@@ -45,8 +45,8 @@ public:
     static size_t digest_size() { return DigestSize; };
 
     virtual void update(const u8*, size_t) = 0;
-    virtual void update(const ByteBuffer& buffer) = 0;
-    virtual void update(const StringView& string) = 0;
+    virtual void update(const ByteBuffer& buffer) { update(buffer.data(), buffer.size()); };
+    virtual void update(const StringView& string) { update((const u8*)string.characters_without_null_termination(), string.length()); };
 
     virtual DigestType peek() = 0;
     virtual DigestType digest() = 0;
