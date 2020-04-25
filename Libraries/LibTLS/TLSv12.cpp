@@ -389,9 +389,11 @@ ByteBuffer TLSv12::build_hello()
     }
 
     // Ciphers
-    builder.append((u16)(2 * sizeof(u16)));
+    builder.append((u16)(4 * sizeof(u16)));
     builder.append((u16)CipherSuite::RSA_WITH_AES_128_CBC_SHA256);
     builder.append((u16)CipherSuite::RSA_WITH_AES_256_CBC_SHA256);
+    builder.append((u16)CipherSuite::RSA_WITH_AES_128_CBC_SHA);
+    builder.append((u16)CipherSuite::RSA_WITH_AES_256_CBC_SHA);
 
     // we don't like compression
     builder.append((u8)1);
@@ -460,8 +462,8 @@ ByteBuffer TLSv12::build_finished()
     auto outbuffer = ByteBuffer::wrap(out, out_size);
     auto dummy = ByteBuffer::create_zeroed(0);
 
-    auto digest = m_context.handshake_hash.hash.peek();
-    auto hashbuf = ByteBuffer::wrap(digest.data, m_context.handshake_hash.hash.DigestSize);
+    auto digest = m_context.handshake_hash.digest();
+    auto hashbuf = ByteBuffer::wrap(digest.immutable_data(), m_context.handshake_hash.digest_size());
     pseudorandom_function(outbuffer, m_context.master_key, (const u8*)"client finished", 15, hashbuf, dummy);
 
     builder.append(outbuffer);
@@ -554,9 +556,9 @@ bool TLSv12::expand_key()
     dbg() << "server iv";
     print_buffer(server_iv, iv_size);
     dbg() << "client mac key";
-    print_buffer(m_context.crypto.local_mac, 32);
+    print_buffer(m_context.crypto.local_mac, mac_size);
     dbg() << "server mac key";
-    print_buffer(m_context.crypto.remote_mac, 32);
+    print_buffer(m_context.crypto.remote_mac, mac_size);
 #endif
 
     memcpy(m_context.crypto.local_iv, client_iv, iv_size);
@@ -577,6 +579,11 @@ void TLSv12::pseudorandom_function(ByteBuffer& output, const ByteBuffer& secret,
         return;
     }
 
+    // RFC 5246: "In this section, we define one PRF, based on HMAC.  This PRF with the
+    // 			  SHA-256 hash function is used for all cipher suites defined in this
+    //            document and in TLS documents published prior to this document when
+    //            TLS 1.2 is negotiated."
+    // Apparently this PRF _always_ uses SHA256
     Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac(secret);
 
     auto l_seed_size = label_length + seed.size() + seed_b.size();
@@ -586,11 +593,13 @@ void TLSv12::pseudorandom_function(ByteBuffer& output, const ByteBuffer& secret,
     label_seed_buffer.overwrite(label_length, seed.data(), seed.size());
     label_seed_buffer.overwrite(label_length + seed.size(), seed_b.data(), seed_b.size());
 
-    u8 digest[hmac.DigestSize];
+    auto digest_size = hmac.digest_size();
 
-    auto digest_0 = ByteBuffer::wrap(digest, hmac.DigestSize);
+    u8 digest[digest_size];
 
-    digest_0.overwrite(0, hmac.process(label_seed_buffer).data, hmac.DigestSize);
+    auto digest_0 = ByteBuffer::wrap(digest, digest_size);
+
+    digest_0.overwrite(0, hmac.process(label_seed_buffer).immutable_data(), digest_size);
 
     size_t index = 0;
     while (index < output.size()) {
@@ -598,12 +607,12 @@ void TLSv12::pseudorandom_function(ByteBuffer& output, const ByteBuffer& secret,
         hmac.update(label_seed_buffer);
         auto digest_1 = hmac.digest();
 
-        auto copy_size = min(hmac.DigestSize, output.size() - index);
+        auto copy_size = min(digest_size, output.size() - index);
 
-        output.overwrite(index, digest_1.data, copy_size);
+        output.overwrite(index, digest_1.immutable_data(), copy_size);
         index += copy_size;
 
-        digest_0.overwrite(0, hmac.process(digest_0).data, hmac.DigestSize);
+        digest_0.overwrite(0, hmac.process(digest_0).immutable_data(), digest_size);
     }
 }
 
@@ -888,6 +897,9 @@ ssize_t TLSv12::handle_hello(const ByteBuffer& buffer, size_t& write_packets)
     m_context.cipher = cipher;
     dbg() << "Cipher: " << (u16)cipher;
 
+    // The handshake hash function is _always_ SHA256
+    m_context.handshake_hash.initialize(Crypto::Hash::HashKind::SHA256);
+
     if (buffer.size() - res < 1) {
         dbg() << "not enough data for compression spec";
         return (i8)Error::NeedMoreData;
@@ -1115,7 +1127,7 @@ ssize_t TLSv12::handle_verify(const ByteBuffer&)
 
 void TLSv12::update_hash(const ByteBuffer& message)
 {
-    m_context.handshake_hash.hash.update(message);
+    m_context.handshake_hash.update(message);
 }
 
 bool TLSv12::connect(const String& hostname, int port)
@@ -1476,7 +1488,8 @@ ByteBuffer TLSv12::hmac_message(const ByteBuffer& buf, const Optional<ByteBuffer
         if (buf2.has_value() && buf2.value().size()) {
             hmac.update(buf2.value());
         }
-        auto mac = ByteBuffer::copy(hmac.digest().data, hmac.DigestSize);
+        auto digest = hmac.digest();
+        auto mac = ByteBuffer::copy(digest.immutable_data(), digest.data_length());
 #ifdef TLS_DEBUG
         dbg() << "HMAC of the block for sequence number " << m_context.local_sequence_number;
         print_buffer(mac);
@@ -1484,12 +1497,16 @@ ByteBuffer TLSv12::hmac_message(const ByteBuffer& buf, const Optional<ByteBuffer
         return mac;
     };
     switch (mac_length) {
+    case Crypto::Hash::SHA1::DigestSize: {
+        Crypto::Authentication::HMAC<Crypto::Hash::SHA1> hmac(ByteBuffer::wrap(local ? m_context.crypto.local_mac : m_context.crypto.remote_mac, mac_length));
+        return digest(hmac);
+    }
     case Crypto::Hash::SHA256::DigestSize: {
-        Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac(ByteBuffer::wrap(local ? m_context.crypto.local_mac : m_context.crypto.remote_mac, 32));
+        Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac(ByteBuffer::wrap(local ? m_context.crypto.local_mac : m_context.crypto.remote_mac, mac_length));
         return digest(hmac);
     }
     case Crypto::Hash::SHA512::DigestSize: {
-        Crypto::Authentication::HMAC<Crypto::Hash::SHA512> hmac(ByteBuffer::wrap(local ? m_context.crypto.local_mac : m_context.crypto.remote_mac, 32));
+        Crypto::Authentication::HMAC<Crypto::Hash::SHA512> hmac(ByteBuffer::wrap(local ? m_context.crypto.local_mac : m_context.crypto.remote_mac, mac_length));
         return digest(hmac);
     }
     default:
