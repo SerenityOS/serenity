@@ -45,6 +45,8 @@ public:
     virtual void set_volatile() = 0;
     [[nodiscard]] virtual bool set_nonvolatile() = 0;
 
+    virtual bool sniff() = 0;
+
 protected:
     ImageDecoderPlugin() {}
 };
@@ -60,6 +62,7 @@ public:
     RefPtr<Gfx::Bitmap> bitmap() const;
     void set_volatile() { m_plugin->set_volatile(); }
     [[nodiscard]] bool set_nonvolatile() { return m_plugin->set_nonvolatile(); }
+    bool sniff() { return m_plugin->sniff(); };
 
 private:
     ImageDecoder(const u8*, size_t);
