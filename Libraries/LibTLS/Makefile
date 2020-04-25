@@ -1,4 +1,9 @@
-LIBTLS_OBJS = TLSv12.o
+LIBTLS_OBJS = TLSv12.o \
+              ClientHandshake.o \
+              Exchange.o \
+              Handshake.o \
+              Record.o \
+              Socket.o 
 
 OBJS = $(LIBTLS_OBJS)
 

@@ -40,36 +40,21 @@
 
 namespace TLS {
 
+inline static void print_buffer(const ByteBuffer& buffer)
+{
+    for (size_t i { 0 }; i < buffer.size(); ++i)
+        dbgprintf("%02x ", buffer[i]);
+    dbgprintf("\n");
+}
+
+inline static void print_buffer(const u8* buffer, size_t size)
+{
+    for (size_t i { 0 }; i < size; ++i)
+        dbgprintf("%02x ", buffer[i]);
+    dbgprintf("\n");
+}
+
 class Socket;
-
-enum class KeyExchangeAlgorithms {
-    DHE_DSS,
-    DHE_RSA,
-    DH_Anon,
-    RSA,
-    DH_DSS,
-    DH_RSA,
-    EC_DiffieHellman
-};
-
-enum class ClientCertificateType {
-    RSA_Sign = 1,
-    DSS_Sign = 2,
-    RSA_FixedDH = 3,
-    DSS_FixedDH = 4,
-    RSA_EphemeralDH = 5,
-    DSS_EphemeralDH = 6,
-    ECDSA_Sign = 64,
-    RSA_FixedECDH = 65,
-    ECDSA_FixedECDH = 66
-};
-
-enum class SignatureAlgorithm {
-    Anonymous = 0,
-    RSA = 1,
-    DSA = 2,
-    ECDSA = 3
-};
 
 enum class CipherSuite {
     Invalid = 0,
@@ -145,6 +130,46 @@ enum class AlertLevel : u8 {
     Critical = 0x02
 };
 
+enum HandshakeType {
+    HelloRequest = 0x00,
+    ClientHello = 0x01,
+    ServerHello = 0x02,
+    HelloVerifyRequest = 0x03,
+    CertificateMessage = 0x0b,
+    ServerKeyExchange = 0x0c,
+    CertificateRequest = 0x0d,
+    ServerHelloDone = 0x0e,
+    CertificateVerify = 0x0f,
+    ClientKeyExchange = 0x10,
+    Finished = 0x14
+};
+
+enum class HandshakeExtension : u16 {
+    ServerName = 0x00,
+    ApplicationLayerProtocolNegotiation = 0x10,
+    SignatureAlgorithms = 0x0d,
+};
+
+enum class WritePacketStage {
+    Initial = 0,
+    ClientHandshake = 1,
+    ServerHandshake = 2,
+    Finished = 3,
+};
+
+enum class ConnectionStatus {
+    Disconnected,
+    Negotiating,
+    KeyExchange,
+    Renegotiating,
+    Established,
+};
+
+enum ClientVerificationStaus {
+    Verified,
+    VerificationNeeded,
+};
+
 struct Certificate {
     u16 version;
     u32 algorithm;
@@ -183,7 +208,7 @@ struct Context {
 
     u8 remote_random[32];
     // To be predictable
-    u8 local_random[32] { 0 };
+    u8 local_random[32];
     u8 session_id[32];
     u8 session_id_size { 0 };
     CipherSuite cipher;
@@ -209,7 +234,7 @@ struct Context {
     u64 remote_sequence_number { 0 };
     u64 local_sequence_number { 0 };
 
-    u8 connection_status { 0 };
+    ConnectionStatus connection_status { ConnectionStatus::Disconnected };
     u8 critical_error { 0 };
     Error error_code { Error::NoError };
 
@@ -225,7 +250,7 @@ struct Context {
 
     ByteBuffer cached_handshake;
 
-    u8 client_verified { 0 };
+    ClientVerificationStaus client_verified { Verified };
 
     bool connection_finished { false };
 
@@ -236,6 +261,8 @@ struct Context {
 
     Vector<String> alpn;
     StringView negotiated_alpn;
+
+    size_t send_retries { 0 };
 };
 
 class TLSv12 : public Core::Socket {
@@ -258,19 +285,19 @@ public:
     }
 
     ByteBuffer& write_buffer() { return m_context.tls_buffer; }
-    bool established() const { return m_context.connection_status == 0xff; }
+    bool is_established() const { return m_context.connection_status == ConnectionStatus::Established; }
     virtual bool connect(const String&, int) override;
 
     void set_sni(const StringView& sni)
     {
-        if (m_context.is_server || m_context.critical_error || m_context.connection_status != 0) {
+        if (m_context.is_server || m_context.critical_error || m_context.connection_status != ConnectionStatus::Disconnected) {
             dbg() << "invalid state for set_sni";
             return;
         }
         m_context.SNI = sni;
     }
 
-    Optional<Certificate> parse_asn1(const ByteBuffer& buffer, bool client_cert = false);
+    Optional<Certificate> parse_asn1(const ByteBuffer& buffer, bool client_cert = false) const;
     bool load_certificates(const ByteBuffer& pem_buffer);
     bool load_private_key(const ByteBuffer& pem_buffer);
 
@@ -280,12 +307,12 @@ public:
     void add_alpn(const StringView& alpn);
     bool has_alpn(const StringView& alpn) const;
 
-    bool cipher_supported(CipherSuite suite) const
+    bool supports_cipher(CipherSuite suite) const
     {
         return suite == CipherSuite::RSA_WITH_AES_128_CBC_SHA256 || suite == CipherSuite::RSA_WITH_AES_256_CBC_SHA256 || suite == CipherSuite::RSA_WITH_AES_128_CBC_SHA || suite == CipherSuite::RSA_WITH_AES_256_CBC_SHA;
     }
 
-    bool version_supported(Version v) const
+    bool supports_version(Version v) const
     {
         return v == Version::V12;
     }
@@ -312,6 +339,7 @@ private:
     void consume(const ByteBuffer& record);
 
     ByteBuffer hmac_message(const ByteBuffer& buf, const Optional<ByteBuffer> buf2, size_t mac_length, bool local = false);
+    void ensure_hmac(size_t digest_size, bool local);
 
     void update_packet(ByteBuffer& packet);
     void update_hash(const ByteBuffer& in);
@@ -332,8 +360,8 @@ private:
 
     bool flush();
 
-    ssize_t handle_hello(const ByteBuffer& buffer, size_t&);
-    ssize_t handle_finished(const ByteBuffer& buffer, size_t&);
+    ssize_t handle_hello(const ByteBuffer& buffer, WritePacketStage&);
+    ssize_t handle_finished(const ByteBuffer& buffer, WritePacketStage&);
     ssize_t handle_certificate(const ByteBuffer& buffer);
     ssize_t handle_server_key_exchange(const ByteBuffer& buffer);
     ssize_t handle_server_hello_done(const ByteBuffer& buffer);
@@ -410,10 +438,12 @@ private:
     bool compute_master_secret(size_t length);
 
     Context m_context;
-    RefPtr<Core::Notifier> m_notifier;
 
-    OwnPtr<Crypto::Cipher::AESCipher::CBCMode> m_aes_local { nullptr };
-    OwnPtr<Crypto::Cipher::AESCipher::CBCMode> m_aes_remote { nullptr };
+    OwnPtr<Crypto::Authentication::HMAC<Crypto::Hash::Manager>> m_hmac_local;
+    OwnPtr<Crypto::Authentication::HMAC<Crypto::Hash::Manager>> m_hmac_remote;
+
+    OwnPtr<Crypto::Cipher::AESCipher::CBCMode> m_aes_local;
+    OwnPtr<Crypto::Cipher::AESCipher::CBCMode> m_aes_remote;
 };
 
 namespace Constants {
@@ -441,6 +471,5 @@ constexpr static const u8 TLS_RSA_SIGN_SHA256_OID[] { 0x2a, 0x86, 0x48, 0x86, 0x
 
 }
 
-namespace Utilities {
-}
+using namespace Crypto;
 }
