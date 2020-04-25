@@ -34,15 +34,13 @@
 #include <LibCrypto/Authentication/HMAC.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibCrypto/Cipher/AES.h>
-#include <LibCrypto/Hash/SHA2.h>
+#include <LibCrypto/Hash/HashManager.h>
 #include <LibCrypto/PK/RSA.h>
 #include <LibTLS/TLSPacketBuilder.h>
 
 namespace TLS {
 
 class Socket;
-
-using HashFunction = Crypto::Hash::SHA256;
 
 enum class KeyExchangeAlgorithms {
     DHE_DSS,
@@ -66,16 +64,6 @@ enum class ClientCertificateType {
     ECDSA_FixedECDH = 66
 };
 
-enum class HashAlgorithm {
-    None = 0,
-    MD5 = 1,
-    SHA1 = 2,
-    SHA224 = 3,
-    SHA256 = 4,
-    SHA384 = 5,
-    SHA512 = 6
-};
-
 enum class SignatureAlgorithm {
     Anonymous = 0,
     RSA = 1,
@@ -90,10 +78,9 @@ enum class CipherSuite {
     AES_128_CCM_SHA256 = 0x1304,
     AES_128_CCM_8_SHA256 = 0x1305,
 
+    // We support these
     RSA_WITH_AES_128_CBC_SHA = 0x002F,
     RSA_WITH_AES_256_CBC_SHA = 0x0035,
-
-    // We support these
     RSA_WITH_AES_128_CBC_SHA256 = 0x003C,
     RSA_WITH_AES_256_CBC_SHA256 = 0x003D,
     // TODO
@@ -187,10 +174,6 @@ struct Certificate {
     ByteBuffer data;
 };
 
-struct Hash {
-    Crypto::Hash::SHA256 hash;
-};
-
 struct Context {
     String to_string() const;
     bool verify() const;
@@ -220,7 +203,7 @@ struct Context {
         u8 remote_iv[16];
     } crypto;
 
-    Hash handshake_hash;
+    Crypto::Hash::Manager handshake_hash;
 
     ByteBuffer message_buffer;
     u64 remote_sequence_number { 0 };
@@ -299,7 +282,7 @@ public:
 
     bool cipher_supported(CipherSuite suite) const
     {
-        return suite == CipherSuite::RSA_WITH_AES_128_CBC_SHA256 || suite == CipherSuite::RSA_WITH_AES_256_CBC_SHA256;
+        return suite == CipherSuite::RSA_WITH_AES_128_CBC_SHA256 || suite == CipherSuite::RSA_WITH_AES_256_CBC_SHA256 || suite == CipherSuite::RSA_WITH_AES_128_CBC_SHA || suite == CipherSuite::RSA_WITH_AES_256_CBC_SHA;
     }
 
     bool version_supported(Version v) const
@@ -384,8 +367,24 @@ private:
     }
     size_t mac_length() const
     {
-        return Crypto::Authentication::HMAC<Crypto::Hash::SHA256>::DigestSize;
-    } // FIXME: generalize
+        switch (m_context.cipher) {
+        case CipherSuite::RSA_WITH_AES_128_CBC_SHA:
+        case CipherSuite::RSA_WITH_AES_256_CBC_SHA:
+            return Crypto::Hash::SHA1::digest_size();
+        case CipherSuite::AES_256_GCM_SHA384:
+        case CipherSuite::RSA_WITH_AES_256_GCM_SHA384:
+            return Crypto::Hash::SHA512::digest_size();
+        case CipherSuite::AES_128_CCM_8_SHA256:
+        case CipherSuite::AES_128_CCM_SHA256:
+        case CipherSuite::AES_128_GCM_SHA256:
+        case CipherSuite::Invalid:
+        case CipherSuite::RSA_WITH_AES_128_CBC_SHA256:
+        case CipherSuite::RSA_WITH_AES_128_GCM_SHA256:
+        case CipherSuite::RSA_WITH_AES_256_CBC_SHA256:
+        default:
+            return Crypto::Hash::SHA256::digest_size();
+        }
+    }
     size_t iv_length() const
     {
         switch (m_context.cipher) {

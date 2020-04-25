@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Optional.h>
+#include <AK/OwnPtr.h>
 #include <LibCrypto/Hash/HashFunction.h>
 #include <LibCrypto/Hash/MD5.h>
 #include <LibCrypto/Hash/SHA1.h>
@@ -124,7 +125,7 @@ public:
     Manager(const Manager& other) // NOT a copy constructor!
     {
         m_pre_init_buffer = ByteBuffer::create_zeroed(0); // will not be used
-        initialise(other.m_kind);
+        initialize(other.m_kind);
     }
 
     Manager(HashKind kind)
@@ -135,6 +136,10 @@ public:
 
     ~Manager()
     {
+        m_sha1 = nullptr;
+        m_sha256 = nullptr;
+        m_sha512 = nullptr;
+        m_md5 = nullptr;
     }
 
     virtual void update(const ByteBuffer& buffer) override { update(buffer.data(), buffer.size()); };
@@ -143,13 +148,13 @@ public:
     {
         switch (m_kind) {
         case HashKind::MD5:
-            return md5.value().digest_size();
+            return m_md5->digest_size();
         case HashKind::SHA1:
-            return sha1.value().digest_size();
+            return m_sha1->digest_size();
         case HashKind::SHA256:
-            return sha256.value().digest_size();
+            return m_sha256->digest_size();
         case HashKind::SHA512:
-            return sha512.value().digest_size();
+            return m_sha512->digest_size();
         default:
         case HashKind::None:
             return 0;
@@ -180,16 +185,16 @@ public:
         m_kind = kind;
         switch (kind) {
         case HashKind::MD5:
-            md5 = MD5 {};
+            m_md5 = make<MD5>();
             break;
         case HashKind::SHA1:
-            sha1 = SHA1 {};
+            m_sha1 = make<SHA1>();
             break;
         case HashKind::SHA256:
-            sha256 = SHA256 {};
+            m_sha256 = make<SHA256>();
             break;
         case HashKind::SHA512:
-            sha512 = SHA512 {};
+            m_sha512 = make<SHA512>();
             break;
         default:
         case HashKind::None:
@@ -199,46 +204,48 @@ public:
 
     virtual void update(const u8* data, size_t length) override
     {
+        auto size = m_pre_init_buffer.size();
         switch (m_kind) {
         case HashKind::MD5:
-            if (m_pre_init_buffer.size())
-                md5.value().update(m_pre_init_buffer);
-            md5.value().update(data, length);
+            if (size)
+                m_md5->update(m_pre_init_buffer);
+            m_md5->update(data, length);
             break;
         case HashKind::SHA1:
-            if (m_pre_init_buffer.size())
-                sha1.value().update(m_pre_init_buffer);
-            sha1.value().update(data, length);
+            if (size)
+                m_sha1->update(m_pre_init_buffer);
+            m_sha1->update(data, length);
             break;
         case HashKind::SHA256:
-            if (m_pre_init_buffer.size())
-                sha256.value().update(m_pre_init_buffer);
-            sha256.value().update(data, length);
+            if (size)
+                m_sha256->update(m_pre_init_buffer);
+            m_sha256->update(data, length);
             break;
         case HashKind::SHA512:
-            if (m_pre_init_buffer.size())
-                sha512.value().update(m_pre_init_buffer);
-            sha512.value().update(data, length);
+            if (size)
+                m_sha512->update(m_pre_init_buffer);
+            m_sha512->update(data, length);
             break;
         default:
         case HashKind::None:
             m_pre_init_buffer.append(data, length);
             return;
         }
-        m_pre_init_buffer.clear();
+        if (size)
+            m_pre_init_buffer.clear();
     }
 
     virtual DigestType peek() override
     {
         switch (m_kind) {
         case HashKind::MD5:
-            return { md5.value().peek() };
+            return { m_md5->peek() };
         case HashKind::SHA1:
-            return { sha1.value().peek() };
+            return { m_sha1->peek() };
         case HashKind::SHA256:
-            return { sha256.value().peek() };
+            return { m_sha256->peek() };
         case HashKind::SHA512:
-            return { sha512.value().peek() };
+            return { m_sha512->peek() };
         default:
         case HashKind::None:
             ASSERT_NOT_REACHED();
@@ -255,18 +262,19 @@ public:
 
     virtual void reset() override
     {
+        m_pre_init_buffer.clear();
         switch (m_kind) {
         case HashKind::MD5:
-            md5.value().reset();
+            m_md5->reset();
             break;
         case HashKind::SHA1:
-            sha1.value().reset();
+            m_sha1->reset();
             break;
         case HashKind::SHA256:
-            sha256.value().reset();
+            m_sha256->reset();
             break;
         case HashKind::SHA512:
-            sha512.value().reset();
+            m_sha512->reset();
             break;
         default:
         case HashKind::None:
@@ -278,13 +286,13 @@ public:
     {
         switch (m_kind) {
         case HashKind::MD5:
-            return md5.value().class_name();
+            return m_md5->class_name();
         case HashKind::SHA1:
-            return sha1.value().class_name();
+            return m_sha1->class_name();
         case HashKind::SHA256:
-            return sha256.value().class_name();
+            return m_sha256->class_name();
         case HashKind::SHA512:
-            return sha512.value().class_name();
+            return m_sha512->class_name();
         default:
         case HashKind::None:
             return "UninitializedHashManager";
@@ -297,10 +305,10 @@ public:
     }
 
 private:
-    Optional<SHA1> sha1;
-    Optional<SHA256> sha256;
-    Optional<SHA512> sha512;
-    Optional<MD5> md5;
+    OwnPtr<SHA1> m_sha1;
+    OwnPtr<SHA256> m_sha256;
+    OwnPtr<SHA512> m_sha512;
+    OwnPtr<MD5> m_md5;
     HashKind m_kind { HashKind::None };
     ByteBuffer m_pre_init_buffer;
 };

@@ -138,9 +138,9 @@ void hmac_md5(const char* message, size_t len)
     Crypto::Authentication::HMAC<Crypto::Hash::MD5> hmac(secret_key);
     auto mac = hmac.process((const u8*)message, len);
     if (binary)
-        printf("%.*s", (int)hmac.DigestSize, mac.data);
+        printf("%.*s", (int)hmac.digest_size(), mac.data);
     else
-        print_buffer(ByteBuffer::wrap(mac.data, hmac.DigestSize), -1);
+        print_buffer(ByteBuffer::wrap(mac.data, hmac.digest_size()), -1);
 }
 
 void sha1(const char* message, size_t len)
@@ -166,9 +166,9 @@ void hmac_sha256(const char* message, size_t len)
     Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac(secret_key);
     auto mac = hmac.process((const u8*)message, len);
     if (binary)
-        printf("%.*s", (int)hmac.DigestSize, mac.data);
+        printf("%.*s", (int)hmac.digest_size(), mac.data);
     else
-        print_buffer(ByteBuffer::wrap(mac.data, hmac.DigestSize), -1);
+        print_buffer(ByteBuffer::wrap(mac.data, hmac.digest_size()), -1);
 }
 
 void sha512(const char* message, size_t len)
@@ -185,9 +185,9 @@ void hmac_sha512(const char* message, size_t len)
     Crypto::Authentication::HMAC<Crypto::Hash::SHA512> hmac(secret_key);
     auto mac = hmac.process((const u8*)message, len);
     if (binary)
-        printf("%.*s", (int)hmac.DigestSize, mac.data);
+        printf("%.*s", (int)hmac.digest_size(), mac.data);
     else
-        print_buffer(ByteBuffer::wrap(mac.data, hmac.DigestSize), -1);
+        print_buffer(ByteBuffer::wrap(mac.data, hmac.digest_size()), -1);
 }
 
 auto main(int argc, char** argv) -> int
@@ -676,9 +676,9 @@ void hmac_md5_test_process()
             0x3b, 0x5b, 0xde, 0x30, 0x3a, 0x54, 0x7b, 0xbb, 0x09, 0xfe, 0x78, 0x89, 0xbc, 0x9f, 0x22, 0xa3
         };
         auto mac = hmac.process("Some bogus data");
-        if (memcmp(result, mac.data, hmac.DigestSize) != 0) {
+        if (memcmp(result, mac.data, hmac.digest_size()) != 0) {
             FAIL(Invalid mac);
-            print_buffer(ByteBuffer::wrap(mac.data, hmac.DigestSize), -1);
+            print_buffer(ByteBuffer::wrap(mac.data, hmac.digest_size()), -1);
         } else
             PASS;
     }
@@ -689,7 +689,7 @@ void hmac_md5_test_process()
         auto mac_0 = hmac.process("Some bogus data");
         auto mac_1 = hmac.process("Some bogus data");
 
-        if (memcmp(mac_0.data, mac_1.data, hmac.DigestSize) != 0) {
+        if (memcmp(mac_0.data, mac_1.data, hmac.digest_size()) != 0) {
             FAIL(Cannot reuse);
         } else
             PASS;
@@ -722,6 +722,44 @@ void sha1_test_hash()
             0xda, 0x39, 0xa3, 0xee, 0x5e, 0x6b, 0x4b, 0x0d, 0x32, 0x55, 0xbf, 0xef, 0x95, 0x60, 0x18, 0x90, 0xaf, 0xd8, 0x07, 0x09
         };
         auto digest = Crypto::Hash::SHA1::hash("");
+        if (memcmp(result, digest.data, Crypto::Hash::SHA1::digest_size()) != 0) {
+            FAIL(Invalid hash);
+            print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::SHA1::digest_size()), -1);
+        } else
+            PASS;
+    }
+    {
+        I_TEST((SHA256 Hashing | Long String));
+        u8 result[] {
+            0x12, 0x15, 0x1f, 0xb1, 0x04, 0x44, 0x93, 0xcc, 0xed, 0x54, 0xa6, 0xb8, 0x7e, 0x93, 0x37, 0x7b, 0xb2, 0x13, 0x39, 0xdb
+        };
+        auto digest = Crypto::Hash::SHA1::hash("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+        if (memcmp(result, digest.data, Crypto::Hash::SHA1::digest_size()) != 0) {
+            FAIL(Invalid hash);
+            print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::SHA1::digest_size()), -1);
+        } else
+            PASS;
+    }
+    {
+        I_TEST((SHA256 Hashing | Successive Updates));
+        u8 result[] {
+            0xd6, 0x6e, 0xce, 0xd1, 0xf4, 0x08, 0xc6, 0xd8, 0x35, 0xab, 0xf0, 0xc9, 0x05, 0x26, 0xa4, 0xb2, 0xb8, 0xa3, 0x7c, 0xd3
+        };
+        auto hasher = Crypto::Hash::SHA1 {};
+        hasher.update("aaaaaaaaaaaaaaa");
+        hasher.update("aaaaaaaaaaaaaaa");
+        hasher.update("aaaaaaaaaaaaaaa");
+        hasher.update("aaaaaaaaaaaaaaa");
+        hasher.update("aaaaaaaaaaaaaaa");
+        hasher.update("aaaaaaaaaaaaaaa");
+        hasher.update("aaaaaaaaaaaaaaa");
+        hasher.update("aaaaaaaaaaaaaaa");
+        hasher.update("aaaaaaaaaaaaaaa");
+        hasher.update("aaaaaaaaaaaaaaa");
+        hasher.update("aaaaaaaaaaaaaaa");
+        hasher.update("aaaaaaaaaaaaaaa");
+        hasher.update("aaaaaaaaa");
+        auto digest = hasher.digest();
         if (memcmp(result, digest.data, Crypto::Hash::SHA1::digest_size()) != 0) {
             FAIL(Invalid hash);
             print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::SHA1::digest_size()), -1);
@@ -795,9 +833,9 @@ void hmac_sha256_test_process()
             0x1a, 0xf2, 0x20, 0x62, 0xde, 0x3b, 0x84, 0x65, 0xc1, 0x25, 0x23, 0x99, 0x76, 0x15, 0x1b, 0xec, 0x15, 0x21, 0x82, 0x1f, 0x23, 0xca, 0x11, 0x66, 0xdd, 0x8c, 0x6e, 0xf1, 0x81, 0x3b, 0x7f, 0x1b
         };
         auto mac = hmac.process("Some bogus data");
-        if (memcmp(result, mac.data, hmac.DigestSize) != 0) {
+        if (memcmp(result, mac.data, hmac.digest_size()) != 0) {
             FAIL(Invalid mac);
-            print_buffer(ByteBuffer::wrap(mac.data, hmac.DigestSize), -1);
+            print_buffer(ByteBuffer::wrap(mac.data, hmac.digest_size()), -1);
         } else
             PASS;
     }
@@ -808,7 +846,7 @@ void hmac_sha256_test_process()
         auto mac_0 = hmac.process("Some bogus data");
         auto mac_1 = hmac.process("Some bogus data");
 
-        if (memcmp(mac_0.data, mac_1.data, hmac.DigestSize) != 0) {
+        if (memcmp(mac_0.data, mac_1.data, hmac.digest_size()) != 0) {
             FAIL(Cannot reuse);
         } else
             PASS;
@@ -880,9 +918,9 @@ void hmac_sha512_test_process()
             0xeb, 0xa8, 0x34, 0x11, 0xfd, 0x5b, 0x46, 0x5b, 0xef, 0xbb, 0x67, 0x5e, 0x7d, 0xc2, 0x7c, 0x2c, 0x6b, 0xe1, 0xcf, 0xe6, 0xc7, 0xe4, 0x7d, 0xeb, 0xca, 0x97, 0xb7, 0x4c, 0xd3, 0x4d, 0x6f, 0x08, 0x9f, 0x0d, 0x3a, 0xf1, 0xcb, 0x00, 0x79, 0x78, 0x2f, 0x05, 0x8e, 0xeb, 0x94, 0x48, 0x0d, 0x50, 0x64, 0x3b, 0xca, 0x70, 0xe2, 0x69, 0x38, 0x4f, 0xe4, 0xb0, 0x49, 0x0f, 0xc5, 0x4c, 0x7a, 0xa7
         };
         auto mac = hmac.process("Some bogus data");
-        if (memcmp(result, mac.data, hmac.DigestSize) != 0) {
+        if (memcmp(result, mac.data, hmac.digest_size()) != 0) {
             FAIL(Invalid mac);
-            print_buffer(ByteBuffer::wrap(mac.data, hmac.DigestSize), -1);
+            print_buffer(ByteBuffer::wrap(mac.data, hmac.digest_size()), -1);
         } else
             PASS;
     }
@@ -893,7 +931,7 @@ void hmac_sha512_test_process()
         auto mac_0 = hmac.process("Some bogus data");
         auto mac_1 = hmac.process("Some bogus data");
 
-        if (memcmp(mac_0.data, mac_1.data, hmac.DigestSize) != 0) {
+        if (memcmp(mac_0.data, mac_1.data, hmac.digest_size()) != 0) {
             FAIL(Cannot reuse);
         } else
             PASS;
@@ -1053,7 +1091,7 @@ void tls_test_client_hello()
         if (sent_request)
             return;
         sent_request = true;
-        if (!tls.write("GET /SerenityOS/serenity HTTP/1.1\r\nHost: github.com\r\nConnection: close\r\n\r\n"_b)) {
+        if (!tls.write("GET / HTTP/1.1\r\nHost: google.com\r\nConnection: close\r\n\r\n"_b)) {
             FAIL(write() failed);
             loop.quit(0);
         }
@@ -1084,7 +1122,7 @@ void tls_test_client_hello()
         FAIL(Connection failure);
         loop.quit(1);
     };
-    if (!tls->connect("github.com", 443)) {
+    if (!tls->connect("192.168.1.2", 8443)) {
         FAIL(connect() failed);
         return;
     }
