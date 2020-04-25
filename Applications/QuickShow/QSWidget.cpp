@@ -84,7 +84,7 @@ void QSWidget::navigate(Directions direction)
         Core::DirIterator iterator(current_dir, Core::DirIterator::Flags::SkipDots);
         while (iterator.has_next()) {
             String file = iterator.next_full_path();
-            if (!file.ends_with(".png")) // TODO: Find a batter way to filter supported images.
+            if (!file.ends_with(".png") && !file.ends_with(".gif")) // TODO: Find a batter way to filter supported images.
                 continue;
             m_files_in_same_dir.append(file);
         }
