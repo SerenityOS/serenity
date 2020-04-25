@@ -72,6 +72,8 @@ class TextDocumentLine;
 class TextDocumentUndoCommand;
 class TextEditor;
 class TreeView;
+class ToolBar;
+class ToolBarContainer;
 class Variant;
 class VerticalBoxLayout;
 class WMEvent;
