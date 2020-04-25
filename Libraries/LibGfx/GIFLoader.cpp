@@ -447,6 +447,31 @@ bool load_gif_impl(GIFLoadingContext& context)
     return true;
 }
 
+GIFImageDecoderPlugin::GIFImageDecoderPlugin(const u8* data, size_t size)
+{
+    m_context = make<GIFLoadingContext>();
+    m_context->data = data;
+    m_context->data_size = size;
+}
+
+GIFImageDecoderPlugin::~GIFImageDecoderPlugin() {}
+
+Size GIFImageDecoderPlugin::size()
+{
+    if (m_context->state == GIFLoadingContext::State::Error) {
+        return {};
+    }
+
+    if (m_context->state < GIFLoadingContext::State::BitmapDecoded) {
+        if (!load_gif_impl(*m_context)) {
+            m_context->state = GIFLoadingContext::State::Error;
+            return {};
+        }
+    }
+
+    return { m_context->width, m_context->height };
+}
+
 RefPtr<Gfx::Bitmap> GIFImageDecoderPlugin::bitmap()
 {
     if (m_context->state == GIFLoadingContext::State::Error) {
@@ -465,6 +490,26 @@ RefPtr<Gfx::Bitmap> GIFImageDecoderPlugin::bitmap()
         return nullptr;
     }
     return m_context->frames.first();
+}
+
+void GIFImageDecoderPlugin::set_volatile()
+{
+    for (auto& frame : m_context->frames) {
+        frame->set_volatile();
+    }
+}
+
+bool GIFImageDecoderPlugin::set_nonvolatile()
+{
+    if (m_context->frames.is_empty()) {
+        return false;
+    }
+
+    bool success = true;
+    for (auto& frame : m_context->frames) {
+        success &= frame->set_nonvolatile();
+    }
+    return success;
 }
 
 }
