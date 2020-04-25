@@ -387,7 +387,7 @@ Value in(Interpreter& interpreter, Value lhs, Value rhs)
     if (!rhs.is_object())
         return interpreter.throw_exception<TypeError>("'in' operator must be used on object");
 
-    return Value(rhs.as_object().get(lhs.to_string()).has_value());
+    return Value(!rhs.as_object().get(lhs.to_string()).is_empty());
 }
 
 Value instance_of(Interpreter&, Value lhs, Value rhs)
@@ -396,10 +396,10 @@ Value instance_of(Interpreter&, Value lhs, Value rhs)
         return Value(false);
 
     auto constructor_prototype_property = rhs.as_object().get("prototype");
-    if (!constructor_prototype_property.has_value() || !constructor_prototype_property.value().is_object())
+    if (!constructor_prototype_property.is_object())
         return Value(false);
 
-    return Value(lhs.as_object().has_prototype(&constructor_prototype_property.value().as_object()));
+    return Value(lhs.as_object().has_prototype(&constructor_prototype_property.as_object()));
 }
 
 const LogStream& operator<<(const LogStream& stream, const Value& value)

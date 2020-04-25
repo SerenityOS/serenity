@@ -151,7 +151,7 @@ void Interpreter::set_variable(const FlyString& name, Value value, bool first_as
     global_object().put(move(name), move(value));
 }
 
-Optional<Value> Interpreter::get_variable(const FlyString& name)
+Value Interpreter::get_variable(const FlyString& name)
 {
     if (m_call_stack.size()) {
         for (auto* environment = current_environment(); environment; environment = environment->parent()) {

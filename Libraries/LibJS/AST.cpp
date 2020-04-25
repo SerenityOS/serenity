@@ -136,8 +136,8 @@ Value CallExpression::execute(Interpreter& interpreter) const
     if (is_new_expression()) {
         new_object = Object::create_empty(interpreter, interpreter.global_object());
         auto prototype = function.get("prototype");
-        if (prototype.has_value() && prototype.value().is_object())
-            new_object->set_prototype(&prototype.value().as_object());
+        if (prototype.is_object())
+            new_object->set_prototype(&prototype.as_object());
         call_frame.this_value = new_object;
         result = function.construct(interpreter);
     } else {
@@ -704,10 +704,10 @@ void ForStatement::dump(int indent) const
 
 Value Identifier::execute(Interpreter& interpreter) const
 {
-    auto variable = interpreter.get_variable(string());
-    if (!variable.has_value())
+    auto value = interpreter.get_variable(string());
+    if (value.is_empty())
         return interpreter.throw_exception<ReferenceError>(String::format("'%s' not known", string().characters()));
-    return variable.value();
+    return value;
 }
 
 void Identifier::dump(int indent) const
@@ -1022,11 +1022,7 @@ Value MemberExpression::execute(Interpreter& interpreter) const
     auto* object_result = object_value.to_object(interpreter.heap());
     if (interpreter.exception())
         return {};
-    auto result = object_result->get(computed_property_name(interpreter));
-    if (result.has_value()) {
-        ASSERT(!result.value().is_empty());
-    }
-    return result.value_or(js_undefined());
+    return object_result->get(computed_property_name(interpreter)).value_or(js_undefined());
 }
 
 Value StringLiteral::execute(Interpreter& interpreter) const

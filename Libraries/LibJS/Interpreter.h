@@ -93,7 +93,7 @@ public:
     bool should_unwind_until(ScopeType type) const { return m_unwind_until == type; }
     bool should_unwind() const { return m_unwind_until != ScopeType::None; }
 
-    Optional<Value> get_variable(const FlyString& name);
+    Value get_variable(const FlyString& name);
     void set_variable(const FlyString& name, Value, bool first_assignment = false);
 
     void gather_roots(Badge<Heap>, HashTable<Cell*>&);

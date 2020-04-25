@@ -46,15 +46,15 @@ public:
     Shape& shape() { return *m_shape; }
     const Shape& shape() const { return *m_shape; }
 
-    virtual Optional<Value> get_by_index(i32 property_index) const;
-    Optional<Value> get(const FlyString& property_name) const;
-    Optional<Value> get(PropertyName) const;
+    virtual Value get_by_index(i32 property_index) const;
+    Value get(const FlyString& property_name) const;
+    Value get(PropertyName) const;
 
     virtual void put_by_index(i32 property_index, Value);
     void put(const FlyString& property_name, Value);
     void put(PropertyName, Value);
 
-    Optional<Value> get_own_property(const Object& this_object, const FlyString& property_name) const;
+    Value get_own_property(const Object& this_object, const FlyString& property_name) const;
 
     enum class PutOwnPropertyMode {
         Put,

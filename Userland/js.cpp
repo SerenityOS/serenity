@@ -607,13 +607,13 @@ int main(int argc, char** argv)
                 auto property_pattern = parts[1];
 
                 auto maybe_variable = interpreter->get_variable(name);
-                if (!maybe_variable.has_value()) {
+                if (maybe_variable.is_empty()) {
                     maybe_variable = interpreter->global_object().get(name);
-                    if (!maybe_variable.has_value())
+                    if (maybe_variable.is_empty())
                         return {};
                 }
 
-                const auto& variable = maybe_variable.value();
+                auto variable = maybe_variable;
                 if (!variable.is_object())
                     return {};
 

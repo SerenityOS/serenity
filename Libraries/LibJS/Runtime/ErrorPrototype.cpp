@@ -88,13 +88,13 @@ Value ErrorPrototype::to_string(Interpreter& interpreter)
 
     String name = "Error";
     auto object_name_property = this_object.get("name");
-    if (object_name_property.has_value() && !object_name_property.value().is_undefined())
-        name = object_name_property.value().to_string();
+    if (!object_name_property.is_empty() && !object_name_property.is_undefined())
+        name = object_name_property.to_string();
 
     String message = "";
     auto object_message_property = this_object.get("message");
-    if (object_message_property.has_value() && !object_message_property.value().is_undefined())
-        message = object_message_property.value().to_string();
+    if (!object_message_property.is_empty() && !object_message_property.is_undefined())
+        message = object_message_property.to_string();
 
     if (name.length() == 0)
         return js_string(interpreter, message);
