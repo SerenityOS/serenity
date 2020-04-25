@@ -41,6 +41,7 @@ ObjectConstructor::ObjectConstructor()
     put("prototype", interpreter().global_object().object_prototype());
 
     put_native_function("defineProperty", define_property, 3);
+    put_native_function("is", is, 2);
     put_native_function("getOwnPropertyDescriptor", get_own_property_descriptor, 2);
     put_native_function("getOwnPropertyNames", get_own_property_names, 1);
     put_native_function("getPrototypeOf", get_prototype_of, 1);
@@ -144,6 +145,22 @@ Value ObjectConstructor::define_property(Interpreter& interpreter)
 
     object.put_own_property(object, interpreter.argument(1).to_string(), attributes, value, PutOwnPropertyMode::DefineProperty);
     return &object;
+}
+
+Value ObjectConstructor::is(Interpreter& interpreter)
+{
+    auto value1 = interpreter.argument(0);
+    auto value2 = interpreter.argument(1);
+    if (value1.is_nan() && value2.is_nan())
+        return Value(true);
+    if (value1.is_number() && value1.as_double() == 0 && value2.is_number() && value2.as_double() == 0) {
+        if (value1.is_positive_zero() && value2.is_positive_zero())
+            return Value(true);
+        if (value1.is_negative_zero() && value2.is_negative_zero())
+            return Value(true);
+        return Value(false);
+    }
+    return typed_eq(interpreter, value1, value2);
 }
 
 }
