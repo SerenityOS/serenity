@@ -161,8 +161,8 @@ public:
             return {};
         }
 
-        // Read code bits using a 32-bit mask. If current code size > 9 bits
-        // then it's possible the code spans 3 bytes.
+        // Extract the code bits using a 32-bit mask to cover the possibility that if
+        // the current code size > 9 bits then the code can span 3 bytes.
         u8 current_bit_offset = m_current_bit_index % 8;
         u32 mask = (u32)(pow(2, m_code_size) - 1) << current_bit_offset;
 
@@ -410,12 +410,12 @@ bool load_gif_impl(GIFLoadingContext& context)
         LZWDecoder decoder(image.lzw_encoded_bytes, image.lzw_min_code_size);
 
         // Add GIF-specific control codes
-        const int CLEAR_CODE = decoder.add_control_code();
-        const int END_OF_INFORMATION_CODE = decoder.add_control_code();
+        const int clear_code = decoder.add_control_code();
+        const int end_of_information_code = decoder.add_control_code();
 
         auto bitmap = Bitmap::create_purgeable(BitmapFormat::RGBA32, { image.width, image.height });
 
-        int pixel_idx = 0;
+        int pixel_index = 0;
         while (true) {
             Optional<u16> code = decoder.next_code();
             if (!code.has_value()) {
@@ -423,24 +423,24 @@ bool load_gif_impl(GIFLoadingContext& context)
                 return false;
             }
 
-            if (code.value() == CLEAR_CODE) {
+            if (code.value() == clear_code) {
                 decoder.reset();
                 continue;
-            } else if (code.value() == END_OF_INFORMATION_CODE) {
+            } else if (code.value() == end_of_information_code) {
                 break;
             }
 
             auto colors = decoder.get_output();
 
-            for (size_t i = 0; i < colors.size(); ++i, ++pixel_idx) {
-                auto color = colors.at(i);
+            for (const auto& color : colors) {
                 auto rgb = logical_screen.color_map[color];
 
-                int x = pixel_idx % image.width;
-                int y = pixel_idx / image.width;
+                int x = pixel_index % image.width;
+                int y = pixel_index / image.width;
 
                 Color c = Color(rgb.r, rgb.g, rgb.b);
                 bitmap->set_pixel(x, y, c);
+                ++pixel_index;
             }
         }
 
