@@ -50,9 +50,37 @@ constexpr size_t highest_reasonable_stack_size = 8 * MB; // That's the default i
 
 extern "C" {
 
-static int create_thread(void* (*entry)(void*), void* argument, void* thread_params)
+static void* pthread_create_helper(void* (*routine)(void*), void* argument)
 {
-    return syscall(SC_create_thread, entry, argument, thread_params);
+    void* ret_val = routine(argument);
+    pthread_exit(ret_val);
+    return nullptr;
+}
+
+static int create_thread(void* (*entry)(void*), void* argument, PthreadAttrImpl* thread_params)
+{
+    void** stack = (void**)((uintptr_t)thread_params->m_stack_location + thread_params->m_stack_size);
+
+    auto push_on_stack = [&](void* data) {
+        stack--;
+        *stack = data;
+        thread_params->m_stack_size -= sizeof(void*);
+    };
+
+    // We set up the stack for pthread_create_helper.
+    // Note that we need to align the stack to 16B, accounting for
+    // the fact that we also push 8 bytes.
+    while (((uintptr_t)stack - 8) % 16 != 0)
+        push_on_stack(nullptr);
+
+    push_on_stack(argument);
+    push_on_stack((void*)entry);
+    ASSERT((uintptr_t)stack % 16 == 0);
+
+    // Push a fake return address
+    push_on_stack(nullptr);
+
+    return syscall(SC_create_thread, pthread_create_helper, thread_params);
 }
 
 static void exit_thread(void* code)

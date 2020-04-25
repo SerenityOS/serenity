@@ -3754,7 +3754,7 @@ void Process::send_signal(u8 signal, Process* sender)
     thread->send_signal(signal, sender);
 }
 
-int Process::sys$create_thread(void* (*entry)(void*), void* argument, const Syscall::SC_create_thread_params* user_params)
+int Process::sys$create_thread(void* (*entry)(void*), const Syscall::SC_create_thread_params* user_params)
 {
     REQUIRE_PROMISE(thread);
     if (!validate_read((const void*)entry, sizeof(void*)))
@@ -3805,10 +3805,6 @@ int Process::sys$create_thread(void* (*entry)(void*), void* argument, const Sysc
     tss.eflags = 0x0202;
     tss.cr3 = page_directory().cr3();
     tss.esp = user_stack_address;
-
-    // NOTE: The stack needs to be 16-byte aligned.
-    thread->push_value_on_stack((FlatPtr)argument);
-    thread->push_value_on_stack(0);
 
     thread->make_thread_specific_region({});
     thread->set_state(Thread::State::Runnable);
