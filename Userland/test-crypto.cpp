@@ -16,16 +16,20 @@
 static const char* secret_key = "WellHelloFreinds";
 static const char* suite = nullptr;
 static const char* filename = nullptr;
+static const char* server = nullptr;
 static int key_bits = 128;
 static bool binary = false;
 static bool interactive = false;
 static bool run_tests = false;
+static int port = 443;
 
 static bool encrypting = true;
 
 constexpr const char* DEFAULT_DIGEST_SUITE { "HMAC-SHA256" };
 constexpr const char* DEFAULT_HASH_SUITE { "SHA256" };
 constexpr const char* DEFAULT_CIPHER_SUITE { "AES_CBC" };
+constexpr const char* DEFAULT_SERVER { "www.google.com" };
+constexpr int DEFAULT_PORT { 443 };
 
 // listAllTests
 // Cipher
@@ -71,6 +75,7 @@ void print_buffer(const ByteBuffer& buffer, int split)
     puts("");
 }
 
+Core::EventLoop loop;
 int run(Function<void(const char*, size_t)> fn)
 {
     if (interactive) {
@@ -78,7 +83,12 @@ int run(Function<void(const char*, size_t)> fn)
         editor.initialize();
         for (;;) {
             auto line = editor.get_line("> ");
-            fn(line.characters(), line.length());
+            if (line == ".wait") {
+                loop.exec();
+            } else {
+                fn(line.characters(), line.length());
+                loop.pump();
+            }
         }
     } else {
         if (filename == nullptr) {
@@ -96,8 +106,38 @@ int run(Function<void(const char*, size_t)> fn)
         }
         auto buffer = file.value()->read_all();
         fn((const char*)buffer.data(), buffer.size());
+        loop.exec();
     }
     return 0;
+}
+
+void tls(const char* message, size_t len)
+{
+    static OwnPtr<TLS::TLSv12> tls;
+    static ByteBuffer write {};
+    if (!tls) {
+        tls = make<TLS::TLSv12>(nullptr);
+        tls->connect(server ?: DEFAULT_SERVER, port);
+        tls->on_tls_ready_to_read = [](auto& tls) {
+            auto buffer = tls.read();
+            if (buffer.has_value())
+                fprintf(stdout, "%.*s", (int)buffer.value().size(), buffer.value().data());
+        };
+        tls->on_tls_ready_to_write = [&](auto&) {
+            if (write.size()) {
+                tls->write(write);
+                write.clear();
+            }
+        };
+        tls->on_tls_error = [&](auto) {
+            loop.quit(1);
+        };
+        tls->on_tls_finished = [&]() {
+            loop.quit(0);
+        };
+    }
+    write.append(message, len);
+    write.append("\r\n", 2);
 }
 
 void aes_cbc(const char* message, size_t len)
@@ -203,6 +243,8 @@ auto main(int argc, char** argv) -> int
     parser.add_option(interactive, "REPL mode", "interactive", 'i');
     parser.add_option(run_tests, "Run tests for the specified suite", "tests", 't');
     parser.add_option(suite, "Set the suite used", "suite-name", 'n', "suite name");
+    parser.add_option(server, "Set the server to talk to (only for `tls')", "server-address", 's', "server-address");
+    parser.add_option(port, "Set the port to talk to (only for `tls')", "port", 'p', "port");
     parser.parse(argc, argv);
 
     StringView mode_sv { mode };
@@ -278,7 +320,9 @@ auto main(int argc, char** argv) -> int
         return bigint_tests();
     }
     if (mode_sv == "tls") {
-        return tls_tests();
+        if (run_tests)
+            return tls_tests();
+        return run(tls);
     }
     encrypting = mode_sv == "encrypt";
     if (encrypting || mode_sv == "decrypt") {
