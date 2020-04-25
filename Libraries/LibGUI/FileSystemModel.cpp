@@ -206,16 +206,11 @@ FileSystemModel::FileSystemModel(const StringView& root_path, Mode mode)
     m_symlink_icon = Icon::default_icon("filetype-symlink");
     m_socket_icon = Icon::default_icon("filetype-socket");
     m_executable_icon = Icon::default_icon("filetype-executable");
-    m_filetype_image_icon = Icon::default_icon("filetype-image");
-    m_filetype_sound_icon = Icon::default_icon("filetype-sound");
-    m_filetype_html_icon = Icon::default_icon("filetype-html");
-    m_filetype_cplusplus_icon = Icon::default_icon("filetype-cplusplus");
-    m_filetype_java_icon = Icon::default_icon("filetype-java");
-    m_filetype_javascript_icon = Icon::default_icon("filetype-javascript");
-    m_filetype_text_icon = Icon::default_icon("filetype-text");
-    m_filetype_pdf_icon = Icon::default_icon("filetype-pdf");
-    m_filetype_library_icon = Icon::default_icon("filetype-library");
-    m_filetype_object_icon = Icon::default_icon("filetype-object");
+
+#define __ENUMERATE_FILETYPE(filetype_name, ...) \
+    m_filetype_##filetype_name##_icon = Icon::default_icon("filetype-" #filetype_name);
+    ENUMERATE_FILETYPES
+#undef __ENUMERATE_FILETYPE
 
     setpwent();
     while (auto* passwd = getpwent())
@@ -431,26 +426,14 @@ Icon FileSystemModel::icon_for_file(const mode_t mode, const String& name) const
         return m_socket_icon;
     if (mode & (S_IXUSR | S_IXGRP | S_IXOTH))
         return m_executable_icon;
-    if (name.to_lowercase().ends_with(".wav"))
-        return m_filetype_sound_icon;
-    if (name.to_lowercase().ends_with(".html"))
-        return m_filetype_html_icon;
-    if (name.to_lowercase().ends_with(".png"))
-        return m_filetype_image_icon;
-    if (name.to_lowercase().ends_with(".cpp"))
-        return m_filetype_cplusplus_icon;
-    if (name.to_lowercase().ends_with(".java"))
-        return m_filetype_java_icon;
-    if (name.to_lowercase().ends_with(".js"))
-        return m_filetype_javascript_icon;
-    if (name.to_lowercase().ends_with(".txt"))
-        return m_filetype_text_icon;
-    if (name.to_lowercase().ends_with(".pdf"))
-        return m_filetype_pdf_icon;
-    if (name.to_lowercase().ends_with(".o") || name.to_lowercase().ends_with(".obj"))
-        return m_filetype_object_icon;
-    if (name.to_lowercase().ends_with(".so") || name.to_lowercase().ends_with(".a"))
-        return m_filetype_library_icon;
+
+#define __ENUMERATE_FILETYPE(filetype_name, filetype_extensions...)  \
+    for (auto& extension : Vector<String> { filetype_extensions }) { \
+        if (name.to_lowercase().ends_with(extension))                \
+            return m_filetype_##filetype_name##_icon;                \
+    }
+    ENUMERATE_FILETYPES
+#undef __ENUMERATE_FILETYPE
 
     return m_file_icon;
 }

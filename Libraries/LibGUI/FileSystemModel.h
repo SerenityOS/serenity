@@ -35,6 +35,17 @@
 #include <sys/stat.h>
 #include <time.h>
 
+#define ENUMERATE_FILETYPES                    \
+    __ENUMERATE_FILETYPE(cplusplus, ".cpp")    \
+    __ENUMERATE_FILETYPE(html, ".html")        \
+    __ENUMERATE_FILETYPE(image, ".png")        \
+    __ENUMERATE_FILETYPE(java, ".java")        \
+    __ENUMERATE_FILETYPE(javascript, ".js")    \
+    __ENUMERATE_FILETYPE(library, ".so", ".a") \
+    __ENUMERATE_FILETYPE(object, ".o", ".obj") \
+    __ENUMERATE_FILETYPE(pdf, ".pdf")          \
+    __ENUMERATE_FILETYPE(sound, ".wav")        \
+    __ENUMERATE_FILETYPE(text, ".txt")
 namespace GUI {
 
 class FileSystemModel
@@ -160,16 +171,11 @@ private:
     GUI::Icon m_symlink_icon;
     GUI::Icon m_socket_icon;
     GUI::Icon m_executable_icon;
-    GUI::Icon m_filetype_image_icon;
-    GUI::Icon m_filetype_sound_icon;
-    GUI::Icon m_filetype_html_icon;
-    GUI::Icon m_filetype_cplusplus_icon;
-    GUI::Icon m_filetype_java_icon;
-    GUI::Icon m_filetype_javascript_icon;
-    GUI::Icon m_filetype_text_icon;
-    GUI::Icon m_filetype_pdf_icon;
-    GUI::Icon m_filetype_library_icon;
-    GUI::Icon m_filetype_object_icon;
+
+#define __ENUMERATE_FILETYPE(filetype_name, ...) \
+    GUI::Icon m_filetype_##filetype_name##_icon;
+    ENUMERATE_FILETYPES
+#undef __ENUMERATE_FILETYPE
 
     unsigned m_thumbnail_progress { 0 };
     unsigned m_thumbnail_progress_total { 0 };
