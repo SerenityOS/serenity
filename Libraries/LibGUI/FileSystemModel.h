@@ -37,6 +37,7 @@
 
 #define ENUMERATE_FILETYPES                    \
     __ENUMERATE_FILETYPE(cplusplus, ".cpp")    \
+    __ENUMERATE_FILETYPE(header, ".h")         \
     __ENUMERATE_FILETYPE(html, ".html")        \
     __ENUMERATE_FILETYPE(image, ".png")        \
     __ENUMERATE_FILETYPE(java, ".java")        \
