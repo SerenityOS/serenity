@@ -122,7 +122,6 @@ int main(int argc, char** argv)
         status = do_file_system_object(paths[0]);
     } else {
         for (auto& path : paths) {
-            printf("%s:\n", path);
             status = do_file_system_object(path);
         }
     }
