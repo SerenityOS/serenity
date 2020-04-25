@@ -725,4 +725,9 @@ bool PNGImageDecoderPlugin::set_nonvolatile()
     return m_context->bitmap->set_nonvolatile();
 }
 
+bool PNGImageDecoderPlugin::sniff()
+{
+    return decode_png_header(*m_context);
+}
+
 }

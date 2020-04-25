@@ -519,4 +519,10 @@ bool GIFImageDecoderPlugin::set_nonvolatile()
     return success;
 }
 
+bool GIFImageDecoderPlugin::sniff()
+{
+    auto buffer = ByteBuffer::wrap(m_context->data, m_context->data_size);
+    BufferStream stream(buffer);
+    return decode_gif_header(stream).has_value();
+}
 }
