@@ -25,6 +25,7 @@
  */
 
 #include <LibGfx/ImageDecoder.h>
+#include <LibGfx/GIFLoader.h>
 #include <LibGfx/PNGLoader.h>
 
 namespace Gfx {
@@ -32,6 +33,16 @@ namespace Gfx {
 ImageDecoder::ImageDecoder(const u8* data, size_t size)
 {
     m_plugin = make<PNGImageDecoderPlugin>(data, size);
+    if (m_plugin->sniff()) {
+        dbg() << "Decoding image as a PNG";
+        return;
+    }
+
+    m_plugin = make<GIFImageDecoderPlugin>(data, size);
+    if (m_plugin->sniff()) {
+        dbg() << "Decoding image as a GIF";
+        return;
+    }
 }
 
 ImageDecoder::~ImageDecoder()
