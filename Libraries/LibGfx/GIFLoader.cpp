@@ -30,6 +30,7 @@
 #include <AK/MappedFile.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibGfx/GIFLoader.h>
+#include <LibM/math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -82,6 +83,127 @@ struct ImageDescriptor {
     RGB color_map[256];
     u8 lzw_min_code_size;
     Vector<u8> lzw_encoded_bytes;
+};
+
+class LZWDecoder {
+public:
+    struct CodeTableEntry {
+        Vector<u8> colors;
+        u16 code;
+    };
+
+    explicit LZWDecoder(const Vector<u8>& lzw_bytes, u8 min_code_size)
+        : m_lzw_bytes(lzw_bytes)
+        , m_code_size(min_code_size)
+        , m_original_code_size(min_code_size)
+    {
+        init_code_table();
+    }
+
+    u16 add_control_code()
+    {
+        const u16 control_code = m_code_table.size();
+        m_code_table.append({ {}, control_code });
+        m_original_code_table.append({ {}, control_code });
+        if ((int)m_code_table.size() >= pow(2, m_code_size) && m_code_size < 12) {
+            ++m_code_size;
+            ++m_original_code_size;
+        }
+        return control_code;
+    }
+
+    void reset()
+    {
+        m_code_table.clear();
+        m_code_table.append(m_original_code_table);
+        m_code_size = m_original_code_size;
+        m_output.clear();
+    }
+
+    Optional<u16> next_code()
+    {
+        size_t current_byte_index = m_current_bit_index / 8;
+        if (current_byte_index >= m_lzw_bytes.size()) {
+            return {};
+        }
+
+        // Read code bits using a 32-bit mask. If current code size > 9 bits
+        // then it's possible the code spans 3 bytes.
+        u8 current_bit_offset = m_current_bit_index % 8;
+        u32 mask = (u32)(pow(2, m_code_size) - 1) << current_bit_offset;
+
+        // Make sure that we don't read bytes past the end of the data.
+        int bytes_past_end = current_byte_index + sizeof(mask) - m_lzw_bytes.size();
+        u8 bits_past_end = 0;
+        if (bytes_past_end > 0) {
+            current_byte_index -= bytes_past_end;
+            mask <<= bytes_past_end * 8;
+            bits_past_end = bytes_past_end * 8;
+        }
+
+        ASSERT(current_byte_index + sizeof(mask) - 1 < m_lzw_bytes.size());
+        const u32* addr = (const u32*)&m_lzw_bytes.at(current_byte_index);
+        m_current_code = (*addr & mask) >> (current_bit_offset + bits_past_end);
+
+        if (m_current_code > m_code_table.size()) {
+            dbg() << "Corrupted LZW stream, invalid code: " << m_current_code << " at bit index: "
+                  << m_current_bit_index << ", code table size: " << m_code_table.size();
+            return {};
+        }
+
+        m_current_bit_index += m_code_size;
+
+        return m_current_code;
+    }
+
+    Vector<u8> get_output()
+    {
+        ASSERT(m_current_code <= m_code_table.size());
+        if (m_current_code < m_code_table.size()) {
+            Vector<u8> new_entry = m_output;
+            m_output = m_code_table.at(m_current_code).colors;
+            new_entry.append(m_output[0]);
+            extend_code_table(new_entry);
+        } else if (m_current_code == m_code_table.size()) {
+            m_output.append(m_output[0]);
+            extend_code_table(m_output);
+        }
+        return m_output;
+    }
+
+private:
+    void init_code_table()
+    {
+        const int initial_table_size = pow(2, m_code_size);
+        m_code_table.clear();
+        for (u16 i = 0; i < initial_table_size; ++i) {
+            m_code_table.append({ { (u8)i }, i });
+        }
+        m_original_code_table = m_code_table;
+    }
+
+    void extend_code_table(Vector<u8> entry)
+    {
+        if (entry.size() > 1 && m_code_table.size() < 4096) {
+            m_code_table.append({ entry, (u16)m_code_table.size() });
+            if ((int)m_code_table.size() >= pow(2, m_code_size) && m_code_size < 12) {
+                ++m_code_size;
+            }
+        }
+    }
+
+    const Vector<u8>& m_lzw_bytes;
+
+    int m_current_bit_index { 0 };
+
+    Vector<CodeTableEntry> m_code_table {};
+    Vector<CodeTableEntry> m_original_code_table {};
+
+    u8 m_code_size { 0 };
+    u8 m_original_code_size { 0 };
+
+    u16 m_current_code { 0 };
+    Vector<u8> m_output {};
 };
 
 RefPtr<Gfx::Bitmap> load_gif_impl(const u8* data, size_t data_size)
