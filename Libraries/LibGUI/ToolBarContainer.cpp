@@ -32,9 +32,34 @@
 
 namespace GUI {
 
+void ToolBarContainer::child_event(Core::ChildEvent& event)
+{
+    Frame::child_event(event);
+
+    if (event.type() == Core::Event::ChildAdded) {
+        if (event.child() && event.child()->is_widget())
+            did_add_toolbar((Widget&)*event.child());
+    } else if (event.type() == Core::Event::ChildRemoved) {
+        if (event.child() && event.child()->is_widget()) {
+            did_remove_toolbar((Widget&)*event.child());
+        }
+    }
+}
+
+void ToolBarContainer::did_remove_toolbar(Widget& toolbar)
+{
+    m_toolbars.remove_first_matching([&](auto& entry) { return entry.ptr() == &toolbar; });
+    recompute_preferred_size();
+}
+
 void ToolBarContainer::did_add_toolbar(Widget& toolbar)
 {
     m_toolbars.append(toolbar);
+    recompute_preferred_size();
+}
+
+void ToolBarContainer::recompute_preferred_size()
+{
     int preferred_size = 4 + (m_toolbars.size() - 1) * 2;
 
     for (auto& toolbar : m_toolbars) {
