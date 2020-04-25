@@ -26,9 +26,9 @@
 
 #include "Tab.h"
 #include "BookmarksBarWidget.h"
-#include "WindowActions.h"
 #include "History.h"
 #include "InspectorWidget.h"
+#include "WindowActions.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -57,23 +57,15 @@
 namespace Browser {
 
 static const char* home_url = "file:///home/anon/www/welcome.html";
-static const char* bookmarks_filename = "/home/anon/bookmarks.json";
 
 Tab::Tab()
 {
     auto& widget = *this;
     set_layout<GUI::VerticalBoxLayout>();
 
-    bool bookmarksbar_enabled = true;
-
-    auto& toolbar_container = widget.add<GUI::ToolBarContainer>();
-    auto& toolbar = toolbar_container.add<GUI::ToolBar>();
-    m_bookmarks_bar = toolbar_container.add<BookmarksBarWidget>(bookmarks_filename, bookmarksbar_enabled);
+    m_toolbar_container = widget.add<GUI::ToolBarContainer>();
+    auto& toolbar = m_toolbar_container->add<GUI::ToolBar>();
     m_html_widget = widget.add<Web::HtmlView>();
-
-    m_bookmarks_bar->on_bookmark_click = [this](auto&, auto& url) {
-        m_html_widget->load(url);
-    };
 
     m_go_back_action = GUI::CommonActions::make_go_back_action([this](auto&) {
         m_history.go_back();
@@ -115,10 +107,10 @@ Tab::Tab()
 
     m_bookmark_button->on_click = [this] {
         auto url = m_html_widget->main_frame().document()->url().to_string();
-        if (m_bookmarks_bar->contains_bookmark(url)) {
-            m_bookmarks_bar->remove_bookmark(url);
+        if (BookmarksBarWidget::the().contains_bookmark(url)) {
+            BookmarksBarWidget::the().remove_bookmark(url);
         } else {
-            m_bookmarks_bar->add_bookmark(url, m_title);
+            BookmarksBarWidget::the().add_bookmark(url, m_title);
         }
         update_bookmark_button(url);
     };
@@ -171,10 +163,6 @@ Tab::Tab()
         m_statusbar->set_text(href);
     };
 
-    m_bookmarks_bar->on_bookmark_hover = [this](auto&, auto& url) {
-        m_statusbar->set_text(url);
-    };
-
     Web::ResourceLoader::the().on_load_counter_change = [this] {
         if (Web::ResourceLoader::the().pending_loads() == 0) {
             m_statusbar->set_text("");
@@ -187,14 +175,18 @@ Tab::Tab()
 
     auto& app_menu = m_menubar->add_menu("Browser");
     app_menu.add_action(WindowActions::the().create_new_tab_action());
-    app_menu.add_action(GUI::Action::create("Close tab", { Mod_Ctrl, Key_W }, Gfx::Bitmap::load_from_file("/res/icons/16x16/close-tab.png"), [this](auto&) {
-        on_tab_close_request(*this);
-    }, this));
+    app_menu.add_action(GUI::Action::create(
+        "Close tab", { Mod_Ctrl, Key_W }, Gfx::Bitmap::load_from_file("/res/icons/16x16/close-tab.png"), [this](auto&) {
+            on_tab_close_request(*this);
+        },
+        this));
 
-    app_menu.add_action(GUI::Action::create("Reload", { Mod_None, Key_F5 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"), [this](auto&) {
-        TemporaryChange<bool> change(m_should_push_loads_to_history, false);
-        m_html_widget->reload();
-    }, this));
+    app_menu.add_action(GUI::Action::create(
+        "Reload", { Mod_None, Key_F5 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"), [this](auto&) {
+            TemporaryChange<bool> change(m_should_push_loads_to_history, false);
+            m_html_widget->reload();
+        },
+        this));
     app_menu.add_separator();
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the().quit();
@@ -234,32 +226,35 @@ Tab::Tab()
     }));
 
     auto& debug_menu = m_menubar->add_menu("Debug");
-    debug_menu.add_action(GUI::Action::create("Dump DOM tree", [this](auto&) {
-        Web::dump_tree(*m_html_widget->document());
-    }, this));
-    debug_menu.add_action(GUI::Action::create("Dump Layout tree", [this](auto&) {
-        Web::dump_tree(*m_html_widget->document()->layout_node());
-    }, this));
-    debug_menu.add_action(GUI::Action::create("Dump Style sheets", [this](auto&) {
-        for (auto& sheet : m_html_widget->document()->stylesheets()) {
-            dump_sheet(sheet);
-        }
-    }, this));
+    debug_menu.add_action(GUI::Action::create(
+        "Dump DOM tree", [this](auto&) {
+            Web::dump_tree(*m_html_widget->document());
+        },
+        this));
+    debug_menu.add_action(GUI::Action::create(
+        "Dump Layout tree", [this](auto&) {
+            Web::dump_tree(*m_html_widget->document()->layout_node());
+        },
+        this));
+    debug_menu.add_action(GUI::Action::create(
+        "Dump Style sheets", [this](auto&) {
+            for (auto& sheet : m_html_widget->document()->stylesheets()) {
+                dump_sheet(sheet);
+            }
+        },
+        this));
     debug_menu.add_separator();
-    auto line_box_borders_action = GUI::Action::create_checkable("Line box borders", [this](auto& action) {
-        m_html_widget->set_should_show_line_box_borders(action.is_checked());
-        m_html_widget->update();
-    }, this);
+    auto line_box_borders_action = GUI::Action::create_checkable(
+        "Line box borders", [this](auto& action) {
+            m_html_widget->set_should_show_line_box_borders(action.is_checked());
+            m_html_widget->update();
+        },
+        this);
     line_box_borders_action->set_checked(false);
     debug_menu.add_action(line_box_borders_action);
 
     auto& bookmarks_menu = m_menubar->add_menu("Bookmarks");
-    auto show_bookmarksbar_action = GUI::Action::create_checkable("Show bookmarks bar", [this](auto& action) {
-        m_bookmarks_bar->set_visible(action.is_checked());
-        m_bookmarks_bar->update();
-    }, this);
-    show_bookmarksbar_action->set_checked(bookmarksbar_enabled);
-    bookmarks_menu.add_action(show_bookmarksbar_action);
+    bookmarks_menu.add_action(WindowActions::the().show_bookmarks_bar_action());
 
     auto& help_menu = m_menubar->add_menu("Help");
     help_menu.add_action(WindowActions::the().about_action());
@@ -282,7 +277,7 @@ void Tab::update_actions()
 
 void Tab::update_bookmark_button(const String& url)
 {
-    if (m_bookmarks_bar->contains_bookmark(url)) {
+    if (BookmarksBarWidget::the().contains_bookmark(url)) {
         m_bookmark_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/star-yellow.png"));
     } else {
         m_bookmark_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/star-contour.png"));
@@ -291,6 +286,17 @@ void Tab::update_bookmark_button(const String& url)
 
 void Tab::did_become_active()
 {
+    BookmarksBarWidget::the().on_bookmark_click = [this](auto&, auto& url) {
+        m_html_widget->load(url);
+    };
+
+    BookmarksBarWidget::the().on_bookmark_hover = [this](auto&, auto& url) {
+        m_statusbar->set_text(url);
+    };
+
+    BookmarksBarWidget::the().remove_from_parent();
+    m_toolbar_container->add_child(BookmarksBarWidget::the());
+
     GUI::Application::the().set_menubar(m_menubar);
 }
 
