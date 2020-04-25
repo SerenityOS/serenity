@@ -88,6 +88,9 @@ constexpr static u64 InitializationHashes[8] = {
 template<size_t Bytes>
 struct SHA2Digest {
     u8 data[Bytes];
+    constexpr static size_t Size = Bytes;
+    const u8* immutable_data() const { return data; }
+    size_t data_length() { return Bytes; }
 };
 
 // FIXME: I want template<size_t BlockSize> but the compiler gets confused
