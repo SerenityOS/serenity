@@ -39,6 +39,7 @@ public:
 
     void enqueue(Thread&);
     void wake_one(Atomic<bool>* lock = nullptr);
+    void wake_n(i32 wake_count);
     void wake_all();
     void clear();
 

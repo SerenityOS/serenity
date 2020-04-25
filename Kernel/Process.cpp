@@ -4636,8 +4636,7 @@ int Process::sys$futex(const Syscall::SC_futex_params* user_params)
         if (value == 1) {
             futex_queue(userspace_address).wake_one();
         } else {
-            // FIXME: Wake exactly (value) waiters.
-            futex_queue(userspace_address).wake_all();
+            futex_queue(userspace_address).wake_n(value);
         }
         break;
     }

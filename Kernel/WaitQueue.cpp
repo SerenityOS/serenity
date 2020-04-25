@@ -55,6 +55,21 @@ void WaitQueue::wake_one(Atomic<bool>* lock)
     Scheduler::stop_idling();
 }
 
+void WaitQueue::wake_n(i32 wake_count)
+{
+    InterruptDisabler disabler;
+    if (m_threads.is_empty())
+        return;
+
+    for (i32 i = 0; i < wake_count; ++i) {
+        Thread* thread = m_threads.take_first();
+        if (!thread)
+            break;
+        thread->wake_from_queue();
+    }
+    Scheduler::stop_idling();
+}
+
 void WaitQueue::wake_all()
 {
     InterruptDisabler disabler;
