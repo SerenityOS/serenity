@@ -40,7 +40,7 @@ public:
     i32 length() const { return m_length; }
 
     virtual void put_by_index(i32 property_index, Value value) override;
-    virtual Optional<Value> get_by_index(i32 property_index) const override;
+    virtual Value get_by_index(i32 property_index) const override;
 
     u8* data() { return m_data; }
     const u8* data() const { return m_data; }

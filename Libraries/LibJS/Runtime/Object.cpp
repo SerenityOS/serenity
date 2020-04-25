@@ -83,7 +83,7 @@ bool Object::has_prototype(const Object* prototype) const
     return false;
 }
 
-Optional<Value> Object::get_own_property(const Object& this_object, const FlyString& property_name) const
+Value Object::get_own_property(const Object& this_object, const FlyString& property_name) const
 {
     auto metadata = shape().lookup(property_name);
     if (!metadata.has_value())
@@ -154,7 +154,7 @@ void Object::put_own_property(Object& this_object, const FlyString& property_nam
     }
 }
 
-Optional<Value> Object::get_by_index(i32 property_index) const
+Value Object::get_by_index(i32 property_index) const
 {
     if (property_index < 0)
         return get(String::number(property_index));
@@ -172,7 +172,7 @@ Optional<Value> Object::get_by_index(i32 property_index) const
     return {};
 }
 
-Optional<Value> Object::get(const FlyString& property_name) const
+Value Object::get(const FlyString& property_name) const
 {
     bool ok;
     i32 property_index = property_name.to_int(ok);
@@ -182,14 +182,14 @@ Optional<Value> Object::get(const FlyString& property_name) const
     const Object* object = this;
     while (object) {
         auto value = object->get_own_property(*this, property_name);
-        if (value.has_value())
-            return value.value();
+        if (!value.is_empty())
+            return value;
         object = object->prototype();
     }
     return {};
 }
 
-Optional<Value> Object::get(PropertyName property_name) const
+Value Object::get(PropertyName property_name) const
 {
     if (property_name.is_number())
         return get_by_index(property_name.as_number());
@@ -308,10 +308,10 @@ Value Object::to_primitive(PreferredType preferred_type) const
 Value Object::to_string() const
 {
     auto to_string_property = get("toString");
-    if (to_string_property.has_value()
-        && to_string_property.value().is_object()
-        && to_string_property.value().as_object().is_function()) {
-        auto& to_string_function = static_cast<Function&>(to_string_property.value().as_object());
+    if (!to_string_property.is_empty()
+        && to_string_property.is_object()
+        && to_string_property.as_object().is_function()) {
+        auto& to_string_function = static_cast<Function&>(to_string_property.as_object());
         return const_cast<Object*>(this)->interpreter().call(&to_string_function, const_cast<Object*>(this));
     }
     return js_string(heap(), String::format("[object %s]", class_name()));

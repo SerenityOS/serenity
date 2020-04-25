@@ -110,11 +110,16 @@ Value ObjectConstructor::get_own_property_descriptor(Interpreter& interpreter)
     auto metadata = object.shape().lookup(interpreter.argument(1).to_string());
     if (!metadata.has_value())
         return js_undefined();
+
+    auto value = object.get(interpreter.argument(1).to_string()).value_or(js_undefined());
+    if (interpreter.exception())
+        return {};
+
     auto* descriptor = Object::create_empty(interpreter, interpreter.global_object());
     descriptor->put("configurable", Value(!!(metadata.value().attributes & Attribute::Configurable)));
     descriptor->put("enumerable", Value(!!(metadata.value().attributes & Attribute::Enumerable)));
     descriptor->put("writable", Value(!!(metadata.value().attributes & Attribute::Writable)));
-    descriptor->put("value", object.get(interpreter.argument(1).to_string()).value_or(js_undefined()));
+    descriptor->put("value", value);
     return descriptor;
 }
 
@@ -129,7 +134,7 @@ Value ObjectConstructor::define_property(Interpreter& interpreter)
     auto& object = interpreter.argument(0).as_object();
     auto& descriptor = interpreter.argument(2).as_object();
 
-    Value value = descriptor.get("value").value_or(Value());
+    auto value = descriptor.get("value");
     u8 configurable = descriptor.get("configurable").value_or(Value(false)).to_boolean() * Attribute::Configurable;
     u8 enumerable = descriptor.get("enumerable").value_or(Value(false)).to_boolean() * Attribute::Enumerable;
     u8 writable = descriptor.get("writable").value_or(Value(false)).to_boolean() * Attribute::Writable;

@@ -164,6 +164,13 @@ public:
 
     Object* to_object(Heap&) const;
 
+    Value value_or(Value fallback) const
+    {
+        if (is_empty())
+            return fallback;
+        return *this;
+    }
+
 private:
     Type m_type { Type::Empty };
 

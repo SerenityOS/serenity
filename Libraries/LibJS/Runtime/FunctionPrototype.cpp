@@ -72,11 +72,15 @@ Value FunctionPrototype::apply(Interpreter& interpreter)
         return interpreter.throw_exception<TypeError>("argument array must be an object");
     size_t length = 0;
     auto length_property = arg_array.as_object().get("length");
-    if (length_property.has_value())
-        length = length_property.value().to_number().to_i32();
+    if (!length_property.is_empty())
+        length = length_property.to_number().to_i32();
     MarkedValueList arguments(interpreter.heap());
-    for (size_t i = 0; i < length; ++i)
-        arguments.append(arg_array.as_object().get(String::number(i)).value_or(js_undefined()));
+    for (size_t i = 0; i < length; ++i) {
+        auto element = arg_array.as_object().get(String::number(i));
+        if (interpreter.exception())
+            return {};
+        arguments.append(element.value_or(js_undefined()));
+    }
     return interpreter.call(function, this_arg, move(arguments));
 }
 

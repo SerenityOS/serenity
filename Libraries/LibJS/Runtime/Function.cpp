@@ -68,8 +68,8 @@ BoundFunction* Function::bind(Value bound_this_value, Vector<Value> arguments)
     if (interpreter().exception()) {
         return nullptr;
     }
-    if (length_property.has_value() && length_property.value().is_number()) {
-        computed_length = max(0, length_property.value().to_i32() - static_cast<i32>(arguments.size()));
+    if (length_property.is_number()) {
+        computed_length = max(0, length_property.to_i32() - static_cast<i32>(arguments.size()));
     }
 
     Object* constructor_prototype = nullptr;
@@ -77,8 +77,8 @@ BoundFunction* Function::bind(Value bound_this_value, Vector<Value> arguments)
     if (interpreter().exception()) {
         return nullptr;
     }
-    if (prototype_property.has_value() && prototype_property.value().is_object()) {
-        constructor_prototype = &prototype_property.value().as_object();
+    if (prototype_property.is_object()) {
+        constructor_prototype = &prototype_property.as_object();
     }
 
     auto all_bound_arguments = bound_arguments();

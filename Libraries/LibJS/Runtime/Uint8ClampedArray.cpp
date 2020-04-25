@@ -72,7 +72,7 @@ void Uint8ClampedArray::put_by_index(i32 property_index, Value value)
     m_data[property_index] = clamp(value.to_i32(), 0, 255);
 }
 
-Optional<Value> Uint8ClampedArray::get_by_index(i32 property_index) const
+Value Uint8ClampedArray::get_by_index(i32 property_index) const
 {
     ASSERT(property_index >= 0);
     ASSERT(property_index < m_length);
