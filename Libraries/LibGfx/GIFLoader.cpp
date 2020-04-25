@@ -169,18 +169,18 @@ public:
         u8 current_bit_offset = m_current_bit_index % 8;
         u32 mask = (u32)(pow(2, m_code_size) - 1) << current_bit_offset;
 
-        // Make sure that we don't read bytes past the end of the data.
-        int bytes_past_end = current_byte_index + sizeof(mask) - m_lzw_bytes.size();
-        u8 bits_past_end = 0;
-        if (bytes_past_end > 0) {
-            current_byte_index -= bytes_past_end;
-            mask <<= bytes_past_end * 8;
-            bits_past_end = bytes_past_end * 8;
+        // Make a padded copy of the final bytes in the data to ensure we don't read past the end.
+        if (current_byte_index + sizeof(mask) > m_lzw_bytes.size()) {
+            u8 padded_last_bytes[sizeof(mask)] = { 0 };
+            for (int i = 0; current_byte_index + i < m_lzw_bytes.size(); ++i) {
+                padded_last_bytes[i] = m_lzw_bytes[current_byte_index + i];
+            }
+            const u32* addr = (const u32*)&padded_last_bytes;
+            m_current_code = (*addr & mask) >> current_bit_offset;
+        } else {
+            const u32* addr = (const u32*)&m_lzw_bytes.at(current_byte_index);
+            m_current_code = (*addr & mask) >> current_bit_offset;
         }
-
-        ASSERT(current_byte_index + sizeof(mask) - 1 < m_lzw_bytes.size());
-        const u32* addr = (const u32*)&m_lzw_bytes.at(current_byte_index);
-        m_current_code = (*addr & mask) >> (current_bit_offset + bits_past_end);
 
         if (m_current_code > m_code_table.size()) {
             dbg() << "Corrupted LZW stream, invalid code: " << m_current_code << " at bit index: "
