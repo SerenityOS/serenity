@@ -36,14 +36,30 @@
 
 namespace Gfx {
 
-static RefPtr<Gfx::Bitmap> load_gif_impl(const u8*, size_t);
+static bool load_gif_impl(GIFLoadingContext&);
+
+struct GIFLoadingContext {
+    enum State {
+        NotDecoded = 0,
+        Error,
+        HeaderDecoded,
+        BitmapDecoded,
+    };
+    State state { NotDecoded };
+    const u8* data { nullptr };
+    size_t data_size { 0 };
+    int width { -1 };
+    int height { -1 };
+    Vector<RefPtr<Gfx::Bitmap>> frames {};
+};
 
 RefPtr<Gfx::Bitmap> load_gif(const StringView& path)
 {
     MappedFile mapped_file(path);
     if (!mapped_file.is_valid())
         return nullptr;
-    auto bitmap = load_gif_impl((const u8*)mapped_file.data(), mapped_file.size());
+    GIFImageDecoderPlugin gif_decoder((const u8*)mapped_file.data(), mapped_file.size());
+    auto bitmap = gif_decoder.bitmap();
     if (bitmap)
         bitmap->set_mmap_name(String::format("Gfx::Bitmap [%dx%d] - Decoded GIF: %s", bitmap->width(), bitmap->height(), canonicalized_path(path).characters()));
     return bitmap;
@@ -51,7 +67,8 @@ RefPtr<Gfx::Bitmap> load_gif(const StringView& path)
 
 RefPtr<Gfx::Bitmap> load_gif_from_memory(const u8* data, size_t length)
 {
-    auto bitmap = load_gif_impl(data, length);
+    GIFImageDecoderPlugin gif_decoder(data, length);
+    auto bitmap = gif_decoder.bitmap();
     if (bitmap)
         bitmap->set_mmap_name(String::format("Gfx::Bitmap [%dx%d] - Decoded GIF: <memory>", bitmap->width(), bitmap->height()));
     return bitmap;
@@ -206,12 +223,12 @@ private:
     Vector<u8> m_output {};
 };
 
-RefPtr<Gfx::Bitmap> load_gif_impl(const u8* data, size_t data_size)
+bool load_gif_impl(GIFLoadingContext& context)
 {
-    if (data_size < 32)
-        return nullptr;
+    if (context.data_size < 32)
+        return false;
 
-    auto buffer = ByteBuffer::wrap(data, data_size);
+    auto buffer = ByteBuffer::wrap(context.data, context.data_size);
     BufferStream stream(buffer);
 
     static const char valid_header_87[] = "GIF87a";
@@ -227,7 +244,7 @@ RefPtr<Gfx::Bitmap> load_gif_impl(const u8* data, size_t data_size)
     else if (!memcmp(header, valid_header_89, sizeof(header)))
         format = GIFFormat::GIF89a;
     else
-        return nullptr;
+        return false;
 
     printf("Format is %s\n", format == GIFFormat::GIF89a ? "GIF89a" : "GIF87a");
 
@@ -235,13 +252,16 @@ RefPtr<Gfx::Bitmap> load_gif_impl(const u8* data, size_t data_size)
     stream >> logical_screen.width;
     stream >> logical_screen.height;
     if (stream.handle_read_failure())
-        return nullptr;
+        return false;
+
+    context.width = logical_screen.width;
+    context.height = logical_screen.height;
 
     u8 gcm_info = 0;
     stream >> gcm_info;
 
     if (stream.handle_read_failure())
-        return nullptr;
+        return false;
 
     bool global_color_map_follows_descriptor = gcm_info & 0x80;
     u8 bits_per_pixel = (gcm_info & 7) + 1;
@@ -255,14 +275,14 @@ RefPtr<Gfx::Bitmap> load_gif_impl(const u8* data, size_t data_size)
     u8 background_color = 0;
     stream >> background_color;
     if (stream.handle_read_failure())
-        return nullptr;
+        return false;
 
     printf("background_color: %u\n", background_color);
 
     u8 pixel_aspect_ratio = 0;
     stream >> pixel_aspect_ratio;
     if (stream.handle_read_failure())
-        return nullptr;
+        return false;
 
     int color_map_entry_count = 1;
     for (int i = 0; i < bits_per_pixel; ++i)
@@ -277,7 +297,7 @@ RefPtr<Gfx::Bitmap> load_gif_impl(const u8* data, size_t data_size)
     }
 
     if (stream.handle_read_failure())
-        return nullptr;
+        return false;
 
     for (int i = 0; i < color_map_entry_count; ++i) {
         auto& rgb = logical_screen.color_map[i];
@@ -295,7 +315,7 @@ RefPtr<Gfx::Bitmap> load_gif_impl(const u8* data, size_t data_size)
             u8 extension_type = 0;
             stream >> extension_type;
             if (stream.handle_read_failure())
-                return nullptr;
+                return false;
 
             printf("Extension block of type %02x\n", extension_type);
 
@@ -305,7 +325,7 @@ RefPtr<Gfx::Bitmap> load_gif_impl(const u8* data, size_t data_size)
                 stream >> sub_block_length;
 
                 if (stream.handle_read_failure())
-                    return nullptr;
+                    return false;
 
                 if (sub_block_length == 0)
                     break;
@@ -315,7 +335,7 @@ RefPtr<Gfx::Bitmap> load_gif_impl(const u8* data, size_t data_size)
                     stream >> dummy;
 
                 if (stream.handle_read_failure())
-                    return nullptr;
+                    return false;
             }
             continue;
         }
@@ -330,7 +350,7 @@ RefPtr<Gfx::Bitmap> load_gif_impl(const u8* data, size_t data_size)
             stream >> image.height;
             stream >> packed_fields;
             if (stream.handle_read_failure())
-                return nullptr;
+                return false;
             printf("Image descriptor: %d,%d %dx%d, %02x\n", image.x, image.y, image.width, image.height, packed_fields);
 
             stream >> image.lzw_min_code_size;
@@ -343,7 +363,7 @@ RefPtr<Gfx::Bitmap> load_gif_impl(const u8* data, size_t data_size)
                 stream >> lzw_encoded_bytes_expected;
 
                 if (stream.handle_read_failure())
-                    return nullptr;
+                    return false;
 
                 if (lzw_encoded_bytes_expected == 0)
                     break;
@@ -354,7 +374,7 @@ RefPtr<Gfx::Bitmap> load_gif_impl(const u8* data, size_t data_size)
                 }
 
                 if (stream.handle_read_failure())
-                    return nullptr;
+                    return false;
 
                 for (int i = 0; i < lzw_encoded_bytes_expected; ++i) {
                     image.lzw_encoded_bytes.append(buffer[i]);
@@ -368,22 +388,83 @@ RefPtr<Gfx::Bitmap> load_gif_impl(const u8* data, size_t data_size)
             break;
         }
 
-        return nullptr;
+        return false;
     }
 
     // We exited the block loop after finding a trailer. We should have everything needed.
     printf("Image count: %zu\n", images.size());
     if (images.is_empty())
-        return nullptr;
+        return false;
 
     for (size_t i = 0; i < images.size(); ++i) {
         auto& image = images.at(i);
         printf("Image %zu: %d,%d %dx%d  %zu bytes LZW-encoded\n", i, image.x, image.y, image.width, image.height, image.lzw_encoded_bytes.size());
 
-        // FIXME: Decode the LZW-encoded bytes and turn them into an image.
+        LZWDecoder decoder(image.lzw_encoded_bytes, image.lzw_min_code_size);
+
+        // Add GIF-specific control codes
+        const int CLEAR_CODE = decoder.add_control_code();
+        const int END_OF_INFORMATION_CODE = decoder.add_control_code();
+
+        auto bitmap = Bitmap::create_purgeable(BitmapFormat::RGBA32, { image.width, image.height });
+
+        int pixel_idx = 0;
+        while (true) {
+            Optional<u16> code = decoder.next_code();
+            if (!code.has_value()) {
+                dbg() << "Unexpectedly reached end of gif frame data";
+                return false;
+            }
+
+            if (code.value() == CLEAR_CODE) {
+                decoder.reset();
+                continue;
+            } else if (code.value() == END_OF_INFORMATION_CODE) {
+                break;
+            }
+
+            auto colors = decoder.get_output();
+
+            for (size_t i = 0; i < colors.size(); ++i, ++pixel_idx) {
+                auto color = colors.at(i);
+                auto rgb = logical_screen.color_map[color];
+
+                int x = pixel_idx % image.width;
+                int y = pixel_idx / image.width;
+
+                Color c = Color(rgb.r, rgb.g, rgb.b);
+                bitmap->set_pixel(x, y, c);
+            }
+        }
+
+        context.frames.append(bitmap);
+
+        // FIXME: for now only decode the first frame.
+        break;
     }
 
-    return nullptr;
+    context.state = GIFLoadingContext::State::BitmapDecoded;
+    return true;
+}
+
+RefPtr<Gfx::Bitmap> GIFImageDecoderPlugin::bitmap()
+{
+    if (m_context->state == GIFLoadingContext::State::Error) {
+        return nullptr;
+    }
+
+    if (m_context->state < GIFLoadingContext::State::BitmapDecoded) {
+        if (!load_gif_impl(*m_context)) {
+            m_context->state = GIFLoadingContext::State::Error;
+            return nullptr;
+        }
+    }
+
+    // FIXME: for now only return the first frame.
+    if (m_context->frames.is_empty()) {
+        return nullptr;
+    }
+    return m_context->frames.first();
 }
 
 }
