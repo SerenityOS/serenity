@@ -35,20 +35,16 @@ class ToolBarContainer : public Frame {
     C_OBJECT(ToolBarContainer);
 
 public:
-    template<class T, class... Args>
-    inline T& add(Args&&... args)
-    {
-        auto& child = Frame::add<T>(forward<Args>(args)...);
-        did_add_toolbar(child);
-        return child;
-    }
 
 private:
     explicit ToolBarContainer(Gfx::Orientation = Gfx::Orientation::Horizontal);
 
     virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void child_event(Core::ChildEvent&) override;
 
     void did_add_toolbar(Widget&);
+    void did_remove_toolbar(Widget&);
+    void recompute_preferred_size();
 
     Gfx::Orientation m_orientation { Gfx::Orientation::Horizontal };
 
