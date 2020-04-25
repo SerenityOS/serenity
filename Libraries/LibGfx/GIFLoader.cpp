@@ -102,6 +102,23 @@ struct ImageDescriptor {
     Vector<u8> lzw_encoded_bytes;
 };
 
+Optional<GIFFormat> decode_gif_header(BufferStream& stream)
+{
+    static const char valid_header_87[] = "GIF87a";
+    static const char valid_header_89[] = "GIF89a";
+
+    char header[6];
+    for (int i = 0; i < 6; ++i)
+        stream >> header[i];
+
+    if (!memcmp(header, valid_header_87, sizeof(header)))
+        return GIFFormat::GIF87a;
+    else if (!memcmp(header, valid_header_89, sizeof(header)))
+        return GIFFormat::GIF89a;
+
+    return {};
+}
+
 class LZWDecoder {
 public:
     struct CodeTableEntry {
@@ -231,22 +248,12 @@ bool load_gif_impl(GIFLoadingContext& context)
     auto buffer = ByteBuffer::wrap(context.data, context.data_size);
     BufferStream stream(buffer);
 
-    static const char valid_header_87[] = "GIF87a";
-    static const char valid_header_89[] = "GIF89a";
-
-    char header[6];
-    for (int i = 0; i < 6; ++i)
-        stream >> header[i];
-
-    GIFFormat format;
-    if (!memcmp(header, valid_header_87, sizeof(header)))
-        format = GIFFormat::GIF87a;
-    else if (!memcmp(header, valid_header_89, sizeof(header)))
-        format = GIFFormat::GIF89a;
-    else
+    Optional<GIFFormat> format = decode_gif_header(stream);
+    if (!format.has_value()) {
         return false;
+    }
 
-    printf("Format is %s\n", format == GIFFormat::GIF89a ? "GIF89a" : "GIF87a");
+    printf("Format is %s\n", format.value() == GIFFormat::GIF89a ? "GIF89a" : "GIF87a");
 
     LogicalScreen logical_screen;
     stream >> logical_screen.width;
