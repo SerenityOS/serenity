@@ -82,7 +82,7 @@ int main(int argc, char** argv)
     unveil(nullptr, nullptr);
 
     auto m_config = Core::ConfigFile::get_for_app("Browser");
-    auto home_url = m_config->read_entry("Preferences", "Home", "file:///home/anon/www/welcome.html");
+    auto home_url = m_config->read_entry("Preferences", "Home", "file:///res/html/blank.html");
 
     bool bookmarksbar_enabled = true;
     auto bookmarks_bar = Browser::BookmarksBarWidget::construct(bookmarks_filename, bookmarksbar_enabled);

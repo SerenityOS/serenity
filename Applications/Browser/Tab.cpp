@@ -56,7 +56,7 @@
 
 namespace Browser {
 
-static const char* home_url = "file:///home/anon/www/welcome.html";
+static const char* home_url = "file:///res/html/blank.html";
 
 Tab::Tab()
 {
