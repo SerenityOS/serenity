@@ -44,6 +44,7 @@
     __ENUMERATE_FILETYPE(library, ".so", ".a") \
     __ENUMERATE_FILETYPE(object, ".o", ".obj") \
     __ENUMERATE_FILETYPE(pdf, ".pdf")          \
+    __ENUMERATE_FILETYPE(python, ".py")        \
     __ENUMERATE_FILETYPE(sound, ".wav")        \
     __ENUMERATE_FILETYPE(text, ".txt")
 namespace GUI {
