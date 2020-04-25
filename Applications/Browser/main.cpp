@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "BookmarksBarWidget.h"
 #include "InspectorWidget.h"
 #include "Tab.h"
 #include "WindowActions.h"
@@ -38,6 +39,8 @@
 #include <LibWeb/ResourceLoader.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+static const char* bookmarks_filename = "/home/anon/bookmarks.json";
 
 int main(int argc, char** argv)
 {
@@ -75,6 +78,9 @@ int main(int argc, char** argv)
 
     auto m_config = Core::ConfigFile::get_for_app("Browser");
     auto home_url = m_config->read_entry("Preferences", "Home", "file:///home/anon/www/welcome.html");
+
+    bool bookmarksbar_enabled = true;
+    auto bookmarks_bar = Browser::BookmarksBarWidget::construct(bookmarks_filename, bookmarksbar_enabled);
 
     auto window = GUI::Window::construct();
     window->set_rect(100, 100, 640, 480);
@@ -160,6 +166,11 @@ int main(int argc, char** argv)
     window_actions.on_about = [&] {
         GUI::AboutDialog::show("Browser", Gfx::Bitmap::load_from_file("/res/icons/32x32/filetype-html.png"), window);
     };
+
+    window_actions.on_show_bookmarks_bar = [&](auto& action) {
+        Browser::BookmarksBarWidget::the().set_visible(action.is_checked());
+    };
+    window_actions.show_bookmarks_bar_action().set_checked(bookmarksbar_enabled);
 
     create_new_tab(default_url, true);
     window->show();

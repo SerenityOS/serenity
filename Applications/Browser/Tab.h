@@ -29,8 +29,6 @@
 #include <LibGUI/Widget.h>
 #include <LibWeb/Forward.h>
 
-class BookmarksBarWidget;
-
 namespace Browser {
 
 class Tab final : public GUI::Widget {
@@ -62,11 +60,11 @@ private:
     RefPtr<GUI::Action> m_go_back_action;
     RefPtr<GUI::Action> m_go_forward_action;
     RefPtr<GUI::TextBox> m_location_box;
-    RefPtr<BookmarksBarWidget> m_bookmarks_bar;
     RefPtr<GUI::Button> m_bookmark_button;
     RefPtr<GUI::Window> m_dom_inspector_window;
     RefPtr<GUI::StatusBar> m_statusbar;
     RefPtr<GUI::MenuBar> m_menubar;
+    RefPtr<GUI::ToolBarContainer> m_toolbar_container;
 
     String m_title;
     RefPtr<const Gfx::Bitmap> m_icon;

@@ -29,9 +29,13 @@
 #include <LibGUI/Forward.h>
 #include <LibGUI/Widget.h>
 
+namespace Browser {
+
 class BookmarksBarWidget final : public GUI::Widget {
     C_OBJECT(BookmarksBarWidget)
 public:
+    static BookmarksBarWidget& the();
+
     virtual ~BookmarksBarWidget() override;
 
     void set_model(RefPtr<GUI::Model>);
@@ -62,3 +66,5 @@ private:
 
     int m_last_visible_index { -1 };
 };
+
+}

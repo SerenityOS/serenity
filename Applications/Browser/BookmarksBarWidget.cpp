@@ -36,8 +36,18 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
 
+namespace Browser {
+
+static BookmarksBarWidget* s_the;
+
+BookmarksBarWidget& BookmarksBarWidget::the()
+{
+    return *s_the;
+}
+
 BookmarksBarWidget::BookmarksBarWidget(const String& bookmarks_file, bool enabled)
 {
+    s_the = this;
     set_layout<GUI::HorizontalBoxLayout>();
     layout()->set_spacing(0);
 
@@ -206,4 +216,6 @@ bool BookmarksBarWidget::add_bookmark(const String& url, const String& title)
         return true;
     }
     return false;
+}
+
 }

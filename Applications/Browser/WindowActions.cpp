@@ -43,6 +43,13 @@ WindowActions::WindowActions(GUI::Window& window)
                 on_about();
         },
         &window);
+    m_show_bookmarks_bar_action = GUI::Action::create_checkable(
+        "Show bookmarks bar",
+        [this](auto& action) {
+            if (on_show_bookmarks_bar)
+                on_show_bookmarks_bar(action);
+        },
+        &window);
 }
 
 }
