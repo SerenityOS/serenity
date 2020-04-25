@@ -57,6 +57,7 @@ StringPrototype::StringPrototype()
     put_native_function("trimEnd", trim_end, 0);
     put_native_function("concat", concat, 1);
     put_native_function("substring", substring, 2);
+    put_native_function("includes", includes, 1);
 }
 
 StringPrototype::~StringPrototype()
@@ -366,6 +367,34 @@ Value StringPrototype::substring(Interpreter& interpreter)
     auto part_length = index_end - index_start;
     auto string_part = string.substring(index_start, part_length);
     return js_string(interpreter, string_part);
+}
+
+Value StringPrototype::includes(Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return {};
+
+    auto& string = this_object->to_string().as_string()->string();
+    auto search_string = interpreter.argument(0).to_string();
+    i32 position = 0;
+
+    if (interpreter.argument_count() >= 2) {
+        position = interpreter.argument(1).to_i32();
+
+        if (position >= static_cast<i32>(string.length()))
+            return Value(false);
+
+        if (position < 0)
+            position = 0;
+    }
+
+    if (position == 0)
+        return Value(string.contains(search_string));
+
+    auto substring_length = string.length() - position;
+    auto substring_search = string.substring(position, substring_length);
+    return Value(substring_search.contains(search_string));
 }
 
 }

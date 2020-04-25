@@ -55,6 +55,7 @@ private:
     static Value trim_start(Interpreter&);
     static Value trim_end(Interpreter&);
     static Value concat(Interpreter&);
+    static Value includes(Interpreter&);
 };
 
 }
