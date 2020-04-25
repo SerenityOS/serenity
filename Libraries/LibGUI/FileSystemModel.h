@@ -47,7 +47,7 @@
     __ENUMERATE_FILETYPE(pdf, ".pdf")          \
     __ENUMERATE_FILETYPE(python, ".py")        \
     __ENUMERATE_FILETYPE(sound, ".wav")        \
-    __ENUMERATE_FILETYPE(text, ".txt")
+    __ENUMERATE_FILETYPE(text, ".txt", ".md")
 namespace GUI {
 
 class FileSystemModel
