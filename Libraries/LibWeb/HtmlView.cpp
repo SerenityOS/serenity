@@ -27,11 +27,11 @@
 #include <AK/FileSystemPath.h>
 #include <AK/URL.h>
 #include <LibCore/File.h>
+#include <LibGfx/ImageDecoder.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/PNGLoader.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/ElementFactory.h>
@@ -317,7 +317,8 @@ static RefPtr<Document> create_image_document(const ByteBuffer& data, const URL&
 {
     auto document = adopt(*new Document(url));
 
-    auto bitmap = Gfx::load_png_from_memory(data.data(), data.size());
+    auto image_decoder = Gfx::ImageDecoder::create(data.data(), data.size());
+    auto bitmap = image_decoder->bitmap();
     ASSERT(bitmap);
 
     auto html_element = create_element(document, "html");
@@ -366,7 +367,7 @@ void HtmlView::load(const URL& url)
             }
 
             RefPtr<Document> document;
-            if (url.path().ends_with(".png")) {
+            if (url.path().ends_with(".png") || url.path().ends_with(".gif")) {
                 document = create_image_document(data, url);
             } else {
                 document = parse_html_document(data, url);
