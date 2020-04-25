@@ -186,7 +186,7 @@ int main(int argc, char** argv)
     if (!make_is_available())
         GUI::MessageBox::show("The 'make' command is not available. You probably want to install the binutils, gcc, and make ports from the root of the Serenity repository.", "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, g_window);
 
-    open_project("/home/anon/js/javascript.files");
+    open_project("/home/anon/little/little.files");
 
     auto& toolbar_container = widget.add<GUI::ToolBarContainer>();
     auto& toolbar = toolbar_container.add<GUI::ToolBar>();
@@ -534,7 +534,7 @@ int main(int argc, char** argv)
         find_in_files_widget.focus_textbox_and_select_all();
     }));
 
-    auto stop_action = GUI::Action::create("Stop", Gfx::Bitmap::load_from_file("/res/icons/16x16/stop.png"), [&](auto&) {
+    auto stop_action = GUI::Action::create("Stop", Gfx::Bitmap::load_from_file("/res/icons/16x16/program-stop.png"), [&](auto&) {
         terminal_wrapper.kill_running_command();
     });
 
@@ -549,15 +549,16 @@ int main(int argc, char** argv)
         stop_action->set_enabled(true);
     });
     toolbar.add_action(build_action);
+    toolbar.add_separator();
 
-    auto run_action = GUI::Action::create("Run", { Mod_Ctrl, Key_R }, Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"), [&](auto&) {
+    auto run_action = GUI::Action::create("Run", { Mod_Ctrl, Key_R }, Gfx::Bitmap::load_from_file("/res/icons/16x16/program-run.png"), [&](auto&) {
         reveal_action_tab(terminal_wrapper);
         run(terminal_wrapper);
         stop_action->set_enabled(true);
     });
 
     RefPtr<LibThread::Thread> debugger_thread;
-    auto debug_action = GUI::Action::create("Debug", Gfx::Bitmap::load_from_file("/res/icons/16x16/play-debug.png"), [&](auto&) {
+    auto debug_action = GUI::Action::create("Debug", Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-run.png"), [&](auto&) {
         if (g_project->type() != ProjectType::Cpp) {
             GUI::MessageBox::show(String::format("Cannot debug current project type", get_project_executable_path().characters()), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK, g_window);
             return;
@@ -575,14 +576,14 @@ int main(int argc, char** argv)
         debugger_thread->start();
     });
 
-    auto continue_action = GUI::Action::create("Continue", Gfx::Bitmap::load_from_file("/res/icons/16x16/go-last.png"), [&](auto&) {
+    auto continue_action = GUI::Action::create("Continue", Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-continue.png"), [&](auto&) {
         pthread_mutex_lock(Debugger::the().continue_mutex());
         Debugger::the().set_continue_type(Debugger::ContinueType::Continue);
         pthread_cond_signal(Debugger::the().continue_cond());
         pthread_mutex_unlock(Debugger::the().continue_mutex());
     });
 
-    auto single_step_action = GUI::Action::create("Single Step", Gfx::Bitmap::load_from_file("/res/icons/16x16/single-step.png"), [&](auto&) {
+    auto single_step_action = GUI::Action::create("Single Step", Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-single-step.png"), [&](auto&) {
         pthread_mutex_lock(Debugger::the().continue_mutex());
         Debugger::the().set_continue_type(Debugger::ContinueType::SourceSingleStep);
         pthread_cond_signal(Debugger::the().continue_cond());
@@ -593,6 +594,8 @@ int main(int argc, char** argv)
 
     toolbar.add_action(run_action);
     toolbar.add_action(stop_action);
+
+    toolbar.add_separator();
     toolbar.add_action(debug_action);
     toolbar.add_action(continue_action);
     toolbar.add_action(single_step_action);
@@ -624,8 +627,10 @@ int main(int argc, char** argv)
 
     auto& build_menu = menubar->add_menu("Build");
     build_menu.add_action(build_action);
+    build_menu.add_separator();
     build_menu.add_action(run_action);
     build_menu.add_action(stop_action);
+    build_menu.add_separator();
     build_menu.add_action(debug_action);
 
     auto& view_menu = menubar->add_menu("View");
