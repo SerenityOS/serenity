@@ -27,6 +27,7 @@
 #include "InspectorWidget.h"
 #include "Tab.h"
 #include "WindowActions.h"
+#include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Application.h>
@@ -37,8 +38,6 @@
 #include <LibWeb/ResourceLoader.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-static const char* home_url = "file:///home/anon/www/welcome.html";
 
 int main(int argc, char** argv)
 {
@@ -73,6 +72,9 @@ int main(int argc, char** argv)
     }
 
     unveil(nullptr, nullptr);
+
+    auto m_config = Core::ConfigFile::get_for_app("Browser");
+    auto home_url = m_config->read_entry("Preferences", "Home", "file:///home/anon/www/welcome.html");
 
     auto window = GUI::Window::construct();
     window->set_rect(100, 100, 640, 480);
