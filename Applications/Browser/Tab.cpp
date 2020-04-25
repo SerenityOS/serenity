@@ -163,14 +163,6 @@ Tab::Tab()
         m_statusbar->set_text(href);
     };
 
-    Web::ResourceLoader::the().on_load_counter_change = [this] {
-        if (Web::ResourceLoader::the().pending_loads() == 0) {
-            m_statusbar->set_text("");
-            return;
-        }
-        m_statusbar->set_text(String::format("Loading (%d pending resources...)", Web::ResourceLoader::the().pending_loads()));
-    };
-
     m_menubar = GUI::MenuBar::construct();
 
     auto& app_menu = m_menubar->add_menu("Browser");
@@ -286,6 +278,14 @@ void Tab::update_bookmark_button(const String& url)
 
 void Tab::did_become_active()
 {
+    Web::ResourceLoader::the().on_load_counter_change = [this] {
+        if (Web::ResourceLoader::the().pending_loads() == 0) {
+            m_statusbar->set_text("");
+            return;
+        }
+        m_statusbar->set_text(String::format("Loading (%d pending resources...)", Web::ResourceLoader::the().pending_loads()));
+    };
+
     BookmarksBarWidget::the().on_bookmark_click = [this](auto&, auto& url) {
         m_html_widget->load(url);
     };
