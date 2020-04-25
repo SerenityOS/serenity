@@ -30,6 +30,7 @@
 #include <AK/String.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/PNGLoader.h>
+#include <LibGfx/GIFLoader.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -85,7 +86,12 @@ RefPtr<Bitmap> Bitmap::create_wrapper(BitmapFormat format, const Size& size, siz
 
 RefPtr<Bitmap> Bitmap::load_from_file(const StringView& path)
 {
-    return load_png(path);
+    if(path.ends_with(".png"))
+        return load_png(path);
+    if(path.ends_with(".gif"))
+        return load_gif(path);
+
+    return nullptr;
 }
 
 Bitmap::Bitmap(BitmapFormat format, const Size& size, size_t pitch, RGBA32* data)
