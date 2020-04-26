@@ -241,6 +241,17 @@ String URL::to_string() const
 {
     StringBuilder builder;
     builder.append(m_protocol);
+
+    if (m_protocol == "data") {
+        builder.append(':');
+        builder.append(m_data_mime_type);
+        if (m_data_payload_is_base64)
+            builder.append(";base64");
+        builder.append(',');
+        builder.append(m_data_payload);
+        return builder.to_string();
+    }
+
     builder.append("://");
     if (protocol() != "file") {
         builder.append(m_host);
