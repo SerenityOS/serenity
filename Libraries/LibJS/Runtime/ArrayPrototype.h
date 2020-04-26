@@ -55,5 +55,6 @@ private:
     static Value last_index_of(Interpreter&);
     static Value includes(Interpreter&);
     static Value find(Interpreter&);
+    static Value find_index(Interpreter&);
 };
 }
