@@ -712,6 +712,18 @@ int Process::sys$gethostname(char* buffer, ssize_t size)
     return 0;
 }
 
+int Process::sys$sethostname(const char* hostname, ssize_t length)
+{
+    REQUIRE_PROMISE(stdio);
+    if (length < 0)
+        return -EINVAL;
+    LOCKER(*s_hostname_lock, Lock::Mode::Shared);
+    if (length > 64)
+        return -ENAMETOOLONG;
+    *s_hostname = validate_and_copy_string_from_user(hostname, length);
+    return 0;
+}
+
 pid_t Process::sys$fork(RegisterState& regs)
 {
     REQUIRE_PROMISE(proc);
