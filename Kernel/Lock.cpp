@@ -65,7 +65,8 @@ void Lock::lock(Mode mode)
                 m_lock.store(false, AK::memory_order_release);
                 return;
             }
-            Thread::current->wait_on(m_queue, &m_lock, m_holder, m_name);
+            timeval* timeout = nullptr;
+            Thread::current->wait_on(m_queue, timeout, &m_lock, m_holder, m_name);
         }
     }
 }

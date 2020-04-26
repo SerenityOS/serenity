@@ -295,6 +295,7 @@ public:
         WokeNormally,
         InterruptedBySignal,
         InterruptedByDeath,
+        InterruptedByTimeout,
     };
 
     template<typename T, class... Args>
@@ -331,7 +332,7 @@ public:
         return block<ConditionBlocker>(state_string, move(condition));
     }
 
-    void wait_on(WaitQueue& queue, Atomic<bool>* lock = nullptr, Thread* beneficiary = nullptr, const char* reason = nullptr);
+    BlockResult wait_on(WaitQueue& queue, timeval* timeout = nullptr, Atomic<bool>* lock = nullptr, Thread* beneficiary = nullptr, const char* reason = nullptr);
     void wake_from_queue();
 
     void unblock();
