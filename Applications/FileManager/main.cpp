@@ -406,15 +406,15 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     });
 
     auto copy_action = GUI::CommonActions::make_copy_action(
-        [&](const GUI::Action& action) {
-            Vector<String> paths;
-            if (action.activator() == directory_context_menu || directory_view.active_widget()->is_focused()) {
-                paths = selected_file_paths();
-            } else {
+        [&](const GUI::Action&) {
+            Vector<String> paths = selected_file_paths();
+
+            if (!paths.size())
                 paths = tree_view_selected_file_paths();
-            }
+
             if (paths.is_empty())
-                return;
+                ASSERT_NOT_REACHED();
+
             StringBuilder copy_text;
             for (auto& path : paths) {
                 copy_text.appendf("%s\n", path.characters());
@@ -489,33 +489,31 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         Yes
     };
 
-    auto do_delete = [&](ConfirmBeforeDelete confirm, const GUI::Action& action) {
-        Vector<String> paths;
-        if (action.activator() == directory_context_menu || directory_view.active_widget()->is_focused()) {
-            paths = selected_file_paths();
-        } else {
-            paths = tree_view_selected_file_paths();
-        }
-        if (paths.is_empty())
-            return;
-        {
-            String message;
-            if (paths.size() == 1) {
-                message = String::format("Really delete %s?", FileSystemPath(paths[0]).basename().characters());
-            } else {
-                message = String::format("Really delete %d files?", paths.size());
-            }
+    auto do_delete = [&](ConfirmBeforeDelete confirm, const GUI::Action&) {
+        Vector<String> paths = selected_file_paths();
 
-            if (confirm == ConfirmBeforeDelete::Yes) {
-                auto result = GUI::MessageBox::show(
-                    message,
-                    "Confirm deletion",
-                    GUI::MessageBox::Type::Warning,
-                    GUI::MessageBox::InputType::OKCancel,
-                    window);
-                if (result == GUI::MessageBox::ExecCancel)
-                    return;
-            }
+        if (!paths.size())
+            paths = tree_view_selected_file_paths();
+
+        if (paths.is_empty())
+            ASSERT_NOT_REACHED();
+
+        String message;
+        if (paths.size() == 1) {
+            message = String::format("Really delete %s?", FileSystemPath(paths[0]).basename().characters());
+        } else {
+            message = String::format("Really delete %d files?", paths.size());
+        }
+
+        if (confirm == ConfirmBeforeDelete::Yes) {
+            auto result = GUI::MessageBox::show(
+                message,
+                "Confirm deletion",
+                GUI::MessageBox::Type::Warning,
+                GUI::MessageBox::InputType::OKCancel,
+                window);
+            if (result == GUI::MessageBox::ExecCancel)
+                return;
         }
 
         for (auto& path : paths) {
