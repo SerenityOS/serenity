@@ -1,4 +1,5 @@
 AK_OBJS = \
+    ../../AK/Base64.o \
     ../../AK/FileSystemPath.o \
     ../../AK/FlyString.o \
     ../../AK/JsonParser.o \
