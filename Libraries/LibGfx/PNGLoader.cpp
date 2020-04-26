@@ -304,6 +304,33 @@ template<bool has_alpha, u8 filter_type>
 {
     // First unpack the scanlines to RGBA:
     switch (context.color_type) {
+    case 0:
+        if (context.bit_depth == 8) {
+            for (int y = 0; y < context.height; ++y) {
+                auto* gray_values = (u8*)context.scanlines[y].data.data();
+                for (int i = 0; i < context.width; ++i) {
+                    auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
+                    pixel.r = gray_values[i];
+                    pixel.g = gray_values[i];
+                    pixel.b = gray_values[i];
+                    pixel.a = 0xff;
+                }
+            }
+        } else if (context.bit_depth == 16) {
+            for (int y = 0; y < context.height; ++y) {
+                auto* gray_values = (u16*)context.scanlines[y].data.data();
+                for (int i = 0; i < context.width; ++i) {
+                    auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
+                    pixel.r = gray_values[i] & 0xFF;
+                    pixel.g = gray_values[i] & 0xFF;
+                    pixel.b = gray_values[i] & 0xFF;
+                    pixel.a = 0xff;
+                }
+            }
+        } else {
+            ASSERT_NOT_REACHED();
+        }
+        break;
     case 2:
         if (context.bit_depth == 8) {
             for (int y = 0; y < context.height; ++y) {
@@ -582,6 +609,13 @@ static bool process_IHDR(const ByteBuffer& data, PNGLoadingContext& context, boo
 
     switch (context.color_type) {
     case 0: // Each pixel is a grayscale sample.
+        // FIXME: Implement support for 1/2/4 bit grayscale based images.
+        if (ihdr.bit_depth != 8 && ihdr.bit_depth != 16) {
+            dbgprintf("PNGLoader::process_IHDR: Unsupported grayscale format (%d bpp).\n", context.bit_depth);
+            return false;
+        }
+        context.bytes_per_pixel = ihdr.bit_depth / 8;
+        break;
     case 4: // Each pixel is a grayscale sample, followed by an alpha sample.
         // FIXME: Implement grayscale PNG support.
         dbgprintf("PNGLoader::process_IHDR: Unsupported grayscale format.\n");
