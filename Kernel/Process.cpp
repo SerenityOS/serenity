@@ -715,9 +715,11 @@ int Process::sys$gethostname(char* buffer, ssize_t size)
 int Process::sys$sethostname(const char* hostname, ssize_t length)
 {
     REQUIRE_PROMISE(stdio);
+    if (!is_superuser())
+        return -EPERM;
     if (length < 0)
         return -EINVAL;
-    LOCKER(*s_hostname_lock, Lock::Mode::Shared);
+    LOCKER(*s_hostname_lock, Lock::Mode::Exclusive);
     if (length > 64)
         return -ENAMETOOLONG;
     *s_hostname = validate_and_copy_string_from_user(hostname, length);
