@@ -2219,6 +2219,45 @@ KResult Process::do_killpg(pid_t pgrp, int signal)
     return error;
 }
 
+KResult Process::do_killall(int signal)
+{
+    InterruptDisabler disabler;
+
+    bool any_succeeded = false;
+    KResult error = KSuccess;
+
+    // Send the signal to all processes we have access to for.
+    for (auto& process : *g_processes) {
+        KResult res = KSuccess;
+        if (process.pid() == m_pid)
+            res = do_killself(signal);
+        else
+            res = do_kill(process, signal);
+
+        if (res.is_success())
+            any_succeeded = true;
+        else
+            error = res;
+    }
+
+    if (any_succeeded)
+        return KSuccess;
+    return error;
+}
+
+KResult Process::do_killself(int signal)
+{
+    if (signal == 0)
+        return KSuccess;
+
+    if (!Thread::current->should_ignore_signal(signal)) {
+        Thread::current->send_signal(signal, this);
+        (void)Thread::current->block<Thread::SemiPermanentBlocker>(Thread::SemiPermanentBlocker::Reason::Signal);
+    }
+
+    return KSuccess;
+}
+
 int Process::sys$kill(pid_t pid, int signal)
 {
     if (pid == m_pid)
@@ -2228,23 +2267,15 @@ int Process::sys$kill(pid_t pid, int signal)
 
     if (signal < 0 || signal >= 32)
         return -EINVAL;
-    if (pid <= 0) {
+    if (pid < -1) {
         if (pid == INT32_MIN)
             return -EINVAL;
         return do_killpg(-pid, signal);
     }
-    if (pid == -1) {
-        // FIXME: Send to all processes.
-        return -ENOTIMPL;
-    }
+    if (pid == -1)
+        return do_killall(signal);
     if (pid == m_pid) {
-        if (signal == 0)
-            return 0;
-        if (!Thread::current->should_ignore_signal(signal)) {
-            Thread::current->send_signal(signal, this);
-            (void)Thread::current->block<Thread::SemiPermanentBlocker>(Thread::SemiPermanentBlocker::Reason::Signal);
-        }
-        return 0;
+        return do_killself(signal);
     }
     InterruptDisabler disabler;
     auto* peer = Process::from_pid(pid);

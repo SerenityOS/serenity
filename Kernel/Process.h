@@ -445,6 +445,8 @@ private:
 
     KResult do_kill(Process&, int signal);
     KResult do_killpg(pid_t pgrp, int signal);
+    KResult do_killall(int signal);
+    KResult do_killself(int signal);
 
     KResultOr<siginfo_t> do_waitid(idtype_t idtype, int id, int options);
 
