@@ -41,6 +41,7 @@ NumberConstructor::NumberConstructor()
     : NativeFunction("Number", *interpreter().global_object().function_prototype())
 {
     put_native_function("isFinite", is_finite, 1);
+    put_native_function("isNaN", is_nan, 1);
     put_native_function("isSafeInteger", is_safe_integer, 1);
 
     put("prototype", interpreter().global_object().number_prototype());
@@ -77,6 +78,11 @@ Value NumberConstructor::construct(Interpreter& interpreter)
 Value NumberConstructor::is_finite(Interpreter& interpreter)
 {
     return Value(interpreter.argument(0).is_finite_number());
+}
+
+Value NumberConstructor::is_nan(Interpreter& interpreter)
+{
+    return Value(interpreter.argument(0).is_nan());
 }
 
 Value NumberConstructor::is_safe_integer(Interpreter& interpreter)
