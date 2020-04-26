@@ -485,14 +485,20 @@ int pthread_cond_destroy(pthread_cond_t*)
     return 0;
 }
 
-int pthread_cond_wait(pthread_cond_t* cond, pthread_mutex_t* mutex)
+static int cond_wait(pthread_cond_t* cond, pthread_mutex_t* mutex, const struct timespec* abstime)
 {
     i32 value = cond->value;
     cond->previous = value;
     pthread_mutex_unlock(mutex);
-    int rc = futex(&cond->value, FUTEX_WAIT, value, nullptr);
-    ASSERT(rc == 0);
+    int rc = futex(&cond->value, FUTEX_WAIT, value, abstime);
     pthread_mutex_lock(mutex);
+    return rc;
+}
+
+int pthread_cond_wait(pthread_cond_t* cond, pthread_mutex_t* mutex)
+{
+    int rc = cond_wait(cond, mutex, nullptr);
+    ASSERT(rc == 0);
     return 0;
 }
 
@@ -515,10 +521,7 @@ int pthread_condattr_setclock(pthread_condattr_t* attr, clockid_t clock)
 
 int pthread_cond_timedwait(pthread_cond_t* cond, pthread_mutex_t* mutex, const struct timespec* abstime)
 {
-    // FIXME: Implement timeout.
-    (void)abstime;
-    pthread_cond_wait(cond, mutex);
-    return 0;
+    return cond_wait(cond, mutex, abstime);
 }
 
 int pthread_cond_signal(pthread_cond_t* cond)
