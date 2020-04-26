@@ -1,0 +1,6 @@
+endpoint LaunchServer = 101
+{
+	Greet() => (i32 client_id)
+
+	OpenUrl(String url) => (bool response)
+}

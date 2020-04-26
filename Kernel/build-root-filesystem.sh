@@ -166,6 +166,7 @@ cp ../Servers/TTYServer/TTYServer mnt/bin/TTYServer
 cp ../Servers/TelnetServer/TelnetServer mnt/bin/TelnetServer
 cp ../Servers/ProtocolServer/ProtocolServer mnt/bin/ProtocolServer
 cp ../Servers/NotificationServer/NotificationServer mnt/bin/NotificationServer
+cp ../Servers/LaunchServer/LaunchServer mnt/bin/LaunchServer
 cp ../Servers/WebServer/WebServer mnt/bin/WebServer
 cp ../Shell/Shell mnt/bin/Shell
 cp ../MenuApplets/Audio/Audio.MenuApplet mnt/bin/
