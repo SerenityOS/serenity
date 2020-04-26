@@ -144,8 +144,7 @@ Value GlobalObject::is_nan(Interpreter& interpreter)
 
 Value GlobalObject::is_finite(Interpreter& interpreter)
 {
-    auto value = interpreter.argument(0).to_number();
-    return Value(!value.is_infinity() && !value.is_nan());
+    return Value(interpreter.argument(0).to_number().is_finite_number());
 }
 
 }
