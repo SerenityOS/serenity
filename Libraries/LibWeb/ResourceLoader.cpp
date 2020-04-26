@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Base64.h>
 #include <AK/SharedBuffer.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
@@ -69,6 +70,21 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&)> succ
 {
     if (is_port_blocked(url.port())) {
         dbg() << "ResourceLoader::load: Error: blocked port " << url.port() << " for URL: " << url;
+        return;
+    }
+
+    if (url.protocol() == "data") {
+        dbg() << "ResourceLoader loading a data URL with mime-type: '" << url.data_mime_type() << "', base64=" << url.data_payload_is_base64() << ", payload='" << url.data_payload() << "'";
+
+        ByteBuffer data;
+        if (url.data_payload_is_base64())
+            data = decode_base64(url.data_payload());
+        else
+            data = url.data_payload().to_byte_buffer();
+
+        deferred_invoke([data = move(data), success_callback = move(success_callback)](auto&) {
+            success_callback(data);
+        });
         return;
     }
 
