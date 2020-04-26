@@ -58,13 +58,13 @@ int main(int argc, char** argv)
             return 2;
         }
     }
-    unsigned pid = String(argv[pid_argi]).to_uint(ok);
+    pid_t pid = String(argv[pid_argi]).to_int(ok);
     if (!ok) {
         printf("'%s' is not a valid PID\n", argv[pid_argi]);
         return 3;
     }
 
-    int rc = kill((pid_t)pid, signum);
+    int rc = kill(pid, signum);
     if (rc < 0)
         perror("kill");
     return 0;
