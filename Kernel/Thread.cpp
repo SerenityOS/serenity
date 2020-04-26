@@ -34,6 +34,7 @@
 #include <Kernel/Scheduler.h>
 #include <Kernel/Thread.h>
 #include <Kernel/ThreadTracer.h>
+#include <Kernel/TimerQueue.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/ProcessPagingScope.h>
@@ -575,8 +576,7 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
 
     m_signal_mask |= new_signal_mask;
 
-    auto setup_stack = [&]<typename ThreadState>(ThreadState state, u32 * stack)
-    {
+    auto setup_stack = [&]<typename ThreadState>(ThreadState state, u32* stack) {
         u32 old_esp = *stack;
         u32 ret_eip = state.eip;
         u32 ret_eflags = state.eflags;
@@ -884,7 +884,7 @@ const LogStream& operator<<(const LogStream& stream, const Thread& value)
     return stream << value.process().name() << "(" << value.pid() << ":" << value.tid() << ")";
 }
 
-void Thread::wait_on(WaitQueue& queue, Atomic<bool>* lock, Thread* beneficiary, const char* reason)
+Thread::BlockResult Thread::wait_on(WaitQueue& queue, timeval* timeout, Atomic<bool>* lock, Thread* beneficiary, const char* reason)
 {
     cli();
     bool did_unlock = unlock_process_if_locked();
@@ -892,6 +892,14 @@ void Thread::wait_on(WaitQueue& queue, Atomic<bool>* lock, Thread* beneficiary, 
         *lock = false;
     set_state(State::Queued);
     queue.enqueue(*current);
+
+    u64 timer_id = 0;
+    if (timeout) {
+        timer_id = TimerQueue::the().add_timer(*timeout, [&]() {
+            wake_from_queue();
+        });
+    }
+
     // Yield and wait for the queue to wake us up again.
     if (beneficiary)
         Scheduler::donate_to(beneficiary, reason);
@@ -900,6 +908,14 @@ void Thread::wait_on(WaitQueue& queue, Atomic<bool>* lock, Thread* beneficiary, 
     // We've unblocked, relock the process if needed and carry on.
     if (did_unlock)
         relock_process();
+
+    BlockResult result = m_wait_queue_node.is_in_list() ? BlockResult::InterruptedByTimeout : BlockResult::WokeNormally;
+
+    // Make sure we cancel the timer if woke normally.
+    if (timeout && result == BlockResult::WokeNormally)
+        TimerQueue::the().cancel_timer(timer_id);
+
+    return result;
 }
 
 void Thread::wake_from_queue()
