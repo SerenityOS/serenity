@@ -654,8 +654,15 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             tree_view.update();
         }
 
-        go_forward_action->set_enabled(directory_view.path_history_position()
-            < directory_view.path_history_size() - 1);
+        struct stat st;
+        if (lstat(new_path.characters(), &st)) {
+            perror("stat");
+            return;
+        }
+
+        auto can_write_in_path = access(new_path.characters(), W_OK) == 0;
+        mkdir_action->set_enabled(can_write_in_path);
+        go_forward_action->set_enabled(directory_view.path_history_position() < directory_view.path_history_size() - 1);
         go_back_action->set_enabled(directory_view.path_history_position() > 0);
         open_parent_directory_action->set_enabled(new_path != "/");
     };
