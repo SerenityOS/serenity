@@ -31,9 +31,9 @@
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/DesktopServices.h>
 #include <LibCore/MimeData.h>
 #include <LibCore/StandardPaths.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
@@ -86,7 +86,7 @@ int main(int argc, char** argv)
 
     GUI::Application app(argc, argv);
 
-    if (pledge("stdio thread shared_buffer accept cpath rpath wpath fattr proc exec", nullptr) < 0) {
+    if (pledge("stdio thread shared_buffer accept cpath rpath wpath fattr proc exec unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -158,7 +158,7 @@ int run_in_desktop_mode(RefPtr<Core::ConfigFile> config, String initial_location
             return;
         auto& node = model->node(index);
         auto path = node.full_path(model);
-        Core::DesktopServices::open(URL::create_with_file_protocol(path));
+        Desktop::Launcher::open(URL::create_with_file_protocol(path));
     };
 
     auto desktop_view_context_menu = GUI::Menu::construct("Directory View");
@@ -205,11 +205,11 @@ int run_in_desktop_mode(RefPtr<Core::ConfigFile> config, String initial_location
     });
 
     auto file_manager_action = GUI::Action::create("Show in FileManager...", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-folder.png"), [&](const GUI::Action&) {
-        Core::DesktopServices::open(URL::create_with_file_protocol(model->root_path()));
+        Desktop::Launcher::open(URL::create_with_file_protocol(model->root_path()));
     });
 
     auto display_properties_action = GUI::Action::create("Display settings...", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-display-settings.png"), [&](const GUI::Action&) {
-        Core::DesktopServices::open(URL::create_with_file_protocol("/bin/DisplaySettings"));
+        Desktop::Launcher::open(URL::create_with_file_protocol("/bin/DisplaySettings"));
     });
 
     desktop_view_context_menu->add_action(mkdir_action);

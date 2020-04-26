@@ -29,7 +29,7 @@
 #include <AK/NumberFormat.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
-#include <LibCore/DesktopServices.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -53,7 +53,7 @@ void DirectoryView::handle_activation(const GUI::ModelIndex& index)
         return;
     }
 
-    Core::DesktopServices::open(URL::create_with_file_protocol(path));
+    Desktop::Launcher::open(URL::create_with_file_protocol(path));
 }
 
 DirectoryView::DirectoryView()
