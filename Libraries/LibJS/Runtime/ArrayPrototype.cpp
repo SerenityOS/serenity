@@ -58,6 +58,7 @@ ArrayPrototype::ArrayPrototype()
     put_native_function("lastIndexOf", last_index_of, 1);
     put_native_function("includes", includes, 1);
     put_native_function("find", find, 1);
+    put_native_function("findIndex", find_index, 1);
     put("length", Value(0));
 }
 
@@ -456,6 +457,40 @@ Value ArrayPrototype::find(Interpreter& interpreter)
     }
 
     return js_undefined();
+}
+
+Value ArrayPrototype::find_index(Interpreter& interpreter)
+{
+    auto* array = array_from(interpreter);
+    if (!array)
+        return {};
+
+    auto* callback = callback_from_args(interpreter, "findIndex");
+    if (!callback)
+        return {};
+
+    auto this_value = interpreter.argument(1);
+    auto array_size = array->elements().size();
+
+    for (size_t i = 0; i < array_size; ++i) {
+        auto value = array->elements().at(i);
+        if (value.is_empty())
+            continue;
+
+        MarkedValueList arguments(interpreter.heap());
+        arguments.append(value);
+        arguments.append(Value((i32)i));
+        arguments.append(array);
+
+        auto result = interpreter.call(callback, this_value, move(arguments));
+        if (interpreter.exception())
+            return {};
+
+        if (result.to_boolean())
+            return Value((i32)i);
+    }
+
+    return Value(-1);
 }
 
 }
