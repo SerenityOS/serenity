@@ -46,6 +46,7 @@ public:
     ElementType& operator*() { return m_node->value; }
     ElementType* operator->() { return &m_node->value; }
     bool is_end() const { return !m_node; }
+    bool is_begin() const { return !m_prev; }
 
 private:
     friend ListType;
