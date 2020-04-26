@@ -28,6 +28,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
 #include <Kernel/Scheduler.h>
+#include <Kernel/Time/TimeManagement.h>
 #include <Kernel/TimerQueue.h>
 
 namespace Kernel {
@@ -41,9 +42,14 @@ TimerQueue& TimerQueue::the()
     return *s_the;
 }
 
+TimerQueue::TimerQueue()
+{
+    m_ticks_per_second = TimeManagement::the().ticks_per_second();
+}
+
 u64 TimerQueue::add_timer(NonnullOwnPtr<Timer>&& timer)
 {
-    ASSERT(timer->expires > g_uptime);
+    ASSERT(timer->expires >= g_uptime);
 
     timer->id = ++m_timer_id_count;
 
@@ -58,10 +64,10 @@ u64 TimerQueue::add_timer(NonnullOwnPtr<Timer>&& timer)
     return m_timer_id_count;
 }
 
-u64 TimerQueue::add_timer(u64 duration, TimeUnit unit, Function<void()>&& callback)
+u64 TimerQueue::add_timer(timeval& deadline, Function<void()>&& callback)
 {
     NonnullOwnPtr timer = make<Timer>();
-    timer->expires = g_uptime + duration * unit;
+    timer->expires = g_uptime + seconds_to_ticks(deadline.tv_sec) + microseconds_to_ticks(deadline.tv_usec);
     timer->callback = move(callback);
     return add_timer(move(timer));
 }
