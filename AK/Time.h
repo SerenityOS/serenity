@@ -50,7 +50,23 @@ inline void timeval_add(const TimevalType& a, const TimevalType& b, TimevalType&
     }
 }
 
+template<typename TimevalType, typename TimespecType>
+inline void timeval_to_timespec(const TimevalType& tv, TimespecType& ts)
+{
+   ts.tv_sec = tv.tv_sec;
+   ts.tv_nsec = tv.tv_usec * 1000;
+}
+
+template<typename TimespecType, typename TimevalType>
+inline void timespec_to_timeval(const TimespecType& ts, TimevalType& tv)
+{
+    tv.tv_sec = ts.tv_sec;
+    tv.tv_usec = ts.tv_nsec / 1000;
+}
+
 }
 
 using AK::timeval_add;
 using AK::timeval_sub;
+using AK::timeval_to_timespec;
+using AK::timespec_to_timeval;
