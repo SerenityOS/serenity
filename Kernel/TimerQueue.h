@@ -34,8 +34,10 @@
 
 namespace Kernel {
 
+typedef u64 TimerId;
+
 struct Timer {
-    u64 id;
+    TimerId id;
     u64 expires;
     Function<void()> callback;
     bool operator<(const Timer& rhs) const
@@ -56,9 +58,9 @@ class TimerQueue {
 public:
     static TimerQueue& the();
 
-    u64 add_timer(NonnullOwnPtr<Timer>&&);
-    u64 add_timer(timeval& timeout, Function<void()>&& callback);
-    bool cancel_timer(u64 id);
+    TimerId add_timer(NonnullOwnPtr<Timer>&&);
+    TimerId add_timer(timeval& timeout, Function<void()>&& callback);
+    bool cancel_timer(TimerId id);
     void fire();
 
 private:

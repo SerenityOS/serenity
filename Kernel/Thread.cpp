@@ -893,7 +893,7 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, timeval* timeout, Atomic<b
     set_state(State::Queued);
     queue.enqueue(*current);
 
-    u64 timer_id = 0;
+    TimerId timer_id {};
     if (timeout) {
         timer_id = TimerQueue::the().add_timer(*timeout, [&]() {
             wake_from_queue();
