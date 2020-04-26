@@ -169,7 +169,7 @@ int main(int argc, char** argv)
     };
 
     window_actions.on_about = [&] {
-        GUI::AboutDialog::show("Browser", Gfx::Bitmap::load_from_file("/res/icons/32x32/filetype-html.png"), window);
+        GUI::AboutDialog::show("Browser", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-browser.png"), window);
     };
 
     window_actions.on_show_bookmarks_bar = [&](auto& action) {
