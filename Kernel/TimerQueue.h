@@ -52,26 +52,26 @@ struct Timer {
     }
 };
 
-enum TimeUnit {
-    MS = OPTIMAL_TICKS_PER_SECOND_RATE / 1000,
-    S = OPTIMAL_TICKS_PER_SECOND_RATE,
-    M = OPTIMAL_TICKS_PER_SECOND_RATE * 60
-};
-
 class TimerQueue {
 public:
     static TimerQueue& the();
 
     u64 add_timer(NonnullOwnPtr<Timer>&&);
-    u64 add_timer(u64 duration, TimeUnit, Function<void()>&& callback);
+    u64 add_timer(timeval& timeout, Function<void()>&& callback);
     bool cancel_timer(u64 id);
     void fire();
 
 private:
+    TimerQueue();
+
     void update_next_timer_due();
+
+    u64 microseconds_to_ticks(u64 micro_seconds) { return micro_seconds * (m_ticks_per_second / 1'000'000); }
+    u64 seconds_to_ticks(u64 seconds) { return seconds * m_ticks_per_second; }
 
     u64 m_next_timer_due { 0 };
     u64 m_timer_id_count { 0 };
+    u64 m_ticks_per_second { 0 };
     SinglyLinkedList<NonnullOwnPtr<Timer>> m_timer_queue;
 };
 
