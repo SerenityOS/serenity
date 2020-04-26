@@ -2327,6 +2327,19 @@ timeval kgettimeofday()
     return const_cast<const timeval&>(((KernelInfoPage*)s_info_page_address_for_kernel.as_ptr())->now);
 }
 
+void compute_relative_timeout_from_absolute(const timeval& absolute_time, timeval& relative_time)
+{
+    // Convert absolute time to relative time of day.
+    timeval_sub(absolute_time, kgettimeofday(), relative_time);
+}
+
+void compute_relative_timeout_from_absolute(const timespec& absolute_time, timeval& relative_time)
+{
+    timeval tv_absolute_time;
+    timespec_to_timeval(absolute_time, tv_absolute_time);
+    compute_relative_timeout_from_absolute(tv_absolute_time, relative_time);
+}
+
 void kgettimeofday(timeval& tv)
 {
     tv = kgettimeofday();
@@ -4660,21 +4673,33 @@ int Process::sys$futex(const Syscall::SC_futex_params* user_params)
     if (user_timeout && !validate_read_typed(user_timeout))
         return -EFAULT;
 
-    timespec timeout { 0, 0 };
-    if (user_timeout)
-        copy_from_user(&timeout, user_timeout);
-
-    i32 user_value;
-
     switch (futex_op) {
-    case FUTEX_WAIT:
+    case FUTEX_WAIT: {
+        i32 user_value;
         copy_from_user(&user_value, userspace_address);
         if (user_value != value)
             return -EAGAIN;
+
+        timespec ts_abstimeout { 0, 0 };
+        if (user_timeout && !validate_read_and_copy_typed(&ts_abstimeout, user_timeout))
+            return -EFAULT;
+
+        WaitQueue& wait_queue = futex_queue(userspace_address);
+        timeval* optional_timeout = nullptr;
+        timeval relative_timeout { 0, 0 };
+        if (user_timeout) {
+            compute_relative_timeout_from_absolute(ts_abstimeout, relative_timeout);
+            optional_timeout = &relative_timeout;
+        }
+
         // FIXME: This is supposed to be interruptible by a signal, but right now WaitQueue cannot be interrupted.
-        // FIXME: Support timeout!
-        Thread::current->wait_on(futex_queue(userspace_address));
+        Thread::BlockResult result = Thread::current->wait_on(wait_queue, optional_timeout);
+        if (result == Thread::BlockResult::InterruptedByTimeout) {
+            return -ETIMEDOUT;
+        }
+
         break;
+    }
     case FUTEX_WAKE:
         if (value == 0)
             return 0;
