@@ -71,6 +71,10 @@ void Object::set_prototype(Object* new_prototype)
 {
     if (prototype() == new_prototype)
         return;
+    if (shape().is_unique()) {
+        shape().set_prototype_without_transition(new_prototype);
+        return;
+    }
     m_shape = m_shape->create_prototype_transition(new_prototype);
 }
 
@@ -113,8 +117,11 @@ void Object::put_own_property(Object& this_object, const FlyString& property_nam
 {
     auto metadata = shape().lookup(property_name);
     if (!metadata.has_value()) {
-        auto* new_shape = m_shape->create_put_transition(property_name, attributes);
-        set_shape(*new_shape);
+        if (m_shape->is_unique()) {
+            m_shape->add_property_to_unique_shape(property_name, attributes);
+        } else {
+            set_shape(*m_shape->create_put_transition(property_name, attributes));
+        }
         metadata = shape().lookup(property_name);
         ASSERT(metadata.has_value());
     }
@@ -126,8 +133,11 @@ void Object::put_own_property(Object& this_object, const FlyString& property_nam
     }
 
     if (mode == PutOwnPropertyMode::DefineProperty && attributes != metadata.value().attributes) {
-        auto* new_shape = m_shape->create_configure_transition(property_name, attributes);
-        set_shape(*new_shape);
+        if (m_shape->is_unique()) {
+            m_shape->reconfigure_property_in_unique_shape(property_name, attributes);
+        } else {
+            set_shape(*m_shape->create_configure_transition(property_name, attributes));
+        }
         metadata = shape().lookup(property_name);
 
         dbg() << "Reconfigured property " << property_name << ", new shape says offset is " << metadata.value().offset << " and my storage capacity is " << m_storage.size();
@@ -152,6 +162,39 @@ void Object::put_own_property(Object& this_object, const FlyString& property_nam
     } else {
         m_storage[metadata.value().offset] = value;
     }
+}
+
+Value Object::delete_property(PropertyName property_name)
+{
+    ASSERT(property_name.is_valid());
+    if (property_name.is_number()) {
+        if (property_name.as_number() < static_cast<i32>(elements().size())) {
+            elements()[property_name.as_number()] = {};
+            return Value(true);
+        }
+        return Value(true);
+    }
+    auto metadata = shape().lookup(property_name.as_string());
+    if (!metadata.has_value())
+        return Value(true);
+    if (!(metadata.value().attributes & Attribute::Configurable))
+        return Value(false);
+
+    size_t deleted_offset = metadata.value().offset;
+
+    ensure_shape_is_unique();
+
+    shape().remove_property_from_unique_shape(property_name.as_string(), deleted_offset);
+    m_storage.remove(deleted_offset);
+    return Value(true);
+}
+
+void Object::ensure_shape_is_unique()
+{
+    if (shape().is_unique())
+        return;
+
+    m_shape = m_shape->create_unique_clone();
 }
 
 Value Object::get_by_index(i32 property_index) const

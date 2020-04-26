@@ -187,6 +187,7 @@ Associativity Parser::operator_associativity(TokenType type) const
     case TokenType::ExclamationMarkEqualsEquals:
     case TokenType::Typeof:
     case TokenType::Void:
+    case TokenType::Delete:
     case TokenType::Ampersand:
     case TokenType::Caret:
     case TokenType::Pipe:
@@ -425,6 +426,9 @@ NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
     case TokenType::Void:
         consume();
         return create_ast_node<UnaryExpression>(UnaryOp::Void, parse_expression(precedence, associativity));
+    case TokenType::Delete:
+        consume();
+        return create_ast_node<UnaryExpression>(UnaryOp::Delete, parse_expression(precedence, associativity));
     default:
         m_parser_state.m_has_errors = true;
         expected("primary expression (missing switch case)");
@@ -1059,7 +1063,8 @@ bool Parser::match_unary_prefixed_expression() const
         || type == TokenType::Plus
         || type == TokenType::Minus
         || type == TokenType::Typeof
-        || type == TokenType::Void;
+        || type == TokenType::Void
+        || type == TokenType::Delete;
 }
 
 bool Parser::match_secondary_expression() const
@@ -1114,7 +1119,6 @@ bool Parser::match_statement() const
         || type == TokenType::Return
         || type == TokenType::Let
         || type == TokenType::Class
-        || type == TokenType::Delete
         || type == TokenType::Do
         || type == TokenType::If
         || type == TokenType::Throw

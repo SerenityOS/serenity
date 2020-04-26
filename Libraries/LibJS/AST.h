@@ -400,6 +400,7 @@ enum class UnaryOp {
     Minus,
     Typeof,
     Void,
+    Delete,
 };
 
 class UnaryExpression : public Expression {
