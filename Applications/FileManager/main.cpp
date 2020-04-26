@@ -425,7 +425,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     copy_action->set_enabled(false);
 
     auto paste_action = GUI::CommonActions::make_paste_action(
-        [&](const GUI::Action&) {
+        [&](const GUI::Action& action) {
             auto data_and_type = GUI::Clipboard::the().data_and_type();
             if (data_and_type.type != "file-list") {
                 dbg() << "Cannot paste clipboard type " << data_and_type.type;
@@ -436,12 +436,19 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 dbg() << "No files to paste";
                 return;
             }
+
+            AK::String target_directory;
+            if (action.activator() == directory_context_menu)
+                target_directory = selected_file_paths()[0];
+            else
+                target_directory = directory_view.path();
+
             for (auto& current_path : copied_lines) {
                 if (current_path.is_empty())
                     continue;
-                auto current_directory = directory_view.path();
+
                 auto new_path = String::format("%s/%s",
-                    current_directory.characters(),
+                    target_directory.characters(),
                     FileSystemPath(current_path).basename().characters());
                 if (!FileUtils::copy_file_or_directory(current_path, new_path)) {
                     auto error_message = String::format("Could not paste %s.",
