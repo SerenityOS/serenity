@@ -49,6 +49,11 @@ class FlyString;
 class Utf32View;
 class Utf8View;
 
+namespace regex {
+class Lexer;
+enum class Error : u8;
+}
+
 template<typename T>
 class Atomic;
 
@@ -143,3 +148,5 @@ using AK::URL;
 using AK::Utf32View;
 using AK::Utf8View;
 using AK::Vector;
+using AK::regex::Error;
+using AK::regex::Lexer;
