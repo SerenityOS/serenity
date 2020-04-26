@@ -28,9 +28,9 @@
 
 #include <AK/Forward.h>
 
-namespace Core {
+namespace Desktop {
 
-class DesktopServices {
+class Launcher {
 public:
     static bool open(const URL&);
 };
