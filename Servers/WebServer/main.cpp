@@ -25,6 +25,7 @@
  */
 
 #include "Client.h"
+#include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/TCPServer.h>
 #include <stdio.h>
@@ -32,8 +33,18 @@
 
 int main(int argc, char** argv)
 {
-    (void)argc;
-    (void)argv;
+    u16 default_port = 8000;
+
+    int port = default_port;
+
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(port, "Port to listen on", "port", Core::ArgsParser::Required::No);
+    args_parser.parse(argc, argv);
+
+    if ((u16)port != port) {
+        printf("Warning: invalid port number: %d\n", port);
+        port = default_port;
+    }
 
     if (pledge("stdio accept rpath inet unix cpath fattr", nullptr) < 0) {
         perror("pledge");
@@ -51,7 +62,8 @@ int main(int argc, char** argv)
         client->start();
     };
 
-    server->listen({}, 8000);
+    server->listen({}, port);
+    printf("Listening on 0.0.0.0:%d\n", port);
 
     if (unveil("/www", "r") < 0) {
         perror("unveil");
