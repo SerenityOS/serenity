@@ -63,6 +63,7 @@ namespace Kernel {
     __ENUMERATE_SYSCALL(getcwd)               \
     __ENUMERATE_SYSCALL(gettimeofday)         \
     __ENUMERATE_SYSCALL(gethostname)          \
+    __ENUMERATE_SYSCALL(sethostname)          \
     __ENUMERATE_SYSCALL(chdir)                \
     __ENUMERATE_SYSCALL(uname)                \
     __ENUMERATE_SYSCALL(set_mmap_name)        \

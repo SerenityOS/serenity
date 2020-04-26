@@ -36,14 +36,24 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    (void)argc;
-    (void)argv;
-    char buffer[HOST_NAME_MAX];
-    int rc = gethostname(buffer, sizeof(buffer));
-    if (rc < 0) {
-        printf("gethostname() error: %s\n", strerror(errno));
-        return 1;
+    if (argc == 1) {
+      char buffer[HOST_NAME_MAX];
+      int rc = gethostname(buffer, sizeof(buffer));
+      if (rc < 0) {
+          printf("gethostname() error: %s\n", strerror(errno));
+          return 1;
+      }
+      printf("%s\n", buffer);
     }
-    printf("%s\n", buffer);
+    else if (argc == 2) {
+      if (strlen(argv[1]) >= HOST_NAME_MAX) {
+        printf("hostname must be less than %i characters\n", HOST_NAME_MAX);
+        return 1;
+      }
+      else {
+        sethostname(argv[1], strlen(argv[1]));
+      }
+    }
+
     return 0;
 }

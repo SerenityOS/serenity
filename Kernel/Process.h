@@ -223,6 +223,7 @@ public:
     int sys$clock_settime(clockid_t, timespec*);
     int sys$clock_nanosleep(const Syscall::SC_clock_nanosleep_params*);
     int sys$gethostname(char*, ssize_t);
+    int sys$sethostname(const char*, ssize_t);
     int sys$uname(utsname*);
     int sys$readlink(const Syscall::SC_readlink_params*);
     int sys$ttyname_r(int fd, char*, ssize_t);
