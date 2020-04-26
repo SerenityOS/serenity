@@ -65,6 +65,10 @@ public:
 
     URL complete_url(const String&) const;
 
+    bool data_payload_is_base64() const { return m_data_payload_is_base64; }
+    const String& data_mime_type() const { return m_data_mime_type; }
+    const String& data_payload() const { return m_data_payload; }
+
     static URL create_with_url_or_path(const String& url_or_path);
     static URL create_with_file_protocol(const String& path);
 
@@ -74,11 +78,14 @@ private:
 
     bool m_valid { false };
     u16 m_port { 80 };
+    bool m_data_payload_is_base64 { false };
     String m_protocol;
     String m_host;
     String m_path;
     String m_query;
     String m_fragment;
+    String m_data_mime_type;
+    String m_data_payload;
 };
 
 }
