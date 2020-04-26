@@ -47,7 +47,7 @@ TimerQueue::TimerQueue()
     m_ticks_per_second = TimeManagement::the().ticks_per_second();
 }
 
-u64 TimerQueue::add_timer(NonnullOwnPtr<Timer>&& timer)
+TimerId TimerQueue::add_timer(NonnullOwnPtr<Timer>&& timer)
 {
     ASSERT(timer->expires >= g_uptime);
 
@@ -64,7 +64,7 @@ u64 TimerQueue::add_timer(NonnullOwnPtr<Timer>&& timer)
     return m_timer_id_count;
 }
 
-u64 TimerQueue::add_timer(timeval& deadline, Function<void()>&& callback)
+TimerId TimerQueue::add_timer(timeval& deadline, Function<void()>&& callback)
 {
     NonnullOwnPtr timer = make<Timer>();
     timer->expires = g_uptime + seconds_to_ticks(deadline.tv_sec) + microseconds_to_ticks(deadline.tv_usec);
@@ -72,7 +72,7 @@ u64 TimerQueue::add_timer(timeval& deadline, Function<void()>&& callback)
     return add_timer(move(timer));
 }
 
-bool TimerQueue::cancel_timer(u64 id)
+bool TimerQueue::cancel_timer(TimerId id)
 {
     auto it = m_timer_queue.find([id](auto& timer) { return timer->id == id; });
     if (it.is_end())
