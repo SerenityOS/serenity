@@ -153,6 +153,7 @@ using PosixOptions = RegexOptions<PosixFlags>;
 }
 }
 
+using AK::regex::AllFlags;
 using AK::regex::ECMAScriptFlags;
 using AK::regex::ECMAScriptOptions;
 using AK::regex::PosixFlags;

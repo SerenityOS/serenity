@@ -26,6 +26,7 @@
 
 #include <AK/TestSuite.h> // import first, to prevent warning of ASSERT* redefinition
 
+#include <AK/RegexLexer.h>
 #include <AK/RegexOptions.h>
 #include <stdio.h>
 
@@ -101,6 +102,30 @@ TEST_CASE(regex_options_posix)
     EXPECT(eo & PosixFlags::Global);
     EXPECT(!(eo & PosixFlags::Insensitive));
     EXPECT(eo & PosixFlags::Multiline);
+}
+
+TEST_CASE(regex_lexer)
+{
+    Lexer l("/[.*+?^${}()|[\\]\\\\]/g");
+    EXPECT(l.next().type() == AK::regex::TokenType::Slash);
+    EXPECT(l.next().type() == AK::regex::TokenType::LeftBracket);
+    EXPECT(l.next().type() == AK::regex::TokenType::Period);
+    EXPECT(l.next().type() == AK::regex::TokenType::Asterisk);
+    EXPECT(l.next().type() == AK::regex::TokenType::Plus);
+    EXPECT(l.next().type() == AK::regex::TokenType::Questionmark);
+    EXPECT(l.next().type() == AK::regex::TokenType::Circumflex);
+    EXPECT(l.next().type() == AK::regex::TokenType::Dollar);
+    EXPECT(l.next().type() == AK::regex::TokenType::LeftCurly);
+    EXPECT(l.next().type() == AK::regex::TokenType::RightCurly);
+    EXPECT(l.next().type() == AK::regex::TokenType::LeftParen);
+    EXPECT(l.next().type() == AK::regex::TokenType::RightParen);
+    EXPECT(l.next().type() == AK::regex::TokenType::Pipe);
+    EXPECT(l.next().type() == AK::regex::TokenType::LeftBracket);
+    EXPECT(l.next().type() == AK::regex::TokenType::EscapeSequence);
+    EXPECT(l.next().type() == AK::regex::TokenType::EscapeSequence);
+    EXPECT(l.next().type() == AK::regex::TokenType::RightBracket);
+    EXPECT(l.next().type() == AK::regex::TokenType::Slash);
+    EXPECT(l.next().type() == AK::regex::TokenType::OrdinaryCharacter);
 }
 
 TEST_MAIN(Regex)

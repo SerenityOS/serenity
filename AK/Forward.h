@@ -50,8 +50,8 @@ class Utf32View;
 class Utf8View;
 
 namespace regex {
-class Lexer;
 enum class Error : u8;
+class Lexer;
 }
 
 template<typename T>
