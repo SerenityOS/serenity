@@ -40,6 +40,7 @@ namespace JS {
 NumberConstructor::NumberConstructor()
     : NativeFunction("Number", *interpreter().global_object().function_prototype())
 {
+    put_native_function("isFinite", is_finite, 1);
     put_native_function("isSafeInteger", is_safe_integer, 1);
 
     put("prototype", interpreter().global_object().number_prototype());
@@ -71,6 +72,11 @@ Value NumberConstructor::construct(Interpreter& interpreter)
     else
         number = interpreter.argument(0).to_number().as_double();
     return NumberObject::create(interpreter.global_object(), number);
+}
+
+Value NumberConstructor::is_finite(Interpreter& interpreter)
+{
+    return Value(interpreter.argument(0).is_finite_number());
 }
 
 Value NumberConstructor::is_safe_integer(Interpreter& interpreter)
