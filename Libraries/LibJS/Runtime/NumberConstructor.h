@@ -43,6 +43,7 @@ private:
     virtual const char* class_name() const override { return "NumberConstructor"; }
 
     static Value is_finite(Interpreter&);
+    static Value is_nan(Interpreter&);
     static Value is_safe_integer(Interpreter&);
 };
 
