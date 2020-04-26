@@ -460,10 +460,10 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             }
         },
         window);
-    paste_action->set_enabled(GUI::Clipboard::the().type() == "file-list");
 
     GUI::Clipboard::the().on_content_change = [&](const String& data_type) {
-        paste_action->set_enabled(data_type == "file-list");
+        auto current_location = directory_view.path();
+        paste_action->set_enabled(data_type == "file-list" && access(current_location.characters(), W_OK) == 0);
     };
 
     auto properties_action
@@ -662,6 +662,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
         auto can_write_in_path = access(new_path.characters(), W_OK) == 0;
         mkdir_action->set_enabled(can_write_in_path);
+        paste_action->set_enabled(can_write_in_path && GUI::Clipboard::the().type() == "file-list");
         go_forward_action->set_enabled(directory_view.path_history_position() < directory_view.path_history_size() - 1);
         go_back_action->set_enabled(directory_view.path_history_position() > 0);
         open_parent_directory_action->set_enabled(new_path != "/");
@@ -800,6 +801,8 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     directory_view.open(initial_location);
     directory_view.set_focus(true);
+
+    paste_action->set_enabled(GUI::Clipboard::the().type() == "file-list" && access(initial_location.characters(), W_OK) == 0);
 
     window->show();
 
