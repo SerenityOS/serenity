@@ -169,6 +169,7 @@ cp ../Services/ProtocolServer/ProtocolServer mnt/bin/ProtocolServer
 cp ../Services/SystemMenu/SystemMenu mnt/bin/SystemMenu
 cp ../Services/NotificationServer/NotificationServer mnt/bin/NotificationServer
 cp ../Services/WebServer/WebServer mnt/bin/WebServer
+cp ../Services/LaunchServer/LaunchServer mnt/bin/LaunchServer
 cp ../Shell/Shell mnt/bin/Shell
 cp ../MenuApplets/Audio/Audio.MenuApplet mnt/bin/
 cp ../MenuApplets/ResourceGraph/ResourceGraph.MenuApplet mnt/bin/
