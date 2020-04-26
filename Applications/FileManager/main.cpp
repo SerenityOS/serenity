@@ -652,6 +652,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         go_forward_action->set_enabled(directory_view.path_history_position()
             < directory_view.path_history_size() - 1);
         go_back_action->set_enabled(directory_view.path_history_position() > 0);
+        open_parent_directory_action->set_enabled(new_path != "/");
     };
 
     directory_view.on_error = [&](int, const char* error_string, bool quit) {
