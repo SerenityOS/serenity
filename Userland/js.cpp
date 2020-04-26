@@ -62,10 +62,10 @@ private:
     static JS::Value save_to_file(JS::Interpreter&);
 };
 
-bool dump_ast = false;
-bool print_last_result = false;
-static OwnPtr<Line::Editor> editor;
-static int repl_line_level = 0;
+static bool s_dump_ast = false;
+static bool s_print_last_result = false;
+static OwnPtr<Line::Editor> s_editor;
+static int s_repl_line_level = 0;
 
 static String prompt_for_level(int level)
 {
@@ -85,8 +85,8 @@ String read_next_piece()
 
     do {
 
-        String line = editor->get_line(prompt_for_level(repl_line_level));
-        editor->add_to_history(line);
+        String line = s_editor->get_line(prompt_for_level(s_repl_line_level));
+        s_editor->add_to_history(line);
 
         piece.append(line);
         auto lexer = JS::Lexer(line);
@@ -96,18 +96,18 @@ String read_next_piece()
             case JS::TokenType::BracketOpen:
             case JS::TokenType::CurlyOpen:
             case JS::TokenType::ParenOpen:
-                repl_line_level++;
+                s_repl_line_level++;
                 break;
             case JS::TokenType::BracketClose:
             case JS::TokenType::CurlyClose:
             case JS::TokenType::ParenClose:
-                repl_line_level--;
+                s_repl_line_level--;
                 break;
             default:
                 break;
             }
         }
-    } while (repl_line_level > 0);
+    } while (s_repl_line_level > 0);
 
     return piece.to_string();
 }
@@ -337,14 +337,14 @@ JS::Value ReplObject::load_file(JS::Interpreter& interpreter)
         }
         auto parser = JS::Parser(JS::Lexer(source));
         auto program = parser.parse_program();
-        if (dump_ast)
+        if (s_dump_ast)
             program->dump(0);
 
         if (parser.has_errors())
             continue;
 
         interpreter.run(*program);
-        if (print_last_result)
+        if (s_print_last_result)
             print(interpreter.last_value());
     }
     return JS::Value(true);
@@ -359,7 +359,7 @@ void repl(JS::Interpreter& interpreter)
         repl_statements.append(piece);
         auto parser = JS::Parser(JS::Lexer(piece));
         auto program = parser.parse_program();
-        if (dump_ast)
+        if (s_dump_ast)
             program->dump(0);
 
         if (parser.has_errors()) {
@@ -397,8 +397,8 @@ int main(int argc, char** argv)
     const char* script_path = nullptr;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(dump_ast, "Dump the AST", "dump-ast", 'A');
-    args_parser.add_option(print_last_result, "Print last result", "print-last-result", 'l');
+    args_parser.add_option(s_dump_ast, "Dump the AST", "dump-ast", 'A');
+    args_parser.add_option(s_print_last_result, "Print last result", "print-last-result", 'l');
     args_parser.add_option(gc_on_every_allocation, "GC on every allocation", "gc-on-every-allocation", 'g');
     args_parser.add_option(syntax_highlight, "Enable live syntax highlighting", "syntax-highlight", 's');
     args_parser.add_option(test_mode, "Run the interpreter with added functionality for the test harness", "test-mode", 't');
@@ -418,19 +418,19 @@ int main(int argc, char** argv)
         if (test_mode)
             enable_test_mode(*interpreter);
 
-        editor = make<Line::Editor>();
+        s_editor = make<Line::Editor>();
 
         signal(SIGINT, [](int) {
             sigint_handler();
-            editor->interrupted();
+            s_editor->interrupted();
         });
 
         signal(SIGWINCH, [](int) {
-            editor->resized();
+            s_editor->resized();
         });
 
-        editor->initialize();
-        editor->on_display_refresh = [syntax_highlight](Line::Editor& editor) {
+        s_editor->initialize();
+        s_editor->on_display_refresh = [syntax_highlight](Line::Editor& editor) {
             auto stylize = [&](Line::Span span, Line::Style styles) {
                 if (syntax_highlight)
                     editor.stylize(span, styles);
@@ -442,7 +442,7 @@ int main(int argc, char** argv)
             builder.append(" ");
             String str = builder.build();
 
-            size_t open_indents = repl_line_level;
+            size_t open_indents = s_repl_line_level;
 
             JS::Lexer lexer(str, false);
             bool indenters_starting_line = true;
@@ -568,7 +568,7 @@ int main(int argc, char** argv)
             editor.set_prompt(prompt_for_level(open_indents));
         };
 
-        auto complete = [&interpreter, &editor = *editor](const String& token) -> Vector<Line::CompletionSuggestion> {
+        auto complete = [&interpreter, &editor = *s_editor](const String& token) -> Vector<Line::CompletionSuggestion> {
             if (token.length() == 0)
                 return {}; // nyeh
 
@@ -630,8 +630,8 @@ int main(int argc, char** argv)
                 editor.suggest(token.length());
             return results;
         };
-        editor->on_tab_complete_first_token = [complete](auto& value) { return complete(value); };
-        editor->on_tab_complete_other_token = [complete](auto& value) { return complete(value); };
+        s_editor->on_tab_complete_first_token = [complete](auto& value) { return complete(value); };
+        s_editor->on_tab_complete_other_token = [complete](auto& value) { return complete(value); };
         repl(*interpreter);
     } else {
         interpreter = JS::Interpreter::create<JS::GlobalObject>();
@@ -659,7 +659,7 @@ int main(int argc, char** argv)
         auto parser = JS::Parser(JS::Lexer(source));
         auto program = parser.parse_program();
 
-        if (dump_ast)
+        if (s_dump_ast)
             program->dump(0);
 
         if (parser.has_errors()) {
@@ -675,7 +675,7 @@ int main(int argc, char** argv)
             interpreter->clear_exception();
             return 1;
         }
-        if (print_last_result)
+        if (s_print_last_result)
             print(result);
     }
 
