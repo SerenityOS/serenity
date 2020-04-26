@@ -378,6 +378,21 @@ Value LogicalExpression::execute(Interpreter& interpreter) const
 
 Value UnaryExpression::execute(Interpreter& interpreter) const
 {
+    if (m_op == UnaryOp::Delete) {
+        if (!m_lhs->is_member_expression())
+            return Value(true);
+        auto object_value = static_cast<const MemberExpression&>(*m_lhs).object().execute(interpreter);
+        if (interpreter.exception())
+            return {};
+        auto* object = object_value.to_object(interpreter.heap());
+        if (!object)
+            return {};
+        auto property_name = static_cast<const MemberExpression&>(*m_lhs).computed_property_name(interpreter);
+        if (!property_name.is_valid())
+            return {};
+        return object->delete_property(property_name);
+    }
+
     auto lhs_result = m_lhs->execute(interpreter);
     if (interpreter.exception())
         return {};
@@ -416,6 +431,8 @@ Value UnaryExpression::execute(Interpreter& interpreter) const
         }
     case UnaryOp::Void:
         return js_undefined();
+    case UnaryOp::Delete:
+        ASSERT_NOT_REACHED();
     }
 
     ASSERT_NOT_REACHED();
@@ -574,6 +591,9 @@ void UnaryExpression::dump(int indent) const
         break;
     case UnaryOp::Void:
         op_string = "void ";
+        break;
+    case UnaryOp::Delete:
+        op_string = "delete ";
         break;
     }
 

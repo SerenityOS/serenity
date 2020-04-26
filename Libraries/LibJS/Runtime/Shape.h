@@ -78,6 +78,9 @@ public:
     Shape* create_configure_transition(const FlyString& name, u8 attributes);
     Shape* create_prototype_transition(Object* new_prototype);
 
+    bool is_unique() const { return m_unique; }
+    Shape* create_unique_clone() const;
+
     Object* prototype() { return m_prototype; }
     const Object* prototype() const { return m_prototype; }
 
@@ -86,6 +89,10 @@ public:
     size_t property_count() const;
 
     void set_prototype_without_transition(Object* new_prototype) { m_prototype = new_prototype; }
+
+    void remove_property_from_unique_shape(const FlyString&, size_t offset);
+    void add_property_to_unique_shape(const FlyString&, u8 attributes);
+    void reconfigure_property_in_unique_shape(const FlyString& property_name, u8 attributes);
 
 private:
     virtual const char* class_name() const override { return "Shape"; }
@@ -99,6 +106,7 @@ private:
     Shape* m_previous { nullptr };
     FlyString m_property_name;
     u8 m_attributes { 0 };
+    bool m_unique { false };
     Object* m_prototype { nullptr };
     TransitionType m_transition_type { TransitionType::Invalid };
 };

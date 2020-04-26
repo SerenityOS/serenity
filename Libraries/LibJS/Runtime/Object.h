@@ -46,6 +46,8 @@ public:
     Shape& shape() { return *m_shape; }
     const Shape& shape() const { return *m_shape; }
 
+    Value delete_property(PropertyName);
+
     virtual Value get_by_index(i32 property_index) const;
     Value get(const FlyString& property_name) const;
     Value get(PropertyName) const;
@@ -102,6 +104,7 @@ public:
 
 private:
     void set_shape(Shape&);
+    void ensure_shape_is_unique();
 
     Shape* m_shape { nullptr };
     Vector<Value> m_storage;
