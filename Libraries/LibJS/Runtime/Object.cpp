@@ -119,6 +119,7 @@ void Object::put_own_property(Object& this_object, const FlyString& property_nam
     if (!metadata.has_value()) {
         if (m_shape->is_unique()) {
             m_shape->add_property_to_unique_shape(property_name, attributes);
+            m_storage.resize(m_shape->property_count());
         } else {
             set_shape(*m_shape->create_put_transition(property_name, attributes));
         }
