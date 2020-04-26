@@ -49,17 +49,27 @@ TimerQueue::TimerQueue()
 
 u64 TimerQueue::add_timer(NonnullOwnPtr<Timer>&& timer)
 {
-    ASSERT(timer->expires >= g_uptime);
+    u64 timer_expiration = timer->expires;
+    ASSERT(timer_expiration >= g_uptime);
 
     timer->id = ++m_timer_id_count;
 
-    auto following_timer = m_timer_queue.find([&timer](auto& other) { return other->expires > timer->expires; });
-    if (following_timer.is_end())
+    if (m_timer_queue.is_empty()) {
         m_timer_queue.append(move(timer));
-    else
-        m_timer_queue.insert_before(following_timer, move(timer));
+        m_next_timer_due = timer_expiration;
+    } else {
+        auto following_timer = m_timer_queue.find([&timer_expiration](auto& other) { return other->expires > timer_expiration; });
 
-    update_next_timer_due();
+        if (following_timer.is_end()) {
+            m_timer_queue.append(move(timer));
+        } else {
+            auto next_timer_needs_update = following_timer.is_begin();
+            m_timer_queue.insert_before(following_timer, move(timer));
+
+            if (next_timer_needs_update)
+                m_next_timer_due = timer_expiration;
+        }
+    }
 
     return m_timer_id_count;
 }
@@ -77,8 +87,13 @@ bool TimerQueue::cancel_timer(u64 id)
     auto it = m_timer_queue.find([id](auto& timer) { return timer->id == id; });
     if (it.is_end())
         return false;
+
+    auto was_next_timer = it.is_begin();
     m_timer_queue.remove(it);
-    update_next_timer_due();
+
+    if (was_next_timer)
+        update_next_timer_due();
+
     return true;
 }
 
