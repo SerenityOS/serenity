@@ -6,6 +6,6 @@ OBJS = \
 
 PROGRAM = FileManager
 
-LIB_DEPS = GUI Gfx IPC Thread Pthread Core
+LIB_DEPS = GUI Gfx Desktop IPC Thread Pthread Core
 
 include ../../Makefile.common

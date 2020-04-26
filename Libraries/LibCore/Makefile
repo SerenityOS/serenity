@@ -2,7 +2,6 @@ OBJS = \
     ArgsParser.o \
     ConfigFile.o \
     DateTime.o \
-    DesktopServices.o \
     DirIterator.o \
     ElapsedTimer.o \
     Event.o \

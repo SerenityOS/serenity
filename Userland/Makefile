@@ -4,7 +4,7 @@ APPS = ${SRCS:.cpp=}
 
 EXTRA_CLEAN = $(APPS)
 
-LIB_DEPS = Web GUI Gfx Audio Protocol IPC Thread Pthread PCIDB Markdown JS Core Line X86 Debug
+LIB_DEPS = Web GUI Gfx Desktop Audio Protocol IPC Thread Pthread PCIDB Markdown JS Core Line X86 Debug
 
 include ../Makefile.common
 

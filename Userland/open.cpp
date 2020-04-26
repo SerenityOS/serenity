@@ -27,10 +27,13 @@
 #include <AK/URL.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DesktopServices.h>
+#include <LibDesktop/Launcher.h>
+#include <LibGUI/Application.h>
 
 int main(int argc, char* argv[])
 {
+    GUI::Application app(argc, argv);
+
     Vector<const char*> urls_or_paths;
     Core::ArgsParser parser;
     parser.add_positional_argument(urls_or_paths, "URL or file path to open", "url-or-path");
@@ -40,7 +43,7 @@ int main(int argc, char* argv[])
 
     for (auto& url_or_path : urls_or_paths) {
         URL url = URL::create_with_url_or_path(url_or_path);
-        bool ok = Core::DesktopServices::open(url);
+        bool ok = Desktop::Launcher::open(url);
         all_ok = all_ok && ok;
     }
 
