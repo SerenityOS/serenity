@@ -714,6 +714,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     file_context_menu->add_action(properties_action);
 
     directory_view_context_menu->add_action(mkdir_action);
+    directory_view_context_menu->add_action(paste_action);
     directory_view_context_menu->add_action(open_terminal_action);
     directory_view_context_menu->add_separator();
     directory_view_context_menu->add_action(properties_action);
