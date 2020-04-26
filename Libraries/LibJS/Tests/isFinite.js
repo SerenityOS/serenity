@@ -4,6 +4,7 @@ try {
     assert(isFinite.length === 1);
 
     assert(isFinite(0) === true);
+    assert(isFinite(1.23) === true);
     assert(isFinite(42) === true);
     assert(isFinite("") === true);
     assert(isFinite("0") === true);
