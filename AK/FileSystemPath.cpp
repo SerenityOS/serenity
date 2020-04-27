@@ -45,10 +45,10 @@ void FileSystemPath::canonicalize()
         return;
     }
 
-    bool is_absolute_path = m_string[0] == '/';
+    m_is_absolute = m_string[0] == '/';
     auto parts = m_string.split_view('/');
 
-    if (!is_absolute_path)
+    if (!m_is_absolute)
         parts.prepend(".");
 
     size_t approximate_canonical_length = 0;
@@ -56,7 +56,7 @@ void FileSystemPath::canonicalize()
 
     for (size_t i = 0; i < parts.size(); ++i) {
         auto& part = parts[i];
-        if (is_absolute_path || i != 0) {
+        if (m_is_absolute || i != 0) {
             if (part == ".")
                 continue;
         }
@@ -78,7 +78,7 @@ void FileSystemPath::canonicalize()
     StringBuilder dirname_builder(approximate_canonical_length);
     for (size_t i = 0; i < canonical_parts.size() - 1; ++i) {
         auto& canonical_part = canonical_parts[i];
-        if (is_absolute_path || i != 0)
+        if (m_is_absolute || i != 0)
             dirname_builder.append('/');
         dirname_builder.append(canonical_part);
     }
@@ -93,7 +93,7 @@ void FileSystemPath::canonicalize()
     StringBuilder builder(approximate_canonical_length);
     for (size_t i = 0; i < canonical_parts.size(); ++i) {
         auto& canonical_part = canonical_parts[i];
-        if (is_absolute_path || i != 0)
+        if (m_is_absolute || i != 0)
             builder.append('/');
         builder.append(canonical_part);
     }

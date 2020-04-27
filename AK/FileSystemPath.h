@@ -37,6 +37,7 @@ public:
     explicit FileSystemPath(const StringView&);
 
     bool is_valid() const { return m_is_valid; }
+    bool is_absolute() const { return m_is_absolute; }
     const String& string() const { return m_string; }
 
     const String& dirname() const { return m_dirname; }
@@ -58,6 +59,7 @@ private:
     String m_title;
     String m_extension;
     bool m_is_valid { false };
+    bool m_is_absolute { false };
 };
 
 String canonicalized_path(const StringView&);
