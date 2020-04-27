@@ -837,21 +837,17 @@ Value AssignmentExpression::execute(Interpreter& interpreter) const
     if (interpreter.exception())
         return {};
 
-    if (m_lhs->is_identifier()) {
-        auto name = static_cast<const Identifier&>(*m_lhs).string();
-        interpreter.set_variable(name, rhs_result);
-    } else if (m_lhs->is_member_expression()) {
-        auto object_value = static_cast<const MemberExpression&>(*m_lhs).object().execute(interpreter);
-        if (interpreter.exception())
-            return {};
-        if (auto* object = object_value.to_object(interpreter.heap())) {
-            auto property_name = static_cast<const MemberExpression&>(*m_lhs).computed_property_name(interpreter);
-            object->put(property_name, rhs_result);
-        }
-    } else {
-        return interpreter.throw_exception<ReferenceError>("Invalid left-hand side in assignment");
-    }
+    auto reference = m_lhs->to_reference(interpreter);
+    if (interpreter.exception())
+        return {};
 
+    if (reference.is_unresolvable())
+        return interpreter.throw_exception<ReferenceError>("Invalid left-hand side in assignment");
+
+    reference.assign(interpreter, rhs_result);
+
+    if (interpreter.exception())
+        return {};
     return rhs_result;
 }
 
