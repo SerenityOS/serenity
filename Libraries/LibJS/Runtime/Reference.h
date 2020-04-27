@@ -42,6 +42,15 @@ public:
     {
     }
 
+    enum LocalVariableTag { LocalVariable };
+    Reference(LocalVariableTag, const String& name, bool strict = false)
+        : m_base(js_null())
+        , m_name(name)
+        , m_strict(strict)
+        , m_local_variable(true)
+    {
+    }
+
     Value base() const { return m_base; }
     const PropertyName& name() const { return m_name; }
     bool is_strict() const { return m_strict; }
@@ -57,10 +66,16 @@ public:
         return m_base.is_boolean() || m_base.is_string() || m_base.is_number();
     }
 
+    bool is_local_variable() const
+    {
+        return m_local_variable;
+    }
+
 private:
     Value m_base { js_undefined() };
     PropertyName m_name;
     bool m_strict { false };
+    bool m_local_variable { false };
 };
 
 const LogStream& operator<<(const LogStream&, const Value&);

@@ -33,6 +33,7 @@
 #include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/Reference.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -161,6 +162,18 @@ Value Interpreter::get_variable(const FlyString& name)
         }
     }
     return global_object().get(name);
+}
+
+Reference Interpreter::get_reference(const FlyString& name)
+{
+    if (m_call_stack.size()) {
+        for (auto* environment = current_environment(); environment; environment = environment->parent()) {
+            auto possible_match = environment->get(name);
+            if (possible_match.has_value())
+                return { Reference::LocalVariable, name };
+        }
+    }
+    return { &global_object(), PropertyName(name) };
 }
 
 void Interpreter::gather_roots(Badge<Heap>, HashTable<Cell*>& roots)

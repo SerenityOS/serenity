@@ -516,6 +516,7 @@ public:
     virtual Value execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual bool is_identifier() const override { return true; }
+    virtual Reference to_reference(Interpreter&) const override;
 
 private:
     virtual const char* class_name() const override { return "Identifier"; }

@@ -96,6 +96,8 @@ public:
     Value get_variable(const FlyString& name);
     void set_variable(const FlyString& name, Value, bool first_assignment = false);
 
+    Reference get_reference(const FlyString& name);
+
     void gather_roots(Badge<Heap>, HashTable<Cell*>&);
 
     void enter_scope(const ScopeNode&, ArgumentVector, ScopeType);
