@@ -1,16 +1,16 @@
 ## Name
 
-mkdir - create a directory
+mkdir - create directories
 
 ## Synopsis
 
 ```**sh
-$ mkdir path
+$ mkdir directories...
 ```
 
 ## Description
 
-Create a new empty directory at the given *path*.
+Create a new empty directory for each of the given *directories*.
 
 ## Examples
 

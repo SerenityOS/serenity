@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,11 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <assert.h>
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <LibCore/ArgsParser.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -39,14 +36,18 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (argc != 2) {
-        printf("usage: mkdir <path>\n");
-        return 1;
+    Vector<const char*> directories;
+
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(directories, "Directories to create", "directories");
+    args_parser.parse(argc, argv);
+
+    bool has_errors = false;
+    for (auto& directory : directories) {
+        if (mkdir(directory, 0755) < 0) {
+            perror("mkdir");
+            has_errors = true;
+        }
     }
-    int rc = mkdir(argv[1], 0755);
-    if (rc < 0) {
-        perror("mkdir");
-        return 1;
-    }
-    return 0;
+    return has_errors ? 1 : 0;
 }
