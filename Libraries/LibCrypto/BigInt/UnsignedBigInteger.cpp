@@ -35,7 +35,7 @@ UnsignedBigInteger UnsignedBigInteger::from_base10(const String& str)
     UnsignedBigInteger ten { 10 };
 
     for (auto& c : str) {
-        result = result.multiply(ten).add(c - '0');
+        result = result.multiplied_by(ten).plus(c - '0');
     }
     return result;
 }
@@ -46,7 +46,7 @@ String UnsignedBigInteger::to_base10() const
     UnsignedBigInteger temp(*this);
 
     while (temp != UnsignedBigInteger { 0 }) {
-        auto div_result = temp.divide({ 10 });
+        auto div_result = temp.divided_by({ 10 });
         ASSERT(div_result.remainder.words()[0] < 10);
         builder.append(static_cast<char>(div_result.remainder.words()[0] + '0'));
         temp = div_result.quotient;
@@ -69,7 +69,7 @@ bool UnsignedBigInteger::operator!=(const UnsignedBigInteger& other) const
 /**
  * Complexity: O(N) where N is the number of words in the larger number
  */
-UnsignedBigInteger UnsignedBigInteger::add(const UnsignedBigInteger& other) const
+UnsignedBigInteger UnsignedBigInteger::plus(const UnsignedBigInteger& other) const
 {
     const UnsignedBigInteger* const longer = (length() > other.length()) ? this : &other;
     const UnsignedBigInteger* const shorter = (longer == &other) ? this : &other;
@@ -111,7 +111,7 @@ UnsignedBigInteger UnsignedBigInteger::add(const UnsignedBigInteger& other) cons
 /**
  * Complexity: O(N) where N is the number of words in the larger number
  */
-UnsignedBigInteger UnsignedBigInteger::sub(const UnsignedBigInteger& other) const
+UnsignedBigInteger UnsignedBigInteger::minus(const UnsignedBigInteger& other) const
 {
     UnsignedBigInteger result;
 
@@ -149,7 +149,7 @@ UnsignedBigInteger UnsignedBigInteger::sub(const UnsignedBigInteger& other) cons
  * So to multiple x*y, we go over each '1' bit in x (say the i'th bit), 
  * and add y<<i to the result.
  */
-UnsignedBigInteger UnsignedBigInteger::multiply(const UnsignedBigInteger& other) const
+UnsignedBigInteger UnsignedBigInteger::multiplied_by(const UnsignedBigInteger& other) const
 {
     UnsignedBigInteger result;
     // iterate all bits
@@ -161,7 +161,7 @@ UnsignedBigInteger UnsignedBigInteger::multiply(const UnsignedBigInteger& other)
 
             const size_t shift_amount = word_index * UnsignedBigInteger::BITS_IN_WORD + bit_index;
             auto shift_result = other.shift_left(shift_amount);
-            result = result.add(shift_result);
+            result = result.plus(shift_result);
         }
     }
     return result;
@@ -175,7 +175,7 @@ UnsignedBigInteger UnsignedBigInteger::multiply(const UnsignedBigInteger& other)
  * so we set the ith bit in the quotient and reduce divisor<<i from the dividend.
  * When we're done, what's left from the dividend is the remainder.
  */
-UnsignedDivisionResult UnsignedBigInteger::divide(const UnsignedBigInteger& divisor) const
+UnsignedDivisionResult UnsignedBigInteger::divided_by(const UnsignedBigInteger& divisor) const
 {
     UnsignedBigInteger leftover_dividend(*this);
     UnsignedBigInteger quotient;
@@ -187,7 +187,7 @@ UnsignedDivisionResult UnsignedBigInteger::divide(const UnsignedBigInteger& divi
             const size_t shift_amount = word_index * UnsignedBigInteger::BITS_IN_WORD + bit_index;
             UnsignedBigInteger divisor_shifted = divisor.shift_left(shift_amount);
 
-            UnsignedBigInteger temp_subtraction_result = leftover_dividend.sub(divisor_shifted);
+            UnsignedBigInteger temp_subtraction_result = leftover_dividend.minus(divisor_shifted);
             if (!temp_subtraction_result.is_invalid()) {
                 leftover_dividend = temp_subtraction_result;
                 quotient.set_bit_inplace(shift_amount);
@@ -231,7 +231,7 @@ UnsignedBigInteger UnsignedBigInteger::shift_left(size_t num_bits) const
     // Shifting the last word can produce a carry
     u32 carry_word = temp_result.shift_left_get_one_word(num_bits, temp_result.length());
     if (carry_word != 0) {
-        result = result.add(UnsignedBigInteger(carry_word).shift_left_by_n_words(temp_result.length()));
+        result = result.plus(UnsignedBigInteger(carry_word).shift_left_by_n_words(temp_result.length()));
     }
     return result;
 }
@@ -333,7 +333,7 @@ UnsignedBigInteger UnsignedBigInteger::import_data(const u8* ptr, size_t length)
 
     for (size_t i = 0; i < length; ++i) {
         auto part = UnsignedBigInteger { ptr[length - i - 1] }.shift_left(8 * i);
-        integer = integer.add(part);
+        integer = integer.plus(part);
     }
 
     return integer;
@@ -349,7 +349,7 @@ size_t UnsignedBigInteger::export_data(AK::ByteBuffer& data)
         if (copy.length() == 0)
             break;
         data[size - i - 1] = copy.m_words[0] & 0xff;
-        copy = copy.divide(256).quotient;
+        copy = copy.divided_by(256).quotient;
     }
     return i;
 }

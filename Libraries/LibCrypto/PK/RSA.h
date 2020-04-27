@@ -129,11 +129,11 @@ public:
         do {
             p = NumberTheory::random_big_prime(bits / 2);
             q = NumberTheory::random_big_prime(bits / 2);
-            lambda = NumberTheory::LCM(p.sub(1), q.sub(1));
+            lambda = NumberTheory::LCM(p.minus(1), q.minus(1));
             dbg() << "checking combination p=" << p << ", q=" << q << ", lambda=" << lambda.length();
         } while (!(NumberTheory::GCD(e, lambda) == 1));
 
-        auto n = p.multiply(q);
+        auto n = p.multiplied_by(q);
 
         auto d = NumberTheory::ModularInverse(e, lambda);
         dbg() << "Your keys are Pub{n=" << n << ", e=" << e << "} and Priv{n=" << n << ", d=" << d << "}";
