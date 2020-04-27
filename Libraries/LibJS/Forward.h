@@ -66,6 +66,7 @@ class Interpreter;
 class LexicalEnvironment;
 class MarkedValueList;
 class PrimitiveString;
+class Reference;
 class ScopeNode;
 class Shape;
 class Statement;

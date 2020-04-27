@@ -26,51 +26,43 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <AK/String.h>
+#include <LibJS/Runtime/PropertyName.h>
+#include <LibJS/Runtime/Value.h>
 
 namespace JS {
 
-class PropertyName {
+class Reference {
 public:
-    enum class Type {
-        Invalid,
-        Number,
-        String,
-    };
-
-    PropertyName() {}
-
-    explicit PropertyName(i32 index)
-        : m_type(Type::Number)
-        , m_number(index)
-    {
-        ASSERT(m_number >= 0);
-    }
-
-    explicit PropertyName(const FlyString& string)
-        : m_type(Type::String)
-        , m_string(string)
+    Reference() {}
+    Reference(Value base, const PropertyName& name, bool strict = false)
+        : m_base(base)
+        , m_name(name)
+        , m_strict(strict)
     {
     }
 
-    bool is_valid() const { return m_type != Type::Invalid; }
-    bool is_number() const { return m_type == Type::Number; }
-    bool is_string() const { return m_type == Type::String; }
+    Value base() const { return m_base; }
+    const PropertyName& name() const { return m_name; }
+    bool is_strict() const { return m_strict; }
 
-    i32 as_number() const { return m_number; }
-    const FlyString& as_string() const { return m_string; }
-
-    String to_string() const
+    bool is_unresolvable() const { return m_base.is_undefined(); }
+    bool is_property() const
     {
-        if (is_string())
-            return as_string();
-        return String::number(as_number());
+        return m_base.is_object() || has_primitive_base();
+    }
+
+    bool has_primitive_base() const
+    {
+        return m_base.is_boolean() || m_base.is_string() || m_base.is_number();
     }
 
 private:
-    Type m_type { Type::Invalid };
-    FlyString m_string;
-    i32 m_number { 0 };
+    Value m_base { js_undefined() };
+    PropertyName m_name;
+    bool m_strict { false };
 };
+
+const LogStream& operator<<(const LogStream&, const Value&);
 
 }
