@@ -94,9 +94,9 @@ private:
         Wrap,
         Adopt
     };
-    explicit ByteBufferImpl(size_t);                       // For ConstructionMode=Uninitialized
+    explicit ByteBufferImpl(size_t); // For ConstructionMode=Uninitialized
     ByteBufferImpl(const void*, size_t, ConstructionMode); // For ConstructionMode=Copy
-    ByteBufferImpl(void*, size_t, ConstructionMode);       // For ConstructionMode=Wrap/Adopt
+    ByteBufferImpl(void*, size_t, ConstructionMode); // For ConstructionMode=Wrap/Adopt
     ByteBufferImpl() {}
 
     u8* m_data { nullptr };
@@ -183,10 +183,10 @@ public:
     {
         if (is_null())
             return {};
-        if (offset >= this->size())
-            return {};
-        if (offset + size >= this->size())
-            size = this->size() - offset;
+
+        // I cannot hand you a slice I don't have
+        ASSERT(offset + size <= this->size());
+
         return wrap(offset_pointer(offset), size);
     }
 
@@ -194,10 +194,10 @@ public:
     {
         if (is_null())
             return {};
-        if (offset >= this->size())
-            return {};
-        if (offset + size >= this->size())
-            size = this->size() - offset;
+
+        // I cannot hand you a slice I don't have
+        ASSERT(offset + size <= this->size());
+
         return copy(offset_pointer(offset), size);
     }
 
@@ -222,7 +222,7 @@ public:
     void overwrite(size_t offset, const void* data, size_t data_size)
     {
         // make sure we're not told to write past the end
-        ASSERT(offset + data_size < size());
+        ASSERT(offset + data_size <= size());
         __builtin_memcpy(this->data() + offset, data, data_size);
     }
 
