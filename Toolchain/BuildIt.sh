@@ -32,6 +32,15 @@ elif [ "$(uname -s)" = "FreeBSD" ]; then
     NPROC="sysctl -n hw.ncpu"
 fi
 
+git_patch=
+while [ "$1" != "" ]; do
+    case $1 in
+        --dev )           git_patch=1
+                          ;;
+    esac
+    shift
+done
+
 echo PREFIX is "$PREFIX"
 echo SYSROOT is "$SYSROOT"
 
@@ -111,10 +120,14 @@ pushd "$DIR/Tarballs"
         tar -xzf ${BINUTILS_PKG}
 
         pushd ${BINUTILS_NAME}
-            git init >/dev/null
-            git add . >/dev/null
-            git commit -am "BASE" >/dev/null
-            git apply "$DIR"/Patches/binutils.patch >/dev/null
+            if [ "$git_patch" = "1" ]; then
+                git init > /dev/null
+                git add . > /dev/null
+                git commit -am "BASE" > /dev/null
+                git apply "$DIR"/Patches/binutils.patch > /dev/null
+            else
+                patch -p1 < "$DIR"/Patches/binutils.patch > /dev/null
+            fi
         popd
     else
         echo "Skipped extracting binutils"
@@ -125,10 +138,14 @@ pushd "$DIR/Tarballs"
         tar -xzf $GCC_PKG
 
         pushd $GCC_NAME
-            git init >/dev/null
-            git add . >/dev/null
-            git commit -am "BASE" >/dev/null
-            git apply "$DIR"/Patches/gcc.patch >/dev/null
+            if [ "$git_patch" = "1" ]; then
+                git init > /dev/null
+                git add . > /dev/null
+                git commit -am "BASE" > /dev/null
+                git apply "$DIR"/Patches/gcc.patch > /dev/null
+            else
+                patch -p1 < "$DIR"/Patches/gcc.patch > /dev/null
+            fi
         popd
     else
         echo "Skipped extracting gcc"
