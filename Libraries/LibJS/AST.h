@@ -55,6 +55,7 @@ public:
     virtual Value execute(Interpreter&) const = 0;
     virtual void dump(int indent) const;
     virtual bool is_identifier() const { return false; }
+    virtual bool is_spread_expression() const { return false; }
     virtual bool is_member_expression() const { return false; }
     virtual bool is_scope_node() const { return false; }
     virtual bool is_program() const { return false; }
@@ -518,6 +519,23 @@ private:
     virtual const char* class_name() const override { return "Identifier"; }
 
     FlyString m_string;
+};
+
+class SpreadExpression final : public Expression {
+public:
+    explicit SpreadExpression(NonnullRefPtr<Expression> target)
+        : m_target(target)
+    {
+    }
+
+    virtual Value execute(Interpreter&) const override;
+    virtual void dump(int indent) const override;
+    virtual bool is_spread_expression() const override { return true; }
+
+private:
+    virtual const char* class_name() const override { return "SpreadExpression"; }
+
+    NonnullRefPtr<Expression> m_target;
 };
 
 class ThisExpression final : public Expression {

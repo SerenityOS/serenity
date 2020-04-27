@@ -84,6 +84,7 @@ Lexer::Lexer(StringView source)
         s_three_char_tokens.set("<<=", TokenType::ShiftLeftEquals);
         s_three_char_tokens.set(">>=", TokenType::ShiftRightEquals);
         s_three_char_tokens.set(">>>", TokenType::UnsignedShiftRight);
+        s_three_char_tokens.set("...", TokenType::TripleDot);
     }
 
     if (s_two_char_tokens.is_empty()) {

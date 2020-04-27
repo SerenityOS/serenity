@@ -492,10 +492,16 @@ NonnullRefPtr<ArrayExpression> Parser::parse_array_expression()
     consume(TokenType::BracketOpen);
 
     Vector<RefPtr<Expression>> elements;
-    while (match_expression() || match(TokenType::Comma)) {
+    while (match_expression() || match(TokenType::TripleDot) || match(TokenType::Comma)) {
         RefPtr<Expression> expression;
-        if (match_expression())
+
+        if (match(TokenType::TripleDot)) {
+            consume(TokenType::TripleDot);
+            expression = create_ast_node<SpreadExpression>(parse_expression(0));
+        } else if (match_expression()) {
             expression = parse_expression(0);
+        }
+
         elements.append(expression);
         if (!match(TokenType::Comma))
             break;
