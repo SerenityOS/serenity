@@ -1019,9 +1019,7 @@ void cache_path()
         while (programs.has_next()) {
             auto program = programs.next_path();
             String program_path = String::format("%s/%s", directory.characters(), program.characters());
-            struct stat program_status;
-            int stat_error = stat(program_path.characters(), &program_status);
-            if (!stat_error && (program_status.st_mode & S_IXUSR))
+            if (access(program_path.characters(), X_OK) == 0)
                 cached_path.append(program.characters());
         }
     }
@@ -1098,7 +1096,7 @@ int main(int argc, char** argv)
                     int stat_error = stat(file_path.characters(), &program_status);
                     if (stat_error)
                         continue;
-                    if (!(program_status.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)))
+                    if (access(file_path.characters(), X_OK) != 0)
                         continue;
                     if (S_ISDIR(program_status.st_mode)) {
                         if (!suggest_executables)
