@@ -736,6 +736,17 @@ void Identifier::dump(int indent) const
     printf("Identifier \"%s\"\n", m_string.characters());
 }
 
+void SpreadExpression::dump(int indent) const
+{
+    ASTNode::dump(indent);
+    m_target->dump(indent + 1);
+}
+
+Value SpreadExpression::execute(Interpreter& interpreter) const
+{
+    return m_target->execute(interpreter);
+}
+
 Value ThisExpression::execute(Interpreter& interpreter) const
 {
     return interpreter.this_value();
@@ -1085,8 +1096,27 @@ Value ArrayExpression::execute(Interpreter& interpreter) const
         auto value = Value();
         if (element) {
             value = element->execute(interpreter);
+
             if (interpreter.exception())
                 return {};
+
+            if (element->is_spread_expression()) {
+                if (!value.is_array()) {
+                    interpreter.throw_exception<TypeError>(String::format("%s is not iterable", value.to_string().characters()));
+                    return {};
+                }
+
+                auto& array_to_spread = static_cast<Array&>(value.as_object());
+                for (auto& it : array_to_spread.elements()) {
+                    if (it.is_empty()) {
+                        array->elements().append(js_undefined());
+                    } else {
+                        array->elements().append(it);
+                    }
+                }
+
+                continue;
+            }
         }
         array->elements().append(value);
     }

@@ -115,6 +115,7 @@ namespace JS {
     __ENUMERATE_JS_TOKEN(This)                        \
     __ENUMERATE_JS_TOKEN(Throw)                       \
     __ENUMERATE_JS_TOKEN(Tilde)                       \
+    __ENUMERATE_JS_TOKEN(TripleDot)                   \
     __ENUMERATE_JS_TOKEN(Try)                         \
     __ENUMERATE_JS_TOKEN(Typeof)                      \
     __ENUMERATE_JS_TOKEN(UnsignedShiftRight)          \
