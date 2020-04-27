@@ -382,6 +382,11 @@ Reference Expression::to_reference(Interpreter&) const
     return {};
 }
 
+Reference Identifier::to_reference(Interpreter& interpreter) const
+{
+    return interpreter.get_reference(string());
+}
+
 Reference MemberExpression::to_reference(Interpreter& interpreter) const
 {
     auto object_value = m_object->execute(interpreter);
@@ -404,6 +409,8 @@ Value UnaryExpression::execute(Interpreter& interpreter) const
             return {};
         if (reference.is_unresolvable())
             return Value(true);
+        // FIXME: Support deleting locals
+        ASSERT(!reference.is_local_variable());
         auto* base_object = reference.base().to_object(interpreter.heap());
         if (!base_object)
             return {};
