@@ -1190,7 +1190,7 @@ Crypto::UnsignedBigInteger bigint_fibonacci(size_t n)
     Crypto::UnsignedBigInteger num1(0);
     Crypto::UnsignedBigInteger num2(1);
     for (size_t i = 0; i < n; ++i) {
-        Crypto::UnsignedBigInteger t = num1.add(num2);
+        Crypto::UnsignedBigInteger t = num1.plus(num2);
         num2 = num1;
         num1 = t;
     }
@@ -1216,7 +1216,7 @@ void bigint_addition_edgecases()
         I_TEST((BigInteger | Edge Cases));
         Crypto::UnsignedBigInteger num1;
         Crypto::UnsignedBigInteger num2(70);
-        Crypto::UnsignedBigInteger num3 = num1.add(num2);
+        Crypto::UnsignedBigInteger num3 = num1.plus(num2);
         bool pass = (num3 == num2);
         pass &= (num1 == Crypto::UnsignedBigInteger(0));
 
@@ -1230,7 +1230,7 @@ void bigint_addition_edgecases()
         I_TEST((BigInteger | Borrow with zero));
         Crypto::UnsignedBigInteger num1({ UINT32_MAX - 3, UINT32_MAX });
         Crypto::UnsignedBigInteger num2({ UINT32_MAX - 2, 0 });
-        if (num1.add(num2).words() == Vector<u32> { 4294967289, 0, 1 }) {
+        if (num1.plus(num2).words() == Vector<u32> { 4294967289, 0, 1 }) {
             PASS;
         } else {
             FAIL(Incorrect Result);
@@ -1245,7 +1245,7 @@ void bigint_subtraction()
         Crypto::UnsignedBigInteger num1(80);
         Crypto::UnsignedBigInteger num2(70);
 
-        if (num1.sub(num2) == Crypto::UnsignedBigInteger(10)) {
+        if (num1.minus(num2) == Crypto::UnsignedBigInteger(10)) {
             PASS;
         } else {
             FAIL(Incorrect Result);
@@ -1256,7 +1256,7 @@ void bigint_subtraction()
         Crypto::UnsignedBigInteger num1(50);
         Crypto::UnsignedBigInteger num2(70);
 
-        if (num1.sub(num2).is_invalid()) {
+        if (num1.minus(num2).is_invalid()) {
             PASS;
         } else {
             FAIL(Incorrect Result);
@@ -1266,8 +1266,8 @@ void bigint_subtraction()
         I_TEST((BigInteger | Subtraction with borrow));
         Crypto::UnsignedBigInteger num1(UINT32_MAX);
         Crypto::UnsignedBigInteger num2(1);
-        Crypto::UnsignedBigInteger num3 = num1.add(num2);
-        Crypto::UnsignedBigInteger result = num3.sub(num2);
+        Crypto::UnsignedBigInteger num3 = num1.plus(num2);
+        Crypto::UnsignedBigInteger result = num3.minus(num2);
         if (result == num1) {
             PASS;
         } else {
@@ -1278,8 +1278,8 @@ void bigint_subtraction()
         I_TEST((BigInteger | Subtraction with large numbers));
         Crypto::UnsignedBigInteger num1 = bigint_fibonacci(343);
         Crypto::UnsignedBigInteger num2 = bigint_fibonacci(218);
-        Crypto::UnsignedBigInteger result = num1.sub(num2);
-        if ((result.add(num2) == num1)
+        Crypto::UnsignedBigInteger result = num1.minus(num2);
+        if ((result.plus(num2) == num1)
             && (result.words() == Vector<u32> { 811430588, 2958904896, 1130908877, 2830569969, 3243275482, 3047460725, 774025231, 7990 })) {
             PASS;
         } else {
@@ -1290,14 +1290,14 @@ void bigint_subtraction()
         I_TEST((BigInteger | Subtraction with large numbers 2));
         Crypto::UnsignedBigInteger num1(Vector<u32> { 1483061863, 446680044, 1123294122, 191895498, 3347106536, 16, 0, 0, 0 });
         Crypto::UnsignedBigInteger num2(Vector<u32> { 4196414175, 1117247942, 1123294122, 191895498, 3347106536, 16 });
-        Crypto::UnsignedBigInteger result = num1.sub(num2);
+        Crypto::UnsignedBigInteger result = num1.minus(num2);
         // this test only verifies that we don't crash on an assertion
         PASS;
     }
     {
         I_TEST((BigInteger | Subtraction Regerssion 1));
         auto num = Crypto::UnsignedBigInteger { 1 }.shift_left(256);
-        if (num.sub(1).words() == Vector<u32> { 4294967295, 4294967295, 4294967295, 4294967295, 4294967295, 4294967295, 4294967295, 4294967295, 0 }) {
+        if (num.minus(1).words() == Vector<u32> { 4294967295, 4294967295, 4294967295, 4294967295, 4294967295, 4294967295, 4294967295, 4294967295, 0 }) {
             PASS;
         } else {
             FAIL(Incorrect Result);
@@ -1311,7 +1311,7 @@ void bigint_multiplication()
         I_TEST((BigInteger | Simple Multipliction));
         Crypto::UnsignedBigInteger num1(8);
         Crypto::UnsignedBigInteger num2(251);
-        Crypto::UnsignedBigInteger result = num1.multiply(num2);
+        Crypto::UnsignedBigInteger result = num1.multiplied_by(num2);
         if (result.words() == Vector<u32> { 2008 }) {
             PASS;
         } else {
@@ -1322,7 +1322,7 @@ void bigint_multiplication()
         I_TEST((BigInteger | Multiplications with big numbers 1));
         Crypto::UnsignedBigInteger num1 = bigint_fibonacci(200);
         Crypto::UnsignedBigInteger num2(12345678);
-        Crypto::UnsignedBigInteger result = num1.multiply(num2);
+        Crypto::UnsignedBigInteger result = num1.multiplied_by(num2);
         if (result.words() == Vector<u32> { 669961318, 143970113, 4028714974, 3164551305, 1589380278, 2 }) {
             PASS;
         } else {
@@ -1333,7 +1333,7 @@ void bigint_multiplication()
         I_TEST((BigInteger | Multiplications with big numbers 2));
         Crypto::UnsignedBigInteger num1 = bigint_fibonacci(200);
         Crypto::UnsignedBigInteger num2 = bigint_fibonacci(341);
-        Crypto::UnsignedBigInteger result = num1.multiply(num2);
+        Crypto::UnsignedBigInteger result = num1.multiplied_by(num2);
         if (result.words() == Vector<u32> { 3017415433, 2741793511, 1957755698, 3731653885, 3154681877, 785762127, 3200178098, 4260616581, 529754471, 3632684436, 1073347813, 2516430 }) {
             PASS;
         } else {
@@ -1347,7 +1347,7 @@ void bigint_division()
         I_TEST((BigInteger | Simple Division));
         Crypto::UnsignedBigInteger num1(27194);
         Crypto::UnsignedBigInteger num2(251);
-        auto result = num1.divide(num2);
+        auto result = num1.divided_by(num2);
         Crypto::UnsignedDivisionResult expected = { Crypto::UnsignedBigInteger(108), Crypto::UnsignedBigInteger(86) };
         if (result.quotient == expected.quotient && result.remainder == expected.remainder) {
             PASS;
@@ -1359,7 +1359,7 @@ void bigint_division()
         I_TEST((BigInteger | Division with big numbers));
         Crypto::UnsignedBigInteger num1 = bigint_fibonacci(386);
         Crypto::UnsignedBigInteger num2 = bigint_fibonacci(238);
-        auto result = num1.divide(num2);
+        auto result = num1.divided_by(num2);
         Crypto::UnsignedDivisionResult expected = {
             Crypto::UnsignedBigInteger(Vector<u32> { 2300984486, 2637503534, 2022805584, 107 }),
             Crypto::UnsignedBigInteger(Vector<u32> { 1483061863, 446680044, 1123294122, 191895498, 3347106536, 16, 0, 0, 0 })
@@ -1374,8 +1374,8 @@ void bigint_division()
         I_TEST((BigInteger | Combined test));
         auto num1 = bigint_fibonacci(497);
         auto num2 = bigint_fibonacci(238);
-        auto div_result = num1.divide(num2);
-        if (div_result.quotient.multiply(num2).add(div_result.remainder) == num1) {
+        auto div_result = num1.divided_by(num2);
+        if (div_result.quotient.multiplied_by(num2).plus(div_result.remainder) == num1) {
             PASS;
         } else {
             FAIL(Incorrect Result);
