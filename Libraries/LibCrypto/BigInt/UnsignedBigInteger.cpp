@@ -32,8 +32,10 @@ namespace Crypto {
 UnsignedBigInteger UnsignedBigInteger::from_base10(const String& str)
 {
     UnsignedBigInteger result;
+    UnsignedBigInteger ten { 10 };
+
     for (auto& c : str) {
-        result = result.multiply({ 10 }).add(c - '0');
+        result = result.multiply(ten).add(c - '0');
     }
     return result;
 }
@@ -74,6 +76,9 @@ UnsignedBigInteger UnsignedBigInteger::add(const UnsignedBigInteger& other) cons
     UnsignedBigInteger result;
 
     u8 carry = 0;
+
+    result.m_words.ensure_capacity(longer->length() + 1);
+
     for (size_t i = 0; i < shorter->length(); ++i) {
         u32 word_addition_result = shorter->m_words[i] + longer->m_words[i];
         u8 carry_out = 0;
@@ -115,8 +120,12 @@ UnsignedBigInteger UnsignedBigInteger::sub(const UnsignedBigInteger& other) cons
     }
 
     u8 borrow = 0;
-    for (size_t i = 0; i < length(); ++i) {
-        u32 other_word = (i < other.length()) ? other.m_words[i] : 0;
+    auto own_length = length(), other_length = other.length();
+
+    result.m_words.ensure_capacity(own_length);
+
+    for (size_t i = 0; i < own_length; ++i) {
+        u32 other_word = (i < other_length) ? other.m_words[i] : 0;
         i64 temp = static_cast<i64>(m_words[i]) - static_cast<i64>(other_word) - static_cast<i64>(borrow);
         // If temp < 0, we had an underflow
         borrow = (temp >= 0) ? 0 : 1;
@@ -193,6 +202,8 @@ void UnsignedBigInteger::set_bit_inplace(size_t bit_index)
     const size_t word_index = bit_index / UnsignedBigInteger::BITS_IN_WORD;
     const size_t inner_word_index = bit_index % UnsignedBigInteger::BITS_IN_WORD;
 
+    m_words.ensure_capacity(word_index);
+
     for (size_t i = length(); i <= word_index; ++i) {
         m_words.append(0);
     }
@@ -261,30 +272,32 @@ u32 UnsignedBigInteger::shift_left_get_one_word(const size_t num_bits, const siz
 
 bool UnsignedBigInteger::operator==(const UnsignedBigInteger& other) const
 {
-    if (trimmed_length() != other.trimmed_length()) {
+    auto length = trimmed_length();
+
+    if (length != other.trimmed_length()) {
         return false;
     }
+
     if (is_invalid() != other.is_invalid()) {
         return false;
     }
 
-    for (size_t i = 0; i < trimmed_length(); ++i) {
-        if (m_words[i] != other.words()[i])
-            return false;
-    }
-    return true;
+    return !__builtin_memcmp(m_words.data(), other.words().data(), length);
 }
 
 bool UnsignedBigInteger::operator<(const UnsignedBigInteger& other) const
 {
-    if (trimmed_length() < other.trimmed_length()) {
+    auto length = trimmed_length();
+    auto other_length = other.trimmed_length();
+
+    if (length < other_length) {
         return true;
     }
-    if (trimmed_length() > other.trimmed_length()) {
+
+    if (length > other_length) {
         return false;
     }
 
-    int length = trimmed_length();
     if (length == 0) {
         return false;
     }
