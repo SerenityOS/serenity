@@ -39,6 +39,7 @@
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Reference.h>
 #include <LibJS/Runtime/ScriptFunction.h>
+#include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/Value.h>
 #include <stdio.h>
 
@@ -1127,21 +1128,30 @@ Value ArrayExpression::execute(Interpreter& interpreter) const
                 return {};
 
             if (element->is_spread_expression()) {
-                if (!value.is_array()) {
-                    interpreter.throw_exception<TypeError>(String::format("%s is not iterable", value.to_string().characters()));
-                    return {};
-                }
-
-                auto& array_to_spread = static_cast<Array&>(value.as_object());
-                for (auto& it : array_to_spread.elements()) {
-                    if (it.is_empty()) {
-                        array->elements().append(js_undefined());
-                    } else {
-                        array->elements().append(it);
+                // FIXME: Support arbitrary iterables
+                if (value.is_array()) {
+                    auto& array_to_spread = static_cast<Array&>(value.as_object());
+                    for (auto& it : array_to_spread.elements()) {
+                        if (it.is_empty()) {
+                            array->elements().append(js_undefined());
+                        } else {
+                            array->elements().append(it);
+                        }
                     }
+                    continue;
                 }
-
-                continue;
+                if (value.is_string() || (value.is_object() && value.as_object().is_string_object())) {
+                    String string_to_spread;
+                    if (value.is_string())
+                        string_to_spread = value.as_string()->string();
+                    else
+                        string_to_spread = static_cast<StringObject*>(&value.as_object())->primitive_string()->string();
+                    for (size_t i = 0; i < string_to_spread.length(); ++i)
+                        array->elements().append(js_string(interpreter, string_to_spread.substring(i, 1)));
+                    continue;
+                }
+                interpreter.throw_exception<TypeError>(String::format("%s is not iterable", value.to_string().characters()));
+                return {};
             }
         }
         array->elements().append(value);

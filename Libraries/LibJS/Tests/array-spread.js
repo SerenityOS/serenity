@@ -24,17 +24,17 @@ try {
     assert(testArray(arr));
 
     assertThrowsError(() => {
-      [...1];
+        [...1];
     }, {
-      error: TypeError,
-      message: "1 is not iterable",
+        error: TypeError,
+        message: "1 is not iterable",
     });
 
     assertThrowsError(() => {
-      [...{}];
+        [...{}];
     }, {
-      error: TypeError,
-      message: "[object Object] is not iterable",
+        error: TypeError,
+        message: "[object Object] is not iterable",
     });
 
     console.log("PASS");
