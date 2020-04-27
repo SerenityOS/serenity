@@ -428,13 +428,16 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         = GUI::Action::create(
             "Properties...", { Mod_Alt, Key_Return }, Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"), [&](const GUI::Action& action) {
                 auto& model = directory_view.model();
+                String container_dir_path;
                 String path;
                 Vector<String> selected;
                 if (action.activator() == directory_context_menu || directory_view.active_widget()->is_focused()) {
                     path = directory_view.path();
+                    container_dir_path = path;
                     selected = selected_file_paths();
                 } else {
                     path = directories_model->full_path(tree_view.selection().first());
+                    container_dir_path = FileSystemPath(path).basename();
                     selected = tree_view_selected_file_paths();
                 }
 
@@ -442,7 +445,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 if (selected.is_empty()) {
                     properties = window->add<PropertiesDialog>(model, path, true);
                 } else {
-                    properties = window->add<PropertiesDialog>(model, selected.first(), false);
+                    properties = window->add<PropertiesDialog>(model, selected.first(), access(container_dir_path.characters(), W_OK) != 0);
                 }
 
                 properties->exec();
