@@ -24,62 +24,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <AK/String.h>
-#include <LibJS/Runtime/PropertyName.h>
-#include <LibJS/Runtime/Value.h>
+#include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Reference.h>
+#include <LibJS/Runtime/Object.h>
 
 namespace JS {
 
-class Reference {
-public:
-    Reference() {}
-    Reference(Value base, const PropertyName& name, bool strict = false)
-        : m_base(base)
-        , m_name(name)
-        , m_strict(strict)
-    {
+void Reference::assign(Interpreter& interpreter, Value value)
+{
+    // NOTE: The caller is responsible for doing an exception check after assign().
+
+    ASSERT(!is_unresolvable());
+
+    if (is_local_variable()) {
+        interpreter.set_variable(m_name.to_string(), value);
+        return;
     }
 
-    enum LocalVariableTag { LocalVariable };
-    Reference(LocalVariableTag, const String& name, bool strict = false)
-        : m_base(js_null())
-        , m_name(name)
-        , m_strict(strict)
-        , m_local_variable(true)
-    {
-    }
+    auto* object = base().to_object(interpreter.heap());
+    if (!object)
+        return;
 
-    Value base() const { return m_base; }
-    const PropertyName& name() const { return m_name; }
-    bool is_strict() const { return m_strict; }
-
-    bool is_unresolvable() const { return m_base.is_undefined(); }
-    bool is_property() const
-    {
-        return m_base.is_object() || has_primitive_base();
-    }
-
-    bool has_primitive_base() const
-    {
-        return m_base.is_boolean() || m_base.is_string() || m_base.is_number();
-    }
-
-    bool is_local_variable() const
-    {
-        return m_local_variable;
-    }
-
-    void assign(Interpreter&, Value);
-
-private:
-    Value m_base { js_undefined() };
-    PropertyName m_name;
-    bool m_strict { false };
-    bool m_local_variable { false };
-};
-
-const LogStream& operator<<(const LogStream&, const Value&);
+    object->put(m_name, value);
+}
 
 }

@@ -599,7 +599,7 @@ enum class AssignmentOp {
 
 class AssignmentExpression : public Expression {
 public:
-    AssignmentExpression(AssignmentOp op, NonnullRefPtr<ASTNode> lhs, NonnullRefPtr<Expression> rhs)
+    AssignmentExpression(AssignmentOp op, NonnullRefPtr<Expression> lhs, NonnullRefPtr<Expression> rhs)
         : m_op(op)
         , m_lhs(move(lhs))
         , m_rhs(move(rhs))
@@ -613,7 +613,7 @@ private:
     virtual const char* class_name() const override { return "AssignmentExpression"; }
 
     AssignmentOp m_op;
-    NonnullRefPtr<ASTNode> m_lhs;
+    NonnullRefPtr<Expression> m_lhs;
     NonnullRefPtr<Expression> m_rhs;
 };
 
