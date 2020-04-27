@@ -424,48 +424,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         window);
     copy_action->set_enabled(false);
 
-    auto paste_action = GUI::CommonActions::make_paste_action(
-        [&](const GUI::Action& action) {
-            auto data_and_type = GUI::Clipboard::the().data_and_type();
-            if (data_and_type.type != "file-list") {
-                dbg() << "Cannot paste clipboard type " << data_and_type.type;
-                return;
-            }
-            auto copied_lines = data_and_type.data.split('\n');
-            if (copied_lines.is_empty()) {
-                dbg() << "No files to paste";
-                return;
-            }
-
-            AK::String target_directory;
-            if (action.activator() == directory_context_menu)
-                target_directory = selected_file_paths()[0];
-            else
-                target_directory = directory_view.path();
-
-            for (auto& current_path : copied_lines) {
-                if (current_path.is_empty())
-                    continue;
-
-                auto new_path = String::format("%s/%s",
-                    target_directory.characters(),
-                    FileSystemPath(current_path).basename().characters());
-                if (!FileUtils::copy_file_or_directory(current_path, new_path)) {
-                    auto error_message = String::format("Could not paste %s.",
-                        current_path.characters());
-                    GUI::MessageBox::show(error_message, "File Manager", GUI::MessageBox::Type::Error);
-                } else {
-                    refresh_tree_view();
-                }
-            }
-        },
-        window);
-
-    GUI::Clipboard::the().on_content_change = [&](const String& data_type) {
-        auto current_location = directory_view.path();
-        paste_action->set_enabled(data_type == "file-list" && access(current_location.characters(), W_OK) == 0);
-    };
-
     auto properties_action
         = GUI::Action::create(
             "Properties...", { Mod_Alt, Key_Return }, Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"), [&](const GUI::Action& action) {
@@ -494,6 +452,41 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     enum class ConfirmBeforeDelete {
         No,
         Yes
+    };
+
+    auto do_paste = [&](const GUI::Action& action) {
+        auto data_and_type = GUI::Clipboard::the().data_and_type();
+        if (data_and_type.type != "file-list") {
+            dbg() << "Cannot paste clipboard type " << data_and_type.type;
+            return;
+        }
+        auto copied_lines = data_and_type.data.split('\n');
+        if (copied_lines.is_empty()) {
+            dbg() << "No files to paste";
+            return;
+        }
+
+        AK::String target_directory;
+        if (action.activator() == directory_context_menu)
+            target_directory = selected_file_paths()[0];
+        else
+            target_directory = directory_view.path();
+
+        for (auto& current_path : copied_lines) {
+            if (current_path.is_empty())
+                continue;
+
+            auto new_path = String::format("%s/%s",
+                target_directory.characters(),
+                FileSystemPath(current_path).basename().characters());
+            if (!FileUtils::copy_file_or_directory(current_path, new_path)) {
+                auto error_message = String::format("Could not paste %s.",
+                    current_path.characters());
+                GUI::MessageBox::show(error_message, "File Manager", GUI::MessageBox::Type::Error);
+            } else {
+                refresh_tree_view();
+            }
+        }
     };
 
     auto do_delete = [&](ConfirmBeforeDelete confirm, const GUI::Action&) {
@@ -565,6 +558,18 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         }
     };
 
+    auto paste_action = GUI::CommonActions::make_paste_action(
+        [&](const GUI::Action& action) {
+            do_paste(action);
+        },
+        window);
+
+    auto folder_specific_paste_action = GUI::CommonActions::make_paste_action(
+        [&](const GUI::Action& action) {
+            do_paste(action);
+        },
+        window);
+
     auto force_delete_action = GUI::Action::create(
         "Delete without confirmation", { Mod_Shift, Key_Delete }, [&](const GUI::Action& action) {
             do_delete(ConfirmBeforeDelete::No, action);
@@ -595,6 +600,11 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             directory_view.open(Core::StandardPaths::home_directory());
         },
         window);
+
+    GUI::Clipboard::the().on_content_change = [&](const String& data_type) {
+        auto current_location = directory_view.path();
+        paste_action->set_enabled(data_type == "file-list" && access(current_location.characters(), W_OK) == 0);
+    };
 
     auto menubar = GUI::MenuBar::construct();
 
@@ -708,7 +718,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     });
 
     directory_context_menu->add_action(copy_action);
-    directory_context_menu->add_action(paste_action);
+    directory_context_menu->add_action(folder_specific_paste_action);
     directory_context_menu->add_action(delete_action);
     directory_context_menu->add_separator();
     directory_context_menu->add_action(properties_action);
@@ -739,10 +749,13 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         if (index.is_valid()) {
             auto& node = directory_view.model().node(index);
 
-            if (node.is_directory())
+            if (node.is_directory()) {
+                auto should_get_enabled = access(node.full_path(directory_view.model()).characters(), W_OK) == 0 && GUI::Clipboard::the().type() == "file-list";
+                folder_specific_paste_action->set_enabled(should_get_enabled);
                 directory_context_menu->popup(event.screen_position());
-            else
+            } else {
                 file_context_menu->popup(event.screen_position());
+            }
         } else {
             directory_view_context_menu->popup(event.screen_position());
         }
