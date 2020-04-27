@@ -702,8 +702,10 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     directory_view.on_selection_change = [&](GUI::AbstractView& view) {
         // FIXME: Figure out how we can enable/disable the paste action, based on clipboard contents.
-        copy_action->set_enabled(!view.selection().is_empty());
-        delete_action->set_enabled(!view.selection().is_empty());
+        auto selection = view.selection();
+
+        delete_action->set_enabled(!selection.is_empty() && access(directory_view.path().characters(), W_OK) == 0);
+        copy_action->set_enabled(!selection.is_empty());
     };
 
     auto open_in_text_editor_action = GUI::Action::create("Open in TextEditor...", Gfx::Bitmap::load_from_file("/res/icons/TextEditor16.png"), [&](auto&) {
