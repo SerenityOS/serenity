@@ -73,6 +73,7 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
     m_icon->set_preferred_size(32, 32);
 
     m_name = file_path.basename();
+    m_path = file_path.string();
 
     m_name_box = file_container.add<GUI::TextBox>();
     m_name_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
@@ -155,7 +156,7 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
     update();
 }
 
-PropertiesDialog::~PropertiesDialog() {}
+PropertiesDialog::~PropertiesDialog() { }
 
 void PropertiesDialog::update()
 {
@@ -226,17 +227,28 @@ void PropertiesDialog::make_permission_checkboxes(GUI::Widget& parent, Permissio
     auto& label = widget.add<GUI::Label>(label_string);
     label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
+    struct stat st;
+    if (lstat(m_path.characters(), &st)) {
+        perror("stat");
+        return;
+    }
+
+    auto can_edit_checkboxes = st.st_uid == getuid();
+
     auto& box_read = widget.add<GUI::CheckBox>("Read");
     box_read.set_checked(mode & masks.read);
     box_read.on_checked = [&, masks](bool checked) { permission_changed(masks.read, checked); };
+    box_read.set_enabled(can_edit_checkboxes);
 
     auto& box_write = widget.add<GUI::CheckBox>("Write");
     box_write.set_checked(mode & masks.write);
     box_write.on_checked = [&, masks](bool checked) { permission_changed(masks.write, checked); };
+    box_write.set_enabled(can_edit_checkboxes);
 
     auto& box_execute = widget.add<GUI::CheckBox>("Execute");
     box_execute.set_checked(mode & masks.execute);
     box_execute.on_checked = [&, masks](bool checked) { permission_changed(masks.execute, checked); };
+    box_execute.set_enabled(can_edit_checkboxes);
 }
 
 void PropertiesDialog::make_property_value_pairs(const Vector<PropertyValuePair>& pairs, GUI::Widget& parent)
