@@ -37,6 +37,7 @@
 #include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/Reference.h>
 #include <LibJS/Runtime/ScriptFunction.h>
 #include <LibJS/Runtime/Value.h>
 #include <stdio.h>
@@ -376,21 +377,37 @@ Value LogicalExpression::execute(Interpreter& interpreter) const
     ASSERT_NOT_REACHED();
 }
 
+Reference Expression::to_reference(Interpreter&) const
+{
+    return {};
+}
+
+Reference MemberExpression::to_reference(Interpreter& interpreter) const
+{
+    auto object_value = m_object->execute(interpreter);
+    if (object_value.is_empty())
+        return {};
+    auto* object = object_value.to_object(interpreter.heap());
+    if (!object)
+        return {};
+    auto property_name = computed_property_name(interpreter);
+    if (!property_name.is_valid())
+        return {};
+    return { object, property_name };
+}
+
 Value UnaryExpression::execute(Interpreter& interpreter) const
 {
     if (m_op == UnaryOp::Delete) {
-        if (!m_lhs->is_member_expression())
-            return Value(true);
-        auto object_value = static_cast<const MemberExpression&>(*m_lhs).object().execute(interpreter);
+        auto reference = m_lhs->to_reference(interpreter);
         if (interpreter.exception())
             return {};
-        auto* object = object_value.to_object(interpreter.heap());
-        if (!object)
+        if (reference.is_unresolvable())
+            return Value(true);
+        auto* base_object = reference.base().to_object(interpreter.heap());
+        if (!base_object)
             return {};
-        auto property_name = static_cast<const MemberExpression&>(*m_lhs).computed_property_name(interpreter);
-        if (!property_name.is_valid())
-            return {};
-        return object->delete_property(property_name);
+        return base_object->delete_property(reference.name());
     }
 
     auto lhs_result = m_lhs->execute(interpreter);

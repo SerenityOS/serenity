@@ -140,6 +140,8 @@ private:
 };
 
 class Expression : public ASTNode {
+public:
+    virtual Reference to_reference(Interpreter&) const;
 };
 
 class Declaration : public Statement {
@@ -755,6 +757,7 @@ public:
 
     virtual Value execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
+    virtual Reference to_reference(Interpreter&) const override;
 
     bool is_computed() const { return m_computed; }
     const Expression& object() const { return *m_object; }
