@@ -41,35 +41,35 @@ static auto ModularInverse(const UnsignedBigInteger& a_, const UnsignedBigIntege
     auto a = a_;
     auto u = a;
     if (a.words()[0] % 2 == 0)
-        u = u.add(b);
+        u = u.plus(b);
 
     auto v = b;
-    auto x = UnsignedBigInteger { 0 };
-    auto d = b.sub(1);
+    UnsignedBigInteger x { 0 };
+    auto d = b.minus(1);
 
     while (!(v == 1)) {
         while (v < u) {
-            u = u.sub(v);
-            d = d.add(x);
+            u = u.minus(v);
+            d = d.plus(x);
             while (u.words()[0] % 2 == 0) {
                 if (d.words()[0] % 2 == 1) {
-                    d = d.add(b);
+                    d = d.plus(b);
                 }
-                u = u.divide(2).quotient;
-                d = d.divide(2).quotient;
+                u = u.divided_by(2).quotient;
+                d = d.divided_by(2).quotient;
             }
         }
-        v = v.sub(u);
-        x = x.add(d);
+        v = v.minus(u);
+        x = x.plus(d);
         while (v.words()[0] % 2 == 0) {
             if (x.words()[0] % 2 == 1) {
-                x = x.add(b);
+                x = x.plus(b);
             }
-            v = v.divide(2).quotient;
-            x = x.divide(2).quotient;
+            v = v.divided_by(2).quotient;
+            x = x.divided_by(2).quotient;
         }
     }
-    return x.divide(b).remainder;
+    return x.divided_by(b).remainder;
 }
 
 static auto ModularPower(const UnsignedBigInteger& b, const UnsignedBigInteger& e, const UnsignedBigInteger& m) -> UnsignedBigInteger
@@ -86,10 +86,10 @@ static auto ModularPower(const UnsignedBigInteger& b, const UnsignedBigInteger& 
         dbg() << ep.to_base10();
 #endif
         if (ep.words()[0] % 2 == 1) {
-            exp = exp.multiply(base).divide(m).remainder;
+            exp = exp.multiplied_by(base).divided_by(m).remainder;
         }
-        ep = ep.divide(2).quotient;
-        base = base.multiply(base).divide(m).remainder;
+        ep = ep.divided_by(2).quotient;
+        base = base.multiplied_by(base).divided_by(m).remainder;
     }
     return exp;
 }
@@ -100,10 +100,10 @@ static auto GCD(const UnsignedBigInteger& a, const UnsignedBigInteger& b) -> Uns
     for (;;) {
         if (a_ == 0)
             return b_;
-        b_ = b_.divide(a_).remainder;
+        b_ = b_.divided_by(a_).remainder;
         if (b_ == 0)
             return a_;
-        a_ = a_.divide(b_).remainder;
+        a_ = a_.divided_by(b_).remainder;
     }
 }
 
@@ -111,24 +111,24 @@ static auto LCM(const UnsignedBigInteger& a, const UnsignedBigInteger& b) -> Uns
 {
     auto temp = GCD(a, b);
 
-    auto div = a.divide(temp);
+    auto div = a.divided_by(temp);
 
 #ifdef NT_DEBUG
     dbg() << "quot: " << div.quotient << " rem: " << div.remainder;
 #endif
-    return temp == 0 ? 0 : (a.divide(temp).quotient.multiply(b));
+    return temp == 0 ? 0 : (a.divided_by(temp).quotient.multiplied_by(b));
 }
 
 template<size_t test_count>
 static bool MR_primality_test(UnsignedBigInteger n, const Vector<UnsignedBigInteger, test_count>& tests)
 {
-    auto prev = n.sub({ 1 });
+    auto prev = n.minus({ 1 });
     auto b = prev;
     auto r = 0;
 
-    auto div_result = b.divide(2);
+    auto div_result = b.divided_by(2);
     while (div_result.quotient == 0) {
-        div_result = b.divide(2);
+        div_result = b.divided_by(2);
         b = div_result.quotient;
         ++r;
     }
@@ -170,7 +170,7 @@ static UnsignedBigInteger random_number(const UnsignedBigInteger& min, const Uns
         vec.append(*(u32*)buf + i);
     }
     UnsignedBigInteger offset { move(vec) };
-    return offset.add(min);
+    return offset.plus(min);
 }
 
 static bool is_probably_prime(const UnsignedBigInteger& p)
@@ -183,7 +183,7 @@ static bool is_probably_prime(const UnsignedBigInteger& p)
     Vector<UnsignedBigInteger, 256> tests;
     UnsignedBigInteger seven { 7 };
     for (size_t i = 0; i < tests.size(); ++i)
-        tests.append(random_number(seven, p.sub(2)));
+        tests.append(random_number(seven, p.minus(2)));
 
     return MR_primality_test(p, tests);
 }
@@ -192,7 +192,7 @@ static UnsignedBigInteger random_big_prime(size_t bits)
 {
     ASSERT(bits >= 33);
     UnsignedBigInteger min = UnsignedBigInteger::from_base10("6074001000").shift_left(bits - 33);
-    UnsignedBigInteger max = UnsignedBigInteger { 1 }.shift_left(bits).sub(1);
+    UnsignedBigInteger max = UnsignedBigInteger { 1 }.shift_left(bits).minus(1);
     for (;;) {
         auto p = random_number(min, max);
         if (is_probably_prime(p))

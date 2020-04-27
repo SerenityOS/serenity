@@ -62,12 +62,12 @@ public:
 
     const AK::Vector<u32, STARTING_WORD_SIZE>& words() const { return m_words; }
 
-    UnsignedBigInteger add(const UnsignedBigInteger& other) const;
-    UnsignedBigInteger sub(const UnsignedBigInteger& other) const;
-    UnsignedBigInteger multiply(const UnsignedBigInteger& other) const;
+    UnsignedBigInteger plus(const UnsignedBigInteger& other) const;
+    UnsignedBigInteger minus(const UnsignedBigInteger& other) const;
+    UnsignedBigInteger multiplied_by(const UnsignedBigInteger& other) const;
     UnsignedBigInteger shift_left(size_t num_bits) const;
 
-    UnsignedDivisionResult divide(const UnsignedBigInteger& divisor) const;
+    UnsignedDivisionResult divided_by(const UnsignedBigInteger& divisor) const;
 
     void set_bit_inplace(size_t bit_index);
 
