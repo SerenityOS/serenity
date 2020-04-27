@@ -61,6 +61,7 @@ ArrayPrototype::ArrayPrototype()
     put_native_function("includes", includes, 1, attr);
     put_native_function("find", find, 1, attr);
     put_native_function("findIndex", find_index, 1, attr);
+    put_native_function("some", some, 1, attr);
     put("length", Value(0), Attribute::Configurable);
 }
 
@@ -493,6 +494,43 @@ Value ArrayPrototype::find_index(Interpreter& interpreter)
     }
 
     return Value(-1);
+}
+
+Value ArrayPrototype::some(Interpreter& interpreter)
+{
+    auto* array = array_from(interpreter);
+    if (!array)
+        return {};
+
+    auto* callback = callback_from_args(interpreter, "some");
+    if (!callback)
+        return {};
+
+    auto this_value = interpreter.argument(1);
+    auto array_size = array->elements().size();
+
+    for (size_t i = 0; i < array_size; ++i) {
+        if (i >= array->elements().size())
+            break;
+
+        auto value = array->elements().at(i);
+        if (value.is_empty())
+            continue;
+
+        MarkedValueList arguments(interpreter.heap());
+        arguments.append(value);
+        arguments.append(Value((i32)i));
+        arguments.append(array);
+
+        auto result = interpreter.call(callback, this_value, move(arguments));
+        if (interpreter.exception())
+            return {};
+
+        if (result.to_boolean())
+            return Value(true);
+    }
+
+    return Value(false);
 }
 
 }

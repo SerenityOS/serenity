@@ -56,5 +56,7 @@ private:
     static Value includes(Interpreter&);
     static Value find(Interpreter&);
     static Value find_index(Interpreter&);
+    static Value some(Interpreter&);
 };
+
 }
