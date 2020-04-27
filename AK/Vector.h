@@ -250,7 +250,7 @@ public:
     // NOTE: Vector::is_null() exists for the benefit of String::copy().
     bool is_null() const { return false; }
     bool is_empty() const { return size() == 0; }
-    size_t size() const { return m_size; }
+    ALWAYS_INLINE size_t size() const { return m_size; }
     size_t capacity() const { return m_capacity; }
 
     T* data()
@@ -266,19 +266,19 @@ public:
         return m_outline_buffer;
     }
 
-    const T& at(size_t i) const
+    ALWAYS_INLINE const T& at(size_t i) const
     {
         ASSERT(i >= 0 && i < m_size);
         return data()[i];
     }
-    T& at(size_t i)
+    ALWAYS_INLINE T& at(size_t i)
     {
         ASSERT(i >= 0 && i < m_size);
         return data()[i];
     }
 
-    const T& operator[](size_t i) const { return at(i); }
-    T& operator[](size_t i) { return at(i); }
+    ALWAYS_INLINE const T& operator[](size_t i) const { return at(i); }
+    ALWAYS_INLINE T& operator[](size_t i) { return at(i); }
 
     const T& first() const { return at(0); }
     T& first() { return at(0); }
@@ -437,14 +437,14 @@ public:
         }
     }
 
-    void unchecked_append(T&& value)
+    ALWAYS_INLINE void unchecked_append(T&& value)
     {
         ASSERT((size() + 1) <= capacity());
         new (slot(m_size)) T(move(value));
         ++m_size;
     }
 
-    void unchecked_append(const T& value)
+    ALWAYS_INLINE void unchecked_append(const T& value)
     {
         unchecked_append(T(value));
     }
@@ -457,14 +457,14 @@ public:
         ++m_size;
     }
 
-    void append(T&& value)
+    ALWAYS_INLINE void append(T&& value)
     {
         grow_capacity(size() + 1);
         new (slot(m_size)) T(move(value));
         ++m_size;
     }
 
-    void append(const T& value)
+    ALWAYS_INLINE void append(const T& value)
     {
         append(T(value));
     }
