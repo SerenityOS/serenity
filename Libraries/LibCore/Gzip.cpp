@@ -136,6 +136,7 @@ Optional<ByteBuffer> Gzip::decompress(const ByteBuffer& data)
 
         if (puff_ret == 0) {
             dbg() << "Gzip::decompress: Decompression success.";
+            destination.trim(destination_len);
             break;
         }
 
