@@ -36,7 +36,7 @@ BoundFunction::BoundFunction(Function& target_function, Value bound_this, Vector
     , m_constructor_prototype(constructor_prototype)
     , m_name(String::format("bound %s", target_function.name().characters()))
 {
-    put("length", Value(length));
+    put("length", Value(length), Attribute::Configurable);
 }
 
 BoundFunction::~BoundFunction()

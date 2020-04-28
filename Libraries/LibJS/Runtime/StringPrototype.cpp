@@ -41,23 +41,25 @@ namespace JS {
 StringPrototype::StringPrototype()
     : StringObject(*js_string(interpreter(), String::empty()), *interpreter().global_object().object_prototype())
 {
-    put_native_property("length", length_getter, nullptr);
-    put_native_function("charAt", char_at, 1);
-    put_native_function("repeat", repeat, 1);
-    put_native_function("startsWith", starts_with, 1);
-    put_native_function("indexOf", index_of, 1);
-    put_native_function("toLowerCase", to_lowercase, 0);
-    put_native_function("toUpperCase", to_uppercase, 0);
-    put_native_function("toString", to_string, 0);
-    put_native_function("padStart", pad_start, 1);
-    put_native_function("padEnd", pad_end, 1);
+    u8 attr = Attribute::Writable | Attribute::Configurable;
 
-    put_native_function("trim", trim, 0);
-    put_native_function("trimStart", trim_start, 0);
-    put_native_function("trimEnd", trim_end, 0);
-    put_native_function("concat", concat, 1);
-    put_native_function("substring", substring, 2);
-    put_native_function("includes", includes, 1);
+    put_native_property("length", length_getter, nullptr, 0);
+    put_native_function("charAt", char_at, 1, attr);
+    put_native_function("repeat", repeat, 1, attr);
+    put_native_function("startsWith", starts_with, 1, attr);
+    put_native_function("indexOf", index_of, 1, attr);
+    put_native_function("toLowerCase", to_lowercase, 0, attr);
+    put_native_function("toUpperCase", to_uppercase, 0, attr);
+    put_native_function("toString", to_string, 0, attr);
+    put_native_function("padStart", pad_start, 1, attr);
+    put_native_function("padEnd", pad_end, 1, attr);
+
+    put_native_function("trim", trim, 0, attr);
+    put_native_function("trimStart", trim_start, 0, attr);
+    put_native_function("trimEnd", trim_end, 0, attr);
+    put_native_function("concat", concat, 1, attr);
+    put_native_function("substring", substring, 2, attr);
+    put_native_function("includes", includes, 1, attr);
 }
 
 StringPrototype::~StringPrototype()

@@ -61,7 +61,7 @@ void GlobalObject::add_constructor(const FlyString& property_name, ConstructorTy
 {
     constructor = heap().allocate<ConstructorType>();
     prototype.put("constructor", constructor);
-    put(property_name, constructor);
+    put(property_name, constructor, Attribute::Writable | Attribute::Configurable);
 }
 
 GlobalObject::GlobalObject()
@@ -85,18 +85,18 @@ void GlobalObject::initialize()
     JS_ENUMERATE_BUILTIN_TYPES
 #undef __JS_ENUMERATE
 
-    put_native_function("gc", gc);
-    put_native_function("isNaN", is_nan, 1);
-    put_native_function("isFinite", is_finite, 1);
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+    put_native_function("gc", gc, 0, attr);
+    put_native_function("isNaN", is_nan, 1, attr);
+    put_native_function("isFinite", is_finite, 1, attr);
 
-    // FIXME: These are read-only in ES5
-    put("NaN", js_nan());
-    put("Infinity", js_infinity());
-    put("undefined", js_undefined());
+    put("NaN", js_nan(), 0);
+    put("Infinity", js_infinity(), 0);
+    put("undefined", js_undefined(), 0);
 
-    put("globalThis", this);
-    put("console", heap().allocate<ConsoleObject>());
-    put("Math", heap().allocate<MathObject>());
+    put("globalThis", this, attr);
+    put("console", heap().allocate<ConsoleObject>(), attr);
+    put("Math", heap().allocate<MathObject>(), attr);
 
     add_constructor("Array", m_array_constructor, *m_array_prototype);
     add_constructor("Boolean", m_boolean_constructor, *m_boolean_prototype);

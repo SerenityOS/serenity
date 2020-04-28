@@ -65,8 +65,9 @@ Value Uint8ClampedArray::length_getter(Interpreter& interpreter)
     return Value(static_cast<const Uint8ClampedArray*>(this_object)->length());
 }
 
-void Uint8ClampedArray::put_by_index(i32 property_index, Value value)
+void Uint8ClampedArray::put_by_index(i32 property_index, Value value, u8)
 {
+    // FIXME: Use attributes
     ASSERT(property_index >= 0);
     ASSERT(property_index < m_length);
     m_data[property_index] = clamp(value.to_i32(), 0, 255);

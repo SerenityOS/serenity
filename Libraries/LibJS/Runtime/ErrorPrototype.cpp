@@ -38,9 +38,10 @@ namespace JS {
 ErrorPrototype::ErrorPrototype()
     : Object(interpreter().global_object().object_prototype())
 {
-    put_native_property("name", name_getter, name_setter);
-    put_native_property("message", message_getter, nullptr);
-    put_native_function("toString", to_string);
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+    put_native_property("name", name_getter, name_setter, attr);
+    put_native_property("message", message_getter, nullptr, attr);
+    put_native_function("toString", to_string, 0, attr);
 }
 
 ErrorPrototype::~ErrorPrototype()
