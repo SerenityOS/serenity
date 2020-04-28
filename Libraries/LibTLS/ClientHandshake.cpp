@@ -279,8 +279,11 @@ void TLSv12::build_random(PacketBuilder& builder)
 ssize_t TLSv12::handle_payload(const ByteBuffer& vbuffer)
 {
     if (m_context.connection_status == ConnectionStatus::Established) {
-        auto packet = build_alert(false, (u8)AlertDescription::NoRenegotiation);
-        write_packet(packet);
+        dbg() << "Renegotiation attempt ignored";
+        // FIXME: We should properly say "NoRenegotiation", but that causes a handshake failure
+        //        so we just roll with it and pretend that we _did_ renegotiate
+        //        This will cause issues when we decide to have long-lasting connections, but
+        //        we do not have those at the moment :^)
         return 1;
     }
     auto buffer = vbuffer;
@@ -530,6 +533,9 @@ ssize_t TLSv12::handle_payload(const ByteBuffer& vbuffer)
                 write_packet(packet);
                 break;
             }
+            case Error::NeedMoreData:
+                // Ignore this, as it's not an "error"
+                break;
             default:
                 dbg() << "Unknown TLS::Error with value " << payload_res;
                 ASSERT_NOT_REACHED();
