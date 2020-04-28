@@ -359,7 +359,7 @@ Gfx::Rect TextEditor::visible_text_rect_in_inner_coordinates() const
 
 void TextEditor::paint_event(PaintEvent& event)
 {
-    Color widget_background_color = palette().color(background_role());
+    Color widget_background_color = palette().color(is_enabled() ? background_role() : Gfx::ColorRole::Window);
     // NOTE: This ensures that spans are updated before we look at them.
     flush_pending_change_notification_if_needed();
 
