@@ -351,10 +351,6 @@ bool Compositor::set_wallpaper(const String& path, Function<void(bool)>&& callba
         },
 
         [this, path, callback = move(callback)](RefPtr<Gfx::Bitmap> bitmap) {
-            if (!bitmap) {
-                callback(false);
-                return;
-            }
             m_wallpaper_path = path;
             m_wallpaper = move(bitmap);
             invalidate();
