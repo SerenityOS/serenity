@@ -155,7 +155,7 @@ Tab::Tab()
     auto focus_location_box_action = GUI::Action::create("Focus location box", { Mod_Ctrl, Key_L }, [this](auto&) {
         m_location_box->select_all();
         m_location_box->set_focus(true);
-    });
+    }, this);
 
     m_statusbar = widget.add<GUI::StatusBar>();
 
@@ -203,7 +203,7 @@ Tab::Tab()
             execl("/bin/TextEditor", "TextEditor", filename_to_open.characters(), nullptr);
             ASSERT_NOT_REACHED();
         }
-    }));
+    }, this));
     inspect_menu.add_action(GUI::Action::create("Inspect DOM tree", { Mod_None, Key_F12 }, [this](auto&) {
         if (!m_dom_inspector_window) {
             m_dom_inspector_window = GUI::Window::construct();
@@ -215,7 +215,7 @@ Tab::Tab()
         inspector_widget->set_document(m_html_widget->document());
         m_dom_inspector_window->show();
         m_dom_inspector_window->move_to_front();
-    }));
+    }, this));
 
     auto& debug_menu = m_menubar->add_menu("Debug");
     debug_menu.add_action(GUI::Action::create(
