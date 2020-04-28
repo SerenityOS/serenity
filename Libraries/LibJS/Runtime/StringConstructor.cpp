@@ -36,8 +36,8 @@ namespace JS {
 StringConstructor::StringConstructor()
     : NativeFunction("String", *interpreter().global_object().function_prototype())
 {
-    put("prototype", interpreter().global_object().string_prototype());
-    put("length", Value(1));
+    put("prototype", interpreter().global_object().string_prototype(), 0);
+    put("length", Value(1), Attribute::Configurable);
 }
 
 StringConstructor::~StringConstructor()

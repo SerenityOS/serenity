@@ -38,14 +38,15 @@ namespace JS {
 ObjectConstructor::ObjectConstructor()
     : NativeFunction("Object", *interpreter().global_object().function_prototype())
 {
-    put("prototype", interpreter().global_object().object_prototype());
+    put("prototype", interpreter().global_object().object_prototype(), 0);
 
-    put_native_function("defineProperty", define_property, 3);
-    put_native_function("is", is, 2);
-    put_native_function("getOwnPropertyDescriptor", get_own_property_descriptor, 2);
-    put_native_function("getOwnPropertyNames", get_own_property_names, 1);
-    put_native_function("getPrototypeOf", get_prototype_of, 1);
-    put_native_function("setPrototypeOf", set_prototype_of, 2);
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+    put_native_function("defineProperty", define_property, 3, attr);
+    put_native_function("is", is, 2, attr);
+    put_native_function("getOwnPropertyDescriptor", get_own_property_descriptor, 2, attr);
+    put_native_function("getOwnPropertyNames", get_own_property_names, 1, attr);
+    put_native_function("getPrototypeOf", get_prototype_of, 1, attr);
+    put_native_function("setPrototypeOf", set_prototype_of, 2, attr);
 }
 
 ObjectConstructor::~ObjectConstructor()

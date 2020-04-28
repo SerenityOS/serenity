@@ -45,11 +45,12 @@ FunctionPrototype::FunctionPrototype()
 
 void FunctionPrototype::initialize()
 {
-    put_native_function("apply", apply, 2);
-    put_native_function("bind", bind, 1);
-    put_native_function("call", call, 1);
-    put_native_function("toString", to_string);
-    put("length", Value(0));
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+    put_native_function("apply", apply, 2, attr);
+    put_native_function("bind", bind, 1, attr);
+    put_native_function("call", call, 1, attr);
+    put_native_function("toString", to_string, 0, attr);
+    put("length", Value(0), Attribute::Configurable);
 }
 
 FunctionPrototype::~FunctionPrototype()

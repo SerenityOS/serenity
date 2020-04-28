@@ -46,8 +46,8 @@ ScriptFunction::ScriptFunction(const FlyString& name, const Statement& body, Vec
     , m_parameters(move(parameters))
     , m_parent_environment(parent_environment)
 {
-    put("prototype", Object::create_empty(interpreter(), interpreter().global_object()));
-    put_native_property("length", length_getter, length_setter);
+    put("prototype", Object::create_empty(interpreter(), interpreter().global_object()), 0);
+    put_native_property("length", length_getter, length_setter, Attribute::Configurable);
 }
 
 ScriptFunction::~ScriptFunction()

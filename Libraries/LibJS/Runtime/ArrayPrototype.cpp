@@ -42,24 +42,26 @@ namespace JS {
 ArrayPrototype::ArrayPrototype()
     : Object(interpreter().global_object().object_prototype())
 {
-    put_native_function("filter", filter, 1);
-    put_native_function("forEach", for_each, 1);
-    put_native_function("map", map, 1);
-    put_native_function("pop", pop, 0);
-    put_native_function("push", push, 1);
-    put_native_function("shift", shift, 0);
-    put_native_function("toString", to_string, 0);
-    put_native_function("unshift", unshift, 1);
-    put_native_function("join", join, 1);
-    put_native_function("concat", concat, 1);
-    put_native_function("slice", slice, 2);
-    put_native_function("indexOf", index_of, 1);
-    put_native_function("reverse", reverse, 0);
-    put_native_function("lastIndexOf", last_index_of, 1);
-    put_native_function("includes", includes, 1);
-    put_native_function("find", find, 1);
-    put_native_function("findIndex", find_index, 1);
-    put("length", Value(0));
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+
+    put_native_function("filter", filter, 1, attr);
+    put_native_function("forEach", for_each, 1, attr);
+    put_native_function("map", map, 1, attr);
+    put_native_function("pop", pop, 0, attr);
+    put_native_function("push", push, 1, attr);
+    put_native_function("shift", shift, 0, attr);
+    put_native_function("toString", to_string, 0, attr);
+    put_native_function("unshift", unshift, 1, attr);
+    put_native_function("join", join, 1, attr);
+    put_native_function("concat", concat, 1, attr);
+    put_native_function("slice", slice, 2, attr);
+    put_native_function("indexOf", index_of, 1, attr);
+    put_native_function("reverse", reverse, 0, attr);
+    put_native_function("lastIndexOf", last_index_of, 1, attr);
+    put_native_function("includes", includes, 1, attr);
+    put_native_function("find", find, 1, attr);
+    put_native_function("findIndex", find_index, 1, attr);
+    put("length", Value(0), Attribute::Configurable);
 }
 
 ArrayPrototype::~ArrayPrototype()
