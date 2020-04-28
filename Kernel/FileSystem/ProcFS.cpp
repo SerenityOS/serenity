@@ -319,11 +319,10 @@ Optional<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
 
         StringBuilder pagemap_builder;
         for (size_t i = 0; i < region.page_count(); ++i) {
-            auto page_index = region.first_page_index() + i;
-            auto& physical_page_slot = region.vmobject().physical_pages()[page_index];
-            if (!physical_page_slot)
+            auto* page = region.physical_page(i);
+            if (!page)
                 pagemap_builder.append('N');
-            else if (physical_page_slot == MM.shared_zero_page())
+            else if (page->is_shared_zero_page())
                 pagemap_builder.append('Z');
             else
                 pagemap_builder.append('P');

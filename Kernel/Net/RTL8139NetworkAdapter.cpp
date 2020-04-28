@@ -158,11 +158,11 @@ RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address address, u8 irq)
     // we add space to account for overhang from the last packet - the rtl8139
     // can optionally guarantee that packets will be contiguous by
     // purposefully overrunning the rx buffer
-    klog() << "RTL8139: RX buffer: " << m_rx_buffer->vmobject().physical_pages()[0]->paddr();
+    klog() << "RTL8139: RX buffer: " << m_rx_buffer->physical_page(0)->paddr();
 
     for (int i = 0; i < RTL8139_TX_BUFFER_COUNT; i++) {
         m_tx_buffers.append(MM.allocate_contiguous_kernel_region(PAGE_ROUND_UP(TX_BUFFER_SIZE), "RTL8139 TX", Region::Access::Write | Region::Access::Read));
-        klog() << "RTL8139: TX buffer " << i << ": " << m_tx_buffers[i]->vmobject().physical_pages()[0]->paddr();
+        klog() << "RTL8139: TX buffer " << i << ": " << m_tx_buffers[i]->physical_page(0)->paddr();
     }
 
     reset();
@@ -250,7 +250,7 @@ void RTL8139NetworkAdapter::reset()
     // device might be in sleep mode, this will take it out
     out8(REG_CONFIG1, 0);
     // set up rx buffer
-    out32(REG_RXBUF, m_rx_buffer->vmobject().physical_pages()[0]->paddr().get());
+    out32(REG_RXBUF, m_rx_buffer->physical_page(0)->paddr().get());
     // reset missed packet counter
     out8(REG_MPC, 0);
     // "basic mode control register" options - 100mbit, full duplex, auto
@@ -268,7 +268,7 @@ void RTL8139NetworkAdapter::reset()
     out32(REG_TXCFG, TXCFG_TXRR_ZERO | TXCFG_MAX_DMA_1K | TXCFG_IFG11);
     // tell the chip where we want it to DMA from for outgoing packets.
     for (int i = 0; i < 4; i++)
-        out32(REG_TXADDR0 + (i * 4), m_tx_buffers[i]->vmobject().physical_pages()[0]->paddr().get());
+        out32(REG_TXADDR0 + (i * 4), m_tx_buffers[i]->physical_page(0)->paddr().get());
     // re-lock config registers
     out8(REG_CFG9346, CFG9346_NONE);
     // enable rx/tx again in case they got turned off (apparently some cards
