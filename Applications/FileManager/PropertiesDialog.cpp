@@ -79,13 +79,10 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
     m_name_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_name_box->set_preferred_size({ 0, 22 });
     m_name_box->set_text(m_name);
-    m_name_box->on_change = [&, disable_rename]() {
-        if (disable_rename) {
-            m_name_box->set_text(m_name); //FIXME: GUI::TextBox does not support set_enabled yet...
-        } else {
-            m_name_dirty = m_name != m_name_box->text();
-            m_apply_button->set_enabled(true);
-        }
+    m_name_box->set_enabled(!disable_rename);
+    m_name_box->on_change = [&]() {
+        m_name_dirty = m_name != m_name_box->text();
+        m_apply_button->set_enabled(true);
     };
 
     set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"));
