@@ -27,12 +27,23 @@
 #pragma once
 
 #include <AK/Vector.h>
+#include <LibMarkdown/Block.h>
+#include <LibMarkdown/Text.h>
 
-class MDBlock {
+namespace Markdown {
+
+class List final : public Block {
 public:
-    virtual ~MDBlock() {}
+    virtual ~List() override {}
 
-    virtual String render_to_html() const = 0;
-    virtual String render_for_terminal() const = 0;
-    virtual bool parse(Vector<StringView>::ConstIterator& lines) = 0;
+    virtual String render_to_html() const override;
+    virtual String render_for_terminal() const override;
+    virtual bool parse(Vector<StringView>::ConstIterator& lines) override;
+
+private:
+    // TODO: List items should be considered blocks of their own kind.
+    Vector<Text> m_items;
+    bool m_is_ordered { false };
 };
+
+}

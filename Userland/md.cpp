@@ -27,7 +27,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/String.h>
 #include <LibCore/File.h>
-#include <LibMarkdown/MDDocument.h>
+#include <LibMarkdown/Document.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
     dbg() << "Read size " << buffer.size();
 
     auto input = String::copy(buffer);
-    MDDocument document;
+    Markdown::Document document;
     success = document.parse(input);
 
     if (!success) {
