@@ -141,7 +141,7 @@ void MMIOAccess::map_device(Address address)
     dbg() << "PCI: Mapping device @ pci (" << String::format("%w", address.seg()) << ":" << String::format("%b", address.bus()) << ":" << String::format("%b", address.slot()) << "." << String::format("%b", address.function()) << ")"
           << " V 0x" << String::format("%x", m_mmio_window_region->vaddr().get()) << " P 0x" << String::format("%x", device_physical_mmio_space.get());
 #endif
-    m_mmio_window_region->vmobject().physical_pages()[0] = PhysicalPage::create(device_physical_mmio_space, false, false);
+    m_mmio_window_region->physical_page_slot(0) = PhysicalPage::create(device_physical_mmio_space, false, false);
     m_mmio_window_region->remap();
     m_mapped_address = address;
 }

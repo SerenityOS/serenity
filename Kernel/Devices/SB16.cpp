@@ -179,7 +179,7 @@ ssize_t SB16::read(FileDescription&, size_t, u8*, ssize_t)
 
 void SB16::dma_start(uint32_t length)
 {
-    const auto addr = m_dma_region->vmobject().physical_pages()[0]->paddr().get();
+    const auto addr = m_dma_region->physical_page(0)->paddr().get();
     const u8 channel = 5; // 16-bit samples use DMA channel 5 (on the master DMA controller)
     const u8 mode = 0;
 

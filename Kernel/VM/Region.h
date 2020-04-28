@@ -128,6 +128,18 @@ public:
         return size() / PAGE_SIZE;
     }
 
+    const PhysicalPage* physical_page(size_t index) const
+    {
+        ASSERT(index < page_count());
+        return vmobject().physical_pages()[first_page_index() + index];
+    }
+
+    RefPtr<PhysicalPage>& physical_page_slot(size_t index)
+    {
+        ASSERT(index < page_count());
+        return vmobject().physical_pages()[first_page_index() + index];
+    }
+
     size_t offset_in_vmobject() const
     {
         return m_offset_in_vmobject;

@@ -131,7 +131,7 @@ bool Region::commit(size_t page_index)
 {
     ASSERT(vmobject().is_anonymous() || vmobject().is_purgeable());
     InterruptDisabler disabler;
-    auto& vmobject_physical_page_entry = vmobject().physical_pages()[first_page_index() + page_index];
+    auto& vmobject_physical_page_entry = physical_page_slot(page_index);
     if (!vmobject_physical_page_entry.is_null() && !vmobject_physical_page_entry->is_shared_zero_page())
         return true;
     auto physical_page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
@@ -165,8 +165,8 @@ size_t Region::amount_resident() const
 {
     size_t bytes = 0;
     for (size_t i = 0; i < page_count(); ++i) {
-        auto& physical_page = m_vmobject->physical_pages()[first_page_index() + i];
-        if (physical_page && !physical_page->is_shared_zero_page())
+        auto* page = physical_page(i);
+        if (page && !page->is_shared_zero_page())
             bytes += PAGE_SIZE;
     }
     return bytes;
@@ -176,8 +176,8 @@ size_t Region::amount_shared() const
 {
     size_t bytes = 0;
     for (size_t i = 0; i < page_count(); ++i) {
-        auto& physical_page = m_vmobject->physical_pages()[first_page_index() + i];
-        if (physical_page && physical_page->ref_count() > 1 && !physical_page->is_shared_zero_page())
+        auto* page = physical_page(i);
+        if (page && page->ref_count() > 1 && !page->is_shared_zero_page())
             bytes += PAGE_SIZE;
     }
     return bytes;
@@ -199,8 +199,8 @@ NonnullOwnPtr<Region> Region::create_kernel_only(const Range& range, NonnullRefP
 
 bool Region::should_cow(size_t page_index) const
 {
-    auto& slot = vmobject().physical_pages()[page_index];
-    if (slot && slot->is_shared_zero_page())
+    auto* page = physical_page(page_index);
+    if (page && page->is_shared_zero_page())
         return true;
     if (m_shared)
         return false;
@@ -224,12 +224,12 @@ void Region::map_individual_page_impl(size_t page_index)
 {
     auto page_vaddr = vaddr().offset(page_index * PAGE_SIZE);
     auto& pte = MM.ensure_pte(*m_page_directory, page_vaddr);
-    auto& physical_page = vmobject().physical_pages()[first_page_index() + page_index];
-    if (!physical_page || (!is_readable() && !is_writable())) {
+    auto* page = physical_page(page_index);
+    if (!page || (!is_readable() && !is_writable())) {
         pte.clear();
     } else {
         pte.set_cache_disabled(!m_cacheable);
-        pte.set_physical_page_base(physical_page->paddr().get());
+        pte.set_physical_page_base(page->paddr().get());
         pte.set_present(true);
         if (should_cow(page_index))
             pte.set_writable(false);
@@ -239,7 +239,7 @@ void Region::map_individual_page_impl(size_t page_index)
             pte.set_execute_disabled(!is_executable());
         pte.set_user_allowed(is_user_accessible());
 #ifdef MM_DEBUG
-        dbg() << "MM: >> region map (PD=" << m_page_directory->cr3() << ", PTE=" << (void*)pte.raw() << "{" << &pte << "}) " << name() << " " << page_vaddr << " => " << physical_page->paddr() << " (@" << physical_page.ptr() << ")";
+        dbg() << "MM: >> region map (PD=" << m_page_directory->cr3() << ", PTE=" << (void*)pte.raw() << "{" << &pte << "}) " << name() << " " << page_vaddr << " => " << page->paddr() << " (@" << page << ")";
 #endif
     }
     MM.flush_tlb(page_vaddr);
@@ -249,7 +249,7 @@ void Region::remap_page(size_t page_index)
 {
     ASSERT(m_page_directory);
     InterruptDisabler disabler;
-    ASSERT(vmobject().physical_pages()[first_page_index() + page_index]);
+    ASSERT(physical_page(page_index));
     map_individual_page_impl(page_index);
 }
 
@@ -263,8 +263,8 @@ void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
         pte.clear();
         MM.flush_tlb(vaddr);
 #ifdef MM_DEBUG
-        auto& physical_page = vmobject().physical_pages()[first_page_index() + i];
-        dbg() << "MM: >> Unmapped " << vaddr << " => P" << String::format("%p", physical_page ? physical_page->paddr().get() : 0) << " <<";
+        auto* page = physical_page(i);
+        dbg() << "MM: >> Unmapped " << vaddr << " => P" << String::format("%p", page ? page->paddr().get() : 0) << " <<";
 #endif
     }
     if (deallocate_range == ShouldDeallocateVirtualMemoryRange::Yes)
@@ -315,7 +315,7 @@ PageFaultResponse Region::handle_fault(const PageFault& fault)
         }
 #ifdef MAP_SHARED_ZERO_PAGE_LAZILY
         if (fault.is_read()) {
-            vmobject().physical_pages()[first_page_index() + page_index_in_region] = MM.shared_zero_page();
+            physical_page_slot(page_index_in_region) = MM.shared_zero_page();
             remap_page(page_index_in_region);
             return PageFaultResponse::Continue;
         }
@@ -330,7 +330,7 @@ PageFaultResponse Region::handle_fault(const PageFault& fault)
 #ifdef PAGE_FAULT_DEBUG
         dbg() << "PV(cow) fault in Region{" << this << "}[" << page_index_in_region << "]";
 #endif
-        if (vmobject().physical_pages()[first_page_index() + page_index_in_region]->is_shared_zero_page()) {
+        if (physical_page(page_index_in_region)->is_shared_zero_page()) {
 #ifdef PAGE_FAULT_DEBUG
             dbg() << "NP(zero) fault in Region{" << this << "}[" << page_index_in_region << "]";
 #endif
@@ -351,9 +351,9 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
     LOCKER(vmobject().m_paging_lock);
     cli();
 
-    auto& vmobject_physical_page_entry = vmobject().physical_pages()[first_page_index() + page_index_in_region];
+    auto& page_slot = physical_page_slot(page_index_in_region);
 
-    if (!vmobject_physical_page_entry.is_null() && !vmobject_physical_page_entry->is_shared_zero_page()) {
+    if (!page_slot.is_null() && !page_slot->is_shared_zero_page()) {
 #ifdef PAGE_FAULT_DEBUG
         dbg() << "MM: zero_page() but page already present. Fine with me!";
 #endif
@@ -364,8 +364,8 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
     if (Thread::current)
         Thread::current->did_zero_fault();
 
-    auto physical_page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
-    if (physical_page.is_null()) {
+    auto page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
+    if (page.is_null()) {
         klog() << "MM: handle_zero_fault was unable to allocate a physical page";
         return PageFaultResponse::ShouldCrash;
     }
@@ -373,7 +373,7 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
 #ifdef PAGE_FAULT_DEBUG
     dbg() << "      >> ZERO " << physical_page->paddr();
 #endif
-    vmobject_physical_page_entry = move(physical_page);
+    page_slot = move(page);
     remap_page(page_index_in_region);
     return PageFaultResponse::Continue;
 }
@@ -381,8 +381,8 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
 PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    auto& vmobject_physical_page_entry = vmobject().physical_pages()[first_page_index() + page_index_in_region];
-    if (vmobject_physical_page_entry->ref_count() == 1) {
+    auto& page_slot = physical_page_slot(page_index_in_region);
+    if (page_slot->ref_count() == 1) {
 #ifdef PAGE_FAULT_DEBUG
         dbg() << "    >> It's a COW page but nobody is sharing it anymore. Remap r/w";
 #endif
@@ -397,19 +397,19 @@ PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
 #ifdef PAGE_FAULT_DEBUG
     dbg() << "    >> It's a COW page and it's time to COW!";
 #endif
-    auto physical_page_to_copy = move(vmobject_physical_page_entry);
-    auto physical_page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No);
-    if (physical_page.is_null()) {
+    auto physical_page_to_copy = move(page_slot);
+    auto page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No);
+    if (page.is_null()) {
         klog() << "MM: handle_cow_fault was unable to allocate a physical page";
         return PageFaultResponse::ShouldCrash;
     }
-    u8* dest_ptr = MM.quickmap_page(*physical_page);
+    u8* dest_ptr = MM.quickmap_page(*page);
     const u8* src_ptr = vaddr().offset(page_index_in_region * PAGE_SIZE).as_ptr();
 #ifdef PAGE_FAULT_DEBUG
     dbg() << "      >> COW " << physical_page->paddr() << " <- " << physical_page_to_copy->paddr();
 #endif
     copy_from_user(dest_ptr, src_ptr, PAGE_SIZE);
-    vmobject_physical_page_entry = move(physical_page);
+    page_slot = move(page);
     MM.unquickmap_page();
     set_should_cow(page_index_in_region, false);
     remap_page(page_index_in_region);

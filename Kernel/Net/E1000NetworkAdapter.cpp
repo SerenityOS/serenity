@@ -279,12 +279,14 @@ void E1000NetworkAdapter::initialize_rx_descriptors()
     auto* rx_descriptors = (e1000_tx_desc*)m_rx_descriptors_region->vaddr().as_ptr();
     for (int i = 0; i < number_of_rx_descriptors; ++i) {
         auto& descriptor = rx_descriptors[i];
-        m_rx_buffers_regions.append(MM.allocate_contiguous_kernel_region(PAGE_ROUND_UP(8192), "E1000 RX buffer", Region::Access::Read | Region::Access::Write));
-        descriptor.addr = m_rx_buffers_regions[i]->vmobject().physical_pages()[0]->paddr().get();
+        auto region = MM.allocate_contiguous_kernel_region(8192, "E1000 RX buffer", Region::Access::Read | Region::Access::Write);
+        ASSERT(region);
+        m_rx_buffers_regions.append(region.release_nonnull());
+        descriptor.addr = m_rx_buffers_regions[i].physical_page(0)->paddr().get();
         descriptor.status = 0;
     }
 
-    out32(REG_RXDESCLO, m_rx_descriptors_region->vmobject().physical_pages()[0]->paddr().get());
+    out32(REG_RXDESCLO, m_rx_descriptors_region->physical_page(0)->paddr().get());
     out32(REG_RXDESCHI, 0);
     out32(REG_RXDESCLEN, number_of_rx_descriptors * sizeof(e1000_rx_desc));
     out32(REG_RXDESCHEAD, 0);
@@ -298,12 +300,14 @@ void E1000NetworkAdapter::initialize_tx_descriptors()
     auto* tx_descriptors = (e1000_tx_desc*)m_tx_descriptors_region->vaddr().as_ptr();
     for (int i = 0; i < number_of_tx_descriptors; ++i) {
         auto& descriptor = tx_descriptors[i];
-        m_tx_buffers_regions.append(MM.allocate_contiguous_kernel_region(PAGE_ROUND_UP(8192), "E1000 TX buffer", Region::Access::Read | Region::Access::Write));
-        descriptor.addr = m_tx_buffers_regions[i]->vmobject().physical_pages()[0]->paddr().get();
+        auto region = MM.allocate_contiguous_kernel_region(8192, "E1000 TX buffer", Region::Access::Read | Region::Access::Write);
+        ASSERT(region);
+        m_tx_buffers_regions.append(region.release_nonnull());
+        descriptor.addr = m_tx_buffers_regions[i].physical_page(0)->paddr().get();
         descriptor.cmd = 0;
     }
 
-    out32(REG_TXDESCLO, m_tx_descriptors_region->vmobject().physical_pages()[0]->paddr().get());
+    out32(REG_TXDESCLO, m_tx_descriptors_region->physical_page(0)->paddr().get());
     out32(REG_TXDESCHI, 0);
     out32(REG_TXDESCLEN, number_of_tx_descriptors * sizeof(e1000_tx_desc));
     out32(REG_TXDESCHEAD, 0);
@@ -392,7 +396,7 @@ void E1000NetworkAdapter::send_raw(const u8* data, size_t length)
     auto* tx_descriptors = (e1000_tx_desc*)m_tx_descriptors_region->vaddr().as_ptr();
     auto& descriptor = tx_descriptors[tx_current];
     ASSERT(length <= 8192);
-    auto* vptr = (void*)m_tx_buffers_regions[tx_current]->vaddr().as_ptr();
+    auto* vptr = (void*)m_tx_buffers_regions[tx_current].vaddr().as_ptr();
     memcpy(vptr, data, length);
     descriptor.length = length;
     descriptor.status = 0;
@@ -427,7 +431,7 @@ void E1000NetworkAdapter::receive()
         rx_current = (rx_current + 1) % number_of_rx_descriptors;
         if (!(rx_descriptors[rx_current].status & 1))
             break;
-        auto* buffer = m_rx_buffers_regions[rx_current]->vaddr().as_ptr();
+        auto* buffer = m_rx_buffers_regions[rx_current].vaddr().as_ptr();
         u16 length = rx_descriptors[rx_current].length;
 #ifdef E1000_DEBUG
         klog() << "E1000: Received 1 packet @ " << buffer << " (" << length << ") bytes!";
