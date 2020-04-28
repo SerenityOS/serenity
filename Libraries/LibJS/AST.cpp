@@ -411,6 +411,8 @@ Value UnaryExpression::execute(Interpreter& interpreter) const
             return Value(true);
         // FIXME: Support deleting locals
         ASSERT(!reference.is_local_variable());
+        if (reference.is_global_variable())
+            return interpreter.global_object().delete_property(reference.name());
         auto* base_object = reference.base().to_object(interpreter.heap());
         if (!base_object)
             return {};
@@ -844,7 +846,7 @@ Value AssignmentExpression::execute(Interpreter& interpreter) const
     if (reference.is_unresolvable())
         return interpreter.throw_exception<ReferenceError>("Invalid left-hand side in assignment");
 
-    reference.assign(interpreter, rhs_result);
+    reference.put(interpreter, rhs_result);
 
     if (interpreter.exception())
         return {};
@@ -853,9 +855,11 @@ Value AssignmentExpression::execute(Interpreter& interpreter) const
 
 Value UpdateExpression::execute(Interpreter& interpreter) const
 {
-    ASSERT(m_argument->is_identifier());
-    auto name = static_cast<const Identifier&>(*m_argument).string();
-    auto old_value = m_argument->execute(interpreter);
+    auto reference = m_argument->to_reference(interpreter);
+    if (interpreter.exception())
+        return {};
+
+    auto old_value = reference.get(interpreter);
     if (interpreter.exception())
         return {};
     old_value = old_value.to_number();
@@ -873,7 +877,9 @@ Value UpdateExpression::execute(Interpreter& interpreter) const
     }
 
     auto new_value = Value(old_value.as_double() + op_result);
-    interpreter.set_variable(name, new_value);
+    reference.put(interpreter, new_value);
+    if (interpreter.exception())
+        return {};
     return m_prefixed ? new_value : old_value;
 }
 

@@ -173,7 +173,7 @@ Reference Interpreter::get_reference(const FlyString& name)
                 return { Reference::LocalVariable, name };
         }
     }
-    return { &global_object(), PropertyName(name) };
+    return { Reference::GlobalVariable, name };
 }
 
 void Interpreter::gather_roots(Badge<Heap>, HashTable<Cell*>& roots)

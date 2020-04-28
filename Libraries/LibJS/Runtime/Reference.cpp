@@ -24,20 +24,29 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/StringBuilder.h>
 #include <LibJS/Interpreter.h>
-#include <LibJS/Runtime/Reference.h>
+#include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/Reference.h>
 
 namespace JS {
 
-void Reference::assign(Interpreter& interpreter, Value value)
+void Reference::put(Interpreter& interpreter, Value value)
 {
     // NOTE: The caller is responsible for doing an exception check after assign().
 
-    ASSERT(!is_unresolvable());
+    if (is_unresolvable()) {
+        throw_reference_error(interpreter);
+        return;
+    }
 
-    if (is_local_variable()) {
-        interpreter.set_variable(m_name.to_string(), value);
+    if (is_local_variable() || is_global_variable()) {
+        if (is_local_variable())
+            interpreter.set_variable(m_name.to_string(), value);
+        else
+            interpreter.global_object().put(m_name, value);
         return;
     }
 
@@ -46,6 +55,48 @@ void Reference::assign(Interpreter& interpreter, Value value)
         return;
 
     object->put(m_name, value);
+}
+
+void Reference::throw_reference_error(Interpreter& interpreter)
+{
+    auto property_name = m_name.to_string();
+    String message;
+    if (property_name.is_empty())
+        message = "Unresolvable reference";
+    else
+        message = String::format("'%s' not known", property_name.characters());
+    interpreter.throw_exception<ReferenceError>(message);
+}
+
+Value Reference::get(Interpreter& interpreter)
+{
+    // NOTE: The caller is responsible for doing an exception check after fetch().
+
+    if (is_unresolvable()) {
+        throw_reference_error(interpreter);
+        return {};
+    }
+
+    if (is_local_variable() || is_global_variable()) {
+        Value value;
+        if (is_local_variable())
+            value = interpreter.get_variable(m_name.to_string());
+        else
+            value = interpreter.global_object().get(m_name);
+        if (interpreter.exception())
+            return {};
+        if (value.is_empty()) {
+            throw_reference_error(interpreter);
+            return {};
+        }
+        return value;
+    }
+
+    auto* object = base().to_object(interpreter.heap());
+    if (!object)
+        return {};
+
+    return object->get(m_name).value_or(js_undefined());
 }
 
 }
