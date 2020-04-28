@@ -50,7 +50,7 @@ Editor::Editor(bool always_refresh)
 Editor::~Editor()
 {
     if (m_initialized)
-        tcsetattr(0, TCSANOW, &m_default_termios);
+        restore();
 }
 
 void Editor::add_to_history(const String& line)
@@ -124,6 +124,7 @@ void Editor::stylize(const Span& span, const Style& style)
 
 String Editor::get_line(const String& prompt)
 {
+    initialize();
     m_is_editing = true;
 
     set_prompt(prompt);
@@ -142,6 +143,7 @@ String Editor::get_line(const String& prompt)
             auto string = String::copy(m_buffer);
             m_buffer.clear();
             m_is_editing = false;
+            restore();
             return string;
         }
         char keybuf[16];
@@ -648,7 +650,6 @@ String Editor::get_line(const String& prompt)
                         m_pre_search_buffer.append(ch);
                     m_pre_search_cursor = m_cursor;
                     m_search_editor = make<Editor>(true); // Has anyone seen 'Inception'?
-                    m_search_editor->initialize();
                     m_search_editor->on_display_refresh = [this](Editor& search_editor) {
                         search(StringView { search_editor.buffer().data(), search_editor.buffer().size() });
                         refresh_display();
