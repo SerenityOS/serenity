@@ -24,19 +24,61 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <AK/StringBuilder.h>
+#include <LibMarkdown/Heading.h>
 
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/String.h>
-#include <LibMarkdown/MDBlock.h>
+namespace Markdown {
 
-class MDDocument final {
-public:
-    String render_to_html() const;
-    String render_for_terminal() const;
+String Heading::render_to_html() const
+{
+    StringBuilder builder;
+    builder.appendf("<h%d>", m_level);
+    builder.append(m_text.render_to_html());
+    builder.appendf("</h%d>\n", m_level);
+    return builder.build();
+}
 
-    bool parse(const StringView&);
+String Heading::render_for_terminal() const
+{
+    StringBuilder builder;
 
-private:
-    NonnullOwnPtrVector<MDBlock> m_blocks;
-};
+    switch (m_level) {
+    case 1:
+    case 2:
+        builder.append("\n\033[1m");
+        builder.append(m_text.render_for_terminal().to_uppercase());
+        builder.append("\033[0m\n");
+        break;
+    default:
+        builder.append("\n\033[1m");
+        builder.append(m_text.render_for_terminal());
+        builder.append("\033[0m\n");
+        break;
+    }
+
+    return builder.build();
+}
+
+bool Heading::parse(Vector<StringView>::ConstIterator& lines)
+{
+    if (lines.is_end())
+        return false;
+
+    const StringView& line = *lines;
+
+    for (m_level = 0; m_level < (int)line.length(); m_level++)
+        if (line[(size_t)m_level] != '#')
+            break;
+
+    if (m_level >= (int)line.length() || line[(size_t)m_level] != ' ')
+        return false;
+
+    StringView title_view = line.substring_view((size_t)m_level + 1, line.length() - (size_t)m_level - 1);
+    bool success = m_text.parse(title_view);
+    ASSERT(success);
+
+    ++lines;
+    return true;
+}
+
+}

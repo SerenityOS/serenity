@@ -41,7 +41,7 @@
 #include <LibGUI/ToolBarContainer.h>
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Window.h>
-#include <LibMarkdown/MDDocument.h>
+#include <LibMarkdown/Document.h>
 #include <LibWeb/HtmlView.h>
 #include <LibWeb/Layout/LayoutNode.h>
 #include <LibWeb/Parser/CSSParser.h>
@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
         auto buffer = file->read_all();
         StringView source { (const char*)buffer.data(), buffer.size() };
 
-        MDDocument md_document;
+        Markdown::Document md_document;
         bool success = md_document.parse(source);
         ASSERT(success);
 

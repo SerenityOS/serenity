@@ -26,12 +26,14 @@
 
 #pragma once
 
-#include <LibMarkdown/MDBlock.h>
-#include <LibMarkdown/MDText.h>
+#include <LibMarkdown/Block.h>
+#include <LibMarkdown/Text.h>
 
-class MDCodeBlock final : public MDBlock {
+namespace Markdown {
+
+class CodeBlock final : public Block {
 public:
-    virtual ~MDCodeBlock() override {}
+    virtual ~CodeBlock() override {}
 
     virtual String render_to_html() const override;
     virtual String render_for_terminal() const override;
@@ -39,8 +41,10 @@ public:
 
 private:
     String style_language() const;
-    MDText::Style style() const;
+    Text::Style style() const;
 
     String m_code;
-    MDText m_style_spec;
+    Text m_style_spec;
 };
+
+}

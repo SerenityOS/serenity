@@ -25,28 +25,30 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <LibMarkdown/MDCodeBlock.h>
+#include <LibMarkdown/CodeBlock.h>
 
-MDText::Style MDCodeBlock::style() const
+namespace Markdown {
+
+Text::Style CodeBlock::style() const
 {
     if (m_style_spec.spans().is_empty())
         return {};
     return m_style_spec.spans()[0].style;
 }
 
-String MDCodeBlock::style_language() const
+String CodeBlock::style_language() const
 {
     if (m_style_spec.spans().is_empty())
         return {};
     return m_style_spec.spans()[0].text;
 }
 
-String MDCodeBlock::render_to_html() const
+String CodeBlock::render_to_html() const
 {
     StringBuilder builder;
 
     String style_language = this->style_language();
-    MDText::Style style = this->style();
+    Text::Style style = this->style();
 
     if (style.strong)
         builder.append("<b>");
@@ -81,11 +83,11 @@ String MDCodeBlock::render_to_html() const
     return builder.build();
 }
 
-String MDCodeBlock::render_for_terminal() const
+String CodeBlock::render_for_terminal() const
 {
     StringBuilder builder;
 
-    MDText::Style style = this->style();
+    Text::Style style = this->style();
     bool needs_styling = style.strong || style.emph;
     if (needs_styling) {
         builder.append("\033[");
@@ -112,7 +114,7 @@ String MDCodeBlock::render_for_terminal() const
     return builder.build();
 }
 
-bool MDCodeBlock::parse(Vector<StringView>::ConstIterator& lines)
+bool CodeBlock::parse(Vector<StringView>::ConstIterator& lines)
 {
     if (lines.is_end())
         return false;
@@ -158,4 +160,6 @@ bool MDCodeBlock::parse(Vector<StringView>::ConstIterator& lines)
 
     m_code = builder.build();
     return true;
+}
+
 }

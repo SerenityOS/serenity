@@ -36,7 +36,7 @@
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/SyntaxHighlighter.h>
 #include <LibGUI/Window.h>
-#include <LibMarkdown/MDDocument.h>
+#include <LibMarkdown/Document.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/HTMLHeadElement.h>
 #include <LibWeb/DOM/Text.h>
@@ -166,7 +166,7 @@ void Editor::show_documentation_tooltip_if_available(const String& hovered_token
         return;
     }
 
-    MDDocument man_document;
+    Markdown::Document man_document;
     bool success = man_document.parse(file->read_all());
 
     if (!success) {

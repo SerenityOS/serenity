@@ -1,10 +1,10 @@
 OBJS = \
-    MDDocument.o \
-    MDParagraph.o \
-    MDHeading.o \
-    MDCodeBlock.o \
-    MDList.o \
-    MDText.o
+    Document.o \
+    Paragraph.o \
+    Heading.o \
+    CodeBlock.o \
+    List.o \
+    Text.o
 
 LIBRARY = libmarkdown.a
 

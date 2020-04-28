@@ -25,8 +25,10 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <LibMarkdown/MDText.h>
+#include <LibMarkdown/Text.h>
 #include <string.h>
+
+namespace Markdown {
 
 static String unescape(const StringView& text)
 {
@@ -42,7 +44,7 @@ static String unescape(const StringView& text)
     return builder.build();
 }
 
-String MDText::render_to_html() const
+String Text::render_to_html() const
 {
     StringBuilder builder;
 
@@ -110,7 +112,7 @@ String MDText::render_to_html() const
     return builder.build();
 }
 
-String MDText::render_for_terminal() const
+String Text::render_for_terminal() const
 {
     StringBuilder builder;
 
@@ -149,7 +151,7 @@ String MDText::render_for_terminal() const
     return builder.build();
 }
 
-bool MDText::parse(const StringView& str)
+bool Text::parse(const StringView& str)
 {
     Style current_style;
     size_t current_span_start = 0;
@@ -228,4 +230,6 @@ bool MDText::parse(const StringView& str)
     append_span_if_needed(str.length());
 
     return true;
+}
+
 }

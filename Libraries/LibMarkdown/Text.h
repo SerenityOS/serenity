@@ -26,17 +26,34 @@
 
 #pragma once
 
-#include <LibMarkdown/MDBlock.h>
-#include <LibMarkdown/MDText.h>
+#include <AK/String.h>
+#include <AK/Vector.h>
 
-class MDParagraph final : public MDBlock {
+namespace Markdown {
+
+class Text final {
 public:
-    virtual ~MDParagraph() override {}
+    struct Style {
+        bool emph { false };
+        bool strong { false };
+        bool code { false };
+        String href;
+    };
 
-    virtual String render_to_html() const override;
-    virtual String render_for_terminal() const override;
-    virtual bool parse(Vector<StringView>::ConstIterator& lines) override;
+    struct Span {
+        String text;
+        Style style;
+    };
+
+    const Vector<Span>& spans() const { return m_spans; }
+
+    String render_to_html() const;
+    String render_for_terminal() const;
+
+    bool parse(const StringView&);
 
 private:
-    MDText m_text;
+    Vector<Span> m_spans;
 };
+
+}

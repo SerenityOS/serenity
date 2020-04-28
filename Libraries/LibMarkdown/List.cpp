@@ -25,9 +25,11 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <LibMarkdown/MDList.h>
+#include <LibMarkdown/List.h>
 
-String MDList::render_to_html() const
+namespace Markdown {
+
+String List::render_to_html() const
 {
     StringBuilder builder;
 
@@ -45,7 +47,7 @@ String MDList::render_to_html() const
     return builder.build();
 }
 
-String MDList::render_for_terminal() const
+String List::render_for_terminal() const
 {
     StringBuilder builder;
 
@@ -64,7 +66,7 @@ String MDList::render_for_terminal() const
     return builder.build();
 }
 
-bool MDList::parse(Vector<StringView>::ConstIterator& lines)
+bool List::parse(Vector<StringView>::ConstIterator& lines)
 {
     bool first = true;
     while (true) {
@@ -104,7 +106,7 @@ bool MDList::parse(Vector<StringView>::ConstIterator& lines)
             return false;
 
         first = false;
-        MDText text;
+        Text text;
         bool success = text.parse(line.substring_view(offset, line.length() - offset));
         ASSERT(success);
         m_items.append(move(text));
@@ -112,4 +114,6 @@ bool MDList::parse(Vector<StringView>::ConstIterator& lines)
     }
 
     return !first;
+}
+
 }

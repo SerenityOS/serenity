@@ -28,7 +28,7 @@
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
-#include <LibMarkdown/MDDocument.h>
+#include <LibMarkdown/Document.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -101,7 +101,7 @@ int main(int argc, char* argv[])
 
     printf("%s(%s)\t\tSerenityOS manual\n", name, section);
 
-    MDDocument document;
+    Markdown::Document document;
     bool success = document.parse(source);
     ASSERT(success);
 

@@ -26,30 +26,24 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/StringView.h>
 #include <AK/Vector.h>
+#include <LibMarkdown/Block.h>
+#include <LibMarkdown/Text.h>
 
-class MDText final {
+namespace Markdown {
+
+class Heading final : public Block {
 public:
-    struct Style {
-        bool emph { false };
-        bool strong { false };
-        bool code { false };
-        String href;
-    };
+    virtual ~Heading() override {}
 
-    struct Span {
-        String text;
-        Style style;
-    };
-
-    const Vector<Span>& spans() const { return m_spans; }
-
-    String render_to_html() const;
-    String render_for_terminal() const;
-
-    bool parse(const StringView&);
+    virtual String render_to_html() const override;
+    virtual String render_for_terminal() const override;
+    virtual bool parse(Vector<StringView>::ConstIterator& lines) override;
 
 private:
-    Vector<Span> m_spans;
+    Text m_text;
+    int m_level { -1 };
 };
+
+}
