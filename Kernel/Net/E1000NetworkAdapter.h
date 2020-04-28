@@ -104,8 +104,8 @@ private:
     bool m_has_eeprom { false };
     bool m_use_mmio { false };
 
-    static const int number_of_rx_descriptors = 32;
-    static const int number_of_tx_descriptors = 8;
+    static const size_t number_of_rx_descriptors = 32;
+    static const size_t number_of_tx_descriptors = 8;
 
     WaitQueue m_wait_queue;
 };
