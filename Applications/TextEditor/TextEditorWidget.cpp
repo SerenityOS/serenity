@@ -74,7 +74,7 @@ TextEditorWidget::TextEditorWidget()
         if (m_markdown_preview_enabled)
             update_markdown_preview();
 
-        // Do not mark as diry on the first change (When document is first opened.)
+        // Do not mark as dirty on the first change (When document is first opened.)
         if (m_document_opening) {
             m_document_opening = false;
             return;
