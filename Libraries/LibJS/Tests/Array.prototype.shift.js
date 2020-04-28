@@ -13,6 +13,8 @@ try {
     assert(value === undefined);
     assert(a.length === 0);
 
+    assert([,].shift() === undefined);
+
     console.log("PASS");
 } catch (e) {
     console.log("FAIL: " + e);

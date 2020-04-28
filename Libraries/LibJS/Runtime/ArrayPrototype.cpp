@@ -207,7 +207,7 @@ Value ArrayPrototype::pop(Interpreter& interpreter)
         return {};
     if (array->elements().is_empty())
         return js_undefined();
-    return array->elements().take_last();
+    return array->elements().take_last().value_or(js_undefined());
 }
 
 Value ArrayPrototype::shift(Interpreter& interpreter)
@@ -217,7 +217,7 @@ Value ArrayPrototype::shift(Interpreter& interpreter)
         return {};
     if (array->elements().is_empty())
         return js_undefined();
-    return array->elements().take_first();
+    return array->elements().take_first().value_or(js_undefined());
 }
 
 static Value join_array_with_separator(Interpreter& interpreter, const Array& array, StringView separator)
