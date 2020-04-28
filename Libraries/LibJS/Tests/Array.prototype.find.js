@@ -23,6 +23,26 @@ try {
     assert(array.find(value => value > 100) === undefined);
     assert([].find(value => value === 1) === undefined);
 
+    var callbackCalled = 0;
+    var callback = () => { callbackCalled++; };
+
+    [].find(callback)
+    assert(callbackCalled === 0);
+
+    [1, 2, 3].find(callback);
+    assert(callbackCalled === 3);
+
+    callbackCalled = 0;
+    [1, , , "foo", , undefined, , ,].find(callback);
+    assert(callbackCalled === 8);
+
+    callbackCalled = 0;
+    [1, , , "foo", , undefined, , ,].find(value => {
+        callbackCalled++;
+        return value === undefined;
+    });
+    assert(callbackCalled === 2);
+
     console.log("PASS");
 } catch (e) {
     console.log("FAIL: " + e);
