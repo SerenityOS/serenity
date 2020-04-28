@@ -26,6 +26,10 @@ try {
     assert([1, 2, 3].map(callback).length === 3);
     assert(callbackCalled === 3);
 
+    callbackCalled = 0;
+    assert([1, , , "foo", , undefined, , ,].map(callback).length === 8);
+    assert(callbackCalled === 3);
+
     var results = [undefined, null, true, "foo", 42, {}].map((value, index) => "" + index + " -> " + value);
     assert(results.length === 6);
     assert(results[0] === "0 -> undefined");
