@@ -42,12 +42,16 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/Splitter.h>
 #include <LibGUI/StatusBar.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/ToolBar.h>
 #include <LibGUI/ToolBarContainer.h>
 #include <LibGfx/Font.h>
+#include <LibMarkdown/Document.h>
+#include <LibWeb/HtmlView.h>
+#include <LibWeb/Parser/HTMLParser.h>
 #include <string.h>
 
 TextEditorWidget::TextEditorWidget()
@@ -58,12 +62,18 @@ TextEditorWidget::TextEditorWidget()
 
     auto& toolbar_container = add<GUI::ToolBarContainer>();
     auto& toolbar = toolbar_container.add<GUI::ToolBar>();
-    m_editor = add<GUI::TextEditor>();
+
+    auto& splitter = add<GUI::HorizontalSplitter>();
+
+    m_editor = splitter.add<GUI::TextEditor>();
     m_editor->set_ruler_visible(true);
     m_editor->set_automatic_indentation_enabled(true);
     m_editor->set_line_wrapping_enabled(true);
 
     m_editor->on_change = [this] {
+        if (m_markdown_preview_enabled)
+            update_markdown_preview();
+
         // Do not mark as diry on the first change (When document is first opened.)
         if (m_document_opening) {
             m_document_opening = false;
@@ -75,6 +85,9 @@ TextEditorWidget::TextEditorWidget()
         if (!was_dirty)
             update_title();
     };
+
+    m_html_view = splitter.add<Web::HtmlView>();
+    m_html_view->set_visible(false);
 
     m_find_replace_widget = add<GUI::Widget>();
     m_find_replace_widget->set_fill_with_background_color(true);
@@ -405,8 +418,16 @@ TextEditorWidget::TextEditorWidget()
     syntax_actions.add_action(*m_js_highlight);
     syntax_menu.add_action(*m_js_highlight);
 
+    m_markdown_preview_action = GUI::Action::create_checkable(
+        "Markdown preview", [this](auto& action) {
+            set_markdown_preview_enabled(action.is_checked());
+        },
+        this);
+
     auto& view_menu = menubar->add_menu("View");
     view_menu.add_action(*m_line_wrapping_setting_action);
+    view_menu.add_separator();
+    view_menu.add_action(*m_markdown_preview_action);
     view_menu.add_separator();
     view_menu.add_submenu(move(font_menu));
     view_menu.add_submenu(move(syntax_menu));
@@ -445,12 +466,15 @@ void TextEditorWidget::set_path(const FileSystemPath& file)
     m_name = file.title();
     m_extension = file.extension();
 
-    if (m_extension == "cpp" || m_extension == "h")
+    if (m_extension == "cpp" || m_extension == "h") {
         m_cpp_highlight->activate();
-    else if (m_extension == "js")
+    } else if (m_extension == "js") {
         m_js_highlight->activate();
-    else
+    } else {
         m_plain_text_highlight->activate();
+    }
+
+    set_markdown_preview_enabled(m_extension == "md");
 
     update_title();
 }
@@ -513,5 +537,26 @@ void TextEditorWidget::drop_event(GUI::DropEvent& event)
             return;
         }
         open_sesame(urls.first().path());
+    }
+}
+
+void TextEditorWidget::set_markdown_preview_enabled(bool enabled)
+{
+    if (m_markdown_preview_enabled == enabled)
+        return;
+    m_markdown_preview_enabled = enabled;
+    m_markdown_preview_action->set_checked(enabled);
+    m_html_view->set_visible(enabled);
+    if (enabled)
+        update_markdown_preview();
+}
+
+void TextEditorWidget::update_markdown_preview()
+{
+    Markdown::Document document;
+    if (document.parse(m_editor->text())) {
+        auto html = document.render_to_html();
+        auto html_document = Web::parse_html_document(html);
+        m_html_view->set_document(html_document);
     }
 }
