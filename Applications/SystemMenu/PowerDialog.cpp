@@ -53,10 +53,10 @@ static const Vector<PowerOption> options = {
 Vector<char const*> PowerDialog::show()
 {
     auto rc = PowerDialog::construct()->exec();
-    if (rc < 0)
-        return {};
+    if(rc == ExecResult::ExecOK)
+        return options[rc].cmd;
 
-    return options[rc].cmd;
+    return {};
 }
 
 PowerDialog::PowerDialog()
@@ -103,13 +103,13 @@ PowerDialog::PowerDialog()
 
     auto& ok_button = button_box.add<GUI::Button>();
     ok_button.on_click = [this] {
-        done(m_selected_option);
+        done(ExecResult::ExecOK);
     };
     ok_button.set_text("OK");
 
     auto& cancel_button = button_box.add<GUI::Button>();
     cancel_button.on_click = [this] {
-        done(-1);
+        done(ExecResult::ExecCancel);
     };
     cancel_button.set_text("Cancel");
 }
