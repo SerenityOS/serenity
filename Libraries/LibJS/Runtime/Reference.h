@@ -51,6 +51,15 @@ public:
     {
     }
 
+    enum GlobalVariableTag { GlobalVariable };
+    Reference(GlobalVariableTag, const String& name, bool strict = false)
+        : m_base(js_null())
+        , m_name(name)
+        , m_strict(strict)
+        , m_global_variable(true)
+    {
+    }
+
     Value base() const { return m_base; }
     const PropertyName& name() const { return m_name; }
     bool is_strict() const { return m_strict; }
@@ -71,13 +80,22 @@ public:
         return m_local_variable;
     }
 
-    void assign(Interpreter&, Value);
+    bool is_global_variable() const
+    {
+        return m_global_variable;
+    }
+
+    void put(Interpreter&, Value);
+    Value get(Interpreter&);
 
 private:
+    void throw_reference_error(Interpreter&);
+
     Value m_base { js_undefined() };
     PropertyName m_name;
     bool m_strict { false };
     bool m_local_variable { false };
+    bool m_global_variable { false };
 };
 
 const LogStream& operator<<(const LogStream&, const Value&);
