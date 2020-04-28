@@ -40,12 +40,12 @@ int main(int argc, char** argv)
     time_t now = time(nullptr);
 
     if (argc == 2 && !strcmp(argv[1], "-u")) {
-        printf("%lld\n", now);
+        printf("%d\n", now);
         return 0;
     }
     if (argc == 3 && !strcmp(argv[1], "-s")) {
         bool ok;
-        timespec ts = { String(argv[2]).to_uint(ok), 0 };
+        timespec ts = { (time_t)String(argv[2]).to_uint(ok), 0 };
         if (!ok) {
             printf("date: Invalid timestamp value\n");
             return 1;
