@@ -72,6 +72,8 @@ void DisplayPropertiesWidget::create_wallpaper_list()
 {
     Core::DirIterator iterator("/res/wallpapers/", Core::DirIterator::Flags::SkipDots);
 
+    m_wallpapers.append("Use background color");
+
     while (iterator.has_next()) {
         m_wallpapers.append(iterator.next_path());
     }
@@ -123,11 +125,15 @@ void DisplayPropertiesWidget::create_frame()
     m_wallpaper_combo->set_model(*ItemListModel<AK::String>::create(m_wallpapers));
     m_wallpaper_combo->on_change = [this](auto& text, const GUI::ModelIndex& index) {
         String path = text;
-        if (index.is_valid()) {
-            StringBuilder builder;
-            builder.append("/res/wallpapers/");
-            builder.append(path);
-            path = builder.to_string();
+        if (index.row() == 0) {
+            path = "";
+        } else {
+            if (index.is_valid()) {
+                StringBuilder builder;
+                builder.append("/res/wallpapers/");
+                builder.append(path);
+                path = builder.to_string();
+            }
         }
 
         this->m_monitor_widget->set_wallpaper(path);
@@ -281,6 +287,8 @@ void DisplayPropertiesWidget::load_current_settings()
             m_wallpaper_combo->set_text(selected_wallpaper);
             m_wallpaper_combo->set_only_allow_values_from_model(true);
         }
+    } else {
+        m_wallpaper_combo->set_selected_index(0);
     }
 
     /// Mode //////////////////////////////////////////////////////////////////////////////////////
@@ -340,11 +348,11 @@ void DisplayPropertiesWidget::send_settings_to_window_server()
 
     if (!m_monitor_widget->wallpaper().is_empty()) {
         GUI::Desktop::the().set_wallpaper(m_monitor_widget->wallpaper());
+    } else {
+        dbg() << "Setting color input: __" << m_color_input->text() << "__";
+        GUI::Desktop::the().set_wallpaper("");
+        GUI::Desktop::the().set_background_color(m_color_input->text());
     }
 
     GUI::Desktop::the().set_wallpaper_mode(m_monitor_widget->wallpaper_mode());
-
-    if (m_color_input->color() != this->palette().desktop_background()) {
-        GUI::Desktop::the().set_background_color(m_color_input->text());
-    }
 }
