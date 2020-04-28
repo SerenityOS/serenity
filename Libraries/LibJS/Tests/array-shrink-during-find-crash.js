@@ -9,7 +9,7 @@ try {
         callbackCalled++;
         a.pop();
     });
-    assert(callbackCalled === 3);
+    assert(callbackCalled === 5);
 
     callbackCalled = 0;
     a = [1, 2, 3, 4, 5];

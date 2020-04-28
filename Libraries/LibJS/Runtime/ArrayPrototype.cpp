@@ -452,12 +452,12 @@ Value ArrayPrototype::find(Interpreter& interpreter)
     auto array_size = array->elements().size();
 
     for (size_t i = 0; i < array_size; ++i) {
-        if (i >= array->elements().size())
-            break;
-
-        auto value = array->elements().at(i);
-        if (value.is_empty())
-            continue;
+        auto value = js_undefined();
+        if (i < array->elements().size()) {
+            value = array->elements().at(i);
+            if (value.is_empty())
+                value = js_undefined();
+        }
 
         MarkedValueList arguments(interpreter.heap());
         arguments.append(value);
