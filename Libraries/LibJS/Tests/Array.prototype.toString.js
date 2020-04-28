@@ -8,6 +8,8 @@ try {
 
     assert("rgb(" + [10, 11, 12] + ")" === "rgb(10,11,12)");
 
+    assert([undefined, null].toString() === ",");
+
     a = new Array(5);
     assert(a.toString() === ",,,,");
     a[2] = "foo";
