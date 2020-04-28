@@ -89,7 +89,7 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->set_rect(100, 100, 640, 480);
-    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png"));
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-browser.png"));
     window->set_title("Browser");
 
     auto& widget = window->set_main_widget<GUI::Widget>();
@@ -108,7 +108,6 @@ int main(int argc, char** argv)
     tab_widget.on_change = [&](auto& active_widget) {
         auto& tab = static_cast<Browser::Tab&>(active_widget);
         window->set_title(String::format("%s - Browser", tab.title().characters()));
-        window->set_icon(tab.icon() ? tab.icon() : default_favicon.ptr());
         tab.did_become_active();
     };
 
@@ -128,8 +127,6 @@ int main(int argc, char** argv)
 
         new_tab.on_favicon_change = [&](auto& bitmap) {
             tab_widget.set_tab_icon(new_tab, &bitmap);
-            if (tab_widget.active_widget() == &new_tab)
-                window->set_icon(&bitmap);
         };
 
         new_tab.on_tab_open_request = [&](auto& url) {
