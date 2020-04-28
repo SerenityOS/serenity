@@ -277,7 +277,7 @@ bool E1000NetworkAdapter::link_up()
 void E1000NetworkAdapter::initialize_rx_descriptors()
 {
     auto* rx_descriptors = (e1000_tx_desc*)m_rx_descriptors_region->vaddr().as_ptr();
-    for (int i = 0; i < number_of_rx_descriptors; ++i) {
+    for (size_t i = 0; i < number_of_rx_descriptors; ++i) {
         auto& descriptor = rx_descriptors[i];
         auto region = MM.allocate_contiguous_kernel_region(8192, "E1000 RX buffer", Region::Access::Read | Region::Access::Write);
         ASSERT(region);
@@ -298,7 +298,7 @@ void E1000NetworkAdapter::initialize_rx_descriptors()
 void E1000NetworkAdapter::initialize_tx_descriptors()
 {
     auto* tx_descriptors = (e1000_tx_desc*)m_tx_descriptors_region->vaddr().as_ptr();
-    for (int i = 0; i < number_of_tx_descriptors; ++i) {
+    for (size_t i = 0; i < number_of_tx_descriptors; ++i) {
         auto& descriptor = tx_descriptors[i];
         auto region = MM.allocate_contiguous_kernel_region(8192, "E1000 TX buffer", Region::Access::Read | Region::Access::Write);
         ASSERT(region);
@@ -389,7 +389,7 @@ u32 E1000NetworkAdapter::in32(u16 address)
 void E1000NetworkAdapter::send_raw(const u8* data, size_t length)
 {
     disable_irq();
-    u32 tx_current = in32(REG_TXDESCTAIL);
+    size_t tx_current = in32(REG_TXDESCTAIL) % number_of_tx_descriptors;
 #ifdef E1000_DEBUG
     klog() << "E1000: Sending packet (" << length << " bytes)";
 #endif
@@ -425,14 +425,15 @@ void E1000NetworkAdapter::receive()
     auto* rx_descriptors = (e1000_tx_desc*)m_rx_descriptors_region->vaddr().as_ptr();
     u32 rx_current;
     for (;;) {
-        rx_current = in32(REG_RXDESCTAIL);
-        if (rx_current == in32(REG_RXDESCHEAD))
+        rx_current = in32(REG_RXDESCTAIL) % number_of_rx_descriptors;
+        if (rx_current == (in32(REG_RXDESCHEAD) % number_of_rx_descriptors))
             return;
         rx_current = (rx_current + 1) % number_of_rx_descriptors;
         if (!(rx_descriptors[rx_current].status & 1))
             break;
         auto* buffer = m_rx_buffers_regions[rx_current].vaddr().as_ptr();
         u16 length = rx_descriptors[rx_current].length;
+        ASSERT(length <= 8192);
 #ifdef E1000_DEBUG
         klog() << "E1000: Received 1 packet @ " << buffer << " (" << length << ") bytes!";
 #endif
