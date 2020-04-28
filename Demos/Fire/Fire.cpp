@@ -70,22 +70,6 @@ static const Color s_palette[] = {
     Color(0xCF, 0xCF, 0x6F), Color(0xEF, 0xEF, 0xC7), Color(0xFF, 0xFF, 0xFF)
 };
 
-/* Random functions...
- * These are from musl libc's prng/rand.c
-*/
-static uint64_t seed;
-
-void my_srand(unsigned s)
-{
-    seed = s - 1;
-}
-
-static int my_rand(void)
-{
-    seed = 6364136223846793005ULL * seed + 1;
-    return seed >> 33;
-}
-
 /*
  * Fire Widget
 */
@@ -129,7 +113,7 @@ Fire::Fire()
     cycles = 0;
     phase = 0;
 
-    my_srand(time(nullptr));
+    srand(time(nullptr));
     stop_timer();
     start_timer(20);
 
@@ -170,7 +154,7 @@ void Fire::timer_event(Core::TimerEvent&)
     /* Paint our palettized buffer to screen */
     for (int px = 0 + phase; px < FIRE_WIDTH; px += 2) {
         for (int py = 1; py < 200; py++) {
-            int rnd = my_rand() % 3;
+            int rnd = rand() % 3;
 
             /* Calculate new pixel value, don't go below 0 */
             u8 nv = bitmap->bits(py)[px];
