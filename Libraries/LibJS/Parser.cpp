@@ -446,6 +446,8 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
         RefPtr<Expression> property_key;
         RefPtr<Expression> property_value;
         auto need_colon = true;
+        auto is_spread = false;
+
         if (match_identifier_name()) {
             auto identifier = consume().value();
             property_key = create_ast_node<StringLiteral>(identifier);
@@ -459,6 +461,12 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
             consume(TokenType::BracketOpen);
             property_key = parse_expression(0);
             consume(TokenType::BracketClose);
+        } else if (match(TokenType::TripleDot)) {
+            consume(TokenType::TripleDot);
+            property_key = create_ast_node<SpreadExpression>(parse_expression(0));
+            property_value = property_key;
+            need_colon = false;
+            is_spread = true;
         } else {
             m_parser_state.m_has_errors = true;
             auto& current_token = m_parser_state.m_current_token;
@@ -476,6 +484,8 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
         }
         auto property = create_ast_node<ObjectProperty>(*property_key, *property_value);
         properties.append(property);
+        if (is_spread)
+            property->set_is_spread();
 
         if (!match(TokenType::Comma))
             break;
