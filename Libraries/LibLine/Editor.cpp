@@ -29,6 +29,8 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
+#include <sys/select.h>
+#include <sys/time.h>
 #include <unistd.h>
 
 namespace Line {
@@ -1033,11 +1035,28 @@ size_t Editor::actual_rendered_string_length(const StringView& string) const
 
 Vector<size_t, 2> Editor::vt_dsr()
 {
+    char buf[16];
+    u32 length { 0 };
+
+    // read whatever junk there is before talking to the terminal
+    bool more_junk_to_read { false };
+    timeval timeout { 0, 0 };
+    fd_set readfds;
+    FD_ZERO(&readfds);
+    FD_SET(0, &readfds);
+
+    do {
+        more_junk_to_read = false;
+        (void)select(1, &readfds, nullptr, nullptr, &timeout);
+        if (FD_ISSET(0, &readfds)) {
+            read(0, buf, 16);
+            more_junk_to_read = true;
+        }
+    } while (more_junk_to_read);
+
     fputs("\033[6n", stdout);
     fflush(stdout);
 
-    char buf[16];
-    u32 length { 0 };
     do {
         auto nread = read(0, buf + length, 16 - length);
         if (nread < 0) {
