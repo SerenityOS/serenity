@@ -26,13 +26,13 @@
 
 #include <LibCore/ElapsedTimer.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGUI/Application.h>
 #include <LibGUI/Action.h>
+#include <LibGUI/Application.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
-#include <math.h>
+#include <time.h>
 #include <stdio.h>
 
 #define WIDTH 64
@@ -48,6 +48,7 @@ private:
     Screensaver();
     RefPtr<Gfx::Bitmap> m_bitmap;
 
+    void draw();
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
@@ -58,8 +59,10 @@ private:
 Screensaver::Screensaver()
 {
     m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, { WIDTH, HEIGHT });
+    srand(time(nullptr));
     stop_timer();
     start_timer(INTERVAL);
+    draw();
 }
 
 Screensaver::~Screensaver()
@@ -75,6 +78,7 @@ void Screensaver::mousedown_event(GUI::MouseEvent&)
 {
     ::exit(0);
 }
+
 void Screensaver::keydown_event(GUI::KeyEvent&)
 {
     ::exit(0);
@@ -90,7 +94,11 @@ void Screensaver::timer_event(Core::TimerEvent&)
 {
     Core::ElapsedTimer timer;
     timer.start();
+    draw();
+}
 
+void Screensaver::draw()
+{
     const Color colors[] {
         Color::Blue,
         Color::Cyan,
@@ -105,7 +113,6 @@ void Screensaver::timer_event(Core::TimerEvent&)
         Gfx::Orientation::Horizontal,
         Gfx::Orientation::Vertical
     };
-
 
     int start_color_index = 0;
     int end_color_index = 0;
