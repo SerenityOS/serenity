@@ -9,6 +9,12 @@ try {
     assert(-null === 0);
     assert(+[] === 0);
     assert(-[] === 0);
+    assert(+[,] === 0);
+    assert(-[,] === 0);
+    assert(+[null] === 0);
+    assert(-[null] === 0);
+    assert(+[undefined] === 0);
+    assert(-[undefined] === 0);
     assert(+[[[[[]]]]] === 0);
     assert(-[[[[[]]]]] === 0);
     assert(+[[[[[42]]]]] === 42);
@@ -35,8 +41,12 @@ try {
     assert(isNaN(-undefined));
     assert(isNaN(+{}));
     assert(isNaN(-{}));
-    assert(isNaN(+{a: 1}));
-    assert(isNaN(-{a: 1}));
+    assert(isNaN(+{ a: 1 }));
+    assert(isNaN(-{ a: 1 }));
+    assert(isNaN(+[, , ,]));
+    assert(isNaN(-[, , ,]));
+    assert(isNaN(+[undefined, undefined]));
+    assert(isNaN(-[undefined, undefined]));
     assert(isNaN(+[1, 2, 3]));
     assert(isNaN(-[1, 2, 3]));
     assert(isNaN(+[[[["foo"]]]]));
