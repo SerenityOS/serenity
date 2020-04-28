@@ -17,7 +17,7 @@ try {
         callbackCalled++;
         a.pop();
     });
-    assert(callbackCalled === 3);
+    assert(callbackCalled === 5);
 
     console.log("PASS");
 } catch (e) {
