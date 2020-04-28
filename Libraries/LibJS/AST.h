@@ -703,6 +703,9 @@ public:
     const Expression& key() const { return m_key; }
     const Expression& value() const { return m_value; }
 
+    bool is_spread() const { return m_is_spread; }
+    void set_is_spread() { m_is_spread = true; }
+
     virtual void dump(int indent) const override;
     virtual Value execute(Interpreter&) const override;
 
@@ -711,6 +714,7 @@ private:
 
     NonnullRefPtr<Expression> m_key;
     NonnullRefPtr<Expression> m_value;
+    bool m_is_spread { false };
 };
 
 class ObjectExpression : public Expression {

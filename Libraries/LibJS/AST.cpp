@@ -39,6 +39,7 @@
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Reference.h>
 #include <LibJS/Runtime/ScriptFunction.h>
+#include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/Value.h>
 #include <stdio.h>
@@ -1028,6 +1029,35 @@ Value ObjectExpression::execute(Interpreter& interpreter) const
         auto key_result = property.key().execute(interpreter);
         if (interpreter.exception())
             return {};
+
+        if (property.is_spread()) {
+            if (key_result.is_array()) {
+                auto& array_to_spread = static_cast<Array&>(key_result.as_object());
+                auto& elements = array_to_spread.elements();
+
+                for (size_t i = 0; i < elements.size(); ++i) {
+                    auto element = elements.at(i);
+                    if (!element.is_empty())
+                        object->put_by_index(i, element);
+                }
+            } else if (key_result.is_object()) {
+                auto& obj_to_spread = key_result.as_object();
+
+                for (auto& it : obj_to_spread.shape().property_table()) {
+                    if (obj_to_spread.has_own_property(it.key) && it.value.attributes & Attribute::Enumerable)
+                        object->put(it.key, obj_to_spread.get(it.key));
+                }
+            } else if (key_result.is_string()) {
+                auto& str_to_spread = key_result.as_string()->string();
+
+                for (size_t i = 0; i < str_to_spread.length(); i++) {
+                    object->put_by_index(i, js_string(interpreter, str_to_spread.substring(i, 1)));
+                }
+            }
+
+            continue;
+        }
+
         auto key = key_result.to_string();
         auto value = property.value().execute(interpreter);
         if (interpreter.exception())
