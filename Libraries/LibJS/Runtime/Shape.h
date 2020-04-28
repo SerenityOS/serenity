@@ -88,6 +88,12 @@ public:
     const HashMap<FlyString, PropertyMetadata>& property_table() const;
     size_t property_count() const;
 
+    struct Property {
+        FlyString name;
+        PropertyMetadata metadata;
+    };
+    Vector<Property> property_table_ordered() const;
+
     void set_prototype_without_transition(Object* new_prototype) { m_prototype = new_prototype; }
 
     void remove_property_from_unique_shape(const FlyString&, size_t offset);

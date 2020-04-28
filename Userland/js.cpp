@@ -142,9 +142,9 @@ static void print_object(const JS::Object& object, HashTable<JS::Object*>& seen_
         fputs(", ", stdout);
 
     size_t index = 0;
-    for (auto& it : object.shape().property_table()) {
-        printf("\"\033[33;1m%s\033[0m\": ", it.key.characters());
-        print_value(object.get_direct(it.value.offset), seen_objects);
+    for (auto& it : object.shape().property_table_ordered()) {
+        printf("\"\033[33;1m%s\033[0m\": ", it.name.characters());
+        print_value(object.get_direct(it.metadata.offset), seen_objects);
         if (index != object.shape().property_count() - 1)
             fputs(", ", stdout);
         ++index;

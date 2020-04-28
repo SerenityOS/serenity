@@ -61,6 +61,13 @@ public:
 
     Value get_own_property(const Object& this_object, const FlyString& property_name) const;
 
+    enum class GetOwnPropertyMode {
+        Key,
+        Value,
+        KeyAndValue,
+    };
+    Value get_own_properties(const Object& this_object, GetOwnPropertyMode, bool enumerable_only = false) const;
+
     enum class PutOwnPropertyMode {
         Put,
         DefineProperty,

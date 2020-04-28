@@ -21,6 +21,12 @@ try {
         qux: 3,
     };
     assert(testObjSpread(obj));
+    
+    // Test spread object ordering
+    let keys = Object.keys(obj);
+    assert(
+        keys[0] === 'foo' && keys[1] === 'bar' && keys[2] === 'baz' && keys[3] === 'qux'
+    );
 
     obj = { foo: 0, bar: 1, baz: 2 };
     obj.qux = 3;

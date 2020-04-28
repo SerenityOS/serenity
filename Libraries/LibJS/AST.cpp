@@ -1046,9 +1046,9 @@ Value ObjectExpression::execute(Interpreter& interpreter) const
             } else if (key_result.is_object()) {
                 auto& obj_to_spread = key_result.as_object();
 
-                for (auto& it : obj_to_spread.shape().property_table()) {
-                    if (obj_to_spread.has_own_property(it.key) && it.value.attributes & Attribute::Enumerable)
-                        object->put(it.key, obj_to_spread.get(it.key));
+                for (auto& it : obj_to_spread.shape().property_table_ordered()) {
+                    if (it.metadata.attributes & Attribute::Enumerable)
+                        object->put(it.name, obj_to_spread.get(it.name));
                 }
             } else if (key_result.is_string()) {
                 auto& str_to_spread = key_result.as_string()->string();

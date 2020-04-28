@@ -112,6 +112,18 @@ const HashMap<FlyString, PropertyMetadata>& Shape::property_table() const
     return *m_property_table;
 }
 
+Vector<Shape::Property> Shape::property_table_ordered() const
+{
+    auto vec = Vector<Shape::Property>();
+    vec.resize(property_table().size());
+
+    for (auto& it : property_table()) {
+        vec[it.value.offset] = { it.key, it.value };
+    }
+
+    return vec;
+}
+
 size_t Shape::property_count() const
 {
     return property_table().size();

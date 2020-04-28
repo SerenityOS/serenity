@@ -60,6 +60,7 @@ public:
 
     Heap& heap() const;
     Interpreter& interpreter();
+    Interpreter& interpreter() const;
 
 protected:
     Cell() {}
