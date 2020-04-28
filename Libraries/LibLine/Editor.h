@@ -80,9 +80,13 @@ public:
     explicit Editor(bool always_refresh = false);
     ~Editor();
 
+    String get_line(const String& prompt);
+
     void initialize()
     {
-        ASSERT(!m_initialized);
+        if (m_initialized)
+            return;
+
         struct termios termios;
         tcgetattr(0, &termios);
         m_default_termios = termios; // grab a copy to restore
@@ -93,8 +97,6 @@ public:
         m_termios = termios;
         m_initialized = true;
     }
-
-    String get_line(const String& prompt);
 
     void add_to_history(const String&);
     const Vector<String>& history() const { return m_history; }
@@ -193,6 +195,13 @@ private:
 
     void refresh_display();
     void cleanup();
+
+    void restore()
+    {
+        ASSERT(m_initialized);
+        tcsetattr(0, TCSANOW, &m_default_termios);
+        m_initialized = false;
+    }
 
     size_t current_prompt_length() const
     {
