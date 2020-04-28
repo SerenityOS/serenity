@@ -107,7 +107,11 @@ public:
 
     // FIXME: we will have to kindly ask our instantiators to set our signal handlers
     // since we can not do this cleanly ourselves (signal() limitation: cannot give member functions)
-    void interrupted() { m_was_interrupted = true; }
+    void interrupted()
+    {
+        if (m_is_editing)
+            m_was_interrupted = true;
+    }
     void resized() { m_was_resized = true; }
 
     size_t cursor() const { return m_cursor; }
@@ -147,6 +151,8 @@ public:
     {
         m_finish = true;
     }
+
+    bool is_editing() const { return m_is_editing; }
 
 private:
     void vt_save_cursor();
@@ -291,6 +297,8 @@ private:
 
     bool m_initialized { false };
     bool m_refresh_needed { false };
+
+    bool m_is_editing { false };
 };
 
 }

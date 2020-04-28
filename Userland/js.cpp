@@ -421,7 +421,8 @@ int main(int argc, char** argv)
         s_editor = make<Line::Editor>();
 
         signal(SIGINT, [](int) {
-            sigint_handler();
+            if (!s_editor->is_editing())
+                sigint_handler();
             s_editor->interrupted();
         });
 
