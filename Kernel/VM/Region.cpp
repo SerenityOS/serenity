@@ -397,12 +397,12 @@ PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
 #ifdef PAGE_FAULT_DEBUG
     dbg() << "    >> It's a COW page and it's time to COW!";
 #endif
-    auto physical_page_to_copy = move(page_slot);
     auto page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No);
     if (page.is_null()) {
         klog() << "MM: handle_cow_fault was unable to allocate a physical page";
         return PageFaultResponse::ShouldCrash;
     }
+    auto physical_page_to_copy = move(page_slot);
     u8* dest_ptr = MM.quickmap_page(*page);
     const u8* src_ptr = vaddr().offset(page_index_in_region * PAGE_SIZE).as_ptr();
 #ifdef PAGE_FAULT_DEBUG
