@@ -430,7 +430,6 @@ int main(int argc, char** argv)
             s_editor->resized();
         });
 
-        s_editor->initialize();
         s_editor->on_display_refresh = [syntax_highlight](Line::Editor& editor) {
             auto stylize = [&](Line::Span span, Line::Style styles) {
                 if (syntax_highlight)
