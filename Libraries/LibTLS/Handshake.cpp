@@ -129,10 +129,17 @@ ByteBuffer TLSv12::build_hello()
 
 ByteBuffer TLSv12::build_alert(bool critical, u8 code)
 {
-    dbg() << "FIXME: build_alert";
-    (void)critical;
-    (void)code;
-    return {};
+    PacketBuilder builder(MessageType::Alert, (u16)m_context.version);
+    builder.append((u8)(critical ? AlertLevel::Critical : AlertLevel::Warning));
+    builder.append(code);
+
+    if (critical)
+        m_context.critical_error = code;
+
+    auto packet = builder.build();
+    update_packet(packet);
+
+    return packet;
 }
 
 ByteBuffer TLSv12::build_finished()
