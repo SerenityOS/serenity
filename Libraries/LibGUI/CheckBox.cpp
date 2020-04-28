@@ -79,7 +79,7 @@ void CheckBox::paint_event(PaintEvent& event)
         0, height() / 2 - s_box_height / 2 - 1,
         s_box_width, s_box_height
     };
-    painter.fill_rect(box_rect, palette().base());
+    painter.fill_rect(box_rect, is_enabled() ? palette().base() : palette().window());
     Gfx::StylePainter::paint_frame(painter, box_rect, palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);
 
     if (is_being_pressed())
