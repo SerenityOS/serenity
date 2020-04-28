@@ -236,9 +236,12 @@ Value ForStatement::execute(Interpreter& interpreter) const
     }
 
     if (m_test) {
-        while (m_test->execute(interpreter).to_boolean()) {
+        while (true) {
+            auto test_result = m_test->execute(interpreter);
             if (interpreter.exception())
                 return {};
+            if (!test_result.to_boolean())
+                break;
             last_value = interpreter.run(*m_body);
             if (interpreter.exception())
                 return {};
