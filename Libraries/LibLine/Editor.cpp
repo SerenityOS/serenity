@@ -124,6 +124,8 @@ void Editor::stylize(const Span& span, const Style& style)
 
 String Editor::get_line(const String& prompt)
 {
+    m_is_editing = true;
+
     set_prompt(prompt);
     reset();
     set_origin();
@@ -139,6 +141,7 @@ String Editor::get_line(const String& prompt)
             fflush(stdout);
             auto string = String::copy(m_buffer);
             m_buffer.clear();
+            m_is_editing = false;
             return string;
         }
         char keybuf[16];
