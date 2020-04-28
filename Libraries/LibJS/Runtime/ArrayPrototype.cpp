@@ -143,29 +143,39 @@ Value ArrayPrototype::for_each(Interpreter& interpreter)
 
 Value ArrayPrototype::map(Interpreter& interpreter)
 {
+    // FIXME: Make generic, i.e. work with length and numeric properties only
+    // This should work: Array.prototype.map.call("abc", ch => ...)
     auto* array = array_from(interpreter);
     if (!array)
         return {};
+
     auto* callback = callback_from_args(interpreter, "map");
     if (!callback)
         return {};
+
     auto this_value = interpreter.argument(1);
     auto initial_array_size = array->elements().size();
     auto* new_array = Array::create(interpreter.global_object());
+    new_array->elements().resize(initial_array_size);
+
     for (size_t i = 0; i < initial_array_size; ++i) {
         if (i >= array->elements().size())
             break;
+
         auto value = array->elements()[i];
         if (value.is_empty())
             continue;
+
         MarkedValueList arguments(interpreter.heap());
         arguments.append(value);
         arguments.append(Value((i32)i));
         arguments.append(array);
+
         auto result = interpreter.call(callback, this_value, move(arguments));
         if (interpreter.exception())
             return {};
-        new_array->elements().append(result);
+
+        new_array->elements()[i] = result;
     }
     return Value(new_array);
 }
