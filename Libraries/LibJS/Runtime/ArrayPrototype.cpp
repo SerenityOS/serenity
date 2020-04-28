@@ -226,8 +226,9 @@ static Value join_array_with_separator(Interpreter& interpreter, const Array& ar
     for (size_t i = 0; i < array.elements().size(); ++i) {
         if (i != 0)
             builder.append(separator);
-        if (!array.elements()[i].is_empty())
-            builder.append(array.elements()[i].to_string());
+        auto value = array.elements()[i];
+        if (!value.is_empty() && !value.is_undefined() && !value.is_null())
+            builder.append(value.to_string());
     }
     return js_string(interpreter, builder.to_string());
 }
