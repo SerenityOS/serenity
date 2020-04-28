@@ -116,7 +116,9 @@ void Object::set_shape(Shape& new_shape)
 void Object::put_own_property(Object& this_object, const FlyString& property_name, u8 attributes, Value value, PutOwnPropertyMode mode)
 {
     auto metadata = shape().lookup(property_name);
-    if (!metadata.has_value()) {
+    bool new_property = !metadata.has_value();
+
+    if (new_property) {
         if (m_shape->is_unique()) {
             m_shape->add_property_to_unique_shape(property_name, attributes);
             m_storage.resize(m_shape->property_count());
@@ -127,7 +129,7 @@ void Object::put_own_property(Object& this_object, const FlyString& property_nam
         ASSERT(metadata.has_value());
     }
 
-    if (mode == PutOwnPropertyMode::DefineProperty && !(metadata.value().attributes & Attribute::Configurable) && attributes != metadata.value().attributes) {
+    if (!new_property && mode == PutOwnPropertyMode::DefineProperty && !(metadata.value().attributes & Attribute::Configurable) && attributes != metadata.value().attributes) {
         dbg() << "Disallow reconfig of non-configurable property";
         interpreter().throw_exception<TypeError>(String::format("Cannot redefine property '%s'", property_name.characters()));
         return;
@@ -144,7 +146,7 @@ void Object::put_own_property(Object& this_object, const FlyString& property_nam
         dbg() << "Reconfigured property " << property_name << ", new shape says offset is " << metadata.value().offset << " and my storage capacity is " << m_storage.size();
     }
 
-    if (mode == PutOwnPropertyMode::Put && !(metadata.value().attributes & Attribute::Writable)) {
+    if (!new_property && mode == PutOwnPropertyMode::Put && !(metadata.value().attributes & Attribute::Writable)) {
         dbg() << "Disallow write to non-writable property";
         return;
     }
@@ -240,24 +242,25 @@ Value Object::get(PropertyName property_name) const
     return get(property_name.as_string());
 }
 
-void Object::put_by_index(i32 property_index, Value value)
+void Object::put_by_index(i32 property_index, Value value, u8 attributes)
 {
     ASSERT(!value.is_empty());
     if (property_index < 0)
-        return put(String::number(property_index), value);
+        return put(String::number(property_index), value, attributes);
     // FIXME: Implement some kind of sparse storage for arrays with huge indices.
+    // Also: Take attributes into account here
     if (static_cast<size_t>(property_index) >= m_elements.size())
         m_elements.resize(property_index + 1);
     m_elements[property_index] = value;
 }
 
-void Object::put(const FlyString& property_name, Value value)
+void Object::put(const FlyString& property_name, Value value, u8 attributes)
 {
     ASSERT(!value.is_empty());
     bool ok;
     i32 property_index = property_name.to_int(ok);
     if (ok && property_index >= 0)
-        return put_by_index(property_index, value);
+        return put_by_index(property_index, value, attributes);
 
     // If there's a setter in the prototype chain, we go to the setter.
     // Otherwise, it goes in the own property storage.
@@ -278,26 +281,26 @@ void Object::put(const FlyString& property_name, Value value)
         }
         object = object->prototype();
     }
-    put_own_property(*this, property_name, Attribute::Configurable | Attribute::Enumerable | Attribute::Writable, value, PutOwnPropertyMode::Put);
+    put_own_property(*this, property_name, attributes, value, PutOwnPropertyMode::Put);
 }
 
-void Object::put(PropertyName property_name, Value value)
+void Object::put(PropertyName property_name, Value value, u8 attributes)
 {
     if (property_name.is_number())
-        return put_by_index(property_name.as_number(), value);
-    return put(property_name.as_string(), value);
+        return put_by_index(property_name.as_number(), value, attributes);
+    return put(property_name.as_string(), value, attributes);
 }
 
-void Object::put_native_function(const FlyString& property_name, AK::Function<Value(Interpreter&)> native_function, i32 length)
+void Object::put_native_function(const FlyString& property_name, AK::Function<Value(Interpreter&)> native_function, i32 length, u8 attributes)
 {
     auto* function = NativeFunction::create(interpreter(), interpreter().global_object(), property_name, move(native_function));
-    function->put("length", Value(length));
-    put(property_name, function);
+    function->put("length", Value(length), Attribute::Configurable);
+    put(property_name, function, attributes);
 }
 
-void Object::put_native_property(const FlyString& property_name, AK::Function<Value(Interpreter&)> getter, AK::Function<void(Interpreter&, Value)> setter)
+void Object::put_native_property(const FlyString& property_name, AK::Function<Value(Interpreter&)> getter, AK::Function<void(Interpreter&, Value)> setter, u8 attributes)
 {
-    put(property_name, heap().allocate<NativeProperty>(move(getter), move(setter)));
+    put(property_name, heap().allocate<NativeProperty>(move(getter), move(setter)), attributes);
 }
 
 void Object::visit_children(Cell::Visitor& visitor)

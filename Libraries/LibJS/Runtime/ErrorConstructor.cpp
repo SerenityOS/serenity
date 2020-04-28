@@ -34,8 +34,8 @@ namespace JS {
 ErrorConstructor::ErrorConstructor()
     : NativeFunction("Error", *interpreter().global_object().function_prototype())
 {
-    put("prototype", interpreter().global_object().error_prototype());
-    put("length", Value(1));
+    put("prototype", interpreter().global_object().error_prototype(), 0);
+    put("length", Value(1), Attribute::Configurable);
 }
 
 ErrorConstructor::~ErrorConstructor()
@@ -59,8 +59,8 @@ Value ErrorConstructor::construct(Interpreter& interpreter)
     ConstructorName::ConstructorName()                                                                               \
         : NativeFunction(*interpreter().global_object().function_prototype())                                        \
     {                                                                                                                \
-        put("prototype", interpreter().global_object().snake_name##_prototype());                                    \
-        put("length", Value(1));                                                                                     \
+        put("prototype", interpreter().global_object().snake_name##_prototype(), 0);                                 \
+        put("length", Value(1), Attribute::Configurable);                                                            \
     }                                                                                                                \
     ConstructorName::~ConstructorName() {}                                                                           \
     Value ConstructorName::call(Interpreter& interpreter)                                                            \

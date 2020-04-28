@@ -36,8 +36,8 @@ namespace JS {
 BooleanConstructor::BooleanConstructor()
     : NativeFunction("Boolean", *interpreter().global_object().function_prototype())
 {
-    put("prototype", Value(interpreter().global_object().boolean_prototype()));
-    put("length", Value(1));
+    put("prototype", Value(interpreter().global_object().boolean_prototype()), 0);
+    put("length", Value(1), Attribute::Configurable);
 }
 
 BooleanConstructor::~BooleanConstructor()

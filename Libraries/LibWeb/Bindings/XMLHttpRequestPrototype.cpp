@@ -40,14 +40,14 @@ XMLHttpRequestPrototype::XMLHttpRequestPrototype()
 {
     put_native_function("open", open, 2);
     put_native_function("send", send, 0);
-    put_native_property("readyState", ready_state_getter, nullptr);
-    put_native_property("responseText", response_text_getter, nullptr);
+    put_native_property("readyState", ready_state_getter, nullptr, JS::Attribute::Enumerable | JS::Attribute::Configurable);
+    put_native_property("responseText", response_text_getter, nullptr, JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
-    put("UNSENT", JS::Value((i32)XMLHttpRequest::ReadyState::Unsent));
-    put("OPENED", JS::Value((i32)XMLHttpRequest::ReadyState::Opened));
-    put("HEADERS_RECEIVED", JS::Value((i32)XMLHttpRequest::ReadyState::HeadersReceived));
-    put("LOADING", JS::Value((i32)XMLHttpRequest::ReadyState::Loading));
-    put("DONE", JS::Value((i32)XMLHttpRequest::ReadyState::Done));
+    put("UNSENT", JS::Value((i32)XMLHttpRequest::ReadyState::Unsent), JS::Attribute::Enumerable);
+    put("OPENED", JS::Value((i32)XMLHttpRequest::ReadyState::Opened), JS::Attribute::Enumerable);
+    put("HEADERS_RECEIVED", JS::Value((i32)XMLHttpRequest::ReadyState::HeadersReceived), JS::Attribute::Enumerable);
+    put("LOADING", JS::Value((i32)XMLHttpRequest::ReadyState::Loading), JS::Attribute::Enumerable);
+    put("DONE", JS::Value((i32)XMLHttpRequest::ReadyState::Done), JS::Attribute::Enumerable);
 }
 
 XMLHttpRequestPrototype::~XMLHttpRequestPrototype()

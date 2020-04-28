@@ -38,8 +38,8 @@ namespace JS {
 FunctionConstructor::FunctionConstructor()
     : NativeFunction("Function", *interpreter().global_object().function_prototype())
 {
-    put("prototype", interpreter().global_object().function_prototype());
-    put("length", Value(1));
+    put("prototype", interpreter().global_object().function_prototype(), 0);
+    put("length", Value(1), Attribute::Configurable);
 }
 
 FunctionConstructor::~FunctionConstructor()

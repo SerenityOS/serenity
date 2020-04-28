@@ -29,6 +29,7 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/Shape.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
 #include <LibWeb/Bindings/NavigatorObject.h>
 #include <LibWeb/Bindings/WindowObject.h>
@@ -49,8 +50,8 @@ void WindowObject::initialize()
 {
     GlobalObject::initialize();
 
-    put("window", this);
-    put_native_property("document", document_getter, document_setter);
+    put("window", this, JS::Attribute::Enumerable);
+    put_native_property("document", document_getter, document_setter, JS::Attribute::Enumerable);
     put_native_function("alert", alert);
     put_native_function("confirm", confirm);
     put_native_function("setInterval", set_interval, 1);
@@ -58,12 +59,12 @@ void WindowObject::initialize()
     put_native_function("requestAnimationFrame", request_animation_frame, 1);
     put_native_function("cancelAnimationFrame", cancel_animation_frame, 1);
 
-    put("navigator", heap().allocate<NavigatorObject>());
+    put("navigator", heap().allocate<NavigatorObject>(), JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
     m_xhr_prototype = heap().allocate<XMLHttpRequestPrototype>();
     m_xhr_constructor = heap().allocate<XMLHttpRequestConstructor>();
-    m_xhr_constructor->put("prototype", m_xhr_prototype);
-    put("XMLHttpRequest", m_xhr_constructor);
+    m_xhr_constructor->put("prototype", m_xhr_prototype, 0);
+    put("XMLHttpRequest", m_xhr_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
 }
 
 WindowObject::~WindowObject()
