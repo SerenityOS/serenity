@@ -1051,7 +1051,7 @@ Value ObjectExpression::execute(Interpreter& interpreter) const
                         object->put(it.key, obj_to_spread.get(it.key));
                 }
             } else if (key_result.is_string()) {
-                auto& str_to_spread = key_result.as_string()->string();
+                auto& str_to_spread = key_result.as_string().string();
 
                 for (size_t i = 0; i < str_to_spread.length(); i++) {
                     object->put_by_index(i, js_string(interpreter, str_to_spread.substring(i, 1)));
@@ -1176,7 +1176,7 @@ Value ArrayExpression::execute(Interpreter& interpreter) const
                 if (value.is_string() || (value.is_object() && value.as_object().is_string_object())) {
                     String string_to_spread;
                     if (value.is_string())
-                        string_to_spread = value.as_string()->string();
+                        string_to_spread = value.as_string().string();
                     else
                         string_to_spread = static_cast<const StringObject&>(value.as_object()).primitive_string().string();
                     for (size_t i = 0; i < string_to_spread.length(); ++i)

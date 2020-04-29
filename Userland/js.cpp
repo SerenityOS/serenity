@@ -322,7 +322,7 @@ JS::Value ReplObject::load_file(JS::Interpreter& interpreter)
         return JS::Value(false);
 
     for (auto& file : interpreter.call_frame().arguments) {
-        String file_name = file.as_string()->string();
+        String file_name = file.as_string().string();
         auto js_file = Core::File::construct(file_name);
         if (!js_file->open(Core::IODevice::ReadOnly)) {
             fprintf(stderr, "Failed to open %s: %s\n", file_name.characters(), js_file->error_string());

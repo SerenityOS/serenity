@@ -139,16 +139,16 @@ public:
         return *m_value.as_object;
     }
 
-    PrimitiveString* as_string()
+    PrimitiveString& as_string()
     {
         ASSERT(is_string());
-        return m_value.as_string;
+        return *m_value.as_string;
     }
 
-    const PrimitiveString* as_string() const
+    const PrimitiveString& as_string() const
     {
         ASSERT(is_string());
-        return m_value.as_string;
+        return *m_value.as_string;
     }
 
     Cell* as_cell()
