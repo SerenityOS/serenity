@@ -67,27 +67,15 @@ void ColorInput::set_color(Color color)
 {
     if (m_color == color)
         return;
-    set_text(color.to_string());
+    set_text(m_color_has_alpha_channel ? color.to_string() : color.to_string_without_alpha());
 };
-
-void ColorInput::set_color_has_alpha_channel(bool has_alpha)
-{
-    if (m_color_has_alpha_channel == has_alpha)
-        return;
-
-    m_color_has_alpha_channel = has_alpha;
-    m_color.set_alpha(0xff);
-    if (!has_alpha)
-        set_text(m_color.to_string_without_alpha());
-    else
-        set_text(m_color.to_string());
-}
 
 void ColorInput::mousedown_event(MouseEvent& event)
 {
     if (event.button() == MouseButton::Left) {
         if (is_enabled() && color_rect().contains(event.position())) {
             auto dialog = GUI::ColorPicker::construct(m_color, window(), m_color_picker_title);
+            dialog->set_color_has_alpha_channel(m_color_has_alpha_channel);
             if (dialog->exec() == GUI::Dialog::ExecOK)
                 set_color(dialog->color());
             event.accept();

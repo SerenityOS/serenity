@@ -40,6 +40,8 @@ class ColorPicker final : public Dialog {
 public:
     virtual ~ColorPicker() override;
 
+    bool color_has_alpha_channel() const { return m_color_has_alpha_channel; }
+    void set_color_has_alpha_channel(bool has_alpha) { m_color_has_alpha_channel = has_alpha; }
     Color color() const { return m_color; }
 
 private:
@@ -52,6 +54,7 @@ private:
     void create_color_button(Widget& container, unsigned rgb);
 
     Color m_color;
+    bool m_color_has_alpha_channel { true };
 
     Vector<ColorButton*> m_color_widgets;
     RefPtr<CustomColorWidget> m_custom_color;
