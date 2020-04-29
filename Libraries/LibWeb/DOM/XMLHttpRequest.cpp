@@ -97,7 +97,7 @@ void XMLHttpRequest::dispatch_event(NonnullRefPtr<Event> event)
             auto* this_value = wrap(heap, *this);
             JS::MarkedValueList arguments(heap);
             arguments.append(wrap(heap, *event));
-            function.interpreter().call(&function, this_value, move(arguments));
+            function.interpreter().call(function, this_value, move(arguments));
         }
     }
 }

@@ -63,8 +63,8 @@ void Window::set_interval(JS::Function& callback, i32 interval)
 {
     // FIXME: This leaks the interval timer and makes it unstoppable.
     (void)Core::Timer::construct(interval, [handle = make_handle(&callback)] {
-        auto* function = const_cast<JS::Function*>(static_cast<const JS::Function*>(handle.cell()));
-        auto& interpreter = function->interpreter();
+        auto& function = const_cast<JS::Function&>(static_cast<const JS::Function&>(*handle.cell()));
+        auto& interpreter = function.interpreter();
         interpreter.call(function);
     }).leak_ref();
 }
@@ -73,8 +73,8 @@ void Window::set_timeout(JS::Function& callback, i32 interval)
 {
     // FIXME: This leaks the interval timer and makes it unstoppable.
     auto& timer = Core::Timer::construct(interval, [handle = make_handle(&callback)] {
-        auto* function = const_cast<JS::Function*>(static_cast<const JS::Function*>(handle.cell()));
-        auto& interpreter = function->interpreter();
+        auto& function = const_cast<JS::Function&>(static_cast<const JS::Function&>(*handle.cell()));
+        auto& interpreter = function.interpreter();
         interpreter.call(function);
     }).leak_ref();
     timer.set_single_shot(true);
@@ -86,8 +86,8 @@ i32 Window::request_animation_frame(JS::Function& callback)
     static double fake_timestamp = 0;
 
     i32 link_id = GUI::DisplayLink::register_callback([handle = make_handle(&callback)](i32 link_id) {
-        auto* function = const_cast<JS::Function*>(static_cast<const JS::Function*>(handle.cell()));
-        auto& interpreter = function->interpreter();
+        auto& function = const_cast<JS::Function&>(static_cast<const JS::Function&>(*handle.cell()));
+        auto& interpreter = function.interpreter();
         JS::MarkedValueList arguments(interpreter.heap());
         arguments.append(JS::Value(fake_timestamp));
         fake_timestamp += 10;

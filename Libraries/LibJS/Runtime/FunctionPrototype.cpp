@@ -64,7 +64,7 @@ Value FunctionPrototype::apply(Interpreter& interpreter)
         return {};
     if (!this_object->is_function())
         return interpreter.throw_exception<TypeError>("Not a Function object");
-    auto function = static_cast<Function*>(this_object);
+    auto& function = static_cast<Function&>(*this_object);
     auto this_arg = interpreter.argument(0);
     auto arg_array = interpreter.argument(1);
     if (arg_array.is_null() || arg_array.is_undefined())
@@ -112,7 +112,7 @@ Value FunctionPrototype::call(Interpreter& interpreter)
         return {};
     if (!this_object->is_function())
         return interpreter.throw_exception<TypeError>("Not a Function object");
-    auto function = static_cast<Function*>(this_object);
+    auto& function = static_cast<Function&>(*this_object);
     auto this_arg = interpreter.argument(0);
     MarkedValueList arguments(interpreter.heap());
     if (interpreter.argument_count() > 1) {
