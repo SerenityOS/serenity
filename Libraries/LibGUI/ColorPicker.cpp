@@ -72,10 +72,10 @@ private:
     CustomColorWidget();
 
     RefPtr<Gfx::Bitmap> m_custom_colors;
-    bool m_status { false };
+    bool m_being_pressed { false };
     Gfx::Point m_last_position;
 
-    void fire_event(GUI::MouseEvent& event);
+    void pick_color_at_position(GUI::MouseEvent& event);
 
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void mouseup_event(GUI::MouseEvent&) override;
@@ -409,22 +409,20 @@ void CustomColorWidget::clear_last_position()
     update();
 }
 
-void CustomColorWidget::fire_event(GUI::MouseEvent& event)
+void CustomColorWidget::pick_color_at_position(GUI::MouseEvent& event)
 {
-    if (!m_status)
-        return;
-
-    if (!on_pick)
+    if (!m_being_pressed)
         return;
 
     auto position = event.position();
-    if (!this->rect().contains(position)) {
+    if (!rect().contains(position))
         return;
-    }
+
+    auto color = m_custom_colors->get_pixel(position);
     m_last_position = position;
 
-    auto color = this->window()->back_bitmap()->get_pixel(position);
-    on_pick(color);
+    if (on_pick)
+        on_pick(color);
 
     update();
 }
@@ -432,21 +430,23 @@ void CustomColorWidget::fire_event(GUI::MouseEvent& event)
 void CustomColorWidget::mousedown_event(GUI::MouseEvent& event)
 {
     if (event.button() == GUI::MouseButton::Left) {
-        m_status = true;
-    } else {
-        m_status = false;
+        m_being_pressed = true;
+        pick_color_at_position(event);
     }
 }
 
 void CustomColorWidget::mouseup_event(GUI::MouseEvent& event)
 {
-    fire_event(event);
-    m_status = false;
+    if (event.button() == GUI::MouseButton::Left) {
+        m_being_pressed = false;
+        pick_color_at_position(event);
+    }
 }
 
 void CustomColorWidget::mousemove_event(GUI::MouseEvent& event)
 {
-    fire_event(event);
+    if (event.buttons() & GUI::MouseButton::Left)
+        pick_color_at_position(event);
 }
 
 void CustomColorWidget::paint_event(GUI::PaintEvent& event)
