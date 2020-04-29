@@ -34,6 +34,7 @@
 #include <LibJS/Runtime/NativeProperty.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Shape.h>
+#include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
