@@ -42,8 +42,8 @@ public:
     };
 
     MenuItem(unsigned menu_id, Type);
-    MenuItem(unsigned menu_id, NonnullRefPtr<Action>&&);
-    MenuItem(unsigned menu_id, NonnullRefPtr<Menu>&&);
+    MenuItem(unsigned menu_id, NonnullRefPtr<Action>);
+    MenuItem(unsigned menu_id, NonnullRefPtr<Menu>);
     ~MenuItem();
 
     Type type() const { return m_type; }

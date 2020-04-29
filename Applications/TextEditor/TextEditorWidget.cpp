@@ -384,7 +384,19 @@ TextEditorWidget::TextEditorWidget()
     edit_menu.add_action(*m_replace_previous_action);
     edit_menu.add_action(*m_replace_all_action);
 
-    auto& font_menu = menubar->add_menu("Font");
+    m_markdown_preview_action = GUI::Action::create_checkable(
+        "Markdown preview", [this](auto& action) {
+            set_markdown_preview_enabled(action.is_checked());
+        },
+        this);
+
+    auto& view_menu = menubar->add_menu("View");
+    view_menu.add_action(*m_line_wrapping_setting_action);
+    view_menu.add_separator();
+    view_menu.add_action(*m_markdown_preview_action);
+    view_menu.add_separator();
+
+    auto& font_menu = view_menu.add_submenu("Font");
     GUI::FontDatabase::the().for_each_fixed_width_font([&](const StringView& font_name) {
         font_menu.add_action(GUI::Action::create(font_name, [this](const GUI::Action& action) {
             m_editor->set_font(GUI::FontDatabase::the().get_by_name(action.text()));
@@ -392,10 +404,9 @@ TextEditorWidget::TextEditorWidget()
         }));
     });
 
-    syntax_actions = GUI::ActionGroup {};
     syntax_actions.set_exclusive(true);
 
-    auto& syntax_menu = menubar->add_menu("Syntax");
+    auto& syntax_menu = view_menu.add_submenu("Syntax");
     m_plain_text_highlight = GUI::Action::create_checkable("Plain text", [&](auto&) {
         m_editor->set_syntax_highlighter(nullptr);
         m_editor->update();
@@ -417,20 +428,6 @@ TextEditorWidget::TextEditorWidget()
     });
     syntax_actions.add_action(*m_js_highlight);
     syntax_menu.add_action(*m_js_highlight);
-
-    m_markdown_preview_action = GUI::Action::create_checkable(
-        "Markdown preview", [this](auto& action) {
-            set_markdown_preview_enabled(action.is_checked());
-        },
-        this);
-
-    auto& view_menu = menubar->add_menu("View");
-    view_menu.add_action(*m_line_wrapping_setting_action);
-    view_menu.add_separator();
-    view_menu.add_action(*m_markdown_preview_action);
-    view_menu.add_separator();
-    view_menu.add_submenu(move(font_menu));
-    view_menu.add_submenu(move(syntax_menu));
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {
