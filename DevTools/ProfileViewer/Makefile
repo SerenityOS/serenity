@@ -1,4 +1,7 @@
 OBJS = \
+    ../../AK/JsonPathElement.o \
+    ../../AK/StreamJsonBuilder.o \
+    ../../AK/StreamJsonParser.o \
     DisassemblyModel.o \
     Profile.o \
     ProfileModel.o \

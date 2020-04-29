@@ -28,9 +28,11 @@
 #include "DisassemblyModel.h"
 #include "ProfileModel.h"
 #include <AK/HashTable.h>
+#include <AK/JsonPathElement.h>
 #include <AK/MappedFile.h>
 #include <AK/QuickSort.h>
 #include <AK/RefPtr.h>
+#include <AK/StreamJsonBuilder.h>
 #include <LibCore/File.h>
 #include <LibELF/Loader.h>
 #include <stdio.h>
@@ -117,8 +119,7 @@ void Profile::rebuild_tree()
 
         ProfileNode* node = nullptr;
 
-        auto for_each_frame = [&]<typename Callback>(Callback callback)
-        {
+        auto for_each_frame = [&]<typename Callback>(Callback callback) {
             if (!m_inverted) {
                 for (size_t i = 0; i < event.frames.size(); ++i) {
                     if (callback(event.frames.at(i), i == event.frames.size() - 1) == IterationDecision::Break)
@@ -171,39 +172,48 @@ OwnPtr<Profile> Profile::load_from_perfcore_file(const StringView& path)
         return nullptr;
     }
 
-    auto json = JsonValue::from_string(file->read_all());
-    if (!json.is_object()) {
+    StreamJsonParser parser;
+    StreamJsonBuilder json_builder(move(parser));
+
+    json_builder.append(file->read(6));
+
+    if (!json_builder.document().is_object()) {
         fprintf(stderr, "Invalid perfcore format (not a JSON object)\n");
         return nullptr;
     }
 
-    auto& object = json.as_object();
-    auto executable_path = object.get("executable").to_string();
+    String executable_path;
+    bool failing { false };
 
-    MappedFile elf_file(executable_path);
-    if (!elf_file.is_valid()) {
-        fprintf(stderr, "Unable to open executable '%s' for symbolication.\n", executable_path.characters());
-        return nullptr;
-    }
+    RefPtr<ELF::Loader> elf_loader;
+    OwnPtr<MappedFile> elf_file;
 
-    auto elf_loader = ELF::Loader::create(static_cast<const u8*>(elf_file.data()), elf_file.size());
+    Vector<Event> events;
 
     MappedFile kernel_elf_file("/boot/kernel");
     RefPtr<ELF::Loader> kernel_elf_loader;
     if (kernel_elf_file.is_valid())
         kernel_elf_loader = ELF::Loader::create(static_cast<const u8*>(kernel_elf_file.data()), kernel_elf_file.size());
 
-    auto events_value = object.get("events");
-    if (!events_value.is_array())
-        return nullptr;
+    // FIXME: This assumes that the executable always comes before the events
+    json_builder.stream({ JsonPathElement { "executable" } }, [&](const JsonValue& path) {
+        executable_path = path.to_string();
 
-    auto& perf_events = events_value.as_array();
-    if (perf_events.is_empty())
-        return nullptr;
+        elf_file = make<MappedFile>(executable_path);
+        if (!elf_file->is_valid()) {
+            fprintf(stderr, "Unable to open executable '%s' for symbolication.\n", executable_path.characters());
+            failing = true;
+        }
 
-    Vector<Event> events;
+        elf_loader = ELF::Loader::create(static_cast<const u8*>(elf_file->data()), elf_file->size());
 
-    for (auto& perf_event_value : perf_events.values()) {
+        return StreamJsonBuilder::VisitDecision::Discard;
+    });
+
+    json_builder.stream({ JsonPathElement { "events" }, JsonPathElement::AnyArrayElement }, [&](const JsonValue& perf_event_value) {
+        if (failing)
+            return StreamJsonBuilder::VisitDecision::Stop;
+
         auto& perf_event = perf_event_value.as_object();
 
         Event event;
@@ -239,12 +249,22 @@ OwnPtr<Profile> Profile::load_from_perfcore_file(const StringView& path)
         }
 
         if (event.frames.size() < 2)
-            continue;
+            return StreamJsonBuilder::VisitDecision::Discard;
 
         FlatPtr innermost_frame_address = event.frames.at(1).address;
         event.in_kernel = innermost_frame_address >= 0xc0000000;
 
         events.append(move(event));
+        return StreamJsonBuilder::VisitDecision::Discard;
+    });
+
+    for (;;) {
+        if (failing)
+            break;
+        auto buffer = file->read(1024);
+        if (buffer.size() == 0)
+            break;
+        json_builder.append(buffer);
     }
 
     return NonnullOwnPtr<Profile>(NonnullOwnPtr<Profile>::Adopt, *new Profile(executable_path, move(events)));
