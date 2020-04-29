@@ -94,9 +94,20 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
         return;
     }
 
-    struct passwd* user_pw = getpwuid(st.st_uid);
-    struct group* group_gr = getgrgid(st.st_gid);
-    ASSERT(user_pw && group_gr);
+    String owner_name;
+    String group_name;
+
+    if (auto* pw = getpwuid(st.st_uid)) {
+        owner_name = pw->pw_name;
+    } else {
+        owner_name = "n/a";
+    }
+
+    if (auto* gr = getgrgid(st.st_gid)) {
+        group_name = gr->gr_name;
+    } else {
+        group_name = "n/a";
+    }
 
     m_mode = st.st_mode;
 
@@ -115,8 +126,8 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
     }
 
     properties.append({ "Size:", String::format("%zu bytes", st.st_size) });
-    properties.append({ "Owner:", String::format("%s (%lu)", user_pw->pw_name, static_cast<u32>(user_pw->pw_uid)) });
-    properties.append({ "Group:", String::format("%s (%lu)", group_gr->gr_name, static_cast<u32>(group_gr->gr_gid)) });
+    properties.append({ "Owner:", String::format("%s (%lu)", owner_name.characters(), st.st_uid) });
+    properties.append({ "Group:", String::format("%s (%lu)", group_name.characters(), st.st_gid) });
     properties.append({ "Created at:", GUI::FileSystemModel::timestamp_string(st.st_ctime) });
     properties.append({ "Last modified:", GUI::FileSystemModel::timestamp_string(st.st_mtime) });
 
@@ -153,7 +164,7 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
     update();
 }
 
-PropertiesDialog::~PropertiesDialog() { }
+PropertiesDialog::~PropertiesDialog() {}
 
 void PropertiesDialog::update()
 {
