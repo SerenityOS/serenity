@@ -105,7 +105,7 @@ Value ArrayPrototype::filter(Interpreter& interpreter)
         arguments.append(value);
         arguments.append(Value((i32)i));
         arguments.append(array);
-        auto result = interpreter.call(callback, this_value, move(arguments));
+        auto result = interpreter.call(*callback, this_value, move(arguments));
         if (interpreter.exception())
             return {};
         if (result.to_boolean())
@@ -134,7 +134,7 @@ Value ArrayPrototype::for_each(Interpreter& interpreter)
         arguments.append(value);
         arguments.append(Value((i32)i));
         arguments.append(array);
-        interpreter.call(callback, this_value, move(arguments));
+        interpreter.call(*callback, this_value, move(arguments));
         if (interpreter.exception())
             return {};
     }
@@ -171,7 +171,7 @@ Value ArrayPrototype::map(Interpreter& interpreter)
         arguments.append(Value((i32)i));
         arguments.append(array);
 
-        auto result = interpreter.call(callback, this_value, move(arguments));
+        auto result = interpreter.call(*callback, this_value, move(arguments));
         if (interpreter.exception())
             return {};
 
@@ -465,7 +465,7 @@ Value ArrayPrototype::find(Interpreter& interpreter)
         arguments.append(Value((i32)i));
         arguments.append(array);
 
-        auto result = interpreter.call(callback, this_value, move(arguments));
+        auto result = interpreter.call(*callback, this_value, move(arguments));
         if (interpreter.exception())
             return {};
 
@@ -502,7 +502,7 @@ Value ArrayPrototype::find_index(Interpreter& interpreter)
         arguments.append(Value((i32)i));
         arguments.append(array);
 
-        auto result = interpreter.call(callback, this_value, move(arguments));
+        auto result = interpreter.call(*callback, this_value, move(arguments));
         if (interpreter.exception())
             return {};
 
@@ -539,7 +539,7 @@ Value ArrayPrototype::some(Interpreter& interpreter)
         arguments.append(Value((i32)i));
         arguments.append(array);
 
-        auto result = interpreter.call(callback, this_value, move(arguments));
+        auto result = interpreter.call(*callback, this_value, move(arguments));
         if (interpreter.exception())
             return {};
 

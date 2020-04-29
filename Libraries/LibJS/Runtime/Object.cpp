@@ -359,7 +359,7 @@ Value Object::to_string() const
         && to_string_property.is_object()
         && to_string_property.as_object().is_function()) {
         auto& to_string_function = static_cast<Function&>(to_string_property.as_object());
-        return const_cast<Object*>(this)->interpreter().call(&to_string_function, const_cast<Object*>(this));
+        return const_cast<Object*>(this)->interpreter().call(to_string_function, const_cast<Object*>(this));
     }
     return js_string(heap(), String::format("[object %s]", class_name()));
 }

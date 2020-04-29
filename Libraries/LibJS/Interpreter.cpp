@@ -195,15 +195,15 @@ void Interpreter::gather_roots(Badge<Heap>, HashTable<Cell*>& roots)
     }
 }
 
-Value Interpreter::call(Function* function, Value this_value, Optional<MarkedValueList> arguments)
+Value Interpreter::call(Function& function, Value this_value, Optional<MarkedValueList> arguments)
 {
     auto& call_frame = push_call_frame();
-    call_frame.function_name = function->name();
+    call_frame.function_name = function.name();
     call_frame.this_value = this_value;
     if (arguments.has_value())
         call_frame.arguments = arguments.value().values();
-    call_frame.environment = function->create_environment();
-    auto result = function->call(*this);
+    call_frame.environment = function.create_environment();
+    auto result = function.call(*this);
     pop_call_frame();
     return result;
 }

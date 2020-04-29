@@ -146,7 +146,7 @@ void Node::dispatch_event(NonnullRefPtr<Event> event)
             auto* event_wrapper = wrap(heap, *event);
             JS::MarkedValueList arguments(heap);
             arguments.append(event_wrapper);
-            document().interpreter().call(&function, this_value, move(arguments));
+            document().interpreter().call(function, this_value, move(arguments));
         }
     }
 
