@@ -61,7 +61,7 @@ private:
     bool m_selected { false };
 };
 
-class CustomColorWidget final : public GUI::Widget {
+class CustomColorWidget final : public GUI::Frame {
     C_OBJECT(CustomColorWidget);
 
 public:
@@ -414,8 +414,8 @@ void CustomColorWidget::pick_color_at_position(GUI::MouseEvent& event)
     if (!m_being_pressed)
         return;
 
-    auto position = event.position();
-    if (!rect().contains(position))
+    auto position = event.position().translated(-frame_thickness(), -frame_thickness());
+    if (!frame_inner_rect().contains(position))
         return;
 
     auto color = m_custom_colors->get_pixel(position);
@@ -451,15 +451,17 @@ void CustomColorWidget::mousemove_event(GUI::MouseEvent& event)
 
 void CustomColorWidget::paint_event(GUI::PaintEvent& event)
 {
-    GUI::Painter painter(*this);
-    Gfx::Rect rect = event.rect();
+    Frame::paint_event(event);
 
-    painter.add_clip_rect(rect);
+    Painter painter(*this);
+    painter.add_clip_rect(event.rect());
+    painter.add_clip_rect(frame_inner_rect());
 
-    painter.draw_scaled_bitmap(rect, *m_custom_colors, m_custom_colors->rect());
+    painter.draw_scaled_bitmap(frame_inner_rect(), *m_custom_colors, m_custom_colors->rect());
 
-    painter.draw_line({ m_last_position.x(), 0 }, { m_last_position.x(), rect.height() }, Color::Black);
-    painter.draw_line({ 0, m_last_position.y() }, { rect.width(), m_last_position.y() }, Color::Black);
+    painter.translate(frame_thickness(), frame_thickness());
+    painter.draw_line({ m_last_position.x(), 0 }, { m_last_position.x(), height() }, Color::Black);
+    painter.draw_line({ 0, m_last_position.y() }, { width(), m_last_position.y() }, Color::Black);
 }
 
 void CustomColorWidget::resize_event(ResizeEvent&)
