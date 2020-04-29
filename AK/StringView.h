@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <AK/Assertions.h>
+#include <AK/Checked.h>
 #include <AK/Forward.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringUtils.h>
@@ -36,16 +38,18 @@ class StringView {
 public:
     using ConstIterator = const char*;
 
-    StringView() {}
+    StringView() { }
     StringView(const char* characters, size_t length)
         : m_characters(characters)
         , m_length(length)
     {
+        ASSERT(!Checked<uintptr_t>::addition_would_overflow((uintptr_t)characters, length));
     }
     StringView(const unsigned char* characters, size_t length)
         : m_characters((const char*)characters)
         , m_length(length)
     {
+        ASSERT(!Checked<uintptr_t>::addition_would_overflow((uintptr_t)characters, length));
     }
     [[gnu::always_inline]] inline StringView(const char* cstring)
         : m_characters(cstring)
