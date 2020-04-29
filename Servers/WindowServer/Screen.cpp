@@ -70,7 +70,7 @@ Screen::~Screen()
 
 bool Screen::set_resolution(int width, int height)
 {
-    FBResolution resolution { 0, (int)width, (int)height };
+    FBResolution resolution { 0, (unsigned)width, (unsigned)height };
     int rc = fb_set_resolution(m_framebuffer_fd, &resolution);
 #ifdef WSSCREEN_DEBUG
     dbg() << "fb_set_resolution() - return code " << rc;
