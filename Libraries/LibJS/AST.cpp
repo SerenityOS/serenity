@@ -1178,7 +1178,7 @@ Value ArrayExpression::execute(Interpreter& interpreter) const
                     if (value.is_string())
                         string_to_spread = value.as_string()->string();
                     else
-                        string_to_spread = static_cast<StringObject*>(&value.as_object())->primitive_string()->string();
+                        string_to_spread = static_cast<const StringObject&>(value.as_object()).primitive_string().string();
                     for (size_t i = 0; i < string_to_spread.length(); ++i)
                         array->elements().append(js_string(interpreter, string_to_spread.substring(i, 1)));
                     continue;
