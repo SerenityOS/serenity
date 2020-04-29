@@ -50,11 +50,13 @@ public:
 
 protected:
     virtual void click() override;
+    virtual void doubleclick_event(GUI::MouseEvent&) override;
     virtual void paint_event(PaintEvent&) override;
 
 private:
-    explicit ColorButton(Color color = {});
+    explicit ColorButton(ColorPicker& picker, Color color = {});
 
+    ColorPicker& m_picker;
     Color m_color;
     bool m_selected { false };
 };
@@ -310,7 +312,7 @@ void ColorPicker::create_color_button(Widget& container, unsigned rgb)
 {
     Color color = Color::from_rgb(rgb);
 
-    auto& widget = container.add<ColorButton>(color);
+    auto& widget = container.add<ColorButton>(*this, color);
     widget.set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
     widget.on_click = [this](Color color) {
         for (auto& value : m_color_widgets) {
@@ -328,10 +330,10 @@ void ColorPicker::create_color_button(Widget& container, unsigned rgb)
     m_color_widgets.append(&widget);
 }
 
-ColorButton::ColorButton(Color color)
+ColorButton::ColorButton(ColorPicker& picker, Color color)
+    : m_picker(picker)
 {
     m_color = color;
-    m_selected = false;
 }
 
 ColorButton::~ColorButton()
@@ -341,6 +343,13 @@ ColorButton::~ColorButton()
 void ColorButton::set_selected(bool selected)
 {
     m_selected = selected;
+}
+
+void ColorButton::doubleclick_event(GUI::MouseEvent&)
+{
+    click();
+    m_selected = true;
+    m_picker.done(Dialog::ExecOK);
 }
 
 void ColorButton::paint_event(PaintEvent& event)
