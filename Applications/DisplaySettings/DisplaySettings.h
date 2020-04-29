@@ -30,11 +30,11 @@
 #include <LibGUI/ColorInput.h>
 #include <LibGUI/ComboBox.h>
 
-class DisplayPropertiesWidget : public GUI::Widget {
+class DisplaySettingsWidget : public GUI::Widget {
     C_OBJECT(MonitorWidget);
 
 public:
-    DisplayPropertiesWidget();
+    DisplaySettingsWidget();
 
     GUI::Widget* root_widget() { return m_root_widget; }
 

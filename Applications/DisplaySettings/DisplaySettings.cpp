@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "DisplayProperties.h"
+#include "DisplaySettings.h"
 #include "ItemListModel.h"
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
@@ -41,7 +41,7 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/SystemTheme.h>
 
-DisplayPropertiesWidget::DisplayPropertiesWidget()
+DisplaySettingsWidget::DisplaySettingsWidget()
 {
     create_resolution_list();
     create_wallpaper_list();
@@ -51,7 +51,7 @@ DisplayPropertiesWidget::DisplayPropertiesWidget()
     load_current_settings();
 }
 
-void DisplayPropertiesWidget::create_resolution_list()
+void DisplaySettingsWidget::create_resolution_list()
 {
     // TODO: Find a better way to get the default resolution
     m_resolutions.append({ 640, 480 });
@@ -68,7 +68,7 @@ void DisplayPropertiesWidget::create_resolution_list()
     m_resolutions.append({ 2560, 1080 });
 }
 
-void DisplayPropertiesWidget::create_wallpaper_list()
+void DisplaySettingsWidget::create_wallpaper_list()
 {
     Core::DirIterator iterator("/res/wallpapers/", Core::DirIterator::Flags::SkipDots);
 
@@ -84,7 +84,7 @@ void DisplayPropertiesWidget::create_wallpaper_list()
     m_modes.append("scaled");
 }
 
-void DisplayPropertiesWidget::create_frame()
+void DisplaySettingsWidget::create_frame()
 {
     m_root_widget = GUI::Widget::construct();
     m_root_widget->set_layout<GUI::VerticalBoxLayout>();
@@ -261,7 +261,7 @@ void DisplayPropertiesWidget::create_frame()
     };
 }
 
-void DisplayPropertiesWidget::load_current_settings()
+void DisplaySettingsWidget::load_current_settings()
 {
     auto ws_config(Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini"));
     auto wm_config = Core::ConfigFile::get_for_app("WindowManager");
@@ -306,13 +306,13 @@ void DisplayPropertiesWidget::load_current_settings()
     // Let's attempt to find the current resolution and select it!
     find_size.set_width(ws_config->read_entry("Screen", "Width", "1024").to_int(okay));
     if (!okay) {
-        fprintf(stderr, "DisplayProperties: failed to convert width to int!");
+        fprintf(stderr, "DisplaySettings: failed to convert width to int!");
         ASSERT_NOT_REACHED();
     }
 
     find_size.set_height(ws_config->read_entry("Screen", "Height", "768").to_int(okay));
     if (!okay) {
-        fprintf(stderr, "DisplayProperties: failed to convert height to int!");
+        fprintf(stderr, "DisplaySettings: failed to convert height to int!");
         ASSERT_NOT_REACHED();
     }
 
@@ -338,7 +338,7 @@ void DisplayPropertiesWidget::load_current_settings()
     m_monitor_widget->update();
 }
 
-void DisplayPropertiesWidget::send_settings_to_window_server()
+void DisplaySettingsWidget::send_settings_to_window_server()
 {
     auto result = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetResolution>(m_monitor_widget->desktop_resolution());
     if (!result->success()) {
