@@ -76,7 +76,7 @@ Value ObjectConstructor::get_own_property_names(Interpreter& interpreter)
             result->elements().append(js_string(interpreter, String::number(i)));
     }
 
-    for (auto& it : object->shape().property_table()) {
+    for (auto& it : object->shape().property_table_ordered()) {
         result->elements().append(js_string(interpreter, it.key));
     }
     return result;

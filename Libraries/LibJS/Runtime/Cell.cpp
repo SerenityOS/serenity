@@ -56,6 +56,11 @@ Interpreter& Cell::interpreter()
     return heap().interpreter();
 }
 
+Interpreter& Cell::interpreter() const
+{
+    return heap().interpreter();
+}
+
 const LogStream& operator<<(const LogStream& stream, const Cell* cell)
 {
     if (!cell)
