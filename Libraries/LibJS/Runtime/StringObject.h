@@ -37,8 +37,7 @@ public:
     StringObject(PrimitiveString&, Object& prototype);
     virtual ~StringObject() override;
 
-    // FIXME: Return const PrimitiveString&
-    const PrimitiveString* primitive_string() const { return &m_string; }
+    const PrimitiveString& primitive_string() const { return m_string; }
     virtual Value value_of() const override
     {
         return Value(&m_string);

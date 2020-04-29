@@ -75,7 +75,7 @@ Value StringPrototype::char_at(Interpreter& interpreter)
     if (interpreter.argument_count())
         index = interpreter.argument(0).to_i32();
     ASSERT(this_object->is_string_object());
-    auto underlying_string = static_cast<const StringObject*>(this_object)->primitive_string()->string();
+    auto underlying_string = static_cast<const StringObject*>(this_object)->primitive_string().string();
     if (index < 0 || index >= static_cast<i32>(underlying_string.length()))
         return js_string(interpreter, String::empty());
     return js_string(interpreter, underlying_string.substring(index, 1));
@@ -94,10 +94,10 @@ Value StringPrototype::repeat(Interpreter& interpreter)
     if (interpreter.argument(0).to_number().is_infinity())
         return interpreter.throw_exception<RangeError>("repeat count must be a finite number");
     auto count = interpreter.argument(0).to_i32();
-    auto* string_object = static_cast<StringObject*>(this_object);
+    auto& string_object = static_cast<const StringObject&>(*this_object);
     StringBuilder builder;
     for (i32 i = 0; i < count; ++i)
-        builder.append(string_object->primitive_string()->string());
+        builder.append(string_object.primitive_string().string());
     return js_string(interpreter, builder.to_string());
 }
 
@@ -117,7 +117,7 @@ Value StringPrototype::starts_with(Interpreter& interpreter)
             position = number.to_i32();
     }
     ASSERT(this_object->is_string_object());
-    auto underlying_string = static_cast<const StringObject*>(this_object)->primitive_string()->string();
+    auto underlying_string = static_cast<const StringObject*>(this_object)->primitive_string().string();
     auto underlying_string_length = static_cast<i32>(underlying_string.length());
     auto start = min(max(position, 0), underlying_string_length);
     if (start + search_string_length > underlying_string_length)
@@ -139,7 +139,7 @@ Value StringPrototype::index_of(Interpreter& interpreter)
     if (interpreter.argument_count() >= 1)
         needle_value = interpreter.argument(0);
     auto needle = needle_value.to_string();
-    auto haystack = static_cast<const StringObject*>(this_object)->primitive_string()->string();
+    auto haystack = static_cast<const StringObject*>(this_object)->primitive_string().string();
     return Value((i32)haystack.index_of(needle).value_or(-1));
 }
 
@@ -160,7 +160,7 @@ Value StringPrototype::to_lowercase(Interpreter& interpreter)
     auto* string_object = string_object_from(interpreter);
     if (!string_object)
         return {};
-    return js_string(interpreter, string_object->primitive_string()->string().to_lowercase());
+    return js_string(interpreter, string_object->primitive_string().string().to_lowercase());
 }
 
 Value StringPrototype::to_uppercase(Interpreter& interpreter)
@@ -168,7 +168,7 @@ Value StringPrototype::to_uppercase(Interpreter& interpreter)
     auto* string_object = string_object_from(interpreter);
     if (!string_object)
         return {};
-    return js_string(interpreter, string_object->primitive_string()->string().to_uppercase());
+    return js_string(interpreter, string_object->primitive_string().string().to_uppercase());
 }
 
 Value StringPrototype::length_getter(Interpreter& interpreter)
@@ -176,7 +176,7 @@ Value StringPrototype::length_getter(Interpreter& interpreter)
     auto* string_object = string_object_from(interpreter);
     if (!string_object)
         return {};
-    return Value((i32)string_object->primitive_string()->string().length());
+    return Value((i32)string_object->primitive_string().string().length());
 }
 
 Value StringPrototype::to_string(Interpreter& interpreter)
@@ -184,7 +184,7 @@ Value StringPrototype::to_string(Interpreter& interpreter)
     auto* string_object = string_object_from(interpreter);
     if (!string_object)
         return {};
-    return js_string(interpreter, string_object->primitive_string()->string());
+    return js_string(interpreter, string_object->primitive_string().string());
 }
 
 enum class PadPlacement {
