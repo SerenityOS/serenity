@@ -31,14 +31,14 @@
 
 namespace GUI {
 
-class ColorInput : public TextEditor {
-    C_OBJECT(ColorInput)
+class ColorInput final : public TextEditor {
+    C_OBJECT(ColorInput);
 
 public:
     ColorInput();
     virtual ~ColorInput() override;
 
-    void set_color(Color color);
+    void set_color(Color);
     Color color() { return m_color; }
 
     void set_color_picker_title(String title) { m_color_picker_title = title; }
@@ -53,14 +53,12 @@ protected:
     virtual void paint_event(PaintEvent&) override;
 
 private:
-    virtual void click();
+    void click();
 
     Color m_color;
     String m_color_picker_title { "Select Color" };
 
-    int m_auto_repeat_interval { 0 };
     bool m_being_pressed { false };
-    RefPtr<Core::Timer> m_auto_repeat_timer;
 };
 
 }
