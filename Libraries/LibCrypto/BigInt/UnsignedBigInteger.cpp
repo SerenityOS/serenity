@@ -90,7 +90,7 @@ UnsignedBigInteger UnsignedBigInteger::plus(const UnsignedBigInteger& other) con
             word_addition_result++;
         }
         carry = carry_out;
-        result.m_words.append(word_addition_result);
+        result.m_words.unchecked_append(word_addition_result);
     }
 
     for (size_t i = shorter->length(); i < longer->length(); ++i) {
@@ -100,10 +100,10 @@ UnsignedBigInteger UnsignedBigInteger::plus(const UnsignedBigInteger& other) con
         if (word_addition_result < longer->m_words[i]) {
             carry = 1;
         }
-        result.m_words.append(word_addition_result);
+        result.m_words.unchecked_append(word_addition_result);
     }
     if (carry) {
-        result.m_words.append(carry);
+        result.m_words.unchecked_append(carry);
     }
     return result;
 }
@@ -149,7 +149,7 @@ UnsignedBigInteger UnsignedBigInteger::minus(const UnsignedBigInteger& other) co
  * So to multiple x*y, we go over each '1' bit in x (say the i'th bit), 
  * and add y<<i to the result.
  */
-UnsignedBigInteger UnsignedBigInteger::multiplied_by(const UnsignedBigInteger& other) const
+FLATTEN UnsignedBigInteger UnsignedBigInteger::multiplied_by(const UnsignedBigInteger& other) const
 {
     UnsignedBigInteger result;
     // iterate all bits
@@ -175,7 +175,7 @@ UnsignedBigInteger UnsignedBigInteger::multiplied_by(const UnsignedBigInteger& o
  * so we set the ith bit in the quotient and reduce divisor<<i from the dividend.
  * When we're done, what's left from the dividend is the remainder.
  */
-UnsignedDivisionResult UnsignedBigInteger::divided_by(const UnsignedBigInteger& divisor) const
+FLATTEN UnsignedDivisionResult UnsignedBigInteger::divided_by(const UnsignedBigInteger& divisor) const
 {
     UnsignedBigInteger leftover_dividend(*this);
     UnsignedBigInteger quotient;
@@ -205,7 +205,7 @@ void UnsignedBigInteger::set_bit_inplace(size_t bit_index)
     m_words.ensure_capacity(word_index);
 
     for (size_t i = length(); i <= word_index; ++i) {
-        m_words.append(0);
+        m_words.unchecked_append(0);
     }
     m_words[word_index] |= (1 << inner_word_index);
 }
@@ -236,15 +236,18 @@ UnsignedBigInteger UnsignedBigInteger::shift_left(size_t num_bits) const
     return result;
 }
 
-UnsignedBigInteger UnsignedBigInteger::shift_left_by_n_words(const size_t number_of_words) const
+ALWAYS_INLINE UnsignedBigInteger UnsignedBigInteger::shift_left_by_n_words(const size_t number_of_words) const
 {
     // shifting left by N words means just inserting N zeroes to the beginning of the words vector
     UnsignedBigInteger result;
+
+    result.m_words.ensure_capacity(number_of_words + length());
+
     for (size_t i = 0; i < number_of_words; ++i) {
-        result.m_words.append(0);
+        result.m_words.unchecked_append(0);
     }
     for (size_t i = 0; i < length(); ++i) {
-        result.m_words.append(m_words[i]);
+        result.m_words.unchecked_append(m_words[i]);
     }
     return result;
 }
@@ -252,7 +255,7 @@ UnsignedBigInteger UnsignedBigInteger::shift_left_by_n_words(const size_t number
 /**
  * Returns the word at a requested index in the result of a shift operation
  */
-u32 UnsignedBigInteger::shift_left_get_one_word(const size_t num_bits, const size_t result_word_index) const
+ALWAYS_INLINE u32 UnsignedBigInteger::shift_left_get_one_word(const size_t num_bits, const size_t result_word_index) const
 {
     // "<= length()" (rather than length() - 1) is intentional,
     // The result inedx of length() is used when calculating the carry word
