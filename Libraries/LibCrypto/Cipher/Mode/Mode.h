@@ -68,8 +68,8 @@ protected:
                 // cannot be padding (the entire block cannot be padding)
                 return;
             }
-            for (auto i = maybe_padding_length; i > 0; --i) {
-                if (data[size - i] != maybe_padding_length) {
+            for (auto i = size - maybe_padding_length; i < size; ++i) {
+                if (data[i] != maybe_padding_length) {
                     // not padding, part of data
                     return;
                 }
@@ -84,8 +84,8 @@ protected:
                 return;
             }
             // FIXME: If we want to constant-time operations, this loop should not stop
-            for (auto i = maybe_padding_length; i > 0; --i) {
-                if (data[size - i - 1] != maybe_padding_length) {
+            for (auto i = size - maybe_padding_length - 1; i < size; ++i) {
+                if (data[i] != maybe_padding_length) {
                     // note that this is likely invalid padding
                     return;
                 }
