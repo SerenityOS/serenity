@@ -36,9 +36,9 @@ struct winsize {
 };
 
 struct FBResolution {
-    int pitch;
-    int width;
-    int height;
+    unsigned pitch;
+    unsigned width;
+    unsigned height;
 };
 
 __END_DECLS

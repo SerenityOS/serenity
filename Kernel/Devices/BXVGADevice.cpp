@@ -98,7 +98,7 @@ void BXVGADevice::revert_resolution()
     ASSERT(validate_setup_resolution(m_framebuffer_width, m_framebuffer_height));
 }
 
-void BXVGADevice::set_resolution_registers(int width, int height)
+void BXVGADevice::set_resolution_registers(size_t width, size_t height)
 {
 #ifdef BXVGA_DEBUG
     dbg() << "BXVGADevice resolution registers set to - " << width << "x" << height;
@@ -113,7 +113,7 @@ void BXVGADevice::set_resolution_registers(int width, int height)
     set_register(VBE_DISPI_INDEX_BANK, 0);
 }
 
-bool BXVGADevice::test_resolution(int width, int height)
+bool BXVGADevice::test_resolution(size_t width, size_t height)
 {
 #ifdef BXVGA_DEBUG
     dbg() << "BXVGADevice resolution test - " << width << "x" << height;
@@ -123,9 +123,9 @@ bool BXVGADevice::test_resolution(int width, int height)
     revert_resolution();
     return resolution_changed;
 }
-bool BXVGADevice::set_resolution(int width, int height)
+bool BXVGADevice::set_resolution(size_t width, size_t height)
 {
-    if (Checked<int>::multiplication_would_overflow(width, height, sizeof(u32)))
+    if (Checked<size_t>::multiplication_would_overflow(width, height, sizeof(u32)))
         return false;
 
     if (!test_resolution(width, height))
@@ -140,7 +140,7 @@ bool BXVGADevice::set_resolution(int width, int height)
     return true;
 }
 
-bool BXVGADevice::validate_setup_resolution(int width, int height)
+bool BXVGADevice::validate_setup_resolution(size_t width, size_t height)
 {
     if ((u16)width != get_register(VBE_DISPI_INDEX_XRES) || (u16)height != get_register(VBE_DISPI_INDEX_YRES)) {
         return false;
@@ -148,7 +148,7 @@ bool BXVGADevice::validate_setup_resolution(int width, int height)
     return true;
 }
 
-void BXVGADevice::set_y_offset(int y_offset)
+void BXVGADevice::set_y_offset(size_t y_offset)
 {
     ASSERT(y_offset == 0 || y_offset == m_framebuffer_height);
     m_y_offset = y_offset;

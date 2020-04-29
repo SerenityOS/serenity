@@ -56,20 +56,20 @@ private:
 
     void set_register(u16 index, u16 value);
     u16 get_register(u16 index);
-    bool validate_setup_resolution(int width, int height);
+    bool validate_setup_resolution(size_t width, size_t height);
     u32 find_framebuffer_address();
     void revert_resolution();
-    bool test_resolution(int width, int height);
+    bool test_resolution(size_t width, size_t height);
     size_t framebuffer_size_in_bytes() const { return m_framebuffer_pitch * m_framebuffer_height * 2; }
-    bool set_resolution(int width, int height);
-    void set_resolution_registers(int width, int height);
-    void set_y_offset(int);
+    bool set_resolution(size_t width, size_t height);
+    void set_resolution_registers(size_t width, size_t height);
+    void set_y_offset(size_t);
 
     PhysicalAddress m_framebuffer_address;
-    int m_framebuffer_pitch { 0 };
-    int m_framebuffer_width { 0 };
-    int m_framebuffer_height { 0 };
-    int m_y_offset { 0 };
+    size_t m_framebuffer_pitch { 0 };
+    size_t m_framebuffer_width { 0 };
+    size_t m_framebuffer_height { 0 };
+    size_t m_y_offset { 0 };
 };
 
 }
