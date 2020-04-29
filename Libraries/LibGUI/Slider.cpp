@@ -115,8 +115,6 @@ Gfx::Rect Slider::knob_rect() const
 
 void Slider::mousedown_event(MouseEvent& event)
 {
-    if (!is_enabled())
-        return;
     if (event.button() == MouseButton::Left) {
         if (knob_rect().contains(event.position())) {
             m_dragging = true;
@@ -135,8 +133,6 @@ void Slider::mousedown_event(MouseEvent& event)
 
 void Slider::mousemove_event(MouseEvent& event)
 {
-    if (!is_enabled())
-        return;
     set_knob_hovered(knob_rect().contains(event.position()));
     if (m_dragging) {
         float delta = event.position().primary_offset_for_orientation(orientation()) - m_drag_origin.primary_offset_for_orientation(orientation());
@@ -151,8 +147,6 @@ void Slider::mousemove_event(MouseEvent& event)
 
 void Slider::mouseup_event(MouseEvent& event)
 {
-    if (!is_enabled())
-        return;
     if (event.button() == MouseButton::Left) {
         m_dragging = false;
         return;
@@ -163,9 +157,6 @@ void Slider::mouseup_event(MouseEvent& event)
 
 void Slider::mousewheel_event(MouseEvent& event)
 {
-    if (!is_enabled())
-        return;
-
     if (orientation() == Orientation::Horizontal)
         set_value(value() - event.wheel_delta() * m_step);
     else
