@@ -79,15 +79,6 @@ void InputBox::build()
     button_container_inner.set_layout<HorizontalBoxLayout>();
     button_container_inner.layout()->set_spacing(8);
 
-    m_cancel_button = button_container_inner.add<Button>();
-    m_cancel_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    m_cancel_button->set_preferred_size(0, 20);
-    m_cancel_button->set_text("Cancel");
-    m_cancel_button->on_click = [this] {
-        dbgprintf("GUI::InputBox: Cancel button clicked\n");
-        done(ExecCancel);
-    };
-
     m_ok_button = button_container_inner.add<Button>();
     m_ok_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_ok_button->set_preferred_size(0, 20);
@@ -96,6 +87,15 @@ void InputBox::build()
         dbgprintf("GUI::InputBox: OK button clicked\n");
         m_text_value = m_text_editor->text();
         done(ExecOK);
+    };
+
+    m_cancel_button = button_container_inner.add<Button>();
+    m_cancel_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    m_cancel_button->set_preferred_size(0, 20);
+    m_cancel_button->set_text("Cancel");
+    m_cancel_button->on_click = [this] {
+        dbgprintf("GUI::InputBox: Cancel button clicked\n");
+        done(ExecCancel);
     };
 
     m_text_editor->on_return_pressed = [this] {
