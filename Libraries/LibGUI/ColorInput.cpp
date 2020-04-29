@@ -72,8 +72,20 @@ void ColorInput::set_color(Color color)
 
 void ColorInput::mousedown_event(MouseEvent& event)
 {
+    if (event.button() == MouseButton::Left && color_rect().contains(event.position())) {
+        m_may_be_color_rect_click = true;
+        return;
+    }
+
+    TextEditor::mousedown_event(event);
+}
+
+void ColorInput::mouseup_event(MouseEvent& event)
+{
     if (event.button() == MouseButton::Left) {
-        if (is_enabled() && color_rect().contains(event.position())) {
+        bool is_color_rect_click = m_may_be_color_rect_click && color_rect().contains(event.position());
+        m_may_be_color_rect_click = false;
+        if (is_color_rect_click) {
             auto dialog = GUI::ColorPicker::construct(m_color, window(), m_color_picker_title);
             dialog->set_color_has_alpha_channel(m_color_has_alpha_channel);
             if (dialog->exec() == GUI::Dialog::ExecOK)
@@ -82,8 +94,7 @@ void ColorInput::mousedown_event(MouseEvent& event)
             return;
         }
     }
-
-    TextEditor::mousedown_event(event);
+    TextEditor::mouseup_event(event);
 }
 
 void ColorInput::mousemove_event(MouseEvent& event)
@@ -109,5 +120,4 @@ void ColorInput::paint_event(PaintEvent& event)
     painter.fill_rect(color_rect(), m_color);
     painter.draw_rect(color_rect(), Color::Black);
 }
-
 }

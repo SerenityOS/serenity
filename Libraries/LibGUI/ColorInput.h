@@ -50,6 +50,7 @@ public:
 
 protected:
     virtual void mousedown_event(MouseEvent&) override;
+    virtual void mouseup_event(MouseEvent&) override;
     virtual void mousemove_event(MouseEvent&) override;
     virtual void paint_event(PaintEvent&) override;
 
@@ -62,6 +63,7 @@ private:
     Color m_color;
     String m_color_picker_title { "Select color" };
     bool m_color_has_alpha_channel { true };
+    bool m_may_be_color_rect_click { false };
 };
 
 }
