@@ -388,11 +388,9 @@ Value StringPrototype::includes(Interpreter& interpreter)
 
 Value StringPrototype::slice(Interpreter& interpreter)
 {
-    auto* string_object = string_object_from(interpreter);
-    if (!string_object)
+    auto string = string_from(interpreter);
+    if (string.is_null())
         return {};
-
-    auto& string = string_object->primitive_string().string();
 
     if (interpreter.argument_count() == 0)
         return js_string(interpreter, string);
