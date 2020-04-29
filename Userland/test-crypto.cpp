@@ -254,11 +254,12 @@ auto main(int argc, char** argv) -> int
         puts("\thash - Access hash functions");
         puts("\tencrypt -- Access encryption functions");
         puts("\tdecrypt -- Access decryption functions");
+        puts("\ttls -- Connect to a peer over TLS 1.2");
         puts("\tlist -- List all known modes");
         puts("these modes only contain tests");
+        puts("\ttest -- Run every test suite");
         puts("\tbigint -- Run big integer test suite");
         puts("\tpk -- Run Public-key system tests");
-        puts("\ttls -- Run TLS tests");
         return 0;
     }
 
@@ -324,6 +325,30 @@ auto main(int argc, char** argv) -> int
             return tls_tests();
         return run(tls);
     }
+    if (mode_sv == "test") {
+        encrypting = true;
+        aes_cbc_tests();
+
+        encrypting = false;
+        aes_cbc_tests();
+
+        md5_tests();
+        sha1_tests();
+        sha256_tests();
+        sha512_tests();
+
+        hmac_md5_tests();
+        hmac_sha256_tests();
+        hmac_sha512_tests();
+
+        rsa_tests();
+
+        tls_tests();
+
+        bigint_tests();
+
+        return 0;
+    }
     encrypting = mode_sv == "encrypt";
     if (encrypting || mode_sv == "decrypt") {
         if (suite == nullptr)
@@ -348,7 +373,6 @@ auto main(int argc, char** argv) -> int
             return 1;
         }
     }
-
     printf("Unknown mode '%s', check out the list of modes\n", mode);
     return 1;
 }
@@ -356,6 +380,7 @@ auto main(int argc, char** argv) -> int
 #define I_TEST(thing)                     \
     {                                     \
         printf("Testing " #thing "... "); \
+        fflush(stdout);                   \
     }
 #define PASS printf("PASS\n")
 #define FAIL(reason) printf("FAIL: " #reason "\n")
@@ -481,12 +506,12 @@ void aes_cbc_test_encrypt()
         test_it(cipher, result);
     }
     {
-        I_TEST((AES CBC with 256 bit key | Specialized Encrypt))
+        I_TEST((AES CBC with 256 bit key | Encrypt with unsigned key))
         u8 result[] {
-            0x0a, 0x44, 0x4d, 0x62, 0x9e, 0x8b, 0xd8, 0x11, 0x80, 0x48, 0x2a, 0x32, 0x53, 0x61, 0xe7,
-            0x59, 0x62, 0x55, 0x9e, 0xf4, 0xe6, 0xad, 0xea, 0xc5, 0x0b, 0xf6, 0xbc, 0x6a, 0xcb, 0x9c,
-            0x47, 0x9f, 0xc2, 0x21, 0xe6, 0x19, 0x62, 0xc3, 0x75, 0xca, 0xab, 0x2d, 0x18, 0xa1, 0x54,
-            0xd1, 0x41, 0xe6
+            0x18, 0x71, 0x80, 0x4c, 0x28, 0x07, 0x55, 0x3c, 0x05, 0x33, 0x36, 0x3f, 0x19, 0x38, 0x5c,
+            0xbe, 0xf8, 0xb8, 0x0e, 0x0e, 0x66, 0x67, 0x63, 0x9c, 0xbf, 0x73, 0xcd, 0x82, 0xf9, 0xcb,
+            0x9d, 0x81, 0x56, 0xc6, 0x75, 0x14, 0x8b, 0x79, 0x60, 0xb0, 0xdf, 0xaa, 0x2c, 0x2b, 0xd4,
+            0xd6, 0xa0, 0x46
         };
         u8 key[] { 0x0a, 0x8c, 0x5b, 0x0d, 0x8a, 0x68, 0x43, 0xf7, 0xaf, 0xc0, 0xe3, 0x4e, 0x4b, 0x43, 0xaa, 0x28, 0x69, 0x9b, 0x6f, 0xe7, 0x24, 0x82, 0x1c, 0x71, 0x86, 0xf6, 0x2b, 0x87, 0xd6, 0x8b, 0x8f, 0xf1 };
         Crypto::Cipher::AESCipher::CBCMode cipher(ByteBuffer::wrap(key, 32), 256, Crypto::Cipher::Intent::Encryption);
@@ -1135,7 +1160,7 @@ void tls_test_client_hello()
         if (sent_request)
             return;
         sent_request = true;
-        if (!tls.write("GET / HTTP/1.1\r\nHost: google.com\r\nConnection: close\r\n\r\n"_b)) {
+        if (!tls.write("GET / HTTP/1.1\r\nHost: github.com\r\nConnection: close\r\n\r\n"_b)) {
             FAIL(write() failed);
             loop.quit(0);
         }
@@ -1166,7 +1191,7 @@ void tls_test_client_hello()
         FAIL(Connection failure);
         loop.quit(1);
     };
-    if (!tls->connect("192.168.1.2", 8443)) {
+    if (!tls->connect("github.com", 443)) {
         FAIL(connect() failed);
         return;
     }
