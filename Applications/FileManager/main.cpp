@@ -205,8 +205,8 @@ int run_in_desktop_mode(RefPtr<Core::ConfigFile> config, String initial_location
         Core::DesktopServices::open(URL::create_with_file_protocol(model->root_path()));
     });
 
-    auto display_properties_action = GUI::Action::create("Display properties...", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-display-properties.png"), [&](const GUI::Action&) {
-        Core::DesktopServices::open(URL::create_with_file_protocol("/bin/DisplayProperties"));
+    auto display_properties_action = GUI::Action::create("Display settings...", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-display-settings.png"), [&](const GUI::Action&) {
+        Core::DesktopServices::open(URL::create_with_file_protocol("/bin/DisplaySettings"));
     });
 
     desktop_view_context_menu->add_action(mkdir_action);

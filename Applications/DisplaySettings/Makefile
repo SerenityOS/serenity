@@ -1,9 +1,9 @@
 OBJS = \
 	MonitorWidget.o \
-	DisplayProperties.o \
+	DisplaySettings.o \
 	main.o \
 
-PROGRAM = DisplayProperties
+PROGRAM = DisplaySettings
 
 LIB_DEPS = GUI Gfx IPC Thread Pthread Core
 

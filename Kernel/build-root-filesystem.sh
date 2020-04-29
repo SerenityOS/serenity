@@ -139,7 +139,7 @@ cp ../Applications/SystemMenu/SystemMenu mnt/bin/SystemMenu
 cp ../Applications/Calculator/Calculator mnt/bin/Calculator
 cp ../Applications/Calendar/Calendar mnt/bin/Calendar
 cp ../Applications/SoundPlayer/SoundPlayer mnt/bin/SoundPlayer
-cp ../Applications/DisplayProperties/DisplayProperties mnt/bin/DisplayProperties
+cp ../Applications/DisplaySettings/DisplaySettings mnt/bin/DisplaySettings
 cp ../Applications/Welcome/Welcome mnt/bin/Welcome
 cp ../Applications/Help/Help mnt/bin/Help
 cp ../Applications/Browser/Browser mnt/bin/Browser

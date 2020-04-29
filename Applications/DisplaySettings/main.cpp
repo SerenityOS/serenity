@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "DisplayProperties.h"
+#include "DisplaySettings.h"
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -50,26 +50,26 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    DisplayPropertiesWidget instance;
+    DisplaySettingsWidget instance;
 
     auto window = GUI::Window::construct();
-    window->set_title("Display Properties");
+    window->set_title("Display settings");
     window->move_to(100, 100);
     window->resize(360, 390);
     window->set_resizable(false);
     window->set_main_widget(instance.root_widget());
-    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-display-properties.png"));
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-display-settings.png"));
 
     auto menubar = GUI::MenuBar::construct();
 
-    auto& app_menu = menubar->add_menu("Display Properties");
+    auto& app_menu = menubar->add_menu("Display settings");
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](const GUI::Action&) {
         app.quit();
     }));
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](const GUI::Action&) {
-        GUI::AboutDialog::show("Display Properties", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-display-properties.png"), window);
+        GUI::AboutDialog::show("Display settings", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-display-settings.png"), window);
     }));
 
     app.set_menubar(move(menubar));
