@@ -41,24 +41,22 @@ public:
     void set_color(Color);
     Color color() { return m_color; }
 
-    void set_color_picker_title(String title) { m_color_picker_title = title; }
+    void set_color_picker_title(String title) { m_color_picker_title = move(title); }
     String color_picker_title() { return m_color_picker_title; }
 
     Function<void()> on_change;
 
 protected:
     virtual void mousedown_event(MouseEvent&) override;
-    virtual void mouseup_event(MouseEvent&) override;
-    virtual void enter_event(Core::Event&) override;
+    virtual void mousemove_event(MouseEvent&) override;
     virtual void paint_event(PaintEvent&) override;
 
 private:
-    void click();
+    Gfx::Rect color_rect() const;
+    void set_color_without_changing_text(Color);
 
     Color m_color;
-    String m_color_picker_title { "Select Color" };
-
-    bool m_being_pressed { false };
+    String m_color_picker_title { "Select color" };
 };
 
 }
