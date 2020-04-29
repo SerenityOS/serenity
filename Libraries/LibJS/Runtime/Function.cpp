@@ -36,7 +36,7 @@ Function::Function(Object& prototype)
 {
 }
 
-Function::Function(Object& prototype, Optional<Value> bound_this, Vector<Value> bound_arguments)
+Function::Function(Object& prototype, Value bound_this, Vector<Value> bound_arguments)
     : Object(&prototype)
     , m_bound_this(bound_this)
     , m_bound_arguments(move(bound_arguments))
@@ -48,11 +48,9 @@ BoundFunction* Function::bind(Value bound_this_value, Vector<Value> arguments)
 
     Function& target_function = is_bound_function() ? static_cast<BoundFunction&>(*this).target_function() : *this;
 
-    auto bound_this_object
-        = [bound_this_value, this]() -> Value {
-        if (bound_this().has_value()) {
-            return bound_this().value();
-        }
+    auto bound_this_object = [bound_this_value, this]() -> Value {
+        if (!m_bound_this.is_empty())
+            return m_bound_this;
         switch (bound_this_value.type()) {
         case Value::Type::Undefined:
         case Value::Type::Null:
@@ -91,9 +89,7 @@ void Function::visit_children(Visitor& visitor)
 {
     Object::visit_children(visitor);
 
-    if (m_bound_this.has_value()) {
-        visitor.visit(m_bound_this.value());
-    }
+    visitor.visit(m_bound_this);
 
     for (auto argument : m_bound_arguments) {
         visitor.visit(argument);

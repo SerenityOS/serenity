@@ -44,7 +44,7 @@ public:
 
     BoundFunction* bind(Value bound_this_value, Vector<Value> arguments);
 
-    Optional<Value> bound_this() const
+    Value bound_this() const
     {
         return m_bound_this;
     }
@@ -56,12 +56,12 @@ public:
 
 protected:
     explicit Function(Object& prototype);
-    explicit Function(Object& prototype, Optional<Value> bound_this, Vector<Value> bound_arguments);
+    explicit Function(Object& prototype, Value bound_this, Vector<Value> bound_arguments);
     virtual const char* class_name() const override { return "Function"; }
 
 private:
     virtual bool is_function() const final { return true; }
-    Optional<Value> m_bound_this;
+    Value m_bound_this;
     Vector<Value> m_bound_arguments;
 };
 
