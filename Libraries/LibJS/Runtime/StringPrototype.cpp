@@ -60,6 +60,7 @@ StringPrototype::StringPrototype()
     put_native_function("concat", concat, 1, attr);
     put_native_function("substring", substring, 2, attr);
     put_native_function("includes", includes, 1, attr);
+    put_native_function("slice", slice, 2, attr);
 }
 
 StringPrototype::~StringPrototype()
@@ -397,6 +398,47 @@ Value StringPrototype::includes(Interpreter& interpreter)
     auto substring_length = string.length() - position;
     auto substring_search = string.substring(position, substring_length);
     return Value(substring_search.contains(search_string));
+}
+
+Value StringPrototype::slice(Interpreter& interpreter)
+{
+    auto* string_object = string_object_from(interpreter);
+    if (!string_object)
+        return {};
+
+    auto& string = string_object->primitive_string().string();
+
+    if (interpreter.argument_count() == 0)
+        return js_string(interpreter, string);
+
+    i32 string_length = static_cast<i32>(string.length());
+    i32 index_start = interpreter.argument(0).to_i32();
+    i32 index_end = string_length;
+
+    auto negative_min_index = -(string_length - 1);
+    if (index_start < negative_min_index)
+        index_start = 0;
+    else if (index_start < 0)
+        index_start = string_length + index_start;
+
+    if (interpreter.argument_count() >= 2) {
+        index_end = interpreter.argument(1).to_i32();
+
+        if (index_end < negative_min_index)
+            return js_string(interpreter, String::empty());
+
+        if (index_end > string_length)
+            index_end = string_length;
+        else if (index_end < 0)
+            index_end = string_length + index_end;
+    }
+
+    if (index_start >= index_end)
+        return js_string(interpreter, String::empty());
+
+    auto part_length = index_end - index_start;
+    auto string_part = string.substring(index_start, part_length);
+    return js_string(interpreter, string_part);
 }
 
 }
