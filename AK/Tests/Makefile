@@ -4,9 +4,12 @@ SHARED_TEST_SOURCES = \
 	../StringBuilder.cpp \
 	../StringView.cpp \
 	../StringUtils.cpp \
+	../StreamJsonBuilder.cpp \
+	../StreamJsonParser.cpp \
 	../LogStream.cpp \
 	../JsonValue.cpp \
 	../JsonParser.cpp \
+	../JsonPathElement.cpp \
     ../FlyString.cpp \
     ../FileSystemPath.cpp \
     ../URL.cpp \
@@ -23,7 +26,7 @@ USE_HOST_CXX = 1
 
 include ../../Makefile.common
 
-CXXFLAGS = -std=c++17 -Wall -Wextra -ggdb3 -O2 -I../ -I../../
+CXXFLAGS = -std=c++17 -Wall -Wextra -ggdb3 -O0 -I../ -I../../
 
 APPS_RUN = $(addsuffix .run,$(APPS))
 test: $(APPS) $(APPS_RUN)
