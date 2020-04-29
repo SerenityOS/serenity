@@ -360,12 +360,12 @@ Value Object::to_string() const
         && to_string_property.as_object().is_function()) {
         auto& to_string_function = static_cast<Function&>(to_string_property.as_object());
         auto& interpreter = const_cast<Object*>(this)->interpreter();
-        auto string_value = interpreter.call(to_string_function, const_cast<Object*>(this));
-        if (!string_value.is_string())
+        auto to_string_result = interpreter.call(to_string_function, const_cast<Object*>(this));
+        if (to_string_result.is_object())
             interpreter.throw_exception<TypeError>("Cannot convert object to string");
         if (interpreter.exception())
             return {};
-        return string_value;
+        return js_string(heap(), to_string_result.to_string());
     }
     return js_string(heap(), String::format("[object %s]", class_name()));
 }
