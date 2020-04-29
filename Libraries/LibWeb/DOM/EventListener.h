@@ -43,7 +43,7 @@ public:
     {
     }
 
-    JS::Function* function();
+    JS::Function& function();
 
 private:
     JS::Handle<JS::Function> m_function;

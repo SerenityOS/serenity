@@ -29,9 +29,10 @@
 
 namespace Web {
 
-JS::Function* EventListener::function()
+JS::Function& EventListener::function()
 {
-    return m_function.cell();
+    ASSERT(m_function.cell());
+    return *m_function.cell();
 }
 
 }
