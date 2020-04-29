@@ -34,7 +34,7 @@
 namespace Crypto {
 
 struct UnsignedDivisionResult;
-constexpr size_t STARTING_WORD_SIZE = 128;
+constexpr size_t STARTING_WORD_SIZE = 512;
 
 class UnsignedBigInteger {
 public:
@@ -86,8 +86,8 @@ public:
     String to_base10() const;
 
 private:
-    UnsignedBigInteger shift_left_by_n_words(const size_t number_of_words) const;
-    u32 shift_left_get_one_word(const size_t num_bits, const size_t result_word_index) const;
+    ALWAYS_INLINE UnsignedBigInteger shift_left_by_n_words(const size_t number_of_words) const;
+    ALWAYS_INLINE u32 shift_left_get_one_word(const size_t num_bits, const size_t result_word_index) const;
 
     static constexpr size_t BITS_IN_WORD = 32;
     AK::Vector<u32, STARTING_WORD_SIZE> m_words;
