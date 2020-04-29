@@ -170,6 +170,7 @@ public:
     }
 
     String to_string() const;
+    String to_string_without_alpha() const;
     static Optional<Color> from_string(const StringView&);
 
     HSV to_hsv() const
