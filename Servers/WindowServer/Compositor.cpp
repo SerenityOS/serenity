@@ -317,7 +317,7 @@ void Compositor::invalidate(const Gfx::Rect& a_rect)
     }
 }
 
-bool Compositor::set_backgound_color(const String& background_color)
+bool Compositor::set_background_color(const String& background_color)
 {
     auto& wm = WindowManager::the();
     wm.wm_config()->write_entry("Background", "Color", background_color);
