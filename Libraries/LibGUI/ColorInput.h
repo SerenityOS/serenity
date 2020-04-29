@@ -35,8 +35,10 @@ class ColorInput final : public TextEditor {
     C_OBJECT(ColorInput);
 
 public:
-    ColorInput();
     virtual ~ColorInput() override;
+
+    bool has_alpha_channel() const { return m_color_has_alpha_channel; }
+    void set_color_has_alpha_channel(bool);
 
     void set_color(Color);
     Color color() { return m_color; }
@@ -52,11 +54,14 @@ protected:
     virtual void paint_event(PaintEvent&) override;
 
 private:
+    ColorInput();
+
     Gfx::Rect color_rect() const;
     void set_color_without_changing_text(Color);
 
     Color m_color;
     String m_color_picker_title { "Select color" };
+    bool m_color_has_alpha_channel { true };
 };
 
 }

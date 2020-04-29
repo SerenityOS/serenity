@@ -70,6 +70,19 @@ void ColorInput::set_color(Color color)
     set_text(color.to_string());
 };
 
+void ColorInput::set_color_has_alpha_channel(bool has_alpha)
+{
+    if (m_color_has_alpha_channel == has_alpha)
+        return;
+
+    m_color_has_alpha_channel = has_alpha;
+    m_color.set_alpha(0xff);
+    if (!has_alpha)
+        set_text(m_color.to_string_without_alpha());
+    else
+        set_text(m_color.to_string());
+}
+
 void ColorInput::mousedown_event(MouseEvent& event)
 {
     if (event.button() == MouseButton::Left) {
