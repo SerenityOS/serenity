@@ -400,12 +400,24 @@ NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
     auto precedence = operator_precedence(m_parser_state.m_current_token.type());
     auto associativity = operator_associativity(m_parser_state.m_current_token.type());
     switch (m_parser_state.m_current_token.type()) {
-    case TokenType::PlusPlus:
+    case TokenType::PlusPlus: {
         consume();
-        return create_ast_node<UpdateExpression>(UpdateOp::Increment, parse_expression(precedence, associativity), true);
-    case TokenType::MinusMinus:
+        auto rhs_start_line = m_parser_state.m_current_token.line_number();
+        auto rhs_start_column = m_parser_state.m_current_token.line_column();
+        auto rhs = parse_expression(precedence, associativity);
+        if (!rhs->is_identifier() && !rhs->is_member_expression())
+            syntax_error(String::format("Right-hand side of prefix increment operator must be identifier or member expression, got %s", rhs->class_name()), rhs_start_line, rhs_start_column);
+        return create_ast_node<UpdateExpression>(UpdateOp::Increment, move(rhs), true);
+    }
+    case TokenType::MinusMinus: {
         consume();
-        return create_ast_node<UpdateExpression>(UpdateOp::Decrement, parse_expression(precedence, associativity), true);
+        auto rhs_start_line = m_parser_state.m_current_token.line_number();
+        auto rhs_start_column = m_parser_state.m_current_token.line_column();
+        auto rhs = parse_expression(precedence, associativity);
+        if (!rhs->is_identifier() && !rhs->is_member_expression())
+            syntax_error(String::format("Right-hand side of prefix decrement operator must be identifier or member expression, got %s", rhs->class_name()), rhs_start_line, rhs_start_column);
+        return create_ast_node<UpdateExpression>(UpdateOp::Decrement, move(rhs), true);
+    }
     case TokenType::ExclamationMark:
         consume();
         return create_ast_node<UnaryExpression>(UnaryOp::Not, parse_expression(precedence, associativity));
@@ -637,9 +649,13 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
         return expression;
     }
     case TokenType::PlusPlus:
+        if (!lhs->is_identifier() && !lhs->is_member_expression())
+            syntax_error(String::format("Left-hand side of postfix increment operator must be identifier or member expression, got %s", lhs->class_name()));
         consume();
         return create_ast_node<UpdateExpression>(UpdateOp::Increment, move(lhs));
     case TokenType::MinusMinus:
+        if (!lhs->is_identifier() && !lhs->is_member_expression())
+            syntax_error(String::format("Left-hand side of postfix increment operator must be identifier or member expression, got %s", lhs->class_name()));
         consume();
         return create_ast_node<UpdateExpression>(UpdateOp::Decrement, move(lhs));
     case TokenType::DoubleAmpersand:
