@@ -1366,10 +1366,10 @@ void ConditionalExpression::dump(int indent) const
     m_test->dump(indent + 1);
     print_indent(indent);
     printf("(Consequent)\n");
-    m_test->dump(indent + 1);
+    m_consequent->dump(indent + 1);
     print_indent(indent);
     printf("(Alternate)\n");
-    m_test->dump(indent + 1);
+    m_alternate->dump(indent + 1);
 }
 
 void SequenceExpression::dump(int indent) const
