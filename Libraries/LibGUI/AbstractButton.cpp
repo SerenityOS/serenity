@@ -90,18 +90,16 @@ void AbstractButton::mousemove_event(MouseEvent& event)
     bool is_over = rect().contains(event.position());
     m_hovered = is_over;
     if (event.buttons() & MouseButton::Left) {
-        if (is_enabled()) {
-            bool being_pressed = is_over;
-            if (being_pressed != m_being_pressed) {
-                m_being_pressed = being_pressed;
-                if (m_auto_repeat_interval) {
-                    if (!m_being_pressed)
-                        m_auto_repeat_timer->stop();
-                    else
-                        m_auto_repeat_timer->start(m_auto_repeat_interval);
-                }
-                update();
+        bool being_pressed = is_over;
+        if (being_pressed != m_being_pressed) {
+            m_being_pressed = being_pressed;
+            if (m_auto_repeat_interval) {
+                if (!m_being_pressed)
+                    m_auto_repeat_timer->stop();
+                else
+                    m_auto_repeat_timer->start(m_auto_repeat_interval);
             }
+            update();
         }
     }
     Widget::mousemove_event(event);
@@ -113,14 +111,12 @@ void AbstractButton::mousedown_event(MouseEvent& event)
     dbgprintf("AbstractButton::mouse_down_event: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
 #endif
     if (event.button() == MouseButton::Left) {
-        if (is_enabled()) {
-            m_being_pressed = true;
-            update();
+        m_being_pressed = true;
+        update();
 
-            if (m_auto_repeat_interval) {
-                click();
-                m_auto_repeat_timer->start(m_auto_repeat_interval);
-            }
+        if (m_auto_repeat_interval) {
+            click();
+            m_auto_repeat_timer->start(m_auto_repeat_interval);
         }
     }
     Widget::mousedown_event(event);
@@ -134,13 +130,11 @@ void AbstractButton::mouseup_event(MouseEvent& event)
     if (event.button() == MouseButton::Left) {
         bool was_auto_repeating = m_auto_repeat_timer->is_active();
         m_auto_repeat_timer->stop();
-        if (is_enabled()) {
-            bool was_being_pressed = m_being_pressed;
-            m_being_pressed = false;
-            update();
-            if (was_being_pressed && !was_auto_repeating)
-                click();
-        }
+        bool was_being_pressed = m_being_pressed;
+        m_being_pressed = false;
+        update();
+        if (was_being_pressed && !was_auto_repeating)
+            click();
     }
     Widget::mouseup_event(event);
 }
