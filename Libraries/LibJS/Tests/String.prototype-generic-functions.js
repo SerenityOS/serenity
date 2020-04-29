@@ -16,6 +16,7 @@ try {
         "concat",
         "substring",
         "includes",
+        "slice",
     ];
 
     genericStringPrototypeFunctions.forEach(name => {
