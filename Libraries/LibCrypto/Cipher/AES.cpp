@@ -59,7 +59,7 @@ namespace Cipher {
         return builder.build();
     }
 
-    void AESCipherKey::expand_encrypt_key(const StringView& user_key, size_t bits)
+    void AESCipherKey::expand_encrypt_key(const ByteBuffer& user_key, size_t bits)
     {
         u32* round_key;
         u32 temp;
@@ -78,10 +78,10 @@ namespace Cipher {
             m_rounds = 14;
         }
 
-        round_key[0] = get_key(user_key.substring_view(0, 4).characters_without_null_termination());
-        round_key[1] = get_key(user_key.substring_view(4, 4).characters_without_null_termination());
-        round_key[2] = get_key(user_key.substring_view(8, 4).characters_without_null_termination());
-        round_key[3] = get_key(user_key.substring_view(12, 4).characters_without_null_termination());
+        round_key[0] = get_key(user_key.slice_view(0, 4).data());
+        round_key[1] = get_key(user_key.slice_view(4, 4).data());
+        round_key[2] = get_key(user_key.slice_view(8, 4).data());
+        round_key[3] = get_key(user_key.slice_view(12, 4).data());
         if (bits == 128) {
             for (;;) {
                 temp = round_key[3];
@@ -103,8 +103,8 @@ namespace Cipher {
             return;
         }
 
-        round_key[4] = get_key(user_key.substring_view(16, 4).characters_without_null_termination());
-        round_key[5] = get_key(user_key.substring_view(20, 4).characters_without_null_termination());
+        round_key[4] = get_key(user_key.slice_view(16, 4).data());
+        round_key[5] = get_key(user_key.slice_view(20, 4).data());
         if (bits == 192) {
             for (;;) {
                 temp = round_key[5];
@@ -131,8 +131,8 @@ namespace Cipher {
             return;
         }
 
-        round_key[6] = get_key(user_key.substring_view(24, 4).characters_without_null_termination());
-        round_key[7] = get_key(user_key.substring_view(28, 4).characters_without_null_termination());
+        round_key[6] = get_key(user_key.slice_view(24, 4).data());
+        round_key[7] = get_key(user_key.slice_view(28, 4).data());
         if (true) { // bits == 256
             for (;;) {
                 temp = round_key[7];
@@ -169,7 +169,7 @@ namespace Cipher {
         }
     }
 
-    void AESCipherKey::expand_decrypt_key(const StringView& user_key, size_t bits)
+    void AESCipherKey::expand_decrypt_key(const ByteBuffer& user_key, size_t bits)
     {
         u32* round_key;
 
@@ -413,6 +413,10 @@ namespace Cipher {
             case PaddingMode::CMS:
                 // fill with the length of the padding bytes
                 __builtin_memset(m_data.data() + length, m_data.size() - length, m_data.size() - length);
+                break;
+            case PaddingMode::RFC5246:
+                // fill with the length of the padding bytes minus one
+                __builtin_memset(m_data.data() + length, m_data.size() - length - 1, m_data.size() - length);
                 break;
             default:
                 // FIXME: We should handle the rest of the common padding modes

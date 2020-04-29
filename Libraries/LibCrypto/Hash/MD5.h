@@ -92,10 +92,21 @@ namespace Hash {
 
         inline static DigestType hash(const ByteBuffer& buffer) { return hash(buffer.data(), buffer.size()); }
         inline static DigestType hash(const StringView& buffer) { return hash((const u8*)buffer.characters_without_null_termination(), buffer.length()); }
+        inline virtual void reset() override
+        {
+            m_A = MD5Constants::init_A;
+            m_B = MD5Constants::init_B;
+            m_C = MD5Constants::init_C;
+            m_D = MD5Constants::init_D;
+
+            m_count[0] = 0;
+            m_count[1] = 0;
+
+            __builtin_memset(m_data_buffer, 0, sizeof(m_data_buffer));
+        }
 
     private:
         inline void transform(const u8*);
-        inline void reset();
 
         static void encode(const u32* from, u8* to, size_t length);
         static void decode(const u8* from, u32* to, size_t length);
