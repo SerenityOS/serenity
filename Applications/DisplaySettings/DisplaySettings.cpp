@@ -236,14 +236,6 @@ void DisplaySettingsWidget::create_frame()
     bottom_widget.set_size_policy(Orientation::Vertical, GUI::SizePolicy::Fixed);
     bottom_widget.set_preferred_size(1, 22);
 
-    auto& apply_button = bottom_widget.add<GUI::Button>();
-    apply_button.set_text("Apply");
-    apply_button.set_size_policy(Orientation::Horizontal, GUI::SizePolicy::Fixed);
-    apply_button.set_preferred_size(60, 22);
-    apply_button.on_click = [this] {
-        send_settings_to_window_server();
-    };
-
     auto& ok_button = bottom_widget.add<GUI::Button>();
     ok_button.set_text("OK");
     ok_button.set_size_policy(Orientation::Horizontal, GUI::SizePolicy::Fixed);
@@ -259,6 +251,14 @@ void DisplaySettingsWidget::create_frame()
     cancel_button.set_preferred_size(60, 22);
     cancel_button.on_click = [] {
         GUI::Application::the().quit();
+    };
+
+    auto& apply_button = bottom_widget.add<GUI::Button>();
+    apply_button.set_text("Apply");
+    apply_button.set_size_policy(Orientation::Horizontal, GUI::SizePolicy::Fixed);
+    apply_button.set_preferred_size(60, 22);
+    apply_button.on_click = [this] {
+        send_settings_to_window_server();
     };
 }
 
