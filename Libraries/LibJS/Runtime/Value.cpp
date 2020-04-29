@@ -69,8 +69,13 @@ String Value::to_string() const
         return String::format("%.4f", as_double());
     }
 
-    if (is_object())
-        return as_object().to_primitive(Object::PreferredType::String).to_string();
+    if (is_object()) {
+        auto primitive_value = as_object().to_primitive(Object::PreferredType::String);
+        // FIXME: Maybe we should pass in the Interpreter& and call interpreter.exception() instead?
+        if (primitive_value.is_empty())
+            return {};
+        return primitive_value.to_string();
+    }
 
     if (is_string())
         return m_value.as_string->string();
