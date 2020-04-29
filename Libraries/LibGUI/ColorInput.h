@@ -38,7 +38,7 @@ public:
     virtual ~ColorInput() override;
 
     bool has_alpha_channel() const { return m_color_has_alpha_channel; }
-    void set_color_has_alpha_channel(bool);
+    void set_color_has_alpha_channel(bool has_alpha) { m_color_has_alpha_channel = has_alpha; }
 
     void set_color(Color);
     Color color() { return m_color; }
