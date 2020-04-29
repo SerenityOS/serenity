@@ -259,7 +259,6 @@ NonnullRefPtr<Statement> Parser::parse_statement()
             consume_or_insert_semicolon();
             return create_ast_node<ExpressionStatement>(move(expr));
         }
-        m_parser_state.m_has_errors = true;
         expected("statement (missing switch case)");
         consume();
         return create_ast_node<ErrorStatement>();
@@ -390,7 +389,6 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
     case TokenType::New:
         return parse_new_expression();
     default:
-        m_parser_state.m_has_errors = true;
         expected("primary expression (missing switch case)");
         consume();
         return create_ast_node<ErrorExpression>();
@@ -430,7 +428,6 @@ NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
         consume();
         return create_ast_node<UnaryExpression>(UnaryOp::Delete, parse_expression(precedence, associativity));
     default:
-        m_parser_state.m_has_errors = true;
         expected("primary expression (missing switch case)");
         consume();
         return create_ast_node<ErrorExpression>();
@@ -468,12 +465,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
             need_colon = false;
             is_spread = true;
         } else {
-            m_parser_state.m_has_errors = true;
-            auto& current_token = m_parser_state.m_current_token;
-            fprintf(stderr, "Syntax Error: Unexpected token %s as member in object initialization. Expected a numeric literal, string literal or identifier (line: %zu, column: %zu))\n",
-                current_token.name(),
-                current_token.line_number(),
-                current_token.line_column());
+            syntax_error(String::format("Unexpected token %s as member in object initialization. Expected a numeric literal, string literal or identifier", m_parser_state.m_current_token.name()));
             consume();
             continue;
         }
@@ -662,7 +654,6 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
     case TokenType::QuestionMark:
         return parse_conditional_expression(move(lhs));
     default:
-        m_parser_state.m_has_errors = true;
         expected("secondary expression (missing switch case)");
         consume();
         return create_ast_node<ErrorExpression>();
@@ -829,8 +820,7 @@ NonnullRefPtr<ThrowStatement> Parser::parse_throw_statement()
 
     // Automatic semicolon insertion: terminate statement when throw is followed by newline
     if (m_parser_state.m_current_token.trivia().contains('\n')) {
-        m_parser_state.m_has_errors = true;
-        fprintf(stderr, "Syntax Error: no line break is allowed between 'throw' and its expression\n");
+        syntax_error("No line break is allowed between 'throw' and its expression");
         return create_ast_node<ThrowStatement>(create_ast_node<ErrorExpression>());
     }
 
@@ -1198,13 +1188,17 @@ Token Parser::consume(TokenType expected_type)
 
 void Parser::expected(const char* what)
 {
+    syntax_error(String::format("Unexpected token %s. Expected %s", m_parser_state.m_current_token.name(), what));
+}
+
+void Parser::syntax_error(const String& message, size_t line, size_t column)
+{
     m_parser_state.m_has_errors = true;
-    auto& current_token = m_parser_state.m_current_token;
-    fprintf(stderr, "Syntax Error: Unexpected token %s. Expected %s (line: %zu, column: %zu)\n",
-        current_token.name(),
-        what,
-        current_token.line_number(),
-        current_token.line_column());
+    if (line == 0 || column == 0) {
+        line = m_parser_state.m_current_token.line_number();
+        column = m_parser_state.m_current_token.line_column();
+    }
+    fprintf(stderr, "Syntax Error: %s (line: %zu, column: %zu)\n", message.characters(), line, column);
 }
 
 void Parser::save_state()
@@ -1218,4 +1212,5 @@ void Parser::load_state()
     m_parser_state = m_saved_state.value();
     m_saved_state.clear();
 }
+
 }

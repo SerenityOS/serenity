@@ -89,6 +89,7 @@ private:
     bool match(TokenType type) const;
     bool done() const;
     void expected(const char* what);
+    void syntax_error(const String& message, size_t line = 0, size_t column = 0);
     Token consume();
     Token consume(TokenType type);
     void consume_or_insert_semicolon();
