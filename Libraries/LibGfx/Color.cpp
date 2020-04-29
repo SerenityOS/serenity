@@ -119,7 +119,12 @@ Color::Color(NamedColor named)
 
 String Color::to_string() const
 {
-    return String::format("#%b%b%b%b", red(), green(), blue(), alpha());
+    return String::format("#%02x%02x%02x%02x", red(), green(), blue(), alpha());
+}
+
+String Color::to_string_without_alpha() const
+{
+    return String::format("#%02x%02x%02x", red(), green(), blue());
 }
 
 static Optional<Color> parse_rgb_color(const StringView& string)
