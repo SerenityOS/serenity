@@ -71,8 +71,8 @@ namespace Cipher {
 
     struct AESCipherKey : public CipherKey {
         virtual ByteBuffer data() const override { return ByteBuffer::copy(m_rd_keys, sizeof(m_rd_keys)); };
-        virtual void expand_encrypt_key(const StringView& user_key, size_t bits) override;
-        virtual void expand_decrypt_key(const StringView& user_key, size_t bits) override;
+        virtual void expand_encrypt_key(const ByteBuffer& user_key, size_t bits) override;
+        virtual void expand_decrypt_key(const ByteBuffer& user_key, size_t bits) override;
         static bool is_valid_key_size(size_t bits) { return bits == 128 || bits == 192 || bits == 256; };
         String to_string() const;
         const u32* round_keys() const
@@ -80,7 +80,8 @@ namespace Cipher {
             return (const u32*)m_rd_keys;
         }
 
-        AESCipherKey(const StringView& user_key, size_t key_bits, Intent intent)
+        AESCipherKey(const ByteBuffer& user_key, size_t key_bits, Intent intent)
+            : m_bits(key_bits)
         {
             if (intent == Intent::Encryption)
                 expand_encrypt_key(user_key, key_bits);
@@ -91,6 +92,7 @@ namespace Cipher {
         virtual ~AESCipherKey() override {}
 
         size_t rounds() const { return m_rounds; }
+        size_t length() const { return m_bits / 8; }
 
     protected:
         u32* round_keys()
@@ -102,13 +104,14 @@ namespace Cipher {
         static constexpr size_t MAX_ROUND_COUNT = 14;
         u32 m_rd_keys[(MAX_ROUND_COUNT + 1) * 4] { 0 };
         size_t m_rounds;
+        size_t m_bits;
     };
 
     class AESCipher final : public Cipher<AESCipherKey, AESCipherBlock> {
     public:
         using CBCMode = CBC<AESCipher>;
 
-        AESCipher(const StringView& user_key, size_t key_bits, Intent intent = Intent::Encryption, PaddingMode mode = PaddingMode::CMS)
+        AESCipher(const ByteBuffer& user_key, size_t key_bits, Intent intent = Intent::Encryption, PaddingMode mode = PaddingMode::CMS)
             : Cipher<AESCipherKey, AESCipherBlock>(mode)
             , m_key(user_key, key_bits, intent)
         {

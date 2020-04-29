@@ -123,16 +123,16 @@ namespace Hash {
             builder.appendf("%zu", this->DigestSize * 8);
             return builder.build();
         };
-
-    private:
-        inline void transform(const u8*);
-        inline void reset()
+        inline virtual void reset() override
         {
             m_data_length = 0;
             m_bit_length = 0;
             for (size_t i = 0; i < 8; ++i)
                 m_state[i] = SHA256Constants::InitializationHashes[i];
         }
+
+    private:
+        inline void transform(const u8*);
 
         u8 m_data_buffer[BlockSize];
         size_t m_data_length { 0 };
@@ -176,16 +176,16 @@ namespace Hash {
             builder.appendf("%zu", this->DigestSize * 8);
             return builder.build();
         };
-
-    private:
-        inline void transform(const u8*);
-        inline void reset()
+        inline virtual void reset() override
         {
             m_data_length = 0;
             m_bit_length = 0;
             for (size_t i = 0; i < 8; ++i)
                 m_state[i] = SHA512Constants::InitializationHashes[i];
         }
+
+    private:
+        inline void transform(const u8*);
 
         u8 m_data_buffer[BlockSize];
         size_t m_data_length { 0 };

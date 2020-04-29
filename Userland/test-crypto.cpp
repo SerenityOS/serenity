@@ -50,10 +50,16 @@ void print_buffer(const ByteBuffer& buffer, int split)
 {
     for (size_t i = 0; i < buffer.size(); ++i) {
         if (split > 0) {
-            if (i % split == 0 && i)
+            if (i % split == 0 && i) {
+                printf("    ");
+                for (size_t j = i - split; j < i; ++j) {
+                    auto ch = buffer[j];
+                    printf("%c", ch >= 32 && ch <= 127 ? ch : '.'); // silly hack
+                }
                 puts("");
+            }
         }
-        printf("%02x", buffer[i]);
+        printf("%02x ", buffer[i]);
     }
     puts("");
 }
@@ -90,7 +96,7 @@ void aes_cbc(const char* message, size_t len)
     auto iv = ByteBuffer::create_zeroed(Crypto::Cipher::AESCipher::block_size());
 
     if (encrypting) {
-        Crypto::Cipher::AESCipher::CBCMode cipher(secret_key, key_bits, Crypto::Cipher::Intent::Encryption);
+        Crypto::Cipher::AESCipher::CBCMode cipher(ByteBuffer::wrap(secret_key, strlen(secret_key)), key_bits, Crypto::Cipher::Intent::Encryption);
 
         auto enc = cipher.create_aligned_buffer(buffer.size());
         cipher.encrypt(buffer, enc, iv);
@@ -100,7 +106,7 @@ void aes_cbc(const char* message, size_t len)
         else
             print_buffer(enc, Crypto::Cipher::AESCipher::block_size());
     } else {
-        Crypto::Cipher::AESCipher::CBCMode cipher(secret_key, key_bits, Crypto::Cipher::Intent::Decryption);
+        Crypto::Cipher::AESCipher::CBCMode cipher(ByteBuffer::wrap(secret_key, strlen(secret_key)), key_bits, Crypto::Cipher::Intent::Decryption);
         auto dec = cipher.create_aligned_buffer(buffer.size());
         cipher.decrypt(buffer, dec, iv);
         printf("%.*s\n", (int)dec.size(), dec.data());
@@ -341,7 +347,7 @@ int aes_cbc_tests()
 void aes_cbc_test_name()
 {
     I_TEST((AES CBC class name));
-    Crypto::Cipher::AESCipher::CBCMode cipher("WellHelloFriends", 128, Crypto::Cipher::Intent::Encryption);
+    Crypto::Cipher::AESCipher::CBCMode cipher("WellHelloFriends"_b, 128, Crypto::Cipher::Intent::Encryption);
     if (cipher.class_name() != "AES_CBC")
         FAIL(Invalid class name);
     else
@@ -371,7 +377,7 @@ void aes_cbc_test_encrypt()
             0x8b, 0xd3, 0x70, 0x45, 0xf0, 0x79, 0x65, 0xca, 0xb9, 0x03, 0x88, 0x72, 0x1c, 0xdd, 0xab,
             0x45, 0x6b, 0x1c
         };
-        Crypto::Cipher::AESCipher::CBCMode cipher("WellHelloFriends", 128, Crypto::Cipher::Intent::Encryption);
+        Crypto::Cipher::AESCipher::CBCMode cipher("WellHelloFriends"_b, 128, Crypto::Cipher::Intent::Encryption);
         test_it(cipher, result);
     }
     {
@@ -382,7 +388,7 @@ void aes_cbc_test_encrypt()
             0x68, 0x51, 0x09, 0xd7, 0x3b, 0x48, 0x1b, 0x8a, 0xd3, 0x50, 0x09, 0xba, 0xfc, 0xde, 0x11,
             0xe0, 0x3f, 0xcb
         };
-        Crypto::Cipher::AESCipher::CBCMode cipher("Well Hello Friends! whf!", 192, Crypto::Cipher::Intent::Encryption);
+        Crypto::Cipher::AESCipher::CBCMode cipher("Well Hello Friends! whf!"_b, 192, Crypto::Cipher::Intent::Encryption);
         test_it(cipher, result);
     }
     {
@@ -393,7 +399,19 @@ void aes_cbc_test_encrypt()
             0x47, 0x9f, 0xc2, 0x21, 0xe6, 0x19, 0x62, 0xc3, 0x75, 0xca, 0xab, 0x2d, 0x18, 0xa1, 0x54,
             0xd1, 0x41, 0xe6
         };
-        Crypto::Cipher::AESCipher::CBCMode cipher("WellHelloFriendsWellHelloFriends", 256, Crypto::Cipher::Intent::Encryption);
+        Crypto::Cipher::AESCipher::CBCMode cipher("WellHelloFriendsWellHelloFriends"_b, 256, Crypto::Cipher::Intent::Encryption);
+        test_it(cipher, result);
+    }
+    {
+        I_TEST((AES CBC with 256 bit key | Specialized Encrypt))
+        u8 result[] {
+            0x0a, 0x44, 0x4d, 0x62, 0x9e, 0x8b, 0xd8, 0x11, 0x80, 0x48, 0x2a, 0x32, 0x53, 0x61, 0xe7,
+            0x59, 0x62, 0x55, 0x9e, 0xf4, 0xe6, 0xad, 0xea, 0xc5, 0x0b, 0xf6, 0xbc, 0x6a, 0xcb, 0x9c,
+            0x47, 0x9f, 0xc2, 0x21, 0xe6, 0x19, 0x62, 0xc3, 0x75, 0xca, 0xab, 0x2d, 0x18, 0xa1, 0x54,
+            0xd1, 0x41, 0xe6
+        };
+        u8 key[] { 0x0a, 0x8c, 0x5b, 0x0d, 0x8a, 0x68, 0x43, 0xf7, 0xaf, 0xc0, 0xe3, 0x4e, 0x4b, 0x43, 0xaa, 0x28, 0x69, 0x9b, 0x6f, 0xe7, 0x24, 0x82, 0x1c, 0x71, 0x86, 0xf6, 0x2b, 0x87, 0xd6, 0x8b, 0x8f, 0xf1 };
+        Crypto::Cipher::AESCipher::CBCMode cipher(ByteBuffer::wrap(key, 32), 256, Crypto::Cipher::Intent::Encryption);
         test_it(cipher, result);
     }
     // TODO: Test non-CMS padding options
@@ -423,7 +441,7 @@ void aes_cbc_test_decrypt()
             0x8b, 0xd3, 0x70, 0x45, 0xf0, 0x79, 0x65, 0xca, 0xb9, 0x03, 0x88, 0x72, 0x1c, 0xdd, 0xab,
             0x45, 0x6b, 0x1c
         };
-        Crypto::Cipher::AESCipher::CBCMode cipher("WellHelloFriends", 128, Crypto::Cipher::Intent::Decryption);
+        Crypto::Cipher::AESCipher::CBCMode cipher("WellHelloFriends"_b, 128, Crypto::Cipher::Intent::Decryption);
         test_it(cipher, result, 48);
     }
     {
@@ -434,7 +452,7 @@ void aes_cbc_test_decrypt()
             0x68, 0x51, 0x09, 0xd7, 0x3b, 0x48, 0x1b, 0x8a, 0xd3, 0x50, 0x09, 0xba, 0xfc, 0xde, 0x11,
             0xe0, 0x3f, 0xcb
         };
-        Crypto::Cipher::AESCipher::CBCMode cipher("Well Hello Friends! whf!", 192, Crypto::Cipher::Intent::Decryption);
+        Crypto::Cipher::AESCipher::CBCMode cipher("Well Hello Friends! whf!"_b, 192, Crypto::Cipher::Intent::Decryption);
         test_it(cipher, result, 48);
     }
     {
@@ -445,7 +463,7 @@ void aes_cbc_test_decrypt()
             0x47, 0x9f, 0xc2, 0x21, 0xe6, 0x19, 0x62, 0xc3, 0x75, 0xca, 0xab, 0x2d, 0x18, 0xa1, 0x54,
             0xd1, 0x41, 0xe6
         };
-        Crypto::Cipher::AESCipher::CBCMode cipher("WellHelloFriendsWellHelloFriends", 256, Crypto::Cipher::Intent::Decryption);
+        Crypto::Cipher::AESCipher::CBCMode cipher("WellHelloFriendsWellHelloFriends"_b, 256, Crypto::Cipher::Intent::Decryption);
         test_it(cipher, result, 48);
     }
     // TODO: Test non-CMS padding options

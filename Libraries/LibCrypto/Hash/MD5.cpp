@@ -220,18 +220,5 @@ namespace Hash {
         __builtin_memset(x, 0, sizeof(x));
     }
 
-    void MD5::reset()
-    {
-        m_A = MD5Constants::init_A;
-        m_B = MD5Constants::init_B;
-        m_C = MD5Constants::init_C;
-        m_D = MD5Constants::init_D;
-
-        m_count[0] = 0;
-        m_count[1] = 0;
-
-        __builtin_memset(m_data_buffer, 0, sizeof(m_data_buffer));
-    }
-
 }
 }

@@ -51,6 +51,8 @@ namespace Hash {
         virtual DigestType peek() = 0;
         virtual DigestType digest() = 0;
 
+        virtual void reset() = 0;
+
         virtual String class_name() const = 0;
     };
 }

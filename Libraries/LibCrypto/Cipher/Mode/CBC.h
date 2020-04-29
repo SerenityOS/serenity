@@ -36,6 +36,7 @@ namespace Cipher {
     template <typename T>
     class CBC : public Mode<T> {
     public:
+        virtual ~CBC() {}
         template <typename... Args>
         explicit constexpr CBC<T>(Args... args)
             : Mode<T>(args...)

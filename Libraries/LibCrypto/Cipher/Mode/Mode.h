@@ -35,6 +35,8 @@ namespace Cipher {
     template <typename T>
     class Mode {
     public:
+        virtual ~Mode() {}
+
         // FIXME: Somehow communicate that encrypt returns the last initialization vector (if the mode supports it)
         virtual Optional<ByteBuffer> encrypt(const ByteBuffer& in, ByteBuffer& out, Optional<ByteBuffer> ivec = {}) = 0;
         virtual void decrypt(const ByteBuffer& in, ByteBuffer& out, Optional<ByteBuffer> ivec = {}) = 0;
@@ -51,10 +53,9 @@ namespace Cipher {
         }
 
         virtual String class_name() const = 0;
-
-    protected:
         T& cipher() { return m_cipher; }
 
+    protected:
         virtual void prune_padding(ByteBuffer& data)
         {
             auto size = data.size();
@@ -72,6 +73,22 @@ namespace Cipher {
                     }
                 }
                 data.trim(size - maybe_padding_length);
+                break;
+            }
+            case PaddingMode::RFC5246: {
+                auto maybe_padding_length = data[size - 1];
+                if (maybe_padding_length >= T::block_size() - 1) {
+                    // cannot be padding (the entire block cannot be padding)
+                    return;
+                }
+                // FIXME: If we want to constant-time operations, this loop should not stop
+                for (auto i = maybe_padding_length; i > 0; --i) {
+                    if (data[size - i - 1] != maybe_padding_length) {
+                        // note that this is likely invalid padding
+                        return;
+                    }
+                }
+                data.trim(size - maybe_padding_length - 1);
                 break;
             }
             case PaddingMode::Null: {
