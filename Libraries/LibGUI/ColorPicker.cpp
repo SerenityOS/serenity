@@ -132,20 +132,20 @@ void ColorPicker::build_ui()
     button_container.layout()->set_spacing(4);
     button_container.layout()->add_spacer();
 
+    auto& ok_button = button_container.add<Button>();
+    ok_button.set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    ok_button.set_preferred_size(80, 0);
+    ok_button.set_text("OK");
+    ok_button.on_click = [this] {
+        done(ExecOK);
+    };
+
     auto& cancel_button = button_container.add<Button>();
     cancel_button.set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     cancel_button.set_preferred_size(80, 0);
     cancel_button.set_text("Cancel");
     cancel_button.on_click = [this] {
         done(ExecCancel);
-    };
-
-    auto& ok_button = button_container.add<Button>();
-    ok_button.set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    ok_button.set_preferred_size(80, 0);
-    ok_button.set_text("Select");
-    ok_button.on_click = [this] {
-        done(ExecOK);
     };
 }
 
