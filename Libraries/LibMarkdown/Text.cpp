@@ -65,6 +65,8 @@ String Text::render_to_html() const
         auto it = open_tags.find([&](const String& open_tag) {
             if (open_tag == "a" && current_style.href != span.style.href)
                 return true;
+            if (open_tag == "img" && current_style.img != span.style.img)
+                return true;
             for (auto& tag_and_flag : tags_and_flags) {
                 if (open_tag == tag_and_flag.tag && !(span.style.*tag_and_flag.flag))
                     return true;
@@ -79,6 +81,11 @@ String Text::render_to_html() const
             // it.
             for (ssize_t j = open_tags.size() - 1; j >= static_cast<ssize_t>(it.index()); --j) {
                 auto& tag = open_tags[j];
+                if (tag == "img") {
+                    builder.append("\" />");
+                    current_style.img = {};
+                    continue;
+                }
                 builder.appendf("</%s>", tag.characters());
                 if (tag == "a") {
                     current_style.href = {};
@@ -94,6 +101,10 @@ String Text::render_to_html() const
             open_tags.append("a");
             builder.appendf("<a href=\"%s\">", span.style.href.characters());
         }
+        if (current_style.img.is_null() && !span.style.img.is_null()) {
+            open_tags.append("img");
+            builder.appendf("<img src=\"%s\" alt=\"", span.style.img.characters());
+        }
         for (auto& tag_and_flag : tags_and_flags) {
             if (current_style.*tag_and_flag.flag != span.style.*tag_and_flag.flag) {
                 open_tags.append(tag_and_flag.tag);
@@ -107,6 +118,10 @@ String Text::render_to_html() const
 
     for (ssize_t i = open_tags.size() - 1; i >= 0; --i) {
         auto& tag = open_tags[i];
+        if (tag == "img") {
+            builder.append("\" />");
+            continue;
+        }
         builder.appendf("</%s>", tag.characters());
     }
 
@@ -147,6 +162,11 @@ String Text::render_for_terminal() const
                 builder.appendf(" <%s>", span.style.href.characters());
             }
         }
+        if (!span.style.img.is_null()) {
+            if (strstr(span.style.img.characters(), "://") != nullptr) {
+                builder.appendf(" <%s>", span.style.img.characters());
+            }
+        }
     }
 
     return builder.build();
@@ -157,6 +177,7 @@ bool Text::parse(const StringView& str)
     Style current_style;
     size_t current_span_start = 0;
     int first_span_in_the_current_link = -1;
+    bool current_link_is_actually_img = false;
 
     auto append_span_if_needed = [&](size_t offset) {
         ASSERT(current_span_start <= offset);
@@ -182,7 +203,7 @@ bool Text::parse(const StringView& str)
         bool is_special_character = false;
         is_special_character |= ch == '`';
         if (!current_style.code)
-            is_special_character |= ch == '*' || ch == '_' || ch == '[' || ch == ']';
+            is_special_character |= ch == '*' || ch == '_' || ch == '[' || ch == ']' || ch == '!';
         if (!is_special_character)
             continue;
 
@@ -201,6 +222,11 @@ bool Text::parse(const StringView& str)
                 current_style.emph = !current_style.emph;
             }
             break;
+        case '!':
+            if (offset + 1 >= str.length() || str[offset + 1] != '[')
+                continue;
+            current_link_is_actually_img = true;
+            break;
         case '[':
             if (first_span_in_the_current_link != -1)
                 dbg() << "Dropping the outer link";
@@ -213,6 +239,7 @@ bool Text::parse(const StringView& str)
             }
             ScopeGuard guard = [&] {
                 first_span_in_the_current_link = -1;
+                current_link_is_actually_img = false;
             };
             if (offset + 2 >= str.length() || str[offset + 1] != '(')
                 continue;
@@ -226,8 +253,12 @@ bool Text::parse(const StringView& str)
                 offset--;
 
             const StringView href = str.substring_view(start_of_href, offset - start_of_href);
-            for (size_t i = first_span_in_the_current_link; i < m_spans.size(); i++)
-                m_spans[i].style.href = href;
+            for (size_t i = first_span_in_the_current_link; i < m_spans.size(); i++) {
+                if (current_link_is_actually_img)
+                    m_spans[i].style.img = href;
+                else
+                    m_spans[i].style.href = href;
+            }
             break;
         }
         default:

@@ -38,6 +38,7 @@ public:
         bool strong { false };
         bool code { false };
         String href;
+        String img;
     };
 
     struct Span {
