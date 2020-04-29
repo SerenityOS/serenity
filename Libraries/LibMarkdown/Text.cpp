@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <LibMarkdown/Text.h>
 #include <string.h>
@@ -158,12 +159,14 @@ bool Text::parse(const StringView& str)
     int first_span_in_the_current_link = -1;
 
     auto append_span_if_needed = [&](size_t offset) {
+        ASSERT(current_span_start <= offset);
         if (current_span_start != offset) {
             Span span {
                 unescape(str.substring_view(current_span_start, offset - current_span_start)),
                 current_style
             };
             m_spans.append(move(span));
+            current_span_start = offset;
         }
     };
 
@@ -199,31 +202,41 @@ bool Text::parse(const StringView& str)
             }
             break;
         case '[':
-            ASSERT(first_span_in_the_current_link == -1);
+            if (first_span_in_the_current_link != -1)
+                dbg() << "Dropping the outer link";
             first_span_in_the_current_link = m_spans.size();
             break;
         case ']': {
-            ASSERT(first_span_in_the_current_link != -1);
-            ASSERT(offset + 2 < str.length());
-            offset++;
-            ASSERT(str[offset] == '(');
-            offset++;
+            if (first_span_in_the_current_link == -1) {
+                dbg() << "Unmatched ]";
+                continue;
+            }
+            ScopeGuard guard = [&] {
+                first_span_in_the_current_link = -1;
+            };
+            if (offset + 2 >= str.length() || str[offset + 1] != '(')
+                continue;
+            offset += 2;
             size_t start_of_href = offset;
 
             do
                 offset++;
             while (offset < str.length() && str[offset] != ')');
+            if (offset == str.length())
+                offset--;
 
             const StringView href = str.substring_view(start_of_href, offset - start_of_href);
             for (size_t i = first_span_in_the_current_link; i < m_spans.size(); i++)
                 m_spans[i].style.href = href;
-            first_span_in_the_current_link = -1;
             break;
         }
         default:
             ASSERT_NOT_REACHED();
         }
 
+        // We've processed the character as a special, so the next offset will
+        // start after it. Note that explicit continue statements skip over this
+        // line, effectively treating the character as not special.
         current_span_start = offset + 1;
     }
 
