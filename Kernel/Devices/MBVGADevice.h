@@ -38,7 +38,7 @@ class MBVGADevice final : public BlockDevice {
 public:
     static MBVGADevice& the();
 
-    MBVGADevice(PhysicalAddress addr, int pitch, int width, int height);
+    MBVGADevice(PhysicalAddress addr, size_t pitch, size_t width, size_t height);
 
     virtual int ioctl(FileDescription&, unsigned request, unsigned arg) override;
     virtual KResultOr<Region*> mmap(Process&, FileDescription&, VirtualAddress preferred_vaddr, size_t offset, size_t, int prot, bool shared) override;
@@ -55,9 +55,9 @@ private:
     size_t framebuffer_size_in_bytes() const { return m_framebuffer_pitch * m_framebuffer_height; }
 
     PhysicalAddress m_framebuffer_address;
-    int m_framebuffer_pitch { 0 };
-    int m_framebuffer_width { 0 };
-    int m_framebuffer_height { 0 };
+    size_t m_framebuffer_pitch { 0 };
+    size_t m_framebuffer_width { 0 };
+    size_t m_framebuffer_height { 0 };
 };
 
 }
