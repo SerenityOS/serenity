@@ -36,11 +36,6 @@ ColorInput::ColorInput()
     : TextEditor(TextEditor::SingleLine)
 {
     set_readonly(true);
-
-    m_auto_repeat_timer = add<Core::Timer>();
-    m_auto_repeat_timer->on_timeout = [this] {
-        click();
-    };
 }
 
 ColorInput::~ColorInput()
@@ -64,11 +59,6 @@ void ColorInput::mousedown_event(MouseEvent& event)
         if (is_enabled()) {
             m_being_pressed = true;
             update();
-
-            if (m_auto_repeat_interval) {
-                click();
-                m_auto_repeat_timer->start(m_auto_repeat_interval);
-            }
         }
     }
 
@@ -78,13 +68,11 @@ void ColorInput::mousedown_event(MouseEvent& event)
 void ColorInput::mouseup_event(MouseEvent& event)
 {
     if (event.button() == MouseButton::Left) {
-        bool was_auto_repeating = m_auto_repeat_timer->is_active();
-        m_auto_repeat_timer->stop();
         if (is_enabled()) {
             bool was_being_pressed = m_being_pressed;
             m_being_pressed = false;
             update();
-            if (was_being_pressed && !was_auto_repeating)
+            if (was_being_pressed)
                 click();
         }
     }
