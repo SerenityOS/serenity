@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,6 +39,26 @@
 
 namespace JS {
 
+static StringObject* string_object_from(Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return nullptr;
+    if (!this_object->is_string_object()) {
+        interpreter.throw_exception<TypeError>("Not a String object");
+        return nullptr;
+    }
+    return static_cast<StringObject*>(this_object);
+}
+
+static String string_from(Interpreter& interpreter)
+{
+    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
+    if (!this_object)
+        return {};
+    return Value(this_object).to_string();
+}
+
 StringPrototype::StringPrototype()
     : StringObject(*js_string(interpreter(), String::empty()), *interpreter().global_object().object_prototype())
 {
@@ -53,7 +74,6 @@ StringPrototype::StringPrototype()
     put_native_function("toString", to_string, 0, attr);
     put_native_function("padStart", pad_start, 1, attr);
     put_native_function("padEnd", pad_end, 1, attr);
-
     put_native_function("trim", trim, 0, attr);
     put_native_function("trimStart", trim_start, 0, attr);
     put_native_function("trimEnd", trim_end, 0, attr);
@@ -68,43 +88,40 @@ StringPrototype::~StringPrototype()
 
 Value StringPrototype::char_at(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
-    if (!this_object)
+    auto string = string_from(interpreter);
+    if (string.is_null())
         return {};
     i32 index = 0;
     if (interpreter.argument_count())
         index = interpreter.argument(0).to_i32();
-    ASSERT(this_object->is_string_object());
-    auto underlying_string = static_cast<const StringObject*>(this_object)->primitive_string().string();
-    if (index < 0 || index >= static_cast<i32>(underlying_string.length()))
+    if (index < 0 || index >= static_cast<i32>(string.length()))
         return js_string(interpreter, String::empty());
-    return js_string(interpreter, underlying_string.substring(index, 1));
+    return js_string(interpreter, string.substring(index, 1));
 }
 
 Value StringPrototype::repeat(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
-    if (!this_object)
+    auto string = string_from(interpreter);
+    if (string.is_null())
         return {};
-    ASSERT(this_object->is_string_object());
     if (!interpreter.argument_count())
         return js_string(interpreter, String::empty());
-    if (interpreter.argument(0).to_double() < 0)
+    auto count_value = interpreter.argument(0).to_number();
+    if (count_value.as_double() < 0)
         return interpreter.throw_exception<RangeError>("repeat count must be a positive number");
-    if (interpreter.argument(0).to_number().is_infinity())
+    if (count_value.is_infinity())
         return interpreter.throw_exception<RangeError>("repeat count must be a finite number");
-    auto count = interpreter.argument(0).to_i32();
-    auto& string_object = static_cast<const StringObject&>(*this_object);
+    auto count = count_value.to_i32();
     StringBuilder builder;
     for (i32 i = 0; i < count; ++i)
-        builder.append(string_object.primitive_string().string());
+        builder.append(string);
     return js_string(interpreter, builder.to_string());
 }
 
 Value StringPrototype::starts_with(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
-    if (!this_object)
+    auto string = string_from(interpreter);
+    if (string.is_null())
         return {};
     if (!interpreter.argument_count())
         return Value(false);
@@ -116,59 +133,41 @@ Value StringPrototype::starts_with(Interpreter& interpreter)
         if (!number.is_nan())
             position = number.to_i32();
     }
-    ASSERT(this_object->is_string_object());
-    auto underlying_string = static_cast<const StringObject*>(this_object)->primitive_string().string();
-    auto underlying_string_length = static_cast<i32>(underlying_string.length());
-    auto start = min(max(position, 0), underlying_string_length);
-    if (start + search_string_length > underlying_string_length)
+    auto string_length = static_cast<i32>(string.length());
+    auto start = min(max(position, 0), string_length);
+    if (start + search_string_length > string_length)
         return Value(false);
     if (search_string_length == 0)
         return Value(true);
-    return Value(underlying_string.substring(start, search_string_length) == search_string);
+    return Value(string.substring(start, search_string_length) == search_string);
 }
 
 Value StringPrototype::index_of(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
-    if (!this_object)
+    auto string = string_from(interpreter);
+    if (string.is_null())
         return {};
-    if (!this_object->is_string_object())
-        return interpreter.throw_exception<TypeError>("Not a String object");
-
     Value needle_value = js_undefined();
     if (interpreter.argument_count() >= 1)
         needle_value = interpreter.argument(0);
     auto needle = needle_value.to_string();
-    auto haystack = static_cast<const StringObject*>(this_object)->primitive_string().string();
-    return Value((i32)haystack.index_of(needle).value_or(-1));
-}
-
-static StringObject* string_object_from(Interpreter& interpreter)
-{
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
-    if (!this_object)
-        return nullptr;
-    if (!this_object->is_string_object()) {
-        interpreter.throw_exception<TypeError>("Not a String object");
-        return nullptr;
-    }
-    return static_cast<StringObject*>(this_object);
+    return Value((i32)string.index_of(needle).value_or(-1));
 }
 
 Value StringPrototype::to_lowercase(Interpreter& interpreter)
 {
-    auto* string_object = string_object_from(interpreter);
-    if (!string_object)
+    auto string = string_from(interpreter);
+    if (string.is_null())
         return {};
-    return js_string(interpreter, string_object->primitive_string().string().to_lowercase());
+    return js_string(interpreter, string.to_lowercase());
 }
 
 Value StringPrototype::to_uppercase(Interpreter& interpreter)
 {
-    auto* string_object = string_object_from(interpreter);
-    if (!string_object)
+    auto string = string_from(interpreter);
+    if (string.is_null())
         return {};
-    return js_string(interpreter, string_object->primitive_string().string().to_uppercase());
+    return js_string(interpreter, string.to_uppercase());
 }
 
 Value StringPrototype::length_getter(Interpreter& interpreter)
@@ -192,15 +191,13 @@ enum class PadPlacement {
     End,
 };
 
-static Value pad_string(Interpreter& interpreter, Object* object, PadPlacement placement)
+static Value pad_string(Interpreter& interpreter, const String& string, PadPlacement placement)
 {
-    auto string = object->to_string().as_string().string();
-    if (interpreter.argument(0).to_number().is_nan()
-        || interpreter.argument(0).to_number().is_undefined()
-        || interpreter.argument(0).to_number().to_i32() < 0) {
+    auto max_length_value = interpreter.argument(0).to_number();
+    if (max_length_value.is_nan() || max_length_value.is_undefined() || max_length_value.as_double() < 0)
         return js_string(interpreter, string);
-    }
-    auto max_length = static_cast<size_t>(interpreter.argument(0).to_i32());
+
+    auto max_length = static_cast<size_t>(max_length_value.to_i32());
     if (max_length <= string.length())
         return js_string(interpreter, string);
 
@@ -224,18 +221,18 @@ static Value pad_string(Interpreter& interpreter, Object* object, PadPlacement p
 
 Value StringPrototype::pad_start(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
-    if (!this_object)
+    auto string = string_from(interpreter);
+    if (string.is_null())
         return {};
-    return pad_string(interpreter, this_object, PadPlacement::Start);
+    return pad_string(interpreter, string, PadPlacement::Start);
 }
 
 Value StringPrototype::pad_end(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
-    if (!this_object)
+    auto string = string_from(interpreter);
+    if (string.is_null())
         return {};
-    return pad_string(interpreter, this_object, PadPlacement::End);
+    return pad_string(interpreter, string, PadPlacement::End);
 }
 
 enum class TrimMode {
@@ -244,10 +241,8 @@ enum class TrimMode {
     Both
 };
 
-static Value trim_string(Interpreter& interpreter, const Object& object, TrimMode mode)
+static Value trim_string(Interpreter& interpreter, const String& string, TrimMode mode)
 {
-    auto& string = object.to_string().as_string().string();
-
     size_t substring_start = 0;
     size_t substring_length = string.length();
 
@@ -266,7 +261,7 @@ static Value trim_string(Interpreter& interpreter, const Object& object, TrimMod
     }
 
     if (substring_length == 0)
-        return js_string(interpreter, String(""));
+        return js_string(interpreter, "");
 
     if (mode == TrimMode::Right || mode == TrimMode::Both) {
         size_t count = 0;
@@ -284,54 +279,47 @@ static Value trim_string(Interpreter& interpreter, const Object& object, TrimMod
 
 Value StringPrototype::trim(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
-    if (!this_object)
+    auto string = string_from(interpreter);
+    if (string.is_null())
         return {};
-    return trim_string(interpreter, *this_object, TrimMode::Both);
+    return trim_string(interpreter, string, TrimMode::Both);
 }
 
 Value StringPrototype::trim_start(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
-    if (!this_object)
+    auto string = string_from(interpreter);
+    if (string.is_null())
         return {};
-    return trim_string(interpreter, *this_object, TrimMode::Left);
+    return trim_string(interpreter, string, TrimMode::Left);
 }
 
 Value StringPrototype::trim_end(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
-    if (!this_object)
+    auto string = string_from(interpreter);
+    if (string.is_null())
         return {};
-    return trim_string(interpreter, *this_object, TrimMode::Right);
+    return trim_string(interpreter, string, TrimMode::Right);
 }
 
 Value StringPrototype::concat(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
-    if (!this_object)
+    auto string = string_from(interpreter);
+    if (string.is_null())
         return {};
-    auto& string = this_object->to_string().as_string().string();
-
     StringBuilder builder;
     builder.append(string);
-
     for (size_t i = 0; i < interpreter.argument_count(); ++i) {
         auto string_argument = interpreter.argument(i).to_string();
         builder.append(string_argument);
     }
-
     return js_string(interpreter, builder.to_string());
 }
 
 Value StringPrototype::substring(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
-    if (!this_object)
+    auto string = string_from(interpreter);
+    if (string.is_null())
         return {};
-
-    auto& string = this_object->to_string().as_string().string();
-
     if (interpreter.argument_count() == 0)
         return js_string(interpreter, string);
 
@@ -373,11 +361,9 @@ Value StringPrototype::substring(Interpreter& interpreter)
 
 Value StringPrototype::includes(Interpreter& interpreter)
 {
-    auto* this_object = interpreter.this_value().to_object(interpreter.heap());
-    if (!this_object)
+    auto string = string_from(interpreter);
+    if (string.is_null())
         return {};
-
-    auto& string = this_object->to_string().as_string().string();
     auto search_string = interpreter.argument(0).to_string();
     i32 position = 0;
 
