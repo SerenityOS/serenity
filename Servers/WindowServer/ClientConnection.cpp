@@ -326,7 +326,7 @@ void ClientConnection::handle(const Messages::WindowServer::AsyncSetWallpaper& m
 
 OwnPtr<Messages::WindowServer::SetBackgroundColorResponse> ClientConnection::handle(const Messages::WindowServer::SetBackgroundColor& message)
 {
-    Compositor::the().set_backgound_color(message.background_color());
+    Compositor::the().set_background_color(message.background_color());
     return make<Messages::WindowServer::SetBackgroundColorResponse>();
 }
 

@@ -1284,7 +1284,7 @@ bool WindowManager::update_theme(String theme_path, String theme_name)
     ASSERT(new_theme);
     Gfx::set_system_theme(*new_theme);
     m_palette = Gfx::PaletteImpl::create_with_shared_buffer(*new_theme);
-    Compositor::the().set_backgound_color(palette().desktop_background().to_string());
+    Compositor::the().set_background_color(palette().desktop_background().to_string());
     HashTable<ClientConnection*> notified_clients;
     for_each_window([&](Window& window) {
         if (window.client()) {
