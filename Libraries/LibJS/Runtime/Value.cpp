@@ -92,7 +92,7 @@ bool Value::to_boolean() const
     case Type::Undefined:
         return false;
     case Type::String:
-        return !as_string()->string().is_empty();
+        return !as_string().string().is_empty();
     case Type::Object:
         return true;
     default:
@@ -144,7 +144,7 @@ Value Value::to_number() const
         return Value(0);
     case Type::String: {
         // FIXME: Trim whitespace beforehand
-        auto& string = as_string()->string();
+        auto& string = as_string().string();
         if (string.is_empty())
             return Value(0);
         if (string == "Infinity" || string == "+Infinity")
@@ -334,7 +334,7 @@ Value typed_eq(Interpreter&, Value lhs, Value rhs)
     case Value::Type::Number:
         return Value(lhs.as_double() == rhs.as_double());
     case Value::Type::String:
-        return Value(lhs.as_string()->string() == rhs.as_string()->string());
+        return Value(lhs.as_string().string() == rhs.as_string().string());
     case Value::Type::Boolean:
         return Value(lhs.as_bool() == rhs.as_bool());
     case Value::Type::Object:

@@ -194,7 +194,7 @@ enum class PadPlacement {
 
 static Value pad_string(Interpreter& interpreter, Object* object, PadPlacement placement)
 {
-    auto string = object->to_string().as_string()->string();
+    auto string = object->to_string().as_string().string();
     if (interpreter.argument(0).to_number().is_nan()
         || interpreter.argument(0).to_number().is_undefined()
         || interpreter.argument(0).to_number().to_i32() < 0) {
@@ -246,7 +246,7 @@ enum class TrimMode {
 
 static Value trim_string(Interpreter& interpreter, const Object& object, TrimMode mode)
 {
-    auto& string = object.to_string().as_string()->string();
+    auto& string = object.to_string().as_string().string();
 
     size_t substring_start = 0;
     size_t substring_length = string.length();
@@ -311,7 +311,7 @@ Value StringPrototype::concat(Interpreter& interpreter)
     auto* this_object = interpreter.this_value().to_object(interpreter.heap());
     if (!this_object)
         return {};
-    auto& string = this_object->to_string().as_string()->string();
+    auto& string = this_object->to_string().as_string().string();
 
     StringBuilder builder;
     builder.append(string);
@@ -330,7 +330,7 @@ Value StringPrototype::substring(Interpreter& interpreter)
     if (!this_object)
         return {};
 
-    auto& string = this_object->to_string().as_string()->string();
+    auto& string = this_object->to_string().as_string().string();
 
     if (interpreter.argument_count() == 0)
         return js_string(interpreter, string);
@@ -377,7 +377,7 @@ Value StringPrototype::includes(Interpreter& interpreter)
     if (!this_object)
         return {};
 
-    auto& string = this_object->to_string().as_string()->string();
+    auto& string = this_object->to_string().as_string().string();
     auto search_string = interpreter.argument(0).to_string();
     i32 position = 0;
 
