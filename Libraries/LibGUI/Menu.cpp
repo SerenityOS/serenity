@@ -71,9 +71,11 @@ void Menu::add_action(NonnullRefPtr<Action> action)
 #endif
 }
 
-void Menu::add_submenu(NonnullRefPtr<Menu> submenu)
+Menu& Menu::add_submenu(const String& name)
 {
-    m_items.append(make<MenuItem>(m_menu_id, move(submenu)));
+    auto submenu = Menu::construct(name);
+    m_items.append(make<MenuItem>(m_menu_id, submenu));
+    return submenu;
 }
 
 void Menu::add_separator()

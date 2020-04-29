@@ -146,14 +146,6 @@ HexEditorWidget::HexEditorWidget()
         GUI::Application::the().quit(0);
     }));
 
-    auto bytes_per_row_menu = GUI::Menu::construct("Bytes Per Row");
-    for (int i = 8; i <= 32; i += 8) {
-        bytes_per_row_menu->add_action(GUI::Action::create(String::number(i), [this, i](auto&) {
-            m_editor->set_bytes_per_row(i);
-            m_editor->update();
-        }));
-    }
-
     m_goto_decimal_offset_action = GUI::Action::create("Go To Offset (Decimal)...", { Mod_Ctrl | Mod_Shift, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GUI::Action&) {
         auto input_box = GUI::InputBox::construct("Enter Decimal offset:", "Go To", window());
         if (input_box->exec() == GUI::InputBox::ExecOK && !input_box->text_value().is_empty()) {
@@ -197,7 +189,13 @@ HexEditorWidget::HexEditorWidget()
     }));
 
     auto& view_menu = menubar->add_menu("View");
-    view_menu.add_submenu(move(bytes_per_row_menu));
+    auto& bytes_per_row_menu = view_menu.add_submenu("Bytes per row");
+    for (int i = 8; i <= 32; i += 8) {
+        bytes_per_row_menu.add_action(GUI::Action::create(String::number(i), [this, i](auto&) {
+            m_editor->set_bytes_per_row(i);
+            m_editor->update();
+        }));
+    }
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {

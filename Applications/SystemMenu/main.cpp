@@ -137,9 +137,8 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
 
         if (g_app_category_menus.contains(category))
             continue;
-        auto category_menu = GUI::Menu::construct(category);
-        system_menu->add_submenu(category_menu);
-        g_app_category_menus.set(category, move(category_menu));
+        auto& category_menu = system_menu->add_submenu(category);
+        g_app_category_menus.set(category, category_menu);
     }
 
     // Then we create and insert all the app menu items into the right place.
@@ -171,9 +170,8 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
 
     g_themes_group.set_exclusive(true);
     g_themes_group.set_unchecking_allowed(false);
-    g_themes_menu = GUI::Menu::construct("Themes");
 
-    system_menu->add_submenu(*g_themes_menu);
+    g_themes_menu = &system_menu->add_submenu("Themes");
 
     {
         Core::DirIterator dt("/res/themes", Core::DirIterator::SkipDots);

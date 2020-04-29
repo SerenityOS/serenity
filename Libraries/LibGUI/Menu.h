@@ -54,7 +54,7 @@ public:
 
     void add_action(NonnullRefPtr<Action>);
     void add_separator();
-    void add_submenu(NonnullRefPtr<Menu>);
+    Menu& add_submenu(const String& name);
 
     void popup(const Gfx::Point& screen_position);
     void dismiss();

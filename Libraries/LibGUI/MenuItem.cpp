@@ -37,7 +37,7 @@ MenuItem::MenuItem(unsigned menu_id, Type type)
 {
 }
 
-MenuItem::MenuItem(unsigned menu_id, NonnullRefPtr<Action>&& action)
+MenuItem::MenuItem(unsigned menu_id, NonnullRefPtr<Action> action)
     : m_type(Type::Action)
     , m_menu_id(menu_id)
     , m_action(move(action))
@@ -49,7 +49,7 @@ MenuItem::MenuItem(unsigned menu_id, NonnullRefPtr<Action>&& action)
         m_checked = m_action->is_checked();
 }
 
-MenuItem::MenuItem(unsigned menu_id, NonnullRefPtr<Menu>&& submenu)
+MenuItem::MenuItem(unsigned menu_id, NonnullRefPtr<Menu> submenu)
     : m_type(Type::Submenu)
     , m_menu_id(menu_id)
     , m_submenu(move(submenu))
