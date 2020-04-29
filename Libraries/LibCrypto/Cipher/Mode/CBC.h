@@ -119,6 +119,7 @@ namespace Cipher {
                 length -= block_size;
                 offset += block_size;
             }
+            out.trim(offset);
             this->prune_padding(out);
         }
     };

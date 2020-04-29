@@ -1,5 +1,6 @@
 #include <LibC/limits.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibCrypto/Authentication/HMAC.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
@@ -8,6 +9,7 @@
 #include <LibCrypto/Hash/SHA2.h>
 #include <LibCrypto/PK/RSA.h>
 #include <LibLine/Editor.h>
+#include <LibTLS/TLSv12.h>
 #include <stdio.h>
 
 static const char* secret_key = "WellHelloFreinds";
@@ -40,6 +42,9 @@ int hmac_sha512_tests();
 
 // Public-Key
 int rsa_tests();
+
+// TLS
+int tls_tests();
 
 // Big Integer
 int bigint_tests();
@@ -196,6 +201,7 @@ auto main(int argc, char** argv) -> int
         puts("these modes only contain tests");
         puts("\tbigint -- Run big integer test suite");
         puts("\tpk -- Run Public-key system tests");
+        puts("\ttls -- Run TLS tests");
         return 0;
     }
 
@@ -250,6 +256,9 @@ auto main(int argc, char** argv) -> int
     }
     if (mode_sv == "bigint") {
         return bigint_tests();
+    }
+    if (mode_sv == "tls") {
+        return tls_tests();
     }
     encrypting = mode_sv == "encrypt";
     if (encrypting || mode_sv == "decrypt") {
@@ -323,6 +332,8 @@ void rsa_test_der_parse();
 void rsa_test_encrypt_decrypt();
 void rsa_emsa_pss_test_create();
 void bigint_test_number_theory(); // FIXME: we should really move these num theory stuff out
+
+void tls_test_client_hello();
 
 void bigint_test_fibo500();
 void bigint_addition_edgecases();
@@ -966,6 +977,56 @@ void rsa_test_encrypt_decrypt()
     } else {
         PASS;
     }
+}
+
+int tls_tests()
+{
+    tls_test_client_hello();
+    return 0;
+}
+
+void tls_test_client_hello()
+{
+    I_TEST((TLS | Connect and Data Transfer));
+    Core::EventLoop loop;
+    RefPtr<TLS::TLSv12> tls = TLS::TLSv12::construct(nullptr);
+    bool sent_request = false;
+    ByteBuffer contents = ByteBuffer::create_uninitialized(0);
+    tls->on_tls_ready_to_write = [&](TLS::TLSv12& tls) {
+        if (sent_request)
+            return;
+        sent_request = true;
+        if (!tls.write("GET /SerenityOS/serenity HTTP/1.1\r\nHost: github.com\r\nConnection: close\r\n\r\n"_b)) {
+            FAIL(write() failed);
+            loop.quit(0);
+        }
+    };
+    tls->on_tls_ready_to_read = [&](TLS::TLSv12& tls) {
+        auto data = tls.read();
+        if (!data.has_value()) {
+            FAIL(No data received);
+            loop.quit(1);
+        } else {
+            //            print_buffer(data.value(), 16);
+            contents.append(data.value().data(), data.value().size());
+        }
+    };
+    tls->on_tls_finished = [&] {
+        PASS;
+        auto file = Core::File::open("foo.response", Core::IODevice::WriteOnly);
+        file->write(contents);
+        file->close();
+        loop.quit(0);
+    };
+    tls->on_tls_error = [&](TLS::AlertDescription) {
+        FAIL(Connection failure);
+        loop.quit(1);
+    };
+    if (!tls->connect("github.com", 443)) {
+        FAIL(connect() failed);
+        return;
+    }
+    loop.exec();
 }
 
 int bigint_tests()
