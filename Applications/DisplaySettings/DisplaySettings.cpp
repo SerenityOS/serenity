@@ -218,6 +218,7 @@ void DisplaySettingsWidget::create_frame()
     color_label.set_text("Color Name:");
 
     m_color_input = color_selection_container.add<GUI::ColorInput>();
+    m_color_input->set_color_has_alpha_channel(false);
     m_color_input->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     m_color_input->set_preferred_size(90, 0);
     m_color_input->set_color_picker_title("Select color for desktop");
