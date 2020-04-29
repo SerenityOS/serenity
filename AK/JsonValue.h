@@ -172,6 +172,18 @@ public:
         return *m_value.as_array;
     }
 
+    JsonObject& as_object()
+    {
+        ASSERT(is_object());
+        return *m_value.as_object;
+    }
+
+    JsonArray& as_array()
+    {
+        ASSERT(is_array());
+        return *m_value.as_array;
+    }
+
 #if !defined(KERNEL) && !defined(BOOTSTRAPPER)
     double as_double() const
     {
