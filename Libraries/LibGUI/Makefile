@@ -30,6 +30,8 @@ OBJS = \
     Icon.o \
     InputBox.o \
     ItemView.o \
+    INILexer.o \
+    INISyntaxHighlighter.o \
     JsonArrayModel.o \
     JSSyntaxHighlighter.o \
     Label.o \
