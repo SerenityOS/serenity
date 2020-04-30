@@ -49,6 +49,7 @@ Lexer::Lexer(StringView source)
         s_keywords.set("class", TokenType::Class);
         s_keywords.set("const", TokenType::Const);
         s_keywords.set("continue", TokenType::Continue);
+        s_keywords.set("debugger", TokenType::Debugger);
         s_keywords.set("default", TokenType::Default);
         s_keywords.set("delete", TokenType::Delete);
         s_keywords.set("do", TokenType::Do);

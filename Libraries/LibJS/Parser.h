@@ -61,6 +61,7 @@ public:
     NonnullRefPtr<ContinueStatement> parse_continue_statement();
     NonnullRefPtr<DoWhileStatement> parse_do_while_statement();
     NonnullRefPtr<WhileStatement> parse_while_statement();
+    NonnullRefPtr<DebuggerStatement> parse_debugger_statement();
     NonnullRefPtr<ConditionalExpression> parse_conditional_expression(NonnullRefPtr<Expression> test);
 
     NonnullRefPtr<Expression> parse_expression(int min_precedence, Associativity associate = Associativity::Right);

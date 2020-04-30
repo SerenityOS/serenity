@@ -1396,6 +1396,12 @@ Value SequenceExpression::execute(Interpreter& interpreter) const
     return last_value;
 }
 
+Value DebuggerStatement::execute(Interpreter&) const
+{
+    dbg() << "Sorry, no JavaScript debugger available (yet)!";
+    return js_undefined();
+}
+
 void ScopeNode::add_variables(NonnullRefPtrVector<VariableDeclaration> variables)
 {
     m_variables.append(move(variables));

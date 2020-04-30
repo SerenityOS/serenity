@@ -102,6 +102,7 @@ static TextStyle style_for_token_type(Gfx::Palette palette, JS::TokenType type)
     case JS::TokenType::Class:
     case JS::TokenType::Const:
     case JS::TokenType::Delete:
+    case JS::TokenType::Debugger:
     case JS::TokenType::Function:
     case JS::TokenType::In:
     case JS::TokenType::Instanceof:
