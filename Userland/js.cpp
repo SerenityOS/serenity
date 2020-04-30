@@ -392,7 +392,7 @@ void sigint_handler()
 int main(int argc, char** argv)
 {
     bool gc_on_every_allocation = false;
-    bool syntax_highlight = false;
+    bool disable_syntax_highlight = false;
     bool test_mode = false;
     const char* script_path = nullptr;
 
@@ -400,10 +400,12 @@ int main(int argc, char** argv)
     args_parser.add_option(s_dump_ast, "Dump the AST", "dump-ast", 'A');
     args_parser.add_option(s_print_last_result, "Print last result", "print-last-result", 'l');
     args_parser.add_option(gc_on_every_allocation, "GC on every allocation", "gc-on-every-allocation", 'g');
-    args_parser.add_option(syntax_highlight, "Enable live syntax highlighting", "syntax-highlight", 's');
+    args_parser.add_option(disable_syntax_highlight, "Disable live syntax highlighting", "no-syntax-highlight", 's');
     args_parser.add_option(test_mode, "Run the interpreter with added functionality for the test harness", "test-mode", 't');
     args_parser.add_positional_argument(script_path, "Path to script file", "script", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
+
+    bool syntax_highlight = !disable_syntax_highlight;
 
     OwnPtr<JS::Interpreter> interpreter;
 
