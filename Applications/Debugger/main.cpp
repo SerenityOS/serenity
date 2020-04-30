@@ -170,7 +170,7 @@ void print_help()
            "cont - Continue execution\n"
            "si - step to the next instruction\n"
            "sl - step to the next source line\n"
-           "line - show the position of the current instruction in the source code"
+           "line - show the position of the current instruction in the source code\n"
            "regs - Print registers\n"
            "dis [number of instructions] - Print disassembly\n"
            "bp <address/symbol/file:line> - Insert a breakpoint\n");
