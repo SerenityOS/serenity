@@ -532,6 +532,7 @@ int main(int argc, char** argv)
                     break;
                 case JS::TokenType::Class:
                 case JS::TokenType::Const:
+                case JS::TokenType::Debugger:
                 case JS::TokenType::Delete:
                 case JS::TokenType::Function:
                 case JS::TokenType::In:
