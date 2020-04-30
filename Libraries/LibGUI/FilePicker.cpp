@@ -99,7 +99,11 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
 
     auto& toolbar = upper_container.add<ToolBar>();
     toolbar.set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+#ifdef MULTIVIEW_WITH_COLUMNSVIEW
     toolbar.set_preferred_size(165, 0);
+#else
+    toolbar.set_preferred_size(140, 0);
+#endif
     toolbar.set_has_frame(false);
 
     auto& location_textbox = upper_container.add<TextBox>();
