@@ -271,8 +271,10 @@ void Tab::update_bookmark_button(const String& url)
 {
     if (BookmarksBarWidget::the().contains_bookmark(url)) {
         m_bookmark_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/star-yellow.png"));
+        m_bookmark_button->set_tooltip("Remove Bookmark");
     } else {
         m_bookmark_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/star-contour.png"));
+        m_bookmark_button->set_tooltip("Add Bookmark");
     }
 }
 
