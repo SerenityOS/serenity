@@ -1135,7 +1135,7 @@ int main(int argc, char** argv)
             // e.g. in `cd /foo/bar', 'bar' is the invariant
             //      since we are not suggesting anything starting with
             //      `/foo/', but rather just `bar...'
-            editor.suggest(token_to_complete.length(), 0);
+            editor.suggest(escape_token(token).length(), 0);
 
             // only suggest dot-files if path starts with a dot
             Core::DirIterator files(path,
@@ -1185,7 +1185,7 @@ int main(int argc, char** argv)
         }
         suggestions.append({ cached_path[index], " " });
 
-        editor.suggest(token_to_complete.length(), 0);
+        editor.suggest(escape_token(token).length(), 0);
 
         return suggestions;
     };
@@ -1216,7 +1216,7 @@ int main(int argc, char** argv)
         // e.g. in `cd /foo/bar', 'bar' is the invariant
         //      since we are not suggesting anything starting with
         //      `/foo/', but rather just `bar...'
-        editor.suggest(token_to_complete.length(), 0);
+        editor.suggest(escape_token(token).length(), 0);
 
         // only suggest dot-files if path starts with a dot
         Core::DirIterator files(path,
