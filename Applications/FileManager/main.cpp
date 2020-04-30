@@ -100,8 +100,11 @@ int main(int argc, char** argv)
     // 3. the root directory
     String initial_location;
 
-    if (argc >= 2)
-        initial_location = argv[1];
+    if (argc >= 2) {
+        char* buffer = realpath(argv[1], nullptr);
+        initial_location = buffer;
+        free(buffer);
+    }
 
     if (initial_location.is_empty())
         initial_location = Core::StandardPaths::home_directory();
