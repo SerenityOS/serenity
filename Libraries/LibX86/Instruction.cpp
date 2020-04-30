@@ -830,6 +830,10 @@ void build_opcode_tables_if_needed()
     build0F(0xBD, "BSR", OP_reg16_RM16, OP_reg32_RM32);
     build0F(0xBE, "MOVSX", OP_reg16_RM8, OP_reg32_RM8);
     build0F(0xBF, "0xBF", OP, "MOVSX", OP_reg32_RM16);
+
+    for (u8 i = 0xc8; i <= 0xcf; ++i)
+        build0F(i, "BSWAP", OP_reg32);
+
     build0F(0xFC, "PADDB", OP_mm1_mm2m64);
     build0F(0xFD, "PADDW", OP_mm1_mm2m64);
     build0F(0xFE, "PADDD", OP_mm1_mm2m64);
@@ -928,7 +932,10 @@ Instruction::Instruction(InstructionStream& stream, bool o32, bool a32)
         m_modrm.decode(stream, m_a32);
         m_register_index = (m_modrm.m_rm >> 3) & 7;
     } else {
-        m_register_index = m_op & 7;
+        if (m_has_sub_op)
+            m_register_index = m_sub_op & 7;
+        else
+            m_register_index = m_op & 7;
     }
 
     bool hasSlash = m_descriptor->format == MultibyteWithSlash;
