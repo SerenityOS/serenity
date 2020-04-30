@@ -46,6 +46,10 @@ set(SOURCES
     Runtime/StringConstructor.cpp
     Runtime/StringObject.cpp
     Runtime/StringPrototype.cpp
+    Runtime/Symbol.cpp
+    Runtime/SymbolConstructor.cpp
+    Runtime/SymbolObject.cpp
+    Runtime/SymbolPrototype.cpp
     Runtime/Uint8ClampedArray.cpp
     Runtime/Value.cpp
     Token.cpp

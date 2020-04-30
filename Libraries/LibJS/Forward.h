@@ -34,7 +34,8 @@
     __JS_ENUMERATE(Function, function, FunctionPrototype, FunctionConstructor)   \
     __JS_ENUMERATE(NumberObject, number, NumberPrototype, NumberConstructor)     \
     __JS_ENUMERATE(Object, object, ObjectPrototype, ObjectConstructor)           \
-    __JS_ENUMERATE(StringObject, string, StringPrototype, StringConstructor)
+    __JS_ENUMERATE(StringObject, string, StringPrototype, StringConstructor)     \
+    __JS_ENUMERATE(SymbolObject, symbol, SymbolPrototype, SymbolConstructor)
 
 #define JS_ENUMERATE_ERROR_SUBCLASSES                                                                   \
     __JS_ENUMERATE(EvalError, eval_error, EvalErrorPrototype, EvalErrorConstructor)                     \
@@ -70,6 +71,7 @@ class Reference;
 class ScopeNode;
 class Shape;
 class Statement;
+class Symbol;
 class Uint8ClampedArray;
 class Value;
 enum class DeclarationKind;

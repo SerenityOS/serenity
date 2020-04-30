@@ -36,7 +36,9 @@
 #include <LibJS/Runtime/NumberObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/Symbol.h>
 #include <LibJS/Runtime/StringObject.h>
+#include <LibJS/Runtime/SymbolObject.h>
 #include <LibJS/Runtime/Value.h>
 #include <math.h>
 
@@ -87,6 +89,9 @@ String Value::to_string_without_side_effects() const
     if (is_string())
         return m_value.as_string->string();
 
+    if (is_symbol())
+        return as_symbol().to_string();
+
     ASSERT(is_object());
     return String::format("[object %s]", as_object().class_name());
 }
@@ -124,6 +129,11 @@ String Value::to_string(Interpreter& interpreter) const
         return String::format("%.4f", as_double());
     }
 
+    if (is_symbol()) {
+        interpreter.throw_exception<TypeError>("Can't convert symbol to string");
+        return {};
+    }
+
     if (is_object()) {
         auto primitive_value = as_object().to_primitive(Object::PreferredType::String);
         // FIXME: Maybe we should pass in the Interpreter& and call interpreter.exception() instead?
@@ -152,6 +162,7 @@ bool Value::to_boolean() const
     case Type::String:
         return !as_string().string().is_empty();
     case Type::Object:
+    case Type::Symbol:
         return true;
     default:
         ASSERT_NOT_REACHED();
@@ -172,6 +183,9 @@ Object* Value::to_object(Heap& heap) const
 
     if (is_string())
         return StringObject::create(heap.interpreter().global_object(), *m_value.as_string);
+
+    if (is_symbol())
+        return SymbolObject::create(heap.interpreter().global_object(), *m_value.as_symbol);
 
     if (is_number())
         return NumberObject::create(heap.interpreter().global_object(), m_value.as_double);
@@ -216,6 +230,9 @@ Value Value::to_number() const
             return js_nan();
         return Value(parsed_double);
     }
+    case Type::Symbol:
+        // FIXME: Get access to the interpreter and throw a TypeError
+        ASSERT_NOT_REACHED();
     case Type::Object:
         return m_value.as_object->to_primitive(Object::PreferredType::Number).to_number();
     }
@@ -473,6 +490,8 @@ bool same_value_non_numeric(Interpreter&, Value lhs, Value rhs)
         return true;
     case Value::Type::String:
         return lhs.as_string().string() == rhs.as_string().string();
+    case Value::Type::Symbol:
+        return &lhs.as_symbol() == &rhs.as_symbol();
     case Value::Type::Boolean:
         return lhs.as_bool() == rhs.as_bool();
     case Value::Type::Object:
@@ -520,10 +539,10 @@ bool abstract_eq(Interpreter& interpreter, Value lhs, Value rhs)
     if (rhs.is_boolean())
         return abstract_eq(interpreter, lhs, rhs.to_number());
 
-    if ((lhs.is_string() || lhs.is_number()) && rhs.is_object())
+    if ((lhs.is_string() || lhs.is_number() || lhs.is_symbol()) && rhs.is_object())
         return abstract_eq(interpreter, lhs, rhs.to_primitive(interpreter));
 
-    if (lhs.is_object() && (rhs.is_string() || rhs.is_number()))
+    if (lhs.is_object() && (rhs.is_string() || rhs.is_number() || rhs.is_symbol()))
         return abstract_eq(interpreter, lhs.to_primitive(interpreter), rhs);
 
     return false;

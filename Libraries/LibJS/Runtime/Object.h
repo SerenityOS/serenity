@@ -89,6 +89,7 @@ public:
     virtual bool is_bound_function() const { return false; }
     virtual bool is_native_property() const { return false; }
     virtual bool is_string_object() const { return false; }
+    virtual bool is_symbol_object() const { return false; }
 
     virtual const char* class_name() const override { return "Object"; }
     virtual void visit_children(Cell::Visitor&) override;
