@@ -55,7 +55,7 @@ bool spawn(String executable, String argument)
     if (child_pid == 0) {
         if (execl(executable.characters(), executable.characters(), argument.characters(), nullptr) < 0) {
             perror("execl");
-            return false;
+            exit(1);
         }
         ASSERT_NOT_REACHED();
     }
