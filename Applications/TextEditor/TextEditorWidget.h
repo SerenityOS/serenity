@@ -87,6 +87,7 @@ private:
     RefPtr<GUI::Action> m_plain_text_highlight;
     RefPtr<GUI::Action> m_cpp_highlight;
     RefPtr<GUI::Action> m_js_highlight;
+    RefPtr<GUI::Action> m_ini_highlight;
 
     RefPtr<Web::HtmlView> m_html_view;
 
