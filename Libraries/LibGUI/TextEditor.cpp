@@ -1198,11 +1198,13 @@ void TextEditor::paste()
 {
     if (is_readonly())
         return;
-    auto paste_text = Clipboard::the().data();
-    printf("Paste: \"%s\"\n", paste_text.characters());
+    auto [data, type] = Clipboard::the().data_and_type();
+    if (type != "text")
+        return;
+    printf("Paste: \"%s\"\n", data.characters());
 
     TemporaryChange change(m_automatic_indentation_enabled, false);
-    insert_at_cursor_or_replace_selection(paste_text);
+    insert_at_cursor_or_replace_selection(data);
 }
 
 void TextEditor::enter_event(Core::Event&)
