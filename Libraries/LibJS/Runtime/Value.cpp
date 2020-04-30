@@ -183,6 +183,16 @@ double Value::to_double() const
     return to_number().as_double();
 }
 
+size_t Value::to_size_t() const
+{
+    if (is_empty())
+        return 0;
+    auto number = to_number();
+    if (number.is_nan() || number.as_double() <= 0)
+        return 0;
+    return min(number.to_i32(), (i32)pow(2, 53) - 1);
+}
+
 Value greater_than(Interpreter&, Value lhs, Value rhs)
 {
     return Value(lhs.to_number().as_double() > rhs.to_number().as_double());
@@ -313,7 +323,7 @@ Value mod(Interpreter&, Value lhs, Value rhs)
 
     double index = lhs.to_number().as_double();
     double period = rhs.to_number().as_double();
-    double trunc = (double)(i32) (index / period);
+    double trunc = (double)(i32)(index / period);
 
     return Value(index - trunc * period);
 }

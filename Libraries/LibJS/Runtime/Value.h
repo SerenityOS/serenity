@@ -162,6 +162,7 @@ public:
     Value to_number() const;
     i32 to_i32() const;
     double to_double() const;
+    size_t to_size_t() const;
     Value to_primitive(Interpreter&) const;
 
     Object* to_object(Heap&) const;
