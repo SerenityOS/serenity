@@ -219,6 +219,7 @@ private:
         m_old_prompt_length = m_cached_prompt_length;
         m_refresh_needed = true;
         m_cursor = 0;
+        m_inline_search_cursor = 0;
     }
 
     void refresh_display();
