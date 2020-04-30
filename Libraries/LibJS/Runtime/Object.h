@@ -55,9 +55,9 @@ public:
     Value get(const FlyString& property_name) const;
     Value get(PropertyName) const;
 
-    virtual void put_by_index(i32 property_index, Value, u8 attributes = default_attributes);
-    void put(const FlyString& property_name, Value, u8 attributes = default_attributes);
-    void put(PropertyName, Value, u8 attributes = default_attributes);
+    virtual bool put_by_index(i32 property_index, Value, u8 attributes = default_attributes);
+    bool put(const FlyString& property_name, Value, u8 attributes = default_attributes);
+    bool put(PropertyName, Value, u8 attributes = default_attributes);
 
     Value get_own_property(const Object& this_object, const FlyString& property_name) const;
 
@@ -73,10 +73,10 @@ public:
         DefineProperty,
     };
 
-    void put_own_property(Object& this_object, const FlyString& property_name, u8 attributes, Value, PutOwnPropertyMode);
+    bool put_own_property(Object& this_object, const FlyString& property_name, u8 attributes, Value, PutOwnPropertyMode);
 
-    void put_native_function(const FlyString& property_name, AK::Function<Value(Interpreter&)>, i32 length = 0, u8 attribute = default_attributes);
-    void put_native_property(const FlyString& property_name, AK::Function<Value(Interpreter&)> getter, AK::Function<void(Interpreter&, Value)> setter, u8 attribute = default_attributes);
+    bool put_native_function(const FlyString& property_name, AK::Function<Value(Interpreter&)>, i32 length = 0, u8 attribute = default_attributes);
+    bool put_native_property(const FlyString& property_name, AK::Function<Value(Interpreter&)> getter, AK::Function<void(Interpreter&, Value)> setter, u8 attribute = default_attributes);
 
     virtual bool is_array() const { return false; }
     virtual bool is_boolean() const { return false; }
