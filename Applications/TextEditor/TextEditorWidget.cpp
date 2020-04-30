@@ -553,7 +553,7 @@ void TextEditorWidget::update_markdown_preview()
     Markdown::Document document;
     if (document.parse(m_editor->text())) {
         auto html = document.render_to_html();
-        auto html_document = Web::parse_html_document(html);
+        auto html_document = Web::parse_html_document(html, URL::create_with_file_protocol(m_path));
         m_html_view->set_document(html_document);
     }
 }
