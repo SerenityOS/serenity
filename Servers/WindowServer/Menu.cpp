@@ -187,8 +187,8 @@ void Menu::draw()
     Gfx::Painter painter(*menu_window()->backing_store());
 
     Gfx::Rect rect { {}, menu_window()->size() };
-    painter.fill_rect(rect.shrunken(6, 6), palette.menu_base());
     Gfx::StylePainter::paint_window_frame(painter, rect, palette);
+    painter.fill_rect(rect.shrunken(6, 6), palette.menu_base());
     int width = this->content_width();
 
     if (!s_checked_bitmap)
