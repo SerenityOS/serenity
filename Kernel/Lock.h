@@ -77,14 +77,14 @@ private:
 
 class Locker {
 public:
-    [[gnu::always_inline]] inline explicit Locker(Lock& l, Lock::Mode mode = Lock::Mode::Exclusive)
+    ALWAYS_INLINE explicit Locker(Lock& l, Lock::Mode mode = Lock::Mode::Exclusive)
         : m_lock(l)
     {
         m_lock.lock(mode);
     }
-    [[gnu::always_inline]] inline ~Locker() { unlock(); }
-    [[gnu::always_inline]] inline void unlock() { m_lock.unlock(); }
-    [[gnu::always_inline]] inline void lock(Lock::Mode mode = Lock::Mode::Exclusive) { m_lock.lock(mode); }
+    ALWAYS_INLINE ~Locker() { unlock(); }
+    ALWAYS_INLINE void unlock() { m_lock.unlock(); }
+    ALWAYS_INLINE void lock(Lock::Mode mode = Lock::Mode::Exclusive) { m_lock.lock(mode); }
 
 private:
     Lock& m_lock;

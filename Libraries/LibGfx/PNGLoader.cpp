@@ -204,7 +204,7 @@ RefPtr<Gfx::Bitmap> load_png_from_memory(const u8* data, size_t length)
     return bitmap;
 }
 
-[[gnu::always_inline]] static inline u8 paeth_predictor(int a, int b, int c)
+ALWAYS_INLINE static u8 paeth_predictor(int a, int b, int c)
 {
     int p = a + b - c;
     int pa = abs(p - a);
@@ -231,7 +231,7 @@ union [[gnu::packed]] Pixel
 static_assert(sizeof(Pixel) == 4);
 
 template<bool has_alpha, u8 filter_type>
-[[gnu::always_inline]] static inline void unfilter_impl(Gfx::Bitmap& bitmap, int y, const void* dummy_scanline_data)
+ALWAYS_INLINE static void unfilter_impl(Gfx::Bitmap& bitmap, int y, const void* dummy_scanline_data)
 {
     auto* dummy_scanline = (const Pixel*)dummy_scanline_data;
     if constexpr (filter_type == 0) {
@@ -312,7 +312,7 @@ template<bool has_alpha, u8 filter_type>
     }
 }
 
-[[gnu::noinline]] static void unfilter(PNGLoadingContext& context)
+NEVER_INLINE FLATTEN static void unfilter(PNGLoadingContext& context)
 {
     // First unpack the scanlines to RGBA:
     switch (context.color_type) {

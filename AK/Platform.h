@@ -36,6 +36,21 @@
 
 #define ARCH(arch) (defined(AK_ARCH_##arch) && AK_ARCH_##arch)
 
+#ifdef ALWAYS_INLINE
+#undef ALWAYS_INLINE
+#endif
+#define ALWAYS_INLINE [[gnu::always_inline]] inline
+
+#ifdef NEVER_INLINE
+#undef NEVER_INLINE
+#endif
+#define NEVER_INLINE [[gnu::noinline]]
+
+#ifdef FLATTEN
+#undef FLATTEN
+#endif
+#define FLATTEN [[gnu::flatten]]
+
 // FIXME: Re-enable this when we can figure out why Clang gets confused about "unknown"
 #if 0
 #    define CONSUMABLE(initial_state) __attribute__((consumable(initial_state)))
@@ -70,7 +85,7 @@ inline int open_with_path_length(const char* path, size_t path_length, int optio
 #endif
 
 template<typename T>
-[[gnu::always_inline]] inline T convert_between_host_and_network(T value)
+ALWAYS_INLINE T convert_between_host_and_network(T value)
 {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     if constexpr (sizeof(T) == 8)
@@ -86,7 +101,7 @@ template<typename T>
 #endif
 }
 
-[[gnu::always_inline]] inline int count_trailing_zeroes_32(unsigned int val)
+ALWAYS_INLINE int count_trailing_zeroes_32(unsigned int val)
 {
 #if defined(__GNUC__) || defined(__clang__)
         return __builtin_ctz(val);

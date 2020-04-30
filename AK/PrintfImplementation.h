@@ -42,7 +42,7 @@ extern "C" size_t strlen(const char*);
 #endif
 
 template<typename PutChFunc, typename T>
-[[gnu::always_inline]] inline int print_hex(PutChFunc putch, char*& bufptr, T number, bool upper_case, bool alternate_form, bool left_pad, bool zeroPad, u8 width)
+ALWAYS_INLINE int print_hex(PutChFunc putch, char*& bufptr, T number, bool upper_case, bool alternate_form, bool left_pad, bool zeroPad, u8 width)
 {
     int ret = 0;
 
@@ -96,7 +96,7 @@ template<typename PutChFunc, typename T>
 }
 
 template<typename PutChFunc>
-[[gnu::always_inline]] inline int print_number(PutChFunc putch, char*& bufptr, u32 number, bool leftPad, bool zeroPad, u32 fieldWidth)
+ALWAYS_INLINE int print_number(PutChFunc putch, char*& bufptr, u32 number, bool leftPad, bool zeroPad, u32 fieldWidth)
 {
     u32 divisor = 1000000000;
     char ch;
@@ -137,7 +137,7 @@ template<typename PutChFunc>
 }
 
 template<typename PutChFunc>
-[[gnu::always_inline]] inline int print_u64(PutChFunc putch, char*& bufptr, u64 number, bool leftPad, bool zeroPad, u32 fieldWidth)
+ALWAYS_INLINE int print_u64(PutChFunc putch, char*& bufptr, u64 number, bool leftPad, bool zeroPad, u32 fieldWidth)
 {
     u64 divisor = 10000000000000000000LLU;
     char ch;
@@ -178,7 +178,7 @@ template<typename PutChFunc>
 }
 
 template<typename PutChFunc>
-[[gnu::always_inline]] inline int print_double(PutChFunc putch, char*& bufptr, double number, bool leftPad, bool zeroPad, u32 fieldWidth, u32 fraction_length = 6)
+ALWAYS_INLINE int print_double(PutChFunc putch, char*& bufptr, double number, bool leftPad, bool zeroPad, u32 fieldWidth, u32 fraction_length = 6)
 {
     int length = 0;
 
@@ -200,7 +200,7 @@ template<typename PutChFunc>
 }
 
 template<typename PutChFunc>
-[[gnu::always_inline]] inline int print_i64(PutChFunc putch, char*& bufptr, i64 number, bool leftPad, bool zeroPad, u32 fieldWidth)
+ALWAYS_INLINE int print_i64(PutChFunc putch, char*& bufptr, i64 number, bool leftPad, bool zeroPad, u32 fieldWidth)
 {
     if (number < 0) {
         putch(bufptr, '-');
@@ -210,7 +210,7 @@ template<typename PutChFunc>
 }
 
 template<typename PutChFunc>
-[[gnu::always_inline]] inline int print_octal_number(PutChFunc putch, char*& bufptr, u32 number, bool leftPad, bool zeroPad, u32 fieldWidth)
+ALWAYS_INLINE int print_octal_number(PutChFunc putch, char*& bufptr, u32 number, bool leftPad, bool zeroPad, u32 fieldWidth)
 {
     u32 divisor = 134217728;
     char ch;
@@ -251,7 +251,7 @@ template<typename PutChFunc>
 }
 
 template<typename PutChFunc>
-[[gnu::always_inline]] inline int print_string(PutChFunc putch, char*& bufptr, const char* str, bool left_pad, size_t field_width, bool dot)
+ALWAYS_INLINE int print_string(PutChFunc putch, char*& bufptr, const char* str, bool left_pad, size_t field_width, bool dot)
 {
     size_t len = strlen(str);
     if (!dot && (!field_width || field_width < len))
@@ -273,7 +273,7 @@ template<typename PutChFunc>
 }
 
 template<typename PutChFunc>
-[[gnu::always_inline]] inline int print_signed_number(PutChFunc putch, char*& bufptr, int number, bool leftPad, bool zeroPad, u32 fieldWidth, bool always_sign)
+ALWAYS_INLINE int print_signed_number(PutChFunc putch, char*& bufptr, int number, bool leftPad, bool zeroPad, u32 fieldWidth, bool always_sign)
 {
     if (number < 0) {
         putch(bufptr, '-');
@@ -285,7 +285,7 @@ template<typename PutChFunc>
 }
 
 template<typename PutChFunc>
-[[gnu::always_inline]] inline int printf_internal(PutChFunc putch, char* buffer, const char*& fmt, va_list ap)
+ALWAYS_INLINE int printf_internal(PutChFunc putch, char* buffer, const char*& fmt, va_list ap)
 {
     const char* p;
 

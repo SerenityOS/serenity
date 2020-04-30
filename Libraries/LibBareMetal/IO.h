@@ -118,7 +118,7 @@ public:
     void mask(u16 m) { m_address &= m; }
 
     template<typename T>
-    [[gnu::always_inline]] inline T in()
+    ALWAYS_INLINE T in()
     {
         if constexpr (sizeof(T) == 4)
             return IO::in32(get());
@@ -130,7 +130,7 @@ public:
     }
 
     template<typename T>
-    [[gnu::always_inline]] inline void out(T value)
+    ALWAYS_INLINE void out(T value)
     {
         if constexpr (sizeof(T) == 4) {
             IO::out32(get(), value);

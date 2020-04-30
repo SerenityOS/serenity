@@ -38,20 +38,20 @@ class StringView {
 public:
     using ConstIterator = const char*;
 
-    [[gnu::always_inline]] inline StringView() { }
-    [[gnu::always_inline]] inline StringView(const char* characters, size_t length)
+    ALWAYS_INLINE StringView() { }
+    ALWAYS_INLINE StringView(const char* characters, size_t length)
         : m_characters(characters)
         , m_length(length)
     {
         ASSERT(!Checked<uintptr_t>::addition_would_overflow((uintptr_t)characters, length));
     }
-    [[gnu::always_inline]] inline StringView(const unsigned char* characters, size_t length)
+    ALWAYS_INLINE StringView(const unsigned char* characters, size_t length)
         : m_characters((const char*)characters)
         , m_length(length)
     {
         ASSERT(!Checked<uintptr_t>::addition_would_overflow((uintptr_t)characters, length));
     }
-    [[gnu::always_inline]] inline StringView(const char* cstring)
+    ALWAYS_INLINE StringView(const char* cstring)
         : m_characters(cstring)
         , m_length(cstring ? __builtin_strlen(cstring) : 0)
     {

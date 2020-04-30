@@ -50,20 +50,20 @@ private:
 
 class Locker {
 public:
-    [[gnu::always_inline]] inline explicit Locker(Lock& l)
+    ALWAYS_INLINE explicit Locker(Lock& l)
         : m_lock(l)
     {
         lock();
     }
-    [[gnu::always_inline]] inline ~Locker() { unlock(); }
-    [[gnu::always_inline]] inline void unlock() { m_lock.unlock(); }
-    [[gnu::always_inline]] inline void lock() { m_lock.lock(); }
+    ALWAYS_INLINE ~Locker() { unlock(); }
+    ALWAYS_INLINE void unlock() { m_lock.unlock(); }
+    ALWAYS_INLINE void lock() { m_lock.lock(); }
 
 private:
     Lock& m_lock;
 };
 
-[[gnu::always_inline]] inline void Lock::lock()
+ALWAYS_INLINE void Lock::lock()
 {
     int tid = gettid();
     if (m_holder == tid) {
