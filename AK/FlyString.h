@@ -56,7 +56,7 @@ public:
     const char* characters() const { return m_impl ? m_impl->characters() : nullptr; }
     size_t length() const { return m_impl ? m_impl->length() : 0; }
 
-    [[gnu::always_inline]] inline u32 hash() const { return m_impl ? m_impl->existing_hash() : 0; }
+    ALWAYS_INLINE u32 hash() const { return m_impl ? m_impl->existing_hash() : 0; }
 
     StringView view() const;
 

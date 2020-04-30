@@ -105,12 +105,12 @@ public:
         return *this;
     }
 
-    [[gnu::always_inline]] inline ~Optional()
+    ALWAYS_INLINE ~Optional()
     {
         clear();
     }
 
-    [[gnu::always_inline]] inline void clear()
+    ALWAYS_INLINE void clear()
     {
         if (m_has_value) {
             value().~T();
@@ -119,17 +119,17 @@ public:
     }
 
     SET_TYPESTATE(consumed)
-    [[gnu::always_inline]] inline bool has_value() const { return m_has_value; }
+    ALWAYS_INLINE bool has_value() const { return m_has_value; }
 
     CALLABLE_WHEN(consumed)
-    [[gnu::always_inline]] inline T& value()
+    ALWAYS_INLINE T& value()
     {
         ASSERT(m_has_value);
         return *reinterpret_cast<T*>(&m_storage);
     }
 
     CALLABLE_WHEN(consumed)
-    [[gnu::always_inline]] inline const T& value() const
+    ALWAYS_INLINE const T& value() const
     {
         return value_without_consume_state();
     }
@@ -144,7 +144,7 @@ public:
         return released_value;
     }
 
-    [[gnu::always_inline]] inline T value_or(const T& fallback) const
+    ALWAYS_INLINE T value_or(const T& fallback) const
     {
         if (m_has_value)
             return value();
@@ -153,7 +153,7 @@ public:
 
 private:
     // Call when we don't want to alter the consume state
-    [[gnu::always_inline]] inline const T& value_without_consume_state() const
+    ALWAYS_INLINE const T& value_without_consume_state() const
     {
         ASSERT(m_has_value);
         return *reinterpret_cast<const T*>(&m_storage);

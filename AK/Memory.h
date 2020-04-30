@@ -13,7 +13,7 @@
 extern "C" void* mmx_memcpy(void* to, const void* from, size_t);
 #endif
 
-[[gnu::always_inline]] inline void fast_u32_copy(u32* dest, const u32* src, size_t count)
+ALWAYS_INLINE void fast_u32_copy(u32* dest, const u32* src, size_t count)
 {
 #if defined(__serenity__) && !defined(KERNEL) && !defined(BOOTSTRAPPER)
     if (count >= 256) {
@@ -28,7 +28,7 @@ extern "C" void* mmx_memcpy(void* to, const void* from, size_t);
         : "memory");
 }
 
-[[gnu::always_inline]] inline void fast_u32_fill(u32* dest, u32 value, size_t count)
+ALWAYS_INLINE void fast_u32_fill(u32* dest, u32 value, size_t count)
 {
     asm volatile(
         "rep stosl\n"

@@ -44,18 +44,10 @@
 #    pragma GCC optimize("O3")
 #endif
 
-#ifndef ALWAYS_INLINE
-#    if __has_attribute(always_inline)
-#        define ALWAYS_INLINE __attribute__((always_inline))
-#    else
-#        define ALWAYS_INLINE inline
-#    endif
-#endif
-
 namespace Gfx {
 
 template<BitmapFormat format = BitmapFormat::Invalid>
-static ALWAYS_INLINE Color get_pixel(const Gfx::Bitmap& bitmap, int x, int y)
+ALWAYS_INLINE Color get_pixel(const Gfx::Bitmap& bitmap, int x, int y)
 {
     if constexpr (format == BitmapFormat::Indexed8)
         return bitmap.palette_color(bitmap.bits(y)[x]);
@@ -752,12 +744,12 @@ void Painter::draw_scaled_bitmap(const Rect& a_dst_rect, const Gfx::Bitmap& sour
     }
 }
 
-[[gnu::flatten]] void Painter::draw_glyph(const Point& point, char ch, Color color)
+FLATTEN void Painter::draw_glyph(const Point& point, char ch, Color color)
 {
     draw_glyph(point, ch, font(), color);
 }
 
-[[gnu::flatten]] void Painter::draw_glyph(const Point& point, char ch, const Font& font, Color color)
+FLATTEN void Painter::draw_glyph(const Point& point, char ch, const Font& font, Color color)
 {
     draw_bitmap(point, font.glyph_bitmap(ch), color);
 }
@@ -936,7 +928,7 @@ void Painter::set_pixel(const Point& p, Color color)
     m_target->scanline(point.y())[point.x()] = color.value();
 }
 
-[[gnu::always_inline]] inline void Painter::set_pixel_with_draw_op(u32& pixel, const Color& color)
+ALWAYS_INLINE void Painter::set_pixel_with_draw_op(u32& pixel, const Color& color)
 {
     if (draw_op() == DrawOp::Copy)
         pixel = color.value();

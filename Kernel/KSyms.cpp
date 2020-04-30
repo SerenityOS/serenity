@@ -115,7 +115,7 @@ static void load_kernel_sybols_from_data(const ByteBuffer& buffer)
     g_kernel_symbols_available = true;
 }
 
-[[gnu::noinline]] void dump_backtrace_impl(u32 ebp, bool use_ksyms)
+NEVER_INLINE void dump_backtrace_impl(u32 ebp, bool use_ksyms)
 {
     SmapDisabler disabler;
 #if 0
