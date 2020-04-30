@@ -67,7 +67,10 @@ public:
     Vector<Command> parse();
 
 private:
-    enum class AllowEmptyToken { No, Yes };
+    enum class AllowEmptyToken {
+        No,
+        Yes,
+    };
     void commit_token(AllowEmptyToken = AllowEmptyToken::No);
     void commit_subcommand();
     void commit_command();
@@ -82,7 +85,22 @@ private:
         InWriteAppendOrRedirectionPath,
         InRedirectionPath,
     };
-    State m_state { Free };
+
+    State state() const { return m_state_stack.last(); }
+
+    void pop_state()
+    {
+        m_state_stack.take_last();
+    }
+
+    void push_state(State state)
+    {
+        m_state_stack.append(state);
+    }
+
+    bool in_state(State) const;
+
+    Vector<State> m_state_stack { Free };
     String m_input;
 
     Vector<Command> m_commands;
