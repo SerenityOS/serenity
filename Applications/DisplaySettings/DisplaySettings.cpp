@@ -215,7 +215,7 @@ void DisplaySettingsWidget::create_frame()
     color_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     color_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     color_label.set_preferred_size({ 70, 0 });
-    color_label.set_text("Color Name:");
+    color_label.set_text("Color:");
 
     m_color_input = color_selection_container.add<GUI::ColorInput>();
     m_color_input->set_color_has_alpha_channel(false);
