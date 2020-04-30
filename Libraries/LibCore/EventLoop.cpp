@@ -331,9 +331,6 @@ void EventLoop::pump(WaitMode mode)
 
     for (size_t i = 0; i < events.size(); ++i) {
         auto& queued_event = events.at(i);
-#ifndef __clang__
-        ASSERT(queued_event.event);
-#endif
         auto* receiver = queued_event.receiver.ptr();
         auto& event = *queued_event.event;
 #ifdef CEVENTLOOP_DEBUG
