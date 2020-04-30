@@ -40,6 +40,7 @@ namespace WindowServer {
 class ClientConnection;
 class Cursor;
 class Menu;
+class MenuItem;
 class MouseEvent;
 
 enum WMEventMask {
@@ -269,6 +270,8 @@ private:
     Gfx::Rect m_unmaximized_rect;
     Gfx::Rect m_rect_in_menubar;
     RefPtr<Menu> m_window_menu;
+    MenuItem* m_window_menu_minimize_item { nullptr };
+    MenuItem* m_window_menu_maximize_item { nullptr };
     int m_minimize_animation_step { -1 };
 };
 

@@ -85,4 +85,12 @@ Gfx::Rect MenuItem::rect() const
     return m_rect.translated(0, m_menu.item_height() - (m_menu.scroll_offset() * m_menu.item_height()));
 }
 
+void MenuItem::set_icon(const Gfx::Bitmap* icon)
+{
+    if (m_icon == icon)
+        return;
+    m_icon = icon;
+    m_menu.redraw();
+}
+
 }

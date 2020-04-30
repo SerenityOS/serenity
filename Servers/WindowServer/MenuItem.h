@@ -70,7 +70,7 @@ public:
     unsigned identifier() const { return m_identifier; }
 
     const Gfx::Bitmap* icon() const { return m_icon; }
-    void set_icon(const Gfx::Bitmap* icon) { m_icon = icon; }
+    void set_icon(const Gfx::Bitmap*);
 
     bool is_submenu() const { return m_submenu_id != -1; }
     int submenu_id() const { return m_submenu_id; }

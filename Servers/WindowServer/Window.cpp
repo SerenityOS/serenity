@@ -48,6 +48,38 @@ static Gfx::Bitmap& default_window_icon()
     return *s_icon;
 }
 
+static Gfx::Bitmap& minimize_icon()
+{
+    static Gfx::Bitmap* s_icon;
+    if (!s_icon)
+        s_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-minimize.png").leak_ref();
+    return *s_icon;
+}
+
+static Gfx::Bitmap& maximize_icon()
+{
+    static Gfx::Bitmap* s_icon;
+    if (!s_icon)
+        s_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-maximize.png").leak_ref();
+    return *s_icon;
+}
+
+static Gfx::Bitmap& restore_icon()
+{
+    static Gfx::Bitmap* s_icon;
+    if (!s_icon)
+        s_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-restore.png").leak_ref();
+    return *s_icon;
+}
+
+static Gfx::Bitmap& close_icon()
+{
+    static Gfx::Bitmap* s_icon;
+    if (!s_icon)
+        s_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-close.png").leak_ref();
+    return *s_icon;
+}
+
 Window::Window(Core::Object& parent, WindowType type)
     : Core::Object(&parent)
     , m_type(type)
@@ -334,10 +366,19 @@ void Window::popup_window_menu(const Gfx::Point& position)
         m_window_menu = Menu::construct(nullptr, -1, "(Window Menu)");
         m_window_menu->set_window_menu_of(*this);
 
-        m_window_menu->add_item(make<MenuItem>(*m_window_menu, 1, m_minimized ? "Unminimize" : "Minimize"));
-        m_window_menu->add_item(make<MenuItem>(*m_window_menu, 2, m_maximized ? "Restore" : "Maximize"));
+        auto minimize_item = make<MenuItem>(*m_window_menu, 1, m_minimized ? "Unminimize" : "Minimize");
+        m_window_menu_minimize_item = minimize_item.ptr();
+        m_window_menu->add_item(move(minimize_item));
+
+        auto maximize_item = make<MenuItem>(*m_window_menu, 2, m_maximized ? "Restore" : "Maximize");
+        m_window_menu_maximize_item = maximize_item.ptr();
+        m_window_menu->add_item(move(maximize_item));
+
         m_window_menu->add_item(make<MenuItem>(*m_window_menu, MenuItem::Type::Separator));
-        m_window_menu->add_item(make<MenuItem>(*m_window_menu, 3, "Close"));
+
+        auto close_item = make<MenuItem>(*m_window_menu, 3, "Close");
+        close_item->set_icon(&close_icon());
+        m_window_menu->add_item(move(close_item));
 
         m_window_menu->item((int)PopupMenuItem::Minimize).set_enabled(m_minimizable);
         m_window_menu->item((int)PopupMenuItem::Maximize).set_enabled(m_resizable);
@@ -361,6 +402,9 @@ void Window::popup_window_menu(const Gfx::Point& position)
             }
         };
     }
+    m_window_menu_minimize_item->set_icon(m_minimized ? nullptr : &minimize_icon());
+    m_window_menu_maximize_item->set_icon(m_maximized ? &restore_icon() : &maximize_icon());
+
     m_window_menu->popup(position);
 }
 
@@ -402,7 +446,7 @@ Gfx::Rect Window::tiled_rect(WindowTileType tiled) const
             WindowManager::the().maximized_window_rect(*this).y(),
             Screen::the().width() / 2 - frame_width,
             WindowManager::the().maximized_window_rect(*this).height());
-    default :
+    default:
         ASSERT_NOT_REACHED();
     }
 }
