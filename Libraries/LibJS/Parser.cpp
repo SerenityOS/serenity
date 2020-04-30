@@ -253,6 +253,8 @@ NonnullRefPtr<Statement> Parser::parse_statement()
         return parse_do_while_statement();
     case TokenType::While:
         return parse_while_statement();
+    case TokenType::Debugger:
+         return parse_debugger_statement();
     default:
         if (match_expression()) {
             auto expr = parse_expression(0);
@@ -1040,6 +1042,13 @@ NonnullRefPtr<ForStatement> Parser::parse_for_statement()
     return create_ast_node<ForStatement>(move(init), move(test), move(update), move(body));
 }
 
+NonnullRefPtr<DebuggerStatement> Parser::parse_debugger_statement()
+{
+    consume(TokenType::Debugger);
+    consume_or_insert_semicolon();
+    return create_ast_node<DebuggerStatement>();
+}
+
 bool Parser::match(TokenType type) const
 {
     return m_parser_state.m_current_token.type() == type;
@@ -1152,7 +1161,8 @@ bool Parser::match_statement() const
         || type == TokenType::Switch
         || type == TokenType::Break
         || type == TokenType::Continue
-        || type == TokenType::Var;
+        || type == TokenType::Var
+        || type == TokenType::Debugger;
 }
 
 bool Parser::match_identifier_name() const

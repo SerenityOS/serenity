@@ -923,4 +923,14 @@ private:
     virtual const char* class_name() const override { return "ContinueStatement"; }
 };
 
+class DebuggerStatement final : public Statement {
+public:
+    DebuggerStatement() {}
+
+    virtual Value execute(Interpreter&) const override;
+
+private:
+    virtual const char* class_name() const override { return "DebuggerStatement"; }
+};
+
 }

@@ -53,6 +53,7 @@ namespace JS {
     __ENUMERATE_JS_TOKEN(Continue)                    \
     __ENUMERATE_JS_TOKEN(CurlyClose)                  \
     __ENUMERATE_JS_TOKEN(CurlyOpen)                   \
+    __ENUMERATE_JS_TOKEN(Debugger)                    \
     __ENUMERATE_JS_TOKEN(Default)                     \
     __ENUMERATE_JS_TOKEN(Delete)                      \
     __ENUMERATE_JS_TOKEN(Do)                          \
