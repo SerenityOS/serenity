@@ -381,6 +381,17 @@ void Object::visit_children(Cell::Visitor& visitor)
         visitor.visit(value);
 }
 
+bool Object::has_property(const FlyString& property_name) const
+{
+    const Object* object = this;
+    while (object) {
+        if (object->has_own_property(property_name))
+            return true;
+        object = object->prototype();
+    }
+    return false;
+}
+
 bool Object::has_own_property(const FlyString& property_name) const
 {
     bool ok;
