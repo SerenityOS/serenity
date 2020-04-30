@@ -197,7 +197,13 @@ void TabWidget::paint_event(PaintEvent& event)
 
 int TabWidget::uniform_tab_width() const
 {
-    return 160;
+    int minimum_tab_width = 24;
+    int maximum_tab_width = 160;
+    int total_tab_width = m_tabs.size() * maximum_tab_width;
+    int tab_width = maximum_tab_width;
+    if (total_tab_width > width())
+        tab_width = width() / m_tabs.size();
+    return max(tab_width, minimum_tab_width);
 }
 
 Gfx::Rect TabWidget::button_rect(int index) const
