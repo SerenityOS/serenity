@@ -184,6 +184,9 @@ void AbstractTableView::set_column_hidden(int column, bool hidden)
     if (column_data.visibility == !hidden)
         return;
     column_data.visibility = !hidden;
+    if (column_data.visibility_action) {
+        column_data.visibility_action->set_checked(!hidden);
+    }
     update_content_size();
     update();
 }
@@ -202,7 +205,7 @@ Menu& AbstractTableView::ensure_header_context_menu()
             column_data.visibility_action = Action::create_checkable(name, [this, column](auto& action) {
                 set_column_hidden(column, !action.is_checked());
             });
-            column_data.visibility_action->set_checked(true);
+            column_data.visibility_action->set_checked(column_data.visibility);
 
             m_header_context_menu->add_action(*column_data.visibility_action);
         }
