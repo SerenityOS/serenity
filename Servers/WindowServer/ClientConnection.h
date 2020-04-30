@@ -104,6 +104,8 @@ private:
     virtual OwnPtr<Messages::WindowServer::SetWindowBackingStoreResponse> handle(const Messages::WindowServer::SetWindowBackingStore&) override;
     virtual OwnPtr<Messages::WindowServer::GetClipboardContentsResponse> handle(const Messages::WindowServer::GetClipboardContents&) override;
     virtual OwnPtr<Messages::WindowServer::SetClipboardContentsResponse> handle(const Messages::WindowServer::SetClipboardContents&) override;
+    virtual OwnPtr<Messages::WindowServer::GetClipboardBitmapResponse> handle(const Messages::WindowServer::GetClipboardBitmap&) override;
+    virtual OwnPtr<Messages::WindowServer::SetClipboardBitmapResponse> handle(const Messages::WindowServer::SetClipboardBitmap&) override;
     virtual void handle(const Messages::WindowServer::WM_SetActiveWindow&) override;
     virtual void handle(const Messages::WindowServer::WM_SetWindowMinimized&) override;
     virtual void handle(const Messages::WindowServer::WM_StartWindowResize&) override;

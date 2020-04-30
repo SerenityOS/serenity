@@ -25,6 +25,7 @@
  */
 
 #include <AK/String.h>
+#include <LibGfx/Bitmap.h>
 #include <LibIPC/Encoder.h>
 
 namespace IPC {
@@ -139,4 +140,31 @@ Encoder& Encoder::operator<<(const String& value)
     return *this << value.view();
 }
 
+Encoder& Encoder::operator<<(Gfx::BitmapFormat format)
+{
+    i32 index;
+    switch (format) {
+    case Gfx::BitmapFormat::RGB32:
+        index = 0;
+        break;
+    case Gfx::BitmapFormat::RGBA32:
+        index = 1;
+        break;
+    case Gfx::BitmapFormat::Indexed8:
+        index = 2;
+        break;
+    case Gfx::BitmapFormat::Invalid:
+        index = 3;
+        break;
+    default:
+        index = -1;
+    }
+
+    return *this << index;
+}
+
+Encoder& Encoder::operator<<(Gfx::Size size)
+{
+    return *this << static_cast<i32>(size.width()) << static_cast<i32>(size.height());
+}
 }

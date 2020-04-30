@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibGfx/Bitmap.h>
 #include <WindowServer/Clipboard.h>
 
 namespace WindowServer {
@@ -70,6 +71,17 @@ void Clipboard::set_data(NonnullRefPtr<SharedBuffer>&& data, int contents_size, 
     m_shared_buffer = move(data);
     m_contents_size = contents_size;
     m_data_type = data_type;
+
+    if (on_content_change)
+        on_content_change();
+}
+
+void Clipboard::set_data(NonnullRefPtr<SharedBuffer>&& data, int contents_size, Gfx::Size bitmap_size, Gfx::BitmapFormat bitmap_format)
+{
+    m_shared_buffer = move(data);
+    m_contents_size = contents_size;
+    m_bitmap_format = bitmap_format;
+    m_bitmap_size = bitmap_size;
 
     if (on_content_change)
         on_content_change();

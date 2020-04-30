@@ -451,6 +451,40 @@ OwnPtr<Messages::WindowServer::GetClipboardContentsResponse> ClientConnection::h
     return make<Messages::WindowServer::GetClipboardContentsResponse>(shbuf_id, clipboard.size(), clipboard.data_type());
 }
 
+OwnPtr<Messages::WindowServer::SetClipboardBitmapResponse> ClientConnection::handle(const Messages::WindowServer::SetClipboardBitmap& message)
+{
+    auto shared_buffer = SharedBuffer::create_from_shbuf_id(message.shbuf_id());
+    if (!shared_buffer) {
+        did_misbehave("SetClipboardBitmap: Bad shared buffer ID");
+        return nullptr;
+    }
+    Clipboard::the().set_data(*shared_buffer, message.content_size(), message.bitmap_size(), message.bitmap_format());
+    return make<Messages::WindowServer::SetClipboardBitmapResponse>();
+}
+
+OwnPtr<Messages::WindowServer::GetClipboardBitmapResponse> ClientConnection::handle(const Messages::WindowServer::GetClipboardBitmap&)
+{
+    auto& clipboard = Clipboard::the();
+
+    i32 shbuf_id = -1;
+    if (clipboard.size()) {
+        // FIXME: Optimize case where an app is copy/pasting within itself.
+        //        We can just reuse the SharedBuffer then, since it will have the same peer PID.
+        //        It would be even nicer if a SharedBuffer could have an arbitrary number of clients..
+        RefPtr<SharedBuffer> shared_buffer = SharedBuffer::create_with_size(clipboard.size());
+        ASSERT(shared_buffer);
+        memcpy(shared_buffer->data(), clipboard.data(), clipboard.size());
+        shared_buffer->seal();
+        shared_buffer->share_with(client_pid());
+        shbuf_id = shared_buffer->shbuf_id();
+
+        // FIXME: This is a workaround for the fact that SharedBuffers will go away if neither side is retaining them.
+        //        After we respond to GetClipboardBitmap, we have to wait for the client to ref the buffer on his side.
+        m_last_sent_clipboard_content = move(shared_buffer);
+    }
+    return make<Messages::WindowServer::GetClipboardBitmapResponse>(shbuf_id, clipboard.size(), clipboard.bitmap_format(), clipboard.bitmap_size());
+}
+
 Window* ClientConnection::window_from_id(i32 window_id)
 {
     auto it = m_windows.find(window_id);

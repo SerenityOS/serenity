@@ -62,6 +62,9 @@ endpoint WindowServer = 2
     GetClipboardContents() => (i32 shbuf_id, i32 content_size, String content_type)
     SetClipboardContents(i32 shbuf_id, i32 content_size, String content_type) => ()
 
+    GetClipboardBitmap() => (i32 shbuf_id, i32 content_size, Gfx::BitmapFormat bitmap_format, Gfx::Size bitmap_size)
+    SetClipboardBitmap(i32 shbuf_id, i32 content_size, Gfx::BitmapFormat bitmap_format, Gfx::Size bitmap_size) => ()
+
     WM_SetActiveWindow(i32 client_id, i32 window_id) =|
     WM_SetWindowMinimized(i32 client_id, i32 window_id, bool minimized) =|
     WM_StartWindowResize(i32 client_id, i32 window_id) =|

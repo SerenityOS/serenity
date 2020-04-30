@@ -50,6 +50,8 @@ public:
     Encoder& operator<<(const char*);
     Encoder& operator<<(const StringView&);
     Encoder& operator<<(const String&);
+    Encoder& operator<<(Gfx::BitmapFormat);
+    Encoder& operator<<(Gfx::Size);
 
 private:
     MessageBuffer& m_buffer;

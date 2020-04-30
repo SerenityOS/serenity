@@ -29,6 +29,7 @@
 #include <AK/Function.h>
 #include <AK/SharedBuffer.h>
 #include <AK/String.h>
+#include <LibGfx/Bitmap.h>
 
 namespace WindowServer {
 
@@ -46,8 +47,12 @@ public:
     const u8* data() const;
     int size() const;
 
+    Gfx::BitmapFormat bitmap_format() const { return m_bitmap_format; }
+    Gfx::Size bitmap_size() const { return m_bitmap_size; }
+
     void clear();
     void set_data(NonnullRefPtr<SharedBuffer>&&, int contents_size, const String& data_type);
+    void set_data(NonnullRefPtr<SharedBuffer>&&, int contents_size, const Gfx::Size bitmap_size, const Gfx::BitmapFormat bitmap_format);
 
     Function<void()> on_content_change;
 
@@ -57,6 +62,9 @@ private:
     String m_data_type;
     RefPtr<SharedBuffer> m_shared_buffer;
     int m_contents_size { 0 };
+
+    Gfx::BitmapFormat m_bitmap_format;
+    Gfx::Size m_bitmap_size;
 };
 
 }

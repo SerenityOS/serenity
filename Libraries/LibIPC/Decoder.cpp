@@ -25,6 +25,7 @@
  */
 
 #include <AK/BufferStream.h>
+#include <LibGfx/Bitmap.h>
 #include <LibIPC/Decoder.h>
 
 namespace IPC {
@@ -110,6 +111,51 @@ bool Decoder::decode(String& value)
     }
     value = *text_impl;
     return !m_stream.handle_read_failure();
+}
+
+bool Decoder::decode(Gfx::BitmapFormat& format)
+{
+    i32 index;
+    m_stream >> index;
+
+    if (index == -1)
+        return false;
+
+    if (index == 0) {
+        format = Gfx::BitmapFormat::RGB32;
+    } else if (index == 1) {
+        format = Gfx::BitmapFormat::RGBA32;
+    } else if (index == 2) {
+        format = Gfx::BitmapFormat::Indexed8;
+    } else {
+        format = Gfx::BitmapFormat::Invalid;
+    }
+    return true;
+}
+
+bool Decoder::decode(Gfx::Size& size)
+{
+    i32 height;
+    m_stream >> height;
+    if (m_stream.handle_read_failure())
+        return false;
+    if (height < 0) {
+        size = {};
+        return true;
+    }
+    size.set_height(height);
+
+    i32 width;
+    m_stream >> width;
+    if (m_stream.handle_read_failure())
+        return false;
+    if (width < 0) {
+        size = {};
+        return true;
+    }
+    size.set_width(width);
+
+    return true;
 }
 
 }

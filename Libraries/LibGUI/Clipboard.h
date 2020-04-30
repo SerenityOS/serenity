@@ -27,8 +27,10 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <AK/SharedBuffer.h>
 #include <AK/String.h>
 #include <LibGUI/Forward.h>
+#include <LibGfx/Bitmap.h>
 
 namespace GUI {
 
@@ -39,13 +41,14 @@ public:
     String data() const { return data_and_type().data; }
     String type() const { return data_and_type().type; }
     void set_data(const StringView&, const String& data_type = "text");
-
+    void set_data(const Gfx::Bitmap&);
     struct DataAndType {
         String data;
         String type;
     };
 
     DataAndType data_and_type() const;
+    RefPtr<Gfx::Bitmap> get_bitmap();
 
     void did_receive_clipboard_contents_changed(Badge<WindowServerConnection>, const String& data_type);
 

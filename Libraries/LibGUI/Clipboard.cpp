@@ -28,6 +28,8 @@
 #include <AK/SharedBuffer.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/WindowServerConnection.h>
+#include <LibGfx/Bitmap.h>
+#include <LibGfx/Color.h>
 
 namespace GUI {
 
@@ -62,6 +64,26 @@ Clipboard::DataAndType Clipboard::data_and_type() const
     return { data, type };
 }
 
+RefPtr<Gfx::Bitmap> Clipboard::get_bitmap()
+{
+    auto response = WindowServerConnection::the().send_sync<Messages::WindowServer::GetClipboardBitmap>();
+
+    if (response->shbuf_id() < 0)
+        return {};
+    auto shared_buffer = SharedBuffer::create_from_shbuf_id(response->shbuf_id());
+
+    if (!shared_buffer) {
+        dbgprintf("GUI::Clipboard::data() failed to attach to the shared buffer\n");
+        return {};
+    }
+    if (response->content_size() > shared_buffer->size()) {
+        dbgprintf("GUI::Clipboard::data() clipping contents size is greater than shared buffer size\n");
+        return {};
+    }
+
+    return Gfx::Bitmap::create_with_shared_buffer(response->bitmap_format(), *shared_buffer, response->bitmap_size());
+}
+
 void Clipboard::set_data(const StringView& data, const String& type)
 {
     auto shared_buffer = SharedBuffer::create_with_size(data.length() + 1);
@@ -79,10 +101,17 @@ void Clipboard::set_data(const StringView& data, const String& type)
     WindowServerConnection::the().send_sync<Messages::WindowServer::SetClipboardContents>(shared_buffer->shbuf_id(), data.length(), type);
 }
 
+void Clipboard::set_data(const Gfx::Bitmap& bitmap)
+{
+    auto bitmap_with_shared_buffer = bitmap.to_bitmap_backed_by_shared_buffer();
+    auto shared_buffer = bitmap_with_shared_buffer->shared_buffer();
+    shared_buffer->share_with(WindowServerConnection::the().server_pid());
+    WindowServerConnection::the().send_sync<Messages::WindowServer::SetClipboardBitmap>(shared_buffer->shbuf_id(), shared_buffer->size(), bitmap.format(), bitmap.size());
+}
+
 void Clipboard::did_receive_clipboard_contents_changed(Badge<WindowServerConnection>, const String& data_type)
 {
     if (on_content_change)
         on_content_change(data_type);
 }
-
 }
