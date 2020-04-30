@@ -90,6 +90,7 @@ protected:
     virtual void mousedown_event(MouseEvent&) override;
     virtual void mousemove_event(MouseEvent&) override;
     virtual void leave_event(Core::Event&) override;
+    virtual void keydown_event(KeyEvent&) override;
 
 private:
     Gfx::Rect child_rect_for_size(const Gfx::Size&) const;

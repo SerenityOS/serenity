@@ -332,4 +332,17 @@ void TabWidget::activate_previous_tab()
     set_active_widget(m_tabs.at(index).widget);
 }
 
+void TabWidget::keydown_event(KeyEvent & event)
+{
+    if (event.ctrl() && event.key() == Key_Tab) {
+        if (event.shift())
+            activate_previous_tab();
+        else
+            activate_next_tab();
+        event.accept();
+        return;
+    }
+    Widget::keydown_event(event);
+}
+
 }
