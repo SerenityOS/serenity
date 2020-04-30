@@ -358,7 +358,7 @@ void WindowFrame::on_mouse_event(const MouseEvent& event)
 
     if (m_window.type() == WindowType::Normal && event.type() == Event::MouseDown && (event.button() == MouseButton::Left || event.button() == MouseButton::Right) && title_bar_icon_rect().contains(event.position())) {
         wm.move_to_front_and_make_active(m_window);
-        m_window.popup_window_menu(title_bar_icon_rect().bottom_left().translated(rect().location()));
+        m_window.popup_window_menu(title_bar_rect().bottom_left().translated(rect().location()));
         return;
     }
 
