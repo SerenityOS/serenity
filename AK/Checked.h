@@ -234,13 +234,16 @@ public:
         return *this;
     }
 
+    template<typename U, typename V>
+    static bool addition_would_overflow(U u, V v)
+    {
+        return __builtin_add_overflow_p(u, v, (T)0);
+    }
+
     template<typename U, typename V, typename X>
     static bool multiplication_would_overflow(U u, V v)
     {
-        Checked checked;
-        checked = u;
-        checked *= v;
-        return checked.has_overflow();
+        return __builtin_mul_overflow_p(u, v, (T)0);
     }
 
     template<typename U, typename V, typename X>
