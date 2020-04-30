@@ -109,6 +109,7 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
     auto& location_textbox = upper_container.add<TextBox>();
     location_textbox.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     location_textbox.set_preferred_size(0, 20);
+    location_textbox.set_text(path);
 
     m_view = vertical_container.add<MultiView>();
     m_view->set_model(SortingProxyModel::create(*m_model));
