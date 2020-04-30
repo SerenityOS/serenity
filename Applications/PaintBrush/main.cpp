@@ -31,6 +31,7 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/Clipboard.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
@@ -96,7 +97,26 @@ int main(int argc, char** argv)
         return;
     }));
 
-    menubar->add_menu("Edit");
+    auto& edit_menu = menubar->add_menu("Edit");
+
+    auto paste_action = GUI::CommonActions::make_paste_action(
+        [&](const GUI::Action&) {
+            auto old_bitmap = RefPtr<Gfx::Bitmap>(paintable_widget.bitmap());
+            auto clipboard_bitmap = GUI::Clipboard::the().get_bitmap();
+            if (!clipboard_bitmap)
+                return;
+            paintable_widget.set_bitmap(*clipboard_bitmap->cloned());
+        },
+        window);
+
+    auto copy_action = GUI::CommonActions::make_copy_action(
+        [&](const GUI::Action&) {
+            GUI::Clipboard::the().set_data(paintable_widget.bitmap());
+        },
+        window);
+
+    edit_menu.add_action(copy_action);
+    edit_menu.add_action(paste_action);
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {
