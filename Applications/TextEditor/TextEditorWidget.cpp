@@ -38,6 +38,7 @@
 #include <LibGUI/CppSyntaxHighlighter.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/FontDatabase.h>
+#include <LibGUI/INISyntaxHighlighter.h>
 #include <LibGUI/JSSyntaxHighlighter.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
@@ -429,6 +430,13 @@ TextEditorWidget::TextEditorWidget()
     syntax_actions.add_action(*m_js_highlight);
     syntax_menu.add_action(*m_js_highlight);
 
+    m_ini_highlight = GUI::Action::create_checkable("INI File", [&](auto&) {
+        m_editor->set_syntax_highlighter(make<GUI::IniSyntaxHighlighter>());
+        m_editor->update();
+    });
+    syntax_actions.add_action(*m_ini_highlight);
+    syntax_menu.add_action(*m_ini_highlight);
+
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {
         GUI::AboutDialog::show("Text Editor", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-texteditor.png"), window());
@@ -467,6 +475,8 @@ void TextEditorWidget::set_path(const FileSystemPath& file)
         m_cpp_highlight->activate();
     } else if (m_extension == "js") {
         m_js_highlight->activate();
+    } else if (m_extension == "ini") {
+        m_ini_highlight->activate();
     } else {
         m_plain_text_highlight->activate();
     }
