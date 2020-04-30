@@ -42,8 +42,6 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/SystemTheme.h>
 
-//#define GEVENTLOOP_DEBUG
-
 namespace GUI {
 
 WindowServerConnection& WindowServerConnection::the()
@@ -81,9 +79,6 @@ void WindowServerConnection::handle(const Messages::WindowClient::UpdateSystemTh
 
 void WindowServerConnection::handle(const Messages::WindowClient::Paint& message)
 {
-#ifdef GEVENTLOOP_DEBUG
-    dbgprintf("WID=%d Paint\n", message.window_id());
-#endif
     if (auto* window = Window::from_window_id(message.window_id()))
         Core::EventLoop::current().post_event(*window, make<MultiPaintEvent>(message.rects(), message.window_size()));
 }
@@ -97,18 +92,12 @@ void WindowServerConnection::handle(const Messages::WindowClient::WindowResized&
 
 void WindowServerConnection::handle(const Messages::WindowClient::WindowActivated& message)
 {
-#ifdef GEVENTLOOP_DEBUG
-    dbgprintf("(%d) WID=%d WindowActivated\n", getpid(), message.window_id());
-#endif
     if (auto* window = Window::from_window_id(message.window_id()))
         Core::EventLoop::current().post_event(*window, make<Event>(Event::WindowBecameActive));
 }
 
 void WindowServerConnection::handle(const Messages::WindowClient::WindowDeactivated& message)
 {
-#ifdef GEVENTLOOP_DEBUG
-    dbgprintf("(%d) WID=%d WindowDeactivated\n", getpid(), message.window_id());
-#endif
     if (auto* window = Window::from_window_id(message.window_id()))
         Core::EventLoop::current().post_event(*window, make<Event>(Event::WindowBecameInactive));
 }
@@ -133,9 +122,6 @@ void WindowServerConnection::handle(const Messages::WindowClient::WindowLeft& me
 
 void WindowServerConnection::handle(const Messages::WindowClient::KeyDown& message)
 {
-#ifdef GEVENTLOOP_DEBUG
-    dbgprintf("WID=%d KeyDown character=0x%02x\n", message.window_id(), message.character());
-#endif
     auto* window = Window::from_window_id(message.window_id());
     if (!window)
         return;
@@ -168,9 +154,6 @@ void WindowServerConnection::handle(const Messages::WindowClient::KeyDown& messa
 
 void WindowServerConnection::handle(const Messages::WindowClient::KeyUp& message)
 {
-#ifdef GEVENTLOOP_DEBUG
-    dbgprintf("WID=%d KeyUp character=0x%02x\n", message.window_id(), message.character());
-#endif
     auto* window = Window::from_window_id(message.window_id());
     if (!window)
         return;
@@ -203,30 +186,18 @@ MouseButton to_gmousebutton(u32 button)
 
 void WindowServerConnection::handle(const Messages::WindowClient::MouseDown& message)
 {
-#ifdef GEVENTLOOP_DEBUG
-    dbgprintf("WID=%d MouseDown %d,%d,%d\n", message.window_id(), message.mouse_position().x(), message.mouse_position().y(), message.wheel_delta();
-#endif
-
     if (auto* window = Window::from_window_id(message.window_id()))
         Core::EventLoop::current().post_event(*window, make<MouseEvent>(Event::MouseDown, message.mouse_position(), message.buttons(), to_gmousebutton(message.button()), message.modifiers(), message.wheel_delta()));
 }
 
 void WindowServerConnection::handle(const Messages::WindowClient::MouseUp& message)
 {
-#ifdef GEVENTLOOP_DEBUG
-    dbgprintf("WID=%d MouseUp %d,%d,%d\n", message.window_id(), message.mouse_position().x(), message.mouse_position().y(), message.wheel_delta();
-#endif
-
     if (auto* window = Window::from_window_id(message.window_id()))
         Core::EventLoop::current().post_event(*window, make<MouseEvent>(Event::MouseUp, message.mouse_position(), message.buttons(), to_gmousebutton(message.button()), message.modifiers(), message.wheel_delta()));
 }
 
 void WindowServerConnection::handle(const Messages::WindowClient::MouseMove& message)
 {
-#ifdef GEVENTLOOP_DEBUG
-    dbgprintf("WID=%d MouseMove %d,%d,%d\n", message.window_id(), message.mouse_position().x(), message.mouse_position().y(), message.wheel_delta();
-#endif
-
     if (auto* window = Window::from_window_id(message.window_id())) {
         if (message.is_drag())
             Core::EventLoop::current().post_event(*window, make<DragEvent>(Event::DragMove, message.mouse_position(), message.drag_data_type()));
@@ -237,20 +208,12 @@ void WindowServerConnection::handle(const Messages::WindowClient::MouseMove& mes
 
 void WindowServerConnection::handle(const Messages::WindowClient::MouseDoubleClick& message)
 {
-#ifdef GEVENTLOOP_DEBUG
-    dbgprintf("WID=%d MouseDoubleClick %d,%d,%d\n", message.window_id(), message.mouse_position().x(), message.mouse_position().y(), message.wheel_delta();
-#endif
-
     if (auto* window = Window::from_window_id(message.window_id()))
         Core::EventLoop::current().post_event(*window, make<MouseEvent>(Event::MouseDoubleClick, message.mouse_position(), message.buttons(), to_gmousebutton(message.button()), message.modifiers(), message.wheel_delta()));
 }
 
 void WindowServerConnection::handle(const Messages::WindowClient::MouseWheel& message)
 {
-#ifdef GEVENTLOOP_DEBUG
-    dbgprintf("WID=%d MouseWheel %d,%d,%d\n", message.window_id(), message.mouse_position().x(), message.mouse_position().y(), message.wheel_delta();
-#endif
-
     if (auto* window = Window::from_window_id(message.window_id()))
         Core::EventLoop::current().post_event(*window, make<MouseEvent>(Event::MouseWheel, message.mouse_position(), message.buttons(), to_gmousebutton(message.button()), message.modifiers(), message.wheel_delta()));
 }
@@ -268,36 +231,24 @@ void WindowServerConnection::handle(const Messages::WindowClient::MenuItemActiva
 
 void WindowServerConnection::handle(const Messages::WindowClient::WM_WindowStateChanged& message)
 {
-#ifdef GEVENTLOOP_DEBUG
-    dbgprintf("EventLoop: handle_wm_event: %d\n", (int)event.type);
-#endif
     if (auto* window = Window::from_window_id(message.wm_id()))
         Core::EventLoop::current().post_event(*window, make<WMWindowStateChangedEvent>(message.client_id(), message.window_id(), message.title(), message.rect(), message.is_active(), static_cast<WindowType>(message.window_type()), message.is_minimized()));
 }
 
 void WindowServerConnection::handle(const Messages::WindowClient::WM_WindowRectChanged& message)
 {
-#ifdef GEVENTLOOP_DEBUG
-    dbgprintf("EventLoop: handle_wm_event: %d\n", (int)event.type);
-#endif
     if (auto* window = Window::from_window_id(message.wm_id()))
         Core::EventLoop::current().post_event(*window, make<WMWindowRectChangedEvent>(message.client_id(), message.window_id(), message.rect()));
 }
 
 void WindowServerConnection::handle(const Messages::WindowClient::WM_WindowIconBitmapChanged& message)
 {
-#ifdef GEVENTLOOP_DEBUG
-    dbgprintf("EventLoop: handle_wm_event: %d\n", (int)event.type);
-#endif
     if (auto* window = Window::from_window_id(message.wm_id()))
         Core::EventLoop::current().post_event(*window, make<WMWindowIconBitmapChangedEvent>(message.client_id(), message.window_id(), message.icon_buffer_id(), message.icon_size()));
 }
 
 void WindowServerConnection::handle(const Messages::WindowClient::WM_WindowRemoved& message)
 {
-#ifdef GEVENTLOOP_DEBUG
-    dbgprintf("EventLoop: handle_wm_event: %d\n", (int)event.type);
-#endif
     if (auto* window = Window::from_window_id(message.wm_id()))
         Core::EventLoop::current().post_event(*window, make<WMWindowRemovedEvent>(message.client_id(), message.window_id()));
 }
