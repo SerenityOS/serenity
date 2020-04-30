@@ -52,6 +52,8 @@ class Utf8View;
 namespace regex {
 enum class Error : u8;
 class Lexer;
+class ParserResult;
+class PosixExtendedParser;
 }
 
 template<typename T>
@@ -150,3 +152,5 @@ using AK::Utf8View;
 using AK::Vector;
 using AK::regex::Error;
 using AK::regex::Lexer;
+using AK::regex::ParserResult;
+using AK::regex::PosixExtendedParser;

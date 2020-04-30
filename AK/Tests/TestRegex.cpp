@@ -26,8 +26,8 @@
 
 #include <AK/TestSuite.h> // import first, to prevent warning of ASSERT* redefinition
 
-#include <AK/RegexLexer.h>
-#include <AK/RegexOptions.h>
+#include <AK/RegexParser.h>
+#include <AK/StringBuilder.h>
 #include <stdio.h>
 
 ECMAScriptOptions match_test_api_options(const ECMAScriptOptions options)
@@ -126,6 +126,108 @@ TEST_CASE(regex_lexer)
     EXPECT(l.next().type() == AK::regex::TokenType::RightBracket);
     EXPECT(l.next().type() == AK::regex::TokenType::Slash);
     EXPECT(l.next().type() == AK::regex::TokenType::OrdinaryCharacter);
+}
+
+TEST_CASE(parser_error_parens)
+{
+    String pattern = "test()test";
+    Lexer l(pattern);
+    PosixExtendedParser p(l);
+    p.parse();
+    EXPECT(p.has_error());
+    EXPECT(p.error() == Error::EmptySubExpression);
+}
+
+TEST_CASE(parser_error_special_characters_used_at_wrong_place)
+{
+    String pattern;
+    Vector<char, 5> chars = { '*', '+', '?', '{' };
+    StringBuilder b;
+
+    Lexer l;
+    PosixExtendedParser p(l);
+
+    for (auto& ch : chars) {
+        // First in ere
+        b.clear();
+        b.append(ch);
+        pattern = b.build();
+        l.set_source(pattern);
+        p.parse();
+        EXPECT(p.has_error());
+        EXPECT(p.error() == Error::InvalidRepetitionMarker);
+
+        // After vertical line
+        b.clear();
+        b.append("a|");
+        b.append(ch);
+        pattern = b.build();
+        l.set_source(pattern);
+        p.parse();
+        EXPECT(p.has_error());
+        EXPECT(p.error() == Error::InvalidRepetitionMarker);
+
+        // After circumflex
+        b.clear();
+        b.append("^");
+        b.append(ch);
+        pattern = b.build();
+        l.set_source(pattern);
+        p.parse();
+        EXPECT(p.has_error());
+        EXPECT(p.error() == Error::InvalidRepetitionMarker);
+
+        // After dollar
+        b.clear();
+        b.append("$");
+        b.append(ch);
+        pattern = b.build();
+        l.set_source(pattern);
+        p.parse();
+        EXPECT(p.has_error());
+        EXPECT(p.error() == Error::InvalidRepetitionMarker);
+
+        // After left parens
+        b.clear();
+        b.append("(");
+        b.append(ch);
+        b.append(")");
+        pattern = b.build();
+        l.set_source(pattern);
+        p.parse();
+        EXPECT(p.has_error());
+        EXPECT(p.error() == Error::InvalidRepetitionMarker);
+    }
+}
+
+TEST_CASE(parser_error_vertical_line_used_at_wrong_place)
+{
+    Lexer l;
+    PosixExtendedParser p(l);
+
+    // First in ere
+    l.set_source("|asdf");
+    p.parse();
+    EXPECT(p.has_error());
+    EXPECT(p.error() == Error::EmptySubExpression);
+
+    // Last in ere
+    l.set_source("asdf|");
+    p.parse();
+    EXPECT(p.has_error());
+    EXPECT(p.error() == Error::EmptySubExpression);
+
+    // After left parens
+    l.set_source("(|asdf)");
+    p.parse();
+    EXPECT(p.has_error());
+    EXPECT(p.error() == Error::EmptySubExpression);
+
+    // Proceed right parens
+    l.set_source("(asdf)|");
+    p.parse();
+    EXPECT(p.has_error());
+    EXPECT(p.error() == Error::EmptySubExpression);
 }
 
 TEST_MAIN(Regex)
