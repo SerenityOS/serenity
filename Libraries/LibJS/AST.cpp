@@ -491,6 +491,8 @@ Value UnaryExpression::execute(Interpreter& interpreter) const
             return js_string(interpreter, "object");
         case Value::Type::Boolean:
             return js_string(interpreter, "boolean");
+        case Value::Type::Symbol:
+            return js_string(interpreter, "symbol");
         default:
             ASSERT_NOT_REACHED();
         }

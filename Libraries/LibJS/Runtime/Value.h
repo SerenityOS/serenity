@@ -30,6 +30,7 @@
 #include <AK/Forward.h>
 #include <AK/LogStream.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Runtime/Symbol.h>
 
 namespace JS {
 
@@ -43,6 +44,7 @@ public:
         String,
         Object,
         Boolean,
+        Symbol,
     };
 
     bool is_empty() const { return m_type == Type::Empty; }
@@ -52,6 +54,7 @@ public:
     bool is_string() const { return m_type == Type::String; }
     bool is_object() const { return m_type == Type::Object; }
     bool is_boolean() const { return m_type == Type::Boolean; }
+    bool is_symbol() const { return m_type == Type::Symbol; }
     bool is_cell() const { return is_string() || is_object(); }
     bool is_array() const;
     bool is_function() const;
@@ -110,6 +113,12 @@ public:
         m_value.as_string = string;
     }
 
+    Value(Symbol* symbol)
+        : m_type(Type::Symbol)
+    {
+        m_value.as_symbol = symbol;
+    }
+
     explicit Value(Type type)
         : m_type(type)
     {
@@ -153,6 +162,18 @@ public:
         return *m_value.as_string;
     }
 
+    Symbol& as_symbol()
+    {
+        ASSERT(is_symbol());
+        return *m_value.as_symbol;
+    }
+
+    const Symbol& as_symbol() const
+    {
+        ASSERT(is_symbol());
+        return *m_value.as_symbol;
+    }
+
     Cell* as_cell()
     {
         ASSERT(is_cell());
@@ -188,6 +209,7 @@ private:
         bool as_bool;
         double as_double;
         PrimitiveString* as_string;
+        Symbol* as_symbol;
         Object* as_object;
         Cell* as_cell;
     } m_value;

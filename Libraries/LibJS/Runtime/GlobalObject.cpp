@@ -54,6 +54,8 @@
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/StringConstructor.h>
 #include <LibJS/Runtime/StringPrototype.h>
+#include <LibJS/Runtime/SymbolConstructor.h>
+#include <LibJS/Runtime/SymbolPrototype.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -102,6 +104,7 @@ void GlobalObject::initialize()
     add_constructor("Number", m_number_constructor, *m_number_prototype);
     add_constructor("Object", m_object_constructor, *m_object_prototype);
     add_constructor("String", m_string_constructor, *m_string_prototype);
+    add_constructor("Symbol", m_symbol_constructor, *m_symbol_prototype);
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
     add_constructor(#ClassName, m_##snake_name##_constructor, *m_##snake_name##_prototype);

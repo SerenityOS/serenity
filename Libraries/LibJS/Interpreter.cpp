@@ -36,6 +36,7 @@
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Reference.h>
 #include <LibJS/Runtime/Shape.h>
+#include <LibJS/Runtime/SymbolObject.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -195,6 +196,8 @@ void Interpreter::gather_roots(Badge<Heap>, HashTable<Cell*>& roots)
         }
         roots.set(call_frame.environment);
     }
+
+    SymbolObject::gather_symbol_roots(roots);
 }
 
 Value Interpreter::call(Function& function, Value this_value, Optional<MarkedValueList> arguments)
