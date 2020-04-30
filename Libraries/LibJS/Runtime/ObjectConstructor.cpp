@@ -47,6 +47,9 @@ ObjectConstructor::ObjectConstructor()
     put_native_function("getOwnPropertyNames", get_own_property_names, 1, attr);
     put_native_function("getPrototypeOf", get_prototype_of, 1, attr);
     put_native_function("setPrototypeOf", set_prototype_of, 2, attr);
+    put_native_function("keys", keys, 1, attr);
+    put_native_function("values", values, 1, attr);
+    put_native_function("entries", entries, 1, attr);
 }
 
 ObjectConstructor::~ObjectConstructor()
@@ -163,6 +166,42 @@ Value ObjectConstructor::is(Interpreter& interpreter)
         return Value(false);
     }
     return typed_eq(interpreter, value1, value2);
+}
+
+Value ObjectConstructor::keys(Interpreter& interpreter)
+{
+    if (!interpreter.argument_count())
+        return interpreter.throw_exception<TypeError>("Can't convert undefined to object");
+
+    auto* obj_arg = interpreter.argument(0).to_object(interpreter.heap());
+    if (interpreter.exception())
+        return {};
+
+    return obj_arg->get_enumerable_own_properties(*obj_arg, GetOwnPropertyMode::Key);
+}
+
+Value ObjectConstructor::values(Interpreter& interpreter)
+{
+    if (!interpreter.argument_count())
+        return interpreter.throw_exception<TypeError>("Can't convert undefined to object");
+
+    auto* obj_arg = interpreter.argument(0).to_object(interpreter.heap());
+    if (interpreter.exception())
+        return {};
+
+    return obj_arg->get_enumerable_own_properties(*obj_arg, GetOwnPropertyMode::Value);
+}
+
+Value ObjectConstructor::entries(Interpreter& interpreter)
+{
+    if (!interpreter.argument_count())
+        return interpreter.throw_exception<TypeError>("Can't convert undefined to object");
+
+    auto* obj_arg = interpreter.argument(0).to_object(interpreter.heap());
+    if (interpreter.exception())
+        return {};
+
+    return obj_arg->get_enumerable_own_properties(*obj_arg, GetOwnPropertyMode::KeyAndValue);
 }
 
 }

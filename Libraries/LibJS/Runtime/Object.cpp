@@ -108,6 +108,69 @@ Value Object::get_own_property(const Object& this_object, const FlyString& prope
     return value_here;
 }
 
+Value Object::get_enumerable_own_properties(const Object& this_object, GetOwnPropertyMode kind) const
+{
+    auto* properties_array = Array::create(interpreter().global_object());
+
+    // FIXME: Support generic iterables
+    if (this_object.is_string_object()) {
+        auto str = static_cast<const StringObject&>(this_object).primitive_string().string();
+
+        for (size_t i = 0; i < str.length(); ++i) {
+            if (kind == GetOwnPropertyMode::Key) {
+                properties_array->put_by_index(i, js_string(interpreter(), String::number(i)));
+            } else if (kind == GetOwnPropertyMode::Value) {
+                properties_array->put_by_index(i, js_string(interpreter(), String::format("%c", str[i])));
+            } else {
+                auto* entry_array = Array::create(interpreter().global_object());
+                entry_array->put_by_index(0, js_string(interpreter(), String::number(i)));
+                entry_array->put_by_index(1, js_string(interpreter(), String::format("%c", str[i])));
+                properties_array->put_by_index(i, entry_array);
+            }
+        }
+
+        return properties_array;
+    }
+
+    size_t property_index = 0;
+    for (size_t i = 0; i < m_elements.size(); ++i) {
+        if (m_elements.at(i).is_empty())
+            continue;
+
+        if (kind == GetOwnPropertyMode::Key) {
+            properties_array->put_by_index(property_index, js_string(interpreter(), String::number(i)));
+        } else if (kind == GetOwnPropertyMode::Value) {
+            properties_array->put_by_index(property_index, m_elements.at(i));
+        } else {
+            auto* entry_array = Array::create(interpreter().global_object());
+            entry_array->put_by_index(0, js_string(interpreter(), String::number(i)));
+            entry_array->put_by_index(1, m_elements.at(i));
+            properties_array->put_by_index(property_index, entry_array);
+        }
+
+        ++property_index;
+    }
+
+    for (auto& it : this_object.shape().property_table_ordered()) {
+        if (it.value.attributes & Attribute::Enumerable) {
+            size_t offset = it.value.offset + property_index;
+
+            if (kind == GetOwnPropertyMode::Key) {
+                properties_array->put_by_index(offset, js_string(interpreter(), it.key));
+            } else if (kind == GetOwnPropertyMode::Value) {
+                properties_array->put_by_index(offset, this_object.get(it.key));
+            } else {
+                auto* entry_array = Array::create(interpreter().global_object());
+                entry_array->put_by_index(0, js_string(interpreter(), it.key));
+                entry_array->put_by_index(1, this_object.get(it.key));
+                properties_array->put_by_index(offset, entry_array);
+            }
+        }
+    }
+
+    return properties_array;
+}
+
 void Object::set_shape(Shape& new_shape)
 {
     m_storage.resize(new_shape.property_count());
