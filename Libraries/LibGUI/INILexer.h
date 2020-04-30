@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020, Hüseyin Aslıtürk <asliturk@hotmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,63 +26,64 @@
 
 #pragma once
 
-#include <AK/Noncopyable.h>
-#include <AK/WeakPtr.h>
-#include <LibGUI/TextDocument.h>
-#include <LibGfx/Palette.h>
+#include <AK/StringView.h>
 
 namespace GUI {
 
-enum class SyntaxLanguage {
-    PlainText,
-    Cpp,
-    Javascript,
-    INI
+#define FOR_EACH_TOKEN_TYPE \
+    __TOKEN(Unknown)        \
+    __TOKEN(Comment)        \
+    __TOKEN(Whitespace)     \
+    __TOKEN(section)        \
+    __TOKEN(LeftBracket)    \
+    __TOKEN(RightBracket)   \
+    __TOKEN(Name)           \
+    __TOKEN(Value)          \
+    __TOKEN(Equal)
+
+struct IniPosition {
+    size_t line;
+    size_t column;
 };
 
-struct TextStyle {
-    Color color;
-    const Gfx::Font* font { nullptr };
+struct IniToken {
+    enum class Type {
+#define __TOKEN(x) x,
+        FOR_EACH_TOKEN_TYPE
+#undef __TOKEN
+    };
+
+    const char* to_string() const
+    {
+        switch (m_type) {
+#define __TOKEN(x) \
+    case Type::x:  \
+        return #x;
+            FOR_EACH_TOKEN_TYPE
+#undef __TOKEN
+        }
+        ASSERT_NOT_REACHED();
+    }
+
+    Type m_type { Type::Unknown };
+    IniPosition m_start;
+    IniPosition m_end;
 };
 
-class SyntaxHighlighter {
-    AK_MAKE_NONCOPYABLE(SyntaxHighlighter);
-    AK_MAKE_NONMOVABLE(SyntaxHighlighter);
-
+class IniLexer {
 public:
-    virtual ~SyntaxHighlighter();
+    IniLexer(const StringView&);
 
-    virtual SyntaxLanguage language() const = 0;
-    virtual void rehighlight(Gfx::Palette) = 0;
-    virtual void highlight_matching_token_pair();
+    Vector<IniToken> lex();
 
-    virtual bool is_identifier(void*) const { return false; };
-    virtual bool is_navigatable(void*) const { return false; };
+private:
+    char peek(size_t offset = 0) const;
+    char consume();
 
-    void attach(TextEditor& editor);
-    void detach();
-    void cursor_did_change();
-
-protected:
-    SyntaxHighlighter() {}
-
-    WeakPtr<TextEditor> m_editor;
-
-    struct MatchingTokenPair {
-        void* open;
-        void* close;
-    };
-
-    virtual Vector<MatchingTokenPair> matching_token_pairs() const = 0;
-    virtual bool token_types_equal(void*, void*) const = 0;
-
-    struct BuddySpan {
-        int index { -1 };
-        GUI::TextDocumentSpan span_backup;
-    };
-
-    bool m_has_brace_buddies { false };
-    BuddySpan m_brace_buddies[2];
+    StringView m_input;
+    size_t m_index { 0 };
+    IniPosition m_previous_position { 0, 0 };
+    IniPosition m_position { 0, 0 };
 };
 
 }
