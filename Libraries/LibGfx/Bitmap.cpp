@@ -29,8 +29,8 @@
 #include <AK/SharedBuffer.h>
 #include <AK/String.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/PNGLoader.h>
 #include <LibGfx/GIFLoader.h>
+#include <LibGfx/PNGLoader.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -61,6 +61,16 @@ RefPtr<Bitmap> Bitmap::create_purgeable(BitmapFormat format, const Size& size)
     return adopt(*new Bitmap(format, size, Purgeable::Yes));
 }
 
+RefPtr<Bitmap> Bitmap::cloned()
+{
+    auto cloned_bitmap = Bitmap::create(format(), size());
+    if (!cloned_bitmap) {
+        return nullptr;
+    }
+    memcpy(cloned_bitmap->scanline(0), scanline(0), size_in_bytes());
+    return cloned_bitmap;
+}
+
 Bitmap::Bitmap(BitmapFormat format, const Size& size, Purgeable purgeable)
     : m_size(size)
     , m_pitch(round_up_to_power_of_two(size.width() * sizeof(RGBA32), 16))
@@ -86,9 +96,9 @@ RefPtr<Bitmap> Bitmap::create_wrapper(BitmapFormat format, const Size& size, siz
 
 RefPtr<Bitmap> Bitmap::load_from_file(const StringView& path)
 {
-    if(path.ends_with(".png"))
+    if (path.ends_with(".png"))
         return load_png(path);
-    if(path.ends_with(".gif"))
+    if (path.ends_with(".gif"))
         return load_gif(path);
 
     return nullptr;
