@@ -96,7 +96,9 @@ public:
     void set_prototype(Object*);
     bool has_prototype(const Object* prototype) const;
 
+    bool has_property(const FlyString& property_name) const;
     bool has_own_property(const FlyString& property_name) const;
+
     enum class PreferredType {
         Default,
         String,
