@@ -35,9 +35,10 @@
 
 namespace Line {
 
-Editor::Editor(bool always_refresh)
+Editor::Editor(Configuration configuration)
+    : m_configuration(configuration)
 {
-    m_always_refresh = always_refresh;
+    m_always_refresh = configuration.refresh_behaviour == Configuration::RefreshBehaviour::Eager;
     m_pending_chars = ByteBuffer::create_uninitialized(0);
     struct winsize ws;
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) < 0) {
@@ -352,21 +353,34 @@ String Editor::get_line(const String& prompt)
                 if (!on_tab_complete_first_token || !on_tab_complete_other_token)
                     continue;
 
-                bool is_empty_token = m_cursor == 0 || m_buffer[m_cursor - 1] == ' ';
+                auto should_break_token = [mode = m_configuration.split_mechanism](auto& buffer, size_t index) {
+                    switch (mode) {
+                    case Configuration::TokenSplitMechanism::Spaces:
+                        return buffer[index] == ' ';
+                    case Configuration::TokenSplitMechanism::UnescapedSpaces:
+                        return buffer[index] == ' ' && (index == 0 || buffer[index - 1] != '\\');
+                    }
+
+                    ASSERT_NOT_REACHED();
+                    return true;
+                };
+
+                bool is_empty_token = m_cursor == 0 || should_break_token(m_buffer, m_cursor - 1);
 
                 // reverse tab can count as regular tab here
                 m_times_tab_pressed++;
 
                 int token_start = m_cursor - 1;
+
                 if (!is_empty_token) {
-                    while (token_start >= 0 && m_buffer[token_start] != ' ')
+                    while (token_start >= 0 && !should_break_token(m_buffer, token_start))
                         --token_start;
                     ++token_start;
                 }
 
                 bool is_first_token = true;
                 for (int i = token_start - 1; i >= 0; --i) {
-                    if (m_buffer[i] != ' ') {
+                    if (should_break_token(m_buffer, i)) {
                         is_first_token = false;
                         break;
                     }
@@ -651,7 +665,7 @@ String Editor::get_line(const String& prompt)
                     for (auto ch : m_buffer)
                         m_pre_search_buffer.append(ch);
                     m_pre_search_cursor = m_cursor;
-                    m_search_editor = make<Editor>(true); // Has anyone seen 'Inception'?
+                    m_search_editor = make<Editor>(Configuration { Configuration::Eager, m_configuration.split_mechanism }); // Has anyone seen 'Inception'?
                     m_search_editor->on_display_refresh = [this](Editor& search_editor) {
                         search(StringView { search_editor.buffer().data(), search_editor.buffer().size() });
                         refresh_display();

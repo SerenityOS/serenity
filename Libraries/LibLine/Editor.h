@@ -75,9 +75,37 @@ struct CompletionSuggestion {
     String trailing_trivia;
 };
 
+struct Configuration {
+    enum TokenSplitMechanism {
+        Spaces,
+        UnescapedSpaces,
+    };
+    enum RefreshBehaviour {
+        Lazy,
+        Eager,
+    };
+
+    Configuration()
+    {
+    }
+
+    template<typename Arg, typename... Rest>
+    Configuration(Arg arg, Rest... rest)
+        : Configuration(rest...)
+    {
+        set(arg);
+    }
+
+    void set(RefreshBehaviour refresh) { refresh_behaviour = refresh; }
+    void set(TokenSplitMechanism split) { split_mechanism = split; }
+
+    RefreshBehaviour refresh_behaviour { RefreshBehaviour::Lazy };
+    TokenSplitMechanism split_mechanism { TokenSplitMechanism::Spaces };
+};
+
 class Editor {
 public:
-    explicit Editor(bool always_refresh = false);
+    explicit Editor(Configuration configuration = {});
     ~Editor();
 
     String get_line(const String& prompt);
@@ -308,6 +336,8 @@ private:
     bool m_refresh_needed { false };
 
     bool m_is_editing { false };
+
+    Configuration m_configuration;
 };
 
 }
