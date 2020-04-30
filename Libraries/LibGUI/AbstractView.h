@@ -34,7 +34,6 @@ namespace GUI {
 
 class AbstractView : public ScrollableWidget {
     C_OBJECT_ABSTRACT(AbstractView)
-    friend class Model;
 
 public:
     void set_model(RefPtr<Model>);
