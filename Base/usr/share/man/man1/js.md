@@ -24,7 +24,7 @@ Run `help()` in REPL mode to see its available built-in functions.
 * `-A`, `--dump-ast`: Dump the Abstract Syntax Tree after parsing the program.
 * `-l`, `--print-last-result`: Print the result of the last statement executed.
 * `-g`, `--gc-on-every-allocation`: Run garbage collection on every allocation.
-* `-s`, `--syntax-highlight`: Enable live syntax highlighting in the REPL
+* `-s`, `--no-syntax-highlight`: Disable live syntax highlighting in the REPL
 * `-t`, `--test-mode`: Run the interpreter with added functionality for the test harness
 
 ## Examples
