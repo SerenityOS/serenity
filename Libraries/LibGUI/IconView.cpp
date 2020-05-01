@@ -27,7 +27,7 @@
 #include <AK/StringBuilder.h>
 #include <Kernel/KeyCode.h>
 #include <LibGUI/DragOperation.h>
-#include <LibGUI/ItemView.h>
+#include <LibGUI/IconView.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
@@ -37,7 +37,7 @@
 
 namespace GUI {
 
-ItemView::ItemView()
+IconView::IconView()
 {
     set_fill_with_background_color(true);
     set_background_role(ColorRole::Base);
@@ -45,11 +45,11 @@ ItemView::ItemView()
     horizontal_scrollbar().set_visible(false);
 }
 
-ItemView::~ItemView()
+IconView::~IconView()
 {
 }
 
-void ItemView::select_all()
+void IconView::select_all()
 {
     selection().clear();
     for (int item_index = 0; item_index < item_count(); ++item_index) {
@@ -58,25 +58,25 @@ void ItemView::select_all()
     }
 }
 
-void ItemView::scroll_into_view(const ModelIndex& index, Orientation orientation)
+void IconView::scroll_into_view(const ModelIndex& index, Orientation orientation)
 {
     ScrollableWidget::scroll_into_view(item_rect(index.row()), orientation);
 }
 
-void ItemView::resize_event(ResizeEvent& event)
+void IconView::resize_event(ResizeEvent& event)
 {
     AbstractView::resize_event(event);
     update_content_size();
 }
 
-void ItemView::did_update_model(unsigned flags)
+void IconView::did_update_model(unsigned flags)
 {
     AbstractView::did_update_model(flags);
     update_content_size();
     update();
 }
 
-void ItemView::update_content_size()
+void IconView::update_content_size()
 {
     if (!model())
         return set_content_size({});
@@ -93,7 +93,7 @@ void ItemView::update_content_size()
     set_content_size({ content_width, content_height });
 }
 
-Gfx::Rect ItemView::item_rect(int item_index) const
+Gfx::Rect IconView::item_rect(int item_index) const
 {
     if (!m_visual_row_count || !m_visual_column_count)
         return {};
@@ -107,7 +107,7 @@ Gfx::Rect ItemView::item_rect(int item_index) const
     };
 }
 
-Vector<int> ItemView::items_intersecting_rect(const Gfx::Rect& rect) const
+Vector<int> IconView::items_intersecting_rect(const Gfx::Rect& rect) const
 {
     ASSERT(model());
     const auto& column_metadata = model()->column_metadata(model_column());
@@ -125,7 +125,7 @@ Vector<int> ItemView::items_intersecting_rect(const Gfx::Rect& rect) const
     return item_indexes;
 }
 
-ModelIndex ItemView::index_at_event_position(const Gfx::Point& position) const
+ModelIndex IconView::index_at_event_position(const Gfx::Point& position) const
 {
     ASSERT(model());
     // FIXME: Since all items are the same size, just compute the clicked item index
@@ -146,12 +146,12 @@ ModelIndex ItemView::index_at_event_position(const Gfx::Point& position) const
     return {};
 }
 
-Gfx::Point ItemView::adjusted_position(const Gfx::Point& position) const
+Gfx::Point IconView::adjusted_position(const Gfx::Point& position) const
 {
     return position.translated(0, vertical_scrollbar().value());
 }
 
-void ItemView::mousedown_event(MouseEvent& event)
+void IconView::mousedown_event(MouseEvent& event)
 {
     if (!model())
         return AbstractView::mousedown_event(event);
@@ -183,7 +183,7 @@ void ItemView::mousedown_event(MouseEvent& event)
     m_rubber_band_current = adjusted_position;
 }
 
-void ItemView::mouseup_event(MouseEvent& event)
+void IconView::mouseup_event(MouseEvent& event)
 {
     if (m_rubber_banding && event.button() == MouseButton::Left) {
         m_rubber_banding = false;
@@ -193,7 +193,7 @@ void ItemView::mouseup_event(MouseEvent& event)
     AbstractView::mouseup_event(event);
 }
 
-void ItemView::drag_move_event(DragEvent& event)
+void IconView::drag_move_event(DragEvent& event)
 {
     auto index = index_at_event_position(event.position());
     ModelIndex new_drop_candidate_index;
@@ -212,7 +212,7 @@ void ItemView::drag_move_event(DragEvent& event)
     event.accept();
 }
 
-void ItemView::mousemove_event(MouseEvent& event)
+void IconView::mousemove_event(MouseEvent& event)
 {
     if (!model())
         return AbstractView::mousemove_event(event);
@@ -239,7 +239,7 @@ void ItemView::mousemove_event(MouseEvent& event)
     AbstractView::mousemove_event(event);
 }
 
-void ItemView::get_item_rects(int item_index, const Gfx::Font& font, const Variant& item_text, Gfx::Rect& item_rect, Gfx::Rect& icon_rect, Gfx::Rect& text_rect) const
+void IconView::get_item_rects(int item_index, const Gfx::Font& font, const Variant& item_text, Gfx::Rect& item_rect, Gfx::Rect& icon_rect, Gfx::Rect& text_rect) const
 {
     item_rect = this->item_rect(item_index);
     icon_rect = { 0, 0, 32, 32 };
@@ -251,7 +251,7 @@ void ItemView::get_item_rects(int item_index, const Gfx::Font& font, const Varia
     text_rect.intersect(item_rect);
 }
 
-void ItemView::second_paint_event(PaintEvent& event)
+void IconView::second_paint_event(PaintEvent& event)
 {
     if (!m_rubber_banding)
         return;
@@ -266,7 +266,7 @@ void ItemView::second_paint_event(PaintEvent& event)
     painter.draw_rect(rubber_band_rect, palette().rubber_band_border());
 }
 
-void ItemView::paint_event(PaintEvent& event)
+void IconView::paint_event(PaintEvent& event)
 {
     Color widget_background_color = palette().color(background_role());
     Frame::paint_event(event);
@@ -328,14 +328,14 @@ void ItemView::paint_event(PaintEvent& event)
     };
 }
 
-int ItemView::item_count() const
+int IconView::item_count() const
 {
     if (!model())
         return 0;
     return model()->row_count();
 }
 
-void ItemView::keydown_event(KeyEvent& event)
+void IconView::keydown_event(KeyEvent& event)
 {
     if (!model())
         return;

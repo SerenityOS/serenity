@@ -78,8 +78,8 @@ DirectoryView::DirectoryView()
 {
     set_active_widget(nullptr);
     set_content_margins({ 2, 2, 2, 2 });
-    m_item_view = add<GUI::ItemView>();
-    m_item_view->set_model(model());
+    m_icon_view = add<GUI::IconView>();
+    m_icon_view->set_model(model());
 
     m_columns_view = add<GUI::ColumnsView>();
     m_columns_view->set_model(model());
@@ -89,7 +89,7 @@ DirectoryView::DirectoryView()
 
     m_table_view->model()->set_key_column_and_sort_order(GUI::FileSystemModel::Column::Name, GUI::SortOrder::Ascending);
 
-    m_item_view->set_model_column(GUI::FileSystemModel::Column::Name);
+    m_icon_view->set_model_column(GUI::FileSystemModel::Column::Name);
     m_columns_view->set_model_column(GUI::FileSystemModel::Column::Name);
 
     m_model->on_error = [this](int error, const char* error_string) {
@@ -105,7 +105,7 @@ DirectoryView::DirectoryView()
 
     m_model->on_complete = [this] {
         m_table_view->selection().clear();
-        m_item_view->selection().clear();
+        m_icon_view->selection().clear();
 
         add_path_to_history(model().root_path());
 
@@ -129,7 +129,7 @@ DirectoryView::DirectoryView()
             on_thumbnail_progress(done, total);
     };
 
-    m_item_view->on_activation = [&](const GUI::ModelIndex& index) {
+    m_icon_view->on_activation = [&](const GUI::ModelIndex& index) {
         handle_activation(index);
     };
     m_columns_view->on_activation = [&](const GUI::ModelIndex& index) {
@@ -145,10 +145,10 @@ DirectoryView::DirectoryView()
         if (on_selection_change)
             on_selection_change(*m_table_view);
     };
-    m_item_view->on_selection_change = [this] {
+    m_icon_view->on_selection_change = [this] {
         update_statusbar();
         if (on_selection_change)
-            on_selection_change(*m_item_view);
+            on_selection_change(*m_icon_view);
     };
     m_columns_view->on_selection_change = [this] {
         update_statusbar();
@@ -160,9 +160,9 @@ DirectoryView::DirectoryView()
         if (on_context_menu_request)
             on_context_menu_request(*m_table_view, index, event);
     };
-    m_item_view->on_context_menu_request = [this](auto& index, auto& event) {
+    m_icon_view->on_context_menu_request = [this](auto& index, auto& event) {
         if (on_context_menu_request)
-            on_context_menu_request(*m_item_view, index, event);
+            on_context_menu_request(*m_icon_view, index, event);
     };
     m_columns_view->on_context_menu_request = [this](auto& index, auto& event) {
         if (on_context_menu_request)
@@ -173,9 +173,9 @@ DirectoryView::DirectoryView()
         if (on_drop)
             on_drop(*m_table_view, index, event);
     };
-    m_item_view->on_drop = [this](auto& index, auto& event) {
+    m_icon_view->on_drop = [this](auto& index, auto& event) {
         if (on_drop)
-            on_drop(*m_item_view, index, event);
+            on_drop(*m_icon_view, index, event);
     };
     m_columns_view->on_drop = [this](auto& index, auto& event) {
         if (on_drop)
@@ -195,7 +195,7 @@ void DirectoryView::set_view_mode(ViewMode mode)
         return;
     m_view_mode = mode;
     update();
-    if (mode == ViewMode::List) {
+    if (mode == ViewMode::Table) {
         set_active_widget(m_table_view);
         return;
     }
@@ -204,7 +204,7 @@ void DirectoryView::set_view_mode(ViewMode mode)
         return;
     }
     if (mode == ViewMode::Icon) {
-        set_active_widget(m_item_view);
+        set_active_widget(m_icon_view);
         return;
     }
     ASSERT_NOT_REACHED();
@@ -297,7 +297,7 @@ void DirectoryView::update_statusbar()
         auto index = current_view().selection().first();
 
         // FIXME: This is disgusting. This code should not even be aware that there is a GUI::SortingProxyModel in the table view.
-        if (m_view_mode == ViewMode::List) {
+        if (m_view_mode == ViewMode::Table) {
             auto& filter_model = (GUI::SortingProxyModel&)*m_table_view->model();
             index = filter_model.map_to_target(index);
         }

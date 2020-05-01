@@ -28,7 +28,7 @@
 
 #include <LibGUI/Action.h>
 #include <LibGUI/ColumnsView.h>
-#include <LibGUI/ItemView.h>
+#include <LibGUI/IconView.h>
 #include <LibGUI/StackWidget.h>
 #include <LibGUI/TableView.h>
 
@@ -50,7 +50,7 @@ public:
     Function<void(const ModelIndex&, const DropEvent&)> on_drop;
 
     enum ViewMode {
-        List,
+        Table,
         Columns,
         Icon
     };
@@ -65,14 +65,14 @@ public:
     GUI::AbstractView& current_view()
     {
         switch (m_view_mode) {
-        case ViewMode::List:
+        case ViewMode::Table:
             return *m_table_view;
 #ifdef MULTIVIEW_WITH_COLUMNSVIEW
         case ViewMode::Columns:
             return *m_columns_view;
 #endif
         case ViewMode::Icon:
-            return *m_item_view;
+            return *m_icon_view;
         default:
             ASSERT_NOT_REACHED();
         }
@@ -85,7 +85,7 @@ public:
     void for_each_view_implementation(Callback callback)
     {
         callback(*m_table_view);
-        callback(*m_item_view);
+        callback(*m_icon_view);
 #ifdef MULTIVIEW_WITH_COLUMNSVIEW
         callback(*m_columns_view);
 #endif
@@ -113,7 +113,7 @@ private:
     RefPtr<Model> m_model;
 
     RefPtr<TableView> m_table_view;
-    RefPtr<ItemView> m_item_view;
+    RefPtr<IconView> m_icon_view;
 #ifdef MULTIVIEW_WITH_COLUMNSVIEW
     RefPtr<ColumnsView> m_columns_view;
 #endif

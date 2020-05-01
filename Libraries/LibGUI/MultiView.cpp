@@ -40,14 +40,14 @@ MultiView::MultiView()
 {
     set_active_widget(nullptr);
     set_content_margins({ 2, 2, 2, 2 });
-    m_item_view = add<ItemView>();
+    m_icon_view = add<IconView>();
     m_table_view = add<TableView>();
 
 #ifdef MULTIVIEW_WITH_COLUMNSVIEW
     m_columns_view = add<ColumnsView>();
 #endif
 
-    m_item_view->on_activation = [&](auto& index) {
+    m_icon_view->on_activation = [&](auto& index) {
         if (on_activation)
             on_activation(index);
     };
@@ -66,7 +66,7 @@ MultiView::MultiView()
         if (on_selection_change)
             on_selection_change();
     };
-    m_item_view->on_selection_change = [this] {
+    m_icon_view->on_selection_change = [this] {
         if (on_selection_change)
             on_selection_change();
     };
@@ -81,7 +81,7 @@ MultiView::MultiView()
         if (on_context_menu_request)
             on_context_menu_request(index, event);
     };
-    m_item_view->on_context_menu_request = [this](auto& index, auto& event) {
+    m_icon_view->on_context_menu_request = [this](auto& index, auto& event) {
         if (on_context_menu_request)
             on_context_menu_request(index, event);
     };
@@ -96,7 +96,7 @@ MultiView::MultiView()
         if (on_drop)
             on_drop(index, event);
     };
-    m_item_view->on_drop = [this](auto& index, auto& event) {
+    m_icon_view->on_drop = [this](auto& index, auto& event) {
         if (on_drop)
             on_drop(index, event);
     };
@@ -121,7 +121,7 @@ void MultiView::set_view_mode(ViewMode mode)
         return;
     m_view_mode = mode;
     update();
-    if (mode == ViewMode::List) {
+    if (mode == ViewMode::Table) {
         set_active_widget(m_table_view);
         return;
     }
@@ -132,7 +132,7 @@ void MultiView::set_view_mode(ViewMode mode)
     }
 #endif
     if (mode == ViewMode::Icon) {
-        set_active_widget(m_item_view);
+        set_active_widget(m_icon_view);
         return;
     }
     ASSERT_NOT_REACHED();
@@ -153,7 +153,7 @@ void MultiView::set_model_column(int column)
     if (m_model_column == column)
         return;
     m_model_column = column;
-    m_item_view->set_model_column(column);
+    m_icon_view->set_model_column(column);
 #ifdef MULTIVIEW_WITH_COLUMNSVIEW
     m_columns_view->set_model_column(column);
 #endif
@@ -168,7 +168,7 @@ void MultiView::build_actions()
 {
     m_view_as_table_action = Action::create_checkable(
         "Table view", Gfx::Bitmap::load_from_file("/res/icons/16x16/table-view.png"), [this](auto&) {
-            set_view_mode(ViewMode::List);
+            set_view_mode(ViewMode::Table);
         });
 
     m_view_as_icons_action = Action::create_checkable(
