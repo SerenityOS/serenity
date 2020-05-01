@@ -38,6 +38,9 @@
 #include <LibJS/Runtime/Value.h>
 #include <math.h>
 
+// 2 ** 53 - 1
+#define MAX_ARRAY_LIKE_INDEX 9007199254740991.0
+
 namespace JS {
 
 bool Value::is_array() const
@@ -190,7 +193,7 @@ size_t Value::to_size_t() const
     auto number = to_number();
     if (number.is_nan() || number.as_double() <= 0)
         return 0;
-    return min(number.to_i32(), (i32)pow(2, 53) - 1);
+    return min((double)number.to_i32(), MAX_ARRAY_LIKE_INDEX);
 }
 
 Value greater_than(Interpreter&, Value lhs, Value rhs)
