@@ -97,9 +97,6 @@ public:
     bool is_occluded() const { return m_occluded; }
     void set_occluded(bool);
 
-    bool show_titlebar() const { return m_show_titlebar; }
-    void set_show_titlebar(bool show) { m_show_titlebar = show; }
-
     bool is_movable() const
     {
         return m_type == WindowType::Normal;
@@ -262,7 +259,6 @@ private:
     WindowTileType m_tiled { WindowTileType::None };
     Gfx::Rect m_untiled_rect;
     bool m_occluded { false };
-    bool m_show_titlebar { true };
     RefPtr<Gfx::Bitmap> m_backing_store;
     RefPtr<Gfx::Bitmap> m_last_backing_store;
     int m_window_id { -1 };

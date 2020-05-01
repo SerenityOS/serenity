@@ -220,9 +220,6 @@ void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
 
     Gfx::StylePainter::paint_window_frame(painter, outer_rect, palette);
 
-    if (!window.show_titlebar())
-        return;
-
     auto titlebar_rect = title_bar_rect();
     auto titlebar_icon_rect = title_bar_icon_rect();
     auto titlebar_inner_rect = title_bar_text_rect();
@@ -278,15 +275,14 @@ void WindowFrame::paint(Gfx::Painter& painter)
 static Gfx::Rect frame_rect_for_window(Window& window, const Gfx::Rect& rect)
 {
     auto type = window.type();
-    auto offset = !window.show_titlebar() ? (window_titlebar_height + 1) : 0;
 
     switch (type) {
     case WindowType::Normal:
         return {
             rect.x() - 4,
-            rect.y() - window_titlebar_height - 6 + offset,
+            rect.y() - window_titlebar_height - 6,
             rect.width() + 8,
-            rect.height() + 10 + window_titlebar_height - offset
+            rect.height() + 10 + window_titlebar_height
         };
     case WindowType::Notification:
         return {
