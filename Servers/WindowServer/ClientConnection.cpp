@@ -451,10 +451,30 @@ OwnPtr<Messages::WindowServer::GetClipboardContentsResponse> ClientConnection::h
     return make<Messages::WindowServer::GetClipboardContentsResponse>(shbuf_id, clipboard.size(), clipboard.data_type());
 }
 
+Window* ClientConnection::window_from_id(i32 window_id)
+{
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end())
+        return nullptr;
+    return it->value.ptr();
+}
+
 OwnPtr<Messages::WindowServer::CreateWindowResponse> ClientConnection::handle(const Messages::WindowServer::CreateWindow& message)
 {
     int window_id = m_next_window_id++;
     auto window = Window::construct(*this, (WindowType)message.type(), window_id, message.modal(), message.minimizable(), message.resizable(), message.fullscreen());
+
+    dbg() << "Constructing window with parent_window_id=" << message.parent_window_id();
+
+    if (message.parent_window_id()) {
+        auto* parent_window = window_from_id(message.parent_window_id());
+        if (!parent_window) {
+            did_misbehave("CreateWindow with bad parent_window_id");
+            return nullptr;
+        }
+        window->set_parent_window(*parent_window);
+    }
+
     window->set_has_alpha_channel(message.has_alpha_channel());
     window->set_title(message.title());
     if (!message.fullscreen()) {

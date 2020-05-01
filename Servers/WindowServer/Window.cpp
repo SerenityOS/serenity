@@ -482,4 +482,16 @@ void Window::recalculate_rect()
     Core::EventLoop::current().post_event(*this, make<ResizeEvent>(old_rect, m_rect));
 }
 
+void Window::add_child_window(Window& child_window)
+{
+    m_child_windows.append(child_window.make_weak_ptr());
+}
+
+void Window::set_parent_window(Window& parent_window)
+{
+    ASSERT(!m_parent_window);
+    m_parent_window = parent_window.make_weak_ptr();
+    parent_window.add_child_window(*this);
+}
+
 }

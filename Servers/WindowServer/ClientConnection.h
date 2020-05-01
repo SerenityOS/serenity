@@ -127,6 +127,8 @@ private:
     virtual void handle(const Messages::WindowServer::EnableDisplayLink&) override;
     virtual void handle(const Messages::WindowServer::DisableDisplayLink&) override;
 
+    Window* window_from_id(i32 window_id);
+
     HashMap<int, NonnullRefPtr<Window>> m_windows;
     HashMap<int, NonnullOwnPtr<MenuBar>> m_menubars;
     HashMap<int, NonnullRefPtr<Menu>> m_menus;
