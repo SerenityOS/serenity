@@ -50,6 +50,7 @@ public:
     Function<void(const ModelIndex&, const DropEvent&)> on_drop;
 
     enum ViewMode {
+        Invalid,
         Table,
         Columns,
         Icon
@@ -107,7 +108,7 @@ private:
 
     void build_actions();
 
-    ViewMode m_view_mode { Icon };
+    ViewMode m_view_mode { Invalid };
     int m_model_column { 0 };
 
     RefPtr<Model> m_model;
