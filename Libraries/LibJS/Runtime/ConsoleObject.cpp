@@ -56,6 +56,7 @@ ConsoleObject::ConsoleObject()
     put_native_function("error", error);
     put_native_function("trace", trace);
     put_native_function("count", count);
+    put_native_function("countReset", count_reset);
 }
 
 ConsoleObject::~ConsoleObject()
@@ -130,6 +131,24 @@ Value ConsoleObject::count(Interpreter& interpreter)
         printf("%s: 1\n", counter_name.characters());
         counters.set(counter_name, 1);
     }
+    return js_undefined();
+}
+
+Value ConsoleObject::count_reset(Interpreter& interpreter)
+{
+    String counter_name;
+    if (!interpreter.argument_count())
+        counter_name = "default";
+    else
+        counter_name = interpreter.argument(0).to_string();
+
+    auto& counters = interpreter.console_counters();
+
+    if (counters.contains(counter_name)) {
+        counters.remove(counter_name);
+        printf("%s: 0\n", counter_name.characters());
+    }
+
     return js_undefined();
 }
 
