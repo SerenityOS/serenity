@@ -142,6 +142,25 @@ void Window::set_rect(const Gfx::Rect& rect)
     m_frame.notify_window_rect_changed(old_rect, rect);
 }
 
+void Window::set_rect_without_repaint(const Gfx::Rect& rect)
+{
+    ASSERT(!rect.is_empty());
+    if (m_rect == rect)
+        return;
+    auto old_rect = m_rect;
+    m_rect = rect;
+
+    if (old_rect.size() == m_rect.size()) {
+        auto delta = m_rect.location() - old_rect.location();
+        for (auto& child_window : m_child_windows) {
+            if (child_window)
+                child_window->move_by(delta);
+        }
+    }
+
+    m_frame.notify_window_rect_changed(old_rect, rect);
+}
+
 void Window::handle_mouse_event(const MouseEvent& event)
 {
     set_automatic_cursor_tracking_enabled(event.buttons() != 0);
