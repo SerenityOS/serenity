@@ -44,7 +44,7 @@ public:
     NonnullRefPtr<Program> parse_program();
 
     template<typename FunctionNodeType>
-    NonnullRefPtr<FunctionNodeType> parse_function_node();
+    NonnullRefPtr<FunctionNodeType> parse_function_node(bool need_function_keyword = true);
 
     NonnullRefPtr<Statement> parse_statement();
     NonnullRefPtr<BlockStatement> parse_block_statement();

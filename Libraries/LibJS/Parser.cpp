@@ -482,7 +482,9 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
             continue;
         }
 
-        if (need_colon || match(TokenType::Colon)) {
+        if (!is_spread && match(TokenType::ParenOpen)) {
+            property_value = parse_function_node<FunctionExpression>(false);
+        } else if (need_colon || match(TokenType::Colon)) {
             consume(TokenType::Colon);
             property_value = parse_expression(0);
         }
@@ -756,11 +758,13 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement()
 }
 
 template<typename FunctionNodeType>
-NonnullRefPtr<FunctionNodeType> Parser::parse_function_node()
+NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(bool needs_function_keyword)
 {
     ScopePusher scope(*this, ScopePusher::Var);
 
-    consume(TokenType::Function);
+    if (needs_function_keyword)
+        consume(TokenType::Function);
+
     String name;
     if (FunctionNodeType::must_have_name()) {
         name = consume(TokenType::Identifier).value();
