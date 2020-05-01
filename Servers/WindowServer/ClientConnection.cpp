@@ -485,7 +485,6 @@ OwnPtr<Messages::WindowServer::CreateWindowResponse> ClientConnection::handle(co
         window->set_rect(WindowManager::the().desktop_rect());
         window->recalculate_rect();
     }
-    window->set_show_titlebar(message.show_titlebar());
     window->set_opacity(message.opacity());
     window->set_size_increment(message.size_increment());
     window->set_base_size(message.base_size());

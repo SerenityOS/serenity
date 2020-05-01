@@ -78,9 +78,6 @@ public:
     String title() const;
     void set_title(const StringView&);
 
-    bool show_titlebar() const { return m_show_titlebar; };
-    void set_show_titlebar(bool show) { m_show_titlebar = show; };
-
     Color background_color() const { return m_background_color; }
     void set_background_color(Color color) { m_background_color = color; }
 
@@ -222,7 +219,6 @@ private:
     bool m_resizable { true };
     bool m_minimizable { true };
     bool m_fullscreen { false };
-    bool m_show_titlebar { true };
     bool m_layout_pending { false };
     bool m_visible_for_timer_purposes { true };
     bool m_visible { false };
