@@ -30,6 +30,7 @@
 #include <AK/NetworkOrdered.h>
 #include <LibCore/puff.h>
 #include <LibGfx/PNGLoader.h>
+#include <LibM/math.h>
 #include <fcntl.h>
 #include <serenity.h>
 #include <stdio.h>
@@ -120,7 +121,7 @@ struct PNGLoadingContext {
     u8 compression_method { 0 };
     u8 filter_method { 0 };
     u8 interlace_method { 0 };
-    u8 bytes_per_pixel { 0 };
+    u8 channels { 0 };
     bool has_seen_zlib_header { false };
     bool has_alpha() const { return color_type & 4 || palette_transparency_data.size() > 0; }
     Vector<Scanline> scanlines;
@@ -339,6 +340,21 @@ NEVER_INLINE FLATTEN static void unfilter(PNGLoadingContext& context)
                     pixel.a = 0xff;
                 }
             }
+        } else if (context.bit_depth == 1 || context.bit_depth == 2 || context.bit_depth == 4) {
+            auto pixels_per_byte = 8 / context.bit_depth;
+            auto mask = (1 << context.bit_depth) - 1;
+            for (int y = 0; y < context.height; ++y) {
+                auto* gray_values = (u8*)context.scanlines[y].data.data();
+                for (int i = 0; i < context.width; ++i) {
+                    auto bit_offset = (8 - context.bit_depth) - (context.bit_depth * (i % pixels_per_byte));
+                    auto value = (gray_values[i / pixels_per_byte] >> bit_offset) & mask;
+                    auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
+                    pixel.r = value * (0xff / pow(context.bit_depth, 2));
+                    pixel.g = value * (0xff / pow(context.bit_depth, 2));
+                    pixel.b = value * (0xff / pow(context.bit_depth, 2));
+                    pixel.a = 0xff;
+                }
+            }
         } else {
             ASSERT_NOT_REACHED();
         }
@@ -418,19 +434,42 @@ NEVER_INLINE FLATTEN static void unfilter(PNGLoadingContext& context)
         }
         break;
     case 3:
-        for (int y = 0; y < context.height; ++y) {
-            auto* palette_index = (u8*)context.scanlines[y].data.data();
-            for (int i = 0; i < context.width; ++i) {
-                auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
-                auto& color = context.palette_data.at((int)palette_index[i]);
-                auto transparency = context.palette_transparency_data.size() >= palette_index[i] + 1u
-                    ? context.palette_transparency_data.data()[palette_index[i]]
-                    : 0xff;
-                pixel.r = color.r;
-                pixel.g = color.g;
-                pixel.b = color.b;
-                pixel.a = transparency;
+        if (context.bit_depth == 8) {
+            for (int y = 0; y < context.height; ++y) {
+                auto* palette_index = (u8*)context.scanlines[y].data.data();
+                for (int i = 0; i < context.width; ++i) {
+                    auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
+                    auto& color = context.palette_data.at((int)palette_index[i]);
+                    auto transparency = context.palette_transparency_data.size() >= palette_index[i] + 1u
+                        ? context.palette_transparency_data.data()[palette_index[i]]
+                        : 0xff;
+                    pixel.r = color.r;
+                    pixel.g = color.g;
+                    pixel.b = color.b;
+                    pixel.a = transparency;
+                }
             }
+        } else if (context.bit_depth == 1 || context.bit_depth == 2 || context.bit_depth == 4) {
+            auto pixels_per_byte = 8 / context.bit_depth;
+            auto mask = (1 << context.bit_depth) - 1;
+            for (int y = 0; y < context.height; ++y) {
+                auto* palette_indexes = (u8*)context.scanlines[y].data.data();
+                for (int i = 0; i < context.width; ++i) {
+                    auto bit_offset = (8 - context.bit_depth) - (context.bit_depth * (i % pixels_per_byte));
+                    auto palette_index = (palette_indexes[i / pixels_per_byte] >> bit_offset) & mask;
+                    auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
+                    auto& color = context.palette_data.at(palette_index);
+                    auto transparency = context.palette_transparency_data.size() >= palette_index + 1u
+                        ? context.palette_transparency_data.data()[palette_index]
+                        : 0xff;
+                    pixel.r = color.r;
+                    pixel.g = color.g;
+                    pixel.b = color.b;
+                    pixel.a = transparency;
+                }
+            }
+        } else {
+            ASSERT_NOT_REACHED();
         }
         break;
     default:
@@ -586,7 +625,8 @@ static bool decode_png_bitmap(PNGLoadingContext& context)
 
         context.scanlines.append({ filter });
         auto& scanline_buffer = context.scanlines.last().data;
-        if (!streamer.wrap_bytes(scanline_buffer, context.width * context.bytes_per_pixel)) {
+        auto row_size = ((context.width * context.channels * context.bit_depth) + 7) / 8;
+        if (!streamer.wrap_bytes(scanline_buffer, row_size)) {
             context.state = PNGLoadingContext::State::Error;
             return false;
         }
@@ -648,36 +688,28 @@ static bool process_IHDR(const ByteBuffer& data, PNGLoadingContext& context, boo
 
     switch (context.color_type) {
     case 0: // Each pixel is a grayscale sample.
-        // FIXME: Implement support for 1/2/4 bit grayscale based images.
-        if (ihdr.bit_depth != 8 && ihdr.bit_depth != 16) {
-            dbgprintf("PNGLoader::process_IHDR: Unsupported grayscale format (%d bpp).\n", context.bit_depth);
-            return false;
-        }
-        context.bytes_per_pixel = ihdr.bit_depth / 8;
+        context.channels = 1;
         break;
     case 4: // Each pixel is a grayscale sample, followed by an alpha sample.
-        context.bytes_per_pixel = 2 * ihdr.bit_depth / 8;
+        context.channels = 2;
         break;
-    case 2:
-        context.bytes_per_pixel = 3 * (ihdr.bit_depth / 8);
+    case 2: // Each pixel is an RGB sample
+        context.channels = 3;
         break;
     case 3: // Each pixel is a palette index; a PLTE chunk must appear.
-        // FIXME: Implement support for 1/2/4 bit palette based images.
-        if (ihdr.bit_depth != 8) {
-            dbgprintf("PNGLoader::process_IHDR: Unsupported index-based format (%d bpp).\n", context.bit_depth);
-            return false;
-        }
-        context.bytes_per_pixel = 1;
+        context.channels = 1;
         break;
-    case 6:
-        context.bytes_per_pixel = 4 * (ihdr.bit_depth / 8);
+    case 6: // Each pixel is an RGB sample, followed by an alpha sample.
+        context.channels = 4;
         break;
     default:
         ASSERT_NOT_REACHED();
     }
 
     if (!decode_size_only) {
-        context.decompression_buffer_size = (context.width * context.height * context.bytes_per_pixel + context.height);
+        // Calculate number of bytes per row (+1 for filter)
+        auto row_size = ((context.width * context.channels * context.bit_depth) + 7) / 8 + 1;
+        context.decompression_buffer_size = row_size * context.height;
         context.decompression_buffer = (u8*)mmap_with_name(nullptr, context.decompression_buffer_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, "PNG decompression buffer");
     }
     return true;
