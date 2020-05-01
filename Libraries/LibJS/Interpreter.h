@@ -30,6 +30,7 @@
 #include <AK/HashMap.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibJS/Console.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/Exception.h>
@@ -162,7 +163,7 @@ public:
 
     Value last_value() const { return m_last_value; }
 
-    HashMap<String, unsigned>& console_counters() { return m_console_counters; }
+    Console& console() { return m_console; }
 
 private:
     Interpreter();
@@ -180,7 +181,7 @@ private:
 
     ScopeType m_unwind_until { ScopeType::None };
 
-    HashMap<String, unsigned> m_console_counters;
+    Console m_console;
 };
 
 }
