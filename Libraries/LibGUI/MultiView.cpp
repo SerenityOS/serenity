@@ -106,9 +106,9 @@ MultiView::MultiView()
             on_drop(index, event);
     };
 #endif
-    set_view_mode(ViewMode::Icon);
 
     build_actions();
+    set_view_mode(ViewMode::Icon);
 }
 
 MultiView::~MultiView()
@@ -123,16 +123,19 @@ void MultiView::set_view_mode(ViewMode mode)
     update();
     if (mode == ViewMode::Table) {
         set_active_widget(m_table_view);
+        m_view_as_table_action->set_checked(true);
         return;
     }
 #ifdef MULTIVIEW_WITH_COLUMNSVIEW
     if (mode == ViewMode::Columns) {
         set_active_widget(m_columns_view);
+        m_view_as_columns_action->set_checked(true);
         return;
     }
 #endif
     if (mode == ViewMode::Icon) {
         set_active_widget(m_icon_view);
+        m_view_as_icons_action->set_checked(true);
         return;
     }
     ASSERT_NOT_REACHED();
