@@ -237,13 +237,27 @@ public:
     template<typename U, typename V>
     static bool addition_would_overflow(U u, V v)
     {
+#ifdef __clang__
+        Checked checked;
+        checked = u;
+        checked += v;
+        return checked.has_overflow();
+#else
         return __builtin_add_overflow_p(u, v, (T)0);
+#endif
     }
 
     template<typename U, typename V, typename X>
     static bool multiplication_would_overflow(U u, V v)
     {
+#ifdef __clang__
+        Checked checked;
+        checked = u;
+        checked *= v;
+        return checked.has_overflow();
+#else
         return __builtin_mul_overflow_p(u, v, (T)0);
+#endif
     }
 
     template<typename U, typename V, typename X>
