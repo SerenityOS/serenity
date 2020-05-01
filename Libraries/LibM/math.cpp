@@ -233,6 +233,11 @@ double fmod(double index, double period)
     return index - trunc(index / period) * period;
 }
 
+float fmodf(float index, float period)
+{
+    return index - trunc(index / period) * period;
+}
+
 double exp(double exponent)
 {
     double result = 1;
