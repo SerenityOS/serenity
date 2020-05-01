@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
+ * Copyright (c) 2020, Emanuele Torre <torreemanuele6@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,6 +28,7 @@
 
 #include <AK/FlyString.h>
 #include <AK/Function.h>
+#include <AK/HashMap.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -53,6 +55,7 @@ ConsoleObject::ConsoleObject()
     put_native_function("warn", warn);
     put_native_function("error", error);
     put_native_function("trace", trace);
+    put_native_function("count", count);
 }
 
 ConsoleObject::~ConsoleObject()
@@ -105,6 +108,27 @@ Value ConsoleObject::trace(Interpreter& interpreter)
         if (String(function_name).is_empty())
             function_name = "<anonymous>";
         printf("%s\n", function_name.characters());
+    }
+    return js_undefined();
+}
+
+Value ConsoleObject::count(Interpreter& interpreter)
+{
+    String counter_name;
+    if (!interpreter.argument_count())
+        counter_name = "default";
+    else
+        counter_name = interpreter.argument(0).to_string();
+
+    auto& counters = interpreter.console_counters();
+    auto counter_value = counters.get(counter_name);
+
+    if (counter_value.has_value()) {
+        printf("%s: %d\n", counter_name.characters(), counter_value.value() + 1);
+        counters.set(counter_name, counter_value.value() + 1);
+    } else {
+        printf("%s: 1\n", counter_name.characters());
+        counters.set(counter_name, 1);
     }
     return js_undefined();
 }

@@ -44,6 +44,7 @@ private:
     static Value warn(Interpreter&);
     static Value error(Interpreter&);
     static Value trace(Interpreter&);
+    static Value count(Interpreter&);
 };
 
 }
