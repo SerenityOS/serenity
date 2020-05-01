@@ -1087,11 +1087,17 @@ PropertyName MemberExpression::computed_property_name(Interpreter& interpreter) 
     auto index = m_property->execute(interpreter);
     if (interpreter.exception())
         return {};
+
     ASSERT(!index.is_empty());
-    // FIXME: What about non-integer numbers tho.
-    if (index.is_number() && index.to_i32() >= 0)
-        return PropertyName(index.to_i32());
-    return PropertyName(index.to_string());
+
+    if (!index.to_number().is_finite_number())
+        return PropertyName(index.to_string());
+
+    auto index_as_double = index.to_double();
+    if (index_as_double < 0 || (i32)index_as_double != index_as_double)
+        return PropertyName(index.to_string());
+
+    return PropertyName(index.to_i32());
 }
 
 String MemberExpression::to_string_approximation() const
