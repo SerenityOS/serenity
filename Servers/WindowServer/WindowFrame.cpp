@@ -257,6 +257,9 @@ void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
 
 void WindowFrame::paint(Gfx::Painter& painter)
 {
+    if (m_window.is_frameless())
+        return;
+
     Gfx::PainterStateSaver saver(painter);
     painter.translate(rect().location());
 
@@ -274,6 +277,9 @@ void WindowFrame::paint(Gfx::Painter& painter)
 
 static Gfx::Rect frame_rect_for_window(Window& window, const Gfx::Rect& rect)
 {
+    if (window.is_frameless())
+        return rect;
+
     auto type = window.type();
 
     switch (type) {

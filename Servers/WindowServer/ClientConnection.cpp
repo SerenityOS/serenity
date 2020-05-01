@@ -475,6 +475,8 @@ OwnPtr<Messages::WindowServer::CreateWindowResponse> ClientConnection::handle(co
         window->set_parent_window(*parent_window);
     }
 
+    window->set_frameless(message.frameless());
+
     window->set_has_alpha_channel(message.has_alpha_channel());
     window->set_title(message.title());
     if (!message.fullscreen()) {

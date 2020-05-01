@@ -229,6 +229,9 @@ public:
     Vector<WeakPtr<Window>>& child_windows() { return m_child_windows; }
     const Vector<WeakPtr<Window>>& child_windows() const { return m_child_windows; }
 
+    void set_frameless(bool frameless) { m_frameless = frameless; }
+    bool is_frameless() const { return m_frameless; }
+
 private:
     void handle_mouse_event(const MouseEvent&);
     void update_menu_item_text(PopupMenuItem item);
@@ -259,6 +262,7 @@ private:
     WindowTileType m_tiled { WindowTileType::None };
     Gfx::Rect m_untiled_rect;
     bool m_occluded { false };
+    bool m_frameless { false };
     RefPtr<Gfx::Bitmap> m_backing_store;
     RefPtr<Gfx::Bitmap> m_last_backing_store;
     int m_window_id { -1 };
