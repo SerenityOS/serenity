@@ -29,7 +29,7 @@
 #include <AK/Vector.h>
 #include <LibGUI/ColumnsView.h>
 #include <LibGUI/FileSystemModel.h>
-#include <LibGUI/ItemView.h>
+#include <LibGUI/IconView.h>
 #include <LibGUI/StackWidget.h>
 #include <LibGUI/TableView.h>
 #include <sys/stat.h>
@@ -59,7 +59,7 @@ public:
 
     enum ViewMode {
         Invalid,
-        List,
+        Table,
         Columns,
         Icon
     };
@@ -69,12 +69,12 @@ public:
     GUI::AbstractView& current_view()
     {
         switch (m_view_mode) {
-        case ViewMode::List:
+        case ViewMode::Table:
             return *m_table_view;
         case ViewMode::Columns:
             return *m_columns_view;
         case ViewMode::Icon:
-            return *m_item_view;
+            return *m_icon_view;
         default:
             ASSERT_NOT_REACHED();
         }
@@ -84,7 +84,7 @@ public:
     void for_each_view_implementation(Callback callback)
     {
         callback(*m_table_view);
-        callback(*m_item_view);
+        callback(*m_icon_view);
         callback(*m_columns_view);
     }
 
@@ -107,6 +107,6 @@ private:
     void add_path_to_history(const StringView& path);
 
     RefPtr<GUI::TableView> m_table_view;
-    RefPtr<GUI::ItemView> m_item_view;
+    RefPtr<GUI::IconView> m_icon_view;
     RefPtr<GUI::ColumnsView> m_columns_view;
 };

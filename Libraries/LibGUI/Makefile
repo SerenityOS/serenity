@@ -28,8 +28,8 @@ OBJS = \
     Frame.o \
     GroupBox.o \
     Icon.o \
+    IconView.o \
     InputBox.o \
-    ItemView.o \
     INILexer.o \
     INISyntaxHighlighter.o \
     JsonArrayModel.o \
