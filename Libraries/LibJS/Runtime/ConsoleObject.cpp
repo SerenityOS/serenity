@@ -28,22 +28,23 @@
 
 #include <AK/FlyString.h>
 #include <AK/Function.h>
+#include <AK/StringBuilder.h>
 #include <LibJS/Console.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
-#include <stdio.h>
 
 namespace JS {
 
-static void print_args(Interpreter& interpreter)
+static String join_args(Interpreter& interpreter)
 {
+    StringBuilder joined_arguments;
     for (size_t i = 0; i < interpreter.argument_count(); ++i) {
-        printf("%s", interpreter.argument(i).to_string().characters());
+        joined_arguments.append(interpreter.argument(i).to_string().characters());
         if (i != interpreter.argument_count() - 1)
-            putchar(' ');
+            joined_arguments.append(' ');
     }
-    putchar('\n');
+    return joined_arguments.build();
 }
 
 ConsoleObject::ConsoleObject()
@@ -57,6 +58,7 @@ ConsoleObject::ConsoleObject()
     put_native_function("trace", trace);
     put_native_function("count", count);
     put_native_function("countReset", count_reset);
+    put_native_function("clear", clear);
 }
 
 ConsoleObject::~ConsoleObject()
@@ -65,51 +67,37 @@ ConsoleObject::~ConsoleObject()
 
 Value ConsoleObject::log(Interpreter& interpreter)
 {
-    print_args(interpreter);
+    interpreter.console().log(join_args(interpreter));
     return js_undefined();
 }
 
 Value ConsoleObject::debug(Interpreter& interpreter)
 {
-    printf("\033[36;1m");
-    print_args(interpreter);
-    printf("\033[0m");
+    interpreter.console().debug(join_args(interpreter));
     return js_undefined();
 }
 
 Value ConsoleObject::info(Interpreter& interpreter)
 {
-    print_args(interpreter);
+    interpreter.console().info(join_args(interpreter));
     return js_undefined();
 }
 
 Value ConsoleObject::warn(Interpreter& interpreter)
 {
-    printf("\033[33;1m");
-    print_args(interpreter);
-    printf("\033[0m");
+    interpreter.console().warn(join_args(interpreter));
     return js_undefined();
 }
 
 Value ConsoleObject::error(Interpreter& interpreter)
 {
-    printf("\033[31;1m");
-    print_args(interpreter);
-    printf("\033[0m");
+    interpreter.console().error(join_args(interpreter));
     return js_undefined();
 }
 
 Value ConsoleObject::trace(Interpreter& interpreter)
 {
-    print_args(interpreter);
-    auto call_stack = interpreter.call_stack();
-    // -2 to skip the console.trace() call frame
-    for (ssize_t i = call_stack.size() - 2; i >= 0; --i) {
-        auto function_name = call_stack[i].function_name;
-        if (String(function_name).is_empty())
-            function_name = "<anonymous>";
-        printf("%s\n", function_name.characters());
-    }
+    interpreter.console().trace(join_args(interpreter));
     return js_undefined();
 }
 
@@ -128,6 +116,12 @@ Value ConsoleObject::count_reset(Interpreter& interpreter)
         interpreter.console().count_reset(interpreter.argument(0).to_string());
     else
         interpreter.console().count_reset();
+    return js_undefined();
+}
+
+Value ConsoleObject::clear(Interpreter& interpreter)
+{
+    interpreter.console().clear();
     return js_undefined();
 }
 
