@@ -121,7 +121,7 @@ Value ConsoleObject::count(Interpreter& interpreter)
     else
         counter_name = interpreter.argument(0).to_string();
 
-    auto& counters = interpreter.console_counters();
+    auto& counters = interpreter.console().counters();
     auto counter_value = counters.get(counter_name);
 
     if (counter_value.has_value()) {
@@ -142,7 +142,7 @@ Value ConsoleObject::count_reset(Interpreter& interpreter)
     else
         counter_name = interpreter.argument(0).to_string();
 
-    auto& counters = interpreter.console_counters();
+    auto& counters = interpreter.console().counters();
 
     if (counters.contains(counter_name)) {
         counters.remove(counter_name);
