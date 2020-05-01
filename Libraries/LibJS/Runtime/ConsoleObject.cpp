@@ -28,7 +28,7 @@
 
 #include <AK/FlyString.h>
 #include <AK/Function.h>
-#include <AK/HashMap.h>
+#include <LibJS/Console.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -115,40 +115,19 @@ Value ConsoleObject::trace(Interpreter& interpreter)
 
 Value ConsoleObject::count(Interpreter& interpreter)
 {
-    String counter_name;
-    if (!interpreter.argument_count())
-        counter_name = "default";
+    if (interpreter.argument_count())
+        interpreter.console().count(interpreter.argument(0).to_string());
     else
-        counter_name = interpreter.argument(0).to_string();
-
-    auto& counters = interpreter.console().counters();
-    auto counter_value = counters.get(counter_name);
-
-    if (counter_value.has_value()) {
-        printf("%s: %d\n", counter_name.characters(), counter_value.value() + 1);
-        counters.set(counter_name, counter_value.value() + 1);
-    } else {
-        printf("%s: 1\n", counter_name.characters());
-        counters.set(counter_name, 1);
-    }
+        interpreter.console().count();
     return js_undefined();
 }
 
 Value ConsoleObject::count_reset(Interpreter& interpreter)
 {
-    String counter_name;
-    if (!interpreter.argument_count())
-        counter_name = "default";
+    if (interpreter.argument_count())
+        interpreter.console().count_reset(interpreter.argument(0).to_string());
     else
-        counter_name = interpreter.argument(0).to_string();
-
-    auto& counters = interpreter.console().counters();
-
-    if (counters.contains(counter_name)) {
-        counters.remove(counter_name);
-        printf("%s: 0\n", counter_name.characters());
-    }
-
+        interpreter.console().count_reset();
     return js_undefined();
 }
 
