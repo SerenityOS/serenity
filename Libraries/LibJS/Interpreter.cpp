@@ -208,6 +208,30 @@ Value Interpreter::call(Function& function, Value this_value, Optional<MarkedVal
     return result;
 }
 
+Value Interpreter::construct(Function& function, Function& new_target, Optional<MarkedValueList> arguments)
+{
+    auto& call_frame = push_call_frame();
+    call_frame.function_name = function.name();
+    if (arguments.has_value())
+        call_frame.arguments = arguments.value().values();
+    call_frame.environment = function.create_environment();
+
+    auto* new_object = Object::create_empty(*this, global_object());
+    auto prototype = new_target.get("prototype");
+    if (prototype.is_object())
+        new_object->set_prototype(&prototype.as_object());
+    call_frame.this_value = new_object;
+    auto result = function.construct(*this);
+
+    pop_call_frame();
+
+    if (exception())
+        return {};
+    if (result.is_object())
+        return result;
+    return new_object;
+}
+
 Value Interpreter::throw_exception(Exception* exception)
 {
     if (exception->value().is_object() && exception->value().as_object().is_error()) {

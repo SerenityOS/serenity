@@ -108,47 +108,23 @@ Value ObjectConstructor::set_prototype_of(Interpreter& interpreter)
 
 Value ObjectConstructor::get_own_property_descriptor(Interpreter& interpreter)
 {
-    if (interpreter.argument_count() < 2)
-        return interpreter.throw_exception<TypeError>("Object.getOwnPropertyDescriptor() needs 2 arguments");
-    if (!interpreter.argument(0).is_object())
-        return interpreter.throw_exception<TypeError>("Object argument is not an object");
-    auto& object = interpreter.argument(0).as_object();
-    auto metadata = object.shape().lookup(interpreter.argument(1).to_string());
-    if (!metadata.has_value())
-        return js_undefined();
-
-    auto value = object.get(interpreter.argument(1).to_string()).value_or(js_undefined());
+    auto* object = interpreter.argument(0).to_object(interpreter.heap());
     if (interpreter.exception())
         return {};
-
-    auto* descriptor = Object::create_empty(interpreter, interpreter.global_object());
-    descriptor->put("configurable", Value(!!(metadata.value().attributes & Attribute::Configurable)));
-    descriptor->put("enumerable", Value(!!(metadata.value().attributes & Attribute::Enumerable)));
-    descriptor->put("writable", Value(!!(metadata.value().attributes & Attribute::Writable)));
-    descriptor->put("value", value);
-    return descriptor;
+    auto property_key = interpreter.argument(1).to_string();
+    return object->get_own_property_descriptor(property_key);
 }
 
 Value ObjectConstructor::define_property(Interpreter& interpreter)
 {
-    if (interpreter.argument_count() < 3)
-        return interpreter.throw_exception<TypeError>("Object.defineProperty() needs 3 arguments");
     if (!interpreter.argument(0).is_object())
         return interpreter.throw_exception<TypeError>("Object argument is not an object");
     if (!interpreter.argument(2).is_object())
         return interpreter.throw_exception<TypeError>("Descriptor argument is not an object");
     auto& object = interpreter.argument(0).as_object();
+    auto property_key = interpreter.argument(1).to_string();
     auto& descriptor = interpreter.argument(2).as_object();
-
-    auto value = descriptor.get("value");
-    u8 configurable = descriptor.get("configurable").value_or(Value(false)).to_boolean() * Attribute::Configurable;
-    u8 enumerable = descriptor.get("enumerable").value_or(Value(false)).to_boolean() * Attribute::Enumerable;
-    u8 writable = descriptor.get("writable").value_or(Value(false)).to_boolean() * Attribute::Writable;
-    u8 attributes = configurable | enumerable | writable;
-
-    dbg() << "Defining new property " << interpreter.argument(1).to_string() << " with descriptor { " << configurable << ", " << enumerable << ", " << writable << ", attributes=" << attributes << " }";
-
-    object.put_own_property(object, interpreter.argument(1).to_string(), attributes, value, PutOwnPropertyMode::DefineProperty);
+    object.define_property(property_key, descriptor);
     return &object;
 }
 
@@ -177,7 +153,7 @@ Value ObjectConstructor::keys(Interpreter& interpreter)
     if (interpreter.exception())
         return {};
 
-    return obj_arg->get_enumerable_own_properties(*obj_arg, GetOwnPropertyMode::Key);
+    return obj_arg->get_own_properties(*obj_arg, GetOwnPropertyMode::Key, Attribute::Enumerable);
 }
 
 Value ObjectConstructor::values(Interpreter& interpreter)
@@ -189,7 +165,7 @@ Value ObjectConstructor::values(Interpreter& interpreter)
     if (interpreter.exception())
         return {};
 
-    return obj_arg->get_enumerable_own_properties(*obj_arg, GetOwnPropertyMode::Value);
+    return obj_arg->get_own_properties(*obj_arg, GetOwnPropertyMode::Value, Attribute::Enumerable);
 }
 
 Value ObjectConstructor::entries(Interpreter& interpreter)
@@ -201,7 +177,7 @@ Value ObjectConstructor::entries(Interpreter& interpreter)
     if (interpreter.exception())
         return {};
 
-    return obj_arg->get_enumerable_own_properties(*obj_arg, GetOwnPropertyMode::KeyAndValue);
+    return obj_arg->get_own_properties(*obj_arg, GetOwnPropertyMode::KeyAndValue, Attribute::Enumerable);
 }
 
 }

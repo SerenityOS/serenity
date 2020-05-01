@@ -108,7 +108,7 @@ Value Object::get_own_property(const Object& this_object, const FlyString& prope
     return value_here;
 }
 
-Value Object::get_enumerable_own_properties(const Object& this_object, GetOwnPropertyMode kind) const
+Value Object::get_own_properties(const Object& this_object, GetOwnPropertyMode kind, u8 attributes) const
 {
     auto* properties_array = Array::create(interpreter().global_object());
 
@@ -152,7 +152,7 @@ Value Object::get_enumerable_own_properties(const Object& this_object, GetOwnPro
     }
 
     for (auto& it : this_object.shape().property_table_ordered()) {
-        if (it.value.attributes & Attribute::Enumerable) {
+        if (it.value.attributes & attributes) {
             size_t offset = it.value.offset + property_index;
 
             if (kind == GetOwnPropertyMode::Key) {
@@ -171,13 +171,42 @@ Value Object::get_enumerable_own_properties(const Object& this_object, GetOwnPro
     return properties_array;
 }
 
+Value Object::get_own_property_descriptor(const FlyString& property_name) const
+{
+    auto metadata = shape().lookup(property_name);
+    if (!metadata.has_value())
+        return js_undefined();
+    auto value = get(property_name);
+    if (interpreter().exception())
+        return {};
+    auto* descriptor = Object::create_empty(interpreter(), interpreter().global_object());
+    descriptor->put("value", value.value_or(js_undefined()));
+    descriptor->put("writable", Value(!!(metadata.value().attributes & Attribute::Writable)));
+    descriptor->put("enumerable", Value(!!(metadata.value().attributes & Attribute::Enumerable)));
+    descriptor->put("configurable", Value(!!(metadata.value().attributes & Attribute::Configurable)));
+    return descriptor;
+}
+
 void Object::set_shape(Shape& new_shape)
 {
     m_storage.resize(new_shape.property_count());
     m_shape = &new_shape;
 }
 
-bool Object::put_own_property(Object& this_object, const FlyString& property_name, u8 attributes, Value value, PutOwnPropertyMode mode)
+bool Object::define_property(const FlyString& property_name, const Object& descriptor, bool throw_exceptions)
+{
+    auto value = descriptor.get("value");
+    u8 configurable = descriptor.get("configurable").value_or(Value(false)).to_boolean() * Attribute::Configurable;
+    u8 enumerable = descriptor.get("enumerable").value_or(Value(false)).to_boolean() * Attribute::Enumerable;
+    u8 writable = descriptor.get("writable").value_or(Value(false)).to_boolean() * Attribute::Writable;
+    u8 attributes = configurable | enumerable | writable;
+
+    dbg() << "Defining new property " << property_name << " with descriptor { " << configurable << ", " << enumerable << ", " << writable << ", attributes=" << attributes << " }";
+
+    return put_own_property(*this, property_name, attributes, value, PutOwnPropertyMode::DefineProperty, throw_exceptions);
+}
+
+bool Object::put_own_property(Object& this_object, const FlyString& property_name, u8 attributes, Value value, PutOwnPropertyMode mode, bool throw_exceptions)
 {
     auto metadata = shape().lookup(property_name);
     bool new_property = !metadata.has_value();
@@ -195,7 +224,8 @@ bool Object::put_own_property(Object& this_object, const FlyString& property_nam
 
     if (!new_property && mode == PutOwnPropertyMode::DefineProperty && !(metadata.value().attributes & Attribute::Configurable) && attributes != metadata.value().attributes) {
         dbg() << "Disallow reconfig of non-configurable property";
-        interpreter().throw_exception<TypeError>(String::format("Cannot redefine property '%s'", property_name.characters()));
+        if (throw_exceptions)
+            interpreter().throw_exception<TypeError>(String::format("Cannot redefine property '%s'", property_name.characters()));
         return false;
     }
 

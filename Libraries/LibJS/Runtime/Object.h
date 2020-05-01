@@ -46,6 +46,17 @@ public:
     explicit Object(Object* prototype);
     virtual ~Object();
 
+    enum class GetOwnPropertyMode {
+        Key,
+        Value,
+        KeyAndValue,
+    };
+
+    enum class PutOwnPropertyMode {
+        Put,
+        DefineProperty,
+    };
+
     Shape& shape() { return *m_shape; }
     const Shape& shape() const { return *m_shape; }
 
@@ -60,20 +71,11 @@ public:
     bool put(PropertyName, Value, u8 attributes = default_attributes);
 
     Value get_own_property(const Object& this_object, const FlyString& property_name) const;
+    Value get_own_properties(const Object& this_object, GetOwnPropertyMode, u8 attributes = Attribute::Configurable | Attribute::Enumerable | Attribute::Writable) const;
+    Value get_own_property_descriptor(const FlyString& property_name) const;
 
-    enum class GetOwnPropertyMode {
-        Key,
-        Value,
-        KeyAndValue,
-    };
-    Value get_enumerable_own_properties(const Object& this_object, GetOwnPropertyMode) const;
-
-    enum class PutOwnPropertyMode {
-        Put,
-        DefineProperty,
-    };
-
-    bool put_own_property(Object& this_object, const FlyString& property_name, u8 attributes, Value, PutOwnPropertyMode);
+    bool define_property(const FlyString& property_name, const Object& descriptor, bool throw_exceptions = true);
+    bool put_own_property(Object& this_object, const FlyString& property_name, u8 attributes, Value, PutOwnPropertyMode, bool throw_exceptions = true);
 
     bool put_native_function(const FlyString& property_name, AK::Function<Value(Interpreter&)>, i32 length = 0, u8 attribute = default_attributes);
     bool put_native_property(const FlyString& property_name, AK::Function<Value(Interpreter&)> getter, AK::Function<void(Interpreter&, Value)> setter, u8 attribute = default_attributes);

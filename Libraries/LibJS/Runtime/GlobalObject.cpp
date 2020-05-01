@@ -49,6 +49,7 @@
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/ObjectConstructor.h>
 #include <LibJS/Runtime/ObjectPrototype.h>
+#include <LibJS/Runtime/ReflectObject.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/StringConstructor.h>
 #include <LibJS/Runtime/StringPrototype.h>
@@ -97,6 +98,7 @@ void GlobalObject::initialize()
     put("globalThis", this, attr);
     put("console", heap().allocate<ConsoleObject>(), attr);
     put("Math", heap().allocate<MathObject>(), attr);
+    put("Reflect", heap().allocate<ReflectObject>(), attr);
 
     add_constructor("Array", m_array_constructor, *m_array_prototype);
     add_constructor("Boolean", m_boolean_constructor, *m_boolean_prototype);
