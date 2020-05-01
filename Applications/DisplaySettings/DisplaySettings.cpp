@@ -275,7 +275,7 @@ void DisplaySettingsWidget::load_current_settings()
 
         Optional<size_t> optional_index;
         if (selected_wallpaper.starts_with("/res/wallpapers/")) {
-            auto name_parts = selected_wallpaper.split('/');
+            auto name_parts = selected_wallpaper.split('/', true);
             optional_index = m_wallpapers.find_first_index(name_parts[2]);
 
             if (optional_index.has_value()) {
