@@ -26,7 +26,7 @@
 
 #include <AK/TestSuite.h> // import first, to prevent warning of ASSERT* redefinition
 
-#include <AK/RegexParser.h>
+#include <AK/Regex.h>
 #include <AK/StringBuilder.h>
 #include <stdio.h>
 
@@ -145,7 +145,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
     StringBuilder b;
 
     Lexer l;
-    PosixExtendedParser p(l);
+    PosixExtended p(l);
 
     for (auto& ch : chars) {
         // First in ere
@@ -203,7 +203,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
 TEST_CASE(parser_error_vertical_line_used_at_wrong_place)
 {
     Lexer l;
-    PosixExtendedParser p(l);
+    PosixExtended p(l);
 
     // First in ere
     l.set_source("|asdf");
@@ -228,6 +228,177 @@ TEST_CASE(parser_error_vertical_line_used_at_wrong_place)
     p.parse();
     EXPECT(p.has_error());
     EXPECT(p.error() == Error::EmptySubExpression);
+}
+
+TEST_CASE(catch_all)
+{
+    Regex<PosixExtended> regex("^.*$", PosixFlags::Global);
+
+    EXPECT(regex.has_match("Hello World"));
+    EXPECT(regex.match("Hello World").success);
+    EXPECT(regex.match("Hello World").count == 1);
+
+    EXPECT(has_match("Hello World", regex));
+    auto res = match("Hello World", regex);
+    EXPECT(res.success);
+    EXPECT(res.count == 1);
+    EXPECT(res.matches.size() == 1);
+    EXPECT(res.matches.first().view == "Hello World");
+}
+
+TEST_CASE(catch_all_again)
+{
+    Regex<PosixExtended> regex("^.*$", PosixFlags::Extra);
+    EXPECT_EQ(has_match("Hello World", regex), true);
+}
+
+TEST_CASE(char_utf8)
+{
+    Regex<PosixExtended> regex("😀");
+    RegexResult result;
+
+    EXPECT_EQ((result = match("Привет, мир! 😀 γειά σου κόσμος 😀 こんにちは世界", regex, PosixFlags::Global)).success, true);
+    EXPECT_EQ(result.count, 2u);
+}
+
+TEST_CASE(catch_all_newline)
+{
+    Regex<PosixExtended> regex("^.*$", PosixFlags::Multiline | PosixFlags::StringCopyMatches);
+    RegexResult result;
+    auto lambda = [&result, &regex]() {
+        String aaa = "Hello World\nTest\n1234\n";
+        result = match(aaa, regex);
+        EXPECT_EQ(result.success, true);
+    };
+    lambda();
+    EXPECT_EQ(result.count, 3u);
+    EXPECT_EQ(result.matches.at(0).view, "Hello World");
+    EXPECT_EQ(result.matches.at(1).view, "Test");
+    EXPECT_EQ(result.matches.at(2).view, "1234");
+}
+
+TEST_CASE(catch_all_newline_view)
+{
+    Regex<PosixExtended> regex("^.*$", PosixFlags::Multiline);
+    RegexResult result;
+
+    String aaa = "Hello World\nTest\n1234\n";
+    result = match(aaa, regex);
+    EXPECT_EQ(result.success, true);
+    EXPECT_EQ(result.count, 3u);
+    String str = "Hello World";
+    EXPECT_EQ(result.matches.at(0).view, str.view());
+    EXPECT_EQ(result.matches.at(1).view, "Test");
+    EXPECT_EQ(result.matches.at(2).view, "1234");
+}
+
+TEST_CASE(catch_all_newline_2)
+{
+    Regex<PosixExtended> regex("^.*$");
+    RegexResult result;
+    result = match("Hello World\nTest\n1234\n", regex, PosixFlags::Multiline | PosixFlags::StringCopyMatches);
+    EXPECT_EQ(result.success, true);
+    EXPECT_EQ(result.count, 3u);
+    EXPECT_EQ(result.matches.at(0).view, "Hello World");
+    EXPECT_EQ(result.matches.at(1).view, "Test");
+    EXPECT_EQ(result.matches.at(2).view, "1234");
+
+    result = match("Hello World\nTest\n1234\n", regex);
+    EXPECT_EQ(result.success, true);
+    EXPECT_EQ(result.count, 1u);
+    EXPECT_EQ(result.matches.at(0).view, "Hello World\nTest\n1234\n");
+}
+
+TEST_CASE(match_all_character_class)
+{
+    Regex<PosixExtended> regex("[[:alpha:]]");
+    String str = "[Window]\nOpacity=255\nAudibleBeep=0\n";
+    RegexResult result = match(str, regex, PosixFlags::Global | PosixFlags::StringCopyMatches);
+
+    EXPECT_EQ(result.success, true);
+    EXPECT_EQ(result.count, 24u);
+    EXPECT_EQ(result.matches.at(0).view, "W");
+    EXPECT_EQ(result.matches.at(1).view, "i");
+    EXPECT_EQ(result.matches.at(2).view, "n");
+    EXPECT(&result.matches.at(0).view.characters_without_null_termination()[0] != &str.view().characters_without_null_termination()[1]);
+}
+
+TEST_CASE(example_for_git_commit)
+{
+    Regex<PosixExtended> regex("^.*$");
+    auto result = regex.match("Well, hello friends!\nHello World!");
+
+    EXPECT(result.success);
+    EXPECT(result.count == 1);
+    EXPECT(result.matches.at(0).view.starts_with("Well"));
+    EXPECT(result.matches.at(0).view.length() == 33);
+
+    EXPECT(regex.has_match("Well,...."));
+
+    result = regex.match("Well, hello friends!\nHello World!", PosixFlags::Multiline);
+
+    EXPECT(result.success);
+    EXPECT(result.count == 2);
+    EXPECT(result.matches.at(0).view == "Well, hello friends!");
+    EXPECT(result.matches.at(1).view == "Hello World!");
+}
+
+TEST_CASE(email_address)
+{
+    Regex<PosixExtended> regex("^[A-Z0-9a-z._%+-]{1,64}@([A-Za-z0-9-]{1,63}\\.){1,125}[A-Za-z]{2,63}$");
+    EXPECT(regex.has_match("hello.world@domain.tld"));
+    EXPECT(regex.has_match("this.is.a.very_long_email_address@world.wide.web"));
+}
+
+TEST_CASE(ini_file_entries)
+{
+    Regex<PosixExtended> re("[[:alpha:]]*=([[:digit:]]*)|\\[(.*)\\]");
+    RegexResult result;
+    //    re.print_bytecode();
+
+    String haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
+    EXPECT_EQ(re.search(haystack.view(), result, PosixFlags::Multiline), true);
+    EXPECT_EQ(result.count, 3u);
+    EXPECT_EQ(result.matches.at(0).view, "[Window]");
+    EXPECT_EQ(result.capture_group_matches.at(0).at(1).view, "Window");
+    EXPECT_EQ(result.matches.at(1).view, "Opacity=255");
+    EXPECT_EQ(result.matches.at(1).line, 1u);
+    EXPECT_EQ(result.matches.at(1).column, 0u);
+    EXPECT_EQ(result.capture_group_matches.at(1).at(0).view, "255");
+    EXPECT_EQ(result.capture_group_matches.at(1).at(0).line, 1u);
+    EXPECT_EQ(result.capture_group_matches.at(1).at(0).column, 8u);
+    EXPECT_EQ(result.matches.at(2).view, "AudibleBeep=0");
+    EXPECT_EQ(result.capture_group_matches.at(2).at(0).view, "0");
+    EXPECT_EQ(result.capture_group_matches.at(2).at(0).line, 2u);
+    EXPECT_EQ(result.capture_group_matches.at(2).at(0).column, 12u);
+}
+
+TEST_CASE(named_capture_group)
+{
+    Regex<PosixExtended> re("[[:alpha:]]*=(?<Test>[[:digit:]]*)");
+    RegexResult result;
+
+    String haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
+    EXPECT_EQ(re.search(haystack.view(), result, PosixFlags::Multiline), true);
+    EXPECT_EQ(result.count, 2u);
+    EXPECT_EQ(result.matches.at(0).view, "Opacity=255");
+    EXPECT_EQ(result.named_capture_group_matches.at(0).ensure("Test").view, "255");
+    EXPECT_EQ(result.matches.at(1).view, "AudibleBeep=0");
+    EXPECT_EQ(result.named_capture_group_matches.at(1).ensure("Test").view, "0");
+}
+
+TEST_CASE(a_star)
+{
+    Regex<PosixExtended> re("a*");
+    RegexResult result;
+
+    String haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
+    EXPECT_EQ(re.search(haystack.view(), result, PosixFlags::Multiline), true);
+    EXPECT_EQ(result.count, 32u);
+    EXPECT_EQ(result.matches.at(0).view.length(), 0u);
+    EXPECT_EQ(result.matches.at(10).view.length(), 1u);
+    EXPECT_EQ(result.matches.at(10).view, "a");
+    EXPECT_EQ(result.matches.at(31).view.length(), 0u);
 }
 
 TEST_MAIN(Regex)
