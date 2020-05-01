@@ -126,18 +126,29 @@ Window* Window::find_parent_window()
     return nullptr;
 }
 
-void Window::hide()
+void Window::server_did_destroy()
 {
-    if (!is_visible())
-        return;
-    reified_windows->remove(m_window_id);
-    WindowServerConnection::the().send_sync<Messages::WindowServer::DestroyWindow>(m_window_id);
     m_window_id = 0;
     m_visible = false;
     m_pending_paint_event_rects.clear();
     m_back_bitmap = nullptr;
     m_front_bitmap = nullptr;
     m_override_cursor = StandardCursor::None;
+}
+
+void Window::hide()
+{
+    if (!is_visible())
+        return;
+    reified_windows->remove(m_window_id);
+    auto response = WindowServerConnection::the().send_sync<Messages::WindowServer::DestroyWindow>(m_window_id);
+    server_did_destroy();
+
+    for (auto child_window_id : response->destroyed_window_ids()) {
+        if (auto* window = Window::from_window_id(child_window_id)) {
+            window->server_did_destroy();
+        }
+    }
 
     bool app_has_visible_windows = false;
     for (auto& window : *all_windows) {
