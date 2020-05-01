@@ -272,6 +272,12 @@ Value Object::get_by_index(i32 property_index) const
 
     const Object* object = this;
     while (object) {
+        if (is_string_object()) {
+            auto& string = static_cast<const StringObject*>(this)->primitive_string().string();
+            if (property_index < (i32)string.length())
+                return js_string(heap(), string.substring(property_index, 1));
+            return js_undefined();
+        }
         if (static_cast<size_t>(property_index) < object->m_elements.size()) {
             auto value = object->m_elements[property_index];
             if (value.is_empty())
@@ -397,6 +403,8 @@ bool Object::has_own_property(const FlyString& property_name) const
     bool ok;
     i32 property_index = property_name.to_int(ok);
     if (ok && property_index >= 0) {
+        if (is_string_object())
+            return property_index < (i32)static_cast<const StringObject*>(this)->primitive_string().string().length();
         if (static_cast<size_t>(property_index) >= m_elements.size())
             return false;
         return !m_elements[property_index].is_empty();
