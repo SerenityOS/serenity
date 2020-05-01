@@ -79,6 +79,8 @@ public:
 private:
     explicit ClientConnection(Core::LocalSocket&, int client_id);
 
+    void destroy_window(Window&, Vector<i32>& destroyed_window_ids);
+
     virtual OwnPtr<Messages::WindowServer::GreetResponse> handle(const Messages::WindowServer::Greet&) override;
     virtual OwnPtr<Messages::WindowServer::CreateMenubarResponse> handle(const Messages::WindowServer::CreateMenubar&) override;
     virtual OwnPtr<Messages::WindowServer::DestroyMenubarResponse> handle(const Messages::WindowServer::DestroyMenubar&) override;

@@ -44,7 +44,7 @@ endpoint WindowServer = 2
         String title,
         i32 parent_window_id) => (i32 window_id)
 
-    DestroyWindow(i32 window_id) => ()
+    DestroyWindow(i32 window_id) => (Vector<i32> destroyed_window_ids)
 
     SetWindowTitle(i32 window_id, String title) => ()
     GetWindowTitle(i32 window_id) => (String title)

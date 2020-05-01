@@ -191,6 +191,8 @@ protected:
 private:
     virtual bool is_window() const override final { return true; }
 
+    void server_did_destroy();
+
     RefPtr<Gfx::Bitmap> create_backing_bitmap(const Gfx::Size&);
     RefPtr<Gfx::Bitmap> create_shared_bitmap(Gfx::BitmapFormat, const Gfx::Size&);
     void set_current_backing_bitmap(Gfx::Bitmap&, bool flush_immediately = false);

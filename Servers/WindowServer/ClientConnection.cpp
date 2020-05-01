@@ -472,6 +472,10 @@ OwnPtr<Messages::WindowServer::CreateWindowResponse> ClientConnection::handle(co
             did_misbehave("CreateWindow with bad parent_window_id");
             return nullptr;
         }
+        if (parent_window->window_id() == window_id) {
+            did_misbehave("CreateWindow trying to make a window with itself as parent");
+            return nullptr;
+        }
         window->set_parent_window(*parent_window);
     }
 
@@ -497,6 +501,25 @@ OwnPtr<Messages::WindowServer::CreateWindowResponse> ClientConnection::handle(co
     return make<Messages::WindowServer::CreateWindowResponse>(window_id);
 }
 
+void ClientConnection::destroy_window(Window& window, Vector<i32>& destroyed_window_ids)
+{
+    for (auto& child_window : window.child_windows()) {
+        if (!child_window)
+            continue;
+        ASSERT(child_window->window_id() != window.window_id());
+        destroy_window(*child_window, destroyed_window_ids);
+    }
+
+    destroyed_window_ids.append(window.window_id());
+
+    if (window.type() == WindowType::MenuApplet)
+        AppletManager::the().remove_applet(window);
+
+    WindowManager::the().invalidate(window);
+    remove_child(window);
+    m_windows.remove(window.window_id());
+}
+
 OwnPtr<Messages::WindowServer::DestroyWindowResponse> ClientConnection::handle(const Messages::WindowServer::DestroyWindow& message)
 {
     auto it = m_windows.find(message.window_id());
@@ -505,16 +528,9 @@ OwnPtr<Messages::WindowServer::DestroyWindowResponse> ClientConnection::handle(c
         return nullptr;
     }
     auto& window = *(*it).value;
-
-    if (window.type() == WindowType::MenuApplet)
-        AppletManager::the().remove_applet(window);
-
-    WindowManager::the().invalidate(window);
-    remove_child(window);
-    ASSERT(it->value.ptr() == &window);
-    m_windows.remove(message.window_id());
-
-    return make<Messages::WindowServer::DestroyWindowResponse>();
+    Vector<i32> destroyed_window_ids;
+    destroy_window(window, destroyed_window_ids);
+    return make<Messages::WindowServer::DestroyWindowResponse>(destroyed_window_ids);
 }
 
 void ClientConnection::post_paint_message(Window& window, bool ignore_occlusion)
