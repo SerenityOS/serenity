@@ -57,6 +57,7 @@ private:
     static Value concat(Interpreter&);
     static Value includes(Interpreter&);
     static Value slice(Interpreter&);
+    static Value last_index_of(Interpreter&);
 };
 
 }
