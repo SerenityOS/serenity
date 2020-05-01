@@ -162,6 +162,8 @@ public:
 
     Value last_value() const { return m_last_value; }
 
+    HashMap<String, unsigned>& console_counters() { return m_console_counters; }
+
 private:
     Interpreter();
 
@@ -177,6 +179,8 @@ private:
     Exception* m_exception { nullptr };
 
     ScopeType m_unwind_until { ScopeType::None };
+
+    HashMap<String, unsigned> m_console_counters;
 };
 
 }
