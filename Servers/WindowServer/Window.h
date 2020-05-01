@@ -142,21 +142,15 @@ public:
     Gfx::Rect rect() const { return m_rect; }
     void set_rect(const Gfx::Rect&);
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
-    void set_rect_without_repaint(const Gfx::Rect& rect)
-    {
-        ASSERT(!rect.is_empty());
-        if (m_rect == rect)
-            return;
-        auto old_rect = m_rect;
-        m_rect = rect;
-        m_frame.notify_window_rect_changed(old_rect, rect);
-    }
+    void set_rect_without_repaint(const Gfx::Rect&);
 
     void set_taskbar_rect(const Gfx::Rect& rect) { m_taskbar_rect = rect; }
     const Gfx::Rect& taskbar_rect() const { return m_taskbar_rect; }
 
     void move_to(const Gfx::Point& position) { set_rect({ position, size() }); }
     void move_to(int x, int y) { move_to({ x, y }); }
+
+    void move_by(const Gfx::Point& delta) { set_position_without_repaint(position().translated(delta)); }
 
     Gfx::Point position() const { return m_rect.location(); }
     void set_position(const Gfx::Point& position) { set_rect({ position.x(), position.y(), width(), height() }); }
