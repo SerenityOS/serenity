@@ -1,5 +1,6 @@
 OBJS = \
     AST.o \
+    Console.o \
     Heap/Handle.o \
     Heap/Heap.o \
     Heap/HeapBlock.o \

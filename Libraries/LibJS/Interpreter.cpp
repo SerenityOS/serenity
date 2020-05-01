@@ -41,6 +41,7 @@ namespace JS {
 
 Interpreter::Interpreter()
     : m_heap(*this)
+    , m_console(*this)
 {
 }
 
