@@ -43,6 +43,9 @@ public:
 
     HashMap<String, unsigned>& counters() { return m_counters; }
 
+    unsigned count(String label = "default");
+    bool count_reset(String label = "default");
+
 private:
     Interpreter& m_interpreter;
 
