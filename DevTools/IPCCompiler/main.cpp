@@ -319,6 +319,16 @@ int main(int argc, char** argv)
                     out() << "                return nullptr;";
                     out() << "            " << parameter.name << ".append(move(rect));";
                     out() << "        }";
+                } else if (parameter.type == "Vector<i32>") {
+                    out() << "        u64 " << parameter.name << "_size = 0;";
+                    out() << "        stream >> " << parameter.name << "_size;";
+                    out() << "        for (size_t i = 0; i < " << parameter.name << "_size; ++i) {";
+                    out() << "            i32 value;";
+                    out() << "            stream >> value;";
+                    out() << "            if (stream.handle_read_failure())";
+                    out() << "                return nullptr;";
+                    out() << "            " << parameter.name << ".append(value);";
+                    out() << "        }";
                 } else {
                     out() << "        if (!decoder.decode(" << parameter.name << "))";
                     out() << "            return nullptr;";
@@ -362,6 +372,11 @@ int main(int argc, char** argv)
                     out() << "            stream << rect.y();";
                     out() << "            stream << rect.width();";
                     out() << "            stream << rect.height();";
+                    out() << "        }";
+                } else if (parameter.type == "Vector<i32>") {
+                    out() << "        stream << (u64)m_" << parameter.name << ".size();";
+                    out() << "        for (auto value : m_" << parameter.name << ") {";
+                    out() << "            stream << value;";
                     out() << "        }";
                 } else if (parameter.type == "Gfx::ShareableBitmap") {
                     out() << "        stream << m_" << parameter.name << ".shbuf_id();";
