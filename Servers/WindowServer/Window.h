@@ -28,6 +28,7 @@
 
 #include <AK/InlineLinkedList.h>
 #include <AK/String.h>
+#include <AK/WeakPtr.h>
 #include <LibCore/Object.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/DisjointRectSet.h>
@@ -229,12 +230,22 @@ public:
 
     void detach_client(Badge<ClientConnection>);
 
+    Window* parent_window() { return m_parent_window; }
+    const Window* parent_window() const { return m_parent_window; }
+
+    void set_parent_window(Window&);
+
 private:
     void handle_mouse_event(const MouseEvent&);
     void update_menu_item_text(PopupMenuItem item);
     void update_menu_item_enabled(PopupMenuItem item);
+    void add_child_window(Window&);
 
     ClientConnection* m_client { nullptr };
+
+    WeakPtr<Window> m_parent_window;
+    Vector<WeakPtr<Window>> m_child_windows;
+
     String m_title;
     Gfx::Rect m_rect;
     Gfx::Rect m_saved_nonfullscreen_rect;

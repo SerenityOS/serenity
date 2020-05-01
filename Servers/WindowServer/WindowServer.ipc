@@ -41,7 +41,8 @@ endpoint WindowServer = 2
         Gfx::Size base_size,
         Gfx::Size size_increment,
         i32 type,
-        String title) => (i32 window_id)
+        String title,
+        i32 parent_window_id) => (i32 window_id)
 
     DestroyWindow(i32 window_id) => ()
 

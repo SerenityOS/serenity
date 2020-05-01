@@ -182,6 +182,8 @@ public:
 
     void did_remove_widget(Badge<Widget>, const Widget&);
 
+    Window* find_parent_window();
+
 protected:
     Window(Core::Object* parent = nullptr);
     virtual void wm_event(WMEvent&);

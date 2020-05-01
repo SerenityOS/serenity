@@ -89,6 +89,9 @@ void Window::show()
 {
     if (is_visible())
         return;
+
+    auto* parent_window = find_parent_window();
+
     m_override_cursor = StandardCursor::None;
     auto response = WindowServerConnection::the().send_sync<Messages::WindowServer::CreateWindow>(
         m_rect_when_windowless,
@@ -102,7 +105,8 @@ void Window::show()
         m_base_size,
         m_size_increment,
         (i32)m_window_type,
-        m_title_when_windowless);
+        m_title_when_windowless,
+        parent_window ? parent_window->window_id() : 0);
     m_window_id = response->window_id();
     m_visible = true;
 
@@ -111,6 +115,15 @@ void Window::show()
     reified_windows->set(m_window_id, this);
     Application::the().did_create_window({});
     update();
+}
+
+Window* Window::find_parent_window()
+{
+    for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
+        if (ancestor->is_window())
+            return static_cast<Window*>(ancestor);
+    }
+    return nullptr;
 }
 
 void Window::hide()
