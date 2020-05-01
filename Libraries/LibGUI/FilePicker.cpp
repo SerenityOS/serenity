@@ -114,6 +114,7 @@ FilePicker::FilePicker(Mode mode, const StringView& file_name, const StringView&
     m_view = vertical_container.add<MultiView>();
     m_view->set_model(SortingProxyModel::create(*m_model));
     m_view->set_model_column(FileSystemModel::Column::Name);
+    m_view->model()->set_key_column_and_sort_order(GUI::FileSystemModel::Column::Name, GUI::SortOrder::Ascending);
     m_view->set_column_hidden(FileSystemModel::Column::Owner, true);
     m_view->set_column_hidden(FileSystemModel::Column::Group, true);
     m_view->set_column_hidden(FileSystemModel::Column::Permissions, true);
