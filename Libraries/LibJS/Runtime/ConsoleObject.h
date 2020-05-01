@@ -46,6 +46,7 @@ private:
     static Value trace(Interpreter&);
     static Value count(Interpreter&);
     static Value count_reset(Interpreter&);
+    static Value clear(Interpreter&);
 };
 
 }
