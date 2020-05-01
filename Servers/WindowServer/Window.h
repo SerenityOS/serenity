@@ -229,6 +229,9 @@ public:
 
     void set_parent_window(Window&);
 
+    Vector<WeakPtr<Window>>& child_windows() { return m_child_windows; }
+    const Vector<WeakPtr<Window>>& child_windows() const { return m_child_windows; }
+
 private:
     void handle_mouse_event(const MouseEvent&);
     void update_menu_item_text(PopupMenuItem item);

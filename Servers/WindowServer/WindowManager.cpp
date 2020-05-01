@@ -47,8 +47,8 @@
 #include <WindowServer/Cursor.h>
 #include <WindowServer/WindowClientEndpoint.h>
 #include <errno.h>
-#include <stdio.h>
 #include <serenity.h>
+#include <stdio.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -217,6 +217,11 @@ void WindowManager::move_to_front_and_make_active(Window& window)
         m_switcher.refresh();
         m_switcher.select_window(window);
         set_highlight_window(&window);
+    }
+
+    for (auto& child_window : window.child_windows()) {
+        if (child_window)
+            move_to_front_and_make_active(*child_window);
     }
 }
 
