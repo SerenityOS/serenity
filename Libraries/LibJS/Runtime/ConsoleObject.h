@@ -35,8 +35,11 @@ public:
     ConsoleObject();
     virtual ~ConsoleObject() override;
 
+    HashMap<String, unsigned>& counters() { return m_counters; }
+
 private:
     virtual const char* class_name() const override { return "ConsoleObject"; }
+    virtual bool is_console_object() const override { return true; }
 
     static Value log(Interpreter&);
     static Value debug(Interpreter&);
@@ -44,6 +47,9 @@ private:
     static Value warn(Interpreter&);
     static Value error(Interpreter&);
     static Value trace(Interpreter&);
+    static Value count(Interpreter&);
+
+    HashMap<String, unsigned> m_counters;
 };
 
 }
