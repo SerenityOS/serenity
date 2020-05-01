@@ -144,16 +144,16 @@ int run_in_desktop_mode(RefPtr<Core::ConfigFile> config, String initial_location
     auto& desktop_widget = window->set_main_widget<DesktopWidget>();
     desktop_widget.set_layout<GUI::VerticalBoxLayout>();
 
-    auto& item_view = desktop_widget.add<GUI::ItemView>();
-    item_view.set_frame_thickness(0);
-    item_view.set_scrollbars_enabled(false);
-    item_view.set_fill_with_background_color(false);
+    auto& icon_view = desktop_widget.add<GUI::IconView>();
+    icon_view.set_frame_thickness(0);
+    icon_view.set_scrollbars_enabled(false);
+    icon_view.set_fill_with_background_color(false);
 
     auto model = GUI::FileSystemModel::create(initial_location);
-    item_view.set_model(model);
-    item_view.set_model_column(GUI::FileSystemModel::Column::Name);
+    icon_view.set_model(model);
+    icon_view.set_model_column(GUI::FileSystemModel::Column::Name);
 
-    item_view.on_activation = [&](auto& index) {
+    icon_view.on_activation = [&](auto& index) {
         if (!index.is_valid())
             return;
         auto& node = model->node(index);
@@ -219,7 +219,7 @@ int run_in_desktop_mode(RefPtr<Core::ConfigFile> config, String initial_location
     desktop_view_context_menu->add_separator();
     desktop_view_context_menu->add_action(display_properties_action);
 
-    item_view.on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
+    icon_view.on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
         if (!index.is_valid())
             desktop_view_context_menu->popup(event.screen_position());
     };
@@ -354,8 +354,8 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     view_as_table_action = GUI::Action::create_checkable(
         "Table view", { Mod_Ctrl, KeyCode::Key_L }, Gfx::Bitmap::load_from_file("/res/icons/16x16/table-view.png"), [&](const GUI::Action&) {
-            directory_view.set_view_mode(DirectoryView::ViewMode::List);
-            config->write_entry("DirectoryView", "ViewMode", "List");
+            directory_view.set_view_mode(DirectoryView::ViewMode::Table);
+            config->write_entry("DirectoryView", "ViewMode", "Table");
             config->sync();
         },
         window);
@@ -832,8 +832,8 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     // Read direcory read mode from config.
     auto dir_view_mode = config->read_entry("DirectoryView", "ViewMode", "Icon");
 
-    if (dir_view_mode.contains("List")) {
-        directory_view.set_view_mode(DirectoryView::ViewMode::List);
+    if (dir_view_mode.contains("Table")) {
+        directory_view.set_view_mode(DirectoryView::ViewMode::Table);
         view_as_table_action->set_checked(true);
     } else if (dir_view_mode.contains("Columns")) {
         directory_view.set_view_mode(DirectoryView::ViewMode::Columns);

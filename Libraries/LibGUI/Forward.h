@@ -40,7 +40,7 @@ class FileSystemModel;
 class Frame;
 class GroupBox;
 class HorizontalBoxLayout;
-class ItemView;
+class IconView;
 class JsonArrayModel;
 class KeyEvent;
 class Label;

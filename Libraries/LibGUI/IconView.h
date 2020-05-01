@@ -31,10 +31,10 @@
 
 namespace GUI {
 
-class ItemView : public AbstractView {
-    C_OBJECT(ItemView)
+class IconView : public AbstractView {
+    C_OBJECT(IconView)
 public:
-    virtual ~ItemView() override;
+    virtual ~IconView() override;
 
     int content_width() const;
     int horizontal_padding() const { return m_horizontal_padding; }
@@ -50,7 +50,7 @@ public:
 
     virtual void select_all() override;
 private:
-    ItemView();
+    IconView();
 
     virtual void did_update_model(unsigned flags) override;
     virtual void paint_event(PaintEvent&) override;
