@@ -100,6 +100,7 @@ void Window::show()
         m_minimizable,
         m_resizable,
         m_fullscreen,
+        m_frameless,
         m_opacity_when_windowless,
         m_base_size,
         m_size_increment,
