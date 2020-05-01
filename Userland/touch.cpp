@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibCore/ArgsParser.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -55,24 +56,28 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (argc != 2) {
-        fprintf(stderr, "usage: touch <path>\n");
-        return 1;
-    }
-    if (file_exists(argv[1])) {
-        int rc = utime(argv[1], nullptr);
-        if (rc < 0)
-            perror("utime");
-    } else {
-        int fd = open(argv[1], O_CREAT, 0100644);
-        if (fd < 0) {
-            perror("open");
-            return 1;
-        }
-        int rc = close(fd);
-        if (rc < 0) {
-            perror("close");
-            return 1;
+    Vector<const char*> paths;
+
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(paths, "Files to touch", "path", Core::ArgsParser::Required::Yes);
+    args_parser.parse(argc, argv);
+
+    for (auto path : paths) {
+        if (file_exists(path)) {
+            int rc = utime(path, nullptr);
+            if (rc < 0)
+                perror("utime");
+        } else {
+            int fd = open(path, O_CREAT, 0100644);
+            if (fd < 0) {
+                perror("open");
+                return 1;
+            }
+            int rc = close(fd);
+            if (rc < 0) {
+                perror("close");
+                return 1;
+            }
         }
     }
     return 0;
