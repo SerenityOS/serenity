@@ -81,6 +81,7 @@ StringPrototype::StringPrototype()
     put_native_function("substring", substring, 2, attr);
     put_native_function("includes", includes, 1, attr);
     put_native_function("slice", slice, 2, attr);
+    put_native_function("lastIndexOf", last_index_of, 1, attr);
 }
 
 StringPrototype::~StringPrototype()
@@ -423,6 +424,39 @@ Value StringPrototype::slice(Interpreter& interpreter)
     auto part_length = index_end - index_start;
     auto string_part = string.substring(index_start, part_length);
     return js_string(interpreter, string_part);
+}
+
+Value StringPrototype::last_index_of(Interpreter& interpreter)
+{
+    auto string = string_from(interpreter);
+    if (string.is_null())
+        return {};
+
+    if (interpreter.argument_count() == 0)
+        return Value(-1);
+
+    auto search_string = interpreter.argument(0).to_string();
+    if (search_string.length() > string.length())
+        return Value(-1);
+
+    ssize_t max_index = string.length() - search_string.length();
+    ssize_t from_index = max_index;
+    if (interpreter.argument_count() >= 2) {
+        from_index = static_cast<ssize_t>(interpreter.argument(1).to_i32());
+
+        if (from_index < 0)
+            from_index = 0;
+        if (from_index > max_index)
+            from_index = max_index;
+    }
+
+    for (ssize_t i = from_index; i >= 0; --i) {
+        auto part_view = string.substring_view(i, search_string.length());
+        if (part_view == search_string)
+            return Value((i32)i);
+    }
+
+    return Value(-1);
 }
 
 }
