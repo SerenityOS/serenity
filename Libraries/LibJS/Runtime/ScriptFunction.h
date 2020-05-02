@@ -44,6 +44,7 @@ public:
     virtual Value construct(Interpreter&) override;
 
     virtual const FlyString& name() const override { return m_name; };
+    void set_name(const FlyString& name) { m_name = name; };
 
 private:
     virtual bool is_script_function() const final { return true; }

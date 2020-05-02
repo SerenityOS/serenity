@@ -46,6 +46,23 @@
 
 namespace JS {
 
+static void update_function_name(Value& value, const FlyString& name)
+{
+    if (!value.is_object())
+        return;
+    auto& object = value.as_object();
+    if (object.is_function()) {
+        auto& function = static_cast<ScriptFunction&>(object);
+        if (function.name().is_empty())
+            function.set_name(name);
+    } else if (object.is_array()) {
+        auto& array = static_cast<Array&>(object);
+        for (size_t i = 0; i < array.elements().size(); ++i) {
+            update_function_name(array.elements()[i], name);
+        }
+    }
+}
+
 Value ScopeNode::execute(Interpreter& interpreter) const
 {
     return interpreter.run(*this);
@@ -851,6 +868,7 @@ Value AssignmentExpression::execute(Interpreter& interpreter) const
     if (reference.is_unresolvable())
         return interpreter.throw_exception<ReferenceError>("Invalid left-hand side in assignment");
 
+    update_function_name(rhs_result, reference.name().as_string());
     reference.put(interpreter, rhs_result);
 
     if (interpreter.exception())
@@ -955,7 +973,9 @@ Value VariableDeclaration::execute(Interpreter& interpreter) const
             auto initalizer_result = init->execute(interpreter);
             if (interpreter.exception())
                 return {};
-            interpreter.set_variable(declarator.id().string(), initalizer_result, true);
+            auto variable_name = declarator.id().string();
+            update_function_name(initalizer_result, variable_name);
+            interpreter.set_variable(variable_name, initalizer_result, true);
         }
     }
     return js_undefined();
@@ -1065,6 +1085,7 @@ Value ObjectExpression::execute(Interpreter& interpreter) const
         auto value = property.value().execute(interpreter);
         if (interpreter.exception())
             return {};
+        update_function_name(value, key);
         object->put(key, value);
     }
     return object;
