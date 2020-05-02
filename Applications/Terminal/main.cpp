@@ -216,14 +216,18 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    run_command(ptm_fd, command_to_execute);
+    RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("Terminal");
+
+    if (command_to_execute)
+        run_command(ptm_fd, command_to_execute);
+    else
+        run_command(ptm_fd, config->read_entry("Startup", "Command"));
 
     auto window = GUI::Window::construct();
     window->set_title("Terminal");
     window->set_background_color(Color::Black);
     window->set_double_buffering_enabled(false);
 
-    RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("Terminal");
     auto& terminal = window->set_main_widget<TerminalWidget>(ptm_fd, true, config);
     terminal.on_command_exit = [&] {
         app.quit(0);
