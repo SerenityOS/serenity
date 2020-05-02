@@ -136,9 +136,18 @@ Value FunctionPrototype::to_string(Interpreter& interpreter)
     if (this_object->is_native_function() || this_object->is_bound_function()) {
         function_body = String::format("  [%s]", this_object->class_name());
     } else {
-        auto& parameters = static_cast<ScriptFunction*>(this_object)->parameters();
         StringBuilder parameters_builder;
-        parameters_builder.join(", ", parameters);
+        auto first = true;
+        for (auto& parameter : static_cast<ScriptFunction*>(this_object)->parameters()) {
+            if (!first)
+                parameters_builder.append(", ");
+            first = false;
+            parameters_builder.append(parameter.name);
+            if (parameter.default_value) {
+                // FIXME: See note below
+                parameters_builder.append(" = TODO");
+            }
+        }
         function_parameters = parameters_builder.build();
         // FIXME: ASTNodes should be able to dump themselves to source strings - something like this:
         // auto& body = static_cast<ScriptFunction*>(this_object)->body();

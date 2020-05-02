@@ -26,19 +26,20 @@
 
 #pragma once
 
+#include <LibJS/AST.h>
 #include <LibJS/Runtime/Function.h>
 
 namespace JS {
 
 class ScriptFunction final : public Function {
 public:
-    static ScriptFunction* create(GlobalObject&, const FlyString& name, const Statement& body, Vector<FlyString> parameters, LexicalEnvironment* parent_environment);
+    static ScriptFunction* create(GlobalObject&, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, LexicalEnvironment* parent_environment);
 
-    ScriptFunction(const FlyString& name, const Statement& body, Vector<FlyString> parameters, LexicalEnvironment* parent_environment, Object& prototype);
+    ScriptFunction(const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, LexicalEnvironment* parent_environment, Object& prototype);
     virtual ~ScriptFunction();
 
     const Statement& body() const { return m_body; }
-    const Vector<FlyString>& parameters() const { return m_parameters; };
+    const Vector<FunctionNode::Parameter>& parameters() const { return m_parameters; };
 
     virtual Value call(Interpreter&) override;
     virtual Value construct(Interpreter&) override;
@@ -56,7 +57,7 @@ private:
 
     FlyString m_name;
     NonnullRefPtr<Statement> m_body;
-    const Vector<FlyString> m_parameters;
+    const Vector<FunctionNode::Parameter> m_parameters;
     LexicalEnvironment* m_parent_environment { nullptr };
 };
 

@@ -279,14 +279,19 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
         load_state();
     };
 
-    Vector<FlyString> parameters;
+    Vector<FunctionNode::Parameter> parameters;
     bool parse_failed = false;
     while (true) {
         if (match(TokenType::Comma)) {
             consume(TokenType::Comma);
         } else if (match(TokenType::Identifier)) {
-            auto token = consume(TokenType::Identifier);
-            parameters.append(token.value());
+            auto parameter_name = consume(TokenType::Identifier).value();
+            RefPtr<Expression> default_value;
+            if (match(TokenType::Equals)) {
+                consume(TokenType::Equals);
+                default_value = parse_expression(0);
+            }
+            parameters.append({ parameter_name, default_value });
         } else if (match(TokenType::ParenClose)) {
             if (expect_parens) {
                 consume(TokenType::ParenClose);
@@ -775,10 +780,15 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(bool needs_function_
             name = consume(TokenType::Identifier).value();
     }
     consume(TokenType::ParenOpen);
-    Vector<FlyString> parameters;
+    Vector<FunctionNode::Parameter> parameters;
     while (match(TokenType::Identifier)) {
-        auto parameter = consume(TokenType::Identifier).value();
-        parameters.append(parameter);
+        auto parameter_name = consume(TokenType::Identifier).value();
+        RefPtr<Expression> default_value;
+        if (match(TokenType::Equals)) {
+            consume(TokenType::Equals);
+            default_value = parse_expression(0);
+        }
+        parameters.append({ parameter_name, default_value });
         if (match(TokenType::ParenClose)) {
             break;
         }
@@ -1233,14 +1243,13 @@ void Parser::syntax_error(const String& message, size_t line, size_t column)
 
 void Parser::save_state()
 {
-    m_saved_state = m_parser_state;
+    m_saved_state.append(m_parser_state);
 }
 
 void Parser::load_state()
 {
-    ASSERT(m_saved_state.has_value());
-    m_parser_state = m_saved_state.value();
-    m_saved_state.clear();
+    ASSERT(!m_saved_state.is_empty());
+    m_parser_state = m_saved_state.take_last();
 }
 
 }

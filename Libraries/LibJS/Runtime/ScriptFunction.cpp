@@ -46,12 +46,12 @@ static ScriptFunction* script_function_from(Interpreter& interpreter)
     return static_cast<ScriptFunction*>(this_object);
 }
 
-ScriptFunction* ScriptFunction::create(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FlyString> parameters, LexicalEnvironment* parent_environment)
+ScriptFunction* ScriptFunction::create(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, LexicalEnvironment* parent_environment)
 {
     return global_object.heap().allocate<ScriptFunction>(name, body, move(parameters), parent_environment, *global_object.function_prototype());
 }
 
-ScriptFunction::ScriptFunction(const FlyString& name, const Statement& body, Vector<FlyString> parameters, LexicalEnvironment* parent_environment, Object& prototype)
+ScriptFunction::ScriptFunction(const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, LexicalEnvironment* parent_environment, Object& prototype)
     : Function(prototype)
     , m_name(name)
     , m_body(body)
@@ -77,7 +77,7 @@ LexicalEnvironment* ScriptFunction::create_environment()
 {
     HashMap<FlyString, Variable> variables;
     for (auto& parameter : m_parameters) {
-        variables.set(parameter, { js_undefined(), DeclarationKind::Var });
+        variables.set(parameter.name, { js_undefined(), DeclarationKind::Var });
     }
 
     if (body().is_scope_node()) {
@@ -97,12 +97,15 @@ Value ScriptFunction::call(Interpreter& interpreter)
     auto& argument_values = interpreter.call_frame().arguments;
     ArgumentVector arguments;
     for (size_t i = 0; i < m_parameters.size(); ++i) {
-        auto name = parameters()[i];
+        auto parameter = parameters()[i];
         auto value = js_undefined();
-        if (i < argument_values.size())
+        if (i < argument_values.size() && !argument_values[i].is_undefined()) {
             value = argument_values[i];
-        arguments.append({ name, value });
-        interpreter.current_environment()->set(name, { value, DeclarationKind::Var });
+        } else if (parameter.default_value) {
+            value = parameter.default_value->execute(interpreter);
+        }
+        arguments.append({ parameter.name, value });
+        interpreter.current_environment()->set(parameter.name, { value, DeclarationKind::Var });
     }
     return interpreter.run(m_body, arguments, ScopeType::Function);
 }
