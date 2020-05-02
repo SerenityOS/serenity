@@ -68,12 +68,15 @@ private:
     u8 wait_then_read(u8 port);
     void parse_data_packet();
     void expect_ack();
+    void set_sample_rate(u8);
+    u8 get_device_id();
 
     bool m_device_present { false };
     CircularQueue<MousePacket, 100> m_queue;
     u8 m_data_state { 0 };
     u8 m_data[4];
     bool m_has_wheel { false };
+    bool m_has_five_buttons { false };
 };
 
 }
