@@ -690,6 +690,28 @@ String Editor::get_line(const String& prompt)
                         return true;
                     });
 
+                    // ^L - This is a source of issues, as the search editor refreshes first,
+                    // and we end up with the wrong order of prompts, so we will first refresh
+                    // ourselves, then refresh the search editor, and then tell him not to process
+                    // this event
+                    m_search_editor->register_character_input_callback(0x0c, [this](auto& search_editor) {
+                        printf("\033[3J\033[H\033[2J"); // Clear screen.
+
+                        // refresh our own prompt
+                        m_origin_x = 1;
+                        m_origin_y = 1;
+                        m_refresh_needed = true;
+                        refresh_display();
+
+                        // move the search prompt below ours
+                        // and tell it to redraw itself
+                        search_editor.m_origin_x = 2;
+                        search_editor.m_origin_y = 1;
+                        search_editor.m_refresh_needed = true;
+
+                        return false;
+                    });
+
                     // quit without clearing the current buffer
                     m_search_editor->register_character_input_callback('\t', [this](Editor& search_editor) {
                         search_editor.finish();
