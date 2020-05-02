@@ -233,6 +233,8 @@ private:
             m_left = {};
             m_right = {};
             m_middle = {};
+            m_back = {};
+            m_forward = {};
         }
 
         WeakPtr<Window> m_clicked_window;
