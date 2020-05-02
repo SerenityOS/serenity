@@ -239,7 +239,7 @@ int main(int argc, char** argv)
     fire.set_stat_label(time);
 
     window->show();
-    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-demo.png"));
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-fire.png"));
 
     return app.exec();
 }
