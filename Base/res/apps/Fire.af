@@ -2,3 +2,6 @@
 Name=Fire
 Executable=/bin/Fire
 Category=Demos
+
+[Icons]
+16x16=/res/icons/16x16/app-fire.png
