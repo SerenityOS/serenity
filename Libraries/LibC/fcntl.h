@@ -96,7 +96,7 @@ int watch_file(const char* path, size_t path_length);
 #define F_RDLCK 0
 #define F_WRLCK 1
 #define F_UNLCK 2
-
+#define F_SETLK 6
 #define F_SETLKW 7
 
 struct flock {
