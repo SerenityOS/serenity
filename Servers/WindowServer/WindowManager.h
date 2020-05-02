@@ -241,6 +241,8 @@ private:
         ClickMetadata m_left;
         ClickMetadata m_right;
         ClickMetadata m_middle;
+        ClickMetadata m_back;
+        ClickMetadata m_forward;
     };
     DoubleClickInfo m_double_click_info;
     int m_double_click_speed { 0 };
