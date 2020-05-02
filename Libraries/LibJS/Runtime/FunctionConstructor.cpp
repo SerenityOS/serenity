@@ -66,7 +66,7 @@ Value FunctionConstructor::construct(Interpreter& interpreter)
         parameters_source = parameters_builder.build();
         body_source = interpreter.argument(interpreter.argument_count() - 1).to_string();
     }
-    auto source = String::format("function (%s) { %s }", parameters_source.characters(), body_source.characters());
+    auto source = String::format("function anonymous(%s) { %s }", parameters_source.characters(), body_source.characters());
     auto parser = Parser(Lexer(source));
     auto function_expression = parser.parse_function_node<FunctionExpression>();
     if (parser.has_errors()) {
