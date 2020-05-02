@@ -150,6 +150,7 @@ cp ../Demos/WidgetGallery/WidgetGallery mnt/bin/WidgetGallery
 cp ../Demos/Cube/Cube mnt/bin/Cube
 cp ../Demos/Screensaver/Screensaver mnt/bin/Screensaver
 cp ../Demos/Fire/Fire mnt/bin/Fire
+cp ../Demos/Mouse/Mouse mnt/bin/Mouse
 cp ../Demos/DynamicLink/LinkDemo/LinkDemo mnt/bin/LinkDemo
 cp ../DevTools/HackStudio/HackStudio mnt/bin/HackStudio
 cp ../DevTools/VisualBuilder/VisualBuilder mnt/bin/VisualBuilder
