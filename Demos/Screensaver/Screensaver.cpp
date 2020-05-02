@@ -146,7 +146,7 @@ int main(int argc, char** argv)
     screensaver_window.update();
 
     window->show();
-    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-demo.png"));
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-screensaver.png"));
 
     return app.exec();
 }
