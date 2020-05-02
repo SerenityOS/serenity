@@ -143,7 +143,7 @@ void Service::setup_socket()
         ASSERT_NOT_REACHED();
     }
 
-    rc = listen(m_socket_fd, 5);
+    rc = listen(m_socket_fd, 16);
     if (rc < 0) {
         perror("listen");
         ASSERT_NOT_REACHED();
