@@ -128,6 +128,7 @@ Window* Window::find_parent_window()
 
 void Window::server_did_destroy()
 {
+    reified_windows->remove(m_window_id);
     m_window_id = 0;
     m_visible = false;
     m_pending_paint_event_rects.clear();
@@ -140,7 +141,6 @@ void Window::hide()
 {
     if (!is_visible())
         return;
-    reified_windows->remove(m_window_id);
     auto response = WindowServerConnection::the().send_sync<Messages::WindowServer::DestroyWindow>(m_window_id);
     server_did_destroy();
 
