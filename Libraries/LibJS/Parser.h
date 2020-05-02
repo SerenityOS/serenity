@@ -108,6 +108,6 @@ private:
     };
 
     ParserState m_parser_state;
-    Optional<ParserState> m_saved_state;
+    Vector<ParserState> m_saved_state;
 };
 }

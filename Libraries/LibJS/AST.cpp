@@ -670,17 +670,27 @@ void NullLiteral::dump(int indent) const
 
 void FunctionNode::dump(int indent, const char* class_name) const
 {
-    StringBuilder parameters_builder;
-    parameters_builder.join(',', parameters());
-
     print_indent(indent);
-    printf("%s '%s(%s)'\n", class_name, name().characters(), parameters_builder.build().characters());
+    printf("%s '%s'\n", class_name, name().characters());
+    if (!m_parameters.is_empty()) {
+        print_indent(indent + 1);
+        printf("(Parameters)\n");
+
+        for (auto& parameter : m_parameters) {
+            print_indent(indent + 2);
+            printf("%s\n", parameter.name.characters());
+            if (parameter.default_value) {
+                parameter.default_value->dump(indent + 3);
+            }
+        }
+    }
     if (!m_variables.is_empty()) {
         print_indent(indent + 1);
         printf("(Variables)\n");
+
+        for (auto& variable : m_variables)
+            variable.dump(indent + 2);
     }
-    for (auto& variable : m_variables)
-        variable.dump(indent + 2);
     print_indent(indent + 1);
     printf("(Body)\n");
     body().dump(indent + 2);
