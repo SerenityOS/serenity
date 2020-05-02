@@ -168,8 +168,11 @@ void HttpsJob::on_socket_connected()
         auto content_length_header = m_headers.get("Content-Length");
         if (content_length_header.has_value()) {
             bool ok;
-            if (m_received_size >= content_length_header.value().to_uint(ok) && ok)
+            auto content_length = content_length_header.value().to_uint(ok);
+            if (ok && m_received_size >= content_length) {
+                m_received_size = content_length;
                 finish_up();
+            }
         } else {
             // no content-length, assume closed connection
             finish_up();
